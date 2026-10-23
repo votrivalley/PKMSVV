@@ -4,7 +4,7 @@ G.MultiplayerUI=(()=>{
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
  const msg=(s,bad=false)=>{const el=$('pkmsvv-mp-message');el.textContent=s;el.style.color=bad?'#ffc4cb':'#d2e8ff';};
  const label=mode=>mode==='royale'?'🏆 Sinh tồn · 2–10':'🤝 Co-op · 2–4';
- const busy=()=>G.Social.room&&G.LobbyUI.open();
+ const busy=()=>{if(!G.Social.room)return false;G.LobbyUI.open();return true;};
  async function create(mode,visibility){
   if(busy())return;
   msg('Đang tạo phòng…');
