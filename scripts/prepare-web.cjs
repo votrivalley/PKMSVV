@@ -58,6 +58,26 @@ const config = loadConfig();
 if (!fs.existsSync(path.join(game, 'dev.html')))
   throw new Error('Fetch pinned JPTER78/pokesurvivor revision into vendor/pokesurvivor first.');
 execFileSync(process.execPath, [path.join(root, 'scripts', 'prepare-game.cjs')], { cwd: root, stdio: 'inherit' });
+
+const loginPath=path.join(game,'js','ui','login.js');
+let login=fs.readFileSync(loginPath,'utf8').replace(/\r\n/g,'\n');
+const noteStart=login.indexOf('  const NOTES = [');
+const noteEnd=login.indexOf('  /** → true si se ha enseñado alguno. */',noteStart);
+if(noteStart<0||noteEnd<0)throw Error('Notice localization source changed');
+login=login.slice(0,noteStart)+String.raw\`
+  const NOTES = [
+    { key: 'pkmsvv.web.cloud-save.vi.v2', when: cloud,
+      title: ['Quan trọng: Hãy lưu tiến trình', 'Important: Save Your Progress'],
+      body: ['<p>Tiến trình của bạn được giữ trên thiết bị ngay khi chơi. Để đồng bộ lên Google Cloud, hãy nhấn nút <b>Lưu</b> ở góc trên bên phải.</p><p>Hãy kiểm tra trạng thái <b>Đã lưu trên đám mây</b> trước khi đóng game hoặc chuyển sang máy khác. Nếu mất mạng, dữ liệu chưa đồng bộ sẽ chỉ nằm trên thiết bị hiện tại.</p>',
+             '<p>Your progress is kept on this device as you play. Use the <b>Save</b> button at the top right to sync to Google Cloud.</p><p>Check that the game says <b>Saved to cloud</b> before closing it or switching devices. Unsynced changes remain on this device if the connection drops.</p>'] }
+  ];
+\`+login.slice(noteEnd);
+const noticeBlock="      // Otros idiomas: el aviso entero va traducido en su diccionario (por trozos sale raro); si falta, en inglés.\n      const other = G.I18n.lang !== 'es' && !en, body = $('savenote-body');\n      if (other) body.setAttribute('translate', 'no');\n      body.innerHTML = !other ? n.body[en] : G.I18n.has(n.body[0]) ? G.T(n.body[0]) : n.body[1];\n      $('savenote-ok').textContent = en ? 'Got it' : 'Entendido';";
+if(!login.includes(noticeBlock))throw Error('notice body anchor');
+login=login.replace(noticeBlock,
+ "      const body = $('savenote-body');\n      body.setAttribute('translate','no');\n      body.innerHTML = n.body[en];\n      $('savenote-ok').textContent = en ? 'Understood' : 'Đã hiểu';");
+fs.writeFileSync(loginPath,login,'utf8');
+
 const oldHtml = fs.readFileSync(path.join(game, 'index.html'), 'utf8');
 const customStyle = oldHtml.match(/<style>\s*body,button,input,select\{font-family:[\s\S]*?<\/style>/);
 if (!customStyle) throw new Error('Unable to retain PKMSVV branding from offline build');

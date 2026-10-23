@@ -104,7 +104,8 @@ G.KecleonUI=(()=>{
   $('pkmk-tab-shop').onclick=()=>{tab='shop';render();};
   $('pkmk-tab-bag').onclick=()=>{tab='bag';render();};
   $('pkmk-back').onclick=close;
-  $('pkmk-mon').onchange=e=>{selected=Number(e.target.value);render();};
+  const pokemonPicker=$('pkmk-mon');
+  if(pokemonPicker)pokemonPicker.onchange=e=>{selected=Number(e.target.value);render();}; // Tab Cửa hàng không có ô chọn Pokémon.
   const backToShop=$('pkmk-list').querySelector('[data-pkmk-goshop]');
   if(backToShop)backToShop.onclick=()=>{tab='shop';render();};
   $('pkmk-list').querySelectorAll('[data-pkmk-buy]').forEach(btn=>btn.onclick=()=>{
