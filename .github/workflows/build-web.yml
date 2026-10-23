@@ -38,7 +38,7 @@ jobs:
         env:
           PKMSVV_FIREBASE_CONFIG_JSON: ${{ secrets.PKMSVV_FIREBASE_CONFIG_JSON }}
           PKMSVV_ALLOWED_HOSTS: ${{ vars.PKMSVV_ALLOWED_HOSTS }}
-          PKMSVV_WEB_PREVIEW: "1"
+          PKMSVV_WEB_PREVIEW: "0"
         run: npm run prepare:web
       - name: Verify static browser output
         run: |
@@ -50,8 +50,23 @@ jobs:
             echo "Upstream Firebase key accidentally included" >&2
             exit 1
           fi
+      - name: Package deploy-ready Firebase Hosting folder
+        shell: bash
+        run: |
+          mkdir -p deploy/site
+          cp -a dist/web/. deploy/site/
+          cat > deploy/firebase.json <<'EOF'
+          {
+            "hosting": {
+              "public": "site",
+              "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
+            }
+          }
+          EOF
+          test -s deploy/site/index.html
+          test -s deploy/site/game/index.html
       - uses: actions/upload-artifact@v4
         with:
-          name: PKMSVV-Web-Dev-Build
-          path: dist/web/
+          name: PKMSVV-Web-Hosting
+          path: deploy/
           retention-days: 5

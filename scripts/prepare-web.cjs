@@ -37,7 +37,7 @@ function loadConfig() {
     throw new Error('Invalid allowed host: ' + h);
   const firebase = {};
   for (const key of allowed) if (typeof parsed[key] === 'string') firebase[key] = parsed[key];
-  return { firebase, hosts: [...new Set(['localhost', '127.0.0.1', ...allowedHosts])] };
+  return { firebase, hosts: [...new Set(['localhost', '127.0.0.1', parsed.projectId.toLowerCase() + '.web.app', parsed.projectId.toLowerCase() + '.firebaseapp.com', ...allowedHosts])] };
 }
 const config = loadConfig();
 if (!fs.existsSync(path.join(game, 'dev.html')))
