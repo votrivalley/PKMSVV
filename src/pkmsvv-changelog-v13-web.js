@@ -17,6 +17,9 @@ G.CHANGELOG.unshift({
   ['Cloud Save: Tiến trình lưu cục bộ khi chơi; nhấn Lưu và chờ đồng bộ xong để tải lên Cloud.','Cloud Save: Progress is cached locally; press Save and wait for a successful upload.']
  ],
  fix:[
+  ['Sửa lỗi kẹt cửa sổ chọn vật phẩm khi nhặt hai rương cùng lúc: phần thưởng được xử lý lần lượt.','Fixed simultaneous chest item choices freezing the game: rewards are now queued.'],
+  ['Thêm menu Nhiều người chơi riêng với phòng công khai và Chơi nhanh (Web Beta).','Added separate multiplayer menu with public lobbies and quick match (Web Beta).'],
+  ['Thêm gán phím bàn phím tùy chỉnh và logo Pokémon / Sống Sót hai dòng.','Added keyboard rebinding and fixed two-line Pokémon / Sống Sót logo.'],
   ['Sửa lỗi không mua được vật phẩm trong Cửa hàng Kecleon.','Fixed unresponsive Buy buttons in Kecleon Shop.'],
   ['Thay thông báo lưu game/reset xếp hạng cũ bằng hướng dẫn phù hợp, song ngữ Việt–Anh.','Replaced outdated save/ranking notices with bilingual Vietnamese and English guidance.'],
   ['Giao diện phòng chơi: Chọn Co-op hoặc Sinh tồn, hiển thị người tham gia và cải thiện phòng đông.','Lobby UI: Select Co-op or Survival, show players and improve larger room layouts.'],

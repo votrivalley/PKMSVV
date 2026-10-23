@@ -546,6 +546,7 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-kecleon.cjs')]
 execFileSync(process.execPath,[path.join(project,'scripts','patch-layout-midgame.cjs')],{cwd:project,stdio:'inherit'});
 // Rebindable keyboard controls and a two-line title on every platform.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-keybind-title.cjs')],{cwd:project,stdio:'inherit'});
+execFileSync(process.execPath,[path.join(project,'scripts','patch-double-items.cjs')],{cwd:project,stdio:'inherit'});
 execFileSync(process.execPath, [path.join(game, 'tools', 'build.js'), '--sin-seo', '--expose'], { cwd: game, stdio: 'inherit' });
 
 const indexPath = path.join(game, 'index.html');
