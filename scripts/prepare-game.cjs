@@ -550,6 +550,8 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-double-items.c
 // Unified high-contrast retro UI shared by Web, Windows and Android.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-retro-ui.cjs')],{cwd:project,stdio:'inherit'});
 execFileSync(process.execPath,[path.join(project,'scripts','patch-skill-track.cjs')],{cwd:project,stdio:'inherit'});
+// First-release chapter zero and replayable character introduction.
+execFileSync(process.execPath,[path.join(project,'scripts','patch-story.cjs')],{cwd:project,stdio:'inherit'});
 execFileSync(process.execPath, [path.join(game, 'tools', 'build.js'), '--sin-seo', '--expose'], { cwd: game, stdio: 'inherit' });
 
 const indexPath = path.join(game, 'index.html');

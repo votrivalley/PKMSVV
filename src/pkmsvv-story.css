@@ -1,0 +1,16 @@
+/* Pixel illustration + high contrast visual novel, responsive on handhelds. */
+#scr-pkmsvv-story{z-index:44;padding:14px;background:#05141c;align-items:center;justify-content:center}
+#scr-pkmsvv-story .pkmsvv-story-screen{position:relative;width:min(960px,100%);max-height:95svh;overflow-y:auto;background:#0e2831;border:3px solid #f9df68;border-radius:12px;box-shadow:0 0 0 4px #082e39,0 16px 75px #000b;padding:9px}
+.pkmsvv-story-frame{position:relative;min-height:230px;background:#091d2c;border:2px solid #72cbbd;border-radius:6px;overflow:hidden;cursor:pointer}
+#pkmsvv-story-image{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;image-rendering:pixelated}
+#pkmsvv-story-mon{position:absolute;width:180px;height:170px;bottom:3%;left:calc(50% - 90px);image-rendering:pixelated;filter:drop-shadow(0 6px 2px #051b23)}
+#pkmsvv-story-mon.hidden{display:none}
+.pkmsvv-story-chapter{position:absolute;top:12px;left:12px;padding:7px 12px;background:#0e2838e8;color:#ffe57b;font:800 13px/1.4 "Segoe UI",sans-serif;letter-spacing:.07em;border:1px solid #b7dcd1}
+.pkmsvv-story-dialog{position:relative;background:#0b303b;color:#fff;border:2px solid #b8f2df;border-radius:8px;margin-top:9px;padding:13px 16px;min-height:147px;font-family:"Segoe UI",Tahoma,sans-serif}
+#pkmsvv-story-speaker{font-size:15px;font-weight:800;color:#ffdd61;margin-bottom:9px}
+#pkmsvv-story-line{color:#fbffff;font-size:clamp(17px,2.4vw,22px);font-weight:650;line-height:1.5;margin:0;min-height:59px;white-space:pre-wrap}
+.pkmsvv-story-controls{display:flex;align-items:center;justify-content:flex-end;gap:9px;margin-top:12px}
+.pkmsvv-story-controls button{min-height:42px;cursor:pointer}
+.pkmsvv-story-controls #pkmsvv-story-count{margin-right:auto;color:#cbe6e0;font-size:13px}
+@media(max-width:620px){#scr-pkmsvv-story{padding:7px}#scr-pkmsvv-story .pkmsvv-story-screen{padding:5px;max-height:97svh}.pkmsvv-story-frame{min-height:150px}.pkmsvv-story-dialog{padding:10px;min-height:165px}#pkmsvv-story-line{font-size:17px}#pkmsvv-story-mon{width:110px;height:115px;left:calc(50% - 55px)}.pkmsvv-story-controls button{padding:8px 12px}}
+@media(prefers-reduced-motion:reduce){#scr-pkmsvv-story *{animation:none!important;transition:none!important}}

@@ -1,0 +1,19 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const root=path.resolve(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8');
+test('Chapter 0 has 4 prologue pixel scenes, a revealed Pokémon and both languages',()=>{
+ const a=read('scripts/generate-story-art.cjs'),s=read('src/pkmsvv-story.js');
+ assert.match(a,/for\(let n=1;n<=5;n\+\+\)/);
+ for(const w of ['Mình đang ở đâu','Where am I','Hạ tổng cộng 50, 100 và 200','Unlock once','replay'])assert.ok(s.includes(w),w);
+ assert.match(s,/G\.UI\.sprite\(cv,chosenDex/);
+});
+test('first new character sees introduction before personality quiz, existing saves safe',()=>{
+ const p=read('scripts/patch-story.cjs');
+ for(const phrase of ['pkmsvvStorySeen','G.PKMSVVStory.prologue','G.TestUI.start','G.PKMSVVStory.reveal','G.PKMSVVStory.replay','src','generate-story-art'])assert.ok(p.includes(phrase),phrase);
+ assert.match(p,/scr-pkmsvv-story/);
+});
+test('Story UI requires readable opaque text panels and skip controls',()=>{
+ const c=read('src/pkmsvv-story.css'),p=read('scripts/patch-story.cjs');
+ assert.match(c,/#0b303b/);assert.match(c,/#fbffff/);
+ assert.match(p,/pkmsvv-story-skip/);assert.match(p,/pkmsvv-story-next/);
+});
