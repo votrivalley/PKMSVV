@@ -1,7 +1,7 @@
 'use strict';
 
 /* Local-only Electron wrapper. This is NOT a browser pointing to pokesurvivor.com. */
-const { app, BrowserWindow, Menu, session, ipcMain } = require('electron');
+const { app, BrowserWindow, Menu, session, ipcMain, shell } = require('electron');
 const path = require('node:path');
 
 app.setAppUserModelId('com.ronvotri.pkmsvv');
@@ -60,6 +60,12 @@ app.whenReady().then(() => {
     if(!win || win!==mainWindow)throw Error('Invalid full-screen requester');
     win.setFullScreen(!win.isFullScreen());
     return {fullscreen:win.isFullScreen()};
+  });
+  // OAuth stays in the trusted external browser, not Electron's file:// renderer.
+  ipcMain.handle('pkmsvv:open-online',async event=>{
+    const win=BrowserWindow.fromWebContents(event.sender);
+    if(!win || win!==mainWindow)throw Error('Invalid online launcher requester');
+    return shell.openExternal('https://pkmsvv-b84d2.web.app/');
   });
   ipcMain.handle('pkmsvv:is-fullscreen',event=>{
     const win=BrowserWindow.fromWebContents(event.sender);

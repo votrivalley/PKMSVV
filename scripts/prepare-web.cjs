@@ -54,6 +54,8 @@ function loadConfig() {
   for (const key of allowed) if (typeof parsed[key] === 'string') firebase[key] = parsed[key];
   return { firebase, hosts: [...new Set(['localhost', '127.0.0.1', parsed.projectId.toLowerCase() + '.web.app', parsed.projectId.toLowerCase() + '.firebaseapp.com', ...allowedHosts])] };
 }
+// Hosted Web never receives the offline/native choice overlay.
+process.env.PKMSVV_BUILD_TARGET='web';
 const config = loadConfig();
 if (!fs.existsSync(path.join(game, 'dev.html')))
   throw new Error('Fetch pinned JPTER78/pokesurvivor revision into vendor/pokesurvivor first.');
