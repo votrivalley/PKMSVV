@@ -28,3 +28,18 @@ test('custom keyboard bindings are persisted device-locally and title fixed to e
  assert.match(read('src/web/index.html'),/pkmsvv-fixed-logo/);
  assert.doesNotMatch(key,/G.DB.commit/);
 });
+
+test('Vietnamese online modes use Sống Sót for coop and Sống Còn for royale across UI',()=>{
+ const hub=read('scripts/patch-multiplayer-hub.cjs');
+ const social=read('scripts/patch-web-multiplayer.cjs');
+ const ui=read('src/web/pkmsvv-multiplayer-ui.js');
+ const royale=read('src/web/pkmsvv-royale.js');
+ for(const name of ['Sống Sót','Sống Còn']){
+  for(const source of [hub,social,ui])assert.ok(source.includes(name),name+' missing from a multiplayer UI source');
+ }
+ assert.match(royale,/BẢNG XẾP HẠNG SỐNG CÒN/);
+ assert.match(social,/mode==='royale'/);
+ assert.match(ui,/create\('coop'/);
+ assert.match(ui,/create\('royale'/);
+ assert.doesNotMatch(hub,/Ghép Co-op|Ghép Sinh tồn/);
+});

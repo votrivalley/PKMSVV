@@ -31,8 +31,8 @@ patch('js/net/social.js','    VALID, MAX_PLAYERS','    VALID, MAX_PLAYERS, roomL
 // Player-host UI to choose explicit mode before inviting.
 patch('dev.html','<div id="fr-list" class="fr-list"></div>',
  '<div id="pkmsvv-create-modes" class="row wrap" translate="no" style="gap:8px;margin:10px 0 16px">\n'+
- '  <button class="btn small gold" id="pkmsvv-create-coop" type="button">🤝 Co-op · 2–4</button>\n'+
- '  <button class="btn small" id="pkmsvv-create-royale" type="button">🏆 Sinh tồn · 2–10</button>\n'+
+ '  <button class="btn small gold" id="pkmsvv-create-coop" type="button">🤝 Sống Sót · 2–4</button>\n'+
+ '  <button class="btn small" id="pkmsvv-create-royale" type="button">🏆 Sống Còn · 2–10</button>\n'+
  '</div><div id="fr-list" class="fr-list"></div>');
 patch('js/ui/social-ui.js',"      $('fr-room').onclick = () => G.LobbyUI.open();",
  ["      $('fr-room').onclick = () => G.LobbyUI.open();",
@@ -46,14 +46,14 @@ patch('js/ui/social-ui.js',"      $('fr-room').onclick = () => G.LobbyUI.open();
 patch('js/ui/social-ui.js',"      $('fr-room').classList.toggle('hidden', !room);",
  ["      $('fr-room').classList.toggle('hidden', !room);",
   "      $('pkmsvv-create-modes').classList.toggle('hidden', !!room);",
-  "      $('pkmsvv-create-royale').textContent=G.I18n.lang==='vi'?'🏆 Sinh tồn · 2–10':'🏆 Survival · 2–10';"].join('\n'));
+  "      $('pkmsvv-create-royale').textContent=G.I18n.lang==='vi'?'🏆 Sống Còn · 2–10':'🏆 Survival · 2–10';"].join('\n'));
 const lp=path.join(base,'js/ui/social-ui.js');let lobby=fs.readFileSync(lp,'utf8');
 if((lobby.match(/G\.Social\.MAX_PLAYERS/g)||[]).length!==4)throw Error('Lobby must use 4 limit references');
 lobby=lobby.replace(/G\.Social\.MAX_PLAYERS/g,'G.Social.roomLimit(room)');fs.writeFileSync(lp,lobby);
 patch('js/ui/social-ui.js',"      const ms = room.members;\n      $('lobby-sub').textContent",
  "      const ms = room.members;\n      $('lobby-note').dataset.mode=room.mode||'coop';\n      $('lobby-sub').textContent");
 patch('js/ui/social-ui.js',"'Eres el anfitrión. Invita a tus amigos (hasta ' + G.Social.roomLimit(room) + ') y empezad cuando estéis.'",
- "(room.mode==='royale'?'🏆 Sinh tồn: mời tối đa ':'🤝 Co-op: mời tối đa ')+G.Social.roomLimit(room)+' người, bắt đầu từ 2.'");
+ "(room.mode==='royale'?'🏆 Sống Còn: mời tối đa ':'🤝 Sống Sót: mời tối đa ')+G.Social.roomLimit(room)+' người, bắt đầu từ 2.'");
 patch('js/ui/social-ui.js',"        k: 'start', seed: Math.floor(Math.random() * 1e6), host: room.host,",
  "        k: 'start', seed: Math.floor(Math.random() * 1e6), host: room.host, mode: room.mode||'coop',");
 patch('js/ui/social-ui.js',"      btn.textContent = 'Empezar partida (' + ms.length + '/' + G.Social.roomLimit(room) + ')';",
@@ -93,7 +93,7 @@ patch('js/game.js','    if (G.Coop.isHost) checkAllDown(dt);',
 patch('js/game.js','    if (!G.Judgment.cinematic) G.HUD.draw(ctx, w, h, pl, st);',
  '    if (!G.Judgment.cinematic) G.HUD.draw(ctx, w, h, pl, st);\n    if(G.Royale.active)G.Royale.draw(ctx,w,h,G.Coop.players());');
 patch('js/ui/run-ui.js',"    $('over-title').textContent = r.dead ? 'Has caído…' : 'Run terminada';",
- "    $('over-title').textContent = r.royale ? (r.royale.winner===G.Social.uid?'🏆 Người sống sót cuối cùng':'🏆 Kết quả Sinh tồn') : (r.dead ? 'Has caído…' : 'Run terminada');");
+ "    $('over-title').textContent = r.royale ? (r.royale.winner===G.Social.uid?'🏆 Người sống sót cuối cùng':'🏆 Kết quả Sống Còn') : (r.dead ? 'Has caído…' : 'Run terminada');");
 patch('js/ui/run-ui.js',"    const ask = $('over-ask');",
  "    if(r.royale)$('over-stats').insertAdjacentHTML('afterbegin',G.Royale.html(r.royale));\n    const ask = $('over-ask');");
 fs.appendFileSync(path.join(base,'css/style.css'),"\n#lobby-members{grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}\n#lobby-members .lob-card{min-width:0;min-height:124px;padding:7px 3px}\n#lobby-members .lob-card b{font-size:clamp(11px,1.3vw,15px);max-width:100%;overflow-wrap:anywhere}\n#lobby-members .lob-card canvas{max-width:100%;height:auto}\n#pkmsvv-create-modes .btn{flex:1;min-height:45px}\n@media(max-width:670px){#lobby-members{grid-template-columns:repeat(2,minmax(0,1fr))}#lobby-members .lob-card{min-height:98px}}\n",'utf8');

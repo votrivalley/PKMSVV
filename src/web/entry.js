@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const status = document.getElementById('cloud-status');
   cloud.disabled = !enabled;
   status.textContent = enabled
-    ? 'Online cần Internet; phòng co-op tối đa 4 người khi đăng nhập.'
+    ? 'Online cần Internet; phòng Sống Sót tối đa 4 người khi đăng nhập.'
     : 'Chưa cấu hình Firebase riêng. Hiện chỉ mở được chế độ offline trên web.';
   function start(mode) {
     try { localStorage.setItem('pkmsvv.web.saveMode', mode); }

@@ -17,20 +17,20 @@ G.Royale=(()=>{
   const map=new Map(players.filter(Boolean).map(p=>[p.uid,p]));
   for(const m of roster){const p=map.get(m.uid);if((!p||p.dead)&&fallen[m.uid]===undefined)fallen[m.uid]=sec(time);}
   const alive=roster.filter(m=>{const p=map.get(m.uid);return p&&!p.dead;});
-  if(alive.length!==lastAlive){lastAlive=alive.length;if(G.UI&&G.UI.toast)G.UI.toast(L('Sinh tồn: còn ','Survival: ')+alive.length+'/'+roster.length+L(' người',' alive'),1700);}
+  if(alive.length!==lastAlive){lastAlive=alive.length;if(G.UI&&G.UI.toast)G.UI.toast(L('Sống Còn: còn ','Survival: ')+alive.length+'/'+roster.length+L(' người',' alive'),1700);}
   if(alive.length>1)return false;
   outcome=results(players,time);callback(outcome);return true;
  }
  function finish(r){if(r&&Array.isArray(r.standings)){outcome=r;active=true;}}
  function html(r){
   if(!r||!Array.isArray(r.standings))return '';
-  return '<div style="grid-column:1/-1;line-height:1.6"><b class="gold">'+L('BẢNG XẾP HẠNG SINH TỒN','SURVIVAL RESULTS')+'</b>'+
+  return '<div style="grid-column:1/-1;line-height:1.6"><b class="gold">'+L('BẢNG XẾP HẠNG SỐNG CÒN','SURVIVAL RESULTS')+'</b>'+
   '<div style="font-size:12px;color:#dbe8fc">'+L('Điểm = giây sống sót × 10; người thắng +1.000. Trận beta chưa tính xếp hạng trực tuyến.','Score = seconds survived × 10; winner +1,000. Beta matches are not part of online rankings.')+'</div>'+
   r.standings.map((p,i)=>'<div style="display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #526589;padding:5px 0"><span>#'+(i+1)+' '+esc(p.name)+(p.win?' 🏆':'')+'</span><b>'+p.points+' '+L('điểm','pts')+'</b></div>').join('')+'</div>';
  }
  function draw(ctx,w,h,players){
   if(!active||!ctx)return;
-  const str=L('SINH TỒN','SURVIVAL')+'  '+players.filter(p=>p&&!p.dead).length+'/'+roster.length;
+  const str=L('SỐNG CÒN','SURVIVAL')+'  '+players.filter(p=>p&&!p.dead).length+'/'+roster.length;
   ctx.save();ctx.font='bold 14px sans-serif';ctx.textAlign='right';ctx.fillStyle='rgba(8,22,53,.86)';
   ctx.fillRect(Math.max(0,w-205),83,190,29);ctx.fillStyle='#ffe089';ctx.fillText(str,w-26,103);ctx.restore();
  }

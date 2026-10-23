@@ -3,7 +3,7 @@ G.MultiplayerUI=(()=>{
  const $=G.UI.$;
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
  const msg=(s,bad=false)=>{const el=$('pkmsvv-mp-message');el.textContent=s;el.style.color=bad?'#ffc4cb':'#d2e8ff';};
- const label=mode=>mode==='royale'?'🏆 Sinh tồn · 2–10':'🤝 Co-op · 2–4';
+ const label=mode=>mode==='royale'?'🏆 Sống Còn · 2–10':'🤝 Sống Sót · 2–4';
  const busy=()=>{if(!G.Social.room)return false;G.LobbyUI.open();return true;};
  async function create(mode,visibility){
   if(busy())return;
@@ -62,7 +62,7 @@ G.MultiplayerUI=(()=>{
  function refresh(){
   const r=G.Social.room;
   $('pkmsvv-existing-lobby').classList.toggle('hidden',!r);
-  $('pkmsvv-mp-current').textContent=r?'Bạn đang trong phòng '+(r.mode==='royale'?'Sinh tồn':'Co-op')+'.':'';
+  $('pkmsvv-mp-current').textContent=r?'Bạn đang trong phòng '+(r.mode==='royale'?'Sống Còn':'Sống Sót')+'.':'';
  }
  function open(){
   G.SocialUI.withNick(()=>{
