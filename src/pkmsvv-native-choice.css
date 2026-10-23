@@ -1,0 +1,9 @@
+/* Native-only entry, does not touch any existing save data. */
+.pkmsvv-native-choice{position:fixed;inset:0;z-index:12000;display:grid;place-items:center;padding:16px;background:#061923f5;color:#f6fffa}
+.pkmsvv-native-choice.hidden{display:none!important}
+.pkmsvv-native-choice-panel{width:min(470px,100%);max-height:88vh;overflow:auto;box-sizing:border-box;padding:23px;background:linear-gradient(150deg,#24646a,#103942);border:3px solid #ffe278;border-radius:14px;box-shadow:0 10px 45px #000b;text-align:center;font-family:"Segoe UI",sans-serif}
+.pkmsvv-native-choice-panel h2{margin:0 0 10px;color:#ffea83;font-size:clamp(21px,4vw,29px)}
+.pkmsvv-native-choice-panel p{margin:0 0 14px;color:#f8fffd;font-size:16px}
+.pkmsvv-native-choice-panel button{display:block;width:100%;min-height:48px;white-space:normal;margin:10px 0;padding:12px;font-size:16px}
+.pkmsvv-native-choice-panel small{display:block;text-align:left;margin-top:14px;line-height:1.6;font-size:12px;color:#e8f6f1}
+.pkmsvv-native-choice-panel button:focus-visible{outline:3px solid #fff;outline-offset:3px}
