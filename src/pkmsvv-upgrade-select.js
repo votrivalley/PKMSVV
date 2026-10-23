@@ -11,6 +11,19 @@ G.PKMSVVUpgradeChooser=(()=>{
   $('pkmsvv-upgrade-all-title').textContent=t('Nâng toàn đội','Team upgrades');
   $('pkmsvv-upgrade-all-desc').textContent=t('Tăng sức mạnh vĩnh viễn cho TẤT CẢ Pokémon.','Permanent bonuses for ALL Pokémon.');
   $('pkmsvv-upgrade-hint').textContent=t('Nâng cấp riêng và toàn đội được lưu độc lập; giữ nguyên các khoản đã mua.','Individual and team upgrades are stored separately; existing purchases are preserved.');
+  const guide=G.PKMSVVSkillTrack.guide(G.DB.save,en()?'en':'vi');
+  let panel=$('pkmsvv-skill-guide');
+  if(!panel){
+   panel=document.createElement('section');panel.id='pkmsvv-skill-guide';
+   panel.className='pkmsvv-skill-guide';panel.setAttribute('aria-label',t('Tiến trình kỹ năng','Skill unlock progress'));
+   $('pkmsvv-upgrade-hint').insertAdjacentElement('afterend',panel);
+  }
+  panel.replaceChildren();
+  const title=document.createElement('h3');title.textContent=guide.headline;
+  const note=document.createElement('p');note.textContent=guide.note;
+  const list=document.createElement('div');list.className='pkmsvv-skill-guide-grid';
+  for(const line of guide.lines){const item=document.createElement('div');item.textContent=line;list.append(item);}
+  panel.append(title,note,list);
   $('pkmsvv-upgrade-back').textContent=t('Trở về','Back');
   $('pkmsvv-upgrade-single').onclick=()=>{
    G.MenuUI.openUpgrades();

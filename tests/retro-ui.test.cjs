@@ -18,3 +18,9 @@ test('upgrade picker contains individual-only warning and separate preserved pat
  assert.match(chooser,/G\.GlobalPowerUI\.open\(\)/);
  assert.match(chooser,/CHỈ áp dụng cho một Pokémon/);
 });
+
+test('upgrade chooser displays permanent account skill milestones without unsafe HTML',()=>{
+ const s=read('src/pkmsvv-upgrade-select.js'),css=read('src/pkmsvv-retro-theme.css');
+ assert.match(s,/PKMSVVSkillTrack\.guide/);assert.match(s,/panel\.replaceChildren/);
+ assert.match(css,/pkmsvv-skill-guide-grid/);
+});
