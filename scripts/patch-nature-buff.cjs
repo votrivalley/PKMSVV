@@ -11,8 +11,8 @@ patch("js/ui/menu.js","    const bar = (label, v, m, txt) =>\n      `<div class=
 patch("js/ui/menu.js","${bar('Vida', p.hp, max.hp, p.hp)}","${bar('Vida', p.hp, max.hp, p.hp, 'hp')}");
 patch("js/ui/menu.js","${bar('Ataque', p.pa, max.atk, '×' + p.pa.toFixed(2))}","${bar('Ataque', p.pa, max.atk, '×' + p.pa.toFixed(2), 'pa')}");
 patch("js/ui/menu.js","${bar('At. Esp.', p.sa, max.atk, '×' + p.sa.toFixed(2))}","${bar('At. Esp.', p.sa, max.atk, '×' + p.sa.toFixed(2), 'sa')}");
-patch("js/ui/menu.js","${bar('Defensa', p.df, max.def, p.df)}","${bar('Defensa', p.df, max.def, p.df, 'df')}");
-patch("js/ui/menu.js","${bar('Def. Esp.', p.sd, max.def, p.sd)}","${bar('Def. Esp.', p.sd, max.def, p.sd, 'sd')}");
-patch("js/ui/menu.js","${bar('Velocidad', p.spd, max.spd, p.spd)}","${bar('Velocidad', p.spd, max.spd, p.spd, 'spd')}");
+patch("js/ui/menu.js","${bar('Defensa', p.df, max.def, p.df)}","${bar('Defensa', p.df, max.def, Math.round(p.df), 'df')}");
+patch("js/ui/menu.js","${bar('Def. Esp.', p.sd, max.def, p.sd)}","${bar('Def. Esp.', p.sd, max.def, Math.round(p.sd), 'sd')}");
+patch("js/ui/menu.js","${bar('Velocidad', p.spd, max.spd, p.spd)}","${bar('Velocidad', p.spd, max.spd, Math.round(p.spd), 'spd')}");
 fs.appendFileSync(path.join(game,'css','style.css'),'\n/* Nature stat badges reflect the effective values used in-game. */\n.pkmsvv-nature-up{color:#76f8b8;font-size:11px;font-weight:800;white-space:nowrap}\n.pkmsvv-nature-down{color:#ffa49a;font-size:11px;font-weight:800;white-space:nowrap}\n#dex-detail .stat>span:last-child{white-space:nowrap;min-width:max-content}\n','utf8');
 console.log('PKMSVV: full ON/OFF buff rings + nature-adjusted Pokédex stats');
