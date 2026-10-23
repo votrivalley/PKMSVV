@@ -11,8 +11,8 @@ test('Pokédex partner button appears before stats and is not duplicated',()=>{
  const stat=s.indexOf("bar('Vida'",title);
  assert.ok(title>=0&&pos>title&&stat>pos);
  assert.equal(s.match(/id="dex-pick"/g)?.length,1);
- assert.match(s,/Đồng hành/);
- assert.match(s,/Chọn đồng hành/);
+ assert.match(s,/Chọn Pokémon/);
+ assert.doesNotMatch(s,/Chọn đồng hành/);
 });
 test('Save shortcut appears between sound and fullscreen and reuses save JSON',()=>{
  if(!fs.existsSync(path.join(base,'index.html')))return;

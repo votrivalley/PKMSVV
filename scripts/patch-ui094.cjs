@@ -22,7 +22,7 @@ modify('js/ui/menu.js',s=>{
   const anchor="      ${own ? `\n        ${bar('Vida'";
   if(s.split(anchor).length!==2)throw Error('UI094: header placement anchor missing');
   return s.replace(anchor,"      ${own ? `\n        <div class=\"pkmsvv-dex-action\">\n"+
-    action.replace('Es tu compañero','Đồng hành').replace('Elegir de compañero','Chọn đồng hành')+
+    action.replace('Es tu compañero','Chọn Pokémon').replace('Elegir de compañero','Chọn Pokémon')+
     "\n        </div>\n        ${bar('Vida'");
 });
 modify('dev.html',s=>replaceOnce(s,
