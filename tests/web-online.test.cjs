@@ -61,7 +61,7 @@ test('installed home-screen icon launches mode picker and can enter offline/full
  assert.match(build,/manifest\.start_url='\.\/'/);
  assert.match(build,/manifest\.scope='\.\/'/);
  assert.match(build,/manifest\.icons=/);
- assert.match(build,/href=\\"\.\.\/manifest\.webmanifest\\"/);
+ assert.ok(build.includes('href="../manifest.webmanifest"'));
  assert.match(build,/patch-web-entry-ui\.cjs/);
  const patch=fs.readFileSync(path.join(root,'scripts/patch-web-entry-ui.cjs'),'utf8');
  assert.match(patch,/pkmsvv-login-offline/);
