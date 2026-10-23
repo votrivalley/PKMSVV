@@ -549,6 +549,7 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-keybind-title.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-double-items.cjs')],{cwd:project,stdio:'inherit'});
 // Unified high-contrast retro UI shared by Web, Windows and Android.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-retro-ui.cjs')],{cwd:project,stdio:'inherit'});
+execFileSync(process.execPath,[path.join(project,'scripts','patch-skill-track.cjs')],{cwd:project,stdio:'inherit'});
 execFileSync(process.execPath, [path.join(game, 'tools', 'build.js'), '--sin-seo', '--expose'], { cwd: game, stdio: 'inherit' });
 
 const indexPath = path.join(game, 'index.html');

@@ -12,8 +12,8 @@ test('every learned ability independently advances its cooldown',()=>{
  assert.ok(Math.abs(a.t-1.0)<1e-8);
  assert.ok(Math.abs(b.t-2.0)<1e-8);
 });
-test('skill bar shows AUTO and slot cap expands after rifts',()=>{
- assert.match(read('js/entities/player.js'),/this\.maxMoves = 6;/);
+test('skill bar shows AUTO and uses the permanent account slot cap',()=>{
+ assert.match(read('js/entities/player.js'),/this\.maxMoves = G\.PKMSVVSkillTrack\.progress\(G\.DB\.save\)\.count/);
  assert.match(read('js/ui/hud.js'),/ctx\.fillText\('AUTO'/);
  assert.match(read('js/systems/rift.js'),/G\.PKMSVVBalance\.rewardRift\(pl\)/);
  assert.doesNotMatch(read('js/game.js'),/G\.Input\.tap\('keyq'\)\) pl\.cycle/);

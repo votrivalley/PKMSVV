@@ -68,7 +68,7 @@ G.PKMSVVBalance = (() => {
   // team resonance instead, while retaining bonus slots and a little haste.
   function rewardRift(pl) {
     if (!pl) return {stacks:0,slots:0};
-    pl.maxMoves = Math.min(8, pl.maxMoves + 1);
+    // Rift resonance buffs remain; slot capacity is controlled by permanent account milestones.
     pl.cdMul *= 0.96;
     const before = Math.min(3, Math.max(0, pl.pkmsvvResonance || 0));
     pl.pkmsvvResonance = Math.min(3, before + 1);

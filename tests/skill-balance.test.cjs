@@ -66,7 +66,7 @@ test('survival retune keeps opening attacks responsive and buff downtime short',
 test('legendary rifts add capped team resonance without requiring manual slot fusion',()=>{
  const G=load(),p={atkMul:1,cdMul:1,maxMoves:6};
  for(let i=0;i<5;i++)G.PKMSVVBalance.rewardRift(p);
- assert.equal(p.maxMoves,8);
+ assert.equal(p.maxMoves,6);
  assert.equal(p.pkmsvvResonance,3);
  assert.ok(Math.abs(p.atkMul-Math.pow(1.08,3))<1e-9);
  assert.ok(Math.abs(p.cdMul-Math.pow(.96,5))<1e-9);
