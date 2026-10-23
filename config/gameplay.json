@@ -1,0 +1,21 @@
+{
+  "_description": "RVT Balanced v1.2 accessibility retune: fewer/lighter mobs through 10 min, no 03:00 cliff; preserves earned upgrades and saves.",
+  "player": {
+    "hpMultiplier": 1.15,
+    "damageMultiplier": 1.1,
+    "speedMultiplier": 1.05
+  },
+  "enemies": {
+    "maxAlive": 60,
+    "density": 0.24,
+    "damageMultiplier": 1.5,
+    "xpMultiplier": 6.4
+  },
+  "progression": {
+    "startingCoins": 750
+  },
+  "shiny": {
+    "wildDenominator": 2048,
+    "gachaDenominator": 90
+  }
+}

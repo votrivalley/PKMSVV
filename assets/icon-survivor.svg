@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+<defs>
+ <radialGradient id="bg"><stop stop-color="#153c90"/><stop offset=".65" stop-color="#071d53"/><stop offset="1" stop-color="#030e27"/></radialGradient>
+ <linearGradient id="red" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ff8772"/><stop offset=".35" stop-color="#f3321b"/><stop offset="1" stop-color="#a70612"/></linearGradient>
+ <linearGradient id="white" x1="0" y1="0" x2=".2" y2="1"><stop stop-color="#fdfefe"/><stop offset="1" stop-color="#adcfe8"/></linearGradient>
+ <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fffc91"/><stop offset=".42" stop-color="#ffbd31"/><stop offset=".85" stop-color="#ff7206"/><stop offset="1" stop-color="#eb4e09"/></linearGradient>
+ <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="14"/></filter>
+</defs>
+<rect width="512" height="512" rx="91" fill="url(#bg)"/>
+<g stroke="#19beff" stroke-width="9" fill="none" filter="url(#glow)" opacity=".75">
+<path d="M45 70 85 131 46 181 90 220M461 49 416 99 469 161 435 197M41 382 85 354 75 314M474 404 433 354 468 323"/>
+</g>
+<rect x="9" y="9" width="494" height="494" rx="84" fill="none" stroke="#27dcff" stroke-width="9"/>
+<g transform="translate(0,-24)">
+ <circle cx="256" cy="240" r="181" fill="#061126" stroke="#061328" stroke-width="13"/>
+ <path d="M75 240 A181 181 0 0 1 437 240 Z" fill="url(#red)"/>
+ <path d="M75 240 A181 181 0 0 0 437 240 Z" fill="url(#white)"/>
+ <path d="M77 240H435" stroke="#081329" stroke-width="35"/>
+ <ellipse cx="176" cy="115" rx="50" ry="21" transform="rotate(-25 176 115)" fill="#fff" opacity=".45"/>
+ <ellipse cx="377" cy="120" rx="25" ry="14" transform="rotate(-27 377 120)" fill="#fff" opacity=".63"/>
+ <circle cx="256" cy="240" r="67" fill="#09142b" stroke="#010813" stroke-width="6"/>
+ <circle cx="256" cy="240" r="47" fill="#e1f1fc" stroke="#7897b4" stroke-width="8"/>
+ <circle cx="256" cy="240" r="30" fill="url(#white)" stroke="#fff" stroke-width="3"/>
+</g>
+<g font-family="Arial Black,Arial,sans-serif" font-weight="1000" font-size="79" letter-spacing="-3" text-anchor="middle">
+ <text x="257" y="455" stroke="#020b24" stroke-width="29" stroke-linejoin="round" fill="#020b24">Survivor</text>
+ <text x="257" y="455" stroke="#edf8ff" stroke-width="21" stroke-linejoin="round" fill="#edf8ff">Survivor</text>
+ <text x="257" y="455" stroke="#003986" stroke-width="12" stroke-linejoin="round" fill="#003986">Survivor</text>
+ <text x="257" y="455" fill="url(#gold)">Survivor</text>
+</g>
+</svg>

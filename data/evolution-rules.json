@@ -1,0 +1,2775 @@
+{
+ "_source": "PokeAPI/pokeapi data/v2/csv + JPTER78/pokesurvivor at 11fe868c640b62ac37beacc222e056bc4d9ec892",
+ "_note": "Conditional special evolutions are adapted for PKMSVV solo offline; no forms or Mega evolution.",
+ "rules": [
+  {
+   "from": 1,
+   "to": 2,
+   "trigger": "1",
+   "level": 16
+  },
+  {
+   "from": 2,
+   "to": 3,
+   "trigger": "1",
+   "level": 32
+  },
+  {
+   "from": 4,
+   "to": 5,
+   "trigger": "1",
+   "level": 16
+  },
+  {
+   "from": 5,
+   "to": 6,
+   "trigger": "1",
+   "level": 36
+  },
+  {
+   "from": 7,
+   "to": 8,
+   "trigger": "1",
+   "level": 16
+  },
+  {
+   "from": 8,
+   "to": 9,
+   "trigger": "1",
+   "level": 36
+  },
+  {
+   "from": 10,
+   "to": 11,
+   "trigger": "1",
+   "level": 7
+  },
+  {
+   "from": 11,
+   "to": 12,
+   "trigger": "1",
+   "level": 10
+  },
+  {
+   "from": 13,
+   "to": 14,
+   "trigger": "1",
+   "level": 7
+  },
+  {
+   "from": 14,
+   "to": 15,
+   "trigger": "1",
+   "level": 10
+  },
+  {
+   "from": 16,
+   "to": 17,
+   "trigger": "1",
+   "level": 18
+  },
+  {
+   "from": 17,
+   "to": 18,
+   "trigger": "1",
+   "level": 36
+  },
+  {
+   "from": 19,
+   "to": 20,
+   "trigger": "1",
+   "level": 20
+  },
+  {
+   "from": 21,
+   "to": 22,
+   "trigger": "1",
+   "level": 20
+  },
+  {
+   "from": 23,
+   "to": 24,
+   "trigger": "1",
+   "level": 22
+  },
+  {
+   "from": 25,
+   "to": 26,
+   "trigger": "3",
+   "item": "thunder-stone"
+  },
+  {
+   "from": 27,
+   "to": 28,
+   "trigger": "1",
+   "level": 22
+  },
+  {
+   "from": 29,
+   "to": 30,
+   "trigger": "1",
+   "level": 16
+  },
+  {
+   "from": 30,
+   "to": 31,
+   "trigger": "3",
+   "item": "moon-stone"
+  },
+  {
+   "from": 32,
+   "to": 33,
+   "trigger": "1",
+   "level": 16
+  },
+  {
+   "from": 33,
+   "to": 34,
+   "trigger": "3",
+   "item": "moon-stone"
+  },
+  {
+   "from": 35,
+   "to": 36,
+   "trigger": "3",
+   "item": "moon-stone"
+  },
+  {
+   "from": 37,
+   "to": 38,
+   "trigger": "3",
+   "item": "fire-stone"
+  },
+  {
+   "from": 39,
+   "to": 40,
+   "trigger": "3",
+   "item": "moon-stone"
+  },
+  {
+   "from": 41,
+   "to": 42,
+   "trigger": "1",
+   "level": 22
+  },
+  {
+   "from": 42,
+   "to": 169,
+   "trigger": "1",
+   "friendship": 160
+  },
+  {
+   "from": 43,
+   "to": 44,
+   "trigger": "1",
+   "level": 21
+  },
+  {
+   "from": 44,
+   "to": 45,
+   "trigger": "3",
+   "item": "leaf-stone"
+  },
+  {
+   "from": 44,
+   "to": 182,
+   "trigger": "3",
+   "item": "sun-stone"
+  },
+  {
+   "from": 46,
+   "to": 47,
+   "trigger": "1",
+   "level": 24
+  },
+  {
+   "from": 48,
+   "to": 49,
+   "trigger": "1",
+   "level": 31
+  },
+  {
+   "from": 50,
+   "to": 51,
+   "trigger": "1",
+   "level": 26
+  },
+  {
+   "from": 52,
+   "to": 53,
+   "trigger": "1",
+   "level": 28
+  },
+  {
+   "from": 52,
+   "to": 863,
+   "trigger": "1",
+   "level": 28
+  },
+  {
+   "from": 54,
+   "to": 55,
+   "trigger": "1",
+   "level": 33
+  },
+  {
+   "from": 56,
+   "to": 57,
+   "trigger": "1",
+   "level": 28
+  },
+  {
+   "from": 57,
+   "to": 979,
+   "trigger": "14",
+   "usedMove": "rage-fist",
+   "moveCount": 20
+  },
+  {
+   "from": 58,
+   "to": 59,
+   "trigger": "3",
+   "item": "fire-stone"
+  },
+  {
+   "from": 60,
+   "to": 61,
+   "trigger": "1",
+   "level": 25
+  },
+  {
+   "from": 61,
+   "to": 62,
+   "trigger": "3",
+   "item": "water-stone"
+  },
+  {
+   "from": 61,
+   "to": 186,
+   "trigger": "2",
+   "held": "kings-rock"
+  },
+  {
+   "from": 63,
+   "to": 64,
+   "trigger": "1",
+   "level": 16
+  },
+  {
+   "from": 64,
+   "to": 65,
+   "trigger": "2"
+  },
+  {
+   "from": 66,
+   "to": 67,
+   "trigger": "1",
+   "level": 28
+  },
+  {
+   "from": 67,
+   "to": 68,
+   "trigger": "2"
+  },
+  {
+   "from": 69,
+   "to": 70,
+   "trigger": "1",
+   "level": 21
+  },
+  {
+   "from": 70,
+   "to": 71,
+   "trigger": "3",
+   "item": "leaf-stone"
+  },
+  {
+   "from": 72,
+   "to": 73,
+   "trigger": "1",
+   "level": 30
+  },
+  {
+   "from": 74,
+   "to": 75,
+   "trigger": "1",
+   "level": 25
+  },
+  {
+   "from": 75,
+   "to": 76,
+   "trigger": "2"
+  },
+  {
+   "from": 77,
+   "to": 78,
+   "trigger": "1",
+   "level": 40
+  },
+  {
+   "from": 79,
+   "to": 80,
+   "trigger": "1",
+   "level": 37
+  },
+  {
+   "from": 79,
+   "to": 199,
+   "trigger": "2",
+   "held": "kings-rock"
+  },
+  {
+   "from": 81,
+   "to": 82,
+   "trigger": "1",
+   "level": 30
+  },
+  {
+   "from": 82,
+   "to": 462,
+   "trigger": "3",
+   "item": "thunder-stone"
+  },
+  {
+   "from": 84,
+   "to": 85,
+   "trigger": "1",
+   "level": 31
+  },
+  {
+   "from": 86,
+   "to": 87,
+   "trigger": "1",
+   "level": 34
+  },
+  {
+   "from": 88,
+   "to": 89,
+   "trigger": "1",
+   "level": 38
+  },
+  {
+   "from": 90,
+   "to": 91,
+   "trigger": "3",
+   "item": "water-stone"
+  },
+  {
+   "from": 92,
+   "to": 93,
+   "trigger": "1",
+   "level": 25
+  },
+  {
+   "from": 93,
+   "to": 94,
+   "trigger": "2"
+  },
+  {
+   "from": 95,
+   "to": 208,
+   "trigger": "2",
+   "held": "metal-coat"
+  },
+  {
+   "from": 96,
+   "to": 97,
+   "trigger": "1",
+   "level": 26
+  },
+  {
+   "from": 98,
+   "to": 99,
+   "trigger": "1",
+   "level": 28
+  },
+  {
+   "from": 100,
+   "to": 101,
+   "trigger": "1",
+   "level": 30
+  },
+  {
+   "from": 102,
+   "to": 103,
+   "trigger": "3",
+   "item": "leaf-stone"
+  },
+  {
+   "from": 104,
+   "to": 105,
+   "trigger": "1",
+   "level": 28
+  },
+  {
+   "from": 108,
+   "to": 463,
+   "trigger": "1",
+   "knownMove": "rollout"
+  },
+  {
+   "from": 109,
+   "to": 110,
+   "trigger": "1",
+   "level": 35
+  },
+  {
+   "from": 111,
+   "to": 112,
+   "trigger": "1",
+   "level": 42
+  },
+  {
+   "from": 112,
+   "to": 464,
+   "trigger": "2",
+   "held": "protector"
+  },
+  {
+   "from": 113,
+   "to": 242,
+   "trigger": "1",
+   "friendship": 160
+  },
+  {
+   "from": 114,
+   "to": 465,
+   "trigger": "1",
+   "knownMove": "ancient-power"
+  },
+  {
+   "from": 116,
+   "to": 117,
+   "trigger": "1",
+   "level": 32
+  },
+  {
+   "from": 117,
+   "to": 230,
+   "trigger": "2",
+   "held": "dragon-scale"
+  },
+  {
+   "from": 118,
+   "to": 119,
+   "trigger": "1",
+   "level": 33
+  },
+  {
+   "from": 120,
+   "to": 121,
+   "trigger": "3",
+   "item": "water-stone"
+  },
+  {
+   "from": 123,
+   "to": 212,
+   "trigger": "2",
+   "held": "metal-coat"
+  },
+  {
+   "from": 123,
+   "to": 900,
+   "trigger": "3",
+   "item": "black-augurite"
+  },
+  {
+   "from": 125,
+   "to": 466,
+   "trigger": "2",
+   "held": "electirizer"
+  },
+  {
+   "from": 126,
+   "to": 467,
+   "trigger": "2",
+   "held": "magmarizer"
+  },
+  {
+   "from": 129,
+   "to": 130,
+   "trigger": "1",
+   "level": 20
+  },
+  {
+   "from": 133,
+   "to": 134,
+   "trigger": "3",
+   "item": "water-stone"
+  },
+  {
+   "from": 133,
+   "to": 135,
+   "trigger": "3",
+   "item": "thunder-stone"
+  },
+  {
+   "from": 133,
+   "to": 136,
+   "trigger": "3",
+   "item": "fire-stone"
+  },
+  {
+   "from": 133,
+   "to": 196,
+   "trigger": "1",
+   "friendship": 160,
+   "time": "day"
+  },
+  {
+   "from": 133,
+   "to": 197,
+   "trigger": "1",
+   "friendship": 160,
+   "time": "night"
+  },
+  {
+   "from": 133,
+   "to": 470,
+   "trigger": "3",
+   "item": "leaf-stone"
+  },
+  {
+   "from": 133,
+   "to": 471,
+   "trigger": "3",
+   "item": "ice-stone"
+  },
+  {
+   "from": 133,
+   "to": 700,
+   "trigger": "1",
+   "friendship": 160,
+   "knownType": "fairy"
+  },
+  {
+   "from": 137,
+   "to": 233,
+   "trigger": "2",
+   "held": "up-grade"
+  },
+  {
+   "from": 138,
+   "to": 139,
+   "trigger": "1",
+   "level": 40
+  },
+  {
+   "from": 140,
+   "to": 141,
+   "trigger": "1",
+   "level": 40
+  },
+  {
+   "from": 147,
+   "to": 148,
+   "trigger": "1",
+   "level": 30
+  },
+  {
+   "from": 148,
+   "to": 149,
+   "trigger": "1",
+   "level": 55
+  },
+  {
+   "from": 152,
+   "to": 153,
+   "trigger": "1",
+   "level": 16
+  },
+  {
+   "from": 153,
+   "to": 154,
+   "trigger": "1",
+   "level": 32
+  },
+  {
+   "from": 155,
+   "to": 156,
+   "trigger": "1",
+   "level": 14
+  },
+  {
+   "from": 156,
+   "to": 157,
+   "trigger": "1",
+   "level": 36
+  },
+  {
+   "from": 158,
+   "to": 159,
+   "trigger": "1",
+   "level": 18
+  },
+  {
+   "from": 159,
+   "to": 160,
+   "trigger": "1",
+   "level": 30
+  },
+  {
+   "from": 161,
+   "to": 162,
+   "trigger": "1",
+   "level": 15
+  },
+  {
+   "from": 163,
+   "to": 164,
+   "trigger": "1",
+   "level": 20
+  },
+  {
+   "from": 165,
+   "to": 166,
+   "trigger": "1",
+   "level": 18
+  },
+  {
+   "from": 167,
+   "to": 168,
+   "trigger": "1",
+   "level": 22
+  },
+  {
+   "from": 170,
+   "to": 171,
+   "trigger": "1",
+   "level": 27
+  },
+  {
+   "from": 172,
+   "to": 25,
+   "trigger": "1",
+   "friendship": 220
+  },
+  {
+   "from": 173,
+   "to": 35,
+   "trigger": "1",
+   "friendship": 160
+  },
+  {
+   "from": 174,
+   "to": 39,
+   "trigger": "1",
+   "friendship": 160
+  },
+  {
+   "from": 175,
+   "to": 176,
+   "trigger": "1",
+   "friendship": 160
+  },
+  {
+   "from": 176,
+   "to": 468,
+   "trigger": "3",
+   "item": "shiny-stone"
+  },
+  {
+   "from": 177,
+   "to": 178,
+   "trigger": "1",
+   "level": 25
+  },
+  {
+   "from": 179,
+   "to": 180,
+   "trigger": "1",
+   "level": 15
+  },
+  {
+   "from": 180,
+   "to": 181,
+   "trigger": "1",
+   "level": 30
+  },
+  {
+   "from": 183,
+   "to": 184,
+   "trigger": "1",
+   "level": 18
+  },
+  {
+   "from": 187,
+   "to": 188,
+   "trigger": "1",
+   "level": 18
+  },
+  {
+   "from": 188,
+   "to": 189,
+   "trigger": "1",
+   "level": 27
+  },
+  {
+   "from": 190,
+   "to": 424,
+   "trigger": "1",
+   "knownMove": "double-hit"
+  },
+  {
+   "from": 191,
+   "to": 192,
+   "trigger": "3",
+   "item": "sun-stone"
+  },
+  {
+   "from": 193,
+   "to": 469,
+   "trigger": "1",
+   "knownMove": "ancient-power"
+  },
+  {
+   "from": 194,
+   "to": 195,
+   "trigger": "1",
+   "level": 20
+  },
+  {
+   "from": 194,
+   "to": 980,
+   "trigger": "1",
+   "level": 20
+  },
+  {
+   "from": 198,
+   "to": 430,
+   "trigger": "3",
+   "item": "dusk-stone"
+  },
+  {
+   "from": 200,
+   "to": 429,
+   "trigger": "3",
+   "item": "dusk-stone"
+  },
+  {
+   "from": 203,
+   "to": 981,
+   "trigger": "1",
+   "knownMove": "twin-beam"
+  },
+  {
+   "from": 204,
+   "to": 205,
+   "trigger": "1",
+   "level": 31
+  },
+  {
+   "from": 206,
+   "to": 982,
+   "trigger": "1",
+   "knownMove": "hyper-drill",
+   "expression": "EC 100 % 0 !=",
+   "chance": 99
+  },
+  {
+   "from": 207,
+   "to": 472,
+   "trigger": "1",
+   "held": "razor-fang",
+   "time": "night"
+  },
+  {
+   "from": 209,
+   "to": 210,
+   "trigger": "1",
+   "level": 23
+  },
+  {
+   "from": 211,
+   "to": 904,
+   "trigger": "1",
+   "knownMove": "barb-barrage"
+  },
+  {
+   "from": 215,
+   "to": 461,
+   "trigger": "1",
+   "held": "razor-claw",
+   "time": "night"
+  },
+  {
+   "from": 215,
+   "to": 903,
+   "trigger": "1",
+   "held": "razor-claw",
+   "time": "day"
+  },
+  {
+   "from": 216,
+   "to": 217,
+   "trigger": "1",
+   "level": 30
+  },
+  {
+   "from": 217,
+   "to": 901,
+   "trigger": "3",
+   "item": "peat-block",
+   "time": "full-moon"
+  },
+  {
+   "from": 218,
+   "to": 219,
+   "trigger": "1",
+   "level": 38
+  },
+  {
+   "from": 220,
+   "to": 221,
+   "trigger": "1",
+   "level": 33
+  },
+  {
+   "from": 221,
+   "to": 473,
+   "trigger": "1",
+   "knownMove": "ancient-power"
+  },
+  {
+   "from": 222,
+   "to": 864,
+   "trigger": "1",
+   "level": 38
+  },
+  {
+   "from": 223,
+   "to": 224,
+   "trigger": "1",
+   "level": 25
+  },
+  {
+   "from": 228,
+   "to": 229,
+   "trigger": "1",
+   "level": 24
+  },
+  {
+   "from": 231,
+   "to": 232,
+   "trigger": "1",
+   "level": 25
+  },
+  {
+   "from": 233,
+   "to": 474,
+   "trigger": "2",
+   "held": "dubious-disc"
+  },
+  {
+   "from": 234,
+   "to": 899,
+   "trigger": "11",
+   "usedMove": "psyshield-bash",
+   "moveCount": 20
+  },
+  {
+   "from": 236,
+   "to": 106,
+   "trigger": "1",
+   "level": 20,
+   "stat": 1
+  },
+  {
+   "from": 236,
+   "to": 107,
+   "trigger": "1",
+   "level": 20,
+   "stat": -1
+  },
+  {
+   "from": 236,
+   "to": 237,
+   "trigger": "1",
+   "level": 20,
+   "stat": 0
+  },
+  {
+   "from": 238,
+   "to": 124,
+   "trigger": "1",
+   "level": 30
+  },
+  {
+   "from": 239,
+   "to": 125,
+   "trigger": "1",
+   "level": 30
+  },
+  {
+   "from": 240,
+   "to": 126,
+   "trigger": "1",
+   "level": 30
+  },
+  {
+   "from": 246,
+   "to": 247,
+   "trigger": "1",
+   "level": 30
+  },
+  {
+   "from": 247,
+   "to": 248,
+   "trigger": "1",
+   "level": 55
+  },
+  {
+   "from": 252,
+   "to": 253,
+   "trigger": "1",
+   "level": 16
+  },
+  {
+   "from": 253,
+   "to": 254,
+   "trigger": "1",
+   "level": 36
+  },
+  {
+   "from": 255,
+   "to": 256,
+   "trigger": "1",
+   "level": 16
+  },
+  {
+   "from": 256,
+   "to": 257,
+   "trigger": "1",
+   "level": 36
+  },
+  {
+   "from": 258,
+   "to": 259,
+   "trigger": "1",
+   "level": 16
+  },
+  {
+   "from": 259,
+   "to": 260,
+   "trigger": "1",
+   "level": 36
+  },
+  {
+   "from": 261,
+   "to": 262,
+   "trigger": "1",
+   "level": 18
+  },
+  {
+   "from": 263,
+   "to": 264,
+   "trigger": "1",
+   "level": 20
+  },
+  {
+   "from": 264,
+   "to": 862,
+   "trigger": "1",
+   "level": 35,
+   "time": "night"
+  },
+  {
+   "from": 265,
+   "to": 266,
+   "trigger": "1",
+   "level": 7,
+   "expression": "EC 16 >> 10 % 4 <=",
+   "chance": 50
+  },
+  {
+   "from": 265,
+   "to": 268,
+   "trigger": "1",
+   "level": 7,
+   "expression": "EC 16 >> 10 % 5 >=",
+   "chance": 50
+  },
+  {
+   "from": 266,
+   "to": 267,
+   "trigger": "1",
+   "level": 10
+  },
+  {
+   "from": 268,
+   "to": 269,
+   "trigger": "1",
+   "level": 10
+  },
+  {
+   "from": 270,
+   "to": 271,
+   "trigger": "1",
+   "level": 14
+  },
+  {
+   "from": 271,
+   "to": 272,
+   "trigger": "3",
+   "item": "water-stone"
+  },
+  {
+   "from": 273,
+   "to": 274,
+   "trigger": "1",
+   "level": 14
+  },
+  {
+   "from": 274,
+   "to": 275,
+   "trigger": "3",
+   "item": "leaf-stone"
+  },
+  {
+   "from": 276,
+   "to": 277,
+   "trigger": "1",
+   "level": 22
+  },
+  {
+   "from": 278,
+   "to": 279,
+   "trigger": "1",
+   "level": 25
+  },
+  {
+   "from": 280,
+   "to": 281,
+   "trigger": "1",
+   "level": 20
+  },
+  {
+   "from": 281,
+   "to": 282,
+   "trigger": "1",
+   "level": 30
+  },
+  {
+   "from": 281,
+   "to": 475,
+   "trigger": "3",
+   "item": "dawn-stone",
+   "gender": 2
+  },
+  {
+   "from": 283,
+   "to": 284,
+   "trigger": "1",
+   "level": 22
+  },
+  {
+   "from": 285,
+   "to": 286,
+   "trigger": "1",
+   "level": 23
+  },
+  {
+   "from": 287,
+   "to": 288,
+   "trigger": "1",
+   "level": 18
+  },
+  {
+   "from": 288,
+   "to": 289,
+   "trigger": "1",
+   "level": 36
+  },
+  {
+   "from": 290,
+   "to": 291,
+   "trigger": "1",
+   "level": 20
+  },
+  {
+   "from": 290,
+   "to": 292,
+   "trigger": "4",
+   "special": "shedinja"
+  },
+  {
+   "from": 293,
+   "to": 294,
+   "trigger": "1",
+   "level": 20
+  },
+  {
+   "from": 294,
+   "to": 295,
+   "trigger": "1",
+   "level": 40
+  },
+  {
+   "from": 296,
+   "to": 297,
+   "trigger": "1",
+   "level": 24
+  },
+  {
+   "from": 298,
+   "to": 183,
+   "trigger": "1",
+   "friendship": 160
+  },
+  {
+   "from": 299,
+   "to": 476,
+   "trigger": "3",
+   "item": "thunder-stone"
+  },
+  {
+   "from": 300,
+   "to": 301,
+   "trigger": "3",
+   "item": "moon-stone"
+  },
+  {
+   "from": 304,
+   "to": 305,
+   "trigger": "1",
+   "level": 32
+  },
+  {
+   "from": 305,
+   "to": 306,
+   "trigger": "1",
+   "level": 42
+  },
+  {
+   "from": 307,
+   "to": 308,
+   "trigger": "1",
+   "level": 37
+  },
+  {
+   "from": 309,
+   "to": 310,
+   "trigger": "1",
+   "level": 26
+  },
+  {
+   "from": 315,
+   "to": 407,
+   "trigger": "3",
+   "item": "shiny-stone"
+  },
+  {
+   "from": 316,
+   "to": 317,
+   "trigger": "1",
+   "level": 26
+  },
+  {
+   "from": 318,
+   "to": 319,
+   "trigger": "1",
+   "level": 30
+  },
+  {
+   "from": 320,
+   "to": 321,
+   "trigger": "1",
+   "level": 40
+  },
+  {
+   "from": 322,
+   "to": 323,
+   "trigger": "1",
+   "level": 33
+  },
+  {
+   "from": 325,
+   "to": 326,
+   "trigger": "1",
+   "level": 32
+  },
+  {
+   "from": 328,
+   "to": 329,
+   "trigger": "1",
+   "level": 35
+  },
+  {
+   "from": 329,
+   "to": 330,
+   "trigger": "1",
+   "level": 45
+  },
+  {
+   "from": 331,
+   "to": 332,
+   "trigger": "1",
+   "level": 32
+  },
+  {
+   "from": 333,
+   "to": 334,
+   "trigger": "1",
+   "level": 35
+  },
+  {
+   "from": 339,
+   "to": 340,
+   "trigger": "1",
+   "level": 30
+  },
+  {
+   "from": 341,
+   "to": 342,
+   "trigger": "1",
+   "level": 30
+  },
+  {
+   "from": 343,
+   "to": 344,
+   "trigger": "1",
+   "level": 36
+  },
+  {
+   "from": 345,
+   "to": 346,
+   "trigger": "1",
+   "level": 40
+  },
+  {
+   "from": 347,
+   "to": 348,
+   "trigger": "1",
+   "level": 40
+  },
+  {
+   "from": 349,
+   "to": 350,
+   "trigger": "2",
+   "held": "prism-scale"
+  },
+  {
+   "from": 353,
+   "to": 354,
+   "trigger": "1",
+   "level": 37
+  },
+  {
+   "from": 355,
+   "to": 356,
+   "trigger": "1",
+   "level": 37
+  },
+  {
+   "from": 356,
+   "to": 477,
+   "trigger": "2",
+   "held": "reaper-cloth"
+  },
+  {
+   "from": 360,
+   "to": 202,
+   "trigger": "1",
+   "level": 15
+  },
+  {
+   "from": 361,
+   "to": 362,
+   "trigger": "1",
+   "level": 42
+  },
+  {
+   "from": 361,
+   "to": 478,
+   "trigger": "3",
+   "item": "dawn-stone",
+   "gender": 1
+  },
+  {
+   "from": 363,
+   "to": 364,
+   "trigger": "1",
+   "level": 32
+  },
+  {
+   "from": 364,
+   "to": 365,
+   "trigger": "1",
+   "level": 44
+  },
+  {
+   "from": 366,
+   "to": 367,
+   "trigger": "2",
+   "held": "deep-sea-tooth"
+  },
+  {
+   "from": 366,
+   "to": 368,
+   "trigger": "2",
+   "held": "deep-sea-scale"
+  },
+  {
+   "from": 371,
+   "to": 372,
+   "trigger": "1",
+   "level": 30
+  },
+  {
+   "from": 372,
+   "to": 373,
+   "trigger": "1",
+   "level": 50
+  },
+  {
+   "from": 374,
+   "to": 375,
+   "trigger": "1",
+   "level": 20
+  },
+  {
+   "from": 375,
+   "to": 376,
+   "trigger": "1",
+   "level": 45
+  },
+  {
+   "from": 387,
+   "to": 388,
+   "trigger": "1",
+   "level": 18
+  },
+  {
+   "from": 388,
+   "to": 389,
+   "trigger": "1",
+   "level": 32
+  },
+  {
+   "from": 390,
+   "to": 391,
+   "trigger": "1",
+   "level": 14
+  },
+  {
+   "from": 391,
+   "to": 392,
+   "trigger": "1",
+   "level": 36
+  },
+  {
+   "from": 393,
+   "to": 394,
+   "trigger": "1",
+   "level": 16
+  },
+  {
+   "from": 394,
+   "to": 395,
+   "trigger": "1",
+   "level": 36
+  },
+  {
+   "from": 396,
+   "to": 397,
+   "trigger": "1",
+   "level": 14
+  },
+  {
+   "from": 397,
+   "to": 398,
+   "trigger": "1",
+   "level": 34
+  },
+  {
+   "from": 399,
+   "to": 400,
+   "trigger": "1",
+   "level": 15
+  },
+  {
+   "from": 401,
+   "to": 402,
+   "trigger": "1",
+   "level": 10
+  },
+  {
+   "from": 403,
+   "to": 404,
+   "trigger": "1",
+   "level": 15
+  },
+  {
+   "from": 404,
+   "to": 405,
+   "trigger": "1",
+   "level": 30
+  },
+  {
+   "from": 406,
+   "to": 315,
+   "trigger": "1",
+   "friendship": 160,
+   "time": "day"
+  },
+  {
+   "from": 408,
+   "to": 409,
+   "trigger": "1",
+   "level": 30
+  },
+  {
+   "from": 410,
+   "to": 411,
+   "trigger": "1",
+   "level": 30
+  },
+  {
+   "from": 412,
+   "to": 413,
+   "trigger": "1",
+   "level": 20,
+   "gender": 1
+  },
+  {
+   "from": 412,
+   "to": 414,
+   "trigger": "1",
+   "level": 20,
+   "gender": 2
+  },
+  {
+   "from": 415,
+   "to": 416,
+   "trigger": "1",
+   "level": 21,
+   "gender": 1
+  },
+  {
+   "from": 418,
+   "to": 419,
+   "trigger": "1",
+   "level": 26
+  },
+  {
+   "from": 420,
+   "to": 421,
+   "trigger": "1",
+   "level": 25
+  },
+  {
+   "from": 422,
+   "to": 423,
+   "trigger": "1",
+   "level": 30
+  },
+  {
+   "from": 425,
+   "to": 426,
+   "trigger": "1",
+   "level": 28
+  },
+  {
+   "from": 427,
+   "to": 428,
+   "trigger": "1",
+   "friendship": 160
+  },
+  {
+   "from": 431,
+   "to": 432,
+   "trigger": "1",
+   "level": 38
+  },
+  {
+   "from": 433,
+   "to": 358,
+   "trigger": "1",
+   "friendship": 220,
+   "time": "night"
+  },
+  {
+   "from": 434,
+   "to": 435,
+   "trigger": "1",
+   "level": 34
+  },
+  {
+   "from": 436,
+   "to": 437,
+   "trigger": "1",
+   "level": 33
+  },
+  {
+   "from": 438,
+   "to": 185,
+   "trigger": "1",
+   "knownMove": "mimic"
+  },
+  {
+   "from": 439,
+   "to": 122,
+   "trigger": "1",
+   "knownMove": "mimic"
+  },
+  {
+   "from": 440,
+   "to": 113,
+   "trigger": "1",
+   "held": "oval-stone",
+   "time": "day"
+  },
+  {
+   "from": 443,
+   "to": 444,
+   "trigger": "1",
+   "level": 24
+  },
+  {
+   "from": 444,
+   "to": 445,
+   "trigger": "1",
+   "level": 48
+  },
+  {
+   "from": 446,
+   "to": 143,
+   "trigger": "1",
+   "friendship": 160
+  },
+  {
+   "from": 447,
+   "to": 448,
+   "trigger": "1",
+   "friendship": 160,
+   "time": "day"
+  },
+  {
+   "from": 449,
+   "to": 450,
+   "trigger": "1",
+   "level": 34
+  },
+  {
+   "from": 451,
+   "to": 452,
+   "trigger": "1",
+   "level": 40
+  },
+  {
+   "from": 453,
+   "to": 454,
+   "trigger": "1",
+   "level": 37
+  },
+  {
+   "from": 456,
+   "to": 457,
+   "trigger": "1",
+   "level": 31
+  },
+  {
+   "from": 458,
+   "to": 226,
+   "trigger": "1",
+   "party": 223
+  },
+  {
+   "from": 459,
+   "to": 460,
+   "trigger": "1",
+   "level": 40
+  },
+  {
+   "from": 495,
+   "to": 496,
+   "trigger": "1",
+   "level": 17
+  },
+  {
+   "from": 496,
+   "to": 497,
+   "trigger": "1",
+   "level": 36
+  },
+  {
+   "from": 498,
+   "to": 499,
+   "trigger": "1",
+   "level": 17
+  },
+  {
+   "from": 499,
+   "to": 500,
+   "trigger": "1",
+   "level": 36
+  },
+  {
+   "from": 501,
+   "to": 502,
+   "trigger": "1",
+   "level": 17
+  },
+  {
+   "from": 502,
+   "to": 503,
+   "trigger": "1",
+   "level": 36
+  },
+  {
+   "from": 504,
+   "to": 505,
+   "trigger": "1",
+   "level": 20
+  },
+  {
+   "from": 506,
+   "to": 507,
+   "trigger": "1",
+   "level": 16
+  },
+  {
+   "from": 507,
+   "to": 508,
+   "trigger": "1",
+   "level": 32
+  },
+  {
+   "from": 509,
+   "to": 510,
+   "trigger": "1",
+   "level": 20
+  },
+  {
+   "from": 511,
+   "to": 512,
+   "trigger": "3",
+   "item": "leaf-stone"
+  },
+  {
+   "from": 517,
+   "to": 518,
+   "trigger": "3",
+   "item": "moon-stone"
+  },
+  {
+   "from": 524,
+   "to": 525,
+   "trigger": "1",
+   "level": 25
+  },
+  {
+   "from": 525,
+   "to": 526,
+   "trigger": "2"
+  },
+  {
+   "from": 527,
+   "to": 528,
+   "trigger": "1",
+   "friendship": 160
+  },
+  {
+   "from": 529,
+   "to": 530,
+   "trigger": "1",
+   "level": 31
+  },
+  {
+   "from": 532,
+   "to": 533,
+   "trigger": "1",
+   "level": 25
+  },
+  {
+   "from": 533,
+   "to": 534,
+   "trigger": "2"
+  },
+  {
+   "from": 535,
+   "to": 536,
+   "trigger": "1",
+   "level": 25
+  },
+  {
+   "from": 536,
+   "to": 537,
+   "trigger": "1",
+   "level": 36
+  },
+  {
+   "from": 540,
+   "to": 541,
+   "trigger": "1",
+   "level": 20
+  },
+  {
+   "from": 541,
+   "to": 542,
+   "trigger": "1",
+   "friendship": 220
+  },
+  {
+   "from": 543,
+   "to": 544,
+   "trigger": "1",
+   "level": 22
+  },
+  {
+   "from": 544,
+   "to": 545,
+   "trigger": "1",
+   "level": 30
+  },
+  {
+   "from": 546,
+   "to": 547,
+   "trigger": "3",
+   "item": "sun-stone"
+  },
+  {
+   "from": 548,
+   "to": 549,
+   "trigger": "3",
+   "item": "sun-stone"
+  },
+  {
+   "from": 550,
+   "to": 902,
+   "trigger": "13",
+   "gender": 2,
+   "damage": 294
+  },
+  {
+   "from": 551,
+   "to": 552,
+   "trigger": "1",
+   "level": 29
+  },
+  {
+   "from": 552,
+   "to": 553,
+   "trigger": "1",
+   "level": 40
+  },
+  {
+   "from": 554,
+   "to": 555,
+   "trigger": "1",
+   "level": 35
+  },
+  {
+   "from": 559,
+   "to": 560,
+   "trigger": "1",
+   "level": 39
+  },
+  {
+   "from": 562,
+   "to": 563,
+   "trigger": "1",
+   "level": 34
+  },
+  {
+   "from": 562,
+   "to": 867,
+   "trigger": "9",
+   "location": "dusty-bowl",
+   "damage": 49
+  },
+  {
+   "from": 566,
+   "to": 567,
+   "trigger": "1",
+   "level": 37
+  },
+  {
+   "from": 568,
+   "to": 569,
+   "trigger": "1",
+   "level": 36
+  },
+  {
+   "from": 570,
+   "to": 571,
+   "trigger": "1",
+   "level": 30
+  },
+  {
+   "from": 572,
+   "to": 573,
+   "trigger": "3",
+   "item": "shiny-stone"
+  },
+  {
+   "from": 574,
+   "to": 575,
+   "trigger": "1",
+   "level": 32
+  },
+  {
+   "from": 575,
+   "to": 576,
+   "trigger": "1",
+   "level": 41
+  },
+  {
+   "from": 577,
+   "to": 578,
+   "trigger": "1",
+   "level": 32
+  },
+  {
+   "from": 578,
+   "to": 579,
+   "trigger": "1",
+   "level": 41
+  },
+  {
+   "from": 580,
+   "to": 581,
+   "trigger": "1",
+   "level": 35
+  },
+  {
+   "from": 582,
+   "to": 583,
+   "trigger": "1",
+   "level": 35
+  },
+  {
+   "from": 583,
+   "to": 584,
+   "trigger": "1",
+   "level": 47
+  },
+  {
+   "from": 585,
+   "to": 586,
+   "trigger": "1",
+   "level": 34
+  },
+  {
+   "from": 588,
+   "to": 589,
+   "trigger": "2",
+   "tradeSpecies": 616
+  },
+  {
+   "from": 595,
+   "to": 596,
+   "trigger": "1",
+   "level": 36
+  },
+  {
+   "from": 597,
+   "to": 598,
+   "trigger": "1",
+   "level": 40
+  },
+  {
+   "from": 599,
+   "to": 600,
+   "trigger": "1",
+   "level": 38
+  },
+  {
+   "from": 600,
+   "to": 601,
+   "trigger": "1",
+   "level": 49
+  },
+  {
+   "from": 602,
+   "to": 603,
+   "trigger": "1",
+   "level": 39
+  },
+  {
+   "from": 603,
+   "to": 604,
+   "trigger": "3",
+   "item": "thunder-stone"
+  },
+  {
+   "from": 605,
+   "to": 606,
+   "trigger": "1",
+   "level": 42
+  },
+  {
+   "from": 607,
+   "to": 608,
+   "trigger": "1",
+   "level": 41
+  },
+  {
+   "from": 608,
+   "to": 609,
+   "trigger": "3",
+   "item": "dusk-stone"
+  },
+  {
+   "from": 610,
+   "to": 611,
+   "trigger": "1",
+   "level": 38
+  },
+  {
+   "from": 611,
+   "to": 612,
+   "trigger": "1",
+   "level": 48
+  },
+  {
+   "from": 613,
+   "to": 614,
+   "trigger": "1",
+   "level": 37
+  },
+  {
+   "from": 619,
+   "to": 620,
+   "trigger": "1",
+   "level": 50
+  },
+  {
+   "from": 622,
+   "to": 623,
+   "trigger": "1",
+   "level": 43
+  },
+  {
+   "from": 624,
+   "to": 625,
+   "trigger": "1",
+   "level": 52
+  },
+  {
+   "from": 625,
+   "to": 983,
+   "trigger": "15"
+  },
+  {
+   "from": 627,
+   "to": 628,
+   "trigger": "1",
+   "level": 54
+  },
+  {
+   "from": 629,
+   "to": 630,
+   "trigger": "1",
+   "level": 54
+  },
+  {
+   "from": 633,
+   "to": 634,
+   "trigger": "1",
+   "level": 50
+  },
+  {
+   "from": 634,
+   "to": 635,
+   "trigger": "1",
+   "level": 64
+  },
+  {
+   "from": 636,
+   "to": 637,
+   "trigger": "1",
+   "level": 59
+  },
+  {
+   "from": 650,
+   "to": 651,
+   "trigger": "1",
+   "level": 16
+  },
+  {
+   "from": 651,
+   "to": 652,
+   "trigger": "1",
+   "level": 36
+  },
+  {
+   "from": 653,
+   "to": 654,
+   "trigger": "1",
+   "level": 16
+  },
+  {
+   "from": 654,
+   "to": 655,
+   "trigger": "1",
+   "level": 36
+  },
+  {
+   "from": 656,
+   "to": 657,
+   "trigger": "1",
+   "level": 16
+  },
+  {
+   "from": 657,
+   "to": 658,
+   "trigger": "1",
+   "level": 36
+  },
+  {
+   "from": 659,
+   "to": 660,
+   "trigger": "1",
+   "level": 20
+  },
+  {
+   "from": 661,
+   "to": 662,
+   "trigger": "1",
+   "level": 17
+  },
+  {
+   "from": 662,
+   "to": 663,
+   "trigger": "1",
+   "level": 35
+  },
+  {
+   "from": 664,
+   "to": 665,
+   "trigger": "1",
+   "level": 9
+  },
+  {
+   "from": 665,
+   "to": 666,
+   "trigger": "1",
+   "level": 12
+  },
+  {
+   "from": 669,
+   "to": 670,
+   "trigger": "1",
+   "level": 19
+  },
+  {
+   "from": 670,
+   "to": 671,
+   "trigger": "3",
+   "item": "shiny-stone"
+  },
+  {
+   "from": 672,
+   "to": 673,
+   "trigger": "1",
+   "level": 32
+  },
+  {
+   "from": 674,
+   "to": 675,
+   "trigger": "1",
+   "level": 32,
+   "partyType": "dark"
+  },
+  {
+   "from": 677,
+   "to": 678,
+   "trigger": "1",
+   "level": 25,
+   "gender": 2
+  },
+  {
+   "from": 679,
+   "to": 680,
+   "trigger": "1",
+   "level": 35
+  },
+  {
+   "from": 680,
+   "to": 681,
+   "trigger": "3",
+   "item": "dusk-stone"
+  },
+  {
+   "from": 684,
+   "to": 685,
+   "trigger": "2",
+   "held": "whipped-dream"
+  },
+  {
+   "from": 686,
+   "to": 687,
+   "trigger": "1",
+   "level": 30,
+   "flip": true
+  },
+  {
+   "from": 688,
+   "to": 689,
+   "trigger": "1",
+   "level": 39
+  },
+  {
+   "from": 690,
+   "to": 691,
+   "trigger": "1",
+   "level": 48
+  },
+  {
+   "from": 692,
+   "to": 693,
+   "trigger": "1",
+   "level": 37
+  },
+  {
+   "from": 694,
+   "to": 695,
+   "trigger": "3",
+   "item": "sun-stone"
+  },
+  {
+   "from": 696,
+   "to": 697,
+   "trigger": "1",
+   "level": 39,
+   "time": "day"
+  },
+  {
+   "from": 698,
+   "to": 699,
+   "trigger": "1",
+   "level": 39,
+   "time": "night"
+  },
+  {
+   "from": 704,
+   "to": 705,
+   "trigger": "1",
+   "level": 40
+  },
+  {
+   "from": 705,
+   "to": 706,
+   "trigger": "1",
+   "level": 50,
+   "rain": true
+  },
+  {
+   "from": 708,
+   "to": 709,
+   "trigger": "2"
+  },
+  {
+   "from": 710,
+   "to": 711,
+   "trigger": "2"
+  },
+  {
+   "from": 712,
+   "to": 713,
+   "trigger": "1",
+   "level": 37
+  },
+  {
+   "from": 714,
+   "to": 715,
+   "trigger": "1",
+   "level": 48
+  },
+  {
+   "from": 722,
+   "to": 723,
+   "trigger": "1",
+   "level": 17
+  },
+  {
+   "from": 723,
+   "to": 724,
+   "trigger": "1",
+   "level": 34
+  },
+  {
+   "from": 725,
+   "to": 726,
+   "trigger": "1",
+   "level": 17
+  },
+  {
+   "from": 726,
+   "to": 727,
+   "trigger": "1",
+   "level": 34
+  },
+  {
+   "from": 728,
+   "to": 729,
+   "trigger": "1",
+   "level": 17
+  },
+  {
+   "from": 729,
+   "to": 730,
+   "trigger": "1",
+   "level": 34
+  },
+  {
+   "from": 736,
+   "to": 737,
+   "trigger": "1",
+   "level": 20
+  },
+  {
+   "from": 737,
+   "to": 738,
+   "trigger": "3",
+   "item": "thunder-stone"
+  },
+  {
+   "from": 739,
+   "to": 740,
+   "trigger": "3",
+   "item": "ice-stone"
+  },
+  {
+   "from": 742,
+   "to": 743,
+   "trigger": "1",
+   "level": 25
+  },
+  {
+   "from": 744,
+   "to": 745,
+   "trigger": "1",
+   "level": 25,
+   "time": "day"
+  },
+  {
+   "from": 747,
+   "to": 748,
+   "trigger": "1",
+   "level": 38
+  },
+  {
+   "from": 749,
+   "to": 750,
+   "trigger": "1",
+   "level": 30
+  },
+  {
+   "from": 751,
+   "to": 752,
+   "trigger": "1",
+   "level": 22
+  },
+  {
+   "from": 753,
+   "to": 754,
+   "trigger": "1",
+   "level": 34,
+   "time": "day"
+  },
+  {
+   "from": 757,
+   "to": 758,
+   "trigger": "1",
+   "level": 33,
+   "gender": 1
+  },
+  {
+   "from": 759,
+   "to": 760,
+   "trigger": "1",
+   "level": 27
+  },
+  {
+   "from": 761,
+   "to": 762,
+   "trigger": "1",
+   "level": 18
+  },
+  {
+   "from": 762,
+   "to": 763,
+   "trigger": "1",
+   "knownMove": "stomp"
+  },
+  {
+   "from": 767,
+   "to": 768,
+   "trigger": "1",
+   "level": 30
+  },
+  {
+   "from": 769,
+   "to": 770,
+   "trigger": "1",
+   "level": 42
+  },
+  {
+   "from": 772,
+   "to": 773,
+   "trigger": "1",
+   "friendship": 160
+  },
+  {
+   "from": 782,
+   "to": 783,
+   "trigger": "1",
+   "level": 35
+  },
+  {
+   "from": 783,
+   "to": 784,
+   "trigger": "1",
+   "level": 45
+  },
+  {
+   "from": 789,
+   "to": 790,
+   "trigger": "1",
+   "level": 43
+  },
+  {
+   "from": 790,
+   "to": 791,
+   "trigger": "1",
+   "level": 53
+  },
+  {
+   "from": 790,
+   "to": 792,
+   "trigger": "1",
+   "level": 53
+  },
+  {
+   "from": 803,
+   "to": 804,
+   "trigger": "1",
+   "knownMove": "dragon-pulse"
+  },
+  {
+   "from": 808,
+   "to": 809,
+   "trigger": "17",
+   "candy": 400
+  },
+  {
+   "from": 810,
+   "to": 811,
+   "trigger": "1",
+   "level": 16
+  },
+  {
+   "from": 811,
+   "to": 812,
+   "trigger": "1",
+   "level": 35
+  },
+  {
+   "from": 813,
+   "to": 814,
+   "trigger": "1",
+   "level": 16
+  },
+  {
+   "from": 814,
+   "to": 815,
+   "trigger": "1",
+   "level": 35
+  },
+  {
+   "from": 816,
+   "to": 817,
+   "trigger": "1",
+   "level": 16
+  },
+  {
+   "from": 817,
+   "to": 818,
+   "trigger": "1",
+   "level": 35
+  },
+  {
+   "from": 819,
+   "to": 820,
+   "trigger": "1",
+   "level": 24
+  },
+  {
+   "from": 821,
+   "to": 822,
+   "trigger": "1",
+   "level": 18
+  },
+  {
+   "from": 822,
+   "to": 823,
+   "trigger": "1",
+   "level": 38
+  },
+  {
+   "from": 824,
+   "to": 825,
+   "trigger": "1",
+   "level": 10
+  },
+  {
+   "from": 825,
+   "to": 826,
+   "trigger": "1",
+   "level": 30
+  },
+  {
+   "from": 827,
+   "to": 828,
+   "trigger": "1",
+   "level": 18
+  },
+  {
+   "from": 829,
+   "to": 830,
+   "trigger": "1",
+   "level": 20
+  },
+  {
+   "from": 831,
+   "to": 832,
+   "trigger": "1",
+   "level": 24
+  },
+  {
+   "from": 833,
+   "to": 834,
+   "trigger": "1",
+   "level": 22
+  },
+  {
+   "from": 835,
+   "to": 836,
+   "trigger": "1",
+   "level": 25
+  },
+  {
+   "from": 840,
+   "to": 841,
+   "trigger": "3",
+   "item": "tart-apple"
+  },
+  {
+   "from": 840,
+   "to": 842,
+   "trigger": "3",
+   "item": "sweet-apple"
+  },
+  {
+   "from": 840,
+   "to": 1011,
+   "trigger": "3",
+   "item": "syrupy-apple"
+  },
+  {
+   "from": 843,
+   "to": 844,
+   "trigger": "1",
+   "level": 36
+  },
+  {
+   "from": 846,
+   "to": 847,
+   "trigger": "1",
+   "level": 26
+  },
+  {
+   "from": 848,
+   "to": 849,
+   "trigger": "1",
+   "level": 30,
+   "nature": 10473025
+  },
+  {
+   "from": 850,
+   "to": 851,
+   "trigger": "1",
+   "level": 28
+  },
+  {
+   "from": 852,
+   "to": 853,
+   "trigger": "1",
+   "knownMove": "taunt"
+  },
+  {
+   "from": 854,
+   "to": 855,
+   "trigger": "3",
+   "item": "cracked-pot"
+  },
+  {
+   "from": 856,
+   "to": 857,
+   "trigger": "1",
+   "level": 32
+  },
+  {
+   "from": 857,
+   "to": 858,
+   "trigger": "1",
+   "level": 42
+  },
+  {
+   "from": 859,
+   "to": 860,
+   "trigger": "1",
+   "level": 32
+  },
+  {
+   "from": 860,
+   "to": 861,
+   "trigger": "1",
+   "level": 42
+  },
+  {
+   "from": 868,
+   "to": 869,
+   "trigger": "5",
+   "held": "strawberry-sweet",
+   "time": "day",
+   "expression": "SPIN_DIR 0 == SPIN_SEC 5 < &&"
+  },
+  {
+   "from": 872,
+   "to": 873,
+   "trigger": "1",
+   "friendship": 160,
+   "time": "night"
+  },
+  {
+   "from": 884,
+   "to": 1018,
+   "trigger": "3",
+   "item": "metal-alloy"
+  },
+  {
+   "from": 885,
+   "to": 886,
+   "trigger": "1",
+   "level": 50
+  },
+  {
+   "from": 886,
+   "to": 887,
+   "trigger": "1",
+   "level": 60
+  },
+  {
+   "from": 891,
+   "to": 892,
+   "trigger": "3",
+   "item": "scroll-of-darkness"
+  },
+  {
+   "from": 906,
+   "to": 907,
+   "trigger": "1",
+   "level": 16
+  },
+  {
+   "from": 907,
+   "to": 908,
+   "trigger": "1",
+   "level": 36
+  },
+  {
+   "from": 909,
+   "to": 910,
+   "trigger": "1",
+   "level": 16
+  },
+  {
+   "from": 910,
+   "to": 911,
+   "trigger": "1",
+   "level": 36
+  },
+  {
+   "from": 912,
+   "to": 913,
+   "trigger": "1",
+   "level": 16
+  },
+  {
+   "from": 913,
+   "to": 914,
+   "trigger": "1",
+   "level": 36
+  },
+  {
+   "from": 915,
+   "to": 916,
+   "trigger": "1",
+   "level": 18,
+   "gender": 2
+  },
+  {
+   "from": 917,
+   "to": 918,
+   "trigger": "1",
+   "level": 15
+  },
+  {
+   "from": 919,
+   "to": 920,
+   "trigger": "1",
+   "level": 24
+  },
+  {
+   "from": 921,
+   "to": 922,
+   "trigger": "1",
+   "level": 18
+  },
+  {
+   "from": 922,
+   "to": 923,
+   "trigger": "1",
+   "steps": 1000
+  },
+  {
+   "from": 924,
+   "to": 925,
+   "trigger": "10",
+   "level": 25,
+   "expression": "EC 100 % 0 !=",
+   "chance": 99
+  },
+  {
+   "from": 926,
+   "to": 927,
+   "trigger": "1",
+   "level": 26
+  },
+  {
+   "from": 932,
+   "to": 933,
+   "trigger": "1",
+   "level": 24
+  },
+  {
+   "from": 933,
+   "to": 934,
+   "trigger": "1",
+   "level": 38
+  },
+  {
+   "from": 935,
+   "to": 936,
+   "trigger": "3",
+   "item": "auspicious-armor"
+  },
+  {
+   "from": 935,
+   "to": 937,
+   "trigger": "3",
+   "item": "malicious-armor"
+  },
+  {
+   "from": 938,
+   "to": 939,
+   "trigger": "3",
+   "item": "thunder-stone"
+  },
+  {
+   "from": 940,
+   "to": 941,
+   "trigger": "1",
+   "level": 25
+  },
+  {
+   "from": 951,
+   "to": 952,
+   "trigger": "3",
+   "item": "fire-stone"
+  },
+  {
+   "from": 957,
+   "to": 958,
+   "trigger": "1",
+   "level": 24
+  },
+  {
+   "from": 958,
+   "to": 959,
+   "trigger": "1",
+   "level": 38
+  },
+  {
+   "from": 960,
+   "to": 961,
+   "trigger": "1",
+   "level": 26
+  },
+  {
+   "from": 963,
+   "to": 964,
+   "trigger": "1",
+   "level": 38,
+   "multiplayer": true
+  },
+  {
+   "from": 965,
+   "to": 966,
+   "trigger": "1",
+   "level": 40
+  },
+  {
+   "from": 969,
+   "to": 970,
+   "trigger": "1",
+   "level": 35
+  },
+  {
+   "from": 971,
+   "to": 972,
+   "trigger": "1",
+   "level": 30,
+   "time": "night"
+  },
+  {
+   "from": 974,
+   "to": 975,
+   "trigger": "3",
+   "item": "ice-stone"
+  },
+  {
+   "from": 996,
+   "to": 997,
+   "trigger": "1",
+   "level": 35
+  },
+  {
+   "from": 997,
+   "to": 998,
+   "trigger": "1",
+   "level": 54
+  },
+  {
+   "from": 999,
+   "to": 1000,
+   "trigger": "pkmsvv-coins",
+   "coins": 999
+  },
+  {
+   "from": 1011,
+   "to": 1019,
+   "trigger": "1",
+   "knownMove": "dragon-cheer"
+  },
+  {
+   "from": 1012,
+   "to": 1013,
+   "trigger": "3",
+   "item": "unremarkable-teacup"
+  }
+ ]
+}

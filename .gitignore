@@ -1,0 +1,12 @@
+node_modules/
+dist/
+vendor/
+*.log
+.DS_Store
+*.zip
+
+android/
+mobile/www/
+
+# Switch Brewser generated SD install bundle
+dist/switch-package/

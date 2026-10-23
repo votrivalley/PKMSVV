@@ -1,0 +1,12 @@
+{
+  "appId": "com.ronvotri.pkmsvv",
+  "appName": "Pokémon Survivor",
+  "webDir": "mobile/www",
+  "backgroundColor": "#0a1430",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}
