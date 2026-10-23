@@ -30,6 +30,12 @@ const page=[
  '  </div>',
  '  <div class="pkmsvv-story-dialog">',
  '   <div id="pkmsvv-story-speaker">???</div><p id="pkmsvv-story-line" aria-live="off"></p>',
+ '   <form id="pkmsvv-story-name-form" class="pkmsvv-story-name-form hidden" autocomplete="off">',
+ '    <label id="pkmsvv-story-name-label" for="pkmsvv-story-name-input">Biệt danh của bạn</label>',
+ '    <div class="pkmsvv-story-name-row"><input id="pkmsvv-story-name-input" class="field" type="text" name="nickname" maxlength="16" autocapitalize="off" autocomplete="off" spellcheck="false" required>',
+ '     <button class="btn gold" id="pkmsvv-story-name-save" type="submit">Đây là tên tôi!</button></div>',
+ '    <p id="pkmsvv-story-name-error" role="alert" aria-live="polite"></p>',
+ '   </form>',
  '   <div class="pkmsvv-story-controls"><span id="pkmsvv-story-count">1 / 8</span>',
  '    <button id="pkmsvv-story-skip" type="button" class="btn ghost">Bỏ qua</button>',
  '    <button id="pkmsvv-story-next" type="button" class="btn gold">Tiếp ▶</button>',
@@ -48,6 +54,12 @@ patch('js/core/db.js',
  '    r.pkmsvvSkillMarks = G.PKMSVVSkillTrack ? G.PKMSVVSkillTrack.merge(r.pkmsvvSkillMarks,older.pkmsvvSkillMarks)',
  '    r.pkmsvvStorySeen = !!(r.pkmsvvStorySeen || older.pkmsvvStorySeen);\n'+
  '    r.pkmsvvSkillMarks = G.PKMSVVSkillTrack ? G.PKMSVVSkillTrack.merge(r.pkmsvvSkillMarks,older.pkmsvvSkillMarks)');
+patch('js/core/db.js',
+ '      pkmsvvStorySeen: false, // skip first-time prologue for existing characters',
+ '      pkmsvvStorySeen: false, // skip first-time prologue for existing characters\n      pkmsvvNameChosen: false, // player nickname chosen in Chapter 0');
+patch('js/core/db.js',
+ '    r.pkmsvvStorySeen = !!(r.pkmsvvStorySeen || older.pkmsvvStorySeen);',
+ '    r.pkmsvvStorySeen = !!(r.pkmsvvStorySeen || older.pkmsvvStorySeen);\n    r.pkmsvvNameChosen = !!(r.pkmsvvNameChosen || older.pkmsvvNameChosen);');
 patch('js/game.js','    G.LoginUI.init(); G.TestUI.init(); G.MenuUI.init();',
  '    G.LoginUI.init(); G.TestUI.init(); G.PKMSVVStory.init(); G.MenuUI.init();');
 patch('js/game.js',

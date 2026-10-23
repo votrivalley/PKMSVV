@@ -30,3 +30,14 @@
  bottom:3%;
  filter:drop-shadow(0 0 10px rgba(255,238,156,.65)) drop-shadow(0 7px 3px rgba(0,0,0,.7));
 }
+
+/* Starter story nickname only: ensure form text is readable on all devices. */
+#scr-pkmsvv-story .pkmsvv-story-name-form{margin:13px 0 5px;padding:12px;background:#eaf8f3;color:#173947;border:2px solid #86c9bb;border-radius:9px}
+#scr-pkmsvv-story .pkmsvv-story-name-form.hidden{display:none}
+#pkmsvv-story-name-label{display:block;color:#183945;font:800 14px/1.5 "Segoe UI",sans-serif;margin-bottom:7px}
+.pkmsvv-story-name-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#pkmsvv-story-name-input{flex:1 1 175px;min-width:0;min-height:44px;background:#fff;color:#102d3a;border:2px solid #408b8c;border-radius:7px;padding:9px 11px;font:700 17px/1.4 "Segoe UI",sans-serif}
+#pkmsvv-story-name-input:focus-visible{outline:3px solid #ffdc47;outline-offset:2px}
+#pkmsvv-story-name-save{flex:1 0 140px;min-height:44px;color:#173945}
+#pkmsvv-story-name-error{min-height:1em;color:#951426;font:800 13px/1.4 "Segoe UI",sans-serif;margin:5px 0 0}
+@media(max-width:560px){#scr-pkmsvv-story .pkmsvv-story-name-form{padding:8px}#pkmsvv-story-name-save{width:100%}}

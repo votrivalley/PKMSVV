@@ -55,3 +55,10 @@ test('third reveal background never replaces either existing approved scene',()=
  assert.match(css,/scale\(2\)/);
  assert.doesNotMatch(css,/\.menu-item.*scale\(2\)/);
 });
+
+test('Chapter 0 offers a story nickname without changing established social nicknames',()=>{
+ const story=read('src/pkmsvv-story.js'),patch=read('scripts/patch-story.cjs');
+ for(const term of ['bạn tên gì','askName:true','G.Social.start()','G.Social.claimNick(name)','G.DB.setName(name)','pkmsvvNameChosen','if(replaying||','e.target.closest'])assert.ok(story.includes(term),term);
+ assert.match(patch,/pkmsvv-story-name-form/);
+ assert.match(patch,/pkmsvvNameChosen/);
+});

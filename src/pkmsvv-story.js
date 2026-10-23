@@ -13,6 +13,8 @@ G.PKMSVVStory=(()=>{
    {art:1,speaker:['???','???'],text:['...Mình đang ở đâu?','...Where am I?']},
    {art:1,speaker:['Tôi','Me'],text:['Tối quá... Mình còn sống sao?','It is so dark... Am I still alive?']},
    {art:2,speaker:['Tôi','Me'],text:['Tên của mình... Sao không thể nhớ nổi?','My name... Why can’t I remember it?']},
+   {art:2,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Vậy... bạn tên gì? Hãy cho ta biết tên mà bạn muốn được gọi.','Then... what is your name? Tell me what you wish to be called.'],askName:true},
+   {art:2,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Ta sẽ gọi ngươi là {name}. Hãy ghi nhớ cái tên ấy.','Then I shall call you {name}. Hold on to that name.']},
    {art:2,speaker:['Tôi','Me'],text:['Cơ thể mình... có gì đó không đúng.','Something feels wrong with my body.']},
    {art:3,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Ngươi cuối cùng cũng tỉnh lại.','You have finally awakened.']},
    {art:3,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Đây là vùng đất của những ký ức thất lạc.','This is the land of lost memories.']},
@@ -29,17 +31,94 @@ G.PKMSVVStory=(()=>{
   ]
  };
  let lines=[],idx=0,full='',visible=0,timer=null,next=null,mode='',replaying=false,chosenDex=0;
+ let nameFormOpen=false,nameChecking=false,nameSubmitting=false;
+ const validNick=s=>/^[A-Za-z0-9_ñÑáéíóúÁÉÍÓÚ]{3,16}$/.test(s);
+ const displayName=()=>String((G.Social&&G.Social.me&&G.Social.me.name)||
+                        (G.DB.save&&G.DB.save.name)||tr('Người chơi','Player'));
+ function hideNameForm(){
+  nameFormOpen=false;
+  $('pkmsvv-story-name-form').classList.add('hidden');
+  $('pkmsvv-story-next').classList.remove('hidden');
+  $('pkmsvv-story-name-error').textContent='';
+ }
+ function nameDone(){
+  if(G.DB.save){G.DB.save.pkmsvvNameChosen=true;G.DB.commit(true);}
+  hideNameForm();idx++;draw();
+ }
+ async function askName(){
+  if(nameFormOpen||nameChecking||mode!=='prologue')return;
+  if(replaying||(G.DB.save&&G.DB.save.pkmsvvNameChosen)){idx++;draw();return;}
+  if(G.DB.online&&G.Social&&G.Social.start){
+   nameChecking=true;
+   try{
+    const status=await G.Social.start();
+    if(mode!=='prologue')return;
+    if(status==='ok'&&G.Social.me){nameDone();return;}
+   }catch(err){console.warn('PKMSVV: nickname lookup unavailable',err);}
+   finally{nameChecking=false;}
+  }
+  if(mode!=='prologue')return;
+  nameFormOpen=true;
+  $('pkmsvv-story-name-form').classList.remove('hidden');
+  $('pkmsvv-story-next').classList.add('hidden');
+  $('pkmsvv-story-name-label').textContent=tr('Biệt danh của bạn (3–16 ký tự)','Your nickname (3–16 characters)');
+  $('pkmsvv-story-name-input').placeholder=tr('Chữ Latin, số hoặc _','Latin letters, digits or _');
+  $('pkmsvv-story-name-save').textContent=tr('Đây là tên tôi!','This is my name!');
+  $('pkmsvv-story-name-input').value='';
+  $('pkmsvv-story-name-error').textContent='';
+  $('pkmsvv-story-name-input').focus();
+ }
+ async function saveName(e){
+  e.preventDefault();
+  if(!nameFormOpen||nameSubmitting)return;
+  const name=$('pkmsvv-story-name-input').value.trim();
+  const err=$('pkmsvv-story-name-error'),btn=$('pkmsvv-story-name-save');
+  if(!validNick(name)){
+   err.textContent=tr('Dùng 3–16 ký tự: chữ Latin, số hoặc _. Không có dấu cách.','Use 3–16 Latin letters, digits or underscores. No spaces.');
+   return;
+  }
+  nameSubmitting=true;btn.disabled=true;err.textContent='';
+  try{
+   if(G.DB.online){
+    const status=await G.Social.start();
+    if(status==='off')throw Error('Offline');
+    if(status==='ok'&&G.Social.me){nameDone();return;} // Keep established online nickname.
+    const result=await G.Social.claimNick(name);
+    if(!result.ok){
+     err.textContent=/ya lo tiene otro|taken/i.test(result.error||'')
+      ?tr('Tên này đã có người dùng. Hãy chọn tên khác.','This nickname is taken; please choose another.')
+      :tr('Không thể lưu tên: ','Could not save nickname: ')+(result.error||'');
+     return;
+    }
+    nameDone();
+   }else{
+    if(G.DB.guest)G.DB.save.name=name;
+    else G.DB.setName(name);
+    nameDone();
+   }
+  }catch(ex){err.textContent=tr('Chưa lưu được tên. Kiểm tra mạng và thử lại.','Could not save nickname. Check your connection and retry.');console.warn(ex);}
+  finally{nameSubmitting=false;btn.disabled=false;}
+ }
+ function skipStory(){
+  if(mode==='prologue'&&!replaying&&G.DB.save&&!G.DB.save.pkmsvvNameChosen&&!(G.Social&&G.Social.me)){
+   if(nameFormOpen){finish();return;} // Deliberate skip; multiplayer can still ask later.
+   const i=lines.findIndex(scene=>scene.askName);
+   if(i>=0){idx=i;draw();stop();$('pkmsvv-story-line').textContent=full;askName();return;}
+  }
+  finish();
+ }
+
  function stop(){if(timer){clearInterval(timer);timer=null;}}
  function finish(){
   stop();const callback=next,wasPrologue=mode==='prologue';
   if(wasPrologue&&!replaying&&G.DB.save){
    G.DB.save.pkmsvvStorySeen=true;G.DB.commit(true);
   }
-  next=null;mode='';G.UI.hide('scr-pkmsvv-story');
+  hideNameForm();next=null;mode='';G.UI.hide('scr-pkmsvv-story');
   if(typeof callback==='function')callback();
  }
  function draw(){
-  stop();
+  stop();hideNameForm();
   const item=lines[idx];if(!item){finish();return;}
   const img=$('pkmsvv-story-image'),cv=$('pkmsvv-story-mon');
   const key=VISUALS[item.art] || 'eyes';
@@ -74,7 +153,7 @@ G.PKMSVVStory=(()=>{
   if(mode==='reveal'&&chosenDex&&G.UI&&G.UI.sprite)G.UI.sprite(cv,chosenDex,{lively:true,scale:3,hero:true});
   $('pkmsvv-story-chapter').textContent=tr('CHƯƠNG 0 · THỨC TỈNH','CHAPTER 0 · AWAKENING');
   $('pkmsvv-story-speaker').textContent=item.speaker[en()?1:0];
-  full=item.text[en()?1:0];
+  full=item.text[en()?1:0].replaceAll('{name}',displayName());
   const label=$('pkmsvv-story-line');label.textContent='';label.setAttribute('aria-label',full);
   visible=0;
   const glyphs=Array.from(full);
@@ -87,13 +166,14 @@ G.PKMSVVStory=(()=>{
   $('pkmsvv-story-skip').textContent=tr('Bỏ qua','Skip');
  }
  function advance(){
-  if(!mode)return;
+  if(!mode||nameFormOpen||nameChecking||nameSubmitting)return;
   if(timer){stop();$('pkmsvv-story-line').textContent=full;return;}
+  if(lines[idx]&&lines[idx].askName){askName();return;}
   idx++;draw();
  }
  function play(type,done,replay=false,dex=0){
   if(!chapters[type])return;
-  stop();mode=type;idx=0;next=done;replaying=replay;chosenDex=dex;
+  stop();hideNameForm();mode=type;idx=0;next=done;replaying=replay;chosenDex=dex;
   lines=chapters[type];G.UI.chrome(false);G.UI.show('scr-pkmsvv-story');
   // Preload once; optional offline fallbacks remain available.
   for(const name of ['eyes','gate','reveal']){const preload=new Image();preload.src='assets/story/'+name+'.webp';}
@@ -105,12 +185,14 @@ G.PKMSVVStory=(()=>{
  function replay(){play('prologue',()=>G.Flow.goMenu(),true);}
  function init(){
   $('pkmsvv-story-next').onclick=advance;
-  $('pkmsvv-story-skip').onclick=finish;
+  $('pkmsvv-story-skip').onclick=skipStory;
+  $('pkmsvv-story-name-form').onsubmit=saveName;
   $('pkmsvv-story-frame').onclick=e=>{if(!e.target.closest('button'))advance();};
   window.addEventListener('keydown',e=>{
    if(!mode)return;
+   if(e.target&&e.target.closest&&e.target.closest('input,textarea,select,button'))return;
    if(['Enter',' ','ArrowRight'].includes(e.key)){e.preventDefault();e.stopPropagation();advance();}
-   else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();finish();}
+   else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();skipStory();}
   },true);
  }
  return {init,prologue,reveal,replay};
