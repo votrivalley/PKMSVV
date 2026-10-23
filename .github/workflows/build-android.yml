@@ -57,6 +57,8 @@ jobs:
         run: npm run prepare:icons && npm run test:balance && npm run test:ux && npm run test:dash
       - name: Bundle offline Android web assets
         run: npm run prepare:android && npm run test:android
+      - name: Verify native Google Web handoff never touches offline save
+        run: node --test tests/native-cloud-entry.test.cjs
       - name: Generate Android native project
         run: |
           npx cap add android
