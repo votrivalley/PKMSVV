@@ -44,11 +44,11 @@ test('shortened partner button is in upstream-patched Pokédex and English is av
  const file=path.join(root,'vendor/pokesurvivor/js/ui/menu.js');
  if(!fs.existsSync(file))return;
  const menu=fs.readFileSync(file,'utf8');
- assert.match(menu,/Đồng hành/);
- assert.match(menu,/Chọn đồng hành/);
+ assert.match(menu,/Chọn Pokémon/);
+ assert.doesNotMatch(menu,/Chọn đồng hành/);
  assert.doesNotMatch(menu,/Đây là Pokémon đồng hành|Chọn làm Pokémon đồng hành/);
  assert.equal(tr('Đồng hành'),'Partner');
- assert.equal(tr('Chọn đồng hành'),'Choose Partner');
+ assert.equal(tr('Chọn Pokémon'),'Choose Pokémon');
 });
 test('English dictionary loads in game before executable modules and is bundled offline',()=>{
  const htmlFile=path.join(root,'vendor/pokesurvivor/index.html');
