@@ -59,6 +59,8 @@ jobs:
         run: npm run prepare:android && npm run test:android
       - name: Verify native Google Web handoff never touches offline save
         run: node --test tests/native-cloud-entry.test.cjs
+      - name: Test fixed Pokédex and rear-layer skills
+        run: node --test tests/dex-buff-layer.test.cjs
       - name: Generate Android native project
         run: |
           npx cap add android

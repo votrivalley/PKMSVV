@@ -556,6 +556,7 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-skill-track.cj
 execFileSync(process.execPath,[path.join(project,'scripts','patch-story.cjs')],{cwd:project,stdio:'inherit'});
 // Keep nature/buff UI patch last, after all native and Web menu patches.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-nature-buff.cjs')],{cwd:project,stdio:'inherit'});
+execFileSync(process.execPath,[path.join(project,'scripts','patch-dex-buff-layer.cjs')],{cwd:project,stdio:'inherit'});
 // Native-only choice; hosted Web builds are not affected.
 if(process.env.PKMSVV_BUILD_TARGET!=='web')execFileSync(process.execPath,[path.join(project,'scripts','patch-native-online.cjs')],{cwd:project,stdio:'inherit'});
 execFileSync(process.execPath, [path.join(game, 'tools', 'build.js'), '--sin-seo', '--expose'], { cwd: game, stdio: 'inherit' });

@@ -45,6 +45,8 @@ jobs:
         run: npm run test:kecleon && npm run test:opening && npm run test:mobile-topbar && npm run test:bilingual && npm run test:changelog && npm run test:extended-i18n && npm run test:autocast && npm run test:global && npm run test:collection && npm run test:controller && npm run test:audio && npm run test:ui
       - name: Verify native Google Web handoff never touches offline save
         run: node --test tests/native-cloud-entry.test.cjs
+      - name: Test fixed Pokédex and rear-layer skills
+        run: node --test tests/dex-buff-layer.test.cjs
       - name: Generate Survivor Poké Ball launcher icons and test all skill cooldowns
         run: npm run prepare:icons && npm run test:balance && npm run test:ux && npm run test:dash
       - name: Produce portable Windows x64 EXE

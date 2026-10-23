@@ -41,6 +41,8 @@ jobs:
           PKMSVV_ALLOWED_HOSTS: ${{ vars.PKMSVV_ALLOWED_HOSTS }}
           PKMSVV_WEB_PREVIEW: "0"
         run: npm run prepare:web
+      - name: Test fixed Pokédex and rear-layer skills
+        run: node --test tests/dex-buff-layer.test.cjs
       - name: Verify static browser output
         run: |
           test -s dist/web/index.html
