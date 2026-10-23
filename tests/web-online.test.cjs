@@ -73,3 +73,25 @@ test('installed home-screen icon launches mode picker and can enter offline/full
  assert.match(sw,/pkmsvv-launch-v1/);
  assert.doesNotMatch(sw,/caches\.delete\(.*localStorage/);
 });
+
+test('Google sign-in stays reachable from both landing and saved offline sessions',()=>{
+ const login=fs.readFileSync(path.join(root,'scripts/patch-web-entry-ui.cjs'),'utf8');
+ assert.match(landing,/id="cloud"/);
+ assert.match(entry,/start\('cloud'\)/);
+ assert.match(login,/pkmsvv-login-google/);
+ assert.match(login,/pkmsvv-menu-google/);
+ assert.match(login,/G\.DB\.mode==='cloud'/);
+ assert.match(login,/pkmsvv\.web\.saveMode','cloud'/);
+ assert.match(login,/\$\('btn-google'\)\.click\(\)/);
+ assert.match(login,/#scr-login #btn-google:not\(\.hidden\)/);
+});
+test('fullscreen controls toggle in both directions and reflect external Escape exits',()=>{
+ const login=fs.readFileSync(path.join(root,'scripts/patch-web-entry-ui.cjs'),'utf8');
+ for(const source of [entry,login]){
+   assert.match(source,/document\.exitFullscreen/);
+   assert.match(source,/document\.fullscreenElement/);
+   assert.match(source,/fullscreenchange/);
+   assert.match(source,/Thoát toàn màn hình/);
+   assert.match(source,/aria-pressed/);
+ }
+});

@@ -14,19 +14,39 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   document.getElementById('local').addEventListener('click', () => start('local'));
   cloud.addEventListener('click', () => { if (enabled) start('cloud'); });
-  // Fullscreen activation needs a real click; no Google login is required.
-  document.getElementById('fullscreen').addEventListener('click', () => {
-    const el=document.documentElement,request=el.requestFullscreen||el.webkitRequestFullscreen;
-    const note=document.getElementById('fullscreen-status');
-    if(!request){
-      note.textContent='iPhone/Safari: thêm vào Màn hình chính và mở qua biểu tượng để có giao diện toàn màn hình.';
+  // A single button enters OR exits native browser fullscreen.
+  // Installed standalone PWAs are managed by the OS, not by the Fullscreen API.
+  const fullButton=document.getElementById('fullscreen');
+  const fullStatus=document.getElementById('fullscreen-status');
+  const isFull=()=>!!(document.fullscreenElement||document.webkitFullscreenElement);
+  const updateFull=()=>{
+    fullButton.textContent=isFull()?'⛶ Thoát toàn màn hình':'⛶ Bật toàn màn hình';
+    fullButton.setAttribute('aria-pressed',String(isFull()));
+  };
+  fullButton.addEventListener('click',()=>{
+    const exiting=isFull();
+    const action=exiting?(document.exitFullscreen||document.webkitExitFullscreen):
+      (document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen);
+    const owner=exiting?document:document.documentElement;
+    if(!action){
+      fullStatus.textContent='Chế độ toàn màn hình không thể bật/tắt bằng nút trên trình duyệt này. Với app đã cài, dùng thao tác hệ thống để thoát.';
       return;
     }
-    Promise.resolve(request.call(el)).then(()=>{
-      note.textContent='Đã bật toàn màn hình. Chọn chế độ chơi để tiếp tục.';
-      try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{});}catch(e){}
-    }).catch(()=>{note.textContent='Trình duyệt không cho phép toàn màn hình. Hãy thử bấm lại.';});
+    try{
+      Promise.resolve(action.call(owner)).then(()=>{
+        updateFull();
+        fullStatus.textContent=isFull()?'Đã bật toàn màn hình.':'Đã thoát toàn màn hình.';
+        if(!exiting){try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{});}catch(e){}}
+        else {try{if(screen.orientation&&screen.orientation.unlock)screen.orientation.unlock();}catch(e){}}
+      }).catch(()=>{
+        updateFull();
+        fullStatus.textContent='Trình duyệt không cho phép đổi toàn màn hình ở đây. Thử thao tác hệ thống hoặc trình duyệt.';
+      });
+    }catch(e){updateFull();fullStatus.textContent='Không đổi được toàn màn hình trên trình duyệt này.';}
   });
+  document.addEventListener('fullscreenchange',updateFull);
+  document.addEventListener('webkitfullscreenchange',updateFull);
+  updateFull();
   // Register a tiny PWA shell for reliable home-screen launch, never clear saves.
   if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 
