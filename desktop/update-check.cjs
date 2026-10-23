@@ -16,8 +16,10 @@ function newer(candidate,current){
 async function checkForNewRelease({app,mainWindow}){
  if(!app.isPackaged||!mainWindow||mainWindow.isDestroyed())return;
  try{
-  const {net,dialog,shell}=require('electron');
-  const response=await net.fetch(url,{
+  const {session,dialog,shell}=require('electron');
+  // Separate in-memory session: defaultSession blocks all network requests from gameplay.
+  const updateSession=session.fromPartition('pkmsvv-version-check',{cache:false});
+  const response=await updateSession.fetch(url,{
    headers:{Accept:'application/vnd.github+json','User-Agent':'PKMSVV-Update-Check'},
    signal:AbortSignal.timeout(6000)
   });
