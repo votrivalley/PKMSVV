@@ -7,9 +7,10 @@ function patch(rel,from,to){
  fs.writeFileSync(file,text.replace(from,to),'utf8');
 }
 execFileSync(process.execPath,[path.join(root,'scripts','generate-story-art.cjs')],{cwd:root,stdio:'inherit'});
-// Prefer the two approved cinematic pixel-art illustrations.
-// Keep the tiny bundled SVGs only as offline compatibility fallbacks.
-for(const name of ['eyes','gate']){
+// Preserve BOTH approved prologue illustrations and add a third background
+// reserved for the starter Pokémon reveal. No shared map/UI sprite changes.
+// The SVGs are legacy fallbacks, and missing reveal.webp falls back to gate.webp.
+for(const name of ['eyes','gate','reveal']){
  const source=path.join(root,'src','story-art',name+'.webp');
  const dest=path.join(game,'assets','story',name+'.webp');
  if(fs.existsSync(source))fs.copyFileSync(source,dest);

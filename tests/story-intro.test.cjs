@@ -35,11 +35,23 @@ test('approved cinematic art paths and renderer are wired into build',()=>{
  const story=read('src/pkmsvv-story.js'),p=read('scripts/patch-story.cjs'),css=read('src/pkmsvv-story.css');
  assert.ok(story.includes('const VISUALS'));
  assert.ok(story.includes("1:'eyes', 2:'eyes', 3:'eyes'"));
- assert.ok(story.includes("4:'gate', 5:'gate'"));
+ assert.ok(story.includes("4:'gate', 5:'reveal'"));
  assert.ok(story.includes("assets/story/"));
  assert.ok(story.includes(".webp"));
  assert.ok(story.includes("img.onerror"));
  assert.ok(p.includes("'src','story-art'"));
  assert.ok(p.includes('fs.copyFileSync(source,dest)'));
  assert.ok(css.includes('object-fit:contain'));
+});
+
+test('third reveal background never replaces either existing approved scene',()=>{
+ const story=read('src/pkmsvv-story.js'),css=read('src/pkmsvv-story.css'),patch=read('scripts/patch-story.cjs');
+ assert.match(story,/1:'eyes', 2:'eyes', 3:'eyes'/);
+ assert.match(story,/4:'gate', 5:'reveal'/);
+ assert.match(story,/\['eyes','gate','reveal'\]/);
+ assert.match(story,/assets\/story\/gate\.webp/);
+ assert.match(patch,/for\(const name of \['eyes','gate','reveal'\]\)/);
+ assert.match(css,/data-scene="5"/);
+ assert.match(css,/scale\(2\)/);
+ assert.doesNotMatch(css,/\.menu-item.*scale\(2\)/);
 });

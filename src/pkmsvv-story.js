@@ -2,10 +2,11 @@
 G.PKMSVVStory=(()=>{
  const $=id=>document.getElementById(id),en=()=>G.I18n&&G.I18n.lang==='en';
  const tr=(vi,eng)=>en()?eng:vi;
- // Scenes reuse the two approved illustrations. The inline SVG only backs up a missing artwork file.
+ // Three independent pictures: approved eye/gate art stays in the prologue,
+ // while a third scene is used ONLY for the Pokémon reveal after the starter quiz.
  const VISUALS=Object.freeze({
    1:'eyes', 2:'eyes', 3:'eyes',
-   4:'gate', 5:'gate'
+   4:'gate', 5:'reveal'
  });
  const chapters={
   prologue:[
@@ -48,14 +49,27 @@ G.PKMSVVStory=(()=>{
   frame.dataset.scene=String(item.art);
   if(img.dataset.artKey!==key){
    img.dataset.artKey=key;
+   // If the new third artwork is missing in an older build, show the approved
+   // portal illustration rather than the crude placeholder. Never replace the original two.
    img.onerror=()=>{
-    img.onerror=null;
-    img.src='assets/story/scene-'+item.art+'.svg';
+    if(key==='reveal' && !img.dataset.revealFallback){
+      img.dataset.revealFallback='1';
+      img.onerror=()=>{img.onerror=null;img.src='assets/story/scene-5.svg';};
+      img.src='assets/story/gate.webp';
+    }else{
+      img.onerror=null;
+      img.src='assets/story/scene-'+item.art+'.svg';
+    }
    };
+   delete img.dataset.revealFallback;
    img.src=imagePath;
   }
-  img.alt=tr(key==='eyes'?'Bóng người trước đôi mắt bí ẩn giữa bầu trời sao':'Bóng người trước cổng ánh sáng giữa bầu trời sao',
-             key==='eyes'?'A lone soul beneath mysterious eyes in the starry sky':'A lone soul facing a glowing portal beneath the stars');
+  img.alt=tr(key==='eyes'?'Bóng người trước đôi mắt bí ẩn giữa bầu trời sao':
+              key==='gate'?'Bóng người trước cổng ánh sáng giữa bầu trời sao':
+              'Cổng ánh sáng rộng mở, chờ Pokémon thức tỉnh',
+             key==='eyes'?'A lone soul beneath mysterious eyes in the starry sky':
+              key==='gate'?'A lone soul facing a glowing portal beneath the stars':
+              'An empty celestial gateway awaiting the awakened Pokémon');
   cv.classList.toggle('hidden',mode!=='reveal');
   if(mode==='reveal'&&chosenDex&&G.UI&&G.UI.sprite)G.UI.sprite(cv,chosenDex,{lively:true,scale:3,hero:true});
   $('pkmsvv-story-chapter').textContent=tr('CHƯƠNG 0 · THỨC TỈNH','CHAPTER 0 · AWAKENING');
@@ -82,7 +96,7 @@ G.PKMSVVStory=(()=>{
   stop();mode=type;idx=0;next=done;replaying=replay;chosenDex=dex;
   lines=chapters[type];G.UI.chrome(false);G.UI.show('scr-pkmsvv-story');
   // Preload once; optional offline fallbacks remain available.
-  for(const name of ['eyes','gate']){const preload=new Image();preload.src='assets/story/'+name+'.webp';}
+  for(const name of ['eyes','gate','reveal']){const preload=new Image();preload.src='assets/story/'+name+'.webp';}
   draw();
   if(G.Pad&&G.Pad.focusFirst)G.Pad.focusFirst();
  }
