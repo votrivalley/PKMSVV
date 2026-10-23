@@ -1,0 +1,41 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path');
+const root=path.join(__dirname,'..'),base=path.join(root,'vendor','pokesurvivor');
+const read=x=>fs.readFileSync(path.join(base,x),'utf8');
+test('Pokédex partner button appears before stats and is not duplicated',()=>{
+ if(!fs.existsSync(path.join(base,'index.html')))return;
+ const s=read('js/ui/menu.js');
+ const title=s.indexOf('<h3>${own ? p.name');
+ const pos=s.indexOf('pkmsvv-dex-action',title);
+ const stat=s.indexOf("bar('Vida'",title);
+ assert.ok(title>=0&&pos>title&&stat>pos);
+ assert.equal(s.match(/id="dex-pick"/g)?.length,1);
+ assert.match(s,/Đồng hành/);
+ assert.match(s,/Chọn đồng hành/);
+});
+test('Save shortcut appears between sound and fullscreen and reuses save JSON',()=>{
+ if(!fs.existsSync(path.join(base,'index.html')))return;
+ const html=read('index.html');
+ const a=html.indexOf('id="btn-sound"'),b=html.indexOf('id="btn-backup"'),c=html.indexOf('id="btn-full"');
+ assert.ok(a>=0&&b>a&&c>b);
+ const save=read('js/ui/pkmsvv-save-ui.js');
+ assert.match(save,/function openQuick/);assert.match(save,/function closeQuick/);
+ assert.match(save,/const data=backup\(\)/);assert.match(save,/const save=validate\(await f\.text\(\)\)/);
+ assert.match(read('js/ui/ui.js'),/G\.PKMSVVSaveUI\.initQuick/);
+ assert.match(read('js/game.js'),/G\.PKMSVVSaveUI\.isOpen\(\)/);
+ assert.match(read('js/app.min.js'),/btn-backup|pkmsvv-quick/);
+});
+test('Fullscreen uses native app integrations and browser API with visible failure',()=>{
+ if(!fs.existsSync(path.join(base,'index.html')))return;
+ const s=read('js/ui/settings-ui.js');
+ assert.match(s,/PKMSVVNative\.toggleFullscreen/);
+ assert.match(s,/PKMSVVScreen/);
+ assert.match(s,/requestFullscreen/);
+ assert.match(s,/Không thể đổi toàn màn hình/);
+ assert.match(s,/fullscreenchange/);
+ const electron=fs.readFileSync(path.join(root,'desktop/main.cjs'),'utf8');
+ assert.match(electron,/pkmsvv:toggle-fullscreen/);
+ const android=fs.readFileSync(path.join(root,'scripts/configure-android.cjs'),'utf8');
+ assert.match(android,/SYSTEM_UI_FLAG_IMMERSIVE_STICKY/);
+});
