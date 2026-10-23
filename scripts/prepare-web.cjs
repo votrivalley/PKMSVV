@@ -58,6 +58,8 @@ const config = loadConfig();
 if (!fs.existsSync(path.join(game, 'dev.html')))
   throw new Error('Fetch pinned JPTER78/pokesurvivor revision into vendor/pokesurvivor first.');
 execFileSync(process.execPath, [path.join(root, 'scripts', 'prepare-game.cjs')], { cwd: root, stdio: 'inherit' });
+// Generate the same Sống Sót icon assets as Windows and Android (including the web PWA).
+execFileSync(process.execPath, [path.join(root, 'scripts', 'generate-icons.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-multiplayer.cjs')], { cwd: root, stdio: 'inherit' });
 const notesFile=path.join(game,'js','data','changelog.js');
 fs.appendFileSync(notesFile,'\n'+fs.readFileSync(path.join(root,'src','pkmsvv-changelog-v13-web.js'),'utf8'),'utf8');
@@ -131,7 +133,7 @@ fs.writeFileSync(path.join(game, 'js', 'core', 'firebase-config.js'),
 execFileSync(process.execPath, [path.join(game, 'tools', 'build.js'), '--sin-seo', '--expose'], { cwd: game, stdio: 'inherit' });
 let html = fs.readFileSync(path.join(game, 'index.html'), 'utf8');
 if (!html.includes('</head>')) throw new Error('Missing HTML head in web build');
-html = html.replace(/<title>[^<]*<\/title>/, '<title>Pokémon Survivor — Votri Valley Web</title>');
+html = html.replace(/<title>[^<]*<\/title>/, '<title>Pokémon Sống Sót — Votri Valley Web</title>');
 html = html.replace('</head>', '<meta name="robots" content="noindex,nofollow">\n' + css + '\n</head>');
 html = html.replace('Web oficial: pokesurvivor.com · si alguien te pide pagar, no somos nosotros',
   'Bản web thử nghiệm Votri Valley · không chính thức · phi thương mại');

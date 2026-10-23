@@ -19,6 +19,6 @@ async function main(){
   }
   fs.writeFileSync(path.join(game,'assets','icons','icon-maskable-512.png'),png);
  }
- console.log('Generated Survivor Pokeball Windows and web icon assets');
+ console.log('Generated Pokémon Sống Sót icon assets for Windows, Android and Web');
 }
 main().catch(e=>{console.error(e);process.exitCode=1});

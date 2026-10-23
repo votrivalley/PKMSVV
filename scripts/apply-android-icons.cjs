@@ -15,6 +15,6 @@ async function main(){
    .composite([{input:small,left:ofs,top:ofs}]).png().toBuffer();
   fs.writeFileSync(path.join(dir,'ic_launcher_foreground.png'),fg);
  }
- console.log('Installed Survival Pokeball Android launcher icons in five densities');
+ console.log('Installed Pokémon Sống Sót launcher icons in five densities');
 }
 main().catch(e=>{console.error(e);process.exitCode=1});

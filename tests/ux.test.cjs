@@ -63,6 +63,6 @@ test('Votri Valley derivative credit is visible on boot and main menu',()=>{
  assert.match(html,/class="splash" translate="no">Việt hóa và Mod điều chỉnh bởi Votri Valley/);
  assert.doesNotMatch(html,/class="pkmsvv-attribution"/);
  assert.match(html,/class="pkmsvv-boot-credit"/);
- assert.match(html,/PokéSurvivor/);
+ assert.match(html,/Pokémon Sống Sót/);
  assert.match(html,/SpriteCollab/);
 });

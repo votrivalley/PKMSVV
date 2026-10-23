@@ -1,7 +1,7 @@
 /* v1.3 — Web-only beta. Owner approved 2026-10-23. Native builds remain offline. */
 G.CHANGELOG.unshift({
  d:'2026-10-23',
- title:['Pokémon Survivor – Votri Valley v1.3 (Web Beta)','Pokémon Survivor – Votri Valley v1.3 (Web Beta)'],
+ title:['Pokémon Sống Sót – Votri Valley v1.3 (Web Beta)','Pokémon Sống Sót – Votri Valley v1.3 (Web Beta)'],
  subtitle:['Thế giới sinh tồn giờ đây không còn là hành trình đơn độc!','The survival world is no longer a solo journey!'],
  new:[
   ['Web Online: Chơi trực tiếp trên trình duyệt, không cần tải bản cài đặt.','Web Online: Play directly in your browser, no installation required.'],

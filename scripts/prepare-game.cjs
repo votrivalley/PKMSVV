@@ -380,7 +380,7 @@ const pkmsvvCredit = 'Việt hóa và Mod điều chỉnh bởi Votri Valley';
 patch('dev.html',
   '      <div class="t1">PokéSurvivor<span class="splash">Folagor, Sekiam, PokeAlex: ¿un hueco?</span></div>\n' +
   '      <div class="t2">Mundo Misterioso</div>',
-  '      <div class="t1">PokéSurvivor<span class="splash" translate="no">' + pkmsvvCredit + '</span></div>\n' +
+  '      <div class="t1" translate="no">Pokémon Sống Sót<span class="splash" translate="no">' + pkmsvvCredit + '</span></div>\n' +
   '      <div class="t2">Mundo Misterioso</div>');
 patch('dev.html',
   '    <p class="boot-ld">Cargando…</p>',
@@ -528,6 +528,17 @@ fs.appendFileSync(path.join(game,'css','style.css'),
   '\n.pkmsvv-news-subtitle{margin:8px 0 14px;color:#e2eaf7;line-height:1.55;font-size:14px}\n' +
   '.pkmsvv-news-credit{font-size:12px;color:#cad7ef;line-height:1.5;border-top:1px solid #50658d;padding-top:12px;margin-top:15px}\n',
   'utf8');
+// Visible product branding only. Preserve author credit, package identifiers and save location.
+const brandHtmlPath = path.join(game, 'dev.html');
+let brandHtml = fs.readFileSync(brandHtmlPath, 'utf8');
+if (!brandHtml.includes('<div class="t1">PokéSurvivor</div>') ||
+    !brandHtml.includes('<h1>PokéSurvivor</h1>')) throw new Error('Upstream brand UI changed');
+brandHtml = brandHtml.replace('<div class="t1">PokéSurvivor</div>',
+  '<div class="t1" translate="no">Pokémon Sống Sót</div>');
+brandHtml = brandHtml.replace(/<h1>PokéSurvivor<\/h1>/g,
+  '<h1 translate="no">Pokémon Sống Sót</h1>');
+fs.writeFileSync(brandHtmlPath, brandHtml, 'utf8');
+
 // Integrate October 21 upstream Kecleon gameplay into the PINNED Votri Valley base.
 // Approved v1.1 What's New remains unchanged pending owner review of new release notes.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-kecleon.cjs')],{cwd:project,stdio:'inherit'});
@@ -536,7 +547,7 @@ execFileSync(process.execPath, [path.join(game, 'tools', 'build.js'), '--sin-seo
 const indexPath = path.join(game, 'index.html');
 let html = fs.readFileSync(indexPath, 'utf8');
 if (!html.includes('</head>')) throw new Error('index.html không có thẻ head');
-html = html.replace(/<title>[^<]*<\/title>/, '<title>Pokémon Survivor — Votri Valley</title>');
+html = html.replace(/<title>[^<]*<\/title>/, '<title>Pokémon Sống Sót — Votri Valley</title>');
 html = html.replace('</head>', '<style>\n' +
   'body,button,input,select{font-family:"Segoe UI",Tahoma,Arial,sans-serif!important;}\n' +
   '.menu-left .logo .t1 .splash{max-width:13em;overflow-wrap:normal;white-space:normal;}\n' +
@@ -560,6 +571,15 @@ html = html.replace('</head>', '<style>\n' +
 html = html.replace('Web oficial: pokesurvivor.com · si alguien te pide pagar, no somos nosotros',
   'PKMSVV: edición offline no oficial · solo uso personal sin fines comerciales');
 fs.writeFileSync(indexPath, html, 'utf8');
+// PWA manifest follows the installed application display name on all platforms.
+const manifestPath=path.join(game,'manifest.webmanifest');
+if(fs.existsSync(manifestPath)){
+  const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
+  manifest.name='Pokémon Sống Sót — Votri Valley';
+  manifest.short_name='Sống Sót';
+  manifest.lang='vi';
+  fs.writeFileSync(manifestPath,JSON.stringify(manifest,null,2)+'\n','utf8');
+}
 
 const notice = fs.readFileSync(path.join(project, 'NOTICE.md'), 'utf8');
 fs.writeFileSync(path.join(game, 'NOTICE-PKMSVV.txt'), notice, 'utf8');

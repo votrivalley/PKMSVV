@@ -2,7 +2,7 @@
   "name": "pkmsvv-offline",
   "version": "1.2.1",
   "private": true,
-  "description": "Unofficial noncommercial offline Windows, Android and Switch Brewser test edition of PokéSurvivor",
+  "description": "Unofficial noncommercial Pokémon Sống Sót client: offline-first Windows and Android editions, browser online beta",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
@@ -43,7 +43,7 @@
   },
   "build": {
     "appId": "com.ronvotri.pkmsvv",
-    "productName": "Pokémon Survivor",
+    "productName": "Pokémon Sống Sót",
     "copyright": "Unofficial noncommercial project; original game copyright JPTER78",
     "asar": true,
     "directories": {
