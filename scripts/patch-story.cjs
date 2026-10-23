@@ -60,6 +60,10 @@ patch('js/core/db.js',
 patch('js/core/db.js',
  '    r.pkmsvvStorySeen = !!(r.pkmsvvStorySeen || older.pkmsvvStorySeen);',
  '    r.pkmsvvStorySeen = !!(r.pkmsvvStorySeen || older.pkmsvvStorySeen);\n    r.pkmsvvNameChosen = !!(r.pkmsvvNameChosen || older.pkmsvvNameChosen);');
+// Local profile keys stay unchanged; only the visible player nickname is restored from their save.
+patch('js/core/db.js',
+ '    save = fold(loadLocal(k, name));',
+ '    save = fold(loadLocal(k, name));\n    if(save.pkmsvvNameChosen && save.name) user = save.name;');
 patch('js/game.js','    G.LoginUI.init(); G.TestUI.init(); G.MenuUI.init();',
  '    G.LoginUI.init(); G.TestUI.init(); G.PKMSVVStory.init(); G.MenuUI.init();');
 patch('js/game.js',
