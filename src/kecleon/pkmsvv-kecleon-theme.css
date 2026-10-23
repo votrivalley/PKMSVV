@@ -1,0 +1,113 @@
+
+/* PKMSVV original Kecleon scene with local offline inventory.
+   Source: JPTER78/pokesurvivor and TheAdro7 PR #236.
+   PolyForm Noncommercial 1.0.0; attribution retained. */
+#scr-kecleon { z-index: 70; padding: 12px; box-sizing: border-box; }
+#scr-kecleon .pkmk-box {
+  width: min(1000px, 98vw); max-width: min(1000px,98vw);
+  max-height: calc(100dvh - 24px); overflow-x: hidden; overflow-y: auto;
+  padding: 20px 22px 22px;
+  overscroll-behavior: contain; scrollbar-gutter: stable;
+}
+#scr-kecleon .pkmk-stall {
+  position:relative; margin:-20px -22px 16px; height:clamp(190px,29vh,295px);
+  overflow:hidden; border-radius:9px 9px 0 0; background:#71b7f1;
+}
+#scr-kecleon .pkmk-stall[hidden] { display:none !important; }
+#scr-kecleon .pkmk-scene {position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
+#scr-kecleon .pkmk-inner { position:relative; }
+#scr-kecleon .pkmk-tabs { margin:10px 0 12px;gap:8px; }
+#scr-kecleon #pkmk-balance {font-size:14px;text-shadow:1px 1px 0 #241b33;}
+#scr-kecleon .pkmk-lead {margin: 8px 0 15px; line-height:1.55; color:#d5e6ff;}
+#scr-kecleon .pkmk-group-title { font-size:18px; margin:18px 0 10px; }
+#scr-kecleon .pkmk-cards { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px; }
+#scr-kecleon .pkmk-card {
+  min-width:0;display:flex;align-items:center;gap:10px;
+  padding:14px 12px;border:2px solid #425f99;
+  background:linear-gradient(155deg,#1e365f,#162b53);
+  border-radius:10px;box-shadow:0 2px 0 rgba(0,0,0,.17);
+  transition:border-color .12s,background .12s;
+}
+#scr-kecleon .pkmk-card:hover {border-color:#9ac6ff;background:#263f72;}
+#scr-kecleon .pkmk-product-art { flex:0 0 40px; width:40px;height:45px;display:grid;place-items:center; }
+#scr-kecleon .pkmk-product-art img {width:34px;height:34px;image-rendering:pixelated;}
+#scr-kecleon .pkmk-product-copy {min-width:0;flex:1;line-height:1.4}
+#scr-kecleon .pkmk-product-copy b {display:block;font-size:14px;line-height:1.25}
+#scr-kecleon .pkmk-product-copy small {display:block;margin-top:4px;color:#c7d9f6;font-size:12px;line-height:1.35}
+#scr-kecleon .pkmk-product-tail {display:flex;align-items:center;justify-content:center;gap:6px;flex-direction:column;flex:none}
+#scr-kecleon .pkmk-product-tail .btn {min-height:40px;min-width:85px;padding:5px 7px;}
+#scr-kecleon .pkmk-stock {color:#ffdb69;font-weight:700;font-size:12px}
+#scr-kecleon .pkmk-tag {display:inline-flex;align-items:center;border-radius:4px;margin:4px 3px 0 0;padding:1px 5px;font-size:10px;font-weight:700;color:#151827;text-shadow:none;}
+#scr-kecleon .pkmk-tag-cat {background:#3e527f;color:#f1f6ff}
+#scr-kecleon .pkmk-empty {text-align:center;padding:18px 10px 28px; display:flex; flex-direction:column;align-items:center;gap:15px;}
+#scr-kecleon .pkmk-empty-art img {width:68px;height:68px;image-rendering:pixelated;}
+#scr-kecleon .pkmk-empty .btn {min-height:48px;padding:10px 22px}
+#scr-kecleon .pkmk-empty p {margin:0;color:#d7e6ff}
+#scr-kecleon .pkmk-row {border-color:#5371a9;background:linear-gradient(140deg,#1c345f,#182d53);}
+#scr-kecleon .pkmk-icon img{width:32px;height:32px;image-rendering:pixelated;}
+#scr-kecleon #pkmk-heading {margin:0;font-size:22px;}
+@media(max-width:850px) {
+ #scr-kecleon .pkmk-cards {grid-template-columns:repeat(2,minmax(0,1fr));}
+ #scr-kecleon .pkmk-card {gap:6px;padding:10px 9px;}
+}
+@media(max-width:600px){
+ #scr-kecleon{padding:5px;}
+ #scr-kecleon .pkmk-box {width:100%;max-width:100%;max-height:calc(100dvh - 10px);padding:10px 12px;}
+ #scr-kecleon .pkmk-stall {margin:-10px -12px 12px;height:175px;}
+ #scr-kecleon .pkmk-cards {grid-template-columns:1fr;gap:8px;}
+ #scr-kecleon .pkmk-card{padding:10px}
+ #scr-kecleon .pkmk-product-tail{min-width:86px;}
+ #scr-kecleon #pkmk-heading{font-size:19px;}
+ #scr-kecleon .pkmk-tabs{gap:4px;}
+}
+@media(prefers-reduced-motion:reduce) {
+ #scr-kecleon .pkmk-stall.opening ~ .pkmk-inner{animation:none;}
+ #scr-kecleon .pkmk-sign,#scr-kecleon .pkmk-bubble{animation:none!important;}
+}
+
+.shop-box { overflow-x: hidden; }
+.pkmk-stall { position: relative; margin: -22px -24px 14px; height: 294px; border-radius: 9px 9px 0 0; overflow: hidden; background: #6fb8f0; }
+.pkmk-scene { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; cursor: default; }
+.pkmk-stall.opening .pkmk-scene { cursor: pointer; }
+/* Cartel colgado del toldo; cae balanceándose y se encienden sus bombillas. */
+.pkmk-sign { position: absolute; z-index: 2; left: 50%; top: 6px; padding: 3px 16px; font-size: 18px; color: #3a1f08; text-shadow: none; white-space: nowrap;
+  background: #e2b26a; border: 3px solid #5a3412; border-radius: 4px; box-shadow: 0 3px 0 #5a3412; transform: translateX(-50%); transform-origin: 50% -14px;
+  opacity: 0; }
+.pkmk-sign.show { opacity: 1; animation: shopSign 1.1s ease-out both; }
+.pkmk-sign.shown { opacity: 1; }
+@keyframes shopSign { 0% { transform: translate(-50%, -70px) rotate(-18deg); } 30% { transform: translate(-50%, 0) rotate(12deg); }
+  55% { transform: translate(-50%, 0) rotate(-7deg); } 78% { transform: translate(-50%, 0) rotate(3deg); } 100% { transform: translate(-50%, 0); } }
+.pkmk-sign::before, .pkmk-sign::after { content: ''; position: absolute; left: 4px; right: 4px; height: 4px;
+  background: radial-gradient(circle, #6b4a20 0 1.6px, transparent 2px) 0 0 / 10px 4px repeat-x; }
+.pkmk-sign::before { top: 2px; } .pkmk-sign::after { bottom: 2px; }
+.pkmk-sign.lit::before, .pkmk-sign.lit::after { animation: shopBulbs .5s steps(1) infinite; }
+.pkmk-sign.lit::after { animation-delay: .25s; }
+.pkmk-sign.lit { box-shadow: 0 3px 0 #5a3412, 0 0 16px rgba(255,210,63,.55); }
+@keyframes shopBulbs {
+  0% { background-image: radial-gradient(circle, #fff4b0 0 1.8px, transparent 2.2px); }
+  50% { background-image: radial-gradient(circle, #ff8a3d 0 1.8px, transparent 2.2px); }
+}
+/* El bocadillo sigue al Kecleon morado (lo coloca shop-ui.js) y se va solo. */
+.pkmk-bubble { position: absolute; z-index: 3; left: 0; top: 0; max-width: 60%; padding: 6px 10px; white-space: nowrap;
+  font-size: 13px; color: #1b1528; text-shadow: none; background: #f4f8ff; border: 3px solid #1b1528; border-radius: 10px;
+  transition: opacity .3s, transform .3s; transform-origin: 100% 60%; }
+.pkmk-bubble::after { content: ''; position: absolute; right: -11px; top: 9px; border: 7px solid transparent; border-left-color: #1b1528; }
+.pkmk-bubble.hide { opacity: 0; transform: scale(.6); }
+.pkmk-bubble.pop { animation: shopBubble .35s ease-out both; }
+@keyframes shopBubble { from { transform: scale(0); } 70% { transform: scale(1.08); } to { transform: none; } }
+/* El objeto comprado vuela a su fila de la lista, que bota al recibirlo. */
+.pkmk-fly { position: fixed; left: 0; top: 0; z-index: 1000; pointer-events: none; filter: drop-shadow(0 3px 4px rgba(0,0,0,.5)); }
+.pkmk-fly img { width: 32px; height: 32px; }
+#pkmk-list .pkmk-product-art.bump { animation: shopBump .4s ease-out; }
+@keyframes shopBump { 30% { transform: scale(1.25); } 60% { transform: scale(.92); } }
+@keyframes shopFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.pkmk-stall.opening ~ .pkmk-inner { animation: shopFade .5s 1.8s ease-out both; }
+@media (max-height: 520px) {                 /* (ahí la caja tiene 10px 14px de relleno) */
+  .pkmk-stall { margin: -10px -14px 10px; height: 200px; }
+  .pkmk-sign { font-size: 14px; top: 3px; }
+}
+@media (max-width: 640px) {
+  .pkmk-stall { height: 220px; }
+  .pkmk-sign { font-size: 14px; }
+  .pkmk-bubble { font-size: 11px; }
+}
