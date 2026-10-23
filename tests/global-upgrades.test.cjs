@@ -65,7 +65,9 @@ test('compiled game has the new menu, save schema, and start move integration',(
  if(!fs.existsSync(path.join(base,'index.html')))return;
  const read=f=>fs.readFileSync(path.join(base,f),'utf8');
  assert.match(read('index.html'),/scr-global-powerups/);
- assert.match(read('index.html'),/data-go="global"/);
+ assert.match(read('index.html'),/scr-upgrade-select/);
+ assert.match(read('index.html'),/pkmsvv-upgrade-all/);
+ assert.doesNotMatch(read('index.html'),/data-go="global"/);
  assert.match(read('js/game.js'),/G\.GlobalPower\.combine/);
  assert.match(read('js/game.js'),/Math\.min\(2,perks\.startMoves\)/);
  assert.match(read('js/core/db.js'),/globalUpgrades: \{\}/);
