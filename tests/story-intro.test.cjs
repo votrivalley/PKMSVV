@@ -23,3 +23,10 @@ test('main menu places Ký Ức immediately after Cài đặt',()=>{
  assert.ok(p.indexOf('data-go="settings"')>=0 && p.indexOf('data-go="memories"')>p.indexOf('data-go="settings"'));
  assert.doesNotMatch(p,/data-go="upgrades"/);
 });
+
+test('menu actively moves Memories immediately after Settings whenever menu opens',()=>{
+ const source=read('scripts/patch-story.cjs');
+ assert.match(source,/settingsItem\.nextElementSibling/);
+ assert.match(source,/settingsItem\.after\(memoriesItem\)/);
+ assert.match(source,/menu-list \[data-go=/);
+});

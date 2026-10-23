@@ -57,6 +57,7 @@ patch('js/ui/menu.js',"upgrades: 'up',","upgrades: 'up', memories: 'book',");
 patch('js/ui/menu.js',
  '    const s = G.DB.save;\n    const mon = G.DEX_BY[s.partner];',
  "    const s = G.DB.save;\n    const memo = document.getElementById('pkmsvv-memory-title');\n"+
+ "    // Match the final menu DOM order even after translation and other menu plugins.\n    const settingsItem=document.querySelector('#scr-menu .menu-list [data-go=\"settings\"]');\n    const memoriesItem=document.querySelector('#scr-menu .menu-list [data-go=\"memories\"]');\n    if(settingsItem&&memoriesItem&&settingsItem.nextElementSibling!==memoriesItem)settingsItem.after(memoriesItem);\n"+
  "    if(memo){memo.textContent=G.I18n.lang==='en'?'Memories':'Ký Ức';document.getElementById('pkmsvv-memory-sub').textContent=G.I18n.lang==='en'?'Replay Chapter 0 · Awakening':'Xem lại Chương 0 · Thức tỉnh';}\n"+
  '    const mon = G.DEX_BY[s.partner];');
 patch('js/ui/menu.js',"else if (go === 'upgrades') G.PKMSVVUpgradeChooser.open();",
