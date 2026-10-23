@@ -66,6 +66,8 @@ execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-multiplaye
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-multiplayer-hub.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-retro-web.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-entry-ui.cjs')], { cwd: root, stdio: 'inherit' });
+// Do not register missing /game/sw.js: both routes share /sw.js.
+replaceOnce(path.join(game,'js','main.js'),"navigator.serviceWorker.register('sw.js')","navigator.serviceWorker.register('/sw.js',{scope:'/'})");
 const notesFile=path.join(game,'js','data','changelog.js');
 fs.appendFileSync(notesFile,'\n'+fs.readFileSync(path.join(root,'src','pkmsvv-changelog-v13-web.js'),'utf8'),'utf8');
 const uiNewsPath=path.join(game,'js','ui','news-ui.js');
@@ -160,11 +162,17 @@ landing = landing.replace('data-cloud-enabled="false"', 'data-cloud-enabled="' +
 fs.writeFileSync(path.join(dest, 'index.html'), landing, 'utf8');
 fs.copyFileSync(path.join(root, 'src', 'web', 'entry.js'), path.join(dest, 'entry.js'));
 const manifest=JSON.parse(fs.readFileSync(path.join(game,'manifest.webmanifest'),'utf8'));
-manifest.start_url='./';
-manifest.scope='./';
+manifest.id='/';
+manifest.start_url='/?source=pwa';
+manifest.scope='/';
 manifest.display='standalone'; // Android home-screen launch; login remains optional.
-manifest.orientation='landscape';
-manifest.icons=(manifest.icons||[]).map(icon=>({...icon,src:'./game/'+icon.src.replace(/^\.?\//,'')}));
+manifest.orientation='any'; // Let the entry screen open in portrait too.
+manifest.icons=(manifest.icons||[]).map(icon=>({...icon,src:'/game/'+icon.src.replace(/^\.?\//,'')}));
 fs.writeFileSync(path.join(dest,'manifest.webmanifest'),JSON.stringify(manifest,null,2)+'\n');
+// Previous installs from /game/ also get the fixed absolute launch URL.
+fs.writeFileSync(path.join(dest,'game','manifest.webmanifest'),JSON.stringify(manifest,null,2)+'\n');
+for(const icon of manifest.icons){
+ if(!fs.existsSync(path.join(dest,icon.src.replace(/^\//,''))))throw Error('Missing install icon: '+icon.src);
+}
 fs.copyFileSync(path.join(root,'src','web','sw.js'),path.join(dest,'sw.js'));
 console.log('PKMSVV WEB READY: dist/web (Google/co-op ' + (config ? 'configured' : 'DISABLED: preview') + ')');

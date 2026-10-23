@@ -47,6 +47,11 @@ jobs:
           test -s dist/web/game/index.html
           test -s dist/web/game/js/app.min.js
           test -d dist/web/game/assets
+          test -s dist/web/manifest.webmanifest
+          test -s dist/web/sw.js
+          test -s dist/web/game/assets/icons/icon-192.png
+          test -s dist/web/game/assets/icons/icon-512.png
+          node -e "const fs=require('fs'),m=JSON.parse(fs.readFileSync('dist/web/manifest.webmanifest'));if(m.start_url!=='/?source=pwa'||m.scope!=='/'||m.id!=='/')process.exit(1)"
           if grep -R -l "AIzaSyB1LpJcsnT7gj7c8cpRMGjhswLPr8-dnBw" dist/web/game/js dist/web/game/index.html; then
             echo "Upstream Firebase key accidentally included" >&2
             exit 1
@@ -60,7 +65,13 @@ jobs:
           {
             "hosting": {
               "public": "site",
-              "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
+              "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+              "headers": [
+                {"source": "/manifest.webmanifest", "headers": [{"key": "Content-Type", "value": "application/manifest+json"}, {"key": "Cache-Control", "value": "no-cache"}]},
+                {"source": "/game/manifest.webmanifest", "headers": [{"key": "Content-Type", "value": "application/manifest+json"}, {"key": "Cache-Control", "value": "no-cache"}]},
+                {"source": "/sw.js", "headers": [{"key": "Cache-Control", "value": "no-cache"}]},
+                {"source": "/index.html", "headers": [{"key": "Cache-Control", "value": "no-cache"}]}
+              ]
             }
           }
           EOF

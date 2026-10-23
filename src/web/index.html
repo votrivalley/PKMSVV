@@ -4,7 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<link rel="manifest" href="./manifest.webmanifest">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/game/assets/icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="/game/assets/icons/icon-180.png">
 <meta name="theme-color" content="#0a2633">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'">
 <title>Pokémon Sống Sót – Votri Valley | Chọn chế độ chơi</title>
@@ -27,11 +29,13 @@ footer{margin-top:17px;text-align:center;color:#92adce;font-size:11px}
 <body>
 <main>
 <h1 class="pkmsvv-fixed-logo"><span>Pokémon</span><span>Sống Sót</span></h1><h2>Votri Valley · Web thử nghiệm</h2>
-<p>Chọn phương thức lưu trước khi vào trò chơi. Chơi offline không cần đăng nhập; chế độ Google cho phép phòng Sống Sót (hợp tác) khi đã cấu hình Firebase riêng.</p>
+<p>Chơi offline và lưu trên máy, hoặc đăng nhập Google để lưu đám mây và chơi nhiều người. Không cần ID/mật khẩu.</p>
 <button id="local" class="primary" type="button">🎮 Chơi offline — Lưu trên thiết bị</button>
 <button id="fullscreen" type="button">⛶ Toàn màn hình (trước khi đăng nhập)</button>
 <small id="fullscreen-status" role="status"></small>
-<button id="cloud" type="button">☁️ Đăng nhập / chơi online qua Google</button>
+<button id="cloud" type="button">☁️ Đăng nhập Google · Chơi Online</button>
+<button id="install" type="button">📲 Cài game lên màn hình chính</button>
+<small id="install-status" role="status">Nếu icon cũ không mở, hãy sao lưu save trước khi cài lại.</small>
 <small id="cloud-status" role="status"></small>
 <p><b>Lưu ý:</b> Save offline và Google được tách biệt. Không tự ghi đè hoặc nhập save giữa hai hồ sơ. Nên xuất file save định kỳ.</p>
 <footer>Bản fan-made phi thương mại · Không được Nintendo/The Pokémon Company bảo trợ</footer>

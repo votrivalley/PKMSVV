@@ -1,18 +1,23 @@
 'use strict';
-/* Installed Web app startup only. Do not cache outdated gameplay scripts or game saves. */
-const CACHE='pkmsvv-launch-v1';
-const SHELL=['./','./index.html','./entry.js','./manifest.webmanifest'];
-self.addEventListener('install',e=>{
- e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()));
+/* Root Web launcher for Android PWAs. Keep saves/storage entirely untouched. */
+const CACHE='pkmsvv-launch-v2';
+const SHELL=['/','/index.html','/entry.js','/manifest.webmanifest'];
+self.addEventListener('install',event=>{
+ event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting()));
 });
-self.addEventListener('activate',e=>{
- e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('pkmsvv-launch-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
+self.addEventListener('activate',event=>{
+ event.waitUntil(caches.keys().then(keys=>Promise.all(
+  keys.filter(key=>key.startsWith('pkmsvv-launch-')&&key!==CACHE).map(key=>caches.delete(key))
+ )).then(()=>self.clients.claim()));
 });
-self.addEventListener('fetch',e=>{
- const u=new URL(e.request.url);
- if(e.request.mode!=='navigate'||u.origin!==self.location.origin)return;
- // Always check current Hosting first; offline launcher falls back only to mode picker.
- if(u.pathname==='/'||u.pathname==='/index.html'){
-  e.respondWith(fetch(e.request).catch(()=>caches.match('./index.html')));
- }
+self.addEventListener('fetch',event=>{
+ if(event.request.method!=='GET'||event.request.mode!=='navigate')return;
+ const url=new URL(event.request.url);
+ if(url.origin!==self.location.origin)return;
+ event.respondWith(fetch(event.request).then(async response=>{
+   if(response.status===404)return (await caches.match('/index.html'))||response;
+   return response;
+  }).catch(async()=> (await caches.match('/index.html'))||
+    new Response('<!doctype html><title>Pokémon Sống Sót</title><p>Kiểm tra Internet rồi mở lại ứng dụng.</p>',
+      {status:503,headers:{'Content-Type':'text/html; charset=utf-8'}})));
 });

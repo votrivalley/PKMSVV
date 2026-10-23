@@ -58,8 +58,8 @@ test('online build does not silently degrade into an offline profile', () => {
 });
 
 test('installed home-screen icon launches mode picker and can enter offline/fullscreen before login',()=>{
- assert.match(build,/manifest\.start_url='\.\/'/);
- assert.match(build,/manifest\.scope='\.\/'/);
+ assert.match(build,/manifest\.start_url='\/\?source=pwa'/);
+ assert.match(build,/manifest\.scope='\/'/);
  assert.match(build,/manifest\.icons=/);
  assert.ok(build.includes('href="../manifest.webmanifest"'));
  assert.match(build,/patch-web-entry-ui\.cjs/);
@@ -70,7 +70,7 @@ test('installed home-screen icon launches mode picker and can enter offline/full
  assert.match(patch,/requestFullscreen/);
  assert.match(entry,/serviceWorker\.register/);
  const sw=fs.readFileSync(path.join(root,'src/web/sw.js'),'utf8');
- assert.match(sw,/pkmsvv-launch-v1/);
+ assert.match(sw,/pkmsvv-launch-v2/);
  assert.doesNotMatch(sw,/caches\.delete\(.*localStorage/);
 });
 
@@ -94,4 +94,28 @@ test('fullscreen controls toggle in both directions and reflect external Escape 
    assert.match(source,/Thoát toàn màn hình/);
    assert.match(source,/aria-pressed/);
  }
+});
+
+test('PWA Android launch has root-scope entry, install prompt and valid icons',()=>{
+ const sw=fs.readFileSync(path.join(root,'src/web/sw.js'),'utf8');
+ assert.match(build,/manifest\.id='\/'/);
+ assert.match(build,/manifest\.start_url='\/\?source=pwa'/);
+ assert.match(build,/manifest\.scope='\/'/);
+ assert.match(build,/manifest\.orientation='any'/);
+ assert.match(build,/game','manifest\.webmanifest/);
+ assert.match(build,/register\('\/sw\.js'/);
+ assert.match(entry,/beforeinstallprompt/);
+ assert.match(entry,/appinstalled/);
+ assert.match(entry,/p\.prompt\(\)/);
+ assert.match(landing,/id="install"/);
+ assert.match(sw,/pkmsvv-launch-v2/);
+ assert.match(sw,/response\.status===404/);
+});
+test('Web hides broken legacy ID/password and leaves saved accounts alone',()=>{
+ const patch=fs.readFileSync(path.join(root,'scripts/patch-web-entry-ui.cjs'),'utf8');
+ assert.match(patch,/#scr-login \.tabs,#scr-login #login-form,#scr-login #btn-guest/);
+ assert.match(patch,/#scr-login #btn-google:not\(\.hidden\)/);
+ assert.match(patch,/pkmsvv-login-google/);
+ assert.match(patch,/pkmsvv-login-offline/);
+ assert.doesNotMatch(patch,/deleteAccount\(|localStorage\.clear\(\)/);
 });

@@ -62,6 +62,13 @@ patch('js/ui/login.js',
  "      } else location.assign('../');",
  "    };"
  ].join('\n'));
+// Hide legacy ID/password account UI on Web, leave old account data intact.
+patch('js/ui/login.js',"    setTimeout(() => $('f-user').focus(), 50);",
+ "    setTimeout(() => $('pkmsvv-login-google').focus(), 50);");
 fs.appendFileSync(path.join(base,'css','style.css'),
  '\n#scr-login .pkmsvv-entry-buttons{display:flex;gap:8px;flex-wrap:wrap;margin:9px 0 4px}#scr-login .pkmsvv-entry-buttons>.btn{min-height:44px;flex:1 1 140px;white-space:normal}#pkmsvv-login-fullscreen-tip{min-height:1em;color:#f7dd99}\n#scr-menu .pkmsvv-google-switch{font-size:15px}#scr-menu .pkmsvv-google-switch .mi-ico{display:inline-flex;align-items:center;justify-content:center}\n#scr-login #btn-google:not(.hidden){display:inline-flex!important}\n','utf8');
-console.log('PKMSVV Web: explicit Offline and Fullscreen before login');
+fs.appendFileSync(path.join(base,'css','style.css'),
+ '\n/* Hide unsupported Web ID/password and guest sign-in choices. */\n'+
+ '#scr-login .tabs,#scr-login #login-form,#scr-login #btn-guest{display:none!important}\n'+
+ '#scr-login #btn-google:not(.hidden){display:none!important}\n','utf8');
+console.log('PKMSVV Web login: Google or Offline only; legacy account data preserved');

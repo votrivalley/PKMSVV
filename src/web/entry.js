@@ -47,7 +47,37 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('fullscreenchange',updateFull);
   document.addEventListener('webkitfullscreenchange',updateFull);
   updateFull();
-  // Register a tiny PWA shell for reliable home-screen launch, never clear saves.
-  if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  // A real Chrome install prompt, with a useful fallback when it is unavailable.
+  const installButton=document.getElementById('install');
+  const installStatus=document.getElementById('install-status');
+  let pendingInstall=null;
+  const installed=()=>matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true;
+  const syncInstall=()=>{if(installed()){installButton.disabled=true;installButton.textContent='✓ Đã mở từ màn hình chính';installStatus.textContent='Bạn đang dùng ứng dụng Web đã cài.';}};
+  window.addEventListener('beforeinstallprompt',event=>{
+    event.preventDefault();pendingInstall=event;
+    installButton.disabled=false;installButton.textContent='📲 Cài game lên màn hình chính';
+    installStatus.textContent='Chạm Cài game để xác nhận cài đặt trong Chrome.';
+  });
+  window.addEventListener('appinstalled',()=>{
+    pendingInstall=null;installButton.disabled=true;installButton.textContent='✓ Đã cài game';
+    installStatus.textContent='Nếu còn icon lỗi từ phiên bản cũ, hãy sao lưu save trước khi gỡ icon đó.';
+  });
+  installButton.onclick=async()=>{
+    if(installed()){syncInstall();return;}
+    if(!pendingInstall){
+      installStatus.textContent='Chrome Android: chọn ⋮ → Thêm vào màn hình chính / Cài đặt ứng dụng. Nếu icon cũ không mở, sao lưu save trước khi cài lại.';
+      return;
+    }
+    const p=pendingInstall;pendingInstall=null;
+    try{
+      await p.prompt();
+      const answer=await p.userChoice;
+      installStatus.textContent=answer&&answer.outcome==='accepted'?'Đã chấp nhận cài đặt. Thử mở biểu tượng mới.':'Bạn đã hủy cài đặt. Có thể thử lại từ menu Chrome.';
+    }catch(e){installStatus.textContent='Không thể mở yêu cầu cài đặt. Thử qua menu Chrome.';}
+  };
+  syncInstall();
+  // The launcher and /game/ share a single root-scope service worker.
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js',{scope:'/'})
+    .catch(e=>{installStatus.textContent='Không đăng ký được chế độ cài đặt: '+(e&&e.message||'service worker');});
 
 });
