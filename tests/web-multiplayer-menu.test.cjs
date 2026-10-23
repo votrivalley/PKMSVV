@@ -21,10 +21,10 @@ test('public room index permissions are owned by the host',()=>{
 test('custom keyboard bindings are persisted device-locally and title fixed to exactly two lines',()=>{
  const key=read('scripts/patch-keybind-title.cjs');
  for(const k of ['up','down','left','right','dash','pause','card1','card2','card3'])assert.match(key,new RegExp(k));
- assert.match(key,/G.Settings.set\\('keys'/);
+ assert.ok(key.includes("G.Settings.set('keys'"));
  assert.match(key,/stopImmediatePropagation/);
  assert.match(key,/virtualPressed/);
- assert.match(key,/Pokémon<\\/span><span>Sống Sót/);
+ assert.ok(key.includes('Pokémon</span><span>Sống Sót'));
  assert.match(read('src/web/index.html'),/pkmsvv-fixed-logo/);
  assert.doesNotMatch(key,/G.DB.commit/);
 });
