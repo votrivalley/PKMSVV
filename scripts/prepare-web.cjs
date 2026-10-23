@@ -22,6 +22,21 @@ function loadConfig() {
   }
   let parsed;
   try { parsed = JSON.parse(raw); } catch (e) { throw new Error('Firebase config must be valid JSON: ' + e.message); }
+  // Reject placeholders and typos BEFORE packaging unusable online builds.
+  // Never print actual apiKey in logs. Firebase Web API keys begin with AIza
+  // followed by 35 base64url characters.
+  if (!/^AIza[A-Za-z0-9_-]{35}$/.test(String(parsed.apiKey || ''))) {
+    throw new Error('Sai Firebase apiKey: hãy copy đúng giá trị apiKey trong Firebase > Project settings > Your apps > Web app > Config. Không dùng chữ SAO_CHEP_TU_FIREBASE hoặc GIÁ_TRỊ_APIKEY_TRONG_FIREBASE.');
+  }
+  if (parsed.projectId !== 'pkmsvv-b84d2') {
+    throw new Error('Sai Firebase projectId: chỉ sử dụng cấu hình Web App của dự án pkmsvv-b84d2.');
+  }
+  if (parsed.authDomain !== 'pkmsvv-b84d2.firebaseapp.com') {
+    throw new Error('Sai authDomain: lấy lại toàn bộ Config từ Firebase Web App của pkmsvv-b84d2.');
+  }
+  if (!String(parsed.databaseURL || '').startsWith('https://pkmsvv-b84d2-default-rtdb.')) {
+    throw new Error('Sai databaseURL: phải là Realtime Database của pkmsvv-b84d2.');
+  }
   const allowed = ['apiKey', 'authDomain', 'projectId', 'appId', 'databaseURL', 'messagingSenderId', 'storageBucket'];
   for (const key of ['apiKey', 'authDomain', 'projectId', 'appId', 'databaseURL']) {
     if (typeof parsed[key] !== 'string' || !parsed[key].trim()) throw new Error('Firebase config missing ' + key);
@@ -54,6 +69,13 @@ let db = fs.readFileSync(dbFile, 'utf8').replace(/\r\n/g, '\n');
 const hostMarker = "const HOSTS = ['pokesurvivor.com', 'www.pokesurvivor.com', 'jpter78.github.io', 'localhost', '127.0.0.1'];";
 if (!db.includes(hostMarker)) throw new Error('Firebase host allowlist anchor changed');
 db = db.replace(hostMarker, 'const HOSTS = ' + JSON.stringify(config ? config.hosts : ['localhost', '127.0.0.1']) + ';');
+// Show a useful error instead of the raw Firebase code when Google login fails.
+const loginErrors = "      'auth/email-already-in-use':";
+if (!db.includes(loginErrors)) throw new Error('authError mapping changed upstream');
+db = db.replace(loginErrors,
+  "      'auth/api-key-not-valid': 'Lỗi khóa Firebase của trang web. Quản trị viên cần sửa apiKey trong GitHub Actions Secret rồi build/triển khai lại.',\n" +
+  "      'auth/invalid-api-key': 'Khóa Firebase không hợp lệ. Hãy kiểm tra cấu hình Web App.',\n" +
+  "      'auth/email-already-in-use':".replaceAll('\n', '\n'));
 const cloudMarker = '  async function initCloud() {\n    const cfg = G.FIREBASE_CONFIG;';
 if (!db.includes(cloudMarker)) throw new Error('initCloud anchor changed');
 db = db.replace(cloudMarker,
@@ -63,7 +85,15 @@ db = db.replace(cloudMarker,
 fs.writeFileSync(dbFile, db);
 const flow = path.join(game, 'js', 'game.js');
 replaceOnce(flow, 'setTimeout(() => this.afterLogin(), 0);',
-  "setTimeout(() => { if (restored || G.DB.mode === 'local') this.afterLogin(); else this.tapToStart(() => this.toLogin()); }, 0);");
+  "setTimeout(() => { " +
+  "  let wantsCloud = false; " +
+  "  try { wantsCloud = localStorage.getItem('pkmsvv.web.saveMode') === 'cloud'; } catch (e) {} " +
+  "  if (wantsCloud && G.DB.mode !== 'cloud') { " +
+  "    alert('Không thể kết nối Firebase Online. Game chưa lưu lên đám mây; hãy quay về màn hình chọn chế độ hoặc báo lỗi cho quản trị viên.'); " +
+  "    window.location.replace('../'); return; " +
+  "  } " +
+  "  if (restored || G.DB.mode === 'local') this.afterLogin(); else this.tapToStart(() => this.toLogin()); " +
+  "}, 0);");
 replaceOnce(flow, 'toLogin() { this.afterLogin(); },',
   "toLogin() { G.Audio.music('village'); G.LoginUI.open(); },");
 fs.writeFileSync(path.join(game, 'js', 'core', 'firebase-config.js'),

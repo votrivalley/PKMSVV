@@ -32,3 +32,25 @@ test('static HTML contains no remote scripts', () => {
   assert.doesNotMatch(landing, /<script[^>]*src="https?:/);
   assert.match(landing, /noindex,nofollow/);
 });
+test('bad copied Firebase API key is rejected before packaging any online game', () => {
+  const { spawnSync } = require('node:child_process');
+  const bad = JSON.stringify({
+    apiKey: 'GIÁ_TRỊ_APIKEY_TRONG_FIREBASE',
+    authDomain: 'pkmsvv-b84d2.firebaseapp.com',
+    projectId: 'pkmsvv-b84d2',
+    appId: '1:123:web:abc',
+    databaseURL: 'https://pkmsvv-b84d2-default-rtdb.asia-southeast1.firebasedatabase.app'
+  });
+  const r = spawnSync(process.execPath, [path.join(root, 'scripts', 'prepare-web.cjs')], {
+    env: { ...process.env, PKMSVV_FIREBASE_CONFIG_JSON: bad, PKMSVV_WEB_PREVIEW: '0' },
+    encoding: 'utf8'
+  });
+  assert.notEqual(r.status, 0);
+  assert.match(r.stderr, /Sai Firebase apiKey/);
+  assert.doesNotMatch(r.stderr, /apiKey.*AIza[A-Za-z0-9_-]{35}/);
+});
+test('online build does not silently degrade into an offline profile', () => {
+  assert.match(build, /wantsCloud && G.DB.mode !== 'cloud'/);
+  assert.match(build, /Không thể kết nối Firebase Online/);
+  assert.match(build, /auth\/api-key-not-valid/);
+});

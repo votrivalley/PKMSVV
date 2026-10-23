@@ -79,3 +79,18 @@ Chú ý **có chữ `--only hosting`**: lệnh này chỉ đưa website lên, **
 - **Không vào được trận hai người:** thử hai mạng/thiết bị khác nhau; WebRTC gốc chỉ dùng STUN, một số mạng cần TURN và sửa tương thích multiplayer.
 
 Các quy tắc bảo mật hiện là bản khởi đầu lấy từ upstream và chưa qua audit đầy đủ. Cần thử bằng tài khoản riêng biệt trước khi chia sẻ rộng.
+
+
+## Sửa lỗi đăng nhập Google: auth/api-key-not-valid (23/10/2026)
+
+Nếu form đăng nhập hiển thị `auth/api-key-not-valid-please-pass-a-valid-api-key`, cấu hình Firebase Web API Key của gói đang triển khai sai hoặc không được chấp nhận.
+
+1. Mở https://console.firebase.google.com/project/pkmsvv-b84d2/settings/general, kéo xuống **Your apps**, chọn **PKMSVV Web**, mở **SDK setup and configuration → Config**.
+2. Sao chép `apiKey` chính xác (chuỗi dài bắt đầu bằng `AIza`), không dùng placeholder như `GIÁ_TRỊ_APIKEY_TRONG_FIREBASE`.
+3. Vào https://github.com/votrivalley/PKMSVV/settings/secrets/actions, chọn nút cây bút cạnh **PKMSVV_FIREBASE_CONFIG_JSON**. Thay `apiKey` bằng khóa thật; nên soát lại `authDomain`, `projectId`, `appId`, `databaseURL` so với Firebase Config. Nhấn **Update secret**. **Không đưa Service Account/Admin SDK keys vào Secret này**.
+4. Sau khi sửa Secret, vào GitHub Actions → **Build Web Edition (test artifact)** → **Run workflow** (nhánh `main`). Nếu secret là placeholder/sai định dạng, bản build mới sẽ **báo lỗi đỏ** thay vì tạo một website đăng nhập bị lỗi.
+5. Khi workflow xanh, tải **PKMSVV-Web-Hosting** của run MỚI, giải nén đè sang thư mục triển khai. Trên PowerShell trong thư mục có `firebase.json`, chạy `firebase.cmd deploy --only hosting --project pkmsvv-b84d2`.
+6. Tải lại trang bằng **Ctrl+Shift+R**, kiểm tra Google Sign-In. Nếu vẫn có lỗi dù chuỗi `apiKey` đúng, kiểm tra **Google Cloud Console → APIs & Services → Credentials → Browser key**. Khóa cần thuộc cùng Firebase project và cho phép **Identity Toolkit API** và **Token Service API**. Nếu bị giới hạn HTTP referrer, thêm tên miền Web Hosting đúng định dạng `https://pkmsvv-b84d2.web.app/*`. Đừng tắt mọi hạn chế API để sửa tạm.
+7. Chế độ Google phải thực sự đăng nhập xong và xuất hiện hồ sơ trong **Firebase Authentication → Users**; tạo tài khoản tên/mật khẩu riêng chỉ dùng Online nếu cũng bật **Authentication → Sign-in method → Email/Password**. Chức năng offline không tự trở thành online chỉ vì đang ở trên website.
+
+Đừng thử đổi Firestore/Realtime Database sang Test Mode để chữa lỗi API Key: hai vấn đề không liên quan.
