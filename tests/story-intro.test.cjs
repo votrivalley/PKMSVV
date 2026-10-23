@@ -31,15 +31,15 @@ test('menu actively moves Memories immediately after Settings whenever menu open
  assert.match(source,/menu-list \[data-go=/);
 });
 
-test('approved cinematic pixel art replaces primitive SVGs whenever included in source',()=>{
+test('approved cinematic art paths and renderer are wired into build',()=>{
  const story=read('src/pkmsvv-story.js'),p=read('scripts/patch-story.cjs'),css=read('src/pkmsvv-story.css');
- assert.match(story,/const VISUALS/);
- assert.match(story,/1:'eyes', 2:'eyes', 3:'eyes'/);
- assert.match(story,/4:'gate', 5:'gate'/);
- assert.match(story,/assets\\/story\\/'/);
- assert.match(story,/\\.webp/);
- assert.match(story,/img\\.onerror/);
- assert.match(p,/src','story-art'/);
- assert.match(p,/fs\\.copyFileSync\\(source,dest\\)/);
- assert.match(css,/object-fit:contain/);
+ assert.ok(story.includes('const VISUALS'));
+ assert.ok(story.includes("1:'eyes', 2:'eyes', 3:'eyes'"));
+ assert.ok(story.includes("4:'gate', 5:'gate'"));
+ assert.ok(story.includes("assets/story/"));
+ assert.ok(story.includes(".webp"));
+ assert.ok(story.includes("img.onerror"));
+ assert.ok(p.includes("'src','story-art'"));
+ assert.ok(p.includes('fs.copyFileSync(source,dest)'));
+ assert.ok(css.includes('object-fit:contain'));
 });
