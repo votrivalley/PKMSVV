@@ -42,14 +42,14 @@ function spawner() {
 
 const config = JSON.parse(fs.readFileSync(path.join(root,'config/gameplay.json'),'utf8'));
 const baseRate = t => (1.6 + t*0.028 + Math.pow(t/60,1.6)*0.5) * config.enemies.density;
-const pacing = t => t<=180 ? 2/3 : t>=600 ? 1 : 2/3+(t-180)/1260;
-const hpFactor = t => 1.65 + Math.min(1.55,Math.max(0,t)/360);
+const pacing = t => t<=180?2/3:t<=540?2/3+(t-180)/1080:t<=900?1+(t-540)*0.0011:Math.min(1.9,1.396+(t-900)*0.0007);
+const hpFactor = t => 1.65+Math.min(1.55,Math.max(0,t)/360)+Math.min(2.15,Math.max(0,t-540)/350);
 const close = (a,b) => assert.ok(Math.abs(a-b)<1e-9,String(a)+' versus '+String(b));
 
-test('0–3 min remains 2/3, then climbs smoothly to 100% at 10 min with no cliff',()=>{
+test('0–3 min remains 2/3, pressure rises past minute 10 without a cliff',()=>{
  if(!fs.existsSync(src))return;
  const {G}=spawner();
- for(const t of [0,60,179,180,181,240,360,480,599,600,900]){
+ for(const t of [0,60,179,180,181,240,360,480,539,540,599,600,900,1200,1800]){
   close(G.Spawner.rate(t),baseRate(t)*pacing(t));
  }
  const eps=0.001;
@@ -62,7 +62,7 @@ test('0–3 min remains 2/3, then climbs smoothly to 100% at 10 min with no clif
 });
 test('Surge/burst enemy amounts respect same gradual ramp from minute 3 to 10',()=>{
  if(!fs.existsSync(src))return;
- for(const [time,expected] of [[0,20],[179,20],[180,20],[240,21],[360,24],[480,27],[600,30],[900,30]]){
+ for(const [time,expected] of [[0,20],[179,20],[180,20],[240,22],[360,25],[480,28],[600,32],[900,42]]){
   const {G,mgr}=spawner();G.Game.st.time=time;
   G.Spawner.burst(30);
   assert.equal(mgr.count,expected,'run time '+time);
@@ -111,4 +111,20 @@ test('Difficulty config does not erase earned upgrades, save progress or base re
  assert.match(patch,/openingSpawnFactor/);
  assert.match(patch,/t < 600/);
  assert.doesNotMatch(patch,/s\.globalUpgrades\s*=\s*\{\}/);
+});
+
+test('late-run spawn pressure and enemy strength increase with a hard cap',()=>{
+ if(!fs.existsSync(src))return;
+ const {G}=spawner();
+ for(const t of [180,540,600,900,1200,1500])assert.ok(G.Spawner.rate(t+1)>=G.Spawner.rate(t));
+ assert.ok(pacing(600)>1 && pacing(900)>pacing(600) && pacing(1200)>pacing(900));
+ assert.ok(pacing(1800)<=1.9 && hpFactor(900)>hpFactor(600) && hpFactor(1200)>hpFactor(900));
+ assert.ok(hpFactor(3600)<5.4);
+ const srcText=fs.readFileSync(src,'utf8');
+ assert.match(srcText,/const lateCap=t=>CAP\+Math.min\(20/);
+ const prev=spawner(); prev.G.Game.st.time=600;prev.G.Spawner.burst(1);
+ const late=spawner(); late.G.Game.st.time=1200;late.G.Spawner.burst(1);
+ assert.ok(late.mgr.instances[0].hp>prev.mgr.instances[0].hp);
+ assert.ok(late.mgr.instances[0].dmg>prev.mgr.instances[0].dmg);
+ assert.equal(late.mgr.instances[0].xp,prev.mgr.instances[0].xp);
 });
