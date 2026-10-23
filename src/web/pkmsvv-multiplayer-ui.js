@@ -3,7 +3,8 @@ G.MultiplayerUI=(()=>{
  const $=G.UI.$;
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
  const msg=(s,bad=false)=>{const el=$('pkmsvv-mp-message');el.textContent=s;el.style.color=bad?'#ffc4cb':'#d2e8ff';};
- const label=mode=>mode==='royale'?'🏆 Sống Còn · 2–10':'🤝 Sống Sót · 2–4';
+ const vi=()=>!G.I18n||G.I18n.lang==='vi';
+ const label=mode=>mode==='royale'?(vi()?'🏆 Sống Còn · 2–10':'🏆 Survival · 2–10'):(vi()?'🤝 Sống Sót · 2–4':'🤝 Co-op · 2–4');
  const busy=()=>{if(!G.Social.room)return false;G.LobbyUI.open();return true;};
  async function create(mode,visibility){
   if(busy())return;
@@ -60,9 +61,19 @@ G.MultiplayerUI=(()=>{
   G.Social.on(()=>{if(G.UI.isOpen('scr-multiplayer'))refresh();});
  }
  function refresh(){
+  const captions=vi()?{
+   'pkmsvv-quick-coop':'🤝 Ghép Sống Sót','pkmsvv-quick-royale':'🏆 Ghép Sống Còn',
+   'pkmsvv-coop-public':'Sống Sót · Công khai','pkmsvv-royale-public':'Sống Còn · Công khai',
+   'pkmsvv-coop-private':'Sống Sót · Riêng tư','pkmsvv-royale-private':'Sống Còn · Riêng tư'
+  }:{
+   'pkmsvv-quick-coop':'🤝 Quick Co-op','pkmsvv-quick-royale':'🏆 Quick Survival',
+   'pkmsvv-coop-public':'Co-op · Public','pkmsvv-royale-public':'Survival · Public',
+   'pkmsvv-coop-private':'Co-op · Private','pkmsvv-royale-private':'Survival · Private'
+  };
+  for(const [id,title] of Object.entries(captions))$(id).textContent=title;
   const r=G.Social.room;
   $('pkmsvv-existing-lobby').classList.toggle('hidden',!r);
-  $('pkmsvv-mp-current').textContent=r?'Bạn đang trong phòng '+(r.mode==='royale'?'Sống Còn':'Sống Sót')+'.':'';
+  $('pkmsvv-mp-current').textContent=r?(vi()?'Bạn đang trong phòng ':'You are in a ')+(r.mode==='royale'?(vi()?'Sống Còn':'Survival'):(vi()?'Sống Sót':'Co-op'))+(vi()?'.':' room.') : '';
  }
  function open(){
   G.SocialUI.withNick(()=>{

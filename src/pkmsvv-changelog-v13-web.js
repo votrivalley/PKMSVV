@@ -7,7 +7,7 @@ G.CHANGELOG.unshift({
   ['Web Online: Chơi trực tiếp trên trình duyệt, không cần tải bản cài đặt.','Web Online: Play directly in your browser, no installation required.'],
   ['Đăng nhập Google: Truy cập hồ sơ Online, khôi phục tiến trình đã đồng bộ trên máy khác.','Google Sign-In: Access your online profile and restore synced progress on another device.'],
   ['Hai chế độ lưu: Lưu trên thiết bị hoặc hồ sơ Cloud. Hai tiến trình tách biệt, không tự ghi đè.','Two save modes: Local device or Cloud profile, separate with no automatic overwrites.'],
-  ['Sống Sót: Tạo phòng cùng bạn bè, tối đa 4 người.','Sống Sót: Create a lobby and play with up to four friends.'],
+  ['Sống Sót: Tạo phòng cùng bạn bè, tối đa 4 người.','Co-op: Create a lobby and play with up to four friends.'],
   ['Sống Còn 10 người (Beta): Phòng 2–10 người; người cuối cùng sống sót giành chiến thắng.','10-Player Survival (Beta): Rooms for 2–10 players; the last survivor wins.']
  ],
  chg:[
@@ -22,7 +22,7 @@ G.CHANGELOG.unshift({
   ['Thêm gán phím bàn phím tùy chỉnh và logo Pokémon / Sống Sót hai dòng.','Added keyboard rebinding and fixed two-line Pokémon / Sống Sót logo.'],
   ['Sửa lỗi không mua được vật phẩm trong Cửa hàng Kecleon.','Fixed unresponsive Buy buttons in Kecleon Shop.'],
   ['Thay thông báo lưu game/reset xếp hạng cũ bằng hướng dẫn phù hợp, song ngữ Việt–Anh.','Replaced outdated save/ranking notices with bilingual Vietnamese and English guidance.'],
-  ['Giao diện phòng chơi: Chọn Sống Sót hoặc Sống Còn, hiển thị người tham gia và cải thiện phòng đông.','Lobby UI: Select Sống Sót or Survival, show players and improve larger room layouts.'],
+  ['Giao diện phòng chơi: Chọn Sống Sót hoặc Sống Còn, hiển thị người tham gia và cải thiện phòng đông.','Lobby UI: Select Co-op or Survival, show players and improve larger room layouts.'],
   ['Online/Sống Còn vẫn là bản thử nghiệm, cần QA nhiều thiết bị; điểm Sống Còn chưa vào bảng xếp hạng chính thức.','Online/Survival still needs multi-device QA; Survival scores are not added to official leaderboards.'],
   ['Đổi tên chế độ hợp tác thành Sống Sót và chế độ đối kháng thành Sống Còn; giữ nguyên luật chơi.','Vietnamese labels: Co-op is now Sống Sót and Survival Royale is Sống Còn; gameplay rules are unchanged.']
  ],

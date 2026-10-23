@@ -46,6 +46,7 @@ patch('js/ui/social-ui.js',"      $('fr-room').onclick = () => G.LobbyUI.open();
 patch('js/ui/social-ui.js',"      $('fr-room').classList.toggle('hidden', !room);",
  ["      $('fr-room').classList.toggle('hidden', !room);",
   "      $('pkmsvv-create-modes').classList.toggle('hidden', !!room);",
+  "      $('pkmsvv-create-coop').textContent=G.I18n.lang==='vi'?'🤝 Sống Sót · 2–4':'🤝 Co-op · 2–4';",
   "      $('pkmsvv-create-royale').textContent=G.I18n.lang==='vi'?'🏆 Sống Còn · 2–10':'🏆 Survival · 2–10';"].join('\n'));
 const lp=path.join(base,'js/ui/social-ui.js');let lobby=fs.readFileSync(lp,'utf8');
 if((lobby.match(/G\.Social\.MAX_PLAYERS/g)||[]).length!==4)throw Error('Lobby must use 4 limit references');
@@ -53,7 +54,7 @@ lobby=lobby.replace(/G\.Social\.MAX_PLAYERS/g,'G.Social.roomLimit(room)');fs.wri
 patch('js/ui/social-ui.js',"      const ms = room.members;\n      $('lobby-sub').textContent",
  "      const ms = room.members;\n      $('lobby-note').dataset.mode=room.mode||'coop';\n      $('lobby-sub').textContent");
 patch('js/ui/social-ui.js',"'Eres el anfitrión. Invita a tus amigos (hasta ' + G.Social.roomLimit(room) + ') y empezad cuando estéis.'",
- "(room.mode==='royale'?'🏆 Sống Còn: mời tối đa ':'🤝 Sống Sót: mời tối đa ')+G.Social.roomLimit(room)+' người, bắt đầu từ 2.'");
+ "(G.I18n.lang==='vi'?(room.mode==='royale'?'🏆 Sống Còn: mời tối đa ':'🤝 Sống Sót: mời tối đa '):(room.mode==='royale'?'🏆 Survival: up to ':'🤝 Co-op: up to '))+G.Social.roomLimit(room)+(G.I18n.lang==='vi'?' người, bắt đầu từ 2.':' players, start from 2.')");
 patch('js/ui/social-ui.js',"        k: 'start', seed: Math.floor(Math.random() * 1e6), host: room.host,",
  "        k: 'start', seed: Math.floor(Math.random() * 1e6), host: room.host, mode: room.mode||'coop',");
 patch('js/ui/social-ui.js',"      btn.textContent = 'Empezar partida (' + ms.length + '/' + G.Social.roomLimit(room) + ')';",

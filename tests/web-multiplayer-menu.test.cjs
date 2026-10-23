@@ -38,6 +38,9 @@ test('Vietnamese online modes use Sống Sót for coop and Sống Còn for royal
   for(const source of [hub,social,ui])assert.ok(source.includes(name),name+' missing from a multiplayer UI source');
  }
  assert.match(royale,/BẢNG XẾP HẠNG SỐNG CÒN/);
+ assert.match(ui,/Quick Co-op/);
+ assert.match(ui,/Quick Survival/);
+ assert.match(social,/🤝 Co-op · 2–4/);
  assert.match(social,/mode==='royale'/);
  assert.match(ui,/create\('coop'/);
  assert.match(ui,/create\('royale'/);
