@@ -17,3 +17,9 @@ test('Story UI requires readable opaque text panels and skip controls',()=>{
  assert.match(c,/#0b303b/);assert.match(c,/#fbffff/);
  assert.match(p,/pkmsvv-story-skip/);assert.match(p,/pkmsvv-story-next/);
 });
+
+test('main menu places Ký Ức immediately after Cài đặt',()=>{
+ const p=read('scripts/patch-story.cjs');
+ assert.match(p,/data-go="settings"[\\s\\S]*?data-go="memories"/);
+ assert.doesNotMatch(p,/data-go="upgrades"/);
+});
