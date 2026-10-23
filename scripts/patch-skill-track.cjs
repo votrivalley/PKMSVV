@@ -17,7 +17,7 @@ patch('js/core/db.js',
 patch('js/core/db.js','    s.globalUpgrades = G.GlobalPower.clean(s.globalUpgrades);',
  '    s.pkmsvvSkillMarks = G.PKMSVVSkillTrack.progress(s).marks;\n    s.globalUpgrades = G.GlobalPower.clean(s.globalUpgrades);');
 patch('js/core/db.js','    r.globalUpgrades = G.GlobalPower.merge(r.globalUpgrades,older.globalUpgrades);',
- '    r.pkmsvvSkillMarks = G.PKMSVVSkillTrack.merge(r.pkmsvvSkillMarks,older.pkmsvvSkillMarks);\n    r.globalUpgrades = G.GlobalPower.merge(r.globalUpgrades,older.globalUpgrades);');
+ '    r.pkmsvvSkillMarks = G.PKMSVVSkillTrack ? G.PKMSVVSkillTrack.merge(r.pkmsvvSkillMarks,older.pkmsvvSkillMarks) : Object.assign({},older.pkmsvvSkillMarks||{},r.pkmsvvSkillMarks||{});\n    r.globalUpgrades = G.GlobalPower.merge(r.globalUpgrades,older.globalUpgrades);');
 patch('js/entities/enemy.js','          pl.kills++;\n          if (e.boss && !e.judge) pl.bosses++;',
  '          pl.kills++;\n          G.PKMSVVSkillTrack.refresh(G.DB.save,pl,true);\n          if (e.boss && !e.judge) pl.bosses++;');
 patch('js/game.js','    save.stats.totalKills += pl.kills;',
