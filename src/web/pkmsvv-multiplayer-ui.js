@@ -70,14 +70,33 @@ G.MultiplayerUI=(()=>{
    'pkmsvv-coop-public':'Co-op · Public','pkmsvv-royale-public':'Survival · Public',
    'pkmsvv-coop-private':'Co-op · Private','pkmsvv-royale-private':'Survival · Private'
   };
-  for(const [id,title] of Object.entries(captions))$(id).textContent=title;
+  for(const [id,title] of Object.entries(captions)) {
+   if(id==='pkmsvv-quick-coop'||id==='pkmsvv-quick-royale')continue;
+   $(id).textContent=title;
+  }
+  for(const [id,coop] of [['pkmsvv-quick-coop',true],['pkmsvv-quick-royale',false]]){
+   const b=$(id);if(!b)return;
+   b.querySelector('.pkmsvv-mode-title').textContent=coop?(vi()?'Sống Sót':'Co-op'):(vi()?'Sống Còn':'Survival');
+   b.querySelector('.pkmsvv-mode-cap').textContent=coop?(vi()?'2–4 người':'2–4 players'):(vi()?'2–10 người · Beta':'2–10 players · Beta');
+   b.querySelector('.pkmsvv-mode-description').textContent=coop?
+    (vi()?'Hợp tác chống quái, cứu đồng đội, cùng nhau vượt qua các đợt tấn công.':'Fight waves together, save teammates and survive as a group.'):
+    (vi()?'Đấu loại. Bị hạ sẽ rời trận; người trụ lại cuối cùng chiến thắng.':'Elimination battle. No revival; the last survivor wins.');
+   b.querySelector('.pkmsvv-mode-action').textContent=vi()?'▶ Chơi nhanh':'▶ Quick match';
+  }
   const r=G.Social.room;
   $('pkmsvv-existing-lobby').classList.toggle('hidden',!r);
   $('pkmsvv-mp-current').textContent=r?(vi()?'Bạn đang trong phòng ':'You are in a ')+(r.mode==='royale'?(vi()?'Sống Còn':'Survival'):(vi()?'Sống Sót':'Co-op'))+(vi()?'.':' room.') : '';
  }
  function open(){
   G.SocialUI.withNick(()=>{
-   G.UI.show('scr-multiplayer',true);msg('');refresh();rooms();
+   G.UI.show('scr-multiplayer',true);msg('');refresh();
+   // Reuse native pixel sprites from the game, not generated/third-party artwork.
+   if(G.UI&&G.UI.sprite){
+    for(const [canvasId,dex] of [['pkmsvv-mode-sprite-coop',25],['pkmsvv-mode-sprite-royale',6]]){
+     const cv=$(canvasId);if(cv)G.UI.sprite(cv,dex,{lively:true,scale:2,hero:true});
+    }
+   }
+   rooms();
   });
  }
  return {init,open,rooms,quick,join,create};

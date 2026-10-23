@@ -1,0 +1,23 @@
+/* Retro online hub with image-backed mode cards and high-contrast copy. */
+#scr-multiplayer .pkmsvv-mp-box{max-width:min(950px,98vw);background:linear-gradient(165deg,#28656c,#153d48);color:#f8fffe}
+#scr-multiplayer .pkmsvv-mp-box .sub,#scr-multiplayer .pkmsvv-mp-box .note{color:#e4f5ef}
+#scr-multiplayer .pkmsvv-public-list{background:#e4f5f0;border:2px solid #72b8ad;color:#183f4b}
+#scr-multiplayer .pkmsvv-public-room{border-bottom:1px solid #9abdb8}
+#scr-multiplayer .pkmsvv-public-room span{color:#173744;font-weight:700}
+#scr-multiplayer .pkmsvv-mp-actions .btn{min-width:0}
+#scr-multiplayer .pkmsvv-mode-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:12px 0 24px}
+#scr-multiplayer .pkmsvv-mode-card{width:100%;min-width:0;min-height:205px;display:flex;align-items:center;justify-content:flex-start;gap:12px;background:#ebfaf2;color:#173648;text-align:left;border:3px solid #76c9b6;border-radius:13px;padding:12px 14px;box-shadow:0 4px 0 #092b34;text-shadow:none;white-space:normal;line-height:1.4;cursor:pointer}
+#scr-multiplayer .pkmsvv-mode-card.royale{background:#fff4d6;border-color:#f3b84b}
+#scr-multiplayer .pkmsvv-mode-card:hover,#scr-multiplayer .pkmsvv-mode-card:focus-visible,#scr-multiplayer .pkmsvv-mode-card.pad-focus{background:#ffe36a;color:#173648;border-color:#9f760d;outline:3px solid #fafff0;outline-offset:2px}
+.pkmsvv-mode-art{width:124px;height:140px;flex:none;display:grid;place-items:center;border-radius:12px;background:radial-gradient(circle,#b6ebbd,#55b89d);border:2px solid #569f9f}
+.pkmsvv-mode-card.royale .pkmsvv-mode-art{background:radial-gradient(circle,#fff7bc,#f1a767);border-color:#d49449}
+.pkmsvv-mode-art canvas{display:block;width:118px;height:125px;image-rendering:pixelated;max-width:100%}
+.pkmsvv-mode-copy{display:flex;flex-direction:column;gap:7px;flex:1;min-width:0}
+.pkmsvv-mode-copy strong{font-size:clamp(19px,2vw,24px);color:#163546}
+.pkmsvv-mode-copy small{color:#28495a;font-size:14px;font-weight:650;line-height:1.48}
+.pkmsvv-mode-copy .pkmsvv-mode-cap{font-weight:800;color:#224f53;letter-spacing:.02em}
+.pkmsvv-mode-card.royale .pkmsvv-mode-copy .pkmsvv-mode-cap{color:#74500c}
+.pkmsvv-mode-copy .pkmsvv-mode-action{font-size:13px;text-transform:uppercase;font-weight:850;color:#185b61;letter-spacing:.035em}
+#scr-multiplayer .pkmsvv-public-list .btn.gold{color:#192e3a}
+@media(max-width:760px){#scr-multiplayer .pkmsvv-mode-grid{grid-template-columns:1fr;gap:12px}#scr-multiplayer .pkmsvv-mode-card{min-height:145px}.pkmsvv-mode-art{width:94px;height:108px}.pkmsvv-mode-art canvas{width:90px;height:98px}}
+@media(max-width:430px){#scr-multiplayer .pkmsvv-mode-card{padding:8px;gap:8px}.pkmsvv-mode-art{width:76px;height:96px}.pkmsvv-mode-art canvas{width:72px;height:92px}.pkmsvv-mode-copy small{font-size:12px}.pkmsvv-mode-copy strong{font-size:18px}}

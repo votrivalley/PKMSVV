@@ -62,6 +62,7 @@ execFileSync(process.execPath, [path.join(root, 'scripts', 'prepare-game.cjs')],
 execFileSync(process.execPath, [path.join(root, 'scripts', 'generate-icons.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-multiplayer.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-multiplayer-hub.cjs')], { cwd: root, stdio: 'inherit' });
+execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-retro-web.cjs')], { cwd: root, stdio: 'inherit' });
 const notesFile=path.join(game,'js','data','changelog.js');
 fs.appendFileSync(notesFile,'\n'+fs.readFileSync(path.join(root,'src','pkmsvv-changelog-v13-web.js'),'utf8'),'utf8');
 const uiNewsPath=path.join(game,'js','ui','news-ui.js');
