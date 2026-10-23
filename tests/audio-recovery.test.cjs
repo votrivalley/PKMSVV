@@ -23,3 +23,15 @@ test('compiled offline bundle includes v0.9.2 audio and immediate-start controll
  assert.match(js,/visibilitychange/);
  assert.match(js,/updateVariant|PKMSVVPadFlow/);
 });
+
+test('approved custom village OGG and browser autoplay recovery',()=>{
+ const src=fs.readFileSync(path.join(root,'scripts/prepare-game.cjs'),'utf8');
+ const patch=fs.readFileSync(path.join(root,'scripts/patch-music.cjs'),'utf8');
+ const ogg=path.join(root,'custom-music','village.ogg');
+ assert.ok(fs.existsSync(ogg),'Please commit village.ogg to the custom-music folder');
+ assert.equal(fs.readFileSync(ogg).subarray(0,4).toString(),'OggS');
+ assert.match(src,/PKMSVV custom music bundled/);
+ assert.match(src,/err\.name === 'NotAllowedError'/);
+ assert.match(patch,/if \(!customAudio\) startCustomMusic\(wanted\)/);
+ assert.match(patch,/Autoplay denied: keep custom OGG pending/);
+});

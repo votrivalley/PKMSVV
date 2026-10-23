@@ -145,6 +145,7 @@ for (const name of musicNames) {
     fs.mkdirSync(outMusic, { recursive: true });
     fs.copyFileSync(src, path.join(outMusic, name + ext));
     musicFiles[name] = name + ext;
+    console.log('PKMSVV custom music bundled: '+name+' -> '+name+ext);
     break;
   }
 }
@@ -177,10 +178,11 @@ patch('js/core/audio.js',
   "    el.volume = settings.muted ? 0 : Math.min(1, settings.music * 0.7);\n" +
   "    customAudio = el;\n" +
   "    el.addEventListener('error', () => {\n" +
-  "      if (customAudio === el) { stopCustomMusic(); if (wanted === name) startSong(name); }\n" +
+  "      if (customAudio === el) { console.warn('PKMSVV: custom music missing or unsupported:', el.src); stopCustomMusic(); if (wanted === name) startSong(name); }\n" +
   "    }, { once: true });\n" +
-  "    el.play().catch(() => {\n" +
-  "      if (customAudio === el) { stopCustomMusic(); if (wanted === name && ctx && ctx.state === 'running') startSong(name); }\n" +
+  "    el.play().catch((err) => {\n" +
+  "      if (customAudio !== el || (err && (err.name === 'NotAllowedError' || err.name === 'AbortError'))) return;
+  "      console.warn('PKMSVV: custom music playback error:', err);\n" +\n" +
   "    });\n" +
   "  }\n" +
   "  /** Cambia de tema (con fundido). null = silencio. */\n  function music(name) {");
