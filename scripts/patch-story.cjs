@@ -50,8 +50,8 @@ patch('js/ui/test.js',
  '    G.Flow.goMenu();',
  '    G.PKMSVVStory.reveal(dex,()=>G.Flow.goMenu());');
 patch('dev.html',
- '<button class="menu-item" data-go="upgrades">Mejoras<small>Haz más fuerte cada run</small></button>',
- '<button class="menu-item" data-go="upgrades">Mejoras<small>Haz más fuerte cada run</small></button>\n'+
+ '<button class="menu-item" data-go="settings">Ajustes<small>Sonido, gráficos, controles y cuenta</small></button>',
+ '<button class="menu-item" data-go="settings">Ajustes<small>Sonido, gráficos, controles y cuenta</small></button>\n'+
  '        <button class="menu-item" data-go="memories"><span id="pkmsvv-memory-title">Ký Ức</span><small id="pkmsvv-memory-sub">Xem lại Chương 0 · Thức tỉnh</small></button>');
 patch('js/ui/menu.js',"upgrades: 'up',","upgrades: 'up', memories: 'book',");
 patch('js/ui/menu.js',
