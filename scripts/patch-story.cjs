@@ -14,6 +14,7 @@ for(const name of ['eyes','gate','reveal']){
  const source=path.join(root,'src','story-art',name+'.webp');
  const dest=path.join(game,'assets','story',name+'.webp');
  if(fs.existsSync(source))fs.copyFileSync(source,dest);
+ else if(name==='reveal')throw new Error('Chapter 0: REQUIRED new illustration src/story-art/reveal.webp is missing. Upload the approved third image to GitHub first; build will then package eyes, gate and reveal together.');
  else console.warn('Chapter 0 art missing: src/story-art/'+name+'.webp (will show the basic fallback until uploaded)');
 }
 fs.copyFileSync(path.join(root,'src','pkmsvv-story.js'),path.join(game,'js','ui','pkmsvv-story.js'));
