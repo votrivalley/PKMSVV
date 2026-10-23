@@ -14,4 +14,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   document.getElementById('local').addEventListener('click', () => start('local'));
   cloud.addEventListener('click', () => { if (enabled) start('cloud'); });
+  // Fullscreen activation needs a real click; no Google login is required.
+  document.getElementById('fullscreen').addEventListener('click', () => {
+    const el=document.documentElement,request=el.requestFullscreen||el.webkitRequestFullscreen;
+    const note=document.getElementById('fullscreen-status');
+    if(!request){
+      note.textContent='iPhone/Safari: thêm vào Màn hình chính và mở qua biểu tượng để có giao diện toàn màn hình.';
+      return;
+    }
+    Promise.resolve(request.call(el)).then(()=>{
+      note.textContent='Đã bật toàn màn hình. Chọn chế độ chơi để tiếp tục.';
+      try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{});}catch(e){}
+    }).catch(()=>{note.textContent='Trình duyệt không cho phép toàn màn hình. Hãy thử bấm lại.';});
+  });
+  // Register a tiny PWA shell for reliable home-screen launch, never clear saves.
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+
 });

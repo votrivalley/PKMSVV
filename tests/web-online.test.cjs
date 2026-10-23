@@ -16,6 +16,8 @@ test('offline and cloud save modes are explicit and do not migrate without conse
   assert.match(entry, /start\('local'\)/);
   assert.match(entry, /start\('cloud'\)/);
   assert.match(landing, /Không tự ghi đè/);
+  assert.match(landing, /id="local"/);
+  assert.match(landing, /id="fullscreen"/);
   assert.match(build, /localReason = 'user'/);
 });
 test('the web build restores cloud login and unhides multiplayer navigation', () => {
@@ -53,4 +55,21 @@ test('online build does not silently degrade into an offline profile', () => {
   assert.match(build, /wantsCloud && G.DB.mode !== 'cloud'/);
   assert.match(build, /Không thể kết nối Firebase Online/);
   assert.match(build, /auth\/api-key-not-valid/);
+});
+
+test('installed home-screen icon launches mode picker and can enter offline/fullscreen before login',()=>{
+ assert.match(build,/manifest\.start_url='\.\/'/);
+ assert.match(build,/manifest\.scope='\.\/'/);
+ assert.match(build,/manifest\.icons=/);
+ assert.match(build,/href=\\"\.\.\/manifest\.webmanifest\\"/);
+ assert.match(build,/patch-web-entry-ui\.cjs/);
+ const patch=fs.readFileSync(path.join(root,'scripts/patch-web-entry-ui.cjs'),'utf8');
+ assert.match(patch,/pkmsvv-login-offline/);
+ assert.match(patch,/pkmsvv\.web\.saveMode/);
+ assert.match(patch,/pkmsvv-login-fullscreen/);
+ assert.match(patch,/requestFullscreen/);
+ assert.match(entry,/serviceWorker\.register/);
+ const sw=fs.readFileSync(path.join(root,'src/web/sw.js'),'utf8');
+ assert.match(sw,/pkmsvv-launch-v1/);
+ assert.doesNotMatch(sw,/caches\.delete\(.*localStorage/);
 });

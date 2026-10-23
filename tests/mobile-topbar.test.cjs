@@ -60,3 +60,12 @@ test('Approved v1.1 What’s New text remains unchanged by mobile patch',()=>{
  assert.match(s,/15 Team Powerups/);
  if(built()) { const release=file('vendor/pokesurvivor/js/data/changelog.js'); assert.ok(release.startsWith(s)); assert.match(release,/G\.CHANGELOG\.unshift\(/); }
 });
+
+test('mobile landscape toolbar is a single row with accessible buttons',()=>{
+ const patch=file('scripts/patch-mobile-header.cjs');
+ assert.match(patch,/flex-direction:row!important/);
+ assert.match(patch,/flex-wrap:nowrap!important/);
+ assert.match(patch,/overflow-x:auto/);
+ assert.match(patch,/min-height:40px/);
+ assert.match(patch,/\.topbar:not\(\.hidden\)/);
+});

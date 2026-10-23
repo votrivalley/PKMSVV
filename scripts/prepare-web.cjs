@@ -63,6 +63,7 @@ execFileSync(process.execPath, [path.join(root, 'scripts', 'generate-icons.cjs')
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-multiplayer.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-multiplayer-hub.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-retro-web.cjs')], { cwd: root, stdio: 'inherit' });
+execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-entry-ui.cjs')], { cwd: root, stdio: 'inherit' });
 const notesFile=path.join(game,'js','data','changelog.js');
 fs.appendFileSync(notesFile,'\n'+fs.readFileSync(path.join(root,'src','pkmsvv-changelog-v13-web.js'),'utf8'),'utf8');
 const uiNewsPath=path.join(game,'js','ui','news-ui.js');
@@ -137,6 +138,9 @@ let html = fs.readFileSync(path.join(game, 'index.html'), 'utf8');
 if (!html.includes('</head>')) throw new Error('Missing HTML head in web build');
 html = html.replace(/<title>[^<]*<\/title>/, '<title>Pokémon Sống Sót — Votri Valley Web</title>');
 html = html.replace('</head>', '<meta name="robots" content="noindex,nofollow">\n' + css + '\n</head>');
+// An installed Web shortcut must always open the mode-selector landing page,
+// even if installed while browsing the /game/ subfolder.
+html = html.replace('href="manifest.webmanifest"','href="../manifest.webmanifest"');
 html = html.replace('Web oficial: pokesurvivor.com · si alguien te pide pagar, no somos nosotros',
   'Bản web thử nghiệm Votri Valley · không chính thức · phi thương mại');
 fs.writeFileSync(path.join(game, 'index.html'), html);
@@ -153,4 +157,12 @@ let landing = fs.readFileSync(path.join(root, 'src', 'web', 'index.html'), 'utf8
 landing = landing.replace('data-cloud-enabled="false"', 'data-cloud-enabled="' + (!!config) + '"');
 fs.writeFileSync(path.join(dest, 'index.html'), landing, 'utf8');
 fs.copyFileSync(path.join(root, 'src', 'web', 'entry.js'), path.join(dest, 'entry.js'));
+const manifest=JSON.parse(fs.readFileSync(path.join(game,'manifest.webmanifest'),'utf8'));
+manifest.start_url='./';
+manifest.scope='./';
+manifest.display='standalone'; // Android home-screen launch; login remains optional.
+manifest.orientation='landscape';
+manifest.icons=(manifest.icons||[]).map(icon=>({...icon,src:'./game/'+icon.src.replace(/^\.?\//,'')}));
+fs.writeFileSync(path.join(dest,'manifest.webmanifest'),JSON.stringify(manifest,null,2)+'\n');
+fs.copyFileSync(path.join(root,'src','web','sw.js'),path.join(dest,'sw.js'));
 console.log('PKMSVV WEB READY: dist/web (Google/co-op ' + (config ? 'configured' : 'DISABLED: preview') + ')');

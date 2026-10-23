@@ -203,7 +203,7 @@ test('Pokédex shows nature-adjusted real stats and green/red +10%/-10% hints',(
  assert.match(src,/pkmsvv-nature-down/);
  const G=game();G.Mons.setNature(25,'jolly');
  const m=G.Mons.monFor(25);
- assert.equal(m.spd,99);
- assert.equal(m.sa,1.35);
+ assert.ok(Math.abs(m.spd-99)<1e-9,'+10% speed must be visible');
+ assert.ok(Math.abs(m.sa-1.35)<1e-9,'-10% special attack must be visible');
  assert.equal(G.DEX_BY[25].spd,90);
 });
