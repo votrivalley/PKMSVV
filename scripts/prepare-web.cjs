@@ -58,6 +58,7 @@ const config = loadConfig();
 if (!fs.existsSync(path.join(game, 'dev.html')))
   throw new Error('Fetch pinned JPTER78/pokesurvivor revision into vendor/pokesurvivor first.');
 execFileSync(process.execPath, [path.join(root, 'scripts', 'prepare-game.cjs')], { cwd: root, stdio: 'inherit' });
+execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-multiplayer.cjs')], { cwd: root, stdio: 'inherit' });
 
 const loginPath=path.join(game,'js','ui','login.js');
 let login=fs.readFileSync(loginPath,'utf8').replace(/\r\n/g,'\n');
