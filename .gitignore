@@ -10,3 +10,6 @@ mobile/www/
 
 # Switch Brewser generated SD install bundle
 dist/switch-package/
+
+# Per-deployment Firebase web app config (not service-account keys)
+config/firebase.web.local.json

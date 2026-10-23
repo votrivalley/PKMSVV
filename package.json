@@ -29,7 +29,9 @@
     "test:bilingual": "node --test tests/bilingual-addon.test.cjs",
     "test:mobile-topbar": "node --test tests/mobile-topbar.test.cjs",
     "test:kecleon": "node --test tests/kecleon.test.cjs",
-    "test:opening": "node --test tests/opening-spawns.test.cjs"
+    "test:opening": "node --test tests/opening-spawns.test.cjs",
+    "prepare:web": "node scripts/prepare-web.cjs",
+    "test:web": "node --test tests/web-online.test.cjs"
   },
   "devDependencies": {
     "electron": "^38.0.0",
