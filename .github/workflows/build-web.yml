@@ -1,0 +1,57 @@
+name: Build Web Edition (test artifact)
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/**"
+      - "src/**"
+      - "config/**"
+      - "data/**"
+      - "package.json"
+      - "tests/**"
+      - ".github/workflows/build-web.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test web mode and account safety
+        run: npm run test:web
+      - name: Load pinned original game (no repo cross-linking)
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init vendor/pokesurvivor
+          git -C vendor/pokesurvivor remote add origin https://github.com/JPTER78/pokesurvivor.git
+          git -C vendor/pokesurvivor fetch --depth 1 origin 11fe868c640b62ac37beacc222e056bc4d9ec892
+          git -C vendor/pokesurvivor checkout --detach FETCH_HEAD
+      - name: Install build dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build web game (online only with Votri Valley credentials)
+        env:
+          PKMSVV_FIREBASE_CONFIG_JSON: ${{ secrets.PKMSVV_FIREBASE_CONFIG_JSON }}
+          PKMSVV_ALLOWED_HOSTS: ${{ vars.PKMSVV_ALLOWED_HOSTS }}
+          PKMSVV_WEB_PREVIEW: "1"
+        run: npm run prepare:web
+      - name: Verify static browser output
+        run: |
+          test -s dist/web/index.html
+          test -s dist/web/game/index.html
+          test -s dist/web/game/js/app.min.js
+          test -d dist/web/game/assets
+          if grep -R -l "AIzaSyB1LpJcsnT7gj7c8cpRMGjhswLPr8-dnBw" dist/web/game/js dist/web/game/index.html; then
+            echo "Upstream Firebase key accidentally included" >&2
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-Web-Dev-Build
+          path: dist/web/
+          retention-days: 5
