@@ -30,3 +30,16 @@ test('menu actively moves Memories immediately after Settings whenever menu open
  assert.match(source,/settingsItem\.after\(memoriesItem\)/);
  assert.match(source,/menu-list \[data-go=/);
 });
+
+test('approved cinematic pixel art replaces primitive SVGs whenever included in source',()=>{
+ const story=read('src/pkmsvv-story.js'),p=read('scripts/patch-story.cjs'),css=read('src/pkmsvv-story.css');
+ assert.match(story,/const VISUALS/);
+ assert.match(story,/1:'eyes', 2:'eyes', 3:'eyes'/);
+ assert.match(story,/4:'gate', 5:'gate'/);
+ assert.match(story,/assets\\/story\\/'/);
+ assert.match(story,/\\.webp/);
+ assert.match(story,/img\\.onerror/);
+ assert.match(p,/src','story-art'/);
+ assert.match(p,/fs\\.copyFileSync\\(source,dest\\)/);
+ assert.match(css,/object-fit:contain/);
+});

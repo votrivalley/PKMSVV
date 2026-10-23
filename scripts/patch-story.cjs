@@ -7,6 +7,14 @@ function patch(rel,from,to){
  fs.writeFileSync(file,text.replace(from,to),'utf8');
 }
 execFileSync(process.execPath,[path.join(root,'scripts','generate-story-art.cjs')],{cwd:root,stdio:'inherit'});
+// Prefer the two approved cinematic pixel-art illustrations.
+// Keep the tiny bundled SVGs only as offline compatibility fallbacks.
+for(const name of ['eyes','gate']){
+ const source=path.join(root,'src','story-art',name+'.webp');
+ const dest=path.join(game,'assets','story',name+'.webp');
+ if(fs.existsSync(source))fs.copyFileSync(source,dest);
+ else console.warn('Chapter 0 art missing: src/story-art/'+name+'.webp (will show the basic fallback until uploaded)');
+}
 fs.copyFileSync(path.join(root,'src','pkmsvv-story.js'),path.join(game,'js','ui','pkmsvv-story.js'));
 patch('dev.html','<script defer src="js/ui/test.js"></script>',
  '<script defer src="js/ui/test.js"></script>\n<script defer src="js/ui/pkmsvv-story.js"></script>');
@@ -14,7 +22,7 @@ const page=[
  '<section id="scr-pkmsvv-story" class="scr dim hidden" aria-label="Pokémon Sống Sót Chapter 0">',
  ' <div class="pkmsvv-story-screen">',
  '  <div id="pkmsvv-story-frame" class="pkmsvv-story-frame">',
- '   <img id="pkmsvv-story-image" src="assets/story/scene-1.svg" alt="Pixel art illustration">',
+ '   <img id="pkmsvv-story-image" src="assets/story/eyes.webp" alt="Cinematic pixel-art awakening" decoding="async">',
  '   <canvas id="pkmsvv-story-mon" class="hidden" width="180" height="170" aria-hidden="true"></canvas>',
  '   <span class="pkmsvv-story-chapter" id="pkmsvv-story-chapter">CHƯƠNG 0 · THỨC TỈNH</span>',
  '  </div>',

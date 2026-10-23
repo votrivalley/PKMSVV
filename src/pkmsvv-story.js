@@ -2,6 +2,11 @@
 G.PKMSVVStory=(()=>{
  const $=id=>document.getElementById(id),en=()=>G.I18n&&G.I18n.lang==='en';
  const tr=(vi,eng)=>en()?eng:vi;
+ // Scenes reuse the two approved illustrations. The inline SVG only backs up a missing artwork file.
+ const VISUALS=Object.freeze({
+   1:'eyes', 2:'eyes', 3:'eyes',
+   4:'gate', 5:'gate'
+ });
  const chapters={
   prologue:[
    {art:1,speaker:['???','???'],text:['...Mình đang ở đâu?','...Where am I?']},
@@ -36,8 +41,21 @@ G.PKMSVVStory=(()=>{
   stop();
   const item=lines[idx];if(!item){finish();return;}
   const img=$('pkmsvv-story-image'),cv=$('pkmsvv-story-mon');
-  img.src='assets/story/scene-'+item.art+'.svg';
-  img.alt=tr('Tranh pixel minh họa chương mở đầu','Pixel-art prologue illustration');
+  const key=VISUALS[item.art] || 'eyes';
+  const imagePath='assets/story/'+key+'.webp';
+  // Images are shared between dialogue beats to avoid flashing or unnecessary downloads.
+  const frame=$('pkmsvv-story-frame');
+  frame.dataset.scene=String(item.art);
+  if(img.dataset.artKey!==key){
+   img.dataset.artKey=key;
+   img.onerror=()=>{
+    img.onerror=null;
+    img.src='assets/story/scene-'+item.art+'.svg';
+   };
+   img.src=imagePath;
+  }
+  img.alt=tr(key==='eyes'?'Bóng người trước đôi mắt bí ẩn giữa bầu trời sao':'Bóng người trước cổng ánh sáng giữa bầu trời sao',
+             key==='eyes'?'A lone soul beneath mysterious eyes in the starry sky':'A lone soul facing a glowing portal beneath the stars');
   cv.classList.toggle('hidden',mode!=='reveal');
   if(mode==='reveal'&&chosenDex&&G.UI&&G.UI.sprite)G.UI.sprite(cv,chosenDex,{lively:true,scale:3,hero:true});
   $('pkmsvv-story-chapter').textContent=tr('CHƯƠNG 0 · THỨC TỈNH','CHAPTER 0 · AWAKENING');
@@ -63,6 +81,8 @@ G.PKMSVVStory=(()=>{
   if(!chapters[type])return;
   stop();mode=type;idx=0;next=done;replaying=replay;chosenDex=dex;
   lines=chapters[type];G.UI.chrome(false);G.UI.show('scr-pkmsvv-story');
+  // Preload once; optional offline fallbacks remain available.
+  for(const name of ['eyes','gate']){const preload=new Image();preload.src='assets/story/'+name+'.webp';}
   draw();
   if(G.Pad&&G.Pad.focusFirst)G.Pad.focusFirst();
  }
