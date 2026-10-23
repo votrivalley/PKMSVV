@@ -23,7 +23,7 @@ patch('dev.html','<!-- ====== Gacha ====== -->',section+'\n<!-- ====== Gacha ===
 patch('dev.html','<script defer src="js/ui/menu.js"></script>','<script defer src="js/ui/menu.js"></script>\n<script defer src="js/ui/pkmsvv-upgrade-select.js"></script>');
 patch('dev.html','    <div class="upg-head">','    <p class="pkmsvv-single-note" id="pkmsvv-single-note">CHỈ ÁP DỤNG CHO 1 POKÉMON ĐƯỢC CHỌN — không ảnh hưởng Pokémon khác.</p>\n    <div class="upg-head">');
 patch('js/ui/menu.js',"else if (go === 'upgrades') openUpgrades();","else if (go === 'upgrades') G.PKMSVVUpgradeChooser.open();");
-patch('js/ui/menu.js','return { init, open, openDex, GEN_NAMES };','return { init, open, openDex, openUpgrades, GEN_NAMES };');
+patch('js/ui/menu.js','return { init, open, GEN_NAMES };','return { init, open, openUpgrades, GEN_NAMES };');
 for(const file of ['js/ui/ui.js','js/game.js'])
  patch(file,"'scr-upgrades', 'scr-global-powerups'","'scr-upgrades', 'scr-upgrade-select', 'scr-global-powerups'");
 patch('dev.html','<button class="menu-item" data-go="global">Nâng cấp Toàn Đội<small>Vĩnh viễn cho mọi Pokémon</small></button>','<!-- Unified upgrade chooser handles team boosts. -->');
