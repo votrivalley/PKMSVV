@@ -59,6 +59,14 @@ if (!fs.existsSync(path.join(game, 'dev.html')))
   throw new Error('Fetch pinned JPTER78/pokesurvivor revision into vendor/pokesurvivor first.');
 execFileSync(process.execPath, [path.join(root, 'scripts', 'prepare-game.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-multiplayer.cjs')], { cwd: root, stdio: 'inherit' });
+const notesFile=path.join(game,'js','data','changelog.js');
+fs.appendFileSync(notesFile,'\n'+fs.readFileSync(path.join(root,'src','pkmsvv-changelog-v13-web.js'),'utf8'),'utf8');
+const uiNewsPath=path.join(game,'js','ui','news-ui.js');
+let uiNews=fs.readFileSync(uiNewsPath,'utf8');
+if(!uiNews.includes('Có gì mới: 1.2.1')||!uiNews.includes("What's New: 1.2.1"))throw Error('Web news version label changed');
+uiNews=uiNews.replace('Có gì mới: 1.2.1','Có gì mới: 1.3').replace("What's New: 1.2.1","What's New: 1.3");
+fs.writeFileSync(uiNewsPath,uiNews,'utf8');
+
 
 const loginPath=path.join(game,'js','ui','login.js');
 let login=fs.readFileSync(loginPath,'utf8').replace(/\r\n/g,'\n');
