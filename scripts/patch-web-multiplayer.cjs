@@ -96,4 +96,5 @@ patch('js/ui/run-ui.js',"    $('over-title').textContent = r.dead ? 'Has caído�
  "    $('over-title').textContent = r.royale ? (r.royale.winner===G.Social.uid?'🏆 Người sống sót cuối cùng':'🏆 Kết quả Sinh tồn') : (r.dead ? 'Has caído…' : 'Run terminada');");
 patch('js/ui/run-ui.js',"    const ask = $('over-ask');",
  "    if(r.royale)$('over-stats').insertAdjacentHTML('afterbegin',G.Royale.html(r.royale));\n    const ask = $('over-ask');");
+fs.appendFileSync(path.join(base,'css/style.css'),"\n#lobby-members{grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}\n#lobby-members .lob-card{min-width:0;min-height:124px;padding:7px 3px}\n#lobby-members .lob-card b{font-size:clamp(11px,1.3vw,15px);max-width:100%;overflow-wrap:anywhere}\n#lobby-members .lob-card canvas{max-width:100%;height:auto}\n#pkmsvv-create-modes .btn{flex:1;min-height:45px}\n@media(max-width:670px){#lobby-members{grid-template-columns:repeat(2,minmax(0,1fr))}#lobby-members .lob-card{min-height:98px}}\n",'utf8');
 console.log('PKMSVV WEB: co-op 4 and Survival beta 10 modes patched, no public rankings.');
