@@ -121,3 +121,11 @@ Bảng dưới đây dùng thời gian hồi cơ sở khi mới học (trước 
 | whirlpool | vortex | 3.00s | **7.05s** | 3.40s | — |
 
 Ghi chú: Orbit hoạt động liên tục, hồi chiêu dùng như khoảng gây sát thương lại; Aura là đòn diện rộng lặp lại. Các dạng tiến hóa chiêu tăng sát thương/số lượng nhưng tuân theo sàn hồi riêng. Bảng được kiểm thử tự động trên toàn bộ 103 chiêu.
+
+## Buff ON/OFF — phương án A
+
+- Buff mỗi nhóm chỉ có **một hiệu ứng hoạt động**. Kích hoạt lại chỉ làm mới thời gian, không cộng tầng.
+- Vòng sáng quanh chân Pokémon: **đủ 360° khi ON**, biến mất hoàn toàn khi OFF. Nhiều nhóm buff có vòng màu riêng.
+- Thanh buff thay `×1` bằng `ON`; cấp MAX duy trì mãi hiện `MAX`.
+- Buff MAX cùng chỉ số không bị buff thường ghi đè thời hạn vô hạn hay hiệu lực cao hơn.
+- Pokédex hiện đúng chỉ số Tính cách đã áp dụng (cùng `G.Mons.monFor` với trận đấu); `+10%` và `−10%` đặt cạnh chỉ số tương ứng, không nhân hai lần.

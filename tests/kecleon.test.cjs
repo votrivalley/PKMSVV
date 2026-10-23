@@ -193,3 +193,17 @@ test('Original Kecleon stall loads authentic scene and bag empties with shop act
  const icons=read(base+'js/ui/icons.js');
  assert.match(icons,/capsuleh:/);
 });
+
+test('Pokédex shows nature-adjusted real stats and green/red +10%/-10% hints',()=>{
+ const src=read('scripts/patch-nature-buff.cjs');
+ assert.match(src,/G\.Mons\.monFor\(dex\)/);
+ assert.match(src,/G\.Mons\.natureOf\(dex\)/);
+ for(const field of ['pa','sa','df','sd','spd'])assert.ok(src.includes(", '"+field+"')"),field);
+ assert.match(src,/pkmsvv-nature-up/);
+ assert.match(src,/pkmsvv-nature-down/);
+ const G=game();G.Mons.setNature(25,'jolly');
+ const m=G.Mons.monFor(25);
+ assert.equal(m.spd,99);
+ assert.equal(m.sa,1.35);
+ assert.equal(G.DEX_BY[25].spd,90);
+});

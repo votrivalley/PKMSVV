@@ -79,8 +79,8 @@ G.PKMSVVBalance = (() => {
     if (m.kind !== 'buff' || m.lvl < m.def.maxLvl) return false;
     const b = pl.buffs && pl.buffs[m.stat];
     if (!b) return false;
-    if (b.n === 1 && b.amount === m.amount && b.t === Infinity) return true;
-    b.amount = m.amount;
+    if (b.n === 1 && b.amount >= m.amount && b.t === Infinity) return true;
+    b.amount = Math.max(b.n > 0 ? b.amount : 0, m.amount);
     b.n = 1;
     b.t = Infinity;
     m.t = Infinity;

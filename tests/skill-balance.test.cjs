@@ -39,6 +39,9 @@ test('global cooldown reduction cannot create infinite skill spam',()=>{
 test('buff indicators, nonstack and combat guard are integrated',()=>{
  const player=read('js/entities/player.js'),hud=read('js/ui/hud.js'),combat=read('js/systems/combat.js');
  assert.match(player,/b\.n = 1; \/\/ PKMSVV/);
+ assert.match(player,/Math\.PI \* 2\); \/\/ PKMSVV: whole ON ring/);
+ assert.doesNotMatch(player,/6\.2832 \* \(b\.n \/ 5\)/);
+ assert.match(hud,/b\.t === Infinity \? ' MAX' : ' ON'/);
  assert.match(hud,/OFF '/);assert.match(hud,/ON '/);assert.match(hud,/MAX/);
  assert.match(combat,/G\.PKMSVVBalance\.effectiveCooldown\(pl, m\)/);
  assert.match(combat,/G\.PKMSVVBalance\.refreshBuff\(pl, m\)/);
@@ -94,4 +97,25 @@ test('Life Orb pays HP at most once in a 2-second window with simultaneous auto 
  assert.equal(pl.hp,97);
  const item=read('js/data/items.js');
  assert.match(item,/pierde hasta un 1% de PS cada 2 s/);
+});
+
+test('buff ON/OFF: recast refreshes but never adds stacks, permanent MAX stays ON',()=>{
+ const G={};new Function('G',read('js/entities/player.js'))(G);
+ const pl={buffs:{patk:{n:0,t:0,amount:0}}};
+ const add=G.Player.prototype.addBuff;
+ add.call(pl,'patk',0.15,7,5);
+ assert.equal(pl.buffs.patk.n,1);
+ add.call(pl,'patk',0.13,8,5);
+ assert.equal(pl.buffs.patk.n,1);
+ assert.equal(pl.buffs.patk.amount,0.15);
+ assert.equal(pl.buffs.patk.t,8);
+ pl.buffs.patk={n:1,t:Infinity,amount:0.21};
+ add.call(pl,'patk',0.12,7,5);
+ assert.equal(pl.buffs.patk.t,Infinity);
+ assert.equal(pl.buffs.patk.amount,0.21);
+ const G2=load(),m=G2.Moves.instance('swords-dance');
+ while(m.lvl < m.def.maxLvl)G2.Moves.levelUp(m);
+ assert.equal(G2.PKMSVVBalance.refreshBuff(pl,m),true);
+ assert.equal(pl.buffs.patk.n,1);
+ assert.equal(pl.buffs.patk.t,Infinity);
 });
