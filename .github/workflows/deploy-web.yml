@@ -1,0 +1,62 @@
+name: Deploy Web to Firebase (opt-in)
+on:
+  workflow_run:
+    workflows: ["Build Web Edition (test artifact)"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: pkmsvv-firebase-live
+  cancel-in-progress: false
+
+jobs:
+  live:
+    # Opt-in must be explicitly enabled; developer Web CI remains independent.
+    if: ${{ vars.PKMSVV_AUTO_DEPLOY_WEB == 'true' && (github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact HEAD and successful Web artifact
+        id: verified
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_SHA: ${{ github.event.workflow_run.head_sha }}
+          EVENT_RUN: ${{ github.event.workflow_run.id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha="$(git rev-parse HEAD)"
+          if [[ "$EVENT_NAME" == "workflow_run" ]]; then
+            test "$EVENT_SHA" = "$sha" || { echo "Stale build, main moved"; exit 1; }
+            run="$EVENT_RUN"
+          else
+            run="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow build-web.yml --branch main --limit 40 \
+              --json databaseId,headSha,conclusion \
+              --jq '[.[]|select(.headSha=="'"$sha"'" and .conclusion=="success")][0].databaseId // empty')"
+          fi
+          test -n "$run" || { echo "No green Web build for current main"; exit 1; }
+          echo "run_id=$run" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.verified.outputs.run_id }}
+          name: PKMSVV-Web-Hosting
+          path: deploy
+      - name: Check hosted contents before publishing
+        run: |
+          test -s deploy/firebase.json
+          test -s deploy/site/index.html
+          test -s deploy/site/game/index.html
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PKMSVV_B84D2 }}
+          projectId: pkmsvv-b84d2
+          channelId: live
+          entryPoint: deploy

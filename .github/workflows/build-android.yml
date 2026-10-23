@@ -1,0 +1,85 @@
+name: Build Android Offline (synchronized)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/**'
+      - 'src/**'
+      - 'data/**'
+      - 'config/**'
+      - 'package.json'
+      - 'tests/**'
+      - '.github/workflows/build-android.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    name: Build Android universal debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Use preinstalled Android SDK and install platform 36
+        shell: bash
+        run: |
+          echo "ANDROID_HOME=${ANDROID_HOME}"
+          export PATH="${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}"
+          sdkmanager --version
+          sdkmanager --install "platforms;android-36" "build-tools;36.0.0"
+      - name: Fetch exact upstream source
+        shell: bash
+        run: |
+          git init vendor/pokesurvivor
+          git -C vendor/pokesurvivor remote add origin https://github.com/JPTER78/pokesurvivor.git
+          git -C vendor/pokesurvivor fetch --depth 1 origin 11fe868c640b62ac37beacc222e056bc4d9ec892
+          git -C vendor/pokesurvivor checkout --detach FETCH_HEAD
+      - name: Install JavaScript and Capacitor dependencies
+        run: npm install --no-audit --no-fund
+      - name: Run evolution and Vietnamese tests
+        run: npm run test:evolution && npm run test:i18n
+      - name: Apply all PKMSVV offline game patches
+        run: npm run prepare:game
+      - name: Verify automatic skills and music slots
+        run: npm run test:kecleon && npm run test:opening && npm run test:mobile-topbar && npm run test:bilingual && npm run test:changelog && npm run test:extended-i18n && npm run test:autocast && npm run test:global && npm run test:collection && npm run test:controller && npm run test:audio && npm run test:ui
+      - name: Render Survivor Poké Ball artwork and verify full skill cooldowns
+        run: npm run prepare:icons && npm run test:balance && npm run test:ux && npm run test:dash
+      - name: Bundle offline Android web assets
+        run: npm run prepare:android && npm run test:android
+      - name: Generate Android native project
+        run: |
+          npx cap add android
+          npx cap sync android
+          node scripts/configure-android.cjs
+          node scripts/apply-android-icons.cjs
+      - name: Assemble Android debug APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon :app:assembleDebug
+      - name: Validate and package Android APK
+        shell: bash
+        run: |
+          mkdir -p dist
+          version="$(node -p 'require(\"./package.json\").version')"
+          cp android/app/build/outputs/apk/debug/app-debug.apk "dist/PKMSVV-${version}-Android-universal-debug.apk"
+          ls -lh dist/*.apk
+          unzip -t dist/*.apk | tail -1
+          "${ANDROID_HOME}/build-tools/36.0.0/aapt" dump badging dist/*.apk | grep -E "^(package:|sdkVersion:|targetSdkVersion:)" | head -4
+      - name: Upload temporary Android test APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-Android-APK-debug
+          path: dist/*.apk
+          if-no-files-found: error
+          retention-days: 14

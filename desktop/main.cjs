@@ -67,6 +67,7 @@ app.whenReady().then(() => {
     return {fullscreen:win.isFullScreen()};
   });
   createWindow();
+  if(app.isPackaged) require('./update-check.cjs').checkForNewRelease({app,mainWindow});
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
