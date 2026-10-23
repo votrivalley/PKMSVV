@@ -6,6 +6,7 @@ on:
       - "scripts/**"
       - "src/**"
       - "config/**"
+      - 'custom-music/**'
       - "data/**"
       - "package.json"
       - "tests/**"

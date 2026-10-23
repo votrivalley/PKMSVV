@@ -8,6 +8,7 @@ on:
       - 'src/**'
       - 'data/**'
       - 'config/**'
+      - 'custom-music/**'
       - 'package.json'
       - 'tests/**'
       - '.github/workflows/build-android.yml'

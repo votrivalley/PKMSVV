@@ -8,6 +8,7 @@ on:
       - 'src/**'
       - 'data/**'
       - 'config/**'
+      - 'custom-music/**'
       - 'desktop/**'
       - 'package.json'
       - 'tests/**'
