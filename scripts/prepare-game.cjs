@@ -181,8 +181,8 @@ patch('js/core/audio.js',
   "      if (customAudio === el) { console.warn('PKMSVV: custom music missing or unsupported:', el.src); stopCustomMusic(); if (wanted === name) startSong(name); }\n" +
   "    }, { once: true });\n" +
   "    el.play().catch((err) => {\n" +
-  "      if (customAudio !== el || (err && (err.name === 'NotAllowedError' || err.name === 'AbortError'))) return;
-  "      console.warn('PKMSVV: custom music playback error:', err);\n" +\n" +
+  "      if (customAudio !== el || (err && (err.name === 'NotAllowedError' || err.name === 'AbortError'))) return;\n" +
+  "      console.warn('PKMSVV: custom music playback error:', err);\n" +
   "    });\n" +
   "  }\n" +
   "  /** Cambia de tema (con fundido). null = silencio. */\n  function music(name) {");
