@@ -1,0 +1,1034 @@
+# PKMSVV — Checklist tiến hóa Pokémon (9 thế hệ)
+
+Nguồn dữ liệu: [PokéAPI / PokeAPI/pokeapi](https://github.com/PokeAPI/pokeapi/tree/master/data/v2/csv) (`pokemon_species.csv`, `pokemon_evolution.csv`). Chỉ liệt kê các loài **có trong Pokédex 966 Pokémon**. Game kiểm tra sprite đích trước khi tiến hóa. Nhánh Gimmighoul được bổ sung thủ công, còn điều kiện 400 kẹo của Meltan được chuyển thể riêng.
+
+**Phân biệt:** mốc Lv. là cấp tiến hóa nguyên bản; các điều kiện ghi **(quy đổi)** là cơ chế thay thế cho bản solo offline, không được xem là quy tắc của game Pokémon chính thức. Tích ô khi bạn đã thử thành công trong PKMSVV. Bản này chưa hỗ trợ các dạng hình thái (ví dụ Alola/Galar) dưới dạng loài Dex riêng; bản checklist chọn nhánh loài chuẩn.
+
+**Danh mục:** tổng 966 Pokémon; 455 nhánh tiến hóa áp dụng được xét theo số Pokédex. Phân loại: Theo cấp 326 · Đá / vật phẩm 57 · Tình bạn 19 · Đặc biệt 28 · Trao đổi 24 · Gimmighoul bổ sung 1.
+
+## Các tiến hóa kiểm thử
+
+
+### Thế hệ 1
+
+- [ ] **#0001 Bulbasaur → #0002 Ivysaur** — Lv. 16
+- [ ] **#0002 Ivysaur → #0003 Venusaur** — Lv. 32
+- [ ] **#0004 Charmander → #0005 Charmeleon** — Lv. 16
+- [ ] **#0005 Charmeleon → #0006 Charizard** — Lv. 36
+- [ ] **#0007 Squirtle → #0008 Wartortle** — Lv. 16
+- [ ] **#0008 Wartortle → #0009 Blastoise** — Lv. 36
+- [ ] **#0010 Caterpie → #0011 Metapod** — Lv. 7
+- [ ] **#0011 Metapod → #0012 Butterfree** — Lv. 10
+- [ ] **#0013 Weedle → #0014 Kakuna** — Lv. 7
+- [ ] **#0014 Kakuna → #0015 Beedrill** — Lv. 10
+- [ ] **#0016 Pidgey → #0017 Pidgeotto** — Lv. 18
+- [ ] **#0017 Pidgeotto → #0018 Pidgeot** — Lv. 36
+- [ ] **#0019 Rattata → #0020 Raticate** — Lv. 20
+- [ ] **#0021 Spearow → #0022 Fearow** — Lv. 20
+- [ ] **#0023 Ekans → #0024 Arbok** — Lv. 22
+- [ ] **#0025 Pikachu → #0026 Raichu** — Dùng Thunder Stone
+- [ ] **#0027 Sandshrew → #0028 Sandslash** — Lv. 22
+- [ ] **#0029 Nidoran♀ → #0030 Nidorina** — Lv. 16
+- [ ] **#0030 Nidorina → #0031 Nidoqueen** — Dùng Moon Stone
+- [ ] **#0032 Nidoran♂ → #0033 Nidorino** — Lv. 16
+- [ ] **#0033 Nidorino → #0034 Nidoking** — Dùng Moon Stone
+- [ ] **#0035 Clefairy → #0036 Clefable** — Dùng Moon Stone
+- [ ] **#0037 Vulpix → #0038 Ninetales** — Dùng Fire Stone
+- [ ] **#0039 Jigglypuff → #0040 Wigglytuff** — Dùng Moon Stone
+- [ ] **#0041 Zubat → #0042 Golbat** — Lv. 22
+- [ ] **#0042 Golbat → #0169 Crobat** — Thân thiết ≥160
+- [ ] **#0043 Oddish → #0044 Gloom** — Lv. 21
+- [ ] **#0044 Gloom → #0045 Vileplume** — Dùng Leaf Stone
+- [ ] **#0044 Gloom → #0182 Bellossom** — Dùng Sun Stone
+- [ ] **#0046 Paras → #0047 Parasect** — Lv. 24
+- [ ] **#0048 Venonat → #0049 Venomoth** — Lv. 31
+- [ ] **#0050 Diglett → #0051 Dugtrio** — Lv. 26
+- [ ] **#0052 Meowth → #0053 Persian** — Lv. 28
+- [ ] **#0052 Meowth → #0863 Perrserker** — Lv. 28
+- [ ] **#0054 Psyduck → #0055 Golduck** — Lv. 33
+- [ ] **#0056 Mankey → #0057 Primeape** — Lv. 28
+- [ ] **#0057 Primeape → #0979 Annihilape** — Dùng Rage Fist 20 lần (quy đổi nếu thiếu đòn)
+- [ ] **#0058 Growlithe → #0059 Arcanine** — Dùng Fire Stone
+- [ ] **#0060 Poliwag → #0061 Poliwhirl** — Lv. 25
+- [ ] **#0061 Poliwhirl → #0062 Poliwrath** — Dùng Water Stone
+- [ ] **#0061 Poliwhirl → #0186 Politoed** — Dây Liên Kết (thay trao đổi); Vật phẩm Kings Rock
+- [ ] **#0063 Abra → #0064 Kadabra** — Lv. 16
+- [ ] **#0064 Kadabra → #0065 Alakazam** — Dây Liên Kết (thay trao đổi)
+- [ ] **#0066 Machop → #0067 Machoke** — Lv. 28
+- [ ] **#0067 Machoke → #0068 Machamp** — Dây Liên Kết (thay trao đổi)
+- [ ] **#0069 Bellsprout → #0070 Weepinbell** — Lv. 21
+- [ ] **#0070 Weepinbell → #0071 Victreebel** — Dùng Leaf Stone
+- [ ] **#0072 Tentacool → #0073 Tentacruel** — Lv. 30
+- [ ] **#0074 Geodude → #0075 Graveler** — Lv. 25
+- [ ] **#0075 Graveler → #0076 Golem** — Dây Liên Kết (thay trao đổi)
+- [ ] **#0077 Ponyta → #0078 Rapidash** — Lv. 40
+- [ ] **#0079 Slowpoke → #0080 Slowbro** — Lv. 37
+- [ ] **#0079 Slowpoke → #0199 Slowking** — Dây Liên Kết (thay trao đổi); Vật phẩm Kings Rock
+- [ ] **#0081 Magnemite → #0082 Magneton** — Lv. 30
+- [ ] **#0082 Magneton → #0462 Magnezone** — Dùng Thunder Stone
+- [ ] **#0084 Doduo → #0085 Dodrio** — Lv. 31
+- [ ] **#0086 Seel → #0087 Dewgong** — Lv. 34
+- [ ] **#0088 Grimer → #0089 Muk** — Lv. 38
+- [ ] **#0090 Shellder → #0091 Cloyster** — Dùng Water Stone
+- [ ] **#0092 Gastly → #0093 Haunter** — Lv. 25
+- [ ] **#0093 Haunter → #0094 Gengar** — Dây Liên Kết (thay trao đổi)
+- [ ] **#0095 Onix → #0208 Steelix** — Dây Liên Kết (thay trao đổi); Vật phẩm Metal Coat
+- [ ] **#0096 Drowzee → #0097 Hypno** — Lv. 26
+- [ ] **#0098 Krabby → #0099 Kingler** — Lv. 28
+- [ ] **#0100 Voltorb → #0101 Electrode** — Lv. 30
+- [ ] **#0102 Exeggcute → #0103 Exeggutor** — Dùng Leaf Stone
+- [ ] **#0104 Cubone → #0105 Marowak** — Lv. 28
+- [ ] **#0108 Lickitung → #0463 Lickilicky** — Học Rollout (kỹ năng tương đương nếu chưa có)
+- [ ] **#0109 Koffing → #0110 Weezing** — Lv. 35
+- [ ] **#0111 Rhyhorn → #0112 Rhydon** — Lv. 42
+- [ ] **#0112 Rhydon → #0464 Rhyperior** — Dây Liên Kết (thay trao đổi); Vật phẩm Protector
+- [ ] **#0113 Chansey → #0242 Blissey** — Thân thiết ≥160
+- [ ] **#0114 Tangela → #0465 Tangrowth** — Học Ancient Power (kỹ năng tương đương nếu chưa có)
+- [ ] **#0116 Horsea → #0117 Seadra** — Lv. 32
+- [ ] **#0117 Seadra → #0230 Kingdra** — Dây Liên Kết (thay trao đổi); Vật phẩm Dragon Scale
+- [ ] **#0118 Goldeen → #0119 Seaking** — Lv. 33
+- [ ] **#0120 Staryu → #0121 Starmie** — Dùng Water Stone
+- [ ] **#0123 Scyther → #0212 Scizor** — Dây Liên Kết (thay trao đổi); Vật phẩm Metal Coat
+- [ ] **#0123 Scyther → #0900 Kleavor** — Dùng Black Augurite
+- [ ] **#0125 Electabuzz → #0466 Electivire** — Dây Liên Kết (thay trao đổi); Vật phẩm Electirizer
+- [ ] **#0126 Magmar → #0467 Magmortar** — Dây Liên Kết (thay trao đổi); Vật phẩm Magmarizer
+- [ ] **#0129 Magikarp → #0130 Gyarados** — Lv. 20
+- [ ] **#0133 Eevee → #0134 Vaporeon** — Dùng Water Stone
+- [ ] **#0133 Eevee → #0135 Jolteon** — Dùng Thunder Stone
+- [ ] **#0133 Eevee → #0136 Flareon** — Dùng Fire Stone
+- [ ] **#0133 Eevee → #0196 Espeon** — Thân thiết ≥160; Ban ngày trong trận
+- [ ] **#0133 Eevee → #0197 Umbreon** — Thân thiết ≥160; Ban đêm trong trận
+- [ ] **#0133 Eevee → #0470 Leafeon** — Dùng Leaf Stone
+- [ ] **#0133 Eevee → #0471 Glaceon** — Dùng Ice Stone
+- [ ] **#0133 Eevee → #0700 Sylveon** — Thân thiết ≥160; Có đòn hệ Fairy
+- [ ] **#0137 Porygon → #0233 Porygon2** — Dây Liên Kết (thay trao đổi); Vật phẩm Up Grade
+- [ ] **#0138 Omanyte → #0139 Omastar** — Lv. 40
+- [ ] **#0140 Kabuto → #0141 Kabutops** — Lv. 40
+- [ ] **#0147 Dratini → #0148 Dragonair** — Lv. 30
+- [ ] **#0148 Dragonair → #0149 Dragonite** — Lv. 55
+
+### Thế hệ 2
+
+- [ ] **#0152 Chikorita → #0153 Bayleef** — Lv. 16
+- [ ] **#0153 Bayleef → #0154 Meganium** — Lv. 32
+- [ ] **#0155 Cyndaquil → #0156 Quilava** — Lv. 14
+- [ ] **#0156 Quilava → #0157 Typhlosion** — Lv. 36
+- [ ] **#0158 Totodile → #0159 Croconaw** — Lv. 18
+- [ ] **#0159 Croconaw → #0160 Feraligatr** — Lv. 30
+- [ ] **#0161 Sentret → #0162 Furret** — Lv. 15
+- [ ] **#0163 Hoothoot → #0164 Noctowl** — Lv. 20
+- [ ] **#0165 Ledyba → #0166 Ledian** — Lv. 18
+- [ ] **#0167 Spinarak → #0168 Ariados** — Lv. 22
+- [ ] **#0170 Chinchou → #0171 Lanturn** — Lv. 27
+- [ ] **#0172 Pichu → #0025 Pikachu** — Thân thiết ≥220
+- [ ] **#0173 Cleffa → #0035 Clefairy** — Thân thiết ≥160
+- [ ] **#0174 Igglybuff → #0039 Jigglypuff** — Thân thiết ≥160
+- [ ] **#0175 Togepi → #0176 Togetic** — Thân thiết ≥160
+- [ ] **#0176 Togetic → #0468 Togekiss** — Dùng Shiny Stone
+- [ ] **#0177 Natu → #0178 Xatu** — Lv. 25
+- [ ] **#0179 Mareep → #0180 Flaaffy** — Lv. 15
+- [ ] **#0180 Flaaffy → #0181 Ampharos** — Lv. 30
+- [ ] **#0183 Marill → #0184 Azumarill** — Lv. 18
+- [ ] **#0187 Hoppip → #0188 Skiploom** — Lv. 18
+- [ ] **#0188 Skiploom → #0189 Jumpluff** — Lv. 27
+- [ ] **#0190 Aipom → #0424 Ambipom** — Học Double Hit (kỹ năng tương đương nếu chưa có)
+- [ ] **#0191 Sunkern → #0192 Sunflora** — Dùng Sun Stone
+- [ ] **#0193 Yanma → #0469 Yanmega** — Học Ancient Power (kỹ năng tương đương nếu chưa có)
+- [ ] **#0194 Wooper → #0195 Quagsire** — Lv. 20
+- [ ] **#0194 Wooper → #0980 Clodsire** — Lv. 20
+- [ ] **#0198 Murkrow → #0430 Honchkrow** — Dùng Dusk Stone
+- [ ] **#0200 Misdreavus → #0429 Mismagius** — Dùng Dusk Stone
+- [ ] **#0203 Girafarig → #0981 Farigiraf** — Học Twin Beam (kỹ năng tương đương nếu chưa có)
+- [ ] **#0204 Pineco → #0205 Forretress** — Lv. 31
+- [ ] **#0206 Dunsparce → #0982 Dudunsparce** — Học Hyper Drill (kỹ năng tương đương nếu chưa có); Điều kiện biến thể (EC 100 % 0 !=) (quy đổi); Tỉ lệ 99%
+- [ ] **#0207 Gligar → #0472 Gliscor** — Vật phẩm Razor Fang; Ban đêm trong trận
+- [ ] **#0209 Snubbull → #0210 Granbull** — Lv. 23
+- [ ] **#0211 Qwilfish → #0904 Overqwil** — Học Barb Barrage (kỹ năng tương đương nếu chưa có)
+- [ ] **#0215 Sneasel → #0461 Weavile** — Vật phẩm Razor Claw; Ban đêm trong trận
+- [ ] **#0215 Sneasel → #0903 Sneasler** — Vật phẩm Razor Claw; Ban ngày trong trận
+- [ ] **#0216 Teddiursa → #0217 Ursaring** — Lv. 30
+- [ ] **#0217 Ursaring → #0901 Ursaluna** — Dùng Peat Block; full-moon
+- [ ] **#0218 Slugma → #0219 Magcargo** — Lv. 38
+- [ ] **#0220 Swinub → #0221 Piloswine** — Lv. 33
+- [ ] **#0221 Piloswine → #0473 Mamoswine** — Học Ancient Power (kỹ năng tương đương nếu chưa có)
+- [ ] **#0222 Corsola → #0864 Cursola** — Lv. 38
+- [ ] **#0223 Remoraid → #0224 Octillery** — Lv. 25
+- [ ] **#0228 Houndour → #0229 Houndoom** — Lv. 24
+- [ ] **#0231 Phanpy → #0232 Donphan** — Lv. 25
+- [ ] **#0233 Porygon2 → #0474 Porygon-Z** — Dây Liên Kết (thay trao đổi); Vật phẩm Dubious Disc
+- [ ] **#0234 Stantler → #0899 Wyrdeer** — Dùng Psyshield Bash 20 lần (quy đổi nếu thiếu đòn)
+- [ ] **#0236 Tyrogue → #0106 Hitmonlee** — Lv. 20; Tỉ lệ Công/Thủ 1
+- [ ] **#0236 Tyrogue → #0107 Hitmonchan** — Lv. 20; Tỉ lệ Công/Thủ -1
+- [ ] **#0236 Tyrogue → #0237 Hitmontop** — Lv. 20; Tỉ lệ Công/Thủ 0
+- [ ] **#0238 Smoochum → #0124 Jynx** — Lv. 30
+- [ ] **#0239 Elekid → #0125 Electabuzz** — Lv. 30
+- [ ] **#0240 Magby → #0126 Magmar** — Lv. 30
+- [ ] **#0246 Larvitar → #0247 Pupitar** — Lv. 30
+- [ ] **#0247 Pupitar → #0248 Tyranitar** — Lv. 55
+
+### Thế hệ 3
+
+- [ ] **#0252 Treecko → #0253 Grovyle** — Lv. 16
+- [ ] **#0253 Grovyle → #0254 Sceptile** — Lv. 36
+- [ ] **#0255 Torchic → #0256 Combusken** — Lv. 16
+- [ ] **#0256 Combusken → #0257 Blaziken** — Lv. 36
+- [ ] **#0258 Mudkip → #0259 Marshtomp** — Lv. 16
+- [ ] **#0259 Marshtomp → #0260 Swampert** — Lv. 36
+- [ ] **#0261 Poochyena → #0262 Mightyena** — Lv. 18
+- [ ] **#0263 Zigzagoon → #0264 Linoone** — Lv. 20
+- [ ] **#0264 Linoone → #0862 Obstagoon** — Lv. 35; Ban đêm trong trận
+- [ ] **#0265 Wurmple → #0266 Silcoon** — Lv. 7; Điều kiện biến thể (EC 16 >> 10 % 4 <=) (quy đổi); Tỉ lệ 50%
+- [ ] **#0265 Wurmple → #0268 Cascoon** — Lv. 7; Điều kiện biến thể (EC 16 >> 10 % 5 >=) (quy đổi); Tỉ lệ 50%
+- [ ] **#0266 Silcoon → #0267 Beautifly** — Lv. 10
+- [ ] **#0268 Cascoon → #0269 Dustox** — Lv. 10
+- [ ] **#0270 Lotad → #0271 Lombre** — Lv. 14
+- [ ] **#0271 Lombre → #0272 Ludicolo** — Dùng Water Stone
+- [ ] **#0273 Seedot → #0274 Nuzleaf** — Lv. 14
+- [ ] **#0274 Nuzleaf → #0275 Shiftry** — Dùng Leaf Stone
+- [ ] **#0276 Taillow → #0277 Swellow** — Lv. 22
+- [ ] **#0278 Wingull → #0279 Pelipper** — Lv. 25
+- [ ] **#0280 Ralts → #0281 Kirlia** — Lv. 20
+- [ ] **#0281 Kirlia → #0282 Gardevoir** — Lv. 30
+- [ ] **#0281 Kirlia → #0475 Gallade** — Dùng Dawn Stone; Giới tính 2 (quy đổi)
+- [ ] **#0283 Surskit → #0284 Masquerain** — Lv. 22
+- [ ] **#0285 Shroomish → #0286 Breloom** — Lv. 23
+- [ ] **#0287 Slakoth → #0288 Vigoroth** — Lv. 18
+- [ ] **#0288 Vigoroth → #0289 Slaking** — Lv. 36
+- [ ] **#0290 Nincada → #0291 Ninjask** — Lv. 20
+- [ ] **#0290 Nincada → #0292 Shedinja** — Dạng Shedinja — phụ
+- [ ] **#0293 Whismur → #0294 Loudred** — Lv. 20
+- [ ] **#0294 Loudred → #0295 Exploud** — Lv. 40
+- [ ] **#0296 Makuhita → #0297 Hariyama** — Lv. 24
+- [ ] **#0298 Azurill → #0183 Marill** — Thân thiết ≥160
+- [ ] **#0299 Nosepass → #0476 Probopass** — Dùng Thunder Stone
+- [ ] **#0300 Skitty → #0301 Delcatty** — Dùng Moon Stone
+- [ ] **#0304 Aron → #0305 Lairon** — Lv. 32
+- [ ] **#0305 Lairon → #0306 Aggron** — Lv. 42
+- [ ] **#0307 Meditite → #0308 Medicham** — Lv. 37
+- [ ] **#0309 Electrike → #0310 Manectric** — Lv. 26
+- [ ] **#0315 Roselia → #0407 Roserade** — Dùng Shiny Stone
+- [ ] **#0316 Gulpin → #0317 Swalot** — Lv. 26
+- [ ] **#0318 Carvanha → #0319 Sharpedo** — Lv. 30
+- [ ] **#0320 Wailmer → #0321 Wailord** — Lv. 40
+- [ ] **#0322 Numel → #0323 Camerupt** — Lv. 33
+- [ ] **#0325 Spoink → #0326 Grumpig** — Lv. 32
+- [ ] **#0328 Trapinch → #0329 Vibrava** — Lv. 35
+- [ ] **#0329 Vibrava → #0330 Flygon** — Lv. 45
+- [ ] **#0331 Cacnea → #0332 Cacturne** — Lv. 32
+- [ ] **#0333 Swablu → #0334 Altaria** — Lv. 35
+- [ ] **#0339 Barboach → #0340 Whiscash** — Lv. 30
+- [ ] **#0341 Corphish → #0342 Crawdaunt** — Lv. 30
+- [ ] **#0343 Baltoy → #0344 Claydol** — Lv. 36
+- [ ] **#0345 Lileep → #0346 Cradily** — Lv. 40
+- [ ] **#0347 Anorith → #0348 Armaldo** — Lv. 40
+- [ ] **#0349 Feebas → #0350 Milotic** — Dây Liên Kết (thay trao đổi); Vật phẩm Prism Scale
+- [ ] **#0353 Shuppet → #0354 Banette** — Lv. 37
+- [ ] **#0355 Duskull → #0356 Dusclops** — Lv. 37
+- [ ] **#0356 Dusclops → #0477 Dusknoir** — Dây Liên Kết (thay trao đổi); Vật phẩm Reaper Cloth
+- [ ] **#0360 Wynaut → #0202 Wobbuffet** — Lv. 15
+- [ ] **#0361 Snorunt → #0362 Glalie** — Lv. 42
+- [ ] **#0361 Snorunt → #0478 Froslass** — Dùng Dawn Stone; Giới tính 1 (quy đổi)
+- [ ] **#0363 Spheal → #0364 Sealeo** — Lv. 32
+- [ ] **#0364 Sealeo → #0365 Walrein** — Lv. 44
+- [ ] **#0366 Clamperl → #0367 Huntail** — Dây Liên Kết (thay trao đổi); Vật phẩm Deep Sea Tooth
+- [ ] **#0366 Clamperl → #0368 Gorebyss** — Dây Liên Kết (thay trao đổi); Vật phẩm Deep Sea Scale
+- [ ] **#0371 Bagon → #0372 Shelgon** — Lv. 30
+- [ ] **#0372 Shelgon → #0373 Salamence** — Lv. 50
+- [ ] **#0374 Beldum → #0375 Metang** — Lv. 20
+- [ ] **#0375 Metang → #0376 Metagross** — Lv. 45
+
+### Thế hệ 4
+
+- [ ] **#0387 Turtwig → #0388 Grotle** — Lv. 18
+- [ ] **#0388 Grotle → #0389 Torterra** — Lv. 32
+- [ ] **#0390 Chimchar → #0391 Monferno** — Lv. 14
+- [ ] **#0391 Monferno → #0392 Infernape** — Lv. 36
+- [ ] **#0393 Piplup → #0394 Prinplup** — Lv. 16
+- [ ] **#0394 Prinplup → #0395 Empoleon** — Lv. 36
+- [ ] **#0396 Starly → #0397 Staravia** — Lv. 14
+- [ ] **#0397 Staravia → #0398 Staraptor** — Lv. 34
+- [ ] **#0399 Bidoof → #0400 Bibarel** — Lv. 15
+- [ ] **#0401 Kricketot → #0402 Kricketune** — Lv. 10
+- [ ] **#0403 Shinx → #0404 Luxio** — Lv. 15
+- [ ] **#0404 Luxio → #0405 Luxray** — Lv. 30
+- [ ] **#0406 Budew → #0315 Roselia** — Thân thiết ≥160; Ban ngày trong trận
+- [ ] **#0408 Cranidos → #0409 Rampardos** — Lv. 30
+- [ ] **#0410 Shieldon → #0411 Bastiodon** — Lv. 30
+- [ ] **#0412 Burmy → #0413 Wormadam** — Lv. 20; Giới tính 1 (quy đổi)
+- [ ] **#0412 Burmy → #0414 Mothim** — Lv. 20; Giới tính 2 (quy đổi)
+- [ ] **#0415 Combee → #0416 Vespiquen** — Lv. 21; Giới tính 1 (quy đổi)
+- [ ] **#0418 Buizel → #0419 Floatzel** — Lv. 26
+- [ ] **#0420 Cherubi → #0421 Cherrim** — Lv. 25
+- [ ] **#0422 Shellos → #0423 Gastrodon** — Lv. 30
+- [ ] **#0425 Drifloon → #0426 Drifblim** — Lv. 28
+- [ ] **#0427 Buneary → #0428 Lopunny** — Thân thiết ≥160
+- [ ] **#0431 Glameow → #0432 Purugly** — Lv. 38
+- [ ] **#0433 Chingling → #0358 Chimecho** — Thân thiết ≥220; Ban đêm trong trận
+- [ ] **#0434 Stunky → #0435 Skuntank** — Lv. 34
+- [ ] **#0436 Bronzor → #0437 Bronzong** — Lv. 33
+- [ ] **#0438 Bonsly → #0185 Sudowoodo** — Học Mimic (kỹ năng tương đương nếu chưa có)
+- [ ] **#0439 Mime Jr. → #0122 Mr. Mime** — Học Mimic (kỹ năng tương đương nếu chưa có)
+- [ ] **#0440 Happiny → #0113 Chansey** — Vật phẩm Oval Stone; Ban ngày trong trận
+- [ ] **#0443 Gible → #0444 Gabite** — Lv. 24
+- [ ] **#0444 Gabite → #0445 Garchomp** — Lv. 48
+- [ ] **#0446 Munchlax → #0143 Snorlax** — Thân thiết ≥160
+- [ ] **#0447 Riolu → #0448 Lucario** — Thân thiết ≥160; Ban ngày trong trận
+- [ ] **#0449 Hippopotas → #0450 Hippowdon** — Lv. 34
+- [ ] **#0451 Skorupi → #0452 Drapion** — Lv. 40
+- [ ] **#0453 Croagunk → #0454 Toxicroak** — Lv. 37
+- [ ] **#0456 Finneon → #0457 Lumineon** — Lv. 31
+- [ ] **#0458 Mantyke → #0226 Mantine** — Điều kiện đồng đội/trao đổi (quy đổi)
+- [ ] **#0459 Snover → #0460 Abomasnow** — Lv. 40
+
+### Thế hệ 5
+
+- [ ] **#0495 Snivy → #0496 Servine** — Lv. 17
+- [ ] **#0496 Servine → #0497 Serperior** — Lv. 36
+- [ ] **#0498 Tepig → #0499 Pignite** — Lv. 17
+- [ ] **#0499 Pignite → #0500 Emboar** — Lv. 36
+- [ ] **#0501 Oshawott → #0502 Dewott** — Lv. 17
+- [ ] **#0502 Dewott → #0503 Samurott** — Lv. 36
+- [ ] **#0504 Patrat → #0505 Watchog** — Lv. 20
+- [ ] **#0506 Lillipup → #0507 Herdier** — Lv. 16
+- [ ] **#0507 Herdier → #0508 Stoutland** — Lv. 32
+- [ ] **#0509 Purrloin → #0510 Liepard** — Lv. 20
+- [ ] **#0511 Pansage → #0512 Simisage** — Dùng Leaf Stone
+- [ ] **#0517 Munna → #0518 Musharna** — Dùng Moon Stone
+- [ ] **#0524 Roggenrola → #0525 Boldore** — Lv. 25
+- [ ] **#0525 Boldore → #0526 Gigalith** — Dây Liên Kết (thay trao đổi)
+- [ ] **#0527 Woobat → #0528 Swoobat** — Thân thiết ≥160
+- [ ] **#0529 Drilbur → #0530 Excadrill** — Lv. 31
+- [ ] **#0532 Timburr → #0533 Gurdurr** — Lv. 25
+- [ ] **#0533 Gurdurr → #0534 Conkeldurr** — Dây Liên Kết (thay trao đổi)
+- [ ] **#0535 Tympole → #0536 Palpitoad** — Lv. 25
+- [ ] **#0536 Palpitoad → #0537 Seismitoad** — Lv. 36
+- [ ] **#0540 Sewaddle → #0541 Swadloon** — Lv. 20
+- [ ] **#0541 Swadloon → #0542 Leavanny** — Thân thiết ≥220
+- [ ] **#0543 Venipede → #0544 Whirlipede** — Lv. 22
+- [ ] **#0544 Whirlipede → #0545 Scolipede** — Lv. 30
+- [ ] **#0546 Cottonee → #0547 Whimsicott** — Dùng Sun Stone
+- [ ] **#0548 Petilil → #0549 Lilligant** — Dùng Sun Stone
+- [ ] **#0550 Basculin → #0902 Basculegion** — Chịu ≥294 sát thương; Giới tính 2 (quy đổi)
+- [ ] **#0551 Sandile → #0552 Krokorok** — Lv. 29
+- [ ] **#0552 Krokorok → #0553 Krookodile** — Lv. 40
+- [ ] **#0554 Darumaka → #0555 Darmanitan** — Lv. 35
+- [ ] **#0559 Scraggy → #0560 Scrafty** — Lv. 39
+- [ ] **#0562 Yamask → #0563 Cofagrigus** — Lv. 34
+- [ ] **#0562 Yamask → #0867 Runerigus** — Chịu ≥49 sát thương; Địa điểm Dusty Bowl (quy đổi theo bioma)
+- [ ] **#0566 Archen → #0567 Archeops** — Lv. 37
+- [ ] **#0568 Trubbish → #0569 Garbodor** — Lv. 36
+- [ ] **#0570 Zorua → #0571 Zoroark** — Lv. 30
+- [ ] **#0572 Minccino → #0573 Cinccino** — Dùng Shiny Stone
+- [ ] **#0574 Gothita → #0575 Gothorita** — Lv. 32
+- [ ] **#0575 Gothorita → #0576 Gothitelle** — Lv. 41
+- [ ] **#0577 Solosis → #0578 Duosion** — Lv. 32
+- [ ] **#0578 Duosion → #0579 Reuniclus** — Lv. 41
+- [ ] **#0580 Ducklett → #0581 Swanna** — Lv. 35
+- [ ] **#0582 Vanillite → #0583 Vanillish** — Lv. 35
+- [ ] **#0583 Vanillish → #0584 Vanilluxe** — Lv. 47
+- [ ] **#0585 Deerling → #0586 Sawsbuck** — Lv. 34
+- [ ] **#0588 Karrablast → #0589 Escavalier** — Dây Liên Kết (thay trao đổi); Điều kiện đồng đội/trao đổi (quy đổi)
+- [ ] **#0595 Joltik → #0596 Galvantula** — Lv. 36
+- [ ] **#0597 Ferroseed → #0598 Ferrothorn** — Lv. 40
+- [ ] **#0599 Klink → #0600 Klang** — Lv. 38
+- [ ] **#0600 Klang → #0601 Klinklang** — Lv. 49
+- [ ] **#0602 Tynamo → #0603 Eelektrik** — Lv. 39
+- [ ] **#0603 Eelektrik → #0604 Eelektross** — Dùng Thunder Stone
+- [ ] **#0605 Elgyem → #0606 Beheeyem** — Lv. 42
+- [ ] **#0607 Litwick → #0608 Lampent** — Lv. 41
+- [ ] **#0608 Lampent → #0609 Chandelure** — Dùng Dusk Stone
+- [ ] **#0610 Axew → #0611 Fraxure** — Lv. 38
+- [ ] **#0611 Fraxure → #0612 Haxorus** — Lv. 48
+- [ ] **#0613 Cubchoo → #0614 Beartic** — Lv. 37
+- [ ] **#0619 Mienfoo → #0620 Mienshao** — Lv. 50
+- [ ] **#0622 Golett → #0623 Golurk** — Lv. 43
+- [ ] **#0624 Pawniard → #0625 Bisharp** — Lv. 52
+- [ ] **#0625 Bisharp → #0983 Kingambit** — Thử thách đặc biệt
+- [ ] **#0627 Rufflet → #0628 Braviary** — Lv. 54
+- [ ] **#0629 Vullaby → #0630 Mandibuzz** — Lv. 54
+- [ ] **#0633 Deino → #0634 Zweilous** — Lv. 50
+- [ ] **#0634 Zweilous → #0635 Hydreigon** — Lv. 64
+- [ ] **#0636 Larvesta → #0637 Volcarona** — Lv. 59
+
+### Thế hệ 6
+
+- [ ] **#0650 Chespin → #0651 Quilladin** — Lv. 16
+- [ ] **#0651 Quilladin → #0652 Chesnaught** — Lv. 36
+- [ ] **#0653 Fennekin → #0654 Braixen** — Lv. 16
+- [ ] **#0654 Braixen → #0655 Delphox** — Lv. 36
+- [ ] **#0656 Froakie → #0657 Frogadier** — Lv. 16
+- [ ] **#0657 Frogadier → #0658 Greninja** — Lv. 36
+- [ ] **#0659 Bunnelby → #0660 Diggersby** — Lv. 20
+- [ ] **#0661 Fletchling → #0662 Fletchinder** — Lv. 17
+- [ ] **#0662 Fletchinder → #0663 Talonflame** — Lv. 35
+- [ ] **#0664 Scatterbug → #0665 Spewpa** — Lv. 9
+- [ ] **#0665 Spewpa → #0666 Vivillon** — Lv. 12
+- [ ] **#0669 Flabébé → #0670 Floette** — Lv. 19
+- [ ] **#0670 Floette → #0671 Florges** — Dùng Shiny Stone
+- [ ] **#0672 Skiddo → #0673 Gogoat** — Lv. 32
+- [ ] **#0674 Pancham → #0675 Pangoro** — Lv. 32; Điều kiện đồng đội/trao đổi (quy đổi)
+- [ ] **#0677 Espurr → #0678 Meowstic** — Lv. 25; Giới tính 2 (quy đổi)
+- [ ] **#0679 Honedge → #0680 Doublade** — Lv. 35
+- [ ] **#0680 Doublade → #0681 Aegislash** — Dùng Dusk Stone
+- [ ] **#0684 Swirlix → #0685 Slurpuff** — Dây Liên Kết (thay trao đổi); Vật phẩm Whipped Dream
+- [ ] **#0686 Inkay → #0687 Malamar** — Lv. 30; Lật hướng (PC)
+- [ ] **#0688 Binacle → #0689 Barbaracle** — Lv. 39
+- [ ] **#0690 Skrelp → #0691 Dragalge** — Lv. 48
+- [ ] **#0692 Clauncher → #0693 Clawitzer** — Lv. 37
+- [ ] **#0694 Helioptile → #0695 Heliolisk** — Dùng Sun Stone
+- [ ] **#0696 Tyrunt → #0697 Tyrantrum** — Lv. 39; Ban ngày trong trận
+- [ ] **#0698 Amaura → #0699 Aurorus** — Lv. 39; Ban đêm trong trận
+- [ ] **#0704 Goomy → #0705 Sliggoo** — Lv. 40
+- [ ] **#0705 Sliggoo → #0706 Goodra** — Lv. 50; Thời tiết mưa
+- [ ] **#0708 Phantump → #0709 Trevenant** — Dây Liên Kết (thay trao đổi)
+- [ ] **#0710 Pumpkaboo → #0711 Gourgeist** — Dây Liên Kết (thay trao đổi)
+- [ ] **#0712 Bergmite → #0713 Avalugg** — Lv. 37
+- [ ] **#0714 Noibat → #0715 Noivern** — Lv. 48
+
+### Thế hệ 7
+
+- [ ] **#0722 Rowlet → #0723 Dartrix** — Lv. 17
+- [ ] **#0723 Dartrix → #0724 Decidueye** — Lv. 34
+- [ ] **#0725 Litten → #0726 Torracat** — Lv. 17
+- [ ] **#0726 Torracat → #0727 Incineroar** — Lv. 34
+- [ ] **#0728 Popplio → #0729 Brionne** — Lv. 17
+- [ ] **#0729 Brionne → #0730 Primarina** — Lv. 34
+- [ ] **#0736 Grubbin → #0737 Charjabug** — Lv. 20
+- [ ] **#0737 Charjabug → #0738 Vikavolt** — Dùng Thunder Stone
+- [ ] **#0739 Crabrawler → #0740 Crabominable** — Dùng Ice Stone
+- [ ] **#0742 Cutiefly → #0743 Ribombee** — Lv. 25
+- [ ] **#0744 Rockruff → #0745 Lycanroc** — Lv. 25; Ban ngày trong trận
+- [ ] **#0747 Mareanie → #0748 Toxapex** — Lv. 38
+- [ ] **#0749 Mudbray → #0750 Mudsdale** — Lv. 30
+- [ ] **#0751 Dewpider → #0752 Araquanid** — Lv. 22
+- [ ] **#0753 Fomantis → #0754 Lurantis** — Lv. 34; Ban ngày trong trận
+- [ ] **#0757 Salandit → #0758 Salazzle** — Lv. 33; Giới tính 1 (quy đổi)
+- [ ] **#0759 Stufful → #0760 Bewear** — Lv. 27
+- [ ] **#0761 Bounsweet → #0762 Steenee** — Lv. 18
+- [ ] **#0762 Steenee → #0763 Tsareena** — Học Stomp (kỹ năng tương đương nếu chưa có)
+- [ ] **#0767 Wimpod → #0768 Golisopod** — Lv. 30
+- [ ] **#0769 Sandygast → #0770 Palossand** — Lv. 42
+- [ ] **#0772 Código Cero → #0773 Silvally** — Thân thiết ≥160
+- [ ] **#0782 Jangmo-o → #0783 Hakamo-o** — Lv. 35
+- [ ] **#0783 Hakamo-o → #0784 Kommo-o** — Lv. 45
+- [ ] **#0789 Cosmog → #0790 Cosmoem** — Lv. 43
+- [ ] **#0790 Cosmoem → #0791 Solgaleo** — Lv. 53
+- [ ] **#0790 Cosmoem → #0792 Lunala** — Lv. 53
+- [ ] **#0803 Poipole → #0804 Naganadel** — Học Dragon Pulse (kỹ năng tương đương nếu chưa có)
+
+### Thế hệ 8
+
+- [ ] **#0808 Meltan → #0809 Melmetal** — Thắng 4 boss trong một trận (quy đổi 400 Kẹo Meltan)
+- [ ] **#0810 Grookey → #0811 Thwackey** — Lv. 16
+- [ ] **#0811 Thwackey → #0812 Rillaboom** — Lv. 35
+- [ ] **#0813 Scorbunny → #0814 Raboot** — Lv. 16
+- [ ] **#0814 Raboot → #0815 Cinderace** — Lv. 35
+- [ ] **#0816 Sobble → #0817 Drizzile** — Lv. 16
+- [ ] **#0817 Drizzile → #0818 Inteleon** — Lv. 35
+- [ ] **#0819 Skwovet → #0820 Greedent** — Lv. 24
+- [ ] **#0821 Rookidee → #0822 Corvisquire** — Lv. 18
+- [ ] **#0822 Corvisquire → #0823 Corviknight** — Lv. 38
+- [ ] **#0824 Blipbug → #0825 Dottler** — Lv. 10
+- [ ] **#0825 Dottler → #0826 Orbeetle** — Lv. 30
+- [ ] **#0827 Nickit → #0828 Thievul** — Lv. 18
+- [ ] **#0829 Gossifleur → #0830 Eldegoss** — Lv. 20
+- [ ] **#0831 Wooloo → #0832 Dubwool** — Lv. 24
+- [ ] **#0833 Chewtle → #0834 Drednaw** — Lv. 22
+- [ ] **#0835 Yamper → #0836 Boltund** — Lv. 25
+- [ ] **#0840 Applin → #0841 Flapple** — Dùng Tart Apple
+- [ ] **#0840 Applin → #0842 Appletun** — Dùng Sweet Apple
+- [ ] **#0840 Applin → #1011 Dipplin** — Dùng Syrupy Apple
+- [ ] **#0843 Silicobra → #0844 Sandaconda** — Lv. 36
+- [ ] **#0846 Arrokuda → #0847 Barraskewda** — Lv. 26
+- [ ] **#0848 Toxel → #0849 Toxtricity** — Lv. 30; Tính cách đặc biệt (quy đổi)
+- [ ] **#0850 Sizzlipede → #0851 Centiskorch** — Lv. 28
+- [ ] **#0852 Clobbopus → #0853 Grapploct** — Học Taunt (kỹ năng tương đương nếu chưa có)
+- [ ] **#0854 Sinistea → #0855 Polteageist** — Dùng Cracked Pot
+- [ ] **#0856 Hatenna → #0857 Hattrem** — Lv. 32
+- [ ] **#0857 Hattrem → #0858 Hatterene** — Lv. 42
+- [ ] **#0859 Impidimp → #0860 Morgrem** — Lv. 32
+- [ ] **#0860 Morgrem → #0861 Grimmsnarl** — Lv. 42
+- [ ] **#0868 Milcery → #0869 Alcremie** — Vật phẩm Strawberry Sweet; Ban ngày trong trận; Điều kiện biến thể (SPIN_DIR 0 == SPIN_SEC 5 < &&) (quy đổi)
+- [ ] **#0872 Snom → #0873 Frosmoth** — Thân thiết ≥160; Ban đêm trong trận
+- [ ] **#0884 Duraludon → #1018 Archaludon** — Dùng Metal Alloy
+- [ ] **#0885 Dreepy → #0886 Drakloak** — Lv. 50
+- [ ] **#0886 Drakloak → #0887 Dragapult** — Lv. 60
+- [ ] **#0891 Kubfu → #0892 Urshifu** — Dùng Scroll Of Darkness
+
+### Thế hệ 9
+
+- [ ] **#0906 Sprigatito → #0907 Floragato** — Lv. 16
+- [ ] **#0907 Floragato → #0908 Meowscarada** — Lv. 36
+- [ ] **#0909 Fuecoco → #0910 Crocalor** — Lv. 16
+- [ ] **#0910 Crocalor → #0911 Skeledirge** — Lv. 36
+- [ ] **#0912 Quaxly → #0913 Quaxwell** — Lv. 16
+- [ ] **#0913 Quaxwell → #0914 Quaquaval** — Lv. 36
+- [ ] **#0915 Lechonk → #0916 Oinkologne** — Lv. 18; Giới tính 2 (quy đổi)
+- [ ] **#0917 Tarountula → #0918 Spidops** — Lv. 15
+- [ ] **#0919 Nymble → #0920 Lokix** — Lv. 24
+- [ ] **#0921 Pawmi → #0922 Pawmo** — Lv. 18
+- [ ] **#0922 Pawmo → #0923 Pawmot** — Di chuyển ≥1000 bước
+- [ ] **#0924 Tandemaus → #0925 Maushold** — Lv. 25; Điều kiện biến thể (EC 100 % 0 !=) (quy đổi); Tỉ lệ 99%
+- [ ] **#0926 Fidough → #0927 Dachsbun** — Lv. 26
+- [ ] **#0932 Nacli → #0933 Naclstack** — Lv. 24
+- [ ] **#0933 Naclstack → #0934 Garganacl** — Lv. 38
+- [ ] **#0935 Charcadet → #0936 Armarouge** — Dùng Auspicious Armor
+- [ ] **#0935 Charcadet → #0937 Ceruledge** — Dùng Malicious Armor
+- [ ] **#0938 Tadbulb → #0939 Bellibolt** — Dùng Thunder Stone
+- [ ] **#0940 Wattrel → #0941 Kilowattrel** — Lv. 25
+- [ ] **#0951 Capsakid → #0952 Scovillain** — Dùng Fire Stone
+- [ ] **#0957 Tinkatink → #0958 Tinkatuff** — Lv. 24
+- [ ] **#0958 Tinkatuff → #0959 Tinkaton** — Lv. 38
+- [ ] **#0960 Wiglett → #0961 Wugtrio** — Lv. 26
+- [ ] **#0963 Finizen → #0964 Palafin** — Lv. 38; Đánh thắng boss (thay chơi nhiều người)
+- [ ] **#0965 Varoom → #0966 Revavroom** — Lv. 40
+- [ ] **#0969 Glimmet → #0970 Glimmora** — Lv. 35
+- [ ] **#0971 Greavard → #0972 Houndstone** — Lv. 30; Ban đêm trong trận
+- [ ] **#0974 Cetoddle → #0975 Cetitan** — Dùng Ice Stone
+- [ ] **#0996 Frigibax → #0997 Arctibax** — Lv. 35
+- [ ] **#0997 Arctibax → #0998 Baxcalibur** — Lv. 54
+- [ ] **#0999 Gimmighoul → #1000 Gholdengo** — Tích lũy và tiêu 999 Pokécoins trong tài khoản local (quy đổi 999 Gimmighoul Coins)
+- [ ] **#1011 Dipplin → #1019 Hydrapple** — Học Dragon Cheer (kỹ năng tương đương nếu chưa có)
+- [ ] **#1012 Poltchageist → #1013 Sinistcha** — Dùng Unremarkable Teacup
+
+## Pokémon không có nhánh tiến hóa trong PKMSVV
+
+- [ ] #0003 Venusaur — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0006 Charizard — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0009 Blastoise — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0012 Butterfree — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0015 Beedrill — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0018 Pidgeot — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0020 Raticate — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0022 Fearow — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0024 Arbok — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0026 Raichu — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0028 Sandslash — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0031 Nidoqueen — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0034 Nidoking — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0036 Clefable — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0038 Ninetales — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0040 Wigglytuff — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0045 Vileplume — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0047 Parasect — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0049 Venomoth — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0051 Dugtrio — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0053 Persian — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0055 Golduck — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0059 Arcanine — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0062 Poliwrath — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0065 Alakazam — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0068 Machamp — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0071 Victreebel — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0073 Tentacruel — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0076 Golem — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0078 Rapidash — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0080 Slowbro — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0083 Farfetch’d — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0085 Dodrio — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0087 Dewgong — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0089 Muk — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0091 Cloyster — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0094 Gengar — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0097 Hypno — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0099 Kingler — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0101 Electrode — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0103 Exeggutor — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0105 Marowak — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0106 Hitmonlee — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0107 Hitmonchan — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0110 Weezing — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0115 Kangaskhan — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0119 Seaking — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0121 Starmie — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0122 Mr. Mime — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0124 Jynx — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0127 Pinsir — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0128 Tauros — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0130 Gyarados — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0131 Lapras — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0132 Ditto — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0134 Vaporeon — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0135 Jolteon — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0136 Flareon — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0139 Omastar — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0141 Kabutops — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0142 Aerodactyl — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0143 Snorlax — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0144 Articuno — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0145 Zapdos — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0146 Moltres — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0149 Dragonite — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0150 Mewtwo — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0151 Mew — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0154 Meganium — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0157 Typhlosion — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0160 Feraligatr — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0162 Furret — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0164 Noctowl — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0166 Ledian — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0168 Ariados — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0169 Crobat — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0171 Lanturn — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0178 Xatu — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0181 Ampharos — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0182 Bellossom — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0184 Azumarill — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0185 Sudowoodo — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0186 Politoed — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0189 Jumpluff — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0192 Sunflora — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0195 Quagsire — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0196 Espeon — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0197 Umbreon — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0199 Slowking — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0201 Unown — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0202 Wobbuffet — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0205 Forretress — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0208 Steelix — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0210 Granbull — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0212 Scizor — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0213 Shuckle — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0214 Heracross — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0219 Magcargo — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0224 Octillery — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0225 Delibird — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0226 Mantine — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0227 Skarmory — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0229 Houndoom — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0230 Kingdra — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0232 Donphan — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0235 Smeargle — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0237 Hitmontop — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0241 Miltank — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0242 Blissey — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0243 Raikou — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0244 Entei — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0245 Suicune — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0248 Tyranitar — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0249 Lugia — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0250 Ho-Oh — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0251 Celebi — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0254 Sceptile — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0257 Blaziken — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0260 Swampert — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0262 Mightyena — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0267 Beautifly — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0269 Dustox — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0272 Ludicolo — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0275 Shiftry — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0277 Swellow — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0279 Pelipper — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0282 Gardevoir — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0284 Masquerain — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0286 Breloom — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0289 Slaking — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0291 Ninjask — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0292 Shedinja — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0295 Exploud — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0297 Hariyama — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0301 Delcatty — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0302 Sableye — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0303 Mawile — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0306 Aggron — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0308 Medicham — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0310 Manectric — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0311 Plusle — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0312 Minun — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0313 Volbeat — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0314 Illumise — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0317 Swalot — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0319 Sharpedo — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0321 Wailord — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0323 Camerupt — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0324 Torkoal — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0326 Grumpig — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0327 Spinda — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0330 Flygon — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0332 Cacturne — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0334 Altaria — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0335 Zangoose — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0336 Seviper — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0337 Lunatone — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0338 Solrock — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0340 Whiscash — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0342 Crawdaunt — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0344 Claydol — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0346 Cradily — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0348 Armaldo — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0350 Milotic — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0351 Castform — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0352 Kecleon — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0354 Banette — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0357 Tropius — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0358 Chimecho — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0359 Absol — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0362 Glalie — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0365 Walrein — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0367 Huntail — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0368 Gorebyss — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0369 Relicanth — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0370 Luvdisc — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0373 Salamence — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0376 Metagross — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0377 Regirock — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0378 Regice — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0379 Registeel — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0380 Latias — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0381 Latios — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0382 Kyogre — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0383 Groudon — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0384 Rayquaza — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0385 Jirachi — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0386 Deoxys — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0389 Torterra — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0392 Infernape — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0395 Empoleon — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0398 Staraptor — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0400 Bibarel — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0402 Kricketune — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0405 Luxray — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0407 Roserade — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0409 Rampardos — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0411 Bastiodon — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0413 Wormadam — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0414 Mothim — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0416 Vespiquen — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0417 Pachirisu — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0419 Floatzel — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0421 Cherrim — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0423 Gastrodon — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0424 Ambipom — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0426 Drifblim — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0428 Lopunny — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0429 Mismagius — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0430 Honchkrow — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0432 Purugly — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0435 Skuntank — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0437 Bronzong — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0441 Chatot — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0442 Spiritomb — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0445 Garchomp — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0448 Lucario — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0450 Hippowdon — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0452 Drapion — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0454 Toxicroak — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0455 Carnivine — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0457 Lumineon — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0460 Abomasnow — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0461 Weavile — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0462 Magnezone — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0463 Lickilicky — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0464 Rhyperior — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0465 Tangrowth — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0466 Electivire — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0467 Magmortar — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0468 Togekiss — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0469 Yanmega — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0470 Leafeon — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0471 Glaceon — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0472 Gliscor — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0473 Mamoswine — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0474 Porygon-Z — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0475 Gallade — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0476 Probopass — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0477 Dusknoir — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0478 Froslass — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0479 Rotom — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0480 Uxie — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0481 Mesprit — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0482 Azelf — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0483 Dialga — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0484 Palkia — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0485 Heatran — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0486 Regigigas — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0487 Giratina — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0488 Cresselia — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0489 Phione — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0490 Manaphy — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0491 Darkrai — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0492 Shaymin — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0493 Arceus — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0494 Victini — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0497 Serperior — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0500 Emboar — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0503 Samurott — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0505 Watchog — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0508 Stoutland — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0510 Liepard — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0512 Simisage — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0513 Pansear — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0515 Panpour — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0518 Musharna — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0519 Pidove — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0521 Unfezant — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0526 Gigalith — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0528 Swoobat — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0530 Excadrill — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0531 Audino — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0534 Conkeldurr — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0537 Seismitoad — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0539 Sawk — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0542 Leavanny — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0545 Scolipede — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0547 Whimsicott — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0549 Lilligant — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0553 Krookodile — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0555 Darmanitan — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0556 Maractus — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0557 Dwebble — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0560 Scrafty — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0561 Sigilyph — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0563 Cofagrigus — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0567 Archeops — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0569 Garbodor — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0571 Zoroark — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0573 Cinccino — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0576 Gothitelle — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0579 Reuniclus — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0581 Swanna — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0584 Vanilluxe — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0586 Sawsbuck — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0587 Emolga — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0589 Escavalier — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0590 Foongus — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0594 Alomomola — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0596 Galvantula — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0598 Ferrothorn — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0601 Klinklang — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0604 Eelektross — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0606 Beheeyem — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0609 Chandelure — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0612 Haxorus — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0614 Beartic — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0615 Cryogonal — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0617 Accelgor — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0620 Mienshao — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0621 Druddigon — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0623 Golurk — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0628 Braviary — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0630 Mandibuzz — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0631 Heatmor — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0632 Durant — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0635 Hydreigon — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0637 Volcarona — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0638 Cobalion — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0639 Terrakion — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0640 Virizion — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0641 Tornadus — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0642 Thundurus — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0643 Reshiram — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0644 Zekrom — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0645 Landorus — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0646 Kyurem — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0647 Keldeo — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0648 Meloetta — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0649 Genesect — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0652 Chesnaught — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0655 Delphox — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0658 Greninja — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0660 Diggersby — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0663 Talonflame — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0666 Vivillon — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0667 Litleo — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0671 Florges — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0673 Gogoat — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0675 Pangoro — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0676 Furfrou — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0678 Meowstic — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0681 Aegislash — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0682 Spritzee — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0685 Slurpuff — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0687 Malamar — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0689 Barbaracle — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0691 Dragalge — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0693 Clawitzer — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0695 Heliolisk — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0697 Tyrantrum — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0699 Aurorus — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0700 Sylveon — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0701 Hawlucha — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0702 Dedenne — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0703 Carbink — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0706 Goodra — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0707 Klefki — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0709 Trevenant — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0711 Gourgeist — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0713 Avalugg — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0715 Noivern — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0716 Xerneas — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0717 Yveltal — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0718 Zygarde — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0719 Diancie — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0720 Hoopa — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0721 Volcanion — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0724 Decidueye — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0727 Incineroar — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0730 Primarina — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0731 Pikipek — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0734 Yungoos — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0738 Vikavolt — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0740 Crabominable — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0741 Oricorio — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0743 Ribombee — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0745 Lycanroc — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0746 Wishiwashi — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0748 Toxapex — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0750 Mudsdale — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0752 Araquanid — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0754 Lurantis — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0755 Morelull — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0758 Salazzle — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0760 Bewear — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0763 Tsareena — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0764 Comfey — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0766 Passimian — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0768 Golisopod — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0770 Palossand — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0771 Pyukumuku — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0773 Silvally — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0774 Minior — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0775 Komala — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0776 Turtonator — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0777 Togedemaru — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0778 Mimikyu — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0779 Bruxish — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0780 Drampa — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0781 Dhelmise — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0784 Kommo-o — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0785 Tapu Koko — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0786 Tapu Lele — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0787 Tapu Bulu — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0788 Tapu Fini — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0791 Solgaleo — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0792 Lunala — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0793 Nihilego — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0794 Buzzwole — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0795 Pheromosa — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0796 Xurkitree — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0797 Celesteela — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0798 Kartana — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0799 Guzzlord — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0800 Necrozma — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0801 Magearna — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0802 Marshadow — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0804 Naganadel — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0805 Stakataka — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0806 Blacephalon — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0807 Zeraora — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0809 Melmetal — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0812 Rillaboom — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0815 Cinderace — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0818 Inteleon — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0820 Greedent — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0823 Corviknight — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0826 Orbeetle — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0828 Thievul — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0830 Eldegoss — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0832 Dubwool — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0834 Drednaw — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0836 Boltund — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0841 Flapple — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0842 Appletun — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0844 Sandaconda — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0845 Cramorant — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0847 Barraskewda — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0849 Toxtricity — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0851 Centiskorch — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0853 Grapploct — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0855 Polteageist — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0858 Hatterene — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0861 Grimmsnarl — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0862 Obstagoon — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0863 Perrserker — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0864 Cursola — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0867 Runerigus — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0869 Alcremie — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0871 Pincurchin — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0873 Frosmoth — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0874 Stonjourner — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0875 Eiscue — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0876 Indeedee — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0877 Morpeko — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0880 Dracozolt — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0881 Arctozolt — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0882 Dracovish — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0883 Arctovish — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0887 Dragapult — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0888 Zacian — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0889 Zamazenta — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0890 Eternatus — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0892 Urshifu — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0894 Regieleki — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0895 Regidrago — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0896 Glastrier — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0897 Spectrier — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0898 Calyrex — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0899 Wyrdeer — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0900 Kleavor — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0901 Ursaluna — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0902 Basculegion — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0903 Sneasler — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0904 Overqwil — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0905 Enamorus — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0908 Meowscarada — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0911 Skeledirge — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0914 Quaquaval — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0916 Oinkologne — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0918 Spidops — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0920 Lokix — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0923 Pawmot — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0925 Maushold — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0927 Dachsbun — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0928 Smoliv — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0930 Arboliva — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0934 Garganacl — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0936 Armarouge — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0937 Ceruledge — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0939 Bellibolt — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0941 Kilowattrel — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0946 Bramblin — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0952 Scovillain — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0953 Rellor — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0955 Flittle — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0959 Tinkaton — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0961 Wugtrio — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0964 Palafin — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0966 Revavroom — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0967 Cyclizar — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0968 Orthworm — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0970 Glimmora — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0972 Houndstone — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0975 Cetitan — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0976 Veluza — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0977 Dondozo — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0978 Tatsugiri — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0979 Annihilape — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0980 Clodsire — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0981 Farigiraf — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0982 Dudunsparce — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0983 Kingambit — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0984 Colmilargo — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0985 Colagrito — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0987 Melenaleteo — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0988 Reptalada — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0989 Pelarena — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0991 Ferrosaco — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0992 Ferropalmas — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0994 Ferropolilla — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0995 Ferropúas — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #0998 Baxcalibur — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #1000 Gholdengo — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #1004 Chi-Yu — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #1005 Bramaluna — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #1006 Ferropaladín — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #1007 Koraidon — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #1009 Ondulagua — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #1010 Ferroverdor — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #1013 Sinistcha — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #1015 Munkidori — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #1016 Fezandipiti — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #1017 Ogerpon — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #1018 Archaludon — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #1019 Hydrapple — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này
+- [ ] #1024 Terapagos — Không có nhánh tiến hóa tiếp theo trong Pokédex phiên bản này

@@ -1,0 +1,80 @@
+{
+  "name": "pkmsvv-offline",
+  "version": "1.2.1",
+  "private": true,
+  "description": "Unofficial noncommercial offline Windows, Android and Switch Brewser test edition of PokéSurvivor",
+  "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
+  "main": "desktop/main.cjs",
+  "scripts": {
+    "prepare:game": "node scripts/prepare-game.cjs",
+    "test:evolution": "node --test tests/evolution.test.cjs",
+    "build:win": "electron-builder --win portable --x64 --publish never",
+    "test:i18n": "node --test tests/i18n.test.cjs",
+    "test:autocast": "node --test tests/autocast.test.cjs",
+    "prepare:android": "node scripts/prepare-android.cjs",
+    "test:android": "node --test tests/android.test.cjs",
+    "prepare:icons": "node scripts/generate-icons.cjs",
+    "test:balance": "node --test tests/skill-balance.test.cjs",
+    "test:ux": "node --test tests/ux.test.cjs",
+    "test:dash": "node --test tests/dash-ui.test.cjs",
+    "prepare:switch": "node scripts/prepare-switch.cjs",
+    "test:switch": "node --test tests/switch.test.cjs",
+    "test:global": "node --test tests/global-upgrades.test.cjs",
+    "test:collection": "node --test tests/collection.test.cjs",
+    "test:controller": "node --test tests/controller.test.cjs",
+    "test:audio": "node --test tests/audio-recovery.test.cjs",
+    "test:ui": "node --test tests/ui094.test.cjs",
+    "test:extended-i18n": "node --test tests/extended-i18n.test.cjs",
+    "test:changelog": "node --test tests/changelog-v11.test.cjs",
+    "test:bilingual": "node --test tests/bilingual-addon.test.cjs",
+    "test:mobile-topbar": "node --test tests/mobile-topbar.test.cjs",
+    "test:kecleon": "node --test tests/kecleon.test.cjs",
+    "test:opening": "node --test tests/opening-spawns.test.cjs"
+  },
+  "devDependencies": {
+    "electron": "^38.0.0",
+    "electron-builder": "^26.0.12",
+    "terser": "^5.39.0",
+    "@capacitor/cli": "8.0.0",
+    "sharp": "^0.34.5",
+    "png-to-ico": "^3.0.1"
+  },
+  "build": {
+    "appId": "com.ronvotri.pkmsvv",
+    "productName": "Pokémon Survivor",
+    "copyright": "Unofficial noncommercial project; original game copyright JPTER78",
+    "asar": true,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "desktop/**/*",
+      "vendor/pokesurvivor/index.html",
+      "vendor/pokesurvivor/favicon.ico",
+      "vendor/pokesurvivor/manifest.webmanifest",
+      "vendor/pokesurvivor/version.json",
+      "vendor/pokesurvivor/js/**/*",
+      "vendor/pokesurvivor/css/**/*",
+      "vendor/pokesurvivor/assets/**/*",
+      "vendor/pokesurvivor/LICENSE",
+      "vendor/pokesurvivor/LICENSE-NONCOMMERCIAL.md",
+      "vendor/pokesurvivor/CREDITS.md",
+      "vendor/pokesurvivor/NOTICE-PKMSVV.txt",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "artifactName": "PKMSVV-${version}-Windows-x64.${ext}",
+      "icon": "build/icon.ico"
+    },
+    "compression": "normal"
+  },
+  "dependencies": {
+    "@capacitor/core": "8.0.0",
+    "@capacitor/android": "8.0.0",
+    "@capacitor/filesystem": "8.0.0",
+    "@capacitor/share": "8.0.0"
+  }
+}
