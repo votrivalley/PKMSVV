@@ -67,8 +67,8 @@ patch('js/net/coop.js','const scaleRate = n => 1 + 0.75 * Math.max(0, n - 1);',
 patch('js/net/coop.js','const scaleHp = n => 1 + 0.3 * Math.max(0, n - 1);',
  'const scaleHp = n => G.Royale.active ? 1 + 0.12 * Math.max(0,n-1) : 1 + 0.3 * Math.max(0, n - 1);');
 patch('js/systems/spawner.js',
- 'return (1.6 + t * 0.028 + Math.pow(t / 60, 1.6) * 0.5) * DENSITY;',
- 'return (1.6 + t * 0.028 + Math.pow(t / 60, 1.6) * 0.5) * DENSITY * (G.Royale.active?G.Royale.intensity(t).density:1);');
+ 'return (1.6 + t * 0.028 + Math.pow(t / 60, 1.6) * 0.5) * DENSITY * openingSpawnFactor(t);',
+ 'return (1.6 + t * 0.028 + Math.pow(t / 60, 1.6) * 0.5) * DENSITY * openingSpawnFactor(t) * (G.Royale.active?G.Royale.intensity(t).density:1);');
 patch('js/systems/spawner.js','e.dmg *= DMG_K; e.xp = Math.round(e.xp * XP_K);',
  'e.dmg *= DMG_K; e.xp = Math.round(e.xp * XP_K);\n    if(G.Royale.active){const k=G.Royale.intensity(t);e.maxHp=e.hp=Math.round(e.hp*k.hp);e.dmg*=k.dmg;}');
 patch('js/game.js','  function startRun(coop = null) {',
