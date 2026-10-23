@@ -12,8 +12,8 @@ const entry=[
  ' <div class="pkmsvv-native-choice-panel">',
  '  <h2>Pokémon Sống Sót</h2><p>Chọn cách chơi của bạn</p>',
  '  <button type="button" id="pkmsvv-native-offline" class="btn gold">🎮 Chơi offline trên thiết bị</button>',
- '  <button type="button" id="pkmsvv-native-google" class="btn">☁️ Đăng nhập Google · chơi Online</button>',
- '  <small>Online mở trang Web chính thức của Votri Valley bằng trình duyệt. Save trong ứng dụng và Google lưu riêng biệt; không tự chuyển hay ghi đè.</small>',
+ '  <button type="button" id="pkmsvv-native-google" class="btn">🌐 Mở Web Online (trình duyệt)</button>',
+ '  <small>Tính năng đăng nhập Google ngay trong ứng dụng chưa có. Nút Web Online mở trình duyệt ngoài; save offline trong ứng dụng KHÔNG đồng bộ với Google.</small>',
  ' </div>',
  '</section>'
 ].join('\n');
@@ -23,7 +23,7 @@ patch('dev.html','<script defer src="js/ui/login.js"></script>',
  '<script defer src="js/ui/login.js"></script>\n<script defer src="js/ui/pkmsvv-native-choice.js"></script>');
 patch('dev.html','        <button class="menu-item play" data-go="play">Jugar<small>Entra en la mazmorra</small></button>',
  '        <button class="menu-item play" data-go="play">Jugar<small>Entra en la mazmorra</small></button>\n'+
- '        <button type="button" id="pkmsvv-native-cloud-menu" class="menu-item"><span class="mi-ico">☁️</span>Chơi Online · Google<small>Mở phiên bản Web, sử dụng tài khoản Google và lưu đám mây</small></button>');
+ '        <button type="button" id="pkmsvv-native-cloud-menu" class="menu-item"><span class="mi-ico">☁️</span>Mở bản Web Online<small>Mở trong trình duyệt ngoài; save ứng dụng không tự đồng bộ với Google</small></button>');
 fs.copyFileSync(path.join(root,'src','pkmsvv-native-choice.js'),path.join(game,'js','ui','pkmsvv-native-choice.js'));
 fs.appendFileSync(path.join(game,'css','style.css'),'\n'+fs.readFileSync(path.join(root,'src','pkmsvv-native-choice.css'),'utf8')+'\n','utf8');
 console.log('PKMSVV: native local mode + external-browser Google Cloud mode selector installed');

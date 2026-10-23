@@ -15,8 +15,11 @@ test('native mode choice keeps existing saves and Web edition stays separate',()
  const src=read('src/pkmsvv-native-choice.js'),p=read('scripts/patch-native-online.cjs');
  const prep=read('scripts/prepare-game.cjs'),web=read('scripts/prepare-web.cjs');
  assert.match(p,/Chơi offline trên thiết bị/);
- assert.match(p,/Đăng nhập Google/);
- assert.match(p,/không tự chuyển hay ghi đè/);
+ assert.match(p,/Mở Web Online \(trình duyệt\)/);
+ assert.match(p,/đăng nhập Google ngay trong ứng dụng chưa có/);
+ assert.match(p,/save offline trong ứng dụng KHÔNG đồng bộ/);
+ assert.match(src,/window\.confirm/);
+ assert.match(p,/không tự đồng bộ với Google/);
  assert.match(src,/sessionStorage/);
  assert.doesNotMatch(src,/localStorage\.(?:setItem|removeItem|clear)/);
  assert.match(prep,/PKMSVV_BUILD_TARGET/);

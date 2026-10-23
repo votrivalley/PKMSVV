@@ -3,6 +3,9 @@
 (() => {
  const $=id=>document.getElementById(id);
  const openOnline=async()=>{
+  // Never imply the Google account is signed into this EXE/APK.
+  // The user's confirmation is required before leaving for the Web browser.
+  if(!window.confirm('Chức năng này mở bản Web trong trình duyệt, KHÔNG đăng nhập Google ngay trong ứng dụng. Save offline trên PC/Android sẽ không tự đồng bộ. Bạn muốn mở Web Online không?'))return;
   try {
    if(window.PKMSVVNative&&typeof window.PKMSVVNative.openOnline==='function')
     return await window.PKMSVVNative.openOnline();
