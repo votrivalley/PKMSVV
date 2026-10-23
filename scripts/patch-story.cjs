@@ -52,8 +52,13 @@ patch('js/ui/test.js',
 patch('dev.html',
  '<button class="menu-item" data-go="upgrades">Mejoras<small>Haz más fuerte cada run</small></button>',
  '<button class="menu-item" data-go="upgrades">Mejoras<small>Haz más fuerte cada run</small></button>\n'+
- '        <button class="menu-item" data-go="memories" translate="no">📖 Ký Ức<small>Xem lại Chương 0 · Thức tỉnh</small></button>');
+ '        <button class="menu-item" data-go="memories"><span id="pkmsvv-memory-title">Ký Ức</span><small id="pkmsvv-memory-sub">Xem lại Chương 0 · Thức tỉnh</small></button>');
 patch('js/ui/menu.js',"upgrades: 'up',","upgrades: 'up', memories: 'book',");
+patch('js/ui/menu.js',
+ '    const s = G.DB.save;\n    const mon = G.DEX_BY[s.partner];',
+ "    const s = G.DB.save;\n    const memo = document.getElementById('pkmsvv-memory-title');\n"+
+ "    if(memo){memo.textContent=G.I18n.lang==='en'?'Memories':'Ký Ức';document.getElementById('pkmsvv-memory-sub').textContent=G.I18n.lang==='en'?'Replay Chapter 0 · Awakening':'Xem lại Chương 0 · Thức tỉnh';}\n"+
+ '    const mon = G.DEX_BY[s.partner];');
 patch('js/ui/menu.js',"else if (go === 'upgrades') G.PKMSVVUpgradeChooser.open();",
  "else if (go === 'upgrades') G.PKMSVVUpgradeChooser.open();\n        else if (go === 'memories') G.PKMSVVStory.replay();");
 fs.appendFileSync(path.join(game,'css','style.css'),'\n'+fs.readFileSync(path.join(root,'src','pkmsvv-story.css'),'utf8')+'\n','utf8');
