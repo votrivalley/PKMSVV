@@ -41,6 +41,8 @@ jobs:
           PKMSVV_ALLOWED_HOSTS: ${{ vars.PKMSVV_ALLOWED_HOSTS }}
           PKMSVV_WEB_PREVIEW: "0"
         run: npm run prepare:web
+      - name: Test v1.4 Judgment, Orbs, Shiny Charm and Gacha ×100
+        run: node --test tests/v14-gameplay.test.cjs
       - name: Test fixed Pokédex and rear-layer skills
         run: node --test tests/dex-buff-layer.test.cjs
       - name: Verify Cloud Save transactions and Co-op reconnect
