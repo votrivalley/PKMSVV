@@ -226,7 +226,7 @@ test('winged and levitating species cross water without bypassing environmental 
  assert.match(player,/G\.PKMSVVWaterHoverDex = new Set/);
  assert.match(player,/!G\.PKMSVVWaterHoverDex\.has\(this\.dex\)/);
  assert.doesNotMatch(player,/this\.inLiquid&&!ab\.steady/,'anti-slow Abilities cannot disable aquatic terrain penalty');
- const sandbox={G:{World:{liquidEffect:()=>({slow:0.6})},Weather:{speedFor:()=>1},Judgment:{active:false}}};
+ const sandbox={G:{World:{liquidEffect:types=>({slow:types.some(t=>t==='water'||t==='flying')?1:0.6})},Weather:{speedFor:()=>1},Judgment:{active:false}}};
  vm.runInNewContext(player,sandbox);
  const pl=Object.create(sandbox.G.Player.prototype);
  Object.assign(pl,{dex:251,mon:{types:['psychic','grass']},baseSpd:100,spdMul:1,buffs:{spd:{n:0,amount:0}},slowT:0,inLiquid:true});
@@ -246,7 +246,9 @@ test('winged and levitating species cross water without bypassing environmental 
  pl.dex=251;pl.abil={steady:true};pl.mon.types=['psychic','grass'];
  assert.equal(pl.spd,100,'Celebi stays exempt when also resistant to slow effects');
  pl.dex=763;pl.mon.types=['water'];
- assert.equal(pl.spd,60,'fixture does not mock Water type immunity, World handles it separately');
+ assert.equal(pl.spd,100,'actual Water typing is always immune to water slowdown');
+ pl.mon.types=['grass','flying'];
+ assert.equal(pl.spd,100,'actual Flying typing is always immune to water slowdown');
  pl.inLiquid=false;
  assert.equal(pl.spd,100,'normal terrain is unchanged');
 });
