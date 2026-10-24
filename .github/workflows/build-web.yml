@@ -45,6 +45,8 @@ jobs:
         run: node --test tests/dex-buff-layer.test.cjs
       - name: Verify Cloud Save transactions and Co-op reconnect
         run: node --test tests/web-cloud-coop-safe.test.cjs
+      - name: Reproduce early ICE signaling and verify stable connection recovery
+        run: node --test tests/web-rtc-stability.test.cjs
       - name: Verify static browser output
         run: |
           test -s dist/web/index.html
