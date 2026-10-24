@@ -35,8 +35,8 @@ for(const a of [
  ])patch('js/entities/enemy.js',a[0],a[1]);
 // Host records credit; Aoe can hit but auto-target favors live boss.
 patch('js/systems/combat.js',
- "    dmg *= k * (crit ? CRIT_MUL : 1);\n    e.hurt(dmg,",
- "    dmg *= k * (crit ? CRIT_MUL : 1) * (e.arceus?G.Judgment.dmgK():1);\n    e.hurt(dmg,");
+ "    dmg *= k * (crit ? critK(pl) : 1);\n    e.hurt(dmg,",
+ "    dmg *= k * (crit ? critK(pl) : 1) * (e.arceus?G.Judgment.dmgK():1);\n    e.hurt(dmg,");
 // Because all SVV skills autocast independently, the selected move should not
 // determine who is targeted. Prioritize elite bosses, except Arceus while legend lives.
 patch('js/entities/player.js',
