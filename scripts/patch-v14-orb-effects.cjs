@@ -43,6 +43,10 @@ patch('js/entities/enemy.js',
  "        ctx.restore();\n"+
  "      }\n"+
  "      // Escudo: burbuja azul.");
+// Sleeping enemies cannot damage the player by touch, even while overlapping.
+patch('js/systems/combat.js',
+ "      if (e.touchCd > 0 || e.behavior === 'thief' || e.stunT > 0) continue;",
+ "      if (e.arceus || e.touchCd > 0 || e.behavior === 'thief' || e.stunT > 0 || e.sleepT > 0 || (e.net && e.net.st & 16)) continue;");
 // Status replication is visual; only the host runs enemy AI and timers.
 patch('js/net/coop.js',
  '(e.burn > 0 ? 1 : 0) | (e.poison > 0 ? 2 : 0) | (e.shield > 0 ? 4 : 0) | (e.slow > 0 ? 8 : 0)]);',
