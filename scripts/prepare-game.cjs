@@ -583,6 +583,8 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-controller
 execFileSync(process.execPath,[path.join(project,'scripts','patch-hover-ability.cjs')],{cwd:project,stdio:'inherit'});
 // Remove obsolete Pokémon-specific shortcut picker and saved slot forcing.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-remove-move-shortcuts.cjs')],{cwd:project,stdio:'inherit'});
+// Allow one-tap fullscreen RESTORE while playing, including mobile WebView recovery.
+execFileSync(process.execPath,[path.join(project,'scripts','patch-match-fullscreen.cjs')],{cwd:project,stdio:'inherit'});
 // Windows and Android remain strictly offline-first: do NOT inject the external
 // browser Online mode switch. The existing native save identity remains unchanged.
 execFileSync(process.execPath, [path.join(game, 'tools', 'build.js'), '--sin-seo', '--expose'], { cwd: game, stdio: 'inherit' });
