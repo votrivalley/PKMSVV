@@ -11,6 +11,21 @@ test('v1.4 release notes bilingual and native/cloud history preserved',()=>{
  assert.match(read('scripts/prepare-web.cjs'),/1\.4/);
  assert.equal(require('../package.json').version,'1.4.0');
 });
+test('Gacha balance uses precise 0.9% Shiny, 1.8% Charm and 1% Legend odds',()=>{
+ const cfg=JSON.parse(read('config/gameplay.json'));
+ assert.equal(cfg.shiny.gachaPercent,0.9);
+ assert.equal(cfg.shiny.wildDenominator,2048,'Wild Shiny rate is unaffected');
+ const prepare=read('scripts/prepare-game.cjs');
+ const v14=read('scripts/patch-v14-gameplay.cjs');
+ const legend=read('scripts/patch-gacha-legend-100.cjs');
+ assert.match(prepare,/gachaPercent/);
+ assert.match(v14,/const shinyLine=shinySource\.match/);
+ assert.match(v14,/SHINY_RATE\*\(hasCharm\(save,gen\)\?2:1\)/);
+ assert.match(legend,/const PITY_5 = 100;/);
+ assert.match(legend,/\[5, 1\]/);
+ assert.ok(cfg.shiny.gachaPercent < 1,'Base Shiny must be rarer per roll than a 5-star');
+});
+
 test('Gacha ×100 is 10 guaranteed ten-pulls; specific Gen completion doubles shiny rate',t=>{
  const file='vendor/pokesurvivor/js/systems/gacha.js';
  if(!fs.existsSync(path.join(root,file))){t.skip('Pinned game not prepared');return;}
@@ -21,7 +36,7 @@ test('Gacha ×100 is 10 guaranteed ten-pulls; specific Gen completion doubles sh
  const G={DEX:dex,SPRITE_META:meta,U:{pick:a=>a[0]},Sprites:{hasShiny:()=>true}};
  vm.runInNewContext(read(file),{G,Math,Date});
  const s={tickets:{t1:100,t10:10},coins:0,owned:{},shiny:{},pity:{},stats:{}};
- assert.equal(G.Gacha.shinyRate(s,1),1/90);
+ assert.ok(Math.abs(G.Gacha.shinyRate(s,1)-0.009)<1e-12);
  assert.equal(G.Gacha.costOf(s,100,'t1').t1,100);
  assert.equal(G.Gacha.costOf(s,100,'t10').t10,10);
  const rolls=G.Gacha.pull(s,100,1,'t1');
@@ -34,8 +49,9 @@ test('Gacha ×100 is 10 guaranteed ten-pulls; specific Gen completion doubles sh
  assert.equal(ticket10Save.tickets.t10,0);
  for(const mon of dex.filter(x=>x.gen===1))s.owned[mon.dex]={at:1,from:'test'};
  assert.equal(G.Gacha.hasCharm(s,1),true);
- assert.equal(G.Gacha.shinyRate(s,1),2/90);
+ assert.ok(Math.abs(G.Gacha.shinyRate(s,1)-0.018)<1e-12);
  assert.equal(G.Gacha.hasCharm(s,0),false);
+ assert.ok(Math.abs(G.Gacha.shinyRate(s,0)-0.009)<1e-12,'ALL GEN has no Shiny Charm multiplier');
 });
 test('5★ rarity odds are exactly 1%, with 100-pull hard pity and no loss of stored pity',t=>{
  const patch=read('scripts/patch-gacha-legend-100.cjs');
