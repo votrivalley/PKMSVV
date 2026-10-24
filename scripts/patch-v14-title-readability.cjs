@@ -3,3 +3,18 @@ const fs=require('node:fs'),path=require('node:path');
 const file=path.join(__dirname,'..','vendor','pokesurvivor','css','style.css');
 fs.appendFileSync(file,'\n'+ "\n/* Readable Pokémon Sống Sót brand: no credit stamped diagonally across title. */\n#scr-menu .menu-left .logo,#scr-login .logo{display:flex;flex-direction:column;align-items:center;max-width:100%;text-align:center}\n#scr-menu .menu-left .logo .t1.pkmsvv-logo{font-size:clamp(30px,5.3vw,59px);letter-spacing:-.9px;line-height:1.04!important;display:flex;flex-direction:column;align-items:center;white-space:nowrap;width:100%;gap:2px;text-shadow:2px 3px 0 #8e5400,4px 5px 0 rgba(10,18,37,.75)}\n#scr-menu .menu-left .logo .pkmsvv-logo>span:not(.splash){display:block;line-height:1.08}\n#scr-menu .menu-left .logo .pkmsvv-logo>.splash{position:static!important;inset:auto!important;right:auto!important;top:auto!important;transform:none!important;animation:none!important;margin:11px auto 0!important;padding:5px 10px;display:block!important;max-width:min(100%,410px)!important;width:auto!important;white-space:normal!important;overflow-wrap:break-word;text-align:center;font-size:clamp(11px,1.38vw,14px)!important;line-height:1.35!important;letter-spacing:0!important;color:#ffe485!important;background:rgba(14,27,49,.83);border:1px solid rgba(246,211,105,.5);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.38);text-shadow:1px 1px 1px #081529!important}\n#scr-menu .menu-left .logo .t2,#scr-login .logo .t2{margin-top:8px!important;font-size:clamp(10px,1.4vw,14px)!important;letter-spacing:clamp(1px,.26vw,3px)!important;white-space:normal;line-height:1.4!important;color:#e5f1ff!important;text-shadow:1px 2px 3px #061321}\n#scr-menu .menu-left .logo{margin-bottom:14px!important}\n#scr-login .logo .t1.pkmsvv-logo{font-size:clamp(30px,7vw,46px);line-height:1.03!important}\n@media(max-width:720px){#scr-menu .menu-left .logo .t1.pkmsvv-logo{font-size:clamp(27px,6.6vw,44px);letter-spacing:-.7px}#scr-menu .menu-left .logo .pkmsvv-logo>.splash{font-size:11px!important;margin-top:8px!important;padding:4px 7px}#scr-menu .menu-left .logo{margin-bottom:7px!important}}\n" +'\n','utf8');
 console.log('PKMSVV: stacked title, subtitle and no-overlap credit.');
+
+
+// Move the credit BELOW the subtitle, not inside the title lettering.
+const htmlPath=path.join(__dirname,'..','vendor','pokesurvivor','dev.html');
+let html=fs.readFileSync(htmlPath,'utf8').replace(/\r\n/g,'\n');
+const pattern=/(<div class="t1 pkmsvv-logo"[^>]*><span>Pokémon<\/span><span>Sống Sót<\/span>)(<span class="splash"[^>]*>[^<]*<\/span>)(<\/div>\s*<div class="t2">[^<]*<\/div>)/g;
+let matches=0;
+html=html.replace(pattern,(_,head,credit,tail)=>{
+ matches++;
+ return head+tail+'<div class="splash pkmsvv-credit" translate="no">'+credit.replace(/<[^>]+>/g,'')+'</div>';
+});
+if(matches!==1)throw Error('Expected one main menu credit near subtitle; got '+matches);
+fs.writeFileSync(htmlPath,html,'utf8');
+
+fs.appendFileSync(file,"\n#scr-menu .menu-left .logo>.pkmsvv-credit{position:static!important;transform:none!important;animation:none!important;margin:12px auto 0!important;width:auto!important;max-width:min(100%,420px)!important;display:block!important;padding:5px 10px;border-radius:8px;color:#ffe485!important;background:rgba(14,27,49,.86);border:1px solid rgba(246,211,105,.5);font-size:clamp(11px,1.38vw,14px)!important;line-height:1.35!important;text-align:center;white-space:normal!important;text-shadow:1px 1px 1px #09182a!important;box-sizing:border-box}\n#scr-menu .menu-left .logo>.t2{margin-top:10px!important}\n@media(max-width:720px){#scr-menu .menu-left .logo>.pkmsvv-credit{font-size:11px!important;padding:4px 8px;margin-top:8px!important}}\n",'utf8');
