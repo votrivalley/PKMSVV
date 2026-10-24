@@ -16,6 +16,6 @@
   },
   "shiny": {
     "wildDenominator": 2048,
-    "gachaDenominator": 90
+    "gachaPercent": 0.9
   }
 }
