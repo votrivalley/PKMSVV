@@ -44,6 +44,24 @@ G.PKMSVVCollectUI=(()=>{
        '<span class="'+(s.pkmMilestones[n]?'pkm-medal-on':'')+'"> '+(s.pkmMilestones[n]?'🏅':'🔒')+' '+n+' '+L('dấu ấn','stamps')+'</span>').join('')+'</div>'+
      '<p class="sub">'+L('Hoàn thành Gen: +5.000 PokéCoins, 1 vé ×10. Shiny đầy Gen: +10.000 PokéCoins.',
        'Complete a Generation: +5,000 PokéCoins and 1 ×10 ticket. Collect every Shiny in a Generation: +10,000 PokéCoins.')+'</p></div>';
+   // v1.4: Region completion is visible in Goals, including all legends.
+   const charm=document.createElement('section');
+   charm.className='pkm-guide pkmsvv-v14-charms';
+   charm.setAttribute('translate','no');
+   const REGIONS=['Kanto','Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar','Paldea'];
+   const line=[];
+   for(let gen=1;gen<=9;gen++){
+     const species=G.DEX.filter(p=>p.gen===gen&&G.SPRITE_META[p.dex]);
+     const owned=species.filter(p=>s.owned[p.dex]).length;
+     const complete=!!species.length&&G.Gacha.hasCharm(s,gen);
+     line.push('<span class="'+(complete?'pkm-medal-on':'')+'" title="'+owned+'/'+species.length+' Pokémon">'+
+       (complete?'✨ ':'🔒 ')+REGIONS[gen-1]+' '+owned+'/'+species.length+'</span>');
+   }
+   charm.innerHTML='<h3>'+L('✨ SHINY CHARM THEO GEN','✨ REGIONAL SHINY CHARMS')+'</h3>'+
+     '<p>'+L('Sưu tập đủ Pokémon của một Gen (kể cả huyền thoại) để tăng gấp đôi tỉ lệ Shiny khi Gacha Gen đó.',
+      'Own every Pokémon in a region (including legendaries) to double Shiny odds on that regional banner.')+
+     '</p><div class="pkm-stamp-grid">'+line.join('')+'</div>';
+   block.appendChild(charm);
    box.appendChild(block);
    action(block,'[data-pkm-claim]',el=>{
      if(!G.PKMSVVCollect.claim(s,el.dataset.pkmClaim))return;
