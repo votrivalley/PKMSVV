@@ -49,6 +49,8 @@ jobs:
         run: node --test tests/web-cloud-multidevice.test.cjs
       - name: Verify exclusive sessions and run-end cloud synchronization
         run: node --test tests/web-exclusive-session.test.cjs
+      - name: Verify real-time online counts without Firestore polling
+        run: node --test tests/web-online-counter.test.cjs
       - name: Reproduce early ICE signaling and verify stable connection recovery
         run: node --test tests/web-rtc-stability.test.cjs
       - name: Verify static browser output
@@ -72,9 +74,11 @@ jobs:
           mkdir -p deploy/site
           cp -a dist/web/. deploy/site/
           cp firebase/firestore.rules deploy/firestore.rules
+          cp firebase/database.rules.json deploy/database.rules.json
           cat > deploy/firebase.json <<'EOF'
           {
             "firestore": {"rules": "firestore.rules"},
+            "database": {"rules": "database.rules.json"},
             "hosting": {
               "public": "site",
               "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
@@ -90,6 +94,7 @@ jobs:
           test -s deploy/site/index.html
           test -s deploy/site/game/index.html
           test -s deploy/firestore.rules
+          test -s deploy/database.rules.json
       - uses: actions/upload-artifact@v4
         with:
           name: PKMSVV-Web-Hosting
