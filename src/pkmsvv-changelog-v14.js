@@ -14,6 +14,7 @@ G.CHANGELOG.unshift({
   ['Gacha ×100: Quay một lúc 100 lần bằng 100 vé thường hoặc 10 vé ×10; giữ đảm bảo ít nhất một Pokémon 4★ trở lên trong mỗi nhóm 10 lượt.','Gacha ×100: Draw 100 at once using 100 normal tickets or ten ×10 tickets, with each group of ten retaining its guaranteed 4★+ pull.']
  ],
  chg:[
+  ['Cân bằng Mystery Dungeon Orbs: Hồi dùng 5 giây, tối đa 10 Orb xuất hiện mỗi trận; giảm tỷ lệ rơi và sức mạnh hiệu ứng. Orb không thể khống chế Arceus.','Mystery Dungeon Orb balance: 5-second use cooldown, at most 10 Orb drops per run, lower drop rates and toned-down effects. Orbs cannot control Arceus.'],
   ['Kỹ năng tự động ưu tiên boss sống và mục tiêu gần, không bị quái nhỏ che boss; Judgment vẫn ưu tiên huyền thoại trước Arceus.','Auto-casting prioritizes live bosses and nearby threats; during Judgment, legendary enemies take priority over Arceus.'],
   ['Huyền thoại trong Judgment tăng máu theo hệ số ×1,25 và sát thương ×1,15 mỗi đợt, thay vì gấp đôi vô hạn ngay từ đầu.','Judgment legends now scale HP ×1.25 and damage ×1.15 per wave rather than doubling both every wave.'],
   ['Từ phút 35, Arceus cảnh báo và phá vật phẩm được trang bị trong trận; không xóa vật phẩm lưu trong túi đồ vĩnh viễn.','At minute 35, Arceus warns before shattering the equipped run item; permanent inventory items are not deleted.'],
