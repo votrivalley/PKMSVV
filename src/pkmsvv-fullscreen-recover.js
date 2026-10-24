@@ -4,7 +4,7 @@
  * for Web/PWA, and do not assume remembered fullscreen state is still true.
  */
 G.PKMSVVFullRestore=(()=>{
- let btn=null,busy=false,actualFullscreen=null,checking=false,platform='',wasActive=false;
+ let btn=null,busy=false,actualFullscreen=null,checking=false,refreshQueued=false,platform='',wasActive=false;
  const active=()=>!!(G.Game&&G.Game.player&&G.Game.state&&
    G.Game.state!=='ui'&&G.Game.state!=='over');
  const coop=()=>!!(G.Coop&&G.Coop.active);
@@ -35,7 +35,7 @@ G.PKMSVVFullRestore=(()=>{
   if(mode==='web'){actualFullscreen=webFullscreen();draw();return;}
   // Native status checks are asynchronous: remain hidden until status is known.
   draw();
-  if(checking)return;
+  if(checking){refreshQueued=true;return;}
   checking=true;
   const status=mode==='android'?
    (typeof plugin().state==='function'?plugin().state():Promise.resolve({enabled:true})):
@@ -48,7 +48,10 @@ G.PKMSVVFullRestore=(()=>{
   }).catch(()=>{
    // An unreadable native state is NOT proof that fullscreen was lost.
    actualFullscreen=true;draw();
-  }).finally(()=>{checking=false;});
+  }).finally(()=>{
+   checking=false;
+   if(refreshQueued){refreshQueued=false;sync();}
+  });
  }
  function error(e){
   const details=e&&e.message?e.message:'';
