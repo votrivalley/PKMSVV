@@ -7,7 +7,7 @@ G.PKMSVVVoice=(()=>{
  const ICE=[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']}];
  const peers=new Map(),blocked=new Set();
  let joined=false,roomId='',microphone=null,micPending=false,volume=.7,ptt=false,held=false;
- let root=null,tip='',blockedAudio=false,initialized=false;
+ let root=null,tip='',blockedAudio=false,initialized=false,lastSignature='';
  const vi=()=>!G.I18n||G.I18n.lang==='vi';
  const tr=(vn,en)=>vi()?vn:en;
  const room=()=>G.Social&&G.Social.room;
@@ -207,6 +207,11 @@ G.PKMSVVVoice=(()=>{
    if(joined&&(!allowed()||roomId!==room()?.id))closeAll(true);
    return;
   }
+  const signature=[vi(),joined,!!microphone,ptt,blockedAudio,tip,
+   room().members.map(m=>m.uid+':'+(peers.get(m.uid)?.state||'absent')+':'+blocked.has(m.uid)).join(';')].join('|');
+  const wasHidden=shell.hidden;
+  if(!wasHidden&&signature===lastSignature)return; // preserve focus and live sliders
+  lastSignature=signature;
   shell.hidden=false;shell.replaceChildren();
   const h=document.createElement('div');h.className='pkmsvv-voice-heading';
   h.textContent=tr('🎙 Thoại đồng đội · Sống Sót','🎙 Team Voice · Co-op');
@@ -220,7 +225,7 @@ G.PKMSVVVoice=(()=>{
   bar.append(button(tr('Rời thoại','Leave voice'),stop,'ghost'));
   if(!ptt)bar.append(button(microphone?tr('🔴 Tắt mic','🔴 Mute mic'):tr('🎤 Bật mic','🎤 Enable mic'),
    ()=>microphone?micOff():micOn(),microphone?'gold':''));
-  else bar.append(button(tr('Giữ V để nói','Hold V to talk'),()=>{},'ghost'));
+  else {const status=document.createElement('span');status.className='pkmsvv-voice-ptt-status';status.textContent=tr('Giữ V để nói','Hold V to talk');bar.append(status);}
   const pttLine=document.createElement('label');pttLine.className='pkmsvv-voice-ptt';
   const cb=document.createElement('input');cb.type='checkbox';cb.checked=ptt;
   cb.onchange=()=>{ptt=cb.checked;held=false;micOff();render();};
