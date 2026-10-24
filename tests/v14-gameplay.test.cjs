@@ -88,7 +88,7 @@ test('Orb controls cannot affect Arceus and boss debuffs remain modest',t=>{
  assert.equal(effects.slow[0][1],6);
  const pickup=read('vendor/pokesurvivor/js/entities/pickup.js');
  assert.match(pickup,/runOrbDrops<10&&Math\.random\(\)<0\.45/);
- assert.match(pickup,/runOrbDrops<10&&Math\.random\(\)<0\.0015/);
+ assert.match(pickup,/runOrbDrops<10&&Math\.random\(\)<0\.03/);
  assert.match(pickup,/G\.Orbs\.canTake\(o,p\.value\)/);
  assert.match(pickup,/function clear\(\) \{ list = \[\]; runOrbDrops = 0; \}/);
 });
