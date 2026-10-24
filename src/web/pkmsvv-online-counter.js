@@ -27,6 +27,7 @@ G.PKMSVVOnline=(()=>{
      prior.remove().catch(()=>{});
      prior.onDisconnect().cancel().catch(()=>{});
    }
+   const e=el();if(e)e.classList.add('hidden');
    render();
  }
  function onAdd(snap){rows.set(snap.key,snap.val());render();}
@@ -54,6 +55,7 @@ G.PKMSVVOnline=(()=>{
    stop();
    if(!nextDb || !nextUid || !/^[0-9a-f]{48}$/.test(nextToken||''))return;
    db=nextDb;uid=nextUid;token=nextToken;disposed=false;
+   const e=el();if(e)e.classList.remove('hidden');
    lastError='';rows=new Map();
    const mySerial=serial;
    presenceRef=db.ref('presenceLive');
