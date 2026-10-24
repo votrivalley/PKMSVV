@@ -45,9 +45,11 @@ patch('js/entities/player.js',
 patch('js/entities/player.js',
  "    const boss = all.find(e => e.boss && !e.dead && G.U.dist(this.x, this.y, e.x, e.y) < 330);",
  "    const boss = all.filter(e=>e.boss&&!e.dead&&G.U.dist(this.x,this.y,e.x,e.y)<420)\n      .sort((a,b)=>G.U.dist2(this.x,this.y,a.x,a.y)-G.U.dist2(this.x,this.y,b.x,b.y))[0];");
+// Preserve existing targeting patches while ensuring that all auto-cast skills
+// prioritize an in-range boss over the nearest normal enemy.
 patch('js/entities/player.js',
- "    const tg = (ranged ? boss || threat : threat || boss)\n             || G.Projectiles.nearest(all, this.x, this.y, 520)",
- "    const arceus = !boss && G.Judgment.active && !G.Judgment.shielded ?\n       all.find(e=>e.arceus&&!e.dead&&G.U.dist(this.x,this.y,e.x,e.y)<420) : null;\n    const tg = boss || threat || arceus\n             || G.Projectiles.nearest(all.filter(e=>!e.arceus||!G.Judgment.shielded), this.x, this.y, 520)");
+ "      this.target = tg;\n      if (tg) this.aim = Math.atan2(tg.y - this.y, tg.x - this.x);",
+ "      this.target = boss || tg;\n      if (this.target) this.aim = Math.atan2(this.target.y - this.y, this.target.x - this.x);");
 // Adapt Judgment score to result UI. Public Web ranking remains disabled.
 patch('js/ui/run-ui.js',
  "  function showOver(r, onBack) {",
