@@ -570,6 +570,7 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-title-read
 // Staged mission attention: ready missions rise to top until claimed; subtle new mission glow.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-mission-attention.cjs')],{cwd:project,stdio:'inherit'});
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-orb-achievements.cjs')],{cwd:project,stdio:'inherit'});
+execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-controller-scroll.cjs')],{cwd:project,stdio:'inherit'});
 // Windows and Android remain strictly offline-first: do NOT inject the external
 // browser Online mode switch. The existing native save identity remains unchanged.
 execFileSync(process.execPath, [path.join(game, 'tools', 'build.js'), '--sin-seo', '--expose'], { cwd: game, stdio: 'inherit' });

@@ -30,8 +30,9 @@ G.PKMSVVOnline=(()=>{
    const e=el();if(e)e.classList.add('hidden');
    render();
  }
- function onAdd(snap){rows.set(snap.key,snap.val());render();}
- function onRemove(snap){rows.delete(snap.key);render();}
+ function signalPresence(){try{window.dispatchEvent(new Event('pkmsvv-presence-change'));}catch(e){}}
+ function onAdd(snap){rows.set(snap.key,snap.val());render();signalPresence();}
+ function onRemove(snap){rows.delete(snap.key);render();signalPresence();}
  async function register(mySerial){
    const myLeaf=leaf;
    if(!myLeaf || !connected || mySerial!==serial)return;
@@ -71,7 +72,7 @@ G.PKMSVVOnline=(()=>{
    db.goOnline();
    render();
  }
- return {start,stop,get active(){return !disposed && !!db;},get count(){
+ return {start,stop,isOnline(other){const v=rows.get(String(other||''));return !!(connected&&v&&typeof v==='object'&&Object.keys(v).length);},get active(){return !disposed && !!db;},get count(){
    let n=0;for(const v of rows.values())if(v&&typeof v==='object'&&Object.keys(v).length>0)n++;
    return connected?n:null;
  }};
