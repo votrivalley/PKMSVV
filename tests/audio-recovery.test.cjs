@@ -7,7 +7,7 @@ test('audio engine retries suspended music, does not restart when muted intentio
  if(!fs.existsSync(path.join(base,'index.html')))return;
  const s=fs.readFileSync(path.join(base,'js/core/audio.js'),'utf8');
  assert.match(s,/function ensureMusic\(\)/);
- assert.match(s,/if \(!wanted\) return;/);
+ assert.match(s,/if \(pkmsvvAudioBackground \|\| document\.hidden \|\| !wanted\) return;/);
  assert.match(s,/ctx\.resume\(\)\.then\(\(\) => ensureMusic\(\)\)/);
  assert.match(s,/if \(wanted === name\) \{ if \(name\) ensureMusic\(\); return; \}/);
  assert.match(s,/visibilitychange/);
