@@ -50,13 +50,20 @@ patch('js/entities/player.js',
 patch('js/entities/player.js',
  "      this.target = tg;\n      if (tg) this.aim = Math.atan2(tg.y - this.y, tg.x - this.x);",
  "      this.target = boss || tg;\n      if (this.target) this.aim = Math.atan2(this.target.y - this.y, this.target.x - this.x);");
+// Store a personal damage record in normal Cloud/local save, no new leaderboard writes.
+patch('js/core/db.js',
+ "groupRuns: 0, bestGroupTime: 0 }",
+ "groupRuns: 0, bestGroupTime: 0, arceusDamageBest: 0 }");
+patch('js/game.js',
+ "    const judge = G.Judgment.summary();\n    if (judge) G.Progress.event('judgeEnd', judge);",
+ "    const judge = G.Judgment.summary();\n    if(judge && Number.isFinite(judge.dmg))save.stats.arceusDamageBest=Math.max(save.stats.arceusDamageBest||0,Math.floor(judge.dmg));\n    if (judge) G.Progress.event('judgeEnd', judge);");
 // Adapt Judgment score to result UI. Public Web ranking remains disabled.
 patch('js/ui/run-ui.js',
  "  function showOver(r, onBack) {",
  "  function showOver(r, onBack) {\n    if(r.judge && r.judge.dmg!=null){\n      const v=G.I18n&&G.I18n.lang==='vi';\n      G.UI.toast((v?'Sát thương Arceus: ':'Arceus damage: ')+r.judge.dmg.toLocaleString(),6000);\n    }");
 patch('js/game.js',
- "    G.Judgment.reset();",
- "    G.Judgment.reset();\n    G.PKMSVV14.reset();\n    G.Orbs.reset();");
+ "    G.Judgment.reset();\n    G.Events.reset();",
+ "    G.Judgment.reset();\n    G.PKMSVV14.reset();\n    G.Orbs.reset();\n    G.Events.reset();");
 // Wait for standard scheduled bosses to clear before adding a midgame challenge.
 patch('js/game.js',
  "    else G.Spawner.tickBanner(dt);\n    G.EnemyMgr.update(dt, all);",
