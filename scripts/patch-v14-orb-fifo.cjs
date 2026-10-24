@@ -18,8 +18,8 @@ patch('js/net/coop.js',
  "            r2(local.reviveT || 0), api.choosing && api.choosing() ? 1 : 0, doneSeq];",
  "            r2(local.reviveT || 0), api.choosing && api.choosing() ? 1 : 0, doneSeq,\n            G.Orbs.ready(local)?1:0];");
 patch('js/net/coop.js',
- "              rev: num(a[12], 0, 0, 60), ch: a[13] === undefined ? undefined : a[13] ? 1 : 0, ld: num(a[14], 0, 0, 1e9) };",
- "              rev: num(a[12], 0, 0, 60), ch: a[13] === undefined ? undefined : a[13] ? 1 : 0, ld: num(a[14], 0, 0, 1e9), orbReady:a[15]===1?1:0 };");
+ "ld: num(a[14], 0, 0, 1e9)",
+ "ld: num(a[14], 0, 0, 1e9), orbReady:a[15]===1?1:0");
 patch('js/net/coop.js',
  "      case 'item': api.item(ev[1]); break;",
  "      case 'item': api.item(ev[1]); break;\n      case 'orb': if(G.Orbs.ready(local))api.orb(ev[1]); break;");
