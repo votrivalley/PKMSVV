@@ -39,3 +39,16 @@ firebase.cmd deploy --only hosting --project pkmsvv-b84d2
 5. Mở `https://pkmsvv-b84d2.web.app/`, nhấn Ctrl+Shift+R. Không xóa dữ liệu trình duyệt để tránh mất save chưa đồng bộ.
 
 **Giới hạn phát hành:** Trang Firebase Hosting đang là web công khai. Trước khi chia sẻ rộng, hãy kiểm tra quyền sử dụng tài sản Pokémon và quy tắc Firebase.
+
+## Vá lỗi Co-op WebRTC 24/10/2026
+
+Bản vá **chỉ áp dụng cho Web Online**, không tự đưa mã lên Firebase Hosting:
+
+- Sửa race condition: ICE candidate của khách đến **trước SDP answer** nay được máy chủ phòng thêm vào RTCPeerConnection sau khi set remote description (trước đây bị giữ lại mãi).
+- Sau 8 giây WebRTC ở trạng thái `disconnected` liên tục, đánh dấu cần kết nối lại. Trận đang chạy vẫn có cửa sổ phục hồi 45 giây.
+- Không hiện giả `relay` thành kết nối thành công khi WebRTC không hỗ trợ (Firebase data relay vẫn bị tắt).
+- Bài kiểm thử `tests/web-rtc-stability.test.cjs` mô phỏng khách gửi ICE trước SDP answer. Cần chạy **sau khi** build Web để kiểm tra trực tiếp mã đã ghép.
+
+**Chưa giải quyết mọi NAT:** Nếu hai máy không lập được đường WebRTC trực tiếp do CGNAT/firewall, chỉ chỉnh STUN và retry chưa đủ. Cần TURN có cơ chế cấp thông tin truy cập ngắn hạn hoặc máy chủ relay riêng, dự trù lưu lượng/chi phí rồi mới bật.
+
+**QA thực tế:** triển khai bản Web mới nhất lên Firebase Hosting, đăng nhập hai tài khoản Google trên hai thiết bị khác nhau. Thử cùng Wi-Fi, khác Wi-Fi, Wi-Fi ↔ 4G; vào phòng, chờ trạng thái **Đã kết nối** trên cả hai đầu rồi mới bắt đầu. Nếu vẫn lỗi, ghi lại cấu hình mạng và trạng thái WebRTC từ `chrome://webrtc-internals` (không gửi token, UID Firebase hoặc thông tin nhạy cảm). Không xác nhận fix thành công ngoài môi trường thực nếu chưa qua bài thử này.
