@@ -93,6 +93,45 @@ test('Orb controls cannot affect Arceus and boss debuffs remain modest',t=>{
  assert.match(pickup,/function clear\(\) \{ list = \[\]; runOrbDrops = 0; \}/);
 });
 
+test('Guaranteed first Orb spawns only at eight learned skills and only once per run',()=>{
+ const received=[];
+ const G={
+  Game:{state:'playing'},Camera:{zoom:1,zoomTo:1},Coop:{active:false},
+  I18n:{lang:'vi'},U:{pick:xs=>xs[0]},
+  Pickups:{dropFirstOrb(x,y,id){received.push({x,y,id});return true;}},
+  Spawner:{say(){}},FX:{ring(){},dmgText(){}},Audio:{sfx(){}}
+ };
+ vm.runInNewContext(read('src/v14/orbs.js'),{G,Math,Date});
+ const pl={x:12,y:34,maxMoves:8,slots:new Array(7).fill(1),dead:false};
+ G.Orbs.update(.1,pl);assert.equal(received.length,0,'not before skill eight');
+ pl.slots.push(1);G.Orbs.update(.1,pl);
+ assert.equal(received.length,1,'guaranteed first Orb at skill eight');
+ assert.equal(received[0].x,50);
+ assert.ok(G.Orbs.BY[received[0].id]);
+ for(let i=0;i<50;i++)G.Orbs.update(.1,pl);
+ assert.equal(received.length,1,'must not spam Orbs every frame');
+ G.Orbs.reset();G.Orbs.update(.1,pl);
+ assert.equal(received.length,2,'new run may provide one tutorial Orb');
+});
+test('All six Orb sprites are bundled and drawn in world + HUD',t=>{
+ const ids=['slumber','slow','blowback','focus','luminous','quick'];
+ for(const id of ids){
+  const xml=read('src/v14/orb-art/'+id+'.svg');
+  assert.match(xml,/viewBox="0 0 32 32"/);
+  assert.match(xml,/<svg/);
+ }
+ assert.match(read('scripts/prepare-game.cjs'),/patch-v14-orb-visuals.cjs/);
+ const file='vendor/pokesurvivor/js/entities/pickup.js';
+ if(!fs.existsSync(path.join(root,file))){t.skip('Pinned game not prepared');return;}
+ const world=read(file),html=read('vendor/pokesurvivor/dev.html'),hud=read('vendor/pokesurvivor/js/ui/hud.js');
+ assert.match(world,/function dropFirstOrb\(/);
+ assert.match(world,/G\.OrbSprites\.draw\(ctx,p\.value/);
+ assert.match(world,/dropFirstOrb, update/);
+ assert.match(html,/pkmsvv-orb-sprites\.js/);
+ assert.match(hud,/G\.OrbSprites\.draw\(ctx,id/);
+ for(const id of ids)assert.ok(fs.existsSync(path.join(root,'vendor/pokesurvivor/assets/orbs/'+id+'.svg')));
+});
+
 test('Milestones fire once at minutes 10 and 20, then Judgment at minute 30',()=>{
  const src=read('src/v14/milestones.js');const spawned=[];
  const G={I18n:{lang:'vi'},Coop:{active:false},Rift:{inArena:false},Judgment:{active:false},
