@@ -15,15 +15,48 @@ G.PKMSVVUpgradeChooser=(()=>{
   let panel=$('pkmsvv-skill-guide');
   if(!panel){
    panel=document.createElement('section');panel.id='pkmsvv-skill-guide';
-   panel.className='pkmsvv-skill-guide';panel.setAttribute('aria-label',t('Tiến trình kỹ năng','Skill unlock progress'));
+   panel.className='pkmsvv-skill-guide';
    $('pkmsvv-upgrade-hint').insertAdjacentElement('afterend',panel);
   }
   panel.replaceChildren();
-  const title=document.createElement('h3');title.textContent=guide.headline;
-  const note=document.createElement('p');note.textContent=guide.note;
-  const list=document.createElement('div');list.className='pkmsvv-skill-guide-grid';
-  for(const line of guide.lines){const item=document.createElement('div');item.textContent=line;list.append(item);}
-  panel.append(title,note,list);
+  // Keep this short by default. The player can expand it with A / touch
+  // and collapse it with the same button; no separate inaccessible close icon.
+  const full=guide.count>=8;
+  const toggle=document.createElement('button');
+  toggle.type='button';toggle.id='pkmsvv-upgrade-guide-toggle';
+  toggle.className='btn pkmsvv-upgrade-guide-toggle';
+  toggle.setAttribute('aria-expanded','false');
+  toggle.setAttribute('aria-controls','pkmsvv-upgrade-guide-details');
+  const symbol=document.createElement('span');symbol.className='pkmsvv-guide-symbol';
+  const title=document.createElement('span');title.className='pkmsvv-guide-title';
+  title.textContent=full?t('Hướng dẫn Mystery Orb','Mystery Orb Guide'):guide.headline;
+  const body=document.createElement('div');body.className='pkmsvv-upgrade-guide-details';
+  body.id='pkmsvv-upgrade-guide-details';body.hidden=true;
+  const renderSymbol=()=>{symbol.textContent=body.hidden?'+':'−';toggle.setAttribute('aria-expanded',String(!body.hidden));};
+  toggle.onclick=()=>{body.hidden=!body.hidden;renderSymbol();};
+  toggle.append(symbol,title);
+  if(full){
+   const explanation=document.createElement('p');
+   explanation.textContent=t(
+    'Trong một trận, học đủ cả 8 kỹ năng thì mới có thể nhặt Mystery Orb. Nhặt trước dùng trước (FIFO). Tối đa 10 Orb rơi mỗi trận, mỗi lần chỉ dùng một quả, thời gian hồi 5 giây. Orb không giữ lại sau trận.',
+    'Learn all eight moves in a run to collect Mystery Orbs. First collected, first used (FIFO). At most 10 drops per run, one use at a time, 5-second cooldown. Orbs expire after each run.'
+   );
+   const controls=document.createElement('p');
+   controls.textContent=t('PC: phím 5 · Tay cầm: Y mặc định · Cảm ứng: nút Orb cạnh kỹ năng chủ động.',
+    'PC: key 5 · Controller: Y by default · Touch: Orb button next to the active skill.');
+   body.append(explanation,controls);
+   for(const orb of G.Orbs.LIST){
+    const row=document.createElement('p');row.className='pkmsvv-orb-guide-row';
+    const name=document.createElement('strong');name.textContent=orb.name[en()?1:0]+': ';
+    name.style.color=orb.col;row.append(name,document.createTextNode(orb.desc[en()?1:0]));body.append(row);
+   }
+  }else{
+   const note=document.createElement('p');note.textContent=guide.note;
+   const list=document.createElement('div');list.className='pkmsvv-skill-guide-grid';
+   for(const line of guide.lines){const item=document.createElement('div');item.textContent=line;list.append(item);}
+   body.append(note,list);
+  }
+  panel.append(toggle,body);renderSymbol();
   $('pkmsvv-upgrade-back').textContent=t('Trở về','Back');
   $('pkmsvv-upgrade-single').onclick=()=>{
    G.MenuUI.openUpgrades();
