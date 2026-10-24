@@ -21,6 +21,7 @@ G.CHANGELOG.unshift({
   ['Meteor Mash giảm sát thương cơ bản 34 → 24, phạm vi 54 → 48 và lực đẩy 80 → 70.','Meteor Mash base damage reduced 34 → 24, radius 54 → 48 and knockback 80 → 70.']
  ],
  fix:[
+  ['Sửa điều khiển Orb trên tay cầm: mặc định Y dùng Orb, B chuyển Orb, X kích hoạt kỹ năng chủ động. Có thể gán lại ba nút tại Cài đặt → Điều khiển, không ảnh hưởng điều khiển menu.','Fixed controller Orb controls: Y uses an Orb, B switches Orbs, X triggers the active skill. Remap all three under Settings → Controls without changing menu navigation.'],
   ['Orbs chỉ tồn tại trong lượt chơi, không làm tăng lượt ghi Cloud Save hoặc làm hỏng save cũ.','Orbs exist only during a run, adding no Cloud Save writes and leaving existing saves intact.'],
   ['Giữ riêng tiến trình Offline trên PC/Android và Cloud Save một tài khoản/một phiên trên Web Online.','Offline PC/Android progress stays separate from the single-session Web Online Cloud Save.']
  ],
