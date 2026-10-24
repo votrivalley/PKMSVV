@@ -63,6 +63,7 @@ execFileSync(process.execPath, [path.join(root, 'scripts', 'prepare-game.cjs')],
 // Generate the same Sống Sót icon assets as Windows and Android (including the web PWA).
 execFileSync(process.execPath, [path.join(root, 'scripts', 'generate-icons.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-multiplayer.cjs')], { cwd: root, stdio: 'inherit' });
+execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-coop-reconnect.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-multiplayer-hub.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-retro-web.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-entry-ui.cjs')], { cwd: root, stdio: 'inherit' });
@@ -121,6 +122,7 @@ db = db.replace(cloudMarker,
   "    try { if (localStorage.getItem('pkmsvv.web.saveMode') === 'local') { localReason = 'user'; return false; } } catch (e) { /* private storage */ }\n" +
   '    const cfg = G.FIREBASE_CONFIG;');
 fs.writeFileSync(dbFile, db);
+execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-cloud-safe.cjs')], { cwd: root, stdio: 'inherit' });
 const flow = path.join(game, 'js', 'game.js');
 replaceOnce(flow, 'setTimeout(() => this.afterLogin(), 0);',
   "setTimeout(() => { " +
