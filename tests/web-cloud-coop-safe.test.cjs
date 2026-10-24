@@ -35,7 +35,9 @@ test('reconnect 45s grace resumes, expires and cleans up',()=>{
  assert.equal(timers.size,0);
  assert.equal(expired,0);
  q.lost('host',()=>expired++);
- [...timers.values()][0].fn();
+ const [id,record]=[...timers.entries()][0];
+ timers.delete(id); // The real timer runtime removes fired timeouts automatically.
+ record.fn();
  assert.equal(expired,1);
  assert.equal(q.pendingCount(),0);
  q.lost('peer',()=>expired++);
