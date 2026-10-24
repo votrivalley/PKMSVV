@@ -47,6 +47,8 @@ jobs:
         run: node --test tests/web-cloud-coop-safe.test.cjs
       - name: Check multi-device Cloud Save security and server-only bootstrap
         run: node --test tests/web-cloud-multidevice.test.cjs
+      - name: Verify exclusive sessions and run-end cloud synchronization
+        run: node --test tests/web-exclusive-session.test.cjs
       - name: Reproduce early ICE signaling and verify stable connection recovery
         run: node --test tests/web-rtc-stability.test.cjs
       - name: Verify static browser output
@@ -69,8 +71,10 @@ jobs:
         run: |
           mkdir -p deploy/site
           cp -a dist/web/. deploy/site/
+          cp firebase/firestore.rules deploy/firestore.rules
           cat > deploy/firebase.json <<'EOF'
           {
+            "firestore": {"rules": "firestore.rules"},
             "hosting": {
               "public": "site",
               "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
@@ -85,6 +89,7 @@ jobs:
           EOF
           test -s deploy/site/index.html
           test -s deploy/site/game/index.html
+          test -s deploy/firestore.rules
       - uses: actions/upload-artifact@v4
         with:
           name: PKMSVV-Web-Hosting
