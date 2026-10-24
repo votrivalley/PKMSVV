@@ -37,6 +37,50 @@ test('Gacha ×100 is 10 guaranteed ten-pulls; specific Gen completion doubles sh
  assert.equal(G.Gacha.shinyRate(s,1),2/90);
  assert.equal(G.Gacha.hasCharm(s,0),false);
 });
+test('5★ rarity odds are exactly 1%, with 100-pull hard pity and no loss of stored pity',t=>{
+ const patch=read('scripts/patch-gacha-legend-100.cjs');
+ assert.match(patch,/const PITY_5 = 100;/);
+ assert.match(patch,/const RATES = \[\[1, 45\.5\], \[2, 30\], \[3, 17\], \[4, 6\.5\], \[5, 1\]\];/);
+ assert.match(read('scripts/prepare-game.cjs'),/patch-gacha-legend-100\.cjs/);
+ const file='vendor/pokesurvivor/js/systems/gacha.js';
+ if(!fs.existsSync(path.join(root,file))){t.skip('Game source not prepared yet');return;}
+ const dex=[];
+ for(const gen of [1,2])for(let rarity=1;rarity<=5;rarity++)
+   dex.push({gen,rarity,dex:gen*10+rarity,bst:100+100*rarity});
+ const deterministicMath=Object.create(Math);
+ deterministicMath.random=()=>0; // Forces rarity 1★ unless pity or 4★ guarantee intervenes.
+ const G={DEX:dex,SPRITE_META:Object.fromEntries(dex.map(m=>[m.dex,true])),
+  U:{pick:pool=>pool[0]},Sprites:{hasShiny:()=>false}};
+ vm.runInNewContext(read(file),{G,Math:deterministicMath,Date});
+ const makeSave=()=>({tickets:{t1:250,t10:20},coins:0,owned:{},shiny:{},pity:{},stats:{}});
+ assert.deepEqual(Array.from(G.Gacha.RATES,([r,p])=>[r,p]),
+  [[1,45.5],[2,30],[3,17],[4,6.5],[5,1]]);
+ assert.equal(G.Gacha.RATES.reduce((n,[,w])=>n+w,0),100);
+ assert.equal(G.Gacha.PITY_5,100);
+ const oldSave=makeSave();
+ oldSave.pity[0]=70; // Old 70/70 pity must carry over as 70/100, never erased.
+ let result=G.Gacha.pull(oldSave,1,0);
+ assert.equal(result[0].rarity,1);
+ assert.equal(oldSave.pity[0],71);
+ oldSave.pity[0]=99;
+ result=G.Gacha.pull(oldSave,1,0);
+ assert.equal(result[0].rarity,5);
+ assert.equal(oldSave.pity[0],0);
+ const genSave=makeSave();
+ genSave.pity[0]=57;genSave.pity[1]=99;
+ assert.equal(G.Gacha.pull(genSave,1,1)[0].rarity,5);
+ assert.equal(genSave.pity[1],0);
+ assert.equal(genSave.pity[0],57,'ALL GEN pity stays independent of Gen 1');
+ const batchSave=makeSave();
+ const oneHundred=G.Gacha.pull(batchSave,100,0,'t1');
+ assert.equal(oneHundred.length,100);
+ assert.equal(oneHundred[99].rarity,5,'100th pull guaranteed 5★ when 99 earlier rolls failed');
+ assert.equal(oneHundred.filter(x=>x.rarity===5).length,1);
+ assert.equal(batchSave.pity[0],0);
+ for(let k=0;k<10;k++)assert.ok(oneHundred.slice(k*10,k*10+10).some(x=>x.rarity>=4),
+  '×10 four-star minimum remains intact (batch '+k+')');
+});
+
 test('Orbs are unlocked per player at eight learned skills and used FIFO',t=>{
  const file='vendor/pokesurvivor/js/systems/orbs.js';
  if(!fs.existsSync(path.join(root,file))){t.skip('Pinned game not prepared');return;}
