@@ -68,10 +68,11 @@ test('voice does not touch microphone when a user declines the opt-in',()=>{
  });
  const document={body:makeNode(),createElement(){const n=makeNode();nodes.push(n);return n;}};
  const r={id:'abc123',mode:'royale',isHost:true,host:'a',members:[{uid:'a',name:'A'},{uid:'b',name:'B'}]};
+ const sent=[];
  const G={I18n:{lang:'vi'},Social:{room:r,on(fn){roomChanged=fn;}},UI:{isOpen(){return true;}},
   Coop:{active:false},Net:{open_:true,uid:'a',on(fn){netMessage=fn;},
-  onPeer(fn){peerCb=fn;},mode(){return 'direct';},send(){throw Error('unexpected voice data');},
-  toHost(){throw Error('unexpected voice data');}}};
+  onPeer(fn){peerCb=fn;},mode(){return 'direct';},send(to,msg){sent.push({to,msg});},
+  toHost(){throw Error('host must not send to host');}}};
  const ctx={G,document,window:{addEventListener(){},setInterval(){}},navigator:{mediaDevices:{
   async getUserMedia(){requested++;throw Error('must not request microphone');}}},console};
  vm.runInNewContext(read('src/web/pkmsvv-voice.js'),ctx);
@@ -83,6 +84,8 @@ test('voice does not touch microphone when a user declines the opt-in',()=>{
  G.PKMSVVVoice.start();
  assert.equal(G.PKMSVVVoice.joined,true,'Co-op may opt in');
  assert.equal(requested,0,'joining receive-only should not ask for microphone permission');
+ assert.equal(sent[0].msg.k,'pkmsvv-voice');
+ assert.equal(sent[0].msg.body.type,'hello');
  G.PKMSVVVoice.stop();
  assert.equal(G.PKMSVVVoice.joined,false,'leaving voice closes voice session');
 });
