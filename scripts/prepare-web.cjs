@@ -72,10 +72,12 @@ execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-entry-ui.c
 replaceOnce(path.join(game,'js','main.js'),"navigator.serviceWorker.register('sw.js')","navigator.serviceWorker.register('/sw.js',{scope:'/'})");
 const notesFile=path.join(game,'js','data','changelog.js');
 fs.appendFileSync(notesFile,'\n'+fs.readFileSync(path.join(root,'src','pkmsvv-changelog-v13-web.js'),'utf8'),'utf8');
+// v1.4 follows v1.3 but must appear first in What's New without duplicating notes.
+fs.appendFileSync(notesFile,"\nconst i14=G.CHANGELOG.findIndex(x=>(x.title||[])[0]?.includes('v1.4'));if(i14>0)G.CHANGELOG.unshift(G.CHANGELOG.splice(i14,1)[0]);\n",'utf8');
 const uiNewsPath=path.join(game,'js','ui','news-ui.js');
 let uiNews=fs.readFileSync(uiNewsPath,'utf8');
 if(!uiNews.includes('Có gì mới: 1.2.1')||!uiNews.includes("What's New: 1.2.1"))throw Error('Web news version label changed');
-uiNews=uiNews.replace('Có gì mới: 1.2.1','Có gì mới: 1.3').replace("What's New: 1.2.1","What's New: 1.3");
+uiNews=uiNews.replace('Có gì mới: 1.2.1','Có gì mới: 1.4').replace("What's New: 1.2.1","What's New: 1.4");
 fs.writeFileSync(uiNewsPath,uiNews,'utf8');
 
 
