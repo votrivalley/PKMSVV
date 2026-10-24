@@ -54,6 +54,47 @@ test('Orbs are run-only, four fixed slots, stacks of three and reset effects',t=
  assert.equal(pl.orbs[0].n,2);
  G.Orbs.reset();assert.equal(G.Camera.zoomTo,1);
 });
+test('Orb controls cannot spam boss lock or impact invincible Arceus',t=>{
+ const src=read('src/v14/orbs.js');
+ assert.match(src,/SLOTS = 4, STACK = 3, CD = 5/);
+ assert.match(src,/e\.dead \|\| e\.remote \|\| e\.arceus/);
+ const runtime='vendor/pokesurvivor/js/systems/orbs.js';
+ if(!fs.existsSync(path.join(root,runtime))){t.skip('Pinned game not prepared');return;}
+ const effects={sleep:[],slow:[]};
+ const normal={x:10,y:20,dead:false,remote:false,boss:false,applySleep(v){effects.sleep.push(v);},applySlow(v,d){effects.slow.push([v,d]);}};
+ const arceus={x:20,y:30,dead:false,remote:false,arceus:true,boss:true,
+  applySleep(){throw Error('Arceus cannot be slept');},
+  applySlow(){throw Error('Arceus cannot be slowed');}};
+ const G={
+  I18n:{lang:'vi'},U:{pick:a=>a[0]},Game:{state:'playing'},Coop:{active:false},
+  Camera:{VIEW_W:768,MIN_VIEW_H:432,zoom:1,zoomTo:1},
+  EnemyMgr:{all:()=>[normal,arceus]},
+  FX:{ring(){},dmgText(){}},Audio:{sfx(){}}
+ };
+ vm.runInNewContext(read(runtime),{G,Math,Date,performance:{now:()=>0}});
+ const pl={x:0,y:0,dead:false,bodyH:20,critChance:0.1,spdMul:1};
+ G.Orbs.add(pl,'focus');
+ G.Orbs.use(pl,0);
+ assert.equal(G.Orbs.cd,5);
+ assert.ok(Math.abs(pl.critChance-0.25)<1e-8);
+ G.Orbs.update(12.1,pl);
+ assert.ok(Math.abs(pl.critChance-0.1)<1e-8,'no permanent crit stacking');
+ G.Orbs.add(pl,'quick');
+ G.Orbs.use(pl,0);
+ assert.equal(pl.spdMul,1.25);
+ G.Orbs.update(8.1,pl);
+ assert.equal(pl.spdMul,1,'no permanent speed multiplier');
+ G.Orbs.foe('slumber',0,0,1);
+ assert.equal(effects.sleep[0],3);
+ G.Orbs.foe('slow',0,0,1);
+ assert.equal(effects.slow[0][0],0.6);
+ assert.equal(effects.slow[0][1],6);
+ const pickup=read('vendor/pokesurvivor/js/entities/pickup.js');
+ assert.match(pickup,/runOrbDrops<10&&Math\.random\(\)<0\.45/);
+ assert.match(pickup,/runOrbDrops<10&&Math\.random\(\)<0\.0015/);
+ assert.match(pickup,/function clear\(\) \{ list = \[\]; runOrbDrops = 0; \}/);
+});
+
 test('Milestones fire once at minutes 10 and 20, then Judgment at minute 30',()=>{
  const src=read('src/v14/milestones.js');const spawned=[];
  const G={I18n:{lang:'vi'},Coop:{active:false},Rift:{inArena:false},Judgment:{active:false},
