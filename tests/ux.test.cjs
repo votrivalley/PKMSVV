@@ -40,7 +40,7 @@ test('dash attacks are manual and the four dash moves never auto-fire',()=>{
  const pad=file('js/core/gamepad.js');
   assert.match(pad,/hit\(orbital\.dash\).*virtual\('keyf'\)/);
   assert.match(pad,/hit\(orbital\.use\).*virtual\('pkmsvv-orb-use'\)/);
-  assert.match(pad,/hit\(orbital\.next\).*virtual\('pkmsvv-orb-next'\)/);
+  assert.doesNotMatch(pad,/orbital\.next/);
  assert.doesNotMatch(pad,/if \(hit\(BT\.LB\).*G\.Input\.virtual\('keyq'\)/);
 });
 test('evolution selection can be navigated and accepted with controller',()=>{
