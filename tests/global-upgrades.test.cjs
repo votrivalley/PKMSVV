@@ -213,7 +213,7 @@ test('winged and levitating species cross water without bypassing environmental 
  for(const id of [15,49,251,269,313,314,330,385,479,494,615,742,743,804,873,994]){
    assert.ok(ids.has(id),'airborne species #'+id+' should not be slowed');
  }
- for(const id of [1,4,25,133,445]){
+ for(const id of [1,4,25,133,445,761,762,763]){
    assert.ok(!ids.has(id),'grounded species #'+id+' still obey terrain slowdown');
  }
  assert.match(src,/G\.PKMSVVWaterHoverDex\.has\(this\.dex\)/);
@@ -225,6 +225,7 @@ test('winged and levitating species cross water without bypassing environmental 
  const player=fs.readFileSync(path.join(base,'js/entities/player.js'),'utf8');
  assert.match(player,/G\.PKMSVVWaterHoverDex = new Set/);
  assert.match(player,/!G\.PKMSVVWaterHoverDex\.has\(this\.dex\)/);
+ assert.doesNotMatch(player,/this\.inLiquid&&!ab\.steady/,'anti-slow Abilities cannot disable aquatic terrain penalty');
  const sandbox={G:{World:{liquidEffect:()=>({slow:0.6})},Weather:{speedFor:()=>1},Judgment:{active:false}}};
  vm.runInNewContext(player,sandbox);
  const pl=Object.create(sandbox.G.Player.prototype);
@@ -234,6 +235,18 @@ test('winged and levitating species cross water without bypassing environmental 
  assert.equal(pl.spd,100,'Jirachi should float over water');
  pl.dex=25;pl.mon.types=['electric'];
  assert.equal(pl.spd,60,'Pikachu is slowed by water');
+ // Grounded Steenee and Tsareena can have Oblivious/Sweet Veil (ab.steady).
+ // Status-slow resistance is NOT permission to run across water at full speed.
+ for(const dex of [761,762,763]){
+   pl.dex=dex;pl.mon.types=['grass'];pl.abil={steady:true};
+   assert.equal(pl.spd,60,'grounded Pokémon #'+dex+' must still be slowed by water');
+   pl.abil={};
+   assert.equal(pl.spd,60,'grounded Pokémon #'+dex+' must obey water without Abilities');
+ }
+ pl.dex=251;pl.abil={steady:true};pl.mon.types=['psychic','grass'];
+ assert.equal(pl.spd,100,'Celebi stays exempt when also resistant to slow effects');
+ pl.dex=763;pl.mon.types=['water'];
+ assert.equal(pl.spd,60,'fixture does not mock Water type immunity, World handles it separately');
  pl.inLiquid=false;
  assert.equal(pl.spd,100,'normal terrain is unchanged');
 });
