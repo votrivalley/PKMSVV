@@ -75,6 +75,7 @@ test('voice does not touch microphone when a user declines the opt-in',()=>{
   toHost(){throw Error('host must not send to host');}}};
  const ctx={G,document,window:{addEventListener(){},setInterval(){}},navigator:{mediaDevices:{
   async getUserMedia(){requested++;throw Error('must not request microphone');}}},console};
+ ctx.RTCPeerConnection=function MockRTCPeerConnection(){};
  vm.runInNewContext(read('src/web/pkmsvv-voice.js'),ctx);
  G.PKMSVVVoice.init();
  G.PKMSVVVoice.start();
