@@ -65,8 +65,8 @@ patch('js/core/db.js',
  "      stopListening();\n      try { await auth.signOut(); }",
  "      stopListening();\n      G.PKMSVVSession.stop();\n      try { await auth.signOut(); }");
 patch('js/game.js',
- "  function startRun(coop = null) {\n    holdBy = [];",
- "  function startRun(coop = null) {\n    if(G.DB.mode==='cloud' && !G.DB.readyForCloudRun()){\n      G.UI.toast('Phiên Cloud chưa sẵn sàng. Kiểm tra tài khoản hoặc save trên máy khác.',5000);return;\n    }\n    holdBy = [];");
+ "    holdBy = []; awayBy = null;\n    const save = G.DB.save;",
+ "    if(G.DB.mode==='cloud' && !G.DB.readyForCloudRun()){\n      G.UI.toast('Phiên Cloud chưa sẵn sàng. Kiểm tra tài khoản hoặc save trên máy khác.',5000);return;\n    }\n    holdBy = []; awayBy = null;\n    const save = G.DB.save;");
 // EndRun has already banked tickets, rewards, upgrades and stats before commit.
 // Request Cloud upload after this, with explicit failure/pending UI.
 patch('js/game.js',
