@@ -28,9 +28,6 @@ patch('js/game.js',
 patch('js/ui/settings-ui.js',
  "    if(tab==='ctl')drawBindings(box);",
  "    if(tab==='ctl'){drawBindings(box);G.PKMSVVPadOrb.mount(box);}");
-patch('js/ui/settings-ui.js',
- "activar movimiento especial (si lo has aprendido)</span>",
- "activar movimiento especial (si lo has aprendido)</span>");
 // Keep a clear selected-slot frame in the Orb HUD for controller users.
 patch('js/ui/hud.js',
  "        ctx.lineWidth=1;ctx.strokeStyle=data?data.col:'#53657c';ctx.stroke();",
