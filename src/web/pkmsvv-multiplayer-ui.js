@@ -6,13 +6,62 @@ G.MultiplayerUI=(()=>{
  const vi=()=>!G.I18n||G.I18n.lang==='vi';
  const label=mode=>mode==='royale'?(vi()?'🏆 Sống Còn · 2–10':'🏆 Survival · 2–10'):(vi()?'🤝 Sống Sót · 2–4':'🤝 Co-op · 2–4');
  const busy=()=>{if(!G.Social.room)return false;G.LobbyUI.open();return true;};
+
+ // Check the immutable compiled-script hash against the server before matchmaking.
+ // A tab left open during a Firebase Hosting update still runs the previous JS.
+ let versionCheck=null, checkedAt=0, versionOkay=true;
+ function loadedVersion(){
+  const el=document.querySelector('script[src*="app.min.js"]');
+  if(!el)return '';
+  try{return new URL(el.getAttribute('src'),location.href).searchParams.get('v')||'';}
+  catch(e){return '';}
+ }
+ function showUpdate(latest){
+  const status=$('pkmsvv-mp-message');if(!status)return;
+  msg(vi()?'Có bản Web mới trên máy chủ. Hãy cập nhật trang trước khi vào phòng nhiều người chơi.':
+    'A newer Web build is available. Reload before joining multiplayer.',true);
+  let btn=$('pkmsvv-update-web');
+  if(!btn){
+   btn=document.createElement('button');
+   btn.id='pkmsvv-update-web';btn.type='button';btn.className='btn gold';
+   status.insertAdjacentElement('afterend',btn);
+  }
+  btn.textContent=vi()?'↻ Tải bản Web mới':'↻ Reload latest Web build';
+  btn.onclick=()=>location.replace('/game/?update='+encodeURIComponent(latest)+'&t='+Date.now());
+  btn.classList.remove('hidden');
+ }
+ async function checkVersion(){
+  // Avoid duplicate checks while opening the lobby or rapidly clicking a room.
+  if(versionCheck)return versionCheck;
+  if(Date.now()-checkedAt<20000)return versionOkay;
+  versionCheck=(async()=>{
+   try{
+    const res=await fetch('/game/version.json?t='+Date.now(),{cache:'no-store'});
+    if(!res.ok)return versionOkay;
+    const remote=await res.json(),local=loadedVersion();
+    if(!local||!remote||!/^[a-f0-9]{10}$/.test(remote.v))return versionOkay;
+    checkedAt=Date.now();versionOkay=(local===remote.v);
+    const btn=$('pkmsvv-update-web');
+    if(versionOkay){if(btn)btn.classList.add('hidden');}
+    else showUpdate(remote.v);
+   }catch(e){
+    // A temporary network failure is not proof that the client is outdated.
+    // Keep the real network error handling in the matchmaking flow.
+   }
+   return versionOkay;
+  })();
+  try{return await versionCheck;}finally{versionCheck=null;}
+ }
+
  async function create(mode,visibility){
+  if(!(await checkVersion()))return;
   if(busy())return;
   msg('Đang tạo phòng…');
   try{await G.Social.createRoom(mode,visibility);G.LobbyUI.open();}
   catch(e){msg('Không tạo được phòng: '+(e.message||e),true);}
  }
  async function join(id){
+  if(!(await checkVersion()))return;
   if(!/^[a-zA-Z0-9_-]{12,45}$/.test(String(id||''))){msg('Mã phòng không hợp lệ.',true);return;}
   if(G.Social.room){G.LobbyUI.open();return;}
   msg('Đang vào phòng…');
@@ -37,6 +86,7 @@ G.MultiplayerUI=(()=>{
   }catch(e){box.textContent='Không tải được phòng công khai. Kiểm tra quyền Realtime Database.';msg(e.message||String(e),true);return [];}
  }
  async function quick(mode){
+  if(!(await checkVersion()))return;
   if(busy())return;
   msg('Đang tìm phòng phù hợp…');
   const list=await rooms();
@@ -97,6 +147,7 @@ G.MultiplayerUI=(()=>{
     }
    }
    rooms();
+   checkVersion(); // show update prompt before the player tries matchmaking
   });
  }
  return {init,open,rooms,quick,join,create};
