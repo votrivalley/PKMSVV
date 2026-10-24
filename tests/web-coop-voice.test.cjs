@@ -66,7 +66,7 @@ test('voice does not touch microphone when a user declines the opt-in',()=>{
   appendChild(el){this.children.push(el);return el;},replaceChildren(...els){this.children=els;},
   setAttribute(){},classList:{add(){},remove(){}}
  });
- const document={body:makeNode(),createElement(){const n=makeNode();nodes.push(n);return n;}};
+ const document={body:makeNode(),createElement(){const n=makeNode();nodes.push(n);return n;},createTextNode(text){return {textContent:text};}};
  const r={id:'abc123',mode:'royale',isHost:true,host:'a',members:[{uid:'a',name:'A'},{uid:'b',name:'B'}]};
  const sent=[];
  const G={I18n:{lang:'vi'},Social:{room:r,on(fn){roomChanged=fn;}},UI:{isOpen(){return true;}},
