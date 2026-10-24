@@ -567,6 +567,8 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-orb-fifo.c
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-orb-visuals.cjs')],{cwd:project,stdio:'inherit'});
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-story-chapters.cjs')],{cwd:project,stdio:'inherit'});
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-title-readability.cjs')],{cwd:project,stdio:'inherit'});
+// Staged mission attention: ready missions rise to top until claimed; subtle new mission glow.
+execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-mission-attention.cjs')],{cwd:project,stdio:'inherit'});
 // Windows and Android remain strictly offline-first: do NOT inject the external
 // browser Online mode switch. The existing native save identity remains unchanged.
 execFileSync(process.execPath, [path.join(game, 'tools', 'build.js'), '--sin-seo', '--expose'], { cwd: game, stdio: 'inherit' });
