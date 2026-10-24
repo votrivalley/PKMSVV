@@ -37,5 +37,53 @@ G.PKMSVVMissionCue=(()=>{
   else if(unseen)el.title=label('Có nhiệm vụ mới','New missions available');
   else el.removeAttribute('title');
  }
- return {data,markSeen,refresh};
+ function decorate(box){
+  const save=G.DB&&G.DB.save, M=save&&save.missions;
+  if(!box||!M)return;
+  const rows=Array.from(box.children).filter(el=>el.classList.contains('mission'));
+  const definitions=[
+   ...(M.daily||[]).map((m,i)=>({m,index:i,weekly:false})),
+   ...(M.weekly||[]).map((m,i)=>({m,index:i,weekly:true}))
+  ];
+  const priority=document.createElement('section');priority.className='pkmsvv-missions-priority';
+  let count=0;
+  definitions.forEach((entry,i)=>{
+    const row=rows[i],m=entry.m;if(!row)return;
+    const claimable=!m.claimed&&G.Progress.done(m);
+    row.classList.toggle('pkmsvv-mission-priority',claimable);
+    row.classList.toggle('pkmsvv-mission-active',!claimable&&!m.claimed);
+    row.classList.toggle('pkmsvv-mission-claimed',!!m.claimed);
+    if(claimable){
+      count++;const label=document.createElement('span');
+      label.className='pkmsvv-ready-label';
+      label.textContent=labelText('✓ HOÀN THÀNH · NHẬN THƯỞNG','✓ COMPLETE · CLAIM REWARD');
+      row.prepend(label);
+      priority.appendChild(row); // Original button handlers/index are preserved.
+    }
+  });
+  const col=box.querySelector('.pkm-collection-goals');
+  if(col){
+    const cards=Array.from(col.children).filter(el=>el.classList.contains('pkm-guide'));
+    const d=save.pkmDaily,w=save.pkmWeekly;
+    const stat=[
+      {ready:!!(d&&d.complete&&!d.claimed),claimed:!!(d&&d.claimed)},
+      {ready:!!(w&&w.dexes&&w.dexes.length&&w.done&&w.done.length>=w.dexes.length&&!w.claimed),
+       claimed:!!(w&&w.claimed)}
+    ];
+    stat.forEach((s,i)=>{
+      const el=cards[i];if(!el)return;
+      el.classList.toggle('pkmsvv-collection-priority',s.ready);
+      el.classList.toggle('pkmsvv-collection-claimed',s.claimed);
+      if(s.ready){count++;priority.appendChild(el);}
+    });
+  }
+  if(count){
+    const header=document.createElement('h3');
+    header.textContent=labelText('🎁 NHIỆM VỤ HOÀN THÀNH · CHỜ NHẬN','🎁 COMPLETED MISSIONS · CLAIM REWARDS');
+    priority.prepend(header);box.prepend(priority);
+  }
+  markSeen();
+ }
+ const labelText=(v,en)=>vi()?v:en;
+ return {data,markSeen,refresh,decorate};
 })();
