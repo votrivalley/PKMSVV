@@ -18,19 +18,13 @@ patch('js/core/gamepad.js',
  "      if (hit(BT.X)) G.Input.virtual('keyf');",
  "      const orbital=G.PKMSVVPadOrb.bindings();\n"+
  "      if (hit(orbital.dash)) G.Input.virtual('keyf');\n"+
- "      if (hit(orbital.use)) G.Input.virtual('pkmsvv-orb-use');\n"+
- "      if (hit(orbital.next)) G.Input.virtual('pkmsvv-orb-next');");
+ "      if (hit(orbital.use)) G.Input.virtual('pkmsvv-orb-use');");
 patch('js/game.js',
  "    if(G.Input.tap('padx'))G.Orbs.useSelected(pl);\n    if(G.Input.tap('pady'))G.Orbs.next(pl);",
- "    if(G.Input.tap('pkmsvv-orb-use'))G.Orbs.useSelected(pl);\n    if(G.Input.tap('pkmsvv-orb-next'))G.Orbs.next(pl);");
+ "    if(G.Input.tap('pkmsvv-orb-use'))G.Orbs.useNext(pl);");
 // The settings keyboard-rebind panel remains unchanged; the new gamepad panel
 // is separate and uses a constrained set of available gameplay buttons.
 patch('js/ui/settings-ui.js',
  "    if(tab==='ctl')drawBindings(box);",
  "    if(tab==='ctl'){drawBindings(box);G.PKMSVVPadOrb.mount(box);}");
-// Keep a clear selected-slot frame in the Orb HUD for controller users.
-patch('js/ui/hud.js',
- "        ctx.lineWidth=1;ctx.strokeStyle=data?data.col:'#53657c';ctx.stroke();",
- "        ctx.lineWidth=i===G.Orbs.sel?3:1;\n"+
- "        ctx.strokeStyle=i===G.Orbs.sel?'#fff2ae':data?data.col:'#53657c';ctx.stroke();");
-console.log('PKMSVV v1.4: gamepad Y uses Orb, B cycles Orb, X retains manual Dash; all three remappable.');
+console.log('PKMSVV v1.4: X manual Dash, Y FIFO Orb use, both rebindable; no Orb cycle.');
