@@ -43,7 +43,7 @@ G.AbilityFX = (() => {
   const absorb = type => ({ d: 'Los ataques de tipo ' + TN(type) + ' no le hacen daño: le curan un poco.', absorb: type });
   const rush = (w, es) => ({ d: '+50 % de velocidad con ' + es + '.', speed: () => (wx() === w ? 1.5 : 1) });
   const summon = (w, es) => ({ d: 'Pone ' + es + ' al empezar la partida y cada 3 minutos.', summon: w });
-  const steady = { d: 'No le frenan las trampas pegajosas ni el terreno.', steady: true };
+  const steady = { d: 'Los ataques y trampas no le aplican frenazos; el agua y el pantano sí lo ralentizan.', steady: true };
   const moxie = { d: 'Cada enemigo derrotado le da +0,5 % de daño (hasta +15 %).',
     kill: pl => { pl.moxie = Math.min(0.15, (pl.moxie || 0) + 0.005); }, out: pl => 1 + (pl.moxie || 0) };
   const contact = (fn, d) => ({ d, contact: fn });
