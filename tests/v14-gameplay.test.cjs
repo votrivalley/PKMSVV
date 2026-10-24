@@ -111,6 +111,36 @@ test('Milestones fire once at minutes 10 and 20, then Judgment at minute 30',()=
  G.PKMSVV14.update(1800,[G.Game.player]);assert.equal(spawned.length,2);
  G.PKMSVV14.reset();G.PKMSVV14.update(600,[G.Game.player]);assert.equal(spawned.length,3);
 });
+test('Controller Orb controls: Y use, B select, X Dash, unique remappable buttons',t=>{
+ const mapSrc=read('src/v14/pad-orb-map.js');
+ let saved=null;
+ const G={I18n:{lang:'vi'},Settings:{get:key=>saved,set:(key,v)=>{saved=v;} }};
+ vm.runInNewContext(mapSrc,{G,Number,Set});
+ const ctl=G.PKMSVVPadOrb;
+ assert.equal(ctl.describe('dash'),'X / □');
+ assert.equal(ctl.describe('use'),'Y / △');
+ assert.equal(ctl.describe('next'),'B / ○');
+ assert.equal(ctl.valid({dash:2,use:2,next:1}),false,'dash and Orb use cannot overlap');
+ assert.equal(ctl.valid({dash:10,use:11,next:1}),true);
+ saved={dash:10,use:11,next:1};
+ assert.equal(ctl.bindings().use,11);
+ assert.equal(ctl.bindings().dash,10);
+ saved={dash:2,use:2,next:1};
+ assert.equal(ctl.bindings().use,3,'invalid saved mapping falls back safely');
+ assert.match(read('scripts/prepare-game.cjs'),/patch-v14-gamepad-orbs\.cjs/);
+ const file='vendor/pokesurvivor/js/core/gamepad.js';
+ if(!fs.existsSync(path.join(root,file))){t.skip('Pinned game not prepared');return;}
+ const pad=read(file),game=read('vendor/pokesurvivor/js/game.js'),
+  settings=read('vendor/pokesurvivor/js/ui/settings-ui.js');
+ assert.match(pad,/hit\(orbital\.dash\).*virtual\('keyf'\)/);
+ assert.match(pad,/hit\(orbital\.use\).*virtual\('pkmsvv-orb-use'\)/);
+ assert.match(pad,/hit\(orbital\.next\).*virtual\('pkmsvv-orb-next'\)/);
+ assert.match(game,/G\.Input\.tap\('pkmsvv-orb-use'\).*G\.Orbs\.useSelected/);
+ assert.match(game,/G\.Input\.tap\('pkmsvv-orb-next'\).*G\.Orbs\.next/);
+ assert.match(settings,/G\.PKMSVVPadOrb\.mount\(box\)/);
+ assert.doesNotMatch(game,/G\.Input\.tap\('padx'\)/);
+});
+
 test('Web build implements Arceus damage tracking and Meteor Mash balance',t=>{
  const file='vendor/pokesurvivor/js/systems/judgment.js';
  if(!fs.existsSync(path.join(root,file))){t.skip('Pinned game not prepared');return;}
