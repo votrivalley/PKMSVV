@@ -76,8 +76,7 @@ fs.appendFileSync(notesFile,'\n'+fs.readFileSync(path.join(root,'src','pkmsvv-ch
 fs.appendFileSync(notesFile,"\nconst i14=G.CHANGELOG.findIndex(x=>(x.title||[])[0]?.includes('v1.4'));if(i14>0)G.CHANGELOG.unshift(G.CHANGELOG.splice(i14,1)[0]);\n",'utf8');
 const uiNewsPath=path.join(game,'js','ui','news-ui.js');
 let uiNews=fs.readFileSync(uiNewsPath,'utf8');
-if(!uiNews.includes('Có gì mới: 1.2.1')||!uiNews.includes("What's New: 1.2.1"))throw Error('Web news version label changed');
-uiNews=uiNews.replace('Có gì mới: 1.2.1','Có gì mới: 1.4').replace("What's New: 1.2.1","What's New: 1.4");
+if(!uiNews.includes('Có gì mới: 1.4')||!uiNews.includes("What's New: 1.4"))throw Error('Web news v1.4 label missing');
 fs.writeFileSync(uiNewsPath,uiNews,'utf8');
 
 
