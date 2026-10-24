@@ -514,6 +514,8 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-collection.cjs
 execFileSync(process.execPath,[path.join(project,'scripts','patch-controller.cjs')],{cwd:project,stdio:'inherit'});
 // v0.9.2: restore WebAudio music after focus/sleep and gamepad-only input.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-music.cjs')],{cwd:project,stdio:'inherit'});
+// Pause village OGG and synthesized BGM when backgrounded; restore on return.
+execFileSync(process.execPath,[path.join(project,'scripts','patch-background-audio.cjs')],{cwd:project,stdio:'inherit'});
 // v0.9.4: move Pokémon partner action, expose quick Save, repair fullscreen.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-ui094.cjs')],{cwd:project,stdio:'inherit'});
 // v1.1.2: Safe mobile topbar geometry and separate tappable action row.
