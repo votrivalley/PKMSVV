@@ -1,0 +1,30 @@
+/* Optional Co-op WebRTC voice — compact on desktop, Steam Deck and touch. */
+#pkmsvv-voice-panel{
+ position:fixed;z-index:1150;top:74px;right:max(12px,env(safe-area-inset-right));
+ width:min(335px,calc(100vw - 24px));max-height:min(67vh,550px);overflow-y:auto;
+ background:rgba(16,35,60,.97);border:2px solid #89cbe9;border-radius:12px;
+ padding:12px;box-shadow:0 6px 25px rgba(0,0,0,.62);font-family:inherit;
+ color:#f3faff;font-size:12px;
+}
+#pkmsvv-voice-panel[hidden]{display:none!important}
+.pkmsvv-voice-heading{font-size:15px;font-weight:900;color:#ffe6a0;margin-bottom:9px}
+.pkmsvv-voice-controls{display:flex;flex-wrap:wrap;gap:7px}
+.pkmsvv-voice-controls .btn{flex:1;min-width:105px;white-space:normal}
+.pkmsvv-voice-volume{display:flex;gap:12px;align-items:center;margin:12px 0}
+.pkmsvv-voice-volume input{flex:1;min-width:80px;accent-color:#ffd369}
+.pkmsvv-voice-ptt{display:flex;align-items:center;gap:9px;margin-top:9px;cursor:pointer}
+.pkmsvv-voice-ptt input{width:18px;height:18px;accent-color:#ffe27a}
+.pkmsvv-voice-ptt-status{display:flex;align-items:center;color:#ffdf91;font-weight:800;min-height:34px}
+.pkmsvv-voice-peers{display:flex;flex-direction:column;gap:7px}
+.pkmsvv-voice-peer{display:flex;gap:6px;align-items:center;justify-content:space-between;
+ border:1px solid #486b87;border-radius:8px;padding:5px 7px}
+.pkmsvv-voice-peer>span{flex:1;min-width:0;overflow-wrap:anywhere}
+.pkmsvv-voice-peer .btn{flex:0 0 auto;font-size:11px;min-height:30px}
+.pkmsvv-voice-tip{margin:9px 0 0;color:#ffe3ab;line-height:1.45}
+#pkmsvv-voice-panel button.pad-focus,#pkmsvv-voice-panel input.pad-focus{
+ outline:3px solid #ffdf83!important;outline-offset:2px!important
+}
+@media(max-width:600px){
+ #pkmsvv-voice-panel{top:auto;bottom:max(66px,env(safe-area-inset-bottom));right:8px;
+ width:min(280px,calc(100vw - 16px));max-height:53vh}
+}
