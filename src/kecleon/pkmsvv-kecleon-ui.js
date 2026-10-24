@@ -225,8 +225,8 @@ G.KecleonUI=(()=>{
   const taught=G.Mons.taught(dex);
   pane.innerHTML='<h3>'+L('Tính cách, Đặc tính & TM','Nature, Ability & TMs')+'</h3>'+
    '<p><b>'+L('Tính cách','Nature')+':</b> '+esc(natName(n))+' <small>'+natureDesc(n)+'</small></p>'+
-   '<p><b>'+L('Đặc tính','Ability')+':</b> '+esc(abilName(a.id))+(a.slot===2?' ★':'')+'</p>'+
-   '<p class="sub">'+L('Hiệu ứng Đặc tính được áp dụng trong trận.','Your Ability takes effect in battle.')+'</p>'+
+   '<p><b>'+L('Đặc tính','Ability')+':</b> '+esc(abilName(a.id))+(a.slot===2?' ★':'')+
+   ' <small class="pkmk-ability-benefit">('+esc(G.PKMSVVAbilityText.summary(a.id,G.DEX_BY[dex],fx,G.I18n.lang!=='vi'))+')</small></p>'+
    '<p><b>'+L('TM đã học','Learned TMs')+':</b> '+(taught.length?taught.map(x=>esc(title(x))).join(', '):L('Chưa có','None'))+'</p>'+
    '<button class="btn small gold" id="pkmk-open-dex">'+L('Dùng vật phẩm / TM','Use Items / TMs')+'</button>';
   host.appendChild(pane);
