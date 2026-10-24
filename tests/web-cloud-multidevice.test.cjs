@@ -10,6 +10,7 @@ test('Web-only Cloud save uses server source and asks before first upload',()=>{
  assert.match(p,/cloudMissing && !uploadConfirmed/);
  assert.match(p,/if\(!ok\)return \{ok:false,why:'unverified'\}/);
  assert.match(p,/pkmsvv\.cloudbackup\.beforeLogin/);
+ assert.match(p,/G\.DB\.commit\(true\)/);
  const native=read('scripts/prepare-game.cjs');
  assert.doesNotMatch(native,/patch-web-cloud-multidevice\.cjs/);
 });
