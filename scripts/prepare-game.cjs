@@ -561,6 +561,7 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-nature-buff.cj
 execFileSync(process.execPath,[path.join(project,'scripts','patch-dex-buff-layer.cjs')],{cwd:project,stdio:'inherit'});
 // v1.4: milestone battles, Arceus scoring, Mystery Dungeon Orbs, regional Charms and ×100 Gacha.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-gameplay.cjs')],{cwd:project,stdio:'inherit'});
+execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-gamepad-orbs.cjs')],{cwd:project,stdio:'inherit'});
 // Windows and Android remain strictly offline-first: do NOT inject the external
 // browser Online mode switch. The existing native save identity remains unchanged.
 execFileSync(process.execPath, [path.join(game, 'tools', 'build.js'), '--sin-seo', '--expose'], { cwd: game, stdio: 'inherit' });
