@@ -24,6 +24,25 @@ service cloud.firestore {
     // un fallo), y lo rechazado no se cobra como escritura.
     function every(last, secs) { return !(last is timestamp) || request.time > last + duration.value(secs, 's'); }
 
+    // A single active game session per authenticated Google account.
+    // Every new Web login replaces the previous token; snapshots kick old tabs.
+    // Token is a random browser-session nonce, not an authentication secret.
+    match /sessions/{uid} {
+      allow read: if signedIn() && me() == uid;
+      allow create, update: if signedIn() && me() == uid
+        && request.resource.data.keys().hasOnly(['token','at'])
+        && request.resource.data.token is string
+        && request.resource.data.token.size() == 48
+        && request.resource.data.at == request.time;
+      allow delete: if signedIn() && me() == uid;
+    }
+
+    function activeSaveSession(uid) {
+      return exists(/databases/$(database)/documents/sessions/$(uid))
+        && request.resource.data.save.get('_webSession','') ==
+          get(/databases/$(database)/documents/sessions/$(uid)).data.token;
+    }
+
     // ---------- partida guardada ----------
     // Sólo su dueño la lee y la escribe. Ya no se marca a nadie solo (14-10-2026:
     // los márgenes contra partidas imposibles dejaban fuera del ranking a gente
@@ -37,10 +56,10 @@ service cloud.firestore {
       allow delete: if signedIn() && me() == uid && resource.data.get('ban', false) == false;
 
       allow create: if signedIn() && me() == uid && validSaveDoc() && saneSave(request.resource.data.save)
-        && request.resource.data.get('ban', false) == false;
+        && request.resource.data.get('ban', false) == false && activeSaveSession(uid);
       allow update: if signedIn() && me() == uid && validSaveDoc() && saneSave(request.resource.data.save)
         && request.resource.data.get('ban', false) == resource.data.get('ban', false)
-        && every(resource.data.updatedAt, 20);
+        && every(resource.data.updatedAt, 2) && activeSaveSession(uid);
       // El admin sólo puede banear o desbanear (y quitar la marca vieja).
       allow update: if admin()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ban', 'sus'])
