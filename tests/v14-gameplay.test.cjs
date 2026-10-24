@@ -32,6 +32,7 @@ test('Gacha ×100 is 10 guaranteed ten-pulls; specific Gen completion doubles sh
  const t={tickets:{t1:0,t10:10},coins:0,owned:{},shiny:{},pity:{},stats:{}};
  assert.equal(G.Gacha.pull(t,100,1,'t10').length,100);
  assert.equal(t.tickets.t10,0);
+ for(const mon of dex.filter(x=>x.gen===1))s.owned[mon.dex]={at:1,from:'test'};
  assert.equal(G.Gacha.hasCharm(s,1),true);
  assert.equal(G.Gacha.shinyRate(s,1),2/90);
  assert.equal(G.Gacha.hasCharm(s,0),false);
