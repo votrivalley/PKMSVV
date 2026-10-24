@@ -85,7 +85,7 @@ patch('js/entities/pickup.js',
 patch('js/entities/pickup.js',
  "  function clear() { list = []; }",
  "  function clear() { list = []; runOrbDrops = 0; }");
-// Drops: max 10 per run; boss 45%, ordinary 0.15%; no drops during Judgment.
+// Drops: max 10 per run; boss 45%, ordinary 3%; no drops during Judgment.
 patch('js/entities/pickup.js',
  "    item:     { color: '#ffd23f', glow: '#c08a10', r: 9 }",
  "    orb:      { color: '#a6dfff', glow: '#4579a8', r: 9 },\n    item:     { color: '#ffd23f', glow: '#c08a10', r: 9 }");
@@ -94,7 +94,7 @@ patch('js/entities/pickup.js',
  "      if (plain) return;\n      if(runOrbDrops<10&&Math.random()<0.45){runOrbDrops++;push(orb('orb',x+25,y-10,G.Orbs.roll()));}\n      push(orb('heal'");
 patch('js/entities/pickup.js',
  "    if (Math.random() < TICKET_RATE) push(orb('ticket', x + G.U.rand(-6, 6), y, 1));",
- "    if (Math.random() < TICKET_RATE) push(orb('ticket', x + G.U.rand(-6, 6), y, 1));\n    if(runOrbDrops<10&&Math.random()<0.0015){runOrbDrops++;push(orb('orb',x,y,G.Orbs.roll()));}");
+ "    if (Math.random() < TICKET_RATE) push(orb('ticket', x + G.U.rand(-6, 6), y, 1));\n    if(runOrbDrops<10&&Math.random()<0.03){runOrbDrops++;push(orb('orb',x,y,G.Orbs.roll()));}");
 patch('js/entities/pickup.js',
  "        G.Icons.draw(ctx, p.kind === 'item' ? p.value : ICON[p.kind], p.x - sz / 2, y - sz / 2 - 1, sz);",
  "        if(p.kind==='orb'){\n          ctx.fillStyle=(G.Orbs.BY[p.value]||{}).col||'#a6dfff';\n          ctx.beginPath();ctx.arc(p.x,y,10,0,6.2832);ctx.fill();\n          ctx.font='bold 14px sans-serif';ctx.textAlign='center';ctx.fillStyle='#172536';ctx.fillText('✦',p.x,y+5);\n          continue;\n        }\n        G.Icons.draw(ctx, p.kind === 'item' ? p.value : ICON[p.kind], p.x - sz / 2, y - sz / 2 - 1, sz);");
