@@ -204,7 +204,8 @@ G.PKMSVVVoice=(()=>{
   const shell=getUi();
   if(!allowed()||!activeView()){
    shell.hidden=true;
-   if(joined&&(!allowed()||roomId!==room()?.id))closeAll(true);
+   // Never leave a live microphone running behind a hidden menu.
+   if(joined)closeAll(true);
    return;
   }
   const signature=[vi(),joined,!!microphone,ptt,blockedAudio,tip,
