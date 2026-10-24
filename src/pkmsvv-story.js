@@ -237,11 +237,24 @@ G.PKMSVVStory=(()=>{
    chapter2:tr('Chương 2 · Tiếng Vọng Thứ Tám','Chapter 2 · The Eighth Echo')};
   choices.innerHTML='<div class="pkmsvv-memory-inner"><h2>'+tr('Ký Ức','Memories')+'</h2>'+
    available.map(c=>'<button type="button" class="btn gold" data-chapter="'+c+'">'+labels[c]+'</button>').join('')+
+   (s.pkmsvvChapter2Seen?'<button type="button" class="btn" data-orb-help="1">'+tr('📖 Hướng dẫn Mystery Orb','📖 Mystery Orb Guide')+'</button>':'')+
    '<button type="button" class="btn ghost" data-close="1">'+tr('Đóng','Close')+'</button></div>';
   document.body.appendChild(choices);
   choices.querySelectorAll('[data-chapter]').forEach(el=>{el.onclick=()=>{
    const chapter=el.dataset.chapter;choices.remove();replay(chapter);
   };});
+  const help=choices.querySelector('[data-orb-help]');
+  if(help)help.onclick=()=>{
+   const inner=choices.querySelector('.pkmsvv-memory-inner');
+   const vi=G.I18n&&G.I18n.lang==='vi',esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+   const orbs=G.Orbs&&G.Orbs.LIST||[];
+   inner.innerHTML='<h2>'+tr('📖 Hướng dẫn Mystery Orb','📖 Mystery Orb Guide')+'</h2>'+
+     '<p>'+tr('Trong mỗi trận, học đủ 8 kỹ năng để nhặt Orb. Tối đa 10 Orb rơi ra. Nhặt trước dùng trước, mỗi lần chỉ dùng một quả, hồi 5 giây. Orb biến mất khi kết thúc trận.','Learn all 8 skills in a run to collect Orbs. At most 10 Orbs drop per run. First picked, first used, one per activation, with a 5-second cooldown. Unused Orbs disappear after the run.')+'</p>'+
+     '<p>'+tr('PC: phím 5. Tay cầm: Y mặc định. Điện thoại: nút Orb cạnh kỹ năng chủ động. Trong Co-op, chỉ người đủ 8 kỹ năng mới nhặt được Orb.','PC: key 5. Controller: Y by default. Phone: Orb button beside the active skill. In Co-op only players with all 8 learned skills can collect Orbs.')+'</p>'+
+     orbs.map(o=>'<p style="margin:5px 0;color:'+o.col+'"><strong>'+esc(o.name[vi?0:1])+'</strong>: '+esc(o.desc[vi?0:1])+'</p>').join('')+
+     '<button type="button" class="btn gold" id="pkmsvv-orb-guide-back">'+tr('Quay lại','Back')+'</button>';
+   inner.querySelector('#pkmsvv-orb-guide-back').onclick=()=>{choices.remove();memories();};
+  };
   choices.querySelector('[data-close]').onclick=()=>choices.remove();
  }
  function init(){
