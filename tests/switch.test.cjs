@@ -13,7 +13,9 @@ test('offline Switch app has local assets, scripts and licenses',()=>{
 });
 test('Switch controller mapping preserves moving and active dash',()=>{
  assert.match(content('js/core/gamepad.js'),/navigator\.getGamepads/);
- assert.match(content('js/core/gamepad.js'),/hit\(BT\.X\).*virtual\('keyf'\)/);
+ assert.match(content('js/core/gamepad.js'),/hit\(orbital\.dash\).*virtual\('keyf'\)/);
+ assert.match(content('js/core/gamepad.js'),/hit\(orbital\.use\).*virtual\('pkmsvv-orb-use'\)/);
+ assert.match(content('js/core/pkmsvv-pad-orb-map.js'),/dash:2,use:3/);
  assert.match(content('js/systems/combat.js'),/manualDash\(pl\)/);
 });
 test('manifest reserves Plus for pause, storage and noncommercial offline play',()=>{
