@@ -126,6 +126,26 @@ test('Controller uses Y to spend first queued Orb and X for Dash',t=>{
  assert.doesNotMatch(game,/G\.Input\.tap\('pkmsvv-orb-next'\)/);
 });
 
+test('Chapter 2 only after all eight learned skills; replayable narrative and title order',t=>{
+ const story=read('src/pkmsvv-story.js'),patch=read('scripts/patch-v14-story-chapters.cjs');
+ const orb=read('src/v14/orbs.js');
+ assert.match(story,/chapter2:\[/);
+ assert.match(story,/CHƯƠNG 2 · TIẾNG VỌNG THỨ TÁM/);
+ assert.match(story,/function markChapter2/);
+ assert.match(story,/function chapter2Pending/);
+ assert.match(orb,/p\.maxMoves>=8&&p\.slots\.length>=8/);
+ assert.match(patch,/pkmsvvChapter2Pending/);
+ assert.match(patch,/G\.PKMSVVStory\.chapter2Pending\(\)/);
+ assert.match(patch,/G\.PKMSVVStory\.memories\(\)/);
+ const html='vendor/pokesurvivor/dev.html';
+ if(!fs.existsSync(path.join(root,html))){t.skip('Pinned game not prepared');return;}
+ const str=read(html);
+ assert.match(str,/<div class="splash pkmsvv-credit"/);
+ assert.match(str,/<div class="t1 pkmsvv-logo"/);
+ assert.match(read('vendor/pokesurvivor/js/net/coop.js'),/orbReady:a\[15\]===1\?1:0/);
+ assert.match(read('vendor/pokesurvivor/js/net/coop.js'),/G\.Orbs\.ready\(local\)\?1:0/);
+});
+
 test('Web build implements Arceus damage tracking and Meteor Mash balance',t=>{
  const file='vendor/pokesurvivor/js/systems/judgment.js';
  if(!fs.existsSync(path.join(root,file))){t.skip('Pinned game not prepared');return;}
