@@ -76,7 +76,7 @@ test('voice does not touch microphone when a user declines the opt-in',()=>{
  const r={id:'abc123',mode:'royale',isHost:true,host:'a',members:[{uid:'a',name:'A'},{uid:'b',name:'B'}]};
  const sent=[];
  const G={I18n:{lang:'vi'},Social:{room:r,on(fn){roomChanged=fn;}},UI:{isOpen(){return true;}},
-  Coop:{active:false},Net:{open_:true,uid:'a',on(fn){netMessage=fn;},
+  Game:{state:'ui'},Coop:{active:false},Net:{open_:true,uid:'a',on(fn){netMessage=fn;},
   onPeer(fn){peerCb=fn;},mode(){return 'direct';},send(to,msg){sent.push({to,msg});},
   toHost(){throw Error('host must not send to host');}}};
  const ctx={G,document,setTimeout(fn){return 1;},clearTimeout(){},window:{addEventListener(){},setInterval(){}},navigator:{mediaDevices:{
@@ -89,7 +89,12 @@ test('voice does not touch microphone when a user declines the opt-in',()=>{
  assert.equal(requested,0,'never request microphone unless user explicitly enables it');
  r.mode='coop';
  G.PKMSVVVoice.start();
- assert.equal(G.PKMSVVVoice.joined,true,'Co-op may opt in');
+ assert.equal(G.PKMSVVVoice.joined,false,'Co-op lobby must not display or initialize voice controls');
+ assert.equal(nodes.some(n=>n.id==='pkmsvv-voice-mic'||n.id==='pkmsvv-voice-speaker'),false,
+   'neither Mic nor Speaker may appear in the lobby');
+ G.Coop.active=true;G.Game.state='playing';
+ G.PKMSVVVoice.start();
+ assert.equal(G.PKMSVVVoice.joined,true,'voice becomes available during the Co-op run');
  assert.equal(requested,0,'joining receive-only should not ask for microphone permission');
  const micBtn=nodes.find(n=>n.id==='pkmsvv-voice-mic');
  const speakerBtn=nodes.find(n=>n.id==='pkmsvv-voice-speaker');
