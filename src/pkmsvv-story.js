@@ -21,6 +21,26 @@ G.PKMSVVStory=(()=>{
    {art:4,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Nếu muốn tiếp tục, trái tim ngươi phải chọn một hình hài.','To go on, your heart must choose a new form.']},
    {art:4,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Hãy trả lời các câu hỏi. Đừng nghĩ quá lâu... hãy là chính mình.','Answer these questions. Do not overthink... be yourself.']}
   ],
+  chapter1:[
+   {art:1,speaker:['Tôi','Me'],text:['Mình đã chiến đấu... nhưng tại sao mọi thứ cứ lặp lại?','I fought... but why does everything keep repeating?']},
+   {art:2,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Mỗi lần đứng dậy, một mảnh ký ức sẽ quay về.','Each time you rise again, a fragment of memory returns.']},
+   {art:4,speaker:['Tôi','Me'],text:['Vậy phải sống sót bao lâu mới nhớ được mình là ai?','How long must I survive before I remember who I am?']},
+   {art:4,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Đừng đếm thời gian. Hãy học cách điều khiển cả tám sức mạnh.','Do not count the minutes. Learn to wield all eight powers.']}
+  ],
+  chapter2:[
+   {art:2,speaker:['Tôi','Me'],text:['Tám kỹ năng... Mình đã học đủ cả tám. Sao mặt đất lại phát sáng?','Eight skills... I have learned all eight. Why is the ground glowing?']},
+   {art:4,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Cánh cửa thứ tám đã mở. Nhưng điều ngươi tìm kiếm không chỉ là sức mạnh.','The eighth gate has opened. But what you seek is not merely power.']},
+   {art:1,speaker:['Tôi','Me'],text:['Đó là... một ký ức? Mình nhìn thấy một nơi chưa từng đến.','Is that... a memory? I see a place I have never visited.']},
+   {art:2,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Mystery Orb là mảnh sức mạnh còn sót lại từ thế giới bị lãng quên.','Mystery Orbs are fragments of power left by a forgotten world.']},
+   {art:2,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Khi đã học đủ tám kỹ năng trong trận, ngươi mới có thể cảm nhận và nhặt được chúng.','Only after learning all eight skills in a run can you sense and collect them.']},
+   {art:4,speaker:['Tôi','Me'],text:['Vậy mình có thể chọn quả nào để dùng trước chứ?','So I can choose which Orb to use first?']},
+   {art:4,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Không. Ký ức đến trước phải được giải phóng trước. Nhặt trước thì dùng trước.','No. The memory you find first must be released first. First collected, first used.']},
+   {art:4,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Orb chỉ dùng một lần, có thể cứu mạng ngươi. Nhưng sức mạnh ấy không ở lại sau mỗi trận.','Each Orb is a one-use lifeline, but its power disappears after the run.']},
+   {art:3,speaker:['Tôi','Me'],text:['Nếu đây là ký ức của mình... ai đã lấy nó đi?','If these are my memories... who took them away?']},
+   {art:3,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Có những kẻ canh giữ điều ngươi đã quên. Đừng đánh thức chúng quá sớm.','Some guard what you have forgotten. Do not awaken them too early.']},
+   {art:4,speaker:['Tôi','Me'],text:['Mình vừa nhìn thấy một bóng trắng... Arceus sao?','I saw a white silhouette... was that Arceus?']},
+   {art:4,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Khi thời khắc phán xét đến, ngươi sẽ tự tìm được câu trả lời.','When judgment arrives, you will discover the answer yourself.']}
+  ],
   reveal:[
    {art:5,speaker:['Tôi','Me'],text:['Mình... đã biến thành một Pokémon?!','I... turned into a Pokémon?!']},
    {art:5,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Sức mạnh của ngươi vẫn đang ngủ yên. Ban đầu chỉ có 3 ô kỹ năng.','Your power still sleeps. At first, only 3 skill slots are open.']},
@@ -151,7 +171,9 @@ G.PKMSVVStory=(()=>{
               'An empty celestial gateway awaiting the awakened Pokémon');
   cv.classList.toggle('hidden',mode!=='reveal');
   if(mode==='reveal'&&chosenDex&&G.UI&&G.UI.sprite)G.UI.sprite(cv,chosenDex,{lively:true,scale:3,hero:true});
-  $('pkmsvv-story-chapter').textContent=tr('CHƯƠNG 0 · THỨC TỈNH','CHAPTER 0 · AWAKENING');
+  $('pkmsvv-story-chapter').textContent=mode==='chapter2'?tr('CHƯƠNG 2 · TIẾNG VỌNG THỨ TÁM','CHAPTER 2 · THE EIGHTH ECHO'):
+    mode==='chapter1'?tr('CHƯƠNG 1 · NHỮNG MẢNH KÝ ỨC','CHAPTER 1 · MEMORY FRAGMENTS'):
+    tr('CHƯƠNG 0 · THỨC TỈNH','CHAPTER 0 · AWAKENING');
   $('pkmsvv-story-speaker').textContent=item.speaker[en()?1:0];
   full=item.text[en()?1:0].replaceAll('{name}',displayName());
   const label=$('pkmsvv-story-line');label.textContent='';label.setAttribute('aria-label',full);
@@ -182,7 +204,46 @@ G.PKMSVVStory=(()=>{
  }
  function prologue(done){play('prologue',done);}
  function reveal(dex,done){play('reveal',done,false,dex);}
- function replay(){play('prologue',()=>G.Flow.goMenu(),true);}
+ function chapter2Pending(){return !!(G.DB.save&&G.DB.save.pkmsvvChapter2Pending&&!G.DB.save.pkmsvvChapter2Seen);}
+ function chapter1Pending(){return !!(G.DB.save&&G.DB.save.pkmsvvChapter1Pending&&!G.DB.save.pkmsvvChapter1Seen);}
+ function markChapter2(){
+  const s=G.DB.save;if(!s||s.pkmsvvChapter2Seen||s.pkmsvvChapter2Pending)return;
+  s.pkmsvvChapter2Pending=true;G.DB.commit(true);
+ }
+ function markChapter1(){
+  const s=G.DB.save;if(!s||s.pkmsvvChapter1Seen||s.pkmsvvChapter1Pending)return;
+  s.pkmsvvChapter1Pending=true;G.DB.commit(true);
+ }
+ function chapter2(done){
+  play('chapter2',()=>{if(G.DB.save){G.DB.save.pkmsvvChapter2Seen=true;G.DB.save.pkmsvvChapter2Pending=false;G.DB.commit(true);}if(done)done();});
+ }
+ function chapter1(done){
+  play('chapter1',()=>{if(G.DB.save){G.DB.save.pkmsvvChapter1Seen=true;G.DB.save.pkmsvvChapter1Pending=false;G.DB.commit(true);}if(done)done();});
+ }
+ function replay(type='prologue'){play(['chapter1','chapter2'].includes(type)?type:'prologue',()=>G.Flow.goMenu(),true);}
+ function memories(){
+  const s=G.DB.save||{};
+  // The default Memories menu opens the next available chapter to replay.
+  // Cycling through chapters never modifies progress.
+  const available=['prologue'];
+  if(s.pkmsvvChapter1Seen)available.push('chapter1');
+  if(s.pkmsvvChapter2Seen)available.push('chapter2');
+  if(available.length===1){replay('prologue');return;}
+  const choices=document.createElement('section');
+  choices.className='pkmsvv-memory-chooser';choices.setAttribute('role','dialog');
+  choices.setAttribute('aria-label',tr('Ký Ức','Memories'));
+  const labels={prologue:tr('Chương 0 · Thức Tỉnh','Chapter 0 · Awakening'),
+   chapter1:tr('Chương 1 · Những Mảnh Ký Ức','Chapter 1 · Memory Fragments'),
+   chapter2:tr('Chương 2 · Tiếng Vọng Thứ Tám','Chapter 2 · The Eighth Echo')};
+  choices.innerHTML='<div class="pkmsvv-memory-inner"><h2>'+tr('Ký Ức','Memories')+'</h2>'+
+   available.map(c=>'<button type="button" class="btn gold" data-chapter="'+c+'">'+labels[c]+'</button>').join('')+
+   '<button type="button" class="btn ghost" data-close="1">'+tr('Đóng','Close')+'</button></div>';
+  document.body.appendChild(choices);
+  choices.querySelectorAll('[data-chapter]').forEach(el=>{el.onclick=()=>{
+   const chapter=el.dataset.chapter;choices.remove();replay(chapter);
+  };});
+  choices.querySelector('[data-close]').onclick=()=>choices.remove();
+ }
  function init(){
   $('pkmsvv-story-next').onclick=advance;
   $('pkmsvv-story-skip').onclick=skipStory;
@@ -195,5 +256,5 @@ G.PKMSVVStory=(()=>{
    else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();skipStory();}
   },true);
  }
- return {init,prologue,reveal,replay};
+ return {init,prologue,reveal,replay,memories,chapter1,chapter2,markChapter1,markChapter2,chapter1Pending,chapter2Pending};
 })();
