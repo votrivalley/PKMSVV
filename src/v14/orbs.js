@@ -15,7 +15,7 @@ G.Orbs=(()=>{
  ];
  const BY=Object.fromEntries(LIST.map(o=>[o.id,o]));
  const vi=()=>G.I18n&&G.I18n.lang==='vi',tr=p=>p[vi()?0:1];
- let cd=0,seen=new Set(),unlockedRun=false;
+ let cd=0,seen=new Set(),unlockedRun=false,firstDrops=new WeakSet();
  const queue=p=>p.orbs||(p.orbs=[]);
  const ready=p=>!!(p&&p.slots&&p.maxMoves>=8&&p.slots.length>=8);
  const eligible=p=>ready(p)||!!(p&&p.net&&p.net.orbReady===1);
@@ -78,6 +78,16 @@ G.Orbs=(()=>{
  }
  function update(dt,pl){
   cd=Math.max(0,cd-dt);
+  // Each newly eligible player gets one guaranteed starter Orb. In Co-op
+  // only the host drops it; spawn is counted toward the shared 10-drop cap.
+  if(!G.Coop.active||G.Coop.isHost){
+   const members=G.Coop.active?G.Coop.players():[pl];
+   if(Array.isArray(members)&&G.Pickups&&G.Pickups.dropFirstOrb)
+    for(const member of members){
+     if(!member||member.dead||!eligible(member)||firstDrops.has(member))continue;
+     if(G.Pickups.dropFirstOrb(member.x+38,member.y,roll()))firstDrops.add(member);
+    }
+  }
   if(pl){notifyUnlock(pl);const b=pl.orbBuff;if(b)for(const id in b)if(b[id]>0&&(b[id]-=dt)<=0){
    if(id==='focus')pl.critChance-=.15;
    else if(id==='quick')pl.spdMul/=1.25;
@@ -85,7 +95,7 @@ G.Orbs=(()=>{
    b[id]=0;
   }}
  }
- function reset(){cd=0;seen.clear();unlockedRun=false;if(G.Camera)G.Camera.zoomTo=1;}
+ function reset(){cd=0;seen.clear();unlockedRun=false;firstDrops=new WeakSet();if(G.Camera)G.Camera.zoomTo=1;}
  function onMateUse(p,id,x,y,z){
   if(!eligible(p)||!BY[id]||!take(p,id))return false;
   if(BY[id].kind==='foe')foe(id,x,y,z);else nearBuff(id,x,y);
