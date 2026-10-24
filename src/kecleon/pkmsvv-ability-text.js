@@ -80,6 +80,18 @@ shed-skin|Mỗi 5 giây xóa làm chậm, hồi 2% HP|Clear slows and heal 2% HP
 natural-cure|Hồi 0,3% HP mỗi giây|Regenerate 0.3% HP each second
 healer|Hồi 0,3% HP mỗi giây|Regenerate 0.3% HP each second
 leaf-guard|Trời nắng: miễn làm chậm, giảm 15% ST nhận vào|Sun: resist slows and take 15% less damage
+oblivious|Miễn làm chậm từ đòn đánh/bẫy; vẫn chậm trên nước|Ignore attack/trap slows; water still slows
+sweet-veil|Miễn làm chậm từ đòn đánh/bẫy; vẫn chậm trên nước|Ignore attack/trap slows; water still slows
+limber|Miễn làm chậm từ đòn đánh/bẫy; vẫn chậm trên nước|Ignore attack/trap slows; water still slows
+own-tempo|Miễn làm chậm từ đòn đánh/bẫy; vẫn chậm trên nước|Ignore attack/trap slows; water still slows
+inner-focus|Miễn làm chậm từ đòn đánh/bẫy; vẫn chậm trên nước|Ignore attack/trap slows; water still slows
+clear-body|Miễn làm chậm từ đòn đánh/bẫy; vẫn chậm trên nước|Ignore attack/trap slows; water still slows
+white-smoke|Miễn làm chậm từ đòn đánh/bẫy; vẫn chậm trên nước|Ignore attack/trap slows; water still slows
+full-metal-body|Miễn làm chậm từ đòn đánh/bẫy; vẫn chậm trên nước|Ignore attack/trap slows; water still slows
+insomnia|Miễn làm chậm từ đòn đánh/bẫy; vẫn chậm trên nước|Ignore attack/trap slows; water still slows
+vital-spirit|Miễn làm chậm từ đòn đánh/bẫy; vẫn chậm trên nước|Ignore attack/trap slows; water still slows
+early-bird|Miễn làm chậm từ đòn đánh/bẫy; vẫn chậm trên nước|Ignore attack/trap slows; water still slows
+shield-dust|Miễn làm chậm từ đòn đánh/bẫy; vẫn chậm trên nước|Ignore attack/trap slows; water still slows
 mold-breaker|+12% ST lên trùm|+12% damage to bosses
 damp|Miễn sát thương từ quái tự nổ|Immune to self-destructing enemy blasts
 rivalry|+15% ST với kẻ địch cùng hệ|+15% damage to enemies sharing a type
