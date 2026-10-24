@@ -14,7 +14,7 @@ patch('js/core/db.js',
  "    }");
 patch('js/game.js',
  "    save.stats.runs++;\n",
- "    save.stats.runs++;\n    if(save.stats.runs===1)G.PKMSVVStory.markChapter1();\n");
+ "    save.stats.runs++;\n    if(!save.pkmsvvChapter1Seen&&!save.pkmsvvChapter1Pending)G.PKMSVVStory.markChapter1();\n");
 patch('js/game.js',
  "    }, () => { pl = null; G.Flow.afterRun(); });",
  "    }, () => {\n       pl=null;\n       const after=()=>G.Flow.afterRun();\n       const chapter2=()=>G.PKMSVVStory.chapter2Pending()?G.PKMSVVStory.chapter2(after):after();\n       if(G.PKMSVVStory.chapter1Pending())G.PKMSVVStory.chapter1(chapter2);\n       else chapter2();\n    });");
