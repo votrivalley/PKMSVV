@@ -6,8 +6,8 @@
 G.PKMSVVVoice=(()=>{
  const ICE=[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']}];
  const peers=new Map(),blocked=new Set();
- let joined=false,roomId='',microphone=null,micPending=false,volume=.7,ptt=false,held=false;
- let root=null,tip='',blockedAudio=false,initialized=false,lastSignature='';
+ let joined=false,roomId='',microphone=null,micPending=false,volume=.7,ptt=false,held=false,speakerEnabled=false,settingsOpen=false;
+ let root=null,tip='',blockedAudio=false,initialized=false,lastSignature='',toastTimer=0,pressTimer=0,suppressSpeakerTap=false;
  const vi=()=>!G.I18n||G.I18n.lang==='vi';
  const tr=(vn,en)=>vi()?vn:en;
  const room=()=>G.Social&&G.Social.room;
@@ -15,7 +15,15 @@ G.PKMSVVVoice=(()=>{
  const members=()=>{const r=room();return r?r.members.map(m=>m.uid):[];};
  const own=()=>G.Net&&G.Net.uid;
  const activeView=()=>!!(allowed()&&((G.UI&&G.UI.isOpen('scr-lobby'))||(G.Coop&&G.Coop.active)));
- function setTip(s){tip=s;render();}
+ function setTip(s){
+  tip=s;clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{tip='';render();},2400);
+  render();
+ }
+ const effectiveVolume=uid=>speakerEnabled&&!blocked.has(uid)?volume:0;
+ function applyVolume(){
+  for(const [uid,p] of peers)if(p.audio)p.audio.volume=effectiveVolume(uid);
+ }
  function send(to,body){
   const r=room();
   if(!allowed()||!members().includes(to)||!to||to===own())return false;
@@ -41,6 +49,7 @@ G.PKMSVVVoice=(()=>{
   for(const u of [...peers.keys()])closePeer(u);
   if(microphone){microphone.stop();microphone=null;}
   joined=false;held=false;micPending=false;roomId='';tip='';blockedAudio=false;
+  speakerEnabled=false;settingsOpen=false;lastSignature='';
   render();
  }
  function newPeer(uid){
@@ -66,7 +75,7 @@ G.PKMSVVVoice=(()=>{
    if(e.track.kind!=='audio')return;
    if(p.audio){p.audio.pause();p.audio.srcObject=null;p.audio.remove();}
    const el=document.createElement('audio');
-   el.autoplay=true;el.playsInline=true;el.volume=blocked.has(uid)?0:volume;
+   el.autoplay=true;el.playsInline=true;el.volume=effectiveVolume(uid);
    el.style.display='none';
    el.srcObject=(e.streams&&e.streams[0])||new MediaStream([e.track]);
    document.body.appendChild(el);
@@ -151,7 +160,7 @@ G.PKMSVVVoice=(()=>{
   if(typeof RTCPeerConnection==='undefined')return setTip(tr('Trình duyệt không hỗ trợ WebRTC.','WebRTC is unavailable.'));
   if(joined)return;
   joined=true;roomId=room().id;
-  tip=tr('Đã vào thoại. Mic vẫn tắt; nhấn Bật mic khi muốn nói.','Voice joined. Mic is off until you enable it.');
+  setTip(tr('Đã kết nối thoại (mic tắt).','Voice connected (mic off).'));
   for(const uid of members())greet(uid);
   render();
  }
@@ -160,9 +169,10 @@ G.PKMSVVVoice=(()=>{
   if(!joined||!allowed())return;
   for(const uid of [...peers.keys()])closePeer(uid);
   for(const uid of members())greet(uid);
-  tip=tr('Đang kết nối lại thoại…','Reconnecting voice…');render();
+  setTip(tr('Đang kết nối lại thoại…','Reconnecting voice…'));
  }
  async function micOn(){
+  if(!joined)start();
   if(!joined||microphone||micPending)return;
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
    setTip(tr('Cần HTTPS và trình duyệt cho phép sử dụng mic.','Microphone requires HTTPS and browser support.'));return;
@@ -178,7 +188,7 @@ G.PKMSVVVoice=(()=>{
    if(!track)throw Error('no audio track');
    microphone=track;track.onended=()=>{if(microphone===track){microphone=null;render();}};
    await Promise.allSettled([...peers.values()].map(p=>p.tx.sender.replaceTrack(track)));
-   tip=tr('Mic đang bật.','Microphone on.');
+   setTip(tr('Mic đã bật.','Microphone on.'));
   }catch(e){setTip(tr('Không bật được mic. Kiểm tra quyền micro trong trình duyệt.','Microphone blocked. Check browser permissions.'));}
   finally{micPending=false;render();}
  }
@@ -186,12 +196,13 @@ G.PKMSVVVoice=(()=>{
   const track=microphone;if(!track)return;
   microphone=null;
   for(const p of peers.values())p.tx.sender.replaceTrack(null).catch(()=>{});
-  track.stop();tip=tr('Đã tắt mic.','Microphone off.');render();
+  track.stop();setTip(tr('Mic đã tắt.','Microphone off.'));
+  if(!speakerEnabled&&!ptt)stop();
  }
  function unmuteSound(){
   blockedAudio=false;
   for(const p of peers.values())if(p.audio){
-   p.audio.volume=blocked.has(p.uid)?0:volume;
+   p.audio.volume=effectiveVolume(p.uid);
    const z=p.audio.play();if(z&&z.catch)z.catch(()=>{blockedAudio=true;render();});
   }
   render();
@@ -199,69 +210,113 @@ G.PKMSVVVoice=(()=>{
  function getUi(){
   if(root)return root;
   root=document.createElement('section');root.id='pkmsvv-voice-panel';
-  root.setAttribute('translate','no');root.setAttribute('aria-label','Voice Chat Co-op');
+  root.setAttribute('translate','no');root.setAttribute('role','group');root.setAttribute('aria-label','Voice Chat Co-op');
   document.body.appendChild(root);return root;
  }
  function button(text,handler,kind=''){
   const b=document.createElement('button');b.type='button';b.className='btn small '+kind;
   b.textContent=text;b.onclick=handler;return b;
  }
+ function toggleMic(){
+  if(micPending)return;
+  if(microphone){micOff();return;}
+  if(ptt){ptt=false;held=false;} // regular Mic button always enables immediately
+  micOn();
+ }
+ function toggleSpeaker(){
+  if(suppressSpeakerTap){suppressSpeakerTap=false;return;}
+  speakerEnabled=!speakerEnabled;
+  if(speakerEnabled){
+   if(!joined)start();
+   unmuteSound();
+   setTip(tr('Đã bật loa đồng đội.','Teammate audio on.'));
+  }else{
+   applyVolume();
+   setTip(tr('Đã tắt loa đồng đội.','Teammate audio off.'));
+   if(!microphone&&!ptt)stop();
+  }
+  render();
+ }
+ function openSettings(){
+  if(!joined)start();
+  settingsOpen=!settingsOpen;
+  suppressSpeakerTap=true;
+  render();
+ }
  function render(){
   const shell=getUi();
   if(!allowed()||!activeView()){
    shell.hidden=true;
-   // Never leave a live microphone running behind a hidden menu.
-   if(joined)closeAll(true);
+   if(joined)closeAll(true); // privacy: never leave mic active offscreen
    return;
   }
-  const signature=[vi(),joined,!!microphone,ptt,blockedAudio,tip,
+  const signature=[vi(),joined,!!microphone,micPending,speakerEnabled,settingsOpen,ptt,blockedAudio,tip,
    room().members.map(m=>m.uid+':'+(peers.get(m.uid)?.state||'absent')+':'+blocked.has(m.uid)).join(';')].join('|');
   const wasHidden=shell.hidden;
-  if(!wasHidden&&signature===lastSignature)return; // preserve focus and live sliders
+  if(!wasHidden&&lastSignature===signature)return;
   lastSignature=signature;
   shell.hidden=false;shell.replaceChildren();
-  const h=document.createElement('div');h.className='pkmsvv-voice-heading';
-  h.textContent=tr('🎙 Thoại đồng đội · Sống Sót','🎙 Team Voice · Co-op');
-  shell.append(h);
-  const bar=document.createElement('div');bar.className='pkmsvv-voice-controls';shell.append(bar);
-  if(!joined){
-   bar.append(button(tr('Tham gia thoại (mic tắt)','Join voice (mic off)'),
-    start,'gold'));
-   return;
+  const bar=document.createElement('div');bar.className='pkmsvv-voice-mini';
+  shell.append(bar);
+  const mic=document.createElement('button');
+  mic.type='button';mic.id='pkmsvv-voice-mic';mic.className='pkmsvv-voice-icon '+(microphone?'is-on':'is-off');
+  mic.textContent='🎤';mic.setAttribute('aria-label',microphone?tr('Tắt micro','Mute microphone'):tr('Bật micro','Enable microphone'));
+  mic.setAttribute('aria-pressed',String(!!microphone));
+  mic.title=mic.getAttribute('aria-label');
+  mic.onclick=toggleMic;mic.disabled=micPending;
+  const speaker=document.createElement('button');
+  speaker.type='button';speaker.id='pkmsvv-voice-speaker';
+  speaker.className='pkmsvv-voice-icon '+(speakerEnabled?'is-on':'is-off');
+  speaker.textContent='🔊';speaker.setAttribute('aria-label',speakerEnabled?tr('Tắt loa đồng đội','Mute team audio'):tr('Bật loa đồng đội','Enable team audio'));
+  speaker.setAttribute('aria-pressed',String(speakerEnabled));
+  speaker.title=tr('Nhấn: bật/tắt loa. Giữ lâu hoặc chuột phải: cài đặt thoại.','Tap: toggle speaker. Hold or right-click: voice settings.');
+  speaker.onclick=toggleSpeaker;
+  speaker.oncontextmenu=e=>{e.preventDefault();openSettings();};
+  speaker.onpointerdown=()=>{clearTimeout(pressTimer);suppressSpeakerTap=false;pressTimer=setTimeout(openSettings,600);};
+  speaker.onpointerup=()=>clearTimeout(pressTimer);
+  speaker.onpointercancel=()=>clearTimeout(pressTimer);
+  speaker.onpointerleave=()=>clearTimeout(pressTimer);
+  bar.append(mic,speaker);
+  if(tip){
+   const toast=document.createElement('p');
+   toast.className='pkmsvv-voice-toast';toast.setAttribute('role','status');
+   toast.textContent=tip;shell.append(toast);
   }
-  bar.append(button(tr('Rời thoại','Leave voice'),stop,'ghost'));
-  bar.append(button(tr('↻ Thử lại','↻ Retry'),reconnect,'ghost'));
-  if(!ptt)bar.append(button(microphone?tr('🔴 Tắt mic','🔴 Mute mic'):tr('🎤 Bật mic','🎤 Enable mic'),
-   ()=>microphone?micOff():micOn(),microphone?'gold':''));
-  else {const status=document.createElement('span');status.className='pkmsvv-voice-ptt-status';status.textContent=tr('Giữ V để nói','Hold V to talk');bar.append(status);}
+  if(!settingsOpen)return;
+  const details=document.createElement('div');details.id='pkmsvv-voice-settings';details.className='pkmsvv-voice-details';
+  const header=document.createElement('div');header.className='pkmsvv-voice-details-heading';
+  const title=document.createElement('strong');title.textContent=tr('Thoại đồng đội · Sống Sót','Team voice · Co-op');
+  header.append(title,button('✕',()=>{settingsOpen=false;render();},'ghost'));
+  details.append(header);
+  details.append(button(tr('↻ Thử kết nối lại','↻ Reconnect voice'),reconnect,'ghost'));
   const pttLine=document.createElement('label');pttLine.className='pkmsvv-voice-ptt';
   const cb=document.createElement('input');cb.type='checkbox';cb.checked=ptt;
   cb.onchange=()=>{ptt=cb.checked;held=false;micOff();render();};
-  pttLine.append(cb,document.createTextNode(tr('Nhấn giữ V để nói','Hold V to talk')));
-  shell.append(pttLine);
+  pttLine.append(cb,document.createTextNode(tr('Giữ V để nói (PC)','Hold V to talk (PC)')));
+  details.append(pttLine);
   const vol=document.createElement('label');vol.className='pkmsvv-voice-volume';
   const slider=document.createElement('input');slider.type='range';slider.min='0';slider.max='100';slider.value=String(Math.round(volume*100));
   slider.setAttribute('aria-label',tr('Âm lượng đồng đội','Teammate volume'));
-  slider.oninput=()=>{volume=Number(slider.value)/100;for(const [u,p] of peers)if(p.audio)p.audio.volume=blocked.has(u)?0:volume;};
-  vol.append(document.createTextNode(tr('Loa đồng đội','Team volume')),slider);shell.append(vol);
-  if(blockedAudio)shell.append(button(tr('🔊 Bật loa','🔊 Enable speakers'),unmuteSound,'gold'));
+  slider.oninput=()=>{volume=Number(slider.value)/100;applyVolume();};
+  vol.append(document.createTextNode(tr('Âm lượng','Volume')),slider);details.append(vol);
+  if(blockedAudio)details.append(button(tr('🔊 Cho phép phát âm thanh','🔊 Allow audio playback'),unmuteSound,'gold'));
   const ul=document.createElement('div');ul.className='pkmsvv-voice-peers';
   for(const m of room().members){
    if(m.uid===own())continue;
-   const p=peers.get(m.uid),row=document.createElement('div');
-   row.className='pkmsvv-voice-peer';
-   const status=document.createElement('span');
-   status.textContent=(m.name||tr('Đồng đội','Teammate'))+' · '+
+   const p=peers.get(m.uid),row=document.createElement('div');row.className='pkmsvv-voice-peer';
+   const label=document.createElement('span');
+   label.textContent=(m.name||tr('Đồng đội','Teammate'))+' · '+
     (p&&(p.state==='connected'||p.state==='completed')?tr('Đã kết nối','Connected'):
-     p?tr('Đang kết nối','Connecting'):tr('Chưa vào thoại','Not on voice'));
+     p?tr('Đang kết nối','Connecting'):tr('Chưa kết nối','Not connected'));
    const mute=button(blocked.has(m.uid)?tr('Bỏ tắt tiếng','Unmute'):tr('Tắt tiếng','Mute'),()=>{
     if(blocked.has(m.uid))blocked.delete(m.uid);else blocked.add(m.uid);
-    if(p&&p.audio)p.audio.volume=blocked.has(m.uid)?0:volume;
-    render();
-   },'ghost');row.append(status,mute);ul.append(row);
+    applyVolume();render();
+   },'ghost');
+   row.append(label,mute);ul.append(row);
   }
-  shell.append(ul);
-  if(tip){const note=document.createElement('p');note.className='pkmsvv-voice-tip';note.textContent=tip;shell.append(note);}
+  details.append(ul);
+  details.append(button(tr('Rời thoại','Leave voice'),()=>{stop();settingsOpen=false;render();},'ghost'));
+  shell.append(details);
  }
  function init(){
   if(initialized)return;initialized=true;
