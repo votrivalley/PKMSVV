@@ -68,3 +68,18 @@ test('Votri Valley derivative credit is visible on boot and main menu',()=>{
  assert.match(html,/Pokémon Sống Sót/);
  assert.match(html,/SpriteCollab/);
 });
+
+// Gameplay now auto-casts every learned skill. Legacy per-Pokémon Move
+// Shortcuts are obsolete, but active Dash/Orb input remaps stay available.
+test('no obsolete Pokémon-specific skill shortcut picker or saved slot forcing',()=>{
+ const menu=file('js/ui/menu.js'),gameCode=file('js/game.js');
+ assert.doesNotMatch(menu,/bindPanel\s*\(/);
+ assert.doesNotMatch(menu,/Atajos de movimientos/);
+ assert.doesNotMatch(menu,/box\.appendChild\(bindPanel\(\)\)/);
+ assert.doesNotMatch(gameCode,/\(save\.pbind && save\.pbind\[mon\.dex\]/);
+ assert.match(file('js/core/gamepad.js'),/pkmsvv-orb-use/);
+ assert.match(gameCode,/G\.Orbs\.useNext\(pl\)/);
+ assert.match(gameCode,/G\.Input\.tap\('keyf'\)/);
+ // Old saved purchases and pbind data must not be destroyed.
+ assert.match(file('js/core/db.js'),/pbind/);
+});
