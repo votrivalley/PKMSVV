@@ -32,8 +32,8 @@ replaceOnce(
  if(songStart<0||songEnd<0||pos<songStart||pos>=songEnd)
   throw Error('Background audio patch: custom song playback site changed');
  source=source.slice(0,pos)+
-   '    // Defer fresh music starts until the window is foregrounded.\\n'+
-   '    if (pkmsvvAudioBackground || document.hidden) return;\\n'+
+   '    // Defer fresh music starts until the window is foregrounded.\n'+
+   '    if (pkmsvvAudioBackground || document.hidden) return;\n'+
    source.slice(pos);
 }
 replaceOnce(
