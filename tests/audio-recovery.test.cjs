@@ -11,8 +11,8 @@ test('audio engine retries suspended music, does not restart when muted intentio
  assert.match(s,/ctx\.resume\(\)\.then\(\(\) => ensureMusic\(\)\)/);
  assert.match(s,/if \(wanted === name\) \{ if \(name\) ensureMusic\(\); return; \}/);
  assert.match(s,/visibilitychange/);
- assert.match(s,/addEventListener\('focus', ensureMusic\)/);
- assert.match(s,/addEventListener\('pageshow', ensureMusic\)/);
+ assert.match(s,/addEventListener\('focus', \(\) => \{ if \(!document\.hidden\) pkmsvvSetAudioBackground\(false\); \}\)/);
+ assert.match(s,/addEventListener\('pageshow', \(\) => \{ if \(!document\.hidden\) pkmsvvSetAudioBackground\(false\); \}\)/);
  assert.match(s,/if \(c\.next < ctx\.currentTime - 0\.4\) c\.next = ctx\.currentTime \+ 0\.05/);
  assert.match(s,/el\.paused/);
  assert.match(fs.readFileSync(path.join(base,'js/core/gamepad.js'),'utf8'),/G\.Audio\.unlock\(\)/);
