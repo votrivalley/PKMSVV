@@ -12,3 +12,14 @@ The shared `scripts/patch-story.cjs` copies these into `vendor/pokesurvivor/asse
 **Please do not delete / overwrite browser storage or player saves to update illustrations.**
 
 - `reveal.webp` — a NEW third illustration, the approved image WITHOUT the person, for the Pokémon result scene only (after the personality quiz). The existing `eyes.webp` and `gate.webp` stay unchanged. The starter Pokémon canvas is visually 2× bigger **only** in reveal scene #5.
+
+## Chương 2 – Tiếng Vọng Thứ Tám (chưa build)
+
+Upload **hai hình WebP 16:9** vào chính thư mục `src/story-art/` này:
+
+- `chapter2-orbs.webp` — Cảnh 1: vòng tròn tám sức mạnh, các Mystery Orb nổi lên (8 lượt thoại đầu).
+- `chapter2-shadow.webp` — Cảnh 2: **cùng không gian/cùng bố cục cảnh 1**, nhưng có thêm hình bóng trắng bí ẩn xuất hiện (4 lượt thoại cuối).
+
+Kích thước khuyên dùng: **1280 × 720**, WebP quality ~80–85. Không đè lên `eyes.webp`, `gate.webp` hoặc `reveal.webp`.
+
+**Chỉ upload ở nhánh `wip/v14-story-art-missions`** nếu muốn chưa build: workflow tự động chỉ chạy trên `main`. Code dựng truyện đã tham chiếu tới hai tên này, và khi chưa có ảnh thì tạm dùng `gate.webp`.

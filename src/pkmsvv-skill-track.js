@@ -40,6 +40,8 @@ G.PKMSVVSkillTrack=(()=>{
        'Thức tỉnh! '+p.count+'/8 ô kỹ năng — áp dụng cho MỌI Pokémon.',4400);
     if(G.Audio&&G.Audio.sfx)G.Audio.sfx('levelup');
    }
+   // The eighth permanent slot is itself an achievement.
+   if(p.count===8&&G.Progress&&G.Progress.checkAch)G.Progress.checkAch();
    if(G.DB&&G.DB.save===s&&G.DB.commit)G.DB.commit();
   }
   return p;

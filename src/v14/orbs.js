@@ -26,11 +26,21 @@ G.Orbs=(()=>{
  function notifyUnlock(p){
   if(!ready(p)||unlockedRun)return;
   unlockedRun=true;
+  if(G.DB&&G.DB.save){
+   const stats=G.DB.save.stats||(G.DB.save.stats={});
+   stats.pkmsvvEightSkills=1;
+   if(G.Progress&&G.Progress.checkAch)G.Progress.checkAch();
+  }
   if(G.PKMSVVStory&&G.PKMSVVStory.markChapter2)G.PKMSVVStory.markChapter2();
   if(G.Spawner&&G.Spawner.say)G.Spawner.say(vi()?'Đã học đủ 8 kỹ năng! Mystery Orb đã mở khóa.':'All 8 skills learned! Mystery Orbs unlocked.',4,true);
  }
  function got(p,id){
   if(!add(p,id))return false;
+  if(G.DB&&G.DB.save&&p===G.Game.player){
+   const stats=G.DB.save.stats||(G.DB.save.stats={});
+   stats.pkmsvvOrbsPicked=Math.min(1000000,(stats.pkmsvvOrbsPicked||0)+1);
+   if(G.Progress&&G.Progress.checkAch)G.Progress.checkAch();
+  }
   const o=BY[id],hint=G.Pad&&G.Pad.name&&G.PKMSVVPadOrb?G.PKMSVVPadOrb.describe('use'):vi()?'phím 5 / chạm ô Orb':'key 5 / tap Orb';
   if(G.FX){G.FX.dmgText(p.x,p.y-(p.bodyH||0)-8,tr(o.name),o.col,true);G.FX.ring(p.x,p.y,6,40,o.col,.35,3);}
   if(!seen.has(id)&&G.Spawner){seen.add(id);G.Spawner.say(tr(o.name)+' ('+hint+'): '+tr(o.desc),5);}
@@ -67,6 +77,13 @@ G.Orbs=(()=>{
  function useNext(pl){
   if(!eligible(pl)||!queue(pl).length||cd>0||pl.dead||G.Game.state!=='playing')return false;
   const id=queue(pl).shift(),o=BY[id];if(!o)return false;
+  if(G.DB&&G.DB.save&&pl===G.Game.player){
+   const stats=G.DB.save.stats||(G.DB.save.stats={});
+   stats.pkmsvvOrbsUsed=Math.min(1000000,(stats.pkmsvvOrbsUsed||0)+1);
+   const idx=LIST.findIndex(v=>v.id===id);
+   if(idx>=0)stats.pkmsvvOrbTypeMask=((stats.pkmsvvOrbTypeMask||0)|(1<<idx))&63;
+   if(G.Progress&&G.Progress.checkAch)G.Progress.checkAch();
+  }
   cd=CD;if(G.Audio)G.Audio.sfx('confirm');
   const z=G.Camera.zoom;
   if(o.kind==='foe'){

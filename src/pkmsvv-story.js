@@ -6,7 +6,8 @@ G.PKMSVVStory=(()=>{
  // while a third scene is used ONLY for the Pokémon reveal after the starter quiz.
  const VISUALS=Object.freeze({
    1:'eyes', 2:'eyes', 3:'eyes',
-   4:'gate', 5:'reveal'
+   4:'gate', 5:'reveal',
+   6:'chapter2-orbs', 7:'chapter2-shadow'
  });
  const chapters={
   prologue:[
@@ -28,18 +29,18 @@ G.PKMSVVStory=(()=>{
    {art:4,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Đừng đếm thời gian. Hãy học cách điều khiển cả tám sức mạnh.','Do not count the minutes. Learn to wield all eight powers.']}
   ],
   chapter2:[
-   {art:2,speaker:['Tôi','Me'],text:['Tám kỹ năng... Mình đã học đủ cả tám. Sao mặt đất lại phát sáng?','Eight skills... I have learned all eight. Why is the ground glowing?']},
-   {art:4,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Cánh cửa thứ tám đã mở. Nhưng điều ngươi tìm kiếm không chỉ là sức mạnh.','The eighth gate has opened. But what you seek is not merely power.']},
-   {art:1,speaker:['Tôi','Me'],text:['Đó là... một ký ức? Mình nhìn thấy một nơi chưa từng đến.','Is that... a memory? I see a place I have never visited.']},
-   {art:2,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Mystery Orb là mảnh sức mạnh còn sót lại từ thế giới bị lãng quên.','Mystery Orbs are fragments of power left by a forgotten world.']},
-   {art:2,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Khi đã học đủ tám kỹ năng trong trận, ngươi mới có thể cảm nhận và nhặt được chúng.','Only after learning all eight skills in a run can you sense and collect them.']},
-   {art:4,speaker:['Tôi','Me'],text:['Vậy mình có thể chọn quả nào để dùng trước chứ?','So I can choose which Orb to use first?']},
-   {art:4,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Không. Ký ức đến trước phải được giải phóng trước. Nhặt trước thì dùng trước.','No. The memory you find first must be released first. First collected, first used.']},
-   {art:4,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Orb chỉ dùng một lần, có thể cứu mạng ngươi. Nhưng sức mạnh ấy không ở lại sau mỗi trận.','Each Orb is a one-use lifeline, but its power disappears after the run.']},
-   {art:3,speaker:['Tôi','Me'],text:['Nếu đây là ký ức của mình... ai đã lấy nó đi?','If these are my memories... who took them away?']},
-   {art:3,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Có những kẻ canh giữ điều ngươi đã quên. Đừng đánh thức chúng quá sớm.','Some guard what you have forgotten. Do not awaken them too early.']},
-   {art:4,speaker:['Tôi','Me'],text:['Mình vừa nhìn thấy một bóng trắng... Arceus sao?','I saw a white silhouette... was that Arceus?']},
-   {art:4,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Khi thời khắc phán xét đến, ngươi sẽ tự tìm được câu trả lời.','When judgment arrives, you will discover the answer yourself.']}
+   {art:6,speaker:['Tôi','Me'],text:['Tám kỹ năng... Mình đã học đủ cả tám. Sao mặt đất lại phát sáng?','Eight skills... I have learned all eight. Why is the ground glowing?']},
+   {art:6,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Cánh cửa thứ tám đã mở. Nhưng điều ngươi tìm kiếm không chỉ là sức mạnh.','The eighth gate has opened. But what you seek is not merely power.']},
+   {art:6,speaker:['Tôi','Me'],text:['Đó là... một ký ức? Mình nhìn thấy một nơi chưa từng đến.','Is that... a memory? I see a place I have never visited.']},
+   {art:6,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Mystery Orb là mảnh sức mạnh còn sót lại từ thế giới bị lãng quên.','Mystery Orbs are fragments of power left by a forgotten world.']},
+   {art:6,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Khi đã học đủ tám kỹ năng trong trận, ngươi mới có thể cảm nhận và nhặt được chúng.','Only after learning all eight skills in a run can you sense and collect them.']},
+   {art:6,speaker:['Tôi','Me'],text:['Vậy mình có thể chọn quả nào để dùng trước chứ?','So I can choose which Orb to use first?']},
+   {art:6,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Không. Ký ức đến trước phải được giải phóng trước. Nhặt trước thì dùng trước.','No. The memory you find first must be released first. First collected, first used.']},
+   {art:6,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Orb chỉ dùng một lần, có thể cứu mạng ngươi. Nhưng sức mạnh ấy không ở lại sau mỗi trận.','Each Orb is a one-use lifeline, but its power disappears after the run.']},
+   {art:7,speaker:['Tôi','Me'],text:['Nếu đây là ký ức của mình... ai đã lấy nó đi?','If these are my memories... who took them away?']},
+   {art:7,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Có những kẻ canh giữ điều ngươi đã quên. Đừng đánh thức chúng quá sớm.','Some guard what you have forgotten. Do not awaken them too early.']},
+   {art:7,speaker:['Tôi','Me'],text:['Mình vừa nhìn thấy một bóng trắng... Arceus sao?','I saw a white silhouette... was that Arceus?']},
+   {art:7,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Khi thời khắc phán xét đến, ngươi sẽ tự tìm được câu trả lời.','When judgment arrives, you will discover the answer yourself.']}
   ],
   reveal:[
    {art:5,speaker:['Tôi','Me'],text:['Mình... đã biến thành một Pokémon?!','I... turned into a Pokémon?!']},
@@ -155,6 +156,9 @@ G.PKMSVVStory=(()=>{
       img.dataset.revealFallback='1';
       img.onerror=()=>{img.onerror=null;img.src='assets/story/scene-5.svg';};
       img.src='assets/story/gate.webp';
+    }else if(key==='chapter2-orbs'||key==='chapter2-shadow'){
+      img.onerror=null;
+      img.src='assets/story/gate.webp';
     }else{
       img.onerror=null;
       img.src='assets/story/scene-'+item.art+'.svg';
@@ -163,7 +167,9 @@ G.PKMSVVStory=(()=>{
    delete img.dataset.revealFallback;
    img.src=imagePath;
   }
-  img.alt=tr(key==='eyes'?'Bóng người trước đôi mắt bí ẩn giữa bầu trời sao':
+  img.alt=key==='chapter2-orbs'?tr('Vòng phép sáng lên, Mystery Orbs trỗi dậy giữa đêm','Eight powers awaken as the Mystery Orbs rise into the night'):
+    key==='chapter2-shadow'?tr('Bóng trắng bí ẩn xuất hiện trong chính khung cảnh Mystery Orbs','A mysterious white shadow appears in the same Mystery Orb scene'):
+    tr(key==='eyes'?'Bóng người trước đôi mắt bí ẩn giữa bầu trời sao':
               key==='gate'?'Bóng người trước cổng ánh sáng giữa bầu trời sao':
               'Cổng ánh sáng rộng mở, chờ Pokémon thức tỉnh',
              key==='eyes'?'A lone soul beneath mysterious eyes in the starry sky':
@@ -198,7 +204,7 @@ G.PKMSVVStory=(()=>{
   stop();hideNameForm();mode=type;idx=0;next=done;replaying=replay;chosenDex=dex;
   lines=chapters[type];G.UI.chrome(false);G.UI.show('scr-pkmsvv-story');
   // Preload once; optional offline fallbacks remain available.
-  for(const name of ['eyes','gate','reveal']){const preload=new Image();preload.src='assets/story/'+name+'.webp';}
+  for(const name of ['eyes','gate','reveal','chapter2-orbs','chapter2-shadow']){const preload=new Image();preload.src='assets/story/'+name+'.webp';}
   draw();
   if(G.Pad&&G.Pad.focusFirst)G.Pad.focusFirst();
  }

@@ -198,3 +198,63 @@ test('Web build implements Arceus damage tracking and Meteor Mash balance',t=>{
  assert.match(game,/arceusDamageBest/);
  assert.match(moves,/id: 'meteor-mash'[\s\S]{0,220}dmg: 24, count: 2, radius: 48, knock: 70/);
 });
+
+
+test('Skill and Orb achievements remain bilingual with persistent counters',()=>{
+ const saved={stats:{pkmsvvEightSkills:0,pkmsvvOrbsPicked:0,pkmsvvOrbsUsed:0,pkmsvvOrbTypeMask:0},pkmsvvSkillMarks:{}};
+ const G={I18n:{lang:'vi'},PKMSVVSkillTrack:{progress:s=>({count:s.pkmsvvSkillMarks.complete?8:3})},AchDefs:{LIST:[],BY:{}}};
+ vm.runInNewContext(read('src/v14/orb-achievements.js'),{G,Math,Number});
+ const defs=G.PKMSVVAchievements.defs;
+ assert.equal(defs.length,6);
+ assert.equal(Object.keys(G.AchDefs.BY).length,6);
+ assert.equal(G.AchDefs.BY['pkmsvv-slot8'].value(saved),3);
+ saved.pkmsvvSkillMarks.complete=true;
+ assert.equal(G.AchDefs.BY['pkmsvv-slot8'].value(saved),8);
+ saved.stats.pkmsvvEightSkills=1;saved.stats.pkmsvvOrbsPicked=10;saved.stats.pkmsvvOrbsUsed=10;
+ saved.stats.pkmsvvOrbTypeMask=63;
+ for(const def of defs)assert.ok(def.value(saved)>=def.goal,'achievement '+def.id+' must qualify');
+ const vietnamese=G.AchDefs.BY['pkmsvv-orb-first'].name;
+ G.I18n.lang='en';assert.notEqual(vietnamese,G.AchDefs.BY['pkmsvv-orb-first'].name);
+ assert.equal(G.AchDefs.BY['pkmsvv-orb-first'].name,'First Memory');
+ assert.match(read('scripts/patch-v14-orb-achievements.cjs'),/pkmsvvOrbTypeMask/);
+ const file='vendor/pokesurvivor/js/data/pkmsvv-orb-achievements.js';
+ if(fs.existsSync(path.join(root,file))){
+  assert.match(read('vendor/pokesurvivor/dev.html'),/js\/data\/pkmsvv-orb-achievements.js/);
+  assert.match(read('vendor/pokesurvivor/js/core/db.js'),/r.stats.pkmsvvOrbTypeMask/);
+ }
+});
+test('Missions visually prioritize unclaimed completions and highlight new tasks',()=>{
+ const src=read('src/pkmsvv-mission-cues.js');
+ assert.match(src,/priority.appendChild\(row\)/);
+ assert.match(src,/priority.appendChild\(el\)/);
+ assert.match(src,/row.classList.toggle\('pkmsvv-mission-claimed'/);
+ assert.match(src,/markSeen\(\)/);
+ const G={I18n:{lang:'vi'},DB:{save:{
+  created:123,missions:{day:'2026-10-24',week:'2026-43',
+   daily:[{id:'a',goal:2,prog:2,claimed:false},{id:'b',goal:3,prog:1,claimed:false}],
+   weekly:[{id:'c',goal:5,prog:5,claimed:true}]},
+  pkmDaily:{claimed:false,complete:true},
+  pkmWeekly:{claimed:false,dexes:[1,2],done:[1]}}},
+  Progress:{done:m=>m.prog>=m.goal}};
+ const store={};
+ vm.runInNewContext(src,{G,localStorage:{getItem:k=>store[k]||null,setItem:(k,v)=>store[k]=v},
+  document:{querySelector:()=>null,createElement:()=>({})}});
+ const d=G.PKMSVVMissionCue.data();
+ assert.equal(d.ready,2);assert.equal(d.active,4);
+ G.PKMSVVMissionCue.markSeen();
+ assert.ok(Object.keys(store).some(k=>k.includes('123')));
+ assert.match(read('scripts/prepare-game.cjs'),/patch-v14-mission-attention.cjs/);
+});
+test('Chapter 2 images use dedicated WebP assets without replacing Chapter 0',()=>{
+ const story=read('src/pkmsvv-story.js');
+ assert.match(story,/6:'chapter2-orbs', 7:'chapter2-shadow'/);
+ assert.equal((story.match(/\{art:6,/g)||[]).length,8);
+ assert.equal((story.match(/\{art:7,/g)||[]).length,4);
+ assert.match(read('scripts/patch-story.cjs'),/chapter2-orbs/);
+ assert.match(read('scripts/patch-story.cjs'),/chapter2-shadow/);
+ const rootArt='vendor/pokesurvivor/assets/story/';
+ if(fs.existsSync(path.join(root,rootArt))){
+  for(const name of ['chapter2-orbs.webp','chapter2-shadow.webp','eyes.webp','gate.webp'])
+   assert.ok(fs.existsSync(path.join(root,rootArt,name)),name);
+ }
+});

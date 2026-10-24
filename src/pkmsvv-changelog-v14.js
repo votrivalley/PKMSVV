@@ -7,6 +7,7 @@ G.CHANGELOG.unshift({
  title:['Pokémon Sống Sót – Votri Valley v1.4','Pokémon Sống Sót – Votri Valley v1.4'],
  subtitle:['Phán Xét Arceus mới, thử thách cột mốc và những công cụ sinh tồn thú vị!','A renewed Arceus Judgment, milestone trials and new survival tools!'],
  new:[
+  ['Thành tựu mới: mở vĩnh viễn đủ 8 ô kỹ năng, học đủ 8 chiêu trong một trận và 4 thành tựu Mystery Orb (nhặt lần đầu, nhặt 10, dùng 10, dùng đủ 6 loại).','New achievements: permanently unlock all 8 skill slots, learn 8 moves in a run, plus 4 Mystery Orb milestones (first pickup, collect 10, use 10, use all 6 types).'],
   ['Thử thách phút 10/20/30: Boss tinh anh ở 10 phút, thử thách huyền thoại ở 20 phút và Phán Xét Arceus ở 30 phút.','10/20/30-minute milestones: An elite boss at minute 10, a legendary trial at minute 20, and Arceus Judgment at minute 30.'],
   ['Phán Xét Arceus 2.0: Arceus vẫn bất tử nhưng giờ nhận sát thương để ghi thành tích; mỗi trận mang một Plate hệ ngẫu nhiên.','Arceus Judgment 2.0: Arceus remains invincible, but attacks now contribute to a damage record; its Plate type is randomized each run.'],
   ['Mystery Dungeon Orbs: 6 loại cầu cứu nguy, chỉ nhặt khi đã học đủ 8 kỹ năng trong trận. Nhặt trước dùng trước (FIFO), không cần chọn Orb; dùng phím 5 hoặc nút Orb trên màn hình.','Mystery Dungeon Orbs: Six one-use survival tools, collectible only after learning all eight skills in a run. First in, first out (FIFO), no manual selection; press 5 or tap the Orb button.'],
@@ -14,6 +15,8 @@ G.CHANGELOG.unshift({
   ['Gacha ×100: Quay một lúc 100 lần bằng 100 vé thường hoặc 10 vé ×10; giữ đảm bảo ít nhất một Pokémon 4★ trở lên trong mỗi nhóm 10 lượt.','Gacha ×100: Draw 100 at once using 100 normal tickets or ten ×10 tickets, with each group of ten retaining its guaranteed 4★+ pull.']
  ],
  chg:[
+  ['Nhiệm vụ mới được nhấn sáng; nhiệm vụ đã hoàn thành chờ nhận thưởng nổi lên đầu. Nhận quà xong, thẻ tự trở về thứ tự cũ và tối màu.','New missions are highlighted; completed unclaimed missions rise to the top. Claiming rewards restores their original order and dims their cards.'],
+  ['Chương 2 dùng hai tranh WebP riêng: Mystery Orb thức tỉnh và bóng trắng bí ẩn xuất hiện ở cùng khung cảnh.','Chapter 2 uses two dedicated WebP scenes: the Mystery Orb awakening and a mysterious white shadow appearing within the same setting.'],
   ['Cốt truyện: mở Chương 1 sau trận đầu; Chương 2 – Tiếng Vọng Thứ Tám sau lần đầu học đủ 8 kỹ năng. Xem lại tại Ký Ức; sắp xếp lại tiêu đề và ghi công cho dễ đọc.','Story: Chapter 1 after the first run; Chapter 2 – The Eighth Echo after first learning all eight skills. Replay via Memories; improved title and credit readability.'],
   ['Cân bằng Mystery Dungeon Orbs: Quái thường có 3% cơ hội rơi Orb sau khi học đủ 8 kỹ năng; boss vẫn 45%. Giới hạn 10 Orb/trận, hồi sử dụng 5 giây; không thể khống chế Arceus.','Mystery Dungeon Orb balance: Normal enemies now have a 3% Orb drop chance after learning 8 skills; boss drops stay at 45%. At most 10 Orbs per run, with a 5-second use cooldown; Arceus is immune to Orb control.'],
   ['Kỹ năng tự động ưu tiên boss sống và mục tiêu gần, không bị quái nhỏ che boss; Judgment vẫn ưu tiên huyền thoại trước Arceus.','Auto-casting prioritizes live bosses and nearby threats; during Judgment, legendary enemies take priority over Arceus.'],
