@@ -30,7 +30,7 @@ const enemyDmg = num(cfg.enemies.damageMultiplier, .2, 5, 'enemies.damageMultipl
 const xp = num(cfg.enemies.xpMultiplier, .2, 12, 'enemies.xpMultiplier');
 const coins = num(cfg.progression.startingCoins, 0, 100000, 'progression.startingCoins', true);
 const wild = num(cfg.shiny.wildDenominator, 1, 20000, 'shiny.wildDenominator', true);
-const gacha = num(cfg.shiny.gachaDenominator, 1, 10000, 'shiny.gachaDenominator', true);
+const gachaPercent = num(cfg.shiny.gachaPercent ?? 100 / cfg.shiny.gachaDenominator, 0.01, 100, 'shiny.gachaPercent');
 
 function patch(rel, before, after) {
   const file = path.join(game, rel);
@@ -78,7 +78,7 @@ patch('js/systems/spawner.js',
   '    if (rollShiny(b.dex)) e.makeShiny();',
   '    if (t < 600) e.dmg *= 0.8 + 0.2 * Math.max(0, t) / 600;\n    if (rollShiny(b.dex)) e.makeShiny();');
 
-patch('js/systems/gacha.js', 'const SHINY_RATE = 1 / 100;', 'const SHINY_RATE = 1 / ' + gacha + ';');
+patch('js/systems/gacha.js', 'const SHINY_RATE = 1 / 100;', 'const SHINY_RATE = ' + gachaPercent + ' / 100;');
 patch('js/core/db.js', 'const START_COINS = 500;', 'const START_COINS = ' + coins + ';');
 // All learned attacks now tick together, each keeping its independent cooldown.
 patch('js/systems/combat.js',
