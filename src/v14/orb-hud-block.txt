@@ -6,9 +6,8 @@
         roundRect(ctx,x,y,size,size,10);
         ctx.fillStyle=orb?'rgba(19,33,57,.95)':'rgba(9,19,34,.8)';ctx.fill();
         ctx.lineWidth=primary?2.5:1.4;ctx.strokeStyle=orb?orb.col:'#60778e';ctx.stroke();
-        ctx.textAlign='center';ctx.font=F(800,size>=42?20:15);
-        ctx.fillStyle=orb?orb.col:'#7691a7';
-        ctx.fillText(orb?'✦':'·',x+size/2,y+size*.61);
+        if(orb&&G.OrbSprites)G.OrbSprites.draw(ctx,id,x+4,y+3,size-8);
+        else {ctx.textAlign='center';ctx.font=F(800,16);ctx.fillStyle='#7691a7';ctx.fillText('·',x+size/2,y+size*.61);}
         if(primary && orb){
           ctx.font=F(700,9);ctx.fillStyle='#ffedab';ctx.fillText('ORB',x+size/2,y+11);
           if(G.Orbs.cd>0){ctx.fillStyle='rgba(0,0,0,.45)';ctx.fillRect(x+3,y+size-10,size-6,7);
