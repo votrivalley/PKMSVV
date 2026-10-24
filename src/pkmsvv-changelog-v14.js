@@ -15,6 +15,7 @@ G.CHANGELOG.unshift({
   ['Gacha ×100: Quay một lúc 100 lần bằng 100 vé thường hoặc 10 vé ×10; giữ đảm bảo ít nhất một Pokémon 4★ trở lên trong mỗi nhóm 10 lượt.','Gacha ×100: Draw 100 at once using 100 normal tickets or ten ×10 tickets, with each group of ten retaining its guaranteed 4★+ pull.']
  ],
  chg:[
+  ['Điều chỉnh Gacha: Pokémon 5★ có tỉ lệ cơ bản 1% mỗi lượt, bảo hiểm chắc chắn 5★ ở lượt thứ 100 nếu chưa ra. Giữ bảo đảm 4★ trở lên trong mỗi ×10 và Pity riêng của từng banner; không xóa Pity đã lưu.','Gacha rebalance: 5★ base chance is now 1% per pull, with a guaranteed 5★ on the 100th pull without one. Each ×10 still guarantees 4★ or higher; banner-specific saved pity is preserved.'],
   ['Nhiệm vụ mới được nhấn sáng; nhiệm vụ đã hoàn thành chờ nhận thưởng nổi lên đầu. Nhận quà xong, thẻ tự trở về thứ tự cũ và tối màu.','New missions are highlighted; completed unclaimed missions rise to the top. Claiming rewards restores their original order and dims their cards.'],
   ['Chương 2 dùng hai tranh WebP riêng: Mystery Orb thức tỉnh và bóng trắng bí ẩn xuất hiện ở cùng khung cảnh.','Chapter 2 uses two dedicated WebP scenes: the Mystery Orb awakening and a mysterious white shadow appearing within the same setting.'],
   ['Cốt truyện: mở Chương 1 sau trận đầu; Chương 2 – Tiếng Vọng Thứ Tám sau lần đầu học đủ 8 kỹ năng. Xem lại tại Ký Ức; sắp xếp lại tiêu đề và ghi công cho dễ đọc.','Story: Chapter 1 after the first run; Chapter 2 – The Eighth Echo after first learning all eight skills. Replay via Memories; improved title and credit readability.'],
