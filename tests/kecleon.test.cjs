@@ -84,7 +84,8 @@ test('Owner-approved changelog is not modified by this integration',()=>{
 
 test('Kecleon Pokédex pane escapes apostrophes and refreshes after item changes',()=>{
  const G=game(),s=G.DB.save;
- G.AbilityFX={of:()=>({})};G.T=v=>v;
+ G.AbilityFX={of:()=>({generic:true})};G.T=v=>v;
+ vm.runInNewContext(read('src/kecleon/pkmsvv-ability-text.js'),{G});
  G.Moves.BY_ID.surf.name="Trainer's Wave";
  s.ptm={25:['surf']};
  const host={
@@ -108,6 +109,26 @@ test('Kecleon Pokédex pane escapes apostrophes and refreshes after item changes
  assert.match(host.panel.innerHTML,/Chưa có/);
 });
 
+test('Pokédex Ability details explain real gameplay effects in Vietnamese/English',()=>{
+ const G=game();
+ vm.runInNewContext(read('src/kecleon/pkmsvv-ability-text.js'),{G});
+ const v=G.PKMSVVAbilityText;
+ assert.equal(v.summary('natural-cure',G.DEX_BY[25],{plus:true},false),
+  'Hồi 0,3% HP mỗi giây · +8% ST hệ chính');
+ assert.equal(v.summary('natural-cure',G.DEX_BY[25],{plus:true},true),
+  'Regenerate 0.3% HP each second · +8% primary-type damage');
+ assert.match(v.summary('levitate',G.DEX_BY[25],{},false),/dung nham/);
+ assert.match(v.summary('sturdy',G.DEX_BY[25],{},false),/90 giây/);
+ assert.match(v.summary('static',G.DEX_BY[25],{generic:true},false),/Điện/);
+ assert.equal(v.summary('huge-power',G.DEX_BY[25],{},true),'+50% physical damage');
+ // All explicitly-implemented Abilities in the original engine must be described.
+ const engine=read('src/kecleon/upstream/data/ability-fx.js');
+ const keys=[...engine.matchAll(/^\s*'([^']+)': \{ d:/gm)].map(m=>m[1]);
+ for(const id of keys)assert.ok(v.BY[id],'Missing real-effect translation for '+id);
+ for(const id of ['libero','pure-power'])assert.ok(v.BY[id]);
+ assert.match(read('src/kecleon/pkmsvv-kecleon-ui.js'),/pkmk-ability-benefit/);
+ assert.doesNotMatch(read('src/kecleon/pkmsvv-kecleon-ui.js'),/Hiệu ứng Đặc tính được áp dụng trong trận/);
+});
 test('Older save merge cannot resurrect consumed Mint, Capsule or TMs',()=>{
  if(!built())return;
  const G={DEX_BY:{25:{}},Shop:{ITEMS:{mint:{},cap:{},caph:{}}},Moves:{BY_ID:{surf:{id:'surf'}}},NATURE_BY:{hardy:{}},GlobalPower:{LIST:[],merge:(newer,older)=>newer||older||{},legacyLedger:()=>({}),cleanLedger:()=>({})}};
