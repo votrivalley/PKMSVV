@@ -128,6 +128,9 @@ patch('js/systems/gacha.js',
 patch('js/systems/gacha.js',
  "    pool, featured, pull }",
  "    pool, featured, pull,hasCharm,shinyRate }");
+patch('js/data/moves.js',
+ "      cd: 1.4, dmg: 34, count: 2, radius: 54, knock: 80 },",
+ "      cd: 1.4, dmg: 24, count: 2, radius: 48, knock: 70 },");
 // Gacha UI: additional 100-pull buttons; 100 results saved before animation.
 patch('dev.html',
  '          <button id="pull-10b" class="btn gold grow" data-sfx="none">Tirar ×10 · <span id="cost-10b"></span></button>',
