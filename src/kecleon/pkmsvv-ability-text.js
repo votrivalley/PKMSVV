@@ -124,6 +124,46 @@ moody|Mỗi 10 giây +10% một chỉ số ngẫu nhiên|+10% to a random stat e
 tangled-feet|Bị làm chậm: 20% né đòn|While slowed: 20% dodge chance
 skill-link|Đòn nhiều hit gây +25% ST|Multi-hit moves deal +25% damage
 protosynthesis|Trời nắng: +20% ST|Sun: +20% damage
+
+overgrow|Dưới 1/3 HP: chiêu hệ Cỏ gây +35% ST|Below 1/3 HP: Grass moves deal +35% damage
+blaze|Dưới 1/3 HP: chiêu hệ Lửa gây +35% ST|Below 1/3 HP: Fire moves deal +35% damage
+torrent|Dưới 1/3 HP: chiêu hệ Nước gây +35% ST|Below 1/3 HP: Water moves deal +35% damage
+swarm|Dưới 1/3 HP: chiêu hệ Bọ gây +35% ST|Below 1/3 HP: Bug moves deal +35% damage
+steelworker|Chiêu hệ Thép gây +20% ST|Steel moves deal +20% damage
+steely-spirit|Chiêu hệ Thép gây +20% ST|Steel moves deal +20% damage
+dragons-maw|Chiêu hệ Rồng gây +20% ST|Dragon moves deal +20% damage
+transistor|Chiêu hệ Điện gây +20% ST|Electric moves deal +20% damage
+iron-fist|Chiêu đấm gây +25% ST|Punch moves deal +25% damage
+strong-jaw|Chiêu cắn/nanh gây +30% ST|Bite and fang moves deal +30% damage
+mega-launcher|Chiêu Pulse/Aura Sphere gây +30% ST|Pulse and Aura Sphere moves deal +30% damage
+sharpness|Chiêu chém/cắt gây +30% ST|Cutting and slashing moves deal +30% damage
+punk-rock|Chiêu âm thanh gây +30% ST|Sound-based moves deal +30% damage
+swift-swim|Trời mưa: tốc độ di chuyển +50%|Rain: +50% movement speed
+chlorophyll|Trời nắng: tốc độ di chuyển +50%|Sun: +50% movement speed
+sand-rush|Bão cát: tốc độ di chuyển +50%|Sandstorm: +50% movement speed
+slush-rush|Trời tuyết: tốc độ di chuyển +50%|Snow: +50% movement speed
+drought|Tạo nắng khi bắt đầu trận và mỗi 3 phút|Summon sun at start and every 3 minutes
+orichalcum-pulse|Tạo nắng khi bắt đầu trận và mỗi 3 phút|Summon sun at start and every 3 minutes
+drizzle|Tạo mưa khi bắt đầu trận và mỗi 3 phút|Summon rain at start and every 3 minutes
+sand-stream|Tạo bão cát khi bắt đầu trận và mỗi 3 phút|Summon sandstorm at start and every 3 minutes
+snow-warning|Tạo tuyết khi bắt đầu trận và mỗi 3 phút|Summon snow at start and every 3 minutes
+water-absorb|Miễn ST hệ Nước; bị chiêu Nước đánh sẽ hồi máu|Immune to Water moves; Water hits heal HP
+storm-drain|Miễn ST hệ Nước; bị chiêu Nước đánh sẽ hồi máu|Immune to Water moves; Water hits heal HP
+volt-absorb|Miễn ST hệ Điện; bị chiêu Điện đánh sẽ hồi máu|Immune to Electric moves; Electric hits heal HP
+lightning-rod|Miễn ST hệ Điện; bị chiêu Điện đánh sẽ hồi máu|Immune to Electric moves; Electric hits heal HP
+motor-drive|Miễn ST hệ Điện; bị chiêu Điện đánh sẽ hồi máu|Immune to Electric moves; Electric hits heal HP
+flash-fire|Miễn ST hệ Lửa; bị chiêu Lửa đánh sẽ hồi máu|Immune to Fire moves; Fire hits heal HP
+well-baked-body|Miễn ST hệ Lửa; bị chiêu Lửa đánh sẽ hồi máu|Immune to Fire moves; Fire hits heal HP
+sap-sipper|Miễn ST hệ Cỏ; bị chiêu Cỏ đánh sẽ hồi máu|Immune to Grass moves; Grass hits heal HP
+earth-eater|Miễn ST hệ Đất; bị chiêu Đất đánh sẽ hồi máu|Immune to Ground moves; Ground hits heal HP
+static|Kẻ địch đánh cận chiến bị làm chậm 50% trong 2,5 giây|Melee attackers are slowed by 50% for 2.5 seconds
+flame-body|Kẻ địch đánh cận chiến bị bỏng|Melee attackers are burned
+poison-point|Kẻ địch đánh cận chiến bị nhiễm độc|Melee attackers are poisoned
+cute-charm|Kẻ địch đánh cận chiến bị làm chậm 40% trong 2,5 giây|Melee attackers are slowed by 40% for 2.5 seconds
+effect-spore|Kẻ địch đánh cận chiến bị làm chậm hoặc nhiễm độc|Melee attackers are slowed or poisoned
+rough-skin|Phản ST lên kẻ địch đánh cận chiến (10 + 3 × cấp)|Damage melee attackers (10 + 3 × level)
+iron-barbs|Phản ST lên kẻ địch đánh cận chiến (10 + 3 × cấp)|Damage melee attackers (10 + 3 × level)
+cursed-body|30% cơ hội làm chậm kẻ địch đánh cận chiến|30% chance to slow melee attackers
 `.trim().split('\n');
  const BY={};
  for(const line of TEXT){
@@ -147,7 +187,7 @@ protosynthesis|Trời nắng: +20% ST|Sun: +20% damage
    '+8% damage with '+primary(mon)[1]+' moves':
    '+8% ST với chiêu hệ '+primary(mon)[0];
   const text=BY[id];
-  if(!text)return english?'Ability effect applies in battle':'Đặc tính có tác dụng trong trận';
+  if(!text)return english?'+8% damage with '+primary(mon)[1]+' moves':'+8% ST với chiêu hệ '+primary(mon)[0];
   // 'plus' effects include an additional +8% primary-type damage bonus.
   if(fx&&fx.plus)return text[i]+(english?' · +8% primary-type damage':' · +8% ST hệ chính');
   return text[i];
