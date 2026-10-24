@@ -43,7 +43,7 @@ test('ICE arriving before answer is added to host after SDP answer',async t=>{
  vm.runInNewContext(source,ctx);
  ctx.G.Net.open('room1',true,'host');
  ctx.G.Net.syncMembers(['host','guest']);
- await Promise.resolve();await Promise.resolve();
+ await new Promise(setImmediate); // allow createOffer/setLocalDescription to finish
  assert.ok(lastPc);
  assert.equal(lastPc.signalingState,'have-local-offer');
  const receive=sig=>receiveHost({val:()=>JSON.stringify({f:'guest',sig}),ref:{remove:()=>Promise.resolve()}});
@@ -51,7 +51,7 @@ test('ICE arriving before answer is added to host after SDP answer',async t=>{
  await Promise.resolve();
  assert.equal(lastPc.candidates.length,0);
  receive({sdp:{type:'answer',sdp:'test'}});
- await Promise.resolve();await Promise.resolve();await Promise.resolve();
+ await new Promise(setImmediate); // allow answer and queued ICE awaits to finish
  assert.equal(lastPc.candidates.length,1);
  assert.equal(lastPc.candidates[0].candidate,'early');
 });
