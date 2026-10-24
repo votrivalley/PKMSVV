@@ -41,9 +41,9 @@ p('    pl.x = sx + ca * len; pl.y = sy + sa * len;\n    G.World.collide(pl);\n  
   '    G.PKMSVVDash.begin(pl,m,pl.aim,len); // travel over frames at skill-specific speed');
 p('    const mx = sx + ca * len / 2, my = sy + sa * len / 2;',
   '    const ex=sx+ca*len,ey=sy+sa*len;\n    const mx = sx + ca * len / 2, my = sy + sa * len / 2;');
-p('segDist2(sx, sy, pl.x, pl.y,', 'segDist2(sx, sy, ex, ey,');
-// There are two swept collision checks; the second is not an ambiguous transform.
-piece=piece.replace('segDist2(sx, sy, pl.x, pl.y,','segDist2(sx, sy, ex, ey,');
+const oldSweep='segDist2(sx, sy, pl.x, pl.y,';
+if(piece.split(oldSweep).length!==3)throw Error('Expected both dash damage sweeps');
+piece=piece.replaceAll(oldSweep,'segDist2(sx, sy, ex, ey,');
 if(piece.includes('segDist2(sx, sy, pl.x'))throw Error('dash damage still tied to old teleport');
 combat=combat.slice(0,i)+piece+combat.slice(e);fs.writeFileSync(combatPath,combat,'utf8');
 // During the dash the player advances frame-by-frame; no normal walking input
