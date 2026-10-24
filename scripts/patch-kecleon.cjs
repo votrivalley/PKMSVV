@@ -20,6 +20,7 @@ for(const [src,dst] of [
  fs.copyFileSync(path.join(project,'src/kecleon/upstream',src),path.join(base,dst));
 }
 fs.copyFileSync(path.join(project,'src/kecleon/pkmsvv-kecleon-ui.js'),path.join(base,'js/ui/pkmsvv-kecleon-ui.js'));
+fs.copyFileSync(path.join(project,'src/kecleon/pkmsvv-ability-text.js'),path.join(base,'js/data/pkmsvv-ability-text.js'));
 fs.copyFileSync(path.join(project,'src/kecleon/pkmsvv-kecleon-scene.js'),path.join(base,'js/ui/pkmsvv-kecleon-scene.js'));
 // Reuse authentic pixel-art icons from the 2026-10-20 shop contribution.
 const iconDefs=fs.readFileSync(path.join(project,'src/kecleon/pkmsvv-kecleon-icon-defs.txt'),'utf8');
@@ -37,6 +38,8 @@ patch('dev.html','<script defer src="js/data/items.js"></script>',
  '<script defer src="js/data/items.js"></script>\n<script defer src="js/data/shop.js"></script>');
 patch('dev.html','<script defer src="js/systems/stats.js"></script>',
  '<script defer src="js/systems/stats.js"></script>\n<script defer src="js/systems/mons.js"></script>\n<script defer src="js/data/ability-fx.js"></script>');
+patch('dev.html','<script defer src="js/data/ability-fx.js"></script>',
+  '<script defer src="js/data/ability-fx.js"></script>\n<script defer src="js/data/pkmsvv-ability-text.js"></script>');
 patch('dev.html','<script defer src="js/ui/menu.js"></script>',
  '<script defer src="js/ui/menu.js"></script>\n<script defer src="js/ui/pkmsvv-kecleon-scene.js"></script>\n<script defer src="js/ui/pkmsvv-kecleon-ui.js"></script>');
 // Bilingual UI and separate Bag. Do not import original online/co-op shop UI.
@@ -267,4 +270,6 @@ fs.appendFileSync(path.join(base,'css/style.css'),String.raw`
 .pkmk-dex p{margin:7px 0;line-height:1.45}
 @media(max-width:630px){.pkmk-row{flex-wrap:wrap}.pkmk-row-tail{width:100%;justify-content:flex-start}.pkmk-box{padding:12px}}
 `+'\n');
+fs.appendFileSync(path.join(base,'css','style.css'),
+ '\n.pkmk-ability-benefit{color:#bfe7ff;line-height:1.45;white-space:normal;overflow-wrap:anywhere}\n');
 console.log('PKMSVV: 2026-10-21 Kecleon systems ported with offline save and bilingual UI');
