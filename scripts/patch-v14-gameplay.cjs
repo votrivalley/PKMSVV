@@ -132,9 +132,13 @@ patch('js/systems/gacha.js',
 patch('js/systems/gacha.js',
  "  function pull(save, n, gen = 1, use = 't1') {\n    const cost = costOf(save, n, use);",
  "  function pull(save, n, gen = 1, use = 't1') {\n    if(n===100){\n      if(!costOf(save,100,use))return null;\n      const all=[];\n      for(let j=0;j<10;j++)all.push(...pull(save,10,gen,use));\n      return all;\n    }\n    const cost = costOf(save, n, use);");
+// Read the configured Gacha probability instead of locking the Charm to an old 1/90 rate.
+const shinySource=fs.readFileSync(path.join(game,'js','systems','gacha.js'),'utf8').replace(/\r\n/g,'\n');
+const shinyLine=shinySource.match(/^  const SHINY_RATE = [^\n]+;$/m)?.[0];
+if(!shinyLine)throw Error('v1.4 Gacha rate declaration missing');
 patch('js/systems/gacha.js',
- "  const SHINY_RATE = 1 / 90;",
- "  const SHINY_RATE = 1 / 90;\n  // Shiny Charm: complete one region INCLUDING its legendaries. ALL GEN has no single regional charm.\n  const hasCharm=(save,gen)=>gen>=1&&gen<=9&&G.DEX.filter(p=>p.gen===gen&&G.SPRITE_META[p.dex]).every(p=>!!(save.owned&&save.owned[p.dex]));\n  const shinyRate=(save,gen)=>SHINY_RATE*(hasCharm(save,gen)?2:1);");
+ shinyLine,
+ shinyLine+"\n  // Shiny Charm: complete one region INCLUDING its legendaries. ALL GEN has no single regional charm.\n  const hasCharm=(save,gen)=>gen>=1&&gen<=9&&G.DEX.filter(p=>p.gen===gen&&G.SPRITE_META[p.dex]).every(p=>!!(save.owned&&save.owned[p.dex]));\n  const shinyRate=(save,gen)=>SHINY_RATE*(hasCharm(save,gen)?2:1);");
 patch('js/systems/gacha.js',
  "    const out = [];\n    for (let i = 0; i < n; i++) {",
  "    const out = [];\n    const batchRate=shinyRate(save,gen);\n    for (let i = 0; i < n; i++) {");
