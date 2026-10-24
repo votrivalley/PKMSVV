@@ -52,7 +52,13 @@ test('voice supports the whole Co-op team, plus mic privacy and teammate control
  assert.match(s,/body\.type==='ice'/);
  assert.match(s,/mute.*blocked|blocked\.add\(m\.uid\)/);
  assert.match(s,/slider\.type='range'/);
- assert.match(s,/if\(!ptt\)bar\.append/);
+ assert.match(s,/pkmsvv-voice-mic/);
+ assert.match(s,/pkmsvv-voice-speaker/);
+ assert.match(s,/speakerEnabled/);
+ assert.match(s,/settingsOpen/);
+ assert.match(s,/speaker\.onpointerdown/);
+ assert.match(s,/mic\.onclick=toggleMic/);
+ assert.match(s,/speaker\.onclick=toggleSpeaker/);
  assert.match(s,/e\.code!=='KeyV'/);
  assert.match(s,/window\.addEventListener\('blur'/);
  assert.match(s,/if\(!joined\|\|microphone\|\|micPending\)return/);
@@ -73,7 +79,7 @@ test('voice does not touch microphone when a user declines the opt-in',()=>{
   Coop:{active:false},Net:{open_:true,uid:'a',on(fn){netMessage=fn;},
   onPeer(fn){peerCb=fn;},mode(){return 'direct';},send(to,msg){sent.push({to,msg});},
   toHost(){throw Error('host must not send to host');}}};
- const ctx={G,document,window:{addEventListener(){},setInterval(){}},navigator:{mediaDevices:{
+ const ctx={G,document,setTimeout(fn){return 1;},clearTimeout(){},window:{addEventListener(){},setInterval(){}},navigator:{mediaDevices:{
   async getUserMedia(){requested++;throw Error('must not request microphone');}}},console};
  ctx.RTCPeerConnection=function MockRTCPeerConnection(){};
  vm.runInNewContext(read('src/web/pkmsvv-voice.js'),ctx);
@@ -85,6 +91,12 @@ test('voice does not touch microphone when a user declines the opt-in',()=>{
  G.PKMSVVVoice.start();
  assert.equal(G.PKMSVVVoice.joined,true,'Co-op may opt in');
  assert.equal(requested,0,'joining receive-only should not ask for microphone permission');
+ const micBtn=nodes.find(n=>n.id==='pkmsvv-voice-mic');
+ const speakerBtn=nodes.find(n=>n.id==='pkmsvv-voice-speaker');
+ assert.ok(micBtn&&speakerBtn,'two compact on/off buttons are available');
+ speakerBtn.onclick();
+ assert.equal(requested,0,'speaker toggle must never request microphone');
+ assert.equal(G.PKMSVVVoice.micActive,false,'speaker control cannot secretly unmute microphone');
  assert.equal(sent[0].msg.k,'pkmsvv-voice');
  assert.equal(sent[0].msg.body.type,'hello');
  G.PKMSVVVoice.stop();

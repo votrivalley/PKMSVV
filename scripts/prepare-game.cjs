@@ -572,6 +572,8 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-mission-at
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-orb-achievements.cjs')],{cwd:project,stdio:'inherit'});
 // Updated 5★ Gacha odds & hard pity: shared by Web, PC and Android.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-gacha-legend-100.cjs')],{cwd:project,stdio:'inherit'});
+// Directional movement-based active dash balance shared across Web, Android and PC.
+execFileSync(process.execPath,[path.join(project,'scripts','patch-directional-dashes.cjs')],{cwd:project,stdio:'inherit'});
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-controller-scroll.cjs')],{cwd:project,stdio:'inherit'});
 // Windows and Android remain strictly offline-first: do NOT inject the external
 // browser Online mode switch. The existing native save identity remains unchanged.
