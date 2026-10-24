@@ -58,17 +58,12 @@ patch('js/core/db.js',
  "  /** Firebase pide email: el nombre se codifica en uno interno, único y válido. */",
  "  function readyForCloudRun(){\n    if(mode!=='cloud' || guest)return true;\n    if(!G.PKMSVVSession.active())return false;\n    if(!cloudMissing || uploadConfirmed)return true;\n    const message=G.I18n&&G.I18n.lang==='vi'?\n      'Cloud chưa có save nào. Nếu đã chơi trên máy khác, hãy nhấn Lưu ở máy cũ trước. Chỉ nhấn OK nếu muốn tạo save Cloud đầu tiên từ thiết bị này.':\n      'No Cloud save exists. If you played on another device, save there first. Press OK only to create your first Cloud save on this device.';\n    if(!confirm(message))return false;\n    uploadConfirmed=true;return true;\n  }\n  /** Firebase pide email: el nombre se codifica en uno interno, único y válido. */");
 patch('js/core/db.js',
- "    ready, register, login, loginWithGoogle, playAsGuest, logout, commit, deleteAccount, flush: pushNow, saveNow, refreshCloud,",
- "    ready, register, login, loginWithGoogle, playAsGuest, logout, commit, deleteAccount, flush: pushNow, saveNow, refreshCloud, readyForCloudRun,");
+ "    ready, register, login, loginWithGoogle, playAsGuest, logout, commit, deleteAccount, flush: pushNow, saveNow,",
+ "    ready, register, login, loginWithGoogle, playAsGuest, logout, commit, deleteAccount, flush: pushNow, saveNow, readyForCloudRun,");
 // Sign out only after final cloud write; stop listening before changing auth.
 patch('js/core/db.js',
  "      stopListening();\n      try { await auth.signOut(); }",
  "      stopListening();\n      G.PKMSVVSession.stop();\n      try { await auth.signOut(); }");
-patch('js/core/db.js',
- "    } else if (mode === 'local' && !guest) {",
- "    } else if (mode === 'local' && !guest) {");
-// Above duplicate guard is intentionally replaced below by an actual path
-// check; it remains unique and ensures this script never loads in native.
 patch('js/game.js',
  "  function startRun(coop = null) {\n    holdBy = [];",
  "  function startRun(coop = null) {\n    if(G.DB.mode==='cloud' && !G.DB.readyForCloudRun()){\n      G.UI.toast('Phiên Cloud chưa sẵn sàng. Kiểm tra tài khoản hoặc save trên máy khác.',5000);return;\n    }\n    holdBy = [];");
