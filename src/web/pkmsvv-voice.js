@@ -197,7 +197,7 @@ G.PKMSVVVoice=(()=>{
   microphone=null;
   for(const p of peers.values())p.tx.sender.replaceTrack(null).catch(()=>{});
   track.stop();setTip(tr('Mic đã tắt.','Microphone off.'));
-  if(!speakerEnabled&&!ptt)stop();
+  // Keep receive-only connection up; the Mic and Speaker remain independent.
  }
  function unmuteSound(){
   blockedAudio=false;
@@ -233,7 +233,7 @@ G.PKMSVVVoice=(()=>{
   }else{
    applyVolume();
    setTip(tr('Đã tắt loa đồng đội.','Teammate audio off.'));
-   if(!microphone&&!ptt)stop();
+   // Speaker-off silences all remote tracks without requesting microphone access.
   }
   render();
  }
@@ -262,7 +262,7 @@ G.PKMSVVVoice=(()=>{
   mic.type='button';mic.id='pkmsvv-voice-mic';mic.className='pkmsvv-voice-icon '+(microphone?'is-on':'is-off');
   mic.textContent='🎤';mic.setAttribute('aria-label',microphone?tr('Tắt micro','Mute microphone'):tr('Bật micro','Enable microphone'));
   mic.setAttribute('aria-pressed',String(!!microphone));
-  mic.title=mic.getAttribute('aria-label');
+  mic.title=tr('Chạm để bật/tắt mic','Tap to toggle microphone');
   mic.onclick=toggleMic;mic.disabled=micPending;
   const speaker=document.createElement('button');
   speaker.type='button';speaker.id='pkmsvv-voice-speaker';
