@@ -32,6 +32,16 @@ G.Orbs = (() => {
     { id: 'quick', name: 'Rapidosfera', kind: 'buff', dur: 10, col: '#ffb24d',
       desc: '+40 % de velocidad durante 10 s, para ti y los compañeros cercanos.' }
   ];
+  // SVV: original Mystery Dungeon Orbs, localized without Spanish fallback.
+  const LABELS = {
+    slumber:[['Cầu Ru Ngủ','Slumber Orb'],['Làm ngủ quái thường 4 giây; boss chỉ 1 giây.','Puts normal enemies to sleep for 4s and bosses for 1s.']],
+    slow:[['Cầu Làm Chậm','Slow Orb'],['Giảm tốc độ quái 50% trong 8 giây; boss 20%.','Slows enemies by 50% for 8s, bosses by 20%.']],
+    blowback:[['Cầu Đẩy Lùi','Blowback Orb'],['Đẩy lùi kẻ địch ở gần, boss bị giảm hiệu lực.','Pushes nearby enemies away; weaker against bosses.']],
+    focus:[['Cầu Tập Trung','Focus Orb'],['Tăng 25% tỷ lệ chí mạng cho đồng đội gần trong 15 giây.','Adds 25% critical chance to nearby teammates for 15s.']],
+    luminous:[['Cầu Tầm Nhìn','Luminous Orb'],['Mở rộng góc nhìn 15 giây.','Increases camera view for 15s.']],
+    quick:[['Cầu Tăng Tốc','Quick Orb'],['Tăng 40% tốc độ di chuyển trong 10 giây.','Adds 40% movement speed for 10s.']]
+  };
+  const tr=(id,kind=0)=>{const pair=(LABELS[id]||[])[kind];return pair?pair[G.I18n&&G.I18n.lang==='vi'?0:1]:id;};
   const BY = {};
   for (const o of LIST) BY[o.id] = o;
 
@@ -71,14 +81,14 @@ G.Orbs = (() => {
     const o = BY[id];
     // Su casilla brilla y enseña el nombre unos segundos (hud.js).
     pl.orbNew = { i: bag(pl).findIndex(s => s && s.id === id), at: performance.now() };
-    G.FX.dmgText(pl.x, pl.y - pl.bodyH - 8, G.T(o.name), o.col, true);
+    G.FX.dmgText(pl.x, pl.y - pl.bodyH - 8, tr(id), o.col, true);
     G.FX.ring(pl.x, pl.y, 6, 50, o.col, 0.4, 3);
     if (!seen.has(id)) {
       // La primera vez en la partida: qué hace y cómo se usa.
       seen.add(id);
       const i = bag(pl).findIndex(s => s && s.id === id);
-      const how = G.Pad.name ? G.T('X para usarla') : G.Touch.active ? G.T('tócala encima de tus ataques') : G.I18n.f('tecla {x}', i + 5);
-      G.Spawner.say(G.T(o.name) + ' (' + how + '): ' + G.T(o.desc), 5);
+      const how = G.Pad.name ? (G.I18n&&G.I18n.lang==='vi'?'X để dùng':'Press X') : G.Touch.active ? (G.I18n&&G.I18n.lang==='vi'?'chạm ô Orb':'tap an Orb slot') : ((G.I18n&&G.I18n.lang==='vi'?'phím ':'key ')+(i+5));
+      G.Spawner.say(tr(id) + ' (' + how + '): ' + tr(id,1), 5);
     }
   }
 
@@ -145,7 +155,7 @@ G.Orbs = (() => {
     pl.orbBuff = pl.orbBuff || {};
     if (!(pl.orbBuff[id] > 0)) on(pl, id);
     pl.orbBuff[id] = o.dur;
-    G.FX.dmgText(pl.x, pl.y - pl.bodyH - 8, G.T(o.name), o.col, true);
+    G.FX.dmgText(pl.x, pl.y - pl.bodyH - 8, tr(id), o.col, true);
   }
   function on(pl, id) {
     if (id === 'focus') pl.critChance += 0.25;
