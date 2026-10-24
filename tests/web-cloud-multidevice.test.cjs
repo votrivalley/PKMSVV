@@ -41,7 +41,9 @@ test('Fresh device reads authoritative Cloud and cannot overwrite unsynced old d
   firestore:Object.assign(firestore,{FieldValue:{serverTimestamp:()=>({})}})
  };
  const ctx={
-  G:{FIREBASE_CONFIG:{apiKey:'mock',projectId:'pkmsvv-b84d2'},I18n:{lang:'vi'}},
+  G:{FIREBASE_CONFIG:{apiKey:'mock',projectId:'pkmsvv-b84d2'},I18n:{lang:'vi'},
+    GlobalPower:{legacyLedger:()=>({}),clean:x=>x||{},cleanLedger:x=>x||{},merge:(a,b)=>Object.assign({},b||{},a||{}),LIST:[]},
+    PKMSVVSkillTrack:{progress:s=>({marks:s.pkmsvvSkillMarks||{}}),merge:(a,b)=>Object.assign({},b||{},a||{})}},
   firebase,location:{protocol:'https:',hostname:'pkmsvv-b84d2.web.app'},
   document:{createElement(){return {async:true,onload:null,onerror:null};},
     head:{appendChild(el){setImmediate(()=>el.onload());}}},
