@@ -564,6 +564,8 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-gameplay.c
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-gamepad-orbs.cjs')],{cwd:project,stdio:'inherit'});
 // Final v1.4 revision: intuitive FIFO Orb, chapter storyline and readable title.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-orb-fifo.cjs')],{cwd:project,stdio:'inherit'});
+// The pinned upstream enemy.js lacks sleep; install the effect before bundling.
+execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-orb-effects.cjs')],{cwd:project,stdio:'inherit'});
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-orb-visuals.cjs')],{cwd:project,stdio:'inherit'});
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-story-chapters.cjs')],{cwd:project,stdio:'inherit'});
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-title-readability.cjs')],{cwd:project,stdio:'inherit'});
