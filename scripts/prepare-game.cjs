@@ -318,7 +318,7 @@ patch('js/ui/news-ui.js',
   "    const text = pair => G.I18n.lang === 'vi' ? pair[0] : pair[1];");
 // v1.2 title credit and changelog button are bilingual, not i18n fragments.
 patch('js/ui/news-ui.js', "    b.innerHTML = G.Icons.html('book', 18) + ' <span>Novedades</span><i class=\"dot\"></i>';",
-  "    b.innerHTML = G.Icons.html('book', 18) + ' <span translate=\"no\">' + (G.I18n.lang === 'vi' ? 'Có gì mới: 1.2.1' : \"What's New: 1.2.1\") + '</span><i class=\"dot\"></i>';\n    const splash = typeof document === 'undefined' ? null : document.querySelector('#scr-menu .splash');\n    if (splash) splash.textContent = G.I18n.lang === 'vi' ? 'Việt hóa và Mod điều chỉnh bởi Votri Valley' : 'Localized and modded by Votri Valley';");
+  "    b.innerHTML = G.Icons.html('book', 18) + ' <span translate=\"no\">' + (G.I18n.lang === 'vi' ? 'Có gì mới: 1.4' : \"What's New: 1.4\") + '</span><i class=\"dot\"></i>';\n    const splash = typeof document === 'undefined' ? null : document.querySelector('#scr-menu .splash');\n    if (splash) splash.textContent = G.I18n.lang === 'vi' ? 'Việt hóa và Mod điều chỉnh bởi Votri Valley' : 'Localized and modded by Votri Valley';");
 // Same-date releases still show the unread indicator after an earlier version.
 patch('js/ui/news-ui.js', "  const latest = () => (G.CHANGELOG[0] || {}).d || '';",
   "  const latest = () => { const v = G.CHANGELOG[0] || {}; return (v.d || '') + '|' + ((v.title || [])[1] || ''); };");
