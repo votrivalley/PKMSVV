@@ -22,11 +22,20 @@ replaceOnce(
 replaceOnce(
  "  function unlock() {\n    if (!init()) return;",
  "  function unlock() {\n    if (pkmsvvAudioBackground || document.hidden) return;\n    if (!init()) return;");
-replaceOnce(
- "    el.play().catch((err) => {",
- "    // Never start a freshly selected track while the app is minimized.\n"+
- "    if (pkmsvvAudioBackground || document.hidden) return;\n"+
- "    el.play().catch((err) => {");
+// There are two el.play() sites (initial song + retry). Patch ONLY the one
+// located inside startCustomMusic, never the recovery path.
+{
+ const songStart=source.indexOf('  function startCustomMusic(name) {');
+ const songEnd=source.indexOf('  /** Cambia de tema',songStart);
+ const playback='    el.play().catch((err) => {';
+ const pos=source.indexOf(playback,songStart);
+ if(songStart<0||songEnd<0||pos<songStart||pos>=songEnd)
+  throw Error('Background audio patch: custom song playback site changed');
+ source=source.slice(0,pos)+
+   '    // Defer fresh music starts until the window is foregrounded.\\n'+
+   '    if (pkmsvvAudioBackground || document.hidden) return;\\n'+
+   source.slice(pos);
+}
 replaceOnce(
  "  function ensureMusic() {\n    if (!wanted) return;",
  "  function ensureMusic() {\n    if (pkmsvvAudioBackground || document.hidden || !wanted) return;");
