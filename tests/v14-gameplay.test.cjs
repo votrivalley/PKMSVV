@@ -199,6 +199,10 @@ test('The bundled enemy implementation supports real sleep and clear visual feed
  assert.match(source,/sleepT = 0/);
  assert.match(source,/this.sleepT > 0/);
  assert.match(source,/fillText\('Zz'/);
+ const combat=read('vendor/pokesurvivor/js/systems/combat.js');
+ assert.match(combat,/e\.sleepT > 0/,'Sleeping enemies must not deal contact damage');
+ const coop=read('vendor/pokesurvivor/js/net/coop.js');
+ assert.match(coop,/e\.sleepT > 0 \? 16 : 0/,'Co-op must replicate sleeping status');
  const loops=[];
  const G={Camera:{sees:()=>true},World:{isLiquid:()=>false,collide:()=>{}},Weather:{speedFor:()=>1}};
  vm.runInNewContext(source,{G,Math,Date,performance:{now:()=>1000}});
