@@ -4,7 +4,7 @@
  *
  *   4 huecos, hasta 3 de cada esfera. Si no te cabe, se queda en el suelo.
  *   Se usan con 5-8, tocando su casilla del HUD o con X (usar) / Y (cambiar) en el mando.
- *   1 s de recarga entre una y otra.
+ *   5 s de recarga entre una y otra.
  *
  * Dos clases:
  *   foe   a los enemigos (dormir, frenar, empujar). En cooperativo las aplica el
@@ -14,32 +14,32 @@
  * A los jefes y legendarios les afectan menos.
  */
 G.Orbs = (() => {
-  const SLOTS = 4, STACK = 3, CD = 1;
+  const SLOTS = 4, STACK = 3, CD = 5;
   const NEAR = 384;                 // "media pantalla" (G.Camera.VIEW_W / 2)
   const PUSH = 1700, PUSH_R = 240;  // la Rafagaesfera los lleva a ~1/3 de pantalla
 
   const LIST = [
     { id: 'slumber', name: 'Soporesfera', kind: 'foe', col: '#b39bff',
-      desc: 'Duerme a los enemigos de la pantalla 4 s (a los jefes, 1 s).' },
+      desc: 'Duerme a los enemigos 3 s (jefes 0,5 s).' },
     { id: 'slow', name: 'Ralentosfera', kind: 'foe', col: '#5fd0ff',
-      desc: 'Los enemigos de la pantalla van un 50 % más lentos durante 8 s (los jefes, un 20 %).' },
+      desc: 'Enemigos 40 % más lentos 6 s (jefes 15 %).' },
     { id: 'blowback', name: 'Rafagaesfera', kind: 'foe', col: '#9ff0c0',
       desc: 'Lanza lejos a los enemigos que tienes cerca (a los jefes, la mitad).' },
-    { id: 'focus', name: 'Focosfera', kind: 'buff', dur: 15, col: '#ff6f7d',
-      desc: '+25 % de crítico durante 15 s, para ti y los compañeros cercanos.' },
+    { id: 'focus', name: 'Focosfera', kind: 'buff', dur: 12, col: '#ff6f7d',
+      desc: '+15 % de crítico durante 12 s, para ti y compañeros cercanos.' },
     { id: 'luminous', name: 'Luminosfera', kind: 'buff', dur: 15, col: '#ffe680',
       desc: 'Ves más campo (la cámara se aleja) durante 15 s, tú y los compañeros cercanos.' },
-    { id: 'quick', name: 'Rapidosfera', kind: 'buff', dur: 10, col: '#ffb24d',
-      desc: '+40 % de velocidad durante 10 s, para ti y los compañeros cercanos.' }
+    { id: 'quick', name: 'Rapidosfera', kind: 'buff', dur: 8, col: '#ffb24d',
+      desc: '+25 % de velocidad durante 8 s, para ti y compañeros cercanos.' }
   ];
   // SVV: original Mystery Dungeon Orbs, localized without Spanish fallback.
   const LABELS = {
-    slumber:[['Cầu Ru Ngủ','Slumber Orb'],['Làm ngủ quái thường 4 giây; boss chỉ 1 giây.','Puts normal enemies to sleep for 4s and bosses for 1s.']],
-    slow:[['Cầu Làm Chậm','Slow Orb'],['Giảm tốc độ quái 50% trong 8 giây; boss 20%.','Slows enemies by 50% for 8s, bosses by 20%.']],
+    slumber:[['Cầu Ru Ngủ','Slumber Orb'],['Làm ngủ quái thường 3 giây; boss chỉ 0,5 giây.','Puts normal enemies to sleep for 3s and bosses for 0.5s.']],
+    slow:[['Cầu Làm Chậm','Slow Orb'],['Giảm tốc độ quái 40% trong 6 giây; boss 15%.','Slows enemies by 40% for 6s, bosses by 15%.']],
     blowback:[['Cầu Đẩy Lùi','Blowback Orb'],['Đẩy lùi kẻ địch ở gần, boss bị giảm hiệu lực.','Pushes nearby enemies away; weaker against bosses.']],
-    focus:[['Cầu Tập Trung','Focus Orb'],['Tăng 25% tỷ lệ chí mạng cho đồng đội gần trong 15 giây.','Adds 25% critical chance to nearby teammates for 15s.']],
+    focus:[['Cầu Tập Trung','Focus Orb'],['Tăng 15 điểm % tỷ lệ chí mạng cho đồng đội gần trong 12 giây.','Adds 15 percentage points of critical chance to nearby teammates for 12s.']],
     luminous:[['Cầu Tầm Nhìn','Luminous Orb'],['Mở rộng góc nhìn 15 giây.','Increases camera view for 15s.']],
-    quick:[['Cầu Tăng Tốc','Quick Orb'],['Tăng 40% tốc độ di chuyển trong 10 giây.','Adds 40% movement speed for 10s.']]
+    quick:[['Cầu Tăng Tốc','Quick Orb'],['Tăng 25% tốc độ di chuyển trong 8 giây.','Adds 25% movement speed for 8s.']]
   };
   const tr=(id,kind=0)=>{const pair=(LABELS[id]||[])[kind];return pair?pair[G.I18n&&G.I18n.lang==='vi'?0:1]:id;};
   const BY = {};
@@ -134,7 +134,7 @@ G.Orbs = (() => {
     ring(id, x, y);
     const hw = G.Camera.VIEW_W / 2 * z + 60, hh = G.Camera.MIN_VIEW_H * 0.75 * z + 60;
     for (const e of G.EnemyMgr.all()) {
-      if (e.dead || e.remote) continue;
+      if (e.dead || e.remote || e.arceus) continue;
       const dx = e.x - x, dy = e.y - y, big = e.boss || e.legend || e.judge;
       if (id === 'blowback') {
         if (dx * dx + dy * dy > PUSH_R * PUSH_R) continue;
@@ -143,8 +143,8 @@ G.Orbs = (() => {
         continue;
       }
       if (Math.abs(dx) > hw || Math.abs(dy) > hh) continue;
-      if (id === 'slumber') e.applySleep(big ? 1 : 4);
-      else if (id === 'slow') e.applySlow(big ? 0.2 : 0.5, 8);
+      if (id === 'slumber') e.applySleep(big ? 0.5 : 3);
+      else if (id === 'slow') e.applySlow(big ? 0.85 : 0.6, 6);
     }
   }
 
@@ -158,13 +158,13 @@ G.Orbs = (() => {
     G.FX.dmgText(pl.x, pl.y - pl.bodyH - 8, tr(id), o.col, true);
   }
   function on(pl, id) {
-    if (id === 'focus') pl.critChance += 0.25;
-    else if (id === 'quick') pl.spdMul *= 1.4;
+    if (id === 'focus') pl.critChance += 0.15;
+    else if (id === 'quick') pl.spdMul *= 1.25;
     else if (id === 'luminous') G.Camera.zoomTo = 1.35;
   }
   function off(pl, id) {
-    if (id === 'focus') pl.critChance -= 0.25;
-    else if (id === 'quick') pl.spdMul /= 1.4;
+    if (id === 'focus') pl.critChance -= 0.15;
+    else if (id === 'quick') pl.spdMul /= 1.25;
     else if (id === 'luminous') G.Camera.zoomTo = 1;
   }
 
