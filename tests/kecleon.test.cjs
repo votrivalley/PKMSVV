@@ -120,10 +120,14 @@ test('Pokédex Ability details explain real gameplay effects in Vietnamese/Engli
  assert.match(v.summary('levitate',G.DEX_BY[25],{},false),/dung nham/);
  assert.match(v.summary('sturdy',G.DEX_BY[25],{},false),/90 giây/);
  assert.match(v.summary('static',G.DEX_BY[25],{generic:true},false),/Điện/);
+ assert.match(v.summary('static',G.DEX_BY[25],{},false),/50%.*2,5 giây/);
+ assert.match(v.summary('blaze',G.DEX_BY[25],{},false),/1\/3 HP.*35%/);
+ assert.match(v.summary('strong-jaw',G.DEX_BY[25],{},true),/30% damage/);
+ assert.match(v.summary('cursed-body',G.DEX_BY[25],{},false),/30%/);
  assert.equal(v.summary('huge-power',G.DEX_BY[25],{},true),'+50% physical damage');
  // All explicitly-implemented Abilities in the original engine must be described.
  const engine=read('src/kecleon/upstream/data/ability-fx.js');
- const keys=[...engine.matchAll(/^\s*'([^']+)': \{ d:/gm)].map(m=>m[1]);
+  const keys=[...engine.matchAll(/'([a-z][a-z0-9-]+)'\s*:\s*(?:\{|pinch\(|boost\(|byName\(|rush\(|summon\(|absorb\(|contact\(|steady(?:,|\s*\}))/g)].map(m=>m[1]);
  for(const id of keys)assert.ok(v.BY[id],'Missing real-effect translation for '+id);
  for(const id of ['libero','pure-power'])assert.ok(v.BY[id]);
  assert.match(read('src/kecleon/pkmsvv-kecleon-ui.js'),/pkmk-ability-benefit/);
