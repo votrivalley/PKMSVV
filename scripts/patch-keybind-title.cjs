@@ -48,7 +48,7 @@ patch('js/ui/settings-ui.js',
  "    if(tab==='ctl')drawBindings(box);\n"+
  "  }\n\n"+
  "  const bindings = "+JSON.stringify(spec)+";\n"+
- "  const labels={up:'Đi lên',down:'Đi xuống',left:'Sang trái',right:'Sang phải',dash:'Kỹ năng chủ động',pause:'Tạm dừng',card1:'Lá bài 1',card2:'Lá bài 2',card3:'Lá bài 3'};\n"+
+ "  const labels={up:'Đi lên',down:'Đi xuống',left:'Sang trái',right:'Sang phải',dash:'Kỹ năng chủ động',pause:'Tạm dừng',card1:'Thẻ skill 1',card2:'Thẻ skill 2',card3:'Thẻ skill 3'};\n"+
  "  let editing=null, waiting=null;\n"+
  "  const nameKey=k=>({space:'Space',escape:'Esc',arrowup:'↑',arrowdown:'↓',arrowleft:'←',arrowright:'→'}[k]||k.replace(/^key/,'').replace(/^digit/,'').replace(/^numpad/,'Num '));\n"+
  "  const keysCurrent=()=>Object.assign({},G.Input.DEFAULT_KEYS,G.Settings.get('keys')||{});\n"+

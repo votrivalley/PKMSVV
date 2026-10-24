@@ -78,3 +78,11 @@ test('all related controller fixes are included in the compiled bundle',()=>{
  assert.match(html,/id="dex-play-now"/);
  assert.match(load('js/app.min.js'),/PKMSVVPadFlow|pkmsvv-pad-flow/);
 });
+
+const fsPkm=require('node:fs'),pathPkm=require('node:path');
+test('keyboard skill card labels use a clear name while keeping physical bindings',()=>{
+ const source=fsPkm.readFileSync(pathPkm.join(__dirname,'../scripts/patch-keybind-title.cjs'),'utf8');
+ for(const n of [1,2,3]) assert.match(source,new RegExp("card"+n+":'Thẻ skill "+n+"'"));
+ assert.doesNotMatch(source,/card1:'Lá bài 1'/);
+ assert.match(source,/card1:'digit1'/);
+});

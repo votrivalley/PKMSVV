@@ -22,7 +22,7 @@ test('native mode choice keeps existing saves and Web edition stays separate',()
  assert.match(p,/không tự đồng bộ với Google/);
  assert.match(src,/sessionStorage/);
  assert.doesNotMatch(src,/localStorage\.(?:setItem|removeItem|clear)/);
- assert.match(prep,/PKMSVV_BUILD_TARGET/);
- assert.match(prep,/patch-native-online\.cjs/);
+ assert.doesNotMatch(prep,/execFileSync\([^\n]*patch-native-online\.cjs/);
+ assert.match(prep,/strictly offline-first/);
  assert.match(web,/PKMSVV_BUILD_TARGET='web'/);
 });

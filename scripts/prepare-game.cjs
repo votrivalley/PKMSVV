@@ -557,8 +557,8 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-story.cjs')],{
 // Keep nature/buff UI patch last, after all native and Web menu patches.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-nature-buff.cjs')],{cwd:project,stdio:'inherit'});
 execFileSync(process.execPath,[path.join(project,'scripts','patch-dex-buff-layer.cjs')],{cwd:project,stdio:'inherit'});
-// Native-only choice; hosted Web builds are not affected.
-if(process.env.PKMSVV_BUILD_TARGET!=='web')execFileSync(process.execPath,[path.join(project,'scripts','patch-native-online.cjs')],{cwd:project,stdio:'inherit'});
+// Windows and Android remain strictly offline-first: do NOT inject the external
+// browser Online mode switch. The existing native save identity remains unchanged.
 execFileSync(process.execPath, [path.join(game, 'tools', 'build.js'), '--sin-seo', '--expose'], { cwd: game, stdio: 'inherit' });
 
 const indexPath = path.join(game, 'index.html');
