@@ -74,6 +74,7 @@ const notesFile=path.join(game,'js','data','changelog.js');
 fs.appendFileSync(notesFile,'\n'+fs.readFileSync(path.join(root,'src','pkmsvv-changelog-v13-web.js'),'utf8'),'utf8');
 // v1.4 follows v1.3 but must appear first in What's New without duplicating notes.
 fs.appendFileSync(notesFile,"\nconst i14=G.CHANGELOG.findIndex(x=>(x.title||[])[0]?.includes('v1.4'));if(i14>0)G.CHANGELOG.unshift(G.CHANGELOG.splice(i14,1)[0]);\n",'utf8');
+fs.appendFileSync(notesFile,'\n'+fs.readFileSync(path.join(root,'src','web','pkmsvv-voice-changelog.js'),'utf8'),'utf8');
 const uiNewsPath=path.join(game,'js','ui','news-ui.js');
 let uiNews=fs.readFileSync(uiNewsPath,'utf8');
 if(!uiNews.includes('Có gì mới: 1.4')||!uiNews.includes("What's New: 1.4"))throw Error('Web news v1.4 label missing');
