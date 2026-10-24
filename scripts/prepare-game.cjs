@@ -307,6 +307,8 @@ fs.appendFileSync(path.join(game,'js','data','changelog.js'),
   '\n' + fs.readFileSync(path.join(project,'src','pkmsvv-changelog-v12.js'),'utf8'),'utf8');
 fs.appendFileSync(path.join(game,'js','data','changelog.js'),
   '\n' + fs.readFileSync(path.join(project,'src','pkmsvv-changelog-v121.js'),'utf8'),'utf8');
+fs.appendFileSync(path.join(game,'js','data','changelog.js'),
+  '\n' + fs.readFileSync(path.join(project,'src','pkmsvv-changelog-v14.js'),'utf8'),'utf8');
 // Upstream news renderer assumes its first language is Spanish. PKMSVV release
 // entries are explicitly [Vietnamese, English]; choose the correct text instead
 // of feeding approved release notes through automatic fragment translation.
@@ -557,6 +559,8 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-story.cjs')],{
 // Keep nature/buff UI patch last, after all native and Web menu patches.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-nature-buff.cjs')],{cwd:project,stdio:'inherit'});
 execFileSync(process.execPath,[path.join(project,'scripts','patch-dex-buff-layer.cjs')],{cwd:project,stdio:'inherit'});
+// v1.4: milestone battles, Arceus scoring, Mystery Dungeon Orbs, regional Charms and ×100 Gacha.
+execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-gameplay.cjs')],{cwd:project,stdio:'inherit'});
 // Windows and Android remain strictly offline-first: do NOT inject the external
 // browser Online mode switch. The existing native save identity remains unchanged.
 execFileSync(process.execPath, [path.join(game, 'tools', 'build.js'), '--sin-seo', '--expose'], { cwd: game, stdio: 'inherit' });
