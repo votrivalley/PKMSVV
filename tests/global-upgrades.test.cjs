@@ -203,3 +203,37 @@ test('compiled game honors flying water immunity and applies account-wide move p
  const js=fs.readFileSync(path.join(base,'js/app.min.js'),'utf8');
  assert.match(js,/pkmGlobalScaled/);
 });
+
+// Movement immunity is visual/physical rather than tied only to Pokémon typing.
+test('winged and levitating species cross water without bypassing environmental hazards',()=>{
+ const src=fs.readFileSync(path.join(root,'scripts','patch-power015.cjs'),'utf8');
+ const match=src.match(/const HOVER_DEX = Object\.freeze\(\[([\s\S]*?)\]\);/);
+ assert.ok(match,'curated National Dex hover set must be present');
+ const ids=new Set((match[1].replace(/\/\/[^\n]*/g,'').match(/\d+/g)||[]).map(Number));
+ for(const id of [15,49,251,269,313,314,330,385,479,494,615,742,743,804,873,994]){
+   assert.ok(ids.has(id),'airborne species #'+id+' should not be slowed');
+ }
+ for(const id of [1,4,25,133,445]){
+   assert.ok(!ids.has(id),'grounded species #'+id+' still obey terrain slowdown');
+ }
+ assert.match(src,/G\.PKMSVVWaterHoverDex\.has\(this\.dex\)/);
+ // Pokémon evolution mutates the live Dex number; terrain must use the new form.
+ const evo=fs.readFileSync(path.join(root,'src','pkmsvv-evolution.js'),'utf8');
+ assert.match(evo,/pl\.mon = after; pl\.dex = after\.dex;/);
+ const base=path.join(root,'vendor','pokesurvivor');
+ if(!fs.existsSync(path.join(base,'index.html')))return;
+ const player=fs.readFileSync(path.join(base,'js/entities/player.js'),'utf8');
+ assert.match(player,/G\.PKMSVVWaterHoverDex = new Set/);
+ assert.match(player,/!G\.PKMSVVWaterHoverDex\.has\(this\.dex\)/);
+ const sandbox={G:{World:{liquidEffect:()=>({slow:0.6})},Weather:{speedFor:()=>1},Judgment:{active:false}}};
+ vm.runInNewContext(player,sandbox);
+ const pl=Object.create(sandbox.G.Player.prototype);
+ Object.assign(pl,{dex:251,mon:{types:['psychic','grass']},baseSpd:100,spdMul:1,buffs:{spd:{n:0,amount:0}},slowT:0,inLiquid:true});
+ assert.equal(pl.spd,100,'Celebi should float over water');
+ pl.dex=385;pl.mon.types=['steel','psychic'];
+ assert.equal(pl.spd,100,'Jirachi should float over water');
+ pl.dex=25;pl.mon.types=['electric'];
+ assert.equal(pl.spd,60,'Pikachu is slowed by water');
+ pl.inLiquid=false;
+ assert.equal(pl.spd,100,'normal terrain is unchanged');
+});
