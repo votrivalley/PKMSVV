@@ -44,25 +44,43 @@ test('run-only fullscreen rescue shows in match, never toggles out',async()=>{
  assert.match(attrs['aria-label'],/Khôi phục toàn màn hình/);
  await G.PKMSVVFullRestore.restore();
  assert.equal(fullscreenRequests,1);
+ assert.equal(btn().hidden,true,'hide restore button immediately after entering fullscreen');
  await G.PKMSVVFullRestore.restore();
  assert.equal(fullscreenRequests,1,'must NOT exit fullscreen when already fullscreen');
  G.Coop.active=true;G.PKMSVVFullRestore.sync();
+ assert.equal(btn().hidden,true,'no in-match button while already fullscreen, even in Co-op');
+ document.fullscreenElement=null;G.PKMSVVFullRestore.sync();
+ assert.equal(btn().hidden,false,'show only when fullscreen is lost');
  assert.ok(cssClasses.has('pkmsvv-full-restore-coop'),'button shifts beside team voice in Co-op');
+ document.fullscreenElement={};G.PKMSVVFullRestore.sync();
+ assert.equal(btn().hidden,true,'hide again once fullscreen is restored externally');
  G.Game.state='over';G.PKMSVVFullRestore.sync();
  assert.equal(btn().hidden,true,'button disappears after ending a run');
  G.Game.state='playing';G.Coop.active=false;document.fullscreenElement=null;
- window.Capacitor={Plugins:{PKMSVVScreen:{toggle:async ({enabled})=>{nativeToggles++;assert.equal(enabled,true);}}}};
- G.PKMSVVFullRestore.sync();
- await G.PKMSVVFullRestore.restore();
- assert.equal(nativeToggles,1,'Android always re-asserts immersive mode after chat overlay');
+ const flush=()=>new Promise(resolve=>setImmediate(resolve));
+ let androidFullscreen=false;
+ window.Capacitor={Plugins:{PKMSVVScreen:{
+  state:async()=>({enabled:true,fullscreen:androidFullscreen}),
+  toggle:async ({enabled})=>{nativeToggles++;assert.equal(enabled,true);androidFullscreen=true;}
+ }}};
+ G.PKMSVVFullRestore.sync();await flush();
+ assert.equal(btn().hidden,false,'Android must detect actual bars despite stored immersive=true');
+ await G.PKMSVVFullRestore.restore();await flush();
+ assert.equal(nativeToggles,1,'Android reasserts immersive mode after chat overlay');
+ assert.equal(btn().hidden,true,'Android hides button after immersive recovery');
  assert.equal(fullscreenRequests,1,'native Android should not use browser fullscreen');
  delete window.Capacitor;
- window.PKMSVVNative={isFullscreen:async()=>({fullscreen:true}),toggleFullscreen:async()=>{nativeToggles++;}};
+ let desktopFullscreen=true;
+ window.PKMSVVNative={isFullscreen:async()=>({fullscreen:desktopFullscreen}),toggleFullscreen:async()=>{nativeToggles++;desktopFullscreen=true;}};
+ G.PKMSVVFullRestore.sync();await flush();
+ assert.equal(btn().hidden,true,'Windows is already fullscreen');
  await G.PKMSVVFullRestore.restore();
  assert.equal(nativeToggles,1,'Windows fullscreen button must not toggle off');
- window.PKMSVVNative.isFullscreen=async()=>({fullscreen:false});
- await G.PKMSVVFullRestore.restore();
+ desktopFullscreen=false;G.PKMSVVFullRestore.sync();await flush();
+ assert.equal(btn().hidden,false,'Windows shows button after leaving fullscreen');
+ await G.PKMSVVFullRestore.restore();await flush();
  assert.equal(nativeToggles,2,'Windows can restore from windowed mode');
+ assert.equal(btn().hidden,true,'Windows hides button after restore');
  assert.equal(lastToast,'');
 });
 
