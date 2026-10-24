@@ -577,6 +577,8 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-gacha-legend-1
 // Directional movement-based active dash balance shared across Web, Android and PC.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-directional-dashes.cjs')],{cwd:project,stdio:'inherit'});
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-controller-scroll.cjs')],{cwd:project,stdio:'inherit'});
+// Remove obsolete Pokémon-specific shortcut picker and saved slot forcing.
+execFileSync(process.execPath,[path.join(project,'scripts','patch-remove-move-shortcuts.cjs')],{cwd:project,stdio:'inherit'});
 // Windows and Android remain strictly offline-first: do NOT inject the external
 // browser Online mode switch. The existing native save identity remains unchanged.
 execFileSync(process.execPath, [path.join(game, 'tools', 'build.js'), '--sin-seo', '--expose'], { cwd: game, stdio: 'inherit' });
