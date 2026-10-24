@@ -128,13 +128,95 @@ test('Orb controls cannot affect Arceus and boss debuffs remain modest',t=>{
   EnemyMgr:{all:()=>[enemy,arceus]},FX:{ring(){},dmgText(){}},Audio:{sfx(){}}};
  vm.runInNewContext(read(file),{G,Math,Date});
  G.Orbs.foe('slumber',0,0,1);assert.equal(effects.sleep[0],3);
- G.Orbs.foe('slow',0,0,1);assert.equal(effects.slow[0][0],.6);
+ G.Orbs.foe('slow',0,0,1);assert.equal(effects.slow[0][0],.4);
  assert.equal(effects.slow[0][1],6);
  const pickup=read('vendor/pokesurvivor/js/entities/pickup.js');
  assert.match(pickup,/runOrbDrops<10&&Math\.random\(\)<0\.45/);
  assert.match(pickup,/runOrbDrops<10&&Math\.random\(\)<0\.03/);
  assert.match(pickup,/G\.Orbs\.canTake\(o,p\.value\)/);
  assert.match(pickup,/function clear\(\) \{ list = \[\]; runOrbDrops = 0; \}/);
+});
+
+test('All six Orbs activate without Camera.zoom and buffs expire correctly',()=>{
+ const effects={sleep:[],slow:[],knock:0};
+ const near={x:30,y:0,dead:false,remote:false,boss:false,kx:0,ky:0,
+  applySleep(t){effects.sleep.push(t);},applySlow(f,t){effects.slow.push([f,t]);}};
+ const boss={x:70,y:0,dead:false,remote:false,boss:true,kx:0,ky:0,
+  applySleep(t){effects.sleep.push(t);},applySlow(f,t){effects.slow.push([f,t]);}};
+ const far={x:10000,y:0,dead:false,remote:false,kx:0,ky:0,
+  applySleep(){throw Error('Out-of-range enemy slept');},
+  applySlow(){throw Error('Out-of-range enemy slowed');}};
+ const cam={VIEW_W:768,MIN_VIEW_H:420,w:768,h:420,scale:1,dpr:1,
+  resize(cssW,cssH){this.scale=Math.min(cssW/this.VIEW_W,cssH/this.MIN_VIEW_H);
+   this.w=cssW/this.scale;this.h=cssH/this.scale;}};
+ const G={Camera:cam,Game:{state:'playing'},Coop:{active:false},
+  I18n:{lang:'vi'},EnemyMgr:{all:()=>[near,boss,far]},
+  U:{pick:a=>a[0],norm:(x,y)=>{const d=Math.hypot(x,y)||1;return [x/d,y/d];}},
+  FX:{ring(){},dmgText(){}},Audio:{sfx(){}}};
+ // Critical regression: pinned source defines NO Camera.zoom property.
+ assert.equal(cam.zoom,undefined);
+ vm.runInNewContext(read('src/v14/orbs.js'),{G,Math,Date});
+ const p={x:0,y:0,bodyH:20,slots:Array.from({length:8},()=>[]),
+  maxMoves:8,dead:false,critChance:.1,spdMul:1};
+ for(const def of G.Orbs.LIST)assert.equal(G.Orbs.add(p,def.id),true);
+ assert.equal(G.Orbs.useNext(p),true,'Slumber activates without camera.zoom');
+ assert.deepEqual(effects.sleep,[3,.5]);
+ G.Orbs.update(5.01,p);
+ assert.equal(G.Orbs.useNext(p),true);
+ assert.deepEqual(effects.slow,[[.4,6],[.15,6]]);
+ G.Orbs.update(5.01,p);
+ assert.equal(G.Orbs.useNext(p),true,'Blowback activates');
+ assert.ok(near.kx>0&&boss.kx>0&&boss.kx<near.kx);
+ assert.equal(far.kx,0);
+ G.Orbs.update(5.01,p);
+ assert.equal(G.Orbs.useNext(p),true,'Focus activates');
+ assert.ok(Math.abs(p.critChance-.25)<1e-9);
+ G.Orbs.update(5.01,p);
+ assert.equal(G.Orbs.useNext(p),true,'Luminous activates');
+ assert.equal(cam.VIEW_W,768*1.35);
+ assert.ok(cam.w>768,'Luminous actually widens the visible world');
+ G.Orbs.update(5.01,p);
+ assert.equal(G.Orbs.useNext(p),true,'Quick activates');
+ assert.ok(Math.abs(p.spdMul-1.25)<1e-9);
+ G.Orbs.update(20,p);
+ assert.ok(Math.abs(p.critChance-.1)<1e-9);
+ assert.equal(p.spdMul,1);
+ assert.equal(cam.VIEW_W,768,'Camera reset after Luminous Orb expiration');
+ assert.equal(cam.MIN_VIEW_H,420);
+ G.Orbs.reset();
+ assert.equal(cam.VIEW_W,768,'New run restores default field of view');
+});
+test('The bundled enemy implementation supports real sleep and clear visual feedback',t=>{
+ const file='vendor/pokesurvivor/js/entities/enemy.js';
+ assert.match(read('scripts/prepare-game.cjs'),/patch-v14-orb-effects.cjs/);
+ const patch=read('scripts/patch-v14-orb-effects.cjs');
+ assert.match(patch,/applySleep\(dur\)/);
+ assert.match(patch,/this.sleepT > 0/);
+ assert.match(patch,/e.sleepT > 0 \? 16 : 0/);
+ if(!fs.existsSync(path.join(root,file))){t.skip('Pinned game has not been prepared yet');return;}
+ const source=read(file);
+ assert.match(source,/applySleep\(dur\)/);
+ assert.match(source,/sleepT = 0/);
+ assert.match(source,/this.sleepT > 0/);
+ assert.match(source,/fillText\('Zz'/);
+ const loops=[];
+ const G={Camera:{sees:()=>true},World:{isLiquid:()=>false,collide:()=>{}},Weather:{speedFor:()=>1}};
+ vm.runInNewContext(source,{G,Math,Date,performance:{now:()=>1000}});
+ const e=Object.create(G.Enemy.prototype);
+ Object.assign(e,{dead:false,remote:false,arceus:false,x:50,y:20,
+  kx:0,ky:0,bodyH:20,shiny:false,flash:0,touchCd:0,rd:0,bob:0,
+  slow:0,slowT:0,burn:0,poison:0,stunT:0,shield:0,
+  anim:{loop:a=>loops.push(a),update(){}},sleepT:0});
+ e.applySleep(3);
+ assert.equal(e.sleepT,3);
+ e.update(.5,{level:1,x:80,y:20});
+ assert.equal(e.x,50,'Sleeping enemy cannot pursue the player');
+ assert.equal(e.sleepT,2.5);
+ assert.equal(loops.at(-1),'Idle');
+ e.applySleep(.5);assert.equal(e.sleepT,2.5,'Shorter sleep cannot truncate remaining duration');
+ e.applySleep(4);assert.equal(e.sleepT,4,'Repeated sleep refreshes duration');
+ e.arceus=true;e.sleepT=0;e.applySleep(3);
+ assert.equal(e.sleepT,0,'Arceus remains immune');
 });
 
 test('Guaranteed first Orb spawns only at eight learned skills and only once per run',()=>{
