@@ -52,8 +52,8 @@ G.PKMSVVCollectUI=(()=>{
    const line=[];
    for(let gen=1;gen<=9;gen++){
      const species=G.DEX.filter(p=>p.gen===gen&&G.SPRITE_META[p.dex]);
-     const owned=species.filter(p=>s.owned[p.dex]).length;
-     const complete=!!species.length&&G.Gacha.hasCharm(s,gen);
+     const owned=species.filter(p=>(s.owned||{})[p.dex]).length;
+     const complete=!!species.length&&!!G.Gacha&&typeof G.Gacha.hasCharm==='function'&&G.Gacha.hasCharm(s,gen);
      line.push('<span class="'+(complete?'pkm-medal-on':'')+'" title="'+owned+'/'+species.length+' Pokémon">'+
        (complete?'✨ ':'🔒 ')+REGIONS[gen-1]+' '+owned+'/'+species.length+'</span>');
    }
@@ -61,7 +61,8 @@ G.PKMSVVCollectUI=(()=>{
      '<p>'+L('Sưu tập đủ Pokémon của một Gen (kể cả huyền thoại) để tăng gấp đôi tỉ lệ Shiny khi Gacha Gen đó.',
       'Own every Pokémon in a region (including legendaries) to double Shiny odds on that regional banner.')+
      '</p><div class="pkm-stamp-grid">'+line.join('')+'</div>';
-   block.appendChild(charm);
+   // Keep a single container for existing mission UI and lightweight test DOMs.
+   block.innerHTML += charm.outerHTML || ('<section class="pkm-guide pkmsvv-v14-charms">'+charm.innerHTML+'</section>');
    box.appendChild(block);
    action(block,'[data-pkm-claim]',el=>{
      if(!G.PKMSVVCollect.claim(s,el.dataset.pkmClaim))return;
