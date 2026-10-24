@@ -41,6 +41,12 @@ patch('js/core/db.js',
 patch('js/core/db.js',
  "    get syncState() { return syncState; },",
  "    get syncState() { return syncState; },\n    get cloudOrigin() { return cloudOrigin; },");
+// The visible Save button MUST snapshot gameplay state even if an add-on
+// changed a property without calling commit(). Otherwise saveNow() may say
+// "Already saved" although there is new progress in memory.
+patch('js/ui/ui.js',
+ "      const r = await G.DB.saveNow();",
+ "      if(G.DB.mode==='cloud' && !G.DB.guest)G.DB.commit(true);\n      const r = await G.DB.saveNow();");
 // Show why a new device has no progress, without changing game state.
 patch('js/game.js',
  "  afterLogin() {\n    G.Audio.music('village');",
