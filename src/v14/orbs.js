@@ -16,6 +16,20 @@ G.Orbs=(()=>{
  const BY=Object.fromEntries(LIST.map(o=>[o.id,o]));
  const vi=()=>G.I18n&&G.I18n.lang==='vi',tr=p=>p[vi()?0:1];
  let cd=0,seen=new Set(),unlockedRun=false,firstDrops=new WeakSet();
+ let visionBase=null;
+ // Unlike zoomTo (which the pinned game's Camera never consumes), resize()
+ // actually changes the visible world area on PC, mobile and Switch.
+ function vision(mult){
+  const c=G.Camera;
+  if(!c||!Number.isFinite(c.VIEW_W)||!Number.isFinite(c.MIN_VIEW_H))return;
+  if(!visionBase)visionBase={w:c.VIEW_W,h:c.MIN_VIEW_H};
+  const cssW=c.w*c.scale,cssH=c.h*c.scale;
+  c.VIEW_W=visionBase.w*mult;
+  c.MIN_VIEW_H=visionBase.h*mult;
+  if(typeof c.resize==='function'&&Number.isFinite(cssW)&&cssW>0&&Number.isFinite(cssH)&&cssH>0)
+   c.resize(cssW,cssH,c.dpr||1);
+  c.zoomTo=mult;
+ }
  const queue=p=>p.orbs||(p.orbs=[]);
  const ready=p=>!!(p&&p.slots&&p.maxMoves>=8&&p.slots.length>=8);
  const eligible=p=>ready(p)||!!(p&&p.net&&p.net.orbReady===1);
@@ -49,7 +63,10 @@ G.Orbs=(()=>{
  function ring(id,x,y,r=240){if(G.FX)G.FX.ring(x,y,10,r,BY[id].col,.6,5);}
  function foe(id,x,y,z=1){
   ring(id,x,y);
-  const hw=G.Camera.VIEW_W/2*z+60,hh=G.Camera.MIN_VIEW_H*.75*z+60;
+  const zoom=Number.isFinite(z)&&z>0?Math.min(z,2):1;
+  const cw=Number.isFinite(G.Camera.w)&&G.Camera.w>0?G.Camera.w:G.Camera.VIEW_W;
+  const ch=Number.isFinite(G.Camera.h)&&G.Camera.h>0?G.Camera.h:G.Camera.MIN_VIEW_H;
+  const hw=(cw||768)/2*zoom+60,hh=(ch||420)/2*zoom+60;
   for(const e of G.EnemyMgr.all()){
    if(e.dead||e.remote||e.arceus)continue;
    const dx=e.x-x,dy=e.y-y,big=e.boss||e.legend||e.judge;
@@ -59,7 +76,7 @@ G.Orbs=(()=>{
     e.kx+=nx*PUSH*(big?.4:1);e.ky+=ny*PUSH*(big?.4:1);
    }else if(Math.abs(dx)<=hw&&Math.abs(dy)<=hh){
     if(id==='slumber')e.applySleep(big?.5:3);
-    else if(id==='slow')e.applySlow(big?.85:.6,6);
+    else if(id==='slow')e.applySlow(big?.15:.4,6);
    }
   }
  }
@@ -68,7 +85,7 @@ G.Orbs=(()=>{
   if(!(pl.orbBuff[id]>0)){
    if(id==='focus')pl.critChance+=.15;
    else if(id==='quick')pl.spdMul*=1.25;
-   else if(id==='luminous')G.Camera.zoomTo=1.35;
+   else if(id==='luminous')vision(1.35);
   }
   // Refresh a buff rather than stacking bonuses on a second use.
   pl.orbBuff[id]=o.dur;
@@ -85,7 +102,7 @@ G.Orbs=(()=>{
    if(G.Progress&&G.Progress.checkAch)G.Progress.checkAch();
   }
   cd=CD;if(G.Audio)G.Audio.sfx('confirm');
-  const z=G.Camera.zoom;
+  const z=Number.isFinite(G.Camera.zoom)&&G.Camera.zoom>0?G.Camera.zoom:1;
   if(o.kind==='foe'){
    if(!G.Coop.active||G.Coop.isHost)foe(id,pl.x,pl.y,z);
    else ring(id,pl.x,pl.y);
@@ -108,11 +125,11 @@ G.Orbs=(()=>{
   if(pl){notifyUnlock(pl);const b=pl.orbBuff;if(b)for(const id in b)if(b[id]>0&&(b[id]-=dt)<=0){
    if(id==='focus')pl.critChance-=.15;
    else if(id==='quick')pl.spdMul/=1.25;
-   else if(id==='luminous')G.Camera.zoomTo=1;
+   else if(id==='luminous')vision(1);
    b[id]=0;
   }}
  }
- function reset(){cd=0;seen.clear();unlockedRun=false;firstDrops=new WeakSet();if(G.Camera)G.Camera.zoomTo=1;}
+ function reset(){cd=0;seen.clear();unlockedRun=false;firstDrops=new WeakSet();vision(1);}
  function onMateUse(p,id,x,y,z){
   if(!eligible(p)||!BY[id]||!take(p,id))return false;
   if(BY[id].kind==='foe')foe(id,x,y,z);else nearBuff(id,x,y);
