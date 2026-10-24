@@ -87,7 +87,7 @@ G.Orbs = (() => {
       // La primera vez en la partida: qué hace y cómo se usa.
       seen.add(id);
       const i = bag(pl).findIndex(s => s && s.id === id);
-      const how = G.Pad.name ? (G.I18n&&G.I18n.lang==='vi'?'X để dùng':'Press X') : G.Touch.active ? (G.I18n&&G.I18n.lang==='vi'?'chạm ô Orb':'tap an Orb slot') : ((G.I18n&&G.I18n.lang==='vi'?'phím ':'key ')+(i+5));
+      const how = G.Pad.name ? (G.PKMSVVPadOrb.describe('use') + (G.I18n&&G.I18n.lang==='vi'?' để dùng':' to use')) : G.Touch.active ? (G.I18n&&G.I18n.lang==='vi'?'chạm ô Orb':'tap an Orb slot') : ((G.I18n&&G.I18n.lang==='vi'?'phím ':'key ')+(i+5));
       G.Spawner.say(tr(id) + ' (' + how + '): ' + tr(id,1), 5);
     }
   }
