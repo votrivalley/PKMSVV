@@ -1,0 +1,40 @@
+    // SVV: FIFO Orb queue, separate from skills; no item-selection controls.
+    if(G.Orbs && G.Orbs.ready(pl) && G.Game.state==='playing'){
+      const orbq=pl.orbs||[];
+      const paintOrb=(x,y,size,id,primary=false)=>{
+        const orb=id&&G.Orbs.BY[id];
+        roundRect(ctx,x,y,size,size,10);
+        ctx.fillStyle=orb?'rgba(19,33,57,.95)':'rgba(9,19,34,.8)';ctx.fill();
+        ctx.lineWidth=primary?2.5:1.4;ctx.strokeStyle=orb?orb.col:'#60778e';ctx.stroke();
+        ctx.textAlign='center';ctx.font=F(800,size>=42?20:15);
+        ctx.fillStyle=orb?orb.col:'#7691a7';
+        ctx.fillText(orb?'✦':'·',x+size/2,y+size*.61);
+        if(primary && orb){
+          ctx.font=F(700,9);ctx.fillStyle='#ffedab';ctx.fillText('ORB',x+size/2,y+11);
+          if(G.Orbs.cd>0){ctx.fillStyle='rgba(0,0,0,.45)';ctx.fillRect(x+3,y+size-10,size-6,7);
+            ctx.fillStyle='#ffdd80';ctx.fillRect(x+3,y+size-10,(size-6)*(1-G.Orbs.cd/5),7);}
+        }
+      };
+      if(touch){
+        const sa=G.Touch.safeArea(),dp=G.Touch.spot('dash'),ds=64;
+        const dx=dp?G.U.clamp(dp[0]*w-ds/2,4,Math.max(4,w-ds-4)):w-90-sa.right;
+        const dy=dp?G.U.clamp(dp[1]*h-ds/2,4,Math.max(4,h-ds-4)):h-174-sa.bottom;
+        const bs=49,bx=dx+ds+9+bs<=w-5?dx+ds+9:Math.max(5,dx-bs-9);
+        const by=G.U.clamp(dy+(ds-bs)/2,5,h-bs-5);
+        paintOrb(bx,by,bs,orbq[0],true);
+        if(orbq.length>1){ctx.fillStyle='#ffdd8d';ctx.font=F(800,12);ctx.fillText('+'+(orbq.length-1),bx+bs-8,by+bs-4);}
+        if(orbq.length)G.Touch.addButton(bx,by,bs,bs,()=>G.Orbs.useNext(pl),5);
+      }else{
+        const widths=[49,39,32],gap=10,sum=widths.reduce((a,b)=>a+b,0)+gap*2;
+        const bx=G.U.clamp((w-sum)/2,6,Math.max(6,w-sum-6)),by=Math.max(8,sy-118);
+        let ox=bx;
+        for(let i=0;i<3;i++){
+          const size=widths[i],id=i<2?orbq[i]:null;
+          paintOrb(ox,by+(widths[0]-size)/2,size,id,i===0);
+          if(i===2&&orbq.length>2){ctx.font=F(800,12);ctx.fillStyle='#ffdc8a';
+            ctx.fillText('+'+(orbq.length-2),ox+size/2,by+(widths[0]-size)/2+size*.60);}
+          ox+=size+gap;
+        }
+        if(orbq.length)G.Touch.addButton(bx,by,49,49,()=>G.Orbs.useNext(pl),3);
+      }
+    }
