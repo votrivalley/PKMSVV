@@ -62,7 +62,7 @@ test('manual dash touch button and controller hints replace old attack cycling',
 test('Votri Valley derivative credit is visible on boot and main menu',()=>{
  const html=file('index.html');
  assert.match(html,/Việt hóa và Mod điều chỉnh bởi Votri Valley/);
- assert.match(html,/class="splash" translate="no">Việt hóa và Mod điều chỉnh bởi Votri Valley/);
+ assert.match(html,/class="splash pkmsvv-credit" translate="no">Việt hóa và Mod điều chỉnh bởi Votri Valley/);
  assert.doesNotMatch(html,/class="pkmsvv-attribution"/);
  assert.match(html,/class="pkmsvv-boot-credit"/);
  assert.match(html,/Pokémon Sống Sót/);
