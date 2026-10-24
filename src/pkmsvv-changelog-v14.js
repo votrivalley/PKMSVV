@@ -22,6 +22,7 @@ G.CHANGELOG.unshift({
   ['Meteor Mash giảm sát thương cơ bản 34 → 24, phạm vi 54 → 48 và lực đẩy 80 → 70.','Meteor Mash base damage reduced 34 → 24, radius 54 → 48 and knockback 80 → 70.']
  ],
  fix:[
+  ['Mystery Orb: thay dấu sao tạm bằng 6 sprite màu riêng. Khi vừa học đủ 8 kỹ năng trong trận, bảo đảm một Orb đầu tiên xuất hiện gần nhân vật; quả này tính vào giới hạn 10 Orb/trận.','Mystery Orbs: replaced placeholder stars with six distinct colored sprites. After learning all eight skills in a run, one first Orb is guaranteed near the character and counts toward the 10-Orb limit.'],
   ['Tinh gọn tay cầm: Y dùng Orb đầu hàng chờ, X dùng kỹ năng chủ động; bỏ nút chuyển Orb. Có thể gán lại hai nút trong Cài đặt → Điều khiển.','Simplified controller mapping: Y uses the first queued Orb and X triggers the active skill; removed Orb switching. Remap both under Settings → Controls.'],
   ['Orb chỉ tồn tại trong trận, UI tối đa 3 ô xem trước trên PC hoặc 1 nút cạnh kỹ năng chủ động trên điện thoại; người chưa đủ 8 kỹ năng không thể nhặt Orb trong Co-op.','Orbs are run-only: three compact desktop queue indicators or one mobile button beside the active skill; in Co-op only players with eight learned skills can collect them.'],
   ['Giữ riêng tiến trình Offline trên PC/Android và Cloud Save một tài khoản/một phiên trên Web Online.','Offline PC/Android progress stays separate from the single-session Web Online Cloud Save.']
