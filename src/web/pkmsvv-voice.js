@@ -156,6 +156,12 @@ G.PKMSVVVoice=(()=>{
   render();
  }
  function stop(){closeAll();}
+ function reconnect(){
+  if(!joined||!allowed())return;
+  for(const uid of [...peers.keys()])closePeer(uid);
+  for(const uid of members())greet(uid);
+  tip=tr('Đang kết nối lại thoại…','Reconnecting voice…');render();
+ }
  async function micOn(){
   if(!joined||microphone||micPending)return;
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
@@ -224,6 +230,7 @@ G.PKMSVVVoice=(()=>{
    return;
   }
   bar.append(button(tr('Rời thoại','Leave voice'),stop,'ghost'));
+  bar.append(button(tr('↻ Thử lại','↻ Retry'),reconnect,'ghost'));
   if(!ptt)bar.append(button(microphone?tr('🔴 Tắt mic','🔴 Mute mic'):tr('🎤 Bật mic','🎤 Enable mic'),
    ()=>microphone?micOff():micOn(),microphone?'gold':''));
   else {const status=document.createElement('span');status.className='pkmsvv-voice-ptt-status';status.textContent=tr('Giữ V để nói','Hold V to talk');bar.append(status);}
@@ -279,5 +286,5 @@ G.PKMSVVVoice=(()=>{
   window.setInterval(render,1500);
   render();
  }
- return {init,start,stop,micOn,micOff,unmuteSound,get joined(){return joined;},get micActive(){return !!microphone;}};
+ return {init,start,stop,reconnect,micOn,micOff,unmuteSound,get joined(){return joined;},get micActive(){return !!microphone;}};
 })();
