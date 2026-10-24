@@ -167,7 +167,9 @@ G.PKMSVVStory=(()=>{
    delete img.dataset.revealFallback;
    img.src=imagePath;
   }
-  img.alt=tr(key==='eyes'?'Bóng người trước đôi mắt bí ẩn giữa bầu trời sao':
+  img.alt=key==='chapter2-orbs'?tr('Vòng phép sáng lên, Mystery Orbs trỗi dậy giữa đêm','Eight powers awaken as the Mystery Orbs rise into the night'):
+    key==='chapter2-shadow'?tr('Bóng trắng bí ẩn xuất hiện trong chính khung cảnh Mystery Orbs','A mysterious white shadow appears in the same Mystery Orb scene'):
+    tr(key==='eyes'?'Bóng người trước đôi mắt bí ẩn giữa bầu trời sao':
               key==='gate'?'Bóng người trước cổng ánh sáng giữa bầu trời sao':
               'Cổng ánh sáng rộng mở, chờ Pokémon thức tỉnh',
              key==='eyes'?'A lone soul beneath mysterious eyes in the starry sky':
