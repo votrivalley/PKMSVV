@@ -37,61 +37,59 @@ test('Gacha ×100 is 10 guaranteed ten-pulls; specific Gen completion doubles sh
  assert.equal(G.Gacha.shinyRate(s,1),2/90);
  assert.equal(G.Gacha.hasCharm(s,0),false);
 });
-test('Orbs are run-only, four fixed slots, stacks of three and reset effects',t=>{
+test('Orbs are unlocked per player at eight learned skills and used FIFO',t=>{
  const file='vendor/pokesurvivor/js/systems/orbs.js';
  if(!fs.existsSync(path.join(root,file))){t.skip('Pinned game not prepared');return;}
- const G={Camera:{zoomTo:1},I18n:{lang:'vi'},U:{pick:a=>a[0]}};
- vm.runInNewContext(read(file),{G,Math,Date,performance:{now:()=>0}});
+ const G={Camera:{zoom:1,zoomTo:1},I18n:{lang:'vi'},U:{pick:a=>a[0]},
+  Game:{state:'playing'},Coop:{active:false},FX:{ring(){},dmgText(){}},Audio:{sfx(){}}};
+ vm.runInNewContext(read(file),{G,Math,Date});
+ const pl={x:0,y:0,bodyH:30,dead:false,maxMoves:8,slots:[],critChance:.1,spdMul:1};
  assert.equal(G.Orbs.LIST.length,6);
- assert.equal(G.Orbs.SLOTS,4);assert.equal(G.Orbs.STACK,3);
- const pl={};
+ assert.equal(G.Orbs.MAX,10);
+ assert.equal(G.Orbs.canTake(pl,'focus'),false,'cannot collect with less than 8 learned skills');
+ pl.slots=new Array(8).fill([]);
+ assert.equal(G.Orbs.ready(pl),true);
  assert.equal(G.Orbs.add(pl,'focus'),true);
- assert.equal(G.Orbs.add(pl,'focus'),true);
- assert.equal(G.Orbs.add(pl,'focus'),true);
- assert.equal(G.Orbs.add(pl,'focus'),false);
- assert.equal(pl.orbs[0].n,3);
- assert.equal(G.Orbs.take(pl,'focus'),true);
- assert.equal(pl.orbs[0].n,2);
- G.Orbs.reset();assert.equal(G.Camera.zoomTo,1);
-});
-test('Orb controls cannot spam boss lock or impact invincible Arceus',t=>{
- const src=read('src/v14/orbs.js');
- assert.match(src,/SLOTS = 4, STACK = 3, CD = 5/);
- assert.match(src,/e\.dead \|\| e\.remote \|\| e\.arceus/);
- const runtime='vendor/pokesurvivor/js/systems/orbs.js';
- if(!fs.existsSync(path.join(root,runtime))){t.skip('Pinned game not prepared');return;}
- const effects={sleep:[],slow:[]};
- const normal={x:10,y:20,dead:false,remote:false,boss:false,applySleep(v){effects.sleep.push(v);},applySlow(v,d){effects.slow.push([v,d]);}};
- const arceus={x:20,y:30,dead:false,remote:false,arceus:true,boss:true,
-  applySleep(){throw Error('Arceus cannot be slept');},
-  applySlow(){throw Error('Arceus cannot be slowed');}};
- const G={
-  I18n:{lang:'vi'},U:{pick:a=>a[0]},Game:{state:'playing'},Coop:{active:false},
-  Camera:{VIEW_W:768,MIN_VIEW_H:432,zoom:1,zoomTo:1},
-  EnemyMgr:{all:()=>[normal,arceus]},
-  FX:{ring(){},dmgText(){}},Audio:{sfx(){}}
- };
- vm.runInNewContext(read(runtime),{G,Math,Date,performance:{now:()=>0}});
- const pl={x:0,y:0,dead:false,bodyH:20,critChance:0.1,spdMul:1};
- G.Orbs.add(pl,'focus');
- G.Orbs.use(pl,0);
+ assert.equal(G.Orbs.add(pl,'quick'),true);
+ assert.equal(G.Orbs.add(pl,'slow'),true);
+ assert.equal(pl.orbs[0],'focus');
+ assert.equal(pl.orbs[1],'quick');
+ assert.equal(G.Orbs.take(pl,'quick'),false,'cannot take a future Orb first');
+ assert.equal(G.Orbs.useNext(pl),true);
+ assert.equal(pl.orbs[0],'quick');
  assert.equal(G.Orbs.cd,5);
- assert.ok(Math.abs(pl.critChance-0.25)<1e-8);
+ assert.ok(Math.abs(pl.critChance-.25)<1e-8);
+ assert.equal(G.Orbs.useNext(pl),false,'5-second cooldown must block rapid consumption');
  G.Orbs.update(12.1,pl);
- assert.ok(Math.abs(pl.critChance-0.1)<1e-8,'no permanent crit stacking');
- G.Orbs.add(pl,'quick');
- G.Orbs.use(pl,0);
+ assert.ok(Math.abs(pl.critChance-.1)<1e-8,'buff cannot accumulate forever');
+ assert.equal(G.Orbs.useNext(pl),true);
  assert.equal(pl.spdMul,1.25);
  G.Orbs.update(8.1,pl);
- assert.equal(pl.spdMul,1,'no permanent speed multiplier');
- G.Orbs.foe('slumber',0,0,1);
- assert.equal(effects.sleep[0],3);
- G.Orbs.foe('slow',0,0,1);
- assert.equal(effects.slow[0][0],0.6);
+ assert.equal(pl.spdMul,1);
+ for(let i=0;i<9;i++)G.Orbs.add(pl,'quick');
+ assert.ok(pl.orbs.length<=10,'queue at most ten picked Orbs');
+ G.Orbs.reset();assert.equal(G.Camera.zoomTo,1);
+});
+test('Orb controls cannot affect Arceus and boss debuffs remain modest',t=>{
+ const file='vendor/pokesurvivor/js/systems/orbs.js';
+ if(!fs.existsSync(path.join(root,file))){t.skip('Pinned game not prepared');return;}
+ const effects={sleep:[],slow:[]};
+ const enemy={x:10,y:20,dead:false,remote:false,boss:false,
+  applySleep(v){effects.sleep.push(v);},applySlow(v,d){effects.slow.push([v,d]);}};
+ const arceus={x:20,y:30,dead:false,remote:false,arceus:true,boss:true,
+  applySleep(){throw Error('Arceus cannot be slept');},applySlow(){throw Error('Arceus cannot be slowed');}};
+ const G={I18n:{lang:'vi'},U:{pick:a=>a[0],norm:()=>[1,0]},
+  Game:{state:'playing'},Coop:{active:false},
+  Camera:{VIEW_W:768,MIN_VIEW_H:432,zoom:1,zoomTo:1},
+  EnemyMgr:{all:()=>[enemy,arceus]},FX:{ring(){},dmgText(){}},Audio:{sfx(){}}};
+ vm.runInNewContext(read(file),{G,Math,Date});
+ G.Orbs.foe('slumber',0,0,1);assert.equal(effects.sleep[0],3);
+ G.Orbs.foe('slow',0,0,1);assert.equal(effects.slow[0][0],.6);
  assert.equal(effects.slow[0][1],6);
  const pickup=read('vendor/pokesurvivor/js/entities/pickup.js');
  assert.match(pickup,/runOrbDrops<10&&Math\.random\(\)<0\.45/);
  assert.match(pickup,/runOrbDrops<10&&Math\.random\(\)<0\.0015/);
+ assert.match(pickup,/G\.Orbs\.canTake\(o,p\.value\)/);
  assert.match(pickup,/function clear\(\) \{ list = \[\]; runOrbDrops = 0; \}/);
 });
 
@@ -111,34 +109,21 @@ test('Milestones fire once at minutes 10 and 20, then Judgment at minute 30',()=
  G.PKMSVV14.update(1800,[G.Game.player]);assert.equal(spawned.length,2);
  G.PKMSVV14.reset();G.PKMSVV14.update(600,[G.Game.player]);assert.equal(spawned.length,3);
 });
-test('Controller Orb controls: Y use, B select, X Dash, unique remappable buttons',t=>{
- const mapSrc=read('src/v14/pad-orb-map.js');
- let saved=null;
- const G={I18n:{lang:'vi'},Settings:{get:key=>saved,set:(key,v)=>{saved=v;} }};
- vm.runInNewContext(mapSrc,{G,Number,Set});
- const ctl=G.PKMSVVPadOrb;
- assert.equal(ctl.describe('dash'),'X / □');
- assert.equal(ctl.describe('use'),'Y / △');
- assert.equal(ctl.describe('next'),'B / ○');
- assert.equal(ctl.valid({dash:2,use:2,next:1}),false,'dash and Orb use cannot overlap');
- assert.equal(ctl.valid({dash:10,use:11,next:1}),true);
- saved={dash:10,use:11,next:1};
- assert.equal(ctl.bindings().use,11);
- assert.equal(ctl.bindings().dash,10);
- saved={dash:2,use:2,next:1};
- assert.equal(ctl.bindings().use,3,'invalid saved mapping falls back safely');
- assert.match(read('scripts/prepare-game.cjs'),/patch-v14-gamepad-orbs\.cjs/);
+test('Controller uses Y to spend first queued Orb and X for Dash',t=>{
+ const G={I18n:{lang:'vi'},Settings:{get(){return null;},set(){}}};
+ vm.runInNewContext(read('src/v14/pad-orb-map.js'),{G,Number,Set});
+ assert.equal(G.PKMSVVPadOrb.describe('dash'),'X / □');
+ assert.equal(G.PKMSVVPadOrb.describe('use'),'Y / △');
+ assert.equal(G.PKMSVVPadOrb.valid({dash:2,use:2}),false);
+ assert.equal(G.PKMSVVPadOrb.valid({dash:10,use:11}),true);
  const file='vendor/pokesurvivor/js/core/gamepad.js';
  if(!fs.existsSync(path.join(root,file))){t.skip('Pinned game not prepared');return;}
- const pad=read(file),game=read('vendor/pokesurvivor/js/game.js'),
-  settings=read('vendor/pokesurvivor/js/ui/settings-ui.js');
+ const pad=read(file),game=read('vendor/pokesurvivor/js/game.js');
  assert.match(pad,/hit\(orbital\.dash\).*virtual\('keyf'\)/);
  assert.match(pad,/hit\(orbital\.use\).*virtual\('pkmsvv-orb-use'\)/);
- assert.match(pad,/hit\(orbital\.next\).*virtual\('pkmsvv-orb-next'\)/);
- assert.match(game,/G\.Input\.tap\('pkmsvv-orb-use'\).*G\.Orbs\.useSelected/);
- assert.match(game,/G\.Input\.tap\('pkmsvv-orb-next'\).*G\.Orbs\.next/);
- assert.match(settings,/G\.PKMSVVPadOrb\.mount\(box\)/);
- assert.doesNotMatch(game,/G\.Input\.tap\('padx'\)/);
+ assert.doesNotMatch(pad,/orbital\.next/);
+ assert.match(game,/G\.Input\.tap\('pkmsvv-orb-use'\).*G\.Orbs\.useNext/);
+ assert.doesNotMatch(game,/G\.Input\.tap\('pkmsvv-orb-next'\)/);
 });
 
 test('Web build implements Arceus damage tracking and Meteor Mash balance',t=>{
