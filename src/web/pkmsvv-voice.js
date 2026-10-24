@@ -14,7 +14,8 @@ G.PKMSVVVoice=(()=>{
  const allowed=()=>{const r=room();return !!(r&&r.id&&r.mode!=='royale'&&r.members&&r.members.length<=4&&G.Net&&G.Net.open_);};
  const members=()=>{const r=room();return r?r.members.map(m=>m.uid):[];};
  const own=()=>G.Net&&G.Net.uid;
- const activeView=()=>!!(allowed()&&((G.UI&&G.UI.isOpen('scr-lobby'))||(G.Coop&&G.Coop.active)));
+ // Voice controls belong to a live Co-op run, never the lobby or menus.
+ const activeView=()=>!!(allowed()&&G.Coop&&G.Coop.active&&G.Game&&G.Game.state!=='ui'&&G.Game.state!=='over');
  function setTip(s){
   tip=s;clearTimeout(toastTimer);
   toastTimer=setTimeout(()=>{tip='';render();},2400);
