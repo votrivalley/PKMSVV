@@ -21,12 +21,11 @@ patch('js/ui/social-ui.js',
  "        const dot = f.status !== 'ok' ? 'pend' : 'on';",
  "        const dot = f.status !== 'ok' ? 'pend' : (G.PKMSVVOnline&&G.PKMSVVOnline.isOnline(f.uid)?'on':'off');");
 patch('js/ui/social-ui.js',
- "          el.innerHTML = `<i class="dot on"></i><b translate="no">${esc(f.name)}</b><span class="grow"></span>`;",
- "          el.innerHTML = `<i class="dot ${G.PKMSVVOnline&&G.PKMSVVOnline.isOnline(f.uid)?'on':'off'}"></i><b translate="no">${esc(f.name)}</b><span class="grow"></span>`;");
+ "          el.innerHTML = `<i class=\"dot on\"></i><b translate=\"no\">${esc(f.name)}</b><span class=\"grow\"></span>`;",
+ "          el.innerHTML = `<i class=\"dot ${G.PKMSVVOnline&&G.PKMSVVOnline.isOnline(f.uid)?'on':'off'}\"></i><b translate=\"no\">${esc(f.name)}</b><span class=\"grow\"></span>`;");
 fs.copyFileSync(path.join(root,'src','web','pkmsvv-coop-repair.js'),path.join(game,'js','ui','pkmsvv-coop-repair.js'));
 patch('dev.html',
- '<script defer src="js/ui/pkmsvv-multiplayer-ui.js"></script>',
- '<script defer src="js/ui/pkmsvv-multiplayer-ui.js"></script>
+ '<script defer src="js/ui/pkmsvv-multiplayer-ui.js"></script>\n<script defer src="js/ui/pkmsvv-coop-repair.js"></script>');
 <script defer src="js/ui/pkmsvv-coop-repair.js"></script>');
 const css="\n.fr-row .dot.off{background:#7d8797!important;box-shadow:none!important}\n#pkmsvv-coop-retry{min-height:39px;padding:8px 13px;white-space:normal;margin-top:10px}\n#pkmsvv-coop-retry.pad-focus{outline:3px solid #ffe27a!important;outline-offset:3px!important}\n#lobby-note{line-height:1.5;max-width:100%;overflow-wrap:break-word}\n";
 fs.appendFileSync(path.join(game,'css','style.css'),css,'utf8');
