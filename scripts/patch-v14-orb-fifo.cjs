@@ -9,8 +9,8 @@ patch('js/entities/pickup.js',
  "      if (plain) return;\n      if(runOrbDrops<10&&Math.random()<0.45)",
  "      if (plain) return;\n      if((G.Coop.active?G.Coop.players().some(G.Orbs.eligible):G.Orbs.ready(G.Game.player))&&runOrbDrops<10&&Math.random()<0.45)");
 patch('js/entities/pickup.js',
- "    if(runOrbDrops<10&&Math.random()<0.0015)",
- "    if((G.Coop.active?G.Coop.players().some(G.Orbs.eligible):G.Orbs.ready(G.Game.player))&&runOrbDrops<10&&Math.random()<0.0015)");
+ "    if(runOrbDrops<10&&Math.random()<0.03)",
+ "    if((G.Coop.active?G.Coop.players().some(G.Orbs.eligible):G.Orbs.ready(G.Game.player))&&runOrbDrops<10&&Math.random()<0.03)");
 patch('js/entities/pickup.js',
  "        if (o.dead && players.length > 1) continue;",
  "        if (o.dead && players.length > 1) continue;\n        if(p.kind==='orb'&&!G.Orbs.canTake(o,p.value))continue;");
