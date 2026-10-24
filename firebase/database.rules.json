@@ -40,6 +40,15 @@
         ".write": "auth != null && ((!data.exists() && newData.child('host').val() === auth.uid) || (data.child('host').val() === auth.uid && (!newData.exists() || newData.child('host').val() === auth.uid)))",
         ".validate": "!newData.exists() || (newData.hasChildren(['host','name','mode','open','size','at']) && newData.child('host').val() === auth.uid && newData.child('name').isString() && newData.child('name').val().length <= 24 && (newData.child('mode').val() === 'coop' || newData.child('mode').val() === 'royale') && newData.child('open').isBoolean() && newData.child('size').isNumber() && newData.child('size').val() >= 1 && newData.child('size').val() <= 10 && newData.child('at').isNumber())"
       }
+    },
+    "presenceLive": {
+      ".read": "auth != null",
+      "$uid": {
+        "$token": {
+          ".write": "auth != null && auth.uid === $uid && $token.matches(/^[a-f0-9]{48}$/)",
+          ".validate": "newData.isNumber()"
+        }
+      }
     }
   }
 }
