@@ -30,6 +30,16 @@ function createWindow() {
   });
   mainWindow = win;
 
+  // Native fail-safe: renderer visibility callbacks can be throttled when
+  // minimized. Mute Electron's output immediately without changing the
+  // player's saved music/SFX mute preferences.
+  const syncBackgroundMute = () => {
+    if (win.isDestroyed() || win.webContents.isDestroyed()) return;
+    win.webContents.setAudioMuted(win.isMinimized() || !win.isVisible() || !win.isFocused());
+  };
+  for (const event of ['minimize','restore','blur','focus','hide','show'])
+    win.on(event, syncBackgroundMute);
+
   // Online content, CDN, Firebase, sockets and other web endpoints are blocked.
   // Local game assets, data: and blob: URLs still work.
   const blocker = ({ url }, done) => {
