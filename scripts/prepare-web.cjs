@@ -126,6 +126,7 @@ fs.writeFileSync(dbFile, db);
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-cloud-safe.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-cloud-multidevice.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-exclusive-session.cjs')], { cwd: root, stdio: 'inherit' });
+execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-online-counter.cjs')], { cwd: root, stdio: 'inherit' });
 const flow = path.join(game, 'js', 'game.js');
 replaceOnce(flow, 'setTimeout(() => this.afterLogin(), 0);',
   "setTimeout(() => { " +
