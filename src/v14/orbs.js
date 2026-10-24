@@ -3,7 +3,7 @@
  * y se pierden al acabarla: no se guardan ni tocan la nube.
  *
  *   4 huecos, hasta 3 de cada esfera. Si no te cabe, se queda en el suelo.
- *   Se usan con 5-8, tocando su casilla del HUD o con X (usar) / Y (cambiar) en el mando.
+ *   Se usan con 5-8, tocando su casilla del HUD o con Y (usar) / B (cambiar) en el mando (personalizable).
  *   5 s de recarga entre una y otra.
  *
  * Dos clases:
@@ -116,7 +116,7 @@ G.Orbs = (() => {
     if (G.Coop.active && G.Coop.orbUsed) G.Coop.orbUsed(id, pl.x, pl.y, z);
   }
 
-  /** Mando: Y pasa a la siguiente esfera que tengas, X usa la elegida. */
+  /** Mando: B pasa a la siguiente esfera, Y usa la elegida (por defecto). */
   function next(pl) {
     const inv = bag(pl);
     for (let k = 1; k <= SLOTS; k++) if (inv[(sel + k) % SLOTS]) { sel = (sel + k) % SLOTS; G.Audio.sfx('click'); return; }
