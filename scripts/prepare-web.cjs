@@ -63,6 +63,7 @@ execFileSync(process.execPath, [path.join(root, 'scripts', 'prepare-game.cjs')],
 // Generate the same Sống Sót icon assets as Windows and Android (including the web PWA).
 execFileSync(process.execPath, [path.join(root, 'scripts', 'generate-icons.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-multiplayer.cjs')], { cwd: root, stdio: 'inherit' });
+execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-rtc-stability.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-coop-reconnect.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-multiplayer-hub.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-retro-web.cjs')], { cwd: root, stdio: 'inherit' });
