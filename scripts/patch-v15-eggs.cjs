@@ -32,7 +32,7 @@ patch('js/entities/player.js',
  '    this.hp -= d;',
  '    const shield=Math.max(0,Number(this.pkmsvvShield)||0),absorbed=Math.min(shield,d);\n'+
  '    this.pkmsvvShield=shield-absorbed;\n'+
- '    this.hp -= d-absorbed;');
+ '    this.hp -= d-absorbed;\n    if(!this.remote)G.PKMSVVEggs?.onHurt?.(d-absorbed);');
 fs.appendFileSync(path.join(game,'css','style.css'),`
 /* v1.5 egg-team replacement keeps active companions user-controlled. */
 .pkmsvv-egg-choice{position:fixed;z-index:12020;inset:0;background:#081e2bd9;display:grid;place-items:center;padding:16px}
