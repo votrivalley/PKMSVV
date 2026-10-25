@@ -430,7 +430,8 @@ test('Companions are drawn within Y-sorted scene with props and players',()=>{
  assert.match(patch,/G\.PKMSVVEggs\?\.drawables\?\.\(cam\)/);
  assert.match(src,/function drawables\(cam\)/);
  assert.match(src,/\.map\(it=>\(\{y:it\.y,draw\(ctx\)/);
- assert.match(src,/const moved=Math\.hypot/);
+ assert.match(src,/const moved=dist>310\?false:/);
+ assert.match(src,/Math\.abs\(it\.x-ox\)\+Math\.abs\(it\.y-oy\)/);
  assert.match(src,/it\.anim\.loop\(moved\?'Walk':'Idle'/);
  assert.match(src,/function syncArena\(pl\)/);
  assert.match(src,/COLLECT_TIME=4/);
