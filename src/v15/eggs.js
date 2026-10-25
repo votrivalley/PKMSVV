@@ -232,8 +232,7 @@ G.PKMSVVEggs=(()=>{
    if(!it.hatched){
     it.age+=dt;it.boost+=dk*1.5+dl*5;
     if(it.age>=HATCH_MIN+it.penalty&&remaining(it)<=0){
-     it.hatched=true;it.active=false;it.anim=new G.Sprites.Animator(it.dex,.72,false);
-     it.anim.loop('Idle');onHatch(it);
+     it.hatched=true;it.active=false;onHatch(it);
     }
    }else{
     it.cooldown-=dt;
@@ -278,7 +277,25 @@ G.PKMSVVEggs=(()=>{
         '#86e2fd',tr('Đang ấp','Hatching'));
    }else{
     // Sprite feet remain anchored on ground, with Walk/Idle directional anim.
-    if(it.anim)it.anim.draw(ctx,it.x,it.y,{alpha:it.active?1:.52});
+    if(it.anim)it.anim.draw(ctx,it.x,it.y,{alpha:it.hurtFlash>0?.72:1});
+   if(it.shiny){
+    // Shiny remains clearly recognizable even if an upstream sprite variant
+    // is not available: 3% spawn has a gold star and subtle glint.
+    ctx.save();ctx.textAlign='center';ctx.font='bold 14px sans-serif';
+    ctx.shadowColor='#ffe581';ctx.shadowBlur=7;ctx.fillStyle='#ffdc71';
+    ctx.fillText('★',it.x+18,it.y-28);ctx.restore();
+   }
+   // Individual HP bars are compact and rendered in world-space.
+   const hpRatio=Math.max(0,Math.min(1,(it.hp||0)/Math.max(1,it.maxHp||1)));
+   const bx=it.x-18,by=it.y-39;
+   ctx.fillStyle='#071826';ctx.fillRect(bx-2,by-2,40,9);
+   ctx.fillStyle='#3a5260';ctx.fillRect(bx,by,36,5);
+   ctx.fillStyle=hpRatio>.55?'#66eaa1':hpRatio>.25?'#ffe17a':'#ff6b80';
+   ctx.fillRect(bx,by,36*hpRatio,5);
+   if(it.shield>0){
+    ctx.strokeStyle='#65d6fc';ctx.lineWidth=1;
+    ctx.strokeRect(bx-1,by-3,38,10);
+   }
     if(it.effectFlash>0&&it.active){
      const c=FX_COLOR[byDex[it.dex]?.role]||'#fff8a9';
      ctx.globalAlpha=Math.min(.55,it.effectFlash*.62);
@@ -286,7 +303,7 @@ G.PKMSVVEggs=(()=>{
      ctx.beginPath();ctx.ellipse(it.x,it.y-6,20+(1-it.effectFlash)*14,10,0,0,Math.PI*2);ctx.stroke();
      ctx.globalAlpha=1;
     }
-    if(!it.active){ctx.fillStyle='#d0edf3';ctx.font='10px sans-serif';ctx.textAlign='center';ctx.fillText('◇',it.x,it.y-32);}
+    if(it.hurtFlash>0)G.FX?.twinkle?.(it.x,it.y-17);
    }
   }
   ctx.restore();
