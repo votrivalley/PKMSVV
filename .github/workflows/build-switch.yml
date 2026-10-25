@@ -1,18 +1,8 @@
 name: Build Switch Brewser Offline (synchronized)
 
+# Switch support is on hold. No automatic builds on push.
+# Preserve the workflow for manual use if development resumes.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'scripts/**'
-      - 'src/**'
-      - 'data/**'
-      - 'config/**'
-      - 'custom-music/**'
-      - 'switch/**'
-      - 'tests/**'
-      - 'package.json'
-      - '.github/workflows/build-switch.yml'
   workflow_dispatch:
 
 permissions:
