@@ -1,5 +1,5 @@
 /* PKMSVV v1.5 — in-run egg nests and tiny companion followers.
-   No gacha, shiny, permanent ownership or changes to existing companion saves. */
+   Shiny support is 3% per hatch, stays in the RUN only, no ownership/save changes. */
 G.PKMSVVEggs=(()=>{
  const SPECIES=[
   {dex:172,role:'attack',period:3.3,power:9}, // Pichu
@@ -13,6 +13,7 @@ G.PKMSVVEggs=(()=>{
  ];
  const byDex=Object.fromEntries(SPECIES.map(x=>[x.dex,x]));
  const COLLECT_TIME=8, NEST_RADIUS=38, HATCH_BASE=45, HATCH_MIN=20;
+ const SHINY_CHANCE=.03, MIN_STAT=.5, MAX_STAT=.8, HIT_COOLDOWN=1.25;
  const FX_COLOR={attack:'#ffd472',heal:'#66ffad',shield:'#6edaff',magnet:'#ffe078',slow:'#e99aff'};
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  let player=null,items=[],nests=[],trail=[],spawnAt=55,seq=0,kills=0,lv=1,runTime=0,lastDir={x:0,y:1};
@@ -22,10 +23,12 @@ G.PKMSVVEggs=(()=>{
   player=pl;items=[];nests=[];trail=pl?[{x:pl.x,y:pl.y}]:[];spawnAt=55;seq=0;runTime=0;lastDir={x:0,y:1};kills=pl?.kills||0;lv=pl?.level||1;
   if(!coop&&unlocked())G.Sprites?.preload?.(SPECIES.map(s=>s.dex),7000);
  }
- const support=()=>items.filter(x=>x.hatched&&x.active);
+ const support=()=>items.filter(x=>x.hatched&&x.active&&x.hp>0);
+ const occupied=()=>items.filter(x=>!x.hatched||(x.active&&x.hp>0)).length;
+ const vacancy=()=>Math.max(0,limit()-occupied());
  function roleName(s){return {attack:tr('Tấn công','Attack'),heal:tr('Hồi phục','Healing'),shield:tr('Tạo khiên','Shield'),magnet:tr('Hút vật phẩm','Magnet'),slow:tr('Làm chậm','Slow')}[s.role]||s.role;}
  function nestSpawn(){
-  if(!player||nests.length>=2)return;
+  if(!player||nests.length>=1||vacancy()<=nests.length)return;
   for(let i=0;i<14;i++){
    const a=Math.random()*Math.PI*2,d=165+Math.random()*245;
    const x=player.x+Math.cos(a)*d,y=player.y+Math.sin(a)*d;
@@ -42,27 +45,27 @@ G.PKMSVVEggs=(()=>{
   }
   G.DB.commit(true);
   G.FX?.ring?.(it.x,it.y,6,62,'#ffe17b',.55,2);
-  if(support().length<limit())it.active=true;
-  else chooseReplace(it);
- }
- function chooseReplace(fresh){
-  const active=support();
-  const box=document.createElement('div');box.className='pkmsvv-egg-choice';box.setAttribute('role','dialog');
-  box.setAttribute('aria-label',tr('Thay Pokémon hỗ trợ','Replace support Pokémon'));
-  const label=dex=>(G.DEX_BY[dex]?.name||'#'+dex);
-  box.innerHTML='<div class="pkmsvv-egg-choice-inner"><h3>'+tr('Đội hỗ trợ đã đầy','Support team is full')+'</h3>'+
-   '<p>'+label(fresh.dex)+' '+tr('vừa nở. Chọn bé muốn thay, hoặc giữ bé mới đi theo nhưng không kích hoạt.','hatched. Choose one active companion to replace, or keep the new one as an inactive follower.')+'</p>'+
-   active.map((p,i)=>'<button type="button" class="btn small" data-replace="'+i+'">'+label(p.dex)+' · '+roleName(byDex[p.dex])+'</button>').join('')+
-   '<button type="button" class="btn small ghost" data-leave="1">'+tr('Giữ nguyên đội','Keep current team')+'</button></div>';
-  document.body.appendChild(box);
-  box.querySelectorAll('[data-replace]').forEach(b=>b.onclick=()=>{
-   active[+b.dataset.replace].active=false;fresh.active=true;box.remove();
-  });
-  box.querySelector('[data-leave]').onclick=()=>box.remove();
+  // Reserved egg slots prevent overflow; there is no replacement dialog.
+  it.active=true;
+  it.shiny=Math.random()<SHINY_CHANCE;
+  it.statScale=it.shiny?1:MIN_STAT+Math.random()*(MAX_STAT-MIN_STAT);
+  it.maxHp=Math.max(1,Math.round((player.maxHp||100)*it.statScale));
+  it.hp=it.maxHp;
+  it.atk=Math.max(1,Number(player.atk||player.baseAtk||10)*it.statScale);
+  it.def=Math.max(0,Number(player.reduction||0)*it.statScale);
+  it.spd=Math.max(25,Number(player.spd||player.baseSpd||120)*it.statScale);
+  it.shield=0;it.hitCooldown=1.2;it.hurtFlash=0;
+  it.anim=new G.Sprites.Animator(it.dex,.72,it.shiny);
+  it.anim.loop('Idle');
+  if(it.shiny){
+   G.Sprites?.preload?.([it.dex],5000,true);
+   G.Spawner?.say?.(tr('Một Pokémon hỗ trợ Shiny đã nở! (100% chỉ số)','A Shiny support Pokémon hatched! (100% stats)'),4,true);
+   G.FX?.ring?.(it.x,it.y,10,80,'#ffe773',.8,3);
+  }
  }
  function collect(n){
   const chosen=SPECIES[Math.floor(Math.random()*SPECIES.length)];
-  items.push({dex:chosen.dex,id:n.id,hatched:false,active:false,age:0,boost:0,penalty:0,cooldown:chosen.period,x:n.x,y:n.y,anim:null,step:0,moving:false,effectFlash:0});
+  items.push({dex:chosen.dex,id:n.id,hatched:false,active:false,age:0,boost:0,penalty:0,cooldown:chosen.period,x:n.x,y:n.y,anim:null,step:0,moving:false,effectFlash:0,shiny:false,hp:0,maxHp:0,statScale:0,hitCooldown:0});
   G.FX?.ring?.(n.x,n.y,5,43,'#f7dc91',.35,2);
   G.Spawner?.say?.(tr('Đã tìm thấy trứng. Hãy chiến đấu để ấp nở!','Egg found. Keep fighting to hatch it!'),3,true);
  }
@@ -81,15 +84,26 @@ G.PKMSVVEggs=(()=>{
   if(count)G.Spawner?.say?.(tr('Trứng bị chậm ấp +3 giây!','Egg incubation delayed by 3 seconds!'),1.5);
  }
  function effect(it,pl){
-  const spec=byDex[it.dex];if(!spec||!it.active||pl.dead)return false;
+  const spec=byDex[it.dex];if(!spec||!it.active||it.hp<=0||pl.dead)return false;
   const enemies=(G.EnemyMgr?.all?.()||[]).filter(e=>e&&!e.dead&&!e.remote&&G.U.dist2(e.x,e.y,it.x,it.y)<260*260);
   const target=enemies.reduce((acc,e)=>!acc||G.U.dist2(e.x,e.y,it.x,it.y)<G.U.dist2(acc.x,acc.y,it.x,it.y)?e:acc,null);
   if((spec.role==='attack'||spec.role==='slow')&&!target)return false;
-  if(spec.role==='attack')target.hurt(Math.max(1,spec.power+pl.level*.55),'#ffe8a1',0,0,0);
+  if(spec.role==='attack')target.hurt(Math.max(1,(spec.power+pl.level*.55)*it.statScale),'#ffe8a1',0,0,0);
   else if(spec.role==='heal'){
-   if(pl.hp>=pl.maxHp)return false; // Do not show a false heal when already full.
-   pl.heal(Math.max(1,pl.maxHp*spec.power));
-  }else if(spec.role==='shield')pl.pkmsvvShield=Math.min(pl.maxHp*.25,(pl.pkmsvvShield||0)+pl.maxHp*spec.power);
+   const wounded=support().filter(a=>a.hp<a.maxHp);
+   const teammate=wounded.reduce((best,a)=>!best||a.hp/a.maxHp<best.hp/best.maxHp?a:best,null);
+   // Heal a wounded teammate when they are worse off than the hero.
+   if(teammate&&teammate.hp/teammate.maxHp<pl.hp/pl.maxHp){
+    teammate.hp=Math.min(teammate.maxHp,teammate.hp+Math.max(1,teammate.maxHp*spec.power*it.statScale));
+    G.FX?.ring?.(teammate.x,teammate.y,6,35,FX_COLOR.heal,.4,2);
+   }else{
+    if(pl.hp>=pl.maxHp)return false;
+    pl.heal(Math.max(1,pl.maxHp*spec.power*it.statScale));
+   }
+  }else if(spec.role==='shield'){
+   pl.pkmsvvShield=Math.min(pl.maxHp*.25,(pl.pkmsvvShield||0)+pl.maxHp*spec.power*it.statScale);
+   for(const teammate of support()) teammate.shield=Math.min(teammate.maxHp*.25,(teammate.shield||0)+teammate.maxHp*spec.power*it.statScale);
+  }
   else if(spec.role==='slow')target.applySlow(spec.power,2.8);
   else if(spec.role==='magnet')G.Pickups?.pullAll?.();
   const c=FX_COLOR[spec.role];
