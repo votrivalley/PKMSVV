@@ -53,7 +53,8 @@ G.PKMSVVEggs=(()=>{
   it.hp=it.maxHp;
   it.atk=Math.max(1,Number(player.atk||player.baseAtk||10)*it.statScale);
   it.def=Math.max(0,Number(player.reduction||0)*it.statScale);
-  it.spd=Math.max(25,Number(player.spd||player.baseSpd||120)*it.statScale);
+  it.spdScale=it.shiny?1:.8+Math.random()*.1;
+  it.spd=Math.max(25,Number(player.spd||player.baseSpd||120)*it.spdScale);
   it.shield=0;it.hitCooldown=1.2;it.hurtFlash=0;
   it.anim=new G.Sprites.Animator(it.dex,.72,it.shiny);
   it.anim.loop('Idle');
@@ -98,7 +99,7 @@ G.PKMSVVEggs=(()=>{
    G.FX?.ring?.(it.x,it.y,5,32,'#82dfff',.25,2);
    return false;
   }
-  it.hp=Math.max(0,it.hp-loss);it.hurtFlash=.5;
+  it.hp=Math.max(0,it.hp-loss);it.hurtFlash=.5;it.recentlyHit=3;
   G.FX?.dmgText?.(it.x,it.y-29,'-'+Math.ceil(loss),'#ff939c');
   G.FX?.burst?.(it.x,it.y-12,'#ff8c94',4,45);
   if(it.hp<=0){
@@ -115,7 +116,6 @@ G.PKMSVVEggs=(()=>{
   const enemies=G.EnemyMgr?.all?.()||[];
   if(!enemies.length)return;
   for(const it of support().slice()){
-   it.hitCooldown=Math.max(0,(it.hitCooldown||0)-dt);
    if(it.hitCooldown>0)continue;
    for(const e of enemies){
     if(!e||e.dead||e.remote||!(e.dmg>0))continue;
@@ -123,9 +123,58 @@ G.PKMSVVEggs=(()=>{
     if(Math.abs(e.x-it.x)>radius||Math.abs(e.y-it.y)>radius)continue;
     if(G.U.dist2(e.x,e.y,it.x,it.y)>radius*radius)continue;
     // Enemy touch damage rather than adding support to enemy target AI.
-    hurtSupport(it,e.dmg*.55);
+    if(hurtSupport(it,e.dmg*.55))e.touchCd=Math.max(e.touchCd||0,.45);
     break;
    }
+  }
+ }
+ // A lower share of enemies chase supports (player weight 1, support weight .4).
+ function enemyTarget(e,pl,dt){
+  if(!pl||pl.dead||!unlocked()||G.Coop?.active||e?.remote||e?.boss||e?.pkmsvvBossGuard)return pl;
+  e.pkmsvvAggroT=Math.max(0,(e.pkmsvvAggroT||0)-Math.min(.25,Math.max(0,dt||0)));
+  const team=support().filter(it=>G.U.dist2(it.x,it.y,e.x,e.y)<230*230);
+  let chosen=team.find(it=>it.id===e.pkmsvvAggroId);
+  if(e.pkmsvvAggroT<=0||!chosen){
+   chosen=null;e.pkmsvvAggroId=null;e.pkmsvvAggroT=2+Math.random()*1.5;
+   const pool=team.filter(it=>(G.EnemyMgr?.all?.()||[]).filter(m=>m!==e&&m.pkmsvvAggroId===it.id&&!m.dead).length<4);
+   const threshold=pool.length*.4/(1+pool.length*.4);
+   if(pool.length&&Math.random()<threshold){
+    chosen=pool[Math.floor(Math.random()*pool.length)];
+    e.pkmsvvAggroId=chosen.id;
+   }
+  }
+  if(!chosen)return pl;
+  let proxy=chosen.aggroProxy;
+  if(!proxy){proxy=Object.create(pl);chosen.aggroProxy=proxy;}
+  proxy.x=chosen.x;proxy.y=chosen.y;proxy.r=11;proxy.bodyH=25;
+  proxy.dead=false;proxy.level=pl.level;proxy._vx=0;proxy._vy=0;
+  proxy.maxHp=chosen.maxHp;proxy.hp=chosen.hp;
+  proxy.hurt=(damage)=>hurtSupport(chosen,damage);
+  return proxy;
+ }
+ function interceptProjectile(p){
+  if(!p||p.friendly||G.Coop?.active||!unlocked())return false;
+  for(const it of support()){
+   if(it.hitCooldown>0)continue;
+   const rr=(Number(p.r)||4)+11;
+   if(G.U.dist2(it.x,it.y,p.x,p.y)<=rr*rr){
+    hurtSupport(it,p.dmg);return true;
+   }
+  }
+  return false;
+ }
+ function hitHazard(h){
+  if(!h||G.Coop?.active||!unlocked())return;
+  for(const it of support().slice()){
+   if(it.hitCooldown>0)continue;
+   let inside=false;
+   if(h.kind==='zone')inside=G.U.dist2(it.x,it.y,h.x,h.y)<Math.pow((h.r||0)+7,2);
+   else if(h.kind==='beam'){
+    const ca=Math.cos(h.angle),sa=Math.sin(h.angle);
+    const px=it.x-h.x,py=it.y-h.y,along=px*ca+py*sa;
+    inside=along>=-11&&along<=(h.len||0)+11&&Math.abs(-px*sa+py*ca)<=(h.w||0)/2+7;
+   }
+   if(inside)hurtSupport(it,h.pct?Math.max(h.dmg||0,it.maxHp*h.pct):h.dmg);
   }
  }
  function effect(it,pl){
@@ -192,6 +241,7 @@ G.PKMSVVEggs=(()=>{
   }
   it.moving=move;it.effectFlash=Math.max(0,(it.effectFlash||0)-dt);
   it.hurtFlash=Math.max(0,(it.hurtFlash||0)-dt);
+  it.recentlyHit=Math.max(0,(it.recentlyHit||0)-dt);
  }
  function update(dt,pl,time,coop){
   if(!pl||!unlocked()||coop)return;
@@ -232,6 +282,7 @@ G.PKMSVVEggs=(()=>{
   }else trail.unshift({x:pl.x,y:pl.y});
   for(let j=0;j<items.length;j++){
    const it=items[j];
+   it.hitCooldown=Math.max(0,(it.hitCooldown||0)-dt);
    follow(it,j,pl,dt);
    if(!it.hatched){
     it.age+=dt;it.boost+=dk*1.5+dl*5;
@@ -281,16 +332,15 @@ G.PKMSVVEggs=(()=>{
     ctx.shadowColor='#ffe581';ctx.shadowBlur=7;ctx.fillStyle='#ffdc71';
     ctx.fillText('★',it.x+18,it.y-28);ctx.restore();
    }
-   // Individual HP bars are compact and rendered in world-space.
+   // Thin 2px line when HP is missing, no prominent duplicate frame.
    const hpRatio=Math.max(0,Math.min(1,(it.hp||0)/Math.max(1,it.maxHp||1)));
-   const bx=it.x-18,by=it.y-39;
-   ctx.fillStyle='#071826';ctx.fillRect(bx-2,by-2,40,9);
-   ctx.fillStyle='#3a5260';ctx.fillRect(bx,by,36,5);
-   ctx.fillStyle=hpRatio>.55?'#66eaa1':hpRatio>.25?'#ffe17a':'#ff6b80';
-   ctx.fillRect(bx,by,36*hpRatio,5);
-   if(it.shield>0){
-    ctx.strokeStyle='#65d6fc';ctx.lineWidth=1;
-    ctx.strokeRect(bx-1,by-3,38,10);
+   if(hpRatio<.999||(it.recentlyHit||0)>0){
+    ctx.save();ctx.globalAlpha=hpRatio<.999?.85:.4;
+    const bx=it.x-13,by=it.y-35;
+    ctx.fillStyle='#193942';ctx.fillRect(bx,by,26,2);
+    ctx.fillStyle=hpRatio>.55?'#a3f2cd':hpRatio>.25?'#ffe08b':'#ff8395';
+    ctx.fillRect(bx,by,26*hpRatio,2);
+    ctx.restore();
    }
     if(it.effectFlash>0&&it.active){
      const c=FX_COLOR[byDex[it.dex]?.role]||'#fff8a9';
@@ -299,7 +349,7 @@ G.PKMSVVEggs=(()=>{
      ctx.beginPath();ctx.ellipse(it.x,it.y-6,20+(1-it.effectFlash)*14,10,0,0,Math.PI*2);ctx.stroke();
      ctx.globalAlpha=1;
     }
-    if(it.hurtFlash>0){ctx.strokeStyle='#ffb2bd';ctx.lineWidth=2;ctx.strokeRect(it.x-20,it.y-43,40,15);}
+    if(it.hurtFlash>0){ctx.save();ctx.globalAlpha=it.hurtFlash*.5;ctx.strokeStyle='#ffb2bd';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(it.x,it.y-9,14,8,0,0,Math.PI*2);ctx.stroke();ctx.restore();}
    }
   }
   ctx.restore();
@@ -343,5 +393,5 @@ G.PKMSVVEggs=(()=>{
   ctx.fillStyle='#fff3bd';ctx.font='bold 11px sans-serif';ctx.textAlign='left';
   ctx.fillText(tr('Đồng hành','Companions')+' '+ready+'/'+limit(),x+8,y+16);ctx.restore();
  }
- return {SPECIES,SHINY_CHANCE,begin,update,onHurt,hurtSupport,remaining,draw,hud,limit,unlocked,get followers(){return items;},get nests(){return nests;},get occupied(){return occupied();}};
+ return {SPECIES,SHINY_CHANCE,begin,update,onHurt,hurtSupport,enemyTarget,interceptProjectile,hitHazard,remaining,draw,hud,limit,unlocked,get followers(){return items;},get nests(){return nests;},get occupied(){return occupied();}};
 })();
