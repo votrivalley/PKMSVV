@@ -46,8 +46,8 @@ patch('dev.html','<script defer src="js/ui/menu.js"></script>',
 patch('dev.html',
  '<button class="menu-item" data-go="gacha">Gacha<small>9 regiones · Pokémon y shinies</small></button>',
  '<button class="menu-item" data-go="gacha">Gacha<small>9 regiones · Pokémon y shinies</small></button>\n'+
- '        <button class="menu-item" data-go="shop" translate="no">🦎 Cửa hàng Kecleon<small>Mint · Capsule · TM</small></button>\n'+
- '        <button class="menu-item" data-go="bag" translate="no">🎒 Túi đồ<small>Vật phẩm · TM</small></button>');
+ '        <button class="menu-item" data-go="shop" translate="no">Kecleon shop<small>Mint · Capsule · TM</small></button>\n'+
+ '        <button class="menu-item" data-go="bag" translate="no">Túi đồ<small>Vật phẩm · TM</small></button>');
 const section=String.raw`
 <!-- ====== Votri Valley: Kecleon shop + Bag (offline, bilingual) ====== -->
 <section id="scr-kecleon" class="scr dim hidden" translate="no">
@@ -82,10 +82,12 @@ patch('js/ui/menu.js',"else if (go === 'global') G.GlobalPowerUI.open();",
 const badge=String.raw`
 const shopBtn=document.querySelector('#scr-menu [data-go="shop"]'),
       bagBtn=document.querySelector('#scr-menu [data-go="bag"]');
-if(shopBtn)shopBtn.innerHTML=G.Icons.html('shop',18)+' '+(G.I18n.lang==='vi'?'Cửa hàng Kecleon':'Kecleon Shop')+
- '<small>'+(G.I18n.lang==='vi'?'Bạc hà · Đặc tính · TM':'Mints · Abilities · TMs')+'</small>';
-if(bagBtn)bagBtn.innerHTML=G.Icons.html('bag',18)+' '+(G.I18n.lang==='vi'?'Túi đồ':'Bag')+
- '<small>'+(G.I18n.lang==='vi'?'Vật phẩm & TM':'Items & TMs')+'</small>';
+if(shopBtn)shopBtn.innerHTML='<span class="mi-ico">'+G.Icons.html('shop',26)+'</span><span class="pkmsvv-menu-copy"><span class="pkmsvv-menu-label">'+
+  (G.I18n.lang==='vi'?'Kecleon shop':'Kecleon Shop')+'</span><small>'+
+  (G.I18n.lang==='vi'?'Bạc hà · Đặc tính · TM':'Mints · Abilities · TMs')+'</small></span>';
+if(bagBtn)bagBtn.innerHTML='<span class="mi-ico">'+G.Icons.html('bag',26)+'</span><span class="pkmsvv-menu-copy"><span class="pkmsvv-menu-label">'+
+  (G.I18n.lang==='vi'?'Túi đồ':'Bag')+'</span><small>'+
+  (G.I18n.lang==='vi'?'Vật phẩm & TM':'Items & TMs')+'</small></span>';
 `;
 patch('js/ui/menu.js',
  "    const shinies = Object.keys(s.shiny || {}).length;",
