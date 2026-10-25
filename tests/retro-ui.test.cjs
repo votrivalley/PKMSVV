@@ -24,3 +24,20 @@ test('upgrade chooser displays permanent account skill milestones without unsafe
  assert.match(s,/PKMSVVSkillTrack\.guide/);assert.match(s,/panel\.replaceChildren/);
  assert.match(css,/pkmsvv-skill-guide-grid/);
 });
+
+test('v1.4 menu title, circular credit and aligned icon/labels survive all platform builds',()=>{
+ const title=read('scripts/patch-v14-title-readability.cjs');
+ const colors=read('src/pkmsvv-retro-theme.css');
+ const shop=read('scripts/patch-kecleon.cjs');
+ const web=read('scripts/patch-retro-web.cjs');
+ assert.match(title,/pkmsvv-one-line/);
+ assert.match(title,/Pokémon Sống Sót/);
+ assert.match(title,/border-radius:50%/);
+ assert.match(title,/justify-content:center!important/);
+ assert.match(colors,/\.menu-item>\.mi-ico/);
+ assert.match(colors,/grid-template-columns:34px max-content/);
+ assert.match(colors,/align-items:center/);
+ assert.match(shop,/Kecleon shop/);
+ assert.match(shop,/pkmsvv-menu-copy/);
+ assert.match(web,/multiplayer\.replace\('Nhiều người chơi','Nhiều người'\)/);
+});
