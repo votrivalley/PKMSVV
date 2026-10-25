@@ -41,3 +41,23 @@ test('v1.4 menu title, circular credit and aligned icon/labels survive all platf
  assert.match(shop,/pkmsvv-menu-copy/);
  assert.match(web,/multiplayer\.replace\('Nhiều người chơi','Nhiều người'\)/);
 });
+
+test('v1.5 menu preserves cloud and fullscreen, moves backup to Options, and keeps Orb keyboard binding',()=>{
+ const menu=read('scripts/patch-v14-title-readability.cjs');
+ const keys=read('scripts/patch-keybind-title.cjs');
+ const pad=read('src/v14/pad-orb-map.js');
+ const dex=read('src/kecleon/pkmsvv-kecleon-ui.js');
+ assert.match(menu,/pkmsvv-v15-menu/);
+ assert.match(menu,/pkmsvv-v15-partner/);
+ assert.match(menu,/pkmsvv-v15-discord/);
+ assert.match(menu,/pkmsvv-v15-event/);
+ assert.match(menu,/pkmsvv-v15-news/);
+ assert.match(menu,/pkmsvv-v15-backup/);
+ assert.match(menu,/btn-backup\{display:none!important\}/);
+ assert.doesNotMatch(menu,/#btn-save\{display:none/);
+ assert.doesNotMatch(menu,/#btn-full\{display:none/);
+ assert.match(keys,/orb:'digit5'/);
+ assert.match(keys,/orb:'Dùng Orb'/);
+ assert.doesNotMatch(pad,/Không cần nút chuyển Orb/);
+ assert.doesNotMatch(dex,/pane\.innerHTML='<h3>'\+L\('Tính cách, Đặc tính & TM'/);
+});
