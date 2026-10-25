@@ -33,6 +33,27 @@ fs.appendFileSync(js,`
    const first=right.firstElementChild;
    if(first){first.style.marginTop='0';first.style.marginBottom='0';}
   }
+  // Options -> Save is a REAL settings page, not a tab that opens a
+  // second dialog behind Settings. Reuse the existing save/restore API.
+  const saveTab=document.getElementById('pkmsvv-v15-backup');
+  const saveBody=document.getElementById('set-body');
+  if(saveTab&&saveBody){
+   saveTab.type='button';
+   saveTab.dataset.t='pkmsvv-backup';
+   saveTab.onclick=event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    document.querySelectorAll('#set-tabs .gen-tab')
+     .forEach(tab=>tab.classList.toggle('on',tab===saveTab));
+    saveBody.replaceChildren();
+    if(!G.PKMSVVSaveUI||typeof G.PKMSVVSaveUI.mount!=='function'){
+     G.UI.toast(G.I18n?.lang==='en'?'Save tools unavailable':'Không thể mở công cụ sao lưu');
+     return;
+    }
+    G.PKMSVVSaveUI.mount(saveBody,'pkmsvv-settings');
+    saveBody.scrollTop=0;
+   };
+  }
   const link=document.getElementById('pkmsvv-v15-discord');
   if(link){
    link.href=discord;link.target='_blank';link.rel='noopener noreferrer';
