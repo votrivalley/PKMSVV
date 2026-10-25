@@ -26,5 +26,26 @@ patch('js/game.js',
 // is separate and uses a constrained set of available gameplay buttons.
 patch('js/ui/settings-ui.js',
  "    if(tab==='ctl')drawBindings(box);",
- "    if(tab==='ctl'){drawBindings(box);G.PKMSVVPadOrb.mount(box);}");
-console.log('PKMSVV v1.4: X manual Dash, Y FIFO Orb use, both rebindable; no Orb cycle.');
+ "    if(tab==='ctl')G.PKMSVVPadOrb.mount(box);");
+
+ // UI actions remap only the actual buttons used by gameplay/menu logic.
+patch('js/core/gamepad.js',
+ "      if (hit(BT.A)) press();",
+ "      if (hit(G.PKMSVVPadOrb.bindings().confirm)) press();");
+patch('js/core/gamepad.js',
+ "      if (hit(BT.B) || hit(BT.BACK)) back();",
+ "      if (hit(G.PKMSVVPadOrb.bindings().back) || hit(BT.BACK)) back();");
+patch('js/core/gamepad.js',
+ "      if (hit(BT.START)) {",
+ "      if (hit(G.PKMSVVPadOrb.bindings().pause)) {");
+patch('js/core/gamepad.js',
+ "      if (hit(BT.Y)) G.Input.virtual('keyr');",
+ "      if (hit(G.PKMSVVPadOrb.bindings().reroll)) G.Input.virtual('keyr');");
+patch('js/core/gamepad.js',
+ "      if (hit(BT.START) || hit(BT.BACK)) G.Input.virtual('escape');",
+ "      if (hit(G.PKMSVVPadOrb.bindings().pause) || hit(BT.BACK)) G.Input.virtual('escape');");
+patch('js/core/gamepad.js',
+ "      if (hit(BT.A)) G.Input.virtual('space');",
+ "      if (hit(G.PKMSVVPadOrb.bindings().confirm)) G.Input.virtual('space');");
+// Map old Y=reroll only in the level-up UI, not an additional Orb selector.
+console.log('PKMSVV v1.5: single Keyboard/Controller control tabs and complete remappable actions.');
