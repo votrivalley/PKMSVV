@@ -211,10 +211,10 @@ test('3% Shiny support exists only within run at 100% of main Pokemon stats; nor
  assert.equal(shiny.it.spd,140);
  assert.equal(shiny.it.anim.shiny,true);
  assert.deepEqual(shiny.save.shiny,{},'Do not unlock permanent Shiny collection entries');
- assert.equal(shiny.save.pkmsvvSupportShiny?.[172],true,'A hatched Shiny companion unlocks only its support variant');
+ assert.equal(shiny.save.pkmsvvSupportShiny?.[shiny.it.dex],true,'A hatched Shiny companion unlocks only its support variant');
  const regular=makeRoll(.03);
  assert.equal(regular.it.shiny,false,'Exactly .03 is outside the 3% range');
- assert.equal(regular.save.pkmsvvSupportShiny?.[172],undefined);
+ assert.equal(regular.save.pkmsvvSupportShiny?.[regular.it.dex],undefined);
  assert.equal(regular.it.statScale,.65);
  assert.equal(regular.it.maxHp,104);
  assert.equal(regular.it.atk,52);
@@ -572,15 +572,14 @@ test('Ditto cycles seven seconds transformed and three seconds resting, no casts
 
 test('Companion catalog shows actual Pokémon sprites and rarity labels without numerical odds',()=>{
  const code=read('src/pkmsvv-support-catalog.js');
- assert.match(code,/G\\.UI\\?\\.spriteCanvas\\?\\./);
- assert.match(code,/G\\.UI\\?\\.sprite\\?\\./);
- assert.match(code,/silhouette:!owned/);
- assert.match(code,/scr-upgrade-select|pkmsvv-upgrade-back/);
- assert.match(code,/Thường/);
- assert.match(code,/Hiếm/);
- assert.match(code,/Siêu hiếm/);
- assert.match(code,/if\\(shinyUnlocked\\)/);
- assert.doesNotMatch(code,/shinyChanceFor|speciesChanceFor|Shiny odds|Hatch chance|Tỷ lệ Shiny|Tỷ lệ nở/);
+ assert.ok(code.includes('G.UI?.spriteCanvas?.('));
+ assert.ok(code.includes('G.UI?.sprite?.('));
+ assert.ok(code.includes('silhouette:!owned'));
+ assert.ok(code.includes('pkmsvv-upgrade-back'));
+ for(const label of ['Thường','Hiếm','Siêu hiếm'])assert.ok(code.includes(label));
+ assert.ok(code.includes('if(shinyUnlocked)'));
+ for(const hidden of ['shinyChanceFor','speciesChanceFor','Shiny odds','Hatch chance','Tỷ lệ Shiny','Tỷ lệ nở'])
+  assert.ok(!code.includes(hidden),'No numerical odds in support Pokédex: '+hidden);
 });
 
 test('Support Shiny is discovered only after hatch and its tab cannot unlock prematurely',()=>{
