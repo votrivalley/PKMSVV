@@ -17,7 +17,7 @@ G.EggRush=(()=>{
   score=Object.fromEntries(roster.map(m=>[m.uid,0]));at={};laid=0;wave=0;outcome=null;transition={};
   if(active){
    G.Sprites?.preload?.([...EGG_SPECIES,...roster.map(x=>x.dex)],7500);
-   roster.forEach(m=>{transition[m.uid]={anim:new G.Sprites.Animator(m.dex,.32,false)};});
+   roster.forEach(m=>{transition[m.uid]={anim:new G.Sprites.Animator(m.dex,.32,false),rank:roster.findIndex(x=>x.uid===m.uid)};});
   }
  }
  function standings(){
@@ -44,6 +44,9 @@ G.EggRush=(()=>{
    const n=nests.find(n=>n.id===id);if(n)n.taken=true;
    score[uid]=total;at[uid]=when;
    if(!pets.some(p=>p.id===id))pets.push({id,uid,dex,age:0,hatch:false,x:n?.x||0,y:n?.y||0,anim:null});
+  }else if(ev[1]==='hatch'){
+   const pet=pets.find(p=>p.id===ev[2]);
+   if(pet&&!pet.hatch){pet.hatch=true;pet.anim=new G.Sprites.Animator(pet.dex,.7,false);G.FX?.ring?.(pet.x,pet.y,8,48,'#f5de8d',.6,3);}
   }else if(ev[1]==='hit'){
    const [, ,uid,dmg,slow]=ev,pl=G.Game.player;
    if(pl?.uid!==uid||pl.dead)return;
@@ -90,9 +93,8 @@ G.EggRush=(()=>{
    pet.age+=dt;
    const me=G.Game.player;
    if(pet.uid===me?.uid&&me?.level>levelSeen){pet.boost=(pet.boost||0)+(me.level-levelSeen)*3;levelSeen=me.level;}
-   if(pet.age>=20&&pet.age+(pet.boost||0)>=45&&!pet.hatch){
-    pet.hatch=true;pet.anim=new G.Sprites.Animator(pet.dex,.7,false);
-    G.FX?.ring?.(pet.x,pet.y,8,48,'#f5de8d',.6,3);
+   if(G.Coop.isHost&&pet.age>=20&&pet.age+(pet.boost||0)>=45&&!pet.hatch){
+    const event=['er','hatch',pet.id];onEvent(event);G.Coop.broadcast(event);
    }
    pet.anim?.update?.(dt);
    if(pet.hatch&&pet.uid===G.Game.player?.uid){
@@ -100,7 +102,12 @@ G.EggRush=(()=>{
     if(own.indexOf(pet)<3){pet.cd=(pet.cd||0)-dt;if(pet.cd<=0){support(pet,G.Game.player);pet.cd=8;}}
    }
   }
-  Object.values(transition).forEach(t=>t.anim?.update?.(dt));
+  const order=standings();
+  Object.entries(transition).forEach(([uid,t])=>{
+   t.anim?.update?.(dt);
+   const target=Math.max(0,order.findIndex(m=>m.uid===uid));
+   t.rank+=(target-t.rank)*Math.min(1,dt*11);
+  });
   if(!G.Coop.isHost)return;
   while(wave<5&&time>=8+wave*132){
    for(let i=0;i<2;i++){
@@ -187,7 +194,7 @@ G.EggRush=(()=>{
   ctx.beginPath();ctx.roundRect(8,119,size,24+board.length*26,8);ctx.fill();ctx.stroke();
   ctx.fillStyle='#ffe17a';ctx.textAlign='right';ctx.font='bold 11px sans-serif';ctx.fillText(collected+'/10',size,135);
   for(let i=0;i<board.length;i++){
-   const p=board[i],y=151+i*26,local=p.uid===G.Social.uid;
+   const p=board[i],y=151+(transition[p.uid]?.rank??i)*26,local=p.uid===G.Social.uid;
    if(local){ctx.fillStyle='#ffe27429';ctx.fillRect(11,y-12,size-5,24);}
    ctx.fillStyle=local?'#ffeaa3':'#f3fffd';ctx.font='bold 11px sans-serif';ctx.textAlign='left';
    ctx.fillText(String(i+1),14,y+3);
