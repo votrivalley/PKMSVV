@@ -23,6 +23,11 @@ patch('js/game.js',
  '       const chapter2=()=>G.PKMSVVStory.chapter2Pending()?G.PKMSVVStory.chapter2(after):after();',
  '       const chapter3=()=>G.PKMSVVStory.chapter3Pending()?G.PKMSVVStory.chapter3(after):after();\n'+
  '       const chapter2=()=>G.PKMSVVStory.chapter2Pending()?G.PKMSVVStory.chapter2(chapter3):chapter3();');
+// Old v1.4 saves may already have all six Orb bits. Detect them at menu open
+// instead of requiring the player to use an extra Orb after updating.
+patch('js/ui/menu.js',
+ "    const memo = document.getElementById('pkmsvv-memory-title');",
+ "    const memo = document.getElementById('pkmsvv-memory-title');\\n    G.PKMSVVStory.markChapter3();");
 patch('js/ui/menu.js',
  'Chương 0–2 · Xem lại truyện',
  'Chương 0–3 · Xem lại truyện');
