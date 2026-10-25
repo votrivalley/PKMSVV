@@ -35,6 +35,20 @@ patch('js/entities/player.js',
  '    const shield=Math.max(0,Number(this.pkmsvvShield)||0),absorbed=Math.min(shield,d);\n'+
  '    this.pkmsvvShield=shield-absorbed;\n'+
  '    this.hp -= d-absorbed;\n    if(!this.remote)G.PKMSVVEggs?.onHurt?.(d-absorbed);');
+// In solo runs, some normal monsters pursue and strike followers, with lower aggro weight.
+patch('js/entities/enemy.js',
+ '        else e.update(dt, nearestPlayer(players, e.x, e.y) || pl);',
+ '        else { const lead=nearestPlayer(players,e.x,e.y)||pl; e.update(dt,G.PKMSVVEggs?.enemyTarget?.(e,lead,dt)||lead); }');
+// Enemy projectiles can damage companions before reaching the protagonist.
+patch('js/systems/combat.js',
+ '        if (G.U.dist2(p.x, p.y, pl.x, pl.y) < (p.r + pl.r) * (p.r + pl.r)) {',
+ '        if(G.PKMSVVEggs?.interceptProjectile?.(p)){projectiles.splice(i,1);continue;}\\n'+
+ '        if (G.U.dist2(p.x, p.y, pl.x, pl.y) < (p.r + pl.r) * (p.r + pl.r)) {');
+// Hostile beams/zones additionally affect followers, using their real HP and hit cooldown.
+patch('js/systems/hazards.js',
+ '        if (pl && !pl.dead && inside(h, pl.x, pl.y, pl.r)) {',
+ '        G.PKMSVVEggs?.hitHazard?.(h);\\n'+
+ '        if (pl && !pl.dead && inside(h, pl.x, pl.y, pl.r)) {');
 fs.appendFileSync(path.join(game,'css','style.css'),`
 /* v1.5 egg-team replacement keeps active companions user-controlled. */
 .pkmsvv-egg-choice{position:fixed;z-index:12020;inset:0;background:#081e2bd9;display:grid;place-items:center;padding:16px}
