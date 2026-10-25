@@ -13,10 +13,8 @@ G.PKMSVVSupportCatalog=(()=>{
   ditto:['Biến hình','Transform','Hóa thành Pokémon chính, sao chép tối đa 3 chiêu ngẫu nhiên.','Transforms into your lead Pokémon and copies up to three random combat moves.'],
   mew:['AOE ngẫu nhiên','Random AOE','Tung AOE ngẫu nhiên mỗi 1 giây.','Casts a random area attack every 1 second.']
  };
- function level(count){
-  if(!count)return 0;
-  return count>=60?5:count>=30?4:count>=15?3:count>=5?2:1;
- }
+ function level(percent){return percent>=100?5:percent>=80?4:percent>=60?3:percent>=40?2:percent>=20?1:0;}
+ const pc=v=>(100*v).toFixed(0)+'%';
  function ensure(){
   if($('pkmsvv-support-catalog'))return;
   const host=$('scr-dex');if(!host)return;
@@ -48,12 +46,12 @@ G.PKMSVVSupportCatalog=(()=>{
   ensure();const wrap=$('pkmsvv-support-catalog');if(!wrap)return;
   $('pkmsvv-support-heading').textContent=t('✦ Pokémon hỗ trợ','✦ Support Pokémon');
   $('pkmsvv-support-description').textContent=t(
-   'Trứng nở càng nhiều lần, tình thân càng cao: +2% hiệu lực kỹ năng cho mỗi lần nở thêm, tối đa +30%. Shiny chỉ tồn tại trong trận. Ditto 8%, Mew 4%, Shiny 3%.',
-   'Each additional hatch adds +2% skill strength for the same species, up to +30%. Shiny is run-only. Ditto 8%, Mew 4%, Shiny 3%.');
+   'Thân thiết tăng theo số lần nở: thường 100 lần, Ditto 50, Mew 25 = 100%. Khi tối đa, Shiny x2; Ditto/Mew còn x2 tỷ lệ ra loài. Shiny chỉ tồn tại trong trận.',
+   'Friendship tracks hatch counts: normal 100, Ditto 50, Mew 25 = 100%. Maximum bond doubles Shiny odds and also doubles Ditto/Mew hatch odds. Shiny is run-only.');
   const grid=$('pkmsvv-support-entries');grid.replaceChildren();
   const species=G.PKMSVVEggs?.SPECIES||[];
   for(const mon of species){
-   const n=G.PKMSVVEggs.affinityFor(mon.dex),lv=level(n);
+   const n=G.PKMSVVEggs.affinityFor(mon.dex),percent=G.PKMSVVEggs.affinityPercent(mon.dex),goal=G.PKMSVVEggs.affinityGoal(mon.dex),lv=level(percent);
    const card=document.createElement('article');card.className='pkmsvv-bond-card';
    const top=document.createElement('div');top.className='pkmsvv-bond-card-top';
    const name=document.createElement('strong');
@@ -65,11 +63,16 @@ G.PKMSVVSupportCatalog=(()=>{
    skill.textContent=t(roles[mon.role]?.[2]||'',roles[mon.role]?.[3]||'')+
      ' · '+t('Hồi chiêu','Cooldown')+': '+mon.period+'s';
    const stat=document.createElement('p');stat.className='pkmsvv-bond-stats';
-   stat.textContent=t('Thân thiết','Bond')+' '+lv+'/5 · '+n+' '+t('lần nở','hatches')+
-    ' · '+t('Kỹ năng','Skill')+' +'+Math.round((G.PKMSVVEggs.affinityMultiplier(mon.dex)-1)*100)+'%';
+   stat.textContent=t('Thân thiết','Friendship')+' '+percent+'% · '+Math.min(n,goal)+'/'+goal+
+    ' '+t('lần gặp','hatches')+' · '+t('Kỹ năng','Skill')+' +'+Math.round((G.PKMSVVEggs.affinityMultiplier(mon.dex)-1)*100)+'%';
+   const odds=document.createElement('p');odds.className='pkmsvv-bond-odds';
+   const shiny=pc(G.PKMSVVEggs.shinyChanceFor(mon.dex));
+   const rare=G.PKMSVVEggs.speciesChanceFor(mon.dex);
+   odds.textContent=t('Tỷ lệ Shiny','Shiny odds')+': '+shiny+
+    (rare?' · '+t('Tỷ lệ nở','Hatch chance')+': '+pc(rare):'');
    const track=document.createElement('div');track.className='pkmsvv-bond-track';
-   const fill=document.createElement('div');fill.style.width=(lv*20)+'%';track.append(fill);
-   card.append(skill,stat,track);grid.append(card);
+   const fill=document.createElement('div');fill.style.width=percent+'%';track.append(fill);
+   card.append(skill,stat,odds,track);grid.append(card);
   }
   wrap.hidden=false;
  }
