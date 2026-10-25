@@ -109,3 +109,13 @@ test('v1.5 renamed runtime retains completed egg gameplay on all platforms',()=>
  assert.ok(web.includes('patch-v15-egg-rush-web.cjs'));
  assert.ok(web.includes('Có gì mới: 1.5'));
 });
+
+test('v1.5 home subtitle announces waking up as a Pokemon without changing save identity',()=>{
+ const qa=read('scripts/patch-v15-menu-qa.cjs');
+ assert.match(qa,/Tỉnh giấc tôi thấy mình hóa Pokemon/);
+ assert.match(qa,/pkmsvv-awakening-tagline/);
+ assert.match(qa,/menuStart=markup.indexOf/);
+ assert.match(qa,/translate="no"/);
+ assert.match(qa,/text-transform:uppercase/);
+ assert.match(read('desktop/main.cjs'),/PKMSVV-Offline/);
+});
