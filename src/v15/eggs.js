@@ -112,13 +112,11 @@ G.PKMSVVEggs=(()=>{
   ctx.save();
   for(const n of nests){
    if(!G.Camera.sees(n.x,n.y,60))continue;
-   ctx.fillStyle='#a27a48';ctx.beginPath();ctx.ellipse(n.x,n.y,21,12,0,0,6.283);ctx.fill();
-   ctx.fillStyle='#b9a472';ctx.beginPath();ctx.ellipse(n.x,n.y-2,16,8,0,0,6.283);ctx.fill();
-   egg(ctx,n.x,n.y-11,1);
+   if(!G.PKMSVVEggArt?.nest(ctx,n.x,n.y))egg(ctx,n.x,n.y-11,1);
   }
   for(const it of items){
    if(!G.Camera.sees(it.x,it.y,45))continue;
-   if(!it.hatched)egg(ctx,it.x,it.y-10,.75);
+   if(!it.hatched)egg(ctx,it.x,it.y-10,.75,(it.age+it.boost)/45);
    else{
     if(it.anim)it.anim.draw(ctx,it.x,it.y,{alpha:it.active?1:.52});
     if(!it.active){ctx.fillStyle='#d0edf3';ctx.font='10px sans-serif';ctx.textAlign='center';ctx.fillText('◇',it.x,it.y-32);}
@@ -126,11 +124,12 @@ G.PKMSVVEggs=(()=>{
   }
   ctx.restore();
  }
- function egg(ctx,x,y,scale){
+ function egg(ctx,x,y,scale,progress=0){
+  if(G.PKMSVVEggArt?.egg(ctx,x,y,scale,progress))return;
+  // Render a simple placeholder only until the local sprite has loaded.
   ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);
   ctx.fillStyle='#ffefbf';ctx.strokeStyle='#d9b879';ctx.lineWidth=2;
   ctx.beginPath();ctx.ellipse(0,0,10,13,0,0,6.283);ctx.fill();ctx.stroke();
-  ctx.fillStyle='#d19fe6';for(const [dx,dy] of [[-3,-4],[5,2],[-2,7]]){ctx.beginPath();ctx.arc(dx,dy,2.6,0,6.283);ctx.fill();}
   ctx.restore();
  }
  function hud(ctx,w,h){
