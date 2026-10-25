@@ -58,7 +58,7 @@ G.PKMSVVBossSupport=(()=>{
    const theta=1+i*2*Math.PI/n;
    const x=boss.x+Math.cos(theta)*55,y=boss.y+Math.sin(theta)*42;
    const mon=G.DEX_BY?.[option.dex];
-   const def={dex:option.dex,name:mon?.name||'Support',hp,spd:Math.max(35,(boss.spd||100)*speedScale),
+   const def={dex:option.dex,name:mon?.name||'Support',hp,spd:Math.max(1,(boss.spd||100)*speedScale),
     dmg:Math.max(1,Math.round((boss.dmg||30)*scale)),xp:1,behavior:'chase'};
    const g=new G.Enemy(def,x,y,{hp:1,spd:1,dmg:1},false);
    g.maxHp=hp;g.hp=hp;g.boss=false;

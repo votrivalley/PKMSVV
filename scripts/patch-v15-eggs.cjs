@@ -42,12 +42,12 @@ patch('js/entities/enemy.js',
 // Enemy projectiles can damage companions before reaching the protagonist.
 patch('js/systems/combat.js',
  '        if (G.U.dist2(p.x, p.y, pl.x, pl.y) < (p.r + pl.r) * (p.r + pl.r)) {',
- '        if(G.PKMSVVEggs?.interceptProjectile?.(p)){projectiles.splice(i,1);continue;}\\n'+
+ '        if(G.PKMSVVEggs?.interceptProjectile?.(p)){projectiles.splice(i,1);continue;}\n'+
  '        if (G.U.dist2(p.x, p.y, pl.x, pl.y) < (p.r + pl.r) * (p.r + pl.r)) {');
 // Hostile beams/zones additionally affect followers, using their real HP and hit cooldown.
 patch('js/systems/hazards.js',
  '        if (pl && !pl.dead && inside(h, pl.x, pl.y, pl.r)) {',
- '        G.PKMSVVEggs?.hitHazard?.(h);\\n'+
+ '        G.PKMSVVEggs?.hitHazard?.(h);\n'+
  '        if (pl && !pl.dead && inside(h, pl.x, pl.y, pl.r)) {');
 fs.appendFileSync(path.join(game,'css','style.css'),`
 /* v1.5 egg-team replacement keeps active companions user-controlled. */
