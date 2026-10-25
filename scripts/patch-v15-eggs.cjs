@@ -41,6 +41,27 @@ patch('js/entities/player.js',
  '    const shield=Math.max(0,Number(this.pkmsvvShield)||0),absorbed=Math.min(shield,d);\n'+
  '    this.pkmsvvShield=shield-absorbed;\n'+
  '    this.hp -= d-absorbed;\n    if(!this.remote)G.PKMSVVEggs?.onHurt?.(d-absorbed);');
+// Ditto's copied skills use the original combat renderer and damage rules,
+// but from a scaled, non-player proxy. No duplicate XP or manual dash.
+patch('js/systems/combat.js',
+ '  return { tick, resolve, ghostCast, ghostOrbit, updateFields, drawGroundFields, drawAirFields, clearFields,',
+ `  function pkmsvvSupportCast(pl,it,m){
+    if(!pl||!it||!m||pl.dead||G.Coop?.active)return false;
+    const target=(G.EnemyMgr.all()||[]).filter(e=>!e.dead&&!e.remote)
+      .reduce((best,e)=>{
+       const d=G.U.dist2(it.x,it.y,e.x,e.y);
+       return d<400*400&&(!best||d<best.d)?{e,d}:best;
+      },null);
+    if(!target)return false;
+    const echo=Object.create(pl);
+    echo.x=it.x;echo.y=it.y;echo.r=11;echo.target=target.e;
+    echo.aim=Math.atan2(target.e.y-it.y,target.e.x-it.x);
+    echo.dead=false;echo.net=null;
+    echo.atkFor=move=>pl.atkFor(move)*(it.statScale||.65)*(it.affinityBoost||1)*.55;
+    echo.onDealt=()=>{};echo.cast=()=>{};echo.heal=()=>{};
+    try{run(echo,{...m});return true;}catch(e){return false;}
+   }
+   return { pkmsvvSupportCast, tick, resolve, ghostCast, ghostOrbit, updateFields, drawGroundFields, drawAirFields, clearFields,`);
 // In solo runs, some normal monsters pursue and strike followers, with lower aggro weight.
 patch('js/entities/enemy.js',
  '        else e.update(dt, nearestPlayer(players, e.x, e.y) || pl);',
