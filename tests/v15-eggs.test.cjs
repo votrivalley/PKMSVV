@@ -623,6 +623,6 @@ test('support HP draws a visible, thin single line at full and partial HP',()=>{
 test('v1.5 log explicitly names the online Egg Rush mode in one consolidated release',()=>{
  const src=read('src/pkmsvv-changelog-v15.js');
  assert.equal((src.match(/G\.CHANGELOG\.unshift\(/g)||[]).length,1);
- assert.match(src,/Thêm chế độ chơi Online mới: Tranh Trứng Online \(Egg Rush\)/);
- assert.match(src,/New Online game mode: Egg Rush/);
+ assert.match(src,/Thêm chế độ nhiều người chơi mới: Tranh Trứng/);
+ assert.match(src,/Added a new multiplayer mode: Egg Rush/);
 });

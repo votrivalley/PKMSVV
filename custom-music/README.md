@@ -1,17 +1,23 @@
-# PKMSVV — 7 vị trí nhạc nền
+# Pokémon Chuyển sinh — nhạc nền tùy chỉnh
 
-| Tên tệp | Hoàn cảnh phát | Hướng chọn bài |
-|---|---|---|
-| `village.mp3` | Menu / chọn Pokémon | Nhạc thị trấn, vui và ấm áp |
-| `forest.mp3` | Sinh tồn trong rừng | Nhạc phiêu lưu trong rừng |
-| `cave.mp3` | Hang pha lê | Nhạc hang động huyền bí |
-| `volcano.mp3` | Núi lửa | Nhạc vùng dung nham, dồn dập |
-| `boss.mp3` | Boss xuất hiện | Nhạc đấu trùm |
-| `rift.mp3` | Trận đấu huyền thoại trong khe nứt | Nhạc đấu Pokémon huyền thoại |
-| `judgment.mp3` | Phán Quyết của Arceus, phút 30 | Nhạc cao trào / Arceus |
+Đặt tệp nhạc trong thư mục `custom-music/` của repo `votrivalley/PKMSVV`. Nhạc phải là tệp âm thanh thực sự được xuất sang OGG, không chỉ đổi tên phần mở rộng.
 
-**Hỗ trợ .mp3 / .ogg / .wav.** Tên phải trùng một trong 7 khóa bên trên; thí dụ `forest.ogg` và `boss.wav` cũng được. Nếu có nhiều định dạng cùng tên, thứ tự ưu tiên: MP3 → OGG → WAV. Mỗi bài sẽ lặp, đồng bộ với âm lượng và nút tắt nhạc trong trò chơi. Các vị trí chưa thêm tệp sẽ dùng bài gốc tổng hợp bằng Web Audio từ `js/data/music.js`.
+| Tên tệp ví dụ | Phát khi |
+|---|---|
+| `village.ogg` | Menu và chọn Pokémon |
+| `forest.ogg` | Sinh tồn trong rừng |
+| `cave.ogg` | Hang pha lê |
+| `volcano.ogg` | Vùng dung nham |
+| `boss.ogg` | Boss |
+| `rift.ogg` | Khe Nứt |
+| `judgment.ogg` | Phán Quyết của Arceus |
+| `eggrush.ogg` | **Tranh Trứng** — chế độ nhiều người chơi hiện có trên Web |
+| `capture_flag.ogg` | **Cướp Cờ** — vị trí nhạc đã dự phòng; chưa có chế độ Cướp Cờ riêng trong game hiện tại |
 
-**Cách dùng:** tải/chuẩn bị những bài bạn được phép sử dụng và phân phối → đặt chúng trong thư mục này của GitHub → commit → GitHub Actions đóng gói lại. Bản EXE đã build không cho thêm nhạc bằng cách thả file cạnh EXE vì các tài nguyên đã nằm bên trong gói portable.
+**Cách dùng:** trong GitHub, mở `custom-music/` → **Add file → Upload files** → tải bài `capture_flag.ogg` (hoặc `eggrush.ogg` nếu nhạc dành cho Tranh Trứng) → **Commit changes**. Build lại gói Web/PC/Android để đóng gói bài nhạc. Nếu tệp chưa có, game tiếp tục phát nhạc thông thường, không bị mất nhạc.
 
-**Bản quyền:** Nhạc Pokémon chính thức do chủ sở hữu nắm quyền. Không đưa bản nhạc có bản quyền vào repo công khai hoặc EXE chia sẻ khi chưa được phép. Có thể sử dụng nhạc sáng tác riêng, bản phối có giấy phép hoặc nhạc miễn phí phù hợp điều khoản.
+**Lưu ý:** gói portable EXE / APK đã build không tự nhận bản nhạc chép bên cạnh file cài đặt. Hãy bổ sung file trước khi build. Hiện chưa có mode `ctf` / Cướp Cờ trong repo; `capture_flag.ogg` chỉ được chọn khi có mode này trong một bản cập nhật tương lai. **Không đổi tên Tranh Trứng thành Cướp Cờ**, và hai bài nhạc được tách độc lập.
+
+Ngoài `.ogg`, bộ đóng gói vẫn hỗ trợ `.mp3` và `.wav` tương ứng. Ưu tiên: MP3 → OGG → WAV. Các bài được lặp lại và dùng chung điều khiển âm lượng/tắt nhạc của game.
+
+Chỉ sử dụng nhạc do bạn có quyền phân phối hoặc có giấy phép phù hợp; không tải nhạc thương mại không được cấp phép lên repo công khai.

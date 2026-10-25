@@ -111,3 +111,16 @@ test('background music stops during window minimize, app switching and tab hidin
  await Promise.resolve();await Promise.resolve();
  assert.equal(song.volume,0,'user-controlled mute remains intact after refocusing');
 });
+
+test('Cướp Cờ and Tranh Trứng have separate optional OGG names and guarded music routing',()=>{
+ const fs=require('node:fs');
+ const src=fs.readFileSync(require('node:path').join(__dirname,'../scripts/prepare-game.cjs'),'utf8');
+ const readme=fs.readFileSync(require('node:path').join(__dirname,'../custom-music/README.md'),'utf8');
+ assert.match(src,/'eggrush','capture_flag'/);
+ assert.match(src,/musicFiles\.capture_flag/);
+ assert.match(src,/musicFiles\.eggrush/);
+ assert.match(src,/G\.EggRush\?\.active/);
+ assert.match(src,/\['ctf','captureflag','capture_flag'\]/);
+ assert.match(readme,/capture_flag\.ogg/);
+ assert.match(readme,/eggrush\.ogg/);
+});

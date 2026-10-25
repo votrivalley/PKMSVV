@@ -134,8 +134,8 @@ patch('js/data/items.js',
   "desc: '+30% de daño, pero cada ataque te quita un poco de vida.'",
   "desc: '+30% de daño; pierde hasta un 1% de PS cada 2 s cuando ataca.'");
 
-// Seven optional licensed songs, otherwise keep the composer's synthesized score.
-const musicNames = ['village','forest','cave','volcano','boss','rift','judgment'];
+// Optional licensed audio tracks; the Capture Flag slot is ready for a future mode.
+const musicNames = ['village','forest','cave','volcano','boss','rift','judgment','eggrush','capture_flag'];
 const musicFiles = {};
 const outMusic = path.join(game, 'assets', 'music-custom');
 for (const name of musicNames) {
@@ -193,6 +193,17 @@ patch('js/core/audio.js',
 patch('js/core/audio.js',
   "get track() { return current && current.name; }",
   "get track() { return customAudio ? customAudio.pkmsvvName : current && current.name; }");
+// Only replace BGM for a supported mode when the corresponding OGG has been
+// supplied. Otherwise preserve the original biome/boss/rift/judgment themes.
+// Cướp Cờ is a future mode: current online modes are co-op, royale, eggrush.
+{
+ const original="    G.Audio.music(G.Judgment.active ? G.Judgment.music : G.Rift.inArena ? 'rift' : G.EnemyMgr.bossAlive() ? 'boss' : G.BIOME_MUSIC[biome % G.BIOME_MUSIC.length]);";
+ const priority=[];
+ if(musicFiles.capture_flag)priority.push("(G.Coop.active && ['ctf','captureflag','capture_flag'].includes(G.Social?.room?.mode)) ? 'capture_flag' : ");
+ if(musicFiles.eggrush)priority.push("G.EggRush?.active ? 'eggrush' : ");
+ if(priority.length)patch('js/game.js',original,original.replace('G.Audio.music(', 'G.Audio.music('+priority.join('')));
+}
+
 
 
 // Help new runs find a damaging second/third move before the first boss.
