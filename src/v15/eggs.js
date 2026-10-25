@@ -61,6 +61,9 @@ G.PKMSVVEggs=(()=>{
    G.Sprites?.preload?.([it.dex],5000,true);
    G.Spawner?.say?.(tr('Một Pokémon hỗ trợ Shiny đã nở! (100% chỉ số)','A Shiny support Pokémon hatched! (100% stats)'),4,true);
    G.FX?.ring?.(it.x,it.y,10,80,'#ffe773',.8,3);
+  }else{
+   G.Spawner?.say?.(tr('Pokémon hỗ trợ nở: '+Math.round(it.statScale*100)+'% chỉ số!',
+                           'Support hatched: '+Math.round(it.statScale*100)+'% stats!'),2.5);
   }
  }
  function collect(n){
@@ -130,6 +133,7 @@ G.PKMSVVEggs=(()=>{
   const enemies=(G.EnemyMgr?.all?.()||[]).filter(e=>e&&!e.dead&&!e.remote&&G.U.dist2(e.x,e.y,it.x,it.y)<260*260);
   const target=enemies.reduce((acc,e)=>!acc||G.U.dist2(e.x,e.y,it.x,it.y)<G.U.dist2(acc.x,acc.y,it.x,it.y)?e:acc,null);
   if((spec.role==='attack'||spec.role==='slow')&&!target)return false;
+  let recipient=pl;
   if(spec.role==='attack')target.hurt(Math.max(1,(spec.power+pl.level*.55)*it.statScale),'#ffe8a1',0,0,0);
   else if(spec.role==='heal'){
    const wounded=support().filter(a=>a.hp<a.maxHp);
@@ -137,7 +141,7 @@ G.PKMSVVEggs=(()=>{
    // Heal a wounded teammate when they are worse off than the hero.
    if(teammate&&teammate.hp/teammate.maxHp<pl.hp/pl.maxHp){
     teammate.hp=Math.min(teammate.maxHp,teammate.hp+Math.max(1,teammate.maxHp*spec.power*it.statScale));
-    G.FX?.ring?.(teammate.x,teammate.y,6,35,FX_COLOR.heal,.4,2);
+    recipient=teammate;
    }else{
     if(pl.hp>=pl.maxHp)return false;
     pl.heal(Math.max(1,pl.maxHp*spec.power*it.statScale));
@@ -146,7 +150,7 @@ G.PKMSVVEggs=(()=>{
    pl.pkmsvvShield=Math.min(pl.maxHp*.25,(pl.pkmsvvShield||0)+pl.maxHp*spec.power*it.statScale);
    for(const teammate of support()) teammate.shield=Math.min(teammate.maxHp*.25,(teammate.shield||0)+teammate.maxHp*spec.power*it.statScale);
   }
-  else if(spec.role==='slow')target.applySlow(spec.power,2.8);
+  else if(spec.role==='slow')target.applySlow(spec.power*it.statScale,2.8);
   else if(spec.role==='magnet')G.Pickups?.pullAll?.();
   const c=FX_COLOR[spec.role];
   it.effectFlash=.85;
@@ -157,9 +161,9 @@ G.PKMSVVEggs=(()=>{
    G.FX?.burst?.(target.x,target.y-9,c,7,70);
    G.FX?.dmgText?.(target.x,target.y-26,tr('CHẬM!','SLOWED!'),c);
   }else if(spec.role==='heal'||spec.role==='shield'||spec.role==='magnet'){
-   G.FX?.ring?.(pl.x,pl.y,8,56,c,.45,2);
-   G.FX?.burst?.(pl.x,pl.y-12,c,6,65);
-   G.FX?.dmgText?.(pl.x,pl.y-38,
+   G.FX?.ring?.(recipient.x,recipient.y,8,56,c,.45,2);
+   G.FX?.burst?.(recipient.x,recipient.y-12,c,6,65);
+   G.FX?.dmgText?.(recipient.x,recipient.y-38,
      spec.role==='heal'?tr('HỒI MÁU','HEAL'):spec.role==='shield'?tr('KHIÊN','SHIELD'):tr('HÚT','MAGNET'),c);
   }else if(target)G.FX?.burst?.(target.x,target.y-10,c,5,52);
   return true;
@@ -303,7 +307,7 @@ G.PKMSVVEggs=(()=>{
      ctx.beginPath();ctx.ellipse(it.x,it.y-6,20+(1-it.effectFlash)*14,10,0,0,Math.PI*2);ctx.stroke();
      ctx.globalAlpha=1;
     }
-    if(it.hurtFlash>0)G.FX?.twinkle?.(it.x,it.y-17);
+    if(it.hurtFlash>0){ctx.strokeStyle='#ffb2bd';ctx.lineWidth=2;ctx.strokeRect(it.x-20,it.y-43,40,15);}
    }
   }
   ctx.restore();
