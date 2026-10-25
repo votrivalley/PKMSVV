@@ -120,3 +120,40 @@ body{background:#081f2a;color:#f8fffe}
 
 /* Friendship percentage and odds panel */
 .pkmsvv-bond-odds{color:#ffe8a5!important;font-weight:700;font-size:12px!important}
+
+/* v1.5.10 Support Pokédex lives next to the Upgrade back button. */
+#scr-upgrade-select .pkmsvv-chooser > .row.between{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#scr-upgrade-select .pkmsvv-chooser > .row.between h2{margin-right:auto}
+#scr-upgrade-select .pkmsvv-support-entry-btn{font-size:13px;white-space:nowrap;padding:8px 11px}
+.pkmsvv-support-modal{width:min(850px,96vw)}
+.pkmsvv-support-layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(230px,.9fr);gap:14px;margin-top:12px;align-items:start}
+#pkmsvv-support-entries{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0;max-height:58vh;overflow:auto;padding:3px}
+.pkmsvv-support-cell{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;background:#153a4b;border:2px solid #447d87;border-radius:10px;color:#f1ffff;min-width:0;padding:8px 5px;font:inherit;transition:border-color .12s,background .12s}
+.pkmsvv-support-cell:hover,.pkmsvv-support-cell.on{background:#19515b;border-color:#ffe272}
+.pkmsvv-support-cell canvas{width:min(92px,100%);height:80px;object-fit:contain;image-rendering:pixelated}
+.pkmsvv-support-cell.locked canvas{filter:brightness(0)}
+.pkmsvv-support-cell strong{font-size:13px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.pkmsvv-support-rarity{display:inline-block;border-radius:5px;padding:3px 7px;font-weight:800;font-size:10px;line-height:1.4;background:#acd9d2;color:#113847}
+.pkmsvv-support-rarity.rare{background:#ddbfff;color:#421877}
+.pkmsvv-support-rarity.super{background:#ffdb73;color:#533302}
+#pkmsvv-support-detail{border:1px solid #5bb2ba;border-radius:12px;padding:14px;text-align:center;background:#102e40;min-height:340px}
+#pkmsvv-support-detail h3{margin:0 0 8px;color:#fff0ad}
+#pkmsvv-support-detail h4{margin:12px 0 4px;color:#a7fbdf}
+#pkmsvv-support-detail p{font-size:13px;line-height:1.5;color:#def7f3}
+.pkmsvv-support-stage{width:min(220px,100%);height:auto;margin:8px auto;display:block;image-rendering:pixelated;max-height:200px}
+.pkmsvv-support-shiny-tabs{display:flex;justify-content:center;gap:6px;margin:8px 0}
+.pkmsvv-support-shiny-tabs .btn{min-width:75px}
+.pkmsvv-support-shiny-tabs .on{background:#ffdc7a;color:#143c4b}
+.pkmsvv-support-bond{margin-top:12px;text-align:left}
+.pkmsvv-support-bond strong{font-size:13px}
+.pkmsvv-support-bond .pkmsvv-bond-track{margin-top:7px;height:6px}
+.pkmsvv-support-bond-max{display:block;color:#ffe283;margin-top:5px}
+.pkmsvv-support-locked-note{font-weight:700}
+@media(max-width:730px){
+ #scr-upgrade-select .pkmsvv-chooser > .row.between h2{width:100%;margin-bottom:4px}
+ #scr-upgrade-select .pkmsvv-support-entry-btn{margin-left:auto}
+ .pkmsvv-support-layout{grid-template-columns:1fr}
+ #pkmsvv-support-entries{grid-template-columns:repeat(3,minmax(0,1fr));max-height:43vh}
+ #pkmsvv-support-detail{min-height:220px}
+}
+@media(max-width:400px){#pkmsvv-support-entries{grid-template-columns:repeat(2,minmax(0,1fr))}}
