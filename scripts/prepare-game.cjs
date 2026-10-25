@@ -576,6 +576,7 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-mission-at
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-orb-achievements.cjs')],{cwd:project,stdio:'inherit'});
 // v1.5: Chapter 3 follows the six Mystery Orb types and adds a separate egg quest.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v15-story.cjs')],{cwd:project,stdio:'inherit'});
+execFileSync(process.execPath,[path.join(project,'scripts','patch-v15-eggs.cjs')],{cwd:project,stdio:'inherit'});
 // Updated 5★ Gacha odds & hard pity: shared by Web, PC and Android.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-gacha-legend-100.cjs')],{cwd:project,stdio:'inherit'});
 // Directional movement-based active dash balance shared across Web, Android and PC.
