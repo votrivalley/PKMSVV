@@ -54,3 +54,20 @@ G.CHANGELOG.unshift({
  fix:[],
  credit:['Votri Valley — Bản mod và Việt hóa phi thương mại dựa trên PokéSurvivor của JPTER78.','Votri Valley — A noncommercial mod and localization based on PokéSurvivor by JPTER78.']
 });
+
+G.CHANGELOG.unshift({
+ d:'2026-10-26',
+ title:['Pokemon Chuyển sinh – Votri Valley v1.5.4','Pokemon Chuyển sinh – Votri Valley v1.5.4'],
+ subtitle:['Canh menu và cập nhật cẩm nang Pokémon hỗ trợ.','Menu alignment and a new support Pokémon handbook.'],
+ new:[
+  ['Trong Chọn kiểu nâng cấp, ô hướng dẫn nay mở danh sách Pokémon hỗ trợ cùng vai trò, hồi chiêu, quy tắc ấp trứng, Shiny và hộ vệ boss.','The upgrade chooser now expands to a support roster with each role, cooldown, egg hatch rules, Shiny odds and boss guardians.']
+ ],
+ chg:[
+  ['Canh cạnh dưới menu bên phải thẳng với phần Sự kiện và Có gì mới bên trái ở màn hình PC rộng; không hạ xuống quá mức khi màn hình nhỏ.','The right menu bottom aligns with the Events and What’s New cards on wide PC screens without overflowing smaller screens.']
+ ],
+ fix:[
+  ['Bỏ nút Hướng dẫn Mystery Orb khỏi Ký Ức, giữ đầy đủ các chương truyện và cơ chế Orb trong trận.','Removed the Mystery Orb Guide button from Memories while preserving story chapters and in-run Orb mechanics.']
+ ],
+ credit:['Votri Valley — Bản mod và Việt hóa phi thương mại dựa trên PokéSurvivor của JPTER78.',
+         'Votri Valley — A noncommercial mod and localization based on PokéSurvivor by JPTER78.']
+});
