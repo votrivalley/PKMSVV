@@ -77,6 +77,12 @@ app.whenReady().then(() => {
     if(!win || win!==mainWindow)throw Error('Invalid online launcher requester');
     return shell.openExternal('https://pkmsvv-b84d2.web.app/');
   });
+  // Only the fixed, approved community invite can open externally.
+  ipcMain.handle('pkmsvv:open-discord',async event=>{
+    const win=BrowserWindow.fromWebContents(event.sender);
+    if(!win || win!==mainWindow)throw Error('Invalid Discord requester');
+    return shell.openExternal('https://discord.gg/z36Hb9775K');
+  });
   ipcMain.handle('pkmsvv:is-fullscreen',event=>{
     const win=BrowserWindow.fromWebContents(event.sender);
     if(!win || win!==mainWindow)throw Error('Invalid full-screen requester');
