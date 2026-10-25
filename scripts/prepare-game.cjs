@@ -579,6 +579,8 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-v15-story.cjs'
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v15-eggs.cjs')],{cwd:project,stdio:'inherit'});
 // Updated 5★ Gacha odds & hard pity: shared by Web, PC and Android.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-gacha-legend-100.cjs')],{cwd:project,stdio:'inherit'});
+// v1.5: region-only missing-collection priority within each existing star tier.
+execFileSync(process.execPath,[path.join(project,'scripts','patch-v15-gacha-completion.cjs')],{cwd:project,stdio:'inherit'});
 // Directional movement-based active dash balance shared across Web, Android and PC.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-directional-dashes.cjs')],{cwd:project,stdio:'inherit'});
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v14-controller-scroll.cjs')],{cwd:project,stdio:'inherit'});
@@ -588,6 +590,8 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-hover-ability.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-remove-move-shortcuts.cjs')],{cwd:project,stdio:'inherit'});
 // Allow one-tap fullscreen RESTORE while playing, including mobile WebView recovery.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-match-fullscreen.cjs')],{cwd:project,stdio:'inherit'});
+// Offline Windows/Android and optional local Web get a save-isolation line.
+execFileSync(process.execPath,[path.join(project,'scripts','patch-v15-offline-save-notice.cjs')],{cwd:project,stdio:'inherit'});
 // Windows and Android remain strictly offline-first: do NOT inject the external
 // browser Online mode switch. The existing native save identity remains unchanged.
 execFileSync(process.execPath, [path.join(game, 'tools', 'build.js'), '--sin-seo', '--expose'], { cwd: game, stdio: 'inherit' });
