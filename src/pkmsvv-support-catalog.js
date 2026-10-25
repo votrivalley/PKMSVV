@@ -10,7 +10,7 @@ G.PKMSVVSupportCatalog=(()=>{
   shield:['Tạo khiên','Shield','Tăng khiên để hấp thụ sát thương.','Grants a damage-absorbing shield.'],
   magnet:['Hút vật phẩm','Magnet','Kéo vật phẩm lại gần.','Pulls pickups toward the player.'],
   slow:['Làm chậm','Slow','Làm chậm quái và báo hiệu trên mục tiêu.','Slows enemies with visual feedback.'],
-  ditto:['Biến hình','Transform','Hóa thành Pokémon chính, sao chép tối đa 3 chiêu ngẫu nhiên.','Transforms into your lead Pokémon and copies up to three random combat moves.'],
+  ditto:['Biến hình 7s / hồi 3s','Transform 7s / rest 3s','Biến thành Pokémon chính trong 7 giây, sử dụng tối đa 3 chiêu sao chép. Trở lại Ditto và hồi 3 giây trước khi lặp lại.','Copies up to three moves and transforms for 7 seconds, then returns to Ditto and rests 3 seconds before repeating.'],
   mew:['AOE ngẫu nhiên','Random AOE','Tung AOE ngẫu nhiên mỗi 1 giây.','Casts a random area attack every 1 second.']
  };
  function level(percent){return percent>=100?5:percent>=80?4:percent>=60?3:percent>=40?2:percent>=20?1:0;}
