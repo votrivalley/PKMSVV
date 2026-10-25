@@ -8,9 +8,14 @@ function patch(p,a,b){const file=path.join(game,p),src=fs.readFileSync(file,'utf
 }
 fs.mkdirSync(path.join(game,'js','systems'),{recursive:true});
 fs.copyFileSync(path.join(root,'src','v15','eggs.js'),path.join(game,'js','systems','pkmsvv-eggs.js'));
+fs.copyFileSync(path.join(root,'src','v15','egg-sprites.js'),path.join(game,'js','systems','pkmsvv-egg-sprites.js'));
+const artFolder=path.join(game,'assets','eggs');
+fs.mkdirSync(artFolder,{recursive:true});
+for(const file of ['egg_follow.svg','egg_crack.svg','egg_nest.svg'])
+ fs.copyFileSync(path.join(root,'src','v15','sprites',file),path.join(artFolder,file));
 patch('dev.html',
  '<script defer src="js/systems/orbs.js"></script>',
- '<script defer src="js/systems/orbs.js"></script>\n<script defer src="js/systems/pkmsvv-eggs.js"></script>');
+ '<script defer src="js/systems/orbs.js"></script>\n<script defer src="js/systems/pkmsvv-egg-sprites.js"></script>\n<script defer src="js/systems/pkmsvv-eggs.js"></script>');
 patch('js/game.js',
  '    G.Camera.x = pl.x; G.Camera.y = pl.y; G.Camera.shake = 0;',
  '    G.PKMSVVEggs.begin(pl,!!coop);\n    G.Camera.x = pl.x; G.Camera.y = pl.y; G.Camera.shake = 0;');
