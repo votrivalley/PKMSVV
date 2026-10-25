@@ -47,7 +47,7 @@ patch('js/entities/player.js',
 // Ditto's copied skills use the original combat renderer and damage rules,
 // but from a scaled, non-player proxy. No duplicate XP or manual dash.
 patch('js/systems/combat.js',
- '  return { tick, resolve, ghostCast, ghostOrbit, updateFields, drawGroundFields, drawAirFields, clearFields,',
+ '  return { tick, manualDash, resolve, ghostCast, ghostOrbit, updateFields, drawGroundFields, drawAirFields, clearFields,',
  `  function pkmsvvSupportCast(pl,it,m){
     if(!pl||!it||!m||pl.dead||G.Coop?.active)return false;
     const target=(G.EnemyMgr.all()||[]).filter(e=>!e.dead&&!e.remote)
@@ -64,7 +64,7 @@ patch('js/systems/combat.js',
     echo.onDealt=()=>{};echo.cast=()=>{};echo.heal=()=>{};
     try{run(echo,{...m});return true;}catch(e){return false;}
    }
-   return { pkmsvvSupportCast, tick, resolve, ghostCast, ghostOrbit, updateFields, drawGroundFields, drawAirFields, clearFields,`);
+   return { pkmsvvSupportCast, tick, manualDash, resolve, ghostCast, ghostOrbit, updateFields, drawGroundFields, drawAirFields, clearFields,`);
 // Hatch affinity persists across devices: choose highest earned count, never
 // add counts from two synced devices (which would inflate friendship).
 patch('js/core/db.js',
