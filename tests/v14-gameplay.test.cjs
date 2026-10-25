@@ -326,7 +326,7 @@ test('Chapter 2 only after all eight learned skills; replayable narrative and ti
  if(!fs.existsSync(path.join(root,html))){t.skip('Pinned game not prepared');return;}
  const str=read(html);
  assert.match(str,/<div class="splash pkmsvv-credit"/);
- assert.match(str,/<div class="t1 pkmsvv-logo"/);
+ assert.match(str,/<div class="t1 pkmsvv-logo pkmsvv-one-line" translate="no"><span>Pokémon Sống Sót<\/span><\/div>/);
  assert.match(read('vendor/pokesurvivor/js/net/coop.js'),/orbReady:a\[15\]===1\?1:0/);
  assert.match(read('vendor/pokesurvivor/js/net/coop.js'),/G\.Orbs\.ready\(local\)\?1:0/);
 });
