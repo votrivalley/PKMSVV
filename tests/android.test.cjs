@@ -18,9 +18,9 @@ test('mobile shell has stable origin and package identity',()=>{
  assert.equal(conf.server.androidScheme,'https');
 });
 
-test('Android assets have Pokémon Sống Sót branding',()=>{
+test('Android assets have Pokemon Chuyển sinh branding',()=>{
  const root=path.join(__dirname,'..','mobile','www');
  const m=JSON.parse(fs.readFileSync(path.join(root,'manifest.webmanifest'),'utf8'));
- assert.match(m.name,/Pokémon Sống Sót/);
+ assert.match(m.name,/Pokemon Chuyển sinh/);
  assert.doesNotMatch(m.name,/Pokémon Survivor|Survival/);
 });

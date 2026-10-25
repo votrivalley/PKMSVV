@@ -8,8 +8,8 @@ test('v1.4 release notes bilingual and native/cloud history preserved',()=>{
  assert.match(s,/v1\.4/);assert.match(s,/10\/20\/30/);assert.match(s,/Mystery Dungeon Orbs/);
  assert.match(s,/Shiny Charm/);assert.match(s,/Gacha ×100/);assert.match(s,/Meteor Mash/);
  assert.match(read('scripts/prepare-game.cjs'),/patch-v14-gameplay.cjs/);
- assert.match(read('scripts/prepare-web.cjs'),/1\.4/);
- assert.equal(require('../package.json').version,'1.4.0');
+ assert.match(read('scripts/prepare-web.cjs'),/1\.5/);
+ assert.equal(require('../package.json').version,'1.5.0');
 });
 test('Gacha balance uses precise 0.9% Shiny, 1.8% Charm and 1% Legend odds',()=>{
  const cfg=JSON.parse(read('config/gameplay.json'));
@@ -326,7 +326,7 @@ test('Chapter 2 only after all eight learned skills; replayable narrative and ti
  if(!fs.existsSync(path.join(root,html))){t.skip('Pinned game not prepared');return;}
  const str=read(html);
  assert.match(str,/<div class="splash pkmsvv-credit"/);
- assert.match(str,/<div class="t1 pkmsvv-logo pkmsvv-one-line" translate="no"><span>Pokémon Sống Sót<\/span><\/div>/);
+ assert.match(str,/<div class="t1 pkmsvv-logo pkmsvv-one-line" translate="no"><span>Pokemon Chuyển sinh<\/span><\/div>/);
  assert.match(read('vendor/pokesurvivor/js/net/coop.js'),/orbReady:a\[15\]===1\?1:0/);
  assert.match(read('vendor/pokesurvivor/js/net/coop.js'),/G\.Orbs\.ready\(local\)\?1:0/);
 });
