@@ -1,7 +1,7 @@
 /* PKMSVV v1.5 — Egg Rush, online 4-player host-authoritative match. */
 G.EggRush=(()=>{
  const MAX=10,MAX_TIME=720,EGG_SPECIES=[172,447,173,35,360,438,175,174];
- let active=false,roster=[],nests=[],trails=new Map(),pets=[],score={},at={},laid=0,wave=0,seed=1,outcome=null,transition={},revives=0,deathTime=0,levelSeen=1;
+ let active=false,roster=[],nests=[],trails=new Map(),pets=[],score={},at={},laid=0,wave=0,seed=1,outcome=null,transition={},revives=0,deathTime=0,levelSeen=1,killsSeen=0;
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  const nameOf=uid=>roster.find(m=>m.uid===uid)?.name||'Player';
  const rand=k=>{let x=((seed+Math.imul(k+1,2654435761))|0);x^=x>>>16;x=Math.imul(x,2246822507);x^=x>>>13;return (x>>>0)/4294967296;};
@@ -13,7 +13,7 @@ G.EggRush=(()=>{
  function begin(cfg){
   active=!!(cfg&&cfg.mode==='eggrush');
   roster=active?(cfg.members||[]).map(m=>({uid:m.uid,name:String(m.name||'Player').slice(0,24),dex:m.dex||25})):[];
-  seed=Math.floor(Number(cfg?.seed)||1);nests=[];pets=[];trails=new Map();revives=0;deathTime=0;levelSeen=1;
+  seed=Math.floor(Number(cfg?.seed)||1);nests=[];pets=[];trails=new Map();revives=0;deathTime=0;levelSeen=1;killsSeen=0;
   score=Object.fromEntries(roster.map(m=>[m.uid,0]));at={};laid=0;wave=0;outcome=null;transition={};
   if(active){
    G.Sprites?.preload?.([...EGG_SPECIES,...roster.map(x=>x.dex)],7500);
@@ -84,6 +84,10 @@ G.EggRush=(()=>{
     else if(!p.dead)deathTime=0;
    }
   }
+  const hostMe=G.Game.player;
+  const advanceLevel=G.Coop.isHost?Math.max(0,(hostMe?.level||1)-levelSeen):0;
+  const advanceKills=G.Coop.isHost?Math.max(0,(hostMe?.kills||0)-killsSeen):0;
+  if(G.Coop.isHost){levelSeen=hostMe?.level||1;killsSeen=hostMe?.kills||0;}
   for(const pet of pets){
    const trl=trails.get(pet.uid);
    if(!trl?.length)continue;
@@ -91,8 +95,7 @@ G.EggRush=(()=>{
    const loc=trl[Math.min((i+1)*12,trl.length-1)];
    pet.x+=(loc.x-pet.x)*Math.min(1,dt*10);pet.y+=(loc.y-pet.y)*Math.min(1,dt*10);
    pet.age+=dt;
-   const me=G.Game.player;
-   if(pet.uid===me?.uid&&me?.level>levelSeen){pet.boost=(pet.boost||0)+(me.level-levelSeen)*3;levelSeen=me.level;}
+   if(G.Coop.isHost)pet.boost=(pet.boost||0)+advanceLevel*3+advanceKills*.65;
    if(G.Coop.isHost&&pet.age>=20&&pet.age+(pet.boost||0)>=45&&!pet.hatch){
     const event=['er','hatch',pet.id];onEvent(event);G.Coop.broadcast(event);
    }
