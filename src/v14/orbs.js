@@ -99,6 +99,7 @@ G.Orbs=(()=>{
    stats.pkmsvvOrbsUsed=Math.min(1000000,(stats.pkmsvvOrbsUsed||0)+1);
    const idx=LIST.findIndex(v=>v.id===id);
    if(idx>=0)stats.pkmsvvOrbTypeMask=((stats.pkmsvvOrbTypeMask||0)|(1<<idx))&63;
+   if((stats.pkmsvvOrbTypeMask&63)===63&&G.PKMSVVStory&&G.PKMSVVStory.markChapter3)G.PKMSVVStory.markChapter3();
    if(G.Progress&&G.Progress.checkAch)G.Progress.checkAch();
   }
   cd=CD;if(G.Audio)G.Audio.sfx('confirm');
