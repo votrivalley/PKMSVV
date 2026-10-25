@@ -41,6 +41,9 @@ patch('js/net/coop.js',
  "if(host)emit(['ob',id,x,y,z]);",
  "if(host){emit(['ob',id,x,y,z]);if(G.EggRush.active)G.EggRush.orb(local,id);}");
 patch('js/game.js',
+ "      if (pl.dead && !G.Royale.active) reviveTick(dt);",
+ "      if (pl.dead && !G.Royale.active && !G.EggRush.active) reviveTick(dt);");
+patch('js/game.js',
  "    G.Royale.begin(coop);",
  "    G.Royale.begin(coop);\n    G.EggRush.begin(coop);");
 patch('js/game.js',
