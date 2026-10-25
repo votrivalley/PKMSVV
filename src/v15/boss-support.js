@@ -44,6 +44,8 @@ G.PKMSVVBossSupport=(()=>{
  }
  function spawn(boss){
   if(!boss?.boss||boss.remote||boss.dead||linked.has(boss.id))return [];
+  // Unlock boss allies only once players can hatch their own support eggs.
+  if(!G.PKMSVVEggs?.unlocked?.())return [];
   if(G.Coop?.active&&!G.Coop?.isHost)return [];
   // Weighted 1/2/3 guardians; never exceeds three.
   const roll=Math.random(),n=roll<.5?1:roll<.82?2:3;

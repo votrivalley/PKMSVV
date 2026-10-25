@@ -285,7 +285,7 @@ test('Boss guardians spawn 1–3 at 30% boss HP, stay attackable and no recursio
   }
   const G={I18n:{lang:'vi'},Enemy,
    DEX_BY:{172:{name:'Pichu'},447:{name:'Riolu'},173:{name:'Cleffa'},360:{name:'Wynaut'},174:{name:'Igglybuff'}},
-   Coop:{active:false,isHost:true},
+   Coop:{active:false,isHost:true},PKMSVVEggs:{unlocked:()=>true},
    EnemyMgr:{add(e){added.push(e);return e;},get(n){return added.find(e=>e.id===n)},clear(){added=[];}},
    FX:{ring(){}},Spawner:{say(s){announcements.push(s);}},
    Sprites:{dirFromAngle:()=>0,preload(){}},
@@ -315,6 +315,11 @@ test('Boss guardians spawn 1–3 at 30% boss HP, stay attackable and no recursio
   b.dead=true;guards[0].update(.1,{x:0,y:0,dead:false});
   assert.equal(guards[0].dead,true);
  }
+});
+test('Boss support is not enabled for players who cannot yet hatch eggs',()=>{
+ const src=read('src/v15/boss-support.js');
+ assert.ok(src.includes('G.PKMSVVEggs?.unlocked?.()'));
+ assert.ok(src.includes('if(G.Coop?.active&&!G.Coop?.isHost)return []'));
 });
 test('Boss support runtime is bundled in shared Windows Android and Web game build',()=>{
  const patch=read('scripts/patch-v15-eggs.cjs');
