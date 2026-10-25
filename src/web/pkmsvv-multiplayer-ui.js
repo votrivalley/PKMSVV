@@ -4,7 +4,7 @@ G.MultiplayerUI=(()=>{
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
  const msg=(s,bad=false)=>{const el=$('pkmsvv-mp-message');el.textContent=s;el.style.color=bad?'#ffc4cb':'#d2e8ff';};
  const vi=()=>!G.I18n||G.I18n.lang==='vi';
- const label=mode=>mode==='royale'?(vi()?'🏆 Sống Còn · 2–10':'🏆 Survival · 2–10'):(vi()?'🤝 Sống Sót · 2–4':'🤝 Co-op · 2–4');
+ const label=mode=>mode==='eggrush'?(vi()?'Tranh Trứng · 4 người':'Egg Rush · 4 players'):mode==='royale'?(vi()?'🏆 Sống Còn · 2–10':'🏆 Survival · 2–10'):(vi()?'🤝 Sống Sót · 2–4':'🤝 Co-op · 2–4');
  const busy=()=>{if(!G.Social.room)return false;G.LobbyUI.open();return true;};
 
  // Check the immutable compiled-script hash against the server before matchmaking.
@@ -102,6 +102,9 @@ G.MultiplayerUI=(()=>{
    'pkmsvv-royale-public':()=>create('royale','public'),
    'pkmsvv-quick-coop':()=>quick('coop'),
    'pkmsvv-quick-royale':()=>quick('royale'),
+   'pkmsvv-quick-eggrush':()=>quick('eggrush'),
+   'pkmsvv-eggrush-public':()=>create('eggrush','public'),
+   'pkmsvv-eggrush-private':()=>create('eggrush','private'),
    'pkmsvv-public-refresh':()=>rooms(),
    'pkmsvv-join-code':()=>join(($('pkmsvv-room-code').value||'').trim()),
    'pkmsvv-existing-lobby':()=>G.LobbyUI.open(),
@@ -114,14 +117,16 @@ G.MultiplayerUI=(()=>{
   const captions=vi()?{
    'pkmsvv-quick-coop':'🤝 Ghép Sống Sót','pkmsvv-quick-royale':'🏆 Ghép Sống Còn',
    'pkmsvv-coop-public':'Sống Sót · Công khai','pkmsvv-royale-public':'Sống Còn · Công khai',
-   'pkmsvv-coop-private':'Sống Sót · Riêng tư','pkmsvv-royale-private':'Sống Còn · Riêng tư'
+   'pkmsvv-coop-private':'Sống Sót · Riêng tư','pkmsvv-royale-private':'Sống Còn · Riêng tư',
+   'pkmsvv-eggrush-public':'Tranh Trứng · Công khai','pkmsvv-eggrush-private':'Tranh Trứng · Riêng tư'
   }:{
    'pkmsvv-quick-coop':'🤝 Quick Co-op','pkmsvv-quick-royale':'🏆 Quick Survival',
    'pkmsvv-coop-public':'Co-op · Public','pkmsvv-royale-public':'Survival · Public',
-   'pkmsvv-coop-private':'Co-op · Private','pkmsvv-royale-private':'Survival · Private'
+   'pkmsvv-coop-private':'Co-op · Private','pkmsvv-royale-private':'Survival · Private',
+   'pkmsvv-eggrush-public':'Egg Rush · Public','pkmsvv-eggrush-private':'Egg Rush · Private'
   };
   for(const [id,title] of Object.entries(captions)) {
-   if(id==='pkmsvv-quick-coop'||id==='pkmsvv-quick-royale')continue;
+   if(id==='pkmsvv-quick-coop'||id==='pkmsvv-quick-royale'||id==='pkmsvv-quick-eggrush')continue;
    $(id).textContent=title;
   }
   for(const [id,coop] of [['pkmsvv-quick-coop',true],['pkmsvv-quick-royale',false]]){
@@ -133,16 +138,18 @@ G.MultiplayerUI=(()=>{
     (vi()?'Đấu loại. Bị hạ sẽ rời trận; người trụ lại cuối cùng chiến thắng.':'Elimination battle. No revival; the last survivor wins.');
    b.querySelector('.pkmsvv-mode-action').textContent=vi()?'▶ Chơi nhanh':'▶ Quick match';
   }
+  const egg=$('pkmsvv-quick-eggrush');
+  if(egg){egg.querySelector('.pkmsvv-mode-title').textContent=vi()?'Tranh Trứng':'Egg Rush';egg.querySelector('.pkmsvv-mode-cap').textContent=vi()?'4 người':'4 players';egg.querySelector('.pkmsvv-mode-description').textContent=vi()?'10 trứng trong 5 đợt · tranh điểm, Orb và chiêu đối kháng':'10 eggs in 5 waves · score race with PvP skills and Orbs';egg.querySelector('.pkmsvv-mode-action').textContent=vi()?'▶ Chơi nhanh':'▶ Quick match';}
   const r=G.Social.room;
   $('pkmsvv-existing-lobby').classList.toggle('hidden',!r);
-  $('pkmsvv-mp-current').textContent=r?(vi()?'Bạn đang trong phòng ':'You are in a ')+(r.mode==='royale'?(vi()?'Sống Còn':'Survival'):(vi()?'Sống Sót':'Co-op'))+(vi()?'.':' room.') : '';
+  $('pkmsvv-mp-current').textContent=r?(vi()?'Bạn đang trong phòng ':'You are in a ')+(r.mode==='eggrush'?(vi()?'Tranh Trứng':'Egg Rush'):r.mode==='royale'?(vi()?'Sống Còn':'Survival'):(vi()?'Sống Sót':'Co-op'))+(vi()?'.':' room.') : '';
  }
  function open(){
   G.SocialUI.withNick(()=>{
    G.UI.show('scr-multiplayer',true);msg('');refresh();
    // Reuse native pixel sprites from the game, not generated/third-party artwork.
    if(G.UI&&G.UI.sprite){
-    for(const [canvasId,dex] of [['pkmsvv-mode-sprite-coop',25],['pkmsvv-mode-sprite-royale',6]]){
+    for(const [canvasId,dex] of [['pkmsvv-mode-sprite-coop',25],['pkmsvv-mode-sprite-royale',6],['pkmsvv-mode-sprite-eggrush',175]]){
      const cv=$(canvasId);if(cv)G.UI.sprite(cv,dex,{lively:true,scale:2,hero:true});
     }
    }
