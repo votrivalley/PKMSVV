@@ -9,7 +9,9 @@ G.PKMSVVEggs=(()=>{
   {dex:360,role:'shield',period:17,power:.12}, // Wynaut
   {dex:438,role:'shield',period:12,power:.065}, // Bonsly
   {dex:175,role:'magnet',period:12,power:18}, // Togepi
-  {dex:174,role:'slow',period:9,power:.32} // Igglybuff
+  {dex:174,role:'slow',period:9,power:.32}, // Igglybuff
+  {dex:132,role:'ditto',period:1,power:1}, // Ditto 8%
+  {dex:151,role:'mew',period:1,power:1} // Mew 4%
  ];
  const byDex=Object.fromEntries(SPECIES.map(x=>[x.dex,x]));
  const COLLECT_TIME=4, NEST_RADIUS=38, HATCH_BASE=45, HATCH_MIN=20;
@@ -39,6 +41,8 @@ G.PKMSVVEggs=(()=>{
    nests.push({id:++seq,x,y,age:0,collecting:0});G.Spawner?.say?.(tr('Một ổ trứng đã xuất hiện!','An egg nest has appeared!'),3);return;
   }
  }
+ function affinityFor(dex){return Math.min(999,Math.max(0,Number(G.DB?.save?.pkmsvvSupportBond?.[dex])||0));}
+ function affinityMultiplier(dex){return 1+Math.min(.3,Math.max(0,affinityFor(dex)-1)*.02);}
  function onHatch(it){
   const stats=G.DB.save.stats||(G.DB.save.stats={});
   stats.pkmsvvEggsHatched=Math.min(99999,(stats.pkmsvvEggsHatched||0)+1);
@@ -46,6 +50,10 @@ G.PKMSVVEggs=(()=>{
    G.DB.save.pkmsvvEggSlot2=true;
    G.Spawner?.say?.(tr('Hoàn thành thử thách Chương 3: mở ô đồng hành thứ hai!','Chapter 3 challenge complete: second companion slot unlocked!'),5,true);
   }
+  const bonds=G.DB.save.pkmsvvSupportBond||(G.DB.save.pkmsvvSupportBond={});
+  bonds[it.dex]=Math.min(999,(Number(bonds[it.dex])||0)+1);
+  it.affinityBoost=affinityMultiplier(it.dex);
+  it.bondHatches=bonds[it.dex];
   G.DB.commit(true);
   G.FX?.ring?.(it.x,it.y,6,62,'#ffe17b',.55,2);
   // Reserved egg slots prevent overflow; there is no replacement dialog.
@@ -59,7 +67,12 @@ G.PKMSVVEggs=(()=>{
   it.spdScale=it.shiny?1:.8+Math.random()*.1;
   it.spd=Math.max(25,Number(player.spd||player.baseSpd||120)*it.spdScale);
   it.shield=0;it.hitCooldown=1.2;it.hurtFlash=0;
-  it.anim=new G.Sprites.Animator(it.dex,.72,it.shiny);
+  it.copiedSkills=[];
+  if(it.dex===132){
+   it.copyDex=player?.mon?.dex||player?.dex||G.DB?.save?.partner||132;
+   updateDittoSkills(it,player);
+  }
+  it.anim=new G.Sprites.Animator(it.copyDex||it.dex,.72,it.shiny&&it.dex!==132);
   it.anim.loop('Idle');
   if(it.shiny){
    G.Sprites?.preload?.([it.dex],5000,true);
@@ -70,8 +83,14 @@ G.PKMSVVEggs=(()=>{
                            'Support hatched: '+Math.round(it.statScale*100)+'% stats!'),2.5);
   }
  }
+ function rollSpecies(roll=Math.random()){
+  if(roll<.08)return byDex[132];
+  if(roll<.12)return byDex[151];
+  const pool=SPECIES.filter(x=>x.dex!==132&&x.dex!==151);
+  return pool[Math.min(pool.length-1,Math.floor((roll-.12)/.88*pool.length))];
+ }
  function collect(n){
-  const chosen=SPECIES[Math.floor(Math.random()*SPECIES.length)];
+  const chosen=rollSpecies();
   items.push({dex:chosen.dex,id:n.id,hatched:false,active:false,age:0,boost:0,penalty:0,cooldown:chosen.period,x:n.x,y:n.y,anim:null,step:0,moving:false,effectFlash:0,shiny:false,hp:0,maxHp:0,statScale:0,hitCooldown:0});
   G.FX?.ring?.(n.x,n.y,5,43,'#f7dc91',.35,2);
   G.Spawner?.say?.(tr('Đã tìm thấy trứng. Hãy chiến đấu để ấp nở!','Egg found. Keep fighting to hatch it!'),3,true);
@@ -180,11 +199,45 @@ G.PKMSVVEggs=(()=>{
    if(inside)hurtSupport(it,h.pct?Math.max(h.dmg||0,it.maxHp*h.pct):h.dmg);
   }
  }
+ const DITTO_KINDS=new Set(['projectile','nova','beam','melee','cone','homing','bounce','chain']);
+ function updateDittoSkills(it,pl){
+  if(!Array.isArray(pl?.moves))return;
+  const taken=new Set(it.copiedSkills.map(x=>x.move.id||x.move.key||x.move.name));
+  const pool=pl.moves.filter(m=>m&&DITTO_KINDS.has(m.kind)&&!taken.has(m.id||m.key||m.name));
+  while(pool.length&&it.copiedSkills.length<3){
+   const i=Math.floor(Math.random()*pool.length);
+   it.copiedSkills.push({move:{...pool.splice(i,1)[0]},timer:0});
+  }
+ }
+ function dittoCast(it,pl){
+  updateDittoSkills(it,pl);let did=false;
+  for(const entry of it.copiedSkills){
+   if(entry.timer>0)continue;
+   if(G.Combat?.pkmsvvSupportCast?.(pl,it,entry.move)){
+    entry.timer=Math.max(1.5,(entry.move.cd||3)*1.35);did=true;
+   }
+  }
+  return did;
+ }
+ function mewCast(it,pl){
+  const pattern=Math.floor(Math.random()*3);
+  const near=(G.EnemyMgr?.all?.()||[]).filter(e=>e&&!e.dead&&!e.remote&&G.U.dist2(e.x,e.y,it.x,it.y)<250*250);
+  const cx=pattern===2&&near.length?near[0].x:it.x,cy=pattern===2&&near.length?near[0].y:it.y;
+  const radius=[100,150,80][pattern],col=['#f7b5fa','#91ddff','#ffe68a'][pattern];
+  G.FX?.ring?.(cx,cy,8,radius,col,.4,2);
+  G.FX?.burst?.(cx,cy-15,col,8,80);
+  for(const e of near)if(G.U.dist2(e.x,e.y,cx,cy)<=radius*radius){
+   e.hurt?.(Math.max(1,(8+pl.level*.7)*it.statScale*(it.affinityBoost||1)),col,0,0,0);
+  }
+  it.effectFlash=.45;return true;
+ }
  function effect(it,pl){
   const spec=byDex[it.dex];if(!spec||!it.active||it.hp<=0||pl.dead)return false;
   const enemies=(G.EnemyMgr?.all?.()||[]).filter(e=>e&&!e.dead&&!e.remote&&G.U.dist2(e.x,e.y,it.x,it.y)<260*260);
   const target=enemies.reduce((acc,e)=>!acc||G.U.dist2(e.x,e.y,it.x,it.y)<G.U.dist2(acc.x,acc.y,it.x,it.y)?e:acc,null);
   if((spec.role==='attack'||spec.role==='slow')&&!target)return false;
+  if(spec.role==='ditto')return dittoCast(it,pl);
+  if(spec.role==='mew')return mewCast(it,pl);
   let recipient=pl;
   if(spec.role==='attack')target.hurt(Math.max(1,(spec.power+pl.level*.55)*it.statScale),'#ffe8a1',0,0,0);
   else if(spec.role==='heal'){
@@ -192,17 +245,17 @@ G.PKMSVVEggs=(()=>{
    const teammate=wounded.reduce((best,a)=>!best||a.hp/a.maxHp<best.hp/best.maxHp?a:best,null);
    // Heal a wounded teammate when they are worse off than the hero.
    if(teammate&&teammate.hp/teammate.maxHp<pl.hp/pl.maxHp){
-    teammate.hp=Math.min(teammate.maxHp,teammate.hp+Math.max(1,teammate.maxHp*spec.power*it.statScale));
+    teammate.hp=Math.min(teammate.maxHp,teammate.hp+Math.max(1,teammate.maxHp*spec.power*it.statScale*(it.affinityBoost||1)));
     recipient=teammate;
    }else{
     if(pl.hp>=pl.maxHp)return false;
-    pl.heal(Math.max(1,pl.maxHp*spec.power*it.statScale));
+    pl.heal(Math.max(1,pl.maxHp*spec.power*it.statScale*(it.affinityBoost||1)));
    }
   }else if(spec.role==='shield'){
-   pl.pkmsvvShield=Math.min(pl.maxHp*.25,(pl.pkmsvvShield||0)+pl.maxHp*spec.power*it.statScale);
-   for(const teammate of support()) teammate.shield=Math.min(teammate.maxHp*.25,(teammate.shield||0)+teammate.maxHp*spec.power*it.statScale);
+   pl.pkmsvvShield=Math.min(pl.maxHp*.25,(pl.pkmsvvShield||0)+pl.maxHp*spec.power*it.statScale*(it.affinityBoost||1));
+   for(const teammate of support()) teammate.shield=Math.min(teammate.maxHp*.25,(teammate.shield||0)+teammate.maxHp*spec.power*it.statScale*(it.affinityBoost||1));
   }
-  else if(spec.role==='slow')target.applySlow(spec.power*it.statScale,2.8);
+  else if(spec.role==='slow')target.applySlow(spec.power*it.statScale*(it.affinityBoost||1),2.8);
   else if(spec.role==='magnet')G.Pickups?.pullAll?.();
   const c=FX_COLOR[spec.role];
   it.effectFlash=.85;
@@ -317,6 +370,10 @@ G.PKMSVVEggs=(()=>{
      it.hatched=true;it.active=false;onHatch(it);
     }
    }else{
+    if(it.dex===132){
+     updateDittoSkills(it,pl);
+     for(const entry of it.copiedSkills)entry.timer=Math.max(0,entry.timer-dt);
+    }
     it.cooldown-=dt;
     if(it.cooldown<=0)it.cooldown=effect(it,pl)?byDex[it.dex].period:.5;
    }
@@ -424,5 +481,5 @@ G.PKMSVVEggs=(()=>{
   ctx.fillStyle='#fff3bd';ctx.font='bold 11px sans-serif';ctx.textAlign='left';
   ctx.fillText(tr('Đồng hành','Companions')+' '+ready+'/'+limit(),x+8,y+16);ctx.restore();
  }
- return {SPECIES,SHINY_CHANCE,COLLECT_TIME,begin,update,onHurt,hurtSupport,enemyTarget,interceptProjectile,hitHazard,remaining,draw,drawables,hud,limit,unlocked,get followers(){return items;},get nests(){return nests;},get occupied(){return occupied();}};
+ return {SPECIES,rollSpecies,affinityFor,affinityMultiplier,SHINY_CHANCE,COLLECT_TIME,begin,update,onHurt,hurtSupport,enemyTarget,interceptProjectile,hitHazard,remaining,draw,drawables,hud,limit,unlocked,get followers(){return items;},get nests(){return nests;},get occupied(){return occupied();}};
 })();
