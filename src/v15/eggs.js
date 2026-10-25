@@ -1,5 +1,5 @@
-/* PKMSVV v1.5 — in-run egg nests and tiny companion followers.
-   Shiny support is 3% per hatch, stays in the RUN only, no ownership/save changes. */
+/* PKMSVV v1.5 — in-run support, affection and Ditto transformation cycles.
+   Species and Shiny have independent chances, with rewards for max friendship. */
 G.PKMSVVEggs=(()=>{
  const SPECIES=[
   {dex:172,role:'attack',period:3.3,power:9}, // Pichu
@@ -16,6 +16,7 @@ G.PKMSVVEggs=(()=>{
  const byDex=Object.fromEntries(SPECIES.map(x=>[x.dex,x]));
  const COLLECT_TIME=4, NEST_RADIUS=38, HATCH_BASE=45, HATCH_MIN=20;
  const SHINY_CHANCE=.03, MIN_STAT=.5, MAX_STAT=.8, HIT_COOLDOWN=1.25;
+ const DITTO_FORM=7,DITTO_REST=3;
  const FX_COLOR={attack:'#ffd472',heal:'#66ffad',shield:'#6edaff',magnet:'#ffe078',slow:'#e99aff'};
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  let player=null,items=[],nests=[],trail=[],spawnAt=55,seq=0,kills=0,lv=1,runTime=0,lastDir={x:0,y:1},wasInArena=false;
@@ -41,8 +42,35 @@ G.PKMSVVEggs=(()=>{
    nests.push({id:++seq,x,y,age:0,collecting:0});G.Spawner?.say?.(tr('Một ổ trứng đã xuất hiện!','An egg nest has appeared!'),3);return;
   }
  }
- function affinityFor(dex){return Math.min(999,Math.max(0,Number(G.DB?.save?.pkmsvvSupportBond?.[dex])||0));}
- function affinityMultiplier(dex){return 1+Math.min(.3,Math.max(0,affinityFor(dex)-1)*.02);}
+ function affinityFor(dex){return Math.min(999,Math.max(0,Math.floor(Number(G.DB?.save?.pkmsvvSupportBond?.[dex])||0)));}
+ function affinityGoal(dex){return Number(dex)===151?25:Number(dex)===132?50:100;}
+ function affinityPercent(dex){return Math.min(100,Math.floor(100*affinityFor(dex)/affinityGoal(dex)));}
+ function maxAffinity(dex){return affinityFor(dex)>=affinityGoal(dex);}
+ function affinityMultiplier(dex){return 1+.3*affinityPercent(dex)/100;}
+ function speciesChanceFor(dex){
+  const mul=maxAffinity(dex)?2:1;
+  return Number(dex)===132?.08*mul:Number(dex)===151?.04*mul:0;
+ }
+ function shinyChanceFor(dex){
+  const base=Number(dex)===132?.08:Number(dex)===151?.04:SHINY_CHANCE;
+  return base*(maxAffinity(dex)?2:1);
+ }
+ function setDittoForm(it,transformed){
+  if(it.dex!==132)return;
+  it.dittoPhase=transformed?'transform':'rest';
+  it.dittoTime=transformed?DITTO_FORM:DITTO_REST;
+  const dex=transformed?(it.copyDex||132):132;
+  const shiny=transformed?!!player?.shiny:!!it.shiny;
+  G.Sprites?.preload?.([dex],5000,shiny);
+  it.anim=new G.Sprites.Animator(dex,.72,shiny);
+  it.anim.loop('Idle');
+  it.cooldown=0;
+ }
+ function tickDitto(it,dt){
+  if(it.dex!==132||!it.hatched||!it.active)return;
+  it.dittoTime=Math.max(0,(it.dittoTime||0)-dt);
+  if(it.dittoTime<=0)setDittoForm(it,it.dittoPhase!=='transform');
+ }
  function onHatch(it){
   const stats=G.DB.save.stats||(G.DB.save.stats={});
   stats.pkmsvvEggsHatched=Math.min(99999,(stats.pkmsvvEggsHatched||0)+1);
@@ -58,7 +86,7 @@ G.PKMSVVEggs=(()=>{
   G.FX?.ring?.(it.x,it.y,6,62,'#ffe17b',.55,2);
   // Reserved egg slots prevent overflow; there is no replacement dialog.
   it.active=true;
-  it.shiny=Math.random()<SHINY_CHANCE;
+  it.shiny=Math.random()<shinyChanceFor(it.dex);
   it.statScale=it.shiny?1:MIN_STAT+Math.random()*(MAX_STAT-MIN_STAT);
   it.maxHp=Math.max(1,Math.round((player.maxHp||100)*it.statScale));
   it.hp=it.maxHp;
@@ -71,9 +99,11 @@ G.PKMSVVEggs=(()=>{
   if(it.dex===132){
    it.copyDex=player?.mon?.dex||player?.dex||G.DB?.save?.partner||132;
    updateDittoSkills(it,player);
+   setDittoForm(it,true);
+  }else{
+   it.anim=new G.Sprites.Animator(it.dex,.72,it.shiny);
+   it.anim.loop('Idle');
   }
-  it.anim=new G.Sprites.Animator(it.copyDex||it.dex,.72,it.shiny&&it.dex!==132);
-  it.anim.loop('Idle');
   if(it.shiny){
    G.Sprites?.preload?.([it.dex],5000,true);
    G.Spawner?.say?.(tr('Một Pokémon hỗ trợ Shiny đã nở! (100% chỉ số)','A Shiny support Pokémon hatched! (100% stats)'),4,true);
@@ -84,10 +114,13 @@ G.PKMSVVEggs=(()=>{
   }
  }
  function rollSpecies(roll=Math.random()){
-  if(roll<.08)return byDex[132];
-  if(roll<.12)return byDex[151];
+  const dittoChance=speciesChanceFor(132),mewChance=speciesChanceFor(151);
+  if(roll<dittoChance)return byDex[132];
+  if(roll<dittoChance+mewChance)return byDex[151];
   const pool=SPECIES.filter(x=>x.dex!==132&&x.dex!==151);
-  return pool[Math.min(pool.length-1,Math.floor((roll-.12)/.88*pool.length))];
+  const remaining=1-dittoChance-mewChance;
+  const idx=Math.min(pool.length-1,Math.max(0,Math.floor((roll-dittoChance-mewChance)/remaining*pool.length)));
+  return pool[idx];
  }
  function collect(n){
   const chosen=rollSpecies();
@@ -210,6 +243,7 @@ G.PKMSVVEggs=(()=>{
   }
  }
  function dittoCast(it,pl){
+  if(it.dittoPhase!=='transform')return false;
   updateDittoSkills(it,pl);let did=false;
   for(const entry of it.copiedSkills){
    if(entry.timer>0)continue;
@@ -373,9 +407,12 @@ G.PKMSVVEggs=(()=>{
     if(it.dex===132){
      updateDittoSkills(it,pl);
      for(const entry of it.copiedSkills)entry.timer=Math.max(0,entry.timer-dt);
+     tickDitto(it,dt);
     }
     it.cooldown-=dt;
-    if(it.cooldown<=0)it.cooldown=effect(it,pl)?byDex[it.dex].period:.5;
+    if(it.dex!==132||it.dittoPhase==='transform'){
+     if(it.cooldown<=0)it.cooldown=effect(it,pl)?byDex[it.dex].period:.5;
+    }
    }
   }
   hitByEnemies(dt);
@@ -481,5 +518,5 @@ G.PKMSVVEggs=(()=>{
   ctx.fillStyle='#fff3bd';ctx.font='bold 11px sans-serif';ctx.textAlign='left';
   ctx.fillText(tr('Đồng hành','Companions')+' '+ready+'/'+limit(),x+8,y+16);ctx.restore();
  }
- return {SPECIES,rollSpecies,affinityFor,affinityMultiplier,SHINY_CHANCE,COLLECT_TIME,begin,update,onHurt,hurtSupport,enemyTarget,interceptProjectile,hitHazard,remaining,draw,drawables,hud,limit,unlocked,get followers(){return items;},get nests(){return nests;},get occupied(){return occupied();}};
+ return {SPECIES,rollSpecies,affinityFor,affinityGoal,affinityPercent,maxAffinity,affinityMultiplier,speciesChanceFor,shinyChanceFor,DITTO_FORM,DITTO_REST,SHINY_CHANCE,COLLECT_TIME,begin,update,onHurt,hurtSupport,enemyTarget,interceptProjectile,hitHazard,remaining,draw,drawables,hud,limit,unlocked,get followers(){return items;},get nests(){return nests;},get occupied(){return occupied();}};
 })();
