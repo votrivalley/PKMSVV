@@ -169,22 +169,21 @@ G.EggRush=(()=>{
    if(target.uid===G.Game.player?.uid)onEvent(evt);else G.Coop.broadcast(evt);
   }
  }
- function egg(ctx,x,y){
+ function egg(ctx,x,y,progress=0){
+  if(G.PKMSVVEggArt?.egg(ctx,x,y-9,1,progress))return;
   ctx.fillStyle='#ffebbf';ctx.strokeStyle='#c19b6f';ctx.lineWidth=2;
   ctx.beginPath();ctx.ellipse(x,y-9,10,13,0,0,6.283);ctx.fill();ctx.stroke();
-  ctx.fillStyle='#cda5dc';ctx.beginPath();ctx.arc(x+2,y-11,3,0,6.283);ctx.fill();
  }
  function draw(ctx){
   if(!active)return;
   ctx.save();
   for(const n of nests){
    if(n.taken||!G.Camera.sees(n.x,n.y,40))continue;
-   ctx.fillStyle='#97774a';ctx.beginPath();ctx.ellipse(n.x,n.y,21,13,0,0,6.283);ctx.fill();
-   egg(ctx,n.x,n.y);
+   if(!G.PKMSVVEggArt?.nest(ctx,n.x,n.y))egg(ctx,n.x,n.y);
   }
   for(const p of pets){
    if(!G.Camera.sees(p.x,p.y,50))continue;
-   if(!p.hatch)egg(ctx,p.x,p.y);else p.anim?.draw(ctx,p.x,p.y,{alpha:.85});
+   if(!p.hatch)egg(ctx,p.x,p.y,(p.age+(p.boost||0))/45);else p.anim?.draw(ctx,p.x,p.y,{alpha:.85});
   }
   ctx.restore();
  }
