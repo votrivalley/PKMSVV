@@ -96,6 +96,17 @@ const dev=path.join(game,'dev.html');
 let markup=fs.readFileSync(dev,'utf8');
 if(!markup.includes('Pokémon Sống Sót'))throw Error('Expected old display name in prepared HTML');
 markup=markup.replaceAll('Pokémon Sống Sót','Pokemon Chuyển sinh');
+/* New story tagline below the logo. Change ONLY the game home menu,
+   not login, account identity or any saved data. */
+const menuStart=markup.indexOf('<section id="scr-menu"');
+const menuEnd=markup.indexOf('</section>',menuStart);
+if(menuStart<0||menuEnd<menuStart)throw Error('Missing game menu when setting awakening tagline');
+let home=markup.slice(menuStart,menuEnd);
+const oldTagline='<div class="t2">Mundo Misterioso</div>';
+if(home.split(oldTagline).length!==2)throw Error('Expected one original menu subtitle');
+home=home.replace(oldTagline,'<div class="t2 pkmsvv-awakening-tagline" translate="no">Tỉnh giấc tôi thấy mình hóa Pokemon</div>');
+markup=markup.slice(0,menuStart)+home+markup.slice(menuEnd);
+
 fs.writeFileSync(dev,markup,'utf8');
 const settings=path.join(game,'js','ui','settings-ui.js');
 let settingsJs=fs.readFileSync(settings,'utf8');
@@ -109,6 +120,23 @@ if(!newsJs.includes('Có gì mới: 1.4'))throw Error('Expected old 1.4 News but
 newsJs=newsJs.replaceAll('Có gì mới: 1.4','Có gì mới: 1.5').replaceAll("What's New: 1.4","What's New: 1.5");
 fs.writeFileSync(newsFile,newsJs,'utf8');
 fs.appendFileSync(css,`
+/* Long storyline tagline stays centered below the single-line game name.
+   Keep its intended Vietnamese wording intact on PC, Android and Web. */
+#scr-menu.pkmsvv-v15-menu .menu-left .logo>.pkmsvv-awakening-tagline{
+  width:100%!important;max-width:100%!important;
+  margin:6px auto 0!important;padding:0 8px!important;
+  box-sizing:border-box!important;text-align:center!important;
+  text-transform:uppercase!important;white-space:normal!important;
+  overflow-wrap:normal!important;line-height:1.35!important;
+  font-size:clamp(10px,1.04vw,14px)!important;
+  letter-spacing:clamp(.3px,.12vw,1.7px)!important;
+}
+@media(max-width:650px){
+ #scr-menu.pkmsvv-v15-menu .menu-left .logo>.pkmsvv-awakening-tagline{
+  font-size:10px!important;letter-spacing:.4px!important;
+  line-height:1.3!important;
+ }
+}
 /* FINAL v1.5 credit: one quiet line, no circular badge, no overlay. */
 #scr-menu.pkmsvv-v15-menu .menu-left .logo>.pkmsvv-credit{
  position:fixed!important;
