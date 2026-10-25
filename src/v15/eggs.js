@@ -179,18 +179,50 @@ G.PKMSVVEggs=(()=>{
    }
   }
  }
+ function bar(ctx,x,y,width,seconds,maxTime,color,label){
+  // Seconds REMAINING: filled right edge retreats towards the left.
+  const ratio=Math.max(0,Math.min(1,seconds/Math.max(1,maxTime)));
+  ctx.save();
+  ctx.fillStyle='rgba(6,21,36,.9)';ctx.strokeStyle='#071b29';ctx.lineWidth=2;
+  ctx.fillRect(x-width/2-3,y-3,width+6,16);ctx.strokeRect(x-width/2-3,y-3,width+6,16);
+  ctx.fillStyle='#152c40';ctx.fillRect(x-width/2,y,width,10);
+  ctx.fillStyle=color;ctx.fillRect(x-width/2,y,width*ratio,10);
+  ctx.fillStyle='#fffbea';ctx.strokeStyle='#06162b';ctx.lineWidth=2;
+  ctx.textAlign='center';ctx.font='bold 10px sans-serif';
+  const msg=label+' '+Math.ceil(seconds)+'s';
+  ctx.strokeText(msg,x,y-8);ctx.fillText(msg,x,y-8);
+  ctx.restore();
+ }
  function draw(ctx){
   if(!unlocked()||!player||G.Coop?.active)return;
   ctx.save();
   for(const n of nests){
    if(!G.Camera.sees(n.x,n.y,60))continue;
    if(!G.PKMSVVEggArt?.nest(ctx,n.x,n.y))egg(ctx,n.x,n.y-11,1);
+   if(n.collecting>0)bar(ctx,n.x,n.y-53,66,
+      COLLECT_TIME-n.collecting,COLLECT_TIME,'#ffe088',tr('Lấy trứng','Collecting'));
+   else{
+    ctx.fillStyle='#ffe9a0';ctx.font='bold 10px sans-serif';ctx.textAlign='center';
+    ctx.fillText(tr('Giữ 8 giây','Hold 8s'),n.x,n.y-44);
+   }
   }
   for(const it of items){
-   if(!G.Camera.sees(it.x,it.y,45))continue;
-   if(!it.hatched)egg(ctx,it.x,it.y-10,.75,(it.age+it.boost)/45);
-   else{
+   if(!G.Camera.sees(it.x,it.y,55))continue;
+   if(!it.hatched){
+    const remainingTime=remaining(it);
+    egg(ctx,it.x,it.y-10,.75,1-remainingTime/(HATCH_BASE+it.penalty));
+    bar(ctx,it.x,it.y-41,56,remainingTime,HATCH_BASE+it.penalty,
+        '#86e2fd',tr('Đang ấp','Hatching'));
+   }else{
+    // Sprite feet remain anchored on ground, with Walk/Idle directional anim.
     if(it.anim)it.anim.draw(ctx,it.x,it.y,{alpha:it.active?1:.52});
+    if(it.effectFlash>0&&it.active){
+     const c=FX_COLOR[byDex[it.dex]?.role]||'#fff8a9';
+     ctx.globalAlpha=Math.min(.55,it.effectFlash*.62);
+     ctx.strokeStyle=c;ctx.lineWidth=3;
+     ctx.beginPath();ctx.ellipse(it.x,it.y-6,20+(1-it.effectFlash)*14,10,0,0,Math.PI*2);ctx.stroke();
+     ctx.globalAlpha=1;
+    }
     if(!it.active){ctx.fillStyle='#d0edf3';ctx.font='10px sans-serif';ctx.textAlign='center';ctx.fillText('◇',it.x,it.y-32);}
    }
   }
@@ -198,19 +230,42 @@ G.PKMSVVEggs=(()=>{
  }
  function egg(ctx,x,y,scale,progress=0){
   if(G.PKMSVVEggArt?.egg(ctx,x,y,scale,progress))return;
-  // Render a simple placeholder only until the local sprite has loaded.
   ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);
   ctx.fillStyle='#ffefbf';ctx.strokeStyle='#d9b879';ctx.lineWidth=2;
   ctx.beginPath();ctx.ellipse(0,0,10,13,0,0,6.283);ctx.fill();ctx.stroke();
   ctx.restore();
  }
+ function arrow(ctx,w,h){
+  if(!nests.length||!player)return;
+  const n=nests.reduce((a,b)=>!a||G.U.dist2(player.x,player.y,b.x,b.y)<G.U.dist2(player.x,player.y,a.x,a.y)?b:a,null);
+  if(!n||G.U.dist2(player.x,player.y,n.x,n.y)<=NEST_RADIUS*NEST_RADIUS)return;
+  const cam=G.Camera;if(!cam?.scale)return;
+  const sx=(n.x-cam.left())*cam.scale,sy=(n.y-44-cam.top())*cam.scale;
+  const off=sx<38||sx>w-38||sy<72||sy>h-78;
+  const x=off?Math.max(46,Math.min(w-46,sx)):sx;
+  const y=off?Math.max(82,Math.min(h-86,sy)):sy-12;
+  const pulse=Math.abs(Math.sin(runTime*5))*5;
+  const angle=off?Math.atan2(sy-y,sx-x):Math.PI/2;
+  ctx.save();ctx.translate(x,y);
+  if(!off)ctx.translate(0,-pulse);
+  ctx.rotate(angle);
+  ctx.lineWidth=4;ctx.strokeStyle='#132039';ctx.fillStyle='#ffe28d';
+  ctx.beginPath();ctx.moveTo(18,0);ctx.lineTo(-10,-10);ctx.lineTo(-6,0);ctx.lineTo(-10,10);ctx.closePath();
+  ctx.stroke();ctx.fill();ctx.restore();
+  ctx.save();ctx.textAlign='center';ctx.font='bold 11px sans-serif';
+  ctx.lineWidth=3;ctx.strokeStyle='#09182c';ctx.fillStyle='#ffefb2';
+  const label=tr('Ổ TRỨNG','EGG NEST')+(off?' · '+Math.round(Math.sqrt(G.U.dist2(player.x,player.y,n.x,n.y))/32)+'m':'');
+  const textY=off?y-20:y-32-pulse;
+  ctx.strokeText(label,x,textY);ctx.fillText(label,x,textY);ctx.restore();
+ }
  function hud(ctx,w,h){
   if(!unlocked()||G.Coop?.active)return;
+  arrow(ctx,w,h);
   const ready=support().length;
   ctx.save();ctx.fillStyle='rgba(13,48,57,.89)';ctx.strokeStyle='#80ddce';
   const x=Math.max(8,w-147),y=101;ctx.beginPath();ctx.roundRect(x,y,134,25,7);ctx.fill();ctx.stroke();
   ctx.fillStyle='#fff3bd';ctx.font='bold 11px sans-serif';ctx.textAlign='left';
   ctx.fillText(tr('Đồng hành','Companions')+' '+ready+'/'+limit(),x+8,y+16);ctx.restore();
  }
- return {SPECIES,begin,update,draw,hud,limit,unlocked,get followers(){return items;},get nests(){return nests;}};
+ return {SPECIES,begin,update,onHurt,remaining,draw,hud,limit,unlocked,get followers(){return items;},get nests(){return nests;}};
 })();
