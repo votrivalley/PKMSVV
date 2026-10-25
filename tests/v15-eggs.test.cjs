@@ -61,27 +61,89 @@ test('Egg Rush is online-only, host owns score, exactly ten nests spawn over fiv
  assert.match(read('scripts/patch-v15-egg-rush-web.cjs'),/room.mode==='eggrush'\?4:2/);
 });
 
-test('Solo egg companions keep the 2 / 3 slots and hatch through time plus combat',()=>{
+test('Solo egg nest requires 8 seconds, interruption resets progress, and hit delays hatching 3s',()=>{
  const source=read('src/v15/eggs.js');
  const player={x:0,y:0,dead:false,kills:0,level:1,maxHp:150,hp:150,heal(v){this.hp=Math.min(this.maxHp,this.hp+v);}};
  const save={pkmsvvChapter3Seen:true,pkmsvvEggSlot3:false,stats:{}};
+ const visuals=[];
  const G={I18n:{lang:'vi'},DB:{save,commit(){}},
-  Sprites:{preload(){},Animator:class{update(){}draw(){}}},
-  U:{dist2:(x,y,a,b)=>(x-a)**2+(y-b)**2},World:{isFree:()=>true,isLiquid:()=>false},
-  Spawner:{say(){}},FX:{ring(){}},Coop:{active:false},EnemyMgr:{all:()=>[]}};
+  Sprites:{preload(){},dirFromAngle:()=>0,Animator:class{loop(){}update(){}draw(){}}},
+  U:{dist2:(x,y,a,b)=>(x-a)**2+(y-b)**2},
+  World:{isFree:()=>true,isLiquid:()=>false},
+  Spawner:{say(){}},FX:{ring(){},dmgText(...a){visuals.push(a);}},
+  Coop:{active:false},EnemyMgr:{all:()=>[]}};
  vm.runInNewContext(source,{G,document:{createElement:()=>({})},Math,Number,Object});
  G.PKMSVVEggs.begin(player,false);
- G.PKMSVVEggs.update(.1,60===0?null:player,60,false);
+ G.PKMSVVEggs.update(.1,player,60,false);
  assert.equal(G.PKMSVVEggs.nests.length,1);
- const nest=G.PKMSVVEggs.nests[0];player.x=nest.x;player.y=nest.y;
- G.PKMSVVEggs.update(.1,player,61,false);
+ const nest=G.PKMSVVEggs.nests[0];
+ player.x=nest.x;player.y=nest.y;
+ for(let i=0;i<39;i++)G.PKMSVVEggs.update(.1,player,60+i*.1,false);
+ assert.equal(G.PKMSVVEggs.followers.length,0,'Cannot collect by touching or waiting less than eight seconds');
+ assert.ok(nest.collecting>3&&nest.collecting<4.1);
+ player.x+=70;
+ G.PKMSVVEggs.update(.1,player,64,false);
+ assert.equal(nest.collecting,0,'Leaving capture radius resets the channel');
+ player.x=nest.x;player.y=nest.y;
+ for(let i=0;i<81;i++)G.PKMSVVEggs.update(.1,player,65+i*.1,false);
+ assert.equal(G.PKMSVVEggs.nests.length,0);
  assert.equal(G.PKMSVVEggs.followers.length,1);
- for(let i=0;i<205;i++){player.kills+=1;G.PKMSVVEggs.update(.1,player,61+i*.1,false);}
- assert.equal(G.PKMSVVEggs.followers[0].hatched,true);
+ const egg=G.PKMSVVEggs.followers[0];
+ const before=G.PKMSVVEggs.remaining(egg);
+ G.PKMSVVEggs.onHurt(0);
+ assert.equal(G.PKMSVVEggs.remaining(egg),before,'Zero HP damage must not delay');
+ G.PKMSVVEggs.onHurt(12);
+ assert.equal(G.PKMSVVEggs.remaining(egg),before+3);
+ assert.equal(egg.penalty,3);
+ assert.ok(visuals.some(v=>v.includes('+3s')),'Delay must be signposted');
+ for(let i=0;i<205;i++){player.kills++;G.PKMSVVEggs.update(.1,player,74+i*.1,false);}
+ assert.equal(egg.hatched,true,'Combat-accelerated incubation still hatches');
  assert.equal(G.PKMSVVEggs.limit(),2);
  save.pkmsvvEggSlot3=true;assert.equal(G.PKMSVVEggs.limit(),3);
 });
 
+test('Igglybuff support slows targets and emits target/support VFX only on successful cast',()=>{
+ const source=read('src/v15/eggs.js');
+ const player={x:0,y:0,dead:false,kills:0,level:1,maxHp:100,hp:100,heal(){}};
+ const save={pkmsvvChapter3Seen:true,stats:{}};
+ const enemy={x:0,y:0,dead:false,remote:false,applySlow(k,d){this.slow=(this.slow||0)+1;this.slowPower=k;this.duration=d;}};
+ let rings=0,bursts=0,damageTexts=[];
+ const G={I18n:{lang:'vi'},DB:{save,commit(){}},
+  Sprites:{preload(){},dirFromAngle:()=>0,Animator:class{loop(){}update(){}draw(){}}},
+  U:{dist2:(x,y,a,b)=>(x-a)**2+(y-b)**2},
+  World:{isFree:()=>true,isLiquid:()=>false},
+  Spawner:{say(){}},FX:{ring(){rings++;},burst(){bursts++;},dmgText(...a){damageTexts.push(a);}},
+  Coop:{active:false},EnemyMgr:{all:()=>[enemy]}};
+ const fixedMath=Object.create(Math);fixedMath.random=()=>.999; // last species = Igglybuff (#174)
+ vm.runInNewContext(source,{G,document:{createElement:()=>({})},Math:fixedMath,Number,Object});
+ G.PKMSVVEggs.begin(player,false);
+ G.PKMSVVEggs.update(.1,player,60,false);
+ const nest=G.PKMSVVEggs.nests[0];player.x=nest.x;player.y=nest.y;
+ for(let i=0;i<81;i++)G.PKMSVVEggs.update(.1,player,61+i*.1,false);
+ const egg=G.PKMSVVEggs.followers[0];
+ assert.equal(egg.dex,174);
+ for(let i=0;i<205;i++){player.kills++;G.PKMSVVEggs.update(.1,player,70+i*.1,false);}
+ assert.equal(egg.hatched,true);
+ assert.equal(egg.active,true);
+ enemy.x=egg.x;enemy.y=egg.y;
+ for(let i=0;i<42;i++)G.PKMSVVEggs.update(.25,player,100+i*.25,false);
+ assert.ok(enemy.slow>0,'Igglybuff must apply a real debuff');
+ assert.ok(enemy.slowPower>0&&enemy.duration>0);
+ assert.ok(rings>=2&&bursts>=1,'Visual rings and particles mark successful slow');
+ assert.ok(damageTexts.some(args=>args.includes('CHẬM!')),'Slow effect is visible to the player');
+});
+
+test('egg direction indicator, reverse timer bars, sprite walking and shield-safe damage hook are bundled',()=>{
+ const src=read('src/v15/eggs.js');
+ assert.match(src,/function arrow\(ctx,w,h\)/);
+ assert.match(src,/ctx\.fillRect\(x-width\/2,y,width\*ratio,10\)/);
+ assert.match(src,/follow\(it,j,pl,dt\)/);
+ assert.match(src,/it\.anim\.loop\(move\?'Walk':'Idle'\)/);
+ assert.match(src,/it\.penalty=\(it\.penalty\|\|0\)\+3/);
+ const patch=read('scripts/patch-v15-eggs.cjs');
+ assert.match(patch,/PKMSVVEggs\?\.onHurt\?\./);
+ assert.match(patch,/d-absorbed/);
+});
 test('real pixel egg/nest sprites are bundled for solo and Web Egg Rush',()=>{
  const script=read('scripts/patch-v15-eggs.cjs');
  const solo=read('src/v15/eggs.js');
