@@ -87,3 +87,14 @@ test('v1.5 final UI eliminates circle, duplicate News frame, low menu and blocke
  assert.doesNotMatch(keys,/,'reroll'\]/);
  assert.doesNotMatch(pad,/PKMSVVPadOrb\.bindings\(\)\.reroll/);
 });
+
+test('v1.5 Save tab mounts live backup and restore controls in Settings',()=>{
+ const ui=read('scripts/patch-v15-menu-qa.cjs');
+ const save=read('src/pkmsvv-save-ui.js');
+ assert.match(ui,/saveTab\.onclick=event=>/);
+ assert.match(ui,/saveTab\.dataset\.t='pkmsvv-backup'/);
+ assert.match(ui,/G\.PKMSVVSaveUI\.mount\(saveBody,'pkmsvv-settings'\)/);
+ assert.match(ui,/saveBody\.replaceChildren\(\)/);
+ assert.match(save,/wrap\.querySelector\('#'\+prefix\+'-export'\)\.onclick=/);
+ assert.match(save,/wrap\.querySelector\('#'\+prefix\+'-import'\)\.onclick=/);
+});
