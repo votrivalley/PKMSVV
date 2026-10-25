@@ -9,17 +9,17 @@
  const $=id=>document.getElementById(id);
  const en=()=>G.I18n?.lang==='en';
  let busy=false;
- const label=()=>en()?'Return to fullscreen':'Trở lại toàn màn hình';
- const tip=()=>en()?'Restore the full-screen game window.':'Đưa game trở lại chế độ toàn màn hình.';
+ const label=full=>full?(en()?'Windowed mode':'Thu gọn màn hình'):(en()?'Return to fullscreen':'Trở lại toàn màn hình');
+ const tip=full=>full?(en()?'Switch to a resizable window.':'Chuyển về cửa sổ có thể thay đổi kích thước.'):(en()?'Return the game to fullscreen.':'Đưa game trở lại chế độ toàn màn hình.');
  const buttons=()=>[$('pkmsvv-pc-restore-pause'),$('pkmsvv-pc-restore-settings')].filter(Boolean);
  async function refresh(){
   try{
    const state=await native.isFullscreen();
    for(const button of buttons()){
-    button.hidden=!!state?.fullscreen;
+    button.hidden=false;
     button.disabled=busy;
-    button.textContent=label();
-    button.title=tip();
+    button.textContent=label(!!state?.fullscreen);
+    button.title=tip(!!state?.fullscreen);
    }
   }catch(e){for(const button of buttons())button.hidden=true;}
  }
@@ -27,9 +27,8 @@
   if(busy)return;
   busy=true;
   try{
-   // Toggle ONLY if windowed; never accidentally leave fullscreen.
-   const result=await native.isFullscreen();
-   if(!result?.fullscreen)await native.toggleFullscreen();
+   // This is an explicit user toggle for BOTH entering and leaving fullscreen.
+   await native.toggleFullscreen();
   }catch(e){
    G.UI?.toast?.(en()?'Cannot restore fullscreen':'Không thể khôi phục toàn màn hình');
   }finally{busy=false;await refresh();}
@@ -40,7 +39,7 @@
   const button=document.createElement('button');
   button.type='button';button.className='btn pkmsvv-pc-restore';
   button.id='pkmsvv-pc-restore-pause';
-  button.textContent=label();button.title=tip();button.hidden=true;
+  button.textContent=label(true);button.title=tip(true);button.hidden=true;
   button.addEventListener('click',restore);
   row.append(button); // Keep next to Resume / Settings / End run.
  }
@@ -57,7 +56,7 @@
   text.append(name,note);
   const button=document.createElement('button');button.type='button';
   button.className='btn small pkmsvv-pc-restore';
-  button.id='pkmsvv-pc-restore-settings';button.textContent=label();
+  button.id='pkmsvv-pc-restore-settings';button.textContent=label(true);
   button.hidden=true;button.addEventListener('click',restore);
   row.append(text,button);box.append(row);
  }
@@ -75,6 +74,12 @@
  document.addEventListener('click',event=>{
   if(event.target?.closest?.('#set-tabs [data-t="gfx"]'))
    Promise.resolve().then(openSettings);
+ });
+ // Familiar desktop shortcut; only Electron receives this script's native bridge.
+ document.addEventListener('keydown',event=>{
+  if(event.key==='F11'&&!event.repeat){
+   event.preventDefault();void restore();
+  }
  });
  // Account for a pause already open when the script first initializes.
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{
