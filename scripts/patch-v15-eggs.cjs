@@ -17,7 +17,7 @@ fs.mkdirSync(artFolder,{recursive:true});
 for(const file of ['egg_follow.svg','egg_crack.svg','egg_nest.svg'])
  fs.copyFileSync(path.join(root,'src','v15','sprites',file),path.join(artFolder,file));
 patch('dev.html','<script defer src="js/ui/menu.js"></script>',
- '<script defer src="js/ui/menu.js"></script>\\n<script defer src="js/ui/pkmsvv-support-catalog.js"></script>');
+ '<script defer src="js/ui/menu.js"></script>\n<script defer src="js/ui/pkmsvv-support-catalog.js"></script>');
 patch('dev.html',
  '<script defer src="js/systems/orbs.js"></script>',
  '<script defer src="js/systems/orbs.js"></script>\n<script defer src="js/systems/pkmsvv-egg-sprites.js"></script>\n<script defer src="js/systems/pkmsvv-eggs.js"></script>\n<script defer src="js/systems/pkmsvv-boss-support.js"></script>');
@@ -65,6 +65,13 @@ patch('js/systems/combat.js',
     try{run(echo,{...m});return true;}catch(e){return false;}
    }
    return { pkmsvvSupportCast, tick, resolve, ghostCast, ghostOrbit, updateFields, drawGroundFields, drawAirFields, clearFields,`);
+// Hatch affinity persists across devices: choose highest earned count, never
+// add counts from two synced devices (which would inflate friendship).
+patch('js/core/db.js',
+ '    for (const k in older.stats || {}) r.stats[k] = Math.max(r.stats[k] || 0, older.stats[k] || 0);',
+ '    for (const k in older.stats || {}) r.stats[k] = Math.max(r.stats[k] || 0, older.stats[k] || 0);\n'+
+ '    r.pkmsvvSupportBond=r.pkmsvvSupportBond||{};\n'+
+ '    for(const k in older.pkmsvvSupportBond||{})r.pkmsvvSupportBond[k]=Math.min(999,Math.max(Number(r.pkmsvvSupportBond[k])||0,Number(older.pkmsvvSupportBond[k])||0));');
 // In solo runs, some normal monsters pursue and strike followers, with lower aggro weight.
 patch('js/entities/enemy.js',
  '        else e.update(dt, nearestPlayer(players, e.x, e.y) || pl);',
