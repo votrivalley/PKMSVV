@@ -19,14 +19,15 @@ test('upgrade picker contains individual-only warning and separate preserved pat
  assert.match(chooser,/CHỈ áp dụng cho một Pokémon/);
 });
 
-test('upgrade chooser displays support roles with safe DOM text instead of an Orb instruction',()=>{
- const s=read('src/pkmsvv-upgrade-select.js'),css=read('src/pkmsvv-retro-theme.css');
- assert.match(s,/G\.PKMSVVEggs\?\.SPECIES/);
- assert.match(s,/panel\.replaceChildren/);
- assert.match(s,/row\.textContent=/);
- assert.match(css,/pkmsvv-support-roster/);
+test('upgrade chooser shows Mystery Orb before Skill Awakening, without support encyclopedia',()=>{
+ const s=read('src/pkmsvv-upgrade-select.js');
+ assert.match(s,/Hướng dẫn Mystery Orb/);
+ assert.match(s,/Hướng dẫn Thức tỉnh kỹ năng/);
+ assert.ok(s.indexOf('Hướng dẫn Mystery Orb')<s.indexOf('Hướng dẫn Thức tỉnh kỹ năng'));
+ assert.doesNotMatch(s,/Thông tin Pokémon hỗ trợ/);
+ assert.match(s,/G\.Orbs\?\.LIST/);
+ assert.match(s,/G\.PKMSVVSkillTrack\?\.guide/);
 });
-
 test('single-line title and aligned icon/labels survive v1.5 menu polishing',()=>{
  const title=read('scripts/patch-v14-title-readability.cjs');
  const colors=read('src/pkmsvv-retro-theme.css');
@@ -130,19 +131,17 @@ test('desktop nav bottom aligns with left cards without legacy 32px cap',()=>{
  assert.match(src,/min-width: 1000px/);
 });
 
-test('upgrade chooser replaces Mystery Orb help with bilingual live support roster',()=>{
- const src=read('src/pkmsvv-upgrade-select.js');
- const css=read('src/pkmsvv-retro-theme.css');
- assert.match(src,/Thông tin Pokémon hỗ trợ/);
- assert.match(src,/G\.PKMSVVEggs\?\.SPECIES/);
- assert.match(src,/mon\.period\+'s'/);
- assert.match(src,/Shiny: 3%/);
- assert.match(src,/30–50% HP của boss/);
- assert.match(src,/aria-expanded/);
- assert.match(css,/pkmsvv-support-roster/);
- assert.doesNotMatch(src,/title\.textContent=full\?t\('Hướng dẫn Mystery Orb'/);
+test('Support encyclopedia is a highlighted entry within Pokémon menu',()=>{
+ const s=read('src/pkmsvv-support-catalog.js'),css=read('src/pkmsvv-retro-theme.css');
+ const patch=read('scripts/patch-v15-eggs.cjs');
+ assert.match(s,/scr-dex/);
+ assert.match(s,/pkmsvv-support-entry/);
+ assert.match(s,/pkmsvvSupportBond/);
+ assert.match(s,/affinityMultiplier/);
+ assert.match(s,/each additional hatch|Each additional hatch/);
+ assert.match(css,/pkmsvv-support-entry-btn/);
+ assert.match(patch,/pkmsvv-support-catalog\.js/);
 });
-
 test('Memories contains chapter replay buttons, but no Mystery Orb guide button',()=>{
  const src=read('src/pkmsvv-story.js');
  assert.match(src,/data-chapter/);
@@ -152,7 +151,7 @@ test('Memories contains chapter replay buttons, but no Mystery Orb guide button'
  assert.doesNotMatch(src,/pkmsvv-orb-guide-back/);
 });
 
-test('Windows-only fullscreen restore is available in Pause and Graphics, never toggles out',()=>{
+test('Windows-only fullscreen control toggles windowed/fullscreen from Pause or Graphics',()=>{
  const src=read('src/pkmsvv-pc-fullscreen.js');
  const patch=read('scripts/patch-v155-pc-fullscreen.cjs');
  const build=read('scripts/prepare-game.cjs');
@@ -160,7 +159,9 @@ test('Windows-only fullscreen restore is available in Pause and Graphics, never 
  assert.match(src,/pkmsvv-pc-restore-pause/);
  assert.match(src,/pkmsvv-pc-restore-settings/);
  assert.match(src,/native\.isFullscreen\(\)/);
- assert.match(src,/if\(!result\?\.fullscreen\)await native\.toggleFullscreen\(\)/);
+ assert.match(src,/await native\.toggleFullscreen\(\)/);
+ assert.match(src,/event\.key==='F11'/);
+ assert.match(src,/Thu gọn màn hình/);
  assert.match(src,/G\.RunUI\.showPause=function/);
  assert.match(src,/G\.SettingsUI\.open=function/);
  assert.match(patch,/js\/ui\/pkmsvv-pc-fullscreen\.js/);

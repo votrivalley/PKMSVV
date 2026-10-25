@@ -6,7 +6,7 @@ G.CHANGELOG.unshift({
  title:['Pokemon Chuyển sinh — v1.5','Pokemon Reincarnation — v1.5'],
  subtitle:['Đồng hành cùng Pokémon và nhiều cải tiến mới.','Pokémon companions and major gameplay improvements.'],
  new:[
-  ['Thêm Pokémon đồng hành nở từ trứng, có kỹ năng hỗ trợ và Shiny hiếm; mở rộng đội hình qua tiến trình Chương 3.','Added hatchable Pokémon companions with support abilities and rare Shiny variants, plus story-based team progression.'],
+  ['Thêm Pokémon đồng hành nở từ trứng, Ditto biến hình, Mew tung AOE, Shiny và độ thân thiết; mở rộng đội hình qua tiến trình Chương 3.','Added hatchable support Pokémon, Ditto transformations, Mew AOE, Shiny and friendship progression.'],
   ['Boss có Pokémon hộ vệ riêng. Bổ sung chế độ Tranh Trứng Online và nhiều hoạt động mới.','Bosses have their own guardians. Added Online Egg Rush and more activities.']
  ],
  chg:[

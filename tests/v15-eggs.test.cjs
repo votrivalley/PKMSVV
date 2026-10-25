@@ -115,7 +115,7 @@ test('Igglybuff support slows targets and emits target/support VFX only on succe
   World:{isFree:()=>true,isLiquid:()=>false},
   Spawner:{say(){}},FX:{ring(){rings++;},burst(){bursts++;},dmgText(...a){damageTexts.push(a);}},
   Coop:{active:false},EnemyMgr:{all:()=>[enemy]}};
- const fixedMath=Object.create(Math);fixedMath.random=()=>.999; // last species = Igglybuff (#174)
+ const fixedMath=Object.create(Math);fixedMath.random=()=>.91; // top end of ordinary 88% pool = Igglybuff (#174)
  vm.runInNewContext(source,{G,document:{createElement:()=>({})},Math:fixedMath,Number,Object});
  G.PKMSVVEggs.begin(player,false);
  G.PKMSVVEggs.update(.1,player,60,false);
@@ -169,7 +169,7 @@ test('real pixel egg/nest sprites are bundled for solo and Web Egg Rush',()=>{
 
 test('v1.5 release identity and completed egg gameplay are both packaged',()=>{
  const pkg=JSON.parse(read('package.json'));
- assert.equal(pkg.version,'1.5.7');
+ assert.equal(pkg.version,'1.5.8');
  assert.equal(pkg.build.productName,'Pokemon Chuyển sinh');
  assert.ok(read('scripts/prepare-game.cjs').includes('patch-v15-eggs.cjs'));
  assert.ok(read('scripts/prepare-web.cjs').includes('patch-v15-egg-rush-web.cjs'));
@@ -441,4 +441,43 @@ test('Changelog has one 1.5 entry and concise bilingual themes',()=>{
  assert.match(src,/Pokemon Chuyển sinh — v1\.5/);
  assert.doesNotMatch(src,/v1\.5\.[1-9]/);
  assert.match(src,/Tranh Trứng Online/);
+});
+
+
+test('Ditto 8%, Mew 4%, all other supports 88%, Shiny 3% independently',()=>{
+ const src=read('src/v15/eggs.js');
+ const save={pkmsvvChapter3Seen:true,stats:{}};
+ const G={DB:{save},I18n:{lang:'vi'}};
+ vm.runInNewContext(src,{G,Math,Number,Object});
+ const roll=G.PKMSVVEggs.rollSpecies;
+ assert.equal(roll(.0).dex,132);
+ assert.equal(roll(.07999).dex,132);
+ assert.equal(roll(.08).dex,151);
+ assert.equal(roll(.11999).dex,151);
+ assert.notEqual(roll(.12).dex,132);
+ assert.notEqual(roll(.999).dex,151);
+ assert.equal(G.PKMSVVEggs.SHINY_CHANCE,.03);
+ assert.equal(G.PKMSVVEggs.SPECIES.length,10);
+});
+
+test('Mew random AOE casts every 1 second and Ditto borrows exactly up to 3 moves',()=>{
+ const s=read('src/v15/eggs.js'),patch=read('scripts/patch-v15-eggs.cjs');
+ assert.match(s,/\{dex:151,role:'mew',period:1,power:1\}/);
+ assert.match(s,/Math\.floor\(Math\.random\(\)\*3\)/);
+ assert.match(s,/function mewCast\(it,pl\)/);
+ assert.match(s,/it\.copiedSkills\.length<3/);
+ assert.match(s,/function dittoCast\(it,pl\)/);
+ assert.match(s,/G\.Combat\?\.pkmsvvSupportCast/);
+ assert.match(patch,/function pkmsvvSupportCast\(pl,it,m\)/);
+});
+
+test('Hatch affinity saves per species without altering ownership and strengthens skills up to 30%',()=>{
+ const save={pkmsvvChapter3Seen:true,stats:{},pkmsvvSupportBond:{172:4}};
+ const G={DB:{save},I18n:{lang:'vi'}};
+ vm.runInNewContext(read('src/v15/eggs.js'),{G,Math,Number,Object});
+ assert.equal(G.PKMSVVEggs.affinityFor(172),4);
+ assert.ok(Math.abs(G.PKMSVVEggs.affinityMultiplier(172)-1.06)<1e-8);
+ save.pkmsvvSupportBond[172]=60;
+ assert.equal(G.PKMSVVEggs.affinityMultiplier(172),1.30);
+ assert.ok(read('scripts/patch-v15-eggs.cjs').includes('older.pkmsvvSupportBond'));
 });
