@@ -223,7 +223,7 @@ G.KecleonUI=(()=>{
   const pane=document.createElement('div');pane.id='pkmk-dex-stats';pane.className='pkmk-dex';
   const fx=G.AbilityFX.of(a.id,G.DEX_BY[dex]);
   const taught=G.Mons.taught(dex);
-  pane.innerHTML='<h3>'+L('Tính cách, Đặc tính & TM','Nature, Ability & TMs')+'</h3>'+
+  pane.innerHTML=
    '<p><b>'+L('Tính cách','Nature')+':</b> '+esc(natName(n))+' <small>'+natureDesc(n)+'</small></p>'+
    '<p><b>'+L('Đặc tính','Ability')+':</b> '+esc(abilName(a.id))+(a.slot===2?' ★':'')+
    ' <small class="pkmk-ability-benefit">('+esc(G.PKMSVVAbilityText.summary(a.id,G.DEX_BY[dex],fx,G.I18n.lang!=='vi'))+')</small></p>'+
