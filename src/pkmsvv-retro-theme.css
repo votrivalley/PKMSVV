@@ -91,3 +91,29 @@ body{background:#081f2a;color:#f8fffe}
 .pkmsvv-support-entry small{font-size:12px;line-height:1.4;color:#eaf9f6}
 .pkmsvv-support-guide .pkmsvv-support-boss-note{margin-top:13px;padding:10px;border-left:3px solid #ffce65;background:#144552;border-radius:5px}
 @media(max-width:660px){.pkmsvv-support-guide .pkmsvv-support-rule-grid,.pkmsvv-support-guide .pkmsvv-support-roster{grid-template-columns:1fr}.pkmsvv-support-guide .pkmsvv-upgrade-guide-details{max-height:45vh}}
+
+/* Pokedex support handbook, separate from Upgrade guides. */
+.pkmsvv-support-entry-btn{background:linear-gradient(110deg,#ffda61,#f4a4f4)!important;color:#102638!important;border:2px solid #fff3ac!important;font-weight:900!important;box-shadow:0 2px 10px #ffd76a66!important}
+.pkmsvv-support-overlay[hidden]{display:none!important}
+.pkmsvv-support-overlay{position:fixed;inset:0;z-index:13020;background:#06141dd9;display:grid;place-items:center;padding:14px}
+.pkmsvv-support-modal{width:min(760px,98vw);max-height:92vh;overflow:auto;border:2px solid #92f0e1;border-radius:16px;background:linear-gradient(155deg,#225f66,#0c303e);padding:18px;color:#fff;box-shadow:0 15px 45px #0009}
+.pkmsvv-support-modal-head{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.pkmsvv-support-modal-head h2{color:#ffe28d;margin:0}
+#pkmsvv-support-description{font-size:13px;line-height:1.55;color:#d8f7f3}
+#pkmsvv-support-entries{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.pkmsvv-bond-card{background:#153e50;border:1px solid #6ec3bc;border-radius:10px;padding:12px}
+.pkmsvv-bond-card-top{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.pkmsvv-bond-card-top strong{color:#ffefab}
+.pkmsvv-bond-role{background:#6fd9db;color:#122e3d;font-size:11px;padding:3px 7px;border-radius:6px;font-weight:800}
+.pkmsvv-bond-card p{font-size:12px;color:#e5f8f4;line-height:1.5;margin:7px 0}
+.pkmsvv-bond-stats{font-weight:700}
+.pkmsvv-bond-track{height:4px;background:#385f68;border-radius:5px;overflow:hidden}
+.pkmsvv-bond-track>div{height:100%;background:linear-gradient(90deg,#ffe16b,#ff8bc5)}
+.pkmsvv-orb-guides{display:flex;flex-direction:column;gap:8px}
+.pkmsvv-guide-accordion{background:#0b2840;border:1px solid #87cad3;border-radius:8px;padding:9px 12px}
+.pkmsvv-guide-accordion>summary{cursor:pointer;color:#fff5be;font-weight:800}
+.pkmsvv-guide-inner{max-height:min(40vh,320px);overflow:auto;padding:10px 0 2px}
+.pkmsvv-orb-guide-row{border-left:3px solid #fff;display:flex;flex-direction:column;gap:3px;padding:7px 10px;background:#204a54;border-radius:4px;margin-bottom:6px}
+.pkmsvv-orb-guide-row small{font-size:12px}
+.pkmsvv-skill-milestone{padding:5px 0;border-bottom:1px solid #48717d;font-size:13px}
+@media(max-width:650px){#pkmsvv-support-entries{grid-template-columns:1fr}.pkmsvv-support-modal{padding:12px}.pkmsvv-support-entry-btn{font-size:11px}}
