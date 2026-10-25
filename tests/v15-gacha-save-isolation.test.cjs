@@ -16,14 +16,15 @@ test('offline warning appears at mode selection and native/local main menu only'
  assert.match(prepare,/patch-v15-offline-save-notice\.cjs/);
 });
 
-test('regional Gacha prioritizes missing same-rarity entries; Arcanine #59 becomes obtainable',t=>{
+test('Gacha late collection soft bonus stays small: Arcanine can drop, duplicates remain',t=>{
  const source='vendor/pokesurvivor';
  if(!fs.existsSync(path.join(root,source,'js/systems/gacha.js'))){
   t.skip('Build-time vendor checkout not present');return;
  }
  const G={U:{pick:list=>list[0]},Sprites:{hasShiny:()=>false}};
  const sandbox={G,Date,Math:Object.create(Math)};
- sandbox.Math.random=()=>.94; // selects 4-star without modifying the rarity distribution.
+ let rolls=[];
+ sandbox.Math.random=()=>rolls.length?rolls.shift():.5;
  vm.runInNewContext(read(source+'/js/data/pokedex.js'),sandbox);
  vm.runInNewContext(read(source+'/js/data/sprites-meta.js'),sandbox);
  vm.runInNewContext(read(source+'/js/systems/gacha.js'),sandbox);
@@ -33,18 +34,32 @@ test('regional Gacha prioritizes missing same-rarity entries; Arcanine #59 becom
  assert.ok(G.SPRITE_META[59],'Arcanine sprite metadata must be present');
  const fourStar=G.Gacha.pool(4,1);
  assert.ok(fourStar.some(p=>p.dex===59),'Arcanine must be in the Kanto 4-star Gacha pool');
- const owned={};
- for(const pokemon of fourStar)if(pokemon.dex!==59)owned[pokemon.dex]={at:1};
- const save={owned,shiny:{},stats:{},tickets:{t1:1,t10:0},pity:{},coins:0};
- const result=G.Gacha.pull(save,1,1,'t1');
- assert.equal(result.length,1);
- assert.equal(result[0].dex,59,'next 4-star regional roll must fill last missing 4-star (Arcanine)');
- assert.equal(result[0].isNew,true);
- assert.ok(save.owned[59],'Arcanine must persist in owned for regional Shiny Charm');
- assert.equal(save.tickets.t1,0);
+ assert.notEqual(fourStar[0].dex,59,'First default pick should differ from Arcanine');
+ const allKanto=G.DEX.filter(p=>p.gen===1&&G.SPRITE_META[p.dex]);
+ const owned=Object.fromEntries(allKanto.filter(p=>p.dex!==59).map(p=>[p.dex,{at:1}]));
+ const makeSave=()=>({owned:{...owned},shiny:{},stats:{},tickets:{t1:1,t10:0},pity:{},coins:0});
+ const boosted=makeSave();
+ rolls=[.94,.05]; // 4-star; within 15%-catch-up band
+ const got=G.Gacha.pull(boosted,1,1,'t1');
+ assert.equal(got[0].dex,59,'Soft bonus can award last missing 4-star Arcanine');
+ assert.ok(boosted.owned[59],'Arcanine must persist in owned');
+ assert.equal(boosted.tickets.t1,0);
+ const duplicate=makeSave();
+ rolls=[.94,.95]; // 4-star; misses 15%-catch-up band
+ const again=G.Gacha.pull(duplicate,1,1,'t1');
+ assert.equal(again[0].dex,fourStar[0].dex,'Duplicates must remain possible');
+ assert.equal(again[0].isNew,false);
+ assert.ok(!duplicate.owned[59],'No guaranteed Arcanine');
+ const fresh=makeSave();
+ fresh.owned={}; // Below 80% completion; never activate catch-up
+ rolls=[.94,.01];
+ const early=G.Gacha.pull(fresh,1,1,'t1');
+ assert.equal(early[0].dex,fourStar[0].dex,'Early-game collection is unchanged');
  assert.deepEqual(Array.from(G.Gacha.RATES,x=>[x[0],x[1]]),[[1,45.5],[2,30],[3,17],[4,6.5],[5,1]]);
  assert.equal(G.Gacha.PITY_5,100);
- assert.match(read('scripts/patch-v15-gacha-completion.cjs'),/newly obtained|Đã nhận mới|notOwnedInTier/);
+ const patch=read('scripts/patch-v15-gacha-completion.cjs');
+ assert.match(patch,/ownedInRegion \/ region.length >= 0.8/);
+ assert.match(patch,/Math.random\(\) < 0.15/);
 });
 
 test('whole ×100 Gacha summary discloses ALL newly obtained Pokémon, not only top 20',()=>{
