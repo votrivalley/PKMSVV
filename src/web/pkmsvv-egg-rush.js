@@ -186,7 +186,7 @@ G.EggRush=(()=>{
     for(const e of candidates){
      if(count>=4)break;
      if(G.U.dist2(e.x,e.y,center.x,center.y)>95*95)continue;
-     e.applyStun(e.boss||e.judge||e.pkmsvvBossGuard?.35:1.1);
+     e.applyStun((e.boss||e.judge||e.pkmsvvBossGuard) ? 0.35 : 1.1);
      e.pkmsvvPichuImmuneUntil=(pet.age||0)+7;count++;
     }
     if(count)G.FX?.ring?.(center.x,center.y,8,95,'#ffdb55',.5,3);

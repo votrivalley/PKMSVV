@@ -15,7 +15,7 @@ test('Canonical support roster matches runtime and silhouette entries are not in
  const catalog=read('src/pkmsvv-support-catalog.js');
  assert.match(catalog,/paralyze:\['Tê liệt'/);
  assert.match(catalog,/silhouette:!owned/);
- assert.match(read('docs/SUPPORT_CANONICAL_RULES.md'),/#035 Clefairy/);
+ assert.match(read('docs/SUPPORT_CANONICAL_RULES.md'),/Clefairy #035/);
 });
 
 test('Pichu paralyzes at most four nearby enemies using real stun, with 7s protection',()=>{

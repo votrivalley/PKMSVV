@@ -326,7 +326,7 @@ G.PKMSVVEggs=(()=>{
    if(affected.length>=4)break;
    if(G.U.dist2(e.x,e.y,center.x,center.y)>95*95)continue;
    const boss=!!(e.boss||e.judge||e.pkmsvvBossGuard);
-   e.applyStun(boss?.35:1.1);
+   e.applyStun(boss ? 0.35 : 1.1);
    e.pkmsvvPichuImmuneUntil=runTime+7;
    affected.push(e);
   }
