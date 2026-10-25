@@ -592,6 +592,8 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-remove-move-sh
 execFileSync(process.execPath,[path.join(project,'scripts','patch-match-fullscreen.cjs')],{cwd:project,stdio:'inherit'});
 // Offline Windows/Android and optional local Web get a save-isolation line.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v15-offline-save-notice.cjs')],{cwd:project,stdio:'inherit'});
+// Final menu QA after retro v1.4 branding, unified layout and offline notice.
+execFileSync(process.execPath,[path.join(project,'scripts','patch-v15-menu-qa.cjs')],{cwd:project,stdio:'inherit'});
 // Windows and Android remain strictly offline-first: do NOT inject the external
 // browser Online mode switch. The existing native save identity remains unchanged.
 execFileSync(process.execPath, [path.join(game, 'tools', 'build.js'), '--sin-seo', '--expose'], { cwd: game, stdio: 'inherit' });
