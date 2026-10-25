@@ -168,7 +168,7 @@ test('real pixel egg/nest sprites are bundled for solo and Web Egg Rush',()=>{
 
 test('v1.5 release identity and completed egg gameplay are both packaged',()=>{
  const pkg=JSON.parse(read('package.json'));
- assert.equal(pkg.version,'1.5.5');
+ assert.equal(pkg.version,'1.5.6');
  assert.equal(pkg.build.productName,'Pokemon Chuyển sinh');
  assert.ok(read('scripts/prepare-game.cjs').includes('patch-v15-eggs.cjs'));
  assert.ok(read('scripts/prepare-web.cjs').includes('patch-v15-egg-rush-web.cjs'));
@@ -215,7 +215,9 @@ test('3% Shiny support exists only within run at 100% of main Pokemon stats; nor
  assert.equal(regular.it.statScale,.65);
  assert.equal(regular.it.maxHp,104);
  assert.equal(regular.it.atk,52);
- assert.equal(regular.it.spd,91);
+ assert.equal(regular.it.spd,119);
+ assert.equal(regular.it.spdScale,.85);
+ assert.equal(shiny.it.spdScale,1);
  assert.equal(regular.it.anim.shiny,false);
 });
 
@@ -265,11 +267,11 @@ test('support touch damage is bounded, shield is absorbed and HP bars exist',()=
  assert.match(s,/function hurtSupport\(it,raw\)/);
  assert.match(s,/Math\.min\(it\.maxHp\*\.20/);
  assert.match(s,/it\.shield=Math\.max/);
- assert.match(s,/ctx\.fillRect\(bx,by,36\*hpRatio,5\)/);
+ assert.match(s,/ctx\.fillRect\(bx,by,26\*hpRatio,2\)/);
  assert.doesNotMatch(s,/chooseReplace\(/);
 });
 
-test('Boss guardians spawn 1–3 at 30% boss HP, stay attackable and no recursion',()=>{
+test('Boss guardians spawn 1–3 at independently rolled 30–50% boss HP, stay attackable and no recursion',()=>{
  const vm=require('node:vm');
  function run(roll){
   let id=1,added=[],announcements=[],shots=[];
@@ -304,13 +306,18 @@ test('Boss guardians spawn 1–3 at 30% boss HP, stay attackable and no recursio
   assert.equal(guards.length,number);
   assert.equal(added.length,number+1);
   for(const g of guards){
-   assert.equal(g.hp,300);
-   assert.equal(g.maxHp,300);
+   const expected=Math.round(1000*(.30+roll*.20));
+   assert.equal(g.hp,expected);
+   assert.equal(g.maxHp,expected);
+   assert.ok(g.pkmsvvScale>=.30&&g.pkmsvvScale<=.50);
+   assert.ok(g.pkmsvvSpeedScale>=.8&&g.pkmsvvSpeedScale<=.9);
+   assert.equal(g.spd,100*g.pkmsvvSpeedScale);
+   assert.equal(g.dmg,Math.round(100*g.pkmsvvScale));
    assert.equal(g.boss,false);
    assert.equal(g.pkmsvvBossGuard,true);
    assert.equal(g.pkmsvvGuardianOf,b.id);
   }
-  guards[0].hurt(75);assert.equal(guards[0].hp,225);
+  guards[0].hurt(75);assert.equal(guards[0].hp,Math.round(1000*(.30+roll*.20))-75);
   guards[0].update(1,{x:0,y:0,dead:false,slowT:0});
   b.dead=true;guards[0].update(.1,{x:0,y:0,dead:false});
   assert.equal(guards[0].dead,true);
@@ -325,7 +332,10 @@ test('Boss support runtime is bundled in shared Windows Android and Web game bui
  const patch=read('scripts/patch-v15-eggs.cjs');
  const source=read('src/v15/boss-support.js');
  assert.ok(patch.includes('pkmsvv-boss-support.js'));
- assert.ok(source.includes('boss.maxHp*.30'));
+ assert.ok(source.includes('.30+Math.random()*.20'));
+ assert.ok(source.includes('.80+Math.random()*.10'));
+ assert.ok(!source.includes('pkmsvvAngle+Math.sin'));
+ assert.ok(!source.includes('const baseDraw=g.draw'));
  assert.ok(source.includes('b.rd||0'));
  assert.ok(source.includes('G.EnemyMgr.add=function'));
 });
@@ -339,4 +349,46 @@ test('egg collection and incubation use only a thin white shrinking line',()=>{
  assert.ok(code.includes('bar(ctx,n.x,n.y-34,48,'));
  assert.ok(code.includes('bar(ctx,it.x,it.y-31,42,'));
  assert.ok(!code.includes("tr('Giữ 8 giây'"));
+});
+
+test('normal support receives actual enemy aggro, contact, hostile projectile and AoE damage',()=>{
+ const save={pkmsvvChapter3Seen:true,stats:{}};
+ const player={x:0,y:0,dead:false,kills:0,level:12,maxHp:100,hp:100,spd:120,atk:20};
+ const enemy={x:22,y:0,dead:false,remote:false,boss:false,pkmsvvBossGuard:false,r:10,dmg:18,touchCd:0};
+ const rand=Object.create(Math);rand.random=()=>0;
+ const G={DB:{save,commit(){}},I18n:{lang:'vi'},Coop:{active:false},
+  U:{dist2:(x,y,a,b)=>(x-a)**2+(y-b)**2},
+  EnemyMgr:{all:()=>[enemy]},World:{isLiquid:()=>false,isFree:()=>true},
+  FX:{ring(){},burst(){},dmgText(){}},Spawner:{say(){}},
+  Sprites:{preload(){},dirFromAngle:()=>0,Animator:class{loop(){}update(){}draw(){}}}};
+ vm.runInNewContext(read('src/v15/eggs.js'),{G,Math:rand,Object,Number});
+ G.PKMSVVEggs.begin(player,false);
+ G.PKMSVVEggs.followers.push({id:1,dex:172,hatched:true,active:true,
+  x:22,y:0,hp:100,maxHp:100,spd:108,statScale:.6,def:0,shield:0,
+  cooldown:999,hitCooldown:0,effectFlash:0,anim:null});
+ const it=G.PKMSVVEggs.followers[0];
+ const target=G.PKMSVVEggs.enemyTarget(enemy,player,.1);
+ assert.notEqual(target,player,'Some enemy AI must target a support');
+ assert.equal(target.x,it.x);
+ target.hurt(10);
+ assert.equal(it.hp,90,'Enemy targeted hit consumes actual follower HP');
+ it.hitCooldown=0;
+ assert.equal(G.PKMSVVEggs.interceptProjectile({x:22,y:0,r:4,dmg:20,friendly:false}),true);
+ assert.equal(it.hp,70,'Hostile projectile hits the follower');
+ it.hitCooldown=0;
+ G.PKMSVVEggs.hitHazard({kind:'zone',x:22,y:0,r:45,dmg:14});
+ assert.equal(it.hp,56,'AOE zone damages the follower');
+ it.hitCooldown=0;
+ G.PKMSVVEggs.hitHazard({kind:'beam',x:0,y:0,angle:0,len:55,w:20,dmg:10});
+ assert.equal(it.hp,46,'Hostile beam damages the follower');
+});
+
+test('support attack targeting and hits are injected into upstream combat, and bars are discreet',()=>{
+ const patch=read('scripts/patch-v15-eggs.cjs');
+ const egg=read('src/v15/eggs.js'),boss=read('src/v15/boss-support.js');
+ for(const api of ['enemyTarget','interceptProjectile','hitHazard'])assert.ok(egg.includes('function '+api+'('));
+ for(const hook of ['js/entities/enemy.js','js/systems/combat.js','js/systems/hazards.js'])
+  assert.ok(patch.includes("patch('"+hook+"'"));
+ assert.ok(!boss.includes('const baseDraw=g.draw'),'No redundant boss HP bar');
+ assert.ok(!egg.includes('ctx.fillRect(bx-2,by-2,40,9)'),'No thick player support HP block');
 });

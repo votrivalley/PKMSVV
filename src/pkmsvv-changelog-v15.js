@@ -86,3 +86,21 @@ G.CHANGELOG.unshift({
  credit:['Votri Valley — Bản mod và Việt hóa phi thương mại dựa trên PokéSurvivor của JPTER78.',
          'Votri Valley — A noncommercial mod and localization based on PokéSurvivor by JPTER78.']
 });
+
+G.CHANGELOG.unshift({
+ d:'2026-10-26',
+ title:['Pokemon Chuyển sinh – Votri Valley v1.5.6','Pokemon Chuyển sinh – Votri Valley v1.5.6'],
+ subtitle:['Hỗ trợ không còn bất tử và hộ vệ boss đi theo tự nhiên.','Hittable companions and natural boss escort movement.'],
+ new:[
+  ['Quái thường có thể chọn đánh Pokémon hỗ trợ với mức chú ý thấp hơn người chơi. Support chịu sát thương chạm, đạn và vùng kỹ năng, nhưng vẫn có thời gian miễn thương ngắn để tránh chết tức thì.','Regular enemies may pursue support Pokémon with lower aggro than the hero. Companions take contact, hostile projectile and area damage with short hit immunity.']
+ ],
+ chg:[
+  ['Support thường giữ 50–80% chỉ số, nhưng tốc độ riêng là 80–90% Pokémon chính. Support Shiny vẫn 3% khi nở và 100% chỉ số/tốc độ trong trận.','Normal support keeps 50–80% stat scaling, with independent 80–90% movement speed. Shiny remains 3% per hatch with full stats and speed for that run.'],
+  ['Mỗi hộ vệ boss có 30–50% HP và sức mạnh, 80–90% tốc độ boss; theo đội hình mềm, giữ khoảng cách, tránh chồng lên nhau thay vì xoay vòng cứng.','Each boss escort rolls 30–50% HP and power, 80–90% boss movement speed, and follows with soft spacing and separation instead of rigid orbiting.']
+ ],
+ fix:[
+  ['Bỏ thanh máu boss support bị vẽ trùng. Thu gọn thanh máu support phe mình thành vạch mảnh chỉ nổi bật khi bị thương.','Removed duplicate boss guard HP bars and minimized the allied support HP display when hurt.']
+ ],
+ credit:['Votri Valley — Bản mod và Việt hóa phi thương mại dựa trên PokéSurvivor của JPTER78.',
+         'Votri Valley — A noncommercial mod and localization based on PokéSurvivor by JPTER78.']
+});
