@@ -61,7 +61,7 @@ test('Egg Rush is online-only, host owns score, exactly ten nests spawn over fiv
  assert.match(read('scripts/patch-v15-egg-rush-web.cjs'),/room.mode==='eggrush'\?4:2/);
 });
 
-test('Solo egg nest requires 8 seconds, interruption resets progress, and hit delays hatching 3s',()=>{
+test('Solo egg nest requires 4 seconds, interruption resets progress, and hit delays hatching 3s',()=>{
  const source=read('src/v15/eggs.js');
  const player={x:0,y:0,dead:false,kills:0,level:1,maxHp:150,hp:150,heal(v){this.hp=Math.min(this.maxHp,this.hp+v);}};
  const save={pkmsvvChapter3Seen:true,pkmsvvEggSlot3:false,stats:{}};
@@ -78,14 +78,14 @@ test('Solo egg nest requires 8 seconds, interruption resets progress, and hit de
  assert.equal(G.PKMSVVEggs.nests.length,1);
  const nest=G.PKMSVVEggs.nests[0];
  player.x=nest.x;player.y=nest.y;
- for(let i=0;i<39;i++)G.PKMSVVEggs.update(.1,player,60+i*.1,false);
- assert.equal(G.PKMSVVEggs.followers.length,0,'Cannot collect by touching or waiting less than eight seconds');
- assert.ok(nest.collecting>3&&nest.collecting<4.1);
+ for(let i=0;i<19;i++)G.PKMSVVEggs.update(.1,player,60+i*.1,false);
+ assert.equal(G.PKMSVVEggs.followers.length,0,'Cannot collect by touching or waiting less than four seconds');
+ assert.ok(nest.collecting>1.7&&nest.collecting<2.1);
  player.x+=70;
  G.PKMSVVEggs.update(.1,player,64,false);
  assert.equal(nest.collecting,0,'Leaving capture radius resets the channel');
  player.x=nest.x;player.y=nest.y;
- for(let i=0;i<81;i++)G.PKMSVVEggs.update(.1,player,65+i*.1,false);
+ for(let i=0;i<41;i++)G.PKMSVVEggs.update(.1,player,65+i*.1,false);
  assert.equal(G.PKMSVVEggs.nests.length,0);
  assert.equal(G.PKMSVVEggs.followers.length,1);
  const egg=G.PKMSVVEggs.followers[0];
@@ -98,8 +98,9 @@ test('Solo egg nest requires 8 seconds, interruption resets progress, and hit de
  assert.ok(visuals.some(v=>v.includes('+3s')),'Delay must be signposted');
  for(let i=0;i<245;i++){player.kills++;G.PKMSVVEggs.update(.1,player,74+i*.1,false);}
  assert.equal(egg.hatched,true,'Combat-accelerated incubation still hatches');
- assert.equal(G.PKMSVVEggs.limit(),2);
- save.pkmsvvEggSlot3=true;assert.equal(G.PKMSVVEggs.limit(),3);
+ assert.equal(G.PKMSVVEggs.limit(),1);
+ save.pkmsvvEggSlot2=true;assert.equal(G.PKMSVVEggs.limit(),2);
+ save.pkmsvvEggSlot3=true;assert.equal(G.PKMSVVEggs.limit(),2);
 });
 
 test('Igglybuff support slows targets and emits target/support VFX only on successful cast',()=>{
@@ -119,7 +120,7 @@ test('Igglybuff support slows targets and emits target/support VFX only on succe
  G.PKMSVVEggs.begin(player,false);
  G.PKMSVVEggs.update(.1,player,60,false);
  const nest=G.PKMSVVEggs.nests[0];player.x=nest.x;player.y=nest.y;
- for(let i=0;i<81;i++)G.PKMSVVEggs.update(.1,player,61+i*.1,false);
+ for(let i=0;i<41;i++)G.PKMSVVEggs.update(.1,player,61+i*.1,false);
  const egg=G.PKMSVVEggs.followers[0];
  assert.equal(egg.dex,174);
  for(let i=0;i<205;i++){player.kills++;G.PKMSVVEggs.update(.1,player,70+i*.1,false);}
@@ -133,12 +134,12 @@ test('Igglybuff support slows targets and emits target/support VFX only on succe
  assert.ok(damageTexts.some(args=>args.includes('CHẬM!')),'Slow effect is visible to the player');
 });
 
-test('egg direction indicator, reverse timer bars, sprite walking and shield-safe damage hook are bundled',()=>{
+test('egg direction indicator, reverse timer bars, walking animation and shield-safe damage are bundled',()=>{
  const src=read('src/v15/eggs.js');
  assert.match(src,/function arrow\(ctx,w,h\)/);
  assert.match(src,/ctx\.fillRect\(x-width\/2,y,width\*ratio,2\)/);
  assert.match(src,/follow\(it,j,pl,dt\)/);
- assert.match(src,/it\.anim\.loop\(move\?'Walk':'Idle'\)/);
+ assert.match(src,/it\.anim\.loop\(moved>\.6\?'Walk':'Idle'/);
  assert.match(src,/it\.penalty=\(it\.penalty\|\|0\)\+3/);
  const patch=read('scripts/patch-v15-eggs.cjs');
  assert.match(patch,/PKMSVVEggs\?\.onHurt\?\./);
@@ -195,7 +196,7 @@ test('3% Shiny support exists only within run at 100% of main Pokemon stats; nor
   G.PKMSVVEggs.begin(pl,false);
   G.PKMSVVEggs.update(.1,pl,60,false);
   const nest=G.PKMSVVEggs.nests[0];pl.x=nest.x;pl.y=nest.y;
-  for(let i=0;i<81;i++)G.PKMSVVEggs.update(.1,pl,61+i*.1,false);
+  for(let i=0;i<41;i++)G.PKMSVVEggs.update(.1,pl,61+i*.1,false);
   for(let i=0;i<210;i++){pl.kills++;G.PKMSVVEggs.update(.1,pl,70+i*.1,false);}
   assert.equal(G.PKMSVVEggs.followers.length,1);
   return {save,pl,G,it:G.PKMSVVEggs.followers[0]};
@@ -234,6 +235,7 @@ test('full team blocks nests, teammate faint frees slot and new nest becomes pos
  vm.runInNewContext(read('src/v15/eggs.js'),{G,Math,Number,Object,document:{}});
  G.PKMSVVEggs.begin(pl,false);
  const team=G.PKMSVVEggs.followers;
+ save.pkmsvvEggSlot2=true; // After the Chapter 3 egg quest, full 2/2 team.
  const make=i=>({id:i,dex:172,hatched:true,active:true,x:0,y:0,anim:null,
   statScale:.6,maxHp:120,hp:120,spd:120,def:0,shield:0,
   hitCooldown:0,cooldown:99,effectFlash:0});
@@ -391,4 +393,52 @@ test('support attack targeting and hits are injected into upstream combat, and b
   assert.ok(patch.includes("patch('"+hook+"'"));
  assert.ok(!boss.includes('const baseDraw=g.draw'),'No redundant boss HP bar');
  assert.ok(!egg.includes('ctx.fillRect(bx-2,by-2,40,9)'),'No thick player support HP block');
+});
+
+test('Rift transitions relocate companions, suppress nests, and keep incubation',()=>{
+ const save={pkmsvvChapter3Seen:true,stats:{}};
+ const pl={x:0,y:0,kills:0,level:1,dead:false,maxHp:150,hp:150,spd:130};
+ let arena=false;
+ const G={DB:{save,commit(){}},I18n:{lang:'vi'},Rift:{get inArena(){return arena;}},
+  U:{dist2:(x,y,a,b)=>(x-a)**2+(y-b)**2},Coop:{active:false},
+  World:{isFree:()=>true,isLiquid:()=>false},Sprites:{preload(){},dirFromAngle:()=>0},
+  Spawner:{say(){}},FX:{ring(){}},EnemyMgr:{all:()=>[]}};
+ vm.runInNewContext(read('src/v15/eggs.js'),{G,Math,Number,Object});
+ G.PKMSVVEggs.begin(pl,false);
+ G.PKMSVVEggs.update(.1,pl,60,false);
+ assert.equal(G.PKMSVVEggs.nests.length,1);
+ G.PKMSVVEggs.followers.push({id:1,dex:172,hatched:false,active:false,
+  x:100,y:100,age:7,boost:0,penalty:0,cooldown:9});
+ arena=true;pl.x=140000;pl.y=150000;
+ G.PKMSVVEggs.update(.1,pl,70,false);
+ const egg=G.PKMSVVEggs.followers[0];
+ assert.equal(G.PKMSVVEggs.nests.length,0,'All map nests disappear on arena entry');
+ assert.ok(Math.hypot(egg.x-pl.x,egg.y-pl.y)<120,'Support egg enters Rift with player');
+ assert.ok(egg.age>7,'Incubation continues inside arena');
+ G.PKMSVVEggs.update(.1,pl,300,false);
+ assert.equal(G.PKMSVVEggs.nests.length,0,'No Rift nest even past spawn timer');
+ arena=false;pl.x=60;pl.y=70;
+ G.PKMSVVEggs.update(.1,pl,301,false);
+ assert.ok(Math.hypot(egg.x-pl.x,egg.y-pl.y)<120,'Support returns with player');
+});
+
+test('Companions are drawn within Y-sorted scene with props and players',()=>{
+ const patch=read('scripts/patch-v15-eggs.cjs');
+ const src=read('src/v15/eggs.js');
+ assert.match(patch,/G\.PKMSVVEggs\?\.drawables\?\.\(cam\)/);
+ assert.match(src,/function drawables\(cam\)/);
+ assert.match(src,/\.map\(it=>\(\{y:it\.y,draw\(ctx\)/);
+ assert.match(src,/const moved=Math\.hypot/);
+ assert.match(src,/it\.anim\.loop\(moved>\.6\?'Walk':'Idle'/);
+ assert.match(src,/function syncArena\(pl\)/);
+ assert.match(src,/COLLECT_TIME=4/);
+ assert.doesNotMatch(src,/pkmsvvEggSlot3\?3:2/);
+});
+
+test('Changelog has one 1.5 entry and concise bilingual themes',()=>{
+ const src=read('src/pkmsvv-changelog-v15.js');
+ assert.equal((src.match(/G\.CHANGELOG\.unshift\(/g)||[]).length,1);
+ assert.match(src,/Pokemon Chuyển sinh — v1\.5/);
+ assert.doesNotMatch(src,/v1\.5\.[1-9]/);
+ assert.match(src,/Tranh Trứng Online/);
 });

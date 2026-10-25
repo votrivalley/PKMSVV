@@ -137,7 +137,7 @@ test('upgrade chooser replaces Mystery Orb help with bilingual live support rost
  assert.match(src,/G\.PKMSVVEggs\?\.SPECIES/);
  assert.match(src,/mon\.period\+'s'/);
  assert.match(src,/Shiny: 3%/);
- assert.match(src,/30% HP tối đa của boss/);
+ assert.match(src,/30–50% HP của boss/);
  assert.match(src,/aria-expanded/);
  assert.match(css,/pkmsvv-support-roster/);
  assert.doesNotMatch(src,/title\.textContent=full\?t\('Hướng dẫn Mystery Orb'/);
