@@ -1,0 +1,181 @@
+/* PKMSVV v1.5 — Egg Rush, online 4-player host-authoritative match. */
+G.EggRush=(()=>{
+ const MAX=10,MAX_TIME=720,EGG_SPECIES=[172,447,173,35,360,438,175,174];
+ let active=false,roster=[],nests=[],trails=new Map(),pets=[],score={},at={},laid=0,wave=0,seed=1,outcome=null,transition={};
+ const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
+ const nameOf=uid=>roster.find(m=>m.uid===uid)?.name||'Player';
+ const rand=k=>{let x=((seed+Math.imul(k+1,2654435761))|0);x^=x>>>16;x=Math.imul(x,2246822507);x^=x>>>13;return (x>>>0)/4294967296;};
+ function startPosition(cfg,i){
+  const corners=[[-300,-225],[300,225],[-300,225],[300,-225]];
+  const rotation=Math.floor((Number(cfg.seed)||0)%4);
+  const p=corners[(i+rotation)%4];return p.slice();
+ }
+ function begin(cfg){
+  active=!!(cfg&&cfg.mode==='eggrush');
+  roster=active?(cfg.members||[]).map(m=>({uid:m.uid,name:String(m.name||'Player').slice(0,24),dex:m.dex||25})):[];
+  seed=Math.floor(Number(cfg?.seed)||1);nests=[];pets=[];trails=new Map();
+  score=Object.fromEntries(roster.map(m=>[m.uid,0]));at={};laid=0;wave=0;outcome=null;transition={};
+  if(active)G.Sprites?.preload?.([...EGG_SPECIES,...roster.map(x=>x.dex)],7500);
+ }
+ function standings(){
+  return roster.map(m=>({...m,eggs:score[m.uid]||0,at:at[m.uid]||0})).sort((a,b)=>
+   b.eggs-a.eggs || (a.at||Infinity)-(b.at||Infinity) || a.name.localeCompare(b.name));
+ }
+ function randomNest(index,players){
+  const n=index+1;
+  for(let tries=0;tries<30;tries++){
+   const a=6.28318*rand(n*73+tries*11),d=80+rand(n*57+tries*7)*335;
+   const x=Math.cos(a)*d,y=Math.sin(a)*d;
+   if(!G.World.isFree(x,y,20)||G.World.isLiquid(x,y))continue;
+   if(players.some(p=>!p.dead&&G.U.dist2(p.x,p.y,x,y)<92*92))continue;
+   return {id:n,x:Math.round(x),y:Math.round(y),taken:false};
+  }
+  return {id:n,x:Math.round(Math.cos(n*2.399)*285),y:Math.round(Math.sin(n*2.399)*210),taken:false};
+ }
+ function onEvent(ev){
+  if(!active||ev[0]!=='er')return;
+  if(ev[1]==='spawn'){
+   if(!nests.some(n=>n.id===ev[2]))nests.push({id:ev[2],x:ev[3],y:ev[4],taken:false});
+  }else if(ev[1]==='take'){
+   const [, ,id,uid,dex,total,when]=ev;
+   const n=nests.find(n=>n.id===id);if(n)n.taken=true;
+   score[uid]=total;at[uid]=when;
+   if(!pets.some(p=>p.id===id))pets.push({id,uid,dex,age:0,hatch:false,x:n?.x||0,y:n?.y||0,anim:null});
+  }else if(ev[1]==='hit'){
+   const [, ,uid,dmg,slow]=ev,pl=G.Game.player;
+   if(pl?.uid!==uid||pl.dead)return;
+   if(pl.pkmsvvPvpImmune>0)return;
+   pl.hurt(Math.max(1,Math.min(90,dmg)),null,true);
+   if(slow>0)pl.pkmsvvPvpSlow=Math.max(pl.pkmsvvPvpSlow||0,slow);
+   pl.pkmsvvPvpImmune=.85;
+  }
+ }
+ function claim(n,pl,time){
+  if(n.taken||!roster.some(m=>m.uid===pl.uid))return false;
+  n.taken=true;score[pl.uid]=(score[pl.uid]||0)+1;at[pl.uid]=time;
+  const dex=EGG_SPECIES[Math.floor(rand(n.id*413)*EGG_SPECIES.length)];
+  const event=['er','take',n.id,pl.uid,dex,score[pl.uid],time];
+  onEvent(event);G.Coop.broadcast(event);
+  G.Spawner?.say?.(nameOf(pl.uid)+' '+tr('nhặt được trứng!','collected an egg!'),2);
+  return true;
+ }
+ const wins=()=>Object.values(score).some(n=>n>=6);
+ function result(time){
+  const board=standings(),win=board[0]||null;
+  return {winner:win?.uid||null,standings:board.map((m,i)=>({...m,rank:i+1,win:m.uid===win?.uid})),collected:laid?MAX-nests.filter(n=>!n.taken).length:0,finishedAt:Math.round(time)};
+ }
+ function update(dt,time,players,finish){
+  if(!active||outcome)return;
+  for(const p of players){
+   if(!p||!p.uid)continue;
+   let trl=trails.get(p.uid);if(!trl){trl=[];trails.set(p.uid,trl);}
+   trl.unshift({x:p.x,y:p.y});if(trl.length>300)trl.length=300;
+   if(p===G.Game.player&&p.pkmsvvPvpImmune>0)p.pkmsvvPvpImmune=Math.max(0,p.pkmsvvPvpImmune-dt);
+  }
+  for(const pet of pets){
+   const trl=trails.get(pet.uid);
+   if(!trl?.length)continue;
+   const siblings=pets.filter(x=>x.uid===pet.uid),i=siblings.indexOf(pet);
+   const loc=trl[Math.min((i+1)*12,trl.length-1)];
+   pet.x+=(loc.x-pet.x)*Math.min(1,dt*10);pet.y+=(loc.y-pet.y)*Math.min(1,dt*10);
+   pet.age+=dt;
+   if(pet.age>=45&&!pet.hatch){
+    pet.hatch=true;pet.anim=new G.Sprites.Animator(pet.dex,.7,false);
+    G.FX?.ring?.(pet.x,pet.y,8,48,'#f5de8d',.6,3);
+   }
+   pet.anim?.update?.(dt);
+  }
+  if(!G.Coop.isHost)return;
+  while(wave<5&&time>=8+wave*132){
+   for(let i=0;i<2;i++){
+    const n=randomNest(wave*2+i,players);nests.push(n);laid++;
+    G.Coop.broadcast(['er','spawn',n.id,n.x,n.y]);
+   }
+   wave++;
+  }
+  for(const n of nests){
+   if(n.taken)continue;
+   let nearest=null,best=38*38;
+   for(const p of players){
+    if(!p||p.dead||!p.uid)continue;
+    const d=G.U.dist2(p.x,p.y,n.x,n.y);
+    if(d<best){best=d;nearest=p;}
+   }
+   if(nearest)claim(n,nearest,time);
+  }
+  if(wins()||nests.filter(n=>n.taken).length>=MAX||time>=MAX_TIME){
+   outcome=result(time);finish(outcome);
+  }
+ }
+ function cast(pl,m){
+  if(!active||!G.Coop.isHost||!pl||pl.dead||!m)return;
+  const players=G.Coop.players();
+  const target=players.filter(p=>p.uid!==pl.uid&&!p.dead).sort((a,b)=>
+   G.U.dist2(pl.x,pl.y,a.x,a.y)-G.U.dist2(pl.x,pl.y,b.x,b.y))[0];
+  if(!target||G.U.dist2(pl.x,pl.y,target.x,target.y)>180*180)return;
+  // The host uses a bounded damage approximation (40% PvE budget).
+  const move=G.Moves?.BY_ID?.[m.id||m],base=Number(move?.power||move?.pow||25);
+  const dmg=Math.max(2,Math.min(50,(base+(m.lvl||1)*2)*.4));
+  const evt=['er','hit',target.uid,Math.round(dmg),.35];
+  if(target.uid===G.Game.player?.uid)onEvent(evt);else G.Coop.broadcast(evt);
+ }
+ function orb(pl,id){
+  if(!active||!G.Coop.isHost||!pl||pl.dead)return;
+  const players=G.Coop.players();
+  for(const target of players){
+   if(!target||target.uid===pl.uid||target.dead||G.U.dist2(pl.x,pl.y,target.x,target.y)>250*250)continue;
+   const slow=['slow','slumber'].includes(id)?.8:0;
+   const evt=['er','hit',target.uid,id==='blowback'?10:4,slow];
+   if(target.uid===G.Game.player?.uid)onEvent(evt);else G.Coop.broadcast(evt);
+  }
+ }
+ function egg(ctx,x,y){
+  ctx.fillStyle='#ffebbf';ctx.strokeStyle='#c19b6f';ctx.lineWidth=2;
+  ctx.beginPath();ctx.ellipse(x,y-9,10,13,0,0,6.283);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#cda5dc';ctx.beginPath();ctx.arc(x+2,y-11,3,0,6.283);ctx.fill();
+ }
+ function draw(ctx){
+  if(!active)return;
+  ctx.save();
+  for(const n of nests){
+   if(n.taken||!G.Camera.sees(n.x,n.y,40))continue;
+   ctx.fillStyle='#97774a';ctx.beginPath();ctx.ellipse(n.x,n.y,21,13,0,0,6.283);ctx.fill();
+   egg(ctx,n.x,n.y);
+  }
+  for(const p of pets){
+   if(!G.Camera.sees(p.x,p.y,50))continue;
+   if(!p.hatch)egg(ctx,p.x,p.y);else p.anim?.draw(ctx,p.x,p.y,{alpha:.85});
+  }
+  ctx.restore();
+ }
+ function hud(ctx,w,h){
+  if(!active)return;
+  const board=standings(),collected=Object.values(score).reduce((s,n)=>s+n,0);
+  const size=Math.min(165,w*.27);
+  ctx.save();
+  ctx.fillStyle='rgba(11,39,51,.78)';ctx.strokeStyle='#80cfc4';ctx.lineWidth=1;
+  ctx.beginPath();ctx.roundRect(8,119,size,24+board.length*26,8);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#ffe17a';ctx.textAlign='right';ctx.font='bold 11px sans-serif';ctx.fillText(collected+'/10',size,135);
+  for(let i=0;i<board.length;i++){
+   const p=board[i],y=151+i*26,local=p.uid===G.Social.uid;
+   if(local){ctx.fillStyle='#ffe27429';ctx.fillRect(11,y-12,size-5,24);}
+   ctx.fillStyle=local?'#ffeaa3':'#f3fffd';ctx.font='bold 11px sans-serif';ctx.textAlign='left';
+   ctx.fillText(String(i+1),14,y+3);
+   const sprite=transition[p.uid]?.anim;if(sprite)sprite.draw(ctx,43,y+4,{alpha:1});
+   else{ctx.fillStyle='#ffe5a2';ctx.beginPath();ctx.arc(39,y,7,0,6.283);ctx.fill();}
+   ctx.fillStyle=local?'#ffebac':'#f2fbfb';ctx.font='10px sans-serif';
+   ctx.fillText(p.name.slice(0,12),54,y+3);
+   ctx.textAlign='right';ctx.fillStyle='#ffe17a';ctx.fillText(String(p.eggs),size-4,y+3);
+  }
+  ctx.restore();
+ }
+ function html(r){
+  if(!r||!Array.isArray(r.standings))return '';
+  const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  return '<div style="grid-column:1/-1"><h3>'+tr('Kết quả Tranh Trứng','Egg Rush results')+'</h3>'+
+   r.standings.map(p=>'<p>#'+p.rank+' '+esc(p.name)+' — '+p.eggs+' '+tr('trứng','eggs')+'</p>').join('')+'</div>';
+ }
+ function finish(r){if(r){outcome=r;active=true;}}
+ return {begin,startPosition,onEvent,update,draw,hud,html,finish,cast,orb,standings,
+  get active(){return active;},get outcome(){return outcome;},get collected(){return Object.values(score).reduce((s,n)=>s+n,0);}};
+})();
