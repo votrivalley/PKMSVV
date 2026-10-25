@@ -27,8 +27,9 @@ G.PKMSVVEggArt=(()=>{
   const w=28*scale,h=32*scale;
   return paint(ctx,progress>=.76?'cracked':'follow',x-w/2,y-h/2,w,h);
  }
- function nest(ctx,x,y){
-  return paint(ctx,'nest',x-32,y-35,64,48);
+ function nest(ctx,x,y,scale=1){
+  // Reduce just the uncollected nest artwork, not its collection radius.
+  return paint(ctx,'nest',x-32*scale,y-35*scale,64*scale,48*scale);
  }
  return {egg,nest,ready:(key)=>!!(imgs[key]?.complete&&imgs[key]?.naturalWidth)};
 })();

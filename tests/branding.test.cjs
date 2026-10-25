@@ -6,7 +6,7 @@ test('Vietnamese game name shown on Windows, Android and entry pages',()=>{
  const cap=JSON.parse(read('capacitor.config.json'));
  assert.equal(pkg.build.productName,'Pokemon Chuyển sinh');
  assert.equal(cap.appName,'Pokemon Chuyển sinh');
- assert.equal(pkg.version,'1.5.12');
+ assert.equal(pkg.version,'1.5.13');
  assert.match(read('src/web/index.html'),/Pokemon Chuyển sinh/);
  assert.match(read('desktop/main.cjs'),/title: 'Pokemon Chuyển sinh — Votri Valley'/);
  assert.match(read('scripts/prepare-game.cjs'),/Pokemon Chuyển sinh/);

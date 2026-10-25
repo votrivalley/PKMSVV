@@ -61,6 +61,12 @@ G.PKMSVVBossSupport=(()=>{
    const def={dex:option.dex,name:mon?.name||'Support',hp,spd:Math.max(1,(boss.spd||100)*speedScale),
     dmg:Math.max(1,Math.round((boss.dmg||30)*scale)),xp:1,behavior:'chase'};
    const g=new G.Enemy(def,x,y,{hp:1,spd:1,dmg:1},false);
+   // Boss escorts use the SAME normal enemy Animator/Walk/Idle; visual only 60%.
+   const visualScale=G.PKMSVVEggs?.SUPPORT_VISUAL_SCALE??.6;
+   g.scale=visualScale;
+   if(g.anim)g.anim.scale=visualScale;
+   if(typeof g.r==='number')g.r*=visualScale;
+   if(typeof g.bodyH==='number')g.bodyH*=visualScale;
    g.maxHp=hp;g.hp=hp;g.boss=false;
    G.Sprites?.sheet?.(option.dex,'Idle',g.shiny);
    G.Sprites?.sheet?.(option.dex,'Walk',g.shiny);

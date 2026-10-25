@@ -17,6 +17,7 @@ G.PKMSVVEggs=(()=>{
  const COLLECT_TIME=4, NEST_RADIUS=38, HATCH_BASE=45, HATCH_MIN=20;
  const SHINY_CHANCE=.03, MIN_STAT=.5, MAX_STAT=.8, HIT_COOLDOWN=1.25;
  const DITTO_FORM=7,DITTO_REST=3;
+ const SUPPORT_VISUAL_SCALE=.6, NEST_VISUAL_SCALE=.8;
  const FX_COLOR={attack:'#ffd472',heal:'#66ffad',shield:'#6edaff',magnet:'#ffe078',slow:'#e99aff'};
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  let player=null,items=[],nests=[],trail=[],spawnAt=55,seq=0,kills=0,lv=1,runTime=0,lastDir={x:0,y:1},wasInArena=false;
@@ -62,7 +63,9 @@ G.PKMSVVEggs=(()=>{
   const dex=transformed?(it.copyDex||132):132;
   const shiny=transformed?!!player?.shiny:!!it.shiny;
   G.Sprites?.preload?.([dex],5000,shiny);
-  it.anim=new G.Sprites.Animator(dex,.72,shiny);
+  // Exact same sprites/animation engine as an ordinary Pokémon. Only appearance size differs.
+  const normalScale=transformed?(G.Sprites.playerScale?.(dex)||1):1;
+  it.anim=new G.Sprites.Animator(dex,SUPPORT_VISUAL_SCALE*normalScale,shiny);
   it.anim.loop('Idle');
   it.cooldown=0;
  }
@@ -105,7 +108,7 @@ G.PKMSVVEggs=(()=>{
    updateDittoSkills(it,player);
    setDittoForm(it,true);
   }else{
-   it.anim=new G.Sprites.Animator(it.dex,.72,it.shiny);
+   it.anim=new G.Sprites.Animator(it.dex,SUPPORT_VISUAL_SCALE,it.shiny);
    it.anim.loop('Idle');
    // Use the very same Idle/Walk PNG sheets and Animator as ordinary Pokémon.
    // Preload BOTH variants immediately: no static Idle sheet while Walk downloads.
@@ -444,7 +447,7 @@ G.PKMSVVEggs=(()=>{
   ctx.save();
   for(const n of nests){
    if(!G.Camera.sees(n.x,n.y,60))continue;
-   if(!G.PKMSVVEggArt?.nest(ctx,n.x,n.y))egg(ctx,n.x,n.y-11,1);
+   if(!G.PKMSVVEggArt?.nest(ctx,n.x,n.y,NEST_VISUAL_SCALE))egg(ctx,n.x,n.y-11,NEST_VISUAL_SCALE);
    if(n.collecting>0)bar(ctx,n.x,n.y-34,48,COLLECT_TIME-n.collecting,COLLECT_TIME);
   }
   ctx.restore();
@@ -528,5 +531,5 @@ G.PKMSVVEggs=(()=>{
   ctx.fillStyle='#fff3bd';ctx.font='bold 11px sans-serif';ctx.textAlign='left';
   ctx.fillText(tr('Đồng hành','Companions')+' '+ready+'/'+limit(),x+8,y+16);ctx.restore();
  }
- return {SPECIES,rollSpecies,affinityFor,affinityGoal,affinityPercent,maxAffinity,affinityMultiplier,speciesChanceFor,shinyChanceFor,DITTO_FORM,DITTO_REST,SHINY_CHANCE,COLLECT_TIME,begin,update,onHurt,hurtSupport,enemyTarget,interceptProjectile,hitHazard,remaining,draw,drawables,hud,limit,unlocked,get followers(){return items;},get nests(){return nests;},get occupied(){return occupied();}};
+ return {SPECIES,rollSpecies,affinityFor,affinityGoal,affinityPercent,maxAffinity,affinityMultiplier,speciesChanceFor,shinyChanceFor,DITTO_FORM,DITTO_REST,SUPPORT_VISUAL_SCALE,NEST_VISUAL_SCALE,SHINY_CHANCE,COLLECT_TIME,begin,update,onHurt,hurtSupport,enemyTarget,interceptProjectile,hitHazard,remaining,draw,drawables,hud,limit,unlocked,get followers(){return items;},get nests(){return nests;},get occupied(){return occupied();}};
 })();

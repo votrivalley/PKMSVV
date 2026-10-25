@@ -169,7 +169,7 @@ test('real pixel egg/nest sprites are bundled for solo and Web Egg Rush',()=>{
 
 test('v1.5 release identity and completed egg gameplay are both packaged',()=>{
  const pkg=JSON.parse(read('package.json'));
- assert.equal(pkg.version,'1.5.12');
+ assert.equal(pkg.version,'1.5.13');
  assert.equal(pkg.build.productName,'Pokemon Chuyển sinh');
  assert.ok(read('scripts/prepare-game.cjs').includes('patch-v15-eggs.cjs'));
  assert.ok(read('scripts/prepare-web.cjs').includes('patch-v15-egg-rush-web.cjs'));
@@ -631,7 +631,7 @@ test('v1.5 log explicitly names the online Egg Rush mode in one consolidated rel
 
 test('all allied support use normal Pokemon Animator, movement velocity and native Walk sheets',()=>{
  const s=read('src/v15/eggs.js');
- assert.match(s,/new G\.Sprites\.Animator\(it\.dex,\.72,it\.shiny\)/);
+ assert.match(s,/new G\.Sprites\.Animator\(it\.dex,SUPPORT_VISUAL_SCALE,it\.shiny\)/);
  assert.match(s,/G\.Sprites\?\.sheet\?\.\(it\.dex,'Walk',it\.shiny\)/);
  assert.match(s,/G\.Sprites\?\.sheet\?\.\(it\.dex,'Idle',it\.shiny\)/);
  assert.match(s,/\/Math\.max\(dt,1\/120\)>2/);
@@ -659,4 +659,32 @@ test('Riolu metadata exposes four actual Walk frames in the original Pokemon spr
  const data=JSON.parse(m[1]);
  assert.equal(data.a.Walk.n,4);
  assert.equal(data.a.Walk.r,8);
+});
+
+// v1.5.13: visual scale is independent of HP/ATK/SPD and keeps the original animation.
+test('all companion Pokémon draw at 60% ordinary sprite size, including shiny and transformed Ditto',()=>{
+ const src=read('src/v15/eggs.js');
+ assert.match(src,/SUPPORT_VISUAL_SCALE=\.6/);
+ assert.match(src,/new G\.Sprites\.Animator\(it\.dex,SUPPORT_VISUAL_SCALE,it\.shiny\)/);
+ assert.match(src,/const normalScale=transformed\?\(G\.Sprites\.playerScale\?\.\(dex\)\|\|1\):1/);
+ assert.match(src,/new G\.Sprites\.Animator\(dex,SUPPORT_VISUAL_SCALE\*normalScale,shiny\)/);
+ assert.match(src,/it\.anim\.loop\(moved\?'Walk':'Idle',moved\?Math\.max\(\.6,it\.spd\/70\):1\)/);
+ const boss=read('src/v15/boss-support.js');
+ assert.match(boss,/g\.anim\.scale=visualScale/);
+ assert.match(boss,/g\.scale=visualScale/);
+ assert.match(boss,/this\.anim\.loop\(moved\?'Walk':'Idle',moved\?Math\.max\(\.6,this\.spd\/70\):1\)/);
+});
+
+test('uncollected nest is 80% original artwork, incubation egg and capture geometry unchanged',()=>{
+ const src=read('src/v15/eggs.js'),renderer=read('src/v15/egg-sprites.js');
+ assert.match(src,/NEST_VISUAL_SCALE=\.8/);
+ assert.match(src,/G\.PKMSVVEggArt\?\.nest\(ctx,n\.x,n\.y,NEST_VISUAL_SCALE\)/);
+ assert.match(src,/egg\(ctx,n\.x,n\.y-11,NEST_VISUAL_SCALE\)/);
+ assert.match(renderer,/function nest\(ctx,x,y,scale=1\)/);
+ assert.match(renderer,/64\*scale,48\*scale/);
+ assert.match(src,/egg\(ctx,it\.x,it\.y-10,\.75/,'Existing carried egg art remains 75%');
+ assert.match(src,/NEST_RADIUS=38/,'The interaction radius stays unchanged');
+ const G={};
+ vm.runInNewContext(renderer,{G,Image:undefined,Object,Math});
+ assert.equal(G.PKMSVVEggArt.nest({save(){},restore(){}},0,0,.8),false);
 });
