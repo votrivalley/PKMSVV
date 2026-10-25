@@ -52,3 +52,15 @@ body{background:#081f2a;color:#f8fffe}
 .pkmsvv-skill-guide-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
 .pkmsvv-skill-guide-grid>div{padding:8px 10px;background:#ebfaf2;color:#1b3a46;border-radius:7px;font-size:13px;font-weight:700}
 @media(max-width:600px){.pkmsvv-skill-guide-grid{grid-template-columns:1fr}}
+
+/* v1.4: pixel-perfect centered icon + menu label as a single visual pair. */
+#scr-menu .menu-item{display:grid;grid-template-columns:34px max-content;justify-content:center;align-content:center;align-items:center;column-gap:12px;row-gap:1px;box-sizing:border-box;min-width:0;text-align:left}
+#scr-menu .menu-item>.mi-ico{grid-column:1;grid-row:1 / span 2;display:grid;place-items:center;width:34px;height:34px;align-self:center;justify-self:center;line-height:1}
+#scr-menu .menu-item>.mi-ico img{display:block;max-width:100%;height:auto;image-rendering:pixelated}
+#scr-menu .menu-item>small{grid-column:2;grid-row:2;margin:0;text-align:left;line-height:1.25}
+#scr-menu .menu-item>.pkmsvv-menu-copy{grid-column:2;grid-row:1 / span 2;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;min-width:0;text-align:left;line-height:1.25}
+#scr-menu .menu-item>.pkmsvv-menu-copy .pkmsvv-menu-label{display:block;line-height:1.25;white-space:nowrap}
+#scr-menu .menu-item>.pkmsvv-menu-copy small{display:block;font-size:13px;line-height:1.25;margin:0;font-weight:600;color:#31515e}
+#scr-menu .menu-item.play{justify-content:start;padding-inline:24px}
+@media(max-width:900px){#scr-menu .menu-item{grid-template-columns:26px max-content;column-gap:7px}#scr-menu .menu-item>.mi-ico{width:26px;height:26px}#scr-menu .menu-item>.pkmsvv-menu-copy small{font-size:10px}#scr-menu .menu-item.play{padding-inline:12px}}
+@media(max-height:400px){#scr-menu .menu-item>.pkmsvv-menu-copy small{display:none}#scr-menu .menu-item.play>.pkmsvv-menu-copy small{display:block}}
