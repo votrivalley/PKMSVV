@@ -71,7 +71,9 @@ patch('js/core/db.js',
  '    for (const k in older.stats || {}) r.stats[k] = Math.max(r.stats[k] || 0, older.stats[k] || 0);',
  '    for (const k in older.stats || {}) r.stats[k] = Math.max(r.stats[k] || 0, older.stats[k] || 0);\n'+
  '    r.pkmsvvSupportBond=r.pkmsvvSupportBond||{};\n'+
- '    for(const k in older.pkmsvvSupportBond||{})r.pkmsvvSupportBond[k]=Math.min(999,Math.max(Number(r.pkmsvvSupportBond[k])||0,Number(older.pkmsvvSupportBond[k])||0));');
+ '    for(const k in older.pkmsvvSupportBond||{})r.pkmsvvSupportBond[k]=Math.min(999,Math.max(Number(r.pkmsvvSupportBond[k])||0,Number(older.pkmsvvSupportBond[k])||0));\n'+
+ '    r.pkmsvvSupportShiny=r.pkmsvvSupportShiny||{};\n'+
+ '    for(const k in older.pkmsvvSupportShiny||{})if(older.pkmsvvSupportShiny[k])r.pkmsvvSupportShiny[k]=true;');
 // In solo runs, some normal monsters pursue and strike followers, with lower aggro weight.
 patch('js/entities/enemy.js',
  '        else e.update(dt, nearestPlayer(players, e.x, e.y) || pl);',

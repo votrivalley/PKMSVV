@@ -52,7 +52,7 @@ G.PKMSVVEggs=(()=>{
   return Number(dex)===132?.08*mul:Number(dex)===151?.04*mul:0;
  }
  function shinyChanceFor(dex){
-  const base=Number(dex)===132?.08:Number(dex)===151?.04:SHINY_CHANCE;
+  const base=Number(dex)===132||Number(dex)===151?.10:SHINY_CHANCE;
   return base*(maxAffinity(dex)?2:1);
  }
  function setDittoForm(it,transformed){
@@ -82,11 +82,15 @@ G.PKMSVVEggs=(()=>{
   bonds[it.dex]=Math.min(999,(Number(bonds[it.dex])||0)+1);
   it.affinityBoost=affinityMultiplier(it.dex);
   it.bondHatches=bonds[it.dex];
-  G.DB.commit(true);
   G.FX?.ring?.(it.x,it.y,6,62,'#ffe17b',.55,2);
   // Reserved egg slots prevent overflow; there is no replacement dialog.
   it.active=true;
   it.shiny=Math.random()<shinyChanceFor(it.dex);
+  if(it.shiny){
+   const discovered=G.DB.save.pkmsvvSupportShiny||(G.DB.save.pkmsvvSupportShiny={});
+   discovered[it.dex]=true; // Separate from player-owned Shiny collection.
+  }
+  G.DB.commit(true); // Persist BOTH normal hatch discovery and special Shiny discovery.
   it.statScale=it.shiny?1:MIN_STAT+Math.random()*(MAX_STAT-MIN_STAT);
   it.maxHp=Math.max(1,Math.round((player.maxHp||100)*it.statScale));
   it.hp=it.maxHp;
