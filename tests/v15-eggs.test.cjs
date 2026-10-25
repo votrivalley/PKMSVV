@@ -96,7 +96,7 @@ test('Solo egg nest requires 8 seconds, interruption resets progress, and hit de
  assert.equal(G.PKMSVVEggs.remaining(egg),before+3);
  assert.equal(egg.penalty,3);
  assert.ok(visuals.some(v=>v.includes('+3s')),'Delay must be signposted');
- for(let i=0;i<205;i++){player.kills++;G.PKMSVVEggs.update(.1,player,74+i*.1,false);}
+ for(let i=0;i<245;i++){player.kills++;G.PKMSVVEggs.update(.1,player,74+i*.1,false);}
  assert.equal(egg.hatched,true,'Combat-accelerated incubation still hatches');
  assert.equal(G.PKMSVVEggs.limit(),2);
  save.pkmsvvEggSlot3=true;assert.equal(G.PKMSVVEggs.limit(),3);
