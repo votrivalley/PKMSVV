@@ -45,8 +45,13 @@ G.PKMSVVPadOrb=(()=>{
   // Remove older split panels if a future build still inserts them.
   box.querySelector('#pkmsvv-bindings')?.remove();
   box.querySelector('#pkmsvv-pad-orb-map')?.remove();
+  // Remove upstream's obsolete controller/keyboard help tables, which
+  // describe switching skills that SVV now auto-casts. Retain live settings
+  // rows and their listeners (rumble, controller enable, touch layout).
+  const shared=[...box.children].filter(el=>el.classList?.contains('set-row')||el.classList?.contains('chips'));
   const root=document.createElement('section');
-  root.id=rootId;root.setAttribute('translate','no');box.appendChild(root);
+  root.id=rootId;root.setAttribute('translate','no');
+  box.replaceChildren(root,...shared);
   let keyDraft=keyboardBindings(),padDraft=bindings(),waiting=null;
   let listener=null;
   const removeListener=()=>{if(listener){document.removeEventListener('keydown',listener,true);listener=null;}};
