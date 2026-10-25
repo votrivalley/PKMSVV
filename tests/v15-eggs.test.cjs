@@ -168,8 +168,103 @@ test('real pixel egg/nest sprites are bundled for solo and Web Egg Rush',()=>{
 
 test('v1.5 release identity and completed egg gameplay are both packaged',()=>{
  const pkg=JSON.parse(read('package.json'));
- assert.equal(pkg.version,'1.5.1');
+ assert.equal(pkg.version,'1.5.2');
  assert.equal(pkg.build.productName,'Pokemon Chuyển sinh');
  assert.ok(read('scripts/prepare-game.cjs').includes('patch-v15-eggs.cjs'));
  assert.ok(read('scripts/prepare-web.cjs').includes('patch-v15-egg-rush-web.cjs'));
+});
+
+
+test('3% Shiny support exists only within run at 100% of main Pokemon stats; normal rolls 50-80%',()=>{
+ function makeRoll(roll){
+  const save={pkmsvvChapter3Seen:true,stats:{},owned:{},shiny:{}};
+  const pl={x:0,y:0,hp:160,maxHp:160,atk:80,spd:140,reduction:.14,
+    dead:false,kills:0,level:1,heal(n){this.hp=Math.min(this.maxHp,this.hp+n);}};
+  const rolls=[.2,.3,.999,roll,.5];const math=Object.create(Math);
+  math.random=()=>rolls.length?rolls.shift():.5;
+  const G={I18n:{lang:'vi'},DB:{save,commit(){}},
+   Sprites:{preload(){},dirFromAngle(){return 0;},Animator:class{
+    constructor(dex,size,shiny){this.dex=dex;this.shiny=shiny;}
+    loop(){}update(){}draw(){}
+   }},
+   U:{dist2:(x,y,a,b)=>(x-a)**2+(y-b)**2},
+   World:{isFree:()=>true,isLiquid:()=>false},
+   Spawner:{say(){}},FX:{ring(){}},
+   Coop:{active:false},EnemyMgr:{all:()=>[]}};
+  vm.runInNewContext(read('src/v15/eggs.js'),{G,Math:math,Object,Number,document:{}});
+  G.PKMSVVEggs.begin(pl,false);
+  G.PKMSVVEggs.update(.1,pl,60,false);
+  const nest=G.PKMSVVEggs.nests[0];pl.x=nest.x;pl.y=nest.y;
+  for(let i=0;i<81;i++)G.PKMSVVEggs.update(.1,pl,61+i*.1,false);
+  for(let i=0;i<210;i++){pl.kills++;G.PKMSVVEggs.update(.1,pl,70+i*.1,false);}
+  assert.equal(G.PKMSVVEggs.followers.length,1);
+  return {save,pl,G,it:G.PKMSVVEggs.followers[0]};
+ }
+ const shiny=makeRoll(.029);
+ assert.equal(shiny.G.PKMSVVEggs.SHINY_CHANCE,.03);
+ assert.equal(shiny.it.shiny,true);
+ assert.equal(shiny.it.statScale,1);
+ assert.equal(shiny.it.maxHp,160);
+ assert.equal(shiny.it.hp,160);
+ assert.equal(shiny.it.atk,80);
+ assert.equal(shiny.it.spd,140);
+ assert.equal(shiny.it.anim.shiny,true);
+ assert.deepEqual(shiny.save.shiny,{},'Do not unlock permanent Shiny collection entries');
+ const regular=makeRoll(.03);
+ assert.equal(regular.it.shiny,false,'Exactly .03 is outside the 3% range');
+ assert.equal(regular.it.statScale,.65);
+ assert.equal(regular.it.maxHp,104);
+ assert.equal(regular.it.atk,52);
+ assert.equal(regular.it.spd,91);
+ assert.equal(regular.it.anim.shiny,false);
+});
+
+test('full team blocks nests, teammate faint frees slot and new nest becomes possible',()=>{
+ const save={pkmsvvChapter3Seen:true,stats:{}};
+ const pl={x:0,y:0,dead:false,kills:0,level:1,maxHp:140,hp:140,atk:30,spd:130};
+ let messages=[];
+ const G={I18n:{lang:'vi'},DB:{save,commit(){}},
+  Sprites:{preload(){},dirFromAngle(){return 0;},Animator:class{loop(){}update(){}draw(){}}},
+  U:{dist2:(x,y,a,b)=>(x-a)**2+(y-b)**2},
+  World:{isFree:()=>true,isLiquid:()=>false},
+  Spawner:{say(s){messages.push(s);}},FX:{ring(){},burst(){},dmgText(){}},
+  Coop:{active:false},EnemyMgr:{all:()=>[]}};
+ vm.runInNewContext(read('src/v15/eggs.js'),{G,Math,Number,Object,document:{}});
+ G.PKMSVVEggs.begin(pl,false);
+ const team=G.PKMSVVEggs.followers;
+ const make=i=>({id:i,dex:172,hatched:true,active:true,x:0,y:0,anim:null,
+  statScale:.6,maxHp:120,hp:120,spd:120,def:0,shield:0,
+  hitCooldown:0,cooldown:99,effectFlash:0});
+ team.push(make(1),make(2));
+ G.PKMSVVEggs.update(.1,pl,60,false);
+ assert.equal(G.PKMSVVEggs.occupied,2);
+ assert.equal(G.PKMSVVEggs.nests.length,0);
+ G.PKMSVVEggs.update(.1,pl,200,false);
+ assert.equal(G.PKMSVVEggs.nests.length,0);
+ const first=G.PKMSVVEggs.followers[0];
+ for(let i=0;i<5;i++){first.hitCooldown=0;G.PKMSVVEggs.hurtSupport(first,1000);}
+ assert.equal(first.hp,0);
+ assert.equal(G.PKMSVVEggs.occupied,1);
+ assert.equal(G.PKMSVVEggs.followers.length,1,'Fainted companion leaves the run');
+ assert.ok(messages.some(s=>s.includes('hạ')),'Faint must be signposted');
+ G.PKMSVVEggs.update(.1,pl,209,false);
+ assert.equal(G.PKMSVVEggs.nests.length,1,'After a faint, nest spawns again');
+ // A pending egg reserves the last slot, preventing over-spawning.
+ G.PKMSVVEggs.followers.push({id:3,dex:174,hatched:false,active:false,x:0,y:0,
+  age:0,boost:0,penalty:0,moving:false,hitCooldown:0,effectFlash:0});
+ G.PKMSVVEggs.update(.1,pl,310,false);
+ assert.equal(G.PKMSVVEggs.nests.length,0);
+ assert.equal(G.PKMSVVEggs.occupied,2);
+});
+
+test('support touch damage is bounded, shield is absorbed and HP bars exist',()=>{
+ const s=read('src/v15/eggs.js');
+ assert.match(s,/const SHINY_CHANCE=\.03/);
+ assert.match(s,/HIT_COOLDOWN=1\.25/);
+ assert.match(s,/function hitByEnemies\(dt\)/);
+ assert.match(s,/function hurtSupport\(it,raw\)/);
+ assert.match(s,/Math\.min\(it\.maxHp\*\.20/);
+ assert.match(s,/it\.shield=Math\.max/);
+ assert.match(s,/ctx\.fillRect\(bx,by,36\*hpRatio,5\)/);
+ assert.doesNotMatch(s,/chooseReplace\(/);
 });
