@@ -1,0 +1,83 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
+
+test('Chapter 3 continues existing arc, unlocks on six USED types, and preserves replay',()=>{
+ const source=read('src/pkmsvv-story.js');
+ for(const n of ['chapter1','chapter2','chapter3','pkmsvvChapter3Seen','pkmsvvChapter3Pending','pkmsvvOrbTypeMask','Arceus','MẦM SỐNG BỊ LÃNG QUÊN']){
+  assert.ok(source.includes(n),n);
+ }
+ assert.doesNotMatch(source,/Giáo sư Korrin|Professor Korrin|phòng thí nghiệm/);
+ assert.match(read('scripts/patch-v15-story.cjs'),/for\(const ch of \[1,2,3\]\)/);
+ assert.match(read('src/v14/orbs.js'),/pkmsvvOrbTypeMask&63\)===63/);
+ const save={pkmsvvChapter2Seen:false,stats:{pkmsvvOrbTypeMask:63}};
+ let commits=0;
+ const G={I18n:{lang:'vi'},DB:{save,commit:()=>commits++}};
+ vm.runInNewContext(source,{G,document:{getElementById:()=>null}});
+ assert.equal(G.PKMSVVStory.markChapter3(),false,'Chapter 2 must be completed');
+ save.pkmsvvChapter2Seen=true;
+ assert.equal(G.PKMSVVStory.markChapter3(),true);
+ assert.equal(save.pkmsvvChapter3Pending,true);
+ assert.equal(G.PKMSVVStory.markChapter3(),false,'Do not re-trigger pending story');
+ assert.equal(commits,1);
+});
+
+test('Egg Rush is online-only, host owns score, exactly ten nests spawn over five waves',()=>{
+ const source=read('src/web/pkmsvv-egg-rush.js');
+ let events=[],end=null;
+ const members=[0,1,2,3].map(i=>({uid:'p'+i,name:'Player'+i,dex:25+i}));
+ const players=members.map(m=>({uid:m.uid,x:1000,y:1000,dead:false,level:1}));
+ const G={
+  I18n:{lang:'vi'},Sprites:{preload(){},Animator:class{update(){}draw(){}}},
+  World:{isFree:()=>true,isLiquid:()=>false},U:{dist2:(x,y,a,b)=>(x-a)**2+(y-b)**2},
+  Coop:{isHost:true,broadcast:e=>events.push(e)},
+  Game:{player:players[0]},Social:{uid:'p0'},
+  Spawner:{say(){}},FX:{ring(){}},
+  Moves:{BY_ID:{}},EnemyMgr:{all:()=>[]}
+ };
+ vm.runInNewContext(source,{G,Math,Map,Object,Number});
+ G.EggRush.begin({mode:'eggrush',seed:117,members});
+ assert.equal(G.EggRush.active,true);
+ for(let wave=0;wave<5;wave++){
+  const time=8+wave*132;
+  G.EggRush.update(.05,time,players,r=>{end=r;});
+  const unclaimed=events.filter(e=>e[0]==='er'&&e[1]==='spawn');
+  assert.equal(unclaimed.length,(wave+1)*2);
+  // Give six separate eggs to player zero: all awards require the host to see proximity.
+  if(wave<3){
+   const targets=unclaimed.slice(wave*2,wave*2+2);
+   for(const t of targets){players[0].x=t[3];players[0].y=t[4];
+    G.EggRush.update(.05,time+.1,players,r=>{end=r;});}
+  }
+  if(end)break;
+ }
+ assert.equal(G.EggRush.collected,6);
+ assert.equal(end.winner,'p0');
+ assert.equal(end.standings[0].eggs,6);
+ assert.equal(events.filter(e=>e[1]==='take').length,6);
+ assert.equal(G.EggRush.standings().length,4);
+ assert.match(source,/Egg Rush/);
+ assert.match(read('scripts/patch-v15-egg-rush-web.cjs'),/room.mode==='eggrush'\?4:2/);
+});
+
+test('Solo egg companions keep the 2 / 3 slots and hatch through time plus combat',()=>{
+ const source=read('src/v15/eggs.js');
+ const player={x:0,y:0,dead:false,kills:0,level:1,maxHp:150,hp:150,heal(v){this.hp=Math.min(this.maxHp,this.hp+v);}};
+ const save={pkmsvvChapter3Seen:true,pkmsvvEggSlot3:false,stats:{}};
+ const G={I18n:{lang:'vi'},DB:{save,commit(){}},
+  Sprites:{preload(){},Animator:class{update(){}draw(){}}},
+  U:{dist2:(x,y,a,b)=>(x-a)**2+(y-b)**2},World:{isFree:()=>true,isLiquid:()=>false},
+  Spawner:{say(){}},FX:{ring(){}},Coop:{active:false},EnemyMgr:{all:()=>[]}};
+ vm.runInNewContext(source,{G,document:{createElement:()=>({})},Math,Number,Object});
+ G.PKMSVVEggs.begin(player,false);
+ G.PKMSVVEggs.update(.1,60===0?null:player,60,false);
+ assert.equal(G.PKMSVVEggs.nests.length,1);
+ const nest=G.PKMSVVEggs.nests[0];player.x=nest.x;player.y=nest.y;
+ G.PKMSVVEggs.update(.1,player,61,false);
+ assert.equal(G.PKMSVVEggs.followers.length,1);
+ for(let i=0;i<205;i++){player.kills+=1;G.PKMSVVEggs.update(.1,player,61+i*.1,false);}
+ assert.equal(G.PKMSVVEggs.followers[0].hatched,true);
+ assert.equal(G.PKMSVVEggs.limit(),2);
+ save.pkmsvvEggSlot3=true;assert.equal(G.PKMSVVEggs.limit(),3);
+});
