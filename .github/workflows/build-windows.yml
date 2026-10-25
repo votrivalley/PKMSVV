@@ -45,6 +45,8 @@ jobs:
         run: npm run test:kecleon && npm run test:opening && npm run test:mobile-topbar && npm run test:bilingual && npm run test:changelog && npm run test:extended-i18n && npm run test:autocast && npm run test:global && npm run test:collection && npm run test:controller && npm run test:audio && npm run test:ui
       - name: Verify native Google Web handoff never touches offline save
         run: node --test tests/native-cloud-entry.test.cjs
+      - name: Test Chapter 0 and v1.5 companion egg replacement
+        run: npm run test:v15
       - name: Test v1.4 Judgment, Orbs, Shiny Charm and Gacha ×100
         run: node --test tests/v14-gameplay.test.cjs
       - name: Test fixed Pokédex and rear-layer skills

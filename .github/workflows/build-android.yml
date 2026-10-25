@@ -59,6 +59,8 @@ jobs:
         run: npm run prepare:android && npm run test:android
       - name: Verify native Google Web handoff never touches offline save
         run: node --test tests/native-cloud-entry.test.cjs
+      - name: Test Chapter 0 and v1.5 companion egg replacement
+        run: npm run test:v15
       - name: Test v1.4 Judgment, Orbs, Shiny Charm and Gacha ×100
         run: node --test tests/v14-gameplay.test.cjs
       - name: Test fixed Pokédex and rear-layer skills

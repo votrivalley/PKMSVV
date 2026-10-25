@@ -345,7 +345,11 @@ test('full team blocks nests, teammate faint frees slot and new nest becomes pos
  assert.equal(G.PKMSVVEggs.followers.length,1,'Fainted companion leaves the run');
  assert.ok(messages.some(s=>s.includes('hạ')),'Faint must be signposted');
  G.PKMSVVEggs.update(.1,pl,209,false);
- assert.equal(G.PKMSVVEggs.nests.length,1,'After a faint, nest spawns again');
+ assert.equal(G.PKMSVVEggs.nests.length,0,'Never instantly replace a fainted companion');
+ G.PKMSVVEggs.update(.1,pl,219.9,false);
+ assert.equal(G.PKMSVVEggs.nests.length,0,'Replacement cannot happen before 20 seconds');
+ G.PKMSVVEggs.update(.1,pl,261,false);
+ assert.equal(G.PKMSVVEggs.nests.length,1,'Replacement becomes possible within 60 seconds');
  // A pending egg reserves the last slot, preventing over-spawning.
  G.PKMSVVEggs.followers.push({id:3,dex:174,hatched:false,active:false,x:0,y:0,
   age:0,boost:0,penalty:0,moving:false,hitCooldown:0,effectFlash:0});
