@@ -12,15 +12,18 @@ G.PKMSVVEggs=(()=>{
   {dex:174,role:'slow',period:9,power:.32} // Igglybuff
  ];
  const byDex=Object.fromEntries(SPECIES.map(x=>[x.dex,x]));
- const COLLECT_TIME=8, NEST_RADIUS=38, HATCH_BASE=45, HATCH_MIN=20;
+ const COLLECT_TIME=4, NEST_RADIUS=38, HATCH_BASE=45, HATCH_MIN=20;
  const SHINY_CHANCE=.03, MIN_STAT=.5, MAX_STAT=.8, HIT_COOLDOWN=1.25;
  const FX_COLOR={attack:'#ffd472',heal:'#66ffad',shield:'#6edaff',magnet:'#ffe078',slow:'#e99aff'};
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
- let player=null,items=[],nests=[],trail=[],spawnAt=55,seq=0,kills=0,lv=1,runTime=0,lastDir={x:0,y:1};
- function limit(){return G.DB?.save?.pkmsvvEggSlot3?3:2;}
+ let player=null,items=[],nests=[],trail=[],spawnAt=55,seq=0,kills=0,lv=1,runTime=0,lastDir={x:0,y:1},wasInArena=false;
+ // New teams start with one slot. Finishing the Chapter 3 egg quest grants slot two.
+ // Respect the previous 'slot3' unlock for compatibility with existing saves.
+ function hasSecondSlot(){return !!(G.DB?.save?.pkmsvvEggSlot2||G.DB?.save?.pkmsvvEggSlot3);}
+ function limit(){return hasSecondSlot()?2:1;}
  function unlocked(){return !!G.DB?.save?.pkmsvvChapter3Seen;}
  function begin(pl,coop){
-  player=pl;items=[];nests=[];trail=pl?[{x:pl.x,y:pl.y}]:[];spawnAt=55;seq=0;runTime=0;lastDir={x:0,y:1};kills=pl?.kills||0;lv=pl?.level||1;
+  player=pl;items=[];nests=[];trail=pl?[{x:pl.x,y:pl.y}]:[];spawnAt=55;seq=0;runTime=0;lastDir={x:0,y:1};wasInArena=!!G.Rift?.inArena;kills=pl?.kills||0;lv=pl?.level||1;
   if(!coop&&unlocked())G.Sprites?.preload?.(SPECIES.map(s=>s.dex),7000);
  }
  const support=()=>items.filter(x=>x.hatched&&x.active&&x.hp>0);
@@ -28,7 +31,7 @@ G.PKMSVVEggs=(()=>{
  const vacancy=()=>Math.max(0,limit()-occupied());
  function roleName(s){return {attack:tr('Tấn công','Attack'),heal:tr('Hồi phục','Healing'),shield:tr('Tạo khiên','Shield'),magnet:tr('Hút vật phẩm','Magnet'),slow:tr('Làm chậm','Slow')}[s.role]||s.role;}
  function nestSpawn(){
-  if(!player||nests.length>=1||vacancy()<=nests.length)return;
+  if(!player||G.Rift?.inArena||nests.length>=1||vacancy()<=nests.length)return;
   for(let i=0;i<14;i++){
    const a=Math.random()*Math.PI*2,d=165+Math.random()*245;
    const x=player.x+Math.cos(a)*d,y=player.y+Math.sin(a)*d;
@@ -39,9 +42,9 @@ G.PKMSVVEggs=(()=>{
  function onHatch(it){
   const stats=G.DB.save.stats||(G.DB.save.stats={});
   stats.pkmsvvEggsHatched=Math.min(99999,(stats.pkmsvvEggsHatched||0)+1);
-  if(!G.DB.save.pkmsvvEggSlot3&&G.DB.save.pkmsvvChapter3Seen&&stats.pkmsvvEgg15min&&stats.pkmsvvEggsHatched>=20){
-   G.DB.save.pkmsvvEggSlot3=true;
-   G.Spawner?.say?.(tr('Nhà Ấp Trứng: mở slot support thứ ba!','Egg Keeper: third support slot unlocked!'),5,true);
+  if(!hasSecondSlot()&&G.DB.save.pkmsvvChapter3Seen&&stats.pkmsvvEgg15min&&stats.pkmsvvEggsHatched>=20){
+   G.DB.save.pkmsvvEggSlot2=true;
+   G.Spawner?.say?.(tr('Hoàn thành thử thách Chương 3: mở ô đồng hành thứ hai!','Chapter 3 challenge complete: second companion slot unlocked!'),5,true);
   }
   G.DB.commit(true);
   G.FX?.ring?.(it.x,it.y,6,62,'#ffe17b',.55,2);
@@ -226,22 +229,44 @@ G.PKMSVVEggs=(()=>{
   const side=(j%2?1:-1)*12;
   const tx=anchor.x-lastDir.y*side,ty=anchor.y+lastDir.x*side;
   const dx=tx-it.x,dy=ty-it.y,dist=Math.hypot(dx,dy);
+  const ox=it.x,oy=it.y;
   const move=dist>5;
-  if(move){
-   const maxStep=Math.min(dist,dt*Math.max(90,Math.min(230,it.hatched?it.spd*1.12:148)));
+  if(dist>310){
+   // The previous navigation point is unreachable or from a teleported map.
+   it.x=pl.x-lastDir.x*gap-lastDir.y*side;
+   it.y=pl.y-lastDir.y*gap+lastDir.x*side;
+  }else if(move){
+   const maxStep=Math.min(dist,dt*Math.max(75,Math.min(230,it.hatched?it.spd*1.12:148)));
    const nx=it.x+dx/dist*maxStep,ny=it.y+dy/dist*maxStep;
    if(!G.World?.isFree||G.World.isFree(nx,ny,9)){it.x=nx;it.y=ny;}
    else if(G.World.isFree(nx,it.y,9))it.x=nx;
    else if(G.World.isFree(it.x,ny,9))it.y=ny;
   }
+  const moved=Math.hypot(it.x-ox,it.y-oy);
   if(it.hatched&&it.anim){
-   it.anim.dir=G.Sprites.dirFromAngle?.(Math.atan2(dy,dx))??it.anim.dir;
-   it.anim.loop(move?'Walk':'Idle');
+   const heading=moved>.1?Math.atan2(it.y-oy,it.x-ox):Math.atan2(dy,dx);
+   it.anim.dir=G.Sprites.dirFromAngle?.(heading)??it.anim.dir;
+   it.anim.loop(moved>.6?'Walk':'Idle',Math.max(.8,Math.min(1.4,it.spd/110)));
    it.anim.update(dt);
   }
-  it.moving=move;it.effectFlash=Math.max(0,(it.effectFlash||0)-dt);
+  it.moving=moved>.6;it.effectFlash=Math.max(0,(it.effectFlash||0)-dt);
   it.hurtFlash=Math.max(0,(it.hurtFlash||0)-dt);
   it.recentlyHit=Math.max(0,(it.recentlyHit||0)-dt);
+ }
+ // Reanchor every teammate on map-to-rift and rift-to-map transitions.
+ function syncArena(pl){
+  const inArena=!!G.Rift?.inArena;
+  if(inArena===wasInArena)return;
+  wasInArena=inArena;
+  trail=[{x:pl.x,y:pl.y}];lastDir={x:0,y:1};
+  if(inArena)nests=[];
+  for(let i=0;i<items.length;i++){
+   const it=items[i];
+   const a=2*Math.PI*(i+1)/(items.length+1);
+   it.x=pl.x+Math.cos(a)*44;
+   it.y=pl.y+Math.sin(a)*32;
+   it.moving=false;
+  }
  }
  function update(dt,pl,time,coop){
   if(!pl||!unlocked()||coop)return;
@@ -250,13 +275,15 @@ G.PKMSVVEggs=(()=>{
   dt=Math.max(0,Math.min(dt,.25));
   const stats=G.DB.save.stats||(G.DB.save.stats={});
   if(time>=900&&!stats.pkmsvvEgg15min){stats.pkmsvvEgg15min=true;G.DB.commit(true);}
-  if(!G.DB.save.pkmsvvEggSlot3&&stats.pkmsvvEgg15min&&stats.pkmsvvEggsHatched>=20){
-   G.DB.save.pkmsvvEggSlot3=true;G.DB.commit(true);
+  if(!hasSecondSlot()&&stats.pkmsvvEgg15min&&stats.pkmsvvEggsHatched>=20){
+   G.DB.save.pkmsvvEggSlot2=true;G.DB.commit(true);
   }
   if(pl.dead)return;
+  syncArena(pl);
+  if(G.Rift?.inArena&&nests.length)nests=[];
   if(vacancy()<=0&&nests.length)nests.length=0;
   if(time>=spawnAt){
-   if(vacancy()>nests.length)nestSpawn();
+   if(!G.Rift?.inArena&&vacancy()>nests.length)nestSpawn();
    spawnAt=time+(vacancy()>nests.length?100:12);
   }
   for(let i=nests.length-1;i>=0;i--){
@@ -307,52 +334,56 @@ G.PKMSVVEggs=(()=>{
   ctx.fillRect(x-width/2,y,width*ratio,2);
   ctx.restore();
  }
+ // Ground elements stay below entities; support sprites are Y-sorted in drawScene.
  function draw(ctx){
-  if(!unlocked()||!player||G.Coop?.active)return;
+  if(!unlocked()||!player||G.Coop?.active||G.Rift?.inArena)return;
   ctx.save();
   for(const n of nests){
    if(!G.Camera.sees(n.x,n.y,60))continue;
    if(!G.PKMSVVEggArt?.nest(ctx,n.x,n.y))egg(ctx,n.x,n.y-11,1);
-   if(n.collecting>0)bar(ctx,n.x,n.y-34,48,
-      COLLECT_TIME-n.collecting,COLLECT_TIME);
+   if(n.collecting>0)bar(ctx,n.x,n.y-34,48,COLLECT_TIME-n.collecting,COLLECT_TIME);
   }
-  for(const it of items){
-   if(!G.Camera.sees(it.x,it.y,55))continue;
-   if(!it.hatched){
-    const remainingTime=remaining(it);
-    egg(ctx,it.x,it.y-10,.75,1-remainingTime/(HATCH_BASE+it.penalty));
-    bar(ctx,it.x,it.y-31,42,remainingTime,HATCH_BASE+it.penalty);
-   }else{
-    // Sprite feet remain anchored on ground, with Walk/Idle directional anim.
-    if(it.anim)it.anim.draw(ctx,it.x,it.y,{alpha:it.hurtFlash>0?.72:1});
+  ctx.restore();
+ }
+ function drawFollower(ctx,it){
+  ctx.save();
+  if(!it.hatched){
+   const remainingTime=remaining(it);
+   egg(ctx,it.x,it.y-10,.75,1-remainingTime/(HATCH_BASE+it.penalty));
+   bar(ctx,it.x,it.y-31,42,remainingTime,HATCH_BASE+it.penalty);
+  }else{
+   if(it.anim)it.anim.draw(ctx,it.x,it.y,{alpha:it.hurtFlash>0?.72:1});
    if(it.shiny){
-    // Shiny remains clearly recognizable even if an upstream sprite variant
-    // is not available: 3% spawn has a gold star and subtle glint.
-    ctx.save();ctx.textAlign='center';ctx.font='bold 14px sans-serif';
+    ctx.textAlign='center';ctx.font='bold 14px sans-serif';
     ctx.shadowColor='#ffe581';ctx.shadowBlur=7;ctx.fillStyle='#ffdc71';
-    ctx.fillText('★',it.x+18,it.y-28);ctx.restore();
+    ctx.fillText('★',it.x+18,it.y-28);ctx.shadowBlur=0;
    }
-   // Thin 2px line when HP is missing, no prominent duplicate frame.
    const hpRatio=Math.max(0,Math.min(1,(it.hp||0)/Math.max(1,it.maxHp||1)));
    if(hpRatio<.999||(it.recentlyHit||0)>0){
     ctx.save();ctx.globalAlpha=hpRatio<.999?.85:.4;
     const bx=it.x-13,by=it.y-35;
     ctx.fillStyle='#193942';ctx.fillRect(bx,by,26,2);
     ctx.fillStyle=hpRatio>.55?'#a3f2cd':hpRatio>.25?'#ffe08b':'#ff8395';
-    ctx.fillRect(bx,by,26*hpRatio,2);
-    ctx.restore();
+    ctx.fillRect(bx,by,26*hpRatio,2);ctx.restore();
    }
-    if(it.effectFlash>0&&it.active){
-     const c=FX_COLOR[byDex[it.dex]?.role]||'#fff8a9';
-     ctx.globalAlpha=Math.min(.55,it.effectFlash*.62);
-     ctx.strokeStyle=c;ctx.lineWidth=3;
-     ctx.beginPath();ctx.ellipse(it.x,it.y-6,20+(1-it.effectFlash)*14,10,0,0,Math.PI*2);ctx.stroke();
-     ctx.globalAlpha=1;
-    }
-    if(it.hurtFlash>0){ctx.save();ctx.globalAlpha=it.hurtFlash*.5;ctx.strokeStyle='#ffb2bd';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(it.x,it.y-9,14,8,0,0,Math.PI*2);ctx.stroke();ctx.restore();}
+   if(it.effectFlash>0&&it.active){
+    const c=FX_COLOR[byDex[it.dex]?.role]||'#fff8a9';
+    ctx.globalAlpha=Math.min(.55,it.effectFlash*.62);
+    ctx.strokeStyle=c;ctx.lineWidth=3;
+    ctx.beginPath();ctx.ellipse(it.x,it.y-6,20+(1-it.effectFlash)*14,10,0,0,Math.PI*2);ctx.stroke();
+    ctx.globalAlpha=1;
+   }
+   if(it.hurtFlash>0){
+    ctx.globalAlpha=it.hurtFlash*.5;ctx.strokeStyle='#ffb2bd';ctx.lineWidth=1;
+    ctx.beginPath();ctx.ellipse(it.x,it.y-9,14,8,0,0,Math.PI*2);ctx.stroke();
    }
   }
   ctx.restore();
+ }
+ function drawables(cam){
+  if(!unlocked()||!player||G.Coop?.active)return [];
+  return items.filter(it=>cam.sees(it.x,it.y,55))
+   .map(it=>({y:it.y,draw(ctx){drawFollower(ctx,it);}}));
  }
  function egg(ctx,x,y,scale,progress=0){
   if(G.PKMSVVEggArt?.egg(ctx,x,y,scale,progress))return;
@@ -393,5 +424,5 @@ G.PKMSVVEggs=(()=>{
   ctx.fillStyle='#fff3bd';ctx.font='bold 11px sans-serif';ctx.textAlign='left';
   ctx.fillText(tr('Đồng hành','Companions')+' '+ready+'/'+limit(),x+8,y+16);ctx.restore();
  }
- return {SPECIES,SHINY_CHANCE,begin,update,onHurt,hurtSupport,enemyTarget,interceptProjectile,hitHazard,remaining,draw,hud,limit,unlocked,get followers(){return items;},get nests(){return nests;},get occupied(){return occupied();}};
+ return {SPECIES,SHINY_CHANCE,COLLECT_TIME,begin,update,onHurt,hurtSupport,enemyTarget,interceptProjectile,hitHazard,remaining,draw,drawables,hud,limit,unlocked,get followers(){return items;},get nests(){return nests;},get occupied(){return occupied();}};
 })();
