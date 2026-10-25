@@ -117,3 +117,6 @@ body{background:#081f2a;color:#f8fffe}
 .pkmsvv-orb-guide-row small{font-size:12px}
 .pkmsvv-skill-milestone{padding:5px 0;border-bottom:1px solid #48717d;font-size:13px}
 @media(max-width:650px){#pkmsvv-support-entries{grid-template-columns:1fr}.pkmsvv-support-modal{padding:12px}.pkmsvv-support-entry-btn{font-size:11px}}
+
+/* Friendship percentage and odds panel */
+.pkmsvv-bond-odds{color:#ffe8a5!important;font-weight:700;font-size:12px!important}

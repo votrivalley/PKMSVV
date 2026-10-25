@@ -169,7 +169,7 @@ test('real pixel egg/nest sprites are bundled for solo and Web Egg Rush',()=>{
 
 test('v1.5 release identity and completed egg gameplay are both packaged',()=>{
  const pkg=JSON.parse(read('package.json'));
- assert.equal(pkg.version,'1.5.8');
+ assert.equal(pkg.version,'1.5.9');
  assert.equal(pkg.build.productName,'Pokemon Chuyển sinh');
  assert.ok(read('scripts/prepare-game.cjs').includes('patch-v15-eggs.cjs'));
  assert.ok(read('scripts/prepare-web.cjs').includes('patch-v15-egg-rush-web.cjs'));
@@ -476,8 +476,103 @@ test('Hatch affinity saves per species without altering ownership and strengthen
  const G={DB:{save},I18n:{lang:'vi'}};
  vm.runInNewContext(read('src/v15/eggs.js'),{G,Math,Number,Object});
  assert.equal(G.PKMSVVEggs.affinityFor(172),4);
- assert.ok(Math.abs(G.PKMSVVEggs.affinityMultiplier(172)-1.06)<1e-8);
+ assert.equal(G.PKMSVVEggs.affinityGoal(172),100);
+ assert.equal(G.PKMSVVEggs.affinityPercent(172),4);
+ assert.ok(Math.abs(G.PKMSVVEggs.affinityMultiplier(172)-1.012)<1e-8);
  save.pkmsvvSupportBond[172]=60;
+ assert.equal(G.PKMSVVEggs.affinityPercent(172),60);
+ assert.equal(G.PKMSVVEggs.affinityMultiplier(172),1.18);
+ save.pkmsvvSupportBond[172]=100;
  assert.equal(G.PKMSVVEggs.affinityMultiplier(172),1.30);
  assert.ok(read('scripts/patch-v15-eggs.cjs').includes('older.pkmsvvSupportBond'));
+});
+
+test('Friendship goals and maximum bonuses are species-specific; no early double odds',()=>{
+ const G={DB:{save:{pkmsvvSupportBond:{}}}};
+ vm.runInNewContext(read('src/v15/eggs.js'),{G,Math,Number,Object});
+ const e=G.PKMSVVEggs;
+ for(const [dex,goal,baseShiny] of [[172,100,.03],[132,50,.08],[151,25,.04]]){
+  assert.equal(e.affinityGoal(dex),goal);
+  assert.equal(e.affinityFor(dex),0);
+  assert.equal(e.affinityPercent(dex),0);
+  assert.equal(e.shinyChanceFor(dex),baseShiny);
+  G.DB.save.pkmsvvSupportBond[dex]=goal-1;
+  assert.ok(e.affinityPercent(dex)<100);
+  assert.equal(e.shinyChanceFor(dex),baseShiny);
+  G.DB.save.pkmsvvSupportBond[dex]=goal;
+  assert.equal(e.affinityPercent(dex),100);
+  assert.ok(Math.abs(e.shinyChanceFor(dex)-baseShiny*2)<1e-12);
+  G.DB.save.pkmsvvSupportBond[dex]=goal+100;
+  assert.equal(e.affinityPercent(dex),100,'Progress is capped at 100%');
+ }
+ assert.equal(e.speciesChanceFor(132),.16);
+ assert.equal(e.speciesChanceFor(151),.08);
+ assert.equal(e.shinyChanceFor(132),.16);
+ assert.equal(e.shinyChanceFor(151),.08);
+ assert.equal(e.shinyChanceFor(172),.06);
+ assert.equal(e.affinityMultiplier(151),1.3);
+});
+
+test('At max Mew/Ditto bond, special species have exact 16%/8% selection boundaries',()=>{
+ const save={pkmsvvSupportBond:{132:50,151:25}};
+ const G={DB:{save}};
+ vm.runInNewContext(read('src/v15/eggs.js'),{G,Math,Number,Object});
+ const roll=G.PKMSVVEggs.rollSpecies;
+ assert.equal(roll(0).dex,132);
+ assert.equal(roll(.15999).dex,132);
+ assert.equal(roll(.16).dex,151);
+ assert.equal(roll(.23999).dex,151);
+ assert.notEqual(roll(.24).dex,151);
+ assert.notEqual(roll(.999).dex,132);
+});
+
+test('Ditto cycles seven seconds transformed and three seconds resting, no casts during rest',()=>{
+ const save={pkmsvvChapter3Seen:true,pkmsvvSupportBond:{132:0},stats:{}};
+ const pl={x:0,y:0,spd:120,level:1,kills:0,hp:100,maxHp:100,dead:false,
+  moves:[{id:'a',kind:'projectile',cd:1},{id:'b',kind:'nova',cd:1},
+         {id:'c',kind:'beam',cd:1},{id:'d',kind:'melee',cd:1}]};
+ let casts=0;
+ const G={I18n:{lang:'vi'},DB:{save,commit(){}},
+  Sprites:{preload(){},dirFromAngle:()=>0,Animator:class{
+   constructor(dex,size,shiny){this.dex=dex;this.shiny=shiny;}
+   loop(){}update(){}draw(){}
+  }},
+  Combat:{pkmsvvSupportCast(){casts++;return true;}},
+  U:{dist2:(x,y,a,b)=>(x-a)**2+(y-b)**2},
+  World:{isFree:()=>true,isLiquid:()=>false},Spawner:{say(){}},
+  FX:{ring(){},burst(){}},Coop:{active:false},EnemyMgr:{all:()=>[]}};
+ vm.runInNewContext(read('src/v15/eggs.js'),{G,Math,Number,Object});
+ G.PKMSVVEggs.begin(pl,false);
+ const it={dex:132,id:5,hatched:true,active:true,x:10,y:10,hp:100,maxHp:100,
+  cooldown:0,hitCooldown:0,effectFlash:0,penalty:0,age:0,statScale:.8,
+  spd:100,copiedSkills:[],copyDex:25,dittoPhase:'transform',dittoTime:7,
+  anim:new G.Sprites.Animator(25,.72,false)};
+ G.PKMSVVEggs.followers.push(it);
+ function tick(n){for(let j=0;j<n;j++)G.PKMSVVEggs.update(.25,pl,(j+1)*.25,false);}
+ tick(27);
+ assert.equal(it.dittoPhase,'transform');
+ assert.equal(it.anim.dex,25);
+ assert.ok(casts>0,'Ditto copied actual moves while transformed');
+ assert.equal(it.copiedSkills.length,3);
+ tick(1);
+ assert.equal(it.dittoPhase,'rest');
+ assert.equal(it.anim.dex,132,'Ditto sprite visible while its abilities are cooling');
+ const before=casts;
+ tick(11);
+ assert.equal(it.dittoPhase,'rest');
+ assert.equal(casts,before,'No copied attack can trigger during 3-second rest');
+ tick(1);
+ assert.equal(it.dittoPhase,'transform');
+ assert.equal(it.anim.dex,25,'Return to cloned player form after exactly 3 seconds');
+ tick(4);
+ assert.ok(casts>before,'Casts resume when the 7-second transformed phase restarts');
+});
+
+test('Support catalog displays friendship percentage, encounter goals and current rarity odds',()=>{
+ const s=read('src/pkmsvv-support-catalog.js');
+ assert.match(s,/affinityPercent\(mon.dex\)/);
+ assert.match(s,/affinityGoal\(mon.dex\)/);
+ assert.match(s,/shinyChanceFor\(mon.dex\)/);
+ assert.match(s,/speciesChanceFor\(mon.dex\)/);
+ assert.match(s,/percent\+'%'/);
 });
