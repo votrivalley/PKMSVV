@@ -62,6 +62,8 @@ G.PKMSVVBossSupport=(()=>{
     dmg:Math.max(1,Math.round((boss.dmg||30)*scale)),xp:1,behavior:'chase'};
    const g=new G.Enemy(def,x,y,{hp:1,spd:1,dmg:1},false);
    g.maxHp=hp;g.hp=hp;g.boss=false;
+   G.Sprites?.sheet?.(option.dex,'Idle',g.shiny);
+   G.Sprites?.sheet?.(option.dex,'Walk',g.shiny);
    g.pkmsvvBossGuard=true;g.pkmsvvGuardianOf=boss.id;g.pkmsvvRole=option.role;
    g.pkmsvvScale=scale;g.pkmsvvSpeedScale=speedScale;g.pkmsvvIndex=i;
    g.pkmsvvTime=0;g.pkmsvvCast=option.cd;
@@ -100,6 +102,7 @@ G.PKMSVVBossSupport=(()=>{
      if(sep<35&&sep>.01){tx+=sx/sep*(35-sep)*.75;ty+=sy/sep*(35-sep)*.75;}
     }
     const dx=tx-this.x,dy=ty-this.y,d=Math.hypot(dx,dy);
+    const ox=this.x,oy=this.y;
     if(d>520){this.x=tx;this.y=ty;}
     else if(d>4){
      const pace=Math.max(40,this.spd)*(d>110?1.3:1);
@@ -109,8 +112,12 @@ G.PKMSVVBossSupport=(()=>{
      else if(G.World.isFree(nx,this.y,8))this.x=nx;
      else if(G.World.isFree(this.x,ny,8))this.y=ny;
     }
-    this.anim.dir=G.Sprites?.dirFromAngle?.(Math.atan2(dy,dx))??0;
-    this.anim.loop(d>4?'Walk':'Idle');
+    // Same animated sprite pipeline as every ordinary enemy.
+    // An escort stuck behind terrain must NOT appear to run in place.
+    const moved=d>520?false:(Math.abs(this.x-ox)+Math.abs(this.y-oy))/Math.max(dt,1/120)>2;
+    const faceA=moved?Math.atan2(this.y-oy,this.x-ox):Math.atan2(dy,dx);
+    this.anim.dir=G.Sprites.dirFromAngle(faceA);
+    this.anim.loop(moved?'Walk':'Idle',moved?Math.max(.6,this.spd/70):1);
     this.anim.update(dt);
     this.pkmsvvCast-=dt;
     if(this.pkmsvvCast<=0)this.pkmsvvCast=cast(this,boss,pl)?option.cd:.75;

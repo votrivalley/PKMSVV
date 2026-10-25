@@ -139,7 +139,7 @@ test('egg direction indicator, reverse timer bars, walking animation and shield-
  assert.match(src,/function arrow\(ctx,w,h\)/);
  assert.match(src,/ctx\.fillRect\(x-width\/2,y,width\*ratio,2\)/);
  assert.match(src,/follow\(it,j,pl,dt\)/);
- assert.match(src,/it\.anim\.loop\(moved>\.6\?'Walk':'Idle'/);
+ assert.match(src,/it\.anim\.loop\(moved\?'Walk':'Idle'/);
  assert.match(src,/it\.penalty=\(it\.penalty\|\|0\)\+3/);
  const patch=read('scripts/patch-v15-eggs.cjs');
  assert.match(patch,/PKMSVVEggs\?\.onHurt\?\./);
@@ -169,7 +169,7 @@ test('real pixel egg/nest sprites are bundled for solo and Web Egg Rush',()=>{
 
 test('v1.5 release identity and completed egg gameplay are both packaged',()=>{
  const pkg=JSON.parse(read('package.json'));
- assert.equal(pkg.version,'1.5.11');
+ assert.equal(pkg.version,'1.5.12');
  assert.equal(pkg.build.productName,'Pokemon Chuyển sinh');
  assert.ok(read('scripts/prepare-game.cjs').includes('patch-v15-eggs.cjs'));
  assert.ok(read('scripts/prepare-web.cjs').includes('patch-v15-egg-rush-web.cjs'));
@@ -431,7 +431,7 @@ test('Companions are drawn within Y-sorted scene with props and players',()=>{
  assert.match(src,/function drawables\(cam\)/);
  assert.match(src,/\.map\(it=>\(\{y:it\.y,draw\(ctx\)/);
  assert.match(src,/const moved=Math\.hypot/);
- assert.match(src,/it\.anim\.loop\(moved>\.6\?'Walk':'Idle'/);
+ assert.match(src,/it\.anim\.loop\(moved\?'Walk':'Idle'/);
  assert.match(src,/function syncArena\(pl\)/);
  assert.match(src,/COLLECT_TIME=4/);
  assert.doesNotMatch(src,/pkmsvvEggSlot3\?3:2/);
@@ -626,4 +626,36 @@ test('v1.5 log explicitly names the online Egg Rush mode in one consolidated rel
  assert.equal((src.match(/G\.CHANGELOG\.unshift\(/g)||[]).length,1);
  assert.match(src,/Thêm chế độ nhiều người chơi mới: Tranh Trứng/);
  assert.match(src,/Added a new multiplayer mode: Egg Rush/);
+});
+
+test('all allied support use normal Pokemon Animator, movement velocity and native Walk sheets',()=>{
+ const s=read('src/v15/eggs.js');
+ assert.match(s,/new G\.Sprites\.Animator\(it\.dex,\.72,it\.shiny\)/);
+ assert.match(s,/G\.Sprites\?\.sheet\?\.\(it\.dex,'Walk',it\.shiny\)/);
+ assert.match(s,/G\.Sprites\?\.sheet\?\.\(it\.dex,'Idle',it\.shiny\)/);
+ assert.match(s,/\/Math\.max\(dt,1\/120\)>2/);
+ assert.match(s,/it\.anim\.loop\(moved\?'Walk':'Idle',moved\?Math\.max\(\.6,it\.spd\/70\):1\)/);
+ assert.match(s,/it\.anim\.update\(dt\)/);
+ assert.doesNotMatch(s,/it\.anim\.loop\(moved>\.6/);
+});
+
+test('boss guards use the same ordinary Pokemon sprite animation lifecycle as allied supports',()=>{
+ const s=read('src/v15/boss-support.js');
+ assert.match(s,/G\.Sprites\?\.sheet\?\.\(option\.dex,'Walk',g\.shiny\)/);
+ assert.match(s,/const ox=this\.x,oy=this\.y/);
+ assert.match(s,/this\.anim\.loop\(moved\?'Walk':'Idle',moved\?Math\.max\(\.6,this\.spd\/70\):1\)/);
+ assert.match(s,/this\.anim\.update\(dt\)/);
+ assert.doesNotMatch(s,/this\.anim\.loop\(d>4/);
+});
+
+test('Riolu metadata exposes four actual Walk frames in the original Pokemon sprite set',()=>{
+ const path=require('node:path'),fs=require('node:fs');
+ const metadata=path.join(__dirname,'../vendor/pokesurvivor/js/data/sprites-meta.js');
+ if(!fs.existsSync(metadata))return; // source fetch occurs in the full prepare step
+ const src=fs.readFileSync(metadata,'utf8');
+ const m=src.match(/\b447:\s*(\{[^\n]+\})/);
+ assert.ok(m,'Riolu species #447 has sprite metadata');
+ const data=JSON.parse(m[1]);
+ assert.equal(data.a.Walk.n,4);
+ assert.equal(data.a.Walk.r,8);
 });

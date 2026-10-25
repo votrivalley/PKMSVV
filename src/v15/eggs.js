@@ -107,6 +107,10 @@ G.PKMSVVEggs=(()=>{
   }else{
    it.anim=new G.Sprites.Animator(it.dex,.72,it.shiny);
    it.anim.loop('Idle');
+   // Use the very same Idle/Walk PNG sheets and Animator as ordinary Pokémon.
+   // Preload BOTH variants immediately: no static Idle sheet while Walk downloads.
+   G.Sprites?.sheet?.(it.dex,'Idle',it.shiny);
+   G.Sprites?.sheet?.(it.dex,'Walk',it.shiny);
   }
   if(it.shiny){
    G.Sprites?.preload?.([it.dex],5000,true);
@@ -333,14 +337,16 @@ G.PKMSVVEggs=(()=>{
    else if(G.World.isFree(nx,it.y,9))it.x=nx;
    else if(G.World.isFree(it.x,ny,9))it.y=ny;
   }
-  const moved=Math.hypot(it.x-ox,it.y-oy);
+  // Match ordinary Enemy.update: animation from ACTUAL velocity, not px/frame.
+  // Otherwise variable FPS constantly flickers back to Idle and Pokémon slide.
+  const moved=dist>310?false:(Math.abs(it.x-ox)+Math.abs(it.y-oy))/Math.max(dt,1/120)>2;
   if(it.hatched&&it.anim){
-   const heading=moved>.1?Math.atan2(it.y-oy,it.x-ox):Math.atan2(dy,dx);
-   it.anim.dir=G.Sprites.dirFromAngle?.(heading)??it.anim.dir;
-   it.anim.loop(moved>.6?'Walk':'Idle',Math.max(.8,Math.min(1.4,it.spd/110)));
+   const faceA=moved?Math.atan2(it.y-oy,it.x-ox):Math.atan2(dy,dx);
+   it.anim.dir=G.Sprites.dirFromAngle(faceA);
+   it.anim.loop(moved?'Walk':'Idle',moved?Math.max(.6,it.spd/70):1);
    it.anim.update(dt);
   }
-  it.moving=moved>.6;it.effectFlash=Math.max(0,(it.effectFlash||0)-dt);
+  it.moving=moved;it.effectFlash=Math.max(0,(it.effectFlash||0)-dt);
   it.hurtFlash=Math.max(0,(it.hurtFlash||0)-dt);
   it.recentlyHit=Math.max(0,(it.recentlyHit||0)-dt);
  }
