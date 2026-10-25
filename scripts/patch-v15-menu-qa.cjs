@@ -32,6 +32,21 @@ fs.appendFileSync(js,`
    right.classList.add('pkmsvv-v15-nav');
    const first=right.firstElementChild;
    if(first){first.style.marginTop='0';first.style.marginBottom='0';}
+   // Align the lower edge of the nav panel with the left event/news cards
+   // on wide desktop only. Small-screen scrolling and touch stay untouched.
+   const panel=right.querySelector('.box');
+   const lower=menu.querySelector('.pkmsvv-v15-bottom');
+   if(panel&&lower&&typeof requestAnimationFrame==='function'){
+    requestAnimationFrame(()=>{
+     panel.style.transform='';
+     if(!window.matchMedia?.('(min-width: 1000px) and (min-height: 650px)').matches)return;
+     const leftEdge=lower.getBoundingClientRect().bottom;
+     const rightEdge=panel.getBoundingClientRect().bottom;
+     const available=window.innerHeight-16-rightEdge;
+     const down=Math.max(0,Math.min(32,leftEdge-rightEdge,available));
+     if(down>2)panel.style.transform='translateY('+Math.round(down)+'px)';
+    });
+   }
   }
   // Settings Save is an action: close Settings and open the existing
   // separate Backup / Restore dialog above the menu (no nested tab content).
@@ -176,6 +191,13 @@ fs.appendFileSync(css,`
 }
 #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item{
  width:100%!important;min-height:42px!important;grid-column:auto!important;
+}
+/* Keep the main menu close to the left panel's baseline without making
+   the mobile navigation taller or spilling below the viewport. */
+@media(min-width:1000px) and (min-height:650px){
+ #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav>.box{
+  transition:transform .16s ease-out!important;
+ }
 }
 /* A single framed News action, not a card inside a second card. */
 #scr-menu.pkmsvv-v15-menu .pkmsvv-v15-bottom{align-items:stretch!important}
