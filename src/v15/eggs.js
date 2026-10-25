@@ -83,6 +83,48 @@ G.PKMSVVEggs=(()=>{
   }
   if(count)G.Spawner?.say?.(tr('Trứng bị chậm ấp +3 giây!','Egg incubation delayed by 3 seconds!'),1.5);
  }
+ function hurtSupport(it,raw){
+  if(!it||!it.hatched||!it.active||it.hp<=0||it.hitCooldown>0||!(raw>0))return false;
+  // They are followers, not tanks: incidental collision only; protected
+  // by per-hit cooldown and capped damage to prevent instant deaths in swarms.
+  const blocked=Math.min(Math.max(0,it.shield||0),raw);
+  it.shield=Math.max(0,(it.shield||0)-blocked);
+  const loss=Math.min(it.maxHp*.20,Math.max(0,(raw-blocked)*(1-Math.min(.65,it.def||0))));
+  it.hitCooldown=HIT_COOLDOWN;
+  if(loss<=0){
+   G.FX?.ring?.(it.x,it.y,5,32,'#82dfff',.25,2);
+   return false;
+  }
+  it.hp=Math.max(0,it.hp-loss);it.hurtFlash=.5;
+  G.FX?.dmgText?.(it.x,it.y-29,'-'+Math.ceil(loss),'#ff939c');
+  G.FX?.burst?.(it.x,it.y-12,'#ff8c94',4,45);
+  if(it.hp<=0){
+   it.active=false;
+   G.FX?.ring?.(it.x,it.y,10,61,it.shiny?'#fff1a3':'#ff8899',.6,2);
+   G.Spawner?.say?.(tr('Pokémon hỗ trợ đã bị hạ! Có thể tìm trứng mới.',
+                          'A support Pokémon fainted! A new egg may appear.'),3);
+   items=items.filter(x=>x!==it); // dead followers never occupy slots
+   spawnAt=Math.min(spawnAt,runTime+8); // replacement nest becomes possible
+  }
+  return true;
+ }
+ function hitByEnemies(dt){
+  const enemies=G.EnemyMgr?.all?.()||[];
+  if(!enemies.length)return;
+  for(const it of support().slice()){
+   it.hitCooldown=Math.max(0,(it.hitCooldown||0)-dt);
+   if(it.hitCooldown>0)continue;
+   for(const e of enemies){
+    if(!e||e.dead||e.remote||!(e.dmg>0))continue;
+    const radius=(Number(e.r)||12)+11;
+    if(Math.abs(e.x-it.x)>radius||Math.abs(e.y-it.y)>radius)continue;
+    if(G.U.dist2(e.x,e.y,it.x,it.y)>radius*radius)continue;
+    // Enemy touch damage rather than adding support to enemy target AI.
+    hurtSupport(it,e.dmg*.55);
+    break;
+   }
+  }
+ }
  function effect(it,pl){
   const spec=byDex[it.dex];if(!spec||!it.active||it.hp<=0||pl.dead)return false;
   const enemies=(G.EnemyMgr?.all?.()||[]).filter(e=>e&&!e.dead&&!e.remote&&G.U.dist2(e.x,e.y,it.x,it.y)<260*260);
@@ -133,7 +175,7 @@ G.PKMSVVEggs=(()=>{
   const dx=tx-it.x,dy=ty-it.y,dist=Math.hypot(dx,dy);
   const move=dist>5;
   if(move){
-   const maxStep=Math.min(dist,dt*148);
+   const maxStep=Math.min(dist,dt*Math.max(90,Math.min(230,it.hatched?it.spd*1.12:148)));
    const nx=it.x+dx/dist*maxStep,ny=it.y+dy/dist*maxStep;
    if(!G.World?.isFree||G.World.isFree(nx,ny,9)){it.x=nx;it.y=ny;}
    else if(G.World.isFree(nx,it.y,9))it.x=nx;
@@ -145,6 +187,7 @@ G.PKMSVVEggs=(()=>{
    it.anim.update(dt);
   }
   it.moving=move;it.effectFlash=Math.max(0,(it.effectFlash||0)-dt);
+  it.hurtFlash=Math.max(0,(it.hurtFlash||0)-dt);
  }
  function update(dt,pl,time,coop){
   if(!pl||!unlocked()||coop)return;
@@ -157,9 +200,14 @@ G.PKMSVVEggs=(()=>{
    G.DB.save.pkmsvvEggSlot3=true;G.DB.commit(true);
   }
   if(pl.dead)return;
-  if(time>=spawnAt){nestSpawn();spawnAt=time+100;}
+  if(vacancy()<=0&&nests.length)nests.length=0;
+  if(time>=spawnAt){
+   if(vacancy()>nests.length)nestSpawn();
+   spawnAt=time+(vacancy()>nests.length?100:12);
+  }
   for(let i=nests.length-1;i>=0;i--){
    const n=nests[i];n.age+=dt;
+   if(vacancy()<=0){nests.splice(i,1);continue;}
    if(G.U.dist2(pl.x,pl.y,n.x,n.y)<=NEST_RADIUS*NEST_RADIUS){
     n.collecting=Math.min(COLLECT_TIME,n.collecting+dt);
     if(n.collecting>=COLLECT_TIME){nests.splice(i,1);collect(n);}
@@ -192,6 +240,7 @@ G.PKMSVVEggs=(()=>{
     if(it.cooldown<=0)it.cooldown=effect(it,pl)?byDex[it.dex].period:.5;
    }
   }
+  hitByEnemies(dt);
  }
  function bar(ctx,x,y,width,seconds,maxTime,color,label){
   // Seconds REMAINING: filled right edge retreats towards the left.
@@ -281,5 +330,5 @@ G.PKMSVVEggs=(()=>{
   ctx.fillStyle='#fff3bd';ctx.font='bold 11px sans-serif';ctx.textAlign='left';
   ctx.fillText(tr('Đồng hành','Companions')+' '+ready+'/'+limit(),x+8,y+16);ctx.restore();
  }
- return {SPECIES,begin,update,onHurt,remaining,draw,hud,limit,unlocked,get followers(){return items;},get nests(){return nests;}};
+ return {SPECIES,SHINY_CHANCE,begin,update,onHurt,hurtSupport,remaining,draw,hud,limit,unlocked,get followers(){return items;},get nests(){return nests;},get occupied(){return occupied();}};
 })();
