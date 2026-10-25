@@ -168,7 +168,7 @@ test('real pixel egg/nest sprites are bundled for solo and Web Egg Rush',()=>{
 
 test('v1.5 release identity and completed egg gameplay are both packaged',()=>{
  const pkg=JSON.parse(read('package.json'));
- assert.equal(pkg.version,'1.5.4');
+ assert.equal(pkg.version,'1.5.5');
  assert.equal(pkg.build.productName,'Pokemon Chuyển sinh');
  assert.ok(read('scripts/prepare-game.cjs').includes('patch-v15-eggs.cjs'));
  assert.ok(read('scripts/prepare-web.cjs').includes('patch-v15-egg-rush-web.cjs'));
@@ -328,4 +328,15 @@ test('Boss support runtime is bundled in shared Windows Android and Web game bui
  assert.ok(source.includes('boss.maxHp*.30'));
  assert.ok(source.includes('b.rd||0'));
  assert.ok(source.includes('G.EnemyMgr.add=function'));
+});
+
+test('egg collection and incubation use only a thin white shrinking line',()=>{
+ const code=read('src/v15/eggs.js');
+ const bar=code.slice(code.indexOf(' function bar(ctx,'),code.indexOf(' function draw(ctx){'));
+ assert.match(bar,/ctx\.fillStyle='#ffffff'/);
+ assert.match(bar,/ctx\.fillRect\(x-width\/2,y,width\*ratio,2\)/);
+ assert.doesNotMatch(bar,/strokeRect|strokeText|fillText|label|background|shadow/);
+ assert.ok(code.includes('bar(ctx,n.x,n.y-34,48,'));
+ assert.ok(code.includes('bar(ctx,it.x,it.y-31,42,'));
+ assert.ok(!code.includes("tr('Giữ 8 giây'"));
 });

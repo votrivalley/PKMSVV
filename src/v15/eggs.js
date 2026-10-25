@@ -245,18 +245,15 @@ G.PKMSVVEggs=(()=>{
   }
   hitByEnemies(dt);
  }
- function bar(ctx,x,y,width,seconds,maxTime,color,label){
-  // Seconds REMAINING: filled right edge retreats towards the left.
+ function bar(ctx,x,y,width,seconds,maxTime){
+  // One discreet white 2px line. The right edge retreats as time runs out.
+  // No frame, dark track, seconds label, glow or floating title.
   const ratio=Math.max(0,Math.min(1,seconds/Math.max(1,maxTime)));
+  if(ratio<=0)return;
   ctx.save();
-  ctx.fillStyle='rgba(6,21,36,.9)';ctx.strokeStyle='#071b29';ctx.lineWidth=2;
-  ctx.fillRect(x-width/2-3,y-3,width+6,16);ctx.strokeRect(x-width/2-3,y-3,width+6,16);
-  ctx.fillStyle='#152c40';ctx.fillRect(x-width/2,y,width,10);
-  ctx.fillStyle=color;ctx.fillRect(x-width/2,y,width*ratio,10);
-  ctx.fillStyle='#fffbea';ctx.strokeStyle='#06162b';ctx.lineWidth=2;
-  ctx.textAlign='center';ctx.font='bold 10px sans-serif';
-  const msg=label+' '+Math.ceil(seconds)+'s';
-  ctx.strokeText(msg,x,y-8);ctx.fillText(msg,x,y-8);
+  ctx.globalAlpha=.92;
+  ctx.fillStyle='#ffffff';
+  ctx.fillRect(x-width/2,y,width*ratio,2);
   ctx.restore();
  }
  function draw(ctx){
@@ -265,20 +262,15 @@ G.PKMSVVEggs=(()=>{
   for(const n of nests){
    if(!G.Camera.sees(n.x,n.y,60))continue;
    if(!G.PKMSVVEggArt?.nest(ctx,n.x,n.y))egg(ctx,n.x,n.y-11,1);
-   if(n.collecting>0)bar(ctx,n.x,n.y-53,66,
-      COLLECT_TIME-n.collecting,COLLECT_TIME,'#ffe088',tr('Lấy trứng','Collecting'));
-   else{
-    ctx.fillStyle='#ffe9a0';ctx.font='bold 10px sans-serif';ctx.textAlign='center';
-    ctx.fillText(tr('Giữ 8 giây','Hold 8s'),n.x,n.y-44);
-   }
+   if(n.collecting>0)bar(ctx,n.x,n.y-34,48,
+      COLLECT_TIME-n.collecting,COLLECT_TIME);
   }
   for(const it of items){
    if(!G.Camera.sees(it.x,it.y,55))continue;
    if(!it.hatched){
     const remainingTime=remaining(it);
     egg(ctx,it.x,it.y-10,.75,1-remainingTime/(HATCH_BASE+it.penalty));
-    bar(ctx,it.x,it.y-41,56,remainingTime,HATCH_BASE+it.penalty,
-        '#86e2fd',tr('Đang ấp','Hatching'));
+    bar(ctx,it.x,it.y-31,42,remainingTime,HATCH_BASE+it.penalty);
    }else{
     // Sprite feet remain anchored on ground, with Walk/Idle directional anim.
     if(it.anim)it.anim.draw(ctx,it.x,it.y,{alpha:it.hurtFlash>0?.72:1});

@@ -151,3 +151,18 @@ test('Memories contains chapter replay buttons, but no Mystery Orb guide button'
  assert.doesNotMatch(src,/data-orb-help/);
  assert.doesNotMatch(src,/pkmsvv-orb-guide-back/);
 });
+
+test('Windows-only fullscreen restore is available in Pause and Graphics, never toggles out',()=>{
+ const src=read('src/pkmsvv-pc-fullscreen.js');
+ const patch=read('scripts/patch-v155-pc-fullscreen.cjs');
+ const build=read('scripts/prepare-game.cjs');
+ assert.match(src,/window\.PKMSVVNative/);
+ assert.match(src,/pkmsvv-pc-restore-pause/);
+ assert.match(src,/pkmsvv-pc-restore-settings/);
+ assert.match(src,/native\.isFullscreen\(\)/);
+ assert.match(src,/if\(!result\?\.fullscreen\)await native\.toggleFullscreen\(\)/);
+ assert.match(src,/G\.RunUI\.showPause=function/);
+ assert.match(src,/G\.SettingsUI\.open=function/);
+ assert.match(patch,/js\/ui\/pkmsvv-pc-fullscreen\.js/);
+ assert.match(build,/patch-v155-pc-fullscreen\.cjs/);
+});

@@ -71,3 +71,18 @@ G.CHANGELOG.unshift({
  credit:['Votri Valley — Bản mod và Việt hóa phi thương mại dựa trên PokéSurvivor của JPTER78.',
          'Votri Valley — A noncommercial mod and localization based on PokéSurvivor by JPTER78.']
 });
+
+G.CHANGELOG.unshift({
+ d:'2026-10-26',
+ title:['Pokemon Chuyển sinh – Votri Valley v1.5.5','Pokemon Chuyển sinh – Votri Valley v1.5.5'],
+ subtitle:['Thanh thời gian trứng tinh gọn và nút trở lại toàn màn hình PC.','Minimal egg progress lines and a PC fullscreen restore button.'],
+ new:[
+  ['Chỉ trên PC: cửa sổ Tạm dừng và phần Đồ họa trong Cài đặt có thể khôi phục chế độ toàn màn hình khi game bị thoát ra cửa sổ.','PC only: restore fullscreen from Pause or the Graphics settings if the game switches to windowed mode.']
+ ],
+ chg:[
+  ['Thanh thời gian lấy và ấp trứng chỉ còn một đường trắng mảnh 2 px, rút ngắn từ phải sang trái, không hộp đen hay chữ nổi.','Egg collection and incubation use only a 2 px white line shrinking right-to-left, without a dark frame or overlaid text.']
+ ],
+ fix:[],
+ credit:['Votri Valley — Bản mod và Việt hóa phi thương mại dựa trên PokéSurvivor của JPTER78.',
+         'Votri Valley — A noncommercial mod and localization based on PokéSurvivor by JPTER78.']
+});
