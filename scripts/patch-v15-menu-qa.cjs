@@ -42,8 +42,9 @@ fs.appendFileSync(js,`
      if(!window.matchMedia?.('(min-width: 1000px) and (min-height: 650px)').matches)return;
      const leftEdge=lower.getBoundingClientRect().bottom;
      const rightEdge=panel.getBoundingClientRect().bottom;
-     const available=window.innerHeight-16-rightEdge;
-     const down=Math.max(0,Math.min(32,leftEdge-rightEdge,available));
+     const available=window.innerHeight-20-rightEdge;
+     // Do NOT cap at 32px: desktop reference needs around 200px to line up.
+     const down=Math.max(0,Math.min(leftEdge-rightEdge,available));
      if(down>2)panel.style.transform='translateY('+Math.round(down)+'px)';
     });
    }
@@ -96,6 +97,11 @@ fs.appendFileSync(js,`
   polish();
   return result;
  };
+ // Recompute after screen resize / fullscreen toggle, not only when opening.
+ window.addEventListener('resize',()=>{
+  const menu=document.getElementById('scr-menu');
+  if(menu&&!menu.classList.contains('hidden'))polish();
+ },{passive:true});
  document.addEventListener('DOMContentLoaded',()=>{
   // In case the home menu was opened before the first DOMContentLoaded callback.
   if(!menuIsHidden())polish();

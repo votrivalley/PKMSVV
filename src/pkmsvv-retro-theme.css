@@ -79,3 +79,15 @@ body{background:#081f2a;color:#f8fffe}
 #pkmsvv-control-message{min-height:1.3em;color:#ffdc7c}
 #pkmsvv-control-map~.set-row,#pkmsvv-control-map~.chips{margin-top:10px}
 @media(max-width:520px){#pkmsvv-control-map .pkmsvv-control-row{min-height:46px}#pkmsvv-control-map .pkmsvv-control-row select{min-width:122px;max-width:46vw;font-size:12px}#pkmsvv-control-map [data-control-tab]{min-width:95px}}
+
+/* Upgrade chooser: explain real support-Pokémon roster instead of an Orb guide. */
+.pkmsvv-support-guide .pkmsvv-upgrade-guide-details{max-height:min(52vh,450px);overflow:auto;overscroll-behavior:contain;padding:12px 2px 1px}
+.pkmsvv-support-guide .pkmsvv-support-rule-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:8px 0 15px}
+.pkmsvv-support-rule-grid>div{background:#e8f9f1;color:#153c48;border-radius:7px;padding:9px 10px;font-size:12px;font-weight:700}
+.pkmsvv-support-guide .pkmsvv-support-roster{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.pkmsvv-support-entry{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:10px;border:1px solid #7cc5bb;border-radius:9px;background:#164550;color:#efffff}
+.pkmsvv-support-entry strong{font-size:14px;color:#ffe28d}
+.pkmsvv-support-entry .pkmsvv-support-role{font-size:12px;font-weight:700;color:#8ee3cf}
+.pkmsvv-support-entry small{font-size:12px;line-height:1.4;color:#eaf9f6}
+.pkmsvv-support-guide .pkmsvv-support-boss-note{margin-top:13px;padding:10px;border-left:3px solid #ffce65;background:#144552;border-radius:5px}
+@media(max-width:660px){.pkmsvv-support-guide .pkmsvv-support-rule-grid,.pkmsvv-support-guide .pkmsvv-support-roster{grid-template-columns:1fr}.pkmsvv-support-guide .pkmsvv-upgrade-guide-details{max-height:45vh}}

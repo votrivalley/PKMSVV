@@ -11,17 +11,16 @@ G.PKMSVVUpgradeChooser=(()=>{
   $('pkmsvv-upgrade-all-title').textContent=t('Nâng toàn đội','Team upgrades');
   $('pkmsvv-upgrade-all-desc').textContent=t('Tăng sức mạnh vĩnh viễn cho TẤT CẢ Pokémon.','Permanent bonuses for ALL Pokémon.');
   $('pkmsvv-upgrade-hint').textContent=t('Nâng cấp riêng và toàn đội được lưu độc lập; giữ nguyên các khoản đã mua.','Individual and team upgrades are stored separately; existing purchases are preserved.');
-  const guide=G.PKMSVVSkillTrack.guide(G.DB.save,en()?'en':'vi');
+  // This expandable slot is now the definitive support-Pokémon handbook.
+  // Keep role data synced with the exact roster used by the egg system.
   let panel=$('pkmsvv-skill-guide');
   if(!panel){
    panel=document.createElement('section');panel.id='pkmsvv-skill-guide';
-   panel.className='pkmsvv-skill-guide';
+   panel.className='pkmsvv-skill-guide pkmsvv-support-guide';
    $('pkmsvv-upgrade-hint').insertAdjacentElement('afterend',panel);
   }
+  panel.classList.add('pkmsvv-support-guide');
   panel.replaceChildren();
-  // Keep this short by default. The player can expand it with A / touch
-  // and collapse it with the same button; no separate inaccessible close icon.
-  const full=guide.count>=8;
   const toggle=document.createElement('button');
   toggle.type='button';toggle.id='pkmsvv-upgrade-guide-toggle';
   toggle.className='btn pkmsvv-upgrade-guide-toggle';
@@ -29,33 +28,57 @@ G.PKMSVVUpgradeChooser=(()=>{
   toggle.setAttribute('aria-controls','pkmsvv-upgrade-guide-details');
   const symbol=document.createElement('span');symbol.className='pkmsvv-guide-symbol';
   const title=document.createElement('span');title.className='pkmsvv-guide-title';
-  title.textContent=full?t('Hướng dẫn Mystery Orb','Mystery Orb Guide'):guide.headline;
-  const body=document.createElement('div');body.className='pkmsvv-upgrade-guide-details';
-  body.id='pkmsvv-upgrade-guide-details';body.hidden=true;
+  title.textContent=t('Thông tin Pokémon hỗ trợ','Support Pokémon Guide');
+  const body=document.createElement('div');
+  body.id='pkmsvv-upgrade-guide-details';body.className='pkmsvv-upgrade-guide-details';
+  body.hidden=true;
   const renderSymbol=()=>{symbol.textContent=body.hidden?'+':'−';toggle.setAttribute('aria-expanded',String(!body.hidden));};
   toggle.onclick=()=>{body.hidden=!body.hidden;renderSymbol();};
   toggle.append(symbol,title);
-  if(full){
-   const explanation=document.createElement('p');
-   explanation.textContent=t(
-    'Trong một trận, học đủ cả 8 kỹ năng thì mới có thể nhặt Mystery Orb. Nhặt trước dùng trước (FIFO). Tối đa 10 Orb rơi mỗi trận, mỗi lần chỉ dùng một quả, thời gian hồi 5 giây. Orb không giữ lại sau trận.',
-    'Learn all eight moves in a run to collect Mystery Orbs. First collected, first used (FIFO). At most 10 drops per run, one use at a time, 5-second cooldown. Orbs expire after each run.'
-   );
-   const controls=document.createElement('p');
-   controls.textContent=t('PC: phím 5 · Tay cầm: Y mặc định · Cảm ứng: nút Orb cạnh kỹ năng chủ động.',
-    'PC: key 5 · Controller: Y by default · Touch: Orb button next to the active skill.');
-   body.append(explanation,controls);
-   for(const orb of G.Orbs.LIST){
-    const row=document.createElement('p');row.className='pkmsvv-orb-guide-row';
-    const name=document.createElement('strong');name.textContent=orb.name[en()?1:0]+': ';
-    name.style.color=orb.col;row.append(name,document.createTextNode(orb.desc[en()?1:0]));body.append(row);
-   }
-  }else{
-   const note=document.createElement('p');note.textContent=guide.note;
-   const list=document.createElement('div');list.className='pkmsvv-skill-guide-grid';
-   for(const line of guide.lines){const item=document.createElement('div');item.textContent=line;list.append(item);}
-   body.append(note,list);
+  const intro=document.createElement('p');
+  intro.textContent=t(
+   'Mở khóa ở Chương 3. Đứng cạnh ổ trứng 8 giây để lấy; mỗi đòn mất máu khi ấp cộng 3 giây. Trứng đang ấp cũng chiếm một ô đồng hành.',
+   'Unlocked in Chapter 3. Stay near a nest for 8 seconds to collect; taking HP damage adds 3 seconds to incubation. Incubating eggs also occupy a slot.');
+  body.append(intro);
+  const rules=document.createElement('div');rules.className='pkmsvv-support-rule-grid';
+  for(const [vi,eng] of [
+   ['Thông thường: 50–80% chỉ số Pokémon chính','Regular: 50–80% of your lead Pokémon stats'],
+   ['Shiny: 3% khi nở · 100% chỉ số · chỉ tồn tại trong trận','Shiny: 3% per hatch · 100% stats · run only'],
+   ['Giới hạn 2 ô, có thể mở ô thứ 3. Đầy ô sẽ ngừng xuất hiện trứng.','Two slots, with a third unlockable. Full slots stop new nests.'],
+   ['Hỗ trợ có HP riêng và có thể bị hạ; hạ gục sẽ giải phóng ô.','Supports have HP and can faint, releasing their slot.']
+  ]){
+   const row=document.createElement('div');row.textContent=t(vi,eng);rules.append(row);
   }
+  body.append(rules);
+  const roles={attack:[t('Tấn công','Attack'),t('Gây sát thương lên quái trong tầm.','Damages enemies in range.')],
+   heal:[t('Hồi phục','Healing'),t('Hồi máu cho người chơi hoặc đồng hành bị thương.','Heals the player or an injured companion.')],
+   shield:[t('Khiên','Shield'),t('Tạo lớp bảo vệ hấp thụ sát thương.','Grants a damage-absorbing shield.')],
+   magnet:[t('Hút vật phẩm','Magnet'),t('Kéo vật phẩm nhặt được về gần.','Draws nearby pickups.')],
+   slow:[t('Làm chậm','Slow'),t('Làm chậm quái và hiện hiệu ứng CHẬM.','Slows enemies with visible SLOWED feedback.')]};
+  const sub=document.createElement('h3');sub.textContent=t('Các Pokémon có thể nở','Pokémon that can hatch');
+  body.append(sub);
+  const list=document.createElement('div');list.className='pkmsvv-support-roster';
+  const species=G.PKMSVVEggs?.SPECIES||[];
+  for(const mon of species){
+   const row=document.createElement('div');row.className='pkmsvv-support-entry';
+   const head=document.createElement('strong');
+   head.textContent=(G.DEX_BY?.[mon.dex]?.name||'Pokémon #'+mon.dex)+' · #'+mon.dex;
+   const role=document.createElement('span');role.className='pkmsvv-support-role';
+   role.textContent=(roles[mon.role]?.[0]||mon.role)+' · '+t('Hồi chiêu','Cooldown')+' '+mon.period+'s';
+   const desc=document.createElement('small');desc.textContent=roles[mon.role]?.[1]||'';
+   row.append(head,role,desc);list.append(row);
+  }
+  if(!species.length){
+   const empty=document.createElement('p');
+   empty.textContent=t('Danh sách hỗ trợ sẽ xuất hiện khi dữ liệu trò chơi sẵn sàng.','Support roster will appear once game data is ready.');
+   list.append(empty);
+  }
+  body.append(list);
+  const boss=document.createElement('p');boss.className='pkmsvv-support-boss-note';
+  boss.textContent=t(
+   'Boss (sau khi mở Chương 3) có thể đi cùng 1–3 Pokémon hộ vệ, mỗi bé có HP bằng 30% HP tối đa của boss. Hạ boss thì hộ vệ biến mất.',
+   'After Chapter 3, bosses may have 1–3 guards, each with HP equal to 30% of the boss’s maximum HP. Guards disappear when the boss falls.');
+  body.append(boss);
   panel.append(toggle,body);renderSymbol();
   $('pkmsvv-upgrade-back').textContent=t('Trở về','Back');
   $('pkmsvv-upgrade-single').onclick=()=>{

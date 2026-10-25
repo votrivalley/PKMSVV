@@ -119,3 +119,33 @@ test('v1.5 home subtitle announces waking up as a Pokemon without changing save 
  assert.match(qa,/text-transform:uppercase/);
  assert.match(read('desktop/main.cjs'),/PKMSVV-Offline/);
 });
+
+test('desktop nav bottom aligns with left cards without legacy 32px cap',()=>{
+ const src=read('scripts/patch-v15-menu-qa.cjs');
+ assert.match(src,/leftEdge-rightEdge,available/);
+ assert.doesNotMatch(src,/Math\.min\(32,leftEdge-rightEdge/);
+ assert.match(src,/window\.addEventListener\('resize'/);
+ assert.match(src,/min-width: 1000px/);
+});
+
+test('upgrade chooser replaces Mystery Orb help with bilingual live support roster',()=>{
+ const src=read('src/pkmsvv-upgrade-select.js');
+ const css=read('src/pkmsvv-retro-theme.css');
+ assert.match(src,/Thông tin Pokémon hỗ trợ/);
+ assert.match(src,/G\.PKMSVVEggs\?\.SPECIES/);
+ assert.match(src,/mon\.period\+'s'/);
+ assert.match(src,/Shiny: 3%/);
+ assert.match(src,/30% HP tối đa của boss/);
+ assert.match(src,/aria-expanded/);
+ assert.match(css,/pkmsvv-support-roster/);
+ assert.doesNotMatch(src,/title\.textContent=full\?t\('Hướng dẫn Mystery Orb'/);
+});
+
+test('Memories contains chapter replay buttons, but no Mystery Orb guide button',()=>{
+ const src=read('src/pkmsvv-story.js');
+ assert.match(src,/data-chapter/);
+ assert.match(src,/Chương 3 · Mầm Sống Bị Lãng Quên/);
+ assert.match(src,/data-close/);
+ assert.doesNotMatch(src,/data-orb-help/);
+ assert.doesNotMatch(src,/pkmsvv-orb-guide-back/);
+});
