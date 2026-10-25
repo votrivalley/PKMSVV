@@ -48,7 +48,7 @@ test('third reveal background never replaces either existing approved scene',()=
  const story=read('src/pkmsvv-story.js'),css=read('src/pkmsvv-story.css'),patch=read('scripts/patch-story.cjs');
  assert.match(story,/1:'eyes', 2:'eyes', 3:'eyes'/);
  assert.match(story,/4:'gate', 5:'reveal'/);
- assert.match(story,/\['eyes','gate','reveal'\]/);
+ assert.match(story,/const VISUALS=Object\.freeze/);
  assert.match(story,/assets\/story\/gate\.webp/);
  assert.match(patch,/for\(const name of \['eyes','gate','reveal'\]\)/);
  assert.match(css,/data-scene="5"/);
