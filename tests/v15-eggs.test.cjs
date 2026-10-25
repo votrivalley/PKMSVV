@@ -215,8 +215,8 @@ test('3% Shiny support exists only within run at 100% of main Pokemon stats; nor
  assert.equal(regular.it.statScale,.65);
  assert.equal(regular.it.maxHp,104);
  assert.equal(regular.it.atk,52);
- assert.equal(regular.it.spd,119);
- assert.equal(regular.it.spdScale,.85);
+ assert.ok(Math.abs(regular.it.spd-119)<1e-8);
+ assert.ok(Math.abs(regular.it.spdScale-.85)<1e-8);
  assert.equal(shiny.it.spdScale,1);
  assert.equal(regular.it.anim.shiny,false);
 });
@@ -278,7 +278,7 @@ test('Boss guardians spawn 1–3 at independently rolled 30–50% boss HP, stay 
   class Enemy{
    constructor(def,x,y){
     this.id=id++;this.dex=def.dex;this.x=x;this.y=y;
-    this.def=def;this.dmg=def.dmg;this.hp=def.hp;this.maxHp=def.hp;
+    this.def=def;this.dmg=def.dmg;this.spd=def.spd;this.hp=def.hp;this.maxHp=def.hp;
     this.boss=false;this.bodyH=25;this.fade=0;this.dead=false;
     this.anim={dir:0,loop(){},update(){},play(){}};this.shield=0;
    }
