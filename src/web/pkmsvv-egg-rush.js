@@ -1,7 +1,7 @@
 /* PKMSVV v1.5 — Egg Rush, online 4-player host-authoritative match. */
 G.EggRush=(()=>{
  const MAX=10,MAX_TIME=720,EGG_SPECIES=[172,447,173,35,360,438,175,174];
- let active=false,roster=[],nests=[],trails=new Map(),pets=[],score={},at={},laid=0,wave=0,seed=1,outcome=null,transition={};
+ let active=false,roster=[],nests=[],trails=new Map(),pets=[],score={},at={},laid=0,wave=0,seed=1,outcome=null,transition={},revives=0,deathTime=0,levelSeen=1;
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  const nameOf=uid=>roster.find(m=>m.uid===uid)?.name||'Player';
  const rand=k=>{let x=((seed+Math.imul(k+1,2654435761))|0);x^=x>>>16;x=Math.imul(x,2246822507);x^=x>>>13;return (x>>>0)/4294967296;};
@@ -13,9 +13,12 @@ G.EggRush=(()=>{
  function begin(cfg){
   active=!!(cfg&&cfg.mode==='eggrush');
   roster=active?(cfg.members||[]).map(m=>({uid:m.uid,name:String(m.name||'Player').slice(0,24),dex:m.dex||25})):[];
-  seed=Math.floor(Number(cfg?.seed)||1);nests=[];pets=[];trails=new Map();
+  seed=Math.floor(Number(cfg?.seed)||1);nests=[];pets=[];trails=new Map();revives=0;deathTime=0;levelSeen=1;
   score=Object.fromEntries(roster.map(m=>[m.uid,0]));at={};laid=0;wave=0;outcome=null;transition={};
-  if(active)G.Sprites?.preload?.([...EGG_SPECIES,...roster.map(x=>x.dex)],7500);
+  if(active){
+   G.Sprites?.preload?.([...EGG_SPECIES,...roster.map(x=>x.dex)],7500);
+   roster.forEach(m=>{transition[m.uid]={anim:new G.Sprites.Animator(m.dex,.32,false)};});
+  }
  }
  function standings(){
   return roster.map(m=>({...m,eggs:score[m.uid]||0,at:at[m.uid]||0})).sort((a,b)=>
@@ -46,7 +49,7 @@ G.EggRush=(()=>{
    if(pl?.uid!==uid||pl.dead)return;
    if(pl.pkmsvvPvpImmune>0)return;
    pl.hurt(Math.max(1,Math.min(90,dmg)),null,true);
-   if(slow>0)pl.pkmsvvPvpSlow=Math.max(pl.pkmsvvPvpSlow||0,slow);
+   if(slow>0){if(!pl.pkmsvvPvpSlowApplied){pl.spdMul*=.7;pl.pkmsvvPvpSlowApplied=true;}pl.pkmsvvPvpSlow=Math.max(pl.pkmsvvPvpSlow||0,slow);}
    pl.pkmsvvPvpImmune=.85;
   }
  }
@@ -62,7 +65,7 @@ G.EggRush=(()=>{
  const wins=()=>Object.values(score).some(n=>n>=6);
  function result(time){
   const board=standings(),win=board[0]||null;
-  return {winner:win?.uid||null,standings:board.map((m,i)=>({...m,rank:i+1,win:m.uid===win?.uid})),collected:laid?MAX-nests.filter(n=>!n.taken).length:0,finishedAt:Math.round(time)};
+  return {winner:win?.uid||null,standings:board.map((m,i)=>({...m,rank:i+1,win:m.uid===win?.uid})),collected:Object.values(score).reduce((sum,n)=>sum+n,0),finishedAt:Math.round(time)};
  }
  function update(dt,time,players,finish){
   if(!active||outcome)return;
@@ -70,7 +73,13 @@ G.EggRush=(()=>{
    if(!p||!p.uid)continue;
    let trl=trails.get(p.uid);if(!trl){trl=[];trails.set(p.uid,trl);}
    trl.unshift({x:p.x,y:p.y});if(trl.length>300)trl.length=300;
-   if(p===G.Game.player&&p.pkmsvvPvpImmune>0)p.pkmsvvPvpImmune=Math.max(0,p.pkmsvvPvpImmune-dt);
+   if(p===G.Game.player){
+    if(p.pkmsvvPvpImmune>0)p.pkmsvvPvpImmune=Math.max(0,p.pkmsvvPvpImmune-dt);
+    if(p.pkmsvvPvpSlow>0)p.pkmsvvPvpSlow=Math.max(0,p.pkmsvvPvpSlow-dt);
+    if(p.pkmsvvPvpSlowApplied&&!p.pkmsvvPvpSlow){p.spdMul/= .7;p.pkmsvvPvpSlowApplied=false;}
+    if(p.dead&&revives<2){deathTime+=dt;if(deathTime>=5){p.revive(.5);revives++;deathTime=0;}}
+    else if(!p.dead)deathTime=0;
+   }
   }
   for(const pet of pets){
    const trl=trails.get(pet.uid);
@@ -79,12 +88,19 @@ G.EggRush=(()=>{
    const loc=trl[Math.min((i+1)*12,trl.length-1)];
    pet.x+=(loc.x-pet.x)*Math.min(1,dt*10);pet.y+=(loc.y-pet.y)*Math.min(1,dt*10);
    pet.age+=dt;
-   if(pet.age>=45&&!pet.hatch){
+   const me=G.Game.player;
+   if(pet.uid===me?.uid&&me?.level>levelSeen){pet.boost=(pet.boost||0)+(me.level-levelSeen)*3;levelSeen=me.level;}
+   if(pet.age>=20&&pet.age+(pet.boost||0)>=45&&!pet.hatch){
     pet.hatch=true;pet.anim=new G.Sprites.Animator(pet.dex,.7,false);
     G.FX?.ring?.(pet.x,pet.y,8,48,'#f5de8d',.6,3);
    }
    pet.anim?.update?.(dt);
+   if(pet.hatch&&pet.uid===G.Game.player?.uid){
+    const own=pets.filter(q=>q.uid===pet.uid&&q.hatch);
+    if(own.indexOf(pet)<3){pet.cd=(pet.cd||0)-dt;if(pet.cd<=0){support(pet,G.Game.player);pet.cd=8;}}
+   }
   }
+  Object.values(transition).forEach(t=>t.anim?.update?.(dt));
   if(!G.Coop.isHost)return;
   while(wave<5&&time>=8+wave*132){
    for(let i=0;i<2;i++){
@@ -105,6 +121,20 @@ G.EggRush=(()=>{
   }
   if(wins()||nests.filter(n=>n.taken).length>=MAX||time>=MAX_TIME){
    outcome=result(time);finish(outcome);
+  }
+ }
+ function support(pet,pl){
+  const nearby=(G.EnemyMgr?.all?.()||[]).filter(e=>e&&!e.dead&&G.U.dist2(e.x,e.y,pl.x,pl.y)<240*240);
+  const enemy=nearby[0];
+  switch(pet.dex){
+   case 172:if(enemy)enemy.hurt(12,'#ffe2a3');break;
+   case 447:if(enemy)enemy.hurt(19,'#c8e2ff');break;
+   case 173:pl.heal(pl.maxHp*.05);break;
+   case 35:pl.heal(pl.maxHp*.08);break;
+   case 360:pl.pkmsvvShield=Math.min(pl.maxHp*.25,(pl.pkmsvvShield||0)+pl.maxHp*.09);break;
+   case 438:pl.pkmsvvShield=Math.min(pl.maxHp*.25,(pl.pkmsvvShield||0)+pl.maxHp*.055);break;
+   case 175:G.Pickups?.pullAll?.();break;
+   case 174:if(enemy)enemy.applySlow(.3,2.5);break;
   }
  }
  function cast(pl,m){
