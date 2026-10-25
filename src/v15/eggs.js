@@ -15,6 +15,7 @@ G.PKMSVVEggs=(()=>{
  ];
  const byDex=Object.fromEntries(SPECIES.map(x=>[x.dex,x]));
  const COLLECT_TIME=4, NEST_RADIUS=38, HATCH_BASE=45, HATCH_MIN=20;
+ const REPLACEMENT_MIN=20, REPLACEMENT_MAX=60;
  const SHINY_CHANCE=.03, MIN_STAT=.5, MAX_STAT=.8, HIT_COOLDOWN=1.25;
  const DITTO_FORM=7,DITTO_REST=3;
  const SUPPORT_VISUAL_SCALE=.6, NEST_VISUAL_SCALE=.8;
@@ -180,10 +181,13 @@ G.PKMSVVEggs=(()=>{
   if(it.hp<=0){
    it.active=false;
    G.FX?.ring?.(it.x,it.y,10,61,it.shiny?'#fff1a3':'#ff8899',.6,2);
-   G.Spawner?.say?.(tr('Pokémon hỗ trợ đã bị hạ! Có thể tìm trứng mới.',
-                          'A support Pokémon fainted! A new egg may appear.'),3);
+   const wait=REPLACEMENT_MIN+Math.random()*(REPLACEMENT_MAX-REPLACEMENT_MIN);
+   G.Spawner?.say?.(tr('Pokémon đồng hành đã bị hạ! Ổ trứng mới sẽ xuất hiện sau khoảng '+Math.round(wait)+' giây.',
+                          'A companion fainted! A new nest can appear in about '+Math.round(wait)+' seconds.'),3);
    items=items.filter(x=>x!==it); // dead followers never occupy slots
-   spawnAt=Math.min(spawnAt,runTime+8); // replacement nest becomes possible
+   // The lost slot gets its own 20–60s respawn window, not an instant refill.
+   // An already visible nest for another empty slot is not removed.
+   spawnAt=runTime+wait;
   }
   return true;
  }

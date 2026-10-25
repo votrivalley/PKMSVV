@@ -15,7 +15,7 @@ G.PKMSVVStory=(()=>{
    {art:1,speaker:['???','???'],text:['...Mình đang ở đâu?','...Where am I?']},
    {art:1,speaker:['Tôi','Me'],text:['Tối quá... Mình còn sống sao?','It is so dark... Am I still alive?']},
    {art:2,speaker:['Tôi','Me'],text:['Tên của mình... Sao không thể nhớ nổi?','My name... Why can’t I remember it?']},
-   {art:2,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Vậy... bạn tên gì? Hãy cho ta biết tên mà bạn muốn được gọi.','Then... what is your name? Tell me what you wish to be called.'],askName:true},
+   {art:2,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Nếu ngươi không nhớ tên mình... vậy ngươi muốn ta gọi ngươi là gì?','If you cannot remember your name... what would you like me to call you?'],askName:true},
    {art:2,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Ta sẽ gọi ngươi là {name}. Hãy ghi nhớ cái tên ấy.','Then I shall call you {name}. Hold on to that name.']},
    {art:2,speaker:['Tôi','Me'],text:['Cơ thể mình... có gì đó không đúng.','Something feels wrong with my body.']},
    {art:3,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Ngươi cuối cùng cũng tỉnh lại.','You have finally awakened.']},
@@ -96,9 +96,9 @@ G.PKMSVVStory=(()=>{
   nameFormOpen=true;
   $('pkmsvv-story-name-form').classList.remove('hidden');
   $('pkmsvv-story-next').classList.add('hidden');
-  $('pkmsvv-story-name-label').textContent=tr('Biệt danh của bạn (3–16 ký tự)','Your nickname (3–16 characters)');
+  $('pkmsvv-story-name-label').textContent=tr('Tên bạn muốn được gọi (3–16 ký tự)','What to call you (3–16 characters)');
   $('pkmsvv-story-name-input').placeholder=tr('Chữ Latin, số hoặc _','Latin letters, digits or _');
-  $('pkmsvv-story-name-save').textContent=tr('Đây là tên tôi!','This is my name!');
+  $('pkmsvv-story-name-save').textContent=tr('Hãy gọi tôi như vậy','Call me that');
   $('pkmsvv-story-name-input').value='';
   $('pkmsvv-story-name-error').textContent='';
   $('pkmsvv-story-name-input').focus();

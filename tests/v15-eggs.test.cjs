@@ -109,6 +109,49 @@ test('Egg Rush keeps two safe nests per wave beyond every player viewport',()=>{
  assert.equal(new Set(eggs.map(e=>e[2])).size,4,'No duplicate nest IDs after retry');
 });
 
+test('Fainted companion waits 20–60s before any new nest, without bypassing the off-screen spawn rule',()=>{
+ const source=read('src/v15/eggs.js');
+ const player={x:0,y:0,dead:false,kills:0,level:1,maxHp:100,hp:100,heal(){}};
+ const save={pkmsvvChapter3Seen:true,stats:{}};
+ const notifications=[];
+ const G={I18n:{lang:'vi'},Camera:{w:800,h:600,sees:()=>false},DB:{save,commit(){}},
+  Sprites:{preload(){},dirFromAngle:()=>0,Animator:class{loop(){}update(){}draw(){}}},
+  World:{isFree:()=>true,isLiquid:()=>false},U:{dist2:(x,y,a,b)=>(x-a)**2+(y-b)**2},
+  Spawner:{say:text=>notifications.push(text)},FX:{ring(){},dmgText(){},burst(){}},
+  Coop:{active:false},EnemyMgr:{all:()=>[]}};
+ const fixedMath=Object.create(Math);fixedMath.random=()=>.5;
+ vm.runInNewContext(source,{G,Math:fixedMath,Number,Object});
+ const eggs=G.PKMSVVEggs;
+ eggs.begin(player,false);
+ eggs.update(.1,player,60,false);
+ assert.equal(eggs.nests.length,1);
+ const first=eggs.nests[0];player.x=first.x;player.y=first.y;
+ for(let i=0;i<41;i++)eggs.update(.1,player,61+i*.1,false);
+ assert.equal(eggs.followers.length,1);
+ for(let i=0;i<180;i++)eggs.update(.25,player,66+i*.25,false);
+ const ally=eggs.followers[0];
+ assert.equal(ally.hatched,true);
+ assert.equal(ally.active,true);
+ eggs.update(.1,player,112,false);
+ for(let i=0;i<8&&ally.hp>0;i++){
+  ally.hitCooldown=0;
+  eggs.hurtSupport(ally,ally.maxHp*100);
+ }
+ assert.equal(ally.hp,0,'Ally must faint in this scenario');
+ assert.equal(eggs.followers.length,0);
+ assert.ok(notifications.some(s=>s.includes('40 giây')),'Random 0.5 means exactly 40s');
+ eggs.update(.1,player,131.9,false);
+ assert.equal(eggs.nests.length,0,'No immediate replacement during cooldown');
+ eggs.update(.1,player,151.9,false);
+ assert.equal(eggs.nests.length,0,'No replacement before 40 seconds');
+ eggs.update(.1,player,152,false);
+ assert.equal(eggs.nests.length,1,'New nest is eligible at exactly 40 seconds');
+ const nest=eggs.nests[0],distance=Math.hypot(nest.x-player.x,nest.y-player.y);
+ assert.ok(distance>=Math.hypot(G.Camera.w,G.Camera.h),'The delayed nest is also a full screen away');
+ assert.match(source,/REPLACEMENT_MIN=20, REPLACEMENT_MAX=60/);
+ assert.doesNotMatch(source,/Math\.min\(spawnAt,runTime\+8\)/);
+});
+
 test('Solo egg nest requires 4 seconds, interruption resets progress, and hit delays hatching 3s',()=>{
  const source=read('src/v15/eggs.js');
  const player={x:0,y:0,dead:false,kills:0,level:1,maxHp:150,hp:150,heal(v){this.hp=Math.min(this.maxHp,this.hp+v);}};
@@ -217,7 +260,7 @@ test('real pixel egg/nest sprites are bundled for solo and Web Egg Rush',()=>{
 
 test('v1.5 release identity and completed egg gameplay are both packaged',()=>{
  const pkg=JSON.parse(read('package.json'));
- assert.equal(pkg.version,'1.5.14');
+ assert.equal(pkg.version,'1.5.15');
  assert.equal(pkg.build.productName,'Pokemon Chuyển sinh');
  assert.ok(read('scripts/prepare-game.cjs').includes('patch-v15-eggs.cjs'));
  assert.ok(read('scripts/prepare-web.cjs').includes('patch-v15-egg-rush-web.cjs'));

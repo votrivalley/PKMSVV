@@ -58,7 +58,11 @@ test('third reveal background never replaces either existing approved scene',()=
 
 test('Chapter 0 offers a story nickname without changing established social nicknames',()=>{
  const story=read('src/pkmsvv-story.js'),patch=read('scripts/patch-story.cjs');
- for(const term of ['bạn tên gì','askName:true','G.Social.start()','G.Social.claimNick(name)','G.DB.setName(name)','pkmsvvNameChosen','if(replaying||','e.target.closest'])assert.ok(story.includes(term),term);
+ for(const term of ['Nếu ngươi không nhớ tên mình','askName:true','G.Social.start()','G.Social.claimNick(name)','G.DB.setName(name)','pkmsvvNameChosen','if(replaying||','e.target.closest'])assert.ok(story.includes(term),term);
  assert.match(patch,/pkmsvv-story-name-form/);
  assert.match(patch,/pkmsvvNameChosen/);
+ assert.match(story,/If you cannot remember your name/);
+ assert.match(story,/Hãy gọi tôi như vậy/);
+ assert.doesNotMatch(story,/Vậy\.\.\. bạn tên gì\?|Đây là tên tôi!/);
+ assert.match(patch,/Hãy gọi tôi như vậy/);
 });
