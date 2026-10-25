@@ -35,7 +35,7 @@ if(html.split(multiplayer).length!==2)throw Error('Expected exactly one multipla
 html=html.replace(multiplayer,'');
 const play='<button class="menu-item play" data-go="play">Jugar<small>Entra en la mazmorra</small></button>';
 if(html.split(play).length!==2)throw Error('Play menu button moved unexpectedly');
-html=html.replace(play,play+'\n        '+multiplayer);
+html=html.replace(play,play+'\n        '+multiplayer.replace('Nhiều người chơi','Nhiều người'));
 fs.writeFileSync(htmlPath,html);
 patch('js/ui/menu.js',"multiplayer: 'friends'","multiplayer: 'online'");
 fs.appendFileSync(path.join(base,'css','style.css'),'\n'+fs.readFileSync(path.join(root,'src','pkmsvv-retro-web.css'),'utf8')+'\n');
