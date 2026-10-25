@@ -12,12 +12,14 @@ G.PKMSVVEggs=(()=>{
   {dex:174,role:'slow',period:9,power:.32} // Igglybuff
  ];
  const byDex=Object.fromEntries(SPECIES.map(x=>[x.dex,x]));
+ const COLLECT_TIME=8, NEST_RADIUS=38, HATCH_BASE=45, HATCH_MIN=20;
+ const FX_COLOR={attack:'#ffd472',heal:'#66ffad',shield:'#6edaff',magnet:'#ffe078',slow:'#e99aff'};
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
- let player=null,items=[],nests=[],trail=[],spawnAt=55,seq=0,kills=0,lv=1,runTime=0;
+ let player=null,items=[],nests=[],trail=[],spawnAt=55,seq=0,kills=0,lv=1,runTime=0,lastDir={x:0,y:1};
  function limit(){return G.DB?.save?.pkmsvvEggSlot3?3:2;}
  function unlocked(){return !!G.DB?.save?.pkmsvvChapter3Seen;}
  function begin(pl,coop){
-  player=pl;items=[];nests=[];trail=[];spawnAt=55;seq=0;runTime=0;kills=pl?.kills||0;lv=pl?.level||1;
+  player=pl;items=[];nests=[];trail=pl?[{x:pl.x,y:pl.y}]:[];spawnAt=55;seq=0;runTime=0;lastDir={x:0,y:1};kills=pl?.kills||0;lv=pl?.level||1;
   if(!coop&&unlocked())G.Sprites?.preload?.(SPECIES.map(s=>s.dex),7000);
  }
  const support=()=>items.filter(x=>x.hatched&&x.active);
@@ -28,7 +30,7 @@ G.PKMSVVEggs=(()=>{
    const a=Math.random()*Math.PI*2,d=165+Math.random()*245;
    const x=player.x+Math.cos(a)*d,y=player.y+Math.sin(a)*d;
    if(G.World.isLiquid(x,y)||!G.World.isFree(x,y,18))continue;
-   nests.push({id:++seq,x,y,age:0});G.Spawner?.say?.(tr('Một ổ trứng đã xuất hiện!','An egg nest has appeared!'),3);return;
+   nests.push({id:++seq,x,y,age:0,collecting:0});G.Spawner?.say?.(tr('Một ổ trứng đã xuất hiện!','An egg nest has appeared!'),3);return;
   }
  }
  function onHatch(it){
@@ -60,23 +62,81 @@ G.PKMSVVEggs=(()=>{
  }
  function collect(n){
   const chosen=SPECIES[Math.floor(Math.random()*SPECIES.length)];
-  items.push({dex:chosen.dex,id:n.id,hatched:false,active:false,age:0,boost:0,cooldown:chosen.period,x:n.x,y:n.y,anim:null,step:0});
+  items.push({dex:chosen.dex,id:n.id,hatched:false,active:false,age:0,boost:0,penalty:0,cooldown:chosen.period,x:n.x,y:n.y,anim:null,step:0,moving:false,effectFlash:0});
   G.FX?.ring?.(n.x,n.y,5,43,'#f7dc91',.35,2);
   G.Spawner?.say?.(tr('Đã tìm thấy trứng. Hãy chiến đấu để ấp nở!','Egg found. Keep fighting to hatch it!'),3,true);
  }
+ function remaining(it){
+  // Kills/levels may accelerate hatching, but actual time >= 20 seconds.
+  return Math.max(0,HATCH_MIN-it.age,HATCH_BASE+it.penalty-it.age-it.boost);
+ }
+ function onHurt(actualDamage){
+  if(!(actualDamage>0)||!unlocked()||!player||G.Coop?.active)return;
+  let count=0;
+  for(const it of items){
+   if(it.hatched)continue;
+   it.penalty=(it.penalty||0)+3;count++;
+   G.FX?.dmgText?.(it.x,it.y-39,'+3s','#ff9fac');
+  }
+  if(count)G.Spawner?.say?.(tr('Trứng bị chậm ấp +3 giây!','Egg incubation delayed by 3 seconds!'),1.5);
+ }
  function effect(it,pl){
-  const spec=byDex[it.dex];if(!spec||!it.active||pl.dead)return;
+  const spec=byDex[it.dex];if(!spec||!it.active||pl.dead)return false;
   const enemies=(G.EnemyMgr?.all?.()||[]).filter(e=>e&&!e.dead&&!e.remote&&G.U.dist2(e.x,e.y,it.x,it.y)<260*260);
   const target=enemies.reduce((acc,e)=>!acc||G.U.dist2(e.x,e.y,it.x,it.y)<G.U.dist2(acc.x,acc.y,it.x,it.y)?e:acc,null);
-  if(spec.role==='attack'&&target)target.hurt(Math.max(1,spec.power+pl.level*.55),'#ffe8a1',0,0,0);
-  else if(spec.role==='heal')pl.heal(Math.max(1,pl.maxHp*spec.power));
-  else if(spec.role==='shield')pl.pkmsvvShield=Math.min(pl.maxHp*.25,(pl.pkmsvvShield||0)+pl.maxHp*spec.power);
-  else if(spec.role==='slow'&&target)target.applySlow(spec.power,2.8);
+  if((spec.role==='attack'||spec.role==='slow')&&!target)return false;
+  if(spec.role==='attack')target.hurt(Math.max(1,spec.power+pl.level*.55),'#ffe8a1',0,0,0);
+  else if(spec.role==='heal'){
+   if(pl.hp>=pl.maxHp)return false; // Do not show a false heal when already full.
+   pl.heal(Math.max(1,pl.maxHp*spec.power));
+  }else if(spec.role==='shield')pl.pkmsvvShield=Math.min(pl.maxHp*.25,(pl.pkmsvvShield||0)+pl.maxHp*spec.power);
+  else if(spec.role==='slow')target.applySlow(spec.power,2.8);
   else if(spec.role==='magnet')G.Pickups?.pullAll?.();
+  const c=FX_COLOR[spec.role];
+  it.effectFlash=.85;
+  G.FX?.ring?.(it.x,it.y,7,48,c,.48,2);
+  if(spec.role==='slow'){
+   // Igglybuff is a ranged DEBUFF on monsters, not a buff on the hero.
+   G.FX?.ring?.(target.x,target.y,6,48,c,.55,2);
+   G.FX?.burst?.(target.x,target.y-9,c,7,70);
+   G.FX?.dmgText?.(target.x,target.y-26,tr('CHẬM!','SLOWED!'),c);
+  }else if(spec.role==='heal'||spec.role==='shield'||spec.role==='magnet'){
+   G.FX?.ring?.(pl.x,pl.y,8,56,c,.45,2);
+   G.FX?.burst?.(pl.x,pl.y-12,c,6,65);
+   G.FX?.dmgText?.(pl.x,pl.y-38,
+     spec.role==='heal'?tr('HỒI MÁU','HEAL'):spec.role==='shield'?tr('KHIÊN','SHIELD'):tr('HÚT','MAGNET'),c);
+  }else if(target)G.FX?.burst?.(target.x,target.y-10,c,5,52);
+  return true;
+ }
+ function follow(it,j,pl,dt){
+  const gap=48+j*30,stepIndex=6+j*4;
+  const anchor=trail[stepIndex]||{
+   x:pl.x-lastDir.x*gap,y:pl.y-lastDir.y*gap
+  };
+  // Stagger teammates beside their own trail; never glue sprites to player.
+  const side=(j%2?1:-1)*12;
+  const tx=anchor.x-lastDir.y*side,ty=anchor.y+lastDir.x*side;
+  const dx=tx-it.x,dy=ty-it.y,dist=Math.hypot(dx,dy);
+  const move=dist>5;
+  if(move){
+   const maxStep=Math.min(dist,dt*148);
+   const nx=it.x+dx/dist*maxStep,ny=it.y+dy/dist*maxStep;
+   if(!G.World?.isFree||G.World.isFree(nx,ny,9)){it.x=nx;it.y=ny;}
+   else if(G.World.isFree(nx,it.y,9))it.x=nx;
+   else if(G.World.isFree(it.x,ny,9))it.y=ny;
+  }
+  if(it.hatched&&it.anim){
+   it.anim.dir=G.Sprites.dirFromAngle?.(Math.atan2(dy,dx))??it.anim.dir;
+   it.anim.loop(move?'Walk':'Idle');
+   it.anim.update(dt);
+  }
+  it.moving=move;it.effectFlash=Math.max(0,(it.effectFlash||0)-dt);
  }
  function update(dt,pl,time,coop){
   if(!pl||!unlocked()||coop)return;
   player=pl;runTime=time;
+  // Prevent long background frames from completing an 8-second capture instantly.
+  dt=Math.max(0,Math.min(dt,.25));
   const stats=G.DB.save.stats||(G.DB.save.stats={});
   if(time>=900&&!stats.pkmsvvEgg15min){stats.pkmsvvEgg15min=true;G.DB.commit(true);}
   if(!G.DB.save.pkmsvvEggSlot3&&stats.pkmsvvEgg15min&&stats.pkmsvvEggsHatched>=20){
@@ -86,24 +146,36 @@ G.PKMSVVEggs=(()=>{
   if(time>=spawnAt){nestSpawn();spawnAt=time+100;}
   for(let i=nests.length-1;i>=0;i--){
    const n=nests[i];n.age+=dt;
-   if(G.U.dist2(pl.x,pl.y,n.x,n.y)<30*30){nests.splice(i,1);collect(n);}
-   else if(n.age>180)nests.splice(i,1);
+   if(G.U.dist2(pl.x,pl.y,n.x,n.y)<=NEST_RADIUS*NEST_RADIUS){
+    n.collecting=Math.min(COLLECT_TIME,n.collecting+dt);
+    if(n.collecting>=COLLECT_TIME){nests.splice(i,1);collect(n);}
+   }else n.collecting=0; // Leaving the nest interrupts the channel.
+   if(n.age>180&&n.collecting===0)nests.splice(i,1);
   }
   const dk=Math.max(0,(pl.kills||0)-kills),dl=Math.max(0,(pl.level||1)-lv);
   kills=pl.kills||0;lv=pl.level||1;
-  trail.unshift({x:pl.x,y:pl.y});if(trail.length>480)trail.length=480;
+  const head=trail[0];
+  if(head){
+   const dx=pl.x-head.x,dy=pl.y-head.y;
+   if(dx*dx+dy*dy>=64){
+    const length=Math.hypot(dx,dy);
+    lastDir={x:dx/length,y:dy/length};
+    trail.unshift({x:pl.x,y:pl.y});
+    if(trail.length>90)trail.length=90;
+   }
+  }else trail.unshift({x:pl.x,y:pl.y});
   for(let j=0;j<items.length;j++){
-   const it=items[j],pos=trail[Math.min(trail.length-1,(j+1)*14)]||pl;
-   const k=Math.min(1,dt*10);
-   it.x+=(pos.x-it.x)*k;it.y+=(pos.y-it.y)*k;
+   const it=items[j];
+   follow(it,j,pl,dt);
    if(!it.hatched){
     it.age+=dt;it.boost+=dk*1.5+dl*5;
-    if(it.age>=20&&it.age+it.boost>=45){
-     it.hatched=true;it.active=false;it.anim=new G.Sprites.Animator(it.dex,.72,false);onHatch(it);
+    if(it.age>=HATCH_MIN&&remaining(it)<=0){
+     it.hatched=true;it.active=false;it.anim=new G.Sprites.Animator(it.dex,.72,false);
+     it.anim.loop('Idle');onHatch(it);
     }
    }else{
-    it.anim?.update?.(dt);it.cooldown-=dt;
-    if(it.cooldown<=0){effect(it,pl);it.cooldown=byDex[it.dex].period;}
+    it.cooldown-=dt;
+    if(it.cooldown<=0)it.cooldown=effect(it,pl)?byDex[it.dex].period:.5;
    }
   }
  }
