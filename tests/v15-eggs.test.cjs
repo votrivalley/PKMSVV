@@ -442,7 +442,8 @@ test('Changelog has one 1.5 entry and concise bilingual themes',()=>{
  assert.equal((src.match(/G\.CHANGELOG\.unshift\(/g)||[]).length,1);
  assert.match(src,/Pokemon Chuyển sinh — v1\.5/);
  assert.doesNotMatch(src,/v1\.5\.[1-9]/);
- assert.match(src,/Tranh Trứng Online/);
+ assert.match(src,/Thêm chế độ nhiều người chơi mới: Tranh Trứng/);
+ assert.doesNotMatch(src,/Tranh Trứng Online/);
 });
 
 
