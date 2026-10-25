@@ -68,7 +68,7 @@ G.PKMSVVEggs=(()=>{
  }
  function remaining(it){
   // Kills/levels may accelerate hatching, but actual time >= 20 seconds.
-  return Math.max(0,HATCH_MIN-it.age,HATCH_BASE+it.penalty-it.age-it.boost);
+  return Math.max(0,HATCH_MIN+it.penalty-it.age,HATCH_BASE+it.penalty-it.age-it.boost);
  }
  function onHurt(actualDamage){
   if(!(actualDamage>0)||!unlocked()||!player||G.Coop?.active)return;
@@ -169,7 +169,7 @@ G.PKMSVVEggs=(()=>{
    follow(it,j,pl,dt);
    if(!it.hatched){
     it.age+=dt;it.boost+=dk*1.5+dl*5;
-    if(it.age>=HATCH_MIN&&remaining(it)<=0){
+    if(it.age>=HATCH_MIN+it.penalty&&remaining(it)<=0){
      it.hatched=true;it.active=false;it.anim=new G.Sprites.Animator(it.dex,.72,false);
      it.anim.loop('Idle');onHatch(it);
     }
