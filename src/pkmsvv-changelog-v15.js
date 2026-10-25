@@ -41,3 +41,16 @@ G.CHANGELOG.unshift({
  credit:['Votri Valley — Bản mod và Việt hóa phi thương mại dựa trên PokéSurvivor của JPTER78.',
          'Votri Valley — A noncommercial mod and localization based on PokéSurvivor by JPTER78.']
 });
+
+G.CHANGELOG.unshift({
+ d:'2026-10-26',
+ title:['Pokemon Chuyển sinh – Votri Valley v1.5.3','Pokemon Chuyển sinh – Votri Valley v1.5.3'],
+ subtitle:['Boss cũng có đội Pokémon hộ vệ.','Bosses can also have Pokémon bodyguards.'],
+ new:[
+  ['Mỗi boss có từ 1 đến 3 Pokémon hỗ trợ, mỗi bé có lượng HP đúng bằng 30% HP tối đa của boss và có thể bị đánh hạ riêng.','Every boss may have 1–3 support Pokémon, each with exactly 30% of the boss’s maximum HP and separately defeatable.'],
+  ['Hộ vệ đi theo boss, có thanh máu riêng và kỹ năng hỗ trợ tấn công, làm chậm, hồi phục hoặc khiên.','Bodyguards follow their boss, show their own HP and provide attack, slow, healing or shielding abilities.']
+ ],
+ chg:[['Hồi phục và khiên cho boss được giới hạn theo sát thương người chơi đang gây ra để tránh boss bất tử; hộ vệ biến mất khi boss bị hạ.','Boss healing and shielding are capped by recent incoming player damage to prevent immortality; followers disappear when the boss falls.']],
+ fix:[],
+ credit:['Votri Valley — Bản mod và Việt hóa phi thương mại dựa trên PokéSurvivor của JPTER78.','Votri Valley — A noncommercial mod and localization based on PokéSurvivor by JPTER78.']
+});

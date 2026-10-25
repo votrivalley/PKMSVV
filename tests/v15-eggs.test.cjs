@@ -168,7 +168,7 @@ test('real pixel egg/nest sprites are bundled for solo and Web Egg Rush',()=>{
 
 test('v1.5 release identity and completed egg gameplay are both packaged',()=>{
  const pkg=JSON.parse(read('package.json'));
- assert.equal(pkg.version,'1.5.2');
+ assert.equal(pkg.version,'1.5.3');
  assert.equal(pkg.build.productName,'Pokemon Chuyển sinh');
  assert.ok(read('scripts/prepare-game.cjs').includes('patch-v15-eggs.cjs'));
  assert.ok(read('scripts/prepare-web.cjs').includes('patch-v15-egg-rush-web.cjs'));
@@ -267,4 +267,58 @@ test('support touch damage is bounded, shield is absorbed and HP bars exist',()=
  assert.match(s,/it\.shield=Math\.max/);
  assert.match(s,/ctx\.fillRect\(bx,by,36\*hpRatio,5\)/);
  assert.doesNotMatch(s,/chooseReplace\(/);
+});
+
+test('Boss guardians spawn 1–3 at 30% boss HP, stay attackable and no recursion',()=>{
+ const vm=require('node:vm');
+ function run(roll){
+  let id=1,added=[],announcements=[],shots=[];
+  class Enemy{
+   constructor(def,x,y){
+    this.id=id++;this.dex=def.dex;this.x=x;this.y=y;
+    this.def=def;this.dmg=def.dmg;this.hp=def.hp;this.maxHp=def.hp;
+    this.boss=false;this.bodyH=25;this.fade=0;this.dead=false;
+    this.anim={dir:0,loop(){},update(){},play(){}};this.shield=0;
+   }
+   draw(){}
+   hurt(d){this.hp-=d;if(this.hp<=0)this.dead=true;}
+  }
+  const G={I18n:{lang:'vi'},Enemy,
+   DEX_BY:{172:{name:'Pichu'},447:{name:'Riolu'},173:{name:'Cleffa'},360:{name:'Wynaut'},174:{name:'Igglybuff'}},
+   Coop:{active:false,isHost:true},
+   EnemyMgr:{add(e){added.push(e);return e;},get(n){return added.find(e=>e.id===n)},clear(){added=[];}},
+   FX:{ring(){}},Spawner:{say(s){announcements.push(s);}},
+   Sprites:{dirFromAngle:()=>0,preload(){}},
+   Projectiles:{spawn(s){shots.push(s);return s;}},
+   World:{isFree:()=>true}
+  };
+  vm.runInNewContext(read('src/v15/boss-support.js'),{G,Math:Object.assign(Object.create(Math),{random:()=>roll}),Map,Number});
+  const b=new Enemy({dex:25,hp:1000,dmg:100},0,0);
+  b.boss=true;b.maxHp=1000;b.hp=1000;b.rd=250;
+  G.EnemyMgr.add(b);
+  return {G,b,added,announcements,shots};
+ }
+ for(const [roll,number] of [[.1,1],[.7,2],[.99,3]]){
+  const {G,b,added}=run(roll);
+  const guards=G.PKMSVVBossSupport.getForBoss(b.id);
+  assert.equal(guards.length,number);
+  assert.equal(added.length,number+1);
+  for(const g of guards){
+   assert.equal(g.hp,300);
+   assert.equal(g.maxHp,300);
+   assert.equal(g.boss,false);
+   assert.equal(g.pkmsvvBossGuard,true);
+   assert.equal(g.pkmsvvGuardianOf,b.id);
+  }
+  guards[0].hurt(75);assert.equal(guards[0].hp,225);
+  guards[0].update(1,{x:0,y:0,dead:false,slowT:0});
+  b.dead=true;guards[0].update(.1,{x:0,y:0,dead:false});
+  assert.equal(guards[0].dead,true);
+ }
+});
+test('Boss support runtime is bundled in shared Windows Android and Web game build',()=>{
+ assert.match(read('scripts/patch-v15-eggs.cjs'),/pkmsvv-boss-support\\.js/);
+ assert.match(read('src/v15/boss-support.js'),/const hp=Math\\.max\\(1,Math\\.round\\(boss\\.maxHp\\*\\.30\\)\\)/);
+ assert.match(read('src/v15/boss-support.js'),/boss\\.rd/);
+ assert.match(read('src/v15/boss-support.js'),/G\\.EnemyMgr\\.add=function/);
 });
