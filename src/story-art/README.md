@@ -1,25 +1,50 @@
-# Pixel artwork for Chapter 0 / Tranh Chương 0
+# Tranh truyện Pokémon Sống Sót — Story artwork
 
-Upload these **two real images** into this folder to replace the primitive SVG illustrations:
+Các tranh phải đồng bộ về phong cách với `eyes.webp`, `gate.webp`, `reveal.webp` và đặc biệt cặp `chapter2-orbs.webp` / `chapter2-shadow.webp`.
 
-- `eyes.webp` — the approved giant eyes under the night sky; Chapter 0 visual beats 1–3.
-- `gate.webp` — the approved shining gate; Chapter 0 beats 4–5 and Pokémon awakening.
+- **Tỷ lệ:** 16:9, lý tưởng 1280×720.
+- **Định dạng:** WebP, chất lượng 80–85 (có thể chỉnh để ảnh ~100–350 KB mà không mất chi tiết).
+- **Không có:** chữ, khung thoại, UI, giáo sư, phòng thí nghiệm hoặc nhân vật con người. Chương 0 đã hóa thành Pokémon nên các chương sau không minh họa nhân vật người.
+- **Không đổi tên hoặc xóa** ảnh cũ; chỉ tải lên các file bổ sung đúng tên.
+- Người dùng phải xem duyệt ảnh trước khi thay tranh trong bản public.
 
-Images should be 16:9 WebP (1280×720 recommended). No words or UI baked into images; dialogue stays localized in code.
+## File Chương 0 (đã có, giữ nguyên)
 
-The shared `scripts/patch-story.cjs` copies these into `vendor/pokesurvivor/assets/story/` as part of building Windows, Android and Web. If files are missing, the old lightweight generated SVG fallback is used instead, with a warning in the build logs. Uploading or replacing either file changes `src/**` and triggers fresh builds.
+| File | Nội dung |
+| --- | --- |
+| `eyes.webp` | Đôi mắt huyền bí trong đêm |
+| `gate.webp` | Cổng thức tỉnh |
+| `reveal.webp` | Khoảnh khắc nhận hình hài Pokémon |
 
-**Please do not delete / overwrite browser storage or player saves to update illustrations.**
+## File Chương 1 — Những Mảnh Ký Ức (mới, đang chờ ảnh)
 
-- `reveal.webp` — a NEW third illustration, the approved image WITHOUT the person, for the Pokémon result scene only (after the personality quiz). The existing `eyes.webp` and `gate.webp` stay unchanged. The starter Pokémon canvas is visually 2× bigger **only** in reveal scene #5.
+| File | Nội dung | Đoạn thoại |
+| --- | --- | --- |
+| `chapter1-echo.webp` | Vòng lặp chiến đấu, bóng Pokémon và những lớp ký ức cũ | 2 đoạn đầu |
+| `chapter1-fragments.webp` | Tám sức mạnh và ký ức đang dần trở lại | 2 đoạn cuối |
 
-## Chương 2 – Tiếng Vọng Thứ Tám (chưa build)
+`src/pkmsvv-story.js` đã ánh xạ Chương 1 sang hai tên ảnh mới; không dùng lại hình Chương 0.
 
-Upload **hai hình WebP 16:9** vào chính thư mục `src/story-art/` này:
+## File Chương 2 — Tiếng Vọng Thứ Tám (đã có)
 
-- `chapter2-orbs.webp` — Cảnh 1: vòng tròn tám sức mạnh, các Mystery Orb nổi lên (8 lượt thoại đầu).
-- `chapter2-shadow.webp` — Cảnh 2: **cùng không gian/cùng bố cục cảnh 1**, nhưng có thêm hình bóng trắng bí ẩn xuất hiện (4 lượt thoại cuối).
+| File | Nội dung |
+| --- | --- |
+| `chapter2-orbs.webp` | Vòng phép tám sức mạnh và Mystery Orbs |
+| `chapter2-shadow.webp` | Cùng không gian, xuất hiện bóng trắng bí ẩn |
 
-Kích thước khuyên dùng: **1280 × 720**, WebP quality ~80–85. Không đè lên `eyes.webp`, `gate.webp` hoặc `reveal.webp`.
+## File Chương 3 — Mầm Sống Bị Lãng Quên (mới, đang chờ ảnh)
 
-**Chỉ upload ở nhánh `wip/v14-story-art-missions`** nếu muốn chưa build: workflow tự động chỉ chạy trên `main`. Code dựng truyện đã tham chiếu tới hai tên này, và khi chưa có ảnh thì tạm dùng `gate.webp`.
+| File | Nội dung | Đoạn thoại |
+| --- | --- | --- |
+| `chapter3-nest.webp` | Ổ trứng phát sáng trong vùng đất ký ức | 5 đoạn đầu |
+| `chapter3-hatch.webp` | Pokémon nhỏ nở, bắt đầu đồng hành; bóng trắng thoáng hiện | 6 đoạn cuối |
+
+## Cách chuẩn bị và upload
+
+1. Tải 4 tranh đã duyệt về máy dưới dạng PNG hoặc JPG.
+2. Mở **https://squoosh.app/**, kéo từng ảnh vào. Chỉnh kích thước về 1280×720 nếu muốn. Chọn **WebP**, chất lượng khoảng **80–85**, tải bản nén xuống.
+3. Đổi tên **file đã mã hóa WebP** đúng bốn tên trong bảng. Chỉ đổi phần mở rộng từ PNG sang .webp **không phải là chuyển đổi định dạng**.
+4. Vào https://github.com/votrivalley/PKMSVV/tree/main/src/story-art, chọn **Add file → Upload files**, kéo 4 file WebP vào, kiểm tra tên và bấm **Commit changes**. Chỉ cần upload ảnh, không sửa code.
+5. `scripts/patch-story.cjs` sẽ đóng gói ảnh vào `assets/story/` khi build Web, PC, Android. Các ảnh Chương 3 cũng được xử lý trong patch v1.5.
+
+**Không xóa save người chơi; không thay dữ liệu lưu hay Firebase chỉ để cập nhật hình.** Khi thiếu hình mới, trò chơi tạm dùng ảnh dự phòng `gate.webp`.
