@@ -48,7 +48,8 @@ test('Gacha result overlay is recognized by pad navigation and A can press conti
  let buttons=Array.from({length:16},()=>({pressed:false,value:0}));
  const mockPad={connected:true,id:'Test Controller',axes:[0,0,0,0],get buttons(){return buttons}};
  const context={G:{Settings:{get:()=>true},Game:{state:'ui'},DB:{save:{partner:25,owned:{25:{}}}},
-     Flow:{play:()=>{}},Input:{virtual:()=>{}},UI:{}},
+     Flow:{play:()=>{}},Input:{virtual:()=>{}},UI:{},
+      PKMSVVPadOrb:{bindings:()=>({dash:2,use:3,pause:9,confirm:0,back:1,reroll:3})}},
    innerWidth:900,innerHeight:600,
    navigator:{getGamepads:()=>[mockPad]},
    addEventListener:(n,cb)=>listeners[n]=cb,
@@ -85,4 +86,30 @@ test('keyboard skill card labels use a clear name while keeping physical binding
  for(const n of [1,2,3]) assert.match(source,new RegExp("card"+n+":'Thẻ skill "+n+"'"));
  assert.doesNotMatch(source,/card1:'Lá bài 1'/);
  assert.match(source,/card1:'digit1'/);
+});
+
+test('v1.5 controller mapping saves six real actions, migrates old maps and rejects conflicts',()=>{
+ const source=fs.readFileSync(path.join(root,'src/v14/pad-orb-map.js'),'utf8');
+ const settings={};
+ const G={I18n:{lang:'vi'},Input:{DEFAULT_KEYS:{up:'keyw',down:'keys',left:'keya',right:'keyd',dash:'keyf',pause:'keyp',orb:'digit5',reroll:'keyr',card1:'digit1',card2:'digit2',card3:'digit3'}},
+  Settings:{get:k=>settings[k],set:(k,v)=>{settings[k]=v;}}};
+ vm.runInNewContext(source,{G,Number,Set,Object});
+ const map=G.PKMSVVPadOrb;
+ assert.equal(map.describe('dash'),'X / □');
+ assert.equal(map.describe('use'),'Y / △');
+ assert.equal(map.describe('pause'),'Start / Options');
+ assert.equal(map.valid({dash:2,use:2}),false,'game actions must not collide');
+ assert.equal(map.valid({dash:10,use:11}),true,'old two-key profiles still accepted');
+ settings[map.KEY]={dash:10,use:11};
+ assert.equal(map.bindings().dash,10);
+ assert.equal(map.bindings().confirm,0,'legacy map gains default confirm');
+ settings[map.KEY]={dash:10,use:11,confirm:1,back:1};
+ assert.equal(map.bindings().confirm,0,'invalid profile falls back to safe defaults');
+ assert.match(source,/data-control-tab="keyboard"/);
+ assert.match(source,/data-control-tab="pad"/);
+ assert.match(source,/keyboardDefaults/);
+ assert.match(source,/G\.Settings\.set\('keys'/);
+ assert.match(source,/G\.Settings\.set\(KEY/);
+ assert.match(source,/pkmsvv-control-reset/);
+ assert.doesNotMatch(source,/Không cần nút chuyển Orb/);
 });
