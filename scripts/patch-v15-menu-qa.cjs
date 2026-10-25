@@ -133,7 +133,7 @@ const settings=path.join(game,'js','ui','settings-ui.js');
 let settingsJs=fs.readFileSync(settings,'utf8');
 if(!settingsJs.includes('about-logo">PokéSurvivor</div>'))throw Error('Original About title changed');
 settingsJs=settingsJs.replace('about-logo">PokéSurvivor</div>','about-logo" translate="no">Pokemon Chuyển sinh</div>');
-settingsJs=settingsJs.replace("const VERSION = '1.2 · 2026-10-09';","const VERSION = '1.5.10 · 2026-10-26';");
+settingsJs=settingsJs.replace("const VERSION = '1.2 · 2026-10-09';","const VERSION = '1.5.11 · 2026-10-26';");
 fs.writeFileSync(settings,settingsJs,'utf8');
 const newsFile=path.join(game,'js','ui','news-ui.js');
 let newsJs=fs.readFileSync(newsFile,'utf8');
@@ -241,4 +241,4 @@ fs.appendFileSync(css,`
  #scr-menu.pkmsvv-v15-menu .pkmsvv-v15-bottom>#btn-news{min-height:52px!important}
 }
 `,'utf8');
-console.log('PKMSVV v1.5.10: renamed menu, popup backup, aligned navigation and single News panel.');
+console.log('PKMSVV v1.5.11: renamed menu, popup backup, aligned navigation and single News panel.');

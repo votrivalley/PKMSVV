@@ -9,7 +9,7 @@ test('v1.4 release notes bilingual and native/cloud history preserved',()=>{
  assert.match(s,/Shiny Charm/);assert.match(s,/Gacha ×100/);assert.match(s,/Meteor Mash/);
  assert.match(read('scripts/prepare-game.cjs'),/patch-v14-gameplay.cjs/);
  assert.match(read('scripts/prepare-web.cjs'),/1\.5/);
- assert.equal(require('../package.json').version,'1.5.10');
+ assert.equal(require('../package.json').version,'1.5.11');
 });
 test('Gacha balance uses precise 0.9% Shiny, 1.8% Charm and 1% Legend odds',()=>{
  const cfg=JSON.parse(read('config/gameplay.json'));

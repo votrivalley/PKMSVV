@@ -169,7 +169,7 @@ test('real pixel egg/nest sprites are bundled for solo and Web Egg Rush',()=>{
 
 test('v1.5 release identity and completed egg gameplay are both packaged',()=>{
  const pkg=JSON.parse(read('package.json'));
- assert.equal(pkg.version,'1.5.10');
+ assert.equal(pkg.version,'1.5.11');
  assert.equal(pkg.build.productName,'Pokemon Chuyển sinh');
  assert.ok(read('scripts/prepare-game.cjs').includes('patch-v15-eggs.cjs'));
  assert.ok(read('scripts/prepare-web.cjs').includes('patch-v15-egg-rush-web.cjs'));
@@ -271,7 +271,7 @@ test('support touch damage is bounded, shield is absorbed and HP bars exist',()=
  assert.match(s,/function hurtSupport\(it,raw\)/);
  assert.match(s,/Math\.min\(it\.maxHp\*\.20/);
  assert.match(s,/it\.shield=Math\.max/);
- assert.match(s,/ctx\.fillRect\(bx,by,26\*hpRatio,2\)/);
+ assert.match(s,/ctx\.fillRect\(bx,by,28\*hpRatio,2\)/);
  assert.doesNotMatch(s,/chooseReplace\(/);
 });
 
@@ -598,4 +598,31 @@ test('Support Shiny is discovered only after hatch and its tab cannot unlock pre
  assert.equal(G.PKMSVVSupportCatalog.rarity(151)[0],'Siêu hiếm');
  assert.equal(G.PKMSVVSupportCatalog.rarity(172)[0],'Thường');
  assert.ok(read('scripts/patch-v15-eggs.cjs').includes('older.pkmsvvSupportShiny'));
+});
+
+// HP stays on-screen even when a companion is at full health and was never hit.
+test('support HP draws a visible, thin single line at full and partial HP',()=>{
+ const save={pkmsvvChapter3Seen:true,stats:{}};
+ const G={DB:{save,commit(){}},Coop:{active:false},
+  Sprites:{preload(){},dirFromAngle:()=>0},
+  U:{dist2:(x,y,a,b)=>(x-a)**2+(y-b)**2}};
+ vm.runInNewContext(read('src/v15/eggs.js'),{G,Math,Number,Object});
+ G.PKMSVVEggs.begin({x:0,y:0,level:1,kills:0,spd:120},false);
+ const it={hatched:true,active:true,x:50,y:60,hp:100,maxHp:100,shiny:false,anim:null,
+  effectFlash:0,hurtFlash:0,recentlyHit:0};
+ G.PKMSVVEggs.followers.push(it);
+ const rects=[];
+ const ctx={save(){},restore(){},fillRect(x,y,w,h){rects.push([x,y,w,h]);}};
+ let drawable=G.PKMSVVEggs.drawables({sees:()=>true})[0];
+ drawable.draw(ctx);
+ assert.equal(rects.length,2,'Full HP draws background and a visible foreground stroke');
+ assert.deepEqual(rects.map(r=>[r[2],r[3]]),[[28,2],[28,2]]);
+ it.hp=50;rects.length=0;drawable.draw(ctx);
+ assert.deepEqual(rects.map(r=>[r[2],r[3]]),[[28,2],[14,2]]);
+});
+test('v1.5 log explicitly names the online Egg Rush mode in one consolidated release',()=>{
+ const src=read('src/pkmsvv-changelog-v15.js');
+ assert.equal((src.match(/G\.CHANGELOG\.unshift\(/g)||[]).length,1);
+ assert.match(src,/Thêm chế độ chơi Online mới: Tranh Trứng Online \(Egg Rush\)/);
+ assert.match(src,/New Online game mode: Egg Rush/);
 });

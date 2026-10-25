@@ -168,3 +168,13 @@ test('Windows-only fullscreen control toggles windowed/fullscreen from Pause or 
  assert.match(patch,/js\/ui\/pkmsvv-pc-fullscreen\.js/);
  assert.match(build,/patch-v155-pc-fullscreen\.cjs/);
 });
+
+test('Skill Awakening guide hides only after all eight skill slots unlock',()=>{
+ const code=read('src/pkmsvv-upgrade-select.js');
+ assert.match(code,/const awakening=G\.PKMSVVSkillTrack\?\.guide\?/);
+ assert.match(code,/if\(!awakening\|\|awakening\.count<8\)/);
+ assert.ok(code.indexOf('Hướng dẫn Mystery Orb')<code.indexOf('Hướng dẫn Thức tỉnh kỹ năng'));
+ // Progress is calculated from both persisted milestones and current achievements.
+ const skill=read('src/pkmsvv-skill-track.js');
+ assert.match(skill,/return \{headline,note,lines,count:p\.count\}/);
+});

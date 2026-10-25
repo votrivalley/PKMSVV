@@ -38,17 +38,20 @@ G.PKMSVVUpgradeChooser=(()=>{
     row.append(name,detail);body.append(row);
    });
   });
-  section(t('Hướng dẫn Thức tỉnh kỹ năng','Skill Awakening Guide'),body=>{
-   const data=G.PKMSVVSkillTrack?.guide?.(G.DB.save,en()?'en':'vi');
-   if(!data)return;
-   const name=document.createElement('strong');name.textContent=data.headline;
-   const desc=document.createElement('p');desc.textContent=data.note;
-   body.append(name,desc);
-   for(const line of data.lines||[]){
-    const row=document.createElement('div');row.className='pkmsvv-skill-milestone';
-    row.textContent=line;body.append(row);
-   }
-  });
+  // Completed accounts do not need the unlock walkthrough any more.
+  const awakening=G.PKMSVVSkillTrack?.guide?.(G.DB.save,en()?'en':'vi');
+  if(!awakening||awakening.count<8){
+   section(t('Hướng dẫn Thức tỉnh kỹ năng','Skill Awakening Guide'),body=>{
+    if(!awakening)return;
+    const name=document.createElement('strong');name.textContent=awakening.headline;
+    const desc=document.createElement('p');desc.textContent=awakening.note;
+    body.append(name,desc);
+    for(const line of awakening.lines||[]){
+     const row=document.createElement('div');row.className='pkmsvv-skill-milestone';
+     row.textContent=line;body.append(row);
+    }
+   });
+  }
   $('pkmsvv-upgrade-back').textContent=t('Trở về','Back');
   $('pkmsvv-upgrade-single').onclick=()=>{
    G.MenuUI.openUpgrades();

@@ -7,7 +7,8 @@ G.CHANGELOG.unshift({
  subtitle:['Đồng hành cùng Pokémon và nhiều cải tiến mới.','Pokémon companions and major gameplay improvements.'],
  new:[
   ['Thêm Pokémon đồng hành, Ditto biến hình theo chu kỳ, Mew tung AOE, Shiny và độ thân thiết để tăng tỷ lệ hiếm; mở rộng đội hình qua Chương 3.','Added hatchable companions, timed Ditto transformations, Mew AOE, Shiny and bond rewards for rare encounters.'],
-  ['Boss có Pokémon hộ vệ riêng. Bổ sung chế độ Tranh Trứng Online và nhiều hoạt động mới.','Bosses have their own guardians. Added Online Egg Rush and more activities.']
+  ['Boss giờ có Pokémon hộ vệ riêng.','Bosses now have their own Pokémon guardians.'],
+  ['Thêm chế độ chơi Online mới: Tranh Trứng Online (Egg Rush).','New Online game mode: Egg Rush.']
  ],
  chg:[
   ['Cân bằng sức mạnh, tốc độ, độ khó, tương tác và khả năng sống sót của đội đồng hành.','Rebalanced companion strength, speed, enemy targeting, and survivability.'],

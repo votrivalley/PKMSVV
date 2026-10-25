@@ -457,13 +457,13 @@ G.PKMSVVEggs=(()=>{
     ctx.fillText('★',it.x+18,it.y-28);ctx.shadowBlur=0;
    }
    const hpRatio=Math.max(0,Math.min(1,(it.hp||0)/Math.max(1,it.maxHp||1)));
-   if(hpRatio<.999||(it.recentlyHit||0)>0){
-    ctx.save();ctx.globalAlpha=hpRatio<.999?.85:.4;
-    const bx=it.x-13,by=it.y-35;
-    ctx.fillStyle='#193942';ctx.fillRect(bx,by,26,2);
-    ctx.fillStyle=hpRatio>.55?'#a3f2cd':hpRatio>.25?'#ffe08b':'#ff8395';
-    ctx.fillRect(bx,by,26*hpRatio,2);ctx.restore();
-   }
+   // Always-visible single thin HP line, even at 100% HP. No box or large HUD.
+   ctx.save();ctx.globalAlpha=.95;
+   const bx=it.x-14,by=it.y-35;
+   ctx.fillStyle='#193942';ctx.fillRect(bx,by,28,2);
+   ctx.fillStyle=hpRatio>.55?'#a3f2cd':hpRatio>.25?'#ffe08b':'#ff8395';
+   ctx.fillRect(bx,by,28*hpRatio,2);
+   ctx.restore();
    if(it.effectFlash>0&&it.active){
     const c=FX_COLOR[byDex[it.dex]?.role]||'#fff8a9';
     ctx.globalAlpha=Math.min(.55,it.effectFlash*.62);
