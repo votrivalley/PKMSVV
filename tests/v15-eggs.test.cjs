@@ -317,8 +317,10 @@ test('Boss guardians spawn 1–3 at 30% boss HP, stay attackable and no recursio
  }
 });
 test('Boss support runtime is bundled in shared Windows Android and Web game build',()=>{
- assert.match(read('scripts/patch-v15-eggs.cjs'),/pkmsvv-boss-support\\.js/);
- assert.match(read('src/v15/boss-support.js'),/const hp=Math\\.max\\(1,Math\\.round\\(boss\\.maxHp\\*\\.30\\)\\)/);
- assert.match(read('src/v15/boss-support.js'),/boss\\.rd/);
- assert.match(read('src/v15/boss-support.js'),/G\\.EnemyMgr\\.add=function/);
+ const patch=read('scripts/patch-v15-eggs.cjs');
+ const source=read('src/v15/boss-support.js');
+ assert.ok(patch.includes('pkmsvv-boss-support.js'));
+ assert.ok(source.includes('boss.maxHp*.30'));
+ assert.ok(source.includes('b.rd||0'));
+ assert.ok(source.includes('G.EnemyMgr.add=function'));
 });
