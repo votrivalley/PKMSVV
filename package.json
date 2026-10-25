@@ -1,6 +1,6 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "private": true,
   "description": "Unofficial noncommercial Pokémon Sống Sót client: offline-first Windows and Android editions, browser online beta",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
@@ -44,7 +44,7 @@
   },
   "build": {
     "appId": "com.ronvotri.pkmsvv",
-    "productName": "Pokémon Sống Sót",
+    "productName": "Pokemon Chuyển sinh",
     "copyright": "Unofficial noncommercial project; original game copyright JPTER78",
     "asar": true,
     "directories": {

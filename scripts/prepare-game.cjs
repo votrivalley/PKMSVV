@@ -309,6 +309,9 @@ fs.appendFileSync(path.join(game,'js','data','changelog.js'),
   '\n' + fs.readFileSync(path.join(project,'src','pkmsvv-changelog-v121.js'),'utf8'),'utf8');
 fs.appendFileSync(path.join(game,'js','data','changelog.js'),
   '\n' + fs.readFileSync(path.join(project,'src','pkmsvv-changelog-v14.js'),'utf8'),'utf8');
+// Latest 1.5 features: Chapter 3 egg companions and Web Egg Rush.
+fs.appendFileSync(path.join(game,'js','data','changelog.js'),
+  '\n' + fs.readFileSync(path.join(project,'src','pkmsvv-changelog-v15.js'),'utf8'),'utf8');
 // Upstream news renderer assumes its first language is Spanish. PKMSVV release
 // entries are explicitly [Vietnamese, English]; choose the correct text instead
 // of feeding approved release notes through automatic fragment translation.
@@ -601,7 +604,7 @@ execFileSync(process.execPath, [path.join(game, 'tools', 'build.js'), '--sin-seo
 const indexPath = path.join(game, 'index.html');
 let html = fs.readFileSync(indexPath, 'utf8');
 if (!html.includes('</head>')) throw new Error('index.html không có thẻ head');
-html = html.replace(/<title>[^<]*<\/title>/, '<title>Pokémon Sống Sót — Votri Valley</title>');
+html = html.replace(/<title>[^<]*<\/title>/, '<title>Pokemon Chuyển sinh — Votri Valley</title>');
 html = html.replace('</head>', '<style>\n' +
   'body,button,input,select{font-family:"Segoe UI",Tahoma,Arial,sans-serif!important;}\n' +
   '.menu-left .logo .t1 .splash{max-width:13em;overflow-wrap:normal;white-space:normal;}\n' +
@@ -629,8 +632,8 @@ fs.writeFileSync(indexPath, html, 'utf8');
 const manifestPath=path.join(game,'manifest.webmanifest');
 if(fs.existsSync(manifestPath)){
   const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
-  manifest.name='Pokémon Sống Sót — Votri Valley';
-  manifest.short_name='Sống Sót';
+  manifest.name='Pokemon Chuyển sinh — Votri Valley';
+  manifest.short_name='Chuyển sinh';
   manifest.lang='vi';
   fs.writeFileSync(manifestPath,JSON.stringify(manifest,null,2)+'\n','utf8');
 }

@@ -29,7 +29,7 @@ async function checkForNewRelease({app,mainWindow}){
   const safeUrl='https://github.com/'+repo+'/releases/tag/'+tag;
   const result=await dialog.showMessageBox(mainWindow,{
    type:'info',buttons:['Xem bản cập nhật','Để sau'],defaultId:1,cancelId:1,
-   title:'Pokémon Sống Sót — Có phiên bản mới',
+   title:'Pokemon Chuyển sinh — Có phiên bản mới',
    message:'Đã có bản '+tag+' (bạn đang dùng '+app.getVersion()+').',
    detail:'Bản PC portable không tự cài đè. Bạn có thể tải bản mới từ GitHub. Tiến trình vẫn được giữ trong thư mục dữ liệu riêng.'
   });

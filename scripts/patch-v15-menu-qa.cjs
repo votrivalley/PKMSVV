@@ -33,25 +33,21 @@ fs.appendFileSync(js,`
    const first=right.firstElementChild;
    if(first){first.style.marginTop='0';first.style.marginBottom='0';}
   }
-  // Options -> Save is a REAL settings page, not a tab that opens a
-  // second dialog behind Settings. Reuse the existing save/restore API.
+  // Settings Save is an action: close Settings and open the existing
+  // separate Backup / Restore dialog above the menu (no nested tab content).
   const saveTab=document.getElementById('pkmsvv-v15-backup');
-  const saveBody=document.getElementById('set-body');
-  if(saveTab&&saveBody){
+  if(saveTab){
    saveTab.type='button';
-   saveTab.dataset.t='pkmsvv-backup';
+   saveTab.removeAttribute('data-t');
    saveTab.onclick=event=>{
     event.preventDefault();
     event.stopPropagation();
-    document.querySelectorAll('#set-tabs .gen-tab')
-     .forEach(tab=>tab.classList.toggle('on',tab===saveTab));
-    saveBody.replaceChildren();
-    if(!G.PKMSVVSaveUI||typeof G.PKMSVVSaveUI.mount!=='function'){
-     G.UI.toast(G.I18n?.lang==='en'?'Save tools unavailable':'Không thể mở công cụ sao lưu');
+    if(!G.PKMSVVSaveUI?.openQuick){
+     G.UI.toast(G.I18n?.lang==='en'?'Backup tools unavailable':'Không thể mở công cụ sao lưu');
      return;
     }
-    G.PKMSVVSaveUI.mount(saveBody,'pkmsvv-settings');
-    saveBody.scrollTop=0;
+    G.SettingsUI?.close?.();
+    G.PKMSVVSaveUI.openQuick();
    };
   }
   const link=document.getElementById('pkmsvv-v15-discord');
@@ -95,6 +91,23 @@ fs.appendFileSync(js,`
  }
 })();
 `,'utf8');
+// Final user-facing rename: never change account IDs, storage paths or PKMSVV_SAVE.
+const dev=path.join(game,'dev.html');
+let markup=fs.readFileSync(dev,'utf8');
+if(!markup.includes('Pokémon Sống Sót'))throw Error('Expected old display name in prepared HTML');
+markup=markup.replaceAll('Pokémon Sống Sót','Pokemon Chuyển sinh');
+fs.writeFileSync(dev,markup,'utf8');
+const settings=path.join(game,'js','ui','settings-ui.js');
+let settingsJs=fs.readFileSync(settings,'utf8');
+if(!settingsJs.includes('about-logo">PokéSurvivor</div>'))throw Error('Original About title changed');
+settingsJs=settingsJs.replace('about-logo">PokéSurvivor</div>','about-logo" translate="no">Pokemon Chuyển sinh</div>');
+settingsJs=settingsJs.replace("const VERSION = '1.2 · 2026-10-09';","const VERSION = '1.5.0 · 2026-10-25';");
+fs.writeFileSync(settings,settingsJs,'utf8');
+const newsFile=path.join(game,'js','ui','news-ui.js');
+let newsJs=fs.readFileSync(newsFile,'utf8');
+if(!newsJs.includes('Có gì mới: 1.4'))throw Error('Expected old 1.4 News button label');
+newsJs=newsJs.replaceAll('Có gì mới: 1.4','Có gì mới: 1.5').replaceAll("What's New: 1.4","What's New: 1.5");
+fs.writeFileSync(newsFile,newsJs,'utf8');
 fs.appendFileSync(css,`
 /* FINAL v1.5 credit: one quiet line, no circular badge, no overlay. */
 #scr-menu.pkmsvv-v15-menu .menu-left .logo>.pkmsvv-credit{
@@ -172,4 +185,4 @@ fs.appendFileSync(css,`
  #scr-menu.pkmsvv-v15-menu .pkmsvv-v15-bottom>#btn-news{min-height:52px!important}
 }
 `,'utf8');
-console.log('PKMSVV v1.5 QA: one-line credit, aligned menu, single news panel, clickable Discord.');
+console.log('PKMSVV v1.5.0: renamed menu, popup backup, aligned navigation and single News panel.');

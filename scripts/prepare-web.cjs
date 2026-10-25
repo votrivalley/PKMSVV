@@ -73,12 +73,12 @@ execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-entry-ui.c
 replaceOnce(path.join(game,'js','main.js'),"navigator.serviceWorker.register('sw.js')","navigator.serviceWorker.register('/sw.js',{scope:'/'})");
 const notesFile=path.join(game,'js','data','changelog.js');
 fs.appendFileSync(notesFile,'\n'+fs.readFileSync(path.join(root,'src','pkmsvv-changelog-v13-web.js'),'utf8'),'utf8');
-// v1.4 follows v1.3 but must appear first in What's New without duplicating notes.
-fs.appendFileSync(notesFile,"\nconst i14=G.CHANGELOG.findIndex(x=>(x.title||[])[0]?.includes('v1.4'));if(i14>0)G.CHANGELOG.unshift(G.CHANGELOG.splice(i14,1)[0]);\n",'utf8');
+// v1.5 stays first even after the Web-only history entries are added.
+fs.appendFileSync(notesFile,"\nconst i15=G.CHANGELOG.findIndex(x=>(x.title||[])[0]?.includes('v1.5'));if(i15>0)G.CHANGELOG.unshift(G.CHANGELOG.splice(i15,1)[0]);\n",'utf8');
 fs.appendFileSync(notesFile,'\n'+fs.readFileSync(path.join(root,'src','web','pkmsvv-voice-changelog.js'),'utf8'),'utf8');
 const uiNewsPath=path.join(game,'js','ui','news-ui.js');
 let uiNews=fs.readFileSync(uiNewsPath,'utf8');
-if(!uiNews.includes('Có gì mới: 1.4')||!uiNews.includes("What's New: 1.4"))throw Error('Web news v1.4 label missing');
+if(!uiNews.includes('Có gì mới: 1.5')||!uiNews.includes("What's New: 1.5"))throw Error('Web news v1.5 label missing');
 fs.writeFileSync(uiNewsPath,uiNews,'utf8');
 
 
@@ -152,7 +152,7 @@ fs.writeFileSync(path.join(game, 'js', 'core', 'firebase-config.js'),
 execFileSync(process.execPath, [path.join(game, 'tools', 'build.js'), '--sin-seo', '--expose'], { cwd: game, stdio: 'inherit' });
 let html = fs.readFileSync(path.join(game, 'index.html'), 'utf8');
 if (!html.includes('</head>')) throw new Error('Missing HTML head in web build');
-html = html.replace(/<title>[^<]*<\/title>/, '<title>Pokémon Sống Sót — Votri Valley Web</title>');
+html = html.replace(/<title>[^<]*<\/title>/, '<title>Pokemon Chuyển sinh — Votri Valley Web</title>');
 html = html.replace('</head>', '<meta name="robots" content="noindex,nofollow">\n' + css + '\n</head>');
 // An installed Web shortcut must always open the mode-selector landing page,
 // even if installed while browsing the /game/ subfolder.

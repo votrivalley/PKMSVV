@@ -103,3 +103,11 @@ test('real pixel egg/nest sprites are bundled for solo and Web Egg Rush',()=>{
  assert.match(renderer,/imageSmoothingEnabled=false/);
  assert.match(license,/MIT License/);
 });
+
+test('v1.5 release identity and completed egg gameplay are both packaged',()=>{
+ const pkg=JSON.parse(read('package.json'));
+ assert.equal(pkg.version,'1.5.0');
+ assert.equal(pkg.build.productName,'Pokemon Chuyển sinh');
+ assert.match(read('scripts/prepare-game.cjs'),/patch-v15-eggs\\.cjs/);
+ assert.match(read('scripts/prepare-web.cjs'),/patch-v15-egg-rush-web\\.cjs/);
+});

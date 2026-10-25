@@ -21,7 +21,7 @@ G.PKMSVVSaveUI=(()=>{
    if(!fs||!share)return false;
    await fs.writeFile({path:filename,data:text,encoding:'utf8',directory:'CACHE'});
    const r=await fs.getUri({path:filename,directory:'CACHE'});
-   await share.share({title:'Pokémon Survivor — Save Backup',url:r.uri,dialogTitle:L('Lưu bản sao ở Downloads, Google Drive hoặc gửi sang thiết bị khác','Save a copy to Downloads, Google Drive, or another device')});
+   await share.share({title:'Pokemon Chuyển sinh — Save Backup',url:r.uri,dialogTitle:L('Lưu bản sao ở Downloads, Google Drive hoặc gửi sang thiết bị khác','Save a copy to Downloads, Google Drive, or another device')});
    return true;
  }
  function download(text,filename){
@@ -33,7 +33,7 @@ G.PKMSVVSaveUI=(()=>{
  function validate(text){
    if(typeof text!=='string'||text.length>MAX_BYTES)throw Error('File save quá lớn hoặc không hợp lệ (tối đa 10 MB).');
    const b=JSON.parse(text),s=b&&b.save;
-   if(!b||b.format!=='PKMSVV_SAVE'||b.version!==1||!s||typeof s!=='object'||Array.isArray(s))throw Error('Đây không phải file sao lưu Pokémon Survivor.');
+   if(!b||b.format!=='PKMSVV_SAVE'||b.version!==1||!s||typeof s!=='object'||Array.isArray(s))throw Error('Đây không phải file sao lưu Pokemon Chuyển sinh.');
    if(!s.owned||typeof s.owned!=='object'||!s.stats||typeof s.stats!=='object'||!s.pupg||typeof s.pupg!=='object'||!Number.isFinite(+s.coins))throw Error('File save thiếu dữ liệu hoặc bị hỏng.');
    // Keep only JSON data. No eval, HTML injection, external URL, or code import.
    return JSON.parse(JSON.stringify(s));
@@ -69,7 +69,7 @@ G.PKMSVVSaveUI=(()=>{
    const msg=wrap.querySelector('#'+prefix+'-msg'),file=wrap.querySelector('#'+prefix+'-file');
    wrap.querySelector('#'+prefix+'-export').onclick=async()=>{
      try{
-       const data=backup(),filename='PokemonSurvivor-Save-'+new Date().toISOString().slice(0,10)+'.json';
+       const data=backup(),filename='PokemonChuyenSinh-Save-'+new Date().toISOString().slice(0,10)+'.json';
        if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()){
          if(await shareAndroid(data,filename)){msg.textContent=L('Đã mở trình chia sẻ. Hãy chọn Drive, Downloads hoặc nơi lưu BÊN NGOÀI ứng dụng.','Sharing is open. Choose Drive, Downloads or another location OUTSIDE the app.');return;}
        }

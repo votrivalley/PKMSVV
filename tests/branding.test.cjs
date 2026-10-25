@@ -4,11 +4,12 @@ const base=path.resolve(__dirname,'..'),read=p=>fs.readFileSync(path.join(base,p
 test('Vietnamese game name shown on Windows, Android and entry pages',()=>{
  const pkg=JSON.parse(read('package.json'));
  const cap=JSON.parse(read('capacitor.config.json'));
- assert.equal(pkg.build.productName,'Pokémon Sống Sót');
- assert.equal(cap.appName,'Pokémon Sống Sót');
- assert.match(read('src/web/index.html'),/Pokémon Sống Sót/);
- assert.match(read('desktop/main.cjs'),/title: 'Pokémon Sống Sót — Votri Valley'/);
- assert.match(read('scripts/prepare-game.cjs'),/Pokémon Sống Sót/);
+ assert.equal(pkg.build.productName,'Pokemon Chuyển sinh');
+ assert.equal(cap.appName,'Pokemon Chuyển sinh');
+ assert.equal(pkg.version,'1.5.0');
+ assert.match(read('src/web/index.html'),/Pokemon Chuyển sinh/);
+ assert.match(read('desktop/main.cjs'),/title: 'Pokemon Chuyển sinh — Votri Valley'/);
+ assert.match(read('scripts/prepare-game.cjs'),/Pokemon Chuyển sinh/);
 });
 test('legacy app identity and existing offline saves remain intact',()=>{
  const pkg=JSON.parse(read('package.json'));
@@ -19,10 +20,10 @@ test('legacy app identity and existing offline saves remain intact',()=>{
 });
 test('single shared icon source has no old text and generates web/Windows/Android assets',()=>{
  const svg=read('assets/icon-survivor.svg');
- assert.match(svg,/>SỐNG SÓT<\/text>/);
+ assert.match(svg,/>CHUYỂN SINH<\/text>/);
  assert.doesNotMatch(svg,/>Survivor<\/text>/);
  assert.match(read('scripts/prepare-web.cjs'),/generate-icons.cjs/);
- assert.match(read('scripts/prepare-android.cjs'),/data.name='Pokémon Sống Sót/);
+ assert.match(read('scripts/prepare-android.cjs'),/data.name='Pokemon Chuyển sinh/);
 });
 test('compiled native display keeps original upstream attribution',()=>{
  const p=read('scripts/prepare-game.cjs');

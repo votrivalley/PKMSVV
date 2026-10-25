@@ -22,10 +22,10 @@
  <circle cx="256" cy="240" r="47" fill="#e1f1fc" stroke="#7897b4" stroke-width="8"/>
  <circle cx="256" cy="240" r="30" fill="url(#white)" stroke="#fff" stroke-width="3"/>
 </g>
-<g font-family="DejaVu Sans,Arial,sans-serif" font-weight="1000" font-size="67" letter-spacing="-2" text-anchor="middle">
- <text x="257" y="455" stroke="#020b24" stroke-width="29" stroke-linejoin="round" fill="#020b24">SỐNG SÓT</text>
- <text x="257" y="455" stroke="#edf8ff" stroke-width="21" stroke-linejoin="round" fill="#edf8ff">SỐNG SÓT</text>
- <text x="257" y="455" stroke="#003986" stroke-width="12" stroke-linejoin="round" fill="#003986">SỐNG SÓT</text>
- <text x="257" y="455" fill="url(#gold)">SỐNG SÓT</text>
+<g font-family="DejaVu Sans,Arial,sans-serif" font-weight="1000" font-size="48" letter-spacing="-1" text-anchor="middle">
+ <text x="257" y="455" stroke="#020b24" stroke-width="29" stroke-linejoin="round" fill="#020b24">CHUYỂN SINH</text>
+ <text x="257" y="455" stroke="#edf8ff" stroke-width="21" stroke-linejoin="round" fill="#edf8ff">CHUYỂN SINH</text>
+ <text x="257" y="455" stroke="#003986" stroke-width="12" stroke-linejoin="round" fill="#003986">CHUYỂN SINH</text>
+ <text x="257" y="455" fill="url(#gold)">CHUYỂN SINH</text>
 </g>
 </svg>

@@ -88,13 +88,24 @@ test('v1.5 final UI eliminates circle, duplicate News frame, low menu and blocke
  assert.doesNotMatch(pad,/PKMSVVPadOrb\.bindings\(\)\.reroll/);
 });
 
-test('v1.5 Save tab mounts live backup and restore controls in Settings',()=>{
+test('v1.5 backup opens separate modal after closing Settings',()=>{
  const ui=read('scripts/patch-v15-menu-qa.cjs');
  const save=read('src/pkmsvv-save-ui.js');
- assert.match(ui,/saveTab\.onclick=event=>/);
- assert.match(ui,/saveTab\.dataset\.t='pkmsvv-backup'/);
- assert.match(ui,/G\.PKMSVVSaveUI\.mount\(saveBody,'pkmsvv-settings'\)/);
- assert.match(ui,/saveBody\.replaceChildren\(\)/);
- assert.match(save,/wrap\.querySelector\('#'\+prefix\+'-export'\)\.onclick=/);
- assert.match(save,/wrap\.querySelector\('#'\+prefix\+'-import'\)\.onclick=/);
+ assert.match(ui,/saveTab.onclick=event=>/);
+ assert.match(ui,/G.SettingsUI\\?.close\\?.\\(\\)/);
+ assert.match(ui,/G.PKMSVVSaveUI.openQuick\\(\\)/);
+ assert.doesNotMatch(ui,/G.PKMSVVSaveUI.mount\\(saveBody/);
+ assert.match(save,/modal.id='scr-pkmsvv-save-quick'/);
+ assert.match(save,/wrap.querySelector\\('#'\\+prefix\\+'-export'\\).onclick=/);
+ assert.match(save,/wrap.querySelector\\('#'\\+prefix\\+'-import'\\).onclick=/);
+});
+test('v1.5 renamed runtime retains completed egg gameplay on all platforms',()=>{
+ const patch=read('scripts/patch-v15-menu-qa.cjs');
+ const game=read('scripts/prepare-game.cjs');
+ const web=read('scripts/prepare-web.cjs');
+ assert.match(patch,/Pokemon Chuyển sinh/);
+ assert.match(game,/pkmsvv-changelog-v15\\.js/);
+ assert.match(game,/patch-v15-eggs\\.cjs/);
+ assert.match(web,/patch-v15-egg-rush-web\\.cjs/);
+ assert.match(web,/Có gì mới: 1\\.5/);
 });
