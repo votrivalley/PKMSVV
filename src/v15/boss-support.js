@@ -11,7 +11,7 @@ G.PKMSVVBossSupport=(()=>{
   if(g.dead||b.dead||!pl||pl.dead)return false;
   const role=g.pkmsvvRole;
   if(role==='heal'){
-   const healed=Math.min(Math.max(0,b.maxHp-b.hp),b.maxHp*.0015,
+   const healed=Math.min(Math.max(0,b.maxHp-b.hp),b.maxHp*.0015*(g.pkmsvvScale/.4),
      Math.max(0,b.rd||0)/6*.2);
    if(healed<1)return false;
    b.hp+=healed;
@@ -19,7 +19,7 @@ G.PKMSVVBossSupport=(()=>{
    G.FX?.dmgText?.(b.x,b.y-(b.bodyH||40)-10,'+'+Math.ceil(healed),'#81ffaf');
   }else if(role==='shield'){
    if((b.shieldT||0)>2)return false;
-   const amount=Math.min(b.maxHp*.003,Math.max(0,b.rd||0)/6*.3);
+   const amount=Math.min(b.maxHp*.003*(g.pkmsvvScale/.4),Math.max(0,b.rd||0)/6*.3);
    if(amount<1)return false;
    b.shield=Math.max(b.shield||0,amount);
    b.shieldT=5;
@@ -33,7 +33,7 @@ G.PKMSVVBossSupport=(()=>{
    const dx=pl.x-g.x,dy=pl.y-g.y,dist=Math.hypot(dx,dy);
    if(dist>350)return false;
    const shot=G.Projectiles?.spawn?.({x:g.x,y:g.y-12,vx:160*dx/(dist||1),
-    vy:160*dy/(dist||1),dmg:Math.max(1,Math.round((b.dmg||30)*.09)),
+    vy:160*dy/(dist||1),dmg:Math.max(1,Math.round(g.dmg*.28)),
     r:5,life:1.6,friendly:false,color:'#ffd2a1',mtype:'normal',
     vis:G.VFX?.forType?.('normal')});
    if(shot&&G.Coop?.active&&G.Coop?.isHost)G.Coop?.enemyShot?.(shot,'normal');
@@ -50,19 +50,24 @@ G.PKMSVVBossSupport=(()=>{
   // Weighted 1/2/3 guardians; never exceeds three.
   const roll=Math.random(),n=roll<.5?1:roll<.82?2:3;
   const guards=[];linked.set(boss.id,guards);
-  const hp=Math.max(1,Math.round(boss.maxHp*.30));
   for(let i=0;i<n;i++){
+   const scale=.30+Math.random()*.20;
+   const speedScale=.80+Math.random()*.10;
+   const hp=Math.max(1,Math.round(boss.maxHp*scale));
    const option=POOL[Math.floor(Math.random()*POOL.length)];
    const theta=1+i*2*Math.PI/n;
    const x=boss.x+Math.cos(theta)*55,y=boss.y+Math.sin(theta)*42;
    const mon=G.DEX_BY?.[option.dex];
-   const def={dex:option.dex,name:mon?.name||'Support',hp,spd:75,
-    dmg:Math.max(1,Math.round((boss.dmg||30)*.1)),xp:1,behavior:'chase'};
+   const def={dex:option.dex,name:mon?.name||'Support',hp,spd:Math.max(35,(boss.spd||100)*speedScale),
+    dmg:Math.max(1,Math.round((boss.dmg||30)*scale)),xp:1,behavior:'chase'};
    const g=new G.Enemy(def,x,y,{hp:1,spd:1,dmg:1},false);
    g.maxHp=hp;g.hp=hp;g.boss=false;
    g.pkmsvvBossGuard=true;g.pkmsvvGuardianOf=boss.id;g.pkmsvvRole=option.role;
-   g.pkmsvvAngle=theta;g.pkmsvvRadius=51+i*10;
+   g.pkmsvvScale=scale;g.pkmsvvSpeedScale=speedScale;g.pkmsvvIndex=i;
    g.pkmsvvTime=0;g.pkmsvvCast=option.cd;
+   g.pkmsvvLagX=boss.x;g.pkmsvvLagY=boss.y;
+   g.pkmsvvBossX=boss.x;g.pkmsvvBossY=boss.y;
+   g.pkmsvvDirX=0;g.pkmsvvDirY=1;g.pkmsvvPhase=Math.random()*6.283;
    g.update=function(dt,pl){
     if(this.dead){this.fade-=dt;this.anim?.update?.(dt);return;}
     if(boss.dead||!G.EnemyMgr.get(boss.id)){
@@ -75,13 +80,30 @@ G.PKMSVVBossSupport=(()=>{
     this.flash=Math.max(0,(this.flash||0)-dt);
     this.bob=(this.bob||0)+dt*5;
     if(this.shieldT>0&&(this.shieldT-=dt)<=0)this.shield=0;
-    const a=this.pkmsvvAngle+Math.sin(this.pkmsvvTime*.45)*.2;
-    const tx=boss.x+Math.cos(a)*this.pkmsvvRadius;
-    const ty=boss.y+Math.sin(a)*this.pkmsvvRadius*.78;
+    const mdx=boss.x-this.pkmsvvBossX,mdy=boss.y-this.pkmsvvBossY;
+    const travel=Math.hypot(mdx,mdy);
+    if(travel>3){this.pkmsvvDirX=mdx/travel;this.pkmsvvDirY=mdy/travel;}
+    this.pkmsvvBossX=boss.x;this.pkmsvvBossY=boss.y;
+    const k=Math.min(1,dt*2.5);
+    this.pkmsvvLagX+=(boss.x-this.pkmsvvLagX)*k;
+    this.pkmsvvLagY+=(boss.y-this.pkmsvvLagY)*k;
+    const behind=48+this.pkmsvvIndex*8;
+    const lane=(this.pkmsvvIndex-(n-1)/2)*43;
+    const side=-this.pkmsvvDirY,sy=this.pkmsvvDirX;
+    let tx=this.pkmsvvLagX-this.pkmsvvDirX*behind+side*lane+
+      Math.sin(this.pkmsvvTime*.65+this.pkmsvvPhase)*6;
+    let ty=this.pkmsvvLagY-this.pkmsvvDirY*behind+sy*lane+
+      Math.cos(this.pkmsvvTime*.53+this.pkmsvvPhase)*5;
+    for(const other of guards){
+     if(other===this||other.dead)continue;
+     const sx=this.x-other.x,sy=this.y-other.y,sep=Math.hypot(sx,sy);
+     if(sep<35&&sep>.01){tx+=sx/sep*(35-sep)*.75;ty+=sy/sep*(35-sep)*.75;}
+    }
     const dx=tx-this.x,dy=ty-this.y,d=Math.hypot(dx,dy);
-    if(d>460){this.x=tx;this.y=ty;}
-    else if(d>3){
-     const step=Math.min(d,Math.max(0,dt)*105);
+    if(d>520){this.x=tx;this.y=ty;}
+    else if(d>4){
+     const pace=Math.max(40,this.spd)*(d>110?1.3:1);
+     const step=Math.min(d,Math.max(0,dt)*pace);
      const nx=this.x+dx/d*step,ny=this.y+dy/d*step;
      if(!G.World?.isFree||G.World.isFree(nx,ny,8)){this.x=nx;this.y=ny;}
      else if(G.World.isFree(nx,this.y,8))this.x=nx;
@@ -93,15 +115,7 @@ G.PKMSVVBossSupport=(()=>{
     this.pkmsvvCast-=dt;
     if(this.pkmsvvCast<=0)this.pkmsvvCast=cast(this,boss,pl)?option.cd:.75;
    };
-   const baseDraw=g.draw;
-   g.draw=function(ctx){
-    baseDraw.call(this,ctx);
-    if(this.dead)return;
-    const pct=Math.max(0,Math.min(1,this.hp/this.maxHp));
-    const y=this.y-(this.bodyH||35)-14;
-    ctx.fillStyle='#13202a';ctx.fillRect(this.x-22,y,44,7);
-    ctx.fillStyle='#ff7eaa';ctx.fillRect(this.x-20,y+2,40*pct,3);
-   };
+   // Default Enemy.draw already draws a subtle HP bar only when damaged.
    G.EnemyMgr.add(g);guards.push(g);
    G.FX?.ring?.(g.x,g.y,5,38,'#ffb0d8',.4,2);
   }
