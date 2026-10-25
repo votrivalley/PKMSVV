@@ -46,3 +46,20 @@ test('Vietnamese online modes use Sống Sót for coop and Sống Còn for royal
  assert.match(ui,/create\('royale'/);
  assert.doesNotMatch(hub,/Ghép Co-op|Ghép Sinh tồn/);
 });
+
+test('v1.5 Egg Rush online creates 4-seat rooms and is permitted by Firebase rules',()=>{
+ const r=JSON.parse(read('firebase/database.rules.json')).rules;
+ const validator=r.publicRooms['$room']['.validate'];
+ assert.match(validator,/eggrush/);
+ assert.match(validator,/\? 4 : 10/);
+ const src=read('scripts/patch-v15-egg-rush-web.cjs');
+ const ui=read('src/web/pkmsvv-multiplayer-ui.js');
+ const game=read('src/web/pkmsvv-egg-rush.js');
+ assert.match(src,/room.mode==='eggrush'\?4:2/);
+ assert.match(src,/pkmsvv-quick-eggrush/);
+ assert.match(ui,/create\('eggrush'/);
+ assert.match(ui,/quick\('eggrush'/);
+ assert.match(game,/MAX=10,MAX_TIME=720/);
+ assert.match(game,/wave<5/);
+ assert.match(game,/G\.Coop\.broadcast/);
+});
