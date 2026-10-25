@@ -27,6 +27,12 @@ patch('js/game.js',
 patch('js/game.js',
  '    G.Pickups.draw(ctx);',
  '    G.Pickups.draw(ctx);\n    G.PKMSVVEggs.draw(ctx);');
+// Follower entities share the exact same depth-sorted layer as Pokémon and
+// map props. This keeps healing circles/flat props behind their sprites.
+patch('js/game.js',
+ '    for (const e of extra) items.push({ y: e.y, ent: e });',
+ '    for (const e of extra) items.push({ y: e.y, ent: e });\n'+
+ '    if(state!==\'ui\')for(const e of G.PKMSVVEggs?.drawables?.(cam)||[])items.push({y:e.y,ent:e});');
 patch('js/game.js',
  '    G.Judgment.drawOverlay(ctx, w, h);',
  '    G.Judgment.drawOverlay(ctx, w, h);\n    G.PKMSVVEggs.hud(ctx,w,h);');

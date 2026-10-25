@@ -37,14 +37,14 @@ G.PKMSVVUpgradeChooser=(()=>{
   toggle.append(symbol,title);
   const intro=document.createElement('p');
   intro.textContent=t(
-   'Mở khóa ở Chương 3. Đứng cạnh ổ trứng 8 giây để lấy; mỗi đòn mất máu khi ấp cộng 3 giây. Trứng đang ấp cũng chiếm một ô đồng hành.',
-   'Unlocked in Chapter 3. Stay near a nest for 8 seconds to collect; taking HP damage adds 3 seconds to incubation. Incubating eggs also occupy a slot.');
+   'Mở khóa ở Chương 3. Đứng cạnh ổ trứng 4 giây để lấy; mỗi đòn mất máu khi ấp cộng 3 giây. Không có ổ trứng trong Khe Nứt.',
+   'Unlocked in Chapter 3. Collect an egg in 4 seconds; HP damage adds 3 seconds to incubation. Nests never spawn in rifts.');
   body.append(intro);
   const rules=document.createElement('div');rules.className='pkmsvv-support-rule-grid';
   for(const [vi,eng] of [
    ['Thông thường: 50–80% chỉ số Pokémon chính','Regular: 50–80% of your lead Pokémon stats'],
    ['Shiny: 3% khi nở · 100% chỉ số · chỉ tồn tại trong trận','Shiny: 3% per hatch · 100% stats · run only'],
-   ['Giới hạn 2 ô, có thể mở ô thứ 3. Đầy ô sẽ ngừng xuất hiện trứng.','Two slots, with a third unlockable. Full slots stop new nests.'],
+   ['Ban đầu 1 ô, mở tối đa 2 ô sau thử thách cuối Chương 3. Trứng đang ấp cũng chiếm ô.','Start with 1 slot; finish the Chapter 3 egg challenge to unlock a second. Incubating eggs also occupy a slot.'],
    ['Hỗ trợ có HP riêng và có thể bị hạ; hạ gục sẽ giải phóng ô.','Supports have HP and can faint, releasing their slot.']
   ]){
    const row=document.createElement('div');row.textContent=t(vi,eng);rules.append(row);
@@ -76,8 +76,8 @@ G.PKMSVVUpgradeChooser=(()=>{
   body.append(list);
   const boss=document.createElement('p');boss.className='pkmsvv-support-boss-note';
   boss.textContent=t(
-   'Boss (sau khi mở Chương 3) có thể đi cùng 1–3 Pokémon hộ vệ, mỗi bé có HP bằng 30% HP tối đa của boss. Hạ boss thì hộ vệ biến mất.',
-   'After Chapter 3, bosses may have 1–3 guards, each with HP equal to 30% of the boss’s maximum HP. Guards disappear when the boss falls.');
+   'Boss (sau khi mở Chương 3) có thể có 1–3 Pokémon hộ vệ với 30–50% HP của boss. Hộ vệ biến mất khi boss bị hạ.',
+   'After Chapter 3, bosses may have 1–3 guards with 30–50% boss HP. Guards disappear when their boss falls.');
   body.append(boss);
   panel.append(toggle,body);renderSymbol();
   $('pkmsvv-upgrade-back').textContent=t('Trở về','Back');
