@@ -38,9 +38,11 @@ patch('js/core/gamepad.js',
 patch('js/core/gamepad.js',
  "      if (hit(BT.START)) {",
  "      if (hit(G.PKMSVVPadOrb.bindings().pause)) {");
+// Y / △ is for using an Orb in a run. Do not advertise or remap
+// a duplicate "Đổi thẻ" action (skill cards are chosen directly).
 patch('js/core/gamepad.js',
  "      if (hit(BT.Y)) G.Input.virtual('keyr');",
- "      if (hit(G.PKMSVVPadOrb.bindings().reroll)) G.Input.virtual('keyr');");
+ "      // Orb remains available on Y in the run; menu needs no extra card-cycle button.");
 patch('js/core/gamepad.js',
  "      if (hit(BT.START) || hit(BT.BACK)) G.Input.virtual('escape');",
  "      if (hit(G.PKMSVVPadOrb.bindings().pause) || hit(BT.BACK)) G.Input.virtual('escape');");
