@@ -1,82 +1,133 @@
-/* Pokemon Chuyển sinh — dedicated Pokémon support encyclopedia inside Pokédex.
- * Hatched-per-species friendship is saved in DB.pkmsvvSupportBond, not collection.
+/* Pokémon Chuyển sinh — Support Pokédex in Upgrades.
+ * Uses exactly the main Pokédex renderer: owned sprites in color, others silhouette.
+ * Support discoveries are separate from owned / Shiny player Pokémon.
  */
 G.PKMSVVSupportCatalog=(()=>{
  const $=id=>document.getElementById(id);
  const t=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  const roles={
-  attack:['Tấn công','Attack','Tấn công quái gần nhất.','Hits the nearest enemy.'],
-  heal:['Hồi máu','Healing','Hồi HP cho người chơi hoặc support.','Heals the player or a companion.'],
-  shield:['Tạo khiên','Shield','Tăng khiên để hấp thụ sát thương.','Grants a damage-absorbing shield.'],
-  magnet:['Hút vật phẩm','Magnet','Kéo vật phẩm lại gần.','Pulls pickups toward the player.'],
-  slow:['Làm chậm','Slow','Làm chậm quái và báo hiệu trên mục tiêu.','Slows enemies with visual feedback.'],
-  ditto:['Biến hình 7s / hồi 3s','Transform 7s / rest 3s','Biến thành Pokémon chính trong 7 giây, sử dụng tối đa 3 chiêu sao chép. Trở lại Ditto và hồi 3 giây trước khi lặp lại.','Copies up to three moves and transforms for 7 seconds, then returns to Ditto and rests 3 seconds before repeating.'],
-  mew:['AOE ngẫu nhiên','Random AOE','Tung AOE ngẫu nhiên mỗi 1 giây.','Casts a random area attack every 1 second.']
+  attack:['Tấn công','Attack','Tấn công đối thủ gần nhất.','Attacks the nearest enemy.'],
+  heal:['Hồi phục','Healing','Chữa trị cho đồng đội đang bị thương.','Heals injured teammates.'],
+  shield:['Bảo vệ','Shield','Tạo một lớp khiên bảo vệ đồng đội.','Creates a shield to protect the team.'],
+  magnet:['Thu hút','Magnet','Thu hút vật phẩm trong tầm.','Attracts nearby pickups.'],
+  slow:['Làm chậm','Slow','Làm chậm những kẻ địch ở gần.','Slows nearby enemies.'],
+  ditto:['Biến hình','Transform','Biến thành Pokémon chính và sao chép kỹ năng, sau đó trở lại Ditto để hồi sức.','Copies your lead Pokémon and its moves, then returns to Ditto to recover.'],
+  mew:['Sức mạnh tâm linh','Psychic Burst','Liên tục sử dụng đòn đánh diện rộng ngẫu nhiên.','Continuously casts random area attacks.']
  };
- function level(percent){return percent>=100?5:percent>=80?4:percent>=60?3:percent>=40?2:percent>=20?1:0;}
- const pc=v=>(100*v).toFixed(0)+'%';
+ const rarity=dex=>Number(dex)===151?['Siêu hiếm','Super Rare']:Number(dex)===132?['Hiếm','Rare']:['Thường','Common'];
+ const seen=dex=>G.PKMSVVEggs?.affinityFor?.(dex)>0;
+ const shinySeen=dex=>!!G.DB?.save?.pkmsvvSupportShiny?.[dex]&&seen(dex);
+ let selected=null,showShiny=false;
+ function close(){const box=$('pkmsvv-support-catalog');if(box)box.hidden=true;}
  function ensure(){
+  const back=$('pkmsvv-upgrade-back');
+  if(back&&!$('pkmsvv-support-entry')){
+   const button=document.createElement('button');
+   button.type='button';button.id='pkmsvv-support-entry';
+   button.className='btn small pkmsvv-support-entry-btn';
+   button.textContent=t('✦ Pokémon hỗ trợ','✦ Support Pokémon');
+   button.addEventListener('click',open);
+   back.parentElement.insertBefore(button,back);
+  }
   if($('pkmsvv-support-catalog'))return;
-  const host=$('scr-dex');if(!host)return;
-  const header=host.querySelector('.box .row.between');
-  if(!header)return;
-  const btn=document.createElement('button');
-  btn.id='pkmsvv-support-entry';btn.type='button';
-  btn.className='btn pkmsvv-support-entry-btn';
-  btn.textContent=t('✦ Pokémon hỗ trợ','✦ Support Pokémon');
-  btn.addEventListener('click',open);
-  header.insertBefore(btn,header.lastElementChild);
-  const overlay=document.createElement('div');
-  overlay.id='pkmsvv-support-catalog';overlay.className='pkmsvv-support-overlay';
-  overlay.hidden=true;
+  const wrap=document.createElement('div');
+  wrap.id='pkmsvv-support-catalog';wrap.className='pkmsvv-support-overlay';wrap.hidden=true;
   const frame=document.createElement('div');frame.className='pkmsvv-support-modal';
   const head=document.createElement('div');head.className='pkmsvv-support-modal-head';
   const title=document.createElement('h2');title.id='pkmsvv-support-heading';
-  const close=document.createElement('button');close.type='button';
-  close.className='btn small ghost';close.textContent=t('Đóng','Close');
-  close.addEventListener('click',()=>overlay.hidden=true);
-  head.append(title,close);
+  const x=document.createElement('button');x.type='button';x.className='btn small ghost';
+  x.textContent=t('Đóng','Close');x.addEventListener('click',close);
+  head.append(title,x);
   const intro=document.createElement('p');intro.id='pkmsvv-support-description';
+  const split=document.createElement('div');split.className='pkmsvv-support-layout';
   const grid=document.createElement('div');grid.id='pkmsvv-support-entries';
-  frame.append(head,intro,grid);overlay.append(frame);
-  overlay.addEventListener('click',event=>{if(event.target===overlay)overlay.hidden=true;});
-  document.body.append(overlay);
+  const detail=document.createElement('div');detail.id='pkmsvv-support-detail';
+  split.append(grid,detail);frame.append(head,intro,split);wrap.append(frame);
+  wrap.addEventListener('click',e=>{if(e.target===wrap)close();});
+  document.body.append(wrap);
+ }
+ function renderDetails(){
+  const area=$('pkmsvv-support-detail');if(!area)return;
+  area.replaceChildren();
+  const m=(G.PKMSVVEggs?.SPECIES||[]).find(x=>x.dex===selected);
+  if(!m)return;
+  const owned=seen(m.dex),shinyUnlocked=shinySeen(m.dex);
+  if(!shinyUnlocked)showShiny=false;
+  const title=document.createElement('h3');
+  title.textContent=owned?(G.DEX_BY?.[m.dex]?.name||'Pokémon'):'???';
+  const rar=document.createElement('span');rar.className='pkmsvv-support-rarity '+(m.dex===151?'super':m.dex===132?'rare':'common');
+  rar.textContent=t(...rarity(m.dex));
+  const art=document.createElement('canvas');
+  art.width=220;art.height=185;art.className='stage pkmsvv-support-stage';
+  art.style.setProperty('--stage-c',owned?'#367b87':'#304553');
+  area.append(title,rar,art);
+  // Exactly the same sprite painter, scaling and silhouette logic as Pokédex.
+  G.UI?.sprite?.(art,m.dex,{
+   lively:owned,spin:owned,silhouette:!owned,scale:3,hero:true,
+   shiny:owned&&showShiny&&shinyUnlocked
+  });
+  if(shinyUnlocked){
+   const tabs=document.createElement('div');tabs.className='pkmsvv-support-shiny-tabs';
+   for(const variant of [false,true]){
+    const b=document.createElement('button');b.type='button';
+    b.className='btn small'+(showShiny===variant?' on':'');
+    b.textContent=variant?'✦ Shiny':t('Thường','Normal');
+    b.addEventListener('click',()=>{showShiny=variant;renderDetails();renderGrid();});
+    tabs.append(b);
+   }
+   area.append(tabs);
+  }
+  if(!owned){
+   const lock=document.createElement('p');lock.className='pkmsvv-support-locked-note';
+   lock.textContent=t('Chưa khám phá — hãy ấp nở Pokémon này để mở khóa.','Undiscovered — hatch this Pokémon to reveal it.');
+   area.append(lock);return;
+  }
+  const skill=document.createElement('h4');skill.textContent=t(...roles[m.role].slice(0,2));
+  const description=document.createElement('p');description.textContent=t(...roles[m.role].slice(2,4));
+  const bond=document.createElement('div');bond.className='pkmsvv-support-bond';
+  const label=document.createElement('strong');label.textContent=t('Thân thiết','Friendship');
+  const track=document.createElement('div');track.className='pkmsvv-bond-track';
+  const fill=document.createElement('div');fill.style.width=G.PKMSVVEggs.affinityPercent(m.dex)+'%';
+  track.append(fill);bond.append(label,track);
+  if(G.PKMSVVEggs.maxAffinity(m.dex)){
+   const max=document.createElement('small');max.className='pkmsvv-support-bond-max';
+   max.textContent=t('Thân thiết tối đa ★','Maximum friendship ★');bond.append(max);
+  }
+  area.append(skill,description,bond);
+ }
+ function renderGrid(){
+  const grid=$('pkmsvv-support-entries');if(!grid)return;
+  grid.replaceChildren();
+  for(const mon of G.PKMSVVEggs?.SPECIES||[]){
+   const owned=seen(mon.dex);
+   const cell=document.createElement('button');cell.type='button';
+   cell.className='pkmsvv-support-cell'+(owned?'':' locked')+(selected===mon.dex?' on':'');
+   cell.setAttribute('aria-label',t('Pokémon hỗ trợ','Support Pokémon')+' #'+mon.dex);
+   const badge=document.createElement('span');
+   badge.className='pkmsvv-support-rarity '+(mon.dex===151?'super':mon.dex===132?'rare':'common');
+   badge.textContent=t(...rarity(mon.dex));
+   const sprite=G.UI?.spriteCanvas?.(mon.dex,92,80,{
+    scale:2,silhouette:!owned,shadow:owned,shiny:owned&&showShiny&&shinySeen(mon.dex)
+   });
+   if(sprite)cell.append(sprite);
+   const name=document.createElement('strong');name.textContent=owned?(G.DEX_BY?.[mon.dex]?.name||'Pokémon'):'???';
+   cell.append(name,badge);
+   cell.addEventListener('click',()=>{selected=mon.dex;showShiny=false;renderGrid();renderDetails();});
+   grid.append(cell);
+  }
  }
  function open(){
   ensure();const wrap=$('pkmsvv-support-catalog');if(!wrap)return;
+  const entry=$('pkmsvv-support-entry');if(entry)entry.textContent=t('✦ Pokémon hỗ trợ','✦ Support Pokémon');
   $('pkmsvv-support-heading').textContent=t('✦ Pokémon hỗ trợ','✦ Support Pokémon');
   $('pkmsvv-support-description').textContent=t(
-   'Thân thiết tăng theo số lần nở: thường 100 lần, Ditto 50, Mew 25 = 100%. Khi tối đa, Shiny x2; Ditto/Mew còn x2 tỷ lệ ra loài. Shiny chỉ tồn tại trong trận.',
-   'Friendship tracks hatch counts: normal 100, Ditto 50, Mew 25 = 100%. Maximum bond doubles Shiny odds and also doubles Ditto/Mew hatch odds. Shiny is run-only.');
-  const grid=$('pkmsvv-support-entries');grid.replaceChildren();
-  const species=G.PKMSVVEggs?.SPECIES||[];
-  for(const mon of species){
-   const n=G.PKMSVVEggs.affinityFor(mon.dex),percent=G.PKMSVVEggs.affinityPercent(mon.dex),goal=G.PKMSVVEggs.affinityGoal(mon.dex),lv=level(percent);
-   const card=document.createElement('article');card.className='pkmsvv-bond-card';
-   const top=document.createElement('div');top.className='pkmsvv-bond-card-top';
-   const name=document.createElement('strong');
-   name.textContent=(G.DEX_BY?.[mon.dex]?.name||'Pokémon')+'  #'+mon.dex;
-   const tag=document.createElement('span');tag.className='pkmsvv-bond-role';
-   tag.textContent=t(roles[mon.role]?.[0]||mon.role,roles[mon.role]?.[1]||mon.role);
-   top.append(name,tag);card.append(top);
-   const skill=document.createElement('p');
-   skill.textContent=t(roles[mon.role]?.[2]||'',roles[mon.role]?.[3]||'')+
-     ' · '+t('Hồi chiêu','Cooldown')+': '+mon.period+'s';
-   const stat=document.createElement('p');stat.className='pkmsvv-bond-stats';
-   stat.textContent=t('Thân thiết','Friendship')+' '+percent+'% · '+Math.min(n,goal)+'/'+goal+
-    ' '+t('lần gặp','hatches')+' · '+t('Kỹ năng','Skill')+' +'+Math.round((G.PKMSVVEggs.affinityMultiplier(mon.dex)-1)*100)+'%';
-   const odds=document.createElement('p');odds.className='pkmsvv-bond-odds';
-   const shiny=pc(G.PKMSVVEggs.shinyChanceFor(mon.dex));
-   const rare=G.PKMSVVEggs.speciesChanceFor(mon.dex);
-   odds.textContent=t('Tỷ lệ Shiny','Shiny odds')+': '+shiny+
-    (rare?' · '+t('Tỷ lệ nở','Hatch chance')+': '+pc(rare):'');
-   const track=document.createElement('div');track.className='pkmsvv-bond-track';
-   const fill=document.createElement('div');fill.style.width=percent+'%';track.append(fill);
-   card.append(skill,stat,odds,track);grid.append(card);
-  }
-  wrap.hidden=false;
+   'Khám phá Pokémon hỗ trợ bằng cách ấp trứng. Pokémon chưa khám phá sẽ ẩn màu; khi tìm được Shiny mới mở lựa chọn Thường / Shiny.',
+   'Discover companions by hatching eggs. Undiscovered Pokémon stay silhouetted; Normal / Shiny is available only after discovering a Shiny.');
+  const list=G.PKMSVVEggs?.SPECIES||[];
+  if(!list.some(x=>x.dex===selected))selected=list[0]?.dex||null;
+  showShiny=false;renderGrid();renderDetails();wrap.hidden=false;
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ensure,{once:true});
  else ensure();
- return {open,level,ensure};
+ return {open,close,ensure,rarity,shinySeen};
 })();
