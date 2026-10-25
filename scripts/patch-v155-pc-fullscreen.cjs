@@ -8,5 +8,5 @@ const entry=path.join(game,'dev.html'),s=fs.readFileSync(entry,'utf8');
 const anchor='<script defer src="js/main.js"></script>';
 if(s.split(anchor).length!==2)throw Error('PC fullscreen entry anchor changed');
 fs.writeFileSync(entry,s.replace(anchor,
- '<script defer src="js/ui/pkmsvv-pc-fullscreen.js"></script>\\n'+anchor),'utf8');
+ '<script defer src="js/ui/pkmsvv-pc-fullscreen.js"></script>\n'+anchor),'utf8');
 console.log('PKMSVV: native fullscreen restore exposed inside pause + graphics only on Electron PC.');

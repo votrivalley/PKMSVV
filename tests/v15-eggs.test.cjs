@@ -136,7 +136,7 @@ test('Igglybuff support slows targets and emits target/support VFX only on succe
 test('egg direction indicator, reverse timer bars, sprite walking and shield-safe damage hook are bundled',()=>{
  const src=read('src/v15/eggs.js');
  assert.match(src,/function arrow\(ctx,w,h\)/);
- assert.match(src,/ctx\.fillRect\(x-width\/2,y,width\*ratio,10\)/);
+ assert.match(src,/ctx\.fillRect\(x-width\/2,y,width\*ratio,2\)/);
  assert.match(src,/follow\(it,j,pl,dt\)/);
  assert.match(src,/it\.anim\.loop\(move\?'Walk':'Idle'\)/);
  assert.match(src,/it\.penalty=\(it\.penalty\|\|0\)\+3/);
@@ -335,7 +335,7 @@ test('egg collection and incubation use only a thin white shrinking line',()=>{
  const bar=code.slice(code.indexOf(' function bar(ctx,'),code.indexOf(' function draw(ctx){'));
  assert.match(bar,/ctx\.fillStyle='#ffffff'/);
  assert.match(bar,/ctx\.fillRect\(x-width\/2,y,width\*ratio,2\)/);
- assert.doesNotMatch(bar,/strokeRect|strokeText|fillText|label|background|shadow/);
+ assert.doesNotMatch(bar.split('\n').filter(line=>!line.trim().startsWith('//')).join('\n'),/strokeRect|strokeText|fillText|label|background|shadow/);
  assert.ok(code.includes('bar(ctx,n.x,n.y-34,48,'));
  assert.ok(code.includes('bar(ctx,it.x,it.y-31,42,'));
  assert.ok(!code.includes("tr('Giữ 8 giây'"));
