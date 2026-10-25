@@ -131,16 +131,17 @@ test('desktop nav bottom aligns with left cards without legacy 32px cap',()=>{
  assert.match(src,/min-width: 1000px/);
 });
 
-test('Support encyclopedia is a highlighted entry within Pokémon menu',()=>{
+test('Support encyclopedia lives beside Upgrade Back, not in main Pokémon menu',()=>{
  const s=read('src/pkmsvv-support-catalog.js'),css=read('src/pkmsvv-retro-theme.css');
  const patch=read('scripts/patch-v15-eggs.cjs');
- assert.match(s,/scr-dex/);
+ assert.match(s,/pkmsvv-upgrade-back/);
+ assert.match(s,/back\\.parentElement\\.insertBefore\\(button,back\\)/);
+ assert.doesNotMatch(s,/getElementById\\('scr-dex'\\)/);
  assert.match(s,/pkmsvv-support-entry/);
- assert.match(s,/pkmsvvSupportBond/);
- assert.match(s,/affinityMultiplier/);
- assert.match(s,/each additional hatch|Each additional hatch/);
+ assert.match(s,/pkmsvvSupportShiny/);
  assert.match(css,/pkmsvv-support-entry-btn/);
- assert.match(patch,/pkmsvv-support-catalog\.js/);
+ assert.match(css,/pkmsvv-support-cell\\.locked canvas/);
+ assert.match(patch,/pkmsvv-support-catalog\\.js/);
 });
 test('Memories contains chapter replay buttons, but no Mystery Orb guide button',()=>{
  const src=read('src/pkmsvv-story.js');

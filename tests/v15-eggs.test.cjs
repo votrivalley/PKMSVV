@@ -169,7 +169,7 @@ test('real pixel egg/nest sprites are bundled for solo and Web Egg Rush',()=>{
 
 test('v1.5 release identity and completed egg gameplay are both packaged',()=>{
  const pkg=JSON.parse(read('package.json'));
- assert.equal(pkg.version,'1.5.9');
+ assert.equal(pkg.version,'1.5.10');
  assert.equal(pkg.build.productName,'Pokemon Chuyển sinh');
  assert.ok(read('scripts/prepare-game.cjs').includes('patch-v15-eggs.cjs'));
  assert.ok(read('scripts/prepare-web.cjs').includes('patch-v15-egg-rush-web.cjs'));
@@ -211,8 +211,10 @@ test('3% Shiny support exists only within run at 100% of main Pokemon stats; nor
  assert.equal(shiny.it.spd,140);
  assert.equal(shiny.it.anim.shiny,true);
  assert.deepEqual(shiny.save.shiny,{},'Do not unlock permanent Shiny collection entries');
+ assert.equal(shiny.save.pkmsvvSupportShiny?.[172],true,'A hatched Shiny companion unlocks only its support variant');
  const regular=makeRoll(.03);
  assert.equal(regular.it.shiny,false,'Exactly .03 is outside the 3% range');
+ assert.equal(regular.save.pkmsvvSupportShiny?.[172],undefined);
  assert.equal(regular.it.statScale,.65);
  assert.equal(regular.it.maxHp,104);
  assert.equal(regular.it.atk,52);
@@ -491,7 +493,7 @@ test('Friendship goals and maximum bonuses are species-specific; no early double
  const G={DB:{save:{pkmsvvSupportBond:{}}}};
  vm.runInNewContext(read('src/v15/eggs.js'),{G,Math,Number,Object});
  const e=G.PKMSVVEggs;
- for(const [dex,goal,baseShiny] of [[172,100,.03],[132,50,.08],[151,25,.04]]){
+ for(const [dex,goal,baseShiny] of [[172,100,.03],[132,50,.10],[151,25,.10]]){
   assert.equal(e.affinityGoal(dex),goal);
   assert.equal(e.affinityFor(dex),0);
   assert.equal(e.affinityPercent(dex),0);
@@ -507,8 +509,8 @@ test('Friendship goals and maximum bonuses are species-specific; no early double
  }
  assert.equal(e.speciesChanceFor(132),.16);
  assert.equal(e.speciesChanceFor(151),.08);
- assert.equal(e.shinyChanceFor(132),.16);
- assert.equal(e.shinyChanceFor(151),.08);
+ assert.equal(e.shinyChanceFor(132),.20);
+ assert.equal(e.shinyChanceFor(151),.20);
  assert.equal(e.shinyChanceFor(172),.06);
  assert.equal(e.affinityMultiplier(151),1.3);
 });
@@ -568,11 +570,33 @@ test('Ditto cycles seven seconds transformed and three seconds resting, no casts
  assert.ok(casts>before,'Casts resume when the 7-second transformed phase restarts');
 });
 
-test('Support catalog displays friendship percentage, encounter goals and current rarity odds',()=>{
- const s=read('src/pkmsvv-support-catalog.js');
- assert.match(s,/affinityPercent\(mon.dex\)/);
- assert.match(s,/affinityGoal\(mon.dex\)/);
- assert.match(s,/shinyChanceFor\(mon.dex\)/);
- assert.match(s,/speciesChanceFor\(mon.dex\)/);
- assert.match(s,/percent\+'%'/);
+test('Companion catalog shows actual Pokémon sprites and rarity labels without numerical odds',()=>{
+ const code=read('src/pkmsvv-support-catalog.js');
+ assert.match(code,/G\\.UI\\?\\.spriteCanvas\\?\\./);
+ assert.match(code,/G\\.UI\\?\\.sprite\\?\\./);
+ assert.match(code,/silhouette:!owned/);
+ assert.match(code,/scr-upgrade-select|pkmsvv-upgrade-back/);
+ assert.match(code,/Thường/);
+ assert.match(code,/Hiếm/);
+ assert.match(code,/Siêu hiếm/);
+ assert.match(code,/if\\(shinyUnlocked\\)/);
+ assert.doesNotMatch(code,/shinyChanceFor|speciesChanceFor|Shiny odds|Hatch chance|Tỷ lệ Shiny|Tỷ lệ nở/);
+});
+
+test('Support Shiny is discovered only after hatch and its tab cannot unlock prematurely',()=>{
+ const save={pkmsvvSupportBond:{},pkmsvvSupportShiny:{}};
+ const doc={readyState:'loading',addEventListener(){}};
+ const G={I18n:{lang:'vi'},DB:{save},
+  PKMSVVEggs:{affinityFor:d=>Number(save.pkmsvvSupportBond[d])||0}};
+ vm.runInNewContext(read('src/pkmsvv-support-catalog.js'),{G,document:doc});
+ assert.equal(G.PKMSVVSupportCatalog.shinySeen(132),false);
+ save.pkmsvvSupportShiny[132]=true;
+ assert.equal(G.PKMSVVSupportCatalog.shinySeen(132),false,'Shiny variant cannot display before the species is discovered');
+ save.pkmsvvSupportBond[132]=1;
+ assert.equal(G.PKMSVVSupportCatalog.shinySeen(132),true);
+ assert.equal(G.PKMSVVSupportCatalog.shinySeen(151),false);
+ assert.equal(G.PKMSVVSupportCatalog.rarity(132)[0],'Hiếm');
+ assert.equal(G.PKMSVVSupportCatalog.rarity(151)[0],'Siêu hiếm');
+ assert.equal(G.PKMSVVSupportCatalog.rarity(172)[0],'Thường');
+ assert.ok(read('scripts/patch-v15-eggs.cjs').includes('older.pkmsvvSupportShiny'));
 });
