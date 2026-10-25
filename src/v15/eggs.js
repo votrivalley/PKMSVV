@@ -2,12 +2,12 @@
    Species and Shiny have independent chances, with rewards for max friendship. */
 G.PKMSVVEggs=(()=>{
  const SPECIES=[
-  {dex:172,role:'attack',period:3.3,power:9}, // Pichu
+  {dex:172,role:'paralyze',period:10,power:1.1}, // Pichu — actual stun, not damage or slowdown
   {dex:447,role:'attack',period:4.3,power:16}, // Riolu
-  {dex:173,role:'heal',period:11,power:.045}, // Cleffa
-  {dex:35,role:'heal',period:14,power:.08}, // Clefairy
-  {dex:360,role:'shield',period:17,power:.12}, // Wynaut
-  {dex:438,role:'shield',period:12,power:.065}, // Bonsly
+  {dex:173,role:'heal',period:12,power:.035}, // Cleffa
+  {dex:35,role:'heal',period:16,power:.06}, // Clefairy
+  {dex:360,role:'shield',period:19,power:.09}, // Wynaut
+  {dex:438,role:'shield',period:15,power:.05}, // Bonsly
   {dex:175,role:'magnet',period:12,power:18}, // Togepi
   {dex:174,role:'slow',period:9,power:.32}, // Igglybuff
   {dex:132,role:'ditto',period:1,power:1}, // Ditto 8%
@@ -19,7 +19,7 @@ G.PKMSVVEggs=(()=>{
  const SHINY_CHANCE=.03, MIN_STAT=.5, MAX_STAT=.8, HIT_COOLDOWN=1.25;
  const DITTO_FORM=7,DITTO_REST=3;
  const SUPPORT_VISUAL_SCALE=.6, NEST_VISUAL_SCALE=.8;
- const FX_COLOR={attack:'#ffd472',heal:'#66ffad',shield:'#6edaff',magnet:'#ffe078',slow:'#e99aff'};
+ const FX_COLOR={attack:'#ffd472',heal:'#66ffad',shield:'#6edaff',magnet:'#ffe078',slow:'#e99aff',paralyze:'#ffdb55'};
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  let player=null,items=[],nests=[],trail=[],spawnAt=55,seq=0,kills=0,lv=1,runTime=0,lastDir={x:0,y:1},wasInArena=false;
  // New teams start with one slot. Finishing the Chapter 3 egg quest grants slot two.
@@ -34,7 +34,7 @@ G.PKMSVVEggs=(()=>{
  const support=()=>items.filter(x=>x.hatched&&x.active&&x.hp>0);
  const occupied=()=>items.filter(x=>!x.hatched||(x.active&&x.hp>0)).length;
  const vacancy=()=>Math.max(0,limit()-occupied());
- function roleName(s){return {attack:tr('Tấn công','Attack'),heal:tr('Hồi phục','Healing'),shield:tr('Tạo khiên','Shield'),magnet:tr('Hút vật phẩm','Magnet'),slow:tr('Làm chậm','Slow')}[s.role]||s.role;}
+ function roleName(s){return {attack:tr('Tấn công','Attack'),heal:tr('Hồi phục','Healing'),shield:tr('Tạo khiên','Shield'),magnet:tr('Hút vật phẩm','Magnet'),slow:tr('Làm chậm','Slow'),paralyze:tr('Tê liệt','Paralysis')}[s.role]||s.role;}
  function nestSpawn(){
   if(!player||G.Rift?.inArena||nests.length>=1||vacancy()<=nests.length)return false;
   // At least one FULL camera diagonal from the player, plus a safety margin.
@@ -289,6 +289,49 @@ G.PKMSVVEggs=(()=>{
   }
   it.effectFlash=.45;return true;
  }
+ // Explicit owner group. Co-op human teammates and enemy boss guardians are NOT
+ // part of the player's owned-support buff group.
+ function ownSquad(pl){return [pl,...support().filter(a=>a!==pl)];}
+ function teamBuff(pl,it,spec){
+  const affected=[];
+  for(const ally of ownSquad(pl)){
+   if(ally.dead||!Number.isFinite(ally.maxHp)||ally.maxHp<=0||!Number.isFinite(ally.hp))continue;
+   const amount=Math.max(1,ally.maxHp*spec.power*it.statScale*(it.affinityBoost||1));
+   if(spec.role==='heal'){
+    if(ally.hp>=ally.maxHp)continue;
+    const before=ally.hp;
+    if(ally===pl&&typeof ally.heal==='function')ally.heal(amount);
+    else ally.hp+=amount;
+    ally.hp=Math.min(ally.maxHp,ally.hp);
+    if(ally.hp>before)affected.push(ally);
+   }else if(spec.role==='shield'){
+    const key=ally===pl?'pkmsvvShield':'shield';
+    const before=Math.max(0,Number(ally[key])||0);
+    const next=Math.min(ally.maxHp*.25,before+amount);
+    if(next<=before)continue;
+    ally[key]=next;affected.push(ally);
+   }
+  }
+  return affected;
+ }
+ // True paralysis: upstream Enemy.applyStun freezes movement and attacks.
+ // Area 95, at most 4 affected; 7s per-target lockout prevents stun chaining.
+ function paralyze(it,enemies){
+  const eligible=enemies.filter(e=>!e.dead&&!e.remote&&typeof e.applyStun==='function'&&
+   G.U.dist2(e.x,e.y,it.x,it.y)<=240*240&&runTime>=(e.pkmsvvPichuImmuneUntil||0));
+  if(!eligible.length)return [];
+  eligible.sort((a,b)=>G.U.dist2(a.x,a.y,it.x,it.y)-G.U.dist2(b.x,b.y,it.x,it.y));
+  const center=eligible[0],affected=[];
+  for(const e of eligible){
+   if(affected.length>=4)break;
+   if(G.U.dist2(e.x,e.y,center.x,center.y)>95*95)continue;
+   const boss=!!(e.boss||e.judge||e.pkmsvvBossGuard);
+   e.applyStun(boss?.35:1.1);
+   e.pkmsvvPichuImmuneUntil=runTime+7;
+   affected.push(e);
+  }
+  return affected;
+ }
  function effect(it,pl){
   const spec=byDex[it.dex];if(!spec||!it.active||it.hp<=0||pl.dead)return false;
   const enemies=(G.EnemyMgr?.all?.()||[]).filter(e=>e&&!e.dead&&!e.remote&&G.U.dist2(e.x,e.y,it.x,it.y)<260*260);
@@ -296,38 +339,41 @@ G.PKMSVVEggs=(()=>{
   if((spec.role==='attack'||spec.role==='slow')&&!target)return false;
   if(spec.role==='ditto')return dittoCast(it,pl);
   if(spec.role==='mew')return mewCast(it,pl);
-  let recipient=pl;
+  let buffed=[],paralyzed=[];
   if(spec.role==='attack')target.hurt(Math.max(1,(spec.power+pl.level*.55)*it.statScale),'#ffe8a1',0,0,0);
-  else if(spec.role==='heal'){
-   const wounded=support().filter(a=>a.hp<a.maxHp);
-   const teammate=wounded.reduce((best,a)=>!best||a.hp/a.maxHp<best.hp/best.maxHp?a:best,null);
-   // Heal a wounded teammate when they are worse off than the hero.
-   if(teammate&&teammate.hp/teammate.maxHp<pl.hp/pl.maxHp){
-    teammate.hp=Math.min(teammate.maxHp,teammate.hp+Math.max(1,teammate.maxHp*spec.power*it.statScale*(it.affinityBoost||1)));
-    recipient=teammate;
-   }else{
-    if(pl.hp>=pl.maxHp)return false;
-    pl.heal(Math.max(1,pl.maxHp*spec.power*it.statScale*(it.affinityBoost||1)));
-   }
-  }else if(spec.role==='shield'){
-   pl.pkmsvvShield=Math.min(pl.maxHp*.25,(pl.pkmsvvShield||0)+pl.maxHp*spec.power*it.statScale*(it.affinityBoost||1));
-   for(const teammate of support()) teammate.shield=Math.min(teammate.maxHp*.25,(teammate.shield||0)+teammate.maxHp*spec.power*it.statScale*(it.affinityBoost||1));
-  }
-  else if(spec.role==='slow')target.applySlow(spec.power*it.statScale*(it.affinityBoost||1),2.8);
+  else if(spec.role==='paralyze'){
+   paralyzed=paralyze(it,enemies);
+   if(!paralyzed.length)return false;
+  }else if(spec.role==='heal'||spec.role==='shield'){
+   buffed=teamBuff(pl,it,spec);
+   if(!buffed.length)return false; // no full cooldown wasted on capped HP or shield
+  }else if(spec.role==='slow')target.applySlow(spec.power*it.statScale*(it.affinityBoost||1),2.8);
   else if(spec.role==='magnet')G.Pickups?.pullAll?.();
   const c=FX_COLOR[spec.role];
   it.effectFlash=.85;
   G.FX?.ring?.(it.x,it.y,7,48,c,.48,2);
-  if(spec.role==='slow'){
-   // Igglybuff is a ranged DEBUFF on monsters, not a buff on the hero.
+  if(spec.role==='paralyze'){
+   const center=paralyzed[0];
+   G.FX?.ring?.(center.x,center.y,9,95,c,.55,3);
+   for(const e of paralyzed){
+    G.FX?.burst?.(e.x,e.y-9,c,5,55);
+    G.FX?.dmgText?.(e.x,e.y-27,tr('TÊ LIỆT!','PARALYZED!'),c);
+   }
+  }else if(spec.role==='slow'){
    G.FX?.ring?.(target.x,target.y,6,48,c,.55,2);
    G.FX?.burst?.(target.x,target.y-9,c,7,70);
    G.FX?.dmgText?.(target.x,target.y-26,tr('CHẬM!','SLOWED!'),c);
-  }else if(spec.role==='heal'||spec.role==='shield'||spec.role==='magnet'){
-   G.FX?.ring?.(recipient.x,recipient.y,8,56,c,.45,2);
-   G.FX?.burst?.(recipient.x,recipient.y-12,c,6,65);
-   G.FX?.dmgText?.(recipient.x,recipient.y-38,
-     spec.role==='heal'?tr('HỒI MÁU','HEAL'):spec.role==='shield'?tr('KHIÊN','SHIELD'):tr('HÚT','MAGNET'),c);
+  }else if(buffed.length){
+   for(const recipient of buffed){
+    G.FX?.ring?.(recipient.x,recipient.y,8,56,c,.45,2);
+    G.FX?.burst?.(recipient.x,recipient.y-12,c,4,45);
+   }
+   G.FX?.dmgText?.(it.x,it.y-38,
+    spec.role==='heal'?tr('HỒI MÁU TOÀN ĐỘI','TEAM HEAL'):tr('KHIÊN TOÀN ĐỘI','TEAM SHIELD'),c);
+  }else if(spec.role==='magnet'){
+   G.FX?.ring?.(pl.x,pl.y,8,56,c,.45,2);
+   G.FX?.burst?.(pl.x,pl.y-12,c,6,65);
+   G.FX?.dmgText?.(pl.x,pl.y-38,tr('HÚT','MAGNET'),c);
   }else if(target)G.FX?.burst?.(target.x,target.y-10,c,5,52);
   return true;
  }

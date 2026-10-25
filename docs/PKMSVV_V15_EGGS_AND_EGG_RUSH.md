@@ -16,6 +16,7 @@
 - Hệ Pokémon support trong trận tách hoàn toàn Gacha, Shiny, Pokédex, tiến hóa, save sở hữu. Không tự unlock Pokémon vĩnh viễn.
 - 8 species đầu: Pichu (#172), Riolu (#447) [công]; Cleffa (#173), Clefairy (#035) [hồi máu — người dùng nói Cleffy/Cleffa, KHÔNG tự thay bằng Klefki nếu chưa được duyệt]; Wynaut (#360), Bonsly (#438) [thủ/khiên]; Togepi (#175), Igglybuff (#174) [hỗ trợ/khống chế].
 - Hồi máu, khiên, sát thương và khống chế thật, có cooldown; ko chỉ hiển thị mô tả.
+- **v1.5.16:** danh sách theo mã hiện hữu, không suy đoán từ ô `???`. Pichu #172 đổi từ công sang tê liệt quái dùng Enemy.applyStun (vùng 95, tối đa 4, 1,1 giây, boss 0,35 giây, hồi 10 giây, miễn nhiễm lặp 7 giây). Hồi máu/khiên buff toàn bộ Pokémon chính và Pokémon đồng hành còn sống **thuộc riêng người chơi**; không bao gồm người chơi Co-op khác, quái hay đối thủ Tranh Trứng. Trần khiên 25% HP. Hồi chiêu Cleffa 12s, Clefairy 16s, Wynaut 19s, Bonsly 15s. Không tự sửa ID Pokémon từ các bóng đen chưa mở khóa.
 - Solo thường: tối đa 2 support active; sau nhiệm vụ Chương 3 mới tối đa 3. Khi đủ slot, chọn bạn đồng hành để thay (không tự xóa vô cớ).
 - Nhiệm vụ **Nhà Ấp Trứng**: sau Chương 3, ấp nở tổng cộng 20 trứng (cộng dồn) VÀ từng có một lượt sống sót từ 15 phút. Hai điều kiện không bắt buộc cùng trận. Hoàn thành mở slot thứ 3 vĩnh viễn cho solo. Trạng thái lưu độc lập, merge Cloud-safe, không phải mua tiền.
 

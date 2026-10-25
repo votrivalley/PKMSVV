@@ -7,7 +7,8 @@ Sau khi hoàn thành Chương 2 và sử dụng đủ sáu loại Mystery Orb (t
 ## Trứng và Pokémon đồng hành (chế độ thường)
 - Trứng xuất hiện tại các ổ rải rác trên bản đồ. Nhặt xong trứng đi theo người chơi.
 - Trứng cần khoảng 45 giây để nở; chiến đấu và tăng cấp giúp ấp nhanh hơn (tối thiểu khoảng 20 giây).
-- 8 Pokémon hỗ trợ đầu: Pichu, Riolu, Cleffa, Clefairy, Wynaut, Bonsly, Togepi, Igglybuff; có vai trò tấn công, hồi máu, khiên, khống chế/hút vật phẩm.
+- Theo danh sách **thực tế trong code**: 8 support thường Pichu #172 (tê liệt), Riolu #447 (tấn công), Cleffa #173 và Clefairy #035 (hồi máu), Wynaut #360 và Bonsly #438 (khiên), Togepi #175 (hút vật phẩm), Igglybuff #174 (làm chậm); 2 loài đặc biệt Ditto #132 và Mew #151. Pokémon chưa mở khóa trong ảnh hiển thị `???` nên không thể xác định bằng bóng đen. Klefki #707 **không** nằm trong support code hiện hành; không được tự ý thay số Pokédex hay nhầm Cleffa/Clefairy/Klefki.
+- Buff hồi máu và khiên áp dụng cho **người chơi + các đồng hành thuộc người đó**, KHÔNG tính đồng đội người chơi khác trong Sống Sót hay đối thủ trong Tranh Trứng. Pichu gây stun quái thật, không phải giảm tốc.
 - Mặc định cùng lúc 2 support có hiệu ứng. Nếu đầy chỗ, người chơi chọn thay một bé.
 - Nhiệm vụ **Nhà Ấp Trứng**: nở tổng cộng 20 trứng và từng sống sót đủ 15 phút trong một lượt. Hoàn thành để mở slot thứ 3 vĩnh viễn.
 - Trứng/support tạm thời theo lượt, không thay đổi Gacha/Shiny hoặc Pokémon sở hữu.

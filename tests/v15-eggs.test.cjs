@@ -3,6 +3,82 @@ const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
 
+
+test('Canonical support roster matches runtime and silhouette entries are not invented',()=>{
+ const solo=read('src/v15/eggs.js'),online=read('src/web/pkmsvv-egg-rush.js');
+ const expected=[[172,'paralyze'],[447,'attack'],[173,'heal'],[35,'heal'],
+  [360,'shield'],[438,'shield'],[175,'magnet'],[174,'slow'],[132,'ditto'],[151,'mew']];
+ const G={};vm.runInNewContext(solo,{G,Math,Number,Object});
+ assert.deepEqual(Array.from(G.PKMSVVEggs.SPECIES,x=>[x.dex,x.role]),expected);
+ assert.match(online,/EGG_SPECIES=\[172,447,173,35,360,438,175,174\]/);
+ assert.doesNotMatch(solo,/{dex:707[,}]/);
+ const catalog=read('src/pkmsvv-support-catalog.js');
+ assert.match(catalog,/paralyze:\['Tê liệt'/);
+ assert.match(catalog,/silhouette:!owned/);
+ assert.match(read('docs/SUPPORT_CANONICAL_RULES.md'),/#035 Clefairy/);
+});
+
+test('Pichu paralyzes at most four nearby enemies using real stun, with 7s protection',()=>{
+ const pl={x:0,y:0,level:1,kills:0,hp:100,maxHp:100,dead:false};
+ const enemies=Array.from({length:6},(_,i)=>({
+  x:80+i*8,y:i*5,dead:false,remote:false,stunT:0,calls:0,
+  applyStun(d){this.stunT=Math.max(this.stunT,d);this.calls++;}
+ }));
+ enemies[4].boss=true;
+ const fx=[];
+ const G={I18n:{lang:'vi'},DB:{save:{pkmsvvChapter3Seen:true,stats:{}},commit(){}},
+  U:{dist2:(x,y,a,b)=>(x-a)**2+(y-b)**2},
+  World:{isFree:()=>true,isLiquid:()=>false},
+  EnemyMgr:{all:()=>enemies},Coop:{active:false},
+  FX:{ring(...args){fx.push(args);},burst(){},dmgText(){}},
+  Sprites:{preload(){}},Spawner:{say(){}}};
+ vm.runInNewContext(read('src/v15/eggs.js'),{G,Math,Number,Object});
+ G.PKMSVVEggs.begin(pl,false);
+ const pet={dex:172,hatched:true,active:true,x:0,y:0,maxHp:100,hp:100,
+  cooldown:0,statScale:.8,spd:100,hitCooldown:0,shield:0};
+ G.PKMSVVEggs.followers.push(pet);
+ G.PKMSVVEggs.update(.1,pl,100,false);
+ assert.equal(enemies.filter(e=>e.calls).length,4,'Only four targets per cast');
+ assert.ok(enemies.some(e=>e.stunT===1.1),'Real Enemy.applyStun must be called');
+ assert.equal(pet.cooldown,10,'Pichu cooldown');
+ pet.cooldown=0;G.PKMSVVEggs.update(.1,pl,101,false);
+ assert.equal(enemies.slice(0,4).reduce((n,e)=>n+e.calls,0),4,'No stun-lock within immunity');
+ pet.cooldown=0;G.PKMSVVEggs.update(.1,pl,107.1,false);
+ assert.equal(enemies.slice(0,4).reduce((n,e)=>n+e.calls,0),8,'May stun again after 7s');
+ assert.ok(fx.some(e=>e[3]===95),'Area visual radius matches gameplay');
+});
+
+test('Healing and shields buff only own lead and living companions, with 25% cap',()=>{
+ const pl={x:0,y:0,kills:0,level:1,dead:false,maxHp:200,hp:100,pkmsvvShield:0,
+  heal(n){this.hp=Math.min(this.maxHp,this.hp+n);}};
+ const G={I18n:{lang:'vi'},DB:{save:{pkmsvvChapter3Seen:true,pkmsvvEggSlot2:true,stats:{}},commit(){}},
+  U:{dist2:(x,y,a,b)=>(x-a)**2+(y-b)**2},
+  World:{isFree:()=>true,isLiquid:()=>false},
+  EnemyMgr:{all:()=>[]},Coop:{active:false,players:()=>[{hp:40,maxHp:100}]},
+  FX:{ring(){},burst(){},dmgText(){}},
+  Sprites:{preload(){}},Spawner:{say(){}}};
+ vm.runInNewContext(read('src/v15/eggs.js'),{G,Math,Number,Object});
+ G.PKMSVVEggs.begin(pl,false);
+ const healer={dex:173,hatched:true,active:true,x:0,y:0,hp:50,maxHp:100,
+  cooldown:0,statScale:1,affinityBoost:1,spd:100,hitCooldown:0,shield:0};
+ const ally={dex:447,hatched:true,active:true,x:0,y:0,hp:20,maxHp:100,
+  cooldown:999,statScale:.7,spd:100,hitCooldown:0,shield:0};
+ G.PKMSVVEggs.followers.push(healer,ally);
+ const outsider={hp:40,maxHp:100};
+ G.Coop.players=()=>[outsider];
+ G.PKMSVVEggs.update(.1,pl,5,false);
+ assert.ok(pl.hp>100&&healer.hp>50&&ally.hp>20,'All owned members healed simultaneously');
+ assert.equal(outsider.hp,40,'Not other human players');
+ assert.equal(healer.cooldown,12);
+ healer.dex=360;healer.cooldown=0;
+ G.PKMSVVEggs.update(.1,pl,6,false);
+ assert.ok(pl.pkmsvvShield>0&&healer.shield>0&&ally.shield>0);
+ assert.equal(healer.cooldown,19);
+ for(let i=0;i<30;i++){healer.cooldown=0;G.PKMSVVEggs.update(.1,pl,7+i,false);}
+ assert.ok(pl.pkmsvvShield<=pl.maxHp*.25&&healer.shield<=healer.maxHp*.25&&ally.shield<=ally.maxHp*.25);
+ assert.equal(outsider.hp,40);
+});
+
 test('Chapter 3 continues existing arc, unlocks on six USED types, and preserves replay',()=>{
  const source=read('src/pkmsvv-story.js');
  for(const n of ['chapter1','chapter2','chapter3','pkmsvvChapter3Seen','pkmsvvChapter3Pending','pkmsvvOrbTypeMask','Arceus','MẦM SỐNG BỊ LÃNG QUÊN']){
@@ -260,7 +336,7 @@ test('real pixel egg/nest sprites are bundled for solo and Web Egg Rush',()=>{
 
 test('v1.5 release identity and completed egg gameplay are both packaged',()=>{
  const pkg=JSON.parse(read('package.json'));
- assert.equal(pkg.version,'1.5.15');
+ assert.equal(pkg.version,'1.5.16');
  assert.equal(pkg.build.productName,'Pokemon Chuyển sinh');
  assert.ok(read('scripts/prepare-game.cjs').includes('patch-v15-eggs.cjs'));
  assert.ok(read('scripts/prepare-web.cjs').includes('patch-v15-egg-rush-web.cjs'));

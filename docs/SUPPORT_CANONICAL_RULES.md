@@ -1,0 +1,27 @@
+# SUPPORT_CANONICAL_RULES — Pokémon Chuyển sinh v1.5.16
+
+## Nguồn sự thật, không được suy đoán
+- Căn cứ code: `src/v15/eggs.js::SPECIES`, `src/web/pkmsvv-egg-rush.js::EGG_SPECIES` và `src/pkmsvv-support-catalog.js`.
+- Ảnh catalog do người chơi cung cấp ngày 26/10/2026: đang hiện màu **Riolu, Cleffa, Wynaut, Igglybuff**. Các ô `???` là chưa khám phá; KHÔNG xác định tên bằng silhouette.
+- **Danh sách hiện hữu trong code (10 loài)**: Pichu #172 (paralyze), Riolu #447 (attack), Cleffa #173 (heal), **Clefairy #035 (heal, có trong code dù chưa chắc mở khóa ở ảnh)**, Wynaut #360 (shield), Bonsly #438 (shield), Togepi #175 (magnet), Igglybuff #174 (slow), Ditto #132 (transform), Mew #151 (AOE).
+- **Klefki #707 KHÔNG có trong support hiện hành.** Không đổi #035 thành #707 chỉ vì người chơi nói chưa có Clefairy; không gọi Cleffa, Clefairy và Klefki là cùng một Pokémon.
+- Mọi thay đổi roster phải xác minh ID Pokédex và cập nhật đồng bộ Solo, Egg Rush, catalog, tests, art/preload, ghi chú bản phát hành; KHÔNG thay species khác nếu người chơi chưa yêu cầu rõ.
+
+## Luật vai trò Pichu (đã chốt ngày 26/10/2026)
+- Pichu #172 **khống chế tê liệt**, không gây sát thương trực tiếp bằng đòn support cũ.
+- Dùng `Enemy.applyStun` có sẵn: quái ngừng di chuyển và tấn công thật, không dùng `applySlow` giả tê liệt.
+- Tầm tìm mục tiêu 240 đơn vị tính từ Pichu; tâm vùng tại quái hợp lệ gần nhất. Bán kính 95 đơn vị; tối đa 4 địch; hiệu lực 1,1 giây, boss/judge/guardian 0,35 giây; hồi chiêu 10 giây; một địch có miễn nhiễm cùng loại 7 giây để chống khóa liên tục.
+- Trong Egg Rush, support Pichu chỉ stun AI địch; **không** được áp hiệu ứng tê liệt trực tiếp lên client PvP khác khi chưa có sự kiện kiểm duyệt từ host. Giữ đúng bảo đảm host-authoritative.
+
+## Luật buff theo đội và cân bằng
+- Đội nhận buff trong Sống Sót chỉ là **Pokémon chính của người chơi + support nở từ trứng thuộc chính người đó** (tối đa 2 support theo runtime hiện tại); **không** gồm quái, boss, người chơi Co-op khác, đối thủ Tranh Trứng.
+- Hồi máu hoặc khiên cast đồng thời trên từng thành viên còn sống, theo % HP tối đa riêng của mỗi người; không buff mục tiêu chết, không vượt HP tối đa.
+- Khiên cộng dồn nhưng **trần 25% HP tối đa từng mục tiêu**; khi toàn nhóm đầy/capped không phát hiệu ứng buff hoặc tiêu thụ cooldown dài.
+- Tần suất và hiệu ứng cơ bản trước nhân chỉ số hỗ trợ/thân thiết: Cleffa #173 hồi 3,5% mỗi 12s; Clefairy #035 hồi 6% mỗi 16s; Wynaut #360 khiên 9% mỗi 19s; Bonsly #438 khiên 5% mỗi 15s.
+- Đây là hiệu ứng **trong trận**, không sửa save đội hình hoặc chỉ số vĩnh viễn. Trong Egg Rush, pet chưa có HP thật: buff chỉ có tác dụng trên người sở hữu (và pet khi nào đã có HP thật), không được mô tả là support nhận HP/khiên chưa tồn tại.
+
+## Kiểm thử bắt buộc
+- Đối chiếu ID/role trong cả Solo và Egg Rush, quyền mở khóa/ẩn `???` và tùy chọn Shiny.
+- Kiểm chứng Pichu ngừng quái thật, tối đa 4 mục tiêu, chống stun-lock, boss bị giảm thời gian khống chế.
+- Kiểm chứng hồi máu/khiên theo từng HP riêng, không buff người lạ hoặc đối thủ, không vượt cap, và cooldown 12–19 giây.
+- Kiểm tra thực tế Win/Android/Web trước công bố; không tự deploy Firebase hoặc tuyên bố QA PvP 4 trình duyệt nếu chưa thực sự thử.

@@ -110,7 +110,7 @@ G.EggRush=(()=>{
    pet.anim?.update?.(dt);
    if(pet.hatch&&pet.uid===G.Game.player?.uid){
     const own=pets.filter(q=>q.uid===pet.uid&&q.hatch);
-    if(own.indexOf(pet)<3){pet.cd=(pet.cd||0)-dt;if(pet.cd<=0){support(pet,G.Game.player);pet.cd=8;}}
+    if(own.indexOf(pet)<3){pet.cd=(pet.cd||0)-dt;if(pet.cd<=0){support(pet,G.Game.player);pet.cd=({172:10,173:12,35:16,360:19,438:15}[pet.dex]||8);}}
    }
   }
   const order=standings();
@@ -142,16 +142,61 @@ G.EggRush=(()=>{
    outcome=result(time);finish(outcome);
   }
  }
+ // Egg Rush is a free-for-all. Never heal/shield other human players.
+ // Pets have cosmetic/noncombat state currently; only the owning player is
+ // damageable, but support for future owned pet HP is kept explicitly guarded.
+ function ownedBuffTargets(pet,pl){
+  if(!pl||pl.dead||pet.uid!==pl.uid)return [];
+  return [pl,...pets.filter(q=>q.uid===pet.uid&&q.hatch&&q!==pet&&
+   Number.isFinite(q.hp)&&Number.isFinite(q.maxHp)&&q.maxHp>0&&!q.dead)];
+ }
+ function eggRushBuff(pet,pl,role,power){
+  let changed=0;
+  for(const ally of ownedBuffTargets(pet,pl)){
+   if(!Number.isFinite(ally.maxHp)||ally.maxHp<=0||!Number.isFinite(ally.hp))continue;
+   if(role==='heal'){
+    const before=ally.hp;
+    if(before>=ally.maxHp)continue;
+    if(ally===pl&&typeof ally.heal==='function')ally.heal(ally.maxHp*power);
+    else ally.hp+=ally.maxHp*power;
+    ally.hp=Math.min(ally.hp,ally.maxHp);
+    if(ally.hp>before)changed++;
+   }else{
+    const key=ally===pl?'pkmsvvShield':'shield';
+    const before=Math.max(0,Number(ally[key])||0);
+    ally[key]=Math.min(ally.maxHp*.25,before+ally.maxHp*power);
+    if(ally[key]>before)changed++;
+   }
+  }
+  return changed;
+ }
  function support(pet,pl){
-  const nearby=(G.EnemyMgr?.all?.()||[]).filter(e=>e&&!e.dead&&G.U.dist2(e.x,e.y,pl.x,pl.y)<240*240);
+  const nearby=(G.EnemyMgr?.all?.()||[]).filter(e=>e&&!e.dead&&!e.remote&&G.U.dist2(e.x,e.y,pl.x,pl.y)<240*240);
   const enemy=nearby[0];
   switch(pet.dex){
-   case 172:if(enemy)enemy.hurt(12,'#ffe2a3');break;
+   case 172:{
+    // Pichu only stuns hostile AI here. PvP CC must be host-authoritative,
+    // so it is never applied directly to opponents by peer clients.
+    const candidates=nearby.filter(e=>typeof e.applyStun==='function'&&
+     (pet.age||0)>=(e.pkmsvvPichuImmuneUntil||0));
+    if(!candidates.length)break;
+    candidates.sort((a,b)=>G.U.dist2(a.x,a.y,pet.x,pet.y)-G.U.dist2(b.x,b.y,pet.x,pet.y));
+    const center=candidates[0];
+    let count=0;
+    for(const e of candidates){
+     if(count>=4)break;
+     if(G.U.dist2(e.x,e.y,center.x,center.y)>95*95)continue;
+     e.applyStun(e.boss||e.judge||e.pkmsvvBossGuard?.35:1.1);
+     e.pkmsvvPichuImmuneUntil=(pet.age||0)+7;count++;
+    }
+    if(count)G.FX?.ring?.(center.x,center.y,8,95,'#ffdb55',.5,3);
+    break;
+   }
    case 447:if(enemy)enemy.hurt(19,'#c8e2ff');break;
-   case 173:pl.heal(pl.maxHp*.05);break;
-   case 35:pl.heal(pl.maxHp*.08);break;
-   case 360:pl.pkmsvvShield=Math.min(pl.maxHp*.25,(pl.pkmsvvShield||0)+pl.maxHp*.09);break;
-   case 438:pl.pkmsvvShield=Math.min(pl.maxHp*.25,(pl.pkmsvvShield||0)+pl.maxHp*.055);break;
+   case 173:eggRushBuff(pet,pl,'heal',.035);break;
+   case 35:eggRushBuff(pet,pl,'heal',.06);break;
+   case 360:eggRushBuff(pet,pl,'shield',.09);break;
+   case 438:eggRushBuff(pet,pl,'shield',.05);break;
    case 175:G.Pickups?.pullAll?.();break;
    case 174:if(enemy)enemy.applySlow(.3,2.5);break;
   }

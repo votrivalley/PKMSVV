@@ -7,8 +7,9 @@ G.PKMSVVSupportCatalog=(()=>{
  const t=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  const roles={
   attack:['Tấn công','Attack','Tấn công đối thủ gần nhất.','Attacks the nearest enemy.'],
-  heal:['Hồi phục','Healing','Chữa trị cho đồng đội đang bị thương.','Heals injured teammates.'],
-  shield:['Bảo vệ','Shield','Tạo một lớp khiên bảo vệ đồng đội.','Creates a shield to protect the team.'],
+  paralyze:['Tê liệt','Paralysis','Pichu gây tê liệt tối đa 4 quái trong vùng 95, 1,1 giây; hồi chiêu 10 giây. Boss chỉ 0,35 giây.','Pichu stuns up to 4 foes in a 95-radius area for 1.1s every 10s; bosses for 0.35s.'],
+  heal:['Hồi phục','Healing','Hồi máu cho Pokémon chính và tất cả đồng hành còn sống của chính mình.','Heals your lead Pokémon and all your living companions.'],
+  shield:['Bảo vệ','Shield','Tạo khiên cho Pokémon chính và tất cả đồng hành của mình; tối đa 25% HP từng mục tiêu.','Shields your own lead Pokémon and companions, capped at 25% of each max HP.'],
   magnet:['Thu hút','Magnet','Thu hút vật phẩm trong tầm.','Attracts nearby pickups.'],
   slow:['Làm chậm','Slow','Làm chậm những kẻ địch ở gần.','Slows nearby enemies.'],
   ditto:['Biến hình','Transform','Biến thành Pokémon chính và sao chép kỹ năng, sau đó trở lại Ditto để hồi sức.','Copies your lead Pokémon and its moves, then returns to Ditto to recover.'],

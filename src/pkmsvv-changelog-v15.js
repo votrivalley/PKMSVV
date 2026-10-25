@@ -12,6 +12,7 @@ G.CHANGELOG.unshift({
  ],
  chg:[
   ['Cân bằng sức mạnh, tốc độ, độ khó, tương tác và khả năng sống sót của đội đồng hành.','Rebalanced companion strength, speed, enemy targeting, and survivability.'],
+  ['Pichu đổi sang tê liệt diện nhỏ (tối đa 4 quái, 1,1 giây, hồi 10 giây); buff máu và khiên áp dụng cho đội Pokémon của chính người chơi, với thời gian hồi cân bằng.','Pichu now briefly paralyzes up to four nearby foes (1.1s, 10s cooldown); healing and shields now buff the player-owned Pokémon squad with balanced cooldowns.'],
   ['Tinh chỉnh giao diện, thanh trạng thái, điều khiển và trải nghiệm trên PC, Android, Web.','Polished menus, status indicators, controls, and the PC, Android, and Web experience.']
  ],
  fix:[
