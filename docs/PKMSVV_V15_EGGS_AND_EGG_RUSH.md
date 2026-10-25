@@ -10,6 +10,7 @@
 
 ## Cơ chế trứng (mọi chế độ được hỗ trợ)
 - Tạo ổ trứng trên bản đồ, người chơi tiếp cận và nhặt. Trứng đi phía sau, không cần ô trang bị.
+- **Từ v1.5.14:** ổ trứng mới cách từng người chơi tối thiểu một đường chéo camera, cộng 80 đơn vị đệm. Solo và host Tranh Trứng kiểm tra khung nhìn/mặt đất; nếu không có chỗ hợp lệ thì hoãn và thử lại, không sinh trứng sát mặt người chơi.
 - Ấp khoảng 45 giây thời gian thực; đánh quái/nhặt EXP giúp rút ngắn, không ít hơn 20 giây.
 - Sau khi nở, Pokémon con tiếp tục nối đuôi kiểu rắn săn mồi; không cản đường, không che hitbox và cần nội suy vị trí. Trứng chưa nở vẫn đi theo với hình trứng.
 - Hệ Pokémon support trong trận tách hoàn toàn Gacha, Shiny, Pokédex, tiến hóa, save sở hữu. Không tự unlock Pokémon vĩnh viễn.

@@ -61,6 +61,54 @@ test('Egg Rush is online-only, host owns score, exactly ten nests spawn over fiv
  assert.match(read('scripts/patch-v15-egg-rush-web.cjs'),/room.mode==='eggrush'\?4:2/);
 });
 
+test('Solo nest spawns beyond one full viewport, never on the live camera',()=>{
+ const source=read('src/v15/eggs.js'),pl={x:70,y:-40,kills:0,level:1,dead:false};
+ const cam={w:800,h:600,sees(x,y,pad=0){return Math.abs(x-70)<400+pad&&Math.abs(y+40)<300+pad;}};
+ let ground=true;
+ const G={Camera:cam,DB:{save:{pkmsvvChapter3Seen:true,stats:{}}},Coop:{active:false},
+  World:{isFree:()=>ground,isLiquid:()=>false},Sprites:{preload(){}},
+  Spawner:{say(){}},U:{dist2:(x,y,a,b)=>(x-a)**2+(y-b)**2}};
+ vm.runInNewContext(source,{G,Math,Number,Object});
+ G.PKMSVVEggs.begin(pl,false);
+ ground=false;
+ G.PKMSVVEggs.update(.1,pl,60,false);
+ assert.equal(G.PKMSVVEggs.nests.length,0,'No unsafe fallback when all terrain is blocked');
+ ground=true;
+ G.PKMSVVEggs.update(.1,pl,65,false);
+ assert.equal(G.PKMSVVEggs.nests.length,1,'Retry after a blocked spawn');
+ const nest=G.PKMSVVEggs.nests[0];
+ assert.ok(Math.hypot(nest.x-pl.x,nest.y-pl.y)>=Math.hypot(cam.w,cam.h),'At least one screen diagonal');
+ assert.equal(cam.sees(nest.x,nest.y,64),false,'Never appear in the camera');
+});
+
+test('Egg Rush keeps two safe nests per wave beyond every player viewport',()=>{
+ const source=read('src/web/pkmsvv-egg-rush.js');
+ const members=[0,1,2,3].map(i=>({uid:'p'+i,name:'P'+i,dex:25+i}));
+ const players=[[-300,-225],[300,225],[-300,225],[300,-225]].map(([x,y],i)=>({uid:'p'+i,x,y,dead:false}));
+ const seen=[],cam={w:800,h:600,sees:(x,y,pad=0)=>Math.abs(x)<400+pad&&Math.abs(y)<300+pad};
+ let ground=false;
+ const G={Camera:cam,Game:{player:players[0]},Social:{uid:'p0'},Coop:{isHost:true,broadcast:e=>seen.push(e)},
+  Sprites:{preload(){},Animator:class{update(){}draw(){}}},World:{isFree:()=>ground,isLiquid:()=>false},
+  U:{dist2:(x,y,a,b)=>(x-a)**2+(y-b)**2},Moves:{BY_ID:{}},EnemyMgr:{all:()=>[]}};
+ vm.runInNewContext(source,{G,Math,Map,Object,Number});
+ G.EggRush.begin({mode:'eggrush',seed:117,members});
+ G.EggRush.update(.05,8,players,()=>{});
+ assert.equal(seen.length,0,'Blocked ground must not create fake or unsafe eggs');
+ ground=true;
+ G.EggRush.update(.05,8.1,players,()=>{});
+ let eggs=seen.filter(e=>e[0]==='er'&&e[1]==='spawn');
+ assert.equal(eggs.length,2,'First wave still has two eggs');
+ for(const e of eggs){
+  const [x,y]=[e[3],e[4]];
+  assert.equal(cam.sees(x,y,64),false);
+  for(const pl of players)assert.ok(Math.hypot(x-pl.x,y-pl.y)>=Math.hypot(cam.w,cam.h),'No pop-in for any player');
+ }
+ G.EggRush.update(.05,140,players,()=>{});
+ eggs=seen.filter(e=>e[0]==='er'&&e[1]==='spawn');
+ assert.equal(eggs.length,4,'Second wave still adds exactly two nests');
+ assert.equal(new Set(eggs.map(e=>e[2])).size,4,'No duplicate nest IDs after retry');
+});
+
 test('Solo egg nest requires 4 seconds, interruption resets progress, and hit delays hatching 3s',()=>{
  const source=read('src/v15/eggs.js');
  const player={x:0,y:0,dead:false,kills:0,level:1,maxHp:150,hp:150,heal(v){this.hp=Math.min(this.maxHp,this.hp+v);}};
@@ -169,7 +217,7 @@ test('real pixel egg/nest sprites are bundled for solo and Web Egg Rush',()=>{
 
 test('v1.5 release identity and completed egg gameplay are both packaged',()=>{
  const pkg=JSON.parse(read('package.json'));
- assert.equal(pkg.version,'1.5.13');
+ assert.equal(pkg.version,'1.5.14');
  assert.equal(pkg.build.productName,'Pokemon Chuyển sinh');
  assert.ok(read('scripts/prepare-game.cjs').includes('patch-v15-eggs.cjs'));
  assert.ok(read('scripts/prepare-web.cjs').includes('patch-v15-egg-rush-web.cjs'));

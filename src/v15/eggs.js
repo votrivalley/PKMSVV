@@ -35,13 +35,22 @@ G.PKMSVVEggs=(()=>{
  const vacancy=()=>Math.max(0,limit()-occupied());
  function roleName(s){return {attack:tr('Tấn công','Attack'),heal:tr('Hồi phục','Healing'),shield:tr('Tạo khiên','Shield'),magnet:tr('Hút vật phẩm','Magnet'),slow:tr('Làm chậm','Slow')}[s.role]||s.role;}
  function nestSpawn(){
-  if(!player||G.Rift?.inArena||nests.length>=1||vacancy()<=nests.length)return;
-  for(let i=0;i<14;i++){
-   const a=Math.random()*Math.PI*2,d=165+Math.random()*245;
+  if(!player||G.Rift?.inArena||nests.length>=1||vacancy()<=nests.length)return false;
+  // At least one FULL camera diagonal from the player, plus a safety margin.
+  // Also check the camera rectangle as its smooth follow can lag behind.
+  const cam=G.Camera;
+  const width=Number(cam?.w)>0?cam.w:768,height=Number(cam?.h)>0?cam.h:420;
+  const screen=Math.hypot(width,height),minDistance=screen+80;
+  for(let i=0;i<48;i++){
+   const a=Math.random()*Math.PI*2,d=minDistance+Math.random()*screen*.65;
    const x=player.x+Math.cos(a)*d,y=player.y+Math.sin(a)*d;
+   if(G.Camera?.sees?.(x,y,64))continue;
    if(G.World.isLiquid(x,y)||!G.World.isFree(x,y,18))continue;
-   nests.push({id:++seq,x,y,age:0,collecting:0});G.Spawner?.say?.(tr('Một ổ trứng đã xuất hiện!','An egg nest has appeared!'),3);return;
+   nests.push({id:++seq,x,y,age:0,collecting:0});
+   G.Spawner?.say?.(tr('Một ổ trứng đã xuất hiện!','An egg nest has appeared!'),3);
+   return true;
   }
+  return false; // No valid ground: retry later; never force a nest into view.
  }
  function affinityFor(dex){return Math.min(999,Math.max(0,Math.floor(Number(G.DB?.save?.pkmsvvSupportBond?.[dex])||0)));}
  function affinityGoal(dex){return Number(dex)===151?25:Number(dex)===132?50:100;}
@@ -383,8 +392,8 @@ G.PKMSVVEggs=(()=>{
   if(G.Rift?.inArena&&nests.length)nests=[];
   if(vacancy()<=0&&nests.length)nests.length=0;
   if(time>=spawnAt){
-   if(!G.Rift?.inArena&&vacancy()>nests.length)nestSpawn();
-   spawnAt=time+(vacancy()>nests.length?100:12);
+   const created=!G.Rift?.inArena&&vacancy()>nests.length?nestSpawn():false;
+   spawnAt=time+(vacancy()>nests.length?(created?100:5):12);
   }
   for(let i=nests.length-1;i>=0;i--){
    const n=nests[i];n.age+=dt;

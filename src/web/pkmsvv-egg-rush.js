@@ -25,15 +25,23 @@ G.EggRush=(()=>{
    b.eggs-a.eggs || (a.at||Infinity)-(b.at||Infinity) || a.name.localeCompare(b.name));
  }
  function randomNest(index,players){
-  const n=index+1;
-  for(let tries=0;tries<30;tries++){
-   const a=6.28318*rand(n*73+tries*11),d=80+rand(n*57+tries*7)*335;
-   const x=Math.cos(a)*d,y=Math.sin(a)*d;
+  const n=index+1,cam=G.Camera;
+  const width=Number(cam?.w)>0?cam.w:768,height=Number(cam?.h)>0?cam.h:420;
+  const screen=Math.hypot(width,height),minDistance=screen+80;
+  // Include players who are down: avoid pop-ins while waiting to revive.
+  const positioned=players.filter(p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.y));
+  const origin=positioned.length?positioned[index%positioned.length]:{x:0,y:0};
+  for(let tries=0;tries<96;tries++){
+   const a=2*Math.PI*rand(n*73+tries*11);
+   const d=minDistance+rand(n*57+tries*7)*screen*.7+Math.floor(tries/24)*screen*.35;
+   const x=Math.round(origin.x+Math.cos(a)*d),y=Math.round(origin.y+Math.sin(a)*d);
+   if(positioned.some(p=>G.U.dist2(p.x,p.y,x,y)<minDistance*minDistance))continue;
+   if(G.Camera?.sees?.(x,y,64))continue;
+   if(nests.some(q=>!q.taken&&G.U.dist2(q.x,q.y,x,y)<120*120))continue;
    if(!G.World.isFree(x,y,20)||G.World.isLiquid(x,y))continue;
-   if(players.some(p=>!p.dead&&G.U.dist2(p.x,p.y,x,y)<92*92))continue;
-   return {id:n,x:Math.round(x),y:Math.round(y),taken:false};
+   return {id:n,x,y,taken:false};
   }
-  return {id:n,x:Math.round(Math.cos(n*2.399)*285),y:Math.round(Math.sin(n*2.399)*210),taken:false};
+  return null; // Retry later without forcing a visible spawn.
  }
  function onEvent(ev){
   if(!active||ev[0]!=='er')return;
@@ -113,11 +121,12 @@ G.EggRush=(()=>{
   });
   if(!G.Coop.isHost)return;
   while(wave<5&&time>=8+wave*132){
-   for(let i=0;i<2;i++){
-    const n=randomNest(wave*2+i,players);nests.push(n);laid++;
-    G.Coop.broadcast(['er','spawn',n.id,n.x,n.y]);
-   }
-   wave++;
+   // Preserve two eggs per wave and do not consume IDs on a failed placement.
+   const n=randomNest(laid,players);
+   if(!n)break;
+   nests.push(n);laid++;
+   G.Coop.broadcast(['er','spawn',n.id,n.x,n.y]);
+   if(laid%2===0)wave++;
   }
   for(const n of nests){
    if(n.taken)continue;
