@@ -17,12 +17,18 @@ for(const name of ['eyes','gate','reveal']){
  else if(name==='reveal')throw new Error('Chapter 0: REQUIRED new illustration src/story-art/reveal.webp is missing. Upload the approved third image to GitHub first; build will then package eyes, gate and reveal together.');
  else console.warn('Chapter 0 art missing: src/story-art/'+name+'.webp (will show the basic fallback until uploaded)');
 }
-// Chapter 2 images are staged separately from the Chapter 0 prologue art.
-// Upload chapter2-orbs.webp and chapter2-shadow.webp into src/story-art/.
-for(const name of ['chapter2-orbs','chapter2-shadow']){
- const src=path.join(root,'src','story-art',name+'.webp');
- if(fs.existsSync(src))fs.copyFileSync(src,path.join(game,'assets','story',name+'.webp'));
- else console.warn('Chapter 2 image pending: src/story-art/'+name+'.webp (falls back to gate.webp)');
+// Chapter 1 gets its own visual beats (do not reuse Chapter 0 eyes/gate).
+// Chapter 2 and Chapter 3 also have dedicated cutscene artworks.
+// Missing optional WebP files use the in-game gate.webp fallback until uploaded.
+for(const name of [
+ 'chapter1-echo','chapter1-fragments',
+ 'chapter2-orbs','chapter2-shadow',
+ 'chapter3-nest','chapter3-hatch'
+]){
+ const source=path.join(root,'src','story-art',name+'.webp');
+ const dest=path.join(game,'assets','story',name+'.webp');
+ if(fs.existsSync(source))fs.copyFileSync(source,dest);
+ else console.warn('Story image pending: src/story-art/'+name+'.webp (falls back to gate.webp)');
 }
 fs.copyFileSync(path.join(root,'src','pkmsvv-story.js'),path.join(game,'js','ui','pkmsvv-story.js'));
 patch('dev.html','<script defer src="js/ui/test.js"></script>',
