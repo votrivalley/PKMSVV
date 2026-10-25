@@ -64,3 +64,18 @@ body{background:#081f2a;color:#f8fffe}
 #scr-menu .menu-item.play{justify-content:start;padding-inline:24px}
 @media(max-width:900px){#scr-menu .menu-item{grid-template-columns:26px max-content;column-gap:7px}#scr-menu .menu-item>.mi-ico{width:26px;height:26px}#scr-menu .menu-item>.pkmsvv-menu-copy small{font-size:10px}#scr-menu .menu-item.play{padding-inline:12px}}
 @media(max-height:400px){#scr-menu .menu-item>.pkmsvv-menu-copy small{display:none}#scr-menu .menu-item.play>.pkmsvv-menu-copy small{display:block}}
+
+/* v1.5 unified controls: one Gán nút header and two independently saved tabs. */
+#pkmsvv-control-map{padding-bottom:14px;max-width:100%;min-width:0}
+#pkmsvv-control-map .set-h{margin-top:4px;color:#ffdf72}
+#pkmsvv-control-map .pkmsvv-control-tabs{display:flex;align-items:center;gap:9px;margin:12px 0}
+#pkmsvv-control-map [data-control-tab]{min-width:112px;min-height:42px;cursor:pointer}
+#pkmsvv-control-map [data-control-tab][aria-selected="true"]{background:#ffe36a;color:#193644;border-color:#fff2ab}
+#pkmsvv-control-map .pkmsvv-control-row{min-height:51px;display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0;border-bottom:1px solid rgba(178,229,220,.13)}
+#pkmsvv-control-map .pkmsvv-control-row>span{flex:1;min-width:0;line-height:1.35}
+#pkmsvv-control-map .pkmsvv-control-row .btn{flex:0 0 auto;min-width:67px;text-align:center}
+#pkmsvv-control-map .pkmsvv-control-row select{min-width:165px;max-width:min(53vw,230px);background:#235964;color:#f8fffc}
+#pkmsvv-control-map .pkmsvv-control-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+#pkmsvv-control-message{min-height:1.3em;color:#ffdc7c}
+#pkmsvv-control-map~.set-row,#pkmsvv-control-map~.chips{margin-top:10px}
+@media(max-width:520px){#pkmsvv-control-map .pkmsvv-control-row{min-height:46px}#pkmsvv-control-map .pkmsvv-control-row select{min-width:122px;max-width:46vw;font-size:12px}#pkmsvv-control-map [data-control-tab]{min-width:95px}}
