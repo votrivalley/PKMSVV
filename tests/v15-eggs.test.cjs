@@ -81,3 +81,25 @@ test('Solo egg companions keep the 2 / 3 slots and hatch through time plus comba
  assert.equal(G.PKMSVVEggs.limit(),2);
  save.pkmsvvEggSlot3=true;assert.equal(G.PKMSVVEggs.limit(),3);
 });
+
+test('real pixel egg/nest sprites are bundled for solo and Web Egg Rush',()=>{
+ const script=read('scripts/patch-v15-eggs.cjs');
+ const solo=read('src/v15/eggs.js');
+ const online=read('src/web/pkmsvv-egg-rush.js');
+ const renderer=read('src/v15/egg-sprites.js');
+ const license=read('src/v15/sprites/LICENSE-SOURCE.md');
+ for(const p of ['egg_follow.svg','egg_crack.svg','egg_nest.svg']){
+  const asset=read('src/v15/sprites/'+p);
+  assert.match(asset,/<svg\b/);
+  assert.match(asset,/shape-rendering="crispEdges"/);
+  assert.match(script,new RegExp(p.replace('.','\\.')));
+ }
+ assert.match(script,/pkmsvv-egg-sprites\.js/);
+ assert.match(script,/assets','eggs'/);
+ assert.match(solo,/PKMSVVEggArt\?\.egg/);
+ assert.match(solo,/PKMSVVEggArt\?\.nest/);
+ assert.match(online,/PKMSVVEggArt\?\.egg/);
+ assert.match(online,/PKMSVVEggArt\?\.nest/);
+ assert.match(renderer,/imageSmoothingEnabled=false/);
+ assert.match(license,/MIT License/);
+});
