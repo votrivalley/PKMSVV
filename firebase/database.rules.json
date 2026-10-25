@@ -38,7 +38,7 @@
       ],
       "$room": {
         ".write": "auth != null && ((!data.exists() && newData.child('host').val() === auth.uid) || (data.child('host').val() === auth.uid && (!newData.exists() || newData.child('host').val() === auth.uid)))",
-        ".validate": "!newData.exists() || (newData.hasChildren(['host','name','mode','open','size','at']) && newData.child('host').val() === auth.uid && newData.child('name').isString() && newData.child('name').val().length <= 24 && (newData.child('mode').val() === 'coop' || newData.child('mode').val() === 'royale') && newData.child('open').isBoolean() && newData.child('size').isNumber() && newData.child('size').val() >= 1 && newData.child('size').val() <= 10 && newData.child('at').isNumber())"
+        ".validate": "!newData.exists() || (newData.hasChildren(['host','name','mode','open','size','at']) && newData.child('host').val() === auth.uid && newData.child('name').isString() && newData.child('name').val().length <= 24 && (newData.child('mode').val() === 'coop' || newData.child('mode').val() === 'royale' || newData.child('mode').val() === 'eggrush') && newData.child('open').isBoolean() && newData.child('size').isNumber() && newData.child('size').val() >= 1 && newData.child('size').val() <= (newData.child('mode').val() === 'eggrush' ? 4 : 10) && newData.child('at').isNumber())"
       }
     },
     "presenceLive": {
