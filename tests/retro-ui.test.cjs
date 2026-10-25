@@ -25,14 +25,18 @@ test('upgrade chooser displays permanent account skill milestones without unsafe
  assert.match(css,/pkmsvv-skill-guide-grid/);
 });
 
-test('v1.4 menu title, circular credit and aligned icon/labels survive all platform builds',()=>{
+test('single-line title and aligned icon/labels survive v1.5 menu polishing',()=>{
  const title=read('scripts/patch-v14-title-readability.cjs');
  const colors=read('src/pkmsvv-retro-theme.css');
  const shop=read('scripts/patch-kecleon.cjs');
  const web=read('scripts/patch-retro-web.cjs');
  assert.match(title,/pkmsvv-one-line/);
  assert.match(title,/Pokémon Sống Sót/);
- assert.match(title,/border-radius:50%/);
+ const final=read('scripts/patch-v15-menu-qa.cjs');
+ assert.match(final,/pkmsvv-credit/);
+ assert.match(final,/border-radius:0!important/);
+ assert.match(final,/white-space:nowrap!important/);
+ assert.match(final,/position:fixed!important/);
  assert.match(title,/justify-content:center!important/);
  assert.match(colors,/\.menu-item>\.mi-ico/);
  assert.match(colors,/grid-template-columns:34px max-content/);
@@ -60,4 +64,26 @@ test('v1.5 menu preserves cloud and fullscreen, moves backup to Options, and kee
  assert.match(keys,/orb:'Dùng Orb'/);
  assert.doesNotMatch(pad,/Không cần nút chuyển Orb/);
  assert.doesNotMatch(dex,/pane\.innerHTML='<h3>'\+L\('Tính cách, Đặc tính & TM'/);
+});
+
+test('v1.5 final UI eliminates circle, duplicate News frame, low menu and blocked Discord',()=>{
+ const polish=read('scripts/patch-v15-menu-qa.cjs');
+ const build=read('scripts/prepare-game.cjs');
+ const main=read('desktop/main.cjs');
+ const preload=read('desktop/preload.cjs');
+ const keys=read('src/v14/pad-orb-map.js');
+ const pad=read('scripts/patch-v14-gamepad-orbs.cjs');
+ assert.match(build,/patch-v15-menu-qa\.cjs/);
+ assert.match(polish,/Việt hóa và Mod điều chỉnh bởi Votri Valley/);
+ assert.match(polish,/border-radius:0!important/);
+ assert.match(polish,/margin-top:0!important/);
+ assert.match(polish,/holder\.replaceWith\(news\)/);
+ assert.match(polish,/noopener noreferrer/);
+ assert.match(polish,/window\.PKMSVVNative\?\.openDiscord/);
+ assert.match(main,/pkmsvv:open-discord/);
+ assert.match(main,/https:\/\/discord\.gg\/z36Hb9775K/);
+ assert.match(preload,/openDiscord/);
+ assert.doesNotMatch(keys,/reroll:tr\('Đổi thẻ'/);
+ assert.doesNotMatch(keys,/,'reroll'\]/);
+ assert.doesNotMatch(pad,/PKMSVVPadOrb\.bindings\(\)\.reroll/);
 });
