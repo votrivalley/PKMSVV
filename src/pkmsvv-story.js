@@ -7,7 +7,8 @@ G.PKMSVVStory=(()=>{
  const VISUALS=Object.freeze({
    1:'eyes', 2:'eyes', 3:'eyes',
    4:'gate', 5:'reveal',
-   6:'chapter2-orbs', 7:'chapter2-shadow', 8:'chapter3-nest', 9:'chapter3-hatch'
+   6:'chapter2-orbs', 7:'chapter2-shadow', 8:'chapter3-nest', 9:'chapter3-hatch',
+   10:'chapter1-echo', 11:'chapter1-fragments'
  });
  const chapters={
   prologue:[
@@ -23,10 +24,10 @@ G.PKMSVVStory=(()=>{
    {art:4,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Hãy trả lời các câu hỏi. Đừng nghĩ quá lâu... hãy là chính mình.','Answer these questions. Do not overthink... be yourself.']}
   ],
   chapter1:[
-   {art:1,speaker:['Tôi','Me'],text:['Mình đã chiến đấu... nhưng tại sao mọi thứ cứ lặp lại?','I fought... but why does everything keep repeating?']},
-   {art:2,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Mỗi lần đứng dậy, một mảnh ký ức sẽ quay về.','Each time you rise again, a fragment of memory returns.']},
-   {art:4,speaker:['Tôi','Me'],text:['Vậy phải sống sót bao lâu mới nhớ được mình là ai?','How long must I survive before I remember who I am?']},
-   {art:4,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Đừng đếm thời gian. Hãy học cách điều khiển cả tám sức mạnh.','Do not count the minutes. Learn to wield all eight powers.']}
+   {art:10,speaker:['Tôi','Me'],text:['Mình đã chiến đấu... nhưng tại sao mọi thứ cứ lặp lại?','I fought... but why does everything keep repeating?']},
+   {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Mỗi lần đứng dậy, một mảnh ký ức sẽ quay về.','Each time you rise again, a fragment of memory returns.']},
+   {art:11,speaker:['Tôi','Me'],text:['Vậy phải sống sót bao lâu mới nhớ được mình là ai?','How long must I survive before I remember who I am?']},
+   {art:11,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Đừng đếm thời gian. Hãy học cách điều khiển cả tám sức mạnh.','Do not count the minutes. Learn to wield all eight powers.']}
   ],
   chapter2:[
    {art:6,speaker:['Tôi','Me'],text:['Tám kỹ năng... Mình đã học đủ cả tám. Sao mặt đất lại phát sáng?','Eight skills... I have learned all eight. Why is the ground glowing?']},
@@ -169,7 +170,7 @@ G.PKMSVVStory=(()=>{
       img.dataset.revealFallback='1';
       img.onerror=()=>{img.onerror=null;img.src='assets/story/scene-5.svg';};
       img.src='assets/story/gate.webp';
-    }else if(key==='chapter2-orbs'||key==='chapter2-shadow'||key==='chapter3-nest'||key==='chapter3-hatch'){
+    }else if(key==='chapter1-echo'||key==='chapter1-fragments'||key==='chapter2-orbs'||key==='chapter2-shadow'||key==='chapter3-nest'||key==='chapter3-hatch'){
       img.onerror=null;
       img.src='assets/story/gate.webp';
     }else{
@@ -180,7 +181,9 @@ G.PKMSVVStory=(()=>{
    delete img.dataset.revealFallback;
    img.src=imagePath;
   }
-  img.alt=key==='chapter3-nest'?tr('Ổ trứng còn sót lại giữa vùng đất ký ức','An abandoned nest in the land of lost memories'):
+  img.alt=key==='chapter1-echo'?tr('Lượt chiến đấu lặp lại giữa vùng đất ký ức','Repeating battles in the land of lost memories'):
+     key==='chapter1-fragments'?tr('Tám sức mạnh và những mảnh ký ức đang trở lại','Eight powers and returning memory fragments'):
+     key==='chapter3-nest'?tr('Ổ trứng còn sót lại giữa vùng đất ký ức','An abandoned nest in the land of lost memories'):
     key==='chapter3-hatch'?tr('Quả trứng nở, Pokémon con đi theo người sống sót','An egg hatches and a baby Pokémon joins the survivor'):
     key==='chapter2-orbs'?tr('Vòng phép sáng lên, Mystery Orbs trỗi dậy giữa đêm','Eight powers awaken as the Mystery Orbs rise into the night'):
     key==='chapter2-shadow'?tr('Bóng trắng bí ẩn xuất hiện trong chính khung cảnh Mystery Orbs','A mysterious white shadow appears in the same Mystery Orb scene'):
@@ -220,7 +223,7 @@ G.PKMSVVStory=(()=>{
   stop();hideNameForm();mode=type;idx=0;next=done;replaying=replay;chosenDex=dex;
   lines=chapters[type];G.UI.chrome(false);G.UI.show('scr-pkmsvv-story');
   // Preload once; optional offline fallbacks remain available.
-  for(const name of ['eyes','gate','reveal','chapter2-orbs','chapter2-shadow','chapter3-nest','chapter3-hatch']){const preload=new Image();preload.src='assets/story/'+name+'.webp';}
+  for(const name of ['eyes','gate','reveal','chapter1-echo','chapter1-fragments','chapter2-orbs','chapter2-shadow','chapter3-nest','chapter3-hatch']){const preload=new Image();preload.src='assets/story/'+name+'.webp';}
   draw();
   if(G.Pad&&G.Pad.focusFirst)G.Pad.focusFirst();
  }
