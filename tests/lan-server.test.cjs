@@ -38,7 +38,7 @@ test('LAN HTTP & same-origin WS support room life cycle and host-only frame rout
   for(const p of [host,guest,stranger])assert.ok((await p.next(m=>m.t==='welcome')).uid.startsWith('lan-'));
   assert.equal((await host.req('hello',{name:'Host'})).ok,true);
   await guest.req('hello',{name:'Guest'});
-  const created=await host.req('create',{mode:'eggrush',visibility:'private',dex:25});
+  const created=await host.req('create',{mode:'coop',visibility:'private',dex:25});
   assert.equal(created.ok,true);const room=created.result;
   assert.equal(room.members.length,1);assert.match(room.id,/^[\w-]{12,45}$/);
   assert.equal((await stranger.req('list')).result.length,0,'Private room is not publicly discovered');
