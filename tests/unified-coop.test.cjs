@@ -40,3 +40,19 @@ test('LAN bots can participate in all 3 modes and pursue real Egg Rush nests',()
  assert.match(bot,/G\.EggRush\?\.nests/);
  assert.match(egg,/get nests\(\)\{return nests;\}/);
 });
+
+test('A copied LAN invitation contains the actual room code and automatically joins',()=>{
+ const serverPatch=read('scripts/patch-lan.cjs');
+ const ui=read('src/shared/coop-unified.js');
+ for(const token of ['pkmsvv-lan-copy-invite','pkmsvvRole','pkmsvvMode','pkmsvvCode','Sao chép lời mời'])
+  assert.ok(serverPatch.includes(token),'Host invite: '+token);
+ assert.match(ui,/const invitedCode=u\.searchParams\.get\('pkmsvvCode'\)/);
+ assert.match(ui,/u\.searchParams\.set\('pkmsvvCode',invitedCode\)/);
+ assert.match(ui,/G\.Social\.joinRoom\(inviteCode\)/);
+ assert.doesNotMatch(serverPatch,/Địa chỉ LAN: '\+location\.origin/,'Do not show loopback as a friend invite');
+});
+test('Tranh Trứng never starts a Rift; other modes keep Rift update',()=>{
+ const script=read('scripts/patch-v15-egg-rush-web.cjs');
+ assert.match(script,/coop && G\.Social\?\.room\?\.mode==='eggrush'/);
+ assert.match(script,/G\.Rift\.update\(dt, pl, time\)/);
+});
