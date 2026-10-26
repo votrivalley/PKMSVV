@@ -41,7 +41,10 @@ const autoDiscoverJava=String.raw`
       .putString(\"host\",ip).putInt(\"port\",port).apply();
     android.content.Intent intent=new android.content.Intent(activity,LANRoomActivity.class);
     intent.putExtra(\"host_ip\",ip);intent.putExtra(\"host_port\",port);
-    intent.putExtra(\"room_role\",role);activity.startActivity(intent);call.resolve();
+    String mode=call.getString(\"mode\",\"coop\");
+    if(!java.util.Arrays.asList(\"coop\",\"royale\",\"eggrush\").contains(mode))mode=\"coop\";
+    intent.putExtra(\"room_role\",role);intent.putExtra(\"room_mode\",mode);
+    activity.startActivity(intent);call.resolve();
   }
   private void enterManual(PluginCall call,String role) {
     android.app.Activity a=getActivity();
@@ -124,14 +127,11 @@ const autoDiscoverJava=String.raw`
     }).start();
   }
   @PluginMethod public void open(PluginCall call) {
-    getActivity().runOnUiThread(()->new android.app.AlertDialog.Builder(getActivity())
-      .setTitle(\"🤝 Co-op · Cùng Wi-Fi\")
-      .setMessage(\"Tạo hoặc tham gia phòng trên máy LAN gần đây. Có 3 chế độ: Sống Sót, Sống Còn, Tranh Trứng. PC giữ dịch vụ LAN chạy.\")
-      .setItems(new String[]{\"🏠 Tạo phòng (Host)\",\"🤝 Tham gia (Join)\"},
-        (dialog,which)->chooseNearby(call,which==0?\"host\":\"join\"))
-      .setNegativeButton(\"Quay lại\",(d,w)->call.resolve()).show());
-  }
-`;
+    String role=call.getString(\"role\",\"join\");
+    if(!java.util.Arrays.asList(\"host\",\"join\",\"ai\").contains(role))role=\"join\";
+    final String chosen=role;
+    getActivity().runOnUiThread(()->chooseNearby(call,chosen));
+  }`;
 
 const begin=pluginJava.indexOf('  @PluginMethod public void open(PluginCall call) {');
 const end=pluginJava.indexOf('\n}\n',begin);
@@ -139,28 +139,17 @@ if(begin<0||end<0)throw Error('Native LAN plugin entrypoint drift');
 const pluginNew=pluginJava.slice(0,begin)+autoDiscoverJava.replace(/\\\"/g,'"')+pluginJava.slice(end);
 fs.writeFileSync(path.join(path.dirname(main),'PKMSVVLAN.java'),pluginNew.replaceAll('__PACKAGE__',pkg),'utf8');
 
-const roleScript=String.raw`
-(function(){
- var role='__ROLE__',tries=0;
- var task=setInterval(function(){
-  if(++tries>90){clearInterval(task);return;}
-  if(window.G&&G.MultiplayerUI&&typeof G.MultiplayerUI.open==='function'&&G.DB?.save){
-   clearInterval(task);try{G.MultiplayerUI.open();}catch(e){}
-  }
- },300);
-})();
-`;
 let newActivity=activityJava;
 newActivity=newActivity.replace('private static final int PORT=37816, EXPORT=711',
  'private static final int EXPORT=711');
 newActivity=newActivity.replace('private String host="",pendingSave;',
- 'private String host="",pendingSave; private int port=37816; private String roomRole="join";');
+ 'private String host="",pendingSave; private int port=37816; private String roomRole="join"; private String roomMode="coop";');
 newActivity=newActivity.replace('uri.getPort()==PORT','uri.getPort()==port');
 newActivity=newActivity.replace('host=getIntent().getStringExtra("host_ip");',
- 'host=getIntent().getStringExtra("host_ip");\n    port=getIntent().getIntExtra("host_port",37816);\n    roomRole=getIntent().getStringExtra("room_role");');
+ 'host=getIntent().getStringExtra("host_ip");\n    port=getIntent().getIntExtra("host_port",37816);\n    roomRole=getIntent().getStringExtra("room_role");\n    roomMode=getIntent().getStringExtra("room_mode");');
 newActivity=newActivity.replace('":"+PORT+"/"', '":"+port+"/"');
-newActivity=newActivity.replace('view.evaluateJavascript(__INJECTED__,null);',
- 'view.evaluateJavascript(__INJECTED__,null);\n        if(localHost(Uri.parse(url)))view.evaluateJavascript(__ROLE_SCRIPT__,null);');
+newActivity=newActivity.replace('web.loadUrl("http://"+host+":"+port+"/");',
+ 'web.loadUrl("http://"+host+":"+port+"/game/?pkmsvvRole="+roomRole+"&pkmsvvMode="+roomMode);');
 fs.writeFileSync(path.join(path.dirname(main),'LANRoomActivity.java'),
- newActivity.replaceAll('__PACKAGE__',pkg).replace('__INJECTED__',JSON.stringify(injected)).replace('__ROLE_SCRIPT__',JSON.stringify(roleScript.replace('__ROLE__','join'))),'utf8');
+ newActivity.replaceAll('__PACKAGE__',pkg).replace('__INJECTED__',JSON.stringify(injected)),'utf8');
 console.log('PKMSVV FULL Android: private IPv4 LAN plugin, external Host WebView, SAF JSON save import/export installed.');
