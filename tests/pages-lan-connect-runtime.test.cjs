@@ -45,6 +45,6 @@ test('Rejects public IP without leaving page or calling old multiplayer service'
  const t=setup();
  t.context.G.MultiplayerUI.open();
  t.input.value='8.8.8.8:37816';t.fields.submit();
- assert.equal(t.navigated,'');assert.match(t.msg.textContent,/không hợp lệ/);
+ assert.equal(t.navigated,'');assert.match(t.msg.textContent,/chưa hợp lệ/);
  assert.equal(t.legacy,0);
 });
