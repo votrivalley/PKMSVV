@@ -131,6 +131,8 @@ execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-cloud-mult
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-exclusive-session.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-online-counter.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-coop-repair.cjs')], { cwd: root, stdio: 'inherit' });
+// Standalone LAN target replaces Firebase room signalling with a same-Wi-Fi hub.
+if(process.env.PKMSVV_LAN_BUILD==='1')execFileSync(process.execPath,[path.join(root,'scripts','patch-lan.cjs')],{cwd:root,stdio:'inherit'});
 // Voice is Web-only and strictly limited to cooperative rooms (2–4 players).
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-voice.cjs')], { cwd: root, stdio: 'inherit' });
 const flow = path.join(game, 'js', 'game.js');
