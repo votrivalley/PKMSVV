@@ -22,7 +22,7 @@ gameHTML=gameHTML.replace('</head>',[
  '#btn-google,#pkmsvv-login-google,#pkmsvv-online-counter,',
  '#scr-friends,#scr-rank,#scr-multiplayer{display:none!important}',
  '</style></head>'
-].join('\\n'));
+].join('\n'));
 fs.writeFileSync(gameIndex,gameHTML,'utf8');
 const manifest=JSON.parse(fs.readFileSync(path.join(ios,'manifest.webmanifest'),'utf8'));
 Object.assign(manifest,{id:'/',start_url:'/?source=ios-home',scope:'/',display:'standalone',
