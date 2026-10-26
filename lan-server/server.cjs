@@ -55,12 +55,14 @@ function startServer({root,port=37816,host='0.0.0.0'}={}){
   if(pathname.includes('\0')||pathname.includes('\\')){res.writeHead(400);res.end();return;}
   const relative=pathname.endsWith('/')?pathname+'index.html':pathname;
   const filename=path.resolve(rootAbs,'.'+relative);
-  if(filename!==rootAbs&&!filename.startsWith(rootAbs+path.sep)){res.writeHead(403);res.end();return;}
+  const relPath=path.relative(rootAbs,filename);
+  if(relPath==='..'||relPath.startsWith('..'+path.sep)||path.isAbsolute(relPath)){res.writeHead(403);res.end('Invalid path');return;}
   let stat;
   try{stat=await fs.promises.stat(filename)}catch(_){res.writeHead(404);res.end('Not found');return;}
   if(!stat.isFile()){res.writeHead(404);res.end();return;}
   const real=await fs.promises.realpath(filename);
-  if(!real.startsWith(rootAbs+path.sep)){res.writeHead(403);res.end();return;}
+  const finalRel=path.relative(rootAbs,real);
+  if(finalRel==='..'||finalRel.startsWith('..'+path.sep)||path.isAbsolute(finalRel)){res.writeHead(403);res.end('Invalid canonical path');return;}
   res.writeHead(200,{'Content-Type':MIMES[path.extname(filename).toLowerCase()]||'application/octet-stream',
    'Content-Length':stat.size,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff',
    'Content-Security-Policy':"default-src 'self' data: blob:; connect-src 'self' ws:; img-src 'self' data: blob:; media-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'","Referrer-Policy":"no-referrer"});
