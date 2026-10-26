@@ -39,7 +39,7 @@ test('Save guardian is loaded before game and Rescue is available for cross-doma
 });
 test('Web Co-op is replaced with a LAN-only overlay, never old Firebase gate',()=>{
  const shell=read('game/js/ui/pkmsvv-local-shell.js');
- assert.match(shell,/G\.MultiplayerUI\.open=openLanDialog/);
+ assert.match(shell,/G\.MultiplayerUI\.open=isPages\?openLanDialog/);
  assert.match(shell,/pkmsvv-lan-connect-modal/);
  assert.match(shell,/window\.location\.assign\('http:\/\/'/);
 });

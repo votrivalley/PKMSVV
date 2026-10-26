@@ -10,7 +10,7 @@ test('Cloudflare old social UI hidden even with specific v1.5 menu flex CSS',()=
 test('Cloudflare Co-op click captured before old Firebase handlers, points only to LAN',()=>{
  const src=read('src/shared/local-shell.js');
  assert.match(src,/document\.addEventListener\('click',enterLan,true\)/);
- assert.match(src,/G\.MultiplayerUI\.open=openLanDialog/);
+ assert.match(src,/G\.MultiplayerUI\.open=isPages\?openLanDialog/);
  assert.match(src,/pkmsvv-lan-connect-modal/);
  assert.match(src,/stopImmediatePropagation/);
  assert.match(src,/window\.location\.assign\('http:\/\/'\+ip\+':'\+port\+'\/game\/'\)/);
