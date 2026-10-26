@@ -6,6 +6,8 @@ on:
       - 'scripts/**'
       - 'src/ios/**'
       - 'src/shared/**'
+      - 'tests/local-shell-ui.test.cjs'
+      - 'tests/local-ui-lan-host-regression.test.cjs'
       - 'src/lan/**'
       - 'src/web/**'
       - 'src/pkmsvv-save-ui.js'

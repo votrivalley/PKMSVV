@@ -8,6 +8,8 @@ on:
       - 'src/cloudflare/**'
       - 'src/ios/**'
       - 'src/shared/**'
+      - 'tests/local-shell-ui.test.cjs'
+      - 'tests/local-ui-lan-host-regression.test.cjs'
       - 'src/web/**'
       - 'tests/cloudflare-pages.test.cjs'
       - 'package.json'

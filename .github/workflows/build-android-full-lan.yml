@@ -8,6 +8,8 @@ on:
       - 'src/android/full-lan-ui.js'
       - 'src/lan/**'
       - 'src/shared/**'
+      - 'tests/local-shell-ui.test.cjs'
+      - 'tests/local-ui-lan-host-regression.test.cjs'
       - 'tests/android-full-lan.test.cjs'
       - 'tests/v15-gacha-save-isolation.test.cjs'
       - '.github/workflows/build-android-full-lan.yml'

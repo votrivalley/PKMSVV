@@ -6,6 +6,8 @@ on:
       - 'lan-server/**'
       - 'src/lan/**'
       - 'src/shared/**'
+      - 'tests/local-shell-ui.test.cjs'
+      - 'tests/local-ui-lan-host-regression.test.cjs'
       - 'scripts/**'
       - 'desktop/lan-main.cjs'
       - 'lan-win.json'
