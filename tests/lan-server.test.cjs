@@ -74,7 +74,7 @@ test('LAN source shares neither Google login nor Firestore and keeps distinct sa
  assert.match(read('src/lan/lan-compact-ui.js'),/Android/);
  assert.match(read('src/lan/lan-compact-ui.js'),/pkmsvv-lan-host-ips/);
  assert.match(read('scripts/prepare-web.cjs'),/PKMSVV_LAN_BUILD/);
- assert.doesNotMatch(read('scripts/patch-lan.cjs'),/if \\(restored && G.DB.save\\) this.afterLogin/);
- assert.match(read('scripts/prepare-web.cjs'),/if \\(restored \\|\\| G.DB.mode === 'local'\\) this.afterLogin/);
- assert.doesNotMatch(read('scripts/patch-lan.cjs'),/#scr-login #login-form\\{display:block!important\\}/);
+ assert.ok(!read('scripts/patch-lan.cjs').includes("if (restored && G.DB.save) this.afterLogin()"));
+ assert.ok(read('scripts/prepare-web.cjs').includes("if (restored || G.DB.mode === 'local') this.afterLogin()"));
+ assert.ok(!read('scripts/patch-lan.cjs').includes("#scr-login #login-form{display:block!important}"));
 });
