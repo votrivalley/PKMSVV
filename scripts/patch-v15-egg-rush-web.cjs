@@ -58,6 +58,11 @@ patch('js/game.js',
 patch('js/game.js',
  "royale: G.Royale.active ? G.Royale.outcome : null,",
  "royale: G.Royale.active ? G.Royale.outcome : null,\n      eggrush: G.EggRush.active ? G.EggRush.outcome : null,");
+// Egg Rush is a nest race, not a Rift/legendary arena mode.
+// Keep Rift intact in Sống Sót, Sống Còn and normal solo.
+patch('js/game.js',
+ "    G.Rift.update(dt, pl, time);",
+ "    if(!(coop && G.Social?.room?.mode==='eggrush'))G.Rift.update(dt, pl, time);");
 patch('js/game.js',
  "    G.PKMSVVEggs.update(dt,pl,time,coop);",
  "    G.PKMSVVEggs.update(dt,pl,time,coop);\n    if(coop&&G.EggRush.active&&!G.Coop.isHost)G.EggRush.update(dt,time,G.Coop.players(),()=>{});");
