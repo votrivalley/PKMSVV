@@ -85,8 +85,16 @@
     if(u.protocol!=='http:'||u.username||u.password||!privateIP||(u.port&&(+u.port<1024||+u.port>65535)))
      throw Error('Nhập IPv4 nội bộ hợp lệ và cổng 1024–65535.');
     if(!u.port)u.port='37816';
+    // A copied invitation already contains the room code; never discard it.
+    const invitedCode=u.searchParams.get('pkmsvvCode');
+    const invitedMode=u.searchParams.get('pkmsvvMode');
     u.pathname='/game/';u.search='';u.hash='';
-    u.searchParams.set('pkmsvvRole',role);u.searchParams.set('pkmsvvMode',mode);
+    u.searchParams.set('pkmsvvRole',invitedCode?'join':role);
+    u.searchParams.set('pkmsvvMode',invitedCode&&modes.some(m=>m[0]===invitedMode)?invitedMode:mode);
+    if(invitedCode){
+     if(!/^[A-Za-z0-9_-]{12,45}$/.test(invitedCode))throw Error('Mã phòng trong lời mời không hợp lệ.');
+     u.searchParams.set('pkmsvvCode',invitedCode);
+    }
     // HTTPS browsers cannot probe HTTP LAN hosts; top-level navigation is allowed.
     if(location.protocol==='http:'){
      const abort=new AbortController();timer=setTimeout(()=>abort.abort(),4000);
@@ -128,7 +136,21 @@
  async function action(role){
   if(busy)return;
   if(lan()){
-   if(role==='join')return joinRooms();
+   if(role==='join'){
+    const inviteCode=new URLSearchParams(location.search).get('pkmsvvCode');
+    if(inviteCode){
+     try{
+      if(!/^[A-Za-z0-9_-]{12,45}$/.test(inviteCode))throw Error('Mã phòng không hợp lệ');
+      if(!G.Social.room){
+       const joined=await G.Social.joinRoom(inviteCode);
+       if(!joined.ok)throw Error(joined.error||'Không thể tham gia phòng');
+      }
+      history.replaceState(null,'',location.pathname);
+      close();G.LobbyUI.open();return;
+     }catch(e){info('Lời mời không thể mở: '+e.message);return;}
+    }
+    return joinRooms();
+   }
    busy=true;
    try{
     if(G.Social.playing){close();G.LobbyUI.open();return;}
@@ -155,6 +177,14 @@
    return;
   }
   detail.replaceChildren();
+  if(role==='ai'){
+   const hint=document.createElement('p');
+   hint.textContent='Bản HTML5 Cloudflare đang chơi offline và không chạy máy chủ LAN. Để chơi với AI ở bản này, hãy mở link lời mời từ PC Host đang chạy. Chọn “Chơi với AI” trên Host để tạo bot; website độc lập chưa có AI offline.';
+   detail.append(hint);
+   const link=document.createElement('button');link.type='button';link.textContent='Dán lời mời từ PC Host';
+   link.onclick=()=>{detail.replaceChildren();addressEntry('join');};
+   detail.append(link);return;
+  }
   addressEntry(role);
  }
  function intercept(e){
