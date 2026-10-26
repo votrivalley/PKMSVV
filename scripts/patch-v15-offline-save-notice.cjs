@@ -19,8 +19,8 @@ fs.appendFileSync(menu,`
   if(!left)return;
   const en=G.I18n?.lang==='en';
   const label=en
-   ? 'OFFLINE SAVE: Progress on this device is separate from Online/Google. It cannot be synced or used as your Online save.'
-   : 'LƯU OFFLINE: Tiến trình trên thiết bị này tách biệt với Online/Google, không thể đồng bộ hoặc dùng chung save Online.';
+   ? 'REMINDER: Back up your game regularly.'
+   : 'Nhớ sao lưu game thường xuyên.';
   const note=old||document.createElement('p');
   note.className='pkmsvv-offline-save-note';
   note.setAttribute('role','note');note.setAttribute('translate','no');

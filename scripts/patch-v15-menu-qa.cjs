@@ -53,6 +53,7 @@ fs.appendFileSync(js,`
   // separate Backup / Restore dialog above the menu (no nested tab content).
   const saveTab=document.getElementById('pkmsvv-v15-backup');
   if(saveTab){
+   saveTab.classList.add('hidden'); // no duplicate backup action inside Settings
    saveTab.type='button';
    saveTab.removeAttribute('data-t');
    saveTab.onclick=event=>{
@@ -64,6 +65,26 @@ fs.appendFileSync(js,`
     }
     G.SettingsUI?.close?.();
     G.PKMSVVSaveUI.openQuick();
+   };
+  }
+  // Keep backup accessible directly on the HOME MENU, never hidden in Settings.
+  // Reuse the existing verified JSON export/import modal without changing saves.
+  const menuList=menu.querySelector('.menu-right .menu-list');
+  if(menuList){
+   let quick=menuList.querySelector('#pkmsvv-main-save');
+   if(!quick){
+    quick=document.createElement('button');
+    quick.id='pkmsvv-main-save';quick.type='button';
+    quick.className='menu-item pkmsvv-menu-save';
+    const settings=menuList.querySelector('[data-go="settings"]');
+    if(settings)menuList.insertBefore(quick,settings);else menuList.appendChild(quick);
+   }
+   quick.innerHTML='<span class="mi-ico" aria-hidden="true">💾</span>'+
+    (G.I18n?.lang==='en'?'Back up game':'Sao lưu game')+
+    '<small>'+(G.I18n?.lang==='en'?'Export / import save file':'Xuất / nhập file save')+'</small>';
+   quick.onclick=()=>{
+    if(G.PKMSVVSaveUI?.openQuick)G.PKMSVVSaveUI.openQuick();
+    else G.UI?.toast?.('Chức năng sao lưu chưa sẵn sàng');
    };
   }
   const link=document.getElementById('pkmsvv-v15-discord');

@@ -1,0 +1,25 @@
+'use strict';
+/* Static HTML5/PWA distribution for iPhone/iPad. Not an IPA or App Store upload. */
+const fs=require('node:fs'),path=require('node:path'),{execFileSync}=require('node:child_process');
+const root=path.resolve(__dirname,'..'),web=path.join(root,'dist','web'),ios=path.join(root,'dist','ios');
+const env={...process.env,PKMSVV_WEB_PREVIEW:'1',PKMSVV_IOS_BUILD:'1'};
+delete env.PKMSVV_FIREBASE_CONFIG_JSON; // Never package authenticated cloud services.
+execFileSync(process.execPath,[path.join(root,'scripts','prepare-web.cjs')],{cwd:root,env,stdio:'inherit'});
+fs.rmSync(ios,{force:true,recursive:true});
+fs.cpSync(web,ios,{recursive:true});
+fs.copyFileSync(path.join(root,'src','ios','index.html'),path.join(ios,'index.html'));
+fs.copyFileSync(path.join(root,'src','ios','entry.js'),path.join(ios,'entry.js'));
+fs.copyFileSync(path.join(root,'src','ios','sw.js'),path.join(ios,'sw.js'));
+const manifest=JSON.parse(fs.readFileSync(path.join(ios,'manifest.webmanifest'),'utf8'));
+Object.assign(manifest,{id:'/',start_url:'/?source=ios-home',scope:'/',display:'standalone',
+ name:'Pokémon Chuyển Sinh',short_name:'Pokémon Chuyển Sinh',orientation:'landscape'});
+fs.writeFileSync(path.join(ios,'manifest.webmanifest'),JSON.stringify(manifest,null,2)+'\n');
+fs.writeFileSync(path.join(ios,'game','manifest.webmanifest'),JSON.stringify(manifest,null,2)+'\n');
+// Preserve actual save storage keys; installed PWA and Safari may have separate storage.
+for(const file of ['index.html','entry.js','sw.js','game/index.html','game/js/app.min.js','manifest.webmanifest']){
+ if(!fs.statSync(path.join(ios,file)).isFile())throw Error('Missing iOS web output '+file);
+}
+const bundled=fs.readFileSync(path.join(ios,'game','js','app.min.js'),'utf8');
+if(/pkmsvv-b84d2-default-rtdb|AIza[A-Za-z0-9_-]{35}/.test(bundled))
+ throw Error('iOS offline bundle contains Firebase credentials or RTDB URL');
+console.log('PKMSVV iOS PWA ready in dist/ios — host over HTTPS. No Firebase or App Store.');

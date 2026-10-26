@@ -1,0 +1,50 @@
+name: Build iOS HTML5 PWA Beta
+on:
+  push:
+    branches: [feature/lan-local-beta]
+    paths:
+      - 'scripts/**'
+      - 'src/ios/**'
+      - 'src/web/**'
+      - 'src/pkmsvv-save-ui.js'
+      - 'src/pkmsvv-native-choice.js'
+      - 'package.json'
+      - 'tests/ios-web.test.cjs'
+      - '.github/workflows/build-ios-web.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ios-pwa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Load pinned game source
+        shell: bash
+        run: |
+          git init vendor/pokesurvivor
+          git -C vendor/pokesurvivor remote add origin https://github.com/JPTER78/pokesurvivor.git
+          git -C vendor/pokesurvivor fetch --depth 1 origin 11fe868c640b62ac37beacc222e056bc4d9ec892
+          git -C vendor/pokesurvivor checkout --detach FETCH_HEAD
+      - run: npm install --no-audit --no-fund
+      - run: npm run test:ios
+      - run: npm run prepare:ios
+      - name: Validate files and pack HTTPS-ready static site
+        shell: bash
+        run: |
+          test -s dist/ios/index.html
+          test -s dist/ios/sw.js
+          test -s dist/ios/game/js/app.min.js
+          test -s dist/ios/game/assets/icons/icon-180.png
+          mkdir -p dist/ios-artifact
+          cd dist/ios && zip -qr ../ios-artifact/PKMSVV-iOS-HTML5-PWA-Beta.zip .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-iOS-HTML5-PWA-Beta
+          path: dist/ios-artifact/*.zip
+          retention-days: 14
+          if-no-files-found: error

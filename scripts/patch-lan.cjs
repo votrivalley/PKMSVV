@@ -31,11 +31,14 @@ ui=ui.replace(marker,
  "      $('lobby-inv-title').classList.add('hidden');\n"+
  "      $('lobby-invite').classList.add('hidden');\n"+marker);
 write('js/ui/social-ui.js',ui);
+// LAN beta is Co-op, not the retired Firebase Online mode.
+once('dev.html','data-go="multiplayer">Nhiều người chơi','data-go="multiplayer">🤝 Co-op');
+once('dev.html','<h2>🌐 Nhiều người chơi</h2>','<h2>🤝 Co-op · LAN</h2>');
 const css=[
 '/* LAN: no Firebase friends/rank, Google login or unavailable HTTP voice */',
 '#scr-menu [data-go="friends"],#scr-menu [data-go="rank"],',
 '#scr-friends,#scr-rank,#pkmsvv-menu-google,#btn-google,#pkmsvv-login-google,',
-'#pkmsvv-online-counter,#lobby-inv-title,#lobby-invite,',
+'#pkmsvv-online-counter,#lobby-inv-title,#lobby-invite,#pkmsvv-v15-backup,',
 '[id*="pkmsvv-voice"],#pkmsvv-voice-panel {display:none!important}',
 '#scr-login .tabs{display:flex!important}',
 '#scr-login #login-form{display:block!important}',
