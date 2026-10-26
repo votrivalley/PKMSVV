@@ -265,7 +265,7 @@ test('Solo egg nest requires 4 seconds, interruption resets progress, and hit de
  assert.ok(visuals.some(v=>v.includes('+3s')),'Delay must be signposted');
  for(let i=0;i<245;i++){player.kills++;G.PKMSVVEggs.update(.1,player,74+i*.1,false);}
  assert.equal(egg.hatched,true,'Combat-accelerated incubation still hatches');
- assert.equal(G.PKMSVVEggs.limit(),1);
+ assert.equal(G.PKMSVVEggs.limit(),2);
  save.pkmsvvEggSlot2=true;assert.equal(G.PKMSVVEggs.limit(),2);
  save.pkmsvvEggSlot3=true;assert.equal(G.PKMSVVEggs.limit(),2);
 });
@@ -858,4 +858,23 @@ test('uncollected nest is 80% original artwork, incubation egg and capture geome
  const G={};
  vm.runInNewContext(renderer,{G,Image:undefined,Object,Math});
  assert.equal(G.PKMSVVEggArt.nest({save(){},restore(){}},0,0,.8),false);
+});
+
+test('Two companions are always available before and after Chapter 3, no old flags required',()=>{
+ for(const save of [
+  {stats:{}},
+  {pkmsvvChapter3Seen:false,pkmsvvEggSlot2:false,stats:{}},
+  {pkmsvvChapter3Seen:true,pkmsvvEggSlot2:false,stats:{}},
+  {pkmsvvChapter3Seen:true,pkmsvvEggSlot2:true,stats:{}}
+ ]){
+  const G={DB:{save},Sprites:{preload(){}},Coop:{active:false}};
+  vm.runInNewContext(read('src/v15/eggs.js'),{G,Math,Number,Object});
+  assert.equal(G.PKMSVVEggs.unlocked(),true);
+  assert.equal(G.PKMSVVEggs.limit(),2);
+  G.PKMSVVEggs.begin({x:0,y:0,kills:0,level:1},false);
+  assert.equal(G.PKMSVVEggs.occupied,0);
+ }
+ const src=read('src/v15/eggs.js');
+ assert.doesNotMatch(src,/function hasSecondSlot|if\(!hasSecondSlot/);
+ assert.match(read('src/pkmsvv-story.js'),/Ngay từ đầu, ngươi đã có thể đồng hành cùng tối đa hai Pokémon/);
 });

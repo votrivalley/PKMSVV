@@ -25,3 +25,8 @@
 - Kiểm chứng Pichu ngừng quái thật, tối đa 4 mục tiêu, chống stun-lock, boss bị giảm thời gian khống chế.
 - Kiểm chứng hồi máu/khiên theo từng HP riêng, không buff người lạ hoặc đối thủ, không vượt cap, và cooldown 12–19 giây.
 - Kiểm tra thực tế Win/Android/Web trước công bố; không tự deploy Firebase hoặc tuyên bố QA PvP 4 trình duyệt nếu chưa thực sự thử.
+
+## Sửa lỗi đội hỗ trợ (26/10/2026)
+- Tối đa **2 hỗ trợ ngay từ trận đầu**, không cần xem hay hoàn thành Chương 3, không phụ thuộc flag `pkmsvvEggSlot2`/`pkmsvvEggSlot3`.
+- Ổ trứng đầu vẫn xuất hiện theo thời điểm đầu trận; đủ 2 con/2 trứng đang ấp thì không sinh thêm; bạn đồng hành gục mới có ổ thay sau khoảng chờ hiện tại.
+- Chương 3 vẫn giữ cốt truyện nhưng không khóa số slot hỗ trợ; save cũ không bị xóa.

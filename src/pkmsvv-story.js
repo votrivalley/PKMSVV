@@ -53,7 +53,7 @@ G.PKMSVVStory=(()=>{
    {art:9,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Hãy tiếp tục chiến đấu, thu thập kinh nghiệm. Mỗi bước tiến sẽ giúp sự sống bên trong thức giấc.','Keep fighting and gathering experience. Every step helps the life within awaken.']},
    {art:9,speaker:['Tôi','Me'],text:['Một Pokémon bé nhỏ... Nó đang đi theo mình!','A tiny Pokémon... It is following me!']},
    {art:9,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Chúng có thể chữa lành, bảo vệ hoặc cùng ngươi chiến đấu. Ban đầu, ngươi chỉ có thể chăm sóc một bạn đồng hành.','They can heal, shield, or fight beside you. At first, you can care for only one companion.']},
-   {art:9,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Khi giúp đủ hai mươi quả trứng nở và sống sót mười lăm phút trong một lượt, ngươi sẽ mở thêm một ô đồng hành. Tối đa hai bạn.','Hatch twenty eggs and survive fifteen minutes in one run to earn your second and final companion slot.']},
+   {art:9,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Ngay từ đầu, ngươi đã có thể đồng hành cùng tối đa hai Pokémon nở từ trứng. Hãy bảo vệ chúng và để tình bạn lớn lên qua mỗi hành trình.','From the beginning, up to two Pokémon hatched from eggs can accompany you. Protect them and let your bond grow on every journey.']},
    {art:9,speaker:['Tôi','Me'],text:['Lần đầu tiên... mình không chỉ chiến đấu để sống sót một mình.','For the first time... I am not fighting just to survive alone.']}
   ],
   reveal:[

@@ -22,11 +22,10 @@ G.PKMSVVEggs=(()=>{
  const FX_COLOR={attack:'#ffd472',heal:'#66ffad',shield:'#6edaff',magnet:'#ffe078',slow:'#e99aff',paralyze:'#ffdb55'};
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  let player=null,items=[],nests=[],trail=[],spawnAt=55,seq=0,kills=0,lv=1,runTime=0,lastDir={x:0,y:1},wasInArena=false;
- // New teams start with one slot. Finishing the Chapter 3 egg quest grants slot two.
- // Respect the previous 'slot3' unlock for compatibility with existing saves.
- function hasSecondSlot(){return !!(G.DB?.save?.pkmsvvEggSlot2||G.DB?.save?.pkmsvvEggSlot3);}
- function limit(){return hasSecondSlot()?2:1;}
- function unlocked(){return !!G.DB?.save?.pkmsvvChapter3Seen;}
+ // Exactly two support slots from the first run, regardless of Chapter 3.
+ // Preserve historical save flags but do not require or rewrite them.
+ function limit(){return 2;}
+ function unlocked(){return !!G.DB?.save;}
  function begin(pl,coop){
   player=pl;items=[];nests=[];trail=pl?[{x:pl.x,y:pl.y}]:[];spawnAt=55;seq=0;runTime=0;lastDir={x:0,y:1};wasInArena=!!G.Rift?.inArena;kills=pl?.kills||0;lv=pl?.level||1;
   if(!coop&&unlocked())G.Sprites?.preload?.(SPECIES.map(s=>s.dex),7000);
@@ -87,10 +86,6 @@ G.PKMSVVEggs=(()=>{
  function onHatch(it){
   const stats=G.DB.save.stats||(G.DB.save.stats={});
   stats.pkmsvvEggsHatched=Math.min(99999,(stats.pkmsvvEggsHatched||0)+1);
-  if(!hasSecondSlot()&&G.DB.save.pkmsvvChapter3Seen&&stats.pkmsvvEgg15min&&stats.pkmsvvEggsHatched>=20){
-   G.DB.save.pkmsvvEggSlot2=true;
-   G.Spawner?.say?.(tr('Hoàn thành thử thách Chương 3: mở ô đồng hành thứ hai!','Chapter 3 challenge complete: second companion slot unlocked!'),5,true);
-  }
   const bonds=G.DB.save.pkmsvvSupportBond||(G.DB.save.pkmsvvSupportBond={});
   bonds[it.dex]=Math.min(999,(Number(bonds[it.dex])||0)+1);
   it.affinityBoost=affinityMultiplier(it.dex);
@@ -434,9 +429,6 @@ G.PKMSVVEggs=(()=>{
   dt=Math.max(0,Math.min(dt,.25));
   const stats=G.DB.save.stats||(G.DB.save.stats={});
   if(time>=900&&!stats.pkmsvvEgg15min){stats.pkmsvvEgg15min=true;G.DB.commit(true);}
-  if(!hasSecondSlot()&&stats.pkmsvvEgg15min&&stats.pkmsvvEggsHatched>=20){
-   G.DB.save.pkmsvvEggSlot2=true;G.DB.commit(true);
-  }
   if(pl.dead)return;
   syncArena(pl);
   if(G.Rift?.inArena&&nests.length)nests=[];
