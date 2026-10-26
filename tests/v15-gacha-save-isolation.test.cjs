@@ -2,7 +2,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.join(__dirname,'..'),read=p=>fs.readFileSync(path.join(root,p),'utf8');
 
-test('local backup reminder appears on native menu without touching save'),()=>{
+test('local backup reminder appears on native menu without touching save',()=>{
  const native=read('scripts/patch-v15-offline-save-notice.cjs');
  const landing=read('src/web/index.html');
  const prepare=read('scripts/prepare-game.cjs');
