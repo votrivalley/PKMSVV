@@ -24,3 +24,13 @@ test('If all reserved ports busy user sees practical error',async()=>{
  const fake=async()=>{const e=new Error('in use');e.code='EADDRINUSE';throw e;};
  await assert.rejects(()=>startOnAvailablePort(fake,{root:'bad',ports:[37816,37817]}),/37816, 37817/);
 });
+
+test('Windows launcher is visible immediately and offers browser fallback on slow loading',()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const src=fs.readFileSync(path.join(__dirname,'..','desktop/lan-main.cjs'),'utf8');
+ assert.match(src,/autoHideMenuBar:true,show:true/);
+ assert.match(src,/shell\.openExternal\(url\)/);
+ assert.match(src,/setTimeout\(\(\)=>\{/);
+ assert.match(src,/clearTimeout\(watchdog\)/);
+ assert.match(src,/Game UI ready after/);
+});
