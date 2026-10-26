@@ -1,0 +1,16 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pokémon Chuyển Sinh — Cứu Save</title>
+<style>body{font:16px system-ui;background:#102d3c;color:#f1faf6;margin:auto;padding:24px;max-width:760px}
+h1{color:#ffe18a}.item{border:1px solid #619f9e;border-radius:10px;padding:12px;margin:10px 0}
+button,a.button{background:#ffe18a;color:#112d38;border:0;border-radius:8px;padding:9px 13px;margin:4px;font-weight:700;cursor:pointer}
+a{color:#ffe18a}strong{color:#ffe18a}#preview{padding:12px;border:1px solid #e8b46b}
+</style></head><body>
+<h1>💾 Cứu save Pokémon Chuyển Sinh</h1>
+<p>Địa chỉ đang kiểm tra: <strong id="origin"></strong></p>
+<p>Save nằm trong bộ nhớ riêng của <strong>từng tên miền</strong> và không nằm trong cache sprite. Trang này chỉ đọc dữ liệu trên máy, không tải save lên máy chủ.</p>
+<p id="preview" hidden>Bạn đang ở bản Preview với bộ nhớ riêng. Hãy tải file save JSON tại đây rồi dùng chức năng Khôi phục Save trên <a id="production">website chính</a>.</p>
+<p><button id="scan">↻ Kiểm tra lại save</button> <a href="/game/">Về game</a></p>
+<div id="saves"></div><p id="message" role="status"></p>
+<script defer src="/save-rescue.js"></script>
+</body></html>

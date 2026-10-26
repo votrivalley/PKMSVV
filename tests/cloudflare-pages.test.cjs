@@ -28,6 +28,15 @@ test('Local save UI remains and PWA uses HTTPS root scope',()=>{
  assert.match(read('sw.js'),/cache\.put/);
  assert.doesNotMatch(read('game/js/app.min.js'),/AIza[A-Za-z0-9_-]{35}|pkmsvv-b84d2-default-rtdb/);
 });
+test('Save guardian is loaded before game and Rescue is available for cross-domain JSON export',()=>{
+ const html=read('game/index.html'),root=read('save-rescue.html'),guard=read('save-guardian.js');
+ assert.match(html,/\.\.\/save-guardian\.js/);
+ assert.match(root,/save-rescue\.js/);
+ assert.match(guard,/ps\.save\./);
+ assert.match(guard,/pkmsvv\.safe\.v1/);
+ assert.doesNotMatch(guard,/localStorage\.clear\(/);
+ assert.match(read('sw.js'),/save-guardian\.js/);
+});
 test('Cloudflare Free plan file count and per-file limit pass',()=>{
  const report=JSON.parse(read('build-info.json'));
  assert.ok(report.files>1000&&report.files<=20000);

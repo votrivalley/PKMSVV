@@ -29,6 +29,8 @@ const html=[
 fs.writeFileSync(path.join(dest,'index.html'),html,'utf8');
 fs.copyFileSync(path.join(root,'src/cloudflare/sw.js'),path.join(dest,'sw.js'));
 fs.copyFileSync(path.join(root,'src/cloudflare/_headers'),path.join(dest,'_headers'));
+for(const name of ['save-guardian.js','save-rescue.js','save-rescue.html'])
+ fs.copyFileSync(path.join(root,'src/cloudflare',name),path.join(dest,name));
 // Cloudflare-only localization for the boot that appears while game scripts load.
 const htmlFile=path.join(dest,'game/index.html');
 let gameHTML=fs.readFileSync(htmlFile,'utf8');
@@ -48,6 +50,9 @@ for(const [oldText,newText] of translation){
 }
 loadingHTML=loadingHTML.replace(/(<h1\b[^>]*>)[\s\S]*?(<\/h1>)/,'$1<span>Pokémon</span><span>Chuyển Sinh</span>$2');
 gameHTML=gameHTML.slice(0,from)+loadingHTML+gameHTML.slice(to);
+if(!gameHTML.includes('</head>'))throw Error('No game HTML head for save guard');
+gameHTML=gameHTML.replace('</head>',
+ '<script src="../save-guardian.js"></script></head>');
 fs.writeFileSync(htmlFile,gameHTML,'utf8');
 const scriptFile=path.join(dest,'game/js/boot.js');
 let bootScript=fs.readFileSync(scriptFile,'utf8').replace(/\r\n/g,'\n');
@@ -71,7 +76,7 @@ for(const name of ['manifest.webmanifest','game/manifest.webmanifest']){
   throw Error('Broken PWA icon path: '+icon.src);
  fs.writeFileSync(file,JSON.stringify(m,null,2)+'\n','utf8');
 }
-for(const needed of ['index.html','sw.js','_headers','manifest.webmanifest',
+for(const needed of ['index.html','sw.js','_headers','manifest.webmanifest','save-guardian.js','save-rescue.html','save-rescue.js',
  'game/index.html','game/js/app.min.js','game/js/boot.js','game/css/style.css',
  'game/js/ui/pkmsvv-local-shell.js','game/assets/icons/icon-180.png'])
  if(!fs.existsSync(path.join(dest,needed)))throw Error('Missing game asset: '+needed);
