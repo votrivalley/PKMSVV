@@ -11,12 +11,10 @@ test('Cloudflare Co-op click captured before old Firebase handlers, points only 
  const src=read('src/shared/local-shell.js');
  assert.match(src,/document\.addEventListener\('click',enterLan,true\)/);
  assert.match(src,/G\.MultiplayerUI\.open=isPages\?openLanDialog/);
- assert.match(src,/pkmsvv-lan-connect-modal/);
+ assert.match(src,/window\.location\.assign\('\/lan-connect\.html'\)/);
  assert.match(src,/stopImmediatePropagation/);
- assert.match(src,/window\.location\.assign\('http:\/\/'\+ip\+':'\+port\+'\/game\/'\)/);
- assert.match(src,/Co-op qua Wi-Fi \/ LAN/);
- assert.match(src,/192\.168\.1\.168:37816/);
- assert.match(src,/Number\.isInteger\(port\)/);
+ assert.match(src,/pkmsvv-coop-lan-entry/);
+ assert.match(read('src/ios/lan-connect.js'),/Number\.isInteger\(port\)/);
 });
 test('Backup action in top bar reuses existing Save UI without deleting any save key',()=>{
  const script=read('src/shared/local-shell.js');
@@ -40,4 +38,13 @@ test('portable Windows Host includes LAN site as real resource folder',()=>{
  assert.match(main,/launchUrl\(server\.port\)/);
  assert.match(main,/requestSingleInstanceLock/);
  assert.match(main,/lan-host-startup\.log/);
+});
+
+test('Left and right menu bottoms align without transform bounce on all targets',()=>{
+ const js=read('scripts/patch-v15-menu-qa.cjs');
+ const css=read('src/shared/local-shell.css');
+ assert.match(js,/--pkmsvv-nav-bottom-gap/);
+ assert.doesNotMatch(js,/translateY\(|transition:transform/);
+ assert.match(css,/justify-content:flex-end!important/);
+ assert.match(css,/transition:none!important/);
 });

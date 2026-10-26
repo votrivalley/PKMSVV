@@ -37,11 +37,16 @@ test('Save guardian is loaded before game and Rescue is available for cross-doma
  assert.doesNotMatch(guard,/localStorage\.clear\(/);
  assert.match(read('sw.js'),/save-guardian\.js/);
 });
-test('Web Co-op is replaced with a LAN-only overlay, never old Firebase gate',()=>{
- const shell=read('game/js/ui/pkmsvv-local-shell.js');
- assert.match(shell,/G\.MultiplayerUI\.open=isPages\?openLanDialog/);
- assert.match(shell,/pkmsvv-lan-connect-modal/);
- assert.match(shell,/window\.location\.assign\('http:\/\/'/);
+test('Web uses real LAN hyperlink instead of the retired Firebase Online menu callback',()=>{
+ const html=read('game/index.html'),shell=read('game/js/ui/pkmsvv-local-shell.js');
+ assert.match(html,/id="pkmsvv-coop-lan-entry" href="\/lan-connect\.html"/);
+ assert.doesNotMatch(html,/data-go="multiplayer"/);
+ assert.match(html,/class="mi-ico" aria-hidden="true">🤝<\/span>/);
+ assert.match(shell,/window\.location\.assign\('\/lan-connect\.html'\)/);
+ for(const file of ['lan-connect.html','lan-connect.js'])assert.ok(fs.existsSync(path.join(dist,file)));
+ assert.match(read('lan-connect.html'),/id="lan-form"/);
+ assert.match(read('lan-connect.js'),/location\.assign\('http:\/\/'/);
+ assert.match(read('sw.js'),/\/lan-connect\.html/);
 });
 test('Cloudflare Free plan file count and per-file limit pass',()=>{
  const report=JSON.parse(read('build-info.json'));

@@ -29,3 +29,10 @@ test('PWA compilation replaces old Online entry before the app bundle is built',
  assert.match(web,/PKMSVVOpenLanDialog/);
  assert.match(web,/pkmsvv-open-lan/);
 });
+
+test('iOS PWA has separate Wi-Fi join page without App Store or legacy Online callback',()=>{
+ const prep=read('scripts/prepare-ios.cjs'),html=read('src/ios/lan-connect.html');
+ assert.match(prep,/lan-connect\.html/);
+ assert.match(html,/id="lan-form"/);
+ assert.match(read('src/ios/lan-connect.js'),/location\.assign\('http:\/\/'/);
+});

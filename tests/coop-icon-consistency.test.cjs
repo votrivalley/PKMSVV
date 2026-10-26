@@ -16,3 +16,11 @@ test('old PWA online hub patched at compilation rather than event-only intercept
  assert.match(web,/window\.PKMSVVOpenLanDialog/);
  assert.match(web,/window\.dispatchEvent/);
 });
+
+test('Hosted PWA menu has a single handshake anchor with no multiplayer data-go',()=>{
+ const src=read('scripts/prepare-web.cjs');
+ assert.match(src,/id="pkmsvv-coop-lan-entry"/);
+ assert.match(src,/href="\/lan-connect\.html"/);
+ assert.match(src,/span class="mi-ico" aria-hidden="true">🤝/);
+ assert.match(src,/data-go="multiplayer"/);
+});

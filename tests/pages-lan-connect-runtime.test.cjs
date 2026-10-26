@@ -1,50 +1,54 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
-const source=fs.readFileSync(path.join(__dirname,'..','src/shared/local-shell.js'),'utf8');
-function setup(){
- const listeners={},overlayEvents={},fields={};
- let legacy=0,navigated='';
- const obj=()=>({style:{setProperty(){}},classList:{add(){},remove(){}},removeAttribute(){},setAttribute(){},appendChild(){},append(){},focus(){},remove(){},addEventListener(){},querySelector(){return null;}});
- const input={...obj(),value:'',addEventListener(k,fn){fields['input:'+k]=fn;}};
- const msg={...obj(),textContent:''};
- const modal={...obj(),querySelector(sel){return {
- '#pkmsvv-lan-ip':input,'#pkmsvv-lan-connect-status':msg,
- '#pkmsvv-lan-cancel':{addEventListener(_k,fn){fields.cancel=fn;}},
- '#pkmsvv-lan-submit':{addEventListener(_k,fn){fields.submit=fn;}}
- }[sel]||null;},addEventListener(){},remove(){}};
- const coop={...obj(),dataset:{go:'multiplayer'},childNodes:[],disabled:true,
- style:{setProperty(){}},querySelector(){return null;},querySelectorAll(){return []},appendChild(){},removeAttribute(){}};
- const menu={...obj(),querySelector(sel){return sel.includes('multiplayer')?coop:null;},querySelectorAll(){return [];}};
- const document={readyState:'complete',body:{appendChild(element){fields.modal=element;}},addEventListener(k,fn,capture){(listeners[k]||=[]).push({fn,capture});},
- removeEventListener(){},getElementById(id){return id==='scr-menu'?menu:null;},
- createElement(){return modal;}};
- const context={document,Node:{TEXT_NODE:3},window:{addEventListener(){},PKMSVV_LOCAL_UI_MODE:'pages',location:{hostname:'pkmsvv-web.pages.dev',assign(url){navigated=url;}},
- G:{MultiplayerUI:{open(){legacy++;}},MenuUI:{open(){}}}},localStorage:{getItem(){return'';},setItem(){}},location:{hostname:'pkmsvv-web.pages.dev'}};
- context.G=context.window.G;
- vm.runInNewContext(source,context);
- return {listeners,fields,coop,input,msg,context,get legacy(){return legacy;},get navigated(){return navigated;}};
+const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
+function app(){
+ let destination='',legacyCalls=0;
+ const listeners={},coop={dataset:{go:'multiplayer'},tagName:'BUTTON',disabled:true,
+  style:{setProperty(){}},classList:{add(){}},removeAttribute(){},setAttribute(){},
+  childNodes:[],querySelector(){return null},querySelectorAll(){return []}};
+ const menu={querySelector(s){return s.includes('multiplayer')?coop:null;},querySelectorAll(){return []}};
+ const doc={readyState:'complete',getElementById(id){return id==='scr-menu'?menu:null;},
+  addEventListener(name,fn,capture){(listeners[name]||=[]).push({fn,capture})},
+  createElement(){return{}},body:{}};
+ const win={PKMSVV_LOCAL_UI_MODE:'pages',addEventListener(){},location:{hostname:'pkmsvv-web.pages.dev',assign(url){destination=url}},
+  G:{MenuUI:{open(){}},MultiplayerUI:{open(){legacyCalls++}}}};
+ const ctx={document:doc,window:win,G:win.G,location:win.location,Node:{TEXT_NODE:3}};
+ vm.runInNewContext(read('src/shared/local-shell.js'),ctx);
+ return {listeners,coop,win,get dest(){return destination},get legacy(){return legacyCalls}};
 }
-test('Click Co-op is intercepted in CAPTURE before Online/Firebase gate',()=>{
- const t=setup();
- const handler=t.listeners.click.find(x=>x.capture)?.fn;
- assert.ok(handler,'missing capture phase listener');
- let blocked=0;
- handler({target:{closest(){return t.coop;}},preventDefault(){blocked++;},stopPropagation(){blocked++;},stopImmediatePropagation(){blocked++;}});
- assert.equal(blocked,3);assert.equal(t.legacy,0);
- assert.ok(t.fields.modal,'LAN connection sheet missing');
-});
-test('Programmatic MultiplayerUI.open is replaced; LAN input navigates directly',()=>{
- const t=setup();
- t.context.G.MultiplayerUI.open();
- assert.equal(t.legacy,0);assert.ok(t.fields.modal);
- t.input.value='192.168.1.168:37817';
- t.fields.submit();
- assert.equal(t.navigated,'http://192.168.1.168:37817/game/');
-});
-test('Rejects public IP without leaving page or calling old multiplayer service',()=>{
- const t=setup();
- t.context.G.MultiplayerUI.open();
- t.input.value='8.8.8.8:37816';t.fields.submit();
- assert.equal(t.navigated,'');assert.match(t.msg.textContent,/chưa hợp lệ/);
+test('PWA fallback Co-op click never executes old Online handler',()=>{
+ const t=app();let prevented=0;
+ const click=t.listeners.click.find(x=>x.capture===true)?.fn;
+ assert.ok(click);
+ click({target:{closest(){return t.coop}},preventDefault(){prevented++},
+ stopPropagation(){prevented++},stopImmediatePropagation(){prevented++}});
+ assert.equal(prevented,3);
+ assert.equal(t.dest,'/lan-connect.html');
  assert.equal(t.legacy,0);
+});
+test('Keyboard/gamepad legacy MultiplayerUI.open routes to standalone LAN page',()=>{
+ const t=app();t.win.G.MultiplayerUI.open();
+ assert.equal(t.dest,'/lan-connect.html');assert.equal(t.legacy,0);
+});
+function form(){
+ let destination='',saved=null;
+ const fields={},input={value:'',focus(){}},error={textContent:''};
+ const node={addEventListener(name,fn){fields[name]=fn}};
+ const document={getElementById(id){return {'lan-form':node,'lan-address':input,'error':error}[id]}};
+ const ctx={document,window:{location:{assign(url){destination=url}}},
+  localStorage:{getItem(){return''},setItem(k,v){saved=[k,v]}}};
+ vm.runInNewContext(read('src/ios/lan-connect.js'),ctx);
+ return {fields,input,error,get dest(){return destination},get saved(){return saved}};
+}
+test('LAN form accepts private IP with fallback port and preserves chosen Host',()=>{
+ const t=form();t.input.value='192.168.1.168:37817';
+ t.fields.submit({preventDefault(){}});
+ assert.equal(t.dest,'http://192.168.1.168:37817/game/');
+ assert.deepEqual(t.saved,['pkmsvv.lan.host.ip','192.168.1.168:37817']);
+});
+test('LAN form rejects public IPs and malformed ports',()=>{
+ for(const value of ['8.8.8.8:37816','192.168.1.168:99999','example.com']){
+  const t=form();t.input.value=value;t.fields.submit({preventDefault(){}});
+  assert.equal(t.dest,'');assert.match(t.error.textContent,/IPv4/);
+ }
 });
