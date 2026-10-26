@@ -19,6 +19,13 @@
    input.focus();return;
   }
   error.textContent='';
+  if(window.PKMSVVLANDesktop?.connect){
+   error.textContent='Đang kiểm tra Host…';
+   window.PKMSVVLANDesktop.connect({address:ip+':'+port,role:'join',mode:'coop'}).then(result=>{
+    if(!result.ok)error.textContent=result.error;
+   }).catch(e=>{error.textContent=e.message||'Không kết nối được Host.';});
+   return;
+  }
   try{localStorage.setItem('pkmsvv.lan.host.ip',ip+':'+port);}catch(_){}
   window.location.assign('http://'+ip+':'+port+'/game/');
  });

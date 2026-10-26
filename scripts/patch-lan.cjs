@@ -7,7 +7,20 @@ function once(p,a,b){const s=read(p),n=s.split(a).length-1;if(n!==1)throw Error(
 const readLan=p=>fs.readFileSync(path.join(root,'src','lan',p),'utf8');
 once('dev.html','<script defer src="js/net/social.js"></script>',
  '<script defer src="js/net/lan-bus.js"></script>\n<script defer src="js/net/social.js"></script>');
-write('js/net/lan-bus.js',readLan('lan-bus.js'));
+// build.js bundles external scripts only and discards inline scripts between
+// scripts:begin/end. Put the target marker INSIDE a compiled source file.
+write('js/net/lan-bus.js',"window.PKMSVV_LOCAL_UI_MODE='lan';\n"+readLan('lan-bus.js'));
+// Avoid redrawing the animated menu at 120/144/240 Hz on gaming displays.
+// Keep gameplay/network ticking at up to 60 Hz; this changes no game rules.
+once('js/game.js',
+ '  function loop(ts) {\n    requestAnimationFrame(loop);',
+ `  let lanFrameAt=0;
+  function loop(ts) {
+    requestAnimationFrame(loop);
+    const interval=1000/(state==='ui'?30:60);
+    if(ts-lanFrameAt<interval-0.5)return;
+    lanFrameAt=ts-((ts-lanFrameAt)%interval);
+    if(document.hidden&&state==='ui'){last=ts;return;}`);
 write('js/net/social.js',readLan('social-lan.js'));
 write('js/net/net.js',readLan('net-lan.js'));
 write('js/net/lan-ai.js',readLan('lan-ai.js'));
@@ -61,7 +74,7 @@ write('js/ui/social-ui.js',ui);
 once('dev.html','<script defer src="js/ui/pkmsvv-multiplayer-ui.js"></script>',
  '<script defer src="js/ui/pkmsvv-multiplayer-ui.js"></script>\n<script defer src="js/ui/lan-compact-ui.js"></script>');
 once('dev.html','<script defer src="js/ui/lan-compact-ui.js"></script>',
- '<script defer src="js/ui/lan-compact-ui.js"></script>\n<script>window.PKMSVV_LOCAL_UI_MODE="lan"</script>\n<script defer src="js/ui/pkmsvv-local-shell.js"></script>\n<script defer src="js/ui/pkmsvv-coop-unified.js"></script>');
+ '<script defer src="js/ui/lan-compact-ui.js"></script>\n<script defer src="js/ui/pkmsvv-local-shell.js"></script>\n<script defer src="js/ui/pkmsvv-coop-unified.js"></script>');
 // Change labels without assuming the exact Web markup after prior patches.
 let html=read('dev.html');
 const linkPattern=/(<button\b[^>]*\bdata-go="multiplayer"[^>]*>)[^<]*/;

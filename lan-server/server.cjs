@@ -50,6 +50,12 @@ function startServer({root,port=37816,host='0.0.0.0'}={}){
  }
  const safeFile=async(req,res)=>{
   if(!privateAddress(req.socket.remoteAddress)){res.writeHead(403);res.end('Not RFC1918 address '+req.socket.remoteAddress);return;}
+  if(new URL(req.url,'http://localhost').pathname==='/lan/health'){
+   const body=JSON.stringify({service:'pkmsvv-lan-v1'});
+   res.writeHead(200,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store',
+    'Access-Control-Allow-Origin':'*','Content-Length':Buffer.byteLength(body)});
+   res.end(req.method==='HEAD'?'':body);return;
+  }
   if(new URL(req.url,'http://localhost').pathname==='/lan/qr.png'){
    // Local QR lets iPhone/iPad join without typing any IP.
    const port=httpServer.address()?.port||37816,ip=lanAddresses()[0]||'127.0.0.1';

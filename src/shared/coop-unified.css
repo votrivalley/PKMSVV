@@ -1,16 +1,33 @@
-#pkmsvv-unified-coop{position:fixed;inset:0;z-index:2147483000;background:#061828e8;display:flex;align-items:center;justify-content:center;padding:clamp(6px,2vmin,18px);box-sizing:border-box}
-#pkmsvv-unified-coop .pkmsvv-coop-panel{width:min(720px,100%);max-height:96dvh;overflow-y:auto;background:linear-gradient(135deg,#194b53,#103043);color:#f7fffb;border:2px solid #87d4c7;border-radius:13px;padding:clamp(10px,2vmin,22px);box-sizing:border-box;font:clamp(12px,1.8vmin,16px)/1.3 system-ui}
-#pkmsvv-unified-coop header{display:flex;justify-content:space-between;align-items:center}
-#pkmsvv-unified-coop h2{margin:0;color:#ffe27c;font-size:clamp(20px,3vmin,28px)}
-#pkmsvv-unified-coop b{display:block;margin:10px 0 7px}
-#pkmsvv-coop-modes,#pkmsvv-coop-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(5px,1.3vmin,10px)}
-#pkmsvv-unified-coop button{cursor:pointer;min-height:37px;border-radius:8px;border:1px solid #9ed5cc;background:#255763;color:#fff;font:750 inherit;padding:8px;white-space:normal}
-#pkmsvv-unified-coop button:focus-visible{outline:3px solid #ffe17a;outline-offset:2px}
-#pkmsvv-coop-modes button{background:#ebf8f1;color:#173b47;display:flex;flex-direction:column;align-items:center;gap:4px}
-#pkmsvv-coop-modes .selected{outline:3px solid #e9bc50}
-#pkmsvv-coop-modes strong{font-size:clamp(12px,1.9vmin,17px)}
-#pkmsvv-coop-modes small{font-size:clamp(10px,1.3vmin,12px)}
+#pkmsvv-unified-coop{position:fixed;inset:0;z-index:2147483000;background:#061828ed;display:flex;align-items:center;justify-content:center;padding:clamp(8px,2vmin,22px);box-sizing:border-box}
+#pkmsvv-unified-coop .pkmsvv-coop-panel{width:min(980px,100%);max-height:94dvh;overflow-y:auto;overscroll-behavior:contain;background:linear-gradient(165deg,#28656c,#153d48);color:#f8fffe;border:2px solid #87d4c7;border-radius:14px;padding:clamp(12px,2vmin,24px);box-sizing:border-box;font:clamp(13px,1.8vmin,16px)/1.45 system-ui;box-shadow:0 12px 36px #0019}
+#pkmsvv-unified-coop header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+#pkmsvv-unified-coop h2{margin:0;color:#ffe27c;font-size:clamp(22px,3vmin,30px)}
+#pkmsvv-unified-coop b{display:block;margin:14px 0 8px}
+#pkmsvv-coop-modes,#pkmsvv-coop-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+#pkmsvv-unified-coop button{cursor:pointer;min-height:42px;border-radius:9px;border:2px solid #9ed5cc;background:#255763;color:#fff;font:inherit;font-weight:750;padding:10px;white-space:normal}
+#pkmsvv-unified-coop button:focus-visible{outline:3px solid #ffe17a;outline-offset:3px}
+#pkmsvv-unified-coop button:disabled{opacity:.65;cursor:wait}
+#pkmsvv-coop-modes .pkmsvv-mode-card{width:100%;min-width:0;min-height:256px;background:#ebfaf2;color:#173648;border:3px solid #76c9b6;display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px 12px;text-align:center;box-shadow:0 4px 0 #092b34;text-shadow:none}
+#pkmsvv-coop-modes .pkmsvv-mode-card.royale{background:#fff4d6;border-color:#f3b84b}
+#pkmsvv-coop-modes .pkmsvv-mode-card.eggrush{background:#fff1df;border-color:#e8af79}
+#pkmsvv-coop-modes .pkmsvv-mode-art{width:124px;height:124px;flex:none;display:grid;place-items:center;border-radius:12px;background:radial-gradient(circle,#b6ebbd,#55b89d);border:2px solid #569f9f}
+#pkmsvv-coop-modes .royale .pkmsvv-mode-art{background:radial-gradient(circle,#fff7bc,#f1a767);border-color:#d49449}
+#pkmsvv-coop-modes .eggrush .pkmsvv-mode-art{background:radial-gradient(circle,#fff8d8,#edbd8d);border-color:#cb9a70}
+#pkmsvv-coop-modes canvas{display:block;width:118px;height:118px;image-rendering:pixelated}
+#pkmsvv-coop-modes .pkmsvv-mode-copy{display:flex;flex-direction:column;gap:4px;min-width:0}
+#pkmsvv-coop-modes strong{font-size:clamp(18px,2.1vmin,23px);color:#163546}
+#pkmsvv-coop-modes small{font-size:13px;line-height:1.4;color:#28495a}
+#pkmsvv-coop-modes .pkmsvv-mode-cap{font-weight:800}
+#pkmsvv-coop-modes .pkmsvv-coop-pokemon{font-weight:750;color:#376356}
+#pkmsvv-coop-modes .selected{outline:3px solid #ffe27c;outline-offset:2px;border-color:#997014;background:#fff6cd}
 #pkmsvv-coop-actions button{background:#ffe078;color:#173744}
-#pkmsvv-coop-detail{margin:10px 0;display:flex;flex-wrap:wrap;gap:7px;align-items:center;font-size:13px}
-#pkmsvv-coop-detail input{padding:8px;min-height:37px;border:1px solid #9ed5cc;border-radius:8px;max-width:100%;background:#f1fffa;color:#12343d}
-@media(max-height:460px){#pkmsvv-unified-coop .pkmsvv-coop-panel{max-height:99dvh;padding:8px}#pkmsvv-unified-coop b{margin:4px 0}#pkmsvv-coop-modes button{min-height:50px}}
+#pkmsvv-coop-detail{margin:14px 0 0;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:14px}
+#pkmsvv-coop-detail p{width:100%;margin:0;line-height:1.5}
+#pkmsvv-coop-detail input{box-sizing:border-box;padding:10px;min-height:44px;border:2px solid #9ed5cc;border-radius:8px;min-width:0;max-width:100%;flex:1 1 240px;background:#f1fffa;color:#12343d;font:inherit}
+#pkmsvv-coop-detail [role=status]{width:100%;color:#ffe7ab;overflow-wrap:anywhere}
+#pkmsvv-unified-coop .pkmsvv-coop-help{margin-top:16px;border-top:1px solid #71a79c;padding-top:10px}
+#pkmsvv-unified-coop summary{cursor:pointer;color:#fbe4a6;font-weight:700}
+#pkmsvv-unified-coop .pkmsvv-coop-help p{overflow-wrap:anywhere}
+#pkmsvv-unified-coop .pkmsvv-coop-help img{width:144px;height:144px;image-rendering:pixelated;border:5px solid #fff;border-radius:8px}
+@media(max-width:600px){#pkmsvv-coop-modes{grid-template-columns:1fr;gap:10px}#pkmsvv-coop-modes .pkmsvv-mode-card{min-height:132px;flex-direction:row;text-align:left;padding:10px}#pkmsvv-coop-modes .pkmsvv-mode-art{width:92px;height:100px}#pkmsvv-coop-modes canvas{width:90px;height:96px}#pkmsvv-coop-actions{gap:6px}#pkmsvv-coop-actions button{padding:8px 5px;font-size:13px}}
+@media(max-height:480px) and (min-width:601px){#pkmsvv-unified-coop .pkmsvv-coop-panel{max-height:96dvh;padding:10px 14px}#pkmsvv-unified-coop header{margin-bottom:6px}#pkmsvv-unified-coop b{margin:7px 0}#pkmsvv-coop-modes .pkmsvv-mode-card{min-height:148px;flex-direction:row;text-align:left;padding:8px;gap:6px}#pkmsvv-coop-modes .pkmsvv-mode-art{width:64px;height:80px}#pkmsvv-coop-modes canvas{width:62px;height:76px}#pkmsvv-coop-modes .pkmsvv-mode-description{font-size:11px}#pkmsvv-coop-modes strong{font-size:17px}}

@@ -13,6 +13,12 @@ on:
       - 'scripts/**'
       - 'desktop/lan-main.cjs'
       - 'desktop/lan-startup.cjs'
+      - 'desktop/lan-connection.cjs'
+      - 'desktop/lan-preload.cjs'
+      - 'tests/lan-connection.test.cjs'
+      - 'tests/lan-bus-retry.test.cjs'
+      - 'tests/lan-ui-smoke.cjs'
+      - 'tests/lan-electron-smoke.cjs'
       - 'desktop/lan-browser-host.cjs'
       - 'desktop/START-HOST-WIFI.cmd'
       - 'tests/lan-browser-host.test.cjs'
@@ -52,6 +58,20 @@ jobs:
         run: npm run test:lan && node --test tests/lan-startup.test.cjs tests/lan-discovery.test.cjs tests/lan-ai-modes.test.cjs tests/lan-browser-host.test.cjs tests/lan-compact-ui.test.cjs tests/lan-direct-entry.test.cjs tests/local-shell-ui.test.cjs tests/local-ui-lan-host-regression.test.cjs tests/coop-icon-consistency.test.cjs tests/unified-coop.test.cjs
       - name: Compile LAN game without Firebase
         run: npm run prepare:lan
+      - name: Validate IP timeout and retry behavior
+        run: node --test tests/lan-connection.test.cjs tests/lan-bus-retry.test.cjs
+      - name: Install browser for real two-client LAN test
+        run: npx playwright install chromium
+      - name: Play all three modes with two independent LAN clients
+        run: npm run test:lan:runtime
+      - name: Verify native PC IP failure and successful retry
+        run: npm run test:lan:pc
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: PKMSVV-LAN-UI-QA
+          path: dist/qa/
+          if-no-files-found: ignore
       - name: Verify LAN content and isolation
         shell: bash
         run: |
@@ -100,7 +120,9 @@ jobs:
           test -s dist/lan-windows/win-unpacked/resources/lan-site/index.html
       - name: Smoke-test packaged Windows executable (runtime, not just build)
         shell: pwsh
-        run: ./tests/smoke-lan-win.ps1
+        run: |
+          $env:PKMSVV_PC_EXE=(Get-ChildItem dist/lan-windows/win-unpacked -Filter '*.exe' | Select-Object -First 1).FullName
+          npm run test:lan:pc
       - name: Include Fast Start readme in the unpacked Windows folder
         shell: pwsh
         run: |

@@ -28,7 +28,7 @@ test('If all reserved ports busy user sees practical error',async()=>{
 test('Windows launcher stays in native EXE window and never opens browser',()=>{
  const fs=require('node:fs'),path=require('node:path');
  const src=fs.readFileSync(path.join(__dirname,'..','desktop/lan-main.cjs'),'utf8');
- assert.match(src,/autoHideMenuBar:true,show:true/);
+ assert.match(src,/autoHideMenuBar:true,show:!smokeTest/);
  assert.doesNotMatch(src,/shell\.openExternal|explorer\.exe|Browser fallback/);
  assert.match(src,/Game UI ready after/);
 });

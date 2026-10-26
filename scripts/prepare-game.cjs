@@ -612,6 +612,11 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-v15-menu-qa.cj
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v155-pc-fullscreen.cjs')],{cwd:project,stdio:'inherit'});
 // Windows and Android remain strictly offline-first: do NOT inject the external
 // browser Online mode switch. The existing native save identity remains unchanged.
+// Invoke the installed minifier directly: npx.cmd + shell splits Windows paths
+// containing spaces (for example Documents/ChatGPT/PKM SVV).
+patch('tools/build.js',
+ "execFileSync(npx, ['--yes', 'terser@5', tmp, '--compress', 'passes=1', '--mangle', '--comments', 'false', '--ecma', '2020', '-o', outJs],\n  { stdio: 'inherit', shell });",
+ "execFileSync(process.execPath, [require.resolve('terser/bin/terser'), tmp, '--compress', 'passes=1', '--mangle', '--comments', 'false', '--ecma', '2020', '-o', outJs],\n  { stdio: 'inherit' });");
 execFileSync(process.execPath, [path.join(game, 'tools', 'build.js'), '--sin-seo', '--expose'], { cwd: game, stdio: 'inherit' });
 
 const indexPath = path.join(game, 'index.html');

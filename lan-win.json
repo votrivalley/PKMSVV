@@ -11,6 +11,8 @@
   "files": [
     "desktop/lan-main.cjs",
     "desktop/lan-startup.cjs",
+    "desktop/lan-connection.cjs",
+    "desktop/lan-preload.cjs",
     "lan-server/server.cjs",
     "package.json",
     "lan-server/discovery.cjs"

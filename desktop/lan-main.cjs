@@ -2,15 +2,17 @@
 /* LAN portable bootstrap. Open /game/ DIRECTLY: loading the old landing '/'
  * immediately redirects, causing Electron loadURL to reject ERR_ABORTED (-3).
  */
-const {app,BrowserWindow,Menu,dialog}=require('electron');
+const {app,BrowserWindow,Menu,dialog,ipcMain}=require('electron');
 const path=require('node:path');
 const fs=require('node:fs');
 const {startServer}=require('../lan-server/server.cjs');
 const {startDiscovery}=require('../lan-server/discovery.cjs');
 const {startOnAvailablePort,launchUrl}=require('./lan-startup.cjs');
+const {hostURL,allowedNavigation,probeHost}=require('./lan-connection.cjs');
 
 app.setAppUserModelId('com.votrivalley.pkmsvv.lan');
-app.setPath('userData',path.join(app.getPath('appData'),'PKMSVV-LAN-Beta'));
+const smokeTest=process.argv.includes('--smoke-test');
+app.setPath('userData',path.join(app.getPath('appData'),smokeTest?'PKMSVV-LAN-QA-'+process.pid:'PKMSVV-LAN-Beta'));
 let server=null,discovery=null,win=null,quitting=false;
 const baseLog=()=>path.join(app.getPath('userData'),'lan-host-startup.log');
 function log(message){
@@ -53,15 +55,47 @@ if(!lock){
   try{
    win=new BrowserWindow({width:1230,height:810,minWidth:790,minHeight:540,
     backgroundColor:'#09283a',title:'Pokémon Chuyển Sinh — Co-op LAN',
-    autoHideMenuBar:true,show:true,
-    webPreferences:{nodeIntegration:false,contextIsolation:true,sandbox:true,webSecurity:true}});
+    autoHideMenuBar:true,show:!smokeTest,
+    webPreferences:{nodeIntegration:false,contextIsolation:true,sandbox:true,webSecurity:true,
+     spellcheck:false,preload:path.join(__dirname,'lan-preload.cjs')}});
    Menu.setApplicationMenu(null);
    win.on('closed',()=>{win=null;app.quit();});
    log('Native Electron window loading game at LAN port '+server.port);
    win.webContents.setWindowOpenHandler(()=>({action:'deny'}));
-   win.webContents.on('will-navigate',(event,target)=>{
-    if(!target.startsWith('http://127.0.0.1:'+server.port+'/'))event.preventDefault();
+   const origins=new Set(['http://127.0.0.1:'+server.port]);
+   let joining=false;
+   ipcMain.handle('pkmsvv:lan-connect',async(event,options={})=>{
+    if(!win||win.isDestroyed()||event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame||
+       !allowedNavigation(event.senderFrame.url,origins))return{ok:false,error:'Không thể kết nối từ cửa sổ này.'};
+    if(joining)return{ok:false,error:'Đang kết nối Host, vui lòng chờ.'};
+    joining=true;
+    const previous=win.webContents.getURL();
+    let target,timer;
+    try{
+     target=hostURL(options.address,options);
+     await probeHost(target);
+     origins.add(target.origin);
+     // Bound the entire load; an HTTP listener alone does not prove the game loads.
+     await Promise.race([win.loadURL(target.href),new Promise((_,reject)=>{
+      timer=setTimeout(()=>{win?.webContents.stop();reject(Error('Host tải game quá lâu. Hãy thử lại.'));},12000);
+     })]);
+     log('Joined LAN Host '+target.origin);
+     return{ok:true};
+    }catch(error){
+     log('LAN join failed: '+error.message);
+     if(win&&!win.isDestroyed()&&win.webContents.getURL()!==previous)
+      await win.loadURL(previous).catch(e=>log('Restore page: '+e.message));
+     return{ok:false,error:error.message};
+    }finally{clearTimeout(timer);joining=false;}
    });
+   win.webContents.on('will-navigate',(event,target)=>{
+    if(!allowedNavigation(target,origins))event.preventDefault();
+   });
+   win.webContents.on('will-redirect',(event,target)=>{
+    if(!allowedNavigation(target,origins))event.preventDefault();
+   });
+   win.webContents.on('render-process-gone',(_event,details)=>log('Renderer stopped: '+JSON.stringify(details)));
+   win.on('unresponsive',()=>log('Game window unresponsive at '+win?.webContents.getURL()));
    win.webContents.on('did-fail-load',(_event,code,description,url,isMainFrame)=>{
     if(!isMainFrame||code===-3)return; // -3 can be deliberate navigation cancellation.
     log('Web page failed '+code+' '+description+' '+url);

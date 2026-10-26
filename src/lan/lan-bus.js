@@ -12,13 +12,21 @@ G.LanBus=(()=>{
    socket=ws;
    const timer=setTimeout(()=>{if(!done){done=true;reject(Error('Không thể kết nối máy Host.'));ws.close();}},7000);
    ws.onmessage=e=>{
+    if(socket!==ws||done&&!identity)return;
     let m;try{m=JSON.parse(e.data);}catch(_){return;}
     if(m.t==='welcome'){identity=m.uid;clearTimeout(timer);done=true;resolve(identity);emit(m);return;}
     if(m.t==='response'){const p=pending.get(m.rid);if(p){pending.delete(m.rid);clearTimeout(p.timer);m.ok?p.resolve(m.result):p.reject(Error(m.error||'LAN error'));}return;}
     emit(m);
    };
-   ws.onerror=()=>{if(!done){clearTimeout(timer);done=true;reject(Error('Không kết nối được máy chủ LAN.'));}};
-   ws.onclose=()=>{identity=null;socket=null;connecting=null;for(const p of pending.values()){clearTimeout(p.timer);p.reject(Error('Mất kết nối LAN'));}pending.clear();emit({t:'disconnected'});};
+   ws.onerror=()=>{if(!done){clearTimeout(timer);done=true;reject(Error('Không kết nối được máy chủ LAN.'));}ws.close();};
+   ws.onclose=()=>{
+    clearTimeout(timer);
+    if(!done){done=true;reject(Error('Host đã đóng kết nối LAN.'));}
+    if(socket!==ws)return;
+    identity=null;socket=null;
+    for(const p of pending.values()){clearTimeout(p.timer);p.reject(Error('Mất kết nối LAN'));}
+    pending.clear();emit({t:'disconnected'});
+   };
   }).finally(()=>{connecting=null;});
   return connecting;
  }
@@ -29,7 +37,8 @@ G.LanBus=(()=>{
   return new Promise((resolve,reject)=>{
    const timer=setTimeout(()=>{pending.delete(rid);reject(Error('Máy chủ LAN không phản hồi.'));},9000);
    pending.set(rid,{resolve,reject,timer});
-   socket.send(JSON.stringify({t:'req',rid,action,...data}));
+   try{socket.send(JSON.stringify({t:'req',rid,action,...data}));}
+   catch(e){pending.delete(rid);clearTimeout(timer);reject(e);}
   });
  }
  function send(to,data){if(socket&&socket.readyState===WebSocket.OPEN)socket.send(JSON.stringify({t:'data',to,data}));}

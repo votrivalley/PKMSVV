@@ -1,5 +1,13 @@
 # Pokémon Chuyển Sinh LAN — PC Fast Start
 
+## Bản sửa 1.5.17 — nhập IP và giao diện Co-op
+- Đã sửa dấu nhận diện LAN bị mất khi biên dịch. Bản PC dùng máy chủ LAN cục bộ khi tạo/vào phòng.
+- Co-op → Tham gia: danh sách phòng và mã phòng thuộc Host hiện tại. Để sang PC Host khác, nhập **IP:cổng** vào ô riêng, ví dụ `192.168.1.20:37816`.
+- Khi nhập IP trên PC, game kiểm tra Host trước khi chuyển trang. Host không trả lời sau 4 giây sẽ báo lỗi và cho thử lại, không bỏ trang game hiện tại. Cả hai PC cần dùng bản LAN mới.
+- Thẻ chế độ có lại Pokémon gốc: Sống Sót/Pikachu, Sống Còn/Charizard, Tranh Trứng/Togepi. Địa chỉ Host và QR nằm ngay trong Co-op.
+- Giới hạn vẽ menu ở 30 khung hình/giây và trận đấu tối đa 60 để tránh vẽ quá nhiều trên màn hình tần số cao.
+- Đã kiểm tra hai phiên game độc lập cho Sống Sót/Sống Còn, bốn phiên cho Tranh Trứng, cùng kiểm tra cửa sổ Electron và EXE Windows với IP không phản hồi rồi thử lại. Các phiên này chạy trên cùng một máy; vẫn cần QA giữa PC và điện thoại qua Wi-Fi thật.
+
 ## Vì sao EXE Portable có thể mất tới 2 phút?
 Bản Portable do electron-builder đóng gói thành 1 file EXE lớn chứa Electron và hơn 13.000 tài nguyên Pokémon. Khi chạy, gói Portable có thể phải giải nén vào TEMP và Windows Defender quét nhiều file. Nếu mỗi lần mở đều chậm nhưng bản thư mục chạy nhanh, nguyên nhân nằm ở bước giải nén portable (không phải game hoặc LAN server).
 

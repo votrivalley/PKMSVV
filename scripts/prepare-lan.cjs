@@ -7,6 +7,8 @@ const from=path.join(root,'dist','web'),to=path.join(root,'dist','lan');
 fs.rmSync(to,{recursive:true,force:true});fs.cpSync(from,to,{recursive:true,force:true});
 fs.copyFileSync(path.join(root,'src','lan','index.html'),path.join(to,'index.html'));
 fs.copyFileSync(path.join(root,'src','lan','entry.js'),path.join(to,'entry.js'));
+for(const file of ['lan-connect.html','lan-connect.js'])
+ fs.copyFileSync(path.join(root,'src','ios',file),path.join(to,file));
 const sw=path.join(to,'sw.js');if(fs.existsSync(sw))fs.rmSync(sw);
 if(!fs.existsSync(path.join(to,'game','js','app.min.js')))throw Error('Missing LAN compiled game');
 console.log('PKMSVV LAN build ready in dist/lan');
