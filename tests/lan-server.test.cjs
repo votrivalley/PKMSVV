@@ -31,7 +31,7 @@ test('LAN HTTP & same-origin WS support room life cycle and host-only frame rout
   }}));
  });
  try{
-  let response=await fetch(base+'/');assert.equal(response.status,200,'LAN HTTP status '+response.status);assert.equal(await response.text(),'LAN TEST');
+  let response=await fetch(base+'/');const text=await response.text();assert.equal(response.status,200,'LAN HTTP '+response.status+': '+text);assert.equal(text,'LAN TEST');
   response=await fetch(base+'/missing.js');assert.equal(response.status,404);
   const [host,guest,stranger]=await Promise.all([open(),open(),open()]);
   for(const p of [host,guest,stranger])assert.ok((await p.next(m=>m.t==='welcome')).uid.startsWith('lan-'));
