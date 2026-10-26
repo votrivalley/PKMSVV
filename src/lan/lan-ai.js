@@ -124,6 +124,10 @@ G.LanAI=(()=>{
    if(other===pl||other.dead)continue;
    const d=Math.sqrt(sq(p,other));if(d<180)score+=(1-d/180)*100;
   }
+  if(G.Social.room?.mode==='coop')for(const other of G.Coop.players()){
+   if(other===pl||other.dead)continue;
+   const d=Math.sqrt(sq(p,other));if(d<85)score+=(1-d/85)*65;
+  }
   return score+liquidCost(pl,p.x,p.y)*9;
  }
  function chooseAxis(pl,s,goal,enemies,shots,hazards){
@@ -142,6 +146,7 @@ G.LanAI=(()=>{
    const a=angle+i*Math.PI/8,axis=i<0?[0,0]:[Math.cos(a),Math.sin(a)];
    const p={x:pl.x+axis[0]*step,y:pl.y+axis[1]*step};
    if(!segment(pl,pl,p))continue;
+   if(!unsafe&&[.25,.5,.75,1].some(t=>liquidCost(pl,pl.x+(p.x-pl.x)*t,pl.y+(p.y-pl.y)*t)>0))continue;
    const progress=Math.sqrt(sq(p,waypoint))*.65;
    const risk=danger(pl,p,enemies,shots,hazards)*(pl.hp/pl.maxHp<.4?1.5:1);
    const slow=unsafe?0:liquidCost(pl,p.x,p.y)*12;
@@ -175,22 +180,28 @@ G.LanAI=(()=>{
      s.roam=dryPoint(pl,{x:s.home.x+Math.cos(a)*300,y:s.home.y+Math.sin(a)*300})||s.home;
      s.wander=5+Math.random()*6;
     }
-    let goal=mode==='royale'?s.roam:host;
-    const objective=['royale','eggrush'].includes(mode)?G.EggRush?.objective?.(pl):null;
+    if(mode==='coop'&&(!s.roam||s.wander<=0||!s.anchor||sq(host,s.anchor)>180**2||sq(pl,host)>430**2)){
+     const a=Math.random()*Math.PI*2,radius=140+Math.random()*120;
+     s.roam=dryPoint(pl,{x:host.x+Math.cos(a)*radius,y:host.y+Math.sin(a)*radius})||{x:pl.x,y:pl.y};
+     s.anchor={x:host.x,y:host.y};s.wander=4+Math.random()*5;
+    }
+    let goal=['royale','coop'].includes(mode)?s.roam:host;
+    let objective=G.EggRush?.objective?.(pl);
+    if(mode==='coop'&&objective&&sq(objective,host)>520**2)objective=null;
     const nests=objective?[objective]:mode==='eggrush'?(G.EggRush?.nests||[]).filter(n=>!n.taken):[];
     if(nests.length)goal=nests.reduce((a,b)=>sq(pl,a)<sq(pl,b)?a:b);
-    else if(mode==='coop'){
+    if(mode==='coop'){
      const fallen=G.Coop.players().filter(p=>p!==pl&&p.dead&&sq(pl,p)<420**2);
      if(fallen.length)goal=fallen.reduce((a,b)=>sq(pl,a)<sq(pl,b)?a:b);
     }
     // Stay at the range of learned attacks rather than walking into monsters.
     const target=enemies.reduce((a,e)=>!a||sq(pl,e)<sq(pl,a)?e:a,null);
-    if(target&&sq(pl,target)<420**2&&goal===host&&!host.dead){
+    if(target&&sq(pl,target)<420**2&&(goal===host||mode==='coop'&&goal===s.roam&&sq(pl,host)<430**2&&sq(target,host)<520**2)&&!host.dead){
      const ranged=pl.moves.some(m=>['projectile','beam','homing','chain','turret','meteor','boomerang'].includes(m.kind));
      const d=Math.sqrt(sq(pl,target))||1,range=ranged?165:85;
      goal={x:target.x+(pl.x-target.x)/d*range,y:target.y+(pl.y-target.y)/d*range};
     }
-    if(goal===host&&!host.dead&&sq(pl,host)<85**2)goal={x:pl.x,y:pl.y};
+    if(mode==='coop'&&!nests.length&&goal===s.roam&&sq(pl,goal)<50**2)goal={x:pl.x,y:pl.y};
     s.axis=chooseAxis(pl,s,goal,enemies,shots,hazards);s.think=.12;
     const dash=G.PKMSVVDash?.preview(pl);
     if(dash?.ready&&Math.hypot(...s.axis)>.5&&danger(pl,pl,enemies,shots,hazards)>65){

@@ -22,7 +22,8 @@ function harness(mode='coop',{water=()=>false,blocked=()=>false,types=['grass'],
    liquidEffect:()=>types.includes('water')?{}:{slow:.6}},
   EnemyMgr:{all:()=>enemies},Projectiles:{all:()=>shots},Hazards:{all:hazards,inside:(h,x,y,r)=>Math.hypot(x-h.x,y-h.y)<h.r+r},
   Combat:{tick:(_dt,p)=>casts.push(p)},EggRush:{nests:[]},Player:{REVIVE_TIME:3}};
- vm.runInNewContext(code,{G,Map,Set,Math,Number,console});G.LanAI.begin();
+ const math=Object.create(Math);math.random=()=>0;
+ vm.runInNewContext(code,{G,Map,Set,Math:math,Number,console});G.LanAI.begin();
  return{G,pl,host,ack,applied,casts,cards(v){cards=v;}};
 }
 test('AI ranks only offered legal cards using Pokemon type and physical/special fit',()=>{
@@ -88,4 +89,24 @@ test('Egg Rush AI targets an untaken nest instead of blindly following the train
  const h=harness('eggrush');h.host.x=-300;h.G.EggRush.nests=[{x:180,y:0,taken:false}];
  for(let i=0;i<10;i++)h.G.LanAI.update(.12,0);
  assert.ok(h.pl.x>50);
+});
+test('Co-op AI chooses a nearby personal area and regroups without stacking onto the trainer',()=>{
+ const h=harness('coop');h.host.x=0;
+ for(let i=0;i<80;i++)h.G.LanAI.update(.12,i*.12);
+ let distance=Math.hypot(h.pl.x-h.host.x,h.pl.y-h.host.y);
+ assert.ok(distance>70&&distance<350,'keeps personal space while remaining near trainer');
+ h.host.x=700;
+ for(let i=0;i<110;i++)h.G.LanAI.update(.12,10+i*.12);
+ distance=Math.hypot(h.pl.x-h.host.x,h.pl.y-h.host.y);
+ assert.ok(distance>70&&distance<350,'returns to the group neighborhood, not the exact player position');
+});
+test('Co-op AI seeks its own support egg but prioritizes rescuing a fallen teammate',()=>{
+ const h=harness('coop');h.host.x=-200;
+ h.G.EggRush.objective=()=>({x:180,y:0});
+ for(let i=0;i<10;i++)h.G.LanAI.update(.12,i*.12);
+ assert.ok(h.pl.x>50,'forages for support independently of trainer direction');
+ h.host.x=h.pl.x-100;h.host.y=h.pl.y;h.host.dead=true;
+ const prior=h.pl.x;
+ for(let i=0;i<8;i++)h.G.LanAI.update(.12,2+i*.12);
+ assert.ok(h.pl.x<prior,'rescue overrides egg foraging');
 });

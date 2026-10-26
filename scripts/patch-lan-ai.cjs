@@ -80,3 +80,5 @@ once('js/game.js',"G.Coop.over(Object.assign(summary(),{royale:result}));endRun(
 once('js/game.js',"if(coop&&G.EggRush.active&&!G.Coop.isHost)","if(coop&&G.EggRush.enabled&&!G.Coop.isHost)");
 once('js/game.js','if(G.EggRush.active)G.EggRush.draw(ctx);','if(G.EggRush.enabled)G.EggRush.draw(ctx);');
 once('js/game.js','if(G.EggRush.active)G.EggRush.hud(ctx,w,h);','if(G.EggRush.enabled)G.EggRush.hud(ctx,w,h);');
+once('js/game.js','      else checkAllDown(dt);',
+ '      else {G.EggRush.update(dt,time,G.Coop.players(),()=>{});checkAllDown(dt);}');

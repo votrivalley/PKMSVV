@@ -1,7 +1,7 @@
 /* PKMSVV v1.5 — Egg Rush, online 4-player host-authoritative match. */
 G.EggRush=(()=>{
  const MAX_TIME=720,SPAWN_EVERY=60,RESPAWN_SECONDS=8,EGG_SPECIES=[172,447,173,35,360,438,175,174];
- let active=false,supportMode=false,nextSpawn=60,roster=[],nests=[],trails=new Map(),pets=[],score={},at={},laid=0,seed=1,outcome=null,transition={},levelSeen=1,killsSeen=0;
+ let active=false,supportMode=false,cooperative=false,nextSpawn=60,roster=[],nests=[],trails=new Map(),pets=[],score={},at={},laid=0,seed=1,outcome=null,transition={},levelSeen=1,killsSeen=0;
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  const nameOf=uid=>roster.find(m=>m.uid===uid)?.name||'Player';
  const rand=k=>{let x=((seed+Math.imul(k+1,2654435761))|0);x^=x>>>16;x=Math.imul(x,2246822507);x^=x>>>13;return (x>>>0)/4294967296;};
@@ -11,7 +11,7 @@ G.EggRush=(()=>{
   const p=corners[(i+rotation)%4];return p.slice();
  }
  function begin(cfg){
-  active=!!(cfg&&cfg.mode==='eggrush');supportMode=cfg?.mode==='royale';nextSpawn=SPAWN_EVERY;
+  active=!!(cfg&&cfg.mode==='eggrush');cooperative=cfg?.mode==='coop';supportMode=cooperative||cfg?.mode==='royale';nextSpawn=SPAWN_EVERY;
   roster=(active||supportMode)?(cfg.members||[]).map(m=>({uid:m.uid,name:String(m.name||'Player').slice(0,24),dex:m.dex||25})):[];
   seed=Math.floor(Number(cfg?.seed)||1);nests=[];pets=[];trails=new Map();levelSeen=1;killsSeen=0;
   score=Object.fromEntries(roster.map(m=>[m.uid,0]));at={};laid=0;outcome=null;transition={};
@@ -27,16 +27,17 @@ G.EggRush=(()=>{
  function randomNest(index,players){
   const n=index+1,cam=G.Camera;
   const width=Number(cam?.w)>0?cam.w:768,height=Number(cam?.h)>0?cam.h:420;
-  const screen=Math.hypot(width,height),minDistance=screen+80;
+  const screen=Math.hypot(width,height),minDistance=cooperative?150:screen+80;
   // Include players who are down: avoid pop-ins while waiting to revive.
   const positioned=players.filter(p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.y));
   const origin=positioned.length?positioned[index%positioned.length]:{x:0,y:0};
   for(let tries=0;tries<96;tries++){
    const a=2*Math.PI*rand(n*73+tries*11);
-   const d=minDistance+rand(n*57+tries*7)*screen*.7+Math.floor(tries/24)*screen*.35;
+   const d=cooperative?180+rand(n*57+tries*7)*160:
+    minDistance+rand(n*57+tries*7)*screen*.7+Math.floor(tries/24)*screen*.35;
    const x=Math.round(origin.x+Math.cos(a)*d),y=Math.round(origin.y+Math.sin(a)*d);
    if(positioned.some(p=>G.U.dist2(p.x,p.y,x,y)<minDistance*minDistance))continue;
-   if(G.Camera?.sees?.(x,y,64))continue;
+   if(!cooperative&&G.Camera?.sees?.(x,y,64))continue;
    if(nests.some(q=>!q.taken&&G.U.dist2(q.x,q.y,x,y)<120*120))continue;
    if(!G.World.isFree(x,y,20)||G.World.isLiquid(x,y))continue;
    return {id:n,x,y,taken:false};
@@ -93,13 +94,16 @@ G.EggRush=(()=>{
    if(!trl?.length)continue;
    const siblings=pets.filter(x=>x.uid===pet.uid),i=siblings.indexOf(pet);
    const loc=trl[Math.min((i+1)*12,trl.length-1)];
+   const ox=pet.x,oy=pet.y;
    pet.x+=(loc.x-pet.x)*Math.min(1,dt*10);pet.y+=(loc.y-pet.y)*Math.min(1,dt*10);
    pet.age+=dt;
    if(G.Coop.isHost)pet.boost=(pet.boost||0)+advanceLevel*3+advanceKills*.65;
    if(G.Coop.isHost&&pet.age>=20&&pet.age+(pet.boost||0)>=45&&!pet.hatch){
     const event=['er','hatch',pet.id];onEvent(event);G.Coop.broadcast(event);
    }
-   pet.anim?.update?.(dt);
+   const moving=Math.hypot(pet.x-ox,pet.y-oy)>.05;
+   if(pet.anim&&moving&&G.Sprites.dirFromAngle)pet.anim.dir=G.Sprites.dirFromAngle(Math.atan2(pet.y-oy,pet.x-ox));
+   pet.anim?.loop?.(moving?'Walk':'Idle');pet.anim?.update?.(dt);
    const owner=pet.uid===G.Game.player?.uid?G.Game.player:(G.Coop.isHost?players.find(p=>p.lanBot&&p.uid===pet.uid):null);
    if(pet.hatch&&owner&&!owner.dead){
     const own=pets.filter(q=>q.uid===pet.uid&&q.hatch);
@@ -113,7 +117,7 @@ G.EggRush=(()=>{
    t.rank+=(target-t.rank)*Math.min(1,dt*11);
   });
   if(!G.Coop.isHost)return;
-  if(time<MAX_TIME&&time>=nextSpawn){
+  if((supportMode||time<MAX_TIME)&&time>=nextSpawn){
    const n=randomNest(laid,players);
    if(n){laid++;onEvent(['er','spawn',n.id,n.x,n.y]);G.Coop.broadcast(['er','spawn',n.id,n.x,n.y]);
     nextSpawn=(Math.floor(time/SPAWN_EVERY)+1)*SPAWN_EVERY;}

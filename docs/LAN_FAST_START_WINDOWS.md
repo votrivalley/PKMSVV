@@ -1,5 +1,10 @@
 # Pokémon Chuyển Sinh LAN — PC Fast Start
 
+## Bản 1.5.21 — AI Sống Sót
+- AI tự hoạt động trong khoảng gần nhóm, giữ khoảng đứng riêng, tự đánh/né/nhặt trứng; không bám đuôi cứng.
+- Mỗi người và mỗi AI tự nhặt, ấp và mang tối đa 2 hỗ trợ riêng. Trứng nằm gần nhóm; đủ 2 thì không lấy thêm.
+- Chi tiết: `docs/LAN_1_5_21.md`.
+
 ## Bản 1.5.20
 - Sống Còn: xuất phát riêng, AI tự tản ra; có trứng và ấp, tối đa 2 hỗ trợ mỗi người.
 - Tranh Trứng: mỗi phút thêm 1 trứng ngẫu nhiên và chỉ dẫn; hồi sinh sau 8 giây, không giới hạn lượt. Giữ không PvP và thời lượng 12 phút.
