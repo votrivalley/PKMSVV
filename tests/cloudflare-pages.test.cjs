@@ -8,6 +8,17 @@ test('Launch full offline game directly without Google sign-in',()=>{
  for(const file of ['game/index.html','game/js/app.min.js','game/js/ui/pkmsvv-local-shell.js',
   'game/assets/icons/icon-180.png'])assert.ok(fs.existsSync(path.join(dist,file)),file);
 });
+test('Boot loader displays Vietnamese text and retains developer credit',()=>{
+ const page=read('game/index.html');
+ const splash=page.slice(page.indexOf('<div id="boot" class="boot">'),page.indexOf('<script src="js/boot.js">'));
+ assert.match(splash,/Pokémon Chuyển Sinh/);
+ assert.match(splash,/Đang tải trò chơi/);
+ assert.match(splash,/pkmsvv-boot-credit/);
+ assert.doesNotMatch(splash,/Cargando|Juego de supervivencia/);
+ const boot=read('game/js/boot.js');
+ assert.ok(boot.includes("vi: ['Game sinh tồn Pokémon"));
+ assert.ok(boot.includes("#boot .boot-ld"));
+});
 test('Local save UI remains and PWA uses HTTPS root scope',()=>{
  const manifest=JSON.parse(read('manifest.webmanifest'));
  for(const field of ['id','start_url','scope'])assert.equal(manifest[field],'/');

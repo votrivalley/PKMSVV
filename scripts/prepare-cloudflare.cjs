@@ -29,6 +29,40 @@ const html=[
 fs.writeFileSync(path.join(dest,'index.html'),html,'utf8');
 fs.copyFileSync(path.join(root,'src/cloudflare/sw.js'),path.join(dest,'sw.js'));
 fs.copyFileSync(path.join(root,'src/cloudflare/_headers'),path.join(dest,'_headers'));
+// Cloudflare-only localization for the boot that appears while game scripts load.
+const htmlFile=path.join(dest,'game/index.html');
+let gameHTML=fs.readFileSync(htmlFile,'utf8');
+const from=gameHTML.indexOf('<div id="boot" class="boot">');
+const to=gameHTML.indexOf('<script src="js/boot.js"></script>',from);
+if(from<0||to<0)throw Error('Missing upstream loading-screen markup');
+let loadingHTML=gameHTML.slice(from,to);
+const translation=[
+ ['Juego de supervivencia con Pokémon, gratis en el navegador y en el móvil.',
+  'Game sinh tồn Pokémon — chơi ngay trên trình duyệt, không cần đăng nhập.'],
+ ['<p class="boot-ld">Cargando…</p>',
+  '<p class="boot-ld" lang="vi">Đang tải trò chơi…</p>']
+];
+for(const [oldText,newText] of translation){
+ if(!loadingHTML.includes(oldText))throw Error('Original loading text changed: '+oldText);
+ loadingHTML=loadingHTML.replace(oldText,newText);
+}
+loadingHTML=loadingHTML.replace(/(<h1[^>]*>)[^<]*(<\/h1>)/,'$1Pokémon Chuyển Sinh$2');
+gameHTML=gameHTML.slice(0,from)+loadingHTML+gameHTML.slice(to);
+fs.writeFileSync(htmlFile,gameHTML,'utf8');
+const scriptFile=path.join(dest,'game/js/boot.js');
+let bootScript=fs.readFileSync(scriptFile,'utf8');
+const spanish="    es: ['Juego de supervivencia con Pokémon, gratis en el navegador y en el móvil.', 'Cargando…'],";
+const oldSelector="  var p = document.querySelectorAll('#boot p');\n  p[0].textContent = copy[0]; p[1].textContent = copy[1];";
+if(!bootScript.includes(spanish)||!bootScript.includes(oldSelector))throw Error('Upstream boot.js changed');
+bootScript=bootScript.replace(spanish,
+ "    vi: ['Game sinh tồn Pokémon — chơi ngay trên trình duyệt, không cần đăng nhập.', 'Đang tải trò chơi…'],\n"+spanish);
+bootScript=bootScript.replace(oldSelector,
+ "  var description = document.querySelector('#boot .boot-in > p:not(.pkmsvv-boot-credit):not(.boot-ld)');\n"+
+ "  var progress = document.querySelector('#boot .boot-ld');\n"+
+ "  if (description) description.textContent = copy[0];\n"+
+ "  if (progress) progress.textContent = copy[1];");
+fs.writeFileSync(scriptFile,bootScript,'utf8');
+
 for(const name of ['manifest.webmanifest','game/manifest.webmanifest']){
  const file=path.join(dest,name),m=JSON.parse(fs.readFileSync(file,'utf8'));
  Object.assign(m,{id:'/',start_url:'/',scope:'/',display:'standalone',orientation:'landscape',
@@ -38,7 +72,7 @@ for(const name of ['manifest.webmanifest','game/manifest.webmanifest']){
  fs.writeFileSync(file,JSON.stringify(m,null,2)+'\n','utf8');
 }
 for(const needed of ['index.html','sw.js','_headers','manifest.webmanifest',
- 'game/index.html','game/js/app.min.js','game/css/style.css',
+ 'game/index.html','game/js/app.min.js','game/js/boot.js','game/css/style.css',
  'game/js/ui/pkmsvv-local-shell.js','game/assets/icons/icon-180.png'])
  if(!fs.existsSync(path.join(dest,needed)))throw Error('Missing game asset: '+needed);
 const bundle=fs.readFileSync(path.join(dest,'game/js/app.min.js'),'utf8');
