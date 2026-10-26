@@ -10,6 +10,20 @@ fs.cpSync(web,ios,{recursive:true});
 fs.copyFileSync(path.join(root,'src','ios','index.html'),path.join(ios,'index.html'));
 fs.copyFileSync(path.join(root,'src','ios','entry.js'),path.join(ios,'entry.js'));
 fs.copyFileSync(path.join(root,'src','ios','sw.js'),path.join(ios,'sw.js'));
+// iOS is a LOCAL standalone web app; hide disabled cloud/friends/matchmaking
+// controls only in this build, never delete shared gameplay source or saves.
+const gameIndex=path.join(ios,'game','index.html');
+let gameHTML=fs.readFileSync(gameIndex,'utf8');
+if(!gameHTML.includes('</head>'))throw Error('Missing compiled iOS HTML head');
+gameHTML=gameHTML.replace('</head>',[
+ '<style id="pkmsvv-ios-local-only">',
+ '#scr-menu [data-go="friends"],#scr-menu [data-go="rank"],',
+ '#scr-menu [data-go="multiplayer"],#pkmsvv-menu-google,',
+ '#btn-google,#pkmsvv-login-google,#pkmsvv-online-counter,',
+ '#scr-friends,#scr-rank,#scr-multiplayer{display:none!important}',
+ '</style></head>'
+].join('\\n'));
+fs.writeFileSync(gameIndex,gameHTML,'utf8');
 const manifest=JSON.parse(fs.readFileSync(path.join(ios,'manifest.webmanifest'),'utf8'));
 Object.assign(manifest,{id:'/',start_url:'/?source=ios-home',scope:'/',display:'standalone',
  name:'Pokémon Chuyển Sinh',short_name:'Pokémon Chuyển Sinh',orientation:'landscape'});

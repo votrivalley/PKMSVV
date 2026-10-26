@@ -7,6 +7,8 @@ test('iOS HTML5 route is local-only with App Store-free Home Screen instructions
  assert.match(html,/Thêm vào Màn hình chính/);
  assert.doesNotMatch(html,/Đăng nhập Google|Chơi Online/);
  assert.match(entry,/pkmsvv.web.saveMode','local/);
+ assert.match(read('scripts/prepare-ios.cjs'),/#pkmsvv-menu-google/);
+ assert.match(read('scripts/prepare-ios.cjs'),/#scr-menu \[data-go="multiplayer"\]/);
 });
 test('LAN says Co-op; native backup is on main menu and old warning replaced',()=>{
  const lan=read('scripts/patch-lan.cjs'),menu=read('scripts/patch-v15-menu-qa.cjs'),notice=read('scripts/patch-v15-offline-save-notice.cjs');

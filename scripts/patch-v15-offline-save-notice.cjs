@@ -37,11 +37,13 @@ fs.appendFileSync(menu,`
 `,'utf8');
 fs.appendFileSync(path.join(base,'css','style.css'),`
 /* Local-profile status, small and persistent: not a popup covering gameplay. */
-#scr-menu .pkmsvv-offline-save-note{margin:5px auto 2px;padding:8px 12px;
- display:block;width:min(820px,96%);box-sizing:border-box;
- text-align:center;line-height:1.45;font-size:clamp(11px,1.12vw,13px);
- color:#ffe6aa;background:rgba(17,53,62,.95);border:1px solid #b8a36e;
- border-radius:11px;overflow-wrap:anywhere;flex:0 0 auto}
-@media(max-width:650px){#scr-menu .pkmsvv-offline-save-note{padding:6px;font-size:10px;line-height:1.25}}
+#scr-menu .pkmsvv-offline-save-note{
+ margin:5px auto 2px;padding:0 5px;display:block;
+ width:auto;max-width:95%;box-sizing:border-box;
+ text-align:center;line-height:1.3;font-size:clamp(10px,1vw,12px);
+ color:#ffe6aa;background:transparent;border:0;
+ border-radius:0;overflow-wrap:anywhere;flex:0 0 auto
+}
+@media(max-width:650px){#scr-menu .pkmsvv-offline-save-note{padding:0 4px;font-size:10px}}
 `,'utf8');
 console.log('PKMSVV: clear offline/online save isolation notice on main menu, no save mutation.');
