@@ -13,6 +13,7 @@ on:
       - 'desktop/lan-startup.cjs'
       - 'tests/lan-startup.test.cjs'
       - 'tests/smoke-lan-win.ps1'
+      - 'docs/LAN_FAST_START_WINDOWS.md'
       - 'lan-win.json'
       - 'package.json'
       - 'tests/lan-server.test.cjs'
@@ -70,6 +71,16 @@ jobs:
       - name: Smoke-test packaged Windows executable (runtime, not just build)
         shell: pwsh
         run: ./tests/smoke-lan-win.ps1
+      - name: Include Fast Start readme in the unpacked Windows folder
+        shell: pwsh
+        run: |
+          Copy-Item docs/LAN_FAST_START_WINDOWS.md dist/lan-windows/win-unpacked/README-FAST-START.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-LAN-Windows-Fast-Start
+          path: dist/lan-windows/win-unpacked/
+          retention-days: 14
+          if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
           name: PKMSVV-LAN-Windows-Host-Beta
