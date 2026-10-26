@@ -131,8 +131,6 @@ execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-cloud-mult
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-exclusive-session.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-online-counter.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-coop-repair.cjs')], { cwd: root, stdio: 'inherit' });
-// Standalone LAN target replaces Firebase room signalling with a same-Wi-Fi hub.
-if(process.env.PKMSVV_LAN_BUILD==='1')execFileSync(process.execPath,[path.join(root,'scripts','patch-lan.cjs')],{cwd:root,stdio:'inherit'});
 // Voice is Web-only and strictly limited to cooperative rooms (2–4 players).
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-voice.cjs')], { cwd: root, stdio: 'inherit' });
 const flow = path.join(game, 'js', 'game.js');
@@ -151,6 +149,8 @@ replaceOnce(flow, 'toLogin() { this.afterLogin(); },',
 fs.writeFileSync(path.join(game, 'js', 'core', 'firebase-config.js'),
   '/* Own Firebase project only; never upstream credentials. */\nG.FIREBASE_CONFIG = ' +
   JSON.stringify(config ? config.firebase : null) + ';\n');
+// Standalone LAN target replaces Firebase room signalling with a same-Wi-Fi hub.
+if(process.env.PKMSVV_LAN_BUILD==='1')execFileSync(process.execPath,[path.join(root,'scripts','patch-lan.cjs')],{cwd:root,stdio:'inherit'});
 execFileSync(process.execPath, [path.join(game, 'tools', 'build.js'), '--sin-seo', '--expose'], { cwd: game, stdio: 'inherit' });
 let html = fs.readFileSync(path.join(game, 'index.html'), 'utf8');
 if (!html.includes('</head>')) throw new Error('Missing HTML head in web build');
