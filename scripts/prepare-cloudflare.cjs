@@ -52,7 +52,7 @@ loadingHTML=loadingHTML.replace(/(<h1\b[^>]*>)[\s\S]*?(<\/h1>)/,'$1<span>Pokémo
 gameHTML=gameHTML.slice(0,from)+loadingHTML+gameHTML.slice(to);
 if(!gameHTML.includes('</head>'))throw Error('No game HTML head for save guard');
 gameHTML=gameHTML.replace('</head>',
- '<script src="../save-guardian.js"></script></head>');
+ '<script src="../save-guardian.js"></script><script>window.PKMSVV_STANDALONE_AI_AVAILABLE=true;</script></head>');
 fs.writeFileSync(htmlFile,gameHTML,'utf8');
 const scriptFile=path.join(dest,'game/js/boot.js');
 let bootScript=fs.readFileSync(scriptFile,'utf8').replace(/\r\n/g,'\n');
@@ -83,6 +83,8 @@ for(const needed of ['index.html','sw.js','_headers','manifest.webmanifest','sav
 const bundle=fs.readFileSync(path.join(dest,'game/js/app.min.js'),'utf8');
 if(/AIza[A-Za-z0-9_-]{35}|pkmsvv-b84d2-default-rtdb/.test(bundle))
  throw Error('Forbidden Google/Firebase configuration in offline game');
+// Compile a second, in-memory AI runtime. It reuses all /game/ sprites and audio.
+execFileSync(process.execPath,[path.join(root,'scripts','prepare-cloudflare-ai.cjs')],{cwd:root,stdio:'inherit'});
 let files=0,total=0,max=0,largest='';
 const maxFile=25*1024*1024;
 function scan(folder){
