@@ -69,8 +69,10 @@ test('LAN source shares neither Google login nor Firestore and keeps distinct sa
  const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
  for(const p of ['src/lan/social-lan.js','src/lan/net-lan.js','src/lan/lan-bus.js'])
   assert.doesNotMatch(read(p),/firebase\.firestore|firebase\.database|auth\.signIn|firestore\.collection/i);
- assert.match(read('src/lan/index.html'),/không đồng bộ với save EXE Offline/);
- assert.match(read('src/lan/index.html'),/Android/);
+ // Instructions moved to the in-game Co-op screen when the startup page was removed.
+ assert.match(read('docs/LAN_LOCAL_BETA.md'),/Save LAN là localStorage/);
+ assert.match(read('src/lan/lan-compact-ui.js'),/Android/);
+ assert.match(read('src/lan/lan-compact-ui.js'),/pkmsvv-lan-host-ips/);
  assert.match(read('scripts/prepare-web.cjs'),/PKMSVV_LAN_BUILD/);
  assert.match(read('scripts/patch-lan.cjs'),/if \(restored && G.DB.save\) this.afterLogin/);
  assert.match(read('scripts/patch-lan.cjs'),/#scr-login #login-form\{display:block!important\}/);
