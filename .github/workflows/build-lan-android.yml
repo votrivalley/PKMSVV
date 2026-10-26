@@ -1,0 +1,65 @@
+name: Build LAN Android Client Beta
+on:
+  push:
+    branches: [feature/lan-local-beta]
+    paths:
+      - 'scripts/prepare-lan-android.cjs'
+      - 'scripts/configure-lan-android.cjs'
+      - '.github/workflows/build-lan-android.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  android-lan:
+    name: Android LAN client APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Ensure Android SDK 36
+        run: |
+          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+          sdkmanager --install "platforms;android-36" "build-tools;36.0.0"
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Prepare separate Android LAN entry and icon
+        run: |
+          node scripts/prepare-lan-android.cjs
+          npm run prepare:icons
+      - name: Generate native Android shell
+        run: |
+          npx cap add android
+          npx cap sync android
+          node scripts/configure-lan-android.cjs
+          node scripts/apply-android-icons.cjs
+      - name: Validate LAN network permissions and app ID
+        shell: bash
+        run: |
+          grep -q 'usesCleartextTraffic="true"' android/app/src/main/AndroidManifest.xml
+          grep -q 'com.votrivalley.pkmsvv.lan' android/app/build.gradle
+          test -n "$(find android/app/src/main/java -name MainActivity.java -print -quit)"
+      - name: Build Android LAN client APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon :app:assembleDebug
+      - name: Validate APK
+        shell: bash
+        run: |
+          mkdir -p dist/lan-android
+          cp android/app/build/outputs/apk/debug/app-debug.apk dist/lan-android/PKMSVV-LAN-Android-debug.apk
+          unzip -t dist/lan-android/*.apk | tail -1
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging dist/lan-android/*.apk | grep "^package:" | head -1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-LAN-Android-Client-Beta
+          path: dist/lan-android/*.apk
+          if-no-files-found: error
+          retention-days: 14
