@@ -878,3 +878,22 @@ test('Two companions are always available before and after Chapter 3, no old fla
  assert.doesNotMatch(src,/function hasSecondSlot|if\(!hasSecondSlot/);
  assert.match(read('src/pkmsvv-story.js'),/Ngay từ đầu, ngươi đã có thể đồng hành cùng tối đa hai Pokémon/);
 });
+
+test('New save before Chapter 3 spawns actual companion nests and reserves two slots',()=>{
+ const pl={x:0,y:0,kills:0,level:1,dead:false,maxHp:100,hp:100};
+ const G={DB:{save:{pkmsvvChapter3Seen:false,stats:{}},commit(){}},
+  Camera:{w:800,h:600,sees:()=>false},
+  World:{isFree:()=>true,isLiquid:()=>false},
+  Sprites:{preload(){}},Spawner:{say(){}},Coop:{active:false},
+  U:{dist2:(x,y,a,b)=>(x-a)**2+(y-b)**2},EnemyMgr:{all:()=>[]}};
+ vm.runInNewContext(read('src/v15/eggs.js'),{G,Math,Number,Object});
+ const eggs=G.PKMSVVEggs;
+ eggs.begin(pl,false);eggs.update(.1,pl,60,false);
+ assert.equal(eggs.unlocked(),true,'Companions available before Chapter 3');
+ assert.equal(eggs.limit(),2);
+ assert.equal(eggs.nests.length,1,'First nest actually spawns');
+ const n=eggs.nests[0];pl.x=n.x;pl.y=n.y;
+ for(let i=0;i<41;i++)eggs.update(.1,pl,61+i*.1,false);
+ assert.equal(eggs.occupied,1,'First collected egg reserves one support slot');
+ assert.equal(eggs.limit()-eggs.occupied,1,'One more companion is available');
+});
