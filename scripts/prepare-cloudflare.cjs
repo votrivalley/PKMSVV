@@ -46,7 +46,7 @@ for(const [oldText,newText] of translation){
  if(!loadingHTML.includes(oldText))throw Error('Original loading text changed: '+oldText);
  loadingHTML=loadingHTML.replace(oldText,newText);
 }
-loadingHTML=loadingHTML.replace(/(<h1[^>]*>)[^<]*(<\/h1>)/,'$1Pokémon Chuyển Sinh$2');
+loadingHTML=loadingHTML.replace(/(<h1\b[^>]*>)[\s\S]*?(<\/h1>)/,'$1<span>Pokémon</span><span>Chuyển Sinh</span>$2');
 gameHTML=gameHTML.slice(0,from)+loadingHTML+gameHTML.slice(to);
 fs.writeFileSync(htmlFile,gameHTML,'utf8');
 const scriptFile=path.join(dest,'game/js/boot.js');

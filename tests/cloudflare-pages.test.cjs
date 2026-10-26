@@ -11,7 +11,7 @@ test('Launch full offline game directly without Google sign-in',()=>{
 test('Boot loader displays Vietnamese text and retains developer credit',()=>{
  const page=read('game/index.html');
  const splash=page.slice(page.indexOf('<div id="boot" class="boot">'),page.indexOf('<script src="js/boot.js">'));
- assert.match(splash,/Pokémon Chuyển Sinh/);
+ assert.match(splash,/<span>Pokémon<\/span><span>Chuyển Sinh<\/span>/);
  assert.match(splash,/Đang tải trò chơi/);
  assert.match(splash,/pkmsvv-boot-credit/);
  assert.doesNotMatch(splash,/Cargando|Juego de supervivencia/);
