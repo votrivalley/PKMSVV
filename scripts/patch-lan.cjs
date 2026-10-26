@@ -40,7 +40,7 @@ ui=ui.replace(marker,
        aiBar=document.createElement('div');aiBar.id='pkmsvv-lan-ai-bar';
        aiBar.className='row wrap';aiBar.style.cssText='gap:8px;margin:8px 0';
        $('lobby-note').insertAdjacentElement('afterend',aiBar);
-       const add=document.createElement('button');add.id='pkmsvv-lan-ai-add';add.type='button';add.className='btn small gold';add.textContent='➕ Thêm AI (thử nghiệm)';
+       const add=document.createElement('button');add.id='pkmsvv-lan-ai-add';add.type='button';add.className='btn small gold';add.textContent='➕ Thêm AI';
        const remove=document.createElement('button');remove.id='pkmsvv-lan-ai-remove';remove.type='button';remove.className='btn small ghost';remove.textContent='➖ Bớt AI';
        aiBar.append(add,remove);
        add.onclick=()=>G.LanBus.request('addBot',{}).catch(e=>G.UI.toast(e.message,3500));
@@ -49,9 +49,9 @@ ui=ui.replace(marker,
         if(bot)G.LanBus.request('removeBot',{uid:bot.uid}).catch(e=>G.UI.toast(e.message,3500));
        };
       }
-      aiBar.classList.toggle('hidden',!room.isHost||room.mode!=='coop'||!room.open);
+      aiBar.classList.toggle('hidden',!room.isHost||!room.open);
       const botCount=room.members.filter(m=>m.bot).length;
-      $('pkmsvv-lan-ai-add').disabled=room.members.length>=4;
+      $('pkmsvv-lan-ai-add').disabled=room.members.length>=(room.mode==='royale'?10:4);
       $('pkmsvv-lan-ai-remove').disabled=!botCount;
       `+
  "      $('lobby-sub').textContent += '  ·  Mã phòng: '+room.id+(room.isHost?'  ·  Địa chỉ LAN: '+location.origin:'');\n"+

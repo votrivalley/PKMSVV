@@ -150,8 +150,9 @@ function startServer({root,port=37816,host='0.0.0.0'}={}){
    if(!r){reply(null,'Chưa tham gia phòng.');return;}
    if(m.action==='addBot'){
     if(r.host!==c.uid){reply(null,'Chỉ Host được thêm AI.');return;}
-    if(r.mode!=='coop'||!r.open){reply(null,'AI thử nghiệm chỉ hỗ trợ phòng Co-op đang chờ.');return;}
-    if(r.members.size>=4){reply(null,'Phòng Co-op đã đủ 4 người.');return;}
+    if(!r.open){reply(null,'Phòng đã bắt đầu, không thêm AI.');return;}
+    const max=r.mode==='royale'?10:4;
+    if(r.members.size>=max){reply(null,'Phòng đã đủ '+max+' người và AI.');return;}
     const picks=[25,1,4,7,133,447,175],dex=picks.includes(m.dex)?m.dex:picks[Math.floor(Math.random()*picks.length)];
     const bot={uid:'ai-'+randomBytes(8).toString('hex'),name:'AI · '+({25:'Pikachu',1:'Bulbasaur',4:'Charmander',7:'Squirtle',133:'Eevee',447:'Riolu',175:'Togepi'}[dex]),dex,shiny:false,bot:true};
     r.members.set(bot.uid,bot);reply(snapshot(r));broadcast(r,{t:'room',room:snapshot(r)});return;

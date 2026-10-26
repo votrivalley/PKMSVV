@@ -6,12 +6,12 @@ G.LanAI=(()=>{
  const sq=(a,b,c,d)=>(a-c)**2+(b-d)**2;
  function activeBots(){
   const room=G.Social?.room;
-  if(!room||!room.isHost||room.mode!=='coop'||!G.Coop?.isHost)return[];
+  if(!room||!room.isHost||!['coop','royale','eggrush'].includes(room.mode)||!G.Coop?.isHost)return[];
   return room.members.filter(x=>x.bot===true&&/^ai-[a-f0-9]{16}$/.test(x.uid));
  }
  function update(){
   if(!G.Coop?.isHost){states.clear();return;}
-  const bots=activeBots(),ids=new Set(bots.map(x=>x.uid));
+  const bots=activeBots(),ids=new Set(bots.map(x=>x.uid)),mode=G.Social.room?.mode;
   for(const id of states.keys())if(!ids.has(id))states.delete(id);
   if(!bots.length)return;
   const host=G.Coop.local;
@@ -31,9 +31,13 @@ G.LanAI=(()=>{
    let closest=null,dist=Infinity;
    for(const e of enemies){const d=sq(state.x,state.y,e.x,e.y);if(d<dist){dist=d;closest=e;}}
    const hasTarget=!!closest&&dist<=MAX_RANGE*MAX_RANGE;
-   const target=hasTarget?closest:host;
+   // Egg Rush opponents search for actual untaken nests; host checks egg claims.
+   const eggs=mode==='eggrush'?(G.EggRush?.nests||[]).filter(n=>!n.taken):[];
+   eggs.sort((a,b)=>sq(state.x,state.y,a.x,a.y)-sq(state.x,state.y,b.x,b.y));
+   const nest=eggs[0]||null;
+   const target=nest||(hasTarget?closest:host);
    let dx=target.x-state.x,dy=target.y-state.y,d=Math.hypot(dx,dy);
-   const follow=hasTarget?125:95,desired=hasTarget?70:Math.min(100,45+bots.indexOf(bot)*25);
+   const follow=nest?185:hasTarget?125:95,desired=nest?4:hasTarget?70:Math.min(100,45+bots.indexOf(bot)*25);
    const walk=d>desired+8;
    if(walk&&d>0){const step=Math.min(d-desired,follow*STEP);state.x+=dx/d*step;state.y+=dy/d*step;}
    const aim=Math.atan2(dy,dx)||0,events=[['lp']]; // instant pick: never deadlock co-op level-up

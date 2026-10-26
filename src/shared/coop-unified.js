@@ -57,10 +57,12 @@
  async function action(role){
   if(lan()){
    if(role==='join')return joinRooms();
-   if(role==='ai'&&mode!=='coop'){info('AI đối thủ của chế độ này chưa hoàn thiện, chưa thể chơi với AI.');return;}
    try{
     if(!G.Social.room)await G.Social.createRoom(mode,role==='ai'?'private':'public');
-    if(role==='ai'&&G.Social.room?.isHost)await G.LanBus.request('addBot',{});
+    if(role==='ai'&&G.Social.room?.isHost){
+     const opponents=mode==='coop'?1:3;
+     for(let i=0;i<opponents;i++)await G.LanBus.request('addBot',{});
+    }
     close();G.LobbyUI.open();
    }catch(e){info('Không tạo được phòng: '+e.message);}
    return;

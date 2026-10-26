@@ -270,5 +270,5 @@ G.EggRush=(()=>{
  }
  function finish(r){if(r){outcome=r;active=true;}}
  return {begin,startPosition,onEvent,update,draw,hud,html,finish,cast,orb,standings,
-  get active(){return active;},get outcome(){return outcome;},get collected(){return Object.values(score).reduce((s,n)=>s+n,0);}};
+  get nests(){return nests;},get active(){return active;},get outcome(){return outcome;},get collected(){return Object.values(score).reduce((s,n)=>s+n,0);}};
 })();
