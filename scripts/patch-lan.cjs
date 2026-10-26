@@ -9,7 +9,8 @@ once('dev.html','<script defer src="js/net/social.js"></script>',
  '<script defer src="js/net/lan-bus.js"></script>\n<script defer src="js/net/social.js"></script>');
 // build.js bundles external scripts only and discards inline scripts between
 // scripts:begin/end. Put the target marker INSIDE a compiled source file.
-write('js/net/lan-bus.js',"window.PKMSVV_LOCAL_UI_MODE='lan';\n"+readLan('lan-bus.js'));
+write('js/net/lan-bus.js',"window.PKMSVV_LOCAL_UI_MODE='lan';\n"+
+ (process.env.PKMSVV_STANDALONE_AI==='1'?"window.PKMSVV_STANDALONE_AI=true;\n"+readLan('solo-ai-bus.js'):readLan('lan-bus.js')));
 // Avoid redrawing the animated menu at 120/144/240 Hz on gaming displays.
 // Keep gameplay/network ticking at up to 60 Hz; this changes no game rules.
 once('js/game.js',
