@@ -57,3 +57,15 @@ test('PWA multiplayer source entrypoint never calls old Online nickname gate',()
  assert.match(ui,/PKMSVVOpenLanDialog=openLanDialog/);
  assert.match(ui,/icon\.textContent='🤝'/);
 });
+
+test('Actual PWA multiplayer module cannot open removed Firebase Online gate',()=>{
+ const upstream=fs.readFileSync(path.join(__dirname,'..','vendor','pokesurvivor','js','ui','pkmsvv-multiplayer-ui.js'),'utf8');
+ const start=upstream.indexOf(' function open(){');
+ const end=upstream.indexOf(' return {init,open,rooms,quick,join,create};',start);
+ assert.ok(start>=0&&end>start,'PWA multiplayer module missing');
+ const fn=upstream.slice(start,end);
+ assert.match(fn,/window\.PKMSVVOpenLanDialog/);
+ assert.doesNotMatch(fn,/G\.SocialUI\.withNick/);
+ const minified=read('game/js/app.min.js');
+ assert.match(minified,/PKMSVVOpenLanDialog/);
+});
