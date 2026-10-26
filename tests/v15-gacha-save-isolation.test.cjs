@@ -2,14 +2,14 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.join(__dirname,'..'),read=p=>fs.readFileSync(path.join(root,p),'utf8');
 
-test('offline warning appears at mode selection and native/local main menu only',()=>{
+test('local backup reminder appears on native menu without touching save'),()=>{
  const native=read('scripts/patch-v15-offline-save-notice.cjs');
  const landing=read('src/web/index.html');
  const prepare=read('scripts/prepare-game.cjs');
  assert.match(landing,/Save offline tách biệt hoàn toàn với Online\/Google/);
  assert.match(landing,/id="local"/);
  assert.match(native,/G\.DB\?\.mode!=='local'/);
- assert.match(native,/không thể đồng bộ hoặc dùng chung save Online/);
+ assert.match(native,/Nhớ sao lưu game thường xuyên/);
  assert.match(native,/pkmsvv-offline-save-note/);
  assert.doesNotMatch(native,/localStorage\.(?:removeItem|clear|setItem)/);
  assert.doesNotMatch(native,/G\.DB\.(?:commit|flush|logout|register)/);

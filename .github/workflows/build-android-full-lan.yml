@@ -7,6 +7,7 @@ on:
       - 'scripts/configure-android-full-lan.cjs'
       - 'src/android/full-lan-ui.js'
       - 'tests/android-full-lan.test.cjs'
+      - 'tests/v15-gacha-save-isolation.test.cjs'
       - '.github/workflows/build-android-full-lan.yml'
       - 'scripts/prepare-game.cjs'
       - 'scripts/prepare-android.cjs'
