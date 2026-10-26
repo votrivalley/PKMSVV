@@ -9,7 +9,7 @@
 
 ## Cách lấy gói build xong
 Vào GitHub Actions → `Build Cloudflare Pages FULL HTML5` → chọn lượt Success → Artifacts → `PKMSVV-Cloudflare-Pages-FULL-HTML5`.
-Giải nén ZIP của GitHub (lớp ngoài), rồi giải nén `PKMSVV-Cloudflare-Pages-FULL-HTML5.zip` (lớp trong).
+**Bản mới đã bỏ ZIP lồng ZIP:** Tải Artifact từ GitHub và giải nén một lần. Đảm bảo `index.html` nằm cạnh thư mục `game/` (không triển khai chính file ZIP).
 Thư mục cuối cùng phải có `index.html`, `game/`, `sw.js`, `manifest.webmanifest`, `_headers` cùng cấp.
 
 ## Cấp quyền và triển khai lần đầu (không cần đưa mật khẩu cho ChatGPT)
@@ -39,3 +39,8 @@ Nguồn giới hạn: https://developers.cloudflare.com/pages/platform/limits/
 Tài liệu Wrangler: https://developers.cloudflare.com/pages/get-started/direct-upload/
 
 **Lưu ý thực tế 26/10/2026:** project đã được tạo với production branch `pkmsvv-web`, nên dùng `--branch pkmsvv-web` để cập nhật trang chính `https://pkmsvv-web.pages.dev/`. Bản deploy với `--branch main` tạo đường dẫn preview `https://main.pkmsvv-web.pages.dev/` và không tự thay thế trang chính.
+
+## Tránh lỗi Cloudflare 25 MiB (26/10/2026)
+Artifact mới chứa **các file website trực tiếp**; tải về sẽ có 1 lớp ZIP do GitHub tạo. Giải nén vào thư mục riêng rồi deploy **thư mục đó**, tuyệt đối không deploy thư mục Downloads còn chứa ZIP nén 72 MiB.
+
+Từ PowerShell, kiểm tra `Test-Path .\index.html` và `Test-Path .\game\index.html` phải trả về True. Kiểm tra `Get-ChildItem -File -Filter *.zip` không trả về gì trong thư mục upload. Dùng `npx.cmd wrangler@4 pages deploy . --project-name pkmsvv-web --branch pkmsvv-web`.
