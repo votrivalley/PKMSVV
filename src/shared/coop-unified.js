@@ -177,6 +177,11 @@
    return;
   }
   detail.replaceChildren();
+  if(role==='ai'&&window.PKMSVV_STANDALONE_AI_AVAILABLE){
+   // Cloudflare ships the real LAN gameplay/AI engine backed by a local
+   // in-memory room. No machine Host, Firebase or IP address is required.
+   window.location.assign('/ai/?mode='+encodeURIComponent(mode));return;
+  }
   if(role==='ai'){
    const hint=document.createElement('p');
    hint.textContent='Bản HTML5 Cloudflare đang chơi offline và không chạy máy chủ LAN. Để chơi với AI ở bản này, hãy mở link lời mời từ PC Host đang chạy. Chọn “Chơi với AI” trên Host để tạo bot; website độc lập chưa có AI offline.';
