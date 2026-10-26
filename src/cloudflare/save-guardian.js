@@ -27,7 +27,8 @@
  function startRecovery(){
   const current=safeRead(SAVE);
   if(!good(current)){
-   const candidate=safeRead(PRIMARY)||safeRead(PREVIOUS);
+   const main=safeRead(PRIMARY),fallback=safeRead(PREVIOUS);
+   const candidate=good(main)?main:fallback;
    if(good(candidate)){
     safeWrite(SAVE,candidate);
     safeWrite('pkmsvv.safe.v1.restoredAt',String(now()));

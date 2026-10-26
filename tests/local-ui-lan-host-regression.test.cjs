@@ -20,6 +20,12 @@ test('Backup action in top bar reuses existing Save UI without deleting any save
  assert.match(script,/G\.PKMSVVSaveUI\.openQuick\(\)/);
  assert.doesNotMatch(script,/localStorage\.clear\(|localStorage\.removeItem\(/);
 });
+test('Preview warning protects users from separate save origins',()=>{
+ const js=read('src/shared/local-shell.js');
+ assert.match(js,/pkmsvv-preview-origin-warning/);
+ assert.match(js,/save-rescue\.html/);
+ assert.match(js,/pkmsvv-web\.pages\.dev/);
+});
 test('portable Windows Host includes LAN site as real resource folder',()=>{
  const pack=JSON.parse(read('lan-win.json')),main=read('desktop/lan-main.cjs');
  assert.deepEqual(pack.extraResources,[{from:'dist/lan',to:'lan-site',filter:['**/*']}]);

@@ -27,6 +27,24 @@
   try{localStorage.setItem('pkmsvv.lan.host.ip',ip);}catch(_){}
   location.assign('http://'+ip+':37816/');
  }
+ function previewAlert(){
+  if(!isPages||location.hostname==='pkmsvv-web.pages.dev'||
+   !location.hostname.endsWith('.pkmsvv-web.pages.dev')||
+   document.getElementById('pkmsvv-preview-origin-warning'))return;
+  const panel=document.createElement('div');
+  panel.id='pkmsvv-preview-origin-warning';panel.style.cssText=
+   'position:fixed;left:12px;right:12px;bottom:12px;max-width:680px;margin:auto;'+
+   'z-index:99999;background:#153849;color:#fff4cf;padding:12px 16px;'+
+   'font:14px system-ui;border:2px solid #f0be64;border-radius:10px';
+  const line=document.createElement('p');
+  line.textContent='Đây là website Preview: save của nó KHÔNG chung với pkmsvv-web.pages.dev. Hãy cứu/xuất save trước khi đổi địa chỉ.';
+  const rescue=document.createElement('a');rescue.href='/save-rescue.html';
+  rescue.style.cssText='color:#fff4cf;text-decoration:underline;margin-right:16px';
+  rescue.textContent='Cứu save tại địa chỉ này';
+  const close=document.createElement('button');close.type='button';close.textContent='Đóng';
+  close.onclick=()=>panel.remove();
+  panel.append(line,rescue,close);document.body.append(panel);
+ }
  function refresh(){
   const menu=el('scr-menu');
   if(!menu)return;
@@ -87,6 +105,7 @@
    G.MenuUI.open=function(...args){const result=old.apply(this,args);refresh();return result;};
   }
   refresh();
+  previewAlert();
   window.addEventListener('resize',refresh,{passive:true});
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
