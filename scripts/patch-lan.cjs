@@ -21,6 +21,9 @@ let ui=read('js/ui/social-ui.js');
 const start=ui.indexOf('  function needOnline() {'),end=ui.indexOf('  // ======================= APODO =======================',start);
 if(start<0||end<0)throw Error('LAN social online gate drift');
 ui=ui.slice(0,start)+'  function needOnline() { return !!G.DB.save; }\n\n'+ui.slice(end);
+once('dev.html',
+ 'Ghép trận với người lạ, tìm phòng công khai hoặc tạo phòng riêng để mời bạn bè.',
+ 'Chọn chế độ để tạo phòng LAN hoặc tìm phòng công khai trên cùng máy Host. Chia sẻ địa chỉ IP và mã phòng để tham gia.');
 const marker='      // Las tarjetas sólo se rehacen si cambian los miembros';
 if(!ui.includes(marker))throw Error('LAN lobby room marker drift');
 ui=ui.replace(marker,
