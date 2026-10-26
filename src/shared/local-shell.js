@@ -16,6 +16,7 @@
   window.location.assign('/lan-connect.html');
  }
  function enterLan(event){
+  if(window.PKMSVV_UNIFIED_COOP_ENABLED)return;
   if(!isPages&&!isAndroidFull)return;
   const target=event.target?.closest?.('#scr-menu [data-go="multiplayer"],#scr-menu [data-go="online"],#scr-menu #pkmsvv-full-lan-entry');
   if(!target)return;
@@ -29,6 +30,7 @@
   openLanDialog();
  }
  function guardLegacyOnline(){
+  if(window.PKMSVV_UNIFIED_COOP_ENABLED)return;
   if((!isPages&&!isAndroidFull)||!window.G?.MultiplayerUI||G.MultiplayerUI.__pkmsvvLanOnly)return;
   // Replaces the old online-only WITHNICK/Firebase guard even when code calls
   // MultiplayerUI.open() directly (controller, keyboard or menu binding).
