@@ -25,12 +25,10 @@ test('If all reserved ports busy user sees practical error',async()=>{
  await assert.rejects(()=>startOnAvailablePort(fake,{root:'bad',ports:[37816,37817]}),/37816, 37817/);
 });
 
-test('Windows launcher is visible immediately and offers browser fallback on slow loading',()=>{
+test('Windows launcher stays in native EXE window and never opens browser',()=>{
  const fs=require('node:fs'),path=require('node:path');
  const src=fs.readFileSync(path.join(__dirname,'..','desktop/lan-main.cjs'),'utf8');
  assert.match(src,/autoHideMenuBar:true,show:true/);
- assert.match(src,/shell\.openExternal\(url\)/);
- assert.match(src,/setTimeout\(\(\)=>\{/);
- assert.match(src,/clearTimeout\(watchdog\)/);
+ assert.doesNotMatch(src,/shell\.openExternal|explorer\.exe|Browser fallback/);
  assert.match(src,/Game UI ready after/);
 });
