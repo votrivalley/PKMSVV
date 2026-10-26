@@ -10,6 +10,13 @@ once('dev.html','<script defer src="js/net/social.js"></script>',
 write('js/net/lan-bus.js',readLan('lan-bus.js'));
 write('js/net/social.js',readLan('social-lan.js'));
 write('js/net/net.js',readLan('net-lan.js'));
+
+once('js/game.js',
+ "if (restored || G.DB.mode === 'local') this.afterLogin(); else this.tapToStart(() => this.toLogin());",
+ "if (restored && G.DB.save) this.afterLogin(); else this.tapToStart(() => this.toLogin());");
+once('js/ui/login.js',
+ "setTimeout(() => $('pkmsvv-login-google').focus(), 50);",
+ "setTimeout(() => $('f-user').focus(), 50);");
 let ui=read('js/ui/social-ui.js');
 const start=ui.indexOf('  function needOnline() {'),end=ui.indexOf('  // ======================= APODO =======================',start);
 if(start<0||end<0)throw Error('LAN social online gate drift');
@@ -27,6 +34,9 @@ const css=[
 '#scr-friends,#scr-rank,#pkmsvv-menu-google,#btn-google,#pkmsvv-login-google,',
 '#pkmsvv-online-counter,#lobby-inv-title,#lobby-invite,',
 '[id*="pkmsvv-voice"],#pkmsvv-voice-panel {display:none!important}',
+'#scr-login .tabs{display:flex!important}',
+'#scr-login #login-form{display:block!important}',
+'#scr-login #btn-guest,#scr-login .pkmsvv-entry-buttons{display:none!important}',
 '#scr-multiplayer .pkmsvv-mp-box:before{',
 'content:"LAN · Cùng Wi-Fi, không cần Google. Host chia sẻ IP và mã phòng. Save LAN tách khỏi Offline và Cloud.";',
 'display:block;color:#ffe3a4;margin:12px 0;line-height:1.5}'
