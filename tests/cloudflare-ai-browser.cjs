@@ -67,7 +67,7 @@ async function main(){
   };
   await cmd('Runtime.enable');await cmd('Page.enable');
   for(const mode of ['coop','royale','eggrush']){
-   await cmd('Page.navigate',{url:'http://127.0.0.1:'+port+'/ai/game/?pkmsvvRole=ai&pkmsvvMode='+mode});
+   await cmd('Page.navigate',{url:'http://127.0.0.1:'+port+'/ai/?mode='+mode});
    const roster=await waitFor(()=>evaluate(`(()=>{const r=window.G?.Social?.room;return r?.mode==='${mode}'&&r?.members?.some(m=>m.bot)?{mode:r.mode,count:r.members.length,bots:r.members.filter(m=>m.bot).length}:null;})()`),30000,'AI lobby '+mode);
    assert.equal(roster.mode,mode);assert.ok(roster.bots>=1);
    const status=await evaluate(`(()=>{const b=document.querySelector('#lobby-start');return {exists:!!b,disabled:b?.disabled};})()`);
