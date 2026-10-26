@@ -1,0 +1,10 @@
+/* Offline LAN / PWA: retain legacy DOM nodes but visually remove unused services */
+#scr-menu [data-go="friends"],#scr-menu [data-go="rank"],
+#scr-menu #pkmsvv-menu-google,#scr-menu .pkmsvv-google-switch,
+#scr-menu #pkmsvv-main-save,
+#scr-friends,#scr-rank,#btn-logout,#btn-google,#pkmsvv-login-google,
+#pkmsvv-online-counter,#pkmsvv-v15-backup{display:none!important}
+#topbar:not(.hidden) #btn-backup{display:inline-flex!important;visibility:visible!important;
+align-items:center!important;justify-content:center!important;min-width:38px!important;
+min-height:38px!important;flex:0 0 auto!important;opacity:1!important;pointer-events:auto!important}
+@media(max-width:740px){#topbar:not(.hidden) #btn-backup{min-width:36px!important;min-height:38px!important}}
