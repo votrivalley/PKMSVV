@@ -37,7 +37,9 @@
     "build:lan:win": "electron-builder --win portable --x64 --publish never --config lan-win.json",
     "test:lan": "node --test tests/lan-server.test.cjs",
     "prepare:ios": "node scripts/prepare-ios.cjs",
-    "test:ios": "node --test tests/ios-web.test.cjs"
+    "test:ios": "node --test tests/ios-web.test.cjs",
+    "prepare:android:full-lan": "node scripts/prepare-full-lan-android.cjs",
+    "test:android:full-lan": "node --test tests/android-full-lan.test.cjs"
   },
   "devDependencies": {
     "electron": "^38.0.0",

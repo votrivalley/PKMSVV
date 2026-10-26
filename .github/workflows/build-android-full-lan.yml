@@ -1,0 +1,92 @@
+name: Build Android FULL Game + Co-op LAN Beta
+on:
+  push:
+    branches: [feature/lan-local-beta]
+    paths:
+      - 'scripts/prepare-full-lan-android.cjs'
+      - 'scripts/configure-android-full-lan.cjs'
+      - 'src/android/full-lan-ui.js'
+      - 'tests/android-full-lan.test.cjs'
+      - '.github/workflows/build-android-full-lan.yml'
+      - 'scripts/prepare-game.cjs'
+      - 'scripts/prepare-android.cjs'
+      - 'package.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  android-full-lan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install Android SDK 36
+        shell: bash
+        run: |
+          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+          sdkmanager --install "platforms;android-36" "build-tools;36.0.0"
+      - name: Fetch pinned upstream full game
+        shell: bash
+        run: |
+          git init vendor/pokesurvivor
+          git -C vendor/pokesurvivor remote add origin https://github.com/JPTER78/pokesurvivor.git
+          git -C vendor/pokesurvivor fetch --depth 1 origin 11fe868c640b62ac37beacc222e056bc4d9ec892
+          git -C vendor/pokesurvivor checkout --detach FETCH_HEAD
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Compile entire modified offline game
+        run: npm run prepare:game
+      - name: Validate original game and save functionality
+        run: npm run test:v15 && npm run test:collection && npm run test:mobile-topbar
+      - name: Pack full offline assets and LAN UI
+        run: |
+          npm run prepare:icons
+          npm run prepare:android
+          npm run test:android
+          npm run prepare:android:full-lan
+          npm run test:android:full-lan
+      - name: Create Capacitor Android and LAN native screen
+        run: |
+          npx cap add android
+          npx cap sync android
+          node scripts/configure-android.cjs
+          node scripts/configure-android-full-lan.cjs
+          node scripts/apply-android-icons.cjs
+      - name: Validate game and manifest
+        shell: bash
+        run: |
+          grep -q 'com.votrivalley.pkmsvv.fulllan' android/app/build.gradle
+          grep -q 'usesCleartextTraffic="true"' android/app/src/main/AndroidManifest.xml
+          grep -q 'LANRoomActivity' android/app/src/main/AndroidManifest.xml
+          test -s mobile/www/js/app.min.js
+          test -s mobile/www/js/ui/pkmsvv-full-lan-ui.js
+          du -sh mobile/www/assets
+      - name: Build APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon :app:assembleDebug
+      - name: Inspect APK and package
+        shell: bash
+        run: |
+          mkdir -p dist/full-lan-android
+          apk="dist/full-lan-android/PKMSVV-1.5.16-Android-FULL-CoopLAN-Beta.apk"
+          cp android/app/build/outputs/apk/debug/app-debug.apk "$apk"
+          unzip -t "$apk" | tail -1
+          unzip -Z -1 "$apk" | grep -q '^assets/public/js/app.min.js$'
+          unzip -Z -1 "$apk" | grep -q '^assets/public/js/ui/pkmsvv-full-lan-ui.js$'
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk" | grep '^package:' | head -1
+          ls -lh "$apk"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-Android-FULL-CoopLAN-Beta
+          path: dist/full-lan-android/*.apk
+          retention-days: 14
+          if-no-files-found: error
