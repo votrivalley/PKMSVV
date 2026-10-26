@@ -1,5 +1,11 @@
 # Pokémon Chuyển Sinh LAN — PC Fast Start
 
+## Bản 1.5.20
+- Sống Còn: xuất phát riêng, AI tự tản ra; có trứng và ấp, tối đa 2 hỗ trợ mỗi người.
+- Tranh Trứng: mỗi phút thêm 1 trứng ngẫu nhiên và chỉ dẫn; hồi sinh sau 8 giây, không giới hạn lượt. Giữ không PvP và thời lượng 12 phút.
+- Trong sảnh, Host kick được từng người/AI. Ô chọn Pokémon AI cho phép thêm đúng loài mong muốn hoặc để trống để random.
+- Chi tiết và kiểm thử: `docs/LAN_1_5_20.md`.
+
 ## Bản 1.5.19 — chơi nhiều ván với AI
 - Tranh Trứng không có sát thương giữa người chơi/AI; vẫn có sát thương từ quái và địa hình.
 - Tất cả hết lượt hồi sinh thì kết thúc trận; hết ván xóa AI cũ, mở lại phòng và cho thêm AI mới/đổi chế độ.

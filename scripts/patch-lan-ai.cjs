@@ -58,14 +58,6 @@ once('js/systems/hazards.js',
  '    const players=[G.Game.player,...(G.Coop.isHost?G.Coop.puppets().filter(p=>p.lanBot):[])];');
 once('js/systems/hazards.js','        if (pl && !pl.dead && inside(h, pl.x, pl.y, pl.r)) {',
  '        for(const pl of players)if (pl && !pl.dead && inside(h, pl.x, pl.y, pl.r)) {');
-// Egg Rush bots obey the same two-revive limit and owned-pet rules.
-once('js/net/pkmsvv-egg-rush.js','if(p===G.Game.player){','if(p===G.Game.player||(G.Coop.isHost&&p.lanBot)){');
-once('js/net/pkmsvv-egg-rush.js',
- 'if(p.dead&&revives<2){deathTime+=dt;if(deathTime>=5){p.revive(.5);revives++;deathTime=0;}}\n    else if(!p.dead)deathTime=0;',
- 'if(p.dead&&(p.lanEggRevives||0)<2){p.lanEggDeath=(p.lanEggDeath||0)+dt;if(p.lanEggDeath>=5){p.revive(.5);p.lanEggRevives=(p.lanEggRevives||0)+1;p.lanEggDeath=0;}}\n    else if(!p.dead)p.lanEggDeath=0;');
-once('js/net/pkmsvv-egg-rush.js',"if(pet.hatch&&pet.uid===G.Game.player?.uid){",
- "const owner=pet.uid===G.Game.player?.uid?G.Game.player:(G.Coop.isHost?players.find(p=>p.lanBot&&p.uid===pet.uid):null);\n   if(pet.hatch&&owner){");
-once('js/net/pkmsvv-egg-rush.js','support(pet,G.Game.player);','support(pet,owner);');
 console.log('LAN AI: engine Player movement/combat/rewards, level barrier and damage integration installed.');
 
 once('js/net/coop.js','    active = false; host = false; local = null;',
@@ -78,3 +70,13 @@ once('js/net/coop.js','G.Orbs.ready(local)?1:0];',
  'G.Orbs.ready(local)?1:0,Math.min(2,local.lanEggRevives||0)];');
 once('js/net/coop.js','orbReady:a[15]===1?1:0',
  'orbReady:a[15]===1?1:0,eggRevives:num(a[16],0,0,2)');
+
+once('js/net/coop.js',"const position=cfg.mode==='eggrush'?G.EggRush.startPosition(cfg,i):null;",
+ "const position=cfg.mode==='eggrush'?G.EggRush.startPosition(cfg,i):cfg.mode==='royale'?G.Royale.startPosition(cfg,i):null;");
+once('js/game.js',"      else if (G.Royale.active) G.Royale.check(G.Coop.players(),time,result=>{",
+ "      else if (G.Royale.active) {G.EggRush.update(dt,time,G.Coop.players(),()=>{});G.Royale.check(G.Coop.players(),time,result=>{");
+once('js/game.js',"G.Coop.over(Object.assign(summary(),{royale:result}));endRun(result.winner!==G.Social.uid);\n      });",
+ "G.Coop.over(Object.assign(summary(),{royale:result}));endRun(result.winner!==G.Social.uid);\n      });}");
+once('js/game.js',"if(coop&&G.EggRush.active&&!G.Coop.isHost)","if(coop&&G.EggRush.enabled&&!G.Coop.isHost)");
+once('js/game.js','if(G.EggRush.active)G.EggRush.draw(ctx);','if(G.EggRush.enabled)G.EggRush.draw(ctx);');
+once('js/game.js','if(G.EggRush.active)G.EggRush.hud(ctx,w,h);','if(G.EggRush.enabled)G.EggRush.hud(ctx,w,h);');

@@ -178,6 +178,16 @@ function startServer({root,port=37816,host='0.0.0.0'}={}){
     if(!bot||bot.bot!==true){reply(null,'Không tìm thấy AI trong phòng.');return;}
     r.members.delete(bot.uid);reply(snapshot(r));broadcast(r,{t:'room',room:snapshot(r)});return;
    }
+   if(m.action==='kick'){
+    if(r.host!==c.uid){reply(null,'Chỉ Host được kick thành viên.');return;}
+    if(!r.open){reply(null,'Hãy trở về sảnh trước khi kick thành viên.');return;}
+    const uid=String(m.uid||'');
+    if(uid===r.host||!r.members.has(uid)){reply(null,'Không thể kick Host hoặc thành viên không tồn tại.');return;}
+    r.members.delete(uid);
+    const peer=connections.get(uid);
+    if(peer){peer.room=null;send(peer.ws,{t:'room-closed',id:r.id,reason:'kicked'});}
+    reply(snapshot(r));broadcast(r,{t:'room',room:snapshot(r)});return;
+   }
    if(m.action==='finish'){
     if(r.host!==c.uid){reply(null,'Chỉ Host được kết thúc ván.');return;}
     for(const [uid,member] of r.members)if(member.bot)r.members.delete(uid);

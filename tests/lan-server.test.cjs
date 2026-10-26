@@ -69,6 +69,15 @@ test('LAN HTTP & same-origin WS support room life cycle and host-only frame rout
   const joined=await host.next(m=>m.t==='room'&&m.room.members.some(p=>p.uid===members[1].uid));
   assert.ok(joined.room.members.some(p=>p.uid===members[1].uid));
   assert.equal((await guest.req('finish')).ok,false,'Only Host clears the completed match');
+  assert.equal((await guest.req('kick',{uid:members[0].uid})).ok,false,'Guest cannot kick anyone');
+  assert.equal((await host.req('kick',{uid:members[0].uid})).ok,false,'Host cannot kick self');
+  assert.equal((await host.req('kick',{uid:members[1].uid})).ok,true);
+  await guest.next(m=>m.t==='room-closed'&&m.reason==='kicked');
+  assert.equal((await guest.req('join',{id:room.id})).ok,true,'Kicked socket remains usable');
+  await host.req('finish');
+  const beforeKick=await host.req('addBot',{dex:150});
+  const targetBot=beforeKick.result.members.find(m=>m.bot&&m.dex===150);
+  assert.equal((await host.req('kick',{uid:targetBot.uid})).ok,true,'Host removes chosen AI');
   assert.equal((await host.req('leave')).ok,true);
   const recreated=await host.req('create',{mode:'eggrush'});assert.equal(recreated.ok,true);
   const newBot=await host.req('addBot');assert.equal(newBot.ok,true);

@@ -99,7 +99,7 @@ test('Chapter 3 continues existing arc, unlocks on six USED types, and preserves
  assert.equal(commits,1);
 });
 
-test('Egg Rush is online-only, host owns score, exactly ten nests spawn over five waves',()=>{
+test('Egg Rush spawns every minute, awards proximity claims, and finishes by score at time limit',()=>{
  const source=read('src/web/pkmsvv-egg-rush.js');
  let events=[],end=null;
  const members=[0,1,2,3].map(i=>({uid:'p'+i,name:'Player'+i,dex:25+i}));
@@ -115,19 +115,16 @@ test('Egg Rush is online-only, host owns score, exactly ten nests spawn over fiv
  vm.runInNewContext(source,{G,Math,Map,Object,Number});
  G.EggRush.begin({mode:'eggrush',seed:117,members});
  assert.equal(G.EggRush.active,true);
- for(let wave=0;wave<5;wave++){
-  const time=8+wave*132;
+ for(let minute=1;minute<=6;minute++){
+  const time=minute*60;
   G.EggRush.update(.05,time,players,r=>{end=r;});
   const unclaimed=events.filter(e=>e[0]==='er'&&e[1]==='spawn');
-  assert.equal(unclaimed.length,(wave+1)*2);
-  // Give six separate eggs to player zero: all awards require the host to see proximity.
-  if(wave<3){
-   const targets=unclaimed.slice(wave*2,wave*2+2);
-   for(const t of targets){players[0].x=t[3];players[0].y=t[4];
-    G.EggRush.update(.05,time+.1,players,r=>{end=r;});}
-  }
-  if(end)break;
+  assert.equal(unclaimed.length,minute);
+  const t=unclaimed.at(-1);players[0].x=t[3];players[0].y=t[4];
+  G.EggRush.update(.05,time+.1,players,r=>{end=r;});
  }
+ assert.equal(end,null,'six claims do not stop later minute spawns');
+ G.EggRush.update(.05,720,players,r=>{end=r;});
  assert.equal(G.EggRush.collected,6);
  assert.equal(end.winner,'p0');
  assert.equal(end.standings[0].eggs,6);
@@ -157,7 +154,7 @@ test('Solo nest spawns beyond one full viewport, never on the live camera',()=>{
  assert.equal(cam.sees(nest.x,nest.y,64),false,'Never appear in the camera');
 });
 
-test('Egg Rush keeps two safe nests per wave beyond every player viewport',()=>{
+test('Egg Rush retries a blocked minute spawn beyond every player viewport',()=>{
  const source=read('src/web/pkmsvv-egg-rush.js');
  const members=[0,1,2,3].map(i=>({uid:'p'+i,name:'P'+i,dex:25+i}));
  const players=[[-300,-225],[300,225],[-300,225],[300,-225]].map(([x,y],i)=>({uid:'p'+i,x,y,dead:false}));
@@ -168,21 +165,21 @@ test('Egg Rush keeps two safe nests per wave beyond every player viewport',()=>{
   U:{dist2:(x,y,a,b)=>(x-a)**2+(y-b)**2},Moves:{BY_ID:{}},EnemyMgr:{all:()=>[]}};
  vm.runInNewContext(source,{G,Math,Map,Object,Number});
  G.EggRush.begin({mode:'eggrush',seed:117,members});
- G.EggRush.update(.05,8,players,()=>{});
+ G.EggRush.update(.05,60,players,()=>{});
  assert.equal(seen.length,0,'Blocked ground must not create fake or unsafe eggs');
  ground=true;
- G.EggRush.update(.05,8.1,players,()=>{});
+ G.EggRush.update(.05,60.1,players,()=>{});
  let eggs=seen.filter(e=>e[0]==='er'&&e[1]==='spawn');
- assert.equal(eggs.length,2,'First wave still has two eggs');
+ assert.equal(eggs.length,1,'First minute creates one egg');
  for(const e of eggs){
   const [x,y]=[e[3],e[4]];
   assert.equal(cam.sees(x,y,64),false);
   for(const pl of players)assert.ok(Math.hypot(x-pl.x,y-pl.y)>=Math.hypot(cam.w,cam.h),'No pop-in for any player');
  }
- G.EggRush.update(.05,140,players,()=>{});
+ G.EggRush.update(.05,120,players,()=>{});
  eggs=seen.filter(e=>e[0]==='er'&&e[1]==='spawn');
- assert.equal(eggs.length,4,'Second wave still adds exactly two nests');
- assert.equal(new Set(eggs.map(e=>e[2])).size,4,'No duplicate nest IDs after retry');
+ assert.equal(eggs.length,2,'Second minute creates one more egg');
+ assert.equal(new Set(eggs.map(e=>e[2])).size,2,'No duplicate nest IDs after retry');
 });
 
 test('Fainted companion waits 20–60s before any new nest, without bypassing the off-screen spawn rule',()=>{

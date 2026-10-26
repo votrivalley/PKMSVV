@@ -36,14 +36,14 @@ async function main(){
     });assert.equal(safe,true,'human and AI damage events cannot hurt other trainers');
     // A death with lives remaining must revive instead of ending the round.
     await page.evaluate(()=>{for(const p of G.Coop.players()){p.dead=true;p.hp=0;p.lanEggRevives=0;}
-     G.EggRush.update(5.1,1,G.Coop.players(),()=>{throw Error('premature finish');});});
+     G.EggRush.update(8.1,1,G.Coop.players(),()=>{throw Error('premature finish');});});
     assert.equal(await page.evaluate(()=>G.Coop.players().every(p=>!p.dead)),true);
    }
-   await page.evaluate(()=>{for(const pl of G.Coop.players()){pl.dead=true;pl.hp=0;pl.lanEggRevives=2;}});
+   await page.evaluate(()=>{for(const pl of G.Coop.players()){pl.dead=true;pl.hp=0;}if(G.EggRush.active)G.Game.debugTime(720);});
    await page.waitForFunction(()=>G.Game.state==='over',null,{timeout:6000});
    await page.waitForFunction(()=>G.Social.room.open&&G.Social.room.members.every(p=>!p.bot));
    assert.equal(await page.evaluate(()=>G.Coop.active),false);
-   if(mode==='eggrush')assert.equal(await page.evaluate(()=>G.EggRush.outcome.reason),'all-eliminated');
+   if(mode==='eggrush')assert.ok(await page.evaluate(()=>G.EggRush.outcome.finishedAt>=720));
    await page.click('#btn-again');await page.waitForFunction(()=>G.UI.isOpen('scr-lobby'));
    assert.equal(await page.evaluate(()=>G.Social.room.members.length),1);
    console.log('PASS round '+mode+': finish, remove old AI, return to lobby and replay/switch mode');
@@ -62,10 +62,10 @@ async function main(){
   await guest.evaluate(()=>{G.Game.player.dead=true;G.Game.player.hp=0;G.Game.player.lanEggRevives=0;});
   await page.waitForTimeout(900);
   assert.notEqual(await page.evaluate(()=>G.Game.state),'over','remote trainer with revives remaining must not prematurely end Egg Rush');
-  await guest.evaluate(()=>{G.Game.player.lanEggRevives=2;});
+  await page.evaluate(()=>G.Game.debugTime(720));
   await page.waitForFunction(()=>G.Game.state==='over',null,{timeout:6000});
   await guest.waitForFunction(()=>G.Game.state==='over',null,{timeout:6000});
-  console.log('PASS remote human: remaining lives synchronize; all exhausted ends match on both devices');
+  console.log('PASS remote human: deaths cannot eliminate trainers; time limit ends match on both devices');
   assert.deepEqual(errors,[]);
  }finally{await browser.close();await server.close();}
 }

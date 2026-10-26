@@ -1,7 +1,7 @@
 /* PKMSVV v1.5 — Egg Rush, online 4-player host-authoritative match. */
 G.EggRush=(()=>{
- const MAX=10,MAX_TIME=720,EGG_SPECIES=[172,447,173,35,360,438,175,174];
- let active=false,roster=[],nests=[],trails=new Map(),pets=[],score={},at={},laid=0,wave=0,seed=1,outcome=null,transition={},revives=0,deathTime=0,levelSeen=1,killsSeen=0;
+ const MAX_TIME=720,SPAWN_EVERY=60,RESPAWN_SECONDS=8,EGG_SPECIES=[172,447,173,35,360,438,175,174];
+ let active=false,supportMode=false,nextSpawn=60,roster=[],nests=[],trails=new Map(),pets=[],score={},at={},laid=0,seed=1,outcome=null,transition={},levelSeen=1,killsSeen=0;
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  const nameOf=uid=>roster.find(m=>m.uid===uid)?.name||'Player';
  const rand=k=>{let x=((seed+Math.imul(k+1,2654435761))|0);x^=x>>>16;x=Math.imul(x,2246822507);x^=x>>>13;return (x>>>0)/4294967296;};
@@ -11,11 +11,11 @@ G.EggRush=(()=>{
   const p=corners[(i+rotation)%4];return p.slice();
  }
  function begin(cfg){
-  active=!!(cfg&&cfg.mode==='eggrush');
-  roster=active?(cfg.members||[]).map(m=>({uid:m.uid,name:String(m.name||'Player').slice(0,24),dex:m.dex||25})):[];
-  seed=Math.floor(Number(cfg?.seed)||1);nests=[];pets=[];trails=new Map();revives=0;deathTime=0;levelSeen=1;killsSeen=0;
-  score=Object.fromEntries(roster.map(m=>[m.uid,0]));at={};laid=0;wave=0;outcome=null;transition={};
-  if(active){
+  active=!!(cfg&&cfg.mode==='eggrush');supportMode=cfg?.mode==='royale';nextSpawn=SPAWN_EVERY;
+  roster=(active||supportMode)?(cfg.members||[]).map(m=>({uid:m.uid,name:String(m.name||'Player').slice(0,24),dex:m.dex||25})):[];
+  seed=Math.floor(Number(cfg?.seed)||1);nests=[];pets=[];trails=new Map();levelSeen=1;killsSeen=0;
+  score=Object.fromEntries(roster.map(m=>[m.uid,0]));at={};laid=0;outcome=null;transition={};
+  if(active||supportMode){
    G.Sprites?.preload?.([...EGG_SPECIES,...roster.map(x=>x.dex)],7500);
    roster.forEach(m=>{transition[m.uid]={anim:new G.Sprites.Animator(m.dex,.32,false),rank:roster.findIndex(x=>x.uid===m.uid)};});
   }
@@ -44,9 +44,9 @@ G.EggRush=(()=>{
   return null; // Retry later without forcing a visible spawn.
  }
  function onEvent(ev){
-  if(!active||ev[0]!=='er')return;
+  if((!active&&!supportMode)||ev[0]!=='er')return;
   if(ev[1]==='spawn'){
-   if(!nests.some(n=>n.id===ev[2]))nests.push({id:ev[2],x:ev[3],y:ev[4],taken:false});
+   if(!nests.some(n=>n.id===ev[2])){nests.push({id:ev[2],x:ev[3],y:ev[4],taken:false});G.Spawner?.say?.(tr('Trứng mới xuất hiện! Đi theo mũi tên.','New egg! Follow the arrow.'),4);}
   }else if(ev[1]==='take'){
    const [, ,id,uid,dex,total,when]=ev;
    const n=nests.find(n=>n.id===id);if(n)n.taken=true;
@@ -60,7 +60,7 @@ G.EggRush=(()=>{
   }
  }
  function claim(n,pl,time){
-  if(n.taken||!roster.some(m=>m.uid===pl.uid))return false;
+  if((supportMode&&pets.filter(p=>p.uid===pl.uid).length>=2)||n.taken||!roster.some(m=>m.uid===pl.uid))return false;
   n.taken=true;score[pl.uid]=(score[pl.uid]||0)+1;at[pl.uid]=time;
   const dex=EGG_SPECIES[Math.floor(rand(n.id*413)*EGG_SPECIES.length)];
   const event=['er','take',n.id,pl.uid,dex,score[pl.uid],time];
@@ -68,23 +68,20 @@ G.EggRush=(()=>{
   G.Spawner?.say?.(nameOf(pl.uid)+' '+tr('nhặt được trứng!','collected an egg!'),2);
   return true;
  }
- const wins=()=>Object.values(score).some(n=>n>=6);
  function result(time){
   const board=standings(),win=board[0]||null;
   return {winner:win?.uid||null,standings:board.map((m,i)=>({...m,rank:i+1,win:m.uid===win?.uid})),collected:Object.values(score).reduce((sum,n)=>sum+n,0),finishedAt:Math.round(time)};
  }
  function update(dt,time,players,finish){
-  if(!active||outcome)return;
+  if((!active&&!supportMode)||outcome)return;
   for(const p of players){
    if(!p||!p.uid)continue;
    let trl=trails.get(p.uid);if(!trl){trl=[];trails.set(p.uid,trl);}
    trl.unshift({x:p.x,y:p.y});if(trl.length>300)trl.length=300;
-   if(p===G.Game.player){
-    if(p.pkmsvvPvpImmune>0)p.pkmsvvPvpImmune=Math.max(0,p.pkmsvvPvpImmune-dt);
-    if(p.pkmsvvPvpSlow>0)p.pkmsvvPvpSlow=Math.max(0,p.pkmsvvPvpSlow-dt);
-    if(p.pkmsvvPvpSlowApplied&&!p.pkmsvvPvpSlow){p.spdMul/= .7;p.pkmsvvPvpSlowApplied=false;}
-    if(p.dead&&revives<2){deathTime+=dt;if(deathTime>=5){p.revive(.5);revives++;deathTime=0;}}
-    else if(!p.dead)deathTime=0;
+   if(active&&(p===G.Game.player||(G.Coop.isHost&&p.lanBot))){
+    if(p.dead){p.lanEggDeath=(p.lanEggDeath||0)+dt;
+     if(p.lanEggDeath>=RESPAWN_SECONDS){p.revive(.5);p.lanEggDeath=0;p.invuln=Math.max(p.invuln||0,2);}}
+    else p.lanEggDeath=0;
    }
   }
   const hostMe=G.Game.player;
@@ -103,9 +100,10 @@ G.EggRush=(()=>{
     const event=['er','hatch',pet.id];onEvent(event);G.Coop.broadcast(event);
    }
    pet.anim?.update?.(dt);
-   if(pet.hatch&&pet.uid===G.Game.player?.uid){
+   const owner=pet.uid===G.Game.player?.uid?G.Game.player:(G.Coop.isHost?players.find(p=>p.lanBot&&p.uid===pet.uid):null);
+   if(pet.hatch&&owner&&!owner.dead){
     const own=pets.filter(q=>q.uid===pet.uid&&q.hatch);
-    if(own.indexOf(pet)<3){pet.cd=(pet.cd||0)-dt;if(pet.cd<=0){support(pet,G.Game.player);pet.cd=({172:10,173:12,35:16,360:19,438:15}[pet.dex]||8);}}
+    if(own.indexOf(pet)<3){pet.cd=(pet.cd||0)-dt;if(pet.cd<=0){support(pet,owner);pet.cd=({172:10,173:12,35:16,360:19,438:15}[pet.dex]||8);}}
    }
   }
   const order=standings();
@@ -115,31 +113,23 @@ G.EggRush=(()=>{
    t.rank+=(target-t.rank)*Math.min(1,dt*11);
   });
   if(!G.Coop.isHost)return;
-  while(wave<5&&time>=8+wave*132){
-   // Preserve two eggs per wave and do not consume IDs on a failed placement.
+  if(time<MAX_TIME&&time>=nextSpawn){
    const n=randomNest(laid,players);
-   if(!n)break;
-   nests.push(n);laid++;
-   G.Coop.broadcast(['er','spawn',n.id,n.x,n.y]);
-   if(laid%2===0)wave++;
+   if(n){laid++;onEvent(['er','spawn',n.id,n.x,n.y]);G.Coop.broadcast(['er','spawn',n.id,n.x,n.y]);
+    nextSpawn=(Math.floor(time/SPAWN_EVERY)+1)*SPAWN_EVERY;}
   }
   for(const n of nests){
    if(n.taken)continue;
    let nearest=null,best=38*38;
    for(const p of players){
-    if(!p||p.dead||!p.uid)continue;
+    if(!p||p.dead||!p.uid||(supportMode&&pets.filter(q=>q.uid===p.uid).length>=2))continue;
     const d=G.U.dist2(p.x,p.y,n.x,n.y);
     if(d<best){best=d;nearest=p;}
    }
    if(nearest)claim(n,nearest,time);
   }
-  const exhausted=players.length>0&&players.every(p=>p.dead&&
-   ((p===G.Game.player||p.lanBot)?(p.lanEggRevives||0):(p.net?.eggRevives||0))>=2);
-  if(wins()||nests.filter(n=>n.taken).length>=MAX||time>=MAX_TIME||exhausted){
-   outcome=result(time);
-   if(exhausted){outcome.reason='all-eliminated';if(!outcome.collected)outcome.winner=null;}
-   finish(outcome);
-  }
+  if(active&&time>=MAX_TIME){outcome=result(time);finish(outcome);}
+
  }
  // Egg Rush is a free-for-all. Never heal/shield other human players.
  // Pets have cosmetic/noncombat state currently; only the owning player is
@@ -209,7 +199,7 @@ G.EggRush=(()=>{
   ctx.beginPath();ctx.ellipse(x,y-9,10,13,0,0,6.283);ctx.fill();ctx.stroke();
  }
  function draw(ctx){
-  if(!active)return;
+  if(!active&&!supportMode)return;
   ctx.save();
   for(const n of nests){
    if(n.taken||!G.Camera.sees(n.x,n.y,40))continue;
@@ -221,14 +211,35 @@ G.EggRush=(()=>{
   }
   ctx.restore();
  }
+ function objective(pl){
+  if(!pl||(supportMode&&pets.filter(p=>p.uid===pl.uid).length>=2))return null;
+  return nests.filter(n=>!n.taken).reduce((a,n)=>!a||G.U.dist2(pl.x,pl.y,n.x,n.y)<G.U.dist2(pl.x,pl.y,a.x,a.y)?n:a,null);
+ }
+ function guide(ctx,w,h){
+  const pl=G.Game.player,n=objective(pl),cam=G.Camera;
+  if(pl?.dead&&active){
+   ctx.save();ctx.textAlign='center';ctx.font='bold 16px sans-serif';ctx.fillStyle='#fff3bd';
+   ctx.fillText(tr('Hồi sinh sau ','Respawn in ')+Math.max(0,Math.ceil(RESPAWN_SECONDS-(pl.lanEggDeath||0)))+'s',w/2,92);ctx.restore();
+  }
+  if(!n||!cam?.scale)return;
+  const sx=(n.x-cam.left())*cam.scale,sy=(n.y-cam.top())*cam.scale;
+  const x=Math.max(50,Math.min(w-50,sx)),y=Math.max(95,Math.min(h-90,sy));
+  ctx.save();ctx.translate(x,y);ctx.rotate(Math.atan2(sy-h/2,sx-w/2));
+  ctx.fillStyle='#ffe381';ctx.strokeStyle='#13283a';ctx.lineWidth=3;
+  ctx.beginPath();ctx.moveTo(17,0);ctx.lineTo(-11,-10);ctx.lineTo(-6,0);ctx.lineTo(-11,10);ctx.closePath();ctx.stroke();ctx.fill();ctx.restore();
+  ctx.save();ctx.textAlign='center';ctx.font='bold 12px sans-serif';ctx.fillStyle='#fff3b4';ctx.strokeStyle='#102a38';ctx.lineWidth=3;
+  const text=tr('TRỨNG','EGG')+' · '+Math.round(Math.hypot(n.x-pl.x,n.y-pl.y)/32)+'m';
+  ctx.strokeText(text,x,y-19);ctx.fillText(text,x,y-19);ctx.restore();
+ }
  function hud(ctx,w,h){
-  if(!active)return;
+  if(!active&&!supportMode)return;
+  guide(ctx,w,h);
   const board=standings(),collected=Object.values(score).reduce((s,n)=>s+n,0);
   const size=Math.min(165,w*.27);
   ctx.save();
   ctx.fillStyle='rgba(11,39,51,.78)';ctx.strokeStyle='#80cfc4';ctx.lineWidth=1;
   ctx.beginPath();ctx.roundRect(8,119,size,24+board.length*26,8);ctx.fill();ctx.stroke();
-  ctx.fillStyle='#ffe17a';ctx.textAlign='right';ctx.font='bold 11px sans-serif';ctx.fillText(collected+'/10',size,135);
+  ctx.fillStyle='#ffe17a';ctx.textAlign='right';ctx.font='bold 11px sans-serif';ctx.fillText(supportMode?tr('Hỗ trợ: tối đa 2/người','Supports: max 2/trainer'):tr('Trứng đã nhặt: ','Collected: ')+collected,size,135);
   for(let i=0;i<board.length;i++){
    const p=board[i],y=151+(transition[p.uid]?.rank??i)*26,local=p.uid===G.Social.uid;
    if(local){ctx.fillStyle='#ffe27429';ctx.fillRect(11,y-12,size-5,24);}
@@ -249,6 +260,7 @@ G.EggRush=(()=>{
    r.standings.map(p=>'<p>#'+p.rank+' '+esc(p.name)+' — '+p.eggs+' '+tr('trứng','eggs')+'</p>').join('')+'</div>';
  }
  function finish(r){if(r){outcome=r;active=true;}}
- return {begin,startPosition,onEvent,update,draw,hud,html,finish,cast,orb,standings,
+ return {begin,startPosition,onEvent,update,draw,hud,html,finish,cast,orb,standings,objective,
+  get enabled(){return active||supportMode;},get pets(){return pets;},
   get nests(){return nests;},get active(){return active;},get outcome(){return outcome;},get collected(){return Object.values(score).reduce((s,n)=>s+n,0);}};
 })();

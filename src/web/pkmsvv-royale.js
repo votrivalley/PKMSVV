@@ -4,6 +4,16 @@ G.Royale=(()=>{
  const sec=v=>Math.max(0,Math.floor(Number(v)||0));
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const L=(vi,en)=>G.I18n&&G.I18n.lang==='vi'?vi:en;
+ function startPosition(cfg,i){
+  const angle=(Number(cfg.seed)||0)*.017+i*Math.PI*2/Math.max(2,cfg.members.length);
+  const radius=Math.max(600,cfg.members.length*100);
+  const x=Math.cos(angle)*radius,y=Math.sin(angle)*radius;
+  for(let step=0;step<80;step++){
+   const a=step*2.39996,d=Math.sqrt(step)*24,px=x+Math.cos(a)*d,py=y+Math.sin(a)*d;
+   if(G.World.isFree(px,py,20))return [px,py];
+  }
+  return [x,y];
+ }
  function begin(cfg){active=!!(cfg&&cfg.mode==='royale');roster=active?(cfg.members||[]).map(m=>({uid:m.uid,name:String(m.name||'Trainer').slice(0,32)})):[];fallen={};outcome=null;lastAlive=-1;}
  function intensity(time){const t=sec(time);return {density:Math.min(2.55,.50+Math.pow(Math.max(0,t-45)/240,1.1)*.38),hp:1+Math.min(2.5,Math.max(0,t-85)/270),dmg:1+Math.min(1.75,Math.max(0,t-90)/390)};}
  function results(players,time){
@@ -34,5 +44,5 @@ G.Royale=(()=>{
   ctx.save();ctx.font='bold 14px sans-serif';ctx.textAlign='right';ctx.fillStyle='rgba(8,22,53,.86)';
   ctx.fillRect(Math.max(0,w-205),83,190,29);ctx.fillStyle='#ffe089';ctx.fillText(str,w-26,103);ctx.restore();
  }
- return {begin,intensity,check,finish,html,draw,get active(){return active;},get outcome(){return outcome;},get size(){return roster.length;}};
+ return {begin,startPosition,intensity,check,finish,html,draw,get active(){return active;},get outcome(){return outcome;},get size(){return roster.length;}};
 })();

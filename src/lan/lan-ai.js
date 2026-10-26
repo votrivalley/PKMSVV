@@ -15,7 +15,7 @@ G.LanAI=(()=>{
    const pl=G.Coop.mate(bot.uid)?.pl;if(!pl)continue;
    pl.lanBot=true;pl.addMove(G.baseStartOf(bot.dex));
    pl.setAbility(G.Mons.abilityOf(bot.dex).id);
-   states.set(bot.uid,{seq:0,route:[],replan:0,think:0,axis:[0,0],goal:null});
+   states.set(bot.uid,{seq:0,route:[],replan:0,think:0,axis:[0,0],goal:null,home:{x:pl.x,y:pl.y},wander:0});
   }
  }
  function frame(pl){
@@ -120,6 +120,10 @@ G.LanAI=(()=>{
     (hazard.w||0)/2+pl.r+12-Math.abs(-(p.x-hazard.x)*Math.sin(hazard.angle)+(p.y-hazard.y)*Math.cos(hazard.angle));
    score+=200+Math.max(0,depth)*6;
   }
+  if(G.Social.room?.mode==='royale')for(const other of G.Coop.players()){
+   if(other===pl||other.dead)continue;
+   const d=Math.sqrt(sq(p,other));if(d<180)score+=(1-d/180)*100;
+  }
   return score+liquidCost(pl,p.x,p.y)*9;
  }
  function chooseAxis(pl,s,goal,enemies,shots,hazards){
@@ -165,8 +169,15 @@ G.LanAI=(()=>{
    }
    s.replan-=dt;s.think-=dt;
    if(s.think<=0){
-    let goal=host;
-    const nests=mode==='eggrush'?(G.EggRush?.nests||[]).filter(n=>!n.taken):[];
+    s.wander-=.12;
+    if(mode==='royale'&&(!s.roam||s.wander<=0)){
+     const a=Math.random()*Math.PI*2;
+     s.roam=dryPoint(pl,{x:s.home.x+Math.cos(a)*300,y:s.home.y+Math.sin(a)*300})||s.home;
+     s.wander=5+Math.random()*6;
+    }
+    let goal=mode==='royale'?s.roam:host;
+    const objective=['royale','eggrush'].includes(mode)?G.EggRush?.objective?.(pl):null;
+    const nests=objective?[objective]:mode==='eggrush'?(G.EggRush?.nests||[]).filter(n=>!n.taken):[];
     if(nests.length)goal=nests.reduce((a,b)=>sq(pl,a)<sq(pl,b)?a:b);
     else if(mode==='coop'){
      const fallen=G.Coop.players().filter(p=>p!==pl&&p.dead&&sq(pl,p)<420**2);

@@ -55,8 +55,18 @@ ui=ui.replace(marker,
        $('lobby-note').insertAdjacentElement('afterend',aiBar);
        const add=document.createElement('button');add.id='pkmsvv-lan-ai-add';add.type='button';add.className='btn small gold';add.textContent='➕ Thêm AI';
        const remove=document.createElement('button');remove.id='pkmsvv-lan-ai-remove';remove.type='button';remove.className='btn small ghost';remove.textContent='➖ Bớt AI';
-       aiBar.append(add,remove);
-       add.onclick=()=>G.LanBus.request('addBot',{}).catch(e=>G.UI.toast(e.message,3500));
+       const species=document.createElement('input');species.id='pkmsvv-lan-ai-species';species.className='field';
+       species.placeholder='Ngẫu nhiên hoặc tìm tên Pokémon';species.setAttribute('aria-label','Chọn Pokémon AI');
+       species.setAttribute('list','pkmsvv-lan-ai-options');
+       const choices=document.createElement('datalist');choices.id='pkmsvv-lan-ai-options';
+       for(const mon of G.DEX){const option=document.createElement('option');option.value=mon.name+' #'+mon.dex;choices.append(option);}
+       aiBar.append(species,choices,add,remove);
+       add.onclick=()=>{
+        const value=species.value.trim();
+        const mon=value?G.DEX.find(p=>(p.name+' #'+p.dex).toLowerCase()===value.toLowerCase()||p.name.toLowerCase()===value.toLowerCase()||String(p.dex)===value):null;
+        if(value&&!mon){G.UI.toast('Chọn Pokémon trong danh sách hoặc để trống để random.');return;}
+        G.LanBus.request('addBot',mon?{dex:mon.dex}:{}).catch(e=>G.UI.toast(e.message,3500));
+       };
        remove.onclick=()=>{
         const bot=G.Social.room?.members?.findLast?.(m=>m.bot);
         if(bot)G.LanBus.request('removeBot',{uid:bot.uid}).catch(e=>G.UI.toast(e.message,3500));
@@ -70,6 +80,22 @@ ui=ui.replace(marker,
  "      $('lobby-sub').textContent += '  ·  Mã phòng: '+room.id+(room.isHost?'  ·  Địa chỉ LAN: '+location.origin:'');\n"+
  "      $('lobby-inv-title').classList.add('hidden');\n"+
  "      $('lobby-invite').classList.add('hidden');\n"+marker);
+// Host can remove a specific AI or human while the lobby is open.
+const kickMarker='      // Invitar (sólo el anfitrión y si queda sitio).';
+if(!ui.includes(kickMarker))throw Error('LAN kick lobby anchor drift');
+ui=ui.replace(kickMarker,`
+      for(const card of box.querySelectorAll('.lob-card')){
+       const uid=card.querySelector('.conn[data-u]')?.dataset.u;
+       const member=ms.find(m=>m.uid===uid);
+       let kick=card.querySelector('.pkmsvv-kick');
+       if(room.isHost&&room.open&&member&&uid!==room.host){
+        if(!kick){kick=document.createElement('button');kick.type='button';kick.className='btn small ghost pkmsvv-kick';card.append(kick);}
+        kick.textContent=member.bot?'✕ Bỏ AI':'✕ Kick';
+        kick.setAttribute('aria-label','Kick '+member.name);
+        kick.onclick=()=>G.LanBus.request('kick',{uid}).catch(e=>G.UI.toast(e.message));
+       }else kick?.remove();
+      }
+`+kickMarker);
 write('js/ui/social-ui.js',ui);
 once('dev.html','<script defer src="js/ui/pkmsvv-multiplayer-ui.js"></script>',
  '<script defer src="js/ui/pkmsvv-multiplayer-ui.js"></script>\n<script defer src="js/ui/lan-compact-ui.js"></script>');

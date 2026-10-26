@@ -27,6 +27,8 @@ on:
       - 'tests/lan-ai-runtime.cjs'
       - 'tests/lan-rounds-runtime.cjs'
       - 'tests/lan-random-bots.test.cjs'
+      - 'tests/lan-mode-rules.test.cjs'
+      - 'tests/lan-mode-features-runtime.cjs'
       - 'tests/lan-startup.test.cjs'
       - 'tests/smoke-lan-win.ps1'
       - 'docs/LAN_FAST_START_WINDOWS.md'
@@ -71,6 +73,8 @@ jobs:
         run: npm run test:lan:ai
       - name: Validate consecutive AI rounds, random species and non-PvP Egg Rush
         run: node --test tests/lan-random-bots.test.cjs && npm run test:lan:rounds
+      - name: Validate independent Survival, timed eggs, respawns and lobby kick UI
+        run: npm run test:lan:modes
       - name: Verify native PC IP failure and successful retry
         run: npm run test:lan:pc
       - uses: actions/upload-artifact@v4
