@@ -10,6 +10,7 @@ on:
       - 'src/lan/solo-ai-bus.js'
       - 'src/lan/lan-ai.js'
       - 'tests/cloudflare-ai.test.cjs'
+      - 'tests/cloudflare-ai-browser.cjs'
       - 'scripts/prepare-ios.cjs'
       - 'src/cloudflare/**'
       - 'src/ios/**'
@@ -53,6 +54,8 @@ jobs:
         run: npm run prepare:cloudflare
       - name: Verify entire game, PWA, save UI, free-tier limits
         run: npm run test:cloudflare && node --test tests/cloudflare-ai.test.cjs tests/local-shell-ui.test.cjs tests/local-ui-lan-host-regression.test.cjs tests/pages-lan-connect-runtime.test.cjs tests/unified-coop.test.cjs
+      - name: Browser smoke QA of real HTML5 AI in all three modes
+        run: node tests/cloudflare-ai-browser.cjs
       - name: Inspect ready-to-deploy website (no nested ZIP)
         shell: bash
         run: |
