@@ -22,7 +22,7 @@ G.LanAI=(()=>{
   const m=pl.activeMove();
   return [Math.round(pl.x),Math.round(pl.y),pl.moveAngle,pl.walking?1:0,
    Math.round(pl.hp),Math.round(pl.maxHp),pl.dead?1:0,m?.id||'',m?.lvl||1,
-   Math.round(pl.magnet),pl.aim,pl.xpMul,pl.reviveT||0,0,states.get(pl.uid)?.seq||0,0];
+   Math.round(pl.magnet),pl.aim,pl.xpMul,pl.reviveT||0,0,states.get(pl.uid)?.seq||0,0,Math.min(2,pl.lanEggRevives||0)];
  }
  function scoreCard(pl,card){
   const ratio=pl.hp/pl.maxHp,id=card.key.split(':')[1];

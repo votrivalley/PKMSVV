@@ -7,6 +7,15 @@ const os = require('node:os');
 const {randomBytes} = require('node:crypto');
 const {WebSocketServer,WebSocket} = require('ws');
 const QRCode=require('qrcode');
+const BOT_ROSTER=require('./bot-roster.json');
+function selectBot(members,requested,random=Math.random){
+ const explicit=BOT_ROSTER.find(p=>p.dex===requested);
+ if(explicit)return explicit;
+ const used=new Set([...members].map(p=>p.dex));
+ const pool=BOT_ROSTER.filter(p=>!used.has(p.dex));
+ const choices=pool.length?pool:BOT_ROSTER;
+ return choices[Math.min(choices.length-1,Math.floor(random()*choices.length))];
+}
 
 const MAX_ROOM=10, MAX_PACKET=256*1024;
 const MIMES={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8',
@@ -34,8 +43,8 @@ function startServer({root,port=37816,host='0.0.0.0'}={}){
  const broadcast=(room,obj)=>{for(const uid of room.members.keys()){const c=connections.get(uid);if(c)send(c.ws,obj);}};
  const snapshot=room=>({id:room.id,mode:room.mode,host:room.host,open:room.open,
   visibility:room.visibility,members:[...room.members.values()]});
- function disconnect(c){
-  connections.delete(c.uid);
+ function disconnect(c,closing=true){
+  if(closing)connections.delete(c.uid);
   const r=rooms.get(c.room);
   if(!r)return;
   if(r.host===c.uid){
@@ -152,15 +161,15 @@ function startServer({root,port=37816,host='0.0.0.0'}={}){
     reply(snapshot(r));broadcast(r,{t:'room',room:snapshot(r)});return;
    }
    const r=room();
-   if(m.action==='leave'){if(r)disconnect(c);reply(true);return;}
+   if(m.action==='leave'){if(r)disconnect(c,false);reply(true);return;}
    if(!r){reply(null,'Chưa tham gia phòng.');return;}
    if(m.action==='addBot'){
     if(r.host!==c.uid){reply(null,'Chỉ Host được thêm AI.');return;}
     if(!r.open){reply(null,'Phòng đã bắt đầu, không thêm AI.');return;}
     const max=r.mode==='royale'?10:4;
     if(r.members.size>=max){reply(null,'Phòng đã đủ '+max+' người và AI.');return;}
-    const picks=[25,1,4,7,133,447,175],dex=picks.includes(m.dex)?m.dex:picks[Math.floor(Math.random()*picks.length)];
-    const bot={uid:'ai-'+randomBytes(8).toString('hex'),name:'AI · '+({25:'Pikachu',1:'Bulbasaur',4:'Charmander',7:'Squirtle',133:'Eevee',447:'Riolu',175:'Togepi'}[dex]),dex,shiny:false,bot:true};
+    const species=selectBot(r.members.values(),m.dex);
+    const bot={uid:'ai-'+randomBytes(8).toString('hex'),name:'AI · '+species.name,dex:species.dex,shiny:false,bot:true};
     r.members.set(bot.uid,bot);reply(snapshot(r));broadcast(r,{t:'room',room:snapshot(r)});return;
    }
    if(m.action==='removeBot'){
@@ -168,6 +177,11 @@ function startServer({root,port=37816,host='0.0.0.0'}={}){
     const bot=r.members.get(String(m.uid||''));
     if(!bot||bot.bot!==true){reply(null,'Không tìm thấy AI trong phòng.');return;}
     r.members.delete(bot.uid);reply(snapshot(r));broadcast(r,{t:'room',room:snapshot(r)});return;
+   }
+   if(m.action==='finish'){
+    if(r.host!==c.uid){reply(null,'Chỉ Host được kết thúc ván.');return;}
+    for(const [uid,member] of r.members)if(member.bot)r.members.delete(uid);
+    r.open=true;reply(snapshot(r));broadcast(r,{t:'room',room:snapshot(r)});return;
    }
    if(m.action==='update'){
     c.member={dex:Number.isInteger(m.dex)&&m.dex>0?m.dex:25,shiny:m.shiny===true};
@@ -192,4 +206,4 @@ function startServer({root,port=37816,host='0.0.0.0'}={}){
   });
  });
 }
-module.exports={startServer,privateAddress,lanAddresses};
+module.exports={startServer,privateAddress,lanAddresses,selectBot};

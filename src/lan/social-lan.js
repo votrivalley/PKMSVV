@@ -1,7 +1,7 @@
 /* Local ownership and room directory; no Firebase credentials or Google accounts. */
 G.Social=(()=>{
  const listeners=new Set();
- let me=null,room=null,started=false,playing=false;
+ let me=null,room=null,started=false,playing=false,finishPromise=null;
  const fire=what=>listeners.forEach(fn=>{try{fn(what);}catch(e){console.warn(e);}});
  const ownMember=()=>{
   const s=G.DB.save||{};
@@ -38,9 +38,18 @@ G.Social=(()=>{
  async function refreshMember(){if(room)await G.LanBus.request('update',ownMember()).catch(()=>{});}
  async function setOpen(open){if(room?.isHost)await G.LanBus.request('open',{open:!!open}).catch(()=>{});}
  async function listPublicRooms(){if(!me&&await start()!=='ok')return[];return G.LanBus.request('list');}
- return {start,claimNick,createRoom,joinRoom,leaveRoom,refreshMember,setOpen,listPublicRooms,
+ function finishMatch(){
+  if(!room?.isHost)return Promise.resolve();
+  if(finishPromise)return finishPromise;
+  const id=room.id;
+  finishPromise=G.LanBus.request('finish').then(r=>{
+   if(room?.id===id){room={...r,isHost:true};fire('room');}
+  }).catch(e=>{finishPromise=null;throw e;});
+  return finishPromise;
+ }
+ return {start,claimNick,createRoom,joinRoom,leaveRoom,refreshMember,setOpen,listPublicRooms,finishMatch,
   roomLimit:limit,MAX_PLAYERS:10,VALID:/^.{1,24}$/,ensureFriends:async()=>[],
-  setPlaying(p){playing=!!p;},refreshPresence(){},publishProfile(){},getProfile:async()=>null,
+  setPlaying(p){playing=!!p;if(p)finishPromise=null;},refreshPresence(){},publishProfile(){},getProfile:async()=>null,
   request:async()=>({ok:false,error:'LAN không có danh sách bạn'}),accept:async()=>({ok:false}),
   remove:async()=>({ok:false}),invite:async()=>({ok:false,error:'Chia sẻ IP/mã phòng để mời'}),
   acceptInvite:async()=>({ok:false}),declineInvite(){},get invites(){return[];},get friends(){return[];},

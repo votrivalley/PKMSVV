@@ -4,7 +4,7 @@
  window.PKMSVV_UNIFIED_COOP_ENABLED=true;
  const modes=[['coop','Sống Sót','2–4 người',25,'Pikachu','Hợp tác chống quái, cứu đồng đội và cùng nhau sống sót.'],
   ['royale','Sống Còn','2–10 người',6,'Charizard','Đấu loại. Pokémon trụ lại cuối cùng chiến thắng.'],
-  ['eggrush','Tranh Trứng','4 người',175,'Togepi','Tranh trứng, ghi điểm và cản bước đối thủ.']];
+  ['eggrush','Tranh Trứng','4 người',175,'Togepi','Tìm trứng, né quái và tranh điểm. Không đánh người chơi.']];
  let mode='coop',view=null,detail=null,busy=false,previousFocus=null;
  const lan=()=>window.PKMSVV_LOCAL_UI_MODE==='lan'&&!!window.G?.LanBus;
  function close(){view?.remove();view=detail=null;previousFocus?.focus?.();}
@@ -131,11 +131,15 @@
    if(role==='join')return joinRooms();
    busy=true;
    try{
-    if(G.Social.room){close();G.LobbyUI.open();return;}
+    if(G.Social.playing){close();G.LobbyUI.open();return;}
+    if(G.Social.room&&G.Social.room.mode!==mode){
+     await G.Social.leaveRoom();
+    }
     if(!G.Social.room)await G.Social.createRoom(mode,role==='ai'?'private':'public');
     if(role==='ai'&&G.Social.room?.isHost){
      const opponents=mode==='coop'?1:3;
-     for(let i=0;i<opponents;i++)await G.LanBus.request('addBot',{});
+     const missing=Math.max(0,opponents+1-G.Social.room.members.length);
+     for(let i=0;i<missing;i++)await G.LanBus.request('addBot',{});
     }
     close();G.LobbyUI.open();
    }catch(e){info('Không tạo được phòng: '+e.message);}

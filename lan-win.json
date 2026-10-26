@@ -14,6 +14,7 @@
     "desktop/lan-connection.cjs",
     "desktop/lan-preload.cjs",
     "lan-server/server.cjs",
+    "lan-server/bot-roster.json",
     "package.json",
     "lan-server/discovery.cjs"
   ],

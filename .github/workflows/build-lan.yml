@@ -25,6 +25,8 @@ on:
       - 'tests/lan-discovery.test.cjs'
       - 'tests/lan-ai-modes.test.cjs'
       - 'tests/lan-ai-runtime.cjs'
+      - 'tests/lan-rounds-runtime.cjs'
+      - 'tests/lan-random-bots.test.cjs'
       - 'tests/lan-startup.test.cjs'
       - 'tests/smoke-lan-win.ps1'
       - 'docs/LAN_FAST_START_WINDOWS.md'
@@ -67,6 +69,8 @@ jobs:
         run: npm run test:lan:runtime
       - name: Validate live and fallen AI rewards in all three modes
         run: npm run test:lan:ai
+      - name: Validate consecutive AI rounds, random species and non-PvP Egg Rush
+        run: node --test tests/lan-random-bots.test.cjs && npm run test:lan:rounds
       - name: Verify native PC IP failure and successful retry
         run: npm run test:lan:pc
       - uses: actions/upload-artifact@v4
@@ -93,7 +97,7 @@ jobs:
           New-Item -ItemType Directory -Force "$target/desktop","$target/lan-server","$target/node_modules" | Out-Null
           Copy-Item -Recurse dist/lan "$target/site"
           Copy-Item desktop/lan-browser-host.cjs,desktop/lan-startup.cjs "$target/desktop/"
-          Copy-Item lan-server/server.cjs,lan-server/discovery.cjs "$target/lan-server/"
+          Copy-Item lan-server/server.cjs,lan-server/discovery.cjs,lan-server/bot-roster.json "$target/lan-server/"
           $pkg = '{"private":true,"dependencies":{"ws":"^8.18.0","qrcode":"^1.5.4"}}'
           Set-Content -Path "$target/package.json" -Value $pkg -Encoding utf8
           npm install --prefix $target --omit=dev --ignore-scripts --no-audit --no-fund

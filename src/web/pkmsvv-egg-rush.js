@@ -56,12 +56,7 @@ G.EggRush=(()=>{
    const pet=pets.find(p=>p.id===ev[2]);
    if(pet&&!pet.hatch){pet.hatch=true;pet.anim=new G.Sprites.Animator(pet.dex,.7,false);G.FX?.ring?.(pet.x,pet.y,8,48,'#f5de8d',.6,3);}
   }else if(ev[1]==='hit'){
-   const [, ,uid,dmg,slow]=ev,pl=G.Game.player;
-   if(pl?.uid!==uid||pl.dead)return;
-   if(pl.pkmsvvPvpImmune>0)return;
-   pl.hurt(Math.max(1,Math.min(90,dmg)),null,true);
-   if(slow>0){if(!pl.pkmsvvPvpSlowApplied){pl.spdMul*=.7;pl.pkmsvvPvpSlowApplied=true;}pl.pkmsvvPvpSlow=Math.max(pl.pkmsvvPvpSlow||0,slow);}
-   pl.pkmsvvPvpImmune=.85;
+   return; // Egg Rush is a non-PvP race: ignore old/malicious damage events.
   }
  }
  function claim(n,pl,time){
@@ -138,8 +133,12 @@ G.EggRush=(()=>{
    }
    if(nearest)claim(n,nearest,time);
   }
-  if(wins()||nests.filter(n=>n.taken).length>=MAX||time>=MAX_TIME){
-   outcome=result(time);finish(outcome);
+  const exhausted=players.length>0&&players.every(p=>p.dead&&
+   ((p===G.Game.player||p.lanBot)?(p.lanEggRevives||0):(p.net?.eggRevives||0))>=2);
+  if(wins()||nests.filter(n=>n.taken).length>=MAX||time>=MAX_TIME||exhausted){
+   outcome=result(time);
+   if(exhausted){outcome.reason='all-eliminated';if(!outcome.collected)outcome.winner=null;}
+   finish(outcome);
   }
  }
  // Egg Rush is a free-for-all. Never heal/shield other human players.
@@ -201,28 +200,9 @@ G.EggRush=(()=>{
    case 174:if(enemy)enemy.applySlow(.3,2.5);break;
   }
  }
- function cast(pl,m){
-  if(!active||!G.Coop.isHost||!pl||pl.dead||!m)return;
-  const players=G.Coop.players();
-  const target=players.filter(p=>p.uid!==pl.uid&&!p.dead).sort((a,b)=>
-   G.U.dist2(pl.x,pl.y,a.x,a.y)-G.U.dist2(pl.x,pl.y,b.x,b.y))[0];
-  if(!target||G.U.dist2(pl.x,pl.y,target.x,target.y)>180*180)return;
-  // The host uses a bounded damage approximation (40% PvE budget).
-  const move=G.Moves?.BY_ID?.[m.id||m],base=Number(move?.power||move?.pow||25);
-  const dmg=Math.max(2,Math.min(50,(base+(m.lvl||1)*2)*.4));
-  const evt=['er','hit',target.uid,Math.round(dmg),.35];
-  if(target.uid===G.Game.player?.uid)onEvent(evt);else G.Coop.broadcast(evt);
- }
- function orb(pl,id){
-  if(!active||!G.Coop.isHost||!pl||pl.dead)return;
-  const players=G.Coop.players();
-  for(const target of players){
-   if(!target||target.uid===pl.uid||target.dead||G.U.dist2(pl.x,pl.y,target.x,target.y)>250*250)continue;
-   const slow=['slow','slumber'].includes(id)?.8:0;
-   const evt=['er','hit',target.uid,id==='blowback'?10:4,slow];
-   if(target.uid===G.Game.player?.uid)onEvent(evt);else G.Coop.broadcast(evt);
-  }
- }
+ // Compete for nests and score; skills/Orbs never hurt another trainer.
+ function cast(){}
+ function orb(){}
  function egg(ctx,x,y,progress=0){
   if(G.PKMSVVEggArt?.egg(ctx,x,y-9,1,progress))return;
   ctx.fillStyle='#ffebbf';ctx.strokeStyle='#c19b6f';ctx.lineWidth=2;

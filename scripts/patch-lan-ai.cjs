@@ -58,9 +58,7 @@ once('js/systems/hazards.js',
  '    const players=[G.Game.player,...(G.Coop.isHost?G.Coop.puppets().filter(p=>p.lanBot):[])];');
 once('js/systems/hazards.js','        if (pl && !pl.dead && inside(h, pl.x, pl.y, pl.r)) {',
  '        for(const pl of players)if (pl && !pl.dead && inside(h, pl.x, pl.y, pl.r)) {');
-// Egg Rush bots obey the same PvP immunity/slow, two revives, and owned-pet rules.
-once('js/net/pkmsvv-egg-rush.js','const [, ,uid,dmg,slow]=ev,pl=G.Game.player;',
- 'const [, ,uid,dmg,slow]=ev,pl=G.Game.player?.uid===uid?G.Game.player:(G.Coop.isHost?G.Coop.players().find(p=>p.lanBot&&p.uid===uid):null);');
+// Egg Rush bots obey the same two-revive limit and owned-pet rules.
 once('js/net/pkmsvv-egg-rush.js','if(p===G.Game.player){','if(p===G.Game.player||(G.Coop.isHost&&p.lanBot)){');
 once('js/net/pkmsvv-egg-rush.js',
  'if(p.dead&&revives<2){deathTime+=dt;if(deathTime>=5){p.revive(.5);revives++;deathTime=0;}}\n    else if(!p.dead)deathTime=0;',
@@ -68,11 +66,15 @@ once('js/net/pkmsvv-egg-rush.js',
 once('js/net/pkmsvv-egg-rush.js',"if(pet.hatch&&pet.uid===G.Game.player?.uid){",
  "const owner=pet.uid===G.Game.player?.uid?G.Game.player:(G.Coop.isHost?players.find(p=>p.lanBot&&p.uid===pet.uid):null);\n   if(pet.hatch&&owner){");
 once('js/net/pkmsvv-egg-rush.js','support(pet,G.Game.player);','support(pet,owner);');
-// Both cast() and orb() must apply hits to locally owned bots as well as broadcast.
-const eggFile=path.join(game,'js/net/pkmsvv-egg-rush.js');
-let egg=fs.readFileSync(eggFile,'utf8');
-const routeHit='if(target.uid===G.Game.player?.uid)onEvent(evt);else G.Coop.broadcast(evt);';
-if(egg.split(routeHit).length!==3)throw Error('LAN Egg Rush hit routing drift');
-egg=egg.split(routeHit).join('if(target.uid===G.Game.player?.uid||target.lanBot)onEvent(evt);else G.Coop.broadcast(evt);');
-fs.writeFileSync(eggFile,egg,'utf8');
 console.log('LAN AI: engine Player movement/combat/rewards, level barrier and damage integration installed.');
+
+once('js/net/coop.js','    active = false; host = false; local = null;',
+ '    G.LanAI.stop();\n    active = false; host = false; local = null;');
+once('js/game.js','    if (coop) G.Social.setPlaying(false);',
+ '    if (coop) G.Social.setPlaying(false);\n    if(coop&&wasHost)void G.Social.finishMatch().catch(e=>G.UI.toast(e.message));');
+once('js/game.js','  afterRun() {',
+ '  async afterRun() {\n    await G.Social.finishMatch();');
+once('js/net/coop.js','G.Orbs.ready(local)?1:0];',
+ 'G.Orbs.ready(local)?1:0,Math.min(2,local.lanEggRevives||0)];');
+once('js/net/coop.js','orbReady:a[15]===1?1:0',
+ 'orbReady:a[15]===1?1:0,eggRevives:num(a[16],0,0,2)');

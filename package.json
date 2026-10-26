@@ -1,6 +1,6 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.18",
+  "version": "1.5.19",
   "private": true,
   "description": "Unofficial noncommercial Pokémon Sống Sót client: offline-first Windows and Android editions, browser online beta",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
@@ -39,6 +39,7 @@
     "test:lan:runtime": "node tests/lan-ui-smoke.cjs",
     "test:lan:pc": "node tests/lan-electron-smoke.cjs",
     "test:lan:ai": "node --test tests/lan-ai-modes.test.cjs && node tests/lan-ai-runtime.cjs",
+    "test:lan:rounds": "node tests/lan-rounds-runtime.cjs",
     "prepare:ios": "node scripts/prepare-ios.cjs",
     "test:ios": "node --test tests/ios-web.test.cjs",
     "prepare:android:full-lan": "node scripts/prepare-full-lan-android.cjs",

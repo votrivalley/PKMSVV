@@ -73,12 +73,12 @@ async function main(){
      let pvp=true;
      if(G.EggRush.active){
       pl.invuln=0;pl.pkmsvvPvpImmune=0;const before=pl.hp;
-      G.EggRush.onEvent(['er','hit',pl.uid,10,.35]);pvp=pl.hp<before;
+      G.EggRush.onEvent(['er','hit',pl.uid,10,.35]);pvp=pl.hp===before;
      }
      return{hit,zone,dealt,pvp,moves:pl.moves.map(m=>({id:m.id,kind:m.kind,damage:m.dmg,cooldown:m.t})),before,after:enemy.hp};
     });
     assert.ok(combat.hit&&combat.zone&&combat.dealt&&combat.pvp,JSON.stringify(combat));
-    console.log('PASS '+mode+': bots deal real skill damage and receive projectile/hazard/PvP damage');
+    console.log('PASS '+mode+': real PvE damage; Egg Rush ignores PvP damage');
     assert.deepEqual(errors.filter(x=>!x.includes('404')&&!x.includes('Failed to load resource')),[]);
    }finally{await context.close();}
   }

@@ -60,6 +60,20 @@ test('LAN HTTP & same-origin WS support room life cycle and host-only frame rout
   assert.equal((await stranger.req('join',{id:room.id})).ok,true,'Unrelated player may join with room code');
   assert.equal((await host.req('open',{open:false})).ok,true);
   assert.equal((await guest.req('leave')).ok,true);
+  // Leaving a room must retain the socket's registration for the next game.
+  const next=await host.req('finish');assert.equal(next.ok,true);
+  assert.equal(next.result.open,true);
+  assert.equal(next.result.members.some(m=>m.bot),false);
+  assert.equal((await host.req('addBot')).ok,true);
+  assert.equal((await guest.req('join',{id:room.id})).ok,true);
+  const joined=await host.next(m=>m.t==='room'&&m.room.members.some(p=>p.uid===members[1].uid));
+  assert.ok(joined.room.members.some(p=>p.uid===members[1].uid));
+  assert.equal((await guest.req('finish')).ok,false,'Only Host clears the completed match');
+  assert.equal((await host.req('leave')).ok,true);
+  const recreated=await host.req('create',{mode:'eggrush'});assert.equal(recreated.ok,true);
+  const newBot=await host.req('addBot');assert.equal(newBot.ok,true);
+  const refreshed=await host.next(m=>m.t==='room'&&m.room.id===recreated.result.id&&m.room.members.length===2);
+  assert.equal(refreshed.room.mode,'eggrush');
  }finally{
   for(const ws of clients)ws.terminate();
   await server.close();fs.rmSync(root,{recursive:true,force:true});

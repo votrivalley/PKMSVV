@@ -1,5 +1,12 @@
 # Pokémon Chuyển Sinh LAN — PC Fast Start
 
+## Bản 1.5.19 — chơi nhiều ván với AI
+- Tranh Trứng không có sát thương giữa người chơi/AI; vẫn có sát thương từ quái và địa hình.
+- Tất cả hết lượt hồi sinh thì kết thúc trận; hết ván xóa AI cũ, mở lại phòng và cho thêm AI mới/đổi chế độ.
+- AI random từ 966 loài có trong bản game, gồm dạng tiến hóa và huyền thoại. Tránh trùng loài trong phòng.
+- Cấp 1 là cấp khởi đầu của ván; chỉ số gốc theo loài, không tự sao chép sức mạnh hay loài Pokemon của chủ phòng.
+- Chi tiết và kiểm thử: `docs/LAN_1_5_19.md`.
+
 ## AI 1.5.18
 - AI tự chọn một trong ba thẻ thưởng hợp lệ; xét hệ, vật lý/đặc biệt, kỹ năng đang có và máu còn lại. AI đã gục cũng xác nhận chọn thưởng, không chặn người chơi ở màn hình lên cấp.
 - Tìm đường vòng hồ/vật cản, thoát nước nếu đã mắc kẹt, né quái/đạn/vùng cảnh báo. Pokémon hệ Nước, Bay hoặc có khả năng tương ứng vẫn di chuyển theo luật địa hình gốc.
