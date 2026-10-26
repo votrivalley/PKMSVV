@@ -29,6 +29,19 @@ test('Sống Còn AI is a real actor, can be eliminated and joins roster',()=>{
  assert.ok(h.frames[0].data.p[0]>0);
  assert.equal(h.frames[0].uid,h.bot.uid);
 });
+test('Sống Còn AI can actually lose HP, get eliminated and stop acting',()=>{
+ const h=harness('royale',{enemies:[{x:0,y:0,dead:false}]});
+ for(let i=0;i<75;i++)h.G.LanAI.update();
+ const down=h.frames.at(-1);
+ assert.equal(down.data.p[4],0,'Bot HP reaches zero while exposed to monsters');
+ assert.equal(down.data.p[6],1,'Dead frame reaches host game logic');
+ const pos=down.data.p.slice(0,2);
+ h.G.LanAI.update();
+ const after=h.frames.at(-1);
+ assert.deepEqual(after.data.p.slice(0,2),pos,'Eliminated bot cannot wander around');
+ assert.equal(after.data.p[3],0,'Eliminated bot cannot display walking state');
+ assert.equal(after.data.ev.length,0,'Eliminated bot cannot cast spells or auto-select upgrades');
+});
 test('Tranh Trứng AI seeks available nest before chasing mobs',()=>{
  const h=harness('eggrush',{nests:[{id:1,x:200,y:0,taken:true},{id:2,x:140,y:0,taken:false}],enemies:[{x:-120,y:0,dead:false}]});
  assert.equal(h.G.LanAI.activeBots().length,1);
