@@ -44,6 +44,32 @@
   const roomsTitle=roomsDesc?.previousElementSibling;
   if(!createTitle||!joinTitle||!roomsTitle)return;
   installed=true;screen.classList.add('pkmsvv-lan-compact');
+  // Show connection instructions only in Co-op, not at startup.
+  const help=document.createElement('details');help.id='pkmsvv-lan-help';
+  const helpHeading=document.createElement('summary');
+  helpHeading.textContent='ⓘ Hướng dẫn kết nối Co-op LAN';
+  const helpBody=document.createElement('div');helpBody.className='pkmsvv-lan-help-body';
+  const address=document.createElement('p');address.className='pkmsvv-lan-help-address';
+  const hostCode=document.createElement('code');hostCode.id='pkmsvv-lan-host-ips';
+  hostCode.textContent=location.origin;address.append('📡 Địa chỉ PC Host: ',hostCode);
+  const guideSteps=document.createElement('ol');
+  for(const line of [
+   'PC mở Windows LAN Host, giữ game chạy và cho phép Windows Firewall ở mạng Private.',
+   'Điện thoại và PC cùng Wi-Fi. iPhone/iPad mở Safari; Android mở Chrome; nhập địa chỉ PC Host (cổng 37816).',
+   'PC vào Co-op → Tạo phòng. Gửi mã phòng cho bạn bè; khách nhập mã hoặc chọn phòng công khai.',
+   'Host có thể Thêm AI trong phòng Sống Sót khi thiếu người rồi bắt đầu trận.',
+   'Nhớ sao lưu game thường xuyên bằng mục Sao lưu game ở menu chính.'
+  ]){const li=document.createElement('li');li.textContent=line;guideSteps.append(li);}
+  const guideNote=document.createElement('p');
+  guideNote.textContent='LAN không cần Google/Firebase. Không mở cổng LAN ra Internet.';
+  helpBody.append(address,guideSteps,guideNote);help.append(helpHeading,helpBody);
+  const subtitle=box.querySelector('p.sub');
+  if(subtitle)subtitle.insertAdjacentElement('afterend',help);else box.prepend(help);
+  fetch('/lan/info',{cache:'no-store'}).then(res=>res.json()).then(info=>{
+   if(Array.isArray(info.addresses)&&info.addresses.length)
+    hostCode.textContent=info.addresses.map(ip=>'http://'+ip+':'+(info.port||37816)).join(' · ');
+  }).catch(()=>{});
+
   const modeTitle=grid.previousElementSibling;
   if(modeTitle)modeTitle.textContent='🎮 Chọn chế độ';
   // Preserve hidden original actions and their existing click handlers.

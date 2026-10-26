@@ -4,10 +4,10 @@ Mục tiêu: giữ các gameplay **Sống Sót (2–4)**, **Tranh Trứng (4)** 
 
 ## Cách vào phòng
 
-1. PC chạy bản **Windows LAN Host**. Giữ ứng dụng mở suốt trận, Windows Firewall cho phép Private Network, không bật port forwarding.
+1. PC chạy bản **Windows LAN Host**. Bản mới tự vào game, không có trang trung gian. Giữ ứng dụng mở, Windows Firewall cho phép Private Network, không bật port forwarding.
 2. Xem IP nội bộ của PC qua ipconfig (IPv4 Address); ví dụ 192.168.1.20.
 3. PC / Android / iPhone / iPad cùng Wi-Fi mở Chrome/Edge/Safari tại http://192.168.1.20:37816 (điều chỉnh địa chỉ IP theo PC thực tế). Máy Host mở http://127.0.0.1:37816.
-4. Chọn **Vào game**, tạo/đăng nhập hồ sơ local trên trình duyệt hoặc WebView LAN của thiết bị đó. Trong **Nhiều người chơi**, Host chọn chế độ/Tạo phòng; chia sẻ mã phòng cho người tham gia. Phòng công khai chỉ xuất hiện trong LAN của PC Host.
+4. Mở URL Host sẽ tự vào game, không còn nút Vào game. Từ trong game chọn **Co-op → ⓘ Hướng dẫn kết nối Co-op LAN** để xem địa chỉ IP, rồi chọn chế độ và tạo phòng. Host gửi mã phòng cho người tham gia.
 5. Tất cả cùng vào sảnh; Host chọn Bắt đầu khi có đủ người.
 
 ## AI trong Co-op (thử nghiệm)

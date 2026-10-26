@@ -75,6 +75,18 @@
 }
 #scr-multiplayer.pkmsvv-lan-compact #pkmsvv-public-refresh{margin-top:9px!important}
 #scr-multiplayer.pkmsvv-lan-compact #pkmsvv-room-code{min-width:0}
+#scr-multiplayer.pkmsvv-lan-compact #pkmsvv-lan-help{
+ margin:9px 0 12px;padding:7px 11px;border:1px solid #87c3bc;
+ border-radius:9px;background:rgba(12,51,59,.85);color:#f7fffe
+}
+#scr-multiplayer.pkmsvv-lan-compact #pkmsvv-lan-help summary{font-weight:850;cursor:pointer;color:#ffe89b}
+#scr-multiplayer.pkmsvv-lan-compact .pkmsvv-lan-help-body{padding:7px 2px;font-size:13px;line-height:1.55}
+#scr-multiplayer.pkmsvv-lan-compact .pkmsvv-lan-help-address{
+ padding:8px 10px;background:#eaf8f3;color:#17394b;border-radius:7px;overflow-wrap:anywhere
+}
+#scr-multiplayer.pkmsvv-lan-compact .pkmsvv-lan-help-address code{font:700 12px ui-monospace,monospace}
+#scr-multiplayer.pkmsvv-lan-compact #pkmsvv-lan-help ol{padding-left:20px}
+#scr-multiplayer.pkmsvv-lan-compact #pkmsvv-lan-help li{margin:4px 0}
 @media(max-width:660px){
  #scr-multiplayer.pkmsvv-lan-compact .pkmsvv-mode-grid{gap:6px!important}
  #scr-multiplayer.pkmsvv-lan-compact .pkmsvv-mode-card{min-height:82px!important;flex-direction:column!important;padding:7px 4px!important;gap:3px!important;text-align:center!important}
