@@ -18,7 +18,7 @@ function setup(){
  const document={readyState:'complete',body:{appendChild(element){fields.modal=element;}},addEventListener(k,fn,capture){(listeners[k]||=[]).push({fn,capture});},
  removeEventListener(){},getElementById(id){return id==='scr-menu'?menu:null;},
  createElement(){return modal;}};
- const context={document,Node:{TEXT_NODE:3},window:{PKMSVV_LOCAL_UI_MODE:'pages',location:{hostname:'pkmsvv-web.pages.dev',assign(url){navigated=url;}},
+ const context={document,Node:{TEXT_NODE:3},window:{addEventListener(){},PKMSVV_LOCAL_UI_MODE:'pages',location:{hostname:'pkmsvv-web.pages.dev',assign(url){navigated=url;}},
  G:{MultiplayerUI:{open(){legacy++;}},MenuUI:{open(){}}}},localStorage:{getItem(){return'';},setItem(){}},location:{hostname:'pkmsvv-web.pages.dev'}};
  context.G=context.window.G;
  vm.runInNewContext(source,context);
