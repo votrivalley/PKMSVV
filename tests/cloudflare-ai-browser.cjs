@@ -86,7 +86,11 @@ async function main(){
   assert.equal(exceptions.length,0,'No browser JS exceptions: '+exceptions.join(' | '));
  }finally{
   try{ws?.close();}catch(_){}
-  chrome.kill('SIGKILL');server.close();fs.rmSync(dir,{recursive:true,force:true});
+  chrome.kill('SIGKILL');server.close();
+  // Chrome sub-processes may still be writing profile files; cleanup must never
+  // hide the underlying browser/assertion error.
+  try{fs.rmSync(dir,{recursive:true,force:true,maxRetries:5,retryDelay:250});}
+  catch(e){console.warn('Chromium temp cleanup:',e.message);}
  }
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});
