@@ -40,7 +40,7 @@ test('Android landscape uses scoped compact mobile layout and native Wi-Fi disco
  assert.match(src,/PKMSVV_DISCOVER_V1/);
  assert.match(src,/chooseNearby/);
  assert.match(src,/37820/);
- assert.match(src,/Tạo phòng \(Host\)/);
- assert.match(src,/Tham gia \(Join\)/);
+ assert.match(src,/getString\(\\"role\\",\\"join\\"\)/);
+ assert.match(src,/room_mode/);
  assert.match(src,/room_role/);
 });
