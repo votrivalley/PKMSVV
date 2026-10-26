@@ -7,6 +7,7 @@ const path=require('node:path');
 const fs=require('node:fs');
 const {spawn}=require('node:child_process');
 const {startServer}=require('../lan-server/server.cjs');
+const {startDiscovery}=require('../lan-server/discovery.cjs');
 const {startOnAvailablePort}=require('./lan-startup.cjs');
 const args=process.argv.slice(2);
 const value=flag=>args.find(x=>x.startsWith(flag+'='))?.slice(flag.length+1);
@@ -23,6 +24,7 @@ async function main(){
  const index=path.join(root,'game','index.html');
  if(!fs.existsSync(index))throw Error('Thiếu game/index.html trong thư mục '+root);
  const {server,fallback}=await startOnAvailablePort(startServer,{root,host:'0.0.0.0',ports});
+ const discovery=startDiscovery({port:server.port,logger:console.log});
  const webUrl='http://127.0.0.1:'+server.port+'/game/';
  const reachable=getAddresses(server).map(ip=>'http://'+ip+':'+server.port+'/game/');
  console.log('========== POKÉMON CHUYỂN SINH — HOST LAN ==========');
@@ -40,6 +42,7 @@ async function main(){
  }
  async function stop(){
   console.log('Đang đóng LAN Host...');
+  discovery.close();
   try{await server.close();}catch(_){}
   process.exit(0);
  }

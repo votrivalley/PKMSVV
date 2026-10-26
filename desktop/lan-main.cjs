@@ -6,11 +6,12 @@ const {app,BrowserWindow,Menu,dialog}=require('electron');
 const path=require('node:path');
 const fs=require('node:fs');
 const {startServer}=require('../lan-server/server.cjs');
+const {startDiscovery}=require('../lan-server/discovery.cjs');
 const {startOnAvailablePort,launchUrl}=require('./lan-startup.cjs');
 
 app.setAppUserModelId('com.votrivalley.pkmsvv.lan');
 app.setPath('userData',path.join(app.getPath('appData'),'PKMSVV-LAN-Beta'));
-let server=null,win=null,quitting=false;
+let server=null,discovery=null,win=null,quitting=false;
 const baseLog=()=>path.join(app.getPath('userData'),'lan-host-startup.log');
 function log(message){
  try{fs.mkdirSync(path.dirname(baseLog()),{recursive:true});fs.appendFileSync(baseLog(),
@@ -46,6 +47,7 @@ if(!lock){
   try{
    selected=await startOnAvailablePort(startServer,{root,host:'0.0.0.0',ports:[37816,37817,37818,37819]});
    server=selected.server;
+   discovery=startDiscovery({port:server.port,logger:log});
    log('Host listening port '+server.port+' at '+JSON.stringify(server.addresses));
   }catch(e){fail(e,'Khởi động LAN Host');app.quit();return;}
   try{
@@ -83,6 +85,7 @@ if(!lock){
  }).catch(e=>{fail(e,'Electron startup');app.quit();});
  app.on('before-quit',()=>{
   if(quitting)return;quitting=true;
+  discovery?.close();
   if(server){const s=server;server=null;s.close().catch(e=>log('Server close '+e.message));}
  });
 }

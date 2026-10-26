@@ -12,7 +12,8 @@
     "desktop/lan-main.cjs",
     "desktop/lan-startup.cjs",
     "lan-server/server.cjs",
-    "package.json"
+    "package.json",
+    "lan-server/discovery.cjs"
   ],
   "win": {
     "target": [
