@@ -15,6 +15,7 @@ body{margin:0;min-height:100dvh;display:grid;place-items:center;background:radia
 main{width:min(520px,94vw);box-sizing:border-box;padding:24px;border-radius:18px;border:1px solid #5f9ca0;background:#11283c;box-shadow:0 16px 42px #0008}
 h1{margin:2px 0 7px;text-align:center;font-size:clamp(23px,5vw,30px);color:#ffe09d}p{line-height:1.55;font-size:14px;color:#d4e6f0}
 button{display:block;width:100%;min-height:50px;margin:10px 0;border-radius:12px;border:1px solid #8bc1d4;background:#236d92;color:#fff;font-weight:750;font-size:16px}
+input{box-sizing:border-box;width:100%;min-height:46px;border:1px solid #7daebb;border-radius:10px;padding:10px 12px;background:#ecf7f6;color:#133648;font:inherit}
 button:focus-visible{outline:3px solid #ffdf9b;outline-offset:3px}
 .note{padding:11px;background:#214359;border:1px solid #668d9e;border-radius:10px}
 small{font-size:12px;line-height:1.5;color:#bed7e0;display:block}#status{min-height:20px;color:#ffe4ac}
@@ -22,7 +23,10 @@ small{font-size:12px;line-height:1.5;color:#bed7e0;display:block}#status{min-hei
 <body><main>
 <h1>Pokémon Chuyển Sinh</h1>
 <p style="text-align:center">HTML5 · iPhone / iPad · không cần App Store</p>
-<button id="play" type="button">🎮 Vào game</button>
+<button id="play" type="button">🎮 Chơi Offline trên iPhone</button>
+<p><b>Co-op cùng PC:</b> Kết nối chung Wi-Fi rồi nhập IPv4 của máy Host (ví dụ 192.168.1.20).</p>
+<input id="lan-ip" type="text" inputmode="decimal" autocomplete="off" placeholder="IP PC Host: 192.168.1.20" aria-label="Địa chỉ IP PC Host">
+<button id="lan-connect" type="button">🤝 Vào Co-op LAN trên PC</button>
 <p class="note">💾 Nhớ sao lưu game thường xuyên. Vào menu chính → <b>Sao lưu game</b> để xuất file JSON.</p>
 <p><b>Đặt biểu tượng lên iPhone:</b> Safari → Chia sẻ → Thêm vào Màn hình chính → Mở dưới dạng ứng dụng web.</p>
 <p><b>Chơi ngang màn hình</b> để các nút điều khiển thoáng hơn. Phiên bản này lưu cục bộ, không yêu cầu tài khoản Google.</p>

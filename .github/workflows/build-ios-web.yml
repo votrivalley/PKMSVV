@@ -5,6 +5,7 @@ on:
     paths:
       - 'scripts/**'
       - 'src/ios/**'
+      - 'src/lan/**'
       - 'src/web/**'
       - 'src/pkmsvv-save-ui.js'
       - 'src/pkmsvv-native-choice.js'

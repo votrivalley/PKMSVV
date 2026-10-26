@@ -11,6 +11,7 @@ write('js/net/lan-bus.js',readLan('lan-bus.js'));
 write('js/net/social.js',readLan('social-lan.js'));
 write('js/net/net.js',readLan('net-lan.js'));
 write('js/net/lan-ai.js',readLan('lan-ai.js'));
+write('js/ui/lan-compact-ui.js',readLan('lan-compact-ui.js'));
 once('dev.html','<script defer src="js/net/lan-bus.js"></script>', '<script defer src="js/net/lan-bus.js"></script>\n<script defer src="js/net/lan-ai.js"></script>');
 
 once('js/game.js',
@@ -25,7 +26,7 @@ if(start<0||end<0)throw Error('LAN social online gate drift');
 ui=ui.slice(0,start)+'  function needOnline() { return !!G.DB.save; }\n\n'+ui.slice(end);
 once('dev.html',
  'Ghép trận với người lạ, tìm phòng công khai hoặc tạo phòng riêng để mời bạn bè.',
- 'Chọn chế độ để tạo phòng LAN hoặc tìm phòng công khai trên cùng máy Host. Chia sẻ địa chỉ IP và mã phòng để tham gia.');
+ 'Chọn chế độ, tạo phòng hoặc nhập mã bạn bè chia sẻ. Cùng Wi-Fi với PC Host.');
 // Show host-only AI controls in the existing lobby, not a second lobby screen.
 const conn='    function connText(m, room) {';
 if(!ui.includes(conn))throw Error('LAN AI connText marker drift');
@@ -56,6 +57,8 @@ ui=ui.replace(marker,
  "      $('lobby-inv-title').classList.add('hidden');\n"+
  "      $('lobby-invite').classList.add('hidden');\n"+marker);
 write('js/ui/social-ui.js',ui);
+once('dev.html','<script defer src="js/ui/pkmsvv-multiplayer-ui.js"></script>',
+ '<script defer src="js/ui/pkmsvv-multiplayer-ui.js"></script>\n<script defer src="js/ui/lan-compact-ui.js"></script>');
 // Change labels without assuming the exact Web markup after prior patches.
 let html=read('dev.html');
 const linkPattern=/(<button\b[^>]*\bdata-go="multiplayer"[^>]*>)[^<]*/;
@@ -75,8 +78,8 @@ const css=[
 '#scr-login #login-form{display:block!important}',
 '#scr-login #btn-guest,#scr-login .pkmsvv-entry-buttons{display:none!important}',
 '#scr-multiplayer .pkmsvv-mp-box:before{',
-'content:"LAN · Cùng Wi-Fi, không cần Google. Host chia sẻ IP và mã phòng. Save LAN tách khỏi Offline và Cloud.";',
+'content:"";',
 'display:block;color:#ffe3a4;margin:12px 0;line-height:1.5}'
 ].join('\n');
-fs.appendFileSync(path.join(game,'css','style.css'),'\n'+css+'\n','utf8');
+fs.appendFileSync(path.join(game,'css','style.css'),'\n'+css+'\n'+readLan('lan-compact-ui.css')+'\n','utf8');
 console.log('PKMSVV LAN: local signalling and frame relay installed.');

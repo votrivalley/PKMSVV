@@ -7,6 +7,9 @@ test('iOS HTML5 route is local-only with App Store-free Home Screen instructions
  assert.match(html,/Thêm vào Màn hình chính/);
  assert.doesNotMatch(html,/Đăng nhập Google|Chơi Online/);
  assert.match(entry,/pkmsvv.web.saveMode','local/);
+ assert.match(html,/id="lan-ip"/);
+ assert.match(html,/id="lan-connect"/);
+ assert.match(entry,/:37816\//);
  assert.match(read('scripts/prepare-ios.cjs'),/#pkmsvv-menu-google/);
  assert.match(read('scripts/prepare-ios.cjs'),/#scr-menu \[data-go="multiplayer"\]/);
 });

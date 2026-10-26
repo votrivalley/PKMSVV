@@ -10,6 +10,7 @@ on:
       - 'lan-win.json'
       - 'package.json'
       - 'tests/lan-server.test.cjs'
+      - 'tests/lan-compact-ui.test.cjs'
       - '.github/workflows/build-lan.yml'
   workflow_dispatch:
 permissions:
@@ -33,7 +34,7 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Validate LAN server, room security and relay
-        run: npm run test:lan
+        run: npm run test:lan && node --test tests/lan-compact-ui.test.cjs
       - name: Compile LAN game without Firebase
         run: npm run prepare:lan
       - name: Verify LAN content and isolation
