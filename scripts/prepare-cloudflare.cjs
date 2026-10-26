@@ -50,7 +50,7 @@ loadingHTML=loadingHTML.replace(/(<h1[^>]*>)[^<]*(<\/h1>)/,'$1Pokémon Chuyển 
 gameHTML=gameHTML.slice(0,from)+loadingHTML+gameHTML.slice(to);
 fs.writeFileSync(htmlFile,gameHTML,'utf8');
 const scriptFile=path.join(dest,'game/js/boot.js');
-let bootScript=fs.readFileSync(scriptFile,'utf8');
+let bootScript=fs.readFileSync(scriptFile,'utf8').replace(/\r\n/g,'\n');
 const spanish="    es: ['Juego de supervivencia con Pokémon, gratis en el navegador y en el móvil.', 'Cargando…'],";
 const oldSelector="  var p = document.querySelectorAll('#boot p');\n  p[0].textContent = copy[0]; p[1].textContent = copy[1];";
 if(!bootScript.includes(spanish)||!bootScript.includes(oldSelector))throw Error('Upstream boot.js changed');
