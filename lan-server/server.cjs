@@ -49,6 +49,11 @@ function startServer({root,port=37816,host='0.0.0.0'}={}){
  }
  const safeFile=async(req,res)=>{
   if(!privateAddress(req.socket.remoteAddress)){res.writeHead(403);res.end('Not RFC1918 address '+req.socket.remoteAddress);return;}
+  if(new URL(req.url,'http://localhost').pathname==='/lan/info'){
+   const body=JSON.stringify({port:httpServer.address()?.port||37816,addresses:lanAddresses()});
+   res.writeHead(200,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Content-Length':Buffer.byteLength(body)});
+   res.end(req.method==='HEAD'?'':body);return;
+  }
   if(req.method!=='GET'&&req.method!=='HEAD'){res.writeHead(405);res.end();return;}
   let pathname;
   try{pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname)}catch(_){res.writeHead(400);res.end();return;}
