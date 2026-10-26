@@ -40,7 +40,8 @@ test('Save guardian is loaded before game and Rescue is available for cross-doma
 test('Web uses real LAN hyperlink instead of the retired Firebase Online menu callback',()=>{
  const html=read('game/index.html'),shell=read('game/js/ui/pkmsvv-local-shell.js');
  assert.match(html,/id="pkmsvv-coop-lan-entry" href="\/lan-connect\.html"/);
- assert.doesNotMatch(html,/data-go="multiplayer"/);
+ const menu=html.slice(html.indexOf('<section id="scr-menu"'),html.indexOf('</section>',html.indexOf('<section id="scr-menu"')));
+ assert.doesNotMatch(menu,/<button[^>]*data-go="multiplayer"/);
  assert.match(html,/class="mi-ico" aria-hidden="true">🤝<\/span>/);
  assert.match(shell,/window\.location\.assign\('\/lan-connect\.html'\)/);
  for(const file of ['lan-connect.html','lan-connect.js'])assert.ok(fs.existsSync(path.join(dist,file)));

@@ -5,7 +5,7 @@ function app(){
  let destination='',legacyCalls=0;
  const listeners={},coop={dataset:{go:'multiplayer'},tagName:'BUTTON',disabled:true,
   style:{setProperty(){}},classList:{add(){}},removeAttribute(){},setAttribute(){},
-  childNodes:[],querySelector(){return null},querySelectorAll(){return []}};
+  childNodes:[],querySelector(){return null},querySelectorAll(){return []},appendChild(){},insertBefore(){}};
  const menu={querySelector(s){return s.includes('multiplayer')?coop:null;},querySelectorAll(){return []}};
  const doc={readyState:'complete',getElementById(id){return id==='scr-menu'?menu:null;},
   addEventListener(name,fn,capture){(listeners[name]||=[]).push({fn,capture})},
