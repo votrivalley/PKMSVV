@@ -32,6 +32,7 @@ test('LAN HTTP & same-origin WS support room life cycle and host-only frame rout
  });
  try{
   let response=await fetch(base+'/');const text=await response.text();assert.equal(response.status,200,'LAN HTTP '+response.status+': '+text);assert.equal(text,'LAN TEST');
+  const info=await fetch(base+'/lan/info').then(r=>r.json());assert.equal(info.port,server.port);assert.ok(Array.isArray(info.addresses));
   response=await fetch(base+'/missing.js');assert.equal(response.status,404);
   const [host,guest,stranger]=await Promise.all([open(),open(),open()]);
   for(const p of [host,guest,stranger])assert.ok((await p.next(m=>m.t==='welcome')).uid.startsWith('lan-'));
@@ -63,4 +64,6 @@ test('LAN source shares neither Google login nor Firestore and keeps distinct sa
  assert.match(read('src/lan/index.html'),/không đồng bộ với save EXE Offline/);
  assert.match(read('src/lan/index.html'),/Android/);
  assert.match(read('scripts/prepare-web.cjs'),/PKMSVV_LAN_BUILD/);
+ assert.match(read('scripts/patch-lan.cjs'),/if \(restored && G.DB.save\) this.afterLogin/);
+ assert.match(read('scripts/patch-lan.cjs'),/#scr-login #login-form\{display:block!important\}/);
 });
