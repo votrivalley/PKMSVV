@@ -1,0 +1,25 @@
+{
+  "appId": "com.votrivalley.pkmsvv.lan",
+  "productName": "Pokemon Chuyển sinh LAN",
+  "asar": true,
+  "extraMetadata": {
+    "main": "desktop/lan-main.cjs"
+  },
+  "directories": {
+    "output": "dist/lan-windows"
+  },
+  "files": [
+    "desktop/lan-main.cjs",
+    "lan-server/server.cjs",
+    "dist/lan/**/*",
+    "package.json"
+  ],
+  "win": {
+    "target": [
+      "portable"
+    ],
+    "artifactName": "PKMSVV-LAN-${version}-Windows-x64.${ext}",
+    "icon": "build/icon.ico"
+  },
+  "compression": "normal"
+}
