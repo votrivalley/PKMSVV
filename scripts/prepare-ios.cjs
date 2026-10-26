@@ -2,7 +2,7 @@
 /* Static HTML5/PWA distribution for iPhone/iPad. Not an IPA or App Store upload. */
 const fs=require('node:fs'),path=require('node:path'),{execFileSync}=require('node:child_process');
 const root=path.resolve(__dirname,'..'),web=path.join(root,'dist','web'),ios=path.join(root,'dist','ios');
-const env={...process.env,PKMSVV_WEB_PREVIEW:'1',PKMSVV_IOS_BUILD:'1'};
+const env={...process.env,PKMSVV_WEB_PREVIEW:'1',PKMSVV_IOS_BUILD:'1',PKMSVV_LOCAL_PWA:'1'};
 delete env.PKMSVV_FIREBASE_CONFIG_JSON; // Never package authenticated cloud services.
 execFileSync(process.execPath,[path.join(root,'scripts','prepare-web.cjs')],{cwd:root,env,stdio:'inherit'});
 fs.rmSync(ios,{force:true,recursive:true});

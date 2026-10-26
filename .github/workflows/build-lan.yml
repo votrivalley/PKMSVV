@@ -6,6 +6,7 @@ on:
       - 'lan-server/**'
       - 'src/lan/**'
       - 'src/shared/**'
+      - 'tests/coop-icon-consistency.test.cjs'
       - 'tests/local-shell-ui.test.cjs'
       - 'tests/local-ui-lan-host-regression.test.cjs'
       - 'scripts/**'
@@ -42,7 +43,7 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Validate LAN server, room security and relay
-        run: npm run test:lan && node --test tests/lan-startup.test.cjs tests/lan-compact-ui.test.cjs tests/lan-direct-entry.test.cjs tests/local-shell-ui.test.cjs tests/local-ui-lan-host-regression.test.cjs
+        run: npm run test:lan && node --test tests/lan-startup.test.cjs tests/lan-compact-ui.test.cjs tests/lan-direct-entry.test.cjs tests/local-shell-ui.test.cjs tests/local-ui-lan-host-regression.test.cjs tests/coop-icon-consistency.test.cjs
       - name: Compile LAN game without Firebase
         run: npm run prepare:lan
       - name: Verify LAN content and isolation

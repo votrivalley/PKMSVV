@@ -22,3 +22,10 @@ test('LAN says Co-op; native backup is on main menu and old warning replaced',()
  assert.match(notice,/Nhớ sao lưu game thường xuyên/);
  assert.doesNotMatch(notice,/Tiến trình trên thiết bị này tách biệt với Online/);
 });
+test('PWA compilation replaces old Online entry before the app bundle is built',()=>{
+ const web=read('scripts/prepare-web.cjs'),ios=read('scripts/prepare-ios.cjs');
+ assert.match(ios,/PKMSVV_LOCAL_PWA:'1'/);
+ assert.match(web,/PKMSVV_LOCAL_PWA==='1'/);
+ assert.match(web,/PKMSVVOpenLanDialog/);
+ assert.match(web,/pkmsvv-open-lan/);
+});

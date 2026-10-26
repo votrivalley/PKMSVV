@@ -49,3 +49,11 @@ test('Cloudflare Free plan file count and per-file limit pass',()=>{
  assert.ok(report.totalMiB>15&&report.largestMiB<=25);
  assert.ok(fs.statSync(path.join(dist,'game','assets')).isDirectory());
 });
+
+test('PWA multiplayer source entrypoint never calls old Online nickname gate',()=>{
+ const app=read('game/js/app.min.js');
+ assert.doesNotMatch(app,/pkmsvv-online-only-sentinel/);
+ const ui=read('game/js/ui/pkmsvv-local-shell.js');
+ assert.match(ui,/PKMSVVOpenLanDialog=openLanDialog/);
+ assert.match(ui,/icon\.textContent='🤝'/);
+});

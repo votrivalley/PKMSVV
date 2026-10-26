@@ -23,3 +23,10 @@ test('native LAN plugin uses explicit private IPv4 and returnable Activity',()=>
   assert.ok(native.includes(token),'Expected '+token);
  assert.doesNotMatch(native,/Firebase|google-services/);
 });
+test('Full Android reuses one Co-op row and calls native LAN instead of Online',()=>{
+ const js=read('src/android/full-lan-ui.js');
+ assert.match(js,/const existing=list\.querySelector\('\[data-go="multiplayer"\],\[data-go="online"\]'\)/);
+ assert.match(js,/PKMSVVOpenAndroidLan=openNative/);
+ assert.match(js,/duplicate\.remove\(\)/);
+ assert.match(js,/icon\.textContent='🤝'/);
+});

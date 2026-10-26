@@ -13,7 +13,7 @@ function setup(){
  '#pkmsvv-lan-submit':{addEventListener(_k,fn){fields.submit=fn;}}
  }[sel]||null;},addEventListener(){},remove(){}};
  const coop={...obj(),dataset:{go:'multiplayer'},childNodes:[],disabled:true,
- style:{setProperty(){}},querySelector(){return null;},appendChild(){},removeAttribute(){}};
+ style:{setProperty(){}},querySelector(){return null;},querySelectorAll(){return []},appendChild(){},removeAttribute(){}};
  const menu={...obj(),querySelector(sel){return sel.includes('multiplayer')?coop:null;},querySelectorAll(){return [];}};
  const document={readyState:'complete',body:{appendChild(element){fields.modal=element;}},addEventListener(k,fn,capture){(listeners[k]||=[]).push({fn,capture});},
  removeEventListener(){},getElementById(id){return id==='scr-menu'?menu:null;},

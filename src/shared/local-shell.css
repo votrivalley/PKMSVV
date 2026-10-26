@@ -43,3 +43,12 @@
 .pkmsvv-lan-connect-actions button{min-height:42px;border-radius:9px;border:1px solid #a4d5d0;
  padding:8px 14px;background:#29566a;color:#fff;font:750 14px system-ui;cursor:pointer}
 #pkmsvv-lan-submit{background:#ffe277;color:#12303b}
+
+/* Exactly one Co-op icon: re-use the original navigation icon container. */
+#scr-menu .menu-right .menu-list > [data-go="multiplayer"] > .mi-ico,
+#scr-menu .menu-right .menu-list > [data-go="online"] > .mi-ico,
+#scr-menu .menu-right .menu-list > #pkmsvv-full-lan-entry > .mi-ico {
+ display:inline-flex;align-items:center;justify-content:center;
+ min-width:26px;width:26px;height:26px;font:normal 22px/1 system-ui;
+ flex:0 0 26px;vertical-align:middle;
+}

@@ -131,6 +131,25 @@ execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-cloud-mult
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-exclusive-session.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-online-counter.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-coop-repair.cjs')], { cwd: root, stdio: 'inherit' });
+// The PWA is static hosting, NOT the removed Firebase online client.
+// Rewrite the actual multiplayer entrypoint BEFORE minifying app.min.js.
+// This is essential: stopping click events alone misses gamepad/menu dispatch.
+if(process.env.PKMSVV_LOCAL_PWA==='1'){
+ const mpFile=path.join(game,'js/ui/pkmsvv-multiplayer-ui.js');
+ let mp=fs.readFileSync(mpFile,'utf8').replace(/\r\n/g,'\n');
+ const start=mp.indexOf(' function open(){');
+ const end=mp.indexOf(' return {init,open,rooms,quick,join,create};',start);
+ if(start<0||end<0||!mp.slice(start,end).includes('G.SocialUI.withNick('))
+  throw Error('PWA Co-op source-level Online guard anchor drift');
+ mp=mp.slice(0,start)+[
+  ' function open(){',
+  "  if(typeof window.PKMSVVOpenLanDialog==='function')return window.PKMSVVOpenLanDialog();",
+  "  window.dispatchEvent(new Event('pkmsvv-open-lan'));",
+  ' }',
+  ''
+ ].join('\n')+mp.slice(end);
+ fs.writeFileSync(mpFile,mp,'utf8');
+}
 // Voice is Web-only and strictly limited to cooperative rooms (2–4 players).
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-voice.cjs')], { cwd: root, stdio: 'inherit' });
 const flow = path.join(game, 'js', 'game.js');
