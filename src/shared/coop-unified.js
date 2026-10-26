@@ -182,19 +182,17 @@
    return;
   }
   window.PKMSVV_COOP_PENDING={role,mode};
+  if(role==='ai'&&window.PKMSVV_STANDALONE_AI_AVAILABLE){
+   window.location.assign('/ai/?mode='+encodeURIComponent(mode));return;
+  }
   if(window.PKMSVV_LOCAL_UI_MODE==='android-full-lan'){
    const api=window.Capacitor?.Plugins?.PKMSVVLAN;
    if(!api?.open){info('Không thể kết nối LAN trên Android');return;}
-   info('Đang tìm Host cùng Wi-Fi…');
+   info(role==='host'?'Chọn PC Host cùng Wi-Fi để tạo phòng cho bạn bè.':'Đang tìm Host cùng Wi-Fi…');
    Promise.resolve(api.open({role,mode})).catch(e=>info(e.message||'Không tìm thấy Host'));
    return;
   }
   detail.replaceChildren();
-  if(role==='ai'&&window.PKMSVV_STANDALONE_AI_AVAILABLE){
-   // Cloudflare ships the real LAN gameplay/AI engine backed by a local
-   // in-memory room. No machine Host, Firebase or IP address is required.
-   window.location.assign('/ai/?mode='+encodeURIComponent(mode));return;
-  }
   if(role==='ai'){
    const hint=document.createElement('p');
    hint.textContent='Bản HTML5 Cloudflare đang chơi offline và không chạy máy chủ LAN. Để chơi với AI ở bản này, hãy mở link lời mời từ PC Host đang chạy. Chọn “Chơi với AI” trên Host để tạo bot; website độc lập chưa có AI offline.';
@@ -203,6 +201,11 @@
    link.onclick=()=>{detail.replaceChildren();addressEntry('join');};
    detail.append(link);return;
   }
+  if(role==='host'){
+   const help=document.createElement('p');
+   help.textContent='Tạo phòng trên PC Host cùng Wi-Fi. Website chưa tự làm máy chủ LAN; Chơi với AI chạy ngay trên thiết bị này.';
+   detail.append(help);
+  }
   addressEntry(role);
  }
  function intercept(e){
@@ -210,8 +213,9 @@
   e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();open();
  }
  function install(){
-  if(!window.G?.MultiplayerUI)return;
-  G.MultiplayerUI.open=open;G.MultiplayerUI.__pkmsvvUnified=true;
+  // Offline Android may omit MultiplayerUI; the shared dialog only needs G.
+  if(!window.G)return;
+  if(G.MultiplayerUI){G.MultiplayerUI.open=open;G.MultiplayerUI.__pkmsvvUnified=true;}
   document.addEventListener('click',intercept,true);
   const args=new URLSearchParams(location.search);
   if(modes.some(x=>x[0]===args.get('pkmsvvMode')))mode=args.get('pkmsvvMode');

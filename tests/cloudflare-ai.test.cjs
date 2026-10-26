@@ -30,11 +30,12 @@ test('HTML5 AI rooms run without WebSocket, Firebase or LAN Host',async()=>{
  await bus.request('leave');
  assert.equal(events.at(-1).t,'room-closed');
 });
-test('HTML5 AI room supports Royale ten players and retains bots after restart',async()=>{
+test('HTML5 AI room supports ten players and clears finished bots before another round',async()=>{
  const {G}=create(),bus=G.LanBus;
  let room=await bus.request('create',{mode:'royale'});
  for(let i=0;i<9;i++)room=await bus.request('addBot');
  assert.equal(room.members.length,10);
  await bus.request('removeBot',{uid:room.members.at(-1).uid});
- assert.equal((await bus.request('finish')).members.length,9);
+ assert.equal((await bus.request('finish')).members.length,1);
+ assert.equal((await bus.request('addBot',{dex:6})).members.at(-1).dex,6);
 });

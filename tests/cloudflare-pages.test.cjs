@@ -69,10 +69,12 @@ test('Self-hosted HTML5 AI mode has its own bundled game logic and no cloud depe
  const welcome=read('ai/index.html'),normal=read('game/index.html');
  assert.match(aiHTML,/<base href="\/game\/"/);
  assert.match(aiHTML,/\/ai\/game\/js\/app\.min\.js/);
- assert.match(welcome,/pkmsvvRole=ai&pkmsvvMode/);
+ assert.match(welcome,/\/ai\/entry\.js/);
+ assert.match(read('ai/entry.js'),/pkmsvvRole=ai&pkmsvvMode/);
  assert.match(aiBundle,/PKMSVV_STANDALONE_AI/);
  assert.doesNotMatch(aiBundle,/AIza[A-Za-z0-9_-]{35}|pkmsvv-b84d2-default-rtdb/);
- assert.match(normal,/PKMSVV_STANDALONE_AI_AVAILABLE=true/);
+ assert.match(normal,/pkmsvv-runtime-config\.js/);
+ assert.match(read('game/js/ui/pkmsvv-runtime-config.js'),/PKMSVV_STANDALONE_AI_AVAILABLE=true/);
  assert.match(read('sw.js'),/\/ai\/game\/js\/app\.min\.js/);
  const coop=fs.readFileSync(path.join(__dirname,'..','src/shared/coop-unified.js'),'utf8');
  assert.match(coop,/window\.location\.assign\('\/ai\/\?mode='/);

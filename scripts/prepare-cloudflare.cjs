@@ -51,8 +51,10 @@ for(const [oldText,newText] of translation){
 loadingHTML=loadingHTML.replace(/(<h1\b[^>]*>)[\s\S]*?(<\/h1>)/,'$1<span>Pokémon</span><span>Chuyển Sinh</span>$2');
 gameHTML=gameHTML.slice(0,from)+loadingHTML+gameHTML.slice(to);
 if(!gameHTML.includes('</head>'))throw Error('No game HTML head for save guard');
+fs.writeFileSync(path.join(dest,'game/js/ui/pkmsvv-runtime-config.js'),
+ 'window.PKMSVV_LOCAL_UI_MODE="pages";window.PKMSVV_STANDALONE_AI_AVAILABLE=true;\n');
 gameHTML=gameHTML.replace('</head>',
- '<script src="../save-guardian.js"></script><script>window.PKMSVV_STANDALONE_AI_AVAILABLE=true;</script></head>');
+ '<script src="../save-guardian.js"></script></head>');
 fs.writeFileSync(htmlFile,gameHTML,'utf8');
 const scriptFile=path.join(dest,'game/js/boot.js');
 let bootScript=fs.readFileSync(scriptFile,'utf8').replace(/\r\n/g,'\n');

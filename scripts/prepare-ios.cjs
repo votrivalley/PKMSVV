@@ -31,8 +31,11 @@ const localCSS=fs.readFileSync(path.join(root,'src/shared/local-shell.css'),'utf
 const coopCSS=fs.readFileSync(path.join(root,'src/shared/coop-unified.css'),'utf8');
 fs.copyFileSync(path.join(root,'src/shared/coop-unified.js'),path.join(ios,'game/js/ui/pkmsvv-coop-unified.js'));
 gameHTML=gameHTML.replace('</head>','<style id="pkmsvv-local-shell-style">'+localCSS+'</style><style id="pkmsvv-unified-coop-style">'+coopCSS+'</style></head>');
+fs.writeFileSync(path.join(ios,'game/js/ui/pkmsvv-runtime-config.js'),
+ 'window.PKMSVV_LOCAL_UI_MODE="pages";\n');
+gameHTML=gameHTML.replace('</head>','<script src="js/ui/pkmsvv-runtime-config.js"></script></head>');
 gameHTML=gameHTML.replace('</body>',
- '<script>window.PKMSVV_LOCAL_UI_MODE="pages"</script>\n<script defer src="js/ui/pkmsvv-local-shell.js"></script>\n<script defer src="js/ui/pkmsvv-coop-unified.js"></script>\n</body>');
+ '<script defer src="js/ui/pkmsvv-local-shell.js"></script>\n<script defer src="js/ui/pkmsvv-coop-unified.js"></script>\n</body>');
 fs.writeFileSync(gameIndex,gameHTML,'utf8');
 const manifest=JSON.parse(fs.readFileSync(path.join(ios,'manifest.webmanifest'),'utf8'));
 Object.assign(manifest,{id:'/',start_url:'/?source=ios-home',scope:'/',display:'standalone',

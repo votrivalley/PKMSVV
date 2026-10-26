@@ -23,12 +23,17 @@ fs.copyFileSync(path.join(root,'src/shared/local-shell.js'),
 const localCSS=fs.readFileSync(path.join(root,'src/shared/local-shell.css'),'utf8');
 const coopCSS=fs.readFileSync(path.join(root,'src/shared/coop-unified.css'),'utf8');
 html=html.replace('</head>','<style id="pkmsvv-local-shell-style">'+localCSS+'</style><style id="pkmsvv-android-compact-style">'+fs.readFileSync(path.join(root,'src/android/compact-landscape.css'),'utf8')+'</style><style id="pkmsvv-unified-coop-style">'+coopCSS+'</style></head>');
+fs.writeFileSync(path.join(web,'js/ui/pkmsvv-runtime-config.js'),
+ 'window.PKMSVV_LOCAL_UI_MODE="android-full-lan";window.PKMSVV_STANDALONE_AI_AVAILABLE=true;\n');
+html=html.replace('</head>','<script src="js/ui/pkmsvv-runtime-config.js"></script></head>');
 html=html.replace('</body>',
- '<script>window.PKMSVV_LOCAL_UI_MODE="android-full-lan"</script>\n<script defer src="js/ui/pkmsvv-local-shell.js"></script>\n<script defer src="js/ui/pkmsvv-coop-unified.js"></script>\n</body>');
+ '<script defer src="js/ui/pkmsvv-local-shell.js"></script>\n<script defer src="js/ui/pkmsvv-coop-unified.js"></script>\n</body>');
 fs.writeFileSync(idx,html);
 const cfg=JSON.parse(fs.readFileSync(configFile,'utf8'));
 if(cfg.appId!=='com.ronvotri.pkmsvv')throw Error('Unexpected original Android identity: '+cfg.appId);
 cfg.appId='com.votrivalley.pkmsvv.fulllan';
 cfg.appName='Pokemon Chuyen Sinh Full LAN';
 fs.writeFileSync(configFile,JSON.stringify(cfg,null,2)+'\n');
+require('./compile-standalone-ai.cjs')();
+require('./package-standalone-ai.cjs')({dest:web,assetBase:'/'});
 console.log('Full Android + Co-op LAN packaged; '+(size/1024/1024).toFixed(1)+' MiB of game assets. Existing app untouched.');

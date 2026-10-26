@@ -11,6 +11,7 @@
  const isAndroidFull=mode==='android-full-lan';
 
  function openLanDialog(){
+  if(window.PKMSVVCoop?.open){window.PKMSVVCoop.open();return;}
   if(!isPages)return;
   // Independent page: bypasses ALL legacy Online/Firebase UI callbacks.
   window.location.assign('/lan-connect.html');
@@ -78,7 +79,8 @@
     // Backup for programmatic b.onclick() and keyboard/controller bindings.
     coop.onclick=e=>{
      e?.preventDefault?.();e?.stopPropagation?.();
-     if(isPages)openLanDialog();else window.PKMSVVOpenAndroidLan?.();
+     if(window.PKMSVVCoop?.open)window.PKMSVVCoop.open();
+     else if(isPages)openLanDialog();else window.PKMSVVOpenAndroidLan?.();
     };
    }
    // MenuUI.init inserts its original Online picture inside .mi-ico.

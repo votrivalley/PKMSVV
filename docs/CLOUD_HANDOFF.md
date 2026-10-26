@@ -1,6 +1,30 @@
 # PKMSVV — handoff for Claude / cloud continuation
 
-Updated: 2026-10-27, Asia/Saigon. Release: **1.5.21**.
+Updated: 2026-10-27, Asia/Saigon. Release: **1.5.22**.
+
+## Current continuation — overrides historical 1.5.21 packaging notes below
+
+- Cloud work through `9d62a7d` added a genuine standalone `/ai/` engine with an
+  in-memory room bus. Web AI does **not** need PC, Firebase or WebSocket.
+- 1.5.22 packages that same engine into Android FULL LAN at `/ai/`, reusing the
+  root offline assets. `prepare:android:full-lan` now also compiles this engine;
+  allow time for the second build, and do not run vendor-mutating builds together.
+- Android Co-op opens the shared three-mode menu. Its main menu click handler
+  must call `PKMSVVCoop.open`, not `PKMSVVOpenAndroidLan` directly. The dialog
+  installs even if offline game omits `G.MultiplayerUI`.
+- Choosing AI routes to `/ai/` **before** checking the Android native bridge.
+  Only human Host/Join actions invoke the native LAN picker with `{role,mode}`.
+- Standalone bots randomize over the game dex, avoid duplicate species, and are
+  removed after finishing a round, matching PC lobby lifecycle.
+- Independent human LAN hosting on a phone or static website is still absent.
+  Their Host action creates a room on the selected PC Host; showing a button is
+  not evidence of a native Android/serverless Web transport Host.
+- `tests/coop-platform-browser.cjs` starts from the actual Web/Android packaged
+  menu, checks all three cards, enters real local AI gameplay, exercises match
+  checkpoints and a second round. Android native dispatch is mocked in browser;
+  this does not substitute for physical-device Wi-Fi QA.
+
+Historical notes below describe 1.5.21 and must not override this section.
 Repository: https://github.com/votrivalley/PKMSVV
 Working branch: **feature/lan-local-beta**. Keep `main` untouched pending QA.
 

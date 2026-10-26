@@ -2,6 +2,10 @@
 /* Add LAN access to the COMPLETE offline game; do not touch save state. */
 (()=>{
  const vi=()=>window.G?.I18n?.lang!=='en';
+ function openCoop(){
+  if(window.PKMSVVCoop?.open){window.PKMSVVCoop.open();return;}
+  window.G?.UI?.toast?.('Menu Co-op đang tải, vui lòng thử lại.');
+ }
  async function openNative(){
   const api=window.Capacitor?.Plugins?.PKMSVVLAN;
   if(!api?.open){window.G?.UI?.toast?.('Không mở được Co-op LAN');return;}
@@ -32,7 +36,7 @@
    for(const n of [...b.childNodes])if(n.nodeType===Node.TEXT_NODE&&n.textContent.trim())n.textContent=' Co-op';
   }
   b.disabled=false;b.removeAttribute('aria-disabled');
-  b.onclick=e=>{e?.preventDefault?.();e?.stopPropagation?.();openNative();};
+  b.onclick=e=>{e?.preventDefault?.();e?.stopPropagation?.();openCoop();};
  }
  function install(){
   window.PKMSVVOpenAndroidLan=openNative;

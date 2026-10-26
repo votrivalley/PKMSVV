@@ -5,12 +5,15 @@ on:
     paths:
       - 'scripts/prepare-cloudflare.cjs'
       - 'scripts/prepare-cloudflare-ai.cjs'
+      - 'scripts/compile-standalone-ai.cjs'
+      - 'scripts/package-standalone-ai.cjs'
       - 'scripts/prepare-lan.cjs'
       - 'scripts/patch-lan.cjs'
       - 'src/lan/solo-ai-bus.js'
       - 'src/lan/lan-ai.js'
       - 'tests/cloudflare-ai.test.cjs'
       - 'tests/cloudflare-ai-browser.cjs'
+      - 'tests/coop-platform-browser.cjs'
       - 'scripts/prepare-ios.cjs'
       - 'src/cloudflare/**'
       - 'src/ios/**'
@@ -56,6 +59,9 @@ jobs:
         run: npm run test:cloudflare && node --test tests/cloudflare-ai.test.cjs tests/local-shell-ui.test.cjs tests/local-ui-lan-host-regression.test.cjs tests/pages-lan-connect-runtime.test.cjs tests/unified-coop.test.cjs
       - name: Browser smoke QA of real HTML5 AI in all three modes
         run: node tests/cloudflare-ai-browser.cjs
+      - name: Verify main menu to AI, match finish and replay on Web
+        shell: bash
+        run: PKMSVV_BROWSER="$(command -v google-chrome)" node tests/coop-platform-browser.cjs
       - name: Inspect ready-to-deploy website (no nested ZIP)
         shell: bash
         run: |

@@ -4,6 +4,8 @@ on:
     branches: [feature/lan-local-beta]
     paths:
       - 'scripts/prepare-full-lan-android.cjs'
+      - 'scripts/compile-standalone-ai.cjs'
+      - 'scripts/package-standalone-ai.cjs'
       - 'scripts/configure-android-full-lan.cjs'
       - 'src/android/full-lan-ui.js'
       - 'src/lan/**'
@@ -13,6 +15,7 @@ on:
       - 'tests/local-shell-ui.test.cjs'
       - 'tests/local-ui-lan-host-regression.test.cjs'
       - 'tests/android-full-lan.test.cjs'
+      - 'tests/coop-platform-browser.cjs'
       - 'tests/v15-gacha-save-isolation.test.cjs'
       - '.github/workflows/build-android-full-lan.yml'
       - 'scripts/prepare-game.cjs'
@@ -61,6 +64,9 @@ jobs:
           npm run test:android:full-lan
           node --test tests/coop-icon-consistency.test.cjs tests/unified-coop.test.cjs
           node --test tests/local-shell-ui.test.cjs
+      - name: Verify Android packaged menu and all three local AI modes in browser
+        shell: bash
+        run: PKMSVV_PLATFORM=android PKMSVV_BROWSER="$(command -v google-chrome)" node tests/coop-platform-browser.cjs
       - name: Create Capacitor Android and LAN native screen
         run: |
           npx cap add android
@@ -76,6 +82,7 @@ jobs:
           grep -q 'LANRoomActivity' android/app/src/main/AndroidManifest.xml
           test -s mobile/www/js/app.min.js
           test -s mobile/www/js/ui/pkmsvv-full-lan-ui.js
+          test -s mobile/www/ai/game/js/app.min.js
           du -sh mobile/www/assets
       - name: Build APK
         working-directory: android

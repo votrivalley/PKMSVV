@@ -39,11 +39,13 @@ G.LanBus=(()=>{
    update();return true;
   }
   if(action==='open'){room.open=!!data.open;update();return true;}
-  if(action==='finish'){room.open=true;update();return snapshot();}
+  if(action==='finish'){room.open=true;room.members=room.members.filter(m=>!m.bot);update();return snapshot();}
   if(action==='addBot'){
    if(!room.open)throw Error('Trận đang diễn ra, không thể thêm AI.');
    if(room.members.length>=max())throw Error('Đã đủ số người chơi và AI.');
-   const picks=[25,1,4,7,133,447,175];
+   const used=new Set(room.members.map(m=>m.dex));
+   const picks=Object.keys(G.DEX_BY||{}).map(Number).filter(dex=>!used.has(dex)&&dex>0);
+   if(!picks.length)picks.push(25);
    const dex=G.DEX_BY?.[Number(data.dex)]?Number(data.dex):picks[Math.floor(Math.random()*picks.length)];
    const id='ai-'+Math.floor(Math.random()*0xffffffff).toString(16).padStart(8,'0')+
     Math.floor(Math.random()*0xffffffff).toString(16).padStart(8,'0');
