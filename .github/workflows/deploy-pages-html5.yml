@@ -1,17 +1,5 @@
 name: Publish Offline HTML5 to GitHub Pages
 on:
-  push:
-    branches: [feature/lan-local-beta]
-    paths:
-      - 'scripts/prepare-pages.cjs'
-      - 'scripts/prepare-ios.cjs'
-      - 'scripts/prepare-web.cjs'
-      - 'src/ios/**'
-      - 'src/shared/**'
-      - 'src/web/**'
-      - 'tests/pages-html5.test.cjs'
-      - 'package.json'
-      - '.github/workflows/deploy-pages-html5.yml'
   workflow_dispatch:
 permissions:
   contents: read

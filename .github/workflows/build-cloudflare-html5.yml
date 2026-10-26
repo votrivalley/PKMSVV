@@ -1,0 +1,70 @@
+name: Build Cloudflare Pages FULL HTML5
+on:
+  push:
+    branches: [feature/lan-local-beta]
+    paths:
+      - 'scripts/prepare-cloudflare.cjs'
+      - 'scripts/prepare-ios.cjs'
+      - 'src/cloudflare/**'
+      - 'src/ios/**'
+      - 'src/shared/**'
+      - 'src/web/**'
+      - 'tests/cloudflare-pages.test.cjs'
+      - 'package.json'
+      - '.github/workflows/build-cloudflare-html5.yml'
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Deploy to Cloudflare Pages (requires Cloudflare secrets and existing project)'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  full-html5:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Load pinned upstream game
+        shell: bash
+        run: |
+          git init vendor/pokesurvivor
+          git -C vendor/pokesurvivor remote add origin https://github.com/JPTER78/pokesurvivor.git
+          git -C vendor/pokesurvivor fetch --depth 1 origin 11fe868c640b62ac37beacc222e056bc4d9ec892
+          git -C vendor/pokesurvivor checkout --detach FETCH_HEAD
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build complete Cloudflare HTML5 game
+        run: npm run prepare:cloudflare
+      - name: Verify entire game, PWA, save UI, free-tier limits
+        run: npm run test:cloudflare && node --test tests/local-shell-ui.test.cjs
+      - name: Package website for Wrangler
+        shell: bash
+        run: |
+          mkdir -p dist/cloudflare-package
+          cd dist/cloudflare
+          zip -qr ../cloudflare-package/PKMSVV-Cloudflare-Pages-FULL-HTML5.zip .
+          ls -lh ../cloudflare-package
+          cat build-info.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-Cloudflare-Pages-FULL-HTML5
+          path: dist/cloudflare-package/*.zip
+          retention-days: 14
+          if-no-files-found: error
+      - name: Deploy only when explicitly requested and authorized
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::Please configure CF_API_TOKEN and CF_ACCOUNT_ID as repository Actions Secrets."
+            exit 1
+          fi
+          npx --yes wrangler@4 pages deploy dist/cloudflare --project-name pkmsvv-ios --branch main
