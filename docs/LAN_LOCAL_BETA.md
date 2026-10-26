@@ -11,10 +11,10 @@ Mục tiêu: giữ các gameplay **Sống Sót (2–4)**, **Tranh Trứng (4)** 
 5. Tất cả cùng vào sảnh; Host chọn Bắt đầu khi có đủ người.
 
 ## AI trong Co-op (thử nghiệm)
-- Host có nút **Thêm AI** / **Bớt AI** trong phòng **Sống Sót (Co-op)**. AI chiếm 1 chỗ (tối đa 4 người tính cả người thật và AI) và di chuyển, sử dụng chiêu cơ bản trong gameplay do Host điều khiển.
-- AI không phải tài khoản hay người chơi từ máy khác, không kết nối Firebase và không tạo save riêng.
-- Đây là bot chiến đấu cơ bản, chưa phải đối thủ PvP thông minh: **không hỗ trợ Tranh Trứng hoặc Sống Còn**; chưa có thu thập trứng, dùng Orb, tiến hóa/nâng cấp kỹ năng và quyết định chiến thuật phức tạp.
-- Cần QA thực tế để bảo đảm AI lên cấp không khiến trận đứng chờ và đánh quái không gây lỗi.
+- Cả ba chế độ **Sống Sót**, **Sống Còn** và **Tranh Trứng** đã có khung AI host-authoritative. Nút **Chơi với AI** tạo phòng riêng và thêm bot tự động (1 bot ở Sống Sót; 3 bot ở hai chế độ còn lại). Host cũng có nút **Thêm AI** / **Bớt AI** trong sảnh, giới hạn 4 người/AI với Sống Sót và Tranh Trứng, tối đa 10 với Sống Còn.
+- Sống Sót: bot đi theo Host, tìm quái, dùng chiêu cơ bản. Sống Còn: bot có HP, chịu sát thương khi ở gần quái và dừng hành động khi bị loại. Tranh Trứng: bot tìm ổ trứng chưa bị lấy và tham gia luật nhặt trứng do Host xác nhận.
+- AI không phải tài khoản hoặc thiết bị độc lập, không kết nối Firebase và không tạo save riêng.
+- Đây vẫn là AI thử nghiệm; chưa có chiến thuật phức tạp, dùng Orb, tiến hóa/nâng cấp chiêu hoặc điều chỉnh độ khó riêng. Các bài test Node chỉ kiểm tra một số hành vi, **chưa thay thế QA hai thiết bị thật** và kiểm tra trọn trận.
 
 ## Phạm vi và giới hạn
 
