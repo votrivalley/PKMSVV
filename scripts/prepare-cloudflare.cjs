@@ -100,7 +100,10 @@ function scan(folder){
 scan(dest);
 if(files>20000)throw Error('Cloudflare Pages Free 20,000 file limit: '+files);
 if(files<1000||total<15*1024*1024)throw Error('Incomplete game: '+files+' files, '+total+' bytes');
-const report={files,totalMiB:+(total/1048576).toFixed(2),largestFile:largest,
+let revision='unknown';
+try{revision=execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim();}catch{}
+const report={version:require('../package.json').version,revision,
+ files,totalMiB:+(total/1048576).toFixed(2),largestFile:largest,
  largestMiB:+(max/1048576).toFixed(2),hosting:'Cloudflare Pages Free',
  gameRoute:'/game/',localSave:true,standalonePWA:true};
 fs.writeFileSync(path.join(dest,'build-info.json'),JSON.stringify(report,null,2)+'\n');

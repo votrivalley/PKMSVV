@@ -1,6 +1,18 @@
 'use strict';
 // A landscape mobile game: apply after 'npx cap add android' (fresh every CI run).
 const fs=require('node:fs'),path=require('node:path');
+const root=path.resolve(__dirname,'..');
+const version=require('../package.json').version;
+const [major,minor,patch]=version.split('.').map(Number);
+const versionCode=major*1000000+minor*1000+patch;
+if(!Number.isSafeInteger(versionCode)||versionCode<1)throw Error('Invalid Android release version');
+const gradle=path.join(root,'android/app/build.gradle');
+let config=fs.readFileSync(gradle,'utf8');
+if(!/versionCode\s+\d+/.test(config)||!/versionName\s+"[^"]+"/.test(config))
+ throw Error('Android version fields missing');
+config=config.replace(/versionCode\s+\d+/,'versionCode '+versionCode)
+ .replace(/versionName\s+"[^"]+"/,'versionName "'+version+'"');
+fs.writeFileSync(gradle,config,'utf8');
 const file=path.join(__dirname,'..','android','app','src','main','AndroidManifest.xml');
 if(!fs.existsSync(file))throw Error('Native Android project not generated');
 let xml=fs.readFileSync(file,'utf8');

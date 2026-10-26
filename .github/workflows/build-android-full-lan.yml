@@ -86,7 +86,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist/full-lan-android
-          apk="dist/full-lan-android/PKMSVV-1.5.16-Android-FULL-CoopLAN-Beta.apk"
+          version=$(node -p "require('./package.json').version")
+          apk="dist/full-lan-android/PKMSVV-${version}-Android-FULL-CoopLAN-Beta.apk"
           cp android/app/build/outputs/apk/debug/app-debug.apk "$apk"
           unzip -t "$apk" | tail -1
           unzip -Z -1 "$apk" | grep -q '^assets/public/js/app.min.js$'

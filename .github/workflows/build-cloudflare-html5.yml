@@ -12,7 +12,7 @@ on:
       - 'tests/unified-coop.test.cjs'
       - 'tests/local-shell-ui.test.cjs'
       - 'tests/local-ui-lan-host-regression.test.cjs'
-      - 'tests/pages-lan-connect-runtime.test.cjs tests/coop-icon-consistency.test.cjs'
+      - 'tests/pages-lan-connect-runtime.test.cjs'
       - 'src/web/**'
       - 'tests/cloudflare-pages.test.cjs'
       - 'package.json'
