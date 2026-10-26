@@ -32,5 +32,8 @@ test('portable Windows Host includes LAN site as real resource folder',()=>{
  assert.match(main,/process\.resourcesPath,'lan-site'/);
  assert.match(main,/lan-host-startup\.log/);
  assert.match(main,/dialog\.showErrorBox/);
- assert.match(main,/EADDRINUSE/);
+ assert.match(main,/startOnAvailablePort/);
+ assert.match(main,/launchUrl\(server\.port\)/);
+ assert.match(main,/requestSingleInstanceLock/);
+ assert.match(main,/lan-host-startup\.log/);
 });

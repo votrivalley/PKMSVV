@@ -10,6 +10,7 @@
   },
   "files": [
     "desktop/lan-main.cjs",
+    "desktop/lan-startup.cjs",
     "lan-server/server.cjs",
     "package.json"
   ],
