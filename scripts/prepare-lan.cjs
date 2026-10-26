@@ -1,0 +1,12 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),{execFileSync}=require('node:child_process');
+const root=path.resolve(__dirname,'..');
+const env={...process.env,PKMSVV_WEB_PREVIEW:'1',PKMSVV_LAN_BUILD:'1'};
+execFileSync(process.execPath,[path.join(root,'scripts','prepare-web.cjs')],{cwd:root,env,stdio:'inherit'});
+const from=path.join(root,'dist','web'),to=path.join(root,'dist','lan');
+fs.rmSync(to,{recursive:true,force:true});fs.cpSync(from,to,{recursive:true,force:true});
+fs.copyFileSync(path.join(root,'src','lan','index.html'),path.join(to,'index.html'));
+fs.copyFileSync(path.join(root,'src','lan','entry.js'),path.join(to,'entry.js'));
+const sw=path.join(to,'sw.js');if(fs.existsSync(sw))fs.rmSync(sw);
+if(!fs.existsSync(path.join(to,'game','js','app.min.js')))throw Error('Missing LAN compiled game');
+console.log('PKMSVV LAN build ready in dist/lan');
