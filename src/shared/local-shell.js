@@ -12,56 +12,8 @@
 
  function openLanDialog(){
   if(!isPages)return;
-  let overlay=el('pkmsvv-lan-connect-modal');
-  if(overlay){overlay.querySelector('#pkmsvv-lan-ip')?.focus();return;}
-  overlay=document.createElement('div');
-  overlay.id='pkmsvv-lan-connect-modal';
-  overlay.className='pkmsvv-lan-connect-modal';
-  overlay.innerHTML=[
-   '<section class="pkmsvv-lan-connect-box" role="dialog" aria-modal="true" aria-labelledby="pkmsvv-lan-connect-title">',
-   '<h2 id="pkmsvv-lan-connect-title">🤝 Co-op qua Wi-Fi / LAN</h2>',
-   '<p><b>Không cần đăng nhập Google hoặc phiên bản Online.</b> PC chạy LAN Host,',
-   ' điện thoại hoặc trình duyệt cùng Wi-Fi truy cập địa chỉ của Host.</p>',
-   '<label for="pkmsvv-lan-ip">IP và cổng hiển thị trên máy Host</label>',
-   '<input id="pkmsvv-lan-ip" type="text" inputmode="url" autocomplete="off"',
-   ' placeholder="192.168.1.168:37816" aria-describedby="pkmsvv-lan-example">',
-   '<p id="pkmsvv-lan-example" class="pkmsvv-lan-connect-hint">',
-   'Trên PC mở Co-op → Hướng dẫn LAN để xem IP:cổng. Nếu Host đổi sang 37817, nhập đúng cổng đó.</p>',
-   '<p class="pkmsvv-lan-connect-save">💾 Save của Cloudflare và IP Host tách biệt.',
-   ' Hãy xuất file JSON rồi nhập vào trang LAN nếu muốn dùng cùng tiến trình.</p>',
-   '<p id="pkmsvv-lan-connect-status" role="status" aria-live="polite"></p>',
-   '<div class="pkmsvv-lan-connect-actions">',
-   '<button type="button" id="pkmsvv-lan-cancel">Quay lại</button>',
-   '<button type="button" id="pkmsvv-lan-submit">Kết nối PC Host</button>',
-   '</div></section>'
-  ].join('');
-  const input=overlay.querySelector('#pkmsvv-lan-ip');
-  const msg=overlay.querySelector('#pkmsvv-lan-connect-status');
-  try{input.value=localStorage.getItem('pkmsvv.lan.host.ip')||'';}catch(_){}
-  const dismiss=()=>{overlay.remove();document.removeEventListener('keydown',onKey);};
-  const onKey=e=>{if(e.key==='Escape'){e.preventDefault();dismiss();}};
-  const submit=()=>{
-   let value=input.value.trim().replace(/^http:\/\//i,'').replace(/\/.*$/,'');
-   const m=value.match(/^(\d{1,3}(?:\.\d{1,3}){3})(?::(\d{2,5}))?$/);
-   const ip=m?.[1]||'',port=m?.[2]?Number(m[2]):37816,octets=ip.split('.');
-   const local=octets.length===4&&octets.every(x=>/^\d{1,3}$/.test(x)&&Number(x)<=255)&&
-    (Number(octets[0])===10||(Number(octets[0])===172&&Number(octets[1])>=16&&Number(octets[1])<=31)||
-     (Number(octets[0])===192&&Number(octets[1])===168));
-   if(!local||!Number.isInteger(port)||port<1024||port>65535){
-    msg.textContent='Địa chỉ chưa hợp lệ. Ví dụ: 192.168.1.168:37816';return;
-   }
-   try{localStorage.setItem('pkmsvv.lan.host.ip',ip+':'+port);}catch(_){}
-   // This is a top-level navigation, not a mixed-content fetch or WebSocket
-   // from HTTPS Cloudflare. The independent LAN HTTP origin owns LAN saves.
-   window.location.assign('http://'+ip+':'+port+'/game/');
-  };
-  overlay.querySelector('#pkmsvv-lan-submit').addEventListener('click',submit);
-  overlay.querySelector('#pkmsvv-lan-cancel').addEventListener('click',dismiss);
-  input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();submit();}});
-  overlay.addEventListener('click',e=>{if(e.target===overlay)dismiss();});
-  document.addEventListener('keydown',onKey);
-  document.body.appendChild(overlay);
-  input.focus();
+  // Independent page: bypasses ALL legacy Online/Firebase UI callbacks.
+  window.location.assign('/lan-connect.html');
  }
  function enterLan(event){
   if(!isPages&&!isAndroidFull)return;
@@ -113,10 +65,11 @@
    item.style.setProperty('display','none','important');
   }
   guardLegacyOnline();
-  const coop=menu.querySelector('[data-go="multiplayer"],[data-go="online"]');
+  const coop=menu.querySelector('#pkmsvv-coop-lan-entry,[data-go="multiplayer"],[data-go="online"]');
   if(coop){
    if(mode==='lan'&&coop.dataset.go==='online')coop.dataset.go='multiplayer';
-   if(isPages||isAndroidFull){
+   if(isPages&&coop.tagName==='A')coop.href='/lan-connect.html';
+   if((isPages||isAndroidFull)&&coop.tagName!=='A'){
     coop.disabled=false;coop.removeAttribute('aria-disabled');
     coop.style.setProperty('pointer-events','auto','important');
     coop.style.setProperty('opacity','1','important');

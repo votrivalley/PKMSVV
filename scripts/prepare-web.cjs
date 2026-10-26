@@ -150,6 +150,20 @@ if(process.env.PKMSVV_LOCAL_PWA==='1'){
  ].join('\n')+mp.slice(end);
  fs.writeFileSync(mpFile,mp,'utf8');
 }
+ if(process.env.PKMSVV_LOCAL_PWA==='1'){
+  // Actual HTML navigation: no data-go means MenuUI.init cannot bind the
+  // retired Online/Firebase callback. Works even when JS crashes or is cached.
+  const dev=path.join(game,'dev.html');
+  let page=fs.readFileSync(dev,'utf8');
+  const button=/<button class="menu-item" data-go="multiplayer">[\s\S]*?<\/button>/g;
+  const found=page.match(button)||[];
+  if(found.length!==1)throw Error('Expected exactly one Online Co-op menu entry: '+found.length);
+  page=page.replace(button,
+   '<a class="menu-item pkmsvv-coop-lan-link" id="pkmsvv-coop-lan-entry"'+
+   ' href="/lan-connect.html"><span class="mi-ico" aria-hidden="true">🤝</span>'+
+   ' Co-op<small>Chơi cùng Wi-Fi / LAN</small></a>');
+  fs.writeFileSync(dev,page,'utf8');
+ }
 // Voice is Web-only and strictly limited to cooperative rooms (2–4 players).
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-voice.cjs')], { cwd: root, stdio: 'inherit' });
 const flow = path.join(game, 'js', 'game.js');

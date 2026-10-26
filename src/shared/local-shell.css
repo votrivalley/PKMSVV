@@ -77,3 +77,13 @@
   transform:none!important;transition:none!important
  }
 }
+
+
+/* Static PWA Co-op anchor, not an Online/Firebase command. */
+#scr-menu a.pkmsvv-coop-lan-link{
+ display:grid!important;grid-template-columns:34px minmax(0,1fr)!important;
+ align-items:center!important;text-decoration:none!important;
+ color:inherit!important;cursor:pointer!important;pointer-events:auto!important
+}
+#scr-menu a.pkmsvv-coop-lan-link small{grid-column:2}
+#scr-menu a.pkmsvv-coop-lan-link:focus-visible{outline:3px solid #ffe277!important;outline-offset:2px}

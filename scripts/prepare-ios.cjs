@@ -10,6 +10,8 @@ fs.cpSync(web,ios,{recursive:true});
 fs.copyFileSync(path.join(root,'src','ios','index.html'),path.join(ios,'index.html'));
 fs.copyFileSync(path.join(root,'src','ios','entry.js'),path.join(ios,'entry.js'));
 fs.copyFileSync(path.join(root,'src','ios','sw.js'),path.join(ios,'sw.js'));
+for(const file of ['lan-connect.html','lan-connect.js'])
+ fs.copyFileSync(path.join(root,'src','ios',file),path.join(ios,file));
 // iOS is a LOCAL standalone web app; hide disabled cloud/friends/matchmaking
 // controls only in this build, never delete shared gameplay source or saves.
 const gameIndex=path.join(ios,'game','index.html');
@@ -36,7 +38,7 @@ Object.assign(manifest,{id:'/',start_url:'/?source=ios-home',scope:'/',display:'
 fs.writeFileSync(path.join(ios,'manifest.webmanifest'),JSON.stringify(manifest,null,2)+'\n');
 fs.writeFileSync(path.join(ios,'game','manifest.webmanifest'),JSON.stringify(manifest,null,2)+'\n');
 // Preserve actual save storage keys; installed PWA and Safari may have separate storage.
-for(const file of ['index.html','entry.js','sw.js','game/index.html','game/js/app.min.js','manifest.webmanifest']){
+for(const file of ['index.html','entry.js','sw.js','game/index.html','game/js/app.min.js','manifest.webmanifest','lan-connect.html','lan-connect.js']){
  if(!fs.statSync(path.join(ios,file)).isFile())throw Error('Missing iOS web output '+file);
 }
 const bundled=fs.readFileSync(path.join(ios,'game','js','app.min.js'),'utf8');
