@@ -35,16 +35,19 @@ G.LanAI=(()=>{
    const eggs=mode==='eggrush'?(G.EggRush?.nests||[]).filter(n=>!n.taken):[];
    eggs.sort((a,b)=>sq(state.x,state.y,a.x,a.y)-sq(state.x,state.y,b.x,b.y));
    const nest=eggs[0]||null;
-   const target=nest||(hasTarget?closest:host);
+   const alive=state.hp>0;
+   const target=alive?(nest||(hasTarget?closest:host)):{x:state.x,y:state.y};
    let dx=target.x-state.x,dy=target.y-state.y,d=Math.hypot(dx,dy);
    const follow=nest?185:hasTarget?125:95,desired=nest?4:hasTarget?70:Math.min(100,45+bots.indexOf(bot)*25);
-   const walk=d>desired+8;
+   const walk=alive&&d>desired+8;
    if(walk&&d>0){const step=Math.min(d-desired,follow*STEP);state.x+=dx/d*step;state.y+=dy/d*step;}
-   const aim=Math.atan2(dy,dx)||0,events=[['lp']]; // instant pick: never deadlock co-op level-up
-   if(state.hp>0&&hasTarget){
-    // A companion can take damage near mobs; not an invulnerable free combat slot.
-    if(dist<38*38)state.hp=Math.max(0,state.hp-3.4*STEP);
-    if(now()>=state.nextCast){
+   const aim=Math.atan2(dy,dx)||0,events=alive?[['lp']]:[]; // instant pick: never deadlock co-op level-up
+   if(alive&&hasTarget){
+    // Host-side proximity damage also reaches ranged bots that stop 70px from mobs.
+    // Without this, Royale AI could remain immortal and prevent the last-survivor finish.
+    const exposure=sq(state.x,state.y,closest.x,closest.y);
+    if(exposure<95*95)state.hp=Math.max(0,state.hp-(exposure<38*38?18:3.2)*STEP);
+    if(state.hp>0&&now()>=state.nextCast){
      const skill=prior.mv||G.baseStartOf(bot.dex);
      if(typeof skill==='string'&&skill.length<=40&&skill.length){
       events.push(['c',skill,1,aim,0]);
