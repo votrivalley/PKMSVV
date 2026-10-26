@@ -36,7 +36,7 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Validate LAN server, room security and relay
-        run: npm run test:lan && node --test tests/lan-compact-ui.test.cjs tests/lan-direct-entry.test.cjs tests/local-shell-ui.test.cjs
+        run: npm run test:lan && node --test tests/lan-compact-ui.test.cjs tests/lan-direct-entry.test.cjs tests/local-shell-ui.test.cjs tests/local-ui-lan-host-regression.test.cjs
       - name: Compile LAN game without Firebase
         run: npm run prepare:lan
       - name: Verify LAN content and isolation
@@ -59,6 +59,9 @@ jobs:
         run: |
           ls -lh dist/lan-windows/*.exe
           test -n "$(find dist/lan-windows -maxdepth 1 -name '*.exe' -print -quit)"
+          test -s dist/lan-windows/win-unpacked/resources/lan-site/game/index.html
+          test -s dist/lan-windows/win-unpacked/resources/lan-site/game/js/app.min.js
+          test -s dist/lan-windows/win-unpacked/resources/lan-site/index.html
       - uses: actions/upload-artifact@v4
         with:
           name: PKMSVV-LAN-Windows-Host-Beta

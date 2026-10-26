@@ -41,7 +41,7 @@ jobs:
       - name: Build complete Cloudflare HTML5 game
         run: npm run prepare:cloudflare
       - name: Verify entire game, PWA, save UI, free-tier limits
-        run: npm run test:cloudflare && node --test tests/local-shell-ui.test.cjs
+        run: npm run test:cloudflare && node --test tests/local-shell-ui.test.cjs tests/local-ui-lan-host-regression.test.cjs
       - name: Package website for Wrangler
         shell: bash
         run: |

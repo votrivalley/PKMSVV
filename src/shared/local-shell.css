@@ -1,10 +1,17 @@
-/* Offline LAN / PWA: retain legacy DOM nodes but visually remove unused services */
+/* Local/Cloudflare: override v1.5 high-specificity menu-item display rule. */
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list > .menu-item[data-go="friends"],
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list > .menu-item[data-go="rank"],
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list > .menu-item#pkmsvv-menu-google,
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list > .menu-item#pkmsvv-main-save,
+#scr-menu .menu-item.pkmsvv-local-hidden,
 #scr-menu [data-go="friends"],#scr-menu [data-go="rank"],
-#scr-menu #pkmsvv-menu-google,#scr-menu .pkmsvv-google-switch,
-#scr-menu #pkmsvv-main-save,
+#scr-menu #pkmsvv-menu-google,#scr-menu .pkmsvv-google-switch,#scr-menu #pkmsvv-main-save,
 #scr-friends,#scr-rank,#btn-logout,#btn-google,#pkmsvv-login-google,
 #pkmsvv-online-counter,#pkmsvv-v15-backup{display:none!important}
-#topbar:not(.hidden) #btn-backup{display:inline-flex!important;visibility:visible!important;
-align-items:center!important;justify-content:center!important;min-width:38px!important;
-min-height:38px!important;flex:0 0 auto!important;opacity:1!important;pointer-events:auto!important}
+#topbar:not(.hidden) #btn-backup{
+ display:inline-flex!important;visibility:visible!important;
+ align-items:center!important;justify-content:center!important;min-width:38px!important;
+ min-height:38px!important;flex:0 0 auto!important;opacity:1!important;pointer-events:auto!important
+}
+#topbar #btn-backup:focus-visible{outline:3px solid #ffe27a!important;outline-offset:2px}
 @media(max-width:740px){#topbar:not(.hidden) #btn-backup{min-width:36px!important;min-height:38px!important}}
