@@ -160,6 +160,12 @@
    }
    busy=true;
    try{
+    // A fresh local Web save can exist before the starter has been chosen.
+    // Set a safe first-run Pokémon only for the standalone AI sandbox.
+    // Preserve every valid player-selected Pokémon and all existing saves.
+    if(window.PKMSVV_STANDALONE_AI&&G.DB?.save&&!G.DEX_BY?.[Number(G.DB.save.partner)]){
+     G.DB.save.partner=25;G.DB.save.partnerShiny=false;G.DB.commit?.();
+    }
     if(G.Social.playing){close();G.LobbyUI.open();return;}
     if(G.Social.room&&G.Social.room.mode!==mode){
      await G.Social.leaveRoom();
