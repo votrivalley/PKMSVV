@@ -32,22 +32,18 @@ fs.appendFileSync(js,`
    right.classList.add('pkmsvv-v15-nav');
    const first=right.firstElementChild;
    if(first){first.style.marginTop='0';first.style.marginBottom='0';}
-   // Align the lower edge of the nav panel with the left event/news cards
-   // on wide desktop only. Small-screen scrolling and touch stay untouched.
+   // Anchor the right menu's bottom edge to the LEFT event/news cards.
+   // No translateY or animation: re-opening the menu will not bounce.
    const panel=right.querySelector('.box');
    const lower=menu.querySelector('.pkmsvv-v15-bottom');
-   if(panel&&lower&&typeof requestAnimationFrame==='function'){
-    requestAnimationFrame(()=>{
-     panel.style.transform='';
-     if(!window.matchMedia?.('(min-width: 1000px) and (min-height: 650px)').matches)return;
-     const leftEdge=lower.getBoundingClientRect().bottom;
-     const rightEdge=panel.getBoundingClientRect().bottom;
-     const available=window.innerHeight-20-rightEdge;
-     // Do NOT cap at 32px: desktop reference needs around 200px to line up.
-     const down=Math.max(0,Math.min(leftEdge-rightEdge,available));
-     if(down>2)panel.style.transform='translateY('+Math.round(down)+'px)';
-    });
-   }
+   if(panel&&lower&&window.matchMedia?.('(min-width: 901px) and (min-height: 580px)').matches){
+    const bounds=menu.getBoundingClientRect();
+    const gap=bounds.bottom-lower.getBoundingClientRect().bottom;
+    const topSafe=Math.max(65,Math.round(bounds.height*.08));
+    const maxGap=Math.max(8,right.clientHeight-panel.offsetHeight-topSafe);
+    right.style.setProperty('--pkmsvv-nav-bottom-gap',
+     Math.round(Math.max(8,Math.min(gap,maxGap)))+'px');
+   }else right.style.removeProperty('--pkmsvv-nav-bottom-gap');
   }
   // Settings Save is an action: close Settings and open the existing
   // separate Backup / Restore dialog above the menu (no nested tab content).
@@ -221,11 +217,7 @@ fs.appendFileSync(css,`
 }
 /* Keep the main menu close to the left panel's baseline without making
    the mobile navigation taller or spilling below the viewport. */
-@media(min-width:1000px) and (min-height:650px){
- #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav>.box{
-  transition:transform .16s ease-out!important;
- }
-}
+/* Navigation uses layout constraints, not animated transforms. */
 /* A single framed News action, not a card inside a second card. */
 #scr-menu.pkmsvv-v15-menu .pkmsvv-v15-bottom{align-items:stretch!important}
 #scr-menu.pkmsvv-v15-menu .pkmsvv-v15-bottom>.pkmsvv-v15-news{

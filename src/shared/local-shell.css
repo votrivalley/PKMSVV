@@ -52,3 +52,28 @@
  min-width:26px;width:26px;height:26px;font:normal 22px/1 system-ui;
  flex:0 0 26px;vertical-align:middle;
 }
+
+
+/* Desktop: stable bottom alignment with the left news/events strip.
+ * Narrow viewports retain scrolling instead of shifting out of view. */
+@media(min-width:901px) and (min-height:580px){
+ #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav{
+  justify-content:flex-end!important;
+  padding-top:clamp(60px,9vh,110px)!important;
+  padding-bottom:var(--pkmsvv-nav-bottom-gap,12vh)!important;
+  overflow-y:auto!important;
+ }
+ #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav>.box{
+  transform:none!important;transition:none!important;
+  margin-top:0!important;margin-bottom:0!important;
+ }
+}
+@media(max-width:900px), (max-height:579px){
+ #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav{
+  justify-content:flex-start!important;overflow-y:auto!important;
+  padding-bottom:max(8px,env(safe-area-inset-bottom))!important
+ }
+ #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav>.box{
+  transform:none!important;transition:none!important
+ }
+}
