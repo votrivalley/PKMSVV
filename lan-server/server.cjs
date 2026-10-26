@@ -60,7 +60,7 @@ function startServer({root,port=37816,host='0.0.0.0'}={}){
   let stat;
   try{stat=await fs.promises.stat(filename)}catch(_){res.writeHead(404);res.end('Not found');return;}
   if(!stat.isFile()){res.writeHead(404);res.end();return;}
-  const real=await fs.promises.realpath(filename);
+  const real=fs.realpathSync(filename);
   const finalRel=path.relative(rootAbs,real);
   if(finalRel==='..'||finalRel.startsWith('..'+path.sep)||path.isAbsolute(finalRel)){res.writeHead(403);res.end('Invalid canonical path');return;}
   res.writeHead(200,{'Content-Type':MIMES[path.extname(filename).toLowerCase()]||'application/octet-stream',
