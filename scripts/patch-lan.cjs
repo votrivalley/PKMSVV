@@ -96,4 +96,5 @@ const css=[
 'display:block;color:#ffe3a4;margin:12px 0;line-height:1.5}'
 ].join('\n');
 fs.appendFileSync(path.join(game,'css','style.css'),'\n'+css+'\n'+readLan('lan-compact-ui.css')+'\n'+fs.readFileSync(path.join(root,'src/shared/local-shell.css'),'utf8')+'\n'+fs.readFileSync(path.join(root,'src/shared/coop-unified.css'),'utf8')+'\n','utf8');
+require('./patch-lan-ai.cjs');
 console.log('PKMSVV LAN: local signalling and frame relay installed.');

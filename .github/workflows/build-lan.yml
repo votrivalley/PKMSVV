@@ -24,6 +24,7 @@ on:
       - 'tests/lan-browser-host.test.cjs'
       - 'tests/lan-discovery.test.cjs'
       - 'tests/lan-ai-modes.test.cjs'
+      - 'tests/lan-ai-runtime.cjs'
       - 'tests/lan-startup.test.cjs'
       - 'tests/smoke-lan-win.ps1'
       - 'docs/LAN_FAST_START_WINDOWS.md'
@@ -64,6 +65,8 @@ jobs:
         run: npx playwright install chromium
       - name: Play all three modes with two independent LAN clients
         run: npm run test:lan:runtime
+      - name: Validate live and fallen AI rewards in all three modes
+        run: npm run test:lan:ai
       - name: Verify native PC IP failure and successful retry
         run: npm run test:lan:pc
       - uses: actions/upload-artifact@v4

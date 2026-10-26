@@ -1,5 +1,11 @@
 # Pokémon Chuyển Sinh LAN — PC Fast Start
 
+## AI 1.5.18
+- AI tự chọn một trong ba thẻ thưởng hợp lệ; xét hệ, vật lý/đặc biệt, kỹ năng đang có và máu còn lại. AI đã gục cũng xác nhận chọn thưởng, không chặn người chơi ở màn hình lên cấp.
+- Tìm đường vòng hồ/vật cản, thoát nước nếu đã mắc kẹt, né quái/đạn/vùng cảnh báo. Pokémon hệ Nước, Bay hoặc có khả năng tương ứng vẫn di chuyển theo luật địa hình gốc.
+- AI dùng nhân vật, sát thương, skill, hồi chiêu và hồi sinh thật của game. Kỹ năng dash đã học chỉ dùng khi sẵn sàng và có hướng đáp an toàn hơn. AI vẫn có thể bị hạ.
+- Xem chi tiết và phạm vi kiểm thử tại `docs/LAN_AI_1_5_18.md`.
+
 ## Bản sửa 1.5.17 — nhập IP và giao diện Co-op
 - Đã sửa dấu nhận diện LAN bị mất khi biên dịch. Bản PC dùng máy chủ LAN cục bộ khi tạo/vào phòng.
 - Co-op → Tham gia: danh sách phòng và mã phòng thuộc Host hiện tại. Để sang PC Host khác, nhập **IP:cổng** vào ô riêng, ví dụ `192.168.1.20:37816`.

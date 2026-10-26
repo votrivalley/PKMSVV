@@ -1,55 +1,91 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
-const code=fs.readFileSync(path.join(__dirname,'..','src/lan/lan-ai.js'),'utf8');
-function harness(mode,{nests=[],enemies=[]}={}){
- const bot={uid:'ai-1234567890abcdef',name:'AI',dex:25,bot:true};
- const frames=[];
- const mate={connected:true,pl:{x:0,y:0,hp:100,maxHp:100,net:{x:0,y:0,hp:100,maxHp:100}}};
- const G={Social:{room:{mode,isHost:true,members:[{uid:'user',name:'Host'},bot]}},
-  Coop:{isHost:true,local:{uid:'user',x:300,y:0},mate:uid=>uid===bot.uid?mate:null},
-  EnemyMgr:{all:()=>enemies},EggRush:{nests},
-  Net:{injectBot:(uid,data)=>frames.push({uid,data})},baseStartOf:()=> 'tackle'};
- vm.runInNewContext(code,{G,Map,Set,Math,Date,Number,
-  setInterval:()=>1,clearInterval:()=>{},console});
- return {G,frames,bot};
+const code=fs.readFileSync(path.join(__dirname,'../src/lan/lan-ai.js'),'utf8');
+function harness(mode='coop',{water=()=>false,blocked=()=>false,types=['grass'],enemies=[],shots=[],hazards=[]}={}){
+ const bot={uid:'ai-1234567890abcdef',dex:1,bot:true};
+ const host={uid:'host',x:300,y:0,dead:false};
+ const pl={uid:bot.uid,x:0,y:0,r:4,mon:{dex:1,types},dex:1,hp:100,maxHp:100,dead:false,
+  spd:100,spdMul:1,moves:[],slots:[],level:1,xpMul:1,magnet:78,aim:0,moveAngle:0,
+  addMove(id){const m={id,kind:'projectile',lvl:1};this.moves.push(m);this.slots.push([m]);},
+  setAbility(){this.abil={};},activeMove(){return this.moves[0];},
+  update(dt){if(this.dead)return;this.x+=this.lanBotAxis[0]*this.spd*dt;this.y+=this.lanBotAxis[1]*this.spd*dt;},
+  revive(){this.dead=false;this.hp=50;}};
+ const ack=[],casts=[],applied=[];
+ let cards=[{type:'new',key:'new:water',apply(p){applied.push('water');p.addMove('water');}},
+  {type:'new',key:'new:grass',apply(p){applied.push('grass');p.addMove('grass');}}];
+ const G={Social:{room:{mode,isHost:true,members:[host,bot]}},
+  Coop:{isHost:true,local:host,mate:()=>({pl}),players:()=>[host,pl],botPicked:(...v)=>ack.push(v)},
+  Mons:{abilityOf:()=>({id:'overgrow'})},baseStartOf:()=> 'tackle',
+  Moves:{BY_ID:{water:{type:'water',cat:'special',kind:'projectile'},grass:{type:'grass',cat:'physical',kind:'projectile'}}},
+  Stats:{fit:(_mon,cat)=>cat==='physical'?1:.7},LevelUp:{offer:()=>cards},
+  PKMSVVWaterHoverDex:new Set(),World:{TS:24,isLiquid:water,isFree:(x,y,r)=>!blocked(x,y,r),
+   liquidEffect:()=>types.includes('water')?{}:{slow:.6}},
+  EnemyMgr:{all:()=>enemies},Projectiles:{all:()=>shots},Hazards:{all:hazards,inside:(h,x,y,r)=>Math.hypot(x-h.x,y-h.y)<h.r+r},
+  Combat:{tick:(_dt,p)=>casts.push(p)},EggRush:{nests:[]},Player:{REVIVE_TIME:3}};
+ vm.runInNewContext(code,{G,Map,Set,Math,Number,console});G.LanAI.begin();
+ return{G,pl,host,ack,applied,casts,cards(v){cards=v;}};
 }
-test('Co-op AI can follow host and periodically attack hostile targets',()=>{
- const h=harness('coop',{enemies:[{x:150,y:0,dead:false}]});
- assert.equal(h.G.LanAI.activeBots().length,1);
- h.G.LanAI.update();
- assert.equal(h.frames.length,1);
- assert.ok(h.frames[0].data.p[0]>0,'Bot moves toward hostile monster');
- assert.ok(h.frames[0].data.ev.some(e=>e[0]==='c'),'Bot casts its own attack');
+test('AI ranks only offered legal cards using Pokemon type and physical/special fit',()=>{
+ const h=harness();h.G.LanAI.levelUp(2,1);
+ assert.deepEqual(h.applied,['grass']);assert.equal(h.pl.level,2);assert.equal(h.ack.length,1);
+ h.G.LanAI.levelUp(2,1);assert.deepEqual(h.applied,['grass'],'no duplicate reward for the same level sequence');
 });
-test('Sống Còn AI is a real actor, can be eliminated and joins roster',()=>{
- const h=harness('royale',{enemies:[{x:150,y:0,dead:false}]});
- assert.equal(h.G.LanAI.activeBots().length,1);
- h.G.LanAI.update();
- assert.equal(h.frames.length,1);
- assert.ok(h.frames[0].data.p[0]>0);
- assert.equal(h.frames[0].uid,h.bot.uid);
+test('Fallen AI chooses its legal reward and acknowledges the level barrier',()=>{
+ const h=harness();h.pl.dead=true;h.pl.hp=0;h.G.LanAI.levelUp(2,1);
+ assert.equal(h.ack[0][0],h.pl.uid);assert.equal(h.ack[0][1],1);assert.equal(h.pl.dead,true);
+ h.G.LanAI.update(.12,0);assert.equal(h.casts.length,0,'dead AI cannot attack');
 });
-test('Sống Còn AI can actually lose HP, get eliminated and stop acting',()=>{
- const h=harness('royale',{enemies:[{x:0,y:0,dead:false}]});
- for(let i=0;i<75;i++)h.G.LanAI.update();
- const down=h.frames.at(-1);
- assert.equal(down.data.p[4],0,'Bot HP reaches zero while exposed to monsters');
- assert.equal(down.data.p[6],1,'Dead frame reaches host game logic');
- const pos=down.data.p.slice(0,2);
- h.G.LanAI.update();
- const after=h.frames.at(-1);
- assert.deepEqual(after.data.p.slice(0,2),pos,'Eliminated bot cannot wander around');
- assert.equal(after.data.p[3],0,'Eliminated bot cannot display walking state');
- assert.equal(after.data.ev.length,0,'Eliminated bot cannot cast spells or auto-select upgrades');
+test('Low-health AI prefers a healing card over another offensive skill',()=>{
+ const h=harness();h.pl.hp=15;
+ h.cards([{type:'stat',key:'stat:heal',apply(p){p.hp+=45;}},{type:'up',key:'up:grass',apply(){throw Error('wrong choice');}}]);
+ h.G.LanAI.levelUp(3,2);assert.equal(h.pl.hp,60);
 });
-test('Tranh Trứng AI seeks available nest before chasing mobs',()=>{
- const h=harness('eggrush',{nests:[{id:1,x:200,y:0,taken:true},{id:2,x:140,y:0,taken:false}],enemies:[{x:-120,y:0,dead:false}]});
- assert.equal(h.G.LanAI.activeBots().length,1);
- h.G.LanAI.update();
- assert.ok(h.frames[0].data.p[0]>0,'Egg competitor must move right toward unclaimed egg, not left toward mob');
+test('AI routes around a pond rather than following a trainer through it',()=>{
+ const water=(x,y)=>x>55&&x<200&&Math.abs(y)<65;
+ const h=harness('coop',{water});let entered=false;
+ for(let i=0;i<100;i++){h.G.LanAI.update(.12,i*.12);if(water(h.pl.x,h.pl.y))entered=true;}
+ assert.equal(entered,false);assert.ok(h.pl.x>200,'bot reaches the other shore by going around');
 });
-test('No AI is driven by non-host clients',()=>{
- const h=harness('eggrush',{nests:[{id:1,x:200,y:0,taken:false}]});
- h.G.Coop.isHost=false;h.G.LanAI.update();
- assert.equal(h.frames.length,0);
+test('AI already stuck in water can leave instead of treating the current tile as impassable',()=>{
+ const water=(x,y)=>Math.abs(x)<65&&Math.abs(y)<65;
+ const h=harness('coop',{water});for(let i=0;i<35;i++)h.G.LanAI.update(.12,i*.12);
+ assert.equal(water(h.pl.x,h.pl.y),false);
+});
+test('Water Pokemon can take a safe water route while ground trainers avoid it',()=>{
+ const water=(x,y)=>x>55&&x<200&&Math.abs(y)<65;
+ const h=harness('coop',{water,types:['water']});let entered=false;
+ for(let i=0;i<25;i++){h.G.LanAI.update(.12,i*.12);if(water(h.pl.x,h.pl.y))entered=true;}
+ assert.equal(entered,true);
+});
+test('Route avoids a solid wall and does not cut its corners',()=>{
+ const blocked=(x,y,r)=>x+r>55&&x-r<110&&Math.abs(y)<80+r;
+ const h=harness('coop',{blocked});let collided=false;
+ for(let i=0;i<100;i++){h.G.LanAI.update(.12,i*.12);if(blocked(h.pl.x,h.pl.y,h.pl.r))collided=true;}
+ assert.equal(collided,false);assert.ok(h.pl.x>160);
+});
+test('AI moves away from a telegraphed hazard and incoming projectile',()=>{
+ const h=harness('coop',{hazards:[{x:0,y:0,r:28,hit:false}],shots:[{x:45,y:0,vx:-100,vy:0,r:5,friendly:false}]});
+ for(let i=0;i<5;i++)h.G.LanAI.update(.12,i*.12);
+ assert.ok(Math.abs(h.pl.y)>h.pl.r+5+2||h.pl.x<0,'moves outside the projectile collision corridor');
+ assert.ok(Math.hypot(h.pl.x,h.pl.y)>28+h.pl.r,'leaves the hazard area');
+});
+test('AI does not move, attack or revive outside host simulation, or after elimination in Royale',()=>{
+ const h=harness('royale');h.pl.dead=true;h.host.x=h.pl.x;
+ for(let i=0;i<40;i++)h.G.LanAI.update(.12,0);
+ assert.equal(h.pl.dead,true);assert.equal(h.casts.length,0);
+ h.G.Coop.isHost=false;assert.equal(h.G.LanAI.activeBots().length,0);
+});
+test('Co-op bot revives near a teammate after the normal three seconds',()=>{
+ const h=harness();h.pl.dead=true;h.pl.hp=0;h.host.x=0;
+ for(let i=0;i<26;i++)h.G.LanAI.update(.12,i*.12);
+ assert.equal(h.pl.dead,false);assert.equal(h.pl.hp,50);
+});
+test('AI acknowledges a failed reward handler so a bot cannot deadlock the human player',()=>{
+ const h=harness();h.cards([{type:'stat',key:'stat:hp',apply(){throw Error('bad reward');}}]);
+ h.G.LanAI.levelUp(2,1);assert.deepEqual(h.ack,[[h.pl.uid,1]]);
+});
+test('Egg Rush AI targets an untaken nest instead of blindly following the trainer',()=>{
+ const h=harness('eggrush');h.host.x=-300;h.G.EggRush.nests=[{x:180,y:0,taken:false}];
+ for(let i=0;i<10;i++)h.G.LanAI.update(.12,0);
+ assert.ok(h.pl.x>50);
 });
