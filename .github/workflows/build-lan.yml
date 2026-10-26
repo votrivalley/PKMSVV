@@ -70,3 +70,10 @@ jobs:
           path: dist/lan-windows/*.exe
           retention-days: 14
           if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-LAN-Windows-Unpacked-Debug
+          path: dist/lan-windows/win-unpacked/
+          retention-days: 14
+          if-no-files-found: error
