@@ -18,3 +18,9 @@ Bản Portable do electron-builder đóng gói thành 1 file EXE lớn chứa El
 
 ## Kiểm thử
 GitHub Actions chạy EXE nằm trong win-unpacked, kiểm tra HTTP /game/ và process còn sống. Chưa đo thời gian startup trên máy Windows của từng người; không bảo đảm mọi trường hợp chậm đều do Portable.
+
+
+## PC Browser Host — nếu EXE không mở được
+Artifact **PKMSVV-LAN-PC-Browser-Host** có nguyên bộ game HTML5 + Node LAN server, không sử dụng Electron. Máy Windows cần Node.js đã được cài (kiểm tra bằng lệnh node --version). Tải ZIP, giải nén toàn bộ ra thư mục cố định. Nhấp đôi **START-HOST-WIFI.cmd**. Giữ cửa sổ dòng lệnh mở trong khi chơi; chương trình tự mở game trong trình duyệt mặc định tại http://127.0.0.1:37816/game/ (hoặc cổng kế tiếp nếu bận). Mọi người cùng Wi-Fi truy cập địa chỉ IP được in trên cửa sổ Host. Trong game nhấn Co-op để tạo phòng. Không sử dụng Firebase hoặc Cloudflare cho LAN Host.
+
+**Quan trọng:** không chạy đồng thời EXE LAN Host và PC Browser Host trên cùng cổng. Khi chơi xong, bấm Ctrl+C trong cửa sổ Host. Giữ nguyên các thư mục site/, desktop/, lan-server/ và node_modules/.

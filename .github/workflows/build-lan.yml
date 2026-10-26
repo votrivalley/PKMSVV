@@ -12,6 +12,9 @@ on:
       - 'scripts/**'
       - 'desktop/lan-main.cjs'
       - 'desktop/lan-startup.cjs'
+      - 'desktop/lan-browser-host.cjs'
+      - 'desktop/START-HOST-WIFI.cmd'
+      - 'tests/lan-browser-host.test.cjs'
       - 'tests/lan-startup.test.cjs'
       - 'tests/smoke-lan-win.ps1'
       - 'docs/LAN_FAST_START_WINDOWS.md'
@@ -43,7 +46,7 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Validate LAN server, room security and relay
-        run: npm run test:lan && node --test tests/lan-startup.test.cjs tests/lan-compact-ui.test.cjs tests/lan-direct-entry.test.cjs tests/local-shell-ui.test.cjs tests/local-ui-lan-host-regression.test.cjs tests/coop-icon-consistency.test.cjs
+        run: npm run test:lan && node --test tests/lan-startup.test.cjs tests/lan-browser-host.test.cjs tests/lan-compact-ui.test.cjs tests/lan-direct-entry.test.cjs tests/local-shell-ui.test.cjs tests/local-ui-lan-host-regression.test.cjs tests/coop-icon-consistency.test.cjs
       - name: Compile LAN game without Firebase
         run: npm run prepare:lan
       - name: Verify LAN content and isolation
@@ -57,6 +60,26 @@ jobs:
             echo "LAN compiled client unexpectedly references Firebase RTDB" >&2
             exit 1
           fi
+      - name: Package lightweight PC Browser Host (Node.js, no Electron)
+        shell: pwsh
+        run: |
+          $target="dist/lan-browser-host"
+          New-Item -ItemType Directory -Force "$target/desktop","$target/lan-server","$target/node_modules" | Out-Null
+          Copy-Item -Recurse dist/lan "$target/site"
+          Copy-Item desktop/lan-browser-host.cjs,desktop/lan-startup.cjs "$target/desktop/"
+          Copy-Item lan-server/server.cjs "$target/lan-server/"
+          Copy-Item -Recurse node_modules/ws "$target/node_modules/ws"
+          Copy-Item desktop/START-HOST-WIFI.cmd "$target/START-HOST-WIFI.cmd"
+          Copy-Item docs/LAN_FAST_START_WINDOWS.md "$target/README.md"
+          if (!(Test-Path "$target/site/game/index.html")) { throw "Packaged LAN game missing" }
+          if (!(Test-Path "$target/node_modules/ws/package.json")) { throw "WebSocket module missing" }
+          node --check "$target/desktop/lan-browser-host.cjs"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-LAN-PC-Browser-Host
+          path: dist/lan-browser-host/
+          retention-days: 14
+          if-no-files-found: error
       - name: Generate icon and build portable Windows LAN host
         run: npm run build:lan:win
         env:
