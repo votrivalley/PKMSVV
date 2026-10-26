@@ -58,14 +58,14 @@
   repaint();
   view.querySelector('[data-mode="'+mode+'"]').focus();
  }
- function addressEntry(role){
+ function addressEntry(role,target=detail){
   const p=document.createElement('p');p.textContent=lan()?
-   'Phòng bên dưới thuộc Host hiện tại. Nếu bạn bè mở Host trên PC khác, nhập IP:cổng của PC đó:':
-   'Nhập IP:cổng hoặc dán liên kết mời của PC Host cùng Wi-Fi.';
-  const input=document.createElement('input');input.type='text';input.placeholder='192.168.1.20:37816';
+   'Nếu bạn bè tạo phòng trên một máy Host khác, dán link mời hoặc địa chỉ LAN ở đây:':
+   'Dán link mời được Host gửi cho bạn (máy cùng Wi-Fi).';
+  const input=document.createElement('input');input.type='text';input.placeholder='Link mời hoặc IP nội bộ';
   input.setAttribute('aria-label','IP:cổng hoặc liên kết máy Host');input.autocomplete='off';
   try{input.value=localStorage.getItem('pkmsvv.lan.host.ip')||'';}catch(_){}
-  const go=document.createElement('button');go.type='button';go.textContent='Kết nối Host bằng IP';
+  const go=document.createElement('button');go.type='button';go.textContent='Kết nối';
   const status=document.createElement('span');status.setAttribute('role','status');
   go.onclick=async()=>{
    if(go.disabled)return;
@@ -107,15 +107,16 @@
    finally{clearTimeout(timer);go.disabled=false;input.disabled=false;}
   };
   input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go.click();}});
-  detail.append(p,input,go,status);
+  target.append(p,input,go,status);
  }
  async function joinRooms(){
   info('Đang tìm phòng cùng Wi-Fi…');
   try{
    const list=(await G.Social.listPublicRooms()).filter(r=>r.mode===mode);
    detail.replaceChildren();
-   addressEntry('join');
-   if(!list.length)detail.append('Chưa có phòng công khai. ');
+   const help=document.createElement('p');help.textContent='Chọn phòng đang mở hoặc dán mã phòng được bạn gửi:';
+   detail.append(help);
+   if(!list.length)detail.append('Chưa có phòng công khai trên Host hiện tại. ');
    for(const r of list){
     const b=document.createElement('button');b.textContent=(r.name||'Host')+' · '+r.size+' người · Tham gia';
     b.onclick=async()=>{
@@ -131,6 +132,9 @@
     const result=await G.Social.joinRoom(input.value.trim());
     if(result.ok){close();G.LobbyUI.open();}else info(result.error);
    };detail.append(input,go);
+   const advanced=document.createElement('details');advanced.className='pkmsvv-coop-advanced';
+   const summary=document.createElement('summary');summary.textContent='Đổi sang máy Host khác (nâng cao)';
+   advanced.append(summary);addressEntry('join',advanced);detail.append(advanced);
   }catch(e){info('Không thể tìm phòng: '+e.message);}
  }
  async function action(role){
