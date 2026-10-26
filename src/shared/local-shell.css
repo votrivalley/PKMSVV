@@ -15,3 +15,31 @@
 }
 #topbar #btn-backup:focus-visible{outline:3px solid #ffe27a!important;outline-offset:2px}
 @media(max-width:740px){#topbar:not(.hidden) #btn-backup{min-width:36px!important;min-height:38px!important}}
+
+/* Hosted PWA Co-op: static site opens a LAN connection sheet, not Online Firebase. */
+#scr-menu [data-go="multiplayer"],#scr-menu [data-go="online"]{
+ pointer-events:auto!important;opacity:1!important;cursor:pointer!important
+}
+.pkmsvv-lan-connect-modal{
+ position:fixed;inset:0;z-index:2147483000;background:rgba(2,13,23,.83);
+ display:flex;align-items:center;justify-content:center;
+ padding:clamp(10px,3vw,22px);box-sizing:border-box
+}
+.pkmsvv-lan-connect-box{
+ width:min(520px,100%);max-height:calc(100dvh - 24px);overflow-y:auto;
+ background:linear-gradient(145deg,#19515b,#102d40);border:2px solid #7fd7cb;
+ border-radius:16px;box-shadow:0 18px 60px #0009;
+ padding:clamp(16px,3vw,26px);box-sizing:border-box;color:#f5fffc;
+ font:15px/1.48 system-ui,sans-serif
+}
+.pkmsvv-lan-connect-box h2{font:800 clamp(19px,3vw,24px) system-ui;color:#ffe18b;margin:0 0 12px}
+.pkmsvv-lan-connect-box p{margin:8px 0 13px}
+.pkmsvv-lan-connect-box label{display:block;font-weight:800;margin-bottom:6px}
+#pkmsvv-lan-ip{box-sizing:border-box;width:100%;min-height:46px;border-radius:9px;
+ border:2px solid #8bcac5;padding:9px 12px;background:#f0fffa;color:#193342;font:600 16px system-ui}
+.pkmsvv-lan-connect-hint,.pkmsvv-lan-connect-save{font-size:12px;color:#d8f0e9}
+#pkmsvv-lan-connect-status{min-height:17px;color:#ffcfb1;font-size:13px}
+.pkmsvv-lan-connect-actions{display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap}
+.pkmsvv-lan-connect-actions button{min-height:42px;border-radius:9px;border:1px solid #a4d5d0;
+ padding:8px 14px;background:#29566a;color:#fff;font:750 14px system-ui;cursor:pointer}
+#pkmsvv-lan-submit{background:#ffe277;color:#12303b}

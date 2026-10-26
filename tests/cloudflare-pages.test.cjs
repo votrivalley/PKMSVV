@@ -37,6 +37,12 @@ test('Save guardian is loaded before game and Rescue is available for cross-doma
  assert.doesNotMatch(guard,/localStorage\.clear\(/);
  assert.match(read('sw.js'),/save-guardian\.js/);
 });
+test('Web Co-op is replaced with a LAN-only overlay, never old Firebase gate',()=>{
+ const shell=read('game/js/ui/pkmsvv-local-shell.js');
+ assert.match(shell,/G\.MultiplayerUI\.open=openLanDialog/);
+ assert.match(shell,/pkmsvv-lan-connect-modal/);
+ assert.match(shell,/window\.location\.assign\('http:\/\/'/);
+});
 test('Cloudflare Free plan file count and per-file limit pass',()=>{
  const report=JSON.parse(read('build-info.json'));
  assert.ok(report.files>1000&&report.files<=20000);

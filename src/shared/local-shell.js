@@ -8,26 +8,72 @@
  let installed=false;
  const inactive=['friends','rank'];
  const isPages=mode==='pages';
+ function openLanDialog(){
+  if(!isPages)return;
+  let overlay=el('pkmsvv-lan-connect-modal');
+  if(overlay){overlay.querySelector('#pkmsvv-lan-ip')?.focus();return;}
+  overlay=document.createElement('div');
+  overlay.id='pkmsvv-lan-connect-modal';
+  overlay.className='pkmsvv-lan-connect-modal';
+  overlay.innerHTML=[
+   '<section class="pkmsvv-lan-connect-box" role="dialog" aria-modal="true" aria-labelledby="pkmsvv-lan-connect-title">',
+   '<h2 id="pkmsvv-lan-connect-title">🤝 Co-op qua Wi-Fi / LAN</h2>',
+   '<p><b>Không cần đăng nhập Google hoặc phiên bản Online.</b> PC chạy LAN Host,',
+   ' điện thoại hoặc trình duyệt cùng Wi-Fi truy cập địa chỉ của Host.</p>',
+   '<label for="pkmsvv-lan-ip">IP và cổng hiển thị trên máy Host</label>',
+   '<input id="pkmsvv-lan-ip" type="text" inputmode="url" autocomplete="off"',
+   ' placeholder="192.168.1.168:37816" aria-describedby="pkmsvv-lan-example">',
+   '<p id="pkmsvv-lan-example" class="pkmsvv-lan-connect-hint">',
+   'Trên PC mở Co-op → Hướng dẫn LAN để xem IP:cổng. Nếu Host đổi sang 37817, nhập đúng cổng đó.</p>',
+   '<p class="pkmsvv-lan-connect-save">💾 Save của Cloudflare và IP Host tách biệt.',
+   ' Hãy xuất file JSON rồi nhập vào trang LAN nếu muốn dùng cùng tiến trình.</p>',
+   '<p id="pkmsvv-lan-connect-status" role="status" aria-live="polite"></p>',
+   '<div class="pkmsvv-lan-connect-actions">',
+   '<button type="button" id="pkmsvv-lan-cancel">Quay lại</button>',
+   '<button type="button" id="pkmsvv-lan-submit">Kết nối PC Host</button>',
+   '</div></section>'
+  ].join('');
+  const input=overlay.querySelector('#pkmsvv-lan-ip');
+  const msg=overlay.querySelector('#pkmsvv-lan-connect-status');
+  try{input.value=localStorage.getItem('pkmsvv.lan.host.ip')||'';}catch(_){}
+  const dismiss=()=>{overlay.remove();document.removeEventListener('keydown',onKey);};
+  const onKey=e=>{if(e.key==='Escape'){e.preventDefault();dismiss();}};
+  const submit=()=>{
+   let value=input.value.trim().replace(/^http:\/\//i,'').replace(/\/.*$/,'');
+   const m=value.match(/^(\d{1,3}(?:\.\d{1,3}){3})(?::(\d{2,5}))?$/);
+   const ip=m?.[1]||'',port=m?.[2]?Number(m[2]):37816,octets=ip.split('.');
+   const local=octets.length===4&&octets.every(x=>/^\d{1,3}$/.test(x)&&Number(x)<=255)&&
+    (Number(octets[0])===10||(Number(octets[0])===172&&Number(octets[1])>=16&&Number(octets[1])<=31)||
+     (Number(octets[0])===192&&Number(octets[1])===168));
+   if(!local||!Number.isInteger(port)||port<1024||port>65535){
+    msg.textContent='Địa chỉ chưa hợp lệ. Ví dụ: 192.168.1.168:37816';return;
+   }
+   try{localStorage.setItem('pkmsvv.lan.host.ip',ip+':'+port);}catch(_){}
+   // This is a top-level navigation, not a mixed-content fetch or WebSocket
+   // from HTTPS Cloudflare. The independent LAN HTTP origin owns LAN saves.
+   window.location.assign('http://'+ip+':'+port+'/game/');
+  };
+  overlay.querySelector('#pkmsvv-lan-submit').addEventListener('click',submit);
+  overlay.querySelector('#pkmsvv-lan-cancel').addEventListener('click',dismiss);
+  input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();submit();}});
+  overlay.addEventListener('click',e=>{if(e.target===overlay)dismiss();});
+  document.addEventListener('keydown',onKey);
+  document.body.appendChild(overlay);
+  input.focus();
+ }
  function enterLan(event){
   if(!isPages)return;
   const target=event.target?.closest?.('#scr-menu [data-go="multiplayer"],#scr-menu [data-go="online"]');
   if(!target)return;
-  // Intercept at capture phase BEFORE the original menu's Online/Firebase
-  // handler on the target element. Cloudflare static pages cannot host rooms.
   event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();
-  const previous=(()=>{try{return localStorage.getItem('pkmsvv.lan.host.ip')||'';}catch(_){return '';}})();
-  const input=window.prompt('Co-op dùng PC LAN Host cùng Wi-Fi, không dùng Google.\nNhập IP và cổng HIỂN THỊ trong Co-op trên PC (ví dụ 192.168.1.168:37816):',previous);
-  if(input===null)return;
-  const host=input.trim(),match=host.match(/^(\d{1,3}(?:\.\d{1,3}){3})(?::(\d{2,5}))?$/);
-  const ip=match?.[1]||'',port=match?.[2]?Number(match[2]):37816,octets=ip.split('.');
-  const valid=octets.length===4&&octets.every(o=>/^\d{1,3}$/.test(o)&&Number(o)<=255)&&
-   Number.isInteger(port)&&port>=1024&&port<=65535&&(
-   Number(octets[0])===10||
-   (Number(octets[0])===172&&Number(octets[1])>=16&&Number(octets[1])<=31)||
-   (Number(octets[0])===192&&Number(octets[1])===168));
-  if(!valid){window.alert('IP/cổng LAN không hợp lệ. Hãy xem địa chỉ Host thực tế trong Co-op trên PC.');return;}
-  try{localStorage.setItem('pkmsvv.lan.host.ip',ip+':'+port);}catch(_){}
-  location.assign('http://'+ip+':'+port+'/');
+  openLanDialog();
+ }
+ function guardLegacyOnline(){
+  if(!isPages||!window.G?.MultiplayerUI||G.MultiplayerUI.__pkmsvvLanOnly)return;
+  // Replaces the old online-only WITHNICK/Firebase guard even when code calls
+  // MultiplayerUI.open() directly (controller, keyboard or menu binding).
+  G.MultiplayerUI.open=openLanDialog;
+  G.MultiplayerUI.__pkmsvvLanOnly=true;
  }
  function previewAlert(){
   if(!isPages||location.hostname==='pkmsvv-web.pages.dev'||
@@ -58,9 +104,17 @@
    item.classList.add('pkmsvv-local-hidden');
    item.style.setProperty('display','none','important');
   }
+  guardLegacyOnline();
   const coop=menu.querySelector('[data-go="multiplayer"],[data-go="online"]');
   if(coop){
    if(mode==='lan'&&coop.dataset.go==='online')coop.dataset.go='multiplayer';
+   if(isPages){
+    coop.disabled=false;coop.removeAttribute('aria-disabled');
+    coop.style.setProperty('pointer-events','auto','important');
+    coop.style.setProperty('opacity','1','important');
+    // Backup for programmatic b.onclick() and keyboard/controller bindings.
+    coop.onclick=e=>{e?.preventDefault?.();e?.stopPropagation?.();openLanDialog();};
+   }
    let label=Array.from(coop.childNodes).find(n=>n.nodeType===Node.TEXT_NODE&&n.textContent.trim());
    if(label)label.textContent='🤝 Co-op';
    else{
@@ -106,6 +160,7 @@
    const old=G.MenuUI.open;
    G.MenuUI.open=function(...args){const result=old.apply(this,args);refresh();return result;};
   }
+  guardLegacyOnline();
   refresh();
   previewAlert();
   window.addEventListener('resize',refresh,{passive:true});
