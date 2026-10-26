@@ -54,7 +54,7 @@ async function main(){
   let next=0;const pending=new Map(),exceptions=[];
   ws.on('message',raw=>{
    let m;try{m=JSON.parse(String(raw));}catch(_){return;}
-   if(m.method==='Runtime.exceptionThrown')exceptions.push(m.params.exceptionDetails?.text||'Browser exception');
+   if(m.method==='Runtime.exceptionThrown'){const e=m.params.exceptionDetails||{};exceptions.push(e.exception?.description||e.text||'Browser exception');}
    const p=pending.get(m.id);if(p){pending.delete(m.id);m.error?p.reject(Error(m.error.message)):p.resolve(m.result);}
   });
   const cmd=(method,params={})=>new Promise((resolve,reject)=>{
