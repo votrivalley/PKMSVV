@@ -1,0 +1,64 @@
+name: Build LAN PC Host Beta
+on:
+  push:
+    branches: [feature/lan-local-beta]
+    paths:
+      - 'lan-server/**'
+      - 'src/lan/**'
+      - 'scripts/**'
+      - 'desktop/lan-main.cjs'
+      - 'lan-win.json'
+      - 'package.json'
+      - 'tests/lan-server.test.cjs'
+      - '.github/workflows/build-lan.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows-lan:
+    runs-on: windows-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Load fixed upstream source
+        shell: bash
+        run: |
+          git init vendor/pokesurvivor
+          git -C vendor/pokesurvivor remote add origin https://github.com/JPTER78/pokesurvivor.git
+          git -C vendor/pokesurvivor fetch --depth 1 origin 11fe868c640b62ac37beacc222e056bc4d9ec892
+          git -C vendor/pokesurvivor checkout --detach FETCH_HEAD
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Validate LAN server, room security and relay
+        run: npm run test:lan
+      - name: Compile LAN game without Firebase
+        run: npm run prepare:lan
+      - name: Verify LAN content and isolation
+        shell: bash
+        run: |
+          test -s dist/lan/index.html
+          test -s dist/lan/game/index.html
+          test -s dist/lan/game/js/app.min.js
+          test -s dist/lan/game/assets/icons/icon-192.png
+          if grep -q "pkmsvv-b84d2-default-rtdb" dist/lan/game/js/app.min.js; then
+            echo "LAN compiled client unexpectedly references Firebase RTDB" >&2
+            exit 1
+          fi
+      - name: Generate icon and build portable Windows LAN host
+        run: npm run build:lan:win
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Verify host installer
+        shell: bash
+        run: |
+          ls -lh dist/lan-windows/*.exe
+          test -n "$(find dist/lan-windows -maxdepth 1 -name '*.exe' -print -quit)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-LAN-Windows-Host-Beta
+          path: dist/lan-windows/*.exe
+          retention-days: 14
+          if-no-files-found: error
