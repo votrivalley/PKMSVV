@@ -17,6 +17,12 @@ fs.mkdirSync(path.dirname(dest),{recursive:true});
 fs.copyFileSync(path.join(root,'src/android/full-lan-ui.js'),dest);
 const tag='<script defer src="'+rel+'"></script>';
 if(!html.includes(tag))html=html.replace('</body>',tag+'\n</body>');
+fs.copyFileSync(path.join(root,'src/shared/local-shell.js'),
+ path.join(web,'js/ui/pkmsvv-local-shell.js'));
+const localCSS=fs.readFileSync(path.join(root,'src/shared/local-shell.css'),'utf8');
+html=html.replace('</head>','<style id="pkmsvv-local-shell-style">'+localCSS+'</style></head>');
+html=html.replace('</body>',
+ '<script>window.PKMSVV_LOCAL_UI_MODE="android-full-lan"</script>\n<script defer src="js/ui/pkmsvv-local-shell.js"></script>\n</body>');
 fs.writeFileSync(idx,html);
 const cfg=JSON.parse(fs.readFileSync(configFile,'utf8'));
 if(cfg.appId!=='com.ronvotri.pkmsvv')throw Error('Unexpected original Android identity: '+cfg.appId);

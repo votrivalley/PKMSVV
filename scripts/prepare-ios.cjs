@@ -18,11 +18,17 @@ if(!gameHTML.includes('</head>'))throw Error('Missing compiled iOS HTML head');
 gameHTML=gameHTML.replace('</head>',[
  '<style id="pkmsvv-ios-local-only">',
  '#scr-menu [data-go="friends"],#scr-menu [data-go="rank"],',
- '#scr-menu [data-go="multiplayer"],#pkmsvv-menu-google,',
+ '#pkmsvv-menu-google,',,
  '#btn-google,#pkmsvv-login-google,#pkmsvv-online-counter,',
  '#scr-friends,#scr-rank,#scr-multiplayer{display:none!important}',
  '</style></head>'
 ].join('\n'));
+fs.copyFileSync(path.join(root,'src/shared/local-shell.js'),
+ path.join(ios,'game/js/ui/pkmsvv-local-shell.js'));
+const localCSS=fs.readFileSync(path.join(root,'src/shared/local-shell.css'),'utf8');
+gameHTML=gameHTML.replace('</head>','<style id="pkmsvv-local-shell-style">'+localCSS+'</style></head>');
+gameHTML=gameHTML.replace('</body>',
+ '<script>window.PKMSVV_LOCAL_UI_MODE="pages"</script>\n<script defer src="js/ui/pkmsvv-local-shell.js"></script>\n</body>');
 fs.writeFileSync(gameIndex,gameHTML,'utf8');
 const manifest=JSON.parse(fs.readFileSync(path.join(ios,'manifest.webmanifest'),'utf8'));
 Object.assign(manifest,{id:'/',start_url:'/?source=ios-home',scope:'/',display:'standalone',

@@ -12,6 +12,7 @@ write('js/net/social.js',readLan('social-lan.js'));
 write('js/net/net.js',readLan('net-lan.js'));
 write('js/net/lan-ai.js',readLan('lan-ai.js'));
 write('js/ui/lan-compact-ui.js',readLan('lan-compact-ui.js'));
+write('js/ui/pkmsvv-local-shell.js',fs.readFileSync(path.join(root,'src/shared/local-shell.js'),'utf8'));
 once('dev.html','<script defer src="js/net/lan-bus.js"></script>', '<script defer src="js/net/lan-bus.js"></script>\n<script defer src="js/net/lan-ai.js"></script>');
 
 once('js/game.js',
@@ -59,6 +60,8 @@ ui=ui.replace(marker,
 write('js/ui/social-ui.js',ui);
 once('dev.html','<script defer src="js/ui/pkmsvv-multiplayer-ui.js"></script>',
  '<script defer src="js/ui/pkmsvv-multiplayer-ui.js"></script>\n<script defer src="js/ui/lan-compact-ui.js"></script>');
+once('dev.html','<script defer src="js/ui/lan-compact-ui.js"></script>',
+ '<script defer src="js/ui/lan-compact-ui.js"></script>\n<script>window.PKMSVV_LOCAL_UI_MODE="lan"</script>\n<script defer src="js/ui/pkmsvv-local-shell.js"></script>');
 // Change labels without assuming the exact Web markup after prior patches.
 let html=read('dev.html');
 const linkPattern=/(<button\b[^>]*\bdata-go="multiplayer"[^>]*>)[^<]*/;
@@ -81,5 +84,5 @@ const css=[
 'content:"";',
 'display:block;color:#ffe3a4;margin:12px 0;line-height:1.5}'
 ].join('\n');
-fs.appendFileSync(path.join(game,'css','style.css'),'\n'+css+'\n'+readLan('lan-compact-ui.css')+'\n','utf8');
+fs.appendFileSync(path.join(game,'css','style.css'),'\n'+css+'\n'+readLan('lan-compact-ui.css')+'\n'+fs.readFileSync(path.join(root,'src/shared/local-shell.css'),'utf8')+'\n','utf8');
 console.log('PKMSVV LAN: local signalling and frame relay installed.');

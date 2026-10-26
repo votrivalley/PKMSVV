@@ -5,6 +5,7 @@ on:
     paths:
       - 'scripts/**'
       - 'src/ios/**'
+      - 'src/shared/**'
       - 'src/lan/**'
       - 'src/web/**'
       - 'src/pkmsvv-save-ui.js'
@@ -32,7 +33,7 @@ jobs:
           git -C vendor/pokesurvivor fetch --depth 1 origin 11fe868c640b62ac37beacc222e056bc4d9ec892
           git -C vendor/pokesurvivor checkout --detach FETCH_HEAD
       - run: npm install --no-audit --no-fund
-      - run: npm run test:ios
+      - run: npm run test:ios && node --test tests/local-shell-ui.test.cjs
       - run: npm run prepare:ios
       - name: Validate files and pack HTTPS-ready static site
         shell: bash

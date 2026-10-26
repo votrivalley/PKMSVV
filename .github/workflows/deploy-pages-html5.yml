@@ -7,6 +7,7 @@ on:
       - 'scripts/prepare-ios.cjs'
       - 'scripts/prepare-web.cjs'
       - 'src/ios/**'
+      - 'src/shared/**'
       - 'src/web/**'
       - 'tests/pages-html5.test.cjs'
       - 'package.json'
@@ -40,7 +41,7 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Build complete HTML5 and test project paths
-        run: npm run prepare:pages && npm run test:pages
+        run: npm run prepare:pages && npm run test:pages && node --test tests/local-shell-ui.test.cjs
       - name: Check complete assets
         shell: bash
         run: |
