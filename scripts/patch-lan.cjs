@@ -15,9 +15,8 @@ write('js/ui/lan-compact-ui.js',readLan('lan-compact-ui.js'));
 write('js/ui/pkmsvv-local-shell.js',fs.readFileSync(path.join(root,'src/shared/local-shell.js'),'utf8'));
 once('dev.html','<script defer src="js/net/lan-bus.js"></script>', '<script defer src="js/net/lan-bus.js"></script>\n<script defer src="js/net/lan-ai.js"></script>');
 
-once('js/game.js',
- "if (restored || G.DB.mode === 'local') this.afterLogin(); else this.tapToStart(() => this.toLogin());",
- "if (restored && G.DB.save) this.afterLogin(); else this.tapToStart(() => this.toLogin());");
+// LOCAL mode already creates/restores the saved player in prepare-game.
+// Never reintroduce the Google/username start screen in LAN builds.
 once('js/ui/login.js',
  "setTimeout(() => $('pkmsvv-login-google').focus(), 50);",
  "setTimeout(() => $('f-user').focus(), 50);");
@@ -77,8 +76,6 @@ const css=[
 '#scr-friends,#scr-rank,#pkmsvv-menu-google,#btn-google,#pkmsvv-login-google,',
 '#pkmsvv-online-counter,#lobby-inv-title,#lobby-invite,#pkmsvv-v15-backup,',
 '[id*="pkmsvv-voice"],#pkmsvv-voice-panel {display:none!important}',
-'#scr-login .tabs{display:flex!important}',
-'#scr-login #login-form{display:block!important}',
 '#scr-login #btn-guest,#scr-login .pkmsvv-entry-buttons{display:none!important}',
 '#scr-multiplayer .pkmsvv-mp-box:before{',
 'content:"";',
