@@ -77,7 +77,35 @@ ui=ui.replace(marker,
       $('pkmsvv-lan-ai-add').disabled=room.members.length>=(room.mode==='royale'?10:4);
       $('pkmsvv-lan-ai-remove').disabled=!botCount;
       `+
- "      $('lobby-sub').textContent += '  ·  Mã phòng: '+room.id+(room.isHost?'  ·  Địa chỉ LAN: '+location.origin:'');\n"+
+ "      $('lobby-sub').textContent += '  ·  Mã phòng: '+room.id;\n"+
+ `      let invite=document.getElementById('pkmsvv-lan-invite');
+      if(!invite){
+       invite=document.createElement('div');invite.id='pkmsvv-lan-invite';invite.className='row wrap';
+       invite.style.cssText='margin:8px 0;gap:8px;align-items:center';
+       const btn=document.createElement('button');btn.type='button';btn.className='btn small gold';
+       btn.textContent='📋 Sao chép lời mời';btn.id='pkmsvv-lan-copy-invite';invite.append(btn);
+       $('lobby-sub').insertAdjacentElement('afterend',invite);
+       btn.onclick=async()=>{
+        const r=G.Social.room;if(!r?.isHost)return;
+        try{
+         const response=await fetch('/lan/info',{cache:'no-store'});
+         if(!response.ok)throw Error('Không xem được địa chỉ LAN');
+         const data=await response.json();
+         const ip=(data.addresses||[]).find(x=>/^192\\.168\\.|^10\\.|^172\\.(1[6-9]|2[0-9]|3[01])\\./.test(x));
+         if(!ip)throw Error('Host không có IPv4 Wi-Fi/LAN để mời bạn');
+         const u=new URL('http://'+ip+':'+data.port+'/game/');
+         u.searchParams.set('pkmsvvRole','join');
+         u.searchParams.set('pkmsvvMode',r.mode);
+         u.searchParams.set('pkmsvvCode',r.id);
+         const t=u.href;
+         if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(t);
+         else{const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.append(ta);ta.select();if(!document.execCommand('copy'))throw Error('Trình duyệt không cho sao chép');ta.remove();}
+         G.UI.toast('Đã sao chép lời mời. Gửi link cho bạn cùng Wi-Fi!',3200);
+        }catch(e){G.UI.toast(e.message||'Không sao chép được lời mời',3800);}
+       };
+      }
+      invite.classList.toggle('hidden',!room.isHost||!room.open);
+      `+
  "      $('lobby-inv-title').classList.add('hidden');\n"+
  "      $('lobby-invite').classList.add('hidden');\n"+marker);
 // Host can remove a specific AI or human while the lobby is open.
