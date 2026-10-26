@@ -1,7 +1,7 @@
 'use strict';
 /* Cache navigations and assets progressively; never cache or transmit save JSON. */
-const CACHE='pkmsvv-ios-v1516-2';
-const SHELL=['/','/index.html','/entry.js','/manifest.webmanifest','/game/index.html','/lan-connect.html','/lan-connect.js'];
+const CACHE='pkmsvv-ios-v1516-3';
+const SHELL=['/','/index.html','/entry.js','/manifest.webmanifest','/game/index.html','/game/js/ui/pkmsvv-coop-unified.js','/lan-connect.html','/lan-connect.js'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(
  keys.filter(k=>k.startsWith('pkmsvv-ios-')&&k!==CACHE).map(k=>caches.delete(k))
