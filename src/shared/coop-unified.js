@@ -26,7 +26,7 @@
     '<button data-role="ai">🤖 Chơi với AI</button></div>'+
     '<div id="pkmsvv-coop-detail" role="status"></div></section>';
   document.body.append(view);detail=view.querySelector('#pkmsvv-coop-detail');
-  if(lan()){
+  if(lan()&&!window.PKMSVV_STANDALONE_AI){
    const help=document.createElement('details');help.className='pkmsvv-coop-help';
    const summary=document.createElement('summary');summary.textContent='Địa chỉ Host & mã QR mời bạn';
    const host=document.createElement('p');host.textContent=location.origin+'/game/';
@@ -136,6 +136,9 @@
  async function action(role){
   if(busy)return;
   if(lan()){
+   if(window.PKMSVV_STANDALONE_AI&&role!=='ai'){
+    info('Đây là phòng AI ngoại tuyến trên thiết bị này. Chọn “Chơi với AI” để bắt đầu; chơi cùng bạn bè cần Host LAN.');return;
+   }
    if(role==='join'){
     const inviteCode=new URLSearchParams(location.search).get('pkmsvvCode');
     if(inviteCode){
