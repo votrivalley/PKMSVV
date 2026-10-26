@@ -12,6 +12,7 @@ on:
       - 'desktop/lan-main.cjs'
       - 'desktop/lan-startup.cjs'
       - 'tests/lan-startup.test.cjs'
+      - 'tests/smoke-lan-win.ps1'
       - 'lan-win.json'
       - 'package.json'
       - 'tests/lan-server.test.cjs'
@@ -66,6 +67,9 @@ jobs:
           test -s dist/lan-windows/win-unpacked/resources/lan-site/game/index.html
           test -s dist/lan-windows/win-unpacked/resources/lan-site/game/js/app.min.js
           test -s dist/lan-windows/win-unpacked/resources/lan-site/index.html
+      - name: Smoke-test packaged Windows executable (runtime, not just build)
+        shell: pwsh
+        run: ./tests/smoke-lan-win.ps1
       - uses: actions/upload-artifact@v4
         with:
           name: PKMSVV-LAN-Windows-Host-Beta
