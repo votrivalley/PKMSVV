@@ -33,13 +33,13 @@ const js=/<script defer src="js\/app\.min\.js\?v=[^"]+"><\/script>/;
 const styles=/<link rel="stylesheet" href="css\/style\.css\?v=[^"]+">/;
 if(!html.includes('<head>')||!js.test(html)||!styles.test(html))
  throw Error('Standalone AI HTML has unexpected asset anchors');
-html=html.replace('<head>','<head><base href="/game/">');
+html=html.replace('<head>',`<head><base href="/game/"><script>try{localStorage.setItem('pkmsvv.web.saveMode','local')}catch(e){}</script>`);
 html=html.replace(js,'<script defer src="/ai/game/js/app.min.js"></script>');
 html=html.replace(styles,'<link rel="stylesheet" href="/ai/game/css/style.css">');
 html=html.replace(/<title>[^<]*<\/title>/,'<title>Pokémon Sinh Tồn — Chơi với AI</title>');
 fs.writeFileSync(path.join(game,'index.html'),html,'utf8');
 const welcome=`<!doctype html><html lang="vi"><meta charset="utf-8"><title>Chơi với AI — Pokémon Sinh Tồn</title><script>
-const allowed=['coop','royale','eggrush'];const q=new URLSearchParams(location.search);
+try{localStorage.setItem('pkmsvv.web.saveMode','local')}catch(e){}\nconst allowed=['coop','royale','eggrush'];const q=new URLSearchParams(location.search);
 const mode=allowed.includes(q.get('mode'))?q.get('mode'):'coop';
 location.replace('/ai/game/?pkmsvvRole=ai&pkmsvvMode='+encodeURIComponent(mode));
 </script><body>Đang mở trận AI ngoại tuyến…</body></html>`;
