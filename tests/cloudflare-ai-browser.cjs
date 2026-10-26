@@ -72,8 +72,15 @@ async function main(){
    assert.equal(roster.mode,mode);assert.ok(roster.bots>=1);
    const status=await evaluate(`(()=>{const b=document.querySelector('#lobby-start');return {exists:!!b,disabled:b?.disabled};})()`);
    assert.equal(status.exists,true,'Start button exists for '+mode);
+   const before=await evaluate(`(()=>({game:G.Game.state,room:G.Social.room?.mode,disabled:document.querySelector('#lobby-start')?.disabled,netOpen:G.Net.open_,peers:G.Net.peers(),startText:document.querySelector('#lobby-start')?.textContent}))()`);
+   console.log('Pre-start '+mode+' '+JSON.stringify(before));
    await evaluate(`document.querySelector('#lobby-start').click()`);
-   await waitFor(()=>evaluate(`window.G?.Game?.state==='playing'`),20000,'AI gameplay '+mode);
+   try{await waitFor(()=>evaluate(`window.G?.Game?.state==='playing'`),20000,'AI gameplay '+mode);}
+   catch(e){
+    const after=await evaluate(`(()=>({game:G.Game.state,room:G.Social.room?.mode,disabled:document.querySelector('#lobby-start')?.disabled,coop:G.Coop.active,menu:document.querySelector('#scr-lobby')?.className,toast:document.querySelector('#toast')?.textContent}))()`);
+    console.error('AI gameplay failure diagnostics '+mode,JSON.stringify({before,after,exceptions}));
+    throw e;
+   }
    const state=await evaluate(`(()=>({mode:window.G.Social.room.mode,players:window.G.Coop.players().length,botPlayers:window.G.Coop.players().filter(p=>p.lanBot).length}))()`);
    assert.equal(state.mode,mode);assert.ok(state.botPlayers>=1,'AI actor joined gameplay');
    if(mode==='eggrush'){
