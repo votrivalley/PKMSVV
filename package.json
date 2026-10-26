@@ -41,7 +41,9 @@
     "prepare:android:full-lan": "node scripts/prepare-full-lan-android.cjs",
     "test:android:full-lan": "node --test tests/android-full-lan.test.cjs",
     "prepare:pages": "node scripts/prepare-pages.cjs",
-    "test:pages": "node --test tests/pages-html5.test.cjs"
+    "test:pages": "node --test tests/pages-html5.test.cjs",
+    "prepare:cloudflare": "node scripts/prepare-cloudflare.cjs",
+    "test:cloudflare": "node --test tests/cloudflare-pages.test.cjs"
   },
   "devDependencies": {
     "electron": "^38.0.0",
