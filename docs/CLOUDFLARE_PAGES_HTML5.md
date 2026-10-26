@@ -15,9 +15,9 @@ Thư mục cuối cùng phải có `index.html`, `game/`, `sw.js`, `manifest.web
 ## Cấp quyền và triển khai lần đầu (không cần đưa mật khẩu cho ChatGPT)
 1. Trên Windows cài Node.js LTS từ https://nodejs.org/ và đăng nhập https://dash.cloudflare.com/ bằng trình duyệt.
 2. Mở PowerShell, chạy `npx wrangler@4 login`, đăng nhập và cấp quyền trong cửa sổ trình duyệt.
-3. Tạo Direct Upload project: `npx wrangler@4 pages project create pkmsvv-ios --production-branch main` (chỉ cần lần đầu).
-4. Mở PowerShell ở thư mục website **đã giải nén** (nơi có file `index.html`), chạy `npx wrangler@4 pages deploy . --project-name pkmsvv-ios --branch main`.
-5. Khi Wrangler báo Success, URL thực tế sẽ hiện trong terminal. Thông thường `https://pkmsvv-ios.pages.dev/` nếu tên này không bị trùng.
+3. Tạo Direct Upload project: `npx wrangler@4 pages project create pkmsvv-web --production-branch pkmsvv-web` (chỉ cần lần đầu).
+4. Mở PowerShell ở thư mục website **đã giải nén** (nơi có file `index.html`), chạy `npx wrangler@4 pages deploy . --project-name pkmsvv-web --branch pkmsvv-web`.
+5. Khi Wrangler báo Success, URL thực tế sẽ hiện trong terminal. Thông thường `https://pkmsvv-web.pages.dev/` nếu tên này không bị trùng.
 6. Trên iPhone Safari mở URL HTTPS → Chia sẻ → Thêm vào Màn hình chính → Mở dưới dạng ứng dụng web.
 
 **Không dùng nút kéo-thả ZIP ở Dashboard:** Cloudflare giới hạn kéo-thả 1.000 tệp. Gói này có hàng nghìn sprite, phải triển khai thư mục bằng Wrangler.
@@ -26,7 +26,7 @@ Thư mục cuối cùng phải có `index.html`, `game/`, `sw.js`, `manifest.web
 1. Tạo Cloudflare API token chỉ cho phép quyền Pages:Edit đúng tài khoản của mình.
 2. GitHub repo → Settings → Secrets and variables → Actions: thêm repository secrets `CF_API_TOKEN` và `CF_ACCOUNT_ID` (không chia sẻ nội dung các giá trị trong chat).
 3. GitHub Actions → `Build Cloudflare Pages FULL HTML5` → Run workflow trên branch `feature/lan-local-beta` → đánh dấu `publish`.
-4. Workflow sẽ build + kiểm tra rồi upload website lên Cloudflare Pages project đã tạo (`pkmsvv-ios`).
+4. Workflow sẽ build + kiểm tra rồi upload website lên Cloudflare Pages project đã tạo (`pkmsvv-web`).
 
 ## Điều cần hiểu
 - Cloudflare Pages chỉ phục vụ **file HTML5 tĩnh**, không phải server Co-op qua Internet; Co-op LAN vẫn do PC Host chạy.
@@ -37,3 +37,5 @@ Thư mục cuối cùng phải có `index.html`, `game/`, `sw.js`, `manifest.web
 
 Nguồn giới hạn: https://developers.cloudflare.com/pages/platform/limits/
 Tài liệu Wrangler: https://developers.cloudflare.com/pages/get-started/direct-upload/
+
+**Lưu ý thực tế 26/10/2026:** project đã được tạo với production branch `pkmsvv-web`, nên dùng `--branch pkmsvv-web` để cập nhật trang chính `https://pkmsvv-web.pages.dev/`. Bản deploy với `--branch main` tạo đường dẫn preview `https://main.pkmsvv-web.pages.dev/` và không tự thay thế trang chính.

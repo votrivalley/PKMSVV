@@ -67,4 +67,4 @@ jobs:
             echo "::error::Please configure CF_API_TOKEN and CF_ACCOUNT_ID as repository Actions Secrets."
             exit 1
           fi
-          npx --yes wrangler@4 pages deploy dist/cloudflare --project-name pkmsvv-ios --branch main
+          npx --yes wrangler@4 pages deploy dist/cloudflare --project-name pkmsvv-web --branch pkmsvv-web
