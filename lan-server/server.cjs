@@ -48,7 +48,7 @@ function startServer({root,port=37816,host='0.0.0.0'}={}){
   c.room=null;
  }
  const safeFile=async(req,res)=>{
-  if(!privateAddress(req.socket.remoteAddress)){res.writeHead(403);res.end();return;}
+  if(!privateAddress(req.socket.remoteAddress)){res.writeHead(403);res.end('Not RFC1918 address '+req.socket.remoteAddress);return;}
   if(req.method!=='GET'&&req.method!=='HEAD'){res.writeHead(405);res.end();return;}
   let pathname;
   try{pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname)}catch(_){res.writeHead(400);res.end();return;}
