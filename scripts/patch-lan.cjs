@@ -10,6 +10,8 @@ once('dev.html','<script defer src="js/net/social.js"></script>',
 write('js/net/lan-bus.js',readLan('lan-bus.js'));
 write('js/net/social.js',readLan('social-lan.js'));
 write('js/net/net.js',readLan('net-lan.js'));
+write('js/net/lan-ai.js',readLan('lan-ai.js'));
+once('dev.html','<script defer src="js/net/lan-bus.js"></script>', '<script defer src="js/net/lan-bus.js"></script>\n<script defer src="js/net/lan-ai.js"></script>');
 
 once('js/game.js',
  "if (restored || G.DB.mode === 'local') this.afterLogin(); else this.tapToStart(() => this.toLogin());",
@@ -24,9 +26,32 @@ ui=ui.slice(0,start)+'  function needOnline() { return !!G.DB.save; }\n\n'+ui.sl
 once('dev.html',
  'Ghép trận với người lạ, tìm phòng công khai hoặc tạo phòng riêng để mời bạn bè.',
  'Chọn chế độ để tạo phòng LAN hoặc tìm phòng công khai trên cùng máy Host. Chia sẻ địa chỉ IP và mã phòng để tham gia.');
+// Show host-only AI controls in the existing lobby, not a second lobby screen.
+const conn='    function connText(m, room) {';
+if(!ui.includes(conn))throw Error('LAN AI connText marker drift');
+ui=ui.replace(conn,conn+" if(m.bot)return 'AI · Máy';");
 const marker='      // Las tarjetas sólo se rehacen si cambian los miembros';
 if(!ui.includes(marker))throw Error('LAN lobby room marker drift');
 ui=ui.replace(marker,
+ `      let aiBar=document.getElementById('pkmsvv-lan-ai-bar');
+      if(!aiBar){
+       aiBar=document.createElement('div');aiBar.id='pkmsvv-lan-ai-bar';
+       aiBar.className='row wrap';aiBar.style.cssText='gap:8px;margin:8px 0';
+       $('lobby-note').insertAdjacentElement('afterend',aiBar);
+       const add=document.createElement('button');add.id='pkmsvv-lan-ai-add';add.type='button';add.className='btn small gold';add.textContent='➕ Thêm AI (thử nghiệm)';
+       const remove=document.createElement('button');remove.id='pkmsvv-lan-ai-remove';remove.type='button';remove.className='btn small ghost';remove.textContent='➖ Bớt AI';
+       aiBar.append(add,remove);
+       add.onclick=()=>G.LanBus.request('addBot',{}).catch(e=>G.UI.toast(e.message,3500));
+       remove.onclick=()=>{
+        const bot=G.Social.room?.members?.findLast?.(m=>m.bot);
+        if(bot)G.LanBus.request('removeBot',{uid:bot.uid}).catch(e=>G.UI.toast(e.message,3500));
+       };
+      }
+      aiBar.classList.toggle('hidden',!room.isHost||room.mode!=='coop'||!room.open);
+      const botCount=room.members.filter(m=>m.bot).length;
+      $('pkmsvv-lan-ai-add').disabled=room.members.length>=4;
+      $('pkmsvv-lan-ai-remove').disabled=!botCount;
+      `+
  "      $('lobby-sub').textContent += '  ·  Mã phòng: '+room.id+(room.isHost?'  ·  Địa chỉ LAN: '+location.origin:'');\n"+
  "      $('lobby-inv-title').classList.add('hidden');\n"+
  "      $('lobby-invite').classList.add('hidden');\n"+marker);

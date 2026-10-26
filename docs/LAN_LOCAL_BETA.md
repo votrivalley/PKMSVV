@@ -10,6 +10,12 @@ Mục tiêu: giữ các gameplay **Sống Sót (2–4)**, **Tranh Trứng (4)** 
 4. Chọn **Vào game**, tạo/đăng nhập hồ sơ local trên trình duyệt hoặc WebView LAN của thiết bị đó. Trong **Nhiều người chơi**, Host chọn chế độ/Tạo phòng; chia sẻ mã phòng cho người tham gia. Phòng công khai chỉ xuất hiện trong LAN của PC Host.
 5. Tất cả cùng vào sảnh; Host chọn Bắt đầu khi có đủ người.
 
+## AI trong Co-op (thử nghiệm)
+- Host có nút **Thêm AI** / **Bớt AI** trong phòng **Sống Sót (Co-op)**. AI chiếm 1 chỗ (tối đa 4 người tính cả người thật và AI) và di chuyển, sử dụng chiêu cơ bản trong gameplay do Host điều khiển.
+- AI không phải tài khoản hay người chơi từ máy khác, không kết nối Firebase và không tạo save riêng.
+- Đây là bot chiến đấu cơ bản, chưa phải đối thủ PvP thông minh: **không hỗ trợ Tranh Trứng hoặc Sống Còn**; chưa có thu thập trứng, dùng Orb, tiến hóa/nâng cấp kỹ năng và quyết định chiến thuật phức tạp.
+- Cần QA thực tế để bảo đảm AI lên cấp không khiến trận đứng chờ và đánh quái không gây lỗi.
+
 ## Phạm vi và giới hạn
 
 - Không cần Firebase, Google Sign-In, danh sách bạn bè hay bảng xếp hạng toàn cầu. Không dùng dữ liệu Online cũ.

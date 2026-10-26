@@ -44,6 +44,14 @@ test('LAN HTTP & same-origin WS support room life cycle and host-only frame rout
   assert.equal((await stranger.req('list')).result.length,0,'Private room is not publicly discovered');
   assert.equal((await guest.req('join',{id:room.id,dex:172,shiny:true})).ok,true);
   const members=(await host.next(m=>m.t==='room'&&m.room.members.length===2)).room.members;
+  assert.equal((await guest.req('addBot')).ok,false,'Only host can add an AI player');
+  const aiRes=await host.req('addBot',{dex:25});
+  assert.equal(aiRes.ok,true);const bot=aiRes.result.members.find(m=>m.bot);
+  assert.ok(bot);assert.match(bot.uid,/^ai-[a-f0-9]{16}$/);
+  assert.equal(aiRes.result.members.length,3,'AI occupies a real room slot');
+  assert.equal((await guest.req('removeBot',{uid:bot.uid})).ok,false,'Guest cannot delete AI');
+  assert.equal((await host.req('removeBot',{uid:bot.uid})).ok,true);
+
   assert.equal(members[1].dex,172);
   assert.equal((await guest.req('open',{open:false})).ok,false,'Guest cannot close room');
   host.ws.send(JSON.stringify({t:'data',to:members[1].uid,data:{k:'f',p:[7,11]}}));
