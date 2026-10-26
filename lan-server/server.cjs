@@ -6,6 +6,7 @@ const path = require('node:path');
 const os = require('node:os');
 const {randomBytes} = require('node:crypto');
 const {WebSocketServer,WebSocket} = require('ws');
+const QRCode=require('qrcode');
 
 const MAX_ROOM=10, MAX_PACKET=256*1024;
 const MIMES={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8',
@@ -49,6 +50,15 @@ function startServer({root,port=37816,host='0.0.0.0'}={}){
  }
  const safeFile=async(req,res)=>{
   if(!privateAddress(req.socket.remoteAddress)){res.writeHead(403);res.end('Not RFC1918 address '+req.socket.remoteAddress);return;}
+  if(new URL(req.url,'http://localhost').pathname==='/lan/qr.png'){
+   // Local QR lets iPhone/iPad join without typing any IP.
+   const port=httpServer.address()?.port||37816,ip=lanAddresses()[0]||'127.0.0.1';
+   const url='http://'+ip+':'+port+'/game/';
+   const png=await QRCode.toBuffer(url,{type:'png',width:256,margin:2,errorCorrectionLevel:'M'});
+   res.writeHead(200,{'Content-Type':'image/png','Cache-Control':'no-store','Content-Length':png.length,
+    'X-Content-Type-Options':'nosniff'});
+   res.end(req.method==='HEAD'?'':png);return;
+  }
   if(new URL(req.url,'http://localhost').pathname==='/lan/info'){
    const body=JSON.stringify({port:httpServer.address()?.port||37816,addresses:lanAddresses()});
    res.writeHead(200,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Content-Length':Buffer.byteLength(body)});

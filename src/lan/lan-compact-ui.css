@@ -100,3 +100,10 @@
 @media(max-width:380px){
  #scr-multiplayer.pkmsvv-lan-compact .pkmsvv-mode-card .pkmsvv-mode-copy strong{font-size:12px!important}
 }
+
+/* iOS camera can join by QR without manual address entry. */
+#scr-multiplayer.pkmsvv-lan-compact #pkmsvv-lan-qr{
+ display:block;width:160px;max-width:50%;height:auto;
+ margin:8px auto;border:7px solid #fff;border-radius:10px;background:#fff;
+ image-rendering:pixelated;
+}

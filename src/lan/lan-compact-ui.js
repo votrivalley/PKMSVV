@@ -49,6 +49,9 @@
   const helpHeading=document.createElement('summary');
   helpHeading.textContent='ⓘ Hướng dẫn kết nối Co-op LAN';
   const helpBody=document.createElement('div');helpBody.className='pkmsvv-lan-help-body';
+  const qr=document.createElement('img');
+  qr.id='pkmsvv-lan-qr';qr.src='/lan/qr.png';
+  qr.alt='Mã QR mở game Co-op trên PC Host';qr.loading='lazy';
   const address=document.createElement('p');address.className='pkmsvv-lan-help-address';
   const hostCode=document.createElement('code');hostCode.id='pkmsvv-lan-host-ips';
   hostCode.textContent=location.origin;address.append('📡 Địa chỉ PC Host: ',hostCode);
@@ -62,7 +65,9 @@
   ]){const li=document.createElement('li');li.textContent=line;guideSteps.append(li);}
   const guideNote=document.createElement('p');
   guideNote.textContent='LAN không cần Google/Firebase. Không mở cổng LAN ra Internet.';
-  helpBody.append(address,guideSteps,guideNote);help.append(helpHeading,helpBody);
+  const camera=document.createElement('p');
+  camera.textContent='📱 iPhone/iPad: mở Camera quét mã QR để vào game LAN; không cần nhập địa chỉ.';
+  helpBody.append(camera,qr,address,guideSteps,guideNote);help.append(helpHeading,helpBody);
   const subtitle=box.querySelector('p.sub');
   if(subtitle)subtitle.insertAdjacentElement('afterend',help);else box.prepend(help);
   fetch('/lan/info',{cache:'no-store'}).then(res=>res.json()).then(info=>{

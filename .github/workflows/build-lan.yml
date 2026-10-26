@@ -70,6 +70,11 @@ jobs:
           Copy-Item desktop/lan-browser-host.cjs,desktop/lan-startup.cjs "$target/desktop/"
           Copy-Item lan-server/server.cjs,lan-server/discovery.cjs "$target/lan-server/"
           Copy-Item -Recurse node_modules/ws "$target/node_modules/ws"
+          Copy-Item -Recurse node_modules/qrcode "$target/node_modules/qrcode"
+          Copy-Item -Recurse node_modules/pngjs "$target/node_modules/pngjs"
+          Copy-Item -Recurse node_modules/yargs "$target/node_modules/yargs"
+          Copy-Item -Recurse node_modules/yargs-parser "$target/node_modules/yargs-parser"
+          Copy-Item -Recurse node_modules/cliui "$target/node_modules/cliui"
           Copy-Item desktop/START-HOST-WIFI.cmd "$target/START-HOST-WIFI.cmd"
           Copy-Item docs/LAN_FAST_START_WINDOWS.md "$target/README.md"
           if (!(Test-Path "$target/site/game/index.html")) { throw "Packaged LAN game missing" }
