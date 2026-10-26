@@ -64,14 +64,17 @@ test('PWA multiplayer source entrypoint never calls old Online nickname gate',()
  assert.match(ui,/icon\.textContent='🤝'/);
 });
 
-test('Actual PWA multiplayer module cannot open removed Firebase Online gate',()=>{
- const upstream=fs.readFileSync(path.join(__dirname,'..','vendor','pokesurvivor','js','ui','pkmsvv-multiplayer-ui.js'),'utf8');
- const start=upstream.indexOf(' function open(){');
- const end=upstream.indexOf(' return {init,open,rooms,quick,join,create};',start);
- assert.ok(start>=0&&end>start,'PWA multiplayer module missing');
- const fn=upstream.slice(start,end);
- assert.match(fn,/window\.PKMSVVOpenLanDialog/);
- assert.doesNotMatch(fn,/G\.SocialUI\.withNick/);
- const minified=read('game/js/app.min.js');
- assert.match(minified,/PKMSVVOpenLanDialog/);
+test('Self-hosted HTML5 AI mode has its own bundled game logic and no cloud dependency',()=>{
+ const aiHTML=read('ai/game/index.html'),aiBundle=read('ai/game/js/app.min.js');
+ const welcome=read('ai/index.html'),normal=read('game/index.html');
+ assert.match(aiHTML,/<base href="\/game\/"/);
+ assert.match(aiHTML,/\/ai\/game\/js\/app\.min\.js/);
+ assert.match(welcome,/pkmsvvRole=ai&pkmsvvMode/);
+ assert.match(aiBundle,/PKMSVV_STANDALONE_AI/);
+ assert.doesNotMatch(aiBundle,/AIza[A-Za-z0-9_-]{35}|pkmsvv-b84d2-default-rtdb/);
+ assert.match(normal,/PKMSVV_STANDALONE_AI_AVAILABLE=true/);
+ assert.match(read('sw.js'),/\/ai\/game\/js\/app\.min\.js/);
+ const coop=fs.readFileSync(path.join(__dirname,'..','src/shared/coop-unified.js'),'utf8');
+ assert.match(coop,/window\.location\.assign\('\/ai\/\?mode='/);
+ assert.match(coop,/pkmsvvCode/);
 });
