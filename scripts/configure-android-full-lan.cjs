@@ -136,7 +136,7 @@ const autoDiscoverJava=String.raw`
 const begin=pluginJava.indexOf('  @PluginMethod public void open(PluginCall call) {');
 const end=pluginJava.indexOf('\n}\n',begin);
 if(begin<0||end<0)throw Error('Native LAN plugin entrypoint drift');
-const pluginNew=pluginJava.slice(0,begin)+autoDiscoverJava+pluginJava.slice(end);
+const pluginNew=pluginJava.slice(0,begin)+autoDiscoverJava.replace(/\\\"/g,'"')+pluginJava.slice(end);
 fs.writeFileSync(path.join(path.dirname(main),'PKMSVVLAN.java'),pluginNew.replaceAll('__PACKAGE__',pkg),'utf8');
 
 const roleScript=String.raw`
@@ -161,7 +161,6 @@ newActivity=newActivity.replace('host=getIntent().getStringExtra("host_ip");',
 newActivity=newActivity.replace('":"+PORT+"/"', '":"+port+"/"');
 newActivity=newActivity.replace('view.evaluateJavascript(__INJECTED__,null);',
  'view.evaluateJavascript(__INJECTED__,null);\n        if(localHost(Uri.parse(url)))view.evaluateJavascript(__ROLE_SCRIPT__,null);');
-const modeScript=roleScript.replace('__ROLE__','join');
 fs.writeFileSync(path.join(path.dirname(main),'LANRoomActivity.java'),
  newActivity.replaceAll('__PACKAGE__',pkg).replace('__INJECTED__',JSON.stringify(injected)).replace('__ROLE_SCRIPT__',JSON.stringify(roleScript.replace('__ROLE__','join'))),'utf8');
 console.log('PKMSVV FULL Android: private IPv4 LAN plugin, external Host WebView, SAF JSON save import/export installed.');

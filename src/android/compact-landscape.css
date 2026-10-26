@@ -1,0 +1,55 @@
+/* Full Android landscape: keep real game proportions and avoid giant desktop nav.
+ * Scoped to the full-LAN APK; does not change PC, Cloudflare, or save state.
+ */
+@media (orientation:landscape) and (max-height:700px) {
+ html,body{overflow-x:hidden!important}
+ #scr-menu.pkmsvv-v15-menu{
+  box-sizing:border-box!important;max-width:100vw!important;min-height:0!important;
+  height:100dvh!important;overflow:hidden!important;
+  display:grid!important;grid-template-columns:minmax(0,1.65fr) minmax(245px,.9fr)!important;
+  column-gap:clamp(6px,1.4vw,14px)!important;
+  padding:clamp(6px,1.5vh,14px)!important;
+ }
+ #scr-menu.pkmsvv-v15-menu .menu-left,
+ #scr-menu.pkmsvv-v15-menu .menu-right{min-width:0!important;max-height:100%!important;min-height:0!important}
+ #scr-menu.pkmsvv-v15-menu .menu-left{
+  overflow-y:auto!important;overflow-x:hidden!important;padding-top:clamp(40px,8vh,56px)!important
+ }
+ #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav{
+  padding:clamp(45px,8vh,60px) 3px 3px!important;
+  display:flex!important;flex-direction:column!important;
+  justify-content:flex-end!important;align-items:stretch!important;
+  overflow-y:auto!important;overflow-x:hidden!important;
+  min-height:0!important;max-height:100%!important
+ }
+ #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav>.box{
+  transform:none!important;transition:none!important;
+  box-sizing:border-box!important;width:100%!important;
+  padding:clamp(7px,1.4vh,12px)!important;max-width:100%!important;
+  margin:0!important;flex:0 0 auto!important;
+ }
+ #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item{
+  box-sizing:border-box!important;width:100%!important;
+  min-height:clamp(30px,6.4vh,37px)!important;
+  padding:clamp(3px,1vh,6px) 8px!important;
+  font-size:clamp(12px,2.5vh,16px)!important;line-height:1.16!important;
+ }
+ #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item .mi-ico{
+  width:21px!important;height:21px!important;min-width:21px!important;
+  font-size:18px!important;flex:0 0 21px!important
+ }
+ #scr-menu.pkmsvv-v15-menu .menu-left .logo{margin-bottom:8px!important}
+ #scr-menu.pkmsvv-v15-menu .menu-left .logo>.t1{font-size:clamp(20px,6vh,31px)!important}
+ #scr-menu.pkmsvv-v15-menu .menu-left .logo>.pkmsvv-awakening-tagline{font-size:10px!important}
+ #scr-menu.pkmsvv-v15-menu .menu-left .pkmsvv-v15-bottom{gap:6px!important}
+ #scr-menu.pkmsvv-v15-menu .menu-left .box{max-width:100%!important}
+ #topbar{max-width:100vw!important;overflow-x:auto!important;box-sizing:border-box!important;
+  padding:2px max(4px,env(safe-area-inset-right))!important}
+ #topbar .btn{min-width:30px!important;min-height:29px!important}
+}
+@media (orientation:landscape) and (max-height:440px){
+ #scr-menu.pkmsvv-v15-menu .menu-left{padding-top:40px!important}
+ #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav{padding-top:42px!important}
+ #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item{
+  min-height:29px!important;font-size:13px!important;padding:3px 6px!important}
+}

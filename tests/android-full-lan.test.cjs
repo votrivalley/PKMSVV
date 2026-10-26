@@ -30,3 +30,17 @@ test('Full Android reuses one Co-op row and calls native LAN instead of Online',
  assert.match(js,/duplicate\.remove\(\)/);
  assert.match(js,/icon\.textContent='🤝'/);
 });
+
+test('Android landscape uses scoped compact mobile layout and native Wi-Fi discovery',()=>{
+ const css=read('src/android/compact-landscape.css');
+ assert.match(css,/max-height:700px/);
+ assert.match(css,/overflow-y:auto!important/);
+ assert.match(read('scripts/prepare-full-lan-android.cjs'),/compact-landscape\.css/);
+ const src=read('scripts/configure-android-full-lan.cjs');
+ assert.match(src,/PKMSVV_DISCOVER_V1/);
+ assert.match(src,/chooseNearby/);
+ assert.match(src,/37820/);
+ assert.match(src,/Tạo phòng \(Host\)/);
+ assert.match(src,/Tham gia \(Join\)/);
+ assert.match(src,/room_role/);
+});
