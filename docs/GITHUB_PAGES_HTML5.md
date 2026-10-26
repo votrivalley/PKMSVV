@@ -7,8 +7,9 @@ Trang mở thẳng game (không có nút Vào game, không đăng nhập Google)
 ## Bật Pages một lần
 1. Chủ repo mở https://github.com/votrivalley/PKMSVV/settings/pages
 2. Trong Build and deployment → Source chọn GitHub Actions (tài khoản GITHUB_TOKEN thông thường không tự bật tính năng này).
-3. Mở workflow https://github.com/votrivalley/PKMSVV/actions/workflows/deploy-pages-html5.yml
-4. Run workflow chọn feature/lan-local-beta. Khi deployment Success, mở website ở trên.
+3. Mở lượt build đã tạo sẵn: https://github.com/votrivalley/PKMSVV/actions/runs/40275334214
+4. Nhấn **Re-run jobs → Re-run all jobs** sau khi bật Pages. Workflow nằm trên nhánh feature/lan-local-beta nên tùy GitHub có thể chưa xuất hiện nút Run workflow ở tab mặc định.
+5. Khi deployment Success, mở website ở trên. Cho tới khi thấy Success, URL dự kiến có thể trả 404.
 
 ## Thêm vào màn hình chính iPhone/iPad
 Safari → truy cập website HTTPS → Chia sẻ → Thêm vào Màn hình chính → Mở dưới dạng ứng dụng web → Thêm.

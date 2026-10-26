@@ -49,6 +49,7 @@ const swFile=path.join(dest,'sw.js');
 let sw=fix(read(swFile)).replace("const SHELL=['/'","const SHELL=['"+prefix+"'");
 if(!sw.includes("const SHELL=['"+prefix+"'"))throw Error('Service worker shell URL changed');
 sw=sw.replace("const CACHE='pkmsvv-ios-v1516-1'","const CACHE='pkmsvv-pages-"+project.toLowerCase()+"-v1516-2'");
+sw=sw.replace("k.startsWith('pkmsvv-ios-')", "(k.startsWith('pkmsvv-ios-')||k.startsWith('pkmsvv-pages-'))");
 write(swFile,sw);
 for(const item of ['index.html','sw.js','manifest.webmanifest','game/index.html','game/js/app.min.js'])
  if(!fs.existsSync(path.join(dest,item)))throw Error('Missing compiled '+item);
