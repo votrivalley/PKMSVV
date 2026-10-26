@@ -55,7 +55,7 @@
   const guideSteps=document.createElement('ol');
   for(const line of [
    'PC mở Windows LAN Host, giữ game chạy và cho phép Windows Firewall ở mạng Private.',
-   'Điện thoại và PC cùng Wi-Fi. iPhone/iPad mở Safari; Android mở Chrome; nhập địa chỉ PC Host (cổng 37816).',
+   'Điện thoại và PC cùng Wi-Fi. iPhone/iPad mở Safari; Android mở Chrome; nhập địa chỉ IP:cổng mà PC Host hiển thị (thường là 37816; có thể 37817 nếu cổng cũ bận).',
    'PC vào Co-op → Tạo phòng. Gửi mã phòng cho bạn bè; khách nhập mã hoặc chọn phòng công khai.',
    'Host có thể Thêm AI trong phòng Sống Sót khi thiếu người rồi bắt đầu trận.',
    'Nhớ sao lưu game thường xuyên bằng mục Sao lưu game ở menu chính.'

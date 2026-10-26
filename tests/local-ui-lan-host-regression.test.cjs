@@ -11,8 +11,10 @@ test('Cloudflare Co-op click captured before old Firebase handlers, points only 
  const src=read('src/shared/local-shell.js');
  assert.match(src,/document\.addEventListener\('click',enterLan,true\)/);
  assert.match(src,/stopImmediatePropagation/);
- assert.match(src,/location\.assign\('http:\/\/'\+ip\+':37816\/'\)/);
+ assert.match(src,/location\.assign\('http:\/\/'\+ip\+':'\+port\+'\/'\)/);
  assert.match(src,/window\.prompt\('Co-op dùng PC LAN Host/);
+ assert.match(src,/192\.168\.1\.168:37816/);
+ assert.match(src,/Number\.isInteger\(port\)/);
 });
 test('Backup action in top bar reuses existing Save UI without deleting any save key',()=>{
  const script=read('src/shared/local-shell.js');

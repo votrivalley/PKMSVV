@@ -16,16 +16,18 @@
   // handler on the target element. Cloudflare static pages cannot host rooms.
   event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();
   const previous=(()=>{try{return localStorage.getItem('pkmsvv.lan.host.ip')||'';}catch(_){return '';}})();
-  const input=window.prompt('Co-op dùng PC LAN Host cùng Wi-Fi, không dùng đăng nhập Google.\nMở PC Host trước và nhập IP của PC (ví dụ 192.168.1.168):',previous);
+  const input=window.prompt('Co-op dùng PC LAN Host cùng Wi-Fi, không dùng Google.\nNhập IP và cổng HIỂN THỊ trong Co-op trên PC (ví dụ 192.168.1.168:37816):',previous);
   if(input===null)return;
-  const ip=input.trim(),octets=ip.split('.');
-  const valid=octets.length===4&&octets.every(o=>/^\d{1,3}$/.test(o)&&Number(o)<=255)&&(
+  const host=input.trim(),match=host.match(/^(\d{1,3}(?:\.\d{1,3}){3})(?::(\d{2,5}))?$/);
+  const ip=match?.[1]||'',port=match?.[2]?Number(match[2]):37816,octets=ip.split('.');
+  const valid=octets.length===4&&octets.every(o=>/^\d{1,3}$/.test(o)&&Number(o)<=255)&&
+   Number.isInteger(port)&&port>=1024&&port<=65535&&(
    Number(octets[0])===10||
    (Number(octets[0])===172&&Number(octets[1])>=16&&Number(octets[1])<=31)||
    (Number(octets[0])===192&&Number(octets[1])===168));
-  if(!valid){window.alert('Địa chỉ IP LAN không hợp lệ. Hãy xem IP Host trong Co-op trên PC.');return;}
-  try{localStorage.setItem('pkmsvv.lan.host.ip',ip);}catch(_){}
-  location.assign('http://'+ip+':37816/');
+  if(!valid){window.alert('IP/cổng LAN không hợp lệ. Hãy xem địa chỉ Host thực tế trong Co-op trên PC.');return;}
+  try{localStorage.setItem('pkmsvv.lan.host.ip',ip+':'+port);}catch(_){}
+  location.assign('http://'+ip+':'+port+'/');
  }
  function previewAlert(){
   if(!isPages||location.hostname==='pkmsvv-web.pages.dev'||
