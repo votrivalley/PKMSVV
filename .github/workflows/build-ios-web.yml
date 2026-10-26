@@ -7,6 +7,7 @@ on:
       - 'src/ios/**'
       - 'src/shared/**'
       - 'tests/coop-icon-consistency.test.cjs'
+      - 'tests/unified-coop.test.cjs'
       - 'tests/local-shell-ui.test.cjs'
       - 'tests/local-ui-lan-host-regression.test.cjs'
       - 'tests/pages-lan-connect-runtime.test.cjs'
@@ -37,7 +38,7 @@ jobs:
           git -C vendor/pokesurvivor fetch --depth 1 origin 11fe868c640b62ac37beacc222e056bc4d9ec892
           git -C vendor/pokesurvivor checkout --detach FETCH_HEAD
       - run: npm install --no-audit --no-fund
-      - run: npm run test:ios && node --test tests/local-shell-ui.test.cjs tests/pages-lan-connect-runtime.test.cjs
+      - run: npm run test:ios && node --test tests/local-shell-ui.test.cjs tests/pages-lan-connect-runtime.test.cjs tests/unified-coop.test.cjs
       - run: npm run prepare:ios
       - name: Verify rendered Co-op uses static LAN link, not legacy Online
         shell: bash

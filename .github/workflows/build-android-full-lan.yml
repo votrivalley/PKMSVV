@@ -9,6 +9,7 @@ on:
       - 'src/lan/**'
       - 'src/shared/**'
       - 'tests/coop-icon-consistency.test.cjs'
+      - 'tests/unified-coop.test.cjs'
       - 'tests/local-shell-ui.test.cjs'
       - 'tests/local-ui-lan-host-regression.test.cjs'
       - 'tests/android-full-lan.test.cjs'
@@ -58,7 +59,7 @@ jobs:
           npm run test:android
           npm run prepare:android:full-lan
           npm run test:android:full-lan
-          node --test tests/coop-icon-consistency.test.cjs
+          node --test tests/coop-icon-consistency.test.cjs tests/unified-coop.test.cjs
           node --test tests/local-shell-ui.test.cjs
       - name: Create Capacitor Android and LAN native screen
         run: |
