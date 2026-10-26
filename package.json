@@ -32,7 +32,10 @@
     "test:opening": "node --test tests/opening-spawns.test.cjs",
     "prepare:web": "node scripts/prepare-web.cjs",
     "test:web": "node --test tests/story-intro.test.cjs tests/web-*.test.cjs tests/v15-eggs.test.cjs tests/v15-gacha-save-isolation.test.cjs",
-    "test:v15": "node --test tests/story-intro.test.cjs tests/v15-eggs.test.cjs tests/v15-gacha-save-isolation.test.cjs"
+    "test:v15": "node --test tests/story-intro.test.cjs tests/v15-eggs.test.cjs tests/v15-gacha-save-isolation.test.cjs",
+    "prepare:lan": "node scripts/prepare-lan.cjs",
+    "build:lan:win": "electron-builder --win portable --x64 --publish never --config lan-win.json",
+    "test:lan": "node --test tests/lan-server.test.cjs"
   },
   "devDependencies": {
     "electron": "^38.0.0",
@@ -78,6 +81,7 @@
     "@capacitor/core": "8.0.0",
     "@capacitor/android": "8.0.0",
     "@capacitor/filesystem": "8.0.0",
-    "@capacitor/share": "8.0.0"
+    "@capacitor/share": "8.0.0",
+    "ws": "^8.18.0"
   }
 }
