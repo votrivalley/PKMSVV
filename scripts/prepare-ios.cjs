@@ -18,7 +18,7 @@ if(!gameHTML.includes('</head>'))throw Error('Missing compiled iOS HTML head');
 gameHTML=gameHTML.replace('</head>',[
  '<style id="pkmsvv-ios-local-only">',
  '#scr-menu [data-go="friends"],#scr-menu [data-go="rank"],',
- '#pkmsvv-menu-google,',,
+ '#pkmsvv-menu-google,',
  '#btn-google,#pkmsvv-login-google,#pkmsvv-online-counter,',
  '#scr-friends,#scr-rank,#scr-multiplayer{display:none!important}',
  '</style></head>'

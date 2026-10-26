@@ -11,7 +11,8 @@ test('iOS HTML5 route is local-only with App Store-free Home Screen instructions
  assert.match(html,/id="lan-connect"/);
  assert.match(entry,/:37816\//);
  assert.match(read('scripts/prepare-ios.cjs'),/#pkmsvv-menu-google/);
- assert.match(read('scripts/prepare-ios.cjs'),/#scr-menu \[data-go="multiplayer"\]/);
+ assert.doesNotMatch(read('scripts/prepare-ios.cjs'),/'#scr-menu \\[data-go="multiplayer"\\],#pkmsvv-menu-google/);
+ assert.match(read('scripts/prepare-ios.cjs'),/pkmsvv-local-shell\\.js/);
 });
 test('LAN says Co-op; native backup is on main menu and old warning replaced',()=>{
  const lan=read('scripts/patch-lan.cjs'),menu=read('scripts/patch-v15-menu-qa.cjs'),notice=read('scripts/patch-v15-offline-save-notice.cjs');
