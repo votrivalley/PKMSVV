@@ -55,3 +55,12 @@ Menu chính → 🤝 Co-op
 - Không yêu cầu nhập IP là bước mặc định trong UX.
 - Không báo “Host trên HTML5 không cần server” khi chưa có signaling WebRTC thực sự.
 - Không tuyên bố AI đã hoàn chỉnh cho Sống Còn/Tranh Trứng khi chưa có simulation gameplay.
+
+## Bổ sung sau bản HTML5 1.5.21 — AI và lời mời một chạm
+
+- Cloudflare Web có đường dẫn `/ai/?mode=coop|royale|eggrush` cho trận **chỉ người chơi + bot trên một thiết bị**, dùng bản LAN gameplay được biên dịch với `src/lan/solo-ai-bus.js`. Chơi AI không cần PC Host, WebSocket, Firebase hoặc IP; không ghép bạn bè từ thiết bị khác vào trận AI này.
+- `/game/` vẫn giữ chế độ chơi đơn và lưu cục bộ. Chọn `Co-op → Chơi với AI` tại Cloudflare mở đúng bản AI; đường dẫn chỉ được bật khi build AI thực sự có mặt.
+- Chơi **với người thật** qua các thiết bị vẫn cần một Host truyền tải trong Wi-Fi (Windows Host). Chủ phòng khác với máy chủ truyền tải. Đây là giới hạn mạng, không phải giới hạn nút bấm.
+- Tại Host LAN, nút **Sao chép lời mời** tạo URL `http://IP-LAN:PORT/game/?pkmsvvRole=join&pkmsvvMode=...&pkmsvvCode=...`. Khách mở lời mời được đưa tự động đến phòng; địa chỉ loopback `127.0.0.1` không được quảng bá tới bạn bè. Danh sách phòng và mã được ưu tiên, IP thủ công nằm ở phần nâng cao.
+- **Tranh Trứng không gọi G.Rift.update** trong trận; Sống Sót, Sống Còn và chơi đơn giữ nguyên.
+- Bản AI Web chỉ coi là hoàn thiện sau khi kiểm thử trực tiếp gameplay của cả ba mode và save/reload, không chỉ khi CI tạo được artifact.
