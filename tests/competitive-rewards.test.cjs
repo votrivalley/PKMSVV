@@ -4,10 +4,29 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const game=path.resolve(__dirname,'..','vendor','pokesurvivor');
 function compiled(file){return fs.readFileSync(path.join(game,file),'utf8');}
-function extract(file,begin,end){
- const src=compiled(file),a=src.indexOf(begin);assert.ok(a>=0,file+' missing '+begin);
- const b=src.indexOf(end,a+begin.length);assert.ok(b>a,file+' missing '+end);
- return src.slice(a,b).trim();
+function extract(file,begin){
+ const src=compiled(file),a=src.indexOf(begin);
+ assert.ok(a>=0,file+' missing '+begin);
+ // Stop at the closing brace of the actual function, rather than catching
+ // any later declarations/comments that make new Function() invalid.
+ let depth=0,quote='',comment='',escaped=false;
+ for(let i=src.indexOf('{',a+begin.length-1);i<src.length;i++){
+  const ch=src[i],next=src[i+1];
+  if(comment==='line'){if(ch==='\n')comment='';continue;}
+  if(comment==='block'){if(ch==='*'&&next==='/'){comment='';i++;}continue;}
+  if(quote){
+   if(escaped){escaped=false;continue;}
+   if(ch==='\\'){escaped=true;continue;}
+   if(ch===quote)quote='';
+   continue;
+  }
+  if(ch==='/'&&next==='/'){comment='line';i++;continue;}
+  if(ch==='/'&&next==='*'){comment='block';i++;continue;}
+  if(ch==='\''||ch==='"'||ch==='\u0060'){quote=ch;continue;}
+  if(ch==='{')depth++;
+  if(ch==='}'&&--depth===0)return src.slice(a,i+1);
+ }
+ throw Error('Unbalanced function '+begin+' in '+file);
 }
 function fixture(mode){
  const local={uid:'host',t1:0,t10:0,x:0,y:0,bodyH:20};
