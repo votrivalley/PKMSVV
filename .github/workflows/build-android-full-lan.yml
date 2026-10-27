@@ -56,6 +56,8 @@ jobs:
           git -C vendor/pokesurvivor checkout --detach FETCH_HEAD
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+      - name: Validate stable Android signing guardrails
+        run: node --test tests/android-stable-signing.test.cjs
       - name: Compile entire modified offline game
         run: npm run prepare:game
       - name: Validate original game and save functionality
@@ -99,7 +101,7 @@ jobs:
         run: |
           mkdir -p dist/full-lan-android
           version=$(node -p "require('./package.json').version")
-          apk="dist/full-lan-android/PKMSVV-${version}-Android-FULL-CoopLAN-Beta.apk"
+          apk="dist/full-lan-android/PKMSVV-${version}-Android-FULL-LAN-DEBUG-TEST-ONLY.apk"
           cp android/app/build/outputs/apk/debug/app-debug.apk "$apk"
           unzip -t "$apk" | tail -1
           unzip -Z -1 "$apk" | grep -q '^assets/public/js/app.min.js$'
@@ -108,7 +110,7 @@ jobs:
           ls -lh "$apk"
       - uses: actions/upload-artifact@v4
         with:
-          name: PKMSVV-Android-FULL-CoopLAN-Beta
+          name: PKMSVV-Android-FULL-LAN-DEBUG-TEST-ONLY
           path: dist/full-lan-android/*.apk
           retention-days: 14
           if-no-files-found: error
