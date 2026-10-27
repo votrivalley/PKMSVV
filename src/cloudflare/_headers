@@ -14,3 +14,9 @@
 
 /manifest.webmanifest
   Cache-Control: no-cache
+
+/game/version.json
+  Cache-Control: no-store, max-age=0
+
+/version.json
+  Cache-Control: no-store, max-age=0
