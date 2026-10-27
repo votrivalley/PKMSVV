@@ -91,6 +91,15 @@ patch('js/game.js',
 patch('js/ui/test.js',
  "    $('starter-back').onclick = () => G.UI.show('scr-result');",
  "    $('starter-back').onclick = () => { if(result)G.UI.show('scr-result'); else start(); };");
+
+patch('dev.html',
+ '    <div class="answers" id="test-a"></div>',
+ '    <div class="answers" id="test-a"></div>\\n'+
+ '    <div class="row" style="justify-content:center;margin-top:16px"><button id="test-skip-starter" type="button" class="btn ghost">Bỏ qua câu hỏi · Tự chọn Pokémon</button></div>');
+patch('js/ui/test.js',
+ "    $('res-ok').onclick = () => choose(result.dex);",
+ "    $('test-skip-starter').onclick = skipToStarters;\\n"+
+ "    $('res-ok').onclick = () => choose(result.dex);");
 patch('js/ui/test.js',
  '  return { init, start };',
  "  function skipToStarters() {\n"+
