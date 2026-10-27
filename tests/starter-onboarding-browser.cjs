@@ -8,7 +8,8 @@ const path=require('node:path');
 const {chromium}=require('playwright');
 const {startServer}=require('../lan-server/server.cjs');
 async function main(){
- const platform=process.env.PKMSVV_PLATFORM||'android';
+ const platform=process.env.PKMSVV_PLATFORM||'lan';
+ assert.ok(['lan','cloudflare','android'].includes(platform),'Unsupported platform for starter QA');
  const root=path.resolve(platform==='android'?'mobile/www':platform==='cloudflare'?'dist/cloudflare':'dist/lan');
  const server=await startServer({root,host:'127.0.0.1',port:0});
  const browser=await chromium.launch({headless:true,...(process.env.PKMSVV_BROWSER?{executablePath:process.env.PKMSVV_BROWSER}:{})});
