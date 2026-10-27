@@ -48,7 +48,10 @@ for(const name of ['manifest.webmanifest','game/manifest.webmanifest']){
 const swFile=path.join(dest,'sw.js');
 let sw=fix(read(swFile)).replace("const SHELL=['/'","const SHELL=['"+prefix+"'");
 if(!sw.includes("const SHELL=['"+prefix+"'"))throw Error('Service worker shell URL changed');
-sw=sw.replace("const CACHE='pkmsvv-ios-v1516-1'","const CACHE='pkmsvv-pages-"+project.toLowerCase()+"-v1516-2'");
+const release=require('../package.json').version.replace(/[^0-9]/g,'');
+const pagesCache='pkmsvv-pages-'+project.toLowerCase()+'-v'+release+'-2';
+if(!/const CACHE='pkmsvv-ios-[^']+'/.test(sw))throw Error('Unknown iOS cache anchor in Pages worker');
+sw=sw.replace(/const CACHE='pkmsvv-ios-[^']+'/,"const CACHE='"+pagesCache+"'");
 sw=sw.replace("k.startsWith('pkmsvv-ios-')", "(k.startsWith('pkmsvv-ios-')||k.startsWith('pkmsvv-pages-'))");
 write(swFile,sw);
 for(const item of ['index.html','sw.js','manifest.webmanifest','game/index.html','game/js/app.min.js'])
