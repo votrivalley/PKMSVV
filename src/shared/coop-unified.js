@@ -139,7 +139,7 @@
  }
  async function action(role){
   if(busy)return;
-  if(role!=='ai'&&!window.PKMSVV_WIFI&&!new URLSearchParams(location.search).get('pkmsvvCode')){
+  if(role!=='ai'&&(lan()||window.PKMSVV_STANDALONE_AI_AVAILABLE)&&!window.PKMSVV_WIFI&&!new URLSearchParams(location.search).get('pkmsvvCode')){
    const target=lan()&&!window.PKMSVV_STANDALONE_AI?'/game/':'/ai/game/';
    const q=new URLSearchParams({pkmsvvWifi:'1',pkmsvvRole:role,pkmsvvMode:mode});
    window.location.assign(target+'?'+q);return;

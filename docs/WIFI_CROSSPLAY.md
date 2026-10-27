@@ -22,6 +22,8 @@ The Web version must have been loaded/installed with its needed assets before
 losing Internet; a website's address alone does not make the game available
 offline. Wi-Fi client isolation can prevent direct connections even on the same
 SSID. Host needs to remain open and foregrounded, especially on Android.
+`tests/wifi-pwa-offline.cjs` checks real service-worker routing with Internet
+disabled, including the Wi-Fi query and versioned script cache fallback.
 
 ## Implementation and boundaries
 

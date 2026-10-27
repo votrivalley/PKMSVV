@@ -4,6 +4,7 @@ on:
     branches: [feature/lan-local-beta]
     paths:
       - 'scripts/bundle-wifi-qr.cjs'
+      - 'tests/wifi-pwa-offline.cjs'
       - 'scripts/patch-lan.cjs'
       - 'scripts/prepare-cloudflare.cjs'
       - 'scripts/prepare-cloudflare-ai.cjs'
@@ -72,6 +73,9 @@ jobs:
         run: node --test tests/competitive-rewards.test.cjs
       - name: Verify P0 arena support nests and opening spawns
         run: node --test tests/arena-v1529.test.cjs tests/spawn-arena-v1529.test.cjs tests/lan-bot-snapshot.test.cjs
+      - name: Verify Wi-Fi Host navigation after losing Internet
+        shell: bash
+        run: PKMSVV_BROWSER="$(command -v google-chrome)" node tests/wifi-pwa-offline.cjs
       - name: Ten-minute Web P0 profile with 10 trainers and AI
         shell: bash
         run: PKMSVV_PLATFORM=web PKMSVV_BROWSER="$(command -v google-chrome)" node tests/arena-v1529-soak.cjs

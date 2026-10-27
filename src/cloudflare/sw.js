@@ -26,11 +26,11 @@ self.addEventListener('fetch',e=>{
     const res=await fetch(request);
     if(res.ok&&res.type==='basic')cache.put(request,res.clone()).catch(()=>{});
     return res;
-   }catch(_){return await cache.match(request)||
-    (request.mode==='navigate'?await cache.match('/game/index.html'):undefined)||
+   }catch(_){return await cache.match(request,{ignoreSearch:true})||
+    (request.mode==='navigate'?await cache.match(url.pathname.startsWith('/ai/game')?'/ai/game/index.html':'/game/index.html'):undefined)||
     Response.error();}
   }
-  const hit=await cache.match(request)||await caches.match(request);if(hit)return hit;
+  const hit=await cache.match(request,{ignoreSearch:true})||await caches.match(request,{ignoreSearch:true});if(hit)return hit;
   try{
    const res=await fetch(request);
    if(res.ok&&res.type==='basic')cache.put(request,res.clone()).catch(()=>{});
