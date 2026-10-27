@@ -72,7 +72,7 @@ jobs:
       - name: Verify personal ticket and Shiny ownership in standalone Web AI
         run: node --test tests/competitive-rewards.test.cjs
       - name: Verify P0 arena support nests and opening spawns
-        run: node --test tests/arena-v1529.test.cjs tests/spawn-arena-v1529.test.cjs tests/lan-bot-snapshot.test.cjs
+        run: node --test tests/arena-v1529.test.cjs tests/spawn-arena-v1529.test.cjs tests/lan-bot-snapshot.test.cjs tests/wifi-qr-license.test.cjs
       - name: Verify Wi-Fi Host navigation after losing Internet
         shell: bash
         run: PKMSVV_BROWSER="$(command -v google-chrome)" node tests/wifi-pwa-offline.cjs

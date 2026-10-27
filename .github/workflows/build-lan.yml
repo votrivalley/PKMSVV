@@ -103,7 +103,7 @@ jobs:
       - name: Verify human can rescue a fallen AI teammate
         run: node tests/lan-ai-rescue-runtime.cjs
       - name: Verify P0 zone, eggs, opening spawns and private rewards
-        run: node --test tests/arena-v1529.test.cjs tests/spawn-arena-v1529.test.cjs tests/lan-bot-snapshot.test.cjs tests/competitive-rewards.test.cjs
+        run: node --test tests/arena-v1529.test.cjs tests/spawn-arena-v1529.test.cjs tests/lan-bot-snapshot.test.cjs tests/wifi-qr-license.test.cjs tests/competitive-rewards.test.cjs
       - name: Verify real Host guest and AI at 2 4 10 participants
         run: node tests/arena-v1529-runtime.cjs
       - name: Ten-minute P0 load profile with 10 participants

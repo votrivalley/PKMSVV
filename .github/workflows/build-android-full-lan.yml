@@ -92,7 +92,7 @@ jobs:
         shell: bash
         run: PKMSVV_PLATFORM=android PKMSVV_BROWSER="$(command -v google-chrome)" node tests/starter-onboarding-browser.cjs
       - name: Verify P0 arena support nests and opening spawns
-        run: node --test tests/arena-v1529.test.cjs tests/spawn-arena-v1529.test.cjs tests/lan-bot-snapshot.test.cjs
+        run: node --test tests/arena-v1529.test.cjs tests/spawn-arena-v1529.test.cjs tests/lan-bot-snapshot.test.cjs tests/wifi-qr-license.test.cjs
       - name: Ten-minute Android assets P0 browser profile with 10 trainers
         shell: bash
         run: PKMSVV_PLATFORM=android PKMSVV_BROWSER="$(command -v google-chrome)" node tests/arena-v1529-soak.cjs

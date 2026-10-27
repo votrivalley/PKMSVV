@@ -11,6 +11,7 @@ module.exports=function bundleQR(){
  }
  const entry=visit(require.resolve('qrcode/lib/core/qrcode.js'));
  const license=fs.readFileSync(require.resolve('qrcode/license'),'utf8')+'\n'+fs.readFileSync(path.join(path.dirname(require.resolve('dijkstrajs')),'LICENSE.md'),'utf8');
- return '/*! QR encoder: qrcode + dijkstrajs\n'+license+'\n*/\n'+
+ // Upstream minification strips comments, so preserve the full notices as data.
+ return 'window.PKMSVV_QR_LICENSE='+JSON.stringify(license)+';\n'+
  '(function(){const modules=['+files.join(',')+'],cache={};function load(id){if(cache[id])return cache[id].exports;const m=cache[id]={exports:{}};modules[id](m,m.exports,load);return m.exports;}window.PKMSVVQR=load('+entry+');})();\n';
 };
