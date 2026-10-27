@@ -227,7 +227,9 @@ G.EggRush=(()=>{
   }
   if(!n||!cam?.scale)return;
   const sx=(n.x-cam.left())*cam.scale,sy=(n.y-cam.top())*cam.scale;
-  const x=Math.max(50,Math.min(w-50,sx)),y=Math.max(95,Math.min(h-90,sy));
+  const x=Math.max(50,Math.min(w-50,sx));let y=Math.max(95,Math.min(h-90,sy));
+  const sidebar=G.HUD?.leftBounds;
+  if(sidebar&&x<sidebar.x+270&&y<sidebar.bottom+66)y=Math.min(h-90,sidebar.bottom+66);
   ctx.save();ctx.translate(x,y);ctx.rotate(Math.atan2(sy-h/2,sx-w/2));
   ctx.fillStyle='#ffe381';ctx.strokeStyle='#13283a';ctx.lineWidth=3;
   ctx.beginPath();ctx.moveTo(17,0);ctx.lineTo(-11,-10);ctx.lineTo(-6,0);ctx.lineTo(-11,10);ctx.closePath();ctx.stroke();ctx.fill();ctx.restore();
@@ -238,9 +240,25 @@ G.EggRush=(()=>{
  function hud(ctx,w,h){
   if(!active&&!supportMode)return;
   guide(ctx,w,h);
+  if(supportMode&&G.Royale?.active)return; // Survival owns the ranking sidebar.
+  const bounds=G.HUD?.leftBounds||{x:8,bottom:111};
+  const top=bounds.bottom+8,left=Math.max(8,bounds.x);
+  if(supportMode){
+   // Survival/Co-op use support eggs, not the competitive Egg Rush scoreboard.
+   const uid=G.Game?.player?.uid||G.Social.uid;
+   const owned=pets.filter(p=>p.uid===uid),hatched=owned.filter(p=>p.hatch).length;
+   const text=tr('Hỗ trợ: ','Supports: ')+hatched+'/2'+
+    (owned.length>hatched?tr(' · Đang ấp: ',' · Hatching: ')+(owned.length-hatched):'');
+   ctx.save();ctx.font='bold 11px sans-serif';ctx.textAlign='left';
+   const width=Math.min(w-left-8,Math.max(150,ctx.measureText(text).width+16));
+   ctx.fillStyle='rgba(11,39,51,.78)';ctx.strokeStyle='#80cfc4';ctx.lineWidth=1;
+   ctx.beginPath();ctx.roundRect(left,top,width,26,7);ctx.fill();ctx.stroke();
+   ctx.fillStyle='#ffe17a';ctx.fillText(text,left+8,top+17,width-16);ctx.restore();return;
+  }
   const board=standings(),collected=Object.values(score).reduce((s,n)=>s+n,0);
   const size=Math.min(165,w*.27);
   ctx.save();
+  ctx.translate(left-8,top-119);
   ctx.fillStyle='rgba(11,39,51,.78)';ctx.strokeStyle='#80cfc4';ctx.lineWidth=1;
   ctx.beginPath();ctx.roundRect(8,119,size,24+board.length*26,8);ctx.fill();ctx.stroke();
   ctx.fillStyle='#ffe17a';ctx.textAlign='right';ctx.font='bold 11px sans-serif';ctx.fillText(supportMode?tr('Hỗ trợ: tối đa 2/người','Supports: max 2/trainer'):tr('Trứng đã nhặt: ','Collected: ')+collected,size,135);

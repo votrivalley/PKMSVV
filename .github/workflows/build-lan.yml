@@ -5,6 +5,8 @@ on:
     paths:
       - 'lan-server/**'
       - 'src/lan/**'
+      - 'src/web/pkmsvv-royale.js'
+      - 'src/web/pkmsvv-egg-rush.js'
       - 'src/shared/**'
       - 'tests/coop-icon-consistency.test.cjs'
       - 'tests/unified-coop.test.cjs'
@@ -79,6 +81,10 @@ jobs:
         run: npm run test:lan:modes
       - name: Validate natural Co-op AI and individual support pairs
         run: npm run test:lan:coop
+      - name: Verify ten-player sidebar on portrait and landscape screens
+        run: node --test tests/lan-hud-layout.test.cjs && node tests/lan-hud-runtime.cjs
+      - name: Verify human can rescue a fallen AI teammate
+        run: node tests/lan-ai-rescue-runtime.cjs
       - name: Verify native PC IP failure and successful retry
         run: npm run test:lan:pc
       - uses: actions/upload-artifact@v4

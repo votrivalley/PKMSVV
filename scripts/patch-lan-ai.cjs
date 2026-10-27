@@ -7,6 +7,25 @@ function once(file,from,to){
  if(code.split(from).length!==2)throw Error('LAN AI anchor drift: '+file+' '+from.slice(0,60));
  fs.writeFileSync(p,code.replace(from,to),'utf8');
 }
+// Expose the actual drawn sidebar bounds so support/egg panels never assume a
+// fixed top offset. Reserve this same area for off-screen teammate markers.
+once('js/ui/hud.js',
+ '  function draw(ctx, w, h, pl, st) {',
+ '  let leftBounds={x:16,bottom:70};\n  function draw(ctx, w, h, pl, st) {');
+once('js/ui/hud.js',
+ '    if (G.Coop.active) drawCoop(ctx, w, h, pl, px, py + (bx > px ? 56 : 40));',
+ '    leftBounds={x:px,bottom:py+50};\n    if (G.Coop.active&&!G.Royale.active) drawCoop(ctx, w, h, pl, px, py + (bx > px ? 56 : 40));');
+once('js/ui/hud.js',
+ '    // Flechas hacia los compañeros fuera de la vista.',
+ '    leftBounds={x:px,bottom:Math.max(leftBounds.bottom,y+2)};\n    ctx.save();ctx.beginPath();ctx.rect(0,0,w,h);ctx.rect(px-8,12,280,leftBounds.bottom+42);ctx.clip("evenodd");\n\n    // Flechas hacia los compañeros fuera de la vista.');
+once('js/ui/hud.js','    // Tú, caído.', '    ctx.restore();\n\n    // Tú, caído.');
+once('js/ui/hud.js',
+ '      const ex = G.U.clamp(sx, M, w - M), ey = G.U.clamp(sy, M + 70, h - M - 80);',
+ '      const ex = G.U.clamp(sx, M, w - M);\n      let ey = G.U.clamp(sy, M + 70, h - M - 80);\n      if(ex<px+270&&ey<leftBounds.bottom+66)ey=Math.min(h-M-80,leftBounds.bottom+66);');
+once('js/ui/hud.js','  return { draw, roundRect, bar };',
+ '  return { draw, roundRect, bar, get leftBounds(){return leftBounds;} };');
+once('js/ui/hud.js',"      G.I18n.rawCanvas(ctx, 'fillText', m.name, px, y + 9);",
+ "      G.I18n.rawCanvas(ctx, 'fillText', m.name, px, y + 9, 70);");
 once('js/net/coop.js',
  "      mates.set(m.uid, { uid: m.uid, name: m.name, color: COLORS[i], pl: p, connected: true, q: [], flushT: 0, xpMul: 1 });\n    });",
  "      mates.set(m.uid, { uid: m.uid, name: m.name, color: COLORS[i], pl: p, connected: true, q: [], flushT: 0, xpMul: 1 });\n    });\n    if(host)G.LanAI.begin();");

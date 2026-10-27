@@ -110,3 +110,17 @@ test('Co-op AI seeks its own support egg but prioritizes rescuing a fallen teamm
  for(let i=0;i<8;i++)h.G.LanAI.update(.12,2+i*.12);
  assert.ok(h.pl.x<prior,'rescue overrides egg foraging');
 });
+test('Survival rolls distinct strength tiers using bounded ordinary upgrade levels',()=>{
+ const {G}=harness('royale');
+ const profiles=[.1,.5,.9].map(r=>G.LanAI.strength(()=>r));
+ assert.deepEqual(profiles.map(p=>p.tier),['normal','trained','elite']);
+ for(const p of profiles)for(const [id,n] of Object.entries(p.levels)){
+  assert.ok(n>=2&&n<=({hp:10,atk:10,def:8,cd:8,spd:8,regen:5})[id]);
+ }
+ assert.ok(profiles[2].levels.hp>profiles[0].levels.hp);
+});
+test('Survival AI retreats from nearby monsters instead of blindly following its roaming goal',()=>{
+ const h=harness('royale',{enemies:[{x:30,y:0,r:12,dead:false}]});
+ h.G.LanAI.update(.12,1);
+ assert.ok(h.pl.lanBotAxis[0]<0,'moves away from threat at close range');
+});

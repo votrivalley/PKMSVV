@@ -40,9 +40,25 @@ G.Royale=(()=>{
  }
  function draw(ctx,w,h,players){
   if(!active||!ctx)return;
-  const str=L('SỐNG CÒN','SURVIVAL')+'  '+players.filter(p=>p&&!p.dead).length+'/'+roster.length;
-  ctx.save();ctx.font='bold 14px sans-serif';ctx.textAlign='right';ctx.fillStyle='rgba(8,22,53,.86)';
-  ctx.fillRect(Math.max(0,w-205),83,190,29);ctx.fillStyle='#ffe089';ctx.fillText(str,w-26,103);ctx.restore();
+  const alive=new Set(players.filter(p=>p&&!p.dead).map(p=>p.uid));
+  const time=G.Game?.st?.time||0;
+  const board=results(players,time).standings.sort((a,b)=>Number(alive.has(b.uid))-Number(alive.has(a.uid))||b.points-a.points||a.name.localeCompare(b.name));
+  const bounds=G.HUD?.leftBounds||{x:16,bottom:70},x=bounds.x,top=bounds.bottom+8;
+  ctx.save();ctx.font='10px sans-serif';
+  const statusWidth=Math.max(ctx.measureText(L('Sống','Alive')).width,ctx.measureText(L('Ngủm','Out')).width);
+  const nameWidth=Math.min(130,Math.max(70,...board.map((p,i)=>ctx.measureText((i+1)+'. '+p.name).width)));
+  const width=Math.min(w-x-8,Math.max(150,nameWidth+statusWidth+26));ctx.restore();
+  const row=Math.max(14,Math.min(20,(h-top-120-26)/Math.max(1,board.length)));
+  const height=26+row*board.length;
+  ctx.save();ctx.fillStyle='rgba(8,22,53,.86)';ctx.strokeStyle='#80cfc4';ctx.lineWidth=1;
+  ctx.beginPath();ctx.roundRect(x,top,width,height,8);ctx.fill();ctx.stroke();
+  ctx.textAlign='left';ctx.font='bold 11px sans-serif';ctx.fillStyle='#ffe089';
+  ctx.fillText(L('SỐNG CÒN','SURVIVAL')+' · '+alive.size+'/'+roster.length,x+8,top+17);
+  board.forEach((p,i)=>{
+   const y=top+26+i*row;ctx.fillStyle=p.uid===G.Social.uid?'#ffe089':alive.has(p.uid)?'#effff6':'#9aabba';
+   ctx.font='10px sans-serif';ctx.textAlign='left';ctx.fillText((i+1)+'. '+p.name,x+8,y+row*.7,width-statusWidth-24);
+   ctx.textAlign='right';ctx.fillText(alive.has(p.uid)?L('Sống','Alive'):L('Ngủm','Out'),x+width-8,y+row*.7);
+  });ctx.restore();
  }
  return {begin,startPosition,intensity,check,finish,html,draw,get active(){return active;},get outcome(){return outcome;},get size(){return roster.length;}};
 })();

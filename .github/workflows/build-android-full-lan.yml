@@ -5,6 +5,9 @@ on:
     paths:
       - 'scripts/prepare-full-lan-android.cjs'
       - 'scripts/compile-standalone-ai.cjs'
+      - 'scripts/patch-lan-ai.cjs'
+      - 'src/web/pkmsvv-egg-rush.js'
+      - 'src/web/pkmsvv-royale.js'
       - 'scripts/package-standalone-ai.cjs'
       - 'scripts/configure-android-full-lan.cjs'
       - 'src/android/full-lan-ui.js'

@@ -6,6 +6,7 @@ on:
       - 'scripts/prepare-cloudflare.cjs'
       - 'scripts/prepare-cloudflare-ai.cjs'
       - 'scripts/compile-standalone-ai.cjs'
+      - 'scripts/patch-lan-ai.cjs'
       - 'scripts/package-standalone-ai.cjs'
       - 'scripts/prepare-lan.cjs'
       - 'scripts/patch-lan.cjs'

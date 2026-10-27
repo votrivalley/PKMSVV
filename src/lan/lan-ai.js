@@ -9,12 +9,29 @@ G.LanAI=(()=>{
   return room.members.filter(m=>m.bot===true&&/^ai-[a-f0-9]{16}$/.test(m.uid));
  }
  function owns(pl){return !!pl?.lanBot&&G.Coop.isHost;}
+ function strength(random=Math.random){
+  const r=random(),tier=r<.25?'normal':r<.7?'trained':'elite';
+  const [min,max]=tier==='normal'?[2,4]:tier==='trained'?[4,7]:[7,10];
+  const level=()=>min+Math.floor(random()*(max-min+1));
+  const levels={hp:level(),atk:level(),def:Math.min(8,level()),cd:Math.min(8,level()),
+   spd:Math.min(8,level()),regen:Math.min(5,level())};
+  return {tier,levels};
+ }
  function begin(){
   states.clear();
   for(const bot of activeBots()){
    const pl=G.Coop.mate(bot.uid)?.pl;if(!pl)continue;
    pl.lanBot=true;pl.addMove(G.baseStartOf(bot.dex));
    pl.setAbility(G.Mons.abilityOf(bot.dex).id);
+   if(G.Social.room.mode==='royale'&&G.Upgrades?.perks){
+    // Match the same capped permanent upgrades a human can buy. Never edit
+    // the trainer's save, grant illegal moves or make bots invulnerable.
+    const profile=strength(),perks=G.Upgrades.perks(profile.levels);
+    pl.addMaxHp(Math.round(perks.hp*pl.maxHp/Math.max(1,pl.mon.hp)));
+    pl.atkMul*=perks.atkMul;pl.spdMul*=perks.spdMul;pl.cdMul*=perks.cdMul;
+    pl.dmgReduce+=perks.dmgReduce;pl.regenFlat+=perks.regen;
+    pl.lanBotProfile=profile;
+   }
    states.set(bot.uid,{seq:0,route:[],replan:0,think:0,axis:[0,0],goal:null,home:{x:pl.x,y:pl.y},wander:0});
   }
  }
@@ -196,9 +213,10 @@ G.LanAI=(()=>{
     }
     // Stay at the range of learned attacks rather than walking into monsters.
     const target=enemies.reduce((a,e)=>!a||sq(pl,e)<sq(pl,a)?e:a,null);
-    if(target&&sq(pl,target)<420**2&&(goal===host||mode==='coop'&&goal===s.roam&&sq(pl,host)<430**2&&sq(target,host)<520**2)&&!host.dead){
+    if(target&&sq(pl,target)<420**2&&(mode==='royale'&&(!objective||pl.hp/pl.maxHp<.55||sq(pl,target)<150**2)||
+     mode==='coop'&&goal===s.roam&&sq(pl,host)<430**2&&sq(target,host)<520**2&&!host.dead||goal===host&&!host.dead)){
      const ranged=pl.moves.some(m=>['projectile','beam','homing','chain','turret','meteor','boomerang'].includes(m.kind));
-     const d=Math.sqrt(sq(pl,target))||1,range=ranged?165:85;
+     const d=Math.sqrt(sq(pl,target))||1,range=pl.hp/pl.maxHp<.4?230:ranged?165:85;
      goal={x:target.x+(pl.x-target.x)/d*range,y:target.y+(pl.y-target.y)/d*range};
     }
     if(mode==='coop'&&!nests.length&&goal===s.roam&&sq(pl,goal)<50**2)goal={x:pl.x,y:pl.y};
@@ -218,5 +236,5 @@ G.LanAI=(()=>{
   }
  }
  function near(x,y,r=520){return G.Coop.isHost&&G.Coop.puppets().some(p=>p.lanBot&&!p.dead&&(p.x-x)**2+(p.y-y)**2<r*r);}
- return {activeBots,owns,begin,frame,levelUp,update,scoreCard,route,chooseAxis,near,stop(){states.clear();}};
+ return {activeBots,owns,begin,frame,levelUp,update,scoreCard,route,chooseAxis,near,strength,stop(){states.clear();}};
 })();

@@ -1,0 +1,621 @@
+{
+  "version": "1.5.23",
+  "date": "2026-10-27",
+  "seed": 123456,
+  "humanDex": 251,
+  "botDex": [
+    1,
+    4,
+    7,
+    25,
+    133,
+    387,
+    393,
+    390,
+    447
+  ],
+  "method": "Parallel Chromium contexts; real simulation time, no debugTime or healing; first legal human level-up card; identical map seed/species, random behavior/profile rolls. One sample, not a universal survival guarantee.",
+  "baseline": {
+    "label": "baseline",
+    "initial": [
+      {
+        "dex": 1,
+        "hp": 103
+      },
+      {
+        "dex": 4,
+        "hp": 101
+      },
+      {
+        "dex": 7,
+        "hp": 103
+      },
+      {
+        "dex": 25,
+        "hp": 99
+      },
+      {
+        "dex": 133,
+        "hp": 109
+      },
+      {
+        "dex": 387,
+        "hp": 109
+      },
+      {
+        "dex": 393,
+        "hp": 108
+      },
+      {
+        "dex": 390,
+        "hp": 103
+      },
+      {
+        "dex": 447,
+        "hp": 101
+      }
+    ],
+    "samples": [
+      {
+        "state": "playing",
+        "time": 60,
+        "alive": 9,
+        "bots": [
+          {
+            "dex": 1,
+            "hp": 103,
+            "dead": false
+          },
+          {
+            "dex": 4,
+            "hp": 101,
+            "dead": false
+          },
+          {
+            "dex": 7,
+            "hp": 103,
+            "dead": false
+          },
+          {
+            "dex": 25,
+            "hp": 99,
+            "dead": false
+          },
+          {
+            "dex": 133,
+            "hp": 109,
+            "dead": false
+          },
+          {
+            "dex": 387,
+            "hp": 104,
+            "dead": false
+          },
+          {
+            "dex": 393,
+            "hp": 108,
+            "dead": false
+          },
+          {
+            "dex": 390,
+            "hp": 103,
+            "dead": false
+          },
+          {
+            "dex": 447,
+            "hp": 101,
+            "dead": false
+          }
+        ]
+      },
+      {
+        "state": "playing",
+        "time": 120,
+        "alive": 9,
+        "bots": [
+          {
+            "dex": 1,
+            "hp": 87,
+            "dead": false
+          },
+          {
+            "dex": 4,
+            "hp": 81,
+            "dead": false
+          },
+          {
+            "dex": 7,
+            "hp": 103,
+            "dead": false
+          },
+          {
+            "dex": 25,
+            "hp": 99,
+            "dead": false
+          },
+          {
+            "dex": 133,
+            "hp": 109,
+            "dead": false
+          },
+          {
+            "dex": 387,
+            "hp": 8,
+            "dead": false
+          },
+          {
+            "dex": 393,
+            "hp": 108,
+            "dead": false
+          },
+          {
+            "dex": 390,
+            "hp": 103,
+            "dead": false
+          },
+          {
+            "dex": 447,
+            "hp": 101,
+            "dead": false
+          }
+        ]
+      },
+      {
+        "state": "playing",
+        "time": 180,
+        "alive": 4,
+        "bots": [
+          {
+            "dex": 1,
+            "hp": 0,
+            "dead": true
+          },
+          {
+            "dex": 4,
+            "hp": 0,
+            "dead": true
+          },
+          {
+            "dex": 7,
+            "hp": 4,
+            "dead": false
+          },
+          {
+            "dex": 25,
+            "hp": 0,
+            "dead": true
+          },
+          {
+            "dex": 133,
+            "hp": 78,
+            "dead": false
+          },
+          {
+            "dex": 387,
+            "hp": 26,
+            "dead": false
+          },
+          {
+            "dex": 393,
+            "hp": 0,
+            "dead": true
+          },
+          {
+            "dex": 390,
+            "hp": 103,
+            "dead": false
+          },
+          {
+            "dex": 447,
+            "hp": 0,
+            "dead": true
+          }
+        ]
+      },
+      {
+        "state": "over",
+        "time": 209,
+        "alive": 1,
+        "bots": [
+          {
+            "dex": 1,
+            "hp": 0,
+            "dead": true
+          },
+          {
+            "dex": 4,
+            "hp": 0,
+            "dead": true
+          },
+          {
+            "dex": 7,
+            "hp": 0,
+            "dead": true
+          },
+          {
+            "dex": 25,
+            "hp": 0,
+            "dead": true
+          },
+          {
+            "dex": 133,
+            "hp": 5,
+            "dead": false
+          },
+          {
+            "dex": 387,
+            "hp": 0,
+            "dead": true
+          },
+          {
+            "dex": 393,
+            "hp": 0,
+            "dead": true
+          },
+          {
+            "dex": 390,
+            "hp": 0,
+            "dead": true
+          },
+          {
+            "dex": 447,
+            "hp": 0,
+            "dead": true
+          }
+        ]
+      }
+    ],
+    "errors": []
+  },
+  "updated": {
+    "label": "updated",
+    "initial": [
+      {
+        "dex": 1,
+        "hp": 140,
+        "profile": {
+          "tier": "trained",
+          "levels": {
+            "hp": 4,
+            "atk": 4,
+            "def": 4,
+            "cd": 4,
+            "spd": 5,
+            "regen": 5
+          }
+        }
+      },
+      {
+        "dex": 4,
+        "hp": 138,
+        "profile": {
+          "tier": "normal",
+          "levels": {
+            "hp": 4,
+            "atk": 2,
+            "def": 3,
+            "cd": 4,
+            "spd": 3,
+            "regen": 4
+          }
+        }
+      },
+      {
+        "dex": 7,
+        "hp": 140,
+        "profile": {
+          "tier": "trained",
+          "levels": {
+            "hp": 4,
+            "atk": 6,
+            "def": 6,
+            "cd": 6,
+            "spd": 7,
+            "regen": 4
+          }
+        }
+      },
+      {
+        "dex": 25,
+        "hp": 145,
+        "profile": {
+          "tier": "trained",
+          "levels": {
+            "hp": 5,
+            "atk": 4,
+            "def": 4,
+            "cd": 5,
+            "spd": 4,
+            "regen": 5
+          }
+        }
+      },
+      {
+        "dex": 133,
+        "hp": 192,
+        "profile": {
+          "tier": "elite",
+          "levels": {
+            "hp": 9,
+            "atk": 9,
+            "def": 8,
+            "cd": 8,
+            "spd": 8,
+            "regen": 5
+          }
+        }
+      },
+      {
+        "dex": 387,
+        "hp": 137,
+        "profile": {
+          "tier": "normal",
+          "levels": {
+            "hp": 3,
+            "atk": 4,
+            "def": 2,
+            "cd": 2,
+            "spd": 3,
+            "regen": 4
+          }
+        }
+      },
+      {
+        "dex": 393,
+        "hp": 145,
+        "profile": {
+          "tier": "normal",
+          "levels": {
+            "hp": 4,
+            "atk": 3,
+            "def": 4,
+            "cd": 4,
+            "spd": 4,
+            "regen": 2
+          }
+        }
+      },
+      {
+        "dex": 390,
+        "hp": 140,
+        "profile": {
+          "tier": "normal",
+          "levels": {
+            "hp": 4,
+            "atk": 3,
+            "def": 3,
+            "cd": 3,
+            "spd": 2,
+            "regen": 3
+          }
+        }
+      },
+      {
+        "dex": 447,
+        "hp": 156,
+        "profile": {
+          "tier": "trained",
+          "levels": {
+            "hp": 6,
+            "atk": 4,
+            "def": 4,
+            "cd": 5,
+            "spd": 7,
+            "regen": 4
+          }
+        }
+      }
+    ],
+    "samples": [
+      {
+        "state": "playing",
+        "time": 60,
+        "alive": 9,
+        "bots": [
+          {
+            "dex": 1,
+            "hp": 140,
+            "dead": false
+          },
+          {
+            "dex": 4,
+            "hp": 138,
+            "dead": false
+          },
+          {
+            "dex": 7,
+            "hp": 140,
+            "dead": false
+          },
+          {
+            "dex": 25,
+            "hp": 145,
+            "dead": false
+          },
+          {
+            "dex": 133,
+            "hp": 192,
+            "dead": false
+          },
+          {
+            "dex": 387,
+            "hp": 137,
+            "dead": false
+          },
+          {
+            "dex": 393,
+            "hp": 145,
+            "dead": false
+          },
+          {
+            "dex": 390,
+            "hp": 140,
+            "dead": false
+          },
+          {
+            "dex": 447,
+            "hp": 156,
+            "dead": false
+          }
+        ]
+      },
+      {
+        "state": "playing",
+        "time": 120,
+        "alive": 9,
+        "bots": [
+          {
+            "dex": 1,
+            "hp": 140,
+            "dead": false
+          },
+          {
+            "dex": 4,
+            "hp": 138,
+            "dead": false
+          },
+          {
+            "dex": 7,
+            "hp": 140,
+            "dead": false
+          },
+          {
+            "dex": 25,
+            "hp": 145,
+            "dead": false
+          },
+          {
+            "dex": 133,
+            "hp": 192,
+            "dead": false
+          },
+          {
+            "dex": 387,
+            "hp": 137,
+            "dead": false
+          },
+          {
+            "dex": 393,
+            "hp": 145,
+            "dead": false
+          },
+          {
+            "dex": 390,
+            "hp": 140,
+            "dead": false
+          },
+          {
+            "dex": 447,
+            "hp": 156,
+            "dead": false
+          }
+        ]
+      },
+      {
+        "state": "playing",
+        "time": 180,
+        "alive": 9,
+        "bots": [
+          {
+            "dex": 1,
+            "hp": 140,
+            "dead": false
+          },
+          {
+            "dex": 4,
+            "hp": 138,
+            "dead": false
+          },
+          {
+            "dex": 7,
+            "hp": 140,
+            "dead": false
+          },
+          {
+            "dex": 25,
+            "hp": 136,
+            "dead": false
+          },
+          {
+            "dex": 133,
+            "hp": 192,
+            "dead": false
+          },
+          {
+            "dex": 387,
+            "hp": 137,
+            "dead": false
+          },
+          {
+            "dex": 393,
+            "hp": 145,
+            "dead": false
+          },
+          {
+            "dex": 390,
+            "hp": 58,
+            "dead": false
+          },
+          {
+            "dex": 447,
+            "hp": 156,
+            "dead": false
+          }
+        ]
+      },
+      {
+        "state": "playing",
+        "time": 240,
+        "alive": 9,
+        "bots": [
+          {
+            "dex": 1,
+            "hp": 140,
+            "dead": false
+          },
+          {
+            "dex": 4,
+            "hp": 106,
+            "dead": false
+          },
+          {
+            "dex": 7,
+            "hp": 140,
+            "dead": false
+          },
+          {
+            "dex": 25,
+            "hp": 109,
+            "dead": false
+          },
+          {
+            "dex": 133,
+            "hp": 169,
+            "dead": false
+          },
+          {
+            "dex": 387,
+            "hp": 135,
+            "dead": false
+          },
+          {
+            "dex": 393,
+            "hp": 145,
+            "dead": false
+          },
+          {
+            "dex": 390,
+            "hp": 140,
+            "dead": false
+          },
+          {
+            "dex": 447,
+            "hp": 158,
+            "dead": false
+          }
+        ]
+      }
+    ],
+    "errors": []
+  }
+}

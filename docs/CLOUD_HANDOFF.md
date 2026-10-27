@@ -1,8 +1,16 @@
 # PKMSVV — handoff for Claude / cloud continuation
 
-Updated: 2026-10-27, Asia/Saigon. Release: **1.5.22**.
+Updated: 2026-10-27, Asia/Saigon. Release: **1.5.23**.
 
 ## Current continuation — overrides historical 1.5.21 packaging notes below
+
+- 1.5.23 Survival HUD keeps only own HP and a Survival ranking; no opponent HP
+  list or duplicate support leaderboard. AI now kites monsters while roaming,
+  and receives random normal/trained/elite capped upgrade profiles for Royale.
+  Human rescue of a fallen Co-op AI is verified: within 56 px for 3 seconds,
+  revives at half HP. Ranking uses compact “Sống” / “Ngủm” statuses.
+  The four-minute audit retained 9/9 updated bots; old baseline ended at 209s.
+  See LAN_1_5_23.md, docs/qa/survival-ai-1.5.23.json and listed runtime checks.
 
 - Cloud work through `9d62a7d` added a genuine standalone `/ai/` engine with an
   in-memory room bus. Web AI does **not** need PC, Firebase or WebSocket.
