@@ -56,6 +56,14 @@ async function main(){
      }
     }
     await page.waitForFunction(()=>G.UI.isOpen('scr-starters'));
+    // Shared regression: a hidden menu must never cover the mandatory starter grid.
+    const menuIsNonBlocking=await page.evaluate(()=>{
+     const menu=document.querySelector('#scr-menu');
+     if(!menu)return false;
+     const style=getComputedStyle(menu);
+     return menu.classList.contains('hidden')&&(style.display==='none'||style.pointerEvents==='none');
+    });
+    assert.equal(menuIsNonBlocking,true,'hidden main menu must not intercept starter taps on '+platform);
     const total=await page.locator('#starter-grid .cell').count();
     assert.ok(total>=3,'starter grid must be populated: '+total);
     await page.locator('#starter-grid .cell').first().click();
