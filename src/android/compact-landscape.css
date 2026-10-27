@@ -10,6 +10,9 @@
   column-gap:clamp(6px,1.4vw,14px)!important;
   padding:clamp(6px,1.5vh,14px)!important;
  }
+ /* The menu uses display:grid!important above; hidden must override it.
+  * Otherwise an invisible menu canvas intercepts starter taps on Android. */
+ #scr-menu.pkmsvv-v15-menu.hidden{display:none!important;pointer-events:none!important}
  #scr-menu.pkmsvv-v15-menu .menu-left,
  #scr-menu.pkmsvv-v15-menu .menu-right{min-width:0!important;max-height:100%!important;min-height:0!important}
  #scr-menu.pkmsvv-v15-menu .menu-left{
