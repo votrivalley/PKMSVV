@@ -21,6 +21,7 @@ on:
       - 'tests/local-ui-lan-host-regression.test.cjs'
       - 'tests/android-full-lan.test.cjs'
       - 'tests/coop-platform-browser.cjs'
+      - 'tests/starter-onboarding-browser.cjs'
       - 'tests/v15-gacha-save-isolation.test.cjs'
       - '.github/workflows/build-android-full-lan.yml'
       - 'scripts/prepare-game.cjs'
@@ -74,6 +75,9 @@ jobs:
       - name: Verify Android packaged menu and all three local AI modes in browser
         shell: bash
         run: PKMSVV_PLATFORM=android PKMSVV_BROWSER="$(command -v google-chrome)" node tests/coop-platform-browser.cjs
+      - name: QA actual Android skip-intro / skip-quiz / starter selection
+        shell: bash
+        run: PKMSVV_PLATFORM=android PKMSVV_BROWSER="$(command -v google-chrome)" node tests/starter-onboarding-browser.cjs
       - name: Create Capacitor Android and LAN native screen
         run: |
           npx cap add android
