@@ -152,4 +152,6 @@ const css=[
 ].join('\n');
 fs.appendFileSync(path.join(game,'css','style.css'),'\n'+css+'\n'+readLan('lan-compact-ui.css')+'\n'+fs.readFileSync(path.join(root,'src/shared/local-shell.css'),'utf8')+'\n'+fs.readFileSync(path.join(root,'src/shared/coop-unified.css'),'utf8')+'\n','utf8');
 require('./patch-lan-ai.cjs');
+// Only competitive Sống Còn and Tranh Trứng use personal tickets and last-hit Shiny.
+require('./patch-competitive-rewards.cjs');
 console.log('PKMSVV LAN: local signalling and frame relay installed.');
