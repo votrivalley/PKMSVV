@@ -4,7 +4,8 @@ Updated: 2026-10-28, Asia/Saigon. Working version: **1.5.29 (unreleased)**.
 
 ## Active work — v1.5.29 (unreleased)
 
-P0 Issue #7 implementation is in progress. Read the full linked v1.5.29 spec.
+P0 Issue #7 source implementation and all three CI builds are complete. Read the
+full linked v1.5.29 spec. Physical-device QA and Android player publication remain open.
 Do not interpret a build as acceptance of real Android/PC/Web networking.
 The final user decision on 2026-10-28 is Wi-Fi-only crossplay: no Internet,
 no rented service. PC/Web/APK each run their own Host using local WebRTC.
@@ -12,6 +13,33 @@ Manual offer + answer exchange uses QR, text or a file. The Internet room-servic
 prototype was removed and must not be revived as the default. See
 `docs/WIFI_CROSSPLAY.md`. Physical mixed-device Wi-Fi QA remains outstanding.
 Do not claim existing historical LAN-only behavior below implements this feature.
+
+### Verified build revision and signing blocker
+
+All three workflows passed on the same game-source commit **`639b15d`**:
+PC `40555231904`, Web `40555231798`, Android `40555232006`.
+Later documentation-only commits do not change that shared build revision.
+See `docs/QA_V1529.md` for download links and performance. Corrected foreground
+ten-minute PC load: 63.7 FPS locally; CI Windows about 55 FPS near the end.
+The original ~10 FPS result measured a backgrounded Host tab, not foreground play.
+
+Android built only `DEBUG-TEST-ONLY`; there is no `SIGNED-UPDATE` because all four
+persistent signing secrets are absent. No old private keystore was found in eight
+branch trees, available Git history, releases (none), or the recent Android artifacts.
+The user clarified they do not have the old key and provided an APK and a run link.
+
+Inspected `Pokemon Chuyển sinh 1.5.apk`: actual version 1.5.27 / 1005027;
+inspected run `40486676126`: version 1.5.28 / 1005028. Both use
+`com.votrivalley.pkmsvv.fulllan`, but have DIFFERENT debug certificate fingerprints.
+A cached local debug keystore exists under ignored `dist/toolchains/android-user/`,
+but its certificate matches neither supplied APK. Exact public fingerprints are in
+`docs/QA_V1529.md`. APKs do not recover the corresponding private signing keys.
+
+Do not promise an in-place Android update from either APK. The user has NOT yet
+approved a new signing identity: they asked to inspect the existing APKs first.
+Next decision: fixed protected key plus ONE verified JSON-save migration, or keep
+the old APK and use PC/Web for now. Never uninstall/clear the old app, overwrite
+the cached key, commit private keys, or present a debug APK as a player update.
 
 ## Permanent publishing rule — Android (DO NOT OVERRIDE)
 
