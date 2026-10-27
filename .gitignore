@@ -13,3 +13,9 @@ dist/switch-package/
 
 # Per-deployment Firebase web app config (not service-account keys)
 config/firebase.web.local.json
+
+# Never put private Android signing keys into the repository
+*.jks
+*.keystore
+*.p12
+*.pfx
