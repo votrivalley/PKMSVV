@@ -185,7 +185,10 @@ G.EggRush=(()=>{
     if(count)G.FX?.ring?.(center.x,center.y,8,95,'#ffdb55',.5,3);
     break;
    }
-   case 447:if(enemy)enemy.hurt(19,'#c8e2ff');break;
+   case 447:if(enemy){
+    if(G.Coop?.isHost&&(G.Royale?.active||G.EggRush?.active)&&pet.uid)enemy.pkmsvvLastHitUid=pet.uid;
+    enemy.hurt(19,'#c8e2ff');
+   }break;
    case 173:eggRushBuff(pet,pl,'heal',.035);break;
    case 35:eggRushBuff(pet,pl,'heal',.06);break;
    case 360:eggRushBuff(pet,pl,'shield',.09);break;
