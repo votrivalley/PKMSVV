@@ -1,6 +1,6 @@
 /* Votri Valley — Survival Royale beta, host-authoritative within WebRTC star. */
 G.Royale=(()=>{
- let active=false,roster=[],fallen={},outcome=null,lastAlive=-1;
+ let active=false,roster=[],fallen={},outcome=null,lastAlive=-1,avatars=new Map();
  const sec=v=>Math.max(0,Math.floor(Number(v)||0));
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const L=(vi,en)=>G.I18n&&G.I18n.lang==='vi'?vi:en;
@@ -14,7 +14,27 @@ G.Royale=(()=>{
   }
   return [x,y];
  }
- function begin(cfg){active=!!(cfg&&cfg.mode==='royale');roster=active?(cfg.members||[]).map(m=>({uid:m.uid,name:String(m.name||'Trainer').slice(0,32)})):[];fallen={};outcome=null;lastAlive=-1;}
+ function dexOf(value){
+  const dex=Number(value);
+  return Number.isInteger(dex)&&dex>0&&dex<=1025?dex:25;
+ }
+ function portrait(uid,dex){
+  const existing=avatars.get(uid);
+  if(existing&&existing.dex===dex)return existing.anim;
+  if(!G.Sprites?.Animator)return null;
+  const anim=new G.Sprites.Animator(dex,.32,false); // same thumbnail animator as Egg Rush
+  avatars.set(uid,{dex,anim});
+  return anim;
+ }
+ function begin(cfg){
+  active=!!(cfg&&cfg.mode==='royale');
+  roster=active?(cfg.members||[]).map(m=>({uid:m.uid,name:String(m.name||'Trainer').slice(0,32),dex:dexOf(m.dex)})):[];
+  fallen={};outcome=null;lastAlive=-1;avatars=new Map();
+  if(active){
+   G.Sprites?.preload?.([...new Set(roster.map(m=>m.dex))],7500);
+   roster.forEach(m=>portrait(m.uid,m.dex));
+  }
+ }
  function intensity(time){const t=sec(time);return {density:Math.min(2.55,.50+Math.pow(Math.max(0,t-45)/240,1.1)*.38),hp:1+Math.min(2.5,Math.max(0,t-85)/270),dmg:1+Math.min(1.75,Math.max(0,t-90)/390)};}
  function results(players,time){
   const t=sec(time),alive=new Set(players.filter(p=>p&&!p.dead).map(p=>p.uid)),winner=alive.size===1?[...alive][0]:null;
@@ -40,25 +60,51 @@ G.Royale=(()=>{
  }
  function draw(ctx,w,h,players){
   if(!active||!ctx)return;
-  const alive=new Set(players.filter(p=>p&&!p.dead).map(p=>p.uid));
+  const livePlayers=(players||[]).filter(Boolean);
+  const alive=new Set(livePlayers.filter(p=>!p.dead).map(p=>p.uid));
+  const liveByUid=new Map(livePlayers.map(p=>[p.uid,p]));
   const time=G.Game?.st?.time||0;
-  const board=results(players,time).standings.sort((a,b)=>Number(alive.has(b.uid))-Number(alive.has(a.uid))||b.points-a.points||a.name.localeCompare(b.name));
-  const bounds=G.HUD?.leftBounds||{x:16,bottom:70},x=bounds.x,top=bounds.bottom+8;
-  ctx.save();ctx.font='10px sans-serif';
-  const statusWidth=Math.max(ctx.measureText(L('Sống','Alive')).width,ctx.measureText(L('Ngủm','Out')).width);
-  const nameWidth=Math.min(130,Math.max(70,...board.map((p,i)=>ctx.measureText((i+1)+'. '+p.name).width)));
-  const width=Math.min(w-x-8,Math.max(150,nameWidth+statusWidth+26));ctx.restore();
-  const row=Math.max(14,Math.min(20,(h-top-120-26)/Math.max(1,board.length)));
+  const board=results(livePlayers,time).standings.sort((a,b)=>
+   Number(alive.has(b.uid))-Number(alive.has(a.uid))||b.points-a.points||a.name.localeCompare(b.name));
+  const bounds=G.HUD?.leftBounds||{x:16,bottom:70};
+  const x=Math.max(8,bounds.x),top=bounds.bottom+8;
+  // Egg Rush proportions, widened just enough for a Pokémon sprite column.
+  // Reduce row height on landscape phones to avoid covering touch controls.
+  const width=Math.min(Math.max(125,w-x-8),w>=760?210:w>=460?185:160);
+  const row=Math.max(13,Math.min(26,(h-top-105-26)/Math.max(1,board.length)));
   const height=26+row*board.length;
+  const nameX=x+53,statusX=x+width-8;
   ctx.save();ctx.fillStyle='rgba(8,22,53,.86)';ctx.strokeStyle='#80cfc4';ctx.lineWidth=1;
   ctx.beginPath();ctx.roundRect(x,top,width,height,8);ctx.fill();ctx.stroke();
   ctx.textAlign='left';ctx.font='bold 11px sans-serif';ctx.fillStyle='#ffe089';
   ctx.fillText(L('SỐNG CÒN','SURVIVAL')+' · '+alive.size+'/'+roster.length,x+8,top+17);
   board.forEach((p,i)=>{
-   const y=top+26+i*row;ctx.fillStyle=p.uid===G.Social.uid?'#ffe089':alive.has(p.uid)?'#effff6':'#9aabba';
-   ctx.font='10px sans-serif';ctx.textAlign='left';ctx.fillText((i+1)+'. '+p.name,x+8,y+row*.7,width-statusWidth-24);
-   ctx.textAlign='right';ctx.fillText(alive.has(p.uid)?L('Sống','Alive'):L('Ngủm','Out'),x+width-8,y+row*.7);
-  });ctx.restore();
+   const y=top+26+i*row,baseline=y+row*.69,local=p.uid===G.Social?.uid;
+   const isAlive=alive.has(p.uid);
+   if(local){ctx.fillStyle='rgba(255,226,116,.12)';ctx.fillRect(x+3,y+1,width-6,Math.max(10,row-1));}
+   ctx.textAlign='left';ctx.font='bold 10px sans-serif';
+   ctx.fillStyle=local?'#ffe089':isAlive?'#effff6':'#9aabba';
+   ctx.fillText(String(i+1),x+7,baseline);
+   const member=roster.find(m=>m.uid===p.uid),live=liveByUid.get(p.uid);
+   const dex=dexOf(live?.dex||member?.dex);
+   const sprite=portrait(p.uid,dex);
+   if(sprite){
+    // Keep the original Egg Rush animated sprite; shrink it only when
+    // ten rows must fit a short screen. Never mutate the game's real sprites.
+    const scale=Math.min(1,Math.max(.55,row/25));
+    ctx.save();ctx.translate(x+34,y+row*.5);ctx.scale(scale,scale);
+    sprite.draw(ctx,0,3,{alpha:isAlive?1:.45});
+    ctx.restore();
+   }else{
+    ctx.fillStyle=isAlive?'#ffe5a2':'#657789';
+    ctx.beginPath();ctx.arc(x+34,y+row*.5,Math.max(2,row*.22),0,Math.PI*2);ctx.fill();
+   }
+   ctx.font='10px sans-serif';ctx.textAlign='left';
+   ctx.fillStyle=local?'#ffe089':isAlive?'#effff6':'#9aabba';
+   ctx.fillText(p.name,nameX,baseline,Math.max(20,width-53-43));
+   ctx.textAlign='right';ctx.fillText(isAlive?L('Sống','Alive'):L('Ngủm','Out'),statusX,baseline);
+  });
+  ctx.restore();
  }
  return {begin,startPosition,intensity,check,finish,html,draw,get active(){return active;},get outcome(){return outcome;},get size(){return roster.length;}};
 })();
