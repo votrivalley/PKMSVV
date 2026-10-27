@@ -75,6 +75,8 @@ jobs:
           npm run test:android:full-lan
           node --test tests/coop-icon-consistency.test.cjs tests/unified-coop.test.cjs
           node --test tests/local-shell-ui.test.cjs
+      - name: Verify personal tickets and Shiny ownership in Android LAN AI
+        run: node --test tests/competitive-rewards.test.cjs
       - name: Verify Android packaged menu and all three local AI modes in browser
         shell: bash
         run: PKMSVV_PLATFORM=android PKMSVV_BROWSER="$(command -v google-chrome)" node tests/coop-platform-browser.cjs
