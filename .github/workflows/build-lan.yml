@@ -75,7 +75,7 @@ jobs:
         run: npx playwright install chromium
       - name: Verify PC first-run story skip, question skip and starter selection
         shell: bash
-        run: node tests/starter-onboarding-browser.cjs
+        run: PKMSVV_PLATFORM=lan node tests/starter-onboarding-browser.cjs
       - name: Play all three modes with two independent LAN clients
         run: npm run test:lan:runtime
       - name: Validate live and fallen AI rewards in all three modes
