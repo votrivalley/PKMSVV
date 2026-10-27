@@ -80,3 +80,18 @@ test('Self-hosted HTML5 AI mode has its own bundled game logic and no cloud depe
  assert.match(coop,/window\.location\.assign\('\/ai\/\?mode='/);
  assert.match(coop,/pkmsvvCode/);
 });
+
+
+test('Offline PWA never auto-reloads from stale version.json (safe for local saves)',()=>{
+ const buildScript=fs.readFileSync(path.join(__dirname,'..','scripts','prepare-web.cjs'),'utf8');
+ const bundle=read('game/js/app.min.js');
+ const worker=read('sw.js');
+ const headers=read('_headers');
+ assert.match(buildScript,/PKMSVV_LOCAL_PWA==='1'/);
+ assert.match(buildScript,/upstream\.includes\('function countdown\(\)'\)/);
+ assert.match(buildScript,/policy:"manual-on-next-open"/);
+ assert.match(bundle,/manual-on-next-open/,'compiled offline game must contain inert updater');
+ assert.match(worker,/if\(\/\\\/version\\\.json\$\/i\.test\(url\.pathname\)\)return/);
+ assert.match(headers,/\/game\/version\.json\n\s+Cache-Control: no-store, max-age=0/);
+ assert.doesNotMatch(worker,/localStorage\.clear|indexedDB\.deleteDatabase/);
+});
