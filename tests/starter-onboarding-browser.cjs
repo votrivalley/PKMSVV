@@ -77,6 +77,30 @@ async function main(){
     await page.waitForFunction(()=>G.UI.isOpen('scr-pkmsvv-story'));
     await page.locator('#pkmsvv-story-skip').click();
     await page.waitForFunction(()=>G.UI.isOpen('scr-menu'));
+    // Regression on the real HOME profile, not just the Pokédex detail card:
+    // one square sprite canvas, no second teal rounded wrapper around it.
+    const portrait=await page.evaluate(()=>{
+     const art=document.querySelector('#scr-menu .pkmsvv-v15-art');
+     const canvas=art?.querySelector('#menu-partner');
+     const info=art?.closest('.pkmsvv-v15-partner');
+     if(!art||!canvas||!info)return null;
+     const outer=getComputedStyle(art),inner=getComputedStyle(canvas);
+     const box=canvas.getBoundingClientRect();
+     return {width:canvas.width,height:canvas.height,ratio:box.width/box.height,
+      outerBorder:outer.borderTopWidth,outerShadow:outer.boxShadow,
+      outerBg:outer.backgroundImage,innerBorder:inner.borderTopWidth,
+      innerRadius:inner.borderTopLeftRadius,infoBorder:getComputedStyle(info).borderTopWidth};
+    });
+    assert.ok(portrait,'home Pokémon portrait exists on '+platform);
+    assert.equal(portrait.width,220);
+    assert.equal(portrait.height,220);
+    assert.ok(Math.abs(portrait.ratio-1)<0.02,'home Pokémon art must be square: '+JSON.stringify(portrait));
+    assert.equal(portrait.outerBorder,'0px','home art outer outline must be removed');
+    assert.equal(portrait.outerShadow,'none','home art must not cast a duplicate frame');
+    assert.equal(portrait.outerBg,'none','home art wrapper must be transparent');
+    assert.equal(portrait.innerBorder,'2px','one inner border remains on Pokémon canvas');
+    assert.equal(portrait.innerRadius,'4px','inner frame has only subtle corners');
+    assert.equal(portrait.infoBorder,'3px','the surrounding information card stays intact');
     assert.deepEqual(errors,[],'uncaught errors in '+testcase);
     console.log('PASS '+platform+' '+testcase+': starter #'+chosen+' chosen and saved');
    }finally{await context.close();}
