@@ -10,6 +10,8 @@ on:
       - 'src/web/pkmsvv-royale.js'
       - 'scripts/package-standalone-ai.cjs'
       - 'scripts/configure-android-full-lan.cjs'
+      - 'scripts/configure-android-stable-signing.cjs'
+      - 'tests/android-stable-signing.test.cjs'
       - 'src/android/full-lan-ui.js'
       - 'src/lan/**'
       - 'src/shared/**'
@@ -108,5 +110,59 @@ jobs:
         with:
           name: PKMSVV-Android-FULL-CoopLAN-Beta
           path: dist/full-lan-android/*.apk
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Check permanent Android update signing
+        id: stable_signing
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.PKMSVV_ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.PKMSVV_ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.PKMSVV_ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.PKMSVV_ANDROID_KEY_PASSWORD }}
+        run: |
+          configured=0
+          for value in "$KEYSTORE_BASE64" "$STORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD"; do
+            if [ -n "$value" ]; then configured=$((configured+1)); fi
+          done
+          if [ "$configured" -eq 0 ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Only debug APK is available: configure four PKMSVV_ANDROID_* GitHub Secrets to enable APKs that can update in place."
+          elif [ "$configured" -ne 4 ]; then
+            echo "::error::Incomplete permanent Android signing secrets. Set all four secrets together."
+            exit 1
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build updateable signed Android FULL LAN release APK
+        if: steps.stable_signing.outputs.ready == 'true'
+        shell: bash
+        env:
+          PKMSVV_ANDROID_KEYSTORE_BASE64: ${{ secrets.PKMSVV_ANDROID_KEYSTORE_BASE64 }}
+          PKMSVV_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.PKMSVV_ANDROID_KEYSTORE_PASSWORD }}
+          PKMSVV_ANDROID_KEY_ALIAS: ${{ secrets.PKMSVV_ANDROID_KEY_ALIAS }}
+          PKMSVV_ANDROID_KEY_PASSWORD: ${{ secrets.PKMSVV_ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          umask 077
+          export PKMSVV_ANDROID_KEYSTORE_FILE="$RUNNER_TEMP/pkmsvv-full-lan-stable.jks"
+          trap 'rm -f "$PKMSVV_ANDROID_KEYSTORE_FILE"' EXIT
+          printf '%s' "$PKMSVV_ANDROID_KEYSTORE_BASE64" | base64 --decode > "$PKMSVV_ANDROID_KEYSTORE_FILE"
+          test -s "$PKMSVV_ANDROID_KEYSTORE_FILE"
+          node scripts/configure-android-stable-signing.cjs
+          (cd android && ./gradlew --no-daemon :app:assembleRelease)
+          version=$(node -p "require('./package.json').version")
+          mkdir -p dist/stable-android
+          apk="dist/stable-android/PKMSVV-${version}-Android-FULL-LAN-UPDATE.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk "$apk"
+          "${ANDROID_HOME}/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$apk"
+          "${ANDROID_HOME}/build-tools/36.0.0/aapt" dump badging "$apk" | grep '^package:' | head -1
+          echo "Signed update APK created for package com.votrivalley.pkmsvv.fulllan."
+      - uses: actions/upload-artifact@v4
+        if: steps.stable_signing.outputs.ready == 'true'
+        with:
+          name: PKMSVV-Android-FULL-LAN-SIGNED-UPDATE
+          path: dist/stable-android/*.apk
           retention-days: 14
           if-no-files-found: error
