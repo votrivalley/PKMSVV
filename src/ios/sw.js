@@ -1,6 +1,6 @@
 'use strict';
 /* Cache navigations and assets progressively; never cache or transmit save JSON. */
-const CACHE='pkmsvv-ios-v1523-1';
+const CACHE='pkmsvv-ios-v1525-2';
 const SHELL=['/','/index.html','/entry.js','/manifest.webmanifest','/game/index.html','/game/js/ui/pkmsvv-runtime-config.js','/game/js/ui/pkmsvv-coop-unified.js','/lan-connect.html','/lan-connect.js'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(
@@ -10,6 +10,8 @@ self.addEventListener('fetch',e=>{
  const r=e.request;if(r.method!=='GET')return;
  const url=new URL(r.url);
  if(url.origin!==self.location.origin||url.pathname.endsWith('.json')&&/save|backup/i.test(url.pathname))return;
+ // Bypass stale version metadata; never trigger an update from a cached version.json.
+ if(/\/version\.json$/i.test(url.pathname))return;
  e.respondWith((async()=>{
   const cache=await caches.open(CACHE);
   // Updated HTML takes precedence. Assets can run from cache if connection drops.
