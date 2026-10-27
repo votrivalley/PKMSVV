@@ -3,9 +3,16 @@ on:
   push:
     branches: [feature/lan-local-beta]
     paths:
+      - 'scripts/bundle-wifi-qr.cjs'
+      - 'scripts/patch-lan.cjs'
       - 'scripts/prepare-full-lan-android.cjs'
       - 'scripts/compile-standalone-ai.cjs'
       - 'scripts/patch-lan-ai.cjs'
+      - 'scripts/patch-arena-v1529.cjs'
+      - 'src/web/pkmsvv-arena.js'
+      - 'src/web/pkmsvv-match-metrics.js'
+      - 'tests/arena-v1529*.cjs'
+      - 'tests/spawn-arena-v1529.test.cjs'
       - 'src/web/pkmsvv-egg-rush.js'
       - 'src/web/pkmsvv-royale.js'
       - 'scripts/package-standalone-ai.cjs'
@@ -84,6 +91,17 @@ jobs:
       - name: QA actual Android skip-intro / skip-quiz / starter selection
         shell: bash
         run: PKMSVV_PLATFORM=android PKMSVV_BROWSER="$(command -v google-chrome)" node tests/starter-onboarding-browser.cjs
+      - name: Verify P0 arena support nests and opening spawns
+        run: node --test tests/arena-v1529.test.cjs tests/spawn-arena-v1529.test.cjs tests/lan-bot-snapshot.test.cjs
+      - name: Ten-minute Android assets P0 browser profile with 10 trainers
+        shell: bash
+        run: PKMSVV_PLATFORM=android PKMSVV_BROWSER="$(command -v google-chrome)" node tests/arena-v1529-soak.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: PKMSVV-P0-v1529-QA-Android-Assets
+          path: dist/qa/v1529-*
+          if-no-files-found: ignore
       - name: Create Capacitor Android and LAN native screen
         run: |
           npx cap add android

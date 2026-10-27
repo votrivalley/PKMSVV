@@ -10,6 +10,7 @@ G.Social=(()=>{
  G.LanBus.on(msg=>{
   if(msg.t==='room'){room={...msg.room,isHost:msg.room.host===G.LanBus.uid};fire('room');}
   if(msg.t==='room-closed'||msg.t==='disconnected'){room=null;fire('room-closed');}
+  if(msg.t==='disconnected'){me=null;started=false;playing=false;}
  });
  async function start(){
   if(!G.DB.save)return'off';
@@ -54,6 +55,6 @@ G.Social=(()=>{
   remove:async()=>({ok:false}),invite:async()=>({ok:false,error:'Chia sẻ IP/mã phòng để mời'}),
   acceptInvite:async()=>({ok:false}),declineInvite(){},get invites(){return[];},get friends(){return[];},
   on(fn){listeners.add(fn);},off(fn){listeners.delete(fn);},
-  get me(){return me;},get uid(){return G.LanBus.uid;},get started(){return started;},get room(){return room;},get playing(){return playing;}
+  get me(){return me?{...me,uid:G.LanBus.uid}:null;},get uid(){return G.LanBus.uid;},get started(){return started;},get room(){return room;},get playing(){return playing;}
  };
 })();

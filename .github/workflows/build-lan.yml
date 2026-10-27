@@ -5,6 +5,10 @@ on:
     paths:
       - 'lan-server/**'
       - 'src/lan/**'
+      - 'src/web/pkmsvv-arena.js'
+      - 'src/web/pkmsvv-match-metrics.js'
+      - 'tests/arena-v1529*.cjs'
+      - 'tests/spawn-arena-v1529.test.cjs'
       - 'src/web/pkmsvv-royale.js'
       - 'src/web/pkmsvv-egg-rush.js'
       - 'src/shared/**'
@@ -79,6 +83,8 @@ jobs:
         run: node --test tests/lan-connection.test.cjs tests/lan-bus-retry.test.cjs
       - name: Install browser for real two-client LAN test
         run: npx playwright install chromium
+      - name: Verify offline Wi-Fi WebRTC with ten clients and real game
+        run: node tests/wifi-transport-runtime.cjs && node tests/wifi-coop-runtime.cjs
       - name: Verify PC first-run story skip, question skip and starter selection
         shell: bash
         run: PKMSVV_PLATFORM=lan node tests/starter-onboarding-browser.cjs
@@ -96,6 +102,12 @@ jobs:
         run: node --test tests/lan-hud-layout.test.cjs && node tests/lan-hud-runtime.cjs
       - name: Verify human can rescue a fallen AI teammate
         run: node tests/lan-ai-rescue-runtime.cjs
+      - name: Verify P0 zone, eggs, opening spawns and private rewards
+        run: node --test tests/arena-v1529.test.cjs tests/spawn-arena-v1529.test.cjs tests/lan-bot-snapshot.test.cjs tests/competitive-rewards.test.cjs
+      - name: Verify real Host guest and AI at 2 4 10 participants
+        run: node tests/arena-v1529-runtime.cjs
+      - name: Ten-minute P0 load profile with 10 participants
+        run: node tests/arena-v1529-soak.cjs
       - name: Verify native PC IP failure and successful retry
         run: npm run test:lan:pc
       - uses: actions/upload-artifact@v4

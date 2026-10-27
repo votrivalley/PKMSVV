@@ -1,11 +1,10 @@
 'use strict';
 /* Cache navigations and assets progressively; never cache or transmit save JSON. */
-const CACHE='pkmsvv-ios-v1528-1';
+const CACHE='pkmsvv-ios-v1529-1';
 const SHELL=['/','/index.html','/entry.js','/manifest.webmanifest','/game/index.html','/game/js/ui/pkmsvv-runtime-config.js','/game/js/ui/pkmsvv-coop-unified.js','/lan-connect.html','/lan-connect.js'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting())));
-self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(
- keys.filter(k=>k.startsWith('pkmsvv-ios-')&&k!==CACHE).map(k=>caches.delete(k))
- )).then(()=>self.clients.claim())));
+// Keep previously cached assets during the P0 update; never clear user storage.
+self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch',e=>{
  const r=e.request;if(r.method!=='GET')return;
  const url=new URL(r.url);
@@ -19,7 +18,7 @@ self.addEventListener('fetch',e=>{
    try{const res=await fetch(r);if(res.ok)await cache.put(r,res.clone());return res;}
    catch(_){return(await cache.match(r))||(await cache.match('/game/index.html'))||Response.error();}
   }
-  const hit=await cache.match(r);if(hit)return hit;
+  const hit=await cache.match(r)||await caches.match(r);if(hit)return hit;
   const res=await fetch(r);if(res.ok&&res.type==='basic')await cache.put(r,res.clone()).catch(()=>{});
   return res;
  })());

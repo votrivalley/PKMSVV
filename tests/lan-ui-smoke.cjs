@@ -1,5 +1,5 @@
 'use strict';
-// Run after prepare:lan. Two independent browser contexts use real HTTP/WS.
+// Run after prepare:lan. The shared menu pairs independent clients over local WebRTC.
 const {chromium}=require('playwright');
 const {startServer}=require('../lan-server/server.cjs');
 const path=require('node:path'),fs=require('node:fs'),assert=require('node:assert/strict');
@@ -49,17 +49,32 @@ async function run(){
      await host.setViewportSize({width:1280,height:800});
     }
     await host.click('[data-role="host"]');
-    await host.waitForFunction(()=>G.Social.room?.isHost&&G.UI.isOpen('scr-lobby'));
+    await host.waitForFunction(()=>window.G?.Social?.room?.isHost&&G.UI.isOpen('scr-lobby'));
     await guest.click('#scr-menu [data-go="multiplayer"]');await guest.click('[data-mode="'+mode+'"]');
     await guest.click('[data-role="join"]');
-    await guest.locator('#pkmsvv-coop-detail button').filter({hasText:'người · Tham gia'}).click();
+    await guest.waitForFunction(()=>window.PKMSVV_WIFI&&window.PKMSVVWifiUI);
+    await guest.locator('.pkmsvv-wifi-panel').waitFor();
+    await host.click('#pkmsvv-lan-copy-invite');
+    await host.locator('.pkmsvv-wifi-panel button').filter({hasText:'1. Tạo lời mời'}).click();
+    await host.waitForFunction(()=>!!document.querySelector('.pkmsvv-wifi-output textarea')?.value);
+    const offer=await host.locator('.pkmsvv-wifi-output textarea').inputValue();
+    await guest.locator('.pkmsvv-wifi-panel textarea').fill(offer);
+    await guest.locator('.pkmsvv-wifi-panel button').filter({hasText:'2. Tạo phản hồi'}).click();
+    await guest.waitForFunction(()=>!!document.querySelector('.pkmsvv-wifi-output textarea')?.value);
+    const answer=await guest.locator('.pkmsvv-wifi-output textarea').inputValue();
+    await host.locator('.pkmsvv-wifi-panel > textarea').fill(answer);
+    await host.locator('.pkmsvv-wifi-panel button').filter({hasText:'3. Nhận phản hồi'}).click();
+    await guest.locator('.pkmsvv-wifi-panel button').filter({hasText:'3. Vào phòng'}).click();
+    await host.locator('.pkmsvv-wifi-panel button').filter({hasText:'Đóng'}).click();
     await Promise.all([host.waitForFunction(()=>G.Social.room?.members.length===2),guest.waitForFunction(()=>G.UI.isOpen('scr-lobby'))]);
     const extraPages=[];
     if(mode==='eggrush'){
      const room=await host.evaluate(()=>G.Social.room.id);
      for(let i=0;i<2;i++){
       const context=await browser.newContext();extraContexts.push(context);
-      const page=await context.newPage();extraPages.push(page);await ready(page,base+'/game/');
+      const page=await context.newPage();extraPages.push(page);await ready(page,base+'/game/?pkmsvvWifi=1');
+      const offer=await host.evaluate(()=>G.LanBus.invitation()),answer=await page.evaluate(s=>G.LanBus.answer(s),offer);
+      await host.evaluate(s=>G.LanBus.accept(s),answer);
       const result=await page.evaluate(async id=>{const result=await G.Social.joinRoom(id);if(result.ok)G.LobbyUI.open();return result;},room);
       assert.equal(result.ok,true);
      }

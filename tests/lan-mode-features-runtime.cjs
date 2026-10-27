@@ -25,15 +25,19 @@ async function main(){
    const players=G.Coop.players();return players.every((p,i)=>players.slice(i+1).every(q=>Math.hypot(p.x-q.x,p.y-q.y)>200));
   });assert.equal(spread,true,'Survival actors start apart and AI do not follow Host');
   console.log('PASS Survival AI remain separated instead of clustering on Host');
+  await page.evaluate(()=>G.Game.debugTime(30));
+  await page.waitForFunction(()=>G.EggRush.nests.some(n=>!n.taken));
+  assert.ok(await page.evaluate(()=>G.EggRush.nests.filter(n=>!n.taken).length<=5),'opening support batch is capped at five');
   for(let minute=1;minute<=3;minute++){
    await page.evaluate(t=>G.Game.debugTime(t),minute*60);
-   await page.waitForFunction(n=>G.EggRush.nests.length===n,minute);
+   await page.waitForFunction(()=>G.EggRush.nests.some(n=>!n.taken));
+   assert.ok(await page.evaluate(()=>G.EggRush.nests.filter(n=>!n.taken).length<=6),'P0 active support nests stay capped at six');
    if(minute<=2){
-    await page.evaluate(()=>{const n=G.EggRush.nests.at(-1);G.Game.player.x=n.x;G.Game.player.y=n.y;});
+    await page.evaluate(()=>{const n=G.EggRush.nests.find(n=>!n.taken);G.Game.player.x=n.x;G.Game.player.y=n.y;});
     await page.waitForFunction(n=>G.EggRush.pets.filter(p=>p.uid===G.Game.player.uid).length===n,minute);
    }
   }
-  await page.evaluate(()=>{const n=G.EggRush.nests.at(-1);G.Game.player.x=n.x;G.Game.player.y=n.y;});
+  await page.evaluate(()=>{const n=G.EggRush.nests.find(n=>!n.taken);G.Game.player.x=n.x;G.Game.player.y=n.y;});
   await page.waitForTimeout(200);
   assert.equal(await page.evaluate(()=>G.EggRush.pets.filter(p=>p.uid===G.Game.player.uid).length),2);
   await page.evaluate(()=>G.EggRush.update(46,181,G.Coop.players(),()=>{}));

@@ -68,6 +68,7 @@ execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-coop-recon
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-multiplayer-hub.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-retro-web.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-v15-egg-rush-web.cjs')], { cwd: root, stdio: 'inherit' });
+execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-arena-v1529.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-entry-ui.cjs')], { cwd: root, stdio: 'inherit' });
 // Do not register missing /game/sw.js: both routes share /sw.js.
 replaceOnce(path.join(game,'js','main.js'),"navigator.serviceWorker.register('sw.js')","navigator.serviceWorker.register('/sw.js',{scope:'/'})");

@@ -1,6 +1,6 @@
 /* Votri Valley — Survival Royale beta, host-authoritative within WebRTC star. */
 G.Royale=(()=>{
- let active=false,roster=[],fallen={},outcome=null,lastAlive=-1,avatars=new Map();
+ let active=false,roster=[],fallen={},outcome=null,lastAlive=-1,avatars=new Map(),hudBounds=null;
  const sec=v=>Math.max(0,Math.floor(Number(v)||0));
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const L=(vi,en)=>G.I18n&&G.I18n.lang==='vi'?vi:en;
@@ -27,6 +27,7 @@ G.Royale=(()=>{
   return anim;
  }
  function begin(cfg){
+  hudBounds=null;
   active=!!(cfg&&cfg.mode==='royale');
   roster=active?(cfg.members||[]).map(m=>({uid:m.uid,name:String(m.name||'Trainer').slice(0,32),dex:dexOf(m.dex)})):[];
   fallen={};outcome=null;lastAlive=-1;avatars=new Map();
@@ -73,6 +74,7 @@ G.Royale=(()=>{
   const width=Math.min(Math.max(125,w-x-8),w>=760?210:w>=460?185:160);
   const row=Math.max(13,Math.min(26,(h-top-105-26)/Math.max(1,board.length)));
   const height=26+row*board.length;
+  hudBounds={x,right:x+width,top,bottom:top+height};
   const nameX=x+53,statusX=x+width-8;
   ctx.save();ctx.fillStyle='rgba(8,22,53,.86)';ctx.strokeStyle='#80cfc4';ctx.lineWidth=1;
   ctx.beginPath();ctx.roundRect(x,top,width,height,8);ctx.fill();ctx.stroke();
@@ -106,5 +108,5 @@ G.Royale=(()=>{
   });
   ctx.restore();
  }
- return {begin,startPosition,intensity,check,finish,html,draw,get active(){return active;},get outcome(){return outcome;},get size(){return roster.length;}};
+ return {begin,startPosition,intensity,check,finish,html,draw,get hudBounds(){return hudBounds;},get active(){return active;},get outcome(){return outcome;},get size(){return roster.length;}};
 })();

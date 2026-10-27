@@ -3,7 +3,7 @@
 (()=>{
  window.PKMSVV_UNIFIED_COOP_ENABLED=true;
  const modes=[['coop','Sống Sót','2–4 người',25,'Pikachu','Hợp tác chống quái, cứu đồng đội và cùng nhau sống sót.'],
-  ['royale','Sống Còn','2–10 người',6,'Charizard','Tản ra sinh tồn, ấp tối đa 2 hỗ trợ. Người cuối cùng thắng.'],
+  ['royale','Sống Còn','2–10 người',6,'Charizard','Bo thu hẹp dần · tối đa 2 hỗ trợ. Người cuối cùng sống thắng.'],
   ['eggrush','Tranh Trứng','4 người',175,'Togepi','Mỗi phút 1 trứng · hồi sinh sau 8 giây · không PvP.']];
  let mode='coop',view=null,detail=null,busy=false,previousFocus=null;
  const lan=()=>window.PKMSVV_LOCAL_UI_MODE==='lan'&&!!window.G?.LanBus;
@@ -26,7 +26,7 @@
     '<button data-role="ai">🤖 Chơi với AI</button></div>'+
     '<div id="pkmsvv-coop-detail" role="status"></div></section>';
   document.body.append(view);detail=view.querySelector('#pkmsvv-coop-detail');
-  if(lan()&&!window.PKMSVV_STANDALONE_AI){
+  if(lan()&&!window.PKMSVV_STANDALONE_AI&&!window.PKMSVV_WIFI){
    const help=document.createElement('details');help.className='pkmsvv-coop-help';
    const summary=document.createElement('summary');summary.textContent='Địa chỉ Host & mã QR mời bạn';
    const host=document.createElement('p');host.textContent=location.origin+'/game/';
@@ -116,7 +116,7 @@
    detail.replaceChildren();
    const help=document.createElement('p');help.textContent='Chọn phòng đang mở hoặc dán mã phòng được bạn gửi:';
    detail.append(help);
-   if(!list.length)detail.append('Chưa có phòng công khai trên Host hiện tại. ');
+   if(!list.length)detail.append('Chưa có phòng công khai đang chờ. ');
    for(const r of list){
     const b=document.createElement('button');b.textContent=(r.name||'Host')+' · '+r.size+' người · Tham gia';
     b.onclick=async()=>{
@@ -139,6 +139,15 @@
  }
  async function action(role){
   if(busy)return;
+  if(role!=='ai'&&!window.PKMSVV_WIFI&&!new URLSearchParams(location.search).get('pkmsvvCode')){
+   const target=lan()&&!window.PKMSVV_STANDALONE_AI?'/game/':'/ai/game/';
+   const q=new URLSearchParams({pkmsvvWifi:'1',pkmsvvRole:role,pkmsvvMode:mode});
+   window.location.assign(target+'?'+q);return;
+  }
+  if(role==='ai'&&window.PKMSVV_WIFI){
+   window.location.assign(location.pathname+'?pkmsvvRole=ai&pkmsvvMode='+encodeURIComponent(mode));return;
+  }
+  if(role==='join'&&window.PKMSVV_WIFI){close();window.PKMSVVWifiUI.join();return;}
   if(lan()){
    if(window.PKMSVV_STANDALONE_AI&&role!=='ai'){
     info('Đây là phòng AI ngoại tuyến trên thiết bị này. Chọn “Chơi với AI” để bắt đầu; chơi cùng bạn bè cần Host LAN.');return;
@@ -223,7 +232,7 @@
   if(lan()&&['host','join','ai'].includes(role)){
    let attempts=0;const timer=setInterval(()=>{
     if(++attempts>90){clearInterval(timer);return;}
-    if(G.DB?.save&&G.Social){clearInterval(timer);void action(role);}
+    if(G.DB?.save&&G.Social){clearInterval(timer);open();void action(role);}
    },200);
   }
  }

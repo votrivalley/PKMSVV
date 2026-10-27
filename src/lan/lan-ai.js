@@ -104,6 +104,7 @@ G.LanAI=(()=>{
   const open=[start],seen=new Map([[key(sx,sy),start]]),closed=new Set();let best=start;
   const cell=(x,y)=>({x:(x+.5)*ts,y:(y+.5)*ts});
   for(let count=0;open.length&&count<700;count++){
+   G.MatchMetrics?.route();
    let at=0;for(let i=1;i<open.length;i++)if(open[i].g+open[i].h<open[at].g+open[at].h)at=i;
    const n=open.splice(at,1)[0],id=key(n.x,n.y);if(closed.has(id))continue;closed.add(id);
    if(n.h<best.h)best=n;if(n.x===gx&&n.y===gy){best=n;break;}
@@ -220,6 +221,7 @@ G.LanAI=(()=>{
      goal={x:target.x+(pl.x-target.x)/d*range,y:target.y+(pl.y-target.y)/d*range};
     }
     if(mode==='coop'&&!nests.length&&goal===s.roam&&sq(pl,goal)<50**2)goal={x:pl.x,y:pl.y};
+    if(G.Arena?.active)goal=G.Arena.clampGoal(goal,pl);
     s.axis=chooseAxis(pl,s,goal,enemies,shots,hazards);s.think=.12;
     const dash=G.PKMSVVDash?.preview(pl);
     if(dash?.ready&&Math.hypot(...s.axis)>.5&&danger(pl,pl,enemies,shots,hazards)>65){

@@ -29,15 +29,21 @@ async function main(){
    assert.equal(await page.locator('#pkmsvv-coop-modes [data-mode]').count(),3);
    for(const role of ['host','join','ai'])assert.equal(await page.locator('#pkmsvv-coop-actions [data-role="'+role+'"]').count(),1);
    await page.click('[data-mode="'+mode+'"]');
-   if(android){
-    // Selection reaches native LAN only for human rooms, never for local AI.
-    for(const role of ['host','join']){
-     await page.click('#pkmsvv-coop-actions [data-role="'+role+'"]');
-     const call=await page.evaluate(()=>window.__nativeCalls.at(-1));
-     assert.deepEqual(call,{role,mode});
-    }
-    await page.evaluate(()=>window.__nativeCalls=[]);
-   }
+   // Human rooms now host locally on the packaged engine, without a PC bridge.
+   await page.click('#pkmsvv-coop-actions [data-role="host"]');
+   await page.waitForFunction(m=>window.PKMSVV_WIFI&&G.Social.room?.mode===m&&G.Social.room.isHost,mode);
+   assert.equal(await page.evaluate(()=>G.DB.save.partner),150);
+   if(android)assert.equal(await page.evaluate(()=>window.__nativeCalls.length),0);
+   await page.click('#pkmsvv-lan-copy-invite');
+   await page.locator('.pkmsvv-wifi-panel').waitFor();
+   assert.match(await page.locator('.pkmsvv-wifi-panel').innerText(),/phản hồi/);
+   await page.locator('.pkmsvv-wifi-panel button').filter({hasText:'Đóng'}).click();
+   await page.evaluate(async()=>{await G.Social.leaveRoom();G.MenuUI.open();PKMSVVCoop.open();});
+   await page.click('#pkmsvv-coop-actions [data-role="join"]');
+   await page.locator('.pkmsvv-wifi-panel').waitFor();
+   assert.equal(await page.locator('.pkmsvv-wifi-panel textarea').count(),1);
+   await page.locator('.pkmsvv-wifi-panel button').filter({hasText:'Đóng'}).click();
+   await page.evaluate(()=>{G.MenuUI.open();PKMSVVCoop.open();});
    await page.click('#pkmsvv-coop-actions [data-role="ai"]');
    try{await page.waitForURL('**/ai/game/**');}
    catch(e){console.error('AI navigation diagnostics',await page.evaluate(()=>({url:location.href,available:window.PKMSVV_STANDALONE_AI_AVAILABLE,mode:window.PKMSVV_LOCAL_UI_MODE,detail:document.querySelector('#pkmsvv-coop-detail')?.textContent})),errors);throw e;}

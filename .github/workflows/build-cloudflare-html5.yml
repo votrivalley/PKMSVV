@@ -3,10 +3,15 @@ on:
   push:
     branches: [feature/lan-local-beta]
     paths:
+      - 'scripts/bundle-wifi-qr.cjs'
+      - 'scripts/patch-lan.cjs'
       - 'scripts/prepare-cloudflare.cjs'
       - 'scripts/prepare-cloudflare-ai.cjs'
       - 'scripts/compile-standalone-ai.cjs'
       - 'scripts/patch-lan-ai.cjs'
+      - 'scripts/patch-arena-v1529.cjs'
+      - 'tests/arena-v1529*.cjs'
+      - 'tests/spawn-arena-v1529.test.cjs'
       - 'scripts/package-standalone-ai.cjs'
       - 'scripts/prepare-lan.cjs'
       - 'scripts/patch-lan.cjs'
@@ -65,6 +70,17 @@ jobs:
         run: npm run test:cloudflare && node --test tests/cloudflare-ai.test.cjs tests/local-shell-ui.test.cjs tests/local-ui-lan-host-regression.test.cjs tests/pages-lan-connect-runtime.test.cjs tests/unified-coop.test.cjs
       - name: Verify personal ticket and Shiny ownership in standalone Web AI
         run: node --test tests/competitive-rewards.test.cjs
+      - name: Verify P0 arena support nests and opening spawns
+        run: node --test tests/arena-v1529.test.cjs tests/spawn-arena-v1529.test.cjs tests/lan-bot-snapshot.test.cjs
+      - name: Ten-minute Web P0 profile with 10 trainers and AI
+        shell: bash
+        run: PKMSVV_PLATFORM=web PKMSVV_BROWSER="$(command -v google-chrome)" node tests/arena-v1529-soak.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: PKMSVV-P0-v1529-QA-Web
+          path: dist/qa/v1529-*
+          if-no-files-found: ignore
       - name: Browser smoke QA of real HTML5 AI in all three modes
         run: node tests/cloudflare-ai-browser.cjs
       - name: Verify main menu to AI, match finish and replay on Web

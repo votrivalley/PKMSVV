@@ -1,6 +1,17 @@
 # PKMSVV — handoff for Claude / cloud continuation
 
-Updated: 2026-10-27, Asia/Saigon. Release: **1.5.24**.
+Updated: 2026-10-28, Asia/Saigon. Working version: **1.5.29 (unreleased)**.
+
+## Active work — v1.5.29 (unreleased)
+
+P0 Issue #7 implementation is in progress. Read the full linked v1.5.29 spec.
+Do not interpret a build as acceptance of real Android/PC/Web networking.
+The final user decision on 2026-10-28 is Wi-Fi-only crossplay: no Internet,
+no rented service. PC/Web/APK each run their own Host using local WebRTC.
+Manual offer + answer exchange uses QR, text or a file. The Internet room-service
+prototype was removed and must not be revived as the default. See
+`docs/WIFI_CROSSPLAY.md`. Physical mixed-device Wi-Fi QA remains outstanding.
+Do not claim existing historical LAN-only behavior below implements this feature.
 
 ## Permanent publishing rule — Android (DO NOT OVERRIDE)
 

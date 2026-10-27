@@ -25,6 +25,13 @@
 #pkmsvv-coop-detail p{width:100%;margin:0;line-height:1.5}
 #pkmsvv-coop-detail input{box-sizing:border-box;padding:10px;min-height:44px;border:2px solid #9ed5cc;border-radius:8px;min-width:0;max-width:100%;flex:1 1 240px;background:#f1fffa;color:#12343d;font:inherit}
 #pkmsvv-coop-detail [role=status]{width:100%;color:#ffe7ab;overflow-wrap:anywhere}
+.pkmsvv-wifi-overlay{position:fixed;inset:0;z-index:10050;background:#001821dd;display:grid;place-items:center;padding:10px}
+.pkmsvv-wifi-panel{box-sizing:border-box;width:min(660px,100%);max-height:94dvh;overflow:auto;background:#174653;color:#fff;border:2px solid #91e0d7;border-radius:14px;padding:16px;font:14px system-ui}
+.pkmsvv-wifi-panel button{margin:5px;padding:10px;border:1px solid #9dd9d4;border-radius:8px;background:#ffe078;color:#143440;font-weight:bold;cursor:pointer}
+.pkmsvv-wifi-panel button:disabled{opacity:.5}
+.pkmsvv-wifi-panel textarea{box-sizing:border-box;width:100%;background:#effffa;color:#12343d;padding:8px;border-radius:8px;overflow-wrap:anywhere}
+.pkmsvv-wifi-panel input{max-width:100%;margin:8px 0}
+.pkmsvv-wifi-output canvas{display:block;width:min(100%,420px);height:auto;margin:12px auto;image-rendering:pixelated}
 #pkmsvv-unified-coop .pkmsvv-coop-help{margin-top:16px;border-top:1px solid #71a79c;padding-top:10px}
 #pkmsvv-unified-coop summary{cursor:pointer;color:#fbe4a6;font-weight:700}
 #pkmsvv-unified-coop .pkmsvv-coop-help p{overflow-wrap:anywhere}

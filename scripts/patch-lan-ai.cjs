@@ -2,6 +2,13 @@
 // LAN bots are actual host-side Player instances, not simulated client health/casts.
 const fs=require('node:fs'),path=require('node:path');
 const game=path.resolve(__dirname,'../vendor/pokesurvivor');
+// Bots are local actors. Do not allocate/serialize a full client snapshot for
+// each one; drain their unused event queues just as the former discarded send did.
+{
+ const p=path.join(game,'js/net/coop.js'),code=fs.readFileSync(p,'utf8'),call='G.Net.send(m.uid, hostFrame(m));';
+ if(code.split(call).length!==3)throw Error('LAN AI outgoing snapshot anchors drifted');
+ fs.writeFileSync(p,code.split(call).join('if(m.pl.lanBot)m.q=[];else '+call));
+}
 function once(file,from,to){
  const p=path.join(game,file),code=fs.readFileSync(p,'utf8').replace(/\r\n/g,'\n');
  if(code.split(from).length!==2)throw Error('LAN AI anchor drift: '+file+' '+from.slice(0,60));

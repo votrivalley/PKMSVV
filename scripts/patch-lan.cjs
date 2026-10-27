@@ -10,7 +10,7 @@ once('dev.html','<script defer src="js/net/social.js"></script>',
 // build.js bundles external scripts only and discards inline scripts between
 // scripts:begin/end. Put the target marker INSIDE a compiled source file.
 write('js/net/lan-bus.js',"window.PKMSVV_LOCAL_UI_MODE='lan';\n"+
- (process.env.PKMSVV_STANDALONE_AI==='1'?"window.PKMSVV_STANDALONE_AI=true;\n"+readLan('solo-ai-bus.js'):readLan('lan-bus.js')));
+ (process.env.PKMSVV_STANDALONE_AI==='1'?"window.PKMSVV_STANDALONE_AI=true;\n"+readLan('solo-ai-bus.js'):readLan('lan-bus.js'))+'\n'+readLan('wifi-bus.js')+'\n'+require('./bundle-wifi-qr.cjs')()+'\n'+readLan('wifi-ui.js'));
 // Avoid redrawing the animated menu at 120/144/240 Hz on gaming displays.
 // Keep gameplay/network ticking at up to 60 Hz; this changes no game rules.
 once('js/game.js',
@@ -84,11 +84,13 @@ ui=ui.replace(marker,
        invite=document.createElement('div');invite.id='pkmsvv-lan-invite';invite.className='row wrap';
        invite.style.cssText='margin:8px 0;gap:8px;align-items:center';
        const btn=document.createElement('button');btn.type='button';btn.className='btn small gold';
-       btn.textContent='📋 Sao chép lời mời';btn.id='pkmsvv-lan-copy-invite';invite.append(btn);
+       btn.textContent=window.PKMSVV_WIFI?'📡 Mời bạn cùng Wi-Fi':'📋 Sao chép lời mời';btn.id='pkmsvv-lan-copy-invite';invite.append(btn);
        $('lobby-sub').insertAdjacentElement('afterend',invite);
        btn.onclick=async()=>{
         const r=G.Social.room;if(!r?.isHost)return;
+        if(window.PKMSVV_WIFI){window.PKMSVVWifiUI.invite();return;}
         try{
+         let t;
          const response=await fetch('/lan/info',{cache:'no-store'});
          if(!response.ok)throw Error('Không xem được địa chỉ LAN');
          const data=await response.json();
@@ -98,7 +100,7 @@ ui=ui.replace(marker,
          u.searchParams.set('pkmsvvRole','join');
          u.searchParams.set('pkmsvvMode',r.mode);
          u.searchParams.set('pkmsvvCode',r.id);
-         const t=u.href;
+         t=u.href;
          if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(t);
          else{const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.append(ta);ta.select();if(!document.execCommand('copy'))throw Error('Trình duyệt không cho sao chép');ta.remove();}
          G.UI.toast('Đã sao chép lời mời. Gửi link cho bạn cùng Wi-Fi!',3200);
