@@ -3,6 +3,9 @@ on:
   push:
     branches: [feature/lan-local-beta]
     paths:
+      - 'config/android-signing-identity.json'
+      - 'scripts/verify-android-signing.cjs'
+      - 'tests/android-signing-identity.test.cjs'
       - 'scripts/bundle-wifi-qr.cjs'
       - 'scripts/patch-lan.cjs'
       - 'scripts/prepare-full-lan-android.cjs'
@@ -54,6 +57,28 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      - name: Check permanent Android update signing
+        id: stable_signing
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.PKMSVV_ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.PKMSVV_ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.PKMSVV_ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.PKMSVV_ANDROID_KEY_PASSWORD }}
+        run: |
+          configured=0
+          for value in "$KEYSTORE_BASE64" "$STORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD"; do
+            if [ -n "$value" ]; then configured=$((configured+1)); fi
+          done
+          if [ "$configured" -eq 0 ]; then
+            echo "::error::No permanent Android key configured; refusing debug fallback."
+            exit 1
+          elif [ "$configured" -ne 4 ]; then
+            echo "::error::Incomplete permanent Android signing secrets. Set all four secrets together."
+            exit 1
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Install Android SDK 36
         shell: bash
         run: |
@@ -69,7 +94,7 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Validate stable Android signing guardrails
-        run: node --test tests/android-stable-signing.test.cjs
+        run: node --test tests/android-stable-signing.test.cjs tests/android-signing-identity.test.cjs
       - name: Compile entire modified offline game
         run: npm run prepare:game
       - name: Validate original game and save functionality
@@ -119,52 +144,6 @@ jobs:
           test -s mobile/www/js/ui/pkmsvv-full-lan-ui.js
           test -s mobile/www/ai/game/js/app.min.js
           du -sh mobile/www/assets
-      - name: Build APK
-        working-directory: android
-        run: |
-          chmod +x gradlew
-          ./gradlew --no-daemon :app:assembleDebug
-      - name: Inspect APK and package
-        shell: bash
-        run: |
-          mkdir -p dist/full-lan-android
-          version=$(node -p "require('./package.json').version")
-          apk="dist/full-lan-android/PKMSVV-${version}-Android-FULL-LAN-DEBUG-TEST-ONLY.apk"
-          cp android/app/build/outputs/apk/debug/app-debug.apk "$apk"
-          unzip -t "$apk" | tail -1
-          unzip -Z -1 "$apk" | grep -q '^assets/public/js/app.min.js$'
-          unzip -Z -1 "$apk" | grep -q '^assets/public/js/ui/pkmsvv-full-lan-ui.js$'
-          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk" | grep '^package:' | head -1
-          ls -lh "$apk"
-      - uses: actions/upload-artifact@v4
-        with:
-          name: PKMSVV-Android-FULL-LAN-DEBUG-TEST-ONLY
-          path: dist/full-lan-android/*.apk
-          retention-days: 14
-          if-no-files-found: error
-
-      - name: Check permanent Android update signing
-        id: stable_signing
-        shell: bash
-        env:
-          KEYSTORE_BASE64: ${{ secrets.PKMSVV_ANDROID_KEYSTORE_BASE64 }}
-          STORE_PASSWORD: ${{ secrets.PKMSVV_ANDROID_KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.PKMSVV_ANDROID_KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.PKMSVV_ANDROID_KEY_PASSWORD }}
-        run: |
-          configured=0
-          for value in "$KEYSTORE_BASE64" "$STORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD"; do
-            if [ -n "$value" ]; then configured=$((configured+1)); fi
-          done
-          if [ "$configured" -eq 0 ]; then
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Only debug APK is available: configure four PKMSVV_ANDROID_* GitHub Secrets to enable APKs that can update in place."
-          elif [ "$configured" -ne 4 ]; then
-            echo "::error::Incomplete permanent Android signing secrets. Set all four secrets together."
-            exit 1
-          else
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-          fi
       - name: Build updateable signed Android FULL LAN release APK
         if: steps.stable_signing.outputs.ready == 'true'
         shell: bash
@@ -180,6 +159,7 @@ jobs:
           trap 'rm -f "$PKMSVV_ANDROID_KEYSTORE_FILE"' EXIT
           printf '%s' "$PKMSVV_ANDROID_KEYSTORE_BASE64" | base64 --decode > "$PKMSVV_ANDROID_KEYSTORE_FILE"
           test -s "$PKMSVV_ANDROID_KEYSTORE_FILE"
+          node scripts/verify-android-signing.cjs --keystore
           node scripts/configure-android-stable-signing.cjs
           (cd android && ./gradlew --no-daemon :app:assembleRelease)
           version=$(node -p "require('./package.json').version")
@@ -188,6 +168,11 @@ jobs:
           cp android/app/build/outputs/apk/release/app-release.apk "$apk"
           "${ANDROID_HOME}/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$apk"
           "${ANDROID_HOME}/build-tools/36.0.0/aapt" dump badging "$apk" | grep '^package:' | head -1
+          unzip -t "$apk" | tail -1
+          unzip -Z -1 "$apk" > "$RUNNER_TEMP/pkmsvv-apk-contents.txt"
+          grep -q '^assets/public/js/app.min.js$' "$RUNNER_TEMP/pkmsvv-apk-contents.txt"
+          grep -q '^assets/public/js/ui/pkmsvv-full-lan-ui.js$' "$RUNNER_TEMP/pkmsvv-apk-contents.txt"
+          node scripts/verify-android-signing.cjs --apk "$apk"
           echo "Signed update APK created for package com.votrivalley.pkmsvv.fulllan."
       - uses: actions/upload-artifact@v4
         if: steps.stable_signing.outputs.ready == 'true'

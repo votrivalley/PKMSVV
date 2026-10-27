@@ -50,5 +50,8 @@ test('CI exposes only the stable signed release as updateable, never the debug A
  assert.match(workflow,/assembleRelease/);
  assert.match(workflow,/apksigner.*verify/);
  assert.match(workflow,/PKMSVV_ANDROID_KEYSTORE_BASE64/);
- assert.match(workflow,/ready=false/);
+ assert.match(workflow,/refusing debug fallback/);
+ assert.doesNotMatch(workflow,/assembleDebug|DEBUG-TEST-ONLY/);
+ assert.match(workflow,/verify-android-signing\.cjs --keystore/);
+ assert.match(workflow,/verify-android-signing\.cjs --apk/);
 });

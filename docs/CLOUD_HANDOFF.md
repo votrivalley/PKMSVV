@@ -23,23 +23,31 @@ See `docs/QA_V1529.md` for download links and performance. Corrected foreground
 ten-minute PC load: 63.7 FPS locally; CI Windows about 55 FPS near the end.
 The original ~10 FPS result measured a backgrounded Host tab, not foreground play.
 
-Android built only `DEBUG-TEST-ONLY`; there is no `SIGNED-UPDATE` because all four
-persistent signing secrets are absent. No old private keystore was found in eight
-branch trees, available Git history, releases (none), or the recent Android artifacts.
-The user clarified they do not have the old key and provided an APK and a run link.
+### Permanent signing enrollment — current work overrides old blocker
 
-Inspected `Pokemon Chuyển sinh 1.5.apk`: actual version 1.5.27 / 1005027;
-inspected run `40486676126`: version 1.5.28 / 1005028. Both use
-`com.votrivalley.pkmsvv.fulllan`, but have DIFFERENT debug certificate fingerprints.
-A cached local debug keystore exists under ignored `dist/toolchains/android-user/`,
-but its certificate matches neither supplied APK. Exact public fingerprints are in
-`docs/QA_V1529.md`. APKs do not recover the corresponding private signing keys.
+On 2026-10-28 the user explicitly authorized ONE permanent APK signing key,
+GitHub Secrets setup, repository rules and a signed Android release. This is not
+an API key. Enrollment succeeded with the public certificate pinned in
+`config/android-signing-identity.json`; read the mandatory root `AGENTS.md`.
+All four existing signing Secrets now describe that one identity. Never rotate,
+regenerate, change app ID, weaken the verifier or publish debug fallback APKs.
+The FULL LAN workflow is being changed to release-only and must verify the
+keystore AND final APK against the pinned certificate.
 
-Do not promise an in-place Android update from either APK. The user has NOT yet
-approved a new signing identity: they asked to inspect the existing APKs first.
-Next decision: fixed protected key plus ONE verified JSON-save migration, or keep
-the old APK and use PC/Web for now. Never uninstall/clear the old app, overwrite
-the cached key, commit private keys, or present a debug APK as a player update.
+Private key backup is outside Git in a protected sibling directory. Local
+password-backup roundtrip initially failed (empty protected file); do not claim
+that local backup is usable until repaired. The GitHub copy and original APK
+signing identity remain unchanged and available for builds. Automatic review
+rejected a proposed temporary job exporting only a public-key encrypted password
+recovery value to logs as unapproved credential egress. Do not bypass it; explicit
+user approval for that recovery method is pending. Continue unaffected release work.
+
+Historical inspection: supplied Downloads APK was 1.5.27 / 1005027; run
+40486676126 was 1.5.28 / 1005028. Their debug certificates differ from each other,
+from the cached local debug keystore, and from the new permanent release key.
+No matching old private keystore was found on GitHub. A verified JSON save
+migration is still required for old debug installs; do not uninstall/clear the
+user's old app. The user says these APKs have not been shared publicly.
 
 ## Permanent publishing rule — Android (DO NOT OVERRIDE)
 

@@ -16,54 +16,51 @@ cài đè bằng key mới. Phải sao lưu, gỡ đúng ứng dụng cũ một 
 phát hành ký cố định rồi nhập lại JSON. Từ những bản sau, miễn dùng đúng
 key và tăng versionCode, có thể cài đè mà không xóa save.
 
-## Cấu hình một khóa ký cố định, làm một lần
+## Khóa cố định đã chốt ngày 28/10/2026
 
-1. Trên **máy riêng của người phát hành** có JDK 21, tạo file keystore mới:
+Người dùng đã cho phép tạo một khóa phát hành duy nhất và cấu hình GitHub.
+Đây là **khóa ký APK, không phải API key**. Bốn Actions Secrets đã được thiết lập
+và đều thuộc cùng một keystore, không phải bốn khóa khác nhau:
 
-   ```powershell
-   keytool -genkeypair -v -keystore pkmsvv-full-lan-update.jks -storetype PKCS12 -alias pkmsvv -keyalg RSA -keysize 3072 -validity 10000
-   ```
+- `PKMSVV_ANDROID_KEYSTORE_BASE64`
+- `PKMSVV_ANDROID_KEYSTORE_PASSWORD`
+- `PKMSVV_ANDROID_KEY_ALIAS`
+- `PKMSVV_ANDROID_KEY_PASSWORD`
 
-   Đặt mật khẩu mạnh, giữ file và mật khẩu trong kho bí mật có sao lưu.
-   **Không commit .jks, không gửi file khóa qua chat, không upload artifact.**
-   Với PKCS12, mật khẩu khóa và mật khẩu keystore thường là một.
+Dấu vân tay chứng chỉ công khai cố định:
+`bdb2c03f6eaa4906a1f4604886b6b2a2ae0562d9b1cc2953ab56147a2c8e2d26`.
+Alias: `pkmsvv`. Ứng dụng: `com.votrivalley.pkmsvv.fulllan`.
+Nguồn chuẩn: `config/android-signing-identity.json` và luật bắt buộc trong `AGENTS.md`.
 
-2. Mở repository `votrivalley/PKMSVV` → **Settings → Secrets and variables →
-   Actions → New repository secret**. Lưu bốn secret:
+**Không tạo khóa mới ở lần build sau. Không đổi dấu vân tay/alias/package ID để ép
+build xanh.** Nếu thiếu hoặc sai Secrets, dừng build và khôi phục đúng khóa đã chốt.
+Chạy `verify-android-signing.cjs --keystore` trước build và `--apk` sau build;
+trình kiểm tra từ chối khóa khác, APK debug, sai phiên bản hoặc sai applicationId.
+Workflow FULL LAN chỉ tạo/phát `SIGNED-UPDATE`, không còn phát APK debug dự phòng.
+Những kiểm thử gameplay, save và thử tải cũ vẫn được giữ nguyên.
 
-   - `PKMSVV_ANDROID_KEYSTORE_BASE64`: Base64 của toàn bộ file keystore.
-     Trên máy Windows, chạy trong thư mục chứa .jks:
+## Sao lưu và cập nhật
 
-     ```powershell
-     [Convert]::ToBase64String([IO.File]::ReadAllBytes((Resolve-Path '.\pkmsvv-full-lan-update.jks'))) | Set-Clipboard
-     ```
+File keystore được giữ trong thư mục bảo mật bên cạnh repo `.pkmsvv-signing`,
+không nằm trong Git; bản thứ hai được mã hóa trong GitHub Actions Secrets.
+Không gửi keystore/mật khẩu qua chat, commit vào repo hoặc upload bản rõ làm artifact.
+Bản sao mật khẩu cục bộ đang được kiểm tra/khôi phục: **chưa được coi là bản sao
+khôi phục được** cho đến khi kiểm tra giải mã và đối chiếu chứng chỉ thành công.
+Khóa ký đã chốt trên GitHub giữ nguyên trong quá trình sửa sao lưu này.
 
-     Sau đó dán nội dung clipboard vào giá trị secret, không dán vào chat.
-   - `PKMSVV_ANDROID_KEYSTORE_PASSWORD`: mật khẩu keystore.
-   - `PKMSVV_ANDROID_KEY_ALIAS`: `pkmsvv`.
-   - `PKMSVV_ANDROID_KEY_PASSWORD`: mật khẩu khóa (thường giống keystore).
+Mỗi bản cập nhật tiếp theo phải tăng version trong package.json để versionCode tăng
+(ví dụ 1.5.29 = 1005029, 1.5.30 = 1005030), giữ nguyên khóa và các khóa save.
+Chỉ lấy APK từ artifact `PKMSVV-Android-FULL-LAN-SIGNED-UPDATE` của workflow đầy đủ.
+Vẫn cần kiểm tra package/version/chứng chỉ của APK tải về trước khi giao.
 
-3. Vào **Actions → Build Android FULL Game + Co-op LAN Beta → Run workflow**.
-   Khi có đủ 4 secret, pipeline vừa tạo bản thử nghiệm debug vừa tạo bản
-   **`PKMSVV-Android-FULL-LAN-SIGNED-UPDATE`**. Chỉ phát bản
-   `SIGNED-UPDATE` cho người chơi muốn cài đè về sau.
-   Nếu secrets chưa cấu hình, pipeline vẫn tạo
-   `PKMSVV-Android-FULL-LAN-DEBUG-TEST-ONLY`, không nên phát hành làm
-   bản cập nhật thường xuyên. Nếu chỉ cấu hình một phần secrets, pipeline
-   báo lỗi rõ ràng.
+## Chuyển từ APK debug cũ — đúng một lần
 
-4. Trước khi gửi APK, đối chiếu `applicationId`, `versionCode`,
-   chứng chỉ ký SHA-256 của 2 APK nếu kiểm tra một bản cập nhật:
-
-   ```powershell
-   apksigner verify --print-certs --verbose .\PKMSVV-OLD.apk
-   apksigner verify --print-certs --verbose .\PKMSVV-NEW.apk
-   aapt dump badging .\PKMSVV-NEW.apk
-   ```
-
-   `apksigner` và `aapt` nằm trong Android SDK build-tools. SHA-256 của
-   signer phải trùng nhau (trừ cấu hình rotation hợp lệ). Nếu không trùng,
-   dừng cập nhật; **không thử cài đè để đánh cược dữ liệu save**.
+Hai APK đã đối chiếu (1.5.27 từ Downloads và 1.5.28 từ GitHub) có chứng chỉ khác
+nhau và khác khóa cố định mới. Không thể hứa cài đè giữ save trực tiếp cho chúng.
+Giữ ứng dụng cũ cho đến khi đã xuất JSON và xác minh file chứa đúng tiến độ/Pokémon.
+Sau đó mới thay ứng dụng bằng bản dùng khóa cố định và nhập JSON lại. Từ lần sau,
+bản đã dùng khóa cố định có thể cài đè khi versionCode tăng. Agent không tự gỡ ứng
+dụng hay xóa dữ liệu trên thiết bị của người dùng.
 
 ## Những ràng buộc an toàn của workflow
 
@@ -79,5 +76,5 @@ key và tăng versionCode, có thể cài đè mà không xóa save.
   cài ngoài Play Store, nhưng khi chữ ký và version hợp lệ sẽ không bắt
   xóa ứng dụng để cài đè.
 
-Trạng thái: mã nguồn và CI hỗ trợ signing cố định; **chưa có khóa phát hành
-trong GitHub Secrets thì chưa có APK signed-update được xác nhận thực tế.**
+Trạng thái: khóa cố định đã tạo và lưu trong GitHub Secrets; chờ xác minh APK
+SIGNED-UPDATE thực tế qua workflow có kiểm tra dấu vân tay.

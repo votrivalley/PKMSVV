@@ -3,6 +3,7 @@ on:
   push:
     branches: [feature/lan-local-beta]
     paths:
+      - 'config/android-signing-identity.json'
       - 'lan-server/**'
       - 'src/lan/**'
       - 'src/web/pkmsvv-arena.js'

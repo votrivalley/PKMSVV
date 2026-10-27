@@ -3,6 +3,7 @@ on:
   push:
     branches: [feature/lan-local-beta]
     paths:
+      - 'config/android-signing-identity.json'
       - 'scripts/bundle-wifi-qr.cjs'
       - 'tests/wifi-pwa-offline.cjs'
       - 'scripts/patch-lan.cjs'
