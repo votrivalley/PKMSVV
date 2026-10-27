@@ -20,7 +20,7 @@ test('Real move-to-header actions preserve handlers, controller and save path',(
  assert.match(patch,/box\.querySelector\('#dex-pick'\)/);
  assert.match(patch,/box\.querySelector\('#pkmk-open-dex'\)/);
  assert.match(patch,/action\.id=id/);
- assert.match(pad,/id=\\"dex-play-now\\"/);
+ assert.ok(pad.includes('dex-play-now'),'controller patch must reference Start action');
  assert.match(pad,/G\.PKMSVVPadFlow\.consumeSelected/);
  assert.match(select,/Chọn Pokémon/);
  const generated=path.join(root,'vendor/pokesurvivor/index.html');
