@@ -35,7 +35,7 @@ test('Android landscape uses scoped compact mobile layout and native Wi-Fi disco
  const css=read('src/android/compact-landscape.css');
  assert.match(css,/max-height:700px/);
  assert.match(css,/overflow-y:auto!important/);
- assert.match(css,/#scr-menu\\.pkmsvv-v15-menu\\.hidden\\{display:none!important;pointer-events:none!important\\}/,
+ assert.match(css,/#scr-menu\.pkmsvv-v15-menu\.hidden\s*\{\s*display:none!important;\s*pointer-events:none!important\s*\}/,
   'Android hidden menu must not cover starter selection or consume taps');
  assert.match(read('scripts/prepare-full-lan-android.cjs'),/compact-landscape\.css/);
  const src=read('scripts/configure-android-full-lan.cjs');
