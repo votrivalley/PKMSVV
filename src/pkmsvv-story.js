@@ -136,21 +136,21 @@ G.PKMSVVStory=(()=>{
  }
  function skipStory(){
   if(mode==='prologue'&&!replaying&&G.DB.save&&!G.DB.save.pkmsvvNameChosen&&!(G.Social&&G.Social.me)){
-   if(nameFormOpen){finish();return;} // Deliberate skip; multiplayer can still ask later.
+   if(nameFormOpen){finish(true);return;} // Skip the name form, but never the starter selection.
    const i=lines.findIndex(scene=>scene.askName);
    if(i>=0){idx=i;draw();stop();$('pkmsvv-story-line').textContent=full;askName();return;}
   }
-  finish();
+  finish(true);
  }
 
  function stop(){if(timer){clearInterval(timer);timer=null;}}
- function finish(){
+ function finish(skipped=false){
   stop();const callback=next,wasPrologue=mode==='prologue';
   if(wasPrologue&&!replaying&&G.DB.save){
    G.DB.save.pkmsvvStorySeen=true;G.DB.commit(true);
   }
   hideNameForm();next=null;mode='';G.UI.hide('scr-pkmsvv-story');
-  if(typeof callback==='function')callback();
+  if(typeof callback==='function')callback(wasPrologue&&skipped&&!replaying);
  }
  function draw(){
   stop();hideNameForm();
