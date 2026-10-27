@@ -31,3 +31,18 @@ test('Real move-to-header actions preserve handlers, controller and save path',(
  assert.match(ui,/toolbar\.insertBefore\(action,playNow\)/);
  assert.match(ui,/G\.PKMSVVPadFlow\.select\(dex, hasSh && viewShiny\)/);
 });
+
+test('Pokédex shows a single sharp square sprite frame on every build',()=>{
+ const patch=read('scripts/patch-dex-buff-layer.cjs');
+ assert.match(patch,/pkmsvv-dex-square-portrait/);
+ assert.match(patch,/width="220" height="220"/);
+ assert.match(patch,/aspect-ratio:1\/1/);
+ assert.match(patch,/border-radius:0!important;box-shadow:none!important;outline:none!important/);
+ const vendor=path.join(root,'vendor','pokesurvivor');
+ if(!fs.existsSync(path.join(vendor,'index.html')))return;
+ const js=read('vendor/pokesurvivor/js/ui/menu.js');
+ const css=read('vendor/pokesurvivor/css/style.css');
+ assert.match(js,/<canvas id="dex-big" class="stage pkmsvv-dex-square-portrait" width="220" height="220"><\/canvas>/);
+ assert.match(css,/#scr-dex #dex-big\.pkmsvv-dex-square-portrait/);
+ assert.match(css,/border:2px solid var\(--stage-c,#5b83d6\)/);
+});
