@@ -83,8 +83,21 @@ patch('js/game.js',
  '    if (!G.DB.save.partner) G.TestUI.start();',
  '    if (!G.DB.save.partner) {\n'+
  '      if(G.DB.save.pkmsvvStorySeen)G.TestUI.start();\n'+
- '      else G.PKMSVVStory.prologue(()=>G.TestUI.start());\n'+
+ '      else G.PKMSVVStory.prologue(skipped=>skipped?G.TestUI.skipToStarters():G.TestUI.start());\n'+
  '    }');
+// Do not discard first-time Pokémon selection when Chapter 0 or the
+// personality questions are skipped. Back from the grid must return to the
+// questionnaire, not a result screen that does not exist yet.
+patch('js/ui/test.js',
+ "    $('starter-back').onclick = () => G.UI.show('scr-result');",
+ "    $('starter-back').onclick = () => { if(result)G.UI.show('scr-result'); else start(); };");
+patch('js/ui/test.js',
+ '  return { init, start };',
+ "  function skipToStarters() {\n"+
+ "    idx=0; scores={}; result=null; picked=null;\n"+
+ "    G.UI.chrome(false); openStarters();\n"+
+ "  }\n"+
+ "  return { init, start, skipToStarters };");
 patch('js/ui/test.js',
  '    G.Flow.goMenu();',
  '    G.PKMSVVStory.reveal(dex,()=>G.Flow.goMenu());');
