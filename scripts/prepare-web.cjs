@@ -165,6 +165,29 @@ if(process.env.PKMSVV_LOCAL_PWA==='1'){
   fs.writeFileSync(dev,page,'utf8');
  }
 // Voice is Web-only and strictly limited to cooperative rooms (2–4 players).
+
+// Offline PWA (Cloudflare, GitHub Pages and iOS): the upstream automatic updater
+// fetches version.json and forcibly reloads after 5 s, which can loop when a
+// previously cached version.json disagrees with the newly deployed JS.
+// Static offline clients receive new assets on their next normal navigation.
+// Never force-reload or interrupt a run, and NEVER clear a player's local save.
+if(process.env.PKMSVV_LOCAL_PWA==='1'){
+ const updaterFile=path.join(game,'js','core','updater.js');
+ const upstream=fs.readFileSync(updaterFile,'utf8');
+ if(!upstream.includes('G.Updater = (() => {')||
+    !upstream.includes("fetch('version.json?t='")||
+    !upstream.includes('function countdown()'))
+  throw Error('Upstream update module changed: review safe offline update policy');
+ fs.writeFileSync(updaterFile,[
+  '/* PKMSVV offline PWA: no automatic reloads, preserve local save. */',
+  'G.Updater=(()=>{',
+  ' const tag=document.querySelector(\'script[src*="app.min.js?v="]\');',
+  ' const version=tag?(tag.getAttribute("src").match(/v=([0-9a-f]+)/)||[])[1]:null;',
+  ' return {policy:"manual-on-next-open", init(){}, async check(){return false;},',
+  '  get pending(){return false;},get version(){return version;}};',
+  '})();',''
+ ].join('\n'),'utf8');
+}
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-voice.cjs')], { cwd: root, stdio: 'inherit' });
 const flow = path.join(game, 'js', 'game.js');
 replaceOnce(flow, 'setTimeout(() => this.afterLogin(), 0);',
