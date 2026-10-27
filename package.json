@@ -23,7 +23,7 @@
     "test:collection": "node --test tests/collection.test.cjs tests/v15-gacha-save-isolation.test.cjs",
     "test:controller": "node --test tests/controller.test.cjs",
     "test:audio": "node --test tests/audio-recovery.test.cjs",
-    "test:ui": "node --test tests/ui094.test.cjs tests/web-match-ux.test.cjs",
+    "test:ui": "node --test tests/ui094.test.cjs tests/web-match-ux.test.cjs tests/dex-header-actions.test.cjs",
     "test:extended-i18n": "node --test tests/extended-i18n.test.cjs",
     "test:changelog": "node --test tests/changelog-v11.test.cjs",
     "test:bilingual": "node --test tests/bilingual-addon.test.cjs",
