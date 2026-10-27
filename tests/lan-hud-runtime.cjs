@@ -13,20 +13,24 @@ const path=require('node:path'),assert=require('node:assert/strict'),fs=require(
   });
   await p.click('#lobby-start');await p.waitForFunction(()=>G.Game.state==='playing');
   await p.evaluate(()=>{
-   window.__rankPanel=null;window.__healthNames=0;const raw=G.I18n.rawCanvas,drawHUD=G.HUD.draw;
+   window.__rankPanel=null;window.__healthNames=0;window.__rankSprites=0;window.__insideRank=false;
+   const avatarDraw=G.Sprites.Animator.prototype.draw;
+   G.Sprites.Animator.prototype.draw=function(...args){if(window.__insideRank)window.__rankSprites++;return avatarDraw.apply(this,args);};
+   const raw=G.I18n.rawCanvas,drawHUD=G.HUD.draw;
    G.HUD.draw=function(...args){window.__insideHUD=true;try{return drawHUD.apply(this,args);}finally{window.__insideHUD=false;}};
    G.I18n.rawCanvas=function(ctx,method,text,...args){if(window.__insideHUD&&G.Coop.mates.some(m=>m.name===text))window.__healthNames++;return raw(ctx,method,text,...args);};
    const old=G.Royale.draw;
    G.Royale.draw=function(ctx,w,h,...args){
     const rect=ctx.roundRect;ctx.roundRect=function(x,y,width,height,...r){window.__rankPanel={x,y,width,height};return rect.call(this,x,y,width,height,...r);};
-    try{return old.call(this,ctx,w,h,...args);}finally{ctx.roundRect=rect;}
+    window.__insideRank=true;
+    try{return old.call(this,ctx,w,h,...args);}finally{window.__insideRank=false;ctx.roundRect=rect;}
    };
   });
   fs.mkdirSync('dist/qa',{recursive:true});
   for(const viewport of [{width:538,height:669},{width:844,height:390}]){
    await p.setViewportSize(viewport);await p.waitForTimeout(1000);
-   const v=await p.evaluate(()=>({bounds:G.HUD.leftBounds,panel:window.__rankPanel,healthNames:window.__healthNames,mates:G.Coop.mates.filter(m=>m.connected).length}));
-   assert.equal(v.mates,9);assert.equal(v.healthNames,0);assert.ok(v.panel.height>100);assert.ok(v.panel.y>=v.bounds.bottom+8);
+   const v=await p.evaluate(()=>({bounds:G.HUD.leftBounds,panel:window.__rankPanel,healthNames:window.__healthNames,rankSprites:window.__rankSprites,mates:G.Coop.mates.filter(m=>m.connected).length}));
+   assert.equal(v.mates,9);assert.equal(v.healthNames,0);assert.ok(v.rankSprites>=10,'Survival HUD must draw ten real Pokémon mini sprites');assert.ok(v.panel.height>100);assert.ok(v.panel.y>=v.bounds.bottom+8);
    assert.ok(v.panel.y+v.panel.height<viewport.height-80,'panel stays above controls');
    await p.screenshot({path:'dist/qa/survival-hud-'+viewport.width+'-1.5.23.png'});
    console.log('PASS 10-player HUD '+viewport.width+'x'+viewport.height+': '+JSON.stringify(v));
