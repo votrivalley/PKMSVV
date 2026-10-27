@@ -23,6 +23,7 @@ on:
       - 'tests/local-ui-lan-host-regression.test.cjs'
       - 'tests/android-full-lan.test.cjs'
       - 'tests/coop-platform-browser.cjs'
+      - 'tests/competitive-rewards.test.cjs'
       - 'tests/dex-header-actions.test.cjs'
       - 'tests/starter-onboarding-browser.cjs'
       - 'tests/v15-gacha-save-isolation.test.cjs'
