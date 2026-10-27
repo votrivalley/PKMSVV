@@ -37,13 +37,17 @@ const sleep=t=>new Promise(r=>setTimeout(r,t));
     },id);
    }
    await page.evaluate(async n=>{for(let i=0;i<n;i++)await G.LanBus.request('addBot',{dex:[25,1,7,4,133,387,393,390,447][i]});G.LobbyUI.open();},count-(guest?2:1));
+   // Creating the guest tab backgrounds the Host; measure an actively played Host,
+   // not Chromium's background-tab throttling. No simulation/assertion is skipped.
+   await page.bringToFront();
    await page.click('#lobby-start');await page.waitForFunction(()=>G.Game.state==='playing');
+   assert.equal(await page.evaluate(()=>document.visibilityState),'visible');
    const start=Date.now(),limit=count===10?duration:Math.min(30000,duration),samples=[];let next=0;
    while(Date.now()-start<limit){
     if(guest)await guest.evaluate(()=>{if(G.Game.state==='levelup')G.RunUI.pick(0);});
     const sample=await page.evaluate(()=>{
      if(G.Game.state==='levelup')G.RunUI.pick(0);
-     return {time:G.Game.st.time,state:G.Game.state,zone:G.Arena.snapshot(),radius:G.Arena.radius,...G.MatchMetrics.snapshot(),saveTickets:[G.DB.save.tickets,G.DB.save.tickets10]};
+     return {time:G.Game.st.time,state:G.Game.state,visibility:document.visibilityState,focused:document.hasFocus(),zone:G.Arena.snapshot(),radius:G.Arena.radius,...G.MatchMetrics.snapshot(),saveTickets:[G.DB.save.tickets,G.DB.save.tickets10]};
     });
     assert.notEqual(sample.state,'over','load fixture must retain all trainers');assert.ok(sample.activeNests<=6);assert.ok(sample.totalPets<=count*2);
     assert.ok(sample.enemies<=80);assert.ok(!sample.chunks||sample.chunks.data<=400&&sample.chunks.images<=48);
