@@ -15,6 +15,11 @@ patch('dev.html',
  '<button id="dex-play-now" class="btn small gold hidden" type="button">▶ CHƠI NGAY (START)</button></div>');
 patch('js/ui/menu.js','    G.KecleonUI.attachDex(dex,box);',
  '    G.KecleonUI.attachDex(dex,box);\n'+mount);
+/* One square Pokémon portrait, one border. Preserve sprite animation and stats. */
+patch('js/ui/menu.js',
+ '      <canvas id="dex-big" class="stage" width="220" height="190"></canvas>',
+ '      <canvas id="dex-big" class="stage pkmsvv-dex-square-portrait" width="220" height="220"></canvas>');
+
 // Move the complete ON/OFF ring before the Pokemon sprite render.
 const playerFile=path.join(dir,'js','entities','player.js');
 let player=fs.readFileSync(playerFile,'utf8').replace(/\r\n/g,'\n');
@@ -53,5 +58,17 @@ fs.writeFileSync(projectileFile,source,'utf8');
 patch('js/game.js','    G.Pickups.draw(ctx);',
  '    G.Pickups.draw(ctx);\n    G.Projectiles.drawGround(ctx); // PKMSVV orbit art below sprites');
 const css="\n/* Header order: [Chọn Pokémon] [Dùng vật phẩm / TM] [Chơi ngay]. */\n#scr-dex .box > .row.between{\n display:flex!important;flex-wrap:nowrap!important;\n align-items:center!important;justify-content:space-between!important;\n gap:8px!important;min-width:0;\n}\n#scr-dex .box > .row.between > h2{\n flex:1 1 auto;min-width:0;white-space:nowrap;\n}\n#scr-dex #pkmsvv-dex-top-actions{\n display:flex;flex:0 1 auto;min-width:0;align-items:center;\n flex-wrap:nowrap;gap:7px;overflow-x:auto;scrollbar-width:none;\n -webkit-overflow-scrolling:touch;\n}\n#scr-dex #pkmsvv-dex-top-actions::-webkit-scrollbar{display:none}\n#scr-dex #pkmsvv-dex-top-actions > .btn{\n position:static!important;flex:0 0 auto;min-width:0;\n margin:0!important;white-space:nowrap!important;\n height:48px;min-height:44px;padding:7px 12px!important;\n font-size:clamp(12px,1.05vw,17px);font-weight:700;\n}\n#scr-dex #pkmsvv-dex-top-actions #dex-play-now{\n border-color:#ffdb6b;min-width:0;\n}\n#scr-dex #pkmsvv-dex-top-actions > .btn[disabled]{\n opacity:.48;cursor:not-allowed;\n}\n#scr-dex #dex-detail{\n display:block!important;min-height:0;min-width:0;\n max-height:100%;overflow:hidden!important;\n box-sizing:border-box;overscroll-behavior:contain;\n}\n#scr-dex #dex-detail .pkmsvv-dex-scroll{\n height:100%;min-height:0;min-width:0;overflow-x:hidden;overflow-y:auto;\n overscroll-behavior-y:contain;scrollbar-gutter:stable;\n -webkit-overflow-scrolling:touch;padding:2px 3px 8px;\n}\n#scr-dex #dex-detail .pkmsvv-dex-action{display:none!important}\n@media(max-height:520px), (max-width:850px){\n #scr-dex .box > .row.between{gap:5px!important}\n #scr-dex .box > .row.between > h2{font-size:17px}\n #scr-dex #pkmsvv-dex-top-actions{gap:4px}\n #scr-dex #pkmsvv-dex-top-actions > .btn{\n  height:41px;min-height:40px;padding:5px 7px!important;font-size:12px;\n }\n}\n";
-fs.appendFileSync(path.join(dir,'css','style.css'),'\n'+css+'\n','utf8');
+
+const portraitCss = [
+ '/* Shared Web / Windows / Android: remove nested PMD frame around dex portrait. */',
+ '#scr-dex #dex-big.pkmsvv-dex-square-portrait{',
+ ' display:block;box-sizing:border-box;width:min(220px,100%);height:auto;',
+ ' aspect-ratio:1/1;border:2px solid var(--stage-c,#5b83d6);',
+ ' border-radius:0!important;box-shadow:none!important;outline:none!important;',
+ '}',
+ '@media(max-height:520px), (max-width:850px){',
+ ' #scr-dex #dex-big.pkmsvv-dex-square-portrait{width:min(132px,100%);height:auto;}',
+ '}'
+].join('\n');
+fs.appendFileSync(path.join(dir,'css','style.css'),'\n'+css+'\n'+portraitCss+'\n','utf8');
 console.log('PKMSVV: Dex fixed header/footer + rear buff rings and orbit art');
