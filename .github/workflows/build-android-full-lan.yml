@@ -15,7 +15,6 @@ on:
       - 'src/android/**'
       - 'src/pkmsvv-story.js'
       - 'scripts/patch-story.cjs'
-      - 'tests/starter-onboarding-browser.cjs'
       - 'src/lan/**'
       - 'src/shared/**'
       - 'tests/coop-icon-consistency.test.cjs'

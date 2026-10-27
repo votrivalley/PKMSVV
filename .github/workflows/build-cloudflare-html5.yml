@@ -15,6 +15,9 @@ on:
       - 'tests/cloudflare-ai.test.cjs'
       - 'tests/cloudflare-ai-browser.cjs'
       - 'tests/coop-platform-browser.cjs'
+      - 'tests/starter-onboarding-browser.cjs'
+      - 'src/pkmsvv-story.js'
+      - 'scripts/patch-story.cjs'
       - 'scripts/prepare-ios.cjs'
       - 'src/cloudflare/**'
       - 'src/ios/**'
@@ -63,6 +66,9 @@ jobs:
       - name: Verify main menu to AI, match finish and replay on Web
         shell: bash
         run: PKMSVV_BROWSER="$(command -v google-chrome)" node tests/coop-platform-browser.cjs
+      - name: Verify Web first-run starter choice after every skip path
+        shell: bash
+        run: PKMSVV_PLATFORM=cloudflare PKMSVV_BROWSER="$(command -v google-chrome)" node tests/starter-onboarding-browser.cjs
       - name: Inspect ready-to-deploy website (no nested ZIP)
         shell: bash
         run: |

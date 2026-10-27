@@ -1,6 +1,6 @@
 # PKMSVV — handoff for Claude / cloud continuation
 
-Updated: 2026-10-27, Asia/Saigon. Release: **1.5.23**.
+Updated: 2026-10-27, Asia/Saigon. Release: **1.5.24**.
 
 ## Permanent publishing rule — Android (DO NOT OVERRIDE)
 
@@ -183,3 +183,20 @@ avoidance, per-owner supports, recurring Egg Rush nests/respawn, final scoring,
 return to lobby, then immediately start a second round and change modes.
 Profile PC slowdowns using reproducible scenes before changing simulation rules.
 Keep all fixes on LAN beta until this QA is complete.
+
+## v1.5.24 — global first-run flow, single-source platform invariant
+
+The rule is shared by PC LAN, Cloudflare HTML5 and Android FULL LAN: if the
+player has no starter, neither skipping Chapter 0 (including after nickname)
+nor skipping the personality questionnaire can bypass the starter grid.
+Explicit starter selection must be committed and stored in the owned roster
+before gameplay/menu access. All three workflows gate packaging on the SAME
+`tests/starter-onboarding-browser.cjs` with different build roots. The Android
+landscape CSS display/pointer-events fix remains scoped exclusively to
+`src/android/compact-landscape.css`; never fork gameplay onboarding by platform.
+Use PC Fast Start as the primary Windows delivery.
+
+Android update distribution ALWAYS requires stable signing, same package ID
+`com.votrivalley.pkmsvv.fulllan`, and increasing versionCode (1.5.24 -> 1005024).
+Without protected stable signing secrets, a debug artifact is NOT an installable
+upgrade to an existing release. Never advise uninstalling before save backup.

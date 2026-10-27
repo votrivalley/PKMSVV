@@ -26,6 +26,8 @@ on:
       - 'tests/lan-browser-host.test.cjs'
       - 'tests/lan-discovery.test.cjs'
       - 'tests/lan-ai-modes.test.cjs'
+      - 'tests/starter-onboarding-browser.cjs'
+      - 'src/pkmsvv-story.js'
       - 'tests/lan-ai-runtime.cjs'
       - 'tests/lan-rounds-runtime.cjs'
       - 'tests/lan-random-bots.test.cjs'
@@ -71,6 +73,9 @@ jobs:
         run: node --test tests/lan-connection.test.cjs tests/lan-bus-retry.test.cjs
       - name: Install browser for real two-client LAN test
         run: npx playwright install chromium
+      - name: Verify PC first-run story skip, question skip and starter selection
+        shell: bash
+        run: node tests/starter-onboarding-browser.cjs
       - name: Play all three modes with two independent LAN clients
         run: npm run test:lan:runtime
       - name: Validate live and fallen AI rewards in all three modes

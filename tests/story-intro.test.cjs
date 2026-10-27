@@ -66,3 +66,17 @@ test('Chapter 0 offers a story nickname without changing established social nick
  assert.doesNotMatch(story,/Vậy\.\.\. bạn tên gì\?|Đây là tên tôi!/);
  assert.match(patch,/Hãy gọi tôi như vậy/);
 });
+
+test('skipping Chapter 0 or the personality quiz can never bypass starter selection on any platform',()=>{
+ const story=read('src/pkmsvv-story.js'),p=read('scripts/patch-story.cjs');
+ const browser=read('tests/starter-onboarding-browser.cjs');
+ assert.match(story,/finish\(true\)/,'skip signals must reach the post-story callback');
+ assert.match(p,/skipped=>skipped\?G\.TestUI\.skipToStarters\(\):G\.TestUI\.start\(\)/);
+ assert.match(p,/test-skip-starter/);
+ assert.match(p,/function skipToStarters\(\)/);
+ assert.match(browser,/skip-story-after-name/);
+ assert.match(browser,/skip-quiz/);
+ assert.match(browser,/complete-quiz/);
+ const android=read('src/android/compact-landscape.css');
+ assert.match(android,/#scr-menu\.pkmsvv-v15-menu\.hidden\{display:none!important/);
+});
