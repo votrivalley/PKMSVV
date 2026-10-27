@@ -91,7 +91,7 @@ test('Offline PWA never auto-reloads from stale version.json (safe for local sav
  assert.match(buildScript,/upstream\.includes\('function countdown\(\)'\)/);
  assert.match(buildScript,/policy:"manual-on-next-open"/);
  assert.match(bundle,/manual-on-next-open/,'compiled offline game must contain inert updater');
- assert.match(worker,/if\(\/\\\/version\\\.json\$\/i\.test\(url\.pathname\)\)return/);
+ assert.ok(worker.includes("if(/\\/version\\.json$/i.test(url.pathname))return;"),'worker must bypass version.json fetch');
  assert.match(headers,/\/game\/version\.json\n\s+Cache-Control: no-store, max-age=0/);
  assert.doesNotMatch(worker,/localStorage\.clear|indexedDB\.deleteDatabase/);
 });
