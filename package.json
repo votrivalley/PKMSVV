@@ -1,6 +1,6 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.26",
+  "version": "1.5.27",
   "private": true,
   "description": "Unofficial noncommercial Pokémon Sống Sót client: offline-first Windows and Android editions, browser online beta",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
@@ -32,7 +32,7 @@
     "test:opening": "node --test tests/opening-spawns.test.cjs",
     "prepare:web": "node scripts/prepare-web.cjs",
     "test:web": "node --test tests/story-intro.test.cjs tests/web-*.test.cjs tests/v15-eggs.test.cjs tests/v15-gacha-save-isolation.test.cjs",
-    "test:v15": "node --test tests/story-intro.test.cjs tests/v15-eggs.test.cjs tests/v15-gacha-save-isolation.test.cjs tests/dex-header-actions.test.cjs",
+    "test:v15": "node --test tests/story-intro.test.cjs tests/v15-eggs.test.cjs tests/v15-gacha-save-isolation.test.cjs tests/dex-header-actions.test.cjs tests/lan-hud-layout.test.cjs",
     "prepare:lan": "node scripts/prepare-lan.cjs",
     "build:lan:win": "electron-builder --win portable --x64 --publish never --config lan-win.json",
     "test:lan": "node --test tests/lan-server.test.cjs",
@@ -49,7 +49,7 @@
     "prepare:pages": "node scripts/prepare-pages.cjs",
     "test:pages": "node --test tests/pages-html5.test.cjs",
     "prepare:cloudflare": "node scripts/prepare-cloudflare.cjs",
-    "test:cloudflare": "node --test tests/cloudflare-pages.test.cjs tests/dex-header-actions.test.cjs"
+    "test:cloudflare": "node --test tests/cloudflare-pages.test.cjs tests/dex-header-actions.test.cjs tests/lan-hud-layout.test.cjs"
   },
   "devDependencies": {
     "playwright": "^1.62.1",
