@@ -26,6 +26,7 @@ on:
       - 'tests/lan-browser-host.test.cjs'
       - 'tests/lan-discovery.test.cjs'
       - 'tests/lan-ai-modes.test.cjs'
+      - 'tests/competitive-rewards.test.cjs'
       - 'tests/dex-header-actions.test.cjs'
       - 'tests/starter-onboarding-browser.cjs'
       - 'src/pkmsvv-story.js'
