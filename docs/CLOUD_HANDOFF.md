@@ -2,6 +2,23 @@
 
 Updated: 2026-10-27, Asia/Saigon. Release: **1.5.23**.
 
+## Permanent publishing rule — Android (DO NOT OVERRIDE)
+
+Every Android APK delivered to players as an **update** MUST use the same
+`com.votrivalley.pkmsvv.fulllan` application ID, a strictly higher versionCode,
+and the **persistent protected release signing keystore** stored in GitHub Actions
+Secrets. Distribute only `PKMSVV-Android-FULL-LAN-SIGNED-UPDATE`; ephemeral
+`DEBUG-TEST-ONLY` APKs are CI/debug output and NEVER player updates.
+If release secrets are missing, block update publication rather than handing
+out a debug APK. Back up player save JSON before any one-time signer migration.
+See `docs/ANDROID_UPDATE_SIGNING.md`. Do not commit private .jks or passwords.
+
+Starter-selection invariant: skipping the Chapter 0 story after setting a nickname,
+or skipping the personality test, must ALWAYS open the starter Pokémon grid for
+players without a chosen starter. No gameplay/menu route should silently treat
+a missing starter as a completed onboarding. Regression test:
+`tests/starter-onboarding-browser.cjs` in the Android packaging workflow.
+
 ## Current continuation — overrides historical 1.5.21 packaging notes below
 
 - 1.5.23 Survival HUD keeps only own HP and a Survival ranking; no opponent HP
