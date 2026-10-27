@@ -145,6 +145,12 @@ if(home.split(oldTagline).length!==2)throw Error('Expected one original menu sub
 home=home.replace(oldTagline,'<div class="t2 pkmsvv-awakening-tagline" translate="no">Tỉnh giấc tôi thấy mình hóa Pokemon</div>');
 markup=markup.slice(0,menuStart)+home+markup.slice(menuEnd);
 
+// The HOME Pokémon portrait (not the Pokédex) must be a genuine square canvas.
+// Preserve the outer information card and save/gameplay; remove only the art wrapper chrome.
+const oldHomeArt='<canvas id="menu-partner" class="stage" width="260" height="200"></canvas>';
+if(markup.split(oldHomeArt).length!==2)throw Error('Missing unique home Pokémon portrait');
+markup=markup.replace(oldHomeArt,
+ '<canvas id="menu-partner" class="stage pkmsvv-single-portrait" width="220" height="220"></canvas>');
 fs.writeFileSync(dev,markup,'utf8');
 const settings=path.join(game,'js','ui','settings-ui.js');
 let settingsJs=fs.readFileSync(settings,'utf8');
@@ -252,6 +258,22 @@ fs.appendFileSync(css,`
   font-size:9px!important;top:max(47px,env(safe-area-inset-top))!important;
  }
  #scr-menu.pkmsvv-v15-menu .pkmsvv-v15-bottom>#btn-news{min-height:52px!important}
+}
+/* v1.5.26 — actual HOME portrait: keep the single square canvas and remove
+   only the extra outer teal portrait frame (not the Pokémon info card). */
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-partner>.pkmsvv-v15-art{
+ border:0!important;border-radius:0!important;
+ background:transparent!important;box-shadow:none!important;
+ outline:none!important;padding:0!important;overflow:visible!important;
+}
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-art>#menu-partner.pkmsvv-single-portrait{
+ display:block!important;box-sizing:border-box!important;
+ width:min(100%,220px)!important;height:auto!important;
+ aspect-ratio:1/1!important;max-height:none!important;
+ border:2px solid var(--stage-c,#5b83d6)!important;
+ border-radius:4px!important;
+ box-shadow:none!important;outline:none!important;
+ margin:0!important;
 }
 `,'utf8');
 console.log('PKMSVV v1.5.16: renamed menu, popup backup, aligned navigation and single News panel.');
