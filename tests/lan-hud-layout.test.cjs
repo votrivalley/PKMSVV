@@ -104,8 +104,8 @@ test('v1.5.30: one unified death message matches Co-op, Royale and Egg Rush',()=
 test('v1.5.30 compiled HUD wires one notice and suppresses duplicate mode notices',()=>{
  const script=fs.readFileSync(require.resolve('../scripts/patch-arena-v1529.cjs'),'utf8');
  assert.match(script,/pkmsvv-death-hud/);
- assert.match(script,/G\\.PKMSVVDeathHUD\\.draw\\(ctx,w,h,pl\\)/);
- assert.match(script,/pl\\.dead && !G\\.PKMSVVDeathHUD/);
- assert.match(fs.readFileSync(require.resolve('../src/web/pkmsvv-royale.js'),'utf8'),/player\\?\\.dead&&!G\\.PKMSVVDeathHUD/);
- assert.match(fs.readFileSync(require.resolve('../src/web/pkmsvv-egg-rush.js'),'utf8'),/pl\\?\\.dead&&active&&!G\\.PKMSVVDeathHUD/);
+ assert.match(script,/G\.PKMSVVDeathHUD\.draw\(ctx,w,h,pl\)/);
+ assert.match(script,/pl\.dead && !G\.PKMSVVDeathHUD/);
+ assert.match(fs.readFileSync(require.resolve('../src/web/pkmsvv-royale.js'),'utf8'),/player\?\.dead&&!G\.PKMSVVDeathHUD/);
+ assert.match(fs.readFileSync(require.resolve('../src/web/pkmsvv-egg-rush.js'),'utf8'),/pl\?\.dead&&active&&!G\.PKMSVVDeathHUD/);
 });
