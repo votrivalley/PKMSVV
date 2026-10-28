@@ -62,14 +62,14 @@ G.LanAI=(()=>{
   const mode=G.Social?.room?.mode,baseline=humanBaseline();
   bots.forEach((bot,index)=>{
    const pl=G.Coop.mate(bot.uid)?.pl;if(!pl)return;
-   pl.lanBot=true;pl.addMove(G.baseStartOf(bot.dex));
-   pl.setAbility(G.Mons.abilityOf(bot.dex).id);
    if(pl.lanBotPowerApplied){states.set(bot.uid,{seq:0,route:[],replan:0,think:0,axis:[0,0],goal:null,home:{x:pl.x,y:pl.y},wander:0});return;}
-   pl.lanBotPowerApplied=true;
+   pl.lanBot=true;pl.lanBotPowerApplied=true;
+   pl.addMove(G.baseStartOf(bot.dex));
+   pl.setAbility(G.Mons.abilityOf(bot.dex).id);
    const required=mode==='eggrush'||index===0;
    if(mode==='royale'&&G.Upgrades?.perks){
     const profile=strength(),perks=G.Upgrades.perks(profile.levels);
-    pl.addMaxHp(Math.round(perks.hp*pl.maxHp/Math.max(1,pl.mon.hp)));
+    pl.addMaxHp(Math.round(perks.hp*pl.maxHp/Math.max(1,pl.mon.hp||pl.maxHp||1)));
     pl.atkMul*=perks.atkMul;pl.spdMul*=perks.spdMul;pl.cdMul*=perks.cdMul;
     pl.dmgReduce+=perks.dmgReduce;pl.regenFlat+=perks.regen;
     pl.lanBotProfile=profile;
