@@ -127,7 +127,7 @@ test('Egg Rush keeps eggs sealed and only ends after ten claims or 12 minutes',(
  assert.equal(end.winner,'p0');assert.equal(end.collected,10);
  assert.equal(end.standings[0].eggs,10);
  assert.equal(end.standings[0].points, end.standings[0].hatched.reduce((n,e)=>n+e.points,0));
- assert.ok(end.standings[0].hatched.every(e=>[5,10,20].includes(e.points)));
+ assert.ok(end.standings[0].hatched.every(e=>[5,10,20,40].includes(e.points)),'Shiny multiplies only the base egg points');
  assert.equal(events.filter(e=>e[1]==='take').length,10);
  assert.ok(events.filter(e=>e[1]==='take').every(e=>e[4]===0),
   'Host does not leak Pokémon identity in live egg collection packets');
