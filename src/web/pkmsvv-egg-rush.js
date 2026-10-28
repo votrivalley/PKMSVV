@@ -16,7 +16,7 @@ G.EggRush=(()=>{
   active=!!(cfg&&cfg.mode==='eggrush');cooperative=cfg?.mode==='coop';supportMode=cooperative||cfg?.mode==='royale';nextSpawn=SPAWN_EVERY;
   survival=cfg?.mode==='royale';if(survival)nextSpawn=30;
   allocation=0;retryAt=0;pendingBatch=0;seenIds.clear();Object.assign(metrics,{placementAttempts:0,placementFailures:0,expired:0});
-  roster=(active||supportMode)?(cfg.members||[]).map(m=>({uid:m.uid,name:String(m.name||'Player').slice(0,24),dex:m.dex||25})):[];
+  roster=(active||supportMode)?(cfg.members||[]).map(m=>({uid:m.uid,name:String(m.name||'Player').slice(0,24),dex:m.dex||25,shiny:!!m.shiny})):[];
   seed=Math.floor(Number(cfg?.seed)||1);nests=[];pets=[];trails=new Map();levelSeen=1;killsSeen=0;
   score=Object.fromEntries(roster.map(m=>[m.uid,0]));at={};laid=0;outcome=null;transition={};
   if(active||supportMode){
@@ -332,7 +332,7 @@ G.EggRush=(()=>{
     const local=p.uid===G.Social?.uid;
     return '<div class="pkmsvv-result-row'+(local?' pkmsvv-result-me':'')+(p.win?' pkmsvv-result-winner':'')+'">'+
      '<strong class="pkmsvv-result-rank">#'+(i+1)+'</strong>'+
-     '<canvas class="pkmsvv-result-mon" width="48" height="48" data-pkmsvv-result-dex="'+dex+'" aria-label="Pokémon #'+dex+'"></canvas>'+
+     '<canvas class="pkmsvv-result-mon" width="48" height="48" data-pkmsvv-result-dex="'+dex+'" data-pkmsvv-result-shiny="'+(p.shiny?'1':'0')+'" aria-label="Pokémon #'+dex+'"></canvas>'+
      '<span class="pkmsvv-result-name">'+esc(p.name)+'</span>'+
      '<b class="pkmsvv-result-stat">'+p.eggs+' '+tr('trứng','eggs')+'</b></div>';
    }).join('')+'</div></section>';
