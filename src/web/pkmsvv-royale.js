@@ -103,7 +103,7 @@ G.Royale=(()=>{
    ctx.textAlign='right';ctx.fillText(isAlive?L('Sống','Alive'):L('Ngủm','Out'),x+width-7,baseline);
   });
   ctx.restore();
-  if(G.Game?.player?.dead){
+  if(G.Game?.player?.dead&&!G.PKMSVVDeathHUD){
    ctx.save();ctx.textAlign='center';ctx.font='bold 17px sans-serif';
    ctx.lineWidth=4;ctx.strokeStyle='rgba(0,0,0,.75)';ctx.fillStyle='#ffb7be';
    const msg=L('Bạn đã bị loại!','You are eliminated!');
