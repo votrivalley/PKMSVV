@@ -92,3 +92,32 @@ test('v1.5.30 displays a world-space red circle and short shrinking hint without
  assert.ok(seen.some(s=>s.includes('Ngoài vòng đỏ')));
  step(11,11);assert.equal(p.hp,99,'visual changes must not alter authoritative damage');
 });
+
+test('Issue #8: Royale ends immediately below 6s and displays all 10 Pokémon ranking icons',()=>{
+ const {G,players}=harness('royale',10),r=[];
+ vm.runInNewContext(fs.readFileSync(require.resolve('../src/web/pkmsvv-royale.js'),'utf8'),{G,Math,Map,Number,Object,Set});
+ G.Royale.begin({mode:'royale',members:players});
+ assert.equal(G.Royale.check(players.slice(0,2),1,x=>r.push(x)),false,'wait for full roster');
+ players.forEach((p,i)=>p.dead=i!==0);
+ assert.equal(G.Royale.check(players,1,x=>r.push(x)),true,'winner at second one');
+ assert.equal(r.length,1);assert.equal(r[0].winner,'p0');assert.equal(r[0].standings.length,10);
+ assert.equal(new Set(r[0].standings.map(p=>p.uid)).size,10);
+ assert.equal(r[0].standings[0].uid,'p0');
+ assert.equal(G.Royale.check(players,2,x=>r.push(x)),false);
+ assert.equal(r.length,1);
+ const html=G.Royale.html(r[0]);
+ assert.equal((html.match(/class="pkmsvv-result-mon"/g)||[]).length,10);
+ assert.equal((html.match(/data-pkmsvv-result-dex="25"/g)||[]).length,10);
+ assert.match(html,/pkmsvv-results-list/);
+});
+test('Issue #8: simultaneous knockouts return a deterministic full draw without a missing rank',()=>{
+ const {G,players}=harness('royale',4),r=[];
+ vm.runInNewContext(fs.readFileSync(require.resolve('../src/web/pkmsvv-royale.js'),'utf8'),{G,Math,Map,Number,Object,Set});
+ G.Royale.begin({mode:'royale',members:players});
+ players.forEach(p=>p.dead=true);
+ G.Royale.check(players,3,x=>r.push(x));
+ assert.equal(r.length,1);assert.equal(r[0].winner,null);
+ assert.equal(r[0].standings.length,4);
+ assert.equal(new Set(r[0].standings.map(p=>p.uid)).size,4);
+ assert.match(G.Royale.html(r[0]),/Hòa · Không còn ai sống/);
+});
