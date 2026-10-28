@@ -20,7 +20,7 @@ patch('js/net/coop.js',
  '    const start=seenSeq+1;',
  '    for(let n=start;n<=seq&&n<start+100;n++)',
  '      api.levelStart(Math.max(1,Math.round(level)-(seq-n)));',
- '    seenSeq=seq;',
+ '    seenSeq=Math.min(seq,start+99);',
  '  }',
  '  // ---------------- subida de nivel compartida ----------------'
  ].join('\n'));
