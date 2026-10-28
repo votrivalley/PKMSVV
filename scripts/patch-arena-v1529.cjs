@@ -4,6 +4,14 @@ function patch(file,a,b){const p=path.join(base,file),s=fs.readFileSync(p,'utf8'
 for(const file of ['pkmsvv-arena','pkmsvv-match-metrics','pkmsvv-death-hud'])fs.copyFileSync(path.join(root,'src/web',file+'.js'),path.join(base,'js/net',file+'.js'));
 patch('dev.html','<script defer src="js/net/pkmsvv-egg-rush.js"></script>',
  '<script defer src="js/net/pkmsvv-egg-rush.js"></script>\n<script defer src="js/net/pkmsvv-arena.js"></script>\n<script defer src="js/net/pkmsvv-match-metrics.js"></script>\n<script defer src="js/net/pkmsvv-death-hud.js"></script>');
+// The original Rift exits without clearing World.arena, causing a permanent
+// disabled red circle. It also revives fallen multiplayer trainers on exit.
+patch('js/systems/rift.js',
+ '    arena = null;\n    G.World.setBiome(a.biome, true);',
+ '    arena = null;\n    G.World.setArena(null);\n    G.World.setBiome(a.biome, true);');
+patch('js/systems/rift.js',
+ '    if (pl.dead) pl.revive(0.3);',
+ '    if (pl.dead && !G.Coop.active) pl.revive(0.3);');
 patch('js/game.js','    G.EggRush.begin(coop);','    G.EggRush.begin(coop);G.Arena.begin(coop);G.MatchMetrics.reset();');
 patch('js/game.js','    if (!coop || G.Coop.isHost) { G.Path.update(dt, all); G.Spawner.update(dt, all, time); }',
  '    G.Arena.update(dt,time,all);\n    if (!coop || G.Coop.isHost) { G.Path.update(dt, all); G.Spawner.update(dt, all, time); }');
