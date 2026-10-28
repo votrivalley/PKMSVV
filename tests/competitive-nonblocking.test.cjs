@@ -35,7 +35,7 @@ test('lost LAN snapshots restore all missed skill cards once',()=>{
 });
 test('Co-op still waits; competitive item/bond choices never send global hold',()=>{
  assert.match(patch,/if\(G\.Coop\.active&&!pkmsvvCompetitive\(\)\)G\.Coop\.holdStart\(\)/);
- assert.match(patch,/if\(G\.Coop\.active&&!pkmsvvCompetitive\(\)\)G\.Coop\.holdEnd\(\)/);
+ assert.match(patch,/if \(G\.Coop\.active && !pkmsvvCompetitive\(\)\) G\.Coop\.holdEnd\(\)/);
  assert.match(patch,/if\(!pkmsvvCompetitive\(\)\)state='choice'/);
  assert.match(patch,/pl\.frozen = coop/);
  assert.match(read('scripts/prepare-game.cjs'),/patch-competitive-levelup\.cjs/);
