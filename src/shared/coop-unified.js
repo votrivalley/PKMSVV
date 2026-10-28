@@ -2,9 +2,9 @@
 /* The exact same Co-op entry for PC, Android and Cloudflare HTML5. */
 (()=>{
  window.PKMSVV_UNIFIED_COOP_ENABLED=true;
- const modes=[['coop','Sống Sót','2–4 người',25,'Pikachu','Hợp tác chống quái, cứu đồng đội và cùng nhau sống sót.'],
-  ['royale','Sống Còn','2–10 người',6,'Charizard','Vòng đỏ rộng, thu dần. Trứng hỗ trợ mỗi 30s. Ra ngoài 10s: mất 1% HP/giây.'],
-  ['eggrush','Tranh Trứng','4 người',175,'Togepi','10 trứng kết thúc · cuối trận nở trứng tính điểm: Mew 20, Ditto 10, khác 5 · Shiny ×2.']];
+ const modes=[['coop','Sống Sót','2–4 người',25,'Pikachu','Hợp tác chống quái, cứu đồng đội. Nâng kỹ năng chung, cả đội chờ nhau.'],
+  ['royale','Sống Còn','2–10 người',6,'Charizard','Vòng đỏ thu dần, trứng mỗi 30s. Chọn kỹ năng riêng, trận vẫn chạy.'],
+  ['eggrush','Tranh Trứng','4 người',175,'Togepi','10 trứng · cuối trận mở điểm Mew 20, Ditto 10, khác 5 · Shiny ×2. Chọn kỹ năng không dừng trận.']];
  let mode='coop',view=null,detail=null,busy=false,previousFocus=null;
  const lan=()=>window.PKMSVV_LOCAL_UI_MODE==='lan'&&!!window.G?.LanBus;
  function close(){view?.remove();view=detail=null;previousFocus?.focus?.();}
