@@ -1,5 +1,23 @@
 # PKMSVV — handoff for Claude / cloud continuation
 
+## Latest work — v1.5.32, 2026-10-28 (overrides older headers below)
+
+Branch `feature/lan-local-beta`; no merge into main. Read `AGENTS.md`,
+`docs/QA_V1532.md`, `docs/QA_V1531.md`, `docs/ANDROID_UPDATE_SIGNING.md` and
+`docs/WIFI_CROSSPLAY.md` before changing gameplay or packaging. New v1.5.32:
+red circle remains enabled after returning from a boss Rift (clear cached
+`World.arena`); knocked-out Co-op/Royale participants are NOT freely revived
+by Rift exit; Royale opening radius 1900, 30s one-support-nest cadence and max
+3 unclaimed; normal enemy Orb chance 6%; real host-owned 50–80%-HP support
+companions with thin bars, hit and heal sync in both Co-op and Royale.
+Keep Egg Rush's competitive scoring/60s nest schedule unchanged.
+Android `versionCode=1005032`, original package ID, fixed forever signing key;
+only verified `PKMSVV-Android-FULL-LAN-SIGNED-UPDATE` is distributable.
+Existing v1.5.31 Web/Android/PC artifacts do NOT contain these fixes.
+Do not claim v1.5.32 release/physical QA pass until the final build run passes
+on all three platforms. Never delete save or publish a debug APK.
+
+
 Updated: 2026-10-28, Asia/Saigon. Working version: **1.5.29 (unreleased)**.
 
 ## Active work — v1.5.29 (unreleased)
