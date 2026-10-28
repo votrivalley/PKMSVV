@@ -5,7 +5,7 @@ Updated: 2026-10-28, Asia/Saigon. Working version: **1.5.29 (unreleased)**.
 ## Active work — v1.5.29 (unreleased)
 
 P0 Issue #7 source implementation and all three CI builds are complete. Read the
-full linked v1.5.29 spec. Physical-device QA and Android player publication remain open.
+full linked v1.5.29 spec. Physical-device QA and old-install save migration remain open.
 Do not interpret a build as acceptance of real Android/PC/Web networking.
 The final user decision on 2026-10-28 is Wi-Fi-only crossplay: no Internet,
 no rented service. PC/Web/APK each run their own Host using local WebRTC.
@@ -14,33 +14,28 @@ prototype was removed and must not be revived as the default. See
 `docs/WIFI_CROSSPLAY.md`. Physical mixed-device Wi-Fi QA remains outstanding.
 Do not claim existing historical LAN-only behavior below implements this feature.
 
-### Verified build revision and signing blocker
+### Verified builds and permanent signing — 2026-10-28
 
-All three workflows passed on the same game-source commit **`639b15d`**:
-PC `40555231904`, Web `40555231798`, Android `40555232006`.
-Later documentation-only commits do not change that shared build revision.
-See `docs/QA_V1529.md` for download links and performance. Corrected foreground
-ten-minute PC load: 63.7 FPS locally; CI Windows about 55 FPS near the end.
-The original ~10 FPS result measured a backgrounded Host tab, not foreground play.
+All three release workflows passed on the SAME commit **915ba8c678cdc3379f440721ee17f759a1cc3028**:
+PC 40565021889, Web 40565021820, Android 40565021872.
+Documentation-only commits after this revision do not change these binaries.
+Android now produces the verified permanent-key SIGNED-UPDATE, not a debug fallback.
+Download links and remaining physical-device/performance limits: docs/QA_V1529.md.
 
-### Permanent signing enrollment — current work overrides old blocker
-
-On 2026-10-28 the user explicitly authorized ONE permanent APK signing key,
-GitHub Secrets setup, repository rules and a signed Android release. This is not
-an API key. Enrollment succeeded with the public certificate pinned in
-`config/android-signing-identity.json`; read the mandatory root `AGENTS.md`.
-All four existing signing Secrets now describe that one identity. Never rotate,
+The user explicitly authorized ONE permanent APK signing key (not an API key).
+Read the mandatory root AGENTS.md and config/android-signing-identity.json.
+All four existing GitHub signing Secrets describe this ONE identity. Never rotate,
 regenerate, change app ID, weaken the verifier or publish debug fallback APKs.
-The FULL LAN workflow is being changed to release-only and must verify the
-keystore AND final APK against the pinned certificate.
+The release-only workflow verifies the keystore AND final APK against the pin.
 
-Private key backup is outside Git in a protected sibling directory. Local
-password-backup roundtrip initially failed (empty protected file); do not claim
-that local backup is usable until repaired. The GitHub copy and original APK
-signing identity remain unchanged and available for builds. Automatic review
-rejected a proposed temporary job exporting only a public-key encrypted password
-recovery value to logs as unapproved credential egress. Do not bypass it; explicit
-user approval for that recovery method is pending. Continue unaffected release work.
+The protected local backup outside Git has now passed DPAPI encrypt/decrypt
+roundtrip and keystore certificate verification. A substitute debug key was rejected.
+The user explicitly approved encrypted-only password recovery after automatic
+review initially rejected the unapproved proposal. Recovery succeeded without
+changing the APK key; the temporary transport private key and GitHub branch were
+removed. Local DPAPI recovery is bound to this Windows account/machine; use the
+private Open-Recovery.cmd helper locally to make an independent password-manager
+backup. Never print credentials or commit private backup material.
 
 Historical inspection: supplied Downloads APK was 1.5.27 / 1005027; run
 40486676126 was 1.5.28 / 1005028. Their debug certificates differ from each other,
@@ -210,7 +205,7 @@ Do not run these builds simultaneously; they mutate the same upstream checkout.
   `prepare:android`, `test:android`, `prepare:android:full-lan`,
   `test:android:full-lan`, `npx cap add android`, `npx cap sync android`,
   `configure-android.cjs`, `configure-android-full-lan.cjs`,
-  `apply-android-icons.cjs`, then Gradle `:app:assembleDebug`.
+  `apply-android-icons.cjs`, then the release-only signing steps and Gradle `:app:assembleRelease` in that workflow.
   The FULL LAN preparation changes tracked `capacitor.config.json`; restore it
   afterwards. Release APK filename and native version come from package.json.
 - PC: `npm run prepare:lan`; use `lan-win.json`. Existing Fast Start 1.5.21 ZIP

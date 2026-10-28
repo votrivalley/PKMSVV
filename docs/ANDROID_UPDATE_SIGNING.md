@@ -44,9 +44,12 @@ Những kiểm thử gameplay, save và thử tải cũ vẫn được giữ ngu
 File keystore được giữ trong thư mục bảo mật bên cạnh repo `.pkmsvv-signing`,
 không nằm trong Git; bản thứ hai được mã hóa trong GitHub Actions Secrets.
 Không gửi keystore/mật khẩu qua chat, commit vào repo hoặc upload bản rõ làm artifact.
-Bản sao mật khẩu cục bộ đang được kiểm tra/khôi phục: **chưa được coi là bản sao
-khôi phục được** cho đến khi kiểm tra giải mã và đối chiếu chứng chỉ thành công.
-Khóa ký đã chốt trên GitHub giữ nguyên trong quá trình sửa sao lưu này.
+Bản sao mật khẩu cục bộ đã được khôi phục theo chấp thuận rõ của người dùng và
+kiểm tra mã hóa/giải mã Windows DPAPI, mở keystore và đối chiếu đúng chứng chỉ.
+Khóa debug thay thế bị trình kiểm tra từ chối. Nhánh vận chuyển tạm và khóa giải mã
+tạm đã được xóa; khóa ký APK giữ nguyên. DPAPI chỉ dùng được với tài khoản/máy
+Windows hiện tại. Dùng Open-Recovery.cmd trong thư mục bảo mật để chủ máy tự lưu
+thêm mật khẩu vào nơi quản lý mật khẩu riêng; không gửi nội dung qua chat.
 
 Mỗi bản cập nhật tiếp theo phải tăng version trong package.json để versionCode tăng
 (ví dụ 1.5.29 = 1005029, 1.5.30 = 1005030), giữ nguyên khóa và các khóa save.
@@ -76,5 +79,5 @@ dụng hay xóa dữ liệu trên thiết bị của người dùng.
   cài ngoài Play Store, nhưng khi chữ ký và version hợp lệ sẽ không bắt
   xóa ứng dụng để cài đè.
 
-Trạng thái: khóa cố định đã tạo và lưu trong GitHub Secrets; chờ xác minh APK
-SIGNED-UPDATE thực tế qua workflow có kiểm tra dấu vân tay.
+Trạng thái: khóa cố định và bản sao cục bộ đã kiểm chứng; APK SIGNED-UPDATE từ
+commit 915ba8c đã build thành công. Xem docs/QA_V1529.md để tải và xem giới hạn QA.
