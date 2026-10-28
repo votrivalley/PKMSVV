@@ -96,15 +96,19 @@ patch('js/game.js',
 patch('js/game.js',
  "    state = 'choice';\n    if (G.Coop.active) G.Coop.holdStart();\n    G.Audio.sfx('levelup');",
  "    if(!pkmsvvCompetitive())state='choice';\n    if(G.Coop.active&&!pkmsvvCompetitive())G.Coop.holdStart();\n    G.Audio.sfx('levelup');");
-patch('js/game.js',
- "      if (G.Coop.active) G.Coop.holdEnd();\n    });\n  }\n\n  // ---------------- recogida ----------------",
- "      if(G.Coop.active&&!pkmsvvCompetitive())G.Coop.holdEnd();\n      if(pkmsvvCompetitive())pkmsvvNextPersonalLevel();\n    });\n  }\n\n  // ---------------- recogida ----------------");
+// Both item and bond choices must not create room-wide holds in competition.
+function patchAll(file,from,to,expected){
+ const full=path.join(game,file),s=fs.readFileSync(full,'utf8').replace(/\r\n/g,'\n');
+ const count=s.split(from).length-1;
+ if(count!==expected)throw Error('Competitive patch occurrences '+file+': '+count+' (expected '+expected+')');
+ fs.writeFileSync(full,s.split(from).join(to),'utf8');
+}
+patchAll('js/game.js',
+ 'if (G.Coop.active) G.Coop.holdEnd();',
+ 'if (G.Coop.active && !pkmsvvCompetitive()) G.Coop.holdEnd();',2);
 patch('js/game.js',
  "      if (o.mine) { state = 'choice'; if (G.Coop.active) G.Coop.holdStart(); }",
  "      if (o.mine && !pkmsvvCompetitive()) { state='choice'; if(G.Coop.active)G.Coop.holdStart(); }");
-patch('js/game.js',
- "      if (G.Coop.active) G.Coop.holdEnd();\n      afterLevelUp();",
- "      if(G.Coop.active&&!pkmsvvCompetitive())G.Coop.holdEnd();\n      if(pkmsvvCompetitive())pkmsvvNextPersonalLevel();\n      afterLevelUp();");
 patch('js/game.js',
  "      state = 'choice';\n      if (G.Coop.active) G.Coop.holdStart();\n    }\n    openItem =",
  "      if(!pkmsvvCompetitive())state='choice';\n      if(G.Coop.active&&!pkmsvvCompetitive())G.Coop.holdStart();\n    }\n    openItem =");
