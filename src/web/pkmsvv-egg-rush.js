@@ -97,7 +97,9 @@ G.EggRush=(()=>{
   // the authoritative finish callback below still runs exactly once.
   if(active&&(Object.values(score).reduce((n,v)=>n+v,0)>=MAX_SCORE||
       Object.values(score).some(v=>v>=WIN_SCORE)))return false;
-  n.taken=true;score[pl.uid]=(score[pl.uid]||0)+1;at[pl.uid]=time;
+  // The authoritative 'take' event marks the nest taken. Pre-marking
+   // here would make onEvent reject the Host's own legitimate claim.
+   score[pl.uid]=(score[pl.uid]||0)+1;at[pl.uid]=time;
   const dex=EGG_SPECIES[Math.floor(rand(n.id*413)*EGG_SPECIES.length)];
   // 50–80% of this owner's real HP, not a global cosmetic HP bar.
    const statScale=.5+rand(n.id*37)*.3;
