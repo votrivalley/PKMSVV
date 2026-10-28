@@ -12,6 +12,12 @@ patch('js/game.js',
 patch('js/game.js',
  "    if (G.Coop.active && pl && state !== 'ui' && state !== 'over') G.Coop.tick(dt);",
  "    if (G.Coop.active && pl && state !== 'ui' && state !== 'over') G.Coop.tick(dt);\n    G.PKMSVVSpectator.tick();");
+// Legacy level/item modals can still leave an already-eliminated Royale
+// trainer in a non-playing game state. Resume simulation before processing
+// inputs so there is no stuck level-up screen or frozen Host match.
+patch('js/game.js',
+ '    G.Pad.poll(real);\n    handleKeys();',
+ "    G.Pad.poll(real);\n    if(pl?.dead&&G.Royale?.active&&(state==='levelup'||state==='choice')){\n      state='playing';G.RunUI.closeLevelUp();\n      G.UI.hide('scr-item');G.UI.hide('scr-bond');\n    }\n    handleKeys();");
 // The original Rift exits without clearing World.arena, causing a permanent
 // disabled red circle. It also revives fallen multiplayer trainers on exit.
 patch('js/systems/rift.js',
