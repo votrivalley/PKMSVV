@@ -1,9 +1,9 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),root=path.resolve(__dirname,'..'),base=path.join(root,'vendor/pokesurvivor');
 function patch(file,a,b){const p=path.join(base,file),s=fs.readFileSync(p,'utf8').replace(/\r\n/g,'\n');if(s.split(a).length!==2)throw Error('Arena source drift '+file+': '+a.slice(0,70));fs.writeFileSync(p,s.replace(a,b));}
-for(const file of ['pkmsvv-arena','pkmsvv-match-metrics'])fs.copyFileSync(path.join(root,'src/web',file+'.js'),path.join(base,'js/net',file+'.js'));
+for(const file of ['pkmsvv-arena','pkmsvv-match-metrics','pkmsvv-death-hud'])fs.copyFileSync(path.join(root,'src/web',file+'.js'),path.join(base,'js/net',file+'.js'));
 patch('dev.html','<script defer src="js/net/pkmsvv-egg-rush.js"></script>',
- '<script defer src="js/net/pkmsvv-egg-rush.js"></script>\n<script defer src="js/net/pkmsvv-arena.js"></script>\n<script defer src="js/net/pkmsvv-match-metrics.js"></script>');
+ '<script defer src="js/net/pkmsvv-egg-rush.js"></script>\n<script defer src="js/net/pkmsvv-arena.js"></script>\n<script defer src="js/net/pkmsvv-match-metrics.js"></script>\n<script defer src="js/net/pkmsvv-death-hud.js"></script>');
 patch('js/game.js','    G.EggRush.begin(coop);','    G.EggRush.begin(coop);G.Arena.begin(coop);G.MatchMetrics.reset();');
 patch('js/game.js','    if (!coop || G.Coop.isHost) { G.Path.update(dt, all); G.Spawner.update(dt, all, time); }',
  '    G.Arena.update(dt,time,all);\n    if (!coop || G.Coop.isHost) { G.Path.update(dt, all); G.Spawner.update(dt, all, time); }');
@@ -13,6 +13,13 @@ patch('js/game.js','    if (!coop || G.Coop.isHost) { G.Path.update(dt, all); G.
 patch('js/ui/hud.js',
  '    if (G.Coop.active) drawCoop(ctx, w, h, pl, px, py + (bx > px ? 56 : 40));',
  '    if (G.Coop.active && !G.Royale.active && !G.EggRush.active) drawCoop(ctx, w, h, pl, px, py + (bx > px ? 56 : 40));');
+// Keep teammate health bars/arrows in Co-op, but suppress the older
+// large rescue sentence: all modes now share exactly one small overlay.
+patch('js/ui/hud.js',
+ '    // Tú, caído.\n    if (pl.dead) {',
+ '    // Tú, caído.\n    if (pl.dead && !G.PKMSVVDeathHUD) {');
+patch('js/game.js','    G.Touch.draw(ctx);',
+ '    G.PKMSVVDeathHUD.draw(ctx,w,h,pl);\n    G.Touch.draw(ctx);');
 patch('js/game.js','    if (!G.Judgment.cinematic) G.HUD.draw(ctx, w, h, pl, st);',
  '    if (!G.Judgment.cinematic) G.HUD.draw(ctx, w, h, pl, st);\n    G.Arena.draw(ctx,w,h);');
 patch('js/entities/player.js','  update(dt) {\n    this.anim.update(dt);',
