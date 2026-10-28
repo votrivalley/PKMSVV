@@ -21,16 +21,23 @@ async function main(){
     },mode);
     await page.click('#lobby-start');await page.waitForFunction(()=>G.Game.state==='playing');
     assert.equal(await page.evaluate(()=>G.Coop.puppets().filter(p=>p.lanBot&&p.moves.length).length),3);
-    // Reproduce screenshot: all AI down when the trainer opens the level-2 reward.
-    await page.evaluate(()=>{
-     for(const pl of G.Coop.puppets()){pl.hp=0;pl.dead=true;}
+    // Royale v1.5.31 immediately ends when only one trainer remains.
+    // Leave one bot alive in that mode so the level-up barrier can be tested
+    // with two fallen bots without contradicting the actual victory rule.
+    // Co-op and Egg Rush still exercise all-three-fallen AI rewards.
+    await page.evaluate(mode=>{
+     const bots=G.Coop.puppets();
+     bots.forEach((pl,i)=>{
+      if(mode==='royale'&&i===0)return;
+      pl.hp=0;pl.dead=true;
+     });
      G.Game.debugLevelUp();
-    });
-    await page.waitForFunction(()=>G.Game.state==='levelup');
+    },mode);
+    await page.waitForFunction(()=>G.Game.state==='levelup',null,{timeout:3000});
     await page.waitForTimeout(750);await page.evaluate(()=>G.RunUI.pick(0));
     await page.waitForFunction(()=>G.Game.state!=='levelup',null,{timeout:2500});
     assert.equal(await page.evaluate(()=>G.Coop.puppets().every(p=>p.level===2)),true);
-    console.log('PASS '+mode+': all three dead AI complete legal level-2 rewards without hanging');
+    console.log('PASS '+mode+': fallen AI complete legal level-2 rewards without hanging ('+(mode==='royale'?'2 down, 1 alive to prevent valid last-survivor victory':'3 down')+')');
     // Next level with a live, wounded bot; two remain fallen.
     await page.evaluate(()=>{G.Coop.puppets()[0].revive(.25);G.Game.debugLevelUp();});
     await page.waitForFunction(()=>G.Game.state==='levelup');
