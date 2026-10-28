@@ -40,7 +40,7 @@ once('js/ui/hud.js',"      G.I18n.rawCanvas(ctx, 'fillText', m.name, px, y + 9);
  "      G.I18n.rawCanvas(ctx, 'fillText', m.name, px, y + 9, 70);");
 once('js/net/coop.js',
  "      mates.set(m.uid, { uid: m.uid, name: m.name, color: COLORS[i], pl: p, connected: true, q: [], flushT: 0, xpMul: 1 });\n    });",
- "      mates.set(m.uid, { uid: m.uid, name: m.name, color: COLORS[i], pl: p, connected: true, q: [], flushT: 0, xpMul: 1 });\n    });\n    if(host)G.LanAI.begin();");
+ "      mates.set(m.uid, { uid: m.uid, name: m.name, color: COLORS[i], pl: p, connected: true, q: [], flushT: 0, xpMul: 1 });\n    });\n    if(host)G.LanAI.begin();\n    G.LanAI.normalizeMatch();");
 once('js/net/coop.js','    api.levelStart(level);\n    sendWaiting();',
  '    api.levelStart(level);\n    G.LanAI.levelUp(level,levelSeq);\n    sendWaiting();');
 once('js/net/coop.js','    ANIMS, COLORS, begin, end, leave, tick, players, puppets, xpFactor, scaleRate, scaleHp,',
