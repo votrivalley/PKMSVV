@@ -1,3 +1,21 @@
+## Current work v1.5.36 — Competitive independent skill-card selection
+
+The newest user requirement: **Sống Còn (Royale) and Tranh Trứng
+(Egg Rush) must NOT stop the room when one player is choosing skill,
+item or bond upgrades**; only Sống Sót Co-op retains the shared
+level-up/wait-for-everybody pause. Game and LAN networking continue
+ticking in competitive modes while a player's own card picker is open.
+Personal selections are queued when several levels arrive close together;
+Host frames advertise monotonic level sequence so packet loss does not
+drop skill choices. Personal movement is frozen only while chooser open;
+no competitive invulnerability introduced. Do not change XP curves,
+personal tickets/Shiny, scores, or saves. Full QA: `docs/QA_V1536.md`,
+`tests/competitive-nonblocking.test.cjs`,
+`tests/coop-platform-browser.cjs`. v1.5.36 / Android versionCode
+**1005036**, original permanent certificate/package ID. Never distribute
+unverified artifact or debug APK; Web production deployment is a
+separate step. Do not merge `main` without acceptance.
+
 ## Latest feature — v1.5.35: purple ×10 Gacha ticket for every completed chapter
 
 Read `docs/QA_V1535.md`. User asked to make the game more forgiving:
