@@ -125,44 +125,64 @@ test('Survival AI retreats from nearby monsters instead of blindly following its
  assert.ok(h.pl.lanBotAxis[0]<0,'moves away from threat at close range');
 });
 
-test('Issue #8: strongest REAL LAN guest defines AI baseline in all three modes, applied once',()=>{
+test('v1.5.34 competitive Host/Guests/AI all receive the same best-real-trainer effective stats, without save edits',()=>{
  for(const mode of ['eggrush','royale','coop']){
   const host={uid:'host',dex:25,name:'Host',bot:false,power:{hp:0,atkMul:1,spdMul:1,cdMul:1,dmgReduce:0,regen:0}};
   const guest={uid:'guest',dex:150,name:'Guest',bot:false,power:{hp:300,atkMul:2,spdMul:1.5,cdMul:.6,dmgReduce:.35,regen:3}};
   const bots=['ai-0000000000000001','ai-0000000000000002'].map(uid=>({uid,dex:1,bot:true}));
   const room={isHost:true,mode,members:[host,guest,...bots]};
-  const me={uid:'host',maxHp:90,baseAtk:45,atkMul:1,baseSpd:50,spdMul:1,cdMul:1,dmgReduce:0,regenFlat:0};
+  const local={uid:'host',mon:{hp:90,atk:45,spd:50,df:50,sd:50},maxHp:90,hp:90,
+   baseAtk:45,atkMul:1,baseSpd:50,spdMul:1,cdMul:1,dmgReduce:0,regenFlat:0};
+  const remote={uid:'guest',mon:{hp:100,atk:90,spd:120,df:100,sd:90},maxHp:400,hp:400,
+   baseAtk:90,atkMul:2,baseSpd:120,spdMul:1.5,cdMul:.6,dmgReduce:.35,regenFlat:3};
   const mons={25:{hp:90,atk:45,spd:50,df:50,sd:50},150:{hp:100,atk:90,spd:120,df:100,sd:90}};
   const actors=new Map(bots.map(bot=>[bot.uid,{
    uid:bot.uid,dex:1,mon:{hp:50,atk:30,spd:40,df:40,sd:35,types:['grass']},
    maxHp:50,hp:50,baseAtk:30,baseSpd:40,atkMul:1,spdMul:1,cdMul:1,dmgReduce:0,regenFlat:0,
    moves:[],addMove(){},setAbility(){},addMaxHp(n){this.maxHp+=n;this.hp+=n;}
   }]));
-  const G={Social:{uid:'host',room},Coop:{isHost:true,local:me,mate:uid=>({pl:actors.get(uid)})},
-   DEX_BY:mons,baseStartOf:()=> 'tackle',Mons:{abilityOf:()=>({id:'overgrow'})},
+  const sheet=actors.get(bots[0].uid).mon;
+  const G={Social:{uid:'host',room},Coop:{
+   active:true,isHost:true,local,
+   players:()=>[local,remote,...actors.values()],
+   mate:uid=>({pl:actors.get(uid)})
+  },DEX_BY:mons,baseStartOf:()=> 'tackle',Mons:{abilityOf:()=>({id:'overgrow'})},
    Upgrades:{perks:()=>({hp:40,atkMul:1.1,spdMul:1.1,cdMul:.9,dmgReduce:.1,regen:.5})}};
   vm.runInNewContext(code,{G,Map,Set,Math,Number,console});
   const baseline=G.LanAI.humanBaseline();
-  assert.equal(baseline.uid,'guest','remote strongest human, not Host or another bot');
+  assert.equal(baseline.uid,'guest','best real player sets baseline');
   assert.equal(baseline.hp,400);
   assert.equal(baseline.atk,180);
   G.LanAI.begin();
-  const champion=actors.get(bots[0].uid);
-  for(const p of actors.values()){
-   if(mode!=='eggrush'&&p!==champion)continue;
-   assert.ok(p.maxHp>=baseline.hp,'HP at least strongest human');
-   assert.ok(p.baseAtk*p.atkMul>=baseline.atk,'effective ATK not weaker');
-   assert.ok(p.baseSpd*p.spdMul>=baseline.spd,'effective SPD not weaker');
-   assert.ok(p.cdMul<=baseline.cd,'cooldown not slower');
-   assert.ok(p.dmgReduce>=baseline.def,'damage reduction not weaker');
-   assert.ok(p.regenFlat>=baseline.regen,'regen not weaker');
-   assert.equal(p.lanBotProfile.targetUid,'guest');
+  if(mode==='coop'){
+   const champion=actors.get(bots[0].uid);
+   assert.ok(champion.maxHp>=baseline.hp,'Co-op challenger preserved');
+   assert.ok(champion.baseAtk*champion.atkMul>=baseline.atk);
+   assert.equal(local.maxHp,90,'Co-op human unchanged');
+   assert.ok(G.LanAI.coopDifficulty()>1);
+   continue;
   }
-  const oldHp=champion.maxHp,oldAtk=champion.atkMul;
-  G.LanAI.begin();
-  assert.equal(champion.maxHp,oldHp,'reconnect must not stack HP bonuses');
-  assert.equal(champion.atkMul,oldAtk,'reconnect must not stack ATK bonuses');
-  if(mode==='coop')assert.ok(G.LanAI.coopDifficulty()>1,'strong friendly bots increase enemy pressure');
-  else assert.equal(G.LanAI.coopDifficulty(),1);
+  assert.equal(G.LanAI.normalizeMatch().uid,'guest');
+  for(const p of [local,remote,...actors.values()]){
+   assert.equal(p.maxHp,baseline.hp);
+   assert.equal(p.baseAtk*p.atkMul,baseline.atk);
+   assert.equal(p.baseSpd*p.spdMul,baseline.spd);
+   assert.equal(p.cdMul,baseline.cd);
+   assert.equal(p.dmgReduce,baseline.def);
+   assert.equal(p.regenFlat,baseline.regen);
+   assert.equal(p.mon.df,baseline.df);
+   assert.equal(p.mon.sd,baseline.sd);
+   assert.equal(p.lanFairStatsApplied,true);
+  }
+  assert.equal(sheet.df,40,'original species sheet not modified');
+  assert.equal(mons[25].atk,45,'permanent species DB unchanged');
+  assert.equal(host.power.hp,0,'no lobby save/power mutation');
+  assert.equal(guest.power.hp,300,'remote personal upgrades unchanged');
+  const snapshot=[local.maxHp,remote.maxHp,...actors.values()].join(',');
+  G.LanAI.normalizeMatch();
+  G.LanAI.begin();G.LanAI.normalizeMatch();
+  assert.equal([local.maxHp,remote.maxHp,...actors.values()].join(','),snapshot,'no repeated stat stacking');
+  assert.ok([...actors.values()].every(p=>p.lanBotProfile.tier==='equalized'));
+  assert.equal(G.LanAI.coopDifficulty(),1,'competitive never receives Co-op allied difficulty');
  }
 });
