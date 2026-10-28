@@ -140,12 +140,14 @@
  async function action(role){
   if(busy)return;
   if(role!=='ai'&&(lan()||window.PKMSVV_STANDALONE_AI_AVAILABLE)&&!window.PKMSVV_WIFI&&!new URLSearchParams(location.search).get('pkmsvvCode')){
-   const target=lan()&&!window.PKMSVV_STANDALONE_AI?'/game/':'/ai/game/';
+   const target=window.PKMSVV_ANDROID_LOCAL_LAN?'/index.html':
+    lan()&&!window.PKMSVV_STANDALONE_AI?'/game/':'/ai/game/';
    const q=new URLSearchParams({pkmsvvWifi:'1',pkmsvvRole:role,pkmsvvMode:mode});
    window.location.assign(target+'?'+q);return;
   }
   if(role==='ai'&&window.PKMSVV_WIFI){
-   window.location.assign(location.pathname+'?pkmsvvRole=ai&pkmsvvMode='+encodeURIComponent(mode));return;
+   window.location.assign((window.PKMSVV_ANDROID_LOCAL_LAN?'/index.html':location.pathname)+
+    '?pkmsvvRole=ai&pkmsvvMode='+encodeURIComponent(mode));return;
   }
   if(role==='join'&&window.PKMSVV_WIFI){close();window.PKMSVVWifiUI.join();return;}
   if(lan()){

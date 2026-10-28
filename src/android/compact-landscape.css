@@ -21,7 +21,7 @@
  #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav{
   padding:clamp(45px,8vh,60px) 3px 3px!important;
   display:flex!important;flex-direction:column!important;
-  justify-content:flex-end!important;align-items:stretch!important;
+  justify-content:flex-start!important;align-items:stretch!important;
   overflow-y:auto!important;overflow-x:hidden!important;
   min-height:0!important;max-height:100%!important
  }
