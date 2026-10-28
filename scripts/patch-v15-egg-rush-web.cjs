@@ -90,7 +90,7 @@ patch('js/ui/run-ui.js',
  "if(r.eggrush)$('over-stats').insertAdjacentHTML('afterbegin',G.EggRush.html(r.eggrush));",
  "if(r.eggrush)$('over-stats').insertAdjacentHTML('afterbegin',G.EggRush.html(r.eggrush));\n"+
  "    if(r.royale||r.eggrush)for(const cv of $('over-stats').querySelectorAll('canvas[data-pkmsvv-result-dex]')){\n"+
- "      G.UI.sprite(cv,Number(cv.dataset.pkmsvvResultDex),{hero:true,lively:false});\n"+
+ "      G.UI.sprite(cv,Number(cv.dataset.pkmsvvResultDex),{hero:true,lively:false,shiny:cv.dataset.pkmsvvResultShiny==='1'});\n"+
  "    }");
 // The Online hub exists after patch-multiplayer-hub. Insert a 3rd quick-match card and room controls.
 const htmlFile=path.join(game,'dev.html');let html=fs.readFileSync(htmlFile,'utf8').replace(/\r\n/g,'\n');
