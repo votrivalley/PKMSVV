@@ -489,7 +489,7 @@ G.EggRush=(()=>{
     '<b class="pkmsvv-result-stat">0 '+tr('điểm','pts')+'</b>'+
     '<div class="pkmsvv-egg-final-hatches">'+eggs+'</div></div>';
   }).join('');
-  return '<section class="pkmsvv-results pkmsvv-eggrush-final" style="grid-column:1/-1" data-pkmsvv-results="eggrush" data-pkmsvv-winner="'+esc(r.standings.find(p=>p.uid===r.winner)?.name||'—')+'">'+
+  return '<section class="pkmsvv-results pkmsvv-eggrush-final" style="grid-column:1/-1" data-pkmsvv-results="eggrush" data-pkmsvv-winner="'+esc(r.standings.find(p=>p.uid===r.winner)?.name||'—')+'" data-pkmsvv-winner-uid="'+esc(r.winner||'')+'">'+
    '<h3>🥚 '+tr('TRỨNG BÍ ẨN · MỞ ĐIỂM','MYSTERY EGG REVEAL')+'</h3>'+
    '<div class="pkmsvv-results-champion" aria-live="polite">'+tr('🥚 Đang nở trứng… Ai sẽ thắng?','🥚 Eggs hatching… Who will win?')+'</div>'+
    '<div class="pkmsvv-egg-scoring-rules">'+tr('Mew +20 · Ditto +10 · Pokémon khác +5','Mew +20 · Ditto +10 · Other Pokémon +5')+'</div>'+
@@ -528,6 +528,12 @@ G.EggRush=(()=>{
    });
    const champion=root.querySelector('.pkmsvv-results-champion');
    if(champion)champion.textContent='🏆 '+tr('Vô địch: ','Winner: ')+(root.dataset.pkmsvvWinner||'—');
+   if(typeof document!=='undefined'){
+    const title=document.getElementById('over-title');
+    if(title)title.textContent=root.dataset.pkmsvvWinnerUid===G.Social?.uid?
+     tr('Tranh Trứng · Chiến thắng','Egg Rush · Victory'):
+     tr('Tranh Trứng · Kết quả','Egg Rush · Results');
+   }
    root.classList.add('pkmsvv-egg-scoring-done');
   };
   setTimeout(step,350);
