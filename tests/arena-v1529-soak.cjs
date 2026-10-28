@@ -9,14 +9,15 @@ const sleep=t=>new Promise(r=>setTimeout(r,t));
   (platform==='android'?'mobile/www':platform==='web'?'dist/cloudflare':'dist/lan');
  const server=await startServer({root:path.resolve(root),host:'127.0.0.1',port:0});
  const browser=await chromium.launch({headless:true,args:['--disable-background-timer-throttling','--disable-renderer-backgrounding'],...(process.env.PKMSVV_BROWSER?{executablePath:process.env.PKMSVV_BROWSER}:{})});
- const duration=Number(process.env.PKMSVV_SOAK_MS||600000),url='http://127.0.0.1:'+server.port+(platform==='pc'?'/game/':'/ai/game/');
+ const duration=Number(process.env.PKMSVV_SOAK_MS||600000),url='http://127.0.0.1:'+server.port+
+  (platform==='pc'?'/game/':platform==='android'?'/index.html':'/ai/game/');
  const reports=[];
  try{
   for(const count of [2,4,10]){
    const context=await browser.newContext({viewport:platform==='android'?{width:844,height:390}:{width:1280,height:800}});
    const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
    page.on('console',m=>{if(m.type()==='error'&&m.text().includes('[Game]'))errors.push(m.text());});
-   await page.goto(url);await page.waitForFunction(()=>G.DB?.save);
+   await page.goto(url);await page.waitForFunction(()=>window.G?.DB?.save);
    await page.evaluate(async count=>{
     Object.assign(G.DB.save,{partner:251,pkmsvvStorySeen:true,pkmsvvNameChosen:true,pkmsvvChapter1Seen:true,pkmsvvChapter2Seen:true,pkmsvvChapter3Seen:true});G.MenuUI.open();
     await G.Social.createRoom('royale','private');
@@ -28,7 +29,7 @@ const sleep=t=>new Promise(r=>setTimeout(r,t));
    let guest;
    if(platform==='pc'){
     guest=await context.newPage();guest.on('pageerror',e=>errors.push(e.message));
-    await guest.goto(url);await guest.waitForFunction(()=>G.DB?.save);
+    await guest.goto(url);await guest.waitForFunction(()=>window.G?.DB?.save);
     const id=await page.evaluate(()=>G.Social.room.id);
     await guest.evaluate(async id=>{
      Object.assign(G.DB.save,{partner:25,pkmsvvStorySeen:true,pkmsvvNameChosen:true});G.MenuUI.open();

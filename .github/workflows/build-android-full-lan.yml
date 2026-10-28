@@ -118,8 +118,10 @@ jobs:
         run: PKMSVV_PLATFORM=android PKMSVV_BROWSER="$(command -v google-chrome)" node tests/starter-onboarding-browser.cjs
       - name: Verify P0 arena support nests and opening spawns
         run: node --test tests/arena-v1529.test.cjs tests/spawn-arena-v1529.test.cjs tests/lan-bot-snapshot.test.cjs tests/wifi-qr-license.test.cjs
-      - name: Ten-minute Android assets P0 browser profile with 10 trainers
+      - name: Android P0 2/4/10-trainer browser stress smoke (short CI, full soak manually)
         shell: bash
+        env:
+          PKMSVV_SOAK_MS: '12000'
         run: PKMSVV_PLATFORM=android PKMSVV_BROWSER="$(command -v google-chrome)" node tests/arena-v1529-soak.cjs
       - uses: actions/upload-artifact@v4
         if: always()
