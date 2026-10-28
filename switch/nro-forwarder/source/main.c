@@ -152,7 +152,7 @@ int main(int argc,char **argv) {
         failure("Game resources inside the NRO cannot be mounted.");consoleExit(NULL);return 1;
     }
     char version[64]={0};
-    if (!readVersion(version) || !isFile("romfs:/brewser.nro") ||
+    if (!readVersion(version,sizeof(version)) || !isFile("romfs:/brewser.nro") ||
         !isFile(GAME_SOURCE "/index.html") || !isFile(GAME_SOURCE "/manifest.json")) {
         failure("Incomplete embedded runtime/game. Download the complete PKMSVV.nro.");
         romfsExit();consoleExit(NULL);return 1;
