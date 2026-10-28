@@ -67,11 +67,24 @@ G.EggRush=(()=>{
    if(!n||pets.some(p=>p.id===id)||!roster.some(m=>m.uid===uid)||(n.expiresAt&&when>=n.expiresAt))return;
    n.taken=true;
    score[uid]=total;at[uid]=when;
-   if(!pets.some(p=>p.id===id))pets.push({id,uid,dex,age:0,hatch:false,x:n?.x||0,y:n?.y||0,anim:null});
+   if(!pets.some(p=>p.id===id)){
+    // Host-owned support HP is transmitted with the verified egg claim.
+    const maxHp=Number.isFinite(ev[7])&&ev[7]>0?Math.max(1,Math.min(50000,Math.round(ev[7]))):100;
+    pets.push({id,uid,dex,age:0,hatch:false,x:n?.x||0,y:n?.y||0,anim:null,
+     hp:maxHp,maxHp,hurtCd:0,hpSeq:0,shield:0});
+   }
   }else if(ev[1]==='hatch'){
    const pet=pets.find(p=>p.id===ev[2]);
-   if(pet&&!pet.hatch){pet.hatch=true;pet.anim=new G.Sprites.Animator(pet.dex,.7,false);G.FX?.ring?.(pet.x,pet.y,8,48,'#f5de8d',.6,3);}
-  }else if(ev[1]==='hit'){
+   if(pet&&!pet.hatch){pet.hatch=true;pet.anim=new G.Sprites.Animator(pet.dex,.6,false);G.FX?.ring?.(pet.x,pet.y,8,48,'#f5de8d',.6,3);}
+  }else if(ev[1]==='hp'){
+    const pet=pets.find(p=>p.id===ev[2]);
+    if(pet&&Number.isFinite(ev[3])&&Number.isSafeInteger(ev[4])&&ev[4]>pet.hpSeq){
+     pet.hpSeq=ev[4];pet.hp=Math.max(0,Math.min(pet.maxHp,ev[3]));
+    }
+   }else if(ev[1]==='down'){
+    const pet=pets.find(p=>p.id===ev[2]);
+    if(pet){pet.hp=0;pets=pets.filter(p=>p.id!==ev[2]);}
+   }else if(ev[1]==='hit'){
    return; // Egg Rush is a non-PvP race: ignore old/malicious damage events.
   }
  }
@@ -86,7 +99,10 @@ G.EggRush=(()=>{
       Object.values(score).some(v=>v>=WIN_SCORE)))return false;
   n.taken=true;score[pl.uid]=(score[pl.uid]||0)+1;at[pl.uid]=time;
   const dex=EGG_SPECIES[Math.floor(rand(n.id*413)*EGG_SPECIES.length)];
-  const event=['er','take',n.id,pl.uid,dex,score[pl.uid],time];
+  // 50–80% of this owner's real HP, not a global cosmetic HP bar.
+   const statScale=.5+rand(n.id*37)*.3;
+   const maxHp=supportMode?Math.max(1,Math.round((pl.maxHp||100)*statScale)):100;
+   const event=['er','take',n.id,pl.uid,dex,score[pl.uid],time,maxHp];
   onEvent(event);G.Coop.broadcast(event);
   G.Spawner?.say?.(nameOf(pl.uid)+' '+tr('nhặt được trứng!','collected an egg!'),2);
   return true;
@@ -134,6 +150,23 @@ G.EggRush=(()=>{
     if(own.indexOf(pet)<3){pet.cd=(pet.cd||0)-dt;if(pet.cd<=0){support(pet,owner);pet.cd=({172:10,173:12,35:16,360:19,438:15}[pet.dex]||8);}}
    }
   }
+  if(G.Coop.isHost&&supportMode){
+   // Only Host applies real enemy touch damage. Other clients render synced HP.
+   const enemies=(G.EnemyMgr?.all?.()||[]).filter(e=>e&&!e.dead&&!e.remote&&e.dmg>0);
+   for(const pet of pets.slice()){
+    if(!pet.hatch||!(pet.hp>0))continue;
+    pet.hurtCd=Math.max(0,(pet.hurtCd||0)-dt);
+    if(pet.hurtCd>0)continue;
+    const enemy=enemies.find(e=>G.U.dist2(e.x,e.y,pet.x,pet.y)<(Number(e.r||16)+11)**2);
+    if(!enemy)continue;
+    const raw=Math.min(pet.maxHp*.2,Math.max(1,enemy.dmg*.55));
+    const blocked=Math.min(pet.shield||0,raw);
+    pet.shield=Math.max(0,(pet.shield||0)-blocked);
+    pet.hp=Math.max(0,pet.hp-(raw-blocked));pet.hurtCd=1.25;
+    G.Coop.broadcast(['er','hp',pet.id,pet.hp,++pet.hpSeq]);
+    if(!pet.hp){const event=['er','down',pet.id];onEvent(event);G.Coop.broadcast(event);}
+   }
+  }
   const order=standings();
   Object.entries(transition).forEach(([uid,t])=>{
    t.anim?.update?.(dt);
@@ -146,13 +179,14 @@ G.EggRush=(()=>{
     const event=['er','despawn',n.id];onEvent(event);G.Coop.broadcast(event);metrics.expired++;
    }
    nests=nests.filter(n=>!n.taken);
-   if(time>=nextSpawn){pendingBatch=nextSpawn===30?5:2;nextSpawn=30+(Math.floor((time-30)/45)+1)*45;retryAt=time;}
+   // Never burst five eggs on entry: one unclaimed support nest every 30s.
+   if(time>=nextSpawn&&!pendingBatch){pendingBatch=1;nextSpawn=time+30;retryAt=time;}
    if(pendingBatch&&time>=retryAt&&(!G.Arena?.mode||G.Arena.active)){
     retryAt=time+1;
     const eligible=players.filter(p=>p?.uid&&!p.dead&&(ownedCounts.get(p.uid)||0)<2);
     const deficit=p=>Math.max(0,2-(ownedCounts.get(p.uid)||0));
     const need=eligible.reduce((n,p)=>n+deficit(p),0),untaken=nests.filter(n=>!n.taken).length;
-    const allow=Math.max(0,Math.min(pendingBatch,6-untaken,need-untaken));
+    const allow=Math.max(0,Math.min(pendingBatch,3-untaken,need-untaken));
     for(let i=0;i<allow;i++){
      const max=Math.max(...eligible.map(deficit)),pool=eligible.filter(p=>deficit(p)===max);
      const owner=pool[allocation++%pool.length],n=randomNest(laid,players,owner);if(!n)continue;
@@ -260,7 +294,16 @@ G.EggRush=(()=>{
   }
   for(const p of pets){
    if(!G.Camera.sees(p.x,p.y,50))continue;
-   if(!p.hatch)egg(ctx,p.x,p.y,(p.age+(p.boost||0))/45);else p.anim?.draw(ctx,p.x,p.y,{alpha:.85});
+   if(!p.hatch)egg(ctx,p.x,p.y,(p.age+(p.boost||0))/45);
+   else{
+    p.anim?.draw(ctx,p.x,p.y,{alpha:.85});
+    if(supportMode&&p.maxHp>0){
+     const ratio=Math.max(0,Math.min(1,p.hp/p.maxHp));
+     ctx.fillStyle='rgba(13,38,43,.85)';ctx.fillRect(p.x-14,p.y-35,28,3);
+     ctx.fillStyle=ratio>.55?'#a3f2cd':ratio>.25?'#ffe08b':'#ff8395';
+     ctx.fillRect(p.x-14,p.y-35,28*ratio,3);
+    }
+   }
   }
   ctx.restore();
  }
