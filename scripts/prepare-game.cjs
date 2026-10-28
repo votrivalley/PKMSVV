@@ -398,12 +398,24 @@ const pkmsvvCredit = 'Việt hóa và Mod điều chỉnh bởi Votri Valley';
 patch('dev.html',
   '      <div class="t1">PokéSurvivor<span class="splash">Folagor, Sekiam, PokeAlex: ¿un hueco?</span></div>\n' +
   '      <div class="t2">Mundo Misterioso</div>',
-  '      <div class="t1" translate="no">Pokémon Sống Sót<span class="splash" translate="no">' + pkmsvvCredit + '</span></div>\n' +
+  '      <div class="t1" translate="no">Pokémon Chuyển Sinh<span class="splash" translate="no">' + pkmsvvCredit + '</span></div>\n' +
   '      <div class="t2">Mundo Misterioso</div>');
 patch('dev.html',
   '    <p class="boot-ld">Cargando…</p>',
   '    <p class="pkmsvv-boot-credit" translate="no" lang="vi">' + pkmsvvCredit + '</p>\n' +
-  '    <p class="boot-ld">Cargando…</p>');
+  '    <p class="boot-ld" lang="vi">Đang tải trò chơi…</p>');
+
+// Show Vietnamese text before boot.js initializes, including standalone AI mode.
+patch('dev.html',
+  '    <p>Juego de supervivencia con Pokémon, gratis en el navegador y en el móvil.</p>',
+  '    <p lang="vi">Game sinh tồn Pokémon — chơi ngay trên trình duyệt, không cần đăng nhập.</p>');
+// Boot text must not overwrite the newly inserted attribution paragraph.
+patch('js/boot.js',
+  '  var copy = {',
+  "  var copy = {\n    vi: ['Game sinh tồn Pokémon — chơi ngay trên trình duyệt, không cần đăng nhập.', 'Đang tải trò chơi…'],");
+patch('js/boot.js',
+  "  }[window.PS_LOCALES && window.PS_LOCALES.lang];\n  if (!copy) return;\n  var p = document.querySelectorAll('#boot p');\n  p[0].textContent = copy[0]; p[1].textContent = copy[1];",
+  "  }[window.PS_LOCALES && window.PS_LOCALES.lang === 'en' ? 'en' : 'vi'];\n  if (!copy) return;\n  var description = document.querySelector('#boot .boot-in > p:not(.pkmsvv-boot-credit):not(.boot-ld)');\n  var progress = document.querySelector('#boot .boot-ld');\n  if (description) description.textContent = copy[0];\n  if (progress) progress.textContent = copy[1];");
 
 // The sign-out button is part of the original UI, but this build has one
 // passwordless persistent local profile. Keep the element so upstream init
@@ -554,9 +566,9 @@ let brandHtml = fs.readFileSync(brandHtmlPath, 'utf8');
 if (!brandHtml.includes('<div class="t1">PokéSurvivor</div>') ||
     !brandHtml.includes('<h1>PokéSurvivor</h1>')) throw new Error('Upstream brand UI changed');
 brandHtml = brandHtml.replace('<div class="t1">PokéSurvivor</div>',
-  '<div class="t1" translate="no">Pokémon Sống Sót</div>');
+  '<div class="t1" translate="no">Pokémon Chuyển Sinh</div>');
 brandHtml = brandHtml.replace(/<h1>PokéSurvivor<\/h1>/g,
-  '<h1 translate="no">Pokémon Sống Sót</h1>');
+  '<h1 translate="no">Pokémon Chuyển Sinh</h1>');
 fs.writeFileSync(brandHtmlPath, brandHtml, 'utf8');
 
 // Integrate October 21 upstream Kecleon gameplay into the PINNED Votri Valley base.

@@ -6,16 +6,18 @@ const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
 
 test('Canonical support roster matches runtime and silhouette entries are not invented',()=>{
  const solo=read('src/v15/eggs.js'),online=read('src/web/pkmsvv-egg-rush.js');
- const expected=[[172,'paralyze'],[447,'attack'],[173,'heal'],[35,'heal'],
+ const expected=[[172,'paralyze'],[447,'attack'],[173,'heal'],
   [360,'shield'],[438,'shield'],[175,'magnet'],[174,'slow'],[132,'ditto'],[151,'mew']];
  const G={};vm.runInNewContext(solo,{G,Math,Number,Object});
  assert.deepEqual(Array.from(G.PKMSVVEggs.SPECIES,x=>[x.dex,x.role]),expected);
- assert.match(online,/EGG_SPECIES=\[172,447,173,35,360,438,175,174\]/);
+ assert.match(online,/EGG_SPECIES=\[172,447,173,360,438,175,174\]/);
  assert.doesNotMatch(solo,/{dex:707[,}]/);
  const catalog=read('src/pkmsvv-support-catalog.js');
  assert.match(catalog,/paralyze:\['Tê liệt'/);
  assert.match(catalog,/silhouette:!owned/);
- assert.match(read('docs/SUPPORT_CANONICAL_RULES.md'),/Clefairy #035/);
+ assert.ok(!G.PKMSVVEggs.SPECIES.some(x=>x.dex===35),'Clefairy must never hatch');
+ assert.ok(!online.includes('case 35:'),'Clefairy must not cast as an Egg Rush support');
+ assert.match(read('docs/SUPPORT_CANONICAL_RULES.md'),/Không chứa Clefairy #035/);
 });
 
 test('Pichu paralyzes at most four nearby enemies using real stun, with 7s protection',()=>{
@@ -634,7 +636,7 @@ test('Ditto 8%, Mew 4%, all other supports 88%, Shiny 3% independently',()=>{
  assert.notEqual(roll(.12).dex,132);
  assert.notEqual(roll(.999).dex,151);
  assert.equal(G.PKMSVVEggs.SHINY_CHANCE,.03);
- assert.equal(G.PKMSVVEggs.SPECIES.length,10);
+ assert.equal(G.PKMSVVEggs.SPECIES.length,9);
 });
 
 test('Mew random AOE casts every 1 second and Ditto borrows exactly up to 3 moves',()=>{

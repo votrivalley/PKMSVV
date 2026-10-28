@@ -45,8 +45,8 @@ const translation=[
   '<p class="boot-ld" lang="vi">Đang tải trò chơi…</p>']
 ];
 for(const [oldText,newText] of translation){
- if(!loadingHTML.includes(oldText))throw Error('Original loading text changed: '+oldText);
- loadingHTML=loadingHTML.replace(oldText,newText);
+ if(loadingHTML.includes(oldText))loadingHTML=loadingHTML.replace(oldText,newText);
+ else if(!loadingHTML.includes(newText))throw Error('Loading screen text missing: '+newText);
 }
 loadingHTML=loadingHTML.replace(/(<h1\b[^>]*>)[\s\S]*?(<\/h1>)/,'$1<span>Pokémon</span><span>Chuyển Sinh</span>$2');
 gameHTML=gameHTML.slice(0,from)+loadingHTML+gameHTML.slice(to);
@@ -58,17 +58,10 @@ gameHTML=gameHTML.replace('</head>',
 fs.writeFileSync(htmlFile,gameHTML,'utf8');
 const scriptFile=path.join(dest,'game/js/boot.js');
 let bootScript=fs.readFileSync(scriptFile,'utf8').replace(/\r\n/g,'\n');
-const spanish="    es: ['Juego de supervivencia con Pokémon, gratis en el navegador y en el móvil.', 'Cargando…'],";
-const oldSelector="  var p = document.querySelectorAll('#boot p');\n  p[0].textContent = copy[0]; p[1].textContent = copy[1];";
-if(!bootScript.includes(spanish)||!bootScript.includes(oldSelector))throw Error('Upstream boot.js changed');
-bootScript=bootScript.replace(spanish,
- "    vi: ['Game sinh tồn Pokémon — chơi ngay trên trình duyệt, không cần đăng nhập.', 'Đang tải trò chơi…'],\n"+spanish);
-bootScript=bootScript.replace(oldSelector,
- "  var description = document.querySelector('#boot .boot-in > p:not(.pkmsvv-boot-credit):not(.boot-ld)');\n"+
- "  var progress = document.querySelector('#boot .boot-ld');\n"+
- "  if (description) description.textContent = copy[0];\n"+
- "  if (progress) progress.textContent = copy[1];");
-fs.writeFileSync(scriptFile,bootScript,'utf8');
+// Shared prepare-game now patches boot.js for all Windows/Web/Android/iOS editions.
+if(!bootScript.includes("    vi: ['Game sinh tồn Pokémon — chơi ngay trên trình duyệt, không cần đăng nhập.', 'Đang tải trò chơi…'],")||
+   !bootScript.includes("document.querySelector('#boot .boot-ld')"))
+ throw Error('Vietnamese boot patch not present in compiled Cloudflare game');
 
 for(const name of ['manifest.webmanifest','game/manifest.webmanifest']){
  const file=path.join(dest,name),m=JSON.parse(fs.readFileSync(file,'utf8'));

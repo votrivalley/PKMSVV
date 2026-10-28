@@ -18,6 +18,6 @@ self.addEventListener('fetch',event=>{
    if(response.status===404)return (await caches.match('/index.html'))||response;
    return response;
   }).catch(async()=> (await caches.match('/index.html'))||
-    new Response('<!doctype html><title>Pokémon Sống Sót</title><p>Kiểm tra Internet rồi mở lại ứng dụng.</p>',
+    new Response('<!doctype html><title>Pokémon Chuyển Sinh</title><p>Kiểm tra Internet rồi mở lại ứng dụng.</p>',
       {status:503,headers:{'Content-Type':'text/html; charset=utf-8'}})));
 });

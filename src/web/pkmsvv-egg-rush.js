@@ -1,6 +1,6 @@
 /* PKMSVV v1.5 — Egg Rush, online 4-player host-authoritative match. */
 G.EggRush=(()=>{
- const MAX_TIME=720,MAX_SCORE=10,SPAWN_EVERY=60,RESPAWN_SECONDS=8,EGG_SPECIES=[172,447,173,35,360,438,175,174];
+ const MAX_TIME=720,MAX_SCORE=10,SPAWN_EVERY=60,RESPAWN_SECONDS=8,EGG_SPECIES=[172,447,173,360,438,175,174];
  // Competitive eggs only reveal their Pokémon and score after the final egg.
  const eggValue=dex=>dex===151?20:dex===132?10:5;
  const eggShinyChance=dex=>(dex===151||dex===132)?.10:.03;
@@ -372,7 +372,6 @@ G.EggRush=(()=>{
     enemy.hurt(19,'#c8e2ff');
    }break;
    case 173:eggRushBuff(pet,pl,'heal',.035);break;
-   case 35:eggRushBuff(pet,pl,'heal',.06);break;
    case 360:eggRushBuff(pet,pl,'shield',.09);break;
    case 438:eggRushBuff(pet,pl,'shield',.05);break;
    case 175:G.Pickups?.pullAll?.();break;

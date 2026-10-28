@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.37",
+  "version": "1.5.38",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.37: eliminated Royale spectator camera, nonblocking competitive skills and shared Co-op",
+  "description": "Pokémon Chuyển Sinh v1.5.38: nine newborn support species, localized boot screen, Royale spectator and competitive skills",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {

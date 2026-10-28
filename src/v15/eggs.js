@@ -5,7 +5,6 @@ G.PKMSVVEggs=(()=>{
   {dex:172,role:'paralyze',period:10,power:1.1}, // Pichu — actual stun, not damage or slowdown
   {dex:447,role:'attack',period:4.3,power:16}, // Riolu
   {dex:173,role:'heal',period:12,power:.035}, // Cleffa
-  {dex:35,role:'heal',period:16,power:.06}, // Clefairy
   {dex:360,role:'shield',period:19,power:.09}, // Wynaut
   {dex:438,role:'shield',period:15,power:.05}, // Bonsly
   {dex:175,role:'magnet',period:12,power:18}, // Togepi
