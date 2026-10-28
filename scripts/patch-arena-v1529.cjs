@@ -6,8 +6,6 @@ patch('dev.html','<script defer src="js/net/pkmsvv-egg-rush.js"></script>',
  '<script defer src="js/net/pkmsvv-egg-rush.js"></script>\n<script defer src="js/net/pkmsvv-arena.js"></script>\n<script defer src="js/net/pkmsvv-match-metrics.js"></script>\n<script defer src="js/net/pkmsvv-death-hud.js"></script>\n<script defer src="js/net/pkmsvv-spectator.js"></script>');
 // A dead Royale trainer spectates living trainers instead of being stuck
 // at their corpse. View control is LOCAL; authoritative match keeps running.
-patch('js/game.js','    G.EggRush.begin(coop);G.Arena.begin(coop);G.MatchMetrics.reset();',
- '    G.EggRush.begin(coop);G.Arena.begin(coop);G.MatchMetrics.reset();G.PKMSVVSpectator.reset();');
 patch('js/game.js',
  '    G.Camera.follow(pl.x, pl.y, dt);\n    G.World.update(dt, G.Camera);',
  '    const spectator=G.PKMSVVSpectator.cameraTarget();\n    G.Camera.follow(spectator?.x??pl.x,spectator?.y??pl.y,dt);\n    G.World.update(dt, G.Camera);');
@@ -22,7 +20,7 @@ patch('js/systems/rift.js',
 patch('js/systems/rift.js',
  '    if (pl.dead) pl.revive(0.3);',
  '    if (pl.dead && !G.Coop.active) pl.revive(0.3);');
-patch('js/game.js','    G.EggRush.begin(coop);','    G.EggRush.begin(coop);G.Arena.begin(coop);G.MatchMetrics.reset();');
+patch('js/game.js','    G.EggRush.begin(coop);','    G.EggRush.begin(coop);G.Arena.begin(coop);G.MatchMetrics.reset();G.PKMSVVSpectator.reset();');
 patch('js/game.js','    if (!coop || G.Coop.isHost) { G.Path.update(dt, all); G.Spawner.update(dt, all, time); }',
  '    G.Arena.update(dt,time,all);\n    if (!coop || G.Coop.isHost) { G.Path.update(dt, all); G.Spawner.update(dt, all, time); }');
 // Rival modes must never render the shared Co-op rescue message, teammate
