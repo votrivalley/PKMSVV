@@ -56,6 +56,35 @@ G.LanAI=(()=>{
   pl.dmgReduce=Math.max(pl.dmgReduce||0,Math.min(.8,target.def+defGap/Math.max(100,target.df+target.sd)*.3));
   pl.regenFlat=Math.max(pl.regenFlat||0,target.regen);
  }
+ // Competitive fairness: all trainers (human, guest and AI) share the
+ // strongest real trainer's effective START-OF-MATCH stat vector.
+ // Never change the permanent save or global species DEX. Freeze per actor.
+ function normalizeMatch(){
+  const mode=G.Social?.room?.mode;
+  if(!['eggrush','royale'].includes(mode)||!G.Coop?.active)return null;
+  const target=humanBaseline();
+  if(!target)return null;
+  for(const pl of G.Coop.players?.()||[]){
+   if(!pl||pl.lanFairStatsApplied)continue;
+   // Keep the same proportions and preserve current HP when reconnecting
+   // into an already active match, although normal start HP is 100%.
+   const fraction=Math.max(0,Math.min(1,(pl.hp||0)/Math.max(1,pl.maxHp||1)));
+   const nextHp=Math.max(1,Math.round(target.hp));
+   pl.maxHp=nextHp;
+   pl.hp=pl.dead?0:Math.max(1,Math.round(nextHp*fraction));
+   pl.atkMul=target.atk/Math.max(1,pl.baseAtk||pl.mon?.atk||50);
+   pl.spdMul=target.spd/Math.max(1,pl.baseSpd||pl.mon?.spd||50);
+   pl.cdMul=target.cd;
+   pl.dmgReduce=target.def;
+   pl.regenFlat=target.regen;
+   // Defense is a species base-stat input into damage formulas. Clone only
+   // this match's actor sheet, never mutate shared DEX_BY or saved Pokémon.
+   if(pl.mon)pl.mon={...pl.mon,df:target.df,sd:target.sd};
+   pl.lanFairStatsApplied=true;
+   if(pl.lanBot)pl.lanBotProfile={tier:'equalized',targetUid:target.uid};
+  }
+  return target;
+ }
  function begin(){
   states.clear();
   const bots=activeBots().slice().sort((a,b)=>a.uid.localeCompare(b.uid));
@@ -67,15 +96,8 @@ G.LanAI=(()=>{
    pl.addMove(G.baseStartOf(bot.dex));
    pl.setAbility(G.Mons.abilityOf(bot.dex).id);
    const required=mode==='eggrush'||index===0;
-   if(mode==='royale'&&G.Upgrades?.perks){
-    const profile=strength(),perks=G.Upgrades.perks(profile.levels);
-    pl.addMaxHp(Math.round(perks.hp*pl.maxHp/Math.max(1,pl.mon.hp||pl.maxHp||1)));
-    pl.atkMul*=perks.atkMul;pl.spdMul*=perks.spdMul;pl.cdMul*=perks.cdMul;
-    pl.dmgReduce+=perks.dmgReduce;pl.regenFlat+=perks.regen;
-    pl.lanBotProfile=profile;
-   }
-   if(required){
-    raiseToHuman(pl,baseline,mode==='eggrush'?1.03:1.02);
+   if(required&&mode==='coop'){
+    raiseToHuman(pl,baseline,1.02);
     pl.lanBotProfile={...(pl.lanBotProfile||{}),tier:'challenger',targetUid:baseline?.uid||null};
    }
    states.set(bot.uid,{seq:0,route:[],replan:0,think:0,axis:[0,0],goal:null,home:{x:pl.x,y:pl.y},wander:0});
@@ -289,5 +311,5 @@ G.LanAI=(()=>{
   }
  }
  function near(x,y,r=520){return G.Coop.isHost&&G.Coop.puppets().some(p=>p.lanBot&&!p.dead&&(p.x-x)**2+(p.y-y)**2<r*r);}
- return {activeBots,owns,begin,frame,levelUp,update,scoreCard,route,chooseAxis,near,strength,humanBaseline,raiseToHuman,coopDifficulty,stop(){states.clear();}};
+ return {activeBots,owns,begin,normalizeMatch,frame,levelUp,update,scoreCard,route,chooseAxis,near,strength,humanBaseline,raiseToHuman,coopDifficulty,stop(){states.clear();}};
 })();
