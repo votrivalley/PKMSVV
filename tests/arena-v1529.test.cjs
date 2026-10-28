@@ -77,3 +77,18 @@ test('four-corner Egg Rush cameras still get legal scoring eggs at the unchanged
  const n=h.G.EggRush.nests[0];assert.ok(h.G.Arena.validSpawn(n.x,n.y));assert.equal(h.G.Arena.visible(n.x,n.y,h.players,80),false);
  h.step(.1,120);assert.equal(h.G.EggRush.nests.length,2);assert.equal(h.G.Arena.radius,1600);
 });
+
+test('v1.5.30 displays a world-space red circle and short shrinking hint without changing zone damage',()=>{
+ const {G,players,step}=harness('royale',10);const p=players[0],seen=[],arcs=[],ctx={
+  save(){},restore(){},beginPath(){},stroke(){},fill(){},fillRect(){},translate(){},rotate(){},
+  moveTo(){},lineTo(){},closePath(){},strokeText(s){seen.push(s);},fillText(s){seen.push(s);},
+  arc(...v){arcs.push({r:v[2],stroke:this.strokeStyle});}
+ };
+ G.Camera.left=()=>p.x-422;G.Camera.top=()=>p.y-195;
+ G.Arena.draw(ctx,844,390);
+ assert.ok(seen.some(s=>s.includes('Vòng đỏ thu sau 4:00')),'visible rule before reaching edge');
+ assert.ok(arcs.some(a=>a.stroke.includes('255,77,85')),'red ring uses shared world-space radius');
+ p.x=1800;p.y=0;G.Arena.draw(ctx,844,390);
+ assert.ok(seen.some(s=>s.includes('Ngoài vòng đỏ')));
+ step(11,11);assert.equal(p.hp,99,'visual changes must not alter authoritative damage');
+});
