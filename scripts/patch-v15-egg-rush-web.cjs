@@ -91,7 +91,8 @@ patch('js/ui/run-ui.js',
  "if(r.eggrush)$('over-stats').insertAdjacentHTML('afterbegin',G.EggRush.html(r.eggrush));\n"+
  "    if(r.royale||r.eggrush)for(const cv of $('over-stats').querySelectorAll('canvas[data-pkmsvv-result-dex]')){\n"+
  "      G.UI.sprite(cv,Number(cv.dataset.pkmsvvResultDex),{hero:true,lively:false,shiny:cv.dataset.pkmsvvResultShiny==='1'});\n"+
- "    }");
+ "    }\n"+
+ "    if(r.eggrush)G.EggRush.reveal($('over-stats').querySelector('[data-pkmsvv-results=eggrush]'));");
 // The Online hub exists after patch-multiplayer-hub. Insert a 3rd quick-match card and room controls.
 const htmlFile=path.join(game,'dev.html');let html=fs.readFileSync(htmlFile,'utf8').replace(/\r\n/g,'\n');
 const idx=html.indexOf('id="pkmsvv-quick-royale"');
@@ -100,7 +101,7 @@ const close=html.indexOf('</button>',idx)+9;
 const card='\n   <button type="button" class="btn pkmsvv-mode-card eggrush" id="pkmsvv-quick-eggrush">'+
  '<span class="pkmsvv-mode-art"><canvas id="pkmsvv-mode-sprite-eggrush" width="144" height="144" aria-hidden="true"></canvas></span>'+
  '<span class="pkmsvv-mode-copy"><strong class="pkmsvv-mode-title">Tranh Trứng</strong><small class="pkmsvv-mode-cap">4 người</small>'+
- '<small class="pkmsvv-mode-description">10 trứng · 5 đợt · đối kháng nhẹ</small><span class="pkmsvv-mode-action">▶ Chơi nhanh</span></span></button>';
+ '<small class="pkmsvv-mode-description">10 trứng · nở cuối trận · điểm bí mật</small><span class="pkmsvv-mode-action">▶ Chơi nhanh</span></span></button>';
 html=html.slice(0,close)+card+html.slice(close);
 const privateBtn='<button class="btn" id="pkmsvv-royale-private">Sống Còn · Riêng tư</button>';
 if(html.split(privateBtn).length!==2)throw Error('Egg Rush: private room card drift');
