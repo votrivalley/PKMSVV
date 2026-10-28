@@ -1,6 +1,6 @@
 /* PKMSVV v1.5 — Egg Rush, online 4-player host-authoritative match. */
 G.EggRush=(()=>{
- const MAX_TIME=720,SPAWN_EVERY=60,RESPAWN_SECONDS=8,EGG_SPECIES=[172,447,173,35,360,438,175,174];
+ const MAX_TIME=720,MAX_SCORE=10,WIN_SCORE=6,SPAWN_EVERY=60,RESPAWN_SECONDS=8,EGG_SPECIES=[172,447,173,35,360,438,175,174];
  let active=false,supportMode=false,cooperative=false,survival=false,nextSpawn=60,roster=[],nests=[],trails=new Map(),pets=[],score={},at={},laid=0,seed=1,outcome=null,transition={},levelSeen=1,killsSeen=0;
  let allocation=0,retryAt=0,pendingBatch=0;const seenIds=new Set();
  const metrics={placementAttempts:0,placementFailures:0,expired:0};
@@ -26,7 +26,7 @@ G.EggRush=(()=>{
  }
  function standings(){
   return roster.map(m=>({...m,eggs:score[m.uid]||0,at:at[m.uid]||0})).sort((a,b)=>
-   b.eggs-a.eggs || (a.at||Infinity)-(b.at||Infinity) || a.name.localeCompare(b.name));
+   b.eggs-a.eggs || (a.at||Infinity)-(b.at||Infinity) || a.name.localeCompare(b.name) || a.uid.localeCompare(b.uid));
  }
  function randomNest(index,players,preferred){
   const n=index+1,cam=G.Camera;
@@ -76,7 +76,7 @@ G.EggRush=(()=>{
   }
  }
  function claim(n,pl,time){
-  if(!G.Coop.isHost||pl.dead||!nests.includes(n)||(n.expiresAt&&time>=n.expiresAt)||
+  if(!G.Coop.isHost||outcome||pl.dead||!nests.includes(n)||(n.expiresAt&&time>=n.expiresAt)||
    G.U.dist2(pl.x,pl.y,n.x,n.y)>=38*38||(G.Arena?.active&&!G.Arena.validSpawn(n.x,n.y,0)))return false;
   if((supportMode&&pets.filter(p=>p.uid===pl.uid).length>=2)||n.taken||!roster.some(m=>m.uid===pl.uid))return false;
   n.taken=true;score[pl.uid]=(score[pl.uid]||0)+1;at[pl.uid]=time;
@@ -170,7 +170,10 @@ G.EggRush=(()=>{
    }
    if(nearest&&claim(n,nearest,time))ownedCounts.set(nearest.uid,(ownedCounts.get(nearest.uid)||0)+1);
   }
-  if(active&&time>=MAX_TIME){outcome=result(time);finish(outcome);}
+  if(active&&(Object.values(score).reduce((n,v)=>n+v,0)>=MAX_SCORE||Object.values(score).some(v=>v>=WIN_SCORE)||time>=MAX_TIME)){
+   // Host alone commits one result; counted eggs, not respawns or nest attempts.
+   outcome=result(time);finish(outcome);
+  }
 
  }
  // Egg Rush is a free-for-all. Never heal/shield other human players.
@@ -320,9 +323,19 @@ G.EggRush=(()=>{
  }
  function html(r){
   if(!r||!Array.isArray(r.standings))return '';
-  const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  return '<div style="grid-column:1/-1"><h3>'+tr('Kết quả Tranh Trứng','Egg Rush results')+'</h3>'+
-   r.standings.map(p=>'<p>#'+p.rank+' '+esc(p.name)+' — '+p.eggs+' '+tr('trứng','eggs')+'</p>').join('')+'</div>';
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  return '<section class="pkmsvv-results" style="grid-column:1/-1" data-pkmsvv-results="eggrush">'+
+   '<h3>🥚 '+tr('KẾT QUẢ TRANH TRỨNG','EGG RUSH RESULTS')+'</h3>'+
+   '<div class="pkmsvv-results-champion">🏆 '+tr('Vô địch: ','Winner: ')+esc(r.standings[0]?.name||'—')+'</div>'+
+   '<div class="pkmsvv-results-list">'+r.standings.map((p,i)=>{
+    const d=Number(p.dex),dex=Number.isInteger(d)&&d>0&&d<=1025?d:25;
+    const local=p.uid===G.Social?.uid;
+    return '<div class="pkmsvv-result-row'+(local?' pkmsvv-result-me':'')+(p.win?' pkmsvv-result-winner':'')+'">'+
+     '<strong class="pkmsvv-result-rank">#'+(i+1)+'</strong>'+
+     '<canvas class="pkmsvv-result-mon" width="48" height="48" data-pkmsvv-result-dex="'+dex+'" aria-label="Pokémon #'+dex+'"></canvas>'+
+     '<span class="pkmsvv-result-name">'+esc(p.name)+'</span>'+
+     '<b class="pkmsvv-result-stat">'+p.eggs+' '+tr('trứng','eggs')+'</b></div>';
+   }).join('')+'</div></section>';
  }
  function finish(r){if(r){outcome=r;active=true;}}
  return {begin,startPosition,onEvent,update,draw,hud,html,finish,cast,orb,standings,objective,get metrics(){return {...metrics};},
