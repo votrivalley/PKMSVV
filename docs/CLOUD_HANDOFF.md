@@ -1,3 +1,26 @@
+## Latest user-approved competitive fairness — v1.5.34 (2026-10-28)
+
+Supersedes ALL earlier references to competitive bot challenger tiers.
+Read `docs/QA_V1534.md`. In **Tranh Trứng** each final row now shows
+the real trainer Pokémon sprite plus "**Ron đã đoạt được 4 trứng, nở ra:**"
+then individual hatched sprite/name/score additions and final points.
+Mew 20, Ditto 10, others 5; shiny is **×2 PER EGG** (40/20/10).
+Competitive egg Shiny rolls are Host-only independent (3% ordinary,
+10% Ditto/Mew) and never use friendship/affinity/Shiny Charm or
+account upgrades. Reveal all point additions before official #1–#4 winner.
+Do not change normal Co-op/Solo egg friendship progression.
+
+Both **Tranh Trứng** and **Sống Còn** normalize EVERY human and AI
+Pokémon to the strongest real human's complete effective start-of-match
+stat vector on match-local actors (HP/ATK/SPD/cooldown/reduction/regen/DF/SD).
+`G.LanAI.normalizeMatch()` runs after `G.Coop.begin` on Host and
+Guest. No +2/+3% AI challenger advantage or random Royale AI stat tiers.
+No saved data or global species DEX is mutated; species moves remain
+distinct. Co-op special challenger AI rules unchanged.
+Android update v1.5.34 = versionCode 1005034, permanent fixed signer and
+`com.votrivalley.pkmsvv.fulllan`. Do not distribute older or failed
+artifacts, auto-deploy Web, clear saves or merge `main`.
+
 # PKMSVV — handoff for Claude / cloud continuation
 
 ## Latest work — v1.5.33, 2026-10-28 (supersedes v1.5.32 Egg Rush rules)
