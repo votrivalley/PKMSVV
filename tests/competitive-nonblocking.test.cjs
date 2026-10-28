@@ -24,7 +24,7 @@ test('lost LAN snapshots restore all missed skill cards once',()=>{
  ' if(!Number.isSafeInteger(seq)||seq<=seenSeq)return;',
  ' const start=seenSeq+1;',
  ' for(let n=start;n<=seq&&n<start+100;n++)api.levelStart(Math.max(1,Math.round(level)-(seq-n)));',
- ' seenSeq=seq;',
+ ' seenSeq=Math.min(seq,start+99);',
  '}',
  'receiveIndividualLevel(4,3);receiveIndividualLevel(4,3);receiveIndividualLevel(5,4);'
  ].join('\n');
