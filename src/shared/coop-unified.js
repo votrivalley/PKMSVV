@@ -4,7 +4,7 @@
  window.PKMSVV_UNIFIED_COOP_ENABLED=true;
  const modes=[['coop','Sống Sót','2–4 người',25,'Pikachu','Hợp tác chống quái, cứu đồng đội và cùng nhau sống sót.'],
   ['royale','Sống Còn','2–10 người',6,'Charizard','Vòng đỏ thu dần. Ra ngoài 10 giây: mất 1% HP tối đa/giây. Người cuối sống thắng.'],
-  ['eggrush','Tranh Trứng','4 người',175,'Togepi','Mỗi phút 1 trứng · hồi sinh sau 8 giây · không PvP.']];
+  ['eggrush','Tranh Trứng','4 người',175,'Togepi','10 trứng kết thúc · đủ 6 trứng thắng sớm · hồi sinh 8 giây.']];
  let mode='coop',view=null,detail=null,busy=false,previousFocus=null;
  const lan=()=>window.PKMSVV_LOCAL_UI_MODE==='lan'&&!!window.G?.LanBus;
  function close(){view?.remove();view=detail=null;previousFocus?.focus?.();}
