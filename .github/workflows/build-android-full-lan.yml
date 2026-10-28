@@ -142,7 +142,9 @@ jobs:
           grep -q 'LANRoomActivity' android/app/src/main/AndroidManifest.xml
           test -s mobile/www/js/app.min.js
           test -s mobile/www/js/ui/pkmsvv-full-lan-ui.js
-          test -s mobile/www/ai/game/js/app.min.js
+          test ! -e mobile/www/ai/game/index.html
+          grep -q 'PKMSVV_ANDROID_LOCAL_LAN=true' mobile/www/index.html
+          grep -q 'PKMSVV_STANDALONE_AI' mobile/www/js/app.min.js
           du -sh mobile/www/assets
       - name: Build updateable signed Android FULL LAN release APK
         if: steps.stable_signing.outputs.ready == 'true'

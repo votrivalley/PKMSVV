@@ -45,9 +45,15 @@ async function main(){
    await page.locator('.pkmsvv-wifi-panel button').filter({hasText:'Đóng'}).click();
    await page.evaluate(()=>{G.MenuUI.open();PKMSVVCoop.open();});
    await page.click('#pkmsvv-coop-actions [data-role="ai"]');
-   try{await page.waitForURL('**/ai/game/**');}
-   catch(e){console.error('AI navigation diagnostics',await page.evaluate(()=>({url:location.href,available:window.PKMSVV_STANDALONE_AI_AVAILABLE,mode:window.PKMSVV_LOCAL_UI_MODE,detail:document.querySelector('#pkmsvv-coop-detail')?.textContent})),errors);throw e;}
-   await page.waitForFunction(m=>G.Social?.room?.mode===m&&G.Social.room.members.some(p=>p.bot),mode);
+   if(android){
+    await page.waitForFunction(m=>G.Social?.room?.mode===m&&G.Social.room.members.some(p=>p.bot),mode);
+    assert.equal(await page.evaluate(()=>window.PKMSVV_ANDROID_LOCAL_LAN),true);
+    assert.ok(!page.url().includes('/ai/game/'),'Android must not navigate to second game');
+   }else{
+    try{await page.waitForURL('**/ai/game/**');}
+    catch(e){console.error('AI navigation diagnostics',await page.evaluate(()=>({url:location.href,available:window.PKMSVV_STANDALONE_AI_AVAILABLE,mode:window.PKMSVV_LOCAL_UI_MODE,detail:document.querySelector('#pkmsvv-coop-detail')?.textContent})),errors);throw e;}
+    await page.waitForFunction(m=>G.Social?.room?.mode===m&&G.Social.room.members.some(p=>p.bot),mode);
+   }
    assert.equal(await page.evaluate(()=>G.DB.save.partner),150,'existing chosen Pokémon preserved');
    assert.equal(await page.evaluate(()=>G.LanBus.offlineAI),true);
    if(android)assert.equal(await page.evaluate(()=>window.__nativeCalls.length),0);

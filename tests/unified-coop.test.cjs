@@ -20,11 +20,11 @@ test('PC Android and HTML5 compile the identical Co-op UI source',()=>{
   assert.ok(js.includes("'"+id+"'"),id);assert.ok(js.includes(title),title);
  }
  for(const name of ['Tạo phòng','Tham gia','Chơi với AI'])assert.ok(js.includes(name));
- for(const p of ['scripts/patch-lan.cjs','scripts/prepare-ios.cjs','scripts/prepare-full-lan-android.cjs'])
+ for(const p of ['scripts/patch-lan.cjs','scripts/prepare-ios.cjs'])
   assert.match(read(p),/coop-unified\.js/);
  assert.match(read('scripts/patch-lan.cjs'),/coop-unified\.css/);
  assert.match(read('scripts/prepare-ios.cjs'),/coop-unified\.css/);
- assert.match(read('scripts/prepare-full-lan-android.cjs'),/coop-unified\.css/);
+ assert.match(read('scripts/prepare-full-lan-android.cjs'),/compile-standalone-ai\.cjs/);
 });
 test('The LAN AI action creates a real private room and adds a bot only in supported mode',()=>{
  const js=read('src/shared/coop-unified.js');
