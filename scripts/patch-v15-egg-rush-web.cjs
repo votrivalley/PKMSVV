@@ -80,7 +80,7 @@ patch('js/game.js',
  "    if(G.Royale.active)G.Royale.draw(ctx,w,h,G.Coop.players());\n    if(G.EggRush.active)G.EggRush.hud(ctx,w,h);");
 patch('js/ui/run-ui.js',
  "r.royale ? (r.royale.winner===G.Social.uid?",
- "r.eggrush ? (r.eggrush.winner===G.Social.uid?'Tranh Trứng · Chiến thắng':'Kết quả Tranh Trứng') : r.royale ? (r.royale.winner===G.Social.uid?");
+ "r.eggrush ? 'Tranh Trứng · Nở trứng tính điểm' : r.royale ? (r.royale.winner===G.Social.uid?");
 patch('js/ui/run-ui.js',
  "if(r.royale)$('over-stats').insertAdjacentHTML('afterbegin',G.Royale.html(r.royale));",
  "if(r.royale)$('over-stats').insertAdjacentHTML('afterbegin',G.Royale.html(r.royale));\n    if(r.eggrush)$('over-stats').insertAdjacentHTML('afterbegin',G.EggRush.html(r.eggrush));");
