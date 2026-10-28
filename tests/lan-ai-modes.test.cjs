@@ -111,26 +111,47 @@ test('Co-op AI seeks its own support egg but prioritizes rescuing a fallen teamm
  assert.ok(h.pl.x<prior,'rescue overrides egg foraging');
 });
 
-test('v1.5.40 Egg Rush distributes 2/1/1 over four bots, or 1/1/1 beside a human',()=>{
+test('v1.5.41 Egg Rush guarantees one elite; remaining AI levels are independent rolls',()=>{
  const {G}=harness('eggrush');
- for(const [count,expected] of [[3,['elite','novice','trained']],[4,['elite','elite','novice','trained']]]){
-  for(const draw of [0,.4,.9]){
-   const got=G.LanAI.tiersFor('eggrush',count,()=>draw);
-   assert.deepEqual(Array.from(got).sort(),expected.slice().sort());
-  }
+ assert.equal(G.LanAI.tiersFor('eggrush',0).length,0);
+ assert.deepEqual(Array.from(G.LanAI.tiersFor('eggrush',1)),['elite']);
+ const cases=[
+  {draw:.1,expected:['elite','elite','elite']},
+  {draw:.5,expected:['elite','trained','trained']},
+  {draw:.95,expected:['elite','novice','novice']}
+ ];
+ for(const {draw,expected} of cases){
+  const got=Array.from(G.LanAI.tiersFor('eggrush',3,()=>draw));
+  assert.deepEqual(got.slice().sort(),expected.slice().sort(),String(draw));
+  assert.ok(got.filter(x=>x==='elite').length>=1);
  }
- assert.deepEqual(Array.from(G.LanAI.tiersFor('eggrush',1)),['trained']);
  assert.notDeepEqual(Array.from(G.LanAI.tiersFor('eggrush',3,()=>0)),Array.from(G.LanAI.tiersFor('eggrush',3,()=>.99)),
-  'same strengths must belong to different AI between matches');
+  'same guaranteed elite must not always belong to the same indexed bot');
 });
-test('v1.5.40 Royale mixes strong, average and beginner bots and never sends a helpless AI',()=>{
+test('v1.5.41 Royale guarantees two elite AI when possible, but never a fixed tier ratio',()=>{
  const {G}=harness('royale');
- const tiers=G.LanAI.tiersFor('royale',9,()=>.3);
- assert.equal(tiers.length,9);
- assert.equal(tiers.filter(t=>t==='elite').length,2);
- assert.equal(tiers.filter(t=>t==='novice').length,2);
- assert.equal(tiers.filter(t=>t==='trained').length,5);
- for(const tier of tiers)assert.ok(['elite','trained','novice'].includes(tier));
+ assert.deepEqual(Array.from(G.LanAI.tiersFor('royale',0)),[]);
+ assert.deepEqual(Array.from(G.LanAI.tiersFor('royale',1)),['elite'],'only one available AI is strong');
+ assert.deepEqual(Array.from(G.LanAI.tiersFor('royale',2)),['elite','elite']);
+ for(const [draw,expected] of [
+  [.1,{elite:9,trained:0,novice:0}],
+  [.5,{elite:2,trained:7,novice:0}],
+  [.95,{elite:2,trained:0,novice:7}]
+ ]){
+  const tiers=Array.from(G.LanAI.tiersFor('royale',9,()=>draw));
+  assert.equal(tiers.length,9);
+  for(const [tier,count] of Object.entries(expected))
+   assert.equal(tiers.filter(t=>t===tier).length,count,'draw '+draw+' tier '+tier);
+ }
+ for(let i=2;i<=9;i++){
+  const tiers=Array.from(G.LanAI.tiersFor('royale',i,()=>.96));
+  assert.equal(tiers.filter(x=>x==='elite').length,2,'guarantee at '+i+' bots');
+ }
+ // Cooperative Sống Sót remains fully random; no mandatory rival AI.
+ assert.deepEqual(Array.from(G.LanAI.tiersFor('coop',3,()=>.95)),['novice','novice','novice']);
+});
+test('v1.5.41 varied AI still chooses valid upgrades and beginners respond to low HP',()=>{
+ const {G}=harness('royale');
  const pl={mon:{types:['grass']},moves:[],hp:100,maxHp:100};
  const offers=[
   {type:'stat',key:'stat:atk'},
@@ -140,11 +161,9 @@ test('v1.5.40 Royale mixes strong, average and beginner bots and never sends a h
  assert.equal(G.LanAI.pickCard(pl,offers,'elite',()=>.99),offers[0]);
  assert.equal(G.LanAI.pickCard(pl,offers,'trained',()=>.95),offers[1]);
  assert.equal(G.LanAI.pickCard(pl,offers,'novice',()=>.99),offers[2]);
- assert.equal(G.LanAI.pickCard(pl,offers,'novice',()=>0),offers[0],
-  'beginner still often chooses a good legal upgrade');
+ assert.equal(G.LanAI.pickCard(pl,offers,'novice',()=>0),offers[0]);
  pl.hp=10;
- assert.equal(G.LanAI.pickCard(pl,[{type:'stat',key:'stat:heal'},...offers],'novice',()=>.99).key,
-  'stat:heal','beginner can respond to critical health');
+ assert.equal(G.LanAI.pickCard(pl,[{type:'stat',key:'stat:heal'},...offers],'novice',()=>.99).key,'stat:heal');
 });
 
 test('Survival rolls distinct strength tiers using bounded ordinary upgrade levels',()=>{

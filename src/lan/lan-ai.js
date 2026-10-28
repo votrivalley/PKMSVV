@@ -15,25 +15,21 @@ G.LanAI=(()=>{
   trained:{think:.28,dash:.5},
   novice:{think:.48,dash:.2}
  };
- // Randomize which opponent receives which skill level at every new match.
- // A four-bot roster is 2 skilled, 1 intermediate and 1 beginner. Egg Rush
- // has four TOTAL slots, so a human + three bots = 1 of each bot tier.
+ // Guarantee a challenging rival without making the entire roster predictable.
+ // Egg Rush: at least one strong AI. Royale: at least two if two bots exist.
+ // Everyone else rolls independently, so a round can have extra elites, all
+ // intermediate opponents, or several beginners (but never helpless bots).
  function tiersFor(mode,count,random=Math.random){
   const n=Math.max(0,Math.min(20,Math.trunc(Number(count)||0)));
   if(!n)return[];
-  let tiers;
-  if(mode==='eggrush'){
-   tiers=n===1?['trained']:n===2?['elite','novice']:n===3?
-    ['elite','trained','novice']:['elite','elite','trained','novice'];
-   if(n>4)for(let i=4;i<n;i++)tiers.push(i%4===0?'elite':i%4===1?'trained':'novice');
-  }else if(n===1)tiers=['trained'];
-  else if(n===2)tiers=['elite','trained'];
-  else if(n===3)tiers=['elite','trained','novice'];
-  else{
-   const elite=Math.max(1,Math.round(n*.25)),novice=Math.max(1,Math.round(n*.2));
-   tiers=[...Array(elite).fill('elite'),...Array(n-elite-novice).fill('trained'),...Array(novice).fill('novice')];
+  const guaranteed=mode==='eggrush'?Math.min(1,n):
+   mode==='royale'?Math.min(2,n):0;
+  const tiers=Array(guaranteed).fill('elite');
+  for(let i=guaranteed;i<n;i++){
+   const r=Math.max(0,Math.min(.999999,Number(random())||0));
+   tiers.push(r<.25?'elite':r<.75?'trained':'novice');
   }
-  // Fisher-Yates: balanced composition, unpredictable ownership of every tier.
+  // Shuffle which AI receives the mandatory and randomly drawn roles.
   for(let i=tiers.length-1;i>0;i--){
    const r=Math.max(0,Math.min(.999999,Number(random())||0)),j=Math.floor(r*(i+1));
    [tiers[i],tiers[j]]=[tiers[j],tiers[i]];

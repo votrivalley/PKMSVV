@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.40",
+  "version": "1.5.41",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.40: varied AI skills with fair combat stats, newcomer-friendly Co-op cards",
+  "description": "Pokémon Chuyển Sinh v1.5.41: guaranteed strong rivals with unpredictable remaining AI",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
