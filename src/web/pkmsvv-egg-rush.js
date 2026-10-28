@@ -64,7 +64,7 @@ G.EggRush=(()=>{
   }else if(ev[1]==='take'){
    const [, ,id,uid,dex,total,when]=ev;
    const n=nests.find(n=>n.id===id);
-   if(!n||pets.some(p=>p.id===id)||!roster.some(m=>m.uid===uid)||(n.expiresAt&&when>=n.expiresAt))return;
+   if(!n||n.taken||pets.some(p=>p.id===id)||!roster.some(m=>m.uid===uid)||(n.expiresAt&&when>=n.expiresAt))return;
    n.taken=true;
    score[uid]=total;at[uid]=when;
    if(!pets.some(p=>p.id===id)){
