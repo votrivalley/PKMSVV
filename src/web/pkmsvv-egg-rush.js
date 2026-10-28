@@ -144,7 +144,10 @@ G.EggRush=(()=>{
    const moving=Math.hypot(pet.x-ox,pet.y-oy)>.05;
    if(pet.anim&&moving&&G.Sprites.dirFromAngle)pet.anim.dir=G.Sprites.dirFromAngle(Math.atan2(pet.y-oy,pet.x-ox));
    pet.anim?.loop?.(moving?'Walk':'Idle');pet.anim?.update?.(dt);
-   const owner=pet.uid===G.Game.player?.uid?G.Game.player:(G.Coop.isHost?players.find(p=>p.lanBot&&p.uid===pet.uid):null);
+   // In Co-op/Royale the Host owns support damage AND support healing.
+   // Human guests must not independently buff the same support twice.
+   const owner=supportMode?(G.Coop.isHost?players.find(p=>p.uid===pet.uid):null):
+    (pet.uid===G.Game.player?.uid?G.Game.player:(G.Coop.isHost?players.find(p=>p.uid===pet.uid):null));
    if(pet.hatch&&owner&&!owner.dead){
     const own=siblings.filter(q=>q.hatch);
     if(own.indexOf(pet)<3){pet.cd=(pet.cd||0)-dt;if(pet.cd<=0){support(pet,owner);pet.cd=({172:10,173:12,35:16,360:19,438:15}[pet.dex]||8);}}
