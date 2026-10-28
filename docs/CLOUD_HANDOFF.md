@@ -6,7 +6,7 @@ Keep v1.5.32 Sống Còn/Co-op Rift repair, zone, Orb 6%, real Host-owned
 support HP, support Walk/Idle sprite animation and Solo-like navigation.
 **ONLY competitive Tranh Trứng now changes:** no mid-match egg hatching,
 no active support Pokémon; collected eggs glide tightly beside owners like
-the original Egg Rush. Host seals Mew 4%, Ditto 8%, other 88% identity
+the original Egg Rush. Host seals Mew 4%, Ditto 8%, other 88% identity using its own private RNG
 on pickup and transmits dex=0 in live take packets. Finish at 10 eggs
 total or minute 12; **six personal eggs do not win early**. At the end,
 reveal each Pokémon sequentially (+20 Mew / +10 Ditto / +5 other), update
