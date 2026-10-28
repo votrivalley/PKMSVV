@@ -35,7 +35,7 @@
     "test:v15": "node --test tests/story-intro.test.cjs tests/v15-eggs.test.cjs tests/v15-gacha-save-isolation.test.cjs tests/dex-header-actions.test.cjs tests/lan-hud-layout.test.cjs tests/lan-mode-rules.test.cjs tests/arena-v1529.test.cjs tests/lan-ai-modes.test.cjs",
     "prepare:lan": "node scripts/prepare-lan.cjs",
     "build:lan:win": "electron-builder --win portable --x64 --publish never --config lan-win.json",
-    "test:lan": "node --test tests/lan-server.test.cjs tests/lan-mode-rules.test.cjs tests/arena-v1529.test.cjs tests/lan-ai-modes.test.cjs",
+    "test:lan": "node --test tests/lan-server.test.cjs tests/lan-mode-rules.test.cjs tests/arena-v1529.test.cjs tests/lan-ai-modes.test.cjs tests/v15-eggs.test.cjs",
     "test:lan:runtime": "node tests/lan-ui-smoke.cjs",
     "test:lan:pc": "node tests/lan-electron-smoke.cjs",
     "test:lan:ai": "node --test tests/lan-ai-modes.test.cjs && node tests/lan-ai-runtime.cjs",
@@ -49,11 +49,11 @@
     "prepare:pages": "node scripts/prepare-pages.cjs",
     "test:pages": "node --test tests/pages-html5.test.cjs",
     "prepare:cloudflare": "node scripts/prepare-cloudflare.cjs",
-    "test:cloudflare": "node --test tests/cloudflare-pages.test.cjs tests/dex-header-actions.test.cjs tests/lan-hud-layout.test.cjs tests/lan-mode-rules.test.cjs tests/arena-v1529.test.cjs tests/lan-ai-modes.test.cjs",
+    "test:cloudflare": "node --test tests/cloudflare-pages.test.cjs tests/dex-header-actions.test.cjs tests/lan-hud-layout.test.cjs tests/lan-mode-rules.test.cjs tests/arena-v1529.test.cjs tests/lan-ai-modes.test.cjs tests/v15-eggs.test.cjs",
     "test:survival-hud": "node --test tests/lan-hud-layout.test.cjs",
     "test:death-hud": "node --test tests/lan-hud-layout.test.cjs",
     "test:competitive-rewards": "node --test tests/competitive-rewards.test.cjs",
-    "test:issue8": "node --test tests/lan-mode-rules.test.cjs tests/arena-v1529.test.cjs tests/lan-ai-modes.test.cjs"
+    "test:issue8": "node --test tests/lan-mode-rules.test.cjs tests/arena-v1529.test.cjs tests/lan-ai-modes.test.cjs tests/v15-eggs.test.cjs"
   },
   "devDependencies": {
     "playwright": "^1.62.1",
