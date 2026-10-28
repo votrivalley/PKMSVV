@@ -99,7 +99,7 @@ test('Chapter 3 continues existing arc, unlocks on six USED types, and preserves
  assert.equal(commits,1);
 });
 
-test('Egg Rush spawns each minute and ends once a trainer claims six scoring eggs',()=>{
+test('Egg Rush keeps eggs sealed and only ends after ten claims or 12 minutes',()=>{
  const source=read('src/web/pkmsvv-egg-rush.js');
  let events=[],end=null;
  const members=[0,1,2,3].map(i=>({uid:'p'+i,name:'Player'+i,dex:25+i}));
@@ -114,23 +114,26 @@ test('Egg Rush spawns each minute and ends once a trainer claims six scoring egg
  };
  vm.runInNewContext(source,{G,Math,Map,Object,Number});
  G.EggRush.begin({mode:'eggrush',seed:117,members});
- assert.equal(G.EggRush.active,true);
- for(let minute=1;minute<=6;minute++){
+ for(let minute=1;minute<=10;minute++){
   const time=minute*60;
   G.EggRush.update(.05,time,players,r=>{end=r;});
-  const unclaimed=events.filter(e=>e[0]==='er'&&e[1]==='spawn');
-  assert.equal(unclaimed.length,minute);
-  const t=unclaimed.at(-1);players[0].x=t[3];players[0].y=t[4];
+  const spawns=events.filter(e=>e[0]==='er'&&e[1]==='spawn');
+  assert.equal(spawns.length,minute,'one new nest per minute');
+  const egg=spawns.at(-1);players[0].x=egg[3];players[0].y=egg[4];
   G.EggRush.update(.05,time+.1,players,r=>{end=r;});
+  assert.ok(G.EggRush.pets.every(p=>!p.hatch),'collected eggs do not hatch while playing');
+  if(minute<10)assert.equal(end,null,'six eggs do not end a hidden-score match');
  }
- assert.equal(end.winner,'p0','six verified claims end immediately');
+ assert.equal(end.winner,'p0');assert.equal(end.collected,10);
+ assert.equal(end.standings[0].eggs,10);
+ assert.equal(end.standings[0].points, end.standings[0].hatched.reduce((n,e)=>n+e.points,0));
+ assert.ok(end.standings[0].hatched.every(e=>[5,10,20].includes(e.points)));
+ assert.equal(events.filter(e=>e[1]==='take').length,10);
+ assert.ok(events.filter(e=>e[1]==='take').every(e=>e[4]===0),
+  'Host does not leak Pokémon identity in live egg collection packets');
  const before=events.filter(e=>e[1]==='spawn').length;
- G.EggRush.update(.05,720,players,r=>{throw Error('duplicate finish');});
- assert.equal(events.filter(e=>e[1]==='spawn').length,before,'no extra spawn after finish');
- assert.equal(G.EggRush.collected,6);
- assert.equal(end.winner,'p0');
- assert.equal(end.standings[0].eggs,6);
- assert.equal(events.filter(e=>e[1]==='take').length,6);
+ G.EggRush.update(.05,720,players,()=>{throw Error('duplicate finish')});
+ assert.equal(events.filter(e=>e[1]==='spawn').length,before);
  assert.equal(G.EggRush.standings().length,4);
  assert.match(source,/Egg Rush/);
  assert.match(read('scripts/patch-v15-egg-rush-web.cjs'),/room.mode==='eggrush'\?4:2/);
