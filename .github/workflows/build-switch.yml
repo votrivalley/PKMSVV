@@ -33,6 +33,8 @@ jobs:
       - name: Install build dependencies
         run: npm install --no-audit --no-fund
       - name: Compile game with current PKMSVV features
+        env:
+          PKMSVV_SWITCH_BOOT: '1'
         run: |
           npm run prepare:game
           npm run prepare:icons
@@ -49,7 +51,7 @@ jobs:
           set -euo pipefail
           mkdir -p switch/nro-forwarder/romfs/game
           cp -a dist/switch-package/switch/brewser/apps/com.votrivalley.pkmsvv/. switch/nro-forwarder/romfs/game/
-          node -p "require('./package.json').version" > switch/nro-forwarder/romfs/version.txt
+          printf '%s-switch-%s\n' "$(node -p "require('./package.json').version")" "${GITHUB_SHA:0:12}" > switch/nro-forwarder/romfs/version.txt
           curl -fL --retry 4 --retry-all-errors --connect-timeout 30 \
             -o switch/nro-forwarder/romfs/brewser.nro \
             "https://github.com/natureglass/Brewser/releases/download/v0.1.1.31/brewser.nro"

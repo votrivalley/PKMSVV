@@ -626,6 +626,21 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-chapter-purple
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v155-pc-fullscreen.cjs')],{cwd:project,stdio:'inherit'});
 // Competitive Royale and Egg Rush personal skill choices must NEVER stop the entire room.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-competitive-levelup.cjs')],{cwd:project,stdio:'inherit'});
+// Only Switch/Brewser: tolerate absent DOMContentLoaded and a stalled pixel-font Promise.
+if (process.env.PKMSVV_SWITCH_BOOT === '1') {
+  patch('js/main.js',
+    "    // Espera a la fuente pixel para que la UI no salte al cargarla.\n    const ready = document.fonts && document.fonts.load ? document.fonts.load('16px Pixelify') : Promise.resolve();\n    ready.catch(() => {}).then(() => G.Flow.boot());",
+    "    // Switch/Brewser: never block game boot on a pixel font.\n"+
+    "    if (window.PKMSVV_SWITCH_HEALTH_STAGE) window.PKMSVV_SWITCH_HEALTH_STAGE('Đang mở menu...');\n"+
+    "    let fonts; try { fonts = document.fonts && typeof document.fonts.load === 'function' ? Promise.resolve(document.fonts.load('16px Pixelify')) : Promise.resolve(); } catch (_) { fonts = Promise.resolve(); }\n"+
+    "    Promise.race([fonts.catch(() => {}), new Promise(resolve => setTimeout(resolve, 1200))]).then(() => G.Flow.boot()).catch(error => { const el=document.querySelector('#boot .boot-ld'); if(el) el.textContent='Lỗi mở game: '+String(error && error.message || error).slice(0,160); console.error('[PKMSVV Switch boot]',error); });");
+  patch('js/main.js',
+    "  if (document.readyState === 'loading') addEventListener('DOMContentLoaded', boot);\n  else boot();",
+    "  let started=false; function bootOnce(){ if(started)return; started=true; boot(); }\n"+
+    "  if (window.PKMSVV_SWITCH_HEALTH_STAGE) window.PKMSVV_SWITCH_HEALTH_STAGE('JavaScript game đã chạy');\n"+
+    "  if (document.readyState === 'loading') { addEventListener('DOMContentLoaded',bootOnce); setTimeout(bootOnce,500); } else bootOnce();");
+}
+
 // Windows and Android remain strictly offline-first: do NOT inject the external
 // browser Online mode switch. The existing native save identity remains unchanged.
 // Invoke the installed minifier directly: npx.cmd + shell splits Windows paths
