@@ -4,8 +4,19 @@ G.Social=(()=>{
  let me=null,room=null,started=false,playing=false,finishPromise=null;
  const fire=what=>listeners.forEach(fn=>{try{fn(what);}catch(e){console.warn(e);}});
  const ownMember=()=>{
-  const s=G.DB.save||{};
-  return {dex:Number(s.partner)||25,shiny:!!s.partnerShiny&&!!G.DB.ownsShiny?.(s.partner)};
+  const s=G.DB.save||{},dex=Number(s.partner)||25;
+  // Send ONLY a bounded preview of earned combat modifiers, never the save.
+  // At battle start the Host compares all human profiles, not just its own.
+  const base=G.Upgrades?.perks?.(G.DB.upgradesOf?.(dex)||{})||{};
+  const perks=G.GlobalPower?.combine?.(base,s.globalUpgrades||{})||base;
+  const power={};
+  for(const [key,min,max,def] of [
+   ['hp',0,2000,0],['atkMul',1,5,1],['spdMul',1,4,1],
+   ['cdMul',.2,1,1],['dmgReduce',0,.8,0],['regen',0,30,0]
+  ]){
+   const v=Number(perks[key]);power[key]=Number.isFinite(v)?Math.max(min,Math.min(max,v)):def;
+  }
+  return {dex,shiny:!!s.partnerShiny&&!!G.DB.ownsShiny?.(s.partner),power};
  };
  G.LanBus.on(msg=>{
   if(msg.t==='room'){room={...msg.room,isHost:msg.room.host===G.LanBus.uid};fire('room');}
