@@ -233,7 +233,13 @@ G.EggRush=(()=>{
     if(ally===pl&&typeof ally.heal==='function')ally.heal(ally.maxHp*power);
     else ally.hp+=ally.maxHp*power;
     ally.hp=Math.min(ally.hp,ally.maxHp);
-    if(ally.hp>before)changed++;
+    if(ally.hp>before){
+     changed++;
+     if(ally!==pl&&G.Coop.isHost&&supportMode){
+      // Healed support bars must remain identical on every client.
+      G.Coop.broadcast(['er','hp',ally.id,ally.hp,++ally.hpSeq]);
+     }
+    }
    }else{
     const key=ally===pl?'pkmsvvShield':'shield';
     const before=Math.max(0,Number(ally[key])||0);
