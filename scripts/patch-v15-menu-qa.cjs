@@ -32,18 +32,8 @@ fs.appendFileSync(js,`
    right.classList.add('pkmsvv-v15-nav');
    const first=right.firstElementChild;
    if(first){first.style.marginTop='0';first.style.marginBottom='0';}
-   // Anchor the right menu's bottom edge to the LEFT event/news cards.
-   // No translateY or animation: re-opening the menu will not bounce.
-   const panel=right.querySelector('.box');
-   const lower=menu.querySelector('.pkmsvv-v15-bottom');
-   if(panel&&lower&&window.matchMedia?.('(min-width: 901px) and (min-height: 580px)').matches){
-    const bounds=menu.getBoundingClientRect();
-    const gap=bounds.bottom-lower.getBoundingClientRect().bottom;
-    const topSafe=Math.max(65,Math.round(bounds.height*.08));
-    const maxGap=Math.max(8,right.clientHeight-panel.offsetHeight-topSafe);
-    right.style.setProperty('--pkmsvv-nav-bottom-gap',
-     Math.round(Math.max(8,Math.min(gap,maxGap)))+'px');
-   }else right.style.removeProperty('--pkmsvv-nav-bottom-gap');
+   // v1.5.30: both menu columns scroll independently, no gap dependency.
+   right.style.removeProperty('--pkmsvv-nav-bottom-gap');
   }
   // Settings Save is an action: close Settings and open the existing
   // separate Backup / Restore dialog above the menu (no nested tab content).
