@@ -33,7 +33,7 @@ if(!main.includes('</head>')||!main.includes('js/app.min.js'))
 const mobileCSS=fs.readFileSync(path.join(root,'src/android/compact-landscape.css'),'utf8');
 // Upstream CSP script-src 'self' blocks inline scripts, including boot flags.
 fs.writeFileSync(path.join(web,'js/ui/pkmsvv-android-root-config.js'),
- "window.PKMSVV_ANDROID_LOCAL_LAN=true;window.PKMSVV_STANDALONE_AI_AVAILABLE=true;\\n");
+ "window.PKMSVV_ANDROID_LOCAL_LAN=true;window.PKMSVV_STANDALONE_AI_AVAILABLE=true;\n");
 main=main.replace('</head>',
  '<meta name="pkmsvv-platform" content="android-pc-lan-shared">'+
  '<script src="js/ui/pkmsvv-android-root-config.js"></script>'+
