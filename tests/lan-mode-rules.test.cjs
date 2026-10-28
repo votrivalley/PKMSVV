@@ -89,3 +89,23 @@ test('Issue #8: six eggs for a single trainer wins early; deadline remains fallb
  deadline.G.EggRush.update(.01,720,deadline.players,r=>out.push(r));
  assert.equal(out.length,1);assert.equal(out[0].collected,0);
 });
+
+test('Issue #8: simultaneous last-egg claims in one Host frame cannot score 11',()=>{
+ const h=setup('eggrush'),G=h.G,players=h.players,finished=[];
+ const owners=[0,1,2,3,0,1,2,3,0],counts=[0,0,0,0];
+ for(let i=0;i<9;i++){
+  G.EggRush.onEvent(['er','spawn',400+i,1000+i*40,1000]);
+  G.EggRush.onEvent(['er','take',400+i,'p'+owners[i],175,++counts[owners[i]],i+1]);
+ }
+ const a=500,b=501;
+ G.EggRush.onEvent(['er','spawn',a,120,200]);
+ G.EggRush.onEvent(['er','spawn',b,-120,-200]);
+ players.forEach(p=>{p.x=10000;p.y=10000;});
+ players[0].x=120;players[0].y=200;
+ players[1].x=-120;players[1].y=-200;
+ G.EggRush.update(.01,12,players,r=>finished.push(r));
+ assert.equal(G.EggRush.collected,10,'never increment score to 11 on same-frame collisions');
+ assert.equal(finished.length,1);
+ assert.equal(h.events.filter(e=>e[1]==='take').length,1,
+  'exactly one of the two final nests is claimed');
+});
