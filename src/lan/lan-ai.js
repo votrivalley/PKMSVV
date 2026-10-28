@@ -310,9 +310,14 @@ G.LanAI=(()=>{
     continue;
    }
    s.replan-=dt;s.think-=dt;
-   // Emergency avoidance still works for beginners; no intentionally
-   // standing inside a fire/meteor zone just to simulate being 'noob'.
-   if(s.think>0&&hazards.some(h=>!h.hit&&G.Hazards.inside(h,pl.x,pl.y,pl.r+14)))s.think=0;
+   // Slower strategic reactions must NEVER mean drifting through a wall,
+   // water or the next A* waypoint; steering safety runs every frame.
+   const lookahead=Math.max(12,(pl.spd||90)*Math.max(dt,.12)*1.5);
+   const ahead={x:pl.x+s.axis[0]*lookahead,y:pl.y+s.axis[1]*lookahead};
+   const blockedTurn=s.route.length&&sq(pl,s.route[0])<Math.max(22,(pl.spd||90)*dt*2)**2;
+   if(s.think>0&&(blockedTurn||!segment(pl,pl,ahead)||
+     (liquidCost(pl,pl.x,pl.y)===0&&liquidCost(pl,ahead.x,ahead.y)>0)||
+     hazards.some(h=>!h.hit&&G.Hazards.inside(h,pl.x,pl.y,pl.r+14))))s.think=0;
    if(s.think<=0){
     s.wander-=.12;
     if(mode==='royale'&&(!s.roam||s.wander<=0)){

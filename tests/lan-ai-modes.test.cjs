@@ -116,11 +116,11 @@ test('v1.5.40 Egg Rush distributes 2/1/1 over four bots, or 1/1/1 beside a human
  for(const [count,expected] of [[3,['elite','novice','trained']],[4,['elite','elite','novice','trained']]]){
   for(const draw of [0,.4,.9]){
    const got=G.LanAI.tiersFor('eggrush',count,()=>draw);
-   assert.deepEqual(got.slice().sort(),expected.slice().sort());
+   assert.deepEqual(Array.from(got).sort(),expected.slice().sort());
   }
  }
- assert.deepEqual(G.LanAI.tiersFor('eggrush',1),['trained']);
- assert.notDeepEqual(G.LanAI.tiersFor('eggrush',3,()=>0),G.LanAI.tiersFor('eggrush',3,()=>.99),
+ assert.deepEqual(Array.from(G.LanAI.tiersFor('eggrush',1)),['trained']);
+ assert.notDeepEqual(Array.from(G.LanAI.tiersFor('eggrush',3,()=>0)),Array.from(G.LanAI.tiersFor('eggrush',3,()=>.99)),
   'same strengths must belong to different AI between matches');
 });
 test('v1.5.40 Royale mixes strong, average and beginner bots and never sends a helpless AI',()=>{

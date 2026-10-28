@@ -68,7 +68,7 @@ test('Competitive HUD patch suppresses the Co-op rescue message and teammate bar
  const script=fs.readFileSync(require.resolve('../scripts/patch-arena-v1529.cjs'),'utf8');
  assert.match(script,/!G.Royale.active && !G.EggRush.active/);
  const desc=fs.readFileSync(require.resolve('../src/shared/coop-unified.js'),'utf8');
- assert.match(desc,/Vòng đỏ thu dần, trứng mỗi 30s/);
+ assert.match(desc,/vòng an toàn ngày càng thu nhỏ/);
  assert.doesNotMatch(desc,/Bo thu hẹp dần/);
 });
 
