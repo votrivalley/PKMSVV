@@ -60,6 +60,8 @@ G.LanAI=(()=>{
    const pl=G.Coop.mate(bot.uid)?.pl;if(!pl)return;
    pl.lanBot=true;pl.addMove(G.baseStartOf(bot.dex));
    pl.setAbility(G.Mons.abilityOf(bot.dex).id);
+   if(pl.lanBotPowerApplied){states.set(bot.uid,{seq:0,route:[],replan:0,think:0,axis:[0,0],goal:null,home:{x:pl.x,y:pl.y},wander:0});return;}
+   pl.lanBotPowerApplied=true;
    const required=mode==='eggrush'||index===0;
    if(mode==='royale'&&G.Upgrades?.perks){
     const profile=strength(),perks=G.Upgrades.perks(profile.levels);
