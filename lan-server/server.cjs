@@ -18,6 +18,15 @@ function selectBot(members,requested,random=Math.random){
 }
 
 const MAX_ROOM=10, MAX_PACKET=256*1024;
+function readPower(v){
+ if(!v||typeof v!=='object'||Array.isArray(v))return null;
+ const out={};
+ for(const [key,min,max,def] of [['hp',0,2000,0],['atkMul',1,5,1],
+  ['spdMul',1,4,1],['cdMul',.2,1,1],['dmgReduce',0,.8,0],['regen',0,30,0]]){
+  const n=Number(v[key]);out[key]=Number.isFinite(n)?Math.max(min,Math.min(max,n)):def;
+ }
+ return out;
+}
 const MIMES={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8',
  '.json':'application/json; charset=utf-8','.png':'image/png','.webp':'image/webp','.gif':'image/gif',
  '.svg':'image/svg+xml','.ico':'image/x-icon','.ogg':'audio/ogg','.mp3':'audio/mpeg','.woff2':'font/woff2'};
@@ -146,7 +155,7 @@ function startServer({root,port=37816,host='0.0.0.0'}={}){
     const mode=['coop','royale','eggrush'].includes(m.mode)?m.mode:'coop';
     const id=randomBytes(12).toString('base64url');
     const r={id,host:c.uid,mode,visibility:m.visibility==='public'?'public':'private',open:true,members:new Map()};
-    c.member={dex:Number.isInteger(m.dex)&&m.dex>0?m.dex:25,shiny:m.shiny===true};
+    c.member={dex:Number.isInteger(m.dex)&&m.dex>0?m.dex:25,shiny:m.shiny===true,power:readPower(m.power)};
     r.members.set(c.uid,{uid:c.uid,name:c.name,...c.member});
     rooms.set(id,r);c.room=id;reply(snapshot(r));broadcast(r,{t:'room',room:snapshot(r)});return;
    }
@@ -156,7 +165,7 @@ function startServer({root,port=37816,host='0.0.0.0'}={}){
     if(!r||!r.open){reply(null,'Không tìm thấy phòng đang chờ.');return;}
     const max=r.mode==='royale'?10:4;
     if(r.members.size>=max){reply(null,'Phòng đã đủ người.');return;}
-    c.member={dex:Number.isInteger(m.dex)&&m.dex>0?m.dex:25,shiny:m.shiny===true};
+    c.member={dex:Number.isInteger(m.dex)&&m.dex>0?m.dex:25,shiny:m.shiny===true,power:readPower(m.power)};
     c.room=id;r.members.set(c.uid,{uid:c.uid,name:c.name,...c.member});
     reply(snapshot(r));broadcast(r,{t:'room',room:snapshot(r)});return;
    }
@@ -194,7 +203,7 @@ function startServer({root,port=37816,host='0.0.0.0'}={}){
     r.open=true;reply(snapshot(r));broadcast(r,{t:'room',room:snapshot(r)});return;
    }
    if(m.action==='update'){
-    c.member={dex:Number.isInteger(m.dex)&&m.dex>0?m.dex:25,shiny:m.shiny===true};
+    c.member={dex:Number.isInteger(m.dex)&&m.dex>0?m.dex:25,shiny:m.shiny===true,power:readPower(m.power)};
     r.members.set(c.uid,{uid:c.uid,name:c.name,...c.member});reply(true);
     broadcast(r,{t:'room',room:snapshot(r)});return;
    }
