@@ -7,6 +7,12 @@ patch('dev.html','<script defer src="js/net/pkmsvv-egg-rush.js"></script>',
 patch('js/game.js','    G.EggRush.begin(coop);','    G.EggRush.begin(coop);G.Arena.begin(coop);G.MatchMetrics.reset();');
 patch('js/game.js','    if (!coop || G.Coop.isHost) { G.Path.update(dt, all); G.Spawner.update(dt, all, time); }',
  '    G.Arena.update(dt,time,all);\n    if (!coop || G.Coop.isHost) { G.Path.update(dt, all); G.Spawner.update(dt, all, time); }');
+// Rival modes must never render the shared Co-op rescue message, teammate
+// health bars or off-screen 'needs help' arrows. Egg Rush owns its 8s timer;
+// Royale is elimination-only; ordinary Co-op rescue remains unchanged.
+patch('js/ui/hud.js',
+ '    if (G.Coop.active) drawCoop(ctx, w, h, pl, px, py + (bx > px ? 56 : 40));',
+ '    if (G.Coop.active && !G.Royale.active && !G.EggRush.active) drawCoop(ctx, w, h, pl, px, py + (bx > px ? 56 : 40));');
 patch('js/game.js','    if (!G.Judgment.cinematic) G.HUD.draw(ctx, w, h, pl, st);',
  '    if (!G.Judgment.cinematic) G.HUD.draw(ctx, w, h, pl, st);\n    G.Arena.draw(ctx,w,h);');
 patch('js/entities/player.js','  update(dt) {\n    this.anim.update(dt);',
