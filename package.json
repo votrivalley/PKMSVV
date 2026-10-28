@@ -51,6 +51,7 @@
     "prepare:cloudflare": "node scripts/prepare-cloudflare.cjs",
     "test:cloudflare": "node --test tests/cloudflare-pages.test.cjs tests/dex-header-actions.test.cjs tests/lan-hud-layout.test.cjs",
     "test:survival-hud": "node --test tests/lan-hud-layout.test.cjs",
+    "test:death-hud": "node --test tests/lan-hud-layout.test.cjs",
     "test:competitive-rewards": "node --test tests/competitive-rewards.test.cjs"
   },
   "devDependencies": {
