@@ -103,6 +103,13 @@ G.Royale=(()=>{
    ctx.textAlign='right';ctx.fillText(isAlive?L('Sống','Alive'):L('Ngủm','Out'),x+width-7,baseline);
   });
   ctx.restore();
+  if(G.Game?.player?.dead){
+   ctx.save();ctx.textAlign='center';ctx.font='bold 17px sans-serif';
+   ctx.lineWidth=4;ctx.strokeStyle='rgba(0,0,0,.75)';ctx.fillStyle='#ffb7be';
+   const msg=L('Bạn đã bị loại!','You are eliminated!');
+   ctx.strokeText(msg,w/2,h*.58,Math.max(100,w-80));
+   ctx.fillText(msg,w/2,h*.58,Math.max(100,w-80));ctx.restore();
+  }
   // Touch's existing canvas button system also supports a mouse click.
   // HUD clears registered buttons each frame, so this registers only once.
   G.Touch?.addButton?.(x,top,width,height,()=>{expanded=!expanded;},0);
