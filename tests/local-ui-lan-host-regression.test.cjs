@@ -40,11 +40,15 @@ test('portable Windows Host includes LAN site as real resource folder',()=>{
  assert.match(main,/lan-host-startup\.log/);
 });
 
-test('Left and right menu bottoms align without transform bounce on all targets',()=>{
+test('v1.5.30 left events and right navigation scroll independently without transforms',()=>{
  const js=read('scripts/patch-v15-menu-qa.cjs');
  const css=read('src/shared/local-shell.css');
- assert.match(js,/--pkmsvv-nav-bottom-gap/);
- assert.doesNotMatch(js,/translateY\(|transition:transform/);
- assert.match(css,/justify-content:flex-end!important/);
+ assert.doesNotMatch(js,/translateY\\(|transition:transform/);
+ assert.match(js,/right\\.style\\.removeProperty\\('--pkmsvv-nav-bottom-gap'\\)/);
+ assert.doesNotMatch(js,/bounds\\.bottom-lower\\.getBoundingClientRect/);
+ assert.match(css,/#scr-menu\\.pkmsvv-v15-menu \\.menu-left\\{/);
+ assert.match(css,/overflow-y:auto!important;overflow-x:hidden!important/);
+ assert.match(css,/overscroll-behavior-y:contain/);
+ assert.match(css,/\\.menu-right\\.pkmsvv-v15-nav[\\s\\S]*?overflow-y:auto!important/);
  assert.match(css,/transition:none!important/);
 });
