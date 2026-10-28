@@ -29,11 +29,24 @@ const path=require('node:path'),assert=require('node:assert/strict'),fs=require(
   fs.mkdirSync('dist/qa',{recursive:true});
   for(const viewport of [{width:538,height:669},{width:844,height:390}]){
    await p.setViewportSize(viewport);await p.waitForTimeout(1000);
-   const v=await p.evaluate(()=>({bounds:G.HUD.leftBounds,panel:window.__rankPanel,healthNames:window.__healthNames,rankSprites:window.__rankSprites,mates:G.Coop.mates.filter(m=>m.connected).length}));
-   assert.equal(v.mates,9);assert.equal(v.healthNames,0);assert.ok(v.rankSprites>=10,'Survival HUD must draw ten real Pokémon mini sprites');assert.ok(v.panel.height>100);assert.ok(v.panel.y>=v.bounds.bottom+8);
-   assert.ok(v.panel.y+v.panel.height<viewport.height-80,'panel stays above controls');
-   await p.screenshot({path:'dist/qa/survival-hud-'+viewport.width+'-1.5.23.png'});
-   console.log('PASS 10-player HUD '+viewport.width+'x'+viewport.height+': '+JSON.stringify(v));
+   const v=await p.evaluate(()=>({bounds:G.HUD.leftBounds,panel:window.__rankPanel,healthNames:window.__healthNames,rankSprites:window.__rankSprites,mates:G.Coop.mates.filter(m=>m.connected).length,expanded:G.Royale.expanded}));
+   assert.equal(v.mates,9);assert.equal(v.healthNames,0);
+   assert.equal(v.expanded,false,'Survival starts with one local trainer row');
+   assert.ok(v.panel.height<=55,'collapsed HUD never blocks gameplay');
+   assert.ok(v.panel.y>=v.bounds.bottom+8);
+   assert.ok(v.panel.y+v.panel.height<viewport.height-80,'panel above controls');
+   await p.screenshot({path:'dist/qa/survival-hud-collapsed-'+viewport.width+'-1.5.30.png'});
+   await p.mouse.click(v.panel.x+v.panel.width-13,v.panel.y+14);
+   await p.waitForFunction(()=>G.Royale.expanded===true);
+   await p.waitForTimeout(450);
+   const full=await p.evaluate(()=>({panel:window.__rankPanel,rankSprites:window.__rankSprites}));
+   assert.ok(full.panel.height>100);
+   assert.ok(full.panel.y+full.panel.height<viewport.height-80,'expanded list avoids controls');
+   assert.ok(full.rankSprites>v.rankSprites+10,'expanded list draws all ten real Pokémon sprites');
+   await p.screenshot({path:'dist/qa/survival-hud-expanded-'+viewport.width+'-1.5.30.png'});
+   await p.mouse.click(full.panel.x+full.panel.width-13,full.panel.y+14);
+   await p.waitForFunction(()=>G.Royale.expanded===false);
+   console.log('PASS collapsed and expanded 10-player HUD '+viewport.width+'x'+viewport.height+': '+JSON.stringify({collapsed:v,expanded:full}));
   }
   assert.deepEqual(errors,[]);
  }finally{await b.close();await s.close();}
