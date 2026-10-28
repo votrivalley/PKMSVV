@@ -55,6 +55,9 @@ patch('js/net/coop.js',
  '  function localPicked() {\n    if (host) picked(me);',
  '  function localPicked() {\n    if(pkmsvvCompetitive()){doneSeq=seenSeq;return;}\n    if (host) picked(me);');
 patch('js/game.js',
+ '    time = 0; pendingLevels = 0;',
+ '    time = 0; pendingLevels = 0; individualLevelQueue=[]; individualLevelOpen=false;');
+patch('js/game.js',
  '  const coopApi = {',
  [
  "  // Private card queue: the simulation always stays in 'playing'.",
