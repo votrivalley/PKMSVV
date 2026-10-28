@@ -194,8 +194,8 @@ G.EggRush=(()=>{
    if(pet.anim){
     if(moving&&G.Sprites.dirFromAngle)
      pet.anim.dir=G.Sprites.dirFromAngle(Math.atan2(pet.y-oy,pet.x-ox));
-    pet.anim.loop(moving?'Walk':'Idle',moving?Math.max(.6,walkSpeed/70):1);
-    pet.anim.update(moveDt);
+    pet.anim.loop?.(moving?'Walk':'Idle',moving?Math.max(.6,walkSpeed/70):1);
+    pet.anim.update?.(moveDt);
    }
    pet.moving=moving;
    // In Co-op/Royale the Host owns support damage AND support healing.
