@@ -72,7 +72,7 @@ G.Royale=(()=>{
   // One-row summary by default, on desktop and landscape mobile alike.
   // Expanded list uses the same 10 animated sprites as previous releases.
   const width=Math.min(Math.max(125,w-x-8),expanded?(w>=760?205:w>=460?185:160):(w>=760?188:170));
-  const row=expanded?Math.max(12,Math.min(26,(h-top-100)/Math.max(1,board.length))):27;
+  const row=expanded?Math.max(11,Math.min(26,(h-top-126)/Math.max(1,board.length))):27;
   const height=26+row*(expanded?board.length:1);
   hudBounds={x,right:x+width,top,bottom:top+height};
   ctx.save();ctx.fillStyle='rgba(8,22,53,.67)';ctx.strokeStyle='rgba(128,207,196,.7)';ctx.lineWidth=1;
