@@ -2,6 +2,18 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path');
 const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
+test('Mode cards explain play objective and winner in Vietnamese without internal rules',()=>{
+ const ui=read('src/shared/coop-unified.js');
+ for(const description of [
+  'Cùng đồng đội đánh quái, cứu nhau khi gặp nguy hiểm và cố gắng sống sót lâu nhất có thể!',
+  'Chiến đấu với quái vật trong vòng an toàn ngày càng thu nhỏ. Người sống sót cuối cùng sẽ chiến thắng!',
+  'Tranh nhau thu thập 10 quả trứng! Cuối trận trứng mới nở để tính điểm. Ai nhiều điểm nhất sẽ thắng!'
+ ])assert.ok(ui.includes(description),'Missing newcomer-friendly description: '+description);
+ const cards=ui.slice(ui.indexOf('const modes='),ui.indexOf('let mode=',ui.indexOf('const modes=')));
+ assert.doesNotMatch(cards,/30s|Mew 20|Ditto 10|Shiny|kỹ năng riêng|kỹ năng chung/i,
+  'Technical combat and reward rules must not crowd the mode cards');
+});
+
 test('PC Android and HTML5 compile the identical Co-op UI source',()=>{
  const js=read('src/shared/coop-unified.js');
  for(const [id,title] of [['coop','Sống Sót'],['royale','Sống Còn'],['eggrush','Tranh Trứng']]){
