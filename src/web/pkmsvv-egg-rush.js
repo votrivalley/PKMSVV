@@ -467,21 +467,73 @@ G.EggRush=(()=>{
  function html(r){
   if(!r||!Array.isArray(r.standings))return '';
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  return '<section class="pkmsvv-results" style="grid-column:1/-1" data-pkmsvv-results="eggrush">'+
-   '<h3>🥚 '+tr('KẾT QUẢ TRANH TRỨNG','EGG RUSH RESULTS')+'</h3>'+
-   '<div class="pkmsvv-results-champion">🏆 '+tr('Vô địch: ','Winner: ')+esc(r.standings[0]?.name||'—')+'</div>'+
-   '<div class="pkmsvv-results-list">'+r.standings.map((p,i)=>{
-    const d=Number(p.dex),dex=Number.isInteger(d)&&d>0&&d<=1025?d:25;
-    const local=p.uid===G.Social?.uid;
-    return '<div class="pkmsvv-result-row'+(local?' pkmsvv-result-me':'')+(p.win?' pkmsvv-result-winner':'')+'">'+
-     '<strong class="pkmsvv-result-rank">#'+(i+1)+'</strong>'+
-     '<canvas class="pkmsvv-result-mon" width="48" height="48" data-pkmsvv-result-dex="'+dex+'" data-pkmsvv-result-shiny="'+(p.shiny?'1':'0')+'" aria-label="Pokémon #'+dex+'"></canvas>'+
-     '<span class="pkmsvv-result-name">'+esc(p.name)+'</span>'+
-     '<b class="pkmsvv-result-stat">'+p.eggs+' '+tr('trứng','eggs')+'</b></div>';
-   }).join('')+'</div></section>';
+  // While eggs are hatching show the pre-reveal EGG COUNT order, never
+  // reveal the winner from score-sorted array until the last hatch.
+  const preliminary=r.standings.slice().sort((a,b)=>b.eggs-a.eggs||a.name.localeCompare(b.name)||a.uid.localeCompare(b.uid));
+  const rows=preliminary.map(p=>{
+   const d=Number(p.dex),dex=Number.isInteger(d)&&d>0&&d<=1025?d:25;
+   const local=p.uid===G.Social?.uid;
+   const eggs=(Array.isArray(p.hatched)?p.hatched:[]).map(e=>{
+    const species=Number(e.dex),valid=Number.isInteger(species)&&species>0&&species<=1025?species:172;
+    const value=eggValue(valid);
+    const label=valid===151?'Mew':valid===132?'Ditto':'Pokémon #'+valid;
+    return '<span class="pkmsvv-egg-reveal" data-pkmsvv-egg-score="'+value+'">'+
+     '<span class="pkmsvv-egg-shell" aria-label="'+tr('Trứng chưa nở','Unhatched egg')+'">🥚</span>'+
+     '<canvas class="pkmsvv-egg-hatched-mon" width="40" height="40" data-pkmsvv-hatch-dex="'+valid+'" aria-hidden="true"></canvas>'+
+     '<small class="pkmsvv-egg-hatched-label">'+esc(label)+' · +'+value+'</small></span>';
+   }).join('');
+   return '<div class="pkmsvv-result-row pkmsvv-egg-final-row'+(local?' pkmsvv-result-me':'')+'" data-pkmsvv-final-rank="'+p.rank+'" data-pkmsvv-total-score="'+p.points+'">'+
+    '<strong class="pkmsvv-result-rank">?</strong>'+
+    '<canvas class="pkmsvv-result-mon" width="48" height="48" data-pkmsvv-result-dex="'+dex+'" data-pkmsvv-result-shiny="'+(p.shiny?'1':'0')+'" aria-label="Pokémon #'+dex+'"></canvas>'+
+    '<span class="pkmsvv-result-name">'+esc(p.name)+'</span>'+
+    '<b class="pkmsvv-result-stat">0 '+tr('điểm','pts')+'</b>'+
+    '<div class="pkmsvv-egg-final-hatches">'+eggs+'</div></div>';
+  }).join('');
+  return '<section class="pkmsvv-results pkmsvv-eggrush-final" style="grid-column:1/-1" data-pkmsvv-results="eggrush" data-pkmsvv-winner="'+esc(r.standings.find(p=>p.uid===r.winner)?.name||'—')+'">'+
+   '<h3>🥚 '+tr('TRỨNG BÍ ẨN · MỞ ĐIỂM','MYSTERY EGG REVEAL')+'</h3>'+
+   '<div class="pkmsvv-results-champion" aria-live="polite">'+tr('🥚 Đang nở trứng… Ai sẽ thắng?','🥚 Eggs hatching… Who will win?')+'</div>'+
+   '<div class="pkmsvv-egg-scoring-rules">'+tr('Mew +20 · Ditto +10 · Pokémon khác +5','Mew +20 · Ditto +10 · Other Pokémon +5')+'</div>'+
+   '<div class="pkmsvv-results-list">'+rows+'</div></section>';
+ }
+ function reveal(root){
+  if(!root||root.dataset.pkmsvvRevealing)return;
+  root.dataset.pkmsvvRevealing='1';
+  const list=root.querySelector('.pkmsvv-results-list'),rows=[...root.querySelectorAll('.pkmsvv-egg-final-row')];
+  if(!list||!rows.length)return;
+  const eggs=[...root.querySelectorAll('.pkmsvv-egg-reveal')];
+  const labels=rows.map(row=>({row,stat:row.querySelector('.pkmsvv-result-stat'),points:0}));
+  let index=0;
+  const step=()=>{
+   // Avoid mutating a replaced result page after the player starts a new match.
+   if(!root.isConnected)return;
+   const egg=eggs[index++];
+   if(egg){
+    const cv=egg.querySelector('canvas[data-pkmsvv-hatch-dex]'),score=Number(egg.dataset.pkmsvvEggScore)||5;
+    const record=labels.find(x=>x.row===egg.closest('.pkmsvv-egg-final-row'));
+    if(cv&&G.UI?.sprite){
+     try{G.UI.sprite(cv,Number(cv.dataset.pkmsvvHatchDex),{hero:true,lively:false});}catch(_){}
+    }
+    egg.classList.add('pkmsvv-egg-revealed');
+    if(record){record.points+=score;record.stat.textContent=record.points+' '+tr('điểm','pts');}
+    setTimeout(step,420);
+    return;
+   }
+   // Only after ALL eggs have hatched does the authoritative ranking appear.
+   rows.sort((a,b)=>Number(a.dataset.pkmsvvFinalRank)-Number(b.dataset.pkmsvvFinalRank));
+   rows.forEach((row,i)=>{
+    row.querySelector('.pkmsvv-result-rank').textContent='#'+(i+1);
+    row.querySelector('.pkmsvv-result-stat').textContent=(Number(row.dataset.pkmsvvTotalScore)||0)+' '+tr('điểm','pts');
+    if(i===0)row.classList.add('pkmsvv-result-winner');
+    list.append(row);
+   });
+   const champion=root.querySelector('.pkmsvv-results-champion');
+   if(champion)champion.textContent='🏆 '+tr('Vô địch: ','Winner: ')+(root.dataset.pkmsvvWinner||'—');
+   root.classList.add('pkmsvv-egg-scoring-done');
+  };
+  setTimeout(step,350);
  }
  function finish(r){if(r){outcome=r;active=true;}}
- return {begin,startPosition,onEvent,update,draw,hud,html,finish,cast,orb,standings,objective,get metrics(){return {...metrics};},
+ return {begin,startPosition,onEvent,update,draw,hud,html,reveal,finish,cast,orb,standings,objective,get metrics(){return {...metrics};},
   get enabled(){return active||supportMode;},get pets(){return pets;},
   get nests(){return nests;},get active(){return active;},get outcome(){return outcome;},get collected(){return Object.values(score).reduce((s,n)=>s+n,0);}};
 })();
