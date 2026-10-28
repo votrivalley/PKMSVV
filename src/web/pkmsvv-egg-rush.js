@@ -1,7 +1,9 @@
 /* PKMSVV v1.5 — Egg Rush, online 4-player host-authoritative match. */
 G.EggRush=(()=>{
- const MAX_TIME=720,MAX_SCORE=10,WIN_SCORE=6,SPAWN_EVERY=60,RESPAWN_SECONDS=8,EGG_SPECIES=[172,447,173,35,360,438,175,174];
- let active=false,supportMode=false,cooperative=false,survival=false,nextSpawn=60,roster=[],nests=[],trails=new Map(),trailDir=new Map(),pets=[],score={},at={},laid=0,seed=1,outcome=null,transition={},levelSeen=1,killsSeen=0;
+ const MAX_TIME=720,MAX_SCORE=10,SPAWN_EVERY=60,RESPAWN_SECONDS=8,EGG_SPECIES=[172,447,173,35,360,438,175,174];
+ // Competitive eggs only reveal their Pokémon and score after the final egg.
+ const eggValue=dex=>dex===151?20:dex===132?10:5;
+ let active=false,supportMode=false,cooperative=false,survival=false,nextSpawn=60,roster=[],nests=[],trails=new Map(),trailDir=new Map(),pets=[],score={},at={},laid=0,seed=1,outcome=null,transition={},levelSeen=1,killsSeen=0,secretEggs=new Map();
  let allocation=0,retryAt=0,pendingBatch=0;const seenIds=new Set();
  const metrics={placementAttempts:0,placementFailures:0,expired:0};
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
@@ -18,7 +20,7 @@ G.EggRush=(()=>{
   allocation=0;retryAt=0;pendingBatch=0;seenIds.clear();Object.assign(metrics,{placementAttempts:0,placementFailures:0,expired:0});
   roster=(active||supportMode)?(cfg.members||[]).map(m=>({uid:m.uid,name:String(m.name||'Player').slice(0,24),dex:m.dex||25,shiny:!!m.shiny})):[];
   seed=Math.floor(Number(cfg?.seed)||1);nests=[];pets=[];trails=new Map();trailDir=new Map();levelSeen=1;killsSeen=0;
-  score=Object.fromEntries(roster.map(m=>[m.uid,0]));at={};laid=0;outcome=null;transition={};
+  score=Object.fromEntries(roster.map(m=>[m.uid,0]));at={};laid=0;outcome=null;transition={};secretEggs=new Map();
   if(active||supportMode){
    G.Sprites?.preload?.([...EGG_SPECIES,...roster.map(x=>x.dex)],7500);
    roster.forEach(m=>{transition[m.uid]={anim:new G.Sprites.Animator(m.dex,.32,false),rank:roster.findIndex(x=>x.uid===m.uid)};});
@@ -67,6 +69,8 @@ G.EggRush=(()=>{
    if(!n||n.taken||pets.some(p=>p.id===id)||!roster.some(m=>m.uid===uid)||(n.expiresAt&&when>=n.expiresAt))return;
    n.taken=true;
    score[uid]=total;at[uid]=when;
+   if(active&&G.Coop.isHost&&!secretEggs.has(id)&&Number.isInteger(dex)&&dex>0)
+    secretEggs.set(id,dex); // trusted unit/replay fixtures
    if(!pets.some(p=>p.id===id)){
     // Host-owned support HP is transmitted with the verified egg claim.
     const maxHp=Number.isFinite(ev[7])&&ev[7]>0?Math.max(1,Math.min(50000,Math.round(ev[7]))):100;
@@ -74,6 +78,7 @@ G.EggRush=(()=>{
      hp:maxHp,maxHp,hurtCd:0,hpSeq:0,shield:0});
    }
   }else if(ev[1]==='hatch'){
+   if(active)return; // Egg Rush: sealed eggs NEVER hatch mid-match.
    const pet=pets.find(p=>p.id===ev[2]);
    if(pet&&!pet.hatch){pet.hatch=true;pet.anim=new G.Sprites.Animator(pet.dex,.6*(G.Sprites.playerScale?.(pet.dex)||1),false);G.FX?.ring?.(pet.x,pet.y,8,48,'#f5de8d',.6,3);}
   }else if(ev[1]==='hp'){
@@ -95,23 +100,36 @@ G.EggRush=(()=>{
   // Multiple trainers may overlap different nests in one Host frame.
   // Stop accepting claims the instant either winning condition is met;
   // the authoritative finish callback below still runs exactly once.
-  if(active&&(Object.values(score).reduce((n,v)=>n+v,0)>=MAX_SCORE||
-      Object.values(score).some(v=>v>=WIN_SCORE)))return false;
+  if(active&&Object.values(score).reduce((n,v)=>n+v,0)>=MAX_SCORE)return false;
   // The authoritative 'take' event marks the nest taken. Pre-marking
    // here would make onEvent reject the Host's own legitimate claim.
    score[pl.uid]=(score[pl.uid]||0)+1;at[pl.uid]=time;
-  const dex=EGG_SPECIES[Math.floor(rand(n.id*413)*EGG_SPECIES.length)];
+  // Each egg's identity is committed by Host at pickup. 4% Mew, 8% Ditto;
+  // remaining 88% draw one of the ordinary Pokémon already used by the game.
+  const roll=rand(n.id*413);
+  const dex=active?(roll<.04?151:roll<.12?132:EGG_SPECIES[Math.min(EGG_SPECIES.length-1,Math.floor((roll-.12)/.88*EGG_SPECIES.length))]):
+   EGG_SPECIES[Math.floor(roll*EGG_SPECIES.length)];
+  if(active)secretEggs.set(n.id,dex);
   // 50–80% of this owner's real HP, not a global cosmetic HP bar.
    const statScale=.5+rand(n.id*37)*.3;
    const maxHp=supportMode?Math.max(1,Math.round((pl.maxHp||100)*statScale)):100;
-   const event=['er','take',n.id,pl.uid,dex,score[pl.uid],time,maxHp];
+   const event=['er','take',n.id,pl.uid,active?0:dex,score[pl.uid],time,maxHp];
   onEvent(event);G.Coop.broadcast(event);
   G.Spawner?.say?.(nameOf(pl.uid)+' '+tr('nhặt được trứng!','collected an egg!'),2);
   return true;
  }
  function result(time){
-  const board=standings(),win=board[0]||null;
-  return {winner:win?.uid||null,standings:board.map((m,i)=>({...m,rank:i+1,win:m.uid===win?.uid})),collected:Object.values(score).reduce((sum,n)=>sum+n,0),finishedAt:Math.round(time)};
+  // ONLY Host computes points from sealed eggs after the match finishes.
+  // Peers receive their species with the final summary, not before.
+  const board=roster.map(m=>{
+   const eggs=pets.filter(p=>p.uid===m.uid).map(p=>{
+    const dex=secretEggs.get(p.id)||p.dex||EGG_SPECIES[0];
+    return {id:p.id,dex,points:eggValue(dex)};
+   });
+   return {...m,eggs:eggs.length,hatched:eggs,points:eggs.reduce((n,e)=>n+e.points,0),at:at[m.uid]||0};
+  }).sort((a,b)=>b.points-a.points||b.eggs-a.eggs||(a.at||Infinity)-(b.at||Infinity)||a.name.localeCompare(b.name)||a.uid.localeCompare(b.uid));
+  const winner=board[0]?.uid||null;
+  return {winner,standings:board.map((m,i)=>({...m,rank:i+1,win:m.uid===winner})),collected:Object.values(score).reduce((sum,n)=>sum+n,0),finishedAt:Math.round(time)};
  }
  function update(dt,time,players,finish){
   if((!active&&!supportMode)||outcome)return;
@@ -155,6 +173,20 @@ G.EggRush=(()=>{
    const trl=trails.get(pet.uid);
    if(!trl?.length)continue;
    const siblings=owners.get(pet.uid),i=siblings.indexOf(pet);
+   if(active){
+    // Egg Rush: stay an EGG, glide right beside the owning trainer.
+    // No Animator, no combat, no premature reveal and negligible CPU.
+    const owner=players.find(p=>p?.uid===pet.uid);
+    if(owner){
+     const direction=trailDir.get(pet.uid)||{x:0,y:1};
+     const side=(i%2?1:-1)*(14+Math.floor(i/2)*4),gap=22+i*14;
+     const tx=owner.x-direction.x*gap-direction.y*side;
+     const ty=owner.y-direction.y*gap+direction.x*side;
+     const k=Math.min(1,Math.max(0,dt)*10);
+     pet.x+=(tx-pet.x)*k;pet.y+=(ty-pet.y)*k;
+    }
+    continue;
+   }
    const direction=trailDir.get(pet.uid)||{x:0,y:1};
    const gap=48+i*30,side=(i%2?1:-1)*12,waypoint=trl[6+i*4];
    const lead=players.find(p=>p?.uid===pet.uid);
@@ -266,7 +298,7 @@ G.EggRush=(()=>{
    }
    if(nearest&&claim(n,nearest,time))ownedCounts.set(nearest.uid,(ownedCounts.get(nearest.uid)||0)+1);
   }
-  if(active&&(Object.values(score).reduce((n,v)=>n+v,0)>=MAX_SCORE||Object.values(score).some(v=>v>=WIN_SCORE)||time>=MAX_TIME)){
+  if(active&&(Object.values(score).reduce((n,v)=>n+v,0)>=MAX_SCORE||time>=MAX_TIME)){
    // Host alone commits one result; counted eggs, not respawns or nest attempts.
    outcome=result(time);finish(outcome);
   }
@@ -357,7 +389,7 @@ G.EggRush=(()=>{
   }
   for(const p of pets){
    if(!G.Camera.sees(p.x,p.y,50))continue;
-   if(!p.hatch)egg(ctx,p.x,p.y,(p.age+(p.boost||0))/45);
+   if(!p.hatch)egg(ctx,p.x,p.y,active?0:(p.age+(p.boost||0))/45);
    else{
     p.anim?.draw(ctx,p.x,p.y,{alpha:.85});
     if(supportMode&&p.maxHp>0){
