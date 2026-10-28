@@ -1,5 +1,22 @@
 # PKMSVV — handoff for Claude / cloud continuation
 
+## Latest work — v1.5.33, 2026-10-28 (supersedes v1.5.32 Egg Rush rules)
+
+Keep v1.5.32 Sống Còn/Co-op Rift repair, zone, Orb 6%, real Host-owned
+support HP, support Walk/Idle sprite animation and Solo-like navigation.
+**ONLY competitive Tranh Trứng now changes:** no mid-match egg hatching,
+no active support Pokémon; collected eggs glide tightly beside owners like
+the original Egg Rush. Host seals Mew 4%, Ditto 8%, other 88% identity
+on pickup and transmits dex=0 in live take packets. Finish at 10 eggs
+total or minute 12; **six personal eggs do not win early**. At the end,
+reveal each Pokémon sequentially (+20 Mew / +10 Ditto / +5 other), update
+totals then reveal the official points-sorted #1–#4 result and winner.
+This overrides the old v1.5.31/32 six-egg early finish and prior
+request to make Egg Rush followers use Walk. See `docs/QA_V1533.md`.
+Version `1.5.33` Android versionCode `1005033`, SAME fixed signing
+certificate and package ID. Build only from final identical gameplay
+source; no auto-merge, no cache wipe, no DEBUG APK distribution.
+
 ## Latest work — v1.5.32, 2026-10-28 (overrides older headers below)
 
 Branch `feature/lan-local-beta`; no merge into main. Read `AGENTS.md`,
