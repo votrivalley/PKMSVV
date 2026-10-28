@@ -1,101 +1,87 @@
-name: Build Switch Brewser Offline (synchronized)
+name: Build Switch One-File NRO Beta
 
-# Switch support is on hold. No automatic builds on push.
-# Preserve the workflow for manual use if development resumes.
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feature/lan-local-beta
+    paths:
+      - '.github/workflows/build-switch.yml'
+      - 'switch/**'
+      - 'scripts/prepare-switch.cjs'
+      - 'tests/switch.test.cjs'
 
 permissions:
   contents: read
 
 jobs:
   switch:
-    name: Build noncommercial Switch SD offline package
+    name: Package self-installing Switch NRO
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Fetch pinned PokéSurvivor source
-        shell: bash
+      - name: Fetch pinned original PokéSurvivor
         run: |
           git init vendor/pokesurvivor
           git -C vendor/pokesurvivor remote add origin https://github.com/JPTER78/pokesurvivor.git
           git -C vendor/pokesurvivor fetch --depth 1 origin 11fe868c640b62ac37beacc222e056bc4d9ec892
           git -C vendor/pokesurvivor checkout --detach FETCH_HEAD
-      - name: Install dependencies
+      - name: Install build dependencies
         run: npm install --no-audit --no-fund
-      - name: Test original gameplay and translations
-        run: npm run test:evolution && npm run test:i18n
-      - name: Apply PKMSVV gameplay patches
-        run: npm run prepare:game
-      - name: Verify Slumber Orb, FIFO Orb and auto-cast UI
-        run: node --test tests/v14-gameplay.test.cjs
-      - name: Test skill casts and evolution/UI
-        run: npm run test:kecleon && npm run test:opening && npm run test:mobile-topbar && npm run test:bilingual && npm run test:changelog && npm run test:extended-i18n && npm run test:autocast && npm run test:global && npm run test:collection && npm run test:controller && npm run test:audio && npm run test:ui && npm run test:balance && npm run test:ux && npm run test:dash
-      - name: Make icon and mobile-style offline files
-        run: npm run prepare:icons && npm run prepare:android && npm run test:android
-      - name: Package SD Switch folder
-        run: npm run prepare:switch && npm run test:switch
-      - name: Render Switch NRO icon with Survivor Poké Ball
+      - name: Compile game with current PKMSVV features
         run: |
-          node -e "require('sharp')('build/icon.png').resize(256,256).jpeg({quality:90}).toFile('switch/nro-forwarder/icon.jpg').catch(e=>{console.error(e);process.exit(1)})"
-      - name: Compile native launcher NRO with devkitPro / libnx
+          npm run prepare:game
+          npm run prepare:icons
+          npm run prepare:android
+          npm run prepare:android:full-lan
+          npm run prepare:switch
+      - name: QA updated game, save safety and offline Switch assets
+        run: |
+          npm run test:switch
+          node --test tests/lan-ai-modes.test.cjs tests/unified-coop.test.cjs
+      - name: Stage self-extracting NRO RomFS
         shell: bash
         run: |
-          docker run --rm \
-            -v "$PWD:/workspace" \
-            -w /workspace/switch/nro-forwarder \
-            -e DEVKITPRO=/opt/devkitpro \
-            devkitpro/devkita64:20260219 \
-            make -j2
-          test -s switch/nro-forwarder/PKMSVV.nro
+          set -euo pipefail
+          mkdir -p switch/nro-forwarder/romfs/game
+          cp -a dist/switch-package/switch/brewser/apps/com.votrivalley.pkmsvv/. switch/nro-forwarder/romfs/game/
+          node -p "require('./package.json').version" > switch/nro-forwarder/romfs/version.txt
+          curl -fL --retry 4 --retry-all-errors --connect-timeout 30 \
+            -o switch/nro-forwarder/romfs/brewser.nro \
+            "https://github.com/natureglass/Brewser/releases/download/v0.1.1.31/brewser.nro"
+          echo "8ce31f5b7dfb617c18a705d0c5fc955b59f60d445b5a76e250a1dd98ccd04b13  switch/nro-forwarder/romfs/brewser.nro" | sha256sum -c -
+          curl -fL --retry 3 -o switch/nro-forwarder/romfs/BREWSER_LICENSE.txt \
+            "https://raw.githubusercontent.com/natureglass/Brewser/v0.1.1.31/LICENSE"
+          test -s switch/nro-forwarder/romfs/game/ai/game/index.html
+          du -sh switch/nro-forwarder/romfs
+      - name: Create official Votri Valley Switch icon
+        run: |
+          node -e "require('sharp')('build/icon.png').resize(256,256).jpeg({quality:90}).toFile('switch/nro-forwarder/icon.jpg').catch(e=>{console.error(e);process.exit(1)})"
+      - name: Build NRO with engine and game in one file
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm -v "$PWD:/workspace" -w /workspace/switch/nro-forwarder \
+            -e DEVKITPRO=/opt/devkitpro devkitpro/devkita64:20260219 \
+            make -j2 APP_VERSION="$(node -p "require('./package.json').version")"
           python3 - <<'PY'
           from pathlib import Path
           nro=Path('switch/nro-forwarder/PKMSVV.nro')
           data=nro.read_bytes()
-          assert data[0x10:0x14] == b'NRO0', 'Not a valid Nintendo Switch NRO'
-          print(f'PKMSVV.nro: {len(data):,} bytes, NRO0 verified')
+          assert data[0x10:0x14]==b'NRO0', 'Invalid NRO format'
+          assert len(data)>70_000_000, 'Missing embedded runtime and game'
+          assert b'com.votrivalley.pkmsvv' in data, 'Missing bundled app manifest'
+          assert b'PKMSVV' in data, 'Missing launcher identifier'
+          print(f'Self-contained installer NRO: {len(data)/1048576:.1f} MiB')
           PY
-          cp switch/nro-forwarder/PKMSVV.nro dist/switch-package/switch/PKMSVV.nro
-      - name: Upload standalone PKMSVV hbmenu launcher NRO
+      - name: Upload ONE NRO only
         uses: actions/upload-artifact@v4
         with:
-          name: PKMSVV-Switch-NRO-Launcher
+          name: PKMSVV-Switch-One-File-NRO-v1.5.41-TEST
           path: switch/nro-forwarder/PKMSVV.nro
-          retention-days: 14
-          if-no-files-found: error
-      - name: Bundle official Brewser NRO and optional Home Menu NSP
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p dist/switch-package/switch dist/switch-package/NSP_TUY_CHON
-          curl -fL --retry 4 --retry-all-errors --connect-timeout 30 -o dist/switch-package/switch/brewser.nro "https://github.com/natureglass/Brewser/releases/download/v0.1.1.31/brewser.nro"
-          curl -fL --retry 4 --retry-all-errors --connect-timeout 30 -o dist/switch-package/NSP_TUY_CHON/brewser-forwarder.nsp "https://github.com/natureglass/Brewser/releases/download/v0.1.1.31/brewser-forwarder.nsp"
-          echo "8ce31f5b7dfb617c18a705d0c5fc955b59f60d445b5a76e250a1dd98ccd04b13  dist/switch-package/switch/brewser.nro" | sha256sum -c -
-          echo "1e3268fe83d45a811c38366645ed59854d6a0a4243de9c97ab156ffdc1a33af8  dist/switch-package/NSP_TUY_CHON/brewser-forwarder.nsp" | sha256sum -c -
-          curl -fL --retry 3 -o dist/switch-package/NSP_TUY_CHON/BREWSER_LICENSE_MPL-2.0.txt "https://raw.githubusercontent.com/natureglass/Brewser/main/LICENSE"
-          printf '%s\n' "Brewser v0.1.1.31: https://github.com/natureglass/Brewser/releases/tag/v0.1.1.31" "Source: https://github.com/natureglass/Brewser" "NSP file opens Brewser, NOT Pokémon Survivor." > dist/switch-package/NSP_TUY_CHON/BREWSER_NGUON_GOC.txt
-      - name: Create offline ZIP
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import zipfile
-          root=Path('dist/switch-package')
-          path=Path('dist/PKMSVV-Switch-Brewser-Offline-Test.zip')
-          with zipfile.ZipFile(path,'w',zipfile.ZIP_DEFLATED,compresslevel=6) as z:
-              for p in sorted(root.rglob('*')):
-                  if p.is_file(): z.write(p,p.relative_to(root))
-          with zipfile.ZipFile(path) as z: assert z.testzip() is None
-          print(path,round(path.stat().st_size/1048576,1),'MiB')
-          PY
-      - name: Upload Switch test package — NOT NRO
-        uses: actions/upload-artifact@v4
-        with:
-          name: PKMSVV-Switch-Brewser-Offline-Test
-          path: dist/PKMSVV-Switch-Brewser-Offline-Test.zip
           retention-days: 14
           if-no-files-found: error

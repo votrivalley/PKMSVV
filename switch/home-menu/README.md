@@ -1,14 +1,35 @@
-# Pokémon Survivor — icon riêng tại Switch HOME
+# Pokémon Chuyển Sinh — Switch One-File NRO Beta
 
-Đây là cách tạo **NSP Forwarder** dẫn tới `sd:/switch/PKMSVV.nro`, tiếp tục mở Brewser và game HTML5 offline. Nó **không** chuyển trò chơi thành native Switch, **không** tích hợp game/engine vào NSP.
+**Một file:** `PKMSVV.nro`. Game vẫn là HTML5, không phải native port.
+NRO có sẵn Brewser runtime và dữ liệu game offline trong RomFS. Lần mở đầu
+NRO tự cài game/Brewser vào thẻ nhớ rồi chạy thẳng Pokémon Chuyển Sinh.
+Không cần tải thêm Brewser, không cần gõ URL, không cần tạo NSP.
 
-1. Dùng bản Switch v0.7.2 từ workflow `.github/workflows/build-switch.yml`, giải nén nguyên `switch/` vào gốc microSD.
-2. Chạy thử `PKMSVV.nro` bằng Homebrew Menu. Nếu NRO chưa mở được, forwarder không tự sửa lỗi này.
-3. Tạo ảnh `pokemon-survivor-home.jpg` dạng JPEG hình vuông từ artwork bạn có quyền sử dụng; để cạnh `TAO_NSP_HOME_MENU.ps1` (gói thiết lập trong cuộc trò chuyện chứa sẵn icon từ ảnh do người dùng cung cấp).
-4. Trên Windows tải [NTON](https://github.com/rlaphoenix/nton/releases); NTON yêu cầu `prod.keys` từ chính máy. **Không tải khóa lên GitHub, vào artifact CI hay chia sẻ qua chat.**
-5. Gắn thẻ microSD vào PC, ví dụ ổ E:, trong PowerShell tại thư mục script chạy: `powershell -ExecutionPolicy Bypass -File .\TAO_NSP_HOME_MENU.ps1 -SwitchSdRoot E:\`
-6. NSP tạo ra sẽ có tên **Pokémon Survivor** và icon tùy chỉnh. Chỉ cài trong môi trường Atmosphère/emuMMC đã cấu hình hợp lệ. File `brewser-forwarder.nsp` có sẵn trong gói cũ chỉ mở **Brewser**; không cần cài nếu dùng forwarder mới.
+## Cài đơn giản
+1. Giải nén gói GitHub Actions lấy **một file PKMSVV.nro**.
+2. Chép file vào `sd:/switch/PKMSVV.nro`.
+3. Mở Homebrew Menu ở chế độ full RAM (giữ R khi mở một game hợp lệ),
+   chọn Pokémon Chuyển Sinh. Lần đầu để màn hình tự cài xong, lần sau mở nhanh hơn.
 
-**Rủi ro:** NSP chưa ký Nintendo; cài trên sysMMC hoặc kết nối máy với dịch vụ Nintendo có nguy cơ bị hạn chế tài khoản/thiết bị. Đây là bản thử nghiệm chưa xác nhận trên Switch Lite thật.
+## Kỹ thuật / hạn chế
+- NRO dùng Brewser (MPL-2.0) để chạy game HTML5 offline; tài nguyên
+  được giải nén tự động vào `sd:/switch/brewser/apps/com.votrivalley.pkmsvv/`.
+- Brewser được tự cài nếu chưa có ở `sd:/switch/brewser.nro`. Nếu đã có
+  Brewser, chương trình không tự ghi đè bản đó.
+- Không yêu cầu khóa mã hóa hay NSP. Game và engine không nằm trong sysMMC.
+- Không xóa localStorage, save, ảnh/thiết lập hiện có; cập nhật chỉ ghi đè
+  file game trong thư mục app, không xóa thư mục user hoặc dữ liệu Brewser.
+- Đây là bản **thử nghiệm**: CI có thể xác minh NRO hợp lệ và dữ liệu đầy đủ,
+  nhưng không thể xác nhận FPS, controller, âm thanh và save trên Switch thực.
+- Tắt máy/thoát NRO khi đang sao chép có thể để lại file tạm; mở lại NRO để
+  nó thử cài lại. Đảm bảo thẻ SD còn tối thiểu khoảng 350 MB.
+- Sống Còn / Tranh Trứng offline AI đi theo bản game build, khả năng vận hành
+  trong engine Brewser trên Switch thật cần test riêng.
+- Không phải phần mềm chính thức Nintendo/Pokémon. Chỉ phát hành phi thương mại.
 
-Game gốc: [JPTER78/pokesurvivor](https://github.com/JPTER78/pokesurvivor); Brewser: [natureglass/Brewser](https://github.com/natureglass/Brewser).
+## Nguồn và giấy phép
+- Pokémon Chuyển Sinh: Votri Valley, dựa trên PokéSurvivor của JPTER78
+  (PolyForm Noncommercial 1.0.0).
+- Brewser (MPL-2.0): https://github.com/natureglass/Brewser
+- NRO tự giải nén engine được tải từ release chính thức, checksum SHA-256
+  được cố định/kiểm tra tại workflow GitHub.

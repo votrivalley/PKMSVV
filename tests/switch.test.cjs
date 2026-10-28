@@ -31,17 +31,23 @@ test('boot settings only apply on first run; clear install instruction',()=>{
  assert.match(b,/if \(!localStorage\.getItem\(key\)\)/);
  assert.match(b,/quality:"low"/);
  const info=fs.readFileSync(path.join(root,'dist','switch-package','HUONG_DAN_SWITCH.txt'),'utf8');
- assert.ok(info.includes('brewser://apps/'+id+'/index.html'));
- assert.ok(info.includes('sd:/switch/brewser.nro'));
+ assert.match(info,/PKMSVV\\.nro/);
+ assert.match(info,/tự cài/);
 });
 
-test('renamed Pokemon Chuyển sinh branding and complete Switch bundle guide',()=>{
+test('Switch NRO includes runtime and game assets and preserves save data',()=>{
  const manifest=JSON.parse(content('manifest.json'));
  assert.match(manifest.name,/Pokemon Chuyển sinh/);
- assert.doesNotMatch(manifest.name,/Survival/);
  const guide=fs.readFileSync(path.join(root,'dist','switch-package','HUONG_DAN_SWITCH.txt'),'utf8');
- assert.match(guide,/brewser-forwarder\.nsp/);
- assert.match(guide,/NSP này CHỈ mở Brewser/);
- assert.match(guide,/PKMSVV\.nro/);
- assert.match(guide,/switch\/brewser\.nro/);
+ assert.match(guide,/một file PKMSVV\\.nro/);
+ assert.match(guide,/không xóa/i);
+ const c=fs.readFileSync(path.join(root,'switch/nro-forwarder/source/main.c'),'utf8');
+ for(const part of ['romfsInit()','copyTree(GAME_SOURCE,GAME)','markVersion(version)',
+   'envSetNextLoad(RUNTIME,args)','--fwd=1','--app=com.votrivalley.pkmsvv'])
+  assert.ok(c.includes(part),part);
+ const make=fs.readFileSync(path.join(root,'switch/nro-forwarder/Makefile'),'utf8');
+ assert.match(make,/ROMFS\\s*:=\\s*romfs/);
+ const workflow=fs.readFileSync(path.join(root,'.github/workflows/build-switch.yml'),'utf8');
+ assert.match(workflow,/PKMSVV-Switch-One-File-NRO/);
+ assert.match(workflow,/sha256sum -c/);
 });

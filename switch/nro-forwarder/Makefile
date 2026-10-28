@@ -39,13 +39,13 @@ include $(DEVKITPRO)/libnx/switch_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	PKMSVV
 BUILD		:=	build
-export APP_TITLE := Pokemon Survivor
+export APP_TITLE := Pokemon Chuyen Sinh
 export APP_AUTHOR := Votri Valley
-export APP_VERSION := 0.7.2
+export APP_VERSION := 1.5.41
 SOURCES		:=	source
 DATA		:=	data
 INCLUDES	:=	include
-#ROMFS	:=	romfs
+ROMFS	:=	romfs
 
 #---------------------------------------------------------------------------------
 # options for code generation
