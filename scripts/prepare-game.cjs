@@ -608,6 +608,8 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-match-fullscre
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v15-offline-save-notice.cjs')],{cwd:project,stdio:'inherit'});
 // Final menu QA after retro v1.4 branding, unified layout and offline notice.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v15-menu-qa.cjs')],{cwd:project,stdio:'inherit'});
+// Chapter 0–3 completion grants exactly one purple Gacha ×10 ticket per chapter.
+execFileSync(process.execPath,[path.join(project,'scripts','patch-chapter-purple-rewards.cjs')],{cwd:project,stdio:'inherit'});
 // Restore native fullscreen from Pause / Graphics on Windows only; web/mobile ignore the native bridge.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v155-pc-fullscreen.cjs')],{cwd:project,stdio:'inherit'});
 // Windows and Android remain strictly offline-first: do NOT inject the external
