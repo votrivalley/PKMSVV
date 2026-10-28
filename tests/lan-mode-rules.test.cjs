@@ -63,7 +63,7 @@ test('Co-op and Royale support mini HP bars reflect actual Host damage and synch
   const pet=h.G.EggRush.pets[0];
   assert.ok(pet.maxHp>=50&&pet.maxHp<=80,'real support health 50–80% of trainer');
   h.G.EggRush.onEvent(['er','hatch',pet.id]);
-  const damage={x:pet.x,y:pet.y,r:12,dmg:60,dead:false,remote:false};
+  const damage={get x(){return pet.x},get y(){return pet.y},r:12,dmg:60,dead:false,remote:false};
   h.G.EnemyMgr.all=()=>[damage];
   h.G.EggRush.update(.1,t+1,h.players,()=>{});
   assert.ok(pet.hp<pet.maxHp,'Host applied enemy damage, not cosmetic');
