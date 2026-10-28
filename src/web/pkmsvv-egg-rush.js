@@ -79,6 +79,11 @@ G.EggRush=(()=>{
   if(!G.Coop.isHost||outcome||pl.dead||!nests.includes(n)||(n.expiresAt&&time>=n.expiresAt)||
    G.U.dist2(pl.x,pl.y,n.x,n.y)>=38*38||(G.Arena?.active&&!G.Arena.validSpawn(n.x,n.y,0)))return false;
   if((supportMode&&pets.filter(p=>p.uid===pl.uid).length>=2)||n.taken||!roster.some(m=>m.uid===pl.uid))return false;
+  // Multiple trainers may overlap different nests in one Host frame.
+  // Stop accepting claims the instant either winning condition is met;
+  // the authoritative finish callback below still runs exactly once.
+  if(active&&(Object.values(score).reduce((n,v)=>n+v,0)>=MAX_SCORE||
+      Object.values(score).some(v=>v>=WIN_SCORE)))return false;
   n.taken=true;score[pl.uid]=(score[pl.uid]||0)+1;at[pl.uid]=time;
   const dex=EGG_SPECIES[Math.floor(rand(n.id*413)*EGG_SPECIES.length)];
   const event=['er','take',n.id,pl.uid,dex,score[pl.uid],time];
