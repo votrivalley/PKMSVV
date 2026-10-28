@@ -67,3 +67,23 @@ test('Switch boot reuses libnx automatic SD mount and probes real access',()=>{
   'Real errors must show diagnostic codes');
  assert.ok(c.includes('Nothing was removed from the Switch save folder.'));
 });
+
+test('Switch chainload passes a real NRO in nx.js argv[1], then forwarder options',()=>{
+ const c=fs.readFileSync(path.join(root,'switch/nro-forwarder/source/main.c'),'utf8');
+ const start=c.indexOf('const char *args =');
+ assert.ok(start>=0, 'Launcher must define an explicit next-load argument string');
+ const end=c.indexOf('Result rc=envSetNextLoad(RUNTIME,args);',start);
+ assert.ok(end>start, 'Launcher must give argv to hbloader');
+ const literal=c.slice(start,end);
+ const runtime='"sdmc:/switch/brewser.nro"';
+ // In C source, each quoted argument is escaped and assembled from string literals.
+ const occurrences=literal.match(/\\\"sdmc:\/switch\/brewser\.nro\\\"/g)||[];
+ assert.equal(occurrences.length,2, 'argv[0] is runtime and argv[1] is the NRO entrypoint');
+ const a=literal.indexOf('sdmc:/switch/brewser.nro');
+ const b=literal.indexOf('sdmc:/switch/brewser.nro',a+1);
+ const f=literal.indexOf('--fwd=1');
+ const app=literal.indexOf('--app=com.votrivalley.pkmsvv');
+ assert.ok(a>=0 && b>a && f>b && app>f,'nx.js must receive argv[1] NRO before Brewser flags');
+ assert.doesNotMatch(literal,/^\\s*const char \\*args=\\\"\\\\\\\"sdmc:\/switch\/brewser.nro/);
+});
+

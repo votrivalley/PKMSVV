@@ -194,7 +194,17 @@ int main(int argc,char **argv) {
     printf("Game ready. Opening...\n");
     consoleUpdate(NULL);
     romfsExit();
-    const char *args="\"sdmc:/switch/brewser.nro\" \"--fwd=1\" \"--app=com.votrivalley.pkmsvv\"";
+    // nx.js treats argv[1] as a script or NRO entrypoint, NOT an option.
+    // Passing --fwd=1 there made it try to open a file literally named
+    // "--fwd=1". Give it Brewser's own executable as the explicit NRO
+    // entrypoint (nx.js mounts that RomFS and boots its main.js); only
+    // then pass Brewser's forwarder flags as argv[2] and argv[3].
+    // Keep argv[0] == RUNTIME for hbloader/libnx path consistency.
+    const char *args =
+        "\"sdmc:/switch/brewser.nro\" "
+        "\"sdmc:/switch/brewser.nro\" "
+        "\"--fwd=1\" "
+        "\"--app=com.votrivalley.pkmsvv\"";
     Result rc=envSetNextLoad(RUNTIME,args);
     if (R_FAILED(rc)) {
         failure("Cannot launch Brewser. Try launching NRO in full-RAM mode.");

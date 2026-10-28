@@ -38,3 +38,8 @@ Không cần tải thêm Brewser, không cần gõ URL, không cần tạo NSP.
 - Bản đầu có lỗi gắn lại SD khi libnx đã gắn sẵn; dễ hiện `Cannot access microSD` dù thẻ bình thường.
 - Bản sửa sẽ dùng ổ `sdmc:/` đã được gắn và thử đọc thư mục gốc trước khi tiếp tục.
 - Không cần format thẻ, gỡ phần mềm, hay xóa save. Khi cập nhật chỉ thay file `sd:/switch/PKMSVV.nro`.
+
+## Hotfix: "No such file or directory: --fwd=1"
+- Bản trước giải nén xong rồi bị lỗi vì truyền `--fwd=1` tại `argv[1]` cho nx.js.
+- nx.js chỉ dùng `argv[1]` để xác định file script/NRO cần chạy. Hotfix đặt `sdmc:/switch/brewser.nro` vào `argv[1]` và giữ các cờ `--fwd=1`, `--app=com.votrivalley.pkmsvv` ở phía sau.
+- Không cần xóa 12.000+ file đã chép hoặc xóa save. Chỉ chép đè `PKMSVV.nro` mới trong `sd:/switch/`.
