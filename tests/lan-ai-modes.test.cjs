@@ -124,3 +124,45 @@ test('Survival AI retreats from nearby monsters instead of blindly following its
  h.G.LanAI.update(.12,1);
  assert.ok(h.pl.lanBotAxis[0]<0,'moves away from threat at close range');
 });
+
+test('Issue #8: strongest REAL LAN guest defines AI baseline in all three modes, applied once',()=>{
+ for(const mode of ['eggrush','royale','coop']){
+  const host={uid:'host',dex:25,name:'Host',bot:false,power:{hp:0,atkMul:1,spdMul:1,cdMul:1,dmgReduce:0,regen:0}};
+  const guest={uid:'guest',dex:150,name:'Guest',bot:false,power:{hp:300,atkMul:2,spdMul:1.5,cdMul:.6,dmgReduce:.35,regen:3}};
+  const bots=['ai-0000000000000001','ai-0000000000000002'].map(uid=>({uid,dex:1,bot:true}));
+  const room={isHost:true,mode,members:[host,guest,...bots]};
+  const me={uid:'host',maxHp:90,baseAtk:45,atkMul:1,baseSpd:50,spdMul:1,cdMul:1,dmgReduce:0,regenFlat:0};
+  const mons={25:{hp:90,atk:45,spd:50,df:50,sd:50},150:{hp:100,atk:90,spd:120,df:100,sd:90}};
+  const actors=new Map(bots.map(bot=>[bot.uid,{
+   uid:bot.uid,dex:1,mon:{hp:50,atk:30,spd:40,df:40,sd:35,types:['grass']},
+   maxHp:50,hp:50,baseAtk:30,baseSpd:40,atkMul:1,spdMul:1,cdMul:1,dmgReduce:0,regenFlat:0,
+   moves:[],addMove(){},setAbility(){},addMaxHp(n){this.maxHp+=n;this.hp+=n;}
+  }]));
+  const G={Social:{uid:'host',room},Coop:{isHost:true,local:me,mate:uid=>({pl:actors.get(uid)})},
+   DEX_BY:mons,baseStartOf:()=> 'tackle',Mons:{abilityOf:()=>({id:'overgrow'})},
+   Upgrades:{perks:()=>({hp:40,atkMul:1.1,spdMul:1.1,cdMul:.9,dmgReduce:.1,regen:.5})}};
+  vm.runInNewContext(code,{G,Map,Set,Math,Number,console});
+  const baseline=G.LanAI.humanBaseline();
+  assert.equal(baseline.uid,'guest','remote strongest human, not Host or another bot');
+  assert.equal(baseline.hp,400);
+  assert.equal(baseline.atk,180);
+  G.LanAI.begin();
+  const champion=actors.get(bots[0].uid);
+  for(const p of actors.values()){
+   if(mode!=='eggrush'&&p!==champion)continue;
+   assert.ok(p.maxHp>=baseline.hp,'HP at least strongest human');
+   assert.ok(p.baseAtk*p.atkMul>=baseline.atk,'effective ATK not weaker');
+   assert.ok(p.baseSpd*p.spdMul>=baseline.spd,'effective SPD not weaker');
+   assert.ok(p.cdMul<=baseline.cd,'cooldown not slower');
+   assert.ok(p.dmgReduce>=baseline.def,'damage reduction not weaker');
+   assert.ok(p.regenFlat>=baseline.regen,'regen not weaker');
+   assert.equal(p.lanBotProfile.targetUid,'guest');
+  }
+  const oldHp=champion.maxHp,oldAtk=champion.atkMul;
+  G.LanAI.begin();
+  assert.equal(champion.maxHp,oldHp,'reconnect must not stack HP bonuses');
+  assert.equal(champion.atkMul,oldAtk,'reconnect must not stack ATK bonuses');
+  if(mode==='coop')assert.ok(G.LanAI.coopDifficulty()>1,'strong friendly bots increase enemy pressure');
+  else assert.equal(G.LanAI.coopDifficulty(),1);
+ }
+});
