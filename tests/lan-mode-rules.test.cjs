@@ -88,6 +88,8 @@ test('Co-op and Royale support mini HP bars reflect actual Host damage and synch
   const down=h.events.find(e=>e[1]==='down'&&e[2]===pet.id);assert.ok(down);
   remote.G.EggRush.onEvent(down);
   assert.equal(remote.G.EggRush.pets.some(q=>q.id===pet.id),false,'guest removes fallen support');
+  remote.G.EggRush.onEvent(h.events.find(e=>e[1]==='take'&&e[2]===pet.id));
+  assert.equal(remote.G.EggRush.pets.some(q=>q.id===pet.id),false,'late duplicate take cannot resurrect fainted support');
  }
 });
 test('Issue #8: tenth successfully claimed scoring egg ends once with four ranked Pokémon portraits',()=>{
