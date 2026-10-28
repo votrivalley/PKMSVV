@@ -25,7 +25,6 @@ patch('js/core/db.js',
 // In particular, initial Chapter 0 skip/quiz skip still forces starter choice;
 // the bonus is only awarded after the player actually has a starter and enters
 // their normal menu. Replay opens the menu too but cannot double-credit.
-patch('js/ui/menu.js',
- '  function open() {\n    const s = G.DB.save;',
- '  function open() {\n    G.PKMSVVStory?.syncChapterPurpleRewards?.();\n    const s = G.DB.save;');
+// Compose with the pre-existing v1.5 UI menu wrapper without editing its internals.
+fs.appendFileSync(path.join(game,'js','ui','menu.js'),"\n/* v1.5.35: one-time chapter reward reconciliation at normal menu open. */\n(()=>{\n const previous=G.MenuUI?.open;\n if(typeof previous!=='function')throw Error('Missing MenuUI.open for chapter reward reconciliation');\n G.MenuUI.open=function(...args){\n  G.PKMSVVStory?.syncChapterPurpleRewards?.();\n  return previous.apply(this,args);\n };\n})();\n",'utf8');
 console.log('PKMSVV Chapter rewards: one permanent purple x10 ticket per Chapter 0–3 (once per save, retroactive).');
