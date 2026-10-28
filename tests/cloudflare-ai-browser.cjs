@@ -70,6 +70,18 @@ async function main(){
    await cmd('Page.navigate',{url:'http://127.0.0.1:'+port+'/ai/?mode='+mode});
    const roster=await waitFor(()=>evaluate(`(()=>{const r=window.G?.Social?.room;return r?.mode==='${mode}'&&r?.members?.some(m=>m.bot)?{mode:r.mode,count:r.members.length,bots:r.members.filter(m=>m.bot).length}:null;})()`),30000,'AI lobby '+mode);
    assert.equal(roster.mode,mode);assert.ok(roster.bots>=1);
+   // Regression: previously /ai/game/ inherited upstream's five-second
+   // version.json reload loop, even after a Co-op match had finished.
+   // All three standalone AI modes must use the inert offline updater.
+   const updater=await evaluate(`(async()=>({
+    policy:G.Updater?.policy,
+    pending:G.Updater?.pending,
+    checked:await G.Updater?.check()
+   }))()`);
+   assert.equal(updater.policy,'manual-on-next-open',
+    'AI mode '+mode+' must never auto-reload when /game/version.json differs');
+   assert.equal(updater.pending,false);
+   assert.equal(updater.checked,false);
    const status=await evaluate(`(()=>{const b=document.querySelector('#lobby-start');return {exists:!!b,disabled:b?.disabled};})()`);
    assert.equal(status.exists,true,'Start button exists for '+mode);
    const before=await evaluate(`(()=>({game:G.Game.state,room:G.Social.room?.mode,disabled:document.querySelector('#lobby-start')?.disabled,netOpen:G.Net.open_,peers:G.Net.peers(),startText:document.querySelector('#lobby-start')?.textContent}))()`);
