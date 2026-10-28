@@ -228,7 +228,7 @@ G.PKMSVVStory=(()=>{
   if(G.Pad&&G.Pad.focusFirst)G.Pad.focusFirst();
  }
  function prologue(done){play('prologue',done);}
- function reveal(dex,done){play('reveal',done,false,dex);}
+ function reveal(dex,done){play('reveal',()=>{syncChapterPurpleRewards();if(done)done();},false,dex);}
  function chapter3Pending(){return !!(G.DB.save&&G.DB.save.pkmsvvChapter3Pending&&!G.DB.save.pkmsvvChapter3Seen);}
  function markChapter3(){
   const s=G.DB.save;
@@ -236,9 +236,38 @@ G.PKMSVVStory=(()=>{
   if(((Number(s.stats&&s.stats.pkmsvvOrbTypeMask)||0)&63)!==63)return false;
   s.pkmsvvChapter3Pending=true;G.DB.commit(true);return true;
  }
+ // Purple ticket icon is 'ticket10': one complete x10 Gacha pull per chapter.
+ // Persist claim flags alongside this exact player's save, never in a
+ // global browser flag. Old completed chapters get one retroactive reward.
+ function syncChapterPurpleRewards(){
+  const s=G.DB?.save;
+  if(!s)return 0;
+  const awarded=s.pkmsvvChapterPurpleRewards;
+  const flags=(awarded&&typeof awarded==='object'&&!Array.isArray(awarded))?awarded:{};
+  const completed=[
+   !!(s.pkmsvvStorySeen&&(s.starter||s.partner)),
+   !!s.pkmsvvChapter1Seen,!!s.pkmsvvChapter2Seen,!!s.pkmsvvChapter3Seen
+  ];
+  let count=0;
+  for(let ch=0;ch<completed.length;ch++){
+   if(!completed[ch]||flags[ch])continue;
+   flags[ch]=true;count++;
+  }
+  if(!count)return 0;
+  s.pkmsvvChapterPurpleRewards=flags;
+  s.tickets=s.tickets||{t1:0,t10:0};
+  s.tickets.t10=(Number(s.tickets.t10)||0)+count;
+  // One commit folds the earned balance into the existing per-save ticket
+  // ledger, preventing reload/replay from crediting the same chapter again.
+  G.DB.commit(true);
+  G.UI?.toast?.(count===1?
+   tr('🎟️ Hoàn thành chương · +1 vé tím Gacha ×10!','🎟️ Chapter complete · +1 purple Gacha ×10 ticket!'):
+   tr('🎟️ Thưởng các chương đã hoàn thành: +'+count+' vé tím Gacha ×10!','🎟️ Completed chapters reward: +'+count+' purple Gacha ×10 tickets!'),3500);
+  return count;
+ }
  function chapter3(done){
   play('chapter3',()=>{
-   if(G.DB.save){G.DB.save.pkmsvvChapter3Seen=true;G.DB.save.pkmsvvChapter3Pending=false;G.DB.commit(true);}
+   if(G.DB.save){G.DB.save.pkmsvvChapter3Seen=true;G.DB.save.pkmsvvChapter3Pending=false;G.DB.commit(true);syncChapterPurpleRewards();}
    if(done)done();
   });
  }
@@ -253,10 +282,10 @@ G.PKMSVVStory=(()=>{
   s.pkmsvvChapter1Pending=true;G.DB.commit(true);
  }
  function chapter2(done){
-  play('chapter2',()=>{if(G.DB.save){G.DB.save.pkmsvvChapter2Seen=true;G.DB.save.pkmsvvChapter2Pending=false;G.DB.commit(true);markChapter3();}if(done)done();});
+  play('chapter2',()=>{if(G.DB.save){G.DB.save.pkmsvvChapter2Seen=true;G.DB.save.pkmsvvChapter2Pending=false;G.DB.commit(true);syncChapterPurpleRewards();markChapter3();}if(done)done();});
  }
  function chapter1(done){
-  play('chapter1',()=>{if(G.DB.save){G.DB.save.pkmsvvChapter1Seen=true;G.DB.save.pkmsvvChapter1Pending=false;G.DB.commit(true);}if(done)done();});
+  play('chapter1',()=>{if(G.DB.save){G.DB.save.pkmsvvChapter1Seen=true;G.DB.save.pkmsvvChapter1Pending=false;G.DB.commit(true);syncChapterPurpleRewards();}if(done)done();});
  }
  function replay(type='prologue'){play(['chapter1','chapter2','chapter3'].includes(type)?type:'prologue',()=>G.Flow.goMenu(),true);}
  function memories(){
@@ -296,5 +325,5 @@ G.PKMSVVStory=(()=>{
    else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();skipStory();}
   },true);
  }
- return {init,prologue,reveal,replay,memories,chapter1,chapter2,chapter3,markChapter1,markChapter2,markChapter3,chapter1Pending,chapter2Pending,chapter3Pending};
+ return {init,prologue,reveal,replay,memories,syncChapterPurpleRewards,chapter1,chapter2,chapter3,markChapter1,markChapter2,markChapter3,chapter1Pending,chapter2Pending,chapter3Pending};
 })();
