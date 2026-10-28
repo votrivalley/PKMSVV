@@ -34,7 +34,7 @@ function harness(mode='coop'){
  return {G,players,events,hatch,step};
 }
 
-for(const mode of ['coop','royale','eggrush']){
+for(const mode of ['coop','royale']){
  test('v1.5.32 '+mode+' support uses real directional Walk/Idle animation at measured velocity',()=>{
   const h=harness(mode),pet=h.hatch(7,'p0');
   assert.ok(pet&&pet.anim);
@@ -91,4 +91,21 @@ test('v1.5.32 every support follows its own trainer, not the local human',()=>{
  h.step(1/60,6);
  assert.ok(Math.hypot(pet.x-h.players[1].x,pet.y-h.players[1].y)<150);
  assert.equal(pet.anim.scale,.54);
+});
+
+test('v1.5.33 Tranh Trứng keeps sealed eggs gliding close, without hatching or combat Animator',()=>{
+ const h=harness('eggrush'),pet=h.hatch(33,'p0',151,{x:120,y:0});
+ assert.ok(pet);
+ assert.equal(pet.hatch,false,'attempted hatch event cannot open a competitive egg');
+ assert.equal(pet.anim,null,'no 60fps sprite Animator for collected eggs mid-match');
+ let before=Math.hypot(pet.x-h.players[0].x,pet.y-h.players[0].y);
+ for(let i=0;i<45;i++){h.players[0].x+=3;h.players[0].y+=1;h.step(1/60,5+i/60);}
+ const dist=Math.hypot(pet.x-h.players[0].x,pet.y-h.players[0].y);
+ assert.ok(dist<90,'egg slides right beside its owner');
+ assert.equal(pet.hatch,false);
+ assert.equal(pet.anim,null);
+ assert.ok(dist!==before);
+ h.G.EggRush.onEvent(['er','hatch',pet.id]);h.step(45,60);
+ assert.equal(pet.hatch,false,'45s incubation never opens competitive eggs');
+ assert.equal(pet.anim,null);
 });
