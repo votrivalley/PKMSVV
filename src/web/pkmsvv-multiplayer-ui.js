@@ -139,7 +139,7 @@ G.MultiplayerUI=(()=>{
    b.querySelector('.pkmsvv-mode-action').textContent=vi()?'▶ Chơi nhanh':'▶ Quick match';
   }
   const egg=$('pkmsvv-quick-eggrush');
-  if(egg){egg.querySelector('.pkmsvv-mode-title').textContent=vi()?'Tranh Trứng':'Egg Rush';egg.querySelector('.pkmsvv-mode-cap').textContent=vi()?'4 người':'4 players';egg.querySelector('.pkmsvv-mode-description').textContent=vi()?'Mỗi phút 1 trứng · hồi sinh sau 8 giây · không PvP':'1 egg/minute · respawn in 8 seconds · no PvP';egg.querySelector('.pkmsvv-mode-action').textContent=vi()?'▶ Chơi nhanh':'▶ Quick match';}
+  if(egg){egg.querySelector('.pkmsvv-mode-title').textContent=vi()?'Tranh Trứng':'Egg Rush';egg.querySelector('.pkmsvv-mode-cap').textContent=vi()?'4 người':'4 players';egg.querySelector('.pkmsvv-mode-description').textContent=vi()?'Nhặt đủ 10 trứng · cuối trận mới nở tính điểm':'10 eggs finish · secret points revealed at end';egg.querySelector('.pkmsvv-mode-action').textContent=vi()?'▶ Chơi nhanh':'▶ Quick match';}
   const r=G.Social.room;
   $('pkmsvv-existing-lobby').classList.toggle('hidden',!r);
   $('pkmsvv-mp-current').textContent=r?(vi()?'Bạn đang trong phòng ':'You are in a ')+(r.mode==='eggrush'?(vi()?'Tranh Trứng':'Egg Rush'):r.mode==='royale'?(vi()?'Sống Còn':'Survival'):(vi()?'Sống Sót':'Co-op'))+(vi()?'.':' room.') : '';
