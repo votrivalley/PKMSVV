@@ -127,9 +127,10 @@ G.EggRush=(()=>{
      // Enter/exit Rift, reconnect, or other real map teleport: never glide
      // hundreds of metres to an obsolete waypoint.
      trl.length=0;trl.push({x:p.x,y:p.y});trailDir.set(p.uid,{x:0,y:1});
+     const companions=pets.filter(q=>q.uid===p.uid);
      let n=0;
-     for(const pet of pets.filter(q=>q.uid===p.uid)){
-      const a=2*Math.PI*(++n)/(pets.filter(q=>q.uid===p.uid).length+1);
+     for(const pet of companions){
+      const a=2*Math.PI*(++n)/(companions.length+1);
       pet.x=p.x+Math.cos(a)*44;pet.y=p.y+Math.sin(a)*32;
       pet.moving=false;pet.anim?.loop?.('Idle');
      }
