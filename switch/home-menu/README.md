@@ -43,3 +43,9 @@ Không cần tải thêm Brewser, không cần gõ URL, không cần tạo NSP.
 - Bản trước giải nén xong rồi bị lỗi vì truyền `--fwd=1` tại `argv[1]` cho nx.js.
 - nx.js chỉ dùng `argv[1]` để xác định file script/NRO cần chạy. Hotfix đặt `sdmc:/switch/brewser.nro` vào `argv[1]` và giữ các cờ `--fwd=1`, `--app=com.votrivalley.pkmsvv` ở phía sau.
 - Không cần xóa 12.000+ file đã chép hoặc xóa save. Chỉ chép đè `PKMSVV.nro` mới trong `sd:/switch/`.
+
+## Hotfix 3 — lỗi đứng màn tải trên Brewser
+- Game trên Switch giờ không đợi font vô hạn và có lối dự phòng nếu `DOMContentLoaded` không được phát.
+- Script chính chạy trực tiếp sau HTML, không dùng `defer` tại Switch. Màn hình tải sẽ báo lỗi JavaScript hoặc bước bị kẹt sau 12 giây.
+- Dấu phiên bản dữ liệu gồm cả mã commit, nên cập nhật NRO mới sẽ cập nhật game trên thẻ nhớ dù version 1.5.41 chưa đổi. Tuy nhiên lần cập nhật nội dung đầu tiên sẽ cần chép lại asset.
+- Không xóa save, không thay APK Android/PC/Web, chưa thể xác nhận gameplay trên Switch nếu chưa thử máy thực.

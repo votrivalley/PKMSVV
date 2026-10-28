@@ -6,7 +6,7 @@ const id='com.votrivalley.pkmsvv';
 const dir=path.join(root,'dist','switch-package','switch','brewser','apps',id);
 const content=p=>fs.readFileSync(path.join(dir,p),'utf8');
 test('offline Switch app has local assets, scripts and licenses',()=>{
- for(const name of ['index.html','js','css','assets','manifest.json','pkmsvv-switch-boot.js','LICENSE-NONCOMMERCIAL.md','CREDITS.md','NOTICE-PKMSVV.txt'])
+ for(const name of ['index.html','js','css','assets','manifest.json','pkmsvv-switch-boot.js','pkmsvv-switch-health.js','LICENSE-NONCOMMERCIAL.md','CREDITS.md','NOTICE-PKMSVV.txt'])
    assert.ok(fs.existsSync(path.join(dir,name)),name);
  assert.match(content('index.html'),/<canvas\b/i);
  assert.match(content('index.html'),/app\.min\.js/);
@@ -87,3 +87,23 @@ test('Switch chainload passes a real NRO in nx.js argv[1], then forwarder option
  assert.doesNotMatch(literal,/^\\s*const char \\*args=\\\"\\\\\\\"sdmc:\/switch\/brewser.nro/);
 });
 
+
+
+test('Switch boot removes defer and provides diagnostics for actual device',()=>{
+ const html=content('index.html');
+ assert.ok(html.includes('pkmsvv-switch-health.js'));
+ assert.match(html,/<script src="js\/app\.min\.js\?v=[^"]+"><\/script>/);
+ assert.doesNotMatch(html,/<script defer src="js\/app\.min\.js/);
+ assert.ok(html.includes('id="pkmsvv-switch-health"'));
+ const health=content('pkmsvv-switch-health.js');
+ assert.ok(health.includes("addEventListener('error'"));
+ assert.ok(health.includes("addEventListener('unhandledrejection'"));
+ assert.ok(health.includes("Dừng ở bước:"));
+ const patcher=fs.readFileSync(path.join(root,'scripts/prepare-game.cjs'),'utf8');
+ assert.ok(patcher.includes("PKMSVV_SWITCH_BOOT === '1'"));
+ assert.ok(patcher.includes('Promise.race('));
+ assert.ok(patcher.includes('setTimeout(bootOnce,500)'));
+ const flow=fs.readFileSync(path.join(root,'.github/workflows/build-switch.yml'),'utf8');
+ assert.ok(flow.includes("PKMSVV_SWITCH_BOOT: '1'"));
+ assert.ok(flow.includes('GITHUB_SHA:0:12'));
+});

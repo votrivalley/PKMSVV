@@ -25,12 +25,21 @@ const boot=[
  ''
 ].join('\n');
 fs.writeFileSync(path.join(dir,'pkmsvv-switch-boot.js'),boot);
+fs.copyFileSync(path.join(root,'src','switch','boot-health.js'),path.join(dir,'pkmsvv-switch-health.js'));
+
 const p=path.join(dir,'index.html');
 let html=fs.readFileSync(p,'utf8');
 if(!/<\/head>/i.test(html))throw Error('Game HTML has no head');
 html=html.replace(/<\/head>/i,
   '<meta name="pkmsvv-platform" content="brewser-switch-homebrew">\n'+
   '<script src="pkmsvv-switch-boot.js"></script>\n</head>');
+const gameTag=/<script defer src="(js\\/app\\.min\\.js\\?v=[^"]+)"><\\/script>/;
+if(!gameTag.test(html))throw Error('Switch needs one compiled JS script near the end of game HTML');
+html=html.replace(gameTag,'<script src="pkmsvv-switch-health.js"></script>\\n<script src="$1"></script>');
+const bootMsg='    <p class="boot-ld" lang="vi">Đang tải trò chơi…</p>';
+if(!html.includes(bootMsg))throw Error('Switch boot text changed upstream');
+html=html.replace(bootMsg,bootMsg+'\\n    <p id="pkmsvv-switch-health" style="color:#a9dcf0;font:12px sans-serif;margin:7px auto;max-width:500px">Đang chờ JavaScript game...</p>');
+
 fs.writeFileSync(p,html,'utf8');
 const manifest={
  id,name:'Pokemon Chuyển sinh — Votri Valley',version,
