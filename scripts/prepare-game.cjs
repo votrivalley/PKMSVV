@@ -612,6 +612,8 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-v15-menu-qa.cj
 execFileSync(process.execPath,[path.join(project,'scripts','patch-chapter-purple-rewards.cjs')],{cwd:project,stdio:'inherit'});
 // Restore native fullscreen from Pause / Graphics on Windows only; web/mobile ignore the native bridge.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v155-pc-fullscreen.cjs')],{cwd:project,stdio:'inherit'});
+// Competitive Royale and Egg Rush personal skill choices must NEVER stop the entire room.
+execFileSync(process.execPath,[path.join(project,'scripts','patch-competitive-levelup.cjs')],{cwd:project,stdio:'inherit'});
 // Windows and Android remain strictly offline-first: do NOT inject the external
 // browser Online mode switch. The existing native save identity remains unchanged.
 // Invoke the installed minifier directly: npx.cmd + shell splits Windows paths
