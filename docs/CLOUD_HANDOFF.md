@@ -1,3 +1,31 @@
+## Latest work v1.5.37 — Dead Royale spectators and monetary reward audit
+
+The user reports a **dead Royale player remains trapped under the skill-card
+panel**. The new fix cancels the dead player's open skill, item and bond
+pickers, discards subsequent queued cards, and restores `playing` from any
+legacy `levelup/choice` state. Do not revive the player. After dying in
+**Sống Còn only**, switch to a local-only spectator camera aimed at other
+alive humans/AI, with ‹/› touch buttons and PC left/right arrow keys;
+auto-advance if focused player dies and hide on match end. No match/network
+authority or saved rewards are changed. Sống Sót still supports revives,
+and Tranh Trứng still respawns after 8 seconds. Source:
+`src/web/pkmsvv-spectator.js`,
+`scripts/patch-arena-v1529.cjs`,
+`scripts/patch-competitive-levelup.cjs`.
+QA: `docs/QA_V1537.md`, `tests/royale-spectator.test.cjs`,
+`tests/coop-platform-browser.cjs`.
+
+User also asked **what money rewards currently exist**. Both Sống Còn and
+Sống Sót use `round((floor(t/5)+floor(kills/4)+bosses*80+collectedCoins)*coinMul)`
+PokéCoins from original `js/game.js`. Royale result board separately
+shows `secondsAlive*10 + (winner?1000:0)` **ranking points only** — not
+PokéCoins, no rank-tier cash payout. Competitive pickups award the collecting
+player their own tickets and last-hit Shiny; Co-op shares those rewards.
+Do NOT implement placement cash bonuses without separate user approval.
+v1.5.37 Android versionCode **1005037**, preserve fixed signer and save.
+Same-version Web/PC/Android/iOS QA required; do not auto-merge or Cloudflare
+publish.
+
 ## Current work v1.5.36 — Competitive independent skill-card selection
 
 The newest user requirement: **Sống Còn (Royale) and Tranh Trứng
