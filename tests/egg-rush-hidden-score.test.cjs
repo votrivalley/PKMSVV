@@ -5,7 +5,7 @@ test('v1.5.33 Host commits rare egg species secretly on pickup; four trainers on
  const source=fs.readFileSync(require.resolve('../src/web/pkmsvv-egg-rush.js'),'utf8');
  const members=Array.from({length:4},(_,i)=>({uid:'p'+i,name:'Player '+i,dex:25+i}));
  const players=members.map(m=>({...m,x:9999,y:9999,hp:100,maxHp:100,dead:false,level:1,kills:0}));
- const messages=[],finished=[],draws=[.01,.08,.35,.40,.45,.55,.6,.7,.75,.8];
+ const messages=[],finished=[],draws=[.01,.99,.08,.99,.35,.99,.40,.99,.45,.99,.55,.99,.6,.99,.7,.99,.75,.99,.8,.99];
  const privateMath=Object.create(Math);
  let rngCalls=0;
  privateMath.random=()=>draws[rngCalls++];
