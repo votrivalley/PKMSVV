@@ -85,6 +85,37 @@ async function main(){
     await page.waitForTimeout(200);
     if(mode==='eggrush')assert.equal(await page.evaluate(()=>G.Rift.drawable()===null),true);
    }
+   if(mode==='royale'){
+    // The exact user regression: one eliminated trainer must not be stuck
+    // choosing cards. Spectate another living human/AI without pausing.
+    await page.evaluate(()=>{
+     const players=G.Coop.players();
+     for(const p of players){p.dead=false;p.hp=p.maxHp;}
+     G.Coop.levelStart(G.Game.player.level+1);
+     if(!G.UI.isOpen('scr-levelup'))throw Error('expected personal skill chooser');
+     G.Game.player.dead=true;G.Game.player.hp=0;
+    });
+    await page.waitForFunction(()=>G.Game.player.dead&&!G.UI.isOpen('scr-levelup')&&
+     document.querySelector('#pkmsvv-spectator:not([hidden])')&&G.PKMSVVSpectator.cameraTarget());
+    const before=await page.evaluate(()=>({t:G.Game.st.time,target:G.PKMSVVSpectator.cameraTarget().uid,
+     available:G.Coop.players().filter(p=>p.uid!==G.Game.player.uid&&!p.dead).length}));
+    assert.ok(before.available>=2);
+    await page.waitForTimeout(500);
+    assert.ok(await page.evaluate(t=>G.Game.state==='playing'&&G.Game.st.time>t+.1,before.t),
+     'Royale keeps ticking after local player eliminated');
+    await page.locator('#pkmsvv-spectator button').nth(1).click();
+    const after=await page.evaluate(()=>({
+     target:G.PKMSVVSpectator.cameraTarget()?.uid,
+     camera:{x:G.Camera.x,y:G.Camera.y},
+     dead:G.Game.player.dead,
+     levelOpen:G.UI.isOpen('scr-levelup'),
+     anyHp:G.Coop.players().filter(p=>!p.dead).length
+    }));
+    assert.notEqual(after.target,before.target,'spectator next must switch to a different alive trainer');
+    assert.equal(after.dead,true,'spectating does not revive the eliminated trainer');
+    assert.equal(after.levelOpen,false,'dead user never gets another skill chooser');
+    assert.ok(after.anyHp>=2,'other contestants continue living');
+   }
    if(mode==='eggrush')await page.evaluate(()=>{
     // Inject two legal Host-owned hidden eggs to exercise real end-screen
     // hatch animation, including Mew and Ditto on Android/Web browsers.
