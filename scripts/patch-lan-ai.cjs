@@ -20,8 +20,8 @@ once('js/ui/hud.js',
  '  function draw(ctx, w, h, pl, st) {',
  '  let leftBounds={x:16,bottom:70};\n  function draw(ctx, w, h, pl, st) {');
 once('js/ui/hud.js',
- '    if (G.Coop.active) drawCoop(ctx, w, h, pl, px, py + (bx > px ? 56 : 40));',
- '    leftBounds={x:px,bottom:py+50};\n    if (G.Coop.active&&!G.Royale.active) drawCoop(ctx, w, h, pl, px, py + (bx > px ? 56 : 40));');
+ '    if (G.Coop.active && !G.Royale.active && !G.EggRush.active) drawCoop(ctx, w, h, pl, px, py + (bx > px ? 56 : 40));',
+ '    leftBounds={x:px,bottom:py+50};\n    if (G.Coop.active && !G.Royale.active && !G.EggRush.active) drawCoop(ctx, w, h, pl, px, py + (bx > px ? 56 : 40));');
 once('js/ui/hud.js',
  '    // Flechas hacia los compañeros fuera de la vista.',
  '    leftBounds={x:px,bottom:Math.max(leftBounds.bottom,y+2)};\n    ctx.save();ctx.beginPath();ctx.rect(0,0,w,h);ctx.rect(px-8,12,280,leftBounds.bottom+42);ctx.clip("evenodd");\n\n    // Flechas hacia los compañeros fuera de la vista.');
