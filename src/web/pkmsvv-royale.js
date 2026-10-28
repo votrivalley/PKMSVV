@@ -29,7 +29,7 @@ G.Royale=(()=>{
  function begin(cfg){
   hudBounds=null;expanded=false;
   active=!!(cfg&&cfg.mode==='royale');
-  roster=active?(cfg.members||[]).map(m=>({uid:m.uid,name:String(m.name||'Trainer').slice(0,32),dex:dexOf(m.dex)})):[];
+  roster=active?(cfg.members||[]).map(m=>({uid:m.uid,name:String(m.name||'Trainer').slice(0,32),dex:dexOf(m.dex),shiny:!!m.shiny})):[];
   fallen={};outcome=null;lastAlive=-1;avatars=new Map();
   if(active){
    G.Sprites?.preload?.([...new Set(roster.map(m=>m.dex))],7500);
@@ -39,7 +39,7 @@ G.Royale=(()=>{
  function intensity(time){const t=sec(time);return {density:Math.min(2.55,.50+Math.pow(Math.max(0,t-45)/240,1.1)*.38),hp:1+Math.min(2.5,Math.max(0,t-85)/270),dmg:1+Math.min(1.75,Math.max(0,t-90)/390)};}
  function results(players,time){
   const t=sec(time),alive=new Set(players.filter(p=>p&&!p.dead).map(p=>p.uid)),winner=alive.size===1?[...alive][0]:null;
-  const standings=roster.map(m=>{const duration=alive.has(m.uid)?t:(fallen[m.uid]===undefined?t:fallen[m.uid]);return {uid:m.uid,name:m.name,dex:m.dex,time:duration,points:duration*10+(winner===m.uid?1000:0),win:winner===m.uid};})
+  const standings=roster.map(m=>{const duration=alive.has(m.uid)?t:(fallen[m.uid]===undefined?t:fallen[m.uid]);return {uid:m.uid,name:m.name,dex:m.dex,shiny:m.shiny,time:duration,points:duration*10+(winner===m.uid?1000:0),win:winner===m.uid};})
    .sort((a,b)=>b.points-a.points||b.time-a.time||a.name.localeCompare(b.name)||a.uid.localeCompare(b.uid));
   return {winner,standings,finishedAt:t};
  }
@@ -66,7 +66,7 @@ G.Royale=(()=>{
     const mm=Math.floor(p.time/60)+':'+String(p.time%60).padStart(2,'0');
     return '<div class="pkmsvv-result-row'+(local?' pkmsvv-result-me':'')+(p.win?' pkmsvv-result-winner':'')+'">'+
      '<strong class="pkmsvv-result-rank">#'+(i+1)+'</strong>'+
-     '<canvas class="pkmsvv-result-mon" width="48" height="48" data-pkmsvv-result-dex="'+dex+'" aria-label="Pokémon #'+dex+'"></canvas>'+
+     '<canvas class="pkmsvv-result-mon" width="48" height="48" data-pkmsvv-result-dex="'+dex+'" data-pkmsvv-result-shiny="'+(p.shiny?'1':'0')+'" aria-label="Pokémon #'+dex+'"></canvas>'+
      '<span class="pkmsvv-result-name">'+esc(p.name)+'</span>'+
      '<b class="pkmsvv-result-stat">'+mm+' · '+p.points+' '+L('đ','pts')+'</b></div>';
    }).join('')+'</div></section>';
