@@ -52,6 +52,28 @@ async function main(){
    assert.equal(await page.evaluate(()=>G.LanBus.offlineAI),true);
    if(android)assert.equal(await page.evaluate(()=>window.__nativeCalls.length),0);
    await page.click('#lobby-start');await page.waitForFunction(()=>G.Game.state==='playing');
+   if(mode==='royale'||mode==='eggrush'){
+    // Real packaged browser: the Host timer/AI keeps running while two
+    // independent skill cards wait for the player to choose in order.
+    const initial=await page.evaluate(()=>{
+     const start=G.Game.st.time;
+     G.Coop.levelStart(G.Game.player.level+1);
+     G.Coop.levelStart(G.Game.player.level+2);
+     return {start,state:G.Game.state,open:G.UI.isOpen('scr-levelup')};
+    });
+    assert.equal(initial.state,'playing','competitive card pick must not pause Host');
+    assert.equal(initial.open,true);
+    await page.waitForTimeout(800);
+    assert.ok(await page.evaluate(x=>G.Game.state==='playing'&&G.Game.st.time>x+.25,initial.start),
+     'match timer and AI continue while a participant selects a skill');
+    await page.evaluate(()=>G.RunUI.pick(0));
+    assert.equal(await page.evaluate(()=>G.UI.isOpen('scr-levelup')),true,'next skill choice queued');
+    await page.waitForTimeout(760);
+    await page.evaluate(()=>G.RunUI.pick(0));
+    await page.waitForFunction(()=>!G.UI.isOpen('scr-levelup'));
+    assert.equal(await page.evaluate(()=>G.Game.state),'playing');
+   }
+
    await page.waitForTimeout(Number(process.env.PKMSVV_SOAK_MS||15000));
    assert.ok(await page.evaluate(()=>G.Coop.players().some(p=>p.lanBot)));
    // Controlled match-time checkpoints supplement the real-time segment.
