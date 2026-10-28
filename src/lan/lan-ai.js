@@ -17,23 +17,68 @@ G.LanAI=(()=>{
    spd:Math.min(8,level()),regen:Math.min(5,level())};
   return {tier,levels};
  }
+ // A one-time baseline is chosen from REAL trainers, never from the best AI.
+ // Room metadata carries only bounded earned perks, not save data.
+ function humanBaseline(){
+  const room=G.Social?.room,members=(room?.members||[]).filter(m=>!m.bot);
+  const humans=members.map(m=>{
+   const mon=G.DEX_BY?.[m.dex]||G.DEX_BY?.[25]||{};
+   const p=m.power||{},local=m.uid===G.Social?.uid?G.Coop.local:null;
+   const hp=local?.maxHp??(Number(mon.hp||100)+Number(p.hp||0));
+   const atk=local?(local.baseAtk||mon.atk||50)*(local.atkMul||1):(Number(mon.atk||50)*Number(p.atkMul||1));
+   const spd=local?(local.baseSpd||mon.spd||50)*(local.spdMul||1):(Number(mon.spd||50)*Number(p.spdMul||1));
+   const cd=local?.cdMul??Number(p.cdMul??1),def=local?.dmgReduce??Number(p.dmgReduce||0);
+   const regen=local?.regenFlat??Number(p.regen||0);
+   const df=Number(mon.df||50),sd=Number(mon.sd||50);
+   const vals={uid:m.uid,hp,atk,spd,cd,def,regen,df,sd};
+   vals.rating=hp*.25+atk*1.2+spd*.8+(df+sd)*.4+
+    (1-Math.max(.2,cd))*120+def*220+regen*20;
+   return vals;
+  }).filter(m=>[m.hp,m.atk,m.spd,m.cd,m.def,m.regen].every(Number.isFinite));
+  humans.sort((a,b)=>b.rating-a.rating||a.uid.localeCompare(b.uid));
+  return humans[0]||null;
+ }
+ function raiseToHuman(pl,target,margin=1){
+  if(!target)return;
+  // Same legal game actors and move/Ability/Nature; NEVER mutate shared mon.
+  const hp=Math.ceil(target.hp*margin);
+  if(pl.maxHp<hp)pl.addMaxHp(hp-pl.maxHp);
+  pl.atkMul=Math.max(pl.atkMul||1,target.atk*margin/Math.max(1,pl.baseAtk));
+  pl.spdMul=Math.max(pl.spdMul||1,target.spd*margin/Math.max(1,pl.baseSpd));
+  pl.cdMul=Math.min(pl.cdMul||1,target.cd);
+  // Species-specific defense remains untouched. Use the normal per-player
+  // damage-reduction channel to compensate for a weaker species baseline.
+  const defGap=Math.max(0,target.df-(pl.mon.df||0),target.sd-(pl.mon.sd||0));
+  pl.dmgReduce=Math.max(pl.dmgReduce||0,Math.min(.8,target.def+defGap/Math.max(100,target.df+target.sd)*.3));
+  pl.regenFlat=Math.max(pl.regenFlat||0,target.regen);
+ }
  function begin(){
   states.clear();
-  for(const bot of activeBots()){
-   const pl=G.Coop.mate(bot.uid)?.pl;if(!pl)continue;
+  const bots=activeBots().slice().sort((a,b)=>a.uid.localeCompare(b.uid));
+  const mode=G.Social?.room?.mode,baseline=humanBaseline();
+  bots.forEach((bot,index)=>{
+   const pl=G.Coop.mate(bot.uid)?.pl;if(!pl)return;
    pl.lanBot=true;pl.addMove(G.baseStartOf(bot.dex));
    pl.setAbility(G.Mons.abilityOf(bot.dex).id);
-   if(G.Social.room.mode==='royale'&&G.Upgrades?.perks){
-    // Match the same capped permanent upgrades a human can buy. Never edit
-    // the trainer's save, grant illegal moves or make bots invulnerable.
+   const required=mode==='eggrush'||index===0;
+   if(mode==='royale'&&G.Upgrades?.perks){
     const profile=strength(),perks=G.Upgrades.perks(profile.levels);
     pl.addMaxHp(Math.round(perks.hp*pl.maxHp/Math.max(1,pl.mon.hp)));
     pl.atkMul*=perks.atkMul;pl.spdMul*=perks.spdMul;pl.cdMul*=perks.cdMul;
     pl.dmgReduce+=perks.dmgReduce;pl.regenFlat+=perks.regen;
     pl.lanBotProfile=profile;
    }
+   if(required){
+    raiseToHuman(pl,baseline,mode==='eggrush'?1.03:1.02);
+    pl.lanBotProfile={...(pl.lanBotProfile||{}),tier:'challenger',targetUid:baseline?.uid||null};
+   }
    states.set(bot.uid,{seq:0,route:[],replan:0,think:0,axis:[0,0],goal:null,home:{x:pl.x,y:pl.y},wander:0});
-  }
+  });
+ }
+ function coopDifficulty(){
+  if(G.Social?.room?.mode!=='coop')return 1;
+  const bots=activeBots().length;
+  return bots?1+Math.min(.28,.12+.04*Math.min(4,bots)):1;
  }
  function frame(pl){
   const m=pl.activeMove();
@@ -238,5 +283,5 @@ G.LanAI=(()=>{
   }
  }
  function near(x,y,r=520){return G.Coop.isHost&&G.Coop.puppets().some(p=>p.lanBot&&!p.dead&&(p.x-x)**2+(p.y-y)**2<r*r);}
- return {activeBots,owns,begin,frame,levelUp,update,scoreCard,route,chooseAxis,near,strength,stop(){states.clear();}};
+ return {activeBots,owns,begin,frame,levelUp,update,scoreCard,route,chooseAxis,near,strength,humanBaseline,raiseToHuman,coopDifficulty,stop(){states.clear();}};
 })();
