@@ -28,14 +28,14 @@ test('v1.5.33 Host commits rare egg species secretly on pickup; four trainers on
   const take=messages.filter(e=>e[1]==='take').at(-1);
   assert.ok(take&&take[2]===id,'Host accepts the nearest real egg');
   assert.equal(take[4],0,'no Pokémon dex in live packet');
-  assert.equal(G.EggRush.pets.at(-1).dex,0,'even Host's public egg object stays sealed');
+  assert.equal(G.EggRush.pets.at(-1).dex,0,'even the Host public egg object stays sealed');
   assert.ok(G.EggRush.pets.every(p=>!p.hatch&&!p.anim),'no companions, no combat before result');
   if(i<9)assert.equal(finished.length,0,'must not end with six or fewer eggs');
   counts[owner[i]]=(counts[owner[i]]||0)+1;
   p.x=9999;p.y=9999;
  }
  assert.equal(finished.length,1);
- assert.equal(rngCalls,10,'one private draw per claimed egg, never rerolled at result');
+ assert.equal(rngCalls,20,'two Host-private rolls per egg (species/Shiny), no result reroll');
  const r=finished[0];assert.equal(r.winner,'p1');
  assert.equal(r.collected,10);assert.equal(r.standings.length,4);
  const p1=r.standings.find(x=>x.uid==='p1'),p0=r.standings.find(x=>x.uid==='p0');
