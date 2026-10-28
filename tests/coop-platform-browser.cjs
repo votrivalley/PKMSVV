@@ -67,7 +67,13 @@ async function main(){
    await page.waitForFunction(()=>G.Game.state==='over',null,{timeout:10000});
    await page.waitForFunction(()=>G.Social.room.open&&G.Social.room.members.every(p=>!p.bot));
    await page.click('#btn-again');await page.waitForFunction(()=>G.UI.isOpen('scr-lobby'));
-   await page.evaluate(async()=>{await G.LanBus.request('addBot',{dex:25});});
+   // A finished match removes all bots. Refill the legally required lobby
+   // capacity before the replay: Egg Rush needs four participants, not two.
+   await page.evaluate(async()=>{
+    const required=G.Social.room.mode==='eggrush'?4:2;
+    while(G.Social.room.members.length<required)await G.LanBus.request('addBot',{dex:25});
+   });
+   await page.waitForFunction(()=>!document.getElementById('lobby-start')?.disabled);
    await page.click('#lobby-start');await page.waitForFunction(()=>G.Game.state==='playing');
    assert.ok(await page.evaluate(()=>G.Coop.players().some(p=>p.lanBot)));
    console.log('PASS '+(android?'Android packaged UI':'Web')+' '+mode+': menu → AI → timed checkpoints → finish → second match');
