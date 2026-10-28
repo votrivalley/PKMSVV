@@ -132,7 +132,7 @@ G.EggRush=(()=>{
      for(const pet of companions){
       const a=2*Math.PI*(++n)/(companions.length+1);
       pet.x=p.x+Math.cos(a)*44;pet.y=p.y+Math.sin(a)*32;
-      pet.moving=false;pet.anim?.loop?.('Idle');
+      pet.moving=false;pet.justReanchored=true;pet.anim?.loop?.('Idle');
      }
     }else if(d2>=64){
      const d=Math.sqrt(d2);trailDir.set(p.uid,{x:dx/d,y:dy/d});
@@ -168,8 +168,11 @@ G.EggRush=(()=>{
    const baseSpeed=Number(lead?.spd||lead?.baseSpd)||140;
    const walkSpeed=Math.max(75,Math.min(230,baseSpeed*.85));
    const moveDt=Math.max(0,Math.min(dt,.1));
-   let warped=false;
-   if(dist>310){
+   let warped=!!pet.justReanchored;
+   pet.justReanchored=false;
+   if(warped){
+    // One frame of Idle after a genuine map transition, never a fake sprint.
+   }else if(dist>310){
     pet.x=(lead?.x??trl[0].x)-direction.x*gap-direction.y*side;
     pet.y=(lead?.y??trl[0].y)-direction.y*gap+direction.x*side;
     warped=true;
