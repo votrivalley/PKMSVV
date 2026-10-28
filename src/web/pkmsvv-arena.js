@@ -86,16 +86,40 @@ G.Arena=(()=>{
  }
  function draw(ctx,w,h){
   const p=G.Game.player,cam=G.Camera;if(!enabled()||!p||p.dead||!cam?.scale)return;
-  const d=Math.hypot(p.x-center.x,p.y-center.y),r=radius();if(d<r-150)return;
-  ctx.save();ctx.strokeStyle='#ffc46daa';ctx.lineWidth=2;
-  ctx.beginPath();ctx.arc((center.x-cam.left())*cam.scale,(center.y-cam.top())*cam.scale,r*cam.scale,0,Math.PI*2);ctx.stroke();
-  ctx.save();ctx.translate(w/2,h-116);ctx.rotate(Math.atan2(center.y-p.y,center.x-p.x));
-  ctx.beginPath();ctx.moveTo(9,0);ctx.lineTo(-5,-5);ctx.lineTo(-5,5);ctx.closePath();ctx.fillStyle='#ffe19d';ctx.fill();ctx.restore();
-  const vi=G.I18n?.lang==='vi',text=mode==='eggrush'?(vi?'Về vùng chơi':'Return to arena'):
-   d>r?(vi?'Ngoài bo · 10s ân hạn · về tâm':'Outside zone · 10s grace · return'):(vi?'Gần rìa vùng an toàn':'Safe-zone edge');
-  // Bottom-center: avoids both sidebar, timer, right touch controls and skills.
-  ctx.textAlign='center';ctx.font='bold 11px sans-serif';ctx.fillStyle='#ffe19d';ctx.strokeStyle='#092536';ctx.lineWidth=3;
-  ctx.strokeText(text,w/2,h-96,Math.max(80,w-180));ctx.fillText(text,w/2,h-96,Math.max(80,w-180));ctx.restore();
+  const d=Math.hypot(p.x-center.x,p.y-center.y),r=radius(),near=d>=r-150,out=d>r;
+  const vi=G.I18n?.lang==='vi',royale=mode==='royale';
+  // World-space ring: the same border for Host/Guest, never a circle glued
+  // to each player's camera. Only draw when the ring crosses this viewport.
+  const cx=(center.x-cam.left())*cam.scale,cy=(center.y-cam.top())*cam.scale,R=r*cam.scale;
+  ctx.save();
+  if(cx+R>=-8&&cy+R>=-8&&cx-R<=w+8&&cy-R<=h+8){
+   ctx.strokeStyle=royale?'rgba(255,77,85,.9)':'rgba(255,196,109,.7)';
+   ctx.lineWidth=royale?3:2;ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.stroke();
+  }
+  if(royale){
+   // Lightweight permanent legend instead of a full-screen tutorial.
+   const until=time<240?240-time:time<480?480-time:time<720?720-time:0;
+   const fmt=Math.floor(until/60)+':'+String(Math.ceil(until%60)).padStart(2,'0');
+   const hint=until>0?(vi?'Vòng đỏ thu sau '+fmt:'Red circle shrinks in '+fmt):
+    (vi?'Vòng đỏ đã thu tối đa':'Final red circle');
+   ctx.textAlign='center';ctx.font='bold 11px sans-serif';
+   ctx.strokeStyle='rgba(5,18,29,.9)';ctx.lineWidth=3;ctx.fillStyle='#ffb3b7';
+   ctx.strokeText(hint,w/2,118,Math.max(90,w-190));ctx.fillText(hint,w/2,118,Math.max(90,w-190));
+   if(out){ctx.fillStyle='rgba(255,40,40,.045)';ctx.fillRect(0,0,w,h);}
+  }
+  if(near){
+   // Near/outside warning only; never cover skill buttons or the score panel.
+   ctx.save();ctx.translate(w/2,h-116);ctx.rotate(Math.atan2(center.y-p.y,center.x-p.x));
+   ctx.beginPath();ctx.moveTo(9,0);ctx.lineTo(-5,-5);ctx.lineTo(-5,5);ctx.closePath();
+   ctx.fillStyle=royale?'#ff8f94':'#ffe19d';ctx.fill();ctx.restore();
+   const msg=!royale?(vi?'Về vùng chơi':'Return to arena'):
+    out?(vi?'Ngoài vòng đỏ · Về tâm!':'Outside red circle · Return!'):
+    (vi?'Gần rìa vòng đỏ':'Near the red circle');
+   ctx.textAlign='center';ctx.font='bold 11px sans-serif';ctx.fillStyle=royale?'#ffb1b8':'#ffe19d';
+   ctx.strokeStyle='#092536';ctx.lineWidth=3;
+   ctx.strokeText(msg,w/2,h-96,Math.max(80,w-180));ctx.fillText(msg,w/2,h-96,Math.max(80,w-180));
+  }
+  ctx.restore();
  }
  const openingBoost=t=>mode==='royale'?1+1.3*(1-Math.max(0,Math.min(180,t))/180):1;
  return {begin,update,onEvent,snapshot,receive,view,visible,motion,validSpawn,clampGoal,draw,radiusAt,openingBoost,
