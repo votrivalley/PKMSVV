@@ -5,7 +5,7 @@ const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const patch=read('scripts/patch-competitive-levelup.cjs');
 test('only Royale/EggRush pick cards without room waiting',()=>{
  assert.match(patch,/G\.Royale\?\.active\|\|G\.EggRush\?\.active/);
- assert.match(patch,/api\.levelStart\(level\);return;/);
+ assert.match(patch,/api\.levelStart\(level\);G\.LanAI\?\.levelUp\?\.\(level,levelSeq\);return;/);
  assert.match(patch,/waiting = new Set\(\[me\]\);/,'Co-op waiting remains');
  assert.match(patch,/if\(pkmsvvCompetitive\(\)\)\{doneSeq=seenSeq;return;\}/);
 });
