@@ -54,13 +54,35 @@
 }
 
 
-/* Desktop: stable bottom alignment with the left news/events strip.
- * Narrow viewports retain scrolling instead of shifting out of view. */
+/* Independent scroll regions: events/updates below the partner card must be
+ * reachable on desktop and mobile, without moving the right-hand navigation. */
+#scr-menu.pkmsvv-v15-menu .menu-left{
+  justify-content:flex-start!important;
+  min-height:0!important;height:100%!important;max-height:100dvh!important;
+  overflow-y:auto!important;overflow-x:hidden!important;
+  overscroll-behavior-y:contain;scrollbar-width:thin;
+  -webkit-overflow-scrolling:touch;
+  box-sizing:border-box!important;
+  padding-top:clamp(64px,9vh,94px)!important;
+  padding-bottom:max(24px,env(safe-area-inset-bottom))!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-left>*{flex-shrink:0}
+#scr-menu.pkmsvv-v15-menu .menu-left::-webkit-scrollbar{width:5px}
+#scr-menu.pkmsvv-v15-menu .menu-left::-webkit-scrollbar-thumb{background:rgba(142,221,213,.5);border-radius:8px}
+@media(max-height:500px){
+  #scr-menu.pkmsvv-v15-menu .menu-left{padding-top:54px!important}
+}
+@media(max-width:760px) and (min-height:521px){
+  #scr-menu.pkmsvv-v15-menu{overflow:hidden!important}
+  #scr-menu.pkmsvv-v15-menu .menu-left{height:54dvh!important;min-height:0!important;flex:0 0 54dvh!important}
+  #scr-menu.pkmsvv-v15-menu .menu-right{min-height:0!important;flex:1 1 auto!important}
+}
+/* Navigation still scrolls separately; do not anchor its bottom to news. */
 @media(min-width:901px) and (min-height:580px){
  #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav{
-  justify-content:flex-end!important;
-  padding-top:clamp(60px,9vh,110px)!important;
-  padding-bottom:var(--pkmsvv-nav-bottom-gap,12vh)!important;
+  justify-content:flex-start!important;
+  padding-top:clamp(74px,11vh,126px)!important;
+  padding-bottom:12px!important;
   overflow-y:auto!important;
  }
  #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav>.box{
