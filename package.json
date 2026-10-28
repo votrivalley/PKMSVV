@@ -54,7 +54,7 @@
     "test:death-hud": "node --test tests/lan-hud-layout.test.cjs",
     "test:competitive-rewards": "node --test tests/competitive-rewards.test.cjs",
     "test:issue8": "node --test tests/lan-mode-rules.test.cjs tests/arena-v1529.test.cjs tests/lan-ai-modes.test.cjs tests/v15-eggs.test.cjs",
-    "test:v1532": "node --test tests/arena-v1529.test.cjs tests/lan-mode-rules.test.cjs tests/v15-eggs.test.cjs tests/lan-coop-support.test.cjs tests/lan-ai-modes.test.cjs tests/lan-hud-layout.test.cjs"
+    "test:v1532": "node --test tests/arena-v1529.test.cjs tests/lan-mode-rules.test.cjs tests/v15-eggs.test.cjs tests/lan-coop-support.test.cjs tests/lan-ai-modes.test.cjs tests/lan-hud-layout.test.cjs tests/competitive-rewards.test.cjs"
   },
   "devDependencies": {
     "playwright": "^1.62.1",
