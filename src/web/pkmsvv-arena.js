@@ -4,8 +4,10 @@ G.Arena=(()=>{
  let mode=null,center={x:0,y:0},time=0,epoch=0,disabled=false,serial=0;
  const outside=new Map(),received=new Map(),views=new Map(),totals=new Map(),applied=new Map(),zoneDead=new Set();
  const radiusAt=(m,t)=>m==='eggrush'?1600:m==='royale'?
-  t<=240?1650:t<=480?1650-(t-240)*450/240:t<=720?1200-(t-480)*300/240:900:Infinity;
- const exempt=()=>!!(G.Rift?.inArena||G.Judgment?.active||G.World?.arena);
+  t<=240?1900:t<=480?1900-(t-240)*550/240:t<=720?1350-(t-480)*450/240:900:Infinity;
+ // World.arena is cached by upstream after Rift exit; it is NOT a valid
+ // indication that the player is still inside a Rift. Use live Rift/Judgment.
+ const exempt=()=>!!(G.Rift?.inArena||G.Judgment?.active);
  const radius=()=>radiusAt(mode,time);
  const enabled=()=>!!mode&&!disabled&&!exempt();
  function begin(cfg){
