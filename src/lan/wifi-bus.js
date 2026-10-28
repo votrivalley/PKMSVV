@@ -10,6 +10,13 @@ if(new URLSearchParams(location.search).get('pkmsvvWifi')==='1'){
   const snapshot=()=>room?JSON.parse(JSON.stringify(room)):null;
   const limit=()=>room?.mode==='royale'?10:4;
   const dex=d=>G.DEX_BY?.[Number(d)]?Number(d):25;
+  const power=v=>{
+   const out={};if(!v||typeof v!=='object'||Array.isArray(v))return null;
+   for(const [key,min,max,def] of [['hp',0,2000,0],['atkMul',1,5,1],
+    ['spdMul',1,4,1],['cdMul',.2,1,1],['dmgReduce',0,.8,0],['regen',0,30,0]]){
+    const n=Number(v[key]);out[key]=Number.isFinite(n)?Math.max(min,Math.min(max,n)):def;
+   }return out;
+  };
   function write(p,msg){
    if(p?.dc?.readyState!=='open')throw Error('Chưa ghép nối với thiết bị');
    if(p.dc.bufferedAmount>2097152)throw Error('Kết nối Wi-Fi quá chậm');
@@ -36,19 +43,19 @@ if(new URLSearchParams(location.search).get('pkmsvvWifi')==='1'){
    if(action==='create'){
     if(who!==uid||room||links.size)throw Error('Rời phòng hoặc hủy ghép nối trước khi tạo phòng khác');
     owner=true;room={id:'wifi-'+random(12),host:uid,mode:['coop','royale','eggrush'].includes(data.mode)?data.mode:'coop',visibility:'private',open:true,
-     members:[{uid,name,dex:dex(data.dex),shiny:!!data.shiny}]};publish();return snapshot();
+     members:[{uid,name,dex:dex(data.dex),shiny:!!data.shiny,power:power(data.power)}]};publish();return snapshot();
    }
    if(action==='join'){
     if(!owner||!p||data.id!==room?.id||!room.open)throw Error('Phòng không còn chờ người chơi');
     if(room.members.some(m=>m.uid===who))return snapshot();
     if(room.members.length>=limit())throw Error('Phòng đã đủ người và AI');
-    room.members.push({uid:who,name:p.name||'Trainer',dex:dex(data.dex),shiny:!!data.shiny});
+    room.members.push({uid:who,name:p.name||'Trainer',dex:dex(data.dex),shiny:!!data.shiny,power:power(data.power)});
     clearTimeout(p.timer);publish();return snapshot();
    }
    if(!room)throw Error('Chưa tạo phòng');
    if(!room.members.some(m=>m.uid===who))throw Error('Chưa tham gia phòng');
    if(action==='update'){
-    Object.assign(room.members.find(m=>m.uid===who),{dex:dex(data.dex),shiny:!!data.shiny});publish();return true;
+    Object.assign(room.members.find(m=>m.uid===who),{dex:dex(data.dex),shiny:!!data.shiny,power:power(data.power)});publish();return true;
    }
    if(action==='leave'){
     if(host){for(const id of [...links.keys()])try{write(links.get(id),{t:'room-closed',reason:'host-left'});}catch(_){};clear();emit({t:'room-closed'});}
