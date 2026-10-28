@@ -46,7 +46,7 @@ async function main(){
    await page.evaluate(()=>{G.MenuUI.open();PKMSVVCoop.open();});
    await page.click('#pkmsvv-coop-actions [data-role="ai"]');
    if(android){
-    await page.waitForFunction(m=>G.Social?.room?.mode===m&&G.Social.room.members.some(p=>p.bot),mode);
+    await page.waitForFunction(m=>window.G?.Social?.room?.mode===m&&G.Social.room.members.some(p=>p.bot),mode);
     assert.equal(await page.evaluate(()=>window.PKMSVV_ANDROID_LOCAL_LAN),true);
     assert.ok(!page.url().includes('/ai/game/'),'Android must not navigate to second game');
    }else{
