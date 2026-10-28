@@ -31,7 +31,7 @@ test('boot settings only apply on first run; clear install instruction',()=>{
  assert.match(b,/if \(!localStorage\.getItem\(key\)\)/);
  assert.match(b,/quality:"low"/);
  const info=fs.readFileSync(path.join(root,'dist','switch-package','HUONG_DAN_SWITCH.txt'),'utf8');
- assert.match(info,/PKMSVV\\.nro/);
+ assert.ok(info.includes('PKMSVV.nro'));
  assert.match(info,/tự cài/);
 });
 
@@ -39,14 +39,14 @@ test('Switch NRO includes runtime and game assets and preserves save data',()=>{
  const manifest=JSON.parse(content('manifest.json'));
  assert.match(manifest.name,/Pokemon Chuyển sinh/);
  const guide=fs.readFileSync(path.join(root,'dist','switch-package','HUONG_DAN_SWITCH.txt'),'utf8');
- assert.match(guide,/một file PKMSVV\\.nro/);
+ assert.ok(guide.includes('một file PKMSVV.nro'));
  assert.match(guide,/không xóa/i);
  const c=fs.readFileSync(path.join(root,'switch/nro-forwarder/source/main.c'),'utf8');
  for(const part of ['romfsInit()','copyTree(GAME_SOURCE,GAME)','markVersion(version)',
    'envSetNextLoad(RUNTIME,args)','--fwd=1','--app=com.votrivalley.pkmsvv'])
   assert.ok(c.includes(part),part);
  const make=fs.readFileSync(path.join(root,'switch/nro-forwarder/Makefile'),'utf8');
- assert.match(make,/ROMFS\\s*:=\\s*romfs/);
+ assert.ok(make.includes('ROMFS\t:=\tromfs'));
  const workflow=fs.readFileSync(path.join(root,'.github/workflows/build-switch.yml'),'utf8');
  assert.match(workflow,/PKMSVV-Switch-One-File-NRO/);
  assert.match(workflow,/sha256sum -c/);
