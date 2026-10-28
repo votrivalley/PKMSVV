@@ -56,7 +56,7 @@ G.EggRush=(()=>{
   return null; // Retry later without forcing a visible spawn.
  }
  function onEvent(ev){
-  if((!active&&!supportMode)||ev[0]!=='er')return;
+  if((!active&&!supportMode)||ev[0]!=='er'||(outcome&&ev[1]==='take'))return;
   if(ev[1]==='spawn'){
    if(!seenIds.has(ev[2])){seenIds.add(ev[2]);nests.push({id:ev[2],x:ev[3],y:ev[4],expiresAt:ev[5]||0,taken:false});G.Spawner?.say?.(tr('Trứng mới xuất hiện! Đi theo mũi tên.','New egg! Follow the arrow.'),4);}
   }else if(ev[1]==='despawn'){
