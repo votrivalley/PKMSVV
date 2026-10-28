@@ -1,6 +1,6 @@
 /* Votri Valley — Survival Royale beta, host-authoritative within WebRTC star. */
 G.Royale=(()=>{
- let active=false,roster=[],fallen={},outcome=null,lastAlive=-1,avatars=new Map(),hudBounds=null;
+ let active=false,roster=[],fallen={},outcome=null,lastAlive=-1,avatars=new Map(),hudBounds=null,expanded=false;
  const sec=v=>Math.max(0,Math.floor(Number(v)||0));
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const L=(vi,en)=>G.I18n&&G.I18n.lang==='vi'?vi:en;
@@ -27,7 +27,7 @@ G.Royale=(()=>{
   return anim;
  }
  function begin(cfg){
-  hudBounds=null;
+  hudBounds=null;expanded=false;
   active=!!(cfg&&cfg.mode==='royale');
   roster=active?(cfg.members||[]).map(m=>({uid:m.uid,name:String(m.name||'Trainer').slice(0,32),dex:dexOf(m.dex)})):[];
   fallen={};outcome=null;lastAlive=-1;avatars=new Map();
@@ -68,45 +68,44 @@ G.Royale=(()=>{
   const board=results(livePlayers,time).standings.sort((a,b)=>
    Number(alive.has(b.uid))-Number(alive.has(a.uid))||b.points-a.points||a.name.localeCompare(b.name));
   const bounds=G.HUD?.leftBounds||{x:16,bottom:70};
-  const x=Math.max(8,bounds.x),top=bounds.bottom+8;
-  // Egg Rush proportions, widened just enough for a Pokémon sprite column.
-  // Reduce row height on landscape phones to avoid covering touch controls.
-  const width=Math.min(Math.max(125,w-x-8),w>=760?210:w>=460?185:160);
-  const row=Math.max(13,Math.min(26,(h-top-105-26)/Math.max(1,board.length)));
-  const height=26+row*board.length;
+  const x=Math.max(8,bounds.x),top=Math.max(8,Math.min(bounds.bottom+8,h-82));
+  // One-row summary by default, on desktop and landscape mobile alike.
+  // Expanded list uses the same 10 animated sprites as previous releases.
+  const width=Math.min(Math.max(125,w-x-8),expanded?(w>=760?205:w>=460?185:160):(w>=760?188:170));
+  const row=expanded?Math.max(12,Math.min(26,(h-top-100)/Math.max(1,board.length))):27;
+  const height=26+row*(expanded?board.length:1);
   hudBounds={x,right:x+width,top,bottom:top+height};
-  const nameX=x+53,statusX=x+width-8;
-  ctx.save();ctx.fillStyle='rgba(8,22,53,.86)';ctx.strokeStyle='#80cfc4';ctx.lineWidth=1;
+  ctx.save();ctx.fillStyle='rgba(8,22,53,.67)';ctx.strokeStyle='rgba(128,207,196,.7)';ctx.lineWidth=1;
   ctx.beginPath();ctx.roundRect(x,top,width,height,8);ctx.fill();ctx.stroke();
   ctx.textAlign='left';ctx.font='bold 11px sans-serif';ctx.fillStyle='#ffe089';
-  ctx.fillText(L('SỐNG CÒN','SURVIVAL')+' · '+alive.size+'/'+roster.length,x+8,top+17);
-  board.forEach((p,i)=>{
-   const y=top+26+i*row,baseline=y+row*.69,local=p.uid===G.Social?.uid;
-   const isAlive=alive.has(p.uid);
+  ctx.fillText(L('SỐNG CÒN','SURVIVAL')+' · '+alive.size+'/'+roster.length,x+8,top+17,width-30);
+  ctx.textAlign='right';ctx.fillText(expanded?'▴':'▾',x+width-8,top+17);
+  const entries=expanded?board:[board.find(p=>p.uid===G.Social?.uid)||board[0]].filter(Boolean);
+  entries.forEach((p,i)=>{
+   const y=top+26+i*row,baseline=y+row*.69,local=p.uid===G.Social?.uid,isAlive=alive.has(p.uid);
    if(local){ctx.fillStyle='rgba(255,226,116,.12)';ctx.fillRect(x+3,y+1,width-6,Math.max(10,row-1));}
    ctx.textAlign='left';ctx.font='bold 10px sans-serif';
    ctx.fillStyle=local?'#ffe089':isAlive?'#effff6':'#9aabba';
-   ctx.fillText(String(i+1),x+7,baseline);
-   const member=roster.find(m=>m.uid===p.uid),live=liveByUid.get(p.uid);
-   const dex=dexOf(live?.dex||member?.dex);
-   const sprite=portrait(p.uid,dex);
+   const position=board.findIndex(m=>m.uid===p.uid)+1;
+   ctx.fillText(String(position),x+7,baseline);
+   const member=roster.find(m=>m.uid===p.uid),live=liveByUid.get(p.uid),dex=dexOf(live?.dex||member?.dex),sprite=portrait(p.uid,dex);
    if(sprite){
-    // Keep the original Egg Rush animated sprite; shrink it only when
-    // ten rows must fit a short screen. Never mutate the game's real sprites.
     const scale=Math.min(1,Math.max(.55,row/25));
     ctx.save();ctx.translate(x+34,y+row*.5);ctx.scale(scale,scale);
-    sprite.draw(ctx,0,3,{alpha:isAlive?1:.45});
-    ctx.restore();
+    sprite.draw(ctx,0,3,{alpha:isAlive?1:.45});ctx.restore();
    }else{
-    ctx.fillStyle=isAlive?'#ffe5a2':'#657789';
-    ctx.beginPath();ctx.arc(x+34,y+row*.5,Math.max(2,row*.22),0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=isAlive?'#ffe5a2':'#657789';ctx.beginPath();
+    ctx.arc(x+34,y+row*.5,Math.max(2,row*.22),0,Math.PI*2);ctx.fill();
    }
    ctx.font='10px sans-serif';ctx.textAlign='left';
    ctx.fillStyle=local?'#ffe089':isAlive?'#effff6':'#9aabba';
-   ctx.fillText(p.name,nameX,baseline,Math.max(20,width-53-43));
-   ctx.textAlign='right';ctx.fillText(isAlive?L('Sống','Alive'):L('Ngủm','Out'),statusX,baseline);
+   ctx.fillText(local?L('Bạn','You'):p.name,x+49,baseline,Math.max(20,width-49-43));
+   ctx.textAlign='right';ctx.fillText(isAlive?L('Sống','Alive'):L('Ngủm','Out'),x+width-7,baseline);
   });
   ctx.restore();
+  // Touch's existing canvas button system also supports a mouse click.
+  // HUD clears registered buttons each frame, so this registers only once.
+  G.Touch?.addButton?.(x,top,width,height,()=>{expanded=!expanded;},0);
  }
- return {begin,startPosition,intensity,check,finish,html,draw,get hudBounds(){return hudBounds;},get active(){return active;},get outcome(){return outcome;},get size(){return roster.length;}};
+ return {begin,startPosition,intensity,check,finish,html,draw,get hudBounds(){return hudBounds;},get expanded(){return expanded;},get active(){return active;},get outcome(){return outcome;},get size(){return roster.length;}};
 })();
