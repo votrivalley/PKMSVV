@@ -14,6 +14,11 @@ function once(file,from,to){
  if(code.split(from).length!==2)throw Error('LAN AI anchor drift: '+file+' '+from.slice(0,60));
  fs.writeFileSync(p,code.replace(from,to),'utf8');
 }
+// Co-op with stronger allied bots needs more hostile pressure; rival modes
+// retain their own spawn multipliers, and normal Co-op without AI is unchanged.
+once('js/systems/spawner.js',
+ '(G.Royale.active?G.Royale.intensity(t).density*G.Arena.openingBoost(t):1);',
+ "(G.Royale.active?G.Royale.intensity(t).density*G.Arena.openingBoost(t):(G.Social?.room?.mode==='coop'?(G.LanAI?.coopDifficulty?.()||1):1));");
 // Expose the actual drawn sidebar bounds so support/egg panels never assume a
 // fixed top offset. Reserve this same area for off-screen teammate markers.
 once('js/ui/hud.js',
