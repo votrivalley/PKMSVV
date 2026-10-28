@@ -72,3 +72,40 @@ test('Competitive HUD patch suppresses the Co-op rescue message and teammate bar
  assert.doesNotMatch(desc,/Bo thu hẹp dần/);
 });
 
+
+test('v1.5.30: one unified death message matches Co-op, Royale and Egg Rush',()=>{
+ const G={I18n:{lang:'vi'},Game:{state:'playing'},Coop:{active:true},Royale:{active:false},EggRush:{active:false}};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../src/web/pkmsvv-death-hud.js'),'utf8'),{G,Math,Number});
+ const p={dead:true,lanEggDeath:6};
+ assert.equal(G.PKMSVVDeathHUD.mode(),'coop');
+ assert.equal(G.PKMSVVDeathHUD.message('coop',p).title,'Bạn đã gục!');
+ assert.equal(G.PKMSVVDeathHUD.message('coop',p).subtitle,'Chờ đồng đội đến cứu.');
+ G.Royale.active=true;
+ assert.equal(G.PKMSVVDeathHUD.mode(),'royale');
+ assert.equal(G.PKMSVVDeathHUD.message('royale',p).title,'Bạn đã bị loại!');
+ assert.equal(G.PKMSVVDeathHUD.message('royale',p).subtitle,'Theo dõi trận đấu và chờ kết quả.');
+ G.Royale.active=false;G.EggRush.active=true;
+ assert.equal(G.PKMSVVDeathHUD.mode(),'eggrush');
+ assert.equal(G.PKMSVVDeathHUD.message('eggrush',p).title,'Hồi sinh sau 2s');
+ assert.equal(G.PKMSVVDeathHUD.message('eggrush',p).subtitle,'Chuẩn bị trở lại cuộc đua!');
+ assert.equal(G.PKMSVVDeathHUD.message('eggrush',{dead:true,lanEggDeath:0}).title,'Hồi sinh sau 8s');
+ assert.equal(G.PKMSVVDeathHUD.message('eggrush',{dead:true,lanEggDeath:9}).title,'Hồi sinh sau 0s');
+ assert.equal(G.PKMSVVDeathHUD.message('eggrush',{dead:false}),null);
+ G.EggRush.active=false;G.Coop.active=false;
+ assert.equal(G.PKMSVVDeathHUD.mode(),null,'solo has no competitive message');
+ // Overlay is a pure renderer, not a respawn or HP authority.
+ let labels=[],saves=0;const ctx={save(){saves++},restore(){saves--},strokeText(){},fillText(s){labels.push(s)}};
+ G.EggRush.active=true;
+ G.PKMSVVDeathHUD.draw(ctx,844,390,p);
+ assert.deepEqual(labels,['Hồi sinh sau 2s','Chuẩn bị trở lại cuộc đua!']);
+ assert.equal(saves,0);
+ assert.equal(p.dead,true);
+});
+test('v1.5.30 compiled HUD wires one notice and suppresses duplicate mode notices',()=>{
+ const script=fs.readFileSync(require.resolve('../scripts/patch-arena-v1529.cjs'),'utf8');
+ assert.match(script,/pkmsvv-death-hud/);
+ assert.match(script,/G\\.PKMSVVDeathHUD\\.draw\\(ctx,w,h,pl\\)/);
+ assert.match(script,/pl\\.dead && !G\\.PKMSVVDeathHUD/);
+ assert.match(fs.readFileSync(require.resolve('../src/web/pkmsvv-royale.js'),'utf8'),/player\\?\\.dead&&!G\\.PKMSVVDeathHUD/);
+ assert.match(fs.readFileSync(require.resolve('../src/web/pkmsvv-egg-rush.js'),'utf8'),/pl\\?\\.dead&&active&&!G\\.PKMSVVDeathHUD/);
+});
