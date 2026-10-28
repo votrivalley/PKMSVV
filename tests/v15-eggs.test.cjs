@@ -99,7 +99,7 @@ test('Chapter 3 continues existing arc, unlocks on six USED types, and preserves
  assert.equal(commits,1);
 });
 
-test('Egg Rush spawns every minute, awards proximity claims, and finishes by score at time limit',()=>{
+test('Egg Rush spawns each minute and ends once a trainer claims six scoring eggs',()=>{
  const source=read('src/web/pkmsvv-egg-rush.js');
  let events=[],end=null;
  const members=[0,1,2,3].map(i=>({uid:'p'+i,name:'Player'+i,dex:25+i}));
@@ -123,8 +123,10 @@ test('Egg Rush spawns every minute, awards proximity claims, and finishes by sco
   const t=unclaimed.at(-1);players[0].x=t[3];players[0].y=t[4];
   G.EggRush.update(.05,time+.1,players,r=>{end=r;});
  }
- assert.equal(end,null,'six claims do not stop later minute spawns');
- G.EggRush.update(.05,720,players,r=>{end=r;});
+ assert.equal(end.winner,'p0','six verified claims end immediately');
+ const before=events.filter(e=>e[1]==='spawn').length;
+ G.EggRush.update(.05,720,players,r=>{throw Error('duplicate finish');});
+ assert.equal(events.filter(e=>e[1]==='spawn').length,before,'no extra spawn after finish');
  assert.equal(G.EggRush.collected,6);
  assert.equal(end.winner,'p0');
  assert.equal(end.standings[0].eggs,6);
