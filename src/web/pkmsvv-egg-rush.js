@@ -3,6 +3,7 @@ G.EggRush=(()=>{
  const MAX_TIME=720,MAX_SCORE=10,SPAWN_EVERY=60,RESPAWN_SECONDS=8,EGG_SPECIES=[172,447,173,35,360,438,175,174];
  // Competitive eggs only reveal their Pokémon and score after the final egg.
  const eggValue=dex=>dex===151?20:dex===132?10:5;
+ const eggShinyChance=dex=>(dex===151||dex===132)?.10:.03;
  let active=false,supportMode=false,cooperative=false,survival=false,nextSpawn=60,roster=[],nests=[],trails=new Map(),trailDir=new Map(),pets=[],score={},at={},laid=0,seed=1,outcome=null,transition={},levelSeen=1,killsSeen=0,secretEggs=new Map();
  let allocation=0,retryAt=0,pendingBatch=0;const seenIds=new Set();
  const metrics={placementAttempts:0,placementFailures:0,expired:0};
@@ -72,7 +73,7 @@ G.EggRush=(()=>{
    n.taken=true;
    score[uid]=total;at[uid]=when;
    if(active&&G.Coop.isHost&&!secretEggs.has(id)&&Number.isInteger(dex)&&dex>0)
-    secretEggs.set(id,dex); // trusted unit/replay fixtures
+    secretEggs.set(id,{dex,shiny:!!ev[8]}); // local regression fixtures; never trust peer claims
    if(!pets.some(p=>p.id===id)){
     // Host-owned support HP is transmitted with the verified egg claim.
     const maxHp=Number.isFinite(ev[7])&&ev[7]>0?Math.max(1,Math.min(50000,Math.round(ev[7]))):100;
@@ -112,7 +113,9 @@ G.EggRush=(()=>{
   const roll=active?Math.random():rand(n.id*413);
   const dex=active?(roll<.04?151:roll<.12?132:EGG_SPECIES[Math.min(EGG_SPECIES.length-1,Math.floor((roll-.12)/.88*EGG_SPECIES.length))]):
    EGG_SPECIES[Math.floor(roll*EGG_SPECIES.length)];
-  if(active)secretEggs.set(n.id,dex);
+  // Shiny is an independent Host-only roll: no friendship, affinity,
+  // Shiny Charm, save progression or legacy egg species multipliers.
+  if(active)secretEggs.set(n.id,{dex,shiny:Math.random()<eggShinyChance(dex)});
   // 50–80% of this owner's real HP, not a global cosmetic HP bar.
    const statScale=.5+rand(n.id*37)*.3;
    const maxHp=supportMode?Math.max(1,Math.round((pl.maxHp||100)*statScale)):100;
@@ -126,8 +129,9 @@ G.EggRush=(()=>{
   // Peers receive their species with the final summary, not before.
   const board=roster.map(m=>{
    const eggs=pets.filter(p=>p.uid===m.uid).map(p=>{
-    const dex=secretEggs.get(p.id)||p.dex||EGG_SPECIES[0];
-    return {id:p.id,dex,points:eggValue(dex)};
+    const secret=secretEggs.get(p.id),dex=Number(secret?.dex||secret||p.dex)||EGG_SPECIES[0];
+    const shiny=!!secret?.shiny,basePoints=eggValue(dex);
+    return {id:p.id,dex,shiny,basePoints,points:basePoints*(shiny?2:1)};
    });
    return {...m,eggs:eggs.length,hatched:eggs,points:eggs.reduce((n,e)=>n+e.points,0),at:at[m.uid]||0};
   }).sort((a,b)=>b.points-a.points||b.eggs-a.eggs||(a.at||Infinity)-(b.at||Infinity)||a.name.localeCompare(b.name)||a.uid.localeCompare(b.uid));
@@ -478,24 +482,25 @@ G.EggRush=(()=>{
    const local=p.uid===G.Social?.uid;
    const eggs=(Array.isArray(p.hatched)?p.hatched:[]).map(e=>{
     const species=Number(e.dex),valid=Number.isInteger(species)&&species>0&&species<=1025?species:172;
-    const value=eggValue(valid);
+    const shiny=!!e.shiny,value=eggValue(valid)*(shiny?2:1);
     const label=valid===151?'Mew':valid===132?'Ditto':'Pokémon #'+valid;
-    return '<span class="pkmsvv-egg-reveal" data-pkmsvv-egg-score="'+value+'">'+
+    return '<span class="pkmsvv-egg-reveal'+(shiny?' pkmsvv-egg-shiny':'')+'" data-pkmsvv-egg-score="'+value+'">'+
      '<span class="pkmsvv-egg-shell" aria-label="'+tr('Trứng chưa nở','Unhatched egg')+'">🥚</span>'+
-     '<canvas class="pkmsvv-egg-hatched-mon" width="40" height="40" data-pkmsvv-hatch-dex="'+valid+'" aria-hidden="true"></canvas>'+
-     '<small class="pkmsvv-egg-hatched-label">'+esc(label)+' · +'+value+'</small></span>';
+     '<canvas class="pkmsvv-egg-hatched-mon" width="40" height="40" data-pkmsvv-hatch-dex="'+valid+'" data-pkmsvv-hatch-shiny="'+(shiny?'1':'0')+'" aria-hidden="true"></canvas>'+
+     '<small class="pkmsvv-egg-hatched-label">'+(shiny?'✨ ':'')+esc(label)+' '+value+(shiny?' (×2)':'')+'</small></span>';
    }).join('');
    return '<div class="pkmsvv-result-row pkmsvv-egg-final-row'+(local?' pkmsvv-result-me':'')+'" data-pkmsvv-final-rank="'+p.rank+'" data-pkmsvv-total-score="'+p.points+'">'+
     '<strong class="pkmsvv-result-rank">?</strong>'+
     '<canvas class="pkmsvv-result-mon" width="48" height="48" data-pkmsvv-result-dex="'+dex+'" data-pkmsvv-result-shiny="'+(p.shiny?'1':'0')+'" aria-label="Pokémon #'+dex+'"></canvas>'+
     '<span class="pkmsvv-result-name">'+esc(p.name)+'</span>'+
     '<b class="pkmsvv-result-stat">0 '+tr('điểm','pts')+'</b>'+
+    '<div class="pkmsvv-egg-owner-caption">'+esc(p.name)+' '+tr('đã đoạt được ','collected ')+p.eggs+' '+tr('trứng, nở ra:','eggs, hatching into:')+'</div>'+
     '<div class="pkmsvv-egg-final-hatches">'+eggs+'</div></div>';
   }).join('');
   return '<section class="pkmsvv-results pkmsvv-eggrush-final" style="grid-column:1/-1" data-pkmsvv-results="eggrush" data-pkmsvv-winner="'+esc(r.standings.find(p=>p.uid===r.winner)?.name||'—')+'" data-pkmsvv-winner-uid="'+esc(r.winner||'')+'">'+
    '<h3>🥚 '+tr('TRỨNG BÍ ẨN · MỞ ĐIỂM','MYSTERY EGG REVEAL')+'</h3>'+
    '<div class="pkmsvv-results-champion" aria-live="polite">'+tr('🥚 Đang nở trứng… Ai sẽ thắng?','🥚 Eggs hatching… Who will win?')+'</div>'+
-   '<div class="pkmsvv-egg-scoring-rules">'+tr('Mew +20 · Ditto +10 · Pokémon khác +5','Mew +20 · Ditto +10 · Other Pokémon +5')+'</div>'+
+   '<div class="pkmsvv-egg-scoring-rules">'+tr('Mew 20 · Ditto 10 · Pokémon khác 5 · Shiny ×2','Mew 20 · Ditto 10 · Other Pokémon 5 · Shiny ×2')+'</div>'+
    '<div class="pkmsvv-results-list">'+rows+'</div></section>';
  }
  function reveal(root){
@@ -514,7 +519,7 @@ G.EggRush=(()=>{
     const cv=egg.querySelector('canvas[data-pkmsvv-hatch-dex]'),score=Number(egg.dataset.pkmsvvEggScore)||5;
     const record=labels.find(x=>x.row===egg.closest('.pkmsvv-egg-final-row'));
     if(cv&&G.UI?.sprite){
-     try{G.UI.sprite(cv,Number(cv.dataset.pkmsvvHatchDex),{hero:true,lively:false});}catch(_){}
+     try{G.UI.sprite(cv,Number(cv.dataset.pkmsvvHatchDex),{hero:true,lively:false,shiny:cv.dataset.pkmsvvHatchShiny==='1'});}catch(_){}
     }
     egg.classList.add('pkmsvv-egg-revealed');
     if(record){record.points+=score;record.stat.textContent=record.points+' '+tr('điểm','pts');}
