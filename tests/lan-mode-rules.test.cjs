@@ -47,3 +47,45 @@ test('Survival eggs hatch and grant a maximum of two supports independently for 
  for(const p of h.players){p.dead=true;p.hp=0;}
  h.step(10,190);assert.equal(h.players.every(p=>p.dead),true,'Survival never inherits Egg Rush respawns');
 });
+
+test('Issue #8: tenth successfully claimed scoring egg ends once with four ranked Pokémon portraits',()=>{
+ const {G,players}=setup('eggrush');
+ const counts=[0,0,0,0],results=[];
+ const owners=[0,1,2,3,0,1,2,3,0,1];
+ for(let i=0;i<9;i++){
+  const n=i+100,uid='p'+owners[i];
+  G.EggRush.onEvent(['er','spawn',n,2000+i*40,1000]);
+  G.EggRush.onEvent(['er','take',n,uid,175,++counts[owners[i]],i+1]);
+ }
+ G.EggRush.update(.01,11,players,r=>results.push(r));
+ assert.equal(results.length,0);
+ G.EggRush.onEvent(['er','spawn',109,2400,1000]);
+ G.EggRush.onEvent(['er','take',109,'p1',175,++counts[1],12]);
+ G.EggRush.update(.01,12,players,r=>results.push(r));
+ assert.equal(results.length,1);
+ assert.equal(results[0].collected,10);
+ assert.equal(results[0].standings.length,4);
+ assert.equal(new Set(results[0].standings.map(p=>p.uid)).size,4);
+ const html=G.EggRush.html(results[0]);
+ assert.equal((html.match(/class="pkmsvv-result-mon"/g)||[]).length,4);
+ assert.equal((html.match(/data-pkmsvv-result-dex="25"/g)||[]).length,4);
+ assert.match(html,/pkmsvv-results-list/);
+ G.EggRush.update(.2,13,players,r=>results.push(r));
+ G.EggRush.onEvent(['er','spawn',110,2440,1000]);
+ G.EggRush.onEvent(['er','take',110,'p0',175,4,14]);
+ assert.equal(results.length,1);
+ assert.equal(G.EggRush.collected,10,'cannot score another egg after final result');
+});
+test('Issue #8: six eggs for a single trainer wins early; deadline remains fallback',()=>{
+ const h=setup('eggrush'),finished=[];
+ for(let i=0;i<6;i++){
+  h.G.EggRush.onEvent(['er','spawn',200+i,i*90,1000]);
+  h.G.EggRush.onEvent(['er','take',200+i,'p2',175,i+1,i+1]);
+ }
+ h.G.EggRush.update(.01,6,h.players,r=>finished.push(r));
+ assert.equal(finished.length,1);assert.equal(finished[0].winner,'p2');
+ assert.equal(finished[0].collected,6);
+ const deadline=setup('eggrush'),out=[];
+ deadline.G.EggRush.update(.01,720,deadline.players,r=>out.push(r));
+ assert.equal(out.length,1);assert.equal(out[0].collected,0);
+});
