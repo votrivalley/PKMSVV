@@ -145,9 +145,22 @@ int main(int argc,char **argv) {
         failure("Open this NRO using Atmosphere Homebrew Menu, in full-RAM mode.");
         consoleExit(NULL);return 1;
     }
-    if (R_FAILED(fsdevMountSdmc())) {
-        failure("Cannot access microSD.");consoleExit(NULL);return 1;
+    // libnx's default __appInit already calls fsdevMountSdmc(). Calling it
+    // again can fail because "sdmc" is registered, even though SD is usable.
+    // Reuse that mount and check actual access instead of trusting a second
+    // mount's return code (which can misleadingly mean OutOfMemory).
+    Result sdMountResult = 0;
+    if (!fsdevGetDeviceFileSystem("sdmc"))
+        sdMountResult = fsdevMountSdmc();
+    DIR *sdRoot = opendir("sdmc:/");
+    if (!sdRoot) {
+        int sdErrno = errno;
+        printf("microSD probe failed: mount result 0x%08X; errno %d\n",
+               (unsigned)sdMountResult, sdErrno);
+        failure("Cannot read microSD root. Check the card and Atmosphere's SD access.");
+        consoleExit(NULL);return 1;
     }
+    closedir(sdRoot);
     if (R_FAILED(romfsInit())) {
         failure("Game resources inside the NRO cannot be mounted.");consoleExit(NULL);return 1;
     }

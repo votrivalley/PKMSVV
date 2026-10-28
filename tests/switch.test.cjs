@@ -51,3 +51,19 @@ test('Switch NRO includes runtime and game assets and preserves save data',()=>{
  assert.match(workflow,/PKMSVV-Switch-One-File-NRO/);
  assert.match(workflow,/sha256sum -c/);
 });
+
+
+test('Switch boot reuses libnx automatic SD mount and probes real access',()=>{
+ const c=fs.readFileSync(path.join(root,'switch/nro-forwarder/source/main.c'),'utf8');
+ const init=c.indexOf('fsdevGetDeviceFileSystem("sdmc")');
+ const mount=c.indexOf('fsdevMountSdmc()',init);
+ const read=c.indexOf('opendir("sdmc:/")',mount);
+ assert.ok(init>=0&&mount>init&&read>mount,
+  'Reuse libnx automatic mount first, then read the real SD root');
+ assert.doesNotMatch(c,/if\s*\(\s*R_FAILED\s*\(\s*fsdevMountSdmc\(\)\s*\)\s*\)/,
+  'Never treat an already-mounted SD card as a failure');
+ assert.ok(c.includes('closedir(sdRoot)'), 'Successful SD probe must close the directory');
+ assert.ok(c.includes('mount result 0x%08X; errno %d'),
+  'Real errors must show diagnostic codes');
+ assert.ok(c.includes('Nothing was removed from the Switch save folder.'));
+});

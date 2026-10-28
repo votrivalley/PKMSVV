@@ -33,3 +33,8 @@ Không cần tải thêm Brewser, không cần gõ URL, không cần tạo NSP.
 - Brewser (MPL-2.0): https://github.com/natureglass/Brewser
 - NRO tự giải nén engine được tải từ release chính thức, checksum SHA-256
   được cố định/kiểm tra tại workflow GitHub.
+
+## Sửa lỗi microSD (Switch NRO Beta)
+- Bản đầu có lỗi gắn lại SD khi libnx đã gắn sẵn; dễ hiện `Cannot access microSD` dù thẻ bình thường.
+- Bản sửa sẽ dùng ổ `sdmc:/` đã được gắn và thử đọc thư mục gốc trước khi tiếp tục.
+- Không cần format thẻ, gỡ phần mềm, hay xóa save. Khi cập nhật chỉ thay file `sd:/switch/PKMSVV.nro`.
