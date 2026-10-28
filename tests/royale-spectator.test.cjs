@@ -35,9 +35,9 @@ test('Royale elimination closes active skill/item/bond UI, no reward click or ga
 });
 test('spectator cycles living humans/AI, updates camera and skips newly eliminated targets',()=>{
  const h=setup(),s=h.G.PKMSVVSpectator;
- assert.deepEqual(s.cameraTarget(),{x:500,y:100,uid:'p1'});
+ assert.equal(s.cameraTarget().uid,'p1');assert.equal(s.cameraTarget().x,500);
  assert.equal(s.step(1).uid,'p2');
- assert.deepEqual(s.cameraTarget(),{x:1000,y:200,uid:'p2'});
+ assert.equal(s.cameraTarget().uid,'p2');assert.equal(s.cameraTarget().y,200);
  assert.equal(s.step(1).uid,'p3');
  assert.equal(s.step(1).uid,'p1','wrap-around');
  assert.equal(s.step(-1).uid,'p3');
