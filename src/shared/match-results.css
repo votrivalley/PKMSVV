@@ -54,3 +54,12 @@
  .pkmsvv-egg-hatched-mon{width:33px;height:33px}
  .pkmsvv-egg-reveal.pkmsvv-egg-revealed{min-height:45px}
 }
+
+
+/* v1.5.34 — named trainer summary and readable addition of individual egg points. */
+.pkmsvv-egg-owner-caption{grid-column:1/-1;padding:1px 3px 4px;color:#f6e7b4;font-weight:700;font-size:clamp(11px,1.6vw,14px);line-height:1.25}
+.pkmsvv-egg-final-hatches{grid-column:1/-1;padding-left:6px;gap:10px}
+.pkmsvv-egg-reveal.pkmsvv-egg-revealed:not(:last-child)::after{content:"+";position:absolute;right:-10px;top:45%;color:#ffe7a1;font-size:12px;font-weight:800}
+.pkmsvv-egg-shiny.pkmsvv-egg-revealed{border-color:#ffd966;background:rgba(159,123,19,.25);box-shadow:0 0 7px rgba(255,218,79,.3)}
+.pkmsvv-egg-shiny .pkmsvv-egg-hatched-label{color:#ffe78d;font-weight:800}
+@media(max-height:510px){.pkmsvv-egg-owner-caption{font-size:11px;padding:0 2px 2px}.pkmsvv-egg-final-hatches{gap:8px}}
