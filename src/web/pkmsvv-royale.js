@@ -39,14 +39,16 @@ G.Royale=(()=>{
  function intensity(time){const t=sec(time);return {density:Math.min(2.55,.50+Math.pow(Math.max(0,t-45)/240,1.1)*.38),hp:1+Math.min(2.5,Math.max(0,t-85)/270),dmg:1+Math.min(1.75,Math.max(0,t-90)/390)};}
  function results(players,time){
   const t=sec(time),alive=new Set(players.filter(p=>p&&!p.dead).map(p=>p.uid)),winner=alive.size===1?[...alive][0]:null;
-  const standings=roster.map(m=>{const duration=alive.has(m.uid)?t:(fallen[m.uid]===undefined?t:fallen[m.uid]);return {uid:m.uid,name:m.name,time:duration,points:duration*10+(winner===m.uid?1000:0),win:winner===m.uid};})
-   .sort((a,b)=>b.points-a.points||b.time-a.time||a.name.localeCompare(b.name));
+  const standings=roster.map(m=>{const duration=alive.has(m.uid)?t:(fallen[m.uid]===undefined?t:fallen[m.uid]);return {uid:m.uid,name:m.name,dex:m.dex,time:duration,points:duration*10+(winner===m.uid?1000:0),win:winner===m.uid};})
+   .sort((a,b)=>b.points-a.points||b.time-a.time||a.name.localeCompare(b.name)||a.uid.localeCompare(b.uid));
   return {winner,standings,finishedAt:t};
  }
  function check(players,time,callback){
-  if(!active||outcome||time<6)return false;
+  if(!active||outcome||roster.length<2)return false;
   const map=new Map(players.filter(Boolean).map(p=>[p.uid,p]));
-  for(const m of roster){const p=map.get(m.uid);if((!p||p.dead)&&fallen[m.uid]===undefined)fallen[m.uid]=sec(time);}
+  // Wait for full roster installation, not a fixed six-second warmup.
+  if(roster.some(m=>!map.has(m.uid)))return false;
+  for(const m of roster){const p=map.get(m.uid);if(p.dead&&fallen[m.uid]===undefined)fallen[m.uid]=sec(time);}
   const alive=roster.filter(m=>{const p=map.get(m.uid);return p&&!p.dead;});
   if(alive.length!==lastAlive){lastAlive=alive.length;if(G.UI&&G.UI.toast)G.UI.toast(L('Sống Còn: còn ','Survival: ')+alive.length+'/'+roster.length+L(' người',' alive'),1700);}
   if(alive.length>1)return false;
@@ -55,9 +57,19 @@ G.Royale=(()=>{
  function finish(r){if(r&&Array.isArray(r.standings)){outcome=r;active=true;}}
  function html(r){
   if(!r||!Array.isArray(r.standings))return '';
-  return '<div style="grid-column:1/-1;line-height:1.6"><b class="gold">'+L('BẢNG XẾP HẠNG SỐNG CÒN','SURVIVAL RESULTS')+'</b>'+
-  '<div style="font-size:12px;color:#dbe8fc">'+L('Điểm = giây sống sót × 10; người thắng +1.000. Trận beta chưa tính xếp hạng trực tuyến.','Score = seconds survived × 10; winner +1,000. Beta matches are not part of online rankings.')+'</div>'+
-  r.standings.map((p,i)=>'<div style="display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #526589;padding:5px 0"><span>#'+(i+1)+' '+esc(p.name)+(p.win?' 🏆':'')+'</span><b>'+p.points+' '+L('điểm','pts')+'</b></div>').join('')+'</div>';
+  const champion=r.standings.find(p=>p.uid===r.winner);
+  return '<section class="pkmsvv-results" data-pkmsvv-results="royale" style="grid-column:1/-1">'+
+   '<h3>🏆 '+L('KẾT QUẢ SỐNG CÒN','SURVIVAL RESULTS')+'</h3>'+
+   '<div class="pkmsvv-results-champion">'+(champion?'👑 '+L('Vô địch: ','Winner: ')+esc(champion.name):L('Hòa · Không còn ai sống','Draw · No survivors'))+'</div>'+
+   '<div class="pkmsvv-results-list">'+r.standings.map((p,i)=>{
+    const dex=dexOf(p.dex),local=p.uid===G.Social?.uid;
+    const mm=Math.floor(p.time/60)+':'+String(p.time%60).padStart(2,'0');
+    return '<div class="pkmsvv-result-row'+(local?' pkmsvv-result-me':'')+(p.win?' pkmsvv-result-winner':'')+'">'+
+     '<strong class="pkmsvv-result-rank">#'+(i+1)+'</strong>'+
+     '<canvas class="pkmsvv-result-mon" width="48" height="48" data-pkmsvv-result-dex="'+dex+'" aria-label="Pokémon #'+dex+'"></canvas>'+
+     '<span class="pkmsvv-result-name">'+esc(p.name)+'</span>'+
+     '<b class="pkmsvv-result-stat">'+mm+' · '+p.points+' '+L('đ','pts')+'</b></div>';
+   }).join('')+'</div></section>';
  }
  function draw(ctx,w,h,players){
   if(!active||!ctx)return;
