@@ -1,9 +1,19 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),root=path.resolve(__dirname,'..'),base=path.join(root,'vendor/pokesurvivor');
 function patch(file,a,b){const p=path.join(base,file),s=fs.readFileSync(p,'utf8').replace(/\r\n/g,'\n');if(s.split(a).length!==2)throw Error('Arena source drift '+file+': '+a.slice(0,70));fs.writeFileSync(p,s.replace(a,b));}
-for(const file of ['pkmsvv-arena','pkmsvv-match-metrics','pkmsvv-death-hud'])fs.copyFileSync(path.join(root,'src/web',file+'.js'),path.join(base,'js/net',file+'.js'));
+for(const file of ['pkmsvv-arena','pkmsvv-match-metrics','pkmsvv-death-hud','pkmsvv-spectator'])fs.copyFileSync(path.join(root,'src/web',file+'.js'),path.join(base,'js/net',file+'.js'));
 patch('dev.html','<script defer src="js/net/pkmsvv-egg-rush.js"></script>',
- '<script defer src="js/net/pkmsvv-egg-rush.js"></script>\n<script defer src="js/net/pkmsvv-arena.js"></script>\n<script defer src="js/net/pkmsvv-match-metrics.js"></script>\n<script defer src="js/net/pkmsvv-death-hud.js"></script>');
+ '<script defer src="js/net/pkmsvv-egg-rush.js"></script>\n<script defer src="js/net/pkmsvv-arena.js"></script>\n<script defer src="js/net/pkmsvv-match-metrics.js"></script>\n<script defer src="js/net/pkmsvv-death-hud.js"></script>\n<script defer src="js/net/pkmsvv-spectator.js"></script>');
+// A dead Royale trainer spectates living trainers instead of being stuck
+// at their corpse. View control is LOCAL; authoritative match keeps running.
+patch('js/game.js','    G.EggRush.begin(coop);G.Arena.begin(coop);G.MatchMetrics.reset();',
+ '    G.EggRush.begin(coop);G.Arena.begin(coop);G.MatchMetrics.reset();G.PKMSVVSpectator.reset();');
+patch('js/game.js',
+ '    G.Camera.follow(pl.x, pl.y, dt);\n    G.World.update(dt, G.Camera);',
+ '    const spectator=G.PKMSVVSpectator.cameraTarget();\n    G.Camera.follow(spectator?.x??pl.x,spectator?.y??pl.y,dt);\n    G.World.update(dt, G.Camera);');
+patch('js/game.js',
+ "    if (G.Coop.active && pl && state !== 'ui' && state !== 'over') G.Coop.tick(dt);",
+ "    if (G.Coop.active && pl && state !== 'ui' && state !== 'over') G.Coop.tick(dt);\n    G.PKMSVVSpectator.tick();");
 // The original Rift exits without clearing World.arena, causing a permanent
 // disabled red circle. It also revives fallen multiplayer trainers on exit.
 patch('js/systems/rift.js',
