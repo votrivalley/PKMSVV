@@ -167,12 +167,12 @@ if(process.env.PKMSVV_LOCAL_PWA==='1'){
  }
 // Voice is Web-only and strictly limited to cooperative rooms (2–4 players).
 
-// Offline PWA (Cloudflare, GitHub Pages and iOS): the upstream automatic updater
-// fetches version.json and forcibly reloads after 5 s, which can loop when a
-// previously cached version.json disagrees with the newly deployed JS.
-// Static offline clients receive new assets on their next normal navigation.
-// Never force-reload or interrupt a run, and NEVER clear a player's local save.
-if(process.env.PKMSVV_LOCAL_PWA==='1'){
+// Offline PWA and LAN/standalone-AI use the same no-reload update policy.
+// The upstream updater compares version.json with app.min.js and can repeatedly
+// reload the /ai/game/ build because its <base href="/game/"> points at the
+// different /game/version.json. LAN/AI also must never interrupt a room or run.
+// Only use newly deployed assets on the next normal launch; preserve local saves.
+if(process.env.PKMSVV_LOCAL_PWA==='1'||process.env.PKMSVV_LAN_BUILD==='1'){
  const updaterFile=path.join(game,'js','core','updater.js');
  const upstream=fs.readFileSync(updaterFile,'utf8');
  if(!upstream.includes('G.Updater = (() => {')||
