@@ -120,20 +120,63 @@ test('Issue #8: tenth successfully claimed scoring egg ends once with four ranke
  assert.equal(results.length,1);
  assert.equal(G.EggRush.collected,10,'cannot score another egg after final result');
 });
-test('Issue #8: six eggs for a single trainer wins early; deadline remains fallback',()=>{
+test('v1.5.33 six eggs no longer auto-win: reveal after 10 or 12m',()=>{
  const h=setup('eggrush'),finished=[];
  for(let i=0;i<6;i++){
   h.G.EggRush.onEvent(['er','spawn',200+i,i*90,1000]);
   h.G.EggRush.onEvent(['er','take',200+i,'p2',175,i+1,i+1]);
  }
  h.G.EggRush.update(.01,6,h.players,r=>finished.push(r));
- assert.equal(finished.length,1);assert.equal(finished[0].winner,'p2');
- assert.equal(finished[0].collected,6);
+ assert.equal(finished.length,0,'six eggs do not predetermine the winner');
+ assert.equal(h.G.EggRush.pets.filter(p=>p.hatch).length,0,'all six still eggs');
+ for(let i=6;i<10;i++){
+  h.G.EggRush.onEvent(['er','spawn',200+i,i*90,1000]);
+  h.G.EggRush.onEvent(['er','take',200+i,'p0',151,i-5,i+1]);
+ }
+ h.G.EggRush.update(.01,11,h.players,r=>finished.push(r));
+ assert.equal(finished.length,1);
+ assert.equal(finished[0].winner,'p0','four Mew eggs beat six ordinary eggs');
+ assert.equal(finished[0].standings[0].points,80);
+ assert.equal(finished[0].standings.find(p=>p.uid==='p2').points,30);
+ assert.equal(finished[0].collected,10);
  const deadline=setup('eggrush'),out=[];
  deadline.G.EggRush.update(.01,720,deadline.players,r=>out.push(r));
  assert.equal(out.length,1);assert.equal(out[0].collected,0);
 });
-
+test('v1.5.33 Mew 20 Ditto 10 others 5, all four ranked and no early reveal',()=>{
+ const h=setup('eggrush'),result=[];
+ const owned=[
+  ['p0',172],['p0',447],['p0',173],['p0',35],['p0',360],['p0',438],
+  ['p1',151],['p1',132],['p2',151],['p3',175]
+ ];
+ const count={};
+ for(let i=0;i<owned.length;i++){
+  const [uid,dex]=owned[i];count[uid]=(count[uid]||0)+1;
+  h.G.EggRush.onEvent(['er','spawn',900+i,i*30,1000]);
+  h.G.EggRush.onEvent(['er','take',900+i,uid,dex,count[uid],i+1]);
+  h.G.EggRush.onEvent(['er','hatch',900+i]);
+ }
+ assert.equal(h.G.EggRush.pets.length,10);
+ assert.ok(h.G.EggRush.pets.every(p=>!p.hatch&&!p.anim),'no early Pokémon animations');
+ h.G.EggRush.update(.01,11,h.players,r=>result.push(r));
+ const r=result[0];assert.ok(r);
+ const a=r.standings.find(p=>p.uid==='p0'),b=r.standings.find(p=>p.uid==='p1'),m=r.standings.find(p=>p.uid==='p2');
+ assert.equal(a.eggs,6);assert.equal(a.points,30);
+ assert.equal(b.eggs,2);assert.equal(b.points,30);
+ assert.equal(m.eggs,1);assert.equal(m.points,20);
+ assert.equal(r.standings[0].uid,'p0','equal points tie breaks on more eggs');
+ assert.equal(r.standings.length,4);
+ assert.deepEqual([...r.standings.map(p=>p.rank)], [1,2,3,4]);
+ const html=h.G.EggRush.html(r);
+ assert.match(html,/pkmsvv-egg-final-hatches/);
+ assert.equal((html.match(/class="pkmsvv-egg-reveal"/g)||[]).length,10);
+ assert.equal((html.match(/class="pkmsvv-result-mon"/g)||[]).length,4);
+ assert.match(html,/data-pkmsvv-hatch-dex="151"/);
+ assert.match(html,/data-pkmsvv-hatch-dex="132"/);
+ assert.match(html,/Trứng chưa nở/);
+ assert.equal((html.match(/class="pkmsvv-result-rank">\?/g)||[]).length,4,
+  'rank hidden until the sequential hatch animation has finished');
+});
 test('Issue #8: simultaneous last-egg claims in one Host frame cannot score 11',()=>{
  const h=setup('eggrush'),G=h.G,players=h.players,finished=[];
  const owners=[0,1,2,3,0,1,2,3,0],counts=[0,0,0,0];
