@@ -32,22 +32,64 @@ test('Egg Rush revives host and AI at 8 seconds for unlimited deaths',()=>{
   for(const p of h.players)assert.equal(p.hp,50);
  }
 });
-test('Survival eggs hatch and grant a maximum of two supports independently for every trainer',()=>{
- const h=setup('royale');assert.equal(h.G.EggRush.active,false);assert.equal(h.G.EggRush.enabled,true);
- for(let minute=1;minute<=3;minute++){
-  h.step(.01,minute*60);const n=h.G.EggRush.nests.at(-1);
-  const p=h.players[0];p.x=n.x;p.y=n.y;h.step(.01,minute*60+.1);
+test('Survival receives one nest every 30s, keeps two own supports and no respawn',()=>{
+ const h=setup('royale');
+ assert.equal(h.G.EggRush.active,false);assert.equal(h.G.EggRush.enabled,true);
+ for(let slot=1;slot<=3;slot++){
+  const t=slot*30;h.step(.01,t);
+  assert.equal(h.G.EggRush.nests.filter(n=>!n.taken).length,1);
+  const n=h.G.EggRush.nests.find(n=>!n.taken),p=h.players[0];
+  if(slot<3){p.x=n.x;p.y=n.y;h.step(.01,t+.1);}
+  else{
+   assert.equal(h.G.EggRush.pets.filter(q=>q.uid==='p0').length,2);
+   p.x=n.x;p.y=n.y;h.step(.01,t+.1);
+   assert.equal(n.taken,false,'trainer already owns two supports');
+   const guest=h.players[1];guest.x=n.x;guest.y=n.y;h.step(.01,t+.2);
+  }
  }
  assert.equal(h.G.EggRush.pets.filter(p=>p.uid==='p0').length,2);
- assert.equal(h.G.EggRush.nests.at(-1).taken,false,'third egg not claimed by trainer at cap');
- const n=h.G.EggRush.nests.at(-1),p=h.players[1];p.x=n.x;p.y=n.y;h.step(.01,181);
  assert.equal(h.G.EggRush.pets.filter(p=>p.uid==='p1').length,1);
- h.step(46,182);assert.equal(h.G.EggRush.pets.every(p=>p.hatch),true);
- assert.equal(h.G.EggRush.objective(h.players[0]),null,'AI at support cap returns to independent survival');
+ h.step(46,140);assert.equal(h.G.EggRush.pets.every(p=>p.hatch),true);
+ assert.equal(h.G.EggRush.objective(h.players[0]),null);
  for(const p of h.players){p.dead=true;p.hp=0;}
- h.step(10,190);assert.equal(h.players.every(p=>p.dead),true,'Survival never inherits Egg Rush respawns');
+ h.step(10,150);assert.equal(h.players.every(p=>p.dead),true);
 });
-
+test('Co-op and Royale support mini HP bars reflect actual Host damage and synchronized down',()=>{
+ for(const mode of ['coop','royale']){
+  const h=setup(mode),t=mode==='coop'?60:30;h.step(.01,t);
+  const n=h.G.EggRush.nests.find(n=>!n.taken),player=h.players[0];
+  assert.ok(n,mode+' should create an eligible support nest');
+  player.x=n.x;player.y=n.y;h.step(.01,t+.1);
+  const pet=h.G.EggRush.pets[0];
+  assert.ok(pet.maxHp>=50&&pet.maxHp<=80,'real support health 50–80% of trainer');
+  h.G.EggRush.onEvent(['er','hatch',pet.id]);
+  const damage={x:pet.x,y:pet.y,r:12,dmg:60,dead:false,remote:false};
+  h.G.EnemyMgr.all=()=>[damage];
+  h.G.EggRush.update(.1,t+1,h.players,()=>{});
+  assert.ok(pet.hp<pet.maxHp,'Host applied enemy damage, not cosmetic');
+  const hit=h.events.find(e=>e[1]==='hp');
+  assert.ok(hit&&hit[2]===pet.id&&hit[3]===pet.hp,'Host broadcast actual support HP');
+  const fills=[],ctx={save(){},restore(){},beginPath(){},ellipse(){},fill(){},stroke(){},
+   fillRect(...v){fills.push(v);}};
+  h.G.Camera.sees=()=>true;h.G.EggRush.draw(ctx);
+  assert.ok(fills.some(v=>v[2]===28&&v[3]===3),'HP track visible');
+  assert.ok(fills.some(v=>v[2]<28&&v[2]>0&&v[3]===3),'damaged HP fill visible');
+  const remote=setup(mode);remote.G.Coop.isHost=false;
+  for(const ev of h.events.filter(ev=>['spawn','take'].includes(ev[1])))remote.G.EggRush.onEvent(ev);
+  remote.G.EggRush.onEvent(['er','hatch',pet.id]);
+  remote.G.EggRush.onEvent(hit);
+  assert.equal(remote.G.EggRush.pets[0].hp,pet.hp,'guest receives Host HP');
+  remote.G.EggRush.onEvent(hit);
+  assert.equal(remote.G.EggRush.pets[0].hp,pet.hp,'duplicated HP packet ignored');
+  for(let j=0;j<12&&h.G.EggRush.pets.some(q=>q.id===pet.id);j++){
+   pet.hurtCd=0;h.G.EggRush.update(.1,t+2+j,h.players,()=>{});
+  }
+  assert.equal(h.G.EggRush.pets.some(q=>q.id===pet.id),false,'fainted support releases slot');
+  const down=h.events.find(e=>e[1]==='down'&&e[2]===pet.id);assert.ok(down);
+  remote.G.EggRush.onEvent(down);
+  assert.equal(remote.G.EggRush.pets.some(q=>q.id===pet.id),false,'guest removes fallen support');
+ }
+});
 test('Issue #8: tenth successfully claimed scoring egg ends once with four ranked Pokémon portraits',()=>{
  const {G,players}=setup('eggrush');
  const counts=[0,0,0,0],results=[];
