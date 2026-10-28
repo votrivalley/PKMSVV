@@ -106,9 +106,10 @@ G.EggRush=(()=>{
   // The authoritative 'take' event marks the nest taken. Pre-marking
    // here would make onEvent reject the Host's own legitimate claim.
    score[pl.uid]=(score[pl.uid]||0)+1;at[pl.uid]=time;
-  // Each egg's identity is committed by Host at pickup. 4% Mew, 8% Ditto;
-  // remaining 88% draw one of the ordinary Pokémon already used by the game.
-  const roll=rand(n.id*413);
+  // Only Host draws the sealed identity at pickup (4% Mew, 8% Ditto).
+  // Do NOT derive competitive odds from the publicly shared room seed;
+  // other clients must not be able to predict a rare egg mid-match.
+  const roll=active?Math.random():rand(n.id*413);
   const dex=active?(roll<.04?151:roll<.12?132:EGG_SPECIES[Math.min(EGG_SPECIES.length-1,Math.floor((roll-.12)/.88*EGG_SPECIES.length))]):
    EGG_SPECIES[Math.floor(roll*EGG_SPECIES.length)];
   if(active)secretEggs.set(n.id,dex);
