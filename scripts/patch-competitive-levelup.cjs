@@ -47,7 +47,7 @@ patch('js/net/coop.js',
  '    if(pkmsvvCompetitive()){',
  '      ++levelSeq;levelNow=level;seenSeq=levelSeq;',
  "      emit(['lu',level,levelSeq]);flushAll();",
- '      api.levelStart(level);return; // competitive: no shared waiting barrier',
+ '      api.levelStart(level);G.LanAI?.levelUp?.(level,levelSeq);return; // AI pick legally, no shared waiting barrier',
  '    }',
  '    waiting = new Set([me]);'
  ].join('\n'));
