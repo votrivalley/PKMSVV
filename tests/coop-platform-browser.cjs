@@ -63,6 +63,18 @@ async function main(){
     await page.waitForTimeout(200);
     if(mode==='eggrush')assert.equal(await page.evaluate(()=>G.Rift.drawable()===null),true);
    }
+   if(mode==='eggrush')await page.evaluate(()=>{
+    // Inject two legal Host-owned hidden eggs to exercise real end-screen
+    // hatch animation, including Mew and Ditto on Android/Web browsers.
+    const uid=G.Game.player.uid,t=G.Game.st.time||600;
+    for(const [i,dex] of [[0,151],[1,132]]){
+     const id=800000+i;
+     G.EggRush.onEvent(['er','spawn',id,5000+i*40,5000]);
+     G.EggRush.onEvent(['er','take',id,uid,dex,i+1,t]);
+    }
+    if(G.EggRush.pets.filter(p=>p.uid===uid&&p.hatch).length)
+     throw Error('competitive eggs hatched before final score');
+   });
    await page.evaluate(()=>{for(const p of G.Coop.players()){p.dead=true;p.hp=0;}if(G.EggRush.active)G.Game.debugTime(720);});
    await page.waitForFunction(()=>G.Game.state==='over',null,{timeout:10000});
    if(mode==='royale'||mode==='eggrush'){
@@ -75,6 +87,25 @@ async function main(){
     assert.equal(podium.count,podium.expected,'every finisher must have a real Pokémon sprite canvas');
     assert.equal(podium.rows,podium.expected,'all ranks visible in the scrollable result list');
     assert.ok(podium.dex.every(n=>Number.isInteger(n)&&n>0));
+    if(mode==='eggrush'){
+     await page.waitForFunction(()=>document.querySelector('[data-pkmsvv-results="eggrush"]')?.classList.contains('pkmsvv-egg-scoring-done'),null,{timeout:12000});
+     const reveal=await page.evaluate(()=>{
+      const root=document.querySelector('[data-pkmsvv-results="eggrush"]');
+      return {
+       rows:root.querySelectorAll('.pkmsvv-egg-final-row').length,
+       hatched:root.querySelectorAll('.pkmsvv-egg-revealed').length,
+       m:!!root.querySelector('[data-pkmsvv-hatch-dex="151"]'),
+       d:!!root.querySelector('[data-pkmsvv-hatch-dex="132"]'),
+       ranks:[...root.querySelectorAll('.pkmsvv-result-rank')].map(e=>e.textContent),
+       winner:root.querySelector('.pkmsvv-results-champion')?.textContent||''
+      };
+     });
+     assert.equal(reveal.rows,4);
+     assert.ok(reveal.hatched>=2,'Mew and Ditto eggs hatched on actual result UI');
+     assert.ok(reveal.m&&reveal.d);
+     assert.deepEqual(reveal.ranks,['#1','#2','#3','#4']);
+     assert.match(reveal.winner,/Vô địch|Winner/);
+    }
    }
    await page.waitForFunction(()=>G.Social.room.open&&G.Social.room.members.every(p=>!p.bot));
    await page.click('#btn-again');await page.waitForFunction(()=>G.UI.isOpen('scr-lobby'));
