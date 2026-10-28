@@ -31,9 +31,12 @@ let main=fs.readFileSync(path.join(game,'index.html'),'utf8');
 if(!main.includes('</head>')||!main.includes('js/app.min.js'))
  throw Error('Incomplete compiled LAN game HTML');
 const mobileCSS=fs.readFileSync(path.join(root,'src/android/compact-landscape.css'),'utf8');
+// Upstream CSP script-src 'self' blocks inline scripts, including boot flags.
+fs.writeFileSync(path.join(web,'js/ui/pkmsvv-android-root-config.js'),
+ "window.PKMSVV_ANDROID_LOCAL_LAN=true;window.PKMSVV_STANDALONE_AI_AVAILABLE=true;\\n");
 main=main.replace('</head>',
  '<meta name="pkmsvv-platform" content="android-pc-lan-shared">'+
- '<script>window.PKMSVV_ANDROID_LOCAL_LAN=true;window.PKMSVV_STANDALONE_AI_AVAILABLE=true;</script>'+
+ '<script src="js/ui/pkmsvv-android-root-config.js"></script>'+
  '<style id="pkmsvv-android-compact-style">'+mobileCSS+'</style></head>');
 fs.writeFileSync(idx,main);
 fs.copyFileSync(path.join(root,'src/android/full-lan-ui.js'),

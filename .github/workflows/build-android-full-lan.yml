@@ -143,7 +143,8 @@ jobs:
           test -s mobile/www/js/app.min.js
           test -s mobile/www/js/ui/pkmsvv-full-lan-ui.js
           test ! -e mobile/www/ai/game/index.html
-          grep -q 'PKMSVV_ANDROID_LOCAL_LAN=true' mobile/www/index.html
+          grep -q 'pkmsvv-android-root-config.js' mobile/www/index.html
+          grep -q 'PKMSVV_ANDROID_LOCAL_LAN=true' mobile/www/js/ui/pkmsvv-android-root-config.js
           grep -q 'PKMSVV_STANDALONE_AI' mobile/www/js/app.min.js
           du -sh mobile/www/assets
       - name: Build updateable signed Android FULL LAN release APK

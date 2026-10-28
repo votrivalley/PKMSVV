@@ -6,7 +6,7 @@ test('FULL Android game included, rather than tiny LAN launcher',()=>{
  for(const p of ['index.html','assets','js','css','js/ui/pkmsvv-full-lan-ui.js','LICENSE-NONCOMMERCIAL.md'])
   assert.ok(fs.existsSync(path.join(web,p)),'Missing '+p);
  const html=fs.readFileSync(path.join(web,'index.html'),'utf8');
- assert.match(html,/app\.min\.js/);assert.match(html,/PKMSVV_ANDROID_LOCAL_LAN/);
+ assert.match(html,/app\.min\.js/);assert.match(html,/pkmsvv-android-root-config\.js/);
  assert.doesNotMatch(html,/Chơi LAN: nhập IP Host/);
 });
 test('New app installs alongside old APK; save stays out of bridge',()=>{
@@ -26,7 +26,10 @@ test('native LAN plugin uses explicit private IPv4 and returnable Activity',()=>
 test('Android root is PC offline LAN/AI runtime; one live Co-op and menu',()=>{
  const html=fs.readFileSync(path.join(web,'index.html'),'utf8');
  const built=fs.readFileSync(path.join(web,'js/app.min.js'),'utf8');
- assert.match(html,/PKMSVV_ANDROID_LOCAL_LAN=true/);
+ assert.match(html,/pkmsvv-android-root-config\.js/);
+ assert.doesNotMatch(html,/<script>window\.PKMSVV_ANDROID_LOCAL_LAN/);
+ const cfg=fs.readFileSync(path.join(web,'js/ui/pkmsvv-android-root-config.js'),'utf8');
+ assert.match(cfg,/PKMSVV_ANDROID_LOCAL_LAN=true/);
  assert.match(html,/pkmsvv-android-compact-style/);
  assert.match(built,/PKMSVV_STANDALONE_AI/);
  assert.doesNotMatch(html,/<script[^>]+src="js\/ui\/pkmsvv-full-lan-ui\.js"/);
