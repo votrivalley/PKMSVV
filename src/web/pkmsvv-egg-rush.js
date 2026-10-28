@@ -1,7 +1,7 @@
 /* PKMSVV v1.5 — Egg Rush, online 4-player host-authoritative match. */
 G.EggRush=(()=>{
  const MAX_TIME=720,MAX_SCORE=10,WIN_SCORE=6,SPAWN_EVERY=60,RESPAWN_SECONDS=8,EGG_SPECIES=[172,447,173,35,360,438,175,174];
- let active=false,supportMode=false,cooperative=false,survival=false,nextSpawn=60,roster=[],nests=[],trails=new Map(),pets=[],score={},at={},laid=0,seed=1,outcome=null,transition={},levelSeen=1,killsSeen=0;
+ let active=false,supportMode=false,cooperative=false,survival=false,nextSpawn=60,roster=[],nests=[],trails=new Map(),trailDir=new Map(),pets=[],score={},at={},laid=0,seed=1,outcome=null,transition={},levelSeen=1,killsSeen=0;
  let allocation=0,retryAt=0,pendingBatch=0;const seenIds=new Set();
  const metrics={placementAttempts:0,placementFailures:0,expired:0};
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
@@ -17,7 +17,7 @@ G.EggRush=(()=>{
   survival=cfg?.mode==='royale';if(survival)nextSpawn=30;
   allocation=0;retryAt=0;pendingBatch=0;seenIds.clear();Object.assign(metrics,{placementAttempts:0,placementFailures:0,expired:0});
   roster=(active||supportMode)?(cfg.members||[]).map(m=>({uid:m.uid,name:String(m.name||'Player').slice(0,24),dex:m.dex||25,shiny:!!m.shiny})):[];
-  seed=Math.floor(Number(cfg?.seed)||1);nests=[];pets=[];trails=new Map();levelSeen=1;killsSeen=0;
+  seed=Math.floor(Number(cfg?.seed)||1);nests=[];pets=[];trails=new Map();trailDir=new Map();levelSeen=1;killsSeen=0;
   score=Object.fromEntries(roster.map(m=>[m.uid,0]));at={};laid=0;outcome=null;transition={};
   if(active||supportMode){
    G.Sprites?.preload?.([...EGG_SPECIES,...roster.map(x=>x.dex)],7500);
@@ -75,7 +75,7 @@ G.EggRush=(()=>{
    }
   }else if(ev[1]==='hatch'){
    const pet=pets.find(p=>p.id===ev[2]);
-   if(pet&&!pet.hatch){pet.hatch=true;pet.anim=new G.Sprites.Animator(pet.dex,.6,false);G.FX?.ring?.(pet.x,pet.y,8,48,'#f5de8d',.6,3);}
+   if(pet&&!pet.hatch){pet.hatch=true;pet.anim=new G.Sprites.Animator(pet.dex,.6*(G.Sprites.playerScale?.(pet.dex)||1),false);G.FX?.ring?.(pet.x,pet.y,8,48,'#f5de8d',.6,3);}
   }else if(ev[1]==='hp'){
     const pet=pets.find(p=>p.id===ev[2]);
     if(pet&&Number.isFinite(ev[3])&&Number.isSafeInteger(ev[4])&&ev[4]>pet.hpSeq){
@@ -116,9 +116,28 @@ G.EggRush=(()=>{
  function update(dt,time,players,finish){
   if((!active&&!supportMode)||outcome)return;
   for(const p of players){
-   if(!p||!p.uid)continue;
-   let trl=trails.get(p.uid);if(!trl){trl=[];trails.set(p.uid,trl);}
-   trl.unshift({x:p.x,y:p.y});if(trl.length>300)trl.length=300;
+   if(!p||!p.uid||!Number.isFinite(p.x)||!Number.isFinite(p.y))continue;
+   // Match the Solo follower trail: one waypoint per ~8 actual world pixels,
+   // not one per rendered frame (which causes jitter/teleport-like sliding).
+   let trl=trails.get(p.uid);
+   if(!trl){trl=[{x:p.x,y:p.y}];trails.set(p.uid,trl);trailDir.set(p.uid,{x:0,y:1});}
+   else{
+    const dx=p.x-trl[0].x,dy=p.y-trl[0].y,d2=dx*dx+dy*dy;
+    if(d2>480*480){
+     // Enter/exit Rift, reconnect, or other real map teleport: never glide
+     // hundreds of metres to an obsolete waypoint.
+     trl.length=0;trl.push({x:p.x,y:p.y});trailDir.set(p.uid,{x:0,y:1});
+     let n=0;
+     for(const pet of pets.filter(q=>q.uid===p.uid)){
+      const a=2*Math.PI*(++n)/(pets.filter(q=>q.uid===p.uid).length+1);
+      pet.x=p.x+Math.cos(a)*44;pet.y=p.y+Math.sin(a)*32;
+      pet.moving=false;pet.anim?.loop?.('Idle');
+     }
+    }else if(d2>=64){
+     const d=Math.sqrt(d2);trailDir.set(p.uid,{x:dx/d,y:dy/d});
+     trl.unshift({x:p.x,y:p.y});if(trl.length>90)trl.length=90;
+    }
+   }
    if(active&&(p===G.Game.player||(G.Coop.isHost&&p.lanBot))){
     if(p.dead){p.lanEggDeath=(p.lanEggDeath||0)+dt;
      if(p.lanEggDeath>=RESPAWN_SECONDS){p.revive(.5);p.lanEggDeath=0;p.invuln=Math.max(p.invuln||0,2);}}
@@ -135,17 +154,46 @@ G.EggRush=(()=>{
    const trl=trails.get(pet.uid);
    if(!trl?.length)continue;
    const siblings=owners.get(pet.uid),i=siblings.indexOf(pet);
-   const loc=trl[Math.min((i+1)*12,trl.length-1)];
+   const direction=trailDir.get(pet.uid)||{x:0,y:1};
+   const gap=48+i*30,side=(i%2?1:-1)*12,waypoint=trl[6+i*4];
+   const lead=players.find(p=>p?.uid===pet.uid);
+   const anchor=waypoint||{x:(lead?.x??trl[0].x)-direction.x*gap,
+    y:(lead?.y??trl[0].y)-direction.y*gap};
+   const tx=anchor.x-direction.y*side,ty=anchor.y+direction.x*side;
+   const dx=tx-pet.x,dy=ty-pet.y,dist=Math.hypot(dx,dy);
    const ox=pet.x,oy=pet.y;
-   pet.x+=(loc.x-pet.x)*Math.min(1,dt*10);pet.y+=(loc.y-pet.y)*Math.min(1,dt*10);
+   // Real world-units/second walking, 85% of the owner's normal speed,
+   // with the same terrain collision, short deadzone, and warp recovery as Solo.
+   const baseSpeed=Number(lead?.spd||lead?.baseSpd)||140;
+   const walkSpeed=Math.max(75,Math.min(230,baseSpeed*.85));
+   const moveDt=Math.max(0,Math.min(dt,.1));
+   let warped=false;
+   if(dist>310){
+    pet.x=(lead?.x??trl[0].x)-direction.x*gap-direction.y*side;
+    pet.y=(lead?.y??trl[0].y)-direction.y*gap+direction.x*side;
+    warped=true;
+   }else if(dist>5&&moveDt>0){
+    const step=Math.min(dist,moveDt*walkSpeed);
+    const nx=pet.x+dx/dist*step,ny=pet.y+dy/dist*step;
+    if(!G.World?.isFree||G.World.isFree(nx,ny,9)){pet.x=nx;pet.y=ny;}
+    else if(G.World.isFree(nx,pet.y,9))pet.x=nx;
+    else if(G.World.isFree(pet.x,ny,9))pet.y=ny;
+   }
    pet.age+=dt;
    if(G.Coop.isHost)pet.boost=(pet.boost||0)+advanceLevel*3+advanceKills*.65;
    if(G.Coop.isHost&&pet.age>=20&&pet.age+(pet.boost||0)>=45&&!pet.hatch){
     const event=['er','hatch',pet.id];onEvent(event);G.Coop.broadcast(event);
    }
-   const moving=Math.hypot(pet.x-ox,pet.y-oy)>.05;
-   if(pet.anim&&moving&&G.Sprites.dirFromAngle)pet.anim.dir=G.Sprites.dirFromAngle(Math.atan2(pet.y-oy,pet.x-ox));
-   pet.anim?.loop?.(moving?'Walk':'Idle');pet.anim?.update?.(dt);
+   // Always use the real Pokémon Animator (Walk/Idle frame strips), never
+   // interpolate a static image. Movement is measured in pixels per second.
+   const moving=!warped&&(Math.abs(pet.x-ox)+Math.abs(pet.y-oy))/Math.max(moveDt,1/120)>2;
+   if(pet.anim){
+    if(moving&&G.Sprites.dirFromAngle)
+     pet.anim.dir=G.Sprites.dirFromAngle(Math.atan2(pet.y-oy,pet.x-ox));
+    pet.anim.loop(moving?'Walk':'Idle',moving?Math.max(.6,walkSpeed/70):1);
+    pet.anim.update(moveDt);
+   }
+   pet.moving=moving;
    // In Co-op/Royale the Host owns support damage AND support healing.
    // Human guests must not independently buff the same support twice.
    const owner=supportMode?(G.Coop.isHost?players.find(p=>p.uid===pet.uid):null):
