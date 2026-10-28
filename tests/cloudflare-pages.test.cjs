@@ -87,10 +87,14 @@ test('Offline PWA never auto-reloads from stale version.json (safe for local sav
  const bundle=read('game/js/app.min.js');
  const worker=read('sw.js');
  const headers=read('_headers');
- assert.match(buildScript,/PKMSVV_LOCAL_PWA==='1'/);
+ assert.match(buildScript,/PKMSVV_LOCAL_PWA==='1'\|\|process\.env\.PKMSVV_LAN_BUILD==='1'/,
+  'LAN and standalone AI must share the offline no-reload policy');
  assert.match(buildScript,/upstream\.includes\('function countdown\(\)'\)/);
  assert.match(buildScript,/policy:"manual-on-next-open"/);
  assert.match(bundle,/manual-on-next-open/,'compiled offline game must contain inert updater');
+ const aiBundle=read('ai/game/js/app.min.js');
+ assert.match(aiBundle,/manual-on-next-open/,
+  'compiled standalone AI must not run the upstream 5-second update countdown');
  assert.ok(worker.includes("if(/\\/version\\.json$/i.test(url.pathname))return;"),'worker must bypass version.json fetch');
  assert.match(headers,/\/game\/version\.json\n\s+Cache-Control: no-store, max-age=0/);
  assert.doesNotMatch(worker,/localStorage\.clear|indexedDB\.deleteDatabase/);
