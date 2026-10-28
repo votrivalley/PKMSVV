@@ -29,20 +29,20 @@ async function prepare(page,url){await page.goto(url);await page.waitForFunction
      if(ev[0]==='er'&&ev[1]==='spawn')spawnWitness.push({id:ev[2],valid:G.Arena.validSpawn(ev[3],ev[4]),visible:G.Arena.visible(ev[3],ev[4],G.Coop.players(),70)});
      return broadcast.call(this,ev);
     };G.Game.debugTime(30);
-   });await host.waitForFunction(()=>G.EggRush.nests.filter(n=>!n.taken).length===Math.min(5,G.Coop.players().length*2),null,{timeout:10000});
-   const nests=await host.evaluate(()=>G.EggRush.nests.filter(n=>!n.taken).map(n=>n.id));
+   });await host.waitForFunction(()=>window.spawnWitness.length>=1,null,{timeout:10000});
+   const nests=await host.evaluate(()=>window.spawnWitness.map(n=>n.id));
    await guest.waitForFunction(ids=>ids.every(id=>G.EggRush.nests.some(n=>n.id===id)),nests);
-   const witness=await host.evaluate(()=>spawnWitness);assert.equal(witness.length,Math.min(5,count*2));assert.ok(witness.every(n=>n.valid&&!n.visible));
-   await guest.evaluate(()=>{G.Game.player.x=1800;G.Game.player.y=0;});
-   await host.waitForFunction(uid=>G.Coop.mate(uid).pl.x>1700,guestUid);
+   const witness=await host.evaluate(()=>spawnWitness);assert.equal(witness.length,1,'exactly one nest at second 30');assert.ok(witness.every(n=>n.valid&&!n.visible));
+   await guest.evaluate(()=>{G.Game.player.x=2150;G.Game.player.y=0;});
+   await host.waitForFunction(uid=>G.Coop.mate(uid).pl.x>2050,guestUid);
    const hp=await guest.evaluate(()=>G.Game.player.hp);
    await host.evaluate(()=>G.Arena.update(11,G.Game.st.time,G.Coop.players()));
    await guest.waitForFunction(before=>G.Game.player.hp<before-.5,hp);
    await guest.evaluate(()=>{G.Game.player.x=1000;G.Game.player.y=0;});
    await host.evaluate(()=>G.Game.debugTime(211));await host.waitForFunction(ids=>ids.every(id=>!G.EggRush.nests.some(n=>n.id===id&&!n.taken)),nests);
    await guest.waitForFunction(ids=>ids.every(id=>!G.EggRush.nests.some(n=>n.id===id&&!n.taken)),nests);
-   await host.evaluate(()=>G.Game.debugTime(480));await guest.waitForFunction(()=>G.Arena.snapshot().time>=480&&Math.abs(G.Arena.radius-1200)<3);
-   if(count===10){await host.setViewportSize({width:844,height:390});await host.evaluate(()=>{G.Game.player.x=1180;G.Game.player.y=0;});await host.waitForTimeout(400);fs.mkdirSync('dist/qa',{recursive:true});await host.screenshot({path:'dist/qa/v1529-zone-mobile.png'});}
+   await host.evaluate(()=>G.Game.debugTime(480));await guest.waitForFunction(()=>G.Arena.snapshot().time>=480&&Math.abs(G.Arena.radius-1350)<3);
+   if(count===10){await host.setViewportSize({width:844,height:390});await host.evaluate(()=>{G.Game.player.x=1320;G.Game.player.y=0;});await host.waitForTimeout(400);fs.mkdirSync('dist/qa',{recursive:true});await host.screenshot({path:'dist/qa/v1529-zone-mobile.png'});}
    console.log('PASS P0 real Host + guest + '+(count-2)+' AI: zone authority, shared nests, TTL, shrink, mobile HUD');
    await context.close();
   }
