@@ -42,9 +42,13 @@ G.LanAI=(()=>{
   if(!target)return;
   // Same legal game actors and move/Ability/Nature; NEVER mutate shared mon.
   const hp=Math.ceil(target.hp*margin);
-  if(pl.maxHp<hp)pl.addMaxHp(hp-pl.maxHp);
-  pl.atkMul=Math.max(pl.atkMul||1,target.atk*margin/Math.max(1,pl.baseAtk));
-  pl.spdMul=Math.max(pl.spdMul||1,target.spd*margin/Math.max(1,pl.baseSpd));
+  if(pl.maxHp<hp){
+   const bonus=hp-pl.maxHp;
+   if(typeof pl.addMaxHp==='function')pl.addMaxHp(bonus);
+   else{pl.maxHp+=bonus;pl.hp+=bonus;} // supports simple test actors
+  }
+  pl.atkMul=Math.max(pl.atkMul||1,target.atk*margin/Math.max(1,pl.baseAtk||pl.mon?.atk||50));
+  pl.spdMul=Math.max(pl.spdMul||1,target.spd*margin/Math.max(1,pl.baseSpd||pl.mon?.spd||50));
   pl.cdMul=Math.min(pl.cdMul||1,target.cd);
   // Species-specific defense remains untouched. Use the normal per-player
   // damage-reduction channel to compensate for a weaker species baseline.
