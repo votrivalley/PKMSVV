@@ -2,7 +2,7 @@
   "name": "pkmsvv-offline",
   "version": "1.5.36",
   "private": true,
-  "description": "Unofficial noncommercial Pokémon Chuyển Sinh v1.5.36: offline Windows, Android and HTML5, competitive nonblocking skill choices, team Co-op, Wi-Fi and AI",
+  "description": "Unofficial noncommercial Pokémon Chuyển Sinh v1.5.36: offline Windows, Android and HTML5; live competitive skill picks, legal AI level rewards and shared Co-op",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
