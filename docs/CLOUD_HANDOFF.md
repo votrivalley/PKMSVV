@@ -1,3 +1,17 @@
+## Latest feature — v1.5.35: purple ×10 Gacha ticket for every completed chapter
+
+Read `docs/QA_V1535.md`. User asked to make the game more forgiving:
+**one purple Gacha ×10 ticket (`tickets.t10`) upon first completion
+of each Chapter 0–3**. Chapter 0 requires a chosen starter; Chapters 1–3
+require the saved `pkmsvvChapterNSeen` flag. Save-scoped permanent
+claim map `pkmsvvChapterPurpleRewards` prevents replay/menu reload farming.
+Existing completed chapters receive any missing reward retroactively when
+their save next opens the main menu. Keep `tickets.t1`, Shiny, save and
+other gameplay intact. DB merge unions claim flags and normal ticket ledger.
+Version 1.5.35; Android versionCode **1005035**, unchanged permanent
+signer/package ID. Full PC/Web/Android CI and real-device QA still required.
+No debug APKs, cache wipes, auto main merge or Cloudflare publish.
+
 ## Latest user-approved competitive fairness — v1.5.34 (2026-10-28)
 
 Supersedes ALL earlier references to competitive bot challenger tiers.
