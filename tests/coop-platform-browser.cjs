@@ -65,6 +65,17 @@ async function main(){
    }
    await page.evaluate(()=>{for(const p of G.Coop.players()){p.dead=true;p.hp=0;}if(G.EggRush.active)G.Game.debugTime(720);});
    await page.waitForFunction(()=>G.Game.state==='over',null,{timeout:10000});
+   if(mode==='royale'||mode==='eggrush'){
+    const podium=await page.evaluate(()=>({
+     count:document.querySelectorAll('#over-stats canvas[data-pkmsvv-result-dex]').length,
+     rows:document.querySelectorAll('#over-stats .pkmsvv-result-row').length,
+     expected:(G.Royale.active?G.Royale.outcome:G.EggRush.outcome)?.standings?.length,
+     dex:[...document.querySelectorAll('#over-stats canvas[data-pkmsvv-result-dex]')].map(c=>Number(c.dataset.pkmsvvResultDex))
+    }));
+    assert.equal(podium.count,podium.expected,'every finisher must have a real Pokémon sprite canvas');
+    assert.equal(podium.rows,podium.expected,'all ranks visible in the scrollable result list');
+    assert.ok(podium.dex.every(n=>Number.isInteger(n)&&n>0));
+   }
    await page.waitForFunction(()=>G.Social.room.open&&G.Social.room.members.every(p=>!p.bot));
    await page.click('#btn-again');await page.waitForFunction(()=>G.UI.isOpen('scr-lobby'));
    // A finished match removes all bots. Refill the legally required lobby
