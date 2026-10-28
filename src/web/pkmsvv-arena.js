@@ -100,7 +100,8 @@ G.Arena=(()=>{
    // Lightweight permanent legend instead of a full-screen tutorial.
    const until=time<240?240-time:time<480?480-time:time<720?720-time:0;
    const fmt=Math.floor(until/60)+':'+String(Math.ceil(until%60)).padStart(2,'0');
-   const hint=until>0?(vi?'Vòng đỏ thu sau '+fmt:'Red circle shrinks in '+fmt):
+   const hint=time<240?(vi?'Vòng đỏ thu sau '+fmt:'Red circle shrinks in '+fmt):
+    time<720?(vi?'Vòng đỏ đang thu':'Red circle shrinking'):
     (vi?'Vòng đỏ đã thu tối đa':'Final red circle');
    ctx.textAlign='center';ctx.font='bold 11px sans-serif';
    ctx.strokeStyle='rgba(5,18,29,.9)';ctx.lineWidth=3;ctx.fillStyle='#ffb3b7';
