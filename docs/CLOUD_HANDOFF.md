@@ -11,6 +11,11 @@ by Rift exit; Royale opening radius 1900, 30s one-support-nest cadence and max
 3 unclaimed; normal enemy Orb chance 6%; real host-owned 50–80%-HP support
 companions with thin bars, hit and heal sync in both Co-op and Royale.
 Keep Egg Rush's competitive scoring/60s nest schedule unchanged.
+All three multiplayer modes now use the Solo-style distance-trail companion
+movement and real directional Walk/Idle sprite animation. See
+`tests/lan-support-animation.test.cjs` and `docs/QA_V1532.md`; followers
+retain 60% visual size and 85%-of-owner speed. Never restore frame-based
+position lerp (caused visibly sliding supports in Sống Còn/Sống Sót/Tranh Trứng).
 Android `versionCode=1005032`, original package ID, fixed forever signing key;
 only verified `PKMSVV-Android-FULL-LAN-SIGNED-UPDATE` is distributable.
 Existing v1.5.31 Web/Android/PC artifacts do NOT contain these fixes.
