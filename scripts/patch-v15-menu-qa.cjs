@@ -146,7 +146,7 @@ const settings=path.join(game,'js','ui','settings-ui.js');
 let settingsJs=fs.readFileSync(settings,'utf8');
 if(!settingsJs.includes('about-logo">PokéSurvivor</div>'))throw Error('Original About title changed');
 settingsJs=settingsJs.replace('about-logo">PokéSurvivor</div>','about-logo" translate="no">Pokemon Chuyển sinh</div>');
-settingsJs=settingsJs.replace("const VERSION = '1.2 · 2026-10-09';","const VERSION = '1.5.35 · 2026-10-28';");
+settingsJs=settingsJs.replace("const VERSION = '1.2 · 2026-10-09';","const VERSION = '1.5.36 · 2026-10-28';");
 fs.writeFileSync(settings,settingsJs,'utf8');
 const newsFile=path.join(game,'js','ui','news-ui.js');
 let newsJs=fs.readFileSync(newsFile,'utf8');
