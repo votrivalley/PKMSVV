@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.39",
+  "version": "1.5.40",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.39: newcomer-friendly Co-op mode cards, nine newborn supports and localized boot",
+  "description": "Pokémon Chuyển Sinh v1.5.40: varied AI skills with fair combat stats, newcomer-friendly Co-op cards",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {

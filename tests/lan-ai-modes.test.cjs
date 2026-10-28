@@ -110,6 +110,43 @@ test('Co-op AI seeks its own support egg but prioritizes rescuing a fallen teamm
  for(let i=0;i<8;i++)h.G.LanAI.update(.12,2+i*.12);
  assert.ok(h.pl.x<prior,'rescue overrides egg foraging');
 });
+
+test('v1.5.40 Egg Rush distributes 2/1/1 over four bots, or 1/1/1 beside a human',()=>{
+ const {G}=harness('eggrush');
+ for(const [count,expected] of [[3,['elite','novice','trained']],[4,['elite','elite','novice','trained']]]){
+  for(const draw of [0,.4,.9]){
+   const got=G.LanAI.tiersFor('eggrush',count,()=>draw);
+   assert.deepEqual(got.slice().sort(),expected.slice().sort());
+  }
+ }
+ assert.deepEqual(G.LanAI.tiersFor('eggrush',1),['trained']);
+ assert.notDeepEqual(G.LanAI.tiersFor('eggrush',3,()=>0),G.LanAI.tiersFor('eggrush',3,()=>.99),
+  'same strengths must belong to different AI between matches');
+});
+test('v1.5.40 Royale mixes strong, average and beginner bots and never sends a helpless AI',()=>{
+ const {G}=harness('royale');
+ const tiers=G.LanAI.tiersFor('royale',9,()=>.3);
+ assert.equal(tiers.length,9);
+ assert.equal(tiers.filter(t=>t==='elite').length,2);
+ assert.equal(tiers.filter(t=>t==='novice').length,2);
+ assert.equal(tiers.filter(t=>t==='trained').length,5);
+ for(const tier of tiers)assert.ok(['elite','trained','novice'].includes(tier));
+ const pl={mon:{types:['grass']},moves:[],hp:100,maxHp:100};
+ const offers=[
+  {type:'stat',key:'stat:atk'},
+  {type:'stat',key:'stat:spd'},
+  {type:'stat',key:'stat:mag'}
+ ];
+ assert.equal(G.LanAI.pickCard(pl,offers,'elite',()=>.99),offers[0]);
+ assert.equal(G.LanAI.pickCard(pl,offers,'trained',()=>.95),offers[1]);
+ assert.equal(G.LanAI.pickCard(pl,offers,'novice',()=>.99),offers[2]);
+ assert.equal(G.LanAI.pickCard(pl,offers,'novice',()=>0),offers[0],
+  'beginner still often chooses a good legal upgrade');
+ pl.hp=10;
+ assert.equal(G.LanAI.pickCard(pl,[{type:'stat',key:'stat:heal'},...offers],'novice',()=>.99).key,
+  'stat:heal','beginner can respond to critical health');
+});
+
 test('Survival rolls distinct strength tiers using bounded ordinary upgrade levels',()=>{
  const {G}=harness('royale');
  const profiles=[.1,.5,.9].map(r=>G.LanAI.strength(()=>r));
@@ -156,8 +193,8 @@ test('v1.5.34 competitive Host/Guests/AI all receive the same best-real-trainer 
   G.LanAI.begin();
   if(mode==='coop'){
    const champion=actors.get(bots[0].uid);
-   assert.ok(champion.maxHp>=baseline.hp,'Co-op challenger preserved');
-   assert.ok(champion.baseAtk*champion.atkMul>=baseline.atk);
+   assert.ok(['elite','trained','novice'].includes(champion.lanBotProfile.tier),'Co-op ally has a skill personality');
+   assert.ok(champion.maxHp>=50,'Co-op companions keep their real in-run stats');
    assert.equal(local.maxHp,90,'Co-op human unchanged');
    assert.ok(G.LanAI.coopDifficulty()>1);
    continue;
@@ -182,7 +219,9 @@ test('v1.5.34 competitive Host/Guests/AI all receive the same best-real-trainer 
   G.LanAI.normalizeMatch();
   G.LanAI.begin();G.LanAI.normalizeMatch();
   assert.equal([local.maxHp,remote.maxHp,...actors.values()].join(','),snapshot,'no repeated stat stacking');
-  assert.ok([...actors.values()].every(p=>p.lanBotProfile.tier==='equalized'));
+   assert.ok([...actors.values()].every(p=>p.lanBotProfile.equalized===true));
+  assert.ok([...actors.values()].every(p=>['elite','trained','novice'].includes(p.lanBotProfile.tier)),
+   'Normalizing combat stats must preserve bot skill personalities');
   assert.equal(G.LanAI.coopDifficulty(),1,'competitive never receives Co-op allied difficulty');
  }
 });

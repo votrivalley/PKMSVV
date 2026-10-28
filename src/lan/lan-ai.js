@@ -9,6 +9,37 @@ G.LanAI=(()=>{
   return room.members.filter(m=>m.bot===true&&/^ai-[a-f0-9]{16}$/.test(m.uid));
  }
  function owns(pl){return !!pl?.lanBot&&G.Coop.isHost;}
+ // Personality only affects in-run decisions, NEVER the shared competitive stat baseline.
+ const PERSONALITY={
+  elite:{think:.12,dash:.85},
+  trained:{think:.28,dash:.5},
+  novice:{think:.48,dash:.2}
+ };
+ // Randomize which opponent receives which skill level at every new match.
+ // A four-bot roster is 2 skilled, 1 intermediate and 1 beginner. Egg Rush
+ // has four TOTAL slots, so a human + three bots = 1 of each bot tier.
+ function tiersFor(mode,count,random=Math.random){
+  const n=Math.max(0,Math.min(20,Math.trunc(Number(count)||0)));
+  if(!n)return[];
+  let tiers;
+  if(mode==='eggrush'){
+   tiers=n===1?['trained']:n===2?['elite','novice']:n===3?
+    ['elite','trained','novice']:['elite','elite','trained','novice'];
+   if(n>4)for(let i=4;i<n;i++)tiers.push(i%4===0?'elite':i%4===1?'trained':'novice');
+  }else if(n===1)tiers=['trained'];
+  else if(n===2)tiers=['elite','trained'];
+  else if(n===3)tiers=['elite','trained','novice'];
+  else{
+   const elite=Math.max(1,Math.round(n*.25)),novice=Math.max(1,Math.round(n*.2));
+   tiers=[...Array(elite).fill('elite'),...Array(n-elite-novice).fill('trained'),...Array(novice).fill('novice')];
+  }
+  // Fisher-Yates: balanced composition, unpredictable ownership of every tier.
+  for(let i=tiers.length-1;i>0;i--){
+   const r=Math.max(0,Math.min(.999999,Number(random())||0)),j=Math.floor(r*(i+1));
+   [tiers[i],tiers[j]]=[tiers[j],tiers[i]];
+  }
+  return tiers;
+ }
  function strength(random=Math.random){
   const r=random(),tier=r<.25?'normal':r<.7?'trained':'elite';
   const [min,max]=tier==='normal'?[2,4]:tier==='trained'?[4,7]:[7,10];
@@ -81,26 +112,30 @@ G.LanAI=(()=>{
    // this match's actor sheet, never mutate shared DEX_BY or saved Pokémon.
    if(pl.mon)pl.mon={...pl.mon,df:target.df,sd:target.sd};
    pl.lanFairStatsApplied=true;
-   if(pl.lanBot)pl.lanBotProfile={tier:'equalized',targetUid:target.uid};
+   if(pl.lanBot)pl.lanBotProfile={...(pl.lanBotProfile||{}),equalized:true,targetUid:target.uid};
   }
   return target;
  }
  function begin(){
   states.clear();
   const bots=activeBots().slice().sort((a,b)=>a.uid.localeCompare(b.uid));
-  const mode=G.Social?.room?.mode,baseline=humanBaseline();
+  const mode=G.Social?.room?.mode,baseline=humanBaseline(),tiers=tiersFor(mode,bots.length);
   bots.forEach((bot,index)=>{
    const pl=G.Coop.mate(bot.uid)?.pl;if(!pl)return;
-   if(pl.lanBotPowerApplied){states.set(bot.uid,{seq:0,route:[],replan:0,think:0,axis:[0,0],goal:null,home:{x:pl.x,y:pl.y},wander:0});return;}
-   pl.lanBot=true;pl.lanBotPowerApplied=true;
+   const tier=tiers[index],personality=PERSONALITY[tier];
+   const state={seq:0,route:[],replan:0,think:0,axis:[0,0],goal:null,
+    home:{x:pl.x,y:pl.y},wander:0,tier,personality};
+   states.set(bot.uid,state);
+   pl.lanBot=true;
+   // Record tier for QA only. Never persist it into the player's save.
+   pl.lanBotProfile={...(pl.lanBotProfile||{}),tier};
+   if(pl.lanBotPowerApplied)return;
+   pl.lanBotPowerApplied=true;
    pl.addMove(G.baseStartOf(bot.dex));
    pl.setAbility(G.Mons.abilityOf(bot.dex).id);
-   const required=mode==='eggrush'||index===0;
-   if(required&&mode==='coop'){
-    raiseToHuman(pl,baseline,1.02);
-    pl.lanBotProfile={...(pl.lanBotProfile||{}),tier:'challenger',targetUid:baseline?.uid||null};
-   }
-   states.set(bot.uid,{seq:0,route:[],replan:0,think:0,axis:[0,0],goal:null,home:{x:pl.x,y:pl.y},wander:0});
+   // A good co-op companion may match the real player's baseline, but not
+   // every AI gets a 102% challenger bonus, and competitive stats stay equal.
+   if(mode==='coop'&&tier==='elite')raiseToHuman(pl,baseline,1);
   });
  }
  function coopDifficulty(){
@@ -129,6 +164,17 @@ G.LanAI=(()=>{
    (card.type==='new'&&damage.length<3&&!buff?20:0)-(buff&&damage.length<2?70:0)-
    (move.kind==='dash'?20:0);
  }
+ function pickCard(pl,offer,tier,random=Math.random){
+  if(!offer?.length)return null;
+  const sorted=offer.slice().sort((a,b)=>scoreCard(pl,b)-scoreCard(pl,a));
+  if(tier==='elite'||sorted.length===1)return sorted[0];
+  // Even beginners recognise an emergency heal: variation isn't sabotage.
+  if(pl.hp/Math.max(1,pl.maxHp)<.28&&sorted[0].key==='stat:heal')return sorted[0];
+  const r=random();
+  if(tier==='trained')return r<.8?sorted[0]:sorted[1];
+  return r<.55?sorted[0]:r<.9?sorted[Math.min(1,sorted.length-1)]:
+   sorted[Math.min(2,sorted.length-1)];
+ }
  function levelUp(level,seq){
   for(const bot of activeBots()){
    const pl=G.Coop.mate(bot.uid)?.pl,s=states.get(bot.uid);
@@ -137,7 +183,7 @@ G.LanAI=(()=>{
     pl.level=level;
     // Choose ONLY among the same three legal cards offered to a human trainer.
     const offer=G.LevelUp.offer(pl);
-    const card=offer.reduce((best,c)=>!best||scoreCard(pl,c)>scoreCard(pl,best)?c:best,null);
+    const card=pickCard(pl,offer,s.tier);
     if(card)card.apply(pl);
     s.seq=seq;
    }catch(error){console.error('LAN AI level reward',error);}
@@ -264,6 +310,9 @@ G.LanAI=(()=>{
     continue;
    }
    s.replan-=dt;s.think-=dt;
+   // Emergency avoidance still works for beginners; no intentionally
+   // standing inside a fire/meteor zone just to simulate being 'noob'.
+   if(s.think>0&&hazards.some(h=>!h.hit&&G.Hazards.inside(h,pl.x,pl.y,pl.r+14)))s.think=0;
    if(s.think<=0){
     s.wander-=.12;
     if(mode==='royale'&&(!s.roam||s.wander<=0)){
@@ -295,9 +344,11 @@ G.LanAI=(()=>{
     }
     if(mode==='coop'&&!nests.length&&goal===s.roam&&sq(pl,goal)<50**2)goal={x:pl.x,y:pl.y};
     if(G.Arena?.active)goal=G.Arena.clampGoal(goal,pl);
-    s.axis=chooseAxis(pl,s,goal,enemies,shots,hazards);s.think=.12;
+    s.axis=chooseAxis(pl,s,goal,enemies,shots,hazards);
+    s.think=s.personality.think*(.9+Math.random()*.2);
     const dash=G.PKMSVVDash?.preview(pl);
-    if(dash?.ready&&Math.hypot(...s.axis)>.5&&danger(pl,pl,enemies,shots,hazards)>65){
+    if(dash?.ready&&Math.random()<s.personality.dash&&Math.hypot(...s.axis)>.5&&
+      danger(pl,pl,enemies,shots,hazards)>65){
      const length=(dash.move.radius||120)*(G.PKMSVVDash.profile(dash.move).range||1);
      const end={x:pl.x+s.axis[0]*length,y:pl.y+s.axis[1]*length};
      if(segment(pl,pl,end)&&!liquidCost(pl,end.x,end.y)&&danger(pl,end,enemies,shots,hazards)<danger(pl,pl,enemies,shots,hazards)){
@@ -311,5 +362,5 @@ G.LanAI=(()=>{
   }
  }
  function near(x,y,r=520){return G.Coop.isHost&&G.Coop.puppets().some(p=>p.lanBot&&!p.dead&&(p.x-x)**2+(p.y-y)**2<r*r);}
- return {activeBots,owns,begin,normalizeMatch,frame,levelUp,update,scoreCard,route,chooseAxis,near,strength,humanBaseline,raiseToHuman,coopDifficulty,stop(){states.clear();}};
+ return {activeBots,owns,begin,normalizeMatch,frame,levelUp,update,scoreCard,pickCard,tiersFor,route,chooseAxis,near,strength,humanBaseline,raiseToHuman,coopDifficulty,stop(){states.clear();}};
 })();
