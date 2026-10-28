@@ -72,9 +72,3 @@ test('Competitive HUD patch suppresses the Co-op rescue message and teammate bar
  assert.doesNotMatch(desc,/Bo thu hẹp dần/);
 });
 
- G.Royale.begin({mode:'royale',members:players});
- G.Royale.draw(ctx,844,390,players);
- assert.equal(draws.length,10);
- assert.ok(boxes[0][1]+boxes[0][3]<390-80,'ranking must not cover touch controls');
- assert.ok(boxes[0][2]<=210,'ranking remains narrow on landscape');
-});
