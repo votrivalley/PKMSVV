@@ -22,7 +22,9 @@ G.EggRush=(()=>{
   seed=Math.floor(Number(cfg?.seed)||1);nests=[];pets=[];trails=new Map();trailDir=new Map();levelSeen=1;killsSeen=0;
   score=Object.fromEntries(roster.map(m=>[m.uid,0]));at={};laid=0;outcome=null;transition={};secretEggs=new Map();
   if(active||supportMode){
-   G.Sprites?.preload?.([...EGG_SPECIES,...roster.map(x=>x.dex)],7500);
+   // Egg Rush contains only sealed eggs until the finale: don't preload
+   // eight unrelated support animation sets during competitive gameplay.
+   G.Sprites?.preload?.(active?roster.map(x=>x.dex):[...EGG_SPECIES,...roster.map(x=>x.dex)],7500);
    roster.forEach(m=>{transition[m.uid]={anim:new G.Sprites.Animator(m.dex,.32,false),rank:roster.findIndex(x=>x.uid===m.uid)};});
   }
  }
