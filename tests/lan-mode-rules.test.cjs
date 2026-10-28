@@ -151,3 +151,25 @@ test('Issue #8: simultaneous last-egg claims in one Host frame cannot score 11',
  assert.equal(h.events.filter(e=>e[1]==='take').length,1,
   'exactly one of the two final nests is claimed');
 });
+
+test('v1.5.32 Host heals remote human-owned support and broadcasts HP once',()=>{
+ const h=setup('coop'),owner=h.players[1];
+ for(const t of [60,120]){
+  h.G.EggRush.update(.1,t,h.players,()=>{});
+  const nest=h.G.EggRush.nests.find(n=>!n.taken);
+  assert.ok(nest);owner.x=nest.x;owner.y=nest.y;
+  h.G.EggRush.update(.1,t+.1,h.players,()=>{});
+ }
+ const myPets=h.G.EggRush.pets.filter(p=>p.uid==='p1');
+ assert.equal(myPets.length,2);
+ myPets[0].dex=173;myPets[1].hp=myPets[1].maxHp*.4;
+ for(const pet of myPets)h.G.EggRush.onEvent(['er','hatch',pet.id]);
+ const hp=myPets[1].hp,seq=myPets[1].hpSeq;
+ h.G.EggRush.update(.1,140,h.players,()=>{});
+ assert.ok(myPets[1].hp>hp,'Host healer restores second owned support');
+ assert.ok(myPets[1].hpSeq>seq,'healing advances per-support HP sequence');
+ assert.ok(h.events.some(e=>e[1]==='hp'&&e[2]===myPets[1].id&&e[3]===myPets[1].hp));
+ myPets[0].cd=0;const before=myPets[1].hp;h.G.Coop.isHost=false;
+ h.G.EggRush.update(.1,141,h.players,()=>{});
+ assert.equal(myPets[1].hp,before,'non-Host cannot independently heal multiplayer supports');
+});
