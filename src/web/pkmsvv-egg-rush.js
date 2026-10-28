@@ -262,7 +262,7 @@ G.EggRush=(()=>{
  }
  function guide(ctx,w,h){
   const pl=G.Game.player,n=objective(pl),cam=G.Camera;
-  if(pl?.dead&&active){
+  if(pl?.dead&&active&&!G.PKMSVVDeathHUD){
    ctx.save();ctx.textAlign='center';ctx.font='bold 16px sans-serif';ctx.fillStyle='#fff3bd';
    ctx.fillText(tr('Hồi sinh sau ','Respawn in ')+Math.max(0,Math.ceil(RESPAWN_SECONDS-(pl.lanEggDeath||0)))+'s',w/2,92);ctx.restore();
   }
