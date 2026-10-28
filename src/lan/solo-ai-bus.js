@@ -26,7 +26,7 @@ G.LanBus=(()=>{
    if(room)throw Error('Đã ở trong phòng.');
    const mode=['coop','royale','eggrush'].includes(data.mode)?data.mode:'coop';
    room={id:'local-ai-'+randomId(),mode,open:true,
-    members:[{uid:identity,name:playerName,dex:dexOf(data.dex),shiny:!!data.shiny}]};
+    members:[{uid:identity,name:playerName,dex:dexOf(data.dex),shiny:!!data.shiny,power:data.power||null}]};
    update();return snapshot();
   }
   if(action==='join')throw Error('Đây là trận AI ngoại tuyến, không hỗ trợ người chơi từ máy khác.');
@@ -35,7 +35,7 @@ G.LanBus=(()=>{
   }
   if(!room)throw Error('Chưa tạo trận AI.');
   if(action==='update'){
-   room.members[0]={...room.members[0],dex:dexOf(data.dex),shiny:!!data.shiny};
+   room.members[0]={...room.members[0],dex:dexOf(data.dex),shiny:!!data.shiny,power:data.power||null};
    update();return true;
   }
   if(action==='open'){room.open=!!data.open;update();return true;}
