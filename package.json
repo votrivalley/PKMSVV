@@ -40,7 +40,7 @@
     "test:lan:pc": "node tests/lan-electron-smoke.cjs",
     "test:lan:ai": "node --test tests/lan-ai-modes.test.cjs && node tests/lan-ai-runtime.cjs",
     "test:lan:rounds": "node tests/lan-rounds-runtime.cjs",
-    "test:lan:modes": "node --test tests/lan-mode-rules.test.cjs && node tests/lan-mode-features-runtime.cjs",
+    "test:lan:modes": "node --test tests/lan-mode-rules.test.cjs tests/lan-hud-layout.test.cjs && node tests/lan-mode-features-runtime.cjs",
     "test:lan:coop": "node --test tests/lan-coop-support.test.cjs && node tests/lan-coop-runtime.cjs",
     "prepare:ios": "node scripts/prepare-ios.cjs",
     "test:ios": "node --test tests/ios-web.test.cjs",
