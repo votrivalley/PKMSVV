@@ -38,7 +38,14 @@ replace('js/core/db.js',
  '    for(const mode of ["coop","royale","eggrush"]){r.pkmsvvMultiplayerDone[mode]=!!(r.pkmsvvMultiplayerDone[mode]||older.pkmsvvMultiplayerDone?.[mode]);}\n'+
  '    r.arenas=r.arenas||{};\n'+
  '    const localCup=r.arenas.pkmChampion||{},otherCup=older.arenas?.pkmChampion||{};\n'+
- '    const crown={trophies:{},seals:{},rewards:{}};\n'+
+ '    const crown={trophies:{},seals:{},rewards:{},history:[]};\n'+
+ '    const past=[...(localCup.history||[]),...(otherCup.history||[])];\n'+
+ '    const seenHistory=new Set();\n'+
+ '    for(const record of past){if(!record||!record.region||!record.at)continue;\n'+
+ '      const key=[record.region,record.dex,record.at].join(\":\");\n'+
+ '      if(seenHistory.has(key))continue;seenHistory.add(key);crown.history.push(record);}\n'+
+ '    crown.history.sort((a,b)=>String(a.at).localeCompare(String(b.at)));\n'+
+ '    if(crown.history.length>75)crown.history=crown.history.slice(-75);\n'+
  '    for(const region of new Set([...Object.keys(localCup.trophies||{}),...Object.keys(otherCup.trophies||{}),...Object.keys(localCup.seals||{}),...Object.keys(otherCup.seals||{}),...Object.keys(localCup.rewards||{}),...Object.keys(otherCup.rewards||{})])){\n'+
  '      if(localCup.trophies?.[region]||otherCup.trophies?.[region])crown.trophies[region]=true;\n'+
  '      if(localCup.seals?.[region]||otherCup.seals?.[region])crown.seals[region]=true;\n'+

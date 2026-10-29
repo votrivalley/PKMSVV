@@ -174,3 +174,11 @@ test('Final win does not unlock a Mega Stone without Gacha',()=>{
  assert.equal(save.megaStones,undefined);
  assert.equal(save.arenas.pkmChampion.seals.Kanto,true);
 });
+
+test('Offline save merge retains and deduplicates full Champion Hall of Fame records',()=>{
+ const source=read('scripts/patch-champion-arena.cjs');
+ assert.match(source,/localCup\.history/);
+ assert.match(source,/otherCup\.history/);
+ assert.match(source,/seenHistory\.has/);
+ assert.match(source,/crown\.history/);
+});
