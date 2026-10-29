@@ -52,3 +52,8 @@ test('Co-op/Survival support has 30s hatch, Shiny host roll and faster/stronger 
  assert.match(c,/if\(active\)return; \/\/ Egg Rush: sealed eggs NEVER hatch mid-match/);
  assert.match(read('src/pkmsvv-support-catalog.js'),/Shiny: 100% chỉ số/);
 });
+
+test('Initial shiny support cooldown is accelerated immediately and full movement stat is retained in Co-op',()=>{
+ assert.match(read('src/v15/eggs.js'),/if\(it\.shiny\)it\.cooldown=Math\.max\(0,it\.cooldown\|\|0\)\*SHINY_CAST_RATIO/);
+ assert.match(read('src/web/pkmsvv-egg-rush.js'),/baseSpeed\*\(pet\.shiny\?1:\.85\)/);
+});

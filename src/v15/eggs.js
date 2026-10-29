@@ -100,6 +100,7 @@ G.PKMSVVEggs=(()=>{
   }
   G.DB.commit(true); // Persist BOTH normal hatch discovery and special Shiny discovery.
   it.statScale=it.shiny?1:MIN_STAT+Math.random()*(MAX_STAT-MIN_STAT);
+  if(it.shiny)it.cooldown=Math.max(0,it.cooldown||0)*SHINY_CAST_RATIO;
   it.maxHp=Math.max(1,Math.round((player.maxHp||100)*it.statScale));
   it.hp=it.maxHp;
   it.atk=Math.max(1,Number(player.atk||player.baseAtk||10)*it.statScale);

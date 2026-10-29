@@ -209,7 +209,7 @@ G.EggRush=(()=>{
    // Real world-units/second walking, 85% of the owner's normal speed,
    // with the same terrain collision, short deadzone, and warp recovery as Solo.
    const baseSpeed=Number(lead?.spd||lead?.baseSpd)||140;
-   const walkSpeed=Math.max(75,Math.min(230,baseSpeed*.85));
+   const walkSpeed=Math.max(75,Math.min(230,baseSpeed*(pet.shiny?1:.85)));
    const moveDt=Math.max(0,Math.min(dt,.1));
    let warped=!!pet.justReanchored;
    pet.justReanchored=false;
