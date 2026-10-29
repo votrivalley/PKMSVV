@@ -165,12 +165,18 @@ G.PKMSVVChampionArena=(()=>{
   const dex=G.DEX_BY?.[opp.dex]?opp.dex:25;
   const targetName=G.DEX_BY?.[dex]?.name||opp.name;
   // Same baseline HP and movement for both sides. Skill builds still matter.
+  pl._arenaOriginal={mon:pl.mon,maxHp:pl.maxHp,baseAtk:pl.baseAtk,baseSpd:pl.baseSpd,
+   atkMul:pl.atkMul,spdMul:pl.spdMul};
+  pl.mon={...pl.mon,hp:320,pa:130,sa:130,atk:130,df:110,sd:110,spd:112};
   pl.maxHp=320;pl.hp=320;pl.baseAtk=1.3;pl.baseSpd=112;
+  pl.atkMul=1;pl.spdMul=1;
+  const aiTier=opp.tier==='elite'?'elite':opp.tier==='trained'?'trained':'novice';
   const raw={dex,name:targetName,hp:320,spd:112,dmg:11,
-   xp:0,behavior:'champion',shotCd:3};
+   xp:0,behavior:'champion',shotCd:aiTier==='elite'?1.65:aiTier==='trained'?2.5:3.5};
   target=G.EnemyMgr.add(new G.Enemy(raw,pl.x+Math.min(300,190+round*15),pl.y-35,
     {hp:1,spd:1,dmg:1},true));
   target.pkmsvvChampion=true;
+  target.skillCd=aiTier==='elite'?0.9:aiTier==='trained'?2.0:3.5;
   stage='fight';elapsed=0;lastSecond=-1;
   panel().hidden=true;
   G.UI?.toast?.(tr('Arena · ','Arena · ')+(ROUNDS[round]||'')+' — '+opp.name,3000);
@@ -193,7 +199,16 @@ G.PKMSVVChampionArena=(()=>{
  function start(){return launch(false);}
  // Previous Champion rematch is superseded by the four-round title.
  function rematch(){return false;}
+ function restoreStats(){
+  const p=G.Game?.player,old=p?._arenaOriginal;
+  if(!old)return;
+  p.mon=old.mon;p.maxHp=old.maxHp;p.hp=Math.max(1,p.maxHp);
+  p.baseAtk=old.baseAtk;p.baseSpd=old.baseSpd;
+  p.atkMul=old.atkMul;p.spdMul=old.spdMul;
+  delete p._arenaOriginal;
+ }
  function beginPrep(){
+  restoreStats();
   stage='prep';elapsed=0;lastSecond=-1;opp=null;target=null;
   G.World?.setArena?.(null);
   panel().hidden=true;
@@ -240,6 +255,7 @@ G.PKMSVVChampionArena=(()=>{
   G.DB.commit(true);
  }
  function returnToMenu(){
+  restoreStats();
   active=false;stage='idle';target=null;opp=null;
   G.World?.setArena?.(null);
   const bar=$('pkmsvv-champion-hud');if(bar)bar.hidden=true;
@@ -249,6 +265,10 @@ G.PKMSVVChampionArena=(()=>{
  }
  function done(reason,rank){
   if(!active)return;
+  if(rank===2&&!lastPodium&&opp){
+   lastPodium=[opp,{id:'you',name:tr('Bạn','You'),dex:G.DB?.save?.partner||25},
+    semiLosers.length===2?aiWinner(semiLosers[0],semiLosers[1]):semiLosers[0]].filter(Boolean);
+  }
   if(rank)settle(rank,rank===1);
   if(reason==='seal'){
    const book=ledger(G.DB?.save);
@@ -283,7 +303,7 @@ G.PKMSVVChampionArena=(()=>{
   const pl=G.Game.player;
   if(!pl)return;
   if(pl.dead){
-   if(round===2){round=4;pl.dead=false;pl.hp=Math.max(1,pl.maxHp);beginPrep();return;}
+   if(round===2){futureBracket(false);round=4;pl.dead=false;pl.hp=Math.max(1,pl.maxHp);beginPrep();return;}
    done('lost',round===0?9:round===1?5:round===4?4:2);return;
   }
   elapsed+=Math.max(0,dt);
@@ -306,7 +326,10 @@ G.PKMSVVChampionArena=(()=>{
   if(stage!=='fight')return;
   if(target?.dead){
    target=null;
-   if(round===4){lastPodium=[bracket[0],bracket[1],{id:'you',name:tr('Bạn','You'),dex:G.DB?.save?.partner||25}].filter(Boolean);
+   if(round===4){
+    const title=aiWinner(bracket[0],bracket[1]);
+    lastPodium=[title,bracket.find(p=>p!==title),
+      {id:'you',name:tr('Bạn','You'),dex:G.DB?.save?.partner||25}].filter(Boolean);
     done('third',3);return;}
    if(round===3){
     lastPodium=[bracket.find(x=>x.id==='you'),bracket.find(x=>x.id!=='you'),
@@ -320,7 +343,7 @@ G.PKMSVVChampionArena=(()=>{
   if(elapsed>=FIGHT_SECONDS){
    if(pl.hp/Math.max(1,pl.maxHp)>(target?.hp||0)/Math.max(1,target?.maxHp||1)){
     target.dead=true;update(0);
-   }else if(round===2){round=4;beginPrep();}
+   }else if(round===2){futureBracket(false);round=4;beginPrep();}
    else done('timeout',round===0?9:round===1?5:round===4?4:2);
   }
  }

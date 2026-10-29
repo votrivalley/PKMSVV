@@ -28,3 +28,10 @@
 /* Arena themed ring and match timer. */
 #pkmsvv-champion-hud[hidden]{display:none!important}
 .pkmsvv-champion-hud{position:fixed;top:44px;left:50%;transform:translateX(-50%);z-index:1700;max-width:85vw;text-align:center;border:2px solid #e8c76f;border-radius:10px;background:#122b3bd9;color:#ffecac;font-size:14px;font-weight:900;padding:7px 12px;pointer-events:none;text-shadow:0 1px 2px #071c25}
+
+/* Small pixel confetti for Champion award stage; visual only, disabled on reduced motion. */
+.pkmsvv-champion-podium{position:relative;isolation:isolate;overflow:hidden}
+.pkmsvv-champion-podium.celebrate::before,.pkmsvv-champion-podium.celebrate::after{content:"";position:absolute;inset:-80% -20%;z-index:-1;pointer-events:none;background-image:radial-gradient(#ffcf42 3px,transparent 4px),radial-gradient(#7ec7f5 2px,transparent 3px),radial-gradient(#f588ab 3px,transparent 4px),radial-gradient(#a78af3 2px,transparent 3px);background-size:68px 67px,75px 78px,105px 86px,87px 94px;opacity:.9;animation:pkmsvv-champ-confetti 2.9s linear infinite}
+.pkmsvv-champion-podium.celebrate::after{animation-delay:-1.4s;transform:rotate(13deg)}
+@keyframes pkmsvv-champ-confetti{to{background-position:0 500px,0 560px,0 640px,0 570px}}
+@media(prefers-reduced-motion:reduce){.pkmsvv-champion-podium.celebrate::before,.pkmsvv-champion-podium.celebrate::after{animation:none}}
