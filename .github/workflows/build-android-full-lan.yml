@@ -3,6 +3,12 @@ on:
   push:
     branches: [feature/lan-local-beta]
     paths:
+      - 'src/pkmsvv-phase1-pastel.css'
+      - 'src/pkmsvv-mega-phase2.css'
+      - 'src/pkmsvv-mega-entry.js'
+      - 'scripts/build-mega-ui-catalog.cjs'
+      - 'scripts/patch-ui-phase2-mega.cjs'
+      - 'tests/mega-ui-phase2.test.cjs'
       - 'tests/mega-lucario.test.cjs'
       - 'src/pkmsvv-mega-lucario.js'
       - 'scripts/build-mega-lucario.cjs'
@@ -103,6 +109,8 @@ jobs:
         run: npm run prepare:game
       - name: Validate original game and save functionality
         run: npm run test:v15 && npm run test:collection && npm run test:mobile-topbar && npm run test:mega
+      - name: Validate 96 Mega encyclopedia UI and real unlock gating
+        run: npm run test:mega:phase2
       - name: Pack full offline assets and LAN UI
         run: |
           npm run prepare:icons

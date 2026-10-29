@@ -3,6 +3,12 @@ on:
   push:
     branches: [feature/lan-local-beta]
     paths:
+      - 'src/pkmsvv-phase1-pastel.css'
+      - 'src/pkmsvv-mega-phase2.css'
+      - 'src/pkmsvv-mega-entry.js'
+      - 'scripts/build-mega-ui-catalog.cjs'
+      - 'scripts/patch-ui-phase2-mega.cjs'
+      - 'tests/mega-ui-phase2.test.cjs'
       - 'scripts/**'
       - 'src/ios/**'
       - 'src/shared/**'
