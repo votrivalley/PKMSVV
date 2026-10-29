@@ -73,11 +73,13 @@ G.PKMSVVMegaPhase3=(()=>{
  function eligible(){
   const p=player(),f=formFor(p);
   return !!(p&&f&&!p.dead&&G.Game?.state==='playing'&&!G.Coop?.active&&
-   !p._megaUsed&&!p._megaActive&&isBattleReady(f));
+   !p._megaUsed&&!p._megaActive&&isBattleReady(f)&&
+   (!p.shiny||G.Sprites.hasShiny?.(f.spriteId)===true));
  }
  function appearance(p,dex){
   const scale=G.Sprites.playerScale(dex),dir=p.anim?.dir||0;
-  p.scale=scale;p.anim=new G.Sprites.Animator(dex,scale,dex===p.dex&&p.shiny);
+  p.scale=scale;p.anim=new G.Sprites.Animator(dex,scale,
+   !!p.shiny&&(dex===p.dex||G.Sprites.hasShiny?.(dex)===true));
   p.anim.dir=dir;p.r=G.Sprites.playerRadius(dex);
   p.bodyH=G.Sprites.bodyHeight(dex,scale);
  }
@@ -113,8 +115,8 @@ G.PKMSVVMegaPhase3=(()=>{
   if(busy||!eligible())return false;
   const p=player(),f=formFor(p);busy=true;
   try{
-   await G.Sprites.preload([f.spriteId],3500,false);
-   const frame=G.Sprites.sheet?.(f.spriteId,'Idle',false);
+   await G.Sprites.preload([f.spriteId],3500,!!p.shiny);
+   const frame=G.Sprites.sheet?.(f.spriteId,'Idle',!!p.shiny);
    if(frame&&!frame.ready)return false;
    return activate(p);
   }finally{busy=false;sync();}

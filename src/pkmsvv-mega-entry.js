@@ -2,7 +2,7 @@
 /* Phase 2 Mega encyclopedia — read-only, never grants stones, quests or species. */
 G.PKMSVVMegaEntry=(()=>{
  const $=id=>document.getElementById(id),tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
- const PAGE=12;let page=0,filter='all',selected=null;
+ const PAGE=12;let page=0,filter='all',selected=null,variant='normal';
  const catalog=()=>Array.isArray(G.PKMSVV_MEGA_CATALOG)?G.PKMSVV_MEGA_CATALOG:[];
  const save=()=>G.DB?.save||{};
  function isUnlocked(f){
@@ -19,9 +19,14 @@ G.PKMSVVMegaEntry=(()=>{
   const [head,end]=f.name.split('-Mega');
   return 'Mega '+head.replace(/-/g,' ')+(end?' '+end.replace(/^-/, ''):'');
  };
- const list=()=>catalog().filter(f=>filter==='all'||(filter==='unlocked'?isUnlocked(f):!isUnlocked(f)));
- const art=f=>{const ok=!!(f.artReady&&G.SPRITE_META?.[f.spriteId]?.a?.Idle);
-  return {dex:ok?f.spriteId:f.dex,ready:ok};};
+ const shinyOwned=f=>!!(f&&save().shiny?.[f.dex]);
+ const discovered=f=>isUnlocked(f)&&(variant==='normal'||shinyOwned(f));
+ const list=()=>catalog().filter(f=>filter==='all'||(filter==='unlocked'?discovered(f):!discovered(f)));
+ const art=f=>{
+  const m=f.artReady&&G.SPRITE_META?.[f.spriteId];
+  const ready=!!(m?.a?.Idle&&(variant==='normal'||(m.sh&&m.sa?.Idle)));
+  return {dex:ready?f.spriteId:f.dex,ready,shiny:variant==='shiny'&&ready};
+ };
  const el=(tag,id,cls)=>{const n=document.createElement(tag);if(id)n.id=id;if(cls)n.className=cls;return n;};
  function close(){const box=$('pkmsvv-mega-phase1');if(box)box.hidden=true;$('pkmsvv-mega-entry')?.focus?.();}
  function ensure(){
@@ -59,7 +64,14 @@ G.PKMSVVMegaEntry=(()=>{
    b.addEventListener('click',()=>{filter=mode;page=0;selected=null;render();});
    filters.append(b);
   }
-  tools.append(count,filters);
+  const tabs=el('div',null,'pkmsvv-mega-variant-tabs');
+  for(const [mode,labelId] of [['normal','pkmsvv-mega-tab-normal'],['shiny','pkmsvv-mega-tab-shiny']]){
+   const b=el('button',labelId,'btn small pkmsvv-mega-variant-btn');
+   b.type='button';b.setAttribute('data-mega-variant',mode);
+   b.addEventListener('click',()=>{variant=mode;page=0;selected=null;render();});
+   tabs.append(b);
+  }
+  tools.append(tabs,count,filters);
   const grid=el('div','pkmsvv-mega-grid','pkmsvv-mega-grid');
   const paging=el('div',null,'pkmsvv-mega-pager');
   const prev=el('button','pkmsvv-mega-prev','btn small ghost');
@@ -77,7 +89,7 @@ G.PKMSVVMegaEntry=(()=>{
  function detailView(f){
   const area=$('pkmsvv-mega-detail');if(!area)return;
   area.replaceChildren();
-  const opened=!!f&&isUnlocked(f);
+  const opened=!!f&&discovered(f);
   area.className='pkmsvv-mega-phase1-locked'+(opened?' is-unlocked':'');
   if(!opened){
    const unknown=el('strong');unknown.textContent='???';
@@ -114,11 +126,14 @@ G.PKMSVVMegaEntry=(()=>{
   const title=el('h3');title.textContent=displayName(f);area.append(title);
   const visual=art(f);
   if(visual.ready&&G.UI?.spriteCanvas){
-   const cv=G.UI.spriteCanvas(visual.dex,200,165,{scale:2,hero:true,spin:true,lively:true});
+   const cv=G.UI.spriteCanvas(visual.dex,200,165,{
+    scale:2,hero:true,spin:true,lively:true,shiny:visual.shiny
+   });
    cv.className='pkmsvv-mega-detail-art';area.append(cv);
   }else{
    const missing=el('div',null,'pkmsvv-mega-art-missing');
-   missing.textContent=tr('Hình Mega đang hoàn thiện','Mega sprite in preparation');area.append(missing);
+   missing.textContent=variant==='shiny'?tr('Chưa có sprite Shiny Mega chuẩn','Verified Shiny Mega art unavailable'):
+    tr('Hình Mega đang hoàn thiện','Mega sprite in preparation');area.append(missing);
   }
   const stone=el('p',null,'pkmsvv-mega-detail-item');
   stone.textContent='Mega Stone: '+(f.stone||tr('Không cần đá — mở bằng cốt truyện','Story unlock — no stone'));
@@ -139,23 +154,36 @@ G.PKMSVVMegaEntry=(()=>{
  }
  function render(){
   if(!$('pkmsvv-mega-phase1'))return;
+  for(const [mode,id,vi,en] of [
+   ['normal','pkmsvv-mega-tab-normal','Thường','Normal'],
+   ['shiny','pkmsvv-mega-tab-shiny','Shiny','Shiny']
+  ]){
+   const b=$(id);
+   if(b){b.textContent=tr(vi,en);b.setAttribute('aria-pressed',String(variant===mode));}
+  }
   const forms=list(),last=Math.max(0,Math.ceil(forms.length/PAGE)-1);
   page=Math.min(last,Math.max(0,page));
   const shown=forms.slice(page*PAGE,(page+1)*PAGE);
   if(!shown.some(f=>f.key===selected))selected=shown[0]?.key||null;
-  $('pkmsvv-mega-count').textContent=tr('Đã mở: ','Unlocked: ')+catalog().filter(isUnlocked).length+'/'+catalog().length;
+  $('pkmsvv-mega-count').textContent=tr('Đã mở: ','Unlocked: ')+catalog().filter(discovered).length+'/'+catalog().length;
   for(const [mode,label] of [['all',tr('Tất cả','All')],['unlocked',tr('Đã mở','Unlocked')],['locked',tr('Chưa mở','Locked')]]){
    const b=$('pkmsvv-mega-roster')?.querySelector?.('[data-mega-filter="'+mode+'"]');
    if(b){b.textContent=label;b.setAttribute('aria-pressed',String(filter===mode));}
   }
   const grid=$('pkmsvv-mega-grid');grid.replaceChildren();
   for(const [i,f] of shown.entries()){
-   const yes=isUnlocked(f),v=art(f),card=el('button',null,'pkmsvv-mega-cell '+(yes?'is-open':'is-locked')+(selected===f.key?' on':''));
+   const yes=discovered(f),v=art(f),card=el('button',null,'pkmsvv-mega-cell '+(yes?'is-open':'is-locked')+(selected===f.key?' on':''));
    card.type='button';
    card.setAttribute('aria-label',yes?displayName(f):tr('Mega chưa khám phá','Undiscovered Mega')+' '+(page*PAGE+i+1));
    card.setAttribute('aria-pressed',String(selected===f.key));
-   if(G.UI?.spriteCanvas){
-    const cv=G.UI.spriteCanvas(v.dex,92,80,{scale:2,silhouette:!yes||!v.ready,shadow:yes&&v.ready});
+   if(yes&&!v.ready){
+    const missing=el('span',null,'pkmsvv-mega-no-art');
+    missing.textContent='✧';card.append(missing);
+   }else if(G.UI?.spriteCanvas){
+    const cv=G.UI.spriteCanvas(v.dex,92,80,{
+     scale:2,shiny:yes&&v.shiny,
+     silhouette:!yes,shadow:yes&&v.ready
+    });
     cv.className='pkmsvv-mega-cell-art';card.append(cv);
    }else{const icon=el('span');icon.textContent='✦';card.append(icon);}
    const label=el('strong');label.textContent=yes?displayName(f):'???';
@@ -169,8 +197,10 @@ G.PKMSVVMegaEntry=(()=>{
   $('pkmsvv-mega-next').textContent=tr('Sau ›','Next ›');
   $('pkmsvv-mega-prev').disabled=page===0;$('pkmsvv-mega-next').disabled=page>=last;
   $('pkmsvv-mega-page').textContent=tr('Trang ','Page ')+(page+1)+'/'+(last+1);
-  $('pkmsvv-mega-phase1-note').textContent=tr(
-   'Danh tính và chỉ số chỉ hiện sau khi mở khóa. Xem danh sách không tốn vé hoặc thay đổi save.',
+  $('pkmsvv-mega-phase1-note').textContent=variant==='shiny'?tr(
+   'Shiny Mega cần Pokémon Shiny đã sở hữu và Mega đã mở khóa. Không tự đổi màu hoặc cấp Shiny.',
+   'Shiny Mega requires an owned Shiny Pokémon and an unlocked Mega. No recolors or free Shinies.') :
+   tr('Danh tính và chỉ số chỉ hiện sau khi mở khóa. Xem danh sách không tốn vé hoặc thay đổi save.',
    'Identity and stats appear only after unlocking. Viewing does not modify saves.');
  }
  function open(){
@@ -193,5 +223,5 @@ G.PKMSVVMegaEntry=(()=>{
  });
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ensure,{once:true});
  else ensure();
- return {open,close,ensure,render,isUnlocked,displayName,get page(){return page},get filter(){return filter}};
+ return {open,close,ensure,render,isUnlocked,displayName,get page(){return page},get filter(){return filter},get variant(){return variant}};
 })();

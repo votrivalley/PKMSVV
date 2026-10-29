@@ -74,3 +74,10 @@
 .pkmsvv-mega-quest-steps b{color:#f3e7aa;font-size:13px}
 .pkmsvv-mega-quest-steps .done{color:#94ead8}
 .pkmsvv-mega-quest-steps .pending{color:#ebf3ef}
+
+/* Verified Mega Shiny form, no color-invented fallbacks. */
+.pkmsvv-mega-variant-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:4px;background:#d2e6e1;border:1px solid #a5c8c2;border-radius:10px}
+.pkmsvv-mega-variant-btn{min-height:38px;padding:6px 12px;border:1px solid transparent;border-radius:8px;background:#e9f5f1;color:#173648;font-weight:800;font-size:13px}
+.pkmsvv-mega-variant-btn[aria-pressed="true"]{background:#ffe486;border-color:#d6a11c;box-shadow:0 2px 5px #67501922}
+.pkmsvv-mega-no-art{display:grid;place-items:center;width:92px;max-width:100%;height:80px;color:#4d6a72;font-size:30px}
+.pkmsvv-mega-cell.is-locked .pkmsvv-mega-no-art{color:#edf5ed}

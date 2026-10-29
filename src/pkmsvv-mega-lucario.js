@@ -17,7 +17,8 @@ G.MegaLucario=(()=>{
  function eligible(){
   const p=player();
   return !!(p&&p.dex===BASE&&!p.dead&&G.Game.state==='playing'&&
-   !(G.Coop&&G.Coop.active)&&!p._megaUsed&&!p._megaActive&&(preview||owned()));
+   !(G.Coop&&G.Coop.active)&&!p._megaUsed&&!p._megaActive&&(preview||owned())&&
+   (!p.shiny||G.Sprites.hasShiny?.(SPRITE)===true));
  }
  function previewUnlock(){
   const s=saved();
@@ -31,7 +32,7 @@ G.MegaLucario=(()=>{
   const scale=G.Sprites.playerScale(dex);
   const dir=p.anim&&p.anim.dir||0;
   p.scale=scale;
-  p.anim=new G.Sprites.Animator(dex,scale,mega?false:p.shiny);
+  p.anim=new G.Sprites.Animator(dex,scale,!!p.shiny&&(!mega||G.Sprites.hasShiny?.(dex)===true));
   p.anim.dir=dir;
   p.r=G.Sprites.playerRadius(dex);
   p.bodyH=G.Sprites.bodyHeight(dex,scale);
@@ -71,7 +72,9 @@ G.MegaLucario=(()=>{
   const p=player();busy=true;
   try{
    // Avoid the blank placeholder sprite on the first frame.
-   await G.Sprites.preload([SPRITE],3500,false);
+   await G.Sprites.preload([SPRITE],3500,!!p.shiny);
+   const image=G.Sprites.sheet?.(SPRITE,'Idle',!!p.shiny);
+   if(image&&!image.ready)return false;
    return activate(p);
   }finally{busy=false;sync();}
  }
