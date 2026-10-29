@@ -52,7 +52,7 @@ test('preview cannot grant stone, transformation restores base stats after 30s',
  assert.equal(mega.previewUnlock(),true);
  assert.equal(await mega.tryActivate(),true);
  assert.equal(player.anim.dex,10448);
- assert.equal(player.baseAtk,11.8);
+ assert.ok(Math.abs(player.baseAtk-11.8)<1e-9, 'Mega attack gain should be 18%');
  assert.equal(player.baseSpd,108);
  assert.equal(player.dex,448);
  assert.equal(player.shiny,false);
