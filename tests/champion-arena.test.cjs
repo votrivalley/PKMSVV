@@ -36,7 +36,7 @@ function setup(){
    multiplayerProgress(){return {count:3,missing:[]};},
    chapter7(){save.pkmsvvChapter7Seen=true;save.pkmsvvChapter7Pending=false;return true;}
   },
-  Enemy:class{constructor(def){this.dex=def.dex;this.dead=false;this.boss=true}},
+  Enemy:class{constructor(def){this.dex=def.dex;this.dead=false;this.boss=true;this.maxHp=def.hp;this.hp=def.hp}},
   EnemyMgr:{add(e){this.last=e;return e},clear(){this.clears=(this.clears||0)+1}},
   Spawner:{update(){}},World:{setArena(a){this.arena=a}},
   Projectiles:{clear(){}},Pickups:{clear(){}},Hazards:{clear(){}},

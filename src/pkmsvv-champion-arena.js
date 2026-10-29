@@ -334,7 +334,7 @@ G.PKMSVVChampionArena=(()=>{
    if(art)step.append(art);
    const name=document.createElement('strong');name.textContent=symbol+' '+p.name;
    step.append(name);box.append(step);
-  });box.classList.add('celebrate');
+  });box.classList?.add?.('celebrate');
  }
  function exit(){if(active){returnToMenu();}const o=$('pkmsvv-champion-screen');if(o)o.hidden=true;}
  // Patch the live runtime rather than source js/game.js: Web/iOS and LAN builds
