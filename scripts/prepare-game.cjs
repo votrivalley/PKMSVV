@@ -628,6 +628,8 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-v155-pc-fullsc
 execFileSync(process.execPath,[path.join(project,'scripts','patch-competitive-levelup.cjs')],{cwd:project,stdio:'inherit'});
 // Mega Lucario proof-of-concept: local sprite, reversible battle form, no Gacha grants.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-mega-lucario.cjs')],{cwd:project,stdio:'inherit'});
+// Phase 1: light mint/yellow retro menu and a real Mega entry beside Support.
+execFileSync(process.execPath,[path.join(project,'scripts','patch-ui-phase1-mega.cjs')],{cwd:project,stdio:'inherit'});
 // Only Switch/Brewser: tolerate absent DOMContentLoaded and a stalled pixel-font Promise.
 if (process.env.PKMSVV_SWITCH_BOOT === '1') {
   patch('js/main.js',

@@ -5,6 +5,9 @@ on:
     paths:
       - 'tests/mega-lucario.test.cjs'
       - 'tests/mega-forms.test.cjs'
+      - 'tests/mega-ui-phase1.test.cjs'
+      - 'src/pkmsvv-phase1-pastel.css'
+      - 'src/pkmsvv-mega-entry.js'
       - 'data/mega-source-catalog.json'
       - 'src/pkmsvv-mega-lucario.js'
       - 'scripts/build-mega-lucario.cjs'
@@ -88,6 +91,8 @@ jobs:
         run: npm run test:mega
       - name: Verify all 36 candidate Mega visual sets and per-form credits
         run: npm run test:mega:pack
+      - name: Verify pastel Phase 1 menu, Mega entry and locked appearance
+        run: npm run test:mega:ui
       - name: Verify competitive rewards never leak across trainers
         run: node --test tests/competitive-rewards.test.cjs
       - name: Verify shared square Pokémon portrait in PC build

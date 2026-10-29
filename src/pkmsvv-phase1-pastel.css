@@ -1,0 +1,204 @@
+/* PHASE 1: soft mint + warm yellow retro menu.
+ * Applied LAST, after v1.5 menu/layout patches. Do not recolor combat/HUD.
+ * Disabled/undiscovered Pokémon deliberately retain dark silhouette surfaces.
+ */
+:root{--pkmsvv-ui-mint:#d9eae6;--pkmsvv-ui-mint-light:#f1faf6;
+ --pkmsvv-ui-tile:#dfefec;--pkmsvv-ui-border:#a4c9c5;
+ --pkmsvv-ui-yellow:#ffe486;--pkmsvv-ui-gold:#d6a11c;
+ --pkmsvv-ui-text:#173648;--pkmsvv-ui-muted:#385968}
+#scr-menu.pkmsvv-v15-menu{
+ background:radial-gradient(ellipse at 50% 15%,#effaf5 0%,#cfe6e2 65%,#b5d3d1 100%)!important;
+ color:var(--pkmsvv-ui-text);
+}
+#scr-menu.pkmsvv-v15-menu .menu-left .logo .t1.pkmsvv-one-line>span{
+ color:#16384b!important;text-shadow:0 2px 0 #fff8,0 4px 8px #2b6a6a33!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-left .logo>.pkmsvv-awakening-tagline{
+ color:#385968!important;text-shadow:none!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav{
+ background:transparent!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav>.box{
+ background:linear-gradient(155deg,#f5fcf8,#d5e8e4)!important;
+ border:2px solid #95c1bc!important;border-radius:14px!important;
+ box-shadow:0 0 0 3px #f4fffa,0 12px 24px #27525a24!important;
+ color:var(--pkmsvv-ui-text)!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list{
+ gap:7px!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item:not(.play){
+ background:linear-gradient(180deg,#eaf5f2,#d9eae7)!important;
+ border:2px solid #b3d0cb!important;border-radius:9px!important;
+ box-shadow:0 1px 2px #25505a1c!important;color:#173648!important;
+ padding:7px 10px!important;min-height:48px!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item.play{
+ background:linear-gradient(180deg,#ffefa8,#ffe17d)!important;
+ border:2px solid #dfae26!important;color:#173648!important;
+ box-shadow:0 2px 4px #735a1733!important;border-radius:10px!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item:not(.play):hover,
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item:not(.play):focus-visible,
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item:not(.play).pad-focus{
+ background:#ffe486!important;border-color:#d6a11c!important;color:#173648!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item .pkmsvv-menu-label{
+ color:#173648!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item .pkmsvv-menu-copy small{
+ display:block!important;font-size:clamp(10px,1vw,12px)!important;
+ line-height:1.2!important;color:#385968!important;
+ white-space:normal!important;
+}
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-partner{
+ background:linear-gradient(155deg,#f5fcf8,#d8ebe7)!important;
+ border:2px solid #a1c7c0!important;color:#173648!important;
+ box-shadow:0 0 0 3px #effaf5,0 12px 24px #30535a27!important;
+}
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-meta,
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-meta .nm,
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-meta .lv,
+#scr-menu.pkmsvv-v15-menu #menu-stats,
+#scr-menu.pkmsvv-v15-menu #menu-stats *{
+ color:#173648!important;text-shadow:none!important;
+}
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-details,
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-details small{
+ color:#385968!important;border-color:#a7cbc5!important;
+}
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-positive{color:#066b53!important}
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-negative{color:#a02b42!important}
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-event{
+ background:#e4f1ec!important;border-color:#a5cac3!important;color:#173648!important;
+}
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-event span{color:#385968!important}
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-bottom>#btn-news,
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-bottom>.pkmsvv-v15-news-card{
+ background:linear-gradient(180deg,#e9f5f0,#d6e9e4)!important;
+ border-color:#a4c9c5!important;color:#173648!important;
+ box-shadow:0 2px 6px #30565c25!important;
+}
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-bottom>#btn-news:hover,
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-bottom>.pkmsvv-v15-news-card:hover{
+ background:#ffe486!important;border-color:#d6a11c!important;
+}
+/* Existing upgrade paths stay intact; presentation only. */
+#scr-upgrade-select.scr.dim{
+ background:radial-gradient(circle at 50% 20%,#ebf8f3,#c8e1dc 80%,#b1d2cc)!important;
+}
+#scr-upgrade-select .pkmsvv-chooser{
+ background:linear-gradient(165deg,#f6fcf8,#d8ebe7)!important;
+ border:2px solid #98c3bd!important;box-shadow:0 12px 35px #2d585b36!important;
+ color:#173648!important;
+}
+#scr-upgrade-select .pkmsvv-chooser h2,
+#scr-upgrade-select .pkmsvv-chooser-intro{color:#173648!important}
+#scr-upgrade-select .pkmsvv-upgrade-tile{
+ background:#e4f1ed;border:2px solid #a4c9c5;box-shadow:0 3px 0 #9fc7c1;
+}
+#scr-upgrade-select .pkmsvv-upgrade-tile:hover,
+#scr-upgrade-select .pkmsvv-upgrade-tile:focus-visible{
+ background:#ffe486;border-color:#d6a11c;
+}
+#scr-upgrade-select .pkmsvv-chooser-hint{
+ background:#e3f2ec;color:#28495a;border:1px solid #a4c9c5;
+}
+#scr-upgrade-select .pkmsvv-skill-guide{
+ background:#e6f3ed;color:#173648;border:2px solid #a4c9c5;
+}
+#scr-upgrade-select .pkmsvv-guide-accordion{
+ background:#f2faf5;color:#173648;border-color:#bad6d0;
+}
+#scr-upgrade-select .pkmsvv-guide-accordion>summary,
+#scr-upgrade-select .pkmsvv-guide-inner,
+#scr-upgrade-select .pkmsvv-skill-guide p{color:#173648}
+#scr-upgrade-select .pkmsvv-orb-guide-row{
+ background:#dfefea;color:#173648;
+}
+#scr-upgrade-select .pkmsvv-chooser>.row.between{
+ display:flex!important;flex-wrap:wrap;align-items:center;gap:8px!important;
+}
+#scr-upgrade-select .pkmsvv-chooser>.row.between h2{
+ flex:1 1 auto;min-width:170px;margin:0 auto 0 0!important;
+}
+#scr-upgrade-select #pkmsvv-support-entry,
+#scr-upgrade-select #pkmsvv-mega-entry{
+ margin:0!important;flex:0 0 auto;min-height:42px;box-sizing:border-box;
+ padding:8px 11px!important;font-size:13px!important;
+ border-radius:9px!important;white-space:normal!important;line-height:1.25;
+}
+#scr-upgrade-select #pkmsvv-support-entry{
+ background:#d6ebea!important;border:2px solid #88bcb7!important;color:#173648!important;
+ box-shadow:0 2px 5px #2a596528!important;
+}
+#scr-upgrade-select #pkmsvv-mega-entry{
+ background:#ffe486!important;border:2px solid #d6a11c!important;color:#173648!important;
+ box-shadow:0 2px 5px #735a1733!important;font-weight:800;
+}
+#scr-upgrade-select #pkmsvv-support-entry:hover,
+#scr-upgrade-select #pkmsvv-mega-entry:hover,
+#scr-upgrade-select #pkmsvv-support-entry:focus-visible,
+#scr-upgrade-select #pkmsvv-mega-entry:focus-visible{
+ background:#ffefa8!important;border-color:#b8840f!important;
+}
+/* Existing Support handbook uses pale frames; LOCKED cells remain dark and ???. */
+.pkmsvv-support-modal{
+ background:linear-gradient(155deg,#f5fcf8,#d7e9e5)!important;
+ border-color:#a1c9c3!important;color:#173648!important;
+}
+.pkmsvv-support-modal-head h2,
+#pkmsvv-support-description{color:#173648!important}
+#pkmsvv-support-detail{
+ background:#ebf5f0;border:1px solid #a5cbc4;color:#173648;
+}
+#pkmsvv-support-detail h3,#pkmsvv-support-detail h4,
+#pkmsvv-support-detail p{color:#173648}
+.pkmsvv-support-cell:not(.locked){
+ background:#e6f3ed;color:#173648;border-color:#a4c9c5;
+}
+.pkmsvv-support-cell.locked{
+ background:#142b36;color:#edf8f5;border-color:#4d6972;
+}
+.pkmsvv-support-cell.locked canvas{filter:brightness(0)}
+.pkmsvv-support-cell:hover,.pkmsvv-support-cell.on{border-color:#d6a11c}
+.pkmsvv-support-bond-track{background:#aecbc5}
+/* Mega menu entry is real, but no permanent Mega unlocks are faked in phase 1. */
+.pkmsvv-mega-phase1-overlay[hidden]{display:none!important}
+.pkmsvv-mega-phase1-overlay{
+ position:fixed;inset:0;z-index:13022;background:#09252cba;
+ display:grid;place-items:center;padding:14px;
+}
+.pkmsvv-mega-phase1-dialog{
+ width:min(540px,96vw);max-height:90vh;overflow:auto;
+ padding:20px;background:linear-gradient(155deg,#f5fcf8,#d7e9e5);
+ border:2px solid #9ac5c0;border-radius:16px;box-shadow:0 18px 55px #071f2b7a;
+ color:#173648;
+}
+.pkmsvv-mega-phase1-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.pkmsvv-mega-phase1-head h2{margin:0;color:#173648;font-size:clamp(20px,3vw,27px)}
+.pkmsvv-mega-phase1-locked{
+ margin:18px auto;padding:20px;min-height:126px;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+ background:#142c38;border:2px solid #526b76;border-radius:12px;color:#f7fff9;
+}
+.pkmsvv-mega-phase1-locked strong{font-size:30px;letter-spacing:4px}
+.pkmsvv-mega-phase1-locked small{color:#dbede9;font-weight:700}
+.pkmsvv-mega-phase1-dialog p{color:#365666;line-height:1.5;margin:10px 0}
+@media(max-width:730px){
+ #scr-upgrade-select .pkmsvv-chooser>.row.between h2{flex-basis:100%;min-width:0}
+ #scr-upgrade-select #pkmsvv-support-entry,
+ #scr-upgrade-select #pkmsvv-mega-entry{
+  flex:1 1 calc(50% - 5px)!important;min-width:0;font-size:12px!important;
+ }
+ #scr-upgrade-select #pkmsvv-upgrade-back{margin-left:auto!important}
+}
+@media(max-width:430px){
+ #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item .pkmsvv-menu-copy small{display:none!important}
+ #scr-upgrade-select #pkmsvv-support-entry,
+ #scr-upgrade-select #pkmsvv-mega-entry{font-size:11px!important;padding:8px 7px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .pkmsvv-mega-phase1-dialog{scroll-behavior:auto!important}
+}
