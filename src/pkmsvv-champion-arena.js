@@ -236,6 +236,26 @@ G.PKMSVVChampionArena=(()=>{
   }
  }
  function exit(){if(active){returnToMenu();}const o=$('pkmsvv-champion-screen');if(o)o.hidden=true;}
+ // Patch the live runtime rather than source js/game.js: Web/iOS and LAN builds
+ // subsequently apply their own exact-code game patches. Wrappers compose safely.
+ function guardUpdate(object,key,fn){
+  const previous=object?.[key];if(typeof previous!=='function')return;
+  object[key]=function(...args){return fn.call(this,previous,args);};
+ }
+ guardUpdate(G.Spawner,'update',function(original,args){
+  return active?undefined:original.apply(this,args);
+ });
+ guardUpdate(G.Rift,'update',function(original,args){
+  return active?undefined:original.apply(this,args);
+ });
+ guardUpdate(G.Judgment,'update',function(original,args){
+  return active?undefined:original.apply(this,args);
+ });
+ guardUpdate(G.EnemyMgr,'update',function(original,args){
+  const out=original.apply(this,args);
+  update(args[0]); // observe actual boss HP/death AFTER combat manager update
+  return out;
+ });
  // If menu is opened externally, create its entry without opening a match.
  const oldOpen=G.MenuUI?.open;
  if(typeof oldOpen==='function')G.MenuUI.open=function(...args){const out=oldOpen.apply(this,args);menu();return out;};

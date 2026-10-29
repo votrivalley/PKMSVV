@@ -107,6 +107,6 @@ test('Narrative chapters are renumbered visibly, with old save keys and reward s
  if(fs.existsSync(path.join(game,'dev.html'))){
   const html=fs.readFileSync(path.join(game,'dev.html'),'utf8');
   assert.match(html,/js\/ui\/pkmsvv-champion-arena\.js/);
-  assert.match(fs.readFileSync(path.join(game,'js','game.js'),'utf8'),/PKMSVVChampionArena\?\.update\(dt\)/);
+  assert.match(fs.readFileSync(path.join(game,'js','ui','pkmsvv-champion-arena.js'),'utf8'),/guardUpdate\(G\.EnemyMgr,'update'/);
  }
 });
