@@ -60,7 +60,8 @@
     "test:v1535": "node --test tests/chapter-purple-rewards.test.cjs tests/story-intro.test.cjs tests/v15-gacha-save-isolation.test.cjs tests/collection.test.cjs",
     "test:competitive:nonblocking": "node --test tests/competitive-nonblocking.test.cjs tests/lan-mode-rules.test.cjs",
     "test:royale:spectator": "node --test tests/royale-spectator.test.cjs tests/competitive-nonblocking.test.cjs tests/lan-mode-rules.test.cjs",
-    "test:mega": "node --test tests/mega-lucario.test.cjs"
+    "test:mega": "node --test tests/mega-lucario.test.cjs",
+    "test:mega:pack": "node --test tests/mega-forms.test.cjs"
   },
   "devDependencies": {
     "playwright": "^1.62.1",
