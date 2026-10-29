@@ -68,3 +68,9 @@
  .pkmsvv-mega-filters .pkmsvv-mega-filter{font-size:11px;padding:6px}
  .pkmsvv-mega-pager{gap:7px}
 }
+
+/* Phase 3 quest checklist never reveals unreleased Mega name or Stone. */
+.pkmsvv-mega-quest-steps{display:flex;flex-direction:column;gap:5px;width:100%;padding:9px 10px;box-sizing:border-box;border:1px solid #526b76;border-radius:8px;text-align:left;background:#1d3945;font-size:12px}
+.pkmsvv-mega-quest-steps b{color:#f3e7aa;font-size:13px}
+.pkmsvv-mega-quest-steps .done{color:#94ead8}
+.pkmsvv-mega-quest-steps .pending{color:#ebf3ef}

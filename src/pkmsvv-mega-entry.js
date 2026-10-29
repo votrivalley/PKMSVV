@@ -90,7 +90,26 @@ G.PKMSVVMegaEntry=(()=>{
    const tip=el('p');tip.textContent=tr(
     'Cần sở hữu Pokémon, đúng Mega Stone và hoàn thành cốt truyện. Huyền thoại có nhiệm vụ riêng.',
     'Own the Pokémon, obtain its Mega Stone and meet story requirements. Legendaries have separate quests.');
-   area.append(tip);return;
+   area.append(tip);
+   const state=G.PKMSVVMegaPhase3?.progress?.(f);
+   if(state){
+    const quest=el('div',null,'pkmsvv-mega-quest-steps');
+    const heading=el('b');heading.textContent=tr('Tiến trình mở khóa','Unlock progress');
+    quest.append(heading);
+    for(const [flag,vi,en] of [
+     ['pokemon','Sở hữu Pokémon','Own the Pokémon'],
+     ['stone','Đúng Mega Stone','Matching Mega Stone'],
+     ['story','Hoàn thành cốt truyện','Complete storyline'],
+     ['form','Mở dạng Mega riêng','Specific Mega form']
+    ]){
+     if(flag==='form'&&!f?.sharedStone)continue;
+     if(flag==='stone'&&!f?.stoneKey)continue;
+     const line=el('span');line.textContent=(state[flag]?'✓ ':'○ ')+tr(vi,en);
+     line.className=state[flag]?'done':'pending';quest.append(line);
+    }
+    area.append(quest);
+   }
+   return;
   }
   const title=el('h3');title.textContent=displayName(f);area.append(title);
   const visual=art(f);

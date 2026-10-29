@@ -27,6 +27,16 @@ G.PKMSVVMegaPhase3=(()=>{
   if(!stoneOwned(s,f.stoneKey))return false;
   return f.storyLocked||s.pkmsvvChapter3Seen===true;
  }
+ function progress(f){
+  const s=getSave();
+  return {
+   pokemon:!!(f&&s?.owned?.[f.dex]),
+   stone:!!(f&&(!f.stoneKey||stoneOwned(s,f.stoneKey))),
+   story:!!(f&&(f.storyLocked?s?.megaStoryCleared?.[f.key]===true:
+     s?.pkmsvvChapter3Seen===true)),
+   form:!!(f&&(!f.sharedStone||s?.megaForms?.[f.key]===true))
+  };
+ }
  function isBattleReady(f){
   return !!(f&&!f.storyLocked&&CHAMPIONS.some(c=>c.key===f.key)&&f.artReady&&
    G.SPRITE_META?.[f.spriteId]?.a?.Idle&&isUnlocked(f));
@@ -158,5 +168,5 @@ G.PKMSVVMegaPhase3=(()=>{
  else mount();
  setInterval(sync,250);
  return {CHAMPIONS,STONE_CHANCE,DURATION,CD_FACTOR,rewardStone,isUnlocked,isBattleReady,
-  stoneOwned,formFor,eligible,activate,tryActivate,stop,tick,sync};
+  stoneOwned,progress,formFor,eligible,activate,tryActivate,stop,tick,sync};
 })();

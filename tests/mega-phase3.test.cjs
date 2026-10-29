@@ -72,6 +72,7 @@ test('only paid successful Gacha pulls can receive 1% bonus and duplicates are s
 test('owner + right stone + Chapter 3 required; legendary miniquests not bypassed',()=>{
  const {lib,s,forms}=setup(),char=forms[0],ray=forms.at(-1);
  assert.equal(lib.isUnlocked(char),true);
+ assert.deepEqual(JSON.parse(JSON.stringify(lib.progress(char))),{pokemon:true,stone:true,story:true,form:true});
  s.pkmsvvChapter3Seen=false;assert.equal(lib.isUnlocked(char),false);
  s.pkmsvvChapter3Seen=true;delete s.megaStones.charizarditex;
  assert.equal(lib.isUnlocked(char),false);
