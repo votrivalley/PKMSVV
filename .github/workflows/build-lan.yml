@@ -29,6 +29,7 @@ on:
       - 'src/v15/eggs.js'
       - 'src/web/pkmsvv-egg-rush.js'
       - 'tests/support-fast-shiny.test.cjs'
+      - 'tests/v15-eggs.test.cjs'
       - 'src/pkmsvv-mega-entry.js'
       - 'data/mega-source-catalog.json'
       - 'src/pkmsvv-mega-lucario.js'
