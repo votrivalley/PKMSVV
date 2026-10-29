@@ -14,7 +14,7 @@ G.PKMSVVChampionArena=(()=>{
  const PREP_SECONDS=180,FIGHT_SECONDS=150;
  const $=id=>document.getElementById(id);
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
- let region=0,stage='idle',round=0,elapsed=0,opp=null,bracket=[],target=null,active=false,paid=false;
+ let region=0,stage='idle',round=0,elapsed=0,opp=null,bracket=[],target=null,active=false,paid=false,lastSecond=-1;
  const ROUNDS=['Vòng 16','Tứ kết','Bán kết','Chung kết','Thách đấu Champion'];
  const SEL=['Round of 16','Quarterfinal','Semifinal','Final','Reigning Champion'];
  const AI_POOL=[25,6,94,149,282,448,475,530,658,778,212,260,445,768,870,998];
@@ -141,7 +141,7 @@ G.PKMSVVChampionArena=(()=>{
   target=G.EnemyMgr.add(new G.Enemy(raw,pl.x+Math.min(300,190+round*15),pl.y-35,
     {hp:1,spd:1,dmg:1},true));
   target.pkmsvvChampion=true;
-  stage='fight';elapsed=0;
+  stage='fight';elapsed=0;lastSecond=-1;
   panel().hidden=true;
   G.UI?.toast?.(tr('Arena · ','Arena · ')+(ROUNDS[round]||'')+' — '+opp.name,3000);
   return true;
@@ -152,6 +152,12 @@ G.PKMSVVChampionArena=(()=>{
   bracket=makeBracket();
   active=true;stage='fight';
   G.Game.startRun(null);
+  const zoneType=G.DEX_BY?.[REGIONS[region][1]]?.types?.[0]||'normal';
+  G.World?.setArena?.({tx:0,ty:0,r:22,type:zoneType});
+  if(G.Tiles?.arenaBiome)G.World?.setBiome?.(G.Tiles.arenaBiome(zoneType),true);
+  const bar=$('pkmsvv-champion-hud')||document.createElement('div');
+  bar.id='pkmsvv-champion-hud';bar.className='pkmsvv-champion-hud';
+  document.body.append(bar);bar.hidden=false;
   if(!spawn()){active=false;stage='idle';return false;}
   return true;
  }
@@ -182,6 +188,8 @@ G.PKMSVVChampionArena=(()=>{
  }
  function returnToMenu(){
   active=false;stage='idle';target=null;opp=null;
+  G.World?.setArena?.(null);
+  const bar=$('pkmsvv-champion-hud');if(bar)bar.hidden=true;
   if(G.Game?.state!=='ui')G.Game?.toUI?.();
   G.Flow?.goMenu?.();
  }
@@ -198,7 +206,7 @@ G.PKMSVVChampionArena=(()=>{
  }
  function nextDuel(){
   if(!active||stage!=='prep')return false;
-  stage='fight';elapsed=0;
+  stage='fight';elapsed=0;lastSecond=-1;
   return spawn();
  }
  function update(dt){
@@ -211,6 +219,18 @@ G.PKMSVVChampionArena=(()=>{
    return;
   }
   elapsed+=Math.max(0,dt);
+  const second=Math.floor(elapsed);
+  if(lastSecond!==second){
+   lastSecond=second;
+   const bar=$('pkmsvv-champion-hud');
+   if(bar)bar.textContent='🏆 '+REGIONS[region][0]+' · '+(ROUNDS[round]||'')+
+    (stage==='fight'?' · '+Math.max(0,Math.ceil(FIGHT_SECONDS-elapsed))+'s':'');
+   if(stage==='prep'){
+    const label=$('pkmsvv-champion-progress');
+    if(label)label.textContent=tr('Chuẩn bị trận tiếp theo: ','Next round in ')+
+     Math.max(0,Math.ceil(PREP_SECONDS-elapsed))+'s · '+(ROUNDS[round]||'');
+   }
+  }
   if(stage==='prep'){
    if(elapsed>=PREP_SECONDS)nextDuel();
    return;

@@ -24,3 +24,7 @@
 @media(max-width:670px){.pkmsvv-champion-regions{grid-template-columns:repeat(2,minmax(0,1fr))}
  .pkmsvv-champion-panel{padding:12px}.pkmsvv-champion-region{font-size:11px}
 }
+
+/* Arena themed ring and match timer. */
+#pkmsvv-champion-hud[hidden]{display:none!important}
+.pkmsvv-champion-hud{position:fixed;top:44px;left:50%;transform:translateX(-50%);z-index:1700;max-width:85vw;text-align:center;border:2px solid #e8c76f;border-radius:10px;background:#122b3bd9;color:#ffecac;font-size:14px;font-weight:900;padding:7px 12px;pointer-events:none;text-shadow:0 1px 2px #071c25}
