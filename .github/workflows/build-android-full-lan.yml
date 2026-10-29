@@ -3,6 +3,10 @@ on:
   push:
     branches: [feature/lan-local-beta]
     paths:
+      - 'tests/mega-lucario.test.cjs'
+      - 'src/pkmsvv-mega-lucario.js'
+      - 'scripts/build-mega-lucario.cjs'
+      - 'scripts/patch-mega-lucario.cjs'
       - 'config/android-signing-identity.json'
       - 'scripts/verify-android-signing.cjs'
       - 'tests/android-signing-identity.test.cjs'
