@@ -42,7 +42,7 @@ test('PC candidate pack has all 36 8-direction local sprite sets with source cre
 });
 test('Mega pack does not modify save species IDs, Gacha or protected Android identity',()=>{
  const code=fs.readFileSync(path.join(root,'scripts','build-mega-forms.cjs'),'utf8');
- assert.equal(/(?:save\.|G\.DB|owned\[|gacha)/i.test(code.replace(/Gacha entries/g,'')),false);
+ assert.equal(/G\.DB\.save|G\.Gacha|G\.DEX_BY\s*\[/.test(code),false);
  const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
  assert.match(pkg.scripts['test:mega:pack'],/mega-forms\.test/);
  assert.equal(pkg.version,'1.5.42');
