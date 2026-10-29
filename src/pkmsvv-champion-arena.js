@@ -80,7 +80,7 @@ G.PKMSVVChampionArena=(()=>{
    '<div class="pkmsvv-champion-heading"><h2 id="pkmsvv-champion-title">🏆 Arena · Champion</h2><button class="btn ghost" id="pkmsvv-champion-close" type="button">×</button></div>'+
    '<p id="pkmsvv-champion-info"></p><div id="pkmsvv-champion-regions" class="pkmsvv-champion-regions"></div>'+
    '<div class="pkmsvv-arena-mode-tabs"><button id="pkmsvv-arena-mode-solo" type="button" class="btn">⚔ Solo 1v1</button><button id="pkmsvv-arena-mode-champion" type="button" class="btn gold">🏆 Champion 16</button></div>'+
-   '<div id="pkmsvv-champion-progress" class="pkmsvv-champion-progress"></div>'+'<div id="pkmsvv-champion-bracket" class="pkmsvv-champion-bracket"></div>'+'<div id="pkmsvv-champion-podium" class="pkmsvv-champion-podium" hidden></div>'+
+   '<div id="pkmsvv-champion-progress" class="pkmsvv-champion-progress"></div>'+'<div id="pkmsvv-champion-bracket" class="pkmsvv-champion-bracket"></div>'+'<div id="pkmsvv-champion-hall" class="pkmsvv-champion-hall"></div>'+'<div id="pkmsvv-champion-podium" class="pkmsvv-champion-podium" hidden></div>'+
    '<div class="pkmsvv-champion-actions"><button id="pkmsvv-champion-start" type="button" class="btn gold">Bắt đầu giải đấu</button>'+
    '<button id="pkmsvv-champion-rematch" type="button" class="btn gold" hidden>Thách đấu lại Champion</button>'+
    '<button id="pkmsvv-champion-ready" type="button" class="btn gold" hidden>Sẵn sàng</button></div></div>';
@@ -118,6 +118,13 @@ G.PKMSVVChampionArena=(()=>{
   if(bracketEl)bracketEl.textContent=active?bracket.map((p,i)=>
    (i%2===0?'\n':' VS ')+(p.id==='you'?'⭐ ':'')+p.name).join(''):
    tr('Đã lưu ','Recorded ')+(led.history?.length||0)+tr(' giải đấu.',' tournaments.');
+  const hall=$('pkmsvv-champion-hall');
+  if(hall){const past=(led.history||[]).slice(-5).reverse();
+   hall.textContent=past.length?tr('Sảnh Danh Vọng: ','Hall of Fame: ')+
+    past.map(x=>'🏆 '+x.region+' · '+(G.DEX_BY?.[x.dex]?.name||'Pokémon')+
+    ' · '+(x.wins||4)+tr(' trận thắng',' wins')).join(' | '):
+    tr('Chưa có cúp Champion nào trong hồ sơ.','No recorded Champion titles yet.');
+  }
   $('pkmsvv-champion-start').hidden=active;
   const regionName=REGIONS[region][0];
   const replayTitle=!active&&!!led.trophies?.[regionName]&&!led.seals?.[regionName];

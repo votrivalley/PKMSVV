@@ -91,6 +91,10 @@ G.PKMSVVArenaSolo=(()=>{
   return true;
  }
  function selection(){
+  // The 10-second pick is a safe interval: no hostile mobs attack a player
+  // behind a modal, and no farm rewards can be gained while selecting.
+  G.EnemyMgr?.clear?.();G.Projectiles?.clear?.();G.Hazards?.clear?.();
+  const p=G.Game?.player;if(p)p.invuln=Math.max(12,p.invuln||0);
   stage='select';elapsed=0;const screen=frame();screen.hidden=false;
   $('pkmsvv-arena-solo-play').hidden=true;
   const picks=$('pkmsvv-arena-solo-picks');picks.replaceChildren();
@@ -159,7 +163,7 @@ G.PKMSVVArenaSolo=(()=>{
   const sec=Math.floor(elapsed);
   if(sec!==lastSecond){
    lastSecond=sec;const h=hud();
-   if(stage==='prep'){
+   if(stage==='prep'||stage==='warn'){
     const left=Math.max(0,Math.ceil(prepTotal-elapsed));
     h.textContent='⚔ Solo 1v1 · '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0')+
      (left<=WARN?' · '+tr('⚠ CÒN 30 GIÂY!','⚠ 30-SECOND WARNING!'):'');

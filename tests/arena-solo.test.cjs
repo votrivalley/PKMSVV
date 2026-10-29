@@ -70,3 +70,12 @@ test('Ring shrinks after 150 seconds and no Pokémon duplication is allowed',()=
  lib.update(181);assert.equal(G.World.arena.r,18);
  assert.notEqual(lib.chosen,lib.rival);
 });
+
+test('Solo freezes enemies during Pokémon pick so a 10-second modal cannot kill the player',()=>{
+ const h=setup(),{G,lib}=h;
+ let count=0;const old=G.EnemyMgr.clear;
+ G.EnemyMgr.clear=function(){count++;return old.call(this)};
+ lib.start(()=>0);lib.update(570);lib.update(20);
+ assert.equal(lib.stage,'select');assert.equal(count,1);
+ assert.ok(h.player.invuln>=12);
+});
