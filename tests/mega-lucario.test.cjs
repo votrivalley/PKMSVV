@@ -97,3 +97,20 @@ test('UI uses a circular Mega Stone with subtle glimmer and a countdown',()=>{
  assert.match(js,/p\.cdMul\/=COOLDOWN/);
  assert.equal((text('scripts/patch-mega-lucario.cjs').match(/patch\('js\/systems\/combat\.js'/g)||[]).length,0);
 });
+
+test('Shiny Mega Lucario BETA uses authentic /s/ sheets and restores base Shiny',async()=>{
+ const {G,player}=mock(),mega=G.MegaLucario;
+ player.shiny=true;
+ G.Sprites.hasShiny=dex=>dex===10448;
+ G.Sprites.sheet=()=>({ready:true});
+ mega.previewUnlock();
+ assert.equal(mega.eligible(),true);
+ assert.equal(await mega.tryActivate(),true);
+ assert.equal(player.anim.dex,10448);
+ assert.equal(player.anim.shiny,true);
+ mega.tick(player,30.2);
+ assert.equal(player.anim.dex,448);
+ assert.equal(player.anim.shiny,true);
+ assert.equal(player.shiny,true);
+ assert.equal(G.DB.save.megaStones.lucarionite,undefined);
+});

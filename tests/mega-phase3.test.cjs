@@ -118,3 +118,22 @@ test('compiled Phase 3 assets are loaded after Phase 2 catalog and original Gach
  const runtime=read('src/pkmsvv-mega-phase3.js');
  assert.doesNotMatch(runtime,/save\.stats\.runs\s*\+\+|megaChampions\s*=|G\.DEX_BY\[/);
 });
+
+test('Shiny Mega Charizard X keeps its genuine Shiny animation and returns Shiny after 30s',()=>{
+ const {lib,G,pl}=setup();
+ G.Sprites.hasShiny=dex=>dex===10006;
+ pl.shiny=true;
+ assert.equal(lib.eligible(),true);
+ assert.equal(lib.activate(pl),true);
+ assert.equal(pl.anim.dex,10006);
+ assert.equal(pl.anim.shiny,true);
+ assert.equal(pl.shiny,true);
+ lib.tick(pl,30.1);
+ assert.equal(pl.anim.dex,6);
+ assert.equal(pl.anim.shiny,true);
+ assert.equal(pl.shiny,true);
+ G.Sprites.hasShiny=()=>false;
+ G.Game.startRun();
+ pl._megaUsed=false;
+ assert.equal(lib.eligible(),false,'no Shiny Mega until genuine Shiny art exists');
+});
