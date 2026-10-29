@@ -75,8 +75,14 @@ async function run(){
       const page=await context.newPage();extraPages.push(page);await ready(page,base+'/game/?pkmsvvWifi=1');
       const offer=await host.evaluate(()=>G.LanBus.invitation()),answer=await page.evaluate(s=>G.LanBus.answer(s),offer);
       await host.evaluate(s=>G.LanBus.accept(s),answer);
-      const result=await page.evaluate(async id=>{const result=await G.Social.joinRoom(id);if(result.ok)G.LobbyUI.open();return result;},room);
-      assert.equal(result.ok,true);
+      await page.waitForFunction(()=>G.LanBus?.connected,null,{timeout:35000});
+      const result=await page.evaluate(async id=>{
+       const result=await G.Social.joinRoom(id);
+       if(result.ok)G.LobbyUI.open();
+       return {...result,connected:G.LanBus.connected,room:G.Social.room?.id,uid:G.LanBus.uid};
+      },room);
+      assert.equal(result.ok,true,'Egg Rush player '+(i+3)+' could not join Host: '+JSON.stringify(result));
+      await host.waitForFunction(expected=>G.Social.room?.members.length===expected,i+3,{timeout:10000});
      }
      await host.waitForFunction(()=>G.Social.room?.members.length===4);
     }

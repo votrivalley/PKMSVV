@@ -158,9 +158,18 @@ if(new URLSearchParams(location.search).get('pkmsvvWifi')==='1'){
    if(owner||!links.size)return uid;
    const p=[...links.values()][0];if(p.dc?.readyState==='open')return uid;
    await new Promise((resolve,reject)=>{
-    const timer=setTimeout(()=>reject(Error('Chưa ghép nối. Host cần nhận phản hồi của bạn; kiểm tra cùng Wi-Fi.')),15000);
-    const poll=setInterval(()=>{if(p.dc?.readyState==='open'){clearTimeout(timer);clearInterval(poll);resolve();}else if(!links.has(p.id)){clearTimeout(timer);clearInterval(poll);reject(Error('Ghép nối đã đóng'));}},100);
-    setTimeout(()=>clearInterval(poll),15100);
+    let finished=false;
+    const settle=error=>{
+     if(finished)return;finished=true;clearInterval(poll);clearTimeout(timer);
+     if(error)reject(error);else resolve();
+    };
+    // Multiple genuine peer connections require additional LAN ICE time on busy PCs.
+    const timer=setTimeout(()=>settle(Error('Chưa ghép nối WebRTC sau 30 giây. Kiểm tra Host và cùng Wi-Fi rồi thử lại.')),30000);
+    const poll=setInterval(()=>{
+     if(p.dc?.readyState==='open')settle();
+     else if(!links.has(p.id)||p.pc.connectionState==='closed'||p.pc.connectionState==='failed')
+      settle(Error('Ghép nối đã đóng hoặc ICE thất bại'));
+    },100);
    });return uid;
   }
   async function request(action,data={}){
