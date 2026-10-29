@@ -8,7 +8,9 @@ G.PKMSVVStory=(()=>{
    1:'eyes', 2:'eyes', 3:'eyes',
    4:'gate', 5:'reveal',
    6:'chapter2-orbs', 7:'chapter2-shadow', 8:'chapter3-nest', 9:'chapter3-hatch',
-   10:'chapter1-echo', 11:'chapter1-fragments'
+   10:'chapter1-echo', 11:'chapter1-fragments',
+   12:'chapter6-arena', 13:'chapter6-champion',
+   14:'chapter7-seal', 15:'chapter7-mega'
  });
  const chapters={
   prologue:[
@@ -68,25 +70,25 @@ G.PKMSVVStory=(()=>{
    {art:10,speaker:['Tôi','Me'],text:['Lần này mình sẽ tìm lại ký ức cùng những người bạn!','This time I will recover my memories with friends!']}
   ],
   chapter6:[
-   {art:10,speaker:['Tôi','Me'],text:['Một đấu trường xuất hiện. Phía trên là mười chiếc vương miện!','An arena has appeared. Above it hang ten crowns!']},
-   {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Mỗi vùng là giải loại trực tiếp mười sáu người. Vòng 16, tứ kết, bán kết, chung kết.','Each region has a sixteen-trainer knockout: round of sixteen, quarterfinals, semifinals and final.']},
-   {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Giữa các vòng, ngươi có ba phút chuẩn bị.','There are three minutes to prepare between rounds.']},
-   {art:10,speaker:['Tôi','Me'],text:['Vô địch là có Ấn Chứng ngay sao?','Does winning the tournament grant me the Crown Seal?']},
-   {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Chưa. Ngươi phải đánh bại Champion đương nhiệm sau trận chung kết.','Not yet. You must beat the reigning Champion after the final.']},
-   {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Nếu thua Champion, ngươi vẫn giữ cúp. Rèn luyện rồi quay lại thách đấu.','Lose to the Champion and you keep your trophy. Train and challenge again.']},
-   {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Thu thập mười Ấn Chứng Vương Miện để mở cánh cổng cuối cùng trên trời.','Collect all ten Crown Seals to open the final sky gate.']},
-   {art:10,speaker:['Tôi','Me'],text:['Những chiếc vương miện đó... mình sẽ giành bằng trận thắng thật sự.','Those crowns... I will earn them in real battles.']}
+   {art:12,speaker:['Tôi','Me'],text:['Một đấu trường xuất hiện. Phía trên là mười chiếc vương miện!','An arena has appeared. Above it hang ten crowns!']},
+   {art:12,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Mỗi vùng là giải loại trực tiếp mười sáu người. Vòng 16, tứ kết, bán kết, chung kết.','Each region has a sixteen-trainer knockout: round of sixteen, quarterfinals, semifinals and final.']},
+   {art:12,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Giữa các vòng, ngươi có ba phút chuẩn bị.','There are three minutes to prepare between rounds.']},
+   {art:12,speaker:['Tôi','Me'],text:['Vô địch là có Ấn Chứng ngay sao?','Does winning the tournament grant me the Crown Seal?']},
+   {art:13,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Chưa. Ngươi phải đánh bại Champion đương nhiệm sau trận chung kết.','Not yet. You must beat the reigning Champion after the final.']},
+   {art:13,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Nếu thua Champion, ngươi vẫn giữ cúp. Rèn luyện rồi quay lại thách đấu.','Lose to the Champion and you keep your trophy. Train and challenge again.']},
+   {art:13,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Thu thập mười Ấn Chứng Vương Miện để mở cánh cổng cuối cùng trên trời.','Collect all ten Crown Seals to open the final sky gate.']},
+   {art:13,speaker:['Tôi','Me'],text:['Những chiếc vương miện đó... mình sẽ giành bằng trận thắng thật sự.','Those crowns... I will earn them in real battles.']}
   ],
   chapter7:[
-   {art:10,speaker:['Tôi','Me'],text:['Ấn Chứng đầu tiên... nó đang rung lên. Có thứ gì thức tỉnh trong cơ thể mình?','My first Crown Seal... it is trembling. Something inside me is awakening.']},
-   {art:11,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Ngươi đã đánh bại một Champion thực sự. Cánh cửa Tiến Hóa Mega cuối cùng cũng mở.','You defeated a true Champion. The gate to Mega Evolution has finally opened.']},
-   {art:10,speaker:['Tôi','Me'],text:['Mega... là dạng tiến hóa mới sao?','Mega... is that a new kind of evolution?']},
-   {art:11,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Đó là sức mạnh bùng lên trong một trận chiến, không phải một dạng tiến hóa vĩnh viễn.','It is a burst of power during battle, not a permanent evolution.']},
-   {art:11,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Muốn biến hình, ngươi còn cần Pokémon phù hợp, Mega Stone tương ứng hoặc điều kiện đặc biệt của dạng đó.','To transform, you still need the right Pokémon and Mega Stone, or that form’s special requirement.']},
-   {art:10,speaker:['Tôi','Me'],text:['Mình có thể dùng sức mạnh ấy mãi sao?','Can I use that power forever?']},
-   {art:11,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Trong các trận solo, Mega kéo dài ba mươi giây, tăng chỉ số và giảm thời gian hồi chiêu ba mươi phần trăm.','In solo battles, Mega lasts thirty seconds, boosts stats and cuts skill cooldowns by thirty percent.']},
-   {art:11,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Mở cửa Mega không có nghĩa mọi dạng đều được tặng. Những bóng đen ??? sẽ hiện nguyên hình khi ngươi thật sự sở hữu chúng.','Opening the Mega gate does not grant every form. The dark ??? silhouettes reveal themselves only when you truly unlock them.']},
-   {art:10,speaker:['Tôi','Me'],text:['Vậy đây mới chỉ là khởi đầu... mình sẽ tìm đủ những mảnh sức mạnh ấy!','So this is only the beginning... I will gather those fragments of power!']}
+   {art:14,speaker:['Tôi','Me'],text:['Ấn Chứng đầu tiên... nó đang rung lên. Có thứ gì thức tỉnh trong cơ thể mình?','My first Crown Seal... it is trembling. Something inside me is awakening.']},
+   {art:14,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Ngươi đã đánh bại một Champion thực sự. Cánh cửa Tiến Hóa Mega cuối cùng cũng mở.','You defeated a true Champion. The gate to Mega Evolution has finally opened.']},
+   {art:14,speaker:['Tôi','Me'],text:['Mega... là dạng tiến hóa mới sao?','Mega... is that a new kind of evolution?']},
+   {art:15,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Đó là sức mạnh bùng lên trong một trận chiến, không phải một dạng tiến hóa vĩnh viễn.','It is a burst of power during battle, not a permanent evolution.']},
+   {art:15,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Muốn biến hình, ngươi còn cần Pokémon phù hợp, Mega Stone tương ứng hoặc điều kiện đặc biệt của dạng đó.','To transform, you still need the right Pokémon and Mega Stone, or that form’s special requirement.']},
+   {art:15,speaker:['Tôi','Me'],text:['Mình có thể dùng sức mạnh ấy mãi sao?','Can I use that power forever?']},
+   {art:15,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Trong các trận solo, Mega kéo dài ba mươi giây, tăng chỉ số và giảm thời gian hồi chiêu ba mươi phần trăm.','In solo battles, Mega lasts thirty seconds, boosts stats and cuts skill cooldowns by thirty percent.']},
+   {art:15,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Mở cửa Mega không có nghĩa mọi dạng đều được tặng. Những bóng đen ??? sẽ hiện nguyên hình khi ngươi thật sự sở hữu chúng.','Opening the Mega gate does not grant every form. The dark ??? silhouettes reveal themselves only when you truly unlock them.']},
+   {art:15,speaker:['Tôi','Me'],text:['Vậy đây mới chỉ là khởi đầu... mình sẽ tìm đủ những mảnh sức mạnh ấy!','So this is only the beginning... I will gather those fragments of power!']}
   ],
   reveal:[
    {art:5,speaker:['Tôi','Me'],text:['Mình... đã biến thành một Pokémon?!','I... turned into a Pokémon?!']},
@@ -202,7 +204,7 @@ G.PKMSVVStory=(()=>{
       img.dataset.revealFallback='1';
       img.onerror=()=>{img.onerror=null;img.src='assets/story/scene-5.svg';};
       img.src='assets/story/gate.webp';
-    }else if(key==='chapter1-echo'||key==='chapter1-fragments'||key==='chapter2-orbs'||key==='chapter2-shadow'||key==='chapter3-nest'||key==='chapter3-hatch'){
+    }else if(key==='chapter1-echo'||key==='chapter1-fragments'||key==='chapter2-orbs'||key==='chapter2-shadow'||key==='chapter3-nest'||key==='chapter3-hatch'||key==='chapter6-arena'||key==='chapter6-champion'||key==='chapter7-seal'||key==='chapter7-mega'){
       img.onerror=null;
       img.src='assets/story/gate.webp';
     }else{
@@ -217,6 +219,10 @@ G.PKMSVVStory=(()=>{
      key==='chapter1-fragments'?tr('Tám sức mạnh và những mảnh ký ức đang trở lại','Eight powers and returning memory fragments'):
      key==='chapter3-nest'?tr('Ổ trứng còn sót lại giữa vùng đất ký ức','An abandoned nest in the land of lost memories'):
     key==='chapter3-hatch'?tr('Quả trứng nở, Pokémon con đi theo người sống sót','An egg hatches and a baby Pokémon joins the survivor'):
+    key==='chapter6-arena'?tr('Đấu trường vương miện xuất hiện giữa bầu trời','A crown arena rises into the sky'):
+    key==='chapter6-champion'?tr('Trận thách đấu Champion quyết định Ấn Chứng Vương Miện','A Champion duel for the Crown Seal'):
+    key==='chapter7-seal'?tr('Ấn Chứng đầu tiên đánh thức sức mạnh Mega','The first Crown Seal awakens Mega power'):
+    key==='chapter7-mega'?tr('Pokémon bùng nổ sức mạnh Tiến Hóa Mega','A Pokémon unleashes the power of Mega Evolution'):
     key==='chapter2-orbs'?tr('Vòng phép sáng lên, Mystery Orbs trỗi dậy giữa đêm','Eight powers awaken as the Mystery Orbs rise into the night'):
     key==='chapter2-shadow'?tr('Bóng trắng bí ẩn xuất hiện trong chính khung cảnh Mystery Orbs','A mysterious white shadow appears in the same Mystery Orb scene'):
     tr(key==='eyes'?'Bóng người trước đôi mắt bí ẩn giữa bầu trời sao':
@@ -258,7 +264,7 @@ G.PKMSVVStory=(()=>{
   stop();hideNameForm();mode=type;idx=0;next=done;replaying=replay;chosenDex=dex;
   lines=chapters[type];G.UI.chrome(false);G.UI.show('scr-pkmsvv-story');
   // Preload once; optional offline fallbacks remain available.
-  for(const name of ['eyes','gate','reveal','chapter1-echo','chapter1-fragments','chapter2-orbs','chapter2-shadow','chapter3-nest','chapter3-hatch']){const preload=new Image();preload.src='assets/story/'+name+'.webp';}
+  for(const name of ['eyes','gate','reveal','chapter1-echo','chapter1-fragments','chapter2-orbs','chapter2-shadow','chapter3-nest','chapter3-hatch','chapter6-arena','chapter6-champion','chapter7-seal','chapter7-mega']){const preload=new Image();preload.src='assets/story/'+name+'.webp';}
   draw();
   if(G.Pad&&G.Pad.focusFirst)G.Pad.focusFirst();
  }
