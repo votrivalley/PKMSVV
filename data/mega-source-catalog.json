@@ -1,0 +1,2712 @@
+{
+  "schema": 1,
+  "auditDate": "2026-10-29",
+  "sources": {
+    "officialData": "smogon/pokemon-showdown data/pokedex.ts",
+    "showdownSha": "ccfaa20f32af363569cd21a9d501b2bc1ded26b1",
+    "sprites": "PMDCollab/SpriteCollab",
+    "spriteSha": "448d3af85e2cfa85a8c5ead076eddb145251b473",
+    "license": "CC BY-NC 4.0, per-form contributor credits required",
+    "note": "Meowstic male/female variants counted as one Mega family to match 96-form catalog; original Magearna and Tatsugiri shape variants remain separate."
+  },
+  "counts": {
+    "sprite-ready": 36,
+    "partial": 6,
+    "missing": 54
+  },
+  "forms": [
+    {
+      "dex": 3,
+      "name": "Venusaur-Mega",
+      "showdownKey": "venusaurmega",
+      "megaStone": "Venusaurite",
+      "megaStats": {
+        "hp": 80,
+        "atk": 100,
+        "def": 123,
+        "spa": 122,
+        "spd": 120,
+        "spe": 80
+      },
+      "megaAbility": "Thick Fat",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0003/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0003/0001"
+      }
+    },
+    {
+      "dex": 6,
+      "name": "Charizard-Mega-X",
+      "showdownKey": "charizardmegax",
+      "megaStone": "Charizardite X",
+      "megaStats": {
+        "hp": 78,
+        "atk": 130,
+        "def": 111,
+        "spa": 130,
+        "spd": 85,
+        "spe": 100
+      },
+      "megaAbility": "Tough Claws",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0006/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Shoot",
+          "SpAttack",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate",
+          "Cringe"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0006/0001"
+      }
+    },
+    {
+      "dex": 6,
+      "name": "Charizard-Mega-Y",
+      "showdownKey": "charizardmegay",
+      "megaStone": "Charizardite Y",
+      "megaStats": {
+        "hp": 78,
+        "atk": 104,
+        "def": 78,
+        "spa": 159,
+        "spd": 115,
+        "spe": 100
+      },
+      "megaAbility": "Drought",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0006/0002",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0006/0002"
+      }
+    },
+    {
+      "dex": 9,
+      "name": "Blastoise-Mega",
+      "showdownKey": "blastoisemega",
+      "megaStone": "Blastoisinite",
+      "megaStats": {
+        "hp": 79,
+        "atk": 103,
+        "def": 120,
+        "spa": 135,
+        "spd": 115,
+        "spe": 78
+      },
+      "megaAbility": "Mega Launcher",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0009/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0009/0001"
+      }
+    },
+    {
+      "dex": 15,
+      "name": "Beedrill-Mega",
+      "showdownKey": "beedrillmega",
+      "megaStone": "Beedrillite",
+      "megaStats": {
+        "hp": 65,
+        "atk": 150,
+        "def": 40,
+        "spa": 15,
+        "spd": 80,
+        "spe": 145
+      },
+      "megaAbility": "Adaptability",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0015/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0015/0001"
+      }
+    },
+    {
+      "dex": 18,
+      "name": "Pidgeot-Mega",
+      "showdownKey": "pidgeotmega",
+      "megaStone": "Pidgeotite",
+      "megaStats": {
+        "hp": 83,
+        "atk": 80,
+        "def": 80,
+        "spa": 135,
+        "spd": 80,
+        "spe": 121
+      },
+      "megaAbility": "No Guard",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0018/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0018/0001"
+      }
+    },
+    {
+      "dex": 26,
+      "name": "Raichu-Mega-X",
+      "showdownKey": "raichumegax",
+      "megaStone": "Raichunite X",
+      "megaStats": {
+        "hp": 60,
+        "atk": 135,
+        "def": 95,
+        "spa": 90,
+        "spd": 95,
+        "spe": 110
+      },
+      "megaAbility": "Electric Surge",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0026/0002",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0026/0002"
+      }
+    },
+    {
+      "dex": 26,
+      "name": "Raichu-Mega-Y",
+      "showdownKey": "raichumegay",
+      "megaStone": "Raichunite Y",
+      "megaStats": {
+        "hp": 60,
+        "atk": 100,
+        "def": 55,
+        "spa": 160,
+        "spd": 80,
+        "spe": 130
+      },
+      "megaAbility": "No Guard",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0026/0003",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0026/0003"
+      }
+    },
+    {
+      "dex": 36,
+      "name": "Clefable-Mega",
+      "showdownKey": "clefablemega",
+      "megaStone": "Clefablite",
+      "megaStats": {
+        "hp": 95,
+        "atk": 80,
+        "def": 93,
+        "spa": 135,
+        "spd": 110,
+        "spe": 70
+      },
+      "megaAbility": "Magic Bounce",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0036/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0036/0001"
+      }
+    },
+    {
+      "dex": 65,
+      "name": "Alakazam-Mega",
+      "showdownKey": "alakazammega",
+      "megaStone": "Alakazite",
+      "megaStats": {
+        "hp": 55,
+        "atk": 50,
+        "def": 65,
+        "spa": 175,
+        "spd": 105,
+        "spe": 150
+      },
+      "megaAbility": "Trace",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0065/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Strike",
+          "Shoot",
+          "SpAttack",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0065/0001"
+      }
+    },
+    {
+      "dex": 71,
+      "name": "Victreebel-Mega",
+      "showdownKey": "victreebelmega",
+      "megaStone": "Victreebelite",
+      "megaStats": {
+        "hp": 80,
+        "atk": 125,
+        "def": 85,
+        "spa": 135,
+        "spd": 95,
+        "spe": 70
+      },
+      "megaAbility": "Innards Out",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0071/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0071/0001"
+      }
+    },
+    {
+      "dex": 80,
+      "name": "Slowbro-Mega",
+      "showdownKey": "slowbromega",
+      "megaStone": "Slowbronite",
+      "megaStats": {
+        "hp": 95,
+        "atk": 75,
+        "def": 180,
+        "spa": 130,
+        "spd": 80,
+        "spe": 30
+      },
+      "megaAbility": "Shell Armor",
+      "sprite": {
+        "state": "partial",
+        "folder": "sprite/0080/0002",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Strike",
+          "Shoot",
+          "Twirl",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate",
+          "Special1"
+        ],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0080/0002"
+      }
+    },
+    {
+      "dex": 94,
+      "name": "Gengar-Mega",
+      "showdownKey": "gengarmega",
+      "megaStone": "Gengarite",
+      "megaStats": {
+        "hp": 60,
+        "atk": 65,
+        "def": 80,
+        "spa": 170,
+        "spd": 95,
+        "spe": 130
+      },
+      "megaAbility": "Shadow Tag",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0094/0001",
+        "animations": [
+          "Walk",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Charge",
+          "Rotate",
+          "Attack",
+          "Strike",
+          "Shoot",
+          "Lick",
+          "Hop"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0094/0001"
+      }
+    },
+    {
+      "dex": 115,
+      "name": "Kangaskhan-Mega",
+      "showdownKey": "kangaskhanmega",
+      "megaStone": "Kangaskhanite",
+      "megaStats": {
+        "hp": 105,
+        "atk": 125,
+        "def": 100,
+        "spa": 60,
+        "spd": 100,
+        "spe": 100
+      },
+      "megaAbility": "Parental Bond",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0115/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Strike",
+          "Shoot",
+          "SpAttack",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0115/0001"
+      }
+    },
+    {
+      "dex": 121,
+      "name": "Starmie-Mega",
+      "showdownKey": "starmiemega",
+      "megaStone": "Starminite",
+      "megaStats": {
+        "hp": 60,
+        "atk": 100,
+        "def": 105,
+        "spa": 130,
+        "spd": 105,
+        "spe": 120
+      },
+      "megaAbility": "Huge Power",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0121/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0121/0001"
+      }
+    },
+    {
+      "dex": 127,
+      "name": "Pinsir-Mega",
+      "showdownKey": "pinsirmega",
+      "megaStone": "Pinsirite",
+      "megaStats": {
+        "hp": 65,
+        "atk": 155,
+        "def": 120,
+        "spa": 65,
+        "spd": 90,
+        "spe": 105
+      },
+      "megaAbility": "Aerilate",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0127/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0127/0001"
+      }
+    },
+    {
+      "dex": 130,
+      "name": "Gyarados-Mega",
+      "showdownKey": "gyaradosmega",
+      "megaStone": "Gyaradosite",
+      "megaStats": {
+        "hp": 95,
+        "atk": 155,
+        "def": 109,
+        "spa": 70,
+        "spd": 130,
+        "spe": 81
+      },
+      "megaAbility": "Mold Breaker",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0130/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0130/0001"
+      }
+    },
+    {
+      "dex": 142,
+      "name": "Aerodactyl-Mega",
+      "showdownKey": "aerodactylmega",
+      "megaStone": "Aerodactylite",
+      "megaStats": {
+        "hp": 80,
+        "atk": 135,
+        "def": 85,
+        "spa": 70,
+        "spd": 95,
+        "spe": 150
+      },
+      "megaAbility": "Tough Claws",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0142/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Strike",
+          "Shoot",
+          "Hover",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate",
+          "Swing"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0142/0001"
+      }
+    },
+    {
+      "dex": 149,
+      "name": "Dragonite-Mega",
+      "showdownKey": "dragonitemega",
+      "megaStone": "Dragoninite",
+      "megaStats": {
+        "hp": 91,
+        "atk": 124,
+        "def": 115,
+        "spa": 145,
+        "spd": 125,
+        "spe": 100
+      },
+      "megaAbility": "Multiscale",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0149/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0149/0001"
+      }
+    },
+    {
+      "dex": 150,
+      "name": "Mewtwo-Mega-X",
+      "showdownKey": "mewtwomegax",
+      "megaStone": "Mewtwonite X",
+      "megaStats": {
+        "hp": 106,
+        "atk": 190,
+        "def": 100,
+        "spa": 154,
+        "spd": 100,
+        "spe": 130
+      },
+      "megaAbility": "Steadfast",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0150/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0150/0001"
+      }
+    },
+    {
+      "dex": 150,
+      "name": "Mewtwo-Mega-Y",
+      "showdownKey": "mewtwomegay",
+      "megaStone": "Mewtwonite Y",
+      "megaStats": {
+        "hp": 106,
+        "atk": 150,
+        "def": 70,
+        "spa": 194,
+        "spd": 120,
+        "spe": 140
+      },
+      "megaAbility": "Insomnia",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0150/0002",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Shoot",
+          "Pose",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0150/0002"
+      }
+    },
+    {
+      "dex": 154,
+      "name": "Meganium-Mega",
+      "showdownKey": "meganiummega",
+      "megaStone": "Meganiumite",
+      "megaStats": {
+        "hp": 80,
+        "atk": 92,
+        "def": 115,
+        "spa": 143,
+        "spd": 115,
+        "spe": 80
+      },
+      "megaAbility": "Mega Sol",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0154/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0154/0001"
+      }
+    },
+    {
+      "dex": 160,
+      "name": "Feraligatr-Mega",
+      "showdownKey": "feraligatrmega",
+      "megaStone": "Feraligite",
+      "megaStats": {
+        "hp": 85,
+        "atk": 160,
+        "def": 125,
+        "spa": 89,
+        "spd": 93,
+        "spe": 78
+      },
+      "megaAbility": "Dragonize",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0160/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0160/0001"
+      }
+    },
+    {
+      "dex": 181,
+      "name": "Ampharos-Mega",
+      "showdownKey": "ampharosmega",
+      "megaStone": "Ampharosite",
+      "megaStats": {
+        "hp": 90,
+        "atk": 95,
+        "def": 105,
+        "spa": 165,
+        "spd": 110,
+        "spe": 45
+      },
+      "megaAbility": "Mold Breaker",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0181/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0181/0001"
+      }
+    },
+    {
+      "dex": 208,
+      "name": "Steelix-Mega",
+      "showdownKey": "steelixmega",
+      "megaStone": "Steelixite",
+      "megaStats": {
+        "hp": 75,
+        "atk": 125,
+        "def": 230,
+        "spa": 55,
+        "spd": 95,
+        "spe": 30
+      },
+      "megaAbility": "Sand Force",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0208/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Strike",
+          "Shoot",
+          "Dance",
+          "Emit",
+          "Appeal",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0208/0001"
+      }
+    },
+    {
+      "dex": 212,
+      "name": "Scizor-Mega",
+      "showdownKey": "scizormega",
+      "megaStone": "Scizorite",
+      "megaStats": {
+        "hp": 70,
+        "atk": 150,
+        "def": 140,
+        "spa": 65,
+        "spd": 100,
+        "spe": 75
+      },
+      "megaAbility": "Technician",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0212/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0212/0001"
+      }
+    },
+    {
+      "dex": 214,
+      "name": "Heracross-Mega",
+      "showdownKey": "heracrossmega",
+      "megaStone": "Heracronite",
+      "megaStats": {
+        "hp": 80,
+        "atk": 185,
+        "def": 115,
+        "spa": 40,
+        "spd": 105,
+        "spe": 75
+      },
+      "megaAbility": "Skill Link",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0214/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0214/0001"
+      }
+    },
+    {
+      "dex": 227,
+      "name": "Skarmory-Mega",
+      "showdownKey": "skarmorymega",
+      "megaStone": "Skarmorite",
+      "megaStats": {
+        "hp": 65,
+        "atk": 140,
+        "def": 110,
+        "spa": 40,
+        "spd": 100,
+        "spe": 110
+      },
+      "megaAbility": "Stalwart",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0227/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Strike",
+          "Shoot",
+          "Twirl",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0227/0001"
+      }
+    },
+    {
+      "dex": 229,
+      "name": "Houndoom-Mega",
+      "showdownKey": "houndoommega",
+      "megaStone": "Houndoominite",
+      "megaStats": {
+        "hp": 75,
+        "atk": 90,
+        "def": 90,
+        "spa": 140,
+        "spd": 90,
+        "spe": 115
+      },
+      "megaAbility": "Solar Power",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0229/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Strike",
+          "Shoot",
+          "Dance",
+          "Shake",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate",
+          "Injured",
+          "Special0",
+          "Fainted"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0229/0001"
+      }
+    },
+    {
+      "dex": 248,
+      "name": "Tyranitar-Mega",
+      "showdownKey": "tyranitarmega",
+      "megaStone": "Tyranitarite",
+      "megaStats": {
+        "hp": 100,
+        "atk": 164,
+        "def": 150,
+        "spa": 95,
+        "spd": 120,
+        "spe": 71
+      },
+      "megaAbility": "Sand Stream",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0248/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Strike",
+          "Shoot",
+          "Twirl",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0248/0001"
+      }
+    },
+    {
+      "dex": 254,
+      "name": "Sceptile-Mega",
+      "showdownKey": "sceptilemega",
+      "megaStone": "Sceptilite",
+      "megaStats": {
+        "hp": 70,
+        "atk": 110,
+        "def": 75,
+        "spa": 145,
+        "spd": 85,
+        "spe": 145
+      },
+      "megaAbility": "Lightning Rod",
+      "sprite": {
+        "state": "partial",
+        "folder": "sprite/0254/0001",
+        "animations": [
+          "Walk",
+          "Idle",
+          "Rotate"
+        ],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0254/0001"
+      }
+    },
+    {
+      "dex": 257,
+      "name": "Blaziken-Mega",
+      "showdownKey": "blazikenmega",
+      "megaStone": "Blazikenite",
+      "megaStats": {
+        "hp": 80,
+        "atk": 160,
+        "def": 80,
+        "spa": 130,
+        "spd": 80,
+        "spe": 100
+      },
+      "megaAbility": "Speed Boost",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0257/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0257/0001"
+      }
+    },
+    {
+      "dex": 260,
+      "name": "Swampert-Mega",
+      "showdownKey": "swampertmega",
+      "megaStone": "Swampertite",
+      "megaStats": {
+        "hp": 100,
+        "atk": 150,
+        "def": 110,
+        "spa": 95,
+        "spd": 110,
+        "spe": 70
+      },
+      "megaAbility": "Swift Swim",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0260/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0260/0001"
+      }
+    },
+    {
+      "dex": 282,
+      "name": "Gardevoir-Mega",
+      "showdownKey": "gardevoirmega",
+      "megaStone": "Gardevoirite",
+      "megaStats": {
+        "hp": 68,
+        "atk": 85,
+        "def": 65,
+        "spa": 165,
+        "spd": 135,
+        "spe": 100
+      },
+      "megaAbility": "Pixilate",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0282/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Strike",
+          "Shoot",
+          "SpAttack",
+          "Appeal",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0282/0001"
+      }
+    },
+    {
+      "dex": 302,
+      "name": "Sableye-Mega",
+      "showdownKey": "sableyemega",
+      "megaStone": "Sablenite",
+      "megaStats": {
+        "hp": 50,
+        "atk": 85,
+        "def": 125,
+        "spa": 85,
+        "spd": 115,
+        "spe": 20
+      },
+      "megaAbility": "Magic Bounce",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0302/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Strike",
+          "Shoot",
+          "SpAttack",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate",
+          "Cringe"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0302/0001"
+      }
+    },
+    {
+      "dex": 303,
+      "name": "Mawile-Mega",
+      "showdownKey": "mawilemega",
+      "megaStone": "Mawilite",
+      "megaStats": {
+        "hp": 50,
+        "atk": 105,
+        "def": 125,
+        "spa": 55,
+        "spd": 95,
+        "spe": 50
+      },
+      "megaAbility": "Huge Power",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0303/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Bite",
+          "Shoot",
+          "Twirl",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate",
+          "EventSleep",
+          "Wake",
+          "Eat",
+          "Tumble",
+          "Pose",
+          "Pull",
+          "Pain",
+          "Float",
+          "DeepBreath",
+          "Nod",
+          "Sit",
+          "LookUp",
+          "Sink",
+          "Trip",
+          "Laying",
+          "LeapForth",
+          "Head",
+          "Cringe",
+          "LostBalance",
+          "TumbleBack",
+          "Faint",
+          "HitGround"
+        ],
+        "reviewLevel": 2,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0303/0001"
+      }
+    },
+    {
+      "dex": 306,
+      "name": "Aggron-Mega",
+      "showdownKey": "aggronmega",
+      "megaStone": "Aggronite",
+      "megaStats": {
+        "hp": 70,
+        "atk": 140,
+        "def": 230,
+        "spa": 60,
+        "spd": 80,
+        "spe": 50
+      },
+      "megaAbility": "Filter",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0306/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0306/0001"
+      }
+    },
+    {
+      "dex": 308,
+      "name": "Medicham-Mega",
+      "showdownKey": "medichammega",
+      "megaStone": "Medichamite",
+      "megaStats": {
+        "hp": 60,
+        "atk": 100,
+        "def": 85,
+        "spa": 80,
+        "spd": 85,
+        "spe": 100
+      },
+      "megaAbility": "Pure Power",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0308/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Punch",
+          "Shoot",
+          "SpAttack",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0308/0001"
+      }
+    },
+    {
+      "dex": 310,
+      "name": "Manectric-Mega",
+      "showdownKey": "manectricmega",
+      "megaStone": "Manectite",
+      "megaStats": {
+        "hp": 70,
+        "atk": 75,
+        "def": 80,
+        "spa": 135,
+        "spd": 80,
+        "spe": 135
+      },
+      "megaAbility": "Intimidate",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0310/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "QuickStrike",
+          "Shoot",
+          "Shock",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate",
+          "Cringe"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0310/0001"
+      }
+    },
+    {
+      "dex": 319,
+      "name": "Sharpedo-Mega",
+      "showdownKey": "sharpedomega",
+      "megaStone": "Sharpedonite",
+      "megaStats": {
+        "hp": 70,
+        "atk": 140,
+        "def": 70,
+        "spa": 110,
+        "spd": 65,
+        "spe": 105
+      },
+      "megaAbility": "Strong Jaw",
+      "sprite": {
+        "state": "partial",
+        "folder": "sprite/0319/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Idle",
+          "Double",
+          "Rotate"
+        ],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0319/0001"
+      }
+    },
+    {
+      "dex": 323,
+      "name": "Camerupt-Mega",
+      "showdownKey": "cameruptmega",
+      "megaStone": "Cameruptite",
+      "megaStats": {
+        "hp": 70,
+        "atk": 120,
+        "def": 100,
+        "spa": 145,
+        "spd": 105,
+        "spe": 20
+      },
+      "megaAbility": "Sheer Force",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0323/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Strike",
+          "Shoot",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Hop",
+          "Charge",
+          "Swing",
+          "Double",
+          "Rotate"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0323/0001"
+      }
+    },
+    {
+      "dex": 334,
+      "name": "Altaria-Mega",
+      "showdownKey": "altariamega",
+      "megaStone": "Altarianite",
+      "megaStats": {
+        "hp": 75,
+        "atk": 110,
+        "def": 110,
+        "spa": 110,
+        "spd": 105,
+        "spe": 80
+      },
+      "megaAbility": "Pixilate",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0334/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Strike",
+          "Shoot",
+          "Hover",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0334/0001"
+      }
+    },
+    {
+      "dex": 354,
+      "name": "Banette-Mega",
+      "showdownKey": "banettemega",
+      "megaStone": "Banettite",
+      "megaStats": {
+        "hp": 64,
+        "atk": 165,
+        "def": 75,
+        "spa": 93,
+        "spd": 83,
+        "spe": 75
+      },
+      "megaAbility": "Prankster",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0354/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Strike",
+          "Shoot",
+          "SpAttack",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0354/0001"
+      }
+    },
+    {
+      "dex": 358,
+      "name": "Chimecho-Mega",
+      "showdownKey": "chimechomega",
+      "megaStone": "Chimechite",
+      "megaStats": {
+        "hp": 75,
+        "atk": 50,
+        "def": 110,
+        "spa": 135,
+        "spd": 120,
+        "spe": 65
+      },
+      "megaAbility": "Levitate",
+      "sprite": {
+        "state": "partial",
+        "folder": "sprite/0358/0001",
+        "animations": [
+          "Idle",
+          "Rotate"
+        ],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0358/0001"
+      }
+    },
+    {
+      "dex": 359,
+      "name": "Absol-Mega",
+      "showdownKey": "absolmega",
+      "megaStone": "Absolite",
+      "megaStats": {
+        "hp": 65,
+        "atk": 150,
+        "def": 60,
+        "spa": 115,
+        "spd": 60,
+        "spe": 115
+      },
+      "megaAbility": "Magic Bounce",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0359/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0359/0001"
+      }
+    },
+    {
+      "dex": 359,
+      "name": "Absol-Mega-Z",
+      "showdownKey": "absolmegaz",
+      "megaStone": "Absolite Z",
+      "megaStats": {
+        "hp": 65,
+        "atk": 154,
+        "def": 60,
+        "spa": 75,
+        "spd": 60,
+        "spe": 151
+      },
+      "megaAbility": "Sharpness",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0359/0002",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0359/0002"
+      }
+    },
+    {
+      "dex": 362,
+      "name": "Glalie-Mega",
+      "showdownKey": "glaliemega",
+      "megaStone": "Glalitite",
+      "megaStats": {
+        "hp": 80,
+        "atk": 120,
+        "def": 80,
+        "spa": 120,
+        "spd": 80,
+        "spe": 100
+      },
+      "megaAbility": "Refrigerate",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0362/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Bite",
+          "Shoot",
+          "Twirl",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0362/0001"
+      }
+    },
+    {
+      "dex": 373,
+      "name": "Salamence-Mega",
+      "showdownKey": "salamencemega",
+      "megaStone": "Salamencite",
+      "megaStats": {
+        "hp": 95,
+        "atk": 145,
+        "def": 130,
+        "spa": 120,
+        "spd": 90,
+        "spe": 120
+      },
+      "megaAbility": "Aerilate",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0373/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0373/0001"
+      }
+    },
+    {
+      "dex": 376,
+      "name": "Metagross-Mega",
+      "showdownKey": "metagrossmega",
+      "megaStone": "Metagrossite",
+      "megaStats": {
+        "hp": 80,
+        "atk": 145,
+        "def": 150,
+        "spa": 105,
+        "spd": 110,
+        "spe": 110
+      },
+      "megaAbility": "Tough Claws",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0376/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0376/0001"
+      }
+    },
+    {
+      "dex": 380,
+      "name": "Latias-Mega",
+      "showdownKey": "latiasmega",
+      "megaStone": "Latiasite",
+      "megaStats": {
+        "hp": 80,
+        "atk": 100,
+        "def": 120,
+        "spa": 140,
+        "spd": 150,
+        "spe": 110
+      },
+      "megaAbility": "Levitate",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0380/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Strike",
+          "Shoot",
+          "Rumble",
+          "SpAttack",
+          "RearUp",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate",
+          "Cringe"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0380/0001"
+      }
+    },
+    {
+      "dex": 381,
+      "name": "Latios-Mega",
+      "showdownKey": "latiosmega",
+      "megaStone": "Latiosite",
+      "megaStats": {
+        "hp": 80,
+        "atk": 130,
+        "def": 100,
+        "spa": 160,
+        "spd": 120,
+        "spe": 110
+      },
+      "megaAbility": "Levitate",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0381/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Strike",
+          "Shoot",
+          "Rumble",
+          "SpAttack",
+          "RearUp",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate",
+          "Cringe"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0381/0001"
+      }
+    },
+    {
+      "dex": 384,
+      "name": "Rayquaza-Mega",
+      "showdownKey": "rayquazamega",
+      "megaStone": null,
+      "megaStats": {
+        "hp": 105,
+        "atk": 180,
+        "def": 100,
+        "spa": 180,
+        "spd": 100,
+        "spe": 115
+      },
+      "megaAbility": "Delta Stream",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0384/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Shoot",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0384/0001"
+      }
+    },
+    {
+      "dex": 398,
+      "name": "Staraptor-Mega",
+      "showdownKey": "staraptormega",
+      "megaStone": "Staraptite",
+      "megaStats": {
+        "hp": 85,
+        "atk": 140,
+        "def": 100,
+        "spa": 60,
+        "spd": 90,
+        "spe": 110
+      },
+      "megaAbility": "Contrary",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0398/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0398/0001"
+      }
+    },
+    {
+      "dex": 428,
+      "name": "Lopunny-Mega",
+      "showdownKey": "lopunnymega",
+      "megaStone": "Lopunnite",
+      "megaStats": {
+        "hp": 65,
+        "atk": 136,
+        "def": 94,
+        "spa": 54,
+        "spd": 96,
+        "spe": 135
+      },
+      "megaAbility": "Scrappy",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0428/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "QuickStrike",
+          "Shoot",
+          "Appeal",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate",
+          "Fainted",
+          "StandingUp",
+          "Pose",
+          "Jump",
+          "Special1"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0428/0001"
+      }
+    },
+    {
+      "dex": 445,
+      "name": "Garchomp-Mega",
+      "showdownKey": "garchompmega",
+      "megaStone": "Garchompite",
+      "megaStats": {
+        "hp": 108,
+        "atk": 170,
+        "def": 115,
+        "spa": 120,
+        "spd": 95,
+        "spe": 92
+      },
+      "megaAbility": "Sand Force",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0445/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0445/0001"
+      }
+    },
+    {
+      "dex": 445,
+      "name": "Garchomp-Mega-Z",
+      "showdownKey": "garchompmegaz",
+      "megaStone": "Garchompite Z",
+      "megaStats": {
+        "hp": 108,
+        "atk": 130,
+        "def": 85,
+        "spa": 141,
+        "spd": 85,
+        "spe": 151
+      },
+      "megaAbility": "Levitate",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0445/0002",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0445/0002"
+      }
+    },
+    {
+      "dex": 448,
+      "name": "Lucario-Mega",
+      "showdownKey": "lucariomega",
+      "megaStone": "Lucarionite",
+      "megaStats": {
+        "hp": 70,
+        "atk": 145,
+        "def": 88,
+        "spa": 140,
+        "spd": 70,
+        "spe": 112
+      },
+      "megaAbility": "Adaptability",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0448/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "QuickStrike",
+          "Strike",
+          "SpAttack",
+          "RearUp",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0448/0001"
+      }
+    },
+    {
+      "dex": 448,
+      "name": "Lucario-Mega-Z",
+      "showdownKey": "lucariomegaz",
+      "megaStone": "Lucarionite Z",
+      "megaStats": {
+        "hp": 70,
+        "atk": 100,
+        "def": 70,
+        "spa": 164,
+        "spd": 70,
+        "spe": 151
+      },
+      "megaAbility": "Aura Guard",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0448/0002",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0448/0002"
+      }
+    },
+    {
+      "dex": 460,
+      "name": "Abomasnow-Mega",
+      "showdownKey": "abomasnowmega",
+      "megaStone": "Abomasite",
+      "megaStats": {
+        "hp": 90,
+        "atk": 132,
+        "def": 105,
+        "spa": 132,
+        "spd": 105,
+        "spe": 30
+      },
+      "megaAbility": "Snow Warning",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0460/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0460/0001"
+      }
+    },
+    {
+      "dex": 475,
+      "name": "Gallade-Mega",
+      "showdownKey": "gallademega",
+      "megaStone": "Galladite",
+      "megaStats": {
+        "hp": 68,
+        "atk": 165,
+        "def": 95,
+        "spa": 65,
+        "spd": 115,
+        "spe": 110
+      },
+      "megaAbility": "Inner Focus",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0475/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Strike",
+          "Shoot",
+          "RearUp",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0475/0001"
+      }
+    },
+    {
+      "dex": 478,
+      "name": "Froslass-Mega",
+      "showdownKey": "froslassmega",
+      "megaStone": "Froslassite",
+      "megaStats": {
+        "hp": 70,
+        "atk": 80,
+        "def": 70,
+        "spa": 140,
+        "spd": 100,
+        "spe": 120
+      },
+      "megaAbility": "Snow Warning",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0478/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0478/0001"
+      }
+    },
+    {
+      "dex": 485,
+      "name": "Heatran-Mega",
+      "showdownKey": "heatranmega",
+      "megaStone": "Heatranite",
+      "megaStats": {
+        "hp": 91,
+        "atk": 120,
+        "def": 106,
+        "spa": 175,
+        "spd": 141,
+        "spe": 67
+      },
+      "megaAbility": "Flash Fire",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0485/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0485/0001"
+      }
+    },
+    {
+      "dex": 491,
+      "name": "Darkrai-Mega",
+      "showdownKey": "darkraimega",
+      "megaStone": "Darkranite",
+      "megaStats": {
+        "hp": 70,
+        "atk": 120,
+        "def": 130,
+        "spa": 165,
+        "spd": 130,
+        "spe": 85
+      },
+      "megaAbility": "Bad Dreams",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0491/0002",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Shoot",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0491/0002"
+      }
+    },
+    {
+      "dex": 500,
+      "name": "Emboar-Mega",
+      "showdownKey": "emboarmega",
+      "megaStone": "Emboarite",
+      "megaStats": {
+        "hp": 110,
+        "atk": 148,
+        "def": 75,
+        "spa": 110,
+        "spd": 110,
+        "spe": 75
+      },
+      "megaAbility": "Mold Breaker",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0500/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0500/0001"
+      }
+    },
+    {
+      "dex": 530,
+      "name": "Excadrill-Mega",
+      "showdownKey": "excadrillmega",
+      "megaStone": "Excadrite",
+      "megaStats": {
+        "hp": 110,
+        "atk": 165,
+        "def": 100,
+        "spa": 65,
+        "spd": 65,
+        "spe": 103
+      },
+      "megaAbility": "Piercing Drill",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0530/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Strike",
+          "Shoot",
+          "Twirl",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0530/0001"
+      }
+    },
+    {
+      "dex": 531,
+      "name": "Audino-Mega",
+      "showdownKey": "audinomega",
+      "megaStone": "Audinite",
+      "megaStats": {
+        "hp": 103,
+        "atk": 60,
+        "def": 126,
+        "spa": 80,
+        "spd": 126,
+        "spe": 50
+      },
+      "megaAbility": "Healer",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0531/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0531/0001"
+      }
+    },
+    {
+      "dex": 545,
+      "name": "Scolipede-Mega",
+      "showdownKey": "scolipedemega",
+      "megaStone": "Scolipite",
+      "megaStats": {
+        "hp": 60,
+        "atk": 140,
+        "def": 149,
+        "spa": 75,
+        "spd": 99,
+        "spe": 62
+      },
+      "megaAbility": "Shell Armor",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0545/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0545/0001"
+      }
+    },
+    {
+      "dex": 560,
+      "name": "Scrafty-Mega",
+      "showdownKey": "scraftymega",
+      "megaStone": "Scraftinite",
+      "megaStats": {
+        "hp": 65,
+        "atk": 130,
+        "def": 135,
+        "spa": 55,
+        "spd": 135,
+        "spe": 68
+      },
+      "megaAbility": "Intimidate",
+      "sprite": {
+        "state": "partial",
+        "folder": "sprite/0560/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Sleep",
+          "Idle",
+          "Swing",
+          "Double",
+          "Rotate"
+        ],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0560/0001"
+      }
+    },
+    {
+      "dex": 604,
+      "name": "Eelektross-Mega",
+      "showdownKey": "eelektrossmega",
+      "megaStone": "Eelektrossite",
+      "megaStats": {
+        "hp": 85,
+        "atk": 145,
+        "def": 80,
+        "spa": 135,
+        "spd": 90,
+        "spe": 80
+      },
+      "megaAbility": "Eelevate",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0604/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Strike",
+          "Shoot",
+          "RearUp",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0604/0001"
+      }
+    },
+    {
+      "dex": 609,
+      "name": "Chandelure-Mega",
+      "showdownKey": "chandeluremega",
+      "megaStone": "Chandelurite",
+      "megaStats": {
+        "hp": 60,
+        "atk": 75,
+        "def": 110,
+        "spa": 175,
+        "spd": 110,
+        "spe": 90
+      },
+      "megaAbility": "Infiltrator",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0609/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0609/0001"
+      }
+    },
+    {
+      "dex": 623,
+      "name": "Golurk-Mega",
+      "showdownKey": "golurkmega",
+      "megaStone": "Golurkite",
+      "megaStats": {
+        "hp": 89,
+        "atk": 159,
+        "def": 105,
+        "spa": 70,
+        "spd": 105,
+        "spe": 55
+      },
+      "megaAbility": "Unseen Fist",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0623/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0623/0001"
+      }
+    },
+    {
+      "dex": 652,
+      "name": "Chesnaught-Mega",
+      "showdownKey": "chesnaughtmega",
+      "megaStone": "Chesnaughtite",
+      "megaStats": {
+        "hp": 88,
+        "atk": 137,
+        "def": 172,
+        "spa": 74,
+        "spd": 115,
+        "spe": 44
+      },
+      "megaAbility": "Bulletproof",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0652/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0652/0001"
+      }
+    },
+    {
+      "dex": 655,
+      "name": "Delphox-Mega",
+      "showdownKey": "delphoxmega",
+      "megaStone": "Delphoxite",
+      "megaStats": {
+        "hp": 75,
+        "atk": 69,
+        "def": 72,
+        "spa": 159,
+        "spd": 125,
+        "spe": 134
+      },
+      "megaAbility": "Levitate",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0655/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0655/0001"
+      }
+    },
+    {
+      "dex": 658,
+      "name": "Greninja-Mega",
+      "showdownKey": "greninjamega",
+      "megaStone": "Greninjite",
+      "megaStats": {
+        "hp": 72,
+        "atk": 125,
+        "def": 77,
+        "spa": 133,
+        "spd": 81,
+        "spe": 142
+      },
+      "megaAbility": "Protean",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0658/0002",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0658/0002"
+      }
+    },
+    {
+      "dex": 668,
+      "name": "Pyroar-Mega",
+      "showdownKey": "pyroarmega",
+      "megaStone": "Pyroarite",
+      "megaStats": {
+        "hp": 86,
+        "atk": 88,
+        "def": 92,
+        "spa": 129,
+        "spd": 86,
+        "spe": 126
+      },
+      "megaAbility": "Fire Mane",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0668/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0668/0001"
+      }
+    },
+    {
+      "dex": 670,
+      "name": "Floette-Mega",
+      "showdownKey": "floettemega",
+      "megaStone": "Floettite",
+      "megaStats": {
+        "hp": 74,
+        "atk": 85,
+        "def": 87,
+        "spa": 155,
+        "spd": 148,
+        "spe": 102
+      },
+      "megaAbility": "Fairy Aura",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0670/0006",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Strike",
+          "Shoot",
+          "Twirl",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0670/0006"
+      }
+    },
+    {
+      "dex": 678,
+      "name": "Meowstic-M-Mega",
+      "showdownKey": "meowsticmmega",
+      "megaStone": "Meowsticite",
+      "megaStats": {
+        "hp": 74,
+        "atk": 48,
+        "def": 76,
+        "spa": 143,
+        "spd": 101,
+        "spe": 124
+      },
+      "megaAbility": "Trace",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0678/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0678/0001"
+      }
+    },
+    {
+      "dex": 687,
+      "name": "Malamar-Mega",
+      "showdownKey": "malamarmega",
+      "megaStone": "Malamarite",
+      "megaStats": {
+        "hp": 86,
+        "atk": 102,
+        "def": 88,
+        "spa": 98,
+        "spd": 120,
+        "spe": 88
+      },
+      "megaAbility": "Contrary",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0687/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0687/0001"
+      }
+    },
+    {
+      "dex": 689,
+      "name": "Barbaracle-Mega",
+      "showdownKey": "barbaraclemega",
+      "megaStone": "Barbaracite",
+      "megaStats": {
+        "hp": 72,
+        "atk": 140,
+        "def": 130,
+        "spa": 64,
+        "spd": 106,
+        "spe": 88
+      },
+      "megaAbility": "Tough Claws",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0689/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0689/0001"
+      }
+    },
+    {
+      "dex": 691,
+      "name": "Dragalge-Mega",
+      "showdownKey": "dragalgemega",
+      "megaStone": "Dragalgite",
+      "megaStats": {
+        "hp": 65,
+        "atk": 85,
+        "def": 105,
+        "spa": 132,
+        "spd": 163,
+        "spe": 44
+      },
+      "megaAbility": "Regenerator",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0691/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Strike",
+          "Shoot",
+          "Twirl",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0691/0001"
+      }
+    },
+    {
+      "dex": 701,
+      "name": "Hawlucha-Mega",
+      "showdownKey": "hawluchamega",
+      "megaStone": "Hawluchanite",
+      "megaStats": {
+        "hp": 78,
+        "atk": 137,
+        "def": 100,
+        "spa": 74,
+        "spd": 93,
+        "spe": 118
+      },
+      "megaAbility": "No Guard",
+      "sprite": {
+        "state": "partial",
+        "folder": "sprite/0701/0001",
+        "animations": [
+          "Walk",
+          "Idle",
+          "Swing",
+          "Double",
+          "Rotate"
+        ],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0701/0001"
+      }
+    },
+    {
+      "dex": 718,
+      "name": "Zygarde-Mega",
+      "showdownKey": "zygardemega",
+      "megaStone": "Zygardite",
+      "megaStats": {
+        "hp": 216,
+        "atk": 70,
+        "def": 91,
+        "spa": 216,
+        "spd": 85,
+        "spe": 100
+      },
+      "megaAbility": "Aura Break",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0718/0005",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Strike",
+          "Shoot",
+          "SpAttack",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0718/0005"
+      }
+    },
+    {
+      "dex": 719,
+      "name": "Diancie-Mega",
+      "showdownKey": "dianciemega",
+      "megaStone": "Diancite",
+      "megaStats": {
+        "hp": 50,
+        "atk": 160,
+        "def": 110,
+        "spa": 160,
+        "spd": 110,
+        "spe": 110
+      },
+      "megaAbility": "Magic Bounce",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0719/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Strike",
+          "Shoot",
+          "Twirl",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0719/0001"
+      }
+    },
+    {
+      "dex": 740,
+      "name": "Crabominable-Mega",
+      "showdownKey": "crabominablemega",
+      "megaStone": "Crabominite",
+      "megaStats": {
+        "hp": 97,
+        "atk": 157,
+        "def": 122,
+        "spa": 62,
+        "spd": 107,
+        "spe": 33
+      },
+      "megaAbility": "Iron Fist",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0740/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0740/0001"
+      }
+    },
+    {
+      "dex": 768,
+      "name": "Golisopod-Mega",
+      "showdownKey": "golisopodmega",
+      "megaStone": "Golisopite",
+      "megaStats": {
+        "hp": 75,
+        "atk": 150,
+        "def": 175,
+        "spa": 70,
+        "spd": 120,
+        "spe": 40
+      },
+      "megaAbility": "Tough Claws",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0768/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0768/0001"
+      }
+    },
+    {
+      "dex": 780,
+      "name": "Drampa-Mega",
+      "showdownKey": "drampamega",
+      "megaStone": "Drampanite",
+      "megaStats": {
+        "hp": 78,
+        "atk": 85,
+        "def": 110,
+        "spa": 160,
+        "spd": 116,
+        "spe": 36
+      },
+      "megaAbility": "Berserk",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0780/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Strike",
+          "Shoot",
+          "RearUp",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0780/0001"
+      }
+    },
+    {
+      "dex": 801,
+      "name": "Magearna-Mega",
+      "showdownKey": "magearnamega",
+      "megaStone": "Magearnite",
+      "megaStats": {
+        "hp": 80,
+        "atk": 125,
+        "def": 115,
+        "spa": 170,
+        "spd": 115,
+        "spe": 95
+      },
+      "megaAbility": "Soul-Heart",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0801/0002",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0801/0002"
+      }
+    },
+    {
+      "dex": 801,
+      "name": "Magearna-Original-Mega",
+      "showdownKey": "magearnaoriginalmega",
+      "megaStone": "Magearnite",
+      "megaStats": {
+        "hp": 80,
+        "atk": 125,
+        "def": 115,
+        "spa": 170,
+        "spd": 115,
+        "spe": 95
+      },
+      "megaAbility": "Soul-Heart",
+      "sprite": {
+        "state": "missing",
+        "folder": null,
+        "animations": [],
+        "reviewLevel": 0,
+        "url": null
+      }
+    },
+    {
+      "dex": 807,
+      "name": "Zeraora-Mega",
+      "showdownKey": "zeraoramega",
+      "megaStone": "Zeraorite",
+      "megaStats": {
+        "hp": 88,
+        "atk": 157,
+        "def": 75,
+        "spa": 147,
+        "spd": 80,
+        "spe": 153
+      },
+      "megaAbility": "Volt Absorb",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0807/0001",
+        "animations": [
+          "Walk",
+          "Attack",
+          "QuickStrike",
+          "Strike",
+          "SpAttack",
+          "RearUp",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate",
+          "Cringe"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0807/0001"
+      }
+    },
+    {
+      "dex": 870,
+      "name": "Falinks-Mega",
+      "showdownKey": "falinksmega",
+      "megaStone": "Falinksite",
+      "megaStats": {
+        "hp": 65,
+        "atk": 135,
+        "def": 135,
+        "spa": 70,
+        "spd": 65,
+        "spe": 100
+      },
+      "megaAbility": "Defiant",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0870/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0870/0001"
+      }
+    },
+    {
+      "dex": 952,
+      "name": "Scovillain-Mega",
+      "showdownKey": "scovillainmega",
+      "megaStone": "Scovillainite",
+      "megaStats": {
+        "hp": 65,
+        "atk": 138,
+        "def": 85,
+        "spa": 138,
+        "spd": 85,
+        "spe": 75
+      },
+      "megaAbility": "Spicy Spray",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0952/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0952/0001"
+      }
+    },
+    {
+      "dex": 970,
+      "name": "Glimmora-Mega",
+      "showdownKey": "glimmoramega",
+      "megaStone": "Glimmoranite",
+      "megaStats": {
+        "hp": 83,
+        "atk": 90,
+        "def": 105,
+        "spa": 150,
+        "spd": 96,
+        "spe": 101
+      },
+      "megaAbility": "Adaptability",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0970/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0970/0001"
+      }
+    },
+    {
+      "dex": 978,
+      "name": "Tatsugiri-Curly-Mega",
+      "showdownKey": "tatsugiricurlymega",
+      "megaStone": "Tatsugirinite",
+      "megaStats": {
+        "hp": 68,
+        "atk": 65,
+        "def": 90,
+        "spa": 135,
+        "spd": 125,
+        "spe": 92
+      },
+      "megaAbility": "Commander",
+      "sprite": {
+        "state": "sprite-ready",
+        "folder": "sprite/0978/0003",
+        "animations": [
+          "Walk",
+          "Attack",
+          "Strike",
+          "Shoot",
+          "SpAttack",
+          "RearUp",
+          "Sleep",
+          "Hurt",
+          "Idle",
+          "Swing",
+          "Double",
+          "Hop",
+          "Charge",
+          "Rotate"
+        ],
+        "reviewLevel": 1,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0978/0003"
+      }
+    },
+    {
+      "dex": 978,
+      "name": "Tatsugiri-Droopy-Mega",
+      "showdownKey": "tatsugiridroopymega",
+      "megaStone": "Tatsugirinite",
+      "megaStats": {
+        "hp": 68,
+        "atk": 65,
+        "def": 90,
+        "spa": 135,
+        "spd": 125,
+        "spe": 92
+      },
+      "megaAbility": "Commander",
+      "sprite": {
+        "state": "missing",
+        "folder": null,
+        "animations": [],
+        "reviewLevel": 0,
+        "url": null
+      }
+    },
+    {
+      "dex": 978,
+      "name": "Tatsugiri-Stretchy-Mega",
+      "showdownKey": "tatsugiristretchymega",
+      "megaStone": "Tatsugirinite",
+      "megaStats": {
+        "hp": 68,
+        "atk": 65,
+        "def": 90,
+        "spa": 135,
+        "spd": 125,
+        "spe": 92
+      },
+      "megaAbility": "Commander",
+      "sprite": {
+        "state": "missing",
+        "folder": null,
+        "animations": [],
+        "reviewLevel": 0,
+        "url": null
+      }
+    },
+    {
+      "dex": 998,
+      "name": "Baxcalibur-Mega",
+      "showdownKey": "baxcaliburmega",
+      "megaStone": "Baxcalibrite",
+      "megaStats": {
+        "hp": 115,
+        "atk": 175,
+        "def": 117,
+        "spa": 105,
+        "spd": 101,
+        "spe": 87
+      },
+      "megaAbility": "Thermal Exchange",
+      "sprite": {
+        "state": "missing",
+        "folder": "sprite/0998/0001",
+        "animations": [],
+        "reviewLevel": 0,
+        "url": "https://github.com/PMDCollab/SpriteCollab/tree/448d3af85e2cfa85a8c5ead076eddb145251b473/sprite/0998/0001"
+      }
+    }
+  ]
+}
