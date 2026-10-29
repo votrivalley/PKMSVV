@@ -48,7 +48,7 @@ function fake(){
  const body=node('body');
  const document={readyState:'complete',body,createElement:node,getElementById:id=>elements.get(id)||null,
   addEventListener:(n,cb)=>events[n]=cb};
- const g={SPRITE_META:{},I18n:{lang:'vi'},DB:{save:{megaStones:{}}},
+ const g={SPRITE_META:{},I18n:{lang:'vi'},DB:{save:{megaStones:{},pkmsvvChapter7Seen:true}},
   PKMSVVSupportCatalog:{ensure(){}},PKMSVVUpgradeChooser:{open(){return 17;}}};
  vm.runInNewContext(read('vendor/pokesurvivor/js/data/pkmsvv-mega-catalog.js'),{G:g});
  let spriteCount=0,draws=[];
@@ -137,4 +137,13 @@ test('Normal/Shiny tabs reveal authentic Shiny only after real ownership and Meg
  h.get('pkmsvv-mega-tab-normal').click();
  assert.equal(ui.variant,'normal');
  assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 1/96');
+});
+
+test('All 96 Mega identities remain ??? before Chapter 7 regardless of stone ownership',()=>{
+ const h=fake(),lib=h.g.PKMSVVMegaEntry;
+ h.g.DB.save.megaStones.lucarionite=1;
+ h.g.DB.save.pkmsvvChapter7Seen=false;
+ lib.open();
+ assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 0/96');
+ assert.equal(lib.isUnlocked(h.g.PKMSVV_MEGA_CATALOG.find(f=>f.key==='lucariomega')),false);
 });

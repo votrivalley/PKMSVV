@@ -36,7 +36,7 @@ function mock(){
  const G={Player,SPRITE_META:{10448:{a:{Idle:{}}}},
   Sprites:{Animator,playerScale:()=>1,playerRadius:()=>18,bodyHeight:()=>36,preload:()=>Promise.resolve()},
   Game:{get state(){return uiState},get player(){return player},startRun(){return true},toUI(){uiState='ui'},quit(){}},
-  MenuUI:{open(){}},DB:{save:{partner:448,owned:{448:1},megaStones:{}},commit(){}},
+  MenuUI:{open(){}},DB:{save:{partner:448,owned:{448:1},megaStones:{},pkmsvvChapter7Seen:true},commit(){}},
   UI:{toast(){}},FX:{ring(){}},Audio:{sfx(){}},Coop:{get active(){return coop}}};
  const context={G,document:{body:{appendChild(){}},createElement:elem,getElementById(){return null},
   addEventListener(n,f){listeners[n]=f}},setInterval(){},console};
@@ -113,4 +113,15 @@ test('Shiny Mega Lucario BETA uses authentic /s/ sheets and restores base Shiny'
  assert.equal(player.anim.shiny,true);
  assert.equal(player.shiny,true);
  assert.equal(G.DB.save.megaStones.lucarionite,undefined);
+});
+
+test('Mega Lucario preview and activation blocked until Chapter 7 after first Champion',async()=>{
+ const h=mock(),m=h.G.MegaLucario;
+ h.G.DB.save.pkmsvvChapter7Seen=false;
+ assert.equal(m.previewUnlock(),false);
+ h.G.DB.save.megaStones.lucarionite=1;
+ assert.equal(m.eligible(),false,'owned stone cannot bypass story');
+ assert.equal(await m.tryActivate(),false);
+ h.G.DB.save.pkmsvvChapter7Seen=true;
+ assert.equal(m.eligible(),true);
 });

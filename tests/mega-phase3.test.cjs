@@ -5,7 +5,7 @@ const root=path.resolve(__dirname,'..'),read=p=>fs.readFileSync(path.join(root,p
 function setup(){
  let active='playing',coop=false,pl=null;
  const s={partner:6,owned:{6:{at:1}},megaStones:{charizarditex:1},
-  pkmsvvChapter3Seen:true,megaForms:{},megaStoryCleared:{}};
+  pkmsvvChapter3Seen:true,pkmsvvChapter7Seen:true,megaForms:{},megaStoryCleared:{}};
  class Animator{constructor(dex,scale,shiny){this.dex=dex;this.scale=scale;this.shiny=shiny;this.dir=0}}
  class Player{update(){return true}}
  const makeButton=()=>({style:{},addEventListener(){},append(){},querySelector(){return {textContent:''}},setAttribute(){}});
@@ -69,7 +69,7 @@ test('only paid successful Gacha pulls can receive 1% bonus and duplicates are s
  assert.equal(JSON.stringify(s.megaStones),before);
  assert.equal(G.Gacha.pull(s,0),null,'invalid unpaid pull does not run bonus');
 });
-test('owner + right stone + Chapter 3 required; legendary miniquests not bypassed',()=>{
+test('owner + right stone + Chapters 3 and 7 required; legendary miniquests not bypassed',()=>{
  const {lib,s,forms}=setup(),char=forms[0],ray=forms.at(-1);
  assert.equal(lib.isUnlocked(char),true);
  assert.deepEqual(JSON.parse(JSON.stringify(lib.progress(char))),{pokemon:true,stone:true,story:true,form:true});
@@ -136,4 +136,15 @@ test('Shiny Mega Charizard X keeps its genuine Shiny animation and returns Shiny
  G.Game.startRun();
  pl._megaUsed=false;
  assert.equal(lib.eligible(),false,'no Shiny Mega until genuine Shiny art exists');
+});
+
+test('Phase 3 cannot activate normal or Shiny Mega before Chapter 7 even with the stone',()=>{
+ const h=setup(),{s,lib,forms}=h;
+ assert.equal(lib.eligible(),true);
+ s.pkmsvvChapter7Seen=false;
+ assert.equal(lib.isUnlocked(forms[0]),false);
+ assert.equal(lib.eligible(),false);
+ assert.equal(lib.progress(forms[0]).story,false);
+ s.pkmsvvChapter7Seen=true;
+ assert.equal(lib.eligible(),true);
 });

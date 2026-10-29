@@ -1,0 +1,9 @@
+# PKMSVV v1.5.45 — Story progression Chapters 5–7
+
+**Chapter 5: Đồng Hành** introduces three distinct multiplayer modes: Co-op, Sống Còn (royale), and Tranh Trứng (eggrush). Its scene is available after former Chapter 3 (now Chapter 4) in Memories or on first Arena visit.
+
+**Chapter 6: Arena** requires actual completed matches in ALL three multiplayer modes, stored per-save in `pkmsvvMultiplayerDone.{coop,royale,eggrush}`. A real competitive result (host standings) is required for Sống Còn and Tranh Trứng; genuine team Co-op play of at least 60 seconds must terminate normally to count. Opening/closing a lobby, joining an AI room, quitting a game, or an invalid/no-results match does NOT progress. Each milestone is recorded only once, merged by logical OR across existing saves. After 3/3, user can read Chapter 6, then access Arena. Existing saved regional tournament cups are grandfathered for Arena entry, but do not trigger the Mega story.
+
+**Chapter 7: Sức Mạnh Mega** unlocks when the user wins their FIRST real Champion duel, receiving a Crown Seal after their Arena trophy. Chapter 7 may be watched/skipped once in Memories or opens after first Champion victory; only once `pkmsvvChapter7Seen` is saved may the user use Mega. Owning a Pokémon or Mega Stone earlier never bypasses this. The 96-form encyclopedia remains dark/??? for undiscovered forms. Normal and Shiny Mega combat is still solo-only, 30 seconds, 30% cooldown reduction, requires a real eligible form/stone/artwork. Completing Chapter 7 does NOT give the Pokémon, stone or locked legendary quest.
+
+All 1–7 completed chapters still grant one purple 10-pull ticket each. The original reward slots 0–5 are preserved and Chapter 7 is slot 6. Chapter 8 and Chapter 9 are **reserved, no premise or story content defined**. Existing prior chapters and their save keys remain unchanged; Android package ID and signing certificate are not modified.

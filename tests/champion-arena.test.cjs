@@ -24,11 +24,18 @@ function setup(){
   addEventListener(){},querySelector(){return null},getElementById:id=>elements.get(id)||null};
  let playing='ui',player={dead:false,x:0,y:0,dex:25};
  const save={partner:25,pkmsvvChapter3Seen:true,pkmsvvChapter5Seen:true,
-  pkmsvvChapter6Seen:true,tickets:{t1:2,t10:1},coins:20,arenas:{}};
+  pkmsvvChapter6Seen:true,pkmsvvMultiplayerDone:{coop:true,royale:true,eggrush:true},
+  tickets:{t1:2,t10:1},coins:20,arenas:{}};
  const G={DB:{save,commit(){this.saved=(this.saved||0)+1}},I18n:{lang:'vi'},
   UI:{toast(){}},DEX_BY:new Proxy({}, {get(target,dex){return {dex:Number(dex),name:'Pokémon '+dex}}}),
   Game:{get player(){return player},get state(){return playing},startRun(){playing='playing';},toUI(){playing='ui';}},
   Flow:{goMenu(){this.gone=(this.gone||0)+1}},
+  PKMSVVStory:{
+   arenaUnlocked(){return !!save.pkmsvvChapter6Seen&&['coop','royale','eggrush'].every(m=>save.pkmsvvMultiplayerDone?.[m]);},
+   allMultiplayerCompleted(){return ['coop','royale','eggrush'].every(m=>save.pkmsvvMultiplayerDone?.[m]);},
+   multiplayerProgress(){return {count:3,missing:[]};},
+   chapter7(){save.pkmsvvChapter7Seen=true;save.pkmsvvChapter7Pending=false;return true;}
+  },
   Enemy:class{constructor(def){this.dex=def.dex;this.dead=false;this.boss=true}},
   EnemyMgr:{add(e){this.last=e;return e}},Coop:{active:false}};
  vm.runInNewContext(read('src/pkmsvv-champion-arena.js'),{G,document,Math});
@@ -97,7 +104,8 @@ test('Narrative chapters are renumbered visibly, with old save keys and reward s
  const s=read('src/pkmsvv-story.js');
  for(const t of ['CHƯƠNG 1 · THỨC TỈNH','CHƯƠNG 2 · NHỮNG MẢNH KÝ ỨC',
   'CHƯƠNG 3 · TIẾNG VỌNG THỨ TÁM','CHƯƠNG 4 · MẦM SỐNG BỊ LÃNG QUÊN',
-  'CHƯƠNG 5 · ĐỒNG HÀNH','CHƯƠNG 6 · ĐẤU TRƯỜNG VƯƠNG MIỆN'])
+  'CHƯƠNG 5 · ĐỒNG HÀNH','CHƯƠNG 6 · ĐẤU TRƯỜNG VƯƠNG MIỆN',
+  'CHƯƠNG 7 · SỨC MẠNH MEGA'])
   assert.ok(s.includes(t),t);
  assert.match(s,/pkmsvvChapter5Seen/);assert.match(s,/pkmsvvChapter6Seen/);
  assert.match(s,/pkmsvvChapterPurpleRewards/);
@@ -141,4 +149,23 @@ test('Chapter 5/6 and regional seals survive offline save merges',()=>{
  assert.match(patch,/localCup\.trophies/);
  assert.match(patch,/otherCup\.seals/);
  assert.match(patch,/Math\.min\(Number\(a\?\.rank\)/);
+});
+
+test('Arena does not start if Chapter 6 was seen but real multiplayer trilogy is incomplete',()=>{
+ const h=setup(),{lib,save}=h;
+ delete save.pkmsvvMultiplayerDone.eggrush;
+ assert.equal(lib.start(),false);
+ assert.equal(lib.active,false);
+ save.pkmsvvMultiplayerDone.eggrush=true;
+ assert.equal(lib.start(),true);
+});
+test('First actual Champion Seal triggers Chapter 7 exactly once and does not grant a Mega Stone',()=>{
+ const h=setup(),{lib,save,G}=h;
+ lib.start();
+ for(let i=0;i<4;i++){G.EnemyMgr.last.dead=true;lib.update(.1);lib.nextDuel();}
+ G.EnemyMgr.last.dead=true;lib.update(.1);
+ assert.equal(save.pkmsvvChapter7Seen,true);
+ assert.equal(save.pkmsvvChapter7Pending,false);
+ assert.equal(save.megaStones,undefined);
+ assert.equal(lib.rematch(),false);
 });

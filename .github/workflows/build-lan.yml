@@ -109,7 +109,9 @@ jobs:
         run: npm run test:mega:phase2
       - name: Verify scarce Champion stones and reversible solo Mega stats
         run: npm run test:mega:phase3
-      - name: Verify Champion Arena bracket, real wins and Chapter 1–6 continuity
+      - name: Verify real Chapter 5–7 multiplayer and Mega story gates
+        run: npm run test:story:gates
+      - name: Verify Champion Arena bracket, real wins and Chapter 1–7 continuity
         run: npm run test:arena:champion
       - name: Verify competitive rewards never leak across trainers
         run: node --test tests/competitive-rewards.test.cjs
