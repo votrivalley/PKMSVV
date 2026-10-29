@@ -10,6 +10,29 @@ fs.copyFileSync(path.join(root,'src','pkmsvv-champion-arena.js'),path.join(game,
 replace('dev.html','<script defer src="js/ui/pkmsvv-mega-phase3.js"></script>',
  '<script defer src="js/ui/pkmsvv-mega-phase3.js"></script>\n'+
  '<script defer src="js/ui/pkmsvv-champion-arena.js"></script>');
+
+// New visible Chapters 5/6 are ADDITIVE. Preserve the old story flags and merges.
+// Neither a newer offline backup nor another device may erase a Crown Seal.
+replace('js/core/db.js',
+ '      pkmsvvChapter3Seen:false,pkmsvvChapter3Pending:false,pkmsvvEggSlot3:false,',
+ '      pkmsvvChapter3Seen:false,pkmsvvChapter3Pending:false,pkmsvvEggSlot3:false,\n'+
+ '      pkmsvvChapter5Seen:false,pkmsvvChapter6Seen:false,');
+replace('js/core/db.js',
+ '    r.pkmsvvEggSlot3=!!(r.pkmsvvEggSlot3||older.pkmsvvEggSlot3);',
+ '    r.pkmsvvEggSlot3=!!(r.pkmsvvEggSlot3||older.pkmsvvEggSlot3);\n'+
+ '    r.pkmsvvChapter5Seen=!!(r.pkmsvvChapter5Seen||older.pkmsvvChapter5Seen);\n'+
+ '    r.pkmsvvChapter6Seen=!!(r.pkmsvvChapter6Seen||older.pkmsvvChapter6Seen);\n'+
+ '    r.arenas=r.arenas||{};\n'+
+ '    const localCup=r.arenas.pkmChampion||{},otherCup=older.arenas?.pkmChampion||{};\n'+
+ '    const crown={trophies:{},seals:{},rewards:{}};\n'+
+ '    for(const region of new Set([...Object.keys(localCup.trophies||{}),...Object.keys(otherCup.trophies||{}),...Object.keys(localCup.seals||{}),...Object.keys(otherCup.seals||{}),...Object.keys(localCup.rewards||{}),...Object.keys(otherCup.rewards||{})])){\n'+
+ '      if(localCup.trophies?.[region]||otherCup.trophies?.[region])crown.trophies[region]=true;\n'+
+ '      if(localCup.seals?.[region]||otherCup.seals?.[region])crown.seals[region]=true;\n'+
+ '      const a=localCup.rewards?.[region],b=otherCup.rewards?.[region];\n'+
+ '      if(a||b){const rank=Math.min(Number(a?.rank)||99,Number(b?.rank)||99);\n'+
+ '        crown.rewards[region]={rank,tickets:Math.max(Number(a?.tickets)||0,Number(b?.tickets)||0)};}\n'+
+ '    }\n'+
+ '    r.arenas.pkmChampion=crown;');
 // No js/game.js rewrites: runtime wrappers handle Spawner/Rift/Judgment/EnemyMgr.
 fs.appendFileSync(path.join(game,'css','style.css'),'\n'+fs.readFileSync(path.join(root,'src','pkmsvv-champion-arena.css'),'utf8')+'\n');
 console.log('Champion Arena: live 1v1 boss combat, bracket, 10 regions, real-earned Crown Seals.');

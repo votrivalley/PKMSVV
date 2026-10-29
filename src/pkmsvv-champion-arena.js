@@ -75,10 +75,12 @@ G.PKMSVVChampionArena=(()=>{
    '<p id="pkmsvv-champion-info"></p><div id="pkmsvv-champion-regions" class="pkmsvv-champion-regions"></div>'+
    '<div id="pkmsvv-champion-progress" class="pkmsvv-champion-progress"></div>'+
    '<div class="pkmsvv-champion-actions"><button id="pkmsvv-champion-start" type="button" class="btn gold">Bắt đầu giải đấu</button>'+
+   '<button id="pkmsvv-champion-rematch" type="button" class="btn gold" hidden>Thách đấu lại Champion</button>'+
    '<button id="pkmsvv-champion-ready" type="button" class="btn gold" hidden>Sẵn sàng</button></div></div>';
   document.body.append(overlay);
   $('pkmsvv-champion-close').onclick=()=>{overlay.hidden=true;if(active)returnToMenu();};
   $('pkmsvv-champion-start').onclick=start;
+  $('pkmsvv-champion-rematch').onclick=rematch;
   $('pkmsvv-champion-ready').onclick=nextDuel;
   overlay.addEventListener('click',e=>{if(e.target===overlay&&!active)overlay.hidden=true;});
   return overlay;
@@ -104,6 +106,10 @@ G.PKMSVVChampionArena=(()=>{
    tr('Đã có ','Collected ')+Object.values(led.seals||{}).filter(Boolean).length+'/10 '+
    tr('Ấn Chứng Vương Miện.','Crown Seals.');
   $('pkmsvv-champion-start').hidden=active;
+  const regionName=REGIONS[region][0];
+  const replayTitle=!active&&!!led.trophies?.[regionName]&&!led.seals?.[regionName];
+  $('pkmsvv-champion-rematch').hidden=!replayTitle;
+  $('pkmsvv-champion-rematch').textContent=tr('⚔️ Thách đấu lại Champion','⚔️ Rematch Champion');
   $('pkmsvv-champion-ready').hidden=!active||stage!=='prep';
   $('pkmsvv-champion-ready').textContent=tr('Sẵn sàng đấu ngay','Fight now');
   $('pkmsvv-champion-start').disabled=!G.DB?.save?.pkmsvvChapter6Seen;
@@ -146,10 +152,10 @@ G.PKMSVVChampionArena=(()=>{
   G.UI?.toast?.(tr('Arena · ','Arena · ')+(ROUNDS[round]||'')+' — '+opp.name,3000);
   return true;
  }
- function start(){
+ function launch(championOnly=false){
   if(active||!G.DB?.save?.pkmsvvChapter6Seen||G.Coop?.active)return false;
-  paid=false;round=0;elapsed=0;opp=null;target=null;
-  bracket=makeBracket();
+  paid=championOnly;round=championOnly?4:0;elapsed=0;opp=null;target=null;
+  bracket=championOnly?[]:makeBracket();
   active=true;stage='fight';
   G.Game.startRun(null);
   const zoneType=G.DEX_BY?.[REGIONS[region][1]]?.types?.[0]||'normal';
@@ -158,8 +164,14 @@ G.PKMSVVChampionArena=(()=>{
   const bar=$('pkmsvv-champion-hud')||document.createElement('div');
   bar.id='pkmsvv-champion-hud';bar.className='pkmsvv-champion-hud';
   document.body.append(bar);bar.hidden=false;
-  if(!spawn()){active=false;stage='idle';return false;}
+  if(!spawn()){active=false;stage='idle';G.World?.setArena?.(null);return false;}
   return true;
+ }
+ function start(){return launch(false);}
+ function rematch(){
+  const name=REGIONS[region][0],book=G.DB?.save?.arenas?.pkmChampion;
+  if(!book?.trophies?.[name]||book.seals?.[name])return false;
+  return launch(true);
  }
  function settle(rank,cup=false){
   if(paid)return;
@@ -283,7 +295,7 @@ G.PKMSVVChampionArena=(()=>{
  // Chapter 5 is explicitly accessible through Memories and Arena intro.
  // In particular, first LAN access must never be blocked by a cutscene.
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',menu,{once:true});else menu();
- return {REGIONS,ROUNDS,PREP_SECONDS,FIGHT_SECONDS,makeBracket,aiWinner,open,start,exit,nextDuel,
+ return {REGIONS,ROUNDS,PREP_SECONDS,FIGHT_SECONDS,makeBracket,aiWinner,open,start,rematch,exit,nextDuel,
   update,settle,claimSeal,ledger,get active(){return active},get stage(){return stage},get round(){return round},
   get opponent(){return opp}};
 })();

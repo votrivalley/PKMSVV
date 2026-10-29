@@ -119,3 +119,26 @@ test('First multiplayer click is never intercepted by story; Chapter 5 accessibl
  assert.match(story,/if\(s\.pkmsvvChapter3Seen\)available\.push\('chapter5'\)/);
  assert.match(story,/chapter==='chapter5'.*pkmsvvChapter5Seen/);
 });
+
+test('Earned regional cup unlocks a real Champion-only rematch; seal prevents repeat',()=>{
+ const h=setup(),{lib,save,G}=h;
+ assert.equal(lib.rematch(),false,'no cup means no rematch');
+ const book=lib.ledger(save);book.trophies.Kanto=true;
+ assert.equal(lib.rematch(),true);
+ assert.equal(lib.round,4);
+ assert.equal(lib.stage,'fight');
+ assert.equal(book.seals.Kanto,undefined);
+ G.EnemyMgr.last.dead=true;
+ lib.update(.1);
+ assert.equal(book.seals.Kanto,true);
+ assert.equal(lib.active,false);
+ assert.equal(lib.rematch(),false,'seals are not farmed on repeated rematches');
+});
+test('Chapter 5/6 and regional seals survive offline save merges',()=>{
+ const patch=read('scripts/patch-champion-arena.cjs');
+ assert.match(patch,/pkmsvvChapter5Seen/);
+ assert.match(patch,/pkmsvvChapter6Seen/);
+ assert.match(patch,/localCup\.trophies/);
+ assert.match(patch,/otherCup\.seals/);
+ assert.match(patch,/Math\.min\(Number\(a\?\.rank\)/);
+});
