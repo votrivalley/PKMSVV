@@ -1,4 +1,4 @@
-/* PKMSVV Chapters 1–6; preserve legacy save keys and rewards on renumbering. */
+/* PKMSVV Chapters 1–7. Chapters 8 and 9 deliberately remain undefined. */
 G.PKMSVVStory=(()=>{
  const $=id=>document.getElementById(id),en=()=>G.I18n&&G.I18n.lang==='en';
  const tr=(vi,eng)=>en()?eng:vi;
@@ -75,6 +75,17 @@ G.PKMSVVStory=(()=>{
    {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Nếu thua Champion, ngươi vẫn giữ cúp. Rèn luyện rồi quay lại thách đấu.','Lose to the Champion and you keep your trophy. Train and challenge again.']},
    {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Thu thập mười Ấn Chứng Vương Miện để mở cánh cổng cuối cùng trên trời.','Collect all ten Crown Seals to open the final sky gate.']},
    {art:10,speaker:['Tôi','Me'],text:['Những chiếc vương miện đó... mình sẽ giành bằng trận thắng thật sự.','Those crowns... I will earn them in real battles.']}
+  ],
+  chapter7:[
+   {art:10,speaker:['Tôi','Me'],text:['Ấn Chứng đầu tiên... nó đang rung lên. Có thứ gì thức tỉnh trong cơ thể mình?','My first Crown Seal... it is trembling. Something inside me is awakening.']},
+   {art:11,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Ngươi đã đánh bại một Champion thực sự. Cánh cửa Tiến Hóa Mega cuối cùng cũng mở.','You defeated a true Champion. The gate to Mega Evolution has finally opened.']},
+   {art:10,speaker:['Tôi','Me'],text:['Mega... là dạng tiến hóa mới sao?','Mega... is that a new kind of evolution?']},
+   {art:11,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Đó là sức mạnh bùng lên trong một trận chiến, không phải một dạng tiến hóa vĩnh viễn.','It is a burst of power during battle, not a permanent evolution.']},
+   {art:11,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Muốn biến hình, ngươi còn cần Pokémon phù hợp, Mega Stone tương ứng hoặc điều kiện đặc biệt của dạng đó.','To transform, you still need the right Pokémon and Mega Stone, or that form’s special requirement.']},
+   {art:10,speaker:['Tôi','Me'],text:['Mình có thể dùng sức mạnh ấy mãi sao?','Can I use that power forever?']},
+   {art:11,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Trong các trận solo, Mega kéo dài ba mươi giây, tăng chỉ số và giảm thời gian hồi chiêu ba mươi phần trăm.','In solo battles, Mega lasts thirty seconds, boosts stats and cuts skill cooldowns by thirty percent.']},
+   {art:11,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Mở cửa Mega không có nghĩa mọi dạng đều được tặng. Những bóng đen ??? sẽ hiện nguyên hình khi ngươi thật sự sở hữu chúng.','Opening the Mega gate does not grant every form. The dark ??? silhouettes reveal themselves only when you truly unlock them.']},
+   {art:10,speaker:['Tôi','Me'],text:['Vậy đây mới chỉ là khởi đầu... mình sẽ tìm đủ những mảnh sức mạnh ấy!','So this is only the beginning... I will gather those fragments of power!']}
   ],
   reveal:[
    {art:5,speaker:['Tôi','Me'],text:['Mình... đã biến thành một Pokémon?!','I... turned into a Pokémon?!']},
@@ -215,7 +226,8 @@ G.PKMSVVStory=(()=>{
               'An empty celestial gateway awaiting the awakened Pokémon');
   cv.classList.toggle('hidden',mode!=='reveal');
   if(mode==='reveal'&&chosenDex&&G.UI&&G.UI.sprite)G.UI.sprite(cv,chosenDex,{lively:true,scale:3,hero:true});
-  $('pkmsvv-story-chapter').textContent=mode==='chapter6'?tr('CHƯƠNG 6 · ĐẤU TRƯỜNG VƯƠNG MIỆN','CHAPTER 6 · CROWN ARENA'):
+  $('pkmsvv-story-chapter').textContent=mode==='chapter7'?tr('CHƯƠNG 7 · SỨC MẠNH MEGA','CHAPTER 7 · MEGA AWAKENING'):
+    mode==='chapter6'?tr('CHƯƠNG 6 · ĐẤU TRƯỜNG VƯƠNG MIỆN','CHAPTER 6 · CROWN ARENA'):
     mode==='chapter5'?tr('CHƯƠNG 5 · ĐỒNG HÀNH','CHAPTER 5 · COMPANIONS'):
     mode==='chapter3'?tr('CHƯƠNG 4 · MẦM SỐNG BỊ LÃNG QUÊN','CHAPTER 4 · FORGOTTEN LIFE'):
     mode==='chapter2'?tr('CHƯƠNG 3 · TIẾNG VỌNG THỨ TÁM','CHAPTER 3 · THE EIGHTH ECHO'):
@@ -270,7 +282,7 @@ G.PKMSVVStory=(()=>{
   const completed=[
    !!(s.pkmsvvStorySeen&&(s.starter||s.partner)),
    !!s.pkmsvvChapter1Seen,!!s.pkmsvvChapter2Seen,!!s.pkmsvvChapter3Seen,
-   !!s.pkmsvvChapter5Seen,!!s.pkmsvvChapter6Seen
+   !!s.pkmsvvChapter5Seen,!!s.pkmsvvChapter6Seen,!!s.pkmsvvChapter7Seen
   ];
   let count=0;
   for(let ch=0;ch<completed.length;ch++){
@@ -311,17 +323,70 @@ G.PKMSVVStory=(()=>{
  function chapter1(done){
   play('chapter1',()=>{if(G.DB.save){G.DB.save.pkmsvvChapter1Seen=true;G.DB.save.pkmsvvChapter1Pending=false;G.DB.commit(true);syncChapterPurpleRewards();}if(done)done();});
  }
+ const MP_MODES=Object.freeze(['coop','royale','eggrush']);
+ const MP_LABELS=Object.freeze({coop:'Co-op',royale:'Sống Còn',eggrush:'Tranh Trứng'});
+ function multiplayerProgress(save=G.DB?.save){
+  const flags=save?.pkmsvvMultiplayerDone||{};
+  const done=MP_MODES.filter(mode=>flags[mode]===true);
+  return {count:done.length,total:3,done,missing:MP_MODES.filter(mode=>flags[mode]!==true)};
+ }
+ function allMultiplayerCompleted(save=G.DB?.save){
+  return multiplayerProgress(save).count===3;
+ }
+ function earnedChampion(save=G.DB?.save){
+  return Object.values(save?.arenas?.pkmChampion?.seals||{}).some(v=>v===true);
+ }
+ function oldArenaCup(save=G.DB?.save){
+  // Preserve trophies earned before the new Chapter 6 prerequisite existed.
+  const a=save?.arenas?.pkmChampion||{};
+  return earnedChampion(save)||Object.values(a.trophies||{}).some(v=>v===true);
+ }
+ function arenaUnlocked(save=G.DB?.save){
+  return !!(save?.pkmsvvChapter6Seen&&(allMultiplayerCompleted(save)||oldArenaCup(save)));
+ }
+ function megaUnlocked(save=G.DB?.save){
+  return !!(save?.pkmsvvChapter7Seen&&earnedChampion(save));
+ }
+ // Called from the *real* multiplayer endRun, never the lobby/room creator.
+ function recordMultiplayerCompletion(mode,detail={}){
+  const s=G.DB?.save;
+  if(!s?.pkmsvvChapter5Seen||!MP_MODES.includes(mode)||detail.abandoned)return false;
+  const time=Number(detail.time)||0;
+  if(mode==='coop'){
+   // In Co-op surviving or falling after genuine team play counts as finishing.
+   // A one-second start-and-abandon run does not.
+   if(time<60)return false;
+  }else{
+   // Competitive modes must have their authoritative final standings.
+   const result=detail.result;
+   if(!result||!Array.isArray(result.standings)||result.standings.length<2||
+    !Number.isFinite(Number(result.finishedAt)))return false;
+  }
+  s.pkmsvvMultiplayerDone=s.pkmsvvMultiplayerDone||{};
+  if(s.pkmsvvMultiplayerDone[mode]===true)return false;
+  s.pkmsvvMultiplayerDone[mode]=true;G.DB.commit(true);
+  const progress=multiplayerProgress(s);
+  G.UI?.toast?.(progress.count===3?
+   tr('🏆 Đã hoàn thành cả ba chế độ! Chương 6 · Arena đã mở.','🏆 All three modes complete! Chapter 6 · Arena is unlocked.'):
+   tr('✅ Hoàn thành '+MP_LABELS[mode]+' · '+progress.count+'/3 chế độ.','✅ Completed '+MP_LABELS[mode]+' · '+progress.count+'/3 modes.'),3500);
+  return true;
+ }
  function chapter5(done){
   if(!G.DB?.save?.pkmsvvChapter3Seen){done?.(false);return false;}
   play('chapter5',()=>{G.DB.save.pkmsvvChapter5Seen=true;G.DB.commit(true);
    syncChapterPurpleRewards();done?.(true);});return true;
  }
  function chapter6(done){
-  if(!G.DB?.save?.pkmsvvChapter5Seen){done?.(false);return false;}
+  if(!G.DB?.save?.pkmsvvChapter5Seen||!allMultiplayerCompleted()){done?.(false);return false;}
   play('chapter6',()=>{G.DB.save.pkmsvvChapter6Seen=true;G.DB.commit(true);
    syncChapterPurpleRewards();done?.(true);});return true;
  }
- function replay(type='prologue'){play(['chapter1','chapter2','chapter3','chapter5','chapter6'].includes(type)?type:'prologue',()=>G.Flow.goMenu(),true);}
+ function chapter7(done){
+  if(!G.DB?.save?.pkmsvvChapter6Seen||!earnedChampion()){done?.(false);return false;}
+  play('chapter7',()=>{G.DB.save.pkmsvvChapter7Seen=true;G.DB.save.pkmsvvChapter7Pending=false;
+   G.DB.commit(true);syncChapterPurpleRewards();done?.(true);});return true;
+ }
+ function replay(type='prologue'){play(['chapter1','chapter2','chapter3','chapter5','chapter6','chapter7'].includes(type)?type:'prologue',()=>G.Flow.goMenu(),true);}
  function memories(){
   const s=G.DB.save||{};
   // The default Memories menu opens the next available chapter to replay.
@@ -332,7 +397,8 @@ G.PKMSVVStory=(()=>{
   if(s.pkmsvvChapter3Seen)available.push('chapter3');
   // Story continuation is selectable before first completion, without blocking LAN.
   if(s.pkmsvvChapter3Seen)available.push('chapter5');
-  if(s.pkmsvvChapter5Seen)available.push('chapter6');
+  if((s.pkmsvvChapter5Seen&&allMultiplayerCompleted(s))||s.pkmsvvChapter6Seen)available.push('chapter6');
+  if(earnedChampion(s))available.push('chapter7');
   if(available.length===1){replay('prologue');return;}
   const choices=document.createElement('section');
   choices.className='pkmsvv-memory-chooser';choices.setAttribute('role','dialog');
@@ -342,7 +408,8 @@ G.PKMSVVStory=(()=>{
    chapter2:tr('Chương 3 · Tiếng Vọng Thứ Tám','Chapter 3 · The Eighth Echo'),
    chapter3:tr('Chương 4 · Mầm Sống Bị Lãng Quên','Chapter 4 · Forgotten Life'),
    chapter5:tr('Chương 5 · Đồng Hành','Chapter 5 · Companions'),
-   chapter6:tr('Chương 6 · Đấu Trường Vương Miện','Chapter 6 · Crown Arena')};
+   chapter6:tr('Chương 6 · Đấu Trường Vương Miện','Chapter 6 · Crown Arena'),
+   chapter7:tr('Chương 7 · Sức Mạnh Mega','Chapter 7 · Mega Awakening')};
   choices.innerHTML='<div class="pkmsvv-memory-inner"><h2>'+tr('Ký Ức','Memories')+'</h2>'+
    available.map(c=>'<button type="button" class="btn gold" data-chapter="'+c+'">'+labels[c]+'</button>').join('')+
    '<button type="button" class="btn ghost" data-close="1">'+tr('Đóng','Close')+'</button></div>';
@@ -351,6 +418,7 @@ G.PKMSVVStory=(()=>{
    const chapter=el.dataset.chapter;choices.remove();
    if(chapter==='chapter5'&&!G.DB?.save?.pkmsvvChapter5Seen)chapter5(()=>G.Flow.goMenu());
    else if(chapter==='chapter6'&&!G.DB?.save?.pkmsvvChapter6Seen)chapter6(()=>G.Flow.goMenu());
+   else if(chapter==='chapter7'&&!G.DB?.save?.pkmsvvChapter7Seen)chapter7(()=>G.Flow.goMenu());
    else replay(chapter);
   };});
   choices.querySelector('[data-close]').onclick=()=>choices.remove();
@@ -367,5 +435,5 @@ G.PKMSVVStory=(()=>{
    else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();skipStory();}
   },true);
  }
- return {init,prologue,reveal,replay,memories,syncChapterPurpleRewards,chapter1,chapter2,chapter3,chapter5,chapter6,markChapter1,markChapter2,markChapter3,chapter1Pending,chapter2Pending,chapter3Pending};
+ return {init,prologue,reveal,replay,memories,syncChapterPurpleRewards,chapter1,chapter2,chapter3,chapter5,chapter6,chapter7,multiplayerProgress,allMultiplayerCompleted,recordMultiplayerCompletion,arenaUnlocked,earnedChampion,megaUnlocked,markChapter1,markChapter2,markChapter3,chapter1Pending,chapter2Pending,chapter3Pending};
 })();
