@@ -43,7 +43,7 @@ function mock(){
  vm.runInNewContext(text('src/pkmsvv-mega-lucario.js'),context);
  player={dex:448,shiny:false,baseAtk:115,baseSpd:90,scale:1,r:18,bodyH:36,
   mon:{dex:448,pa:110,sa:115,atk:115,df:70,sd:70,spd:90,types:['fighting','steel']},
-  moves:[{id:'aura',cd:10,t:10}],
+  moves:[{id:'aura',cd:10,t:10}],cdMul:1,
   x:0,y:0,anim:new Animator(448,1,false),dead:false};
  return{G,player,setCoop:x=>{coop=x},events:listeners};
 }
@@ -62,6 +62,7 @@ test('preview cannot grant stone, transformation restores base stats after 30s',
  assert.ok(Math.abs(player.mon.df-70*(88/70))<1e-9,'Mega physical defense');
  assert.equal(player.mon.sd,70);
  assert.ok(Math.abs(player.moves[0].t-7)<1e-9,'existing cooldown reduced 30%');
+ assert.ok(Math.abs(player.cdMul-.7)<1e-9,'all future casts recover 30% faster');
  assert.equal(player.dex,448);
  assert.equal(player.shiny,false);
  assert.equal(G.DB.save.megaStones.lucarionite,undefined,'preview never mutates stone save');
@@ -69,6 +70,7 @@ test('preview cannot grant stone, transformation restores base stats after 30s',
  assert.equal(player.anim.dex,448);
  assert.equal(player.baseAtk,115);
  assert.equal(player.baseSpd,90);
+ assert.ok(Math.abs(player.cdMul-1)<1e-9,'cooldown multiplier restored without corrupting perks');
  assert.strictEqual(player.mon,originalMon,'original Pokédex stats restored by reference');
  assert.equal(player.mon.df,70,'defense restored');
  assert.equal(player.mon.atk,115,'unmodified original Pokédex stats restored');
@@ -91,7 +93,7 @@ test('UI uses a circular Mega Stone with subtle glimmer and a countdown',()=>{
  assert.match(css,/prefers-reduced-motion/);
  assert.match(js,/pkmsvv-mega-btn__gem/);
  assert.match(js,/Math\.ceil\(p\._megaRemaining\)/);
- const patch=text('scripts/patch-mega-lucario.cjs');
- assert.match(patch,/pl\._megaActive \? 0\.70 : 1/);
- assert.match(patch,/this\._megaActive \? 0\.70 : 1/);
+ assert.match(js,/p\.cdMul\*=COOLDOWN/);
+ assert.match(js,/p\.cdMul\/=COOLDOWN/);
+ assert.equal((text('scripts/patch-mega-lucario.cjs').match(/patch\('js\/systems\/combat\.js'/g)||[]).length,0);
 });

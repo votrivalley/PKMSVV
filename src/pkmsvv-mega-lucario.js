@@ -41,6 +41,8 @@ G.MegaLucario=(()=>{
   const old=p._megaBackup;
   // Restore the original species stat object: never alter the global Pokédex.
   p.mon=old.mon;p.baseAtk=old.atk;p.baseSpd=old.spd;
+  // Preserve other cooldown perks/buffs by removing only the Mega factor.
+  if(p._megaCdApplied){p.cdMul/=COOLDOWN;p._megaCdApplied=false;}
   p._megaActive=false;p._megaRemaining=0;p._megaBackup=null;
   changeAppearance(p,false);
   sync();return true;
@@ -53,6 +55,8 @@ G.MegaLucario=(()=>{
   p.mon={...mon,pa,sa,atk:Math.max(pa,sa),df:mon.df*RATIOS.defense,
    sd:mon.sd,spd:mon.spd*RATIOS.speed};
   p.baseAtk=p.mon.atk;p.baseSpd=p.mon.spd;
+  // The existing Combat and Cast paths already apply this player's cdMul.
+  p.cdMul*=COOLDOWN;p._megaCdApplied=true;
   // A ready or partially recharging move also benefits from Mega's -30% CD.
   for(const m of p.moves||[])if(Number.isFinite(m.t)&&m.t>0)m.t*=COOLDOWN;
   p._megaRemaining=DURATION;p._megaUsed=true;p._megaActive=true;
