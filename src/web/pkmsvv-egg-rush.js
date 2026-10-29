@@ -1,6 +1,7 @@
 /* PKMSVV v1.5 — Egg Rush, online 4-player host-authoritative match. */
 G.EggRush=(()=>{
  const MAX_TIME=720,MAX_SCORE=10,SPAWN_EVERY=60,RESPAWN_SECONDS=8,EGG_SPECIES=[172,447,173,360,438,175,174];
+ const SUPPORT_HATCH=30,SUPPORT_MIN_HATCH=40/3,SHINY_CAST_RATIO=2/3,SHINY_SKILL_POWER=1.5;
  // Competitive eggs only reveal their Pokémon and score after the final egg.
  const eggValue=dex=>dex===151?20:dex===132?10:5;
  const eggShinyChance=dex=>(dex===151||dex===132)?.10:.03;
@@ -78,12 +79,14 @@ G.EggRush=(()=>{
     // Host-owned support HP is transmitted with the verified egg claim.
     const maxHp=Number.isFinite(ev[7])&&ev[7]>0?Math.max(1,Math.min(50000,Math.round(ev[7]))):100;
     pets.push({id,uid,dex,age:0,hatch:false,x:n?.x||0,y:n?.y||0,anim:null,
+     shiny:supportMode&&ev[8]===true,
+     statScale:supportMode&&ev[8]===true?1:Math.max(.5,Math.min(.8,Number(ev[9])||.65)),
      hp:maxHp,maxHp,hurtCd:0,hpSeq:0,shield:0});
    }
   }else if(ev[1]==='hatch'){
    if(active)return; // Egg Rush: sealed eggs NEVER hatch mid-match.
    const pet=pets.find(p=>p.id===ev[2]);
-   if(pet&&!pet.hatch){pet.hatch=true;pet.anim=new G.Sprites.Animator(pet.dex,.6*(G.Sprites.playerScale?.(pet.dex)||1),false);G.FX?.ring?.(pet.x,pet.y,8,48,'#f5de8d',.6,3);}
+   if(pet&&!pet.hatch){pet.hatch=true;pet.anim=new G.Sprites.Animator(pet.dex,.6*(G.Sprites.playerScale?.(pet.dex)||1),!!pet.shiny);G.FX?.ring?.(pet.x,pet.y,8,48,'#f5de8d',.6,3);}
   }else if(ev[1]==='hp'){
     const pet=pets.find(p=>p.id===ev[2]);
     if(pet&&Number.isFinite(ev[3])&&Number.isSafeInteger(ev[4])&&ev[4]>pet.hpSeq){
@@ -116,10 +119,11 @@ G.EggRush=(()=>{
   // Shiny is an independent Host-only roll: no friendship, affinity,
   // Shiny Charm, save progression or legacy egg species multipliers.
   if(active)secretEggs.set(n.id,{dex,shiny:Math.random()<eggShinyChance(dex)});
-  // 50–80% of this owner's real HP, not a global cosmetic HP bar.
-   const statScale=.5+rand(n.id*37)*.3;
+  // Shiny support is Host-rolled; competitive eggs retain private identity.
+   const supportShiny=supportMode&&Math.random()<eggShinyChance(dex);
+   const statScale=supportShiny?1:.5+rand(n.id*37)*.3;
    const maxHp=supportMode?Math.max(1,Math.round((pl.maxHp||100)*statScale)):100;
-   const event=['er','take',n.id,pl.uid,active?0:dex,score[pl.uid],time,maxHp];
+   const event=['er','take',n.id,pl.uid,active?0:dex,score[pl.uid],time,maxHp,supportShiny,statScale];
   onEvent(event);G.Coop.broadcast(event);
   G.Spawner?.say?.(nameOf(pl.uid)+' '+tr('nhặt được trứng!','collected an egg!'),2);
   return true;
@@ -224,7 +228,7 @@ G.EggRush=(()=>{
    }
    pet.age+=dt;
    if(G.Coop.isHost)pet.boost=(pet.boost||0)+advanceLevel*3+advanceKills*.65;
-   if(G.Coop.isHost&&pet.age>=20&&pet.age+(pet.boost||0)>=45&&!pet.hatch){
+   if(G.Coop.isHost&&pet.age>=SUPPORT_MIN_HATCH&&pet.age+(pet.boost||0)>=SUPPORT_HATCH&&!pet.hatch){
     const event=['er','hatch',pet.id];onEvent(event);G.Coop.broadcast(event);
    }
    // Always use the real Pokémon Animator (Walk/Idle frame strips), never
@@ -243,7 +247,7 @@ G.EggRush=(()=>{
     (pet.uid===G.Game.player?.uid?G.Game.player:(G.Coop.isHost?players.find(p=>p.uid===pet.uid):null));
    if(pet.hatch&&owner&&!owner.dead){
     const own=siblings.filter(q=>q.hatch);
-    if(own.indexOf(pet)<3){pet.cd=(pet.cd||0)-dt;if(pet.cd<=0){support(pet,owner);pet.cd=({172:10,173:12,35:16,360:19,438:15}[pet.dex]||8);}}
+    if(own.indexOf(pet)<3){pet.cd=(pet.cd||0)-dt;if(pet.cd<=0){support(pet,owner);pet.cd=({172:10,173:12,360:19,438:15}[pet.dex]||8)*(pet.shiny?SHINY_CAST_RATIO:1);}}
    }
   }
   if(G.Coop.isHost&&supportMode){
@@ -326,8 +330,8 @@ G.EggRush=(()=>{
    if(role==='heal'){
     const before=ally.hp;
     if(before>=ally.maxHp)continue;
-    if(ally===pl&&typeof ally.heal==='function')ally.heal(ally.maxHp*power);
-    else ally.hp+=ally.maxHp*power;
+    if(ally===pl&&typeof ally.heal==='function')ally.heal(ally.maxHp*power*(pet.shiny?SHINY_SKILL_POWER:1));
+    else ally.hp+=ally.maxHp*power*(pet.shiny?SHINY_SKILL_POWER:1);
     ally.hp=Math.min(ally.hp,ally.maxHp);
     if(ally.hp>before){
      changed++;
@@ -339,7 +343,7 @@ G.EggRush=(()=>{
    }else{
     const key=ally===pl?'pkmsvvShield':'shield';
     const before=Math.max(0,Number(ally[key])||0);
-    ally[key]=Math.min(ally.maxHp*.25,before+ally.maxHp*power);
+    ally[key]=Math.min(ally.maxHp*.25,before+ally.maxHp*power*(pet.shiny?SHINY_SKILL_POWER:1));
     if(ally[key]>before)changed++;
    }
   }
@@ -361,7 +365,7 @@ G.EggRush=(()=>{
     for(const e of candidates){
      if(count>=4)break;
      if(G.U.dist2(e.x,e.y,center.x,center.y)>95*95)continue;
-     e.applyStun((e.boss||e.judge||e.pkmsvvBossGuard) ? 0.35 : 1.1);
+     e.applyStun(((e.boss||e.judge||e.pkmsvvBossGuard) ? 0.35 : 1.1)*(pet.shiny?SHINY_SKILL_POWER:1));
      e.pkmsvvPichuImmuneUntil=(pet.age||0)+7;count++;
     }
     if(count)G.FX?.ring?.(center.x,center.y,8,95,'#ffdb55',.5,3);
@@ -369,13 +373,13 @@ G.EggRush=(()=>{
    }
    case 447:if(enemy){
     if(G.Coop?.isHost&&(G.Royale?.active||G.EggRush?.active)&&pet.uid)enemy.pkmsvvLastHitUid=pet.uid;
-    enemy.hurt(19,'#c8e2ff');
+    enemy.hurt(19*(pet.statScale||.65)/.65*(pet.shiny?SHINY_SKILL_POWER:1),'#c8e2ff');
    }break;
    case 173:eggRushBuff(pet,pl,'heal',.035);break;
    case 360:eggRushBuff(pet,pl,'shield',.09);break;
    case 438:eggRushBuff(pet,pl,'shield',.05);break;
    case 175:G.Pickups?.pullAll?.();break;
-   case 174:if(enemy)enemy.applySlow(.3,2.5);break;
+   case 174:if(enemy)enemy.applySlow(pet.shiny?.45:.3,2.5);break;
   }
  }
  // Compete for nests and score; skills/Orbs never hurt another trainer.
@@ -395,7 +399,7 @@ G.EggRush=(()=>{
   }
   for(const p of pets){
    if(!G.Camera.sees(p.x,p.y,50))continue;
-   if(!p.hatch)egg(ctx,p.x,p.y,active?0:(p.age+(p.boost||0))/45);
+   if(!p.hatch)egg(ctx,p.x,p.y,active?0:(p.age+(p.boost||0))/SUPPORT_HATCH);
    else{
     p.anim?.draw(ctx,p.x,p.y,{alpha:.85});
     if(supportMode&&p.maxHp>0){
