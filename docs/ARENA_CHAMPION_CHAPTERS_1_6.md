@@ -1,3 +1,5 @@
+> **Superseded gameplay note (v1.5.44).** Current design/implementation: [ARENA_SOLO_CHAMPION_V1548.md](./ARENA_SOLO_CHAMPION_V1548.md). The mandatory fifth Champion duel described below was removed. The Champion title is earned directly from the fourth/final fight.
+
 # Arena / Champion v1.5.44 — 2026-10-29
 
 Chapter numbering in user-facing UI is now **1 Awakening, 2 Memory Fragments, 3 Eighth Echo, 4 Forgotten Life, 5 Companions, 6 Crown Arena**. The old internal keys (prologue, chapter1, chapter2, chapter3) are kept to preserve all existing saves and previous reward ledger entries 0–3. Chapters 5 and 6 are bilingual cutscenes triggered by opening Multiplayer for the first time after Chapter 4 and Arena for the first time after Chapter 5. They can be replayed in Memories and each pays exactly one additional purple x10 ticket (ledger 4/5); no duplicate old payouts.
