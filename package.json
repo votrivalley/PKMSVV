@@ -64,7 +64,8 @@
     "test:mega:pack": "node --test tests/mega-forms.test.cjs",
     "test:mega:ui": "node --test tests/mega-ui-phase1.test.cjs",
     "test:mega:phase2": "node --test tests/mega-ui-phase2.test.cjs",
-    "test:mega:phase3": "node --test tests/mega-phase3.test.cjs"
+    "test:mega:phase3": "node --test tests/mega-phase3.test.cjs",
+    "test:mega:shiny": "node --test tests/mega-shiny.test.cjs"
   },
   "devDependencies": {
     "playwright": "^1.62.1",

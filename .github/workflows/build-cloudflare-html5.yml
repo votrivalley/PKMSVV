@@ -3,6 +3,10 @@ on:
   push:
     branches: [feature/lan-local-beta]
     paths:
+      - 'scripts/build-mega-shiny.cjs'
+      - 'tests/mega-shiny.test.cjs'
+      - 'src/pkmsvv-mega-lucario.js'
+      - 'src/pkmsvv-mega-phase3.js'
       - 'src/pkmsvv-phase1-pastel.css'
       - 'src/pkmsvv-mega-phase2.css'
       - 'src/pkmsvv-mega-entry.js'
@@ -76,6 +80,8 @@ jobs:
         run: npm run prepare:cloudflare
       - name: Validate 96 Mega encyclopedia UI and real unlock gating
         run: npm run test:mega:phase2
+      - name: Verify Shiny Mega artwork and identity in Web package
+        run: npm run test:mega:shiny
       - name: Verify entire game, PWA, save UI, free-tier limits
         run: npm run test:cloudflare && node --test tests/cloudflare-ai.test.cjs tests/local-shell-ui.test.cjs tests/local-ui-lan-host-regression.test.cjs tests/pages-lan-connect-runtime.test.cjs tests/unified-coop.test.cjs
       - name: Verify personal ticket and Shiny ownership in standalone Web AI

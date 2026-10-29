@@ -4,6 +4,8 @@ on:
     branches: [feature/lan-local-beta]
     paths:
       - 'tests/mega-lucario.test.cjs'
+      - 'tests/mega-shiny.test.cjs'
+      - 'scripts/build-mega-shiny.cjs'
       - 'tests/mega-forms.test.cjs'
       - 'tests/mega-ui-phase1.test.cjs'
       - 'tests/mega-ui-phase2.test.cjs'
@@ -96,6 +98,8 @@ jobs:
         run: npm run test:mega
       - name: Verify all 36 candidate Mega visual sets and per-form credits
         run: npm run test:mega:pack
+      - name: Verify authentic Shiny Mega offline art, all 8 directions
+        run: npm run test:mega:shiny
       - name: Verify pastel Phase 1 menu, Mega entry and locked appearance
         run: npm run test:mega:ui
       - name: Verify read-only 96-form Mega encyclopedia and 12-per-page silhouettes

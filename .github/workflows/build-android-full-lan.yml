@@ -3,6 +3,10 @@ on:
   push:
     branches: [feature/lan-local-beta]
     paths:
+      - 'scripts/build-mega-shiny.cjs'
+      - 'tests/mega-shiny.test.cjs'
+      - 'src/pkmsvv-mega-lucario.js'
+      - 'src/pkmsvv-mega-phase3.js'
       - 'src/pkmsvv-phase1-pastel.css'
       - 'src/pkmsvv-mega-phase2.css'
       - 'src/pkmsvv-mega-entry.js'
@@ -111,6 +115,8 @@ jobs:
         run: npm run test:v15 && npm run test:collection && npm run test:mobile-topbar && npm run test:mega
       - name: Validate 96 Mega encyclopedia UI and real unlock gating
         run: npm run test:mega:phase2
+      - name: Verify Shiny Mega artwork and identity in Android package
+        run: npm run test:mega:shiny
       - name: Pack full offline assets and LAN UI
         run: |
           npm run prepare:icons
