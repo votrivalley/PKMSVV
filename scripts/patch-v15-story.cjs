@@ -30,7 +30,7 @@ patch('js/ui/menu.js',
  "    const memo = document.getElementById('pkmsvv-memory-title');\n    G.PKMSVVStory.markChapter3();");
 patch('js/ui/menu.js',
  'Chương 0–2 · Xem lại truyện',
- 'Chương 0–3 · Xem lại truyện');
+ 'Chương 1–6 · Xem lại truyện');
 // Missing storyboard art does not fail builds: keep the two original Chapter 2
 // images as safe placeholders until approved Chapter 3 illustrations are staged.
 for(const [next,old] of [['chapter3-nest','chapter2-orbs'],['chapter3-hatch','chapter2-shadow']]){

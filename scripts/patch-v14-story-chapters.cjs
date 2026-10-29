@@ -22,7 +22,7 @@ patch('js/ui/menu.js',
  "        else if (go === 'memories') G.PKMSVVStory.replay();",
  "        else if (go === 'memories') G.PKMSVVStory.memories();");
 patch('js/ui/menu.js',
- "Xem lại Chương 0 · Thức tỉnh",
+ "Xem lại Chương 1 · Thức tỉnh",
  "Chương 0–2 · Xem lại truyện");
 fs.appendFileSync(path.join(game,'css','style.css'),'\n'+
  '.pkmsvv-memory-chooser{position:fixed;inset:0;z-index:11000;background:rgba(5,12,28,.91);display:grid;place-items:center;padding:22px}\n'+
