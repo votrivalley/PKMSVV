@@ -626,6 +626,8 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-chapter-purple
 execFileSync(process.execPath,[path.join(project,'scripts','patch-v155-pc-fullscreen.cjs')],{cwd:project,stdio:'inherit'});
 // Competitive Royale and Egg Rush personal skill choices must NEVER stop the entire room.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-competitive-levelup.cjs')],{cwd:project,stdio:'inherit'});
+// Mega Lucario proof-of-concept: local sprite, reversible battle form, no Gacha grants.
+execFileSync(process.execPath,[path.join(project,'scripts','patch-mega-lucario.cjs')],{cwd:project,stdio:'inherit'});
 // Only Switch/Brewser: tolerate absent DOMContentLoaded and a stalled pixel-font Promise.
 if (process.env.PKMSVV_SWITCH_BOOT === '1') {
   patch('js/main.js',

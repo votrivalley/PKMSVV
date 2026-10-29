@@ -59,7 +59,8 @@
     "test:v1534": "node --test tests/egg-rush-hidden-score.test.cjs tests/egg-rush-shiny.test.cjs tests/lan-ai-modes.test.cjs tests/lan-mode-rules.test.cjs tests/v15-eggs.test.cjs tests/lan-support-animation.test.cjs tests/competitive-rewards.test.cjs",
     "test:v1535": "node --test tests/chapter-purple-rewards.test.cjs tests/story-intro.test.cjs tests/v15-gacha-save-isolation.test.cjs tests/collection.test.cjs",
     "test:competitive:nonblocking": "node --test tests/competitive-nonblocking.test.cjs tests/lan-mode-rules.test.cjs",
-    "test:royale:spectator": "node --test tests/royale-spectator.test.cjs tests/competitive-nonblocking.test.cjs tests/lan-mode-rules.test.cjs"
+    "test:royale:spectator": "node --test tests/royale-spectator.test.cjs tests/competitive-nonblocking.test.cjs tests/lan-mode-rules.test.cjs",
+    "test:mega": "node --test tests/mega-lucario.test.cjs"
   },
   "devDependencies": {
     "playwright": "^1.62.1",
