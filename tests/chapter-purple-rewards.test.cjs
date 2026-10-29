@@ -92,3 +92,18 @@ test('Production game scripts install claim defaults, merge claim flags and main
  assert.match(source,/pkmsvvChapter1Seen=true;[\s\S]{0,150}syncChapterPurpleRewards\(\)/);
  assert.match(source,/pkmsvvChapter3Seen=true;[\s\S]{0,180}syncChapterPurpleRewards\(\)/);
 });
+
+test('Renumbering Chapters 1–4 preserves old flags; new Chapters 5/6 each add exactly one purple ticket',()=>{
+ const save={pkmsvvStorySeen:true,partner:25,starter:25,pkmsvvChapter1Seen:true,
+  pkmsvvChapter2Seen:true,pkmsvvChapter3Seen:true,tickets:{t1:4,t10:0}};
+ const h=setup(save);
+ assert.equal(h.claim(),4);
+ save.pkmsvvChapter5Seen=true;
+ assert.equal(h.claim(),1);
+ save.pkmsvvChapter6Seen=true;
+ assert.equal(h.claim(),1);
+ assert.equal(h.claim(),0);
+ assert.equal(save.tickets.t10,6);
+ assert.equal(save.tickets.t1,4);
+ for(const id of [0,1,2,3,4,5])assert.equal(save.pkmsvvChapterPurpleRewards[id],true);
+});

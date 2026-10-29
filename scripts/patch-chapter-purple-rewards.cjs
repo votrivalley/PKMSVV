@@ -8,18 +8,18 @@ function patch(file,from,to){
  fs.writeFileSync(full,source.replace(from,to),'utf8');
 }
 // Defaults for new saves and additive migration for old saves.
-// Existing saves intentionally DON'T pre-claim rewards: old Chapter 0–3
+// Existing saves intentionally DON'T pre-claim rewards: old Chapter 0–5
 // completions are eligible retroactively on first menu open.
 patch('js/core/db.js',
  '      pkmsvvChapter3Seen:false,pkmsvvChapter3Pending:false,pkmsvvEggSlot3:false,',
  '      pkmsvvChapter3Seen:false,pkmsvvChapter3Pending:false,pkmsvvEggSlot3:false,\n'+
- '      pkmsvvChapterPurpleRewards:{}, // chapter IDs 0–3 already awarded (Gacha x10)');
+ '      pkmsvvChapterPurpleRewards:{}, // chapter IDs 0–5 already awarded (Gacha x10)');
 patch('js/core/db.js',
  '    r.pkmsvvEggSlot3=!!(r.pkmsvvEggSlot3||older.pkmsvvEggSlot3);',
  '    r.pkmsvvEggSlot3=!!(r.pkmsvvEggSlot3||older.pkmsvvEggSlot3);\n'+
  '    // Idempotent chapter claims survive save imports/cloud merges.\n'+
  '    r.pkmsvvChapterPurpleRewards=r.pkmsvvChapterPurpleRewards||{};\n'+
- '    for(const ch of [0,1,2,3]){\n'+
+ '    for(const ch of [0,1,2,3,4,5]){\n'+
  '      r.pkmsvvChapterPurpleRewards[ch]=!!(r.pkmsvvChapterPurpleRewards[ch]||older.pkmsvvChapterPurpleRewards?.[ch]);\n'+
  '    }');
 // In particular, initial Chapter 0 skip/quiz skip still forces starter choice;
@@ -27,4 +27,4 @@ patch('js/core/db.js',
 // their normal menu. Replay opens the menu too but cannot double-credit.
 // Compose with the pre-existing v1.5 UI menu wrapper without editing its internals.
 fs.appendFileSync(path.join(game,'js','ui','menu.js'),"\n/* v1.5.35: one-time chapter reward reconciliation at normal menu open. */\n(()=>{\n const previous=G.MenuUI?.open;\n if(typeof previous!=='function')throw Error('Missing MenuUI.open for chapter reward reconciliation');\n G.MenuUI.open=function(...args){\n  G.PKMSVVStory?.syncChapterPurpleRewards?.();\n  return previous.apply(this,args);\n };\n})();\n",'utf8');
-console.log('PKMSVV Chapter rewards: one permanent purple x10 ticket per Chapter 0–3 (once per save, retroactive).');
+console.log('PKMSVV Chapter rewards: one permanent purple x10 ticket per Chapter 0–5 (once per save, retroactive).');

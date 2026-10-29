@@ -5,6 +5,9 @@ on:
     paths:
       - 'scripts/build-mega-shiny.cjs'
       - 'tests/mega-shiny.test.cjs'
+      - 'tests/champion-arena.test.cjs'
+      - 'src/pkmsvv-champion-arena.js'
+      - 'src/pkmsvv-champion-arena.css'
       - 'src/pkmsvv-mega-lucario.js'
       - 'src/pkmsvv-mega-phase3.js'
       - 'src/pkmsvv-phase1-pastel.css'
@@ -82,6 +85,8 @@ jobs:
         run: npm run test:mega:phase2
       - name: Verify Shiny Mega artwork and identity in Web package
         run: npm run test:mega:shiny
+      - name: Verify Chapter 1–6 and offline Crown Arena
+        run: npm run test:arena:champion
       - name: Verify entire game, PWA, save UI, free-tier limits
         run: npm run test:cloudflare && node --test tests/cloudflare-ai.test.cjs tests/local-shell-ui.test.cjs tests/local-ui-lan-host-regression.test.cjs tests/pages-lan-connect-runtime.test.cjs tests/unified-coop.test.cjs
       - name: Verify personal ticket and Shiny ownership in standalone Web AI

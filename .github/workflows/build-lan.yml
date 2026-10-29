@@ -10,6 +10,9 @@ on:
       - 'tests/mega-ui-phase1.test.cjs'
       - 'tests/mega-ui-phase2.test.cjs'
       - 'tests/mega-phase3.test.cjs'
+      - 'tests/champion-arena.test.cjs'
+      - 'src/pkmsvv-champion-arena.js'
+      - 'src/pkmsvv-champion-arena.css'
       - 'src/pkmsvv-mega-phase3.js'
       - 'src/pkmsvv-mega-phase2.css'
       - 'scripts/build-mega-ui-catalog.cjs'
@@ -106,6 +109,8 @@ jobs:
         run: npm run test:mega:phase2
       - name: Verify scarce Champion stones and reversible solo Mega stats
         run: npm run test:mega:phase3
+      - name: Verify Champion Arena bracket, real wins and Chapter 1–6 continuity
+        run: npm run test:arena:champion
       - name: Verify competitive rewards never leak across trainers
         run: node --test tests/competitive-rewards.test.cjs
       - name: Verify shared square Pokémon portrait in PC build
