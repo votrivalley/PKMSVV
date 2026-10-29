@@ -330,8 +330,9 @@ G.PKMSVVStory=(()=>{
   if(s.pkmsvvChapter1Seen)available.push('chapter1');
   if(s.pkmsvvChapter2Seen)available.push('chapter2');
   if(s.pkmsvvChapter3Seen)available.push('chapter3');
-  if(s.pkmsvvChapter5Seen)available.push('chapter5');
-  if(s.pkmsvvChapter6Seen)available.push('chapter6');
+  // Story continuation is selectable before first completion, without blocking LAN.
+  if(s.pkmsvvChapter3Seen)available.push('chapter5');
+  if(s.pkmsvvChapter5Seen)available.push('chapter6');
   if(available.length===1){replay('prologue');return;}
   const choices=document.createElement('section');
   choices.className='pkmsvv-memory-chooser';choices.setAttribute('role','dialog');
@@ -347,7 +348,10 @@ G.PKMSVVStory=(()=>{
    '<button type="button" class="btn ghost" data-close="1">'+tr('Đóng','Close')+'</button></div>';
   document.body.appendChild(choices);
   choices.querySelectorAll('[data-chapter]').forEach(el=>{el.onclick=()=>{
-   const chapter=el.dataset.chapter;choices.remove();replay(chapter);
+   const chapter=el.dataset.chapter;choices.remove();
+   if(chapter==='chapter5'&&!G.DB?.save?.pkmsvvChapter5Seen)chapter5(()=>G.Flow.goMenu());
+   else if(chapter==='chapter6'&&!G.DB?.save?.pkmsvvChapter6Seen)chapter6(()=>G.Flow.goMenu());
+   else replay(chapter);
   };});
   choices.querySelector('[data-close]').onclick=()=>choices.remove();
  }

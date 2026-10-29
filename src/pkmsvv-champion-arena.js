@@ -279,12 +279,9 @@ G.PKMSVVChampionArena=(()=>{
  // If menu is opened externally, create its entry without opening a match.
  const oldOpen=G.MenuUI?.open;
  if(typeof oldOpen==='function')G.MenuUI.open=function(...args){const out=oldOpen.apply(this,args);menu();return out;};
- document.addEventListener('click',e=>{
-  const link=e.target?.closest?.('[data-go="multiplayer"],#pkmsvv-coop-lan-entry');
-  if(!link||!G.DB?.save?.pkmsvvChapter3Seen||G.DB.save.pkmsvvChapter5Seen)return;
-  e.preventDefault();e.stopImmediatePropagation();
-  G.PKMSVVStory?.chapter5?.(ok=>{if(ok)link.click();});
- },true);
+ // Do not intercept the real Multiplayer/Co-op click.
+ // Chapter 5 is explicitly accessible through Memories and Arena intro.
+ // In particular, first LAN access must never be blocked by a cutscene.
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',menu,{once:true});else menu();
  return {REGIONS,ROUNDS,PREP_SECONDS,FIGHT_SECONDS,makeBracket,aiWinner,open,start,exit,nextDuel,
   update,settle,claimSeal,ledger,get active(){return active},get stage(){return stage},get round(){return round},

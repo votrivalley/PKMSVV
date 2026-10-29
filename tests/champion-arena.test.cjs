@@ -110,3 +110,12 @@ test('Narrative chapters are renumbered visibly, with old save keys and reward s
   assert.match(fs.readFileSync(path.join(game,'js','ui','pkmsvv-champion-arena.js'),'utf8'),/guardUpdate\(G\.EnemyMgr,'update'/);
  }
 });
+
+test('First multiplayer click is never intercepted by story; Chapter 5 accessible from Memories',()=>{
+ const runtime=read('src/pkmsvv-champion-arena.js');
+ const story=read('src/pkmsvv-story.js');
+ assert.doesNotMatch(runtime,/stopImmediatePropagation\(\)/);
+ assert.doesNotMatch(runtime,/link\.click\(\)/);
+ assert.match(story,/if\(s\.pkmsvvChapter3Seen\)available\.push\('chapter5'\)/);
+ assert.match(story,/chapter==='chapter5'.*pkmsvvChapter5Seen/);
+});
