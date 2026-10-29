@@ -1,4 +1,4 @@
-/* PKMSVV Chapter 0 — bilingual, replayable pixel-illustrated visual novel. */
+/* PKMSVV Chapters 1–6; preserve legacy save keys and rewards on renumbering. */
 G.PKMSVVStory=(()=>{
  const $=id=>document.getElementById(id),en=()=>G.I18n&&G.I18n.lang==='en';
  const tr=(vi,eng)=>en()?eng:vi;
@@ -55,6 +55,26 @@ G.PKMSVVStory=(()=>{
    {art:9,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Chúng có thể chữa lành, bảo vệ hoặc cùng ngươi chiến đấu. Ban đầu, ngươi chỉ có thể chăm sóc một bạn đồng hành.','They can heal, shield, or fight beside you. At first, you can care for only one companion.']},
    {art:9,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Ngay từ đầu, ngươi đã có thể đồng hành cùng tối đa hai Pokémon nở từ trứng. Hãy bảo vệ chúng và để tình bạn lớn lên qua mỗi hành trình.','From the beginning, up to two Pokémon hatched from eggs can accompany you. Protect them and let your bond grow on every journey.']},
    {art:9,speaker:['Tôi','Me'],text:['Lần đầu tiên... mình không chỉ chiến đấu để sống sót một mình.','For the first time... I am not fighting just to survive alone.']}
+  ],
+  chapter5:[
+   {art:10,speaker:['Tôi','Me'],text:['Dưới chân mình... có dấu chân của những Pokémon khác!','There are other Pokémon footprints here!']},
+   {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Cánh cửa Đồng Hành đã mở. Ngươi không cần chiến đấu một mình nữa.','The Gate of Companions is open. You need not fight alone.']},
+   {art:10,speaker:['Tôi','Me'],text:['Mình có thể đi cùng bạn bè và thử sức với họ sao?','I can team up with friends, or compete with them?']},
+   {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Sống Còn, Tranh Trứng và Co-op là ba thử thách khác nhau.','Survival, Egg Rush, and Co-op are three different challenges.']},
+   {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Có thể kết nối chung mạng LAN. Thiếu người sẽ có những huấn luyện viên AI tham gia.','Join on a local network. AI trainers can fill empty slots.']},
+   {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Tranh Trứng chỉ tính điểm khi trứng nở cuối trận. Nhiều trứng chưa chắc đã thắng.','Egg Rush reveals points only after the eggs hatch at match end. More eggs do not guarantee victory.']},
+   {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Sống Còn và Tranh Trứng không chờ lựa chọn kỹ năng; chỉ Co-op mới được đồng lòng đợi nhau.','Survival and Egg Rush never pause for your skill choices; only Co-op can wait together.']},
+   {art:10,speaker:['Tôi','Me'],text:['Lần này mình sẽ tìm lại ký ức cùng những người bạn!','This time I will recover my memories with friends!']}
+  ],
+  chapter6:[
+   {art:10,speaker:['Tôi','Me'],text:['Một đấu trường xuất hiện. Phía trên là mười chiếc vương miện!','An arena has appeared. Above it hang ten crowns!']},
+   {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Mỗi vùng là giải loại trực tiếp mười sáu người. Vòng 16, tứ kết, bán kết, chung kết.','Each region has a sixteen-trainer knockout: round of sixteen, quarterfinals, semifinals and final.']},
+   {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Giữa các vòng, ngươi có ba phút chuẩn bị.','There are three minutes to prepare between rounds.']},
+   {art:10,speaker:['Tôi','Me'],text:['Vô địch là có Ấn Chứng ngay sao?','Does winning the tournament grant me the Crown Seal?']},
+   {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Chưa. Ngươi phải đánh bại Champion đương nhiệm sau trận chung kết.','Not yet. You must beat the reigning Champion after the final.']},
+   {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Nếu thua Champion, ngươi vẫn giữ cúp. Rèn luyện rồi quay lại thách đấu.','Lose to the Champion and you keep your trophy. Train and challenge again.']},
+   {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Thu thập mười Ấn Chứng Vương Miện để mở cánh cổng cuối cùng trên trời.','Collect all ten Crown Seals to open the final sky gate.']},
+   {art:10,speaker:['Tôi','Me'],text:['Những chiếc vương miện đó... mình sẽ giành bằng trận thắng thật sự.','Those crowns... I will earn them in real battles.']}
   ],
   reveal:[
    {art:5,speaker:['Tôi','Me'],text:['Mình... đã biến thành một Pokémon?!','I... turned into a Pokémon?!']},
@@ -195,10 +215,12 @@ G.PKMSVVStory=(()=>{
               'An empty celestial gateway awaiting the awakened Pokémon');
   cv.classList.toggle('hidden',mode!=='reveal');
   if(mode==='reveal'&&chosenDex&&G.UI&&G.UI.sprite)G.UI.sprite(cv,chosenDex,{lively:true,scale:3,hero:true});
-  $('pkmsvv-story-chapter').textContent=mode==='chapter3'?tr('CHƯƠNG 3 · MẦM SỐNG BỊ LÃNG QUÊN','CHAPTER 3 · FORGOTTEN LIFE'):
-    mode==='chapter2'?tr('CHƯƠNG 2 · TIẾNG VỌNG THỨ TÁM','CHAPTER 2 · THE EIGHTH ECHO'):
-    mode==='chapter1'?tr('CHƯƠNG 1 · NHỮNG MẢNH KÝ ỨC','CHAPTER 1 · MEMORY FRAGMENTS'):
-    tr('CHƯƠNG 0 · THỨC TỈNH','CHAPTER 0 · AWAKENING');
+  $('pkmsvv-story-chapter').textContent=mode==='chapter6'?tr('CHƯƠNG 6 · ĐẤU TRƯỜNG VƯƠNG MIỆN','CHAPTER 6 · CROWN ARENA'):
+    mode==='chapter5'?tr('CHƯƠNG 5 · ĐỒNG HÀNH','CHAPTER 5 · COMPANIONS'):
+    mode==='chapter3'?tr('CHƯƠNG 4 · MẦM SỐNG BỊ LÃNG QUÊN','CHAPTER 4 · FORGOTTEN LIFE'):
+    mode==='chapter2'?tr('CHƯƠNG 3 · TIẾNG VỌNG THỨ TÁM','CHAPTER 3 · THE EIGHTH ECHO'):
+    mode==='chapter1'?tr('CHƯƠNG 2 · NHỮNG MẢNH KÝ ỨC','CHAPTER 2 · MEMORY FRAGMENTS'):
+    tr('CHƯƠNG 1 · THỨC TỈNH','CHAPTER 1 · AWAKENING');
   $('pkmsvv-story-speaker').textContent=item.speaker[en()?1:0];
   full=item.text[en()?1:0].replaceAll('{name}',displayName());
   const label=$('pkmsvv-story-line');label.textContent='';label.setAttribute('aria-label',full);
@@ -244,9 +266,11 @@ G.PKMSVVStory=(()=>{
   if(!s)return 0;
   const awarded=s.pkmsvvChapterPurpleRewards;
   const flags=(awarded&&typeof awarded==='object'&&!Array.isArray(awarded))?awarded:{};
+  // Old reward ledger slots 0–3 MUST remain stable after visible renumbering.
   const completed=[
    !!(s.pkmsvvStorySeen&&(s.starter||s.partner)),
-   !!s.pkmsvvChapter1Seen,!!s.pkmsvvChapter2Seen,!!s.pkmsvvChapter3Seen
+   !!s.pkmsvvChapter1Seen,!!s.pkmsvvChapter2Seen,!!s.pkmsvvChapter3Seen,
+   !!s.pkmsvvChapter5Seen,!!s.pkmsvvChapter6Seen
   ];
   let count=0;
   for(let ch=0;ch<completed.length;ch++){
@@ -287,7 +311,17 @@ G.PKMSVVStory=(()=>{
  function chapter1(done){
   play('chapter1',()=>{if(G.DB.save){G.DB.save.pkmsvvChapter1Seen=true;G.DB.save.pkmsvvChapter1Pending=false;G.DB.commit(true);syncChapterPurpleRewards();}if(done)done();});
  }
- function replay(type='prologue'){play(['chapter1','chapter2','chapter3'].includes(type)?type:'prologue',()=>G.Flow.goMenu(),true);}
+ function chapter5(done){
+  if(!G.DB?.save?.pkmsvvChapter3Seen){done?.(false);return false;}
+  play('chapter5',()=>{G.DB.save.pkmsvvChapter5Seen=true;G.DB.commit(true);
+   syncChapterPurpleRewards();done?.(true);});return true;
+ }
+ function chapter6(done){
+  if(!G.DB?.save?.pkmsvvChapter5Seen){done?.(false);return false;}
+  play('chapter6',()=>{G.DB.save.pkmsvvChapter6Seen=true;G.DB.commit(true);
+   syncChapterPurpleRewards();done?.(true);});return true;
+ }
+ function replay(type='prologue'){play(['chapter1','chapter2','chapter3','chapter5','chapter6'].includes(type)?type:'prologue',()=>G.Flow.goMenu(),true);}
  function memories(){
   const s=G.DB.save||{};
   // The default Memories menu opens the next available chapter to replay.
@@ -296,14 +330,18 @@ G.PKMSVVStory=(()=>{
   if(s.pkmsvvChapter1Seen)available.push('chapter1');
   if(s.pkmsvvChapter2Seen)available.push('chapter2');
   if(s.pkmsvvChapter3Seen)available.push('chapter3');
+  if(s.pkmsvvChapter5Seen)available.push('chapter5');
+  if(s.pkmsvvChapter6Seen)available.push('chapter6');
   if(available.length===1){replay('prologue');return;}
   const choices=document.createElement('section');
   choices.className='pkmsvv-memory-chooser';choices.setAttribute('role','dialog');
   choices.setAttribute('aria-label',tr('Ký Ức','Memories'));
-  const labels={prologue:tr('Chương 0 · Thức Tỉnh','Chapter 0 · Awakening'),
-   chapter1:tr('Chương 1 · Những Mảnh Ký Ức','Chapter 1 · Memory Fragments'),
-   chapter2:tr('Chương 2 · Tiếng Vọng Thứ Tám','Chapter 2 · The Eighth Echo'),
-   chapter3:tr('Chương 3 · Mầm Sống Bị Lãng Quên','Chapter 3 · Forgotten Life')};
+  const labels={prologue:tr('Chương 1 · Thức Tỉnh','Chapter 1 · Awakening'),
+   chapter1:tr('Chương 2 · Những Mảnh Ký Ức','Chapter 2 · Memory Fragments'),
+   chapter2:tr('Chương 3 · Tiếng Vọng Thứ Tám','Chapter 3 · The Eighth Echo'),
+   chapter3:tr('Chương 4 · Mầm Sống Bị Lãng Quên','Chapter 4 · Forgotten Life'),
+   chapter5:tr('Chương 5 · Đồng Hành','Chapter 5 · Companions'),
+   chapter6:tr('Chương 6 · Đấu Trường Vương Miện','Chapter 6 · Crown Arena')};
   choices.innerHTML='<div class="pkmsvv-memory-inner"><h2>'+tr('Ký Ức','Memories')+'</h2>'+
    available.map(c=>'<button type="button" class="btn gold" data-chapter="'+c+'">'+labels[c]+'</button>').join('')+
    '<button type="button" class="btn ghost" data-close="1">'+tr('Đóng','Close')+'</button></div>';
@@ -325,5 +363,5 @@ G.PKMSVVStory=(()=>{
    else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();skipStory();}
   },true);
  }
- return {init,prologue,reveal,replay,memories,syncChapterPurpleRewards,chapter1,chapter2,chapter3,markChapter1,markChapter2,markChapter3,chapter1Pending,chapter2Pending,chapter3Pending};
+ return {init,prologue,reveal,replay,memories,syncChapterPurpleRewards,chapter1,chapter2,chapter3,chapter5,chapter6,markChapter1,markChapter2,markChapter3,chapter1Pending,chapter2Pending,chapter3Pending};
 })();

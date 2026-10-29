@@ -14,10 +14,10 @@ for(const name of ['eyes','gate','reveal']){
  const source=path.join(root,'src','story-art',name+'.webp');
  const dest=path.join(game,'assets','story',name+'.webp');
  if(fs.existsSync(source))fs.copyFileSync(source,dest);
- else if(name==='reveal')throw new Error('Chapter 0: REQUIRED new illustration src/story-art/reveal.webp is missing. Upload the approved third image to GitHub first; build will then package eyes, gate and reveal together.');
- else console.warn('Chapter 0 art missing: src/story-art/'+name+'.webp (will show the basic fallback until uploaded)');
+ else if(name==='reveal')throw new Error('Chapter 1: REQUIRED new illustration src/story-art/reveal.webp is missing. Upload the approved third image to GitHub first; build will then package eyes, gate and reveal together.');
+ else console.warn('Chapter 1 art missing: src/story-art/'+name+'.webp (will show the basic fallback until uploaded)');
 }
-// Chapter 1 gets its own visual beats (do not reuse Chapter 0 eyes/gate).
+// Chapter 1 gets its own visual beats (do not reuse Chapter 1 eyes/gate).
 // Chapter 2 and Chapter 3 also have dedicated cutscene artworks.
 // Missing optional WebP files use the in-game gate.webp fallback until uploaded.
 for(const name of [
@@ -34,12 +34,12 @@ fs.copyFileSync(path.join(root,'src','pkmsvv-story.js'),path.join(game,'js','ui'
 patch('dev.html','<script defer src="js/ui/test.js"></script>',
  '<script defer src="js/ui/test.js"></script>\n<script defer src="js/ui/pkmsvv-story.js"></script>');
 const page=[
- '<section id="scr-pkmsvv-story" class="scr dim hidden" aria-label="Pokémon Sống Sót Chapter 0">',
+ '<section id="scr-pkmsvv-story" class="scr dim hidden" aria-label="Pokémon Sống Sót Chapter 1">',
  ' <div class="pkmsvv-story-screen">',
  '  <div id="pkmsvv-story-frame" class="pkmsvv-story-frame">',
  '   <img id="pkmsvv-story-image" src="assets/story/eyes.webp" alt="Cinematic pixel-art awakening" decoding="async">',
  '   <canvas id="pkmsvv-story-mon" class="hidden" width="180" height="170" aria-hidden="true"></canvas>',
- '   <span class="pkmsvv-story-chapter" id="pkmsvv-story-chapter">CHƯƠNG 0 · THỨC TỈNH</span>',
+ '   <span class="pkmsvv-story-chapter" id="pkmsvv-story-chapter">CHƯƠNG 1 · THỨC TỈNH</span>',
  '  </div>',
  '  <div class="pkmsvv-story-dialog">',
  '   <div id="pkmsvv-story-speaker">???</div><p id="pkmsvv-story-line" aria-live="off"></p>',
@@ -69,7 +69,7 @@ patch('js/core/db.js',
  '    r.pkmsvvSkillMarks = G.PKMSVVSkillTrack ? G.PKMSVVSkillTrack.merge(r.pkmsvvSkillMarks,older.pkmsvvSkillMarks)');
 patch('js/core/db.js',
  '      pkmsvvStorySeen: false, // skip first-time prologue for existing characters',
- '      pkmsvvStorySeen: false, // skip first-time prologue for existing characters\n      pkmsvvNameChosen: false, // player nickname chosen in Chapter 0');
+ '      pkmsvvStorySeen: false, // skip first-time prologue for existing characters\n      pkmsvvNameChosen: false, // player nickname chosen in Chapter 1');
 patch('js/core/db.js',
  '    r.pkmsvvStorySeen = !!(r.pkmsvvStorySeen || older.pkmsvvStorySeen);',
  '    r.pkmsvvStorySeen = !!(r.pkmsvvStorySeen || older.pkmsvvStorySeen);\n    r.pkmsvvNameChosen = !!(r.pkmsvvNameChosen || older.pkmsvvNameChosen);');
@@ -85,7 +85,7 @@ patch('js/game.js',
  '      if(G.DB.save.pkmsvvStorySeen)G.TestUI.start();\n'+
  '      else G.PKMSVVStory.prologue(skipped=>skipped?G.TestUI.skipToStarters():G.TestUI.start());\n'+
  '    }');
-// Do not discard first-time Pokémon selection when Chapter 0 or the
+// Do not discard first-time Pokémon selection when Chapter 1 or the
 // personality questions are skipped. Back from the grid must return to the
 // questionnaire, not a result screen that does not exist yet.
 patch('js/ui/test.js',
@@ -113,15 +113,15 @@ patch('js/ui/test.js',
 patch('dev.html',
  '<button class="menu-item" data-go="settings">Ajustes<small>Sonido, gráficos, controles y cuenta</small></button>',
  '<button class="menu-item" data-go="settings">Ajustes<small>Sonido, gráficos, controles y cuenta</small></button>\n'+
- '        <button class="menu-item" data-go="memories"><span id="pkmsvv-memory-title">Ký Ức</span><small id="pkmsvv-memory-sub">Xem lại Chương 0 · Thức tỉnh</small></button>');
+ '        <button class="menu-item" data-go="memories"><span id="pkmsvv-memory-title">Ký Ức</span><small id="pkmsvv-memory-sub">Xem lại Chương 1 · Thức tỉnh</small></button>');
 patch('js/ui/menu.js',"upgrades: 'up',","upgrades: 'up', memories: 'book',");
 patch('js/ui/menu.js',
  '    const s = G.DB.save;\n    const mon = G.DEX_BY[s.partner];',
  "    const s = G.DB.save;\n    const memo = document.getElementById('pkmsvv-memory-title');\n"+
  "    // Match the final menu DOM order even after translation and other menu plugins.\n    const settingsItem=document.querySelector('#scr-menu .menu-list [data-go=\"settings\"]');\n    const memoriesItem=document.querySelector('#scr-menu .menu-list [data-go=\"memories\"]');\n    if(settingsItem&&memoriesItem&&settingsItem.nextElementSibling!==memoriesItem)settingsItem.after(memoriesItem);\n"+
- "    if(memo){memo.textContent=G.I18n.lang==='en'?'Memories':'Ký Ức';document.getElementById('pkmsvv-memory-sub').textContent=G.I18n.lang==='en'?'Replay Chapter 0 · Awakening':'Xem lại Chương 0 · Thức tỉnh';}\n"+
+ "    if(memo){memo.textContent=G.I18n.lang==='en'?'Memories':'Ký Ức';document.getElementById('pkmsvv-memory-sub').textContent=G.I18n.lang==='en'?'Replay Chapter 1 · Awakening':'Xem lại Chương 1 · Thức tỉnh';}\n"+
  '    const mon = G.DEX_BY[s.partner];');
 patch('js/ui/menu.js',"else if (go === 'upgrades') G.PKMSVVUpgradeChooser.open();",
  "else if (go === 'upgrades') G.PKMSVVUpgradeChooser.open();\n        else if (go === 'memories') G.PKMSVVStory.replay();");
 fs.appendFileSync(path.join(game,'css','style.css'),'\n'+fs.readFileSync(path.join(root,'src','pkmsvv-story.css'),'utf8')+'\n','utf8');
-console.log('PKMSVV Chapter 0: pixel scenes + replay + personality quiz / choice reveal integrated');
+console.log('PKMSVV Chapter 1: pixel scenes + replay + personality quiz / choice reveal integrated');
