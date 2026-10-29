@@ -69,7 +69,7 @@ patch('js/core/db.js',
  '    r.pkmsvvSkillMarks = G.PKMSVVSkillTrack ? G.PKMSVVSkillTrack.merge(r.pkmsvvSkillMarks,older.pkmsvvSkillMarks)');
 patch('js/core/db.js',
  '      pkmsvvStorySeen: false, // skip first-time prologue for existing characters',
- '      pkmsvvStorySeen: false, // skip first-time prologue for existing characters\n      pkmsvvNameChosen: false, // player nickname chosen in Chapter 1');
+ '      pkmsvvStorySeen: false, // skip first-time prologue for existing characters\n      pkmsvvNameChosen: false, // player nickname chosen in Chapter 0');
 patch('js/core/db.js',
  '    r.pkmsvvStorySeen = !!(r.pkmsvvStorySeen || older.pkmsvvStorySeen);',
  '    r.pkmsvvStorySeen = !!(r.pkmsvvStorySeen || older.pkmsvvStorySeen);\n    r.pkmsvvNameChosen = !!(r.pkmsvvNameChosen || older.pkmsvvNameChosen);');
