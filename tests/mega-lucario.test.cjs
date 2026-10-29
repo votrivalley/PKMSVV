@@ -41,7 +41,7 @@ function mock(){
  const context={G,document:{body:{appendChild(){}},createElement:elem,getElementById(){return null},
   addEventListener(n,f){listeners[n]=f}},setInterval(){},console};
  vm.runInNewContext(text('src/pkmsvv-mega-lucario.js'),context);
- player={dex:448,shiny:false,baseAtk:10,baseSpd:100,scale:1,r:18,bodyH:36,
+ player={dex:448,shiny:false,baseAtk:115,baseSpd:90,scale:1,r:18,bodyH:36,
   mon:{dex:448,pa:110,sa:115,atk:115,df:70,sd:70,spd:90,types:['fighting','steel']},
   moves:[{id:'aura',cd:10,t:10}],
   x:0,y:0,anim:new Animator(448,1,false),dead:false};
@@ -55,8 +55,8 @@ test('preview cannot grant stone, transformation restores base stats after 30s',
  assert.equal(mega.previewUnlock(),true);
  assert.equal(await mega.tryActivate(),true);
  assert.equal(player.anim.dex,10448);
- assert.ok(Math.abs(player.baseAtk-10*(140/115))<1e-9,'special offense uses official Mega base ratio');
- assert.ok(Math.abs(player.baseSpd-100*(112/90))<1e-9,'Mega speed ratio');
+ assert.ok(Math.abs(player.baseAtk-145)<1e-9,'strongest attack becomes original Mega Attack 145');
+ assert.ok(Math.abs(player.baseSpd-112)<1e-9,'Mega speed ratio');
  assert.ok(Math.abs(player.mon.pa-110*(145/110))<1e-9,'physical attack ratio');
  assert.ok(Math.abs(player.mon.sa-115*(140/115))<1e-9,'special attack ratio');
  assert.ok(Math.abs(player.mon.df-70*(88/70))<1e-9,'Mega physical defense');
@@ -67,8 +67,8 @@ test('preview cannot grant stone, transformation restores base stats after 30s',
  assert.equal(G.DB.save.megaStones.lucarionite,undefined,'preview never mutates stone save');
  mega.tick(player,30.1);
  assert.equal(player.anim.dex,448);
- assert.equal(player.baseAtk,10);
- assert.equal(player.baseSpd,100);
+ assert.equal(player.baseAtk,115);
+ assert.equal(player.baseSpd,90);
  assert.strictEqual(player.mon,originalMon,'original Pokédex stats restored by reference');
  assert.equal(player.mon.df,70,'defense restored');
  assert.equal(player.mon.atk,115,'unmodified original Pokédex stats restored');
