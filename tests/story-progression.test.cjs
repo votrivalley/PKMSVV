@@ -75,3 +75,18 @@ test('Modes and chapters are merged across saves; game hooks run only at actual 
  assert.match(s,/chapter7:\[/);
  assert.doesNotMatch(s,/chapter8:\[|chapter9:\[/,'no invented Chapter 8/9 narrative');
 });
+
+test('A completed match after Chapter 4 is remembered even before viewing Chapter 5',()=>{
+ const h=setup({pkmsvvChapter5Seen:false}),{api,save}=h;
+ assert.equal(api.recordMultiplayerCompletion('coop',{time:80}),true);
+ assert.equal(api.multiplayerProgress().count,1);
+ assert.equal(api.chapter6(()=>{}),false,'Chapter 5 storyline remains required');
+ save.pkmsvvChapter5Seen=true;
+ assert.equal(api.multiplayerProgress().count,1,'earned mode completion survives the cutscene');
+});
+test('Chapter 5 automatically follows Chapter 4 for new players without hijacking Multiplayer menu',()=>{
+ const s=read('src/pkmsvv-story.js');
+ assert.match(s,/if\(G\.DB\.save&&!G\.DB\.save\.pkmsvvChapter5Seen\)chapter5/);
+ assert.match(s,/Hãy hoàn thành cả ba chế độ/);
+ assert.doesNotMatch(read('src/pkmsvv-champion-arena.js'),/stopImmediatePropagation/);
+});

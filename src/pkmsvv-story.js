@@ -64,6 +64,7 @@ G.PKMSVVStory=(()=>{
    {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Có thể kết nối chung mạng LAN. Thiếu người sẽ có những huấn luyện viên AI tham gia.','Join on a local network. AI trainers can fill empty slots.']},
    {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Tranh Trứng chỉ tính điểm khi trứng nở cuối trận. Nhiều trứng chưa chắc đã thắng.','Egg Rush reveals points only after the eggs hatch at match end. More eggs do not guarantee victory.']},
    {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Sống Còn và Tranh Trứng không chờ lựa chọn kỹ năng; chỉ Co-op mới được đồng lòng đợi nhau.','Survival and Egg Rush never pause for your skill choices; only Co-op can wait together.']},
+   {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Hãy hoàn thành cả ba chế độ. Khi ba thử thách khép lại, cánh cửa Arena mới thức tỉnh.','Complete all three modes. Only after all three challenges will the Arena gate awaken.']},
    {art:10,speaker:['Tôi','Me'],text:['Lần này mình sẽ tìm lại ký ức cùng những người bạn!','This time I will recover my memories with friends!']}
   ],
   chapter6:[
@@ -304,7 +305,9 @@ G.PKMSVVStory=(()=>{
  function chapter3(done){
   play('chapter3',()=>{
    if(G.DB.save){G.DB.save.pkmsvvChapter3Seen=true;G.DB.save.pkmsvvChapter3Pending=false;G.DB.commit(true);syncChapterPurpleRewards();}
-   if(done)done();
+   // New players discover multiplayer in sequence, without intercepting its menu.
+   if(G.DB.save&&!G.DB.save.pkmsvvChapter5Seen)chapter5(()=>{if(done)done();});
+   else if(done)done();
   });
  }
  function chapter2Pending(){return !!(G.DB.save&&G.DB.save.pkmsvvChapter2Pending&&!G.DB.save.pkmsvvChapter2Seen);}
@@ -350,7 +353,7 @@ G.PKMSVVStory=(()=>{
  // Called from the *real* multiplayer endRun, never the lobby/room creator.
  function recordMultiplayerCompletion(mode,detail={}){
   const s=G.DB?.save;
-  if(!s?.pkmsvvChapter5Seen||!MP_MODES.includes(mode)||detail.abandoned)return false;
+  if(!s?.pkmsvvChapter3Seen||!MP_MODES.includes(mode)||detail.abandoned)return false;
   const time=Number(detail.time)||0;
   if(mode==='coop'){
    // In Co-op surviving or falling after genuine team play counts as finishing.
