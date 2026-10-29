@@ -92,14 +92,20 @@ async function buildForm(form){
    // Only try animations tracked by SpriteCollab or XML copies of them.
    if(!form.sprite.animations.includes(source.name)&&!form.sprite.animations.includes(candidate))continue;
    const file=await fetchBytes(prefix+source.name+'-Anim.png',true);
-   if(file){selected={file,source};break;}
+   if(!file)continue;
+   const info=await sharp(file).metadata();
+   const cols=Math.floor(info.width/source.w),rows=Math.floor(info.height/source.h);
+   const n=Math.min(cols,source.d.length);
+   // Some Fainted/Special sprites have only one direction: use the next
+   // tracked 8-direction fallback instead of a visibly broken battle sprite.
+   if(cols<1||n<1||rows<8){
+    console.warn(form.name+' '+want+': skip '+source.name+' ('+rows+' directions)');
+    continue;
+   }
+   selected={file,source,rows,n};break;
   }
-  assert(selected,form.name+' has no animation for '+want);
-  const {file,source}=selected;
-  const info=await sharp(file).metadata();
-  const cols=Math.floor(info.width/source.w),rows=Math.floor(info.height/source.h);
-  const n=Math.min(cols,source.d.length);
-  assert(cols>0&&n>0&&rows>=8,form.name+' bad directional grid '+want);
+  assert(selected,form.name+' has no valid eight-direction animation for '+want);
+  const {file,source,rows,n}=selected;
   const shadow=await fetchBytes(prefix+source.name+'-Shadow.png',true);
   const [ax,ay]=await shadowAnchor(shadow,source.w,source.h);
   anim[want]={w:source.w,h:source.h,n,r:rows,d:source.d.slice(0,n),ax,ay};
