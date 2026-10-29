@@ -609,7 +609,7 @@ test('Companions are drawn within Y-sorted scene with props and players',()=>{
  assert.match(src,/Math\.abs\(it\.x-ox\)\+Math\.abs\(it\.y-oy\)/);
  assert.match(src,/it\.anim\.loop\(moved\?'Walk':'Idle'/);
  assert.match(src,/function syncArena\(pl\)/);
- assert.match(src,/COLLECT_TIME=4/);
+ assert.match(src,/COLLECT_TIME=2/);
  assert.doesNotMatch(src,/pkmsvvEggSlot3\?3:2/);
 });
 
