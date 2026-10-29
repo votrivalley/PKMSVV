@@ -7,11 +7,13 @@ function replace(file,needle,insert){
  fs.writeFileSync(p,s.replace(needle,insert));
 }
 fs.copyFileSync(path.join(root,'src','pkmsvv-champion-arena.js'),path.join(game,'js','ui','pkmsvv-champion-arena.js'));
+fs.copyFileSync(path.join(root,'src','pkmsvv-arena-solo.js'),path.join(game,'js','ui','pkmsvv-arena-solo.js'));
 fs.copyFileSync(path.join(root,'src','pkmsvv-mega-gacha.js'),path.join(game,'js','ui','pkmsvv-mega-gacha.js'));
 replace('dev.html','<script defer src="js/ui/pkmsvv-mega-phase3.js"></script>',
  '<script defer src="js/ui/pkmsvv-mega-phase3.js"></script>\n'+
  '<script defer src="js/ui/pkmsvv-mega-gacha.js"></script>\n'+
- '<script defer src="js/ui/pkmsvv-champion-arena.js"></script>');
+ '<script defer src="js/ui/pkmsvv-champion-arena.js"></script>\n'+
+ '<script defer src="js/ui/pkmsvv-arena-solo.js"></script>');
 
 // New visible Chapters 5/6 are ADDITIVE. Preserve the old story flags and merges.
 // Neither a newer offline backup nor another device may erase a Crown Seal.
@@ -59,5 +61,6 @@ replace('js/game.js',
  "    G.DB.commit('run');");
 // No other js/game.js rewrites: runtime wrappers handle Spawner/Rift/Judgment/EnemyMgr.
 fs.appendFileSync(path.join(game,'css','style.css'),'\n'+fs.readFileSync(path.join(root,'src','pkmsvv-champion-arena.css'),'utf8')+'\n'+
- fs.readFileSync(path.join(root,'src','pkmsvv-mega-gacha.css'),'utf8')+'\n');
+ fs.readFileSync(path.join(root,'src','pkmsvv-mega-gacha.css'),'utf8')+'\n'+
+ fs.readFileSync(path.join(root,'src','pkmsvv-arena-solo.css'),'utf8')+'\n');
 console.log('Champion Arena: live 1v1 boss combat, bracket, 10 regions, real-earned Crown Seals.');

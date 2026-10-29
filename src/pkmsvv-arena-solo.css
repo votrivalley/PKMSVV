@@ -1,0 +1,29 @@
+
+/* Arena 1v1/Champion picker; desktop and Android share the same layout. */
+.pkmsvv-arena-mode-tabs{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:6px 0 14px}
+.pkmsvv-arena-mode-tabs button{min-height:45px;font-weight:900}
+.pkmsvv-arena-ready-float{position:fixed;z-index:4300;right:14px;bottom:85px;border:2px solid #f1cc72;border-radius:12px;min-height:48px;padding:9px 16px}
+.pkmsvv-arena-ready-float[hidden]{display:none!important}
+.pkmsvv-champion-bracket{white-space:pre-line;line-height:1.8;border:1px solid #bdd8cf;border-radius:9px;padding:10px;background:#f1faf5;color:#2d505c;font-size:12px;margin:8px 0}
+.pkmsvv-champion-podium[hidden]{display:none!important}
+.pkmsvv-champion-podium{display:flex;gap:10px;align-items:end;justify-content:center;min-height:170px;margin:13px 0;padding:15px;background:linear-gradient(#e9f6fb,#e6f0d2);border:2px solid #e9ca70;border-radius:12px}
+.pkmsvv-champion-podium-place{display:flex;flex-direction:column;align-items:center;justify-content:end;min-width:70px;min-height:115px;border-radius:9px 9px 0 0;padding:7px 5px;color:#244758;text-align:center;font-size:11px;font-weight:900;background:linear-gradient(#d2d6dc,#a3b2bc)}
+.pkmsvv-champion-podium-place.place-0{min-height:155px;order:2;background:linear-gradient(#fff0a0,#e5b94f)}
+.pkmsvv-champion-podium-place.place-1{min-height:130px;order:1}
+.pkmsvv-champion-podium-place.place-2{min-height:110px;order:3;background:linear-gradient(#ffd4a1,#bc795b)}
+.pkmsvv-champion-podium.celebrate{animation:pkmsvv-award 1s ease-out}
+@keyframes pkmsvv-award{0%{filter:brightness(2);transform:scale(.92)}100%{filter:brightness(1);transform:scale(1)}}
+#pkmsvv-arena-solo-screen[hidden]{display:none!important}
+.pkmsvv-arena-solo-screen{position:fixed;inset:0;z-index:14500;display:grid;place-items:center;padding:12px;background:#071d32d9}
+.pkmsvv-arena-solo-card{width:min(660px,95vw);max-height:90vh;overflow:auto;padding:20px;border:3px solid #8ebfbc;border-radius:15px;background:#e4f1ed;color:#214858;text-align:center}
+.pkmsvv-arena-solo-card h2{margin:0;color:#164253}
+.pkmsvv-arena-solo-picks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;padding:12px 0}
+.pkmsvv-arena-solo-pick{background:#f7fcf9;border:2px solid #afccc8;border-radius:8px;min-height:45px;font-size:12px;font-weight:bold;color:#264f5e}
+.pkmsvv-arena-solo-pick.on{background:#ffe481;border-color:#cfab42}
+.pkmsvv-arena-solo-pick:disabled{opacity:.4}
+.pkmsvv-arena-solo-vs{font-weight:900;font-size:clamp(18px,3vw,27px);color:#7750b7;text-shadow:0 0 8px #e9cffb}
+.pkmsvv-arena-solo-controls{display:flex;gap:10px;justify-content:center;margin-top:12px}
+.pkmsvv-arena-solo-hud[hidden]{display:none!important}
+.pkmsvv-arena-solo-hud{position:fixed;left:50%;top:50px;transform:translateX(-50%);z-index:3800;border:2px solid #e6cf7d;border-radius:10px;padding:8px 13px;background:#143447e5;color:#fff0ae;text-align:center;white-space:normal;max-width:88vw;font-size:14px;font-weight:900;pointer-events:none}
+@media(max-width:600px){.pkmsvv-arena-solo-picks{grid-template-columns:repeat(2,minmax(0,1fr))}.pkmsvv-champion-podium-place{min-width:62px}}
+@media(prefers-reduced-motion:reduce){.pkmsvv-champion-podium.celebrate{animation:none}}

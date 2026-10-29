@@ -79,12 +79,15 @@ G.PKMSVVChampionArena=(()=>{
   overlay.innerHTML='<div class="pkmsvv-champion-panel" role="dialog" aria-modal="true" aria-labelledby="pkmsvv-champion-title">'+
    '<div class="pkmsvv-champion-heading"><h2 id="pkmsvv-champion-title">🏆 Arena · Champion</h2><button class="btn ghost" id="pkmsvv-champion-close" type="button">×</button></div>'+
    '<p id="pkmsvv-champion-info"></p><div id="pkmsvv-champion-regions" class="pkmsvv-champion-regions"></div>'+
+   '<div class="pkmsvv-arena-mode-tabs"><button id="pkmsvv-arena-mode-solo" type="button" class="btn">⚔ Solo 1v1</button><button id="pkmsvv-arena-mode-champion" type="button" class="btn gold">🏆 Champion 16</button></div>'+
    '<div id="pkmsvv-champion-progress" class="pkmsvv-champion-progress"></div>'+'<div id="pkmsvv-champion-bracket" class="pkmsvv-champion-bracket"></div>'+'<div id="pkmsvv-champion-podium" class="pkmsvv-champion-podium" hidden></div>'+
    '<div class="pkmsvv-champion-actions"><button id="pkmsvv-champion-start" type="button" class="btn gold">Bắt đầu giải đấu</button>'+
    '<button id="pkmsvv-champion-rematch" type="button" class="btn gold" hidden>Thách đấu lại Champion</button>'+
    '<button id="pkmsvv-champion-ready" type="button" class="btn gold" hidden>Sẵn sàng</button></div></div>';
   document.body.append(overlay);
   $('pkmsvv-champion-close').onclick=()=>{overlay.hidden=true;if(active)returnToMenu();};
+  $('pkmsvv-arena-mode-solo').onclick=()=>{overlay.hidden=true;G.PKMSVVArenaSolo?.open?.();};
+  $('pkmsvv-arena-mode-champion').onclick=()=>updatePanel();
   $('pkmsvv-champion-start').onclick=start;
   $('pkmsvv-champion-rematch').onclick=rematch;
   $('pkmsvv-champion-ready').onclick=nextDuel;
