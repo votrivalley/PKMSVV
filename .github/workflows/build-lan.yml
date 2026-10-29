@@ -11,6 +11,9 @@ on:
       - 'tests/mega-ui-phase2.test.cjs'
       - 'tests/mega-phase3.test.cjs'
       - 'tests/champion-arena.test.cjs'
+      - 'tests/mega-arena-gacha.test.cjs'
+      - 'src/pkmsvv-mega-gacha.js'
+      - 'src/pkmsvv-mega-gacha.css'
       - 'tests/story-progression.test.cjs'
       - 'scripts/patch-v15-story.cjs'
       - 'scripts/patch-champion-arena.cjs'
@@ -112,6 +115,8 @@ jobs:
         run: npm run test:mega:phase2
       - name: Verify scarce Champion stones and reversible solo Mega stats
         run: npm run test:mega:phase3
+      - name: Verify dedicated Arena Point Mega Gacha and legendary pity
+        run: npm run test:mega:gacha
       - name: Verify real Chapter 5–7 multiplayer and Mega story gates
         run: npm run test:story:gates
       - name: Verify Champion Arena bracket, real wins and Chapter 1–7 continuity

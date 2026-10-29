@@ -6,6 +6,9 @@ on:
       - 'scripts/build-mega-shiny.cjs'
       - 'tests/mega-shiny.test.cjs'
       - 'tests/champion-arena.test.cjs'
+      - 'tests/mega-arena-gacha.test.cjs'
+      - 'src/pkmsvv-mega-gacha.js'
+      - 'src/pkmsvv-mega-gacha.css'
       - 'tests/story-progression.test.cjs'
       - 'scripts/patch-v15-story.cjs'
       - 'scripts/patch-champion-arena.cjs'
@@ -88,6 +91,8 @@ jobs:
         run: npm run test:mega:phase2
       - name: Verify Shiny Mega artwork and identity in Web package
         run: npm run test:mega:shiny
+      - name: Verify separate Mega Arena Points and legendary pity on Web
+        run: npm run test:mega:gacha
       - name: Verify Chapter 1–7 multiplayer and Mega story gates
         run: npm run test:story:gates
       - name: Verify Chapter 1–7 and offline Crown Arena
