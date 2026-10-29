@@ -8,6 +8,9 @@ on:
       - 'src/pkmsvv-mega-lucario.js'
       - 'src/pkmsvv-mega-phase3.js'
       - 'src/pkmsvv-phase1-pastel.css'
+      - 'src/v15/eggs.js'
+      - 'src/web/pkmsvv-egg-rush.js'
+      - 'tests/support-fast-shiny.test.cjs'
       - 'src/pkmsvv-mega-phase2.css'
       - 'src/pkmsvv-mega-entry.js'
       - 'scripts/build-mega-ui-catalog.cjs'
@@ -53,6 +56,7 @@ jobs:
           git -C vendor/pokesurvivor checkout --detach FETCH_HEAD
       - run: npm install --no-audit --no-fund
       - run: npm run test:arena:solo
+      - run: npm run test:support:fast-shiny
       - run: npm run test:ios && node --test tests/local-shell-ui.test.cjs tests/pages-lan-connect-runtime.test.cjs tests/unified-coop.test.cjs
       - run: npm run prepare:ios
       - name: Verify rendered Co-op uses static LAN link, not legacy Online

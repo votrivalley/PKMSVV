@@ -20,6 +20,9 @@ on:
       - 'src/pkmsvv-mega-lucario.js'
       - 'src/pkmsvv-mega-phase3.js'
       - 'src/pkmsvv-phase1-pastel.css'
+      - 'src/v15/eggs.js'
+      - 'src/web/pkmsvv-egg-rush.js'
+      - 'tests/support-fast-shiny.test.cjs'
       - 'src/pkmsvv-mega-phase2.css'
       - 'src/pkmsvv-mega-entry.js'
       - 'scripts/build-mega-ui-catalog.cjs'
@@ -137,6 +140,8 @@ jobs:
         run: npm run test:arena:champion
       - name: Test Arena Solo 1v1 preparation and AI duel
         run: npm run test:arena:solo
+      - name: Verify live Pokémon backdrop and quick Shiny supports
+        run: npm run test:support:fast-shiny
       - name: Pack full offline assets and LAN UI
         run: |
           npm run prepare:icons

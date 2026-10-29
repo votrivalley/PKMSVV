@@ -232,7 +232,7 @@ test('Fainted companion waits 20–60s before any new nest, without bypassing th
  assert.doesNotMatch(source,/Math\.min\(spawnAt,runTime\+8\)/);
 });
 
-test('Solo egg nest requires 4 seconds, interruption resets progress, and hit delays hatching 3s',()=>{
+test('Solo egg nest requires 2 seconds, interruption resets progress, and hit delays hatching 3s',()=>{
  const source=read('src/v15/eggs.js');
  const player={x:0,y:0,dead:false,kills:0,level:1,maxHp:150,hp:150,heal(v){this.hp=Math.min(this.maxHp,this.hp+v);}};
  const save={pkmsvvChapter3Seen:true,pkmsvvEggSlot3:false,stats:{}};
@@ -250,7 +250,7 @@ test('Solo egg nest requires 4 seconds, interruption resets progress, and hit de
  const nest=G.PKMSVVEggs.nests[0];
  player.x=nest.x;player.y=nest.y;
  for(let i=0;i<19;i++)G.PKMSVVEggs.update(.1,player,60+i*.1,false);
- assert.equal(G.PKMSVVEggs.followers.length,0,'Cannot collect by touching or waiting less than four seconds');
+ assert.equal(G.PKMSVVEggs.followers.length,0,'Cannot collect by touching or waiting less than two seconds');
  assert.ok(nest.collecting>1.7&&nest.collecting<2.1);
  player.x+=70;
  G.PKMSVVEggs.update(.1,player,64,false);

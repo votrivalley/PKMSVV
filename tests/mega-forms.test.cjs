@@ -45,5 +45,5 @@ test('Mega pack does not modify save species IDs, Gacha or protected Android ide
  assert.equal(/G\.DB\.save|G\.Gacha|G\.DEX_BY\s*\[/.test(code),false);
  const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
  assert.match(pkg.scripts['test:mega:pack'],/mega-forms\.test/);
- assert.equal(pkg.version,'1.5.48');
+ assert.equal(pkg.version,'1.5.49');
 });

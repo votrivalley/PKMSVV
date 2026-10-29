@@ -67,6 +67,13 @@ G.PKMSVVSupportCatalog=(()=>{
    lively:owned,spin:owned,silhouette:!owned,scale:3,hero:true,
    shiny:owned&&showShiny&&shinyUnlocked
   });
+  if(shinyUnlocked&&showShiny){
+   const note=document.createElement('p');
+   note.className='pkmsvv-shiny-support-bonus';
+   note.textContent=t('✦ Shiny: 100% chỉ số · hồi kỹ năng 2/3 · sức mạnh hiệu ứng ×1,5',
+    '✦ Shiny: full stats · 2/3 skill cooldown · 1.5× effect strength');
+   area.append(note);
+  }
   if(shinyUnlocked){
    const tabs=document.createElement('div');tabs.className='pkmsvv-support-shiny-tabs';
    for(const variant of [false,true]){
