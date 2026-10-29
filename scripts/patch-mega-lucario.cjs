@@ -11,6 +11,16 @@ function patch(file,before,after){
 execFileSync(process.execPath,[path.join(root,'scripts','build-mega-lucario.cjs')],{cwd:root,stdio:'inherit'});
 fs.copyFileSync(path.join(root,'src','pkmsvv-mega-lucario.js'),
  path.join(game,'js','ui','pkmsvv-mega-lucario.js'));
+// Button visuals stay in the shipped CSS so CSP remains safe on every platform.
+fs.appendFileSync(path.join(game,'css','style.css'),'\n'+
+ fs.readFileSync(path.join(root,'src','pkmsvv-mega-lucario.css'),'utf8'),'utf8');
+// Mega applies a temporary cooldown factor to real casts (not permanent perks).
+patch('js/systems/combat.js',
+ 'm.t = Math.max(0.05, m.cd * pl.cdMul);',
+ 'm.t = Math.max(0.05, m.cd * pl.cdMul * (pl._megaActive ? 0.70 : 1));');
+patch('js/entities/player.js',
+ 'const cd = Math.max(0.12, m.cd * this.cdMul);',
+ 'const cd = Math.max(0.12, m.cd * this.cdMul * (this._megaActive ? 0.70 : 1));');
 patch('dev.html','<script defer src="js/data/sprites-meta.js"></script>',
  '<script defer src="js/data/sprites-meta.js"></script>\n'+
  '<script defer src="js/data/pkmsvv-mega-sprite-meta.js"></script>');

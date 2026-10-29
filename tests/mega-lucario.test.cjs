@@ -42,18 +42,26 @@ function mock(){
   addEventListener(n,f){listeners[n]=f}},setInterval(){},console};
  vm.runInNewContext(text('src/pkmsvv-mega-lucario.js'),context);
  player={dex:448,shiny:false,baseAtk:10,baseSpd:100,scale:1,r:18,bodyH:36,
+  mon:{dex:448,pa:110,sa:115,atk:115,df:70,sd:70,spd:90,types:['fighting','steel']},
+  moves:[{id:'aura',cd:10,t:10}],
   x:0,y:0,anim:new Animator(448,1,false),dead:false};
  return{G,player,setCoop:x=>{coop=x},events:listeners};
 }
 test('preview cannot grant stone, transformation restores base stats after 30s',async()=>{
  const {G,player}=mock(),mega=G.MegaLucario;
+ const originalMon=player.mon;
  assert.equal(mega.owned(),false);
  assert.equal(await mega.tryActivate(),false);
  assert.equal(mega.previewUnlock(),true);
  assert.equal(await mega.tryActivate(),true);
  assert.equal(player.anim.dex,10448);
- assert.ok(Math.abs(player.baseAtk-11.8)<1e-9, 'Mega attack gain should be 18%');
- assert.equal(player.baseSpd,108);
+ assert.ok(Math.abs(player.baseAtk-10*(140/115))<1e-9,'special offense uses official Mega base ratio');
+ assert.ok(Math.abs(player.baseSpd-100*(112/90))<1e-9,'Mega speed ratio');
+ assert.ok(Math.abs(player.mon.pa-110*(145/110))<1e-9,'physical attack ratio');
+ assert.ok(Math.abs(player.mon.sa-115*(140/115))<1e-9,'special attack ratio');
+ assert.ok(Math.abs(player.mon.df-70*(88/70))<1e-9,'Mega physical defense');
+ assert.equal(player.mon.sd,70);
+ assert.ok(Math.abs(player.moves[0].t-7)<1e-9,'existing cooldown reduced 30%');
  assert.equal(player.dex,448);
  assert.equal(player.shiny,false);
  assert.equal(G.DB.save.megaStones.lucarionite,undefined,'preview never mutates stone save');
@@ -61,6 +69,9 @@ test('preview cannot grant stone, transformation restores base stats after 30s',
  assert.equal(player.anim.dex,448);
  assert.equal(player.baseAtk,10);
  assert.equal(player.baseSpd,100);
+ assert.strictEqual(player.mon,originalMon,'original Pokédex stats restored by reference');
+ assert.equal(player.mon.df,70,'defense restored');
+ assert.equal(player.mon.atk,115,'unmodified original Pokédex stats restored');
  assert.equal(await mega.tryActivate(),false,'one Mega activation per run');
 });
 test('Mega disabled in all Co-op/PvP modes; no permanent save changes',async()=>{
@@ -70,4 +81,17 @@ test('Mega disabled in all Co-op/PvP modes; no permanent save changes',async()=>
  assert.equal(await mega.tryActivate(),false);
  assert.equal(player.anim.dex,448);
  assert.deepEqual(Object.keys(G.DB.save.megaStones),[]);
+});
+
+
+test('UI uses a circular Mega Stone with subtle glimmer and a countdown',()=>{
+ const css=text('src/pkmsvv-mega-lucario.css'),js=text('src/pkmsvv-mega-lucario.js');
+ assert.match(css,/border-radius:50%/);
+ assert.match(css,/pkmsvv-mega-glimmer/);
+ assert.match(css,/prefers-reduced-motion/);
+ assert.match(js,/pkmsvv-mega-btn__gem/);
+ assert.match(js,/Math\.ceil\(p\._megaRemaining\)/);
+ const patch=text('scripts/patch-mega-lucario.cjs');
+ assert.match(patch,/pl\._megaActive \? 0\.70 : 1/);
+ assert.match(patch,/this\._megaActive \? 0\.70 : 1/);
 });
