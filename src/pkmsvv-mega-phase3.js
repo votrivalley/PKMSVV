@@ -56,13 +56,9 @@ G.PKMSVVMegaPhase3=(()=>{
   }
   return bonuses;
  }
- // Successful PAID pulls only. UI commits this exact save after G.Gacha.pull.
- const previousPull=G.Gacha?.pull;
- if(typeof previousPull==='function')G.Gacha.pull=function(save,n,...rest){
-  const out=previousPull.call(this,save,n,...rest);
-  if(Array.isArray(out)&&out.length===n)rewardStone(save,out);
-  return out;
- };
+ // Mega Stones now use a dedicated Arena Point banner. Never silently
+ // grant a Mega Stone from the regular Pokemon ticket Gacha.
+ // Legacy helper rewardStone is retained solely for old test imports.
  // Ratio normalization uses the original species' official base stats.
  const BASE=Object.freeze({
   charizardmegax:{atk:84,def:78,spa:109,spd:85,spe:100},

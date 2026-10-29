@@ -193,6 +193,10 @@ G.PKMSVVChampionArena=(()=>{
   const save=G.DB?.save;if(!save)return;
   const book=ledger(save);const name=REGIONS[region][0];
   const tickets=rank===1?10:rank===2?6:rank===3?3:0;
+  // One actual tournament finish, no grant for lobby/start/abandon.
+  const arenaEarned=G.PKMSVVMegaGacha?.grantTournament?.(
+   save,name,rank,!book.trophies[name])||0;
+  if(arenaEarned)G.UI?.toast?.('✦ +'+arenaEarned+' Điểm Arena');
   // Rewards are paid once per successful rank per region. No infinite refresh farming.
   if(!book.rewards[name]||book.rewards[name].rank>rank){
    const old=book.rewards[name]?.tickets||0;
@@ -209,8 +213,11 @@ G.PKMSVVChampionArena=(()=>{
   const save=G.DB?.save,book=ledger(save);if(!book)return;
   const name=REGIONS[region][0];
   if(!book.trophies[name])return; // never grant seal without an earned cup
+  if(book.seals[name])return; // one Champion payout per region, forever
   const first=Object.values(book.seals).every(v=>v!==true);
   book.seals[name]=true;
+  const arenaEarned=G.PKMSVVMegaGacha?.grantChampion?.(save,name)||0;
+  if(arenaEarned)G.UI?.toast?.('👑 +100 Điểm Arena · Champion '+name);
   if(first&&!save.pkmsvvChapter7Seen)save.pkmsvvChapter7Pending=true;
   G.DB.commit(true);
  }

@@ -1,0 +1,20 @@
+
+/* In-Gacha second physical-feel machine. Screen keeps original Pokemon UI. */
+#pkmsvv-mega-gacha-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.pkmsvv-mega-gacha-tab{min-height:42px;border:2px solid #a7c6c1;background:#e0eeea;color:#224655;border-radius:9px;font-weight:900}
+.pkmsvv-mega-gacha-tab.on{background:#ffe588;border-color:#dfb448;color:#493b12}
+#pkmsvv-mega-gacha-panel[hidden]{display:none!important}
+#scr-gacha.pkmsvv-mega-gacha-mode #gacha-gens,#scr-gacha.pkmsvv-mega-gacha-mode .split{display:none!important}
+.pkmsvv-mega-gacha-panel{display:grid;grid-template-columns:minmax(135px,220px) 1fr;gap:18px;border:2px solid #b5cfc8;background:#e7f4ef;border-radius:13px;padding:17px;color:#15394a}
+.pkmsvv-mega-gacha-machine{min-height:210px;display:flex;flex-direction:column;justify-content:center;align-items:center;border:5px solid #d4b75a;box-shadow:inset 0 0 0 5px #e8d993,0 10px 20px #31495833;background:linear-gradient(160deg,#344d6b,#172542);border-radius:24px}
+.pkmsvv-mega-gacha-gem{width:122px;height:122px;display:grid;place-items:center;border:6px double #ffe9a7;border-radius:50%;font-size:72px;color:#b6f7ff;text-shadow:0 0 18px #bd95ff,0 0 28px #53d9ff;animation:pkmsvv-mega-gacha-glow 2.3s ease-in-out infinite alternate}
+.pkmsvv-mega-gacha-plate{letter-spacing:4px;font-size:17px;color:#ffe7a0;font-weight:900}
+@keyframes pkmsvv-mega-gacha-glow{to{box-shadow:0 0 25px #9c74ffcc;transform:scale(1.035)}}
+.pkmsvv-mega-gacha-data h3{color:#1e4850;font-size:19px;margin:0 0 12px}
+.pkmsvv-mega-gacha-data p{color:#274a55;font-size:13px;line-height:1.55}
+.pkmsvv-mega-gacha-data #pkmsvv-mega-gacha-balance{font-size:20px;font-weight:900}
+#pkmsvv-mega-gacha-pull{min-height:46px;width:100%;margin:10px 0}
+.pkmsvv-mega-gacha-result{font-weight:900;min-height:22px;color:#254b5d}
+.pkmsvv-mega-gacha-result.is-legend{color:#a35c00}
+@media(max-width:590px){.pkmsvv-mega-gacha-panel{grid-template-columns:1fr;padding:10px}.pkmsvv-mega-gacha-machine{min-height:165px}.pkmsvv-mega-gacha-gem{width:90px;height:90px;font-size:48px}}
+@media(prefers-reduced-motion:reduce){.pkmsvv-mega-gacha-gem{animation:none}}
