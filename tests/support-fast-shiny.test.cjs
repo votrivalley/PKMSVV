@@ -7,6 +7,7 @@ test('The Home mint background is transparent and does not cover animated game P
  assert.match(css,/background-color:transparent!important/);
  assert.match(css,/backdrop-filter:none!important/);
  assert.match(css,/pkmsvv-credit\{color:#153b4e!important/);
+ assert.match(css,/\.pkmsvv-offline-save-note\{color:#23485a!important/);
 });
 test('Solo support capture is 2 seconds and incubation is two thirds of former 45 seconds',()=>{
  const G={};vm.runInNewContext(read('src/v15/eggs.js'),{G,Math});

@@ -209,3 +209,6 @@
 #scr-menu.pkmsvv-v15-menu .pkmsvv-v15-bottom,#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-bottom *:not(.gold){color:#193b4e!important;text-shadow:none!important}
 #scr-menu.pkmsvv-v15-menu .pkmsvv-v15-event,#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-event *{color:#21465a!important;text-shadow:none!important}
 #scr-menu.pkmsvv-v15-menu .menu-list>.menu-item small{color:#345466!important;text-shadow:none!important}
+
+/* Keep the former pale-yellow offline save reminder readable over mint cards. */
+#scr-menu.pkmsvv-v15-menu .pkmsvv-offline-save-note{color:#23485a!important;text-shadow:0 1px 1px #fff9!important;font-weight:800!important}
