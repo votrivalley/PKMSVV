@@ -6,6 +6,9 @@ on:
       - 'tests/mega-lucario.test.cjs'
       - 'tests/mega-forms.test.cjs'
       - 'tests/mega-ui-phase1.test.cjs'
+      - 'tests/mega-ui-phase2.test.cjs'
+      - 'src/pkmsvv-mega-phase2.css'
+      - 'scripts/build-mega-ui-catalog.cjs'
       - 'src/pkmsvv-phase1-pastel.css'
       - 'src/pkmsvv-mega-entry.js'
       - 'data/mega-source-catalog.json'
@@ -93,6 +96,8 @@ jobs:
         run: npm run test:mega:pack
       - name: Verify pastel Phase 1 menu, Mega entry and locked appearance
         run: npm run test:mega:ui
+      - name: Verify read-only 96-form Mega encyclopedia and 12-per-page silhouettes
+        run: npm run test:mega:phase2
       - name: Verify competitive rewards never leak across trainers
         run: node --test tests/competitive-rewards.test.cjs
       - name: Verify shared square Pokémon portrait in PC build

@@ -39,6 +39,7 @@ function mocked(){
     el.children.splice(index,0,n);n.parentElement=el;if(n.id)elements.set(n.id,n);
     for(let i=0;i<el.children.length;i++)el.children[i].nextSibling=el.children[i+1]||null;
    },
+   replaceChildren(...nodes){el.children=[];el.append(...nodes);},
    querySelector:selector=>selector==='[data-mega-close]'?findClose(el):null,
    focus(){el.focused=true},
    click:()=>listeners.click?.({target:el})

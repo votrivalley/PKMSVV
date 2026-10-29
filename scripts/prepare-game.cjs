@@ -630,6 +630,8 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-competitive-le
 execFileSync(process.execPath,[path.join(project,'scripts','patch-mega-lucario.cjs')],{cwd:project,stdio:'inherit'});
 // Phase 1: light mint/yellow retro menu and a real Mega entry beside Support.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-ui-phase1-mega.cjs')],{cwd:project,stdio:'inherit'});
+// Phase 2: read-only 96-form Mega encyclopedia, paginated silhouettes and real stone gates.
+execFileSync(process.execPath,[path.join(project,'scripts','patch-ui-phase2-mega.cjs')],{cwd:project,stdio:'inherit'});
 // Only Switch/Brewser: tolerate absent DOMContentLoaded and a stalled pixel-font Promise.
 if (process.env.PKMSVV_SWITCH_BOOT === '1') {
   patch('js/main.js',

@@ -1,0 +1,70 @@
+/* Phase 2 Mega encyclopaedia: dark silhouettes and true read-only discovery. */
+.pkmsvv-mega-phase1-dialog{
+ width:min(930px,97vw);max-height:min(92vh,850px);overflow:auto;
+ display:grid;grid-template-columns:minmax(0,1.65fr) minmax(235px,1fr);
+ grid-template-areas:"head head" "list detail" "note note";
+ gap:12px 14px;align-items:start;
+}
+.pkmsvv-mega-phase1-head{grid-area:head;padding-bottom:6px;border-bottom:1px solid #a9cbc5}
+.pkmsvv-mega-roster{grid-area:list;min-width:0}
+#pkmsvv-mega-detail{grid-area:detail;min-width:0;min-height:300px;margin:0;box-sizing:border-box;
+ display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+#pkmsvv-mega-phase1-note{grid-area:note;margin:0!important;font-size:12px}
+.pkmsvv-mega-tools{display:flex;flex-direction:column;gap:8px;margin-bottom:9px}
+#pkmsvv-mega-count{font-size:14px;color:#174253}
+.pkmsvv-mega-filters{display:flex;gap:6px;flex-wrap:wrap}
+.pkmsvv-mega-filters .pkmsvv-mega-filter{
+ min-height:35px;min-width:0;border:1px solid #93bdb6;background:#e0f0eb;color:#1a4151;
+ padding:6px 11px;border-radius:8px;box-shadow:none;font-size:12px}
+.pkmsvv-mega-filters .pkmsvv-mega-filter[aria-pressed="true"]{
+ background:#ffe486;border-color:#d6a11c;color:#173648}
+.pkmsvv-mega-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;min-height:90px}
+.pkmsvv-mega-cell{
+ display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;min-height:130px;
+ gap:5px;padding:9px 5px;background:#dfefea;border:2px solid #a4c9c5;border-radius:10px;
+ font:inherit;cursor:pointer;text-align:center;line-height:1.25;color:#173648;overflow:hidden}
+.pkmsvv-mega-cell.is-locked{background:#142c38;color:#f0f7f5;border-color:#506f78}
+.pkmsvv-mega-cell canvas{width:min(92px,100%);height:80px;object-fit:contain;image-rendering:pixelated}
+.pkmsvv-mega-cell.is-locked canvas{filter:brightness(0)}
+.pkmsvv-mega-cell strong{max-width:100%;font-size:12px;overflow:hidden;white-space:normal;overflow-wrap:anywhere}
+.pkmsvv-mega-cell small{font-size:11px;color:inherit;opacity:.82}
+.pkmsvv-mega-cell:hover,.pkmsvv-mega-cell.on{border-color:#e3b628;box-shadow:0 0 0 1px #e3b628}
+.pkmsvv-mega-cell:focus-visible,.pkmsvv-mega-filter:focus-visible,.pkmsvv-mega-pager button:focus-visible{
+ outline:3px solid #d6a11c;outline-offset:2px}
+.pkmsvv-mega-pager{display:flex;justify-content:center;align-items:center;gap:12px;margin:11px 0 0}
+.pkmsvv-mega-pager button{min-height:35px;font-size:12px}
+#pkmsvv-mega-page{color:#274c57;font-weight:800;font-size:13px}
+#pkmsvv-mega-detail.pkmsvv-mega-phase1-locked{
+ padding:15px;background:#132b37;color:#f7fff9;border-color:#506b75}
+#pkmsvv-mega-detail.pkmsvv-mega-phase1-locked p,
+#pkmsvv-mega-detail.pkmsvv-mega-phase1-locked small{color:#d8eae5}
+#pkmsvv-mega-detail.pkmsvv-mega-phase1-locked.is-unlocked{
+ background:#edf6ef;color:#153d4d;border:2px solid #9fc8c2}
+#pkmsvv-mega-detail.is-unlocked p,#pkmsvv-mega-detail.is-unlocked small{color:#385968}
+#pkmsvv-mega-detail h3{font-size:19px;margin:0;color:#173648}
+#pkmsvv-mega-detail h4{font-size:13px;margin:7px 0 0;color:#20586a}
+#pkmsvv-mega-detail .pkmsvv-mega-detail-art{
+ width:min(200px,100%);height:auto;image-rendering:pixelated;max-height:165px}
+#pkmsvv-mega-detail .pkmsvv-mega-detail-art.is-hidden{filter:brightness(0)}
+#pkmsvv-mega-detail .pkmsvv-mega-art-missing{
+ display:grid;place-items:center;height:120px;width:100%;max-width:210px;
+ border:1px dashed #9bc0b9;background:#daeae5;color:#345668;border-radius:9px;font-weight:700}
+#pkmsvv-mega-detail.is-unlocked p{font-size:12px;margin:3px 0;line-height:1.4}
+.pkmsvv-mega-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;gap:5px}
+.pkmsvv-mega-stats>div{display:flex;align-items:center;justify-content:space-between;
+ background:#d9ece7;border-radius:6px;padding:7px;gap:7px;color:#234658;font-size:12px}
+.pkmsvv-mega-stats b{font-size:13px;color:#143744}
+#pkmsvv-mega-detail .pkmsvv-mega-runtime-note{
+ border-top:1px solid #afcec8;padding-top:10px;margin-top:6px;color:#45616c!important}
+@media(max-width:740px){
+ .pkmsvv-mega-phase1-dialog{grid-template-columns:1fr;grid-template-areas:"head" "detail" "list" "note";
+ max-height:94vh;padding:12px}
+ #pkmsvv-mega-detail{min-height:0}
+ .pkmsvv-mega-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:430px){
+ .pkmsvv-mega-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .pkmsvv-mega-cell{min-height:117px}
+ .pkmsvv-mega-filters .pkmsvv-mega-filter{font-size:11px;padding:6px}
+ .pkmsvv-mega-pager{gap:7px}
+}
