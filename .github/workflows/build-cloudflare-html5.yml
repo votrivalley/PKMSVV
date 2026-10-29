@@ -41,6 +41,8 @@ on:
       - 'scripts/patch-lan.cjs'
       - 'src/lan/solo-ai-bus.js'
       - 'src/lan/lan-ai.js'
+      - 'src/lan/**'
+      - 'tests/lan-ui-smoke.cjs'
       - 'tests/cloudflare-ai.test.cjs'
       - 'tests/cloudflare-ai-browser.cjs'
       - 'tests/coop-platform-browser.cjs'
