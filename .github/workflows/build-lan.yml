@@ -18,6 +18,9 @@ on:
       - 'scripts/patch-v15-story.cjs'
       - 'scripts/patch-champion-arena.cjs'
       - 'src/pkmsvv-champion-arena.js'
+      - 'src/pkmsvv-arena-solo.js'
+      - 'src/pkmsvv-arena-solo.css'
+      - 'tests/arena-solo.test.cjs'
       - 'src/pkmsvv-champion-arena.css'
       - 'src/pkmsvv-mega-phase3.js'
       - 'src/pkmsvv-mega-phase2.css'
@@ -121,6 +124,8 @@ jobs:
         run: npm run test:story:gates
       - name: Verify Champion Arena bracket, real wins and Chapter 1–7 continuity
         run: npm run test:arena:champion
+      - name: Test Arena Solo 1v1 preparation and AI duel
+        run: npm run test:arena:solo
       - name: Verify competitive rewards never leak across trainers
         run: node --test tests/competitive-rewards.test.cjs
       - name: Verify shared square Pokémon portrait in PC build

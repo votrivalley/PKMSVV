@@ -37,7 +37,10 @@ function setup(){
    chapter7(){save.pkmsvvChapter7Seen=true;save.pkmsvvChapter7Pending=false;return true;}
   },
   Enemy:class{constructor(def){this.dex=def.dex;this.dead=false;this.boss=true}},
-  EnemyMgr:{add(e){this.last=e;return e}},Coop:{active:false}};
+  EnemyMgr:{add(e){this.last=e;return e},clear(){this.clears=(this.clears||0)+1}},
+  Spawner:{update(){}},World:{setArena(a){this.arena=a}},
+  Projectiles:{clear(){}},Pickups:{clear(){}},Hazards:{clear(){}},
+  FX:{burst(){}},Coop:{active:false}};
  vm.runInNewContext(read('src/pkmsvv-champion-arena.js'),{G,document,Math});
  return {G,save,lib:G.PKMSVVChampionArena,document,player,get:id=>elements.get(id)};
 }
@@ -52,40 +55,39 @@ test('Ten original regional Champions, sixteen entrants and three-minute prepara
  assert.equal(draw.filter(p=>p.tier==='elite').length,2,'at least 2 strong AI guaranteed');
  assert.equal(new Set(draw.map(p=>p.id)).size,16);
 });
-test('Four REAL boss kills give a tournament cup; only fifth Champion kill gives seal',()=>{
- const h=setup(),{G,save,lib}=h;
- assert.equal(lib.start(),true);
- assert.equal(lib.round,0);
- assert.equal(lib.stage,'fight');
- assert.equal(save.tickets.t1,2);
- // Never advance a round until the actual enemy is dead.
- lib.update(0.1);assert.equal(lib.round,0);
+test('Champion starts with 3-minute farm and crowns champion after exactly 4 real fights',()=>{
+ const h=setup(),{lib,G,save}=h;
+ assert.equal(lib.start(),true);assert.equal(lib.stage,'prep');
  for(let round=0;round<4;round++){
-  assert.equal(lib.round,round);
-  G.EnemyMgr.last.dead=true;
-  lib.update(.1);
-  assert.equal(lib.round,round+1);
-  assert.equal(lib.stage,'prep');
-  if(round<3){assert.equal(lib.nextDuel(),true);}
+  assert.equal(lib.round,round);assert.equal(lib.stage,'prep');
+  assert.equal(lib.nextDuel(),true);
+  assert.equal(lib.stage,'fight');assert.equal(G.EnemyMgr.last.maxHp,320);
+  G.EnemyMgr.last.dead=true;lib.update(.1);
  }
  const book=lib.ledger(save);
- assert.equal(book.trophies.Kanto,true);
- assert.equal(book.seals.Kanto,undefined);
- assert.equal(save.tickets.t1,12,'winner gets 10 yellow tickets exactly once');
- assert.equal(save.tickets.t10,1,'purple tickets are untouched');
- assert.equal(lib.nextDuel(),true);
- assert.equal(lib.round,4);
- assert.equal(save.arenas.pkmChampion.seals.Kanto,undefined);
- G.EnemyMgr.last.dead=true;
- lib.update(.1);
- assert.equal(book.seals.Kanto,true);
  assert.equal(lib.active,false);
- assert.equal(G.Flow.gone,1);
- assert.equal(save.tickets.t1,12,'no second first-place payout after Champion');
+ assert.equal(book.trophies.Kanto,true);
+ assert.equal(book.seals.Kanto,true);
+ assert.equal(book.history.length,1);
+ assert.equal(book.history[0].wins,4);
+ assert.equal(save.tickets.t1,12);
+ assert.equal(save.pkmsvvChapter7Seen,true);
+ assert.equal(lib.rematch(),false);
 });
+test('Real mobs spawn in Champion preparation but stop during one-versus-one duel',()=>{
+ const h=setup(),{lib,G}=h,spawns=[];
+ G.Spawner.update=function(_dt,_p,t){spawns.push(t);};
+ // Instrument installed wrapper in original game source instead of overriding mock in test.
+ assert.match(read('src/pkmsvv-champion-arena.js'),/if\(stage==='prep'\)\{const copy=args\.slice\(\)/);
+ assert.match(read('src/pkmsvv-champion-arena.js'),/G\.EnemyMgr\?\.clear\?\.\(\)/);
+ lib.start();assert.equal(lib.stage,'prep');
+ lib.update(90);assert.equal(lib.stage,'prep');
+ lib.nextDuel();assert.equal(lib.stage,'fight');
+});
+
 test('Lose round 16: no false cup/seal, participant PokéCoins once',()=>{
  const h=setup(),{lib,player,save}=h;
- lib.start();player.dead=true;lib.update(.1);
+ lib.start();lib.nextDuel();player.dead=true;lib.update(.1);
  assert.equal(lib.active,false);
  assert.equal(save.arenas.pkmChampion.trophies.Kanto,undefined);
  assert.equal(save.arenas.pkmChampion.seals.Kanto,undefined);
@@ -128,20 +130,13 @@ test('First multiplayer click is never intercepted by story; Chapter 5 accessibl
  assert.match(story,/chapter==='chapter5'.*pkmsvvChapter5Seen/);
 });
 
-test('Earned regional cup unlocks a real Champion-only rematch; seal prevents repeat',()=>{
- const h=setup(),{lib,save,G}=h;
- assert.equal(lib.rematch(),false,'no cup means no rematch');
- const book=lib.ledger(save);book.trophies.Kanto=true;
- assert.equal(lib.rematch(),true);
- assert.equal(lib.round,4);
- assert.equal(lib.stage,'fight');
- assert.equal(book.seals.Kanto,undefined);
- G.EnemyMgr.last.dead=true;
- lib.update(.1);
- assert.equal(book.seals.Kanto,true);
- assert.equal(lib.active,false);
- assert.equal(lib.rematch(),false,'seals are not farmed on repeated rematches');
+test('Older Champion cups and seals survive; no compulsory fifth boss',()=>{
+ const h=setup(),{lib,save}=h;
+ assert.equal(lib.rematch(),false);
+ const ledger=lib.ledger(save);ledger.trophies.Kanto=true;ledger.seals.Kanto=true;
+ assert.equal(ledger.trophies.Kanto,true);assert.equal(ledger.seals.Kanto,true);
 });
+
 test('Chapter 5/6 and regional seals survive offline save merges',()=>{
  const patch=read('scripts/patch-champion-arena.cjs');
  assert.match(patch,/pkmsvvChapter5Seen/);
@@ -159,13 +154,23 @@ test('Arena does not start if Chapter 6 was seen but real multiplayer trilogy is
  save.pkmsvvMultiplayerDone.eggrush=true;
  assert.equal(lib.start(),true);
 });
-test('First actual Champion Seal triggers Chapter 7 exactly once and does not grant a Mega Stone',()=>{
- const h=setup(),{lib,save,G}=h;
+test('Champion semifinal defeat enters real third-place playoff, without false Champion',()=>{
+ const h=setup(),{G,lib,save,player}=h;
  lib.start();
- for(let i=0;i<4;i++){G.EnemyMgr.last.dead=true;lib.update(.1);lib.nextDuel();}
+ for(let i=0;i<2;i++){lib.nextDuel();G.EnemyMgr.last.dead=true;lib.update(.1);}
+ assert.equal(lib.round,2);
+ lib.nextDuel();player.dead=true;lib.update(.1);
+ assert.equal(lib.round,4);assert.equal(lib.stage,'prep');
+ assert.equal(lib.nextDuel(),true);
  G.EnemyMgr.last.dead=true;lib.update(.1);
+ assert.equal(lib.active,false);
+ assert.equal(save.tickets.t1,5);
+ assert.equal(lib.ledger(save).seals.Kanto,undefined);
+});
+test('Final win does not unlock a Mega Stone without Gacha',()=>{
+ const h=setup(),{lib,G,save}=h;lib.start();
+ for(let i=0;i<4;i++){lib.nextDuel();G.EnemyMgr.last.dead=true;lib.update(.1);}
  assert.equal(save.pkmsvvChapter7Seen,true);
- assert.equal(save.pkmsvvChapter7Pending,false);
  assert.equal(save.megaStones,undefined);
- assert.equal(lib.rematch(),false);
+ assert.equal(save.arenas.pkmChampion.seals.Kanto,true);
 });

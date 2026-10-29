@@ -13,6 +13,9 @@ on:
       - 'scripts/patch-v15-story.cjs'
       - 'scripts/patch-champion-arena.cjs'
       - 'src/pkmsvv-champion-arena.js'
+      - 'src/pkmsvv-arena-solo.js'
+      - 'src/pkmsvv-arena-solo.css'
+      - 'tests/arena-solo.test.cjs'
       - 'src/pkmsvv-champion-arena.css'
       - 'src/pkmsvv-mega-lucario.js'
       - 'src/pkmsvv-mega-phase3.js'
@@ -132,6 +135,8 @@ jobs:
         run: npm run test:story:gates
       - name: Verify Chapter 1–7 and offline Crown Arena
         run: npm run test:arena:champion
+      - name: Test Arena Solo 1v1 preparation and AI duel
+        run: npm run test:arena:solo
       - name: Pack full offline assets and LAN UI
         run: |
           npm run prepare:icons

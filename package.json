@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.47",
+  "version": "1.5.48",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.47: Android uses PC LAN/AI engine and one unified menu",
+  "description": "Pokémon Chuyển Sinh v1.5.48: Android uses PC LAN/AI engine and one unified menu",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
@@ -68,7 +68,8 @@
     "test:mega:shiny": "node --test tests/mega-shiny.test.cjs",
     "test:arena:champion": "node --test tests/champion-arena.test.cjs",
     "test:story:gates": "node --test tests/story-progression.test.cjs",
-    "test:mega:gacha": "node --test tests/mega-arena-gacha.test.cjs"
+    "test:mega:gacha": "node --test tests/mega-arena-gacha.test.cjs",
+    "test:arena:solo": "node --test tests/arena-solo.test.cjs"
   },
   "devDependencies": {
     "playwright": "^1.62.1",
