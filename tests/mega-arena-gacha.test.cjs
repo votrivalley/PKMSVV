@@ -103,3 +103,24 @@ test('Prepared offline bundle loads physical Mega machine without network and ou
  assert.ok(html.indexOf('pkmsvv-mega-gacha.js')<html.indexOf('pkmsvv-champion-arena.js'));
  assert.ok(fs.statSync(path.join(base,'js','ui','pkmsvv-mega-gacha.js')).size>1000);
 });
+
+test('Pre-existing Arena cups and Champion seals receive backfilled points once, never on reopen',()=>{
+ const {G,save,gacha}=setup();
+ save.arenaGacha.points=0;
+ save.arenas={pkmChampion:{trophies:{Kanto:true,Johto:true},seals:{Kanto:true,Johto:false},rewards:{}}};
+ assert.equal(gacha.syncLegacyArena(save),180);
+ assert.equal(gacha.balance(save),180);
+ assert.equal(gacha.syncLegacyArena(save),0,'no repeat awards on reload');
+ assert.equal(G.DB.commits,1);
+ assert.equal(gacha.grantChampion(save,'Kanto'),0);
+ assert.equal(gacha.grantChampion(save,'Johto'),100);
+ assert.equal(gacha.balance(save),280);
+});
+test('Fresh earned cup never triggers duplicate backfill in Mega tab',()=>{
+ const {save,gacha}=setup();
+ save.arenaGacha.points=0;
+ assert.equal(gacha.grantTournament(save,'Kanto',1,true),40);
+ save.arenas={pkmChampion:{trophies:{Kanto:true},seals:{},rewards:{}}};
+ assert.equal(gacha.syncLegacyArena(save),0);
+ assert.equal(gacha.balance(save),40);
+});

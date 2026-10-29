@@ -14,6 +14,7 @@ G.PKMSVVMegaGacha=(()=>{
   a.pity=Math.max(0,Math.min(LEGEND_PITY-1,Math.floor(Number(a.pity)||0)));
   a.pulls=Math.max(0,Math.floor(Number(a.pulls)||0));
   a.championPaid=a.championPaid||{};
+  a.trophyPaid=a.trophyPaid||{};
   return a;
  }
  const balance=s=>Math.max(0,Math.floor(Number(s?.arenaGacha?.points)||0));
@@ -56,7 +57,9 @@ G.PKMSVVMegaGacha=(()=>{
   if(!save||!region)return 0;
   const award=rank===1?(firstTitle?40:20):rank===2?10:rank===3?5:0;
   if(!award)return 0;
-  ledger(save).points+=award;return award;
+  const a=ledger(save);
+  if(rank===1&&firstTitle)a.trophyPaid[region]=true;
+  a.points+=award;return award;
  }
  function grantChampion(save,region){
   if(!save||!region)return 0;
@@ -65,6 +68,26 @@ G.PKMSVVMegaGacha=(()=>{
   a.championPaid[region]=true;
   a.points+=100;
   return 100;
+ }
+ // Backfill points for genuine regional achievements from before this currency
+ // existed. An idempotent marker prevents any new points on reload/reimport.
+ function syncLegacyArena(save=G.DB?.save){
+  if(!save)return 0;
+  const a=ledger(save),book=save.arenas?.pkmChampion;
+  if(!book)return 0;
+  let amount=0;
+  for(const [region,won] of Object.entries(book.trophies||{})){
+   if(won===true&&!a.trophyPaid[region]){
+    a.trophyPaid[region]=true;a.points+=40;amount+=40;
+   }
+  }
+  for(const [region,won] of Object.entries(book.seals||{})){
+   if(won===true&&!a.championPaid[region]){
+    a.championPaid[region]=true;a.points+=100;amount+=100;
+   }
+  }
+  if(amount)G.DB.commit(true);
+  return amount;
  }
  function createUI(){
   if($('pkmsvv-mega-gacha-tabs'))return;
@@ -94,7 +117,9 @@ G.PKMSVVMegaGacha=(()=>{
    if(isMega)refresh();
   }
   function refresh(){
-   const save=G.DB?.save||{},a=save.arenaGacha||{};
+   const save=G.DB?.save||{};
+   syncLegacyArena(save);
+   const a=save.arenaGacha||{};
    $('pkmsvv-mega-gacha-heading').textContent=tr('Máy quay Mega Stone','Mega Stone Machine');
    $('pkmsvv-mega-gacha-balance').textContent=tr('✦ Điểm Arena: ','✦ Arena Points: ')+balance(save);
    $('pkmsvv-mega-gacha-pity').textContent=
@@ -129,5 +154,5 @@ G.PKMSVVMegaGacha=(()=>{
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',createUI,{once:true});
  else createUI();
  return {COST,LEGEND_RATE,LEGEND_PITY,ledger,balance,pool,canPull,pull,
-  grantTournament,grantChampion,createUI};
+  grantTournament,grantChampion,syncLegacyArena,createUI};
 })();
