@@ -9,6 +9,7 @@ G.PKMSVVMegaEntry=(()=>{
   if(!f)return false;
   if(G.PKMSVVMegaPhase3?.isUnlocked)return G.PKMSVVMegaPhase3.isUnlocked(f);
   const s=save();
+  if(!s.pkmsvvChapter7Seen)return false;
   if(f.storyLocked&&s.megaStoryCleared?.[f.key]!==true)return false;
   if(f.sharedStone&&s.megaForms?.[f.key]!==true)return false;
   if(!f.stoneKey)return !!f.storyLocked&&s.megaStoryCleared?.[f.key]===true;

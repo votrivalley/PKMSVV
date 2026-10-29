@@ -17,12 +17,12 @@ G.MegaLucario=(()=>{
  function eligible(){
   const p=player();
   return !!(p&&p.dex===BASE&&!p.dead&&G.Game.state==='playing'&&
-   !(G.Coop&&G.Coop.active)&&!p._megaUsed&&!p._megaActive&&(preview||owned())&&
+   !(G.Coop&&G.Coop.active)&&saved()?.pkmsvvChapter7Seen===true&&!p._megaUsed&&!p._megaActive&&(preview||owned())&&
    (!p.shiny||G.Sprites.hasShiny?.(SPRITE)===true));
  }
  function previewUnlock(){
   const s=saved();
-  if(!s||s.partner!==BASE||!s.owned||!s.owned[BASE])return false;
+  if(!s?.pkmsvvChapter7Seen||s.partner!==BASE||!s.owned||!s.owned[BASE])return false;
   preview=true;
   toast('Mega Lucario BETA: vào trận solo, nhấn M hoặc nút MEGA (30 giây).');
   sync();return true;
@@ -133,7 +133,7 @@ G.MegaLucario=(()=>{
    menuButton.addEventListener('click',previewUnlock);
    target.insertAdjacentElement('afterend',menuButton);
   }
-  const show=s.partner===BASE&&!!s.owned[BASE];
+  const show=!!s.pkmsvvChapter7Seen&&s.partner===BASE&&!!s.owned[BASE];
   menuButton.style.display=show?'inline-block':'none';
   menuButton.textContent=preview||owned()?'Mega Lucario đã sẵn sàng (BETA)':'Thử Mega Lucario (BETA, không tốn vé)';
  }

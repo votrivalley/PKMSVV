@@ -20,7 +20,7 @@ G.PKMSVVMegaPhase3=(()=>{
  };
  function isUnlocked(f){
   const s=getSave();
-  if(!f||!s?.owned?.[f.dex])return false;
+  if(!f||!s?.owned?.[f.dex]||!s.pkmsvvChapter7Seen)return false;
   if(f.storyLocked&&s.megaStoryCleared?.[f.key]!==true)return false;
   if(f.sharedStone&&s.megaForms?.[f.key]!==true)return false;
   if(!f.stoneKey)return !!f.storyLocked&&s.megaStoryCleared?.[f.key]===true;
@@ -32,7 +32,8 @@ G.PKMSVVMegaPhase3=(()=>{
   return {
    pokemon:!!(f&&s?.owned?.[f.dex]),
    stone:!!(f&&(!f.stoneKey||stoneOwned(s,f.stoneKey))),
-   story:!!(f&&(f.storyLocked?s?.megaStoryCleared?.[f.key]===true:
+   story:!!(f&&s?.pkmsvvChapter7Seen===true&&
+     (f.storyLocked?s?.megaStoryCleared?.[f.key]===true:
      s?.pkmsvvChapter3Seen===true)),
    form:!!(f&&(!f.sharedStone||s?.megaForms?.[f.key]===true))
   };

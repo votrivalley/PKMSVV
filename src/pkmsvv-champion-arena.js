@@ -64,6 +64,11 @@ G.PKMSVVChampionArena=(()=>{
   }
   const mult=nav.querySelector('[data-go="multiplayer"]')||nav.querySelector('[data-go="play"]');
   if(mult)mult.after(btn);else nav.append(btn);
+  const gate=G.PKMSVVStory?.arenaUnlocked?.();
+  const p=G.PKMSVVStory?.multiplayerProgress?.();
+  const small=btn.querySelector?.('small');
+  if(small)small.textContent=gate?tr('16 chiến binh · 10 vùng','16 entrants · 10 regions'):
+   (p?tr('🔒 Hoàn thành 3 chế độ: ','🔒 Complete 3 modes: ')+p.count+'/3':tr('🔒 Chưa mở khóa','🔒 Locked'));
   return true;
  }
  function panel(){
@@ -112,7 +117,7 @@ G.PKMSVVChampionArena=(()=>{
   $('pkmsvv-champion-rematch').textContent=tr('⚔️ Thách đấu lại Champion','⚔️ Rematch Champion');
   $('pkmsvv-champion-ready').hidden=!active||stage!=='prep';
   $('pkmsvv-champion-ready').textContent=tr('Sẵn sàng đấu ngay','Fight now');
-  $('pkmsvv-champion-start').disabled=!G.DB?.save?.pkmsvvChapter6Seen;
+  $('pkmsvv-champion-start').disabled=!G.PKMSVVStory?.arenaUnlocked?.();
   o.hidden=false;
  }
  function open(){
@@ -125,9 +130,18 @@ G.PKMSVVChampionArena=(()=>{
   if(!save.pkmsvvChapter5Seen){
    return !!G.PKMSVVStory?.chapter5?.(ok=>{if(ok)open();});
   }
+  if(!G.PKMSVVStory?.allMultiplayerCompleted?.(save)&&
+     !G.PKMSVVStory?.arenaUnlocked?.(save)){
+   const missing=G.PKMSVVStory?.multiplayerProgress?.(save)?.missing||[];
+   const names={coop:'Co-op',royale:'Sống Còn',eggrush:'Tranh Trứng'};
+   G.UI?.toast?.(tr('🔒 Hoàn thành cả ba chế độ trước khi vào Arena. Còn: ','🔒 Finish all three multiplayer modes before Arena. Missing: ')+
+    missing.map(m=>names[m]||m).join(', '),3800);
+   return false;
+  }
   if(!save.pkmsvvChapter6Seen){
    return !!G.PKMSVVStory?.chapter6?.(ok=>{if(ok)open();});
   }
+  if(!G.PKMSVVStory?.arenaUnlocked?.(save))return false;
   updatePanel();return true;
  }
  function battleName(){
@@ -153,7 +167,7 @@ G.PKMSVVChampionArena=(()=>{
   return true;
  }
  function launch(championOnly=false){
-  if(active||!G.DB?.save?.pkmsvvChapter6Seen||G.Coop?.active)return false;
+  if(active||!G.PKMSVVStory?.arenaUnlocked?.()||G.Coop?.active)return false;
   paid=championOnly;round=championOnly?4:0;elapsed=0;opp=null;target=null;
   bracket=championOnly?[]:makeBracket();
   active=true;stage='fight';
@@ -195,7 +209,9 @@ G.PKMSVVChampionArena=(()=>{
   const save=G.DB?.save,book=ledger(save);if(!book)return;
   const name=REGIONS[region][0];
   if(!book.trophies[name])return; // never grant seal without an earned cup
+  const first=Object.values(book.seals).every(v=>v!==true);
   book.seals[name]=true;
+  if(first&&!save.pkmsvvChapter7Seen)save.pkmsvvChapter7Pending=true;
   G.DB.commit(true);
  }
  function returnToMenu(){
@@ -215,6 +231,11 @@ G.PKMSVVChampionArena=(()=>{
   returnToMenu();
   updatePanel();
   $('pkmsvv-champion-progress').textContent=label;
+  if(reason==='seal'&&G.DB?.save?.pkmsvvChapter7Pending&&
+     !G.DB.save.pkmsvvChapter7Seen){
+   panel().hidden=true;
+   G.PKMSVVStory?.chapter7?.(()=>G.Flow?.goMenu?.());
+  }
  }
  function nextDuel(){
   if(!active||stage!=='prep')return false;
