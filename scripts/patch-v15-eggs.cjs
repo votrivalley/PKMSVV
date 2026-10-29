@@ -60,7 +60,7 @@ patch('js/systems/combat.js',
     echo.x=it.x;echo.y=it.y;echo.r=11;echo.target=target.e;
     echo.aim=Math.atan2(target.e.y-it.y,target.e.x-it.x);
     echo.dead=false;echo.net=null;
-    echo.atkFor=move=>pl.atkFor(move)*(it.statScale||.65)*(it.affinityBoost||1)*.55;
+    echo.atkFor=move=>pl.atkFor(move)*(it.statScale||.65)*(it.affinityBoost||1)*.55*(it.shiny?1.5:1);
     echo.onDealt=()=>{};echo.cast=()=>{};echo.heal=()=>{};
     try{run(echo,{...m});return true;}catch(e){return false;}
    }

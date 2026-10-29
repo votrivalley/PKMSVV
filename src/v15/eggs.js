@@ -13,8 +13,9 @@ G.PKMSVVEggs=(()=>{
   {dex:151,role:'mew',period:1,power:1} // Mew 4%
  ];
  const byDex=Object.fromEntries(SPECIES.map(x=>[x.dex,x]));
- const COLLECT_TIME=4, NEST_RADIUS=38, HATCH_BASE=45, HATCH_MIN=20;
+ const COLLECT_TIME=2, NEST_RADIUS=38, HATCH_BASE=30, HATCH_MIN=40/3;
  const REPLACEMENT_MIN=20, REPLACEMENT_MAX=60;
+ const SHINY_CAST_RATIO=2/3,SHINY_SKILL_POWER=1.5;
  const SHINY_CHANCE=.03, MIN_STAT=.5, MAX_STAT=.8, HIT_COOLDOWN=1.25;
  const DITTO_FORM=7,DITTO_REST=3;
  const SUPPORT_VISUAL_SCALE=.6, NEST_VISUAL_SCALE=.8;
@@ -121,7 +122,7 @@ G.PKMSVVEggs=(()=>{
   }
   if(it.shiny){
    G.Sprites?.preload?.([it.dex],5000,true);
-   G.Spawner?.say?.(tr('Một Pokémon hỗ trợ Shiny đã nở! (100% chỉ số)','A Shiny support Pokémon hatched! (100% stats)'),4,true);
+   G.Spawner?.say?.(tr('Hỗ trợ Shiny: 100% chỉ số, tung chiêu nhanh và mạnh ×1,5!','Shiny support: full stats, 1.5× faster and stronger casts!'),4,true);
    G.FX?.ring?.(it.x,it.y,10,80,'#ffe773',.8,3);
   }else{
    G.Spawner?.say?.(tr('Pokémon hỗ trợ nở: '+Math.round(it.statScale*100)+'% chỉ số!',
@@ -266,7 +267,7 @@ G.PKMSVVEggs=(()=>{
   for(const entry of it.copiedSkills){
    if(entry.timer>0)continue;
    if(G.Combat?.pkmsvvSupportCast?.(pl,it,entry.move)){
-    entry.timer=Math.max(1.5,(entry.move.cd||3)*1.35);did=true;
+    entry.timer=Math.max(1.5,(entry.move.cd||3)*1.35)*(it.shiny?SHINY_CAST_RATIO:1);did=true;
    }
   }
   return did;
@@ -279,7 +280,7 @@ G.PKMSVVEggs=(()=>{
   G.FX?.ring?.(cx,cy,8,radius,col,.4,2);
   G.FX?.burst?.(cx,cy-15,col,8,80);
   for(const e of near)if(G.U.dist2(e.x,e.y,cx,cy)<=radius*radius){
-   e.hurt?.(Math.max(1,(8+pl.level*.7)*it.statScale*(it.affinityBoost||1)),col,0,0,0);
+   e.hurt?.(Math.max(1,(8+pl.level*.7)*it.statScale*(it.affinityBoost||1)*(it.shiny?SHINY_SKILL_POWER:1)),col,0,0,0);
   }
   it.effectFlash=.45;return true;
  }
@@ -290,7 +291,7 @@ G.PKMSVVEggs=(()=>{
   const affected=[];
   for(const ally of ownSquad(pl)){
    if(ally.dead||!Number.isFinite(ally.maxHp)||ally.maxHp<=0||!Number.isFinite(ally.hp))continue;
-   const amount=Math.max(1,ally.maxHp*spec.power*it.statScale*(it.affinityBoost||1));
+   const amount=Math.max(1,ally.maxHp*spec.power*it.statScale*(it.affinityBoost||1)*(it.shiny?SHINY_SKILL_POWER:1));
    if(spec.role==='heal'){
     if(ally.hp>=ally.maxHp)continue;
     const before=ally.hp;
@@ -320,7 +321,7 @@ G.PKMSVVEggs=(()=>{
    if(affected.length>=4)break;
    if(G.U.dist2(e.x,e.y,center.x,center.y)>95*95)continue;
    const boss=!!(e.boss||e.judge||e.pkmsvvBossGuard);
-   e.applyStun(boss ? 0.35 : 1.1);
+   e.applyStun((boss ? 0.35 : 1.1)*(it.shiny?SHINY_SKILL_POWER:1));
    e.pkmsvvPichuImmuneUntil=runTime+7;
    affected.push(e);
   }
@@ -334,14 +335,14 @@ G.PKMSVVEggs=(()=>{
   if(spec.role==='ditto')return dittoCast(it,pl);
   if(spec.role==='mew')return mewCast(it,pl);
   let buffed=[],paralyzed=[];
-  if(spec.role==='attack')target.hurt(Math.max(1,(spec.power+pl.level*.55)*it.statScale),'#ffe8a1',0,0,0);
+  if(spec.role==='attack')target.hurt(Math.max(1,(spec.power+pl.level*.55)*it.statScale*(it.shiny?SHINY_SKILL_POWER:1)),'#ffe8a1',0,0,0);
   else if(spec.role==='paralyze'){
    paralyzed=paralyze(it,enemies);
    if(!paralyzed.length)return false;
   }else if(spec.role==='heal'||spec.role==='shield'){
    buffed=teamBuff(pl,it,spec);
    if(!buffed.length)return false; // no full cooldown wasted on capped HP or shield
-  }else if(spec.role==='slow')target.applySlow(spec.power*it.statScale*(it.affinityBoost||1),2.8);
+  }else if(spec.role==='slow')target.applySlow(Math.min(.85,spec.power*it.statScale*(it.affinityBoost||1)*(it.shiny?SHINY_SKILL_POWER:1)),2.8);
   else if(spec.role==='magnet')G.Pickups?.pullAll?.();
   const c=FX_COLOR[spec.role];
   it.effectFlash=.85;
@@ -474,7 +475,7 @@ G.PKMSVVEggs=(()=>{
     }
     it.cooldown-=dt;
     if(it.dex!==132||it.dittoPhase==='transform'){
-     if(it.cooldown<=0)it.cooldown=effect(it,pl)?byDex[it.dex].period:.5;
+     if(it.cooldown<=0)it.cooldown=effect(it,pl)?byDex[it.dex].period*(it.shiny?SHINY_CAST_RATIO:1):.5;
     }
    }
   }
@@ -581,5 +582,5 @@ G.PKMSVVEggs=(()=>{
   ctx.fillStyle='#fff3bd';ctx.font='bold 11px sans-serif';ctx.textAlign='left';
   ctx.fillText(tr('Đồng hành','Companions')+' '+ready+'/'+limit(),x+8,y+16);ctx.restore();
  }
- return {SPECIES,rollSpecies,affinityFor,affinityGoal,affinityPercent,maxAffinity,affinityMultiplier,speciesChanceFor,shinyChanceFor,DITTO_FORM,DITTO_REST,SUPPORT_VISUAL_SCALE,NEST_VISUAL_SCALE,SHINY_CHANCE,COLLECT_TIME,begin,update,onHurt,hurtSupport,enemyTarget,interceptProjectile,hitHazard,remaining,draw,drawables,hud,limit,unlocked,get followers(){return items;},get nests(){return nests;},get occupied(){return occupied();}};
+ return {SPECIES,rollSpecies,affinityFor,affinityGoal,affinityPercent,maxAffinity,affinityMultiplier,speciesChanceFor,shinyChanceFor,DITTO_FORM,DITTO_REST,SUPPORT_VISUAL_SCALE,NEST_VISUAL_SCALE,SHINY_CHANCE,COLLECT_TIME,HATCH_BASE,HATCH_MIN,SHINY_CAST_RATIO,SHINY_SKILL_POWER,begin,update,onHurt,hurtSupport,enemyTarget,interceptProjectile,hitHazard,remaining,draw,drawables,hud,limit,unlocked,get followers(){return items;},get nests(){return nests;},get occupied(){return occupied();}};
 })();

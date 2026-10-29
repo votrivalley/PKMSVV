@@ -7,7 +7,7 @@
  --pkmsvv-ui-yellow:#ffe486;--pkmsvv-ui-gold:#d6a11c;
  --pkmsvv-ui-text:#173648;--pkmsvv-ui-muted:#385968}
 #scr-menu.pkmsvv-v15-menu{
- background:radial-gradient(ellipse at 50% 15%,#effaf5 0%,#cfe6e2 65%,#b5d3d1 100%)!important;
+ background:linear-gradient(180deg,rgba(237,250,246,.06),rgba(192,227,220,.09))!important;
  color:var(--pkmsvv-ui-text);
 }
 #scr-menu.pkmsvv-v15-menu .menu-left .logo .t1.pkmsvv-one-line>span{
@@ -202,3 +202,10 @@
 @media(prefers-reduced-motion:reduce){
  .pkmsvv-mega-phase1-dialog{scroll-behavior:auto!important}
 }
+
+/* v1.5.49: preserve animated #game canvas behind the translucent Home menu. */
+#scr-menu.pkmsvv-v15-menu{background-color:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+#scr-menu.pkmsvv-v15-menu .menu-left .logo>.pkmsvv-credit,#scr-menu.pkmsvv-v15-menu .pkmsvv-credit{color:#153b4e!important;text-shadow:0 1px 1px #f7fff9,0 0 2px #fff!important;font-weight:800!important}
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-bottom,#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-bottom *:not(.gold){color:#193b4e!important;text-shadow:none!important}
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-event,#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-event *{color:#21465a!important;text-shadow:none!important}
+#scr-menu.pkmsvv-v15-menu .menu-list>.menu-item small{color:#345466!important;text-shadow:none!important}
