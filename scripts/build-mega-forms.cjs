@@ -127,8 +127,10 @@ async function main(){
  assert(fs.existsSync(META),'run Mega Lucario builder first');
  const ready=catalog.forms.filter(f=>f.sprite.state==='sprite-ready');
  assert(ready.length===36,'reviewed catalog must have 36 sprite candidates');
- const forms=ready.filter(f=>f.name!=='Lucario-Mega');
- assert(forms.length===35,'expected 35 new candidates');
+ const pc=process.env.PKMSVV_MEGA_SPRITE_PACK==='1';
+ const battle=new Set(['Charizard-Mega-X','Excadrill-Mega']);
+ const forms=ready.filter(f=>f.name!=='Lucario-Mega'&&(pc||battle.has(f.name)));
+ assert(forms.length===(pc?35:2),'expected '+(pc?35:2)+' additional ready candidates');
  const ids=ready.map(virtualId);
  assert(new Set(ids).size===36,'virtual sprite key collision');
  assert(virtualId(ready.find(f=>f.name==='Lucario-Mega'))===10448,'keep Lucario key 10448');
@@ -146,17 +148,17 @@ async function main(){
  const data=results.sort((a,b)=>a.spriteId-b.spriteId);
  let code='\n/* Candidate Mega art; per-form contributor credits in each sprite folder. */\n';
  for(const form of data)code+='G.SPRITE_META['+form.spriteId+']='+JSON.stringify(form.animationMeta)+';\n';
- const registry=ready.map(f=>{
+ const registry=ready.filter(f=>f.name==='Lucario-Mega'||forms.includes(f)).map(f=>{
   const imported=data.find(x=>x.name===f.name);
   return {name:f.name,dex:f.dex,spriteId:virtualId(f),megaStone:f.megaStone,
     megaStats:f.megaStats,megaAbility:f.megaAbility,source:f.sprite.folder,
-    // An asset candidate is not automatically a gameplay unlock.
     assetOnly:true,qaRequired:true,imported:!!imported||f.name==='Lucario-Mega'};
  });
- assert(registry.every(x=>x.imported),'not every reviewed form was imported');
+ assert(registry.length===(pc?36:3)&&registry.every(x=>x.imported),
+  'missing reviewed Mega visual candidates');
  code+='G.PKMSVV_MEGA_READY='+JSON.stringify(registry)+';\n';
  fs.appendFileSync(META,code,'utf8');
- console.log('Packed '+data.length+' additional Mega candidates; 36 visual sets including Lucario.');
+ console.log('Packed '+data.length+' additional Mega candidates; '+registry.length+' sets including Lucario, PC full='+pc);
  console.log('No stones, Dex species, Gacha entries, story unlocks or PvP powers granted.');
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});

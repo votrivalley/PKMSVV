@@ -22,13 +22,11 @@ test('all shipped Shiny Mega animations are genuinely eight-direction offline PN
  vm.runInNewContext(meta,{G:g});
  const list=g.PKMSVV_MEGA_SHINY_READY;
  assert.ok(Array.isArray(list),'missing Shiny Mega pack');
- const pc=Array.isArray(g.PKMSVV_MEGA_READY);
- assert.equal(list.length,pc?32:1);
+ const pc=Array.isArray(g.PKMSVV_MEGA_READY)&&g.PKMSVV_MEGA_READY.length===36;
+ assert.equal(list.length,pc?32:3);
  assert.ok(list.some(f=>f.name==='Lucario-Mega'&&f.spriteId===10448));
- if(pc){
-  assert.ok(list.some(f=>f.name==='Charizard-Mega-X'&&f.spriteId===10006));
-  assert.ok(list.some(f=>f.name==='Excadrill-Mega'&&f.spriteId===10530));
- }
+ assert.ok(list.some(f=>f.name==='Charizard-Mega-X'&&f.spriteId===10006));
+ assert.ok(list.some(f=>f.name==='Excadrill-Mega'&&f.spriteId===10530));
  assert.equal(new Set(list.map(f=>f.spriteId)).size,list.length);
  for(const form of list){
   const m=g.SPRITE_META[form.spriteId];

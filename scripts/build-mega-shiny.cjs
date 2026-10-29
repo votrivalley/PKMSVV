@@ -101,8 +101,9 @@ async function main(){
  const ready=catalog.forms.filter(f=>f.sprite.state==='sprite-ready');
  if(ready.length!==36)fail('normal source count drift');
  const pc=process.env.PKMSVV_MEGA_SPRITE_PACK==='1';
- const candidates=ready.filter(f=>(pc||f.name==='Lucario-Mega')&&!KNOWN_MISSING.has(f.name));
- if(candidates.length!==(pc?32:1))fail('expected '+(pc?32:1)+' audited Shiny source folders');
+ const battle=new Set(['Lucario-Mega','Charizard-Mega-X','Excadrill-Mega']);
+ const candidates=ready.filter(f=>(pc||battle.has(f.name))&&!KNOWN_MISSING.has(f.name));
+ if(candidates.length!==(pc?32:3))fail('expected '+(pc?32:3)+' audited Shiny source folders');
  let cursor=0;const results=[];
  await Promise.all(Array.from({length:pc?4:1},async()=>{
   while(cursor<candidates.length){
