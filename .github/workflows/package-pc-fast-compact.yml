@@ -1,0 +1,95 @@
+name: Package Windows Fast Start Compact Test
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/lan-local-beta]
+    paths:
+      - '.github/workflows/package-pc-fast-compact.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  compact:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download verified Mega Lucario PC Fast Start
+        uses: actions/download-artifact@v4
+        with:
+          name: PKMSVV-LAN-Windows-Fast-Start
+          repository: votrivalley/PKMSVV
+          run-id: 40836815759
+          github-token: ${{ github.token }}
+          path: dist/fast-start
+      - name: Verify real Mega sprites and offline PC assets
+        shell: pwsh
+        run: |
+          $dir = 'dist/fast-start'
+          foreach($file in @(
+            'Pokemon Chuyển sinh LAN.exe',
+            'resources/lan-site/game/assets/pokemon/448/Idle.png',
+            'resources/lan-site/game/assets/pokemon/10448/Idle.png',
+            'resources/lan-site/game/assets/pokemon/10448/Walk.png',
+            'resources/lan-site/game/assets/pokemon/10448/Attack.png',
+            'resources/lan-site/game/assets/pokemon/494/Idle.png',
+            'resources/lan-site/game/assets/pokemon/498/Idle.png',
+            'resources/lan-site/game/js/app.min.js'
+          )){
+            $path=Join-Path $dir $file
+            if(!(Test-Path $path)){ throw "MISSING packaged sprite/file: $file" }
+            $item=Get-Item $path
+            if($item.Length -lt 100){throw "EMPTY packaged sprite/file: $file"}
+            Write-Host "OK: $file ($($item.Length) bytes)"
+          }
+          Write-Host "Total unpacked:"
+          (Get-ChildItem $dir -Recurse -File | Measure-Object -Property Length -Sum).Sum
+      - name: Create strongly-compressed Fast Start archive
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist/compact | Out-Null
+          $seven=Join-Path ${env:ProgramFiles} '7-Zip/7z.exe'
+          if(!(Test-Path $seven)){ $seven=(Get-Command 7z -ErrorAction Stop).Source }
+          Push-Location dist/fast-start
+          & $seven a -t7z -mx=9 -m0=lzma2 -md=128m -mmt=on ../compact/PKMSVV-PC-Fast-Start-Mega-LUX.7z ./*
+          if($LASTEXITCODE -ne 0){throw '7-Zip failed to compress'}
+          Pop-Location
+          & $seven t dist/compact/PKMSVV-PC-Fast-Start-Mega-LUX.7z
+          if($LASTEXITCODE -ne 0){throw '7-Zip checksum verification failed'}
+          $bytes=(Get-Item 'dist/compact/PKMSVV-PC-Fast-Start-Mega-LUX.7z').Length
+          Write-Host "Fast Start .7z: $bytes bytes"
+          if($bytes -gt 120MB){
+            Write-Host "Single archive too large for direct chat transfer; creating 85-MiB parts"
+            Push-Location dist/fast-start
+            & $seven a -t7z -mx=9 -m0=lzma2 -md=128m -mmt=on -v85m ../compact/PKMSVV-PC-Fast-Start-Mega-SPLIT.7z ./*
+            if($LASTEXITCODE -ne 0){throw 'Split 7-Zip failed'}
+            Pop-Location
+          }
+      - name: Upload compressed single-file Fast Start
+        uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-PC-Fast-Start-LUX-7Z
+          path: dist/compact/PKMSVV-PC-Fast-Start-Mega-LUX.7z
+          retention-days: 14
+          if-no-files-found: error
+      - name: Upload split part 1 if needed
+        uses: actions/upload-artifact@v4
+        if: ${{ hashFiles('dist/compact/*SPLIT.7z.001') != '' }}
+        with:
+          name: PKMSVV-PC-Fast-Start-SPLIT-001
+          path: dist/compact/*SPLIT.7z.001
+          retention-days: 14
+      - name: Upload split part 2 if needed
+        uses: actions/upload-artifact@v4
+        if: ${{ hashFiles('dist/compact/*SPLIT.7z.002') != '' }}
+        with:
+          name: PKMSVV-PC-Fast-Start-SPLIT-002
+          path: dist/compact/*SPLIT.7z.002
+          retention-days: 14
+      - name: Upload split part 3 if needed
+        uses: actions/upload-artifact@v4
+        if: ${{ hashFiles('dist/compact/*SPLIT.7z.003') != '' }}
+        with:
+          name: PKMSVV-PC-Fast-Start-SPLIT-003
+          path: dist/compact/*SPLIT.7z.003
+          retention-days: 14
