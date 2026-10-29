@@ -7,6 +7,8 @@ on:
       - 'tests/mega-forms.test.cjs'
       - 'tests/mega-ui-phase1.test.cjs'
       - 'tests/mega-ui-phase2.test.cjs'
+      - 'tests/mega-phase3.test.cjs'
+      - 'src/pkmsvv-mega-phase3.js'
       - 'src/pkmsvv-mega-phase2.css'
       - 'scripts/build-mega-ui-catalog.cjs'
       - 'src/pkmsvv-phase1-pastel.css'
@@ -98,6 +100,8 @@ jobs:
         run: npm run test:mega:ui
       - name: Verify read-only 96-form Mega encyclopedia and 12-per-page silhouettes
         run: npm run test:mega:phase2
+      - name: Verify scarce Champion stones and reversible solo Mega stats
+        run: npm run test:mega:phase3
       - name: Verify competitive rewards never leak across trainers
         run: node --test tests/competitive-rewards.test.cjs
       - name: Verify shared square Pokémon portrait in PC build

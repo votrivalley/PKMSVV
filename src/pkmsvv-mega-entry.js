@@ -7,6 +7,7 @@ G.PKMSVVMegaEntry=(()=>{
  const save=()=>G.DB?.save||{};
  function isUnlocked(f){
   if(!f)return false;
+  if(G.PKMSVVMegaPhase3?.isUnlocked)return G.PKMSVVMegaPhase3.isUnlocked(f);
   const s=save();
   if(f.storyLocked&&s.megaStoryCleared?.[f.key]!==true)return false;
   if(f.sharedStone&&s.megaForms?.[f.key]!==true)return false;
@@ -87,8 +88,8 @@ G.PKMSVVMegaEntry=(()=>{
     cv.className='pkmsvv-mega-detail-art is-hidden';area.append(cv);
    }
    const tip=el('p');tip.textContent=tr(
-    'Hoàn thành điều kiện trong game để khám phá Mega này.',
-    'Complete in-game requirements to discover this Mega.');
+    'Cần sở hữu Pokémon, đúng Mega Stone và hoàn thành cốt truyện. Huyền thoại có nhiệm vụ riêng.',
+    'Own the Pokémon, obtain its Mega Stone and meet story requirements. Legendaries have separate quests.');
    area.append(tip);return;
   }
   const title=el('h3');title.textContent=displayName(f);area.append(title);
@@ -110,8 +111,11 @@ G.PKMSVVMegaEntry=(()=>{
    tag.textContent=name;value.textContent=String(f.stats[key]);c.append(tag,value);stats.append(c);
   }
   const note=el('p',null,'pkmsvv-mega-runtime-note');
-  note.textContent=tr('Đã khám phá thông tin. Sử dụng trong trận sẽ được kích hoạt sau kiểm thử.',
-   'Discovered. In-battle use awaits gameplay validation.');
+  note.textContent=G.PKMSVVMegaPhase3?.isBattleReady?.(f)?tr(
+   'Đã sẵn sàng trong solo: 30 giây · Hồi chiêu -30%.',
+   'Ready in solo: 30 seconds · Cooldown -30%.'):
+   tr('Đã khám phá nhưng đang chờ sprite hoặc tuyến truyện chiến đấu.',
+   'Discovered; battle art or storyline support is pending.');
   area.append(stone,ability,label,stats,note);
  }
  function render(){
