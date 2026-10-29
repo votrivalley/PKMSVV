@@ -152,6 +152,18 @@ G.PKMSVVArenaSolo=(()=>{
   const def={dex,name:G.DEX_BY?.[dex]?.name||'AI',hp:320,spd:112,dmg:11,
    xp:0,behavior:'champion',shotCd:2.5};
   target=G.EnemyMgr.add(new G.Enemy(def,p.x+170,p.y-45,{hp:1,spd:1,dmg:1},true));
+
+  // Duel opponents still use boss combat mechanics, but MUST draw like normal
+  // player Pokémon rather than the enlarged boss species artwork.
+  if(target&&G.Sprites){
+   const visualScale=G.Sprites.playerScale?.(dex);
+   if(Number.isFinite(visualScale)&&visualScale>0){
+    target.scale=visualScale;
+    if(G.Sprites.Animator)target.anim=new G.Sprites.Animator(dex,visualScale,!!target.shiny);
+    target.r=G.Sprites.bodyRadius?.(dex,visualScale)??target.r;
+    target.bodyH=G.Sprites.bodyHeight?.(dex,visualScale)??target.bodyH;
+   }
+  }
   target.pkmsvvArenaSolo=true;
   G.UI?.toast?.(tr('3 · 2 · 1 · CHIẾN ĐẤU!','3 · 2 · 1 · FIGHT!'),1500);
  }

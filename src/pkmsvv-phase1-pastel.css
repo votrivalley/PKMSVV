@@ -212,3 +212,18 @@
 
 /* Keep the former pale-yellow offline save reminder readable over mint cards. */
 #scr-menu.pkmsvv-v15-menu .pkmsvv-offline-save-note{color:#23485a!important;text-shadow:0 1px 1px #fff9!important;font-weight:800!important}
+
+/* Contrast pass: labels outside pale cards must remain legible over animated biomes. */
+#scr-menu.pkmsvv-v15-menu .menu-left .logo .t1.pkmsvv-one-line>span{
+ color:#f6fdff!important;
+ text-shadow:-2px -2px 0 #102d41,2px -2px 0 #102d41,-2px 2px 0 #102d41,2px 2px 0 #102d41,0 4px 8px #081a29!important;
+ -webkit-text-stroke:.3px #102d41;
+}
+#scr-menu.pkmsvv-v15-menu .menu-left .logo>.t2,
+#scr-menu.pkmsvv-v15-menu .menu-left .logo>.pkmsvv-awakening-tagline{
+ color:#f4fcff!important;text-shadow:0 2px 3px #061625,0 0 7px #061625!important;font-weight:800!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-left .logo>.pkmsvv-credit,
+#scr-menu.pkmsvv-v15-menu .pkmsvv-credit{
+ color:#fff5b9!important;text-shadow:0 1px 2px #05131d,0 0 5px #05131d!important;
+}

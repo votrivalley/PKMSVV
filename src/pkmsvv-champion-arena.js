@@ -12,6 +12,7 @@ G.PKMSVVChampionArena=(()=>{
   ['Paldea',998,'Baxcalibur'],['Votri Valley',149,'Dragonite']
  ]);
  const PREP_SECONDS=180,FIGHT_SECONDS=150;
+ const clock=secs=>{const n=Math.max(0,Math.ceil(secs));return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');};
  const $=id=>document.getElementById(id);
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  let region=0,stage='idle',round=0,elapsed=0,opp=null,bracket=[],target=null,active=false,paid=false,lastSecond=-1,semiLosers=[],lastPodium=null;
@@ -90,7 +91,7 @@ G.PKMSVVChampionArena=(()=>{
   $('pkmsvv-arena-mode-champion').onclick=()=>updatePanel();
   $('pkmsvv-champion-start').onclick=start;
   $('pkmsvv-champion-rematch').onclick=rematch;
-  $('pkmsvv-champion-ready').onclick=nextDuel;
+  $('pkmsvv-champion-ready').onclick=()=>{if(active&&elapsed>=PREP_SECONDS)nextDuel();};
   overlay.addEventListener('click',e=>{if(e.target===overlay&&!active)overlay.hidden=true;});
   return overlay;
  }
@@ -110,7 +111,7 @@ G.PKMSVVChampionArena=(()=>{
   });
   const progress=$('pkmsvv-champion-progress');
   progress.textContent=active?tr('Vòng ','Round ')+Math.min(round+1,4)+'/4 · '+(ROUNDS[round]||'')+
-   (stage==='prep'?' · '+tr('Chuẩn bị ','Preparation ')+Math.ceil(PREP_SECONDS-elapsed)+'s':
+   (stage==='prep'?' · '+tr('Vào trận sau ','Battle in ')+clock(PREP_SECONDS-elapsed):
     opp?' · VS '+opp.name:''):
    tr('Đã có ','Collected ')+Object.values(led.seals||{}).filter(Boolean).length+'/10 '+
    tr('Ấn Chứng Vương Miện.','Crown Seals.');
@@ -130,8 +131,9 @@ G.PKMSVVChampionArena=(()=>{
   const replayTitle=!active&&!!led.trophies?.[regionName]&&!led.seals?.[regionName];
   $('pkmsvv-champion-rematch').hidden=!replayTitle;
   $('pkmsvv-champion-rematch').textContent=tr('⚔️ Thách đấu lại Champion','⚔️ Rematch Champion');
-  $('pkmsvv-champion-ready').hidden=!active||stage!=='prep';
-  $('pkmsvv-champion-ready').textContent=tr('Sẵn sàng đấu ngay','Fight now');
+  // Champion prep is mandatory; never expose a button that skips its timer.
+  $('pkmsvv-champion-ready').hidden=true;
+  $('pkmsvv-champion-ready').disabled=true;
   $('pkmsvv-champion-start').disabled=!G.PKMSVVStory?.arenaUnlocked?.();
   o.hidden=false;
  }
@@ -182,6 +184,18 @@ G.PKMSVVChampionArena=(()=>{
    xp:0,behavior:'champion',shotCd:aiTier==='elite'?1.65:aiTier==='trained'?2.5:3.5};
   target=G.EnemyMgr.add(new G.Enemy(raw,pl.x+Math.min(300,190+round*15),pl.y-35,
     {hp:1,spd:1,dmg:1},true));
+
+  // Duel opponents still use boss combat mechanics, but MUST draw like normal
+  // player Pokémon rather than the enlarged boss species artwork.
+  if(target&&G.Sprites){
+   const visualScale=G.Sprites.playerScale?.(dex);
+   if(Number.isFinite(visualScale)&&visualScale>0){
+    target.scale=visualScale;
+    if(G.Sprites.Animator)target.anim=new G.Sprites.Animator(dex,visualScale,!!target.shiny);
+    target.r=G.Sprites.bodyRadius?.(dex,visualScale)??target.r;
+    target.bodyH=G.Sprites.bodyHeight?.(dex,visualScale)??target.bodyH;
+   }
+  }
   target.pkmsvvChampion=true;
   target.skillCd=aiTier==='elite'?0.9:aiTier==='trained'?2.0:3.5;
   stage='fight';elapsed=0;lastSecond=-1;
@@ -219,12 +233,8 @@ G.PKMSVVChampionArena=(()=>{
   stage='prep';elapsed=0;lastSecond=-1;opp=null;target=null;
   G.World?.setArena?.(null);
   panel().hidden=true;
-  let ready=$('pkmsvv-arena-ready-float');
-  if(!ready){ready=document.createElement('button');ready.id='pkmsvv-arena-ready-float';
-   ready.className='btn gold pkmsvv-arena-ready-float';
-   ready.textContent=tr('⚔ Sẵn sàng đấu','⚔ Fight now');
-   ready.addEventListener('click',nextDuel);document.body.append(ready);}
-  ready.hidden=false;
+  // Previous builds created a floating skip button. Suppress it in timed Champion.
+  const ready=$('pkmsvv-arena-ready-float');if(ready){ready.hidden=true;ready.disabled=true;}
   G.UI?.toast?.(tr('3 phút farm quái và nâng kỹ năng trước trận!','3 minutes of farming and skill upgrades before the duel!'),2800);
  }
  function settle(rank,cup=false){
@@ -319,11 +329,11 @@ G.PKMSVVChampionArena=(()=>{
    lastSecond=second;
    const bar=$('pkmsvv-champion-hud');
    if(bar)bar.textContent='🏆 '+REGIONS[region][0]+' · '+(ROUNDS[round]||'')+
-    (stage==='fight'?' · '+Math.max(0,Math.ceil(FIGHT_SECONDS-elapsed))+'s':'');
+    (stage==='fight'?' · '+clock(FIGHT_SECONDS-elapsed):' · '+tr('Vào trận sau ','Battle in ')+clock(PREP_SECONDS-elapsed));
    if(stage==='prep'){
     const label=$('pkmsvv-champion-progress');
     if(label)label.textContent=tr('Chuẩn bị trận tiếp theo: ','Next round in ')+
-     Math.max(0,Math.ceil(PREP_SECONDS-elapsed))+'s · '+(ROUNDS[round]||'');
+     clock(PREP_SECONDS-elapsed)+' · '+(ROUNDS[round]||'');
    }
   }
   if(stage==='prep'){

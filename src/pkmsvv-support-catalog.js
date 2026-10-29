@@ -70,8 +70,8 @@ G.PKMSVVSupportCatalog=(()=>{
   if(shinyUnlocked&&showShiny){
    const note=document.createElement('p');
    note.className='pkmsvv-shiny-support-bonus';
-   note.textContent=t('✦ Shiny: 100% chỉ số · hồi kỹ năng 2/3 · sức mạnh hiệu ứng ×1,5',
-    '✦ Shiny: full stats · 2/3 skill cooldown · 1.5× effect strength');
+   note.textContent=t('✦ Shiny: Chỉ số vượt trội · Kỹ năng vượt trội',
+    '✦ Shiny: Superior stats · Enhanced abilities');
    area.append(note);
   }
   if(shinyUnlocked){

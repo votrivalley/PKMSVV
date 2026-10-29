@@ -134,7 +134,7 @@ G.PKMSVVMegaEntry=(()=>{
   }else{
    const missing=el('div',null,'pkmsvv-mega-art-missing');
    missing.textContent=variant==='shiny'?tr('Chưa có sprite Shiny Mega chuẩn','Verified Shiny Mega art unavailable'):
-    tr('Hình Mega đang hoàn thiện','Mega sprite in preparation');area.append(missing);
+    tr('Cập nhật sau','Sprite coming in a later update');area.append(missing);
   }
   const stone=el('p',null,'pkmsvv-mega-detail-item');
   stone.textContent='Mega Stone: '+(f.stone||tr('Không cần đá — mở bằng cốt truyện','Story unlock — no stone'));
@@ -173,13 +173,13 @@ G.PKMSVVMegaEntry=(()=>{
   }
   const grid=$('pkmsvv-mega-grid');grid.replaceChildren();
   for(const [i,f] of shown.entries()){
-   const yes=discovered(f),v=art(f),card=el('button',null,'pkmsvv-mega-cell '+(yes?'is-open':'is-locked')+(selected===f.key?' on':''));
+   const yes=discovered(f),v=art(f),card=el('button',null,'pkmsvv-mega-cell '+(yes?'is-open':'is-locked')+(yes&&!v.ready?' is-pending-art':'')+(selected===f.key?' on':''));
    card.type='button';
    card.setAttribute('aria-label',yes?displayName(f):tr('Mega chưa khám phá','Undiscovered Mega')+' '+(page*PAGE+i+1));
    card.setAttribute('aria-pressed',String(selected===f.key));
    if(yes&&!v.ready){
     const missing=el('span',null,'pkmsvv-mega-no-art');
-    missing.textContent='✧';card.append(missing);
+    missing.textContent='✧';missing.setAttribute('title',tr('Đã mở khóa — sprite đang cập nhật','Unlocked — sprite not available yet'));card.append(missing);
    }else if(G.UI?.spriteCanvas){
     const cv=G.UI.spriteCanvas(v.dex,92,80,{
      scale:2,shiny:yes&&v.shiny,
@@ -188,7 +188,7 @@ G.PKMSVVMegaEntry=(()=>{
     cv.className='pkmsvv-mega-cell-art';card.append(cv);
    }else{const icon=el('span');icon.textContent='✦';card.append(icon);}
    const label=el('strong');label.textContent=yes?displayName(f):'???';
-   const state=el('small');state.textContent=yes?tr('Đã mở','Unlocked'):tr('Chưa mở','Locked');
+   const state=el('small');state.textContent=!yes?tr('Chưa mở','Locked'):!v.ready?tr('Cập nhật sau','Coming soon'):tr('Đã mở','Unlocked');
    card.append(label,state);
    card.addEventListener('click',()=>{selected=f.key;render();});
    grid.append(card);
