@@ -1,0 +1,26 @@
+/* Champion Arena · matches the Phase 1 pastel style. */
+#pkmsvv-champion-screen[hidden]{display:none!important}
+.pkmsvv-champion-overlay{position:fixed;inset:0;z-index:14200;display:grid;
+ place-items:center;background:#0a2534cc;padding:12px;overflow-y:auto}
+.pkmsvv-champion-panel{box-sizing:border-box;width:min(790px,96vw);
+ max-height:92vh;overflow:auto;background:linear-gradient(160deg,#f8fff9,#d6eae6);
+ color:#193e4d;border:3px solid #91bdb7;border-radius:17px;padding:19px;
+ box-shadow:0 18px 58px #001e2e77}
+.pkmsvv-champion-heading{display:flex;gap:10px;align-items:center;justify-content:space-between}
+.pkmsvv-champion-heading h2{margin:0;color:#173849;font-size:clamp(20px,3vw,28px)}
+#pkmsvv-champion-info{font-size:13px;color:#335767;line-height:1.6;margin:12px 0}
+.pkmsvv-champion-regions{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin:10px 0}
+.pkmsvv-champion-region{min-width:0;white-space:normal;border:2px solid #a7cac5;background:#e2f2ee;
+ border-radius:10px;color:#143846;padding:11px 5px;cursor:pointer;font-weight:700;font-size:12px}
+.pkmsvv-champion-region.chosen{background:#ffe486;border-color:#c79a22}
+.pkmsvv-champion-region:disabled{opacity:.7;cursor:default}
+.pkmsvv-champion-progress{color:#174351;background:#deeee9;border:1px solid #a8cbc6;
+ border-radius:10px;padding:12px;margin:10px 0;font-size:13px;font-weight:800}
+.pkmsvv-champion-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.pkmsvv-champion-actions>button{min-height:43px;padding:9px 18px}
+#scr-menu .menu-list>.pkmsvv-champion-menu{background:linear-gradient(160deg,#f4f7ee,#e9efe0);
+ border:2px solid #c5cda8;color:#173648!important;border-radius:9px}
+.pkmsvv-champion-menu-icon{font-size:21px;margin-right:8px}
+@media(max-width:670px){.pkmsvv-champion-regions{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .pkmsvv-champion-panel{padding:12px}.pkmsvv-champion-region{font-size:11px}
+}
