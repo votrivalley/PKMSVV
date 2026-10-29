@@ -12,6 +12,8 @@ execFileSync(process.execPath,[path.join(root,'scripts','build-mega-lucario.cjs'
 // Optional PC Fast Start candidate pack. All other builds remain unchanged.
 if(process.env.PKMSVV_MEGA_SPRITE_PACK==='1')
  execFileSync(process.execPath,[path.join(root,'scripts','build-mega-forms.cjs')],{cwd:root,stdio:'inherit'});
+// Published artist-made Shiny variants are separate 8-direction sheets under /s/.
+execFileSync(process.execPath,[path.join(root,'scripts','build-mega-shiny.cjs')],{cwd:root,stdio:'inherit'});
 fs.copyFileSync(path.join(root,'src','pkmsvv-mega-lucario.js'),
  path.join(game,'js','ui','pkmsvv-mega-lucario.js'));
 // Button visuals stay in the shipped CSS so CSP remains safe on every platform.
