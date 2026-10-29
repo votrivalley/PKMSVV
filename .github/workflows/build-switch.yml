@@ -40,6 +40,7 @@ jobs:
           npm run prepare:icons
           npm run prepare:android
           npm run prepare:android:full-lan
+          npm run test:mega
           npm run prepare:switch
       - name: QA updated game, save safety and offline Switch assets
         run: |

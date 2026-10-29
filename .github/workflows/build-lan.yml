@@ -76,6 +76,8 @@ jobs:
         run: npm run test:lan && node --test tests/lan-startup.test.cjs tests/lan-discovery.test.cjs tests/lan-ai-modes.test.cjs tests/lan-browser-host.test.cjs tests/lan-compact-ui.test.cjs tests/lan-direct-entry.test.cjs tests/local-shell-ui.test.cjs tests/local-ui-lan-host-regression.test.cjs tests/coop-icon-consistency.test.cjs tests/unified-coop.test.cjs
       - name: Compile LAN game without Firebase
         run: npm run prepare:lan
+      - name: Verify Mega Lucario reversible 30-second form and asset credits
+        run: npm run test:mega
       - name: Verify competitive rewards never leak across trainers
         run: node --test tests/competitive-rewards.test.cjs
       - name: Verify shared square Pokémon portrait in PC build

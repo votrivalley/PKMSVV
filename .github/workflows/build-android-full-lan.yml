@@ -98,7 +98,7 @@ jobs:
       - name: Compile entire modified offline game
         run: npm run prepare:game
       - name: Validate original game and save functionality
-        run: npm run test:v15 && npm run test:collection && npm run test:mobile-topbar
+        run: npm run test:v15 && npm run test:collection && npm run test:mobile-topbar && npm run test:mega
       - name: Pack full offline assets and LAN UI
         run: |
           npm run prepare:icons
