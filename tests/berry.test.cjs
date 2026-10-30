@@ -38,7 +38,7 @@ test('Chapter 6 counts distinct used Berry types, never five copies of the same 
 test('Mega regional candidates are ten distinct forms; every use is gated by a real battle sprite',()=>{
  const s=fs.readFileSync(path.join(root,'src','pkmsvv-champion-arena.js'),'utf8');
  assert.match(s,/tyranitarmega/);assert.match(s,/tatsugiricurlymega/);
- assert.match(s,/f\.artReady&&G\.SPRITE_META\?\.\[f\.spriteId\]\?\.a\?\.Idle/);
+ assert.ok(s.includes('f?.artReady&&G.SPRITE_META?.[f.spriteId]?.a?.Idle'));
 });
 test('Berry subsystem compiles on all platform builds before game minification',()=>{
  const patch=fs.readFileSync(path.join(root,'scripts/patch-berry.cjs'),'utf8');
