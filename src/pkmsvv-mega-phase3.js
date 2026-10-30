@@ -11,7 +11,8 @@ G.PKMSVVMegaPhase3=(()=>{
   {region:'Alola',key:'golisopodmega'},{region:'Galar',key:'falinksmega'},
   {region:'Paldea',key:'baxcaliburmega'},{region:'Votri Valley',key:'dragonitemega'}
  ]);
- const STONE_CHANCE=.01,DURATION=30,CD_FACTOR=.7;
+ const STONE_CHANCE=.01,DURATION=30,REUSE_COOLDOWN=200,CD_FACTOR=.7;
+ const ENERGY_MAX=100,HIT_ENERGY=1,KILL_ENERGY=2,BOSS_ENERGY=3;
  const getSave=()=>G.DB?.save;
  const getForm=key=>(G.PKMSVV_MEGA_CATALOG||[]).find(f=>f.key===key);
  const stoneOwned=(s,key)=>{
@@ -76,10 +77,22 @@ G.PKMSVVMegaPhase3=(()=>{
    (G.PKMSVV_MEGA_4DIR_QA?.enabled===true&&f.qa4dir===true&&
     G.PKMSVV_MEGA_4DIR_QA.forms?.includes(f.key)))):null;
  let button=null,busy=false;
+ function energy(p){
+  if(!p)return 0;
+  if(!Number.isFinite(p._megaEnergy))p._megaEnergy=0;
+  p._megaEnergy=Math.max(0,Math.min(ENERGY_MAX,p._megaEnergy));
+  return p._megaEnergy;
+ }
+ function addEnergy(p,points){
+  if(!p||p.dead||p._megaActive||G.Coop?.active||G.Game?.state!=='playing')return 0;
+  if(!Number.isFinite(points)||points<=0)return energy(p);
+  p._megaEnergy=Math.min(ENERGY_MAX,energy(p)+points);
+  return p._megaEnergy;
+ }
  function eligible(){
   const p=player(),f=formFor(p);
   return !!(p&&f&&!p.dead&&G.Game?.state==='playing'&&!G.Coop?.active&&
-   !p._megaUsed&&!p._megaActive&&isBattleReady(f)&&
+   !p._megaActive&&!(p._megaCooldownRemaining>0)&&energy(p)>=ENERGY_MAX&&isBattleReady(f)&&
    (!p.shiny||G.Sprites.hasShiny?.(f.spriteId)===true));
  }
  function appearance(p,dex){
@@ -95,6 +108,7 @@ G.PKMSVVMegaPhase3=(()=>{
   p.mon=old.mon;p.baseAtk=old.atk;p.baseSpd=old.spd;
   if(p._megaPhase3Cd){p.cdMul/=CD_FACTOR;p._megaPhase3Cd=false;}
   p._megaActive=false;p._megaRemaining=0;p._megaPhase3Backup=null;
+  p._megaCooldownRemaining=REUSE_COOLDOWN; // Starts AFTER the 30-second transformation.
   appearance(p,p.dex);sync();return true;
  }
  function activate(p){
@@ -110,7 +124,8 @@ G.PKMSVVMegaPhase3=(()=>{
   p.baseAtk=p.mon.atk;p.baseSpd=p.mon.spd;
   p.cdMul*=CD_FACTOR;p._megaPhase3Cd=true;
   for(const move of p.moves||[])if(Number.isFinite(move.t)&&move.t>0)move.t*=CD_FACTOR;
-  p._megaRemaining=DURATION;p._megaActive=true;p._megaUsed=true;
+  p._megaRemaining=DURATION;p._megaActive=true;
+  p._megaEnergy=0;p._megaKillsSeen=Number(p.kills)||0;p._megaBossesSeen=Number(p.bosses)||0;
   appearance(p,f.spriteId);
   G.FX?.ring?.(p.x,p.y,15,100,'#b49aff',.9,8);
   G.Audio?.sfx?.('shinyGet');
@@ -128,9 +143,24 @@ G.PKMSVVMegaPhase3=(()=>{
   }finally{busy=false;sync();}
  }
  function tick(p,dt){
-  if(!p?._megaPhase3Backup)return;
-  if(p.dead||G.Game?.state!=='playing'){stop(p);return;}
-  p._megaRemaining-=Math.max(0,dt);if(p._megaRemaining<=0)stop(p);
+  if(!p)return;
+  const elapsed=Number.isFinite(dt)?Math.max(0,dt):0;
+  if(p.dead||G.Game?.state!=='playing'){if(p._megaActive)stop(p);return;}
+  if(p._megaActive){
+   p._megaRemaining=Math.max(0,p._megaRemaining-elapsed);
+   if(p._megaRemaining<=0)stop(p);
+   return;
+  }
+  // Credited kills and boss defeats are tracked on Player by the engine.
+  // Count only positive deltas; never write back to the save or global DEX.
+  const kills=Math.max(0,Number(p.kills)||0),bosses=Math.max(0,Number(p.bosses)||0);
+  const previousKills=Number.isFinite(p._megaKillsSeen)?p._megaKillsSeen:0;
+  const previousBosses=Number.isFinite(p._megaBossesSeen)?p._megaBossesSeen:0;
+  addEnergy(p,Math.max(0,kills-previousKills)*KILL_ENERGY+
+   Math.max(0,bosses-previousBosses)*BOSS_ENERGY);
+  p._megaKillsSeen=kills;p._megaBossesSeen=bosses;
+  if(p._megaCooldownRemaining>0)
+   p._megaCooldownRemaining=Math.max(0,p._megaCooldownRemaining-elapsed);
  }
  function mount(){
   if(button||!document.body)return;
@@ -147,15 +177,31 @@ G.PKMSVVMegaPhase3=(()=>{
  function sync(){
   if(!button)return;
   const p=player(),f=formFor(p);
-  const visible=!!(p&&f&&!G.Coop?.active&&G.Game?.state==='playing'&&
-   (eligible()||p._megaPhase3Backup));
+  const visible=!!(p&&f&&!p.dead&&!G.Coop?.active&&G.Game?.state==='playing'&&
+   isBattleReady(f));
   button.style.display=visible?'flex':'none';
   if(!visible)return;
-  button.disabled=busy||!!p._megaActive;
-  button.className='pkmsvv-mega-btn'+(p._megaActive?' is-active':'');
+  const cooldown=Math.max(0,Math.ceil(p._megaCooldownRemaining||0));
+  const charge=Math.floor(energy(p));
+  button.disabled=busy||!!p._megaActive||cooldown>0||charge<ENERGY_MAX;
+  button.className='pkmsvv-mega-btn'+(p._megaActive?' is-active':cooldown>0?' is-cooling':charge<ENERGY_MAX?' is-charging':' is-ready');
   const label=button.querySelector?.('.pkmsvv-mega-btn__label');
-  if(label)label.textContent=p._megaActive?Math.max(0,Math.ceil(p._megaRemaining))+'s':'MEGA';
+  if(label)label.textContent=p._megaActive?Math.max(0,Math.ceil(p._megaRemaining))+'s':
+   cooldown>0?cooldown+'s':charge<ENERGY_MAX?charge+'%':'MEGA';
+  button.title=p._megaActive?'Mega: '+Math.ceil(p._megaRemaining)+' giây':
+   cooldown>0?'Mega hồi '+cooldown+' giây · Năng lượng '+charge+'%':
+   charge<ENERGY_MAX?'Năng lượng Mega '+charge+'% / 100% · Đánh trúng và hạ quái để tích':'Mega đã sẵn sàng · Phím M';
+  button.setAttribute?.('aria-label',button.title);
  }
+ // Real hit credit is optional in upstream engines that expose Enemy.hurt.
+ // Never charge from remote enemies, invincible Arceus, or competitive modes.
+ const hurt=G.Enemy?.prototype?.hurt;
+ if(typeof hurt==='function')G.Enemy.prototype.hurt=function(amount,...args){
+  const credit=!this.dead&&!this.remote&&!this.arceus&&Number.isFinite(amount)&&amount>0;
+  const result=hurt.call(this,amount,...args);
+  if(credit)addEnergy(player(),HIT_ENERGY);
+  return result;
+ };
  const update=G.Player?.prototype?.update;
  if(typeof update==='function')G.Player.prototype.update=function(dt){
   if(this===player())tick(this,dt);
@@ -175,6 +221,7 @@ G.PKMSVVMegaPhase3=(()=>{
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});
  else mount();
  setInterval(sync,250);
- return {CHAMPIONS,STONE_CHANCE,DURATION,CD_FACTOR,rewardStone,isUnlocked,isBattleReady,
-  stoneOwned,progress,formFor,eligible,activate,tryActivate,stop,tick,sync};
+ return {CHAMPIONS,STONE_CHANCE,DURATION,REUSE_COOLDOWN,CD_FACTOR,ENERGY_MAX,
+  HIT_ENERGY,KILL_ENERGY,BOSS_ENERGY,rewardStone,isUnlocked,isBattleReady,
+  stoneOwned,progress,formFor,energy,addEnergy,eligible,activate,tryActivate,stop,tick,sync};
 })();
