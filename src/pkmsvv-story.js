@@ -11,7 +11,8 @@ G.PKMSVVStory=(()=>{
    10:'chapter1-echo', 11:'chapter1-fragments',
    12:'chapter6-arena', 13:'chapter6-champion',
    14:'chapter7-seal', 15:'chapter7-mega',
-   16:'chapter5-gate', 17:'chapter5-trials'
+   16:'chapter5-gate', 17:'chapter5-trials',
+   18:'chapter6-berry-grove',19:'chapter6-berry-rescue'
  });
  const chapters={
   prologue:[
@@ -70,7 +71,16 @@ G.PKMSVVStory=(()=>{
    {art:17,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Hãy hoàn thành cả ba chế độ. Khi ba thử thách khép lại, cánh cửa Arena Chương 7 mới thức tỉnh.','Complete all three modes. Only then will the Chapter 7 Arena gate awaken.']},
    {art:17,speaker:['Tôi','Me'],text:['Lần này mình sẽ tìm lại ký ức cùng những người bạn!','This time I will recover my memories with friends!']}
   ],
-  // Chapter 6 Berry gameplay reserved for a future release; existing save flags unchanged.
+  // Chapter 6: independent Berry journey; previous Arena/Mega save flags stay untouched.
+  berry:[
+   {art:18,speaker:['Tôi','Me'],text:['Giữa khu rừng ký ức... sao những quả Berry lại phát sáng?','Why do these Berries glow in the forest of memories?']},
+   {art:18,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Berry giữ lại sự sống. Ngươi có thể mang tối đa hai quả cho mỗi trận chiến.','Berries preserve life. You may take up to two into each battle.']},
+   {art:18,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Trước trận đấu, ngươi có bốn giây để chọn hoặc từ chối. Một quả đã mang đi sẽ được sử dụng hết.','Before each battle, you have four seconds to choose or skip. Equipped berries are consumed.']},
+   {art:19,speaker:['Tôi','Me'],text:['Có thể tìm thêm Berry ở đâu?','Where can I find more Berries?']},
+   {art:19,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Hãy mở Túi Berry ở trang chính: mua trong cửa hàng hoặc giải cứu Berry khỏi bóng tối.','Open the Berry Bag in the main menu: buy them in the Shop or rescue them from shadows.']},
+   {art:19,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Hãy sử dụng năm loại Berry khác nhau để hoàn thành thử thách này.','Use five different Berry types to complete this trial.']},
+   {art:19,speaker:['Tôi','Me'],text:['Mỗi quả là một cơ hội sống sót... mình sẽ ghi nhớ điều đó.','Each berry is another chance at life. I will remember.']}
+  ],
   chapter6:[
    {art:12,speaker:['Tôi','Me'],text:['Một đấu trường xuất hiện. Phía trên là mười chiếc vương miện!','An arena has appeared. Above it hang ten crowns!']},
    {art:12,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Mỗi vùng là giải loại trực tiếp mười sáu người. Vòng 16, tứ kết, bán kết, chung kết.','Each region has a sixteen-trainer knockout: round of sixteen, quarterfinals, semifinals and final.']},
@@ -206,7 +216,7 @@ G.PKMSVVStory=(()=>{
       img.dataset.revealFallback='1';
       img.onerror=()=>{img.onerror=null;img.src='assets/story/scene-5.svg';};
       img.src='assets/story/gate.webp';
-    }else if(key==='chapter1-echo'||key==='chapter1-fragments'||key==='chapter2-orbs'||key==='chapter2-shadow'||key==='chapter3-nest'||key==='chapter3-hatch'||key==='chapter5-gate'||key==='chapter5-trials'||key==='chapter6-arena'||key==='chapter6-champion'||key==='chapter7-seal'||key==='chapter7-mega'){
+    }else if(key==='chapter1-echo'||key==='chapter1-fragments'||key==='chapter2-orbs'||key==='chapter2-shadow'||key==='chapter3-nest'||key==='chapter3-hatch'||key==='chapter5-gate'||key==='chapter5-trials'||key==='chapter6-arena'||key==='chapter6-champion'||key==='chapter7-seal'||key==='chapter7-mega'||key==='chapter6-berry-grove'||key==='chapter6-berry-rescue'){
       img.onerror=null;
       img.src='assets/story/gate.webp';
     }else{
@@ -227,6 +237,8 @@ G.PKMSVVStory=(()=>{
     key==='chapter6-champion'?tr('Trận thách đấu Champion quyết định Ấn Chứng Vương Miện','A Champion duel for the Crown Seal'):
     key==='chapter7-seal'?tr('Ấn Chứng đầu tiên đánh thức sức mạnh Mega','The first Crown Seal awakens Mega power'):
     key==='chapter7-mega'?tr('Pokémon bùng nổ sức mạnh Tiến Hóa Mega','A Pokémon unleashes the power of Mega Evolution'):
+    key==='chapter6-berry-grove'?tr('Vườn Berry bị lãng quên trong vùng đất ký ức','Forgotten Berry Grove in the land of lost memories'):
+    key==='chapter6-berry-rescue'?tr('Cứu Berry khỏi bóng tối','Rescue Berries from the shadows'):
     key==='chapter2-orbs'?tr('Vòng phép sáng lên, Mystery Orbs trỗi dậy giữa đêm','Eight powers awaken as the Mystery Orbs rise into the night'):
     key==='chapter2-shadow'?tr('Bóng trắng bí ẩn xuất hiện trong chính khung cảnh Mystery Orbs','A mysterious white shadow appears in the same Mystery Orb scene'):
     tr(key==='eyes'?'Bóng người trước đôi mắt bí ẩn giữa bầu trời sao':
@@ -239,6 +251,7 @@ G.PKMSVVStory=(()=>{
   if(mode==='reveal'&&chosenDex&&G.UI&&G.UI.sprite)G.UI.sprite(cv,chosenDex,{lively:true,scale:3,hero:true});
   $('pkmsvv-story-chapter').textContent=mode==='chapter7'?tr('CHƯƠNG 8 · SỨC MẠNH MEGA','CHAPTER 8 · MEGA AWAKENING'):
     mode==='chapter6'?tr('CHƯƠNG 7 · ĐẤU TRƯỜNG VƯƠNG MIỆN','CHAPTER 7 · CROWN ARENA'):
+    mode==='berry'?tr('CHƯƠNG 6 · BÍ MẬT BERRY','CHAPTER 6 · BERRY SECRETS'):
     mode==='chapter5'?tr('CHƯƠNG 5 · ĐỒNG HÀNH','CHAPTER 5 · COMPANIONS'):
     mode==='chapter3'?tr('CHƯƠNG 4 · MẦM SỐNG BỊ LÃNG QUÊN','CHAPTER 4 · FORGOTTEN LIFE'):
     mode==='chapter2'?tr('CHƯƠNG 3 · TIẾNG VỌNG THỨ TÁM','CHAPTER 3 · THE EIGHTH ECHO'):
@@ -268,7 +281,7 @@ G.PKMSVVStory=(()=>{
   stop();hideNameForm();mode=type;idx=0;next=done;replaying=replay;chosenDex=dex;
   lines=chapters[type];G.UI.chrome(false);G.UI.show('scr-pkmsvv-story');
   // Preload once; optional offline fallbacks remain available.
-  for(const name of ['eyes','gate','reveal','chapter1-echo','chapter1-fragments','chapter2-orbs','chapter2-shadow','chapter3-nest','chapter3-hatch','chapter5-gate','chapter5-trials','chapter6-arena','chapter6-champion','chapter7-seal','chapter7-mega']){const preload=new Image();preload.src='assets/story/'+name+'.webp';}
+  for(const name of ['eyes','gate','reveal','chapter1-echo','chapter1-fragments','chapter2-orbs','chapter2-shadow','chapter3-nest','chapter3-hatch','chapter5-gate','chapter5-trials','chapter6-arena','chapter6-champion','chapter7-seal','chapter7-mega','chapter6-berry-grove','chapter6-berry-rescue']){const preload=new Image();preload.src='assets/story/'+name+'.webp';}
   draw();
   if(G.Pad&&G.Pad.focusFirst)G.Pad.focusFirst();
  }
@@ -289,11 +302,12 @@ G.PKMSVVStory=(()=>{
   if(!s)return 0;
   const awarded=s.pkmsvvChapterPurpleRewards;
   const flags=(awarded&&typeof awarded==='object'&&!Array.isArray(awarded))?awarded:{};
-  // Existing reward ledger slots 0–6 stay stable; Berry teaser has no ticket reward.
+  // Existing ledger slots 0–6 stay stable; Berry is appended at slot 7.
   const completed=[
    !!(s.pkmsvvStorySeen&&(s.starter||s.partner)),
    !!s.pkmsvvChapter1Seen,!!s.pkmsvvChapter2Seen,!!s.pkmsvvChapter3Seen,
-   !!s.pkmsvvChapter5Seen,!!s.pkmsvvChapter6Seen,!!s.pkmsvvChapter7Seen
+   !!s.pkmsvvChapter5Seen,!!s.pkmsvvChapter6Seen,!!s.pkmsvvChapter7Seen,
+   !!s.pkmsvvBerryChapterDone
   ];
   let count=0;
   for(let ch=0;ch<completed.length;ch++){
@@ -399,7 +413,22 @@ G.PKMSVVStory=(()=>{
   play('chapter7',()=>{G.DB.save.pkmsvvChapter7Seen=true;G.DB.save.pkmsvvChapter7Pending=false;
    G.DB.commit(true);syncChapterPurpleRewards();done?.(true);});return true;
  }
- function replay(type='prologue'){play(['chapter1','chapter2','chapter3','chapter5','chapter6','chapter7'].includes(type)?type:'prologue',()=>G.Flow.goMenu(),true);}
+ function berryChapter(done){
+  if(!G.DB?.save?.pkmsvvChapter5Seen){done?.(false);return false;}
+  const already=!!G.DB.save.pkmsvvBerryIntroSeen;
+  play('berry',()=>{
+   if(!already&&G.DB?.save){
+    G.DB.save.pkmsvvBerryIntroSeen=true;
+    // Two free starter berries: keeps onboarding possible without purchases.
+    G.PKMSVVBerry?.grant?.('oran',1);
+    G.PKMSVVBerry?.grant?.('liechi',1);
+    G.DB.commit(true);
+   }
+   done?.(true);
+  },already);
+  return true;
+ }
+ function replay(type='prologue'){play(['chapter1','chapter2','chapter3','chapter5','berry','chapter6','chapter7'].includes(type)?type:'prologue',()=>G.Flow.goMenu(),true);}
  function memories(){
   const s=G.DB.save||{};
   // The default Memories menu opens the next available chapter to replay.
@@ -410,7 +439,7 @@ G.PKMSVVStory=(()=>{
   if(s.pkmsvvChapter3Seen)available.push('chapter3');
   // Story continuation is selectable before first completion, without blocking LAN.
   if(s.pkmsvvChapter3Seen)available.push('chapter5');
-  if(s.pkmsvvChapter5Seen)available.push('berry-preview');
+  if(s.pkmsvvChapter5Seen)available.push('berry');
   if((s.pkmsvvChapter5Seen&&allMultiplayerCompleted(s))||s.pkmsvvChapter6Seen)available.push('chapter6');
   if(earnedChampion(s))available.push('chapter7');
   if(available.length===1){replay('prologue');return;}
@@ -422,16 +451,17 @@ G.PKMSVVStory=(()=>{
    chapter2:tr('Chương 3 · Tiếng Vọng Thứ Tám','Chapter 3 · The Eighth Echo'),
    chapter3:tr('Chương 4 · Mầm Sống Bị Lãng Quên','Chapter 4 · Forgotten Life'),
    chapter5:tr('Chương 5 · Đồng Hành','Chapter 5 · Companions'),
-   'berry-preview':tr('Chương 6 · Bí Mật Berry (sắp ra mắt)','Chapter 6 · Berry Secrets (coming soon)'),
+   berry:tr('Chương 6 · Bí Mật Berry','Chapter 6 · Berry Secrets'),
    chapter6:tr('Chương 7 · Đấu Trường Vương Miện','Chapter 7 · Crown Arena'),
    chapter7:tr('Chương 8 · Sức Mạnh Mega','Chapter 8 · Mega Awakening')};
   choices.innerHTML='<div class="pkmsvv-memory-inner"><h2>'+tr('Ký Ức','Memories')+'</h2>'+
-   available.map(c=>'<button type="button" class="btn gold" data-chapter="'+c+'"'+(c==='berry-preview'?' disabled title="Berry sẽ phát triển sau"':'')+'>'+labels[c]+'</button>').join('')+
+   available.map(c=>'<button type="button" class="btn gold" data-chapter="'+c+'">'+labels[c]+'</button>').join('')+
    '<button type="button" class="btn ghost" data-close="1">'+tr('Đóng','Close')+'</button></div>';
   document.body.appendChild(choices);
   choices.querySelectorAll('[data-chapter]').forEach(el=>{el.onclick=()=>{
    const chapter=el.dataset.chapter;choices.remove();
-   if(chapter==='chapter5'&&!G.DB?.save?.pkmsvvChapter5Seen)chapter5(()=>G.Flow.goMenu());
+   if(chapter==='berry'&&!G.DB?.save?.pkmsvvBerryIntroSeen)berryChapter(()=>G.Flow.goMenu());
+   else if(chapter==='chapter5'&&!G.DB?.save?.pkmsvvChapter5Seen)chapter5(()=>G.Flow.goMenu());
    else if(chapter==='chapter6'&&!G.DB?.save?.pkmsvvChapter6Seen)chapter6(()=>G.Flow.goMenu());
    else if(chapter==='chapter7'&&!G.DB?.save?.pkmsvvChapter7Seen)chapter7(()=>G.Flow.goMenu());
    else replay(chapter);
@@ -450,5 +480,5 @@ G.PKMSVVStory=(()=>{
    else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();skipStory();}
   },true);
  }
- return {init,prologue,reveal,replay,memories,syncChapterPurpleRewards,chapter1,chapter2,chapter3,chapter5,chapter6,chapter7,multiplayerProgress,allMultiplayerCompleted,recordMultiplayerCompletion,arenaUnlocked,earnedChampion,megaUnlocked,markChapter1,markChapter2,markChapter3,chapter1Pending,chapter2Pending,chapter3Pending};
+ return {init,prologue,reveal,replay,memories,syncChapterPurpleRewards,chapter1,chapter2,chapter3,chapter5,berryChapter,chapter6,chapter7,multiplayerProgress,allMultiplayerCompleted,recordMultiplayerCompletion,arenaUnlocked,earnedChampion,megaUnlocked,markChapter1,markChapter2,markChapter3,chapter1Pending,chapter2Pending,chapter3Pending};
 })();
