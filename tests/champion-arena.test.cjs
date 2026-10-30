@@ -235,3 +235,17 @@ test('Offline save merge retains and deduplicates full Champion Hall of Fame rec
  assert.match(source,/seenHistory\.has/);
  assert.match(source,/crown\.history/);
 });
+
+test('unreleased regional Champion Mega art uses real stand-in Pokémon, then true sprite when imported',()=>{
+ const {lib,G}=setup();
+ assert.equal(lib.MEGA_KEYS.length,10);
+ assert.equal(lib.regionChampion(1).dex,248,'Johto uses Tyranitar before Mega Scizor art');
+ assert.equal(lib.regionChampion(2).dex,376,'Hoenn uses Metagross before Mega Swampert');
+ assert.equal(lib.regionChampion(9).dex,373,'Votri Valley uses Salamence before Mega Dragonite');
+ G.PKMSVV_MEGA_CATALOG=[{key:'dragonitemega',dex:149,artReady:true,spriteId:10149}];
+ G.SPRITE_META={10149:{a:{Idle:{}}}};
+ assert.equal(lib.regionChampion(9).dex,149,'new Mega sprite restores original region Champion');
+ assert.equal(lib.regionChampion(9).spriteId,10149);
+ assert.equal(lib.regionChampion(9).temporary,false);
+ assert.equal(lib.regionChampion(1).temporary,true);
+});
