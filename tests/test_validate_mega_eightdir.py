@@ -1,5 +1,5 @@
 """Tests for Stage3 strict no-fake-8-dir readiness gate."""
-import importlib.util,pathlib,unittest
+import importlib.util,pathlib,unittest,tempfile
 from PIL import Image
 P=pathlib.Path(__file__).resolve().parents[1]/'scripts'/'validate-mega-eightdir.py'
 s=importlib.util.spec_from_file_location('mega8',P)
@@ -9,11 +9,19 @@ class Stage3Tests(unittest.TestCase):
   self.project={'format':'pkmsvv-mega-stage3-draft','version':1,'draft':{},'approved':{},'battleReady':False}
  def test_original_cardinals_do_not_count_as_finished(self):
   q=qa.check(self.project,'scizor','normal')
-  self.assertEqual(q['originalWalkFrames'],16)
+  self.assertEqual(q['originalWalkFrames'],0,'cannot claim source art without supplied PNG')
   self.assertEqual(q['requiredManual'],208)
-  self.assertEqual(len(q['missing']),208)
+  self.assertEqual(len(q['missing']),224)
   self.assertFalse(q['candidateComplete'])
   self.assertFalse(q['battleReady'])
+ def test_real_sheet_can_supply_original_sixteen_frames(self):
+  with tempfile.TemporaryDirectory() as d:
+   p=pathlib.Path(d)/'valid.png'
+   Image.new('RGBA',(384,384),(255,0,0,255)).save(p)
+   q=qa.check(self.project,'scizor','normal',p)
+   self.assertEqual(q['originalWalkFrames'],16)
+   self.assertEqual(q['requiredManual'],208)
+   self.assertEqual(len(q['missing']),208)
  def test_fake_approval_without_png_fails(self):
   k='scizor|normal|Walk|front-left|0'
   self.project['approved'][k]=True
