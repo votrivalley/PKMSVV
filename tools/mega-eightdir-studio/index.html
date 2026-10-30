@@ -36,6 +36,8 @@ small,.muted{color:#b9cbda}#result{white-space:pre-line;line-height:1.7}
 <p class="muted">Chọn Pokémon/loại trước khi nhập sheet tương ứng. Bản ZIP offline trong cuộc trò chuyện đã đóng gói sẵn 8 ảnh tham chiếu.</p>
 <h3>Tiến độ</h3><p id="result"></p>
 <div class="tools"><button id="exportPng">Xuất PNG nháp 8 hướng</button><button id="exportJson">Xuất dự án JSON</button></div>
+<label>Nhập sheet nháp 8 hướng 384×768 <input id="draftSheet" type="file" accept="image/png"></label>
+<small>Nhập cho Pokémon, dạng và hành động đang chọn. Chỉ thêm frame nháp, KHÔNG tự duyệt và KHÔNG ghi đè bốn hướng Walk gốc.</small>
 <label>Nhập dự án <input id="importJson" type="file" accept="application/json,.json"></label>
 <p><small>PNG nháp 384×768: 4 frame × 8 hàng. Không dùng trực tiếp cho game nếu chưa đủ action, hướng và metadata.</small></p></section></div></main>
 <script>
@@ -88,6 +90,30 @@ for(let k of ['mon','variant','action','frame'])$(k).onchange=e=>{s[k]=k==='fram
 $('source').onchange=e=>{let file=e.target.files?.[0];if(!file)return;let image=new Image(),url=URL.createObjectURL(file);
  image.onload=()=>{if(image.width!==384||image.height!==384){alert('Cần sheet PA2.1 384×384');URL.revokeObjectURL(url);return}
  sources[srcId()]=image;render();URL.revokeObjectURL(url)};image.src=url};
+$('draftSheet').onchange=e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ const image=new Image(),url=URL.createObjectURL(file);
+ const targetMon=s.mon,targetVar=s.variant,targetAct=s.action;
+ image.onload=()=>{
+  URL.revokeObjectURL(url);
+  if(image.width!==384||image.height!==768){alert('Cần sheet đúng 384×768 (4 frame × 8 hướng), không resize');return}
+  if(!confirm('Nhập frame nháp vào '+targetMon+'/'+targetVar+'/'+targetAct+'? Các frame đã vẽ có thể bị thay bằng dữ liệu mới. Chưa frame nào được tự động duyệt.'))return;
+  let count=0;
+  for(let row=0;row<8;row++)for(let frame=0;frame<4;frame++){
+   const dir=DIR[row];
+   if(targetAct==='Walk'&&Object.hasOwn(ROW,dir))continue;
+   const canvas=blank(),ctx=canvas.getContext('2d');
+   ctx.drawImage(image,frame*96,row*96,96,96,0,0,96,96);
+   const alpha=ctx.getImageData(0,0,96,96).data;
+   if(!alpha.some((v,i)=>i%4===3&&v>0))continue;
+   const key=[targetMon,targetVar,targetAct,dir,frame].join('|');
+   edits[key]=canvas;reviewed[key]=false;count++;
+  }
+  render();alert('Đã nhập '+count+' frame nháp. Hãy kiểm tra và duyệt từng frame trước khi QA.');
+ };
+ image.onerror=()=>{URL.revokeObjectURL(url);alert('Không đọc được PNG')};
+ image.src=url;
+};
 function download(blob,name){let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
 $('exportPng').onclick=()=>{
  let c=document.createElement('canvas');c.width=384;c.height=768;let x=c.getContext('2d');x.imageSmoothingEnabled=false;
