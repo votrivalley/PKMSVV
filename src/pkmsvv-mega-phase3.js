@@ -87,6 +87,8 @@ G.PKMSVVMegaPhase3=(()=>{
    (G.PKMSVV_MEGA_4DIR_QA?.enabled===true&&f.qa4dir===true&&
     G.PKMSVV_MEGA_4DIR_QA.forms?.includes(f.key)))):null;
  let button=null,busy=false;
+ const controlHint=()=>G.Pad?.name?G.PKMSVVPadOrb?.describe?.('mega')||'LB / L1':
+  (String(G.Input?.bound?.('mega')||'digit4').replace(/^(digit|key|numpad)/,'').toUpperCase());
  function energy(p){
   if(!p)return 0;
   if(!Number.isFinite(p._megaEnergy))p._megaEnergy=0;
@@ -178,7 +180,7 @@ G.PKMSVVMegaPhase3=(()=>{
   if(button||!document.body)return;
   button=document.createElement('button');
   button.id='pkmsvv-mega-champion-btn';button.type='button';
-  button.className='pkmsvv-mega-btn';button.title='Tiến hóa Mega · Phím 4';
+  button.className='pkmsvv-mega-btn';button.title='Tiến hóa Mega · '+controlHint();
   button.style.display='none';
   button.innerHTML='<span class="pkmsvv-mega-champion-gem">✧</span><span class="pkmsvv-mega-btn__label">MEGA</span>';
   button.addEventListener('click',event=>{
@@ -203,7 +205,7 @@ G.PKMSVVMegaPhase3=(()=>{
    cooldown>0?cooldown+'s':charge<ENERGY_MAX?charge+'%':'MEGA';
   button.title=p._megaActive?'Mega: '+Math.ceil(p._megaRemaining)+' giây':
    cooldown>0?'Mega hồi '+cooldown+' giây · Năng lượng '+charge+'%':
-   charge<ENERGY_MAX?'Năng lượng Mega '+charge+'% / 100% · Đánh trúng và hạ quái để tích':'Mega đã sẵn sàng · Phím 4';
+   charge<ENERGY_MAX?'Năng lượng Mega '+charge+'% / 100% · Đánh trúng và hạ quái để tích':'Mega đã sẵn sàng · '+controlHint();
   button.setAttribute?.('aria-label',button.title);
  }
  // Called from the pinned enemy.hurt patch; never credit invulnerable,
