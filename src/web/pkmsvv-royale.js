@@ -36,7 +36,10 @@ G.Royale=(()=>{
    roster.forEach(m=>portrait(m.uid,m.dex));
   }
  }
- function intensity(time){const t=sec(time);return {density:Math.min(2.55,.50+Math.pow(Math.max(0,t-45)/240,1.1)*.38),hp:1+Math.min(2.5,Math.max(0,t-85)/270),dmg:1+Math.min(1.75,Math.max(0,t-90)/390)};}
+ // Every complete 5 minutes in Royale adds one cumulative +1/3 run-speed tier.
+ // Only enemy movement is affected (not attack, player stats or other modes).
+ function speedAt(time){return Math.pow(4/3,Math.floor(sec(time)/300));}
+ function intensity(time){const t=sec(time);return {density:Math.min(2.55,.50+Math.pow(Math.max(0,t-45)/240,1.1)*.38),hp:1+Math.min(2.5,Math.max(0,t-85)/270),dmg:1+Math.min(1.75,Math.max(0,t-90)/390),speed:speedAt(t)};}
  function results(players,time){
   const t=sec(time),alive=new Set(players.filter(p=>p&&!p.dead).map(p=>p.uid)),winner=alive.size===1?[...alive][0]:null;
   const standings=roster.map(m=>{const duration=alive.has(m.uid)?t:(fallen[m.uid]===undefined?t:fallen[m.uid]);return {uid:m.uid,name:m.name,dex:m.dex,shiny:m.shiny,time:duration,points:duration*10+(winner===m.uid?1000:0),win:winner===m.uid};})
@@ -126,5 +129,5 @@ G.Royale=(()=>{
   // HUD clears registered buttons each frame, so this registers only once.
   G.Touch?.addButton?.(x,top,width,height,()=>{expanded=!expanded;},0);
  }
- return {begin,startPosition,intensity,check,finish,html,draw,get hudBounds(){return hudBounds;},get expanded(){return expanded;},get active(){return active;},get outcome(){return outcome;},get size(){return roster.length;}};
+ return {begin,startPosition,intensity,speedAt,check,finish,html,draw,get hudBounds(){return hudBounds;},get expanded(){return expanded;},get active(){return active;},get outcome(){return outcome;},get size(){return roster.length;}};
 })();
