@@ -465,7 +465,7 @@ G.PKMSVVEggs=(()=>{
   for(let j=0;j<items.length;j++){
    const it=items[j];
    it.hitCooldown=Math.max(0,(it.hitCooldown||0)-dt);
-   it.eggHitLockout=Math.max(0,(it.eggHitLockout||0)-dt);
+   it.eggHitLockout=Math.max(0,(it.eggHitLockout||0)-dt-1e-9); // exactly 5s, no FP residue
    follow(it,j,pl,dt);
    if(!it.hatched){
     it.age+=dt;it.boost+=dk*1.5+dl*5;
