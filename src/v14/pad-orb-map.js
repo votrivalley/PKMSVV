@@ -13,7 +13,8 @@ G.PKMSVVPadOrb=(()=>{
  const keyboardBindings=()=>{
   const b=Object.assign({},keyboardDefaults(),G.Settings.get('keys')||{});
   // Migrate only the former default pair, preserving unrelated custom keys.
-  if(b.orb==='digit5'&&b.mega==='digit4'){b.orb='digit4';b.mega='digit5';}
+  const saved=G.Settings.get('keys')||{};
+  if(saved.orb==='digit5'&&(saved.mega===undefined||saved.mega==='digit4')){b.orb='digit4';b.mega='digit5';}
   return b;
  };
  const merged=o=>Object.assign({},DEFAULT,o||{});
