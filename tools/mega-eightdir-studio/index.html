@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PKMSVV Mega 8-direction QA Studio</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0c192b;color:#eff6ff;font:14px system-ui,sans-serif}
+main{max-width:1150px;margin:auto;padding:20px}h1{font-size:23px}p{color:#bbd0e1;line-height:1.5}
+select,button,input{padding:9px;border:1px solid #527793;border-radius:8px;background:#1e3954;color:#fff}
+button{cursor:pointer}button:disabled{opacity:.5}button.selected{background:#f9d36a;color:#16263b}
+.settings,.tools{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.columns{display:grid;grid-template-columns:minmax(350px,1fr) 320px;gap:14px}
+section{background:#152a42;padding:14px;border:1px solid #45627d;border-radius:12px}
+#editor{width:100%;max-width:576px;aspect-ratio:1;image-rendering:pixelated;touch-action:none;cursor:crosshair;
+background:repeating-conic-gradient(#263e55 0% 25%,#304b64 0% 50%) 50%/30px 30px}
+#reference{width:100%;max-width:256px;aspect-ratio:1;image-rendering:pixelated;
+background:repeating-conic-gradient(#263e55 0% 25%,#304b64 0% 50%) 50%/24px 24px}
+.directions{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin:10px 0}
+.directions button{padding:7px 2px;font-size:12px}.danger{background:#442e2e;color:#ffd5b5;padding:12px;border-radius:9px}
+small,.muted{color:#b9cbda}#result{white-space:pre-line;line-height:1.7}
+@media(max-width:820px){.columns{grid-template-columns:1fr}}
+</style></head><body><main><h1>⚡ Mega Studio · 8 hướng (QA)</h1>
+<p class="danger">Bản này dùng để tạo/duyệt sprite thủ công. Không tự tạo hướng chéo bằng lật ảnh và không mở khóa Mega trong game. Giữ nguồn art riêng, kiểm tra quyền sử dụng trước khi phát hành.</p>
+<div class="settings">
+<label>Pokémon <select id="mon"><option>scizor</option><option>swampert</option><option>garchomp</option><option>dragonite</option></select></label>
+<label>Dạng <select id="variant"><option>normal</option><option>shiny</option></select></label>
+<label>Hành động <select id="action"><option>Walk</option><option>Idle</option><option>Attack</option><option>Shoot</option><option>Charge</option><option>Hurt</option><option>Faint</option></select></label>
+<label>Frame <select id="frame"><option value="0">1/4</option><option value="1">2/4</option><option value="2">3/4</option><option value="3">4/4</option></select></label>
+</div>
+<div class="columns"><section><b>Chỉnh frame 96×96</b>
+<div id="directions" class="directions"></div><canvas id="editor" width="96" height="96"></canvas>
+<div class="tools"><button id="paint" class="selected">Vẽ</button><button id="erase">Tẩy</button><button id="pick">Lấy màu</button>
+<input type="color" id="color" value="#ffe070"><button id="undo">Hoàn tác</button><button id="clear">Xóa nháp</button><button id="approve">✓ Duyệt frame</button></div>
+<p id="frameStatus"></p><small>Hướng gốc của Walk là chỉ-đọc. Ở hướng chéo, ô vẽ lúc đầu trống; Pokémon bên phải chỉ là ảnh mẫu.</small></section>
+<section><b>Ảnh tham chiếu – không đưa vào hình xuất</b>
+<canvas width="96" height="96" id="reference"></canvas>
+<div class="tools"><label>Nhập sheet PA2.1 384×384 PNG <input type="file" accept="image/png" id="source"></label></div>
+<p class="muted">Chọn Pokémon/loại trước khi nhập sheet tương ứng. Bản ZIP offline trong cuộc trò chuyện đã đóng gói sẵn 8 ảnh tham chiếu.</p>
+<h3>Tiến độ</h3><p id="result"></p>
+<div class="tools"><button id="exportPng">Xuất PNG nháp 8 hướng</button><button id="exportJson">Xuất dự án JSON</button></div>
+<label>Nhập dự án <input id="importJson" type="file" accept="application/json,.json"></label>
+<p><small>PNG nháp 384×768: 4 frame × 8 hàng. Không dùng trực tiếp cho game nếu chưa đủ action, hướng và metadata.</small></p></section></div></main>
+<script>
+'use strict';
+const ACTIONS=['Idle','Walk','Attack','Shoot','Charge','Hurt','Faint'];
+const DIR=['front','front-left','left','back-left','back','back-right','right','front-right'];
+const ROW={front:0,left:1,right:2,back:3},NEAR={'front-left':'front','front-right':'front','back-left':'back','back-right':'back'};
+const $=id=>document.getElementById(id),cv=$('editor'),g=cv.getContext('2d',{willReadFrequently:true}),rv=$('reference'),rg=rv.getContext('2d');
+g.imageSmoothingEnabled=rg.imageSmoothingEnabled=false;
+let s={mon:'scizor',variant:'normal',action:'Walk',dir:'front',frame:0,tool:'paint',color:'#ffe070'};
+let sources={},edits={},reviewed={},undo={},down=false;
+const srcId=()=>s.mon+'-'+s.variant;
+const id=(a=s.action,d=s.dir,f=s.frame)=>[s.mon,s.variant,a,d,f].join('|');
+const blank=()=>{let c=document.createElement('canvas');c.width=c.height=96;return c};
+const original=()=>s.action==='Walk'&&Object.hasOwn(ROW,s.dir);
+function sourceFrame(d,f){let img=sources[srcId()],c=blank();if(img&&Object.hasOwn(ROW,d))c.getContext('2d').drawImage(img,96*f,96*ROW[d],96,96,0,0,96,96);return c}
+function current(){let k=id();if(!edits[k])edits[k]=blank();return edits[k]}
+function render(){
+ g.clearRect(0,0,96,96);let img=original()?sourceFrame(s.dir,s.frame):edits[id()];if(img)g.drawImage(img,0,0);
+ rg.clearRect(0,0,96,96);rg.drawImage(sourceFrame(ROW[s.dir]===undefined?NEAR[s.dir]:s.dir,s.frame),0,0);
+ $('frameStatus').textContent=original()?'Nguồn Walk 4 hướng: chỉ đọc':reviewed[id()]?'Đã duyệt thủ công':edits[id()]?'Frame nháp':'Chưa có art';
+ for(const n of ['paint','erase','clear','approve'])$(n).disabled=original();
+ let sourced=sources[srcId()]?16:0,done=0,missing=0;
+ for(let a of ACTIONS)for(let d of DIR)for(let f=0;f<4;f++){
+  if(a==='Walk'&&Object.hasOwn(ROW,d)){continue}
+  if(reviewed[id(a,d,f)])done++;else missing++;
+ }
+ $('result').textContent=sourced+'/16 frame Walk gốc có nguồn.\\n'+done+'/208 frame mới đã duyệt.\\n'+missing+' frame mới còn thiếu.\\n battleReady = false (luôn luôn).';
+ drawButtons();
+}
+function drawButtons(){const root=$('directions');root.replaceChildren();for(let d of DIR){let b=document.createElement('button');b.textContent=d+(Object.hasOwn(ROW,d)?' ●':' ◯');b.className=s.dir===d?'selected':'';b.onclick=()=>{s.dir=d;render()};root.append(b)}}
+function pointer(e){
+ let b=cv.getBoundingClientRect(),x=Math.floor((e.clientX-b.left)*96/b.width),y=Math.floor((e.clientY-b.top)*96/b.height);
+ if(x<0||y<0||x>=96||y>=96)return;
+ if(s.tool==='pick'){let p=g.getImageData(x,y,1,1).data;if(p[3]){$('color').value='#'+[p[0],p[1],p[2]].map(v=>v.toString(16).padStart(2,'0')).join('');s.color=$('color').value}return}
+ if(original())return;
+ let c=current(),t=c.getContext('2d');if(s.tool==='erase')t.clearRect(x,y,1,1);else{t.fillStyle=s.color;t.fillRect(x,y,1,1)}
+ reviewed[id()]=false;render();
+}
+cv.onpointerdown=e=>{if(s.tool!=='pick'&&!original()){let k=id();(undo[k]??=[]).push(current().toDataURL());if(undo[k].length>30)undo[k].shift();down=true;cv.setPointerCapture(e.pointerId)}pointer(e)};
+cv.onpointermove=e=>{if(down)pointer(e)};cv.onpointerup=cv.onpointercancel=()=>{down=false};
+for(let v of ['paint','erase','pick'])$(v).onclick=()=>{s.tool=v;for(let n of ['paint','erase','pick'])$(n).classList.toggle('selected',n===v)};
+$('color').onchange=e=>s.color=e.target.value;
+$('clear').onclick=()=>{delete edits[id()];delete reviewed[id()];render()};
+$('undo').onclick=()=>{let a=undo[id()];if(!a?.length)return;let img=new Image(),url=a.pop();img.onload=()=>{let c=blank();c.getContext('2d').drawImage(img,0,0);edits[id()]=c;reviewed[id()]=false;render()};img.src=url};
+$('approve').onclick=()=>{if(original())return;let a=current().getContext('2d').getImageData(0,0,96,96).data;
+ if(!a.some((v,i)=>i%4===3&&v>0)){alert('Không thể duyệt frame trống');return}
+ reviewed[id()]=true;render()};
+for(let k of ['mon','variant','action','frame'])$(k).onchange=e=>{s[k]=k==='frame'?Number(e.target.value):e.target.value;render()};
+$('source').onchange=e=>{let file=e.target.files?.[0];if(!file)return;let image=new Image(),url=URL.createObjectURL(file);
+ image.onload=()=>{if(image.width!==384||image.height!==384){alert('Cần sheet PA2.1 384×384');URL.revokeObjectURL(url);return}
+ sources[srcId()]=image;render();URL.revokeObjectURL(url)};image.src=url};
+function download(blob,name){let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
+$('exportPng').onclick=()=>{
+ let c=document.createElement('canvas');c.width=384;c.height=768;let x=c.getContext('2d');x.imageSmoothingEnabled=false;
+ for(let r=0;r<8;r++)for(let f=0;f<4;f++){let d=DIR[r],image=s.action==='Walk'&&Object.hasOwn(ROW,d)?sourceFrame(d,f):edits[id(s.action,d,f)];
+ if(image)x.drawImage(image,f*96,r*96)}
+ c.toBlob(v=>download(v,'QA-'+srcId()+'-'+s.action+'-8dir.png'),'image/png')
+};
+$('exportJson').onclick=()=>{
+ let project={format:'pkmsvv-mega-stage3-draft',version:1,battleReady:false,approved:reviewed,draft:{},sources:{}};
+ for(let [k,c] of Object.entries(edits))project.draft[k]=c.toDataURL('image/png');
+ for(let [k,img] of Object.entries(sources)){let c=document.createElement('canvas');c.width=c.height=384;c.getContext('2d').drawImage(img,0,0);project.sources[k]=c.toDataURL('image/png')}
+ download(new Blob([JSON.stringify(project)],{type:'application/json'}),'QA-Mega-8dir-project.json')
+};
+$('importJson').onchange=async e=>{let f=e.target.files?.[0];if(!f)return;let data;try{data=JSON.parse(await f.text())}catch{alert('JSON lỗi');return}
+ if(data.format!=='pkmsvv-mega-stage3-draft'||data.version!==1){alert('Sai định dạng dự án');return}
+ edits={};reviewed={};sources={};const jobs=[];
+ for(let [k,v] of Object.entries(data.draft||{}).slice(0,2000))jobs.push(new Promise(ok=>{let image=new Image();image.onload=()=>{let c=blank();c.getContext('2d').drawImage(image,0,0);edits[k]=c;ok()};image.onerror=ok;image.src=v}));
+ for(let [k,v] of Object.entries(data.sources||{}))jobs.push(new Promise(ok=>{let image=new Image();image.onload=()=>{sources[k]=image;ok()};image.onerror=ok;image.src=v}));
+ await Promise.all(jobs);for(let [k,v] of Object.entries(data.approved||{}))if(v&&edits[k])reviewed[k]=true;render()
+};
+render();
+</script></body></html>
