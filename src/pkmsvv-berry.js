@@ -32,7 +32,7 @@ G.PKMSVVBerry=(()=>{
  function count(id){return cap(data()?.bag?.[id]);}
  function grant(id,n=1){
   const d=data();if(!d||!byId[id])return false;
-  d.bag[id]=cap(d.bag[id]+n);save();return true;
+  d.bag[id]=cap((Number(d.bag[id])||0)+n);save();return true;
  }
  function chapterProgress(){return TYPES.filter(t=>data()?.used[t.id]).length;}
  function markUsed(ids){
@@ -49,7 +49,7 @@ G.PKMSVVBerry=(()=>{
   const t=byId[id],d=data(),s=G.DB?.save;
   if(!t||!d||!s||!t.price)return false;
   if((Number(s.coins)||0)<t.price){G.UI?.toast?.(tr('Thiếu xu!','Not enough coins!'),1600);return false;}
-  s.coins-=t.price;d.bag[id]=cap(d.bag[id]+1);save();G.UI?.refreshCoins?.();
+  s.coins-=t.price;d.bag[id]=cap((Number(d.bag[id])||0)+1);save();G.UI?.refreshCoins?.();
   G.UI?.toast?.('🍓 '+t.name+' Berry +1',1300);renderBag();return true;
  }
  function clearModal(){for(const el of modals){el.remove?.();}modals=[];}
