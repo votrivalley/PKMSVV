@@ -48,3 +48,17 @@ Các tranh phải đồng bộ về phong cách với `eyes.webp`, `gate.webp`, 
 5. `scripts/patch-story.cjs` sẽ đóng gói ảnh vào `assets/story/` khi build Web, PC, Android. Các ảnh Chương 3 cũng được xử lý trong patch v1.5.
 
 **Không xóa save người chơi; không thay dữ liệu lưu hay Firebase chỉ để cập nhật hình.** Khi thiếu hình mới, trò chơi tạm dùng ảnh dự phòng `gate.webp`.
+
+## Chương 6 — Bí Mật Berry
+
+Hai ảnh riêng, không ghi đè hai ảnh Arena hiện có (`chapter6-arena.webp`, `chapter6-champion.webp`):
+
+| Tên file chính xác | Nội dung | Vị trí thoại |
+| --- | --- | --- |
+| `chapter6-berry-grove.webp` | Vườn Berry bị lãng quên, các quả Berry tỏa sáng giữa rừng ký ức | Nửa đầu Chương 6 |
+| `chapter6-berry-rescue.webp` | Khoảnh khắc cứu những quả Berry khỏi bóng tối | Nửa cuối Chương 6 |
+
+Cùng chuẩn tranh trước: **16:9, 1280×720, WebP 80–85, không chữ, không khung UI, không có người**.
+Upload vào nhánh `feature/lan-local-beta`, thư mục `src/story-art/`.
+Khi chưa có hai ảnh, bản PC dùng tạm tranh Chương 3 để không hiện khung ảnh lỗi.
+Sau khi upload ảnh cần build PC Fast Start lại để đóng gói ảnh mới vào EXE.
