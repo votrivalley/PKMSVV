@@ -83,7 +83,7 @@ patch('js/game.js',
  ].join('\n'));
 patch('js/game.js',
  '    levelStart(level) {\n      // (Si tenías abierta la elección de objeto, vuelve al terminar: afterLevelUp.)',
- '    levelStart(level) {\n      if(pkmsvvCompetitive()){\n        if(pl?.dead){individualLevelQueue.length=0;individualLevelOpen=false;document.body?.classList?.remove?.('pkmsvv-competitive-pick');G.RunUI.closeLevelUp();return;}\n        individualLevelQueue.push(level);pkmsvvNextPersonalLevel();return;\n      }\n      // (Si tenías abierta la elección de objeto, vuelve al terminar: afterLevelUp.)');
+ '    levelStart(level) {\n      if(pkmsvvCompetitive()){\n        if(pl?.dead){individualLevelQueue.length=0;individualLevelOpen=false;document.body?.classList?.remove?.(\'pkmsvv-competitive-pick\');G.RunUI.closeLevelUp();return;}\n        individualLevelQueue.push(level);pkmsvvNextPersonalLevel();return;\n      }\n      // (Si tenías abierta la elección de objeto, vuelve al terminar: afterLevelUp.)');
 patch('js/game.js',
  '    resume() {\n      G.RunUI.closeLevelUp();',
  '    resume() {\n      if(pkmsvvCompetitive())return; // never cancel an independent pick\n      G.RunUI.closeLevelUp();');
