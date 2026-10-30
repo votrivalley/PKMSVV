@@ -197,3 +197,29 @@ test('Phase 3 never double-ticks the independent Mega Lucario BETA timer',()=>{
  lib.tick(pl,5);
  assert.equal(pl._megaRemaining,25,'separate Lucario BETA module owns its timer');
 });
+
+test('QA4 preview never grants permanent unlocks and remains isolated to imported private art',()=>{
+ const {lib,G,s,pl,forms}=setup();
+ const f=forms.find(x=>x.key==='dragonitemega');
+ assert.ok(f);s.owned={};s.megaStones={};s.pkmsvvChapter7Seen=false;
+ assert.equal(lib.isUnlocked(f),false);
+ f.artReady=true;f.qa4dir=true;
+ G.SPRITE_META[f.spriteId]={a:{Idle:{}},sh:true,sa:{Idle:{}}};
+ G.PKMSVV_MEGA_4DIR_QA={enabled:false,forms:[f.key]};
+ assert.equal(lib.isUnlocked(f),false,'disabled flag cannot bypass gates');
+ G.PKMSVV_MEGA_4DIR_QA.enabled=true;
+ assert.equal(lib.privateQaPreview(f),true);
+ assert.equal(lib.isUnlocked(f),true,'visible only with authenticated isolated PC QA flag');
+ assert.equal(lib.isBattleReady(f),true,'QA sprite can be tested without story flags');
+ pl.dex=f.dex;
+ assert.equal(lib.eligible(),true,'PC QA can test when energy reaches 100%');
+ assert.equal(lib.activate(pl),true,'PC QA Mega transformation starts');
+ lib.tick(pl,30);
+ assert.equal(pl._megaCooldownRemaining,200);
+ assert.equal(s.pkmsvvChapter7Seen,false);
+ assert.equal(s.owned[f.dex],undefined);
+ assert.equal(s.megaStones[f.stoneKey],undefined,'QA never grants a permanent stone');
+ G.PKMSVV_MEGA_4DIR_QA.enabled=false;
+ assert.equal(lib.privateQaPreview(f),false);
+ assert.equal(lib.isUnlocked(f),false,'ordinary release keeps story and stone gates');
+});
