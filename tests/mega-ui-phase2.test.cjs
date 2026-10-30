@@ -51,18 +51,22 @@ function fake(){
  const g={SPRITE_META:{},I18n:{lang:'vi'},DB:{save:{megaStones:{},pkmsvvChapter7Seen:true}},
   PKMSVVSupportCatalog:{ensure(){}},PKMSVVUpgradeChooser:{open(){return 17;}}};
  vm.runInNewContext(read('vendor/pokesurvivor/js/data/pkmsvv-mega-catalog.js'),{G:g});
+ // Fake the 36 audited PC candidate sprites, never unreleased future forms.
+ for(const f of g.PKMSVV_MEGA_CATALOG)if(f.artReady)
+  g.SPRITE_META[f.spriteId]={a:{Idle:{}},sh:true,sa:{Idle:{}}};
  let spriteCount=0,draws=[];
  g.UI={spriteCanvas:(dex,w,h,o)=>{spriteCount++;draws.push({dex,opts:o});return node('canvas');}};
  vm.runInNewContext(read('src/pkmsvv-mega-entry.js'),{G:g,document});
  return {g,header,events,get:id=>elements.get(id),draws,drawCount:()=>spriteCount};
 }
-test('96-form Mega UI paginates 12 sprites, hides locked identities, and does not edit save',()=>{
+test('Mega UI paginates only real local sprites, hides locked identities, and does not edit save',()=>{
  const h=fake(),ui=h.g.PKMSVVMegaEntry,before=JSON.stringify(h.g.DB.save);
  assert.deepEqual(h.header.children.map(x=>x.id),['pkmsvv-upgrade-title','pkmsvv-support-entry','pkmsvv-mega-entry','pkmsvv-upgrade-back']);
  assert.equal(ui.open(),true);
  assert.equal(h.get('pkmsvv-mega-grid').children.length,12);
- assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 0/96');
- assert.equal(h.get('pkmsvv-mega-page').textContent,'Trang 1/8');
+ assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 0/36 · Có sprite');
+ assert.equal(h.get('pkmsvv-mega-page').textContent,'Trang 1/3');
+ assert.equal(ui.available().length,36,'60 unreleased forms stay hidden');
  assert.equal(h.get('pkmsvv-mega-grid').children[0].children[1].textContent,'???');
  assert.equal(h.get('pkmsvv-mega-detail').children[0].textContent,'???');
  assert.ok(h.drawCount()<=13,'too many live canvases on page');
@@ -90,10 +94,12 @@ test('Only real stone/form/story conditions unlock Mega; BETA does not count',()
  assert.equal(lib.isUnlocked(ray),false);
  h.g.DB.save.megaStoryCleared.rayquazamega=true;
  assert.equal(lib.isUnlocked(ray),true);
- lib.open();assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 3/96');
+ lib.open();assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 2/36 · Có sprite');
  h.g.DB.save.megaStones.venusaurite=1;
- lib.render();assert.equal(h.get('pkmsvv-mega-grid').children[0].children[1].textContent,'Mega Venusaur');
- assert.ok(h.get('pkmsvv-mega-detail').children.some(x=>x.className==='pkmsvv-mega-stats'));
+ lib.render();
+ assert.equal(lib.isUnlocked(list.find(f=>f.key==='venusaurmega')),true);
+ assert.equal(lib.available().some(f=>f.key==='venusaurmega'),false,'unreleased Venusaur stays hidden despite unlocked save');
+ assert.ok(h.get('pkmsvv-mega-grid').children.length>0);
 });
 test('UI has no save mutator, no remote image fetch, and retains Phase 1 colors',()=>{
  const ui=read('src/pkmsvv-mega-entry.js'),patch=read('scripts/patch-ui-phase2-mega.cjs');
@@ -117,7 +123,7 @@ test('Normal/Shiny tabs reveal authentic Shiny only after real ownership and Meg
  h.get('pkmsvv-mega-tab-shiny').click();
  assert.equal(ui.variant,'shiny');
  assert.equal(h.get('pkmsvv-mega-tab-shiny').attributes['aria-pressed'],'true');
- assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 1/96');
+ assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 1/36 · Có sprite');
  const filter=h.get('pkmsvv-mega-roster').querySelector('[data-mega-filter="unlocked"]');
  filter.click();
  assert.equal(h.get('pkmsvv-mega-grid').children.length,1);
@@ -126,17 +132,19 @@ test('Normal/Shiny tabs reveal authentic Shiny only after real ownership and Meg
  assert.equal(JSON.stringify(h.g.DB.save),saveBefore,'Shiny UI is read-only');
  delete h.g.DB.save.shiny[448];
  ui.render();
- assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 0/96');
- assert.equal(h.get('pkmsvv-mega-grid').children.length,0);
+ assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 0/36 · Có sprite');
+ assert.equal(h.get('pkmsvv-mega-grid').children.length,1,'empty text replaces missing cards');
+ assert.equal(h.get('pkmsvv-mega-grid').children[0].className,'pkmsvv-mega-empty');
  assert.equal(ui.isUnlocked(lucario),true,'normal Mega unlock survives Shiny filtering');
  h.g.DB.save.shiny[448]={at:2};
  h.g.SPRITE_META[10448].sh=false;
  ui.render();
- assert.equal(h.get('pkmsvv-mega-grid').children.length,1);
- assert.ok(h.get('pkmsvv-mega-detail').children.some(x=>x.textContent==='Chưa có sprite Shiny Mega chuẩn'));
+ assert.equal(h.get('pkmsvv-mega-grid').children.length,1,'missing Shiny art produces text, no card');
+ assert.equal(h.get('pkmsvv-mega-grid').children[0].className,'pkmsvv-mega-empty');
+ assert.equal(ui.available().some(f=>f.key==='lucariomega'),false,'Lucario missing Shiny sprite is hidden');
  h.get('pkmsvv-mega-tab-normal').click();
  assert.equal(ui.variant,'normal');
- assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 1/96');
+ assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 1/36 · Có sprite');
 });
 
 test('All 96 Mega identities remain ??? before Chapter 7 regardless of stone ownership',()=>{
@@ -144,32 +152,59 @@ test('All 96 Mega identities remain ??? before Chapter 7 regardless of stone own
  h.g.DB.save.megaStones.lucarionite=1;
  h.g.DB.save.pkmsvvChapter7Seen=false;
  lib.open();
- assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 0/96');
+ assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 0/36 · Có sprite');
  assert.equal(lib.isUnlocked(h.g.PKMSVV_MEGA_CATALOG.find(f=>f.key==='lucariomega')),false);
 });
 
 
-test('full-save Mega Dragonite remains visibly unlocked without public battle sprite',()=>{
+test('full-save Mega Dragonite is hidden until its private PC QA sprite is imported',()=>{
  const h=fake(),ui=h.g.PKMSVVMegaEntry,save=h.g.DB.save;
  const dragonite=h.g.PKMSVV_MEGA_CATALOG.find(f=>f.key==='dragonitemega');
- assert.ok(dragonite,'Dragonite belongs to 96-form catalog');
+ assert.ok(dragonite,'Dragonite belongs to original 96-form catalog');
  assert.equal(dragonite.dex,149);
- assert.equal(dragonite.artReady,false,'public build must not pretend to have private QA art');
+ assert.equal(dragonite.artReady,false,'public build lacks private QA art');
  save.owned={149:{at:1,from:'qa'}};
  save.megaStones.dragoninite=1;
  save.pkmsvvChapter3Seen=true;
  save.pkmsvvChapter7Seen=true;
  save.megaForms={dragonitemega:true};
  save.megaStoryCleared={dragonitemega:true};
- assert.equal(ui.isUnlocked(dragonite),true);
+ const original=JSON.stringify(save);
+ assert.equal(ui.isUnlocked(dragonite),true,'full save was already unlocked');
  ui.open();
  h.get('pkmsvv-mega-roster').querySelector('[data-mega-filter="unlocked"]').click();
- assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 1/96');
+ assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 0/36 · Có sprite');
+ assert.equal(ui.available().some(f=>f.key==='dragonitemega'),false,'no blank Dragonite cell in normal build');
+ assert.equal(h.get('pkmsvv-mega-grid').children[0].className,'pkmsvv-mega-empty');
+ // Mimic actual QA build importer after validating eight original PA2.1 sheets.
+ dragonite.artReady=true;dragonite.qa4dir=true;
+ h.g.PKMSVV_MEGA_4DIR_QA={enabled:true,forms:['dragonitemega']};
+ h.g.SPRITE_META[dragonite.spriteId]={a:{Idle:{}},sh:true,sa:{Idle:{}}};
+ ui.render();
+ assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 1/37 · Có sprite');
+ assert.equal(ui.available().some(f=>f.key==='dragonitemega'),true);
  const cards=h.get('pkmsvv-mega-grid').children;
  assert.equal(cards.length,1);
- const card=cards[0];
- assert.match(card.className,/is-pending-art/);
- assert.equal(card.children.at(-2).textContent,'Mega Dragonite');
- assert.equal(card.children.at(-1).textContent,'Đã mở · Chờ sprite');
- assert.ok(h.get('pkmsvv-mega-detail').children.some(x=>String(x.textContent).includes('Đã mở khóa · Chờ sprite Mega chuẩn')));
+ assert.equal(cards[0].children.at(-2).textContent,'Mega Dragonite');
+ assert.equal(cards[0].children.at(-1).textContent,'Đã mở');
+ assert.equal(cards[0].className.includes('is-pending-art'),false);
+ assert.equal(JSON.stringify(save),original,'sprite visibility never changes the QA save');
+});
+test('four imported PC QA Mega forms are visible and unimported ones do not occupy cells',()=>{
+ const h=fake(),ui=h.g.PKMSVVMegaEntry;
+ const names=['dragonitemega','scizormega','swampertmega','garchompmega'];
+ for(const name of names){
+  const f=h.g.PKMSVV_MEGA_CATALOG.find(x=>x.key===name);
+  assert.equal(f.artReady,false);
+  f.artReady=true;f.qa4dir=true;
+  h.g.SPRITE_META[f.spriteId]={a:{Idle:{}},sh:true,sa:{Idle:{}}};
+ }
+ h.g.PKMSVV_MEGA_4DIR_QA={enabled:true,forms:names};
+ ui.open();
+ assert.equal(ui.available().length,40,'36 PC candidate sprites plus 4 QA-only previews');
+ assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 0/40 · Có sprite');
+ const keys=ui.available().map(f=>f.key);
+ for(const name of names)assert.ok(keys.includes(name));
+ assert.equal(keys.includes('venusaurmega'),false);
+ assert.equal(h.get('pkmsvv-mega-page').textContent,'Trang 1/4');
 });
