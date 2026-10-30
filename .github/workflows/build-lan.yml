@@ -106,6 +106,8 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Validate LAN server, room security and relay
         run: npm run test:lan && node --test tests/lan-startup.test.cjs tests/lan-discovery.test.cjs tests/lan-ai-modes.test.cjs tests/lan-browser-host.test.cjs tests/lan-compact-ui.test.cjs tests/lan-direct-entry.test.cjs tests/local-shell-ui.test.cjs tests/local-ui-lan-host-regression.test.cjs tests/coop-icon-consistency.test.cjs tests/unified-coop.test.cjs
+      - name: Validate translucent upgrades, support, Mega and opt-in 4-dir PC loader
+        run: node --test tests/mega-4dir-pc-qa.test.cjs
       - name: Compile LAN game without Firebase
         run: npm run prepare:lan
         env:
