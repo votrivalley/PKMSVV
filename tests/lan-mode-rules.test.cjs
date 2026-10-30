@@ -61,7 +61,9 @@ test('Co-op and Royale support mini HP bars reflect actual Host damage and synch
   assert.ok(n,mode+' should create an eligible support nest');
   player.x=n.x;player.y=n.y;h.step(.01,t+.1);
   const pet=h.G.EggRush.pets[0];
-  assert.ok(pet.maxHp>=50&&pet.maxHp<=80,'real support health 50–80% of trainer');
+  // Shiny supports deliberately have 100% trainer HP; normal supports have 50–80%.
+  if(pet.shiny)assert.equal(pet.maxHp,100,'Shiny support uses trainer-equivalent HP');
+  else assert.ok(pet.maxHp>=50&&pet.maxHp<=80,'normal support health 50–80% of trainer');
   h.G.EggRush.onEvent(['er','hatch',pet.id]);
   const damage={get x(){return pet.x},get y(){return pet.y},r:12,dmg:60,dead:false,remote:false};
   h.G.EnemyMgr.all=()=>[damage];
