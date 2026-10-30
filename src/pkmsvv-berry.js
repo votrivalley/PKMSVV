@@ -116,8 +116,14 @@ G.PKMSVVBerry=(()=>{
   return true;
  }
  function apply(pl,ids,mode){
-  // Reset is per duel/run and never changes the permanent inventory twice.
+  // Reset old Berry multipliers on rematch, preventing permanent buffs/stacking.
   if(!pl)return;
+  const old=pl._pkmsvvBerry;
+  if(old){
+   pl.atkMul=(pl.atkMul||1)/(old.atkK||1);
+   pl.spdMul=(pl.spdMul||1)/(old.spdK||1);
+   pl.cdMul=(pl.cdMul||1)/(old.cdK||1);
+  }
   pl._pkmsvvBerry={ids,mode,elapsed:0,once:{},atkK:1,spdK:1,cdK:1,powerUntil:0,lumUntil:0};
   if(ids.includes('starf'))pl._pkmsvvBerry.starf=['liechi','salac','ganlon','leppa'][Math.floor(Math.random()*4)];
   G.UI?.toast?.(tr('🍓 Berry kích hoạt: ','🍓 Active Berries: ')+ids.map(id=>byId[id]?.name).join(' + '),2200);
@@ -171,10 +177,10 @@ G.PKMSVVBerry=(()=>{
  function tick(pl,dt){
   const b=pl._pkmsvvBerry;if(!b||pl.dead)return;
   b.elapsed+=Math.max(0,dt);
+  if(G.Coop?.active&&(G.Royale?.active||G.EggRush?.active)||G.PKMSVVChampionArena?.stage==='fight')
+   b.mode='pvp';
   const run=t=>b.ids.includes(t)||b.starf===t;
   const pct=Math.max(0,1-b.elapsed/90);
-  const amount=(type)=>b.ids.includes(type)?.30:0;
-  const star=type=>b.starf===type?.25:0;
   ratio(pl,'atkK',1+(run('liechi')? (b.ids.includes('liechi')?.30*pct:.25*(b.elapsed<60)):0)+(b.powerUntil>b.elapsed?.5:0));
   ratio(pl,'spdK',1+(run('salac')?(b.ids.includes('salac')?.30*pct:.25*(b.elapsed<60)):0));
   ratio(pl,'cdK',1-(run('leppa')&&b.elapsed<(b.ids.includes('leppa')?45:60)?(b.ids.includes('leppa')?.20:.25):0));
@@ -185,7 +191,7 @@ G.PKMSVVBerry=(()=>{
  function hurt(pl,original,args){
   const b=pl._pkmsvvBerry;
   if(!b||pl.remote||pl.dead)return original.apply(pl,args);
-  let amount=args[0],mit=0;
+  const amount=args[0];
   const armor=b.ids.includes('ganlon')?.30*Math.max(0,1-b.elapsed/90):b.starf==='ganlon'&&b.elapsed<60?.25:0;
   if(armor>0&&Number.isFinite(amount))args[0]=amount*(1-armor);
   const was=pl.hp;original.apply(pl,args);
