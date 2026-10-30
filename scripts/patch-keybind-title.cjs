@@ -13,7 +13,7 @@ const spec=Object.entries(defs).map(([id,key])=>({id,key}));
 patch('js/core/input.js',
  "  const MOVE_KEYS = {\n    up: ['keyw', 'arrowup'], down: ['keys', 'arrowdown'],\n    left: ['keya', 'arrowleft'], right: ['keyd', 'arrowright']\n  };",
  "  const DEFAULT_KEYS = "+JSON.stringify(defs)+";\n"+
- "  const bound=id=>{const cur=G.Settings.get('keys')||{};if(cur.orb==='digit5'&&cur.mega==='digit4'){if(id==='orb')return 'digit4';if(id==='mega')return 'digit5';}return cur[id]||DEFAULT_KEYS[id];};\n"+
+ "  const bound=id=>{const cur=G.Settings.get('keys')||{};if(cur.orb==='digit5'&&(cur.mega===undefined||cur.mega==='digit4')){if(id==='orb')return 'digit4';if(id==='mega')return 'digit5';}return cur[id]||DEFAULT_KEYS[id];};\n"+
  "  const MOVE_KEYS={up:['arrowup'],down:['arrowdown'],left:['arrowleft'],right:['arrowright']};\n"+
  "  const virtualPressed=new Set();\n"+
  "  const activeTextInput=()=>{const a=document.activeElement;return a&&(a.matches('input,textarea,select,[contenteditable=\"true\"]'));};");
