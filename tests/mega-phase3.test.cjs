@@ -40,7 +40,8 @@ function setup(){
  vm.runInNewContext(read('src/pkmsvv-mega-phase3.js'),context);
  pl={dex:6,dead:false,shiny:false,anim:new Animator(6,1,false),scale:1,r:18,bodyH:36,
   mon:{dex:6,pa:1.16,sa:1.30,atk:1.30,df:78,sd:85,spd:120,types:['fire','flying']},
-  baseAtk:1.30,baseSpd:120,cdMul:1,moves:[{t:10}],x:0,y:0};
+  baseAtk:1.30,baseSpd:120,cdMul:1,moves:[{t:10}],x:0,y:0,
+  kills:0,bosses:0,_megaEnergy:100};
  return {G,s,pl,lib:G.PKMSVVMegaPhase3,forms,
   coop:v=>{coop=v},state:v=>{active=v}};
 }
@@ -50,7 +51,8 @@ test('10 regional Champions remain fixed and never mark a tournament victory',()
  assert.deepEqual(Array.from(lib.CHAMPIONS,c=>c.region),[
   'Kanto','Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar','Paldea','Votri Valley']);
  assert.equal(lib.STONE_CHANCE,.01);
- assert.equal(lib.DURATION,30);assert.equal(lib.CD_FACTOR,.7);
+ assert.equal(lib.DURATION,30);assert.equal(lib.REUSE_COOLDOWN,200);
+ assert.equal(lib.ENERGY_MAX,100);assert.equal(lib.CD_FACTOR,.7);
  assert.equal(s.megaChampions,undefined);
 });
 test('only paid successful Gacha pulls can receive 1% bonus and duplicates are skipped',()=>{
@@ -102,7 +104,13 @@ test('authentic Mega Charizard X uses individual original stat ratios and revert
  assert.strictEqual(pl.mon,original);
  assert.equal(pl.baseSpd,120);
  assert.ok(Math.abs(pl.cdMul-1)<1e-9);
- assert.equal(lib.eligible(),false,'Mega used once per run');
+ assert.equal(lib.eligible(),false,'200s cooldown begins after form expires');
+ assert.equal(pl._megaCooldownRemaining,200);
+ lib.addEnergy(pl,100);
+ lib.tick(pl,199);assert.equal(pl._megaCooldownRemaining,1);
+ assert.equal(lib.eligible(),false,'even full energy cannot bypass cooldown');
+ lib.tick(pl,1);assert.equal(pl._megaCooldownRemaining,0);
+ assert.equal(lib.eligible(),true,'Mega can be reused after 200s if energy is full');
  coop(true);assert.equal(lib.eligible(),false);
  assert.equal(lib.activate(pl),false,'no LAN Mega without host replication');
 });
@@ -147,4 +155,38 @@ test('Phase 3 cannot activate normal or Shiny Mega before Chapter 7 even with th
  assert.equal(lib.progress(forms[0]).story,false);
  s.pkmsvvChapter7Seen=true;
  assert.equal(lib.eligible(),true);
+});
+
+test('solo Mega energy gains from actual hits, credited kills and boss defeats',()=>{
+ const {lib,pl,coop,state}=setup();
+ pl._megaEnergy=0;
+ assert.equal(lib.eligible(),false,'fresh run needs 100 energy');
+ const enemy={dead:false,remote:false,arceus:false};
+ lib.onEnemyHurt(enemy,10);
+ assert.equal(pl._megaEnergy,1);
+ lib.onEnemyHurt({...enemy,remote:true},50);
+ lib.onEnemyHurt({...enemy,arceus:true},50);
+ lib.onEnemyHurt({...enemy,dead:true},50);
+ lib.onEnemyHurt(enemy,0);
+ assert.equal(pl._megaEnergy,1,'remote/invincible/dead/zero hits never charge');
+ pl.kills=2;pl.bosses=1;lib.tick(pl,.1);
+ assert.equal(pl._megaEnergy,8,'1 hit + 2x2 kills + 3 boss = 8');
+ lib.tick(pl,.1);assert.equal(pl._megaEnergy,8,'counters do not double-credit');
+ lib.addEnergy(pl,10000);assert.equal(pl._megaEnergy,100,'energy caps at 100');
+ assert.equal(lib.activate(pl),true);
+ assert.equal(pl._megaEnergy,0,'activation consumes full energy');
+ lib.onEnemyHurt(enemy,10);assert.equal(pl._megaEnergy,0,'cannot recharge while Mega active');
+ lib.tick(pl,30);assert.equal(pl._megaCooldownRemaining,200);
+ pl.kills=3;lib.tick(pl,1);assert.equal(pl._megaEnergy,2,'can charge during cooldown');
+ assert.equal(lib.eligible(),false,'charged energy still respects cooldown');
+ coop(true);lib.onEnemyHurt(enemy,10);assert.equal(pl._megaEnergy,2,'no multiplayer charge');
+ coop(false);state('ui');lib.onEnemyHurt(enemy,10);assert.equal(pl._megaEnergy,2,'no menu charge');
+});
+test('phase3 build pipeline wires real Enemy.hurt hit credit and does not write save currency',()=>{
+ const patcher=read('scripts/patch-ui-phase3-mega.cjs');
+ assert.match(patcher,/onEnemyHurt/);
+ assert.match(patcher,/js\/entities\/enemy\.js/);
+ const source=read('src/pkmsvv-mega-phase3.js');
+ assert.match(source,/REUSE_COOLDOWN=200/);
+ assert.doesNotMatch(source,/G\.DB\.commit\(|megaStones\[.*\]=\s*100/);
 });
