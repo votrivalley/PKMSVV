@@ -178,7 +178,7 @@ G.PKMSVVMegaPhase3=(()=>{
   if(button||!document.body)return;
   button=document.createElement('button');
   button.id='pkmsvv-mega-champion-btn';button.type='button';
-  button.className='pkmsvv-mega-btn';button.title='Tiến hóa Mega · Phím M';
+  button.className='pkmsvv-mega-btn';button.title='Tiến hóa Mega · Phím 4';
   button.style.display='none';
   button.innerHTML='<span class="pkmsvv-mega-champion-gem">✧</span><span class="pkmsvv-mega-btn__label">MEGA</span>';
   button.addEventListener('click',event=>{
@@ -191,6 +191,7 @@ G.PKMSVVMegaPhase3=(()=>{
   const p=player(),f=formFor(p);
   const visible=!!(p&&f&&!p.dead&&!G.Coop?.active&&G.Game?.state==='playing'&&
    isBattleReady(f));
+  document.body?.classList?.toggle?.('pkmsvv-mega-gamepad',!!G.Pad?.name);
   button.style.display=visible?'flex':'none';
   if(!visible)return;
   const cooldown=Math.max(0,Math.ceil(p._megaCooldownRemaining||0));
@@ -202,7 +203,7 @@ G.PKMSVVMegaPhase3=(()=>{
    cooldown>0?cooldown+'s':charge<ENERGY_MAX?charge+'%':'MEGA';
   button.title=p._megaActive?'Mega: '+Math.ceil(p._megaRemaining)+' giây':
    cooldown>0?'Mega hồi '+cooldown+' giây · Năng lượng '+charge+'%':
-   charge<ENERGY_MAX?'Năng lượng Mega '+charge+'% / 100% · Đánh trúng và hạ quái để tích':'Mega đã sẵn sàng · Phím M';
+   charge<ENERGY_MAX?'Năng lượng Mega '+charge+'% / 100% · Đánh trúng và hạ quái để tích':'Mega đã sẵn sàng · Phím 4';
   button.setAttribute?.('aria-label',button.title);
  }
  // Called from the pinned enemy.hurt patch; never credit invulnerable,
@@ -213,7 +214,10 @@ G.PKMSVVMegaPhase3=(()=>{
  }
  const update=G.Player?.prototype?.update;
  if(typeof update==='function')G.Player.prototype.update=function(dt){
-  if(this===player())tick(this,dt);
+  if(this===player()){
+   tick(this,dt);
+   if((G.Input?.tap?.('digit4')||G.Input?.tap?.('pkmsvv-mega'))&&eligible())tryActivate();
+  }
   return update.call(this,dt);
  };
  for(const action of ['startRun','toUI','quit']){
@@ -222,11 +226,7 @@ G.PKMSVVMegaPhase3=(()=>{
    stop(player());const result=original.apply(this,args);sync();return result;
   };
  }
- document.addEventListener('keydown',event=>{
-  if(event.repeat||event.ctrlKey||event.altKey||event.metaKey||event.key?.toLowerCase()!=='m')return;
-  if(event.target&&/INPUT|TEXTAREA|SELECT/.test(event.target.tagName||''))return;
-  if(eligible()){event.preventDefault();tryActivate();}
- });
+ // Unified G.Input handles remappable keyboard 4 and controller Mega; touch uses on-screen button.
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});
  else mount();
  setInterval(sync,250);
