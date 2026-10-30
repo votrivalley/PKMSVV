@@ -634,6 +634,10 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-ui-phase1-mega
 execFileSync(process.execPath,[path.join(project,'scripts','patch-ui-phase2-mega.cjs')],{cwd:project,stdio:'inherit'});
 // Phase 3: Champion Mega Stone draws and validated solo Mega transitions.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-ui-phase3-mega.cjs')],{cwd:project,stdio:'inherit'});
+// Optional four-direction Mega prototype for manual Windows PC QA ONLY.
+// Normal PC/Web/Android builds never read or package third-party private art.
+if(process.env.PKMSVV_MEGA_4DIR_PC_QA==='1')
+ execFileSync(process.execPath,[path.join(project,'scripts','patch-mega-4dir-pc-qa.cjs')],{cwd:project,stdio:'inherit'});
 // Solo Crown Arena: 16-entry bracket, Champion duel, chapter-6 gate and real rewards.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-champion-arena.cjs')],{cwd:project,stdio:'inherit'});
 // Only Switch/Brewser: tolerate absent DOMContentLoaded and a stalled pixel-font Promise.
