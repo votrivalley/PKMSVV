@@ -236,14 +236,16 @@ G.PKMSVVChampionArena=(()=>{
   return true;
  }
  function launch(championOnly=false){
-  if(active||!G.PKMSVVStory?.arenaUnlocked?.()||G.Coop?.active||!regionUnlocked(region))return false;
+  if(active||!G.PKMSVVStory?.arenaUnlocked?.()||G.Coop?.active)return false;
+  if(mode==='story'&&!regionUnlocked(region)||mode==='league'&&!storyCompleted())return false;
   paid=false;round=0;elapsed=0;opp=null;target=null;semiLosers=[];lastPodium=null;
   bracket=makeBracket();
+  duelType=mode==='story'?REGION_THEMES[region]:(mapChoice==='random'?REGION_THEMES[Math.floor(rand()*REGION_THEMES.length)]:REGION_THEMES[Math.max(0,Math.min(9,Number(mapChoice)||0))]);
   active=true;stage='prep';
   G.Game.startRun(null);
-  const zoneType=REGION_THEMES[region];
+  const zoneType=mode==='league'?'normal':duelType;
   G.World?.setArena?.({tx:0,ty:0,r:22,type:zoneType});
-  if(G.Tiles?.arenaBiome)G.World?.setBiome?.(G.Tiles.arenaBiome(zoneType),true);
+  if(G.Tiles?.arenaBiome)G.World?.setBiome?.(G.Tiles.arenaBiome(duelType),true);
   const bar=$('pkmsvv-champion-hud')||document.createElement('div');
   bar.id='pkmsvv-champion-hud';bar.className='pkmsvv-champion-hud';
   document.body.append(bar);bar.hidden=false;
@@ -276,6 +278,11 @@ G.PKMSVVChampionArena=(()=>{
   const save=G.DB?.save;if(!save)return;
   const book=ledger(save);const name=REGIONS[region][0];
   const tickets=rank===1?10:rank===2?6:rank===3?3:0;
+  if(mode==='league'){
+   const points=G.PKMSVVMegaGacha?.grantTournament?.(save,'League',rank,false)||0;
+   if(points)G.UI?.toast?.('✦ +'+points+' Điểm Arena · Giải Champion');
+   G.DB.commit(true);return;
+  }
   if(book.seals[name]===true)return; // No PokéCoins, tickets or Arena Points on story replay.
   // One actual tournament finish, no grant for lobby/start/abandon.
   const arenaEarned=G.PKMSVVMegaGacha?.grantTournament?.(
@@ -321,21 +328,21 @@ G.PKMSVVChampionArena=(()=>{
     semiLosers.length===2?aiWinner(semiLosers[0],semiLosers[1]):semiLosers[0]].filter(Boolean);
   }
   if(rank)settle(rank,rank===1);
-  if(reason==='seal'){
+  if(reason==='seal'&&mode==='story'){
    const book=ledger(G.DB?.save);
    if(book){book.history.push({region:REGIONS[region][0],dex:G.DB.save.partner,
     wins:4,rank:1,at:new Date().toISOString(),
     podium:lastPodium?.map(p=>({dex:p.dex,name:p.name}))||[]});
     if(book.history.length>75)book.history.shift();G.DB.commit(true);}
   }
-  const label=reason==='seal'?tr('Đăng quang Champion! Nhận cúp và Ấn Chứng Vương Miện.','Champion crowned! Cup and Crown Seal awarded.'):
+  const label=reason==='seal'?(mode==='league'?tr('Hoàn thành Giải Champion!','Champion League complete!'):tr('Đăng quang Champion! Ấn Chứng đã lưu nếu lần đầu thắng.','Champion crowned! First-time Crown Seal recorded.')):
    reason==='title-loss'?tr('Thua Champion, nhưng vẫn giữ cúp vô địch.','Champion defeated you, but your cup is safe.'):
    tr('Kết thúc giải. Hạng ','Tournament over. Rank ')+rank;
   returnToMenu();
   updatePanel();
   $('pkmsvv-champion-progress').textContent=label;
   if(lastPodium)renderPodium(lastPodium);
-  if(reason==='seal'&&G.DB?.save?.pkmsvvChapter7Pending&&
+  if(reason==='seal'&&mode==='story'&&G.DB?.save?.pkmsvvChapter7Pending&&
      !G.DB.save.pkmsvvChapter7Seen){
    panel().hidden=true;
    G.PKMSVVStory?.chapter7?.(()=>G.Flow?.goMenu?.());
@@ -344,8 +351,8 @@ G.PKMSVVChampionArena=(()=>{
  function nextDuel(){
   if(!active||stage!=='prep')return false;
   G.EnemyMgr?.clear?.();G.Pickups?.clear?.();G.Projectiles?.clear?.();G.Hazards?.clear?.();
-  const duelType=REGION_THEMES[region];
-  G.World?.setArena?.({tx:0,ty:0,r:20,type:duelType});
+  const surfaceType=mode==='league'?'normal':duelType;
+  G.World?.setArena?.({tx:0,ty:0,r:20,type:surfaceType});
   if(G.Tiles?.arenaBiome)G.World?.setBiome?.(G.Tiles.arenaBiome(duelType),true);
   const pl=G.Game?.player;if(pl){pl.x=0;pl.y=100;pl.invuln=2;}
   const ready=$('pkmsvv-arena-ready-float');if(ready)ready.hidden=true;
