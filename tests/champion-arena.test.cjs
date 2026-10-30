@@ -61,7 +61,7 @@ test('Champion starts with 3-minute farm and crowns champion after exactly 4 rea
  for(let round=0;round<4;round++){
   assert.equal(lib.round,round);assert.equal(lib.stage,'prep');
   assert.equal(lib.nextDuel(),true);
-  assert.equal(lib.stage,'fight');assert.equal(G.EnemyMgr.last.maxHp,320);
+  assert.equal(lib.stage,'fight');assert.equal(G.EnemyMgr.last.maxHp,320+5*round);
   G.EnemyMgr.last.dead=true;lib.update(.1);
  }
  const book=lib.ledger(save);
@@ -134,6 +134,45 @@ test('Arena preparation doubles mobs and XP but preserves native duel maps',()=>
   assert.ok(mapTypes,'1v1 maps must be selected from engine-owned biomes');
   assert.equal(mapTypes[1].split(',').length,6,'exactly six varied neutral duel arenas');
  }
+});
+test('Story Crown Journey unlocks regions only after previous seals while preserving old wins',()=>{
+ const {lib,save}=setup();
+ assert.equal(lib.regionUnlocked(0),true);
+ assert.equal(lib.regionUnlocked(1),false);
+ assert.equal(lib.regionUnlocked(9),false);
+ save.arenas={pkmChampion:{trophies:{Johto:true},seals:{Johto:true}}};
+ assert.equal(lib.regionUnlocked(1),true,'grandfather genuinely earned Johto seal');
+ assert.equal(lib.regionUnlocked(2),false,'future region still blocked');
+ for(const [name] of lib.REGIONS)save.arenas.pkmChampion.seals[name]=true;
+ assert.equal(lib.storyCompleted(),true);
+});
+test('Bracket randomizes human and includes exactly two strong AI',()=>{
+ const {lib}=setup();
+ const participants=lib.makeBracket(()=>.37);
+ assert.equal(participants.length,16);
+ assert.equal(participants.filter(p=>p.tier==='elite').length,2);
+ assert.equal(participants.filter(p=>p.id==='you').length,1);
+ assert.notEqual(participants[0].id,'you','player position must not be fixed to slot one');
+});
+test('Podium appears only for final results and clears when Arena is reopened',()=>{
+ const {lib,get}=setup();lib.open();
+ lib.renderPodium([{dex:25,name:'Trainer A'}]);
+ assert.equal(get('pkmsvv-champion-podium').hidden,false);
+ lib.open();
+ assert.equal(get('pkmsvv-champion-podium').hidden,true);
+});
+test('League stays locked until all ten seals; AI-only league does not award new story seals',()=>{
+ const {lib,save,G,get}=setup();
+ lib.open();
+ assert.equal(get('pkmsvv-arena-mode-league').disabled,true);
+ const book=lib.ledger(save);for(const [name] of lib.REGIONS)book.seals[name]=true;
+ lib.open();assert.equal(get('pkmsvv-arena-mode-league').disabled,false);
+ get('pkmsvv-arena-mode-league').onclick();
+ assert.equal(lib.start(),true);assert.equal(lib.stage,'prep');
+ const count=Object.values(book.seals).filter(Boolean).length;
+ for(let r=0;r<4;r++){lib.nextDuel();G.EnemyMgr.last.dead=true;lib.update(.1);}
+ assert.equal(Object.values(book.seals).filter(Boolean).length,count);
+ assert.equal(book.history.length,0,'AI-only league must not rewrite earned story titles');
 });
 test('First multiplayer click is never intercepted by story; Chapter 5 accessible from Memories',()=>{
  const runtime=read('src/pkmsvv-champion-arena.js');
