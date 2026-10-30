@@ -223,3 +223,15 @@ test('QA4 preview never grants permanent unlocks and remains isolated to importe
  assert.equal(lib.privateQaPreview(f),false);
  assert.equal(lib.isUnlocked(f),false,'ordinary release keeps story and stone gates');
 });
+
+test('Mega hotkey uses remappable Digit4 or controller action without hard-coded M',()=>{
+ const phase=read('src/pkmsvv-mega-phase3.js'),lucario=read('src/pkmsvv-mega-lucario.js');
+ const keymap=read('scripts/patch-keybind-title.cjs'),pad=read('scripts/patch-v14-gamepad-orbs.cjs');
+ assert.match(keymap,/mega:'digit4'/);
+ assert.match(pad,/orbital\.mega/);
+ for(const source of [phase,lucario]){
+  assert.ok(source.includes("G.Input?.tap?.('digit4')"));
+  assert.ok(source.includes("G.Input?.tap?.('pkmsvv-mega')"));
+  assert.doesNotMatch(source,/event\.key.*!==\s*'m'/);
+ }
+});
