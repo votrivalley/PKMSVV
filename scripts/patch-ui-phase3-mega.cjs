@@ -10,6 +10,11 @@ const anchor='<script defer src="js/ui/pkmsvv-mega-entry.js"></script>';
 patch('dev.html',anchor,anchor+'\n<script defer src="js/ui/pkmsvv-mega-phase3.js"></script>');
 fs.copyFileSync(path.join(root,'src','pkmsvv-mega-phase3.js'),
  path.join(game,'js','ui','pkmsvv-mega-phase3.js'));
+// Credit actual solo combat hits even though Enemy is not exported on G.
+// No damage, hitboxes or multiplayer authority are modified.
+patch('js/entities/enemy.js',
+ "    hurt(amount, color = '#fff', dirX = 0, dirY = 0, knock = 0, eff = null) {\n      if (this.dead) return;",
+ "    hurt(amount, color = '#fff', dirX = 0, dirY = 0, knock = 0, eff = null) {\n      if (this.dead) return;\n      G.PKMSVVMegaPhase3?.onEnemyHurt?.(this, amount);");
 patch('js/core/db.js',
  '      megaStones: {},             // permanent Mega Stone ownership, zero on fresh saves',
  '      megaStones: {},             // permanent Mega Stone ownership, zero on fresh saves\n'+
