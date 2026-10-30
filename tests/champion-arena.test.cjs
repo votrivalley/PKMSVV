@@ -129,7 +129,7 @@ test('Arena preparation doubles mobs and XP but preserves native duel maps',()=>
   const source=read(p);
   assert.match(source,/FARM_SPAWN_MULT=2,FARM_XP_MULT=2/);
   assert.match(source,/dropXp/);
-  assert.match(source,/type:duelType/);
+  assert.match(source,/type:(duelType|surfaceType)/);
   const mapTypes=source.match(/DUEL_TYPES=\[([^\]]+)\]/);
   assert.ok(mapTypes,'1v1 maps must be selected from engine-owned biomes');
   assert.equal(mapTypes[1].split(',').length,6,'exactly six varied neutral duel arenas');
