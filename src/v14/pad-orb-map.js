@@ -131,5 +131,5 @@ G.PKMSVVPadOrb=(()=>{
   observer.observe(parent,{childList:true});
   render();
  }
- return {KEY,DEFAULT,BUTTONS,valid,bindings,describe,mount};
+ return {KEY,DEFAULT,BUTTONS,valid,bindings,describe,keyboardDefaults,keyboardBindings,mount};
 })();
