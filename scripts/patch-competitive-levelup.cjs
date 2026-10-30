@@ -56,7 +56,7 @@ patch('js/net/coop.js',
  '  function localPicked() {\n    if(pkmsvvCompetitive()){doneSeq=seenSeq;return;}\n    if (host) picked(me);');
 patch('js/game.js',
  '    time = 0; pendingLevels = 0;',
- '    time = 0; pendingLevels = 0; individualLevelQueue=[]; individualLevelOpen=false;');
+ '    time = 0; pendingLevels = 0; individualLevelQueue=[]; individualLevelOpen=false;document.body?.classList?.remove?.("pkmsvv-competitive-pick");');
 patch('js/game.js',
  '  const coopApi = {',
  [
