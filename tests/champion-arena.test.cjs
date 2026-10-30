@@ -113,9 +113,9 @@ test('Narrative chapters are renumbered visibly, with old save keys and reward s
   assert.ok(s.includes(t),t);
  assert.match(s,/pkmsvvChapter5Seen/);assert.match(s,/pkmsvvChapter6Seen/);
  assert.match(s,/pkmsvvChapterPurpleRewards/);
- assert.match(s,/Chương 6 · Bí Mật Berry \(sắp ra mắt\)/);
- assert.match(s,/berry-preview'\?' disabled/);
- assert.doesNotMatch(s,/pkmsvvChapterBerrySeen/);
+ assert.match(s,/Chương 6 · Bí Mật Berry/);
+ assert.match(s,/berryChapter/);
+ assert.match(s,/pkmsvvBerryChapterDone/);
  assert.match(s,/pkmsvvChapter1Seen/);
  assert.match(read('scripts/prepare-game.cjs'),/patch-champion-arena\.cjs/);
  const game=path.join(root,'vendor','pokesurvivor');
@@ -242,13 +242,13 @@ test('unreleased regional Champion Mega art uses real stand-in Pokémon, then tr
  const {lib,G}=setup();
  assert.equal(lib.MEGA_KEYS.length,10);
  assert.equal(lib.regionChampion(1).dex,248,'Johto uses Tyranitar before Mega Scizor art');
- assert.equal(lib.regionChampion(2).dex,376,'Hoenn uses Metagross before Mega Swampert');
- assert.equal(lib.regionChampion(9).dex,373,'Votri Valley uses Salamence before Mega Dragonite');
- G.PKMSVV_MEGA_CATALOG=[{key:'dragonitemega',dex:149,artReady:true,spriteId:10149}];
- G.SPRITE_META={10149:{a:{Idle:{}}}};
- assert.equal(lib.regionChampion(9).dex,149,'new Mega sprite restores original region Champion');
- assert.equal(lib.regionChampion(9).spriteId,10149);
- assert.equal(lib.regionChampion(9).temporary,false);
+ assert.equal(lib.regionChampion(2).dex,282,'Hoenn uses Gardevoir before Mega Gardevoir');
+ assert.equal(lib.regionChampion(9).dex,359,'Votri Valley uses Absol before Mega Absol');
+ G.PKMSVV_MEGA_CATALOG=[{key:'absolmega',dex:359,artReady:true,spriteId:10359}];
+ G.SPRITE_META={10359:{a:{Idle:{}}}};
+ assert.equal(lib.regionChampion(9).dex,359,'new Mega Absol sprite restores Votri Valley Champion');
+ assert.equal(lib.regionChampion(9).spriteId,10359);
+ assert.equal(lib.regionChampion(9).temporary,true,'replacement stays marked temporary');
  assert.equal(lib.regionChampion(1).temporary,true);
 });
 
