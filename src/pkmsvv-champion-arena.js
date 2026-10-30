@@ -12,17 +12,21 @@ G.PKMSVVChampionArena=(()=>{
   ['Paldea',998,'Baxcalibur'],['Votri Valley',149,'Dragonite']
  ]);
  // Temporary regional Champion stand-ins; no fake Mega combat sprites.
- const MEGA_KEYS=['charizardmegax','scizormega','swampertmega','garchompmega',
-  'excadrillmega','greninjamega','golisopodmega','falinksmega','baxcaliburmega','dragonitemega'];
+ // Ten distinct regional Megas. Only use the original art when Idle animation
+ // really exists; otherwise the matching natural form is a safe stand-in.
+ const MEGA_KEYS=['charizardmegax','tyranitarmega','gardevoirmega','lucariomega',
+  'excadrillmega','dragalgemega','drampamega','gengarmega','tatsugiricurlymega','absolmega'];
+ const MEGA_NAMES=['Charizard X','Tyranitar','Gardevoir','Lucario','Excadrill',
+  'Dragalge','Drampa','Gengar','Tatsugiri Curly','Absol'];
  const TEMP_CHAMPIONS={
-  1:[248,'Tyranitar'],2:[376,'Metagross'],3:[448,'Lucario'],
-  5:[681,'Aegislash'],6:[784,'Kommo-o'],7:[823,'Corviknight'],
-  8:[983,'Kingambit'],9:[373,'Salamence']
+  1:[248,'Tyranitar'],2:[282,'Gardevoir'],3:[448,'Lucario'],
+  5:[691,'Dragalge'],6:[780,'Drampa'],7:[94,'Gengar'],
+  8:[978,'Tatsugiri'],9:[359,'Absol']
  };
  function regionChampion(index){
   const v=REGIONS[index],f=G.PKMSVV_MEGA_CATALOG?.find?.(m=>m.key===MEGA_KEYS[index]);
   const ready=!!(f?.artReady&&G.SPRITE_META?.[f.spriteId]?.a?.Idle);
-  if(ready)return {dex:v[1],name:'Mega '+v[2],spriteId:f.spriteId,temporary:false};
+  if(ready)return {dex:f.dex||v[1],name:'Mega '+MEGA_NAMES[index],spriteId:f.spriteId,temporary:index!==0&&index!==4};
   const sub=TEMP_CHAMPIONS[index]||[v[1],v[2]];
   const dex=G.DEX_BY?.[sub[0]]?sub[0]:v[1];
   return {dex,name:dex===sub[0]?sub[1]:v[2],spriteId:null,temporary:dex!==v[1]};
@@ -402,8 +406,15 @@ G.PKMSVVChampionArena=(()=>{
    G.PKMSVVStory?.chapter7?.(()=>G.Flow?.goMenu?.());
   }
  }
- function nextDuel(){
-  if(!active||stage!=='prep')return false;
+ function nextDuel(bypassBerry=false){
+  if(!active||(stage!=='prep'&&stage!=='berry'))return false;
+  if(!bypassBerry&&G.PKMSVVBerry?.offer){
+   stage='berry';
+   G.PKMSVVBerry.offer({mode:'pvp',onDone:()=>{
+    if(active&&stage==='berry'){stage='prep';nextDuel(true);}
+   }});
+   return true;
+  }
   G.EnemyMgr?.clear?.();G.Pickups?.clear?.();G.Projectiles?.clear?.();G.Hazards?.clear?.();
   const surfaceType=mode==='league'?'normal':duelType;
   G.World?.setArena?.({tx:0,ty:0,r:20,type:surfaceType});
