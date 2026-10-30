@@ -1,7 +1,7 @@
 /* PKMSVV v1.5 — Egg Rush, online 4-player host-authoritative match. */
 G.EggRush=(()=>{
  const MAX_TIME=720,MAX_SCORE=10,SPAWN_EVERY=60,RESPAWN_SECONDS=8,EGG_SPECIES=[172,447,173,360,438,175,174];
- const SUPPORT_HATCH=30,SUPPORT_MIN_HATCH=40/3,SHINY_CAST_RATIO=2/3,SHINY_SKILL_POWER=1.5;
+ const SUPPORT_HATCH=24,SUPPORT_MIN_HATCH=32/3,SHINY_CAST_RATIO=2/3,SHINY_SKILL_POWER=1.5;
  // Competitive eggs only reveal their Pokémon and score after the final egg.
  const eggValue=dex=>dex===151?20:dex===132?10:5;
  const eggShinyChance=dex=>(dex===151||dex===132)?.10:.03;
