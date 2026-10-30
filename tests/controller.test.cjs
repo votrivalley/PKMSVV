@@ -116,20 +116,43 @@ test('v1.5 controller mapping saves six real actions, migrates old maps and reje
  assert.doesNotMatch(source,/Không cần nút chuyển Orb/);
 });
 
-test('Mega action is available as keyboard 4, controller LB, and on-screen button',()=>{
+test('Orb 4 and Mega 5 remain remappable, with controller LB and touch Mega button',()=>{
  const keys=fs.readFileSync(path.join(root,'scripts/patch-keybind-title.cjs'),'utf8');
  const pad=fs.readFileSync(path.join(root,'scripts/patch-v14-gamepad-orbs.cjs'),'utf8');
  const mega=fs.readFileSync(path.join(root,'src/pkmsvv-mega-phase3.js'),'utf8');
  const lu=fs.readFileSync(path.join(root,'src/pkmsvv-mega-lucario.js'),'utf8');
  const css=fs.readFileSync(path.join(root,'src/pkmsvv-mega-lucario.css'),'utf8');
- assert.match(keys,/mega:'digit4'/);
+ assert.match(keys,/mega:'digit5',orb:'digit4'/);
+ assert.match(keys,/c==='digit4'\?'orb':c==='digit5'\?'mega'/);
  assert.match(pad,/orbital\.mega/);
  for(const source of [mega,lu]){
-  assert.match(source,/G\.Input\?\.tap\?\.\('digit4'\)/);
+  assert.match(source,/G\.Input\?\.tap\?\.\('digit5'\)/);
   assert.match(source,/G\.Input\?\.tap\?\.\('pkmsvv-mega'\)/);
   assert.doesNotMatch(source,/event\.key.*!==.'m'/);
  }
  assert.match(css,/#pkmsvv-mega-champion-btn\.pkmsvv-mega-btn/);
  assert.match(css,/left:calc\(50% \+ 100px\)/);
  assert.match(css,/body\.touch/);
+ assert.match(fs.readFileSync(path.join(root,'scripts/patch-v14-orb-fifo.cjs'),'utf8'),/G\.Input\.tap\('digit4'\)/);
 });
+test('legacy saved Orb 5 or old Orb 5 + Mega 4 are migrated safely, custom bindings survive',()=>{
+ const source=fs.readFileSync(path.join(root,'src/v14/pad-orb-map.js'),'utf8');
+ const settings={};
+ const G={I18n:{lang:'vi'},Input:{DEFAULT_KEYS:{up:'keyw',down:'keys',left:'keya',right:'keyd',dash:'keyf',pause:'keyp',orb:'digit4',mega:'digit5',reroll:'keyr',card1:'digit1',card2:'digit2',card3:'digit3'}},
+  Settings:{get:key=>settings[key],set:(key,value)=>{settings[key]=value}}};
+ vm.runInNewContext(source,{G,Number,Set,Object});
+ const panel=G.PKMSVVPadOrb;
+ assert.equal(panel.keyboardBindings().orb,'digit4');
+ assert.equal(panel.keyboardBindings().mega,'digit5');
+ settings.keys={orb:'digit5',mega:'digit4',dash:'keyg'};
+ assert.equal(panel.keyboardBindings().orb,'digit4');
+ assert.equal(panel.keyboardBindings().mega,'digit5');
+ assert.equal(panel.keyboardBindings().dash,'keyg');
+ settings.keys={orb:'digit5',dash:'keyg'};
+ assert.equal(panel.keyboardBindings().orb,'digit4');
+ assert.equal(panel.keyboardBindings().mega,'digit5');
+ settings.keys={orb:'digit7',mega:'digit6'};
+ assert.equal(panel.keyboardBindings().orb,'digit7');
+ assert.equal(panel.keyboardBindings().mega,'digit6');
+});
+
