@@ -106,11 +106,14 @@ test('Narrative chapters are renumbered visibly, with old save keys and reward s
  const s=read('src/pkmsvv-story.js');
  for(const t of ['CHƯƠNG 1 · THỨC TỈNH','CHƯƠNG 2 · NHỮNG MẢNH KÝ ỨC',
   'CHƯƠNG 3 · TIẾNG VỌNG THỨ TÁM','CHƯƠNG 4 · MẦM SỐNG BỊ LÃNG QUÊN',
-  'CHƯƠNG 5 · ĐỒNG HÀNH','CHƯƠNG 6 · ĐẤU TRƯỜNG VƯƠNG MIỆN',
-  'CHƯƠNG 7 · SỨC MẠNH MEGA'])
+  'CHƯƠNG 5 · ĐỒNG HÀNH','CHƯƠNG 7 · ĐẤU TRƯỜNG VƯƠNG MIỆN',
+  'CHƯƠNG 8 · SỨC MẠNH MEGA'])
   assert.ok(s.includes(t),t);
  assert.match(s,/pkmsvvChapter5Seen/);assert.match(s,/pkmsvvChapter6Seen/);
  assert.match(s,/pkmsvvChapterPurpleRewards/);
+ assert.match(s,/Chương 6 · Bí Mật Berry \(sắp ra mắt\)/);
+ assert.match(s,/berry-preview'\?' disabled/);
+ assert.doesNotMatch(s,/pkmsvvChapterBerrySeen/);
  assert.match(s,/pkmsvvChapter1Seen/);
  assert.match(read('scripts/prepare-game.cjs'),/patch-champion-arena\.cjs/);
  const game=path.join(root,'vendor','pokesurvivor');
@@ -121,6 +124,14 @@ test('Narrative chapters are renumbered visibly, with old save keys and reward s
  }
 });
 
+test('Arena preparation doubles mobs and XP but preserves native duel maps',()=>{
+ for(const p of ['src/pkmsvv-arena-solo.js','src/pkmsvv-champion-arena.js']){
+  const source=read(p);
+  assert.match(source,/FARM_SPAWN_MULT=2,FARM_XP_MULT=2/);
+  assert.match(source,/dropXp/);
+  assert.match(source,/type:duelType/);
+ }
+});
 test('First multiplayer click is never intercepted by story; Chapter 5 accessible from Memories',()=>{
  const runtime=read('src/pkmsvv-champion-arena.js');
  const story=read('src/pkmsvv-story.js');
