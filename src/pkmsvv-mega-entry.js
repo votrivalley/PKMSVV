@@ -133,8 +133,8 @@ G.PKMSVVMegaEntry=(()=>{
    cv.className='pkmsvv-mega-detail-art';area.append(cv);
   }else{
    const missing=el('div',null,'pkmsvv-mega-art-missing');
-   missing.textContent=variant==='shiny'?tr('Chưa có sprite Shiny Mega chuẩn','Verified Shiny Mega art unavailable'):
-    tr('Cập nhật sau','Sprite coming in a later update');area.append(missing);
+   missing.textContent=variant==='shiny'?tr('Đã mở khóa · Chưa có sprite Shiny Mega chuẩn','Unlocked · Verified Shiny Mega art unavailable'):
+    tr('Đã mở khóa · Chờ sprite Mega chuẩn','Unlocked · Mega sprite coming in a later update');area.append(missing);
   }
   const stone=el('p',null,'pkmsvv-mega-detail-item');
   stone.textContent='Mega Stone: '+(f.stone||tr('Không cần đá — mở bằng cốt truyện','Story unlock — no stone'));
@@ -149,8 +149,8 @@ G.PKMSVVMegaEntry=(()=>{
   note.textContent=G.PKMSVVMegaPhase3?.isBattleReady?.(f)?tr(
    'Đã sẵn sàng trong solo: 30 giây · Hồi chiêu -30%.',
    'Ready in solo: 30 seconds · Cooldown -30%.'):
-   tr('Đã khám phá nhưng đang chờ sprite hoặc tuyến truyện chiến đấu.',
-   'Discovered; battle art or storyline support is pending.');
+   tr('Đã mở khóa trong save. Chỉ dùng trong trận khi sprite chiến đấu và tính năng đã sẵn sàng.',
+   'Unlocked in save. Battle transformation requires ready sprite art and gameplay support.');
   area.append(stone,ability,label,stats,note);
  }
  function render(){
@@ -188,7 +188,7 @@ G.PKMSVVMegaEntry=(()=>{
     cv.className='pkmsvv-mega-cell-art';card.append(cv);
    }else{const icon=el('span');icon.textContent='✦';card.append(icon);}
    const label=el('strong');label.textContent=yes?displayName(f):'???';
-   const state=el('small');state.textContent=!yes?tr('Chưa mở','Locked'):!v.ready?tr('Cập nhật sau','Coming soon'):tr('Đã mở','Unlocked');
+   const state=el('small');state.textContent=!yes?tr('Chưa mở','Locked'):!v.ready?tr('Đã mở · Chờ sprite','Unlocked · Sprite pending'):tr('Đã mở','Unlocked');
    card.append(label,state);
    card.addEventListener('click',()=>{selected=f.key;render();});
    grid.append(card);
