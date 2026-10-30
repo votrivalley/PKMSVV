@@ -78,14 +78,15 @@ test('Mega button sits immediately after Support, opens and closes real dialog w
  assert.equal(h.G.PKMSVVMegaEntry.open(),true);
  const overlay=h.get('pkmsvv-mega-phase1');
  assert.equal(overlay.hidden,false);
- assert.equal(h.get('pkmsvv-mega-phase1-lock').textContent,'Chưa mở khóa');
- assert.ok(overlay.children[0].children[1].children[0].textContent==='???');
+ assert.match(h.get('pkmsvv-mega-detail').children[0].textContent,/Chưa có dạng Mega nào phù hợp/);
+ assert.equal(h.get('pkmsvv-mega-grid').children.length,1,'empty state does not draw 12 dummy cards');
+ assert.equal(h.get('pkmsvv-mega-grid').children[0].className,'pkmsvv-mega-empty');
  assert.equal(h.G.PKMSVVMegaEntry.close(),undefined);
  assert.equal(overlay.hidden,true);
  h.G.I18n.lang='en';h.G.PKMSVVUpgradeChooser.open();
  assert.match(h.get('pkmsvv-mega-entry').textContent,/Mega Evolution/);
  h.G.PKMSVVMegaEntry.open();
- assert.equal(h.get('pkmsvv-mega-phase1-lock').textContent,'Not unlocked');
+ assert.match(h.get('pkmsvv-mega-detail').children[0].textContent,/No Mega sprites match/);
  h.docEvents.keydown({key:'Escape',preventDefault(){},stopPropagation(){}});
  assert.equal(overlay.hidden,true);
 });
