@@ -95,9 +95,9 @@ test('Chapter 5 uses its own two uploaded cinematic scenes, not Chapter 2 or Cha
  const story=read('src/pkmsvv-story.js'),patch=read('scripts/patch-story.cjs');
  const scene=story.split('  chapter5:[')[1]?.split('  // Chapter 6')[0];
  assert.ok(scene,'Chapter 5 scene exists');
- assert.equal((scene.match(/\\{art:16,/g)||[]).length,3,'Companion Gate tells the first three beats');
- assert.equal((scene.match(/\\{art:17,/g)||[]).length,6,'three-mode trials tell the following six beats');
- assert.doesNotMatch(scene,/\\{art:10,/,'old memory artwork cannot appear in Chapter 5');
+ assert.equal(scene.split('{art:16,').length-1,3,'Companion Gate tells the first three beats');
+ assert.equal(scene.split('{art:17,').length-1,6,'three-mode trials tell the following six beats');
+ assert.ok(!scene.includes('{art:10,'),'old memory artwork cannot appear in Chapter 5');
  assert.match(story,/16:'chapter5-gate', 17:'chapter5-trials'/);
  for(const name of ['chapter5-gate','chapter5-trials']){
   const image=read('src/story-art/'+name+'.webp');
