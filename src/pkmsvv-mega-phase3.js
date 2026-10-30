@@ -19,7 +19,17 @@ G.PKMSVVMegaPhase3=(()=>{
   const v=s?.megaStones?.[key];
   return v===1||v===true||!!(v&&typeof v==='object'&&v.unlocked===true);
  };
+ // Local, isolated Mega4 QA allows visual/gameplay preview of the four
+ // imported genuine sprites without faking story completion or modifying saves.
+ // Never active in public PC, Web, Android or ordinary LAN game builds.
+ function privateQaPreview(f){
+  return !!(f?.qa4dir===true&&f.artReady===true&&
+   G.PKMSVV_MEGA_4DIR_QA?.enabled===true&&
+   G.PKMSVV_MEGA_4DIR_QA.forms?.includes(f.key)&&
+   G.SPRITE_META?.[f.spriteId]?.a?.Idle);
+ }
  function isUnlocked(f){
+  if(privateQaPreview(f))return true;
   const s=getSave();
   if(!f||!s?.owned?.[f.dex]||!s.pkmsvvChapter7Seen)return false;
   if(f.storyLocked&&s.megaStoryCleared?.[f.key]!==true)return false;
@@ -222,5 +232,5 @@ G.PKMSVVMegaPhase3=(()=>{
  setInterval(sync,250);
  return {CHAMPIONS,STONE_CHANCE,DURATION,REUSE_COOLDOWN,CD_FACTOR,ENERGY_MAX,
   HIT_ENERGY,KILL_ENERGY,BOSS_ENERGY,rewardStone,isUnlocked,isBattleReady,
-  stoneOwned,progress,formFor,energy,addEnergy,onEnemyHurt,eligible,activate,tryActivate,stop,tick,sync};
+  stoneOwned,privateQaPreview,progress,formFor,energy,addEnergy,onEnemyHurt,eligible,activate,tryActivate,stop,tick,sync};
 })();
