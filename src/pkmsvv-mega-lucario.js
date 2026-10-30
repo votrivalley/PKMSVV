@@ -100,7 +100,7 @@ G.MegaLucario=(()=>{
   button.id='pkmsvv-mega-lucario-btn';
   button.type='button';
   button.className='pkmsvv-mega-btn';
-  button.title='Mega Lucario · Phím 4 · Hồi chiêu -30%';
+  button.title='Mega Lucario · '+(G.Pad?.name?G.PKMSVVPadOrb?.describe?.('mega')||'LB / L1':String(G.Input?.bound?.('mega')||'digit4').replace(/^(digit|key|numpad)/,'').toUpperCase())+' · Hồi chiêu -30%';
   button.innerHTML=STONE_SVG+'<span class="pkmsvv-mega-btn__label">MEGA</span>';
   button.style.display='none';
   button.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();tryActivate();});
@@ -119,7 +119,7 @@ G.MegaLucario=(()=>{
   button.disabled=busy||active;
   const label=typeof button.querySelector==='function'?button.querySelector('.pkmsvv-mega-btn__label'):null;
   if(label)label.textContent=active?Math.max(0,Math.ceil(p._megaRemaining))+'s':'MEGA';
-  button.title=active?'Mega Lucario: '+Math.ceil(p._megaRemaining)+' giây còn lại':'Mega Lucario · Phím 4 · Hồi chiêu -30%';
+  button.title=active?'Mega Lucario: '+Math.ceil(p._megaRemaining)+' giây còn lại':'Mega Lucario · '+(G.Pad?.name?G.PKMSVVPadOrb?.describe?.('mega')||'LB / L1':String(G.Input?.bound?.('mega')||'digit4').replace(/^(digit|key|numpad)/,'').toUpperCase())+' · Hồi chiêu -30%';
   button.setAttribute?.('aria-label',button.title);
  }
  function menu(){
