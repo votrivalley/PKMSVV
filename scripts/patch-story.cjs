@@ -24,13 +24,14 @@ for(const name of [
  'chapter1-echo','chapter1-fragments',
  'chapter2-orbs','chapter2-shadow',
  'chapter3-nest','chapter3-hatch',
+ 'chapter5-gate','chapter5-trials',
  'chapter6-arena','chapter6-champion',
  'chapter7-seal','chapter7-mega'
 ]){
  const source=path.join(root,'src','story-art',name+'.webp');
  const dest=path.join(game,'assets','story',name+'.webp');
  if(fs.existsSync(source))fs.copyFileSync(source,dest);
- else if(name.startsWith('chapter6-')||name.startsWith('chapter7-'))throw Error('Required Chapter 6–7 art missing: '+source);
+ else if(name.startsWith('chapter5-')||name.startsWith('chapter6-')||name.startsWith('chapter7-'))throw Error('Required Chapter 5–7 art missing: '+source);
  else console.warn('Story image pending: src/story-art/'+name+'.webp (falls back to gate.webp)');
 }
 fs.copyFileSync(path.join(root,'src','pkmsvv-story.js'),path.join(game,'js','ui','pkmsvv-story.js'));
