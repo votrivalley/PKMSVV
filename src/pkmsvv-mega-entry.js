@@ -22,11 +22,18 @@ G.PKMSVVMegaEntry=(()=>{
  };
  const shinyOwned=f=>!!(f&&save().shiny?.[f.dex]);
  const discovered=f=>isUnlocked(f)&&(variant==='normal'||shinyOwned(f));
- const list=()=>catalog().filter(f=>filter==='all'||(filter==='unlocked'?discovered(f):!discovered(f)));
+ // Only forms with a real Mega sprite in THIS build belong on the screen.
+ // This automatically includes the four private 4-dir Mega sprites when the
+ // isolated PC QA importer registers their metadata; no blank future cards.
+ const hasSprite=(f,mode=variant)=>{
+  const m=f?.artReady===true&&G.SPRITE_META?.[f.spriteId];
+  return !!(m?.a?.Idle&&(mode!=='shiny'||(m.sh&&m.sa?.Idle)));
+ };
+ const available=()=>catalog().filter(f=>hasSprite(f));
+ const list=()=>available().filter(f=>filter==='all'||(filter==='unlocked'?discovered(f):!discovered(f)));
  const art=f=>{
-  const m=f.artReady&&G.SPRITE_META?.[f.spriteId];
-  const ready=!!(m?.a?.Idle&&(variant==='normal'||(m.sh&&m.sa?.Idle)));
-  return {dex:ready?f.spriteId:f.dex,ready,shiny:variant==='shiny'&&ready};
+  const ready=hasSprite(f);
+  return {dex:ready?f.spriteId:f?.dex,ready,shiny:variant==='shiny'&&ready};
  };
  const el=(tag,id,cls)=>{const n=document.createElement(tag);if(id)n.id=id;if(cls)n.className=cls;return n;};
  function close(){const box=$('pkmsvv-mega-phase1');if(box)box.hidden=true;$('pkmsvv-mega-entry')?.focus?.();}
@@ -90,7 +97,14 @@ G.PKMSVVMegaEntry=(()=>{
  function detailView(f){
   const area=$('pkmsvv-mega-detail');if(!area)return;
   area.replaceChildren();
-  const opened=!!f&&discovered(f);
+  if(!f){
+   area.className='pkmsvv-mega-phase1-locked is-unavailable';
+   const empty=el('p');empty.textContent=tr(
+    'Chưa có dạng Mega nào phù hợp với bộ sprite và bộ lọc hiện tại.',
+    'No Mega sprites match this build and the current filter.');
+   area.append(empty);return;
+  }
+  const opened=discovered(f);
   area.className='pkmsvv-mega-phase1-locked'+(opened?' is-unlocked':'');
   if(!opened){
    const unknown=el('strong');unknown.textContent='???';
@@ -166,12 +180,21 @@ G.PKMSVVMegaEntry=(()=>{
   page=Math.min(last,Math.max(0,page));
   const shown=forms.slice(page*PAGE,(page+1)*PAGE);
   if(!shown.some(f=>f.key===selected))selected=shown[0]?.key||null;
-  $('pkmsvv-mega-count').textContent=tr('Đã mở: ','Unlocked: ')+catalog().filter(discovered).length+'/'+catalog().length;
+  const availableArt=available();
+  $('pkmsvv-mega-count').textContent=tr('Đã mở: ','Unlocked: ')+
+   availableArt.filter(discovered).length+'/'+availableArt.length+
+   tr(' · Có sprite',' · Sprites available');
   for(const [mode,label] of [['all',tr('Tất cả','All')],['unlocked',tr('Đã mở','Unlocked')],['locked',tr('Chưa mở','Locked')]]){
    const b=$('pkmsvv-mega-roster')?.querySelector?.('[data-mega-filter="'+mode+'"]');
    if(b){b.textContent=label;b.setAttribute('aria-pressed',String(filter===mode));}
   }
   const grid=$('pkmsvv-mega-grid');grid.replaceChildren();
+  if(!shown.length){
+   const empty=el('p',null,'pkmsvv-mega-empty');
+   empty.textContent=tr('Chưa có Mega phù hợp · Các dạng chưa có sprite sẽ được bổ sung sau.',
+    'No matching Mega yet · Forms without sprites will be added later.');
+   grid.append(empty);
+  }
   for(const [i,f] of shown.entries()){
    const yes=discovered(f),v=art(f),card=el('button',null,'pkmsvv-mega-cell '+(yes?'is-open':'is-locked')+(yes&&!v.ready?' is-pending-art':'')+(selected===f.key?' on':''));
    card.type='button';
@@ -199,10 +222,10 @@ G.PKMSVVMegaEntry=(()=>{
   $('pkmsvv-mega-prev').disabled=page===0;$('pkmsvv-mega-next').disabled=page>=last;
   $('pkmsvv-mega-page').textContent=tr('Trang ','Page ')+(page+1)+'/'+(last+1);
   $('pkmsvv-mega-phase1-note').textContent=variant==='shiny'?tr(
-   'Shiny Mega cần Pokémon Shiny đã sở hữu và Mega đã mở khóa. Không tự đổi màu hoặc cấp Shiny.',
-   'Shiny Mega requires an owned Shiny Pokémon and an unlocked Mega. No recolors or free Shinies.') :
-   tr('Danh tính và chỉ số chỉ hiện sau khi mở khóa. Xem danh sách không tốn vé hoặc thay đổi save.',
-   'Identity and stats appear only after unlocking. Viewing does not modify saves.');
+   'Chỉ hiện Shiny Mega có sprite thật trong bản này. Cần sở hữu Pokémon Shiny và mở khóa Mega.',
+   'Only verified Shiny Mega sprites in this build are shown. Shiny ownership and Mega unlock are required.') :
+   tr('Chỉ hiện Mega đã có sprite thật trong bản đang chơi. Các Mega chưa có sprite được ẩn tạm, không xóa khỏi save.',
+   'Only Mega forms with real sprites in this build appear. Unreleased forms are hidden, never deleted from saves.');
  }
  function open(){
   if(!ensure())return false;
@@ -224,5 +247,5 @@ G.PKMSVVMegaEntry=(()=>{
  });
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ensure,{once:true});
  else ensure();
- return {open,close,ensure,render,isUnlocked,displayName,get page(){return page},get filter(){return filter},get variant(){return variant}};
+ return {open,close,ensure,render,isUnlocked,hasSprite,available,displayName,get page(){return page},get filter(){return filter},get variant(){return variant}};
 })();
