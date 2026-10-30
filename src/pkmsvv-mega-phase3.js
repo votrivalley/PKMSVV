@@ -193,15 +193,12 @@ G.PKMSVVMegaPhase3=(()=>{
    charge<ENERGY_MAX?'Năng lượng Mega '+charge+'% / 100% · Đánh trúng và hạ quái để tích':'Mega đã sẵn sàng · Phím M';
   button.setAttribute?.('aria-label',button.title);
  }
- // Real hit credit is optional in upstream engines that expose Enemy.hurt.
- // Never charge from remote enemies, invincible Arceus, or competitive modes.
- const hurt=G.Enemy?.prototype?.hurt;
- if(typeof hurt==='function')G.Enemy.prototype.hurt=function(amount,...args){
-  const credit=!this.dead&&!this.remote&&!this.arceus&&Number.isFinite(amount)&&amount>0;
-  const result=hurt.call(this,amount,...args);
-  if(credit)addEnergy(player(),HIT_ENERGY);
-  return result;
- };
+ // Called from the pinned enemy.hurt patch; never credit invulnerable,
+ // remote or competitive targets, and never alter their combat outcome.
+ function onEnemyHurt(enemy,amount){
+  if(enemy&&!enemy.dead&&!enemy.remote&&!enemy.arceus&&
+   Number.isFinite(amount)&&amount>0)addEnergy(player(),HIT_ENERGY);
+ }
  const update=G.Player?.prototype?.update;
  if(typeof update==='function')G.Player.prototype.update=function(dt){
   if(this===player())tick(this,dt);
@@ -223,5 +220,5 @@ G.PKMSVVMegaPhase3=(()=>{
  setInterval(sync,250);
  return {CHAMPIONS,STONE_CHANCE,DURATION,REUSE_COOLDOWN,CD_FACTOR,ENERGY_MAX,
   HIT_ENERGY,KILL_ENERGY,BOSS_ENERGY,rewardStone,isUnlocked,isBattleReady,
-  stoneOwned,progress,formFor,energy,addEnergy,eligible,activate,tryActivate,stop,tick,sync};
+  stoneOwned,progress,formFor,energy,addEnergy,onEnemyHurt,eligible,activate,tryActivate,stop,tick,sync};
 })();
