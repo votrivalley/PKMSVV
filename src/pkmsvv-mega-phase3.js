@@ -88,7 +88,7 @@ G.PKMSVVMegaPhase3=(()=>{
     G.PKMSVV_MEGA_4DIR_QA.forms?.includes(f.key)))):null;
  let button=null,busy=false;
  const controlHint=()=>G.Pad?.name?G.PKMSVVPadOrb?.describe?.('mega')||'LB / L1':
-  (String(G.Input?.bound?.('mega')||'digit4').replace(/^(digit|key|numpad)/,'').toUpperCase());
+  (String(G.Input?.bound?.('mega')||'digit5').replace(/^(digit|key|numpad)/,'').toUpperCase());
  function energy(p){
   if(!p)return 0;
   if(!Number.isFinite(p._megaEnergy))p._megaEnergy=0;
@@ -218,7 +218,7 @@ G.PKMSVVMegaPhase3=(()=>{
  if(typeof update==='function')G.Player.prototype.update=function(dt){
   if(this===player()){
    tick(this,dt);
-   if((G.Input?.tap?.('digit4')||G.Input?.tap?.('pkmsvv-mega'))&&eligible())tryActivate();
+   if((G.Input?.tap?.('digit5')||G.Input?.tap?.('numpad5')||G.Input?.tap?.('pkmsvv-mega'))&&eligible())tryActivate();
   }
   return update.call(this,dt);
  };
@@ -228,7 +228,7 @@ G.PKMSVVMegaPhase3=(()=>{
    stop(player());const result=original.apply(this,args);sync();return result;
   };
  }
- // Unified G.Input handles remappable keyboard 4 and controller Mega; touch uses on-screen button.
+ // Unified G.Input handles remappable keyboard 5 and controller Mega; touch uses on-screen button.
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});
  else mount();
  setInterval(sync,250);
