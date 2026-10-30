@@ -200,11 +200,18 @@ test('four imported PC QA Mega forms are visible and unimported ones do not occu
   h.g.SPRITE_META[f.spriteId]={a:{Idle:{}},sh:true,sa:{Idle:{}}};
  }
  h.g.PKMSVV_MEGA_4DIR_QA={enabled:true,forms:names};
+ h.g.PKMSVVMegaPhase3={isUnlocked:f=>f.qa4dir===true};
  ui.open();
  assert.equal(ui.available().length,40,'36 PC candidate sprites plus 4 QA-only previews');
- assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 0/40 · Có sprite');
+ assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 4/40 · Có sprite');
  const keys=ui.available().map(f=>f.key);
  for(const name of names)assert.ok(keys.includes(name));
  assert.equal(keys.includes('venusaurmega'),false);
  assert.equal(h.get('pkmsvv-mega-page').textContent,'Trang 1/4');
+ h.get('pkmsvv-mega-tab-shiny').click();
+ assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 4/40 · Có sprite',
+  'isolated QA should reveal both Normal and Shiny sheet even without Shiny save');
+ const ready=h.g.PKMSVV_MEGA_CATALOG.filter(f=>names.includes(f.key));
+ assert.ok(ready.every(f=>ui.isUnlocked(f)),'test QA preview forms can be inspected');
+ assert.equal(h.g.DB.save.shiny,undefined,'QA browsing never grants a Shiny');
 });
