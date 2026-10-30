@@ -122,9 +122,9 @@ patch('js/core/gamepad.js',
  "    return G.Game.state !== 'playing' || (!!topScreen() && !(G.Coop?.active && (G.Royale?.active||G.EggRush?.active) && G.UI.isOpen('scr-levelup')));");
 patch('js/core/gamepad.js',
  "      if (hit(G.PKMSVVPadOrb.bindings().confirm)) G.Input.virtual('space');",
- "      if(G.Coop?.active && (G.Royale?.active||G.EggRush?.active) && G.UI.isOpen('scr-levelup')){\\n"+
- "        if(hit(G.PKMSVVPadOrb.bindings().confirm))G.RunUI.pick(0);\\n"+
- "        if(hit(2))G.RunUI.pick(1);if(hit(3))G.RunUI.pick(2);\\n"+
+ "      if(G.Coop?.active && (G.Royale?.active||G.EggRush?.active) && G.UI.isOpen('scr-levelup')){\n"+
+ "        if(hit(G.PKMSVVPadOrb.bindings().confirm))G.RunUI.pick(0);\n"+
+ "        if(hit(2))G.RunUI.pick(1);if(hit(3))G.RunUI.pick(2);\n"+
  "      }else if (hit(G.PKMSVVPadOrb.bindings().confirm)) G.Input.virtual('space');");
 // Game HUD remains touchable and the three personal card choices take very
 // little space; only the cards themselves capture pointer events.
@@ -165,5 +165,5 @@ body.pkmsvv-competitive-pick #scr-levelup #lvl-reroll{min-height:27px;font-size:
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
  }
 }
-`+'\\n');
+`+'\n');
 console.log('PKMSVV competitive: personal cards, no shared pause; Co-op shared pause preserved.');
