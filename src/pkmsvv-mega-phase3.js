@@ -147,6 +147,8 @@ G.PKMSVVMegaPhase3=(()=>{
   const elapsed=Number.isFinite(dt)?Math.max(0,dt):0;
   if(p.dead||G.Game?.state!=='playing'){if(p._megaActive)stop(p);return;}
   if(p._megaActive){
+   // Mega Lucario BETA owns its own timer; Phase 3 must not tick it twice.
+   if(!p._megaPhase3Backup)return;
    p._megaRemaining=Math.max(0,p._megaRemaining-elapsed);
    if(p._megaRemaining<=0)stop(p);
    return;
