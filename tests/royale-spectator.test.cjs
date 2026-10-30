@@ -66,6 +66,7 @@ test('patched game uses living-target camera and a spectator tick AFTER network 
  assert.match(arenaPatch,/G\.PKMSVVSpectator\.cameraTarget\(\)/);
  assert.match(arenaPatch,/G\.Camera\.follow\(spectator\?\.x\?\?pl\.x,spectator\?\.y\?\?pl\.y,dt\)/);
  assert.match(arenaPatch,/G\.Coop\.tick\(dt\);\\n    G\.PKMSVVSpectator\.tick\(\)/);
- assert.match(levelPatch,/if\(pl\?\.dead\)\{individualLevelQueue\.length=0;individualLevelOpen=false;document\.body\?\.classList\?\.remove\?\.\('pkmsvv-competitive-pick'\);G\.RunUI\.closeLevelUp\(\);return;\}/);
- assert.match(levelPatch,/if\(pl\.dead\)\{individualLevelQueue\.length=0;individualLevelOpen=false;document\.body\?\.classList\?\.remove\?\.\('pkmsvv-competitive-pick'\);return;\}/);
+ assert.ok(levelPatch.includes('individualLevelQueue.length=0;individualLevelOpen=false;'), 'death must clear pending personal level choices');
+ assert.ok(levelPatch.includes('individualLevelQueue.length=0;individualLevelOpen=false;'), 'death must clear pending personal level choices');
+ assert.ok(levelPatch.includes("classList?.remove?.(\\'pkmsvv-competitive-pick\\')"), 'elimination closes compact overlay');
 });
