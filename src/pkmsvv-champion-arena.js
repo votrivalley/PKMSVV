@@ -15,7 +15,7 @@ G.PKMSVVChampionArena=(()=>{
  const clock=secs=>{const n=Math.max(0,Math.ceil(secs));return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');};
  const DUEL_TYPES=['normal','fighting','psychic','steel','rock','ghost'];
  // Ten distinct built-in biomes; bespoke outlined stadium art is still pending.
- const REGION_THEMES=['fire','steel','water','dragon','ground','psychic','bug','fighting','ice','dragon'];
+ const REGION_THEMES=['fire','steel','water','ground','rock','dark','bug','fighting','ice','dragon'];
  const FARM_SPAWN_MULT=2,FARM_XP_MULT=2;
  const $=id=>document.getElementById(id);
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
