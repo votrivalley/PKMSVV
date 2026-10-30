@@ -142,7 +142,7 @@ test('Shiny Mega Charizard X keeps its genuine Shiny animation and returns Shiny
  assert.equal(pl.shiny,true);
  G.Sprites.hasShiny=()=>false;
  G.Game.startRun();
- pl._megaUsed=false;
+ pl._megaCooldownRemaining=0;pl._megaEnergy=100;
  assert.equal(lib.eligible(),false,'no Shiny Mega until genuine Shiny art exists');
 });
 
@@ -189,4 +189,11 @@ test('phase3 build pipeline wires real Enemy.hurt hit credit and does not write 
  const source=read('src/pkmsvv-mega-phase3.js');
  assert.match(source,/REUSE_COOLDOWN=200/);
  assert.doesNotMatch(source,/G\.DB\.commit\(|megaStones\[.*\]=\s*100/);
+});
+
+test('Phase 3 never double-ticks the independent Mega Lucario BETA timer',()=>{
+ const {lib,pl}=setup();
+ pl._megaActive=true;pl._megaPhase3Backup=null;pl._megaRemaining=25;
+ lib.tick(pl,5);
+ assert.equal(pl._megaRemaining,25,'separate Lucario BETA module owns its timer');
 });
