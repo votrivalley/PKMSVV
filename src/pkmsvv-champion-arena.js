@@ -14,6 +14,8 @@ G.PKMSVVChampionArena=(()=>{
  const PREP_SECONDS=180,FIGHT_SECONDS=150;
  const clock=secs=>{const n=Math.max(0,Math.ceil(secs));return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');};
  const DUEL_TYPES=['normal','fighting','psychic','steel','rock','ghost'];
+ // Ten distinct built-in biomes; bespoke outlined stadium art is still pending.
+ const REGION_THEMES=['fire','steel','water','dragon','ground','psychic','bug','fighting','ice','dragon'];
  const FARM_SPAWN_MULT=2,FARM_XP_MULT=2;
  const $=id=>document.getElementById(id);
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
@@ -191,8 +193,11 @@ G.PKMSVVChampionArena=(()=>{
   pl.maxHp=320;pl.hp=320;pl.baseAtk=1.3;pl.baseSpd=112;
   pl.atkMul=1;pl.spdMul=1;
   const aiTier=opp.tier==='elite'?'elite':opp.tier==='trained'?'trained':'novice';
-  const raw={dex,name:targetName,hp:320,spd:112,dmg:11,
-   xp:0,behavior:'champion',shotCd:aiTier==='elite'?1.65:aiTier==='trained'?2.5:3.5};
+  const power=region;
+  const cadence=Math.max(.67,1-.035*power);
+  const raw={dex,name:targetName,hp:320+22*power+5*round,spd:112,
+    dmg:Math.round((11+.64*power+.15*round)*10)/10,xp:0,behavior:'champion',
+    shotCd:(aiTier==='elite'?1.65:aiTier==='trained'?2.5:3.5)*cadence};
   target=G.EnemyMgr.add(new G.Enemy(raw,pl.x+Math.min(300,190+round*15),pl.y-35,
     {hp:1,spd:1,dmg:1},true));
 
@@ -208,7 +213,7 @@ G.PKMSVVChampionArena=(()=>{
    }
   }
   target.pkmsvvChampion=true;
-  target.skillCd=aiTier==='elite'?0.9:aiTier==='trained'?2.0:3.5;
+  target.skillCd=(aiTier==='elite'?0.9:aiTier==='trained'?2.0:3.5)*cadence;
   stage='fight';elapsed=0;lastSecond=-1;
   panel().hidden=true;
   G.UI?.toast?.(tr('Arena · ','Arena · ')+(ROUNDS[round]||'')+' — '+opp.name,3000);
@@ -220,7 +225,7 @@ G.PKMSVVChampionArena=(()=>{
   bracket=makeBracket();
   active=true;stage='prep';
   G.Game.startRun(null);
-  const zoneType=G.DEX_BY?.[REGIONS[region][1]]?.types?.[0]||'normal';
+  const zoneType=REGION_THEMES[region];
   G.World?.setArena?.({tx:0,ty:0,r:22,type:zoneType});
   if(G.Tiles?.arenaBiome)G.World?.setBiome?.(G.Tiles.arenaBiome(zoneType),true);
   const bar=$('pkmsvv-champion-hud')||document.createElement('div');
@@ -255,6 +260,7 @@ G.PKMSVVChampionArena=(()=>{
   const save=G.DB?.save;if(!save)return;
   const book=ledger(save);const name=REGIONS[region][0];
   const tickets=rank===1?10:rank===2?6:rank===3?3:0;
+  if(book.seals[name]===true)return; // No PokéCoins, tickets or Arena Points on story replay.
   // One actual tournament finish, no grant for lobby/start/abandon.
   const arenaEarned=G.PKMSVVMegaGacha?.grantTournament?.(
    save,name,rank,!book.trophies[name])||0;
@@ -322,7 +328,7 @@ G.PKMSVVChampionArena=(()=>{
  function nextDuel(){
   if(!active||stage!=='prep')return false;
   G.EnemyMgr?.clear?.();G.Pickups?.clear?.();G.Projectiles?.clear?.();G.Hazards?.clear?.();
-  const duelType=DUEL_TYPES[(region+round)%DUEL_TYPES.length];
+  const duelType=REGION_THEMES[region];
   G.World?.setArena?.({tx:0,ty:0,r:20,type:duelType});
   if(G.Tiles?.arenaBiome)G.World?.setBiome?.(G.Tiles.arenaBiome(duelType),true);
   const pl=G.Game?.player;if(pl){pl.x=0;pl.y=100;pl.invuln=2;}
@@ -430,7 +436,7 @@ G.PKMSVVChampionArena=(()=>{
  // Chapter 5 is explicitly accessible through Memories and Arena intro.
  // In particular, first LAN access must never be blocked by a cutscene.
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',menu,{once:true});else menu();
- return {REGIONS,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIGHT_SECONDS,makeBracket,aiWinner,open,start,rematch,exit,nextDuel,renderPodium,
+ return {REGIONS,REGION_THEMES,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIGHT_SECONDS,makeBracket,aiWinner,open,start,rematch,exit,nextDuel,renderPodium,
   update,settle,claimSeal,ledger,get active(){return active},get stage(){return stage},get round(){return round},
   get opponent(){return opp}};
 })();
