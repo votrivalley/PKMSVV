@@ -62,10 +62,19 @@ G.PKMSVVMegaPhase3=(()=>{
  // Ratio normalization uses the original species' official base stats.
  const BASE=Object.freeze({
   charizardmegax:{atk:84,def:78,spa:109,spd:85,spe:100},
-  excadrillmega:{atk:135,def:60,spa:50,spd:65,spe:88}
+  excadrillmega:{atk:135,def:60,spa:50,spd:65,spe:88},
+  // Authenticated base stats; these four are only available when explicitly
+  // loaded from private four-direction PC QA art, never in public builds.
+  scizormega:{atk:130,def:100,spa:55,spd:80,spe:65},
+  swampertmega:{atk:110,def:90,spa:85,spd:90,spe:60},
+  garchompmega:{atk:130,def:95,spa:80,spd:85,spe:102},
+  dragonitemega:{atk:134,def:95,spa:100,spd:100,spe:80}
  });
  const player=()=>G.Game?.player;
- const formFor=p=>p?CHAMPIONS.map(c=>getForm(c.key)).find(f=>f?.dex===p.dex&&BASE[f.key]):null;
+ const formFor=p=>p?CHAMPIONS.map(c=>getForm(c.key)).find(f=>f?.dex===p.dex&&BASE[f.key]&&
+  (f.key==='charizardmegax'||f.key==='excadrillmega'||
+   (G.PKMSVV_MEGA_4DIR_QA?.enabled===true&&f.qa4dir===true&&
+    G.PKMSVV_MEGA_4DIR_QA.forms?.includes(f.key)))):null;
  let button=null,busy=false;
  function eligible(){
   const p=player(),f=formFor(p);
@@ -105,7 +114,7 @@ G.PKMSVVMegaPhase3=(()=>{
   appearance(p,f.spriteId);
   G.FX?.ring?.(p.x,p.y,15,100,'#b49aff',.9,8);
   G.Audio?.sfx?.('shinyGet');
-  G.UI?.toast?.('MEGA '+(G.DEX_BY?.[p.dex]?.name||'POKÉMON').toUpperCase()+'! 30 giây · Hồi chiêu -30%');
+  G.UI?.toast?.('MEGA '+(G.DEX_BY?.[p.dex]?.name||'POKÉMON').toUpperCase()+'! 30 giây · Hồi chiêu -30%'+(f.qa4dir?' · QA sprite 4 hướng':''));
   sync();return true;
  }
  async function tryActivate(){
