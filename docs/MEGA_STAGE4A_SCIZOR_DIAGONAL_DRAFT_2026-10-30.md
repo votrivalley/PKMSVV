@@ -1,3 +1,9 @@
+# REJECTED — DO NOT USE (2026-10-30)
+
+The user rejected all four hand-drawn diagonal Scizor and Shiny Scizor directions as visually incorrect and poor-quality. These Stage 4A draft sprites are **cancelled**, not real source art, not approved, and **must never be imported into builds, candidate Mega packs, or cited as finished eight-direction sprites**. Discard Stage4A draft atlases and GIFs. No new sprite images from Stage4A were committed to the repository. Retain verified original four-direction source sheets and the independent PA2.1 tooling. Further art work should use verified source animations with appropriate permissions; do not synthesize or mirror inaccurate Pokémon silhouettes.
+
+---
+
 # Mega Stage 4A — Scizor 8-direction Walk art DRAFT (2026-10-30)
 
 ## Work completed
