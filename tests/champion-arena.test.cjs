@@ -44,11 +44,13 @@ function setup(){
  vm.runInNewContext(read('src/pkmsvv-champion-arena.js'),{G,document,Math});
  return {G,save,lib:G.PKMSVVChampionArena,document,player,get:id=>elements.get(id)};
 }
-test('Ten original regional Champions, sixteen entrants and three-minute preparation',()=>{
+test('Ten Champions, sixteen entrants, 5m opener and 2m30 later preparation',()=>{
  const {lib}=setup();
  assert.equal(lib.REGIONS.length,10);
- assert.equal(lib.PREP_SECONDS,180);
- assert.equal(lib.FIGHT_SECONDS,150);
+ assert.equal(lib.PREP_SECONDS,150);
+ assert.equal(lib.FIRST_PREP_SECONDS,300);
+ assert.equal(lib.FIGHT_SECONDS,120);
+ assert.equal(lib.WARN_SECONDS,15);
  assert.equal(lib.ROUNDS.length,5);
  const draw=lib.makeBracket(()=>.5);
  assert.equal(draw.length,16);assert.equal(draw.filter(p=>p.id==='you').length,1);
@@ -248,4 +250,36 @@ test('unreleased regional Champion Mega art uses real stand-in Pokémon, then tr
  assert.equal(lib.regionChampion(9).spriteId,10149);
  assert.equal(lib.regionChampion(9).temporary,false);
  assert.equal(lib.regionChampion(1).temporary,true);
+});
+
+test('first Champion battle starts after 5 minutes; later rounds after 2m30 with warnings',()=>{
+ const {G,lib,get}=setup(),alerts=[];
+ G.UI.toast=(message)=>alerts.push(message);
+ assert.equal(lib.start(),true);
+ assert.equal(lib.prepSeconds(),300);
+ lib.update(239);
+ assert.equal(lib.stage,'prep');
+ assert.equal(G.World.arena,null,'opening farms on ordinary map');
+ lib.update(1);
+ assert.equal(lib.stage,'prep');
+ assert.equal(G.World.arena.r,22,'boss preview shifts farming to arena without dueling');
+ assert.equal(get('pkmsvv-champion-preview').hidden,false);
+ assert.ok(alerts.some(m=>m.includes('Đối thủ xuất hiện')));
+ lib.update(45);
+ assert.ok(alerts.some(m=>m.includes('15 giây')));
+ lib.update(15);
+ assert.equal(lib.stage,'fight');
+ assert.equal(get('pkmsvv-champion-preview').hidden,true);
+ G.EnemyMgr.last.dead=true;lib.update(.1);
+ assert.equal(lib.round,1);assert.equal(lib.stage,'prep');
+ assert.equal(G.World.arena,null,'winner exits duel to ordinary farming map');
+ assert.equal(lib.prepSeconds(),150);
+ lib.update(119.9);
+ assert.equal(G.World.arena,null);
+ lib.update(.1);
+ assert.equal(G.World.arena.r,22,'next opponent revealed at 2m mark');
+ lib.update(15);
+ assert.ok(alerts.filter(m=>m.includes('15 giây')).length>=2);
+ lib.update(15);
+ assert.equal(lib.stage,'fight');
 });
