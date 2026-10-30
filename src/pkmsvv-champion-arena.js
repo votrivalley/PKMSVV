@@ -301,6 +301,7 @@ G.PKMSVVChampionArena=(()=>{
   G.DB.commit(true);
  }
  function claimSeal(){
+  if(mode!=='story')return; // Only Crown Journey can mint one-time regional seals.
   const save=G.DB?.save,book=ledger(save);if(!book)return;
   const name=REGIONS[region][0];
   if(!book.trophies[name])return; // never grant seal without an earned cup
