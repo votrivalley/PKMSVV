@@ -266,6 +266,13 @@ test('Solo egg nest requires 2 seconds, interruption resets progress, and hit de
  G.PKMSVVEggs.onHurt(12);
  assert.equal(G.PKMSVVEggs.remaining(egg),before+3);
  assert.equal(egg.penalty,3);
+ G.PKMSVVEggs.onHurt(12);G.PKMSVVEggs.onHurt(6);
+ assert.equal(egg.penalty,3,'repeated collisions during five seconds cannot lock egg forever');
+ assert.equal(egg.eggHitLockout,5);
+ for(let j=0;j<50;j++)G.PKMSVVEggs.update(.1,player,74+j*.1,false);
+ assert.ok(egg.eggHitLockout<.01);
+ G.PKMSVVEggs.onHurt(4);
+ assert.equal(egg.penalty,6,'next legitimate collision after five seconds adds 3s');
  assert.ok(visuals.some(v=>v.includes('+3s')),'Delay must be signposted');
  for(let i=0;i<245;i++){player.kills++;G.PKMSVVEggs.update(.1,player,74+i*.1,false);}
  assert.equal(egg.hatched,true,'Combat-accelerated incubation still hatches');
@@ -311,7 +318,8 @@ test('egg direction indicator, reverse timer bars, walking animation and shield-
  assert.match(src,/ctx\.fillRect\(x-width\/2,y,width\*ratio,2\)/);
  assert.match(src,/follow\(it,j,pl,dt\)/);
  assert.match(src,/it\.anim\.loop\(moved\?'Walk':'Idle'/);
- assert.match(src,/it\.penalty=\(it\.penalty\|\|0\)\+3/);
+ assert.match(src,/it\.penalty=\(it\.penalty\|\|0\)\+EGG_HIT_PENALTY/);
+ assert.match(src,/EGG_HIT_LOCKOUT=5/);
  const patch=read('scripts/patch-v15-eggs.cjs');
  assert.match(patch,/PKMSVVEggs\?\.onHurt\?\./);
  assert.match(patch,/d-absorbed/);
@@ -900,4 +908,14 @@ test('New save before Chapter 3 spawns actual companion nests and reserves two s
  for(let i=0;i<41;i++)eggs.update(.1,pl,61+i*.1,false);
  assert.equal(eggs.occupied,1,'First collected egg reserves one support slot');
  assert.equal(eggs.limit()-eggs.occupied,1,'One more companion is available');
+});
+
+test('Mew AOE is 1.5x wide with a visible high contrast ring; both hatch clocks are 80 percent',()=>{
+ const solo=read('src/v15/eggs.js'),multi=read('src/web/pkmsvv-egg-rush.js');
+ assert.match(solo,/HATCH_BASE=24, HATCH_MIN=32\/3/);
+ assert.match(multi,/SUPPORT_HATCH=24,SUPPORT_MIN_HATCH=32\/3/);
+ assert.match(solo,/radius=\[150,225,120\]/);
+ assert.match(solo,/cx,cy,13,radius,col,\.90,5/);
+ assert.match(solo,/cx,cy,9,radius\*\.78,'#ffffff',\.75,3/);
+ assert.match(solo,/G\.U\.dist2\(e\.x,e\.y,it\.x,it\.y\)<375\*375/);
 });
