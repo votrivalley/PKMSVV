@@ -4,7 +4,11 @@ G.Arena=(()=>{
  let mode=null,center={x:0,y:0},time=0,epoch=0,disabled=false,serial=0;
  const outside=new Map(),received=new Map(),views=new Map(),totals=new Map(),applied=new Map(),zoneDead=new Set();
  const radiusAt=(m,t)=>m==='eggrush'?1600:m==='royale'?
-  t<=240?1900:t<=480?1900-(t-240)*550/240:t<=720?1350-(t-480)*450/240:900:Infinity;
+  t<=240?1900:t<=480?1900-(t-240)*550/240:
+  t<=720?1350-(t-480)*450/240:
+  t<=960?900-(t-720)*250/240:
+  t<=1200?650-(t-960)*200/240:450:Infinity;
+ const SHRINK_DONE_AT=1200;
  // World.arena is cached by upstream after Rift exit; it is NOT a valid
  // indication that the player is still inside a Rift. Use live Rift/Judgment.
  const exempt=()=>!!(G.Rift?.inArena||G.Judgment?.active);
@@ -100,10 +104,10 @@ G.Arena=(()=>{
   }
   if(royale){
    // Lightweight permanent legend instead of a full-screen tutorial.
-   const until=time<240?240-time:time<480?480-time:time<720?720-time:0;
+   const until=time<240?240-time:time<480?480-time:time<720?720-time:time<960?960-time:time<1200?1200-time:0;
    const fmt=Math.floor(until/60)+':'+String(Math.ceil(until%60)).padStart(2,'0');
    const hint=time<240?(vi?'Vòng đỏ thu sau '+fmt:'Red circle shrinks in '+fmt):
-    time<720?(vi?'Vòng đỏ đang thu':'Red circle shrinking'):
+    time<SHRINK_DONE_AT?(vi?'Vòng đỏ đang thu':'Red circle shrinking'):
     (vi?'Vòng đỏ đã thu tối đa':'Final red circle');
    ctx.textAlign='center';ctx.font='bold 11px sans-serif';
    ctx.strokeStyle='rgba(5,18,29,.9)';ctx.lineWidth=3;ctx.fillStyle='#ffb3b7';
