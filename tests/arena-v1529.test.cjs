@@ -15,7 +15,7 @@ function harness(mode='royale',count=10,host=true){
  return {G,players,events,step};
 }
 test('Royale radii interpolate, Egg Rush stays fixed, Co-op remains unbounded',()=>{
- const {G}=harness();for(const [t,r] of [[0,1900],[240,1900],[360,1625],[480,1350],[600,1125],[720,900],[1000,900]])assert.equal(G.Arena.radiusAt('royale',t),r);
+ const {G}=harness();for(const [t,r] of [[0,1900],[240,1900],[360,1625],[480,1350],[600,1125],[720,900],[840,775],[960,650],[1080,550],[1200,450],[1400,450]])assert.equal(G.Arena.radiusAt('royale',t),r);
  assert.equal(G.Arena.radiusAt('eggrush',1000),1600);assert.equal(G.Arena.radiusAt('coop',1000),Infinity);
 });
 test('only Host charges zone damage after grace, reentry resets, arenas suspend penalties',()=>{
@@ -148,4 +148,17 @@ test('v1.5.32 normal enemies drop Orb at 6% and retain eligibility',()=>{
  assert.match(orb,/runOrbDrops<10&&Math\.random\(\)<0\.06/);
  assert.match(fifo,/G\.Orbs\.eligible/);
  assert.match(fifo,/runOrbDrops<10&&Math\.random\(\)<0\.06/);
+});
+
+test('Royale monsters gain +1/3 cumulative movement speed every five minutes only',()=>{
+ const h=harness('royale',4),G=h.G;
+ vm.runInNewContext(fs.readFileSync(require.resolve('../src/web/pkmsvv-royale.js'),'utf8'),{G,Math,Map,Number,Object,Set});
+ const speed=G.Royale.speedAt;
+ for(const [time,factor] of [[0,1],[299,1],[300,4/3],[599,4/3],
+  [600,16/9],[900,64/27],[1200,256/81]]){
+  assert.ok(Math.abs(speed(time)-factor)<1e-9, 'speed at '+time);
+ }
+ const patch=fs.readFileSync(require.resolve('../scripts/patch-arena-v1529.cjs'),'utf8');
+ assert.match(patch,/G\.Royale\?\.active\?G\.Royale\.speedAt/);
+ assert.match(patch,/js\/entities\/enemy\.js/);
 });
