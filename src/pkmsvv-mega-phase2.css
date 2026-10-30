@@ -19,6 +19,9 @@
 .pkmsvv-mega-filters .pkmsvv-mega-filter[aria-pressed="true"]{
  background:#ffe486;border-color:#d6a11c;color:#173648}
 .pkmsvv-mega-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;min-height:90px}
+.pkmsvv-mega-empty{grid-column:1/-1;margin:4px 0;padding:13px 12px;
+ background:#e2efe9;border:1px dashed #9bbfba;border-radius:9px;
+ color:#365968;font-size:12px;text-align:center;line-height:1.5}
 .pkmsvv-mega-cell{
  display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;min-height:130px;
  gap:5px;padding:9px 5px;background:#dfefea;border:2px solid #a4c9c5;border-radius:10px;
