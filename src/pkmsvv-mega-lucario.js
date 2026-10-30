@@ -24,7 +24,7 @@ G.MegaLucario=(()=>{
   const s=saved();
   if(!s?.pkmsvvChapter7Seen||s.partner!==BASE||!s.owned||!s.owned[BASE])return false;
   preview=true;
-  toast('Mega Lucario BETA: vào trận solo, nhấn M hoặc nút MEGA (30 giây).');
+  toast('Mega Lucario BETA: vào trận solo, nhấn phím 4 hoặc nút MEGA (30 giây).');
   sync();return true;
  }
  function changeAppearance(p,mega){
@@ -100,7 +100,7 @@ G.MegaLucario=(()=>{
   button.id='pkmsvv-mega-lucario-btn';
   button.type='button';
   button.className='pkmsvv-mega-btn';
-  button.title='Mega Lucario · Phím M · Hồi chiêu -30%';
+  button.title='Mega Lucario · Phím 4 · Hồi chiêu -30%';
   button.innerHTML=STONE_SVG+'<span class="pkmsvv-mega-btn__label">MEGA</span>';
   button.style.display='none';
   button.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();tryActivate();});
@@ -111,6 +111,7 @@ G.MegaLucario=(()=>{
   const p=player();
   const show=!!(p&&p.dex===BASE&&G.Game.state==='playing'&&
     !(G.Coop&&G.Coop.active)&&(eligible()||p._megaActive));
+  document.body?.classList?.toggle?.('pkmsvv-mega-gamepad',!!G.Pad?.name);
   button.style.display=show?'flex':'none';
   if(!show)return;
   const active=!!p._megaActive;
@@ -118,7 +119,7 @@ G.MegaLucario=(()=>{
   button.disabled=busy||active;
   const label=typeof button.querySelector==='function'?button.querySelector('.pkmsvv-mega-btn__label'):null;
   if(label)label.textContent=active?Math.max(0,Math.ceil(p._megaRemaining))+'s':'MEGA';
-  button.title=active?'Mega Lucario: '+Math.ceil(p._megaRemaining)+' giây còn lại':'Mega Lucario · Phím M · Hồi chiêu -30%';
+  button.title=active?'Mega Lucario: '+Math.ceil(p._megaRemaining)+' giây còn lại':'Mega Lucario · Phím 4 · Hồi chiêu -30%';
   button.setAttribute?.('aria-label',button.title);
  }
  function menu(){
@@ -139,7 +140,10 @@ G.MegaLucario=(()=>{
  }
  const originalUpdate=G.Player.prototype.update;
  G.Player.prototype.update=function(dt){
-  if(this===player())tick(this,dt);
+  if(this===player()){
+   tick(this,dt);
+   if((G.Input?.tap?.('digit4')||G.Input?.tap?.('pkmsvv-mega'))&&eligible())tryActivate();
+  }
   return originalUpdate.call(this,dt);
  };
  const originalStart=G.Game.startRun;
@@ -154,11 +158,7 @@ G.MegaLucario=(()=>{
  G.Game.quit=function(...args){stop(player());const out=originalQuit.apply(this,args);sync();return out;};
  const originalMenu=G.MenuUI.open;
  G.MenuUI.open=function(...args){const out=originalMenu.apply(this,args);menu();return out;};
- document.addEventListener('keydown',event=>{
-  if(event.repeat||event.ctrlKey||event.altKey||event.metaKey||event.key.toLowerCase()!=='m')return;
-  if(event.target&&/INPUT|TEXTAREA|SELECT/.test(event.target.tagName||''))return;
-  if(eligible()){event.preventDefault();tryActivate();}
- });
+ // Same keyboard/controller Mega input mapping as the regional transformations.
  initUI();
  setInterval(sync,250);
  return {BASE,SPRITE,DURATION,COOLDOWN,RATIOS,owned,eligible,previewUnlock,tryActivate,activate,stop,tick,sync};
