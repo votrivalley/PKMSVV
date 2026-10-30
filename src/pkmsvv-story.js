@@ -10,7 +10,8 @@ G.PKMSVVStory=(()=>{
    6:'chapter2-orbs', 7:'chapter2-shadow', 8:'chapter3-nest', 9:'chapter3-hatch',
    10:'chapter1-echo', 11:'chapter1-fragments',
    12:'chapter6-arena', 13:'chapter6-champion',
-   14:'chapter7-seal', 15:'chapter7-mega'
+   14:'chapter7-seal', 15:'chapter7-mega',
+   16:'chapter5-gate', 17:'chapter5-trials'
  });
  const chapters={
   prologue:[
@@ -59,15 +60,15 @@ G.PKMSVVStory=(()=>{
    {art:9,speaker:['Tôi','Me'],text:['Lần đầu tiên... mình không chỉ chiến đấu để sống sót một mình.','For the first time... I am not fighting just to survive alone.']}
   ],
   chapter5:[
-   {art:10,speaker:['Tôi','Me'],text:['Dưới chân mình... có dấu chân của những Pokémon khác!','There are other Pokémon footprints here!']},
-   {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Cánh cửa Đồng Hành đã mở. Ngươi không cần chiến đấu một mình nữa.','The Gate of Companions is open. You need not fight alone.']},
-   {art:10,speaker:['Tôi','Me'],text:['Mình có thể đi cùng bạn bè và thử sức với họ sao?','I can team up with friends, or compete with them?']},
-   {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Sống Còn, Tranh Trứng và Co-op là ba thử thách khác nhau.','Survival, Egg Rush, and Co-op are three different challenges.']},
-   {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Có thể kết nối chung mạng LAN. Thiếu người sẽ có những huấn luyện viên AI tham gia.','Join on a local network. AI trainers can fill empty slots.']},
-   {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Tranh Trứng chỉ tính điểm khi trứng nở cuối trận. Nhiều trứng chưa chắc đã thắng.','Egg Rush reveals points only after the eggs hatch at match end. More eggs do not guarantee victory.']},
-   {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Sống Còn và Tranh Trứng không chờ lựa chọn kỹ năng; chỉ Co-op mới được đồng lòng đợi nhau.','Survival and Egg Rush never pause for your skill choices; only Co-op can wait together.']},
-   {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Hãy hoàn thành cả ba chế độ. Khi ba thử thách khép lại, cánh cửa Arena Chương 7 mới thức tỉnh.','Complete all three modes. Only then will the Chapter 7 Arena gate awaken.']},
-   {art:10,speaker:['Tôi','Me'],text:['Lần này mình sẽ tìm lại ký ức cùng những người bạn!','This time I will recover my memories with friends!']}
+   {art:16,speaker:['Tôi','Me'],text:['Dưới chân mình... có dấu chân của những Pokémon khác!','There are other Pokémon footprints here!']},
+   {art:16,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Cánh cửa Đồng Hành đã mở. Ngươi không cần chiến đấu một mình nữa.','The Gate of Companions is open. You need not fight alone.']},
+   {art:16,speaker:['Tôi','Me'],text:['Mình có thể đi cùng bạn bè và thử sức với họ sao?','I can team up with friends, or compete with them?']},
+   {art:17,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Sống Còn, Tranh Trứng và Co-op là ba thử thách khác nhau.','Survival, Egg Rush, and Co-op are three different challenges.']},
+   {art:17,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Có thể kết nối chung mạng LAN. Thiếu người sẽ có những huấn luyện viên AI tham gia.','Join on a local network. AI trainers can fill empty slots.']},
+   {art:17,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Tranh Trứng chỉ tính điểm khi trứng nở cuối trận. Nhiều trứng chưa chắc đã thắng.','Egg Rush reveals points only after the eggs hatch at match end. More eggs do not guarantee victory.']},
+   {art:17,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Sống Còn và Tranh Trứng không chờ lựa chọn kỹ năng; chỉ Co-op mới được đồng lòng đợi nhau.','Survival and Egg Rush never pause for your skill choices; only Co-op can wait together.']},
+   {art:17,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Hãy hoàn thành cả ba chế độ. Khi ba thử thách khép lại, cánh cửa Arena Chương 7 mới thức tỉnh.','Complete all three modes. Only then will the Chapter 7 Arena gate awaken.']},
+   {art:17,speaker:['Tôi','Me'],text:['Lần này mình sẽ tìm lại ký ức cùng những người bạn!','This time I will recover my memories with friends!']}
   ],
   // Chapter 6 Berry gameplay reserved for a future release; existing save flags unchanged.
   chapter6:[
@@ -205,7 +206,7 @@ G.PKMSVVStory=(()=>{
       img.dataset.revealFallback='1';
       img.onerror=()=>{img.onerror=null;img.src='assets/story/scene-5.svg';};
       img.src='assets/story/gate.webp';
-    }else if(key==='chapter1-echo'||key==='chapter1-fragments'||key==='chapter2-orbs'||key==='chapter2-shadow'||key==='chapter3-nest'||key==='chapter3-hatch'||key==='chapter6-arena'||key==='chapter6-champion'||key==='chapter7-seal'||key==='chapter7-mega'){
+    }else if(key==='chapter1-echo'||key==='chapter1-fragments'||key==='chapter2-orbs'||key==='chapter2-shadow'||key==='chapter3-nest'||key==='chapter3-hatch'||key==='chapter5-gate'||key==='chapter5-trials'||key==='chapter6-arena'||key==='chapter6-champion'||key==='chapter7-seal'||key==='chapter7-mega'){
       img.onerror=null;
       img.src='assets/story/gate.webp';
     }else{
@@ -220,6 +221,8 @@ G.PKMSVVStory=(()=>{
      key==='chapter1-fragments'?tr('Tám sức mạnh và những mảnh ký ức đang trở lại','Eight powers and returning memory fragments'):
      key==='chapter3-nest'?tr('Ổ trứng còn sót lại giữa vùng đất ký ức','An abandoned nest in the land of lost memories'):
     key==='chapter3-hatch'?tr('Quả trứng nở, Pokémon con đi theo người sống sót','An egg hatches and a baby Pokémon joins the survivor'):
+    key==='chapter5-gate'?tr('Cổng Đồng Hành mở ra giữa vùng đất ký ức','The Gate of Companions opens in the land of lost memories'):
+    key==='chapter5-trials'?tr('Ba thử thách Co-op, Sống Còn và Tranh Trứng','Three challenges: Co-op, Survival and Egg Rush'):
     key==='chapter6-arena'?tr('Đấu trường vương miện xuất hiện giữa bầu trời','A crown arena rises into the sky'):
     key==='chapter6-champion'?tr('Trận thách đấu Champion quyết định Ấn Chứng Vương Miện','A Champion duel for the Crown Seal'):
     key==='chapter7-seal'?tr('Ấn Chứng đầu tiên đánh thức sức mạnh Mega','The first Crown Seal awakens Mega power'):
@@ -265,7 +268,7 @@ G.PKMSVVStory=(()=>{
   stop();hideNameForm();mode=type;idx=0;next=done;replaying=replay;chosenDex=dex;
   lines=chapters[type];G.UI.chrome(false);G.UI.show('scr-pkmsvv-story');
   // Preload once; optional offline fallbacks remain available.
-  for(const name of ['eyes','gate','reveal','chapter1-echo','chapter1-fragments','chapter2-orbs','chapter2-shadow','chapter3-nest','chapter3-hatch','chapter6-arena','chapter6-champion','chapter7-seal','chapter7-mega']){const preload=new Image();preload.src='assets/story/'+name+'.webp';}
+  for(const name of ['eyes','gate','reveal','chapter1-echo','chapter1-fragments','chapter2-orbs','chapter2-shadow','chapter3-nest','chapter3-hatch','chapter5-gate','chapter5-trials','chapter6-arena','chapter6-champion','chapter7-seal','chapter7-mega']){const preload=new Image();preload.src='assets/story/'+name+'.webp';}
   draw();
   if(G.Pad&&G.Pad.focusFirst)G.Pad.focusFirst();
  }
