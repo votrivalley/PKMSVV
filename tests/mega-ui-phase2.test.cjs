@@ -147,3 +147,29 @@ test('All 96 Mega identities remain ??? before Chapter 7 regardless of stone own
  assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 0/96');
  assert.equal(lib.isUnlocked(h.g.PKMSVV_MEGA_CATALOG.find(f=>f.key==='lucariomega')),false);
 });
+
+
+test('full-save Mega Dragonite remains visibly unlocked without public battle sprite',()=>{
+ const h=fake(),ui=h.g.PKMSVVMegaEntry,save=h.g.DB.save;
+ const dragonite=h.g.PKMSVV_MEGA_CATALOG.find(f=>f.key==='dragonitemega');
+ assert.ok(dragonite,'Dragonite belongs to 96-form catalog');
+ assert.equal(dragonite.dex,149);
+ assert.equal(dragonite.artReady,false,'public build must not pretend to have private QA art');
+ save.owned={149:{at:1,from:'qa'}};
+ save.megaStones.dragoninite=1;
+ save.pkmsvvChapter3Seen=true;
+ save.pkmsvvChapter7Seen=true;
+ save.megaForms={dragonitemega:true};
+ save.megaStoryCleared={dragonitemega:true};
+ assert.equal(ui.isUnlocked(dragonite),true);
+ ui.open();
+ h.get('pkmsvv-mega-roster').querySelector('[data-mega-filter="unlocked"]').click();
+ assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 1/96');
+ const cards=h.get('pkmsvv-mega-grid').children;
+ assert.equal(cards.length,1);
+ const card=cards[0];
+ assert.match(card.className,/is-pending-art/);
+ assert.equal(card.children.at(-2).textContent,'Mega Dragonite');
+ assert.equal(card.children.at(-1).textContent,'Đã mở · Chờ sprite');
+ assert.ok(h.get('pkmsvv-mega-detail').children.some(x=>String(x.textContent).includes('Đã mở khóa · Chờ sprite Mega chuẩn')));
+});
