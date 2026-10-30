@@ -63,7 +63,8 @@ test('v1.5 menu preserves cloud and fullscreen, moves backup to Options, and kee
  assert.match(menu,/btn-backup\{display:none!important\}/);
  assert.doesNotMatch(menu,/#btn-save\{display:none/);
  assert.doesNotMatch(menu,/#btn-full\{display:none/);
- assert.match(keys,/orb:'digit5'/);
+ assert.match(keys,/orb:'digit4'/);
+  assert.match(keys,/mega:'digit5'/);
  assert.match(keys,/orb:'Dùng Orb'/);
  assert.doesNotMatch(pad,/Không cần nút chuyển Orb/);
  assert.doesNotMatch(dex,/pane\.innerHTML='<h3>'\+L\('Tính cách, Đặc tính & TM'/);
