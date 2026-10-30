@@ -29,15 +29,14 @@ G.PKMSVVChampionArena=(()=>{
   const book=save.arenas.pkmChampion;book.history=book.history||[];return book;
  }
  // A bracket seed is not a win; only player defeat of a real Enemy counts.
+ // Exactly two strong AI with 13 randomized others; shuffle player position too.
  function makeBracket(random=rand){
-  const opponents=Array.from({length:15},(_,i)=>({
-   id:'ai-'+i,name:'AI '+String(i+1).padStart(2,'0'),
-   dex:AI_POOL[i%AI_POOL.length],
-   tier:i<2?'elite':random()<.22?'elite':random()<.68?'trained':'novice'
-  }));
-  const shuffled=opponents.slice();
-  for(let i=shuffled.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];}
-  return [{id:'you',name:tr('Bạn','You'),dex:G.DB?.save?.partner||25,tier:'human'},...shuffled];
+  const opponents=Array.from({length:15},(_,i)=>({id:'ai-'+i,name:'AI '+String(i+1).padStart(2,'0'),
+   dex:AI_POOL[Math.min(AI_POOL.length-1,Math.floor(random()*AI_POOL.length))],
+   tier:i<2?'elite':random()<Math.min(.85,.38+region*.05)?'trained':'novice'}));
+  const seats=[{id:'you',name:tr('Bạn','You'),dex:G.DB?.save?.partner||25,tier:'human'},...opponents];
+  for(let i=seats.length-1;i>0;i--){const j=Math.min(i,Math.max(0,Math.floor(random()*(i+1))));[seats[i],seats[j]]=[seats[j],seats[i]];}
+  return seats;
  }
  function aiWinner(a,b,random=rand){
   const p={elite:.68,trained:.5,novice:.35};
@@ -56,6 +55,16 @@ G.PKMSVVChampionArena=(()=>{
  }
  const playerOpponent=()=>{const at=bracket.findIndex(p=>p.id==='you');
   return at<0?null:bracket[at%2===0?at+1:at-1];};
+ function regionUnlocked(index,save=G.DB?.save){
+  if(!Number.isInteger(index)||index<0||index>=REGIONS.length)return false;
+  if(index===0)return true;
+  const seals=save?.arenas?.pkmChampion?.seals||{};
+  return seals[REGIONS[index][0]]===true||REGIONS.slice(0,index).every(([name])=>seals[name]===true);
+ }
+ function storyCompleted(save=G.DB?.save){return REGIONS.every(([name])=>save?.arenas?.pkmChampion?.seals?.[name]===true);}
+ function nextStoryRegion(save=G.DB?.save){const seals=save?.arenas?.pkmChampion?.seals||{};
+  const index=REGIONS.findIndex(([name],i)=>seals[name]!==true&&regionUnlocked(i,save));return index<0?0:index;}
+ function clearResult(){lastPodium=null;const box=$('pkmsvv-champion-podium');if(box){box.hidden=true;box.replaceChildren?.();box.classList?.remove?.('celebrate');}}
  function menu(){
   const nav=document.querySelector('#scr-menu .menu-right .menu-list');
   if(!nav)return false;
@@ -88,13 +97,13 @@ G.PKMSVVChampionArena=(()=>{
    '<button id="pkmsvv-champion-rematch" type="button" class="btn gold" hidden>Thách đấu lại Champion</button>'+
    '<button id="pkmsvv-champion-ready" type="button" class="btn gold" hidden>Sẵn sàng</button></div></div>';
   document.body.append(overlay);
-  $('pkmsvv-champion-close').onclick=()=>{overlay.hidden=true;if(active)returnToMenu();};
+  $('pkmsvv-champion-close').onclick=()=>{overlay.hidden=true;clearResult();if(active)returnToMenu();};
   $('pkmsvv-arena-mode-solo').onclick=()=>{overlay.hidden=true;G.PKMSVVArenaSolo?.open?.();};
   $('pkmsvv-arena-mode-champion').onclick=()=>updatePanel();
   $('pkmsvv-champion-start').onclick=start;
   $('pkmsvv-champion-rematch').onclick=rematch;
   $('pkmsvv-champion-ready').onclick=()=>{if(active&&elapsed>=PREP_SECONDS)nextDuel();};
-  overlay.addEventListener('click',e=>{if(e.target===overlay&&!active)overlay.hidden=true;});
+  overlay.addEventListener('click',e=>{if(e.target===overlay&&!active){overlay.hidden=true;clearResult();}});
   return overlay;
  }
  function updatePanel(){
@@ -106,9 +115,9 @@ G.PKMSVVChampionArena=(()=>{
   regionBox.replaceChildren();
   REGIONS.forEach(([name,dex,champion],i)=>{
    const b=document.createElement('button');b.type='button';b.className='pkmsvv-champion-region'+(region===i?' chosen':'');
-   b.textContent=(led.seals?.[name]?'👑 ':led.trophies?.[name]?'🏆 ':'○ ')+name;
-   b.disabled=active;
-   b.onclick=()=>{region=i;updatePanel();};
+   b.textContent=(led.seals?.[name]?'👑 ':led.trophies?.[name]?'🏆 ':regionUnlocked(i)?'○ ':'🔒 ')+name;
+   b.disabled=active||!regionUnlocked(i);
+   b.onclick=()=>{region=i;clearResult();updatePanel();};
    regionBox.append(b);
   });
   const progress=$('pkmsvv-champion-progress');
@@ -161,7 +170,7 @@ G.PKMSVVChampionArena=(()=>{
    return !!G.PKMSVVStory?.chapter6?.(ok=>{if(ok)open();});
   }
   if(!G.PKMSVVStory?.arenaUnlocked?.(save))return false;
-  updatePanel();return true;
+  region=nextStoryRegion(save);clearResult();updatePanel();return true;
  }
  function battleName(){
   const ch=REGIONS[region];
@@ -206,7 +215,7 @@ G.PKMSVVChampionArena=(()=>{
   return true;
  }
  function launch(championOnly=false){
-  if(active||!G.PKMSVVStory?.arenaUnlocked?.()||G.Coop?.active)return false;
+  if(active||!G.PKMSVVStory?.arenaUnlocked?.()||G.Coop?.active||!regionUnlocked(region))return false;
   paid=false;round=0;elapsed=0;opp=null;target=null;semiLosers=[];lastPodium=null;
   bracket=makeBracket();
   active=true;stage='prep';
@@ -381,7 +390,7 @@ G.PKMSVVChampionArena=(()=>{
    step.append(name);box.append(step);
   });box.classList?.add?.('celebrate');
  }
- function exit(){if(active){returnToMenu();}const o=$('pkmsvv-champion-screen');if(o)o.hidden=true;}
+ function exit(){clearResult();if(active){returnToMenu();}const o=$('pkmsvv-champion-screen');if(o)o.hidden=true;}
  // Patch the live runtime rather than source js/game.js: Web/iOS and LAN builds
  // subsequently apply their own exact-code game patches. Wrappers compose safely.
  function guardUpdate(object,key,fn){
@@ -421,7 +430,7 @@ G.PKMSVVChampionArena=(()=>{
  // Chapter 5 is explicitly accessible through Memories and Arena intro.
  // In particular, first LAN access must never be blocked by a cutscene.
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',menu,{once:true});else menu();
- return {REGIONS,ROUNDS,PREP_SECONDS,FIGHT_SECONDS,makeBracket,aiWinner,open,start,rematch,exit,nextDuel,renderPodium,
+ return {REGIONS,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIGHT_SECONDS,makeBracket,aiWinner,open,start,rematch,exit,nextDuel,renderPodium,
   update,settle,claimSeal,ledger,get active(){return active},get stage(){return stage},get round(){return round},
   get opponent(){return opp}};
 })();
