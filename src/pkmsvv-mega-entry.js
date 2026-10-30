@@ -21,7 +21,12 @@ G.PKMSVVMegaEntry=(()=>{
   return 'Mega '+head.replace(/-/g,' ')+(end?' '+end.replace(/^-/, ''):'');
  };
  const shinyOwned=f=>!!(f&&save().shiny?.[f.dex]);
- const discovered=f=>isUnlocked(f)&&(variant==='normal'||shinyOwned(f));
+ // The isolated 4-direction QA pack may preview both supplied sprite sheets.
+ // This is visual only: it never unlocks an actual Shiny Pokémon in the save.
+ const qaShinyPreview=f=>!!(f?.qa4dir===true&&
+  G.PKMSVV_MEGA_4DIR_QA?.enabled===true&&
+  G.PKMSVV_MEGA_4DIR_QA.forms?.includes(f.key));
+ const discovered=f=>isUnlocked(f)&&(variant==='normal'||shinyOwned(f)||qaShinyPreview(f));
  // Only forms with a real Mega sprite in THIS build belong on the screen.
  // This automatically includes the four private 4-dir Mega sprites when the
  // isolated PC QA importer registers their metadata; no blank future cards.
