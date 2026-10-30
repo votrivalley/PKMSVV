@@ -11,6 +11,22 @@ G.PKMSVVChampionArena=(()=>{
   ['Kalos',658,'Greninja'],['Alola',768,'Golisopod'],['Galar',870,'Falinks'],
   ['Paldea',998,'Baxcalibur'],['Votri Valley',149,'Dragonite']
  ]);
+ // Temporary regional Champion stand-ins; no fake Mega combat sprites.
+ const MEGA_KEYS=['charizardmegax','scizormega','swampertmega','garchompmega',
+  'excadrillmega','greninjamega','golisopodmega','falinksmega','baxcaliburmega','dragonitemega'];
+ const TEMP_CHAMPIONS={
+  1:[248,'Tyranitar'],2:[376,'Metagross'],3:[448,'Lucario'],
+  5:[681,'Aegislash'],6:[784,'Kommo-o'],7:[823,'Corviknight'],
+  8:[983,'Kingambit'],9:[373,'Salamence']
+ };
+ function regionChampion(index){
+  const v=REGIONS[index],f=G.PKMSVV_MEGA_CATALOG?.find?.(m=>m.key===MEGA_KEYS[index]);
+  const ready=!!(f?.artReady&&G.SPRITE_META?.[f.spriteId]?.a?.Idle);
+  if(ready)return {dex:v[1],name:'Mega '+v[2],spriteId:f.spriteId,temporary:false};
+  const sub=TEMP_CHAMPIONS[index]||[v[1],v[2]];
+  const dex=G.DEX_BY?.[sub[0]]?sub[0]:v[1];
+  return {dex,name:dex===sub[0]?sub[1]:v[2],spriteId:null,temporary:dex!==v[1]};
+ }
  const PREP_SECONDS=180,FIGHT_SECONDS=150;
  const clock=secs=>{const n=Math.max(0,Math.ceil(secs));return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');};
  const DUEL_TYPES=['normal','fighting','psychic','steel','rock','ghost'];
@@ -192,7 +208,9 @@ G.PKMSVVChampionArena=(()=>{
  }
  function battleName(){
   const ch=REGIONS[region];
-  return tr('Champion ','Champion ')+ch[0]+' · '+ch[2];
+  const standIn=regionChampion(region);
+  return tr('Champion ','Champion ')+ch[0]+' · '+standIn.name+
+   (standIn.temporary?tr(' (tạm thời)',' (stand-in)'):'');
  }
  function spawn(){
   const pl=G.Game?.player;
@@ -200,8 +218,13 @@ G.PKMSVVChampionArena=(()=>{
   const c=REGIONS[region];
   opp=round===4?(semiLosers.find(x=>x.id!=='you')||{id:'ai-3rd',name:'AI',dex:c[1],tier:'elite'}):playerOpponent();
   if(!opp)return false;
+  if(round===3){
+   const champion=regionChampion(region);
+   opp={...opp,dex:champion.dex,name:champion.name,
+    pkmsvvMegaSprite:champion.spriteId,pkmsvvTemporaryChampion:champion.temporary};
+  }
   const dex=G.DEX_BY?.[opp.dex]?opp.dex:25;
-  const targetName=G.DEX_BY?.[dex]?.name||opp.name;
+  const targetName=opp.pkmsvvMegaSprite?opp.name:(G.DEX_BY?.[dex]?.name||opp.name);
   // Same baseline HP and movement for both sides. Skill builds still matter.
   pl._arenaOriginal={mon:pl.mon,maxHp:pl.maxHp,baseAtk:pl.baseAtk,baseSpd:pl.baseSpd,
    atkMul:pl.atkMul,spdMul:pl.spdMul};
@@ -220,12 +243,13 @@ G.PKMSVVChampionArena=(()=>{
   // Duel opponents still use boss combat mechanics, but MUST draw like normal
   // player Pokémon rather than the enlarged boss species artwork.
   if(target&&G.Sprites){
-   const visualScale=G.Sprites.playerScale?.(dex);
+   const visualDex=opp.pkmsvvMegaSprite||dex;
+   const visualScale=G.Sprites.playerScale?.(visualDex);
    if(Number.isFinite(visualScale)&&visualScale>0){
     target.scale=visualScale;
-    if(G.Sprites.Animator)target.anim=new G.Sprites.Animator(dex,visualScale,!!target.shiny);
-    target.r=G.Sprites.bodyRadius?.(dex,visualScale)??target.r;
-    target.bodyH=G.Sprites.bodyHeight?.(dex,visualScale)??target.bodyH;
+    if(G.Sprites.Animator)target.anim=new G.Sprites.Animator(visualDex,visualScale,!!target.shiny);
+    target.r=G.Sprites.bodyRadius?.(visualDex,visualScale)??target.r;
+    target.bodyH=G.Sprites.bodyHeight?.(visualDex,visualScale)??target.bodyH;
    }
   }
   target.pkmsvvChampion=true;
@@ -460,7 +484,7 @@ G.PKMSVVChampionArena=(()=>{
  // Chapter 5 is explicitly accessible through Memories and Arena intro.
  // In particular, first LAN access must never be blocked by a cutscene.
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',menu,{once:true});else menu();
- return {REGIONS,REGION_THEMES,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIGHT_SECONDS,makeBracket,aiWinner,open,start,rematch,exit,nextDuel,renderPodium,
+ return {REGIONS,REGION_THEMES,MEGA_KEYS,TEMP_CHAMPIONS,regionChampion,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIGHT_SECONDS,makeBracket,aiWinner,open,start,rematch,exit,nextDuel,renderPodium,
   update,settle,claimSeal,ledger,get active(){return active},get stage(){return stage},get round(){return round},
   get opponent(){return opp}};
 })();
