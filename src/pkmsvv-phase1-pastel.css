@@ -86,7 +86,7 @@
 }
 /* Existing upgrade paths stay intact; presentation only. */
 #scr-upgrade-select.scr.dim{
- background:radial-gradient(circle at 50% 20%,#ebf8f3,#c8e1dc 80%,#b1d2cc)!important;
+ background:radial-gradient(circle at 50% 35%,rgba(7,22,33,.18),rgba(6,16,28,.56) 78%,rgba(5,13,25,.68))!important;
 }
 #scr-upgrade-select .pkmsvv-chooser{
  background:linear-gradient(165deg,#f6fcf8,#d8ebe7)!important;
@@ -226,4 +226,27 @@
 #scr-menu.pkmsvv-v15-menu .menu-left .logo>.pkmsvv-credit,
 #scr-menu.pkmsvv-v15-menu .pkmsvv-credit{
  color:#fff5b9!important;text-shadow:0 1px 2px #05131d,0 0 5px #05131d!important;
+}
+
+/* v1.5.51 — No opaque white/mint fullscreen layers over the animated Pokemon
+   backdrop. Only modal content cards are opaque for readable text. */
+#scr-upgrade-select.scr.dim{
+ background-color:transparent!important;
+ backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+#pkmsvv-support-catalog.pkmsvv-support-overlay:not([hidden]){
+ background:rgba(4,16,28,.52)!important;
+ background-image:none!important;
+ backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+#pkmsvv-mega-phase1.pkmsvv-mega-phase1-overlay:not([hidden]){
+ background:rgba(4,16,28,.52)!important;
+ background-image:none!important;
+ backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+/* Maintain crisp opaque mint content panels and dark accessible headings. */
+#scr-upgrade-select .pkmsvv-chooser,
+#pkmsvv-support-catalog .pkmsvv-support-modal,
+#pkmsvv-mega-phase1 .pkmsvv-mega-phase1-dialog{
+ opacity:1!important;filter:none!important;
 }
