@@ -25,7 +25,7 @@ Sau khi hoàn thành Chương 2 và sử dụng đủ sáu loại Mystery Orb (t
 - Sảnh một khối, thẻ Pokémon bên trái, giao diện bo tròn teal của Votri Valley.
 - Đổi nhãn **Online**, **Xếp hạng**, **Kecleon shop**; bỏ tiêu đề dài Nature/Ability/TM nhưng giữ chi tiết bên trong.
 - Nút Discord: https://discord.gg/z36Hb9775K. Có gì mới chuyển xuống dưới, dành vị trí cho sự kiện; Sao lưu Save nằm trong Tùy chọn. Giữ nút Lưu Cloud và Toàn màn hình.
-- Điều khiển gọn với hai tab Bàn phím / Tay cầm, lưu và mặc định riêng. Orb trên PC mặc định phím 5; Y / △ trên tay cầm là dùng Orb, không phải chuyển Orb.
+- Điều khiển gọn với hai tab Bàn phím / Tay cầm, lưu và mặc định riêng. Orb trên PC mặc định phím 4; Mega mặc định phím 5; Y / △ trên tay cầm là dùng Orb, không phải chuyển Orb.
 
 ## Trước khi public phải xác nhận
 - QA 4 người WebRTC, cạnh tranh nhặt cùng trứng, hồi sinh, PvP, mất kết nối, Host rời và kết quả.
