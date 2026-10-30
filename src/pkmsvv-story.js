@@ -66,9 +66,10 @@ G.PKMSVVStory=(()=>{
    {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Có thể kết nối chung mạng LAN. Thiếu người sẽ có những huấn luyện viên AI tham gia.','Join on a local network. AI trainers can fill empty slots.']},
    {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Tranh Trứng chỉ tính điểm khi trứng nở cuối trận. Nhiều trứng chưa chắc đã thắng.','Egg Rush reveals points only after the eggs hatch at match end. More eggs do not guarantee victory.']},
    {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Sống Còn và Tranh Trứng không chờ lựa chọn kỹ năng; chỉ Co-op mới được đồng lòng đợi nhau.','Survival and Egg Rush never pause for your skill choices; only Co-op can wait together.']},
-   {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Hãy hoàn thành cả ba chế độ. Khi ba thử thách khép lại, cánh cửa Arena mới thức tỉnh.','Complete all three modes. Only after all three challenges will the Arena gate awaken.']},
+   {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Hãy hoàn thành cả ba chế độ. Khi ba thử thách khép lại, cánh cửa Arena Chương 7 mới thức tỉnh.','Complete all three modes. Only then will the Chapter 7 Arena gate awaken.']},
    {art:10,speaker:['Tôi','Me'],text:['Lần này mình sẽ tìm lại ký ức cùng những người bạn!','This time I will recover my memories with friends!']}
   ],
+  // Chapter 6 Berry gameplay reserved for a future release; existing save flags unchanged.
   chapter6:[
    {art:12,speaker:['Tôi','Me'],text:['Một đấu trường xuất hiện. Phía trên là mười chiếc vương miện!','An arena has appeared. Above it hang ten crowns!']},
    {art:12,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Mỗi vùng là giải loại trực tiếp mười sáu người. Vòng 16, tứ kết, bán kết, chung kết.','Each region has a sixteen-trainer knockout: round of sixteen, quarterfinals, semifinals and final.']},
@@ -233,8 +234,8 @@ G.PKMSVVStory=(()=>{
               'An empty celestial gateway awaiting the awakened Pokémon');
   cv.classList.toggle('hidden',mode!=='reveal');
   if(mode==='reveal'&&chosenDex&&G.UI&&G.UI.sprite)G.UI.sprite(cv,chosenDex,{lively:true,scale:3,hero:true});
-  $('pkmsvv-story-chapter').textContent=mode==='chapter7'?tr('CHƯƠNG 7 · SỨC MẠNH MEGA','CHAPTER 7 · MEGA AWAKENING'):
-    mode==='chapter6'?tr('CHƯƠNG 6 · ĐẤU TRƯỜNG VƯƠNG MIỆN','CHAPTER 6 · CROWN ARENA'):
+  $('pkmsvv-story-chapter').textContent=mode==='chapter7'?tr('CHƯƠNG 8 · SỨC MẠNH MEGA','CHAPTER 8 · MEGA AWAKENING'):
+    mode==='chapter6'?tr('CHƯƠNG 7 · ĐẤU TRƯỜNG VƯƠNG MIỆN','CHAPTER 7 · CROWN ARENA'):
     mode==='chapter5'?tr('CHƯƠNG 5 · ĐỒNG HÀNH','CHAPTER 5 · COMPANIONS'):
     mode==='chapter3'?tr('CHƯƠNG 4 · MẦM SỐNG BỊ LÃNG QUÊN','CHAPTER 4 · FORGOTTEN LIFE'):
     mode==='chapter2'?tr('CHƯƠNG 3 · TIẾNG VỌNG THỨ TÁM','CHAPTER 3 · THE EIGHTH ECHO'):
@@ -285,7 +286,7 @@ G.PKMSVVStory=(()=>{
   if(!s)return 0;
   const awarded=s.pkmsvvChapterPurpleRewards;
   const flags=(awarded&&typeof awarded==='object'&&!Array.isArray(awarded))?awarded:{};
-  // Old reward ledger slots 0–3 MUST remain stable after visible renumbering.
+  // Existing reward ledger slots 0–6 stay stable; Berry teaser has no ticket reward.
   const completed=[
    !!(s.pkmsvvStorySeen&&(s.starter||s.partner)),
    !!s.pkmsvvChapter1Seen,!!s.pkmsvvChapter2Seen,!!s.pkmsvvChapter3Seen,
@@ -376,7 +377,7 @@ G.PKMSVVStory=(()=>{
   s.pkmsvvMultiplayerDone[mode]=true;G.DB.commit(true);
   const progress=multiplayerProgress(s);
   G.UI?.toast?.(progress.count===3?
-   tr('🏆 Đã hoàn thành cả ba chế độ! Chương 6 · Arena đã mở.','🏆 All three modes complete! Chapter 6 · Arena is unlocked.'):
+   tr('🏆 Đã hoàn thành cả ba chế độ! Chương 7 · Arena đã mở.','🏆 All three modes complete! Chapter 7 · Arena is unlocked.'):
    tr('✅ Hoàn thành '+MP_LABELS[mode]+' · '+progress.count+'/3 chế độ.','✅ Completed '+MP_LABELS[mode]+' · '+progress.count+'/3 modes.'),3500);
   return true;
  }
@@ -406,6 +407,7 @@ G.PKMSVVStory=(()=>{
   if(s.pkmsvvChapter3Seen)available.push('chapter3');
   // Story continuation is selectable before first completion, without blocking LAN.
   if(s.pkmsvvChapter3Seen)available.push('chapter5');
+  if(s.pkmsvvChapter5Seen)available.push('berry-preview');
   if((s.pkmsvvChapter5Seen&&allMultiplayerCompleted(s))||s.pkmsvvChapter6Seen)available.push('chapter6');
   if(earnedChampion(s))available.push('chapter7');
   if(available.length===1){replay('prologue');return;}
@@ -417,10 +419,11 @@ G.PKMSVVStory=(()=>{
    chapter2:tr('Chương 3 · Tiếng Vọng Thứ Tám','Chapter 3 · The Eighth Echo'),
    chapter3:tr('Chương 4 · Mầm Sống Bị Lãng Quên','Chapter 4 · Forgotten Life'),
    chapter5:tr('Chương 5 · Đồng Hành','Chapter 5 · Companions'),
-   chapter6:tr('Chương 6 · Đấu Trường Vương Miện','Chapter 6 · Crown Arena'),
-   chapter7:tr('Chương 7 · Sức Mạnh Mega','Chapter 7 · Mega Awakening')};
+   'berry-preview':tr('Chương 6 · Bí Mật Berry (sắp ra mắt)','Chapter 6 · Berry Secrets (coming soon)'),
+   chapter6:tr('Chương 7 · Đấu Trường Vương Miện','Chapter 7 · Crown Arena'),
+   chapter7:tr('Chương 8 · Sức Mạnh Mega','Chapter 8 · Mega Awakening')};
   choices.innerHTML='<div class="pkmsvv-memory-inner"><h2>'+tr('Ký Ức','Memories')+'</h2>'+
-   available.map(c=>'<button type="button" class="btn gold" data-chapter="'+c+'">'+labels[c]+'</button>').join('')+
+   available.map(c=>'<button type="button" class="btn gold" data-chapter="'+c+'"'+(c==='berry-preview'?' disabled title="Berry sẽ phát triển sau"':'')+'>'+labels[c]+'</button>').join('')+
    '<button type="button" class="btn ghost" data-close="1">'+tr('Đóng','Close')+'</button></div>';
   document.body.appendChild(choices);
   choices.querySelectorAll('[data-chapter]').forEach(el=>{el.onclick=()=>{

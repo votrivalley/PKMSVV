@@ -13,6 +13,8 @@ G.PKMSVVChampionArena=(()=>{
  ]);
  const PREP_SECONDS=180,FIGHT_SECONDS=150;
  const clock=secs=>{const n=Math.max(0,Math.ceil(secs));return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');};
+ const DUEL_TYPES=['normal','fighting','psychic','steel','rock','ghost'];
+ const FARM_SPAWN_MULT=2,FARM_XP_MULT=2;
  const $=id=>document.getElementById(id);
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  let region=0,stage='idle',round=0,elapsed=0,opp=null,bracket=[],target=null,active=false,paid=false,lastSecond=-1,semiLosers=[],lastPodium=null;
@@ -232,10 +234,11 @@ G.PKMSVVChampionArena=(()=>{
   restoreStats();
   stage='prep';elapsed=0;lastSecond=-1;opp=null;target=null;
   G.World?.setArena?.(null);
+  G.World?.setBiome?.(0,true); // farm area reset after 1v1
   panel().hidden=true;
   // Previous builds created a floating skip button. Suppress it in timed Champion.
   const ready=$('pkmsvv-arena-ready-float');if(ready){ready.hidden=true;ready.disabled=true;}
-  G.UI?.toast?.(tr('3 phút farm quái và nâng kỹ năng trước trận!','3 minutes of farming and skill upgrades before the duel!'),2800);
+  G.UI?.toast?.(tr('3 phút farm: quái ×2 và EXP ×2 trước trận!','3-minute preparation: 2x monsters and 2x EXP!'),2800);
  }
  function settle(rank,cup=false){
   if(paid)return;
@@ -310,7 +313,9 @@ G.PKMSVVChampionArena=(()=>{
  function nextDuel(){
   if(!active||stage!=='prep')return false;
   G.EnemyMgr?.clear?.();G.Pickups?.clear?.();G.Projectiles?.clear?.();G.Hazards?.clear?.();
-  G.World?.setArena?.({tx:0,ty:0,r:20,type:'normal'});
+  const duelType=DUEL_TYPES[(region+round)%DUEL_TYPES.length];
+  G.World?.setArena?.({tx:0,ty:0,r:20,type:duelType});
+  if(G.Tiles?.arenaBiome)G.World?.setBiome?.(G.Tiles.arenaBiome(duelType),true);
   const pl=G.Game?.player;if(pl){pl.x=0;pl.y=100;pl.invuln=2;}
   const ready=$('pkmsvv-arena-ready-float');if(ready)ready.hidden=true;
   stage='fight';elapsed=0;lastSecond=-1;return spawn();
@@ -386,8 +391,17 @@ G.PKMSVVChampionArena=(()=>{
  guardUpdate(G.Spawner,'update',function(original,args){
   if(!active)return original.apply(this,args);
   if(stage==='prep'){const copy=args.slice();if(copy.length>2)copy[2]=elapsed;
+   if(copy.length>0)copy[0]=Math.max(0,Number(copy[0])||0)*FARM_SPAWN_MULT;
    return original.apply(this,copy);}
   return undefined;
+ });
+ // Double XP applies strictly to the farming phases, never boss kills.
+ guardUpdate(G.Pickups,'dropXp',function(original,args){
+  if(active&&stage==='prep'){
+   const copy=args.slice();copy[2]=Math.max(0,Number(copy[2])||0)*FARM_XP_MULT;
+   return original.apply(this,copy);
+  }
+  return original.apply(this,args);
  });
  guardUpdate(G.Rift,'update',function(original,args){
   return active?undefined:original.apply(this,args);

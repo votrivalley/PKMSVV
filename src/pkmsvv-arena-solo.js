@@ -9,7 +9,10 @@ G.PKMSVVArenaSolo=(()=>{
  const $=id=>document.getElementById(id);
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  const pool=[6,25,94,149,212,260,282,445,448,475,530,658,768,778,870,998];
- let active=false,stage='idle',prepTotal=0,elapsed=0,opponent=null,target=null,selected=null,enemyDex=null,lastSecond=-1,shrunk=0;
+ // Use built-in neutral biomes; no unlicensed third-party map assets.
+ const DUEL_TYPES=['normal','fighting','psychic','steel','rock','ghost'];
+ const FARM_SPAWN_MULT=2,FARM_XP_MULT=2;
+ let active=false,stage='idle',prepTotal=0,elapsed=0,opponent=null,target=null,selected=null,enemyDex=null,lastSecond=-1,shrunk=0,duelType='normal';
  const canEnter=()=>!!(G.PKMSVVStory?.arenaUnlocked?.()&&!G.Coop?.active);
  function owned(){
   const s=G.DB?.save||{},collection=s.owned||{},ids=Object.keys(collection)
@@ -41,7 +44,7 @@ G.PKMSVVArenaSolo=(()=>{
  }
  function open(){
   if(!canEnter()){
-   G.UI?.toast?.(tr('🔒 Hoàn thành Chương 6 để mở Arena.','🔒 Complete Chapter 6 to unlock Arena.'));
+   G.UI?.toast?.(tr('🔒 Hoàn thành Chương 7 để mở Arena.','🔒 Complete Chapter 7 to unlock Arena.'));
    return false;
   }
   const screen=frame();screen.hidden=false;
@@ -86,8 +89,8 @@ G.PKMSVVArenaSolo=(()=>{
   G.Game.startRun(null);
   G.World?.setBiome?.(0,true); // isolated instance, no LAN room or remote player
   frame().hidden=true;hud();
-  G.UI?.toast?.(tr('Solo 1v1: hãy săn quái và xây dựng kỹ năng trước khi quyết đấu!',
-   'Solo 1v1: farm monsters and build skills before the duel!'),3800);
+  G.UI?.toast?.(tr('Solo 1v1: quái ×2 và EXP ×2 khi farm trước trận!',
+   'Solo 1v1: 2x monsters and 2x EXP during preparation!'),3800);
   return true;
  }
  function selection(){
@@ -138,7 +141,9 @@ G.PKMSVVArenaSolo=(()=>{
   const p=G.Game?.player;if(!p){abort();return;}
   normalize(p);
   G.EnemyMgr?.clear?.();G.Pickups?.clear?.();G.Projectiles?.clear?.();G.Hazards?.clear?.();
-  G.World?.setArena?.({tx:0,ty:0,r:20,type:'normal'});
+  duelType=DUEL_TYPES[Math.abs(Number(enemyDex)||0)%DUEL_TYPES.length];
+  G.World?.setArena?.({tx:0,ty:0,r:20,type:duelType});
+  if(G.Tiles?.arenaBiome)G.World?.setBiome?.(G.Tiles.arenaBiome(duelType),true);
   p.x=0;p.y=95;p.invuln=4;
   const el=frame();el.hidden=false;
   $('pkmsvv-arena-solo-picks').replaceChildren();
@@ -200,7 +205,7 @@ G.PKMSVVArenaSolo=(()=>{
   if(target?.dead){finish(true);return;}
   if(elapsed>=SHRINK_FROM){
    const next=Math.max(9,20-Math.floor((elapsed-SHRINK_FROM)/15));
-   if(next!==shrunk){shrunk=next;G.World?.setArena?.({tx:0,ty:0,r:next,type:'normal'});}
+   if(next!==shrunk){shrunk=next;G.World?.setArena?.({tx:0,ty:0,r:next,type:duelType});}
   }
   if(elapsed>=DUEL_LIMIT){
    finish(p.hp/Math.max(1,p.maxHp)>(target?.hp||0)/Math.max(1,target?.maxHp||1));
@@ -212,8 +217,17 @@ G.PKMSVVArenaSolo=(()=>{
   if(!active)return prev.apply(this,args);
   if(stage==='prep'||stage==='warn'){
    const scoped=args.slice();if(scoped.length>2)scoped[2]=Math.min(179,elapsed%180);
+   if(scoped.length>0)scoped[0]=Math.max(0,Number(scoped[0])||0)*FARM_SPAWN_MULT;
    return prev.apply(this,scoped);
   }
+ });
+ // Farm XP bonus ends before select, intro and duel; no 1v1 exploitation.
+ guard(G.Pickups,'dropXp',function(prev,args){
+  if(active&&(stage==='prep'||stage==='warn')){
+   const copy=args.slice();copy[2]=Math.max(0,Number(copy[2])||0)*FARM_XP_MULT;
+   return prev.apply(this,copy);
+  }
+  return prev.apply(this,args);
  });
  guard(G.Rift,'update',function(prev,args){if(!active)return prev.apply(this,args);});
  guard(G.Judgment,'update',function(prev,args){if(!active)return prev.apply(this,args);});
