@@ -19,7 +19,7 @@ G.PKMSVVChampionArena=(()=>{
  const FARM_SPAWN_MULT=2,FARM_XP_MULT=2;
  const $=id=>document.getElementById(id);
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
- let region=0,stage='idle',round=0,elapsed=0,opp=null,bracket=[],target=null,active=false,paid=false,lastSecond=-1,semiLosers=[],lastPodium=null;
+ let region=0,stage='idle',round=0,elapsed=0,opp=null,bracket=[],target=null,active=false,paid=false,lastSecond=-1,semiLosers=[],lastPodium=null,mode='story',mapChoice='random',duelType='normal';
  const ROUNDS=['Vòng 16','Tứ kết','Bán kết','Chung kết','Tranh hạng ba'];
  const SEL=['Round of 16','Quarterfinal','Semifinal','Final','Reigning Champion'];
  const AI_POOL=[25,6,94,149,282,448,475,530,658,778,212,260,445,768,870,998];
@@ -74,7 +74,7 @@ G.PKMSVVChampionArena=(()=>{
   if(!btn){
    btn=document.createElement('button');btn.id='pkmsvv-champion-entry';
    btn.className='menu-item pkmsvv-champion-menu';btn.type='button';
-   btn.innerHTML='<span class="pkmsvv-champion-menu-icon">🏆</span><span class="pkmsvv-menu-copy"><span class="pkmsvv-menu-label">Arena</span><small>Solo 1v1 · Champion 16</small></span>';
+   btn.innerHTML='<span class="pkmsvv-champion-menu-icon">🏆</span><span class="pkmsvv-menu-copy"><span class="pkmsvv-menu-label">Arena</span><small>Hành Trình Vương Miện · Giải Champion</small></span>';
    btn.addEventListener('click',open);
   }
   const mult=nav.querySelector('[data-go="multiplayer"]')||nav.querySelector('[data-go="play"]');
@@ -93,15 +93,18 @@ G.PKMSVVChampionArena=(()=>{
   overlay.innerHTML='<div class="pkmsvv-champion-panel" role="dialog" aria-modal="true" aria-labelledby="pkmsvv-champion-title">'+
    '<div class="pkmsvv-champion-heading"><h2 id="pkmsvv-champion-title">🏆 Arena · Champion</h2><button class="btn ghost" id="pkmsvv-champion-close" type="button">×</button></div>'+
    '<p id="pkmsvv-champion-info"></p><div id="pkmsvv-champion-regions" class="pkmsvv-champion-regions"></div>'+
-   '<div class="pkmsvv-arena-mode-tabs"><button id="pkmsvv-arena-mode-solo" type="button" class="btn">⚔ Solo 1v1</button><button id="pkmsvv-arena-mode-champion" type="button" class="btn gold">🏆 Champion 16</button></div>'+
-   '<div id="pkmsvv-champion-progress" class="pkmsvv-champion-progress"></div>'+'<div id="pkmsvv-champion-bracket" class="pkmsvv-champion-bracket"></div>'+'<div id="pkmsvv-champion-hall" class="pkmsvv-champion-hall"></div>'+'<div id="pkmsvv-champion-podium" class="pkmsvv-champion-podium" hidden></div>'+
+   '<div class="pkmsvv-arena-mode-tabs"><button id="pkmsvv-arena-mode-solo" type="button" class="btn">⚔ Solo 1v1</button><button id="pkmsvv-arena-mode-champion" type="button" class="btn gold">📜 Hành Trình Vương Miện</button><button id="pkmsvv-arena-mode-league" type="button" class="btn">🏆 Giải Champion</button></div>'+
+   '<div id="pkmsvv-champion-map-row" class="pkmsvv-champion-map-row" hidden><label for="pkmsvv-champion-map">Sân thi đấu</label><select id="pkmsvv-champion-map"></select><small>Đấu với AI trong bản thử nghiệm; đấu với bạn bè qua LAN sẽ phát triển sau.</small></div>'+ 
+    '<div id="pkmsvv-champion-progress" class="pkmsvv-champion-progress"></div>'+'<div id="pkmsvv-champion-bracket" class="pkmsvv-champion-bracket"></div>'+'<div id="pkmsvv-champion-hall" class="pkmsvv-champion-hall"></div>'+'<div id="pkmsvv-champion-podium" class="pkmsvv-champion-podium" hidden></div>'+
    '<div class="pkmsvv-champion-actions"><button id="pkmsvv-champion-start" type="button" class="btn gold">Bắt đầu giải đấu</button>'+
    '<button id="pkmsvv-champion-rematch" type="button" class="btn gold" hidden>Thách đấu lại Champion</button>'+
    '<button id="pkmsvv-champion-ready" type="button" class="btn gold" hidden>Sẵn sàng</button></div></div>';
   document.body.append(overlay);
   $('pkmsvv-champion-close').onclick=()=>{overlay.hidden=true;clearResult();if(active)returnToMenu();};
   $('pkmsvv-arena-mode-solo').onclick=()=>{overlay.hidden=true;G.PKMSVVArenaSolo?.open?.();};
-  $('pkmsvv-arena-mode-champion').onclick=()=>updatePanel();
+  $('pkmsvv-arena-mode-champion').onclick=()=>{mode='story';clearResult();updatePanel();};
+   $('pkmsvv-arena-mode-league').onclick=()=>{if(!storyCompleted())return;mode='league';clearResult();updatePanel();};
+   $('pkmsvv-champion-map').onchange=()=>{mapChoice=String($('pkmsvv-champion-map').value||'random');};
   $('pkmsvv-champion-start').onclick=start;
   $('pkmsvv-champion-rematch').onclick=rematch;
   $('pkmsvv-champion-ready').onclick=()=>{if(active&&elapsed>=PREP_SECONDS)nextDuel();};
@@ -110,15 +113,27 @@ G.PKMSVVChampionArena=(()=>{
  }
  function updatePanel(){
   const o=panel(),led=G.DB?.save?.arenas?.pkmChampion||{trophies:{},seals:{}};
-  $('pkmsvv-champion-info').textContent=tr(
-   'Giải 16 thí sinh · 4 vòng loại trực tiếp, 3 phút đánh quái trước MỖI vòng. Vô địch chung kết nhận cúp và Ấn Chứng.',
-   '16 entrants, 4 knockout rounds, 3 minutes of monster farming before EACH round. Win the final for the trophy and Crown Seal.');
+  $('pkmsvv-champion-info').textContent=mode==='story'?tr(
+   'Hành Trình Vương Miện: mở 10 vùng lần lượt, farm 3 phút mỗi vòng; chỉ nhận thưởng một lần.',
+   'Crown Journey: 10 regions in order, 3-minute farm per round; rewards once only.'):
+   tr('Giải Champion: 16 suất với 2 AI mạnh. Bản này đấu với AI; LAN nhiều người sẽ cập nhật sau.',
+   'Champion League: 16 slots and 2 elite AI. This build supports AI-only matches, LAN PvP is coming later.');
+  const leagueTab=$('pkmsvv-arena-mode-league');leagueTab.disabled=!storyCompleted();
+  leagueTab.classList?.toggle?.('gold',mode==='league');
+  $('pkmsvv-arena-mode-champion').classList?.toggle?.('gold',mode==='story');
+  const mapRow=$('pkmsvv-champion-map-row');if(mapRow)mapRow.hidden=mode!=='league';
+  const chooser=$('pkmsvv-champion-map');if(chooser&&mode==='league'){
+   chooser.replaceChildren();
+   for(const [v,label] of [['random',tr('🎲 Ngẫu nhiên','🎲 Random')],...REGIONS.map(([name],i)=>[String(i),name])]){
+    const option=document.createElement('option');option.value=v;option.textContent=label;option.selected=mapChoice===v;chooser.append(option);
+   }
+  }
   const regionBox=$('pkmsvv-champion-regions');
-  regionBox.replaceChildren();
+  regionBox.replaceChildren();regionBox.hidden=mode==='league';
   REGIONS.forEach(([name,dex,champion],i)=>{
    const b=document.createElement('button');b.type='button';b.className='pkmsvv-champion-region'+(region===i?' chosen':'');
    b.textContent=(led.seals?.[name]?'👑 ':led.trophies?.[name]?'🏆 ':regionUnlocked(i)?'○ ':'🔒 ')+name;
-   b.disabled=active||!regionUnlocked(i);
+   b.disabled=active||mode==='league'||!regionUnlocked(i);
    b.onclick=()=>{region=i;clearResult();updatePanel();};
    regionBox.append(b);
   });
@@ -147,7 +162,8 @@ G.PKMSVVChampionArena=(()=>{
   // Champion prep is mandatory; never expose a button that skips its timer.
   $('pkmsvv-champion-ready').hidden=true;
   $('pkmsvv-champion-ready').disabled=true;
-  $('pkmsvv-champion-start').disabled=!G.PKMSVVStory?.arenaUnlocked?.();
+  $('pkmsvv-champion-start').disabled=!G.PKMSVVStory?.arenaUnlocked?.()||(mode==='story'?!regionUnlocked(region):!storyCompleted());
+  $('pkmsvv-champion-start').textContent=mode==='story'?tr('Bắt đầu Hành Trình Vương Miện','Start Crown Journey'):tr('Bắt đầu Giải Champion · AI','Start Champion League · AI');
   o.hidden=false;
  }
  function open(){
@@ -172,7 +188,7 @@ G.PKMSVVChampionArena=(()=>{
    return !!G.PKMSVVStory?.chapter6?.(ok=>{if(ok)open();});
   }
   if(!G.PKMSVVStory?.arenaUnlocked?.(save))return false;
-  region=nextStoryRegion(save);clearResult();updatePanel();return true;
+  mode='story';region=nextStoryRegion(save);clearResult();updatePanel();return true;
  }
  function battleName(){
   const ch=REGIONS[region];
