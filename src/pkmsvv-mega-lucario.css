@@ -1,8 +1,9 @@
 /* Mega Stone is a standalone transformation button, not a fifth skill slot.
  * Low-cost SVG/CSS only. Accessible for keyboard, touch and reduced motion. */
-#pkmsvv-mega-lucario-btn.pkmsvv-mega-btn{
- position:fixed;right:max(10px,env(safe-area-inset-right));bottom:94px;
- z-index:950;box-sizing:border-box;width:76px;height:76px;flex:0 0 76px;
+#pkmsvv-mega-lucario-btn.pkmsvv-mega-btn,
+#pkmsvv-mega-champion-btn.pkmsvv-mega-btn{
+ position:fixed;left:calc(50% + 100px);right:auto;bottom:160px;
+ z-index:12019;box-sizing:border-box;width:58px;height:58px;flex:0 0 58px;
  border-radius:50%;border:3px solid #e6c9ff;cursor:pointer;
  background:radial-gradient(circle at 34% 20%,#6755be 0%,#332769 64%,#111a37 100%);
  box-shadow:0 2px 14px #140d368c,0 0 0 2px #7149ad55 inset;
@@ -25,10 +26,25 @@
 .pkmsvv-mega-btn:disabled{cursor:default;opacity:.87;}
 @keyframes pkmsvv-mega-ring{0%,100%{opacity:.45;transform:scale(.96)}50%{opacity:1;transform:scale(1.04)}}
 @keyframes pkmsvv-mega-glimmer{0%,80%,100%{opacity:.73}88%,94%{opacity:1;filter:brightness(1.25)}}
-@media(max-width:600px){
- #pkmsvv-mega-lucario-btn.pkmsvv-mega-btn{width:68px;height:68px;bottom:90px;}
- .pkmsvv-mega-btn__gem{width:40px;height:40px}
+/* Touch and connected gamepads use the right-side action rail. */
+body.touch #pkmsvv-mega-lucario-btn.pkmsvv-mega-btn,
+body.touch #pkmsvv-mega-champion-btn.pkmsvv-mega-btn,
+body.pkmsvv-mega-gamepad #pkmsvv-mega-lucario-btn.pkmsvv-mega-btn,
+body.pkmsvv-mega-gamepad #pkmsvv-mega-champion-btn.pkmsvv-mega-btn{
+ left:auto;right:max(12px,env(safe-area-inset-right));bottom:max(160px,env(safe-area-inset-bottom) + 135px);
 }
+@media(max-width:600px){
+ #pkmsvv-mega-lucario-btn.pkmsvv-mega-btn,
+ #pkmsvv-mega-champion-btn.pkmsvv-mega-btn{
+  width:58px;height:58px;right:max(12px,env(safe-area-inset-right));left:auto;
+  bottom:max(138px,env(safe-area-inset-bottom) + 116px);
+ }
+ .pkmsvv-mega-btn__gem{width:36px;height:36px}
+}
+#pkmsvv-mega-champion-btn .pkmsvv-mega-champion-gem{font-size:25px;line-height:1;color:#ffeab0}
+.pkmsvv-mega-btn.is-charging{opacity:.83}
+.pkmsvv-mega-btn.is-ready{border-color:#ffe37a;box-shadow:0 0 16px #e8c86399,0 0 0 2px #7149ad55 inset}
+.pkmsvv-mega-btn.is-cooling{filter:saturate(.7)}
 @media(prefers-reduced-motion:reduce){
  .pkmsvv-mega-btn:before,.pkmsvv-mega-btn__gem path{animation:none!important}
 }
