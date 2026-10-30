@@ -70,6 +70,11 @@ patch('js/world/world.js','    get arena() { return arena; },',
 patch('js/systems/spawner.js',
  '(G.Royale.active?G.Royale.intensity(t).density:1);',
  '(G.Royale.active?G.Royale.intensity(t).density*G.Arena.openingBoost(t):1);');
+ // Apply a run-time multiplier to the enemy movement vector, not Enemy.spd.
+ // This avoids permanently multiplying stats on every frame or save restore.
+ patch('js/entities/enemy.js',
+ '      const spd = this.spd * (1 - this.slow) * terrainMul * G.Weather.speedFor(this.types);',
+ '      const spd = this.spd * (1 - this.slow) * terrainMul * G.Weather.speedFor(this.types) * (G.Royale?.active?G.Royale.speedAt(G.Game?.st?.time||0):1);');
 patch('js/systems/spawner.js','  let players = [];',
  `  let players = [],openingQueue=null,anchorTurn=0;
   const openingMetrics={spawned:0,attempts:0,byTrainer:{}};
