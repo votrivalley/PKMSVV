@@ -9,11 +9,11 @@ test('The Home mint background is transparent and does not cover animated game P
  assert.match(css,/pkmsvv-credit\{color:#153b4e!important/);
  assert.match(css,/\.pkmsvv-offline-save-note\{color:#23485a!important/);
 });
-test('Solo support capture is 2 seconds and incubation is two thirds of former 45 seconds',()=>{
+test('Solo support capture stays 2s; hatch duration is reduced to 80%',()=>{
  const G={};vm.runInNewContext(read('src/v15/eggs.js'),{G,Math});
  assert.equal(G.PKMSVVEggs.COLLECT_TIME,2);
- assert.equal(G.PKMSVVEggs.HATCH_BASE,30);
- assert.ok(Math.abs(G.PKMSVVEggs.HATCH_MIN-40/3)<.0001);
+ assert.equal(G.PKMSVVEggs.HATCH_BASE,24);
+ assert.ok(Math.abs(G.PKMSVVEggs.HATCH_MIN-32/3)<.0001);
  assert.equal(G.PKMSVVEggs.SHINY_CAST_RATIO,2/3);
  assert.equal(G.PKMSVVEggs.SHINY_SKILL_POWER,1.5);
 });
@@ -44,9 +44,9 @@ test('True Shiny support improves buffs and Ditto damage but preserves shields c
  assert.match(s,/Math\.min\(ally\.maxHp\*\.25/);
  assert.match(p,/it\.shiny\?1\.5:1/);
 });
-test('Co-op/Survival support has 30s hatch, Shiny host roll and faster/stronger skills',()=>{
+test('Co-op/Survival support has 24s hatch, Shiny host roll and faster/stronger skills',()=>{
  const c=read('src/web/pkmsvv-egg-rush.js');
- assert.match(c,/SUPPORT_HATCH=30,SUPPORT_MIN_HATCH=40\/3/);
+ assert.match(c,/SUPPORT_HATCH=24,SUPPORT_MIN_HATCH=32\/3/);
  assert.match(c,/supportShiny=supportMode&&Math\.random\(\)<eggShinyChance/);
  assert.match(c,/pet\.age>=SUPPORT_MIN_HATCH&&pet\.age\+\(pet\.boost\|\|0\)>=SUPPORT_HATCH/);
  assert.match(c,/SHINY_CAST_RATIO=2\/3,SHINY_SKILL_POWER=1\.5/);
