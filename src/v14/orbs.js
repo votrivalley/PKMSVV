@@ -55,7 +55,7 @@ G.Orbs=(()=>{
    stats.pkmsvvOrbsPicked=Math.min(1000000,(stats.pkmsvvOrbsPicked||0)+1);
    if(G.Progress&&G.Progress.checkAch)G.Progress.checkAch();
   }
-  const o=BY[id],hint=G.Pad&&G.Pad.name&&G.PKMSVVPadOrb?G.PKMSVVPadOrb.describe('use'):vi()?'phím 5 / chạm ô Orb':'key 5 / tap Orb';
+  const o=BY[id],hint=G.Pad&&G.Pad.name&&G.PKMSVVPadOrb?G.PKMSVVPadOrb.describe('use'):vi()?'phím '+String(G.Input?.bound?.('orb')||'digit4').replace(/^(digit|key|numpad)/,'').toUpperCase()+' / chạm ô Orb':'key '+String(G.Input?.bound?.('orb')||'digit4').replace(/^(digit|key|numpad)/,'').toUpperCase()+' / tap Orb';
   if(G.FX){G.FX.dmgText(p.x,p.y-(p.bodyH||0)-8,tr(o.name),o.col,true);G.FX.ring(p.x,p.y,6,40,o.col,.35,3);}
   if(!seen.has(id)&&G.Spawner){seen.add(id);G.Spawner.say(tr(o.name)+' ('+hint+'): '+tr(o.desc),5);}
   return true;
