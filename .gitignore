@@ -19,3 +19,8 @@ config/firebase.web.local.json
 *.keystore
 *.p12
 *.pfx
+
+# Local-only Mega4 QA executable entrypoint and private test assets
+/desktop/lan-main-mega4-qa.cjs
+/lan-win-mega4-qa.json
+/mega4-qa-art/
