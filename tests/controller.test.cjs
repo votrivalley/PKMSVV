@@ -98,6 +98,8 @@ test('v1.5 controller mapping saves six real actions, migrates old maps and reje
  assert.equal(map.describe('dash'),'X / □');
  assert.equal(map.describe('use'),'Y / △');
  assert.equal(map.describe('pause'),'Start / Options');
+ assert.equal(map.describe('mega'),'LB / L1');
+ assert.equal(map.bindings().mega,4,'Mega defaults to LB/L1');
  assert.equal(map.valid({dash:2,use:2}),false,'game actions must not collide');
  assert.equal(map.valid({dash:10,use:11}),true,'old two-key profiles still accepted');
  settings[map.KEY]={dash:10,use:11};
@@ -112,4 +114,22 @@ test('v1.5 controller mapping saves six real actions, migrates old maps and reje
  assert.match(source,/G\.Settings\.set\(KEY/);
  assert.match(source,/pkmsvv-control-reset/);
  assert.doesNotMatch(source,/Không cần nút chuyển Orb/);
+});
+
+test('Mega action is available as keyboard 4, controller LB, and on-screen button',()=>{
+ const keys=fs.readFileSync(path.join(root,'scripts/patch-keybind-title.cjs'),'utf8');
+ const pad=fs.readFileSync(path.join(root,'scripts/patch-v14-gamepad-orbs.cjs'),'utf8');
+ const mega=fs.readFileSync(path.join(root,'src/pkmsvv-mega-phase3.js'),'utf8');
+ const lu=fs.readFileSync(path.join(root,'src/pkmsvv-mega-lucario.js'),'utf8');
+ const css=fs.readFileSync(path.join(root,'src/pkmsvv-mega-lucario.css'),'utf8');
+ assert.match(keys,/mega:'digit4'/);
+ assert.match(pad,/orbital\.mega/);
+ for(const source of [mega,lu]){
+  assert.match(source,/G\.Input\?\.tap\?\.\('digit4'\)/);
+  assert.match(source,/G\.Input\?\.tap\?\.\('pkmsvv-mega'\)/);
+  assert.doesNotMatch(source,/event\.key.*!==.'m'/);
+ }
+ assert.match(css,/#pkmsvv-mega-champion-btn\.pkmsvv-mega-btn/);
+ assert.match(css,/left:calc\(50% \+ 100px\)/);
+ assert.match(css,/body\.touch/);
 });
