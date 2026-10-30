@@ -1,4 +1,4 @@
-name: Build PC Fast Start (Quick Test)
+name: Build PC Fast Start (Berry QA)
 on:
   workflow_dispatch:
   push:
@@ -33,7 +33,7 @@ jobs:
         env:
           PKMSVV_MEGA_SPRITE_PACK: '1'
       - name: Quick regressions for controls, Mega, Orb, supports and Champion
-        run: node --test tests/controller.test.cjs tests/mega-phase3.test.cjs tests/champion-arena.test.cjs tests/support-fast-shiny.test.cjs tests/competitive-nonblocking.test.cjs tests/royale-spectator.test.cjs
+        run: node --test tests/berry.test.cjs tests/controller.test.cjs tests/mega-phase3.test.cjs tests/champion-arena.test.cjs tests/support-fast-shiny.test.cjs tests/competitive-nonblocking.test.cjs tests/royale-spectator.test.cjs
       - name: Package portable PC executable
         run: npm run build:lan:win
         env:
@@ -49,6 +49,7 @@ jobs:
           }
           $app=Get-Content (Join-Path $dir 'resources/lan-site/game/js/app.min.js') -Raw
           if(!$app.Contains('pkmsvv-mega')){throw 'Mega control is not bundled'}
+          if(!$app.Contains('pkmsvv-berry-open')){throw 'Berry inventory is not bundled'}
           Write-Host "Fast Start is ready: $($exe.Name) ($($exe.Length) bytes)"
       - name: Include Fast Start instructions
         shell: pwsh
@@ -59,7 +60,7 @@ jobs:
       - name: Upload PC Fast Start for testing
         uses: actions/upload-artifact@v4
         with:
-          name: PKMSVV-PC-Fast-Start-Current
+          name: PKMSVV-PC-Fast-Berry-Chapter6
           path: dist/lan-windows/win-unpacked/
           retention-days: 14
           if-no-files-found: error
