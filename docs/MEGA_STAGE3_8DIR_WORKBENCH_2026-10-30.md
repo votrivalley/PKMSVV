@@ -1,7 +1,7 @@
 # Mega Stage 3 — 8-direction offline workbench (30/10/2026)
 
 ## Status
-**Prototype working locally, NOT ready for gameplay.** A private offline ZIP with the 8 PA2.1 fan-art source atlases and a pixel-editing Studio was provided in the ChatGPT conversation. The repo retains the source-independent QA validator and tests. We deliberately do not commit third-party image bytes before license review.
+**Prototype working locally, NOT ready for gameplay.** A private offline ZIP with the 8 PA2.1 fan-art source atlases and a pixel-editing Studio was provided in the ChatGPT conversation. The repo also retains the source-only browser Studio at `tools/mega-eightdir-studio/index.html`, plus the QA validator and tests. The repo Studio accepts a user-selected 384×384 PA2.1 source PNG; no art bytes are checked in. We deliberately do not commit third-party image bytes before license review.
 
 Stage3 Studio can select one of four Pokémon (Scizor, Swampert, Garchomp, Dragonite), normal or Shiny, eight direction slots, four frames each and seven engine actions (Idle, Walk, Attack, Shoot, Charge, Hurt, Faint). Four source cardinal-direction Walk rows are read-only and serve as genuine reference. Diagonal action frames start **empty**, never auto-filled by flipping or cloning. A user can paint and erase individual pixels, sample colors, undo edits, mark nonempty frames as reviewed, export draft action sheet PNG (384×768) and save/load progress JSON. The preview reference is not included in exported artwork.
 
@@ -16,11 +16,11 @@ Per Pokémon *and* per variant:
 Requires Python and Pillow, no original image files needed for checking project JSON:
 
 ```sh
-python scripts/validate-mega-eightdir.py QA-Mega-8dir-project.json --pokemon scizor --variant shiny --report qa-report.json
+python scripts/validate-mega-eightdir.py QA-Mega-8dir-project.json --pokemon scizor --variant shiny --source-sheet /path/to/scizor-shiny-pa21.png --report qa-report.json
 python -m unittest discover -s tests -p 'test_validate_mega_eightdir.py'
 ```
 
-Missing frames and fake approvals produce exit code 2. No source art is saved to repo or imported into game. Existing Mega registries, saves, Android signatures, PC and Web builds are unchanged.
+Missing frames, missing source PNG and fake approvals produce exit code 2. The standalone repository Studio embeds a source PNG in project JSON; the downloadable ZIP Studio saves art assets separately, so pass `--source-sheet` for its exported JSON. No source art is saved to repo or imported into game. Existing Mega registries, saves, Android signatures, PC and Web builds are unchanged.
 
 ## Rendering and license limits
 Direction labels in the editor are a **QA convention**, not verified engine row indexing. Porting 384×768 draft sheets into `build-mega-forms.cjs` requires true animation metadata, action frame durations, anchors, QA and appropriate rights. Keep sprites marked `assetOnly` until full acceptance.
