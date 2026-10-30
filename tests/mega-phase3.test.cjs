@@ -229,6 +229,8 @@ test('Mega hotkey uses remappable Digit5 or controller action without hard-coded
  const keymap=read('scripts/patch-keybind-title.cjs'),pad=read('scripts/patch-v14-gamepad-orbs.cjs');
  assert.match(keymap,/mega:'digit5',orb:'digit4'/);
  assert.match(pad,/orbital\.mega/);
+ assert.match(read('scripts/patch-v14-orb-fifo.cjs'),/G\.Input\.tap\('digit4'\)/);
+ assert.match(read('src/pkmsvv-upgrade-select.js'),/G\.Input\?\.bound\?\.\('orb'\)/);
  for(const source of [phase,lucario]){
   assert.ok(source.includes("G.Input?.tap?.('digit5')"));
   assert.ok(source.includes("G.Input?.tap?.('pkmsvv-mega')"));
