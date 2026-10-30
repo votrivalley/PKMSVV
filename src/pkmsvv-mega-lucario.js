@@ -24,7 +24,7 @@ G.MegaLucario=(()=>{
   const s=saved();
   if(!s?.pkmsvvChapter7Seen||s.partner!==BASE||!s.owned||!s.owned[BASE])return false;
   preview=true;
-  toast('Mega Lucario BETA: vào trận solo, nhấn phím 4 hoặc nút MEGA (30 giây).');
+  toast('Mega Lucario BETA: vào trận solo, nhấn phím 5 hoặc nút MEGA (30 giây).');
   sync();return true;
  }
  function changeAppearance(p,mega){
@@ -100,7 +100,7 @@ G.MegaLucario=(()=>{
   button.id='pkmsvv-mega-lucario-btn';
   button.type='button';
   button.className='pkmsvv-mega-btn';
-  button.title='Mega Lucario · '+(G.Pad?.name?G.PKMSVVPadOrb?.describe?.('mega')||'LB / L1':String(G.Input?.bound?.('mega')||'digit4').replace(/^(digit|key|numpad)/,'').toUpperCase())+' · Hồi chiêu -30%';
+  button.title='Mega Lucario · '+(G.Pad?.name?G.PKMSVVPadOrb?.describe?.('mega')||'LB / L1':String(G.Input?.bound?.('mega')||'digit5').replace(/^(digit|key|numpad)/,'').toUpperCase())+' · Hồi chiêu -30%';
   button.innerHTML=STONE_SVG+'<span class="pkmsvv-mega-btn__label">MEGA</span>';
   button.style.display='none';
   button.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();tryActivate();});
@@ -119,7 +119,7 @@ G.MegaLucario=(()=>{
   button.disabled=busy||active;
   const label=typeof button.querySelector==='function'?button.querySelector('.pkmsvv-mega-btn__label'):null;
   if(label)label.textContent=active?Math.max(0,Math.ceil(p._megaRemaining))+'s':'MEGA';
-  button.title=active?'Mega Lucario: '+Math.ceil(p._megaRemaining)+' giây còn lại':'Mega Lucario · '+(G.Pad?.name?G.PKMSVVPadOrb?.describe?.('mega')||'LB / L1':String(G.Input?.bound?.('mega')||'digit4').replace(/^(digit|key|numpad)/,'').toUpperCase())+' · Hồi chiêu -30%';
+  button.title=active?'Mega Lucario: '+Math.ceil(p._megaRemaining)+' giây còn lại':'Mega Lucario · '+(G.Pad?.name?G.PKMSVVPadOrb?.describe?.('mega')||'LB / L1':String(G.Input?.bound?.('mega')||'digit5').replace(/^(digit|key|numpad)/,'').toUpperCase())+' · Hồi chiêu -30%';
   button.setAttribute?.('aria-label',button.title);
  }
  function menu(){
@@ -142,7 +142,7 @@ G.MegaLucario=(()=>{
  G.Player.prototype.update=function(dt){
   if(this===player()){
    tick(this,dt);
-   if((G.Input?.tap?.('digit4')||G.Input?.tap?.('pkmsvv-mega'))&&eligible())tryActivate();
+   if((G.Input?.tap?.('digit5')||G.Input?.tap?.('numpad5')||G.Input?.tap?.('pkmsvv-mega'))&&eligible())tryActivate();
   }
   return originalUpdate.call(this,dt);
  };
