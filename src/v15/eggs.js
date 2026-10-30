@@ -13,10 +13,10 @@ G.PKMSVVEggs=(()=>{
   {dex:151,role:'mew',period:1,power:1} // Mew 4%
  ];
  const byDex=Object.fromEntries(SPECIES.map(x=>[x.dex,x]));
- const COLLECT_TIME=2, NEST_RADIUS=38, HATCH_BASE=30, HATCH_MIN=40/3;
+ const COLLECT_TIME=2, NEST_RADIUS=38, HATCH_BASE=24, HATCH_MIN=32/3;
  const REPLACEMENT_MIN=20, REPLACEMENT_MAX=60;
  const SHINY_CAST_RATIO=2/3,SHINY_SKILL_POWER=1.5;
- const SHINY_CHANCE=.03, MIN_STAT=.5, MAX_STAT=.8, HIT_COOLDOWN=1.25;
+ const SHINY_CHANCE=.03, MIN_STAT=.5, MAX_STAT=.8, HIT_COOLDOWN=1.25, EGG_HIT_PENALTY=3, EGG_HIT_LOCKOUT=5;
  const DITTO_FORM=7,DITTO_REST=3;
  const SUPPORT_VISUAL_SCALE=.6, NEST_VISUAL_SCALE=.8;
  const FX_COLOR={attack:'#ffd472',heal:'#66ffad',shield:'#6edaff',magnet:'#ffe078',slow:'#e99aff',paralyze:'#ffdb55'};
@@ -141,20 +141,21 @@ G.PKMSVVEggs=(()=>{
  }
  function collect(n){
   const chosen=rollSpecies();
-  items.push({dex:chosen.dex,id:n.id,hatched:false,active:false,age:0,boost:0,penalty:0,cooldown:chosen.period,x:n.x,y:n.y,anim:null,step:0,moving:false,effectFlash:0,shiny:false,hp:0,maxHp:0,statScale:0,hitCooldown:0});
+  items.push({dex:chosen.dex,id:n.id,hatched:false,active:false,age:0,boost:0,penalty:0,eggHitLockout:0,cooldown:chosen.period,x:n.x,y:n.y,anim:null,step:0,moving:false,effectFlash:0,shiny:false,hp:0,maxHp:0,statScale:0,hitCooldown:0});
   G.FX?.ring?.(n.x,n.y,5,43,'#f7dc91',.35,2);
   G.Spawner?.say?.(tr('Đã tìm thấy trứng. Hãy chiến đấu để ấp nở!','Egg found. Keep fighting to hatch it!'),3,true);
  }
  function remaining(it){
-  // Kills/levels may accelerate hatching, but actual time >= 20 seconds.
+  // Kills/levels speed up incubation; real minimum is 80% of old floor.
   return Math.max(0,HATCH_MIN+it.penalty-it.age,HATCH_BASE+it.penalty-it.age-it.boost);
  }
  function onHurt(actualDamage){
   if(!(actualDamage>0)||!unlocked()||!player||G.Coop?.active)return;
   let count=0;
   for(const it of items){
-   if(it.hatched)continue;
-   it.penalty=(it.penalty||0)+3;count++;
+   if(it.hatched||(it.eggHitLockout||0)>0)continue;
+   it.penalty=(it.penalty||0)+EGG_HIT_PENALTY;
+   it.eggHitLockout=EGG_HIT_LOCKOUT;count++;
    G.FX?.dmgText?.(it.x,it.y-39,'+3s','#ff9fac');
   }
   if(count)G.Spawner?.say?.(tr('Trứng bị chậm ấp +3 giây!','Egg incubation delayed by 3 seconds!'),1.5);
@@ -275,11 +276,13 @@ G.PKMSVVEggs=(()=>{
  }
  function mewCast(it,pl){
   const pattern=Math.floor(Math.random()*3);
-  const near=(G.EnemyMgr?.all?.()||[]).filter(e=>e&&!e.dead&&!e.remote&&G.U.dist2(e.x,e.y,it.x,it.y)<250*250);
+  const near=(G.EnemyMgr?.all?.()||[]).filter(e=>e&&!e.dead&&!e.remote&&G.U.dist2(e.x,e.y,it.x,it.y)<375*375);
   const cx=pattern===2&&near.length?near[0].x:it.x,cy=pattern===2&&near.length?near[0].y:it.y;
-  const radius=[100,150,80][pattern],col=['#f7b5fa','#91ddff','#ffe68a'][pattern];
-  G.FX?.ring?.(cx,cy,8,radius,col,.4,2);
-  G.FX?.burst?.(cx,cy-15,col,8,80);
+  const radius=[150,225,120][pattern],col=['#f7b5fa','#91ddff','#ffe68a'][pattern];
+  // Denser, brighter FX at the true damage radius for readable Mew AOE.
+  G.FX?.ring?.(cx,cy,13,radius,col,.90,5);
+  G.FX?.ring?.(cx,cy,9,radius*.78,'#ffffff',.75,3);
+  G.FX?.burst?.(cx,cy-15,col,17,radius*.82);
   for(const e of near)if(G.U.dist2(e.x,e.y,cx,cy)<=radius*radius){
    e.hurt?.(Math.max(1,(8+pl.level*.7)*it.statScale*(it.affinityBoost||1)*(it.shiny?SHINY_SKILL_POWER:1)),col,0,0,0);
   }
@@ -462,6 +465,7 @@ G.PKMSVVEggs=(()=>{
   for(let j=0;j<items.length;j++){
    const it=items[j];
    it.hitCooldown=Math.max(0,(it.hitCooldown||0)-dt);
+   it.eggHitLockout=Math.max(0,(it.eggHitLockout||0)-dt);
    follow(it,j,pl,dt);
    if(!it.hatched){
     it.age+=dt;it.boost+=dk*1.5+dl*5;
