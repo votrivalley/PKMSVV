@@ -1,4 +1,4 @@
-name: Package Windows Fast Start Compact Test
+name: Build PC Fast Start (Quick Test)
 on:
   workflow_dispatch:
   push:
@@ -7,89 +7,59 @@ on:
       - '.github/workflows/package-pc-fast-compact.yml'
 permissions:
   contents: read
-  actions: read
+concurrency:
+  group: pkmsvv-pc-fast-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
-  compact:
+  pc-fast:
     runs-on: windows-latest
-    timeout-minutes: 35
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
-      - name: Download verified Mega Lucario PC Fast Start
-        uses: actions/download-artifact@v4
+      - uses: actions/setup-node@v4
         with:
-          name: PKMSVV-LAN-Windows-Fast-Start
-          repository: votrivalley/PKMSVV
-          run-id: 40836815759
-          github-token: ${{ github.token }}
-          path: dist/fast-start
-      - name: Verify real Mega sprites and offline PC assets
+          node-version: '22'
+      - name: Fetch pinned original PokéSurvivor source
+        shell: bash
+        run: |
+          git init vendor/pokesurvivor
+          git -C vendor/pokesurvivor remote add origin https://github.com/JPTER78/pokesurvivor.git
+          git -C vendor/pokesurvivor fetch --depth 1 origin 11fe868c640b62ac37beacc222e056bc4d9ec892
+          git -C vendor/pokesurvivor checkout --detach FETCH_HEAD
+      - name: Install PC build dependencies
+        run: npm install --no-audit --no-fund
+      - name: Compile latest offline + LAN game
+        run: npm run prepare:lan
+        env:
+          PKMSVV_MEGA_SPRITE_PACK: '1'
+      - name: Quick regressions for controls, Mega, Orb, supports and Champion
+        run: node --test tests/controller.test.cjs tests/retro-ui.test.cjs tests/mega-phase3.test.cjs tests/champion-arena.test.cjs tests/support-fast-shiny.test.cjs tests/competitive-nonblocking.test.cjs tests/royale-spectator.test.cjs
+      - name: Package portable PC executable
+        run: npm run build:lan:win
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Verify executable, LAN game and new hotkeys
         shell: pwsh
         run: |
-          $dir = 'dist/fast-start'
-          foreach($file in @(
-            'Pokemon Chuyển sinh LAN.exe',
-            'resources/lan-site/game/assets/pokemon/448/Idle.png',
-            'resources/lan-site/game/assets/pokemon/10448/Idle.png',
-            'resources/lan-site/game/assets/pokemon/10448/Walk.png',
-            'resources/lan-site/game/assets/pokemon/10448/Attack.png',
-            'resources/lan-site/game/assets/pokemon/494/Idle.png',
-            'resources/lan-site/game/assets/pokemon/498/Idle.png',
-            'resources/lan-site/game/js/app.min.js'
-          )){
-            $path=Join-Path $dir $file
-            if(!(Test-Path $path)){ throw "MISSING packaged sprite/file: $file" }
-            $item=Get-Item $path
-            if($item.Length -lt 100){throw "EMPTY packaged sprite/file: $file"}
-            Write-Host "OK: $file ($($item.Length) bytes)"
+          $dir='dist/lan-windows/win-unpacked'
+          $exe=Get-ChildItem $dir -Filter '*.exe' | Select-Object -First 1
+          if(!$exe -or $exe.Length -lt 100KB){throw 'Windows Fast Start EXE missing'}
+          foreach($file in @('resources/lan-site/game/index.html','resources/lan-site/game/js/app.min.js','resources/lan-site/game/assets/icons/icon-192.png')){
+            if(!(Test-Path (Join-Path $dir $file))){throw "Missing PC asset: $file"}
           }
-          Write-Host "Total unpacked:"
-          (Get-ChildItem $dir -Recurse -File | Measure-Object -Property Length -Sum).Sum
-      - name: Create strongly-compressed Fast Start archive
+          $app=Get-Content (Join-Path $dir 'resources/lan-site/game/js/app.min.js') -Raw
+          if(!$app.Contains('pkmsvv-mega')){throw 'Mega control is not bundled'}
+          Write-Host "Fast Start is ready: $($exe.Name) ($($exe.Length) bytes)"
+      - name: Include Fast Start instructions
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force dist/compact | Out-Null
-          $seven=Join-Path ${env:ProgramFiles} '7-Zip/7z.exe'
-          if(!(Test-Path $seven)){ $seven=(Get-Command 7z -ErrorAction Stop).Source }
-          Push-Location dist/fast-start
-          & $seven a -t7z -mx=9 -m0=lzma2 -md=128m -mmt=on ../compact/PKMSVV-PC-Fast-Start-Mega-LUX.7z ./*
-          if($LASTEXITCODE -ne 0){throw '7-Zip failed to compress'}
-          Pop-Location
-          & $seven t dist/compact/PKMSVV-PC-Fast-Start-Mega-LUX.7z
-          if($LASTEXITCODE -ne 0){throw '7-Zip checksum verification failed'}
-          $bytes=(Get-Item 'dist/compact/PKMSVV-PC-Fast-Start-Mega-LUX.7z').Length
-          Write-Host "Fast Start .7z: $bytes bytes"
-          if($bytes -gt 120MB){
-            Write-Host "Single archive too large for direct chat transfer; creating 85-MiB parts"
-            Push-Location dist/fast-start
-            & $seven a -t7z -mx=9 -m0=lzma2 -md=128m -mmt=on -v85m ../compact/PKMSVV-PC-Fast-Start-Mega-SPLIT.7z ./*
-            if($LASTEXITCODE -ne 0){throw 'Split 7-Zip failed'}
-            Pop-Location
-          }
-      - name: Upload compressed single-file Fast Start
+          Copy-Item docs/LAN_FAST_START_WINDOWS.md dist/lan-windows/win-unpacked/README-FAST-START.md
+          "Source: ${{ github.sha }}" | Add-Content dist/lan-windows/win-unpacked/README-FAST-START.md
+          "Controls: Orb = 4, Mega = 5 (customizable in Settings)." | Add-Content dist/lan-windows/win-unpacked/README-FAST-START.md
+      - name: Upload PC Fast Start for testing
         uses: actions/upload-artifact@v4
         with:
-          name: PKMSVV-PC-Fast-Start-LUX-7Z
-          path: dist/compact/PKMSVV-PC-Fast-Start-Mega-LUX.7z
+          name: PKMSVV-PC-Fast-Start-Current
+          path: dist/lan-windows/win-unpacked/
           retention-days: 14
           if-no-files-found: error
-      - name: Upload split part 1 if needed
-        uses: actions/upload-artifact@v4
-        if: ${{ hashFiles('dist/compact/*SPLIT.7z.001') != '' }}
-        with:
-          name: PKMSVV-PC-Fast-Start-SPLIT-001
-          path: dist/compact/*SPLIT.7z.001
-          retention-days: 14
-      - name: Upload split part 2 if needed
-        uses: actions/upload-artifact@v4
-        if: ${{ hashFiles('dist/compact/*SPLIT.7z.002') != '' }}
-        with:
-          name: PKMSVV-PC-Fast-Start-SPLIT-002
-          path: dist/compact/*SPLIT.7z.002
-          retention-days: 14
-      - name: Upload split part 3 if needed
-        uses: actions/upload-artifact@v4
-        if: ${{ hashFiles('dist/compact/*SPLIT.7z.003') != '' }}
-        with:
-          name: PKMSVV-PC-Fast-Start-SPLIT-003
-          path: dist/compact/*SPLIT.7z.003
-          retention-days: 14
