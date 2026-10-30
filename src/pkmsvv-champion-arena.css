@@ -45,3 +45,18 @@
 .pkmsvv-champion-map-row select{flex:1;min-width:140px;max-width:260px;background:#fff;color:#193e4d;border:2px solid #91bdb7;border-radius:8px;padding:7px;font-weight:700}
 .pkmsvv-champion-map-row small{width:100%;font-size:11px;color:#3f626d}
 @media(max-width:570px){.pkmsvv-champion-panel .pkmsvv-arena-mode-tabs{grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}.pkmsvv-champion-panel .pkmsvv-arena-mode-tabs button{font-size:10px;padding:8px 3px}}
+
+/* Boss reveal: informative preview while real monster farming continues. */
+.pkmsvv-champion-preview[hidden]{display:none!important}
+.pkmsvv-champion-preview{
+ position:fixed;z-index:1701;top:93px;left:50%;transform:translateX(-50%);
+ display:flex;align-items:center;justify-content:center;gap:9px;
+ max-width:min(430px,88vw);padding:5px 13px;
+ border:1px solid rgba(255,215,115,.75);border-radius:12px;
+ background:rgba(18,37,57,.92);color:#ffe8a5;
+ box-shadow:0 4px 16px #04162888;font-size:12px;font-weight:800;
+ text-shadow:0 1px 2px #041628;pointer-events:none;
+}
+.pkmsvv-champion-preview canvas{width:46px;height:46px;object-fit:contain}
+@media(max-width:650px){.pkmsvv-champion-preview{top:81px;font-size:11px;padding:4px 8px}
+.pkmsvv-champion-preview canvas{width:36px;height:36px}}
