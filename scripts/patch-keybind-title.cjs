@@ -7,7 +7,7 @@ function patch(file,from,to){
  if(parts.length!==2)throw Error('Controls/branding patch failed: '+file+' '+from.slice(0,90));
  fs.writeFileSync(p,parts.join(to),'utf8');
 }
-const defs={up:'keyw',down:'keys',left:'keya',right:'keyd',dash:'keyf',pause:'keyp',card1:'digit1',card2:'digit2',card3:'digit3',orb:'digit5',reroll:'keyr'};
+const defs={up:'keyw',down:'keys',left:'keya',right:'keyd',dash:'keyf',pause:'keyp',card1:'digit1',card2:'digit2',card3:'digit3',mega:'digit4',orb:'digit5',reroll:'keyr'};
 const spec=Object.entries(defs).map(([id,key])=>({id,key}));
 // Patch the actual input dispatcher, not just the settings UI labels.
 patch('js/core/input.js',
@@ -30,7 +30,7 @@ patch('js/core/input.js',
  "    tap(c) { return pressed.has(c); },\n    /** Una pulsación que no viene del teclado (el mando): cuenta como tecla en este fotograma. */\n    virtual(c) { pressed.add(c); },",
  "    tap(c) {\n"+
  "      if(virtualPressed.has(c))return true;\n"+
- "      const action=c==='keyf'?'dash':c==='keyp'?'pause':/^digit[123]$/.test(c)?'card'+c.slice(-1):c==='digit5'?'orb':c==='keyr'?'reroll':null;\n"+
+ "      const action=c==='keyf'?'dash':c==='keyp'?'pause':/^digit[123]$/.test(c)?'card'+c.slice(-1):c==='digit5'?'orb':c==='digit4'?'mega':c==='keyr'?'reroll':null;\n"+
  "      return action?pressed.has(bound(action)):pressed.has(c);\n"+
  "    },\n"+
  "    virtual(c) { virtualPressed.add(c); },");
@@ -48,7 +48,7 @@ patch('js/ui/settings-ui.js',
  "    if(tab==='ctl')drawBindings(box);\n"+
  "  }\n\n"+
  "  const bindings = "+JSON.stringify(spec)+";\n"+
- "  const labels={up:'Đi lên',down:'Đi xuống',left:'Sang trái',right:'Sang phải',dash:'Kỹ năng chủ động',pause:'Tạm dừng',card1:'Thẻ skill 1',card2:'Thẻ skill 2',card3:'Thẻ skill 3',orb:'Dùng Orb'};\n"+
+ "  const labels={up:'Đi lên',down:'Đi xuống',left:'Sang trái',right:'Sang phải',dash:'Kỹ năng chủ động',pause:'Tạm dừng',card1:'Thẻ skill 1',card2:'Thẻ skill 2',card3:'Thẻ skill 3',mega:'Tiến hóa Mega',orb:'Dùng Orb'};\n"+
  "  let editing=null, waiting=null;\n"+
  "  const nameKey=k=>({space:'Space',escape:'Esc',arrowup:'↑',arrowdown:'↓',arrowleft:'←',arrowright:'→'}[k]||k.replace(/^key/,'').replace(/^digit/,'').replace(/^numpad/,'Num '));\n"+
  "  const keysCurrent=()=>Object.assign({},G.Input.DEFAULT_KEYS,G.Settings.get('keys')||{});\n"+
