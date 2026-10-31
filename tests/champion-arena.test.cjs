@@ -24,16 +24,16 @@ function setup(){
   addEventListener(){},querySelector(){return null},getElementById:id=>elements.get(id)||null};
  let playing='ui',player={dead:false,x:0,y:0,dex:25};
  const save={partner:25,pkmsvvChapter3Seen:true,pkmsvvChapter5Seen:true,
-  pkmsvvChapter6Seen:true,pkmsvvMultiplayerDone:{coop:true,royale:true,eggrush:true},
+  pkmsvvChapter6Seen:true,pkmsvvBerryChapterDone:true,pkmsvvMultiplayerDone:{coop:true,royale:true,eggrush:true},
   tickets:{t1:2,t10:1},coins:20,arenas:{}};
  const G={DB:{save,commit(){this.saved=(this.saved||0)+1}},I18n:{lang:'vi'},
   UI:{toast(){}},DEX_BY:new Proxy({}, {get(target,dex){return {dex:Number(dex),name:'Pokémon '+dex}}}),
   Game:{get player(){return player},get state(){return playing},startRun(){playing='playing';},toUI(){playing='ui';}},
   Flow:{goMenu(){this.gone=(this.gone||0)+1}},
   PKMSVVStory:{
-   arenaUnlocked(){return !!save.pkmsvvChapter6Seen&&['coop','royale','eggrush'].every(m=>save.pkmsvvMultiplayerDone?.[m]);},
-   allMultiplayerCompleted(){return ['coop','royale','eggrush'].every(m=>save.pkmsvvMultiplayerDone?.[m]);},
-   multiplayerProgress(){return {count:3,missing:[]};},
+   arenaUnlocked(){return !!save.pkmsvvChapter6Seen&&['coop','royale'].every(m=>save.pkmsvvMultiplayerDone?.[m]);},
+   allMultiplayerCompleted(){return ['coop','royale'].every(m=>save.pkmsvvMultiplayerDone?.[m]);},
+   multiplayerProgress(){return {count:2,total:2,missing:[]};},
    chapter7(){save.pkmsvvChapter7Seen=true;save.pkmsvvChapter7Pending=false;return true;},
    onChampionSeal(){save.pkmsvvChapter7Seen=true;return true;},
    tenChampionCompleted(){return Object.values(save.arenas?.pkmChampion?.seals||{}).filter(Boolean).length===10;}
@@ -242,13 +242,16 @@ test('Chapter 5/6 and regional seals survive offline save merges',()=>{
  assert.match(patch,/Math\.min\(Number\(a\?\.rank\)/);
 });
 
-test('Arena does not start if Chapter 6 was seen but real multiplayer trilogy is incomplete',()=>{
+test('Arena requires two Chapter 5 modes, not optional Egg Rush',()=>{
  const h=setup(),{lib,save}=h;
  delete save.pkmsvvMultiplayerDone.eggrush;
- assert.equal(lib.start(),false);
+ assert.equal(lib.start(),true,'Egg Rush may be unplayed');
+ lib.exit();
+ delete save.pkmsvvMultiplayerDone.royale;
+ assert.equal(lib.start(),false,'Sống Còn remains required');
  assert.equal(lib.active,false);
- save.pkmsvvMultiplayerDone.eggrush=true;
- assert.equal(lib.start(),true);
+ save.pkmsvvMultiplayerDone.royale=true;
+ assert.equal(lib.start(),true,'both required modes permit Arena');
 });
 test('Champion semifinal defeat enters real third-place playoff, without false Champion',()=>{
  const h=setup(),{G,lib,save,player}=h;
