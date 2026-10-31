@@ -1,6 +1,15 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path');
 const game=path.join(__dirname,'..','vendor','pokesurvivor');
+// One compact lossless WebP (3 trees × 6 HP states) is an optional source asset.
+// Keep old canvas-rendered trees as a safe fallback until the file is uploaded.
+const atlasSource=path.join(__dirname,'..','src','berry-tree-assets','berry_trees_3x6.webp');
+if(fs.existsSync(atlasSource)){
+ const dst=path.join(game,'assets','berry-trees');
+ fs.mkdirSync(dst,{recursive:true});
+ fs.copyFileSync(atlasSource,path.join(dst,'berry_trees_3x6.webp'));
+ console.log('Berry Rescue: bundled lossless WebP HP-tree atlas for offline PC/Web/Android');
+}else console.log('Berry Rescue: WebP atlas not uploaded yet; using existing Canvas tree fallback');
 function patch(rel,from,to){
  const file=path.join(game,rel),src=fs.readFileSync(file,'utf8').replace(/\r\n/g,'\n');
  if(src.split(from).length!==2)throw Error('Berry Co-op source drift: '+rel+' -> '+from.slice(0,95));
