@@ -1,4 +1,4 @@
-name: Build PC Fast Start (Berry Rescue Co-op Integration)
+name: Build PC Fast Start (Berry Rescue Co-op Network Fix)
 on:
   workflow_dispatch:
   push:
