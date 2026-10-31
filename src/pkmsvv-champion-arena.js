@@ -305,10 +305,13 @@ G.PKMSVVChampionArena=(()=>{
   pl.atkMul=1;pl.spdMul=1;
   const aiTier=opp.tier==='elite'?'elite':opp.tier==='trained'?'trained':'novice';
   const power=region;
-  const cadence=Math.max(.67,1-.035*power);
-  const raw={dex,name:targetName,hp:320+22*power+5*round,spd:112,
-    dmg:Math.round((11+.64*power+.15*round)*10)/10,xp:0,behavior:'champion',
-    shotCd:(aiTier==='elite'?1.65:aiTier==='trained'?2.5:3.5)*cadence};
+  const cadence=Math.max(.62,1-.04*power);
+  const tierHp=aiTier==='elite'?1.28:aiTier==='trained'?1.13:1.03;
+  const tierDmg=aiTier==='elite'?1.32:aiTier==='trained'?1.15:1.04;
+  const raw={dex,name:targetName,hp:Math.round((340+26*power+12*round)*tierHp),
+    spd:112+Math.min(28,region*2.5+round*3),
+    dmg:Math.round((12.4+.95*power+.5*round)*tierDmg*10)/10,xp:0,behavior:'champion',
+    shotCd:(aiTier==='elite'?1.35:aiTier==='trained'?1.95:2.7)*cadence};
   target=G.EnemyMgr.add(new G.Enemy(raw,pl.x+Math.min(300,190+round*15),pl.y-35,
     {hp:1,spd:1,dmg:1},true));
 
@@ -326,7 +329,7 @@ G.PKMSVVChampionArena=(()=>{
   }
   if(target)applyMapEffect(pl,target);
   target.pkmsvvChampion=true;
-  target.skillCd=(aiTier==='elite'?0.9:aiTier==='trained'?2.0:3.5)*cadence;
+  target.skillCd=(aiTier==='elite'?.75:aiTier==='trained'?1.55:2.5)*cadence;
   stage='fight';elapsed=0;lastSecond=-1;
   panel().hidden=true;
   G.UI?.toast?.(tr('Arena · ','Arena · ')+(ROUNDS[round]||'')+' — '+opp.name,3000);
