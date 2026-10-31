@@ -1,4 +1,6 @@
-# PKMSVV v1.5.45 — Story progression Chapters 5–7
+> **Legacy reference only.** New authoritative chapter order and gates: [Chapters 1–10 + Shadow Bonus](./CHAPTERS_1_10_SHADOW_BONUS_ROADMAP.md). This historical v1.5.45 document retains older internal chapter numbers and MUST NOT be used to redesign the current progression.
+
+# PKMSVV v1.5.45 — Historical story progression Chapters 5–7
 
 **Chapter 5: Đồng Hành** introduces three distinct multiplayer modes: Co-op, Sống Còn (royale), and Tranh Trứng (eggrush). Its scene is available after former Chapter 3 (now Chapter 4) in Memories or on first Arena visit.
 
