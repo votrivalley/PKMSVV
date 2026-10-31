@@ -91,6 +91,9 @@ G.KecleonUI=(()=>{
  function render(){
   if(!valid())return;
   $('pkmk-heading').textContent=L('Cửa hàng Kecleon','Kecleon Shop');
+  // Keep Berry as the middle tab: Shop | Berry | Bag, on every platform.
+  const berryTab=$('pkmk-tab-berry'),bagTab=$('pkmk-tab-bag');
+  if(berryTab&&bagTab&&bagTab.parentNode===berryTab.parentNode)bagTab.parentNode.insertBefore(berryTab,bagTab);
   $('pkmk-tab-shop').textContent=L('Cửa hàng','Shop');
   $('pkmk-tab-bag').textContent=L('Túi đồ','Bag');
   $('pkmk-tab-berry').textContent='🍓 Berry';
