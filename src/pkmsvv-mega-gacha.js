@@ -53,6 +53,7 @@ G.PKMSVVMegaGacha=(()=>{
   a.points+=refund;
   // Duplicates refund Arena Points only. Never unlock Pokémon or bypass story.
   G.DB.commit(true);
+  if(save===G.DB?.save)G.PKMSVVStory?.onMegaUnlocked?.();
   return {key:picked.key,stoneKey:picked.stoneKey,name:picked.name,
    stone:picked.stone,legendary:special,duplicate,refund,pity:a.pity,balance:a.points};
  }
@@ -122,6 +123,7 @@ G.PKMSVVMegaGacha=(()=>{
   function refresh(){
    const save=G.DB?.save||{};
    syncLegacyArena(save);
+   G.PKMSVVStory?.onMegaUnlocked?.();
    const a=save.arenaGacha||{};
    $('pkmsvv-mega-gacha-heading').textContent=tr('Máy quay Mega Stone','Mega Stone Machine');
    $('pkmsvv-mega-gacha-balance').textContent=tr('✦ Điểm Arena: ','✦ Arena Points: ')+balance(save);
@@ -134,8 +136,8 @@ G.PKMSVVMegaGacha=(()=>{
    btn.textContent=tr('Quay Mega · 100 Điểm Arena','Mega Draw · 100 Arena Points');
    btn.disabled=!canPull(save);
    $('pkmsvv-mega-gacha-note').textContent=!save.pkmsvvChapter7Seen?
-    tr('🔒 Đánh bại Champion đầu tiên và hoàn thành Chương 7 để mở máy quay Mega.',
-       '🔒 Defeat your first Champion and complete Chapter 7 to unlock Mega Gacha.'):
+    tr('🔒 Đánh bại Champion đầu tiên ở Chương 8 để mở máy quay Mega.',
+       '🔒 Defeat your first Champion in Chapter 8 to unlock Mega Gacha.'):
     tr('Thắng Champion lần đầu từng vùng: +100 điểm. Vô địch Arena: +40 lần đầu / +20 lần sau. Mega huyền thoại vẫn cần mở cốt truyện riêng.',
        'First Champion win per region: +100. Arena win: +40 first / +20 repeat. Legendary Mega still needs its own storyline.');
   }
