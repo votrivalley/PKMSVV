@@ -68,8 +68,8 @@ patch('js/systems/spawner.js',
  "if (b && t >= b.at) { spawnBoss(anchor(), t, b); bossIdx++; }",
  "if (b && !G.PKMSVVBerryRescue?.active && t >= b.at) { spawnBoss(anchor(), t, b); bossIdx++; }");
 patch('js/game.js',
- "    G.Rift.update(dt, pl, time);",
- "    if(!G.PKMSVVBerryRescue?.active)G.Rift.update(dt, pl, time);");
+ "    if(!(coop && G.Social?.room?.mode==='eggrush'))G.Rift.update(dt, pl, time);",
+ "    if(!G.PKMSVVBerryRescue?.active&&!(coop && G.Social?.room?.mode==='eggrush'))G.Rift.update(dt, pl, time);");
 patch('js/game.js',
  "    G.Judgment.update(dt, pl, time);",
  "    if(!G.PKMSVVBerryRescue?.active)G.Judgment.update(dt, pl, time);");
@@ -80,27 +80,33 @@ patch('js/game.js',
  "    G.Interact.update(dt, pl);",
  "    if(!G.PKMSVVBerryRescue?.active)G.Interact.update(dt, pl);");
 patch('js/game.js',
- "    if (G.Coop.isHost) checkAllDown(dt);",
- "    if(G.PKMSVVBerryRescue?.active){\n"+
- "      G.PKMSVVBerryRescue.tick(dt,time,all,result=>{\n"+
+ "G.Path.update(dt, all); G.Spawner.update(dt, all, time);",
+ "if(!G.PKMSVVBerryRescue?.active)G.Path.update(dt, all); G.Spawner.update(dt, all, time);");
+patch('js/game.js',
+ "      else checkAllDown(dt);",
+ "      else if(!G.PKMSVVBerryRescue?.active)checkAllDown(dt);");
+// Berry mode runs a separate Host-authoritative objective, not death-all check.
+patch('js/game.js',
+ "    if (G.Coop.isHost) {",
+ "    if (G.Coop.isHost) {\n"+
+ "      if(G.PKMSVVBerryRescue?.active)G.PKMSVVBerryRescue.tick(dt,time,all,result=>{\n"+
  "        G.PKMSVVBerryRescue.reward(result);\n"+
  "        G.Coop.over(Object.assign(summary(),{berryRescue:result}));endRun(!result.success);\n"+
- "      });\n"+
- "    }else if(G.Coop.isHost)checkAllDown(dt);");
+ "      });");
 patch('js/game.js',
  "      if (d && d.t) time = d.t;",
  "      if (d && d.t) time = d.t;\n"+
  "      if(d?.berryRescue)G.PKMSVVBerryRescue?.reward?.(d.berryRescue);");
 patch('js/game.js',
- "    G.onRescue = (dex, name) => {",
- "    G.onRescue = (dex, name) => {\n"+
- "      if(G.Coop?.active||G.PKMSVVArenaSolo?.active||G.PKMSVVChampionArena?.active)return;");
+ "  G.onRescue = (dex, name) => {",
+ "  G.onRescue = (dex, name) => {\n"+
+ "    if(G.Royale?.active||G.EggRush?.active||G.PKMSVVBerryRescue?.active||G.PKMSVVArenaSolo?.active||G.PKMSVVChampionArena?.active)return;");
 patch('js/game.js',
- "if(G.EggRush.enabled)G.EggRush.draw(ctx);",
- "if(G.EggRush.enabled)G.EggRush.draw(ctx);G.PKMSVVBerryRescue?.draw?.(ctx);");
+ "if(G.EggRush.active)G.EggRush.draw(ctx);",
+ "if(G.EggRush.active)G.EggRush.draw(ctx);G.PKMSVVBerryRescue?.draw?.(ctx);");
 patch('js/game.js',
- "if(G.EggRush.enabled)G.EggRush.hud(ctx,w,h);",
- "if(G.EggRush.enabled)G.EggRush.hud(ctx,w,h);G.PKMSVVBerryRescue?.hud?.(ctx,w,h);");
+ "if(G.EggRush.active)G.EggRush.hud(ctx,w,h);",
+ "if(G.EggRush.active)G.EggRush.hud(ctx,w,h);G.PKMSVVBerryRescue?.hud?.(ctx,w,h);");
 
 // Art may be staged after this build: use existing approved Chapter 3 artwork as
 // offline fallbacks, never produce a blank pane or require an external image API.
