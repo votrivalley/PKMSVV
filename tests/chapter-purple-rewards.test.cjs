@@ -111,7 +111,7 @@ test('Renumbering Chapters 1–4 preserves old flags; new Chapters 5/6 each add 
 test('Chapter 7 pays one purple x10 ticket once and preserves old six slots',()=>{
  const save={pkmsvvStorySeen:true,starter:25,partner:25,pkmsvvChapter1Seen:true,
  pkmsvvChapter2Seen:true,pkmsvvChapter3Seen:true,pkmsvvChapter5Seen:true,
- pkmsvvChapter6Seen:true,pkmsvvChapter7Seen:true,tickets:{t1:3,t10:4}};
+ pkmsvvChapter6Seen:true,pkmsvvChapter7Seen:true,pkmsvvChapter9MegaDone:true,tickets:{t1:3,t10:4}};
  const h=setup(save);
  assert.equal(h.claim(),7);
  assert.equal(save.tickets.t10,11);
