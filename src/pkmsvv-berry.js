@@ -98,7 +98,7 @@ G.PKMSVVBerry=(()=>{
   // Rescue is a full 4-trainer PvE battle mode, not the old click-to-win tiles.
   if(G.Game?.state==='playing'||choiceOpen)return false;
   clearModal();
-  const ui=window.PKMSVVCoop;
+  const ui=typeof window==='object'?window.PKMSVVCoop:null;
   if(ui?.open){ui.open('berry');return true;}
   G.MultiplayerUI?.open?.();
   G.UI?.toast?.(tr('Chọn Giải Cứu Berry trong Co-op.','Choose Rescue Berry in Co-op.'),2000);
