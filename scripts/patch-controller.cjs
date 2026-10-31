@@ -139,13 +139,17 @@ const accessibility=String.raw`
   if(list.some(x=>x.type==='childList'||x.attributeName==='hidden'||x.attributeName==='class'))queue();
  }).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['hidden','class']});
  document.addEventListener('DOMContentLoaded',queue,{once:true});
+ function back(){
+  const dlg=current();if(!dlg)return false;
+  if(dlg.classList.contains('pkmsvv-memory-chooser')){dlg.remove();return true;}
+  const close=dlg.querySelector('[data-back],[data-mega-close],#pkmsvv-champion-close,#pkmsvv-arena-solo-close,.pkmsvv-support-modal-head button,.pkmsvv-berry-btn.ghost');
+  if(close){close.click();return true;}
+  if(dlg.id==='pkmsvv-wiki-overlay'){G.PKMSVVWiki?.close?.();return true;}
+  return false;
+ }
+ G.PKMSVVPadDialogs={back};
  document.addEventListener('keydown',e=>{
-  if(e.key!=='Escape')return;
-  const dlg=current();if(!dlg)return;
-  if(dlg.id==='pkmsvv-wiki-overlay'){G.PKMSVVWiki?.close?.();e.stopPropagation();return;}
-  if(dlg.classList.contains('pkmsvv-memory-chooser')){dlg.remove();e.stopPropagation();return;}
-  const close=dlg.querySelector('[data-back],[data-mega-close],.pkmsvv-pc-close,.pkmsvv-champion-heading #pkmsvv-champion-close');
-  if(close){close.click();e.stopPropagation();}
+  if(e.key==='Escape'&&back()){e.preventDefault();e.stopPropagation();}
  },true);
 })();
 `;
