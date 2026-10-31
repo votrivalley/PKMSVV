@@ -149,7 +149,8 @@ test('Narrative chapters are renumbered visibly, with old save keys and reward s
  for(const t of ['CHƯƠNG 1 · THỨC TỈNH','CHƯƠNG 2 · NHỮNG MẢNH KÝ ỨC',
   'CHƯƠNG 3 · TIẾNG VỌNG THỨ TÁM','CHƯƠNG 4 · MẦM SỐNG BỊ LÃNG QUÊN',
   'CHƯƠNG 5 · ĐỒNG HÀNH','CHƯƠNG 7 · ĐẤU TRƯỜNG VƯƠNG MIỆN',
-  'CHƯƠNG 8 · SỨC MẠNH MEGA'])
+  'CHƯƠNG 6 · BÍ MẬT BERRY','CHƯƠNG 8 · BÍ MẬT CHAMPION',
+  'CHƯƠNG 9 · SỨC MẠNH MEGA','CHƯƠNG 10 · BẦU TRỜI HẮC HÓA'])
   assert.ok(s.includes(t),t);
  assert.match(s,/pkmsvvChapter5Seen/);assert.match(s,/pkmsvvChapter6Seen/);
  assert.match(s,/pkmsvvChapterPurpleRewards/);
