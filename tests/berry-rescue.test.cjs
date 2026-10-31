@@ -103,5 +103,5 @@ test('Rescue Berry room disables unrelated eggs, Rift, story bosses and NPC resc
  assert.match(patch,/!G\.PKMSVVBerryRescue\?\.active/);
  assert.match(patch,/G\.PKMSVVBerryRescue\.tick/);
  assert.match(patch,/G\.PKMSVVBerryRescue\.reward/);
- assert.match(read('src/shared/coop-unified.js'),/\['berry','Giải Cứu Berry · Thường','4 người'/);
+ assert.match(read('src/shared/coop-unified.js'),/\['berry','Giải Cứu Berry','4 người · 8 phút'/);
 });
