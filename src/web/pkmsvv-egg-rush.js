@@ -438,7 +438,7 @@ G.EggRush=(()=>{
  }
  function hud(ctx,w,h){
   if(!active&&!supportMode)return;
-  guide(ctx,w,h);
+  if(!active)guide(ctx,w,h);
   if(supportMode&&G.Royale?.active)return; // Survival owns the ranking sidebar.
   const bounds=G.HUD?.leftBounds||{x:8,bottom:111};
   const top=bounds.bottom+8,left=Math.max(8,bounds.x);
