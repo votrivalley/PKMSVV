@@ -225,7 +225,7 @@ G.PKMSVVMegaPhase3=(()=>{
  // Called from the pinned enemy.hurt patch; never credit invulnerable,
  // remote or competitive targets, and never alter their combat outcome.
  function onEnemyHurt(enemy,amount){
-  if(enemy&&!enemy.dead&&!enemy.remote&&!enemy.arceus&&
+  if(enemy&&!enemy.dead&&!enemy.arceus&&
    Number.isFinite(amount)&&amount>0)addEnergy(player(),HIT_ENERGY);
  }
  const update=G.Player?.prototype?.update;
