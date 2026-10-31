@@ -52,6 +52,15 @@ patch('js/net/coop.js',
  "      case 'br': G.PKMSVVBerryRescue?.onEvent?.(ev); break;\n"+
  "      case 'mg': G.PKMSVVMegaPhase3?.remoteMega?.(ev[1],Number(ev[2])||0); break;\n"+
  "      case 'jd': case 'jk': G.Judgment.onEvent(ev); break;");
+patch('js/net/coop.js',
+ "        case 'pb':",
+ "        case 'mg': {\n"+
+ "          const f=(G.PKMSVV_MEGA_CATALOG||[]).find(x=>x.dex===m.pl.dex&&x.spriteId===Number(ev[1])&&x.artReady&&G.SPRITE_META?.[x.spriteId]?.a?.Idle);\n"+
+ "          const sprite=f?.spriteId||0;\n"+
+ "          G.PKMSVVMegaPhase3?.remoteMega?.(from,sprite);\n"+
+ "          emit(['mg',from,sprite],from);break;\n"+
+ "        }\n"+
+ "        case 'pb':");
 patch('js/game.js',
  "    G.EggRush.begin(coop);G.Arena.begin(coop);",
  "    G.EggRush.begin(coop);G.Arena.begin(coop);G.PKMSVVBerryRescue.begin(coop);");
