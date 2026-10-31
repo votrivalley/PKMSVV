@@ -41,8 +41,8 @@ patch('js/game.js',
  "    G.EggRush.begin(coop);G.Arena.begin(coop);",
  "    G.EggRush.begin(coop);G.Arena.begin(coop);G.PKMSVVBerryRescue.begin(coop);");
 patch('js/systems/spawner.js',
- "if (b && t >= b.at) { spawnBoss(anchor(), t, b); bossIdx++; }",
- "if (b && !G.PKMSVVBerryRescue?.active && t >= b.at) { spawnBoss(anchor(), t, b); bossIdx++; }");
+ "if (b && t >= b.at) { if(spawnBoss(anchor(), t, b))bossIdx++; }",
+ "if (b && !G.PKMSVVBerryRescue?.active && t >= b.at) { if(spawnBoss(anchor(), t, b))bossIdx++; }");
 patch('js/game.js',
  "    if(!(coop && G.Social?.room?.mode==='eggrush'))G.Rift.update(dt, pl, time);",
  "    if(!G.PKMSVVBerryRescue?.active&&!(coop && G.Social?.room?.mode==='eggrush'))G.Rift.update(dt, pl, time);");
