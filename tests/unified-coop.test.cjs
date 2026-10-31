@@ -2,6 +2,14 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path');
 const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
+test('Berry difficulty expands immediately after selected mode with approved names',()=>{
+ const source=read('src/shared/coop-unified.js');
+ assert.ok(source.includes("'🌳 Nườm Nượp'"));
+ assert.ok(source.includes("'🍃 Nhẹ Nhàng'"));
+ assert.match(source,/querySelector\('#pkmsvv-coop-modes'\)\?\.after\(line\)/);
+ assert.match(source,/\['berry','Giải Cứu Berry'/);
+ assert.ok(!source.includes("['berryeasy','Giải Cứu Berry · Dễ'"),'one Berry mode card');
+});
 test('Mode cards explain play objective and winner in Vietnamese without internal rules',()=>{
  const ui=read('src/shared/coop-unified.js');
  for(const description of [
