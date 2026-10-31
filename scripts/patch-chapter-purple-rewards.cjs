@@ -19,7 +19,7 @@ patch('js/core/db.js',
  '    r.pkmsvvEggSlot3=!!(r.pkmsvvEggSlot3||older.pkmsvvEggSlot3);\n'+
  '    // Idempotent chapter claims survive save imports/cloud merges.\n'+
  '    r.pkmsvvChapterPurpleRewards=r.pkmsvvChapterPurpleRewards||{};\n'+
- '    for(const ch of [0,1,2,3,4,5,6]){\n'+
+ '    for(const ch of [0,1,2,3,4,5,6,7,8]){\n'+
  '      r.pkmsvvChapterPurpleRewards[ch]=!!(r.pkmsvvChapterPurpleRewards[ch]||older.pkmsvvChapterPurpleRewards?.[ch]);\n'+
  '    }');
 // In particular, initial Chapter 0 skip/quiz skip still forces starter choice;
