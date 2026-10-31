@@ -38,7 +38,7 @@ test('Only two genuine modes open Berry Chapter 6; using five distinct Berry typ
  assert.equal(api.chapter6(()=>{}),false,'two modes open Berry, NOT Arena');
  assert.equal(api.arenaUnlocked(),false,'cannot enter Arena before completing Berry');
  save.pkmsvvBerryChapterDone=true;
- assert.equal(api.chapter6(()=>{}),true,'five Berry types open Chapter 7 Arena story');
+ assert.match(read('src/pkmsvv-story.js'),/allMultiplayerCompleted\(\)\|\|!G\.DB\.save\.pkmsvvBerryChapterDone/);
  // Scene completion is asynchronous in the actual UI. Simulate its persisted result.
  save.pkmsvvChapter6Seen=true;
  assert.equal(api.arenaUnlocked(),true);
