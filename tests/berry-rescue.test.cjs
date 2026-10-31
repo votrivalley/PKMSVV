@@ -103,7 +103,7 @@ test('Berry AI defendGoal stays at live trees and never chases beyond the grove'
  const defense=h.game.defendGoal(far,[{x:2000,y:2000}]);
  assert.ok(Math.hypot(defense.x,defense.y)<h.game.DEFENSE_RADIUS);
  const loc=h.game.defendGoal(near,[{x:-92,y:95,dead:false}]);
- assert.ok(Math.hypot(loc.x+92,loc.y-82)<=55+1e-6);
+ assert.ok(Math.abs(Math.hypot(loc.x+92,loc.y-82)-76)<1e-6,'AI stands beside the tree instead of on its trunk');
  const outside=h.game.defendGoal(near,[{x:1200,y:1200,dead:false}]);
  assert.ok(Math.hypot(outside.x,outside.y)<h.game.DEFENSE_RADIUS);
  const bots=read('src/lan/lan-ai.js');
@@ -112,10 +112,19 @@ test('Berry AI defendGoal stays at live trees and never chases beyond the grove'
 });
 test('Berry tree sprites draw without large ellipses and use thin borderless HP strips',()=>{
  const src=read('src/pkmsvv-berry-rescue.js');
- const chunk=src.slice(src.indexOf('function draw(ctx)'),src.indexOf('function hud('));
+ const chunk=src.slice(src.indexOf('function drawOne(ctx,t)'),src.indexOf('function hud('));
  assert.doesNotMatch(chunk,/ellipse\(/);
  assert.doesNotMatch(chunk,/stroke\(/);
  assert.match(chunk,/fillRect\(-31,y,62,3\)/);
+ const patch=read('scripts/patch-berry-coop.cjs');
+ assert.match(patch,/PKMSVVBerryRescue\.drawables\(\)/,'insert trees into native Y-depth sort');
+ assert.match(patch,/items\.push\(\{y:e\.y,ent:e\}\)/);
+ assert.doesNotMatch(patch,/G\.PKMSVVBerryRescue\?\.draw\?\.\(ctx\)/,'no premature ground draw');
+ const game=harness();game.game.begin({mode:'berry'});
+ assert.equal(game.game.drawables().length,3);
+ assert.equal(game.game.drawables()[0].y,82);
+ const player={x:-92,y:82,r:15};game.game.keepOutsideTrunks(player);
+ assert.ok(Math.hypot(player.x+92,player.y-82)>=56,'player cannot stand inside tree trunk');
 });
 test('Host owns Berry tree HP; guests only consume validated snapshots',()=>{
  const h=harness();h.game.begin({mode:'berry'});
