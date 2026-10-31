@@ -1,4 +1,4 @@
-name: Build PC Fast Start (Berry Rescue 4P and Mega)
+name: Build PC Fast Start (Berry Rescue 4P and Mega Sprite Fix)
 on:
   workflow_dispatch:
   push:
