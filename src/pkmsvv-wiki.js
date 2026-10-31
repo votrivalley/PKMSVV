@@ -35,6 +35,16 @@ G.PKMSVVWiki=(()=>{
   .pkmsvv-pc-card canvas{width:118px;height:118px;max-width:100%;image-rendering:pixelated}
   .pkmsvv-pc-card strong{font-size:clamp(14px,2.1vw,18px);color:#ffdf89}
   .pkmsvv-pc-card small{font-size:12px;line-height:1.4;color:#d8eeeb}
+  .pkmsvv-pc-guide{margin-top:14px;border:1px solid #84c6bc;border-radius:12px;padding:12px;background:#123640}
+  .pkmsvv-pc-guide h3{color:#ffe6a0;margin:0 0 9px;font-size:17px}
+  .pkmsvv-pc-berry-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:55vh;overflow-y:auto}
+  .pkmsvv-pc-berry-row{display:flex;align-items:center;gap:9px;padding:8px;border:1px solid #5b8e91;border-radius:9px;background:#1b4951}
+  .pkmsvv-pc-berry-row img{width:38px;height:38px;object-fit:contain;image-rendering:pixelated;flex-shrink:0}
+  .pkmsvv-pc-berry-row strong{color:#ffdf8c;display:block}
+  .pkmsvv-pc-berry-row span{font-size:12px;line-height:1.5;color:#e4f5f2}
+  .pkmsvv-pc-learn{margin-top:9px;border:1px solid #80bbb2;background:#204e55;border-radius:9px;padding:10px}
+  .pkmsvv-pc-learn summary{cursor:pointer;color:#ffe3a3;font-weight:bold}
+  .pkmsvv-pc-learn p{color:#d8efeb;font-size:13px;line-height:1.65}
   .pkmsvv-pc-card .pkmsvv-pc-action{margin-top:auto;border-radius:8px;background:#ffdc68;
     color:#103841;padding:7px 12px;font-weight:900;font-size:13px}
   @media(max-width:580px){.pkmsvv-pc-grid{grid-template-columns:1fr;gap:8px}
@@ -52,7 +62,7 @@ G.PKMSVVWiki=(()=>{
    b=document.createElement('button');b.type='button';b.id='pkmsvv-menu-wiki';
    b.className='menu-item pkmsvv-menu-wiki';
    const upgrade=list.querySelector('[data-go="upgrades"]');
-   if(upgrade)upgrade.insertAdjacentElement('afterend',b);else list.append(b);
+   if(upgrade)list.insertBefore(b,upgrade);else list.append(b);
   }
   b.innerHTML='<span class="mi-ico">💻</span><span class="pkmsvv-menu-copy"><span class="pkmsvv-menu-label">PC</span><small>Pokémon hỗ trợ · Mega · Berry</small></span>';
   b.onclick=e=>{e.preventDefault();e.stopPropagation();open();};
@@ -72,6 +82,39 @@ G.PKMSVVWiki=(()=>{
   }catch(_e){/* UI sprite not initialized yet; card remains usable */ }
   b.onclick=()=>{close();onClick();};
   return b;
+ }
+ function berryGuide(){
+  close();installStyle();
+  const shade=document.createElement('div');shade.id='pkmsvv-wiki-overlay';
+  shade.className='pkmsvv-pc-overlay';shade.setAttribute('role','dialog');
+  shade.setAttribute('aria-modal','true');
+  const box=document.createElement('section');box.className='pkmsvv-pc-panel';
+  const head=document.createElement('header');head.className='pkmsvv-pc-header';
+  const h=document.createElement('h2');h.textContent=tr('🍓 CẨM NANG BERRY','🍓 BERRY GUIDE');
+  const back=document.createElement('button');back.type='button';back.className='pkmsvv-pc-close';
+  back.textContent=tr('← Quay lại PC','← Back to PC');back.onclick=open;
+  head.append(h,back);box.append(head);
+  const intro=document.createElement('p');intro.className='pkmsvv-pc-hint';
+  intro.textContent=tr('Berry dùng một lần, tối đa 2 quả mỗi trận; chọn trong 4 giây trước trận. Chương 6 cần sử dụng 5 loại khác nhau.',
+  'Berries are single-use: up to two per match, selected in four seconds. Chapter 6 requires five distinct kinds.');
+  box.append(intro);
+  const grid=document.createElement('div');grid.className='pkmsvv-pc-berry-list';
+  for(const item of G.PKMSVVBerry?.TYPES||[]){
+   const tile=document.createElement('div');tile.className='pkmsvv-pc-berry-row';
+   const image=document.createElement('img');image.src='assets/berry/'+encodeURIComponent(item.id)+'.png';
+   image.alt=item.name;image.loading='lazy';
+   const text=document.createElement('div');const title=document.createElement('strong');
+   title.textContent=item.name+' Berry';
+   const effect=document.createElement('span');effect.textContent=item.desc?.[G.I18n?.lang==='en'?1:0]||'';
+   text.append(title,effect);tile.append(image,text);grid.append(tile);
+  }
+  box.append(grid);
+  const note=document.createElement('p');note.className='pkmsvv-pc-hint';
+  note.textContent=tr('Berry hiếm nhận từ Giải Cứu Berry. Mua Berry tại Kecleon Shop → Berry.',
+   'Rare berries drop in Rescue Berry. Purchase berries in Kecleon Shop → Berry.');
+  box.append(note);shade.append(box);document.body.append(shade);
+  shade.addEventListener('click',e=>{if(e.target===shade)open();});
+  back.focus();G.Pad?.focusFirst?.();return true;
  }
  function open(){
   close();installStyle();
@@ -93,11 +136,29 @@ G.PKMSVVWiki=(()=>{
    desc:tr('Mega Mewtwo · Xem các dạng Mega và điều kiện mở khóa.','Mega Mewtwo · Review forms and unlock requirements.'),
    action:tr('Mở Mega','Open Mega'),onClick:()=>G.PKMSVVMegaEntry?.open?.()});
   makeCard(grid,{title:'Berry',dex:420,
-   desc:tr('Cherubi · Túi Berry, cửa hàng và Giải Cứu Berry.','Cherubi · Berry bag, shop and rescue.'),
-   action:tr('Mở Berry','Open Berry'),onClick:()=>{if(G.KecleonUI?.open)G.KecleonUI.open('berry');else G.PKMSVVBerry?.openBag?.();}});
+   desc:tr('Cherubi · Tra cứu công dụng 10 loại Berry.','Cherubi · Learn the effects of all ten Berries.'),
+   action:tr('Xem cẩm nang','View guide'),onClick:berryGuide});
+  const help=document.createElement('section');help.className='pkmsvv-pc-guide';
+  const sub=document.createElement('h3');sub.textContent=tr('Kiến thức Pokémon','Pokémon knowledge');
+  help.append(sub);
+  const articles=[
+   [tr('Mystery Orb','Mystery Orb'),
+    tr('Nhận Orb trong trận để tăng sức mạnh; giữ đúng loại Orb cho chiến thuật, với nút Orb riêng trên PC/controller.',
+       'Collect Mystery Orbs in battle to enhance your abilities. A separate Orb control is available on keyboard and controller.')],
+   [tr('Thức tỉnh & Quên kỹ năng','Awakening & Forgetting Skills'),
+    tr('Kỹ năng được nâng trong trận; khi học đầy ô, có thể thay thế kỹ năng cũ. Các nâng cấp lâu dài không bị mất khi quên một kỹ năng.',
+       'Level skills during runs and replace an old skill when your slots fill. Permanent upgrades remain intact.')]
+  ];
+  for(const [name,description] of articles){
+   const detail=document.createElement('details');detail.className='pkmsvv-pc-learn';
+   const summary=document.createElement('summary');summary.textContent=name;
+   const p=document.createElement('p');p.textContent=description;
+   detail.append(summary,p);help.append(detail);
+  }
+  box.append(help);
   overlay.append(box);document.body.append(overlay);
   overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
-  x.focus();return true;
+  x.focus();G.Pad?.focusFirst?.();return true;
  }
  function install(){
   installStyle();installMenu();
@@ -109,5 +170,5 @@ G.PKMSVVWiki=(()=>{
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('pkmsvv-wiki-overlay')){close();e.stopPropagation();}});
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
- return {open,close,installMenu};
+ return {open,close,berryGuide,installMenu};
 })();
