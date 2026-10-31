@@ -12,10 +12,10 @@ function setup(overrides={}){
  return {G,save,api:G.PKMSVVStory,messages};
 }
 const result=(n=4)=>({standings:Array.from({length:n},(_,i)=>({uid:'user'+i})),finishedAt:720});
-test('Chapter 5 introduces 3 modes; room creation/quit/invalid result never count',()=>{
+test('Chapter 5 requires Sống Sót + Sống Còn; skipped, quit and unranked runs do not count',()=>{
  const {api,save}=setup();
  assert.equal(api.multiplayerProgress().count,0);
- assert.equal(api.chapter6(()=>{}),false,'reading Chapter 6 before the trilogy is blocked');
+ assert.equal(api.chapter6(()=>{}),false,'Arena cannot begin before required modes and Berry chapter');
  assert.equal(api.recordMultiplayerCompletion('coop',{time:5}),false);
  assert.equal(api.recordMultiplayerCompletion('coop',{time:300,abandoned:true}),false);
  assert.equal(api.recordMultiplayerCompletion('royale',{time:300}),false);
@@ -23,19 +23,27 @@ test('Chapter 5 introduces 3 modes; room creation/quit/invalid result never coun
  assert.equal(api.recordMultiplayerCompletion('unknown',{time:900,result:result()}),false);
  assert.equal(save.pkmsvvMultiplayerDone,undefined);
 });
-test('All 3 genuine completed modes open Chapter 6, but not Arena until story read',()=>{
+test('Only two genuine modes open Berry Chapter 6; using five distinct Berry types opens Arena Chapter 7',()=>{
  const {api,save,G}=setup();
+ assert.equal(api.recordMultiplayerCompletion('eggrush',{time:720,result:result()}),true,'Egg Rush is optional');
+ assert.equal(api.allMultiplayerCompleted(),false,'Egg Rush alone never counts');
  assert.equal(api.recordMultiplayerCompletion('coop',{time:90}),true);
+ assert.equal(api.multiplayerProgress().count,1);
+ assert.equal(api.chapter6(()=>{}),false);
  assert.equal(api.recordMultiplayerCompletion('royale',{time:180,result:result()}),true);
- assert.equal(api.recordMultiplayerCompletion('eggrush',{time:720,result:result()}),true);
- assert.deepEqual(Array.from(api.multiplayerProgress().done),['coop','royale','eggrush']);
+ assert.deepEqual(Array.from(api.multiplayerProgress().done),['coop','royale']);
+ assert.equal(api.multiplayerProgress().total,2);
  assert.equal(api.allMultiplayerCompleted(),true);
  assert.equal(api.recordMultiplayerCompletion('eggrush',{result:result()}),false);
- assert.equal(api.arenaUnlocked(),false,'players must see Chapter 6 to enter Arena');
+ assert.equal(api.chapter6(()=>{}),false,'two modes open Berry, NOT Arena');
+ assert.equal(api.arenaUnlocked(),false,'cannot enter Arena before completing Berry');
+ save.pkmsvvBerryChapterDone=true;
+ assert.equal(api.chapter6(()=>{}),true,'five Berry types open Chapter 7 Arena story');
+ // Scene completion is asynchronous in the actual UI. Simulate its persisted result.
  save.pkmsvvChapter6Seen=true;
  assert.equal(api.arenaUnlocked(),true);
- assert.equal(api.megaUnlocked(),false,'Arena unlock never directly grants Mega');
- assert.equal(G.DB.count,3,'one saved milestone per mode, no duplicate');
+ assert.equal(api.megaUnlocked(),false,'Arena never directly grants Mega');
+ assert.equal(G.DB.count,3,'one milestone per unique mode, optional Egg Rush tracked separately');
 });
 test('Chapter 7 requires the first earned Champion Crown Seal, not a cup',()=>{
  const {api,save}=setup({pkmsvvChapter6Seen:true,
@@ -109,6 +117,13 @@ test('Modes and chapters are merged across saves; game hooks run only at actual 
  assert.doesNotMatch(s,/chapter8:\[|chapter9:\[/,'no invented Chapter 8/9 narrative');
 });
 
+test('Required modes never count fake completed matches as Berry chapter progress',()=>{
+ const {save,api}=setup();
+ save.pkmsvvMultiplayerDone={coop:true,royale:true};
+ assert.equal(api.allMultiplayerCompleted(),true);
+ assert.equal(api.chapter6(()=>{}),false);
+ assert.equal(save.pkmsvvBerryChapterDone,undefined);
+});
 test('A completed match after Chapter 4 is remembered even before viewing Chapter 5',()=>{
  const h=setup({pkmsvvChapter5Seen:false}),{api,save}=h;
  assert.equal(api.recordMultiplayerCompletion('coop',{time:80}),true);
@@ -120,7 +135,7 @@ test('A completed match after Chapter 4 is remembered even before viewing Chapte
 test('Chapter 5 automatically follows Chapter 4 for new players without hijacking Multiplayer menu',()=>{
  const s=read('src/pkmsvv-story.js');
  assert.match(s,/if\(G\.DB\.save&&!G\.DB\.save\.pkmsvvChapter5Seen\)chapter5/);
- assert.match(s,/Hãy hoàn thành cả ba chế độ/);
+ assert.match(s,/Hoàn thành Sống Sót và Sống Còn/);
  assert.doesNotMatch(read('src/pkmsvv-champion-arena.js'),/stopImmediatePropagation/);
 });
 
