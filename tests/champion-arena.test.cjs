@@ -89,7 +89,9 @@ test('PC replaces Wiki with three sprite cards and direct Support, Mega, Berry a
  assert.match(src,/megaMewtwoArt\(\)/);
  assert.match(src,/PKMSVVSupportCatalog\?\.open/);
  assert.match(src,/PKMSVVMegaEntry\?\.open/);
- assert.match(src,/KecleonUI\?\.open/);
+ assert.match(src,/function berryGuide\(/);
+ assert.match(src,/G\.PKMSVVBerry\?\.TYPES/);
+ assert.doesNotMatch(src,/KecleonUI\?\.open/,'PC Berry opens wiki, not the Kecleon shop');
  assert.match(build,/pkmsvv-wiki\.js/,'the PC hub must be bundled into the actual game');
 });
 test('Champion starts with four-minute opener and first Crown Seal unlocks Mega after four real fights',()=>{
@@ -120,9 +122,15 @@ test('Rayquaza Sky fight unlocks only at ten real Champion seals and finishes on
  assert.equal(lib.stage,'sky');
  assert.equal(G.EnemyMgr.last.dex,384);
  assert.equal(save.pkmsvvRayquazaDefeated,undefined);
+ G.EnemyMgr.last.hp=G.EnemyMgr.last.maxHp*.49;
+ lib.update(.1);
+ assert.equal(lib.stage,'sky');
+ assert.equal(G.EnemyMgr.last._pkmsvvMegaPhase2,true,'Rayquaza enters true Mega phase at 50% HP');
+ assert.equal(G.EnemyMgr.last.hp,G.EnemyMgr.last.maxHp,'Mega phase restores doubled full HP');
+ assert.equal(save.pkmsvvRayquazaDefeated,undefined,'first phase must NOT pay Chapter 10');
  G.EnemyMgr.last.dead=true;
  lib.update(.1);
- assert.equal(save.pkmsvvRayquazaDefeated,true,'must kill Rayquaza actor');
+ assert.equal(save.pkmsvvRayquazaDefeated,true,'kill Rayquaza AFTER its Mega phase');
  assert.equal(lib.active,false);
  assert.equal(G.World.arena,null,'return to ordinary map');
 });
