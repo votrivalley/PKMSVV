@@ -60,7 +60,8 @@ G.PKMSVVChampionArena=(()=>{
   const playerSpeed=e.groundOnly&&ignoresWater(pl)?1:e.spd;
   const enemySpeed=e.groundOnly&&ignoresWater(enemy)?1:e.spd;
   pl.atkMul*=e.atk;pl.spdMul*=playerSpeed;
-  enemy.dmg*=e.atk;enemy.spd*=enemySpeed;
+  if(Number.isFinite(enemy.dmg))enemy.dmg*=e.atk;
+  if(Number.isFinite(enemy.spd))enemy.spd*=enemySpeed;
   G.UI?.toast?.('🏟️ '+e.name+' · '+e.hint,3300);
  }
  const FARM_SPAWN_MULT=2,FARM_XP_MULT=2;
