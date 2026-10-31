@@ -58,6 +58,8 @@ async function main(){
    assert.equal(await page.evaluate(()=>G.LanBus.offlineAI),true);
    if(android)assert.equal(await page.evaluate(()=>window.__nativeCalls.length),0);
    await page.click('#lobby-start');await page.waitForFunction(()=>G.Game.state==='playing');
+   // The requested four-second Berry selection freezes combat/time before a new match.
+   await page.waitForFunction(()=>!G.PKMSVVBerry?.choosing,null,{timeout:10000});
    if(mode==='royale'||mode==='eggrush'){
     // Real packaged browser: the Host timer/AI keeps running while two
     // independent skill cards wait for the player to choose in order.
@@ -176,6 +178,8 @@ async function main(){
    });
    await page.waitForFunction(()=>!document.getElementById('lobby-start')?.disabled);
    await page.click('#lobby-start');await page.waitForFunction(()=>G.Game.state==='playing');
+   // The requested four-second Berry selection freezes combat/time before a new match.
+   await page.waitForFunction(()=>!G.PKMSVVBerry?.choosing,null,{timeout:10000});
    assert.ok(await page.evaluate(()=>G.Coop.players().some(p=>p.lanBot)));
    console.log('PASS '+(android?'Android packaged UI':'Web')+' '+mode+': menu → AI → timed checkpoints → finish → second match');
   }
