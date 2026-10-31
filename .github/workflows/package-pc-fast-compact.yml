@@ -1,4 +1,4 @@
-name: Build PC Fast Start (Berry Rescue Co-op Network Fix)
+name: Build PC Fast Start (Berry Rescue Boss Timing Fix)
 on:
   workflow_dispatch:
   push:
