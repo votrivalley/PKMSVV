@@ -344,11 +344,17 @@ G.LanAI=(()=>{
      goal={x:target.x+(pl.x-target.x)/d*range,y:target.y+(pl.y-target.y)/d*range};
     }
     if(['coop','berry','berryeasy'].includes(mode)&&!nests.length&&goal===s.roam&&sq(pl,goal)<50**2)goal={x:pl.x,y:pl.y};
+    // Berry Rescue overrides ordinary wandering, distant rescues and monster chase.
+    // The grove coordinates are authoritative and all bots patrol/defend close to it.
+    if(mode==='berry'||mode==='berryeasy'){
+     const defense=G.PKMSVVBerryRescue?.defendGoal?.(pl,enemies);
+     if(defense)goal=defense;
+    }
     if(G.Arena?.active)goal=G.Arena.clampGoal(goal,pl);
     s.axis=chooseAxis(pl,s,goal,enemies,shots,hazards);
     s.think=s.personality.think*(.9+Math.random()*.2);
     const dash=G.PKMSVVDash?.preview(pl);
-    if(dash?.ready&&Math.random()<s.personality.dash&&Math.hypot(...s.axis)>.5&&
+    if(mode!=='berry'&&mode!=='berryeasy'&&dash?.ready&&Math.random()<s.personality.dash&&Math.hypot(...s.axis)>.5&&
       danger(pl,pl,enemies,shots,hazards)>65){
      const length=(dash.move.radius||120)*(G.PKMSVVDash.profile(dash.move).range||1);
      const end={x:pl.x+s.axis[0]*length,y:pl.y+s.axis[1]*length};
