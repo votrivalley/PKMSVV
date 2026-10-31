@@ -98,8 +98,8 @@ patch('js/game.js',
 // Berry tree objects share the game's normal Y-sorted drawable list.
 // This preserves occlusion: Pokémon in front of a tree draw in front of it.
 patch('js/game.js',
- "if (state!=='ui')for(const e of G.PKMSVVEggs?.drawables?.(cam)||[])items.push({y:e.y,ent:e});",
- "if (state!=='ui')for(const e of G.PKMSVVEggs?.drawables?.(cam)||[])items.push({y:e.y,ent:e});\n"+
+ "    if (state!=='ui')for(const e of G.PKMSVVEggs?.drawables?.(cam)||[])items.push({y:e.y,ent:e});",
+ "    if (state!=='ui')for(const e of G.PKMSVVEggs?.drawables?.(cam)||[])items.push({y:e.y,ent:e});\n"+
  "    if(G.PKMSVVBerryRescue?.active)for(const e of G.PKMSVVBerryRescue.drawables())items.push({y:e.y,ent:e});");
 patch('js/game.js',
  "if(G.EggRush.active)G.EggRush.hud(ctx,w,h);",
