@@ -45,6 +45,9 @@ G.PKMSVVWiki=(()=>{
   .pkmsvv-pc-learn{margin-top:9px;border:1px solid #80bbb2;background:#204e55;border-radius:9px;padding:10px}
   .pkmsvv-pc-learn button{cursor:pointer;color:#ffe3a3;font-weight:bold;border:0;background:transparent;text-align:left;width:100%;padding:5px}
   .pkmsvv-pc-learn p{color:#d8efeb;font-size:13px;line-height:1.65}
+  .pkmsvv-pc-orb-details p{margin:7px 0;color:#e4f1ee;font-size:13px;line-height:1.6}
+  .pkmsvv-pc-orb-item strong{color:#ffe29a}
+
   .pkmsvv-pc-card .pkmsvv-pc-action{margin-top:auto;border-radius:8px;background:#ffdc68;
     color:#103841;padding:7px 12px;font-weight:900;font-size:13px}
   @media(max-width:580px){.pkmsvv-pc-grid{grid-template-columns:1fr;gap:8px}
@@ -142,9 +145,7 @@ G.PKMSVVWiki=(()=>{
   const sub=document.createElement('h3');sub.textContent=tr('Kiến thức Pokémon','Pokémon knowledge');
   help.append(sub);
   const articles=[
-   [tr('Mystery Orb','Mystery Orb'),
-    tr('Nhận Orb trong trận để tăng sức mạnh; giữ đúng loại Orb cho chiến thuật, với nút Orb riêng trên PC/controller.',
-       'Collect Mystery Orbs in battle to enhance your abilities. A separate Orb control is available on keyboard and controller.')],
+   [tr('Mystery Orb','Mystery Orb'),null],
    [tr('Thức tỉnh & Quên kỹ năng','Awakening & Forgetting Skills'),
     tr('Kỹ năng được nâng trong trận; khi học đầy ô, có thể thay thế kỹ năng cũ. Các nâng cấp lâu dài không bị mất khi quên một kỹ năng.',
        'Level skills during runs and replace an old skill when your slots fill. Permanent upgrades remain intact.')]
@@ -153,7 +154,24 @@ G.PKMSVVWiki=(()=>{
    const detail=document.createElement('div');detail.className='pkmsvv-pc-learn';
    const toggle=document.createElement('button');toggle.type='button';toggle.textContent='▸ '+name;
    toggle.setAttribute('aria-expanded','false');
-   const p=document.createElement('p');p.textContent=description;p.hidden=true;
+   const p=document.createElement('div');p.hidden=true;p.className='pkmsvv-pc-orb-details';
+   if(description!==null){
+    const paragraph=document.createElement('p');paragraph.textContent=description;p.append(paragraph);
+   }else{
+    const intro=document.createElement('p');
+    intro.textContent=tr('Mystery Orb xuất hiện ngay từ đầu mỗi trận, không cần đầy kỹ năng. Hàng đợi tối đa 10 Orb; dùng đúng thứ tự đã nhặt (FIFO), hồi 5 giây giữa hai lần kích hoạt. Kẻ địch boss chịu hiệu ứng khống chế yếu hơn.',
+      'Mystery Orbs appear from the start of each run without a skill requirement. Hold up to 10 in first-in-first-out order, with 5 seconds between uses. Bosses resist crowd-control effects.');
+    p.append(intro);
+    for(const orb of G.Orbs?.LIST||[]){
+     const item=document.createElement('p');item.className='pkmsvv-pc-orb-item';
+     const strong=document.createElement('strong');strong.textContent=orb.name?.[G.I18n?.lang==='en'?1:0]||orb.id;
+     item.append(strong,document.createTextNode(' — '+(orb.desc?.[G.I18n?.lang==='en'?1:0]||'')));
+     p.append(item);
+    }
+    const note=document.createElement('p');note.textContent=tr('Chương Orb: sử dụng đủ 6 loại khác nhau. Phím Orb theo thiết lập tay cầm/bàn phím hiện tại; không tự thêm cơ chế Orb mới.',
+      'Orb chapter: use all 6 distinct types. The Orb shortcut follows current controls; no new Orb mechanics added.');
+    p.append(note);
+   }
    toggle.onclick=()=>{p.hidden=!p.hidden;toggle.textContent=(p.hidden?'▸ ':'▾ ')+name;toggle.setAttribute('aria-expanded',String(!p.hidden));};
    detail.append(toggle,p);help.append(detail);
   }
