@@ -50,7 +50,7 @@ G.PKMSVVMegaPhase3=(()=>{
   };
  }
  function isBattleReady(f){
-  return !!(f&&!f.storyLocked&&CHAMPIONS.some(c=>c.key===f.key)&&f.artReady&&
+  return !!(f&&(f.storyLocked||CHAMPIONS.some(c=>c.key===f.key))&&f.artReady&&
    G.SPRITE_META?.[f.spriteId]?.a?.Idle&&isUnlocked(f));
  }
  function rewardStone(save,results,random=Math.random){
@@ -85,7 +85,7 @@ G.PKMSVVMegaPhase3=(()=>{
  const HOVER_MEGA=new Set(['charizardmegax','charizardmegay','dragonitemega','scizormega','pidgeotmega','salamencemega','latiasmega','latiosmega','rayquazamega']);
  const AURA={charizardmegax:'#43baff',charizardmegay:'#ffb356',scizormega:'#f77f98',swampertmega:'#6fe1ee',garchompmega:'#af87ff',dragonitemega:'#ffe69b'};
  const formFor=p=>p?(G.PKMSVV_MEGA_CATALOG||[]).find(f=>
-  f.dex===p.dex&&!f.storyLocked&&f.stats&&f.artReady&&G.SPRITE_META?.[f.spriteId]?.a?.Idle&&
+  f.dex===p.dex&&f.stats&&f.artReady&&G.SPRITE_META?.[f.spriteId]?.a?.Idle&&
   (!p.shiny||G.Sprites.hasShiny?.(f.spriteId)===true)):null;
  function canActivate(p,ai=false){
   const f=formFor(p);
