@@ -30,6 +30,11 @@ patch('js/core/db.js',
  '    r.pkmsvvBerry.last=Array.isArray(r.pkmsvvBerry.last)?r.pkmsvvBerry.last:[];\n'+
  '    r.pkmsvvBerry.rescueWins=Math.max(0,Number(r.pkmsvvBerry.rescueWins)||0,Number(formerBerry.rescueWins)||0);');
 
+// The 4-second pre-battle Berry selector must freeze simulation time and
+// hostile spawns even in LAN rooms. Networking still ticks in the frame loop.
+patch('js/game.js',
+ '  function update(dt) {\n    const coop = G.Coop.active;',
+ '  function update(dt) {\n    const coop = G.Coop.active;\n    if(G.PKMSVVBerry?.choosing){\n      if(pl){pl.invuln=Math.max(pl.invuln||0,5);pl.anim?.update?.(dt);}\n      G.FX.update(dt);G.Camera.follow(pl.x,pl.y,dt);return;\n    }');
 // Web/LAN multiplayer-only Berry Rescue patches run after web arena/egg patches.
 // Art may be staged after this build: use existing approved Chapter 3 artwork as
 // offline fallbacks, never produce a blank pane or require an external image API.
