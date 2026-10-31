@@ -43,7 +43,7 @@ test('Only two genuine modes open Berry Chapter 6; using five distinct Berry typ
  save.pkmsvvChapter6Seen=true;
  assert.equal(api.arenaUnlocked(),true);
  assert.equal(api.megaUnlocked(),false,'Arena never directly grants Mega');
- assert.equal(G.DB.count,3,'one milestone per unique mode, optional Egg Rush tracked separately');
+ assert.equal(G.DB.count,4,'three saved mode milestones plus one-time Chapter 5 ticket reconciliation');
 });
 test('Chapter 7 requires the first earned Champion Crown Seal, not a cup',()=>{
  const {api,save}=setup({pkmsvvChapter6Seen:true,
