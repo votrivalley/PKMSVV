@@ -69,7 +69,7 @@ G.PKMSVVStory=(()=>{
    {art:17,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Có thể kết nối chung mạng LAN. Thiếu người sẽ có những huấn luyện viên AI tham gia.','Join on a local network. AI trainers can fill empty slots.']},
    {art:17,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Tranh Trứng chỉ tính điểm khi trứng nở cuối trận. Nhiều trứng chưa chắc đã thắng.','Egg Rush reveals points only after the eggs hatch at match end. More eggs do not guarantee victory.']},
    {art:17,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Sống Còn và Tranh Trứng không chờ lựa chọn kỹ năng; chỉ Co-op mới được đồng lòng đợi nhau.','Survival and Egg Rush never pause for your skill choices; only Co-op can wait together.']},
-   {art:17,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Hãy hoàn thành cả ba chế độ. Khi ba thử thách khép lại, cánh cửa Arena Chương 7 mới thức tỉnh.','Complete all three modes. Only then will the Chapter 7 Arena gate awaken.']},
+   {art:17,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Hoàn thành Sống Sót và Sống Còn để mở Chương 6: Bí Mật Berry. Tranh Trứng là thử thách tự chọn. Sử dụng đủ năm loại Berry mới mở Arena Chương 7.','Complete Co-op Survival and Battle Royale for Chapter 6 Berry Secrets. Egg Rush is optional. Use five Berry types to open Chapter 7 Arena.']},
    {art:17,speaker:['Tôi','Me'],text:['Lần này mình sẽ tìm lại ký ức cùng những người bạn!','This time I will recover my memories with friends!']}
   ],
   // Chapter 6: independent Berry journey; previous Arena/Mega save flags stay untouched.
@@ -378,15 +378,17 @@ G.PKMSVVStory=(()=>{
  function chapter1(done){
   play('chapter1',()=>{if(G.DB.save){G.DB.save.pkmsvvChapter1Seen=true;G.DB.save.pkmsvvChapter1Pending=false;G.DB.commit(true);syncChapterPurpleRewards();}if(done)done();});
  }
- const MP_MODES=Object.freeze(['coop','royale','eggrush']);
+ // Only Sống Sót and Sống Còn are required for Chapter 6.
+ const MP_MODES=Object.freeze(['coop','royale']);
+ const MP_OPTIONAL=Object.freeze(['eggrush']);
  const MP_LABELS=Object.freeze({coop:'Co-op',royale:'Sống Còn',eggrush:'Tranh Trứng'});
  function multiplayerProgress(save=G.DB?.save){
   const flags=save?.pkmsvvMultiplayerDone||{};
   const done=MP_MODES.filter(mode=>flags[mode]===true);
-  return {count:done.length,total:3,done,missing:MP_MODES.filter(mode=>flags[mode]!==true)};
+  return {count:done.length,total:MP_MODES.length,done,missing:MP_MODES.filter(mode=>flags[mode]!==true)};
  }
  function allMultiplayerCompleted(save=G.DB?.save){
-  return multiplayerProgress(save).count===3;
+  return multiplayerProgress(save).count===MP_MODES.length;
  }
  const CHAMPION_REGIONS=Object.freeze(['Kanto','Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar','Paldea','Votri Valley']);
  function championSealCount(save=G.DB?.save){
@@ -411,7 +413,7 @@ G.PKMSVVStory=(()=>{
  // Called from the *real* multiplayer endRun, never the lobby/room creator.
  function recordMultiplayerCompletion(mode,detail={}){
   const s=G.DB?.save;
-  if(!s?.pkmsvvChapter3Seen||!MP_MODES.includes(mode)||detail.abandoned)return false;
+  if(!s?.pkmsvvChapter3Seen||![...MP_MODES,...MP_OPTIONAL].includes(mode)||detail.abandoned)return false;
   const time=Number(detail.time)||0;
   if(mode==='coop'){
    // In Co-op surviving or falling after genuine team play counts as finishing.
@@ -427,9 +429,11 @@ G.PKMSVVStory=(()=>{
   if(s.pkmsvvMultiplayerDone[mode]===true)return false;
   s.pkmsvvMultiplayerDone[mode]=true;G.DB.commit(true);
   const progress=multiplayerProgress(s);
-  G.UI?.toast?.(progress.count===3?
-   tr('🏆 Đã hoàn thành cả ba chế độ! Chương 7 · Arena đã mở.','🏆 All three modes complete! Chapter 7 · Arena is unlocked.'):
-   tr('✅ Hoàn thành '+MP_LABELS[mode]+' · '+progress.count+'/3 chế độ.','✅ Completed '+MP_LABELS[mode]+' · '+progress.count+'/3 modes.'),3500);
+  G.UI?.toast?.(MP_OPTIONAL.includes(mode)?
+   tr('✅ Tranh Trứng hoàn thành! Đây là chế độ tự chọn.','✅ Egg Rush complete! This mode is optional.'):
+   allMultiplayerCompleted(s)?
+   tr('🍓 Đã hoàn thành Sống Sót và Sống Còn! Chương 6 · Bí Mật Berry đã mở.','🍓 Survival and Battle Royale done! Chapter 6 Berry Secrets unlocked.'):
+   tr('✅ Hoàn thành '+MP_LABELS[mode]+' · '+progress.count+'/2 chế độ bắt buộc.','✅ Completed '+MP_LABELS[mode]+' · '+progress.count+'/2 required modes.'),3500);
   return true;
  }
  function chapter5(done){
@@ -438,7 +442,8 @@ G.PKMSVVStory=(()=>{
    syncChapterPurpleRewards();done?.(true);});return true;
  }
  function chapter6(done){
-  if(!G.DB?.save?.pkmsvvChapter5Seen||!allMultiplayerCompleted()){done?.(false);return false;}
+  // Internal chapter6 = visible Chapter 7 Arena. First complete Chapter 6 Berry.
+  if(!G.DB?.save?.pkmsvvChapter5Seen||!allMultiplayerCompleted()||!G.DB.save.pkmsvvBerryChapterDone){done?.(false);return false;}
   play('chapter6',()=>{G.DB.save.pkmsvvChapter6Seen=true;G.DB.commit(true);
    syncChapterPurpleRewards();done?.(true);});return true;
  }
@@ -497,7 +502,7 @@ G.PKMSVVStory=(()=>{
   });return true;
  }
  function berryChapter(done){
-  if(!G.DB?.save?.pkmsvvChapter5Seen){done?.(false);return false;}
+  if(!G.DB?.save?.pkmsvvChapter5Seen||(!allMultiplayerCompleted()&&!G.DB.save.pkmsvvBerryIntroSeen&&!G.DB.save.pkmsvvChapter6Seen)){done?.(false);return false;}
   const already=!!G.DB.save.pkmsvvBerryIntroSeen;
   play('berry',()=>{
    if(!already&&G.DB?.save){
@@ -522,9 +527,9 @@ G.PKMSVVStory=(()=>{
   if(s.pkmsvvChapter3Seen)available.push('chapter3');
   // Story continuation is selectable before first completion, without blocking LAN.
   if(s.pkmsvvChapter3Seen)available.push('chapter5');
-  if(s.pkmsvvChapter5Seen)available.push('berry');
-  if((s.pkmsvvChapter5Seen&&allMultiplayerCompleted(s))||s.pkmsvvChapter6Seen)available.push('chapter6');
-  if(s.pkmsvvChapter6Seen)available.push('championTen');
+  if(s.pkmsvvChapter5Seen&&(allMultiplayerCompleted(s)||s.pkmsvvBerryIntroSeen||s.pkmsvvChapter6Seen))available.push('berry');
+  if((s.pkmsvvChapter5Seen&&allMultiplayerCompleted(s)&&s.pkmsvvBerryChapterDone)||s.pkmsvvChapter6Seen)available.push('chapter6');
+  if(arenaUnlocked(s))available.push('championTen');
   if(firstMegaUnlocked(s)||s.pkmsvvChapter9MegaDone)available.push('chapter7');
   if(s.pkmsvvRayquazaDefeated||s.pkmsvvChapter10Done)available.push('chapter10');
   if(available.length===1){replay('prologue');return;}
