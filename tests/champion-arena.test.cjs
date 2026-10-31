@@ -79,7 +79,7 @@ test('Ten Champions, sixteen entrants, 4m opener and 1m30 later preparation',()=
  assert.equal(lib.ROUNDS.length,5);
  const draw=lib.makeBracket(()=>.5);
  assert.equal(draw.length,16);assert.equal(draw.filter(p=>p.id==='you').length,1);
- assert.equal(draw.filter(p=>p.tier==='elite').length,2,'at least 2 strong AI guaranteed');
+ assert.equal(draw.filter(p=>p.tier==='elite').length,3,'three elite AI guarantee higher difficulty');
  assert.equal(new Set(draw.map(p=>p.id)).size,16);
 });
 test('Champion starts with four-minute opener and first Crown Seal unlocks Mega after four real fights',()=>{
@@ -88,7 +88,7 @@ test('Champion starts with four-minute opener and first Crown Seal unlocks Mega 
  for(let round=0;round<4;round++){
   assert.equal(lib.round,round);assert.equal(lib.stage,'prep');
   assert.equal(lib.nextDuel(),true);
-  assert.equal(lib.stage,'fight');assert.equal(G.EnemyMgr.last.maxHp,320+5*round);
+  assert.equal(lib.stage,'fight');assert.ok(G.EnemyMgr.last.maxHp>=Math.round((340+12*round)*1.03),'real opponents receive scaled HP');
   G.EnemyMgr.last.dead=true;lib.update(.1);
  }
  const book=lib.ledger(save);
@@ -189,11 +189,11 @@ test('Story Crown Journey unlocks regions only after previous seals while preser
  for(const [name] of lib.REGIONS)save.arenas.pkmChampion.seals[name]=true;
  assert.equal(lib.storyCompleted(),true);
 });
-test('Bracket randomizes human and includes exactly two strong AI',()=>{
+test('Bracket randomizes human and includes three strong AI',()=>{
  const {lib}=setup();
  const participants=lib.makeBracket(()=>.37);
  assert.equal(participants.length,16);
- assert.equal(participants.filter(p=>p.tier==='elite').length,2);
+ assert.equal(participants.filter(p=>p.tier==='elite').length,3);
  assert.equal(participants.filter(p=>p.id==='you').length,1);
  assert.notEqual(participants[0].id,'you','player position must not be fixed to slot one');
 });
@@ -287,15 +287,25 @@ test('unreleased regional Champion Mega art uses real stand-in Pokémon, then tr
  assert.equal(lib.MEGA_KEYS.length,10);
  assert.equal(lib.regionChampion(1).dex,248,'Johto uses Tyranitar before Mega Scizor art');
  assert.equal(lib.regionChampion(2).dex,282,'Hoenn uses Gardevoir before Mega Gardevoir');
- assert.equal(lib.regionChampion(9).dex,359,'Votri Valley uses Absol before Mega Absol');
- G.PKMSVV_MEGA_CATALOG=[{key:'absolmega',dex:359,artReady:true,spriteId:10359}];
- G.SPRITE_META={10359:{a:{Idle:{}}}};
- assert.equal(lib.regionChampion(9).dex,359,'new Mega Absol sprite restores Votri Valley Champion');
- assert.equal(lib.regionChampion(9).spriteId,10359);
+ assert.equal(lib.regionChampion(9).dex,149,'Sky Pillar uses Dragonite before Mega Dragonite');
+ G.PKMSVV_MEGA_CATALOG=[{key:'dragonitemega',dex:149,artReady:true,spriteId:10149}];
+ G.SPRITE_META={10149:{a:{Idle:{}}}};
+ assert.equal(lib.regionChampion(9).dex,149,'new Mega Dragonite becomes Sky Pillar Champion');
+ assert.equal(lib.regionChampion(9).spriteId,10149);
  assert.equal(lib.regionChampion(9).temporary,true,'replacement stays marked temporary');
  assert.equal(lib.regionChampion(1).temporary,true);
 });
 
+test('Nine regional Champion brackets contain only native-generation Pokemon; final Sky Pillar is exceptional',()=>{
+ const {lib}=setup();
+ for(let i=0;i<9;i++){
+  const [lo,hi]=lib.GEN_BOUNDS[i];
+  assert.ok(lib.GEN_POOLS[i].length>=12,'each region has a varied roster');
+  for(const dex of lib.GEN_POOLS[i])assert.ok(dex>=lo&&dex<=hi,'wrong generation: region '+i+' dex '+dex);
+ }
+ assert.equal(lib.displayRegion('Votri Valley'),'Tháp Thiên Không','legacy Crown Seal key has neutral visible name');
+ assert.equal(lib.regionChampion(7).dex,823,'Galar should not use Gen 1 Gengar');
+});
 test('Champion opens after 4m with bosses at 1m30 and 3m; later rounds at 1m30',()=>{
  const {G,lib,get}=setup(),alerts=[];
  G.UI.toast=(message)=>alerts.push(message);
