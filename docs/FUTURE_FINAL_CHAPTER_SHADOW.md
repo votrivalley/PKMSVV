@@ -1,10 +1,10 @@
 # TƯƠNG LAI — CHƯƠNG CUỐI: POKÉMON HẮC HÓA
 
-> **Concept đã lưu, chưa triển khai.** Không chốt số chương; không thay đổi Chương 1–7 và không tự chiếm Chương 8–9 (hiện vẫn được để dành). Toàn bộ nội dung này chỉ kích hoạt khi người thiết kế xác nhận cốt truyện.
+> **Bonus Shadow — cập nhật sau Chương 10.** Đã chốt Chương 8 giới thiệu Champion, Chương 9 hoàn thành khi mở Mega đầu tiên, Chương 10 đánh Rayquaza sau 10 Champion. Tài liệu này mô tả **phụ bản và hệ thống Shadow tương lai** chứ không tự phát hành các sprite hoặc phần thưởng. Xem [roadmap 1–10](./CHAPTERS_1_10_SHADOW_BONUS_ROADMAP.md).
 
 ## Ý tưởng cốt lõi
 
-Khi người chơi đã vượt qua Champion vùng, khai mở Mega và hoàn thành các tuyến sau đó, một nguồn năng lượng bóng tối làm Pokémon dần **Hắc Hóa (Shadow)**. Đây là **mục tiêu late game / chương kết thúc**, không phải event ngắn hoặc skin quay Gacha tràn lan.
+Sau khi người chơi hạ Rayquaza ở Chương 10 và chứng kiến Mega Rayquaza hắc hóa bay đi, năng lượng bóng tối bắt đầu làm Pokémon **Hắc Hóa (Shadow)** trên nhiều vùng đất. Đây là **mục tiêu late game / chương kết thúc**, không phải event ngắn hoặc skin quay Gacha tràn lan.
 
 Người chơi phải tìm ra nguyên nhân, cứu Pokémon bị ảnh hưởng và đối đầu với những huyền thoại mang năng lượng Dark. Quan hệ giữa Shadow và Mega là nhánh thử thách cấp cao: có thể xuất hiện **Mega Shadow boss** nhưng vẫn giữ tách biệt khỏi Mega và Shiny thường.
 
@@ -36,3 +36,7 @@ Tham khảo `docs/ASSET_VAULT_SHADOW_HALLOWEEN_2026_10_31.md`. Có 146 PNG Shado
 - Đề xuất hệ thống thanh tẩy, Shadow AI, cân bằng boss và phần thưởng, thử ở nhánh thử nghiệm không đụng save.
 - QA song song PC/Web/Android, save tương thích, AI không mắc kẹt, Shadow form không đè sprite hiện hành.
 - Chỉ phát hành khi người thiết kế duyệt, không tự triển khai từ tài liệu này.
+
+## Bonus: phụ bản và Điểm Hắc Hóa (đã chốt ý tưởng, chưa code)
+
+Sau đoạn kết Chương 10, người chơi sẽ có phụ bản mới để **farm Điểm Hắc Hóa** từ mục tiêu bảo vệ/thanh tẩy, sau đó dùng điểm **đổi Pokémon Hắc Hóa**. Đây là currency và danh sách Pokémon tách biệt hoàn toàn khỏi Mega Stone, Điểm Arena và Shiny thông thường. Darkrai/Yveltal là ứng viên trùm phụ bản theo chủ đề huyền thoại hệ Dark. Chưa nhập dữ liệu sprite Doofcraft vào build do điều kiện bản quyền và QA animation.
