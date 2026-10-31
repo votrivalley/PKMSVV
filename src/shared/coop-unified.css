@@ -41,7 +41,7 @@
 
 
 /* Rescue Berry is ONE Co-op mode card; pick difficulty only after selection. */
-#pkmsvv-coop-modes .pkmsvv-mode-card.berry{background:linear-gradient(160deg,#e8faec,#c9f1dc);border-color:#71c19b}
+#pkmsvv-coop-modes .pkmsvv-mode-card.berry{background:linear-gradient(100deg,rgba(232,250,236,.96),rgba(233,251,241,.84)),url('assets/story/chapter6-berry-grove.webp') center/cover;border-color:#71c19b}
 #pkmsvv-coop-modes .berry .pkmsvv-mode-art{background:radial-gradient(circle,#bff3d2,#5dbe96);border-color:#5ca682}
 #pkmsvv-coop-detail .pkmsvv-berry-difficulty{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;
  padding:12px;background:rgba(10,42,53,.88);border:1px solid #9dd8bf;border-radius:11px}
