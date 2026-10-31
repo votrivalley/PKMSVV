@@ -36,7 +36,7 @@ patch('js/core/gamepad.js',
  "      if (hit(G.PKMSVVPadOrb.bindings().confirm)) press();");
 patch('js/core/gamepad.js',
  "      if (hit(BT.B) || hit(BT.BACK)) back();",
- "      if (hit(G.PKMSVVPadOrb.bindings().back) || hit(BT.BACK)) back();");
+ "      if (hit(G.PKMSVVPadOrb.bindings().back) || hit(BT.BACK)) { if (!G.PKMSVVPadDialogs?.back?.()) back(); }");
 patch('js/core/gamepad.js',
  "      if (hit(BT.START)) {",
  "      if (hit(G.PKMSVVPadOrb.bindings().pause)) {");
