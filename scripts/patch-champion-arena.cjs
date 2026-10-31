@@ -15,6 +15,15 @@ replace('dev.html','<script defer src="js/ui/pkmsvv-mega-phase3.js"></script>',
  '<script defer src="js/ui/pkmsvv-champion-arena.js"></script>\n'+
  '<script defer src="js/ui/pkmsvv-arena-solo.js"></script>');
 
+// When a duel ends, invalidate chunks cached as arena terrain. The original
+// setArena(null) cleared only the flag but kept the tiles rendered as the arena.
+replace('js/world/world.js',
+ '      arena = a;\n      if (!a) return;\n      a.th = G.Tiles.ARENA_THEMES[a.type] || G.Tiles.ARENA_THEMES.normal;',
+ '      const formerArena=arena;\n      arena=a;\n      if(!a&&!formerArena)return;\n      const zone=a||formerArena;\n      if(a)a.th=G.Tiles.ARENA_THEMES[a.type] || G.Tiles.ARENA_THEMES.normal;');
+replace('js/world/world.js','      const R = a.r + 9;','      const R = zone.r + 9;');
+replace('js/world/world.js',
+ 'if (Math.abs(cx * N + N / 2 - a.tx) < R + N && Math.abs(cy * N + N / 2 - a.ty) < R + N)',
+ 'if (Math.abs(cx * N + N / 2 - zone.tx) < R + N && Math.abs(cy * N + N / 2 - zone.ty) < R + N)');
 // New visible Chapters 5/6 are ADDITIVE. Preserve the old story flags and merges.
 // Neither a newer offline backup nor another device may erase a Crown Seal.
 replace('js/core/db.js',
