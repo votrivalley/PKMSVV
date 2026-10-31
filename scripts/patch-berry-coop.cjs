@@ -89,6 +89,12 @@ patch('js/game.js',
  "  G.onRescue = (dex, name) => {",
  "  G.onRescue = (dex, name) => {\n"+
  "    if(G.Royale?.active||G.EggRush?.active||G.PKMSVVBerryRescue?.active||G.PKMSVVArenaSolo?.active||G.PKMSVVChampionArena?.active)return;");
+// Render layering diagnostic: printed during prepare (not at runtime).
+// Use it to place foreground canopies AFTER player/monster sprites, but BEFORE HUD.
+const renderSrc=fs.readFileSync(path.join(game,'js/game.js'),'utf8');
+const eggPos=renderSrc.indexOf('G.PKMSVVBerryRescue?.draw?.(ctx)');
+console.log('Berry draw pipeline:',renderSrc.slice(Math.max(0,eggPos-650),Math.min(renderSrc.length,eggPos+1400))
+ .split('\\n').slice(0,70).join(' | ').slice(0,2600));
 patch('js/game.js',
  "if(G.EggRush.active)G.EggRush.draw(ctx);",
  "if(G.EggRush.active)G.EggRush.draw(ctx);G.PKMSVVBerryRescue?.draw?.(ctx);");
