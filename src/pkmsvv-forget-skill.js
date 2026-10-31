@@ -18,6 +18,10 @@ G.PKMSVVForgetSkill=(()=>{
    const group=p.slots[i],idx=group.indexOf(m);
    if(idx>=0){group.splice(idx,1);if(!group.length)p.slots.splice(i,1);}
   }
+  // A max-level passive buff can be infinite: forgetting it must remove
+  // that effect, but never erase another learned move's shared buff stat.
+  if(m.kind==='buff'&&m.stat&&p.buffs&&!p.moves.some(other=>other.kind==='buff'&&other.stat===m.stat))
+   delete p.buffs[m.stat];
   if(p.slots.length){const keep=p.slots.indexOf(current);p.active=keep>=0?keep:Math.min(p.active,p.slots.length-1);}
   else p.active=0;
   G.UI?.toast?.('🧠 Đã quên '+(G.T?.(m.name,'move')||m.name||m.id)+' · Có thể học chiêu mới!',2900);
