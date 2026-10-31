@@ -15,7 +15,8 @@ patch('js/core/gamepad.js',
  '    // Dynamically mounted PKMSVV dialogs must be navigable before the underlying screen.\n'+
  '    for(const selector of [".pkmsvv-memory-chooser",".pkmsvv-berry-overlay",\n'+
  '      "#pkmsvv-wiki-overlay","#pkmsvv-champion-screen",\n'+
- '      "#pkmsvv-support-catalog","#pkmsvv-mega-phase1"]){\n'+
+ '      "#pkmsvv-support-catalog","#pkmsvv-mega-phase1",\n'+
+ '      "#pkmsvv-arena-solo-screen"]){\n'+
  '      const node=document.querySelector(selector);\n'+
  '      if(node&&!node.hidden&&!node.classList.contains("hidden"))return node;\n'+
  '    }\n'+
@@ -114,7 +115,8 @@ const accessibility=String.raw`
 (function(){
  let scheduled=false;
  const selectors=['.pkmsvv-memory-chooser','.pkmsvv-berry-overlay','#pkmsvv-wiki-overlay',
-  '#pkmsvv-champion-screen','#pkmsvv-support-catalog','#pkmsvv-mega-phase1'];
+  '#pkmsvv-champion-screen','#pkmsvv-support-catalog','#pkmsvv-mega-phase1',
+  '#pkmsvv-arena-solo-screen'];
  function current(){
   for(const selector of selectors){
    const element=document.querySelector(selector);
@@ -156,7 +158,8 @@ fs.appendFileSync(path.join(dir,'css','style.css'),String.raw`
 #pull-close.pad-focus,#dex-play-now.pad-focus,
 .pkmsvv-memory-chooser .pad-focus,.pkmsvv-pc-overlay .pad-focus,
 .pkmsvv-champion-overlay .pad-focus,.pkmsvv-support-overlay .pad-focus,
-.pkmsvv-mega-phase1-overlay .pad-focus,.pkmsvv-berry-overlay .pad-focus{
+.pkmsvv-mega-phase1-overlay .pad-focus,.pkmsvv-berry-overlay .pad-focus,
+.pkmsvv-arena-solo-screen .pad-focus{
  outline:3px solid #ffe17d!important;outline-offset:3px;
  box-shadow:0 0 0 4px rgba(12,22,44,.8),0 0 17px rgba(255,221,102,.55)!important;
 }
