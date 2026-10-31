@@ -331,7 +331,7 @@ G.PKMSVVStory=(()=>{
   const completed=[
    !!(s.pkmsvvStorySeen&&(s.starter||s.partner)),
    !!s.pkmsvvChapter1Seen,!!s.pkmsvvChapter2Seen,!!s.pkmsvvChapter3Seen,
-   !!s.pkmsvvChapter5Seen,!!s.pkmsvvChapter6Seen,
+   !!(s.pkmsvvChapter5Seen&&allMultiplayerCompleted(s)),!!s.pkmsvvChapter6Seen,
    !!s.pkmsvvChapter9MegaDone || (!!flags[6]&&!!s.pkmsvvChapter7Seen),
    !!s.pkmsvvBerryChapterDone,
    !!s.pkmsvvChapter8IntroSeen,
