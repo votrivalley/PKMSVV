@@ -10,6 +10,11 @@ on:
       - 'scripts/patch-berry*.cjs'
       - 'tests/mega-phase3.test.cjs'
       - 'tests/berry-rescue.test.cjs'
+      - 'src/pkmsvv-champion-arena.js'
+      - 'src/v14/orbs.js'
+      - 'src/pkmsvv-forget-skill.js'
+      - 'scripts/patch-skill-forget.cjs'
+      - 'tests/forget-skill.test.cjs'
 permissions:
   contents: read
 concurrency:
@@ -38,7 +43,7 @@ jobs:
         env:
           PKMSVV_MEGA_SPRITE_PACK: '1'
       - name: Quick regressions for controls, Mega, Orb, supports and Champion
-        run: node --test tests/berry.test.cjs tests/berry-rescue.test.cjs tests/controller.test.cjs tests/mega-phase3.test.cjs tests/champion-arena.test.cjs tests/support-fast-shiny.test.cjs tests/competitive-nonblocking.test.cjs tests/royale-spectator.test.cjs
+        run: node --test tests/berry.test.cjs tests/berry-rescue.test.cjs tests/forget-skill.test.cjs tests/controller.test.cjs tests/mega-phase3.test.cjs tests/champion-arena.test.cjs tests/support-fast-shiny.test.cjs tests/competitive-nonblocking.test.cjs tests/royale-spectator.test.cjs
       - name: Package portable PC executable
         run: npm run build:lan:win
         env:
