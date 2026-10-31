@@ -1,4 +1,4 @@
-name: Build PC Fast Start (Berry Story Final QA)
+name: Build PC Fast Start (Berry Rescue 4P and Mega)
 on:
   workflow_dispatch:
   push:
@@ -33,7 +33,7 @@ jobs:
         env:
           PKMSVV_MEGA_SPRITE_PACK: '1'
       - name: Quick regressions for controls, Mega, Orb, supports and Champion
-        run: node --test tests/berry.test.cjs tests/controller.test.cjs tests/mega-phase3.test.cjs tests/champion-arena.test.cjs tests/support-fast-shiny.test.cjs tests/competitive-nonblocking.test.cjs tests/royale-spectator.test.cjs
+        run: node --test tests/berry.test.cjs tests/berry-rescue.test.cjs tests/controller.test.cjs tests/mega-phase3.test.cjs tests/champion-arena.test.cjs tests/support-fast-shiny.test.cjs tests/competitive-nonblocking.test.cjs tests/royale-spectator.test.cjs
       - name: Package portable PC executable
         run: npm run build:lan:win
         env:
@@ -49,7 +49,10 @@ jobs:
           }
           $app=Get-Content (Join-Path $dir 'resources/lan-site/game/js/app.min.js') -Raw
           if(!$app.Contains('pkmsvv-mega')){throw 'Mega control is not bundled'}
-          if(!$app.Contains('pkmsvv-berry-open')){throw 'Berry inventory is not bundled'}
+          if(!$app.Contains('pkmk-tab-berry')){throw 'Kecleon Berry shop missing'}
+          if(!$app.Contains('PKMSVVBerryRescue')){throw 'Four-player Berry Rescue runtime missing'}
+          $berryIcons=Get-ChildItem (Join-Path $dir 'resources/lan-site/game/assets/berry') -Filter '*.png'
+          if($berryIcons.Count -ne 10){throw 'Exactly 10 Berry pixel sprites must be packaged'}
           Write-Host "Fast Start is ready: $($exe.Name) ($($exe.Length) bytes)"
       - name: Include Fast Start instructions
         shell: pwsh
@@ -60,7 +63,7 @@ jobs:
       - name: Upload PC Fast Start for testing
         uses: actions/upload-artifact@v4
         with:
-          name: PKMSVV-PC-Fast-Berry-Chapter6
+          name: PKMSVV-PC-Fast-Berry-Rescue-Mega
           path: dist/lan-windows/win-unpacked/
           retention-days: 14
           if-no-files-found: error
