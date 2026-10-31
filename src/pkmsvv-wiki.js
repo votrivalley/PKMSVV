@@ -33,7 +33,7 @@ G.PKMSVVWiki=(()=>{
   const head=document.createElement('header');const title=document.createElement('h2');title.textContent='📖 WIKI · POKÉMON CHUYỂN SINH';
   head.append(title);action(head,'✕ Đóng',close);box.append(head);
   const orb=section(box,tr('Mystery Orb','Mystery Orb'),
-   tr('Nhặt ngay từ đầu trận, tối đa 10 Orb, xài theo thứ tự nhặt. Phím Orb mặc định 5 (hoặc tùy chỉnh trong Cài đặt).',
+   tr('Nhặt ngay từ đầu trận, tối đa 10 Orb, xài theo thứ tự nhặt. Phím Orb có thể đổi trong Cài đặt.',
       'Collect from the start. Up to 10 Orbs; use in pickup order via your mapped Orb key.'));
   for(const o of G.Orbs?.LIST||[]){
    const p=document.createElement('p');p.textContent=(o.name?.[G.I18n?.lang==='en'?1:0]||'Orb')+' — '+(o.desc?.[G.I18n?.lang==='en'?1:0]||'');
