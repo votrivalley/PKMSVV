@@ -95,24 +95,55 @@ G.PKMSVVBerry=(()=>{
   const box=document.createElement('div');box.id='pkmsvv-berry-bag';p.append(box);renderBag();return true;
  }
  function rescue(){
-  if(G.Game?.state==='playing')return false;
-  clearModal();const p=shell(tr('GIẢI CỨU BERRY','RESCUE BERRY'),tr('Cứu 5 quả Berry trước khi bóng tối lấy mất!','Rescue five Berries before the shadows!'));
-  const countEl=document.createElement('p');p.append(countEl);
-  let captured=0,closed=false;
-  const finish=()=>{
-   if(closed)return;closed=true;clearInterval(interval);
-   if(captured>=5){
-    const r=Math.random(),id=r<.015?'enigma':r<.045?'starf':r<.12?'petaya':r<.20?'lum':TYPES[Math.floor(Math.random()*6)].id;
+  if(G.Game?.state==='playing'||choiceOpen)return false;
+  clearModal();
+  const p=shell(tr('GIẢI CỨU BERRY','RESCUE BERRY'),
+   tr('Cứu đủ 5 Berry trong 20 giây; tránh quả bị bóng tối chiếm lấy. Sai 3 lần sẽ thua.',
+      'Rescue 5 Berries in 20 seconds. Avoid shadow-infected fruit; three mistakes end the run.'));
+  p.classList.add('pkmsvv-berry-rescue');
+  const hud=document.createElement('div');hud.className='pkmsvv-berry-rescue-hud';p.append(hud);
+  const board=document.createElement('div');board.className='pkmsvv-berry-rescue-board';p.append(board);
+  const status=document.createElement('p');status.className='pkmsvv-berry-result';p.append(status);
+  let saved=0,mistakes=0,remaining=20,finished=false,interval=null;
+  const stamp=()=>{hud.textContent=tr('🍓 Đã cứu: ','🍓 Rescued: ')+saved+'/5  ·  '+
+    tr('Sai: ','Misses: ')+mistakes+'/3  ·  ⏱ '+remaining+'s';};
+  function clearClock(){if(interval!==null){clearInterval(interval);interval=null;}}
+  function finish(won){
+   if(finished)return;finished=true;clearClock();board.replaceChildren();
+   if(won){
+    const r=Math.random();
+    const id=r<.015?'enigma':r<.045?'starf':r<.12?'petaya':r<.20?'lum':
+      TYPES[Math.floor(Math.random()*6)].id;
     grant(id,1);const d=data();d.rescueWins=(d.rescueWins||0)+1;save();
-    countEl.textContent=tr('Giải cứu thành công! Nhận ','Rescued! Reward: ')+byId[id].name+' Berry ×1';
-   }else countEl.textContent=tr('Chưa cứu đủ Berry.','Not enough berries rescued.');
-   p.append(button(tr('Về túi Berry','Back to Berry bag'),openBag));
-  };
-  const btn=button('🍓',()=>{if(closed)return;captured++;countEl.textContent=tr('Đã cứu ','Rescued ')+captured+'/5';if(captured>=5){btn.disabled=true;finish();}});
-  btn.className+=' pkmsvv-berry-rescue-target';p.append(btn);countEl.textContent='0/5';
-  let remaining=20;
-  const interval=setInterval(()=>{if(closed){clearInterval(interval);return;}remaining--;if(remaining<=0)finish();else if(captured<5)btn.style.transform='translateX('+Math.round((Math.random()-.5)*120)+'px)';},1000);
-  p.append(button(tr('Thoát','Exit'),()=>{closed=true;clearInterval(interval);openBag();},'ghost'));
+    status.textContent=tr('✨ Giải cứu thành công! Nhận ','✨ Rescue complete! Reward: ')+byId[id].name+' Berry ×1';
+   }else{
+    status.textContent=tr('Bóng tối đã lấy mất Berry! Thử lại nhé.','The shadows won this round. Try again!');
+   }
+   p.append(button(tr('Chơi lại','Play again'),rescue,'primary'));
+   p.append(button(tr('Về túi Berry','Back to Berry Bag'),openBag,'ghost'));
+  }
+  function wave(){
+   if(finished)return;stamp();board.replaceChildren();
+   const target=Math.floor(Math.random()*6);
+   const kind=TYPES[Math.floor(Math.random()*6)].id;
+   for(let i=0;i<6;i++){
+    const safe=i===target;
+    const cell=button(safe?'🍓':'🌑',()=>{
+     if(finished)return;
+     if(safe){saved++;status.textContent=tr('Đã cứu thêm một Berry!','A Berry was rescued!');
+      if(saved>=5){finish(true);return;}}
+     else{mistakes++;status.textContent=tr('Một quả bị bóng tối chiếm lấy!','A shadow-infected fruit!');
+      if(mistakes>=3){finish(false);return;}}
+     wave();
+    },safe?'pkmsvv-berry-target':'pkmsvv-berry-shadow');
+    cell.setAttribute('aria-label',safe?tr('Cứu Berry '+byId[kind].name,'Rescue '+byId[kind].name):
+      tr('Berry nhiễm bóng tối','Shadow berry'));
+    board.append(cell);
+   }
+  }
+  wave();
+  interval=setInterval(()=>{if(finished)return;remaining--;stamp();if(remaining<=0)finish(false);},1000);
+  p.append(button(tr('Thoát','Exit'),()=>{finished=true;clearClock();openBag();},'ghost'));
   return true;
  }
  function apply(pl,ids,mode){
