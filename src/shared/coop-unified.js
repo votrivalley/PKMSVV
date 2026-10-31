@@ -4,7 +4,8 @@
  window.PKMSVV_UNIFIED_COOP_ENABLED=true;
  const modes=[['coop','Sống Sót','2–4 người',25,'Pikachu','Cùng đồng đội đánh quái, cứu nhau khi gặp nguy hiểm và cố gắng sống sót lâu nhất có thể!'],
   ['royale','Sống Còn','2–10 người',6,'Charizard','Chiến đấu với quái vật trong vòng an toàn ngày càng thu nhỏ. Người sống sót cuối cùng sẽ chiến thắng!'],
-  ['eggrush','Tranh Trứng','4 người',175,'Togepi','Tranh nhau thu thập 10 quả trứng! Cuối trận trứng mới nở để tính điểm. Ai nhiều điểm nhất sẽ thắng!']];
+  ['eggrush','Tranh Trứng','4 người',175,'Togepi','Tranh nhau thu thập 10 quả trứng! Cuối trận trứng mới nở để tính điểm. Ai nhiều điểm nhất sẽ thắng!'],
+   ['berry','Giải Cứu Berry','4 người',25,'Pikachu','Bảo vệ 3 cây Berry trong 8 phút · boss phút 4 và 8 · mỗi cây sống sót có 30% cơ hội thưởng Berry.']];
  let mode='coop',view=null,detail=null,busy=false,previousFocus=null;
  const lan=()=>window.PKMSVV_LOCAL_UI_MODE==='lan'&&!!window.G?.LanBus;
  function close(){view?.remove();view=detail=null;previousFocus?.focus?.();}
@@ -14,8 +15,9 @@
    const on=e.dataset.mode===mode;e.classList.toggle('selected',on);e.setAttribute('aria-pressed',String(on));
   });detail?.replaceChildren();
  }
- function open(){
-  if(view)return;
+ function open(preselect){
+  if(modes.some(m=>m[0]===preselect))mode=preselect;
+  if(view){repaint();return;}
   previousFocus=document.activeElement;
   view=document.createElement('div');view.id='pkmsvv-unified-coop';
   view.innerHTML='<section class="pkmsvv-coop-panel" role="dialog" aria-modal="true" aria-label="Co-op">'+
