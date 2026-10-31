@@ -70,6 +70,14 @@ patch('js/game.js',
 patch('js/game.js',
  "G.Path.update(dt, all); G.Spawner.update(dt, all, time);",
  "if(!G.PKMSVVBerryRescue?.active)G.Path.update(dt, all); G.Spawner.update(dt, all, time);");
+// Keep trainers outside the solid base of each objective tree.
+patch('js/game.js',
+ "    if(coop&&G.Coop.isHost)G.LanAI.update(dt,time);",
+ "    if(coop&&G.Coop.isHost)G.LanAI.update(dt,time);\n"+
+ "    if(G.PKMSVVBerryRescue?.active){\n"+
+ "      G.PKMSVVBerryRescue.keepOutsideTrunks(pl);\n"+
+ "      if(coop&&G.Coop.isHost)for(const p of G.Coop.puppets())G.PKMSVVBerryRescue.keepOutsideTrunks(p);\n"+
+ "    }");
 patch('js/game.js',
  "  function checkAllDown(dt) {",
  "  function checkAllDown(dt) {\n    if(G.PKMSVVBerryRescue?.active)return;");
@@ -89,16 +97,12 @@ patch('js/game.js',
  "  G.onRescue = (dex, name) => {",
  "  G.onRescue = (dex, name) => {\n"+
  "    if(G.Royale?.active||G.EggRush?.active||G.PKMSVVBerryRescue?.active||G.PKMSVVArenaSolo?.active||G.PKMSVVChampionArena?.active)return;");
+// Berry tree objects share the game's normal Y-sorted drawable list.
+// This preserves occlusion: Pokémon in front of a tree draw in front of it.
 patch('js/game.js',
- "if(G.EggRush.active)G.EggRush.draw(ctx);",
- "if(G.EggRush.active)G.EggRush.draw(ctx);G.PKMSVVBerryRescue?.draw?.(ctx);");
-// Render layering diagnostic: printed during prepare (not at runtime).
-// Use it to place foreground canopies AFTER player/monster sprites, but BEFORE HUD.
-const renderSrc=fs.readFileSync(path.join(game,'js/game.js'),'utf8');
-const eggPos=renderSrc.indexOf('G.PKMSVVBerryRescue?.draw?.(ctx)');
-console.log('Berry draw pipeline:',renderSrc.slice(Math.max(0,eggPos-650),Math.min(renderSrc.length,eggPos+1400))
- .split('\\n').slice(0,70).join(' | ').slice(0,2600));
-
+ "if (state!=='ui')for(const e of G.PKMSVVEggs?.drawables?.(cam)||[])items.push({y:e.y,ent:e});",
+ "if (state!=='ui')for(const e of G.PKMSVVEggs?.drawables?.(cam)||[])items.push({y:e.y,ent:e});\n"+
+ "    if(G.PKMSVVBerryRescue?.active)for(const e of G.PKMSVVBerryRescue.drawables())items.push({y:e.y,ent:e});");
 patch('js/game.js',
  "if(G.EggRush.active)G.EggRush.hud(ctx,w,h);",
  "if(G.EggRush.active)G.EggRush.hud(ctx,w,h);G.PKMSVVBerryRescue?.hud?.(ctx,w,h);");
