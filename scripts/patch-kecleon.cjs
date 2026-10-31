@@ -63,6 +63,7 @@ const section=String.raw`
   <div class="row wrap pkmk-tabs">
    <button class="btn small" id="pkmk-tab-shop">Cửa hàng</button>
    <button class="btn small" id="pkmk-tab-bag">Túi đồ</button>
+   <button class="btn small" id="pkmk-tab-berry">🍓 Berry</button>
    <b id="pkmk-balance"></b>
   </div>
   <div id="pkmk-owner"></div><div id="pkmk-list"></div>
