@@ -58,11 +58,11 @@ test('Ten distinct regional map rules and post-campaign random map gate',()=>{
  for(const [region] of lib.REGIONS)book.seals[region]=true;
  assert.equal(lib.storyCompleted(save),true);
 });
-test('Ten Champions, sixteen entrants, 5m opener and 2m30 later preparation',()=>{
+test('Ten Champions, sixteen entrants, 4m opener and 1m30 later preparation',()=>{
  const {lib}=setup();
  assert.equal(lib.REGIONS.length,10);
- assert.equal(lib.PREP_SECONDS,150);
- assert.equal(lib.FIRST_PREP_SECONDS,300);
+ assert.equal(lib.PREP_SECONDS,90);
+ assert.equal(lib.FIRST_PREP_SECONDS,240);
  assert.equal(lib.FIGHT_SECONDS,120);
  assert.equal(lib.WARN_SECONDS,15);
  assert.equal(lib.ROUNDS.length,5);
@@ -266,17 +266,22 @@ test('unreleased regional Champion Mega art uses real stand-in Pokémon, then tr
  assert.equal(lib.regionChampion(1).temporary,true);
 });
 
-test('first Champion battle starts after 5 minutes; later rounds after 2m30 with warnings',()=>{
+test('Champion opens after 4m with bosses at 1m30 and 3m; later rounds at 1m30',()=>{
  const {G,lib,get}=setup(),alerts=[];
  G.UI.toast=(message)=>alerts.push(message);
  assert.equal(lib.start(),true);
- assert.equal(lib.prepSeconds(),300);
- lib.update(239);
+ assert.equal(lib.prepSeconds(),240);
+ G.Enemies={BOSSES:[{dex:25,name:'Pikachu',hp:300},{dex:6,name:'Charizard',hp:600}],bossScale(){return {hp:1,dmg:1,spd:1}}};
+ lib.update(89);assert.equal(lib.stage,'prep');
+ lib.update(1);assert.equal(G.EnemyMgr.last._pkmsvvChampionPrepBoss,1);
+ lib.update(89);assert.equal(lib.stage,'prep');
+ lib.update(1);assert.equal(G.EnemyMgr.last._pkmsvvChampionPrepBoss,2);
+ lib.update(0);
  assert.equal(lib.stage,'prep');
  assert.equal(G.World.arena,null,'opening farms on ordinary map');
  lib.update(1);
  assert.equal(lib.stage,'prep');
- assert.equal(G.World.arena.r,22,'boss preview shifts farming to arena without dueling');
+ assert.equal(G.World.arena,null,'opponent preview does not leave regular farming world');
  assert.equal(get('pkmsvv-champion-preview').hidden,false);
  assert.ok(alerts.some(m=>m.includes('Đối thủ xuất hiện')));
  lib.update(45);
@@ -287,11 +292,11 @@ test('first Champion battle starts after 5 minutes; later rounds after 2m30 with
  G.EnemyMgr.last.dead=true;lib.update(.1);
  assert.equal(lib.round,1);assert.equal(lib.stage,'prep');
  assert.equal(G.World.arena,null,'winner exits duel to ordinary farming map');
- assert.equal(lib.prepSeconds(),150);
- lib.update(119.9);
+ assert.equal(lib.prepSeconds(),90);
+ lib.update(59.9);
  assert.equal(G.World.arena,null);
  lib.update(.1);
- assert.equal(G.World.arena.r,22,'next opponent revealed at 2m mark');
+ assert.equal(G.World.arena,null,'later preview stays on regular map too');
  lib.update(15);
  assert.ok(alerts.filter(m=>m.includes('15 giây')).length>=2);
  lib.update(15);
