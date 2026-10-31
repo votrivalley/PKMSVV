@@ -1,0 +1,191 @@
+{
+  "schema": "pkmsvv-third-party-staging-index-v1",
+  "captured_on": "2026-10-31",
+  "source_site": "https://pokesurvivor.doofcraft.com/",
+  "source_archive_sha256": "c88135e91d6e5d8ca2e8a105f0b01ff8469e9057328b4be6533e114dfc5657f7",
+  "private_vault_sha256": "4588d3eb289877dd51f183c51473669926f93790596365b1223dac422d8906e0",
+  "source_archive": "doofcraft_shadow_halloween_capture_kit (1).rar",
+  "frames": {
+    "shadow": 146,
+    "halloween_featured": 38,
+    "total": 184
+  },
+  "forms": [
+    {
+      "category": "halloween_featured",
+      "key": "10115",
+      "animations": 6,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "halloween_featured",
+      "key": "10171",
+      "animations": 5,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "halloween_featured",
+      "key": "10233",
+      "animations": 7,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "halloween_featured",
+      "key": "10238",
+      "animations": 7,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "halloween_featured",
+      "key": "10239",
+      "animations": 7,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "halloween_featured",
+      "key": "10272",
+      "animations": 6,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "shadow",
+      "key": "10901",
+      "animations": 6,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "shadow",
+      "key": "10901-mega",
+      "animations": 6,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "shadow",
+      "key": "10902",
+      "animations": 6,
+      "status": "quarantine_metadata_mismatch"
+    },
+    {
+      "category": "shadow",
+      "key": "12001",
+      "animations": 7,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "shadow",
+      "key": "12002",
+      "animations": 7,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "shadow",
+      "key": "12003",
+      "animations": 7,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "shadow",
+      "key": "12004",
+      "animations": 7,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "shadow",
+      "key": "12005",
+      "animations": 7,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "shadow",
+      "key": "12006",
+      "animations": 7,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "shadow",
+      "key": "12007",
+      "animations": 7,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "shadow",
+      "key": "12008",
+      "animations": 7,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "shadow",
+      "key": "12009",
+      "animations": 7,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "shadow",
+      "key": "12010",
+      "animations": 7,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "shadow",
+      "key": "12011",
+      "animations": 6,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "shadow",
+      "key": "12011-black",
+      "animations": 6,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "shadow",
+      "key": "12011-white",
+      "animations": 6,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "shadow",
+      "key": "12012",
+      "animations": 7,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "shadow",
+      "key": "12012-mega",
+      "animations": 6,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "shadow",
+      "key": "12013",
+      "animations": 7,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "shadow",
+      "key": "12014",
+      "animations": 7,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "shadow",
+      "key": "12014-mega",
+      "animations": 6,
+      "status": "research_only_license_pending"
+    },
+    {
+      "category": "shadow",
+      "key": "12015",
+      "animations": 7,
+      "status": "research_only_license_pending"
+    }
+  ],
+  "blocked": [
+    "shadow/10902/Faint.png (HTTP 404)",
+    "shadow/10902: 6 PNG sheets inconsistent with supplied HAR frame dimensions"
+  ],
+  "shiny_shadow": "none_confirmed_in_supplied_metadata",
+  "redistribution": "no_public_png_import_until_license_and_attribution_verified",
+  "gameplay_integration": false,
+  "design_document": "docs/FUTURE_FINAL_CHAPTER_SHADOW.md"
+}
