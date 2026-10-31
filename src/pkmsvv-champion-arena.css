@@ -9,7 +9,7 @@
 .pkmsvv-champion-heading{display:flex;gap:10px;align-items:center;justify-content:space-between}
 .pkmsvv-champion-heading h2{margin:0;color:#173849;font-size:clamp(20px,3vw,28px)}
 .pkmsvv-champion-heading-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
-.pkmsvv-champion-heading-actions #pkmsvv-champion-sky{font-size:12px;padding:9px 12px;max-width:min(50vw,250px);white-space:normal}
+.pkmsvv-champion-heading-actions #pkmsvv-champion-sky{font-size:12px;padding:9px 13px;max-width:min(52vw,300px);white-space:normal;background:linear-gradient(180deg,#ffe78c,#ffca39)!important;color:#18394a!important;border:3px solid #2a4852!important;box-shadow:0 0 0 3px #f6d57b,0 5px 16px #af7b2a66!important;font-weight:900;isolation:isolate}
 .pkmsvv-champion-heading-actions #pkmsvv-champion-sky[hidden]{display:none!important}
 .pkmsvv-champion-heading-actions #pkmsvv-champion-close{min-width:42px;height:42px;flex-shrink:0}
 @media(max-width:560px){.pkmsvv-champion-heading{align-items:flex-start}.pkmsvv-champion-heading h2{max-width:47%}.pkmsvv-champion-heading-actions #pkmsvv-champion-sky{font-size:11px;padding:7px}}
@@ -65,3 +65,8 @@
 .pkmsvv-champion-preview canvas{width:46px;height:46px;object-fit:contain}
 @media(max-width:650px){.pkmsvv-champion-preview{top:81px;font-size:11px;padding:4px 8px}
 .pkmsvv-champion-preview canvas{width:36px;height:36px}}
+
+/* Sky Journey is a story chapter, separate from Arena's competitive mode tabs. */
+.pkmsvv-champion-heading-actions #pkmsvv-champion-sky::before{content:'CỐT TRUYỆN · CHƯƠNG 10';display:block;font-size:9px;letter-spacing:.08em;color:#665015;font-weight:900;margin:0 0 3px}
+.pkmsvv-champion-heading-actions #pkmsvv-champion-sky:hover{filter:brightness(1.04)}
+.pkmsvv-champion-heading-actions #pkmsvv-champion-sky:focus-visible{outline:3px solid #72d8ff;outline-offset:4px}
