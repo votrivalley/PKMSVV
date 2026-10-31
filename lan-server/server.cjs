@@ -152,7 +152,7 @@ function startServer({root,port=37816,host='0.0.0.0'}={}){
    }
    if(m.action==='create'){
     if(c.room){reply(null,'Đã ở trong phòng khác.');return;}
-    const mode=['coop','royale','eggrush'].includes(m.mode)?m.mode:'coop';
+    const mode=['coop','royale','eggrush','berry','berryeasy'].includes(m.mode)?m.mode:'coop';
     const id=randomBytes(12).toString('base64url');
     const r={id,host:c.uid,mode,visibility:m.visibility==='public'?'public':'private',open:true,members:new Map()};
     c.member={dex:Number.isInteger(m.dex)&&m.dex>0?m.dex:25,shiny:m.shiny===true,power:readPower(m.power)};
