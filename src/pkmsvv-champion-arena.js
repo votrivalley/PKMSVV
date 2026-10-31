@@ -415,8 +415,9 @@ G.PKMSVVChampionArena=(()=>{
   book.seals[name]=true;
   const arenaEarned=G.PKMSVVMegaGacha?.grantChampion?.(save,name)||0;
   if(arenaEarned)G.UI?.toast?.('👑 +100 Điểm Arena · Champion '+name);
-  if(first&&!save.pkmsvvChapter7Seen)save.pkmsvvChapter7Pending=true;
+  if(first&&!save.pkmsvvChapter8IntroSeen)save.pkmsvvChapter8Pending=true;
   G.DB.commit(true);
+  G.PKMSVVStory?.onChampionSeal?.();
  }
  function returnToMenu(){
   restoreStats();
@@ -449,10 +450,15 @@ G.PKMSVVChampionArena=(()=>{
   updatePanel();
   $('pkmsvv-champion-progress').textContent=label;
   if(lastPodium)renderPodium(lastPodium);
-  if(reason==='seal'&&mode==='story'&&G.DB?.save?.pkmsvvChapter7Pending&&
-     !G.DB.save.pkmsvvChapter7Seen){
-   panel().hidden=true;
-   G.PKMSVVStory?.chapter7?.(()=>G.Flow?.goMenu?.());
+  if(reason==='seal'&&mode==='story'&&G.DB?.save){
+   const save=G.DB.save;
+   if(save.pkmsvvChapter8Pending&&!save.pkmsvvChapter8IntroSeen){
+    panel().hidden=true;
+    G.PKMSVVStory?.chapter8?.(()=>G.Flow?.goMenu?.());
+   }else if(G.PKMSVVStory?.tenChampionCompleted?.(save)&&!save.pkmsvvChapter7Seen){
+    panel().hidden=true;
+    G.PKMSVVStory?.chapter7?.(()=>G.Flow?.goMenu?.());
+   }
   }
  }
  function nextDuel(bypassBerry=false){
