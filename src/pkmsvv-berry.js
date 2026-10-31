@@ -323,4 +323,8 @@ G.PKMSVVBerry=(()=>{
  // Stable public QA interface.
  return {TYPES,byId,data,count,grant,buy,chapterProgress,markUsed,offer,openBag,rescue,kecleonHtml,spriteUrl,image,install,tick,apply,hurt,get choosing(){return choiceOpen;}};
 })();
+// This deferred file executes before js/game.js. Bind startRun again after
+// all deferred scripts finish, otherwise no four-second pre-match picker.
 G.PKMSVVBerry.install();
+if(document.readyState==='loading'&&typeof document.addEventListener==='function')
+ document.addEventListener('DOMContentLoaded',()=>G.PKMSVVBerry.install(),{once:true});
