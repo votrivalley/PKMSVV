@@ -57,3 +57,8 @@
  .pkmsvv-berry-rescue-board{gap:6px}
  .pkmsvv-berry-rescue-board .pkmsvv-berry-btn{height:56px;font-size:28px}
 }
+
+.pkmsvv-berry-sprite{image-rendering:pixelated!important;object-fit:contain;flex:0 0 auto;width:42px;height:42px;vertical-align:middle;filter:drop-shadow(0 1px 2px #07233988)}
+.pkmsvv-berry-store-card .pkmsvv-berry-sprite{width:46px;height:46px}
+.pkmsvv-berry-grid>.pkmsvv-berry-btn{display:flex;align-items:center;justify-content:flex-start;gap:8px}
+.pkmsvv-berry-grid>.pkmsvv-berry-btn img{width:36px;height:36px}
