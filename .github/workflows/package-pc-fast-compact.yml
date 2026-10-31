@@ -1,4 +1,4 @@
-name: Build PC Fast Start (Berry Rescue Boss Timing Fix)
+name: Build PC Fast Start (Berry Rescue LAN AI Fix)
 on:
   workflow_dispatch:
   push:
