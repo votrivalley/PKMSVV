@@ -70,7 +70,7 @@ test('Mega 5 and PC+touch button are live in co-op, with Host bot auto-transform
  assert.match(mega,/netMega\(p,f\.spriteId\)/);
  assert.match(mega,/remoteMega\(uid,sprite\)/);
  assert.match(mega,/G\.Input\?\.tap\?\.\('digit5'\)/);
- assert.match(read('scripts/patch-berry.cjs'),/case 'mg'/);
+ assert.match(read('scripts/patch-berry-coop.cjs'),/case 'mg'/);
 });
 test('Rescue Berry room disables unrelated eggs, Rift, story bosses and NPC rescues',()=>{
  const patch=read('scripts/patch-berry-coop.cjs');
