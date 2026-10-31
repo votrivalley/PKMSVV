@@ -101,6 +101,21 @@ test('Champion starts with four-minute opener and first Crown Seal unlocks Mega 
  assert.equal(save.pkmsvvChapter7Seen,true);
  assert.equal(lib.rematch(),false);
 });
+test('Rayquaza Sky fight unlocks only at ten real Champion seals and finishes only after Rayquaza dies',()=>{
+ const {lib,save,G}=setup();
+ assert.equal(lib.startSky(),false,'nine or fewer seals cannot start the finale');
+ const book=lib.ledger(save);
+ for(const [region] of lib.REGIONS)book.seals[region]=true;
+ assert.equal(lib.startSky(),true);
+ assert.equal(lib.stage,'sky');
+ assert.equal(G.EnemyMgr.last.dex,384);
+ assert.equal(save.pkmsvvRayquazaDefeated,undefined);
+ G.EnemyMgr.last.dead=true;
+ lib.update(.1);
+ assert.equal(save.pkmsvvRayquazaDefeated,true,'must kill Rayquaza actor');
+ assert.equal(lib.active,false);
+ assert.equal(G.World.arena,null,'return to ordinary map');
+});
 test('Real mobs spawn in Champion preparation but stop during one-versus-one duel',()=>{
  const h=setup(),{lib,G}=h,spawns=[];
  G.Spawner.update=function(_dt,_p,t){spawns.push(t);};
