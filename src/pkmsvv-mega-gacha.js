@@ -24,7 +24,7 @@ G.PKMSVVMegaGacha=(()=>{
  function pool(save,legendary){
   const known=new Set();
   return formCatalog().filter(f=>{
-   if(!f?.stoneKey||!!f.storyLocked!==legendary||stoneOwned(save,f.stoneKey)||known.has(f.stoneKey))return false;
+   if(!f?.stoneKey||!!f.storyLocked!==legendary||known.has(f.stoneKey))return false;
    known.add(f.stoneKey);return true;
   });
  }
@@ -46,12 +46,15 @@ G.PKMSVVMegaGacha=(()=>{
   const picked=choice[index];if(!picked)return null;
   a.points-=COST;a.pulls++;
   a.pity=special?0:Math.min(LEGEND_PITY-1,a.pity+1);
+  const duplicate=stoneOwned(save,picked.stoneKey);
+  const refund=duplicate?(special?200:50):0;
   save.megaStones=save.megaStones||{};
-  save.megaStones[picked.stoneKey]=1;
-  // Do NOT set owned, megaForms, megaStoryCleared or chapter flags.
+  if(!duplicate)save.megaStones[picked.stoneKey]=1;
+  a.points+=refund;
+  // Duplicates refund Arena Points only. Never unlock Pokémon or bypass story.
   G.DB.commit(true);
   return {key:picked.key,stoneKey:picked.stoneKey,name:picked.name,
-   stone:picked.stone,legendary:special,pity:a.pity,balance:a.points};
+   stone:picked.stone,legendary:special,duplicate,refund,pity:a.pity,balance:a.points};
  }
  function grantTournament(save,region,rank,firstTitle){
   if(!save||!region)return 0;
@@ -107,7 +110,7 @@ G.PKMSVVMegaGacha=(()=>{
    '<div class="pkmsvv-mega-gacha-plate">MEGA</div></div>'+
    '<div class="pkmsvv-mega-gacha-data"><h3 id="pkmsvv-mega-gacha-heading"></h3>'+
    '<p id="pkmsvv-mega-gacha-balance"></p><p id="pkmsvv-mega-gacha-pity"></p>'+
-   '<p id="pkmsvv-mega-gacha-odds"></p><button class="btn gold" id="pkmsvv-mega-gacha-pull" type="button"></button>'+
+   '<p id="pkmsvv-mega-gacha-odds"></p><p class="pkmsvv-mega-refund">Trùng Mega thường: +50 Điểm Arena · Trùng Mega huyền thoại: +200 Điểm Arena</p><button class="btn gold" id="pkmsvv-mega-gacha-pull" type="button"></button>'+
    '<div id="pkmsvv-mega-gacha-result" role="status" aria-live="polite"></div>'+
    '<p id="pkmsvv-mega-gacha-note" class="note"></p></div>';
   container.insertBefore(panel,gens);
@@ -141,7 +144,8 @@ G.PKMSVVMegaGacha=(()=>{
    const out=$('pkmsvv-mega-gacha-result');
    out.className='pkmsvv-mega-gacha-result'+(r.legendary?' is-legend':'');
    out.textContent=(r.legendary?'🌟 ':'✧ ')+(r.stone||r.name)+
-    (r.legendary?tr(' · HUYỀN THOẠI!',' · LEGENDARY!'):'');
+    (r.legendary?tr(' · HUYỀN THOẠI!',' · LEGENDARY!'):'')+
+    (r.duplicate?tr(' · Đã sở hữu, hoàn +',' · Duplicate, refund +')+r.refund+' Điểm Arena':'');
    G.Audio?.sfx?.('shinyGet');refresh();
   };
   regular.onclick=()=>show('pokemon');mega.onclick=()=>show('mega');
