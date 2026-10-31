@@ -94,7 +94,7 @@ G.PKMSVVWiki=(()=>{
    action:tr('Mở Mega','Open Mega'),onClick:()=>G.PKMSVVMegaEntry?.open?.()});
   makeCard(grid,{title:'Berry',dex:420,
    desc:tr('Cherubi · Túi Berry, cửa hàng và Giải Cứu Berry.','Cherubi · Berry bag, shop and rescue.'),
-   action:tr('Mở Berry','Open Berry'),onClick:()=>G.KecleonUI?.open?.('berry')||G.PKMSVVBerry?.openBag?.()});
+   action:tr('Mở Berry','Open Berry'),onClick:()=>{if(G.KecleonUI?.open)G.KecleonUI.open('berry');else G.PKMSVVBerry?.openBag?.();}});
   overlay.append(box);document.body.append(overlay);
   overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
   x.focus();return true;
