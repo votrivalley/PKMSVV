@@ -5,7 +5,7 @@
  const modes=[['coop','Sống Sót','2–4 người',25,'Pikachu','Cùng đồng đội đánh quái, cứu nhau khi gặp nguy hiểm và cố gắng sống sót lâu nhất có thể!'],
   ['royale','Sống Còn','2–10 người',6,'Charizard','Chiến đấu với quái vật trong vòng an toàn ngày càng thu nhỏ. Người sống sót cuối cùng sẽ chiến thắng!'],
   ['eggrush','Tranh Trứng','4 người',175,'Togepi','Tranh nhau thu thập 10 quả trứng! Cuối trận trứng mới nở để tính điểm. Ai nhiều điểm nhất sẽ thắng!'],
-   ['berry','Giải Cứu Berry','4 người · 8 phút',25,'Pikachu','Bảo vệ 3 cây Berry · chọn Nhẹ Nhàng hoặc Nườm Nượp bên dưới.']];
+   ['berry','Giải Cứu Berry','4 người · 8 phút',420,'Cherubi','Cherubi cần bạn bảo vệ 3 cây Berry · chọn Nhẹ Nhàng hoặc Nườm Nượp bên dưới.']];
  const berryMode=id=>id==='berry'||id==='berryeasy';
  const validMode=id=>modes.some(m=>m[0]===id)||id==='berryeasy';
  let mode='coop',view=null,detail=null,busy=false,previousFocus=null;
