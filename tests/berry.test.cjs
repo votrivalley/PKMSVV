@@ -86,6 +86,19 @@ test('Solo Berry choice occurs before enemy spawning, lasts 4 seconds, consumes 
  assert.deepEqual([...h.G.Game.player._pkmsvvBerry.ids],['liechi']);
  assert.equal(b.chapterProgress(),1);
 });
+test('Deferred script registers the four-second pre-match wrapper after Game is initialized',()=>{
+ const save={coins:1000},callbacks={};
+ const G={DB:{save,commit(){}},I18n:{lang:'vi'},UI:{toast(){}},Game:undefined};
+ const document={readyState:'interactive',getElementById(){return null},
+  addEventListener(type,fn){callbacks[type]=fn;}};
+ vm.runInNewContext(fs.readFileSync(path.join(root,'src/pkmsvv-berry.js'),'utf8'),{
+  G,document,setInterval(){},clearInterval(){},Math,Number,Array,Set,Object});
+ assert.equal(typeof callbacks.DOMContentLoaded,'function');
+ G.Game={state:'ui',startRun(){}};
+ assert.equal(G.Game._pkmsvvBerryStartWrapped,undefined);
+ callbacks.DOMContentLoaded();
+ assert.equal(G.Game._pkmsvvBerryStartWrapped,true);
+});
 test('Four-second Berry countdown also runs with an empty bag before starting the fight',()=>{
  const h=interactiveHarness();
  h.G.Game.startRun(null);
