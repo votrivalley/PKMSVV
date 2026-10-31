@@ -152,3 +152,13 @@ G.PKMSVVBerryRescue=(()=>{
   get easy(){return easy},
   get active(){return active},get trees(){return trees},get bossStage(){return bossStage}};
 })();
+// Same opening forest music as Tranh Trứng, without re-editing js/game.js.
+// Installed after core/audio.js in defer ordering, and restored automatically
+// outside of Berry matches. Only wraps once across rematches.
+if(G.Audio?.music&&!G.Audio._pkmsvvBerryMusicWrapped){
+ const originalMusic=G.Audio.music;
+ G.Audio._pkmsvvBerryMusicWrapped=true;
+ G.Audio.music=function(track,...args){
+  return originalMusic.call(this,G.PKMSVVBerryRescue?.active?(G.BIOME_MUSIC?.[0]||'forest'):track,...args);
+ };
+}
