@@ -203,7 +203,7 @@ G.PKMSVVChampionArena=(()=>{
    'Hành Trình Vương Miện: vòng đầu 4 phút; các vòng sau 90 giây. 9 Champion còn lại Mega hóa ở nửa máu và được tăng gấp đôi sức mạnh.',
    'Crown Journey: 4-minute opener, then 90-second preparations. The remaining 9 Champions Mega Evolve at half HP and double their power.'):
    tr('Giải Champion hậu truyện: 15 AI tinh nhuệ, sức mạnh cân bằng theo Pokémon người chơi. Tranh Top 1!',
-   'Post-game Champion League: 15 elite AI matched to the player's power. Compete for Top 1!');
+   'Post-game Champion League: 15 elite rivals matched to your Pokémon. Compete for Top 1!');
   const leagueTab=$('pkmsvv-arena-mode-league');leagueTab.disabled=!storyCompleted();
   leagueTab.classList?.toggle?.('gold',mode==='league');
   $('pkmsvv-arena-mode-champion').classList?.toggle?.('gold',mode==='story');
