@@ -10,7 +10,7 @@ const fs=require('node:fs'),path=require('node:path');
 const file=path.join(__dirname,'..','vendor','pokesurvivor','js','entities','player.js');
 const source=fs.readFileSync(file,'utf8').replace(/\r\n/g,'\n');
 const old='    const slow=this.inLiquid&&!ab.steady?(G.World.liquidEffect(this.mon.types).slow||1):1;';
-const updated='    const slow=this.inLiquid&&!G.PKMSVVWaterHoverDex.has(this.dex)?(G.World.liquidEffect(this.mon.types).slow||1):1;';
+const updated='    const slow=this.inLiquid&&!G.PKMSVVWaterHoverDex.has(this.dex)&&!this._pkmsvvMegaIgnoresWater?(G.World.liquidEffect(this.mon.types).slow||1):1;';
 if(source.split(old).length!==2)throw Error('Hover+Ability movement anchor changed');
 if(!source.includes('G.PKMSVVWaterHoverDex = new Set('))throw Error('Missing airborne Dex set');
 fs.writeFileSync(file,source.replace(old,updated),'utf8');
