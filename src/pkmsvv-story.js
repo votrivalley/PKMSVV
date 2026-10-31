@@ -428,6 +428,8 @@ G.PKMSVVStory=(()=>{
   s.pkmsvvMultiplayerDone=s.pkmsvvMultiplayerDone||{};
   if(s.pkmsvvMultiplayerDone[mode]===true)return false;
   s.pkmsvvMultiplayerDone[mode]=true;G.DB.commit(true);
+  // Chapter 5's one-time reward is earned only when BOTH required modes finish.
+  if(allMultiplayerCompleted(s))syncChapterPurpleRewards();
   const progress=multiplayerProgress(s);
   G.UI?.toast?.(MP_OPTIONAL.includes(mode)?
    tr('✅ Tranh Trứng hoàn thành! Đây là chế độ tự chọn.','✅ Egg Rush complete! This mode is optional.'):
