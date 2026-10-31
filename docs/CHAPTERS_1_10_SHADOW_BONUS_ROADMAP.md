@@ -6,13 +6,24 @@ Internal keys are **intentionally not renumbered**; old save fields must remain 
 | Chương | Nội dung | Điều kiện hoàn thành / mở tiếp |
 | --- | --- | --- |
 | 1–4 | Thức Tỉnh, ký ức, Orb, Pokémon đồng hành | Giữ logic đã có |
-| 5 | Đồng Hành | Hoàn thành 3 chế độ Co-op/Sống Còn/Tranh Trứng |
-| **6** | **Bí Mật Berry** | Dùng đủ 5 loại Berry khác nhau |
-| **7** | **Arena** | Mở hành trình đấu trường |
+| 5 | Đồng Hành | Hoàn thành **2 chế độ bắt buộc: Sống Sót (Co-op) và Sống Còn**. Tranh Trứng là chế độ tự chọn |
+| **6** | **Bí Mật Berry** | Mở sau 2 chế độ ở Chương 5. **Dùng đủ 5 loại Berry khác nhau** để mở Chương 7 |
+| **7** | **Arena** | Xem chương Arena sau khi hoàn thành Berry, rồi mở hệ thống đấu trường |
 | **8** | **Bí Mật Champion** | Xem câu chuyện giới thiệu 10 Champion khi bước vào Crown Journey |
 | **9** | **Sức Mạnh Mega** | **Thắng Champion đầu tiên → mở Máy quay Mega. Sở hữu/mở khóa được 1 Mega thật dùng được → hoàn thành Ch9** |
 | **10** | **Bầu Trời Hắc Hóa** | Có 10 Crown Seal từ 10 Champion → mở trận **Rayquaza thật** → thắng → cảnh **Mega Rayquaza bị hắc hóa rồi bay đi** → Ch10 hoàn thành |
 | **Bonus (cập nhật sau)** | **Đại Dịch Pokémon Hắc Hóa** | Shadow Pokémon tràn vào các map; phụ bản PvE mới để farm **Điểm Hắc Hóa** và đổi Pokémon Shadow; boss Darkrai/Yveltal (còn chờ chốt) |
+
+## Trật tự mở khóa Chương 5 → 10
+
+1. Xem Chương 5 và hoàn thành **Sống Sót** + **Sống Còn**. Tranh Trứng vẫn chơi được nhưng **không bắt buộc**.
+2. Mở Chương 6 Berry, sử dụng **5 loại Berry khác nhau** (không phải 5 quả cùng loại). Hoàn thành Berry mới mở Chương 7.
+3. Chương 7 mở Arena; bước vào Hành Trình Vương Miện để xem Chương 8 giới thiệu 10 Champion.
+4. Hạ Champion đầu tiên → mở Máy quay Mega; khi mở được 1 Mega chiến đấu hợp lệ → hoàn thành Chương 9.
+5. Chinh phục đủ 10 Champion → mở trận Rayquaza ở Chương 10; đánh thắng để xem Mega Rayquaza bị hắc hóa rồi bay đi.
+6. Bonus Shadow là nội dung chưa phát hành, có phụ bản farm Điểm Hắc Hóa và đổi Pokémon Shadow.
+
+**Tương thích save cũ:** người chơi đã có cúp/Ấn Chứng thật hoặc đã xem Arena trong phiên bản trước không mất tiến trình; save mới đi đúng thứ tự Berry trước Arena.
 
 ## Mốc Chương 9: Mega sau Champion đầu tiên
 
@@ -42,6 +53,8 @@ Internal keys are **intentionally not renumbered**; old save fields must remain 
 
 ## QA bắt buộc
 
+- Chương 5 bắt buộc Sống Sót + Sống Còn (2/2), Tranh Trứng không bị tính nhầm điều kiện.
+- Chưa dùng đủ 5 loại Berry không mở Arena cho save mới; dùng đủ mới mở.
 - 1 Champion mở Gacha, 10 Champion không cần cho Mega.
 - Có stone nhưng thiếu Pokémon hoặc sprite không hoàn thành Ch9.
 - Mở một Mega hợp lệ hoàn thành Ch9 và chỉ cộng 1 vé tím.
