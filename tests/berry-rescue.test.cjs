@@ -16,6 +16,17 @@ function harness(){
  vm.runInNewContext(read('src/pkmsvv-berry-rescue.js'),{G,Math,Image:undefined,Number});
  return {G,game:G.PKMSVVBerryRescue,events,grants,step(dt,time){G.PKMSVVBerryRescue.tick(dt,time,[],r=>last=r);},result:()=>last};
 }
+test('One optional lossless WebP atlas holds three Berry trees and six HP states, preserving canvas fallback',()=>{
+ const runtime=read('src/pkmsvv-berry-rescue.js');
+ const build=read('scripts/patch-berry-coop.cjs');
+ assert.match(runtime,/berry_trees_3x6\.webp/);
+ assert.match(runtime,/stage\*TREE_CELL,id\*TREE_CELL,TREE_CELL,TREE_CELL/);
+ assert.match(runtime,/if\(hasTreeAtlas\(\)\)/);
+ assert.match(runtime,/ctx\.imageSmoothingEnabled=false/);
+ assert.match(runtime,/function treeStage\(r\)/);
+ assert.match(build,/fs\.existsSync\(atlasSource\)/,'missing optional atlas must not break builds');
+ assert.match(build,/fs\.copyFileSync\(atlasSource/);
+});
 test('Three defended Berry trees, four-player Co-op mode and exactly 8 minutes',()=>{
  const h=harness();assert.equal(h.game.begin({mode:'coop'}),false);
  assert.equal(h.game.begin({mode:'berry'}),true);
