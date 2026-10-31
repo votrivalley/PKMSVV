@@ -38,11 +38,12 @@ fs.appendFileSync(menu,`
 fs.appendFileSync(path.join(base,'css','style.css'),`
 /* Local-profile status, small and persistent: not a popup covering gameplay. */
 #scr-menu .pkmsvv-offline-save-note{
- margin:5px auto 2px;padding:0 5px;display:block;
- width:auto;max-width:95%;box-sizing:border-box;
- text-align:center;line-height:1.3;font-size:clamp(10px,1vw,12px);
- color:#ffe6aa;background:transparent;border:0;
- border-radius:0;overflow-wrap:anywhere;flex:0 0 auto
+ margin:6px auto 4px;padding:5px 13px;display:block;
+ width:max-content;max-width:95%;box-sizing:border-box;
+ text-align:center;line-height:1.4;font-size:clamp(11px,1.12vw,13px);font-weight:800;
+ color:#fff0ae!important;background:rgba(8,26,39,.91)!important;border:1px solid #d9bc6f;
+ text-shadow:0 1px 2px #020c16;box-shadow:0 2px 9px #05101a99;
+ border-radius:15px;overflow-wrap:anywhere;flex:0 0 auto
 }
 @media(max-width:650px){#scr-menu .pkmsvv-offline-save-note{padding:0 4px;font-size:10px}}
 `,'utf8');
