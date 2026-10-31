@@ -131,7 +131,7 @@ test('Orb 4 and Mega 5 remain remappable, with controller LB and touch Mega butt
   assert.doesNotMatch(source,/event\.key.*!==.'m'/);
  }
  assert.match(css,/#pkmsvv-mega-champion-btn\.pkmsvv-mega-btn/);
- assert.match(css,/left:calc\(50% \+ 100px\)/);
+ assert.match(css,/left:calc\(50% - 140px\)/);
  assert.match(css,/body\.touch/);
  assert.match(fs.readFileSync(path.join(root,'scripts/patch-v14-orb-fifo.cjs'),'utf8'),/G\.Input\.tap\('digit4'\)/);
 });
