@@ -473,8 +473,7 @@ G.EggRush=(()=>{
    ctx.textAlign='right';ctx.fillStyle='#ffe17a';ctx.fillText(String(p.eggs),size-4,y+3);
   }
   ctx.restore();
-  // Competitive-only priority: overlay the directional arrow after rankings.
-  if(active)guide(ctx,w,h);
+  // Competitive egg pointer is rendered LAST by game.js above every HUD layer.
  }
  function html(r){
   if(!r||!Array.isArray(r.standings))return '';
@@ -552,7 +551,7 @@ G.EggRush=(()=>{
   setTimeout(step,350);
  }
  function finish(r){if(r){outcome=r;active=true;}}
- return {begin,startPosition,onEvent,update,draw,hud,html,reveal,finish,cast,orb,standings,objective,get metrics(){return {...metrics};},
+ return {begin,startPosition,onEvent,update,draw,hud,guide,html,reveal,finish,cast,orb,standings,objective,get metrics(){return {...metrics};},
   get enabled(){return active||supportMode;},get pets(){return pets;},
   get nests(){return nests;},get active(){return active;},get outcome(){return outcome;},get collected(){return Object.values(score).reduce((s,n)=>s+n,0);}};
 })();
