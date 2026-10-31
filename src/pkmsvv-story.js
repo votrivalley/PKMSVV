@@ -84,11 +84,11 @@ G.PKMSVVStory=(()=>{
   ],
   chapter6:[
    {art:12,speaker:['Tôi','Me'],text:['Một đấu trường xuất hiện. Phía trên là mười chiếc vương miện!','An arena has appeared. Above it hang ten crowns!']},
-   {art:12,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Mỗi vùng là giải loại trực tiếp mười sáu người. Vòng 16, tứ kết, bán kết, chung kết.','Each region has a sixteen-trainer knockout: round of sixteen, quarterfinals, semifinals and final.']},
-   {art:12,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Giữa các vòng, ngươi có ba phút chuẩn bị.','There are three minutes to prepare between rounds.']},
+   {art:12,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Mỗi vùng là giải loại trực tiếp mười sáu người. Vòng sơ kết, tứ kết, bán kết và chung kết.','Each region has a sixteen-trainer knockout: round of sixteen, quarterfinals, semifinals and final.']},
+   {art:12,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Vòng đầu chuẩn bị bốn phút, các vòng sau một phút ba mươi giây.','The first preparation lasts four minutes, later rounds ninety seconds.']},
    {art:12,speaker:['Tôi','Me'],text:['Vô địch là có Ấn Chứng ngay sao?','Does winning the tournament grant me the Crown Seal?']},
-   {art:13,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Chưa. Ngươi phải đánh bại Champion đương nhiệm sau trận chung kết.','Not yet. You must beat the reigning Champion after the final.']},
-   {art:13,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Nếu thua Champion, ngươi vẫn giữ cúp. Rèn luyện rồi quay lại thách đấu.','Lose to the Champion and you keep your trophy. Train and challenge again.']},
+   {art:13,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Từng vùng có Champion đứng chờ tại trận quyết định. Chiến thắng mới có Ấn Chứng.','Each region has a Champion in its decisive fight. Win to earn the Crown Seal.']},
+   {art:13,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Nếu chưa giành được Ấn Chứng, hãy luyện tập rồi thách đấu lại.','If you have not earned the Crown Seal, train and challenge the region again.']},
    {art:13,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Thu thập mười Ấn Chứng Vương Miện để mở cánh cổng cuối cùng trên trời.','Collect all ten Crown Seals to open the final sky gate.']},
    {art:13,speaker:['Tôi','Me'],text:['Những chiếc vương miện đó... mình sẽ giành bằng trận thắng thật sự.','Those crowns... I will earn them in real battles.']}
   ],
