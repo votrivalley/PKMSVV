@@ -8,12 +8,14 @@ function replace(file,needle,insert){
 }
 fs.copyFileSync(path.join(root,'src','pkmsvv-champion-arena.js'),path.join(game,'js','ui','pkmsvv-champion-arena.js'));
 fs.copyFileSync(path.join(root,'src','pkmsvv-arena-solo.js'),path.join(game,'js','ui','pkmsvv-arena-solo.js'));
+fs.copyFileSync(path.join(root,'src','pkmsvv-wiki.js'),path.join(game,'js','ui','pkmsvv-wiki.js'));
 fs.copyFileSync(path.join(root,'src','pkmsvv-mega-gacha.js'),path.join(game,'js','ui','pkmsvv-mega-gacha.js'));
 replace('dev.html','<script defer src="js/ui/pkmsvv-mega-phase3.js"></script>',
  '<script defer src="js/ui/pkmsvv-mega-phase3.js"></script>\n'+
  '<script defer src="js/ui/pkmsvv-mega-gacha.js"></script>\n'+
  '<script defer src="js/ui/pkmsvv-champion-arena.js"></script>\n'+
- '<script defer src="js/ui/pkmsvv-arena-solo.js"></script>');
+ '<script defer src="js/ui/pkmsvv-arena-solo.js"></script>\n'+
+ '<script defer src="js/ui/pkmsvv-wiki.js"></script>');
 
 // When a duel ends, invalidate chunks cached as arena terrain. The original
 // setArena(null) cleared only the flag but kept the tiles rendered as the arena.
