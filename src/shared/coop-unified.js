@@ -5,7 +5,7 @@
  const modes=[['coop','Sống Sót','2–4 người',25,'Pikachu','Cùng đồng đội đánh quái, cứu nhau khi gặp nguy hiểm và cố gắng sống sót lâu nhất có thể!'],
   ['royale','Sống Còn','2–10 người',6,'Charizard','Chiến đấu với quái vật trong vòng an toàn ngày càng thu nhỏ. Người sống sót cuối cùng sẽ chiến thắng!'],
   ['eggrush','Tranh Trứng','4 người',175,'Togepi','Tranh nhau thu thập 10 quả trứng! Cuối trận trứng mới nở để tính điểm. Ai nhiều điểm nhất sẽ thắng!'],
-   ['berry','Giải Cứu Berry','4 người · 8 phút',25,'Pikachu','Bảo vệ 3 cây Berry · thưởng theo HP · chọn Dễ/Thường bên dưới.']];
+   ['berry','Giải Cứu Berry','4 người · 8 phút',25,'Pikachu','Bảo vệ 3 cây Berry · chọn Nhẹ Nhàng hoặc Nườm Nượp bên dưới.']];
  const berryMode=id=>id==='berry'||id==='berryeasy';
  const validMode=id=>modes.some(m=>m[0]===id)||id==='berryeasy';
  let mode='coop',view=null,detail=null,busy=false,previousFocus=null;
@@ -16,19 +16,21 @@
   view?.querySelectorAll('[data-mode]').forEach(e=>{
    const on=e.dataset.mode===mode||(e.dataset.mode==='berry'&&berryMode(mode));e.classList.toggle('selected',on);e.setAttribute('aria-pressed',String(on));
   });detail?.replaceChildren();
-  if(berryMode(mode)&&detail){
+  view?.querySelector('.pkmsvv-berry-difficulty')?.remove();
+  if(berryMode(mode)&&view){
    const line=document.createElement('div');line.className='pkmsvv-berry-difficulty';
-   const caption=document.createElement('strong');caption.textContent='🌿 Chọn độ khó Giải Cứu Berry';
+   const caption=document.createElement('strong');caption.textContent='🌿 Độ khó · Giải Cứu Berry';
    line.append(caption);
    for(const [id,title,desc] of [
-     ['berry','🌳 Thường','Bảo vệ 3 cây · thưởng 30–35%'],
-     ['berryeasy','🍃 Dễ','Quái yếu hơn 30% · thưởng 13–18%']
+     ['berry','🌳 Nườm Nượp','Quái tăng 20% tốc độ / 2 phút · thưởng 30–35%'],
+     ['berryeasy','🍃 Nhẹ Nhàng','Quái yếu hơn 30%, tăng 15% tốc độ / 2 phút · thưởng 13–18%']
    ]){
     const b=document.createElement('button');b.type='button';b.dataset.difficulty=id;
     b.className=id===mode?'selected':'';b.textContent=title+' · '+desc;
     b.onclick=()=>{mode=id;repaint();};line.append(b);
    }
-   detail.append(line);
+   // Expand directly under the selected Berry card row, ABOVE room actions.
+   view.querySelector('#pkmsvv-coop-modes')?.after(line);
   }
  }
  function open(preselect){
