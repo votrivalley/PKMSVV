@@ -104,7 +104,9 @@ G.PKMSVVMegaPhase3=(()=>{
   const f=(G.PKMSVV_MEGA_CATALOG||[]).find(x=>x.dex===p.dex&&x.spriteId===sprite&&
    x.artReady&&G.SPRITE_META?.[x.spriteId]?.a?.Idle);
   if(sprite&&(!f||p.shiny&&G.Sprites.hasShiny?.(sprite)!==true))return false;
-  appearance(p,f?.spriteId||p.dex);p._megaRemoteSprite=f?.spriteId||0;return true;
+  appearance(p,f?.spriteId||p.dex);p._megaRemoteSprite=f?.spriteId||0;
+  p._pkmsvvMegaIgnoresWater=!!(f&&(f.ignoreWaterSlow||HOVER_MEGA.has(f.key)));
+  p._pkmsvvMegaAuraColor=f?(AURA[f.key]||'#d4a0ff'):null;return true;
  }
  let button=null,busy=false;
  const controlHint=()=>G.Pad?.name?G.PKMSVVPadOrb?.describe?.('mega')||'LB / L1':
@@ -217,6 +219,15 @@ G.PKMSVVMegaPhase3=(()=>{
   const visible=!!(p&&f&&!p.dead&&G.Game?.state==='playing'&&
    isBattleReady(f));
   document.body?.classList?.toggle?.('pkmsvv-mega-gamepad',!!G.Pad?.name);
+  // Network peers also emit a subtle Mega aura; never mutate their stats.
+  if(G.Game?.state==='playing'&&G.Coop?.active)for(const other of G.Coop.players?.()||[]){
+   if(!other?._megaRemoteSprite||other===p||other.dead)continue;
+   other._pkmsvvMegaRemoteAuraClock=(other._pkmsvvMegaRemoteAuraClock||0)+.25;
+   if(other._pkmsvvMegaRemoteAuraClock<.75)continue;
+   other._pkmsvvMegaRemoteAuraClock=0;
+   G.FX?.ring?.(other.x,other.y,5,Math.max(30,(other.r||18)*2.5),
+    other._pkmsvvMegaAuraColor||'#d4a0ff',.30,5);
+  }
   button.style.display=visible?'flex':'none';
   if(!visible)return;
   const cooldown=Math.max(0,Math.ceil(p._megaCooldownRemaining||0));
