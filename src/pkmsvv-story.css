@@ -5,6 +5,20 @@
 #pkmsvv-story-image{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;image-rendering:pixelated}
 #pkmsvv-story-mon{position:absolute;width:180px;height:170px;bottom:3%;left:calc(50% - 90px);image-rendering:pixelated;filter:drop-shadow(0 6px 2px #051b23)}
 #pkmsvv-story-mon.hidden{display:none}
+#scr-pkmsvv-story #pkmsvv-story-mon.pkmsvv-shadow-rayquaza-flight{
+ width:min(38%,320px);height:65%;left:36%;bottom:9%;
+ filter:brightness(.42) saturate(1.6) hue-rotate(218deg)
+  drop-shadow(0 0 13px rgba(139,73,228,.94))
+  drop-shadow(0 0 4px #e0a5ff);
+ transform-origin:50% 60%;
+ animation:pkmsvv-shadow-rayquaza-escape 4.4s cubic-bezier(.2,.4,.4,1) forwards;
+}
+@keyframes pkmsvv-shadow-rayquaza-escape{
+ 0%{transform:translate(0,12%) scale(1);opacity:1}
+ 26%{transform:translate(0,-8%) scale(1.23);opacity:1}
+ 58%{transform:translate(13%,-26%) scale(.82);opacity:1}
+ 100%{transform:translate(130%,-150%) scale(.18);opacity:0}
+}
 .pkmsvv-story-chapter{position:absolute;top:12px;left:12px;padding:7px 12px;background:#0e2838e8;color:#ffe57b;font:800 13px/1.4 "Segoe UI",sans-serif;letter-spacing:.07em;border:1px solid #b7dcd1}
 .pkmsvv-story-dialog{position:relative;background:#0b303b;color:#fff;border:2px solid #b8f2df;border-radius:8px;margin-top:9px;padding:13px 16px;min-height:147px;font-family:"Segoe UI",Tahoma,sans-serif}
 #pkmsvv-story-speaker{font-size:15px;font-weight:800;color:#ffdd61;margin-bottom:9px}
