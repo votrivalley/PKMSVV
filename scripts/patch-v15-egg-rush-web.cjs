@@ -84,6 +84,11 @@ patch('js/ui/run-ui.js',
 patch('js/ui/run-ui.js',
  "if(r.royale)$('over-stats').insertAdjacentHTML('afterbegin',G.Royale.html(r.royale));",
  "if(r.royale)$('over-stats').insertAdjacentHTML('afterbegin',G.Royale.html(r.royale));\n    if(r.eggrush)$('over-stats').insertAdjacentHTML('afterbegin',G.EggRush.html(r.eggrush));");
+// Only Tranh Trứng: draw the egg arrow AFTER HUD, Touch, and ranking visuals.
+ // It must be visible even when the objective sits behind the regular UI.
+patch('js/game.js',
+ "    G.Touch.draw(ctx);",
+ "    G.Touch.draw(ctx);\n    if(G.EggRush?.active)G.EggRush.guide(ctx,w,h);");
 // Populate the final results' real SpriteCollab Pokémon canvases after HTML
 // injection but before the results screen opens. Never substitute emoji portraits.
 patch('js/ui/run-ui.js',
