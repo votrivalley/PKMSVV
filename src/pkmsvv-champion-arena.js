@@ -37,6 +37,32 @@ G.PKMSVVChampionArena=(()=>{
  const DUEL_TYPES=['normal','fighting','psychic','steel','rock','ghost'];
  // Ten distinct built-in biomes; bespoke outlined stadium art is still pending.
  const REGION_THEMES=['fire','steel','water','ground','rock','dark','bug','fighting','ice','dragon'];
+ // Each regional arena has a distinct symmetrical combat rule. These affect
+ // the match actors only and never permanently modify Pokémon or save stats.
+ const MAP_EFFECTS=Object.freeze({
+  fire:{name:'Kanto · Lửa',hint:'Sát thương +8%',atk:1.08,spd:1},
+  steel:{name:'Johto · Thép',hint:'Sát thương -8%',atk:.92,spd:1},
+  water:{name:'Hoenn · Nước',hint:'Pokémon trên mặt đất chạy chậm 10%',atk:1,spd:.90,groundOnly:true},
+  ground:{name:'Sinnoh · Đất',hint:'Tốc độ chạy -12%',atk:1,spd:.88},
+  rock:{name:'Unova · Đá',hint:'Sát thương -5%, tốc độ -6%',atk:.95,spd:.94},
+  dark:{name:'Kalos · Bóng tối',hint:'Sát thương +6%, tốc độ -3%',atk:1.06,spd:.97},
+  bug:{name:'Alola · Rừng',hint:'Tốc độ chạy +12%',atk:1,spd:1.12},
+  fighting:{name:'Galar · Võ đài',hint:'Sát thương +10%',atk:1.10,spd:1},
+  ice:{name:'Paldea · Băng',hint:'Tốc độ chạy -10%',atk:1,spd:.90},
+  dragon:{name:'Votri Valley · Rồng',hint:'Sát thương +15%, tốc độ +5%',atk:1.15,spd:1.05}
+ });
+ function mapEffect(type=duelType){return MAP_EFFECTS[type]||MAP_EFFECTS.fire;}
+ function ignoresWater(p){return !!(p?._pkmsvvMegaIgnoresWater||
+  G.PKMSVVWaterHoverDex?.has?.(p?.dex)||p?.mon?.types?.includes?.('flying')||
+  p?.mon?.types?.includes?.('water'));}
+ function applyMapEffect(pl,enemy){
+  const e=mapEffect();if(!pl||!enemy)return;
+  const playerSpeed=e.groundOnly&&ignoresWater(pl)?1:e.spd;
+  const enemySpeed=e.groundOnly&&ignoresWater(enemy)?1:e.spd;
+  pl.atkMul*=e.atk;pl.spdMul*=playerSpeed;
+  enemy.dmg*=e.atk;enemy.spd*=enemySpeed;
+  G.UI?.toast?.('🏟️ '+e.name+' · '+e.hint,3300);
+ }
  const FARM_SPAWN_MULT=2,FARM_XP_MULT=2;
  const $=id=>document.getElementById(id);
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
@@ -262,6 +288,7 @@ G.PKMSVVChampionArena=(()=>{
     target.bodyH=G.Sprites.bodyHeight?.(visualDex,visualScale)??target.bodyH;
    }
   }
+  if(target)applyMapEffect(pl,target);
   target.pkmsvvChampion=true;
   target.skillCd=(aiTier==='elite'?0.9:aiTier==='trained'?2.0:3.5)*cadence;
   stage='fight';elapsed=0;lastSecond=-1;
@@ -437,7 +464,7 @@ G.PKMSVVChampionArena=(()=>{
   if(lastSecond!==second){
    lastSecond=second;
    const bar=$('pkmsvv-champion-hud');
-   if(bar)bar.textContent='🏆 '+REGIONS[region][0]+' · '+(ROUNDS[round]||'')+
+   if(bar)bar.textContent='🏆 '+(mode==='league'?mapEffect().name:REGIONS[region][0])+' · '+(ROUNDS[round]||'')+
     (stage==='fight'?' · '+clock(FIGHT_SECONDS-elapsed):' · '+tr('Vào trận sau ','Battle in ')+clock(prepSeconds()-elapsed));
    if(stage==='prep'){
     const label=$('pkmsvv-champion-progress');
@@ -531,7 +558,7 @@ G.PKMSVVChampionArena=(()=>{
  // Chapter 5 is explicitly accessible through Memories and Arena intro.
  // In particular, first LAN access must never be blocked by a cutscene.
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',menu,{once:true});else menu();
- return {REGIONS,REGION_THEMES,MEGA_KEYS,TEMP_CHAMPIONS,regionChampion,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIRST_PREP_SECONDS,FIGHT_SECONDS,WARN_SECONDS,prepSeconds,previewSeconds,makeBracket,aiWinner,open,start,rematch,exit,nextDuel,renderPodium,
+ return {REGIONS,REGION_THEMES,MAP_EFFECTS,mapEffect,MEGA_KEYS,TEMP_CHAMPIONS,regionChampion,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIRST_PREP_SECONDS,FIGHT_SECONDS,WARN_SECONDS,prepSeconds,previewSeconds,makeBracket,aiWinner,open,start,rematch,exit,nextDuel,renderPodium,
   update,settle,claimSeal,ledger,get active(){return active},get stage(){return stage},get round(){return round},
   get opponent(){return opp}};
 })();
