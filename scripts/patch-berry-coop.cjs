@@ -68,16 +68,14 @@ patch('js/game.js',
  "    G.Interact.update(dt, pl);",
  "    if(!G.PKMSVVBerryRescue?.active)G.Interact.update(dt, pl);");
 patch('js/game.js',
+ "    if(!G.PKMSVVBerryRescue?.active)G.Interact.update(dt, pl);",
+ "    if(G.PKMSVVBerryRescue?.active)G.PKMSVVBerryRescue.keepOutsideTrunks(pl);\n"+
+ "    else G.Interact.update(dt, pl);");
+patch('js/game.js',
  "G.Path.update(dt, all); G.Spawner.update(dt, all, time);",
  "if(!G.PKMSVVBerryRescue?.active)G.Path.update(dt, all); G.Spawner.update(dt, all, time);");
 // Keep trainers outside the solid base of each objective tree.
-patch('js/game.js',
- "    if(coop&&G.Coop.isHost)G.LanAI.update(dt,time);",
- "    if(coop&&G.Coop.isHost)G.LanAI.update(dt,time);\n"+
- "    if(G.PKMSVVBerryRescue?.active){\n"+
- "      G.PKMSVVBerryRescue.keepOutsideTrunks(pl);\n"+
- "      if(coop&&G.Coop.isHost)for(const p of G.Coop.puppets())G.PKMSVVBerryRescue.keepOutsideTrunks(p);\n"+
- "    }");
+
 patch('js/game.js',
  "  function checkAllDown(dt) {",
  "  function checkAllDown(dt) {\n    if(G.PKMSVVBerryRescue?.active)return;");
