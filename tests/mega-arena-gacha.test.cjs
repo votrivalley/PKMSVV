@@ -59,20 +59,23 @@ test('Pull costs exactly 100, cannot bypass Chapter 7 or grant Pokémon/story',(
  assert.equal(gacha.pull(save,()=>0),null);
  assert.equal(save.arenaGacha.points,99);
 });
-test('Missing-stone-only draw never gives a duplicate or the no-stone Rayquaza form',()=>{
+test('Duplicate Mega Stones can still roll, reimburse 50 ordinary or 200 legendary points',()=>{
  const {save,gacha}=setup();
  let r=gacha.pull(save,()=>.4);
- assert.equal(r.name,'Charizard-Mega-X');
+ assert.equal(r.name,'Charizard-Mega-X');assert.equal(r.duplicate,false);
+ const bal=gacha.balance(save);
  r=gacha.pull(save,()=>.4);
- assert.equal(r.name,'Lucario-Mega');
- assert.ok(!gacha.pool(save,false).length);
- r=gacha.pull(save,()=>.4);
- assert.equal(r.name,'Mewtwo-Mega-X');
- assert.equal(r.legendary,true);
- assert.equal(gacha.pool(save,true).length,0);
- const remaining=save.arenaGacha.points;
- assert.equal(gacha.pull(save,()=>0),null);
- assert.equal(save.arenaGacha.points,remaining);
+ assert.equal(r.name,'Charizard-Mega-X');assert.equal(r.duplicate,true);
+ assert.equal(r.refund,50);assert.equal(gacha.balance(save),bal-50);
+ save.arenaGacha.points=300;
+ r=gacha.pull(save,()=>0);
+ assert.equal(r.legendary,true);assert.equal(r.duplicate,false);
+ const pre=gacha.balance(save);
+ r=gacha.pull(save,()=>0);
+ assert.equal(r.duplicate,true);assert.equal(r.refund,200);
+ assert.equal(gacha.balance(save),pre+100);
+ assert.ok(gacha.canPull(save));
+ assert.ok(!gacha.pool(save,true).some(f=>f.key==='rayquazamega'),'no-stone forms are not prize stones');
 });
 test('Legendary pity triggers on pull 30 and resets on a true legendary stone',()=>{
  const {save,gacha}=setup();
