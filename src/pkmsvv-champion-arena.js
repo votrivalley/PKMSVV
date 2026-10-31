@@ -11,20 +11,22 @@ G.PKMSVVChampionArena=(()=>{
   ['Kalos',658,'Greninja'],['Alola',768,'Golisopod'],['Galar',870,'Falinks'],
   ['Paldea',998,'Baxcalibur'],['Votri Valley',149,'Dragonite']
  ]);
+ const displayRegion=name=>name==='Votri Valley'?tr('Tháp Thiên Không','Sky Pillar'):name;
+ // Legacy seal save key remains 'Votri Valley'; display is not a player name.
  // Temporary regional Champion stand-ins; no fake Mega combat sprites.
  // Ten distinct regional Megas. Only use the original art when Idle animation
  // really exists; otherwise the matching natural form is a safe stand-in.
  const MEGA_KEYS=['charizardmegax','tyranitarmega','gardevoirmega','lucariomega',
-  'excadrillmega','dragalgemega','drampamega','gengarmega','tatsugiricurlymega','absolmega'];
+  'excadrillmega','dragalgemega','drampamega',null,'tatsugiricurlymega','dragonitemega'];
  const MEGA_NAMES=['Charizard X','Tyranitar','Gardevoir','Lucario','Excadrill',
   'Dragalge','Drampa','Gengar','Tatsugiri Curly','Absol'];
  const TEMP_CHAMPIONS={
   1:[248,'Tyranitar'],2:[282,'Gardevoir'],3:[448,'Lucario'],
-  5:[691,'Dragalge'],6:[780,'Drampa'],7:[94,'Gengar'],
-  8:[978,'Tatsugiri'],9:[359,'Absol']
+  5:[691,'Dragalge'],6:[780,'Drampa'],7:[823,'Corviknight'],
+  8:[978,'Tatsugiri'],9:[149,'Dragonite']
  };
  function regionChampion(index){
-  const v=REGIONS[index],f=G.PKMSVV_MEGA_CATALOG?.find?.(m=>m.key===MEGA_KEYS[index]);
+  const v=REGIONS[index],f=MEGA_KEYS[index]?G.PKMSVV_MEGA_CATALOG?.find?.(m=>m.key===MEGA_KEYS[index]):null;
   const ready=!!(f?.artReady&&G.SPRITE_META?.[f.spriteId]?.a?.Idle);
   if(ready)return {dex:f.dex||v[1],name:'Mega '+MEGA_NAMES[index],spriteId:f.spriteId,temporary:index!==0&&index!==4};
   const sub=TEMP_CHAMPIONS[index]||[v[1],v[2]];
@@ -50,7 +52,7 @@ G.PKMSVVChampionArena=(()=>{
   bug:{name:'Alola · Rừng',hint:'Tốc độ chạy +12%',atk:1,spd:1.12},
   fighting:{name:'Galar · Võ đài',hint:'Sát thương +10%',atk:1.10,spd:1},
   ice:{name:'Paldea · Băng',hint:'Tốc độ chạy -10%',atk:1,spd:.90},
-  dragon:{name:'Votri Valley · Rồng',hint:'Sát thương +15%, tốc độ +5%',atk:1.15,spd:1.05}
+  dragon:{name:'Tháp Thiên Không · Rồng',hint:'Sát thương +15%, tốc độ +5%',atk:1.15,spd:1.05}
  });
  function mapEffect(type=duelType){return MAP_EFFECTS[type]||MAP_EFFECTS.fire;}
  function ignoresWater(p){return !!(p?._pkmsvvMegaIgnoresWater||
@@ -71,7 +73,21 @@ G.PKMSVVChampionArena=(()=>{
  let region=0,stage='idle',round=0,elapsed=0,opp=null,bracket=[],target=null,active=false,paid=false,lastSecond=-1,prepBossStage=0,previewSeen=false,warnSeen=false,semiLosers=[],lastPodium=null,mode='story',mapChoice='random',duelType='normal';
  const ROUNDS=['Vòng sơ kết','Tứ kết','Bán kết','Chung kết','Tranh hạng ba'];
  const SEL=['Preliminary Round','Quarterfinal','Semifinal','Final','Reigning Champion'];
- const AI_POOL=[25,6,94,149,282,448,475,530,658,778,212,260,445,768,870,998];
+ // Generations 1–9 are strict, tenth Sky Pillar is a mixed-generation Dragon tournament.
+ const GEN_POOLS=Object.freeze([
+  [6,9,25,65,94,112,115,128,130,131,134,143,149],
+  [154,157,160,181,196,197,208,212,214,227,230,232,248],
+  [254,257,260,282,286,306,319,330,334,350,373,376],
+  [389,392,395,405,407,426,428,430,437,445,448,461,468,471,475],
+  [497,500,503,523,530,534,537,553,560,571,579,589,609,612,623,635],
+  [652,655,658,663,668,671,675,681,687,691,693,700,706,715],
+  [724,727,730,733,738,740,745,748,752,758,763,768,778,784,799],
+  [812,815,818,823,826,834,839,841,844,849,858,861,865,870,887],
+  [908,911,914,923,934,937,945,952,959,964,967,970,977,978,998],
+  [149,230,248,330,373,445,635,706,715,784,887,998]
+ ]);
+ const GEN_BOUNDS=[[1,151],[152,251],[252,386],[387,493],[494,649],[650,721],[722,809],[810,905],[906,1025]];
+ const regionalPool=(index=region)=>GEN_POOLS[index]||GEN_POOLS[0];
  const rand=()=>Math.random();
  function ledger(save=G.DB?.save){
   if(!save)return null;
@@ -83,8 +99,8 @@ G.PKMSVVChampionArena=(()=>{
  // Exactly two strong AI with 13 randomized others; shuffle player position too.
  function makeBracket(random=rand){
   const opponents=Array.from({length:15},(_,i)=>({id:'ai-'+i,name:'AI '+String(i+1).padStart(2,'0'),
-   dex:AI_POOL[Math.min(AI_POOL.length-1,Math.floor(random()*AI_POOL.length))],
-   tier:i<2?'elite':random()<Math.min(.85,.38+region*.05)?'trained':'novice'}));
+   dex:regionalPool()[Math.min(regionalPool().length-1,Math.floor(random()*regionalPool().length))],
+   tier:i<3?'elite':random()<Math.min(.93,.64+region*.025)?'trained':'novice'}));
   const seats=[{id:'you',name:tr('Bạn','You'),dex:G.DB?.save?.partner||25,tier:'human'},...opponents];
   for(let i=seats.length-1;i>0;i--){const j=Math.min(i,Math.max(0,Math.floor(random()*(i+1))));[seats[i],seats[j]]=[seats[j],seats[i]];}
   return seats;
@@ -194,7 +210,7 @@ G.PKMSVVChampionArena=(()=>{
   const mapRow=$('pkmsvv-champion-map-row');if(mapRow)mapRow.hidden=mode!=='league';
   const chooser=$('pkmsvv-champion-map');if(chooser&&mode==='league'){
    chooser.replaceChildren();
-   for(const [v,label] of [['random',tr('🎲 Ngẫu nhiên','🎲 Random')],...REGIONS.map(([name],i)=>[String(i),name+' · '+mapEffect(REGION_THEMES[i]).hint])]){
+   for(const [v,label] of [['random',tr('🎲 Ngẫu nhiên','🎲 Random')],...REGIONS.map(([name],i)=>[String(i),displayRegion(name)+' · '+mapEffect(REGION_THEMES[i]).hint])]){
     const option=document.createElement('option');option.value=v;option.textContent=label;option.selected=mapChoice===v;chooser.append(option);
    }
   }
@@ -202,7 +218,7 @@ G.PKMSVVChampionArena=(()=>{
   regionBox.replaceChildren();regionBox.hidden=mode==='league';
   REGIONS.forEach(([name,dex,champion],i)=>{
    const b=document.createElement('button');b.type='button';b.className='pkmsvv-champion-region'+(region===i?' chosen':'');
-   b.textContent=(led.seals?.[name]?'👑 ':led.trophies?.[name]?'🏆 ':regionUnlocked(i)?'○ ':'🔒 ')+name;
+   b.textContent=(led.seals?.[name]?'👑 ':led.trophies?.[name]?'🏆 ':regionUnlocked(i)?'○ ':'🔒 ')+displayRegion(name);
    b.disabled=active||mode==='league'||!regionUnlocked(i);
    b.title='🏟️ '+mapEffect(REGION_THEMES[i]).name+' · '+mapEffect(REGION_THEMES[i]).hint;
    b.onclick=()=>{region=i;clearResult();updatePanel();};
@@ -221,7 +237,7 @@ G.PKMSVVChampionArena=(()=>{
   const hall=$('pkmsvv-champion-hall');
   if(hall){const past=(led.history||[]).slice(-5).reverse();
    hall.textContent=past.length?tr('Sảnh Danh Vọng: ','Hall of Fame: ')+
-    past.map(x=>'🏆 '+x.region+' · '+(G.DEX_BY?.[x.dex]?.name||'Pokémon')+
+    past.map(x=>'🏆 '+displayRegion(x.region)+' · '+(G.DEX_BY?.[x.dex]?.name||'Pokémon')+
     ' · '+(x.wins||4)+tr(' trận thắng',' wins')).join(' | '):
     tr('Chưa có cúp Champion nào trong hồ sơ.','No recorded Champion titles yet.');
   }
@@ -270,7 +286,7 @@ G.PKMSVVChampionArena=(()=>{
  function battleName(){
   const ch=REGIONS[region];
   const standIn=regionChampion(region);
-  return tr('Champion ','Champion ')+ch[0]+' · '+standIn.name+
+  return tr('Champion ','Champion ')+displayRegion(ch[0])+' · '+standIn.name+
    (standIn.temporary?tr(' (tạm thời)',' (stand-in)'):'');
  }
  function spawn(){
@@ -547,7 +563,7 @@ G.PKMSVVChampionArena=(()=>{
    lastSecond=second;
    const bar=$('pkmsvv-champion-hud');
    if(bar&&stage==='sky')bar.textContent='🐉 SKY · RAYQUAZA · '+clock(elapsed);
-   else if(bar)bar.textContent='🏆 '+(mode==='league'?mapEffect().name:REGIONS[region][0])+' · '+(ROUNDS[round]||'')+
+   else if(bar)bar.textContent='🏆 '+(mode==='league'?mapEffect().name:displayRegion(REGIONS[region][0]))+' · '+(ROUNDS[round]||'')+
     (stage==='fight'?' · '+clock(FIGHT_SECONDS-elapsed):' · '+tr('Vào trận sau ','Battle in ')+clock(prepSeconds()-elapsed));
    if(stage==='prep'){
     const label=$('pkmsvv-champion-progress');
@@ -645,7 +661,7 @@ G.PKMSVVChampionArena=(()=>{
  // Chapter 5 is explicitly accessible through Memories and Arena intro.
  // In particular, first LAN access must never be blocked by a cutscene.
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',menu,{once:true});else menu();
- return {REGIONS,REGION_THEMES,MAP_EFFECTS,mapEffect,MEGA_KEYS,TEMP_CHAMPIONS,regionChampion,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIRST_PREP_SECONDS,FIGHT_SECONDS,WARN_SECONDS,prepSeconds,previewSeconds,makeBracket,aiWinner,open,start,startSky,rematch,exit,nextDuel,renderPodium,
+ return {REGIONS,REGION_THEMES,MAP_EFFECTS,mapEffect,MEGA_KEYS,TEMP_CHAMPIONS,GEN_POOLS,GEN_BOUNDS,regionalPool,displayRegion,regionChampion,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIRST_PREP_SECONDS,FIGHT_SECONDS,WARN_SECONDS,prepSeconds,previewSeconds,makeBracket,aiWinner,open,start,startSky,rematch,exit,nextDuel,renderPodium,
   update,settle,claimSeal,ledger,get active(){return active},get stage(){return stage},get round(){return round},
   get opponent(){return opp}};
 })();
