@@ -44,6 +44,15 @@ function setup(){
  vm.runInNewContext(read('src/pkmsvv-champion-arena.js'),{G,document,Math});
  return {G,save,lib:G.PKMSVVChampionArena,document,player,get:id=>elements.get(id)};
 }
+test('Champion stage transitions clear cached arena tiles and never set Arena on opponent preview',()=>{
+ const source=read('scripts/patch-champion-arena.cjs');
+ assert.match(source,/formerArena=arena/);
+ assert.match(source,/zone=a\|\|formerArena/);
+ const runtime=read('src/pkmsvv-champion-arena.js');
+ const preview=runtime.slice(runtime.indexOf('function revealUpcoming()'),runtime.indexOf('function spawnPrepBoss()'));
+ assert.doesNotMatch(preview,/setArena\?\.\(/);
+ assert.ok(runtime.includes("'Vòng sơ kết'"));
+});
 test('Ten distinct regional map rules and post-campaign random map gate',()=>{
  const {lib,save}=setup();
  assert.equal(lib.REGION_THEMES.length,10);
