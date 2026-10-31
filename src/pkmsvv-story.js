@@ -262,8 +262,16 @@ G.PKMSVVStory=(()=>{
              key==='eyes'?'A lone soul beneath mysterious eyes in the starry sky':
               key==='gate'?'A lone soul facing a glowing portal beneath the stars':
               'An empty celestial gateway awaiting the awakened Pokémon');
-  cv.classList.toggle('hidden',mode!=='reveal');
+  const rayquazaEscape=mode==='chapter10'&&item.art===21;
+  cv.classList.toggle('hidden',mode!=='reveal'&&!rayquazaEscape);
+  cv.classList.toggle('pkmsvv-shadow-rayquaza-flight',rayquazaEscape);
   if(mode==='reveal'&&chosenDex&&G.UI&&G.UI.sprite)G.UI.sprite(cv,chosenDex,{lively:true,scale:3,hero:true});
+  if(rayquazaEscape&&G.UI?.sprite){
+   // Use the ALREADY PACKAGED genuine Mega Rayquaza animation.
+   // Dark tint is an in-story possession effect, not an imported Shadow asset.
+   const mega=(G.PKMSVV_MEGA_CATALOG||[]).find(f=>f.key==='rayquazamega'&&f.artReady);
+   G.UI.sprite(cv,mega?.spriteId||384,{lively:true,scale:2,hero:true});
+  }
   $('pkmsvv-story-chapter').textContent=mode==='chapter10'?tr('CHƯƠNG 10 · BẦU TRỜI HẮC HÓA','CHAPTER 10 · SHADOWED SKY'):
     mode==='chapter7'?tr('CHƯƠNG 9 · SỨC MẠNH MEGA','CHAPTER 9 · MEGA AWAKENING'):
     mode==='championTen'?tr('CHƯƠNG 8 · BÍ MẬT CHAMPION','CHAPTER 8 · THE CHAMPIONS'):
