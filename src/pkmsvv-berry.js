@@ -78,7 +78,7 @@ G.PKMSVVBerry=(()=>{
   const grid=document.createElement('div');grid.className='pkmsvv-berry-grid';
   for(const t of TYPES){
    const tile=document.createElement('div');tile.className='pkmsvv-berry-tile';
-   const name=document.createElement('strong');name.textContent='🍓 '+t.name+' ×'+count(t.id);
+   const name=document.createElement('strong');name.textContent=t.name+' ×'+count(t.id);tile.prepend(image(t.id,42));
    const desc=document.createElement('small');desc.textContent=t.desc[vi()?0:1];
    tile.append(name,desc);
    if(t.price)tile.append(button(tr('Mua ','Buy ')+t.price+' 🪙',()=>buy(t.id)));
@@ -95,6 +95,36 @@ G.PKMSVVBerry=(()=>{
   const box=document.createElement('div');box.id='pkmsvv-berry-bag';p.append(box);renderBag();return true;
  }
  function rescue(){
+  // Rescue is a full 4-trainer PvE battle mode, not the old click-to-win tiles.
+  if(G.Game?.state==='playing'||choiceOpen)return false;
+  clearModal();
+  const ui=window.PKMSVVCoop;
+  if(ui?.open){ui.open('berry');return true;}
+  G.MultiplayerUI?.open?.();
+  G.UI?.toast?.(tr('Chọn Giải Cứu Berry trong Co-op.','Choose Rescue Berry in Co-op.'),2000);
+  return true;
+ }
+ function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+ function spriteUrl(id){return 'assets/berry/'+encodeURIComponent(id)+'.png';}
+ function image(id,size=40){
+  const img=document.createElement('img');img.className='pkmsvv-berry-sprite';
+  img.src=spriteUrl(id);img.alt=(byId[id]?.name||id)+' Berry';
+  img.width=img.height=size;img.loading='lazy';return img;
+ }
+ function imageHtml(id){return '<img class="pkmsvv-berry-sprite" src="'+spriteUrl(id)+'" width="42" height="42" loading="lazy" alt="'+esc(byId[id]?.name||id)+' Berry">';}
+ function kecleonHtml(){
+  const d=data();if(!d)return '';
+  const header='<p class="pkmk-lead">'+tr('Berry là vật phẩm dùng một lần. Trang bị tối đa 2 quả trước trận; các quả hiếm nhận từ Giải Cứu Berry.','Berries are consumable. Equip up to two before battle; rare Berries drop in Rescue Berry.')+'</p>';
+  let out=header+'<h3 class="pkmk-group-title">'+tr('Berry của bạn · ','Your Berries · ')+chapterProgress()+'/5 '+tr('loại đã dùng','types used')+'</h3><div class="pkmk-cards">';
+  for(const t of TYPES){
+   const stock=count(t.id),canBuy=t.price>0&&(G.DB.save.coins||0)>=t.price;
+   const buy=t.price?'<button class="btn small gold" data-berry-buy="'+t.id+'" '+(!canBuy?'disabled':'')+'>🪙 '+t.price+'</button>':
+    '<small>'+tr('Giải Cứu Berry','Rescue Berry')+'</small>';
+   out+='<div class="pkmk-card pkmsvv-berry-store-card"><div class="pkmk-product-art">'+imageHtml(t.id)+'</div><div class="pkmk-product-copy"><b>'+t.name+' Berry</b><small>'+esc(t.desc[vi()?0:1])+'</small></div><div class="pkmk-product-tail">'+buy+'<span class="pkmk-stock">×'+stock+'</span></div></div>';
+  }
+  return out+'</div><button class="btn gold" data-berry-rescue="1">🌿 '+tr('Chơi Giải Cứu Berry · Co-op 4 người · 8 phút','Rescue Berry · 4-player Co-op · 8 min')+'</button>';
+ }
+ function legacyRescueTiles(){
   if(G.Game?.state==='playing'||choiceOpen)return false;
   clearModal();
   const p=shell(tr('GIẢI CỨU BERRY','RESCUE BERRY'),
@@ -184,11 +214,11 @@ G.PKMSVVBerry=(()=>{
    clearModal();finishChoice(picked,onDone,mode||'pve',preRun);
   };
   for(const type of TYPES.filter(t=>count(t.id)>0)){
-   const b=button('🍓 '+type.name+' ×'+count(type.id)+' · '+type.desc[vi()?0:1],()=>{
+   const b=button(type.name+' ×'+count(type.id)+' · '+type.desc[vi()?0:1],()=>{
     if(picked.includes(type.id)){picked.splice(picked.indexOf(type.id),1);b.classList.remove('picked');}
     else if(picked.length<2){picked.push(type.id);b.classList.add('picked');}
    });
-   grid.append(b);
+   b.prepend(image(type.id,36));grid.append(b);
   }
   panel.append(button(tr('Xác nhận','Confirm'),done,'primary'));
   panel.append(button(tr('Không dùng Berry','No Berry'),()=>{picked.length=0;done();},'ghost'));
@@ -286,10 +316,10 @@ G.PKMSVVBerry=(()=>{
  }
  function mountMenu(){
   const menu=$('scr-menu');if(!menu||$('pkmsvv-berry-open'))return;
-  const b=button(tr('🍓 Túi Berry / Cửa hàng','🍓 Berry Bag / Shop'),openBag);
-  b.id='pkmsvv-berry-open';menu.append(b);
+  // Berry inventory and purchases now live in Kecleon Shop's third tab.
+  // Do not reintroduce a floating button that overlays the main menu.
  }
  // Stable public QA interface.
- return {TYPES,byId,data,count,grant,buy,chapterProgress,markUsed,offer,openBag,rescue,install,tick,apply,hurt};
+ return {TYPES,byId,data,count,grant,buy,chapterProgress,markUsed,offer,openBag,rescue,kecleonHtml,spriteUrl,image,install,tick,apply,hurt};
 })();
 G.PKMSVVBerry.install();
