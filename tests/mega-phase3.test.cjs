@@ -3,7 +3,7 @@ const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.resolve(__dirname,'..'),read=p=>fs.readFileSync(path.join(root,p),'utf8');
 function setup(){
- let active='playing',coop=false,pl=null;
+ let active='playing',coop=false,pl=null,sent=[];
  const s={partner:6,owned:{6:{at:1}},megaStones:{charizarditex:1},
   pkmsvvChapter3Seen:true,pkmsvvChapter7Seen:true,megaForms:{},megaStoryCleared:{}};
  class Animator{constructor(dex,scale,shiny){this.dex=dex;this.scale=scale;this.shiny=shiny;this.dir=0}}
@@ -32,17 +32,17 @@ function setup(){
   Player,Sprites:{Animator,playerScale(){return 1},playerRadius(){return 18},bodyHeight(){return 36},
    preload:async()=>{},sheet(){return {ready:true}}},
   SPRITE_META:{10006:{a:{Idle:{}}},10530:{a:{Idle:{}}}},
-  Coop:{get active(){return coop}},UI:{toast(){}},FX:{ring(){}},Audio:{sfx(){}},
+  Coop:{get active(){return coop},isHost:false,toHost(ev){sent.push(ev)}},UI:{toast(){}},FX:{ring(){}},Audio:{sfx(){}},
   DEX_BY:{6:{name:'Charizard'},530:{name:'Excadrill'}}
  };
  const context={G,document:{body:{append(){}},readyState:'complete',getElementById(){return null},
   addEventListener(){},createElement:makeButton},setInterval(){},console};
  vm.runInNewContext(read('src/pkmsvv-mega-phase3.js'),context);
- pl={dex:6,dead:false,shiny:false,anim:new Animator(6,1,false),scale:1,r:18,bodyH:36,
+ pl={uid:'qa-player',dex:6,dead:false,shiny:false,anim:new Animator(6,1,false),scale:1,r:18,bodyH:36,
   mon:{dex:6,pa:1.16,sa:1.30,atk:1.30,df:78,sd:85,spd:120,types:['fire','flying']},
   baseAtk:1.30,baseSpd:120,cdMul:1,moves:[{t:10}],x:0,y:0,
   kills:0,bosses:0,_megaEnergy:100};
- return {G,s,pl,lib:G.PKMSVVMegaPhase3,forms,
+ return {G,s,pl,sent,lib:G.PKMSVVMegaPhase3,forms,
   coop:v=>{coop=v},state:v=>{active=v}};
 }
 test('10 regional Champions remain fixed and never mark a tournament victory',()=>{
@@ -87,7 +87,7 @@ test('owner + right stone + Chapters 3 and 7 required; legendary miniquests not 
  assert.equal(lib.isBattleReady(ray),false);
 });
 test('authentic Mega Charizard X uses individual original stat ratios and reverts after 30s',()=>{
- const {lib,pl,G,coop}=setup(),original=pl.mon;
+ const {lib,pl,G,coop,sent}=setup(),original=pl.mon;
  assert.equal(lib.eligible(),true);
  assert.equal(lib.activate(pl),true);
  assert.equal(pl.anim.dex,10006);
@@ -111,8 +111,9 @@ test('authentic Mega Charizard X uses individual original stat ratios and revert
  assert.equal(lib.eligible(),false,'even full energy cannot bypass cooldown');
  lib.tick(pl,1);assert.equal(pl._megaCooldownRemaining,0);
  assert.equal(lib.eligible(),true,'Mega can be reused after 200s if energy is full');
- coop(true);assert.equal(lib.eligible(),false);
- assert.equal(lib.activate(pl),false,'no LAN Mega without host replication');
+ coop(true);assert.equal(lib.eligible(),true,'unlocked Mega is usable in Co-op');
+ assert.equal(lib.activate(pl),true,'local Co-op Mega transforms normally');
+ assert.equal(JSON.stringify(sent[0]),JSON.stringify(['mg',10006]),'guest announces selected Mega sprite to Host');
 });
 test('compiled Phase 3 assets are loaded after Phase 2 catalog and original Gacha saves stay intact',()=>{
  const html=read('vendor/pokesurvivor/dev.html');
@@ -179,8 +180,8 @@ test('solo Mega energy gains from actual hits, credited kills and boss defeats',
  lib.tick(pl,30);assert.equal(pl._megaCooldownRemaining,200);
  pl.kills=3;lib.tick(pl,1);assert.equal(pl._megaEnergy,2,'can charge during cooldown');
  assert.equal(lib.eligible(),false,'charged energy still respects cooldown');
- coop(true);lib.onEnemyHurt(enemy,10);assert.equal(pl._megaEnergy,2,'no multiplayer charge');
- coop(false);state('ui');lib.onEnemyHurt(enemy,10);assert.equal(pl._megaEnergy,2,'no menu charge');
+ coop(true);lib.onEnemyHurt(enemy,10);assert.equal(pl._megaEnergy,3,'Co-op can earn Mega energy');
+ coop(false);state('ui');lib.onEnemyHurt(enemy,10);assert.equal(pl._megaEnergy,3,'no menu charge');
 });
 test('phase3 build pipeline wires real Enemy.hurt hit credit and does not write save currency',()=>{
  const patcher=read('scripts/patch-ui-phase3-mega.cjs');
