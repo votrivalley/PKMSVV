@@ -41,10 +41,12 @@ fs.appendFileSync(path.join(base,'css','style.css'),`
  margin:6px auto 4px;padding:5px 13px;display:block;
  width:max-content;max-width:95%;box-sizing:border-box;
  text-align:center;line-height:1.4;font-size:clamp(11px,1.12vw,13px);font-weight:800;
- color:#fff0ae!important;background:rgba(8,26,39,.91)!important;border:1px solid #d9bc6f;
- text-shadow:0 1px 2px #020c16;box-shadow:0 2px 9px #05101a99;
- border-radius:15px;overflow-wrap:anywhere;flex:0 0 auto
+ color:#fffde2!important;background:#0d3542!important;border:2px solid #ffd967!important;
+ text-shadow:0 1px 1px #00131c!important;box-shadow:0 3px 9px #05101a99;
+ border-radius:15px;overflow-wrap:anywhere;flex:0 0 auto;
+ opacity:1!important;visibility:visible!important;filter:none!important;
+ isolation:isolate;letter-spacing:.015em
 }
-@media(max-width:650px){#scr-menu .pkmsvv-offline-save-note{padding:0 4px;font-size:10px}}
+@media(max-width:650px){#scr-menu .pkmsvv-offline-save-note{padding:4px 9px;font-size:11px}}
 `,'utf8');
 console.log('PKMSVV: clear offline/online save isolation notice on main menu, no save mutation.');
