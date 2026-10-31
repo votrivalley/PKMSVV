@@ -43,10 +43,15 @@
 /* Rescue Berry is ONE Co-op mode card; pick difficulty only after selection. */
 #pkmsvv-coop-modes .pkmsvv-mode-card.berry{background:linear-gradient(100deg,rgba(232,250,236,.96),rgba(233,251,241,.84)),url('assets/story/chapter6-berry-grove.webp') center/cover;border-color:#71c19b}
 #pkmsvv-coop-modes .berry .pkmsvv-mode-art{background:radial-gradient(circle,#bff3d2,#5dbe96);border-color:#5ca682}
-#pkmsvv-coop-detail .pkmsvv-berry-difficulty{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;
+#pkmsvv-unified-coop .pkmsvv-berry-difficulty{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;
  padding:12px;background:rgba(10,42,53,.88);border:1px solid #9dd8bf;border-radius:11px}
-#pkmsvv-coop-detail .pkmsvv-berry-difficulty strong{grid-column:1/-1;color:#fff0b1;font-size:15px}
-#pkmsvv-coop-detail .pkmsvv-berry-difficulty button{min-width:0;min-height:66px;padding:11px;
+#pkmsvv-unified-coop .pkmsvv-berry-difficulty strong{grid-column:1/-1;color:#fff0b1;font-size:15px}
+#pkmsvv-unified-coop .pkmsvv-berry-difficulty button{min-width:0;min-height:66px;padding:11px;
  background:#d8f4eb;color:#163e49;text-align:left;white-space:normal;line-height:1.45}
-#pkmsvv-coop-detail .pkmsvv-berry-difficulty button.selected{background:#ffdf7b;color:#213541;border-color:#ab7d22;box-shadow:0 0 0 2px #ffe8ad}
-@media(max-width:500px){#pkmsvv-coop-detail .pkmsvv-berry-difficulty{grid-template-columns:1fr}}
+#pkmsvv-unified-coop .pkmsvv-berry-difficulty button.selected{background:#ffdf7b;color:#213541;border-color:#ab7d22;box-shadow:0 0 0 2px #ffe8ad}
+@media(max-width:500px){#pkmsvv-unified-coop .pkmsvv-berry-difficulty{grid-template-columns:1fr}}
+
+/* Difficulty expands just beneath the Berry card grid, not in the status/room area. */
+#pkmsvv-unified-coop .pkmsvv-berry-difficulty{margin:10px 0 16px;animation:pkmsvv-berry-expand .16s ease-out}
+#pkmsvv-unified-coop .pkmsvv-berry-difficulty button{font-size:clamp(12px,1.35vw,15px)}
+@keyframes pkmsvv-berry-expand{from{opacity:.5;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
