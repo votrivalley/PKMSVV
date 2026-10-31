@@ -5,19 +5,34 @@
  const modes=[['coop','Sống Sót','2–4 người',25,'Pikachu','Cùng đồng đội đánh quái, cứu nhau khi gặp nguy hiểm và cố gắng sống sót lâu nhất có thể!'],
   ['royale','Sống Còn','2–10 người',6,'Charizard','Chiến đấu với quái vật trong vòng an toàn ngày càng thu nhỏ. Người sống sót cuối cùng sẽ chiến thắng!'],
   ['eggrush','Tranh Trứng','4 người',175,'Togepi','Tranh nhau thu thập 10 quả trứng! Cuối trận trứng mới nở để tính điểm. Ai nhiều điểm nhất sẽ thắng!'],
-   ['berry','Giải Cứu Berry · Thường','4 người',25,'Pikachu','8 phút · bảo vệ 3 cây · thưởng theo HP 30–35% mỗi cây.'],
-   ['berryeasy','Giải Cứu Berry · Dễ','4 người',25,'Pikachu','Quái yếu hơn 30% · thưởng theo HP 13–18% mỗi cây.']];
+   ['berry','Giải Cứu Berry','4 người · 8 phút',25,'Pikachu','Bảo vệ 3 cây Berry · thưởng theo HP · chọn Dễ/Thường bên dưới.']];
+ const berryMode=id=>id==='berry'||id==='berryeasy';
+ const validMode=id=>modes.some(m=>m[0]===id)||id==='berryeasy';
  let mode='coop',view=null,detail=null,busy=false,previousFocus=null;
  const lan=()=>window.PKMSVV_LOCAL_UI_MODE==='lan'&&!!window.G?.LanBus;
  function close(){view?.remove();view=detail=null;previousFocus?.focus?.();}
  function info(x){if(detail)detail.textContent=x;}
  function repaint(){
   view?.querySelectorAll('[data-mode]').forEach(e=>{
-   const on=e.dataset.mode===mode;e.classList.toggle('selected',on);e.setAttribute('aria-pressed',String(on));
+   const on=e.dataset.mode===mode||(e.dataset.mode==='berry'&&berryMode(mode));e.classList.toggle('selected',on);e.setAttribute('aria-pressed',String(on));
   });detail?.replaceChildren();
+  if(berryMode(mode)&&detail){
+   const line=document.createElement('div');line.className='pkmsvv-berry-difficulty';
+   const caption=document.createElement('strong');caption.textContent='🌿 Chọn độ khó Giải Cứu Berry';
+   line.append(caption);
+   for(const [id,title,desc] of [
+     ['berry','🌳 Thường','Bảo vệ 3 cây · thưởng 30–35%'],
+     ['berryeasy','🍃 Dễ','Quái yếu hơn 30% · thưởng 13–18%']
+   ]){
+    const b=document.createElement('button');b.type='button';b.dataset.difficulty=id;
+    b.className=id===mode?'selected':'';b.textContent=title+' · '+desc;
+    b.onclick=()=>{mode=id;repaint();};line.append(b);
+   }
+   detail.append(line);
+  }
  }
  function open(preselect){
-  if(modes.some(m=>m[0]===preselect))mode=preselect;
+  if(validMode(preselect))mode=preselect;
   if(view){repaint();return;}
   previousFocus=document.activeElement;
   view=document.createElement('div');view.id='pkmsvv-unified-coop';
@@ -59,7 +74,7 @@
    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
   });
   repaint();
-  view.querySelector('[data-mode="'+mode+'"]').focus();
+  view.querySelector('[data-mode="'+(berryMode(mode)?'berry':mode)+'"]').focus();
  }
  function addressEntry(role,target=detail){
   const p=document.createElement('p');p.textContent=lan()?
@@ -93,7 +108,7 @@
     const invitedMode=u.searchParams.get('pkmsvvMode');
     u.pathname='/game/';u.search='';u.hash='';
     u.searchParams.set('pkmsvvRole',invitedCode?'join':role);
-    u.searchParams.set('pkmsvvMode',invitedCode&&modes.some(m=>m[0]===invitedMode)?invitedMode:mode);
+    u.searchParams.set('pkmsvvMode',invitedCode&&validMode(invitedMode)?invitedMode:mode);
     if(invitedCode){
      if(!/^[A-Za-z0-9_-]{12,45}$/.test(invitedCode))throw Error('Mã phòng trong lời mời không hợp lệ.');
      u.searchParams.set('pkmsvvCode',invitedCode);
@@ -232,7 +247,7 @@
   if(G.MultiplayerUI){G.MultiplayerUI.open=open;G.MultiplayerUI.__pkmsvvUnified=true;}
   document.addEventListener('click',intercept,true);
   const args=new URLSearchParams(location.search);
-  if(modes.some(x=>x[0]===args.get('pkmsvvMode')))mode=args.get('pkmsvvMode');
+  if(validMode(args.get('pkmsvvMode')))mode=args.get('pkmsvvMode');
   const role=args.get('pkmsvvRole');
   if(lan()&&['host','join','ai'].includes(role)){
    let attempts=0;const timer=setInterval(()=>{
