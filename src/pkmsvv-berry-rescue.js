@@ -155,12 +155,18 @@ G.PKMSVVBerryRescue=(()=>{
  }
  // Host AI defends the three-tree cluster instead of following players across the map.
  const DEFENSE_RADIUS=170,THREAT_RADIUS=135;
- function defendGoal(pl,enemies=[]){
+ function defendGoal(pl,enemies=[],slot=0){
   if(!active||!pl)return null;
   const live=trees.filter(t=>t.hp>0);
   if(!live.length)return {x:0,y:0};
   const cx=live.reduce((n,t)=>n+t.x,0)/live.length,cy=live.reduce((n,t)=>n+t.y,0)/live.length;
   if(Math.hypot(pl.x-cx,pl.y-cy)>DEFENSE_RADIUS)return {x:cx,y:cy};
+  const defendPosition=(t,dx,dy)=>{
+   // Stand beside a tree, not *on top of* its trunk or under its canopy.
+   let len=Math.hypot(dx,dy);
+   if(len<.01){dx=cx-t.x;dy=cy-t.y;len=Math.hypot(dx,dy)||1;}
+   return {x:t.x+dx/len*76,y:t.y+dy/len*76};
+  };
   const threats=(enemies||[]).filter(e=>e&&!e.dead&&
    live.some(t=>Math.hypot(e.x-t.x,e.y-t.y)<THREAT_RADIUS));
   if(threats.length){
@@ -168,11 +174,24 @@ G.PKMSVVBerryRescue=(()=>{
     Math.hypot(pl.x-b.x,pl.y-b.y)?a:b));
    const base=live.reduce((a,b)=>(Math.hypot(enemy.x-a.x,enemy.y-a.y)<
     Math.hypot(enemy.x-b.x,enemy.y-b.y)?a:b));
-   const dx=enemy.x-base.x,dy=enemy.y-base.y,len=Math.hypot(dx,dy)||1;
-   return {x:base.x+dx/len*Math.min(55,len),y:base.y+dy/len*Math.min(55,len)};
+   return defendPosition(base,enemy.x-base.x,enemy.y-base.y);
   }
-  return live.reduce((a,b)=>(Math.hypot(pl.x-a.x,pl.y-a.y)<
-   Math.hypot(pl.x-b.x,pl.y-b.y)?a:b));
+  const tree=live[Math.abs(slot|0)%live.length];
+  return defendPosition(tree,cx-tree.x,cy-tree.y);
+ }
+ // All trainers (including the local player) should avoid walking through
+ // the physical trunk. Tree canopies are visual and do not block spells.
+ function keepOutsideTrunks(pl){
+  if(!active||!pl||pl.dead)return;
+  for(const t of trees){
+   if(t.hp<=0)continue;
+   const dx=pl.x-t.x,dy=pl.y-t.y,d=Math.hypot(dx,dy);
+   const minDist=Math.max(56,(Number(pl.r)||14)+36);
+   if(d<minDist){
+    const vx=d>1e-6?dx/d:0,vy=d>1e-6?dy/d:1;
+    pl.x=t.x+vx*minDist;pl.y=t.y+vy*minDist;
+   }
+  }
  }
  function hud(ctx,w,h){
   if(!active)return;
@@ -185,7 +204,7 @@ G.PKMSVVBerryRescue=(()=>{
   });
   ctx.restore();
  }
- return {DURATION,BOSS_TIMES,REWARD_CHANCE,NORMAL_REWARDS,EASY_REWARDS,XP_MULT,DEFENSE_RADIUS,chanceForHp,difficultyFor,defendGoal,begin,tick,onEvent,reward,draw,hud,state,
+ return {DURATION,BOSS_TIMES,REWARD_CHANCE,NORMAL_REWARDS,EASY_REWARDS,XP_MULT,DEFENSE_RADIUS,chanceForHp,difficultyFor,defendGoal,keepOutsideTrunks,begin,tick,onEvent,reward,draw,hud,state,
   get easy(){return easy},
   get active(){return active},get trees(){return trees},get bossStage(){return bossStage}};
 })();
