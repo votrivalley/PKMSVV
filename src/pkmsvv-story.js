@@ -464,9 +464,10 @@ G.PKMSVVStory=(()=>{
  function firstMegaUnlocked(save=G.DB?.save){
   if(!save?.pkmsvvChapter7Seen)return false;
   const forms=G.PKMSVV_MEGA_CATALOG||[];
+  const phase=G.PKMSVVMegaPhase3;
   return forms.some(f=>f?.artReady===true&&(
-   G.PKMSVVMegaPhase3?.isBattleReady?.(f)||
-   G.PKMSVVMegaPhase3?.isUnlocked?.(f)
+   typeof phase?.isBattleReady==='function'?phase.isBattleReady(f):
+   phase?.isUnlocked?.(f)
   ));
  }
  function onMegaUnlocked(){
