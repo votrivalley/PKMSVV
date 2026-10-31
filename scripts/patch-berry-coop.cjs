@@ -11,16 +11,16 @@ function patch(rel,from,to){
  */
 patch('js/net/social.js',
  "['coop','royale','eggrush'].includes(mode)?mode:'coop'",
- "['coop','royale','eggrush','berry'].includes(mode)?mode:'coop'");
+ "['coop','royale','eggrush','berry','berryeasy'].includes(mode)?mode:'coop'");
 patch('js/net/social.js',
  "['royale','eggrush'].includes(requested)?requested:'coop'",
- "['royale','eggrush','berry'].includes(requested)?requested:'coop'");
+ "['royale','eggrush','berry','berryeasy'].includes(requested)?requested:'coop'");
 patch('js/net/social.js',
  "['coop','royale','eggrush'].includes(r.mode)",
- "['coop','royale','eggrush','berry'].includes(r.mode)");
+ "['coop','royale','eggrush','berry','berryeasy'].includes(r.mode)");
 patch('js/ui/social-ui.js',
  "(room.mode==='eggrush'?4:2)",
- "(['eggrush','berry'].includes(room.mode)?4:2)");
+ "(['eggrush','berry','berryeasy'].includes(room.mode)?4:2)");
 // The host owns each Berry tree's HP. Guests get authoritative half-second
 // updates via the already running Co-op host event stream.
 patch('js/net/coop.js',
