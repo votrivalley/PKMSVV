@@ -75,7 +75,7 @@ test('Berry mode HP tiers, easy rewards and enemy speed escalations',()=>{
  for(const [hp,prob] of [[100,.35],[90,.33],[70,.32],[50,.31],[30,.30],[0,0]]){
   assert.equal(h.game.chanceForHp(hp,false),prob);
  }
- for(const [minute,mul] of [[0,.7],[2,.805],[4,.91],[6,1.015]]){
+ for(const [minute,mul] of [[0,.7],[2,.77],[4,.84],[6,.91]]){
   assert.ok(Math.abs(h.game.difficultyFor(minute/2,true)-mul)<1e-9);
  }
  const enemy={x:900,y:900,hp:100,maxHp:100,dmg:10,spd:100,dead:false};
@@ -85,9 +85,37 @@ test('Berry mode HP tiers, easy rewards and enemy speed escalations',()=>{
  assert.ok(Math.abs(enemy.dmg-7)<1e-8);
  assert.ok(Math.abs(enemy.hp-70)<1e-8);
  h.step(.1,120);
- assert.ok(Math.abs(enemy.spd-80.5)<1e-8);
+ assert.ok(Math.abs(enemy.spd-77)<1e-8);
  h.step(.1,360);
- assert.ok(Math.abs(enemy.spd-101.5)<1e-8);
+ assert.ok(Math.abs(enemy.spd-91)<1e-8);
+});
+test('Berry normal enemies award 1.5× kill XP, new arrivals get one-time multiplier',()=>{
+ const h=harness();h.game.begin({mode:'berry'});
+ const e={x:900,y:900,xp:30,spd:100,dmg:10,hp:100,maxHp:100};
+ h.G.EnemyMgr.enemies=[e];
+ h.step(.1,0);assert.equal(e.xp,45);
+ h.step(.1,120);assert.equal(e.xp,45,'no exponential XP stacking every tick');
+ assert.ok(Math.abs(e.spd-100*(1+.2*2/3))<1e-7);
+});
+test('Berry AI defendGoal stays at live trees and never chases beyond the grove',()=>{
+ const h=harness();h.game.begin({mode:'berry'});
+ const far={x:700,y:700},near={x:0,y:0};
+ const defense=h.game.defendGoal(far,[{x:2000,y:2000}]);
+ assert.ok(Math.hypot(defense.x,defense.y)<h.game.DEFENSE_RADIUS);
+ const loc=h.game.defendGoal(near,[{x:-92,y:95,dead:false}]);
+ assert.ok(Math.hypot(loc.x+92,loc.y-82)<=55+1e-6);
+ const outside=h.game.defendGoal(near,[{x:1200,y:1200,dead:false}]);
+ assert.ok(Math.hypot(outside.x,outside.y)<h.game.DEFENSE_RADIUS);
+ const bots=read('src/lan/lan-ai.js');
+ assert.match(bots,/PKMSVVBerryRescue\?\.defendGoal/);
+ assert.match(bots,/mode!=='berry'&&mode!=='berryeasy'&&dash/);
+});
+test('Berry tree sprites draw without large ellipses and use thin borderless HP strips',()=>{
+ const src=read('src/pkmsvv-berry-rescue.js');
+ const chunk=src.slice(src.indexOf('function draw(ctx)'),src.indexOf('function hud('));
+ assert.doesNotMatch(chunk,/ellipse\(/);
+ assert.doesNotMatch(chunk,/stroke\(/);
+ assert.match(chunk,/fillRect\(-31,y,62,3\)/);
 });
 test('Host owns Berry tree HP; guests only consume validated snapshots',()=>{
  const h=harness();h.game.begin({mode:'berry'});
