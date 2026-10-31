@@ -52,6 +52,37 @@ test('Chapter 7 requires the first earned Champion Crown Seal, not a cup',()=>{
  save.pkmsvvChapter7Seen=true;
  assert.equal(api.megaUnlocked(),true);
 });
+test('Chapter 8 introduces Champion, one seal unlocks Mega, first actual Mega completes Chapter 9, ten seals gate Chapter 10',()=>{
+ const {save,api,G}=setup({pkmsvvChapter6Seen:true,pkmsvvChapter8IntroSeen:true});
+ save.arenas.pkmChampion={seals:{Kanto:true},trophies:{Kanto:true}};
+ assert.equal(api.megaUnlocked(),false);
+ assert.equal(api.onChampionSeal(),false);
+ assert.equal(api.megaUnlocked(),true,'one genuine seal is enough to open Mega Gacha');
+ assert.equal(api.championSealCount(save),1);
+ assert.equal(api.tenChampionCompleted(save),false);
+ assert.equal(api.firstMegaUnlocked(save),false);
+ G.PKMSVV_MEGA_CATALOG=[{dex:6,key:'charizardmegax',artReady:true}];
+ G.PKMSVVMegaPhase3={isBattleReady:f=>f.key==='charizardmegax'};
+ assert.equal(api.onMegaUnlocked(),true);
+ assert.equal(save.pkmsvvChapter9MegaDone,true);
+ assert.equal(api.onMegaUnlocked(),false,'first Mega milestone pays only once');
+ assert.equal(save.pkmsvvChapter10Pending,undefined);
+ for(const region of ['Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar','Paldea','Votri Valley'])
+  save.arenas.pkmChampion.seals[region]=true;
+ assert.equal(api.tenChampionCompleted(save),true);
+ assert.equal(api.onChampionSeal(),true);
+ assert.equal(save.pkmsvvChapter10Pending,true);
+ assert.notEqual(save.pkmsvvChapter10Done,true,'ten seals only unlock the boss');
+});
+test('Chapter 10 Rayquaza sky battle is real gameplay, Shadow exchange is future-only',()=>{
+ const runtime=read('src/pkmsvv-champion-arena.js'),story=read('src/pkmsvv-story.js');
+ assert.match(runtime,/function startSky\(/);
+ assert.match(runtime,/target=G\.EnemyMgr\.add\(new G\.Enemy\(/);
+ assert.match(runtime,/if\(stage==='sky'&&target\?\.dead\)\{finishSky\(true\)/);
+ assert.match(story,/chapter10:\[/);
+ assert.match(story,/pkmsvvRayquazaDefeated/);
+ assert.match(story,/pkmsvvShadowBonusTeased/);
+});
 test('Old earned cups retain Arena entitlement; old story flags do not fabricate completed modes',()=>{
  const {api,save}=setup({pkmsvvChapter6Seen:true,pkmsvvMultiplayerDone:{}});
  assert.equal(api.arenaUnlocked(),false);
