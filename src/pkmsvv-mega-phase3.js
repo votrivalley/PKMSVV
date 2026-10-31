@@ -82,10 +82,28 @@ G.PKMSVVMegaPhase3=(()=>{
   dragonitemega:{atk:134,def:95,spa:100,spd:100,spe:80}
  });
  const player=()=>G.Game?.player;
- const formFor=p=>p?CHAMPIONS.map(c=>getForm(c.key)).find(f=>f?.dex===p.dex&&BASE[f.key]&&
-  (f.key==='charizardmegax'||f.key==='excadrillmega'||
-   (G.PKMSVV_MEGA_4DIR_QA?.enabled===true&&f.qa4dir===true&&
-    G.PKMSVV_MEGA_4DIR_QA.forms?.includes(f.key)))):null;
+ const formFor=p=>p?(G.PKMSVV_MEGA_CATALOG||[]).find(f=>
+  f.dex===p.dex&&!f.storyLocked&&f.stats&&f.artReady&&G.SPRITE_META?.[f.spriteId]?.a?.Idle&&
+  (!p.shiny||G.Sprites.hasShiny?.(f.spriteId)===true)):null;
+ function canActivate(p,ai=false){
+  const f=formFor(p);
+  return !!(p&&f&&!p.dead&&G.Game?.state==='playing'&&!p._megaActive&&
+   !(p._megaCooldownRemaining>0)&&energy(p)>=ENERGY_MAX&&
+   (ai?G.Coop?.isHost&&p.lanBot:isUnlocked(f)));
+ }
+ function netMega(p,sprite){
+  if(!G.Coop?.active||!p?.uid)return;
+  if(G.Coop.isHost)G.Coop.broadcast?.(['mg',p.uid,sprite||0]);
+  else if(p===player())G.Coop.toHost?.(['mg',sprite||0]);
+ }
+ function remoteMega(uid,sprite){
+  const p=G.Coop?.players?.().find(x=>x&&x.uid===uid);
+  if(!p||p===player())return false;
+  const f=(G.PKMSVV_MEGA_CATALOG||[]).find(x=>x.dex===p.dex&&x.spriteId===sprite&&
+   x.artReady&&G.SPRITE_META?.[x.spriteId]?.a?.Idle);
+  if(sprite&&(!f||p.shiny&&G.Sprites.hasShiny?.(sprite)!==true))return false;
+  appearance(p,f?.spriteId||p.dex);p._megaRemoteSprite=f?.spriteId||0;return true;
+ }
  let button=null,busy=false;
  const controlHint=()=>G.Pad?.name?G.PKMSVVPadOrb?.describe?.('mega')||'LB / L1':
   (String(G.Input?.bound?.('mega')||'digit5').replace(/^(digit|key|numpad)/,'').toUpperCase());
@@ -96,17 +114,12 @@ G.PKMSVVMegaPhase3=(()=>{
   return p._megaEnergy;
  }
  function addEnergy(p,points){
-  if(!p||p.dead||p._megaActive||G.Coop?.active||G.Game?.state!=='playing')return 0;
+  if(!p||p.dead||p._megaActive||G.Game?.state!=='playing')return 0;
   if(!Number.isFinite(points)||points<=0)return energy(p);
   p._megaEnergy=Math.min(ENERGY_MAX,energy(p)+points);
   return p._megaEnergy;
  }
- function eligible(){
-  const p=player(),f=formFor(p);
-  return !!(p&&f&&!p.dead&&G.Game?.state==='playing'&&!G.Coop?.active&&
-   !p._megaActive&&!(p._megaCooldownRemaining>0)&&energy(p)>=ENERGY_MAX&&isBattleReady(f)&&
-   (!p.shiny||G.Sprites.hasShiny?.(f.spriteId)===true));
- }
+ function eligible(){return canActivate(player(),false);}
  function appearance(p,dex){
   const scale=G.Sprites.playerScale(dex),dir=p.anim?.dir||0;
   p.scale=scale;p.anim=new G.Sprites.Animator(dex,scale,
@@ -121,13 +134,14 @@ G.PKMSVVMegaPhase3=(()=>{
   if(p._megaPhase3Cd){p.cdMul/=CD_FACTOR;p._megaPhase3Cd=false;}
   p._megaActive=false;p._megaRemaining=0;p._megaPhase3Backup=null;
   p._megaCooldownRemaining=REUSE_COOLDOWN; // Starts AFTER the 30-second transformation.
-  appearance(p,p.dex);sync();return true;
+  appearance(p,p.dex);p._megaFormSprite=0;netMega(p,0);sync();return true;
  }
  function activate(p){
-  const f=formFor(p);
-  if(!f||p!==player()||!eligible())return false;
-  const old=BASE[f.key],stats=f.stats,mon=p.mon;
-  if(!old||!stats)return false;
+  const ai=!!p?.lanBot&&G.Coop?.isHost,f=formFor(p);
+  if(!f||(!ai&&p!==player())||!canActivate(p,ai))return false;
+  const mon=p.mon,stats=f.stats;
+  const old=BASE[f.key]||{atk:mon.pa,def:mon.df,spa:mon.sa,spd:mon.sd,spe:mon.spd};
+  if(!stats||!old.atk||!old.spa||!old.def||!old.spd||!old.spe)return false;
   p._megaPhase3Backup={mon,atk:p.baseAtk,spd:p.baseSpd};
   const pa=mon.pa*stats.atk/old.atk,sa=mon.sa*stats.spa/old.spa;
   p.mon={...mon,pa,sa,atk:Math.max(pa,sa),df:mon.df*stats.def/old.def,
@@ -138,7 +152,7 @@ G.PKMSVVMegaPhase3=(()=>{
   for(const move of p.moves||[])if(Number.isFinite(move.t)&&move.t>0)move.t*=CD_FACTOR;
   p._megaRemaining=DURATION;p._megaActive=true;
   p._megaEnergy=0;p._megaKillsSeen=Number(p.kills)||0;p._megaBossesSeen=Number(p.bosses)||0;
-  appearance(p,f.spriteId);
+  appearance(p,f.spriteId);p._megaFormSprite=f.spriteId;netMega(p,f.spriteId);
   G.FX?.ring?.(p.x,p.y,15,100,'#b49aff',.9,8);
   G.Audio?.sfx?.('shinyGet');
   G.UI?.toast?.('MEGA '+(G.DEX_BY?.[p.dex]?.name||'POKÉMON').toUpperCase()+'! 30 giây · Hồi chiêu -30%'+(f.qa4dir?' · QA sprite 4 hướng':''));
@@ -191,7 +205,7 @@ G.PKMSVVMegaPhase3=(()=>{
  function sync(){
   if(!button)return;
   const p=player(),f=formFor(p);
-  const visible=!!(p&&f&&!p.dead&&!G.Coop?.active&&G.Game?.state==='playing'&&
+  const visible=!!(p&&f&&!p.dead&&G.Game?.state==='playing'&&
    isBattleReady(f));
   document.body?.classList?.toggle?.('pkmsvv-mega-gamepad',!!G.Pad?.name);
   button.style.display=visible?'flex':'none';
@@ -219,6 +233,12 @@ G.PKMSVVMegaPhase3=(()=>{
   if(this===player()){
    tick(this,dt);
    if((G.Input?.tap?.('digit5')||G.Input?.tap?.('numpad5')||G.Input?.tap?.('pkmsvv-mega'))&&eligible())tryActivate();
+  }else if(this.lanBot&&G.Coop?.isHost){
+   tick(this,dt);
+   if(formFor(this)&&!this._megaActive){
+    addEnergy(this,dt*1.3);
+    if(canActivate(this,true))activate(this);
+   }
   }
   return update.call(this,dt);
  };
@@ -234,5 +254,5 @@ G.PKMSVVMegaPhase3=(()=>{
  setInterval(sync,250);
  return {CHAMPIONS,STONE_CHANCE,DURATION,REUSE_COOLDOWN,CD_FACTOR,ENERGY_MAX,
   HIT_ENERGY,KILL_ENERGY,BOSS_ENERGY,rewardStone,isUnlocked,isBattleReady,
-  stoneOwned,privateQaPreview,progress,formFor,energy,addEnergy,onEnemyHurt,eligible,activate,tryActivate,stop,tick,sync};
+  stoneOwned,privateQaPreview,progress,formFor,energy,addEnergy,onEnemyHurt,eligible,canActivate,activate,tryActivate,stop,tick,sync,remoteMega};
 })();
