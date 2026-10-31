@@ -35,11 +35,6 @@ patch('js/core/db.js',
 patch('js/game.js',
  '  function update(dt) {\n    const coop = G.Coop.active;',
  '  function update(dt) {\n    const coop = G.Coop.active;\n    if(G.PKMSVVBerry?.choosing){\n      if(pl){pl.invuln=Math.max(pl.invuln||0,5);pl.anim?.update?.(dt);}\n      G.FX.update(dt);G.Camera.follow(pl.x,pl.y,dt);return;\n    }');
-// Rescue Berry uses the same opening-stage 'forest' song as Egg Rush,
-// with no separate arena soundtrack while defending the trees.
-patch('js/game.js',
- "G.Audio.music(G.Judgment.active ? G.Judgment.music : G.Rift.inArena ? 'rift' : G.EnemyMgr.bossAlive() ? 'boss' : G.BIOME_MUSIC[biome % G.BIOME_MUSIC.length]);",
- "G.Audio.music(G.PKMSVVBerryRescue?.active ? G.BIOME_MUSIC[0] : G.Judgment.active ? G.Judgment.music : G.Rift.inArena ? 'rift' : G.EnemyMgr.bossAlive() ? 'boss' : G.BIOME_MUSIC[biome % G.BIOME_MUSIC.length]);");
 // Web/LAN multiplayer-only Berry Rescue patches run after web arena/egg patches.
 // Art may be staged after this build: use existing approved Chapter 3 artwork as
 // offline fallbacks, never produce a blank pane or require an external image API.
