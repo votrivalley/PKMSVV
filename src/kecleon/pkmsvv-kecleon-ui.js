@@ -184,7 +184,8 @@ G.KecleonUI=(()=>{
  }
  function bagHtml(){
   const total=G.Shop.ORDER.some(k=>G.Shop.count(k)) ||
-    Object.keys(G.DB.save.tms||{}).some(id=>G.Shop.tmCount(id)&&G.Moves.BY_ID[id]);
+    Object.keys(G.DB.save.tms||{}).some(id=>G.Shop.tmCount(id)&&G.Moves.BY_ID[id]) ||
+    !!G.PKMSVVBerry?.TYPES?.some(t=>G.PKMSVVBerry.count(t.id)>0);
   if(!total) return '<div class="pkmk-empty"><div class="pkmk-empty-art">'+itemIcon('bag',64)+'</div>'+
     '<p>'+L('Túi đồ của bạn đang trống.','Your Bag is empty.')+'</p>'+
     '<button type="button" class="btn gold" data-pkmk-goshop>'+itemIcon('shop',18)+' '+
@@ -218,6 +219,17 @@ G.KecleonUI=(()=>{
    '<button class="btn small gold" data-pkmk-tm="'+esc(id)+'" '+
     (!G.Mons.canLearn(selected,id)?'disabled':'')+'>'+L('Dạy chiêu','Teach')+'</button>');
   if(tms.length)s+='</div>';
+  const berry=G.PKMSVVBerry,owned=berry?.TYPES?.filter(t=>berry.count(t.id)>0)||[];
+  if(owned.length){
+   s+='<h3 class="pkmk-group-title">🍓 Berry</h3><div class="pkmk-cards">';
+   for(const t of owned){
+    s+=card('<img class="pkmsvv-berry-sprite" src="'+berry.spriteUrl(t.id)+'" width="36" height="36" alt="'+esc(t.name)+'">',
+      esc(t.name+' Berry'),esc(t.desc[G.I18n?.lang==='en'?1:0]),
+      '<span class="pkmk-stock">×'+berry.count(t.id)+'</span>');
+   }
+   s+='</div><p class="pkmk-lead">'+L('Berry được chọn tối đa 2 quả trong 4 giây trước trận.',
+    'Choose up to 2 Berries during the 4-second pre-battle countdown.')+'</p>';
+  }
   return s;
  }
  function attachDex(dex,host){
