@@ -82,6 +82,8 @@ G.PKMSVVMegaPhase3=(()=>{
   dragonitemega:{atk:134,def:95,spa:100,spd:100,spe:80}
  });
  const player=()=>G.Game?.player;
+ const HOVER_MEGA=new Set(['charizardmegax','charizardmegay','dragonitemega','scizormega','pidgeotmega','salamencemega','latiasmega','latiosmega','rayquazamega']);
+ const AURA={charizardmegax:'#43baff',charizardmegay:'#ffb356',scizormega:'#f77f98',swampertmega:'#6fe1ee',garchompmega:'#af87ff',dragonitemega:'#ffe69b'};
  const formFor=p=>p?(G.PKMSVV_MEGA_CATALOG||[]).find(f=>
   f.dex===p.dex&&!f.storyLocked&&f.stats&&f.artReady&&G.SPRITE_META?.[f.spriteId]?.a?.Idle&&
   (!p.shiny||G.Sprites.hasShiny?.(f.spriteId)===true)):null;
@@ -131,6 +133,7 @@ G.PKMSVVMegaPhase3=(()=>{
   if(!p?._megaPhase3Backup||!p._megaActive)return false;
   const old=p._megaPhase3Backup;
   p.mon=old.mon;p.baseAtk=old.atk;p.baseSpd=old.spd;
+  p._pkmsvvMegaIgnoresWater=!!old.ignoreWater;
   if(p._megaPhase3Cd){p.cdMul/=CD_FACTOR;p._megaPhase3Cd=false;}
   p._megaActive=false;p._megaRemaining=0;p._megaPhase3Backup=null;
   p._megaCooldownRemaining=REUSE_COOLDOWN; // Starts AFTER the 30-second transformation.
@@ -142,7 +145,8 @@ G.PKMSVVMegaPhase3=(()=>{
   const mon=p.mon,stats=f.stats;
   const old=BASE[f.key]||{atk:mon.pa,def:mon.df,spa:mon.sa,spd:mon.sd,spe:mon.spd};
   if(!stats||!old.atk||!old.spa||!old.def||!old.spd||!old.spe)return false;
-  p._megaPhase3Backup={mon,atk:p.baseAtk,spd:p.baseSpd};
+  p._megaPhase3Backup={mon,atk:p.baseAtk,spd:p.baseSpd,ignoreWater:p._pkmsvvMegaIgnoresWater};
+  p._pkmsvvMegaIgnoresWater=!!(f.ignoreWaterSlow||HOVER_MEGA.has(f.key));
   const pa=mon.pa*stats.atk/old.atk,sa=mon.sa*stats.spa/old.spa;
   p.mon={...mon,pa,sa,atk:Math.max(pa,sa),df:mon.df*stats.def/old.def,
    sd:mon.sd*stats.spd/old.spd,spd:mon.spd*stats.spe/old.spe,
@@ -150,7 +154,7 @@ G.PKMSVVMegaPhase3=(()=>{
   p.baseAtk=p.mon.atk;p.baseSpd=p.mon.spd;
   p.cdMul*=CD_FACTOR;p._megaPhase3Cd=true;
   for(const move of p.moves||[])if(Number.isFinite(move.t)&&move.t>0)move.t*=CD_FACTOR;
-  p._megaRemaining=DURATION;p._megaActive=true;
+  p._megaRemaining=DURATION;p._megaActive=true;p._pkmsvvMegaAuraClock=0;p._pkmsvvMegaAuraColor=AURA[f.key]||'#d4a0ff';
   p._megaEnergy=0;p._megaKillsSeen=Number(p.kills)||0;p._megaBossesSeen=Number(p.bosses)||0;
   appearance(p,f.spriteId);p._megaFormSprite=f.spriteId;netMega(p,f.spriteId);
   G.FX?.ring?.(p.x,p.y,15,100,'#b49aff',.9,8);
@@ -176,6 +180,11 @@ G.PKMSVVMegaPhase3=(()=>{
    // Mega Lucario BETA owns its own timer; Phase 3 must not tick it twice.
    if(!p._megaPhase3Backup)return;
    p._megaRemaining=Math.max(0,p._megaRemaining-elapsed);
+   p._pkmsvvMegaAuraClock=(p._pkmsvvMegaAuraClock||0)+elapsed;
+   if(p._pkmsvvMegaAuraClock>=.33){
+    p._pkmsvvMegaAuraClock=0;
+    G.FX?.ring?.(p.x,p.y,5,Math.max(30,(p.r||18)*2.5),p._pkmsvvMegaAuraColor||'#d4a0ff',.32,5);
+   }
    if(p._megaRemaining<=0)stop(p);
    return;
   }
