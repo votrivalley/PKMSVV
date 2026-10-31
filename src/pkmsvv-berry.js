@@ -215,8 +215,13 @@ G.PKMSVVBerry=(()=>{
   ratio(pl,'atkK',1+(run('liechi')? (b.ids.includes('liechi')?.30*pct:.25*(b.elapsed<60)):0)+(b.powerUntil>b.elapsed?.5:0));
   ratio(pl,'spdK',1+(run('salac')?(b.ids.includes('salac')?.30*pct:.25*(b.elapsed<60)):0));
   ratio(pl,'cdK',1-(run('leppa')&&b.elapsed<(b.ids.includes('leppa')?45:60)?(b.ids.includes('leppa')?.20:.25):0));
+  const status=['slowT','poisonT','burnT','freezeT','paralyzeT'];
+  if(b.ids.includes('lum')&&!b.once.lum&&status.some(k=>(pl[k]||0)>0)){
+   b.once.lum=1;b.lumUntil=b.elapsed+3;
+   G.UI?.toast?.(tr('✨ Lum Berry đã thanh tẩy!','✨ Lum Berry cleansed your Pokémon!'),1200);
+  }
   if(b.lumUntil>b.elapsed){
-   for(const k of ['slowT','poisonT','burnT','freezeT','paralyzeT'])if(pl[k]>0)pl[k]=0;
+   for(const k of status)if(pl[k]>0)pl[k]=0;
   }
  }
  function hurt(pl,original,args){
