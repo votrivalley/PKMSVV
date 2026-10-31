@@ -473,6 +473,8 @@ G.EggRush=(()=>{
    ctx.textAlign='right';ctx.fillStyle='#ffe17a';ctx.fillText(String(p.eggs),size-4,y+3);
   }
   ctx.restore();
+  // Competitive-only priority: overlay the directional arrow after rankings.
+  if(active)guide(ctx,w,h);
  }
  function html(r){
   if(!r||!Array.isArray(r.standings))return '';
