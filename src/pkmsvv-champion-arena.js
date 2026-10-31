@@ -1,7 +1,7 @@
 'use strict';
 /* Crown Arena — real SOLO boss combat with a 16-entrant knockout bracket.
  * The other seven matches in round 1 are simulated, never paid as human wins.
- * First round: 4m farm + 1m preview; next rounds: 2m farm + 30s preview.
+ * Opening round: 4m with 90s/180s bosses; next rounds: 90s total.
  * No LAN >10, no fake Mega sprite, no invented Champion victory.
  */
 G.PKMSVVChampionArena=(()=>{
@@ -31,7 +31,8 @@ G.PKMSVVChampionArena=(()=>{
   const dex=G.DEX_BY?.[sub[0]]?sub[0]:v[1];
   return {dex,name:dex===sub[0]?sub[1]:v[2],spriteId:null,temporary:dex!==v[1]};
  }
- const PREP_SECONDS=150,FIRST_PREP_SECONDS=300,FIGHT_SECONDS=120;
+ const PREP_SECONDS=90,FIRST_PREP_SECONDS=240,FIGHT_SECONDS=120;
+ const FIRST_FARM_BOSS_TIMES=[90,180];
  const FIRST_PREVIEW_SECONDS=60,NEXT_PREVIEW_SECONDS=30,WARN_SECONDS=15;
  const clock=secs=>{const n=Math.max(0,Math.ceil(secs));return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');};
  const DUEL_TYPES=['normal','fighting','psychic','steel','rock','ghost'];
@@ -67,9 +68,9 @@ G.PKMSVVChampionArena=(()=>{
  const FARM_SPAWN_MULT=2,FARM_XP_MULT=2;
  const $=id=>document.getElementById(id);
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
- let region=0,stage='idle',round=0,elapsed=0,opp=null,bracket=[],target=null,active=false,paid=false,lastSecond=-1,previewSeen=false,warnSeen=false,semiLosers=[],lastPodium=null,mode='story',mapChoice='random',duelType='normal';
- const ROUNDS=['Vòng 16','Tứ kết','Bán kết','Chung kết','Tranh hạng ba'];
- const SEL=['Round of 16','Quarterfinal','Semifinal','Final','Reigning Champion'];
+ let region=0,stage='idle',round=0,elapsed=0,opp=null,bracket=[],target=null,active=false,paid=false,lastSecond=-1,prepBossStage=0,previewSeen=false,warnSeen=false,semiLosers=[],lastPodium=null,mode='story',mapChoice='random',duelType='normal';
+ const ROUNDS=['Vòng sơ kết','Tứ kết','Bán kết','Chung kết','Tranh hạng ba'];
+ const SEL=['Preliminary Round','Quarterfinal','Semifinal','Final','Reigning Champion'];
  const AI_POOL=[25,6,94,149,282,448,475,530,658,778,212,260,445,768,870,998];
  const rand=()=>Math.random();
  function ledger(save=G.DB?.save){
@@ -334,7 +335,7 @@ G.PKMSVVChampionArena=(()=>{
  }
  function beginPrep(){
   restoreStats();
-  stage='prep';elapsed=0;lastSecond=-1;previewSeen=false;warnSeen=false;opp=null;target=null;
+  stage='prep';elapsed=0;lastSecond=-1;prepBossStage=0;previewSeen=false;warnSeen=false;opp=null;target=null;
   G.World?.setArena?.(null);
   G.World?.setBiome?.(0,true); // farm area reset after 1v1
   panel().hidden=true;
@@ -342,17 +343,14 @@ G.PKMSVVChampionArena=(()=>{
   const ready=$('pkmsvv-arena-ready-float');if(ready){ready.hidden=true;ready.disabled=true;}
   const preview=$('pkmsvv-champion-preview');if(preview)preview.hidden=true;
   const message=round===0?
-   tr('4 phút farm, sau đó xem đối thủ 1 phút.','4-minute farm followed by 1-minute preview.'):
-   tr('2 phút farm, sau đó xem đối thủ 30 giây.','2-minute farm followed by 30-second preview.');
+   tr('4 phút chuẩn bị, boss phút 1:30 và 3:00; xem đối thủ phút cuối.','4-minute prep, bosses at 1:30 and 3:00; preview final minute.'):
+   tr('1 phút 30 giây chuẩn bị, xem đối thủ trong 30 giây cuối.','90-second prep, preview in final 30 seconds.');
   G.UI?.toast?.(message+tr(' Quái ×2 · EXP ×2.',' 2x mobs · 2x EXP.'),2800);
  }
  function revealUpcoming(){
   if(previewSeen||stage!=='prep')return;
   previewSeen=true;
-  // Preview is non-combat; keep farming live monsters in the themed arena.
-  const surfaceType=mode==='league'?'normal':duelType;
-  G.World?.setArena?.({tx:0,ty:0,r:22,type:surfaceType});
-  if(G.Tiles?.arenaBiome)G.World?.setBiome?.(G.Tiles.arenaBiome(duelType),true);
+  // Reveal opponent via UI only. Remain on ordinary world terrain until the fight.
   const opponent=nextOpponent();if(!opponent)return;
   let box=$('pkmsvv-champion-preview');
   if(!box){box=document.createElement('div');box.id='pkmsvv-champion-preview';
@@ -363,6 +361,21 @@ G.PKMSVVChampionArena=(()=>{
   const name=document.createElement('span');name.textContent='🏆 '+(ROUNDS[round]||'')+' · '+opponent.name;
   box.append(name);box.hidden=false;
   G.UI?.toast?.(tr('Đối thủ xuất hiện: ','Opponent revealed: ')+opponent.name+' · '+clock(prepSeconds()-elapsed),3000);
+ }
+ // First preparation includes two actual bosses. All later preparations are 90s.
+ function spawnPrepBoss(){
+  if(!active||stage!=='prep'||round!==0)return false;
+  const pl=G.Game?.player,defs=G.Enemies?.BOSSES;
+  if(!pl||!Array.isArray(defs)||!defs.length||!G.Enemy||!G.EnemyMgr?.add)return false;
+  const wave=prepBossStage,def=defs[Math.min(wave-1,defs.length-1)];
+  if(!def)return false;
+  const boss=new G.Enemy(def,pl.x+(wave===1?210:-210),pl.y-130,
+   G.Enemies.bossScale?.(elapsed)||{hp:1,dmg:1,spd:1},true);
+  boss._pkmsvvChampionPrepBoss=wave;
+  boss.hp=boss.maxHp=Math.max(boss.maxHp||1,wave===1?450:850);
+  G.EnemyMgr.add(boss);
+  G.Spawner?.say?.('🏆 '+tr('BOSS CHUẨN BỊ','PREP BOSS')+' '+wave+'/2',3);
+  return true;
  }
  function settle(rank,cup=false){
   if(paid)return;
@@ -482,6 +495,9 @@ G.PKMSVVChampionArena=(()=>{
    }
   }
   if(stage==='prep'){
+   while(round===0&&prepBossStage<FIRST_FARM_BOSS_TIMES.length&&elapsed>=FIRST_FARM_BOSS_TIMES[prepBossStage]){
+    prepBossStage++;spawnPrepBoss();
+   }
    const remaining=prepSeconds()-elapsed;
    if(!previewSeen&&remaining<=previewSeconds())revealUpcoming();
    if(!warnSeen&&remaining<=WARN_SECONDS&&remaining>0){
