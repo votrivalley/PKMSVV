@@ -2,8 +2,8 @@
  * Low-cost SVG/CSS only. Accessible for keyboard, touch and reduced motion. */
 #pkmsvv-mega-lucario-btn.pkmsvv-mega-btn,
 #pkmsvv-mega-champion-btn.pkmsvv-mega-btn{
- /* Match the vertical center of PC's three Orb stones (sy-118 on canvas). */
- position:fixed;left:calc(50% + 100px);right:auto;bottom:137px;
+ /* PC: Mega sits LEFT of the Orb queue (width 140, center anchored). */
+ position:fixed;left:calc(50% - 140px);right:auto;bottom:137px;
  z-index:12019;box-sizing:border-box;width:58px;height:58px;flex:0 0 58px;
  border-radius:50%;border:3px solid #e6c9ff;cursor:pointer;
  background:radial-gradient(circle at 34% 20%,#6755be 0%,#332769 64%,#111a37 100%);
