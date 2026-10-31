@@ -141,17 +141,24 @@ G.PKMSVVBerryRescue=(()=>{
   ctx.restore();
  }
  // Tree sprites are scene foreground (not a giant target ring); compact bars only.
+ // A single tree is drawn in the same Y-sorted world layer as players and enemies.
+ function drawOne(ctx,t){
+  ctx.save();ctx.translate(t.x,t.y);
+  drawTree(ctx,t.hp/t.maxHp,t.id);
+  const ratio=Math.max(0,Math.min(1,t.hp/t.maxHp));
+  const y=hasTreeAtlas()?-91:-62;
+  ctx.fillStyle='rgba(24,47,39,.62)';ctx.fillRect(-31,y,62,3);
+  ctx.fillStyle=ratio>.35?'#8fe2ad':'#f28a73';ctx.fillRect(-31,y,62*ratio,3);
+  ctx.restore();
+ }
  function draw(ctx){
-  if(!active)return;
-  for(const t of trees){
-   ctx.save();ctx.translate(t.x,t.y);
-   drawTree(ctx,t.hp/t.maxHp,t.id);
-   const ratio=Math.max(0,Math.min(1,t.hp/t.maxHp));
-   const y=hasTreeAtlas()?-91:-62;
-   ctx.fillStyle='rgba(24,47,39,.62)';ctx.fillRect(-31,y,62,3);
-   ctx.fillStyle=ratio>.35?'#8fe2ad':'#f28a73';ctx.fillRect(-31,y,62*ratio,3);
-   ctx.restore();
-  }
+  if(active)for(const t of trees)drawOne(ctx,t);
+ }
+ // Must be inserted into game's items.sort((a,b)=>a.y-b.y) entity render list.
+ // The base of the trunk is the same anchor as a Pokémon's feet (t.y).
+ function drawables(){
+  if(!active)return [];
+  return trees.map(t=>({y:t.y,draw(ctx){drawOne(ctx,t);}}));
  }
  // Host AI defends the three-tree cluster instead of following players across the map.
  const DEFENSE_RADIUS=170,THREAT_RADIUS=135;
@@ -204,7 +211,7 @@ G.PKMSVVBerryRescue=(()=>{
   });
   ctx.restore();
  }
- return {DURATION,BOSS_TIMES,REWARD_CHANCE,NORMAL_REWARDS,EASY_REWARDS,XP_MULT,DEFENSE_RADIUS,chanceForHp,difficultyFor,defendGoal,keepOutsideTrunks,begin,tick,onEvent,reward,draw,hud,state,
+ return {DURATION,BOSS_TIMES,REWARD_CHANCE,NORMAL_REWARDS,EASY_REWARDS,XP_MULT,DEFENSE_RADIUS,chanceForHp,difficultyFor,defendGoal,keepOutsideTrunks,begin,tick,onEvent,reward,draw,drawables,hud,state,
   get easy(){return easy},
   get active(){return active},get trees(){return trees},get bossStage(){return bossStage}};
 })();
