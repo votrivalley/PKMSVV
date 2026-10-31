@@ -54,11 +54,15 @@ G.PKMSVVBerryRescue=(()=>{
   const rates=isEasy?EASY_REWARDS:NORMAL_REWARDS;
   return pct>=99.999?rates[0]:pct>=80?rates[1]:pct>=60?rates[2]:pct>=40?rates[3]:rates[4];
  }
- function difficultyFor(stage,isEasy=easy){return (isEasy?.7:1)*(1+(isEasy?.15:.20)*Math.max(0,Math.min(3,stage)));}
+ // Reduced per-stage enemy speed escalation to two thirds of the prior increment.
+  const SPEED_GAIN_NORMAL=.20*2/3,SPEED_GAIN_EASY=.15*2/3,XP_MULT=1.5;
+  function difficultyFor(stage,isEasy=easy){return (isEasy?.7:1)*(1+(isEasy?SPEED_GAIN_EASY:SPEED_GAIN_NORMAL)*Math.max(0,Math.min(3,stage)));}
  function rebalanceEnemy(e,stage){
   if(!e||e.dead||e.remote)return;
   if(!e._pkmsvvBerryAdjusted){
    e._pkmsvvBerryAdjusted=true;
+    // Berry enemies award 1.5× EXP exactly once per spawned enemy.
+    if(Number.isFinite(e.xp))e.xp*=XP_MULT;
    if(easy){
     if(Number.isFinite(e.maxHp)){e.maxHp=Math.max(1,e.maxHp*.7);e.hp=Math.min(e.maxHp,Math.max(1,(e.hp||e.maxHp)*.7));}
     if(Number.isFinite(e.dmg))e.dmg*=.7;
@@ -136,19 +140,39 @@ G.PKMSVVBerryRescue=(()=>{
    ctx.fillRect(x-2,y-1,5,5);ctx.fillStyle='#fff3c0';ctx.fillRect(x-1,y,2,2);}
   ctx.restore();
  }
+ // Tree sprites are scene foreground (not a giant target ring); compact bars only.
  function draw(ctx){
   if(!active)return;
   for(const t of trees){
    ctx.save();ctx.translate(t.x,t.y);
-   ctx.fillStyle='#1128239e';ctx.strokeStyle=t.hp>0?'#8acbb2':'#646e79';
-   ctx.lineWidth=1.2;ctx.beginPath();ctx.ellipse(0,0,52,27,0,0,Math.PI*2);ctx.fill();ctx.stroke();
    drawTree(ctx,t.hp/t.maxHp,t.id);
-   // Slim, borderless health strip above the sprite canopy; not a large black frame.
-   const top=hasTreeAtlas()?-94:-65,ratio=Math.max(0,Math.min(1,t.hp/t.maxHp));
-   ctx.fillStyle='#112b29b3';ctx.fillRect(-34,top,68,6);
-   ctx.fillStyle=ratio>.35?'#89dba2':'#e87e65';ctx.fillRect(-33,top+1,66*ratio,4);
+   const ratio=Math.max(0,Math.min(1,t.hp/t.maxHp));
+   const y=hasTreeAtlas()?-91:-62;
+   ctx.fillStyle='rgba(24,47,39,.62)';ctx.fillRect(-31,y,62,3);
+   ctx.fillStyle=ratio>.35?'#8fe2ad':'#f28a73';ctx.fillRect(-31,y,62*ratio,3);
    ctx.restore();
   }
+ }
+ // Host AI defends the three-tree cluster instead of following players across the map.
+ const DEFENSE_RADIUS=170,THREAT_RADIUS=135;
+ function defendGoal(pl,enemies=[]){
+  if(!active||!pl)return null;
+  const live=trees.filter(t=>t.hp>0);
+  if(!live.length)return {x:0,y:0};
+  const cx=live.reduce((n,t)=>n+t.x,0)/live.length,cy=live.reduce((n,t)=>n+t.y,0)/live.length;
+  if(Math.hypot(pl.x-cx,pl.y-cy)>DEFENSE_RADIUS)return {x:cx,y:cy};
+  const threats=(enemies||[]).filter(e=>e&&!e.dead&&
+   live.some(t=>Math.hypot(e.x-t.x,e.y-t.y)<THREAT_RADIUS));
+  if(threats.length){
+   const enemy=threats.reduce((a,b)=>(Math.hypot(pl.x-a.x,pl.y-a.y)<
+    Math.hypot(pl.x-b.x,pl.y-b.y)?a:b));
+   const base=live.reduce((a,b)=>(Math.hypot(enemy.x-a.x,enemy.y-a.y)<
+    Math.hypot(enemy.x-b.x,enemy.y-b.y)?a:b));
+   const dx=enemy.x-base.x,dy=enemy.y-base.y,len=Math.hypot(dx,dy)||1;
+   return {x:base.x+dx/len*Math.min(55,len),y:base.y+dy/len*Math.min(55,len)};
+  }
+  return live.reduce((a,b)=>(Math.hypot(pl.x-a.x,pl.y-a.y)<
+   Math.hypot(pl.x-b.x,pl.y-b.y)?a:b));
  }
  function hud(ctx,w,h){
   if(!active)return;
@@ -161,7 +185,7 @@ G.PKMSVVBerryRescue=(()=>{
   });
   ctx.restore();
  }
- return {DURATION,BOSS_TIMES,REWARD_CHANCE,NORMAL_REWARDS,EASY_REWARDS,chanceForHp,difficultyFor,begin,tick,onEvent,reward,draw,hud,state,
+ return {DURATION,BOSS_TIMES,REWARD_CHANCE,NORMAL_REWARDS,EASY_REWARDS,XP_MULT,DEFENSE_RADIUS,chanceForHp,difficultyFor,defendGoal,begin,tick,onEvent,reward,draw,hud,state,
   get easy(){return easy},
   get active(){return active},get trees(){return trees},get bossStage(){return bossStage}};
 })();
