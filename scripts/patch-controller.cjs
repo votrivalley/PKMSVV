@@ -108,7 +108,6 @@ patch('js/systems/pkmsvv-evolution.js',
  "        if (G.Pad.focusFirst) G.Pad.focusFirst();\n"+
  "      }\n"+
  "    }");
-fs.appendFileSync(path.join(dir,'css','style.css'),String.raw`
 /* A/B on any new overlay uses the existing gamepad candidates() and press()/back().
    Observe only overlay mounts/unhides, never rebuild the candidate list on every frame. */
 const accessibility=String.raw`
@@ -151,9 +150,13 @@ const accessibility=String.raw`
 fs.writeFileSync(path.join(dir,'js','ui','pkmsvv-pad-dialogs.js'),accessibility);
 patch('dev.html','<script defer src="js/ui/pkmsvv-pad-flow.js"></script>',
  '<script defer src="js/ui/pkmsvv-pad-flow.js"></script>\\n<script defer src="js/ui/pkmsvv-pad-dialogs.js"></script>');
+fs.appendFileSync(path.join(dir,'css','style.css'),String.raw`
 /* Show the active controller selection in custom modal options. */
 .pkmsvv-evo-option.pad-focus,.pkmsvv-evo-skip.pad-focus,
-#pull-close.pad-focus,#dex-play-now.pad-focus,\n.pkmsvv-memory-chooser .pad-focus,.pkmsvv-pc-overlay .pad-focus,\n.pkmsvv-champion-overlay .pad-focus,.pkmsvv-support-overlay .pad-focus,\n.pkmsvv-mega-phase1-overlay .pad-focus,.pkmsvv-berry-overlay .pad-focus{
+#pull-close.pad-focus,#dex-play-now.pad-focus,
+.pkmsvv-memory-chooser .pad-focus,.pkmsvv-pc-overlay .pad-focus,
+.pkmsvv-champion-overlay .pad-focus,.pkmsvv-support-overlay .pad-focus,
+.pkmsvv-mega-phase1-overlay .pad-focus,.pkmsvv-berry-overlay .pad-focus{
  outline:3px solid #ffe17d!important;outline-offset:3px;
  box-shadow:0 0 0 4px rgba(12,22,44,.8),0 0 17px rgba(255,221,102,.55)!important;
 }
