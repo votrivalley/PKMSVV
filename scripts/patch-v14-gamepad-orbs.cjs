@@ -17,7 +17,7 @@ patch('dev.html',
 patch('js/core/gamepad.js',
  "      if (hit(BT.X)) G.Input.virtual('keyf');",
  "      const orbital=G.PKMSVVPadOrb.bindings();\n"+
- "      const cards=!!(G.Coop?.active&&(G.Royale?.active||G.EggRush?.active)&&G.UI.isOpen('scr-levelup'));\n"+
+ "      const cards=!!(G.UI.isOpen('scr-levelup')&&((G.Coop?.active&&(G.Royale?.active||G.EggRush?.active))||G.PKMSVVChampionArena?.active||G.PKMSVVArenaSolo?.active));\n"+
  "      if (!cards&&hit(orbital.dash)) G.Input.virtual('keyf');\n"+
  "      if (!cards&&hit(orbital.use)) G.Input.virtual('pkmsvv-orb-use');\n"+
  "      if (hit(orbital.mega)) G.Input.virtual('pkmsvv-mega');");
