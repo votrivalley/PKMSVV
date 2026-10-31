@@ -86,19 +86,12 @@ test('Solo Berry choice occurs before enemy spawning, lasts 4 seconds, consumes 
  assert.deepEqual([...h.G.Game.player._pkmsvvBerry.ids],['liechi']);
  assert.equal(b.chapterProgress(),1);
 });
-test('Berry Rescue has moving six-tile targets, three chances, and awards exactly one inventory item',()=>{
- const h=interactiveHarness(),b=h.berry;
- assert.equal(b.rescue(),true);
- const before=b.TYPES.reduce((v,t)=>v+b.count(t.id),0);
- for(let turn=0;turn<5;turn++){
-  const good=h.elements.filter(e=>e.className.includes('pkmsvv-berry-target')&&!e.used).at(-1);
-  assert.ok(good,'berry target must appear in each wave');
-  good.used=true;good.onclick();
- }
- const after=b.TYPES.reduce((v,t)=>v+b.count(t.id),0);
- assert.equal(after-before,1);
- assert.equal(b.data().rescueWins,1);
- assert.equal(h.intervals.size,0,'successful challenge clears countdown interval');
+test('Rescue Berry enters Co-op room mode rather than awarding via click-to-win',()=>{
+ const h=interactiveHarness();let chosen=null;
+ h.G.MultiplayerUI={open(){chosen='fallback'}};
+ assert.equal(h.berry.rescue(),true);
+ assert.equal(chosen,'fallback');
+ assert.equal(h.berry.data().rescueWins,0);
 });
 test('Berry chapter story has two uploaded 16:9 illustrations and exactly five-type requirement',()=>{
  const story=fs.readFileSync(path.join(root,'src/pkmsvv-story.js'),'utf8');
