@@ -43,7 +43,7 @@ G.PKMSVVWiki=(()=>{
   .pkmsvv-pc-berry-row strong{color:#ffdf8c;display:block}
   .pkmsvv-pc-berry-row span{font-size:12px;line-height:1.5;color:#e4f5f2}
   .pkmsvv-pc-learn{margin-top:9px;border:1px solid #80bbb2;background:#204e55;border-radius:9px;padding:10px}
-  .pkmsvv-pc-learn summary{cursor:pointer;color:#ffe3a3;font-weight:bold}
+  .pkmsvv-pc-learn button{cursor:pointer;color:#ffe3a3;font-weight:bold;border:0;background:transparent;text-align:left;width:100%;padding:5px}
   .pkmsvv-pc-learn p{color:#d8efeb;font-size:13px;line-height:1.65}
   .pkmsvv-pc-card .pkmsvv-pc-action{margin-top:auto;border-radius:8px;background:#ffdc68;
     color:#103841;padding:7px 12px;font-weight:900;font-size:13px}
@@ -92,7 +92,7 @@ G.PKMSVVWiki=(()=>{
   const head=document.createElement('header');head.className='pkmsvv-pc-header';
   const h=document.createElement('h2');h.textContent=tr('🍓 CẨM NANG BERRY','🍓 BERRY GUIDE');
   const back=document.createElement('button');back.type='button';back.className='pkmsvv-pc-close';
-  back.textContent=tr('← Quay lại PC','← Back to PC');back.onclick=open;
+  back.textContent=tr('← Quay lại PC','← Back to PC');back.setAttribute('data-back','');back.onclick=open;
   head.append(h,back);box.append(head);
   const intro=document.createElement('p');intro.className='pkmsvv-pc-hint';
   intro.textContent=tr('Berry dùng một lần, tối đa 2 quả mỗi trận; chọn trong 4 giây trước trận. Chương 6 cần sử dụng 5 loại khác nhau.',
@@ -124,7 +124,7 @@ G.PKMSVVWiki=(()=>{
   const box=document.createElement('section');box.className='pkmsvv-pc-panel';
   const head=document.createElement('header');head.className='pkmsvv-pc-header';
   const title=document.createElement('h2');title.textContent='💻 PC · POKÉMON CHUYỂN SINH';
-  const x=document.createElement('button');x.type='button';x.className='pkmsvv-pc-close';x.textContent=tr('✕ Đóng','✕ Close');x.onclick=close;
+  const x=document.createElement('button');x.type='button';x.className='pkmsvv-pc-close';x.textContent=tr('✕ Đóng','✕ Close');x.setAttribute('data-back','');x.onclick=close;
   head.append(title,x);box.append(head);
   const hint=document.createElement('p');hint.className='pkmsvv-pc-hint';
   hint.textContent=tr('Chọn một mục để vào thẳng tính năng, không cần mở Wiki trung gian.','Select a feature directly.');box.append(hint);
@@ -150,10 +150,12 @@ G.PKMSVVWiki=(()=>{
        'Level skills during runs and replace an old skill when your slots fill. Permanent upgrades remain intact.')]
   ];
   for(const [name,description] of articles){
-   const detail=document.createElement('details');detail.className='pkmsvv-pc-learn';
-   const summary=document.createElement('summary');summary.textContent=name;
-   const p=document.createElement('p');p.textContent=description;
-   detail.append(summary,p);help.append(detail);
+   const detail=document.createElement('div');detail.className='pkmsvv-pc-learn';
+   const toggle=document.createElement('button');toggle.type='button';toggle.textContent='▸ '+name;
+   toggle.setAttribute('aria-expanded','false');
+   const p=document.createElement('p');p.textContent=description;p.hidden=true;
+   toggle.onclick=()=>{p.hidden=!p.hidden;toggle.textContent=(p.hidden?'▸ ':'▾ ')+name;toggle.setAttribute('aria-expanded',String(!p.hidden));};
+   detail.append(toggle,p);help.append(detail);
   }
   box.append(help);
   overlay.append(box);document.body.append(overlay);
