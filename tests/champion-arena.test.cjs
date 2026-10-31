@@ -44,6 +44,20 @@ function setup(){
  vm.runInNewContext(read('src/pkmsvv-champion-arena.js'),{G,document,Math});
  return {G,save,lib:G.PKMSVVChampionArena,document,player,get:id=>elements.get(id)};
 }
+test('Ten distinct regional map rules and post-campaign random map gate',()=>{
+ const {lib,save}=setup();
+ assert.equal(lib.REGION_THEMES.length,10);
+ assert.equal(new Set(lib.REGION_THEMES).size,10);
+ for(const theme of lib.REGION_THEMES){
+  const effect=lib.MAP_EFFECTS[theme];
+  assert.ok(effect?.name&&effect.hint,theme);
+  assert.ok(Number.isFinite(effect.atk)&&Number.isFinite(effect.spd),theme);
+ }
+ assert.equal(lib.storyCompleted(save),false);
+ const book=lib.ledger(save);
+ for(const [region] of lib.REGIONS)book.seals[region]=true;
+ assert.equal(lib.storyCompleted(save),true);
+});
 test('Ten Champions, sixteen entrants, 5m opener and 2m30 later preparation',()=>{
  const {lib}=setup();
  assert.equal(lib.REGIONS.length,10);
