@@ -6,7 +6,7 @@ function harness(){
  let last=null,events=[],grants=[];
  const G={
   I18n:{lang:'vi'},
-  Enemies:{BOSSES:[{dex:25,name:'Pikachu',hp:1000}],bossScale(){return {hp:1,dmg:1,spd:1}}},
+  Enemies:{BOSSES:[{dex:25,name:'Pikachu',hp:1000},{dex:6,name:'Charizard',hp:1800}],bossScale(){return {hp:1,dmg:1,spd:1}}},
   Enemy:class {constructor(def,x,y,sc,boss){Object.assign(this,{def,x,y,sc,boss,hp:1000,maxHp:1000});}},
   EnemyMgr:{all(){return this.enemies||[]},add(e){(this.enemies||=[]).push(e)}},
   Coop:{isHost:true,active:true,broadcast(e){events.push(e)}},
