@@ -10,6 +10,7 @@ function harness(){
   Enemy:class {constructor(def,x,y,sc,boss){Object.assign(this,{def,x,y,sc,boss,hp:1000,maxHp:1000});}},
   EnemyMgr:{all(){return this.enemies||[]},add(e){(this.enemies||=[]).push(e)}},
   Coop:{isHost:true,active:true,broadcast(e){events.push(e)}},
+  BIOME_MUSIC:['forest','cave','volcano'],Audio:{music(name){this.last=name;}},
   UI:{toast(){}},Spawner:{say(){}},PKMSVVBerry:{TYPES:[{id:'oran'}],grant(id){grants.push(id);return true;}},
  };
  vm.runInNewContext(read('src/pkmsvv-berry-rescue.js'),{G,Math,Image:undefined,Number});
@@ -32,6 +33,14 @@ test('Three defended Berry trees, four-player Co-op mode and exactly 8 minutes',
  h.G.EnemyMgr.enemies[1].dead=true;
  h.step(.5,480.5);assert.equal(h.game.active,false);
  assert.equal(h.result().success,true);assert.equal(h.result().trees.length,3);
+});
+test('Berry soundtrack matches Egg Rush forest and releases audio override after completion',()=>{
+ const h=harness();h.game.begin({mode:'berry'});
+ h.G.Audio.music('boss');
+ assert.equal(h.G.Audio.last,'forest');
+ h.game.begin({mode:'coop'});
+ h.G.Audio.music('boss');
+ assert.equal(h.G.Audio.last,'boss');
 });
 test('Berry mode HP tiers, easy rewards and enemy speed escalations',()=>{
  const h=harness();
