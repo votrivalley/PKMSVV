@@ -34,7 +34,9 @@ function setup(){
    arenaUnlocked(){return !!save.pkmsvvChapter6Seen&&['coop','royale','eggrush'].every(m=>save.pkmsvvMultiplayerDone?.[m]);},
    allMultiplayerCompleted(){return ['coop','royale','eggrush'].every(m=>save.pkmsvvMultiplayerDone?.[m]);},
    multiplayerProgress(){return {count:3,missing:[]};},
-   chapter7(){save.pkmsvvChapter7Seen=true;save.pkmsvvChapter7Pending=false;return true;}
+   chapter7(){save.pkmsvvChapter7Seen=true;save.pkmsvvChapter7Pending=false;return true;},
+   onChampionSeal(){save.pkmsvvChapter7Seen=true;return true;},
+   tenChampionCompleted(){return Object.values(save.arenas?.pkmChampion?.seals||{}).filter(Boolean).length===10;}
   },
   Enemy:class{constructor(def){this.dex=def.dex;this.dead=false;this.boss=true;this.maxHp=def.hp;this.hp=def.hp}},
   EnemyMgr:{add(e){this.last=e;return e},clear(){this.clears=(this.clears||0)+1}},
@@ -80,7 +82,7 @@ test('Ten Champions, sixteen entrants, 4m opener and 1m30 later preparation',()=
  assert.equal(draw.filter(p=>p.tier==='elite').length,2,'at least 2 strong AI guaranteed');
  assert.equal(new Set(draw.map(p=>p.id)).size,16);
 });
-test('Champion starts with 3-minute farm and crowns champion after exactly 4 real fights',()=>{
+test('Champion starts with four-minute opener and first Crown Seal unlocks Mega after four real fights',()=>{
  const h=setup(),{lib,G,save}=h;
  assert.equal(lib.start(),true);assert.equal(lib.stage,'prep');
  for(let round=0;round<4;round++){
