@@ -5,6 +5,11 @@ on:
     branches: [feature/lan-local-beta]
     paths:
       - '.github/workflows/package-pc-fast-compact.yml'
+      - 'src/pkmsvv-mega-phase3.js'
+      - 'src/pkmsvv-berry-rescue.js'
+      - 'scripts/patch-berry*.cjs'
+      - 'tests/mega-phase3.test.cjs'
+      - 'tests/berry-rescue.test.cjs'
 permissions:
   contents: read
 concurrency:
