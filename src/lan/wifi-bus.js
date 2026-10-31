@@ -42,7 +42,7 @@ if(new URLSearchParams(location.search).get('pkmsvvWifi')==='1'){
    if(action==='list')return [];
    if(action==='create'){
     if(who!==uid||room||links.size)throw Error('Rời phòng hoặc hủy ghép nối trước khi tạo phòng khác');
-    owner=true;room={id:'wifi-'+random(12),host:uid,mode:['coop','royale','eggrush'].includes(data.mode)?data.mode:'coop',visibility:'private',open:true,
+    owner=true;room={id:'wifi-'+random(12),host:uid,mode:['coop','royale','eggrush','berry','berryeasy'].includes(data.mode)?data.mode:'coop',visibility:'private',open:true,
      members:[{uid,name,dex:dex(data.dex),shiny:!!data.shiny,power:power(data.power)}]};publish();return snapshot();
    }
    if(action==='join'){
