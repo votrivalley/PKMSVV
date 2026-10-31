@@ -38,3 +38,15 @@
 #pkmsvv-unified-coop .pkmsvv-coop-help img{width:144px;height:144px;image-rendering:pixelated;border:5px solid #fff;border-radius:8px}
 @media(max-width:600px){#pkmsvv-coop-modes{grid-template-columns:1fr;gap:10px}#pkmsvv-coop-modes .pkmsvv-mode-card{min-height:132px;flex-direction:row;text-align:left;padding:10px}#pkmsvv-coop-modes .pkmsvv-mode-art{width:92px;height:100px}#pkmsvv-coop-modes canvas{width:90px;height:96px}#pkmsvv-coop-actions{gap:6px}#pkmsvv-coop-actions button{padding:8px 5px;font-size:13px}}
 @media(max-height:480px) and (min-width:601px){#pkmsvv-unified-coop .pkmsvv-coop-panel{max-height:96dvh;padding:10px 14px}#pkmsvv-unified-coop header{margin-bottom:6px}#pkmsvv-unified-coop b{margin:7px 0}#pkmsvv-coop-modes .pkmsvv-mode-card{min-height:148px;flex-direction:row;text-align:left;padding:8px;gap:6px}#pkmsvv-coop-modes .pkmsvv-mode-art{width:64px;height:80px}#pkmsvv-coop-modes canvas{width:62px;height:76px}#pkmsvv-coop-modes .pkmsvv-mode-description{font-size:11px}#pkmsvv-coop-modes strong{font-size:17px}}
+
+
+/* Rescue Berry is ONE Co-op mode card; pick difficulty only after selection. */
+#pkmsvv-coop-modes .pkmsvv-mode-card.berry{background:linear-gradient(160deg,#e8faec,#c9f1dc);border-color:#71c19b}
+#pkmsvv-coop-modes .berry .pkmsvv-mode-art{background:radial-gradient(circle,#bff3d2,#5dbe96);border-color:#5ca682}
+#pkmsvv-coop-detail .pkmsvv-berry-difficulty{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;
+ padding:12px;background:rgba(10,42,53,.88);border:1px solid #9dd8bf;border-radius:11px}
+#pkmsvv-coop-detail .pkmsvv-berry-difficulty strong{grid-column:1/-1;color:#fff0b1;font-size:15px}
+#pkmsvv-coop-detail .pkmsvv-berry-difficulty button{min-width:0;min-height:66px;padding:11px;
+ background:#d8f4eb;color:#163e49;text-align:left;white-space:normal;line-height:1.45}
+#pkmsvv-coop-detail .pkmsvv-berry-difficulty button.selected{background:#ffdf7b;color:#213541;border-color:#ab7d22;box-shadow:0 0 0 2px #ffe8ad}
+@media(max-width:500px){#pkmsvv-coop-detail .pkmsvv-berry-difficulty{grid-template-columns:1fr}}
