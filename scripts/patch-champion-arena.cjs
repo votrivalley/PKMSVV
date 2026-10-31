@@ -30,13 +30,17 @@ replace('js/core/db.js',
  '      pkmsvvChapter3Seen:false,pkmsvvChapter3Pending:false,pkmsvvEggSlot3:false,',
  '      pkmsvvChapter3Seen:false,pkmsvvChapter3Pending:false,pkmsvvEggSlot3:false,\n'+
  '      pkmsvvChapter5Seen:false,pkmsvvChapter6Seen:false,\n'+
- '      pkmsvvChapter7Seen:false,pkmsvvMultiplayerDone:{},arenaGacha:{points:0,pity:0,pulls:0,championPaid:{}},');
+ '      pkmsvvChapter7Seen:false,pkmsvvChapter8Pending:false,pkmsvvChapter8IntroSeen:false,\n'+
+ '      pkmsvvChapter8TenChampionDone:false,pkmsvvChapter9MegaSeen:false,\n'+
+ '      pkmsvvMultiplayerDone:{},arenaGacha:{points:0,pity:0,pulls:0,championPaid:{}},');
 replace('js/core/db.js',
  '    r.pkmsvvEggSlot3=!!(r.pkmsvvEggSlot3||older.pkmsvvEggSlot3);',
  '    r.pkmsvvEggSlot3=!!(r.pkmsvvEggSlot3||older.pkmsvvEggSlot3);\n'+
  '    r.pkmsvvChapter5Seen=!!(r.pkmsvvChapter5Seen||older.pkmsvvChapter5Seen);\n'+
  '    r.pkmsvvChapter6Seen=!!(r.pkmsvvChapter6Seen||older.pkmsvvChapter6Seen);\n'+
  '    r.pkmsvvChapter7Seen=!!(r.pkmsvvChapter7Seen||older.pkmsvvChapter7Seen);\n'+
+ '    for(const k of ["pkmsvvChapter8Pending","pkmsvvChapter8IntroSeen","pkmsvvChapter8TenChampionDone","pkmsvvChapter9MegaSeen"]){\n'+
+ '      r[k]=!!(r[k]||older[k]);}\n'+
  '    r.arenaGacha=r.arenaGacha||{points:0,pity:0,pulls:0,championPaid:{}};\n'+
  '    const oldAG=older.arenaGacha||{};\n'+
  '    r.arenaGacha.championPaid={...(oldAG.championPaid||{}),...(r.arenaGacha.championPaid||{})};\n'+
