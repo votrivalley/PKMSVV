@@ -159,17 +159,17 @@ G.PKMSVVBerry=(()=>{
   if(ids.includes('starf'))pl._pkmsvvBerry.starf=['liechi','salac','ganlon','leppa'][Math.floor(Math.random()*4)];
   G.UI?.toast?.(tr('🍓 Berry kích hoạt: ','🍓 Active Berries: ')+ids.map(id=>byId[id]?.name).join(' + '),2200);
  }
- function finishChoice(ids,cb,mode){
+ function finishChoice(ids,cb,mode,preRun=false){
   const d=data(),picked=[];
   if(d)for(const id of ids.slice(0,2))if(byId[id]&&count(id)>0&&!picked.includes(id)){
    d.bag[id]--;picked.push(id);
   }
   if(d){d.last=picked;markUsed(picked);}
   const pl=G.Game?.player;
-  if(pl){apply(pl,picked,mode);pl.invuln=Math.max(pl.invuln||0,1.5);}
+  if(pl&&!preRun){apply(pl,picked,mode);pl.invuln=Math.max(pl.invuln||0,1.5);}
   cb?.(picked);
  }
- function offer({onDone,mode}={}){
+ function offer({onDone,mode,preRun=false}={}){
   if(choiceOpen){onDone?.([]);return false;}
   const d=data();
   if(!d||!TYPES.some(t=>count(t.id)>0)){onDone?.([]);return false;}
@@ -181,7 +181,7 @@ G.PKMSVVBerry=(()=>{
   const grid=document.createElement('div');grid.className='pkmsvv-berry-grid';panel.append(grid);
   const done=()=>{
    if(token!==turn||!choiceOpen)return;choiceOpen=false;clearInterval(chooseTimer);chooseTimer=null;
-   clearModal();finishChoice(picked,onDone,mode||'pve');
+   clearModal();finishChoice(picked,onDone,mode||'pve',preRun);
   };
   for(const type of TYPES.filter(t=>count(t.id)>0)){
    const b=button('🍓 '+type.name+' ×'+count(type.id)+' · '+type.desc[vi()?0:1],()=>{
@@ -194,7 +194,7 @@ G.PKMSVVBerry=(()=>{
   panel.append(button(tr('Không dùng Berry','No Berry'),()=>{picked.length=0;done();},'ghost'));
   chooseTimer=setInterval(()=>{if(token!==turn)return;seconds--;clock.textContent='0'+seconds+'s';if(seconds<=0)done();},1000);
   // During the four-second selection, prevent unavoidable early deaths.
-  const pl=G.Game?.player;if(pl)pl.invuln=Math.max(pl.invuln||0,5);
+  const pl=!preRun&&G.Game?.player;if(pl)pl.invuln=Math.max(pl.invuln||0,5);
   return true;
  }
  function ratio(pl,key,val){
@@ -254,9 +254,22 @@ G.PKMSVVBerry=(()=>{
   if(G.Game?.startRun&&!G.Game._pkmsvvBerryStartWrapped){
    const start=G.Game.startRun;G.Game._pkmsvvBerryStartWrapped=true;
    G.Game.startRun=function(...args){
-    const result=start.apply(this,args);
-    // Champion/solo duel prompts again before the arena duel itself.
-    offer({mode:G.Coop?.active&&(G.Royale?.active||G.EggRush?.active)?'pvp':'pve'});
+    const ctx=this;
+    // Solo starts AFTER the 4-second pre-match choice, before monsters spawn.
+    // Champion's launch must initialize its farm arena synchronously; the
+    // tournament separately prompts again before each actual duel.
+    const champion=!!G.PKMSVVChampionArena?.active;
+    const online=!!args[0]||!!G.Coop?.active;
+    const hasBerry=TYPES.some(t=>count(t.id)>0);
+    if(!champion&&!online&&hasBerry){
+     offer({preRun:true,mode:'pve',onDone:ids=>{
+      start.apply(ctx,args);
+      const pl=G.Game?.player;if(pl)apply(pl,ids,'pve');
+     }});
+     return;
+    }
+    const result=start.apply(ctx,args);
+    if(hasBerry)offer({mode:online?'pvp':'pve'});
     return result;
    };
   }
