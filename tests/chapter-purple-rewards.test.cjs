@@ -93,25 +93,31 @@ test('Production game scripts install claim defaults, merge claim flags and main
  assert.match(source,/pkmsvvChapter3Seen=true;[\s\S]{0,180}syncChapterPurpleRewards\(\)/);
 });
 
-test('Renumbering Chapters 1–4 preserves old flags; new Chapters 5/6 each add exactly one purple ticket',()=>{
+test('Chapter 5 pays only for the two mandatory modes, Berry for five types, Arena for Chapter 7',()=>{
  const save={pkmsvvStorySeen:true,partner:25,starter:25,pkmsvvChapter1Seen:true,
   pkmsvvChapter2Seen:true,pkmsvvChapter3Seen:true,tickets:{t1:4,t10:0}};
  const h=setup(save);
  assert.equal(h.claim(),4);
  save.pkmsvvChapter5Seen=true;
- assert.equal(h.claim(),1);
+ assert.equal(h.claim(),0,'Chapter 5 introduction alone does not complete its two modes');
+ save.pkmsvvMultiplayerDone={coop:true,eggrush:true};
+ assert.equal(h.claim(),0,'optional Egg Rush cannot replace Battle Royale');
+ save.pkmsvvMultiplayerDone.royale=true;
+ assert.equal(h.claim(),1,'two required modes finish Chapter 5');
+ save.pkmsvvBerryChapterDone=true;
+ assert.equal(h.claim(),1,'five different Berry types complete Chapter 6');
  save.pkmsvvChapter6Seen=true;
- assert.equal(h.claim(),1);
+ assert.equal(h.claim(),1,'Arena scene completes Chapter 7');
  assert.equal(h.claim(),0);
- assert.equal(save.tickets.t10,6);
+ assert.equal(save.tickets.t10,7);
  assert.equal(save.tickets.t1,4);
- for(const id of [0,1,2,3,4,5])assert.equal(save.pkmsvvChapterPurpleRewards[id],true);
+ for(const id of [0,1,2,3,4,5,7])assert.equal(save.pkmsvvChapterPurpleRewards[id],true);
 });
 
 test('Chapter 7 pays one purple x10 ticket once and preserves old six slots',()=>{
  const save={pkmsvvStorySeen:true,starter:25,partner:25,pkmsvvChapter1Seen:true,
  pkmsvvChapter2Seen:true,pkmsvvChapter3Seen:true,pkmsvvChapter5Seen:true,
- pkmsvvChapter6Seen:true,pkmsvvChapter7Seen:true,pkmsvvChapter9MegaDone:true,tickets:{t1:3,t10:4}};
+ pkmsvvMultiplayerDone:{coop:true,royale:true},pkmsvvChapter6Seen:true,pkmsvvChapter7Seen:true,pkmsvvChapter9MegaDone:true,tickets:{t1:3,t10:4}};
  const h=setup(save);
  assert.equal(h.claim(),7);
  assert.equal(save.tickets.t10,11);
