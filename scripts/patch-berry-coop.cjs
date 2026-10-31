@@ -24,10 +24,10 @@ patch('js/ui/social-ui.js',
 // The host owns each Berry tree's HP. Guests get authoritative half-second
 // updates via the already running Co-op host event stream.
 patch('js/net/coop.js',
- "      case 'jd': case 'jk': G.Judgment.onEvent(ev); break;",
+ "      case 'jd': case 'jk': case 'jb': G.Judgment.onEvent(ev); break;",
  "      case 'br': G.PKMSVVBerryRescue?.onEvent?.(ev); break;\n"+
  "      case 'mg': G.PKMSVVMegaPhase3?.remoteMega?.(ev[1],Number(ev[2])||0); break;\n"+
- "      case 'jd': case 'jk': G.Judgment.onEvent(ev); break;");
+ "      case 'jd': case 'jk': case 'jb': G.Judgment.onEvent(ev); break;");
 patch('js/net/coop.js',
  "        case 'pb':",
  "        case 'mg': {\n"+
