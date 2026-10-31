@@ -62,7 +62,9 @@ test('Chapter 8 introduces Champion, one seal unlocks Mega, first actual Mega co
  assert.equal(api.tenChampionCompleted(save),false);
  assert.equal(api.firstMegaUnlocked(save),false);
  G.PKMSVV_MEGA_CATALOG=[{dex:6,key:'charizardmegax',artReady:true}];
- G.PKMSVVMegaPhase3={isBattleReady:f=>f.key==='charizardmegax'};
+ G.PKMSVVMegaPhase3={isUnlocked:()=>true,isBattleReady:()=>false};
+ assert.equal(api.onMegaUnlocked(),false,'owning a stone without battle-ready sprite is not a completed Mega');
+ G.PKMSVVMegaPhase3.isBattleReady=f=>f.key==='charizardmegax';
  assert.equal(api.onMegaUnlocked(),true);
  assert.equal(save.pkmsvvChapter9MegaDone,true);
  assert.equal(api.onMegaUnlocked(),false,'first Mega milestone pays only once');
