@@ -1,7 +1,7 @@
 'use strict';
 /* Phase 3 — first 10 Champion roster and scarce Mega Stones. Never fake
  * tournament wins; only battle forms with authentic local sprite sheets.
- * Not enabled in LAN, Royale or Egg Rush until Host replication exists.
+ * Co-op Mega transforms propagate via Host-owned network events.
  */
 G.PKMSVVMegaPhase3=(()=>{
  const CHAMPIONS=Object.freeze([
@@ -225,7 +225,7 @@ G.PKMSVVMegaPhase3=(()=>{
  // Called from the pinned enemy.hurt patch; never credit invulnerable,
  // remote or competitive targets, and never alter their combat outcome.
  function onEnemyHurt(enemy,amount){
-  if(enemy&&!enemy.dead&&!enemy.arceus&&
+  if(enemy&&!enemy.dead&&!enemy.remote&&!enemy.arceus&&
    Number.isFinite(amount)&&amount>0)addEnergy(player(),HIT_ENERGY);
  }
  const update=G.Player?.prototype?.update;
