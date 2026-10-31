@@ -61,7 +61,7 @@ patch('js/game.js',
  '  const coopApi = {',
  [
  "  // Private card queue: the simulation always stays in 'playing'.",
- "  const pkmsvvCompetitive=()=>!!(G.Coop.active&&(G.Royale?.active||G.EggRush?.active));",
+ "  const pkmsvvCompetitive=()=>!!((G.Coop?.active&&(G.Royale?.active||G.EggRush?.active))||G.PKMSVVChampionArena?.active||G.PKMSVVArenaSolo?.active);",
  '  let individualLevelQueue=[],individualLevelOpen=false;',
  '  function pkmsvvNextPersonalLevel(){',
  "    if(!pkmsvvCompetitive()||individualLevelOpen||!individualLevelQueue.length||!pl||pl.dead||state==='over')return;",
@@ -119,10 +119,10 @@ patch('js/game.js',
 // match simulation, touch joystick and keyboard remain live while choosing.
 patch('js/core/gamepad.js',
  "    return G.Game.state !== 'playing' || !!topScreen();",
- "    return G.Game.state !== 'playing' || (!!topScreen() && !(G.Coop?.active && (G.Royale?.active||G.EggRush?.active) && G.UI.isOpen('scr-levelup')));");
+ "    return G.Game.state !== 'playing' || (!!topScreen() && !(((G.Coop?.active&&(G.Royale?.active||G.EggRush?.active))||G.PKMSVVChampionArena?.active||G.PKMSVVArenaSolo?.active) && G.UI.isOpen('scr-levelup')));");
 patch('js/core/gamepad.js',
  "      if (hit(G.PKMSVVPadOrb.bindings().confirm)) G.Input.virtual('space');",
- "      if(G.Coop?.active && (G.Royale?.active||G.EggRush?.active) && G.UI.isOpen('scr-levelup')){\n"+
+ "      if(((G.Coop?.active&&(G.Royale?.active||G.EggRush?.active))||G.PKMSVVChampionArena?.active||G.PKMSVVArenaSolo?.active) && G.UI.isOpen('scr-levelup')){\n"+
  "        if(hit(G.PKMSVVPadOrb.bindings().confirm))G.RunUI.pick(0);\n"+
  "        if(hit(2))G.RunUI.pick(1);if(hit(3))G.RunUI.pick(2);\n"+
  "      }else if (hit(G.PKMSVVPadOrb.bindings().confirm)) G.Input.virtual('space');");
@@ -166,4 +166,4 @@ body.pkmsvv-competitive-pick #scr-levelup #lvl-reroll{min-height:27px;font-size:
  }
 }
 `+'\n');
-console.log('PKMSVV competitive: personal cards, no shared pause; Co-op shared pause preserved.');
+console.log('PKMSVV competitive: personal cards, no shared pause; Co-op shared pause preserved; Arena Solo and Champion are independent/non-pausing.');
