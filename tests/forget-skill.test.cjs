@@ -3,10 +3,10 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const script=fs.readFileSync(path.join(__dirname,'..','src/pkmsvv-forget-skill.js'),'utf8');
 function setup(){
  let original={offers:0};
- const G={Game:{state:'playing',player:null},LevelUp:{offer(){original.offers++;return [
+ const G={DB:{upgradesOf(){return {forget:1};}},Game:{state:'playing',player:null},LevelUp:{offer(){original.offers++;return [
  {key:'stat:a',type:'stat'},{key:'stat:b',type:'stat'},{key:'stat:c',type:'stat'}];}},
  UI:{toast(){}},T:s=>s};
- const p={maxMoves:8,slots:[],moves:[],active:0,dead:false};
+ const p={dex:6,maxMoves:8,slots:[],moves:[],active:0,dead:false};
  for(let i=0;i<8;i++){const m={id:'move'+i,name:'Move '+i,lvl:2};p.moves.push(m);p.slots.push([m]);}
  G.Game.player=p;
  const el=()=>({children:[],append(...a){this.children.push(...a)},setAttribute(){},remove(){this.removed=true},querySelector(){return null}});
