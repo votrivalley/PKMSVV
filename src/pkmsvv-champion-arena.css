@@ -8,6 +8,11 @@
  box-shadow:0 18px 58px #001e2e77}
 .pkmsvv-champion-heading{display:flex;gap:10px;align-items:center;justify-content:space-between}
 .pkmsvv-champion-heading h2{margin:0;color:#173849;font-size:clamp(20px,3vw,28px)}
+.pkmsvv-champion-heading-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.pkmsvv-champion-heading-actions #pkmsvv-champion-sky{font-size:12px;padding:9px 12px;max-width:min(50vw,250px);white-space:normal}
+.pkmsvv-champion-heading-actions #pkmsvv-champion-sky[hidden]{display:none!important}
+.pkmsvv-champion-heading-actions #pkmsvv-champion-close{min-width:42px;height:42px;flex-shrink:0}
+@media(max-width:560px){.pkmsvv-champion-heading{align-items:flex-start}.pkmsvv-champion-heading h2{max-width:47%}.pkmsvv-champion-heading-actions #pkmsvv-champion-sky{font-size:11px;padding:7px}}
 #pkmsvv-champion-info{font-size:13px;color:#335767;line-height:1.6;margin:12px 0}
 .pkmsvv-champion-regions{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin:10px 0}
 .pkmsvv-champion-region{min-width:0;white-space:normal;border:2px solid #a7cac5;background:#e2f2ee;
