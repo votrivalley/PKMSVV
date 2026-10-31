@@ -20,6 +20,8 @@ async function main(){
      G.LobbyUI.open();
     },mode);
     await page.click('#lobby-start');await page.waitForFunction(()=>G.Game.state==='playing');
+    // The four-second Berry selector is a prematch stage, not a stalled skill prompt.
+    await page.waitForFunction(()=>!G.PKMSVVBerry?.choosing,null,{timeout:10000});
     assert.equal(await page.evaluate(()=>G.Coop.puppets().filter(p=>p.lanBot&&p.moves.length).length),3);
     // Royale v1.5.31 immediately ends when only one trainer remains.
     // Leave one bot alive in that mode so mode-specific skill picking can be tested
