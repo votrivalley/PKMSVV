@@ -8,7 +8,7 @@
 #scr-multiplayer.pkmsvv-lan-compact .pkmsvv-mp-box h3{margin:13px 0 8px!important}
 #scr-multiplayer.pkmsvv-lan-compact .pkmsvv-mp-box>p.sub{margin:4px 0 8px!important;font-size:12px}
 #scr-multiplayer.pkmsvv-lan-compact .pkmsvv-mode-grid{
- display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;
  gap:9px!important;margin:7px 0 12px!important;
 }
 #scr-multiplayer.pkmsvv-lan-compact .pkmsvv-mode-card,
