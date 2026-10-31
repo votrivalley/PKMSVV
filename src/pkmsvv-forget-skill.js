@@ -4,7 +4,7 @@
 G.PKMSVVForgetSkill=(()=>{
  'use strict';
  function full(p){return !!(p&&!p.dead&&!p.remote&&!p.lanBot&&p===G.Game?.player&&
-   G.DB?.upgradesOf?.(p.dex)?.forget>0&&p.maxMoves>=8&&p.slots?.length>=p.maxMoves&&p.moves?.length>=2&&!p._pkmsvvForgetUsed);}
+   G.DB?.upgradesOf?.(p.dex)?.forget>0&&p.maxMoves>=2&&p.slots?.length>=p.maxMoves&&p.moves?.length>=2&&!p._pkmsvvForgetUsed);}
  function options(p,random=Math.random){
   const a=(p?.moves||[]).slice();
   for(let i=a.length-1;i>0;i--){const j=Math.max(0,Math.min(i,Math.floor(random()*(i+1))));[a[i],a[j]]=[a[j],a[i]];}
