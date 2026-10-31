@@ -77,6 +77,9 @@ patch('js/game.js',
  "    G.Events.update(dt, all, time);",
  "    if(!G.PKMSVVBerryRescue?.active)G.Events.update(dt, all, time);");
 patch('js/game.js',
+ "    G.PKMSVVEggs.update(dt,pl,time,coop);",
+ "    if(!G.PKMSVVBerryRescue?.active)G.PKMSVVEggs.update(dt,pl,time,coop);");
+patch('js/game.js',
  "    G.Interact.update(dt, pl);",
  "    if(!G.PKMSVVBerryRescue?.active)G.Interact.update(dt, pl);");
 patch('js/game.js',
