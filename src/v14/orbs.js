@@ -1,5 +1,5 @@
 /* Pokémon Sống Sót v1.4 — Mystery Orbs FIFO
- * Eight learned skills in this run unlock Orb collection, independently per player.
+ * Mystery Orbs are collectible from the beginning of EVERY match for every player.
  * 10-orb queue, consume in pickup order, 5s between uses, never saved to Cloud.
  * All enemy control effects are weaker on bosses; Arceus always immune.
  */
@@ -31,14 +31,15 @@ G.Orbs=(()=>{
   c.zoomTo=mult;
  }
  const queue=p=>p.orbs||(p.orbs=[]);
- const ready=p=>!!(p&&p.slots&&p.maxMoves>=8&&p.slots.length>=8);
- const eligible=p=>ready(p)||!!(p&&p.net&&p.net.orbReady===1);
+ const hasEightSkills=p=>!!(p&&p.slots&&p.maxMoves>=8&&p.slots.length>=8);
+ const ready=p=>!!p; // Orb collection/use no longer requires maxed-out moves.
+ const eligible=p=>!!p;
  function canTake(p,id){return !!BY[id]&&eligible(p)&&queue(p).length<MAX;}
  function add(p,id){if(!canTake(p,id))return false;queue(p).push(id);return true;}
  function take(p,id){const q=queue(p);if(q[0]!==id)return false;q.shift();return true;}
  const roll=()=>G.U.pick(LIST).id;
  function notifyUnlock(p){
-  if(!ready(p)||unlockedRun)return;
+  if(!hasEightSkills(p)||unlockedRun)return;
   unlockedRun=true;
   if(G.DB&&G.DB.save){
    const stats=G.DB.save.stats||(G.DB.save.stats={});
@@ -46,7 +47,7 @@ G.Orbs=(()=>{
    if(G.Progress&&G.Progress.checkAch)G.Progress.checkAch();
   }
   if(G.PKMSVVStory&&G.PKMSVVStory.markChapter2)G.PKMSVVStory.markChapter2();
-  if(G.Spawner&&G.Spawner.say)G.Spawner.say(vi()?'Đã học đủ 8 kỹ năng! Mystery Orb đã mở khóa.':'All 8 skills learned! Mystery Orbs unlocked.',4,true);
+  if(G.Spawner&&G.Spawner.say)G.Spawner.say(vi()?'Đã học đủ 8 kỹ năng!':'All 8 skills learned!',4,true);
  }
  function got(p,id){
   if(!add(p,id))return false;
@@ -113,7 +114,7 @@ G.Orbs=(()=>{
  }
  function update(dt,pl){
   cd=Math.max(0,cd-dt);
-  // Each newly eligible player gets one guaranteed starter Orb. In Co-op
+  // Every participant can receive an Orb from the very start. In Co-op
   // only the host drops it; spawn is counted toward the shared 10-drop cap.
   if(!G.Coop.active||G.Coop.isHost){
    const members=G.Coop.active?G.Coop.players():[pl];
@@ -141,6 +142,6 @@ G.Orbs=(()=>{
   ring(id,x,y,BY[id].kind==='buff'?NEAR:240);
   if(BY[id].kind==='buff'&&pl&&!pl.dead&&G.U.dist2(pl.x,pl.y,x,y)<NEAR*NEAR)buff(pl,id);
  }
- return {LIST,BY,MAX,roll,ready,eligible,canTake,add,take,got,useNext,update,reset,foe,onMateUse,nearBuff,
+ return {LIST,BY,MAX,roll,ready,eligible,hasEightSkills,canTake,add,take,got,useNext,update,reset,foe,onMateUse,nearBuff,
   get cd(){return cd;},get unlockedRun(){return unlockedRun;}};
 })();
