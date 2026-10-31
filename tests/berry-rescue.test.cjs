@@ -27,6 +27,17 @@ test('One optional lossless WebP atlas holds three Berry trees and six HP states
  assert.match(build,/fs\.existsSync\(atlasSource\)/,'missing optional atlas must not break builds');
  assert.match(build,/fs\.copyFileSync\(atlasSource/);
 });
+test('Berry Rescue uses 3x6 genuine lossless WebP tree damage art in offline builds',()=>{
+ const atlas=fs.readFileSync(path.join(root,'src/berry-tree-assets/berry_trees_3x6.webp'));
+ assert.equal(atlas.toString('ascii',0,4),'RIFF');
+ assert.equal(atlas.toString('ascii',8,12),'WEBP');
+ assert.ok(atlas.length>15000&&atlas.length<300000,'one compact asset, not 18 separate downloads');
+ const source=read('src/pkmsvv-berry-rescue.js'),installer=read('scripts/patch-berry-coop.cjs');
+ assert.match(source,/stage\*TREE_CELL,id\*TREE_CELL,TREE_CELL,TREE_CELL/);
+ assert.match(source,/TREE_ATLAS_URL='assets\/berry-trees\/berry_trees_3x6\.webp'/);
+ assert.match(installer,/fs\.copyFileSync\(atlasSource/);
+ assert.match(read('src/shared/coop-unified.js'),/\['berry','Giải Cứu Berry','4 người · 8 phút',420,'Cherubi'/);
+});
 test('Three defended Berry trees, four-player Co-op mode and exactly 8 minutes',()=>{
  const h=harness();assert.equal(h.game.begin({mode:'coop'}),false);
  assert.equal(h.game.begin({mode:'berry'}),true);
