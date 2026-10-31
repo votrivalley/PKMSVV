@@ -34,3 +34,26 @@
  .pkmsvv-berry-tile{padding:6px}
  .pkmsvv-berry-btn{font-size:11px;padding:6px 8px}
 }
+
+/* Rescue Berry is a real, timed six-tile challenge (not a repeat-click reward). */
+.pkmsvv-berry-rescue-hud{padding:8px 10px;margin:8px 0;text-align:center;
+ color:#ffe5a6;font-size:14px;font-weight:800;
+ background:rgba(19,44,54,.92);border-radius:10px}
+.pkmsvv-berry-rescue-board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:10px;max-width:450px;margin:12px auto}
+.pkmsvv-berry-rescue-board .pkmsvv-berry-btn{
+ width:100%;height:75px;font-size:36px;line-height:1;text-align:center;
+ border-radius:14px;margin:0;box-shadow:inset 0 0 18px #1a385599}
+.pkmsvv-berry-rescue-board .pkmsvv-berry-target{
+ background:radial-gradient(circle at 50% 42%,#5b7f47,#224357 78%);
+ border-color:#9bc67b;animation:pkmsvv-berry-glow 1.5s ease-in-out infinite}
+.pkmsvv-berry-rescue-board .pkmsvv-berry-shadow{
+ background:radial-gradient(circle at 50% 42%,#6b396d,#18182e 80%);
+ border-color:#705174}
+.pkmsvv-berry-result{min-height:24px;text-align:center;font-weight:700;color:#fce9bd!important}
+@keyframes pkmsvv-berry-glow{0%,100%{box-shadow:0 0 9px #b5e68b40}
+ 50%{box-shadow:0 0 18px #b5e68b90}}
+@media(max-width:650px){
+ .pkmsvv-berry-rescue-board{gap:6px}
+ .pkmsvv-berry-rescue-board .pkmsvv-berry-btn{height:56px;font-size:28px}
+}
