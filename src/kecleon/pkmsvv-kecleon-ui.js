@@ -39,7 +39,7 @@ G.KecleonUI=(()=>{
  let selected=null,tab='shop',sceneActive=false;
  const Scene=()=>G.PKMSVVKecleonScene;
  function syncScene(){
-   const stall=$('pkmk-stall'),show=tab==='shop';
+   const stall=$('pkmk-stall'),show=tab==='shop'||tab==='berry';
    if(!stall)return;
    stall.hidden=!show;
    if(!show){if(sceneActive&&Scene())Scene().stop();sceneActive=false;return;}
@@ -61,7 +61,7 @@ G.KecleonUI=(()=>{
   return true;
  }
  function open(which='shop'){
-  tab=which==='bag'?'bag':'shop';
+  tab=['shop','bag','berry'].includes(which)?which:'shop';
   if(!valid()){toast('Cần mở khóa Pokémon trước.','Unlock a Pokémon first.');return;}
   if(sceneActive&&Scene())Scene().stop();
   sceneActive=false;
@@ -93,16 +93,21 @@ G.KecleonUI=(()=>{
   $('pkmk-heading').textContent=L('Cửa hàng Kecleon','Kecleon Shop');
   $('pkmk-tab-shop').textContent=L('Cửa hàng','Shop');
   $('pkmk-tab-bag').textContent=L('Túi đồ','Bag');
+  $('pkmk-tab-berry').textContent='🍓 Berry';
   $('pkmk-back').textContent=L('Trở về','Back');
   $('pkmk-tab-shop').classList.toggle('gold',tab==='shop');
   $('pkmk-tab-bag').classList.toggle('gold',tab==='bag');
+  $('pkmk-tab-berry').classList.toggle('gold',tab==='berry');
   $('pkmk-balance').textContent=money(G.DB.save.coins||0)+' PokéCoins';
   $('pkmk-owner').innerHTML=tab==='bag'?buttons():'';
-  $('pkmk-list').innerHTML=tab==='shop'?shopHtml():bagHtml();
+  $('pkmk-list').innerHTML=tab==='shop'?shopHtml():tab==='berry'?(G.PKMSVVBerry?.kecleonHtml?.()||'Berry đang tải…'):bagHtml();
   $('pkmk-sign').textContent=L('Cửa hàng Kecleon','Kecleon Shop');
   syncScene();
   $('pkmk-tab-shop').onclick=()=>{tab='shop';render();};
   $('pkmk-tab-bag').onclick=()=>{tab='bag';render();};
+  $('pkmk-tab-berry').onclick=()=>{tab='berry';render();};
+  $('pkmk-list').querySelectorAll('[data-berry-buy]').forEach(b=>b.onclick=()=>{if(G.PKMSVVBerry?.buy?.(b.dataset.berryBuy))render();});
+  $('pkmk-list').querySelectorAll('[data-berry-rescue]').forEach(b=>b.onclick=()=>G.PKMSVVBerry?.rescue?.());
   $('pkmk-back').onclick=close;
   const pokemonPicker=$('pkmk-mon');
   if(pokemonPicker)pokemonPicker.onchange=e=>{selected=Number(e.target.value);render();}; // Tab Cửa hàng không có ô chọn Pokémon.
