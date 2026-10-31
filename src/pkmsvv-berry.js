@@ -76,7 +76,7 @@ G.PKMSVVBerry=(()=>{
   prog.textContent=tr('Chương 6 · Đã dùng ','Chapter 6 · Used ')+chapterProgress()+'/5 '+tr('loại Berry','Berry types')+(s.pkmsvvBerryChapterDone?' ✅':'');
   root.append(prog);
   const grid=document.createElement('div');grid.className='pkmsvv-berry-grid';
-  for(const t of TYPES){
+  for(const t of TYPES.filter(t=>t.price>0)){
    const tile=document.createElement('div');tile.className='pkmsvv-berry-tile';
    const name=document.createElement('strong');name.textContent=t.name+' ×'+count(t.id);tile.append(image(t.id,42));
    const desc=document.createElement('small');desc.textContent=t.desc[vi()?0:1];
@@ -116,7 +116,7 @@ G.PKMSVVBerry=(()=>{
   const d=data();if(!d)return '';
   const header='<p class="pkmk-lead">'+tr('Berry là vật phẩm dùng một lần. Trang bị tối đa 2 quả trước trận; các quả hiếm nhận từ Giải Cứu Berry.','Berries are consumable. Equip up to two before battle; rare Berries drop in Rescue Berry.')+'</p>';
   let out=header+'<h3 class="pkmk-group-title">'+tr('Berry của bạn · ','Your Berries · ')+chapterProgress()+'/5 '+tr('loại đã dùng','types used')+'</h3><div class="pkmk-cards">';
-  for(const t of TYPES){
+  for(const t of TYPES.filter(t=>t.price>0)){
    const stock=count(t.id),canBuy=t.price>0&&(G.DB.save.coins||0)>=t.price;
    const buy=t.price?'<button class="btn small gold" data-berry-buy="'+t.id+'" '+(!canBuy?'disabled':'')+'>🪙 '+t.price+'</button>':
     '<small>'+tr('Giải Cứu Berry','Rescue Berry')+'</small>';
@@ -202,7 +202,7 @@ G.PKMSVVBerry=(()=>{
  function offer({onDone,mode,preRun=false}={}){
   if(choiceOpen){onDone?.([]);return false;}
   const d=data();
-  if(!d||!TYPES.some(t=>count(t.id)>0)){onDone?.([]);return false;}
+  if(!d){onDone?.([]);return false;}
   choiceOpen=true;const token=++turn;let seconds=4;
   const picked=[];
   const panel=shell(tr('CHỌN BERRY TRƯỚC TRẬN','CHOOSE PRE-BATTLE BERRIES'),
@@ -220,6 +220,7 @@ G.PKMSVVBerry=(()=>{
    });
    b.append(image(type.id,36));grid.append(b);
   }
+  if(!grid.children.length){const empty=document.createElement('p');empty.className='pkmsvv-berry-empty';empty.textContent=tr('Túi đang trống. Trận sẽ bắt đầu sau 4 giây.','No Berries yet. Match begins in 4 seconds.');grid.append(empty);}
   panel.append(button(tr('Xác nhận','Confirm'),done,'primary'));
   panel.append(button(tr('Không dùng Berry','No Berry'),()=>{picked.length=0;done();},'ghost'));
   chooseTimer=setInterval(()=>{if(token!==turn)return;seconds--;clock.textContent='0'+seconds+'s';if(seconds<=0)done();},1000);
@@ -295,8 +296,7 @@ G.PKMSVVBerry=(()=>{
     // tournament separately prompts again before each actual duel.
     const champion=!!G.PKMSVVChampionArena?.active;
     const online=!!args[0]||!!G.Coop?.active;
-    const hasBerry=TYPES.some(t=>count(t.id)>0);
-    if(!champion&&!online&&hasBerry){
+    if(!champion&&!online){
      offer({preRun:true,mode:'pve',onDone:ids=>{
       start.apply(ctx,args);
       const pl=G.Game?.player;if(pl)apply(pl,ids,'pve');
@@ -304,7 +304,7 @@ G.PKMSVVBerry=(()=>{
      return;
     }
     const result=start.apply(ctx,args);
-    if(hasBerry)offer({mode:online?'pvp':'pve'});
+    offer({mode:online?'pvp':'pve'});
     return result;
    };
   }
@@ -320,6 +320,6 @@ G.PKMSVVBerry=(()=>{
   // Do not reintroduce a floating button that overlays the main menu.
  }
  // Stable public QA interface.
- return {TYPES,byId,data,count,grant,buy,chapterProgress,markUsed,offer,openBag,rescue,kecleonHtml,spriteUrl,image,install,tick,apply,hurt};
+ return {TYPES,byId,data,count,grant,buy,chapterProgress,markUsed,offer,openBag,rescue,kecleonHtml,spriteUrl,image,install,tick,apply,hurt,get choosing(){return choiceOpen;}};
 })();
 G.PKMSVVBerry.install();
