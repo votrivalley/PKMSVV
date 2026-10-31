@@ -142,7 +142,9 @@ G.PKMSVVChampionArena=(()=>{
   const p=G.PKMSVVStory?.multiplayerProgress?.();
   const small=btn.querySelector?.('small');
   if(small)small.textContent=gate?tr('16 chiến binh · 10 vùng','16 entrants · 10 regions'):
-   (p?tr('🔒 Hoàn thành 3 chế độ: ','🔒 Complete 3 modes: ')+p.count+'/3':tr('🔒 Chưa mở khóa','🔒 Locked'));
+   !G.PKMSVVStory?.allMultiplayerCompleted?.()?tr('🔒 Sống Sót + Sống Còn: ','🔒 Survival + Royale: ')+(p?.count||0)+'/2':
+   !G.DB?.save?.pkmsvvBerryChapterDone?tr('🔒 Chương 6 · Dùng 5 loại Berry','🔒 Chapter 6 · Use 5 Berry types'):
+   tr('🔒 Xem cốt truyện Chương 7','🔒 View Chapter 7 story');
   return true;
  }
  function panel(){
@@ -249,9 +251,14 @@ G.PKMSVVChampionArena=(()=>{
   if(!G.PKMSVVStory?.allMultiplayerCompleted?.(save)&&
      !G.PKMSVVStory?.arenaUnlocked?.(save)){
    const missing=G.PKMSVVStory?.multiplayerProgress?.(save)?.missing||[];
-   const names={coop:'Co-op',royale:'Sống Còn',eggrush:'Tranh Trứng'};
-   G.UI?.toast?.(tr('🔒 Hoàn thành cả ba chế độ trước khi vào Arena. Còn: ','🔒 Finish all three multiplayer modes before Arena. Missing: ')+
+   const names={coop:'Sống Sót',royale:'Sống Còn'};
+   G.UI?.toast?.(tr('🔒 Chương 5: Hoàn thành Sống Sót và Sống Còn để mở Berry. Còn: ','🔒 Chapter 5: Finish Co-op Survival and Battle Royale before Berry. Missing: ')+
     missing.map(m=>names[m]||m).join(', '),3800);
+   return false;
+  }
+  if(!save.pkmsvvChapter6Seen&&!save.pkmsvvBerryChapterDone){
+   G.UI?.toast?.(tr('🍓 Chương 6: Dùng đủ 5 loại Berry trước khi mở Arena.',
+    '🍓 Chapter 6: use five different Berry types before Arena.'),3800);
    return false;
   }
   if(!save.pkmsvvChapter6Seen){
