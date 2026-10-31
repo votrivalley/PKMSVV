@@ -157,6 +157,7 @@ G.PKMSVVChampionArena=(()=>{
     '<div id="pkmsvv-champion-progress" class="pkmsvv-champion-progress"></div>'+'<div id="pkmsvv-champion-bracket" class="pkmsvv-champion-bracket"></div>'+'<div id="pkmsvv-champion-hall" class="pkmsvv-champion-hall"></div>'+'<div id="pkmsvv-champion-podium" class="pkmsvv-champion-podium" hidden></div>'+
    '<div class="pkmsvv-champion-actions"><button id="pkmsvv-champion-start" type="button" class="btn gold">Bắt đầu giải đấu</button>'+
    '<button id="pkmsvv-champion-rematch" type="button" class="btn gold" hidden>Thách đấu lại Champion</button>'+
+    '<button id="pkmsvv-champion-sky" type="button" class="btn gold" hidden>🐉 Chương 10 · Thách đấu Rayquaza</button>'+
    '<button id="pkmsvv-champion-ready" type="button" class="btn gold" hidden>Sẵn sàng</button></div></div>';
   document.body.append(overlay);
   $('pkmsvv-champion-close').onclick=()=>{overlay.hidden=true;clearResult();if(active)returnToMenu();};
@@ -172,6 +173,7 @@ G.PKMSVVChampionArena=(()=>{
       mapEffect(REGION_THEMES[Number(mapChoice)||0]).hint;
    };
   $('pkmsvv-champion-start').onclick=start;
+  $('pkmsvv-champion-sky').onclick=startSky;
   $('pkmsvv-champion-rematch').onclick=rematch;
   $('pkmsvv-champion-ready').onclick=()=>{if(active&&elapsed>=prepSeconds())nextDuel();};
   overlay.addEventListener('click',e=>{if(e.target===overlay&&!active){overlay.hidden=true;clearResult();}});
@@ -230,6 +232,7 @@ G.PKMSVVChampionArena=(()=>{
   $('pkmsvv-champion-ready').hidden=true;
   $('pkmsvv-champion-ready').disabled=true;
   $('pkmsvv-champion-start').disabled=!G.PKMSVVStory?.arenaUnlocked?.()||(mode==='story'?!regionUnlocked(region):!storyCompleted());
+  const sky=$('pkmsvv-champion-sky');if(sky){sky.hidden=!(storyCompleted()&&!G.DB?.save?.pkmsvvChapter10Done);sky.disabled=active;}
   $('pkmsvv-champion-start').textContent=mode==='story'?tr('Bắt đầu Hành Trình Vương Miện','Start Crown Journey'):tr('Bắt đầu Giải Champion · AI','Start Champion League · AI');
   o.hidden=false;
  }
@@ -322,7 +325,54 @@ G.PKMSVVChampionArena=(()=>{
   document.body.append(bar);bar.hidden=false;
   beginPrep();return true;
  }
- function start(){return launch(false);}
+ function start(){
+  const save=G.DB?.save;
+  if(mode==='story'&&save?.pkmsvvChapter6Seen&&!save.pkmsvvChapter8IntroSeen&&
+     typeof G.PKMSVVStory?.chapter8==='function'){
+   panel().hidden=true;
+   return G.PKMSVVStory.chapter8(ok=>{if(ok){open();launch(false);}});
+  }
+  return launch(false);
+ }
+ // Defeating Rayquaza is a genuine solo encounter, never a free cutscene.
+ function startSky(){
+  const save=G.DB?.save;
+  if(active||!G.PKMSVVStory?.tenChampionCompleted?.(save)||save.pkmsvvChapter10Done||G.Coop?.active)return false;
+  if(!G.Game?.startRun||!G.Enemy||!G.EnemyMgr?.add)return false;
+  active=true;stage='sky';paid=false;target=null;opp=null;elapsed=0;
+  G.Game.startRun(null);
+  const hero=G.Game?.player;
+  if(!hero){active=false;stage='idle';return false;}
+  G.World?.setArena?.({tx:0,ty:0,r:25,type:'dragon'});
+  if(G.Tiles?.arenaBiome)G.World?.setBiome?.(G.Tiles.arenaBiome('dragon'),true);
+  hero.x=0;hero.y=110;hero.invuln=Math.max(3,hero.invuln||0);
+  G.EnemyMgr?.clear?.();G.Pickups?.clear?.();G.Projectiles?.clear?.();G.Hazards?.clear?.();
+  const dex=384,raw={dex,name:'Rayquaza',hp:4200,spd:90,dmg:28,xp:0,
+   behavior:'champion',shotCd:1.55};
+  target=G.EnemyMgr.add(new G.Enemy(raw,hero.x+225,hero.y-115,{hp:1,spd:1,dmg:1},true));
+  if(!target){returnToMenu();return false;}
+  target.pkmsvvChampion=true;target._pkmsvvSkyBoss=true;target.skillCd=1.35;
+  const art=G.Sprites?.playerScale?.(dex);
+  if(art>0&&G.Sprites?.Animator){
+   target.scale=art;target.anim=new G.Sprites.Animator(dex,art,false);
+   target.r=G.Sprites.bodyRadius?.(dex,art)??target.r;
+  }
+  panel().hidden=true;
+  const bar=$('pkmsvv-champion-hud');if(bar){bar.hidden=false;bar.textContent='🐉 SKY · RAYQUAZA';}
+  G.UI?.toast?.(tr('🐉 Chương 10: Đánh bại Rayquaza trên bầu trời!',
+    '🐉 Chapter 10: Defeat Rayquaza in the Sky!'),3500);
+  return true;
+ }
+ function finishSky(victory){
+  if(!active||stage!=='sky')return;
+  const save=G.DB?.save;
+  if(victory&&save){save.pkmsvvRayquazaDefeated=true;G.DB.commit(true);}
+  returnToMenu();updatePanel();
+  if(victory&&save){
+   panel().hidden=true;G.PKMSVVStory?.chapter10?.(()=>G.Flow?.goMenu?.());
+  }else G.UI?.toast?.(tr('Rayquaza vẫn chờ ngươi thách đấu lại.',
+   'Rayquaza awaits your rematch.'),3200);
+ }
  // Previous Champion rematch is superseded by the four-round title.
  function rematch(){return false;}
  function restoreStats(){
@@ -415,9 +465,10 @@ G.PKMSVVChampionArena=(()=>{
   book.seals[name]=true;
   const arenaEarned=G.PKMSVVMegaGacha?.grantChampion?.(save,name)||0;
   if(arenaEarned)G.UI?.toast?.('👑 +100 Điểm Arena · Champion '+name);
-  if(first&&!save.pkmsvvChapter8IntroSeen)save.pkmsvvChapter8Pending=true;
   G.DB.commit(true);
   G.PKMSVVStory?.onChampionSeal?.();
+  if(G.PKMSVVStory?.tenChampionCompleted?.(save))
+   G.UI?.toast?.(tr('🐉 Đã có đủ 10 Ấn Chứng! Trận Rayquaza ở Chương 10 đã mở.','🐉 Ten Crown Seals earned! Chapter 10 Rayquaza awaits.'),4000);
  }
  function returnToMenu(){
   restoreStats();
@@ -450,15 +501,9 @@ G.PKMSVVChampionArena=(()=>{
   updatePanel();
   $('pkmsvv-champion-progress').textContent=label;
   if(lastPodium)renderPodium(lastPodium);
-  if(reason==='seal'&&mode==='story'&&G.DB?.save){
-   const save=G.DB.save;
-   if(save.pkmsvvChapter8Pending&&!save.pkmsvvChapter8IntroSeen){
-    panel().hidden=true;
-    G.PKMSVVStory?.chapter8?.(()=>G.Flow?.goMenu?.());
-   }else if(G.PKMSVVStory?.tenChampionCompleted?.(save)&&!save.pkmsvvChapter7Seen){
-    panel().hidden=true;
-    G.PKMSVVStory?.chapter7?.(()=>G.Flow?.goMenu?.());
-   }
+  if(reason==='seal'&&mode==='story'&&G.DB?.save?.pkmsvvChapter8Pending&&
+     !G.DB.save.pkmsvvChapter8IntroSeen){
+   panel().hidden=true;G.PKMSVVStory?.chapter8?.(()=>G.Flow?.goMenu?.());
   }
  }
  function nextDuel(bypassBerry=false){
@@ -483,6 +528,8 @@ G.PKMSVVChampionArena=(()=>{
   if(!active||G.Game?.state!=='playing')return;
   const pl=G.Game.player;
   if(!pl)return;
+  if(pl.dead&&stage==='sky'){finishSky(false);return;}
+  if(stage==='sky'&&target?.dead){finishSky(true);return;}
   if(pl.dead){
    if(round===2){futureBracket(false);round=4;pl.dead=false;pl.hp=Math.max(1,pl.maxHp);beginPrep();return;}
    done('lost',round===0?9:round===1?5:round===4?4:2);return;
@@ -492,7 +539,8 @@ G.PKMSVVChampionArena=(()=>{
   if(lastSecond!==second){
    lastSecond=second;
    const bar=$('pkmsvv-champion-hud');
-   if(bar)bar.textContent='🏆 '+(mode==='league'?mapEffect().name:REGIONS[region][0])+' · '+(ROUNDS[round]||'')+
+   if(bar&&stage==='sky')bar.textContent='🐉 SKY · RAYQUAZA · '+clock(elapsed);
+   else if(bar)bar.textContent='🏆 '+(mode==='league'?mapEffect().name:REGIONS[region][0])+' · '+(ROUNDS[round]||'')+
     (stage==='fight'?' · '+clock(FIGHT_SECONDS-elapsed):' · '+tr('Vào trận sau ','Battle in ')+clock(prepSeconds()-elapsed));
    if(stage==='prep'){
     const label=$('pkmsvv-champion-progress');
@@ -500,6 +548,7 @@ G.PKMSVVChampionArena=(()=>{
      clock(prepSeconds()-elapsed)+' · '+(ROUNDS[round]||'');
    }
   }
+  if(stage==='sky')return;
   if(stage==='prep'){
    while(round===0&&prepBossStage<FIRST_FARM_BOSS_TIMES.length&&elapsed>=FIRST_FARM_BOSS_TIMES[prepBossStage]){
     prepBossStage++;spawnPrepBoss();
@@ -589,7 +638,7 @@ G.PKMSVVChampionArena=(()=>{
  // Chapter 5 is explicitly accessible through Memories and Arena intro.
  // In particular, first LAN access must never be blocked by a cutscene.
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',menu,{once:true});else menu();
- return {REGIONS,REGION_THEMES,MAP_EFFECTS,mapEffect,MEGA_KEYS,TEMP_CHAMPIONS,regionChampion,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIRST_PREP_SECONDS,FIGHT_SECONDS,WARN_SECONDS,prepSeconds,previewSeconds,makeBracket,aiWinner,open,start,rematch,exit,nextDuel,renderPodium,
+ return {REGIONS,REGION_THEMES,MAP_EFFECTS,mapEffect,MEGA_KEYS,TEMP_CHAMPIONS,regionChampion,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIRST_PREP_SECONDS,FIGHT_SECONDS,WARN_SECONDS,prepSeconds,previewSeconds,makeBracket,aiWinner,open,start,startSky,rematch,exit,nextDuel,renderPodium,
   update,settle,claimSeal,ledger,get active(){return active},get stage(){return stage},get round(){return round},
   get opponent(){return opp}};
 })();
