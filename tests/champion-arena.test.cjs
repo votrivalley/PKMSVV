@@ -82,6 +82,16 @@ test('Ten Champions, sixteen entrants, 4m opener and 1m30 later preparation',()=
  assert.equal(draw.filter(p=>p.tier==='elite').length,3,'three elite AI guarantee higher difficulty');
  assert.equal(new Set(draw.map(p=>p.id)).size,16);
 });
+test('PC replaces Wiki with three sprite cards and direct Support, Mega, Berry actions',()=>{
+ const src=read('src/pkmsvv-wiki.js'),build=read('scripts/patch-champion-arena.cjs');
+ assert.match(src,/PC · POKÉMON CHUYỂN SINH/);
+ for(const dex of ['175','420'])assert.ok(src.includes(dex),'missing Pokémon mascot '+dex);
+ assert.match(src,/megaMewtwoArt\(\)/);
+ assert.match(src,/PKMSVVSupportCatalog\?\.open/);
+ assert.match(src,/PKMSVVMegaEntry\?\.open/);
+ assert.match(src,/KecleonUI\?\.open/);
+ assert.match(build,/pkmsvv-wiki\.js/,'the PC hub must be bundled into the actual game');
+});
 test('Champion starts with four-minute opener and first Crown Seal unlocks Mega after four real fights',()=>{
  const h=setup(),{lib,G,save}=h;
  assert.equal(lib.start(),true);assert.equal(lib.stage,'prep');
