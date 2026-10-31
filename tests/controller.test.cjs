@@ -81,6 +81,22 @@ test('all related controller fixes are included in the compiled bundle',()=>{
 });
 
 const fsPkm=require('node:fs'),pathPkm=require('node:path');
+test('new dialogs share D-pad navigation, A confirm, B back and visible focus',()=>{
+ const patch=fsPkm.readFileSync(pathPkm.join(root,'scripts/patch-controller.cjs'),'utf8');
+ for(const id of ['pkmsvv-wiki-overlay','pkmsvv-champion-screen','pkmsvv-support-catalog',
+  'pkmsvv-mega-phase1','pkmsvv-arena-solo-screen','pkmsvv-memory-chooser','pkmsvv-berry-overlay']){
+  assert.ok(patch.includes(id),id+' must be above the game UI for controller navigation');
+ }
+ assert.match(patch,/pkmsvv-pad-dialogs\.js/);
+ assert.match(patch,/\.pad-focus/,'pad focus must have a visible outline');
+ const wiki=fsPkm.readFileSync(pathPkm.join(root,'src/pkmsvv-wiki.js'),'utf8');
+ assert.match(wiki,/G\.Pad\?\.focusFirst/);
+ assert.match(wiki,/setAttribute\('data-back'/);
+ assert.match(wiki,/toggle\.onclick/,'PC knowledge accordions use real focusable buttons');
+ const arena=fsPkm.readFileSync(pathPkm.join(root,'scripts/patch-v14-gamepad-orbs.cjs'),'utf8');
+ assert.match(arena,/PKMSVVChampionArena\?\.active/);
+ assert.match(arena,/PKMSVVArenaSolo\?\.active/);
+});
 test('keyboard skill card labels use a clear name while keeping physical bindings',()=>{
  const source=fsPkm.readFileSync(pathPkm.join(__dirname,'../scripts/patch-keybind-title.cjs'),'utf8');
  for(const n of [1,2,3]) assert.match(source,new RegExp("card"+n+":'Thẻ skill "+n+"'"));
