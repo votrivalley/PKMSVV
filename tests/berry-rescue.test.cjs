@@ -28,16 +28,41 @@ test('Three defended Berry trees, four-player Co-op mode and exactly 8 minutes',
  h.step(.5,480.5);assert.equal(h.game.active,false);
  assert.equal(h.result().success,true);assert.equal(h.result().trees.length,3);
 });
+test('Berry mode HP tiers, easy rewards and enemy speed escalations',()=>{
+ const h=harness();
+ assert.equal(h.game.begin({mode:'berryeasy'}),true);
+ assert.equal(h.game.easy,true);
+ assert.equal(h.game.trees[0].maxHp,220);
+ for(const [hp,prob] of [[100,.18],[90,.16],[70,.15],[50,.14],[30,.13],[0,0]]){
+  assert.equal(h.game.chanceForHp(hp,true),prob);
+ }
+ for(const [hp,prob] of [[100,.35],[90,.33],[70,.32],[50,.31],[30,.30],[0,0]]){
+  assert.equal(h.game.chanceForHp(hp,false),prob);
+ }
+ for(const [minute,mul] of [[0,.7],[2,.84],[4,.98],[6,1.12]]){
+  assert.ok(Math.abs(h.game.difficultyFor(minute/2,true)-mul)<1e-9);
+ }
+ const enemy={x:900,y:900,hp:100,maxHp:100,dmg:10,spd:100,dead:false};
+ h.G.EnemyMgr.enemies=[enemy];
+ h.step(.1,0);
+ assert.ok(Math.abs(enemy.spd-70)<1e-8);
+ assert.ok(Math.abs(enemy.dmg-7)<1e-8);
+ assert.ok(Math.abs(enemy.hp-70)<1e-8);
+ h.step(.1,120);
+ assert.ok(Math.abs(enemy.spd-84)<1e-8);
+ h.step(.1,360);
+ assert.ok(Math.abs(enemy.spd-112)<1e-8);
+});
 test('Host owns Berry tree HP; guests only consume validated snapshots',()=>{
  const h=harness();h.game.begin({mode:'berry'});
  h.G.EnemyMgr.enemies=[{x:0,y:145,dead:false,boss:false}];
  h.step(10,10);
- assert.ok(h.game.trees[1].hp<100);
- assert.equal(h.game.trees[0].hp,100);
+ assert.ok(h.game.trees[1].hp<h.game.trees[1].maxHp);
+ assert.equal(h.game.trees[0].hp,h.game.trees[0].maxHp);
  assert.ok(h.events.some(e=>e[0]==='br'));
  h.G.Coop.isHost=false;
  h.game.onEvent(['br',65,44,92,1,150,1]);
- assert.equal(Math.round(h.game.trees[1].hp),44);
+ assert.equal(Math.round(100*h.game.trees[1].hp/h.game.trees[1].maxHp),44);
  assert.equal(h.game.bossStage,1);
 });
 test('Each of three saved trees independently has a 30 percent reward roll and only awards once',()=>{
