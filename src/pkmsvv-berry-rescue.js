@@ -9,13 +9,18 @@ G.PKMSVVBerryRescue=(()=>{
  const POS=[[-92,82],[92,82],[0,-72]];
  const NAMES=['Oran','Sitrus','Lum'];
  let active=false,easy=false,time=0,trees=[],bossStage=0,won=false,claimed=false,sendClock=0,endClock=0;
- let sprites=[];
+ let sprites=[],treeAtlas=null;
+ const TREE_ATLAS_URL='assets/berry-trees/berry_trees_3x6.webp';
+ const TREE_CELL=192,TREE_ATLAS_WIDTH=6*TREE_CELL,TREE_ATLAS_HEIGHT=3*TREE_CELL;
+ function hasTreeAtlas(){return !!(treeAtlas?.complete&&treeAtlas.naturalWidth===TREE_ATLAS_WIDTH&&treeAtlas.naturalHeight===TREE_ATLAS_HEIGHT);}
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  function begin(cfg){
   active=!!(cfg&&['berry','berryeasy'].includes(cfg.mode));easy=cfg?.mode==='berryeasy';time=0;bossStage=0;won=false;claimed=false;
   sendClock=0;endClock=0;
   const hp=easy?220:180;
   trees=POS.map(([x,y],i)=>({id:i,x,y,hp,maxHp:hp,guard:0}));
+  treeAtlas=typeof Image==='function'?new Image():null;
+  if(treeAtlas){treeAtlas.decoding='async';treeAtlas.src=TREE_ATLAS_URL;}
   sprites=['oran','sitrus','lum'].map(id=>{
    const img=typeof Image==='function'?new Image():null;
    if(img)img.src=G.PKMSVVBerry?.spriteUrl?.(id)||'assets/berry/'+id+'.png';
@@ -112,6 +117,12 @@ G.PKMSVVBerryRescue=(()=>{
  function drawTree(ctx,ratio,id){
   const stage=treeStage(ratio),leaves=[13,10,8,5,2,0][stage],fruit=[5,4,3,2,1,0][stage];
   ctx.save();ctx.imageSmoothingEnabled=false;
+  // Each row is one defended tree: pink/yellow/mixed. Columns are HP 100/80/60/40/20/0.
+  // Lossless WebP sprite atlas is bundled offline; original canvas pixel tree remains fallback.
+  if(hasTreeAtlas()){
+   ctx.drawImage(treeAtlas,stage*TREE_CELL,id*TREE_CELL,TREE_CELL,TREE_CELL,-45,-89,90,90);
+   ctx.restore();return;
+  }
   ctx.fillStyle='#18291f';ctx.fillRect(-6,-29,12,31);ctx.fillRect(-16,-28,15,9);ctx.fillRect(3,-34,15,9);
   ctx.fillStyle='#4c3228';ctx.fillRect(-4,-27,8,27);ctx.fillRect(-14,-26,11,5);ctx.fillRect(4,-32,12,5);
   ctx.fillStyle='#9b653c';ctx.fillRect(-2,-24,3,22);ctx.fillRect(-12,-25,7,2);ctx.fillRect(5,-31,8,2);
@@ -129,11 +140,13 @@ G.PKMSVVBerryRescue=(()=>{
   if(!active)return;
   for(const t of trees){
    ctx.save();ctx.translate(t.x,t.y);
-   ctx.fillStyle='#112823b3';ctx.strokeStyle=t.hp>0?'#98eea4':'#6e7686';
-   ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(0,0,55,30,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+   ctx.fillStyle='#1128239e';ctx.strokeStyle=t.hp>0?'#8acbb2':'#646e79';
+   ctx.lineWidth=1.2;ctx.beginPath();ctx.ellipse(0,0,52,27,0,0,Math.PI*2);ctx.fill();ctx.stroke();
    drawTree(ctx,t.hp/t.maxHp,t.id);
-   ctx.fillStyle='#081e29';ctx.fillRect(-38,-65,76,9);
-   ctx.fillStyle=t.hp>35?'#8adf9e':'#e8765d';ctx.fillRect(-36,-63,72*t.hp/t.maxHp,5);
+   // Slim, borderless health strip above the sprite canopy; not a large black frame.
+   const top=hasTreeAtlas()?-94:-65,ratio=Math.max(0,Math.min(1,t.hp/t.maxHp));
+   ctx.fillStyle='#112b29b3';ctx.fillRect(-34,top,68,6);
+   ctx.fillStyle=ratio>.35?'#89dba2':'#e87e65';ctx.fillRect(-33,top+1,66*ratio,4);
    ctx.restore();
   }
  }
