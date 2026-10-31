@@ -347,7 +347,7 @@ G.LanAI=(()=>{
     // Berry Rescue overrides ordinary wandering, distant rescues and monster chase.
     // The grove coordinates are authoritative and all bots patrol/defend close to it.
     if(mode==='berry'||mode==='berryeasy'){
-     const defense=G.PKMSVVBerryRescue?.defendGoal?.(pl,enemies);
+     const defense=G.PKMSVVBerryRescue?.defendGoal?.(pl,enemies,activeBots().findIndex(x=>x.uid===bot.uid));
      if(defense)goal=defense;
     }
     if(G.Arena?.active)goal=G.Arena.clampGoal(goal,pl);
