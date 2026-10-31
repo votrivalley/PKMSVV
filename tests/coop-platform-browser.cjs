@@ -26,7 +26,7 @@ async function main(){
    const entry=page.locator('#scr-menu #pkmsvv-coop-lan-entry,#scr-menu #pkmsvv-full-lan-entry,#scr-menu [data-go="multiplayer"],#scr-menu [data-go="online"]');
    assert.equal(await entry.count(),1,'exactly one Co-op menu entry');
    await entry.click();await page.locator('#pkmsvv-unified-coop').waitFor();
-   assert.equal(await page.locator('#pkmsvv-coop-modes [data-mode]').count(),3);
+   assert.equal(await page.locator('#pkmsvv-coop-modes [data-mode]').count(),5,'three original modes plus Berry normal/easy');
    for(const role of ['host','join','ai'])assert.equal(await page.locator('#pkmsvv-coop-actions [data-role="'+role+'"]').count(),1);
    await page.click('[data-mode="'+mode+'"]');
    // Human rooms now host locally on the packaged engine, without a PC bridge.
