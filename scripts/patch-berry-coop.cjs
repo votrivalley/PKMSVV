@@ -62,8 +62,8 @@ patch('js/game.js',
  "G.Path.update(dt, all); G.Spawner.update(dt, all, time);",
  "if(!G.PKMSVVBerryRescue?.active)G.Path.update(dt, all); G.Spawner.update(dt, all, time);");
 patch('js/game.js',
- "      else checkAllDown(dt);",
- "      else if(!G.PKMSVVBerryRescue?.active)checkAllDown(dt);");
+ "  function checkAllDown(dt) {",
+ "  function checkAllDown(dt) {\n    if(G.PKMSVVBerryRescue?.active)return;");
 // Berry mode runs a separate Host-authoritative objective, not death-all check.
 patch('js/game.js',
  "    if (G.Coop.isHost) {",
