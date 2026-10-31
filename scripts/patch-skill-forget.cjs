@@ -6,7 +6,11 @@ const upgrades=path.join(game,'js','data','upgrades.js');
 const oldUpgrades=fs.readFileSync(upgrades,'utf8').replace(/\r\n/g,'\n');
 const slot='  ];\n  const BY = {};';
 if(oldUpgrades.split(slot).length!==2)throw Error('Personal upgrade list changed');
-fs.writeFileSync(upgrades,oldUpgrades.replace(slot,
+// The upstream 'start' entry was the final array element without a comma.
+const finalStart=/({ id: 'start'[^\n]*grow: 1 })/;
+if(!finalStart.test(oldUpgrades))throw Error('Original personal upgrade last entry changed');
+const separated=oldUpgrades.replace(finalStart,'$1,');
+fs.writeFileSync(upgrades,separated.replace(slot,
  "    { id: 'forget', icon: 'book', name: 'Quên Kỹ Năng', unit: 'Tối đa 1 lần mỗi trận sau khi học đủ kỹ năng', max: 1, base: 600, grow: 1 },\n"+slot));
 const from='<script defer src="js/ui/pkmsvv-berry-rescue.js"></script>';
 const to=from+'\n<script defer src="js/ui/pkmsvv-forget-skill.js"></script>\n<script defer src="js/ui/pkmsvv-wiki.js"></script>';
