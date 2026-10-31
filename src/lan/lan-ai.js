@@ -5,7 +5,7 @@ G.LanAI=(()=>{
  const sq=(a,b)=>(a.x-b.x)**2+(a.y-b.y)**2;
  function activeBots(){
   const room=G.Social?.room;
-  if(!room?.isHost||!['coop','royale','eggrush'].includes(room.mode)||!G.Coop?.isHost)return[];
+  if(!room?.isHost||!['coop','royale','eggrush','berry','berryeasy'].includes(room.mode)||!G.Coop?.isHost)return[];
   return room.members.filter(m=>m.bot===true&&/^ai-[a-f0-9]{16}$/.test(m.uid));
  }
  function owns(pl){return !!pl?.lanBot&&G.Coop.isHost;}
@@ -131,11 +131,11 @@ G.LanAI=(()=>{
    pl.setAbility(G.Mons.abilityOf(bot.dex).id);
    // A good co-op companion may match the real player's baseline, but not
    // every AI gets a 102% challenger bonus, and competitive stats stay equal.
-   if(mode==='coop'&&tier==='elite')raiseToHuman(pl,baseline,1);
+   if(['coop','berry','berryeasy'].includes(mode)&&tier==='elite')raiseToHuman(pl,baseline,1);
   });
  }
  function coopDifficulty(){
-  if(G.Social?.room?.mode!=='coop')return 1;
+  if(!['coop','berry','berryeasy'].includes(G.Social?.room?.mode))return 1;
   const bots=activeBots().length;
   return bots?1+Math.min(.28,.12+.04*Math.min(4,bots)):1;
  }
@@ -257,7 +257,7 @@ G.LanAI=(()=>{
    if(other===pl||other.dead)continue;
    const d=Math.sqrt(sq(p,other));if(d<180)score+=(1-d/180)*100;
   }
-  if(G.Social.room?.mode==='coop')for(const other of G.Coop.players()){
+  if(['coop','berry','berryeasy'].includes(G.Social.room?.mode))for(const other of G.Coop.players()){
    if(other===pl||other.dead)continue;
    const d=Math.sqrt(sq(p,other));if(d<85)score+=(1-d/85)*65;
   }
@@ -298,7 +298,7 @@ G.LanAI=(()=>{
    const pl=G.Coop.mate(bot.uid)?.pl,s=states.get(bot.uid);if(!pl||!s)continue;
    if(pl.dead){
     s.axis=[0,0];pl.walking=false;
-    if(mode==='coop'){
+    if(['coop','berry','berryeasy'].includes(mode)){
      const help=G.Coop.players().some(p=>p!==pl&&!p.dead&&sq(p,pl)<56**2);
      pl.reviveT=help?(pl.reviveT||0)+dt:Math.max(0,(pl.reviveT||0)-dt*.5);
      if(pl.reviveT>=G.Player.REVIVE_TIME)pl.revive(.5);
@@ -321,29 +321,29 @@ G.LanAI=(()=>{
      s.roam=dryPoint(pl,{x:s.home.x+Math.cos(a)*300,y:s.home.y+Math.sin(a)*300})||s.home;
      s.wander=5+Math.random()*6;
     }
-    if(mode==='coop'&&(!s.roam||s.wander<=0||!s.anchor||sq(host,s.anchor)>180**2||sq(pl,host)>430**2)){
+    if(['coop','berry','berryeasy'].includes(mode)&&(!s.roam||s.wander<=0||!s.anchor||sq(host,s.anchor)>180**2||sq(pl,host)>430**2)){
      const a=Math.random()*Math.PI*2,radius=140+Math.random()*120;
      s.roam=dryPoint(pl,{x:host.x+Math.cos(a)*radius,y:host.y+Math.sin(a)*radius})||{x:pl.x,y:pl.y};
      s.anchor={x:host.x,y:host.y};s.wander=4+Math.random()*5;
     }
-    let goal=['royale','coop'].includes(mode)?s.roam:host;
+    let goal=['royale','coop','berry','berryeasy'].includes(mode)?s.roam:host;
     let objective=G.EggRush?.objective?.(pl);
-    if(mode==='coop'&&objective&&sq(objective,host)>520**2)objective=null;
+    if(['coop','berry','berryeasy'].includes(mode)&&objective&&sq(objective,host)>520**2)objective=null;
     const nests=objective?[objective]:mode==='eggrush'?(G.EggRush?.nests||[]).filter(n=>!n.taken):[];
     if(nests.length)goal=nests.reduce((a,b)=>sq(pl,a)<sq(pl,b)?a:b);
-    if(mode==='coop'){
+    if(['coop','berry','berryeasy'].includes(mode)){
      const fallen=G.Coop.players().filter(p=>p!==pl&&p.dead&&sq(pl,p)<420**2);
      if(fallen.length)goal=fallen.reduce((a,b)=>sq(pl,a)<sq(pl,b)?a:b);
     }
     // Stay at the range of learned attacks rather than walking into monsters.
     const target=enemies.reduce((a,e)=>!a||sq(pl,e)<sq(pl,a)?e:a,null);
     if(target&&sq(pl,target)<420**2&&(mode==='royale'&&(!objective||pl.hp/pl.maxHp<.55||sq(pl,target)<150**2)||
-     mode==='coop'&&goal===s.roam&&sq(pl,host)<430**2&&sq(target,host)<520**2&&!host.dead||goal===host&&!host.dead)){
+     ['coop','berry','berryeasy'].includes(mode)&&goal===s.roam&&sq(pl,host)<430**2&&sq(target,host)<520**2&&!host.dead||goal===host&&!host.dead)){
      const ranged=pl.moves.some(m=>['projectile','beam','homing','chain','turret','meteor','boomerang'].includes(m.kind));
      const d=Math.sqrt(sq(pl,target))||1,range=pl.hp/pl.maxHp<.4?230:ranged?165:85;
      goal={x:target.x+(pl.x-target.x)/d*range,y:target.y+(pl.y-target.y)/d*range};
     }
-    if(mode==='coop'&&!nests.length&&goal===s.roam&&sq(pl,goal)<50**2)goal={x:pl.x,y:pl.y};
+    if(['coop','berry','berryeasy'].includes(mode)&&!nests.length&&goal===s.roam&&sq(pl,goal)<50**2)goal={x:pl.x,y:pl.y};
     if(G.Arena?.active)goal=G.Arena.clampGoal(goal,pl);
     s.axis=chooseAxis(pl,s,goal,enemies,shots,hazards);
     s.think=s.personality.think*(.9+Math.random()*.2);
