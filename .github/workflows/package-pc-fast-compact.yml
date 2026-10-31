@@ -15,6 +15,14 @@ on:
       - 'src/pkmsvv-forget-skill.js'
       - 'scripts/patch-skill-forget.cjs'
       - 'tests/forget-skill.test.cjs'
+      - 'tests/controller.test.cjs'
+      - 'src/pkmsvv-mega-lucario.css'
+      - 'src/shared/coop-unified.js'
+      - 'src/web/pkmsvv-egg-rush.js'
+      - 'scripts/patch-v15-egg-rush-web.cjs'
+      - 'scripts/patch-hover-ability.cjs'
+      - 'scripts/patch-v15-offline-save-notice.cjs'
+      - 'scripts/prepare-game.cjs'
 permissions:
   contents: read
 concurrency:
