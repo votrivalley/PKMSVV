@@ -191,7 +191,12 @@ G.PKMSVVChampionArena=(()=>{
       mapEffect(REGION_THEMES[Number(mapChoice)||0]).hint;
    };
   $('pkmsvv-champion-start').onclick=start;
-  $('pkmsvv-champion-sky').onclick=startSky;
+  $('pkmsvv-champion-sky').onclick=()=>{
+   if(G.DB?.save?.pkmsvvChapter10Done){
+    overlay.hidden=true;
+    G.PKMSVVStory?.replay?.('chapter10');
+   }else startSky();
+  };
   $('pkmsvv-champion-rematch').onclick=rematch;
   $('pkmsvv-champion-ready').onclick=()=>{if(active&&elapsed>=prepSeconds())nextDuel();};
   overlay.addEventListener('click',e=>{if(e.target===overlay&&!active){overlay.hidden=true;clearResult();}});
@@ -250,7 +255,14 @@ G.PKMSVVChampionArena=(()=>{
   $('pkmsvv-champion-ready').hidden=true;
   $('pkmsvv-champion-ready').disabled=true;
   $('pkmsvv-champion-start').disabled=!G.PKMSVVStory?.arenaUnlocked?.()||(mode==='story'?!regionUnlocked(region):!storyCompleted());
-  const sky=$('pkmsvv-champion-sky');if(sky){sky.hidden=!(storyCompleted()&&!G.DB?.save?.pkmsvvChapter10Done);sky.disabled=active;}
+  const sky=$('pkmsvv-champion-sky');
+  if(sky){
+   // Story chapter is separated from the three Arena competitive modes.
+   sky.hidden=!storyCompleted();sky.disabled=active;
+   sky.textContent=G.DB?.save?.pkmsvvChapter10Done?
+    tr('📖 Xem lại Hành Trình Thiên Không','📖 Replay Sky Journey'):
+    tr('📜 Hành Trình Thiên Không','📜 Sky Journey');
+  }
   $('pkmsvv-champion-start').textContent=mode==='story'?tr('Bắt đầu Hành Trình Vương Miện','Start Crown Journey'):tr('Bắt đầu Giải Champion · AI','Start Champion League · AI');
   o.hidden=false;
  }
