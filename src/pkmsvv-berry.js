@@ -78,7 +78,7 @@ G.PKMSVVBerry=(()=>{
   const grid=document.createElement('div');grid.className='pkmsvv-berry-grid';
   for(const t of TYPES){
    const tile=document.createElement('div');tile.className='pkmsvv-berry-tile';
-   const name=document.createElement('strong');name.textContent=t.name+' ×'+count(t.id);tile.prepend(image(t.id,42));
+   const name=document.createElement('strong');name.textContent=t.name+' ×'+count(t.id);tile.append(image(t.id,42));
    const desc=document.createElement('small');desc.textContent=t.desc[vi()?0:1];
    tile.append(name,desc);
    if(t.price)tile.append(button(tr('Mua ','Buy ')+t.price+' 🪙',()=>buy(t.id)));
@@ -218,7 +218,7 @@ G.PKMSVVBerry=(()=>{
     if(picked.includes(type.id)){picked.splice(picked.indexOf(type.id),1);b.classList.remove('picked');}
     else if(picked.length<2){picked.push(type.id);b.classList.add('picked');}
    });
-   b.prepend(image(type.id,36));grid.append(b);
+   b.append(image(type.id,36));grid.append(b);
   }
   panel.append(button(tr('Xác nhận','Confirm'),done,'primary'));
   panel.append(button(tr('Không dùng Berry','No Berry'),()=>{picked.length=0;done();},'ghost'));
