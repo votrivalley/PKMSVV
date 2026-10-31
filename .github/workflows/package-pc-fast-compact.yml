@@ -23,6 +23,18 @@ on:
       - 'scripts/patch-hover-ability.cjs'
       - 'scripts/patch-v15-offline-save-notice.cjs'
       - 'scripts/prepare-game.cjs'
+      - 'src/pkmsvv-berry.js'
+      - 'src/pkmsvv-wiki.js'
+      - 'src/shared/coop-unified.js'
+      - 'src/shared/coop-unified.css'
+      - 'src/lan/wifi-bus.js'
+      - 'src/lan/lan-ai.js'
+      - 'lan-server/server.cjs'
+      - 'src/kecleon/pkmsvv-kecleon-ui.js'
+      - 'src/pkmsvv-mega-gacha.js'
+      - 'tests/berry.test.cjs'
+      - 'tests/unified-coop.test.cjs'
+      - 'tests/mega-arena-gacha.test.cjs'
 permissions:
   contents: read
 concurrency:
@@ -51,7 +63,7 @@ jobs:
         env:
           PKMSVV_MEGA_SPRITE_PACK: '1'
       - name: Quick regressions for controls, Mega, Orb, supports and Champion
-        run: node --test tests/berry.test.cjs tests/berry-rescue.test.cjs tests/forget-skill.test.cjs tests/controller.test.cjs tests/mega-phase3.test.cjs tests/champion-arena.test.cjs tests/support-fast-shiny.test.cjs tests/competitive-nonblocking.test.cjs tests/royale-spectator.test.cjs
+        run: node --test tests/berry.test.cjs tests/berry-rescue.test.cjs tests/berry.test.cjs tests/unified-coop.test.cjs tests/mega-arena-gacha.test.cjs tests/forget-skill.test.cjs tests/controller.test.cjs tests/mega-phase3.test.cjs tests/champion-arena.test.cjs tests/support-fast-shiny.test.cjs tests/competitive-nonblocking.test.cjs tests/royale-spectator.test.cjs
       - name: Package portable PC executable
         run: npm run build:lan:win
         env:
