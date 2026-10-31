@@ -3,8 +3,10 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const root=path.resolve(__dirname,'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const patch=read('scripts/patch-competitive-levelup.cjs');
-test('only Royale/EggRush pick cards without room waiting',()=>{
+test('Royale, Egg Rush, Arena Solo and Champion pick cards without pausing the simulation',()=>{
  assert.match(patch,/G\.Royale\?\.active\|\|G\.EggRush\?\.active/);
+ assert.match(patch,/G\.PKMSVVChampionArena\?\.active/);
+ assert.match(patch,/G\.PKMSVVArenaSolo\?\.active/);
  assert.match(patch,/api\.levelStart\(level\);G\.LanAI\?\.levelUp\?\.\(level,levelSeq\);return;/);
  assert.match(patch,/waiting = new Set\(\[me\]\);/,'Co-op waiting remains');
  assert.match(patch,/if\(pkmsvvCompetitive\(\)\)\{doneSeq=seenSeq;return;\}/);
