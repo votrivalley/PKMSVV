@@ -11,7 +11,15 @@ function patch(file,a,b) {
 // Let the gamepad's candidate/confirm/back logic see ONLY this highest overlay.
 patch('js/core/gamepad.js',
  '  function topScreen() {\n    let top = null, tz = -Infinity;',
- '  function topScreen() {\n    const gachaResults = document.getElementById("pull-fx");\n    if (gachaResults && !gachaResults.classList.contains("hidden")) return gachaResults;\n    let top = null, tz = -Infinity;');
+ '  function topScreen() {\n    const gachaResults = document.getElementById("pull-fx");\n    if (gachaResults && !gachaResults.classList.contains("hidden")) return gachaResults;\n'+
+ '    // Dynamically mounted PKMSVV dialogs must be navigable before the underlying screen.\n'+
+ '    for(const selector of [".pkmsvv-memory-chooser",".pkmsvv-berry-overlay",\n'+
+ '      "#pkmsvv-wiki-overlay","#pkmsvv-champion-screen",\n'+
+ '      "#pkmsvv-support-catalog","#pkmsvv-mega-phase1"]){\n'+
+ '      const node=document.querySelector(selector);\n'+
+ '      if(node&&!node.hidden&&!node.classList.contains("hidden"))return node;\n'+
+ '    }\n'+
+ '    let top = null, tz = -Infinity;');
 // Gacha results often appear after an asynchronous slot animation. Focus must be
 // moved explicitly when the continue button finally becomes visible.
 patch('js/core/gamepad.js',
@@ -101,9 +109,51 @@ patch('js/systems/pkmsvv-evolution.js',
  "      }\n"+
  "    }");
 fs.appendFileSync(path.join(dir,'css','style.css'),String.raw`
+/* A/B on any new overlay uses the existing gamepad candidates() and press()/back().
+   Observe only overlay mounts/unhides, never rebuild the candidate list on every frame. */
+const accessibility=String.raw`
+(function(){
+ let scheduled=false;
+ const selectors=['.pkmsvv-memory-chooser','.pkmsvv-berry-overlay','#pkmsvv-wiki-overlay',
+  '#pkmsvv-champion-screen','#pkmsvv-support-catalog','#pkmsvv-mega-phase1'];
+ function current(){
+  for(const selector of selectors){
+   const element=document.querySelector(selector);
+   if(element&&!element.hidden&&!element.classList.contains('hidden'))return element;
+  }
+  return null;
+ }
+ function focus(){
+  scheduled=false;
+  const dlg=current();
+  if(!dlg)return;
+  const buttons=Array.from(dlg.querySelectorAll('button:not([disabled]),select:not([disabled]),input:not([disabled]),summary'))
+   .filter(b=>b.getClientRects?.().length!==0);
+  if(buttons.length&&G.Pad?.focusElement){
+   if(!buttons.some(b=>b.classList.contains('pad-focus')))G.Pad.focusElement(buttons[0]);
+  }else G.Pad?.focusFirst?.();
+ }
+ function queue(){if(scheduled)return;scheduled=true;requestAnimationFrame(focus);}
+ if(typeof MutationObserver==='function')new MutationObserver(list=>{
+  if(list.some(x=>x.type==='childList'||x.attributeName==='hidden'||x.attributeName==='class'))queue();
+ }).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['hidden','class']});
+ document.addEventListener('DOMContentLoaded',queue,{once:true});
+ document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  const dlg=current();if(!dlg)return;
+  if(dlg.id==='pkmsvv-wiki-overlay'){G.PKMSVVWiki?.close?.();e.stopPropagation();return;}
+  if(dlg.classList.contains('pkmsvv-memory-chooser')){dlg.remove();e.stopPropagation();return;}
+  const close=dlg.querySelector('[data-back],[data-mega-close],.pkmsvv-pc-close,.pkmsvv-champion-heading #pkmsvv-champion-close');
+  if(close){close.click();e.stopPropagation();}
+ },true);
+})();
+`;
+fs.writeFileSync(path.join(dir,'js','ui','pkmsvv-pad-dialogs.js'),accessibility);
+patch('dev.html','<script defer src="js/ui/pkmsvv-pad-flow.js"></script>',
+ '<script defer src="js/ui/pkmsvv-pad-flow.js"></script>\\n<script defer src="js/ui/pkmsvv-pad-dialogs.js"></script>');
 /* Show the active controller selection in custom modal options. */
 .pkmsvv-evo-option.pad-focus,.pkmsvv-evo-skip.pad-focus,
-#pull-close.pad-focus,#dex-play-now.pad-focus{
+#pull-close.pad-focus,#dex-play-now.pad-focus,\n.pkmsvv-memory-chooser .pad-focus,.pkmsvv-pc-overlay .pad-focus,\n.pkmsvv-champion-overlay .pad-focus,.pkmsvv-support-overlay .pad-focus,\n.pkmsvv-mega-phase1-overlay .pad-focus,.pkmsvv-berry-overlay .pad-focus{
  outline:3px solid #ffe17d!important;outline-offset:3px;
  box-shadow:0 0 0 4px rgba(12,22,44,.8),0 0 17px rgba(255,221,102,.55)!important;
 }
