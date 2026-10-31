@@ -1,6 +1,13 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),game=path.join(root,'vendor','pokesurvivor');
+// A real, purchasable individual Pokémon upgrade (not a global skill).
+const upgrades=path.join(game,'js','data','upgrades.js');
+const oldUpgrades=fs.readFileSync(upgrades,'utf8').replace(/\r\n/g,'\n');
+const slot='  ];\n  const BY = {};';
+if(oldUpgrades.split(slot).length!==2)throw Error('Personal upgrade list changed');
+fs.writeFileSync(upgrades,oldUpgrades.replace(slot,
+ "    { id: 'forget', icon: 'book', name: 'Quên Kỹ Năng', unit: 'Tối đa 1 lần mỗi trận sau khi học đủ kỹ năng', max: 1, base: 600, grow: 1 },\n"+slot));
 const from='<script defer src="js/ui/pkmsvv-berry-rescue.js"></script>';
 const to=from+'\n<script defer src="js/ui/pkmsvv-forget-skill.js"></script>';
 const html=path.join(game,'dev.html'),src=fs.readFileSync(html,'utf8');
