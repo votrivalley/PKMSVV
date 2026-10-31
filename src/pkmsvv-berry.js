@@ -204,7 +204,7 @@ G.PKMSVVBerry=(()=>{
   const d=data();
   if(!d){onDone?.([]);return false;}
   choiceOpen=true;const token=++turn;let seconds=4;
-  const picked=[];
+  const picked=[];let locked=false;
   const panel=shell(tr('CHỌN BERRY TRƯỚC TRẬN','CHOOSE PRE-BATTLE BERRIES'),
     tr('Còn 4 giây · Chọn tối đa 2 Berry · Có thể bỏ qua','4 seconds · Max 2 Berries · You may skip'));
   const clock=document.createElement('strong');clock.className='pkmsvv-berry-clock';clock.textContent='04s';panel.append(clock);
@@ -215,14 +215,15 @@ G.PKMSVVBerry=(()=>{
   };
   for(const type of TYPES.filter(t=>count(t.id)>0)){
    const b=button(type.name+' ×'+count(type.id)+' · '+type.desc[vi()?0:1],()=>{
+    if(locked)return;
     if(picked.includes(type.id)){picked.splice(picked.indexOf(type.id),1);b.classList.remove('picked');}
     else if(picked.length<2){picked.push(type.id);b.classList.add('picked');}
    });
    b.append(image(type.id,36));grid.append(b);
   }
   if(!grid.children.length){const empty=document.createElement('p');empty.className='pkmsvv-berry-empty';empty.textContent=tr('Túi đang trống. Trận sẽ bắt đầu sau 4 giây.','No Berries yet. Match begins in 4 seconds.');grid.append(empty);}
-  panel.append(button(tr('Xác nhận','Confirm'),done,'primary'));
-  panel.append(button(tr('Không dùng Berry','No Berry'),()=>{picked.length=0;done();},'ghost'));
+  panel.append(button(tr('Xác nhận','Confirm'),()=>{locked=true;clock.textContent='✓ '+seconds+'s';},'primary'));
+  panel.append(button(tr('Không dùng Berry','No Berry'),()=>{picked.length=0;locked=true;clock.textContent='✓ '+seconds+'s';},'ghost'));
   chooseTimer=setInterval(()=>{if(token!==turn)return;seconds--;clock.textContent='0'+seconds+'s';if(seconds<=0)done();},1000);
   // During the four-second selection, prevent unavoidable early deaths.
   const pl=!preRun&&G.Game?.player;if(pl)pl.invuln=Math.max(pl.invuln||0,5);
