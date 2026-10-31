@@ -19,7 +19,7 @@ G.PKMSVVChampionArena=(()=>{
  const MEGA_KEYS=['charizardmegax','tyranitarmega','gardevoirmega','lucariomega',
   'excadrillmega','dragalgemega','drampamega',null,'tatsugiricurlymega','dragonitemega'];
  const MEGA_NAMES=['Charizard X','Tyranitar','Gardevoir','Lucario','Excadrill',
-  'Dragalge','Drampa','Gengar','Tatsugiri Curly','Absol'];
+  'Dragalge','Drampa','Corviknight','Tatsugiri Curly','Dragonite'];
  const TEMP_CHAMPIONS={
   1:[248,'Tyranitar'],2:[282,'Gardevoir'],3:[448,'Lucario'],
   5:[691,'Dragalge'],6:[780,'Drampa'],7:[823,'Corviknight'],
@@ -96,11 +96,11 @@ G.PKMSVVChampionArena=(()=>{
   const book=save.arenas.pkmChampion;book.history=book.history||[];return book;
  }
  // A bracket seed is not a win; only player defeat of a real Enemy counts.
- // Exactly two strong AI with 13 randomized others; shuffle player position too.
+ // Crown Journey has three elite rivals; post-game Top 1 gives all 15 AI elite strength.
  function makeBracket(random=rand){
   const opponents=Array.from({length:15},(_,i)=>({id:'ai-'+i,name:'AI '+String(i+1).padStart(2,'0'),
    dex:regionalPool()[Math.min(regionalPool().length-1,Math.floor(random()*regionalPool().length))],
-   tier:i<3?'elite':random()<Math.min(.93,.64+region*.025)?'trained':'novice'}));
+   tier:mode==='league'||i<3?'elite':random()<Math.min(.93,.64+region*.025)?'trained':'novice'}));
   const seats=[{id:'you',name:tr('Bạn','You'),dex:G.DB?.save?.partner||25,tier:'human'},...opponents];
   for(let i=seats.length-1;i>0;i--){const j=Math.min(i,Math.max(0,Math.floor(random()*(i+1))));[seats[i],seats[j]]=[seats[j],seats[i]];}
   return seats;
@@ -168,14 +168,14 @@ G.PKMSVVChampionArena=(()=>{
   overlay=document.createElement('section');overlay.id='pkmsvv-champion-screen';
   overlay.className='pkmsvv-champion-overlay';overlay.hidden=true;
   overlay.innerHTML='<div class="pkmsvv-champion-panel" role="dialog" aria-modal="true" aria-labelledby="pkmsvv-champion-title">'+
-   '<div class="pkmsvv-champion-heading"><h2 id="pkmsvv-champion-title">🏆 Arena · Champion</h2><button class="btn ghost" id="pkmsvv-champion-close" type="button">×</button></div>'+
+   '<div class="pkmsvv-champion-heading"><h2 id="pkmsvv-champion-title">🏆 Arena · Champion</h2><div class="pkmsvv-champion-heading-actions"><button id="pkmsvv-champion-sky" type="button" class="btn gold" hidden>🐉 Hành Trình Thiên Không</button><button class="btn ghost" id="pkmsvv-champion-close" type="button">×</button></div></div>'+
    '<p id="pkmsvv-champion-info"></p><div id="pkmsvv-champion-regions" class="pkmsvv-champion-regions"></div>'+
    '<div class="pkmsvv-arena-mode-tabs"><button id="pkmsvv-arena-mode-solo" type="button" class="btn">⚔ Solo 1v1</button><button id="pkmsvv-arena-mode-champion" type="button" class="btn gold">📜 Hành Trình Vương Miện</button><button id="pkmsvv-arena-mode-league" type="button" class="btn">🏆 Giải Champion</button></div>'+
    '<div id="pkmsvv-champion-map-row" class="pkmsvv-champion-map-row" hidden><label for="pkmsvv-champion-map">Sân thi đấu</label><select id="pkmsvv-champion-map"></select><small>Đấu với AI trong bản thử nghiệm; đấu với bạn bè qua LAN sẽ phát triển sau.</small></div>'+ 
     '<div id="pkmsvv-champion-progress" class="pkmsvv-champion-progress"></div>'+'<div id="pkmsvv-champion-bracket" class="pkmsvv-champion-bracket"></div>'+'<div id="pkmsvv-champion-hall" class="pkmsvv-champion-hall"></div>'+'<div id="pkmsvv-champion-podium" class="pkmsvv-champion-podium" hidden></div>'+
    '<div class="pkmsvv-champion-actions"><button id="pkmsvv-champion-start" type="button" class="btn gold">Bắt đầu giải đấu</button>'+
    '<button id="pkmsvv-champion-rematch" type="button" class="btn gold" hidden>Thách đấu lại Champion</button>'+
-    '<button id="pkmsvv-champion-sky" type="button" class="btn gold" hidden>🐉 Chương 10 · Thách đấu Rayquaza</button>'+
+
    '<button id="pkmsvv-champion-ready" type="button" class="btn gold" hidden>Sẵn sàng</button></div></div>';
   document.body.append(overlay);
   $('pkmsvv-champion-close').onclick=()=>{overlay.hidden=true;clearResult();if(active)returnToMenu();};
@@ -200,10 +200,10 @@ G.PKMSVVChampionArena=(()=>{
  function updatePanel(){
   const o=panel(),led=G.DB?.save?.arenas?.pkmChampion||{trophies:{},seals:{}};
   $('pkmsvv-champion-info').textContent=mode==='story'?tr(
-   'Hành Trình Vương Miện: 4 phút farm + 1 phút xem đối thủ đầu giải; các vòng sau 2 phút farm + 30 giây xem đối thủ. Chỉ thưởng một lần.',
-   'Crown Journey: 4-minute farm + 1-minute preview initially; later 2-minute farm + 30-second preview. Rewards once only.'):
-   tr('Giải Champion: 16 suất với 2 AI mạnh. Bản này đấu với AI; LAN nhiều người sẽ cập nhật sau.',
-   'Champion League: 16 slots and 2 elite AI. This build supports AI-only matches, LAN PvP is coming later.');
+   'Hành Trình Vương Miện: vòng đầu 4 phút; các vòng sau 90 giây. 9 Champion còn lại Mega hóa ở nửa máu và được tăng gấp đôi sức mạnh.',
+   'Crown Journey: 4-minute opener, then 90-second preparations. The remaining 9 Champions Mega Evolve at half HP and double their power.'):
+   tr('Giải Champion hậu truyện: 15 AI tinh nhuệ, sức mạnh cân bằng theo Pokémon người chơi. Tranh Top 1!',
+   'Post-game Champion League: 15 elite AI matched to the player's power. Compete for Top 1!');
   const leagueTab=$('pkmsvv-arena-mode-league');leagueTab.disabled=!storyCompleted();
   leagueTab.classList?.toggle?.('gold',mode==='league');
   $('pkmsvv-arena-mode-champion').classList?.toggle?.('gold',mode==='story');
@@ -300,9 +300,16 @@ G.PKMSVVChampionArena=(()=>{
   // Same baseline HP and movement for both sides. Skill builds still matter.
   pl._arenaOriginal={mon:pl.mon,maxHp:pl.maxHp,baseAtk:pl.baseAtk,baseSpd:pl.baseSpd,
    atkMul:pl.atkMul,spdMul:pl.spdMul};
-  pl.mon={...pl.mon,hp:320,pa:130,sa:130,atk:130,df:110,sd:110,spd:112};
-  pl.maxHp=320;pl.hp=320;pl.baseAtk=1.3;pl.baseSpd=112;
-  pl.atkMul=1;pl.spdMul=1;
+  // In the post-game Top 1 league all AI must match the player's real build,
+  // instead of resetting the player's trained stats to the 320 HP Story baseline.
+  const userBaseline={hp:Math.max(320,Number(pl.maxHp)||320),
+   dmg:Math.max(12.4,12.4*Math.max(1,Number(pl.atkMul)||1)*Math.max(1,Number(pl.baseAtk)||1)/1.3),
+   spd:Math.max(112,Number(pl.baseSpd)||112)};
+  if(mode!=='league'){
+   pl.mon={...pl.mon,hp:320,pa:130,sa:130,atk:130,df:110,sd:110,spd:112};
+   pl.maxHp=320;pl.hp=320;pl.baseAtk=1.3;pl.baseSpd=112;
+   pl.atkMul=1;pl.spdMul=1;
+  }else pl.hp=pl.maxHp;
   const aiTier=opp.tier==='elite'?'elite':opp.tier==='trained'?'trained':'novice';
   const power=region;
   const cadence=Math.max(.62,1-.04*power);
@@ -312,13 +319,19 @@ G.PKMSVVChampionArena=(()=>{
     spd:112+Math.min(28,region*2.5+round*3),
     dmg:Math.round((12.4+.95*power+.5*round)*tierDmg*10)/10,xp:0,behavior:'champion',
     shotCd:(aiTier==='elite'?1.35:aiTier==='trained'?1.95:2.7)*cadence};
+  if(mode==='league'){
+   raw.hp=Math.max(raw.hp,userBaseline.hp);
+   raw.dmg=Math.max(raw.dmg,userBaseline.dmg);
+   raw.spd=Math.max(raw.spd,userBaseline.spd);
+   raw.shotCd=Math.min(raw.shotCd,1.3);
+  }
   target=G.EnemyMgr.add(new G.Enemy(raw,pl.x+Math.min(300,190+round*15),pl.y-35,
     {hp:1,spd:1,dmg:1},true));
 
   // Duel opponents still use boss combat mechanics, but MUST draw like normal
   // player Pokémon rather than the enlarged boss species artwork.
   if(target&&G.Sprites){
-   const visualDex=opp.pkmsvvMegaSprite||dex;
+   const visualDex=dex; // phase 1 always uses ordinary Pokémon artwork
    const visualScale=G.Sprites.playerScale?.(visualDex);
    if(Number.isFinite(visualScale)&&visualScale>0){
     target.scale=visualScale;
@@ -329,6 +342,9 @@ G.PKMSVVChampionArena=(()=>{
   }
   if(target)applyMapEffect(pl,target);
   target.pkmsvvChampion=true;
+  target._pkmsvvChampionMegaEligible=mode==='story'&&round===3&&region>0;
+  target._pkmsvvMegaSprite=opp?.pkmsvvMegaSprite||null;
+  target._pkmsvvMegaPhase2=false;
   target.skillCd=(aiTier==='elite'?.75:aiTier==='trained'?1.55:2.5)*cadence;
   stage='fight';elapsed=0;lastSecond=-1;
   panel().hidden=true;
@@ -377,7 +393,7 @@ G.PKMSVVChampionArena=(()=>{
    behavior:'champion',shotCd:1.55};
   target=G.EnemyMgr.add(new G.Enemy(raw,hero.x+225,hero.y-115,{hp:1,spd:1,dmg:1},true));
   if(!target){returnToMenu();return false;}
-  target.pkmsvvChampion=true;target._pkmsvvSkyBoss=true;target.skillCd=1.35;
+  target.pkmsvvChampion=true;target._pkmsvvSkyBoss=true;target._pkmsvvMegaPhase2=false;target.skillCd=1.35;
   const art=G.Sprites?.playerScale?.(dex);
   if(art>0&&G.Sprites?.Animator){
    target.scale=art;target.anim=new G.Sprites.Animator(dex,art,false);
@@ -387,6 +403,36 @@ G.PKMSVVChampionArena=(()=>{
   const bar=$('pkmsvv-champion-hud');if(bar){bar.hidden=false;bar.textContent='🐉 SKY · RAYQUAZA';}
   G.UI?.toast?.(tr('🐉 Chương 10: Đánh bại Rayquaza trên bầu trời!',
     '🐉 Chapter 10: Defeat Rayquaza in the Sky!'),3500);
+  return true;
+ }
+ // The real second phase starts at <=50% HP, restores a full doubled health pool
+ // and doubles combat attributes. Only verified sprite sheets are used for Mega art.
+ function megaPhase(targetEnemy){
+  if(!targetEnemy||targetEnemy._pkmsvvMegaPhase2)return false;
+  const sky=targetEnemy._pkmsvvSkyBoss===true;
+  if(!sky&&!targetEnemy._pkmsvvChampionMegaEligible)return false;
+  const half=Math.max(1,Number(targetEnemy.maxHp)||1)*.5;
+  if(targetEnemy.hp>half&&!targetEnemy.dead)return false;
+  targetEnemy._pkmsvvMegaPhase2=true;targetEnemy.dead=false;
+  const previousHp=Math.max(1,Number(targetEnemy.maxHp)||1);
+  targetEnemy.maxHp=previousHp*2;targetEnemy.hp=targetEnemy.maxHp;
+  for(const key of ['dmg','spd','atk','def','pa','sa','df','sd','baseAtk','baseSpd']){
+   if(Number.isFinite(targetEnemy[key]))targetEnemy[key]*=2;
+  }
+  if(Number.isFinite(targetEnemy.shotCd))targetEnemy.shotCd=Math.max(.25,targetEnemy.shotCd/2);
+  if(Number.isFinite(targetEnemy.skillCd))targetEnemy.skillCd=Math.max(.2,targetEnemy.skillCd/2);
+  const catalog=G.PKMSVV_MEGA_CATALOG||[];
+  const form=sky?catalog.find(x=>x.key==='rayquazamega'&&x.artReady):null;
+  const sprite=sky?form?.spriteId:targetEnemy._pkmsvvMegaSprite;
+  if(sprite&&G.SPRITE_META?.[sprite]?.a?.Idle&&G.Sprites?.Animator){
+   const sc=G.Sprites.playerScale?.(sprite)||targetEnemy.scale||1;
+   targetEnemy.anim=new G.Sprites.Animator(sprite,sc,!!targetEnemy.shiny);
+   targetEnemy.scale=sc;targetEnemy.r=G.Sprites.bodyRadius?.(sprite,sc)||targetEnemy.r;
+   targetEnemy.bodyH=G.Sprites.bodyHeight?.(sprite,sc)||targetEnemy.bodyH;
+  }
+  G.FX?.burst?.(targetEnemy.x||0,targetEnemy.y||0,'#c282ff',65,210);
+  G.UI?.toast?.(tr('⚡ '+(sky?'Rayquaza':'Champion')+' Mega hóa! Hồi đầy HP và x2 chỉ số!',
+   '⚡ '+(sky?'Rayquaza':'Champion')+' Mega Evolved! Full HP and 2× stats!'),4200);
   return true;
  }
  function finishSky(victory){
@@ -555,6 +601,7 @@ G.PKMSVVChampionArena=(()=>{
   const pl=G.Game.player;
   if(!pl)return;
   if(pl.dead&&stage==='sky'){finishSky(false);return;}
+  if(stage==='sky'&&target&&megaPhase(target))return;
   if(stage==='sky'&&target?.dead){finishSky(true);return;}
   if(pl.dead){
    if(round===2){futureBracket(false);round=4;pl.dead=false;pl.hp=Math.max(1,pl.maxHp);beginPrep();return;}
@@ -589,6 +636,7 @@ G.PKMSVVChampionArena=(()=>{
    return;
   }
   if(stage!=='fight')return;
+  if(target&&megaPhase(target))return;
   if(target?.dead){
    target=null;
    if(round===4){
@@ -664,7 +712,7 @@ G.PKMSVVChampionArena=(()=>{
  // Chapter 5 is explicitly accessible through Memories and Arena intro.
  // In particular, first LAN access must never be blocked by a cutscene.
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',menu,{once:true});else menu();
- return {REGIONS,REGION_THEMES,MAP_EFFECTS,mapEffect,MEGA_KEYS,TEMP_CHAMPIONS,GEN_POOLS,GEN_BOUNDS,regionalPool,displayRegion,regionChampion,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIRST_PREP_SECONDS,FIGHT_SECONDS,WARN_SECONDS,prepSeconds,previewSeconds,makeBracket,aiWinner,open,start,startSky,rematch,exit,nextDuel,renderPodium,
+ return {REGIONS,REGION_THEMES,MAP_EFFECTS,mapEffect,MEGA_KEYS,TEMP_CHAMPIONS,GEN_POOLS,GEN_BOUNDS,regionalPool,displayRegion,megaPhase,regionChampion,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIRST_PREP_SECONDS,FIGHT_SECONDS,WARN_SECONDS,prepSeconds,previewSeconds,makeBracket,aiWinner,open,start,startSky,rematch,exit,nextDuel,renderPodium,
   update,settle,claimSeal,ledger,get active(){return active},get stage(){return stage},get round(){return round},
   get opponent(){return opp}};
 })();
