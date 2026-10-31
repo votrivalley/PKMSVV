@@ -86,6 +86,27 @@ test('Solo Berry choice occurs before enemy spawning, lasts 4 seconds, consumes 
  assert.deepEqual([...h.G.Game.player._pkmsvvBerry.ids],['liechi']);
  assert.equal(b.chapterProgress(),1);
 });
+test('Four-second Berry countdown also runs with an empty bag before starting the fight',()=>{
+ const h=interactiveHarness();
+ h.G.Game.startRun(null);
+ assert.equal(h.starts,0,'no monsters before the four-second selection');
+ assert.equal(h.berry.choosing,true);
+ assert.ok(h.elements.some(e=>e.tagName==='strong'&&e.textContent==='04s'));
+ for(let i=0;i<3;i++)h.pulse();
+ assert.equal(h.starts,0);
+ h.pulse();
+ assert.equal(h.starts,1);assert.equal(h.berry.choosing,false);
+ assert.deepEqual([...h.berry.data().last],[]);
+});
+test('Both transport room services preserve Berry and Berry Easy rather than silently falling back to Co-op',()=>{
+ const wifi=fs.readFileSync(path.join(root,'src/lan/wifi-bus.js'),'utf8');
+ const server=fs.readFileSync(path.join(root,'lan-server/server.cjs'),'utf8');
+ for(const code of [wifi,server]){
+  assert.match(code,/\['coop','royale','eggrush','berry','berryeasy'\]/);
+ }
+ const ai=fs.readFileSync(path.join(root,'src/lan/lan-ai.js'),'utf8');
+ assert.ok(ai.includes("'berryeasy'")&&ai.includes("'berry'"));
+});
 test('Rescue Berry enters Co-op room mode rather than awarding via click-to-win',()=>{
  const h=interactiveHarness();let chosen=null;
  h.G.MultiplayerUI={open(){chosen='fallback'}};
