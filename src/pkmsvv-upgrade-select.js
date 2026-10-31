@@ -28,8 +28,8 @@ G.PKMSVVUpgradeChooser=(()=>{
   section(t('Hướng dẫn Mystery Orb','Mystery Orb Guide'),body=>{
    const info=document.createElement('p');
    const orbKey=String(G.Input?.bound?.('orb')||'digit4').replace(/^(digit|key|numpad)/,'').toUpperCase();
-   info.textContent=t('Mở khi học đủ 8 kỹ năng. Nhặt Orb để xếp hàng và sử dụng bằng phím '+orbKey+'; tối đa 10 Orb trong trận, hồi chiêu 5 giây.',
-     'Unlock after learning eight skills. Collect Orbs in FIFO order and use key '+orbKey+'; up to 10 Orbs per run with a 5-second cooldown.');
+   info.textContent=t('Nhặt Mystery Orb ngay từ đầu trận, xếp hàng và sử dụng bằng phím '+orbKey+'; tối đa 10 Orb trong trận, hồi chiêu 5 giây.',
+     'Collect Orbs from the beginning of each match in FIFO order and use key '+orbKey+'; up to 10 Orbs per run with a 5-second cooldown.');
    body.append(info);
    (G.Orbs?.LIST||[]).forEach(orb=>{
     const row=document.createElement('div');row.className='pkmsvv-orb-guide-row';
