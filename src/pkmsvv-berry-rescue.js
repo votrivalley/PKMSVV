@@ -5,7 +5,8 @@ G.PKMSVVBerryRescue=(()=>{
  'use strict';
  const DURATION=480,BOSS_TIMES=[240,480],REWARD_CHANCE=.3;
  const NORMAL_REWARDS=[.35,.33,.32,.31,.30],EASY_REWARDS=[.18,.16,.15,.14,.13];
- const POS=[[-260,105],[0,145],[260,105]];
+ // Cluster the three objective trees as a tactical triangle.
+ const POS=[[-92,82],[92,82],[0,-72]];
  const NAMES=['Oran','Sitrus','Lum'];
  let active=false,easy=false,time=0,trees=[],bossStage=0,won=false,claimed=false,sendClock=0,endClock=0;
  let sprites=[];
@@ -48,7 +49,7 @@ G.PKMSVVBerryRescue=(()=>{
   const rates=isEasy?EASY_REWARDS:NORMAL_REWARDS;
   return pct>=99.999?rates[0]:pct>=80?rates[1]:pct>=60?rates[2]:pct>=40?rates[3]:rates[4];
  }
- function difficultyFor(stage,isEasy=easy){return (isEasy?.7:1)*(1+.2*Math.max(0,Math.min(3,stage)));}
+ function difficultyFor(stage,isEasy=easy){return (isEasy?.7:1)*(1+(isEasy?.15:.20)*Math.max(0,Math.min(3,stage)));}
  function rebalanceEnemy(e,stage){
   if(!e||e.dead||e.remote)return;
   if(!e._pkmsvvBerryAdjusted){
@@ -111,12 +112,15 @@ G.PKMSVVBerryRescue=(()=>{
  function drawTree(ctx,ratio,id){
   const stage=treeStage(ratio),leaves=[13,10,8,5,2,0][stage],fruit=[5,4,3,2,1,0][stage];
   ctx.save();ctx.imageSmoothingEnabled=false;
+  ctx.fillStyle='#18291f';ctx.fillRect(-6,-29,12,31);ctx.fillRect(-16,-28,15,9);ctx.fillRect(3,-34,15,9);
   ctx.fillStyle='#4c3228';ctx.fillRect(-4,-27,8,27);ctx.fillRect(-14,-26,11,5);ctx.fillRect(4,-32,12,5);
   ctx.fillStyle='#9b653c';ctx.fillRect(-2,-24,3,22);ctx.fillRect(-12,-25,7,2);ctx.fillRect(5,-31,8,2);
   for(let i=0;i<leaves;i++){const [x,y]=LEAVES[i];const tint=i%3;
+   ctx.fillStyle='#153c2f';ctx.fillRect(x-5,y-5,11,11);
    ctx.fillStyle=tint===0?'#286b43':tint===1?'#4f9d55':'#79bb64';
    ctx.fillRect(x-4,y-4,9,9);ctx.fillStyle='#afdf83';ctx.fillRect(x-2,y-3,3,3);}
   for(let i=0;i<fruit;i++){const [x,y]=FRUIT[(i+id)%FRUIT.length];
+   ctx.fillStyle='#392e31';ctx.fillRect(x-3,y-2,7,7);
    ctx.fillStyle=id===1?'#f0b447':id===2?'#d777aa':'#e96346';
    ctx.fillRect(x-2,y-1,5,5);ctx.fillStyle='#fff3c0';ctx.fillRect(x-1,y,2,2);}
   ctx.restore();
