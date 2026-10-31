@@ -115,7 +115,7 @@ G.PKMSVVStory=(()=>{
    {art:21,speaker:['Tôi','Me'],text:['Rayquaza... Mega hóa! Không, thứ năng lượng đen kia đang nuốt chửng nó!','Rayquaza Mega Evolves... No, that dark energy is consuming it!']},
    {art:21,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Mega Rayquaza đã hắc hóa và bay về phía chân trời. Bóng tối bắt đầu tràn vào thế giới Pokémon.','Shadow Mega Rayquaza flies into the horizon. Darkness is spreading across the Pokémon world.']},
    {art:21,speaker:['Tôi','Me'],text:['Một vùng phụ bản mới đang hình thành. Mình phải chuẩn bị để giải cứu Pokémon bị hắc hóa!','A new dungeon is forming. I must prepare to rescue Shadow Pokémon!']},
-   {art:20,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Hành trình Hắc Hóa sẽ tiếp tục trong chương Bonus — cập nhật sau.','The Shadow journey continues in a future bonus chapter.']}
+   {art:20,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Nhưng đây chưa phải hồi kết... Câu chuyện của chúng ta vẫn còn tiếp diễn.','But this is not the end... Our story is still unfolding.']}
   ],
   reveal:[
    {art:5,speaker:['Tôi','Me'],text:['Mình... đã biến thành một Pokémon?!','I... turned into a Pokémon?!']},
@@ -196,6 +196,11 @@ G.PKMSVVStory=(()=>{
   finally{nameSubmitting=false;btn.disabled=false;}
  }
  function skipStory(){
+  // Memory replay returns to the Memories selector, never to the main menu.
+  if(memoryReplayActive&&mode!=='prologue'){
+   stop();hideNameForm();mode='';next=null;memoryReplayActive=false;
+   G.UI.hide('scr-pkmsvv-story');memories();return;
+  }
   if(mode==='prologue'&&!replaying&&G.DB.save&&!G.DB.save.pkmsvvNameChosen&&!(G.Social&&G.Social.me)){
    if(nameFormOpen){finish(true);return;} // Skip the name form, but never the starter selection.
    const i=lines.findIndex(scene=>scene.askName);
@@ -212,6 +217,7 @@ G.PKMSVVStory=(()=>{
   }
   hideNameForm();next=null;mode='';G.UI.hide('scr-pkmsvv-story');
   if(typeof callback==='function')callback(wasPrologue&&skipped&&!replaying);
+  if(memoryReplayActive&&!mode){memoryReplayActive=false;memories();}
  }
  function draw(){
   stop();hideNameForm();
@@ -519,6 +525,7 @@ G.PKMSVVStory=(()=>{
   return true;
  }
  function replay(type='prologue'){play(['chapter1','chapter2','chapter3','chapter5','berry','chapter6','championTen','chapter7','chapter10'].includes(type)?type:'prologue',()=>G.Flow.goMenu(),true);}
+ let memoryReplayActive=false;
  function memories(){
   const s=G.DB.save||{};
   // The default Memories menu opens the next available chapter to replay.
@@ -553,7 +560,7 @@ G.PKMSVVStory=(()=>{
    '<button type="button" class="btn ghost" data-close="1">'+tr('Đóng','Close')+'</button></div>';
   document.body.appendChild(choices);
   choices.querySelectorAll('[data-chapter]').forEach(el=>{el.onclick=()=>{
-   const chapter=el.dataset.chapter;choices.remove();
+   const chapter=el.dataset.chapter;choices.remove();memoryReplayActive=true;
    if(chapter==='berry'&&!G.DB?.save?.pkmsvvBerryIntroSeen)berryChapter(()=>G.Flow.goMenu());
    else if(chapter==='chapter5'&&!G.DB?.save?.pkmsvvChapter5Seen)chapter5(()=>G.Flow.goMenu());
    else if(chapter==='chapter6'&&!G.DB?.save?.pkmsvvChapter6Seen)chapter6(()=>G.Flow.goMenu());
