@@ -10,6 +10,7 @@ function patch(rel,from,to){
  fs.writeFileSync(target,c.replace(from,to),'utf8');
 }
 fs.copyFileSync(path.join(root,'src','pkmsvv-berry.js'),path.join(game,'js','ui','pkmsvv-berry.js'));
+require('./install-berry-sprites.cjs');
 patch('dev.html',
  '<script defer src="js/ui/pkmsvv-arena-solo.js"></script>',
  '<script defer src="js/ui/pkmsvv-arena-solo.js"></script>\n'+
