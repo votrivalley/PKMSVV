@@ -162,7 +162,14 @@ G.PKMSVVChampionArena=(()=>{
   $('pkmsvv-arena-mode-solo').onclick=()=>{overlay.hidden=true;G.PKMSVVArenaSolo?.open?.();};
   $('pkmsvv-arena-mode-champion').onclick=()=>{mode='story';clearResult();updatePanel();};
    $('pkmsvv-arena-mode-league').onclick=()=>{if(!storyCompleted())return;mode='league';clearResult();updatePanel();};
-   $('pkmsvv-champion-map').onchange=()=>{mapChoice=String($('pkmsvv-champion-map').value||'random');};
+   $('pkmsvv-champion-map').onchange=()=>{
+    mapChoice=String($('pkmsvv-champion-map').value||'random');
+    const hint=$('pkmsvv-champion-map-row')?.querySelector?.('small');
+    if(hint)hint.textContent=mapChoice==='random'?
+     '🎲 Chọn ngẫu nhiên trong 10 sân đã mở':
+     '🏟️ '+mapEffect(REGION_THEMES[Number(mapChoice)||0]).name+' · '+
+      mapEffect(REGION_THEMES[Number(mapChoice)||0]).hint;
+   };
   $('pkmsvv-champion-start').onclick=start;
   $('pkmsvv-champion-rematch').onclick=rematch;
   $('pkmsvv-champion-ready').onclick=()=>{if(active&&elapsed>=prepSeconds())nextDuel();};
@@ -182,7 +189,7 @@ G.PKMSVVChampionArena=(()=>{
   const mapRow=$('pkmsvv-champion-map-row');if(mapRow)mapRow.hidden=mode!=='league';
   const chooser=$('pkmsvv-champion-map');if(chooser&&mode==='league'){
    chooser.replaceChildren();
-   for(const [v,label] of [['random',tr('🎲 Ngẫu nhiên','🎲 Random')],...REGIONS.map(([name],i)=>[String(i),name])]){
+   for(const [v,label] of [['random',tr('🎲 Ngẫu nhiên','🎲 Random')],...REGIONS.map(([name],i)=>[String(i),name+' · '+mapEffect(REGION_THEMES[i]).hint])]){
     const option=document.createElement('option');option.value=v;option.textContent=label;option.selected=mapChoice===v;chooser.append(option);
    }
   }
@@ -192,6 +199,7 @@ G.PKMSVVChampionArena=(()=>{
    const b=document.createElement('button');b.type='button';b.className='pkmsvv-champion-region'+(region===i?' chosen':'');
    b.textContent=(led.seals?.[name]?'👑 ':led.trophies?.[name]?'🏆 ':regionUnlocked(i)?'○ ':'🔒 ')+name;
    b.disabled=active||mode==='league'||!regionUnlocked(i);
+   b.title='🏟️ '+mapEffect(REGION_THEMES[i]).name+' · '+mapEffect(REGION_THEMES[i]).hint;
    b.onclick=()=>{region=i;clearResult();updatePanel();};
    regionBox.append(b);
   });
