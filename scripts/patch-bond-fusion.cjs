@@ -29,9 +29,9 @@ fs.appendFileSync(path.join(base,'css/style.css'),String.raw`
 }
 #pkmsvv-fusion-action:disabled{opacity:.55;cursor:default}
 #pkmsvv-fusion-action[hidden]{display:none!important}
-body:has(#scr-pause:not([hidden])) #pkmsvv-fusion-action,
-body:has(#scr-menu:not([hidden])) #pkmsvv-fusion-action,
-body:has(#scr-settings:not([hidden])) #pkmsvv-fusion-action{
+body:has(#scr-pause:not(.hidden):not([hidden])) #pkmsvv-fusion-action,
+body:has(#scr-menu:not(.hidden):not([hidden])) #pkmsvv-fusion-action,
+body:has(#scr-settings:not(.hidden):not([hidden])) #pkmsvv-fusion-action{
  display:none!important;pointer-events:none!important
 }
 @media(max-width:720px),(pointer:coarse){
