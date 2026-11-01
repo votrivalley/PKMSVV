@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.58",
+  "version": "1.5.59",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.58: all 96 Mega catalog entries, Co-op Arena 1/2 progress and one Berry tree HP bar",
+  "description": "Pokémon Chuyển Sinh v1.5.59: real usable Mega silhouettes until unlock, colored after discovery; Android PC fixes",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
