@@ -21,6 +21,7 @@ G.PKMSVVBerryRescue=(()=>{
   const requested=typeof cfg==='string'?cfg:(cfg?.mode||G.Social?.room?.mode);
   active=['berry','berryeasy'].includes(requested);easy=requested==='berryeasy';time=0;bossStage=0;won=false;claimed=false;
   if(typeof document!=='undefined')document.body?.classList?.toggle?.('pkmsvv-berry-defense',active);
+  if(active)G.World?.flattenForBerry?.(); // clear cached wall chunks so enemy access to all 3 trees is unblocked
   drawnTrees.clear();
   sendClock=0;endClock=0;
   const hp=easy?220:180;

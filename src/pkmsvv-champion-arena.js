@@ -228,7 +228,7 @@ G.PKMSVVChampionArena=(()=>{
   const leagueTab=$('pkmsvv-arena-mode-league');leagueTab.disabled=!storyCompleted();
   leagueTab.classList?.toggle?.('gold',mode==='league');
   $('pkmsvv-arena-mode-champion').classList?.toggle?.('gold',mode==='story');
-  const mapRow=$('pkmsvv-champion-map-row');if(mapRow)mapRow.hidden=mode!=='league';
+  const mapRow=$('pkmsvv-champion-map-row');if(mapRow)mapRow.hidden=true; // select from the large region tiles, no dropdown
   const chooser=$('pkmsvv-champion-map');if(chooser&&mode==='league'){
    chooser.replaceChildren();
    for(const [v,label] of [['random',tr('🎲 Ngẫu nhiên','🎲 Random')],...REGIONS.map(([name],i)=>[String(i),displayRegion(name)+' · '+mapEffect(REGION_THEMES[i]).hint])]){
@@ -236,15 +236,37 @@ G.PKMSVVChampionArena=(()=>{
    }
   }
   const regionBox=$('pkmsvv-champion-regions');
-  regionBox.replaceChildren();regionBox.hidden=mode==='league';
+  regionBox.replaceChildren();regionBox.hidden=false;
   REGIONS.forEach(([name,dex,champion],i)=>{
    const b=document.createElement('button');b.type='button';b.className='pkmsvv-champion-region'+(region===i?' chosen':'');
-   b.textContent=(led.seals?.[name]?'👑 ':led.trophies?.[name]?'🏆 ':regionUnlocked(i)?'○ ':'🔒 ')+displayRegion(name);
-   b.disabled=active||mode==='league'||!regionUnlocked(i);
-   b.title='🏟️ '+mapEffect(REGION_THEMES[i]).name+' · '+mapEffect(REGION_THEMES[i]).hint;
-   b.onclick=()=>{region=i;clearResult();updatePanel();};
+   const completed=!!led.seals?.[name],unlocked=mode==='story'?regionUnlocked(i):completed;
+   b.className+=' '+(completed?'is-cleared ':'')+(unlocked?'is-unlocked':'is-locked');
+   b.classList.toggle('chosen',mode==='story'?region===i:mapChoice===String(i));
+   const title=document.createElement('strong');title.textContent=(completed?'✓ ':unlocked?'🏟️ ':'🔒 ')+displayRegion(name);
+   const rule=document.createElement('small');rule.textContent=mapEffect(REGION_THEMES[i]).hint;
+   const status=document.createElement('span');status.className='pkmsvv-region-status';
+   status.textContent=completed?tr('Đã hoàn thành','Completed'):unlocked?tr('Đang mở','Unlocked'):tr('Chưa mở','Locked');
+   b.replaceChildren(title,rule,status);
+   b.disabled=active||!unlocked;
+   b.title=mapEffect(REGION_THEMES[i]).name+' · '+rule.textContent;
+   b.onclick=()=>{if(mode==='league')mapChoice=String(i);else region=i;clearResult();updatePanel();};
    regionBox.append(b);
   });
+  if(mode==='league'){
+   const random=document.createElement('button');random.type='button';
+   random.className='pkmsvv-champion-region pkmsvv-region-random'+(mapChoice==='random'?' chosen':'');
+   random.textContent=tr('🎲 Ngẫu nhiên · chọn một sân đã mở','🎲 Random · choose an unlocked arena');
+   random.disabled=active;
+   random.onclick=()=>{mapChoice='random';clearResult();updatePanel();};
+   regionBox.append(random);
+  }
+  const journey=$('pkmsvv-arena-mode-champion');
+  if(journey){
+   const finished=storyCompleted();
+   journey.classList.toggle('pkmsvv-crown-finished',finished);
+   journey.disabled=finished&&!active;
+   journey.textContent=finished?tr('✓ Hành Trình Vương Miện · Hoàn thành','✓ Crown Journey · Completed'):tr('👑 Hành Trình Vương Miện','👑 Crown Journey');
+  }
   const progress=$('pkmsvv-champion-progress');
   progress.textContent=active?tr('Vòng ','Round ')+Math.min(round+1,4)+'/4 · '+(ROUNDS[round]||'')+
    (stage==='prep'?' · '+tr('Vào trận sau ','Battle in ')+clock(prepSeconds()-elapsed):

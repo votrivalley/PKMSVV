@@ -68,3 +68,17 @@
 
 /* Chapter 10 replay exists only in Ký Ức; this boss action appears on unlock. */
 .pkmsvv-champion-actions #pkmsvv-champion-sky:focus-visible,.pkmsvv-crown-journey button:focus-visible{outline:3px solid #72d8ff;outline-offset:3px}
+
+/* Region tiles ARE the arena chooser, including map rules and status. */
+.pkmsvv-champion-regions{grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+.pkmsvv-champion-region{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:5px;min-height:102px;padding:10px;line-height:1.3}
+.pkmsvv-champion-region strong{font-size:13px}
+.pkmsvv-champion-region small{font-size:11px;color:#385a64;font-weight:600}
+.pkmsvv-region-status{font-size:10px;color:#235d46;font-weight:900}
+.pkmsvv-champion-region.is-cleared{background:#dce3e4;border-color:#adb9c0;color:#435460}
+.pkmsvv-champion-region.is-cleared:not(.chosen) small{color:#5c7077}
+.pkmsvv-champion-region.is-locked{background:#b5c4ca;color:#455b66}
+.pkmsvv-champion-region.is-locked .pkmsvv-region-status{color:#56636a}
+.pkmsvv-region-random{background:#f0e6ff;border-color:#a57edc;color:#553789;justify-content:center;align-items:center;text-align:center}
+.pkmsvv-crown-finished{background:#a8b1b9!important;color:#394952!important;border-color:#84939d!important;box-shadow:none!important}
+@media(max-width:720px){.pkmsvv-champion-regions{grid-template-columns:repeat(2,minmax(0,1fr))}.pkmsvv-champion-region{min-height:88px}}

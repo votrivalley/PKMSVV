@@ -38,7 +38,7 @@ G.PKMSVVArenaSolo=(()=>{
    '<button class="btn gold" type="button" id="pkmsvv-arena-solo-play">Bắt đầu</button>'+
    '<button class="btn ghost" type="button" id="pkmsvv-arena-solo-close">Đóng</button></div></div>';
   document.body.append(screen);
-  $('pkmsvv-arena-solo-play').onclick=start;
+  $('pkmsvv-arena-solo-play').onclick=()=>start(); // click handler must not pass PointerEvent as the RNG function
   $('pkmsvv-arena-solo-close').onclick=()=>{if(active)abort();else screen.hidden=true;};
   return screen;
  }

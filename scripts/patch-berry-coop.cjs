@@ -129,3 +129,15 @@ patch('js/game.js',
 
 
 console.log('Berry Rescue: 4-player Host-authoritative objectives installed after competitive mode patches.');
+
+// v1.5.67: Berry terrain has no impenetrable rocky wall formations.
+patch('js/world/world.js',
+ '  function terrainRaw(tx, ty) {',
+ '  function terrainRaw(tx, ty) {\n    if(G.PKMSVVBerryRescue?.active&&!arena)return FLOOR;');
+patch('js/world/world.js',
+ '    TS, CW, reset, setBiome, biomeName, liquidKind, liquidEffect, walkable,',
+ '    TS, CW, reset, flattenForBerry(){data.clear();images.clear();fade=null;}, setBiome, biomeName, liquidKind, liquidEffect, walkable,');
+// Player HP is a flat clean fill without the dark rounded frame.
+patch('js/ui/hud.js',
+ "    bar(ctx, px + 48, py + 17, 168, 11, pl.hp / pl.maxHp, '#ff5f6d');",
+ "    ctx.fillStyle='#84445044';ctx.fillRect(px+48,py+17,168,11);\n    ctx.fillStyle='#ff5f6d';ctx.fillRect(px+48,py+17,168*G.U.clamp(pl.hp/pl.maxHp,0,1),11);");
