@@ -30,6 +30,10 @@ on:
       - 'scripts/build-mega-ui-catalog.cjs'
       - 'src/pkmsvv-phase1-pastel.css'
       - 'src/v15/eggs.js'
+      - 'src/pkmsvv-berry.js'
+      - 'src/pkmsvv-berry.css'
+      - 'tests/berry-ux.test.cjs'
+      - 'tests/double-item-choice.test.cjs'
       - 'src/web/pkmsvv-egg-rush.js'
       - 'tests/support-fast-shiny.test.cjs'
       - 'tests/v15-eggs.test.cjs'
@@ -122,6 +126,8 @@ jobs:
         run: npm run prepare:lan
         env:
           PKMSVV_MEGA_SPRITE_PACK: '1'
+      - name: Phase A+B — Berry effects, HUD and collision-free reward queues
+        run: npm run test:berry:ux && npm run test:choice:queue
       - name: Verify Mega Lucario reversible 30-second form and asset credits
         run: npm run test:mega
       - name: Verify Mega 4 and Orb 5 keyboard defaults and remapping
