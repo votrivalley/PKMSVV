@@ -48,7 +48,7 @@ patch('js/net/coop.js',
  "        case 'pb':");
 patch('js/game.js',
  "    G.EggRush.begin(coop);G.Arena.begin(coop);",
- "    G.EggRush.begin(coop);G.Arena.begin(coop);G.PKMSVVBerryRescue.begin(coop);");
+ "    G.EggRush.begin(coop);G.Arena.begin(coop);G.PKMSVVBerryRescue.begin({mode:G.Social?.room?.mode});");
 patch('js/systems/spawner.js',
  "if (b && t >= b.at) { if(spawnBoss(anchor(), t, b))bossIdx++; }",
  "if (b && !G.PKMSVVBerryRescue?.active && t >= b.at) { if(spawnBoss(anchor(), t, b))bossIdx++; }");
