@@ -219,7 +219,12 @@ G.PKMSVVMegaPhase3=(()=>{
   const candidate=p?(G.PKMSVV_MEGA_CATALOG||[]).find(form=>form.dex===p.dex):null;
   // Mega stays visible for a Mega-capable species, even if it is locked or
   // the genuine combat sprite is not present. Never fake an animation.
-  const visible=!!(p&&candidate&&!p.dead&&G.Game?.state==='playing');
+  // The legacy Lucario module has its own genuine sprite/button in Solo:
+  // avoid stacking two Mega circles at the same screen coordinates.
+  const lucarioOwnsButton=!!(p&&p.dex===G.MegaLucario?.BASE&&
+    (G.MegaLucario?.eligible?.()||p._megaBackup));
+  const visible=!!(p&&candidate&&!p.dead&&G.Game?.state==='playing'&&
+    !lucarioOwnsButton);
   const available=!!(f&&isBattleReady(f));
   document.body?.classList?.toggle?.('pkmsvv-mega-gamepad',!!G.Pad?.name);
   // Network peers also emit a subtle Mega aura; never mutate their stats.
