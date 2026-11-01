@@ -405,6 +405,7 @@ G.PKMSVVChampionArena=(()=>{
   target._pkmsvvChampionMegaEligible=mode==='story'&&round===3; // Kanto included
   target._pkmsvvMegaSprite=opp?.pkmsvvMegaSprite||null;
   target._pkmsvvMegaPhase2=false;
+  target._pkmsvvMegaTransition=0;
   target.skillCd=(aiTier==='elite'?.75:aiTier==='trained'?1.55:2.5)*cadence;
   installChampionCombat(target);
   stage='fight';elapsed=0;lastSecond=-1;
@@ -456,7 +457,7 @@ G.PKMSVVChampionArena=(()=>{
    behavior:'champion',shotCd:1.55};
   target=G.EnemyMgr.add(new G.Enemy(raw,hero.x+225,hero.y-115,{hp:1,spd:1,dmg:1},true));
   if(!target){returnToMenu();return false;}
-  target.pkmsvvChampion=true;target._pkmsvvSkyBoss=true;target._pkmsvvMegaPhase2=false;target.skillCd=1.35;
+  target.pkmsvvChampion=true;target._pkmsvvSkyBoss=true;target._pkmsvvMegaPhase2=false;target._pkmsvvMegaTransition=0;target.skillCd=1.35;
   installChampionCombat(target);
   const art=G.Sprites?.playerScale?.(dex);
   if(art>0&&G.Sprites?.Animator){
@@ -471,6 +472,26 @@ G.PKMSVVChampionArena=(()=>{
  }
  // The real second phase starts at <=50% HP, restores a full doubled health pool
  // and doubles combat attributes. Only verified sprite sheets are used for Mega art.
+ // First-phase 50% HP barrier is inviolable, even on overkill.
+ function canMegaTransition(enemy){
+  return !!(enemy&&!enemy._pkmsvvMegaPhase2&&!enemy._pkmsvvMegaTransition&&
+   (enemy._pkmsvvSkyBoss===true||enemy._pkmsvvChampionMegaEligible===true));
+ }
+ function beginMegaTransition(enemy){
+  if(!active||!canMegaTransition(enemy))return false;
+  const half=Math.max(1,Number(enemy.maxHp)||1)*.5;
+  if(enemy.hp>half&&!enemy.dead)return false;
+  enemy.hp=half;enemy.dead=false;
+  enemy._pkmsvvMegaTransition=MEGA_TRANSITION_SECONDS;
+  transitionClock=MEGA_TRANSITION_SECONDS;transitionOrigin=stage;
+  stage='mega-transition';
+  const pl=G.Game?.player;
+  if(pl)pl.invuln=Math.max(Number(pl.invuln)||0,MEGA_TRANSITION_SECONDS+.2);
+  G.Projectiles?.clear?.();G.Hazards?.clear?.();
+  battleCountdown(tr('⚡ TIẾN HÓA MEGA!','⚡ MEGA EVOLUTION!'),'mega');
+  G.FX?.burst?.(enemy.x||0,enemy.y||0,'#dfb4ff',35,155);
+  return true;
+ }
  function megaPhase(targetEnemy){
   if(!targetEnemy||targetEnemy._pkmsvvMegaPhase2)return false;
   const sky=targetEnemy._pkmsvvSkyBoss===true;
@@ -528,16 +549,24 @@ G.PKMSVVChampionArena=(()=>{
   if(typeof enemy.die==='function'){
    const original=enemy.die;
    enemy.die=function(...args){
-    if(megaPhase(this))return;
+    if(beginMegaTransition(this))return;
     return original.apply(this,args);
    };
   }
   if(typeof enemy.hurt==='function'){
    const original=enemy.hurt;
    enemy.hurt=function(...args){
+    if(this._pkmsvvMegaTransition>0)return;
     const out=original.apply(this,args);
-    if(!this.dead)megaPhase(this);
+    if(!this.dead)beginMegaTransition(this);
     return out;
+   };
+  }
+  if(typeof enemy.update==='function'){
+   const original=enemy.update;
+   enemy.update=function(...args){
+    if(this._pkmsvvMegaTransition>0)return; // 1s: no attacks, no movement.
+    return original.apply(this,args);
    };
   }
   // Enemy.bossEnd controls REAL boss attack cadence; shotCd is not used here.
@@ -743,8 +772,18 @@ G.PKMSVVChampionArena=(()=>{
   if(!active||G.Game?.state!=='playing')return;
   const pl=G.Game.player;
   if(!pl)return;
+  if(stage==='mega-transition'){
+   transitionClock=Math.max(0,transitionClock-Math.max(0,Number(dt)||0));
+   if(transitionClock<=0){
+    const enemy=target;
+    if(enemy)enemy._pkmsvvMegaTransition=0;
+    stage=transitionOrigin;hideBattleCountdown();
+    if(enemy)megaPhase(enemy);
+   }
+   return; // 1s transform is excluded from timed duel.
+  }
   if(pl.dead&&stage==='sky'){finishSky(false);return;}
-  if(stage==='sky'&&target&&megaPhase(target))return;
+  if(stage==='sky'&&target&&beginMegaTransition(target))return;
   if(stage==='sky'&&target?.dead){finishSky(true);return;}
   if(pl.dead){
    if(round===2){futureBracket(false);round=4;pl.dead=false;pl.hp=Math.max(1,pl.maxHp);beginPrep();return;}
@@ -784,7 +823,7 @@ G.PKMSVVChampionArena=(()=>{
    return;
   }
   if(stage!=='fight')return;
-  if(target&&megaPhase(target))return;
+  if(target&&beginMegaTransition(target))return;
   if(target?.dead){
    target=null;
    if(round===4){
