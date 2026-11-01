@@ -54,6 +54,13 @@ function setup(){
  vm.runInNewContext(read('src/pkmsvv-champion-arena.js'),{G,document,Math});
  return {G,save,lib:G.PKMSVVChampionArena,document,player,get:id=>elements.get(id)};
 }
+function enterDuel(lib){
+ const started=lib.nextDuel();
+ if(started&&lib.stage==='countdown'){
+  lib.update(lib.DUEL_COUNTDOWN||3);
+ }
+ return started;
+}
 test('Champion stage transitions clear cached arena tiles and never set Arena on opponent preview',()=>{
  const source=read('scripts/patch-champion-arena.cjs');
  assert.match(source,/formerArena=arena/);
@@ -84,6 +91,8 @@ test('Ten Champions, sixteen entrants, 4m opener and 1m30 later preparation',()=
  assert.equal(lib.FIRST_PREP_SECONDS,240);
  assert.equal(lib.FIGHT_SECONDS,120);
  assert.equal(lib.CHAMPION_PHASE_SECONDS,180);
+ assert.equal(lib.DUEL_COUNTDOWN,3);
+ assert.equal(lib.MEGA_TRANSITION_SECONDS,1);
  assert.equal(lib.WARN_SECONDS,15);
  assert.equal(lib.ROUNDS.length,5);
  const draw=lib.makeBracket(()=>.5);
@@ -108,11 +117,13 @@ test('Champion starts with four-minute opener and first Crown Seal unlocks Mega 
  assert.equal(lib.start(),true);assert.equal(lib.stage,'prep');
  for(let round=0;round<4;round++){
   assert.equal(lib.round,round);assert.equal(lib.stage,'prep');
-  assert.equal(lib.nextDuel(),true);
+  assert.equal(enterDuel(lib),true);
   assert.equal(lib.stage,'fight');assert.ok(G.EnemyMgr.last.maxHp>=Math.round((340+12*round)*1.03),'real opponents receive scaled HP');
   G.EnemyMgr.last.dead=true;lib.update(.1);
   if(round===3){
-   assert.equal(lib.stage,'fight','Kanto must transition before title is earned');
+   assert.equal(lib.stage,'mega-transition','Kanto must survive at the half-HP boundary');
+   lib.update(1);
+   assert.equal(lib.stage,'fight');
    assert.equal(G.EnemyMgr.last._pkmsvvMegaPhase2,true);
    G.EnemyMgr.last.dead=true;lib.update(.1);
   }
@@ -138,6 +149,8 @@ test('Rayquaza Sky fight unlocks only at ten real Champion seals and finishes on
  assert.equal(save.pkmsvvRayquazaDefeated,undefined);
  G.EnemyMgr.last.hp=G.EnemyMgr.last.maxHp*.49;
  lib.update(.1);
+ assert.equal(lib.stage,'mega-transition');
+ lib.update(1);
  assert.equal(lib.stage,'sky');
  assert.equal(G.EnemyMgr.last._pkmsvvMegaPhase2,true,'Rayquaza enters true Mega phase at 50% HP');
  assert.equal(G.EnemyMgr.last.hp,G.EnemyMgr.last.maxHp,'Mega phase restores doubled full HP');
@@ -156,12 +169,12 @@ test('Real mobs spawn in Champion preparation but stop during one-versus-one due
  assert.match(read('src/pkmsvv-champion-arena.js'),/G\.EnemyMgr\?\.clear\?\.\(\)/);
  lib.start();assert.equal(lib.stage,'prep');
  lib.update(90);assert.equal(lib.stage,'prep');
- lib.nextDuel();assert.equal(lib.stage,'fight');
+ enterDuel(lib);assert.equal(lib.stage,'fight');
 });
 
 test('Lose round 16: no false cup/seal, participant PokéCoins once',()=>{
  const h=setup(),{lib,player,save}=h;
- lib.start();lib.nextDuel();player.dead=true;lib.update(.1);
+ lib.start();enterDuel(lib);player.dead=true;lib.update(.1);
  assert.equal(lib.active,false);
  assert.equal(save.arenas.pkmChampion.trophies.Kanto,undefined);
  assert.equal(save.arenas.pkmChampion.seals.Kanto,undefined);
@@ -245,7 +258,7 @@ test('League stays locked until all ten seals; AI-only league does not award new
  get('pkmsvv-arena-mode-league').onclick();
  assert.equal(lib.start(),true);assert.equal(lib.stage,'prep');
  const count=Object.values(book.seals).filter(Boolean).length;
- for(let r=0;r<4;r++){lib.nextDuel();G.EnemyMgr.last.dead=true;lib.update(.1);}
+ for(let r=0;r<4;r++){enterDuel(lib);G.EnemyMgr.last.dead=true;lib.update(.1);}
  assert.equal(Object.values(book.seals).filter(Boolean).length,count);
  assert.equal(book.history.length,0,'AI-only league must not rewrite earned story titles');
 });
@@ -288,11 +301,11 @@ test('Arena requires two Chapter 5 modes, not optional Egg Rush',()=>{
 test('Champion semifinal defeat enters real third-place playoff, without false Champion',()=>{
  const h=setup(),{G,lib,save,player}=h;
  lib.start();
- for(let i=0;i<2;i++){lib.nextDuel();G.EnemyMgr.last.dead=true;lib.update(.1);}
+ for(let i=0;i<2;i++){enterDuel(lib);G.EnemyMgr.last.dead=true;lib.update(.1);}
  assert.equal(lib.round,2);
- lib.nextDuel();player.dead=true;lib.update(.1);
+ enterDuel(lib);player.dead=true;lib.update(.1);
  assert.equal(lib.round,4);assert.equal(lib.stage,'prep');
- assert.equal(lib.nextDuel(),true);
+ assert.equal(enterDuel(lib),true);
  G.EnemyMgr.last.dead=true;lib.update(.1);
  assert.equal(lib.active,false);
  assert.equal(save.tickets.t1,5);
@@ -301,7 +314,7 @@ test('Champion semifinal defeat enters real third-place playoff, without false C
 test('Final win does not unlock a Mega Stone without Gacha',()=>{
  const h=setup(),{lib,G,save}=h;lib.start();
  for(let i=0;i<4;i++){
-  lib.nextDuel();G.EnemyMgr.last.dead=true;lib.update(.1);
+  enterDuel(lib);G.EnemyMgr.last.dead=true;lib.update(.1);
   if(i===3){assert.equal(save.arenas?.pkmChampion?.seals?.Kanto,undefined);
    G.EnemyMgr.last.dead=true;lib.update(.1);}
  }
@@ -363,8 +376,10 @@ test('Champion opens after 4m with bosses at 1m30 and 3m; later rounds at 1m30',
  lib.update(45);
  assert.ok(alerts.some(m=>m.includes('15 giây')));
  lib.update(15);
- assert.equal(lib.stage,'fight');
+ assert.equal(lib.stage,'countdown');
  assert.equal(get('pkmsvv-champion-preview').hidden,true);
+ assert.equal(G.EnemyMgr.last._pkmsvvChampionPrepBoss,2,'no rival during countdown');
+ lib.update(3);assert.equal(lib.stage,'fight');
  G.EnemyMgr.last.dead=true;lib.update(.1);
  assert.equal(lib.round,1);assert.equal(lib.stage,'prep');
  assert.equal(G.World.arena,null,'winner exits duel to ordinary farming map');
@@ -376,7 +391,8 @@ test('Champion opens after 4m with bosses at 1m30 and 3m; later rounds at 1m30',
  lib.update(15);
  assert.ok(alerts.filter(m=>m.includes('15 giây')).length>=2);
  lib.update(15);
- assert.equal(lib.stage,'fight');
+ assert.equal(lib.stage,'countdown');
+ lib.update(3);assert.equal(lib.stage,'fight');
 });
 
 
@@ -393,7 +409,7 @@ test('All ten Crown venues use distinct native region biomes and an elite final 
   buttons[region].onclick();
   assert.equal(lib.start(),true);
   for(let round=0;round<4;round++){
-   assert.equal(lib.nextDuel(),true);
+   assert.equal(enterDuel(lib),true);
    assert.equal(G.World.arena.type,lib.REGION_THEMES[region],
     'each region needs its own actual game terrain (not only text labels)');
    if(round<3){
@@ -417,16 +433,24 @@ test('All ten Crown venues use distinct native region biomes and an elite final 
 test('Champion overkill at 100% HP enters Mega immediately before death, preserves boss and withholds title/loot',()=>{
  const {lib,G,save}=setup();
  lib.start();
- for(let round=0;round<3;round++){lib.nextDuel();G.EnemyMgr.last.dead=true;lib.update(.1);}
- lib.nextDuel();
+ for(let round=0;round<3;round++){enterDuel(lib);G.EnemyMgr.last.dead=true;lib.update(.1);}
+ enterDuel(lib);
  const enemy=G.EnemyMgr.last;
  assert.equal(enemy._pkmsvvMegaPhase2,false);
  const beforeHP=enemy.maxHp,damage=enemy.dmg;
  enemy.hurt(beforeHP*100);
  assert.equal(enemy.dead,false,'fatal first-phase hit cannot cause premature death');
- assert.equal(enemy._pkmsvvMegaPhase2,true,'lethal hit must trigger Mega before EnemyMgr removes target');
+ assert.equal(lib.stage,'mega-transition');
+ assert.equal(enemy.hp,beforeHP*.5,'overkill stops at exact half HP');
+ assert.equal(enemy._pkmsvvMegaPhase2,false,'Mega must not begin until reveal finishes');
+ enemy.hurt(beforeHP*100);
+ assert.equal(enemy.hp,beforeHP*.5,'cannot hit enemy during 1s reveal');
+ assert.equal(enemy.loot,undefined);
+ lib.update(.5);assert.equal(lib.stage,'mega-transition');
+ lib.update(.5);assert.equal(lib.stage,'fight');
+ assert.equal(enemy._pkmsvvMegaPhase2,true);
  assert.equal(enemy.maxHp,beforeHP*2);
- assert.equal(enemy.hp,enemy.maxHp,'full health restored for phase 2');
+ assert.equal(enemy.hp,enemy.maxHp,'full HP visible in phase 2');
  assert.equal(enemy.dmg,damage*2);
  assert.equal(enemy.loot,undefined,'the transition is not a fake boss kill/drop');
  assert.equal(lib.stage,'fight');
@@ -446,12 +470,15 @@ test('Champion overkill at 100% HP enters Mega immediately before death, preserv
 test('Nonlethal crossing of exactly 50% triggers phase 2, resets timer, speeds up real boss casts',()=>{
  const {lib,G}=setup();
  lib.start();
- for(let round=0;round<3;round++){lib.nextDuel();G.EnemyMgr.last.dead=true;lib.update(.1);}
- lib.nextDuel();
+ for(let round=0;round<3;round++){enterDuel(lib);G.EnemyMgr.last.dead=true;lib.update(.1);}
+ enterDuel(lib);
  const enemy=G.EnemyMgr.last;
  const hp=enemy.maxHp,oldSpd=enemy.spd;
  lib.update(140);
  enemy.hurt(Math.ceil(hp*.5));
+ assert.equal(enemy.hp,hp*.5);
+ assert.equal(enemy._pkmsvvMegaPhase2,false);
+ lib.update(1);
  assert.equal(enemy._pkmsvvMegaPhase2,true);
  assert.equal(enemy.hp,enemy.maxHp);
  assert.equal(enemy.spd<oldSpd*1.5,true,'Mega cannot have impossible 2× movement on mobile');
@@ -464,8 +491,8 @@ test('Nonlethal crossing of exactly 50% triggers phase 2, resets timer, speeds u
 test('Champion title cannot be earned by timeout ratio while either boss phase remains alive',()=>{
  const {lib,G,save}=setup();
  lib.start();
- for(let round=0;round<3;round++){lib.nextDuel();G.EnemyMgr.last.dead=true;lib.update(.1);}
- lib.nextDuel();
+ for(let round=0;round<3;round++){enterDuel(lib);G.EnemyMgr.last.dead=true;lib.update(.1);}
+ enterDuel(lib);
  const enemy=G.EnemyMgr.last;
  enemy.hp=enemy.maxHp*.75; // still first phase, never rewarded for a timer
  lib.update(lib.CHAMPION_PHASE_SECONDS+.1);
@@ -476,10 +503,11 @@ test('Champion title cannot be earned by timeout ratio while either boss phase r
 test('Champion Mega can show a distinct phase 2 glow without inventing missing official sprites',()=>{
  const {lib,G}=setup();
  lib.start();
- for(let round=0;round<3;round++){lib.nextDuel();G.EnemyMgr.last.dead=true;lib.update(.1);}
- lib.nextDuel();
+ for(let round=0;round<3;round++){enterDuel(lib);G.EnemyMgr.last.dead=true;lib.update(.1);}
+ enterDuel(lib);
  const enemy=G.EnemyMgr.last;
  enemy.hurt(enemy.hp*.51);
+ lib.update(1);
  let rings=0;
  const ctx={save(){},restore(){},beginPath(){},ellipse(){rings++},stroke(){}};
  enemy.draw(ctx);
@@ -492,4 +520,35 @@ test('November seasonal event never paints over scored Arena or Rayquaza',()=>{
  const season=read('scripts/patch-season-event.cjs');
  assert.ok(season.includes("G.PKMSVVChampionArena?.active?'champion'"));
  assert.ok(season.includes("G.PKMSVVArenaSolo?.active?'arena-solo'"));
+});
+
+test('Abandon Champion via menu or starting Berry clears every previous match timer',()=>{
+ const {G,lib,get}=setup();
+ lib.start();assert.equal(lib.active,true);
+ G.Game.toUI();assert.equal(lib.active,false);
+ assert.equal(lib.stage,'idle');
+ assert.equal(G.World.arena,null);
+ lib.update(1000);assert.equal(lib.active,false,'no countdown after exit');
+ lib.start();assert.equal(lib.active,true);
+ G.Game.startRun({mode:'berry'});
+ assert.equal(lib.active,false,'Berry run terminates retired Champion state');
+ assert.equal(lib.stage,'idle');
+ lib.update(1000);assert.equal(lib.active,false);
+ assert.equal(G.World.arena,null);
+ lib.start();G.Flow.goMenu();assert.equal(lib.active,false);
+});
+test('Countdown spans 3 seconds and never creates a rival before the start cue',()=>{
+ const {G,lib,get}=setup();
+ lib.start();lib.nextDuel();
+ assert.equal(lib.stage,'countdown');
+ assert.equal(get('pkmsvv-champion-countdown').textContent,'3');
+ assert.equal(G.EnemyMgr.last,undefined);
+ lib.update(1);
+ assert.equal(get('pkmsvv-champion-countdown').textContent,'2');
+ assert.equal(G.EnemyMgr.last,undefined);
+ lib.update(1);
+ assert.equal(get('pkmsvv-champion-countdown').textContent,'1');
+ lib.update(1);assert.equal(lib.stage,'fight');
+ assert.ok(G.EnemyMgr.last);
+ assert.equal(get('pkmsvv-champion-countdown').hidden,true);
 });
