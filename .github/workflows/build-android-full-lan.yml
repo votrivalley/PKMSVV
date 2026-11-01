@@ -140,7 +140,7 @@ jobs:
       - name: Verify Chapter 1–7 multiplayer and Mega story gates
         run: npm run test:story:gates
       - name: Verify Chapter 1–7 and offline Crown Arena
-        run: npm run test:arena:champion && node --test tests/chapter10-arena-layout.test.cjs
+        run: npm run test:arena:champion && node --test tests/chapter10-arena-layout.test.cjs tests/berry-rescue.test.cjs
       - name: Test Arena Solo 1v1 preparation and AI duel
         run: npm run test:arena:solo
       - name: Verify live Pokémon backdrop and quick Shiny supports
