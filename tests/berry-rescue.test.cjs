@@ -115,7 +115,9 @@ test('Berry tree sprites draw without large ellipses and use thin borderless HP 
  const chunk=src.slice(src.indexOf('function drawOne(ctx,t)'),src.indexOf('function hud('));
  assert.doesNotMatch(chunk,/ellipse\(/);
  assert.doesNotMatch(chunk,/stroke\(/);
- assert.match(chunk,/fillRect\(-31,y,62,3\)/);
+ assert.match(chunk,/fillRect\(-34,barY,68,7\)/);
+ assert.match(chunk,/fillRect\(-32,barY\+2,64\*ratio,3\)/);
+ assert.doesNotMatch(chunk,/fillRect\(-38,-5,76,10\)|strokeRect\(-38,-5,76,10\)/,'old faux second HP bar must not exist');
  const patch=read('scripts/patch-berry-coop.cjs');
  assert.match(patch,/PKMSVVBerryRescue\.drawables\(\)/,'insert trees into native Y-depth sort');
  assert.match(patch,/items\.push\(\{y:e\.y,ent:e\}\)/);
