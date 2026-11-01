@@ -71,14 +71,13 @@ G.PKMSVVBerryRescue=(()=>{
   return {x:tree.x,y:tree.y,r:34,level:1,dead:false,_vx:0,_vy:0,_pkmsvvBerryTree:tree.id};
  }
  // Reduced per-stage enemy speed escalation to two thirds of the prior increment.
-  const SPEED_GAIN_NORMAL=.20*2/3,SPEED_GAIN_EASY=.15*2/3,XP_MULT=1.5;
+  const SPEED_GAIN_NORMAL=.20*2/3,SPEED_GAIN_EASY=.15*2/3,XP_MULT=1;
   function difficultyFor(stage,isEasy=easy){return (isEasy?.7:1)*(1+(isEasy?SPEED_GAIN_EASY:SPEED_GAIN_NORMAL)*Math.max(0,Math.min(3,stage)));}
  function rebalanceEnemy(e,stage){
   if(!e||e.dead||e.remote)return;
   if(!e._pkmsvvBerryAdjusted){
    e._pkmsvvBerryAdjusted=true;
-    // Berry enemies award 1.5× EXP exactly once per spawned enemy.
-    if(Number.isFinite(e.xp))e.xp*=XP_MULT;
+    // Rescue gives normal enemy XP; do not multiply or mutate rewards.
    if(easy){
     if(Number.isFinite(e.maxHp)){e.maxHp=Math.max(1,e.maxHp*.7);e.hp=Math.min(e.maxHp,Math.max(1,(e.hp||e.maxHp)*.7));}
     if(Number.isFinite(e.dmg))e.dmg*=.7;
@@ -231,7 +230,7 @@ G.PKMSVVBerryRescue=(()=>{
   ctx.save();ctx.font='bold 12px sans-serif';ctx.textBaseline='top';
   const left=15,top=Math.max(130,h-124);
   ctx.fillStyle='#0c2738df';ctx.fillRect(left,top,202,95);
-  ctx.fillStyle='#ffe9ab';ctx.fillText('🍓 '+tr('GIẢI CỨU BERRY','RESCUE BERRY')+' · EXP ×1.5',left+8,top+7);
+  ctx.fillStyle='#ffe9ab';ctx.fillText('🍓 '+tr('GIẢI CỨU BERRY','RESCUE BERRY')+' · EXP ×1',left+8,top+7);
   trees.forEach((tree,i)=>{
    ctx.fillStyle='#e8f7eb';ctx.fillText('🌳 '+(i+1)+' '+Math.round(100*tree.hp/tree.maxHp)+'%',left+9,top+29+i*20);
   });
