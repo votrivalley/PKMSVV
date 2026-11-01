@@ -36,7 +36,7 @@ test('Original 103 moves offer 5253 theoretical pairs, no fixed recipe gate',()=
  assert.equal(api.potentialPairs(),5253);
  assert.equal(api.maxGroup,4);
  assert.equal(api.maxPerRun,1);
- assert.equal(api.RECIPES.length,5,'five are illustrative combinations, not mandatory');
+ assert.equal(api.RECIPES.length,10,'ten suggestions, not mandatory recipes');
  assert.equal(api.readyMove({id:'tackle',lvl:1,evolved:false}),true);
 });
 test('Any two distinct learned moves can be fused, even if unevolved and level one',()=>{
@@ -98,4 +98,97 @@ test('Fusion Chapter 2 tutorials and Wiki explain all pairings without changing 
  assert.match(wiki,/GỢI Ý, không mở chiêu mới/);
  assert.match(wiki,/potentialPairs/);
  assert.match(read('scripts/prepare-game.cjs'),/patch-bond-fusion\.cjs/);
+});
+
+test('All ten suggestions are distinct pairs of real pinned PokéSurvivor skills',()=>{
+ const source=read('src/pkmsvv-bond-fusion.js');
+ const m=source.match(/id:'fire-gust'/);assert.ok(m);
+ const {api}=setup();
+ const original=['tackle','quick-attack','ember','water-gun','vine-whip','rapid-spin',
+  'thunder-shock','confusion','flamethrower','gust','bubble-beam','ice-shard',
+  'razor-leaf','rock-tomb','shadow-ball','psychic','thunderbolt','metal-claw'];
+ const pairs=new Set();
+ for(const r of api.RECIPES){
+  assert.equal(r.ids.length,2);
+  assert.notEqual(r.ids[0],r.ids[1]);
+  for(const id of r.ids)assert.ok(original.includes(id),id);
+  const key=[...r.ids].sort().join('|');
+  assert.equal(pairs.has(key),false,'duplicate named pair '+key);
+  pairs.add(key);
+ }
+ const compiled=path.join(__dirname,'..','vendor','pokesurvivor','js','data','moves.js');
+ if(fs.existsSync(compiled)){
+  const skills=fs.readFileSync(compiled,'utf8');
+  for(const id of original)assert.ok(skills.includes("id: '"+id+"'"),'missing move in real game: '+id);
+ }
+});
+test('Level-up cards label a known partner, two offered halves, and any free Fusion',()=>{
+ const {api,G,pl,m}=setup();
+ G.Moves.BY_ID=Object.fromEntries([
+  'tackle','ember','flamethrower','gust','rock-tomb','razor-leaf','ice-shard','bubble-beam',
+  'metal-claw','thunderbolt'
+ ].map(id=>[id,{name:id}]));
+ G.T=(v)=>v;
+ G.Game={player:pl,state:'playing'};
+ G.UI={toast(){}};
+ const cards=[
+  {type:'new',key:'new:flamethrower',desc:'Fire',apply:p=>p.slots.push([m('flamethrower')])},
+  {type:'new',key:'new:gust',desc:'Wind',apply:p=>p.slots.push([m('gust')])},
+  {type:'new',key:'new:quick-attack',desc:'Normal',apply:p=>p.slots.push([m('quick-attack')])}
+ ];
+ api.decorateOffers(pl,cards);
+ assert.match(cards[0].desc,/CẶP TIỀM NĂNG/);
+ assert.match(cards[1].desc,/chọn 1, học chiêu kia sau/);
+ assert.match(cards[2].desc,/Có thể Fusion với skill đã học/);
+ assert.equal(cards[0]._pkmsvvFusionHint,'offered');
+ assert.ok(!cards[0].desc.includes('FUSION SẴN SÀNG'),
+  'two offered halves cannot both be picked at once');
+ const more=[{type:'new',key:'new:water-gun',desc:'W',apply:p=>p.slots.push([m('water-gun')])}];
+ api.decorateOffers(pl,more);
+ assert.equal(more[0]._pkmsvvFusionHint,'ready','Tackle is already owned');
+ assert.match(more[0].desc,/Đã có tackle/);
+ assert.equal(cards[0].desc.includes('<script'),false);
+});
+test('A newly learned complementary skill alerts once per pair and lights the Fusion HUD',()=>{
+ const {api,G,pl,m}=setup();let toasts=[];
+ G.Moves.BY_ID=Object.fromEntries(['ember','quick-attack','flamethrower','gust']
+  .map(id=>[id,{name:id}]));
+ G.T=v=>v;G.UI={toast:(s)=>toasts.push(s)};
+ G.Game={player:pl,state:'playing'};
+ G.LevelUp={offer(){
+  return [
+   {type:'new',key:'new:quick-attack',desc:'move',
+    apply:p=>p.slots.push([m('quick-attack')])},
+   {type:'stat',key:'stat:hp',desc:'heal',apply(){}}
+  ];
+ }};
+ assert.equal(api.installSkillHints(),true);
+ assert.equal(api.installSkillHints(),true,'do not wrap twice');
+ let cards=G.LevelUp.offer(pl);
+ assert.equal(cards.length,2,'no extra card slots or altered RNG');
+ assert.match(cards[0].desc,/FUSION GỢI Ý/);
+ assert.equal(cards[1].desc,'heal','stats are not marked');
+ const initial=G.DB.save,old=JSON.stringify(initial);
+ cards[0].apply(pl);
+ assert.equal(toasts.length,1,'new matching pair notifies after actual learn');
+ assert.match(toasts[0],/FUSION SẴN SÀNG/);
+ assert.ok(Number(pl._pkmsvvFusionHintUntil)>Date.now());
+ assert.equal(JSON.stringify(G.DB.save),old,'no persistent state mutation');
+ cards=G.LevelUp.offer(pl);
+ cards[0].apply(pl);
+ assert.equal(toasts.length,1,'relearning/same card cannot notify repeatedly');
+ assert.equal(api.RECIPES.length,10);
+});
+test('First generic pair notifies once even without named recipe, but no notifications before owning two',()=>{
+ const {api,G,pl,m}=setup();const seen=[];
+ G.Game={player:pl,state:'playing'};G.UI={toast:t=>seen.push(t)};
+ pl.slots=[[m('tackle')]];
+ const before=api.learnedIds(pl);
+ pl.slots.push([m('ice-beam')]);
+ assert.equal(api.notifyLearned(pl,'ice-beam',before),true);
+ assert.match(seen[0],/2 skill rồi/);
+ const after=api.learnedIds(pl);
+ pl.slots.push([m('aura-sphere')]);
+ assert.equal(api.notifyLearned(pl,'aura-sphere',after),false);
+ assert.equal(seen.length,1);
 });
