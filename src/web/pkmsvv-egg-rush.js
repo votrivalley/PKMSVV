@@ -297,7 +297,8 @@ G.EggRush=(()=>{
   }else if((supportMode||time<MAX_TIME)&&time>=nextSpawn){
    const n=randomNest(laid,players);
    if(n){laid++;onEvent(['er','spawn',n.id,n.x,n.y]);G.Coop.broadcast(['er','spawn',n.id,n.x,n.y]);
-    nextSpawn=(Math.floor(time/SPAWN_EVERY)+1)*SPAWN_EVERY;}
+    const interval=active?30:SPAWN_EVERY;
+    nextSpawn=(Math.floor(time/interval)+1)*interval;}
   }
   for(const n of nests){
    if(n.taken)continue;
