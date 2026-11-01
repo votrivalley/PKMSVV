@@ -58,6 +58,18 @@ on:
       - 'src/pkmsvv-berry.js'
       - 'src/pkmsvv-berry.css'
       - 'tests/berry-ux.test.cjs'
+      - 'src/pkmsvv-held-item-ui.js'
+      - 'src/pkmsvv-bond-fusion.js'
+      - 'src/pkmsvv-season-event.js'
+      - 'src/kecleon/pkmsvv-kecleon-ui.js'
+      - 'src/kecleon/pkmsvv-kecleon-theme.css'
+      - 'src/pkmsvv-wiki.js'
+      - 'scripts/patch-held-item-ui.cjs'
+      - 'scripts/patch-bond-fusion.cjs'
+      - 'scripts/patch-season-event.cjs'
+      - 'tests/held-item-choice.test.cjs'
+      - 'tests/bond-fusion-svv.test.cjs'
+      - 'tests/season-event.test.cjs'
       - 'tests/double-item-choice.test.cjs'
       - 'scripts/patch-story.cjs'
       - 'scripts/prepare-ios.cjs'
@@ -103,6 +115,8 @@ jobs:
         run: npm run prepare:cloudflare
       - name: Phase A+B — Berry HUD and safe item/skill/Bond queue
         run: npm run test:berry:ux && npm run test:choice:queue
+      - name: C+D+E — Held item selection, Solo Fusion pilot and deterministic season
+        run: npm run test:ced
       - name: Validate 96 Mega encyclopedia UI and real unlock gating
         run: npm run test:mega:phase2
       - name: Verify Shiny Mega artwork and identity in Web package
