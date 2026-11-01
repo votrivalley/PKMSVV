@@ -10,21 +10,11 @@ function patch(file,from,to){
 }
 const script='<script defer src="js/ui/pkmsvv-held-item-ui.js"></script>';
 patch('dev.html',script,script+'\n<script defer src="'+mod+'"></script>');
-patch('js/game.js',
- '    const opt = pl.bondOptions();',
- '    const pilot=G.PKMSVVFusionPilot;\n'+
- '    const opt=pilot?.pilotEligible?.(pl)?pilot.options(pl):pl.bondOptions();');
-patch('js/game.js',
- '      const group = pl.fuse(picked, opt.group);',
- "      if(opt.pilot&&!G.PKMSVVFusionPilot?.confirm?.(pl,picked)){\n"+
- "        if(state==='choice')state=holdBy.length?'held':'playing';\n"+
- "        if(G.Coop.active)G.Coop.holdEnd();\n"+
- "        return;\n"+
- "      }\n"+
- '      const group = pl.fuse(picked, opt.group);');
+// Original Rift Bonds retain unrestricted pl.bondOptions()/pl.fuse() paths.
+// Free Fusion is a separate UI action, not a replacement for earned Bonds.
 const css="#scr-bond .pkmsvv-fusion-pilot-hint{\n margin:7px 0 10px;padding:9px 12px;border-radius:10px;\n background:#183e49;border:2px solid #d6b75d;color:#fff0ad;\n font:800 clamp(12px,1.8vw,15px)/1.5 \"Segoe UI\",sans-serif;\n text-align:center;overflow-wrap:anywhere\n}\n#scr-bond .pkmsvv-fusion-pilot-hint[hidden]{display:none!important}\n@media(orientation:landscape) and (max-height:430px){\n #scr-bond .pkmsvv-fusion-pilot-hint{padding:5px 8px;font-size:11px}\n}";
 fs.appendFileSync(path.join(base,'css/style.css'),'\n'+css+'\n');
-console.log('PKMSVV: five real 2-move Fusion recipes for Solo PvE, one per match.');
+console.log('PKMSVV: all pairings enabled; one free Fusion per match, original Rift Bonds preserved.');
 fs.appendFileSync(path.join(base,'css/style.css'),`\n.pkmsvv-fusion-recipes{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:5px;padding:6px 0}\n.pkmsvv-fusion-recipe{display:flex;align-items:center;flex-wrap:wrap;gap:5px;background:#163e50;border:1px solid #83c4c8;border-radius:8px;padding:7px;color:#fff}\n.pkmsvv-fusion-move{display:inline-flex;align-items:center;gap:5px;font-size:12px}.pkmsvv-fusion-move svg{width:20px;height:20px}.pkmsvv-fusion-recipe strong{color:#ffe47a}\n`);
 
 fs.appendFileSync(path.join(base,'css/style.css'),String.raw`
@@ -70,3 +60,11 @@ fs.appendFileSync(path.join(base,'css/style.css'),String.raw`
 @media (max-height:430px){.pkmsvv-fusion-guide-panel{padding:8px;max-height:90dvh}
  .pkmsvv-fusion-guide-row{padding:3px 6px;margin:3px 0}}
 `+'\n');
+
+fs.appendFileSync(path.join(base,'css/style.css'),String.raw`
+.pkmsvv-fusion-guide-panel>h3{color:#ffe9ad;font-size:14px;margin:13px 0 8px}
+.pkmsvv-fusion-all-pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+ gap:5px;max-height:25vh;overflow-y:auto;overscroll-behavior:contain;
+ border-top:1px solid #3d7f86;border-bottom:1px solid #3d7f86;padding:7px 2px}
+.pkmsvv-fusion-all-pairs>.pkmsvv-fusion-guide-pair{padding:6px 7px;border:1px solid #598d94;
+ background:#113744;border-radius:7px;min-width:0}`+'\n');
