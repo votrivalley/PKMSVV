@@ -36,9 +36,10 @@ test('PC Android and HTML5 compile the identical Co-op UI source',()=>{
 });
 test('The LAN AI action creates a real private room and adds a bot only in supported mode',()=>{
  const js=read('src/shared/coop-unified.js');
- assert.match(js,/G\.Social\.createRoom\(mode,role==='ai'\?'private':'public'\)/);
+ assert.match(js,/G\.Social\.createRoom\(requestedMode,role==='ai'\?'private':'public'\)/);
  assert.match(js,/G\.LanBus\.request\('addBot'/);
- assert.match(js,/const opponents=mode==='coop'\?1:3/);
+ assert.match(js,/const opponents=requestedMode==='coop'\?1:3/);
+ assert.match(js,/G\.Social\.room\?\.mode!==requestedMode/);
 });
 test('Native mobile bridge passes role and mode into the common browser UI',()=>{
  const js=read('scripts/configure-android-full-lan.cjs');
