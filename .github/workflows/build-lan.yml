@@ -10,6 +10,9 @@ on:
       - 'tests/mega-ui-phase1.test.cjs'
       - 'tests/mega-ui-phase2.test.cjs'
       - 'tests/mega-phase3.test.cjs'
+      - 'src/v14/pad-orb-map.js'
+      - 'src/v14/orbs.js'
+      - 'tests/controller.test.cjs'
       - 'tests/champion-arena.test.cjs'
       - 'tests/mega-arena-gacha.test.cjs'
       - 'src/pkmsvv-mega-gacha.js'
@@ -121,6 +124,8 @@ jobs:
           PKMSVV_MEGA_SPRITE_PACK: '1'
       - name: Verify Mega Lucario reversible 30-second form and asset credits
         run: npm run test:mega
+      - name: Verify Mega 4 and Orb 5 keyboard defaults and remapping
+        run: npm run test:controller
       - name: Verify all 36 candidate Mega visual sets and per-form credits
         run: npm run test:mega:pack
       - name: Verify authentic Shiny Mega offline art, all 8 directions
