@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.57",
+  "version": "1.5.58",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.57: Berry AI mode labels and safe mode routing on PC Android with passing QA",
+  "description": "Pokémon Chuyển Sinh v1.5.58: all 96 Mega catalog entries, Co-op Arena 1/2 progress and one Berry tree HP bar",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
