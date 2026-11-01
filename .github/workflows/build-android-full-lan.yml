@@ -38,6 +38,11 @@ on:
       - 'tests/android-signing-identity.test.cjs'
       - 'scripts/bundle-wifi-qr.cjs'
       - 'scripts/patch-lan.cjs'
+      - 'scripts/patch-keybind-title.cjs'
+      - 'scripts/patch-v14-orb-fifo.cjs'
+      - 'src/v14/pad-orb-map.js'
+      - 'src/v14/orbs.js'
+      - 'tests/controller.test.cjs'
       - 'scripts/prepare-full-lan-android.cjs'
       - 'scripts/compile-standalone-ai.cjs'
       - 'scripts/patch-lan-ai.cjs'
@@ -137,6 +142,8 @@ jobs:
         run: npm run prepare:game
       - name: Validate original game and save functionality
         run: npm run test:v15 && npm run test:collection && npm run test:mobile-topbar && npm run test:mega
+      - name: Verify Mega 4 and Orb 5 keyboard defaults and remapping
+        run: npm run test:controller
       - name: Validate 96 Mega encyclopedia UI and real unlock gating
         run: npm run test:mega:phase2
       - name: Verify Shiny Mega artwork and identity in Android package
