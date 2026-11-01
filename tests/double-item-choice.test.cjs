@@ -15,7 +15,9 @@ function setup(){
  const ctx={G,state:'playing',holdBy:[],pkmsvvCompetitive:()=>false,
   pl:{item:'a',equip(k){this.item=k;}}};
  vm.runInNewContext(s.slice(start,end)+'\nthis.h={offerItem,afterLevelUp,pending:()=>laterItems.slice(),active:()=>openItem,\n   invalidate:()=>{++pkmsvvItemEpoch;openItem=null;laterItems.length=0;}};',ctx);
- return {...ctx,modal,choices,events,choose(i,id){modal.item=false;choices[i].cb(id);}};
+ return {G,modal,choices,events,h:ctx.h,pl:ctx.pl,
+  get state(){return ctx.state},set state(v){ctx.state=v},
+  choose(i,id){modal.item=false;choices[i].cb(id);}};
 }
 test('two simultaneous reward choices are queued and neither is lost',()=>{
  const x=setup();x.h.offerItem('b');x.h.offerItem('c');
