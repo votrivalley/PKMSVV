@@ -56,12 +56,12 @@ async function main(){
   for(let i=0;i<4;i++){
    const revived=await page.evaluate(()=>{
     const players=G.Coop.players();for(const p of players){p.dead=true;p.hp=0;}
-    G.EggRush.update(7.9,361,players,()=>{throw Error('premature end');});
-    if(!players.every(p=>p.dead))throw Error('respawned before 8s');
+    G.EggRush.update(1.9,361,players,()=>{throw Error('premature end');});
+    if(!players.every(p=>p.dead))throw Error('respawned before 2s');
     G.EggRush.update(.11,361,players,()=>{});return players.every(p=>!p.dead);
    });assert.equal(revived,true);
   }
-  console.log('PASS six minute-spawns, shared arrow objective and unlimited 8-second respawns for human and AI');
+  console.log('PASS six minute-spawns, shared arrow objective and unlimited 2-second respawns for human and AI');
   assert.deepEqual(errors,[]);
  }finally{await browser.close();await server.close();}
 }
