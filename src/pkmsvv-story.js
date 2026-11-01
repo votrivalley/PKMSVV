@@ -428,9 +428,9 @@ G.PKMSVVStory=(()=>{
   if(!s?.pkmsvvChapter3Seen||![...MP_MODES,...MP_OPTIONAL].includes(mode)||detail.abandoned)return false;
   const time=Number(detail.time)||0;
   if(mode==='coop'){
-   // In Co-op surviving or falling after genuine team play counts as finishing.
-   // A one-second start-and-abandon run does not.
-   if(time<60)return false;
+   // A real party wipe is a completed Survival match even before 60 seconds.
+   // Voluntary quit/abandon still requires a full minute; no lobby/instant grant.
+   if(time<5||(time<60&&detail.completed!==true))return false;
   }else{
    // Competitive modes must have their authoritative final standings.
    const result=detail.result;
@@ -532,6 +532,34 @@ G.PKMSVVStory=(()=>{
  }
  function replay(type='prologue'){play(['chapter1','chapter2','chapter3','chapter5','berry','chapter6','championTen','chapter7','chapter10'].includes(type)?type:'prologue',()=>G.Flow.goMenu(),true);}
  let memoryReplayActive=false;
+ // Read-only unlock guide: a locked chapter is always visible in Memories
+ // so players know exactly what to do next. Uses the same save gates as play().
+ function chapterUnlockHints(save=G.DB?.save){
+  const p=multiplayerProgress(save);
+  const berryUsed=G.PKMSVVBerry?.chapterProgress?.()??
+   Object.values(save?.pkmsvvBerry?.used||{}).filter(Boolean).length;
+  const orbMask=Number(save?.stats?.pkmsvvOrbTypeMask)||0;
+  const orbs=Array.from({length:6},(_,i)=>(orbMask>>i)&1).reduce((a,b)=>a+b,0);
+  const seals=championSealCount(save);
+  const survival=save?.pkmsvvMultiplayerDone?.coop===true;
+  const royale=save?.pkmsvvMultiplayerDone?.royale===true;
+  const marker=done=>done?'✅':'⬜';
+  return {
+   prologue:tr('Bắt đầu hành trình','Begin the journey'),
+   chapter1:tr('Hoàn thành Chương 1','Complete Chapter 1'),
+   chapter2:tr('Thức tỉnh kỹ năng tối đa trong trận','Max out a skill during a run'),
+   chapter3:tr('Thu thập đủ 6 loại Mystery Orb: ','Discover all six Mystery Orbs: ')+orbs+'/6',
+   chapter5:tr('Hoàn thành cốt truyện Chương 4','Finish Chapter 4 story'),
+   berry:tr('Chương 5 · Sống Sót ','Chapter 5 · Survival ')+marker(survival)+
+    tr(' · Sống Còn ',' · Royale ')+marker(royale)+' · '+p.count+'/2',
+   chapter6:tr('Chương 6 · Dùng 5 loại Berry khác nhau: ','Chapter 6 · Use five different Berries: ')+berryUsed+'/5',
+   championTen:tr('Mở Arena bằng cách hoàn thành Chương 7','Open Arena by completing Chapter 7'),
+   chapter7:tr('Hạ Champion đầu tiên và mở một Mega dùng được trong trận',
+    'Defeat your first Champion and unlock one battle-ready Mega'),
+   chapter10:tr('Thu thập 10 Ấn Chứng Vương Miện: ','Collect ten Crown Seals: ')+seals+
+    '/10'+tr(' · đánh bại Rayquaza',' · defeat Rayquaza')
+  };
+ }
  function memories(){
   const s=G.DB.save||{};
   // The default Memories menu opens the next available chapter to replay.
@@ -547,7 +575,7 @@ G.PKMSVVStory=(()=>{
   if(arenaUnlocked(s))available.push('championTen');
   if(firstMegaUnlocked(s)||s.pkmsvvChapter9MegaDone)available.push('chapter7');
   if(s.pkmsvvRayquazaDefeated||s.pkmsvvChapter10Done)available.push('chapter10');
-  if(available.length===1){replay('prologue');return;}
+  // Show all ten story chapters and their gates, including a brand-new save.
   // A quick Back/Next or an Android back event must not stack two selectors.
   if(document.querySelector('.pkmsvv-memory-chooser'))return;
   const choices=document.createElement('section');
@@ -566,11 +594,22 @@ G.PKMSVVStory=(()=>{
   // Android landscape can be shorter than the list of ten chapters.
   // Keep Exit visible and scroll ONLY the chapter grid, not the game behind it.
   choices.setAttribute('aria-modal','true');
+  const hints=chapterUnlockHints(s);
+  const guide=Object.keys(labels).map(c=>{
+   const unlocked=available.includes(c);
+   const hint=hints[c]||'';
+   return '<button type="button" class="btn pkmsvv-memory-chapter '+(unlocked?'gold is-open':'is-locked')+
+    '" data-chapter="'+c+'" '+(unlocked?'':'disabled aria-disabled="true"')+
+    '><span class="pkmsvv-memory-name">'+labels[c]+'</span>'+
+    '<small class="pkmsvv-memory-requirement">'+(unlocked?'✅ ':'🔒 ')+hint+'</small></button>';
+  }).join('');
   choices.innerHTML='<div class="pkmsvv-memory-inner">'+
    '<div class="pkmsvv-memory-head"><h2>'+tr('Ký Ức','Memories')+'</h2>'+
    '<button type="button" class="btn ghost pkmsvv-memory-close" data-close="1" aria-label="'+tr('Đóng Ký Ức','Close Memories')+'">✕</button></div>'+
+   '<p class="pkmsvv-memory-summary">'+tr('Đã mở ','Unlocked ')+available.length+
+     '/10 · '+tr('Chương khóa có ghi rõ điều kiện bên dưới','Locked chapters show the steps to unlock them')+'</p>'+
    '<div class="pkmsvv-memory-scroll" role="group" aria-label="'+tr('Chọn chương','Select chapter')+'">'+
-   available.map(c=>'<button type="button" class="btn gold" data-chapter="'+c+'">'+labels[c]+'</button>').join('')+
+   guide+
    '</div><button type="button" class="btn ghost pkmsvv-memory-footer" data-close="1">'+tr('Đóng · Trở về','Close · Back')+'</button></div>';
   document.body.appendChild(choices);
   const closeChooser=(restoreMenu=true)=>{
@@ -634,5 +673,5 @@ G.PKMSVVStory=(()=>{
    else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();skipStory();}
   },true);
  }
- return {init,prologue,reveal,replay,memories,syncChapterPurpleRewards,chapter1,chapter2,chapter3,chapter5,berryChapter,chapter6,chapter7,chapter8,chapter10,onChampionSeal,onMegaUnlocked,firstMegaUnlocked,championSealCount,tenChampionCompleted,multiplayerProgress,allMultiplayerCompleted,recordMultiplayerCompletion,arenaUnlocked,earnedChampion,megaUnlocked,markChapter1,markChapter2,markChapter3,chapter1Pending,chapter2Pending,chapter3Pending};
+ return {init,prologue,reveal,replay,memories,chapterUnlockHints,syncChapterPurpleRewards,chapter1,chapter2,chapter3,chapter5,berryChapter,chapter6,chapter7,chapter8,chapter10,onChampionSeal,onMegaUnlocked,firstMegaUnlocked,championSealCount,tenChampionCompleted,multiplayerProgress,allMultiplayerCompleted,recordMultiplayerCompletion,arenaUnlocked,earnedChampion,megaUnlocked,markChapter1,markChapter2,markChapter3,chapter1Pending,chapter2Pending,chapter3Pending};
 })();
