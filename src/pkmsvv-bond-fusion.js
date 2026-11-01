@@ -94,10 +94,48 @@ G.PKMSVVFusionPilot=(()=>{
   const competitive=()=>!!(G.Royale?.active||G.EggRush?.active||
    G.PKMSVVArenaSolo?.active||G.PKMSVVChampionArena?.active||
    G.PKMSVVBerryRescue?.active);
+  function showGuide(p){
+   document.getElementById('pkmsvv-fusion-guide')?.remove?.();
+   const overlay=document.createElement('div');
+   overlay.id='pkmsvv-fusion-guide';overlay.className='pkmsvv-fusion-guide';
+   overlay.setAttribute('role','dialog');
+   overlay.setAttribute('aria-label',tr('Công thức Fusion','Fusion recipes'));
+   const box=document.createElement('section');box.className='pkmsvv-fusion-guide-panel';
+   const h=document.createElement('h2');h.textContent=tr('🔗 FUSION · CÔNG THỨC','🔗 FUSION · RECIPES');
+   const note=document.createElement('p');
+   note.textContent=tr('Mỗi người ghép tối đa 1 lần/trận. Học và tiến hóa tối đa cả hai skill theo đúng cặp để mở ghép.',
+    'One Fusion per trainer per match. Fully evolve both recipe skills to unlock.');
+   const close=document.createElement('button');close.type='button';close.className='btn small';
+   close.textContent=tr('Đóng','Close');close.onclick=()=>overlay.remove();
+   box.append(h,note);
+   for(const recipe of RECIPES){
+    const row=document.createElement('div');row.className='pkmsvv-fusion-guide-row';
+    const prog=progress(p).find(x=>x.id===recipe.id);
+    const pair=document.createElement('div');pair.className='pkmsvv-fusion-guide-pair';
+    recipe.ids.forEach((id,index)=>{
+     if(index){const plus=document.createElement('strong');plus.textContent='+';pair.append(plus);}
+     const item=document.createElement('span');item.className='pkmsvv-fusion-guide-move';
+     const icon=document.createElement('span');icon.innerHTML=G.Icons?.html?.('move:'+id,24)||'✦';
+     const move=G.Moves?.BY_ID?.[id];
+     const label=document.createElement('span');label.textContent=G.T?.(move?.name||id,'move')||move?.name||id;
+     item.append(icon,label);pair.append(item);
+    });
+    const outcome=document.createElement('b');outcome.textContent='→ '+tr(recipe.vi,recipe.en);
+    const status=document.createElement('small');
+    status.textContent=prog?.unlocked?tr('✅ Có thể ghép','✅ Ready'):
+     tr('Đã hoàn thiện '+(prog?.ready||0)+'/2 skill','Max-evolved '+(prog?.ready||0)+'/2 skills');
+    row.append(pair,outcome,status);box.append(row);
+   }
+   box.append(close);overlay.append(box);
+   overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove();});
+   document.body.append(overlay);
+   return true;
+  }
   function openFusion(){
    const p=G.Game?.player,opt=options(p);
-   if(!opt||G.Game?.state!=='playing'||G.UI?.isOpen?.('scr-bond')||
+   if(!p||G.Game?.state!=='playing'||G.UI?.isOpen?.('scr-bond')||
       G.UI?.isOpen?.('scr-levelup'))return false;
+   if(!opt||Number(p._pkmsvvFusionUsed||0)>=maxPerRun)return showGuide(p);
    const shared=!!(G.Coop?.active&&!competitive());
    if(shared)G.Coop?.holdStart?.();
    G.RunUI.showBond(opt,picked=>{
@@ -121,9 +159,9 @@ G.PKMSVVFusionPilot=(()=>{
    const visible=!!(p&&!p.dead&&G.Game?.state==='playing'&&
      !G.UI?.isOpen?.('scr-pause')&&!G.UI?.isOpen?.('scr-menu'));
    action.hidden=!visible;
-   if(!visible)return;
+   if(!visible){document.getElementById('pkmsvv-fusion-guide')?.remove?.();return;}
    const used=Number(p._pkmsvvFusionUsed||0)>=maxPerRun,ready=!!options(p);
-   action.disabled=used||!ready||!!G.UI?.isOpen?.('scr-levelup')||
+   action.disabled=!!G.UI?.isOpen?.('scr-levelup')||
      !!G.UI?.isOpen?.('scr-bond')||!!G.UI?.isOpen?.('scr-item');
    action.textContent=used?'FUSION ✓':'🔗 FUSION';
    action.title=used?tr('Đã dùng Fusion trận này','Fusion used this match'):
@@ -143,5 +181,5 @@ G.PKMSVVFusionPilot=(()=>{
   else if(typeof document.addEventListener==='function')
    document.addEventListener('DOMContentLoaded',mount,{once:true});
   return {RECIPES,maxPerRun,pilotEligible,readyMove,pairFor,options,confirm,
-   progress,install,competitive,openFusion,mount,sync};
+   progress,install,competitive,openFusion,showGuide,mount,sync};
 })();
