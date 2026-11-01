@@ -75,23 +75,31 @@ replace('js/core/db.js',
  '        crown.rewards[region]={rank,tickets:Math.max(Number(a?.tickets)||0,Number(b?.tickets)||0)};}\n'+
  '    }\n'+
  '    r.arenas.pkmChampion=crown;');
-// An endless Co-op Survival session can be ended by the player after genuine
-// team play. Remember the room BEFORE quitRun() calls Coop.leave(); otherwise
-// endRun() sees no active room and fails to award 1/2 despite 10+ minutes played.
-// Short (<60s) quit attempts still do not qualify; Royale/Egg Rush require results.
+// Capture the actual mode when the game starts, before any room teardown.
+// Android standalone AI may reset G.Social.room before a party-wipe game over.
 replace('js/game.js',
  '  function quitRun() {\n    if (G.Coop.active) G.Coop.leave();',
- "  let pkmsvvQuitMode=null;\n  function quitRun() {\n"+
- "    pkmsvvQuitMode=G.Coop.active?G.Social?.room?.mode:null;\n"+
+ "  let pkmsvvQuitMode=null,pkmsvvActiveMode=null,pkmsvvManualExit=false;\n"+
+ "  function quitRun() {\n"+
+ "    pkmsvvManualExit=true;\n"+
+ "    pkmsvvQuitMode=pkmsvvActiveMode||(G.Coop.active?G.Social?.room?.mode:null);\n"+
  "    if (G.Coop.active) G.Coop.leave();");
 replace('js/game.js',
+ '    const mon = G.DEX_BY[save.partner];',
+ "    pkmsvvManualExit=false;pkmsvvQuitMode=null;\n"+
+ "    pkmsvvActiveMode=coop?(G.Social?.room?.mode||coop.mode||G.LanBus?.room?.mode||null):null;\n"+
+ "    const mon = G.DEX_BY[save.partner];");
+replace('js/game.js',
  '    const coop = !!pl.uid;                    // sólo las partidas en grupo le ponen uid',
- '    const pkmsvvFinishedMode=(G.Coop.active?G.Social?.room?.mode:null)||pkmsvvQuitMode;\n'+
- '    pkmsvvQuitMode=null;\n'+
+ '    const pkmsvvFinishedMode=(G.Coop.active?G.Social?.room?.mode:null)||pkmsvvActiveMode||pkmsvvQuitMode||\n'+
+ "      (G.Royale?.active?'royale':G.EggRush?.active?'eggrush':G.PKMSVVBerryRescue?.active?'berry':(pl.uid?'coop':null));\n"+
+ '    const pkmsvvWasManualExit=pkmsvvManualExit;\n'+
+ '    pkmsvvActiveMode=null;pkmsvvQuitMode=null;pkmsvvManualExit=false;\n'+
  '    const coop = !!pl.uid;                    // sólo las partidas en grupo le ponen uid');
 replace('js/game.js',
  "    G.DB.commit('run');",
  "    G.PKMSVVStory?.recordMultiplayerCompletion?.(pkmsvvFinishedMode,{time,\n"+
+ "      completed:!pkmsvvWasManualExit,abandoned:pkmsvvWasManualExit&&time<60,\n"+
  "      result:pkmsvvFinishedMode==='royale'?G.Royale?.outcome:\n"+
  "             pkmsvvFinishedMode==='eggrush'?G.EggRush?.outcome:null});\n"+
  "    G.DB.commit('run');");
