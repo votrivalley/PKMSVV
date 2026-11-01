@@ -18,27 +18,17 @@ console.log('PKMSVV: all pairings enabled; one free Fusion per match, original R
 fs.appendFileSync(path.join(base,'css/style.css'),`\n.pkmsvv-fusion-recipes{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:5px;padding:6px 0}\n.pkmsvv-fusion-recipe{display:flex;align-items:center;flex-wrap:wrap;gap:5px;background:#163e50;border:1px solid #83c4c8;border-radius:8px;padding:7px;color:#fff}\n.pkmsvv-fusion-move{display:inline-flex;align-items:center;gap:5px;font-size:12px}.pkmsvv-fusion-move svg{width:20px;height:20px}.pkmsvv-fusion-recipe strong{color:#ffe47a}\n`);
 
 fs.appendFileSync(path.join(base,'css/style.css'),String.raw`
-/* Fusion lives above the Mystery Orb queue and never overlays pause/menu. */
-#pkmsvv-fusion-action{
- position:fixed;left:calc(50% - 71px);bottom:208px;z-index:12018;
- min-width:106px;min-height:34px;padding:5px 9px;
- border:2px solid #93d6d1;border-radius:9px;
- background:linear-gradient(160deg,#19475c,#133442);color:#fff3b2;
- font:900 12px/1.15 "Segoe UI",sans-serif;letter-spacing:.4px;
- box-shadow:0 3px 10px #03192388;cursor:pointer;
+/* Fusion is a real pause-menu action, never a fixed combat HUD overlay. */
+#scr-pause .pause-box .row{flex-wrap:wrap;gap:8px}
+#pkmsvv-pause-fusion{
+ display:inline-flex;align-items:center;justify-content:center;min-height:40px;
+ border:2px solid #a5d7d1;border-radius:10px;
+ background:linear-gradient(160deg,#215666,#153846);color:#fff4b0;
+ font-weight:900;letter-spacing:.3px;white-space:nowrap
 }
-#pkmsvv-fusion-action:disabled{opacity:.55;cursor:default}
-#pkmsvv-fusion-action[hidden]{display:none!important}
-body:has(#scr-pause:not(.hidden):not([hidden])) #pkmsvv-fusion-action,
-body:has(#scr-menu:not(.hidden):not([hidden])) #pkmsvv-fusion-action,
-body:has(#scr-settings:not(.hidden):not([hidden])) #pkmsvv-fusion-action{
- display:none!important;pointer-events:none!important
-}
-@media(max-width:720px),(pointer:coarse){
- #pkmsvv-fusion-action{left:auto;right:max(12px,env(safe-area-inset-right));
- bottom:max(233px,env(safe-area-inset-bottom) + 204px);
- min-width:80px;min-height:31px;padding:4px 6px;font-size:10px}
-}
+#pkmsvv-pause-fusion[hidden]{display:none!important}
+#pkmsvv-pause-fusion:disabled{opacity:.45;cursor:default}
+@media(max-height:450px){#pkmsvv-pause-fusion{min-height:34px;padding:5px 9px}}
 `+'\n');
 
 fs.appendFileSync(path.join(base,'css/style.css'),String.raw`
@@ -70,7 +60,7 @@ fs.appendFileSync(path.join(base,'css/style.css'),String.raw`
  background:#113744;border-radius:7px;min-width:0}`+'\n');
 
 fs.appendFileSync(path.join(base,'css/style.css'),String.raw`
-/* The engine's genuine level-up cards (including rerolls and LAN personal cards). */
+/* Fusion suggestions on genuine skill cards, with no overlay on the arena. */
 #cards .pkmsvv-fusion-card-hint{
  display:block;clear:both;width:fit-content;max-width:100%;box-sizing:border-box;
  margin-top:5px;padding:4px 7px;border-radius:6px;border:1px solid #63bbb4;
@@ -92,7 +82,7 @@ fs.appendFileSync(path.join(base,'css/style.css'),String.raw`
 #cards .pkmsvv-fusion-card-hint.is-offered{
  border-color:#bba5de;background:#332b51;color:#f4e5ff;
 }
-#pkmsvv-fusion-action.has-new-match:not(:disabled){
+#pkmsvv-pause-fusion.has-new-match:not(:disabled){
  border-color:#ffe87c;color:#fff8b6;
  box-shadow:0 0 0 3px #e2ca5a55,0 0 18px #ffe27db8;
  animation:pkmsvv-fusion-reminder 1.5s ease-in-out infinite;
@@ -102,7 +92,7 @@ fs.appendFileSync(path.join(base,'css/style.css'),String.raw`
  50%{filter:brightness(1.22)}
 }
 @media (prefers-reduced-motion:reduce){
- #pkmsvv-fusion-action.has-new-match{animation:none!important}
+ #pkmsvv-pause-fusion.has-new-match{animation:none!important}
 }
 @media(orientation:landscape) and (max-height:460px){
  #cards .pkmsvv-fusion-card-hint{font-size:10px;margin-top:3px;padding:2px 5px}
