@@ -155,7 +155,7 @@ G.PKMSVVBerry=(()=>{
     '<small>'+tr('Giải Cứu Berry','Rescue Berry')+'</small>';
    out+='<div class="pkmk-card pkmsvv-berry-store-card"><div class="pkmk-product-art">'+imageHtml(t.id)+'</div><div class="pkmk-product-copy"><b>'+t.name+' Berry</b><small>'+esc(t.desc[vi()?0:1])+'</small>'+detailsHtml(t.id)+'</div><div class="pkmk-product-tail">'+buy+'<span class="pkmk-stock">×'+stock+'</span></div></div>';
   }
-  return out+'</div><button class="btn gold" data-berry-rescue="1">🌿 '+tr('Chơi Giải Cứu Berry · Co-op 4 người · 8 phút','Rescue Berry · 4-player Co-op · 8 min')+'</button>';
+  return out+'</div>'; // Berry Rescue launched from the co-op mode selector, not the shop.
  }
  function legacyRescueTiles(){
   if(G.Game?.state==='playing'||choiceOpen)return false;

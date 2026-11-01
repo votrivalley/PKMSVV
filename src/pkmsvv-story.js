@@ -112,10 +112,10 @@ G.PKMSVVStory=(()=>{
   chapter10:[
    {art:20,speaker:['Tôi','Me'],text:['Mười Ấn Chứng Vương Miện đã hội tụ. Bầu trời bất ngờ tối sầm...','All ten Crown Seals converge. The sky suddenly darkens...']},
    {art:20,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Ngươi đã vượt qua thử thách Rayquaza. Nhưng đây không phải kết thúc.','You have survived Rayquaza. But this is not the end.']},
-   {art:21,speaker:['Tôi','Me'],text:['Rayquaza... Mega hóa! Không, thứ năng lượng đen kia đang nuốt chửng nó!','Rayquaza Mega Evolves... No, that dark energy is consuming it!']},
+   {art:21,speaker:['Tôi','Me'],text:['Rayquaza... Mega Rayquaza đang hắc hóa! Năng lượng đen kia đang nuốt chửng nó!','Mega Rayquaza is being corrupted! That dark energy is consuming it!']},
    {art:21,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Mega Rayquaza đã hắc hóa và bay về phía chân trời. Bóng tối bắt đầu tràn vào thế giới Pokémon.','Shadow Mega Rayquaza flies into the horizon. Darkness is spreading across the Pokémon world.']},
    {art:21,speaker:['Tôi','Me'],text:['Một vùng phụ bản mới đang hình thành. Mình phải chuẩn bị để giải cứu Pokémon bị hắc hóa!','A new dungeon is forming. I must prepare to rescue Shadow Pokémon!']},
-   {art:20,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Nhưng đây chưa phải hồi kết... Câu chuyện của chúng ta vẫn còn tiếp diễn.','But this is not the end... Our story is still unfolding.']}
+   {art:21,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Nhưng đây chưa phải hồi kết... Câu chuyện của chúng ta vẫn còn tiếp diễn.','But this is not the end... Our story is still unfolding.']}
   ],
   reveal:[
    {art:5,speaker:['Tôi','Me'],text:['Mình... đã biến thành một Pokémon?!','I... turned into a Pokémon?!']},
@@ -274,7 +274,7 @@ G.PKMSVVStory=(()=>{
              key==='eyes'?'A lone soul beneath mysterious eyes in the starry sky':
               key==='gate'?'A lone soul facing a glowing portal beneath the stars':
               'An empty celestial gateway awaiting the awakened Pokémon');
-  const rayquazaEscape=mode==='chapter10'&&item.art===21;
+  const rayquazaEscape=mode==='chapter10'&&item.art===21&&item!==chapters.chapter10[chapters.chapter10.length-1];
   cv.classList.toggle('hidden',mode!=='reveal'&&!rayquazaEscape);
   cv.classList.toggle('pkmsvv-shadow-rayquaza-flight',rayquazaEscape);
   if(mode==='reveal'&&chosenDex&&G.UI&&G.UI.sprite)G.UI.sprite(cv,chosenDex,{lively:true,scale:3,hero:true});

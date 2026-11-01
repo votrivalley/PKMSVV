@@ -25,7 +25,7 @@ patch('js/net/coop.js',
  "      case 'item': api.item(ev[1]); break;\n      case 'orb': if(G.Orbs.ready(local))api.orb(ev[1]); break;");
 patch('js/game.js',
  "    for(let i=0;i<4;i++)if(G.Input.tap('digit'+(i+5))||G.Input.tap('numpad'+(i+5)))G.Orbs.use(pl,i);",
- "    if(G.Input.tap('digit5')||G.Input.tap('numpad5'))G.Orbs.useNext(pl);");
+ "    if(G.Input.tap('digit4')||G.Input.tap('numpad4'))G.Orbs.useNext(pl);");
 {
  const p='js/ui/hud.js',s=load(p),start=s.indexOf('    // v1.4: Mystery Dungeon Orbs are run-only items');
  const end=s.indexOf('    // ---------- vínculo guardado (aún no hay dos movimientos sueltos) ----------',start);

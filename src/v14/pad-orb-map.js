@@ -9,12 +9,12 @@ G.PKMSVVPadOrb=(()=>{
  const tr=(vi,en)=>G.I18n&&G.I18n.lang==='en'?en:vi;
  const KB_IDS=['up','down','left','right','dash','orb','mega','pause','card1','card2','card3'];
  const PAD_IDS=['dash','use','mega','pause','confirm','back'];
- const keyboardDefaults=()=>Object.assign({},G.Input.DEFAULT_KEYS,{orb:'digit5',mega:'digit4',reroll:'keyr'});
+ const keyboardDefaults=()=>Object.assign({},G.Input.DEFAULT_KEYS,{orb:'digit4',mega:'digit5',reroll:'keyr'});
  const keyboardBindings=()=>{
   const b=Object.assign({},keyboardDefaults(),G.Settings.get('keys')||{});
   // Migrate only the former default pair, preserving unrelated custom keys.
   const saved=G.Settings.get('keys')||{};
-  if(saved.orb==='digit4'&&(saved.mega===undefined||saved.mega==='digit5')){b.orb='digit5';b.mega='digit4';}
+  if(saved.orb==='digit5'&&(saved.mega===undefined||saved.mega==='digit4')){b.orb='digit4';b.mega='digit5';}
   return b;
  };
  const merged=o=>Object.assign({},DEFAULT,o||{});

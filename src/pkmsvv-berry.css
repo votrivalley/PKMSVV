@@ -115,3 +115,6 @@ body.pkmsvv-berry-defense .pkmsvv-berry-active-hud{
  body.pkmsvv-berry-defense .pkmsvv-berry-active-hud{
   top:clamp(148px,23vh,205px);right:max(7px,env(safe-area-inset-right));
   width:min(165px,43vw)}}
+
+.pkmk-card.pkmsvv-berry-store-card .pkmk-product-copy small,.pkmk-card.pkmsvv-berry-store-card .pkmsvv-berry-detail,.pkmk-card.pkmsvv-berry-store-card p{color:#edfff5!important;opacity:1!important;text-shadow:none!important}
+.pkmk-card.pkmsvv-berry-store-card .pkmk-product-copy b{color:#fff7cf!important}

@@ -49,3 +49,8 @@ body.pkmsvv-mega-gamepad #pkmsvv-mega-champion-btn.pkmsvv-mega-btn{
 @media(prefers-reduced-motion:reduce){
  .pkmsvv-mega-btn:before,.pkmsvv-mega-btn__gem path{animation:none!important}
 }
+
+/* Hide floating Mega above pause/menu and conceal the menu scroll thumb. */
+body:has(#scr-pause:not([hidden])) .pkmsvv-mega-btn,body:has(#scr-menu:not([hidden])) .pkmsvv-mega-btn,body:has(#scr-settings:not([hidden])) .pkmsvv-mega-btn{display:none!important;pointer-events:none!important}
+#scr-menu .menu-right,#scr-menu .menu-list,#scr-menu .menu-left{scrollbar-width:none}
+#scr-menu .menu-right::-webkit-scrollbar,#scr-menu .menu-list::-webkit-scrollbar,#scr-menu .menu-left::-webkit-scrollbar{width:0!important;display:none!important}

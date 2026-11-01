@@ -178,8 +178,8 @@ G.PKMSVVWiki=(()=>{
     tr('Kỹ năng được mở và nâng cấp khi Pokémon lên cấp trong trận. Hãy chọn kỹ năng phù hợp để phát huy sức mạnh; các nâng cấp vĩnh viễn vẫn được giữ nguyên.',
        'Unlock and improve skills as your Pokémon levels up during a run. Choose skills that fit your play style; permanent upgrades remain intact.')],
    [tr('🔗 Bond / Fusion hai kỹ năng','🔗 Two-Move Bond Fusion'),
-    tr('THỬ NGHIỆM SOLO PVE: Có 5 công thức. Cả hai chiêu phải đạt cấp tối đa và đã tiến hóa; chỉ ghép 1 lần mỗi trận. Co-op, AI, Sống Còn, Tranh Trứng và Champion hiện giữ Bond gốc.',
-       'SOLO PVE PILOT: Five recipes. Both moves must be fully leveled and evolved; one Fusion per run. Co-op, AI, Royale, Egg Rush and Champion keep original Bond.')+
+    tr('FUSION CHÍNH THỨC · SOLO PVE: Có 5 công thức. Cả hai chiêu phải đạt cấp tối đa và đã tiến hóa; chỉ ghép 1 lần mỗi trận. Co-op, AI, Sống Còn, Tranh Trứng và Champion hiện giữ Bond gốc.',
+       'FUSION ENABLED · SOLO PVE: Five recipes. Both moves must be fully leveled and evolved; one Fusion per run. Co-op, AI, Royale, Egg Rush and Champion keep original Bond.')+
      '  '+(G.PKMSVVFusionPilot?.RECIPES||[]).map(r=>{
        const name=tr(r.vi,r.en);
        const moves=r.ids.map(id=>G.T(G.Moves?.BY_ID?.[id]?.name||id,'move')).join(' + ');

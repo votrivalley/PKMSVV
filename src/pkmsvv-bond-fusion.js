@@ -1,6 +1,6 @@
 /* D — Five explicitly curated 2-move Bond recipes. The engine already
  * fuses actual move instances and owns cast/VFX: reuse it without stat changes.
- * Pilot enabled ONLY for a human, offline solo PvE Pokémon; other modes keep
+ * Official for a human, offline solo PvE Pokémon; other modes keep
  * their original Bond behavior until network verification and balancing. */
 G.PKMSVVFusionPilot=(()=>{
  const tr=(a,b)=>G.I18n?.lang==='en'?b:a;
@@ -11,7 +11,7 @@ G.PKMSVVFusionPilot=(()=>{
   {id:'spark-quick',ids:['thunder-shock','quick-attack'],vi:'Điện Quang',en:'Thunder Dash'},
   {id:'mind-tackle',ids:['confusion','tackle'],vi:'Tâm Lực',en:'Psychic Impact'}
  ]);
- const ENABLE_PILOT=true; // full online/AI/competitive must not accidentally use it
+ const ENABLE_PILOT=true; // official solo PvE Fusion, online and PvP retain standard Bond
  const maxPerRun=1;
  const readyMove=m=>!!(m&&m.evolved===true&&m.def&&
   Number.isFinite(m.lvl)&&m.lvl>=m.def.maxLvl&&G.Moves?.EVO?.[m.id]);
@@ -65,13 +65,30 @@ G.PKMSVVFusionPilot=(()=>{
     if(root&&list){
      let hint=root.querySelector('.pkmsvv-fusion-pilot-hint');
      if(!hint){hint=document.createElement('p');hint.className='pkmsvv-fusion-pilot-hint';list.before(hint);}
-     hint.textContent=tr('🔗 FUSION thử nghiệm (solo PvE) · ', '🔗 Fusion Pilot (solo PvE) · ')+
+     hint.textContent=tr('🔗 FUSION chính thức (Solo PvE) · ', '🔗 Fusion (Solo PvE) · ')+
        opt.recipeName+tr(' · Đúng 2 chiêu đã tiến hóa tối đa · 1 lần/trận',
         ' · Exactly 2 fully evolved moves · Once per run');
      hint.hidden=false;
+     let recipes=root.querySelector('.pkmsvv-fusion-recipes');
+     if(!recipes){recipes=document.createElement('div');recipes.className='pkmsvv-fusion-recipes';hint.after(recipes);}
+     recipes.hidden=false;recipes.replaceChildren();
+     for(const r of RECIPES){
+      const line=document.createElement('div');line.className='pkmsvv-fusion-recipe';
+      for(let i=0;i<r.ids.length;i++){
+       if(i){const plus=document.createElement('b');plus.textContent=' + ';line.append(plus);}
+       const id=r.ids[i],m=G.Moves?.BY_ID?.[id];
+       const move=document.createElement('span');move.className='pkmsvv-fusion-move';
+       const icon=document.createElement('span');icon.innerHTML=G.Icons?.html?.('move:'+id,20)||'✦';
+       const label=document.createElement('span');label.textContent=G.T?.(m?.name||id,'move')||m?.name||id;
+       move.append(icon,label);line.append(move);
+      }
+      const result=document.createElement('strong');result.textContent=' → '+tr(r.vi,r.en);
+      line.append(result);recipes.append(line);
+     }
     }
    }else{
     document.querySelector('.pkmsvv-fusion-pilot-hint')?.setAttribute('hidden','');
+    document.querySelector('.pkmsvv-fusion-recipes')?.setAttribute('hidden','');
    }
    return result;
   };
