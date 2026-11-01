@@ -2,7 +2,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.resolve(__dirname,'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
-function harness(lang='vi'){
+function harness(lang='vi',failStart=false){
  const all=[],byId=new Map(),timers=new Map();let seq=0,started=0,menuOpens=0,commits=0;
  function node(tag){
   const el={tagName:tag,children:[],textContent:'',className:'',style:{},hidden:false,removed:false,
@@ -17,7 +17,7 @@ function harness(lang='vi'){
  const save={coins:1500,pkmsvvChapter5Seen:true};
  const G={I18n:{lang},DB:{save,commit(){commits++}},
   UI:{toast(){},refreshCoins(){}},
-  Game:{state:'ui',player:null,startRun(){started++;this.state='playing';
+  Game:{state:'ui',player:null,startRun(){started++;if(failStart)throw Error('simulated engine start failure');this.state='playing';
    this.player={hp:100,maxHp:100,atkMul:1,spdMul:1,cdMul:1,invuln:0};}},
   MenuUI:{open(){menuOpens++;}},
   PKMSVVStory:{syncChapterPurpleRewards(){}}};
@@ -92,4 +92,14 @@ test('Berry HUD styles stay within Android safe areas, do not block joystick or 
  assert.match(css,/safe-area-inset-left/);
  assert.match(css,/\.pkmsvv-berry-active-hud\[hidden\]/);
  assert.match(css,/\.pkmsvv-berry-option-detail/);
+});
+
+test('failed pre-run startup never burns a Berry or marks chapter usage',()=>{
+ const h=harness('vi',true);h.berry.grant('oran',1);
+ h.G.Game.startRun(null);
+ const b=h.all.find(n=>n.tagName==='button'&&n.textContent.includes('Oran ×1'));
+ assert.ok(b);b.onclick();for(let i=0;i<3;i++)h.pulse();
+ assert.throws(()=>h.pulse(),/simulated engine start failure/);
+ assert.equal(h.berry.count('oran'),1,'no item consumption when the engine cannot start');
+ assert.equal(h.berry.chapterProgress(),0,'no phantom Chapter 6 progress');
 });
