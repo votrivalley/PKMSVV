@@ -40,15 +40,24 @@ test('No Fusion for missing evolution, level, multiple grouped slots or wrong pa
  pl.slots[1][0].lvl=6;assert.equal(api.confirm(pl,[pl.slots[0][0],pl.slots[0][0]]),false);
  pl.slots=[pl.slots[0].concat(pl.slots[1])];assert.equal(api.options(pl),null);
 });
-test('AI, Co-op, Berry Rescue, Royale, Eggs, Arena and Champion use existing Bond only',()=>{
+test('Fusion is available in Co-op, Rescue, Royale, Eggs, Solo and Champion; remote AI cannot claim it',()=>{
  const {api,G,pl}=setup();
  for(const [obj,key] of [[G.Coop,'active'],[G.Royale,'active'],[G.EggRush,'active'],
   [G.PKMSVVBerryRescue,'active'],[G.PKMSVVArenaSolo,'active'],[G.PKMSVVChampionArena,'active']]){
-  obj[key]=true;assert.equal(api.pilotEligible(pl),false);
-  assert.equal(api.options(pl),null);obj[key]=false;
+  obj[key]=true;assert.equal(api.pilotEligible(pl),true);
+  assert.equal(api.options(pl).pilot,true);obj[key]=false;
  }
- pl.uid='ai99';assert.equal(api.pilotEligible(pl),false);
- delete pl.uid;pl.remote=true;assert.equal(api.pilotEligible(pl),false);
+ pl.uid='local-trainer';assert.equal(api.pilotEligible(pl),true);
+ pl.remote=true;assert.equal(api.pilotEligible(pl),false);
+ pl.remote=false;pl.lanBot=true;assert.equal(api.pilotEligible(pl),false);
+});
+test('Fusion is a real HUD action with one-use lock and original Player.fuse',()=>{
+ const {api}=setup();
+ assert.equal(typeof api.openFusion,'function');
+ assert.equal(typeof api.sync,'function');
+ const css=read('scripts/patch-bond-fusion.cjs');
+ assert.match(css,/#pkmsvv-fusion-action/);
+ assert.match(read('src/pkmsvv-bond-fusion.js'),/p\.fuse\(picked,opt\.group\)/);
 });
 test('Fusion does not mutate persistent save or create new combat effects',()=>{
  const {api,G,pl}=setup(),before=JSON.stringify(G.DB.save);
