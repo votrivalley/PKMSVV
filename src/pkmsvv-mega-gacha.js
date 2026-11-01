@@ -94,6 +94,30 @@ G.PKMSVVMegaGacha=(()=>{
   return amount;
  }
 
+
+ // The same sprite sheet is decoded once for the canvas reels. Only the
+ // Mega mode invokes this; the ordinary Pokémon Gacha keeps its old draw path.
+ let stoneSheet=null,stoneSheetLoad=null;
+ function preloadStoneSheet(){
+  if(stoneSheet?.complete&&stoneSheet.naturalWidth)return Promise.resolve(true);
+  if(stoneSheetLoad)return stoneSheetLoad;
+  if(typeof Image==='undefined')return Promise.resolve(false);
+  stoneSheetLoad=new Promise(resolve=>{
+   const img=new Image();
+   stoneSheet=img;
+   img.onload=()=>resolve(true);
+   img.onerror=()=>resolve(false);
+   img.src='assets/mega-items/itemicons-sheet.png';
+   if(img.complete&&img.naturalWidth)resolve(true);
+  });
+  return stoneSheetLoad;
+ }
+ function drawStoneSlot(ctx,key,x,y,size=24){
+  const n=G.PKMSVV_MEGA_ITEM_MAP?.icons?.[key];
+  if(!stoneSheet?.complete||!stoneSheet.naturalWidth||!Number.isInteger(n)||!ctx?.drawImage)return false;
+  ctx.drawImage(stoneSheet,(n%16)*24,Math.floor(n/16)*24,24,24,x,y,size,size);
+  return true;
+ }
  // Use the exact pixel item icon from the offline Showdown atlas. One file
  // covers all 92 named Mega Stones; no runtime network access is required.
  function stoneIcon(key,size=72){
@@ -224,7 +248,11 @@ G.PKMSVVMegaGacha=(()=>{
    stage.append(title,canvas,hint,result,close);layer.append(stage);document.body.append(layer);
    try{
     if(!globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches&&G.Slots?.play){
-     await G.Slots.play(canvas,[{rarity:r.legendary?5:3,shiny:false}]);
+     await preloadStoneSheet();
+     const keys=[...new Set(formCatalog().filter(f=>f.stoneKey).map(f=>f.stoneKey))];
+     await G.Slots.play(canvas,[{rarity:r.legendary?5:3,shiny:false}],{
+      mega:{prize:r.stoneKey,keys}
+     });
     }
    }catch(err){console.warn('Mega slot visual skipped; award already saved',err);}
    if(!layer.isConnected)return;
@@ -254,5 +282,5 @@ G.PKMSVVMegaGacha=(()=>{
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',createUI,{once:true});
  else createUI();
  return {COST,LEGEND_RATE,LEGEND_PITY,ledger,balance,pool,canPull,pull,
-  grantTournament,grantChampion,syncLegacyArena,createUI};
+  grantTournament,grantChampion,syncLegacyArena,preloadStoneSheet,drawStoneSlot,stoneIcon,createUI};
 })();
