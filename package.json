@@ -1,6 +1,6 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.62",
+  "version": "1.5.63",
   "private": true,
   "description": "Pokémon Chuyển Sinh v1.5.62: Phase A Berry effect HUD and Phase B safe item/skill/Bond choice queue",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
@@ -72,7 +72,8 @@
     "test:arena:solo": "node --test tests/arena-solo.test.cjs",
     "test:support:fast-shiny": "node --test tests/support-fast-shiny.test.cjs",
     "test:berry:ux": "node --test tests/berry.test.cjs tests/berry-ux.test.cjs",
-    "test:choice:queue": "node --test tests/double-item-choice.test.cjs tests/competitive-nonblocking.test.cjs"
+    "test:choice:queue": "node --test tests/double-item-choice.test.cjs tests/competitive-nonblocking.test.cjs",
+    "test:chapter5:progress": "node --test tests/story-progression.test.cjs tests/champion-arena.test.cjs tests/android-berry-memory-routing.test.cjs"
   },
   "devDependencies": {
     "playwright": "^1.62.1",
