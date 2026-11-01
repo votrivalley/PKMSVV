@@ -32,6 +32,10 @@ on:
       - 'scripts/patch-v15-offline-save-notice.cjs'
       - 'scripts/prepare-game.cjs'
       - 'src/pkmsvv-berry.js'
+      - 'src/pkmsvv-berry.css'
+      - 'scripts/patch-double-items.cjs'
+      - 'tests/berry-ux.test.cjs'
+      - 'tests/double-item-choice.test.cjs'
       - 'src/pkmsvv-wiki.js'
       - 'src/shared/coop-unified.js'
       - 'src/shared/coop-unified.css'
@@ -70,6 +74,8 @@ jobs:
         run: npm run prepare:lan
         env:
           PKMSVV_MEGA_SPRITE_PACK: '1'
+      - name: Phase A+B — Berry UX and safe item/Bond selections
+        run: npm run test:berry:ux && npm run test:choice:queue
       - name: Quick regressions for controls, Mega, Orb, supports and Champion
         run: node --test tests/berry.test.cjs tests/berry-rescue.test.cjs tests/unified-coop.test.cjs tests/mega-arena-gacha.test.cjs tests/forget-skill.test.cjs tests/controller.test.cjs tests/mega-phase3.test.cjs tests/champion-arena.test.cjs tests/story-progression.test.cjs tests/chapter-purple-rewards.test.cjs tests/support-fast-shiny.test.cjs tests/competitive-nonblocking.test.cjs tests/royale-spectator.test.cjs
       - name: Package portable PC executable
@@ -97,7 +103,7 @@ jobs:
         run: |
           Copy-Item docs/LAN_FAST_START_WINDOWS.md dist/lan-windows/win-unpacked/README-FAST-START.md
           "Source: ${{ github.sha }}" | Add-Content dist/lan-windows/win-unpacked/README-FAST-START.md
-          "Controls: Orb = 4, Mega = 5 (customizable in Settings)." | Add-Content dist/lan-windows/win-unpacked/README-FAST-START.md
+          "Controls: Mega = 4, Orb = 5 (customizable in Settings)." | Add-Content dist/lan-windows/win-unpacked/README-FAST-START.md
       - name: Upload PC Fast Start for testing
         uses: actions/upload-artifact@v4
         with:
