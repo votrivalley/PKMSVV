@@ -95,29 +95,29 @@ replace('js/game.js',
  "      result:pkmsvvFinishedMode==='royale'?G.Royale?.outcome:\n"+
  "             pkmsvvFinishedMode==='eggrush'?G.EggRush?.outcome:null});\n"+
  "    G.DB.commit('run');");
-// Visible, persistent result beside the real end-of-run statistics.
+// Feed the actual completed mode into the existing run-result UI.
 replace('js/game.js',
- '    }, () => { pl = null; G.Flow.afterRun(); });\n  }',
- `    }, () => { pl = null; G.Flow.afterRun(); });
-    if(pkmsvvFinishedMode==='coop'){
+ '    G.RunUI.showOver({',
+ '    G.RunUI.showOver({\n      pkmsvvFinishedMode,');
+replace('js/ui/run-ui.js',
+ "    G.UI.show('scr-over');",
+ `    G.UI.show('scr-over');
+    if(r.pkmsvvFinishedMode==='coop'){
       const box=document.getElementById('over-stats');
-      const info=G.PKMSVVStory?.multiplayerProgress?.();
+      const progress=G.PKMSVVStory?.multiplayerProgress?.();
       const counted=G.DB.save?.pkmsvvMultiplayerDone?.coop===true;
       if(box){
         const notice=document.createElement('div');
         notice.style.cssText='grid-column:1/-1;padding:10px;border:2px solid #e4c56b;border-radius:9px;background:#183746;color:#f9e7ac';
-        const enough=time>=60;
         notice.textContent=counted?
-          '✅ Sống Sót đã được tính · '+(info?.count||1)+'/2 nhiệm vụ · Tiếp theo: Sống Còn → Berry → Arena':
+          '✅ Sống Sót đã được tính · '+(progress?.count||1)+'/2 nhiệm vụ · Tiếp theo: Sống Còn → Berry → Arena':
           !G.DB.save?.pkmsvvChapter3Seen?
-           '🔒 Hãy hoàn thành Chương 4 trước khi nhận tiến độ Sống Sót':
-          !enough?'Sống Sót: cần chơi tối thiểu 60 giây để tính nhiệm vụ':
+           '🔒 Hoàn thành Chương 4 trước khi nhận tiến độ Sống Sót':
+          r.time<60?'Sống Sót: cần chơi tối thiểu 60 giây để tính nhiệm vụ':
           'Sống Sót chưa được ghi nhận · vui lòng kiểm tra lại tiến trình';
         box.prepend(notice);
       }
-    }
-  }`);
-
+    }`);
 // No other js/game.js rewrites: runtime wrappers handle Spawner/Rift/Judgment/EnemyMgr.
 fs.appendFileSync(path.join(game,'css','style.css'),'\n'+fs.readFileSync(path.join(root,'src','pkmsvv-champion-arena.css'),'utf8')+'\n'+
  fs.readFileSync(path.join(root,'src','pkmsvv-mega-gacha.css'),'utf8')+'\n'+
