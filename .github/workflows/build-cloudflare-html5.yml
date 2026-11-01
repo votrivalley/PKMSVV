@@ -83,6 +83,15 @@ on:
       - 'tests/pages-lan-connect-runtime.test.cjs'
       - 'src/web/**'
       - 'tests/cloudflare-pages.test.cjs'
+      - 'src/pkmsvv-berry-rescue.js'
+      - 'scripts/patch-berry-coop.cjs'
+      - 'src/pkmsvv-forget-skill.js'
+      - 'scripts/patch-skill-forget.cjs'
+      - 'scripts/patch-competitive-levelup.cjs'
+      - 'src/web/pkmsvv-death-hud.js'
+      - 'tests/berry-rescue.test.cjs'
+      - 'tests/forget-skill.test.cjs'
+      - 'tests/competitive-nonblocking.test.cjs'
       - 'package.json'
       - '.github/workflows/build-cloudflare-html5.yml'
   workflow_dispatch:
@@ -126,7 +135,7 @@ jobs:
       - name: Verify Chapter 1–7 multiplayer and Mega story gates
         run: npm run test:story:gates
       - name: Verify Chapter 1–7 and offline Crown Arena
-        run: npm run test:arena:champion
+        run: npm run test:arena:champion && node --test tests/berry-rescue.test.cjs tests/forget-skill.test.cjs tests/competitive-nonblocking.test.cjs
       - name: Test Arena Solo 1v1 preparation and AI duel
         run: npm run test:arena:solo
       - name: Verify live Pokémon backdrop and quick Shiny supports

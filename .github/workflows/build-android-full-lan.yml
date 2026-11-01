@@ -100,6 +100,15 @@ on:
       - '.github/workflows/build-android-full-lan.yml'
       - 'scripts/prepare-game.cjs'
       - 'scripts/prepare-android.cjs'
+      - 'src/pkmsvv-berry-rescue.js'
+      - 'scripts/patch-berry-coop.cjs'
+      - 'src/pkmsvv-forget-skill.js'
+      - 'scripts/patch-skill-forget.cjs'
+      - 'scripts/patch-competitive-levelup.cjs'
+      - 'src/web/pkmsvv-death-hud.js'
+      - 'tests/berry-rescue.test.cjs'
+      - 'tests/forget-skill.test.cjs'
+      - 'tests/competitive-nonblocking.test.cjs'
       - 'package.json'
   workflow_dispatch:
 permissions:
@@ -174,7 +183,7 @@ jobs:
       - name: Verify Chapter 1–7 multiplayer and Mega story gates
         run: npm run test:story:gates
       - name: Verify Chapter 1–7 and offline Crown Arena
-        run: npm run test:arena:champion && node --test tests/chapter10-arena-layout.test.cjs tests/berry-rescue.test.cjs tests/wiki-scroll-regression.test.cjs tests/android-berry-memory-routing.test.cjs
+        run: npm run test:arena:champion && node --test tests/chapter10-arena-layout.test.cjs tests/berry-rescue.test.cjs tests/wiki-scroll-regression.test.cjs tests/android-berry-memory-routing.test.cjs tests/forget-skill.test.cjs tests/competitive-nonblocking.test.cjs
       - name: Test Arena Solo 1v1 preparation and AI duel
         run: npm run test:arena:solo
       - name: Verify live Pokémon backdrop and quick Shiny supports
