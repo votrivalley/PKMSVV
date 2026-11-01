@@ -474,6 +474,63 @@ G.PKMSVVChampionArena=(()=>{
   }else G.UI?.toast?.(tr('Rayquaza vẫn chờ ngươi thách đấu lại.',
    'Rayquaza awaits your rematch.'),3200);
  }
+ // Champion combat hooks are placed on the live Enemy actor. The upstream
+ // manager removes dead enemies and pays loot BEFORE its update() returns.
+ // Intercept fatal hits in die() to avoid a detached/missing Mega boss.
+ function installChampionCombat(enemy){
+  if(!enemy||enemy._pkmsvvChampionCombatInstalled)return;
+  enemy._pkmsvvChampionCombatInstalled=true;
+  if(typeof enemy.die==='function'){
+   const original=enemy.die;
+   enemy.die=function(...args){
+    if(megaPhase(this))return;
+    return original.apply(this,args);
+   };
+  }
+  if(typeof enemy.hurt==='function'){
+   const original=enemy.hurt;
+   enemy.hurt=function(...args){
+    const out=original.apply(this,args);
+    if(!this.dead)megaPhase(this);
+    return out;
+   };
+  }
+  // Enemy.bossEnd controls REAL boss attack cadence; shotCd is not used here.
+  if(typeof enemy.bossEnd==='function'){
+   const original=enemy.bossEnd;
+   enemy.bossEnd=function(...args){
+    const out=original.apply(this,args);
+    const prof=REGION_BALANCE[region]||REGION_BALANCE[0];
+    if(this.ai&&Number.isFinite(this.ai.cd)){
+     const final=round===3||this._pkmsvvSkyBoss===true;
+     const k=prof.tempo*(final?.90:1)*(this._pkmsvvMegaPhase2?.80:1);
+     this.ai.cd=Math.max(.65,this.ai.cd*k);
+    }
+    return out;
+   };
+  }
+  if(typeof enemy.bossInit==='function'){
+   const original=enemy.bossInit;
+   enemy.bossInit=function(...args){
+    const out=original.apply(this,args);
+    if(this._pkmsvvMegaPhase2&&this.ai)this.ai.fury=true;
+    return out;
+   };
+  }
+  // Distinctive phase-2 glow if an authentic Mega battle sprite is unavailable.
+  if(typeof enemy.draw==='function'){
+   const original=enemy.draw;
+   enemy.draw=function(ctx,...args){
+    if(this._pkmsvvMegaPhase2&&ctx?.save&&ctx?.beginPath&&ctx?.ellipse){
+     ctx.save();ctx.globalAlpha=.42;ctx.strokeStyle='#ce8dff';ctx.lineWidth=2.5;
+     ctx.beginPath();ctx.ellipse(this.x,this.y-(this.bodyH||35)*.36,
+      Math.max(20,(this.r||15)*1.65),Math.max(22,(this.bodyH||35)*.78),0,0,Math.PI*2);
+     ctx.stroke();ctx.restore();
+    }
+    return original.call(this,ctx,...args);
+   };
+  }
+ }
  // Previous Champion rematch is superseded by the four-round title.
  function rematch(){return false;}
  function restoreStats(){
@@ -743,7 +800,7 @@ G.PKMSVVChampionArena=(()=>{
  // Chapter 5 is explicitly accessible through Memories and Arena intro.
  // In particular, first LAN access must never be blocked by a cutscene.
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',menu,{once:true});else menu();
- return {REGIONS,REGION_THEMES,MAP_EFFECTS,mapEffect,MEGA_KEYS,TEMP_CHAMPIONS,GEN_POOLS,GEN_BOUNDS,regionalPool,displayRegion,megaPhase,regionChampion,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIRST_PREP_SECONDS,FIGHT_SECONDS,WARN_SECONDS,prepSeconds,previewSeconds,makeBracket,aiWinner,open,start,startSky,rematch,exit,nextDuel,renderPodium,
+ return {REGIONS,REGION_THEMES,REGION_BALANCE,CHAMPION_PHASE_SECONDS,MAP_EFFECTS,mapEffect,MEGA_KEYS,TEMP_CHAMPIONS,GEN_POOLS,GEN_BOUNDS,regionalPool,displayRegion,megaPhase,regionChampion,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIRST_PREP_SECONDS,FIGHT_SECONDS,WARN_SECONDS,prepSeconds,previewSeconds,makeBracket,aiWinner,open,start,startSky,rematch,exit,nextDuel,renderPodium,
   update,settle,claimSeal,ledger,get active(){return active},get stage(){return stage},get round(){return round},
   get opponent(){return opp}};
 })();
