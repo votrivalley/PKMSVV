@@ -143,7 +143,9 @@ G.PKMSVVWiki=(()=>{
   box.append(note);shade.append(box);document.body.append(shade);
   shade.addEventListener('click',e=>{if(e.target===shade)open();});
   // Focus must never drag the scrollable guide back to the first item.
-  back.focus({preventScroll:true});return true;
+  back.focus({preventScroll:true});
+  // D-pad gets a highlighted button, but touch/mouse must not auto-scroll.
+  if(G.Pad?.name)G.Pad?.focusFirst?.();return true;
  }
  function open(){
   close();installStyle();
@@ -205,7 +207,9 @@ G.PKMSVVWiki=(()=>{
   overlay.append(box);document.body.append(overlay);
   overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
   // Avoid browser scrollIntoView repositioning the entire PC/Android panel.
-  x.focus({preventScroll:true});return true;
+  x.focus({preventScroll:true});
+  // Only a connected controller may auto-select a focusable menu item.
+  if(G.Pad?.name)G.Pad?.focusFirst?.();return true;
  }
  function install(){
   installStyle();installMenu();
