@@ -43,13 +43,13 @@ test('Keep / Replace / Skip are clear; callbacks fire exactly once and never spe
  assert.match(actions[2].textContent,/Bỏ qua/);
  actions[1].onclick();actions[0].onclick();actions[2].onclick();
  assert.deepEqual(selected,['quickclaw']);
- assert.deepEqual(h.api.skipped(),[]);
+ assert.deepEqual(Array.from(h.api.skipped()),[]);
  assert.equal(JSON.stringify(h.G.DB.save),h.before);
  h.G.RunUI.showItemChoice('leftovers','lifeorb',id=>selected.push(id));
  h.box.children[2].children[2].onclick();
  assert.deepEqual(selected,['quickclaw','leftovers'],'skip keeps original held item');
- assert.deepEqual(h.api.skipped(),['lifeorb']);
- h.api.reset();assert.deepEqual(h.api.skipped(),[],'discard only lasts the run');
+ assert.deepEqual(Array.from(h.api.skipped()),['lifeorb']);
+ h.api.reset();assert.deepEqual(Array.from(h.api.skipped()),[],'discard only lasts the run');
 });
 test('Stale old modal callbacks cannot modify a new run after reset',()=>{
  const h=harness(),picked=[];
