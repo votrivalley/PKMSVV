@@ -393,7 +393,7 @@ G.PKMSVVStory=(()=>{
  // Only Sống Sót and Sống Còn are required for Chapter 6.
  const MP_MODES=Object.freeze(['coop','royale']);
  const MP_OPTIONAL=Object.freeze(['eggrush']);
- const MP_LABELS=Object.freeze({coop:'Co-op',royale:'Sống Còn',eggrush:'Tranh Trứng'});
+ const MP_LABELS=Object.freeze({coop:'Sống Sót',royale:'Sống Còn',eggrush:'Tranh Trứng'});
  function multiplayerProgress(save=G.DB?.save){
   const flags=save?.pkmsvvMultiplayerDone||{};
   const done=MP_MODES.filter(mode=>flags[mode]===true);
