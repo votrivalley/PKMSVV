@@ -911,7 +911,7 @@ G.PKMSVVChampionArena=(()=>{
  });
  // If menu is opened externally, create its entry without opening a match.
  const oldOpen=G.MenuUI?.open;
- if(typeof oldOpen==='function')G.MenuUI.open=function(...args){const out=oldOpen.apply(this,args);menu();return out;};
+ if(typeof oldOpen==='function')G.MenuUI.open=function(...args){if(active&&!startingOwnRun)cancelSession();const out=oldOpen.apply(this,args);menu();return out;};
  // Do not intercept the real Multiplayer/Co-op click.
  // Chapter 5 is explicitly accessible through Memories and Arena intro.
  // In particular, first LAN access must never be blocked by a cutscene.
