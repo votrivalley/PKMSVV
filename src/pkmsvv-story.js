@@ -557,12 +557,46 @@ G.PKMSVVStory=(()=>{
    championTen:tr('Chương 8 · Bí Mật Champion','Chapter 8 · The Champions'),
    chapter7:tr('Chương 9 · Sức Mạnh Mega','Chapter 9 · Mega Awakening'),
    chapter10:tr('Chương 10 · Bầu Trời Hắc Hóa','Chapter 10 · Shadowed Sky')};
-  choices.innerHTML='<div class="pkmsvv-memory-inner"><h2>'+tr('Ký Ức','Memories')+'</h2>'+
+  // Android landscape can be shorter than the list of ten chapters.
+  // Keep Exit visible and scroll ONLY the chapter grid, not the game behind it.
+  choices.setAttribute('aria-modal','true');
+  choices.innerHTML='<div class="pkmsvv-memory-inner">'+
+   '<div class="pkmsvv-memory-head"><h2>'+tr('Ký Ức','Memories')+'</h2>'+
+   '<button type="button" class="btn ghost pkmsvv-memory-close" data-close="1" aria-label="'+tr('Đóng Ký Ức','Close Memories')+'">✕</button></div>'+
+   '<div class="pkmsvv-memory-scroll" role="group" aria-label="'+tr('Chọn chương','Select chapter')+'">'+
    available.map(c=>'<button type="button" class="btn gold" data-chapter="'+c+'">'+labels[c]+'</button>').join('')+
-   '<button type="button" class="btn ghost" data-close="1">'+tr('Đóng','Close')+'</button></div>';
+   '</div><button type="button" class="btn ghost pkmsvv-memory-footer" data-close="1">'+tr('Đóng · Trở về','Close · Back')+'</button></div>';
   document.body.appendChild(choices);
+  const closeChooser=()=>{
+   document.removeEventListener('keydown',onKey,true);
+   document.removeEventListener('backbutton',onBack,true);
+   choices.remove();
+  };
+  const onKey=e=>{
+   if(e.key==='Escape'||e.key==='Backspace'){
+    e.preventDefault();e.stopPropagation();closeChooser();
+   }
+  };
+  const onBack=e=>{e.preventDefault?.();closeChooser();};
+  document.addEventListener('keydown',onKey,true);
+  document.addEventListener('backbutton',onBack,true);
+  choices.addEventListener('click',e=>{if(e.target===choices)closeChooser();});
+  // The game canvas disables native touch scrolling on some Android WebViews.
+  // Explicitly scroll this one modal with a single finger; do not zoom/pan the game.
+  const scroll=choices.querySelector('.pkmsvv-memory-scroll');
+  let lastTouchY=0;
+  scroll.addEventListener('touchstart',e=>{
+   if(e.touches.length===1)lastTouchY=e.touches[0].clientY;
+  },{passive:true});
+  scroll.addEventListener('touchmove',e=>{
+   if(e.touches.length!==1){if(e.cancelable)e.preventDefault();return;}
+   const y=e.touches[0].clientY;
+   if(scroll.scrollHeight>scroll.clientHeight)scroll.scrollTop+=lastTouchY-y;
+   lastTouchY=y;
+   if(e.cancelable)e.preventDefault();
+  },{passive:false});
   choices.querySelectorAll('[data-chapter]').forEach(el=>{el.onclick=()=>{
-   const chapter=el.dataset.chapter;choices.remove();memoryReplayActive=true;
+   const chapter=el.dataset.chapter;closeChooser();memoryReplayActive=true;
    if(chapter==='berry'&&!G.DB?.save?.pkmsvvBerryIntroSeen)berryChapter(()=>G.Flow.goMenu());
    else if(chapter==='chapter5'&&!G.DB?.save?.pkmsvvChapter5Seen)chapter5(()=>G.Flow.goMenu());
    else if(chapter==='chapter6'&&!G.DB?.save?.pkmsvvChapter6Seen)chapter6(()=>G.Flow.goMenu());
@@ -571,7 +605,8 @@ G.PKMSVVStory=(()=>{
    else if(chapter==='chapter10'&&!G.DB?.save?.pkmsvvChapter10Seen)chapter10(()=>G.Flow.goMenu());
    else replay(chapter);
   };});
-  choices.querySelector('[data-close]').onclick=()=>choices.remove();
+  choices.querySelectorAll('[data-close]').forEach(el=>{el.onclick=closeChooser;});
+  choices.querySelector('.pkmsvv-memory-close')?.focus?.({preventScroll:true});
  }
  function init(){
   $('pkmsvv-story-next').onclick=advance;
