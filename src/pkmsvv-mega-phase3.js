@@ -225,6 +225,12 @@ G.PKMSVVMegaPhase3=(()=>{
     (G.MegaLucario?.eligible?.()||p._megaBackup));
   const visible=!!(p&&candidate&&!p.dead&&G.Game?.state==='playing'&&
     !lucarioOwnsButton);
+  // A Shiny player may have a real normal Mega sheet but no genuine Shiny
+  // variation. Keep the HUD visible and say why activation is disabled.
+  const normalArt=p?(G.PKMSVV_MEGA_CATALOG||[]).find(form=>
+   form.dex===p.dex&&form.artReady&&G.SPRITE_META?.[form.spriteId]?.a?.Idle):null;
+  const missingShinyArt=!!(p?.shiny&&normalArt&&
+   G.Sprites?.hasShiny?.(normalArt.spriteId)!==true);
   const available=!!(f&&isBattleReady(f));
   document.body?.classList?.toggle?.('pkmsvv-mega-gamepad',!!G.Pad?.name);
   // Network peers also emit a subtle Mega aura; never mutate their stats.
@@ -243,10 +249,11 @@ G.PKMSVVMegaPhase3=(()=>{
   button.disabled=busy||!available||!!p._megaActive||cooldown>0||charge<ENERGY_MAX;
   button.className='pkmsvv-mega-btn'+(!available?' is-locked':p._megaActive?' is-active':cooldown>0?' is-cooling':charge<ENERGY_MAX?' is-charging':' is-ready');
   const label=button.querySelector?.('.pkmsvv-mega-btn__label');
-  if(label)label.textContent=!f?'SPRITE':!isUnlocked(f)?'🔒':
+  if(label)label.textContent=!f?(missingShinyArt?'SHINY':'SPRITE'):!isUnlocked(f)?'🔒':
    !available?'CHỜ MỞ':p._megaActive?Math.max(0,Math.ceil(p._megaRemaining))+'s':
    cooldown>0?cooldown+'s':charge<ENERGY_MAX?charge+'%':'MEGA';
-  button.title=!f?'Mega chưa có sprite chiến đấu hợp lệ cho Pokémon này':
+  button.title=!f?(missingShinyArt?'Chưa có sprite Mega Shiny 8 hướng chính xác cho Pokémon này':
+   'Mega chưa có sprite chiến đấu hợp lệ cho Pokémon này'):
    !isUnlocked(f)?'Mega chưa mở khóa: cần Pokémon, Mega Stone và cốt truyện':
    !available?'Mega chưa hỗ trợ chiến đấu ở bản này':
    p._megaActive?'Mega: '+Math.ceil(p._megaRemaining)+' giây':
