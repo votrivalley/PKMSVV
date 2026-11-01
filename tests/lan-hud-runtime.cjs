@@ -42,7 +42,7 @@ const path=require('node:path'),assert=require('node:assert/strict'),fs=require(
    assert.ok(v.panel.y+v.panel.height<viewport.height-80,'panel above controls');
    await p.screenshot({path:'dist/qa/survival-hud-collapsed-'+viewport.width+'-1.5.30.png'});
    await p.mouse.click(v.panel.x+v.panel.width-13,v.panel.y+14);
-   try{await p.waitForFunction(()=>G.Royale.expanded===true,{timeout:5000});}
+   try{await p.waitForFunction(()=>G.Royale.expanded===true,null,{timeout:5000});}
    catch(error){
     const debug=await p.evaluate(({x,y})=>{
      const top=document.elementFromPoint(x,y),canvas=document.querySelector('#game');
