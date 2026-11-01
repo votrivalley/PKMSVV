@@ -126,8 +126,9 @@ test('Required modes never count fake completed matches as Berry chapter progres
 });
 test('Endless Co-op exit after a genuine session records progress and renders a result milestone',()=>{
  const patch=read('scripts/patch-champion-arena.cjs');
- assert.match(patch,/pkmsvvQuitMode=G\.Coop\.active\?G\.Social\?\.room\?\.mode:null/);
- assert.match(patch,/pkmsvvFinishedMode=\(G\.Coop\.active\?G\.Social\?\.room\?\.mode:null\)\|\|pkmsvvQuitMode/);
+ assert.match(patch,/pkmsvvQuitMode=pkmsvvActiveMode/,'quitting stores active room mode');
+ assert.match(patch,/pkmsvvActiveMode=coop\?/,'mode must be captured at game start');
+ assert.match(patch,/\|\|pkmsvvActiveMode\|\|pkmsvvQuitMode/,'run end has stored mode fallback');
  assert.match(patch,/G\.PKMSVVStory\?\.recordMultiplayerCompletion\?\./);
  assert.match(patch,/Sống Sót đã được tính/);
  assert.match(patch,/over-stats/);
@@ -167,4 +168,47 @@ test('Chapter 5 uses its own two uploaded cinematic scenes, not Chapter 2 or Cha
   assert.ok(story.includes("'"+name+"'"),name+' must be mapped into runtime');
  }
  assert.match(patch,/chapter5-'.*chapter6-'.*chapter7-/,'Chapter 5 art required at build time');
+});
+
+
+test('Short natural Survival team wipe counts Chapter 5, short manual quit never does',()=>{
+ const h=setup(),{api,save}=h;
+ assert.equal(api.recordMultiplayerCompletion('coop',{time:25,completed:true}),true,
+  'genuine loss must not need a one-minute timer');
+ assert.equal(api.multiplayerProgress().count,1);
+ assert.equal(api.recordMultiplayerCompletion('coop',{time:25,completed:true}),false,'only once');
+ assert.equal(save.pkmsvvMultiplayerDone.coop,true);
+ const quit=setup();
+ assert.equal(quit.api.recordMultiplayerCompletion('coop',{time:25,abandoned:true,completed:false}),false);
+ assert.equal(quit.api.multiplayerProgress().count,0);
+ const finish=setup();
+ assert.equal(finish.api.recordMultiplayerCompletion('coop',{time:0,completed:true}),false,'empty sessions do not count');
+ assert.equal(finish.api.recordMultiplayerCompletion('royale',{time:120,completed:true}),false,'Royale still requires true standings');
+});
+test('Memories displays per-chapter unlock hints and exact Survival/Royale, Berry, seal counters',()=>{
+ const h=setup({pkmsvvMultiplayerDone:{coop:true},pkmsvvBerry:{used:{oran:true,liechi:true}}});
+ const hints=h.api.chapterUnlockHints();
+ assert.match(hints.berry,/Sống Sót ✅/);
+ assert.match(hints.berry,/Sống Còn ⬜/);
+ assert.match(hints.berry,/1\/2/);
+ assert.match(hints.chapter6,/2\/5/);
+ assert.match(hints.chapter10,/0\/10/);
+ const source=read('src/pkmsvv-story.js'),css=read('src/pkmsvv-story.css');
+ assert.match(source,/Object\.keys\(labels\)\.map/,'all ten chapters, not only unlocked ones');
+ assert.match(source,/disabled aria-disabled/);
+ assert.match(source,/pkmsvv-memory-requirement/);
+ assert.match(css,/\.pkmsvv-memory-chapter\.is-locked/);
+ assert.match(css,/\.pkmsvv-memory-summary/);
+});
+test('Arena shows each completion separately, save reminder is readable and quest hooks ship on every platform',()=>{
+ const arena=read('src/pkmsvv-champion-arena.js'),notice=read('scripts/patch-v15-offline-save-notice.cjs');
+ assert.match(arena,/p\?\.done\?\.includes\('coop'\)/);
+ assert.match(arena,/p\?\.done\?\.includes\('royale'\)/);
+ assert.match(arena,/berryCount\+'\/5'/);
+ assert.match(notice,/background:#fff0a6!important/);
+ assert.match(notice,/-webkit-text-fill-color:#142e3d!important/);
+ const patch=read('scripts/patch-champion-arena.cjs');
+ assert.match(patch,/pkmsvvActiveMode=coop\?/);
+ assert.match(patch,/completed:!pkmsvvWasManualExit/);
+ assert.match(patch,/pkmsvvManualExit&&time<60/);
 });
