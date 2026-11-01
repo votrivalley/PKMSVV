@@ -87,7 +87,12 @@ G.PKMSVVWiki=(()=>{
    const upgrade=list.querySelector('[data-go="upgrades"]');
    if(upgrade)list.insertBefore(b,upgrade);else list.append(b);
   }
-  b.innerHTML='<span class="mi-ico">💻</span><span class="pkmsvv-menu-copy"><span class="pkmsvv-menu-label">PC</span><small>Pokémon hỗ trợ · Mega · Berry</small></span>';
+  // Do not rebuild the same button on every MenuUI.open: Android and PC may
+  // scroll-jump when focused descendants are replaced during navigation.
+  if(!b.dataset.pkmsvvWikiReady){
+   b.innerHTML='<span class="mi-ico">💻</span><span class="pkmsvv-menu-copy"><span class="pkmsvv-menu-label">PC</span><small>Pokémon hỗ trợ · Mega · Berry</small></span>';
+   b.dataset.pkmsvvWikiReady='1';
+  }
   b.onclick=e=>{e.preventDefault();e.stopPropagation();open();};
  }
  function makeCard(grid,{title,desc,action,dex,onClick}){
