@@ -9,10 +9,10 @@
 .pkmsvv-champion-heading{display:flex;gap:10px;align-items:center;justify-content:space-between}
 .pkmsvv-champion-heading h2{margin:0;color:#173849;font-size:clamp(20px,3vw,28px)}
 .pkmsvv-champion-heading-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
-.pkmsvv-champion-heading-actions #pkmsvv-champion-sky{font-size:12px;padding:9px 13px;max-width:min(52vw,300px);white-space:normal;background:linear-gradient(180deg,#ffe78c,#ffca39)!important;color:#18394a!important;border:3px solid #2a4852!important;box-shadow:0 0 0 3px #f6d57b,0 5px 16px #af7b2a66!important;font-weight:900;isolation:isolate}
-.pkmsvv-champion-heading-actions #pkmsvv-champion-sky[hidden]{display:none!important}
+.pkmsvv-champion-actions #pkmsvv-champion-sky{font-size:13px;padding:10px 16px;white-space:normal;background:linear-gradient(180deg,#ffe78c,#ffca39)!important;color:#18394a!important;border:2px solid #2a4852!important;font-weight:900}
+.pkmsvv-champion-actions #pkmsvv-champion-sky[hidden]{display:none!important}
 .pkmsvv-champion-heading-actions #pkmsvv-champion-close{min-width:42px;height:42px;flex-shrink:0}
-@media(max-width:560px){.pkmsvv-champion-heading{align-items:flex-start}.pkmsvv-champion-heading h2{max-width:47%}.pkmsvv-champion-heading-actions #pkmsvv-champion-sky{font-size:11px;padding:7px}}
+@media(max-width:560px){.pkmsvv-champion-heading{align-items:center}.pkmsvv-champion-heading h2{max-width:calc(100% - 55px)}}
 #pkmsvv-champion-info{font-size:13px;color:#335767;line-height:1.6;margin:12px 0}
 .pkmsvv-champion-regions{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin:10px 0}
 .pkmsvv-champion-region{min-width:0;white-space:normal;border:2px solid #a7cac5;background:#e2f2ee;
@@ -42,14 +42,14 @@
 @media(prefers-reduced-motion:reduce){.pkmsvv-champion-podium.celebrate::before,.pkmsvv-champion-podium.celebrate::after{animation:none}}
 
 /* Story and AI-only Champion league share one clear, compact selection screen. */
-.pkmsvv-champion-panel .pkmsvv-arena-mode-tabs{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.pkmsvv-crown-journey{display:flex;justify-content:center;align-items:center;margin:14px 0 8px}.pkmsvv-crown-journey #pkmsvv-arena-mode-champion{width:min(100%,370px);min-height:48px;font-size:16px;font-weight:900;line-height:1.2;border:3px solid #244951;box-shadow:0 2px 0 #d2a027}.pkmsvv-champion-panel .pkmsvv-arena-mode-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .pkmsvv-champion-panel .pkmsvv-arena-mode-tabs button{white-space:normal;line-height:1.2;font-size:12px;padding:10px 5px}
 .pkmsvv-champion-map-row[hidden]{display:none!important}
 .pkmsvv-champion-map-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px;border:1px solid #a8cbc6;background:#e9f6f2;padding:10px;border-radius:10px;margin:8px 0}
 .pkmsvv-champion-map-row label{font-weight:900;color:#193e4d;font-size:13px}
 .pkmsvv-champion-map-row select{flex:1;min-width:140px;max-width:260px;background:#fff;color:#193e4d;border:2px solid #91bdb7;border-radius:8px;padding:7px;font-weight:700}
 .pkmsvv-champion-map-row small{width:100%;font-size:11px;color:#3f626d}
-@media(max-width:570px){.pkmsvv-champion-panel .pkmsvv-arena-mode-tabs{grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}.pkmsvv-champion-panel .pkmsvv-arena-mode-tabs button{font-size:10px;padding:8px 3px}}
+@media(max-width:570px){.pkmsvv-champion-panel .pkmsvv-arena-mode-tabs{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.pkmsvv-champion-panel .pkmsvv-arena-mode-tabs button{font-size:12px;padding:10px 5px}.pkmsvv-crown-journey #pkmsvv-arena-mode-champion{font-size:14px}}
 
 /* Boss reveal: informative preview while real monster farming continues. */
 .pkmsvv-champion-preview[hidden]{display:none!important}
@@ -66,7 +66,5 @@
 @media(max-width:650px){.pkmsvv-champion-preview{top:81px;font-size:11px;padding:4px 8px}
 .pkmsvv-champion-preview canvas{width:36px;height:36px}}
 
-/* Sky Journey is a story chapter, separate from Arena's competitive mode tabs. */
-.pkmsvv-champion-heading-actions #pkmsvv-champion-sky::before{content:'CỐT TRUYỆN · CHƯƠNG 10';display:block;font-size:9px;letter-spacing:.08em;color:#665015;font-weight:900;margin:0 0 3px}
-.pkmsvv-champion-heading-actions #pkmsvv-champion-sky:hover{filter:brightness(1.04)}
-.pkmsvv-champion-heading-actions #pkmsvv-champion-sky:focus-visible{outline:3px solid #72d8ff;outline-offset:4px}
+/* Chapter 10 replay exists only in Ký Ức; this boss action appears on unlock. */
+.pkmsvv-champion-actions #pkmsvv-champion-sky:focus-visible,.pkmsvv-crown-journey button:focus-visible{outline:3px solid #72d8ff;outline-offset:3px}
