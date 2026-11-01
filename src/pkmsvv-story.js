@@ -32,7 +32,11 @@ G.PKMSVVStory=(()=>{
    {art:10,speaker:['Tôi','Me'],text:['Mình đã chiến đấu... nhưng tại sao mọi thứ cứ lặp lại?','I fought... but why does everything keep repeating?']},
    {art:10,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Mỗi lần đứng dậy, một mảnh ký ức sẽ quay về.','Each time you rise again, a fragment of memory returns.']},
    {art:11,speaker:['Tôi','Me'],text:['Vậy phải sống sót bao lâu mới nhớ được mình là ai?','How long must I survive before I remember who I am?']},
-   {art:11,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Đừng đếm thời gian. Hãy học cách điều khiển cả tám sức mạnh.','Do not count the minutes. Learn to wield all eight powers.']}
+   {art:11,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Đừng đếm thời gian. Hãy học cách điều khiển cả tám sức mạnh.','Do not count the minutes. Learn to wield all eight powers.']},
+   {art:11,speaker:['Tôi','Me'],text:['Nếu hai kỹ năng cùng vang lên một lúc... liệu mình có thể nối chúng lại không?','What if two moves resonate at once... could I link them together?']},
+   {art:11,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Đó là Fusion — Liên Kết kỹ năng. Học hai chiêu bất kỳ, rồi chọn Fusion để ghép chúng. Không có công thức bắt buộc.','That is Fusion: a Bond between moves. Learn any two moves, then select Fusion to link them. No fixed recipe is required.']},
+   {art:11,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Mỗi trận có một lần Fusion miễn phí. Hạ Pokémon huyền thoại ở khe nứt để nhận thêm Bond; một nhóm ghép được tối đa bốn chiêu. Mỗi chiêu vẫn tự thi triển với hồi chiêu riêng.','Each run grants one free Fusion. Defeat Rift legendaries to earn more Bonds. A group can hold up to four moves, each casting on its own cooldown.']},
+   {art:11,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Đừng nhầm với Tiến Hóa Kỹ Năng: đó là làm mạnh một chiêu khi luyện đủ. Fusion chỉ liên kết những chiêu đã học, không biến chúng thành chiêu mới.','Do not confuse it with Move Evolution: evolving strengthens one trained move. Fusion links learned moves; it does not invent a new attack.']}
   ],
   chapter2:[
    {art:6,speaker:['Tôi','Me'],text:['Tám kỹ năng... Mình đã học đủ cả tám. Sao mặt đất lại phát sáng?','Eight skills... I have learned all eight. Why is the ground glowing?']},
