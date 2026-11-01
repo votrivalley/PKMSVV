@@ -58,7 +58,7 @@ test('item during Berry chooser or Judgment cinematic waits until the overlay is
 });
 test('stale item callback after a new run cannot award or replace held item',()=>{
  const x=setup();x.h.offerItem('b');const old=x.choices[0].cb;
- x.h.invalidate();x.modal.item=false; // startRun hides the old item overlay
+ x.h.invalidate();x.modal.item=false;x.state='playing'; // startRun resets old overlay and choice state
  old('b');assert.equal(x.pl.item,'a');assert.equal(x.events.length,0);
  x.h.offerItem('c');x.choose(1,'c');
  assert.equal(x.events.length,1);assert.equal(x.pl.item,'c');
