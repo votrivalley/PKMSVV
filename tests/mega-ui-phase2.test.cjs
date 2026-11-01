@@ -215,3 +215,37 @@ test('four imported PC QA Mega forms are visible and unimported ones do not occu
  assert.ok(ready.every(f=>ui.isUnlocked(f)),'test QA preview forms can be inspected');
  assert.equal(h.g.DB.save.shiny,undefined,'QA browsing never grants a Shiny');
 });
+
+
+test('Android release displays all three usable Megas as silhouettes before discovery, in color after real unlock',()=>{
+ const h=fake(),ui=h.g.PKMSVVMegaEntry;
+ const playable=new Set(['charizardmegax','excadrillmega','lucariomega']);
+ for(const f of h.g.PKMSVV_MEGA_CATALOG){
+  if(!playable.has(f.key))delete h.g.SPRITE_META[f.spriteId];
+ }
+ assert.equal(ui.available().length,3,'only actually bundled runtime Mega sprites, regardless of discovery');
+ const before=JSON.stringify(h.g.DB.save);
+ ui.open();
+ assert.equal(h.get('pkmsvv-mega-grid').children.length,3,'undiscovered but playable Megas must not disappear');
+ assert.ok(h.get('pkmsvv-mega-grid').children.every(c=>c.className.includes('is-locked')));
+ assert.ok(h.get('pkmsvv-mega-grid').children.every(c=>c.children.at(-2).textContent==='???'));
+ assert.ok(h.draws.every(d=>d.opts.silhouette===true),'hidden forms must draw their real sprite as black silhouette');
+ assert.equal(JSON.stringify(h.g.DB.save),before,'opening Mega encyclopedia never grants a form');
+ h.g.DB.save.megaStones.lucarionite=true;
+ const drawStart=h.draws.length;
+ ui.render();
+ const cards=h.get('pkmsvv-mega-grid').children;
+ const lucario=cards.find(c=>c.children.at(-2).textContent==='Mega Lucario');
+ assert.ok(lucario,'unlocked Mega reveals its own name');
+ assert.ok(lucario.className.includes('is-open'),'unlocked Mega must be colored');
+ assert.equal(cards.filter(c=>c.className.includes('is-locked')).length,2,'other discoverable forms remain silhouettes');
+ assert.ok(h.draws.slice(drawStart).some(d=>d.dex===10448&&d.opts.silhouette===false),
+  'render full-color authentic Mega sprite once discovered');
+ h.get('pkmsvv-mega-tab-shiny').click();
+ assert.ok(h.get('pkmsvv-mega-grid').children.every(c=>c.className.includes('is-locked')),
+  'normal discovery must not reveal Shiny');
+ h.g.DB.save.shiny={448:{at:1}};
+ ui.render();
+ assert.ok(h.get('pkmsvv-mega-grid').children.some(c=>c.children.at(-2).textContent==='Mega Lucario'&&c.className.includes('is-open')),
+  'owned Shiny and Mega unlock reveal corresponding colored Shiny sprite');
+});
