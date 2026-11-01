@@ -172,7 +172,7 @@ test('Mega 5 and PC+touch button are live in co-op, with Host bot auto-transform
 });
 test('Rescue Berry room disables unrelated eggs, Rift, story bosses and NPC rescues',()=>{
  const patch=read('scripts/patch-berry-coop.cjs');
- assert.match(patch,/PKMSVVBerryRescue\.begin\(coop\)/);
+ assert.match(patch,/PKMSVVBerryRescue\.begin\(\{mode:G\.Social\?\.room\?\.mode\}\)/);
  assert.match(patch,/!G\.PKMSVVBerryRescue\?\.active/);
  assert.match(patch,/G\.PKMSVVBerryRescue\.tick/);
  assert.match(patch,/G\.PKMSVVBerryRescue\.reward/);
