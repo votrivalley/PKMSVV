@@ -90,7 +90,8 @@ test('Solo center 3-2-1 really blocks rival spawn until the countdown ends',()=>
  assert.equal(G.EnemyMgr.last,undefined);
  lib.update(1);assert.equal(dom.get('pkmsvv-arena-solo-countdown').textContent,'1');
  lib.update(1);assert.equal(lib.stage,'fight');
- assert.ok(G.EnemyMgr.last);assert.equal(dom.get('pkmsvv-arena-solo-countdown').hidden,true);
+ assert.ok(G.EnemyMgr.last);assert.match(dom.get('pkmsvv-arena-solo-countdown').textContent,/BẮT ĐẦU/);
+ lib.update(.7);assert.equal(dom.get('pkmsvv-arena-solo-countdown').hidden,true);
 });
 test('Leaving Solo and switching to Berry or Champion cancels old Solo arena tick',()=>{
  const {G,lib}=setup();
