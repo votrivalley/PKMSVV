@@ -176,7 +176,18 @@ G.PKMSVVWiki=(()=>{
    [tr('Mystery Orb','Mystery Orb'),null],
    [tr('Thức tỉnh kỹ năng','Skill Awakening'),
     tr('Kỹ năng được mở và nâng cấp khi Pokémon lên cấp trong trận. Hãy chọn kỹ năng phù hợp để phát huy sức mạnh; các nâng cấp vĩnh viễn vẫn được giữ nguyên.',
-       'Unlock and improve skills as your Pokémon levels up during a run. Choose skills that fit your play style; permanent upgrades remain intact.')]
+       'Unlock and improve skills as your Pokémon levels up during a run. Choose skills that fit your play style; permanent upgrades remain intact.')],
+   [tr('🔗 Bond / Fusion hai kỹ năng','🔗 Two-Move Bond Fusion'),
+    tr('THỬ NGHIỆM SOLO PVE: Có 5 công thức. Cả hai chiêu phải đạt cấp tối đa và đã tiến hóa; chỉ ghép 1 lần mỗi trận. Co-op, AI, Sống Còn, Tranh Trứng và Champion hiện giữ Bond gốc.',
+       'SOLO PVE PILOT: Five recipes. Both moves must be fully leveled and evolved; one Fusion per run. Co-op, AI, Royale, Egg Rush and Champion keep original Bond.')+
+     '  '+(G.PKMSVVFusionPilot?.RECIPES||[]).map(r=>{
+       const name=tr(r.vi,r.en);
+       const moves=r.ids.map(id=>G.T(G.Moves?.BY_ID?.[id]?.name||id,'move')).join(' + ');
+       return name+': '+moves;
+     }).join(' · ')],
+   [tr('✨ Sương Ký Ức · Sự kiện mùa','✨ Memory Mist · Seasonal Event'),
+    tr('1–30/11/2026 (UTC): ba cảnh quan Lá Thu, Sương Lam và Đom Đóm chọn theo seed trận. Chỉ đổi trang trí hình ảnh ở Solo PvE và Co-op Sống Sót; không thêm chỉ số, boss, Pokémon hoặc tiền.',
+       'November 1–30, 2026 (UTC): Amber Leaves, Blue Mist and Firefly Dusk visuals selected by run seed. Decoration only in solo PvE and Co-op Survival; no stats, bosses, Pokémon or currency.')]
   ];
   for(const [name,description] of articles){
    const detail=document.createElement('div');detail.className='pkmsvv-pc-learn';
