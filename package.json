@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.54",
+  "version": "1.5.55",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.54: Android Berry offline AI mode and Memories return-to-menu hotfix",
+  "description": "Pokémon Chuyển Sinh v1.5.55: Berry room mode activation and Memories menu restore",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
