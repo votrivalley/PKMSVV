@@ -164,12 +164,12 @@ test('Berry art is bundled as 10 offline pixel sprite assets in Kecleon with no 
  assert.match(berry,/imageHtml\(t\.id\)/);
  assert.doesNotMatch(berry,/menu\.append\(b\)/);
 });
-test('Mega 5 and PC+touch button are live in co-op, with Host bot auto-transformation',()=>{
+test('Mega 4 and PC+touch button are live in co-op, with Host bot auto-transformation',()=>{
  const mega=read('src/pkmsvv-mega-phase3.js');
  assert.match(mega,/lanBot&&G\.Coop\?\.isHost/);
  assert.match(mega,/netMega\(p,f\.spriteId\)/);
  assert.match(mega,/remoteMega\(uid,sprite\)/);
- assert.match(mega,/G\.Input\?\.tap\?\.\('digit5'\)/);
+ assert.match(mega,/G\.Input\?\.tap\?\.\('digit4'\)/);
  assert.match(read('scripts/patch-berry-coop.cjs'),/case 'mg'/);
 });
 test('Rescue Berry room disables unrelated eggs, Rift, story bosses and NPC rescues',()=>{
