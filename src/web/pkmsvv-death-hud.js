@@ -21,7 +21,7 @@ G.PKMSVVDeathHUD=(()=>{
   };
   if(m==='eggrush'){
    const elapsed=Number(player.lanEggDeath);
-   const remaining=Math.max(0,Math.ceil(8-(Number.isFinite(elapsed)?elapsed:0)));
+   const remaining=Math.max(0,Math.ceil(2-(Number.isFinite(elapsed)?elapsed:0)));
    return {
     title:L('Hồi sinh sau ','Respawn in ')+remaining+'s',
     subtitle:L('Chuẩn bị trở lại cuộc đua!','Get ready to rejoin the race!')
