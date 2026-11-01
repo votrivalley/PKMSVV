@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.56",
+  "version": "1.5.57",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.56: correct Berry AI lobby and preserve room mode across Android and PC",
+  "description": "Pokémon Chuyển Sinh v1.5.57: Berry AI mode labels and safe mode routing on PC Android with passing QA",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
