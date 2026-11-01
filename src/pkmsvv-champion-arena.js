@@ -28,7 +28,7 @@ G.PKMSVVChampionArena=(()=>{
  function regionChampion(index){
   const v=REGIONS[index],f=MEGA_KEYS[index]?G.PKMSVV_MEGA_CATALOG?.find?.(m=>m.key===MEGA_KEYS[index]):null;
   const ready=!!(f?.artReady&&G.SPRITE_META?.[f.spriteId]?.a?.Idle);
-  if(ready)return {dex:f.dex||v[1],name:'Mega '+MEGA_NAMES[index],spriteId:f.spriteId,temporary:index!==0&&index!==4};
+  if(ready)return {dex:f.dex||v[1],name:G.DEX_BY?.[f.dex||v[1]]?.name||v[2],spriteId:f.spriteId,temporary:index!==0&&index!==4};
   const sub=TEMP_CHAMPIONS[index]||[v[1],v[2]];
   const dex=G.DEX_BY?.[sub[0]]?sub[0]:v[1];
   return {dex,name:dex===sub[0]?sub[1]:v[2],spriteId:null,temporary:dex!==v[1]};
@@ -221,8 +221,8 @@ G.PKMSVVChampionArena=(()=>{
  function updatePanel(){
   const o=panel(),led=G.DB?.save?.arenas?.pkmChampion||{trophies:{},seals:{}};
   $('pkmsvv-champion-info').textContent=mode==='story'?tr(
-   'Hành Trình Vương Miện: vòng đầu 4 phút; các vòng sau 90 giây. 9 Champion còn lại Mega hóa ở nửa máu và được tăng gấp đôi sức mạnh.',
-   'Crown Journey: 4-minute opener, then 90-second preparations. The remaining 9 Champions Mega Evolve at half HP and double their power.'):
+   'Hành Trình Vương Miện: vòng đầu 4 phút; các vòng sau 90 giây. Cả 10 Champion chuyển pha Mega ở 50% HP: hồi đầy HP ×2, sát thương ×2, đánh nhanh hơn. Nếu thiếu sprite Mega sẽ có hào quang pha 2.',
+   'Crown Journey: 4-minute opener, then 90-second preparations. All 10 Champions switch to a Mega phase at 50% HP: full doubled HP and double damage. Missing Mega art uses a Phase-2 aura.'):
    tr('Giải Champion hậu truyện: 15 AI tinh nhuệ, sức mạnh cân bằng theo Pokémon người chơi. Tranh Top 1!',
    'Post-game Champion League: 15 elite rivals matched to your Pokémon. Compete for Top 1!');
   const leagueTab=$('pkmsvv-arena-mode-league');leagueTab.disabled=!storyCompleted();
@@ -445,11 +445,21 @@ G.PKMSVVChampionArena=(()=>{
   targetEnemy._pkmsvvMegaPhase2=true;targetEnemy.dead=false;
   const previousHp=Math.max(1,Number(targetEnemy.maxHp)||1);
   targetEnemy.maxHp=previousHp*2;targetEnemy.hp=targetEnemy.maxHp;
-  for(const key of ['dmg','spd','atk','def','pa','sa','df','sd','baseAtk','baseSpd']){
+  // Preserve double offensive power while limiting movement speed so the
+  // attacks remain avoidable on Android touchscreen (actual cadence uses ai.cd).
+  for(const key of ['dmg','atk','pa','sa','baseAtk'])
    if(Number.isFinite(targetEnemy[key]))targetEnemy[key]*=2;
+  const speedBoost=sky?1.25:Math.min(1.32,1.16+region*.018);
+  for(const key of ['spd','baseSpd'])
+   if(Number.isFinite(targetEnemy[key]))targetEnemy[key]*=speedBoost;
+  if(Number.isFinite(targetEnemy.shotCd))targetEnemy.shotCd=Math.max(.5,targetEnemy.shotCd*.75);
+  if(Number.isFinite(targetEnemy.skillCd))targetEnemy.skillCd=Math.max(.5,targetEnemy.skillCd*.75);
+  if(targetEnemy.ai){
+   targetEnemy.ai.fury=true;
+   targetEnemy.ai.cd=Math.min(targetEnemy.ai.cd,1.05);
   }
-  if(Number.isFinite(targetEnemy.shotCd))targetEnemy.shotCd=Math.max(.25,targetEnemy.shotCd/2);
-  if(Number.isFinite(targetEnemy.skillCd))targetEnemy.skillCd=Math.max(.2,targetEnemy.skillCd/2);
+  // Full second-phase battle time rather than an immediate 1st-phase timeout.
+  elapsed=0;lastSecond=-1;
   const catalog=G.PKMSVV_MEGA_CATALOG||[];
   const form=sky?catalog.find(x=>x.key==='rayquazamega'&&x.artReady):null;
   const sprite=sky?form?.spriteId:targetEnemy._pkmsvvMegaSprite;
@@ -460,8 +470,8 @@ G.PKMSVVChampionArena=(()=>{
    targetEnemy.bodyH=G.Sprites.bodyHeight?.(sprite,sc)||targetEnemy.bodyH;
   }
   G.FX?.burst?.(targetEnemy.x||0,targetEnemy.y||0,'#c282ff',65,210);
-  G.UI?.toast?.(tr('⚡ '+(sky?'Rayquaza':'Champion')+' Mega hóa! Hồi đầy HP và x2 chỉ số!',
-   '⚡ '+(sky?'Rayquaza':'Champion')+' Mega Evolved! Full HP and 2× stats!'),4200);
+  G.UI?.toast?.(tr('⚡ '+(sky?'Rayquaza':'Champion')+' vào PHA MEGA! Hồi đầy HP ×2, sát thương ×2; tốc độ vẫn có thể né!',
+   '⚡ '+(sky?'Rayquaza':'Champion')+' enters MEGA PHASE! Full doubled HP and double damage, dodgeable speed!'),4200);
   return true;
  }
  function finishSky(victory){
