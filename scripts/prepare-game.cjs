@@ -644,6 +644,9 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-champion-arena
 execFileSync(process.execPath,[path.join(project,'scripts','patch-berry.cjs')],{cwd:project,stdio:'inherit'});
 // Personal level-up once-per-Pokémon skill forgetting (NOT permanent upgrades).
 execFileSync(process.execPath,[path.join(project,'scripts','patch-skill-forget.cjs')],{cwd:project,stdio:'inherit'});
+// C: item comparison/skip, D: curated 2-move Fusion solo PvE, E: UTC visual season.
+for(const patchName of ['patch-held-item-ui.cjs','patch-bond-fusion.cjs','patch-season-event.cjs'])
+ execFileSync(process.execPath,[path.join(project,'scripts',patchName)],{cwd:project,stdio:'inherit'});
 // Only Switch/Brewser: tolerate absent DOMContentLoaded and a stalled pixel-font Promise.
 if (process.env.PKMSVV_SWITCH_BOOT === '1') {
   patch('js/main.js',
