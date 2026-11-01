@@ -125,3 +125,48 @@ body>.pkmsvv-memory-chooser .pkmsvv-memory-footer{
  body>.pkmsvv-memory-chooser .pkmsvv-memory-close{min-height:35px;width:35px;flex-basis:35px}
  body>.pkmsvv-memory-chooser .pkmsvv-memory-footer{min-height:34px;padding:5px 12px!important}
 }
+
+/* Memories roadmap: every chapter remains visible, locked entries explain the
+   exact quest and counters; neither tabs nor backdrop should swallow scrolling. */
+body>.pkmsvv-memory-chooser .pkmsvv-memory-summary{
+ flex:0 0 auto;margin:0!important;padding:5px 10px!important;
+ background:#264957!important;border:1px solid #77bdb3!important;
+ border-radius:8px;color:#f7edc6!important;
+ font:750 clamp(11px,1.8vh,15px)/1.35 "Segoe UI",Tahoma,sans-serif!important;
+ text-align:center!important;
+}
+body>.pkmsvv-memory-chooser .pkmsvv-memory-scroll .pkmsvv-memory-chapter{
+ height:auto;min-height:72px!important;
+ display:flex!important;flex-direction:column!important;justify-content:center!important;
+ align-items:center!important;gap:4px!important;
+ padding:8px 10px!important;text-align:center!important;
+}
+body>.pkmsvv-memory-chooser .pkmsvv-memory-chapter .pkmsvv-memory-name{
+ font-weight:900!important;font-size:clamp(13px,2.6vh,21px)!important;
+ line-height:1.14!important;color:inherit!important;
+}
+body>.pkmsvv-memory-chooser .pkmsvv-memory-chapter .pkmsvv-memory-requirement{
+ display:block!important;width:100%;font:750 clamp(10px,1.75vh,14px)/1.3 "Segoe UI",Tahoma,sans-serif!important;
+ white-space:normal!important;overflow-wrap:anywhere!important;
+ color:inherit!important;opacity:1!important;
+}
+body>.pkmsvv-memory-chooser .pkmsvv-memory-chapter.is-open{
+ background:linear-gradient(#ffeda5,#ffce45)!important;color:#183744!important;
+ border:2px solid #a8832c!important;
+}
+body>.pkmsvv-memory-chooser .pkmsvv-memory-chapter.is-locked,
+body>.pkmsvv-memory-chooser .pkmsvv-memory-chapter.is-locked:disabled{
+ opacity:1!important;filter:none!important;cursor:default!important;
+ background:#233f50!important;color:#e8f5f5!important;
+ border:2px solid #638c98!important;
+ -webkit-text-fill-color:#e8f5f5!important;box-shadow:none!important;
+}
+body>.pkmsvv-memory-chooser .pkmsvv-memory-chapter.is-locked .pkmsvv-memory-requirement{
+ color:#ffdf9b!important;-webkit-text-fill-color:#ffdf9b!important;
+}
+@media(orientation:landscape) and (max-height:430px){
+ body>.pkmsvv-memory-chooser .pkmsvv-memory-summary{font-size:11px!important;padding:3px 7px!important}
+ body>.pkmsvv-memory-chooser .pkmsvv-memory-scroll .pkmsvv-memory-chapter{min-height:55px!important;padding:5px 7px!important;gap:2px!important}
+ body>.pkmsvv-memory-chooser .pkmsvv-memory-chapter .pkmsvv-memory-name{font-size:12px!important}
+ body>.pkmsvv-memory-chooser .pkmsvv-memory-chapter .pkmsvv-memory-requirement{font-size:10px!important}
+}
