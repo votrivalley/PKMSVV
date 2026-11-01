@@ -110,7 +110,7 @@ G.PKMSVVMegaPhase3=(()=>{
  }
  let button=null,busy=false;
  const controlHint=()=>G.Pad?.name?G.PKMSVVPadOrb?.describe?.('mega')||'LB / L1':
-  (String(G.Input?.bound?.('mega')||'digit5').replace(/^(digit|key|numpad)/,'').toUpperCase());
+  (String(G.Input?.bound?.('mega')||'digit4').replace(/^(digit|key|numpad)/,'').toUpperCase());
  function energy(p){
   if(!p)return 0;
   if(!Number.isFinite(p._megaEnergy))p._megaEnergy=0;
@@ -252,7 +252,7 @@ G.PKMSVVMegaPhase3=(()=>{
  if(typeof update==='function')G.Player.prototype.update=function(dt){
   if(this===player()){
    tick(this,dt);
-   if((G.Input?.tap?.('digit5')||G.Input?.tap?.('numpad5')||G.Input?.tap?.('pkmsvv-mega'))&&eligible())tryActivate();
+   if((G.Input?.tap?.('digit4')||G.Input?.tap?.('numpad4')||G.Input?.tap?.('pkmsvv-mega'))&&eligible())tryActivate();
   }else if(this.lanBot&&G.Coop?.isHost){
    tick(this,dt);
    if(formFor(this)&&!this._megaActive){
