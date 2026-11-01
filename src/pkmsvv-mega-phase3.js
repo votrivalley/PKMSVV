@@ -216,8 +216,11 @@ G.PKMSVVMegaPhase3=(()=>{
  function sync(){
   if(!button)return;
   const p=player(),f=formFor(p);
-  const visible=!!(p&&f&&!p.dead&&G.Game?.state==='playing'&&
-   isBattleReady(f));
+  const candidate=p?(G.PKMSVV_MEGA_CATALOG||[]).find(form=>form.dex===p.dex):null;
+  // Mega stays visible for a Mega-capable species, even if it is locked or
+  // the genuine combat sprite is not present. Never fake an animation.
+  const visible=!!(p&&candidate&&!p.dead&&G.Game?.state==='playing');
+  const available=!!(f&&isBattleReady(f));
   document.body?.classList?.toggle?.('pkmsvv-mega-gamepad',!!G.Pad?.name);
   // Network peers also emit a subtle Mega aura; never mutate their stats.
   if(G.Game?.state==='playing'&&G.Coop?.active)for(const other of G.Coop.players?.()||[]){
@@ -232,12 +235,16 @@ G.PKMSVVMegaPhase3=(()=>{
   if(!visible)return;
   const cooldown=Math.max(0,Math.ceil(p._megaCooldownRemaining||0));
   const charge=Math.floor(energy(p));
-  button.disabled=busy||!!p._megaActive||cooldown>0||charge<ENERGY_MAX;
-  button.className='pkmsvv-mega-btn'+(p._megaActive?' is-active':cooldown>0?' is-cooling':charge<ENERGY_MAX?' is-charging':' is-ready');
+  button.disabled=busy||!available||!!p._megaActive||cooldown>0||charge<ENERGY_MAX;
+  button.className='pkmsvv-mega-btn'+(!available?' is-locked':p._megaActive?' is-active':cooldown>0?' is-cooling':charge<ENERGY_MAX?' is-charging':' is-ready');
   const label=button.querySelector?.('.pkmsvv-mega-btn__label');
-  if(label)label.textContent=p._megaActive?Math.max(0,Math.ceil(p._megaRemaining))+'s':
+  if(label)label.textContent=!f?'SPRITE':!isUnlocked(f)?'🔒':
+   !available?'CHỜ MỞ':p._megaActive?Math.max(0,Math.ceil(p._megaRemaining))+'s':
    cooldown>0?cooldown+'s':charge<ENERGY_MAX?charge+'%':'MEGA';
-  button.title=p._megaActive?'Mega: '+Math.ceil(p._megaRemaining)+' giây':
+  button.title=!f?'Mega chưa có sprite chiến đấu hợp lệ cho Pokémon này':
+   !isUnlocked(f)?'Mega chưa mở khóa: cần Pokémon, Mega Stone và cốt truyện':
+   !available?'Mega chưa hỗ trợ chiến đấu ở bản này':
+   p._megaActive?'Mega: '+Math.ceil(p._megaRemaining)+' giây':
    cooldown>0?'Mega hồi '+cooldown+' giây · Năng lượng '+charge+'%':
    charge<ENERGY_MAX?'Năng lượng Mega '+charge+'% / 100% · Đánh trúng và hạ quái để tích':'Mega đã sẵn sàng · '+controlHint();
   button.setAttribute?.('aria-label',button.title);
