@@ -189,13 +189,28 @@ G.PKMSVVWiki=(()=>{
     tr('1–30/11/2026 (UTC): ba cảnh quan Lá Thu, Sương Lam và Đom Đóm chọn theo seed trận. Chỉ đổi trang trí hình ảnh ở Solo PvE và Co-op Sống Sót; không thêm chỉ số, boss, Pokémon hoặc tiền.',
        'November 1–30, 2026 (UTC): Amber Leaves, Blue Mist and Firefly Dusk visuals selected by run seed. Decoration only in solo PvE and Co-op Survival; no stats, bosses, Pokémon or currency.')]
   ];
-  for(const [name,description] of articles){
+  // Put Fusion recipes above Mystery Orb in the knowledge accordion.
+  for(const [name,description] of articles.sort((a,b)=>(b[0].includes('Fusion')?1:0)-(a[0].includes('Fusion')?1:0))){
    const detail=document.createElement('div');detail.className='pkmsvv-pc-learn';
    const toggle=document.createElement('button');toggle.type='button';toggle.textContent='▸ '+name;
    toggle.setAttribute('aria-expanded','false');
    const p=document.createElement('div');p.hidden=true;p.className='pkmsvv-pc-orb-details';
    if(description!==null){
     const paragraph=document.createElement('p');paragraph.textContent=description;p.append(paragraph);
+    if(name.includes('Fusion')){
+     const recipes=document.createElement('div');recipes.className='pkmsvv-fusion-recipes';
+     for(const formula of G.PKMSVVFusionPilot?.RECIPES||[]){
+      const row=document.createElement('div');row.className='pkmsvv-fusion-recipe';
+      for(const id of formula.ids){
+       const pair=document.createElement('span');pair.className='pkmsvv-fusion-move';
+       const icon=document.createElement('span');icon.innerHTML=G.Icons?.html?.('move:'+id,20)||'✦';
+       const label=document.createElement('span');label.textContent=G.T?.(G.Moves?.BY_ID?.[id]?.name||id,'move')||id;
+       pair.append(icon,label);row.append(pair);
+      }
+      const result=document.createElement('strong');result.textContent=' ⇒ '+tr(formula.vi,formula.en);row.append(result);recipes.append(row);
+     }
+     p.append(recipes);
+    }
    }else{
     const intro=document.createElement('p');
     intro.textContent=tr('Mystery Orb xuất hiện ngay từ đầu mỗi trận, không cần đầy kỹ năng. Hàng đợi tối đa 10 Orb; dùng đúng thứ tự đã nhặt (FIFO), hồi 5 giây giữa hai lần kích hoạt. Kẻ địch boss chịu hiệu ứng khống chế yếu hơn.',
