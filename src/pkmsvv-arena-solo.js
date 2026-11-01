@@ -12,6 +12,7 @@ G.PKMSVVArenaSolo=(()=>{
  // Use built-in neutral biomes; no unlicensed third-party map assets.
  const DUEL_TYPES=['normal','fighting','psychic','steel','rock','ghost'];
  const FARM_SPAWN_MULT=2,FARM_XP_MULT=2;
+ let startingOwnRun=false;
  let active=false,stage='idle',prepTotal=0,elapsed=0,opponent=null,target=null,selected=null,enemyDex=null,lastSecond=-1,shrunk=0,duelType='normal';
  const canEnter=()=>!!(G.PKMSVVStory?.arenaUnlocked?.()&&!G.Coop?.active);
  function owned(){
@@ -56,8 +57,16 @@ G.PKMSVVArenaSolo=(()=>{
   $('pkmsvv-arena-solo-vs').textContent=tr('Đối thủ AI sẽ được bốc ngẫu nhiên.','AI opponent is chosen at random.');
   return true;
  }
+ function countView(value){
+  let el=$('pkmsvv-arena-solo-countdown');
+  if(!el){el=document.createElement('div');el.id='pkmsvv-arena-solo-countdown';
+   el.className='pkmsvv-arena-solo-countdown';document.body.append(el);}
+  el.hidden=false;el.textContent=value;return el;
+ }
+ function hideCountView(){const el=$('pkmsvv-arena-solo-countdown');if(el)el.hidden=true;}
  function reset(){
   active=false;stage='idle';target=null;opponent=null;lastSecond=-1;
+  hideCountView();
   G.World?.setArena?.(null);
   const hud=$('pkmsvv-arena-solo-hud');if(hud)hud.hidden=true;
   const screen=$('pkmsvv-arena-solo-screen');if(screen)screen.hidden=true;
@@ -86,7 +95,8 @@ G.PKMSVVArenaSolo=(()=>{
   enemyDex=chooseEnemy(pool,random);
   prepTotal=Math.round(PREP_MIN+Math.max(0,Math.min(1,random()))*(PREP_MAX-PREP_MIN));
   elapsed=0;lastSecond=-1;active=true;stage='prep';target=null;
-  G.Game.startRun(null);
+  startingOwnRun=true;
+  try{G.Game.startRun(null);}finally{startingOwnRun=false;}
   G.World?.setBiome?.(0,true); // isolated instance, no LAN room or remote player
   frame().hidden=true;hud();
   G.UI?.toast?.(tr('Solo 1v1: quái ×2 và EXP ×2 khi farm trước trận!',
@@ -137,7 +147,7 @@ G.PKMSVVArenaSolo=(()=>{
   p.atkMul=1;p.spdMul=1;p.invuln=2;
  }
  function startIntro(){
-  stage='intro';elapsed=0;
+  stage='intro';elapsed=0;countView('3');
   const p=G.Game?.player;if(!p){abort();return;}
   normalize(p);
   G.EnemyMgr?.clear?.();G.Pickups?.clear?.();G.Projectiles?.clear?.();G.Hazards?.clear?.();
@@ -152,7 +162,7 @@ G.PKMSVVArenaSolo=(()=>{
  }
  function beginDuel(){
   const p=G.Game?.player;if(!p||!G.Enemy||!G.EnemyMgr){abort();return;}
-  stage='fight';elapsed=0;frame().hidden=true;
+  stage='fight';elapsed=0;frame().hidden=true;hideCountView();
   const dex=enemyDex===selected?chooseEnemy():enemyDex;
   const def={dex,name:G.DEX_BY?.[dex]?.name||'AI',hp:320,spd:112,dmg:11,
    xp:0,behavior:'champion',shotCd:2.5};
@@ -170,7 +180,7 @@ G.PKMSVVArenaSolo=(()=>{
    }
   }
   target.pkmsvvArenaSolo=true;
-  G.UI?.toast?.(tr('3 · 2 · 1 · CHIẾN ĐẤU!','3 · 2 · 1 · FIGHT!'),1500);
+  G.UI?.toast?.(tr('⚔ BẮT ĐẦU!','⚔ FIGHT!'),850);
  }
  function update(dt){
   if(!active||G.Game?.state!=='playing')return;
@@ -200,7 +210,11 @@ G.PKMSVVArenaSolo=(()=>{
    return;
   }
   if(stage==='select'){if(elapsed>=SELECT)startIntro();return;}
-  if(stage==='intro'){if(elapsed>=INTRO)beginDuel();return;}
+  if(stage==='intro'){
+   if(elapsed>=INTRO)beginDuel();
+   else countView(String(Math.max(1,Math.ceil(INTRO-elapsed))));
+   return;
+  }
   if(stage!=='fight')return;
   if(target?.dead){finish(true);return;}
   if(elapsed>=SHRINK_FROM){
@@ -233,6 +247,23 @@ G.PKMSVVArenaSolo=(()=>{
  guard(G.Judgment,'update',function(prev,args){if(!active)return prev.apply(this,args);});
  guard(G.EnemyMgr,'update',function(prev,args){
   const output=prev.apply(this,args);update(args[0]);return output;
+ });
+ // An external Berry/Champion/new-game start must end a retired Solo run.
+ function guardSession(obj,key,fn){
+  const previous=obj?.[key];if(typeof previous!=='function')return;
+  obj[key]=function(...args){return fn.call(this,previous,args);};
+ }
+ guardSession(G.Game,'startRun',function(previous,args){
+  if(active&&!startingOwnRun)reset();return previous.apply(this,args);
+ });
+ guardSession(G.Game,'toUI',function(previous,args){
+  if(active)reset();return previous.apply(this,args);
+ });
+ guardSession(G.Game,'quit',function(previous,args){
+  if(active)reset();return previous.apply(this,args);
+ });
+ guardSession(G.Flow,'goMenu',function(previous,args){
+  if(active)reset();return previous.apply(this,args);
  });
  return {PREP_MIN,PREP_MAX,WARN,SELECT,INTRO,DUEL_LIMIT,SHRINK_FROM,
   open,start,abort,finish,owned,chooseEnemy,selection,beginDuel,update,
