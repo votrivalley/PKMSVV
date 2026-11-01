@@ -192,3 +192,34 @@ test('First generic pair notifies once even without named recipe, but no notific
  assert.equal(api.notifyLearned(pl,'aura-sphere',after),false);
  assert.equal(seen.length,1);
 });
+
+test('All ten Fusion suggestions use clear Pokémon-style Vietnamese labels without changing recipes',()=>{
+ const {api}=setup();
+ const names=new Map([
+  ['ember-quick','Lướt Lửa'],
+  ['water-tackle','Húc Sóng'],
+  ['grass-spin','Dây Leo Xoáy'],
+  ['spark-quick','Lướt Điện'],
+  ['mind-tackle','Húc Tâm Linh'],
+  ['fire-gust','Lốc Lửa'],
+  ['bubble-ice','Bong Bóng Băng'],
+  ['leaf-rock','Lá Sắc Đá Rơi'],
+  ['shadow-mind','Bóng Ma Siêu Năng'],
+  ['thunder-claw','Vuốt Sét']
+ ]);
+ assert.equal(api.RECIPES.length,names.size);
+ assert.equal(new Set(api.RECIPES.map(r=>r.vi)).size,names.size);
+ for(const recipe of api.RECIPES){
+  assert.equal(recipe.vi,names.get(recipe.id),'stable recipe '+recipe.id);
+  assert.equal(recipe.ids.length,2,'must preserve two learned move ids');
+ }
+ const oldNames=['Thủy Kích','Tâm Lực','Hỏa Phong','Băng Triều','Thạch Diệp','Tâm Ảnh','Lôi Trảo'];
+ for(const forbidden of oldNames){
+  assert.ok(!api.RECIPES.some(r=>r.vi===forbidden),forbidden+' is still used');
+ }
+ const src=read('src/pkmsvv-bond-fusion.js');
+ const wiki=read('src/pkmsvv-wiki.js');
+ assert.match(src,/hint\.recipe\.vi/,'skill pick hints use the updated labels');
+ assert.match(src,/tr\(r\.vi,r\.en\)/,'Fusion guide uses the updated labels');
+ assert.match(wiki,/tr\(formula\.vi,formula\.en\)/,'Wiki uses the updated labels');
+});
