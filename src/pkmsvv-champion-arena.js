@@ -241,7 +241,7 @@ G.PKMSVVChampionArena=(()=>{
    const b=document.createElement('button');b.type='button';b.className='pkmsvv-champion-region'+(region===i?' chosen':'');
    const completed=!!led.seals?.[name],unlocked=mode==='story'?regionUnlocked(i):completed;
    b.className+=' '+(completed?'is-cleared ':'')+(unlocked?'is-unlocked':'is-locked');
-   b.classList.toggle('chosen',mode==='story'?region===i:mapChoice===String(i));
+   b.classList?.toggle?.('chosen',mode==='story'?region===i:mapChoice===String(i));
    const title=document.createElement('strong');title.textContent=(completed?'✓ ':unlocked?'🏟️ ':'🔒 ')+displayRegion(name);
    const rule=document.createElement('small');rule.textContent=mapEffect(REGION_THEMES[i]).hint;
    const status=document.createElement('span');status.className='pkmsvv-region-status';
@@ -263,7 +263,7 @@ G.PKMSVVChampionArena=(()=>{
   const journey=$('pkmsvv-arena-mode-champion');
   if(journey){
    const finished=storyCompleted();
-   journey.classList.toggle('pkmsvv-crown-finished',finished);
+   journey.classList?.toggle?.('pkmsvv-crown-finished',finished);
    journey.disabled=finished&&!active;
    journey.textContent=finished?tr('✓ Hành Trình Vương Miện · Hoàn thành','✓ Crown Journey · Completed'):tr('👑 Hành Trình Vương Miện','👑 Crown Journey');
   }
