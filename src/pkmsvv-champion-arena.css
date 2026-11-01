@@ -82,3 +82,19 @@
 .pkmsvv-region-random{background:#f0e6ff;border-color:#a57edc;color:#553789;justify-content:center;align-items:center;text-align:center}
 .pkmsvv-crown-finished{background:#a8b1b9!important;color:#394952!important;border-color:#84939d!important;box-shadow:none!important}
 @media(max-width:720px){.pkmsvv-champion-regions{grid-template-columns:repeat(2,minmax(0,1fr))}.pkmsvv-champion-region{min-height:88px}}
+
+/* Shared Arena combat-start counter / Champion Mega cinematic. */
+.pkmsvv-champion-countdown,.pkmsvv-arena-solo-countdown{
+ position:fixed;inset:0;z-index:13890;display:flex;align-items:center;justify-content:center;
+ pointer-events:none;background:radial-gradient(ellipse at center,#091f3288,#041b270f 65%,transparent);
+ color:#fff1ab;font:900 clamp(72px,17vw,180px)/1 "Segoe UI",sans-serif;
+ -webkit-text-stroke:2px #244a69;text-shadow:0 0 23px #fff4ae,0 8px 6px #05131fc9;
+ animation:pkmsvv-arena-countbeat .28s ease-out both;
+}
+.pkmsvv-champion-countdown[data-phase="mega"]{font-size:clamp(24px,4.5vw,60px);
+ color:#f4d5ff;-webkit-text-stroke:1px #49307e;text-shadow:0 0 35px #e1acff,0 5px 9px #0b1735;
+ background:radial-gradient(ellipse at center,#341953ac,#0b122d55 70%,transparent);
+}
+.pkmsvv-champion-countdown[hidden],.pkmsvv-arena-solo-countdown[hidden]{display:none!important}
+@keyframes pkmsvv-arena-countbeat{from{opacity:.5;scale:1.16}to{opacity:1;scale:1}}
+@media(prefers-reduced-motion:reduce){.pkmsvv-champion-countdown,.pkmsvv-arena-solo-countdown{animation:none}}
