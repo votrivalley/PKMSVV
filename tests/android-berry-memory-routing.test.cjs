@@ -20,7 +20,7 @@ test('Standalone PC/Android AI transport preserves BOTH Berry difficulties',asyn
  }
  const script=read('src/lan/solo-ai-bus.js');
  assert.match(script,/\['coop','royale','eggrush','berry','berryeasy'\]/);
- assert.match(read('scripts/patch-berry-coop.cjs'),/PKMSVVBerryRescue\.begin\(coop\)/);
+ assert.match(read('scripts/patch-berry-coop.cjs'),/PKMSVVBerryRescue\.begin\(\{mode:G\.Social\?\.room\?\.mode\}\)/);
 });
 
 test('Story skip and Memories X/back reliably restore actual home menu',()=>{
@@ -29,7 +29,7 @@ test('Story skip and Memories X/back reliably restore actual home menu',()=>{
  assert.match(code,/G\.Flow\.goMenu\(\);memories\(\);return;/);
  assert.match(code,/const closeChooser=\(restoreMenu=true\)=>/);
  assert.match(code,/if\(restoreMenu\)\{/);
- assert.match(code,/!G\.UI\.isOpen\('scr-menu'\)/);
+ assert.match(code,/if\(restoreMenu\)\{[\s\S]*?G\.Flow\.goMenu\(\);/);
  assert.match(code,/G\.Flow\.goMenu\(\);/);
  assert.match(code,/closeChooser\(false\);memoryReplayActive=true/);
  assert.match(code,/choices\.querySelectorAll\('\[data-close\]'\)/);
