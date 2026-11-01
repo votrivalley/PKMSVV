@@ -673,13 +673,24 @@ G.PKMSVVChampionArena=(()=>{
   if(G.PKMSVVStory?.tenChampionCompleted?.(save))
    G.UI?.toast?.(tr('🐉 Đã có đủ 10 Ấn Chứng! Trận Rayquaza ở Chương 10 đã mở.','🐉 Ten Crown Seals earned! Chapter 10 Rayquaza awaits.'),4000);
  }
- function returnToMenu(){
+ // Session owns only its own startRun. A new Berry/Co-op/Solo run,
+ // quit or external menu action MUST invalidate every Arena timer/actor.
+ function cancelSession(){
+  if(!active)return false;
   restoreStats();
-  active=false;stage='idle';target=null;opp=null;
+  active=false;stage='idle';elapsed=0;lastSecond=-1;round=0;
+  target=null;opp=null;transitionClock=0;paid=false;
   G.World?.setArena?.(null);
-  const bar=$('pkmsvv-champion-hud');if(bar)bar.hidden=true;
-  const preview=$('pkmsvv-champion-preview');if(preview)preview.hidden=true;
-  const ready=$('pkmsvv-arena-ready-float');if(ready)ready.hidden=true;
+  hideBattleCountdown();
+  for(const id of ['pkmsvv-champion-hud','pkmsvv-champion-preview',
+   'pkmsvv-arena-ready-float']){
+   const el=$(id);if(el)el.hidden=true;
+  }
+  const screen=$('pkmsvv-champion-screen');if(screen)screen.hidden=true;
+  return true;
+ }
+ function returnToMenu(){
+  cancelSession();
   if(G.Game?.state!=='ui')G.Game?.toUI?.();
   G.Flow?.goMenu?.();
  }
@@ -844,6 +855,21 @@ G.PKMSVVChampionArena=(()=>{
   update(args[0]); // observe actual boss HP/death AFTER combat manager update
   return out;
  });
+ // Any external game transition ends the previous Champion session.
+ // This prevents Berry Rescue inheriting Arena's old match countdown.
+ guardUpdate(G.Game,'startRun',function(original,args){
+  if(active&&!startingOwnRun)cancelSession();
+  return original.apply(this,args);
+ });
+ guardUpdate(G.Game,'toUI',function(original,args){
+  if(active)cancelSession();return original.apply(this,args);
+ });
+ guardUpdate(G.Game,'quit',function(original,args){
+  if(active)cancelSession();return original.apply(this,args);
+ });
+ guardUpdate(G.Flow,'goMenu',function(original,args){
+  if(active)cancelSession();return original.apply(this,args);
+ });
  // If menu is opened externally, create its entry without opening a match.
  const oldOpen=G.MenuUI?.open;
  if(typeof oldOpen==='function')G.MenuUI.open=function(...args){const out=oldOpen.apply(this,args);menu();return out;};
@@ -852,6 +878,6 @@ G.PKMSVVChampionArena=(()=>{
  // In particular, first LAN access must never be blocked by a cutscene.
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',menu,{once:true});else menu();
  return {REGIONS,REGION_THEMES,REGION_BALANCE,CHAMPION_PHASE_SECONDS,MAP_EFFECTS,mapEffect,MEGA_KEYS,TEMP_CHAMPIONS,GEN_POOLS,GEN_BOUNDS,regionalPool,displayRegion,megaPhase,regionChampion,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIRST_PREP_SECONDS,FIGHT_SECONDS,WARN_SECONDS,prepSeconds,previewSeconds,makeBracket,aiWinner,open,start,startSky,rematch,exit,nextDuel,renderPodium,
-  update,settle,claimSeal,ledger,get active(){return active},get stage(){return stage},get round(){return round},
+  update,settle,claimSeal,ledger,cancelSession,get active(){return active},get stage(){return stage},get round(){return round},
   get opponent(){return opp}};
 })();
