@@ -77,9 +77,20 @@ G.PKMSVVChampionArena=(()=>{
   {hp:1.14,atk:1.06,tempo:.86},{hp:1.15,atk:1.07,tempo:.84}
  ]);
  const FARM_SPAWN_MULT=2,FARM_XP_MULT=2;
+ const DUEL_COUNTDOWN=3,MEGA_TRANSITION_SECONDS=1;
+ let startingOwnRun=false,transitionClock=0,transitionOrigin='fight';
  const $=id=>document.getElementById(id);
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  let region=0,stage='idle',round=0,elapsed=0,opp=null,bracket=[],target=null,active=false,paid=false,lastSecond=-1,prepBossStage=0,previewSeen=false,warnSeen=false,semiLosers=[],lastPodium=null,mode='story',mapChoice='random',duelType='normal';
+ // The rival is not spawned until the center-screen 3-2-1 ends.
+ function battleCountdown(text,kind='duel'){
+  let el=$('pkmsvv-champion-countdown');
+  if(!el){el=document.createElement('div');el.id='pkmsvv-champion-countdown';
+   el.className='pkmsvv-champion-countdown';document.body.append(el);}
+  if(el.dataset)el.dataset.phase=kind;
+  el.textContent=text;el.hidden=false;return el;
+ }
+ function hideBattleCountdown(){const el=$('pkmsvv-champion-countdown');if(el)el.hidden=true;}
  const ROUNDS=['Vòng sơ kết','Tứ kết','Bán kết','Chung kết','Tranh hạng ba'];
  const SEL=['Preliminary Round','Quarterfinal','Semifinal','Final','Reigning Champion'];
  // Generations 1–9 are strict, tenth Sky Pillar is a mixed-generation Dragon tournament.
@@ -397,7 +408,7 @@ G.PKMSVVChampionArena=(()=>{
   target.skillCd=(aiTier==='elite'?.75:aiTier==='trained'?1.55:2.5)*cadence;
   installChampionCombat(target);
   stage='fight';elapsed=0;lastSecond=-1;
-  panel().hidden=true;
+  hideBattleCountdown();panel().hidden=true;
   G.UI?.toast?.(tr('Arena · ','Arena · ')+(ROUNDS[round]||'')+' — '+opp.name,3000);
   return true;
  }
@@ -408,7 +419,8 @@ G.PKMSVVChampionArena=(()=>{
   bracket=makeBracket();
   duelType=mode==='story'?REGION_THEMES[region]:(mapChoice==='random'?REGION_THEMES[Math.floor(rand()*REGION_THEMES.length)]:REGION_THEMES[Math.max(0,Math.min(9,Number(mapChoice)||0))]);
   active=true;stage='prep';
-  G.Game.startRun(null);
+  startingOwnRun=true;
+  try{G.Game.startRun(null);}finally{startingOwnRun=false;}
   const zoneType=mode==='league'?'normal':duelType;
   G.World?.setArena?.({tx:0,ty:0,r:22,type:zoneType});
   if(G.Tiles?.arenaBiome)G.World?.setBiome?.(G.Tiles.arenaBiome(duelType),true);
@@ -432,7 +444,8 @@ G.PKMSVVChampionArena=(()=>{
   if(active||!G.PKMSVVStory?.tenChampionCompleted?.(save)||save.pkmsvvChapter10Done||G.Coop?.active)return false;
   if(!G.Game?.startRun||!G.Enemy||!G.EnemyMgr?.add)return false;
   active=true;stage='sky';paid=false;target=null;opp=null;elapsed=0;
-  G.Game.startRun(null);
+  startingOwnRun=true;
+  try{G.Game.startRun(null);}finally{startingOwnRun=false;}
   const hero=G.Game?.player;
   if(!hero){active=false;stage='idle';return false;}
   G.World?.setArena?.({tx:0,ty:0,r:25,type:'dragon'});
@@ -712,7 +725,8 @@ G.PKMSVVChampionArena=(()=>{
   const pl=G.Game?.player;if(pl){pl.x=0;pl.y=100;pl.invuln=2;}
   const ready=$('pkmsvv-arena-ready-float');if(ready)ready.hidden=true;
   const preview=$('pkmsvv-champion-preview');if(preview)preview.hidden=true;
-  stage='fight';elapsed=0;lastSecond=-1;return spawn();
+  stage='countdown';elapsed=0;lastSecond=-1;
+  battleCountdown('3');return true;
  }
  function update(dt){
   if(!active||G.Game?.state!=='playing')return;
@@ -740,6 +754,11 @@ G.PKMSVVChampionArena=(()=>{
    }
   }
   if(stage==='sky')return;
+  if(stage==='countdown'){
+   if(elapsed>=DUEL_COUNTDOWN){hideBattleCountdown();spawn();}
+   else battleCountdown(String(Math.max(1,Math.ceil(DUEL_COUNTDOWN-elapsed))));
+   return;
+  }
   if(stage==='prep'){
    while(round===0&&prepBossStage<FIRST_FARM_BOSS_TIMES.length&&elapsed>=FIRST_FARM_BOSS_TIMES[prepBossStage]){
     prepBossStage++;spawnPrepBoss();
