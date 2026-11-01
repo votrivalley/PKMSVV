@@ -10,12 +10,17 @@ G.PKMSVVBerryRescue=(()=>{
  const NAMES=['Oran','Sitrus','Lum'];
  let active=false,easy=false,time=0,trees=[],bossStage=0,won=false,claimed=false,sendClock=0,endClock=0;
  let sprites=[],treeAtlas=null;
+ // Track which trees the native entity pass actually rendered this frame.
+ // Android may skip the entity layer after a WebView context recreation.
+ const drawnTrees=new Set();
  const TREE_ATLAS_URL='assets/berry-trees/berry_trees_3x6.webp';
  const TREE_CELL=192,TREE_ATLAS_WIDTH=6*TREE_CELL,TREE_ATLAS_HEIGHT=3*TREE_CELL;
  function hasTreeAtlas(){return !!(treeAtlas?.complete&&treeAtlas.naturalWidth===TREE_ATLAS_WIDTH&&treeAtlas.naturalHeight===TREE_ATLAS_HEIGHT);}
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  function begin(cfg){
-  active=!!(cfg&&['berry','berryeasy'].includes(cfg.mode));easy=cfg?.mode==='berryeasy';time=0;bossStage=0;won=false;claimed=false;
+  const requested=typeof cfg==='string'?cfg:(cfg?.mode||G.Social?.room?.mode);
+  active=['berry','berryeasy'].includes(requested);easy=requested==='berryeasy';time=0;bossStage=0;won=false;claimed=false;
+  drawnTrees.clear();
   sendClock=0;endClock=0;
   const hp=easy?220:180;
   trees=POS.map(([x,y],i)=>({id:i,x,y,hp,maxHp:hp,guard:0}));
@@ -143,13 +148,24 @@ G.PKMSVVBerryRescue=(()=>{
  // Tree sprites are scene foreground (not a giant target ring); compact bars only.
  // A single tree is drawn in the same Y-sorted world layer as players and enemies.
  function drawOne(ctx,t){
+  drawnTrees.add(t.id);
   ctx.save();ctx.translate(t.x,t.y);
+  // Dark ground anchor + pale outline stop the trees disappearing into the forest.
+  ctx.fillStyle='rgba(7,31,27,.84)';ctx.fillRect(-38,-5,76,10);
+  ctx.strokeStyle='#b3dba0';ctx.lineWidth=1.5;ctx.strokeRect(-38,-5,76,10);
   drawTree(ctx,t.hp/t.maxHp,t.id);
   const ratio=Math.max(0,Math.min(1,t.hp/t.maxHp));
   const y=hasTreeAtlas()?-91:-62;
   ctx.fillStyle='rgba(24,47,39,.62)';ctx.fillRect(-31,y,62,3);
   ctx.fillStyle=ratio>.35?'#8fe2ad':'#f28a73';ctx.fillRect(-31,y,62*ratio,3);
   ctx.restore();
+ }
+ function beginFrame(){drawnTrees.clear();}
+ function drawMissing(ctx){
+  if(!active)return;
+  // Render missing objectives in world coordinates, while the game's camera
+  // transform is still applied. No duplicate drawings when Y-sort works.
+  for(const t of trees)if(!drawnTrees.has(t.id))drawOne(ctx,t);
  }
  function draw(ctx){
   if(active)for(const t of trees)drawOne(ctx,t);
@@ -211,7 +227,7 @@ G.PKMSVVBerryRescue=(()=>{
   });
   ctx.restore();
  }
- return {DURATION,BOSS_TIMES,REWARD_CHANCE,NORMAL_REWARDS,EASY_REWARDS,XP_MULT,DEFENSE_RADIUS,chanceForHp,difficultyFor,defendGoal,keepOutsideTrunks,begin,tick,onEvent,reward,draw,drawables,hud,state,
+ return {DURATION,BOSS_TIMES,REWARD_CHANCE,NORMAL_REWARDS,EASY_REWARDS,XP_MULT,DEFENSE_RADIUS,chanceForHp,difficultyFor,defendGoal,keepOutsideTrunks,begin,beginFrame,drawMissing,tick,onEvent,reward,draw,drawables,hud,state,
   get easy(){return easy},
   get active(){return active},get trees(){return trees},get bossStage(){return bossStage}};
 })();
