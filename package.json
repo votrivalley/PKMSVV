@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.60",
+  "version": "1.5.61",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.60: audit hotfix Mega 4 Orb 5 remappable defaults and PC HUD diagnostics",
+  "description": "Pokémon Chuyển Sinh v1.5.61: audit fixes Mega 4 Orb 5, 30s Egg Rush, 2s respawn and PC HUD QA",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
