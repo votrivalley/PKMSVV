@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.70",
+  "version": "1.5.71",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.70: all original-style Bond combinations, Rift Bond regression fix and Chapter 2 Fusion tutorial",
+  "description": "Pokémon Chuyển Sinh v1.5.71: Mega and Fusion buttons visible during combat; honest Shiny Mega art warnings",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
