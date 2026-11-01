@@ -95,6 +95,15 @@ patch('js/game.js',
  "  G.onRescue = (dex, name) => {",
  "  G.onRescue = (dex, name) => {\n"+
  "    if(G.Royale?.active||G.EggRush?.active||G.PKMSVVBerryRescue?.active||G.PKMSVVArenaSolo?.active||G.PKMSVVChampionArena?.active)return;");
+// Guarantee Berry objectives survive Android WebView entity-layer resets.
+// Normal rendering remains sorted by Y. Fallback draws only if the entity
+// list skipped some trees, still inside the world's camera transform.
+patch('js/game.js',
+ '  function drawScene(cam, extra) {\n    const t = performance.now() / 1000;',
+ '  function drawScene(cam, extra) {\n    G.PKMSVVBerryRescue?.beginFrame?.();\n    const t = performance.now() / 1000;');
+patch('js/game.js',
+ '    drawScene(G.Camera, G.Coop.active ? [pl, ...G.Coop.puppets()] : [pl]);',
+ '    drawScene(G.Camera, G.Coop.active ? [pl, ...G.Coop.puppets()] : [pl]);\n    G.PKMSVVBerryRescue?.drawMissing?.(ctx);');
 // Berry tree objects share the game's normal Y-sorted drawable list.
 // This preserves occlusion: Pokémon in front of a tree draw in front of it.
 patch('js/game.js',
