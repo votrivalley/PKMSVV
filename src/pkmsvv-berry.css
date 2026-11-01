@@ -76,7 +76,7 @@
  padding:max(7px,env(safe-area-inset-top)) max(7px,env(safe-area-inset-right))
  max(7px,env(safe-area-inset-bottom)) max(7px,env(safe-area-inset-left))}
 .pkmsvv-berry-active-hud{
- position:fixed;z-index:70;top:clamp(158px,34vh,255px);left:max(8px,env(safe-area-inset-left));
+ position:fixed;z-index:70;top:clamp(248px,39vh,310px);left:max(8px,env(safe-area-inset-left));
  width:clamp(165px,19vw,218px);display:grid;gap:4px;pointer-events:none;
  box-sizing:border-box;padding:6px 7px;border:1px solid #91c8a2;
  border-radius:11px;background:rgba(10,39,44,.79);
@@ -94,7 +94,7 @@
 .pkmsvv-berry-hud-item.is-active{color:#9af8c5}
 .pkmsvv-berry-hud-item.is-spent{opacity:.64}
 @media (orientation:landscape) and (max-height:450px){
- .pkmsvv-berry-active-hud{top:clamp(113px,32vh,150px);padding:4px;
+ .pkmsvv-berry-active-hud{top:clamp(216px,58vh,255px);padding:4px;
   width:clamp(150px,19vw,195px);font-size:10px;gap:2px}
  .pkmsvv-berry-hud-item img{width:19px;height:19px}
 }
