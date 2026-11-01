@@ -43,3 +43,5 @@
 .pkmsvv-arena-solo-countdown[hidden],.pkmsvv-arena-solo-countdown[hidden]{display:none!important}
 @keyframes pkmsvv-arena-countbeat{from{opacity:.5;scale:1.16}to{opacity:1;scale:1}}
 @media(prefers-reduced-motion:reduce){.pkmsvv-arena-solo-countdown{animation:none}}
+
+.pkmsvv-arena-solo-countdown{z-index:14650}
