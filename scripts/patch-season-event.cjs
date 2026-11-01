@@ -15,7 +15,9 @@ patch('js/game.js',
  "    const pkmsvvSeasonSeed=coop?coop.seed:Math.floor(Math.random()*1e6);\n"+
  "    G.World.reset(pkmsvvSeasonSeed);\n"+
  "    G.PKMSVVSeason?.begin?.({seed:pkmsvvSeasonSeed,\n"+
- "      mode:coop?(G.Social?.room?.mode||coop.mode||'coop'):'solo',\n"+
+ "      mode:coop?(G.Social?.room?.mode||coop.mode||'coop'):\n"+
+ "        (G.PKMSVVChampionArena?.active?'champion':\n"+
+ "         G.PKMSVVArenaSolo?.active?'arena-solo':'solo'),\n"+
  "      seasonId:coop?.seasonId,weatherState:coop?.weatherState});");
 patch('js/game.js',
  '    G.World.drawGround(ctx, cam);',
