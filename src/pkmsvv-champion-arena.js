@@ -160,10 +160,18 @@ G.PKMSVVChampionArena=(()=>{
   const gate=G.PKMSVVStory?.arenaUnlocked?.();
   const p=G.PKMSVVStory?.multiplayerProgress?.();
   const small=btn.querySelector?.('small');
-  if(small)small.textContent=gate?tr('16 chiến binh · 10 vùng','16 entrants · 10 regions'):
-   !G.PKMSVVStory?.allMultiplayerCompleted?.()?tr('🔒 Sống Sót + Sống Còn: ','🔒 Survival + Royale: ')+(p?.count||0)+'/2':
-   !G.DB?.save?.pkmsvvBerryChapterDone?tr('🔒 Chương 6 · Dùng 5 loại Berry','🔒 Chapter 6 · Use 5 Berry types'):
-   tr('🔒 Xem cốt truyện Chương 7','🔒 View Chapter 7 story');
+  const survival=p?.done?.includes('coop')?'✅':'⬜';
+  const royale=p?.done?.includes('royale')?'✅':'⬜';
+  const berryCount=G.PKMSVVBerry?.chapterProgress?.()||0;
+  if(small){
+   small.textContent=gate?tr('✅ Đã mở · 16 chiến binh · 10 vùng','✅ Unlocked · 16 entrants · 10 regions'):
+    !G.PKMSVVStory?.allMultiplayerCompleted?.()?
+     tr('🔒 Sống Sót ','🔒 Survival ')+survival+tr(' · Sống Còn ',' · Royale ')+royale+' · '+(p?.count||0)+'/2':
+    !G.DB?.save?.pkmsvvBerryChapterDone?
+     tr('🍓 Đã xong 2/2 · Berry ','🍓 2/2 complete · Berries ')+berryCount+'/5':
+    tr('🔒 Đã xong Berry · Xem Chương 7','🔒 Berry complete · Watch Chapter 7');
+   small.setAttribute('aria-label',small.textContent);
+  }
   return true;
  }
  function panel(){
