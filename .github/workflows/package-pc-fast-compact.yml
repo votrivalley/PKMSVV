@@ -5,6 +5,7 @@ on:
     branches: [feature/lan-local-beta]
     paths:
       - '.github/workflows/package-pc-fast-compact.yml'
+      - 'package.json'
       - 'src/pkmsvv-mega-phase3.js'
       - 'src/pkmsvv-berry-rescue.js'
       - 'scripts/patch-berry*.cjs'
