@@ -314,7 +314,7 @@ G.PKMSVVFusionPilot=(()=>{
    const visible=!!(p&&!p.dead&&G.Game?.state==='playing'&&
      !G.UI?.isOpen?.('scr-pause')&&!G.UI?.isOpen?.('scr-menu'));
    action.hidden=!visible;
-   if(!visible){document.getElementById('pkmsvv-fusion-guide')?.remove?.();return;}
+   if(!visible)return;
    const used=Number(p._pkmsvvFusionUsed||0)>=maxPerRun,ready=!!options(p);
    action.disabled=!!G.UI?.isOpen?.('scr-levelup')||
      !!G.UI?.isOpen?.('scr-bond')||!!G.UI?.isOpen?.('scr-item');
