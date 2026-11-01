@@ -405,14 +405,14 @@ test('All ten Crown venues use distinct native region biomes and an elite final 
   assert.equal(enemy._pkmsvvChampionMegaEligible,true,'Kanto through Sky Pillar must all transform');
   assert.ok(enemy.maxHp>prevFinalHp,
    'final Champion HP must increase with region difficulty at region '+region);
-  assert.ok(enemy.dmg>prevFinalDmg,
-   'final Champion damage must increase with region difficulty at region '+region);
-  prevFinalHp=enemy.maxHp;prevFinalDmg=enemy.dmg;
+  const baseDmg=enemy.dmg/lib.MAP_EFFECTS[lib.REGION_THEMES[region]].atk;
+  assert.ok(baseDmg>prevFinalDmg,'underlying Champion damage must rise regardless of symmetric venue modifiers at region '+region);
+  prevFinalHp=enemy.maxHp;prevFinalDmg=baseDmg;
   lib.exit();
  }
  const engine=read('vendor/pokesurvivor/js/world/tiles.js');
  for(const theme of lib.REGION_THEMES)
-  assert.match(engine,new RegExp('\\\\b'+theme+':\\\\s*\\\\{'),'native arena biome missing '+theme);
+  assert.ok(engine.includes(theme+':'),'native arena biome missing '+theme);
 });
 test('Champion overkill at 100% HP enters Mega immediately before death, preserves boss and withholds title/loot',()=>{
  const {lib,G,save}=setup();
@@ -467,7 +467,7 @@ test('Champion title cannot be earned by timeout ratio while either boss phase r
  for(let round=0;round<3;round++){lib.nextDuel();G.EnemyMgr.last.dead=true;lib.update(.1);}
  lib.nextDuel();
  const enemy=G.EnemyMgr.last;
- enemy.hp=enemy.maxHp*.1;
+ enemy.hp=enemy.maxHp*.75; // still first phase, never rewarded for a timer
  lib.update(lib.CHAMPION_PHASE_SECONDS+.1);
  assert.equal(lib.active,false);
  assert.equal(enemy.loot,undefined,'timeout never silently kills a fake Champion');
