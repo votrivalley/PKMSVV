@@ -55,3 +55,73 @@
 #pkmsvv-story-name-save{flex:1 0 140px;min-height:44px;color:#173945}
 #pkmsvv-story-name-error{min-height:1em;color:#951426;font:800 13px/1.4 "Segoe UI",sans-serif;margin:5px 0 0}
 @media(max-width:560px){#scr-pkmsvv-story .pkmsvv-story-name-form{padding:8px}#pkmsvv-story-name-save{width:100%}}
+
+/* Memory chapter selector — self-contained Android/PC modal.
+   Overrides the original early Story v1.4 flex column, which was taller than
+   the viewport and could not scroll on landscape Android WebViews. */
+body>.pkmsvv-memory-chooser{
+ position:fixed!important;inset:0!important;z-index:36010!important;
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ width:100vw!important;height:100dvh!important;max-height:100dvh!important;
+ padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right))
+         max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))!important;
+ box-sizing:border-box!important;overflow:hidden!important;
+ overscroll-behavior:contain!important;touch-action:none!important;
+ background:rgba(5,12,28,.91)!important;
+}
+body>.pkmsvv-memory-chooser .pkmsvv-memory-inner{
+ box-sizing:border-box!important;width:min(850px,97vw)!important;
+ min-width:0!important;max-width:100%!important;
+ max-height:100%!important;min-height:0!important;
+ padding:clamp(8px,2.2vh,18px)!important;
+ display:flex!important;flex-direction:column!important;
+ gap:clamp(5px,1.5vh,12px)!important;overflow:hidden!important;
+}
+body>.pkmsvv-memory-chooser .pkmsvv-memory-head{
+ display:flex;align-items:center;justify-content:space-between;
+ flex:0 0 auto;gap:10px;min-height:40px;
+}
+body>.pkmsvv-memory-chooser .pkmsvv-memory-head h2{
+ margin:0!important;flex:1;min-width:0;text-align:center;
+ font-size:clamp(20px,5.5vh,38px);line-height:1.1;
+}
+body>.pkmsvv-memory-chooser .pkmsvv-memory-close{
+ flex:0 0 43px;min-height:43px;width:43px;padding:0!important;
+ font-size:22px!important;line-height:1!important;
+ border:2px solid #f4d37b!important;color:#ffe7a8!important;
+ background:#284b5c!important;border-radius:10px;
+ touch-action:manipulation!important;cursor:pointer;
+}
+body>.pkmsvv-memory-chooser .pkmsvv-memory-scroll{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ align-content:start;gap:clamp(5px,1.25vh,12px);
+ min-height:0;flex:1 1 auto;overflow-x:hidden!important;overflow-y:auto!important;
+ overscroll-behavior:contain!important;touch-action:pan-y!important;
+ -webkit-overflow-scrolling:touch;scrollbar-width:thin;
+ scrollbar-color:#e6c76c #152841;padding:3px 4px 8px;
+}
+body>.pkmsvv-memory-chooser .pkmsvv-memory-scroll .btn{
+ width:100%;min-width:0;min-height:clamp(43px,9vh,67px);
+ max-width:100%;white-space:normal!important;
+ overflow-wrap:break-word;line-height:1.18;
+ padding:clamp(6px,1.4vh,12px) 8px!important;
+ font-size:clamp(13px,2.5vh,22px)!important;
+ touch-action:manipulation!important;
+}
+body>.pkmsvv-memory-chooser .pkmsvv-memory-footer{
+ flex:0 0 auto;align-self:center;min-height:40px;
+ padding:7px 22px!important;color:#f9ecd1!important;
+ background:#23485c!important;touch-action:manipulation!important;
+}
+@media (orientation:portrait) and (max-width:620px){
+ body>.pkmsvv-memory-chooser .pkmsvv-memory-scroll{grid-template-columns:minmax(0,1fr)}
+ body>.pkmsvv-memory-chooser .pkmsvv-memory-scroll .btn{min-height:46px;font-size:16px!important}
+}
+@media (orientation:landscape) and (max-height:430px){
+ body>.pkmsvv-memory-chooser .pkmsvv-memory-inner{padding:6px!important;gap:5px!important}
+ body>.pkmsvv-memory-chooser .pkmsvv-memory-scroll{gap:5px}
+ body>.pkmsvv-memory-chooser .pkmsvv-memory-scroll .btn{min-height:38px;font-size:13px!important;padding:5px!important}
+ body>.pkmsvv-memory-chooser .pkmsvv-memory-head{min-height:33px}
+ body>.pkmsvv-memory-chooser .pkmsvv-memory-close{min-height:35px;width:35px;flex-basis:35px}
+ body>.pkmsvv-memory-chooser .pkmsvv-memory-footer{min-height:34px;padding:5px 12px!important}
+}
