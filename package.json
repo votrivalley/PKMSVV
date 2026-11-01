@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.73",
+  "version": "1.5.74",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.73: Arena mode cleanup, true 3-2-1 BẮT ĐẦU intro, 50% Champion HP gate and 1s Mega reveal, Berry EXP x1",
+  "description": "Pokémon Chuyển Sinh v1.5.74: rename all ten Fusion combinations to clear Pokémon-style Vietnamese move names",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
