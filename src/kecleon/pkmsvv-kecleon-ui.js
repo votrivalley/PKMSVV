@@ -104,6 +104,12 @@ G.KecleonUI=(()=>{
   $('pkmk-balance').textContent=money(G.DB.save.coins||0)+' PokéCoins';
   $('pkmk-owner').innerHTML=tab==='bag'?buttons():'';
   $('pkmk-list').innerHTML=tab==='shop'?shopHtml():tab==='berry'?(G.PKMSVVBerry?.kecleonHtml?.()||'Berry đang tải…'):bagHtml();
+  if(tab!=='berry'){
+   const help=document.createElement('p');help.className='pkmk-held-help';
+   help.textContent=L('🎒 Trang bị chiến đấu: nhặt từ rương/boss trong trận, chỉ mang 1 món và không mua ở shop. Mint, Capsule, TM là vật phẩm trong Túi đồ.',
+    '🎒 Held battle gear comes from run chests/bosses: one slot only, not sold here. Mints, Capsules and TMs belong to your Bag.');
+   $('pkmk-list').prepend(help);
+  }
   $('pkmk-sign').textContent=L('Cửa hàng Kecleon','Kecleon Shop');
   syncScene();
   $('pkmk-tab-shop').onclick=()=>{tab='shop';render();};
@@ -117,8 +123,12 @@ G.KecleonUI=(()=>{
   const backToShop=$('pkmk-list').querySelector('[data-pkmk-goshop]');
   if(backToShop)backToShop.onclick=()=>{tab='shop';render();};
   $('pkmk-list').querySelectorAll('[data-pkmk-buy]').forEach(btn=>btn.onclick=()=>{
+    // Synchronous purchase + a disabled button prevent double taps from
+    // spending twice before a mobile WebView rerender finishes.
+    if(btn.disabled)return;
+    btn.disabled=true;
     const what=btn.dataset.pkmkBuy, result=G.Shop.buy(what);
-    if(!result.ok){toast('Không đủ xu hoặc vật phẩm đã hết hàng.','Insufficient coins or item no longer for sale.');return;}
+    if(!result.ok){toast('Không đủ xu hoặc vật phẩm đã hết hàng.','Insufficient coins or item no longer for sale.');render();return;}
     G.UI.refreshCoins();G.Audio.sfx('buy');
     if(sceneActive&&Scene()){
       const icon=what.startsWith('tm:')?'tm':(what==='cap'?'capsule':what==='caph'?'capsuleh':'mint');
