@@ -23,9 +23,23 @@ require('./compile-standalone-ai.cjs')();
 const game=path.join(root,'dist','lan','game');
 for(const name of ['index.html','js/app.min.js','css/style.css'])
  if(!fs.statSync(path.join(game,name)).isFile())throw Error('Missing compiled LAN game '+name);
-for(const dir of ['js','css']){
- fs.rmSync(path.join(web,dir),{force:true,recursive:true});
- fs.cpSync(path.join(game,dir),path.join(web,dir),{recursive:true});
+// The LAN compilation adds scene assets AFTER prepare:android has copied
+// upstream assets. Re-sync the complete compiled asset set, not only JS/CSS:
+// otherwise Android silently drops the 3-tree Berry WebP atlas.
+for(const dir of ['js','css','assets']){
+ const source=path.join(game,dir),target=path.join(web,dir);
+ if(!fs.existsSync(source))throw Error('Compiled LAN game missing '+dir);
+ fs.rmSync(target,{force:true,recursive:true});
+ fs.cpSync(source,target,{recursive:true});
+}
+const berryAtlas='assets/berry-trees/berry_trees_3x6.webp';
+const atlas=path.join(web,berryAtlas);
+if(!fs.existsSync(atlas)||fs.statSync(atlas).size<15000)
+ throw Error('Android Berry Rescue trees not packaged: '+berryAtlas);
+for(const art of ['chapter10-darkening.webp','chapter10-shadow-sky.webp']){
+ const target=path.join(web,'assets','story',art);
+ if(!fs.existsSync(target)||fs.statSync(target).size<15000)
+  throw Error('Android Chapter 10 art missing: '+art);
 }
 let main=fs.readFileSync(path.join(game,'index.html'),'utf8');
 if(!main.includes('</head>')||!main.includes('js/app.min.js'))
