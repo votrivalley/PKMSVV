@@ -14,6 +14,11 @@ const path=require('node:path'),assert=require('node:assert/strict'),fs=require(
   await p.click('#lobby-start');await p.waitForFunction(()=>G.Game.state==='playing');
   await p.evaluate(()=>{
    window.__rankPanel=null;window.__healthNames=0;window.__rankSprites=0;window.__insideRank=false;
+   window.__rankPointer=[];
+   document.addEventListener('pointerdown',e=>{
+    const top=document.elementFromPoint(e.clientX,e.clientY);
+    window.__rankPointer.push({x:e.clientX,y:e.clientY,target:e.target?.id,top:top?.id,kind:e.pointerType});
+   },true);
    const avatarDraw=G.Sprites.Animator.prototype.draw;
    G.Sprites.Animator.prototype.draw=function(...args){if(window.__insideRank)window.__rankSprites++;return avatarDraw.apply(this,args);};
    const raw=G.I18n.rawCanvas,drawHUD=G.HUD.draw;
@@ -37,7 +42,19 @@ const path=require('node:path'),assert=require('node:assert/strict'),fs=require(
    assert.ok(v.panel.y+v.panel.height<viewport.height-80,'panel above controls');
    await p.screenshot({path:'dist/qa/survival-hud-collapsed-'+viewport.width+'-1.5.30.png'});
    await p.mouse.click(v.panel.x+v.panel.width-13,v.panel.y+14);
-   await p.waitForFunction(()=>G.Royale.expanded===true);
+   try{await p.waitForFunction(()=>G.Royale.expanded===true,{timeout:5000});}
+   catch(error){
+    const debug=await p.evaluate(({x,y})=>{
+     const top=document.elementFromPoint(x,y),canvas=document.querySelector('#game');
+     return {state:G.Game.state,royaleActive:G.Royale.active,expanded:G.Royale.expanded,
+      touchActive:G.Touch.active,pointer:window.__rankPointer.slice(-4),top:top?.id,
+      canvasRect:canvas?.getBoundingClientRect()?.toJSON?.(),
+      overlays:[...document.querySelectorAll('.scr')].filter(n=>!n.classList.contains('hidden')).map(n=>n.id),
+      currentBounds:G.Royale.hudBounds,health:G.HUD.leftBounds};
+    },{x:v.panel.x+v.panel.width-13,y:v.panel.y+14});
+    await p.screenshot({path:'dist/qa/royale-click-failed-'+viewport.width+'.png'});
+    throw Error('Survival HUD cannot expand by actual mouse click: '+JSON.stringify(debug)+'; '+error.message);
+   }
    await p.waitForTimeout(450);
    const full=await p.evaluate(()=>({panel:window.__rankPanel,rankSprites:window.__rankSprites}));
    assert.ok(full.panel.height>100);
