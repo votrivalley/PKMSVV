@@ -26,7 +26,8 @@ for(const name of [
  'chapter3-nest','chapter3-hatch',
  'chapter5-gate','chapter5-trials',
  'chapter6-arena','chapter6-champion',
- 'chapter7-seal','chapter7-mega'
+ 'chapter7-seal','chapter7-mega',
+ 'chapter10-darkening','chapter10-shadow-sky'
 ]){
  const source=path.join(root,'src','story-art',name+'.webp');
  const dest=path.join(game,'assets','story',name+'.webp');
