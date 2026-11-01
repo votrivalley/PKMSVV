@@ -6,16 +6,16 @@
 G.PKMSVVFusionPilot=(()=>{
  const tr=(a,b)=>G.I18n?.lang==='en'?b:a;
  const RECIPES=Object.freeze([
-  {id:'ember-quick',ids:['ember','quick-attack'],vi:'Lửa Lướt',en:'Blazing Rush'},
-  {id:'water-tackle',ids:['water-gun','tackle'],vi:'Thủy Kích',en:'Tidal Charge'},
-  {id:'grass-spin',ids:['vine-whip','rapid-spin'],vi:'Lốc Dây Leo',en:'Vine Cyclone'},
-  {id:'spark-quick',ids:['thunder-shock','quick-attack'],vi:'Điện Quang',en:'Thunder Dash'},
-  {id:'mind-tackle',ids:['confusion','tackle'],vi:'Tâm Lực',en:'Psychic Impact'},
-  {id:'fire-gust',ids:['flamethrower','gust'],vi:'Hỏa Phong',en:'Flame Gale'},
-  {id:'bubble-ice',ids:['bubble-beam','ice-shard'],vi:'Băng Triều',en:'Frost Tide'},
-  {id:'leaf-rock',ids:['razor-leaf','rock-tomb'],vi:'Thạch Diệp',en:'Stoneleaf Trap'},
-  {id:'shadow-mind',ids:['shadow-ball','psychic'],vi:'Tâm Ảnh',en:'Mindshade'},
-  {id:'thunder-claw',ids:['thunderbolt','metal-claw'],vi:'Lôi Trảo',en:'Thunder Claw'}
+  {id:'ember-quick',ids:['ember','quick-attack'],vi:'Lướt Lửa',en:'Blazing Rush'},
+  {id:'water-tackle',ids:['water-gun','tackle'],vi:'Húc Sóng',en:'Tidal Charge'},
+  {id:'grass-spin',ids:['vine-whip','rapid-spin'],vi:'Dây Leo Xoáy',en:'Vine Cyclone'},
+  {id:'spark-quick',ids:['thunder-shock','quick-attack'],vi:'Lướt Điện',en:'Thunder Dash'},
+  {id:'mind-tackle',ids:['confusion','tackle'],vi:'Húc Tâm Linh',en:'Psychic Impact'},
+  {id:'fire-gust',ids:['flamethrower','gust'],vi:'Lốc Lửa',en:'Flame Gale'},
+  {id:'bubble-ice',ids:['bubble-beam','ice-shard'],vi:'Bong Bóng Băng',en:'Frost Tide'},
+  {id:'leaf-rock',ids:['razor-leaf','rock-tomb'],vi:'Lá Sắc Đá Rơi',en:'Stoneleaf Trap'},
+  {id:'shadow-mind',ids:['shadow-ball','psychic'],vi:'Bóng Ma Siêu Năng',en:'Mindshade'},
+  {id:'thunder-claw',ids:['thunderbolt','metal-claw'],vi:'Vuốt Sét',en:'Thunder Claw'}
  ]);
  const ENABLE_PILOT=true; // all modes
  const maxPerRun=1; // free Fusion, Rift Bonds are separate and not capped here
