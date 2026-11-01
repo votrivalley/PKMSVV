@@ -65,9 +65,14 @@ fs.appendFileSync(js,`
     const settings=menuList.querySelector('[data-go="settings"]');
     if(settings)menuList.insertBefore(quick,settings);else menuList.appendChild(quick);
    }
-   quick.innerHTML='<span class="mi-ico" aria-hidden="true">💾</span>'+
-    (G.I18n?.lang==='en'?'Back up game':'Sao lưu game')+
-    '<small>'+(G.I18n?.lang==='en'?'Export / import save file':'Xuất / nhập file save')+'</small>';
+   const quickLanguage=G.I18n?.lang==='en'?'en':'vi';
+   // Avoid replacing a scrolled menu item's children on each polish/resize.
+   if(quick.dataset.pkmsvvLanguage!==quickLanguage){
+    quick.innerHTML='<span class="mi-ico" aria-hidden="true">💾</span>'+
+     (quickLanguage==='en'?'Back up game':'Sao lưu game')+
+     '<small>'+(quickLanguage==='en'?'Export / import save file':'Xuất / nhập file save')+'</small>';
+    quick.dataset.pkmsvvLanguage=quickLanguage;
+   }
    quick.onclick=()=>{
     if(G.PKMSVVSaveUI?.openQuick)G.PKMSVVSaveUI.openQuick();
     else G.UI?.toast?.('Chức năng sao lưu chưa sẵn sàng');
