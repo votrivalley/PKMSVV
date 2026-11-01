@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.51",
+  "version": "1.5.52",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.51: Arena Crown Journey UI and separate chapter 10 story art",
+  "description": "Pokémon Chuyển Sinh v1.5.52: Android Memories scrolling and guaranteed 3 Berry trees",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
