@@ -95,8 +95,8 @@ test('Fusion Chapter 2 tutorials and Wiki explain all pairings without changing 
  const passage=story.slice(story.indexOf('  chapter1:['),story.indexOf('  chapter2:['));
  assert.match(passage,/Fusion/);assert.match(passage,/Không có công thức bắt buộc/);
  assert.match(passage,/tối đa bốn chiêu/);
- assert.match(wiki,/GỢI Ý, không mở chiêu mới/);
- assert.match(wiki,/potentialPairs/);
+ assert.match(wiki,/10 cặp dưới đây là gợi ý/);
+ assert.match(wiki,/Miễn phí 1 lần\/trận/);
  assert.match(read('scripts/prepare-game.cjs'),/patch-bond-fusion\.cjs/);
 });
 
@@ -149,7 +149,7 @@ test('Level-up cards label a known partner, two offered halves, and any free Fus
  assert.match(more[0].desc,/Đã có ember/);
  assert.equal(cards[0].desc.includes('<script'),false);
 });
-test('A newly learned complementary skill alerts once per pair and lights the Fusion HUD',()=>{
+test('A newly learned complementary skill alerts once per pair and highlights Pause Fusion',()=>{
  const {api,G,pl,m}=setup();let toasts=[];
  G.Moves.BY_ID=Object.fromEntries(['ember','quick-attack','flamethrower','gust']
   .map(id=>[id,{name:id}]));
@@ -222,4 +222,58 @@ test('All ten Fusion suggestions use clear Pokémon-style Vietnamese labels with
  assert.match(src,/hint\.recipe\.vi/,'skill pick hints use the updated labels');
  assert.match(src,/tr\(r\.vi,r\.en\)/,'Fusion guide uses the updated labels');
  assert.match(wiki,/tr\(formula\.vi,formula\.en\)/,'Wiki uses the updated labels');
+});
+
+test('Fusion appears only inside Pause and opens real Bond picker on PC and mobile',()=>{
+ const script=read('src/pkmsvv-bond-fusion.js'),css=read('scripts/patch-bond-fusion.cjs');
+ assert.doesNotMatch(script,/pkmsvv-fusion-action/,'old floating HUD action must be removed');
+ assert.match(script,/pkmsvv-pause-fusion/);
+ assert.match(script,/querySelector\?\.\('\.pause-box \.row'\)/);
+ assert.match(script,/G\.Game\?\.togglePause\?\.\(\)/);
+ assert.match(script,/openFromPause\(\)/);
+ assert.match(css,/#pkmsvv-pause-fusion/);
+ assert.doesNotMatch(css,/#pkmsvv-fusion-action/);
+ const wiki=read('src/pkmsvv-wiki.js');
+ assert.match(wiki,/Ghép 2 kỹ năng đã học bất kỳ/);
+ assert.doesNotMatch(wiki,/POKÉSURVIVOR GỐC: Bất kỳ hai chiêu/);
+});
+test('Pause Fusion resumes solo before selection; empty recipes stay paused',()=>{
+ const source=read('src/pkmsvv-bond-fusion.js');
+ const children=[],buttonNodes={};
+ function element(tag){
+  return {tag,hidden:false,style:{},classList:{toggle(){}},
+   addEventListener(k,cb){this[k]=cb;},setAttribute(){},
+   append(...xs){this.children=(this.children||[]).concat(xs);},
+   appendChild(el){this.append(el);},
+   querySelector(){return null},
+   remove(){},insertBefore(el){children.push(el);}
+  };
+ }
+ const row=element('div'),pause=element('section'),settings=element('button');
+ pause.querySelector=()=>row;settings.parentElement=row;
+ buttonNodes['scr-pause']=pause;buttonNodes['btn-pause-settings']=settings;
+ const document={body:{appendChild(){}},createElement:element,
+  getElementById(id){return buttonNodes[id]||null},
+  querySelector(){return null;}};
+ const moves=[{id:'ember',name:'Ember'},{id:'tackle',name:'Tackle'}];
+ const pl={dead:false,slots:moves.map(m=>[m]),bonds:0,
+  bondOptions(){return {mode:'pair',group:null,loose:moves};},
+  fuse(picked){this.bonds--;return picked;}};
+ let state='paused',shown=true,pausedToggles=0,pickers=0;
+ const G={I18n:{lang:'vi'},Moves:{ALL:[],BY_ID:{}},
+  Game:{player:pl,get state(){return state},
+   togglePause(){pausedToggles++;state='playing';shown=false;}},
+  UI:{isOpen(id){return id==='scr-pause'&&shown},hide(id){if(id==='scr-pause')shown=false;}},
+  RunUI:{showBond(opt,cb){pickers++;}},
+  Coop:{active:false},DB:{save:{}}};
+ vm.runInNewContext(source,{G,document,setInterval(){}});
+ const api=G.PKMSVVFusionPilot;
+ assert.equal(children.length,1,'one button in pause row');
+ assert.equal(children[0].id,'pkmsvv-pause-fusion');
+ assert.equal(children[0].hidden,false);
+ assert.equal(api.openFromPause(),true);
+ assert.equal(pausedToggles,1);
+ assert.equal(pickers,1);
+ assert.equal(shown,false);
+ assert.equal(api.openFromPause(),false,'must not open outside pause');
 });
