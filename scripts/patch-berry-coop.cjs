@@ -83,8 +83,8 @@ patch('js/game.js',
 // All enemy variants (including ranged and boss AI) aim at live trees.
 // Do not alter any non-Berry mode's ordinary player targeting.
 patch('js/entities/enemy.js',
- 'else e.update(dt, nearestPlayer(players, e.x, e.y) || pl);',
- 'else e.update(dt, G.PKMSVVBerryRescue?.targetFor?.(e) || nearestPlayer(players, e.x, e.y) || pl);');
+ 'else { const lead=nearestPlayer(players,e.x,e.y)||pl; e.update(dt,G.PKMSVVEggs?.enemyTarget?.(e,lead,dt)||lead); }',
+ 'else { const lead=nearestPlayer(players,e.x,e.y)||pl; e.update(dt,G.PKMSVVBerryRescue?.targetFor?.(e)||G.PKMSVVEggs?.enemyTarget?.(e,lead,dt)||lead); }');
 patch('js/entities/enemy.js',
  'const near = nearestPlayer(players, e.x, e.y) || pl;',
  'const near = G.PKMSVVBerryRescue?.targetFor?.(e) || nearestPlayer(players, e.x, e.y) || pl;');
