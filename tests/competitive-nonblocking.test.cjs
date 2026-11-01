@@ -15,6 +15,7 @@ test('competitive personal skill queue does not move simulation into paused leve
  assert.match(patch,/individualLevelQueue=\[\],individualLevelOpen=false/);
  assert.match(patch,/G\.RunUI\.showLevelUp\(level,G\.LevelUp\.offer\(pl\),card=>\{/);
  assert.match(patch,/individualLevelQueue\.push\(level\);pkmsvvNextPersonalLevel\(\);return;/);
+ assert.match(patch,/if\(pkmsvvCompetitive\(\)\)\{coopApi\.levelStart\(pl\.level\);return;\}/,'offline Solo branch must not set state=levelup');
  assert.match(patch,/G\.UI\.isOpen\('scr-levelup'\)/);
  assert.match(patch,/state === 'levelup' \|\|/);
  assert.match(patch,/pendingLevels = 0; individualLevelQueue=\[\]; individualLevelOpen=false/);
