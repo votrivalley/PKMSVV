@@ -3,7 +3,7 @@ const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.resolve(__dirname,'..'),read=p=>fs.readFileSync(path.join(root,p),'utf8');
 function setup(){
- let active='playing',coop=false,pl=null,sent=[];
+ let active='playing',coop=false,pl=null,sent=[],mountedMegaButton=null;
  const s={partner:6,owned:{6:{at:1}},megaStones:{charizarditex:1},
   pkmsvvChapter3Seen:true,pkmsvvChapter7Seen:true,megaForms:{},megaStoryCleared:{}};
  class Animator{constructor(dex,scale,shiny){this.dex=dex;this.scale=scale;this.shiny=shiny;this.dir=0}}
@@ -35,7 +35,7 @@ function setup(){
   Coop:{get active(){return coop},isHost:false,toHost(ev){sent.push(ev)}},UI:{toast(){}},FX:{ring(){}},Audio:{sfx(){}},
   DEX_BY:{6:{name:'Charizard'},530:{name:'Excadrill'}}
  };
- const context={G,document:{body:{append(){}},readyState:'complete',getElementById(){return null},
+ const context={G,document:{body:{append(el){mountedMegaButton=el;}},readyState:'complete',getElementById(){return null},
   addEventListener(){},createElement:makeButton},setInterval(){},console};
  vm.runInNewContext(read('src/pkmsvv-mega-phase3.js'),context);
  pl={uid:'qa-player',dex:6,dead:false,shiny:false,anim:new Animator(6,1,false),scale:1,r:18,bodyH:36,
@@ -43,7 +43,7 @@ function setup(){
   baseAtk:1.30,baseSpd:120,cdMul:1,moves:[{t:10}],x:0,y:0,
   kills:0,bosses:0,_megaEnergy:100};
  return {G,s,pl,sent,lib:G.PKMSVVMegaPhase3,forms,
-  coop:v=>{coop=v},state:v=>{active=v}};
+  getMegaButton:()=>mountedMegaButton,coop:v=>{coop=v},state:v=>{active=v}};
 }
 test('10 regional Champions remain fixed and never mark a tournament victory',()=>{
  const {lib,s}=setup();
@@ -236,5 +236,28 @@ test('Mega hotkey uses remappable Digit5 or controller action without hard-coded
   assert.ok(source.includes("G.Input?.tap?.('digit5')"));
   assert.ok(source.includes("G.Input?.tap?.('pkmsvv-mega')"));
   assert.doesNotMatch(source,/event\.key.*!==\s*'m'/);
+ }
+});
+
+test('Mega is visible in real combat for Rayquaza even when art or story is locked',()=>{
+ const {lib,pl,getMegaButton}=setup();
+ const button=getMegaButton();
+ assert.ok(button,'Mega button mounts in document.body');
+ pl.dex=384;pl._megaEnergy=0;
+ lib.sync();
+ assert.equal(button.style.display,'flex','do not hide Rayquaza Mega button during combat');
+ assert.equal(button.disabled,true,'cannot activate missing sprite or unfinished story');
+ assert.match(button.className,/is-locked/);
+ assert.match(button.title,/sprite/i);
+});
+test('Mega and Fusion HUD CSS only hide for actually OPEN pause/menu/settings screens',()=>{
+ const mega=read('src/pkmsvv-mega-lucario.css'),fusion=read('scripts/patch-bond-fusion.cjs');
+ for(const name of ['scr-pause','scr-menu','scr-settings']){
+  const regex=new RegExp('#'+name+':not\\(\\.hidden\\):not\\(\\[hidden\\]\\)');
+  assert.match(mega,regex,name+' must check CSS hidden class');
+  assert.match(fusion,regex,name+' must check CSS hidden class');
+  const old=new RegExp('#'+name+':not\\(\\[hidden\\]\\)(?![\\w:])');
+  assert.doesNotMatch(mega,old,'old rule permanently hid Mega during gameplay');
+  assert.doesNotMatch(fusion,old,'old rule permanently hid Fusion during gameplay');
  }
 });
