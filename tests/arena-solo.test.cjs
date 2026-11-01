@@ -79,3 +79,25 @@ test('Solo freezes enemies during Pokémon pick so a 10-second modal cannot kill
  assert.equal(lib.stage,'select');assert.equal(count,1);
  assert.ok(h.player.invuln>=12);
 });
+
+test('Solo center 3-2-1 really blocks rival spawn until the countdown ends',()=>{
+ const {G,lib,dom}=setup();
+ lib.start(()=>0);lib.update(570);lib.update(20);lib.update(10);
+ assert.equal(lib.stage,'intro');
+ assert.equal(dom.get('pkmsvv-arena-solo-countdown').textContent,'3');
+ assert.equal(G.EnemyMgr.last,undefined);
+ lib.update(1);assert.equal(dom.get('pkmsvv-arena-solo-countdown').textContent,'2');
+ assert.equal(G.EnemyMgr.last,undefined);
+ lib.update(1);assert.equal(dom.get('pkmsvv-arena-solo-countdown').textContent,'1');
+ lib.update(1);assert.equal(lib.stage,'fight');
+ assert.ok(G.EnemyMgr.last);assert.equal(dom.get('pkmsvv-arena-solo-countdown').hidden,true);
+});
+test('Leaving Solo and switching to Berry or Champion cancels old Solo arena tick',()=>{
+ const {G,lib}=setup();
+ lib.start(()=>0);assert.equal(lib.active,true);
+ G.Game.toUI();assert.equal(lib.active,false);
+ lib.update(900);assert.equal(lib.stage,'idle');
+ lib.start(()=>0);G.Game.startRun({mode:'berry'});
+ assert.equal(lib.active,false);assert.equal(G.World.arena,null);
+ lib.start(()=>0);G.Flow.goMenu();assert.equal(lib.active,false);
+});
