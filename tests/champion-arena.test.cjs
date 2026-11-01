@@ -553,5 +553,6 @@ test('Countdown spans 3 seconds and never creates a rival before the start cue',
  assert.equal(get('pkmsvv-champion-countdown').textContent,'1');
  lib.update(1);assert.equal(lib.stage,'fight');
  assert.ok(G.EnemyMgr.last);
- assert.equal(get('pkmsvv-champion-countdown').hidden,true);
+ assert.match(get('pkmsvv-champion-countdown').textContent,/BẮT ĐẦU/);
+ lib.update(.7);assert.equal(get('pkmsvv-champion-countdown').hidden,true);
 });
