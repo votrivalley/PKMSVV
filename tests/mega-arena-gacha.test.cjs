@@ -143,9 +143,14 @@ test('All 92 named Mega Stones have correct sprite offsets in the 16-column Show
 });
 test('Mega Gacha reuses the real Pokémon machine, then reveals the drawn item without rerolling',()=>{
  const script=read('src/pkmsvv-mega-gacha.js');
- assert.match(script,/G\.Slots\.play\(canvas,\[\{rarity:r\.legendary\?5:3,shiny:false\}\]\)/);
+ assert.match(script,/G\.Slots\.play\(canvas,\[\{rarity:r\.legendary\?5:3,shiny:false\}\],\{/);
  assert.match(script,/function revealStone\(root,r\)/);
  assert.match(script,/stoneIcon\(r\.stoneKey,112\)/);
+ assert.match(script,/drawStoneSlot\(ctx,key,x,y,size=24\)/);
+ assert.match(script,/preloadStoneSheet\(\)/);
+ assert.match(script,/mega:\{prize:r\.stoneKey,keys\}/);
+ assert.match(read('scripts/patch-mega-slot-reels.cjs'),/megaReels/);
+ assert.match(read('scripts/patch-champion-arena.cjs'),/patch-mega-slot-reels\.cjs/);
  assert.match(script,/if\(busy\)return;/);
  assert.match(script,/const r=pull\(\)/);
  assert.match(script,/role','dialog/);
