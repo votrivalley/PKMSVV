@@ -38,6 +38,11 @@ on:
       - 'tests/android-signing-identity.test.cjs'
       - 'scripts/bundle-wifi-qr.cjs'
       - 'scripts/patch-lan.cjs'
+      - 'scripts/patch-double-items.cjs'
+      - 'src/pkmsvv-berry.js'
+      - 'src/pkmsvv-berry.css'
+      - 'tests/berry-ux.test.cjs'
+      - 'tests/double-item-choice.test.cjs'
       - 'scripts/patch-keybind-title.cjs'
       - 'scripts/patch-v14-orb-fifo.cjs'
       - 'src/v14/pad-orb-map.js'
@@ -140,6 +145,8 @@ jobs:
         run: node --test tests/android-stable-signing.test.cjs tests/android-signing-identity.test.cjs
       - name: Compile entire modified offline game
         run: npm run prepare:game
+      - name: Phase A+B — Berry effect HUD and collision-free item/skill/Bond choices
+        run: npm run test:berry:ux && npm run test:choice:queue
       - name: Validate original game and save functionality
         run: npm run test:v15 && npm run test:collection && npm run test:mobile-topbar && npm run test:mega
       - name: Verify Mega 4 and Orb 5 keyboard defaults and remapping
