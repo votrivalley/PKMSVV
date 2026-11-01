@@ -198,8 +198,12 @@ G.PKMSVVStory=(()=>{
  function skipStory(){
   // Memory replay returns to the Memories selector, never to the main menu.
   if(memoryReplayActive&&mode!=='prologue'){
-   stop();hideNameForm();mode='';next=null;memoryReplayActive=false;
-   G.UI.hide('scr-pkmsvv-story');memories();return;
+   stop();hideNameForm();mode='';next=null;replaying=false;memoryReplayActive=false;
+   G.UI.hide('scr-pkmsvv-story');
+   // Story G.UI.show() hides every other screen and chrome. Reopen the real
+   // menu BEFORE the Memory selector; otherwise closing X exposes only the
+   // animated background (especially after Chapter 5 on Android).
+   G.Flow.goMenu();memories();return;
   }
   if(mode==='prologue'&&!replaying&&G.DB.save&&!G.DB.save.pkmsvvNameChosen&&!(G.Social&&G.Social.me)){
    if(nameFormOpen){finish(true);return;} // Skip the name form, but never the starter selection.
@@ -544,6 +548,8 @@ G.PKMSVVStory=(()=>{
   if(firstMegaUnlocked(s)||s.pkmsvvChapter9MegaDone)available.push('chapter7');
   if(s.pkmsvvRayquazaDefeated||s.pkmsvvChapter10Done)available.push('chapter10');
   if(available.length===1){replay('prologue');return;}
+  // A quick Back/Next or an Android back event must not stack two selectors.
+  if(document.querySelector('.pkmsvv-memory-chooser'))return;
   const choices=document.createElement('section');
   choices.className='pkmsvv-memory-chooser';choices.setAttribute('role','dialog');
   choices.setAttribute('aria-label',tr('Ký Ức','Memories'));
@@ -567,10 +573,17 @@ G.PKMSVVStory=(()=>{
    available.map(c=>'<button type="button" class="btn gold" data-chapter="'+c+'">'+labels[c]+'</button>').join('')+
    '</div><button type="button" class="btn ghost pkmsvv-memory-footer" data-close="1">'+tr('Đóng · Trở về','Close · Back')+'</button></div>';
   document.body.appendChild(choices);
-  const closeChooser=()=>{
+  const closeChooser=(restoreMenu=true)=>{
    document.removeEventListener('keydown',onKey,true);
    document.removeEventListener('backbutton',onBack,true);
    choices.remove();
+   if(restoreMenu){
+    memoryReplayActive=false;
+    // A story replay may have hidden scr-menu and topbar. Restore them only
+    // when the chooser actually closes, never when a chapter is selected.
+    if(!G.UI.isOpen('scr-menu')||document.getElementById('topbar')?.classList.contains('hidden'))
+     G.Flow.goMenu();
+   }
   };
   const onKey=e=>{
    if(e.key==='Escape'||e.key==='Backspace'){
@@ -596,7 +609,7 @@ G.PKMSVVStory=(()=>{
    if(e.cancelable)e.preventDefault();
   },{passive:false});
   choices.querySelectorAll('[data-chapter]').forEach(el=>{el.onclick=()=>{
-   const chapter=el.dataset.chapter;closeChooser();memoryReplayActive=true;
+   const chapter=el.dataset.chapter;closeChooser(false);memoryReplayActive=true;
    if(chapter==='berry'&&!G.DB?.save?.pkmsvvBerryIntroSeen)berryChapter(()=>G.Flow.goMenu());
    else if(chapter==='chapter5'&&!G.DB?.save?.pkmsvvChapter5Seen)chapter5(()=>G.Flow.goMenu());
    else if(chapter==='chapter6'&&!G.DB?.save?.pkmsvvChapter6Seen)chapter6(()=>G.Flow.goMenu());
@@ -605,7 +618,7 @@ G.PKMSVVStory=(()=>{
    else if(chapter==='chapter10'&&!G.DB?.save?.pkmsvvChapter10Seen)chapter10(()=>G.Flow.goMenu());
    else replay(chapter);
   };});
-  choices.querySelectorAll('[data-close]').forEach(el=>{el.onclick=closeChooser;});
+  choices.querySelectorAll('[data-close]').forEach(el=>{el.onclick=()=>closeChooser();});
   choices.querySelector('.pkmsvv-memory-close')?.focus?.({preventScroll:true});
  }
  function init(){
