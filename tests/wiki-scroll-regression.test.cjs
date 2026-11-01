@@ -22,7 +22,8 @@ test('Wiki uses exactly one bounded scroll area, with no nested modal or Berry l
  assert.match(src,/\.pkmsvv-pc-berry-list\{[^}]*max-height:none;overflow:visible/s);
  assert.match(src,/\.pkmsvv-pc-header\{position:sticky;top:0/);
  assert.match(src,/\.focus\(\{preventScroll:true\}\)/);
- assert.doesNotMatch(src,/\.focusFirst\?\.\(/);
+ assert.match(src,/if\(G\.Pad\?\.name\)G\.Pad\?\.focusFirst\?\.\(\)/,
+  'D-pad focus is allowed only when an actual controller is connected');
 });
 
 test('Menu does not reparent Arena entry or rebuild PC/backup items on each open',()=>{
