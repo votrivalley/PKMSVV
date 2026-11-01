@@ -108,7 +108,7 @@ replace('js/game.js',
         notice.style.cssText='grid-column:1/-1;padding:10px;border:2px solid #e4c56b;border-radius:9px;background:#183746;color:#f9e7ac';
         const enough=time>=60;
         notice.textContent=counted?
-          '✅ Sống Sót đã được ghi nhận · '+(info?.count||1)+'/2 để mở Chương 6 Berry':
+          '✅ Sống Sót đã được tính · '+(info?.count||1)+'/2 nhiệm vụ · Tiếp theo: Sống Còn → Berry → Arena':
           !G.DB.save?.pkmsvvChapter3Seen?
            '🔒 Hãy hoàn thành Chương 4 trước khi nhận tiến độ Sống Sót':
           !enough?'Sống Sót: cần chơi tối thiểu 60 giây để tính nhiệm vụ':
