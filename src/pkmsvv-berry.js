@@ -18,8 +18,38 @@ G.PKMSVVBerry=(()=>{
   {id:'enigma',name:'Enigma',tier:3,price:0,desc:['8% thoát chết ở 1 HP; bất tử 7s PvE / 3s PvP','8% cheat death; 7s PvE / 3s PvP']}
  ]);
  const byId=Object.fromEntries(TYPES.map(x=>[x.id,x]));
+ // Descriptions only: gameplay probabilities, durations and reward tables stay unchanged.
+ const DETAILS=Object.freeze({
+  oran:{trigger:['HP dưới 30%','Below 30% HP'],duration:['Hồi ngay 20% HP','Instant +20% HP'],limit:['1 lần/trận','Once per run']},
+  sitrus:{trigger:['HP dưới 25%','Below 25% HP'],duration:['Hồi ngay 40% HP','Instant +40% HP'],limit:['1 lần/trận','Once per run']},
+  liechi:{trigger:['Đầu trận','At start'],duration:['90 giây · giảm dần +30% sát thương','90s · +30% damage fades'],limit:['Tự động','Automatic']},
+  salac:{trigger:['Đầu trận','At start'],duration:['90 giây · giảm dần +30% tốc chạy','90s · +30% speed fades'],limit:['Tự động','Automatic']},
+  ganlon:{trigger:['Khi chịu sát thương','On damage'],duration:['90 giây · giảm dần 30% giảm sát thương','90s · 30% resistance fades'],limit:['Tự động','Automatic']},
+  leppa:{trigger:['Đầu trận','At start'],duration:['45 giây · giảm 20% hồi chiêu','45s · 20% cooldown reduction'],limit:['Tự động','Automatic']},
+  lum:{trigger:['Dính hiệu ứng xấu đầu tiên','First negative status'],duration:['Thanh tẩy + miễn nhiễm 3 giây','Cleanse + 3s immunity'],limit:['1 lần/trận','Once per run']},
+  petaya:{trigger:['HP dưới 30%','Below 30% HP'],duration:['+50% sức mạnh kỹ năng trong 10 giây','+50% skill power for 10s'],limit:['1 lần/trận','Once per run']},
+  starf:{trigger:['Ngẫu nhiên khi vào trận','Random at start'],duration:['1 buff ngẫu nhiên +25% trong 60 giây','Random +25% boost for 60s'],limit:['1 lần/trận','Once per run']},
+  enigma:{trigger:['Khi tử vong','On fatal damage'],duration:['Bất tử 7s PvE / 3s PvP nếu thành công','Invulnerable 7s PvE / 3s PvP on success'],limit:['8% cơ hội · 1 lần/trận','8% chance · Once per run']}
+ });
+ function berryDetails(id){const d=DETAILS[id];if(!d)return null;const i=vi()?0:1;return {
+  trigger:d.trigger[i],duration:d.duration[i],limit:d.limit[i],
+  text:[d.trigger[i],d.duration[i],d.limit[i]].join(' · ')
+ };}
+ function detailsHtml(id){const d=berryDetails(id);return d?
+  '<span class="pkmsvv-berry-details">'+esc(d.trigger)+'<span> · '+esc(d.duration)+'</span><span> · '+esc(d.limit)+'</span></span>':'';}
  const cap=n=>Math.max(0,Math.min(999,Math.floor(Number(n)||0)));
  let choiceOpen=false,turn=0,current=null,chooseTimer=null,menuAdded=false,modals=[];
+ let hudEl=null,hudStamp='',hudClock=0;
+ function hideHud(){
+  if(hudEl)hudEl.hidden=true;
+  hudStamp='';hudClock=0;
+ }
+ function cancelOffer(){
+  if(!choiceOpen)return false;
+  choiceOpen=false;turn++;
+  if(chooseTimer!==null){clearInterval(chooseTimer);chooseTimer=null;}
+  clearModal();return true;
+ }
  function data(){
   const save=G.DB?.save;if(!save)return null;
   if(!save.pkmsvvBerry||typeof save.pkmsvvBerry!=='object')save.pkmsvvBerry={bag:{},used:{},last:[],rescueWins:0};
@@ -79,7 +109,7 @@ G.PKMSVVBerry=(()=>{
   for(const t of TYPES.filter(t=>t.price>0)){
    const tile=document.createElement('div');tile.className='pkmsvv-berry-tile';
    const name=document.createElement('strong');name.textContent=t.name+' ×'+count(t.id);tile.append(image(t.id,42));
-   const desc=document.createElement('small');desc.textContent=t.desc[vi()?0:1];
+   const desc=document.createElement('small');desc.textContent=berryDetails(t.id)?.text||t.desc[vi()?0:1];
    tile.append(name,desc);
    if(t.price)tile.append(button(tr('Mua ','Buy ')+t.price+' 🪙',()=>buy(t.id)));
    else {const rare=document.createElement('small');rare.textContent=tr('Chỉ nhận qua Giải Cứu Berry','Rescue Berry reward only');tile.append(rare);}
@@ -120,7 +150,7 @@ G.PKMSVVBerry=(()=>{
    const stock=count(t.id),canBuy=t.price>0&&(G.DB.save.coins||0)>=t.price;
    const buy=t.price?'<button class="btn small gold" data-berry-buy="'+t.id+'" '+(!canBuy?'disabled':'')+'>🪙 '+t.price+'</button>':
     '<small>'+tr('Giải Cứu Berry','Rescue Berry')+'</small>';
-   out+='<div class="pkmk-card pkmsvv-berry-store-card"><div class="pkmk-product-art">'+imageHtml(t.id)+'</div><div class="pkmk-product-copy"><b>'+t.name+' Berry</b><small>'+esc(t.desc[vi()?0:1])+'</small></div><div class="pkmk-product-tail">'+buy+'<span class="pkmk-stock">×'+stock+'</span></div></div>';
+   out+='<div class="pkmk-card pkmsvv-berry-store-card"><div class="pkmk-product-art">'+imageHtml(t.id)+'</div><div class="pkmk-product-copy"><b>'+t.name+' Berry</b><small>'+esc(t.desc[vi()?0:1])+'</small>'+detailsHtml(t.id)+'</div><div class="pkmk-product-tail">'+buy+'<span class="pkmk-stock">×'+stock+'</span></div></div>';
   }
   return out+'</div><button class="btn gold" data-berry-rescue="1">🌿 '+tr('Chơi Giải Cứu Berry · Co-op 4 người · 8 phút','Rescue Berry · 4-player Co-op · 8 min')+'</button>';
  }
@@ -176,6 +206,49 @@ G.PKMSVVBerry=(()=>{
   p.append(button(tr('Thoát','Exit'),()=>{finished=true;clearClock();openBag();},'ghost'));
   return true;
  }
+ function effectState(pl,id){
+  const b=pl?._pkmsvvBerry;
+  if(!b||!b.ids?.includes(id))return null;
+  const t=b.elapsed||0,once=b.once||{},countdown=n=>Math.max(0,Math.ceil(n-t));
+  let remain=0,state='waiting';
+  if(['liechi','salac','ganlon'].includes(id)){remain=countdown(90);state=remain?'active':'spent';}
+  else if(id==='leppa'){remain=countdown(45);state=remain?'active':'spent';}
+  else if(id==='starf'){remain=countdown(60);state=remain?'active':'spent';}
+  else if(id==='petaya'){remain=countdown(b.powerUntil||0);state=remain?'active':once.petaya?'spent':'waiting';}
+  else if(id==='lum'){remain=countdown(b.lumUntil||0);state=remain?'active':once.lum?'spent':'waiting';}
+  else if(id==='enigma'){remain=countdown(b.enigmaUntil||0);state=remain?'active':once.enigma?'spent':'waiting';}
+  else state=once[id]?'spent':'waiting';
+  return {state,remaining:remain,label:state==='active'?tr('Đang tác dụng','Active'):
+   state==='spent'?tr('Đã sử dụng','Consumed'):tr('Chờ kích hoạt','Waiting')};
+ }
+ function renderHud(pl,force=false){
+  const b=pl?._pkmsvvBerry;
+  if(!b||!b.ids?.length||G.Game?.state==='over'||G.Game?.state==='ui'){hideHud();return;}
+  hudClock+=force?0:.05;
+  if(!force&&hudClock<.25)return;
+  hudClock=0;
+  const rows=b.ids.slice(0,2).map(id=>({id,details:berryDetails(id),state:effectState(pl,id)}));
+  const stamp=rows.map(row=>[row.id,row.state?.state,row.state?.remaining].join(':')).join('|')+String(vi());
+  if(hudEl&&hudStamp===stamp&&!hudEl.hidden)return;
+  hudStamp=stamp;
+  if(!hudEl){
+   hudEl=document.createElement('aside');hudEl.id='pkmsvv-berry-active-hud';
+   hudEl.className='pkmsvv-berry-active-hud';hudEl.setAttribute('aria-label',tr('Hiệu ứng Berry','Berry effects'));
+   document.body.append(hudEl);
+  }
+  hudEl.hidden=false;hudEl.replaceChildren();
+  const title=document.createElement('strong');title.className='pkmsvv-berry-hud-title';
+  title.textContent=tr('🍓 BERRY','🍓 BERRIES');hudEl.append(title);
+  for(const row of rows){
+   if(!row.state)continue;
+   const tile=document.createElement('div');tile.className='pkmsvv-berry-hud-item is-'+row.state.state;
+   tile.title=(byId[row.id]?.name||row.id)+' · '+(row.details?.text||'');
+   tile.append(image(row.id,24));
+   const info=document.createElement('span');info.textContent=(byId[row.id]?.name||row.id)+' · '+row.state.label;
+   const seconds=document.createElement('b');seconds.textContent=row.state.remaining?row.state.remaining+'s':'';
+   tile.append(info,seconds);hudEl.append(tile);
+  }
+ }
  function apply(pl,ids,mode){
   // Reset old Berry multipliers on rematch, preventing permanent buffs/stacking.
   if(!pl)return;
@@ -185,7 +258,8 @@ G.PKMSVVBerry=(()=>{
    pl.spdMul=(pl.spdMul||1)/(old.spdK||1);
    pl.cdMul=(pl.cdMul||1)/(old.cdK||1);
   }
-  pl._pkmsvvBerry={ids,mode,elapsed:0,once:{},atkK:1,spdK:1,cdK:1,powerUntil:0,lumUntil:0};
+  pl._pkmsvvBerry={ids,mode,elapsed:0,once:{},atkK:1,spdK:1,cdK:1,powerUntil:0,lumUntil:0,enigmaUntil:0};
+  renderHud(pl,true);
   if(ids.includes('starf'))pl._pkmsvvBerry.starf=['liechi','salac','ganlon','leppa'][Math.floor(Math.random()*4)];
   G.UI?.toast?.(tr('🍓 Berry kích hoạt: ','🍓 Active Berries: ')+ids.map(id=>byId[id]?.name).join(' + '),2200);
  }
@@ -219,6 +293,9 @@ G.PKMSVVBerry=(()=>{
     if(picked.includes(type.id)){picked.splice(picked.indexOf(type.id),1);b.classList.remove('picked');}
     else if(picked.length<2){picked.push(type.id);b.classList.add('picked');}
    });
+   b.title=berryDetails(type.id)?.text||'';b.setAttribute('aria-label',b.textContent+' · '+b.title);
+   const meta=document.createElement('small');meta.className='pkmsvv-berry-option-detail';
+   meta.textContent=berryDetails(type.id)?.text||'';b.append(meta);
    b.append(image(type.id,36));grid.append(b);
   }
   if(!grid.children.length){const empty=document.createElement('p');empty.className='pkmsvv-berry-empty';empty.textContent=tr('Túi đang trống. Trận sẽ bắt đầu sau 4 giây.','No Berries yet. Match begins in 4 seconds.');grid.append(empty);}
@@ -255,6 +332,7 @@ G.PKMSVVBerry=(()=>{
   if(b.lumUntil>b.elapsed){
    for(const k of status)if(pl[k]>0)pl[k]=0;
   }
+  renderHud(pl);
  }
  function hurt(pl,original,args){
   const b=pl._pkmsvvBerry;
@@ -274,11 +352,13 @@ G.PKMSVVBerry=(()=>{
    b.once.enigma=1;
    if(Math.random()<.08){
     pl.dead=false;pl.hp=1;pl.invuln=b.mode==='pve'?7:3;
+    b.enigmaUntil=b.elapsed+pl.invuln;
     pl.anim?.play?.('Idle');
     G.FX?.ring?.(pl.x,pl.y,16,120,'#ffe47a',.95,6);
     G.UI?.toast?.(tr('✨ ENIGMA! Bộc phát thoát chết!','✨ ENIGMA! Cheat death!'),2600);
    }
   }
+  renderHud(pl,true);
   return was;
  }
  function install(){
@@ -292,6 +372,7 @@ G.PKMSVVBerry=(()=>{
    const start=G.Game.startRun;G.Game._pkmsvvBerryStartWrapped=true;
    G.Game.startRun=function(...args){
     const ctx=this;
+    hideHud();
     // Solo starts AFTER the 4-second pre-match choice, before monsters spawn.
     // Champion's launch must initialize its farm arena synchronously; the
     // tournament separately prompts again before each actual duel.
@@ -311,7 +392,7 @@ G.PKMSVVBerry=(()=>{
   }
   if(G.MenuUI?.open&&!G.MenuUI._pkmsvvBerryMenuWrapped){
    const old=G.MenuUI.open;G.MenuUI._pkmsvvBerryMenuWrapped=true;
-   G.MenuUI.open=function(...args){const ret=old.apply(this,args);mountMenu();return ret;};
+   G.MenuUI.open=function(...args){cancelOffer();hideHud();const ret=old.apply(this,args);mountMenu();return ret;};
   }
   mountMenu();
  }
@@ -321,7 +402,7 @@ G.PKMSVVBerry=(()=>{
   // Do not reintroduce a floating button that overlays the main menu.
  }
  // Stable public QA interface.
- return {TYPES,byId,data,count,grant,buy,chapterProgress,markUsed,offer,openBag,rescue,kecleonHtml,spriteUrl,image,install,tick,apply,hurt,get choosing(){return choiceOpen;}};
+ return {TYPES,byId,berryDetails,effectState,renderHud,hideHud,cancelOffer,data,count,grant,buy,chapterProgress,markUsed,offer,openBag,rescue,kecleonHtml,spriteUrl,image,install,tick,apply,hurt,get choosing(){return choiceOpen;}};
 })();
 // This deferred file executes before js/game.js. Bind startRun again after
 // all deferred scripts finish, otherwise no four-second pre-match picker.
