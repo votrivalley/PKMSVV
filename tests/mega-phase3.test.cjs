@@ -250,6 +250,18 @@ test('Mega is visible in real combat for Rayquaza even when art or story is lock
  assert.match(button.className,/is-locked/);
  assert.match(button.title,/sprite/i);
 });
+test('Shiny Rayquaza displays a truthful missing-art hint but keeps the Mega control',()=>{
+ const {lib,G,pl,forms,getMegaButton}=setup();
+ const ray=forms.at(-1);ray.artReady=true;
+ G.SPRITE_META[10384]={a:{Idle:{}}};
+ G.Sprites.hasShiny=()=>false;
+ pl.dex=384;pl.shiny=true;
+ lib.sync();
+ const btn=getMegaButton();
+ assert.equal(btn.style.display,'flex');
+ assert.equal(btn.disabled,true);
+ assert.match(btn.title,/Shiny/);
+});
 test('Mega and Fusion HUD CSS only hide for actually OPEN pause/menu/settings screens',()=>{
  const mega=read('src/pkmsvv-mega-lucario.css'),fusion=read('scripts/patch-bond-fusion.cjs');
  for(const name of ['scr-pause','scr-menu','scr-settings']){
