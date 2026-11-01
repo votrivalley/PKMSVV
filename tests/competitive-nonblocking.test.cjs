@@ -53,3 +53,12 @@ test('prepared game contains private competitive queue when installed',t=>{
  assert.match(c,/receiveIndividualLevel/);
  assert.match(g,/pkmsvvNextPersonalLevel/);
 });
+
+test('second-finger pointerdown can choose skill while moving in competitive modes',()=>{
+ assert.match(patch,/patch\('js\/ui\/run-ui\.js'/);
+ assert.match(patch,/el\.addEventListener\('pointerdown'/);
+ assert.match(patch,/pkmsvv-competitive-pick/);
+ assert.match(patch,/touch-action:manipulation/);
+ assert.match(read('src/pkmsvv-forget-skill.js'),/pkmsvv-forget-competitive/);
+ assert.match(read('scripts/patch-skill-forget.cjs'),/pointer-events:none/);
+});

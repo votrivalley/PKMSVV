@@ -80,6 +80,19 @@ patch('js/game.js',
  "  function checkAllDown(dt) {",
  "  function checkAllDown(dt) {\n    if(G.PKMSVVBerryRescue?.active)return;");
 // Berry mode runs a separate Host-authoritative objective, not death-all check.
+// All enemy variants (including ranged and boss AI) aim at live trees.
+// Do not alter any non-Berry mode's ordinary player targeting.
+patch('js/entities/enemy.js',
+ 'else e.update(dt, nearestPlayer(players, e.x, e.y) || pl);',
+ 'else e.update(dt, G.PKMSVVBerryRescue?.targetFor?.(e) || nearestPlayer(players, e.x, e.y) || pl);');
+patch('js/entities/enemy.js',
+ 'const near = nearestPlayer(players, e.x, e.y) || pl;',
+ 'const near = G.PKMSVVBerryRescue?.targetFor?.(e) || nearestPlayer(players, e.x, e.y) || pl;');
+// Humans respawn after four seconds unassisted; ordinary Co-op still
+// requires a nearby teammate and keeps its existing revive duration.
+patch('js/game.js',
+ '  function reviveTick(dt) {\n    const helper =',
+ '  function reviveTick(dt) {\n    if(G.PKMSVVBerryRescue?.active){pl.reviveT=(pl.reviveT||0)+dt;if(pl.reviveT>=4)pl.revive(.5);return;}\n    const helper =');
 patch('js/game.js',
  "    if (G.Coop.isHost) {",
  "    if (G.Coop.isHost) {\n"+

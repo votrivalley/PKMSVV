@@ -101,3 +101,17 @@
 @media (orientation:portrait) and (max-width:480px){
  .pkmsvv-berry-active-hud{top:clamp(165px,26vh,225px);width:155px}
 }
+
+/* Berry buff HUD sits upper-right, never over the bottom-left tree status. */
+body.pkmsvv-berry-defense .pkmsvv-berry-active-hud{
+ left:auto;right:max(9px,env(safe-area-inset-right));
+ top:clamp(128px,27vh,215px);width:clamp(155px,18vw,205px);
+ max-height:36vh;overflow:hidden}
+@media (orientation:landscape) and (max-height:450px){
+ body.pkmsvv-berry-defense .pkmsvv-berry-active-hud{
+  top:clamp(108px,27vh,140px);right:max(7px,env(safe-area-inset-right));
+  width:155px;max-height:38vh;font-size:10px}}
+@media (orientation:portrait) and (max-width:480px){
+ body.pkmsvv-berry-defense .pkmsvv-berry-active-hud{
+  top:clamp(148px,23vh,205px);right:max(7px,env(safe-area-inset-right));
+  width:min(165px,43vw)}}

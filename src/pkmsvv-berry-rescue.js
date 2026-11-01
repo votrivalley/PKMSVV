@@ -20,6 +20,7 @@ G.PKMSVVBerryRescue=(()=>{
  function begin(cfg){
   const requested=typeof cfg==='string'?cfg:(cfg?.mode||G.Social?.room?.mode);
   active=['berry','berryeasy'].includes(requested);easy=requested==='berryeasy';time=0;bossStage=0;won=false;claimed=false;
+  if(typeof document!=='undefined')document.body?.classList?.toggle?.('pkmsvv-berry-defense',active);
   drawnTrees.clear();
   sendClock=0;endClock=0;
   const hp=easy?220:180;
@@ -58,6 +59,15 @@ G.PKMSVVBerryRescue=(()=>{
   if(!Number.isFinite(pct)||pct<=0)return 0;
   const rates=isEasy?EASY_REWARDS:NORMAL_REWARDS;
   return pct>=99.999?rates[0]:pct>=80?rates[1]:pct>=60?rates[2]:pct>=40?rates[3]:rates[4];
+ }
+ // Enemy pathing and boss attacks use a living tree as their destination.
+ function targetFor(enemy){
+  if(!active||!enemy)return null;
+  const live=trees.filter(t=>t.hp>0);
+  if(!live.length)return null;
+  const tree=live.reduce((a,b)=>
+   (enemy.x-b.x)**2+(enemy.y-b.y)**2<(enemy.x-a.x)**2+(enemy.y-a.y)**2?b:a);
+  return {x:tree.x,y:tree.y,r:34,level:1,dead:false,_vx:0,_vy:0,_pkmsvvBerryTree:tree.id};
  }
  // Reduced per-stage enemy speed escalation to two thirds of the prior increment.
   const SPEED_GAIN_NORMAL=.20*2/3,SPEED_GAIN_EASY=.15*2/3,XP_MULT=1.5;
@@ -110,11 +120,11 @@ G.PKMSVVBerryRescue=(()=>{
    sendClock=0;G.Coop?.broadcast?.(['br',...state(),bossStage,Math.round(time),1]);
   }
   const survivors=trees.filter(t=>t.hp>0).length;
-  if(!survivors){active=false;finish?.({success:false,trees:[0,0,0],easy,time:Math.floor(time)});return;}
+  if(!survivors){active=false;if(typeof document!=='undefined')document.body?.classList?.remove?.('pkmsvv-berry-defense');G.Spawner?.say?.(tr('PHÒNG THỦ THẤT BẠI!','DEFENSE FAILED!'),4);finish?.({success:false,trees:[0,0,0],easy,time:Math.floor(time)});return;}
   if(time>=DURATION){
    const lastBossAlive=enemies.some(e=>e&&!e.dead&&e._pkmsvvBerryBoss===2);
    if(!lastBossAlive||time>=DURATION+30){
-    won=true;active=false;finish?.({success:true,trees:state(),easy,time:Math.floor(time)});
+    won=true;active=false;if(typeof document!=='undefined')document.body?.classList?.remove?.('pkmsvv-berry-defense');finish?.({success:true,trees:state(),easy,time:Math.floor(time)});
    }
   }
  }
@@ -220,13 +230,13 @@ G.PKMSVVBerryRescue=(()=>{
   ctx.save();ctx.font='bold 12px sans-serif';ctx.textBaseline='top';
   const left=15,top=Math.max(130,h-124);
   ctx.fillStyle='#0c2738df';ctx.fillRect(left,top,202,95);
-  ctx.fillStyle='#ffe9ab';ctx.fillText('🍓 '+tr('GIẢI CỨU BERRY','RESCUE BERRY')+' · '+Math.max(0,Math.ceil((DURATION-time)/60))+'m',left+8,top+7);
+  ctx.fillStyle='#ffe9ab';ctx.fillText('🍓 '+tr('GIẢI CỨU BERRY','RESCUE BERRY')+' · EXP ×1.5',left+8,top+7);
   trees.forEach((tree,i)=>{
    ctx.fillStyle='#e8f7eb';ctx.fillText('🌳 '+(i+1)+' '+Math.round(100*tree.hp/tree.maxHp)+'%',left+9,top+29+i*20);
   });
   ctx.restore();
  }
- return {DURATION,BOSS_TIMES,REWARD_CHANCE,NORMAL_REWARDS,EASY_REWARDS,XP_MULT,DEFENSE_RADIUS,chanceForHp,difficultyFor,defendGoal,keepOutsideTrunks,begin,beginFrame,drawMissing,tick,onEvent,reward,draw,drawables,hud,state,
+ return {DURATION,BOSS_TIMES,REWARD_CHANCE,NORMAL_REWARDS,EASY_REWARDS,XP_MULT,DEFENSE_RADIUS,chanceForHp,difficultyFor,targetFor,defendGoal,keepOutsideTrunks,begin,beginFrame,drawMissing,tick,onEvent,reward,draw,drawables,hud,state,
   get easy(){return easy},
   get active(){return active},get trees(){return trees},get bossStage(){return bossStage}};
 })();

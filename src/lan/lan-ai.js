@@ -299,9 +299,10 @@ G.LanAI=(()=>{
    if(pl.dead){
     s.axis=[0,0];pl.walking=false;
     if(['coop','berry','berryeasy'].includes(mode)){
-     const help=G.Coop.players().some(p=>p!==pl&&!p.dead&&sq(p,pl)<56**2);
+     const berry=mode==='berry'||mode==='berryeasy';
+     const help=berry||G.Coop.players().some(p=>p!==pl&&!p.dead&&sq(p,pl)<56**2);
      pl.reviveT=help?(pl.reviveT||0)+dt:Math.max(0,(pl.reviveT||0)-dt*.5);
-     if(pl.reviveT>=G.Player.REVIVE_TIME)pl.revive(.5);
+     if(pl.reviveT>=(berry?4:G.Player.REVIVE_TIME))pl.revive(.5);
     }
     continue;
    }

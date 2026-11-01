@@ -205,3 +205,22 @@ test('Android Berry starts from live room mode and renders every missing objecti
  assert.match(patch,/PKMSVVBerryRescue\?\.drawMissing\?\.\(ctx\)/);
  assert.match(patch,/drawScene\(G\.Camera, G\.Coop\.active/);
 });
+
+test('Berry predators target all living trees, EXP x1.5 and automatic four-second respawn',()=>{
+ const h=harness();h.game.begin({mode:'berry'});
+ const enemy={x:95,y:85,xp:20,spd:90,hp:100,maxHp:100};
+ const target=h.game.targetFor(enemy);
+ assert.equal(target._pkmsvvBerryTree,1);
+ assert.equal(target.x,92);assert.equal(target.y,82);
+ h.game.trees[1].hp=0;
+ assert.notEqual(h.game.targetFor(enemy)._pkmsvvBerryTree,1);
+ h.G.EnemyMgr.enemies=[enemy];h.step(.1,0);assert.equal(enemy.xp,30);
+ h.game.trees.forEach(t=>t.hp=0);
+ assert.equal(h.game.targetFor(enemy),null);
+ const patch=read('scripts/patch-berry-coop.cjs');
+ assert.match(patch,/enemy\.js/);assert.match(patch,/targetFor/);
+ assert.match(patch,/pl\.reviveT>=4/);
+ const bots=read('src/lan/lan-ai.js');
+ assert.match(bots,/berry\?4:G\.Player\.REVIVE_TIME/);
+ assert.match(read('src/pkmsvv-berry.css'),/body\.pkmsvv-berry-defense \.pkmsvv-berry-active-hud/);
+});

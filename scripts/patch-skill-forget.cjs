@@ -11,7 +11,7 @@ const finalStart=/({ id: 'start'[^\n]*grow: 1 })/;
 if(!finalStart.test(oldUpgrades))throw Error('Original personal upgrade last entry changed');
 const separated=oldUpgrades.replace(finalStart,'$1,');
 fs.writeFileSync(upgrades,separated.replace(slot,
- "    { id: 'forget', icon: 'book', name: 'Quên Kỹ Năng', unit: 'Tối đa 1 lần mỗi trận sau khi học đủ kỹ năng', max: 1, base: 600, grow: 1 },\n"+slot));
+ "    { id: 'forget', icon: 'book', name: 'Quên Kỹ Năng', unit: 'Chỉ xuất hiện 1 lần khi đủ 8 kỹ năng: chọn 1 trong 8 kỹ năng để quên', max: 1, base: 600, grow: 1 },\n"+slot));
 const from='<script defer src="js/ui/pkmsvv-berry-rescue.js"></script>';
 const to=from+'\n<script defer src="js/ui/pkmsvv-forget-skill.js"></script>\n<script defer src="js/ui/pkmsvv-wiki.js"></script>';
 const html=path.join(game,'dev.html'),src=fs.readFileSync(html,'utf8');
@@ -29,7 +29,37 @@ fs.appendFileSync(path.join(game,'css','style.css'),`
 .pkmsvv-forget-panel p{font-size:13px;line-height:1.5;color:#e5f0ef}
 .pkmsvv-forget-choice{display:block;width:100%;text-align:left;margin:10px 0;padding:14px;
  border:2px solid #a48ac8;background:#35436b;color:#fff;border-radius:10px;font-size:15px;font-weight:800}
+.pkmsvv-forget-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.pkmsvv-forget-choice{display:flex;align-items:center;gap:7px;min-width:0;min-height:50px;
+ padding:7px;margin:0;text-align:left;font-size:12px;line-height:1.3;touch-action:manipulation}
+.pkmsvv-forget-name{flex:1;min-width:0;overflow-wrap:anywhere}
+.pkmsvv-forget-icon{display:grid;place-items:center;flex:0 0 28px;height:28px}
+.pkmsvv-forget-icon svg{width:24px;height:24px}
+.pkmsvv-forget-close{display:block;margin:8px 0 0 auto;border:1px solid #9b91bf;
+ border-radius:8px;background:#303d5c;color:#fff;padding:7px 12px;touch-action:manipulation}
 .pkmsvv-forget-choice:focus-visible{outline:3px solid #ffe97e}
+/* The left thumb stays on canvas while the other thumb picks a card. */
+.pkmsvv-forget-skill.pkmsvv-forget-competitive{pointer-events:none;background:transparent;
+ display:block;padding:0}
+.pkmsvv-forget-competitive .pkmsvv-forget-panel{pointer-events:auto;position:absolute;
+ right:max(8px,env(safe-area-inset-right));top:max(44px,env(safe-area-inset-top));
+ width:min(365px,47vw);max-height:min(76dvh,500px);padding:9px;
+ background:#1d3047f2}
+.pkmsvv-forget-competitive .pkmsvv-forget-panel h2{font-size:15px;margin:0 0 3px}
+.pkmsvv-forget-competitive .pkmsvv-forget-panel p{font-size:10px;margin:0 0 7px}
+@media (orientation:landscape) and (max-height:450px){
+ .pkmsvv-forget-competitive .pkmsvv-forget-panel{
+  top:max(14px,env(safe-area-inset-top));width:min(320px,49vw);max-height:88dvh;padding:7px}
+ .pkmsvv-forget-competitive .pkmsvv-forget-grid{gap:4px}
+ .pkmsvv-forget-competitive .pkmsvv-forget-choice{min-height:37px;padding:4px;font-size:10px}
+ .pkmsvv-forget-competitive .pkmsvv-forget-icon{flex-basis:22px;height:22px}
+ .pkmsvv-forget-competitive .pkmsvv-forget-icon svg{width:19px;height:19px}
+}
+@media (orientation:portrait) and (max-width:480px){
+ .pkmsvv-forget-competitive .pkmsvv-forget-panel{
+  top:max(80px,env(safe-area-inset-top) + 36px);width:min(310px,76vw);
+  max-height:63dvh}
+}
 `);
 
 // New Wiki navigation and safe, equal-height per-Pokémon upgrade cards.

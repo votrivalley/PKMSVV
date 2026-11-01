@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.65",
+  "version": "1.5.66",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.65: 10 region Champion Elite balance, real 50% Mega phases and overkill-safe awards",
+  "description": "Pokémon Chuyển Sinh v1.5.66: Berry tree enemy targeting, 4s revival, eight-skill forget picker, mobile competitive multitouch",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {

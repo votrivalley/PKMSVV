@@ -19,13 +19,15 @@ test('Forgetting is offered only in this Pokémon personal level-up cards',()=>{
  const cards=G.LevelUp.offer(p);
  assert.equal(cards.length,3);assert.equal(cards[2].key,'pkmsvv:forget');
  assert.equal(lib.full(p),true);
+ assert.equal(p._pkmsvvForgetOffered,true);
+ assert.ok(!G.LevelUp.offer(p).some(c=>c.type==='forget'),'card is only shown once, even after rerolls');
  const second={...p,moves:p.moves.slice(),slots:p.slots.map(g=>g.slice()),_pkmsvvForgetUsed:true};
  assert.equal(lib.full(second),false);
  p.slots.pop();assert.ok(!G.LevelUp.offer(p).some(c=>c.type==='forget'));
 });
-test('Random choice shows two distinct moves, deleting one from move list and active slot',()=>{
- const {p,lib}=setup();const opts=lib.options(p,()=>0);
- assert.equal(opts.length,2);assert.notEqual(opts[0],opts[1]);
+test('Picker shows all 8 distinct owned moves, deleting one from active slots',()=>{
+ const {p,lib}=setup();const opts=lib.options(p);
+ assert.equal(opts.length,8);assert.equal(new Set(opts).size,8);
  const m=p.moves[4];p.active=4;
  assert.equal(lib.remove(p,m),true);
  assert.equal(p.moves.length,7);assert.equal(p.slots.length,7);

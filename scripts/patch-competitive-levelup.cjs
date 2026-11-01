@@ -126,6 +126,17 @@ patch('js/core/gamepad.js',
  "        if(hit(G.PKMSVVPadOrb.bindings().confirm))G.RunUI.pick(0);\n"+
  "        if(hit(2))G.RunUI.pick(1);if(hit(3))G.RunUI.pick(2);\n"+
  "      }else if (hit(G.PKMSVVPadOrb.bindings().confirm)) G.Input.virtual('space');");
+// The second touch can select a skill while the first touch keeps holding
+// the canvas joystick. Keep normal click for desktop and the card-guard window.
+patch('js/ui/run-ui.js',
+ '      el.onclick = () => pick(i);',
+ `      el.onclick = () => pick(i);
+      el.addEventListener('pointerdown',e=>{
+        if((e.pointerType==='touch'||e.pointerType==='pen') &&
+           document.body?.classList?.contains('pkmsvv-competitive-pick') && !guarded()){
+          e.preventDefault();e.stopPropagation();pick(i);
+        }
+      });`);
 // Game HUD remains touchable and the three personal card choices take very
 // little space; only the cards themselves capture pointer events.
 fs.appendFileSync(path.join(game,'css','style.css'),String.raw`
@@ -146,6 +157,7 @@ body.pkmsvv-competitive-pick #scr-levelup .box h2{font-size:16px!important;margi
 body.pkmsvv-competitive-pick #scr-levelup .box .sub{font-size:10px!important;margin:2px 0!important}
 body.pkmsvv-competitive-pick #scr-levelup #cards{width:100%!important;gap:4px!important}
 body.pkmsvv-competitive-pick #scr-levelup #cards .card{
+ touch-action:manipulation!important;overscroll-behavior:contain;
  min-height:0!important;padding:5px 7px!important;gap:6px!important;
  font-size:11px!important;line-height:1.15!important;border-width:1px!important;
 }
