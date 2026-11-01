@@ -118,3 +118,15 @@ body.pkmsvv-berry-defense .pkmsvv-berry-active-hud{
 
 .pkmk-card.pkmsvv-berry-store-card .pkmk-product-copy small,.pkmk-card.pkmsvv-berry-store-card .pkmsvv-berry-detail,.pkmk-card.pkmsvv-berry-store-card p{color:#edfff5!important;opacity:1!important;text-shadow:none!important}
 .pkmk-card.pkmsvv-berry-store-card .pkmk-product-copy b{color:#fff7cf!important}
+
+/* Berry shop contrast hotfix: descriptions and all recipe details must not inherit
+   the pale-menu dark text color on the teal Kecleon product cards. */
+.pkmk-card.pkmsvv-berry-store-card .pkmk-product-copy,
+.pkmk-card.pkmsvv-berry-store-card .pkmk-product-copy b,
+.pkmk-card.pkmsvv-berry-store-card .pkmk-product-copy small,
+.pkmk-card.pkmsvv-berry-store-card .pkmk-product-copy .pkmsvv-berry-details,
+.pkmk-card.pkmsvv-berry-store-card .pkmk-product-copy .pkmsvv-berry-details *,
+.pkmk-card.pkmsvv-berry-store-card .pkmk-product-copy p{
+ color:#fff!important;opacity:1!important;
+ text-shadow:0 1px 2px rgba(0,15,22,.6)!important;
+}
