@@ -12,7 +12,7 @@ G.PKMSVVArenaSolo=(()=>{
  // Use built-in neutral biomes; no unlicensed third-party map assets.
  const DUEL_TYPES=['normal','fighting','psychic','steel','rock','ghost'];
  const FARM_SPAWN_MULT=2,FARM_XP_MULT=2;
- let startingOwnRun=false;
+ let startingOwnRun=false,fightCue=0;
  let active=false,stage='idle',prepTotal=0,elapsed=0,opponent=null,target=null,selected=null,enemyDex=null,lastSecond=-1,shrunk=0,duelType='normal';
  const canEnter=()=>!!(G.PKMSVVStory?.arenaUnlocked?.()&&!G.Coop?.active);
  function owned(){
@@ -65,7 +65,7 @@ G.PKMSVVArenaSolo=(()=>{
  }
  function hideCountView(){const el=$('pkmsvv-arena-solo-countdown');if(el)el.hidden=true;}
  function reset(){
-  active=false;stage='idle';target=null;opponent=null;lastSecond=-1;
+  active=false;stage='idle';target=null;opponent=null;lastSecond=-1;fightCue=0;
   hideCountView();
   G.World?.setArena?.(null);
   const hud=$('pkmsvv-arena-solo-hud');if(hud)hud.hidden=true;
@@ -162,7 +162,7 @@ G.PKMSVVArenaSolo=(()=>{
  }
  function beginDuel(){
   const p=G.Game?.player;if(!p||!G.Enemy||!G.EnemyMgr){abort();return;}
-  stage='fight';elapsed=0;frame().hidden=true;hideCountView();
+  stage='fight';elapsed=0;frame().hidden=true;fightCue=.65;countView(tr('⚔ BẮT ĐẦU!','⚔ FIGHT!'));
   const dex=enemyDex===selected?chooseEnemy():enemyDex;
   const def={dex,name:G.DEX_BY?.[dex]?.name||'AI',hp:320,spd:112,dmg:11,
    xp:0,behavior:'champion',shotCd:2.5};
@@ -216,6 +216,10 @@ G.PKMSVVArenaSolo=(()=>{
    return;
   }
   if(stage!=='fight')return;
+  if(fightCue>0){
+   fightCue=Math.max(0,fightCue-Math.max(0,Number(dt)||0));
+   if(!fightCue)hideCountView();
+  }
   if(target?.dead){finish(true);return;}
   if(elapsed>=SHRINK_FROM){
    const next=Math.max(9,20-Math.floor((elapsed-SHRINK_FROM)/15));
