@@ -4,6 +4,7 @@
 G.PKMSVVDeathHUD=(()=>{
  const L=(vi,en)=>G.I18n?.lang==='vi'?vi:en;
  function mode(){
+  if(G.PKMSVVBerryRescue?.active)return 'berry';
   if(G.Royale?.active)return 'royale';
   if(G.EggRush?.active)return 'eggrush';
   if(G.Coop?.active)return 'coop';
@@ -11,6 +12,13 @@ G.PKMSVVDeathHUD=(()=>{
  }
  function message(m,player){
   if(!player?.dead)return null;
+  if(m==='berry'){
+   const remaining=Math.max(0,Math.ceil(4-(Number(player.reviveT)||0)));
+   return {
+    title:L('Hồi sinh sau ','Respawn in ')+remaining+'s',
+    subtitle:L('Tiếp tục bảo vệ ba cây Berry!','Keep defending the three Berry trees!')
+   };
+  }
   if(m==='coop')return {
    title:L('Bạn đã gục!','You have fallen!'),
    subtitle:L('Chờ đồng đội đến cứu.','Wait for your teammates to revive you.')

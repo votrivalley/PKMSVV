@@ -224,3 +224,10 @@ test('Berry predators target all living trees, EXP x1.5 and automatic four-secon
  assert.match(bots,/berry\?4:G\.Player\.REVIVE_TIME/);
  assert.match(read('src/pkmsvv-berry.css'),/body\.pkmsvv-berry-defense \.pkmsvv-berry-active-hud/);
 });
+
+test('Berry death HUD counts down from 4 seconds rather than asking for rescue',()=>{
+ const src=read('src/web/pkmsvv-death-hud.js');
+ assert.match(src,/PKMSVVBerryRescue\?\.active/);
+ assert.match(src,/Math\.ceil\(4-\(Number\(player\.reviveT\)/);
+ assert.match(src,/Tiếp tục bảo vệ ba cây Berry/);
+});
