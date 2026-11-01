@@ -103,8 +103,8 @@ patch('js/game.js',
 // maybeLevelUp(), so the old branch still sets state='levelup' and freezes time.
 // Route competitive offline rewards through the personal nonblocking queue too.
 patch('js/game.js',
- "    pendingLevels--;\\n    state = 'levelup';",
- "    pendingLevels--;\\n    if(pkmsvvCompetitive()){coopApi.levelStart(pl.level);return;}\\n    state = 'levelup';");
+ "    pendingLevels--;\n    state = 'levelup';",
+ "    pendingLevels--;\n    if(pkmsvvCompetitive()){coopApi.levelStart(pl.level);return;}\n    state = 'levelup';");
 // Both item and bond choices must not create room-wide holds in competition.
 function patchAll(file,from,to,expected){
  const full=path.join(game,file),s=fs.readFileSync(full,'utf8').replace(/\r\n/g,'\n');
