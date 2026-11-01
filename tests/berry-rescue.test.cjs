@@ -89,12 +89,12 @@ test('Berry mode HP tiers, easy rewards and enemy speed escalations',()=>{
  h.step(.1,360);
  assert.ok(Math.abs(enemy.spd-91)<1e-8);
 });
-test('Berry normal enemies award 1.5× kill XP, new arrivals get one-time multiplier',()=>{
+test('Berry Rescue gives standard EXP once and never mutates base enemy payouts',()=>{
  const h=harness();h.game.begin({mode:'berry'});
  const e={x:900,y:900,xp:30,spd:100,dmg:10,hp:100,maxHp:100};
  h.G.EnemyMgr.enemies=[e];
- h.step(.1,0);assert.equal(e.xp,45);
- h.step(.1,120);assert.equal(e.xp,45,'no exponential XP stacking every tick');
+ h.step(.1,0);assert.equal(e.xp,30);
+ h.step(.1,120);assert.equal(e.xp,45,'XP remains unmodified through all stages');
  assert.ok(Math.abs(e.spd-100*(1+.2*2/3))<1e-7);
 });
 test('Berry AI defendGoal stays at live trees and never chases beyond the grove',()=>{
@@ -206,7 +206,7 @@ test('Android Berry starts from live room mode and renders every missing objecti
  assert.match(patch,/drawScene\(G\.Camera, G\.Coop\.active/);
 });
 
-test('Berry predators target all living trees, EXP x1.5 and automatic four-second respawn',()=>{
+test('Berry predators defend all trees with standard EXP and four-second respawn',()=>{
  const h=harness();h.game.begin({mode:'berry'});
  const enemy={x:95,y:85,xp:20,spd:90,hp:100,maxHp:100};
  const target=h.game.targetFor(enemy);
@@ -214,7 +214,7 @@ test('Berry predators target all living trees, EXP x1.5 and automatic four-secon
  assert.equal(target.x,92);assert.equal(target.y,82);
  h.game.trees[1].hp=0;
  assert.notEqual(h.game.targetFor(enemy)._pkmsvvBerryTree,1);
- h.G.EnemyMgr.enemies=[enemy];h.step(.1,0);assert.equal(enemy.xp,30);
+ h.G.EnemyMgr.enemies=[enemy];h.step(.1,0);assert.equal(enemy.xp,20);
  h.game.trees.forEach(t=>t.hp=0);
  assert.equal(h.game.targetFor(enemy),null);
  const patch=read('scripts/patch-berry-coop.cjs');
