@@ -111,3 +111,28 @@
   .pkmk-sign { font-size: 14px; }
   .pkmk-bubble { font-size: 11px; }
 }
+
+
+/* C: honest distinction between permanent bag consumables and run-only held item. */
+#scr-kecleon .pkmk-held-help{
+ margin:6px 0 13px!important;padding:10px 12px!important;
+ border:2px solid #76b3bd!important;border-radius:11px;
+ background:#e4f5f0!important;color:#163d4c!important;
+ font:750 13px/1.5 "Segoe UI",Tahoma,sans-serif!important;
+ box-shadow:0 2px 8px rgba(0,0,0,.08);overflow-wrap:anywhere
+}
+#scr-kecleon .pkmk-tabs{
+ position:sticky;top:0;z-index:12;padding:7px;
+ background:rgba(15,40,56,.96);border:1px solid #477e8f;
+ border-radius:10px;flex-wrap:wrap;
+}
+#scr-kecleon .pkmk-tabs .btn{
+ min-height:42px;touch-action:manipulation;white-space:normal
+}
+#scr-kecleon .pkmk-card:focus-within{outline:2px solid #ffe58b;outline-offset:1px}
+#scr-kecleon .pkmk-box{overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch}
+@media(orientation:landscape) and (max-height:450px){
+ #scr-kecleon .pkmk-stall{height:min(24vh,115px)}
+ #scr-kecleon .pkmk-tabs{gap:5px;padding:4px}
+ #scr-kecleon .pkmk-held-help{font-size:11px!important;padding:6px 9px!important}
+}
