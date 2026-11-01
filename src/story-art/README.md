@@ -39,6 +39,17 @@ Các tranh phải đồng bộ về phong cách với `eyes.webp`, `gate.webp`, 
 | `chapter3-nest.webp` | Ổ trứng phát sáng trong vùng đất ký ức | 5 đoạn đầu |
 | `chapter3-hatch.webp` | Pokémon nhỏ nở, bắt đầu đồng hành; bóng trắng thoáng hiện | 6 đoạn cuối |
 
+## Chương 10 — Bầu Trời Hắc Hóa
+
+Tuyệt đối không dùng lại hai tranh Chương 9 (`chapter7-seal.webp`, `chapter7-mega.webp`). Cảnh Rayquaza hắc hóa phải có hai file WebP riêng:
+
+| Tên file chính xác | Nội dung | Cảnh |
+| --- | --- | --- |
+| `chapter10-darkening.webp` | Mười Ấn Chứng hội tụ, Rayquaza và mây trời chuyển tím đen | Thoại 1–2 |
+| `chapter10-shadow-sky.webp` | Toàn cảnh trời tối, vực xoáy hắc ám, đảo đá và vết nứt không gian; Rayquaza bay đi dùng canvas hoạt ảnh riêng | Thoại 3–6 |
+
+Ảnh chuẩn 1280×720, 16:9, pixel-art, không chữ/UI. Hai file cần được upload vào `src/story-art/` trên `feature/lan-local-beta` trước khi build gói có tranh mới. Build không tự đổi ảnh cũ hoặc tạo lại tranh.
+
 ## Cách chuẩn bị và upload
 
 1. Tải 4 tranh đã duyệt về máy dưới dạng PNG hoặc JPG.
