@@ -490,6 +490,6 @@ test('Champion Mega can show a distinct phase 2 glow without inventing missing o
 });
 test('November seasonal event never paints over scored Arena or Rayquaza',()=>{
  const season=read('scripts/patch-season-event.cjs');
- assert.match(season,/G\\.PKMSVVChampionArena\\?\\.active\\?'champion'/);
- assert.match(season,/G\\.PKMSVVArenaSolo\\?\\.active\\?'arena-solo'/);
+ assert.ok(season.includes("G.PKMSVVChampionArena?.active?'champion'"));
+ assert.ok(season.includes("G.PKMSVVArenaSolo?.active?'arena-solo'"));
 });
