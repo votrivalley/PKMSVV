@@ -150,14 +150,13 @@ G.PKMSVVBerryRescue=(()=>{
  function drawOne(ctx,t){
   drawnTrees.add(t.id);
   ctx.save();ctx.translate(t.x,t.y);
-  // Dark ground anchor + pale outline stop the trees disappearing into the forest.
-  ctx.fillStyle='rgba(7,31,27,.84)';ctx.fillRect(-38,-5,76,10);
-  ctx.strokeStyle='#b3dba0';ctx.lineWidth=1.5;ctx.strokeRect(-38,-5,76,10);
+  // One health indicator BELOW the trunk; the old ground anchor resembled
+  // a second HP bar while the tiny canopy bar looked like a third.
   drawTree(ctx,t.hp/t.maxHp,t.id);
   const ratio=Math.max(0,Math.min(1,t.hp/t.maxHp));
-  const y=hasTreeAtlas()?-91:-62;
-  ctx.fillStyle='rgba(24,47,39,.62)';ctx.fillRect(-31,y,62,3);
-  ctx.fillStyle=ratio>.35?'#8fe2ad':'#f28a73';ctx.fillRect(-31,y,62*ratio,3);
+  const barY=9;
+  ctx.fillStyle='rgba(12,35,31,.9)';ctx.fillRect(-34,barY,68,7);
+  ctx.fillStyle=ratio>.35?'#8fe2ad':'#f28a73';ctx.fillRect(-32,barY+2,64*ratio,3);
   ctx.restore();
  }
  function beginFrame(){drawnTrees.clear();}
