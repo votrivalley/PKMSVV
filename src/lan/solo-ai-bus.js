@@ -24,7 +24,9 @@ G.LanBus=(()=>{
   if(action==='list')return []; // local AI room is never discoverable
   if(action==='create'){
    if(room)throw Error('Đã ở trong phòng.');
-   const mode=['coop','royale','eggrush'].includes(data.mode)?data.mode:'coop';
+   // Keep Berry difficulty IDs intact from mode selection through the Host's
+   // start packet. Turning them into 'coop' silently disables all three trees.
+   const mode=['coop','royale','eggrush','berry','berryeasy'].includes(data.mode)?data.mode:'coop';
    room={id:'local-ai-'+randomId(),mode,open:true,
     members:[{uid:identity,name:playerName,dex:dexOf(data.dex),shiny:!!data.shiny,power:data.power||null}]};
    update();return snapshot();
