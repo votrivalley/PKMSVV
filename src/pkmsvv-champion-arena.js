@@ -616,6 +616,7 @@ G.PKMSVVChampionArena=(()=>{
   delete p._arenaOriginal;
  }
  function beginPrep(){
+  hideBattleCountdown();fightCue=0;
   restoreStats();
   stage='prep';elapsed=0;lastSecond=-1;prepBossStage=0;previewSeen=false;warnSeen=false;opp=null;target=null;
   G.World?.setArena?.(null);
