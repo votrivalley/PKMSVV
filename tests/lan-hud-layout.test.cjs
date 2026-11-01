@@ -76,7 +76,7 @@ test('Competitive HUD patch suppresses the Co-op rescue message and teammate bar
 test('v1.5.30: one unified death message matches Co-op, Royale and Egg Rush',()=>{
  const G={I18n:{lang:'vi'},Game:{state:'playing'},Coop:{active:true},Royale:{active:false},EggRush:{active:false}};
  vm.runInNewContext(fs.readFileSync(require.resolve('../src/web/pkmsvv-death-hud.js'),'utf8'),{G,Math,Number});
- const p={dead:true,lanEggDeath:6};
+ const p={dead:true,lanEggDeath:.5};
  assert.equal(G.PKMSVVDeathHUD.mode(),'coop');
  assert.equal(G.PKMSVVDeathHUD.message('coop',p).title,'Bạn đã gục!');
  assert.equal(G.PKMSVVDeathHUD.message('coop',p).subtitle,'Chờ đồng đội đến cứu.');
@@ -88,7 +88,7 @@ test('v1.5.30: one unified death message matches Co-op, Royale and Egg Rush',()=
  assert.equal(G.PKMSVVDeathHUD.mode(),'eggrush');
  assert.equal(G.PKMSVVDeathHUD.message('eggrush',p).title,'Hồi sinh sau 2s');
  assert.equal(G.PKMSVVDeathHUD.message('eggrush',p).subtitle,'Chuẩn bị trở lại cuộc đua!');
- assert.equal(G.PKMSVVDeathHUD.message('eggrush',{dead:true,lanEggDeath:0}).title,'Hồi sinh sau 8s');
+ assert.equal(G.PKMSVVDeathHUD.message('eggrush',{dead:true,lanEggDeath:0}).title,'Hồi sinh sau 2s');
  assert.equal(G.PKMSVVDeathHUD.message('eggrush',{dead:true,lanEggDeath:9}).title,'Hồi sinh sau 0s');
  assert.equal(G.PKMSVVDeathHUD.message('eggrush',{dead:false}),null);
  G.EggRush.active=false;G.Coop.active=false;
