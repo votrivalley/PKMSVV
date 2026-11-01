@@ -50,3 +50,23 @@ body:has(#scr-settings:not([hidden])) #pkmsvv-fusion-action{
  min-width:80px;min-height:31px;padding:4px 6px;font-size:10px}
 }
 `+'\n');
+
+fs.appendFileSync(path.join(base,'css/style.css'),String.raw`
+.pkmsvv-fusion-guide{position:fixed;inset:0;z-index:13050;background:rgba(1,14,25,.76);
+ display:flex;align-items:center;justify-content:center;padding:12px}
+.pkmsvv-fusion-guide-panel{box-sizing:border-box;width:min(560px,96vw);
+ max-height:88dvh;overflow:auto;background:#153c49;color:#fff;
+ border:2px solid #95d8cb;border-radius:14px;padding:16px;box-shadow:0 12px 28px #0009}
+.pkmsvv-fusion-guide-panel h2{color:#ffe8a4;font-size:clamp(18px,3vw,23px);margin:0 0 7px}
+.pkmsvv-fusion-guide-panel p{font-size:12px;line-height:1.5;color:#fff;margin:6px 0 12px}
+.pkmsvv-fusion-guide-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+ border:1px solid #72bbb8;background:#0a2f3b;border-radius:9px;padding:7px 9px;margin:6px 0}
+.pkmsvv-fusion-guide-pair{display:flex;align-items:center;flex-wrap:wrap;gap:7px;min-width:0;flex:1}
+.pkmsvv-fusion-guide-move{display:inline-flex;align-items:center;gap:4px;font-size:12px}
+.pkmsvv-fusion-guide-move svg{width:24px;height:24px;flex:none}
+.pkmsvv-fusion-guide-row>b{font-size:12px;color:#ffe77c}
+.pkmsvv-fusion-guide-row>small{font-size:11px;color:#b9e4d9;width:100%}
+.pkmsvv-fusion-guide-panel>.btn{margin-top:10px}
+@media (max-height:430px){.pkmsvv-fusion-guide-panel{padding:8px;max-height:90dvh}
+ .pkmsvv-fusion-guide-row{padding:3px 6px;margin:3px 0}}
+`+'\n');
