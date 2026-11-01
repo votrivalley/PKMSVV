@@ -31,12 +31,15 @@ G.PKMSVVBerry=(()=>{
   starf:{trigger:['Ngẫu nhiên khi vào trận','Random at start'],duration:['1 buff ngẫu nhiên +25% trong 60 giây','Random +25% boost for 60s'],limit:['1 lần/trận','Once per run']},
   enigma:{trigger:['Khi tử vong','On fatal damage'],duration:['Bất tử 7s PvE / 3s PvP nếu thành công','Invulnerable 7s PvE / 3s PvP on success'],limit:['8% cơ hội · 1 lần/trận','8% chance · Once per run']}
  });
- function berryDetails(id){const d=DETAILS[id];if(!d)return null;const i=vi()?0:1;return {
-  trigger:d.trigger[i],duration:d.duration[i],limit:d.limit[i],
-  text:[d.trigger[i],d.duration[i],d.limit[i]].join(' · ')
+ function berryDetails(id){const d=DETAILS[id];if(!d)return null;const i=vi()?0:1;
+ const rarity=byId[id]?.tier===3?tr('Cực hiếm','Ultra-rare'):
+  byId[id]?.tier===2?tr('Hiếm','Rare'):tr('Thường','Common');
+ return {
+  trigger:d.trigger[i],duration:d.duration[i],limit:d.limit[i],rarity,
+  text:[rarity,d.trigger[i],d.duration[i],d.limit[i]].join(' · ')
  };}
  function detailsHtml(id){const d=berryDetails(id);return d?
-  '<span class="pkmsvv-berry-details">'+esc(d.trigger)+'<span> · '+esc(d.duration)+'</span><span> · '+esc(d.limit)+'</span></span>':'';}
+  '<span class="pkmsvv-berry-details"><b>'+esc(d.rarity)+'</b> · '+esc(d.trigger)+'<span> · '+esc(d.duration)+'</span><span> · '+esc(d.limit)+'</span></span>':'';}
  const cap=n=>Math.max(0,Math.min(999,Math.floor(Number(n)||0)));
  let choiceOpen=false,turn=0,current=null,chooseTimer=null,menuAdded=false,modals=[];
  let hudEl=null,hudStamp='',hudClock=0;
@@ -386,7 +389,10 @@ G.PKMSVVBerry=(()=>{
      return;
     }
     const result=start.apply(ctx,args);
-    offer({mode:online?'pvp':'pve'});
+    // Survival/Berry Co-op is PvE; Royale/Egg Rush/Arena duels use PvP timing.
+    const competitive=!!(G.Royale?.active||G.EggRush?.active||
+     G.PKMSVVArenaSolo?.active||G.PKMSVVChampionArena?.stage==='fight');
+    offer({mode:competitive?'pvp':'pve'});
     return result;
    };
   }
