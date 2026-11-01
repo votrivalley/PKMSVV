@@ -155,7 +155,7 @@ G.PKMSVVArenaSolo=(()=>{
   G.World?.setArena?.({tx:0,ty:0,r:20,type:duelType});
   if(G.Tiles?.arenaBiome)G.World?.setBiome?.(G.Tiles.arenaBiome(duelType),true);
   p.x=0;p.y=95;p.invuln=4;
-  const el=frame();el.hidden=false;
+  const el=frame();el.hidden=true; // show world map behind the center 3-2-1, not the selection modal
   $('pkmsvv-arena-solo-picks').replaceChildren();
   $('pkmsvv-arena-solo-vs').textContent=(G.DEX_BY?.[selected]?.name||selected)+'  ⚡ VS ⚡  '+
    (G.DEX_BY?.[enemyDex]?.name||enemyDex);
