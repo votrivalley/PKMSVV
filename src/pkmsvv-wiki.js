@@ -16,12 +16,24 @@ G.PKMSVVWiki=(()=>{
   const css=document.createElement('style');css.id='pkmsvv-pc-style';
   css.textContent=`
   #pkmsvv-wiki-overlay.pkmsvv-pc-overlay{position:fixed;inset:0;z-index:20000;
-   display:flex;align-items:center;justify-content:center;padding:16px;
-   background:rgba(2,15,27,.82);overflow:auto}
-  .pkmsvv-pc-overlay .pkmsvv-pc-panel{width:min(810px,100%);max-height:min(90vh,880px);
-   overflow:auto;color:#effbf8;border:2px solid #a2e5db;border-radius:15px;
-   box-shadow:0 18px 46px #0009;background:linear-gradient(145deg,#174952,#102b42);padding:17px}
-  .pkmsvv-pc-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+   display:flex;align-items:center;justify-content:center;box-sizing:border-box;
+   width:100vw;height:100dvh;padding:max(6px,env(safe-area-inset-top))
+   max(6px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom))
+   max(6px,env(safe-area-inset-left));background:rgba(2,15,27,.82);
+   overflow:hidden;overscroll-behavior:contain;touch-action:none}
+  .pkmsvv-pc-overlay .pkmsvv-pc-panel{
+   box-sizing:border-box;width:min(810px,100%);min-width:0;max-width:100%;
+   height:auto;max-height:min(92dvh,880px);min-height:0;
+   overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;
+   touch-action:pan-y;-webkit-overflow-scrolling:touch;scrollbar-width:thin;
+   scrollbar-gutter:stable;overflow-anchor:none;scroll-behavior:auto;
+   color:#effbf8;border:2px solid #a2e5db;border-radius:15px;
+   box-shadow:0 18px 46px #0009;background:linear-gradient(145deg,#174952,#102b42);
+   padding:clamp(8px,2vh,17px)}
+  .pkmsvv-pc-header{position:sticky;top:0;z-index:2;
+   display:flex;align-items:center;justify-content:space-between;
+   gap:12px;margin-bottom:12px;padding:7px 5px;
+   background:#17434e;border-radius:8px}
   .pkmsvv-pc-header h2{margin:0;font-size:clamp(19px,3vw,28px);color:#ffe28a}
   .pkmsvv-pc-close{border:2px solid #f0d485;background:#ffe084;color:#163847;font-weight:900;
    padding:8px 13px;border-radius:9px;cursor:pointer}
@@ -37,7 +49,8 @@ G.PKMSVVWiki=(()=>{
   .pkmsvv-pc-card small{font-size:12px;line-height:1.4;color:#d8eeeb}
   .pkmsvv-pc-guide{margin-top:14px;border:1px solid #84c6bc;border-radius:12px;padding:12px;background:#123640}
   .pkmsvv-pc-guide h3{color:#ffe6a0;margin:0 0 9px;font-size:17px}
-  .pkmsvv-pc-berry-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:55vh;overflow-y:auto}
+  .pkmsvv-pc-berry-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+   gap:8px;max-height:none;overflow:visible}
   .pkmsvv-pc-berry-row{display:flex;align-items:center;gap:9px;padding:8px;border:1px solid #5b8e91;border-radius:9px;background:#1b4951}
   .pkmsvv-pc-berry-row img{width:38px;height:38px;object-fit:contain;image-rendering:pixelated;flex-shrink:0}
   .pkmsvv-pc-berry-row strong{color:#ffdf8c;display:block}
@@ -50,6 +63,13 @@ G.PKMSVVWiki=(()=>{
 
   .pkmsvv-pc-card .pkmsvv-pc-action{margin-top:auto;border-radius:8px;background:#ffdc68;
     color:#103841;padding:7px 12px;font-weight:900;font-size:13px}
+  @media(orientation:landscape) and (max-height:500px){
+   .pkmsvv-pc-overlay .pkmsvv-pc-panel{max-height:calc(100dvh - 12px)}
+   .pkmsvv-pc-grid{gap:7px}
+   .pkmsvv-pc-header{margin-bottom:7px}
+   .pkmsvv-pc-card canvas{width:72px;height:72px;flex:0 0 72px}
+   .pkmsvv-pc-card small{font-size:11px}
+  }
   @media(max-width:580px){.pkmsvv-pc-grid{grid-template-columns:1fr;gap:8px}
    .pkmsvv-pc-card{flex-direction:row;justify-content:flex-start;text-align:left;flex-wrap:wrap}
    .pkmsvv-pc-card canvas{width:76px;height:76px;flex:0 0 76px}
@@ -117,7 +137,8 @@ G.PKMSVVWiki=(()=>{
    'Rare berries drop in Rescue Berry. Purchase berries in Kecleon Shop → Berry.');
   box.append(note);shade.append(box);document.body.append(shade);
   shade.addEventListener('click',e=>{if(e.target===shade)open();});
-  back.focus();G.Pad?.focusFirst?.();return true;
+  // Focus must never drag the scrollable guide back to the first item.
+  back.focus({preventScroll:true});return true;
  }
  function open(){
   close();installStyle();
@@ -146,9 +167,9 @@ G.PKMSVVWiki=(()=>{
   help.append(sub);
   const articles=[
    [tr('Mystery Orb','Mystery Orb'),null],
-   [tr('Thức tỉnh & Quên kỹ năng','Awakening & Forgetting Skills'),
-    tr('Kỹ năng được nâng trong trận; khi học đầy ô, có thể thay thế kỹ năng cũ. Các nâng cấp lâu dài không bị mất khi quên một kỹ năng.',
-       'Level skills during runs and replace an old skill when your slots fill. Permanent upgrades remain intact.')]
+   [tr('Thức tỉnh kỹ năng','Skill Awakening'),
+    tr('Kỹ năng được mở và nâng cấp khi Pokémon lên cấp trong trận. Hãy chọn kỹ năng phù hợp để phát huy sức mạnh; các nâng cấp vĩnh viễn vẫn được giữ nguyên.',
+       'Unlock and improve skills as your Pokémon levels up during a run. Choose skills that fit your play style; permanent upgrades remain intact.')]
   ];
   for(const [name,description] of articles){
    const detail=document.createElement('div');detail.className='pkmsvv-pc-learn';
@@ -178,7 +199,8 @@ G.PKMSVVWiki=(()=>{
   box.append(help);
   overlay.append(box);document.body.append(overlay);
   overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
-  x.focus();G.Pad?.focusFirst?.();return true;
+  // Avoid browser scrollIntoView repositioning the entire PC/Android panel.
+  x.focus({preventScroll:true});return true;
  }
  function install(){
   installStyle();installMenu();
