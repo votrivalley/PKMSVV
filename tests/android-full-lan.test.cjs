@@ -61,3 +61,20 @@ test('Android landscape uses scoped compact mobile layout and native Wi-Fi disco
  assert.match(src,/room_mode/);
  assert.match(src,/room_role/);
 });
+
+
+test('Android FULL LAN packs Berry three-tree atlas and two Chapter 10 illustrations from final engine',()=>{
+ const assets=path.join(web,'assets');
+ const atlas='berry-trees/berry_trees_3x6.webp';
+ assert.ok(fs.existsSync(path.join(assets,atlas)),'Three Berry trees are missing from the APK web assets');
+ assert.deepEqual(fs.readFileSync(path.join(assets,atlas)),
+  fs.readFileSync(path.join(root,'src/berry-tree-assets',path.basename(atlas))),
+  'APK Berry atlas must be the original approved sprite file');
+ for(const name of ['chapter10-darkening.webp','chapter10-shadow-sky.webp']){
+  const dest=path.join(assets,'story',name);
+  assert.ok(fs.existsSync(dest),name+' missing in Android');
+  assert.deepEqual(fs.readFileSync(dest),fs.readFileSync(path.join(root,'src/story-art',name)));
+ }
+ const build=read('scripts/prepare-full-lan-android.cjs');
+ assert.match(build,/for\(const dir of \['js','css','assets'\]\)/);
+});
