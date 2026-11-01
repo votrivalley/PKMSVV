@@ -210,5 +210,5 @@ test('Arena shows each completion separately, save reminder is readable and ques
  const patch=read('scripts/patch-champion-arena.cjs');
  assert.match(patch,/pkmsvvActiveMode=coop\?/);
  assert.match(patch,/completed:!pkmsvvWasManualExit/);
- assert.match(patch,/pkmsvvManualExit&&time<60/);
+ assert.match(patch,/pkmsvvWasManualExit&&time<60/);
 });
