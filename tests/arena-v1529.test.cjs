@@ -75,12 +75,12 @@ test('opening boost is Royale-only, monotone and continuous at 180 seconds',()=>
  assert.equal(G.Arena.openingBoost(0),2.3);assert.equal(G.Arena.openingBoost(180),1);
  G.Arena.begin({mode:'coop'});assert.equal(G.Arena.openingBoost(0),1);
 });
-test('four-corner Egg Rush cameras still get legal scoring eggs at the unchanged minute cadence',()=>{
+test('four-corner Egg Rush cameras still get legal scoring eggs every 30 seconds',()=>{
  const h=harness('eggrush',4),corners=[[-1000,-1000],[1000,-1000],[-1000,1000],[1000,1000]];
  h.players.forEach((p,i)=>{[p.x,p.y]=corners[i];});h.G.Camera.x=-1000;h.G.Camera.y=-1000;
- h.step(.1,59.9);assert.equal(h.G.EggRush.nests.length,0);h.step(.1,60);assert.equal(h.G.EggRush.nests.length,1);
+ h.step(.1,29.9);assert.equal(h.G.EggRush.nests.length,0);h.step(.1,30);assert.equal(h.G.EggRush.nests.length,1);
  const n=h.G.EggRush.nests[0];assert.ok(h.G.Arena.validSpawn(n.x,n.y));assert.equal(h.G.Arena.visible(n.x,n.y,h.players,80),false);
- h.step(.1,120);assert.equal(h.G.EggRush.nests.length,2);assert.equal(h.G.Arena.radius,1600);
+ h.step(.1,60);assert.equal(h.G.EggRush.nests.length,2);assert.equal(h.G.Arena.radius,1600);
 });
 
 test('v1.5.30 displays a world-space red circle and short shrinking hint without changing zone damage',()=>{
