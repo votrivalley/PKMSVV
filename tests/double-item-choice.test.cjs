@@ -13,8 +13,7 @@ function setup(){
   Spawner:{say(){}}, Progress:{event:(name,payload)=>events.push([name,payload])}
  };
  const ctx={G,state:'playing',holdBy:[],pl:{item:'a',equip(k){this.item=k;}}};
- vm.runInNewContext(s.slice(start,end)+'\nthis.h={offerItem,afterLevelUp,pending:()=>laterItems.slice(),active:()=>openItem,
-   invalidate:()=>{++pkmsvvItemEpoch;openItem=null;laterItems.length=0;}};',ctx);
+ vm.runInNewContext(s.slice(start,end)+'\nthis.h={offerItem,afterLevelUp,pending:()=>laterItems.slice(),active:()=>openItem,\n   invalidate:()=>{++pkmsvvItemEpoch;openItem=null;laterItems.length=0;}};',ctx);
  return {...ctx,modal,choices,events,choose(i,id){modal.item=false;choices[i].cb(id);}};
 }
 test('two simultaneous reward choices are queued and neither is lost',()=>{
@@ -40,7 +39,7 @@ test('reward collected during levelup or bond waits its turn',()=>{
 });
 test('fresh runs clear stale rewards and modal references',()=>{
  assert.match(s,/openItem = null; laterItems\.length = 0;/);
- assert.match(s,/if \(selected\) return/);
+ assert.match(s,/selected\|\|epoch!==pkmsvvItemEpoch/);
 });
 
 test('item during Berry chooser or Judgment cinematic waits until the overlay is gone',()=>{
