@@ -77,6 +77,14 @@ fs.appendFileSync(path.join(base,'css/style.css'),String.raw`
  background:#133d46;color:#edfff8;font:800 11px/1.4 "Segoe UI",sans-serif;
  overflow-wrap:anywhere;white-space:normal;text-shadow:none;
 }
+/* Make complementary skill offers noticeable before the player chooses. */
+#cards .card:has(.pkmsvv-fusion-card-hint.is-ready){
+ border-color:#ffe185!important;
+ box-shadow:inset 0 0 0 1px #f6d36b66,0 0 12px #ffe17840!important;
+}
+#cards .card:has(.pkmsvv-fusion-card-hint.is-offered){
+ border-color:#b999ec!important;
+}
 #cards .pkmsvv-fusion-card-hint.is-ready{
  background:#4f3b18;color:#fff0a7;border-color:#e9c76c;
  box-shadow:0 0 0 1px #f9d78733;
