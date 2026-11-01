@@ -93,29 +93,63 @@ G.PKMSVVMegaGacha=(()=>{
   if(amount)G.DB.commit(true);
   return amount;
  }
+
+ // Use the exact pixel item icon from the offline Showdown atlas. One file
+ // covers all 92 named Mega Stones; no runtime network access is required.
+ function stoneIcon(key,size=72){
+  const n=G.PKMSVV_MEGA_ITEM_MAP?.icons?.[key];
+  const icon=document.createElement('span');
+  icon.className='pkmsvv-mega-item-icon';
+  icon.style.width=size+'px';icon.style.height=size+'px';
+  if(Number.isInteger(n)&&n>=0){
+   icon.classList.add('has-sprite');
+   icon.style.backgroundSize=(size*16)+'px auto';
+   icon.style.backgroundPosition='-'+((n%16)*size)+'px -'+(Math.floor(n/16)*size)+'px';
+  }else{
+   icon.textContent='◇';
+   icon.classList.add('is-missing');
+  }
+  icon.setAttribute('role','img');icon.setAttribute('aria-label',key||'Mega Stone');
+  return icon;
+ }
  function createUI(){
   if($('pkmsvv-mega-gacha-tabs'))return;
   const screen=$('scr-gacha'),container=screen?.querySelector('.box.wide');
   const gens=$('gacha-gens');
   if(!container||!gens)return;
+  let busy=false;
   const tabs=document.createElement('div');
   tabs.id='pkmsvv-mega-gacha-tabs';tabs.className='pkmsvv-mega-gacha-tabs';
   const regular=document.createElement('button'),mega=document.createElement('button');
   for(const el of [regular,mega]){el.type='button';el.className='btn pkmsvv-mega-gacha-tab';}
-  regular.id='pkmsvv-gacha-tab-pokemon';regular.textContent=tr('◉ Pokémon','◉ Pokémon');
+  regular.id='pkmsvv-gacha-tab-pokemon';regular.textContent='◉ Pokémon';
   mega.id='pkmsvv-gacha-tab-mega';mega.textContent=tr('✧ Tiến hóa Mega','✧ Mega Evolution');
   tabs.append(regular,mega);container.insertBefore(tabs,gens);
   const panel=document.createElement('div');panel.id='pkmsvv-mega-gacha-panel';
   panel.className='pkmsvv-mega-gacha-panel';panel.hidden=true;
-  panel.innerHTML='<div class="pkmsvv-mega-gacha-machine" aria-hidden="true"><div class="pkmsvv-mega-gacha-gem">✧</div>'+
-   '<div class="pkmsvv-mega-gacha-plate">MEGA</div></div>'+
+  panel.innerHTML='<div class="pkmsvv-mega-gacha-machine">'+
+   '<div class="pkmsvv-mega-gacha-plate">MEGA STONE</div>'+
+   '<div id="pkmsvv-mega-gacha-preview" class="pkmsvv-mega-gacha-preview" aria-label="Mega Stone"></div>'+
+   '<div class="pkmsvv-mega-gacha-machine-hint">✦ '+tr('Mỗi lần quay, một viên đá!','One stone per pull!')+'</div></div>'+
    '<div class="pkmsvv-mega-gacha-data"><h3 id="pkmsvv-mega-gacha-heading"></h3>'+
    '<p id="pkmsvv-mega-gacha-balance"></p><p id="pkmsvv-mega-gacha-pity"></p>'+
-   '<p id="pkmsvv-mega-gacha-odds"></p><p class="pkmsvv-mega-refund">Trùng Mega thường: +50 Điểm Arena · Trùng Mega huyền thoại: +200 Điểm Arena</p><button class="btn gold" id="pkmsvv-mega-gacha-pull" type="button"></button>'+
+   '<p id="pkmsvv-mega-gacha-odds"></p>'+
+   '<p class="pkmsvv-mega-refund">'+tr('Trùng Mega thường: +50 Điểm Arena · Trùng Mega huyền thoại: +200 Điểm Arena',
+    'Normal duplicate: +50 Arena Points · Legendary duplicate: +200 Arena Points')+'</p>'+
+   '<button class="btn gold" id="pkmsvv-mega-gacha-pull" type="button" data-sfx="none"></button>'+
    '<div id="pkmsvv-mega-gacha-result" role="status" aria-live="polite"></div>'+
    '<p id="pkmsvv-mega-gacha-note" class="note"></p></div>';
   container.insertBefore(panel,gens);
+  const sample=formCatalog().filter(f=>f.stoneKey);
+  const preview=$('pkmsvv-mega-gacha-preview');
+  for(const f of [sample[0],sample[Math.floor(sample.length/3)],sample[Math.floor(sample.length*2/3)]]){
+   if(!f)continue;
+   const art=stoneIcon(f.stoneKey,64);
+   art.title=f.stone||f.name;
+   preview.append(art);
+  }
   function show(mode){
+   if(busy)return;
    const isMega=mode==='mega';screen.classList.toggle('pkmsvv-mega-gacha-mode',isMega);
    panel.hidden=!isMega;regular.classList.toggle('on',!isMega);mega.classList.toggle('on',isMega);
    if(isMega)refresh();
@@ -133,27 +167,87 @@ G.PKMSVVMegaGacha=(()=>{
     tr('Mega thường 98,5% · Mega huyền thoại 1,5% · Bảo hiểm lượt thứ 30.',
        'Normal Mega 98.5% · Legendary Mega 1.5% · Guaranteed by pull 30.');
    const btn=$('pkmsvv-mega-gacha-pull');
-   btn.textContent=tr('Quay Mega · 100 Điểm Arena','Mega Draw · 100 Arena Points');
-   btn.disabled=!canPull(save);
+   btn.textContent=tr('🎰 Quay Mega · 100 Điểm Arena','🎰 Mega Spin · 100 Arena Points');
+   btn.disabled=busy||!canPull(save);
    $('pkmsvv-mega-gacha-note').textContent=!save.pkmsvvChapter7Seen?
     tr('🔒 Đánh bại Champion đầu tiên ở Chương 8 để mở máy quay Mega.',
        '🔒 Defeat your first Champion in Chapter 8 to unlock Mega Gacha.'):
     tr('Thắng Champion lần đầu từng vùng: +100 điểm. Vô địch Arena: +40 lần đầu / +20 lần sau. Mega huyền thoại vẫn cần mở cốt truyện riêng.',
        'First Champion win per region: +100. Arena win: +40 first / +20 repeat. Legendary Mega still needs its own storyline.');
   }
+  function revealStone(root,r){
+   root.replaceChildren();
+   const card=document.createElement('div');
+   card.className='pkmsvv-mega-reveal-card'+(r.legendary?' is-legend':'');
+   const heading=document.createElement('strong');
+   heading.textContent=r.legendary?tr('✦ MEGA HUYỀN THOẠI!','✦ LEGENDARY MEGA!'):
+    tr('✦ NHẬN ĐƯỢC MEGA STONE!','✦ MEGA STONE OBTAINED!');
+   const art=stoneIcon(r.stoneKey,112);
+   art.setAttribute('aria-label',r.stone||r.name);
+   const label=document.createElement('h3');label.textContent=r.stone||r.name;
+   const detail=document.createElement('p');
+   detail.textContent=r.duplicate?
+    tr('Đã sở hữu · Hoàn +','Duplicate · Refund +')+r.refund+' '+tr('Điểm Arena','Arena Points'):
+    tr('Đã thêm vào bộ sưu tập Mega Stone.','Added to your Mega Stone collection.');
+   card.append(heading,art,label,detail);root.append(card);
+   G.Audio?.sfx?.(r.legendary?'legend':'reveal',{rarity:r.legendary?5:3});
+  }
+  // Exactly the original Pokémon Gacha's animated 3-reel slot machine,
+  // including lever, staggered stopping, particles and sound. The stone
+  // outcome is already saved before animation, so closing cannot reroll it.
+  async function showSpin(r){
+   const layer=document.createElement('div');layer.id='pkmsvv-mega-spin-fx';
+   layer.className='pkmsvv-mega-spin-fx';
+   layer.setAttribute('role','dialog');
+   layer.setAttribute('aria-modal','true');
+   layer.setAttribute('aria-label',tr('Quay Mega Stone','Mega Stone spin'));
+   const stage=document.createElement('section');stage.className='pkmsvv-mega-spin-stage';
+   const title=document.createElement('h2');title.textContent=tr('🎰 QUAY MEGA STONE','🎰 MEGA STONE SPIN');
+   const canvas=document.createElement('canvas');canvas.id='pkmsvv-mega-spin-slot';
+   canvas.width=176;canvas.height=170;
+   canvas.title=tr('Chạm để tăng tốc','Tap to speed up');
+   const hint=document.createElement('p');hint.className='pkmsvv-mega-spin-hint';
+   hint.textContent=tr('Chạm vào máy để tăng tốc vòng quay','Tap the machine to speed up the spin');
+   const result=document.createElement('div');result.id='pkmsvv-mega-spin-result';result.hidden=true;
+   const close=document.createElement('button');close.type='button';close.className='btn gold pkmsvv-mega-spin-close';
+   close.textContent=tr('Tiếp tục','Continue');close.hidden=true;
+   close.onclick=()=>{
+    layer.remove();busy=false;
+    const out=$('pkmsvv-mega-gacha-result');
+    if(out){
+     out.className='pkmsvv-mega-gacha-result'+(r.legendary?' is-legend':'');
+     out.textContent=(r.stone||r.name)+(r.duplicate?
+      tr(' · Trùng, hoàn +',' · Duplicate, refund +')+r.refund+' Arena':'');
+    }
+    refresh();
+   };
+   stage.append(title,canvas,hint,result,close);layer.append(stage);document.body.append(layer);
+   try{
+    if(!globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches&&G.Slots?.play){
+     await G.Slots.play(canvas,[{rarity:r.legendary?5:3,shiny:false}]);
+    }
+   }catch(err){console.warn('Mega slot visual skipped; award already saved',err);}
+   if(!layer.isConnected)return;
+   canvas.hidden=true;hint.hidden=true;result.hidden=false;
+   stage.classList.toggle('is-legend',!!r.legendary);
+   revealStone(result,r);close.hidden=false;close.focus?.();
+  }
   $('pkmsvv-mega-gacha-pull').onclick=()=>{
-   const r=pull();if(!r){G.UI?.toast?.(tr('Chưa đủ điều kiện hoặc Điểm Arena.','Requirements or Arena Points missing.'));refresh();return;}
-   const out=$('pkmsvv-mega-gacha-result');
-   out.className='pkmsvv-mega-gacha-result'+(r.legendary?' is-legend':'');
-   out.textContent=(r.legendary?'🌟 ':'✧ ')+(r.stone||r.name)+
-    (r.legendary?tr(' · HUYỀN THOẠI!',' · LEGENDARY!'):'')+
-    (r.duplicate?tr(' · Đã sở hữu, hoàn +',' · Duplicate, refund +')+r.refund+' Điểm Arena':'');
-   G.Audio?.sfx?.('shinyGet');refresh();
+   if(busy)return;
+   busy=true;
+   const r=pull();
+   if(!r){
+    busy=false;G.Audio?.sfx?.('error');
+    G.UI?.toast?.(tr('Chưa đủ điều kiện hoặc Điểm Arena.','Requirements or Arena Points missing.'));
+    refresh();return;
+   }
+   refresh();
+   void showSpin(r).catch(err=>{console.error('Mega Gacha screen failed',err);busy=false;refresh();});
   };
   regular.onclick=()=>show('pokemon');mega.onclick=()=>show('mega');
   const oldOpen=G.GachaUI?.open;
   if(typeof oldOpen==='function')G.GachaUI.open=function(...args){
-   const result=oldOpen.apply(this,args);show('pokemon');return result;
+   const result=oldOpen.apply(this,args);if(!busy)show('pokemon');return result;
   };
   show('pokemon');
  }
