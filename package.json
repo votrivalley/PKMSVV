@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.53",
+  "version": "1.5.54",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.53: PC and Android wiki scroll stability and skill awakening guide",
+  "description": "Pokémon Chuyển Sinh v1.5.54: Android Berry offline AI mode and Memories return-to-menu hotfix",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
