@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.67",
+  "version": "1.5.68",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.66: Berry tree enemy targeting, 4s revival, eight-skill forget picker, mobile competitive multitouch",
+  "description": "Pokémon Chuyển Sinh v1.5.68: Mega HUD restored, readable Berry shop, realtime Solo levelups and cross-mode Fusion",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
