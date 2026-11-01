@@ -378,3 +378,118 @@ test('Champion opens after 4m with bosses at 1m30 and 3m; later rounds at 1m30',
  lib.update(15);
  assert.equal(lib.stage,'fight');
 });
+
+
+test('All ten Crown venues use distinct native region biomes and an elite final Champion with rising HP',()=>{
+ const {lib,G,save,get}=setup();
+ const book=lib.ledger(save);
+ for(const [name] of lib.REGIONS)book.seals[name]=true; // QA route; not a new game save or reward
+ let prevFinalHp=0,prevFinalDmg=0;
+ for(let region=0;region<10;region++){
+  lib.open();
+  const buttons=get('pkmsvv-champion-regions').children;
+  assert.equal(buttons.length,10);
+  assert.equal(buttons[region].disabled,false);
+  buttons[region].onclick();
+  assert.equal(lib.start(),true);
+  for(let round=0;round<4;round++){
+   assert.equal(lib.nextDuel(),true);
+   assert.equal(G.World.arena.type,lib.REGION_THEMES[region],
+    'each region needs its own actual game terrain (not only text labels)');
+   if(round<3){
+    G.EnemyMgr.last.dead=true;lib.update(.1);
+   }
+  }
+  const enemy=G.EnemyMgr.last;
+  assert.equal(lib.opponent.tier,'elite','regional Champion must never randomly be novice');
+  assert.equal(enemy._pkmsvvChampionMegaEligible,true,'Kanto through Sky Pillar must all transform');
+  assert.ok(enemy.maxHp>prevFinalHp,
+   'final Champion HP must increase with region difficulty at region '+region);
+  assert.ok(enemy.dmg>prevFinalDmg,
+   'final Champion damage must increase with region difficulty at region '+region);
+  prevFinalHp=enemy.maxHp;prevFinalDmg=enemy.dmg;
+  lib.exit();
+ }
+ const engine=read('vendor/pokesurvivor/js/world/tiles.js');
+ for(const theme of lib.REGION_THEMES)
+  assert.match(engine,new RegExp('\\\\b'+theme+':\\\\s*\\\\{'),'native arena biome missing '+theme);
+});
+test('Champion overkill at 100% HP enters Mega immediately before death, preserves boss and withholds title/loot',()=>{
+ const {lib,G,save}=setup();
+ lib.start();
+ for(let round=0;round<3;round++){lib.nextDuel();G.EnemyMgr.last.dead=true;lib.update(.1);}
+ lib.nextDuel();
+ const enemy=G.EnemyMgr.last;
+ assert.equal(enemy._pkmsvvMegaPhase2,false);
+ const beforeHP=enemy.maxHp,damage=enemy.dmg;
+ enemy.hurt(beforeHP*100);
+ assert.equal(enemy.dead,false,'fatal first-phase hit cannot cause premature death');
+ assert.equal(enemy._pkmsvvMegaPhase2,true,'lethal hit must trigger Mega before EnemyMgr removes target');
+ assert.equal(enemy.maxHp,beforeHP*2);
+ assert.equal(enemy.hp,enemy.maxHp,'full health restored for phase 2');
+ assert.equal(enemy.dmg,damage*2);
+ assert.equal(enemy.loot,undefined,'the transition is not a fake boss kill/drop');
+ assert.equal(lib.stage,'fight');
+ assert.equal(lib.active,true);
+ assert.equal(save.arenas?.pkmChampion?.seals?.Kanto,undefined);
+ const beforeSecond=enemy.maxHp;
+ enemy.hurt(enemy.hp*.4);
+ assert.equal(enemy.maxHp,beforeSecond,'phase 2 must not retrigger Mega');
+ assert.equal(enemy.dead,false);
+ enemy.hurt(enemy.hp+999);
+ assert.equal(enemy.dead,true);
+ assert.equal(enemy.loot,1,'the genuine second kill should happen only once');
+ lib.update(.1);
+ assert.equal(save.arenas?.pkmChampion?.seals?.Kanto,true);
+ assert.equal(lib.active,false);
+});
+test('Nonlethal crossing of exactly 50% triggers phase 2, resets timer, speeds up real boss casts',()=>{
+ const {lib,G}=setup();
+ lib.start();
+ for(let round=0;round<3;round++){lib.nextDuel();G.EnemyMgr.last.dead=true;lib.update(.1);}
+ lib.nextDuel();
+ const enemy=G.EnemyMgr.last;
+ const hp=enemy.maxHp,oldSpd=enemy.spd;
+ lib.update(140);
+ enemy.hurt(Math.ceil(hp*.5));
+ assert.equal(enemy._pkmsvvMegaPhase2,true);
+ assert.equal(enemy.hp,enemy.maxHp);
+ assert.equal(enemy.spd<oldSpd*1.5,true,'Mega cannot have impossible 2× movement on mobile');
+ assert.equal(enemy.ai.fury,true,'phase 2 fires enhanced existing boss attacks');
+ enemy.bossEnd();
+ assert.ok(enemy.ai.cd<2,'actual bossEnd cooldown reduced, not just decorative shotCd');
+ lib.update(5);
+ assert.equal(lib.stage,'fight','phase 2 has its own battle timer');
+});
+test('Champion title cannot be earned by timeout ratio while either boss phase remains alive',()=>{
+ const {lib,G,save}=setup();
+ lib.start();
+ for(let round=0;round<3;round++){lib.nextDuel();G.EnemyMgr.last.dead=true;lib.update(.1);}
+ lib.nextDuel();
+ const enemy=G.EnemyMgr.last;
+ enemy.hp=enemy.maxHp*.1;
+ lib.update(lib.CHAMPION_PHASE_SECONDS+.1);
+ assert.equal(lib.active,false);
+ assert.equal(enemy.loot,undefined,'timeout never silently kills a fake Champion');
+ assert.equal(save.arenas?.pkmChampion?.seals?.Kanto,undefined);
+});
+test('Champion Mega can show a distinct phase 2 glow without inventing missing official sprites',()=>{
+ const {lib,G}=setup();
+ lib.start();
+ for(let round=0;round<3;round++){lib.nextDuel();G.EnemyMgr.last.dead=true;lib.update(.1);}
+ lib.nextDuel();
+ const enemy=G.EnemyMgr.last;
+ enemy.hurt(enemy.hp*.51);
+ let rings=0;
+ const ctx={save(){},restore(){},beginPath(){},ellipse(){rings++},stroke(){}};
+ enemy.draw(ctx);
+ assert.ok(rings>0,'unready art gets authentic combat state + independent aura, not a fake image');
+ const source=read('src/pkmsvv-champion-arena.js');
+ assert.match(source,/all 10|Cả 10 Champion/);
+ assert.doesNotMatch(source,/remaining 9 Champions|9 Champion còn lại/);
+});
+test('November seasonal event never paints over scored Arena or Rayquaza',()=>{
+ const season=read('scripts/patch-season-event.cjs');
+ assert.match(season,/G\\.PKMSVVChampionArena\\?\\.active\\?'champion'/);
+ assert.match(season,/G\\.PKMSVVArenaSolo\\?\\.active\\?'arena-solo'/);
+});
