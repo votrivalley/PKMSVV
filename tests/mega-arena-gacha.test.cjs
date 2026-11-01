@@ -127,3 +127,41 @@ test('Fresh earned cup never triggers duplicate backfill in Mega tab',()=>{
  assert.equal(gacha.syncLegacyArena(save),0);
  assert.equal(gacha.balance(save),40);
 });
+
+test('All 92 named Mega Stones have correct sprite offsets in the 16-column Showdown atlas',()=>{
+ const source=JSON.parse(read('src/mega-stone-sprite-map.json'));
+ const forms=JSON.parse(read('data/mega-source-catalog.json')).forms;
+ const keys=[...new Set(forms.filter(f=>f.megaStone).map(f=>f.megaStone.toLowerCase().replace(/[^a-z0-9]/g,'')))];
+ assert.equal(keys.length,92);
+ assert.equal(source.columns,16);
+ assert.equal(source.tileSize,24);
+ for(const k of keys)assert.ok(Number.isInteger(source.icons[k])&&source.icons[k]>=0,'missing stone art '+k);
+ const builder=read('scripts/install-mega-stone-icons.cjs');
+ assert.match(builder,/itemicons-sheet\.png/);
+ assert.match(builder,/requiredHeight/);
+ assert.match(read('scripts/patch-champion-arena.cjs'),/pkmsvv-mega-item-map\.js/);
+});
+test('Mega Gacha reuses the real Pokémon machine, then reveals the drawn item without rerolling',()=>{
+ const script=read('src/pkmsvv-mega-gacha.js');
+ assert.match(script,/G\.Slots\.play\(canvas,\[\{rarity:r\.legendary\?5:3,shiny:false\}\]\)/);
+ assert.match(script,/function revealStone\(root,r\)/);
+ assert.match(script,/stoneIcon\(r\.stoneKey,112\)/);
+ assert.match(script,/if\(busy\)return;/);
+ assert.match(script,/const r=pull\(\)/);
+ assert.match(script,/role','dialog/);
+ const css=read('src/pkmsvv-mega-gacha.css');
+ assert.match(css,/itemicons-sheet\.png/);
+ assert.match(css,/image-rendering:pixelated/);
+ assert.match(css,/prefers-reduced-motion/);
+});
+test('Built Mega assets are offline and ship with PC, Web and signed Android',t=>{
+ const game=path.join(root,'vendor','pokesurvivor');
+ const icon=path.join(game,'assets','mega-items','itemicons-sheet.png');
+ const map=path.join(game,'js','data','pkmsvv-mega-item-map.js');
+ if(!fs.existsSync(game)){t.skip('Run npm run prepare:game first');return;}
+ assert.ok(fs.existsSync(icon),'Mega Stone sprite atlas must be bundled for offline runtime');
+ assert.ok(fs.statSync(icon).size>30000);
+ assert.ok(fs.readFileSync(map,'utf8').includes('charizarditex'));
+ const html=fs.readFileSync(path.join(game,'dev.html'),'utf8');
+ assert.match(html,/js\/data\/pkmsvv-mega-item-map\.js/);
+});
