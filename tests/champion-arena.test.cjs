@@ -316,6 +316,9 @@ test('Final win does not unlock a Mega Stone without Gacha',()=>{
  for(let i=0;i<4;i++){
   enterDuel(lib);G.EnemyMgr.last.dead=true;lib.update(.1);
   if(i===3){assert.equal(save.arenas?.pkmChampion?.seals?.Kanto,undefined);
+   assert.equal(lib.stage,'mega-transition');
+   lib.update(1);
+   assert.equal(G.EnemyMgr.last._pkmsvvMegaPhase2,true);
    G.EnemyMgr.last.dead=true;lib.update(.1);}
  }
  assert.equal(save.pkmsvvChapter7Seen,true);
