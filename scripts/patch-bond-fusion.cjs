@@ -68,3 +68,34 @@ fs.appendFileSync(path.join(base,'css/style.css'),String.raw`
  border-top:1px solid #3d7f86;border-bottom:1px solid #3d7f86;padding:7px 2px}
 .pkmsvv-fusion-all-pairs>.pkmsvv-fusion-guide-pair{padding:6px 7px;border:1px solid #598d94;
  background:#113744;border-radius:7px;min-width:0}`+'\n');
+
+fs.appendFileSync(path.join(base,'css/style.css'),String.raw`
+/* The engine's genuine level-up cards (including rerolls and LAN personal cards). */
+#cards .pkmsvv-fusion-card-hint{
+ display:block;clear:both;width:fit-content;max-width:100%;box-sizing:border-box;
+ margin-top:5px;padding:4px 7px;border-radius:6px;border:1px solid #63bbb4;
+ background:#133d46;color:#edfff8;font:800 11px/1.4 "Segoe UI",sans-serif;
+ overflow-wrap:anywhere;white-space:normal;text-shadow:none;
+}
+#cards .pkmsvv-fusion-card-hint.is-ready{
+ background:#4f3b18;color:#fff0a7;border-color:#e9c76c;
+ box-shadow:0 0 0 1px #f9d78733;
+}
+#cards .pkmsvv-fusion-card-hint.is-offered{
+ border-color:#bba5de;background:#332b51;color:#f4e5ff;
+}
+#pkmsvv-fusion-action.has-new-match:not(:disabled){
+ border-color:#ffe87c;color:#fff8b6;
+ box-shadow:0 0 0 3px #e2ca5a55,0 0 18px #ffe27db8;
+ animation:pkmsvv-fusion-reminder 1.5s ease-in-out infinite;
+}
+@keyframes pkmsvv-fusion-reminder{
+ 0%,100%{filter:brightness(1)}
+ 50%{filter:brightness(1.22)}
+}
+@media (prefers-reduced-motion:reduce){
+ #pkmsvv-fusion-action.has-new-match{animation:none!important}
+}
+@media(orientation:landscape) and (max-height:460px){
+ #cards .pkmsvv-fusion-card-hint{font-size:10px;margin-top:3px;padding:2px 5px}
+}`+'\n');
