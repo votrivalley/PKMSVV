@@ -75,11 +75,19 @@ replace('js/core/db.js',
  '        crown.rewards[region]={rank,tickets:Math.max(Number(a?.tickets)||0,Number(b?.tickets)||0)};}\n'+
  '    }\n'+
  '    r.arenas.pkmChampion=crown;');
-// Capture a genuine group-run completion before the upstream endRun closes Co-op.
-// The quit path exits Co-op before endRun; it cannot count as a completed mode.
+// An endless Co-op Survival session can be ended by the player after genuine
+// team play. Remember the room BEFORE quitRun() calls Coop.leave(); otherwise
+// endRun() sees no active room and fails to award 1/2 despite 10+ minutes played.
+// Short (<60s) quit attempts still do not qualify; Royale/Egg Rush require results.
+replace('js/game.js',
+ '  function quitRun() {\n    if (G.Coop.active) G.Coop.leave();',
+ "  let pkmsvvQuitMode=null;\n  function quitRun() {\n"+
+ "    pkmsvvQuitMode=G.Coop.active?G.Social?.room?.mode:null;\n"+
+ "    if (G.Coop.active) G.Coop.leave();");
 replace('js/game.js',
  '    const coop = !!pl.uid;                    // sólo las partidas en grupo le ponen uid',
- '    const pkmsvvFinishedMode=G.Coop.active?G.Social?.room?.mode:null;\n'+
+ '    const pkmsvvFinishedMode=(G.Coop.active?G.Social?.room?.mode:null)||pkmsvvQuitMode;\n'+
+ '    pkmsvvQuitMode=null;\n'+
  '    const coop = !!pl.uid;                    // sólo las partidas en grupo le ponen uid');
 replace('js/game.js',
  "    G.DB.commit('run');",
@@ -87,6 +95,29 @@ replace('js/game.js',
  "      result:pkmsvvFinishedMode==='royale'?G.Royale?.outcome:\n"+
  "             pkmsvvFinishedMode==='eggrush'?G.EggRush?.outcome:null});\n"+
  "    G.DB.commit('run');");
+// Visible, persistent result beside the real end-of-run statistics.
+replace('js/game.js',
+ '    }, () => { pl = null; G.Flow.afterRun(); });\n  }',
+ `    }, () => { pl = null; G.Flow.afterRun(); });
+    if(pkmsvvFinishedMode==='coop'){
+      const box=document.getElementById('over-stats');
+      const info=G.PKMSVVStory?.multiplayerProgress?.();
+      const counted=G.DB.save?.pkmsvvMultiplayerDone?.coop===true;
+      if(box){
+        const notice=document.createElement('div');
+        notice.style.cssText='grid-column:1/-1;padding:10px;border:2px solid #e4c56b;border-radius:9px;background:#183746;color:#f9e7ac';
+        const enough=time>=60;
+        notice.textContent=counted?
+          '✅ Sống Sót đã được ghi nhận · '+(info?.count||1)+'/2 để mở Chương 6 Berry':
+          !G.DB.save?.pkmsvvChapter3Seen?
+           '🔒 Hãy hoàn thành Chương 4 trước khi nhận tiến độ Sống Sót':
+          !enough?'Sống Sót: cần chơi tối thiểu 60 giây để tính nhiệm vụ':
+          'Sống Sót chưa được ghi nhận · vui lòng kiểm tra lại tiến trình';
+        box.prepend(notice);
+      }
+    }
+  }`);
+
 // No other js/game.js rewrites: runtime wrappers handle Spawner/Rift/Judgment/EnemyMgr.
 fs.appendFileSync(path.join(game,'css','style.css'),'\n'+fs.readFileSync(path.join(root,'src','pkmsvv-champion-arena.css'),'utf8')+'\n'+
  fs.readFileSync(path.join(root,'src','pkmsvv-mega-gacha.css'),'utf8')+'\n'+
