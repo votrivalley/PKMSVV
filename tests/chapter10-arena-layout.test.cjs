@@ -30,3 +30,21 @@ test('Sky Rayquaza boss remains playable, story replay is only in Memories',()=>
  assert.doesNotMatch(ui,/replay\?\.\('chapter10'\)/);
  assert.match(ui,/function startSky\(\)/);
 });
+
+
+test('Android Memories fits landscape viewport, supports scroll and has visible escape routes',()=>{
+ const story=read('src/pkmsvv-story.js'),css=read('src/pkmsvv-story.css');
+ assert.match(story,/pkmsvv-memory-head/);
+ assert.match(story,/pkmsvv-memory-scroll/);
+ assert.match(story,/pkmsvv-memory-close/);
+ assert.match(story,/data-close="1"/);
+ assert.match(story,/scroll\.addEventListener\('touchmove'/);
+ assert.match(story,/document\.addEventListener\('backbutton',onBack,true\)/);
+ assert.match(story,/document\.addEventListener\('keydown',onKey,true\)/);
+ assert.match(story,/choices\.querySelectorAll\('\[data-close\]'\)/);
+ assert.match(css,/max-height:100dvh!important/);
+ assert.match(css,/overflow-y:auto!important/);
+ assert.match(css,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+ assert.match(css,/touch-action:pan-y!important/);
+ assert.match(css,/safe-area-inset-bottom/);
+});
