@@ -177,14 +177,12 @@ G.PKMSVVWiki=(()=>{
    [tr('Thức tỉnh kỹ năng','Skill Awakening'),
     tr('Kỹ năng được mở và nâng cấp khi Pokémon lên cấp trong trận. Hãy chọn kỹ năng phù hợp để phát huy sức mạnh; các nâng cấp vĩnh viễn vẫn được giữ nguyên.',
        'Unlock and improve skills as your Pokémon levels up during a run. Choose skills that fit your play style; permanent upgrades remain intact.')],
-   [tr('🔗 Bond / Fusion hai kỹ năng','🔗 Two-Move Bond Fusion'),
-    tr('FUSION CHÍNH THỨC · SOLO PVE: Có 5 công thức. Cả hai chiêu phải đạt cấp tối đa và đã tiến hóa; chỉ ghép 1 lần mỗi trận. Co-op, AI, Sống Còn, Tranh Trứng và Champion hiện giữ Bond gốc.',
-       'FUSION ENABLED · SOLO PVE: Five recipes. Both moves must be fully leveled and evolved; one Fusion per run. Co-op, AI, Royale, Egg Rush and Champion keep original Bond.')+
-     '  '+(G.PKMSVVFusionPilot?.RECIPES||[]).map(r=>{
-       const name=tr(r.vi,r.en);
-       const moves=r.ids.map(id=>G.T(G.Moves?.BY_ID?.[id]?.name||id,'move')).join(' + ');
-       return name+': '+moves;
-     }).join(' · ')],
+   [tr('🔗 Bond / Fusion tự do','🔗 Free Bond Fusion'),
+    tr('POKÉSURVIVOR GỐC: Bất kỳ hai chiêu khác nhau đã học đều có thể Liên Kết, không cần đúng công thức, không bắt buộc tiến hóa. Nhóm tối đa 4 chiêu, mỗi chiêu giữ hồi chiêu riêng. SVV cho phép một Fusion miễn phí mỗi trận; hạ huyền thoại ở khe nứt để kiếm thêm Bond. Áp dụng ở Sống Sót, Co-op, Sống Còn, Tranh Trứng, Arena và Champion. Năm cặp bên dưới chỉ là GỢI Ý, không mở chiêu mới.',
+       'ORIGINAL BOND: Any two distinct learned moves can link, without prescribed recipes or evolution. Groups hold up to 4 moves, each with separate cooldowns. SVV grants one free Fusion per match; Rift legendaries award more Bonds. Available in Survival, Co-op, Royale, Egg Rush, Arena and Champion. The five pairs below are SUGGESTIONS, not new moves.')+
+     '  '+tr('Kho kỹ năng gốc: ','Original move catalog: ')+(G.PKMSVVFusionPilot?.learnedCount?.()||G.Moves?.ALL?.length||0)+
+     tr(' chiêu · Các cặp hai chiêu có thể ghép: ',' moves · Possible two-move combinations: ')+
+     (G.PKMSVVFusionPilot?.potentialPairs?.()||0)],
    [tr('✨ Sương Ký Ức · Sự kiện mùa','✨ Memory Mist · Seasonal Event'),
     tr('1–30/11/2026 (UTC): ba cảnh quan Lá Thu, Sương Lam và Đom Đóm chọn theo seed trận. Chỉ đổi trang trí hình ảnh ở Solo PvE và Co-op Sống Sót; không thêm chỉ số, boss, Pokémon hoặc tiền.',
        'November 1–30, 2026 (UTC): Amber Leaves, Blue Mist and Firefly Dusk visuals selected by run seed. Decoration only in solo PvE and Co-op Survival; no stats, bosses, Pokémon or currency.')]
@@ -207,7 +205,7 @@ G.PKMSVVWiki=(()=>{
        const label=document.createElement('span');label.textContent=G.T?.(G.Moves?.BY_ID?.[id]?.name||id,'move')||id;
        pair.append(icon,label);row.append(pair);
       }
-      const result=document.createElement('strong');result.textContent=' ⇒ '+tr(formula.vi,formula.en);row.append(result);recipes.append(row);
+      const result=document.createElement('strong');result.textContent=' · '+tr(formula.vi,formula.en);row.append(result);recipes.append(row);
      }
      p.append(recipes);
     }
