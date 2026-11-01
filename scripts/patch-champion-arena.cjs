@@ -85,10 +85,10 @@ replace('js/game.js',
  "    pkmsvvQuitMode=pkmsvvActiveMode||(G.Coop.active?G.Social?.room?.mode:null);\n"+
  "    if (G.Coop.active) G.Coop.leave();");
 replace('js/game.js',
- '    const mon = G.DEX_BY[save.partner];',
+ '  function startRun(coop = null) {',
+ "  function startRun(coop = null) {\n"+
  "    pkmsvvManualExit=false;pkmsvvQuitMode=null;\n"+
- "    pkmsvvActiveMode=coop?(G.Social?.room?.mode||coop.mode||G.LanBus?.room?.mode||null):null;\n"+
- "    const mon = G.DEX_BY[save.partner];");
+ "    pkmsvvActiveMode=coop?(G.Social?.room?.mode||coop.mode||G.LanBus?.room?.mode||null):null;");
 replace('js/game.js',
  '    const coop = !!pl.uid;                    // sólo las partidas en grupo le ponen uid',
  '    const pkmsvvFinishedMode=(G.Coop.active?G.Social?.room?.mode:null)||pkmsvvActiveMode||pkmsvvQuitMode||\n'+
