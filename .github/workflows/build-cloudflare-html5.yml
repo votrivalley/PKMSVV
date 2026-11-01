@@ -54,6 +54,11 @@ on:
       - 'tests/dex-header-actions.test.cjs'
       - 'tests/starter-onboarding-browser.cjs'
       - 'src/pkmsvv-story.js'
+      - 'scripts/patch-double-items.cjs'
+      - 'src/pkmsvv-berry.js'
+      - 'src/pkmsvv-berry.css'
+      - 'tests/berry-ux.test.cjs'
+      - 'tests/double-item-choice.test.cjs'
       - 'scripts/patch-story.cjs'
       - 'scripts/prepare-ios.cjs'
       - 'src/cloudflare/**'
@@ -96,6 +101,8 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Build complete Cloudflare HTML5 game
         run: npm run prepare:cloudflare
+      - name: Phase A+B — Berry HUD and safe item/skill/Bond queue
+        run: npm run test:berry:ux && npm run test:choice:queue
       - name: Validate 96 Mega encyclopedia UI and real unlock gating
         run: npm run test:mega:phase2
       - name: Verify Shiny Mega artwork and identity in Web package
