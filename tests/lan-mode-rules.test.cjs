@@ -14,20 +14,20 @@ function setup(mode='eggrush'){
  G.EggRush.begin({mode,seed:123,members:players.map(p=>({...p,name:p.uid,dex:25}))});
  return{G,players,events,step:(dt,t)=>G.EggRush.update(dt,t,players,()=>{throw Error('unexpected finish');})};
 }
-test('Egg Rush continues spawning after two eggs; each minute adds exactly one shared nest',()=>{
- const h=setup();h.step(.01,59.99);assert.equal(h.G.EggRush.nests.length,0);
+test('Egg Rush continues spawning after two eggs; every 30 seconds adds a shared nest',()=>{
+ const h=setup();h.step(.01,29.99);assert.equal(h.G.EggRush.nests.length,0);
  for(let minute=1;minute<=10;minute++){
-  h.step(.01,minute*60);assert.equal(h.G.EggRush.nests.length,minute);
-  h.step(.01,minute*60+.1);assert.equal(h.G.EggRush.nests.length,minute);
+  h.step(.01,minute*30);assert.equal(h.G.EggRush.nests.length,minute);
+  h.step(.01,minute*30+.1);assert.equal(h.G.EggRush.nests.length,minute);
  }
  assert.equal(h.events.filter(e=>e[1]==='spawn').length,10);
  assert.ok(h.G.EggRush.objective(h.players[0]),'a shared objective is available for guide arrows');
 });
-test('Egg Rush revives host and AI at 8 seconds for unlimited deaths',()=>{
+test('Egg Rush revives host and AI at 2 seconds for unlimited deaths',()=>{
  const h=setup();
  for(let death=0;death<6;death++){
   for(const p of h.players){p.dead=true;p.hp=0;}
-  h.step(7.9,10);assert.equal(h.players.every(p=>p.dead),true);
+  h.step(1.9,10);assert.equal(h.players.every(p=>p.dead),true);
   h.step(.11,10);assert.equal(h.players.every(p=>!p.dead),true);
   for(const p of h.players)assert.equal(p.hp,50);
  }
