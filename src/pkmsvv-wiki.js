@@ -178,11 +178,8 @@ G.PKMSVVWiki=(()=>{
     tr('Kỹ năng được mở và nâng cấp khi Pokémon lên cấp trong trận. Hãy chọn kỹ năng phù hợp để phát huy sức mạnh; các nâng cấp vĩnh viễn vẫn được giữ nguyên.',
        'Unlock and improve skills as your Pokémon levels up during a run. Choose skills that fit your play style; permanent upgrades remain intact.')],
    [tr('🔗 Bond / Fusion tự do','🔗 Free Bond Fusion'),
-    tr('POKÉSURVIVOR GỐC: Bất kỳ hai chiêu khác nhau đã học đều có thể Liên Kết, không cần đúng công thức, không bắt buộc tiến hóa. Nhóm tối đa 4 chiêu, mỗi chiêu giữ hồi chiêu riêng. SVV cho phép một Fusion miễn phí mỗi trận; hạ huyền thoại ở khe nứt để kiếm thêm Bond. Áp dụng ở Sống Sót, Co-op, Sống Còn, Tranh Trứng, Arena và Champion. Mười cặp bên dưới chỉ là GỢI Ý, không mở chiêu mới. Khi chọn skill mới, thẻ có dấu 🔗 nếu ghép được với chiêu đang sở hữu; có hai thẻ tương hợp cùng xuất hiện vẫn chỉ được chọn một.',
-       'ORIGINAL BOND: Any two distinct learned moves can link, without prescribed recipes or evolution. Groups hold up to 4 moves, each with separate cooldowns. SVV grants one free Fusion per match; Rift legendaries award more Bonds. Available in Survival, Co-op, Royale, Egg Rush, Arena and Champion. The ten pairs below are SUGGESTIONS, not new moves. Level-up skill cards display 🔗 for a matching owned move; two matching offers still mean you can only choose one.')+
-     '  '+tr('Kho kỹ năng gốc: ','Original move catalog: ')+(G.PKMSVVFusionPilot?.learnedCount?.()||G.Moves?.ALL?.length||0)+
-     tr(' chiêu · Các cặp hai chiêu có thể ghép: ',' moves · Possible two-move combinations: ')+
-     (G.PKMSVVFusionPilot?.potentialPairs?.()||0)],
+    tr('Ghép 2 kỹ năng đã học bất kỳ. Miễn phí 1 lần/trận; kiếm thêm Bond từ huyền thoại khe nứt. Tối đa 4 kỹ năng/nhóm, hồi chiêu riêng. Dấu 🔗 báo kỹ năng có thể ghép. 10 cặp dưới đây là gợi ý.',
+       'Link any 2 learned moves. One free Fusion per match; earn more Bonds from Rift legendaries. Up to 4 moves per group, each with its own cooldown. 🔗 marks compatible moves. The 10 pairs below are suggestions.')],
    [tr('✨ Sương Ký Ức · Sự kiện mùa','✨ Memory Mist · Seasonal Event'),
     tr('1–30/11/2026 (UTC): ba cảnh quan Lá Thu, Sương Lam và Đom Đóm chọn theo seed trận. Chỉ đổi trang trí hình ảnh ở Solo PvE và Co-op Sống Sót; không thêm chỉ số, boss, Pokémon hoặc tiền.',
        'November 1–30, 2026 (UTC): Amber Leaves, Blue Mist and Firefly Dusk visuals selected by run seed. Decoration only in solo PvE and Co-op Survival; no stats, bosses, Pokémon or currency.')]
