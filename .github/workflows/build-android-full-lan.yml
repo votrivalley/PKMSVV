@@ -57,6 +57,8 @@ on:
       - 'src/story-art/**'
       - 'tests/chapter10-arena-layout.test.cjs'
       - 'tests/wiki-scroll-regression.test.cjs'
+      - 'tests/android-berry-memory-routing.test.cjs'
+      - 'src/lan/solo-ai-bus.js'
       - 'src/pkmsvv-wiki.js'
       - 'scripts/patch-v15-menu-qa.cjs'
       - 'scripts/patch-story.cjs'
@@ -68,6 +70,7 @@ on:
       - 'tests/local-ui-lan-host-regression.test.cjs'
       - 'tests/android-full-lan.test.cjs'
       - 'tests/coop-platform-browser.cjs'
+      - 'tests/android-berry-memories-browser.cjs'
       - 'tests/competitive-rewards.test.cjs'
       - 'tests/dex-header-actions.test.cjs'
       - 'tests/starter-onboarding-browser.cjs'
@@ -143,7 +146,7 @@ jobs:
       - name: Verify Chapter 1–7 multiplayer and Mega story gates
         run: npm run test:story:gates
       - name: Verify Chapter 1–7 and offline Crown Arena
-        run: npm run test:arena:champion && node --test tests/chapter10-arena-layout.test.cjs tests/berry-rescue.test.cjs tests/wiki-scroll-regression.test.cjs
+        run: npm run test:arena:champion && node --test tests/chapter10-arena-layout.test.cjs tests/berry-rescue.test.cjs tests/wiki-scroll-regression.test.cjs tests/android-berry-memory-routing.test.cjs
       - name: Test Arena Solo 1v1 preparation and AI duel
         run: npm run test:arena:solo
       - name: Verify live Pokémon backdrop and quick Shiny supports
@@ -161,7 +164,9 @@ jobs:
         run: node --test tests/competitive-rewards.test.cjs
       - name: Verify Android packaged menu and all three local AI modes in browser
         shell: bash
-        run: PKMSVV_PLATFORM=android PKMSVV_BROWSER="$(command -v google-chrome)" node tests/coop-platform-browser.cjs
+        run: |
+          PKMSVV_PLATFORM=android PKMSVV_BROWSER="$(command -v google-chrome)" node tests/coop-platform-browser.cjs
+          PKMSVV_PLATFORM=android PKMSVV_BROWSER="$(command -v google-chrome)" node tests/android-berry-memories-browser.cjs
       - name: QA actual Android skip-intro / skip-quiz / starter selection
         shell: bash
         run: PKMSVV_PLATFORM=android PKMSVV_BROWSER="$(command -v google-chrome)" node tests/starter-onboarding-browser.cjs
