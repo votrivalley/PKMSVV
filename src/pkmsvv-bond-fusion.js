@@ -1,7 +1,5 @@
-/* D — Five explicitly curated 2-move Bond recipes. The engine already
- * fuses actual move instances and owns cast/VFX: reuse it without stat changes.
- * Official for a human, offline solo PvE Pokémon; other modes keep
- * their original Bond behavior until network verification and balancing. */
+/* Official Fusion: five two-move recipes across all battle modes.
+ * Player.fuse owns combat casts and VFX; one use per player per match. */
 G.PKMSVVFusionPilot=(()=>{
  const tr=(a,b)=>G.I18n?.lang==='en'?b:a;
  const RECIPES=Object.freeze([
@@ -11,15 +9,12 @@ G.PKMSVVFusionPilot=(()=>{
   {id:'spark-quick',ids:['thunder-shock','quick-attack'],vi:'Điện Quang',en:'Thunder Dash'},
   {id:'mind-tackle',ids:['confusion','tackle'],vi:'Tâm Lực',en:'Psychic Impact'}
  ]);
- const ENABLE_PILOT=true; // official solo PvE Fusion, online and PvP retain standard Bond
+ const ENABLE_PILOT=true; // all modes
  const maxPerRun=1;
  const readyMove=m=>!!(m&&m.evolved===true&&m.def&&
   Number.isFinite(m.lvl)&&m.lvl>=m.def.maxLvl&&G.Moves?.EVO?.[m.id]);
  function pilotEligible(pl){
-  if(!ENABLE_PILOT||!pl||pl.remote||pl.uid||G.Coop?.active||
-   G.Royale?.active||G.EggRush?.active||G.PKMSVVBerryRescue?.active||
-   G.PKMSVVArenaSolo?.active||G.PKMSVVChampionArena?.active||
-   G.Judgment?.cinematic||G.Rift?.inArena)return false;
+  if(!ENABLE_PILOT||!pl||pl.remote||pl.lanBot||pl.dead)return false;
   return true;
  }
  function pairFor(pl){
@@ -65,7 +60,7 @@ G.PKMSVVFusionPilot=(()=>{
     if(root&&list){
      let hint=root.querySelector('.pkmsvv-fusion-pilot-hint');
      if(!hint){hint=document.createElement('p');hint.className='pkmsvv-fusion-pilot-hint';list.before(hint);}
-     hint.textContent=tr('🔗 FUSION chính thức (Solo PvE) · ', '🔗 Fusion (Solo PvE) · ')+
+     hint.textContent=tr('🔗 FUSION · Tất cả chế độ · ', '🔗 Fusion · All modes · ')+
        opt.recipeName+tr(' · Đúng 2 chiêu đã tiến hóa tối đa · 1 lần/trận',
         ' · Exactly 2 fully evolved moves · Once per run');
      hint.hidden=false;
@@ -94,6 +89,59 @@ G.PKMSVVFusionPilot=(()=>{
   };
   show._pkmsvvFusion=true;G.RunUI.showBond=show;return true;
  }
- install();
- return {RECIPES,maxPerRun,pilotEligible,readyMove,pairFor,options,confirm,progress,install};
+  // Battle HUD action above Mystery Orb; competitive modes keep running.
+  let action=null;
+  const competitive=()=>!!(G.Royale?.active||G.EggRush?.active||
+   G.PKMSVVArenaSolo?.active||G.PKMSVVChampionArena?.active||
+   G.PKMSVVBerryRescue?.active);
+  function openFusion(){
+   const p=G.Game?.player,opt=options(p);
+   if(!opt||G.Game?.state!=='playing'||G.UI?.isOpen?.('scr-bond')||
+      G.UI?.isOpen?.('scr-levelup'))return false;
+   const shared=!!(G.Coop?.active&&!competitive());
+   if(shared)G.Coop?.holdStart?.();
+   G.RunUI.showBond(opt,picked=>{
+    try{
+     if(!confirm(p,picked))return;
+     p.bonds=Math.max(1,Number(p.bonds)||0); // Player.fuse consumes a bond
+     const group=p.fuse(picked,opt.group);
+     G.Audio?.sfx?.('legend');G.FX?.ring?.(p.x,p.y,8,130,'#ff8ad8',.8,6);
+     G.UI?.toast?.(tr('🔗 Đã ghép '+group.length+' skill · 1 lần/trận',
+      '🔗 '+group.length+' moves fused · once per match'),2000);
+    }finally{
+     if(shared)G.Coop?.holdEnd?.();
+     sync();
+    }
+   });
+   return true;
+  }
+  function sync(){
+   if(!action)return;
+   const p=G.Game?.player;
+   const visible=!!(p&&!p.dead&&G.Game?.state==='playing'&&
+     !G.UI?.isOpen?.('scr-pause')&&!G.UI?.isOpen?.('scr-menu'));
+   action.hidden=!visible;
+   if(!visible)return;
+   const used=Number(p._pkmsvvFusionUsed||0)>=maxPerRun,ready=!!options(p);
+   action.disabled=used||!ready||!!G.UI?.isOpen?.('scr-levelup')||
+     !!G.UI?.isOpen?.('scr-bond')||!!G.UI?.isOpen?.('scr-item');
+   action.textContent=used?'FUSION ✓':'🔗 FUSION';
+   action.title=used?tr('Đã dùng Fusion trận này','Fusion used this match'):
+    ready?tr('Ghép hai skill · chỉ một lần mỗi trận','Fuse two moves once per match'):
+    tr('Cần hai skill đúng công thức đã tiến hóa tối đa',
+       'Needs two max-evolved recipe moves');
+  }
+  function mount(){
+   if(action||!document.body?.appendChild)return;
+   action=document.createElement('button');action.id='pkmsvv-fusion-action';
+   action.type='button';action.textContent='🔗 FUSION';action.hidden=true;
+   action.addEventListener('click',openFusion);document.body.append(action);
+   sync();if(typeof setInterval==='function')setInterval(sync,250);
+  }
+  install();
+  if(document.body?.appendChild)mount();
+  else if(typeof document.addEventListener==='function')
+   document.addEventListener('DOMContentLoaded',mount,{once:true});
+  return {RECIPES,maxPerRun,pilotEligible,readyMove,pairFor,options,confirm,
+   progress,install,competitive,openFusion,mount,sync};
 })();
