@@ -12,7 +12,8 @@ function setup(){
   Coop:{active:false}, Judgment:{cinematic:false},PKMSVVBerry:{choosing:false},
   Spawner:{say(){}}, Progress:{event:(name,payload)=>events.push([name,payload])}
  };
- const ctx={G,state:'playing',holdBy:[],pl:{item:'a',equip(k){this.item=k;}}};
+ const ctx={G,state:'playing',holdBy:[],pkmsvvCompetitive:()=>false,
+  pl:{item:'a',equip(k){this.item=k;}}};
  vm.runInNewContext(s.slice(start,end)+'\nthis.h={offerItem,afterLevelUp,pending:()=>laterItems.slice(),active:()=>openItem,\n   invalidate:()=>{++pkmsvvItemEpoch;openItem=null;laterItems.length=0;}};',ctx);
  return {...ctx,modal,choices,events,choose(i,id){modal.item=false;choices[i].cb(id);}};
 }
