@@ -59,7 +59,7 @@ function fake(){
  vm.runInNewContext(read('src/pkmsvv-mega-entry.js'),{G:g,document});
  return {g,header,events,get:id=>elements.get(id),draws,drawCount:()=>spriteCount};
 }
-test('Mega UI paginates only real local sprites, hides locked identities, and does not edit save',()=>{
+test('Mega UI paginates full catalog, hides locked identities, and does not edit save',()=>{
  const h=fake(),ui=h.g.PKMSVVMegaEntry,before=JSON.stringify(h.g.DB.save);
  assert.deepEqual(h.header.children.map(x=>x.id),['pkmsvv-upgrade-title','pkmsvv-support-entry','pkmsvv-mega-entry','pkmsvv-upgrade-back']);
  assert.equal(ui.open(),true);
@@ -139,9 +139,9 @@ test('Normal/Shiny tabs reveal authentic Shiny only after real ownership and Meg
  h.g.DB.save.shiny[448]={at:2};
  h.g.SPRITE_META[10448].sh=false;
  ui.render();
- assert.equal(h.get('pkmsvv-mega-grid').children.length,1,'missing Shiny art produces text, no card');
- assert.equal(h.get('pkmsvv-mega-grid').children[0].className,'pkmsvv-mega-empty');
- assert.equal(ui.available().some(f=>f.key==='lucariomega'),false,'Lucario missing Shiny sprite is hidden');
+ assert.equal(h.get('pkmsvv-mega-grid').children.length,1,'owned Shiny remains visible with honest pending artwork');
+ assert.equal(h.get('pkmsvv-mega-grid').children[0].children.at(-1).textContent,'Cập nhật sprite sau');
+ assert.equal(ui.available().some(f=>f.key==='lucariomega'),true,'Lucario remains in the catalog without Shiny sprite');
  h.get('pkmsvv-mega-tab-normal').click();
  assert.equal(ui.variant,'normal');
  assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 1/96 · Sprite sẵn sàng: 36');
@@ -157,7 +157,7 @@ test('All 96 Mega identities remain ??? before Chapter 7 regardless of stone own
 });
 
 
-test('full-save Mega Dragonite is hidden until its private PC QA sprite is imported',()=>{
+test('full-save Mega Dragonite has a pending sprite indicator until QA artwork arrives',()=>{
  const h=fake(),ui=h.g.PKMSVVMegaEntry,save=h.g.DB.save;
  const dragonite=h.g.PKMSVV_MEGA_CATALOG.find(f=>f.key==='dragonitemega');
  assert.ok(dragonite,'Dragonite belongs to original 96-form catalog');
@@ -173,9 +173,10 @@ test('full-save Mega Dragonite is hidden until its private PC QA sprite is impor
  assert.equal(ui.isUnlocked(dragonite),true,'full save was already unlocked');
  ui.open();
  h.get('pkmsvv-mega-roster').querySelector('[data-mega-filter="unlocked"]').click();
- assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 0/96 · Sprite sẵn sàng: 36');
- assert.equal(ui.available().some(f=>f.key==='dragonitemega'),false,'no blank Dragonite cell in normal build');
- assert.equal(h.get('pkmsvv-mega-grid').children[0].className,'pkmsvv-mega-empty');
+ assert.equal(h.get('pkmsvv-mega-count').textContent,'Đã mở: 1/96 · Sprite sẵn sàng: 36');
+ assert.equal(ui.available().some(f=>f.key==='dragonitemega'),true,'Dragonite listed even with art pending');
+ assert.equal(h.get('pkmsvv-mega-grid').children[0].children.at(-2).textContent,'Mega Dragonite');
+ assert.equal(h.get('pkmsvv-mega-grid').children[0].children.at(-1).textContent,'Cập nhật sprite sau');
  // Mimic actual QA build importer after validating eight original PA2.1 sheets.
  dragonite.artReady=true;dragonite.qa4dir=true;
  h.g.PKMSVV_MEGA_4DIR_QA={enabled:true,forms:['dragonitemega']};
@@ -190,7 +191,7 @@ test('full-save Mega Dragonite is hidden until its private PC QA sprite is impor
  assert.equal(cards[0].className.includes('is-pending-art'),false);
  assert.equal(JSON.stringify(save),original,'sprite visibility never changes the QA save');
 });
-test('four imported PC QA Mega forms are visible and unimported ones do not occupy cells',()=>{
+test('four imported PC QA Mega forms become playable while future cards remain listed',()=>{
  const h=fake(),ui=h.g.PKMSVVMegaEntry;
  const names=['dragonitemega','scizormega','swampertmega','garchompmega'];
  for(const name of names){
