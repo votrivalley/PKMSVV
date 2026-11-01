@@ -78,7 +78,7 @@ G.PKMSVVChampionArena=(()=>{
  ]);
  const FARM_SPAWN_MULT=2,FARM_XP_MULT=2;
  const DUEL_COUNTDOWN=3,MEGA_TRANSITION_SECONDS=1;
- let startingOwnRun=false,transitionClock=0,transitionOrigin='fight';
+ let startingOwnRun=false,transitionClock=0,transitionOrigin='fight',fightCue=0;
  const $=id=>document.getElementById(id);
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  let region=0,stage='idle',round=0,elapsed=0,opp=null,bracket=[],target=null,active=false,paid=false,lastSecond=-1,prepBossStage=0,previewSeen=false,warnSeen=false,semiLosers=[],lastPodium=null,mode='story',mapChoice='random',duelType='normal';
@@ -409,7 +409,7 @@ G.PKMSVVChampionArena=(()=>{
   target.skillCd=(aiTier==='elite'?.75:aiTier==='trained'?1.55:2.5)*cadence;
   installChampionCombat(target);
   stage='fight';elapsed=0;lastSecond=-1;
-  hideBattleCountdown();panel().hidden=true;
+  fightCue=.65;battleCountdown(tr('⚔ BẮT ĐẦU!','⚔ FIGHT!'),'start');panel().hidden=true;
   G.UI?.toast?.(tr('Arena · ','Arena · ')+(ROUNDS[round]||'')+' — '+opp.name,3000);
   return true;
  }
@@ -708,7 +708,7 @@ G.PKMSVVChampionArena=(()=>{
   if(!active)return false;
   restoreStats();
   active=false;stage='idle';elapsed=0;lastSecond=-1;round=0;
-  target=null;opp=null;transitionClock=0;paid=false;
+  target=null;opp=null;transitionClock=0;fightCue=0;paid=false;
   G.World?.setArena?.(null);
   hideBattleCountdown();
   for(const id of ['pkmsvv-champion-hud','pkmsvv-champion-preview',
@@ -823,6 +823,10 @@ G.PKMSVVChampionArena=(()=>{
    return;
   }
   if(stage!=='fight')return;
+  if(fightCue>0){
+   fightCue=Math.max(0,fightCue-Math.max(0,Number(dt)||0));
+   if(!fightCue)hideBattleCountdown();
+  }
   if(target&&beginMegaTransition(target))return;
   if(target?.dead){
    target=null;
