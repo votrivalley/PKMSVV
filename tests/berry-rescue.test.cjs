@@ -94,7 +94,7 @@ test('Berry Rescue gives standard EXP once and never mutates base enemy payouts'
  const e={x:900,y:900,xp:30,spd:100,dmg:10,hp:100,maxHp:100};
  h.G.EnemyMgr.enemies=[e];
  h.step(.1,0);assert.equal(e.xp,30);
- h.step(.1,120);assert.equal(e.xp,45,'XP remains unmodified through all stages');
+ h.step(.1,120);assert.equal(e.xp,30,'XP remains unmodified through all stages');
  assert.ok(Math.abs(e.spd-100*(1+.2*2/3))<1e-7);
 });
 test('Berry AI defendGoal stays at live trees and never chases beyond the grove',()=>{
