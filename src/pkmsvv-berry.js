@@ -267,6 +267,9 @@ G.PKMSVVBerry=(()=>{
   G.UI?.toast?.(tr('🍓 Berry kích hoạt: ','🍓 Active Berries: ')+ids.map(id=>byId[id]?.name).join(' + '),2200);
  }
  function finishChoice(ids,cb,mode,preRun=false){
+  // Pre-run choice is a preview, not a purchase: commit inventory ONLY after
+  // the engine successfully creates the player and enters gameplay.
+  if(preRun){cb?.(ids.slice(0,2));return;}
   const d=data(),picked=[];
   if(d)for(const id of ids.slice(0,2))if(byId[id]&&count(id)>0&&!picked.includes(id)){
    d.bag[id]--;picked.push(id);
@@ -384,7 +387,8 @@ G.PKMSVVBerry=(()=>{
     if(!champion&&!online){
      offer({preRun:true,mode:'pve',onDone:ids=>{
       start.apply(ctx,args);
-      const pl=G.Game?.player;if(pl)apply(pl,ids,'pve');
+      if(G.Game?.state==='playing'&&G.Game?.player)
+       finishChoice(ids,null,'pve',false);
      }});
      return;
     }
