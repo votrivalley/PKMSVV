@@ -126,7 +126,7 @@ test('Level-up cards label a known partner, two offered halves, and any free Fus
  const {api,G,pl,m}=setup();
  G.Moves.BY_ID=Object.fromEntries([
   'tackle','ember','flamethrower','gust','rock-tomb','razor-leaf','ice-shard','bubble-beam',
-  'metal-claw','thunderbolt'
+  'metal-claw','thunderbolt','spikes','quick-attack'
  ].map(id=>[id,{name:id}]));
  G.T=(v)=>v;
  G.Game={player:pl,state:'playing'};
@@ -134,7 +134,7 @@ test('Level-up cards label a known partner, two offered halves, and any free Fus
  const cards=[
   {type:'new',key:'new:flamethrower',desc:'Fire',apply:p=>p.slots.push([m('flamethrower')])},
   {type:'new',key:'new:gust',desc:'Wind',apply:p=>p.slots.push([m('gust')])},
-  {type:'new',key:'new:quick-attack',desc:'Normal',apply:p=>p.slots.push([m('quick-attack')])}
+  {type:'new',key:'new:spikes',desc:'Normal',apply:p=>p.slots.push([m('spikes')])}
  ];
  api.decorateOffers(pl,cards);
  assert.match(cards[0].desc,/CẶP TIỀM NĂNG/);
@@ -143,10 +143,10 @@ test('Level-up cards label a known partner, two offered halves, and any free Fus
  assert.equal(cards[0]._pkmsvvFusionHint,'offered');
  assert.ok(!cards[0].desc.includes('FUSION SẴN SÀNG'),
   'two offered halves cannot both be picked at once');
- const more=[{type:'new',key:'new:water-gun',desc:'W',apply:p=>p.slots.push([m('water-gun')])}];
+ const more=[{type:'new',key:'new:quick-attack',desc:'Quick',apply:p=>p.slots.push([m('quick-attack')])}];
  api.decorateOffers(pl,more);
- assert.equal(more[0]._pkmsvvFusionHint,'ready','Tackle is already owned');
- assert.match(more[0].desc,/Đã có tackle/);
+ assert.equal(more[0]._pkmsvvFusionHint,'ready','Ember is already owned');
+ assert.match(more[0].desc,/Đã có ember/);
  assert.equal(cards[0].desc.includes('<script'),false);
 });
 test('A newly learned complementary skill alerts once per pair and lights the Fusion HUD',()=>{
