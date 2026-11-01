@@ -20,7 +20,8 @@ patch('  const laterItems = [];         // objetos recogidos con las cartas de n
  '  }');
 patch('  function startRun(coop = null) {\n    holdBy = []; awayBy = null;',
  '  function startRun(coop = null) {\n    holdBy = []; awayBy = null;\n'+
- '    openItem = null; laterItems.length = 0; ++pkmsvvItemEpoch;');
+ '    openItem = null; laterItems.length = 0; ++pkmsvvItemEpoch;\n'+
+ '    G.PKMSVVHeldItems?.reset?.();');
 patch("  function endRun(dead = true) {\n    if (state === 'over' || !pl) return;",
  "  function endRun(dead = true) {\n    if (state === 'over' || !pl) return;\n"+
  "    openItem=null;laterItems.length=0;++pkmsvvItemEpoch;");
