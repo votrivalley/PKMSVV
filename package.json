@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.72",
+  "version": "1.5.73",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.72: ten Fusion suggestions, complementary level-up card hints and ready notifications",
+  "description": "Pokémon Chuyển Sinh v1.5.73: Arena session teardown, 3-2-1 duel start, one-second Champion Mega reveal, normal Berry EXP",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
