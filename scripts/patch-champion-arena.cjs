@@ -10,8 +10,15 @@ fs.copyFileSync(path.join(root,'src','pkmsvv-champion-arena.js'),path.join(game,
 fs.copyFileSync(path.join(root,'src','pkmsvv-arena-solo.js'),path.join(game,'js','ui','pkmsvv-arena-solo.js'));
 fs.copyFileSync(path.join(root,'src','pkmsvv-wiki.js'),path.join(game,'js','ui','pkmsvv-wiki.js'));
 fs.copyFileSync(path.join(root,'src','pkmsvv-mega-gacha.js'),path.join(game,'js','ui','pkmsvv-mega-gacha.js'));
+const {execFileSync}=require('node:child_process');
+const megaIcons=JSON.parse(fs.readFileSync(path.join(root,'src','mega-stone-sprite-map.json'),'utf8'));
+fs.writeFileSync(path.join(game,'js','data','pkmsvv-mega-item-map.js'),
+ 'G.PKMSVV_MEGA_ITEM_MAP='+JSON.stringify(megaIcons)+';'+String.fromCharCode(10));
+execFileSync(process.execPath,[path.join(root,'scripts','install-mega-stone-icons.cjs')],{cwd:root,stdio:'inherit'});
+
 replace('dev.html','<script defer src="js/ui/pkmsvv-mega-phase3.js"></script>',
  '<script defer src="js/ui/pkmsvv-mega-phase3.js"></script>\n'+
+ '<script defer src="js/data/pkmsvv-mega-item-map.js"></script>\n'+
  '<script defer src="js/ui/pkmsvv-mega-gacha.js"></script>\n'+
  '<script defer src="js/ui/pkmsvv-champion-arena.js"></script>\n'+
  '<script defer src="js/ui/pkmsvv-arena-solo.js"></script>\n'+
