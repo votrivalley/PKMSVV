@@ -178,3 +178,28 @@ test('Rescue Berry room disables unrelated eggs, Rift, story bosses and NPC resc
  assert.match(patch,/G\.PKMSVVBerryRescue\.reward/);
  assert.match(read('src/shared/coop-unified.js'),/\['berry','Giải Cứu Berry','4 người · 8 phút'/);
 });
+
+
+test('Android Berry starts from live room mode and renders every missing objective exactly once',()=>{
+ const h=harness();
+ h.G.Social={room:{mode:'berryeasy'}};
+ assert.equal(h.game.begin({}),true,'room mode fallback is necessary when LAN start packet omits mode');
+ assert.equal(h.game.easy,true);
+ const draws=[];
+ const ctx={save(){},restore(){},translate(x,y){draws.push([x,y]);},fillRect(){},strokeRect(){}};
+ h.game.beginFrame();
+ const drawables=h.game.drawables();
+ assert.equal(drawables.length,3);
+ drawables[0].draw(ctx);
+ h.game.drawMissing(ctx);
+ assert.equal(draws.length,3,'draw missing two trees in transformed world layer');
+ h.game.drawMissing(ctx);
+ assert.equal(draws.length,3,'no duplicates when fallback runs twice');
+ h.game.beginFrame();
+ h.game.drawMissing(ctx);
+ assert.equal(draws.length,6,'all 3 trees recover if native Y-sort skipped the whole frame');
+ const patch=read('scripts/patch-berry-coop.cjs');
+ assert.match(patch,/PKMSVVBerryRescue\?\.beginFrame\?\.\(\)/);
+ assert.match(patch,/PKMSVVBerryRescue\?\.drawMissing\?\.\(ctx\)/);
+ assert.match(patch,/drawScene\(G\.Camera, G\.Coop\.active/);
+});
