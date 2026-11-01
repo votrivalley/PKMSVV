@@ -27,7 +27,7 @@ fs.appendFileSync(path.join(base,'css/style.css'),'\n'+css+'\n');
 console.log('PKMSVV: five real 2-move Fusion recipes for Solo PvE, one per match.');
 fs.appendFileSync(path.join(base,'css/style.css'),`\n.pkmsvv-fusion-recipes{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:5px;padding:6px 0}\n.pkmsvv-fusion-recipe{display:flex;align-items:center;flex-wrap:wrap;gap:5px;background:#163e50;border:1px solid #83c4c8;border-radius:8px;padding:7px;color:#fff}\n.pkmsvv-fusion-move{display:inline-flex;align-items:center;gap:5px;font-size:12px}.pkmsvv-fusion-move svg{width:20px;height:20px}.pkmsvv-fusion-recipe strong{color:#ffe47a}\n`);
 
-fs.appendFileSync(path.join(base,'css/style.css'),String.raw\`
+fs.appendFileSync(path.join(base,'css/style.css'),String.raw`
 /* Fusion lives above the Mystery Orb queue and never overlays pause/menu. */
 #pkmsvv-fusion-action{
  position:fixed;left:calc(50% - 71px);bottom:208px;z-index:12018;
@@ -49,4 +49,4 @@ body:has(#scr-settings:not([hidden])) #pkmsvv-fusion-action{
  bottom:max(233px,env(safe-area-inset-bottom) + 204px);
  min-width:80px;min-height:31px;padding:4px 6px;font-size:10px}
 }
-\`+'\n');
+`+'\n');
