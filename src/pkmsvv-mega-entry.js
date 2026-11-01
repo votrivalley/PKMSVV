@@ -105,7 +105,7 @@ G.PKMSVVMegaEntry=(()=>{
   if(!f){
    area.className='pkmsvv-mega-phase1-locked is-unavailable';
    const empty=el('p');empty.textContent=tr(
-    'Không có dạng Mega phù hợp với bộ lọc này.',
+    'Chưa có dạng Mega nào phù hợp với bộ lọc hiện tại.',
     'No Mega forms match this filter.');
    area.append(empty);return;
   }
