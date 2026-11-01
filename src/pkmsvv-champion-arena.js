@@ -35,6 +35,7 @@ G.PKMSVVChampionArena=(()=>{
  }
  const PREP_SECONDS=90,FIRST_PREP_SECONDS=240,FIGHT_SECONDS=120;
  const FIRST_FARM_BOSS_TIMES=[90,180];
+ const CHAMPION_PHASE_SECONDS=180;
  const FIRST_PREVIEW_SECONDS=60,NEXT_PREVIEW_SECONDS=30,WARN_SECONDS=15;
  const clock=secs=>{const n=Math.max(0,Math.ceil(secs));return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');};
  const DUEL_TYPES=['normal','fighting','psychic','steel','rock','ghost'];
@@ -67,6 +68,14 @@ G.PKMSVVChampionArena=(()=>{
   if(Number.isFinite(enemy.spd))enemy.spd*=enemySpeed;
   G.UI?.toast?.('🏟️ '+e.name+' · '+e.hint,3300);
  }
+ // Progressive HP and boss tempo: difficulty grows without instant one-hit attacks.
+ const REGION_BALANCE=Object.freeze([
+  {hp:1.00,atk:1.00,tempo:1.00},{hp:1.02,atk:1.00,tempo:.98},
+  {hp:1.04,atk:1.01,tempo:.96},{hp:1.06,atk:1.01,tempo:.95},
+  {hp:1.08,atk:1.02,tempo:.93},{hp:1.10,atk:1.03,tempo:.91},
+  {hp:1.12,atk:1.04,tempo:.90},{hp:1.13,atk:1.05,tempo:.88},
+  {hp:1.14,atk:1.06,tempo:.86},{hp:1.15,atk:1.07,tempo:.84}
+ ]);
  const FARM_SPAWN_MULT=2,FARM_XP_MULT=2;
  const $=id=>document.getElementById(id);
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
@@ -129,7 +138,8 @@ G.PKMSVVChampionArena=(()=>{
   const opponent=round===4?(semiLosers.find(x=>x.id!=='you')||{id:'ai-3rd',name:'AI',dex:c[1],tier:'elite'}):playerOpponent();
   if(!opponent||round!==3)return opponent;
   const champion=regionChampion(region);
-  return {...opponent,dex:champion.dex,name:champion.name,
+  // A Champion final cannot be a novice merely because a novice AI survived the bracket.
+  return {...opponent,dex:champion.dex,name:champion.name,tier:'elite',
    pkmsvvMegaSprite:champion.spriteId,pkmsvvTemporaryChampion:champion.temporary};
  }
  function regionUnlocked(index,save=G.DB?.save){
@@ -328,13 +338,13 @@ G.PKMSVVChampionArena=(()=>{
    pl.atkMul=1;pl.spdMul=1;
   }else pl.hp=pl.maxHp;
   const aiTier=opp.tier==='elite'?'elite':opp.tier==='trained'?'trained':'novice';
-  const power=region;
-  const cadence=Math.max(.62,1-.04*power);
+  const power=region,profile=REGION_BALANCE[region]||REGION_BALANCE[0];
+  const cadence=Math.max(.62,1-.04*power)*profile.tempo;
   const tierHp=aiTier==='elite'?1.28:aiTier==='trained'?1.13:1.03;
   const tierDmg=aiTier==='elite'?1.32:aiTier==='trained'?1.15:1.04;
-  const raw={dex,name:targetName,hp:Math.round((340+26*power+12*round)*tierHp),
+  const raw={dex,name:targetName,hp:Math.round((340+26*power+12*round)*tierHp*profile.hp),
     spd:112+Math.min(28,region*2.5+round*3),
-    dmg:Math.round((12.4+.95*power+.5*round)*tierDmg*10)/10,xp:0,behavior:'champion',
+    dmg:Math.round((12.4+.95*power+.5*round)*tierDmg*profile.atk*10)/10,xp:0,behavior:'champion',
     shotCd:(aiTier==='elite'?1.35:aiTier==='trained'?1.95:2.7)*cadence};
   if(mode==='league'){
    raw.hp=Math.max(raw.hp,userBaseline.hp);
@@ -359,10 +369,11 @@ G.PKMSVVChampionArena=(()=>{
   }
   if(target)applyMapEffect(pl,target);
   target.pkmsvvChampion=true;
-  target._pkmsvvChampionMegaEligible=mode==='story'&&round===3&&region>0;
+  target._pkmsvvChampionMegaEligible=mode==='story'&&round===3; // Kanto included
   target._pkmsvvMegaSprite=opp?.pkmsvvMegaSprite||null;
   target._pkmsvvMegaPhase2=false;
   target.skillCd=(aiTier==='elite'?.75:aiTier==='trained'?1.55:2.5)*cadence;
+  installChampionCombat(target);
   stage='fight';elapsed=0;lastSecond=-1;
   panel().hidden=true;
   G.UI?.toast?.(tr('Arena · ','Arena · ')+(ROUNDS[round]||'')+' — '+opp.name,3000);
@@ -411,6 +422,7 @@ G.PKMSVVChampionArena=(()=>{
   target=G.EnemyMgr.add(new G.Enemy(raw,hero.x+225,hero.y-115,{hp:1,spd:1,dmg:1},true));
   if(!target){returnToMenu();return false;}
   target.pkmsvvChampion=true;target._pkmsvvSkyBoss=true;target._pkmsvvMegaPhase2=false;target.skillCd=1.35;
+  installChampionCombat(target);
   const art=G.Sprites?.playerScale?.(dex);
   if(art>0&&G.Sprites?.Animator){
    target.scale=art;target.anim=new G.Sprites.Animator(dex,art,false);
@@ -631,7 +643,7 @@ G.PKMSVVChampionArena=(()=>{
    const bar=$('pkmsvv-champion-hud');
    if(bar&&stage==='sky')bar.textContent='🐉 SKY · RAYQUAZA · '+clock(elapsed);
    else if(bar)bar.textContent='🏆 '+(mode==='league'?mapEffect().name:displayRegion(REGIONS[region][0]))+' · '+(ROUNDS[round]||'')+
-    (stage==='fight'?' · '+clock(FIGHT_SECONDS-elapsed):' · '+tr('Vào trận sau ','Battle in ')+clock(prepSeconds()-elapsed));
+    (stage==='fight'?(target?._pkmsvvMegaPhase2?' ⚡ MEGA':'')+' · '+clock((round===3?CHAMPION_PHASE_SECONDS:FIGHT_SECONDS)-elapsed):' · '+tr('Vào trận sau ','Battle in ')+clock(prepSeconds()-elapsed));
    if(stage==='prep'){
     const label=$('pkmsvv-champion-progress');
     if(label)label.textContent=tr('Chuẩn bị trận tiếp theo: ','Next round in ')+
@@ -670,7 +682,9 @@ G.PKMSVVChampionArena=(()=>{
    }
    futureBracket(true);round++;beginPrep();return;
   }
-  if(elapsed>=FIGHT_SECONDS){
+  if(elapsed>=(round===3?CHAMPION_PHASE_SECONDS:FIGHT_SECONDS)){
+    // Finalists must survive and defeat both HP phases; no synthetic timeout kill.
+    if(round===3){done('timeout',2);return;}
    if(pl.hp/Math.max(1,pl.maxHp)>(target?.hp||0)/Math.max(1,target?.maxHp||1)){
     target.dead=true;update(0);
    }else if(round===2){futureBracket(false);round=4;beginPrep();}
