@@ -159,6 +159,8 @@
  }
  async function action(role){
   if(busy)return;
+  // Capture mode before any async network/AI setup: no silent downgrade to Co-op.
+  const requestedMode=mode;
   if(role!=='ai'&&(lan()||window.PKMSVV_STANDALONE_AI_AVAILABLE)&&!window.PKMSVV_WIFI&&!new URLSearchParams(location.search).get('pkmsvvCode')){
    const target=window.PKMSVV_ANDROID_LOCAL_LAN?'/index.html':
     lan()&&!window.PKMSVV_STANDALONE_AI?'/game/':'/ai/game/';
@@ -198,12 +200,15 @@
      G.DB.save.partner=25;G.DB.save.partnerShiny=false;G.DB.commit?.();
     }
     if(G.Social.playing){close();G.LobbyUI.open();return;}
-    if(G.Social.room&&G.Social.room.mode!==mode){
+    if(G.Social.room&&G.Social.room.mode!==requestedMode){
      await G.Social.leaveRoom();
     }
-    if(!G.Social.room)await G.Social.createRoom(mode,role==='ai'?'private':'public');
+    if(!G.Social.room)await G.Social.createRoom(requestedMode,role==='ai'?'private':'public');
+    if(G.Social.room?.mode!==requestedMode){
+     throw Error('Phòng chọn '+requestedMode+' nhưng nhận '+(G.Social.room?.mode||'không rõ')+'. Hãy rời phòng và tạo lại.');
+    }
     if(role==='ai'&&G.Social.room?.isHost){
-     const opponents=mode==='coop'?1:3;
+     const opponents=requestedMode==='coop'?1:3;
      const missing=Math.max(0,opponents+1-G.Social.room.members.length);
      for(let i=0;i<missing;i++)await G.LanBus.request('addBot',{});
     }
