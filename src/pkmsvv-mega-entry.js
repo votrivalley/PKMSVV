@@ -27,14 +27,14 @@ G.PKMSVVMegaEntry=(()=>{
   G.PKMSVV_MEGA_4DIR_QA?.enabled===true&&
   G.PKMSVV_MEGA_4DIR_QA.forms?.includes(f.key));
  const discovered=f=>isUnlocked(f)&&(variant==='normal'||shinyOwned(f)||qaShinyPreview(f));
- // Only forms with a real Mega sprite in THIS build belong on the screen.
- // This automatically includes the four private 4-dir Mega sprites when the
- // isolated PC QA importer registers their metadata; no blank future cards.
+ // Catalogue all 96 known forms so Android, PC and Web show the full collection.
+ // Combat-art readiness is independent of unlock progress. A missing sprite
+ // gets a visible "update later" placeholder, NEVER fake battle art.
  const hasSprite=(f,mode=variant)=>{
   const m=f?.artReady===true&&G.SPRITE_META?.[f.spriteId];
   return !!(m?.a?.Idle&&(mode!=='shiny'||(m.sh&&m.sa?.Idle)));
  };
- const available=()=>catalog().filter(f=>hasSprite(f));
+ const available=()=>catalog();
  const list=()=>available().filter(f=>filter==='all'||(filter==='unlocked'?discovered(f):!discovered(f)));
  const art=f=>{
   const ready=hasSprite(f);
@@ -105,8 +105,8 @@ G.PKMSVVMegaEntry=(()=>{
   if(!f){
    area.className='pkmsvv-mega-phase1-locked is-unavailable';
    const empty=el('p');empty.textContent=tr(
-    'Chưa có dạng Mega nào phù hợp với bộ sprite và bộ lọc hiện tại.',
-    'No Mega sprites match this build and the current filter.');
+    'Không có dạng Mega phù hợp với bộ lọc này.',
+    'No Mega forms match this filter.');
    area.append(empty);return;
   }
   const opened=discovered(f);
@@ -115,9 +115,12 @@ G.PKMSVVMegaEntry=(()=>{
    const unknown=el('strong');unknown.textContent='???';
    const lock=el('small','pkmsvv-mega-phase1-lock');lock.textContent=tr('Chưa mở khóa','Not unlocked');
    area.append(unknown,lock);
-   if(f&&G.UI?.spriteCanvas){
+   if(hasSprite(f)&&G.UI?.spriteCanvas){
     const v=art(f),cv=G.UI.spriteCanvas(v.dex,180,155,{scale:2,hero:true,silhouette:true,shadow:false});
     cv.className='pkmsvv-mega-detail-art is-hidden';area.append(cv);
+   }else{
+    const pending=el('p',null,'pkmsvv-mega-art-missing');
+    pending.textContent=tr('✧ Sprite Mega: cập nhật sau','✧ Mega sprite: coming later');area.append(pending);
    }
    const tip=el('p');tip.textContent=tr(
     'Cần sở hữu Pokémon, đúng Mega Stone và hoàn thành cốt truyện. Huyền thoại có nhiệm vụ riêng.',
@@ -185,10 +188,10 @@ G.PKMSVVMegaEntry=(()=>{
   page=Math.min(last,Math.max(0,page));
   const shown=forms.slice(page*PAGE,(page+1)*PAGE);
   if(!shown.some(f=>f.key===selected))selected=shown[0]?.key||null;
-  const availableArt=available();
+  const formsAll=available();
   $('pkmsvv-mega-count').textContent=tr('Đã mở: ','Unlocked: ')+
-   availableArt.filter(discovered).length+'/'+availableArt.length+
-   tr(' · Có sprite',' · Sprites available');
+   formsAll.filter(discovered).length+'/'+formsAll.length+
+   tr(' · Sprite sẵn sàng: ',' · Ready sprites: ')+formsAll.filter(f=>hasSprite(f)).length;
   for(const [mode,label] of [['all',tr('Tất cả','All')],['unlocked',tr('Đã mở','Unlocked')],['locked',tr('Chưa mở','Locked')]]){
    const b=$('pkmsvv-mega-roster')?.querySelector?.('[data-mega-filter="'+mode+'"]');
    if(b){b.textContent=label;b.setAttribute('aria-pressed',String(filter===mode));}
@@ -205,9 +208,9 @@ G.PKMSVVMegaEntry=(()=>{
    card.type='button';
    card.setAttribute('aria-label',yes?displayName(f):tr('Mega chưa khám phá','Undiscovered Mega')+' '+(page*PAGE+i+1));
    card.setAttribute('aria-pressed',String(selected===f.key));
-   if(yes&&!v.ready){
+   if(!v.ready){
     const missing=el('span',null,'pkmsvv-mega-no-art');
-    missing.textContent='✧';missing.setAttribute('title',tr('Đã mở khóa — sprite đang cập nhật','Unlocked — sprite not available yet'));card.append(missing);
+    missing.textContent='✧';missing.setAttribute('title',tr('Sprite Mega: cập nhật sau','Mega sprite: coming later'));card.append(missing);
    }else if(G.UI?.spriteCanvas){
     const cv=G.UI.spriteCanvas(v.dex,92,80,{
      scale:2,shiny:yes&&v.shiny,
@@ -216,7 +219,9 @@ G.PKMSVVMegaEntry=(()=>{
     cv.className='pkmsvv-mega-cell-art';card.append(cv);
    }else{const icon=el('span');icon.textContent='✦';card.append(icon);}
    const label=el('strong');label.textContent=yes?displayName(f):'???';
-   const state=el('small');state.textContent=!yes?tr('Chưa mở','Locked'):!v.ready?tr('Đã mở · Chờ sprite','Unlocked · Sprite pending'):tr('Đã mở','Unlocked');
+   const state=el('small');state.textContent=!v.ready?
+    tr('Cập nhật sprite sau','Sprite coming later'):
+    !yes?tr('Chưa mở','Locked'):tr('Đã mở','Unlocked');
    card.append(label,state);
    card.addEventListener('click',()=>{selected=f.key;render();});
    grid.append(card);
@@ -227,10 +232,10 @@ G.PKMSVVMegaEntry=(()=>{
   $('pkmsvv-mega-prev').disabled=page===0;$('pkmsvv-mega-next').disabled=page>=last;
   $('pkmsvv-mega-page').textContent=tr('Trang ','Page ')+(page+1)+'/'+(last+1);
   $('pkmsvv-mega-phase1-note').textContent=variant==='shiny'?tr(
-   'Chỉ hiện Shiny Mega có sprite thật trong bản này. Cần sở hữu Pokémon Shiny và mở khóa Mega.',
-   'Only verified Shiny Mega sprites in this build are shown. Shiny ownership and Mega unlock are required.') :
-   tr('Chỉ hiện Mega đã có sprite thật trong bản đang chơi. Các Mega chưa có sprite được ẩn tạm, không xóa khỏi save.',
-   'Only Mega forms with real sprites in this build appear. Unreleased forms are hidden, never deleted from saves.');
+   'Hiển thị toàn bộ dạng Mega Shiny; dạng thiếu sprite sẽ ghi Cập nhật sprite sau. Không tự mở khóa Shiny.',
+   'Shows all Shiny Mega forms; unavailable art is marked coming later. No Shiny is auto-unlocked.') :
+   tr('Đủ 96 dạng Mega; dạng chưa có sprite thật được ghi Cập nhật sprite sau. Chỉ dạng có sprite chiến đấu mới dùng được trong trận.',
+   'All 96 Mega forms are listed. Missing sprites are marked coming later; only verified battle sprites work in combat.');
  }
  function open(){
   if(!ensure())return false;
