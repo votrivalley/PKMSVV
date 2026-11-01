@@ -581,8 +581,9 @@ G.PKMSVVStory=(()=>{
     memoryReplayActive=false;
     // A story replay may have hidden scr-menu and topbar. Restore them only
     // when the chooser actually closes, never when a chapter is selected.
-    if(!G.UI.isOpen('scr-menu')||document.getElementById('topbar')?.classList.contains('hidden'))
-     G.Flow.goMenu();
+    // Always rebuild the actual menu after a replay: a visible scr-menu flag
+    // can survive while its child panels/chrome are hidden in Android WebView.
+    G.Flow.goMenu();
    }
   };
   const onKey=e=>{
