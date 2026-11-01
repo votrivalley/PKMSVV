@@ -153,7 +153,10 @@ G.PKMSVVChampionArena=(()=>{
    btn.addEventListener('click',open);
   }
   const mult=nav.querySelector('[data-go="multiplayer"]')||nav.querySelector('[data-go="play"]');
-  if(mult)mult.after(btn);else nav.append(btn);
+  // Reparenting an existing menu button can reset the user's scroll position
+  // (especially inside Android WebView and Windows Electron scroll columns).
+  if(mult){if(mult.nextElementSibling!==btn)mult.after(btn);}
+  else if(btn.parentElement!==nav)nav.append(btn);
   const gate=G.PKMSVVStory?.arenaUnlocked?.();
   const p=G.PKMSVVStory?.multiplayerProgress?.();
   const small=btn.querySelector?.('small');
