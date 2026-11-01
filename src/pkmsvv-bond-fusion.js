@@ -210,7 +210,7 @@ G.PKMSVVFusionPilot=(()=>{
   };
   show._pkmsvvFusion=true;G.RunUI.showBond=show;return true;
  }
-  // Battle HUD action above Mystery Orb; competitive modes keep running.
+  // One pause-menu Fusion action; no floating in-game button.
   let action=null;
   const competitive=()=>!!(G.Royale?.active||G.EggRush?.active||
    G.PKMSVVArenaSolo?.active||G.PKMSVVChampionArena?.active||
@@ -308,31 +308,50 @@ G.PKMSVVFusionPilot=(()=>{
    });
    return true;
   }
+  // The real action lives inside Pause, not over the battle HUD.
+  // When selected, resume a paused solo run before opening the source Bond
+  // picker. Co-op/competitive sessions continue in real time as designed.
+  function openFromPause(){
+   const p=G.Game?.player;
+   if(!p||p.dead||!G.UI?.isOpen?.('scr-pause'))return false;
+   const state=G.Game?.state;
+   if(state!=='paused'&&state!=='playing')return false;
+   if(!options(p)||Number(p._pkmsvvFusionUsed||0)>=maxPerRun){
+    return showGuide(p); // Keep solo paused while viewing available recipes.
+   }
+   if(state==='paused')G.Game?.togglePause?.();
+   else G.UI?.hide?.('scr-pause');
+   return openFusion();
+  }
   function sync(){
    if(!action)return;
-   const p=G.Game?.player;
-   const visible=!!(p&&!p.dead&&G.Game?.state==='playing'&&
-     !G.UI?.isOpen?.('scr-pause')&&!G.UI?.isOpen?.('scr-menu'));
+   const p=G.Game?.player,state=G.Game?.state;
+   const visible=!!(p&&!p.dead&&(state==='playing'||state==='paused'));
    action.hidden=!visible;
    if(!visible)return;
-   const used=Number(p._pkmsvvFusionUsed||0)>=maxPerRun,ready=!!options(p);
    action.disabled=!!G.UI?.isOpen?.('scr-levelup')||
      !!G.UI?.isOpen?.('scr-bond')||!!G.UI?.isOpen?.('scr-item');
+   const used=Number(p._pkmsvvFusionUsed||0)>=maxPerRun,ready=!!options(p);
    const alert=Date.now()<(Number(p._pkmsvvFusionHintUntil)||0);
    action.classList?.toggle?.('has-new-match',alert&&!used&&ready);
-   action.textContent=used?'FUSION ✓':alert&&ready?'🔗 FUSION!':'🔗 FUSION';
-   action.title=used?tr('Đã dùng lượt Fusion miễn phí; vẫn có thể kiếm Bond ở khe nứt',
-    'Free Fusion used; Rift Bonds remain earnable'):
-    ready?tr('Ghép bất kỳ hai chiêu đã học, miễn phí một lần/trận',
-     'Link any learned moves free once per match'):
-    tr('Xem tất cả cặp skill · Học hai chiêu để bắt đầu',
-       'View every skill pair · Learn two moves to start');
+   action.textContent=used?'🔗 FUSION ✓':alert&&ready?'🔗 FUSION!':'🔗 FUSION';
+   action.title=used?tr('Đã dùng lượt ghép miễn phí – xem công thức',
+      'Free Fusion used – view recipes'):
+    ready?tr('Ghép các kỹ năng đã học','Fuse learned moves'):
+    tr('Xem công thức · Cần ít nhất hai kỹ năng','View recipes · Learn two moves');
   }
   function mount(){
    if(action||!document.body?.appendChild)return;
-   action=document.createElement('button');action.id='pkmsvv-fusion-action';
-   action.type='button';action.textContent='🔗 FUSION';action.hidden=true;
-   action.addEventListener('click',openFusion);document.body.append(action);
+   const panel=document.getElementById('scr-pause');
+   const row=panel?.querySelector?.('.pause-box .row')||
+     panel?.querySelector?.('.row');
+   if(!row)return;
+   action=document.createElement('button');
+   action.id='pkmsvv-pause-fusion';action.className='btn pkmsvv-pause-fusion';
+   action.type='button';action.textContent='🔗 FUSION';
+   action.addEventListener('click',openFromPause);
+   const settings=document.getElementById('btn-pause-settings');
+   row.insertBefore(action,settings&&settings.parentElement===row?settings:null);
    sync();if(typeof setInterval==='function')setInterval(sync,250);
   }
   install();installSkillHints();
@@ -341,5 +360,5 @@ G.PKMSVVFusionPilot=(()=>{
    document.addEventListener('DOMContentLoaded',mount,{once:true});
   return {RECIPES,maxPerRun,maxGroup,pilotEligible,readyMove,looseMoves,learnedCount,potentialPairs,pairFor,options,confirm,
    progress,learnedIds,offerHint,decorateOffers,notifyLearned,installSkillHints,
-   install,competitive,openFusion,showGuide,mount,sync};
+   install,competitive,openFusion,openFromPause,showGuide,mount,sync};
 })();
