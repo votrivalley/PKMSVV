@@ -1,5 +1,8 @@
-/* Official Fusion: five two-move recipes across all battle modes.
- * Player.fuse owns combat casts and VFX; one use per player per match. */
+/* Unlimited source-compatible Bond pairing: any two learned distinct moves,
+ * regardless of level/evolution. Five named pairs are suggestions, not gates.
+ * One complimentary Fusion per run; Rift Bonds remain earnable independently.
+ * All groups use original Player.fuse (4 moves per group, no fake skills).
+ */
 G.PKMSVVFusionPilot=(()=>{
  const tr=(a,b)=>G.I18n?.lang==='en'?b:a;
  const RECIPES=Object.freeze([
@@ -10,43 +13,50 @@ G.PKMSVVFusionPilot=(()=>{
   {id:'mind-tackle',ids:['confusion','tackle'],vi:'Tâm Lực',en:'Psychic Impact'}
  ]);
  const ENABLE_PILOT=true; // all modes
- const maxPerRun=1;
- const readyMove=m=>!!(m&&m.evolved===true&&m.def&&
-  Number.isFinite(m.lvl)&&m.lvl>=m.def.maxLvl&&G.Moves?.EVO?.[m.id]);
+ const maxPerRun=1; // free Fusion, Rift Bonds are separate and not capped here
+ const maxGroup=4;
+ const readyMove=m=>!!(m&&typeof m.id==='string'&&m.id.length>0);
  function pilotEligible(pl){
-  if(!ENABLE_PILOT||!pl||pl.remote||pl.lanBot||pl.dead)return false;
-  return true;
+  return !!(ENABLE_PILOT&&pl&&!pl.remote&&!pl.lanBot&&!pl.dead);
  }
+ const looseMoves=pl=>Array.isArray(pl?.slots)?
+  pl.slots.filter(s=>Array.isArray(s)&&s.length===1).map(s=>s[0]).filter(readyMove):[];
+ const learnedCount=()=>Array.isArray(G.Moves?.ALL)?G.Moves.ALL.length:0;
+ const potentialPairs=()=>{const n=learnedCount();return n*(n-1)/2;};
  function pairFor(pl){
-  if(!pilotEligible(pl)||Number(pl._pkmsvvFusionUsed||0)>=maxPerRun||!Array.isArray(pl.slots))return null;
-  const loose=pl.slots.filter(slot=>slot.length===1).map(slot=>slot[0]);
-  for(const recipe of RECIPES){
-   const moves=recipe.ids.map(id=>loose.find(m=>m.id===id&&readyMove(m)));
-   if(moves.length===2&&moves.every(Boolean)&&moves[0]!==moves[1])
-    return {recipe,moves};
-  }
+  if(!pilotEligible(pl)||Number(pl._pkmsvvFusionUsed||0)>=maxPerRun)return null;
+  const base=typeof pl.bondOptions==='function'?pl.bondOptions():null;
+  if(!base||!Array.isArray(base.loose))return null;
+  if(base.mode==='pair'&&base.loose.length>=2)return base;
+  if(base.mode==='add'&&Array.isArray(base.group)&&base.group.length>=2&&
+     base.group.length<maxGroup&&base.loose.length)return base;
   return null;
  }
  function options(pl){
-  const found=pairFor(pl);
-  return found?{mode:'pair',group:null,loose:found.moves,pilot:true,
-   recipe:found.recipe.id,recipeName:tr(found.recipe.vi,found.recipe.en)}:null;
+  const opt=pairFor(pl);
+  return opt?{...opt,pilot:true,recipe:'all-moves',
+    recipeName:tr('Liên Kết Tự Do','Free Bond')}:null;
  }
  function confirm(pl,picked){
-  const found=pairFor(pl);
-  if(!found||!Array.isArray(picked)||picked.length!==2||
-   !picked.every(m=>found.moves.includes(m))||picked[0]===picked[1])return false;
-  pl._pkmsvvFusionUsed=(pl._pkmsvvFusionUsed||0)+1;
+  const opt=options(pl);
+  if(!opt||!Array.isArray(picked))return false;
+  if(opt.mode==='pair'){
+   if(picked.length!==2||picked[0]===picked[1]||
+      !picked.every(m=>opt.loose.includes(m)))return false;
+  }else if(opt.mode==='add'){
+   if(picked.length!==1||!opt.loose.includes(picked[0])||
+      opt.group.includes(picked[0]))return false;
+  }else return false;
+  pl._pkmsvvFusionUsed=(Number(pl._pkmsvvFusionUsed)||0)+1;
   return true;
  }
  function progress(pl){
-  const slots=pl?.slots||[],loose=slots.filter(s=>s.length===1).map(s=>s[0]);
+  const loose=looseMoves(pl);
   return RECIPES.map(r=>{
-   const ready=r.ids.map(id=>loose.some(m=>m.id===id&&readyMove(m)));
    const learned=r.ids.map(id=>loose.some(m=>m.id===id));
    return {id:r.id,name:tr(r.vi,r.en),ids:r.ids.slice(),
-    learned:learned.filter(Boolean).length,ready:ready.filter(Boolean).length,
-    unlocked:ready.every(Boolean),used:!!pl?Number(pl._pkmsvvFusionUsed||0)>=maxPerRun:false};
+    learned:learned.filter(Boolean).length,ready:learned.filter(Boolean).length,
+    unlocked:learned.every(Boolean),used:!!pl?Number(pl._pkmsvvFusionUsed||0)>=maxPerRun:false};
   });
  }
  function install(){
@@ -60,9 +70,8 @@ G.PKMSVVFusionPilot=(()=>{
     if(root&&list){
      let hint=root.querySelector('.pkmsvv-fusion-pilot-hint');
      if(!hint){hint=document.createElement('p');hint.className='pkmsvv-fusion-pilot-hint';list.before(hint);}
-     hint.textContent=tr('🔗 FUSION · Tất cả chế độ · ', '🔗 Fusion · All modes · ')+
-       opt.recipeName+tr(' · Đúng 2 chiêu đã tiến hóa tối đa · 1 lần/trận',
-        ' · Exactly 2 fully evolved moves · Once per run');
+     hint.textContent=tr('🔗 FUSION TỰ DO · Ghép hai chiêu đã học, hoặc thêm chiêu vào nhóm đang ghép (tối đa 4).',
+       '🔗 FREE FUSION · Link two learned moves or add to a group of up to four.');
      hint.hidden=false;
      let recipes=root.querySelector('.pkmsvv-fusion-recipes');
      if(!recipes){recipes=document.createElement('div');recipes.className='pkmsvv-fusion-recipes';hint.after(recipes);}
@@ -77,7 +86,7 @@ G.PKMSVVFusionPilot=(()=>{
        const label=document.createElement('span');label.textContent=G.T?.(m?.name||id,'move')||m?.name||id;
        move.append(icon,label);line.append(move);
       }
-      const result=document.createElement('strong');result.textContent=' → '+tr(r.vi,r.en);
+      const result=document.createElement('strong');result.textContent=' · '+tr(r.vi,r.en);
       line.append(result);recipes.append(line);
      }
     }
@@ -101,13 +110,16 @@ G.PKMSVVFusionPilot=(()=>{
    overlay.setAttribute('role','dialog');
    overlay.setAttribute('aria-label',tr('Công thức Fusion','Fusion recipes'));
    const box=document.createElement('section');box.className='pkmsvv-fusion-guide-panel';
-   const h=document.createElement('h2');h.textContent=tr('🔗 FUSION · CÔNG THỨC','🔗 FUSION · RECIPES');
+   const h=document.createElement('h2');h.textContent=tr('🔗 FUSION · LIÊN KẾT TỰ DO','🔗 FUSION · FREE BONDS');
    const note=document.createElement('p');
-   note.textContent=tr('Mỗi người ghép tối đa 1 lần/trận. Học và tiến hóa tối đa cả hai skill theo đúng cặp để mở ghép.',
-    'One Fusion per trainer per match. Fully evolve both recipe skills to unlock.');
+   note.textContent=tr('Bản gốc có '+learnedCount()+' chiêu, tương đương '+potentialPairs()+' cặp khác nhau. Học ít nhất hai chiêu bất kỳ để ghép miễn phí một lần/trận; hạ huyền thoại trong khe nứt để kiếm thêm Bond. Nhóm tối đa 4 chiêu, mỗi chiêu vẫn tự đánh và giữ hồi chiêu riêng.',
+    'The original has '+learnedCount()+' moves and '+potentialPairs()+' possible pairs. Link any two learned moves free once per match; Rift legendaries award more Bonds. Each group holds up to four moves with their own cooldowns.');
    const close=document.createElement('button');close.type='button';close.className='btn small';
    close.textContent=tr('Đóng','Close');close.onclick=()=>overlay.remove();
    box.append(h,note);
+   const sub=document.createElement('h3');
+   sub.textContent=tr('5 cặp gợi ý (không bắt buộc)','Five optional pairing ideas');
+   box.append(sub);
    for(const recipe of RECIPES){
     const row=document.createElement('div');row.className='pkmsvv-fusion-guide-row';
     const prog=progress(p).find(x=>x.id===recipe.id);
@@ -123,8 +135,39 @@ G.PKMSVVFusionPilot=(()=>{
     const outcome=document.createElement('b');outcome.textContent='→ '+tr(recipe.vi,recipe.en);
     const status=document.createElement('small');
     status.textContent=prog?.unlocked?tr('✅ Có thể ghép','✅ Ready'):
-     tr('Đã hoàn thiện '+(prog?.ready||0)+'/2 skill','Max-evolved '+(prog?.ready||0)+'/2 skills');
+     tr('Đã học '+(prog?.ready||0)+'/2 chiêu','Learned '+(prog?.ready||0)+'/2 moves');
     row.append(pair,outcome,status);box.append(row);
+   }
+   const owned=looseMoves(p),num=owned.length;
+   const subAll=document.createElement('h3');
+   subAll.textContent=tr('Tất cả cặp skill đã học ('+(num*(num-1)/2)+')',
+                         'All learned pairs ('+(num*(num-1)/2)+')');
+   box.append(subAll);
+   const pairs=document.createElement('div');pairs.className='pkmsvv-fusion-all-pairs';
+   if(num<2){
+    const msg=document.createElement('p');
+    msg.textContent=tr('Hãy học ít nhất hai kỹ năng khác nhau trong trận.',
+      'Learn at least two different moves during the run.');pairs.append(msg);
+   }
+   for(let i=0;i<num;i++)for(let j=i+1;j<num;j++){
+    const row=document.createElement('div');row.className='pkmsvv-fusion-guide-pair';
+    for(const [k,m] of [owned[i],owned[j]].entries()){
+     if(k){const plus=document.createElement('b');plus.textContent='+';row.append(plus);}
+     const cell=document.createElement('span');cell.className='pkmsvv-fusion-guide-move';
+     const ico=document.createElement('span');
+     ico.innerHTML=G.Icons?.html?.('move:'+m.id,20)||'✦';
+     const name=document.createElement('span');name.textContent=G.T?.(m.name,'move')||m.name||m.id;
+     cell.append(ico,name);row.append(cell);
+    }
+    pairs.append(row);
+   }
+   box.append(pairs);
+   const existing=(p?.slots||[]).find(slot=>slot.length>1&&slot.length<maxGroup);
+   if(existing){
+    const msg=document.createElement('p');
+    msg.textContent=tr('Nhóm đang có '+existing.length+'/4 chiêu. Có thể nối thêm một chiêu lẻ bằng Bond.',
+      'Existing group: '+existing.length+'/4 moves. A Bond may add another loose move.');
+    box.append(msg);
    }
    box.append(close);overlay.append(box);
    overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove();});
@@ -141,7 +184,7 @@ G.PKMSVVFusionPilot=(()=>{
    G.RunUI.showBond(opt,picked=>{
     try{
      if(!confirm(p,picked))return;
-     p.bonds=Math.max(1,Number(p.bonds)||0); // Player.fuse consumes a bond
+     p.bonds=(Number(p.bonds)||0)+1; // Free-use token: preserve Rift Bonds
      const group=p.fuse(picked,opt.group);
      G.Audio?.sfx?.('legend');G.FX?.ring?.(p.x,p.y,8,130,'#ff8ad8',.8,6);
      G.UI?.toast?.(tr('🔗 Đã ghép '+group.length+' skill · 1 lần/trận',
@@ -164,10 +207,12 @@ G.PKMSVVFusionPilot=(()=>{
    action.disabled=!!G.UI?.isOpen?.('scr-levelup')||
      !!G.UI?.isOpen?.('scr-bond')||!!G.UI?.isOpen?.('scr-item');
    action.textContent=used?'FUSION ✓':'🔗 FUSION';
-   action.title=used?tr('Đã dùng Fusion trận này','Fusion used this match'):
-    ready?tr('Ghép hai skill · chỉ một lần mỗi trận','Fuse two moves once per match'):
-    tr('Cần hai skill đúng công thức đã tiến hóa tối đa',
-       'Needs two max-evolved recipe moves');
+   action.title=used?tr('Đã dùng lượt Fusion miễn phí; vẫn có thể kiếm Bond ở khe nứt',
+    'Free Fusion used; Rift Bonds remain earnable'):
+    ready?tr('Ghép bất kỳ hai chiêu đã học, miễn phí một lần/trận',
+     'Link any learned moves free once per match'):
+    tr('Xem tất cả cặp skill · Học hai chiêu để bắt đầu',
+       'View every skill pair · Learn two moves to start');
   }
   function mount(){
    if(action||!document.body?.appendChild)return;
@@ -180,6 +225,6 @@ G.PKMSVVFusionPilot=(()=>{
   if(document.body?.appendChild)mount();
   else if(typeof document.addEventListener==='function')
    document.addEventListener('DOMContentLoaded',mount,{once:true});
-  return {RECIPES,maxPerRun,pilotEligible,readyMove,pairFor,options,confirm,
+  return {RECIPES,maxPerRun,maxGroup,pilotEligible,readyMove,looseMoves,learnedCount,potentialPairs,pairFor,options,confirm,
    progress,install,competitive,openFusion,showGuide,mount,sync};
 })();
