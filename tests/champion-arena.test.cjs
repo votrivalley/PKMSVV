@@ -38,7 +38,15 @@ function setup(){
    onChampionSeal(){save.pkmsvvChapter7Seen=true;return true;},
    tenChampionCompleted(){return Object.values(save.arenas?.pkmChampion?.seals||{}).filter(Boolean).length===10;}
   },
-  Enemy:class{constructor(def){this.dex=def.dex;this.dead=false;this.boss=true;this.maxHp=def.hp;this.hp=def.hp}},
+  Enemy:class{
+   constructor(def){this.def=def;this.dex=def.dex;this.dead=false;this.boss=true;
+    this.maxHp=def.hp;this.hp=def.hp;this.dmg=def.dmg;this.spd=def.spd;this.ai={cd:1.6,fury:false};}
+   hurt(dmg){if(this.dead)return;this.hp-=dmg;if(this.hp<=0)this.die();}
+   die(){this.dead=true;this.loot=(this.loot||0)+1;}
+   bossEnd(){this.ai.cd=2;return true;}
+   bossInit(){this.ai={cd:1.6,fury:false};}
+   draw(){}
+  },
   EnemyMgr:{add(e){this.last=e;return e},clear(){this.clears=(this.clears||0)+1}},
   Spawner:{update(){}},World:{setArena(a){this.arena=a}},
   Projectiles:{clear(){}},Pickups:{clear(){}},Hazards:{clear(){}},
@@ -75,6 +83,7 @@ test('Ten Champions, sixteen entrants, 4m opener and 1m30 later preparation',()=
  assert.equal(lib.PREP_SECONDS,90);
  assert.equal(lib.FIRST_PREP_SECONDS,240);
  assert.equal(lib.FIGHT_SECONDS,120);
+ assert.equal(lib.CHAMPION_PHASE_SECONDS,180);
  assert.equal(lib.WARN_SECONDS,15);
  assert.equal(lib.ROUNDS.length,5);
  const draw=lib.makeBracket(()=>.5);
@@ -102,6 +111,11 @@ test('Champion starts with four-minute opener and first Crown Seal unlocks Mega 
   assert.equal(lib.nextDuel(),true);
   assert.equal(lib.stage,'fight');assert.ok(G.EnemyMgr.last.maxHp>=Math.round((340+12*round)*1.03),'real opponents receive scaled HP');
   G.EnemyMgr.last.dead=true;lib.update(.1);
+  if(round===3){
+   assert.equal(lib.stage,'fight','Kanto must transition before title is earned');
+   assert.equal(G.EnemyMgr.last._pkmsvvMegaPhase2,true);
+   G.EnemyMgr.last.dead=true;lib.update(.1);
+  }
  }
  const book=lib.ledger(save);
  assert.equal(lib.active,false);
@@ -286,7 +300,11 @@ test('Champion semifinal defeat enters real third-place playoff, without false C
 });
 test('Final win does not unlock a Mega Stone without Gacha',()=>{
  const h=setup(),{lib,G,save}=h;lib.start();
- for(let i=0;i<4;i++){lib.nextDuel();G.EnemyMgr.last.dead=true;lib.update(.1);}
+ for(let i=0;i<4;i++){
+  lib.nextDuel();G.EnemyMgr.last.dead=true;lib.update(.1);
+  if(i===3){assert.equal(save.arenas?.pkmChampion?.seals?.Kanto,undefined);
+   G.EnemyMgr.last.dead=true;lib.update(.1);}
+ }
  assert.equal(save.pkmsvvChapter7Seen,true);
  assert.equal(save.megaStones,undefined);
  assert.equal(save.arenas.pkmChampion.seals.Kanto,true);
