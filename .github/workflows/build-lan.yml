@@ -67,6 +67,8 @@ on:
       - 'tests/dex-header-actions.test.cjs'
       - 'tests/starter-onboarding-browser.cjs'
       - 'src/pkmsvv-story.js'
+      - 'src/story-art/**'
+      - 'tests/chapter10-arena-layout.test.cjs'
       - 'tests/lan-ai-runtime.cjs'
       - 'tests/lan-rounds-runtime.cjs'
       - 'tests/lan-random-bots.test.cjs'
@@ -129,7 +131,7 @@ jobs:
       - name: Verify real Chapter 5–7 multiplayer and Mega story gates
         run: npm run test:story:gates
       - name: Verify Champion Arena bracket, real wins and Chapter 1–7 continuity
-        run: npm run test:arena:champion
+        run: npm run test:arena:champion && node --test tests/chapter10-arena-layout.test.cjs
       - name: Test Arena Solo 1v1 preparation and AI duel
         run: npm run test:arena:solo
       - name: Verify live Pokémon backdrop and quick Shiny supports
