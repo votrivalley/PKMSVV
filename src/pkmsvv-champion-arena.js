@@ -916,7 +916,7 @@ G.PKMSVVChampionArena=(()=>{
  // Chapter 5 is explicitly accessible through Memories and Arena intro.
  // In particular, first LAN access must never be blocked by a cutscene.
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',menu,{once:true});else menu();
- return {REGIONS,REGION_THEMES,REGION_BALANCE,CHAMPION_PHASE_SECONDS,MAP_EFFECTS,mapEffect,MEGA_KEYS,TEMP_CHAMPIONS,GEN_POOLS,GEN_BOUNDS,regionalPool,displayRegion,megaPhase,regionChampion,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIRST_PREP_SECONDS,FIGHT_SECONDS,WARN_SECONDS,prepSeconds,previewSeconds,makeBracket,aiWinner,open,start,startSky,rematch,exit,nextDuel,renderPodium,
+ return {REGIONS,REGION_THEMES,REGION_BALANCE,CHAMPION_PHASE_SECONDS,DUEL_COUNTDOWN,MEGA_TRANSITION_SECONDS,MAP_EFFECTS,mapEffect,MEGA_KEYS,TEMP_CHAMPIONS,GEN_POOLS,GEN_BOUNDS,regionalPool,displayRegion,megaPhase,regionChampion,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIRST_PREP_SECONDS,FIGHT_SECONDS,WARN_SECONDS,prepSeconds,previewSeconds,makeBracket,aiWinner,open,start,startSky,rematch,exit,nextDuel,renderPodium,
   update,settle,claimSeal,ledger,cancelSession,get active(){return active},get stage(){return stage},get round(){return round},
   get opponent(){return opp}};
 })();
