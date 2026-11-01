@@ -13,7 +13,7 @@ G.PKMSVVStory=(()=>{
    14:'chapter7-seal', 15:'chapter7-mega',
    16:'chapter5-gate', 17:'chapter5-trials',
    18:'chapter6-berry-grove',19:'chapter6-berry-rescue',
-   20:'chapter7-seal',21:'chapter7-mega'
+   20:'chapter10-darkening',21:'chapter10-shadow-sky'
  });
  const chapters={
   prologue:[
@@ -237,7 +237,7 @@ G.PKMSVVStory=(()=>{
       img.dataset.revealFallback='1';
       img.onerror=()=>{img.onerror=null;img.src='assets/story/scene-5.svg';};
       img.src='assets/story/gate.webp';
-    }else if(key==='chapter1-echo'||key==='chapter1-fragments'||key==='chapter2-orbs'||key==='chapter2-shadow'||key==='chapter3-nest'||key==='chapter3-hatch'||key==='chapter5-gate'||key==='chapter5-trials'||key==='chapter6-arena'||key==='chapter6-champion'||key==='chapter7-seal'||key==='chapter7-mega'||key==='chapter6-berry-grove'||key==='chapter6-berry-rescue'){
+    }else if(key==='chapter1-echo'||key==='chapter1-fragments'||key==='chapter2-orbs'||key==='chapter2-shadow'||key==='chapter3-nest'||key==='chapter3-hatch'||key==='chapter5-gate'||key==='chapter5-trials'||key==='chapter6-arena'||key==='chapter6-champion'||key==='chapter7-seal'||key==='chapter7-mega'||key==='chapter10-darkening'||key==='chapter10-shadow-sky'||key==='chapter6-berry-grove'||key==='chapter6-berry-rescue'){
       img.onerror=null;
       img.src='assets/story/gate.webp';
     }else{
@@ -258,6 +258,8 @@ G.PKMSVVStory=(()=>{
     key==='chapter6-champion'?tr('Trận thách đấu Champion quyết định Ấn Chứng Vương Miện','A Champion duel for the Crown Seal'):
     key==='chapter7-seal'?tr('Ấn Chứng đầu tiên đánh thức sức mạnh Mega','The first Crown Seal awakens Mega power'):
     key==='chapter7-mega'?tr('Pokémon bùng nổ sức mạnh Tiến Hóa Mega','A Pokémon unleashes the power of Mega Evolution'):
+    key==='chapter10-darkening'?tr('Mười Ấn Chứng hội tụ, bầu trời bắt đầu hắc hóa','Ten Crown Seals converge as the sky darkens'):
+    key==='chapter10-shadow-sky'?tr('Bầu trời hắc ám, những vết nứt không gian và vực xoáy bóng tối','A darkened sky with rifts and a vortex of shadows'):
     key==='chapter6-berry-grove'?tr('Vườn Berry bị lãng quên trong vùng đất ký ức','Forgotten Berry Grove in the land of lost memories'):
     key==='chapter6-berry-rescue'?tr('Cứu Berry khỏi bóng tối','Rescue Berries from the shadows'):
     key==='chapter2-orbs'?tr('Vòng phép sáng lên, Mystery Orbs trỗi dậy giữa đêm','Eight powers awaken as the Mystery Orbs rise into the night'):
