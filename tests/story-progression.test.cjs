@@ -124,6 +124,19 @@ test('Required modes never count fake completed matches as Berry chapter progres
  assert.equal(api.chapter6(()=>{}),false);
  assert.equal(save.pkmsvvBerryChapterDone,undefined);
 });
+test('Endless Co-op exit after a genuine session records progress and renders a result milestone',()=>{
+ const patch=read('scripts/patch-champion-arena.cjs');
+ assert.match(patch,/pkmsvvQuitMode=G\.Coop\.active\?G\.Social\?\.room\?\.mode:null/);
+ assert.match(patch,/pkmsvvFinishedMode=\(G\.Coop\.active\?G\.Social\?\.room\?\.mode:null\)\|\|pkmsvvQuitMode/);
+ assert.match(patch,/G\.PKMSVVStory\?\.recordMultiplayerCompletion\?\./);
+ assert.match(patch,/Sống Sót đã được tính/);
+ assert.match(patch,/over-stats/);
+ const {api,save}=setup();
+ assert.equal(api.recordMultiplayerCompletion('coop',{time:59}),false,'one-minute minimum prevents instant quits');
+ assert.equal(api.recordMultiplayerCompletion('coop',{time:600}),true,'legitimate 10 minute play qualifies even if exited via menu');
+ assert.equal(save.pkmsvvMultiplayerDone.coop,true);
+ assert.equal(api.multiplayerProgress().count,1);
+});
 test('A completed match after Chapter 4 is remembered even before viewing Chapter 5',()=>{
  const h=setup({pkmsvvChapter5Seen:false}),{api,save}=h;
  assert.equal(api.recordMultiplayerCompletion('coop',{time:80}),true);
