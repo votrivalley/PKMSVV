@@ -33,6 +33,7 @@ on:
       - 'src/web/**'
       - 'src/pkmsvv-save-ui.js'
       - 'src/pkmsvv-native-choice.js'
+      - 'tests/mega-platform-parity.test.cjs'
       - 'package.json'
       - 'tests/ios-web.test.cjs'
       - '.github/workflows/build-ios-web.yml'
@@ -64,6 +65,8 @@ jobs:
       - run: npm run test:support:fast-shiny
       - run: npm run test:ios && node --test tests/local-shell-ui.test.cjs tests/pages-lan-connect-runtime.test.cjs tests/unified-coop.test.cjs
       - run: npm run prepare:ios
+      - name: Verify iOS HTML5 also ships the complete Mega catalog and sprites
+        run: node tests/mega-platform-parity.test.cjs ios
       - name: Verify rendered Co-op uses static LAN link, not legacy Online
         shell: bash
         run: |
