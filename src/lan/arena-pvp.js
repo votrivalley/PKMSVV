@@ -52,11 +52,28 @@ G.PKMSVVArenaPvp=(()=>{
   const count=$('pkmsvv-arena-pvp-count');if(count)count.remove();
   G.World?.setArena?.(null);
  }
+ // Equal fixed PvP skill loadouts; never bring account upgrades to a duel.
+ // All skills are real source moves, not guessed attack IDs. The Host can
+ // validate a guest's cast against the same deterministic three-move loadout.
+ function loadout(dex){
+  const mon=G.DEX_BY?.[dex]||G.DEX_BY?.[25];
+  const first=G.startMoveOf?.(dex);
+  const pool=G.Moves?.poolFor?.(mon)||Object.keys(G.Moves?.BY_ID||{});
+  return [...new Set([first,...pool].filter(id=>G.Moves?.BY_ID?.[id]&&
+    G.Moves.BY_ID[id].kind!=='buff'))].slice(0,3);
+ }
  function normalize(pl){
   if(!pl)return;
   pl.maxHp=HP;pl.hp=HP;pl.baseAtk=1.3;pl.atkMul=1;
   pl.baseSpd=112;pl.spdMul=1;pl.cdMul=1;pl.regen=0;
   pl.invuln=COUNTDOWN+.2;pl.dead=false;pl.frozen=true;
+  const moves=loadout(pl.dex).map(id=>{
+   const m=G.Moves?.instance?.(id,1);if(m)m.since=0;return m;
+  }).filter(Boolean);
+  if(moves.length){
+   pl.moves=moves;pl.slots=moves.map(m=>[m]);pl.active=0;pl.maxMoves=4;
+   pl.bonds=0;pl.critChance=0;pl.dmgReduce=0;
+  }
   // Native Pokémon moves, no fabricated opponent AI or new attack definitions.
  }
  function begin(cfg,pl){
@@ -80,6 +97,8 @@ G.PKMSVVArenaPvp=(()=>{
  function canCast(from,id,level,aim){
   if(!mode()||!host||stage!=='fight'||from!==uid&&!people.some(m=>m.uid===from))return null;
   const def=G.Moves?.BY_ID?.[id];if(!def||typeof id!=='string'||id.length>60)return null;
+  const ownerMember=people.find(p=>p.uid===from);
+  if(!ownerMember||!loadout(ownerMember.dex).includes(id))return null;
   const k=kind(def);if(k==='buff')return null;
   const owner=coords(from),enemy=coords(peerId(from));
   if(!owner||!enemy)return null;
@@ -291,7 +310,7 @@ G.PKMSVVArenaPvp=(()=>{
   return true;
  }
  install();
- return {begin,cleanup,update,receive,strike,canCast,render,exit,COUNTDOWN,DUEL,HP,
+ return {begin,cleanup,update,receive,strike,canCast,loadout,render,exit,COUNTDOWN,DUEL,HP,
   get active(){return active},get stage(){return stage},get winner(){return winner},
   get health(){return {...hp}},get host(){return host}};
 })();
