@@ -33,7 +33,7 @@ G.Social=(()=>{
   }catch(e){G.UI?.toast?.('LAN: '+e.message,3300);return'off';}
  }
  async function claimNick(name){const n=String(name||'').trim();if(!n||n.length>24)return{ok:false,error:'Tên từ 1–24 ký tự'};const r=await G.LanBus.request('hello',{name:n});me={uid:G.LanBus.uid,name:r.name};return{ok:true};}
- const limit=r=>r?.mode==='royale'?10:r?.mode==='arena'?2:4;
+ const limit=r=>r?.mode==='royale'?10:(r?.mode==='arena'||r?.mode==='champion')?2:4;
  async function createRoom(mode='coop',visibility='private'){
   if(!me&&await start()!=='ok')throw Error('Chưa kết nối LAN');
   const r=await G.LanBus.request('create',{mode,visibility,...ownMember()});
