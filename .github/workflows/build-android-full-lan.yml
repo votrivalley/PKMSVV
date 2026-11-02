@@ -109,6 +109,7 @@ on:
       - 'tests/berry-rescue.test.cjs'
       - 'tests/forget-skill.test.cjs'
       - 'tests/competitive-nonblocking.test.cjs'
+      - 'tests/mega-platform-parity.test.cjs'
       - 'package.json'
   workflow_dispatch:
 permissions:
@@ -201,6 +202,8 @@ jobs:
           npm run test:android:full-lan
           node --test tests/coop-icon-consistency.test.cjs tests/unified-coop.test.cjs
           node --test tests/local-shell-ui.test.cjs
+      - name: Verify Android ships all 36 Mega sprites and 32 real Shiny variants
+        run: node tests/mega-platform-parity.test.cjs android
       - name: Verify personal tickets and Shiny ownership in Android LAN AI
         run: node --test tests/competitive-rewards.test.cjs
       - name: Verify Android packaged menu and all three local AI modes in browser
