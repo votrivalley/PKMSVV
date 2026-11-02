@@ -13,7 +13,7 @@ G.PKMSVVArenaSolo=(()=>{
  const DUEL_TYPES=['normal','fighting','psychic','steel','rock','ghost'];
  const FARM_SPAWN_MULT=2,FARM_XP_MULT=2;
  let startingOwnRun=false,fightCue=0;
- let active=false,stage='idle',prepTotal=0,elapsed=0,opponent=null,target=null,selected=null,enemyDex=null,lastSecond=-1,shrunk=0,duelType='normal';
+ let active=false,stage='idle',prepTotal=0,elapsed=0,opponent=null,target=null,selected=null,enemyDex=null,lastSecond=-1,shrunk=0,duelType='normal',aiFactor=1;
  const canEnter=()=>!!(G.PKMSVVStory?.arenaUnlocked?.()&&!G.Coop?.active);
  function owned(){
   const s=G.DB?.save||{},collection=s.owned||{},ids=Object.keys(collection)
@@ -36,10 +36,17 @@ G.PKMSVVArenaSolo=(()=>{
    '<div id="pkmsvv-arena-solo-picks" class="pkmsvv-arena-solo-picks"></div>'+
    '<div id="pkmsvv-arena-solo-vs" class="pkmsvv-arena-solo-vs"></div>'+
    '<div class="pkmsvv-arena-solo-controls">'+
-   '<button class="btn gold" type="button" id="pkmsvv-arena-solo-play">Bắt đầu</button>'+
+   '<button class="btn gold" type="button" id="pkmsvv-arena-solo-play">🤖 Random AI</button>'+ 
+   '<button class="btn ghost" type="button" id="pkmsvv-arena-solo-invite">🤝 Mời người chơi</button>'+ 
    '<button class="btn ghost" type="button" id="pkmsvv-arena-solo-close">Đóng</button></div></div>';
   document.body.append(screen);
   $('pkmsvv-arena-solo-play').onclick=()=>start(); // click handler must not pass PointerEvent as the RNG function
+  $('pkmsvv-arena-solo-invite').onclick=()=>{
+   if(active)return;
+   screen.hidden=true;
+   if(typeof window!=='undefined'&&window.PKMSVVCoop?.open)window.PKMSVVCoop.open('arena');
+   else G.UI?.toast?.(tr('Mời bạn qua Arena Solo trên PC Host / Wi-Fi.','Invite a friend via Arena Solo on PC Host / Wi-Fi.'));
+  };
   $('pkmsvv-arena-solo-close').onclick=()=>{if(active)abort();else screen.hidden=true;};
   return screen;
  }
@@ -50,9 +57,10 @@ G.PKMSVVArenaSolo=(()=>{
   }
   const screen=frame();screen.hidden=false;
   $('pkmsvv-arena-solo-play').hidden=false;
+  $('pkmsvv-arena-solo-invite').hidden=false;
   $('pkmsvv-arena-solo-info').textContent=tr(
-   'Chuẩn bị trong bản đồ riêng từ 10–15 phút. Báo trước 30 giây, chọn Pokémon trong 10 giây, rồi đấu với AI có chỉ số cơ bản cân bằng.',
-   'Train on your own map for 10–15 minutes, receive a 30-second warning, select a Pokémon for 10 seconds, then face a normalized AI opponent.');
+   'Chọn Random AI (90–120% chỉ số của bạn) hoặc Mời người chơi qua Wi-Fi. AI: chuẩn bị 10–15 phút, cảnh báo 30 giây, chọn Pokémon 10 giây.',
+   'Choose Random AI (90–120% of your stats) or Invite a real player via Wi-Fi. AI: 10–15-minute preparation, 30-second warning and 10-second Pokémon pick.');
   $('pkmsvv-arena-solo-picks').replaceChildren();
   $('pkmsvv-arena-solo-vs').textContent=tr('Đối thủ AI sẽ được bốc ngẫu nhiên.','AI opponent is chosen at random.');
   return true;
@@ -94,6 +102,7 @@ G.PKMSVVArenaSolo=(()=>{
   selected=G.DB.save.partner;
   enemyDex=chooseEnemy(pool,random);
   prepTotal=Math.round(PREP_MIN+Math.max(0,Math.min(1,random()))*(PREP_MAX-PREP_MIN));
+  aiFactor=.9+Math.max(0,Math.min(1,Number(random())||0))*.3;
   elapsed=0;lastSecond=-1;active=true;stage='prep';target=null;
   startingOwnRun=true;
   try{G.Game.startRun(null);}finally{startingOwnRun=false;}
@@ -110,6 +119,7 @@ G.PKMSVVArenaSolo=(()=>{
   const p=G.Game?.player;if(p)p.invuln=Math.max(12,p.invuln||0);
   stage='select';elapsed=0;const screen=frame();screen.hidden=false;
   $('pkmsvv-arena-solo-play').hidden=true;
+  $('pkmsvv-arena-solo-invite').hidden=true;
   const picks=$('pkmsvv-arena-solo-picks');picks.replaceChildren();
   const options=owned();
   if(!options.includes(selected))options.unshift(selected);
@@ -160,12 +170,21 @@ G.PKMSVVArenaSolo=(()=>{
   $('pkmsvv-arena-solo-vs').textContent=(G.DEX_BY?.[selected]?.name||selected)+'  ⚡ VS ⚡  '+
    (G.DEX_BY?.[enemyDex]?.name||enemyDex);
  }
+ // All opponent combat factors use the SAME random multiplier so no hidden
+ // 2× boss scale defeats the promised 90–120% AI stat range.
+ function balanceAi(p,ratio=aiFactor){
+  const scale=Math.max(.9,Math.min(1.2,Number(ratio)||1));
+  return {hp:Math.round(Math.max(1,Number(p?.maxHp)||320)*scale),
+   spd:Math.round(Math.max(1,Number(p?.baseSpd)||112)*scale),
+   dmg:Math.round(11*Math.max(.1,Number(p?.baseAtk)||1.3)/1.3*scale*10)/10,
+   shotCd:Math.round(2.5/scale*100)/100};
+ }
  function beginDuel(){
   const p=G.Game?.player;if(!p||!G.Enemy||!G.EnemyMgr){abort();return;}
   stage='fight';elapsed=0;frame().hidden=true;fightCue=.65;countView(tr('⚔ BẮT ĐẦU!','⚔ FIGHT!'));
   const dex=enemyDex===selected?chooseEnemy():enemyDex;
-  const def={dex,name:G.DEX_BY?.[dex]?.name||'AI',hp:320,spd:112,dmg:11,
-   xp:0,behavior:'champion',shotCd:2.5};
+  const def={dex,name:G.DEX_BY?.[dex]?.name||'AI',...balanceAi(p),
+   xp:0,behavior:'champion'};
   target=G.EnemyMgr.add(new G.Enemy(def,p.x+170,p.y-45,{hp:1,spd:1,dmg:1},true));
 
   // Duel opponents still use boss combat mechanics, but MUST draw like normal
@@ -270,7 +289,7 @@ G.PKMSVVArenaSolo=(()=>{
   if(active)reset();return previous.apply(this,args);
  });
  return {PREP_MIN,PREP_MAX,WARN,SELECT,INTRO,DUEL_LIMIT,SHRINK_FROM,
-  open,start,abort,finish,owned,chooseEnemy,selection,beginDuel,update,
+  open,start,abort,finish,owned,chooseEnemy,selection,beginDuel,balanceAi,update,
   get active(){return active},get stage(){return stage},get prepTotal(){return prepTotal},
-  get chosen(){return selected},get rival(){return enemyDex}};
+  get chosen(){return selected},get rival(){return enemyDex},get aiFactor(){return aiFactor}};
 })();
