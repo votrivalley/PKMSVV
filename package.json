@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.75",
+  "version": "1.5.76",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.75: Fusion action in Pause (no HUD overlay), concise PC guide, shared signed Android/PC/Web builds",
+  "description": "Pokémon Chuyển Sinh v1.5.76: real two-player Co-op Arena PvP with Host/Join, 3-2-1, authoritative health and rematch lobby",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
