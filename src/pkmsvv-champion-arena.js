@@ -148,7 +148,8 @@ G.PKMSVVChampionArena=(()=>{
   const c=REGIONS[region];
   const opponent=round===4?(semiLosers.find(x=>x.id!=='you')||{id:'ai-3rd',name:'AI',dex:c[1],tier:'elite'}):playerOpponent();
   if(!opponent||round!==3)return opponent;
-  const champion=regionChampion(region);
+  const leagueRegion=mode==='league'?(mapChoice==='random'?Math.max(0,REGION_THEMES.indexOf(duelType)):Math.max(0,Math.min(9,Number(mapChoice)||0))):region;
+  const champion=regionChampion(leagueRegion);
   // A Champion final cannot be a novice merely because a novice AI survived the bracket.
   return {...opponent,dex:champion.dex,name:champion.name,tier:'elite',
    pkmsvvMegaSprite:champion.spriteId,pkmsvvTemporaryChampion:champion.temporary};
@@ -171,7 +172,7 @@ G.PKMSVVChampionArena=(()=>{
    btn=document.createElement('button');btn.id='pkmsvv-champion-entry';
    btn.className='menu-item pkmsvv-champion-menu';btn.type='button';
    btn.innerHTML='<span class="pkmsvv-champion-menu-icon">🏆</span><span class="pkmsvv-menu-copy"><span class="pkmsvv-menu-label">Arena</span><small>Hành Trình Vương Miện · Giải Champion</small></span>';
-   btn.addEventListener('click',open);
+   btn.addEventListener('click',openArena);
   }
   const mult=nav.querySelector('[data-go="multiplayer"]')||nav.querySelector('[data-go="play"]');
   // Reparenting an existing menu button can reset the user's scroll position
@@ -195,6 +196,25 @@ G.PKMSVVChampionArena=(()=>{
   }
   return true;
  }
+ function arenaHub(){
+  let o=$('pkmsvv-arena-hub');if(o)return o;
+  o=document.createElement('section');o.id='pkmsvv-arena-hub';o.className='pkmsvv-champion-overlay';o.hidden=true;
+  o.innerHTML='<div class="pkmsvv-champion-panel pkmsvv-arena-hub-panel" role="dialog" aria-modal="true">'+
+   '<div class="pkmsvv-champion-heading"><h2>⚔ Arena</h2><button class="btn ghost" id="pkmsvv-arena-hub-close" type="button">×</button></div>'+
+   '<p>Chọn Solo hoặc Champion</p><div class="pkmsvv-arena-hub-choices">'+
+   '<button id="pkmsvv-arena-hub-solo" class="btn gold" type="button">⚔ Solo<small>🤖 Random AI hoặc 🤝 Mời người chơi</small></button>'+
+   '<button id="pkmsvv-arena-hub-champion" class="btn gold" type="button">🏆 Champion<small>16 chiến binh AI hoặc mời bạn bè đấu Champion</small></button></div></div>';
+  document.body.append(o);
+  $('pkmsvv-arena-hub-close').onclick=()=>{o.hidden=true;};
+  $('pkmsvv-arena-hub-solo').onclick=()=>{o.hidden=true;G.PKMSVVArenaSolo?.open?.();};
+  $('pkmsvv-arena-hub-champion').onclick=()=>{o.hidden=true;mode='story';region=nextStoryRegion();clearResult();updatePanel();};
+  o.addEventListener('click',event=>{if(event.target===o)o.hidden=true;});
+  return o;
+ }
+ function openArena(){
+  if(!open())return false; // Retain existing story, Berry and chapter gates.
+  panel().hidden=true;arenaHub().hidden=false;return true;
+ }
  function panel(){
   let overlay=$('pkmsvv-champion-screen');if(overlay)return overlay;
   overlay=document.createElement('section');overlay.id='pkmsvv-champion-screen';
@@ -202,8 +222,8 @@ G.PKMSVVChampionArena=(()=>{
   overlay.innerHTML='<div class="pkmsvv-champion-panel" role="dialog" aria-modal="true" aria-labelledby="pkmsvv-champion-title">'+
    '<div class="pkmsvv-champion-heading"><h2 id="pkmsvv-champion-title">🏆 Arena · Champion</h2><div class="pkmsvv-champion-heading-actions"><button class="btn ghost" id="pkmsvv-champion-close" type="button">×</button></div></div>'+
    '<div class="pkmsvv-crown-journey"><button id="pkmsvv-arena-mode-champion" type="button" class="btn gold">👑 Hành Trình Vương Miện</button></div><p id="pkmsvv-champion-info"></p><div id="pkmsvv-champion-regions" class="pkmsvv-champion-regions"></div>'+
-   '<div class="pkmsvv-arena-mode-tabs"><button id="pkmsvv-arena-mode-solo" type="button" class="btn">⚔ Solo 1v1 · AI</button><button id="pkmsvv-arena-mode-pvp" type="button" class="btn">🤝 Arena Co-op 1v1</button><button id="pkmsvv-arena-mode-league" type="button" class="btn">🏆 Giải Champion</button></div>'+
-   '<div id="pkmsvv-champion-map-row" class="pkmsvv-champion-map-row" hidden><label for="pkmsvv-champion-map">Sân thi đấu</label><select id="pkmsvv-champion-map"></select><small>Chọn Arena Co-op 1v1 để đấu với bạn bè thật trong phòng LAN.</small></div>'+ 
+   '<div class="pkmsvv-arena-mode-tabs"><button id="pkmsvv-champion-vs-ai" type="button" class="btn gold">🤖 Đấu với AI · 16 người</button><button id="pkmsvv-champion-vs-human" type="button" class="btn">🤝 Mời người chơi</button><button id="pkmsvv-arena-mode-league" type="button" class="btn">🏆 Giải Champion hậu truyện</button></div>'+
+   '<div id="pkmsvv-champion-map-row" class="pkmsvv-champion-map-row" hidden><label for="pkmsvv-champion-map">Sân thi đấu</label><select id="pkmsvv-champion-map"></select><small>Chọn một sân đấu sau khi mở khóa hậu truyện.</small></div>'+ 
     '<div id="pkmsvv-champion-progress" class="pkmsvv-champion-progress"></div>'+'<div id="pkmsvv-champion-bracket" class="pkmsvv-champion-bracket"></div>'+'<div id="pkmsvv-champion-hall" class="pkmsvv-champion-hall"></div>'+'<div id="pkmsvv-champion-podium" class="pkmsvv-champion-podium" hidden></div>'+
    '<div class="pkmsvv-champion-actions"><button id="pkmsvv-champion-start" type="button" class="btn gold">Bắt đầu giải đấu</button><button id="pkmsvv-champion-sky" type="button" class="btn gold" hidden>🐉 Thách đấu Rayquaza</button>'+
    '<button id="pkmsvv-champion-rematch" type="button" class="btn gold" hidden>Thách đấu lại Champion</button>'+
@@ -211,10 +231,10 @@ G.PKMSVVChampionArena=(()=>{
    '<button id="pkmsvv-champion-ready" type="button" class="btn gold" hidden>Sẵn sàng</button></div></div>';
   document.body.append(overlay);
   $('pkmsvv-champion-close').onclick=()=>{overlay.hidden=true;clearResult();if(active)returnToMenu();};
-  $('pkmsvv-arena-mode-solo').onclick=()=>{overlay.hidden=true;G.PKMSVVArenaSolo?.open?.();};
-  $('pkmsvv-arena-mode-pvp').onclick=()=>{overlay.hidden=true;
-   if(window.PKMSVVCoop?.open)window.PKMSVVCoop.open('arena');
-   else G.UI?.toast?.(tr('Mở Co-op → Arena 1v1 để tạo hoặc vào phòng đấu.','Open Co-op → Arena 1v1 to host or join.'));
+  $('pkmsvv-champion-vs-ai').onclick=()=>{mode='story';clearResult();updatePanel();};
+  $('pkmsvv-champion-vs-human').onclick=()=>{overlay.hidden=true;
+   if(typeof window!=='undefined'&&window.PKMSVVCoop?.open)window.PKMSVVCoop.open('champion');
+   else G.UI?.toast?.(tr('Mời bạn bằng PC Host hoặc Wi-Fi để đấu Champion.','Invite a friend over PC Host or Wi-Fi for Champion PvP.'));
   };
   $('pkmsvv-arena-mode-champion').onclick=()=>{mode='story';clearResult();updatePanel();};
    $('pkmsvv-arena-mode-league').onclick=()=>{if(!storyCompleted())return;mode='league';clearResult();updatePanel();};
@@ -326,7 +346,7 @@ G.PKMSVVChampionArena=(()=>{
    return false;
   }
   if(!save.pkmsvvChapter5Seen){
-   return !!G.PKMSVVStory?.chapter5?.(ok=>{if(ok)open();});
+   return !!G.PKMSVVStory?.chapter5?.(ok=>{if(ok)openArena();});
   }
   if(!G.PKMSVVStory?.allMultiplayerCompleted?.(save)&&
      !G.PKMSVVStory?.arenaUnlocked?.(save)){
@@ -342,7 +362,7 @@ G.PKMSVVChampionArena=(()=>{
    return false;
   }
   if(!save.pkmsvvChapter6Seen){
-   return !!G.PKMSVVStory?.chapter6?.(ok=>{if(ok)open();});
+   return !!G.PKMSVVStory?.chapter6?.(ok=>{if(ok)openArena();});
   }
   if(!G.PKMSVVStory?.arenaUnlocked?.(save))return false;
   mode='story';region=nextStoryRegion(save);clearResult();updatePanel();return true;
@@ -377,8 +397,8 @@ G.PKMSVVChampionArena=(()=>{
   const aiTier=opp.tier==='elite'?'elite':opp.tier==='trained'?'trained':'novice';
   const power=region,profile=REGION_BALANCE[region]||REGION_BALANCE[0];
   const cadence=Math.max(.62,1-.04*power)*profile.tempo;
-  const tierHp=aiTier==='elite'?1.28:aiTier==='trained'?1.13:1.03;
-  const tierDmg=aiTier==='elite'?1.32:aiTier==='trained'?1.15:1.04;
+  const tierHp=aiTier==='elite'?1.38:aiTier==='trained'?1.16:1.03;
+  const tierDmg=aiTier==='elite'?1.38:aiTier==='trained'?1.18:1.04;
   const raw={dex,name:targetName,hp:Math.round((340+26*power+12*round)*tierHp*profile.hp),
     spd:112+Math.min(28,region*2.5+round*3),
     dmg:Math.round((12.4+.95*power+.5*round)*tierDmg*profile.atk*10)/10,xp:0,behavior:'champion',
@@ -406,7 +426,8 @@ G.PKMSVVChampionArena=(()=>{
   }
   if(target)applyMapEffect(pl,target);
   target.pkmsvvChampion=true;
-  target._pkmsvvChampionMegaEligible=mode==='story'&&round===3; // Kanto included
+  // Story and post-story Champion finals both transform at the half-HP boundary.
+  target._pkmsvvChampionMegaEligible=round===3;
   target._pkmsvvMegaSprite=opp?.pkmsvvMegaSprite||null;
   target._pkmsvvMegaPhase2=false;
   target._pkmsvvMegaTransition=0;
@@ -925,7 +946,7 @@ G.PKMSVVChampionArena=(()=>{
  // Chapter 5 is explicitly accessible through Memories and Arena intro.
  // In particular, first LAN access must never be blocked by a cutscene.
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',menu,{once:true});else menu();
- return {REGIONS,REGION_THEMES,REGION_BALANCE,CHAMPION_PHASE_SECONDS,DUEL_COUNTDOWN,MEGA_TRANSITION_SECONDS,MAP_EFFECTS,mapEffect,MEGA_KEYS,TEMP_CHAMPIONS,GEN_POOLS,GEN_BOUNDS,regionalPool,displayRegion,megaPhase,regionChampion,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIRST_PREP_SECONDS,FIGHT_SECONDS,WARN_SECONDS,prepSeconds,previewSeconds,makeBracket,aiWinner,open,start,startSky,rematch,exit,nextDuel,renderPodium,
+ return {REGIONS,REGION_THEMES,REGION_BALANCE,CHAMPION_PHASE_SECONDS,DUEL_COUNTDOWN,MEGA_TRANSITION_SECONDS,MAP_EFFECTS,mapEffect,MEGA_KEYS,TEMP_CHAMPIONS,GEN_POOLS,GEN_BOUNDS,regionalPool,displayRegion,megaPhase,regionChampion,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIRST_PREP_SECONDS,FIGHT_SECONDS,WARN_SECONDS,prepSeconds,previewSeconds,makeBracket,aiWinner,open,openArena,arenaHub,start,startSky,rematch,exit,nextDuel,renderPodium,
   update,settle,claimSeal,ledger,cancelSession,get active(){return active},get stage(){return stage},get round(){return round},
   get opponent(){return opp}};
 })();
