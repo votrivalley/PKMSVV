@@ -171,6 +171,8 @@ jobs:
         run: node --test tests/android-stable-signing.test.cjs tests/android-signing-identity.test.cjs
       - name: Compile entire modified offline game
         run: npm run prepare:game
+      - name: Validate bilingual 1.0–current changelog and preserve Vietnamese UI
+        run: npm run test:localization
       - name: Phase A+B — Berry effect HUD and collision-free item/skill/Bond choices
         run: npm run test:berry:ux && npm run test:choice:queue
       - name: C+D+E — Held item selection, Solo Fusion pilot and deterministic season
