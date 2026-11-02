@@ -137,6 +137,8 @@ jobs:
         run: node --test tests/mega-4dir-pc-qa.test.cjs tests/mega4-isolated-pc-launcher.test.cjs
       - name: Compile LAN game without Firebase
         run: npm run prepare:lan
+      - name: Validate bilingual 1.0–current changelog and preserve Vietnamese UI
+        run: npm run test:localization
         env:
           PKMSVV_MEGA_SPRITE_PACK: '1'
       - name: Verify PC Mega asset pack matches Android and Web releases
