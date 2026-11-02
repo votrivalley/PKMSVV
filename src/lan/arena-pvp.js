@@ -10,9 +10,10 @@ G.PKMSVVArenaPvp=(()=>{
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  const clamp=(n,lo,hi)=>Math.max(lo,Math.min(hi,Number.isFinite(Number(n))?Number(n):lo));
  const members=()=>G.Social?.room?.members||[];
- const actualRoom=()=>G.Social?.room?.mode==='arena'&&
+ const isDuelMode=value=>value==='arena'||value==='champion';
+ const actualRoom=()=>isDuelMode(G.Social?.room?.mode)&&
     members().length===2&&members().every(m=>!m.bot&&typeof m.uid==='string');
- let active=false,host=false,uid='',hostUid='',seed=null,people=[],hp={},stage='idle';
+ let active=false,host=false,uid='',hostUid='',seed=null,people=[],hp={},stage='idle',matchType='arena',round=1,scores={};
  let elapsed=0,serial=0,received=-1,frameClock=0,winner=null,casts=new Map(),orbClock=0;
  let element=null,result=null;
  // Keep duel isolation active after a rival disconnects; otherwise old
@@ -28,7 +29,7 @@ G.PKMSVVArenaPvp=(()=>{
  };
  const kind=(m)=>m?.kind||'projectile';
  function validPair(cfg){
-  return cfg?.mode==='arena'&&actualRoom()&&
+  return isDuelMode(cfg?.mode)&&cfg.mode===G.Social?.room?.mode&&actualRoom()&&
    Array.isArray(cfg.members)&&cfg.members.length===2&&
    cfg.members.every(m=>members().some(r=>r.uid===m.uid&&!r.bot))&&
    cfg.host===G.Social.room.host;
@@ -47,7 +48,7 @@ G.PKMSVVArenaPvp=(()=>{
   panel.querySelector('#pkmsvv-arena-pvp-exit').onclick=exit;
  }
  function cleanup(){
-  active=false;host=false;stage='idle';winner=null;people=[];hp={};casts.clear();
+  active=false;host=false;stage='idle';winner=null;people=[];hp={};matchType='arena';round=1;scores={};casts.clear();
   frameClock=0;orbClock=0;elapsed=0;received=-1;
   if(element){element.remove();element=null;}
   if(result){result.remove();result=null;}
@@ -86,6 +87,7 @@ G.PKMSVVArenaPvp=(()=>{
   if(!cfg.members.some(m=>m.uid===uid))return false;
   people=cfg.members.map(m=>({uid:m.uid,name:String(m.name||'Trainer').slice(0,24),dex:m.dex}));
   seed=cfg.seed;active=true;stage='countdown';elapsed=0;winner=null;
+  matchType=cfg.mode;round=1;scores=Object.fromEntries(people.map(m=>[m.uid,0]));
   hp=Object.fromEntries(people.map(m=>[m.uid,HP]));
   normalize(pl);
   const left=uid===hostUid;
@@ -128,6 +130,24 @@ G.PKMSVVArenaPvp=(()=>{
   if(!radial&&Math.abs(delta)>spread)return null;
   return {move:m,distance:d,from,target:peerId(from),kind:k};
  }
+ // Solo invited PvP is a single duel. Champion invited PvP is a real
+ // two-human best-of-three. Never create NPC stand-ins or award story seals.
+ function settleRound(won){
+  G.Projectiles?.clear?.();G.Combat?.clearFields?.();casts.clear();orbClock=0;
+  if(matchType!=='champion'){winner=won;stage='result';return;}
+  if(won&&Object.prototype.hasOwnProperty.call(scores,won))scores[won]++;
+  if(Math.max(...Object.values(scores))>=2||round>=3){
+   winner=won&&scores[won]>scores[peerId(won)]?won:
+    scores[people[0].uid]>scores[people[1].uid]?people[0].uid:
+    scores[people[1].uid]>scores[people[0].uid]?people[1].uid:null;
+   stage='result';return;
+  }
+  round++;stage='countdown';elapsed=0;winner=null;
+  for(const member of people)hp[member.uid]=HP;
+  const p=local();if(p){p.hp=HP;p.dead=false;p.invuln=COUNTDOWN+.2;p.frozen=true;}
+  const other=G.Coop?.mate?.(peerId(uid))?.pl;
+  if(other){other.hp=HP;if(other.net)other.net.hp=HP;}
+ }
  function strike(from,id,lvl,aim){
   const hit=canCast(from,id,lvl,aim);
   if(!hit)return false;
@@ -143,7 +163,7 @@ G.PKMSVVArenaPvp=(()=>{
   const opponent=G.Coop?.mate?.(victim)?.pl;
   if(opponent?.net)opponent.net.hp=Math.max(1,hp[victim]);
   G.FX?.burst?.(coords(victim)?.x||0,coords(victim)?.y||0,'#ff8a92',5,70);
-  if(hp[victim]<=0){winner=from;stage='result';G.Projectiles?.clear?.();G.Combat?.clearFields?.();}
+  if(hp[victim]<=0)settleRound(from);
   sendState(true);
   return true;
  }
@@ -151,16 +171,19 @@ G.PKMSVVArenaPvp=(()=>{
   if(!mode()||!host)return;
   if(!force&&frameClock>0)return;
   frameClock=FRAME_RATE;
-  const packet={k:'apvp',seed,seq:++serial,stage,time:elapsed,hp:{...hp},winner};
+  const packet={k:'apvp',seed,seq:++serial,stage,time:elapsed,hp:{...hp},winner,matchType,round,scores:{...scores}};
   G.Net?.broadcast?.(packet);
   render();
  }
  function receive(from,data){
   if(!active||!data||from!==hostUid||host||data.k!=='apvp'||
+     data.matchType!==matchType||
      data.seed!==seed||!Number.isSafeInteger(data.seq)||data.seq<=received)return;
   received=data.seq;
   if(!['countdown','fight','result'].includes(data.stage))return;
   stage=data.stage;elapsed=clamp(data.time,0,DUEL+COUNTDOWN+5);
+  round=clamp(data.round,1,3);
+  for(const m of people)scores[m.uid]=clamp(data.scores?.[m.uid],0,3);
   for(const m of people)hp[m.uid]=clamp(data.hp?.[m.uid],0,HP);
   winner=data.winner&&people.some(m=>m.uid===data.winner)?data.winner:null;
   applyHp();render();
@@ -193,9 +216,10 @@ G.PKMSVVArenaPvp=(()=>{
   element.replaceChildren(bar(one),bar(two));
   let txt=element.querySelector('.pkmsvv-arena-pvp-time');
   if(!txt){txt=document.createElement('div');txt.className='pkmsvv-arena-pvp-time';element.append(txt);}
-  txt.textContent=stage==='fight'?tr('⚔ ĐẤU TRƯỜNG · ','⚔ ARENA · ')+
-     Math.max(0,Math.ceil(DUEL-elapsed))+'s':stage==='countdown'?
-     tr('⚔ CHUẨN BỊ · ','⚔ READY · ')+Math.max(1,Math.ceil(COUNTDOWN-elapsed)):'';
+  const heading=matchType==='champion'?'🏆 CHAMPION '+round+'/3 · '+
+   people.map(m=>(scores[m.uid]||0)).join('–')+' · ':tr('⚔ ĐẤU TRƯỜNG · ','⚔ ARENA · ');
+  txt.textContent=stage==='fight'?heading+Math.max(0,Math.ceil(DUEL-elapsed))+'s':stage==='countdown'?
+   heading+tr('CHUẨN BỊ · ','READY · ')+Math.max(1,Math.ceil(COUNTDOWN-elapsed)):'';
   let count=$('pkmsvv-arena-pvp-count');
   if(!count){count=document.createElement('div');count.id='pkmsvv-arena-pvp-count';count.className='pkmsvv-arena-pvp-count';document.body.append(count);}
   count.hidden=stage==='result'||stage==='fight'&&elapsed>.7;
@@ -207,7 +231,7 @@ G.PKMSVVArenaPvp=(()=>{
     result.querySelector('#pkmsvv-arena-pvp-result-title').textContent=
       winner===null?tr('🤝 HÒA!','🤝 DRAW!'):win?tr('🏆 BẠN THẮNG!','🏆 VICTORY!'):tr('💥 BẠN THUA!','💥 DEFEAT!');
     result.querySelector('#pkmsvv-arena-pvp-result-details').textContent=
-      tr('Arena 1v1 · ', 'Arena 1v1 · ')+(people.find(p=>p.uid===winner)?.name||tr('Hòa','Draw'))+
+      (matchType==='champion'?'Champion PvP · '+people.map(m=>scores[m.uid]||0).join('–')+' · ':'Arena Solo 1v1 · ')+(people.find(p=>p.uid===winner)?.name||tr('Hòa','Draw'))+
       (winner?tr(' chiến thắng.',' wins.'):'');
    }
   }
@@ -231,9 +255,9 @@ G.PKMSVVArenaPvp=(()=>{
      }
     }
     if(elapsed>=DUEL){
-     winner=hp[people[0].uid]===hp[people[1].uid]?null:
+     const win=hp[people[0].uid]===hp[people[1].uid]?null:
        hp[people[0].uid]>hp[people[1].uid]?people[0].uid:people[1].uid;
-     stage='result';sendState(true);
+     settleRound(win);sendState(true);
     }
    }
    sendState();
@@ -333,5 +357,5 @@ G.PKMSVVArenaPvp=(()=>{
  install();
  return {begin,cleanup,update,receive,strike,canCast,loadout,render,exit,COUNTDOWN,DUEL,HP,
   get active(){return active},get stage(){return stage},get winner(){return winner},
-  get health(){return {...hp}},get host(){return host}};
+  get health(){return {...hp}},get host(){return host},get matchType(){return matchType},get round(){return round},get scores(){return {...scores}}};
 })();
