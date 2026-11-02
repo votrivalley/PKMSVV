@@ -92,8 +92,8 @@
  }
  function addressEntry(role,target=detail){
   const p=document.createElement('p');p.textContent=lan()?
-   'Nếu bạn bè tạo phòng trên một máy Host khác, dán link mời hoặc địa chỉ LAN ở đây:':
-   'Dán link mời được Host gửi cho bạn (máy cùng Wi-Fi).';
+   L('Nếu bạn bè tạo phòng trên một máy Host khác, dán link mời hoặc địa chỉ LAN ở đây:','If a friend hosts on another PC, paste their invitation link or LAN address:'):
+   L('Dán link mời được Host gửi cho bạn (máy cùng Wi-Fi).','Paste the invitation sent by your Host on the same Wi-Fi.');
   const input=document.createElement('input');input.type='text';input.placeholder=L('Link mời hoặc IP nội bộ','Invitation link or local IP');
   input.setAttribute('aria-label','IP:cổng hoặc liên kết máy Host');input.autocomplete='off';
   try{input.value=localStorage.getItem('pkmsvv.lan.host.ip')||'';}catch(_){}
@@ -135,7 +135,7 @@
     }
     try{localStorage.setItem('pkmsvv.lan.host.ip',u.host);}catch(_){}
     window.location.assign(u.href);
-   }catch(e){status.textContent=e.name==='AbortError'?'Host không phản hồi. Kiểm tra IP:cổng, Wi-Fi và tường lửa.':(e.message||'Không kết nối được Host.');}
+   }catch(e){status.textContent=e.name==='AbortError'?L('Host không phản hồi. Kiểm tra IP:cổng, Wi-Fi và tường lửa.','Host did not respond. Check IP:port, Wi-Fi and firewall.'):(e.message||L('Không kết nối được Host.','Could not connect to Host.'));}
    finally{clearTimeout(timer);go.disabled=false;input.disabled=false;}
   };
   input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go.click();}});
@@ -148,9 +148,9 @@
    detail.replaceChildren();
    const help=document.createElement('p');help.textContent=L('Chọn phòng đang mở hoặc dán mã phòng được bạn gửi:','Choose a room or enter an invitation code:');
    detail.append(help);
-   if(!list.length)detail.append('Chưa có phòng công khai đang chờ. ');
+   if(!list.length)detail.append(L('Chưa có phòng công khai đang chờ. ','No public rooms are waiting. '));
    for(const r of list){
-    const b=document.createElement('button');b.textContent=(r.name||'Host')+' · '+r.size+' người · Tham gia';
+    const b=document.createElement('button');b.textContent=(r.name||'Host')+' · '+r.size+L(' người · Tham gia',' players · Join');
     b.onclick=async()=>{
      const result=await G.Social.joinRoom(r.id);
      if(result.ok){close();G.LobbyUI.open();}else info(result.error);
@@ -167,11 +167,11 @@
    const advanced=document.createElement('details');advanced.className='pkmsvv-coop-advanced';
    const summary=document.createElement('summary');summary.textContent=L('Đổi sang máy Host khác (nâng cao)','Connect to another Host (advanced)');
    advanced.append(summary);addressEntry('join',advanced);detail.append(advanced);
-  }catch(e){info('Không thể tìm phòng: '+e.message);}
+  }catch(e){info(L('Không thể tìm phòng: ','Could not find rooms: ')+e.message);}
  }
  async function action(role){
   if(busy)return;
-  if(arenaMode(mode)&&role==='ai'){info('Arena PvP chỉ nhận người chơi thật. Hãy chọn Đấu với AI trong Arena.');return;}
+  if(arenaMode(mode)&&role==='ai'){info(L('Arena PvP chỉ nhận người chơi thật. Hãy chọn Đấu với AI trong Arena.','Arena PvP requires real players. Choose Fight AI in Arena instead.'));return;}
   // Capture mode before any async network/AI setup: no silent downgrade to Co-op.
   const requestedMode=mode;
   if(role!=='ai'&&(lan()||window.PKMSVV_STANDALONE_AI_AVAILABLE)&&!window.PKMSVV_WIFI&&!new URLSearchParams(location.search).get('pkmsvvCode')){
@@ -200,7 +200,7 @@
       }
       history.replaceState(null,'',location.pathname);
       close();G.LobbyUI.open();return;
-     }catch(e){info('Lời mời không thể mở: '+e.message);return;}
+     }catch(e){info(L('Lời mời không thể mở: ','Could not open invitation: ')+e.message);return;}
     }
     return joinRooms();
    }
@@ -226,7 +226,7 @@
      for(let i=0;i<missing;i++)await G.LanBus.request('addBot',{});
     }
     close();G.LobbyUI.open();
-   }catch(e){info('Không tạo được phòng: '+e.message);}
+   }catch(e){info(L('Không tạo được phòng: ','Could not create room: ')+e.message);}
    finally{busy=false;}
    return;
   }
@@ -236,15 +236,15 @@
   }
   if(window.PKMSVV_LOCAL_UI_MODE==='android-full-lan'){
    const api=window.Capacitor?.Plugins?.PKMSVVLAN;
-   if(!api?.open){info('Không thể kết nối LAN trên Android');return;}
-   info(role==='host'?'Chọn PC Host cùng Wi-Fi để tạo phòng cho bạn bè.':'Đang tìm Host cùng Wi-Fi…');
+   if(!api?.open){info(L('Không thể kết nối LAN trên Android','Cannot connect to LAN on Android'));return;}
+   info(role==='host'?L('Chọn PC Host cùng Wi-Fi để tạo phòng cho bạn bè.','Choose a PC Host on the same Wi-Fi to create a room for friends.'):L('Đang tìm Host cùng Wi-Fi…','Looking for a Host on your Wi-Fi…'));
    Promise.resolve(api.open({role,mode})).catch(e=>info(e.message||'Không tìm thấy Host'));
    return;
   }
   detail.replaceChildren();
   if(role==='ai'){
    const hint=document.createElement('p');
-   hint.textContent='Bản HTML5 Cloudflare đang chơi offline và không chạy máy chủ LAN. Để chơi với AI ở bản này, hãy mở link lời mời từ PC Host đang chạy. Chọn “Chơi với AI” trên Host để tạo bot; website độc lập chưa có AI offline.';
+   hint.textContent=L('Bản HTML5 Cloudflare đang chơi offline và không chạy máy chủ LAN. Để chơi với AI ở bản này, hãy mở link lời mời từ PC Host đang chạy. Chọn “Chơi với AI” trên Host để tạo bot; website độc lập chưa có AI offline.','This Cloudflare HTML5 site does not run a LAN server. Open a PC Host invitation on the same Wi-Fi and select Play with AI on that Host to add bots. The standalone website does not offer offline AI.');
    detail.append(hint);
    const link=document.createElement('button');link.type='button';link.textContent=L('Dán lời mời từ PC Host','Paste PC Host invitation');
    link.onclick=()=>{detail.replaceChildren();addressEntry('join');};
@@ -252,7 +252,7 @@
   }
   if(role==='host'){
    const help=document.createElement('p');
-   help.textContent='Tạo phòng trên PC Host cùng Wi-Fi. Website chưa tự làm máy chủ LAN; Chơi với AI chạy ngay trên thiết bị này.';
+   help.textContent=L('Tạo phòng trên PC Host cùng Wi-Fi. Website chưa tự làm máy chủ LAN; Chơi với AI chạy ngay trên thiết bị này.','Create a room on a PC Host on the same Wi-Fi. The website cannot host a LAN server; Play with AI runs on this device.');
    detail.append(help);
   }
   addressEntry(role);
