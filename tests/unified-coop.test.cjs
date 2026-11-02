@@ -58,7 +58,7 @@ test('LAN bots can participate in all 3 modes and pursue real Egg Rush nests',()
  const server=read('lan-server/server.cjs'),bot=read('src/lan/lan-ai.js'),egg=read('src/web/pkmsvv-egg-rush.js');
  assert.match(server,/const max=r.mode==='royale'\?10:\(r.mode==='arena'\|\|r.mode==='champion'\)\?2:4/);
   assert.match(read('src/lan/arena-pvp.js'),/actualRoom\(\)/);
-  assert.match(read('src/shared/coop-unified.js'),/Arena 1v1/);
+  assert.match(read('src/shared/coop-unified.js'),/Solo · Mời người chơi/);
  assert.match(bot,/\['coop','royale','eggrush','berry','berryeasy'\]/);
  assert.match(bot,/G\.EggRush\?\.nests/);
  assert.match(egg,/get nests\(\)\{return nests;\}/);
