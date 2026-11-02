@@ -202,8 +202,8 @@ G.PKMSVVChampionArena=(()=>{
   overlay.innerHTML='<div class="pkmsvv-champion-panel" role="dialog" aria-modal="true" aria-labelledby="pkmsvv-champion-title">'+
    '<div class="pkmsvv-champion-heading"><h2 id="pkmsvv-champion-title">🏆 Arena · Champion</h2><div class="pkmsvv-champion-heading-actions"><button class="btn ghost" id="pkmsvv-champion-close" type="button">×</button></div></div>'+
    '<div class="pkmsvv-crown-journey"><button id="pkmsvv-arena-mode-champion" type="button" class="btn gold">👑 Hành Trình Vương Miện</button></div><p id="pkmsvv-champion-info"></p><div id="pkmsvv-champion-regions" class="pkmsvv-champion-regions"></div>'+
-   '<div class="pkmsvv-arena-mode-tabs"><button id="pkmsvv-arena-mode-solo" type="button" class="btn">⚔ Solo 1v1</button><button id="pkmsvv-arena-mode-league" type="button" class="btn">🏆 Giải Champion</button></div>'+
-   '<div id="pkmsvv-champion-map-row" class="pkmsvv-champion-map-row" hidden><label for="pkmsvv-champion-map">Sân thi đấu</label><select id="pkmsvv-champion-map"></select><small>Đấu với AI trong bản thử nghiệm; đấu với bạn bè qua LAN sẽ phát triển sau.</small></div>'+ 
+   '<div class="pkmsvv-arena-mode-tabs"><button id="pkmsvv-arena-mode-solo" type="button" class="btn">⚔ Solo 1v1 · AI</button><button id="pkmsvv-arena-mode-pvp" type="button" class="btn">🤝 Arena Co-op 1v1</button><button id="pkmsvv-arena-mode-league" type="button" class="btn">🏆 Giải Champion</button></div>'+
+   '<div id="pkmsvv-champion-map-row" class="pkmsvv-champion-map-row" hidden><label for="pkmsvv-champion-map">Sân thi đấu</label><select id="pkmsvv-champion-map"></select><small>Chọn Arena Co-op 1v1 để đấu với bạn bè thật trong phòng LAN.</small></div>'+ 
     '<div id="pkmsvv-champion-progress" class="pkmsvv-champion-progress"></div>'+'<div id="pkmsvv-champion-bracket" class="pkmsvv-champion-bracket"></div>'+'<div id="pkmsvv-champion-hall" class="pkmsvv-champion-hall"></div>'+'<div id="pkmsvv-champion-podium" class="pkmsvv-champion-podium" hidden></div>'+
    '<div class="pkmsvv-champion-actions"><button id="pkmsvv-champion-start" type="button" class="btn gold">Bắt đầu giải đấu</button><button id="pkmsvv-champion-sky" type="button" class="btn gold" hidden>🐉 Thách đấu Rayquaza</button>'+
    '<button id="pkmsvv-champion-rematch" type="button" class="btn gold" hidden>Thách đấu lại Champion</button>'+
@@ -212,6 +212,10 @@ G.PKMSVVChampionArena=(()=>{
   document.body.append(overlay);
   $('pkmsvv-champion-close').onclick=()=>{overlay.hidden=true;clearResult();if(active)returnToMenu();};
   $('pkmsvv-arena-mode-solo').onclick=()=>{overlay.hidden=true;G.PKMSVVArenaSolo?.open?.();};
+  $('pkmsvv-arena-mode-pvp').onclick=()=>{overlay.hidden=true;
+   if(window.PKMSVVCoop?.open)window.PKMSVVCoop.open('arena');
+   else G.UI?.toast?.(tr('Mở Co-op → Arena 1v1 để tạo hoặc vào phòng đấu.','Open Co-op → Arena 1v1 to host or join.'));
+  };
   $('pkmsvv-arena-mode-champion').onclick=()=>{mode='story';clearResult();updatePanel();};
    $('pkmsvv-arena-mode-league').onclick=()=>{if(!storyCompleted())return;mode='league';clearResult();updatePanel();};
    $('pkmsvv-champion-map').onchange=()=>{
