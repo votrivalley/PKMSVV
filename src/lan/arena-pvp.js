@@ -210,10 +210,10 @@ G.PKMSVVArenaPvp=(()=>{
     if(elapsed>=DUEL){
      winner=hp[people[0].uid]===hp[people[1].uid]?null:
        hp[people[0].uid]>hp[people[1].uid]?people[0].uid:people[1].uid;
-     stage='result';
+     stage='result';sendState(true);
     }
    }
-   sendState(stage==='result');
+   sendState();
   }
   applyHp();
   if(!host)render();
@@ -258,9 +258,18 @@ G.PKMSVVArenaPvp=(()=>{
   if(typeof updateRift==='function')G.Rift.update=function(...args){
    if(mode())return;return updateRift.apply(this,args);
   };
+  const updateEvents=G.Events?.update;
+  if(typeof updateEvents==='function')G.Events.update=function(...args){
+   if(mode())return;return updateEvents.apply(this,args);
+  };
   const updateJudge=G.Judgment?.update;
   if(typeof updateJudge==='function')G.Judgment.update=function(...args){
    if(mode())return;return updateJudge.apply(this,args);
+  };
+  const playerUpdate=G.Player?.prototype?.update;
+  if(typeof playerUpdate==='function')G.Player.prototype.update=function(dt,...args){
+   if(mode()&&this===local()&&stage!=='fight')this.frozen=true;
+   return playerUpdate.call(this,dt,...args);
   };
   const oldCombat=G.Combat?.tick;
   if(typeof oldCombat==='function')G.Combat.tick=function(dt,pl,now){
