@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.78",
+  "version": "1.5.79",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.78: Arena Solo/Champion with human Host Join or balanced AI, Champion Mega finals, cross-platform Arena QA",
+  "description": "Pokémon Chuyển Sinh v1.5.79: unify 36 genuine Mega forms and 32 authentic Shiny sprite sets on PC Android Web and iOS",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
