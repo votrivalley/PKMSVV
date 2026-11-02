@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.76",
+  "version": "1.5.77",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.76: real cross-platform Arena Co-op 1v1, 3-2-1, authoritative damage, rematches; PvP and Survival HUD QA",
+  "description": "Pokémon Chuyển Sinh v1.5.77: fix unlocked Mega Lucario button in Co-op, preserve full 30s duration; Champion 50% HP Mega QA",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
