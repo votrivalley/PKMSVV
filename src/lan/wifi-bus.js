@@ -8,7 +8,7 @@ if(new URLSearchParams(location.search).get('pkmsvvWifi')==='1'){
   let uid='lan-'+random(10),name='Trainer',room=null,owner=false,next=0;
   const emit=m=>listeners.forEach(fn=>{try{fn(m);}catch(e){console.error('Wi-Fi event',e);}});
   const snapshot=()=>room?JSON.parse(JSON.stringify(room)):null;
-  const limit=()=>room?.mode==='royale'?10:room?.mode==='arena'?2:4;
+  const limit=()=>room?.mode==='royale'?10:(room?.mode==='arena'||room?.mode==='champion')?2:4;
   const dex=d=>G.DEX_BY?.[Number(d)]?Number(d):25;
   const power=v=>{
    const out={};if(!v||typeof v!=='object'||Array.isArray(v))return null;
@@ -42,7 +42,7 @@ if(new URLSearchParams(location.search).get('pkmsvvWifi')==='1'){
    if(action==='list')return [];
    if(action==='create'){
     if(who!==uid||room||links.size)throw Error('Rời phòng hoặc hủy ghép nối trước khi tạo phòng khác');
-    owner=true;room={id:'wifi-'+random(12),host:uid,mode:['coop','royale','eggrush','berry','berryeasy','arena'].includes(data.mode)?data.mode:'coop',visibility:'private',open:true,
+    owner=true;room={id:'wifi-'+random(12),host:uid,mode:['coop','royale','eggrush','berry','berryeasy','arena','champion'].includes(data.mode)?data.mode:'coop',visibility:'private',open:true,
      members:[{uid,name,dex:dex(data.dex),shiny:!!data.shiny,power:power(data.power)}]};publish();return snapshot();
    }
    if(action==='join'){
@@ -67,7 +67,7 @@ if(new URLSearchParams(location.search).get('pkmsvvWifi')==='1'){
    if(action==='finish'){room.open=true;room.members=room.members.filter(m=>!m.bot);publish();return snapshot();}
    if(!room.open)throw Error('Hãy trở về sảnh trước');
    if(action==='addBot'){
-     if(room.mode==='arena')throw Error('Arena 1v1 chỉ nhận hai người chơi thật.');
+     if(room.mode==='arena'||room.mode==='champion')throw Error('Arena 1v1 chỉ nhận hai người chơi thật.');
     if(room.members.length>=limit())throw Error('Phòng đã đủ người và AI');
     const used=new Set(room.members.map(m=>m.dex));let pool=Object.keys(G.DEX_BY||{}).map(Number).filter(d=>d>0&&!used.has(d));
     if(!pool.length)pool=[25];const species=G.DEX_BY?.[Number(data.dex)]?Number(data.dex):pool[Math.floor(Math.random()*pool.length)];
