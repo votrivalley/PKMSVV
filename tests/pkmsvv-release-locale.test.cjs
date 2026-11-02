@@ -7,19 +7,20 @@ const getHistory=()=>{
 };
 const localized=(pair,lang)=>pair[lang==='en'?1:0];
 const vietnamese=/[ăâđêôơưĂÂĐÊÔƠƯ]/u;
-test('Version history covers 1.0 to the current release, not outdated original branding',()=>{
- const items=getHistory(),version=require('../package.json').version;
- assert.equal(items.length,8);
- assert.ok(items[0].title[0].includes(version),'latest entry follows the real package version');
- assert.ok(items.at(-1).title[0].includes('v1.0'));
- assert.match(items.at(-1).subtitle[0],/Pokémon Sống Sót.*Pokémon Chuyển Sinh/);
- assert.match(JSON.stringify(items.at(-1).new.map(p=>p[0])),/10 chương/);
+test('What's New is one continuous summary of all additions since the original',()=>{
+ const items=getHistory();
+ assert.equal(items.length,1,'no separate release-by-release entries');
+ assert.equal(items[0].title[0],'Pokémon Chuyển Sinh');
+ assert.equal(items[0].title[1],'Pokémon Reincarnation');
+ assert.match(items[0].new[0][0],/Pokémon Sống Sót.*Pokémon Chuyển Sinh/);
+ assert.match(items[0].new[0][0],/10 chương/);
  const allVi=JSON.stringify(items.map(v=>[v.new,v.chg,v.fix].flat().map(x=>x?.[0])));
  for(const name of ['Kecleon','Mega','Champion','Fusion','Berry','Tranh Trứng','Nature','Arceus']){
-  assert.ok(allVi.includes(name),name+' missing from SVV-vs-original history');
+  assert.ok(allVi.includes(name),name+' missing from SVV-vs-original summary');
  }
- for(let i=1;i<items.length;i++)assert.ok(items[i-1].d>=items[i].d,'chronological history');
+ assert.doesNotMatch(JSON.stringify(items),/\bv1\.\d+(?:\.\d+)?\b/,'do not show per-patch version headings');
 });
+
 test('Every player-visible release note is a pair with correctly separated VI and English',()=>{
  const notes=getHistory();
  for(const entry of notes){
@@ -70,7 +71,7 @@ test('Co-op, Arena and menu choose paired text at render time; no forced Vietnam
  assert.match(champion,/tr\('Chọn Solo hoặc Champion','Choose Solo or Champion'\)/);
  assert.match(menu,/english\?'Pokémon Reincarnation':'Pokémon Chuyển Sinh'/);
  assert.match(menu,/english\?'I woke up as a Pokémon':'Tỉnh giấc tôi thấy mình hóa Pokemon'/);
- assert.match(menu,/Có gì mới: 1\.5\.80/);
+ assert.match(menu,/replaceAll\('Có gì mới: 1\.4','Có gì mới'\)/);
 });
 test('English-specific dictionary and consolidated changelog reach all three build paths',()=>{
  const prepare=read('scripts/prepare-game.cjs'),web=read('scripts/prepare-web.cjs');
@@ -85,11 +86,11 @@ test('English-specific dictionary and consolidated changelog reach all three bui
  const html=read('vendor/pokesurvivor/dev.html'),
        news=read('vendor/pokesurvivor/js/data/changelog.js');
  assert.match(html,/js\/data\/pkmsvv-ui-en-coverage\.js/);
- assert.ok(news.includes('consolidated bilingual development history'));
+ assert.ok(news.includes("one continuous bilingual What's New entry"));
  let G={};
  vm.runInNewContext(news,{G});
- assert.equal(G.CHANGELOG[0].title[0].includes(require('../package.json').version),true);
- assert.equal(G.CHANGELOG.at(-1).title[0].includes('v1.0'),true);
+ assert.equal(G.CHANGELOG[0].title[0],'Pokémon Chuyển Sinh');
+ assert.equal(G.CHANGELOG.length,1);
 });
 test('The rendered What’s New dialog never translates an English entry through Vietnamese or vice versa',()=>{
  const vendor=path.join(root,'vendor','pokesurvivor/js/ui/news-ui.js');
@@ -104,13 +105,13 @@ test('The rendered What’s New dialog never translates an English entry through
   G.NewsUI.init();G.NewsUI.open();
   const html=controls['news-body'].innerHTML;
   if(lang==='vi'){
-   assert.match(html,/Từ Pokémon Sống Sót trở thành Pokémon Chuyển Sinh/);
+   assert.match(html,/Pokémon Sống Sót.*Pokémon Chuyển Sinh/);
    assert.match(html,/Cửa hàng Kecleon/);
    assert.doesNotMatch(html,/From Pokémon Survival to Pokémon Reincarnation/);
   }else{
-   assert.match(html,/From Pokémon Survival to Pokémon Reincarnation/);
+   assert.match(html,/Pokémon Survival.*Pokémon Reincarnation/);
    assert.match(html,/Kecleon Shop/);
-   assert.doesNotMatch(html,/Từ Pokémon Sống Sót trở thành/);
+   assert.doesNotMatch(html,/Pokémon Sống Sót chính thức/);
    assert.doesNotMatch(html,vietnamese);
   }
  }
