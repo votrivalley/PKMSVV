@@ -47,7 +47,7 @@ test('Solo has a real timed selection/VS transition and 320 HP duel normalizatio
  lib.start(()=>0);lib.update(570);lib.update(20);lib.update(10);
  assert.equal(lib.stage,'intro');lib.update(3);
  assert.equal(lib.stage,'fight');
- assert.equal(h.player.maxHp,320);assert.equal(G.EnemyMgr.last.maxHp,320);
+ assert.equal(h.player.maxHp,320);assert.equal(G.EnemyMgr.last.maxHp,288);assert.equal(lib.aiFactor,.9);
  assert.equal(G.World.arena.r,20);
 });
 test('Actual enemy kill decides Solo win; a lobby exit cannot grant rewards',()=>{
@@ -101,4 +101,19 @@ test('Leaving Solo and switching to Berry or Champion cancels old Solo arena tic
  lib.start(()=>0);G.Game.startRun({mode:'berry'});
  assert.equal(lib.active,false);assert.equal(G.World.arena,null);
  lib.start(()=>0);G.Flow.goMenu();assert.equal(lib.active,false);
+});
+
+test('Random AI mirrors 90–120% player HP, attack and speed and is actually spawned',()=>{
+ const {lib,G}=setup();
+ for(const factor of [.9,1,1.2]){
+  lib.start(()=>factor===.9?0:factor===1?1/3:1);
+  lib.update(900);lib.update(20);lib.update(10);lib.update(3);
+  const enemy=G.EnemyMgr.last;
+  assert.ok(enemy.maxHp>=288&&enemy.maxHp<=384,'AI HP within 90–120% of 320');
+  lib.abort();
+ }
+ const stats=lib.balanceAi({maxHp:400,baseSpd:110,baseAtk:1.3},1.2);
+ assert.equal(stats.hp,480);assert.equal(stats.spd,132);assert.equal(stats.dmg,13.2);
+ const src=read('src/pkmsvv-arena-solo.js');
+ assert.match(src,/pkmsvv-arena-solo-invite/);assert.match(src,/PKMSVVCoop.open\('arena'\)/);
 });
