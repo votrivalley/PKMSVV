@@ -100,7 +100,7 @@ async function main(){
  if(!fs.existsSync(META))fail('normal Mega sprites must be built first');
  const ready=catalog.forms.filter(f=>f.sprite.state==='sprite-ready');
  if(ready.length!==36)fail('normal source count drift');
- const pc=process.env.PKMSVV_MEGA_SPRITE_PACK==='1';
+ const pc=process.env.PKMSVV_MEGA_SPRITE_PACK==='1'; // Full cross-platform release, not PC-exclusive.
  const battle=new Set(['Lucario-Mega','Charizard-Mega-X','Excadrill-Mega']);
  const candidates=ready.filter(f=>(pc||battle.has(f.name))&&!KNOWN_MISSING.has(f.name));
  if(candidates.length!==(pc?32:3))fail('expected '+(pc?32:3)+' audited Shiny source folders');
