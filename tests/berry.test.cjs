@@ -115,7 +115,7 @@ test('Both transport room services preserve Berry and Berry Easy rather than sil
  const wifi=fs.readFileSync(path.join(root,'src/lan/wifi-bus.js'),'utf8');
  const server=fs.readFileSync(path.join(root,'lan-server/server.cjs'),'utf8');
  for(const code of [wifi,server]){
-  assert.match(code,/\['coop','royale','eggrush','berry','berryeasy','arena'\]/);
+  assert.match(code,/\['coop','royale','eggrush','berry','berryeasy','arena','champion'\]/);
  }
  const ai=fs.readFileSync(path.join(root,'src/lan/lan-ai.js'),'utf8');
  assert.ok(ai.includes("'berryeasy'")&&ai.includes("'berry'"));
