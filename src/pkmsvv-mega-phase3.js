@@ -50,7 +50,9 @@ G.PKMSVVMegaPhase3=(()=>{
   };
  }
  function isBattleReady(f){
-  return !!(f&&(f.storyLocked||CHAMPIONS.some(c=>c.key===f.key))&&f.artReady&&
+  // Mega Lucario is already bundled on all three platforms, but was
+  // accidentally excluded from Co-op because it is not in CHAMPIONS.
+  return !!(f&&(f.storyLocked||f.key==='lucariomega'||CHAMPIONS.some(c=>c.key===f.key))&&f.artReady&&
    G.SPRITE_META?.[f.spriteId]?.a?.Idle&&isUnlocked(f));
  }
  function rewardStone(save,results,random=Math.random){
@@ -74,6 +76,9 @@ G.PKMSVVMegaPhase3=(()=>{
  const BASE=Object.freeze({
   charizardmegax:{atk:84,def:78,spa:109,spd:85,spe:100},
   excadrillmega:{atk:135,def:60,spa:50,spd:65,spe:88},
+  // Verified base Lucario stats: the shared Phase 3 engine owns Co-op Mega,
+  // while the legacy MegaLucario button remains the Solo-only controller.
+  lucariomega:{atk:110,def:70,spa:115,spd:70,spe:90},
   // Authenticated base stats; these four are only available when explicitly
   // loaded from private four-direction PC QA art, never in public builds.
   scizormega:{atk:130,def:100,spa:55,spd:80,spe:65},
