@@ -47,7 +47,7 @@ function instance(myUid,opts={}){
  let now=10000;
  vm.runInNewContext(SOURCE,{G,document,performance:{now(){return now}}});
  const api=G.PKMSVVArenaPvp;
- const cfg={mode:'arena',seed,host:'host',members};
+ const cfg={mode:opts.mode||'arena',seed,host:'host',members};
  function start(){G.Coop.begin(cfg,me,{});}
  function emit(from,msg){for(const cb of listeners)cb(from,msg);}
  function disconnect(from){for(const cb of peers)cb(from,'closed');}
@@ -129,14 +129,17 @@ test('Victory and rematch reset do not leak previous session health or UI',()=>{
  host.start();assert.equal(host.api.stage,'countdown');
  assert.equal(host.api.health.host,320);
 });
-test('Arena 1v1 is accessible from Arena menu, shared Co-op selector and all builds',()=>{
+test('Arena Solo and Champion invitations have dedicated Host Join room modes',()=>{
  const arena=read('src/pkmsvv-champion-arena.js');
  const menu=read('src/shared/coop-unified.js');
  const patch=read('scripts/patch-arena-pvp.cjs');
  const prep=read('scripts/prepare-game.cjs');
- assert.match(arena,/pkmsvv-arena-mode-pvp/);
- assert.match(arena,/PKMSVVCoop\.open\('arena'\)/);
- assert.match(menu,/\['arena','Arena 1v1'/);
+ assert.match(arena,/pkmsvv-arena-hub-solo/);
+ assert.match(arena,/pkmsvv-champion-vs-human/);
+ assert.match(read('src/pkmsvv-arena-solo.js'),/PKMSVVCoop.open\('arena'\)/);
+ assert.match(arena,/PKMSVVCoop.open\('champion'\)/);
+ assert.match(menu,/\['arena','Solo · Mời người chơi'/);
+ assert.match(menu,/\['champion','Champion · Đấu người chơi'/);
  assert.match(menu,/role==='ai'/);
  assert.match(patch,/js\/net\/pkmsvv-arena-pvp\.js/);
  assert.match(prep,/patch-arena-pvp\.cjs/);
@@ -178,4 +181,24 @@ test('Forfeit remains isolated even after remote player leaves the room',()=>{
  assert.equal(host.spawns,0,'Survival spawner must not restart after losing arena peer');
  host.frame(.1);
  assert.equal(host.api.active,true,'remain in result until host exits');
+});
+
+test('Champion PvP is a real human-only first-to-two series, synchronized across peers',()=>{
+ const host=instance('host',{mode:'champion'}),guest=instance('guest',{mode:'champion'});
+ host.start();guest.start();
+ assert.equal(host.api.matchType,'champion');assert.equal(host.api.round,1);
+ for(let round=1;round<=2;round++){
+  host.frame(3.01);
+  for(let hit=0;hit<22&&host.api.stage==='fight';hit++){
+   host.advance(500);host.emit('guest',{k:'f',ev:[['c','ember',1,Math.PI]]});
+  }
+  assert.equal(host.api.scores.guest,round);
+  if(round===1){assert.equal(host.api.stage,'countdown');assert.equal(host.api.round,2);
+   assert.equal(host.api.health.host,320);assert.equal(host.api.health.guest,320);}
+ }
+ assert.equal(host.api.stage,'result');assert.equal(host.api.winner,'guest');
+ for(const packet of host.network)guest.emit('host',packet);
+ assert.equal(guest.api.winner,'guest');assert.equal(guest.api.scores.guest,2);
+ const fake=instance('host',{mode:'champion',ai:true});fake.start();assert.equal(fake.api.active,false);
+ assert.equal(host.gameQuit,0,'Champion PvP must not grant Survival or Crown Journey progression');
 });
