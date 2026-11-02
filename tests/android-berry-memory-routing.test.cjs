@@ -19,7 +19,7 @@ test('Standalone PC/Android AI transport preserves BOTH Berry difficulties',asyn
   await G.LanBus.request('leave');
  }
  const script=read('src/lan/solo-ai-bus.js');
- assert.match(script,/\['coop','royale','eggrush','berry','berryeasy'\]/);
+ assert.match(script,/\['coop','royale','eggrush','berry','berryeasy','arena'\]/);
  assert.match(read('scripts/patch-berry-coop.cjs'),/PKMSVVBerryRescue\.begin\(\{mode:G\.Social\?\.room\?\.mode\}\)/);
 });
 
