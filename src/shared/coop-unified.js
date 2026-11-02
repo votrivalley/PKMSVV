@@ -2,6 +2,8 @@
 /* The exact same Co-op entry for PC, Android and Cloudflare HTML5. */
 (()=>{
  window.PKMSVV_UNIFIED_COOP_ENABLED=true;
+ const L=(vi,en)=>window.G?.I18n?.lang==='en'?en:vi;
+ const englishModes={coop:['Survival','2–4 players','Fight monsters together, revive teammates and survive as long as possible.'],royale:['Survival Royale','2–10 players','Fight inside a shrinking safe zone; the last survivor wins.'],eggrush:['Egg Rush','4 players','Collect 10 eggs. The player with most points wins.'],berry:['Berry Rescue','4 players · 8 minutes','Protect Cherubi and three Berry trees. Choose Gentle or Intense difficulty.'],arena:['Solo · Invite Player','2 human players','Real 1v1 Host/Join battle with synchronized damage.'],champion:['Champion · Human Duel','2 human players','Challenge real players via Host/Join. Fight AI in the Arena Champion bracket.']};
  const modes=[['coop','Sống Sót','2–4 người',25,'Pikachu','Cùng đồng đội đánh quái, cứu nhau khi gặp nguy hiểm và cố gắng sống sót lâu nhất có thể!'],
   ['royale','Sống Còn','2–10 người',6,'Charizard','Chiến đấu với quái vật trong vòng an toàn ngày càng thu nhỏ. Người sống sót cuối cùng sẽ chiến thắng!'],
   ['eggrush','Tranh Trứng','4 người',175,'Togepi','Tranh nhau thu thập 10 quả trứng! Cuối trận trứng mới nở để tính điểm. Ai nhiều điểm nhất sẽ thắng!'],
@@ -25,14 +27,14 @@
   if(aiButton){aiButton.disabled=arenaMode(mode);aiButton.hidden=arenaMode(mode);}
   if(berryMode(mode)&&view){
    const line=document.createElement('div');line.className='pkmsvv-berry-difficulty';
-   const caption=document.createElement('strong');caption.textContent='🌿 Độ khó · Giải Cứu Berry';
+   const caption=document.createElement('strong');caption.textContent=L('🌿 Độ khó · Giải Cứu Berry','🌿 Difficulty · Berry Rescue');
    line.append(caption);
    for(const [id,title,desc] of [
      ['berry','🌳 Nườm Nượp','Quái tăng 20% tốc độ / 2 phút · thưởng 30–35%'],
      ['berryeasy','🍃 Nhẹ Nhàng','Quái yếu hơn 30%, tăng 15% tốc độ / 2 phút · thưởng 13–18%']
    ]){
     const b=document.createElement('button');b.type='button';b.dataset.difficulty=id;
-    b.className=id===mode?'selected':'';b.textContent=title+' · '+desc;
+    b.className=id===mode?'selected':'';b.textContent=L(title,id==='berry'?'🌳 Intense':'🍃 Gentle')+' · '+L(desc,id==='berry'?'Enemies gain 20% speed every 2 min · 30–35% reward':'Enemies 30% weaker; +15% speed every 2 min · 13–18% reward');
     b.onclick=()=>{mode=id;repaint();};line.append(b);
    }
    // Expand directly under the selected Berry card row, ABOVE room actions.
@@ -50,17 +52,17 @@
   view=document.createElement('div');view.id='pkmsvv-unified-coop';
   view.innerHTML='<section class="pkmsvv-coop-panel" role="dialog" aria-modal="true" aria-label="Co-op">'+
     '<header><h2>'+(viewArena?(mode==='champion'?'🏆 Arena · Champion':'⚔ Arena · Solo'):'🤝 Co-op')+'</h2><button type="button" id="pkmsvv-coop-close">✕</button></header>'+ 
-    '<b>Chọn chế độ</b><div id="pkmsvv-coop-modes"></div>'+
-    '<b>Chọn cách chơi</b><div id="pkmsvv-coop-actions">'+
-    '<button data-role="host">🏠 Tạo phòng</button><button data-role="join">🤝 Tham gia</button>'+
-    '<button data-role="ai">🤖 Chơi với AI</button></div>'+
+    '<b>'+L('Chọn chế độ','Choose mode')+'</b><div id="pkmsvv-coop-modes"></div>'+
+    '<b>'+L('Chọn cách chơi','How to play')+'</b><div id="pkmsvv-coop-actions">'+
+    '<button data-role="host">'+L('🏠 Tạo phòng','🏠 Host')+'</button><button data-role="join">'+L('🤝 Tham gia','🤝 Join')+'</button>'+
+    '<button data-role="ai">'+L('🤖 Chơi với AI','🤖 Play with AI')+'</button></div>'+
     '<div id="pkmsvv-coop-detail" role="status"></div></section>';
   document.body.append(view);detail=view.querySelector('#pkmsvv-coop-detail');
   if(lan()&&!window.PKMSVV_STANDALONE_AI&&!window.PKMSVV_WIFI){
    const help=document.createElement('details');help.className='pkmsvv-coop-help';
-   const summary=document.createElement('summary');summary.textContent='Địa chỉ Host & mã QR mời bạn';
+   const summary=document.createElement('summary');summary.textContent=L('Địa chỉ Host & mã QR mời bạn','Host address & invitation QR');
    const host=document.createElement('p');host.textContent=location.origin+'/game/';
-   const qr=document.createElement('img');qr.src='/lan/qr.png';qr.alt='Mã QR vào Host qua Wi-Fi';qr.loading='lazy';
+   const qr=document.createElement('img');qr.src='/lan/qr.png';qr.alt=L('Mã QR vào Host qua Wi-Fi','QR code for Wi-Fi Host');qr.loading='lazy';
    help.append(summary,host,qr);detail.before(help);
    fetch('/lan/info',{cache:'no-store'}).then(r=>r.json()).then(data=>{
     if(data.addresses?.length)host.textContent=data.addresses.map(ip=>'http://'+ip+':'+data.port+'/game/').join(' · ');
@@ -69,8 +71,8 @@
   for(const [id,title,capacity,dex,name,description] of (viewArena?arenaModes.filter(m=>m[0]===mode):modes)){
    const b=document.createElement('button');b.type='button';b.dataset.mode=id;b.className='pkmsvv-mode-card '+id;
    b.innerHTML='<span class="pkmsvv-mode-art"><canvas width="144" height="144" aria-hidden="true"></canvas></span>'+
-    '<span class="pkmsvv-mode-copy"><strong>'+title+'</strong><small class="pkmsvv-mode-cap">'+capacity+'</small>'+
-    '<small class="pkmsvv-coop-pokemon" translate="no">'+name+'</small><small class="pkmsvv-mode-description">'+description+'</small></span>';
+    '<span class="pkmsvv-mode-copy"><strong>'+L(title,englishModes[id]?.[0]||title)+'</strong><small class="pkmsvv-mode-cap">'+L(capacity,englishModes[id]?.[1]||capacity)+'</small>'+
+    '<small class="pkmsvv-coop-pokemon" translate="no">'+name+'</small><small class="pkmsvv-mode-description">'+L(description,englishModes[id]?.[2]||description)+'</small></span>';
    b.onclick=()=>{mode=id;repaint();};view.querySelector('#pkmsvv-coop-modes').append(b);
    G.UI?.sprite?.(b.querySelector('canvas'),dex,{lively:true,scale:2,hero:true});
   }
@@ -92,14 +94,14 @@
   const p=document.createElement('p');p.textContent=lan()?
    'Nếu bạn bè tạo phòng trên một máy Host khác, dán link mời hoặc địa chỉ LAN ở đây:':
    'Dán link mời được Host gửi cho bạn (máy cùng Wi-Fi).';
-  const input=document.createElement('input');input.type='text';input.placeholder='Link mời hoặc IP nội bộ';
+  const input=document.createElement('input');input.type='text';input.placeholder=L('Link mời hoặc IP nội bộ','Invitation link or local IP');
   input.setAttribute('aria-label','IP:cổng hoặc liên kết máy Host');input.autocomplete='off';
   try{input.value=localStorage.getItem('pkmsvv.lan.host.ip')||'';}catch(_){}
-  const go=document.createElement('button');go.type='button';go.textContent='Kết nối';
+  const go=document.createElement('button');go.type='button';go.textContent=L('Kết nối','Connect');
   const status=document.createElement('span');status.setAttribute('role','status');
   go.onclick=async()=>{
    if(go.disabled)return;
-   go.disabled=true;input.disabled=true;status.textContent='Đang kiểm tra Host…';
+   go.disabled=true;input.disabled=true;status.textContent=L('Đang kiểm tra Host…','Checking Host…');
    let timer;
    try{
     const address=input.value.trim();
@@ -140,11 +142,11 @@
   target.append(p,input,go,status);
  }
  async function joinRooms(){
-  info('Đang tìm phòng cùng Wi-Fi…');
+  info(L('Đang tìm phòng cùng Wi-Fi…','Finding rooms on your Wi-Fi…'));
   try{
    const list=(await G.Social.listPublicRooms()).filter(r=>r.mode===mode);
    detail.replaceChildren();
-   const help=document.createElement('p');help.textContent='Chọn phòng đang mở hoặc dán mã phòng được bạn gửi:';
+   const help=document.createElement('p');help.textContent=L('Chọn phòng đang mở hoặc dán mã phòng được bạn gửi:','Choose a room or enter an invitation code:');
    detail.append(help);
    if(!list.length)detail.append('Chưa có phòng công khai đang chờ. ');
    for(const r of list){
@@ -154,16 +156,16 @@
      if(result.ok){close();G.LobbyUI.open();}else info(result.error);
     };detail.append(b);
    }
-   const input=document.createElement('input');input.placeholder='Mã phòng (không phải địa chỉ IP)';
+   const input=document.createElement('input');input.placeholder=L('Mã phòng (không phải địa chỉ IP)','Room code (not IP address)');
    input.setAttribute('aria-label','Mã phòng trên Host hiện tại');
-   const go=document.createElement('button');go.textContent='Vào bằng mã';
+   const go=document.createElement('button');go.textContent=L('Vào bằng mã','Join with code');
    go.onclick=async()=>{
     if(!/^[A-Za-z0-9_-]{12,45}$/.test(input.value.trim())){info('Mã phòng không hợp lệ');return;}
     const result=await G.Social.joinRoom(input.value.trim());
     if(result.ok){close();G.LobbyUI.open();}else info(result.error);
    };detail.append(input,go);
    const advanced=document.createElement('details');advanced.className='pkmsvv-coop-advanced';
-   const summary=document.createElement('summary');summary.textContent='Đổi sang máy Host khác (nâng cao)';
+   const summary=document.createElement('summary');summary.textContent=L('Đổi sang máy Host khác (nâng cao)','Connect to another Host (advanced)');
    advanced.append(summary);addressEntry('join',advanced);detail.append(advanced);
   }catch(e){info('Không thể tìm phòng: '+e.message);}
  }
@@ -244,7 +246,7 @@
    const hint=document.createElement('p');
    hint.textContent='Bản HTML5 Cloudflare đang chơi offline và không chạy máy chủ LAN. Để chơi với AI ở bản này, hãy mở link lời mời từ PC Host đang chạy. Chọn “Chơi với AI” trên Host để tạo bot; website độc lập chưa có AI offline.';
    detail.append(hint);
-   const link=document.createElement('button');link.type='button';link.textContent='Dán lời mời từ PC Host';
+   const link=document.createElement('button');link.type='button';link.textContent=L('Dán lời mời từ PC Host','Paste PC Host invitation');
    link.onclick=()=>{detail.replaceChildren();addressEntry('join');};
    detail.append(link);return;
   }
