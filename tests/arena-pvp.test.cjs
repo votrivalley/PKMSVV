@@ -21,6 +21,7 @@ function instance(myUid,opts={}){
  const me={x:0,y:0,hp:200,maxHp:200,aim:0,invuln:0,dead:false,
   activeGroup(){return [{kind:'projectile',id:'ember',lvl:1}]}
  };
+ Object.defineProperty(me,'regen',{get(){return 0;}}); // Real G.Player getter has no setter.
  const other={x:135,y:0,hp:200,maxHp:200,remote:true,net:{x:135,y:0,hp:200,maxHp:200,dead:0}};
  let started=false,isHost=myUid==='host';
  const mate=id=>id===myUid?null:{pl:other};
@@ -141,4 +142,27 @@ test('Arena 1v1 is accessible from Arena menu, shared Co-op selector and all bui
  for(const p of ['lan-server/server.cjs','src/lan/wifi-bus.js','src/lan/social-lan.js']){
   assert.match(read(p),/arena/);
  }
+});
+
+test('Leaving after real PvP is not a Survival endRun and also clears the guest',()=>{
+ const host=instance('host'),guest=instance('guest');
+ host.start();guest.start();host.frame(3.01);
+ host.api.exit();
+ assert.equal(host.api.active,false);
+ assert.equal(host.gameQuit,0,'Arena must not call Game.quit/endRun and award Survival coins');
+ assert.equal(host.G.World.arena,null);
+ assert.equal(host.document.getElementById('pkmsvv-arena-pvp-count'),null);
+ const notice=host.network.find(m=>m.k==='apvp-exit');
+ assert.ok(notice);
+ guest.emit('host',notice);
+ assert.equal(guest.api.active,false,'Guest receives actual host exit');
+ assert.equal(guest.gameQuit,0);
+});
+test('Equal PvP skill loadouts are level one and enemy IDs cannot replace a human',()=>{
+ const host=instance('host');host.start();
+ assert.equal(host.me.moves?.length,2,'fixture has only two legal source skills');
+ assert.ok(host.me.moves.every(m=>m.lvl===1));
+ assert.equal(host.api.health.host,320);
+ assert.equal(host.api.health.guest,320);
+ assert.equal(host.G.World.arena.r,18);
 });
