@@ -239,7 +239,18 @@ G.PKMSVVArenaPvp=(()=>{
  }
  function exit(){
   if(!active)return;
-  cleanup();G.Game?.quit?.();G.Flow?.goMenu?.();
+  const isHost=host,oldSeed=seed;
+  if(isHost)G.Net?.broadcast?.({k:'apvp-exit',seed:oldSeed});
+  else G.Net?.toHost?.({k:'apvp-exit-request',seed:oldSeed});
+  cleanup();
+  G.Coop?.end?.();G.Social?.setPlaying?.(false);
+  G.Game?.toUI?.();
+  // Arena duel is not a Survival run: no automatic coin/time/quest rewards.
+  const finished=isHost?G.Social?.finishMatch?.():null;
+  Promise.resolve(finished).catch(()=>{}).then(()=>{
+   if(G.Social?.room)G.LobbyUI?.open?.();
+   else G.Flow?.goMenu?.();
+  });
  }
  function install(){
   if(!G.Coop?.begin||!G.Net?.on)return false;
@@ -259,6 +270,12 @@ G.PKMSVVArenaPvp=(()=>{
   G.Net.on((from,data)=>{
    if(!active)return;
    if(data?.k==='apvp'){receive(from,data);return;}
+   if(from===hostUid&&data?.k==='apvp-exit'&&data.seed===seed){
+    exit();return;
+   }
+   if(host&&from===peerId(uid)&&data?.k==='apvp-exit-request'&&data.seed===seed){
+    winner=uid;stage='result';sendState(true);return;
+   }
    if(host&&stage==='fight'&&from===peerId(uid)&&data?.k==='f'&&Array.isArray(data.ev)){
     for(const e of data.ev.slice(0,28))
      if(Array.isArray(e)&&e[0]==='c'&&typeof e[1]==='string')
