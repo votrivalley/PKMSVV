@@ -134,3 +134,14 @@ test('Wi-Fi invitation, QR pairing and close buttons are fully bilingual without
  assert.match(qa,/\.pkmsvv-wifi-panel > button/);
  assert.doesNotMatch(qa,/filter\(\{hasText:'Đóng'\}\)/);
 });
+
+test('LAN PC guide and Web Preview/backup retain original Vietnamese while supplying English',()=>{
+ const lan=read('src/lan/lan-compact-ui.js'),web=read('src/shared/local-shell.js');
+ for(const source of [lan,web])assert.match(source,/const L=\(vi,en\)=>window\.G\?\.I18n\?\.lang==='en'\?en:vi/);
+ assert.match(lan,/L\('ⓘ Hướng dẫn kết nối Co-op LAN','ⓘ Co-op LAN connection guide'\)/);
+ assert.match(lan,/LAN không cần Google\/Firebase/);
+ assert.match(lan,/LAN does not require Google or Firebase/);
+ assert.match(web,/Preview website has a DIFFERENT save/);
+ assert.match(web,/save của nó KHÔNG chung/);
+ assert.match(web,/L\('Đóng','Close'\)/);
+});
