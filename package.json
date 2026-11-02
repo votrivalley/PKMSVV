@@ -2,7 +2,7 @@
   "name": "pkmsvv-offline",
   "version": "1.5.80",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.80: complete bilingual 1.0-to-current changelog, English UI coverage without changing Vietnamese copy",
+  "description": "Pokémon Chuyển Sinh v1.5.80: eight chronological bilingual release milestones from v1.0, English Arena/Co-op/LAN UI and unchanged Vietnamese",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
