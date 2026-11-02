@@ -323,6 +323,9 @@ fs.appendFileSync(path.join(game,'js','data','changelog.js'),
 // Latest 1.5 features: Chapter 3 egg companions and Web Egg Rush.
 fs.appendFileSync(path.join(game,'js','data','changelog.js'),
   '\n' + fs.readFileSync(path.join(project,'src','pkmsvv-changelog-v15.js'),'utf8'),'utf8');
+// Replace the public in-game feed with complete bilingual version milestones.
+fs.appendFileSync(path.join(game,'js','data','changelog.js'),
+  '\n'+fs.readFileSync(path.join(project,'src','pkmsvv-changelog-history.js'),'utf8'),'utf8');
 // Upstream news renderer assumes its first language is Spanish. PKMSVV release
 // entries are explicitly [Vietnamese, English]; choose the correct text instead
 // of feeding approved release notes through automatic fragment translation.
