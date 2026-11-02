@@ -152,7 +152,7 @@ function startServer({root,port=37816,host='0.0.0.0'}={}){
    }
    if(m.action==='create'){
     if(c.room){reply(null,'Đã ở trong phòng khác.');return;}
-    const mode=['coop','royale','eggrush','berry','berryeasy','arena'].includes(m.mode)?m.mode:'coop';
+    const mode=['coop','royale','eggrush','berry','berryeasy','arena','champion'].includes(m.mode)?m.mode:'coop';
     const id=randomBytes(12).toString('base64url');
     const r={id,host:c.uid,mode,visibility:m.visibility==='public'?'public':'private',open:true,members:new Map()};
     c.member={dex:Number.isInteger(m.dex)&&m.dex>0?m.dex:25,shiny:m.shiny===true,power:readPower(m.power)};
@@ -163,7 +163,7 @@ function startServer({root,port=37816,host='0.0.0.0'}={}){
     if(c.room){reply(null,'Đã ở trong phòng khác.');return;}
     const id=String(m.id||''),r=rooms.get(id);
     if(!r||!r.open){reply(null,'Không tìm thấy phòng đang chờ.');return;}
-    const max=r.mode==='royale'?10:r.mode==='arena'?2:4;
+    const max=r.mode==='royale'?10:(r.mode==='arena'||r.mode==='champion')?2:4;
     if(r.members.size>=max){reply(null,'Phòng đã đủ người.');return;}
     c.member={dex:Number.isInteger(m.dex)&&m.dex>0?m.dex:25,shiny:m.shiny===true,power:readPower(m.power)};
     c.room=id;r.members.set(c.uid,{uid:c.uid,name:c.name,...c.member});
@@ -173,10 +173,10 @@ function startServer({root,port=37816,host='0.0.0.0'}={}){
    if(m.action==='leave'){if(r)disconnect(c,false);reply(true);return;}
    if(!r){reply(null,'Chưa tham gia phòng.');return;}
    if(m.action==='addBot'){
-     if(r.mode==='arena'){reply(null,'Arena 1v1 chỉ dành cho hai người chơi thật.');return;}
+     if(r.mode==='arena'||r.mode==='champion'){reply(null,'Arena 1v1 chỉ dành cho hai người chơi thật.');return;}
     if(r.host!==c.uid){reply(null,'Chỉ Host được thêm AI.');return;}
     if(!r.open){reply(null,'Phòng đã bắt đầu, không thêm AI.');return;}
-    const max=r.mode==='royale'?10:r.mode==='arena'?2:4;
+    const max=r.mode==='royale'?10:(r.mode==='arena'||r.mode==='champion')?2:4;
     if(r.members.size>=max){reply(null,'Phòng đã đủ '+max+' người và AI.');return;}
     const species=selectBot(r.members.values(),m.dex);
     const bot={uid:'ai-'+randomBytes(8).toString('hex'),name:'AI · '+species.name,dex:species.dex,shiny:false,bot:true};
