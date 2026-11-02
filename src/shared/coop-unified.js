@@ -2,13 +2,16 @@
 /* The exact same Co-op entry for PC, Android and Cloudflare HTML5. */
 (()=>{
  window.PKMSVV_UNIFIED_COOP_ENABLED=true;
- const modes=[['arena','Arena 1v1','2 người thật',448,'Lucario','Đấu trực tiếp với bạn cùng phòng Host/Join. Có đếm 3–2–1, cân bằng máu và skill, Host xác định thắng thua.'],['coop','Sống Sót','2–4 người',25,'Pikachu','Cùng đồng đội đánh quái, cứu nhau khi gặp nguy hiểm và cố gắng sống sót lâu nhất có thể!'],
+ const modes=[['coop','Sống Sót','2–4 người',25,'Pikachu','Cùng đồng đội đánh quái, cứu nhau khi gặp nguy hiểm và cố gắng sống sót lâu nhất có thể!'],
   ['royale','Sống Còn','2–10 người',6,'Charizard','Chiến đấu với quái vật trong vòng an toàn ngày càng thu nhỏ. Người sống sót cuối cùng sẽ chiến thắng!'],
   ['eggrush','Tranh Trứng','4 người',175,'Togepi','Tranh nhau thu thập 10 quả trứng! Cuối trận trứng mới nở để tính điểm. Ai nhiều điểm nhất sẽ thắng!'],
    ['berry','Giải Cứu Berry','4 người · 8 phút',420,'Cherubi','Cherubi cần bạn bảo vệ 3 cây Berry · chọn Nhẹ Nhàng hoặc Nườm Nượp bên dưới.']];
+ const arenaModes=[['arena','Solo · Mời người chơi','2 người thật',448,'Lucario','Solo 1v1 qua Host/Join, đếm 3–2–1 và đồng bộ sát thương.'],
+  ['champion','Champion · Đấu người chơi','2 người thật',6,'Charizard','Đấu Champion PvP qua Host/Join. Champion AI và hành trình 16 người ở Arena → Champion → Đấu với AI.']];
+ const arenaMode=id=>id==='arena'||id==='champion';
  const berryMode=id=>id==='berry'||id==='berryeasy';
- const validMode=id=>modes.some(m=>m[0]===id)||id==='berryeasy';
- let mode='coop',view=null,detail=null,busy=false,previousFocus=null;
+ const validMode=id=>modes.some(m=>m[0]===id)||arenaMode(id)||id==='berryeasy';
+ let mode='coop',view=null,detail=null,busy=false,previousFocus=null,viewArena=false;
  const lan=()=>window.PKMSVV_LOCAL_UI_MODE==='lan'&&!!window.G?.LanBus;
  function close(){view?.remove();view=detail=null;previousFocus?.focus?.();}
  function info(x){if(detail)detail.textContent=x;}
@@ -18,7 +21,7 @@
   });detail?.replaceChildren();
   view?.querySelector('.pkmsvv-berry-difficulty')?.remove();
   const aiButton=view?.querySelector('[data-role="ai"]');
-  if(aiButton){aiButton.disabled=mode==='arena';aiButton.hidden=mode==='arena';}
+  if(aiButton){aiButton.disabled=arenaMode(mode);aiButton.hidden=arenaMode(mode);}
   if(berryMode(mode)&&view){
    const line=document.createElement('div');line.className='pkmsvv-berry-difficulty';
    const caption=document.createElement('strong');caption.textContent='🌿 Độ khó · Giải Cứu Berry';
@@ -37,11 +40,15 @@
  }
  function open(preselect){
   if(validMode(preselect))mode=preselect;
+  else if(!arenaMode(preselect))mode='coop'; // Opening ordinary Co-op must never inherit an Arena selection.
+  const requestedArena=arenaMode(mode);
+  if(view&&viewArena!==requestedArena)close();
   if(view){repaint();return;}
+  viewArena=requestedArena;
   previousFocus=document.activeElement;
   view=document.createElement('div');view.id='pkmsvv-unified-coop';
   view.innerHTML='<section class="pkmsvv-coop-panel" role="dialog" aria-modal="true" aria-label="Co-op">'+
-    '<header><h2>🤝 Co-op</h2><button type="button" id="pkmsvv-coop-close">✕</button></header>'+
+    '<header><h2>'+(viewArena?(mode==='champion'?'🏆 Arena · Champion':'⚔ Arena · Solo'):'🤝 Co-op')+'</h2><button type="button" id="pkmsvv-coop-close">✕</button></header>'+ 
     '<b>Chọn chế độ</b><div id="pkmsvv-coop-modes"></div>'+
     '<b>Chọn cách chơi</b><div id="pkmsvv-coop-actions">'+
     '<button data-role="host">🏠 Tạo phòng</button><button data-role="join">🤝 Tham gia</button>'+
@@ -58,7 +65,7 @@
     if(data.addresses?.length)host.textContent=data.addresses.map(ip=>'http://'+ip+':'+data.port+'/game/').join(' · ');
    }).catch(()=>{});
   }
-  for(const [id,title,capacity,dex,name,description] of modes){
+  for(const [id,title,capacity,dex,name,description] of (viewArena?arenaModes.filter(m=>m[0]===mode):modes)){
    const b=document.createElement('button');b.type='button';b.dataset.mode=id;b.className='pkmsvv-mode-card '+id;
    b.innerHTML='<span class="pkmsvv-mode-art"><canvas width="144" height="144" aria-hidden="true"></canvas></span>'+
     '<span class="pkmsvv-mode-copy"><strong>'+title+'</strong><small class="pkmsvv-mode-cap">'+capacity+'</small>'+
@@ -161,7 +168,7 @@
  }
  async function action(role){
   if(busy)return;
-  if(mode==='arena'&&role==='ai'){info('Arena 1v1 yêu cầu hai người chơi thật, không dùng AI.');return;}
+  if(arenaMode(mode)&&role==='ai'){info('Arena PvP chỉ nhận người chơi thật. Hãy chọn Đấu với AI trong Arena.');return;}
   // Capture mode before any async network/AI setup: no silent downgrade to Co-op.
   const requestedMode=mode;
   if(role!=='ai'&&(lan()||window.PKMSVV_STANDALONE_AI_AVAILABLE)&&!window.PKMSVV_WIFI&&!new URLSearchParams(location.search).get('pkmsvvCode')){
