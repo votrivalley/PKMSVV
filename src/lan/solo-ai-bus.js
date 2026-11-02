@@ -12,7 +12,7 @@ G.LanBus=(()=>{
   visibility:'private',members:room.members.map(m=>({...m}))}:null;
  const update=()=>emit({t:'room',room:snapshot()});
  const randomId=()=>Math.random().toString(36).slice(2,12)+Math.random().toString(36).slice(2,10);
- const max=()=>room?.mode==='royale'?10:4;
+ const max=()=>room?.mode==='royale'?10:room?.mode==='arena'?2:4;
  const dexOf=dex=>G.DEX_BY?.[Number(dex)]?Number(dex):25;
  function connect(){return Promise.resolve(identity);}
  async function request(action,data={}){
@@ -26,7 +26,7 @@ G.LanBus=(()=>{
    if(room)throw Error('Đã ở trong phòng.');
    // Keep Berry difficulty IDs intact from mode selection through the Host's
    // start packet. Turning them into 'coop' silently disables all three trees.
-   const mode=['coop','royale','eggrush','berry','berryeasy'].includes(data.mode)?data.mode:'coop';
+   const mode=['coop','royale','eggrush','berry','berryeasy','arena'].includes(data.mode)?data.mode:'coop';
    room={id:'local-ai-'+randomId(),mode,open:true,
     members:[{uid:identity,name:playerName,dex:dexOf(data.dex),shiny:!!data.shiny,power:data.power||null}]};
    update();return snapshot();
@@ -43,6 +43,7 @@ G.LanBus=(()=>{
   if(action==='open'){room.open=!!data.open;update();return true;}
   if(action==='finish'){room.open=true;room.members=room.members.filter(m=>!m.bot);update();return snapshot();}
   if(action==='addBot'){
+    if(room.mode==='arena')throw Error('Arena PvP cần hai người chơi thật; không hỗ trợ AI ngoại tuyến.');
    if(!room.open)throw Error('Trận đang diễn ra, không thể thêm AI.');
    if(room.members.length>=max())throw Error('Đã đủ số người chơi và AI.');
    const used=new Set(room.members.map(m=>m.dex));
