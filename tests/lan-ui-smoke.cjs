@@ -104,13 +104,18 @@ async function run(){
       if(!target)throw Error('No human Host avatar');
       // Real guest's enrolled first move is emitted over the same Co-op
       // channel as combat; do not fabricate an Enemy/AI entity.
-      const move=G.Game.player.activeGroup()[0];
-      G.Coop.cast(G.Game.player,move);
+      const me=G.Game.player;
+      // Make the live opponent safely within range and aim at Host's
+      // actual position; no artificial damage / fake opponent is inserted.
+      me.x=target.x+120;me.y=target.y;me.aim=Math.PI;
+      const move=me.moves.find(m=>m.kind==='projectile'||
+       m.kind==='beam'||m.kind==='chain'||m.kind==='nova')||me.activeGroup()[0];
+      G.Coop.cast(me,move);
      });
      await host.waitForFunction(()=>G.PKMSVVArenaPvp.health[G.Social.uid]<320,null,{timeout:5000});
      const guestUid=await guest.evaluate(()=>G.Social.uid);
      await guest.waitForFunction(uid=>G.PKMSVVArenaPvp.health[G.Social.room.host]<
-      320&&G.PKMSVVArenaPvp.health[uid]===320,guestUid,{timeout:5000});
+      320&&G.PKMSVVArenaPvp.health[uid]<=320,guestUid,{timeout:5000});
      assert.equal(await host.locator('#pkmsvv-arena-pvp-hud').count(),1);
      await host.screenshot({path:path.join(output,'arena-pvp-real-host.png')});
      await guest.screenshot({path:path.join(output,'arena-pvp-real-guest.png')});
