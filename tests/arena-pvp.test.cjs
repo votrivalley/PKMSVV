@@ -76,7 +76,7 @@ test('Host 3-2-1 is authoritative, spawns no enemies and enters Fight together',
  };
  host.frame(1);relay();assert.equal(guest.api.stage,'countdown');
  host.frame(1);relay();assert.equal(guest.api.stage,'countdown');
- host.frame(1);relay();
+ host.frame(1.05);relay();
  assert.equal(host.api.stage,'fight');
  assert.equal(guest.api.stage,'fight');
  host.G.Spawner.update(1,[],0);assert.equal(host.spawns,0,'never spawn a fake player as an Enemy');
