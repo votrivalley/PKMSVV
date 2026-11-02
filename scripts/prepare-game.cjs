@@ -640,6 +640,8 @@ if(process.env.PKMSVV_MEGA_4DIR_PC_QA==='1')
  execFileSync(process.execPath,[path.join(project,'scripts','patch-mega-4dir-pc-qa.cjs')],{cwd:project,stdio:'inherit'});
 // Solo Crown Arena: 16-entry bracket, Champion duel, chapter-6 gate and real rewards.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-champion-arena.cjs')],{cwd:project,stdio:'inherit'});
+// Native Host/Join PvP: real connected players (no fake AI rival).
+execFileSync(process.execPath,[path.join(project,'scripts','patch-arena-pvp.cjs')],{cwd:project,stdio:'inherit'});
 // Berry: persistent standalone gameplay item system; after Chapter 7/Champion hooks.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-berry.cjs')],{cwd:project,stdio:'inherit'});
 // Personal level-up once-per-Pokémon skill forgetting (NOT permanent upgrades).
