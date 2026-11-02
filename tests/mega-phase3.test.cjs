@@ -267,9 +267,9 @@ test('Mega and Fusion HUD CSS only hide for actually OPEN pause/menu/settings sc
  for(const name of ['scr-pause','scr-menu','scr-settings']){
   const regex=new RegExp('#'+name+':not\\(\\.hidden\\):not\\(\\[hidden\\]\\)');
   assert.match(mega,regex,name+' must check CSS hidden class');
-  assert.match(fusion,regex,name+' must check CSS hidden class');
+  // Fusion moved inside Pause in v1.5.75, no floating HUD to hide.
   const old=new RegExp('#'+name+':not\\(\\[hidden\\]\\)(?![\\w:])');
   assert.doesNotMatch(mega,old,'old rule permanently hid Mega during gameplay');
-  assert.doesNotMatch(fusion,old,'old rule permanently hid Fusion during gameplay');
+  assert.doesNotMatch(fusion,/#pkmsvv-fusion-action/,'legacy floating Fusion HUD must be gone');
  }
 });
