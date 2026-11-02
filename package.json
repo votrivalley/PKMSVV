@@ -2,7 +2,7 @@
   "name": "pkmsvv-offline",
   "version": "1.5.78",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.78: Arena Solo versus Champion, real human invitations, balanced random Solo AI, challenging Champion Mega finals",
+  "description": "Pokémon Chuyển Sinh v1.5.78: Arena Solo/Champion with human Host Join or balanced AI, Champion Mega finals, cross-platform Arena QA",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
