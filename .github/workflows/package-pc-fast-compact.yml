@@ -12,6 +12,11 @@ on:
       - 'tests/mega-phase3.test.cjs'
       - 'tests/berry-rescue.test.cjs'
       - 'src/pkmsvv-champion-arena.js'
+      - 'src/lan/arena-pvp.js'
+      - 'src/lan/arena-pvp.css'
+      - 'src/web/pkmsvv-royale.js'
+      - 'scripts/patch-arena-pvp.cjs'
+      - 'tests/arena-pvp.test.cjs'
       - 'src/pkmsvv-story.js'
       - 'src/pkmsvv-story.css'
       - 'scripts/patch-chapter-purple-rewards.cjs'
@@ -92,7 +97,7 @@ jobs:
       - name: C+D+E — Held item selection, Solo Fusion pilot and deterministic season
         run: npm run test:ced
       - name: Quick regressions for controls, Mega, Orb, supports and Champion
-        run: node --test tests/berry.test.cjs tests/berry-rescue.test.cjs tests/unified-coop.test.cjs tests/mega-arena-gacha.test.cjs tests/forget-skill.test.cjs tests/controller.test.cjs tests/mega-phase3.test.cjs tests/champion-arena.test.cjs tests/story-progression.test.cjs tests/chapter-purple-rewards.test.cjs tests/support-fast-shiny.test.cjs tests/competitive-nonblocking.test.cjs tests/royale-spectator.test.cjs
+        run: node --test tests/arena-pvp.test.cjs tests/berry.test.cjs tests/berry-rescue.test.cjs tests/unified-coop.test.cjs tests/mega-arena-gacha.test.cjs tests/forget-skill.test.cjs tests/controller.test.cjs tests/mega-phase3.test.cjs tests/champion-arena.test.cjs tests/story-progression.test.cjs tests/chapter-purple-rewards.test.cjs tests/support-fast-shiny.test.cjs tests/competitive-nonblocking.test.cjs tests/royale-spectator.test.cjs
       - name: Package portable PC executable
         run: npm run build:lan:win
         env:
@@ -110,6 +115,7 @@ jobs:
           if(!$app.Contains('pkmsvv-mega')){throw 'Mega control is not bundled'}
           if(!$app.Contains('pkmk-tab-berry')){throw 'Kecleon Berry shop missing'}
           if(!$app.Contains('PKMSVVBerryRescue')){throw 'Four-player Berry Rescue runtime missing'}
+           if(!$app.Contains('PKMSVVArenaPvp')){throw 'Real Host/Guest Arena PvP runtime missing'}
           $berryIcons=Get-ChildItem (Join-Path $dir 'resources/lan-site/game/assets/berry') -Filter '*.png'
           if($berryIcons.Count -ne 10){throw 'Exactly 10 Berry pixel sprites must be packaged'}
           Write-Host "Fast Start is ready: $($exe.Name) ($($exe.Length) bytes)"
