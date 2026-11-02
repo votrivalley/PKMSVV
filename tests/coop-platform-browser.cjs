@@ -137,7 +137,16 @@ async function main(){
      throw Error('competitive eggs hatched before final score');
    });
    await page.evaluate(()=>{for(const p of G.Coop.players()){p.dead=true;p.hp=0;}if(G.EggRush.active)G.Game.debugTime(720);});
-   await page.waitForFunction(()=>G.Game.state==='over',null,{timeout:10000});
+   try{await page.waitForFunction(()=>G.Game.state==='over',null,{timeout:20000});}
+   catch(error){
+    const diagnostics=await page.evaluate(()=>({
+     url:location.pathname,roomMode:G.Social.room?.mode,state:G.Game.state,
+     time:G.Game.st?.time,players:G.Coop.players().map(p=>({uid:p.uid,dead:p.dead,hp:p.hp})),
+     royale:{active:G.Royale.active,size:G.Royale.size,outcome:!!G.Royale.outcome},
+     eggrush:{active:G.EggRush.active,finished:!!G.EggRush.outcome}
+    }));
+    throw Error('Packaged Co-op round did not finish: '+JSON.stringify(diagnostics)+'; '+error.message);
+   }
    if(mode==='royale'||mode==='eggrush'){
     const podium=await page.evaluate(()=>({
      count:document.querySelectorAll('#over-stats canvas[data-pkmsvv-result-dex]').length,
