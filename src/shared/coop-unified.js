@@ -11,11 +11,12 @@
  const arenaMode=id=>id==='arena'||id==='champion';
  const berryMode=id=>id==='berry'||id==='berryeasy';
  const validMode=id=>modes.some(m=>m[0]===id)||arenaMode(id)||id==='berryeasy';
- let mode='coop',view=null,detail=null,busy=false,previousFocus=null,viewArena=false;
+ let mode='coop',lastCoopMode='coop',view=null,detail=null,busy=false,previousFocus=null,viewArena=false;
  const lan=()=>window.PKMSVV_LOCAL_UI_MODE==='lan'&&!!window.G?.LanBus;
  function close(){view?.remove();view=detail=null;previousFocus?.focus?.();}
  function info(x){if(detail)detail.textContent=x;}
  function repaint(){
+  if(!arenaMode(mode))lastCoopMode=mode;
   view?.querySelectorAll('[data-mode]').forEach(e=>{
    const on=e.dataset.mode===mode||(e.dataset.mode==='berry'&&berryMode(mode));e.classList.toggle('selected',on);e.setAttribute('aria-pressed',String(on));
   });detail?.replaceChildren();
@@ -40,7 +41,7 @@
  }
  function open(preselect){
   if(validMode(preselect))mode=preselect;
-  else if(arenaMode(mode))mode='coop'; // Preserve the last Co-op choice, but never inherit an Arena room.
+  else if(arenaMode(mode))mode=lastCoopMode; // Preserve existing Co-op choice after Arena.
   const requestedArena=arenaMode(mode);
   if(view&&viewArena!==requestedArena)close();
   if(view){repaint();return;}
@@ -264,12 +265,13 @@
   if(G.MultiplayerUI){G.MultiplayerUI.open=open;G.MultiplayerUI.__pkmsvvUnified=true;}
   document.addEventListener('click',intercept,true);
   const args=new URLSearchParams(location.search);
-  if(validMode(args.get('pkmsvvMode')))mode=args.get('pkmsvvMode');
+  const routeMode=args.get('pkmsvvMode');
+  if(validMode(routeMode))mode=routeMode;
   const role=args.get('pkmsvvRole');
   if(lan()&&['host','join','ai'].includes(role)){
    let attempts=0;const timer=setInterval(()=>{
     if(++attempts>90){clearInterval(timer);return;}
-    if(G.DB?.save&&G.Social){clearInterval(timer);open(mode);void action(role);}
+    if(G.DB?.save&&G.Social){clearInterval(timer);open(validMode(routeMode)?routeMode:mode);void action(role);}
    },200);
   }
  }
