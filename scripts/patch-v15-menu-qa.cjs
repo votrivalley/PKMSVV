@@ -167,7 +167,7 @@ fs.writeFileSync(settings,settingsJs,'utf8');
 const newsFile=path.join(game,'js','ui','news-ui.js');
 let newsJs=fs.readFileSync(newsFile,'utf8');
 if(!newsJs.includes('Có gì mới: 1.4'))throw Error('Expected old 1.4 News button label');
-newsJs=newsJs.replaceAll('Có gì mới: 1.4','Có gì mới: 1.5.80').replaceAll("What's New: 1.4","What's New: 1.5.80");
+newsJs=newsJs.replaceAll('Có gì mới: 1.4','Có gì mới').replaceAll("What's New: 1.4","What's New");
 fs.writeFileSync(newsFile,newsJs,'utf8');
 fs.appendFileSync(css,`
 /* Long storyline tagline stays centered below the single-line game name.
