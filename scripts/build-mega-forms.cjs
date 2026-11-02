@@ -1,6 +1,6 @@
 'use strict';
 /**
- * PC-only Mega asset candidate pack. Do not enable gameplay unlocks here.
+ * Full cross-platform Mega asset pack (PC, Android, Web, iOS). No gameplay unlocks.
  * Downloads during CI from a pinned SpriteCollab revision. At runtime all art
  * is local and the normal Pokédex/save species IDs remain untouched.
  * License: CC BY-NC 4.0 with each contributor's original credits.txt.
