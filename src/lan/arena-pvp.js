@@ -15,7 +15,9 @@ G.PKMSVVArenaPvp=(()=>{
  let active=false,host=false,uid='',hostUid='',seed=null,people=[],hp={},stage='idle';
  let elapsed=0,serial=0,received=-1,frameClock=0,winner=null,casts=new Map(),orbClock=0;
  let element=null,result=null;
- const mode=()=>!!(active&&G.Coop?.active&&actualRoom());
+ // Keep duel isolation active after a rival disconnects; otherwise old
+ // Survival spawners wake up as the room shrinks from two members to one.
+ const mode=()=>!!(active&&G.Coop?.active);
  const local=()=>G.Game?.player;
  const peerId=id=>people.find(m=>m.uid!==id)?.uid;
  const getPeer=id=>id===uid?local():G.Coop?.mate?.(id)?.pl;
