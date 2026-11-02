@@ -16,6 +16,9 @@ function setup(){
   {dex:530,key:'excadrillmega',stone:'Excadrite',stoneKey:'excadrite',
    storyLocked:false,sharedStone:false,spriteId:10530,artReady:true,
    stats:{hp:110,atk:165,def:100,spa:65,spd:85,spe:108}},
+  {dex:448,key:'lucariomega',stone:'Lucarionite',stoneKey:'lucarionite',
+   storyLocked:false,sharedStone:false,spriteId:10448,artReady:true,
+   stats:{hp:70,atk:145,def:88,spa:140,spd:70,spe:112}},
   ...['scizormega','swampertmega','garchompmega','greninjamega','golisopodmega',
    'falinksmega','baxcaliburmega','dragonitemega'].map((key,i)=>({
    dex:100+i,key,stone:'Stone '+key,stoneKey:'stone'+key,
@@ -31,9 +34,9 @@ function setup(){
    toUI(){active='ui'},quit(){active='ui'}},
   Player,Sprites:{Animator,playerScale(){return 1},playerRadius(){return 18},bodyHeight(){return 36},
    preload:async()=>{},sheet(){return {ready:true}}},
-  SPRITE_META:{10006:{a:{Idle:{}}},10530:{a:{Idle:{}}}},
+  SPRITE_META:{10006:{a:{Idle:{}}},10530:{a:{Idle:{}}},10448:{a:{Idle:{}}}},
   Coop:{get active(){return coop},isHost:false,toHost(ev){sent.push(ev)}},UI:{toast(){}},FX:{ring(){}},Audio:{sfx(){}},
-  DEX_BY:{6:{name:'Charizard'},530:{name:'Excadrill'}}
+  DEX_BY:{6:{name:'Charizard'},530:{name:'Excadrill'},448:{name:'Lucario'}}
  };
  const context={G,document:{body:{append(el){mountedMegaButton=el;}},readyState:'complete',getElementById(){return null},
   addEventListener(){},createElement:makeButton},setInterval(){},console};
@@ -114,6 +117,36 @@ test('authentic Mega Charizard X uses individual original stat ratios and revert
  coop(true);assert.equal(lib.eligible(),true,'unlocked Mega is usable in Co-op');
  assert.equal(lib.activate(pl),true,'local Co-op Mega transforms normally');
  assert.equal(JSON.stringify(sent[0]),JSON.stringify(['mg',10006]),'guest announces selected Mega sprite to Host');
+});
+test('owned Mega Lucario appears and transforms in Co-op without the old Solo button',()=>{
+ const {G,s,pl,lib,coop,getMegaButton,sent}=setup();
+ s.owned[448]={at:1};s.megaStones.lucarionite=1;
+ pl.dex=448;pl.mon={dex:448,pa:110,sa:115,atk:115,df:70,sd:70,spd:90,types:['fighting','steel']};
+ pl.baseAtk=115;pl.baseSpd=90;
+ const initial=pl.mon;
+ coop(true);
+ // Old Solo controller is deliberately unavailable in LAN; this shared
+ // controller must not hide the only usable Mega button.
+ G.MegaLucario={BASE:448,eligible(){return false}};
+ assert.equal(lib.isUnlocked(G.PKMSVV_MEGA_CATALOG.find(f=>f.key==='lucariomega')),true);
+ assert.equal(lib.isBattleReady(G.PKMSVV_MEGA_CATALOG.find(f=>f.key==='lucariomega')),true);
+ lib.sync();
+ assert.equal(getMegaButton().style.display,'flex','Co-op Lucario must show the Mega button');
+ assert.equal(getMegaButton().disabled,false,'enough charge, stone and story enable the button');
+ assert.equal(lib.eligible(),true);
+ assert.equal(lib.activate(pl),true);
+ assert.equal(pl.anim.dex,10448,'real bundled Lucario combat sprite');
+ assert.equal(pl.mon.pa,145,'correct physical stat ratio, never multiply by raw mega base stat');
+ assert.equal(pl.mon.sa,140);
+ assert.equal(pl.mon.df,88);
+ assert.equal(pl.mon.sd,70);
+ assert.equal(pl.mon.spd,112);
+ assert.equal(JSON.stringify(sent[0]),JSON.stringify(['mg',10448]),'network notifies the Host');
+ lib.tick(pl,30.1);
+ assert.strictEqual(pl.mon,initial,'Mega returns to the original stats');
+ assert.equal(pl._megaCooldownRemaining,200);
+ coop(false);G.MegaLucario.eligible=()=>true;lib.sync();
+ assert.equal(getMegaButton().style.display,'none','Solo legacy controller must not overlap Phase 3');
 });
 test('compiled Phase 3 assets are loaded after Phase 2 catalog and original Gacha saves stay intact',()=>{
  const html=read('vendor/pokesurvivor/dev.html');
