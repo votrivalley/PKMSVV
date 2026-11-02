@@ -90,6 +90,8 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Compile latest offline + LAN game
         run: npm run prepare:lan
+      - name: Validate bilingual 1.0–current changelog and preserve Vietnamese UI
+        run: npm run test:localization
         env:
           PKMSVV_MEGA_SPRITE_PACK: '1'
       - name: Phase A+B — Berry UX and safe item/Bond selections
