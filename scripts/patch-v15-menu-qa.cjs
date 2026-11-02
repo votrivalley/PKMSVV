@@ -13,6 +13,17 @@ fs.appendFileSync(js,`
  function polish(){
   const menu=document.getElementById('scr-menu');
   if(!menu)return;
+  // The game identity and subtitle switch only when English was selected.
+  // Keep the entire Vietnamese original intact (including every accent).
+  const english=G.I18n?.lang==='en';
+  const brand=menu.querySelector('.menu-left .logo .t1');
+  if(brand){
+   const textNode=[...brand.childNodes].find(node=>node.nodeType===3);
+   if(textNode)textNode.nodeValue=english?'Pokémon Reincarnation':'Pokémon Chuyển Sinh';
+  }
+  const tagline=menu.querySelector('.menu-left .logo .pkmsvv-awakening-tagline');
+  if(tagline)tagline.textContent=english?'I woke up as a Pokémon':'Tỉnh giấc tôi thấy mình hóa Pokemon';
+
   // Credit is displayed once as a tiny non-interactive line in upper left.
   const credit=menu.querySelector('.menu-left .pkmsvv-credit');
   if(credit){
@@ -151,12 +162,12 @@ const settings=path.join(game,'js','ui','settings-ui.js');
 let settingsJs=fs.readFileSync(settings,'utf8');
 if(!settingsJs.includes('about-logo">PokéSurvivor</div>'))throw Error('Original About title changed');
 settingsJs=settingsJs.replace('about-logo">PokéSurvivor</div>','about-logo" translate="no">Pokemon Chuyển sinh</div>');
-settingsJs=settingsJs.replace("const VERSION = '1.2 · 2026-10-09';","const VERSION = '1.5.37 · 2026-10-28';");
+settingsJs=settingsJs.replace("const VERSION = '1.2 · 2026-10-09';","const VERSION = '1.5.80 · 2026-11-03';");
 fs.writeFileSync(settings,settingsJs,'utf8');
 const newsFile=path.join(game,'js','ui','news-ui.js');
 let newsJs=fs.readFileSync(newsFile,'utf8');
 if(!newsJs.includes('Có gì mới: 1.4'))throw Error('Expected old 1.4 News button label');
-newsJs=newsJs.replaceAll('Có gì mới: 1.4','Có gì mới: 1.5').replaceAll("What's New: 1.4","What's New: 1.5");
+newsJs=newsJs.replaceAll('Có gì mới: 1.4','Có gì mới: 1.5.80').replaceAll("What's New: 1.4","What's New: 1.5.80");
 fs.writeFileSync(newsFile,newsJs,'utf8');
 fs.appendFileSync(css,`
 /* Long storyline tagline stays centered below the single-line game name.
