@@ -129,5 +129,17 @@ G.Royale=(()=>{
   // HUD clears registered buttons each frame, so this registers only once.
   G.Touch?.addButton?.(x,top,width,height,()=>{expanded=!expanded;},0);
  }
+ // Mouse pointer is tested against the *drawn* ranking bounds. A later
+ // render overlay can clear Touch's temporary button list, so desktop clicks
+ // should not depend on that list. Touch screens retain native Touch buttons.
+ if(typeof document!=='undefined'&&document.addEventListener)
+  document.addEventListener('pointerdown',e=>{
+   if(!active||!hudBounds||e.pointerType!=='mouse'||e.target?.id!=='game'||
+      G.Game?.state!=='playing')return;
+   const rect=e.target.getBoundingClientRect?.();if(!rect)return;
+   const x=e.clientX-rect.left,y=e.clientY-rect.top;
+   if(x<hudBounds.x||x>hudBounds.right||y<hudBounds.top||y>hudBounds.bottom)return;
+   expanded=!expanded;e.preventDefault();e.stopImmediatePropagation();
+  },true);
  return {begin,startPosition,intensity,speedAt,check,finish,html,draw,get hudBounds(){return hudBounds;},get expanded(){return expanded;},get active(){return active;},get outcome(){return outcome;},get size(){return roster.length;}};
 })();
