@@ -79,7 +79,9 @@ G.MegaLucario=(()=>{
   }finally{busy=false;sync();}
  }
  function tick(p,dt){
-  if(p&&p._megaActive){
+  // Only tick the legacy Lucario form. Phase 3 owns Co-op and other Mega
+  // transformations; ticking them here would incorrectly halve 30s duration.
+  if(p&&p._megaActive&&p._megaBackup){
    if(p.dead||G.Game.state==='over'){stop(p);return;}
    p._megaRemaining-=Math.max(0,dt);
    if(p._megaRemaining<=0)stop(p);
