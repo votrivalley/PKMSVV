@@ -92,6 +92,7 @@ on:
       - 'tests/berry-rescue.test.cjs'
       - 'tests/forget-skill.test.cjs'
       - 'tests/competitive-nonblocking.test.cjs'
+      - 'tests/mega-platform-parity.test.cjs'
       - 'package.json'
       - '.github/workflows/build-cloudflare-html5.yml'
   workflow_dispatch:
@@ -126,6 +127,8 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Build complete Cloudflare HTML5 game
         run: npm run prepare:cloudflare
+      - name: Verify Web ships the complete PC Mega pack, not three preview forms
+        run: node tests/mega-platform-parity.test.cjs web
       - name: Phase A+B — Berry HUD and safe item/skill/Bond queue
         run: npm run test:berry:ux && npm run test:choice:queue
       - name: C+D+E — Held item selection, Solo Fusion pilot and deterministic season
