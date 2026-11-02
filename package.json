@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.79",
+  "version": "1.5.80",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.79: unify 36 genuine Mega forms and 32 authentic Shiny sprite sets on PC Android Web and iOS",
+  "description": "Pokémon Chuyển Sinh v1.5.80: complete bilingual 1.0-to-current changelog, English UI coverage without changing Vietnamese copy",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
@@ -24,8 +24,9 @@
     "test:controller": "node --test tests/controller.test.cjs",
     "test:audio": "node --test tests/audio-recovery.test.cjs",
     "test:ui": "node --test tests/ui094.test.cjs tests/web-match-ux.test.cjs tests/dex-header-actions.test.cjs",
-    "test:extended-i18n": "node --test tests/extended-i18n.test.cjs",
-    "test:changelog": "node --test tests/changelog-v11.test.cjs",
+    "test:extended-i18n": "node --test tests/extended-i18n.test.cjs tests/pkmsvv-release-locale.test.cjs",
+    "test:changelog": "node --test tests/changelog-v11.test.cjs tests/pkmsvv-release-locale.test.cjs",
+    "test:localization": "node --test tests/pkmsvv-release-locale.test.cjs",
     "test:bilingual": "node --test tests/bilingual-addon.test.cjs",
     "test:mobile-topbar": "node --test tests/mobile-topbar.test.cjs",
     "test:kecleon": "node --test tests/kecleon.test.cjs",
