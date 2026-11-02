@@ -49,7 +49,11 @@ function instance(myUid,opts={}){
  const cfg={mode:'arena',seed,host:'host',members};
  function start(){G.Coop.begin(cfg,me,{});}
  function emit(from,msg){for(const cb of listeners)cb(from,msg);}
- function frame(dt){G.EnemyMgr.update(dt,[]);}
+ function frame(dt){
+  // The original engine clamps each animation tick; advance with 30 FPS frames.
+  for(let remain=dt;remain>0;remain-=Math.min(remain,1/30))
+   G.EnemyMgr.update(Math.min(remain,1/30),[]);
+ }
  return {G,api,me,other,document,elements,network,emit,frame,start,cfg,advance(t){now+=t},get damage(){return damage},
   get spawns(){return spawns},get gameQuit(){return gameQuit}};
 }
