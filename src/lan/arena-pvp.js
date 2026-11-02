@@ -65,7 +65,8 @@ G.PKMSVVArenaPvp=(()=>{
  function normalize(pl){
   if(!pl)return;
   pl.maxHp=HP;pl.hp=HP;pl.baseAtk=1.3;pl.atkMul=1;
-  pl.baseSpd=112;pl.spdMul=1;pl.cdMul=1;pl.regen=0;
+  pl.baseSpd=112;pl.spdMul=1;pl.cdMul=1;pl.regenFlat=0;
+  if(pl.buffs?.regen)pl.buffs.regen.n=0;
   pl.invuln=COUNTDOWN+.2;pl.dead=false;pl.frozen=true;
   const moves=loadout(pl.dex).map(id=>{
    const m=G.Moves?.instance?.(id,1);if(m)m.since=0;return m;
@@ -165,7 +166,8 @@ G.PKMSVVArenaPvp=(()=>{
  function applyHp(){
   const p=local();if(!p)return;
   p.maxHp=HP;p.hp=Math.max(1,hp[uid]??HP);
-  p.dead=false;p.regen=0;
+  p.dead=false;p.regenFlat=0;
+  if(p.buffs?.regen)p.buffs.regen.n=0;
   p.frozen=stage!=='fight';
   const opponent=G.Coop?.mate?.(peerId(uid))?.pl;
   if(opponent){
