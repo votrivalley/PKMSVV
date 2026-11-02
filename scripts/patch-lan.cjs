@@ -73,9 +73,9 @@ ui=ui.replace(marker,
         if(bot)G.LanBus.request('removeBot',{uid:bot.uid}).catch(e=>G.UI.toast(e.message,3500));
        };
       }
-      aiBar.classList.toggle('hidden',!room.isHost||!room.open);
+      aiBar.classList.toggle('hidden',!room.isHost||!room.open||room.mode==='arena');
       const botCount=room.members.filter(m=>m.bot).length;
-      $('pkmsvv-lan-ai-add').disabled=room.members.length>=(room.mode==='royale'?10:4);
+      $('pkmsvv-lan-ai-add').disabled=room.mode==='arena'||room.members.length>=(room.mode==='royale'?10:4);
       $('pkmsvv-lan-ai-remove').disabled=!botCount;
       `+
  "      $('lobby-sub').textContent += '  ·  Mã phòng: '+room.id;\n"+
