@@ -127,6 +127,8 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Build complete Cloudflare HTML5 game
         run: npm run prepare:cloudflare
+      - name: Validate bilingual 1.0–current changelog and preserve Vietnamese UI
+        run: npm run test:localization
       - name: Verify Web ships the complete PC Mega pack, not three preview forms
         run: node tests/mega-platform-parity.test.cjs web
       - name: Phase A+B — Berry HUD and safe item/skill/Bond queue
