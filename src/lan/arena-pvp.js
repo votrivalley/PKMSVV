@@ -195,7 +195,7 @@ G.PKMSVVArenaPvp=(()=>{
   if(host){
    const step=clamp(dt,0,.07);
    elapsed+=step;frameClock-=step;
-   if(stage==='countdown'&&elapsed>=COUNTDOWN){stage='fight';elapsed=0;casts.clear();}
+   if(stage==='countdown'&&elapsed>=COUNTDOWN){stage='fight';elapsed=0;casts.clear();sendState(true);}
    if(stage==='fight'){
     const a=coords(uid),b=coords(peerId(uid));
     // Orb damage uses the real owned orbit move on the Host; guests are
