@@ -8,11 +8,13 @@ test('Crown Journey appears above regions and the two equal combat tabs',()=>{
  assert.equal((markup.match(/id="pkmsvv-arena-mode-champion"/g)||[]).length,1);
  assert.equal((markup.match(/id="pkmsvv-champion-sky"/g)||[]).length,1);
  assert.ok(markup.indexOf('id="pkmsvv-arena-mode-champion"')<markup.indexOf('id="pkmsvv-champion-regions"'));
- assert.ok(markup.indexOf('id="pkmsvv-champion-regions"')<markup.indexOf('id="pkmsvv-arena-mode-solo"'));
+ assert.ok(markup.indexOf('id="pkmsvv-champion-regions"')<markup.indexOf('id="pkmsvv-champion-vs-ai"'));
  const tabs=markup.slice(markup.indexOf('<div class="pkmsvv-arena-mode-tabs">'),markup.indexOf('<div id="pkmsvv-champion-map-row"'));
- assert.match(tabs,/id="pkmsvv-arena-mode-solo"/);assert.match(tabs,/id="pkmsvv-arena-mode-league"/);
+ assert.match(tabs,/id="pkmsvv-champion-vs-ai"/);assert.match(tabs,/id="pkmsvv-champion-vs-human"/);assert.match(tabs,/id="pkmsvv-arena-mode-league"/);
  assert.doesNotMatch(tabs,/id="pkmsvv-arena-mode-champion"/);
  assert.doesNotMatch(markup,/Xem lại Hành Trình Thiên Không/);
+ assert.match(ui,/pkmsvv-arena-hub-solo/);assert.match(ui,/pkmsvv-arena-hub-champion/);
+ assert.match(ui,/PKMSVVCoop.open\('champion'\)/);
  const css=read('src/pkmsvv-champion-arena.css');
  assert.match(css,/pkmsvv-crown-journey/);assert.match(css,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
 });
