@@ -10,7 +10,9 @@ async function ready(page,url){
  assert.equal(await page.evaluate(()=>window.PKMSVV_LOCAL_UI_MODE),'lan','compiled build must retain the LAN marker');
  await page.evaluate(()=>{
   Object.assign(G.DB.save,{partner:25,starter:25,pkmsvvStorySeen:true,pkmsvvNameChosen:true,
-   pkmsvvChapter1Pending:false,pkmsvvChapter2Pending:false,pkmsvvChapter3Pending:false});
+   pkmsvvChapter1Pending:false,pkmsvvChapter2Pending:false,pkmsvvChapter3Pending:false,
+   pkmsvvChapter3Seen:true,pkmsvvChapter5Seen:true,pkmsvvChapter6Seen:true,
+   pkmsvvBerryChapterDone:true,pkmsvvMultiplayerDone:{coop:true,royale:true}});
   G.DB.commit();G.MenuUI.open();
  });
  return errors;
@@ -21,15 +23,21 @@ async function run(){
  const base='http://127.0.0.1:'+server.port;
  const output=path.resolve('dist/qa');fs.mkdirSync(output,{recursive:true});
  try{
-  for(const mode of ['arena','coop','royale','eggrush']){
+  for(const mode of ['arena','champion','coop','royale','eggrush']){
    const hostContext=await browser.newContext({viewport:{width:1280,height:800}});
    const guestContext=await browser.newContext({viewport:{width:1280,height:800}});
    const host=await hostContext.newPage(),guest=await guestContext.newPage();
    const extraContexts=[];
    try{
     const [hostErrors,guestErrors]=await Promise.all([ready(host,base+'/game/'),ready(guest,base+'/game/')]);
-    await host.click('#scr-menu [data-go="multiplayer"]');
-    await host.click('[data-mode="'+mode+'"]');
+    if(mode==='arena'||mode==='champion'){
+     await host.click('#pkmsvv-champion-entry');
+     await host.click('#pkmsvv-arena-hub-'+(mode==='arena'?'solo':'champion'));
+     await host.click(mode==='arena'?'#pkmsvv-arena-solo-invite':'#pkmsvv-champion-vs-human');
+    }else{
+     await host.click('#scr-menu [data-go="multiplayer"]');
+     await host.click('[data-mode="'+mode+'"]');
+    }
     await host.waitForFunction(()=>[...document.querySelectorAll('#pkmsvv-coop-modes canvas')].every(cv=>{
      const p=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;
      let n=0;for(let i=3;i<p.length;i+=4)if(p[i])n++;return n>500;
@@ -50,7 +58,13 @@ async function run(){
     }
     await host.click('[data-role="host"]');
     await host.waitForFunction(()=>window.G?.Social?.room?.isHost&&G.UI.isOpen('scr-lobby'));
-    await guest.click('#scr-menu [data-go="multiplayer"]');await guest.click('[data-mode="'+mode+'"]');
+    if(mode==='arena'||mode==='champion'){
+     await guest.click('#pkmsvv-champion-entry');
+     await guest.click('#pkmsvv-arena-hub-'+(mode==='arena'?'solo':'champion'));
+     await guest.click(mode==='arena'?'#pkmsvv-arena-solo-invite':'#pkmsvv-champion-vs-human');
+    }else{
+     await guest.click('#scr-menu [data-go="multiplayer"]');await guest.click('[data-mode="'+mode+'"]');
+    }
     await guest.click('[data-role="join"]');
     await guest.waitForFunction(()=>window.PKMSVV_WIFI&&window.PKMSVVWifiUI);
     await guest.locator('.pkmsvv-wifi-panel').waitFor();
@@ -94,9 +108,10 @@ async function run(){
       room:G.Social.room?.members.length,recv:G.Net.stats.recv,state:G.Game.state}));
      assert.equal(state.mode,mode);assert.equal(state.connected,true);assert.equal(state.room,mode==='eggrush'?4:2);assert.ok(state.recv>0);
     }
-    if(mode==='arena'){
+    if(mode==='arena'||mode==='champion'){
      await Promise.all([host,guest].map(page=>page.waitForFunction(()=>
       G.PKMSVVArenaPvp?.active&&G.PKMSVVArenaPvp.stage==='fight',null,{timeout:12000})));
+     assert.equal(await host.evaluate(()=>G.PKMSVVArenaPvp.matchType),mode,'selected Arena mode must be preserved');
      assert.equal(await host.evaluate(()=>G.PKMSVVArenaPvp.host),true,'Arena Host owns PvP outcomes');
      assert.equal(await guest.evaluate(()=>G.PKMSVVArenaPvp.host),false,'Arena guest is real remote player');
      await guest.evaluate(()=>{
