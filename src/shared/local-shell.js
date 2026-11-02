@@ -4,6 +4,7 @@
  */
 (()=>{
  const mode=window.PKMSVV_LOCAL_UI_MODE||'lan';
+ const L=(vi,en)=>window.G?.I18n?.lang==='en'?en:vi;
  const el=id=>document.getElementById(id);
  let installed=false;
  const inactive=['friends','rank'];
@@ -25,7 +26,7 @@
   if(isAndroidFull){
    const open=window.PKMSVVOpenAndroidLan;
    if(typeof open==='function')open();
-   else window.G?.UI?.toast?.('Co-op LAN chưa sẵn sàng');
+   else window.G?.UI?.toast?.(L('Co-op LAN chưa sẵn sàng','Co-op LAN is not available yet'));
    return;
   }
   openLanDialog();
@@ -48,11 +49,11 @@
    'z-index:99999;background:#153849;color:#fff4cf;padding:12px 16px;'+
    'font:14px system-ui;border:2px solid #f0be64;border-radius:10px';
   const line=document.createElement('p');
-  line.textContent='Đây là website Preview: save của nó KHÔNG chung với pkmsvv-web.pages.dev. Hãy cứu/xuất save trước khi đổi địa chỉ.';
+  line.textContent=L('Đây là website Preview: save của nó KHÔNG chung với pkmsvv-web.pages.dev. Hãy cứu/xuất save trước khi đổi địa chỉ.','This Preview website has a DIFFERENT save from pkmsvv-web.pages.dev. Export or rescue your save before switching addresses.');
   const rescue=document.createElement('a');rescue.href='/save-rescue.html';
   rescue.style.cssText='color:#fff4cf;text-decoration:underline;margin-right:16px';
-  rescue.textContent='Cứu save tại địa chỉ này';
-  const close=document.createElement('button');close.type='button';close.textContent='Đóng';
+  rescue.textContent=L('Cứu save tại địa chỉ này','Rescue save from this address');
+  const close=document.createElement('button');close.type='button';close.textContent=L('Đóng','Close');
   close.onclick=()=>panel.remove();
   panel.append(line,rescue,close);document.body.append(panel);
  }
@@ -101,7 +102,7 @@
     label.textContent='Co-op';
    }
    const small=coop.querySelector('small');
-   if(small)small.textContent=isPages?'PC Host cùng Wi-Fi · nhập IP':'Co-op LAN · cùng Wi-Fi';
+   if(small)small.textContent=isPages?L('PC Host cùng Wi-Fi · nhập IP','PC Host on same Wi-Fi · enter IP'):L('Co-op LAN · cùng Wi-Fi','Co-op LAN · same Wi-Fi');
   }
   const topbar=el('topbar');
   if(topbar){
@@ -119,11 +120,11 @@
    else if(button.parentElement!==topbar)topbar.appendChild(button);
    button.classList.remove('hidden');button.hidden=false;
    button.style.removeProperty('display');
-   button.title='Sao lưu / Khôi phục game';button.setAttribute('aria-label',button.title);
+   button.title=L('Sao lưu / Khôi phục game','Back up / Restore game');button.setAttribute('aria-label',button.title);
    button.onclick=event=>{
     event?.preventDefault();event?.stopPropagation();
     if(window.G?.PKMSVVSaveUI?.openQuick)G.PKMSVVSaveUI.openQuick();
-    else window.G?.UI?.toast?.('Công cụ sao lưu chưa sẵn sàng');
+    else window.G?.UI?.toast?.(L('Công cụ sao lưu chưa sẵn sàng','Backup tool is not available yet'));
    };
   }
   el('pkmsvv-v15-backup')?.classList.add('hidden');
