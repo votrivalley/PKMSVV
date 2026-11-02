@@ -186,6 +186,11 @@ G.PKMSVVArenaSolo=(()=>{
   const def={dex,name:G.DEX_BY?.[dex]?.name||'AI',...balanceAi(p),
    xp:0,behavior:'champion'};
   target=G.EnemyMgr.add(new G.Enemy(def,p.x+170,p.y-45,{hp:1,spd:1,dmg:1},true));
+  // Native boss constructor may apply its own run scaling. The chosen Solo
+  // rival MUST stay within 90–120% of the player's normalized duel stats.
+  if(target){target.maxHp=def.hp;target.hp=def.hp;target.spd=def.spd;
+   target.dmg=def.dmg;if(Number.isFinite(target.shotCd))target.shotCd=def.shotCd;}
+
 
   // Duel opponents still use boss combat mechanics, but MUST draw like normal
   // player Pokémon rather than the enlarged boss species artwork.
