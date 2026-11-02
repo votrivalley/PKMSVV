@@ -2,7 +2,7 @@
 /* The exact same Co-op entry for PC, Android and Cloudflare HTML5. */
 (()=>{
  window.PKMSVV_UNIFIED_COOP_ENABLED=true;
- const modes=[['coop','Sống Sót','2–4 người',25,'Pikachu','Cùng đồng đội đánh quái, cứu nhau khi gặp nguy hiểm và cố gắng sống sót lâu nhất có thể!'],
+ const modes=[['arena','Arena 1v1','2 người thật',448,'Lucario','Đấu trực tiếp với bạn cùng phòng Host/Join. Có đếm 3–2–1, cân bằng máu và skill, Host xác định thắng thua.'],['coop','Sống Sót','2–4 người',25,'Pikachu','Cùng đồng đội đánh quái, cứu nhau khi gặp nguy hiểm và cố gắng sống sót lâu nhất có thể!'],
   ['royale','Sống Còn','2–10 người',6,'Charizard','Chiến đấu với quái vật trong vòng an toàn ngày càng thu nhỏ. Người sống sót cuối cùng sẽ chiến thắng!'],
   ['eggrush','Tranh Trứng','4 người',175,'Togepi','Tranh nhau thu thập 10 quả trứng! Cuối trận trứng mới nở để tính điểm. Ai nhiều điểm nhất sẽ thắng!'],
    ['berry','Giải Cứu Berry','4 người · 8 phút',420,'Cherubi','Cherubi cần bạn bảo vệ 3 cây Berry · chọn Nhẹ Nhàng hoặc Nườm Nượp bên dưới.']];
@@ -17,6 +17,8 @@
    const on=e.dataset.mode===mode||(e.dataset.mode==='berry'&&berryMode(mode));e.classList.toggle('selected',on);e.setAttribute('aria-pressed',String(on));
   });detail?.replaceChildren();
   view?.querySelector('.pkmsvv-berry-difficulty')?.remove();
+  const aiButton=view?.querySelector('[data-role="ai"]');
+  if(aiButton){aiButton.disabled=mode==='arena';aiButton.hidden=mode==='arena';}
   if(berryMode(mode)&&view){
    const line=document.createElement('div');line.className='pkmsvv-berry-difficulty';
    const caption=document.createElement('strong');caption.textContent='🌿 Độ khó · Giải Cứu Berry';
@@ -159,6 +161,7 @@
  }
  async function action(role){
   if(busy)return;
+  if(mode==='arena'&&role==='ai'){info('Arena 1v1 yêu cầu hai người chơi thật, không dùng AI.');return;}
   // Capture mode before any async network/AI setup: no silent downgrade to Co-op.
   const requestedMode=mode;
   if(role!=='ai'&&(lan()||window.PKMSVV_STANDALONE_AI_AVAILABLE)&&!window.PKMSVV_WIFI&&!new URLSearchParams(location.search).get('pkmsvvCode')){
