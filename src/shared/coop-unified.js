@@ -269,7 +269,7 @@
   if(lan()&&['host','join','ai'].includes(role)){
    let attempts=0;const timer=setInterval(()=>{
     if(++attempts>90){clearInterval(timer);return;}
-    if(G.DB?.save&&G.Social){clearInterval(timer);open();void action(role);}
+    if(G.DB?.save&&G.Social){clearInterval(timer);open(mode);void action(role);}
    },200);
   }
  }
