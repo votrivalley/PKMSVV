@@ -134,9 +134,10 @@ G.Royale=(()=>{
  // should not depend on that list. Touch screens retain native Touch buttons.
  if(typeof document!=='undefined'&&document.addEventListener)
   document.addEventListener('pointerdown',e=>{
-   if(!active||!hudBounds||e.pointerType!=='mouse'||e.target?.id!=='game'||
-      G.Game?.state!=='playing')return;
-   const rect=e.target.getBoundingClientRect?.();if(!rect)return;
+   if(!active||!hudBounds||e.pointerType!=='mouse'||G.Game?.state!=='playing')return;
+   // A transparent touch/input layer can sit above the game canvas on PC;
+   // hit-test canvas geometry, not whichever DOM child received the pointer.
+   const rect=document.getElementById('game')?.getBoundingClientRect?.();if(!rect)return;
    const x=e.clientX-rect.left,y=e.clientY-rect.top;
    if(x<hudBounds.x||x>hudBounds.right||y<hudBounds.top||y>hudBounds.bottom)return;
    expanded=!expanded;e.preventDefault();e.stopImmediatePropagation();
