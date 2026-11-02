@@ -49,6 +49,7 @@ G.PKMSVVArenaPvp=(()=>{
   frameClock=0;orbClock=0;elapsed=0;received=-1;
   if(element){element.remove();element=null;}
   if(result){result.remove();result=null;}
+  const count=$('pkmsvv-arena-pvp-count');if(count)count.remove();
   G.World?.setArena?.(null);
  }
  function normalize(pl){
@@ -113,7 +114,7 @@ G.PKMSVVArenaPvp=(()=>{
   if(!damageBase)return false;
   const type=G.DEX_BY?.[people.find(m=>m.uid===victim)?.dex]?.types||[];
   const typeEffect=clamp(G.Types?.mult?.(hit.move.type,type)||1,.35,2);
-  const pulse=hit.kind==='orbit'||hit.kind==='aura'?.34:1;
+  const pulse=(hit.kind==='orbit'||hit.kind==='aura')?.34:1;
   const damage=clamp(damageBase*.72*typeEffect*pulse,2,46);
   hp[victim]=Math.max(0,hp[victim]-damage);
   if(victim===uid&&local())local().hp=Math.max(1,hp[victim]);
