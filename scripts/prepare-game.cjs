@@ -556,6 +556,13 @@ fs.copyFileSync(path.join(project,'src','pkmsvv-extended-en.js'),
 patch('dev.html',
   '<script defer src="js/data/pkmsvv-ux-languages.js"></script>',
   '<script defer src="js/data/pkmsvv-ux-languages.js"></script>\n<script defer src="js/data/pkmsvv-extended-en.js"></script>');
+ // SVV English-only dictionary extends the original I18n observer. It NEVER
+ // registers replacements in 'vi', preserving all Vietnamese copy and accents.
+ fs.copyFileSync(path.join(project,'src','pkmsvv-ui-en-coverage.js'),
+   path.join(game,'js','data','pkmsvv-ui-en-coverage.js'));
+ patch('dev.html',
+  '<script defer src="js/data/pkmsvv-extended-en.js"></script>',
+  '<script defer src="js/data/pkmsvv-extended-en.js"></script>\n<script defer src="js/data/pkmsvv-ui-en-coverage.js"></script>');
 
 // Minimal styling for the approved What's New subtitle and attribution;
  // content remains sourced from the bilingual release note data.
