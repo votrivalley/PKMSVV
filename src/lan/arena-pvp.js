@@ -323,7 +323,7 @@ G.PKMSVVArenaPvp=(()=>{
   };
   G.Net.onPeer?.((from,state)=>{
    if(active&&host&&from===peerId(uid)&&['closed','failed'].includes(state)){
-    winner=uid;stage='result';sendState(true);
+    winner=uid;stage='result';render(); // Guest has left: show forfeit even without 2-member room.
    }
   });
   return true;
