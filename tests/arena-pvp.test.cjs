@@ -50,12 +50,13 @@ function instance(myUid,opts={}){
  const cfg={mode:'arena',seed,host:'host',members};
  function start(){G.Coop.begin(cfg,me,{});}
  function emit(from,msg){for(const cb of listeners)cb(from,msg);}
+ function disconnect(from){for(const cb of peers)cb(from,'closed');}
  function frame(dt){
   // The original engine clamps each animation tick; advance with 30 FPS frames.
   for(let remain=dt;remain>0;remain-=Math.min(remain,1/30))
    G.EnemyMgr.update(Math.min(remain,1/30),[]);
  }
- return {G,api,me,other,document,elements,network,emit,frame,start,cfg,advance(t){now+=t},get damage(){return damage},
+ return {G,api,me,other,document,elements,network,emit,disconnect,frame,start,cfg,advance(t){now+=t},get damage(){return damage},
   get spawns(){return spawns},get gameQuit(){return gameQuit}};
 }
 test('Real Arena rooms use human identities and reject AI/no-second-player modes',()=>{
@@ -165,4 +166,16 @@ test('Equal PvP skill loadouts are level one and enemy IDs cannot replace a huma
  assert.equal(host.api.health.host,320);
  assert.equal(host.api.health.guest,320);
  assert.equal(host.G.World.arena.r,18);
+});
+
+test('Forfeit remains isolated even after remote player leaves the room',()=>{
+ const host=instance('host');host.start();host.frame(3.01);
+ host.G.Social.room.members.splice(1);
+ host.disconnect('guest');
+ assert.equal(host.api.stage,'result');
+ assert.equal(host.api.winner,'host');
+ host.G.Spawner.update(.1,[],4);
+ assert.equal(host.spawns,0,'Survival spawner must not restart after losing arena peer');
+ host.frame(.1);
+ assert.equal(host.api.active,true,'remain in result until host exits');
 });
