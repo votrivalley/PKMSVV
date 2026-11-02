@@ -104,6 +104,7 @@ on:
       - 'tests/smoke-lan-win.ps1'
       - 'docs/LAN_FAST_START_WINDOWS.md'
       - 'lan-win.json'
+      - 'tests/mega-platform-parity.test.cjs'
       - 'package.json'
       - 'tests/lan-server.test.cjs'
       - 'tests/lan-compact-ui.test.cjs'
@@ -138,6 +139,8 @@ jobs:
         run: npm run prepare:lan
         env:
           PKMSVV_MEGA_SPRITE_PACK: '1'
+      - name: Verify PC Mega asset pack matches Android and Web releases
+        run: node tests/mega-platform-parity.test.cjs pc
       - name: Phase A+B — Berry effects, HUD and collision-free reward queues
         run: npm run test:berry:ux && npm run test:choice:queue
       - name: C+D+E — Held item selection, Solo Fusion pilot and deterministic season
