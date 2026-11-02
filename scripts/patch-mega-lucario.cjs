@@ -9,7 +9,7 @@ function patch(file,before,after){
  fs.writeFileSync(full,text.replace(before,after),'utf8');
 }
 execFileSync(process.execPath,[path.join(root,'scripts','build-mega-lucario.cjs')],{cwd:root,stdio:'inherit'});
-// Three production-preview battle forms on every platform; PC packs all 36.
+// Development without PKMSVV_MEGA_SPRITE_PACK uses three previews; release builds pack all 36 on every platform.
 execFileSync(process.execPath,[path.join(root,'scripts','build-mega-forms.cjs')],{cwd:root,stdio:'inherit'});
 // Published artist-made Shiny variants are separate 8-direction sheets under /s/.
 execFileSync(process.execPath,[path.join(root,'scripts','build-mega-shiny.cjs')],{cwd:root,stdio:'inherit'});
