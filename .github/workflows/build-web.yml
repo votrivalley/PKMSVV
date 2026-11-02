@@ -41,6 +41,8 @@ jobs:
           PKMSVV_ALLOWED_HOSTS: ${{ vars.PKMSVV_ALLOWED_HOSTS }}
           PKMSVV_WEB_PREVIEW: "0"
         run: npm run prepare:web
+      - name: Validate bilingual 1.0–current changelog and preserve Vietnamese UI
+        run: npm run test:localization
       - name: Verify background music pauses and resumes across browsers
         run: node --test tests/audio-recovery.test.cjs
       - name: Test v1.4 Judgment, Orbs, Shiny Charm and Gacha ×100
