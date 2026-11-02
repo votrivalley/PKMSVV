@@ -115,3 +115,22 @@ test('The rendered What’s New dialog never translates an English entry through
   }
  }
 });
+
+test('Wi-Fi invitation, QR pairing and close buttons are fully bilingual without touching VI',()=>{
+ const source=read('src/lan/wifi-ui.js');
+ assert.match(source,/const L=\(vi,en\)=>window\.G\?\.I18n\?\.lang==='en'\?en:vi/);
+ for(const [vi,en] of [
+  ['Đóng','Close'],
+  ['1. Tạo lời mời cho một bạn','1. Create an invitation for one friend'],
+  ['2. Tạo phản hồi gửi lại Host','2. Create reply for Host'],
+  ['3. Vào phòng','3. Join Room'],
+  ['Không ghép nối được','Pairing failed'],
+  ['Đang ghép nối với Host…','Pairing with Host…']
+ ]){
+  assert.ok(source.includes("L('"+vi+"','"+en+"')"),
+   'Missing explicitly localized Wi-Fi action '+vi);
+ }
+ const qa=read('tests/coop-platform-browser.cjs');
+ assert.match(qa,/\.pkmsvv-wifi-panel > button/);
+ assert.doesNotMatch(qa,/filter\(\{hasText:'Đóng'\}\)/);
+});
