@@ -76,6 +76,13 @@ test('preview cannot grant stone, transformation restores base stats after 30s',
  assert.equal(player.mon.atk,115,'unmodified original Pokédex stats restored');
  assert.equal(await mega.tryActivate(),false,'one Mega activation per run');
 });
+test('legacy Lucario timer cannot double-tick an active Phase 3 Mega in Co-op',()=>{
+ const {G,player}=mock();
+ player._megaActive=true;player._megaPhase3Backup={mon:player.mon};player._megaRemaining=30;
+ G.MegaLucario.tick(player,1);
+ assert.equal(player._megaRemaining,30,'the Phase 3 engine alone manages its own 30-second timer');
+ assert.equal(player._megaActive,true,'legacy timer must not end another Mega');
+});
 test('Mega disabled in all Co-op/PvP modes; no permanent save changes',async()=>{
  const {G,player,setCoop}=mock(),mega=G.MegaLucario;
  mega.previewUnlock();setCoop(true);
