@@ -116,6 +116,10 @@ permissions:
 jobs:
   android-full-lan:
     runs-on: ubuntu-latest
+    # Exactly the PC pack: 36 genuine eight-direction Mega forms, 32 real Shiny variants.
+    # Job scope is needed: Android/Web also rebuild the engine for standalone AI.
+    env:
+      PKMSVV_MEGA_SPRITE_PACK: '1'
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
