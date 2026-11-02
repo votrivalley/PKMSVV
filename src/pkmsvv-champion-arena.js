@@ -171,7 +171,7 @@ G.PKMSVVChampionArena=(()=>{
   if(!btn){
    btn=document.createElement('button');btn.id='pkmsvv-champion-entry';
    btn.className='menu-item pkmsvv-champion-menu';btn.type='button';
-   btn.innerHTML='<span class="pkmsvv-champion-menu-icon">🏆</span><span class="pkmsvv-menu-copy"><span class="pkmsvv-menu-label">Arena</span><small>Hành Trình Vương Miện · Giải Champion</small></span>';
+   btn.innerHTML='<span class="pkmsvv-champion-menu-icon">🏆</span><span class="pkmsvv-menu-copy"><span class="pkmsvv-menu-label">Arena</span><small>'+tr('Hành Trình Vương Miện · Giải Champion','Crown Journey · Champion League')+'</small></span>';
    btn.addEventListener('click',openArena);
   }
   const mult=nav.querySelector('[data-go="multiplayer"]')||nav.querySelector('[data-go="play"]');
@@ -201,9 +201,9 @@ G.PKMSVVChampionArena=(()=>{
   o=document.createElement('section');o.id='pkmsvv-arena-hub';o.className='pkmsvv-champion-overlay';o.hidden=true;
   o.innerHTML='<div class="pkmsvv-champion-panel pkmsvv-arena-hub-panel" role="dialog" aria-modal="true">'+
    '<div class="pkmsvv-champion-heading"><h2>⚔ Arena</h2><button class="btn ghost" id="pkmsvv-arena-hub-close" type="button">×</button></div>'+
-   '<p>Chọn Solo hoặc Champion</p><div class="pkmsvv-arena-hub-choices">'+
-   '<button id="pkmsvv-arena-hub-solo" class="btn gold" type="button">⚔ Solo<small>🤖 Random AI hoặc 🤝 Mời người chơi</small></button>'+
-   '<button id="pkmsvv-arena-hub-champion" class="btn gold" type="button">🏆 Champion<small>16 chiến binh AI hoặc mời bạn bè đấu Champion</small></button></div></div>';
+   '<p>'+tr('Chọn Solo hoặc Champion','Choose Solo or Champion')+'</p><div class="pkmsvv-arena-hub-choices">'+
+   '<button id="pkmsvv-arena-hub-solo" class="btn gold" type="button">⚔ Solo<small>'+tr('🤖 Random AI hoặc 🤝 Mời người chơi','🤖 Random AI or 🤝 Invite Player')+'</small></button>'+
+   '<button id="pkmsvv-arena-hub-champion" class="btn gold" type="button">🏆 Champion<small>'+tr('16 chiến binh AI hoặc mời bạn bè đấu Champion','16 AI opponents or invite friends to Champion')+'</small></button></div></div>';
   document.body.append(o);
   $('pkmsvv-arena-hub-close').onclick=()=>{o.hidden=true;};
   $('pkmsvv-arena-hub-solo').onclick=()=>{o.hidden=true;G.PKMSVVArenaSolo?.open?.();};
@@ -221,14 +221,14 @@ G.PKMSVVChampionArena=(()=>{
   overlay.className='pkmsvv-champion-overlay';overlay.hidden=true;
   overlay.innerHTML='<div class="pkmsvv-champion-panel" role="dialog" aria-modal="true" aria-labelledby="pkmsvv-champion-title">'+
    '<div class="pkmsvv-champion-heading"><h2 id="pkmsvv-champion-title">🏆 Arena · Champion</h2><div class="pkmsvv-champion-heading-actions"><button class="btn ghost" id="pkmsvv-champion-close" type="button">×</button></div></div>'+
-   '<div class="pkmsvv-crown-journey"><button id="pkmsvv-arena-mode-champion" type="button" class="btn gold">👑 Hành Trình Vương Miện</button></div><p id="pkmsvv-champion-info"></p><div id="pkmsvv-champion-regions" class="pkmsvv-champion-regions"></div>'+
-   '<div class="pkmsvv-arena-mode-tabs"><button id="pkmsvv-champion-vs-ai" type="button" class="btn gold">🤖 Đấu với AI · 16 người</button><button id="pkmsvv-champion-vs-human" type="button" class="btn">🤝 Mời người chơi</button><button id="pkmsvv-arena-mode-league" type="button" class="btn">🏆 Giải Champion hậu truyện</button></div>'+
+   '<div class="pkmsvv-crown-journey"><button id="pkmsvv-arena-mode-champion" type="button" class="btn gold">'+tr('👑 Hành Trình Vương Miện','👑 Crown Journey')+'</button></div><p id="pkmsvv-champion-info"></p><div id="pkmsvv-champion-regions" class="pkmsvv-champion-regions"></div>'+
+   '<div class="pkmsvv-arena-mode-tabs"><button id="pkmsvv-champion-vs-ai" type="button" class="btn gold">'+tr('🤖 Đấu với AI · 16 người','🤖 Fight AI · 16 players')+'</button><button id="pkmsvv-champion-vs-human" type="button" class="btn">'+tr('🤝 Mời người chơi','🤝 Invite Player')+'</button><button id="pkmsvv-arena-mode-league" type="button" class="btn">'+tr('🏆 Giải Champion hậu truyện','🏆 Postgame Champion League')+'</button></div>'+
    '<div id="pkmsvv-champion-map-row" class="pkmsvv-champion-map-row" hidden><label for="pkmsvv-champion-map">Sân thi đấu</label><select id="pkmsvv-champion-map"></select><small>Chọn một sân đấu sau khi mở khóa hậu truyện.</small></div>'+ 
     '<div id="pkmsvv-champion-progress" class="pkmsvv-champion-progress"></div>'+'<div id="pkmsvv-champion-bracket" class="pkmsvv-champion-bracket"></div>'+'<div id="pkmsvv-champion-hall" class="pkmsvv-champion-hall"></div>'+'<div id="pkmsvv-champion-podium" class="pkmsvv-champion-podium" hidden></div>'+
-   '<div class="pkmsvv-champion-actions"><button id="pkmsvv-champion-start" type="button" class="btn gold">Bắt đầu giải đấu</button><button id="pkmsvv-champion-sky" type="button" class="btn gold" hidden>🐉 Thách đấu Rayquaza</button>'+
-   '<button id="pkmsvv-champion-rematch" type="button" class="btn gold" hidden>Thách đấu lại Champion</button>'+
+   '<div class="pkmsvv-champion-actions"><button id="pkmsvv-champion-start" type="button" class="btn gold">'+tr('Bắt đầu giải đấu','Start Tournament')+'</button><button id="pkmsvv-champion-sky" type="button" class="btn gold" hidden>'+tr('🐉 Thách đấu Rayquaza','🐉 Challenge Rayquaza')+'</button>'+
+   '<button id="pkmsvv-champion-rematch" type="button" class="btn gold" hidden>'+tr('Thách đấu lại Champion','Challenge Champion Again')+'</button>'+
 
-   '<button id="pkmsvv-champion-ready" type="button" class="btn gold" hidden>Sẵn sàng</button></div></div>';
+   '<button id="pkmsvv-champion-ready" type="button" class="btn gold" hidden>'+tr('Sẵn sàng','Ready')+'</button></div></div>';
   document.body.append(overlay);
   $('pkmsvv-champion-close').onclick=()=>{overlay.hidden=true;clearResult();if(active)returnToMenu();};
   $('pkmsvv-champion-vs-ai').onclick=()=>{mode='story';clearResult();updatePanel();};
