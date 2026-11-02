@@ -40,7 +40,7 @@
  }
  function open(preselect){
   if(validMode(preselect))mode=preselect;
-  else if(!arenaMode(preselect))mode='coop'; // Opening ordinary Co-op must never inherit an Arena selection.
+  else if(arenaMode(mode))mode='coop'; // Preserve the last Co-op choice, but never inherit an Arena room.
   const requestedArena=arenaMode(mode);
   if(view&&viewArena!==requestedArena)close();
   if(view){repaint();return;}
