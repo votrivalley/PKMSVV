@@ -37,12 +37,12 @@ async function main(){
    await page.click('#pkmsvv-lan-copy-invite');
    await page.locator('.pkmsvv-wifi-panel').waitFor();
    assert.match(await page.locator('.pkmsvv-wifi-panel').innerText(),/phản hồi/);
-   await page.locator('.pkmsvv-wifi-panel button').filter({hasText:'Đóng'}).click();
+   await page.locator('.pkmsvv-wifi-panel > button').first().click();
    await page.evaluate(async()=>{await G.Social.leaveRoom();G.MenuUI.open();PKMSVVCoop.open();});
    await page.click('#pkmsvv-coop-actions [data-role="join"]');
    await page.locator('.pkmsvv-wifi-panel').waitFor();
    assert.equal(await page.locator('.pkmsvv-wifi-panel textarea').count(),1);
-   await page.locator('.pkmsvv-wifi-panel button').filter({hasText:'Đóng'}).click();
+   await page.locator('.pkmsvv-wifi-panel > button').first().click();
    await page.evaluate(()=>{G.MenuUI.open();PKMSVVCoop.open();});
    await page.click('#pkmsvv-coop-actions [data-role="ai"]');
    if(android){
