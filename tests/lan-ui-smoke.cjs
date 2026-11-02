@@ -21,7 +21,7 @@ async function run(){
  const base='http://127.0.0.1:'+server.port;
  const output=path.resolve('dist/qa');fs.mkdirSync(output,{recursive:true});
  try{
-  for(const mode of ['coop','royale','eggrush']){
+  for(const mode of ['arena','coop','royale','eggrush']){
    const hostContext=await browser.newContext({viewport:{width:1280,height:800}});
    const guestContext=await browser.newContext({viewport:{width:1280,height:800}});
    const host=await hostContext.newPage(),guest=await guestContext.newPage();
@@ -93,6 +93,28 @@ async function run(){
      const state=await page.evaluate(()=>({mode:G.Social.room?.mode,connected:G.LanBus.connected,
       room:G.Social.room?.members.length,recv:G.Net.stats.recv,state:G.Game.state}));
      assert.equal(state.mode,mode);assert.equal(state.connected,true);assert.equal(state.room,mode==='eggrush'?4:2);assert.ok(state.recv>0);
+    }
+    if(mode==='arena'){
+     await Promise.all([host,guest].map(page=>page.waitForFunction(()=>
+      G.PKMSVVArenaPvp?.active&&G.PKMSVVArenaPvp.stage==='fight',null,{timeout:12000})));
+     assert.equal(await host.evaluate(()=>G.PKMSVVArenaPvp.host),true,'Arena Host owns PvP outcomes');
+     assert.equal(await guest.evaluate(()=>G.PKMSVVArenaPvp.host),false,'Arena guest is real remote player');
+     await guest.evaluate(()=>{
+      const target=G.Coop.mate(G.Social.room.host)?.pl;
+      if(!target)throw Error('No human Host avatar');
+      // Real guest's enrolled first move is emitted over the same Co-op
+      // channel as combat; do not fabricate an Enemy/AI entity.
+      const move=G.Game.player.activeGroup()[0];
+      G.Coop.cast(G.Game.player,move);
+     });
+     await host.waitForFunction(()=>G.PKMSVVArenaPvp.health[G.Social.uid]<320,null,{timeout:5000});
+     const guestUid=await guest.evaluate(()=>G.Social.uid);
+     await guest.waitForFunction(uid=>G.PKMSVVArenaPvp.health[G.Social.room.host]<
+      320&&G.PKMSVVArenaPvp.health[uid]===320,guestUid,{timeout:5000});
+     assert.equal(await host.locator('#pkmsvv-arena-pvp-hud').count(),1);
+     await host.screenshot({path:path.join(output,'arena-pvp-real-host.png')});
+     await guest.screenshot({path:path.join(output,'arena-pvp-real-guest.png')});
+     console.log('PASS Arena real Host/Guest hit validation, synchronized HP and 3-2-1 on Wi-Fi WebRTC');
     }
     assert.deepEqual(hostErrors,[]);assert.deepEqual(guestErrors,[]);
     console.log('PASS '+(mode==='eggrush'?4:2)+' real clients create, join, start and exchange frames: '+mode);
