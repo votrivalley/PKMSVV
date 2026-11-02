@@ -78,11 +78,11 @@ fs.appendFileSync(notesFile,'\n'+fs.readFileSync(path.join(root,'src','pkmsvv-ch
 // v1.5 stays first even after the Web-only history entries are added.
 fs.appendFileSync(notesFile,"\nconst i15=G.CHANGELOG.findIndex(x=>(x.title||[])[0]?.includes('v1.5'));if(i15>0)G.CHANGELOG.unshift(G.CHANGELOG.splice(i15,1)[0]);\n",'utf8');
 fs.appendFileSync(notesFile,'\n'+fs.readFileSync(path.join(root,'src','web','pkmsvv-voice-changelog.js'),'utf8'),'utf8');
-// Web must show the identical history as Android and PC after Web-specific notes.
+// Web must show the same single bilingual What's New entry as Android and PC.
 fs.appendFileSync(notesFile,'\n'+fs.readFileSync(path.join(root,'src','pkmsvv-changelog-history.js'),'utf8'),'utf8');
 const uiNewsPath=path.join(game,'js','ui','news-ui.js');
 let uiNews=fs.readFileSync(uiNewsPath,'utf8');
-if(!uiNews.includes('Có gì mới: 1.5')||!uiNews.includes("What's New: 1.5"))throw Error('Web news v1.5 label missing');
+if(!uiNews.includes('Có gì mới')||!uiNews.includes("What's New"))throw Error('Web localized news label missing');
 fs.writeFileSync(uiNewsPath,uiNews,'utf8');
 
 
