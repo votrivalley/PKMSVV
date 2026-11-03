@@ -117,6 +117,8 @@ jobs:
   windows-lan:
     runs-on: windows-latest
     timeout-minutes: 55
+    env:
+      PKMSVV_MEGA_SPRITE_PACK: '1' # Full 36 normal + 32 Shiny pack on build, not test-only
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
