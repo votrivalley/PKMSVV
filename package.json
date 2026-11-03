@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.91",
+  "version": "1.5.92",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.91: single-scroll PC Support, compact Pokédex and corrected VI/EN menus",
+  "description": "Pokémon Chuyển Sinh v1.5.92: readable generation filters, clear sort labels, no retro text overlap",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
