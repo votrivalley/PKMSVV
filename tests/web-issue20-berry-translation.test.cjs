@@ -41,3 +41,20 @@ for(const lang of ['vi','en'])test('Issue 20: '+lang+' Berry overlay remains tra
  assert.equal(ctx.save.pkmsvvBerry.bag.liechi,1,'unused Berry cannot disappear');
  assert.equal(ctx.G.PKMSVVBerry.choosing,false);
 });
+
+for(const lang of ['vi','en'])test('Issue 20: '+lang+' selected Berry HUD is already localized',()=>{
+ const ctx=boot(lang);
+ ctx.G.Game.startRun(null);
+ const option=ctx.elements.find(e=>e.tagName==='button'&&String(e.textContent).includes('Oran ×1'));
+ assert.ok(option);
+ option.onclick();
+ for(let i=0;i<4;i++)ctx.tick();
+ assert.equal(ctx.G.Game.state,'playing');
+ assert.equal(ctx.launches,1);
+ assert.equal(ctx.save.pkmsvvBerry.bag.oran,0);
+ assert.equal(ctx.save.pkmsvvBerry.bag.liechi,1);
+ assert.equal(ctx.save.pkmsvvBerry.used.oran,true);
+ const hud=ctx.elements.find(e=>e.id==='pkmsvv-berry-active-hud');
+ assert.ok(hud);
+ assert.equal(hud.attributes.translate,'no');
+});
