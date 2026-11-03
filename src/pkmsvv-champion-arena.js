@@ -179,19 +179,18 @@ G.PKMSVVChampionArena=(()=>{
   // (especially inside Android WebView and Windows Electron scroll columns).
   if(mult){if(mult.nextElementSibling!==btn)mult.after(btn);}
   else if(btn.parentElement!==nav)nav.append(btn);
-  const gate=G.PKMSVVStory?.arenaUnlocked?.();
-  const p=G.PKMSVVStory?.multiplayerProgress?.();
+  const save=G.DB?.save;
+  const gate=G.PKMSVVStory?.arenaUnlocked?.(save);
   const small=btn.querySelector?.('small');
-  const survival=p?.done?.includes('coop')?'✅':'⬜';
-  const royale=p?.done?.includes('royale')?'✅':'⬜';
-  const berryCount=G.PKMSVVBerry?.chapterProgress?.()||0;
   if(small){
+   // Arena is Chapter 7. The 2/2 tasks belong to Chapter 5 and Berry
+   // belongs to Chapter 6, so the Arena menu must not show a premature 0/2.
    small.textContent=gate?tr('✅ Đã mở · 16 chiến binh · 10 vùng','✅ Unlocked · 16 entrants · 10 regions'):
-    !G.PKMSVVStory?.allMultiplayerCompleted?.()?
-     tr('🔒 Sống Sót ','🔒 Survival ')+survival+tr(' · Sống Còn ',' · Royale ')+royale+' · '+(p?.count||0)+'/2':
-    !G.DB?.save?.pkmsvvBerryChapterDone?
-     tr('🍓 Đã xong 2/2 · Berry ','🍓 2/2 complete · Berries ')+berryCount+'/5':
-    tr('🔒 Đã xong Berry · Xem Chương 7','🔒 Berry complete · Watch Chapter 7');
+    !save?.pkmsvvChapter6Seen?
+     (save?.pkmsvvBerryChapterDone?
+      tr('🔒 Xem cốt truyện Chương 7 để mở Arena','🔒 Watch Chapter 7 story to unlock Arena'):
+      tr('🔒 Hoàn thành Chương 6 để mở Arena','🔒 Complete Chapter 6 to unlock Arena')):
+     tr('🔒 Kiểm tra tiến độ Chương 5 trong Ký Ức','🔒 Check Chapter 5 progress in Memories');
    small.setAttribute('translate','no');
    small.setAttribute('aria-label',small.textContent);
   }
@@ -343,7 +342,7 @@ G.PKMSVVChampionArena=(()=>{
   menu();
   const save=G.DB?.save;
   if(!save?.pkmsvvChapter3Seen){
-   G.UI?.toast?.(tr('Hoàn thành Chương 4 để mở cốt truyện Arena.','Complete Chapter 4 to unlock the Arena story.'));
+   G.UI?.toast?.(tr('🔒 Hoàn thành Chương 6 để mở Arena. Hãy tiếp tục cốt truyện theo thứ tự.','🔒 Complete Chapter 6 to unlock Arena. Continue the story in order.'),3800);
    return false;
   }
   if(!save.pkmsvvChapter5Seen){
@@ -353,13 +352,14 @@ G.PKMSVVChampionArena=(()=>{
      !G.PKMSVVStory?.arenaUnlocked?.(save)){
    const missing=G.PKMSVVStory?.multiplayerProgress?.(save)?.missing||[];
    const names={coop:'Sống Sót',royale:'Sống Còn'};
-   G.UI?.toast?.(tr('🔒 Chương 5: Hoàn thành Sống Sót và Sống Còn để mở Berry. Còn: ','🔒 Chapter 5: Finish Co-op Survival and Battle Royale before Berry. Missing: ')+
+   G.UI?.toast?.(tr('🔒 Arena mở sau Chương 6. Chương 5 cần hoàn thành Sống Sót và Sống Còn. Còn: ','🔒 Arena unlocks after Chapter 6. Chapter 5 requires Survival and Battle Royale. Missing: ')+
     missing.map(m=>names[m]||m).join(', '),3800);
    return false;
   }
   if(!save.pkmsvvChapter6Seen&&!save.pkmsvvBerryChapterDone){
-   G.UI?.toast?.(tr('🍓 Chương 6: Dùng đủ 5 loại Berry trước khi mở Arena.',
-    '🍓 Chapter 6: use five different Berry types before Arena.'),3800);
+   const used=G.PKMSVVBerry?.chapterProgress?.()||0;
+   G.UI?.toast?.(tr('🍓 Hoàn thành Chương 6 để mở Arena: sử dụng 5 loại Berry ('+used+'/5).',
+    '🍓 Complete Chapter 6 to unlock Arena: use five Berry types ('+used+'/5).'),3800);
    return false;
   }
   if(!save.pkmsvvChapter6Seen){
