@@ -59,6 +59,15 @@ async function main(){
      return {owned:Object.keys(s.owned).length,berries:Object.keys(s.pkmsvvBerry?.bag||{}).length};
     },mature);
     if(mature)assert.ok(seeded.owned>=540);
+    // Full reload exercises save migration/restore boot, not just in-memory edits.
+    await page.reload({waitUntil:'domcontentloaded'});
+    await page.waitForFunction(()=>!!window.G?.DB?.save&&!!G.Game?.startRun);
+    const persisted=await page.evaluate(()=>({owned:Object.keys(G.DB.save.owned||{}).length,
+      coop:G.DB.save.pkmsvvMultiplayerDone?.coop,
+      royale:G.DB.save.pkmsvvMultiplayerDone?.royale}));
+    if(mature){assert.ok(persisted.owned>=540,'reload lost synthetic collection');
+      assert.equal(persisted.coop,true);assert.equal(persisted.royale,true);}
+    await page.evaluate(()=>G.MenuUI.open());
     // Use actual wrapped launch path, including 4-second pre-run Berry choice.
     await page.evaluate(()=>G.Game.startRun(null));
     await page.waitForFunction(()=>G.Game?.state==='playing'&&!!G.Game?.player,
