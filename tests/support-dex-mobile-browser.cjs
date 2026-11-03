@@ -86,6 +86,10 @@ async function main(){
      assert.ok((await scroll(page)).top>=afterSelection.top-45,'Support modal must not auto-scroll upward');
     }
     await page.evaluate(()=>{G.PKMSVVSupportCatalog.close();G.MenuUI.open();});
+    // The shipping game deliberately blocks portrait navigation with its
+    // rotate-device notice. Disable only that gate in this browser QA to
+    // inspect the underlying responsive menu; landscape remains untouched.
+    if(viewport.height>viewport.width)await page.addStyleTag({content:'#rotate{display:none!important}'});
     await page.locator('#scr-menu [data-go="dex"]').first().click();
     const dex=await page.evaluate(()=>({
      q:!!document.getElementById('dex-q'),
