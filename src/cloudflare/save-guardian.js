@@ -63,7 +63,7 @@
   if(!retained(older.arenaGacha?.trophyPaid,newer.arenaGacha?.trophyPaid))return true;
   if((Number(newer.arenaGacha?.pulls)||0)<(Number(older.arenaGacha?.pulls)||0))return true;
   if(older.pkmsvvBerryChapterDone===true&&newer.pkmsvvBerryChapterDone!==true)return true;
-  for(const k of keys(older))if(/^pkmsvvChapter\\d+(?:Done|Seen)$/.test(k)&&
+  for(const k of keys(older))if(/^pkmsvvChapter\d+(?:Done|Seen)$/.test(k)&&
      older[k]===true&&newer[k]!==true)return true;
   if(!learnedRetained(older,newer))return true;
   // Removing an entire inventory field is a schema/data-loss regression,
