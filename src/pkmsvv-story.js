@@ -429,7 +429,9 @@ G.PKMSVVStory=(()=>{
  // Called from the *real* multiplayer endRun, never the lobby/room creator.
  function recordMultiplayerCompletion(mode,detail={}){
   const s=G.DB?.save;
-  if(!s?.pkmsvvChapter3Seen||![...MP_MODES,...MP_OPTIONAL].includes(mode)||detail.abandoned)return false;
+  // Record genuinely finished modes even when the player explored Co-op before
+  // finishing Chapter 4. Progress is saved now; story/arena gates remain linear.
+  if(!s||![...MP_MODES,...MP_OPTIONAL].includes(mode)||detail.abandoned)return false;
   const time=Number(detail.time)||0;
   if(mode==='coop'){
    // A real party wipe is a completed Survival match even before 60 seconds.
@@ -450,7 +452,9 @@ G.PKMSVVStory=(()=>{
   G.UI?.toast?.(MP_OPTIONAL.includes(mode)?
    tr('✅ Tranh Trứng hoàn thành! Đây là chế độ tự chọn.','✅ Egg Rush complete! This mode is optional.'):
    allMultiplayerCompleted(s)?
-   tr('🍓 Đã hoàn thành Sống Sót và Sống Còn! Chương 6 · Bí Mật Berry đã mở.','🍓 Survival and Battle Royale done! Chapter 6 Berry Secrets unlocked.'):
+   (s.pkmsvvChapter5Seen?
+    tr('🍓 Đã hoàn thành Sống Sót và Sống Còn! Chương 6 · Bí Mật Berry đã mở.','🍓 Survival and Battle Royale done! Chapter 6 Berry Secrets unlocked.'):
+    tr('✅ Đã ghi nhận đủ 2/2 chế độ! Hãy tiếp tục cốt truyện đến Chương 5 rồi hoàn thành Chương 6 để mở Arena.','✅ Both modes recorded (2/2)! Continue to Chapter 5, then complete Chapter 6 to unlock Arena.')):
    tr('✅ Hoàn thành '+MP_LABELS[mode]+' · '+progress.count+'/2 chế độ bắt buộc.','✅ Completed '+MP_LABELS[mode]+' · '+progress.count+'/2 required modes.'),3500);
   return true;
  }
