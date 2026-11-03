@@ -1,0 +1,33 @@
+/* v1.5.85: same Vietnamese title in BOTH locales.
+ * Remove exaggerated glyph strokes/edge aliasing and reserve full accent height. */
+#scr-menu.pkmsvv-v15-menu .menu-left .logo .t1.pkmsvv-logo.pkmsvv-one-line,
+#scr-login .logo .t1.pkmsvv-logo{
+ font-family:"Segoe UI",Tahoma,Arial,sans-serif!important;
+ font-weight:800!important;font-synthesis:none!important;
+ letter-spacing:-.028em!important;line-height:1.23!important;
+ -webkit-text-stroke:0 transparent!important;text-shadow:0 1px 2px #142c39bb!important;
+ filter:none!important;transform:none!important;
+ overflow:visible!important;text-overflow:clip!important;
+ padding:5px 5px 8px!important;min-height:0!important;
+ box-sizing:border-box!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-left .logo .t1.pkmsvv-logo.pkmsvv-one-line>span{
+ font-family:inherit!important;font-weight:inherit!important;
+ line-height:1.23!important;max-width:100%;white-space:nowrap;
+ text-shadow:inherit!important;overflow:visible!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-left .logo>.pkmsvv-awakening-tagline{
+ font-family:"Segoe UI",Tahoma,Arial,sans-serif!important;
+ text-transform:uppercase!important;line-height:1.45!important;
+ word-break:normal!important;overflow-wrap:normal!important;
+ letter-spacing:.07em!important;
+}
+@media(max-height:520px), (max-width:850px){
+ #scr-menu.pkmsvv-v15-menu .menu-left .logo .t1.pkmsvv-logo.pkmsvv-one-line{
+  font-size:clamp(24px,3.6vw,42px)!important;
+  line-height:1.26!important;padding:7px 2px 8px!important;
+ }
+ #scr-menu.pkmsvv-v15-menu .menu-left .logo>.pkmsvv-awakening-tagline{
+  font-size:clamp(10px,1.2vw,13px)!important;letter-spacing:.05em!important;
+ }
+}
