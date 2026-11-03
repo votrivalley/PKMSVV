@@ -291,7 +291,7 @@ test('Arena locked menu announces Chapter 6 instead of Chapter 4 or false 0/2 co
  const runtime=read('src/pkmsvv-champion-arena.js');
  const menu=runtime.slice(runtime.indexOf(' function menu(){'),runtime.indexOf(' function arenaHub(){'));
  assert.match(menu,/Hoàn thành Chương 6 để mở Arena/);
- assert.doesNotMatch(menu,/Sống Sót .*Sống Còn .*count|0\\/2/);
+ assert.equal(menu.includes('0/2'),false,'Chapter 5 tasks belong in Memories, not the Arena tile');
  assert.doesNotMatch(runtime,/Hoàn thành Chương 4 để mở cốt truyện Arena/);
  assert.match(runtime,/Xem cốt truyện Chương 7 để mở Arena/);
  assert.match(runtime,/Hoàn thành Chương 6 để mở Arena: sử dụng 5 loại Berry/);
