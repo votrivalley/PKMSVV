@@ -216,11 +216,13 @@ test('Memories displays per-chapter unlock hints and exact Survival/Royale, Berr
  assert.match(css,/\.pkmsvv-memory-chapter\.is-locked/);
  assert.match(css,/\.pkmsvv-memory-summary/);
 });
-test('Arena shows each completion separately, save reminder is readable and quest hooks ship on every platform',()=>{
+test('Arena shows Chapter 6 gate instead of Chapter 5 tasks; Memories and run results keep accurate progress',()=>{
  const arena=read('src/pkmsvv-champion-arena.js'),notice=read('scripts/patch-v15-offline-save-notice.cjs');
- assert.match(arena,/p\?\.done\?\.includes\('coop'\)/);
- assert.match(arena,/p\?\.done\?\.includes\('royale'\)/);
- assert.match(arena,/berryCount\+'\/5'/);
+ assert.match(arena,/Hoàn thành Chương 6 để mở Arena/);
+ assert.match(arena,/Xem cốt truyện Chương 7 để mở Arena/);
+ assert.doesNotMatch(arena,/p\?\.done\?\.includes\('coop'\)/);
+ assert.doesNotMatch(arena,/p\?\.done\?\.includes\('royale'\)/);
+ assert.match(read('src/pkmsvv-story.js'),/tr\('Chương 5 · Sống Sót '/);
  assert.match(notice,/background:#fff0a6!important/);
  assert.match(notice,/-webkit-text-fill-color:#142e3d!important/);
  const patch=read('scripts/patch-champion-arena.cjs');
