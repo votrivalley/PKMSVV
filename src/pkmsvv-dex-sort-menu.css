@@ -62,3 +62,11 @@
  #scr-dex .pkmsvv-dex-tools #dex-q{flex:1 1 100%;width:100%}
  #scr-dex #pkmsvv-dex-sort-menu{top:10px;max-height:calc(100svh - 20px)}
 }
+
+/* Always-visible close control when the sort popover covers its trigger. */
+#scr-dex #pkmsvv-dex-sort-menu #pkmsvv-dex-sort-close{
+ position:sticky;top:-14px;z-index:5;display:block;
+ margin:-8px -7px 12px auto;min-height:42px;
+ padding:8px 13px;background:#d9e9e4;color:#193e49;
+ border:2px solid #70b6ad;border-radius:9px;font-weight:800;
+}

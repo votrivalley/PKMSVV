@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.87",
+  "version": "1.5.88",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.87: smooth Support scroll, compact Pokédex sort and consistent VI/EN branding",
+  "description": "Pokémon Chuyển Sinh v1.5.88: smooth Support scroll, compact Pokédex sort and consistent VI/EN branding",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
