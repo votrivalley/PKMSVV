@@ -41,7 +41,14 @@ G.PKMSVVMegaEntry=(()=>{
   return {dex:ready?f.spriteId:f?.dex,ready,shiny:variant==='shiny'&&ready};
  };
  const el=(tag,id,cls)=>{const n=document.createElement(tag);if(id)n.id=id;if(cls)n.className=cls;return n;};
- function close(){const box=$('pkmsvv-mega-phase1');if(box)box.hidden=true;$('pkmsvv-mega-entry')?.focus?.();}
+ // Focusing a button above the visible content can yank mobile scrolling back.
+ // Touch users do not need forced focus; keyboard users keep focus without scroll.
+ function focusWithoutScroll(target){
+  if(typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches)return;
+  target?.focus?.({preventScroll:true});
+ }
+ function scroller(){return $('pkmsvv-mega-phase1')?.querySelector?.('.pkmsvv-mega-phase1-dialog');}
+ function close(){const box=$('pkmsvv-mega-phase1');if(box)box.hidden=true;focusWithoutScroll($('pkmsvv-mega-entry'));}
  function ensure(){
   const back=$('pkmsvv-upgrade-back');if(!back?.parentElement)return false;
   G.PKMSVVSupportCatalog?.ensure?.();
@@ -172,8 +179,30 @@ G.PKMSVVMegaEntry=(()=>{
    'Unlocked in save. Battle transformation requires ready sprite art and gameplay support.');
   area.append(stone,ability,label,stats,note);
  }
+ // A newly-rendered grid removes the focused card and can snap Android Chrome
+ // to the first control. Update selection in place, preserving the scroll.
+ function selectForm(form){
+  if(!form||selected===form.key)return;
+  const grid=$('pkmsvv-mega-grid'),panel=scroller();
+  const before=grid?.getBoundingClientRect?.().top;
+  const scrollTop=panel?.scrollTop;
+  selected=form.key;
+  for(const card of grid?.children||[]){
+   const active=card.dataset?.megaKey===form.key;
+   card.className=card.className.replace(/\s+on\b/g,'')+(active?' on':'');
+   card.setAttribute('aria-pressed',String(active));
+  }
+  detailView(form);
+  // On mobile, the detail panel sits above the roster. Keep the tapped card
+  // visually stationary even if the detail grows/shrinks on selection.
+  const after=grid?.getBoundingClientRect?.().top;
+  if(panel&&Number.isFinite(scrollTop)){
+   panel.scrollTop=scrollTop+(Number.isFinite(before)&&Number.isFinite(after)?after-before:0);
+  }
+ }
  function render(){
   if(!$('pkmsvv-mega-phase1'))return;
+  const panel=scroller(),scrollTop=panel?.scrollTop;
   for(const [mode,id,vi,en] of [
    ['normal','pkmsvv-mega-tab-normal','Thường','Normal'],
    ['shiny','pkmsvv-mega-tab-shiny','Shiny','Shiny']
@@ -205,6 +234,7 @@ G.PKMSVVMegaEntry=(()=>{
    card.type='button';
    card.setAttribute('aria-label',yes?displayName(f):tr('Mega chưa khám phá','Undiscovered Mega')+' '+(page*PAGE+i+1));
    card.setAttribute('aria-pressed',String(selected===f.key));
+   card.dataset.megaKey=f.key;
    if(yes&&!v.ready){
     const missing=el('span',null,'pkmsvv-mega-no-art');
     missing.textContent='✧';missing.setAttribute('title',tr('Đã mở khóa — sprite đang cập nhật','Unlocked — sprite not available yet'));card.append(missing);
@@ -218,7 +248,7 @@ G.PKMSVVMegaEntry=(()=>{
    const label=el('strong');label.textContent=yes?displayName(f):'???';
    const state=el('small');state.textContent=!yes?tr('Chưa mở','Locked'):!v.ready?tr('Đã mở · Chờ sprite','Unlocked · Sprite pending'):tr('Đã mở','Unlocked');
    card.append(label,state);
-   card.addEventListener('click',()=>{selected=f.key;render();});
+   card.addEventListener('click',()=>selectForm(f));
    grid.append(card);
   }
   detailView(forms.find(f=>f.key===selected));
@@ -231,13 +261,16 @@ G.PKMSVVMegaEntry=(()=>{
    'Only verified Shiny Mega sprites in this build are shown. Shiny ownership and Mega unlock are required.') :
    tr('Chỉ hiện Mega đã có sprite thật trong bản đang chơi. Các Mega chưa có sprite được ẩn tạm, không xóa khỏi save.',
    'Only Mega forms with real sprites in this build appear. Unreleased forms are hidden, never deleted from saves.');
+  if(panel&&Number.isFinite(scrollTop))panel.scrollTop=scrollTop;
  }
  function open(){
   if(!ensure())return false;
   const box=build();
   $('pkmsvv-mega-phase1-title').textContent=tr('Tiến hóa Mega','Mega Evolution');
   box.querySelector('[data-mega-close]').textContent=tr('Đóng','Close');
-  render();box.hidden=false;box.querySelector('[data-mega-close]').focus?.();
+  render();box.hidden=false;
+  const panel=scroller();if(panel)panel.scrollTop=0;
+  focusWithoutScroll(box.querySelector('[data-mega-close]'));
   return true;
  }
  const previous=G.PKMSVVUpgradeChooser?.open;
