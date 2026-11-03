@@ -86,3 +86,46 @@
 /* The global mobile #topbar is a higher ancestor stacking layer.
    Keep the filter sheet's close control BELOW it in both orientations;
    moving only the close button's z-index cannot pierce that layer. */
+
+/* v1.5.92: The retro game theme gives generation buttons a thick shadow/stroke,
+   which draws overlapping dark glyphs on this LIGHT Sort sheet.
+   Override typography only INSIDE the sheet; never change the rest of game. */
+#scr-dex #pkmsvv-dex-sort-menu,
+#scr-dex #pkmsvv-dex-sort-menu button,
+#scr-dex #pkmsvv-dex-sort-menu button *,
+#scr-dex #pkmsvv-dex-sort-menu label,
+#scr-dex #pkmsvv-dex-sort-menu label *,
+#scr-dex #pkmsvv-dex-sort-menu .sub{
+ text-shadow:none!important;
+ -webkit-text-stroke:0 transparent!important;
+ -webkit-text-fill-color:currentColor!important;
+ filter:none!important;
+}
+#scr-dex #pkmsvv-dex-sort-menu #dex-gens .gen-tab{
+ display:flex!important;flex-direction:column!important;align-items:center!important;
+ justify-content:center!important;gap:2px!important;
+ font-size:13px!important;font-weight:750!important;
+ line-height:1.25!important;letter-spacing:normal!important;
+ text-shadow:none!important;-webkit-text-stroke-width:0!important;
+}
+#scr-dex #pkmsvv-dex-sort-menu #dex-gens .gen-tab small,
+#scr-dex #pkmsvv-dex-sort-menu #dex-gens .gen-tab .sub{
+ display:block!important;font-size:11px!important;
+ font-weight:500!important;line-height:1.25!important;
+ color:#385763!important;opacity:1!important;
+ text-shadow:none!important;-webkit-text-stroke-width:0!important;
+}
+#scr-dex #pkmsvv-dex-sort-menu .sub,
+#scr-dex #pkmsvv-dex-sort-menu #dex-sort .sub,
+#scr-dex #pkmsvv-dex-sort-menu .pkmsvv-dex-type-row,
+#scr-dex #pkmsvv-dex-sort-menu .pkmsvv-dex-type-row span{
+ color:#203f4e!important;opacity:1!important;
+ font-size:13px!important;font-weight:750!important;
+ text-shadow:none!important;-webkit-text-stroke-width:0!important;
+}
+#scr-dex #pkmsvv-dex-sort-menu #dex-sort .sub{
+ display:inline-flex!important;align-items:center!important;
+ min-height:34px;margin-right:4px!important;
+}
+#scr-dex #pkmsvv-dex-sort-menu .gen-tab.on small,
+#scr-dex #pkmsvv-dex-sort-menu .gen-tab.on .sub{color:#385168!important}
