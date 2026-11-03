@@ -124,6 +124,7 @@ fs.appendFileSync(path.join(base,'js/ui/menu.js'),[
  ' const l=(vi,en)=>G.I18n?.lang==="en"?en:vi;',
  ' G.MenuUI.open=function(...args){',
  '  const result=former.apply(this,args),stats=G.DB?.save?.stats,node=document.getElementById("menu-stats");',
+ '  if(document.title!=="Pokémon Chuyển Sinh — Votri Valley")document.title="Pokémon Chuyển Sinh — Votri Valley";',
  '  if(node&&stats){',
  '   const b=v=>"<b>"+v+"</b>";',
  '   node.innerHTML=l("Lượt chơi ","Runs ")+b(stats.runs||0)+" · "+',
