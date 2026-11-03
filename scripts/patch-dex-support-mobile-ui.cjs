@@ -63,7 +63,10 @@ replaceOnce(dexFile,
  "    toggle.textContent='☷ '+tr('Sắp xếp','Sort & filter');\n"+
  "    toggle.setAttribute('aria-expanded',String(!panel.hidden));\n"+
  "    toggle.onclick=()=>{panel.hidden=!panel.hidden;toggle.setAttribute('aria-expanded',String(!panel.hidden));};\n"+
- "    $('pkmsvv-dex-gen-label').textContent=tr('Theo thế hệ','Generation');\n"+
+ "    const closer=$('pkmsvv-dex-sort-close');\n"+
+ "    closer.textContent=tr('✕ Đóng bộ lọc','✕ Close filters');\n"+
+ "    closer.onclick=()=>{panel.hidden=true;toggle.setAttribute('aria-expanded','false');toggle.focus({preventScroll:true});};\n"+
+  "    $('pkmsvv-dex-gen-label').textContent=tr('Theo thế hệ','Generation');\n"+
  "    $('pkmsvv-dex-status-label').textContent=tr('Theo loại Pokémon','Pokémon category');\n"+
  "    $('pkmsvv-dex-type-label').textContent=tr('Hệ Pokémon','Pokémon type');\n"+
  "    renderGrid();");
@@ -101,6 +104,7 @@ const compact=[
  '          <button class="btn small ghost hidden" id="dex-clear" type="button">Xóa lọc</button>',
  '        </div>',
  '        <div id="pkmsvv-dex-sort-menu" class="pkmsvv-dex-sort-menu" hidden translate="no">',
+ '          <button id="pkmsvv-dex-sort-close" type="button" class="btn small ghost">✕ Đóng bộ lọc</button>',
  '          <b id="pkmsvv-dex-gen-label">Theo thế hệ</b>',
  '          <div class="gen-tabs" id="dex-gens"></div>',
  '          <b id="pkmsvv-dex-status-label">Theo loại Pokémon</b>',
