@@ -24,7 +24,7 @@ test('custom keyboard bindings are persisted device-locally and title fixed to e
  assert.ok(key.includes("G.Settings.set('keys'"));
  assert.match(key,/stopImmediatePropagation/);
  assert.match(key,/virtualPressed/);
- assert.ok(key.includes('Pokémon</span><span>Sống Sót'));
+ assert.ok(key.includes('Pokémon</span><span>Chuyển Sinh'));
  assert.match(read('src/web/index.html'),/pkmsvv-fixed-logo/);
  assert.doesNotMatch(key,/G.DB.commit/);
 });
@@ -37,7 +37,7 @@ test('Vietnamese online modes use Sống Sót for coop and Sống Còn for royal
  for(const name of ['Sống Sót','Sống Còn']){
   for(const source of [hub,social,ui])assert.ok(source.includes(name),name+' missing from a multiplayer UI source');
  }
- assert.match(royale,/BẢNG XẾP HẠNG SỐNG CÒN/);
+ assert.match(royale,/KẾT QUẢ SỐNG CÒN/);
  assert.match(ui,/Quick Co-op/);
  assert.match(ui,/Quick Survival/);
  assert.match(social,/🤝 Co-op · 2–4/);
@@ -59,7 +59,7 @@ test('v1.5 Egg Rush online creates 4-seat rooms and is permitted by Firebase rul
  assert.match(src,/pkmsvv-quick-eggrush/);
  assert.match(ui,/create\('eggrush'/);
  assert.match(ui,/quick\('eggrush'/);
- assert.match(game,/MAX=10,MAX_TIME=720/);
- assert.match(game,/wave<5/);
+ assert.match(game,/MAX_TIME=720,MAX_SCORE=10/);
+ assert.match(game,/nextSpawn=time\+30/);
  assert.match(game,/G\.Coop\.broadcast/);
 });
