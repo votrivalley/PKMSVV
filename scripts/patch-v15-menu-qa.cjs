@@ -28,7 +28,7 @@ fs.appendFileSync(js,`
   // Credit is displayed once as a tiny non-interactive line in upper left.
   const credit=menu.querySelector('.menu-left .pkmsvv-credit');
   if(credit){
-   credit.textContent='Việt hóa và Mod điều chỉnh bởi Votri Valley';
+   credit.textContent=english?'Localized and modified by Votri Valley':'Việt hóa và Mod điều chỉnh bởi Votri Valley';
    credit.setAttribute('aria-label',credit.textContent);
   }
   // The old v1.5 script nested the News BUTTON inside another bordered News
@@ -87,8 +87,16 @@ fs.appendFileSync(js,`
    }
    quick.onclick=()=>{
     if(G.PKMSVVSaveUI?.openQuick)G.PKMSVVSaveUI.openQuick();
-    else G.UI?.toast?.('Chức năng sao lưu chưa sẵn sàng');
+    else G.UI?.toast?.(english?'Backup is not available yet':'Chức năng sao lưu chưa sẵn sàng');
    };
+   // The PC summary was a hard-coded English fragment in Vietnamese menus.
+   const pc=[...menuList.querySelectorAll('button.menu-item')].find(b=>
+    b.querySelector('.pkmsvv-menu-label')?.textContent?.trim()==='PC');
+   const pcSub=pc?.querySelector('small');
+   if(pcSub){
+    pcSub.textContent=english?'Support Pokémon · Mega · Berries':'Pokémon hỗ trợ · Mega · Berry';
+    pcSub.setAttribute('translate','no');
+   }
   }
   const link=document.getElementById('pkmsvv-v15-discord');
   if(link){
