@@ -103,7 +103,8 @@ async function main(){
     await page.locator('#pkmsvv-dex-sort-toggle').click();
     assert.equal(await page.locator('#pkmsvv-dex-sort-menu').isVisible(),true);
     assert.match(await page.locator('#pkmsvv-dex-status-label').textContent(),/Theo loại Pokémon/);
-    await page.locator('#pkmsvv-dex-sort-toggle').click();
+    await page.locator('#pkmsvv-dex-sort-close').click();
+    assert.equal(await page.locator('#pkmsvv-dex-sort-menu').isVisible(),false,'Sort sheet must close without tapping through its own overlay');
     await page.evaluate(()=>{G.MenuUI.open();window.PKMSVVCoop?.open('berry');});
     await page.locator('#pkmsvv-unified-coop').waitFor({state:'visible'});
     assert.match(await page.locator('#pkmsvv-unified-coop').innerText(),/Chọn chế độ/);
