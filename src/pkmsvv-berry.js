@@ -88,6 +88,11 @@ G.PKMSVVBerry=(()=>{
  function clearModal(){for(const el of modals){el.remove?.();}modals=[];}
  function shell(title,sub){
   const shade=document.createElement('div');shade.className='pkmsvv-berry-overlay';shade.setAttribute('role','dialog');
+  // The entire Berry dialog is already localized with tr(vi,en). Without this,
+  // upstream G.I18n's MutationObserver repeatedly re-translates mixed Vietnamese
+  // option labels when the save contains Berry stock, freezing the main thread.
+  // Mark BEFORE appending to the DOM to avoid even one translation pass.
+  shade.setAttribute('translate','no');
   shade.setAttribute('aria-label',title);
   const panel=document.createElement('div');panel.className='pkmsvv-berry-panel';
   const h=document.createElement('h2');h.textContent=title;panel.append(h);
