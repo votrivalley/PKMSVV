@@ -112,6 +112,31 @@ async function main(){
     await page.locator('#pkmsvv-dex-sort-toggle').click();
     assert.equal(await page.locator('#pkmsvv-dex-sort-menu').isVisible(),true);
     assert.match(await page.locator('#pkmsvv-dex-status-label').textContent(),/Theo loại Pokémon/);
+    // Regression for 03-Nov screenshot: retro shadows double/darken Gen labels
+    // and pale .sub text vanishes against the light mint Sort surface.
+    const sortText=await page.evaluate(()=>{
+     const root=document.getElementById('pkmsvv-dex-sort-menu');
+     const gen=root.querySelector('#dex-gens .gen-tab');
+     const counter=gen.querySelector('small,.sub');
+     const order=root.querySelector('#dex-sort .sub');
+     const type=root.querySelector('#pkmsvv-dex-type-label');
+     const css=el=>el?{text:el.textContent?.trim(),color:getComputedStyle(el).color,
+      shadow:getComputedStyle(el).textShadow,
+      stroke:getComputedStyle(el).webkitTextStrokeWidth,
+      opacity:getComputedStyle(el).opacity}:null;
+     return {gen:css(gen),counter:css(counter),order:css(order),type:css(type)};
+    });
+    for(const key of ['gen','order','type']){
+     assert.ok(sortText[key],key+' label missing: '+JSON.stringify(sortText));
+     assert.equal(sortText[key].shadow,'none',key+' must not duplicate glyphs');
+     assert.match(sortText[key].stroke,/^0(px)?$/,key+' must not retain a pixel-font stroke');
+    }
+    assert.equal(sortText.order.color,'rgb(32, 63, 78)','sort-order hint must contrast with mint background');
+    assert.equal(sortText.type.color,'rgb(32, 63, 78)','type label must contrast with mint background');
+    if(sortText.counter){
+     assert.equal(sortText.counter.shadow,'none');
+     assert.equal(sortText.counter.color,'rgb(56, 87, 99)');
+    }
     await page.locator('#pkmsvv-dex-sort-close').click();
     assert.equal(await page.locator('#pkmsvv-dex-sort-menu').isVisible(),false,'Sort sheet must close without tapping through its own overlay');
     await page.evaluate(()=>{G.MenuUI.open();window.PKMSVVCoop?.open('berry');});
