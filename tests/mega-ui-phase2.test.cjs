@@ -18,14 +18,15 @@ test('Phase 2 offline Mega registry has exactly 96 stable forms and 36 art candi
  assert.match(style,/\.pkmsvv-mega-cell\.is-locked/);
  assert.match(style,/filter:brightness\(0\)/);
 });
-function fake(){
+function fake({coarse=false}={}){
  const elements=new Map(),events={};
  function node(tag='div'){
   const handlers={},el={tagName:tag.toUpperCase(),children:[],attributes:{},hidden:false,
    id:'',className:'',textContent:'',parentElement:null,nextSibling:null,disabled:false,
+   dataset:{},scrollTop:0,getBoundingClientRect:()=>({top:0}),
    addEventListener:(n,f)=>handlers[n]=f,
    setAttribute:(n,v)=>el.attributes[n]=v,
-   focus:()=>{el.focused=true},
+   focus:opts=>{el.focused=true;el.focusOptions=opts;},
    append(...items){for(const x of items){x.parentElement=el;el.children.push(x);if(x.id)elements.set(x.id,x);}
     for(let i=0;i<el.children.length;i++)el.children[i].nextSibling=el.children[i+1]||null;},
    replaceChildren(...items){el.children=[];el.append(...items);},
@@ -35,6 +36,7 @@ function fake(){
     for(let i=0;i<el.children.length;i++)el.children[i].nextSibling=el.children[i+1]||null;},
    querySelector:(q)=>{
     if(q==='[data-mega-close]')return find(el,v=>v.attributes['data-mega-close']!==undefined);
+    if(q==='.pkmsvv-mega-phase1-dialog')return find(el,v=>v.className.includes('pkmsvv-mega-phase1-dialog'));
     if(q.startsWith('[data-mega-filter='))return find(el,v=>v.attributes['data-mega-filter']===q.match(/"([^"]+)"/)?.[1]);
     return null;
    },
@@ -56,7 +58,7 @@ function fake(){
   g.SPRITE_META[f.spriteId]={a:{Idle:{}},sh:true,sa:{Idle:{}}};
  let spriteCount=0,draws=[];
  g.UI={spriteCanvas:(dex,w,h,o)=>{spriteCount++;draws.push({dex,opts:o});return node('canvas');}};
- vm.runInNewContext(read('src/pkmsvv-mega-entry.js'),{G:g,document});
+ vm.runInNewContext(read('src/pkmsvv-mega-entry.js'),{G:g,document,matchMedia:()=>({matches:coarse})});
  return {g,header,events,get:id=>elements.get(id),draws,drawCount:()=>spriteCount};
 }
 test('Mega UI paginates only real local sprites, hides locked identities, and does not edit save',()=>{
@@ -248,4 +250,53 @@ test('Android release displays all three usable Megas as silhouettes before disc
  ui.render();
  assert.ok(h.get('pkmsvv-mega-grid').children.some(c=>c.children.at(-2).textContent==='Mega Lucario'&&c.className.includes('is-open')),
   'owned Shiny and Mega unlock reveal corresponding colored Shiny sprite');
+});
+
+
+test('Mega mobile touch browsing does not replace focused cards or scroll back to top',()=>{
+ const h=fake({coarse:true}),ui=h.g.PKMSVVMegaEntry;
+ assert.equal(ui.open(),true);
+ const overlay=h.get('pkmsvv-mega-phase1'),panel=overlay.querySelector('.pkmsvv-mega-phase1-dialog');
+ const close=overlay.querySelector('[data-mega-close]');
+ assert.notEqual(close.focused,true,'touch open must not focus a button at the top');
+ const grid=h.get('pkmsvv-mega-grid'),card=grid.children[6];
+ panel.scrollTop=325;
+ card.click();
+ assert.equal(panel.scrollTop,325);
+ assert.strictEqual(h.get('pkmsvv-mega-grid'),grid);
+ assert.strictEqual(grid.children[6],card,'selection must preserve the original live button');
+ assert.equal(card.attributes['aria-pressed'],'true');
+ assert.equal(grid.children[0].attributes['aria-pressed'],'false');
+ // Emulate the detail above the roster growing by 65 pixels after selection.
+ let top=210;
+ grid.getBoundingClientRect=()=>({top});
+ const detail=h.get('pkmsvv-mega-detail'),replace=detail.replaceChildren;
+ detail.replaceChildren=(...args)=>{top+=65;return replace(...args);};
+ panel.scrollTop=400;
+ grid.children[8].click();
+ assert.equal(panel.scrollTop,465,'selection compensates height changes above the list');
+ // Changing tabs/pages is intentional but must not force us to the top.
+ panel.scrollTop=485;
+ h.get('pkmsvv-mega-next').click();
+ assert.equal(panel.scrollTop,485);
+ ui.render();
+ assert.equal(panel.scrollTop,485);
+ ui.close();
+ assert.notEqual(h.get('pkmsvv-mega-entry').focused,true,'touch close must not refocus a hidden screen');
+});
+
+test('Desktop Mega focus never scrolls and mobile CSS isolates one scroll area',()=>{
+ const h=fake(),ui=h.g.PKMSVVMegaEntry;
+ ui.open();
+ const overlay=h.get('pkmsvv-mega-phase1'),close=overlay.querySelector('[data-mega-close]');
+ assert.equal(close.focused,true,'keyboard dialog focus stays supported');
+ assert.equal(close.focusOptions.preventScroll,true);
+ ui.close();
+ assert.equal(h.get('pkmsvv-mega-entry').focusOptions.preventScroll,true);
+ const css=read('src/pkmsvv-mega-phase2.css');
+ assert.match(css,/height:100dvh;overflow:hidden/);
+ assert.match(css,/overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain/);
+ assert.match(css,/touch-action:pan-y;-webkit-overflow-scrolling:touch/);
+ assert.match(css,/scroll-behavior:auto;overflow-anchor:none/);
+ assert.match(read('scripts/patch-ui-phase2-mega.cjs'),/pkmsvv-mega-phase2\.css/);
 });
