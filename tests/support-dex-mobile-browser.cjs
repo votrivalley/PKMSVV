@@ -126,14 +126,14 @@ async function main(){
   // grid, cutting cards and trapping the mouse wheel. Test an ordinary mouse
   // viewport, not only emulated touch devices.
   {
-   const viewport={width:1280,height:620};
+   const viewport={width:1280,height:565};
    const {page,context,errors}=await boot(browser,server,'vi',viewport,false);
    try{
     await page.evaluate(()=>G.PKMSVVSupportCatalog.open());
     const start=await scroll(page);
     assert.equal(start.overflow,'auto','PC modal must be the only scroll container');
     assert.equal(start.nested,'visible','PC grid must not scroll or clip independently');
-    assert.ok(start.max>30,'PC modal should scroll in 1280x620: '+JSON.stringify(start));
+    assert.ok(start.max>30,'PC modal should scroll in 1280x565: '+JSON.stringify(start));
     const cards=page.locator('#pkmsvv-support-entries .pkmsvv-support-cell');
     assert.ok(await cards.count()>=6,'PC support cards must be populated');
     const grid=await page.locator('#pkmsvv-support-entries').boundingBox();
@@ -152,7 +152,7 @@ async function main(){
     });
     assert.equal(fullyVisible,true,'Last PC Support card must not be cut off');
     assert.deepEqual(errors,[],'PC browser errors: '+JSON.stringify(errors));
-    console.log('PASS PC 1280x620 one-scroll Support modal, mouse wheel, card selection');
+    console.log('PASS PC 1280x565 one-scroll Support modal, mouse wheel, card selection');
    }finally{await context.close();}
   }
   const {page,context,errors}=await boot(browser,server,'en',{width:844,height:390});
