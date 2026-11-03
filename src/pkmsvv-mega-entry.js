@@ -48,7 +48,13 @@ G.PKMSVVMegaEntry=(()=>{
   target?.focus?.({preventScroll:true});
  }
  function scroller(){return $('pkmsvv-mega-phase1')?.querySelector?.('.pkmsvv-mega-phase1-dialog');}
- function close(){const box=$('pkmsvv-mega-phase1');if(box)box.hidden=true;focusWithoutScroll($('pkmsvv-mega-entry'));}
+ function close(){
+  const box=$('pkmsvv-mega-phase1');if(box)box.hidden=true;
+  // Keep the page beneath the Mega modal from stealing mobile swipe input.
+  document.body?.classList?.remove('pkmsvv-mega-modal-open');
+  document.documentElement?.classList?.remove('pkmsvv-mega-modal-open');
+  focusWithoutScroll($('pkmsvv-mega-entry'));
+ }
  function ensure(){
   const back=$('pkmsvv-upgrade-back');if(!back?.parentElement)return false;
   G.PKMSVVSupportCatalog?.ensure?.();
@@ -56,7 +62,11 @@ G.PKMSVVMegaEntry=(()=>{
   if(!btn){btn=el('button','pkmsvv-mega-entry','btn small pkmsvv-mega-entry-btn');
    btn.type='button';btn.addEventListener('click',open);}
   const support=$('pkmsvv-support-entry');
-  back.parentElement.insertBefore(btn,support?.parentElement===back.parentElement?support.nextSibling||back:back);
+  const parent=back.parentElement;
+  const anchor=support?.parentElement===parent?support.nextSibling||back:back;
+  // Do not detach/reinsert a focused button on every menu refresh.
+  if(btn.parentElement!==parent||(anchor!==btn&&btn.nextSibling!==anchor))
+   parent.insertBefore(btn,anchor);
   btn.textContent=tr('✧ Tiến hóa Mega','✧ Mega Evolution');
   btn.setAttribute('aria-haspopup','dialog');btn.setAttribute('aria-controls','pkmsvv-mega-phase1');
   return true;
@@ -269,6 +279,14 @@ G.PKMSVVMegaEntry=(()=>{
   $('pkmsvv-mega-phase1-title').textContent=tr('Tiến hóa Mega','Mega Evolution');
   box.querySelector('[data-mega-close]').textContent=tr('Đóng','Close');
   render();box.hidden=false;
+  // Mobile browsers sometimes retain focus on the underlying Mega-entry
+  // button and scroll the background screen into view while the modal moves.
+  const activeElement=document.activeElement;
+  if(activeElement&&!box.contains(activeElement)&&
+      typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches)
+   activeElement.blur?.();
+  document.body?.classList?.add('pkmsvv-mega-modal-open');
+  document.documentElement?.classList?.add('pkmsvv-mega-modal-open');
   const panel=scroller();if(panel)panel.scrollTop=0;
   focusWithoutScroll(box.querySelector('[data-mega-close]'));
   return true;
