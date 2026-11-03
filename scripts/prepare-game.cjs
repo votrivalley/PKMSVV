@@ -659,6 +659,8 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-skill-forget.c
 // C: item comparison/skip, D: curated 2-move Fusion solo PvE, E: UTC visual season.
 for(const patchName of ['patch-held-item-ui.cjs','patch-bond-fusion.cjs','patch-season-event.cjs'])
  execFileSync(process.execPath,[path.join(project,'scripts',patchName)],{cwd:project,stdio:'inherit'});
+// Final UI pass: compact Pokédex sort, Support native scrolling and accent-safe title.
+execFileSync(process.execPath,[path.join(project,'scripts','patch-dex-support-mobile-ui.cjs')],{cwd:project,stdio:'inherit'});
 // Only Switch/Brewser: tolerate absent DOMContentLoaded and a stalled pixel-font Promise.
 if (process.env.PKMSVV_SWITCH_BOOT === '1') {
   patch('js/main.js',
