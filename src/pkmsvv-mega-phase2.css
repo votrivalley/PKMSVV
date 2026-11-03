@@ -89,3 +89,18 @@
 .pkmsvv-mega-cell.is-pending-art{background:#e8efec;border-style:dashed;border-color:#9abbb5}
 .pkmsvv-mega-cell.is-pending-art .pkmsvv-mega-no-art{color:#456e78}
 .pkmsvv-mega-cell.is-pending-art small{color:#526773;opacity:1;font-weight:700}
+
+
+/* Mobile Mega roster: exactly one bounded touch scroll container.
+ * Prevent parent-page scroll chaining and CSS scroll anchoring after
+ * selected Pokémon details or filter counts change size. */
+#pkmsvv-mega-phase1.pkmsvv-mega-phase1-overlay{
+ box-sizing:border-box;height:100dvh;overflow:hidden;
+ overscroll-behavior:contain;touch-action:none;
+}
+#pkmsvv-mega-phase1 .pkmsvv-mega-phase1-dialog{
+ box-sizing:border-box;min-height:0;max-height:min(94dvh,850px);
+ overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;
+ touch-action:pan-y;-webkit-overflow-scrolling:touch;
+ scroll-behavior:auto;overflow-anchor:none;
+}
