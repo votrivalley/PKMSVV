@@ -50,6 +50,7 @@
   viewArena=requestedArena;
   previousFocus=document.activeElement;
   view=document.createElement('div');view.id='pkmsvv-unified-coop';
+  view.setAttribute('translate','no'); // preserve explicit locale strings from the global fragment translator
   view.innerHTML='<section class="pkmsvv-coop-panel" role="dialog" aria-modal="true" aria-label="Co-op">'+
     '<header><h2>'+(viewArena?(mode==='champion'?'🏆 Arena · Champion':'⚔ Arena · Solo'):'🤝 Co-op')+'</h2><button type="button" id="pkmsvv-coop-close">✕</button></header>'+ 
     '<b>'+L('Chọn chế độ','Choose mode')+'</b><div id="pkmsvv-coop-modes"></div>'+

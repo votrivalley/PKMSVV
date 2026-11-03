@@ -192,6 +192,7 @@ G.PKMSVVChampionArena=(()=>{
     !G.DB?.save?.pkmsvvBerryChapterDone?
      tr('🍓 Đã xong 2/2 · Berry ','🍓 2/2 complete · Berries ')+berryCount+'/5':
     tr('🔒 Đã xong Berry · Xem Chương 7','🔒 Berry complete · Watch Chapter 7');
+   small.setAttribute('translate','no');
    small.setAttribute('aria-label',small.textContent);
   }
   return true;
