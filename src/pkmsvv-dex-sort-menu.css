@@ -70,3 +70,9 @@
  padding:8px 13px;background:#d9e9e4;color:#193e49;
  border:2px solid #70b6ad;border-radius:9px;font-weight:800;
 }
+
+/* A fixed descendant cannot escape its stacking-context parent; lift the
+ * Pokédex screen ONLY while its filter sheet is expanded over the top bar. */
+#scr-dex:has(#pkmsvv-dex-sort-menu:not([hidden])){
+ z-index:20000!important;
+}
