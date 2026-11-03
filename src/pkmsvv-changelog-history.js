@@ -75,8 +75,8 @@ G.CHANGELOG = [
     ],
     "fix": [
       [
-        "v1.5.93: Sửa lỗi save cũ khiến trận thường bị treo khi có Berry và dùng tiếng Việt; khắc phục cả bảng chọn Berry lẫn thanh hiệu ứng trong trận, không mất tiến trình.",
-        "v1.5.93: Fixed a legacy-save freeze when starting Solo with Berries in Vietnamese, including the pre-run picker and in-battle Berry HUD, without deleting progress."
+        "Sửa lỗi save cũ khiến trận thường bị treo khi có Berry và dùng tiếng Việt; khắc phục cả bảng chọn Berry lẫn thanh hiệu ứng trong trận mà không làm mất tiến trình.",
+        "Fixed a legacy-save freeze when starting Solo with Berries in Vietnamese, including the pre-run picker and in-battle Berry HUD, without deleting progress."
       ],
       [
         "Cải thiện giao diện, hiển thị Mega, Arena, chơi nhiều người và độ ổn định trên các nền tảng.",
