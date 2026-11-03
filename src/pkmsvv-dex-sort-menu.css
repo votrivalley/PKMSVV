@@ -53,14 +53,14 @@
  border:1px solid #84bcb4;border-radius:8px;padding:6px 8px;
 }
 @media(max-height:540px){
- #scr-dex #pkmsvv-dex-sort-menu{top:12px;max-height:calc(100svh - 24px)}
+ #scr-dex #pkmsvv-dex-sort-menu{top:max(70px,env(safe-area-inset-top));max-height:calc(100svh - 82px)}
  #scr-dex .pkmsvv-dex-tools #dex-q{min-height:39px}
  #scr-dex .pkmsvv-dex-tools #pkmsvv-dex-fav,
  #scr-dex .pkmsvv-dex-tools #pkmsvv-dex-sort-toggle{min-height:38px;padding:6px 9px}
 }
 @media(max-width:520px){
  #scr-dex .pkmsvv-dex-tools #dex-q{flex:1 1 100%;width:100%}
- #scr-dex #pkmsvv-dex-sort-menu{top:10px;max-height:calc(100svh - 20px)}
+ #scr-dex #pkmsvv-dex-sort-menu{top:max(70px,env(safe-area-inset-top));max-height:calc(100svh - 82px)}
 }
 
 /* Always-visible close control when the sort popover covers its trigger. */
@@ -82,3 +82,7 @@
 #scr-dex:has(#pkmsvv-dex-sort-menu:not([hidden])){
  z-index:20000!important;
 }
+
+/* The global mobile #topbar is a higher ancestor stacking layer.
+   Keep the filter sheet's close control BELOW it in both orientations;
+   moving only the close button's z-index cannot pierce that layer. */
