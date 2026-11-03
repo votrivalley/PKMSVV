@@ -68,8 +68,8 @@ replaceOnce(dexFile,
  "    $('pkmsvv-dex-type-label').textContent=tr('Hệ Pokémon','Pokémon type');\n"+
  "    renderGrid();");
 replaceOnce(dexFile,
- "const busy = f.q || f.status !== 'all' || f.shiny || f.fav || f.rar.size || f.type || f.sort !== 'num';",
- "const busy = dexGen!==0 || f.q || f.status !== 'all' || f.shiny || f.fav || f.rar.size || f.type || f.sort !== 'num';");
+ "const f = dexF, busy = f.q || f.status !== 'all' || f.shiny || f.fav || f.rar.size || f.type || f.sort !== 'num';",
+ "const f = dexF, busy = dexGen!==0 || f.q || f.status !== 'all' || f.shiny || f.fav || f.rar.size || f.type || f.sort !== 'num';",);
 replaceOnce(dexFile,
  "grid.innerHTML = '<p class=\"sub\" style=\"grid-column:1/-1\">Ninguno con estos filtros.</p>';",
  "grid.innerHTML = '<p class=\"sub\" style=\"grid-column:1/-1\">'+tr('Không có Pokémon phù hợp bộ lọc.','No Pokémon match your filters.')+'</p>';");
