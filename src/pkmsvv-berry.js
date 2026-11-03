@@ -241,7 +241,12 @@ G.PKMSVVBerry=(()=>{
   hudStamp=stamp;
   if(!hudEl){
    hudEl=document.createElement('aside');hudEl.id='pkmsvv-berry-active-hud';
-   hudEl.className='pkmsvv-berry-active-hud';hudEl.setAttribute('aria-label',tr('Hiệu ứng Berry','Berry effects'));
+   hudEl.className='pkmsvv-berry-active-hud';
+   // Like the pre-run chooser, HUD text is localized by tr(vi,en).
+   // Otherwise the VI DOM translator can recursively rewrite a selected
+   // Berry's status labels and hang the game after the 4-second picker.
+   hudEl.setAttribute('translate','no');
+   hudEl.setAttribute('aria-label',tr('Hiệu ứng Berry','Berry effects'));
    document.body.append(hudEl);
   }
   hudEl.hidden=false;hudEl.replaceChildren();
