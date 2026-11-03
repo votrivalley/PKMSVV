@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.90",
+  "version": "1.5.91",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.90: Arena unlock after Chapter 6 and valid early Co-op/Royale milestones",
+  "description": "Pokémon Chuyển Sinh v1.5.91: single-scroll PC Support, compact Pokédex and corrected VI/EN menus",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
