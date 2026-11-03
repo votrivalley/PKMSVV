@@ -7,7 +7,7 @@ G.CHANGELOG = [
     "d": "2026-11-03",
     "title": [
       "Pokémon Chuyển Sinh",
-      "Pokémon Reincarnation"
+      "Pokémon Chuyển Sinh"
     ],
     "subtitle": [
       "Có gì mới — Một hành trình mới bắt đầu!",
@@ -16,7 +16,7 @@ G.CHANGELOG = [
     "new": [
       [
         "Pokémon Sống Sót chính thức đổi tên thành Pokémon Chuyển Sinh! Từ những trận sinh tồn, người chơi bước vào cốt truyện 10 chương để tìm lại ký ức đã mất.",
-        "Pokémon Survival is now Pokémon Reincarnation! Beyond survival battles, embark on a ten-chapter story to recover lost memories."
+        "Pokémon Survival is now Pokémon Chuyển Sinh! Beyond survival battles, embark on a ten-chapter story to recover lost memories."
       ],
       [
         "Mỗi chương có tranh minh họa, nhiệm vụ và điều kiện mở khóa riêng; mục Ký Ức giúp xem lại hành trình đã khám phá.",
@@ -81,7 +81,7 @@ G.CHANGELOG = [
     ],
     "credit": [
       "Pokémon Chuyển Sinh là dự án Việt hóa và mở rộng phi thương mại của Votri Valley, dựa trên PokéSurvivor do JPTER78 phát triển. Không phải sản phẩm Pokémon chính thức.",
-      "Pokémon Reincarnation is a noncommercial localization and expansion by Votri Valley, based on PokéSurvivor by JPTER78. It is not an official Pokémon product."
+      "Pokémon Chuyển Sinh is a noncommercial localization and expansion by Votri Valley, based on PokéSurvivor by JPTER78. It is not an official Pokémon product."
     ]
   }
 ];
