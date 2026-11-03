@@ -2,7 +2,7 @@
   "name": "pkmsvv-offline",
   "version": "1.5.93",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.93: fix old-save VI Berry picker and active HUD freeze",
+  "description": "Pokémon Chuyển Sinh v1.5.93: old-save Berry crash fix, bilingual changelog QA and signed in-place Android update",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
