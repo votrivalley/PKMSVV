@@ -52,10 +52,15 @@ async function main(){
     const home=await page.evaluate(()=>({
      language:G.I18n.lang,title:document.querySelector('#scr-menu .menu-left .logo .t1')?.textContent?.trim(),
      tagline:document.querySelector('#scr-menu .pkmsvv-awakening-tagline')?.textContent?.trim(),
+     credit:document.querySelector('#scr-menu .pkmsvv-credit')?.textContent?.trim(),
+     pcSub:[...document.querySelectorAll('#scr-menu .menu-right .menu-list button.menu-item')]
+      .find(b=>b.querySelector('.pkmsvv-menu-label')?.textContent?.trim()==='PC')?.querySelector('small')?.textContent?.trim(),
      stats:document.getElementById('menu-stats')?.textContent
     }));
     assert.equal(home.language,'vi');
     assert.equal(home.title,'Pokémon Chuyển Sinh');
+    assert.equal(home.credit,'Việt hóa và Mod điều chỉnh bởi Votri Valley');
+    assert.equal(home.pcSub,'Pokémon hỗ trợ · Mega · Berry');
     assert.match(home.tagline,/Tỉnh giấc tôi thấy mình hóa Pokémon/i);
     assert.match(home.stats,/Lượt chơi/);
     assert.match(home.stats,/Kỷ lục sống sót/);
@@ -155,10 +160,15 @@ async function main(){
    const home=await page.evaluate(()=>({
     language:G.I18n.lang,title:document.querySelector('#scr-menu .menu-left .logo .t1')?.textContent?.trim(),
     tagline:document.querySelector('#scr-menu .pkmsvv-awakening-tagline')?.textContent?.trim(),
-    stats:document.getElementById('menu-stats')?.textContent
+    credit:document.querySelector('#scr-menu .pkmsvv-credit')?.textContent?.trim(),
+     pcSub:[...document.querySelectorAll('#scr-menu .menu-right .menu-list button.menu-item')]
+      .find(b=>b.querySelector('.pkmsvv-menu-label')?.textContent?.trim()==='PC')?.querySelector('small')?.textContent?.trim(),
+     stats:document.getElementById('menu-stats')?.textContent
    }));
    assert.equal(home.language,'en');
    assert.equal(home.title,'Pokémon Chuyển Sinh','English must NOT rename the game');
+   assert.equal(home.credit,'Localized and modified by Votri Valley');
+   assert.equal(home.pcSub,'Support Pokémon · Mega · Berries');
    assert.equal(home.tagline,'I woke up as a Pokémon');
    assert.match(home.stats,/Runs/);
    await page.evaluate(()=>G.PKMSVVSupportCatalog.open());
