@@ -2,7 +2,7 @@
   "name": "pkmsvv-offline",
   "version": "1.5.90",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.90: sequential Arena chapter gating and early-mode milestone recording",
+  "description": "Pokémon Chuyển Sinh v1.5.90: Arena unlock after Chapter 6 and valid early Co-op/Royale milestones",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
