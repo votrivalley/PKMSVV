@@ -106,6 +106,30 @@ const compact=[
  '        </div>'
 ].join('\n');
 replaceOnce('dev.html',original,compact);
-fs.appendFileSync(path.join(base,'css/style.css'),'\n'+fs.readFileSync(path.join(__dirname,'../src/pkmsvv-dex-sort-menu.css'),'utf8')+
+fs.appendFileSync(path.join(base,'css/style.css'),'\n'+fs.readFileSync(path.join(__dirname,'../src/pkmsvv-brand-stable.css'),'utf8')+'\n'+fs.readFileSync(path.join(__dirname,'../src/pkmsvv-dex-sort-menu.css'),'utf8')+
  '\n'+fs.readFileSync(path.join(__dirname,'../src/pkmsvv-support-scroll-fix.css'),'utf8')+'\n','utf8');
+
+// Override original Spanish/English hybrid menu statistics after all upstream
+// wrappers. Reformat only the visible strings; never write player progress.
+fs.appendFileSync(path.join(base,'js/ui/menu.js'),[
+ '',
+ '/* PKMSVV locale-safe menu statistics; generated after upstream wrappers. */',
+ '(()=>{',
+ ' const former=G.MenuUI?.open;',
+ ' if(typeof former!=="function")return;',
+ ' const l=(vi,en)=>G.I18n?.lang==="en"?en:vi;',
+ ' G.MenuUI.open=function(...args){',
+ '  const result=former.apply(this,args),stats=G.DB?.save?.stats,node=document.getElementById("menu-stats");',
+ '  if(node&&stats){',
+ '   const b=v=>"<b>"+v+"</b>";',
+ '   node.innerHTML=l("Lượt chơi ","Runs ")+b(stats.runs||0)+" · "+',
+ '    l("Kỷ lục sống sót ","Best time ")+b(G.U.mmss(stats.bestTime||0))+"<br>"+',
+ '    l("Cấp cao nhất ","Best level ")+b(stats.bestLevel||0)+" · "+',
+ '    l("Đã hạ ","Defeated ")+b(Number(stats.totalKills||0).toLocaleString(G.I18n?.locale||"vi-VN"))+',
+ '    (G.DB.guest?"<br>"+l("Chế độ khách: không lưu","Guest mode: not saved"):"");',
+ '  }',
+ '  return result;',
+ ' };',
+ '})();'
+].join('\n'),'utf8');
 console.log('PKMSVV: Pokédex generation/rarity/status/type/sort options folded into one menu; Support single-scroll modal.');
