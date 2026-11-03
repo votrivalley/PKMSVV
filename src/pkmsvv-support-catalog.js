@@ -35,6 +35,7 @@ G.PKMSVVSupportCatalog=(()=>{
   if($('pkmsvv-support-catalog'))return;
   const wrap=document.createElement('div');
   wrap.id='pkmsvv-support-catalog';wrap.className='pkmsvv-support-overlay';wrap.hidden=true;
+  wrap.setAttribute('translate','no'); // all strings already have explicit VI/EN pairs
   const frame=document.createElement('div');frame.className='pkmsvv-support-modal';
   const head=document.createElement('div');head.className='pkmsvv-support-modal-head';
   const title=document.createElement('h2');title.id='pkmsvv-support-heading';
