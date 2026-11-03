@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.83",
+  "version": "1.5.84",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.83: Save Guardian Berry/Mega/item regression protection and reliable Arena client exit",
+  "description": "Pokémon Chuyển Sinh v1.5.84: mobile Web Mega native scroll correction and browser touch regression test",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
