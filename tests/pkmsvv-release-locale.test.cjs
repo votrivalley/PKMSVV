@@ -11,7 +11,7 @@ test('What’s New is a single bilingual summary of all improvements since versi
  const items=getHistory();
  assert.equal(items.length,1,'no separate release-by-release articles');
  assert.equal(items[0].title[0],'Pokémon Chuyển Sinh');
- assert.equal(items[0].title[1],'Pokémon Reincarnation');
+ assert.equal(items[0].title[1],'Pokémon Chuyển Sinh');
  assert.match(items[0].new[0][0],/Pokémon Sống Sót.*Pokémon Chuyển Sinh/);
  assert.match(items[0].new[0][0],/10 chương/);
  const allVi=JSON.stringify(items.map(v=>[v.new,v.chg,v.fix].flat().map(x=>x?.[0])));
@@ -109,7 +109,7 @@ test('The rendered What’s New dialog never translates an English entry through
    assert.match(html,/Cửa hàng Kecleon/);
    assert.doesNotMatch(html,/From Pokémon Survival to Pokémon Reincarnation/);
   }else{
-   assert.match(html,/Pokémon Survival.*Pokémon Reincarnation/);
+   assert.match(html,/Pokémon Survival.*Pokémon Chuyển Sinh/);
    assert.match(html,/Kecleon Shop/);
    assert.doesNotMatch(html,/Pokémon Sống Sót chính thức/);
    assert.doesNotMatch(html,vietnamese);
