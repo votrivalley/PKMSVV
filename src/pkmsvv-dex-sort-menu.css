@@ -76,3 +76,9 @@
    they previously intercepted taps on the visible Close button. */
 #scr-dex #pkmsvv-dex-sort-menu #dex-gens{position:relative;z-index:0}
 #scr-dex #pkmsvv-dex-sort-menu #dex-gens .gen-tab{z-index:auto}
+
+/* A fixed descendant cannot escape the stacking-context of its screen.
+ * Lift Pokédex above the global topbar only when the Sort sheet is open. */
+#scr-dex:has(#pkmsvv-dex-sort-menu:not([hidden])){
+ z-index:20000!important;
+}
