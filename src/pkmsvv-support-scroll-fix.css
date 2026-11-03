@@ -1,6 +1,41 @@
 /* v1.5.85: Support PC/Android/Web — one scroll area, no clipped cards. */
 .pkmsvv-support-overlay.pkmsvv-support-overlay[hidden]{display:none!important}
 .pkmsvv-support-modal-head button{flex:0 0 auto;min-width:70px}
+
+/* Desktop PC: the original retro CSS left a nested 58vh scrollbar inside
+   the Support catalogue. Wheel input was trapped there and the last cards
+   looked cut off while the outer modal continued to scroll independently.
+   Use exactly one outer scrollbar, as in the Mega catalogue. */
+@media (hover:hover) and (pointer:fine) and (min-height:561px) {
+ .pkmsvv-support-overlay:not([hidden]){
+  display:flex;align-items:center;justify-content:center;
+  box-sizing:border-box;overflow:hidden;
+ }
+ .pkmsvv-support-overlay .pkmsvv-support-modal{
+  box-sizing:border-box;
+  width:min(1050px,calc(100vw - 36px));
+  height:min(820px,calc(100dvh - 36px));
+  max-height:calc(100dvh - 36px);min-height:0;
+  overflow-x:hidden;overflow-y:auto;
+  overscroll-behavior-y:contain;overflow-anchor:none;
+  scrollbar-gutter:stable;
+ }
+ .pkmsvv-support-overlay .pkmsvv-support-modal-head{
+  position:sticky;top:-18px;z-index:5;
+  background:#174954;border-radius:9px;
+  padding:8px 9px;margin:-8px -8px 10px;
+ }
+ .pkmsvv-support-overlay .pkmsvv-support-layout{
+  min-width:0;grid-template-columns:minmax(0,1.45fr) minmax(250px,.9fr);
+  align-items:start;
+ }
+ .pkmsvv-support-overlay #pkmsvv-support-entries{
+  max-height:none!important;height:auto!important;
+  overflow:visible!important;overscroll-behavior:contain;
+  min-width:0;
+ }
+}
+
 #pkmsvv-support-entries .pkmsvv-support-cell{height:auto;min-height:138px;overflow:visible;touch-action:manipulation}
 #pkmsvv-support-entries .pkmsvv-support-cell strong{white-space:normal;overflow-wrap:anywhere;text-overflow:clip}
 @media (pointer:coarse), (max-height:560px){
