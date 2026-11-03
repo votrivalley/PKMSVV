@@ -79,6 +79,8 @@ replaceOnce(dexFile,
 // Keep all existing filtering and sorting functions; only replace the controls.
 const original=[ 
  '    <div class="gen-tabs" id="dex-gens"></div>',
+ '    <div class="split" style="margin-top:8px">',
+ '      <div>',
  '        <div class="dex-tools">',
  '          <input id="dex-q" type="search" placeholder="Buscar por nombre o número" autocomplete="off" spellcheck="false">',
  '          <select id="dex-type" title="Tipo"></select>',
@@ -89,6 +91,8 @@ const original=[
  '        <div class="filters dex-sort" id="dex-sort"></div>'
 ].join('\n');
 const compact=[
+ '    <div class="split" style="margin-top:8px">',
+ '      <div>',
  '        <div class="dex-tools pkmsvv-dex-tools">',
  '          <input id="dex-q" type="search" placeholder="Tìm Pokémon theo tên hoặc số" autocomplete="off" spellcheck="false">',
  '          <button id="pkmsvv-dex-fav" class="chip" type="button" aria-pressed="false">☆ Yêu thích</button>',
