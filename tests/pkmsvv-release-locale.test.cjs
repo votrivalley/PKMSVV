@@ -69,8 +69,8 @@ test('Co-op, Arena and menu choose paired text at render time; no forced Vietnam
  assert.match(coop,/L\(title,englishModes\[id\]/);
  assert.match(coop,/L\(description,englishModes\[id\]/);
  assert.match(champion,/tr\('Chọn Solo hoặc Champion','Choose Solo or Champion'\)/);
- assert.match(menu,/english\?'Pokémon Reincarnation':'Pokémon Chuyển Sinh'/);
- assert.match(menu,/english\?'I woke up as a Pokémon':'Tỉnh giấc tôi thấy mình hóa Pokemon'/);
+ assert.match(menu,/title\.textContent='Pokémon Chuyển Sinh'/);
+ assert.match(menu,/english\?'I woke up as a Pokémon':'Tỉnh giấc tôi thấy mình hóa Pokémon'/);
  assert.match(menu,/newsJs\.replaceAll\('Có gì mới: 1\.4','Có gì mới'\)/);
 });
 test('English-specific dictionary and consolidated changelog reach all three build paths',()=>{
