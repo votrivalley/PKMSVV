@@ -16,6 +16,10 @@ G.PKMSVVArenaPvp=(()=>{
  let active=false,host=false,uid='',hostUid='',seed=null,people=[],hp={},stage='idle',matchType='arena',round=1,scores={};
  let elapsed=0,serial=0,received=-1,frameClock=0,winner=null,casts=new Map(),orbClock=0;
  let element=null,result=null;
+ // The Host already repeats "apvp" result snapshots each frame. The only
+ // fragile one-off was its exit packet. The lobby's authoritative open flag
+ // provides a separate recovery signal when that packet is lost.
+ let matchRoom='',startedWhileClosed=false;
  // Keep duel isolation active after a rival disconnects; otherwise old
  // Survival spawners wake up as the room shrinks from two members to one.
  const mode=()=>!!(active&&G.Coop?.active);
@@ -49,7 +53,7 @@ G.PKMSVVArenaPvp=(()=>{
  }
  function cleanup(){
   active=false;host=false;stage='idle';winner=null;people=[];hp={};matchType='arena';round=1;scores={};casts.clear();
-  frameClock=0;orbClock=0;elapsed=0;received=-1;
+  frameClock=0;orbClock=0;elapsed=0;received=-1;matchRoom='';startedWhileClosed=false;
   if(element){element.remove();element=null;}
   if(result){result.remove();result=null;}
   const count=$('pkmsvv-arena-pvp-count');if(count)count.remove();
@@ -84,6 +88,8 @@ G.PKMSVVArenaPvp=(()=>{
   cleanup();
   if(!validPair(cfg))return false;
   uid=G.Social.uid;hostUid=cfg.host;host=uid===hostUid;
+  matchRoom=String(G.Social.room?.id||'');
+  startedWhileClosed=G.Social.room?.open===false;
   if(!cfg.members.some(m=>m.uid===uid))return false;
   people=cfg.members.map(m=>({uid:m.uid,name:String(m.name||'Trainer').slice(0,24),dex:m.dex}));
   seed=cfg.seed;active=true;stage='countdown';elapsed=0;winner=null;
@@ -265,11 +271,11 @@ G.PKMSVVArenaPvp=(()=>{
   applyHp();
   if(!host)render();
  }
- function exit(){
+ function exit(notify=true){
   if(!active)return;
   const isHost=host,oldSeed=seed;
-  if(isHost)G.Net?.broadcast?.({k:'apvp-exit',seed:oldSeed});
-  else G.Net?.toHost?.({k:'apvp-exit-request',seed:oldSeed});
+  if(isHost&&notify)G.Net?.broadcast?.({k:'apvp-exit',seed:oldSeed});
+  else if(!isHost&&notify)G.Net?.toHost?.({k:'apvp-exit-request',seed:oldSeed});
   cleanup();
   G.Coop?.end?.();G.Social?.setPlaying?.(false);
   G.Game?.toUI?.();
@@ -299,7 +305,7 @@ G.PKMSVVArenaPvp=(()=>{
    if(!active)return;
    if(data?.k==='apvp'){receive(from,data);return;}
    if(from===hostUid&&data?.k==='apvp-exit'&&data.seed===seed){
-    exit();return;
+    exit(false);return;
    }
    if(host&&from===peerId(uid)&&data?.k==='apvp-exit-request'&&data.seed===seed){
     winner=uid;stage='result';sendState(true);return;
@@ -347,6 +353,15 @@ G.PKMSVVArenaPvp=(()=>{
    }
    return oldCombat.call(this,dt,pl,now);
   };
+  G.Social?.on?.(what=>{
+   // Host has returned this exact room to its open lobby. A guest that
+   // missed apvp-exit must not remain stuck in an inactive Arena match.
+   // Ignore initial/open lobbies, stale rooms, and the Host itself.
+   const room=G.Social?.room;
+   if(what==='room'&&active&&!host&&startedWhileClosed&&matchRoom&&
+      room?.id===matchRoom&&room.mode===matchType&&room.open===true)
+    exit(false);
+  });
   G.Net.onPeer?.((from,state)=>{
    if(active&&host&&from===peerId(uid)&&['closed','failed'].includes(state)){
     winner=uid;stage='result';render(); // Guest has left: show forfeit even without 2-member room.

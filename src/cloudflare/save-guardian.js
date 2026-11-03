@@ -16,12 +16,63 @@
    s.owned&&typeof s.owned==='object'&&s.stats&&typeof s.stats==='object'&&
    Number.isFinite(Number(s.coins));}catch(_){return false;}
  };
- const score=text=>{try{const s=JSON.parse(text);return {
-  owned:Object.keys(s.owned||{}).length,runs:Number(s.stats?.runs)||0,
-  best:Number(s.stats?.bestTime)||0};}catch(_){return {owned:0,runs:0,best:0}}};
+ // Only permanent achievements are monotonic. Quantities in bag, tms,
+ // Berry bag and Arena Points legitimately decrease when players spend them.
+ const record=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
+ const keys=v=>record(v)?Object.keys(v):[];
+ const earned=v=>v===true||v===1||Number(v)>0||
+   (record(v)&&v.unlocked===true);
+ const retained=(oldMap,newMap,valid=earned)=>keys(oldMap).every(k=>
+   !valid(oldMap[k])||valid(record(newMap)?newMap[k]:undefined));
+ const taught=s=>record(s?.ptm)?s.ptm:{};
+ const learnedRetained=(a,b)=>keys(taught(a)).every(dex=>{
+  const older=taught(a)[dex],newer=taught(b)[dex];
+  return !Array.isArray(older)||older.every(id=>Array.isArray(newer)&&newer.includes(id));
+ });
+ const score=text=>{
+  try{
+   const s=JSON.parse(text),berry=s.pkmsvvBerry||{},arena=s.arenas?.pkmChampion||{};
+   return {owned:keys(s.owned).length,shiny:keys(s.shiny).length,
+    runs:Number(s.stats?.runs)||0,best:Number(s.stats?.bestTime)||0,
+    mega:keys(s.megaStones).filter(k=>earned(s.megaStones[k])).length,
+    megaForms:keys(s.megaForms).filter(k=>earned(s.megaForms[k])).length,
+    berryUsed:keys(berry.used).filter(k=>earned(berry.used[k])).length,
+    berryWins:Number(berry.rescueWins)||0,
+    items:keys(s.itemsFound).length,learnedTms:keys(taught(s))
+     .reduce((n,k)=>n+(Array.isArray(taught(s)[k])?taught(s)[k].length:0),0),
+    championSeals:keys(arena.seals).filter(k=>earned(arena.seals[k])).length};
+  }catch(_){return null;}
+ };
  const regress=(oldText,next)=>{
   const a=score(oldText),b=score(next);
-  return b.owned<a.owned||b.runs<a.runs||b.best<a.best;
+  if(!a||!b)return true;
+  for(const key of ['owned','shiny','runs','best','mega','megaForms','berryUsed',
+   'berryWins','items','learnedTms','championSeals'])
+   if(b[key]<a[key])return true;
+  const older=JSON.parse(oldText),newer=JSON.parse(next);
+  // A swapped collection entry with the same count is still lost progress.
+  for(const path of ['owned','shiny','itemsFound','evoMoves','ach','legends'])
+   if(!keys(older[path]).every(k=>Object.hasOwn(newer[path]||{},k)))return true;
+  for(const path of ['megaStones','megaForms','megaStoryCleared'])
+   if(!retained(older[path],newer[path]))return true;
+  for(const path of ['seals','trophies'])
+   if(!retained(older.arenas?.pkmChampion?.[path],
+                newer.arenas?.pkmChampion?.[path]))return true;
+  if(!retained(older.pkmsvvBerry?.used,newer.pkmsvvBerry?.used))return true;
+  if(!retained(older.arenaGacha?.championPaid,newer.arenaGacha?.championPaid))return true;
+  if(!retained(older.arenaGacha?.trophyPaid,newer.arenaGacha?.trophyPaid))return true;
+  if((Number(newer.arenaGacha?.pulls)||0)<(Number(older.arenaGacha?.pulls)||0))return true;
+  if(older.pkmsvvBerryChapterDone===true&&newer.pkmsvvBerryChapterDone!==true)return true;
+  for(const k of keys(older))if(/^pkmsvvChapter\d+(?:Done|Seen)$/.test(k)&&
+     older[k]===true&&newer[k]!==true)return true;
+  if(!learnedRetained(older,newer))return true;
+  // Removing an entire inventory field is a schema/data-loss regression,
+  // unlike ordinary consumption that can reduce individual item counts.
+  for(const name of ['bag','tms'])
+   if(keys(older[name]).length&& !record(newer[name]))return true;
+  if(keys(older.pkmsvvBerry?.bag).length&&
+     !record(newer.pkmsvvBerry?.bag))return true;
+  return false;
  };
  const backupEnvelope=(save)=>JSON.stringify({source:'pkmsvv-local',createdAt:now(),profile:PROFILE,save});
  function startRecovery(){
@@ -69,6 +120,6 @@
  document.addEventListener('visibilitychange',()=>{if(document.hidden)snapshot();});
  window.addEventListener('pagehide',snapshot);
  setInterval(snapshot,15000);
- window.PKMSVVSaveGuardian={snapshot,good,keys:[SAVE,PRIMARY,PREVIOUS],
+ window.PKMSVVSaveGuardian={snapshot,good,score,regress,keys:[SAVE,PRIMARY,PREVIOUS],
   currentProfile:PROFILE,exportSnapshot:()=>backupEnvelope(safeRead(SAVE))};
 })();
