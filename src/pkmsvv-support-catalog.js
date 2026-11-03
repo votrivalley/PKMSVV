@@ -19,7 +19,9 @@ G.PKMSVVSupportCatalog=(()=>{
  const seen=dex=>G.PKMSVVEggs?.affinityFor?.(dex)>0;
  const shinySeen=dex=>!!G.DB?.save?.pkmsvvSupportShiny?.[dex]&&seen(dex);
  let selected=null,showShiny=false;
- function close(){const box=$('pkmsvv-support-catalog');if(box)box.hidden=true;}
+ const scroller=()=>$('pkmsvv-support-catalog')?.querySelector('.pkmsvv-support-modal');
+ function close(){const box=$('pkmsvv-support-catalog');if(box)box.hidden=true;
+  document.body?.classList?.remove('pkmsvv-support-open');}
  function ensure(){
   const back=$('pkmsvv-upgrade-back');
   if(back&&!$('pkmsvv-support-entry')){
@@ -80,7 +82,7 @@ G.PKMSVVSupportCatalog=(()=>{
     const b=document.createElement('button');b.type='button';
     b.className='btn small'+(showShiny===variant?' on':'');
     b.textContent=variant?'✦ Shiny':t('Thường','Normal');
-    b.addEventListener('click',()=>{showShiny=variant;renderDetails();renderGrid();});
+    b.addEventListener('click',()=>{showShiny=variant;renderDetails();renderGrid(true);});
     tabs.append(b);
    }
    area.append(tabs);
@@ -103,14 +105,28 @@ G.PKMSVVSupportCatalog=(()=>{
   }
   area.append(skill,description,bond);
  }
- function renderGrid(){
+ function choose(dex){
+  if(selected===dex)return;
+  selected=dex;showShiny=false;
+  const grid=$('pkmsvv-support-entries');
+  for(const cell of grid?.children||[]){
+   const active=Number(cell.dataset?.supportDex)===dex;
+   cell.classList.toggle('on',active);
+   cell.setAttribute('aria-pressed',String(active));
+  }
+  // Do not recreate the scrolled grid or refocus the first card on touch.
+  renderDetails();
+ }
+ function renderGrid(keep=false){
   const grid=$('pkmsvv-support-entries');if(!grid)return;
+  const panel=scroller(),before=panel?.scrollTop;
   grid.replaceChildren();
   for(const mon of G.PKMSVVEggs?.SPECIES||[]){
    const owned=seen(mon.dex);
-   const cell=document.createElement('button');cell.type='button';
+   const cell=document.createElement('button');cell.type='button';cell.dataset.supportDex=String(mon.dex);
    cell.className='pkmsvv-support-cell'+(owned?'':' locked')+(selected===mon.dex?' on':'');
    cell.setAttribute('aria-label',t('Pokémon hỗ trợ','Support Pokémon')+' #'+mon.dex);
+   cell.setAttribute('aria-pressed',String(selected===mon.dex));
    const badge=document.createElement('span');
    badge.className='pkmsvv-support-rarity '+(mon.dex===151?'super':mon.dex===132?'rare':'common');
    badge.textContent=t(...rarity(mon.dex));
@@ -120,13 +136,16 @@ G.PKMSVVSupportCatalog=(()=>{
    if(sprite)cell.append(sprite);
    const name=document.createElement('strong');name.textContent=owned?(G.DEX_BY?.[mon.dex]?.name||'Pokémon'):'???';
    cell.append(name,badge);
-   cell.addEventListener('click',()=>{selected=mon.dex;showShiny=false;renderGrid();renderDetails();});
+   cell.addEventListener('click',()=>choose(mon.dex));
    grid.append(cell);
   }
+  if(keep&&panel&&Number.isFinite(before))panel.scrollTop=before;
  }
  function open(){
   ensure();const wrap=$('pkmsvv-support-catalog');if(!wrap)return;
   const entry=$('pkmsvv-support-entry');if(entry)entry.textContent=t('✦ Pokémon hỗ trợ','✦ Support Pokémon');
+  const closer=wrap.querySelector('.pkmsvv-support-modal-head button');
+  if(closer)closer.textContent=t('Đóng','Close');
   $('pkmsvv-support-heading').textContent=t('✦ Pokémon hỗ trợ','✦ Support Pokémon');
   $('pkmsvv-support-description').textContent=t(
    'Khám phá Pokémon hỗ trợ bằng cách ấp trứng. Pokémon chưa khám phá sẽ ẩn màu; khi tìm được Shiny mới mở lựa chọn Thường / Shiny.',
@@ -134,6 +153,8 @@ G.PKMSVVSupportCatalog=(()=>{
   const list=G.PKMSVVEggs?.SPECIES||[];
   if(!list.some(x=>x.dex===selected))selected=list[0]?.dex||null;
   showShiny=false;renderGrid();renderDetails();wrap.hidden=false;
+  document.body?.classList?.add('pkmsvv-support-open');
+  const panel=scroller();if(panel)panel.scrollTop=0;
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ensure,{once:true});
  else ensure();

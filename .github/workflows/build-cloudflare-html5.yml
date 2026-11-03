@@ -30,6 +30,11 @@ on:
       - 'scripts/patch-ui-phase2-mega.cjs'
       - 'tests/mega-ui-phase2.test.cjs'
       - 'tests/mega-mobile-scroll-browser.cjs'
+      - 'tests/support-dex-mobile-browser.cjs'
+      - 'src/pkmsvv-support-scroll-fix.css'
+      - 'src/pkmsvv-dex-sort-menu.css'
+      - 'src/pkmsvv-brand-stable.css'
+      - 'scripts/patch-dex-support-mobile-ui.cjs'
       - 'config/android-signing-identity.json'
       - 'scripts/bundle-wifi-qr.cjs'
       - 'tests/wifi-pwa-offline.cjs'
@@ -141,6 +146,9 @@ jobs:
       - name: Verify real Web mobile Mega finger scrolling in Chrome (portrait and landscape)
         shell: bash
         run: PKMSVV_BROWSER="$(command -v google-chrome)" node tests/mega-mobile-scroll-browser.cjs
+      - name: Verify Support PC scroll, Pokédex Sort menu and VI/EN labels on mobile Chrome
+        shell: bash
+        run: PKMSVV_BROWSER="$(command -v google-chrome)" node tests/support-dex-mobile-browser.cjs
       - name: Verify Shiny Mega artwork and identity in Web package
         run: npm run test:mega:shiny
       - name: Verify separate Mega Arena Points and legendary pity on Web

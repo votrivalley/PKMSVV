@@ -1,0 +1,53 @@
+/* v1.5.85: Support PC/Android/Web — one scroll area, no clipped cards. */
+.pkmsvv-support-overlay.pkmsvv-support-overlay[hidden]{display:none!important}
+.pkmsvv-support-modal-head button{flex:0 0 auto;min-width:70px}
+#pkmsvv-support-entries .pkmsvv-support-cell{height:auto;min-height:138px;overflow:visible;touch-action:manipulation}
+#pkmsvv-support-entries .pkmsvv-support-cell strong{white-space:normal;overflow-wrap:anywhere;text-overflow:clip}
+@media (pointer:coarse), (max-height:560px){
+ .pkmsvv-support-overlay.pkmsvv-support-overlay:not([hidden]){
+  position:fixed;inset:0;display:flex;align-items:stretch;justify-content:center;
+  box-sizing:border-box;width:100%;height:100svh;max-height:100svh;
+  overflow:hidden;touch-action:pan-y;overscroll-behavior:contain;
+  padding:max(7px,env(safe-area-inset-top)) max(7px,env(safe-area-inset-right))
+   max(7px,env(safe-area-inset-bottom)) max(7px,env(safe-area-inset-left));
+ }
+ .pkmsvv-support-overlay .pkmsvv-support-modal{
+  flex:1 1 auto;align-self:stretch;box-sizing:border-box;
+  width:min(1100px,100%);height:100%;max-height:none;min-height:0;
+  overflow-x:hidden;overflow-y:auto;scroll-behavior:auto;overflow-anchor:none;
+  -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;touch-action:pan-y;
+  padding:12px 14px 18px;
+ }
+ .pkmsvv-support-modal-head{
+  position:sticky;top:-12px;z-index:4;background:#e9f5ef;color:#174253;
+  border-radius:8px;padding:6px 8px 8px;margin:-5px -6px 8px;
+ }
+ .pkmsvv-support-modal-head h2{font-size:clamp(20px,3vw,29px);color:#174253!important}
+ .pkmsvv-support-overlay #pkmsvv-support-entries{
+  max-height:none!important;min-height:0;overflow:visible!important;
+  touch-action:pan-y;overscroll-behavior:contain;
+ }
+ .pkmsvv-support-overlay .pkmsvv-support-layout{
+  min-height:0;align-items:start;
+  grid-template-columns:minmax(0,1.32fr) minmax(0,1fr);gap:12px;
+ }
+ .pkmsvv-support-overlay #pkmsvv-support-detail{
+  box-sizing:border-box;min-height:0;
+ }
+ .pkmsvv-support-overlay .pkmsvv-support-cell{min-height:134px}
+ body.pkmsvv-support-open{overscroll-behavior:none}
+}
+@media (pointer:coarse) and (orientation:portrait), (max-width:680px){
+ .pkmsvv-support-overlay .pkmsvv-support-layout{
+  display:flex;flex-direction:column;gap:10px;
+ }
+ .pkmsvv-support-overlay #pkmsvv-support-detail{order:-1;width:100%;min-height:0}
+ .pkmsvv-support-overlay #pkmsvv-support-entries{
+  width:100%;grid-template-columns:repeat(3,minmax(0,1fr));
+ }
+}
+@media (max-width:420px){
+ .pkmsvv-support-overlay #pkmsvv-support-entries{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+ }
+}
