@@ -113,7 +113,7 @@ G.I18n.add({
  'Cứu Berry':'Rescue Berry',
  'Giải cứu Berry':'Berry Rescue',
  'Pokémon hỗ trợ · Mega · Berry':'Support Pokémon · Mega · Berries',
- '💻 PC · POKÉMON CHUYỂN SINH':'💻 PC · POKÉMON REINCARNATION',
+ '💻 PC · POKÉMON CHUYỂN SINH':'💻 PC · POKÉMON CHUYỂN SINH',
  'Cẩm nang':'Guide',
  'Kiến thức Pokémon':'Pokémon knowledge',
  'Thức tỉnh kỹ năng':'Skill Awakening',
