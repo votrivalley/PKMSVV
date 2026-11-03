@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-offline",
-  "version": "1.5.92",
+  "version": "1.5.93",
   "private": true,
-  "description": "Pokémon Chuyển Sinh v1.5.92: readable generation filters, clear sort labels, no retro text overlap",
+  "description": "Pokémon Chuyển Sinh v1.5.93: fix old-save VI Berry picker and active HUD freeze",
   "author": "Votri Valley (Vietnamese translation/gameplay mods); original PokéSurvivor by JPTER78",
   "main": "desktop/main.cjs",
   "scripts": {
