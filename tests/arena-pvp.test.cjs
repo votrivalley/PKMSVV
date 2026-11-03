@@ -4,7 +4,7 @@ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
 const SOURCE=read('src/lan/arena-pvp.js');
 function instance(myUid,opts={}){
- const elements=new Map(),listeners=[],peers=[];
+ const elements=new Map(),listeners=[],peers=[],roomListeners=[];
  function node(tag='div'){
   const n={tag,id:'',textContent:'',hidden:false,style:{},children:[],className:'',
    setAttribute(){},remove(){elements.delete(this.id);},
@@ -27,7 +27,9 @@ function instance(myUid,opts={}){
  const mate=id=>id===myUid?null:{pl:other};
  let seed=1234,network=[],origCast=0,spawns=0,damage=0,gameQuit=0;
  const G={
-  I18n:{lang:'vi'},Social:{uid:myUid,room:{id:'test',host:'host',mode:opts.mode||'arena',members}},
+  I18n:{lang:'vi'},Social:{uid:myUid,room:{id:'test',host:'host',mode:opts.mode||'arena',open:false,members},
+   on(cb){roomListeners.push(cb)},setPlaying(p){this.playing=!!p},finishMatch(){this.room.open=true;for(const cb of roomListeners)cb('room');return Promise.resolve(this.room)}},
+
   Game:{player:me,state:'playing',quit(){gameQuit++;}},
   Flow:{goMenu(){}},Moves:{BY_ID:{ember:{id:'ember',kind:'projectile',type:'fire',dmg:25,cd:.5,speed:300,life:1.5},
     tackle:{id:'tackle',kind:'melee',type:'normal',dmg:18,cd:1,radius:75}},
@@ -51,12 +53,13 @@ function instance(myUid,opts={}){
  function start(){G.Coop.begin(cfg,me,{});}
  function emit(from,msg){for(const cb of listeners)cb(from,msg);}
  function disconnect(from){for(const cb of peers)cb(from,'closed');}
+ function notifyRoom(what='room'){for(const cb of roomListeners)cb(what);}
  function frame(dt){
   // The original engine clamps each animation tick; advance with 30 FPS frames.
   for(let remain=dt;remain>0;remain-=Math.min(remain,1/30))
    G.EnemyMgr.update(Math.min(remain,1/30),[]);
  }
- return {G,api,me,other,document,elements,network,emit,disconnect,frame,start,cfg,advance(t){now+=t},get damage(){return damage},
+ return {G,api,me,other,document,elements,network,emit,disconnect,notifyRoom,frame,start,cfg,advance(t){now+=t},get damage(){return damage},
   get spawns(){return spawns},get gameQuit(){return gameQuit}};
 }
 test('Real Arena rooms use human identities and reject AI/no-second-player modes',()=>{
@@ -201,4 +204,55 @@ test('Champion PvP is a real human-only first-to-two series, synchronized across
  assert.equal(guest.api.winner,'guest');assert.equal(guest.api.scores.guest,2);
  const fake=instance('host',{mode:'champion',ai:true});fake.start();assert.equal(fake.api.active,false);
  assert.equal(host.gameQuit,0,'Champion PvP must not grant Survival or Crown Journey progression');
+});
+
+test('Periodic Host snapshots recover a lost result packet; forged/stale matches are ignored',()=>{
+ const host=instance('host'),guest=instance('guest');host.start();guest.start();
+ host.frame(3.05);
+ for(let n=0;n<24&&host.api.stage!=='result';n++){
+  host.advance(700);
+  host.emit('guest',{k:'f',ev:[['c','ember',1,Math.PI]]});
+ }
+ assert.equal(host.api.stage,'result');
+ // Simulate the short disconnect dropping every packet through the final hit.
+ host.network.length=0;
+ assert.equal(guest.api.stage,'countdown');
+ host.frame(.3);
+ const terminal=host.network.find(p=>p.k==='apvp'&&p.stage==='result');
+ assert.ok(terminal,'Host must keep publishing the authoritative terminal state');
+ guest.emit('attacker',terminal);
+ assert.equal(guest.api.stage,'countdown','unauthorized peer cannot finish match');
+ guest.emit('host',{...terminal,seed:terminal.seed+99});
+ assert.equal(guest.api.stage,'countdown','a different match seed cannot finish match');
+ guest.emit('host',terminal);
+ assert.equal(guest.api.stage,'result','guest recovers without the one-off event');
+ assert.equal(guest.api.winner,host.api.winner);
+ guest.emit('host',{...terminal,stage:'fight',seq:terminal.seq-1});
+ assert.equal(guest.api.stage,'result','older packets cannot reopen a finished match');
+});
+test('Guest leaves stale Arena when room reopens despite lost Host exit notice',()=>{
+ const host=instance('host'),guest=instance('guest');
+ host.start();guest.start();host.frame(3.01);
+ host.api.exit();
+ const lost=host.network.find(p=>p.k==='apvp-exit');
+ assert.ok(lost);
+ assert.equal(guest.api.active,true,'exit packet deliberately dropped');
+ const room=guest.G.Social.room;
+ room.open=true;guest.notifyRoom();
+ assert.equal(guest.api.active,false,'lobby state reconciles dropped exit notice');
+ assert.equal(guest.G.World.arena,null);
+ assert.equal(guest.gameQuit,0,'cleanup is never counted as survival progress');
+ assert.equal(guest.network.some(p=>p.k==='apvp-exit-request'),false,
+  'room reconciliation does not bounce a stale exit request to Host');
+});
+test('Unrelated or stale room notifications cannot terminate an active Arena match',()=>{
+ const guest=instance('guest');guest.start();
+ guest.G.Social.room={...guest.G.Social.room,id:'old-room',open:true};guest.notifyRoom();
+ assert.equal(guest.api.active,true);
+ guest.G.Social.room={...guest.G.Social.room,id:'test',mode:'coop',open:true};guest.notifyRoom();
+ assert.equal(guest.api.active,true);
+ guest.G.Social.room={...guest.G.Social.room,id:'test',mode:'arena',open:false};guest.notifyRoom();
+ assert.equal(guest.api.active,true);
+ const stale=instance('guest');stale.G.Social.room.open=true;stale.start();stale.notifyRoom();
+ assert.equal(stale.api.active,true,'initial lobby open is not a completed battle');
 });
