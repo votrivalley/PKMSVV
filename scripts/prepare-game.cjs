@@ -688,7 +688,7 @@ execFileSync(process.execPath, [path.join(game, 'tools', 'build.js'), '--sin-seo
 const indexPath = path.join(game, 'index.html');
 let html = fs.readFileSync(indexPath, 'utf8');
 if (!html.includes('</head>')) throw new Error('index.html không có thẻ head');
-html = html.replace(/<title>[^<]*<\/title>/, '<title>Pokemon Chuyển sinh — Votri Valley</title>');
+html = html.replace(/<title>[^<]*<\/title>/, '<title>Pokémon Chuyển Sinh — Votri Valley</title>');
 html = html.replace('</head>', '<style>\n' +
   'body,button,input,select{font-family:"Segoe UI",Tahoma,Arial,sans-serif!important;}\n' +
   '.menu-left .logo .t1 .splash{max-width:13em;overflow-wrap:normal;white-space:normal;}\n' +
@@ -716,8 +716,8 @@ fs.writeFileSync(indexPath, html, 'utf8');
 const manifestPath=path.join(game,'manifest.webmanifest');
 if(fs.existsSync(manifestPath)){
   const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
-  manifest.name='Pokemon Chuyển sinh — Votri Valley';
-  manifest.short_name='Chuyển sinh';
+  manifest.name='Pokémon Chuyển Sinh — Votri Valley';
+  manifest.short_name='Chuyển Sinh';
   manifest.lang='vi';
   fs.writeFileSync(manifestPath,JSON.stringify(manifest,null,2)+'\n','utf8');
 }
