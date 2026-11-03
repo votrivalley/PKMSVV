@@ -1,4 +1,6 @@
 /* Pokémon Chuyển Sinh — persistent Berry inventory, pre-battle item choice, effects and Rescue Berry mini-game.
+ * v1.5.93 (Issue #20): protect manually-localized picker and active HUD from
+ * the generic DOM translator. Otherwise VI Berry stock can freeze Solo runs.
  * All inventory/quest progress lives inside G.DB.save; no server, no localStorage sidecar.
  */
 G.PKMSVVBerry=(()=>{
