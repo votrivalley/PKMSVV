@@ -287,6 +287,15 @@ test('Chapter 5/6 and regional seals survive offline save merges',()=>{
  assert.match(patch,/Math\.min\(Number\(a\?\.rank\)/);
 });
 
+test('Arena locked menu announces Chapter 6 instead of Chapter 4 or false 0/2 counter',()=>{
+ const runtime=read('src/pkmsvv-champion-arena.js');
+ const menu=runtime.slice(runtime.indexOf(' function menu(){'),runtime.indexOf(' function arenaHub(){'));
+ assert.match(menu,/Hoàn thành Chương 6 để mở Arena/);
+ assert.doesNotMatch(menu,/Sống Sót .*Sống Còn .*count|0\\/2/);
+ assert.doesNotMatch(runtime,/Hoàn thành Chương 4 để mở cốt truyện Arena/);
+ assert.match(runtime,/Xem cốt truyện Chương 7 để mở Arena/);
+ assert.match(runtime,/Hoàn thành Chương 6 để mở Arena: sử dụng 5 loại Berry/);
+});
 test('Arena requires two Chapter 5 modes, not optional Egg Rush',()=>{
  const h=setup(),{lib,save}=h;
  delete save.pkmsvvMultiplayerDone.eggrush;
