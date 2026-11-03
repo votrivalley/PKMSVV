@@ -13,16 +13,17 @@ fs.appendFileSync(js,`
  function polish(){
   const menu=document.getElementById('scr-menu');
   if(!menu)return;
-  // The game identity and subtitle switch only when English was selected.
-  // Keep the entire Vietnamese original intact (including every accent).
+  // The official game title NEVER changes with language, only its subtitle.
+  // Branding uses a nested span, not a text node, in the current main menu.
   const english=G.I18n?.lang==='en';
   const brand=menu.querySelector('.menu-left .logo .t1');
   if(brand){
-   const textNode=[...brand.childNodes].find(node=>node.nodeType===3);
-   if(textNode)textNode.nodeValue=english?'Pokémon Reincarnation':'Pokémon Chuyển Sinh';
+   const title=brand.querySelector('span:not(.splash)');
+   if(title){if(title.textContent!=='Pokémon Chuyển Sinh')title.textContent='Pokémon Chuyển Sinh';}
+   else if(brand.textContent!=='Pokémon Chuyển Sinh')brand.textContent='Pokémon Chuyển Sinh';
   }
   const tagline=menu.querySelector('.menu-left .logo .pkmsvv-awakening-tagline');
-  if(tagline)tagline.textContent=english?'I woke up as a Pokémon':'Tỉnh giấc tôi thấy mình hóa Pokemon';
+  if(tagline)tagline.textContent=english?'I woke up as a Pokémon':'Tỉnh giấc tôi thấy mình hóa Pokémon';
 
   // Credit is displayed once as a tiny non-interactive line in upper left.
   const credit=menu.querySelector('.menu-left .pkmsvv-credit');
@@ -139,7 +140,7 @@ fs.appendFileSync(js,`
 const dev=path.join(game,'dev.html');
 let markup=fs.readFileSync(dev,'utf8');
 if(!markup.includes('Pokémon Sống Sót'))throw Error('Expected old display name in prepared HTML');
-markup=markup.replaceAll('Pokémon Sống Sót','Pokemon Chuyển sinh');
+markup=markup.replaceAll('Pokémon Sống Sót','Pokémon Chuyển Sinh');
 /* New story tagline below the logo. Change ONLY the game home menu,
    not login, account identity or any saved data. */
 const menuStart=markup.indexOf('<section id="scr-menu"');
@@ -148,7 +149,7 @@ if(menuStart<0||menuEnd<menuStart)throw Error('Missing game menu when setting aw
 let home=markup.slice(menuStart,menuEnd);
 const oldTagline='<div class="t2">Mundo Misterioso</div>';
 if(home.split(oldTagline).length!==2)throw Error('Expected one original menu subtitle');
-home=home.replace(oldTagline,'<div class="t2 pkmsvv-awakening-tagline" translate="no">Tỉnh giấc tôi thấy mình hóa Pokemon</div>');
+home=home.replace(oldTagline,'<div class="t2 pkmsvv-awakening-tagline" translate="no">Tỉnh giấc tôi thấy mình hóa Pokémon</div>');
 markup=markup.slice(0,menuStart)+home+markup.slice(menuEnd);
 
 // The HOME Pokémon portrait (not the Pokédex) must be a genuine square canvas.
@@ -161,8 +162,8 @@ fs.writeFileSync(dev,markup,'utf8');
 const settings=path.join(game,'js','ui','settings-ui.js');
 let settingsJs=fs.readFileSync(settings,'utf8');
 if(!settingsJs.includes('about-logo">PokéSurvivor</div>'))throw Error('Original About title changed');
-settingsJs=settingsJs.replace('about-logo">PokéSurvivor</div>','about-logo" translate="no">Pokemon Chuyển sinh</div>');
-settingsJs=settingsJs.replace("const VERSION = '1.2 · 2026-10-09';","const VERSION = '1.5.84 · 2026-11-03';");
+settingsJs=settingsJs.replace('about-logo">PokéSurvivor</div>','about-logo" translate="no">Pokémon Chuyển Sinh</div>');
+settingsJs=settingsJs.replace("const VERSION = '1.2 · 2026-10-09';","const VERSION = '1.5.85 · 2026-11-03';");
 fs.writeFileSync(settings,settingsJs,'utf8');
 const newsFile=path.join(game,'js','ui','news-ui.js');
 let newsJs=fs.readFileSync(newsFile,'utf8');
