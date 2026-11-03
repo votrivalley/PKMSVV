@@ -79,7 +79,10 @@ async function run(){
     await host.locator('.pkmsvv-wifi-panel > textarea').fill(answer);
     await host.locator('.pkmsvv-wifi-panel button').filter({hasText:'3. Nhận phản hồi'}).click();
     await guest.locator('.pkmsvv-wifi-panel button').filter({hasText:'3. Vào phòng'}).click();
-    await host.locator('.pkmsvv-wifi-panel button').filter({hasText:'Đóng'}).click();
+    // Pairing can auto-dismiss the Host dialog; when still shown, close it
+    // using its structural control rather than a locale-dependent label.
+    const hostClose=host.locator('.pkmsvv-wifi-panel > button').first();
+    if(await hostClose.isVisible())await hostClose.click();
     await Promise.all([host.waitForFunction(()=>G.Social.room?.members.length===2),guest.waitForFunction(()=>G.UI.isOpen('scr-lobby'))]);
     const extraPages=[];
     if(mode==='eggrush'){
