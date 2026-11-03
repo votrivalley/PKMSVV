@@ -54,12 +54,13 @@ test('Extra translations register in English ONLY; never overwrite Vietnamese st
  assert.equal(d['Chọn chế độ'],'Choose mode');
  assert.equal(d['Nhẹ Nhàng'],'Gentle');
  assert.equal(d['Hành Trình Vương Miện'],'Crown Journey');
- assert.equal(d['💻 PC · POKÉMON CHUYỂN SINH'],'💻 PC · POKÉMON REINCARNATION');
+ assert.equal(d['💻 PC · POKÉMON CHUYỂN SINH'],'💻 PC · POKÉMON CHUYỂN SINH');
  const render=(key,lang)=>lang==='en'?(d[key]||key):key;
- for(const k of ['Giải Cứu Berry','Sống Sót','Đang tải trò chơi…','Nhẹ Nhàng','Pokémon Chuyển Sinh']){
+ for(const k of ['Giải Cứu Berry','Sống Sót','Đang tải trò chơi…','Nhẹ Nhàng']){
   assert.equal(render(k,'vi'),k,'VI accent or copy changed: '+k);
   assert.notEqual(render(k,'en'),k,'missing English key '+k);
  }
+ assert.equal(render('Pokémon Chuyển Sinh','en'),'Pokémon Chuyển Sinh','English keeps original title');
 });
 test('Co-op, Arena and menu choose paired text at render time; no forced Vietnamese rewrite',()=>{
  const coop=read('src/shared/coop-unified.js'),
