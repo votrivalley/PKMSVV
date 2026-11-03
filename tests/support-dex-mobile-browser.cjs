@@ -27,8 +27,8 @@ const scroll=page=>page.evaluate(()=>{
   overflow:p&&getComputedStyle(p).overflowY,touch:p&&getComputedStyle(p).touchAction,
   nested:grid&&getComputedStyle(grid).overflowY,hidden:document.getElementById('pkmsvv-support-catalog')?.hidden};
 });
-async function boot(browser,server,language,viewport){
- const context=await browser.newContext({viewport,isMobile:true,hasTouch:true,deviceScaleFactor:2});
+async function boot(browser,server,language,viewport,mobile=true){
+ const context=await browser.newContext({viewport,isMobile:mobile,hasTouch:mobile,deviceScaleFactor:mobile?2:1});
  await context.addInitScript(lang=>localStorage.setItem('ps.lang',lang),language);
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  page.setDefaultTimeout(26000);
@@ -115,6 +115,39 @@ async function main(){
     assert.doesNotMatch(await page.locator('#pkmsvv-unified-coop').innerText(),/Choose mode|Survival Royale/);
     assert.deepEqual(errors,[],'No uncaught browser errors: '+JSON.stringify({viewport,errors}));
     console.log('PASS VI mobile '+viewport.width+'x'+viewport.height+' Support, Dex and Co-op');
+   }finally{await context.close();}
+  }
+  // The PC desktop modal used to have a second 58vh scrollbar on the card
+  // grid, cutting cards and trapping the mouse wheel. Test an ordinary mouse
+  // viewport, not only emulated touch devices.
+  {
+   const viewport={width:1280,height:620};
+   const {page,context,errors}=await boot(browser,server,'vi',viewport,false);
+   try{
+    await page.evaluate(()=>G.PKMSVVSupportCatalog.open());
+    const start=await scroll(page);
+    assert.equal(start.overflow,'auto','PC modal must be the only scroll container');
+    assert.equal(start.nested,'visible','PC grid must not scroll or clip independently');
+    assert.ok(start.max>30,'PC modal should scroll in 1280x620: '+JSON.stringify(start));
+    const cards=page.locator('#pkmsvv-support-entries .pkmsvv-support-cell');
+    assert.ok(await cards.count()>=6,'PC support cards must be populated');
+    const grid=await page.locator('#pkmsvv-support-entries').boundingBox();
+    await page.mouse.move(grid.x+Math.min(80,grid.width*.3),grid.y+Math.min(60,grid.height*.2));
+    await page.mouse.wheel(0,500);await sleep(230);
+    const wheel=await scroll(page);
+    assert.ok(wheel.top>30,'PC wheel must move the outer modal: '+JSON.stringify({start,wheel}));
+    await page.evaluate(()=>document.querySelector('#pkmsvv-support-entries .pkmsvv-support-cell:last-child')?.click());
+    const chosen=await scroll(page);
+    assert.ok(chosen.top>=wheel.top-3,'PC choosing a Support Pokémon must preserve wheel position');
+    await page.evaluate(()=>{const p=document.querySelector('.pkmsvv-support-modal');p.scrollTop=p.scrollHeight;});
+    const fullyVisible=await page.evaluate(()=>{
+     const p=document.querySelector('.pkmsvv-support-modal'),card=document.querySelector('#pkmsvv-support-entries .pkmsvv-support-cell:last-child');
+     const a=p.getBoundingClientRect(),b=card.getBoundingClientRect();
+     return b.bottom<=a.bottom+3&&b.top>=a.top-3;
+    });
+    assert.equal(fullyVisible,true,'Last PC Support card must not be cut off');
+    assert.deepEqual(errors,[],'PC browser errors: '+JSON.stringify(errors));
+    console.log('PASS PC 1280x620 one-scroll Support modal, mouse wheel, card selection');
    }finally{await context.close();}
   }
   const {page,context,errors}=await boot(browser,server,'en',{width:844,height:390});
