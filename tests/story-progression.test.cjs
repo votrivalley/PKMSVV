@@ -23,6 +23,22 @@ test('Chapter 5 requires Sống Sót + Sống Còn; skipped, quit and unranked r
  assert.equal(api.recordMultiplayerCompletion('unknown',{time:900,result:result()}),false);
  assert.equal(save.pkmsvvMultiplayerDone,undefined);
 });
+test('Valid Co-op and Royale results count even before Chapter 4, but cannot bypass Chapter 5/6',()=>{
+ const {api,save}=setup({pkmsvvChapter3Seen:false,pkmsvvChapter5Seen:false});
+ assert.equal(api.recordMultiplayerCompletion('coop',{time:5}),false,'instant exits do not count');
+ assert.equal(api.recordMultiplayerCompletion('coop',{time:75,completed:true}),true);
+ assert.equal(api.recordMultiplayerCompletion('royale',{time:180}),false,'an unranked room never counts');
+ assert.equal(api.recordMultiplayerCompletion('royale',{time:180,result:result()}),true);
+ assert.deepEqual(Array.from(api.multiplayerProgress().done),['coop','royale']);
+ assert.equal(save.pkmsvvMultiplayerDone.coop,true);
+ assert.equal(save.pkmsvvMultiplayerDone.royale,true);
+ assert.equal(api.arenaUnlocked(),false,'two real modes cannot skip story chapters');
+ assert.equal(api.chapter6(()=>{}),false,'Chapter 5 and Berry stay required');
+ save.pkmsvvChapter3Seen=true;save.pkmsvvChapter5Seen=true;save.pkmsvvBerryChapterDone=true;
+ assert.equal(api.arenaUnlocked(),false,'must view Chapter 7 Arena story');
+ save.pkmsvvChapter6Seen=true;
+ assert.equal(api.arenaUnlocked(),true,'earned modes survive chapter progress');
+});
 test('Only two genuine modes open Berry Chapter 6; using five distinct Berry types opens Arena Chapter 7',()=>{
  const {api,save,G}=setup();
  assert.equal(api.recordMultiplayerCompletion('eggrush',{time:720,result:result()}),true,'Egg Rush is optional');
