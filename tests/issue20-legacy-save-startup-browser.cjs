@@ -33,7 +33,7 @@ async function main(){
       pkmsvvChapter1Seen:true,pkmsvvChapter2Seen:true,pkmsvvChapter3Seen:true});
      s.owned=s.owned||{};s.owned[722]={at:now,from:'starter'};
      if(mature){
-      const available=G.DEX.filter(x=>!!G.SPRITE_META[x.dex]);
+      const available=(Array.isArray(G.DEX)?G.DEX:Object.values(G.DEX_BY||{})).filter(x=>x&&Number.isFinite(Number(x.dex)));
       const pick=available.slice(0,540);
       s.owned=Object.fromEntries(pick.map(x=>[x.dex,{at:now,from:'gacha'}]));
       s.owned[722]={at:now,from:'starter'};s.owned[150]={at:now,from:'gacha'};
@@ -54,14 +54,19 @@ async function main(){
        crit:3,regen:4,coins:3,ban:3};
       s.pban={722:['harden','substitute','rapid-spin']};
      }
-     G.DB.commit(true);
-     G.MenuUI.open();
+     // A saved local profile is necessary: guest/in-memory changes do not
+     // exercise the legacy load/migrate path after a page refresh.
+     const k='syntheticqa';
+     localStorage.setItem('ps.accounts',JSON.stringify({[k]:{
+      name:'SyntheticQA',salt:'qa',hash:'not-a-real-password',created:now}}));
+     localStorage.setItem('ps.session',JSON.stringify(k));
+     localStorage.setItem('ps.save.'+k,JSON.stringify(s));
      return {owned:Object.keys(s.owned).length,berries:Object.keys(s.pkmsvvBerry?.bag||{}).length};
     },mature);
     if(mature)assert.ok(seeded.owned>=540);
     // Full reload exercises save migration/restore boot, not just in-memory edits.
     await page.reload({waitUntil:'domcontentloaded'});
-    await page.waitForFunction(()=>!!window.G?.DB?.save&&!!G.Game?.startRun);
+    await page.waitForFunction(()=>!!window.G?.DB?.save&&!!G.Game?.startRun&&G.DB.save.name==='Synthetic QA');
     const persisted=await page.evaluate(()=>({owned:Object.keys(G.DB.save.owned||{}).length,
       coop:G.DB.save.pkmsvvMultiplayerDone?.coop,
       royale:G.DB.save.pkmsvvMultiplayerDone?.royale}));
@@ -69,7 +74,7 @@ async function main(){
       assert.equal(persisted.coop,true);assert.equal(persisted.royale,true);}
     await page.evaluate(()=>G.MenuUI.open());
     // Use actual wrapped launch path, including 4-second pre-run Berry choice.
-    await page.evaluate(()=>G.Game.startRun(null));
+    await page.evaluate(()=>{window.__issue20StartedAt=performance.now();G.Game.startRun(null);});
     await page.waitForFunction(()=>G.Game?.state==='playing'&&!!G.Game?.player,
      null,{timeout:14000});
     const first=await page.evaluate(()=>({
@@ -81,6 +86,9 @@ async function main(){
     assert.equal(first.choosing,false);
     assert.ok(Number.isFinite(first.playerHP)&&first.playerHP>0);
     await page.waitForTimeout(500);
+    const checkpoint=await page.evaluate(()=>({elapsed:Math.round(performance.now()-window.__issue20StartedAt),
+      state:G.Game.state,active:document.visibilityState}));
+    assert.equal(checkpoint.state,'playing');
     await page.evaluate(()=>G.MenuUI.open());
     assert.deepEqual(errors,[],'uncaught page errors: '+JSON.stringify({platform,mature,messages}));
     console.log('PASS '+platform+' '+(mature?'synthetic mature save':'fresh control')+
