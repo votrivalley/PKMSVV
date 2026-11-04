@@ -1,6 +1,6 @@
 # PKMSVV — Tạm lưu brainstorm Pokédex / PokéBox / cá thể / Rank
 Ngày ghi: 2026-11-03 (Asia/Ho_Chi_Minh)
-Trạng thái: **ĐANG BRAINSTORM — ĐÃ CHỐT NGUYÊN TẮC A+B CHO NGUYÊN LIỆU RANK; CHƯA TRIỂN KHAI**
+Trạng thái: **ĐANG BRAINSTORM — CHỐT HƯỚNG A+C CHO NGUYÊN LIỆU RANK (ĐÍNH CHÍNH TỪ A+B); CHƯA TRIỂN KHAI**
 Cập nhật quyết định: 2026-11-04
 Nguồn tham khảo ý tưởng giao diện: ảnh người dùng gửi từ PokéLit (https://pokelit.0d4y.cc/). KHÔNG sao chép asset/mã nguồn PokéLit khi chưa xác minh quyền sử dụng.
 
@@ -17,8 +17,13 @@ Nguồn tham khảo ý tưởng giao diện: ảnh người dùng gửi từ Pok
 
 ## 2. Hệ Rank bằng bản sao (cơ chế người dùng đề xuất)
 
-Cá thể mới mặc định Rank 0. **Đã duyệt hướng A + B**: có thể tiêu thụ bản sao **đúng cùng loài (A)** hoặc **cùng chuỗi tiến hóa (B)**. Ví dụ, Charizard có thể dùng Charizard, Charmeleon hoặc Charmander làm nguyên liệu. Cả hai đều là phương án hợp lệ, không phải hai chế độ Rank riêng. **Chưa chốt** tỷ lệ quy đổi nếu nguyên liệu khác giai đoạn tiến hóa (mặc định thiết kế đơn giản 1 cá thể hợp lệ = 1 nguyên liệu, chỉ áp dụng sau khi duyệt chi tiết).
-| Thăng Rank | Bản sao cần tiêu thụ | Tổng bản sao tiêu thụ |
+Cá thể mới mặc định Rank 0. **Người dùng đã đính chính lựa chọn: A + C, KHÔNG PHẢI A + B.** Hai cách nâng Rank cùng tồn tại:
+
+- **A — Bản sao đúng cùng loài (cùng Pokédex dex):** dùng trực tiếp Pokémon trùng làm nguyên liệu nâng Rank cho cá thể chính. Ví dụ Charizard Rank 3 chỉ dùng các Charizard khác, không dùng Charmander hoặc Charmeleon.
+- **C — Chuyển Pokémon trùng thành nguyên liệu Rank theo loài:** người chơi có thể chủ động chuyển bản sao Charizard thành điểm/mảnh Rank **Charizard** để trữ gọn kho rồi dùng nâng Charizard sau. Không chuyển Pokémon khác loài hoặc Pokémon trong cùng chuỗi tiến hóa thành nguyên liệu Charizard.
+- **B — Cùng chuỗi tiến hóa:** KHÔNG được chọn; đề xuất A+B ở commit trước đã bị hủy. Giữ nguyên quy tắc đúng cùng loài cho cả nguyên liệu trực tiếp và nguyên liệu đã quy đổi.
+
+| Thăng Rank | Bản sao đúng loài **hoặc** đơn vị nguyên liệu loài cần | Tổng đã tiêu thụ |
 |---|---:|---:|
 | 0 → 1 | 1 | 1 |
 | 1 → 2 | 2 | 3 |
@@ -26,17 +31,17 @@ Cá thể mới mặc định Rank 0. **Đã duyệt hướng A + B**: có thể
 | 3 → 4 | 4 | 10 |
 | 4 → 5 | 5 | 15 |
 
-Để đạt Rank 5 cần **16 cá thể thu được** tổng cộng (1 cá thể chính + 15 nguyên liệu), nếu tính mọi bản sao hợp lệ 1:1 và không có nguồn thay thế. Đây là điểm cần điều tiết cho Legendary.
+**Minh họa đề xuất, chưa chốt tỷ lệ quy đổi:** 1 Charizard dư → 1 mảnh Rank Charizard. Để nâng Charizard Rank 3 → 4 có thể dùng 2 Charizard dư + 2 mảnh Rank Charizard. Vẫn tương đương 15 bản sao + 1 cá thể chính cho Rank 5 nếu tỷ lệ 1:1 được duyệt.
 
-**Các nguyên tắc kèm theo A + B**:
-- Pokémon chính giữ nguyên ID cá thể, Nature, Ability, Shiny, nâng cấp và Rank sau tiến hóa. Không tạo Pokémon mới chỉ vì tiến hóa.
-- Bảng nguyên liệu hiển thị cả bản sao đúng loài và bản sao cùng chuỗi tiến hóa; đề xuất ưu tiên hiển thị cùng loài trước, nhưng **người chơi tự chọn** bản nào bị tiêu thụ.
-- Bản nguyên liệu thuộc các nhánh tiến hóa rẽ (ví dụ Eevee → Vaporeon/Jolteon) cần luật riêng; **chưa được duyệt** việc lấy Pokémon ở nhánh cuối này để nâng Pokémon ở nhánh cuối khác.
-- Mega không tạo cá thể và không phải nguyên liệu Rank độc lập.
-
-- Chỉ tiêu thụ bản sao sau khi người chơi chọn, xem trước và xác nhận; không tự động lấy cá thể đang chiến đấu, khóa, yêu thích, Shiny, Legendary, đã nâng Rank hoặc có nâng cấp, trừ khi có cơ chế xác nhận đặc biệt *được duyệt sau*.
-- Không được ảnh hưởng tỉ lệ Gacha đang vận hành, banner/pity, vé và sở hữu Shiny cá nhân.
-- **Chưa chốt** mức tăng chỉ số mỗi Rank, chi phí tiền/vật liệu, mức Rank SS và xử lý Rank PvP.
+**Nguyên tắc an toàn của A + C:**
+- Chuyển thành mảnh/điểm chỉ khi người chơi chủ động chọn và xác nhận; không mặc định tự chuyển khi Gacha hoặc lúc đầy Box.
+- Không tự dùng Pokémon đang chọn, được khóa, đánh dấu yêu thích, Shiny, Legendary, đã tăng Rank hoặc đã đầu tư nâng cấp. Nếu muốn đổi luật trường hợp đặc biệt thì cần duyệt riêng.
+- Chuyển thành nguyên liệu loài là một giao dịch một chiều nếu không có cơ chế hoàn tác được chốt; cần hiển thị trước số cá thể mất, số mảnh nhận, số mảnh còn và Rank sẽ tăng.
+- Pokédex vẫn ghi nhận loài đã từng sở hữu, nhưng PokéBox không còn chứa cá thể đã chuyển; Nature/Ability của cá thể ấy cũng không chuyển theo mảnh.
+- Pokémon chính giữ nguyên ID, Nature, Ability, Shiny, nâng cấp và Rank khi tiến hóa; **sau tiến hóa, nguyên liệu để nâng tiếp phải đúng loài hiện tại**. Nếu người chơi còn mảnh của dạng trước tiến hóa thì không tự quy đổi liên loài; cần cảnh báo trước khi tiến hóa.
+- Mega chỉ là dạng biến hình, không tạo loài nguyên liệu Rank mới.
+- Không đổi tỷ lệ Gacha, pity, vé hay quyền sở hữu Shiny chỉ vì cơ chế này.
+- Chi phí/mảnh theo loài, hiển thị, xử lý vật liệu dở dang khi tiến hóa, Legendary, mức buff và PvP **vẫn cần brainstorm trước khi code**.
 
 ### Đề xuất cân bằng để tiếp tục bàn, KHÔNG phải luật đã chốt
 - Có thể đặt Rank 1–5 tăng vừa phải, tránh Rank 5 phá Arena; kiểm thử ở PvE lẫn Champion.
@@ -49,7 +54,7 @@ Cá thể mới mặc định Rank 0. **Đã duyệt hướng A + B**: có thể
 
 - Giao diện các ô Pokémon kiểu PC Box, **30 ô/trang**, có tìm kiếm, lọc (Gen, Shiny, Rank, Nature, Ability, đang chọn, yêu thích, có thể nâng Rank), sắp xếp.
 - **Không khóa cứng tổng dung lượng ngay**. Khi trang hết chỗ, tự thêm trang theo nhu cầu trong phạm vi giới hạn lưu trữ thực tế; không cho mất Pokémon khi đầy.
-- Bản sao dư có thể quản lý theo nhóm/cùng loài; thao tác đa chọn, gợi ý nguyên liệu hợp lệ; giữ lại cá thể chính và thú quý.
+- Bản sao dư có thể quản lý theo nhóm/cùng loài; thao tác đa chọn, gợi ý nguyên liệu hợp lệ hoặc **chủ động chuyển bản sao đúng loài thành mảnh Rank của loài đó** để giảm số ô kho; giữ lại cá thể chính và thú quý.
 - Không auto-delete, auto-release hay auto-convert Pokémon không có sự đồng ý. Khi storage gần giới hạn, thông báo và không trừ vé nếu không thể đảm bảo ghi cá thể.
 - Tránh tải/re-render toàn bộ hàng nghìn sprite cùng lúc: phân trang/virtualization, lazy sprites, giới hạn phần tử DOM và lưu vị trí cuộn.
 - Pokédex vẫn phải gọn như v1.5.92: tìm tên, yêu thích và nút Sắp xếp duy nhất; các bộ lọc trong nút Sắp xếp.
@@ -104,7 +109,7 @@ Không lấy các giá trị ví dụ làm định mức triển khai.
 
 ## 8. Các quyết định còn mở để brainstorm
 
-1. **Đã chốt nguyên tắc A+B:** bản sao cùng loài hoặc cùng chuỗi tiến hóa đều hợp lệ. **Cần chốt tiếp** tỷ lệ quy đổi, cách nhận diện nhánh tiến hóa rẽ (Eevee), và có cho phép lấy bản sao đã tiến hóa để nâng dạng chưa tiến hóa không.
+1. **Đã đính chính chốt A+C (không B):** dùng bản sao **đúng loài** trực tiếp hoặc chuyển thành nguyên liệu Rank **đúng loài** để cất gọn. **Cần chốt tiếp:** tỷ lệ bản sao → mảnh, dùng hỗn hợp cá thể + mảnh, cơ chế cảnh báo mảnh của dạng trước tiến hóa, có hay không hoàn tác chuyển mảnh.
 2. Có cơ chế vật liệu thay thế cho Legendary? Tỷ lệ/cách kiếm?
 3. Trường hợp Shiny nên tách cá thể ngay cả khi save cũ chỉ ghi cờ Shiny như thế nào?
 4. Nature / Ability / TM / nâng cấp cá nhân (pupg) đi theo *cá thể* hay có phần đi theo *loài*?
