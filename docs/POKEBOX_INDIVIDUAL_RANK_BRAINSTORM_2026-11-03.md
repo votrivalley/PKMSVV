@@ -1,6 +1,7 @@
 # PKMSVV — Tạm lưu brainstorm Pokédex / PokéBox / cá thể / Rank
 Ngày ghi: 2026-11-03 (Asia/Ho_Chi_Minh)
-Trạng thái: **ĐỀ XUẤT — CHƯA CHỐT, CHƯA TRIỂN KHAI**
+Trạng thái: **ĐANG BRAINSTORM — ĐÃ CHỐT NGUYÊN TẮC A+B CHO NGUYÊN LIỆU RANK; CHƯA TRIỂN KHAI**
+Cập nhật quyết định: 2026-11-04
 Nguồn tham khảo ý tưởng giao diện: ảnh người dùng gửi từ PokéLit (https://pokelit.0d4y.cc/). KHÔNG sao chép asset/mã nguồn PokéLit khi chưa xác minh quyền sử dụng.
 
 > Mục đích của tài liệu: giữ nguyên ý tưởng và những quyết định đang cân nhắc để sửa lỗi khác trước, tiếp tục brainstorm sau. Không thay gameplay, data save, version, APK hay Web production chỉ vì tài liệu này.
@@ -16,7 +17,7 @@ Nguồn tham khảo ý tưởng giao diện: ảnh người dùng gửi từ Pok
 
 ## 2. Hệ Rank bằng bản sao (cơ chế người dùng đề xuất)
 
-Cá thể mới mặc định Rank 0. Nâng Rank bằng cách tiêu thụ bản sao **cùng loài**:
+Cá thể mới mặc định Rank 0. **Đã duyệt hướng A + B**: có thể tiêu thụ bản sao **đúng cùng loài (A)** hoặc **cùng chuỗi tiến hóa (B)**. Ví dụ, Charizard có thể dùng Charizard, Charmeleon hoặc Charmander làm nguyên liệu. Cả hai đều là phương án hợp lệ, không phải hai chế độ Rank riêng. **Chưa chốt** tỷ lệ quy đổi nếu nguyên liệu khác giai đoạn tiến hóa (mặc định thiết kế đơn giản 1 cá thể hợp lệ = 1 nguyên liệu, chỉ áp dụng sau khi duyệt chi tiết).
 | Thăng Rank | Bản sao cần tiêu thụ | Tổng bản sao tiêu thụ |
 |---|---:|---:|
 | 0 → 1 | 1 | 1 |
@@ -25,7 +26,14 @@ Cá thể mới mặc định Rank 0. Nâng Rank bằng cách tiêu thụ bản 
 | 3 → 4 | 4 | 10 |
 | 4 → 5 | 5 | 15 |
 
-Để đạt Rank 5 cần **16 cá thể thu được** tổng cộng (1 cá thể chính + 15 nguyên liệu), nếu không có nguồn thay thế. Đây là điểm cần điều tiết cho Legendary.
+Để đạt Rank 5 cần **16 cá thể thu được** tổng cộng (1 cá thể chính + 15 nguyên liệu), nếu tính mọi bản sao hợp lệ 1:1 và không có nguồn thay thế. Đây là điểm cần điều tiết cho Legendary.
+
+**Các nguyên tắc kèm theo A + B**:
+- Pokémon chính giữ nguyên ID cá thể, Nature, Ability, Shiny, nâng cấp và Rank sau tiến hóa. Không tạo Pokémon mới chỉ vì tiến hóa.
+- Bảng nguyên liệu hiển thị cả bản sao đúng loài và bản sao cùng chuỗi tiến hóa; đề xuất ưu tiên hiển thị cùng loài trước, nhưng **người chơi tự chọn** bản nào bị tiêu thụ.
+- Bản nguyên liệu thuộc các nhánh tiến hóa rẽ (ví dụ Eevee → Vaporeon/Jolteon) cần luật riêng; **chưa được duyệt** việc lấy Pokémon ở nhánh cuối này để nâng Pokémon ở nhánh cuối khác.
+- Mega không tạo cá thể và không phải nguyên liệu Rank độc lập.
+
 - Chỉ tiêu thụ bản sao sau khi người chơi chọn, xem trước và xác nhận; không tự động lấy cá thể đang chiến đấu, khóa, yêu thích, Shiny, Legendary, đã nâng Rank hoặc có nâng cấp, trừ khi có cơ chế xác nhận đặc biệt *được duyệt sau*.
 - Không được ảnh hưởng tỉ lệ Gacha đang vận hành, banner/pity, vé và sở hữu Shiny cá nhân.
 - **Chưa chốt** mức tăng chỉ số mỗi Rank, chi phí tiền/vật liệu, mức Rank SS và xử lý Rank PvP.
@@ -96,7 +104,7 @@ Không lấy các giá trị ví dụ làm định mức triển khai.
 
 ## 8. Các quyết định còn mở để brainstorm
 
-1. Rank tiêu thụ **đúng cùng dex** hay cùng chuỗi tiến hóa; nếu Charmander tiến hóa thành Charizard, bản sao nào nâng được?
+1. **Đã chốt nguyên tắc A+B:** bản sao cùng loài hoặc cùng chuỗi tiến hóa đều hợp lệ. **Cần chốt tiếp** tỷ lệ quy đổi, cách nhận diện nhánh tiến hóa rẽ (Eevee), và có cho phép lấy bản sao đã tiến hóa để nâng dạng chưa tiến hóa không.
 2. Có cơ chế vật liệu thay thế cho Legendary? Tỷ lệ/cách kiếm?
 3. Trường hợp Shiny nên tách cá thể ngay cả khi save cũ chỉ ghi cờ Shiny như thế nào?
 4. Nature / Ability / TM / nâng cấp cá nhân (pupg) đi theo *cá thể* hay có phần đi theo *loài*?
