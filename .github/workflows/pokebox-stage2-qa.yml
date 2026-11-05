@@ -1,4 +1,4 @@
-name: Pokebox Stage 2 isolated QA artifact
+name: Pokebox Stage 3 isolated QA artifact
 on:
   push:
     branches:
@@ -19,7 +19,7 @@ jobs:
         with:
           node-version: '22'
       - name: Run PokéBox unit tests
-        run: npm run test:pokebox:stage2
+        run: npm run test:pokebox:stage3
       - name: Retrieve previously successful Web v1.5.93 build artifact
         uses: actions/download-artifact@v4
         with:
@@ -27,25 +27,29 @@ jobs:
           run-id: 41693288005
           github-token: ${{ github.token }}
           path: dist/cloudflare
-      - name: Create isolated Stage 2 Web QA bundle
+      - name: Create isolated Stage 3 Web QA bundle
         run: node scripts/build-pokebox-stage1-qa.cjs
       - name: Verify QA scripts, game and save isolation
         run: |
-          test -s dist/pokebox-stage2-qa/ai/game/index.html
-          test -s dist/pokebox-stage2-qa/ai/game/js/ui/pkmsvv-box-stage2.js
-          test -s dist/pokebox-stage2-qa/ai/game/js/ui/pkmsvv-box-stage2-ui.js
-          grep -q pkmsvv-box-stage2 dist/pokebox-stage2-qa/ai/game/index.html
-          test -s dist/pokebox-stage2-qa/game/js/app.min.js
-      - name: Check all Stage 2 scripts compile
+          test -s dist/pokebox-stage3-qa/ai/game/index.html
+          test -s dist/pokebox-stage3-qa/ai/game/js/ui/pkmsvv-box-stage2.js
+          test -s dist/pokebox-stage3-qa/ai/game/js/ui/pkmsvv-box-stage2-ui.js
+          test -s dist/pokebox-stage3-qa/ai/game/js/ui/pkmsvv-box-stage3.js
+          test -s dist/pokebox-stage3-qa/ai/game/css/pkmsvv-box-stage3.css
+          grep -q pkmsvv-box-stage3 dist/pokebox-stage3-qa/ai/game/index.html
+          test -s dist/pokebox-stage3-qa/game/js/app.min.js
+      - name: Check all Stage 3 scripts compile
         run: |
           node --check src/pkmsvv-box-stage2.js
           node --check src/pkmsvv-box-stage2-ui.js
+          node --check src/pkmsvv-box-stage3.js
+          node --check tests/pokebox-stage3.test.cjs
           node --check tests/pokebox-stage2-browser.cjs
       - name: Real Chromium smoke of isolated Web QA injection
         run: node tests/pokebox-stage2-browser.cjs
       - uses: actions/upload-artifact@v4
         with:
-          name: PKMSVV-PokeBox-Stage2-Web-QA-ONLY
-          path: dist/pokebox-stage2-qa
+          name: PKMSVV-PokeBox-Stage3-Web-QA-ONLY
+          path: dist/pokebox-stage3-qa
           retention-days: 14
           if-no-files-found: error
