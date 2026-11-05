@@ -29,7 +29,8 @@
  function get(s,id){return s?.pkmsvvBox?.find(x=>x.id===id)||null;}
  function shards(s,dex){return s?.pkmsvvRankFragments?.[String(dex)]||0;}
  function eligible(s,item,validated=false,speciesCount=null){
-  if(!item||(!validated&&!valid(s))||item.id===s.pkmsvvSelectedInstanceId||item.locked||item.favorite||
+  if(!item||(!validated&&!valid(s))||item.id===s.pkmsvvSelectedInstanceId||
+     (Array.isArray(s.pkmsvvTeam6)&&s.pkmsvvTeam6.includes(item.id))||item.locked||item.favorite||
      item.shiny||item.rank!==0||item.upgraded||item.personalUpgrades) return false;
   if(item.id.startsWith('b1-'))return false; // migrated originals are never fodder
   const copies=speciesCount===null?s.pkmsvvBox.filter(x=>x.dex===item.dex).length:speciesCount;
