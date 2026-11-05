@@ -56,8 +56,8 @@ async function main(){
   };
   await cmd('Runtime.enable');await cmd('Page.enable');
   await cmd('Page.navigate',{url:'http://127.0.0.1:'+srv.address().port+'/ai/game/'});
-  const query="(()=>({stage1:!!window.G?.PKMSVVBox,stage2:!!window.G?.PKMSVVBox2,stage3:!!window.G?.PKMSVVBox3,stage4:!!window.G?.PKMSVVBox4,rankCombat:!!window.G?.Player?.prototype?._pkmbxStage4Installed,hooked:!!window.G?.Gacha?._pkmbxStage2Wrapped,traits:!!window.G?.Mons?._pkmbxStage2Traits,rankUi:!!window.G?.PKMSVVBox?._pkmbxRankUiWrapped,enemyHook:!!window.G?.Enemy?.prototype?._pkmsvvReforgeHurtWrapped,shopHook:!!window.G?.KecleonUI?.render?.toString?.().includes('draw()'),title:document.title}))()";
-  const state=await until(()=>evaluate(query).then(x=>x?.stage1&&x.stage2&&x.stage3&&x.stage4&&x.rankCombat&&x.hooked&&x.traits&&x.rankUi&&x.enemyHook&&x.shopHook?x:null),35000);
+  const query="(()=>({stage1:!!window.G?.PKMSVVBox,stage2:!!window.G?.PKMSVVBox2,stage3:!!window.G?.PKMSVVBox3,stage4:!!window.G?.PKMSVVBox4,hub:!!window.G?.PKMSVVBoxHub,hubUI:!!window.G?.PKMSVVBoxHubUI,individualMons:!!window.G?.Mons?._pkmbxIndividualHub,rankCombat:!!window.G?.Player?.prototype?._pkmbxStage4Installed,hooked:!!window.G?.Gacha?._pkmbxStage2Wrapped,traits:!!window.G?.Mons?._pkmbxStage2Traits,rankUi:!!window.G?.PKMSVVBox?._pkmbxRankUiWrapped,enemyHook:!!window.G?.Enemy?.prototype?._pkmsvvReforgeHurtWrapped,shopHook:!!window.G?.KecleonUI?.render?.toString?.().includes('draw()'),title:document.title}))()";
+  const state=await until(()=>evaluate(query).then(x=>x?.stage1&&x.stage2&&x.stage3&&x.stage4&&x.hub&&x.hubUI&&x.individualMons&&x.rankCombat&&x.hooked&&x.traits&&x.rankUi&&x.enemyHook&&x.shopHook?x:null),35000);
   const five=await evaluate('G.PKMSVVBox2.formatRank(5).hp');
   assert.equal(await evaluate('G.PKMSVVBox3.PRICE'),6500);
   assert.equal(await evaluate('G.PKMSVVBox3.PITY'),180);
@@ -65,6 +65,17 @@ async function main(){
   assert.equal(await evaluate('G.PKMSVVBox4.HIT_PROC'),0.16);
   assert.equal(await evaluate('G.PKMSVVBox4.HYBRID_MAX'),6);
   assert.equal(five,30);
+  const pureDex=await evaluate("(()=>{G.PKMSVVBoxHubUI.openDex();return ({overlay:!!document.querySelector('#pkmbx-dex-overlay'),search:!!document.querySelector('#pkmbx-dex-search'),hasEvolutionPane:!!document.querySelector('#pkmbx-dex-details'),itemActions:!!document.querySelector('#pkmbx-dex-overlay [data-hub-tm],#pkmbx-dex-overlay [data-pkmbx-use]'),cards:document.querySelectorAll('#pkmbx-dex-list button').length})})()");
+  assert.equal(pureDex.overlay,true);
+  assert.equal(pureDex.search,true);
+  assert.equal(pureDex.hasEvolutionPane,true);
+  assert.equal(pureDex.itemActions,false,'Pokédex must remain read-only');
+  assert.ok(pureDex.cards>0,'Pokédex must list species');
+  assert.equal(await evaluate("(()=>{G.PKMSVVBoxHubUI.closeDex();return !!document.querySelector('#pkmbx-dex-overlay')})()"),false);
+  const menuState=await evaluate("(()=>({oldMenu:document.querySelector('#scr-menu [data-go=\\\"dex\\\"] .pkmsvv-menu-label')?.textContent,second:document.querySelector('#pkmsvv-pokebox-button .pkmsvv-menu-label')?.textContent}))()");
+  if(menuState.oldMenu)assert.equal(menuState.oldMenu,'PokéBox');
+  if(menuState.second)assert.equal(menuState.second,'Pokédex');
+
   console.log('PASS Stage 4 real browser QA:',JSON.stringify({...state,rank5Hp:five,otherExceptions:errors.length}));
  }finally{
   try{ws?.close()}catch(_){}
