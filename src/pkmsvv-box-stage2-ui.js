@@ -61,10 +61,21 @@
      '<p id="pkmbx-rank-count"></p><button class="btn gold" id="pkmbx-rank-up">'+
      txt('⬆ Nâng Rank','⬆ Rank Up')+'</button>';
   }else html+='<p>'+txt('Đã đạt Rank 5!','Rank 5 reached!')+'</p>';
+  const effectName=t=>{
+   const names={
+    burn:txt('Thiêu Đốt','Burn'),poison:txt('Nhiễm Độc','Poison'),
+    slow:txt('Làm Chậm','Slow'),strike:txt('Đòn Xung Kích','Impact'),
+    evade:txt('Né Đòn','Evasion'),guard:txt('Giáp Bảo Hộ','Guard'),
+    heal:txt('Hồi Phục','Healing')
+   };
+   return names[G.PKMSVVBox4?.ST?.[t]||'strike']||names.strike;
+  };
+  if(x.rank>=4)html+='<p>⏱️ '+txt('Rank 4: hồi chiêu nhanh hơn 5% trong Solo PvE.','Rank 4: 5% faster cooldown in Solo PvE.')+'</p>';
+  if(x.rank>=5)html+='<p>✨ '+txt('Rank 5: hiệu ứng kết hợp lan tối đa 6 quái, hồi 12 giây; đòn kết liễu vẫn kích hoạt.','Rank 5: hybrid burst hits up to 6 foes, 12s cooldown; finishing blows also trigger it.')+'</p>';
   if(x.rank>=3){
-   if(x.rankBranch)html+='<p>✨ '+txt('Hướng hiện tại: ','Current branch: ')+esc(typeName(x.rankBranch))+'</p>';
+   if(x.rankBranch)html+='<p>✨ '+txt('Hướng hiện tại: ','Current branch: ')+esc(typeName(x.rankBranch))+' · '+effectName(x.rankBranch)+' ('+txt('16% cơ hội, hồi 3,5 giây','16% chance, 3.5s cooldown')+')</p>';
    else html+='<h3>'+txt('Chọn hướng Rank 3 miễn phí','Choose your free Rank 3 path')+'</h3>'+
-     '<div class="pkmbx-branches">'+api.branches(x.dex).map(t=>'<button class="btn small" data-pkmbx-branch="'+esc(t)+'">'+esc(typeName(t))+'</button>').join('')+'</div>';
+     '<div class="pkmbx-branches">'+api.branches(x.dex).map(t=>'<button class="btn small" data-pkmbx-branch="'+esc(t)+'">'+esc(typeName(t))+' · '+effectName(t)+'</button>').join('')+'</div>';
   }
   if(x.rank>=3&&x.rankBranch&&G.PKMSVVBox3){
    const prism=G.PKMSVVBox3;
