@@ -130,3 +130,22 @@ test('stage2 is only bundled in isolated QA, not production prepare scripts',()=
  }
  assert.doesNotMatch(production,/pkmsvv-box-stage2/);
 });
+
+test('Individual traits follow the selected PokéBox instance',()=>{
+ const h=setup(),second=add(h.s,6);
+ G.NATURE_BY={hardy:{id:'hardy'},jolly:{id:'jolly',up:'spd',down:'sa'}};
+ G.DEX_BY[6]={...G.DEX_BY[6],hp:100,pa:20,sa:30,df:30,sd:20,spd:50};
+ G.Mons={natureOf(){return G.NATURE_BY.hardy;},abilityOf(){return {id:11,slot:0}},
+  monFor(){return {dex:6,hp:100,pa:20,sa:30,df:30,sd:20,spd:50,atk:30,nature:'hardy'}}};
+ second.natureId='jolly';second.abilitySlot=1;
+ stage2.hookIndividualTraits(G.Mons,G.DB);stage2.hookPveStats(G.Mons,G.DB);
+ h.s.pkmsvvSelectedInstanceId=second.id;
+ assert.equal(G.Mons.natureOf(6).id,'jolly');
+ assert.equal(G.Mons.abilityOf(6).id,12);
+ const mon=G.Mons.monFor(6);
+ assert.equal(mon.hp,100);
+ assert.equal(mon.spd,55);assert.equal(mon.sa,27);
+ h.s.pkmsvvSelectedInstanceId='b1-6-n';
+ assert.equal(G.Mons.natureOf(6).id,'hardy');
+ assert.equal(G.Mons.abilityOf(6).id,11);
+});
