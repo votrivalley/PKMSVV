@@ -36,7 +36,7 @@
  }
  function render(){
   if(!panel)return;
-  const x=api.selected(s()),body=$('pkmbx-rank-body');
+  const x=api.get(s(),G.PKMSVVBox?.focusedId?.())||api.selected(s()),body=$('pkmbx-rank-body');
   $('pkmbx-rank-close').textContent=txt('✕ Đóng','✕ Close');
   $('pkmbx-rank-note').textContent=txt(
    'Bản QA: Chỉ dùng Pokémon trùng đúng loài. Không tự tiêu Shiny, Legendary, Pokémon yêu thích hoặc Pokémon gốc từ save cũ. Rank 3/5 đang lưu hướng và chờ đặc tính chiến đấu hoàn thiện.',
@@ -125,4 +125,5 @@
   };
  }
  function open(){ensure();selectedMat.clear();shardCount=0;render();}
+ G.PKMSVVRankUI={open,close,render};
 })();
