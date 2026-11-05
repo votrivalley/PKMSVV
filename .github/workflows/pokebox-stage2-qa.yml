@@ -36,6 +36,13 @@ jobs:
           test -s dist/pokebox-stage2-qa/ai/game/js/ui/pkmsvv-box-stage2-ui.js
           grep -q pkmsvv-box-stage2 dist/pokebox-stage2-qa/ai/game/index.html
           test -s dist/pokebox-stage2-qa/game/js/app.min.js
+      - name: Check all Stage 2 scripts compile
+        run: |
+          node --check src/pkmsvv-box-stage2.js
+          node --check src/pkmsvv-box-stage2-ui.js
+          node --check tests/pokebox-stage2-browser.cjs
+      - name: Real Chromium smoke of isolated Web QA injection
+        run: node tests/pokebox-stage2-browser.cjs
       - uses: actions/upload-artifact@v4
         with:
           name: PKMSVV-PokeBox-Stage2-Web-QA-ONLY
