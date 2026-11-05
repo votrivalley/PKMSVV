@@ -65,9 +65,11 @@ test('Rank 5 dual-type hybrid is limited to six targets and once per 12 seconds'
  G.EnemyMgr.queryCircle=()=>[main,...ten];
  const traits=pl._pkmbxRankTraits;
  assert.equal(traits.hybrid,true);
+ ten[9].pkmsvvBossGuard=true;
  const affected=stage4.hybridHit(pl,main,traits,10000);
  assert.equal(affected,6);
  assert.equal(ten.filter(x=>x.status.hit>0).length,6);
+ assert.equal(ten[9].status.hit,0,'Boss guardian must be ignored by hybrid AoE');
  assert.equal(stage4.hybridHit(pl,main,traits,10001),0);
  assert.equal(stage4.hybridHit(pl,main,traits,22010),6);
 });
