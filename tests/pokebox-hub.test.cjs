@@ -1,0 +1,137 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path');
+const stage1=require('../src/pkmsvv-box-stage1.js');
+const stage2=require('../src/pkmsvv-box-stage2.js');
+const hub=require('../src/pkmsvv-box-hub.js');
+function setup(){
+ const raw={owned:{6:{at:1},25:{at:2}},shiny:{6:{at:3}},partner:6,partnerShiny:false,
+  bag:{mint:3,cap:2,caph:1},tms:{'shadow-ball':2},ptm:{6:['flamethrower']},
+  pnat:{6:['bold',100]},pabil:{6:[0,100]},coins:1000,pkmsvvBerry:{bag:{oran:2}},megaStones:{6:1}};
+ const s=stage1.migrate(raw,{natureOf:()=>({id:'bold'}),abilityOf:()=>({slot:0})}).save;
+ const mon={dex:6,name:'Charizard',pa:100,sa:100,df:80,sd:80,spd:85,
+  hp:100,atk:100,types:['fire','flying'],rarity:3};
+ const natures=[{id:'bold',up:'df',down:'pa',n:['Bold','Bold']},
+  {id:'jolly',up:'spd',down:'sa',n:['Jolly','Jolly']},
+  {id:'hardy',n:['Hardy','Hardy']}];
+ let writes=0,fail=false;
+ global.G={DB:{save:s,commit(){if(fail)return false;writes++;return true}},
+  PKMSVVBox:stage1,PKMSVVBox2:stage2,DEX_BY:{6:mon,25:{dex:25,types:['electric'],rarity:2}},
+  NATURES:natures,NATURE_BY:Object.fromEntries(natures.map(n=>[n.id,n])),
+  DEX_ABIL:{6:[11,12,13]},ABIL:{11:['a','Blaze'],12:['a','Solar Power'],13:['a','Flame Body']},
+  Moves:{BY_ID:{'shadow-ball':{name:['Bola sombra','Shadow Ball']},
+   flamethrower:{name:['Lanzallamas','Flamethrower']}}},
+  TM_OF:dex=>dex===6?['shadow-ball']:[],
+  Mons:{
+   natural:(dex,move)=>move==='flamethrower',
+   natureOf:()=>natures[0],
+   abilityOf:()=>({slot:0,id:11}),
+   monFor:()=>({dex:6,pa:90,sa:100,df:88,sd:80,spd:85,atk:100,nature:'bold'}),
+   taught:()=>['flamethrower']
+  }};
+ return {s,get writes(){return writes},set fail(v){fail=v},mon};
+}
+function add(s,dex=6){
+ return stage2.makeOne(s,{dex,shiny:false},{random:()=>0,natures:[{id:'hardy'}],abilities:{[dex]:[11,12,13]}});
+}
+test('Team 6 defaults to current Pokémon, contains six unique instance IDs and survives reopen',()=>{
+ const h=setup();assert.deepEqual(hub.team(h.s),['b1-6-n']);
+ const copies=Array.from({length:6},()=>add(h.s));
+ for(const m of copies.slice(0,5))hub.toggleTeam(m.id,h.s);
+ assert.equal(hub.team(h.s).length,6);
+ assert.equal(hub.team(h.s)[0],'b1-6-n');
+ assert.ok(copies[0].id!=='b1-6-n');
+ assert.ok(hub.item(h.s,copies[0].id).favorite);
+ assert.throws(()=>hub.toggleTeam(copies[5].id,h.s),/full/);
+ const kept=hub.team(h.s);
+ assert.deepEqual(hub.team(JSON.parse(JSON.stringify(h.s))),kept);
+ assert.equal(hub.reorderTeam(kept.slice().reverse(),h.s)[0],kept.at(-1));
+ assert.equal(hub.team(h.s)[0],kept.at(-1));
+ assert.equal(hub.toggleTeam(copies[0].id,h.s).added,false);
+ assert.equal(hub.team(h.s).length,5);
+});
+test('every favorite and team member is protected from direct Rank fodder or shard conversion',()=>{
+ const h=setup(),m=add(h.s);
+ hub.toggleTeam(m.id,h.s);
+ assert.equal(stage2.eligible(h.s,hub.item(h.s,m.id)),false);
+ hub.toggleTeam(m.id,h.s);
+ assert.equal(stage2.eligible(h.s,hub.item(h.s,m.id)),false,'favorite remains protected after removing from Team');
+ hub.toggleFavorite(m.id,h.s);
+ assert.equal(stage2.eligible(h.s,hub.item(h.s,m.id)),true);
+ assert.equal(hub.item(h.s,m.id).favorite,false);
+});
+test('Mint changes only one specific individual and consumes exactly one Mint',()=>{
+ const h=setup(),first=hub.item(h.s,'b1-6-n'),duplicate=add(h.s);
+ assert.equal(first.natureId,'bold');
+ hub.useMint(duplicate.id,'jolly',h.s);
+ assert.equal(hub.item(h.s,duplicate.id).natureId,'jolly');
+ assert.equal(hub.item(h.s,'b1-6-n').natureId,'bold');
+ assert.equal(h.s.bag.mint,2);
+ assert.equal(h.s.pnat[6][0],'bold');
+ assert.throws(()=>hub.useMint(duplicate.id,'jolly',h.s),/different Nature/);
+});
+test('Ability Capsule and hidden capsule use correct inventory per individual',()=>{
+ const h=setup(),duplicate=add(h.s);
+ hub.useCapsule(duplicate.id,1,false,h.s);
+ assert.equal(hub.item(h.s,duplicate.id).abilitySlot,1);
+ assert.equal(h.s.bag.cap,1);
+ assert.throws(()=>hub.useCapsule(duplicate.id,2,false,h.s),/unavailable/);
+ hub.useCapsule(duplicate.id,2,true,h.s);
+ assert.equal(hub.item(h.s,duplicate.id).abilitySlot,2);
+ assert.equal(h.s.bag.caph,undefined);
+ assert.equal(hub.item(h.s,'b1-6-n').abilitySlot,0);
+});
+test('TM is consumed only for the selected individual, preserving old species TM and other duplicates',()=>{
+ const h=setup(),dupe1=add(h.s),dupe2=add(h.s);
+ assert.equal(hub.canTeach(h.s,hub.item(h.s,dupe1.id),'shadow-ball'),true);
+ hub.teach(dupe1.id,'shadow-ball',h.s);
+ assert.deepEqual(hub.learned(h.s,hub.item(h.s,dupe1.id)),['shadow-ball']);
+ assert.deepEqual(hub.learned(h.s,hub.item(h.s,dupe2.id)),[]);
+ assert.deepEqual(hub.learned(h.s,hub.item(h.s,'b1-6-n')),['flamethrower']);
+ assert.equal(h.s.tms['shadow-ball'],1);
+ assert.deepEqual(h.s.ptm[6],['flamethrower']);
+ assert.equal(hub.canTeach(h.s,hub.item(h.s,dupe1.id),'shadow-ball'),false);
+ assert.throws(()=>hub.teach(dupe1.id,'flamethrower',h.s),/unavailable/);
+});
+test('failed save commit atomically restores team, items, inventory and TM',()=>{
+ const h=setup(),duplicate=add(h.s),before=JSON.stringify(h.s);
+ h.fail=true;
+ assert.throws(()=>hub.toggleTeam(duplicate.id,h.s),/Could not save/);
+ assert.equal(JSON.stringify(h.s),before);
+ assert.throws(()=>hub.useMint(duplicate.id,'jolly',h.s),/Could not save/);
+ assert.equal(JSON.stringify(h.s),before);
+ assert.throws(()=>hub.teach(duplicate.id,'shadow-ball',h.s),/Could not save/);
+ assert.equal(JSON.stringify(h.s),before);
+});
+test('selected instance affects Nature, Ability and learned TM in combat, without changing another instance',()=>{
+ const h=setup(),duplicate=add(h.s);
+ hub.useMint(duplicate.id,'jolly',h.s);
+ hub.useCapsule(duplicate.id,1,false,h.s);
+ hub.teach(duplicate.id,'shadow-ball',h.s);
+ assert.equal(hub.installMons(G.Mons),true);
+ assert.equal(hub.installMons(G.Mons),false);
+ assert.equal(G.Mons.natureOf(6).id,'bold');
+ assert.equal(G.Mons.abilityOf(6).id,11);
+ assert.deepEqual(G.Mons.taught(6),['flamethrower']);
+ h.s.pkmsvvSelectedInstanceId=duplicate.id;
+ assert.equal(G.Mons.natureOf(6).id,'jolly');
+ assert.equal(G.Mons.abilityOf(6).id,12);
+ assert.deepEqual(G.Mons.taught(6),['shadow-ball']);
+ const mon=G.Mons.monFor(6);
+ assert.ok(Math.abs(mon.pa-100)<.0001,'removes old -10% physical attack effect');
+ assert.ok(Math.abs(mon.sa-90)<.0001,'adds Jolly -10% special attack');
+ assert.ok(mon.spd>85);
+});
+test('isolated QA packagers include Hub UI and never modify production prepare script',()=>{
+ const root=path.join(__dirname,'..');
+ for(const script of ['scripts/build-pokebox-stage1-qa.cjs','scripts/build-pokebox-stage1-pc-qa.cjs','scripts/patch-pokebox-stage4-apk-qa.cjs']){
+  const src=fs.readFileSync(path.join(root,script),'utf8');
+  for(const f of ['pkmsvv-box-hub.js','pkmsvv-box-hub-ui.js','pkmsvv-box-hub.css'])assert.match(src,new RegExp(f.replace('.','\\.')));
+ }
+ const prod=fs.readFileSync(path.join(root,'scripts/prepare-game.cjs'),'utf8');
+ assert.doesNotMatch(prod,/pkmsvv-box-hub/);
+ const ui=fs.readFileSync(path.join(root,'src/pkmsvv-box-hub-ui.js'),'utf8');
+ assert.match(ui,/pok(e|é)dex/i);
+ assert.match(ui,/data-go="dex"/);
+ assert.match(ui,/data-hub-tm/);
+});
