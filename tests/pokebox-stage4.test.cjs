@@ -56,7 +56,7 @@ test('Rank 3 fire path applies burn on any attack type and keeps original Abilit
  pl.abil.hit(pl,enemy(),{type:'water'});
  assert.equal(h.baseHits,1);
  assert.equal(pl.abil.out(pl,{},e),1.25);
- assert.equal(h.originalAbility.hit,undefined,false); // legacy object remains unchanged
+ assert.equal(typeof h.originalAbility.hit,'function'); // legacy object remains unchanged
 });
 test('Rank 5 dual-type hybrid is limited to six targets and once per 12 seconds',()=>{
  const h=setup(5,'fire',['fire','flying']),pl=new h.Player();
