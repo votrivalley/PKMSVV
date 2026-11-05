@@ -1,0 +1,109 @@
+name: Pokebox Stage 4 isolated Android QA APK
+on:
+  push:
+    branches: [feature/pokebox-stage1-isolated-qa]
+    paths:
+      - 'src/pkmsvv-box-stage*.js'
+      - 'src/pkmsvv-box-stage*.css'
+      - 'scripts/build-pokebox-stage4-android-qa.cjs'
+      - 'tests/pokebox-stage*.test.cjs'
+      - '.github/workflows/pokebox-stage4-android-qa.yml'
+      - 'package.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  android-pokebox-qa-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    env:
+      PKMSVV_MEGA_SPRITE_PACK: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Test all four PokéBox phases
+        run: npm run test:pokebox:stage4
+      - name: Require permanent Android signing, no debug APK fallback
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.PKMSVV_ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.PKMSVV_ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.PKMSVV_ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.PKMSVV_ANDROID_KEY_PASSWORD }}
+        run: |
+          for value in "$KEYSTORE_BASE64" "$STORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD"; do
+            if [ -z "$value" ]; then echo "::error::No stable key. QA will not use debug signing."; exit 1; fi
+          done
+      - name: Install Android SDK 36
+        shell: bash
+        run: |
+          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+          sdkmanager --install "platforms;android-36" "build-tools;36.0.0"
+      - name: Fetch pinned upstream
+        shell: bash
+        run: |
+          git init vendor/pokesurvivor
+          git -C vendor/pokesurvivor remote add origin https://github.com/JPTER78/pokesurvivor.git
+          git -C vendor/pokesurvivor fetch --depth 1 origin 11fe868c640b62ac37beacc222e056bc4d9ec892
+          git -C vendor/pokesurvivor checkout --detach FETCH_HEAD
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build unchanged full local-LAN engine and validate
+        run: |
+          npm run prepare:game
+          npm run test:localization
+          npm run prepare:icons
+          npm run prepare:android
+          npm run prepare:android:full-lan
+          npm run test:android:full-lan
+      - name: Inject Stage 1–4 into Android game files
+        run: |
+          node scripts/build-pokebox-stage4-android-qa.cjs
+          test -s mobile/www/js/ui/pkmsvv-box-stage4.js
+          grep -q pkmsvv-box-stage4.js mobile/www/index.html
+      - name: Create Capacitor Android native package
+        run: |
+          npx cap add android
+          npx cap sync android
+          node scripts/configure-android.cjs
+          node scripts/configure-android-full-lan.cjs
+          node scripts/apply-android-icons.cjs
+      - name: Build signed QA APK with isolated Android application ID
+        shell: bash
+        env:
+          PKMSVV_ANDROID_KEYSTORE_BASE64: ${{ secrets.PKMSVV_ANDROID_KEYSTORE_BASE64 }}
+          PKMSVV_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.PKMSVV_ANDROID_KEYSTORE_PASSWORD }}
+          PKMSVV_ANDROID_KEY_ALIAS: ${{ secrets.PKMSVV_ANDROID_KEY_ALIAS }}
+          PKMSVV_ANDROID_KEY_PASSWORD: ${{ secrets.PKMSVV_ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          umask 077
+          export PKMSVV_ANDROID_KEYSTORE_FILE="$RUNNER_TEMP/pkmsvv-qa-stable.jks"
+          trap 'rm -f "$PKMSVV_ANDROID_KEYSTORE_FILE"' EXIT
+          printf '%s' "$PKMSVV_ANDROID_KEYSTORE_BASE64" | base64 --decode > "$PKMSVV_ANDROID_KEYSTORE_FILE"
+          node scripts/verify-android-signing.cjs --keystore
+          node scripts/configure-android-stable-signing.cjs
+          node scripts/build-pokebox-stage4-android-qa.cjs --isolate-android-project
+          grep -q 'applicationId "com.votrivalley.pkmsvv.pokeboxqa"' android/app/build.gradle
+          ! grep -q 'applicationId "com.votrivalley.pkmsvv.fulllan"' android/app/build.gradle
+          (cd android && ./gradlew --no-daemon :app:assembleRelease)
+          mkdir -p dist/pokebox-stage4-android-qa
+          apk="dist/pokebox-stage4-android-qa/PKMSVV-PokeBox-Stage4-QA-SEPARATE-APP.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk "$apk"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$apk"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk" | grep "package: name='com.votrivalley.pkmsvv.pokeboxqa'"
+          unzip -t "$apk" | tail -1
+          unzip -Z -1 "$apk" | grep '^assets/public/js/ui/pkmsvv-box-stage4.js$'
+          unzip -Z -1 "$apk" | grep '^assets/public/POKEBOX-QA-ONLY.txt$'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-PokeBox-Stage4-Android-QA-SEPARATE-APP
+          path: dist/pokebox-stage4-android-qa/*.apk
+          if-no-files-found: error
+          retention-days: 14
