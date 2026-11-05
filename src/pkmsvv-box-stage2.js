@@ -28,18 +28,21 @@
  }
  function get(s,id){return s?.pkmsvvBox?.find(x=>x.id===id)||null;}
  function shards(s,dex){return s?.pkmsvvRankFragments?.[String(dex)]||0;}
- function eligible(s,item){
-  if(!item||!valid(s)||item.id===s.pkmsvvSelectedInstanceId||item.locked||item.favorite||
+ function eligible(s,item,validated=false,speciesCount=null){
+  if(!item||(!validated&&!valid(s))||item.id===s.pkmsvvSelectedInstanceId||item.locked||item.favorite||
      item.shiny||item.rank!==0||item.upgraded||item.personalUpgrades) return false;
   if(item.id.startsWith('b1-'))return false; // migrated originals are never fodder
-  if(s.pkmsvvBox.filter(x=>x.dex===item.dex).length<=1)return false;
+  const copies=speciesCount===null?s.pkmsvvBox.filter(x=>x.dex===item.dex).length:speciesCount;
+  if(copies<=1)return false;
   const mon=typeof G==='undefined'?null:G.DEX_BY?.[item.dex];
   if(mon&&(mon.rarity>=5||mon.leg||mon.legendary))return false;
   return true;
  }
  function candidateList(s,id){
+  if(!valid(s))return [];
   const target=get(s,id);if(!target)return [];
-  return s.pkmsvvBox.filter(x=>x.dex===target.dex&&x.id!==id&&eligible(s,x));
+  const same=s.pkmsvvBox.filter(x=>x.dex===target.dex);
+  return same.filter(x=>x.id!==id&&eligible(s,x,true,same.length));
  }
  function validateMutation(before,after){
   if(!valid(after))throw Error('Invalid PokéBox after operation');
