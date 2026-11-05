@@ -93,6 +93,7 @@ test('eligible kills calculate highest single rate, not double for dual types',(
  assert.equal(prism.enemyInfo(foe(7),s),null);
  assert.equal(prism.enemyInfo(foe(25,{remote:true,types:['fire']}),s),null);
  assert.equal(prism.enemyInfo(foe(150,{arceus:true,boss:true,types:['fire']}),s),null);
+ assert.equal(prism.enemyInfo(foe(6,{pkmsvvBossGuard:true,boss:false}),s),null,'boss escort must never count as wild kill');
 });
 test('pity counts eligible KOs only, guaranteed 180th, and max one drop per run',()=>{
  const {s}=setup();
