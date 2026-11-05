@@ -17,7 +17,7 @@
  const integer=n=>Number.isSafeInteger(n)&&n>0;
  const getSave=()=>typeof G==='undefined'?null:G.DB?.save;
  const box2=()=>typeof G==='undefined'?null:G.PKMSVVBox2;
- let dropsThisRun=0,unflushedPityKills=0,enemyInstalled=false,shopInstalled=false;
+ let dropsThisRun=0,unflushedPityKills=0,pendingPitySave=null,enemyInstalled=false,shopInstalled=false;
  const PITY_BATCH=25; // far fewer synchronous save writes in crowded solo runs
  function valid(s){
   if(!box2()?.valid?.(s))return false;
@@ -140,7 +140,7 @@
    // Regular kills update in-memory pity without forcing a localStorage write
    // on every death. Existing game autosave and the run boundary flush it.
    if(!drops&&counter%PITY_BATCH!==0){
-    s.pkmsvvReforgePity=counter;unflushedPityKills++;
+    s.pkmsvvReforgePity=counter;unflushedPityKills++;pendingPitySave=s;
     return {eligible:true,dropped:false,kind:info.kind,rate:info.rate,
       pity:counter,prisms:s.pkmsvvReforgePrisms||0};
    }
@@ -150,7 +150,7 @@
     return {eligible:true,dropped:drops,kind:info.kind,rate:info.rate,
      pity:draft.pkmsvvReforgePity,prisms:draft.pkmsvvReforgePrisms||0};
    });
-   unflushedPityKills=0;dropsThisRun=nextDrops;
+   unflushedPityKills=0;pendingPitySave=null;dropsThisRun=nextDrops;
    return receipt;
   }catch(e){
    enemy._pkmsvvPrismCounted=false;
@@ -160,9 +160,11 @@
  function flushPity(){
   if(!unflushedPityKills)return false;
   if(typeof G==='undefined'||!G.DB?.commit)return false;
+  // Never flush pending kills from another login into the next save profile.
+  if(G.DB.save!==pendingPitySave){unflushedPityKills=0;pendingPitySave=null;return false;}
   try{
    if(G.DB.commit(true)===false)return false;
-   unflushedPityKills=0;return true;
+   unflushedPityKills=0;pendingPitySave=null;return true;
   }catch(_){return false}
  }
  function resetRun(){flushPity();dropsThisRun=0;}
