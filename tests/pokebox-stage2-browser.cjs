@@ -75,6 +75,15 @@ async function main(){
   assert.equal(pureDex.itemActions,false,'Pokédex must remain read-only');
   assert.ok(pureDex.cards>0,'Pokédex must list species');
   assert.equal(await evaluate("(()=>{G.PKMSVVBoxHubUI.closeDex();return !!document.querySelector('#pkmbx-dex-overlay')})()"),false);
+  const hubScreen=await evaluate("(()=>{const original=G.DB.save;try{G.DB.save=G.PKMSVVBox.migrate({owned:{6:{at:1},25:{at:2}},shiny:{},partner:6,partnerShiny:false,created:1,bag:{mint:1,cap:1,caph:1},tms:{'shadow-ball':1},ptm:{6:[]},coins:1000}).save;G.PKMSVVBoxHubUI.openBox('items');return {overlay:!!document.querySelector('#pkmsvv-pokebox-overlay'),teamSlots:document.querySelectorAll('.pkmbx-team-slot').length,cards:document.querySelectorAll('.pkmbx-hub-slot').length,animatedHero:!!document.querySelector('#pkmbx-hero'),natureSelect:!!document.querySelector('#pkmbx-mint-select'),abilityButtons:document.querySelectorAll('[data-hub-ability]').length,rankTab:!!document.querySelector('[data-box-tab=rank]'),readOnlyDexHidden:!document.querySelector('#pkmbx-dex-overlay')};}finally{G.PKMSVVBoxHubUI.closeBox();G.DB.save=original;}})()");
+  assert.equal(hubScreen.overlay,true);
+  assert.equal(hubScreen.teamSlots,6);
+  assert.ok(hubScreen.cards>=2);
+  assert.equal(hubScreen.animatedHero,true);
+  assert.equal(hubScreen.natureSelect,true);
+  assert.ok(hubScreen.abilityButtons>=1);
+  assert.equal(hubScreen.rankTab,true);
+  assert.equal(hubScreen.readOnlyDexHidden,true);
   const menuState=await evaluate("(()=>({oldMenu:document.querySelector('#scr-menu [data-go=dex] .pkmsvv-menu-label')?.textContent,second:document.querySelector('#pkmsvv-pokebox-button .pkmsvv-menu-label')?.textContent}))()");
   if(menuState.oldMenu)assert.equal(menuState.oldMenu,'PokéBox');
   if(menuState.second)assert.equal(menuState.second,'Pokédex');
