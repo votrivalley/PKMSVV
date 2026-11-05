@@ -17,7 +17,8 @@
  const integer=n=>Number.isSafeInteger(n)&&n>0;
  const getSave=()=>typeof G==='undefined'?null:G.DB?.save;
  const box2=()=>typeof G==='undefined'?null:G.PKMSVVBox2;
- let dropsThisRun=0,enemyInstalled=false,shopInstalled=false;
+ let dropsThisRun=0,unflushedPityKills=0,enemyInstalled=false,shopInstalled=false;
+ const PITY_BATCH=25; // far fewer synchronous save writes in crowded solo runs
  function valid(s){
   if(!box2()?.valid?.(s))return false;
   if(s.pkmsvvReforgePrisms!==undefined&&!nonneg(s.pkmsvvReforgePrisms))return false;
@@ -136,20 +137,35 @@
   const drops=counter>=PITY||random()<info.rate;
   const nextDrops=dropsThisRun+(drops?1:0);
   try{
+   // Regular kills update in-memory pity without forcing a localStorage write
+   // on every death. Existing game autosave and the run boundary flush it.
+   if(!drops&&counter%PITY_BATCH!==0){
+    s.pkmsvvReforgePity=counter;unflushedPityKills++;
+    return {eligible:true,dropped:false,kind:info.kind,rate:info.rate,
+      pity:counter,prisms:s.pkmsvvReforgePrisms||0};
+   }
    const receipt=atomic(s,draft=>{
     draft.pkmsvvReforgePity=drops?0:counter;
     if(drops)draft.pkmsvvReforgePrisms=(draft.pkmsvvReforgePrisms||0)+1;
     return {eligible:true,dropped:drops,kind:info.kind,rate:info.rate,
      pity:draft.pkmsvvReforgePity,prisms:draft.pkmsvvReforgePrisms||0};
    });
-   dropsThisRun=nextDrops;
+   unflushedPityKills=0;dropsThisRun=nextDrops;
    return receipt;
   }catch(e){
    enemy._pkmsvvPrismCounted=false;
    throw e;
   }
  }
- function resetRun(){dropsThisRun=0;}
+ function flushPity(){
+  if(!unflushedPityKills)return false;
+  if(typeof G==='undefined'||!G.DB?.commit)return false;
+  try{
+   if(G.DB.commit(true)===false)return false;
+   unflushedPityKills=0;return true;
+  }catch(_){return false}
+ }
+ function resetRun(){flushPity();dropsThisRun=0;}
  function runDrops(){return dropsThisRun;}
  function enemyHook(EnemyClass,manager,db){
   if(!EnemyClass?.prototype||typeof EnemyClass.prototype.hurt!=='function')return false;
@@ -251,6 +267,7 @@
  }
  return {ITEM,PRICE,SHOP_RATE,PITY,MAX_DROPS_PER_RUN,RATES,valid,count,pity,today,slotRoll,
   shopOffer,buy,resetBranch,enemyInfo,eligibleDefeat,defeated,resetRun,runDrops,isSoloPvE,enemyHook,
+  PITY_BATCH,flushPity,
   installShop,init};
 });
 if(typeof window!=='undefined'&&window.G)window.G.PKMSVVBox3?.init?.();
