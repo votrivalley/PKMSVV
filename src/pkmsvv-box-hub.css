@@ -1,0 +1,87 @@
+/* PokéBox hub v1 — isolated QA. Uses same dark teal UI language as game.
+ * Compact grid + animated live detail; fixed 6-slot quick team, modal scrollers.
+ */
+#pkmsvv-pokebox-overlay .pkmbx-hub-panel{width:min(1280px,100%);max-height:96dvh;display:flex;flex-direction:column;overflow:hidden;padding:16px 18px;background:#10273a;border:2px solid #75bbc0}
+#pkmsvv-pokebox-overlay .pkmbx-hub-panel .pkmbx-head{flex-shrink:0}
+.pkmbx-hub-team-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:8px 0 5px}
+.pkmbx-hub-team-title h3{font-size:15px;letter-spacing:.3px;color:#ffdf89;margin:0}
+.pkmbx-hub-team-title b{font-size:13px;color:#f4f7ff}
+.pkmbx-team-six{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;flex-shrink:0}
+.pkmbx-team-slot{min-width:0;min-height:82px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;background:#193d50;border:1px solid #6fadb6;border-radius:9px;color:white;cursor:pointer;font:inherit;padding:4px}
+.pkmbx-team-slot.focused{border-color:#f2dc93;box-shadow:inset 0 0 0 2px #f2dc93}
+.pkmbx-team-slot canvas{width:42px;height:42px;image-rendering:pixelated}
+.pkmbx-team-slot span:not(.pkmbx-team-empty){font-size:11px;font-weight:650;max-width:100%;text-overflow:ellipsis;white-space:nowrap;overflow:hidden}
+.pkmbx-team-slot:disabled{opacity:.6;cursor:default}
+.pkmbx-team-empty{font-size:26px;color:#88d5c2}
+#pkmsvv-pokebox-overlay .pkmbx-hub-tools{margin:12px 0;gap:14px}
+.pkmbx-hub-tools input[type=search]{max-width:560px}
+.pkmbx-hub-main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(290px,1fr);gap:12px;min-height:0;flex:1}
+.pkmbx-hub-left{min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.pkmbx-hub-left>.pkmbx-grid{flex:1;min-height:120px;overflow-y:auto;align-content:start;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;padding:3px 4px 7px;scrollbar-color:#79a4a9 transparent}
+#pkmsvv-pokebox-overlay .pkmbx-hub-slot{min-height:118px;padding:6px 4px;position:relative;background:#19394c;border:1px solid #59838f}
+#pkmsvv-pokebox-overlay .pkmbx-hub-slot.focused{border-color:#ffd56b;box-shadow:inset 0 0 0 2px #ffd56b}
+#pkmsvv-pokebox-overlay .pkmbx-hub-slot.selected{background:#31556b}
+#pkmsvv-pokebox-overlay .pkmbx-hub-slot canvas{width:64px;height:64px}
+.pkmbx-mini-icons{font-size:12px;color:#ffdf82;min-height:14px}
+.pkmbx-profile{min-width:0;overflow-y:auto;overflow-x:hidden;background:linear-gradient(180deg,#183d50,#122d41);border:1px solid #5b8298;border-radius:12px;padding:12px;scrollbar-color:#7b99a4 transparent}
+.pkmbx-hub-hero{display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:1px solid #63849a}
+.pkmbx-hub-hero>canvas{flex:0 0 auto;width:min(145px,45%);height:145px;image-rendering:pixelated}
+.pkmbx-hub-hero>div{min-width:0}
+.pkmbx-hub-hero strong{font-size:21px;word-break:break-word;color:#ffdf8a}
+.pkmbx-hub-hero p{font-size:12px;color:#dbebf6;line-height:1.5;margin:7px 0}
+.pkmbx-hub-info{margin:8px 0;padding:6px 11px;background:#11283a;border-radius:9px;border:1px solid #38596f}
+.pkmbx-hub-info p{font-size:13px;color:#e2f3fa;line-height:1.5;margin:6px 0;overflow-wrap:anywhere}
+.pkmbx-hub-buttons,.pkmbx-hub-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:9px 0}
+.pkmbx-hub-buttons>.btn{flex:1 1 auto;white-space:normal}
+.pkmbx-hub-tabs>.btn{flex:1 1 25%;min-width:85px;white-space:normal}
+.pkmbx-hub-tab-content{font-size:13px;color:#e0eaf5;line-height:1.5}
+.pkmbx-hub-tab-content p{margin:8px 0}
+.pkmbx-hub-tab-content h3{font-size:15px;color:#ffda8a;margin:9px 0}
+.pkmbx-hub-tab-content h4{font-size:14px;color:#e8d9a8;margin:12px 0 6px}
+.pkmbx-hub-inventory{display:flex;align-items:end;flex-wrap:wrap;gap:8px}
+.pkmbx-hub-inventory label{display:grid;flex:1;min-width:180px;gap:4px}
+.pkmbx-hub-inventory select{width:100%;background:#102e3d;border:1px solid #6eafbf;border-radius:7px;color:white;padding:9px}
+.pkmbx-hub-ability,.pkmbx-hub-tms{display:flex;flex-wrap:wrap;gap:7px;margin:6px 0}
+.pkmbx-hub-ability button,.pkmbx-hub-tms button{white-space:normal;min-height:34px}
+.pkmbx-page{margin:5px 0}
+#pkmsvv-pokebox-overlay .pkmbx-foot{margin-top:8px;padding-top:7px;flex-shrink:0}
+#pkmsvv-pokebox-overlay .pkmbx-warning{flex-shrink:0;margin:5px 0 0}
+#pkmbx-dex-overlay{position:fixed;inset:0;z-index:20060;background:rgba(2,8,20,.93);display:flex;align-items:center;justify-content:center;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
+#pkmbx-dex-overlay .pkmbx-dex-panel{width:min(1200px,100%);max-height:96dvh;overflow:hidden;display:flex;flex-direction:column;background:#102b3c;border:2px solid #78aab8}
+#pkmbx-dex-search{flex-shrink:0;padding:12px;background:#0a1c2d;border:1px solid #6e94a7;border-radius:8px;color:white;font:inherit;margin:8px 0 12px}
+.pkmbx-dex-main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(310px,1fr);gap:12px;flex:1;min-height:0}
+.pkmbx-dex-results{overflow:hidden;min-height:0;display:flex;flex-direction:column}
+.pkmbx-dex-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;align-content:start;overflow:auto;flex:1;min-height:130px;padding:3px}
+.pkmbx-dex-card{min-width:0;min-height:111px;background:#193c4a;color:#fff;border:1px solid #5d8b95;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:5px;cursor:pointer}
+.pkmbx-dex-card.focused{border:2px solid #ffdb80;background:#244d5c}
+.pkmbx-dex-card canvas{width:56px;height:56px;image-rendering:pixelated}
+.pkmbx-dex-card span{font-size:11px;color:#bad6e3}
+.pkmbx-dex-card b{max-width:100%;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pkmbx-dex-evo{border:1px solid #66859a;border-radius:10px;padding:11px;margin:12px 0}
+.pkmbx-dex-evo h4{font-size:14px;color:#ffdb87;margin:0 0 7px}
+.pkmbx-dex-evo button{display:block;width:100%;text-align:left;white-space:normal;line-height:1.45;margin:6px 0}
+.pkmbx-dex-evo p{font-size:12px;line-height:1.45;color:#cbdbeb}
+@media(max-width:870px){
+ #pkmsvv-pokebox-overlay .pkmbx-hub-panel{padding:10px}
+ .pkmbx-hub-main{grid-template-columns:minmax(0,1fr) minmax(230px,.95fr)}
+ .pkmbx-hub-left>.pkmbx-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ #pkmsvv-pokebox-overlay .pkmbx-hub-slot{min-height:105px}
+ .pkmbx-hub-hero>canvas{width:95px;height:95px}
+ .pkmbx-hub-hero strong{font-size:17px}
+ .pkmbx-dex-main{grid-template-columns:minmax(0,1fr) minmax(240px,.9fr)}
+ .pkmbx-dex-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:620px){
+ #pkmsvv-pokebox-overlay .pkmbx-hub-panel,#pkmbx-dex-overlay .pkmbx-dex-panel{max-height:calc(100dvh - 20px);overflow:auto}
+ .pkmbx-team-six{grid-template-columns:repeat(6,minmax(0,1fr));gap:3px}
+ .pkmbx-team-slot{min-height:65px;padding:3px}
+ .pkmbx-team-slot canvas{width:33px;height:33px}
+ .pkmbx-team-slot span:not(.pkmbx-team-empty){font-size:9px}
+ .pkmbx-hub-main,.pkmbx-dex-main{display:flex;flex-direction:column;overflow:visible}
+ .pkmbx-hub-left>.pkmbx-grid,.pkmbx-dex-grid{grid-template-columns:repeat(3,minmax(0,1fr));max-height:320px;overflow:auto}
+ .pkmbx-profile{max-height:none;overflow:visible}
+ .pkmbx-hub-hero>canvas{height:116px;width:116px}
+ #pkmsvv-pokebox-overlay .pkmbx-hub-slot{min-height:99px}
+ #pkmsvv-pokebox-overlay .pkmbx-hub-slot canvas{width:52px;height:52px}
+ .pkmbx-hub-tools input[type=search]{width:100%}
+}
