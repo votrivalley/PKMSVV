@@ -56,7 +56,7 @@
   return true;
  }
  function hybridHit(pl,e,traits,atMs=nowMs()){
-  if(!traits?.hybrid||!e||e.dead||!eligibleMode())return 0;
+  if(!traits?.hybrid||!e||!eligibleMode())return 0; // fatal hit still erupts around the defeated target
   if(atMs<(pl._pkmbxHybridNext||0))return 0;
   const around=typeof G!=='undefined'&&G.EnemyMgr?.queryCircle?.(e.x,e.y,140);
   if(!Array.isArray(around))return 0;
@@ -77,9 +77,9 @@
   return affected;
  }
  function procHit(pl,e,move,traits,random=Math.random,atMs=nowMs()){
-  if(!traits||!pl||!e||e.dead||!eligibleMode()||e.remote)return {proc:false,hybrid:0};
+  if(!traits||!pl||!e||!eligibleMode()||e.remote)return {proc:false,hybrid:0};
   let proc=false;
-  if(atMs>=(pl._pkmbxRankHitNext||0)&&random()<HIT_PROC){
+  if(!e.dead&&atMs>=(pl._pkmbxRankHitNext||0)&&random()<HIT_PROC){
    pl._pkmbxRankHitNext=atMs+HIT_LOCK_MS;
    proc=applyStatus(e,traits.effects,pl,traits.rank,random);
   }
