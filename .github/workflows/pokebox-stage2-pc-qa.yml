@@ -1,4 +1,4 @@
-name: Pokebox Stage 3 isolated Windows QA artifact
+name: Pokebox Stage 4 isolated Windows QA artifact
 on:
   push:
     branches:
@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: '22'
       - name: Run Stage 1 and Stage 1/2/3 save/regression tests
-        run: npm run test:pokebox:stage3
+        run: npm run test:pokebox:stage4
       - name: Download successful signed v1.5.93 Windows baseline
         uses: actions/download-artifact@v4
         with:
@@ -29,15 +29,16 @@ jobs:
         run: node scripts/build-pokebox-stage1-pc-qa.cjs
       - name: Verify PC game and isolated save identity
         run: |
-          test -s dist/pokebox-stage3-pc-qa/resources/app.asar
-          test -s dist/pokebox-stage3-pc-qa/resources/lan-site/game/js/ui/pkmsvv-box-stage2.js
-          test -s dist/pokebox-stage3-pc-qa/resources/lan-site/game/js/ui/pkmsvv-box-stage2-ui.js
-          test -s dist/pokebox-stage3-pc-qa/resources/lan-site/game/js/ui/pkmsvv-box-stage3.js
-          test -s dist/pokebox-stage3-pc-qa/resources/lan-site/game/css/pkmsvv-box-stage3.css
-          grep -q pkmsvv-box-stage3 dist/pokebox-stage3-pc-qa/resources/lan-site/game/index.html
+          test -s dist/pokebox-stage4-pc-qa/resources/app.asar
+          test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-box-stage2.js
+          test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-box-stage2-ui.js
+          test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-box-stage3.js
+          test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-box-stage4.js
+          test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/css/pkmsvv-box-stage3.css
+          grep -q pkmsvv-box-stage4 dist/pokebox-stage4-pc-qa/resources/lan-site/game/index.html
       - uses: actions/upload-artifact@v4
         with:
-          name: PKMSVV-PokeBox-Stage3-Windows-QA-ONLY
-          path: dist/pokebox-stage3-pc-qa
+          name: PKMSVV-PokeBox-Stage4-Windows-QA-ONLY
+          path: dist/pokebox-stage4-pc-qa
           retention-days: 14
           if-no-files-found: error
