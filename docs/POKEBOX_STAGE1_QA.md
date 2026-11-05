@@ -45,3 +45,24 @@ Local browser smoke tests are **not yet verified**: sandbox Chromium could not n
 **Tests:** npm run test:pokebox:stage2. The draft-branch test:web suite includes both Stage 1 and Stage 2 test files; source CI green at 2d6cb617. No production build, production site deploy or Android APK is authorized before all four stages.
 
 **Before release:** browser runtime and Windows executable smoke, legacy save replay/export, full Gacha ×1/10/100 after restart, real quota exhaustion, service worker cache/version behavior, per-individual Nature/Ability during actual battle, rank trait implementation, Reforge Prism economy, 3-platform same-commit QA.
+
+
+## Stage 3 incremental QA — Reforge Prism (2026-11-05)
+
+**Status:** Stage 3 source + unit tests + isolated Web/PC packaging; **NOT** a release build for Android/Web production.
+
+- Reforge Prism / Lăng Kính Tái Khắc: the first Rank 3 branch choice stays free. A later branch swap consumes **one** Prism, leaving the individual's Rank 3 or Rank 5, Nature, Ability, Shiny, Mega, upgrades and same-species shards untouched. Only an alternate branch valid for the Pokémon's current typing may be selected; Rank never resets.
+- Solo PvE kill drops: one roll per eligible, actually defeated, non-remote enemy; type match **0.35%**, exact same species **1.5%**, matching-type elite **3%**, matching-type boss **8%**. Apply **one highest rate** only (dual-type monsters are not double-rolled). Arceus/remote/boss-support guards and Arena, Co-op, Royale, Berry Rescue, menu states are excluded from the QA hook until host/kill attribution is reviewed.
+- **Guaranteed drop on eligible kill #180** after the last drop (pity counter stored in pkmsvvReforgePity); at most **1 dropped Prism per run**. Buying in Kecleon does not reset pity. Kill hook watches local G.Enemy.prototype.hurt transition to dead; the per-run cap resets on G.EnemyMgr.clear. Real mixed boss waves/kill-credit handling needs manual Stage 4 validation.
+- Kecleon Shop: deterministic **12%** daily availability, **6,500 PokéCoins**, one item maximum per day. The day key follows the shop's existing Europe/Madrid TM refresh. Reopening or switching tabs cannot reroll stock. In Shop the item is shown with price/status; in **Túi đồ / Bag** it shows owned count and where to use it.
+- All item purchase, respec, and Prism-drop record writes clone the save and roll back the in-memory save if G.DB.commit(true) signals immediate failure. This does **not** prove crash durability or distributed Cloud Save safety; those remain release blockers.
+- Web/PC staging uses scripts/build-pokebox-stage1-qa.cjs and scripts/build-pokebox-stage1-pc-qa.cjs (historical names), emitting dist/pokebox-stage3-qa and dist/pokebox-stage3-pc-qa from the known successful v1.5.93 artifacts. The PC profile remains **PKMSVV-BOX-QA-1**, separate from production save. No Cloudflare deploy, no Android package changes.
+- Test command: npm run test:pokebox:stage3 covers Stage 1/2/3 data, shop, drops, Rank reset and failed-commit rollback. Isolated Web QA workflow additionally tests actual browser engine/module/shop/kill hook installation using headless Chromium.
+
+### Stage 4 release blockers
+
+1. Runtime Rank 3/5 elemental trait implementations, 5% Rank 4 cooldown and clear Solo/Champion/Mega balancing (the Rank trait currently stores metadata only).
+2. Check combat credit across elite/boss/support deaths and that kill-drop save commits do not cause slowdown at high monster density.
+3. Test actual Gacha ×1/×10/×100, restore/import, quota errors, store purchase/respec across restart, and existing Berry crash old-save regression.
+4. Build all platforms from the **same approved commit** and smoke-test PC, Android signed in-place update and Web.
+5. Keep this PR **DRAFT** and do not merge to feature/lan-local-beta / deploy Cloudflare until all four stages are complete.
