@@ -167,8 +167,8 @@
    // ratio so the same Rank bonus isn't applied twice and base stats survive.
    for(const stat of ['pa','sa','df','sd','spd']){
     if(typeof result[stat]!=='number')continue;
-    const before=(old.up===stat?1.1:old.down===stat?.9:1);
-    const after=(n.up===stat?1.1:n.down===stat?.9:1);
+    const before=(old.up===stat?1.1:old.down===stat ? .9 : 1);
+    const after=(n.up===stat?1.1:n.down===stat ? .9 : 1);
     result[stat]=result[stat]*after/before;
    }
    if(typeof result.pa==='number'&&typeof result.sa==='number')
