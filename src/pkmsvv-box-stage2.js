@@ -182,6 +182,38 @@
   else if(typeof copyMon.atk==='number')copyMon.atk*=factor;
   return copyMon;
  }
+
+ function hookIndividualTraits(mons,db){
+  if(!mons||mons._pkmbxStage2Traits||typeof mons.natureOf!=='function'||typeof mons.abilityOf!=='function')return false;
+  const oldNature=mons.natureOf,oldAbility=mons.abilityOf;
+  mons.natureOf=function(dex,...args){
+   const x=selected(db?.save);
+   if(x&&x.dex===Number(dex)){
+    const nature=G.NATURE_BY?.[x.natureId];
+    if(nature)return nature;
+   }
+   return oldNature.call(this,dex,...args);
+  };
+  mons.abilityOf=function(dex,...args){
+   const x=selected(db?.save),abilities=G.DEX_ABIL?.[dex];
+   if(x&&x.dex===Number(dex)&&abilities?.[x.abilitySlot])
+    return {slot:x.abilitySlot,id:abilities[x.abilitySlot]};
+   return oldAbility.call(this,dex,...args);
+  };
+  mons._pkmbxStage2Traits=true;return true;
+ }
+ function withIndividualNature(mon,dex,item){
+  const nature=G.NATURE_BY?.[item.natureId],base=G.DEX_BY?.[dex];
+  if(!nature||!base||mon.nature===nature.id)return mon;
+  const adjusted={...mon};
+  for(const k of ['pa','sa','df','sd','spd']){
+   if(typeof base[k]!=='number')continue;
+   adjusted[k]=base[k]*(nature.up===k?1.1:nature.down===k?0.9:1);
+  }
+  if(typeof adjusted.pa==='number'&&typeof adjusted.sa==='number')adjusted.atk=Math.max(adjusted.pa,adjusted.sa);
+  adjusted.nature=nature.id;
+  return adjusted;
+ }
  function hookPveStats(mons,db){
   if(!mons||typeof mons.monFor!=='function'||mons._pkmbxStage2Stats)return false;
   const original=mons.monFor;
@@ -189,7 +221,7 @@
    const result=original.call(this,dex,...args),s=db?.save,x=selected(s);
    // No raw Rank advantage in PvP or multiplayer. Champion balancing is Stage 4.
    if(!x||x.dex!==Number(dex)||typeof G!=='undefined'&&(G.Coop?.active||G.PKMSVVArenaPvp?.active||G.PKMSVVChampion?.active))return result;
-   return statBonus(result,x);
+   return statBonus(withIndividualNature(result,dex,x),x);
   };
   mons._pkmbxStage2Stats=true;return true;
  }
@@ -198,6 +230,7 @@
   // Late-loaded QA injection: run after the compiled engine registered Gacha and Mons.
   function install(){
    try{wrappedPull(G.Gacha,G.DB);}catch(_){}
+   try{hookIndividualTraits(G.Mons,G.DB);}catch(_){}
    try{hookPveStats(G.Mons,G.DB);}catch(_){}
   }
   install();
@@ -207,6 +240,6 @@
   }
  }
  return {MAX_RANK,MAX_SAVE_CHARS,formatRank,valid,get,shards,eligible,candidateList,makeOne,applyRolls,wrappedPull,
-  toFragments,rankUp,branches,chooseBranch,selected,statBonus,hookPveStats,init};
+  toFragments,rankUp,branches,chooseBranch,selected,statBonus,hookIndividualTraits,withIndividualNature,hookPveStats,init};
 });
 if(typeof window!=='undefined'&&window.G)window.G.PKMSVVBox2?.init?.();
