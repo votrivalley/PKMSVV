@@ -71,6 +71,28 @@ test('Rank 5 dual-type hybrid is limited to six targets and once per 12 seconds'
  assert.equal(stage4.hybridHit(pl,main,traits,10001),0);
  assert.equal(stage4.hybridHit(pl,main,traits,22010),6);
 });
+test('Rank 5 hybrid still triggers on fatal blows, but cannot apply burn to a dead Pokémon',()=>{
+ const h=setup(5,'fire',['fire','flying']),pl=new h.Player();
+ stage4.install(h.Player,G.DB);pl.setAbility(10);
+ const finalTarget=enemy({dead:true});
+ const targets=[enemy(),enemy()];
+ G.EnemyMgr.queryCircle=()=>[finalTarget,...targets];
+ const result=stage4.procHit(pl,finalTarget,{type:'fire'},pl._pkmbxRankTraits,()=>0,10000);
+ assert.equal(result.proc,false);
+ assert.equal(result.hybrid,2);
+ assert.ok(targets.every(e=>e.status.hit===1));
+ assert.equal(finalTarget.status.burn,0);
+});
+test('Rank stat boost also stays out of Champion and Royale, not merely Co-op',()=>{
+ const h=setup(5,'fire');
+ G.Mons={monFor:dex=>({dex,hp:100,pa:20,sa:30})};
+ stage2.hookPveStats(G.Mons,G.DB);
+ assert.equal(G.Mons.monFor(6).hp,130);
+ G.PKMSVVChampionArena={active:true};
+ assert.equal(G.Mons.monFor(6).hp,100);
+ G.PKMSVVChampionArena.active=false;G.Royale.active=true;
+ assert.equal(G.Mons.monFor(6).hp,100);
+});
 test('monotype branch receives a strengthened specialized Rank 5 effect',()=>{
  const h=setup(5,'offense',['electric']),pl=new h.Player();
  stage4.install(h.Player,G.DB);pl.setAbility(10);
