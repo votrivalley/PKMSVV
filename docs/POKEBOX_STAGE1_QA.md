@@ -22,3 +22,9 @@ node --test tests/pokebox-stage1.test.cjs
 The builder copies the already-built Web into `dist/pokebox-stage1-qa` and adds standalone scripts to `/game/` and `/ai/game/`. It cannot modify or upload the production directory. No Android package ID, signing key, versionCode or live deployment is changed.
 
 Test a **copy** of save JSON and confirm the backup is downloaded before clicking migration. Stage 1 must not be merged to `feature/lan-local-beta` until all four stages and cross-platform QA pass.
+
+## Windows QA
+
+Use a successful baseline `dist/lan-windows/win-unpacked` and run `node scripts/build-pokebox-stage1-pc-qa.cjs`. The new standalone output is `dist/pokebox-stage1-pc-qa`. Never overlay the installed PC application or deploy to the public website.
+
+Local browser smoke tests are **not yet verified**: sandbox Chromium could not navigate even to its loopback server, although the game assets returned HTTP 200 from curl. Check the actual menu/selection and save restore manually on Windows/Android before merging.
