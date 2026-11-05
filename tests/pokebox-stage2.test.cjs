@@ -144,7 +144,7 @@ test('Individual traits follow the selected PokéBox instance',()=>{
  assert.equal(G.Mons.abilityOf(6).id,12);
  const mon=G.Mons.monFor(6);
  assert.equal(mon.hp,100);
- assert.equal(mon.spd,55);assert.equal(mon.sa,27);
+ assert.ok(Math.abs(mon.spd-55)<1e-9);assert.ok(Math.abs(mon.sa-27)<1e-9);
  h.s.pkmsvvSelectedInstanceId='b1-6-n';
  assert.equal(G.Mons.natureOf(6).id,'hardy');
  assert.equal(G.Mons.abilityOf(6).id,11);
