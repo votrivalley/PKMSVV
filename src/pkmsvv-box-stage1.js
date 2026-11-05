@@ -50,6 +50,7 @@
    next.pkmsvvBoxSchema=SCHEMA;
    next.pkmsvvBox=box;
    next.pkmsvvSelectedInstanceId=selectedId(save,box);
+   next.pkmsvvTeam6=next.pkmsvvSelectedInstanceId?[next.pkmsvvSelectedInstanceId]:[];
    return {save:next,changed:true,count:box.length};
  }
  function validBox(save){
@@ -64,14 +65,14 @@
  function lookups(){
    return {natureOf:dex=>G.Mons?.natureOf?.(dex),abilityOf:dex=>G.Mons?.abilityOf?.(dex)};
  }
- function snapshotFields(s){return ['pkmsvvBoxSchema','pkmsvvBox','pkmsvvSelectedInstanceId','partner','partnerShiny'].map(k=>({k,exists:own(s,k),v:s[k]}));}
+ function snapshotFields(s){return ['pkmsvvBoxSchema','pkmsvvBox','pkmsvvSelectedInstanceId','pkmsvvTeam6','partner','partnerShiny'].map(k=>({k,exists:own(s,k),v:s[k]}));}
  function rollbackFields(s,values){for(const {k,exists,v} of values)if(exists)s[k]=v;else delete s[k];}
  function persistMigration(){
    const s=getSave();if(!s||!G.DB||G.DB.guest)throw Error(tr('Hãy đăng nhập hồ sơ offline trước.','Log into an offline profile first.'));
    const result=migrate(s,lookups());if(!result.changed)return result;
    const old=snapshotFields(s);
    try{
-     for(const k of ['pkmsvvBoxSchema','pkmsvvBox','pkmsvvSelectedInstanceId'])s[k]=result.save[k];
+     for(const k of ['pkmsvvBoxSchema','pkmsvvBox','pkmsvvSelectedInstanceId','pkmsvvTeam6'])s[k]=result.save[k];
      if(!validBox(s))throw Error('Invalid migrated box');
      if(G.DB.commit(true)===false)throw Error('Save commit failed');
      return result;
