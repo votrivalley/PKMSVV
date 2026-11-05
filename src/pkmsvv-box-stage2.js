@@ -220,7 +220,9 @@
   mons.monFor=function(dex,...args){
    const result=original.call(this,dex,...args),s=db?.save,x=selected(s);
    // No raw Rank advantage in PvP or multiplayer. Champion balancing is Stage 4.
-   if(!x||x.dex!==Number(dex)||typeof G!=='undefined'&&(G.Coop?.active||G.PKMSVVArenaPvp?.active||G.PKMSVVChampion?.active))return result;
+   if(!x||x.dex!==Number(dex)||typeof G!=='undefined'&&(G.Coop?.active||G.Arena?.active||G.Royale?.active||
+    G.PKMSVVArenaPvp?.active||G.PKMSVVChampionArena?.active||G.PKMSVVChampion?.active||
+    G.PKMSVVBerryRescue?.active||G.Rift?.inArena))return result;
    return statBonus(withIndividualNature(result,dex,x),x);
   };
   mons._pkmbxStage2Stats=true;return true;
