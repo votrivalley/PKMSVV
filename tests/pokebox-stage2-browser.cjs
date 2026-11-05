@@ -72,7 +72,7 @@ async function main(){
   assert.equal(pureDex.itemActions,false,'Pokédex must remain read-only');
   assert.ok(pureDex.cards>0,'Pokédex must list species');
   assert.equal(await evaluate("(()=>{G.PKMSVVBoxHubUI.closeDex();return !!document.querySelector('#pkmbx-dex-overlay')})()"),false);
-  const menuState=await evaluate("(()=>({oldMenu:document.querySelector('#scr-menu [data-go=\\\"dex\\\"] .pkmsvv-menu-label')?.textContent,second:document.querySelector('#pkmsvv-pokebox-button .pkmsvv-menu-label')?.textContent}))()");
+  const menuState=await evaluate("(()=>({oldMenu:document.querySelector('#scr-menu [data-go=dex] .pkmsvv-menu-label')?.textContent,second:document.querySelector('#pkmsvv-pokebox-button .pkmsvv-menu-label')?.textContent}))()");
   if(menuState.oldMenu)assert.equal(menuState.oldMenu,'PokéBox');
   if(menuState.second)assert.equal(menuState.second,'Pokédex');
 
