@@ -375,6 +375,12 @@
   if(menuInitialized)return;
   menuInitialized=true;
   if(G.Mons)Hub.installMons(G.Mons);
+  if(G.MenuUI?.openDex&&!G.MenuUI._pkmbxReadonlyDex){
+   G.MenuUI.openDex=openDex;
+   G.MenuUI._pkmbxReadonlyDex=true;
+  }
+  if(/Pok[eé]mon Sinh T[oồ]n/i.test(doc.title))doc.title='Pokémon Chuyển Sinh — Votri Valley';
+
   // The Stage 2 overlay is retained, but Rank works on the *focused* individual.
   Box.focusedId=()=>focused||currentSave()?.pkmsvvSelectedInstanceId||null;
   Box.open=openBox;
