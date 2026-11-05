@@ -45,28 +45,7 @@ jobs:
           profile: Nexus 6
           emulator-options: -no-window -no-audio -no-snapshot -gpu swiftshader_indirect
           disable-animations: true
-          script: |
-            set -e
-            apk="$(find qa-android -name '*.apk' -type f -print -quit)"
-            test -s "$apk"
-            prod="$(find prod-android -name '*.apk' -type f -print -quit)"
-            test -s "$prod"
-            adb install -r "$prod"
-            adb install -r "$apk"
-            adb shell pm list packages | grep -q 'com.votrivalley.pkmsvv.box4qa0'
-            adb shell pm list packages | grep -q 'com.votrivalley.pkmsvv.fulllan'
-            echo "Both official and QA APK are installed side-by-side."
-            adb shell monkey -p com.votrivalley.pkmsvv.box4qa0 -c android.intent.category.LAUNCHER 1
-            sleep 22
-            adb shell pidof com.votrivalley.pkmsvv.box4qa0
-            adb shell dumpsys activity activities | grep -E 'ResumedActivity|topResumedActivity' | head -5
-            adb logcat -d -t 12000 > qa-android-logcat.txt
-            if grep -E -A 6 'FATAL EXCEPTION: main' qa-android-logcat.txt | grep -q 'com.votrivalley.pkmsvv.box4qa0'; then
-              echo 'QA Android process crashed'; exit 1
-            fi
-            adb exec-out screencap -p > qa-android-screenshot.png
-            test -s qa-android-screenshot.png
-            echo "PASS: distinct QA Android app installed, foreground process alive, screenshot captured."
+          script: bash scripts/pokebox-stage4-android-emulator-smoke.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:
