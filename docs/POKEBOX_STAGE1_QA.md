@@ -66,3 +66,38 @@ Local browser smoke tests are **not yet verified**: sandbox Chromium could not n
 3. Test actual Gacha ×1/×10/×100, restore/import, quota errors, store purchase/respec across restart, and existing Berry crash old-save regression.
 4. Build all platforms from the **same approved commit** and smoke-test PC, Android signed in-place update and Web.
 5. Keep this PR **DRAFT** and do not merge to feature/lan-local-beta / deploy Cloudflare until all four stages are complete.
+
+
+## Stage 4 incremental QA — Rank battle + pre-release gates (2026-11-06)
+
+**Code implemented on isolated draft branch. Still NOT approved for production Web/Android/PC.**
+
+- Solo PvE: Rank 0–5 gives +6% max HP and damage per rank (Rank 5 +30%, not compounded).
+- Rank 3 dual-type: select a primary type; single-type: choose offense/defense. A 16%-chance proc with 3.5-second cooldown on any successful hit, even if the skill does not match the selected type. Type groups include burn, poison, slow, impact, evasion, guard and healing.
+- Rank 4: multiply the active player's final cooldown multiplier by 0.95, after the existing Ability setup.
+- Rank 5: hybrid effect every 12 seconds maximum, capped at six nearby enemies, reduced boss damage and triggered by finishing blows. Dual-type Pokémon use the other base type for the additional effect; single-type Pokémon reinforce the chosen specialty.
+- Live effects decorate the selected Player's individual Ability object, never G.AbilityFX.FX shared across species.
+- Competitive balance guard: Block both Rank stats and active effects in Arena, Champion, Royale, Co-op and Berry Rescue. Rank currently works only for Solo PvE; Mega changed typings do NOT automatically change a selected branch, pending user approval.
+- Original Gacha/Rank item and shop logic still use the independently versioned Stage 1-3 QA modules; official source game compilation has no PokéBox injections.
+
+### Performance/save mitigations
+
+- Reforge pity progress is kept in memory, with flush every 25 eligible kills and at new run; a Prism drop still commits immediately. Flush cannot be transferred across a different save profile.
+- Rank fodder candidate listing validates only once per view, avoiding repeated O(n²) work with large boxes.
+- The migrated original individual, shiny, favorite, locked or Legendary Pokémon are never automatically consumed.
+- More QA is still needed for sudden process death, Android lifecycle interruptions, cloud/local save import, 2–4 trainer soak and in-game Mega transitions.
+
+### Automated QA
+
+- npm run test:pokebox:stage4 covers Stage 1–4: Gacha atomicity, duplicate-only Rank A+C, shop odds, Prism reset, pity, old-save retention, Rank proc/cooldown, multiplayer and Champion isolation.
+- The Web QA builder produces dist/pokebox-stage4-qa, with headless Chromium boot/hook tests. The Windows QA builder produces dist/pokebox-stage4-pc-qa and keeps Electron data in PKMSVV-BOX-QA-1, separate from production.
+- Android QA uses a separate application ID com.votrivalley.pkmsvv.box4qa0 to avoid overwriting the installed app and its saves. The pinned upstream source became inaccessible; an APK repacking workflow attempts to use the previous successfully signed v1.5.93 APK as a baseline, patch QA-only assets and sign with the same permanent key. A successfully packaged QA APK is not a verified native gameplay test.
+- Full public release must rebuild all platforms at the SAME approved commit, retain Android package com.votrivalley.pkmsvv.fulllan with increased versionCode, verify save import/export and old-save game startup, and only then deploy Cloudflare.
+
+### Unresolved release blockers
+
+1. Real device Android UI and scene stability, old save import/export, quota and abrupt termination.
+2. Validate Boss/Elite kill attribution, 3/5 effects during fast monster waves and long-session performance.
+3. Consider Mega changes to elemental typing, Champion AI balance and per-species unique visual traits.
+4. Legendary Rank fodder remains intentionally protected; explicit material/confirm rules still need approval.
+5. Keep PR #22 DRAFT and production branch untouched until these checks pass.
