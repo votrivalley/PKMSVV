@@ -177,3 +177,29 @@ test('Stage 4 source remains in separate QA packagers, never in production scrip
  const prod=fs.readFileSync(path.join(p,'scripts/prepare-game.cjs'),'utf8');
  assert.doesNotMatch(prod,/pkmsvv-box-stage4/);
 });
+
+
+test('QA Android manifest isolates ContentProvider authority and keeps native Activity name',()=>{
+ const os=require('node:os'),cp=require('node:child_process');
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'pkmbx-apk-manifest-'));
+ try{
+  fs.mkdirSync(path.join(dir,'res/values'),{recursive:true});
+  fs.mkdirSync(path.join(dir,'assets/public'),{recursive:true});
+  fs.writeFileSync(path.join(dir,'AndroidManifest.xml'),
+   '<manifest package="com.votrivalley.pkmsvv.fulllan" xmlns:android="http://schemas.android.com/apk/res/android">'+
+   '<application><activity android:name=".MainActivity"/>'+
+   '<provider android:name="androidx.core.content.FileProvider" android:authorities="com.votrivalley.pkmsvv.fulllan.fileprovider"/>'+
+   '</application></manifest>');
+  fs.writeFileSync(path.join(dir,'res/values/strings.xml'),
+   '<resources><string name="app_name">Old Game</string><string name="title_activity_main">Old Game</string></resources>');
+  fs.writeFileSync(path.join(dir,'assets/public/index.html'),
+   '<html><head><title>Old Game</title></head><body><script src="js/app.min.js"></script></body></html>');
+  cp.execFileSync(process.execPath,[path.join(__dirname,'../scripts/patch-pokebox-stage4-apk-qa.cjs'),dir],{timeout:10000});
+  const xml=fs.readFileSync(path.join(dir,'AndroidManifest.xml'),'utf8');
+  assert.match(xml,/package="com\.votrivalley\.pkmsvv\.box4qa0"/);
+  assert.match(xml,/android:name="com\.votrivalley\.pkmsvv\.fulllan\.MainActivity"/);
+  assert.match(xml,/android:authorities="com\.votrivalley\.pkmsvv\.box4qa0\.fileprovider"/);
+  assert.doesNotMatch(xml,/android:authorities="[^"]*fulllan/);
+  assert.match(fs.readFileSync(path.join(dir,'assets/public/index.html'),'utf8'),/pkmsvv-box-stage4\.js/);
+ }finally{fs.rmSync(dir,{recursive:true,force:true});}
+});
