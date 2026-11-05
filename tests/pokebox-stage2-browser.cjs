@@ -31,7 +31,7 @@ async function main(){
  let ws;
  try{
   const portfile=path.join(data,'DevToolsActivePort');
-  await until(()=>fs.existsSync(portfile),12000);
+  await until(()=>fs.existsSync(portfile),30000); // CI cold-start and parallel artifact jobs can delay Chromium startup
   const port=Number(fs.readFileSync(portfile,'utf8').split('\n')[0]);
   const targets=await (await fetch('http://127.0.0.1:'+port+'/json/list')).json();
   const page=targets.find(x=>x.type==='page');assert.ok(page?.webSocketDebuggerUrl);
