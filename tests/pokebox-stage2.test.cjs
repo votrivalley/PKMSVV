@@ -29,7 +29,7 @@ test('existing migration still holds legacy Shiny, Berry, Mega and upgrades unto
  assert.equal(h.s.pkmsvvBox.length,3);
  const x=add(h.s,6);
  assert.equal(x.id,'b2-1');assert.equal(x.dex,6);
- assert.equal(x.natureId,'jolly');assert.equal(x.abilitySlot,0);
+ assert.equal(x.natureId,'jolly');assert.equal(x.abilitySlot,2,'controlled random 0 must hit 5% hidden Ability');
  assert.equal(h.s.pkmsvvBox.length,4);
  assert.equal(h.s.pupg[6].atk,5);assert.equal(h.s.pkmsvvBerry.bag.oran,4);
  assert.equal(h.s.shiny[6].at,2);assert.ok(before.includes('pkmsvvSelectedInstanceId'));
