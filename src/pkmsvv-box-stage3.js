@@ -184,7 +184,8 @@
   function draw(){
    const list=typeof document!=='undefined'?document.getElementById('pkmk-list'):null;
    const active=!!document.getElementById('pkmk-tab-shop')?.classList?.contains('gold');
-   if(!list||!active||list.querySelector('#pkmbx-prism-store'))return;
+   const inBag=!!document.getElementById('pkmk-tab-bag')?.classList?.contains('gold');
+   if(!list||(!active&&!inBag)||list.querySelector('#pkmbx-prism-store'))return;
    const s=db?.save,offer=shopOffer(today(),s);
    const section=document.createElement('section');section.id='pkmbx-prism-store';
    section.setAttribute('translate','no');
@@ -195,7 +196,19 @@
     !offer.available?(vi?'Chưa xuất hiện hôm nay (12%/ngày)':'Not in stock today (12% per day)'):
     (vi?'Hàng hiếm hôm nay · chỉ 1 viên':'Rare daily stock · one only');
    section.innerHTML='<h3>'+title+'</h3><p>'+(vi?'Đổi hướng Rank 3/5 mà không mất Rank.':'Switch your Rank 3/5 branch without losing Rank.')+'</p>'+
-    '<p>'+status+' · '+(vi?'Túi hiện có: ':'In Bag: ')+count(s)+'</p>';
+    '<p>'+(inBag?(vi?'Số lượng trong Túi đồ: ':'Owned: '):(status+' · '+(vi?'Túi hiện có: ':'In Bag: ')))+count(s)+'</p>';
+   if(inBag){
+    const info=document.createElement('p');
+    info.textContent=vi?'Dùng tại PokéBox → Rank → Đổi hướng.':'Use from PokéBox → Rank → Change Path.';
+    section.appendChild(info);
+    list.appendChild(section);
+    return;
+   }
+   if(!valid(s)){
+    const info=document.createElement('p');
+    info.textContent=vi?'Cần tạo PokéBox từ bản sao save trước khi mua.':'Create PokéBox from a backed-up save before buying.';
+    section.appendChild(info);
+   }
    if(offer.available&&!offer.bought){
     const button=document.createElement('button');
     button.className='btn small gold';button.type='button';
