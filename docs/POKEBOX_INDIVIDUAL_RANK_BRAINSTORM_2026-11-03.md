@@ -129,3 +129,24 @@ Không lấy các giá trị ví dụ làm định mức triển khai.
 ### Hàng rào an toàn
 - Không sửa `main`, `feature/lan-local-beta`, khóa ký, package `com.votrivalley.pkmsvv.fulllan`, versionCode, save người chơi hoặc Cloudflare ở bước ghi chú này.
 - Branch này chỉ để giữ các quyết định brainstorm và làm mốc so sánh. Các bugfix gameplay khác nên nằm ở nhánh hotfix riêng theo quy trình bình thường.
+
+## 10. Đề xuất reset nhánh Rank — Lăng Kính Tái Khắc (05/11/2026, CHỜ DUYỆT)
+
+**Gợi ý, không phải luật đã chốt:** Đặt tên vật phẩm hiếm là **Lăng Kính Tái Khắc / Reforge Prism**, dùng một lần để chọn lại hướng đặc tính tại Rank 3. Nếu đang Rank 5, đặc tính kết hợp sẽ cập nhật theo hướng mới, **không** giảm Rank hay xóa Nature, Ability, Mega, TM, nâng cấp hoặc Pokémon. Lần chọn nhánh đầu tiên khi đạt Rank 3 miễn phí. Pokémon một hệ chọn hướng tấn công/phòng thủ (cần thiết kế nhóm hiệu ứng riêng); Pokémon hai hệ chọn hệ chủ đạo và Rank 5 kết hợp hai hệ. Sử dụng từ PokéBox trên một cá thể chỉ định; hiển thị trước/sau và xác nhận trước khi trừ vật phẩm.
+
+### Gợi ý tỷ lệ rơi và bán Shop (chưa cân bằng bằng số liệu runtime)
+
+| Nguồn | Tỷ lệ/giá đề xuất | Điều kiện |
+|---|---|---|
+| Pokémon thường trùng >=1 hệ với Pokémon đang chơi | **0,35%** mỗi hạ gục | Chỉ đối thủ đã bị tiêu diệt hợp lệ |
+| Pokémon đúng cùng loài | **1,5%** mỗi hạ gục | Ưu tiên thay vì mức trùng hệ |
+| Pokémon tinh anh trùng hệ | **3%** mỗi hạ gục | Chỉ một mức tỷ lệ cao nhất, không cộng dồn |
+| Boss trùng hệ | **8%** mỗi hạ gục | Chỉ một mức tỷ lệ cao nhất, không cộng dồn |
+| Bảo hiểm | **Đảm bảo ở lần hạ hợp lệ thứ 180 không rơi** | Bộ đếm lưu theo tài khoản, reset khi nhận được Prism qua rơi; chưa chốt xem mua shop có reset bộ đếm hay không |
+| Giới hạn | **1 Prism rơi/trận** | Chống farm AFK; cần quy tắc credit khi có AI/Co-op |
+| Kecleon Shop | **12% xác suất xuất hiện mỗi ngày** | Một slot ngẫu nhiên riêng, tồn kho 1 viên khi xuất hiện, không phải mọi lần mở shop roll lại |
+| Giá Shop | **6.500 PokéCoins** | Chỉ mua tối đa một viên khi Shop có hàng mỗi ngày |
+
+**Cơ sở giá:** dữ liệu Kecleon hiện có Mint 1.500, Ability Capsule 1.500, Hidden Ability Capsule 5.000 PokéCoins; shop hiện mới luân phiên 8 TM/ngày. Slot Prism ngẫu nhiên là tính năng mới, không khẳng định đã triển khai.
+
+**Hạn chế quan trọng:** Pokémon 2 hệ không được tung hai lần xúc xắc cho một kẻ địch. Chỉ chọn một tỷ lệ cao nhất; không gộp thưởng nếu cùng loài đồng thời trùng hệ. Prism đề xuất dùng chung mọi loài (không tạo 18 item nguyên tố), nhưng điều kiện farm dựa trên Pokémon đang chơi, không phải loài sẽ dùng Prism sau này. Không có tự tiêu mảnh Rank hay ảnh hưởng việc đổi bản sao thành mảnh theo lựa chọn A+C. Cần thử tính cân bằng số trận/giờ chơi và giới hạn Farm AI/Co-op trước khi duyệt chính thức.
