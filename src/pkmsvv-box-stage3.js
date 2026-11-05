@@ -109,7 +109,7 @@
  }
  function enemyInfo(enemy,s=getSave()){
   if(!enemy||enemy.remote||enemy.arceus||enemy._pkmsvvPrismCounted||enemy.isCompanion||
-    enemy._pkmsvvBossSupport||enemy._pkmsvvSupportGuard)return null;
+    enemy._pkmsvvBossSupport||enemy._pkmsvvSupportGuard||enemy.pkmsvvBossGuard)return null;
   const dex=Number(enemy.dex||enemy.mon?.dex||enemy.data?.dex);
   if(!Number.isSafeInteger(dex)||dex<1||dex>1025)return null;
   const played=box2()?.selected?.(s),me=typeof G!=='undefined'?G.DEX_BY?.[played?.dex]:null;
