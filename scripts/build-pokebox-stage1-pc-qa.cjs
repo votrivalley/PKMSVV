@@ -4,7 +4,7 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const root=path.resolve(__dirname,'..');
 const source=path.resolve(process.env.PKMSVV_BOX_PC_BASE||path.join(root,'dist/lan-windows/win-unpacked'));
-const dest=path.resolve(process.env.PKMSVV_BOX_PC_QA_OUT||path.join(root,'dist/pokebox-stage3-pc-qa'));
+const dest=path.resolve(process.env.PKMSVV_BOX_PC_QA_OUT||path.join(root,'dist/pokebox-stage4-pc-qa'));
 if(source===dest||dest.startsWith(source+path.sep)||source.startsWith(dest+path.sep))throw Error('Unsafe QA path');
 const game=path.join(source,'resources/lan-site/game');
 if(!fs.existsSync(path.join(game,'index.html')))throw Error('Build a baseline Windows win-unpacked first');
@@ -33,15 +33,15 @@ fs.writeFileSync(asarPath,bytes);
 const out=path.join(dest,'resources/lan-site/game');
 fs.copyFileSync(path.join(root,'src/pkmsvv-box-stage1.js'),path.join(out,'js/ui/pkmsvv-box-stage1.js'));
 fs.copyFileSync(path.join(root,'src/pkmsvv-box-stage1.css'),path.join(out,'css/pkmsvv-box-stage1.css'));
-for(const [filename,sub] of [['pkmsvv-box-stage2.js','js/ui'],['pkmsvv-box-stage2-ui.js','js/ui'],['pkmsvv-box-stage2.css','css'],['pkmsvv-box-stage3.js','js/ui'],['pkmsvv-box-stage3.css','css']])
+for(const [filename,sub] of [['pkmsvv-box-stage2.js','js/ui'],['pkmsvv-box-stage2-ui.js','js/ui'],['pkmsvv-box-stage2.css','css'],['pkmsvv-box-stage3.js','js/ui'],['pkmsvv-box-stage3.css','css'],['pkmsvv-box-stage4.js','js/ui']])
  fs.copyFileSync(path.join(root,'src',filename),path.join(out,sub,filename));
 const entry=path.join(out,'index.html');let html=fs.readFileSync(entry,'utf8');
 if(!html.includes('</head>')||!html.includes('</body>'))throw Error('PC QA entry changed');
 if(!html.includes('pkmsvv-box-stage1.css'))html=html.replace('</head>','<link rel="stylesheet" href="css/pkmsvv-box-stage1.css">\n</head>');
 if(!html.includes('pkmsvv-box-stage1.js'))html=html.replace('</body>','<script defer src="js/ui/pkmsvv-box-stage1.js"></script>\n</body>');
 for(const cssName of ['pkmsvv-box-stage2.css','pkmsvv-box-stage3.css'])if(!html.includes(cssName))html=html.replace('</head>','<link rel="stylesheet" href="css/'+cssName+'">\n</head>');
-for(const name of ['pkmsvv-box-stage2.js','pkmsvv-box-stage2-ui.js','pkmsvv-box-stage3.js'])
+for(const name of ['pkmsvv-box-stage2.js','pkmsvv-box-stage2-ui.js','pkmsvv-box-stage3.js','pkmsvv-box-stage4.js'])
  if(!html.includes(name))html=html.replace('</body>','<script defer src="js/ui/'+name+'"></script>\n</body>');
 fs.writeFileSync(entry,html);
-fs.writeFileSync(path.join(dest,'POKEBOX-STAGE1-QA.txt'),'PokéBox Stage 1+2+3 QA only. Extract to a separate folder; never overwrite your existing installed game. Export JSON backup before migration. No production release.\n');
-console.log('PokéBox Stage 3 Windows QA output:',dest);
+fs.writeFileSync(path.join(dest,'POKEBOX-STAGE1-QA.txt'),'PokéBox Stage 1+2+3+4 QA only. Extract to a separate folder; never overwrite your existing installed game. Export JSON backup before migration. No production release.\n');
+console.log('PokéBox Stage 4 Windows QA output:',dest);
