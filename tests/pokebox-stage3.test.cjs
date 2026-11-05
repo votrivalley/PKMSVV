@@ -161,10 +161,16 @@ test('enemy hurt and run clear hook only credits genuine solo kill once',()=>{
  assert.equal(prism.enemyHook(Enemy,G.EnemyMgr,G.DB),true);
  assert.equal(prism.enemyHook(Enemy,G.EnemyMgr,G.DB),true);
  const e=new Enemy(6);
- e.hurt(5);assert.equal(prism.pity(s),0);
- e.hurt(5);assert.equal(prism.pity(s),1);
- e.hurt(5);assert.equal(prism.pity(s),1);
- G.EnemyMgr.clear();assert.equal(prism.runDrops(),0);
+ // Defeat hooks use Math.random. Force a no-drop roll so this test always
+ // checks a one-count pity, rather than failing randomly on a 1.5% drop.
+ const oldRandom=Math.random;
+ try{
+  Math.random=()=>1;
+  e.hurt(5);assert.equal(prism.pity(s),0);
+  e.hurt(5);assert.equal(prism.pity(s),1);
+  e.hurt(5);assert.equal(prism.pity(s),1);
+  G.EnemyMgr.clear();assert.equal(prism.runDrops(),0);
+ }finally{Math.random=oldRandom;}
 });
 test('stage3 only injected into isolated QA, not standard Web/PC/Android source',()=>{
  const root=path.join(__dirname,'..');
