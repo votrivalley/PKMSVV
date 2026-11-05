@@ -1,7 +1,7 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),os=require('node:os'),assert=require('node:assert/strict');
 const {spawn,spawnSync}=require('node:child_process');
-const root=path.resolve(__dirname,'../dist/pokebox-stage3-qa');
+const root=path.resolve(__dirname,'../dist/pokebox-stage4-qa');
 const sleep=t=>new Promise(r=>setTimeout(r,t));
 async function until(fn,ms=30000){
  const deadline=Date.now()+ms;
@@ -56,14 +56,16 @@ async function main(){
   };
   await cmd('Runtime.enable');await cmd('Page.enable');
   await cmd('Page.navigate',{url:'http://127.0.0.1:'+srv.address().port+'/ai/game/'});
-  const query="(()=>({stage1:!!window.G?.PKMSVVBox,stage2:!!window.G?.PKMSVVBox2,stage3:!!window.G?.PKMSVVBox3,hooked:!!window.G?.Gacha?._pkmbxStage2Wrapped,traits:!!window.G?.Mons?._pkmbxStage2Traits,rankUi:!!window.G?.PKMSVVBox?._pkmbxRankUiWrapped,enemyHook:!!window.G?.Enemy?.prototype?._pkmsvvReforgeHurtWrapped,shopHook:!!window.G?.KecleonUI?.render?.toString?.().includes('draw()'),title:document.title}))()";
-  const state=await until(()=>evaluate(query).then(x=>x?.stage1&&x.stage2&&x.stage3&&x.hooked&&x.traits&&x.rankUi&&x.enemyHook&&x.shopHook?x:null),35000);
+  const query="(()=>({stage1:!!window.G?.PKMSVVBox,stage2:!!window.G?.PKMSVVBox2,stage3:!!window.G?.PKMSVVBox3,stage4:!!window.G?.PKMSVVBox4,rankCombat:!!window.G?.Player?.prototype?._pkmbxStage4Installed,hooked:!!window.G?.Gacha?._pkmbxStage2Wrapped,traits:!!window.G?.Mons?._pkmbxStage2Traits,rankUi:!!window.G?.PKMSVVBox?._pkmbxRankUiWrapped,enemyHook:!!window.G?.Enemy?.prototype?._pkmsvvReforgeHurtWrapped,shopHook:!!window.G?.KecleonUI?.render?.toString?.().includes('draw()'),title:document.title}))()";
+  const state=await until(()=>evaluate(query).then(x=>x?.stage1&&x.stage2&&x.stage3&&x.stage4&&x.rankCombat&&x.hooked&&x.traits&&x.rankUi&&x.enemyHook&&x.shopHook?x:null),35000);
   const five=await evaluate('G.PKMSVVBox2.formatRank(5).hp');
   assert.equal(await evaluate('G.PKMSVVBox3.PRICE'),6500);
   assert.equal(await evaluate('G.PKMSVVBox3.PITY'),180);
   assert.equal(await evaluate('G.PKMSVVBox3.RATES.boss'),0.08);
+  assert.equal(await evaluate('G.PKMSVVBox4.HIT_PROC'),0.16);
+  assert.equal(await evaluate('G.PKMSVVBox4.HYBRID_MAX'),6);
   assert.equal(five,30);
-  console.log('PASS Stage 3 real browser QA:',JSON.stringify({...state,rank5Hp:five,otherExceptions:errors.length}));
+  console.log('PASS Stage 4 real browser QA:',JSON.stringify({...state,rank5Hp:five,otherExceptions:errors.length}));
  }finally{
   try{ws?.close()}catch(_){}
   child.kill('SIGKILL');srv.close();
