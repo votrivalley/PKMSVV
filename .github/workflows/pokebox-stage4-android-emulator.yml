@@ -1,0 +1,67 @@
+name: Pokebox Stage4 Android QA emulator smoke
+on:
+  push:
+    branches: [feature/pokebox-stage1-isolated-qa]
+    paths:
+      - '.github/workflows/pokebox-stage4-android-emulator.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  emulator-smoke-qa-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Download verified QA APK from matching Stage4 commit 4088dbc2
+        uses: actions/download-artifact@v4
+        with:
+          name: PKMSVV-PokeBox-Stage4-Android-QA-SEPARATE-APP
+          run-id: 42090241123
+          github-token: ${{ github.token }}
+          path: qa-android
+      - name: Enable Android emulator KVM acceleration
+        shell: bash
+        run: |
+          if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
+      - name: Launch separate QA APK in Android WebView emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
+          emulator-options: -no-window -no-audio -no-snapshot -gpu swiftshader_indirect
+          disable-animations: true
+          script: |
+            set -e
+            apk="$(find qa-android -name '*.apk' -type f -print -quit)"
+            test -s "$apk"
+            adb install -r "$apk"
+            adb shell pm list packages | grep -q 'com.votrivalley.pkmsvv.box4qa0'
+            if adb shell pm list packages | grep -q 'com.votrivalley.pkmsvv.fulllan'; then echo 'Production package unexpectedly installed in QA emulator'; exit 1; fi
+            adb shell monkey -p com.votrivalley.pkmsvv.box4qa0 -c android.intent.category.LAUNCHER 1
+            sleep 22
+            adb shell pidof com.votrivalley.pkmsvv.box4qa0
+            adb shell dumpsys activity activities | grep -E 'ResumedActivity|topResumedActivity' | head -5
+            adb logcat -d -t 12000 > qa-android-logcat.txt
+            if grep -E -A 6 'FATAL EXCEPTION: main' qa-android-logcat.txt | grep -q 'com.votrivalley.pkmsvv.box4qa0'; then
+              echo 'QA Android process crashed'; exit 1
+            fi
+            adb exec-out screencap -p > qa-android-screenshot.png
+            test -s qa-android-screenshot.png
+            echo "PASS: distinct QA Android app installed, foreground process alive, screenshot captured."
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: PKMSVV-PokeBox-Stage4-Android-Emulator-Smoke
+          path: |
+            qa-android-logcat.txt
+            qa-android-screenshot.png
+          if-no-files-found: ignore
+          retention-days: 7
