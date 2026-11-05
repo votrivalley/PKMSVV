@@ -28,7 +28,7 @@ xml=xml.replace(/android:authorities="([^"]+)"/g,(full,authorities)=>{
  return 'android:authorities="'+remapped+'"';
 });
 if(!remappedAuthorities)throw Error('Baseline APK ContentProvider authority missing: review manifest before QA install');
-if(/android:authorities="[^"]*com\\.votrivalley\\.pkmsvv\\.fulllan/.test(xml))
+if((xml.match(/android:authorities="[^"]+"/g)||[]).some(authority=>authority.includes(prod)))
  throw Error('Production ContentProvider authority remains in QA APK');
 
 // Android Activity class names are compiled in the original Java namespace.
