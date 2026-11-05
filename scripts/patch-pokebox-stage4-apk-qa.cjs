@@ -15,6 +15,22 @@ const manifest=path.join(decoded,'AndroidManifest.xml');
 let xml=fs.readFileSync(manifest,'utf8');
 if(!xml.includes('package="'+prod+'"'))throw Error('Unexpected signed APK application ID');
 xml=xml.replace('package="'+prod+'"','package="'+qa+'"');
+
+/* Each Android ContentProvider's authorities must be globally unique across
+ * installed apps. Changing applicationId alone leaves Capacitor's provider
+ * authority pointing at the production app and causes INSTALL_FAILED_CONFLICTING_PROVIDER.
+ * Only remap authorities: never rewrite Java class names or broad manifest strings. */
+let remappedAuthorities=0;
+xml=xml.replace(/android:authorities="([^"]+)"/g,(full,authorities)=>{
+ if(!authorities.includes(prod))return full;
+ const remapped=authorities.split(';').map(a=>a.startsWith(prod)?qa+a.slice(prod.length):a).join(';');
+ if(remapped!==authorities)remappedAuthorities++;
+ return 'android:authorities="'+remapped+'"';
+});
+if(!remappedAuthorities)throw Error('Baseline APK ContentProvider authority missing: review manifest before QA install');
+if(/android:authorities="[^"]*com\\.votrivalley\\.pkmsvv\\.fulllan/.test(xml))
+ throw Error('Production ContentProvider authority remains in QA APK');
+
 // Android Activity class names are compiled in the original Java namespace.
 // Only resource/application ID changes, to give the app a separate save sandbox.
 xml=xml.replace(/(android:name=")\.([a-zA-Z_$][\w.$]*")/g,(_,a,b)=>a+prod+'.'+b);
@@ -56,4 +72,4 @@ if(fs.existsSync(config)){
  let text=fs.readFileSync(config,'utf8').replaceAll(prod,qa);
  fs.writeFileSync(config,text);
 }
-console.log('Patched four PokéBox phases into isolated Android QA package',qa);
+console.log('Patched PokéBox QA package',qa,'and remapped',remappedAuthorities,'ContentProvider authorities');
