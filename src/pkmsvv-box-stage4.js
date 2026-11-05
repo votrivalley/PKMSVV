@@ -66,7 +66,7 @@
   let affected=0;
   for(const target of around){
    if(affected>=HYBRID_MAX)break;
-   if(!target||target.dead||target.remote||target.arceus||target===e||target._pkmsvvBossSupport)continue;
+   if(!target||target.dead||target.remote||target.arceus||target===e||target._pkmsvvBossSupport||target.pkmsvvBossGuard)continue;
    const power=Math.min(100,8+(Number(pl?.level)||1)*1.5)*(target.boss?.35:1);
    target.hurt?.(power,traits.color);
    if(other)applyStatus(target,ST[other]||'strike',pl,traits.rank);
