@@ -101,3 +101,26 @@ Local browser smoke tests are **not yet verified**: sandbox Chromium could not n
 3. Consider Mega changes to elemental typing, Champion AI balance and per-species unique visual traits.
 4. Legendary Rank fodder remains intentionally protected; explicit material/confirm rules still need approval.
 5. Keep PR #22 DRAFT and production branch untouched until these checks pass.
+
+
+## PokéBox Hub UI reorganization — user screenshots (2026-11-06)
+
+**User requirement:** PokéBox replaces the old interactive Pokémon chooser. Pokédex is only an encyclopedia: search species/evolution. Swap their places in the game menu: first card **PokéBox**, next **Pokédex**. PC (support, Mega, Berry) remains unchanged.
+
+**Implemented in Stage 4 isolated QA only. No production deploy or merge.**
+
+- src/pkmsvv-box-hub-ui.js and src/pkmsvv-box-hub.css: new responsive PokéBox with 30 cards/page, name/Dex search, Shiny and Favorite filters, and an animated sprite in the selected individual detail. Animation reuses the game's existing lively/spin/hero sprite options.
+- Team of six is persisted as save.pkmsvvTeam6, containing at most six unique individual IDs. Migration initially seeds the active Pokémon and marks it Favorite. Adding a member marks it favorite; direct Rank consumption/shard conversion protects Team6 and Favorites. Team order is preserved, and a separate API allows reordering.
+- Viewing a Pokémon is NOT the same as changing the active fighter. Explicit Set Active chooses the fighter. Team6 editing never starts gameplay or changes the active fighter.
+- src/pkmsvv-box-hub.js adds atomic individual Mint/Nature, Capsule/Ability and TM consumption; failed commits roll back the Bag and the individual. Original legacy per-species nature/ability/TM save fields are preserved; migrated creatures inherit original TM knowledge until an individual TM list is created. The active fighter's in-game Nature, Ability, TM list, and stat adjustment now read the chosen individual where supported.
+- The right-hand PokéBox panel has Details, Items/TM, Rank; the Rank dialog works on the FOCUSED individual even if a different fighter is active. Reforge Prism remains in the Rank dialog.
+- Main Bag menu entry redirects to PokéBox Items. Kecleon Shop remains available for buying.
+- The separate Pokédex overlay contains name/Dex search, Pokémon sprite, discovered/unowned status, base typing, evolution parents/children and conditions from the existing evolution rule data. Pokédex has NO choose, favorite, Mint, TM or Rank controls.
+- Language text is selected from VI/EN. The old Spanish/Vietnamese selected-partner toast from the old chooser is bypassed in the new Hub selection flow.
+
+### QA and release blockers
+
+- npm run test:pokebox:hub checks the six-member cap, favorite and Team6 protection against consuming fodder, individual Nature/Ability/TM, save rollback and runtime per-individual selection.
+- Web headless Chromium checks Hub boot/menu and confirms the Pokédex has read-only search with no item actions. Web/PC/Android isolated QA bundles include the new assets.
+- Real-device Android landscape and actual Windows gameplay require manual inspection of scrolling, animated sprites, Team6, navigation, items/TMs and Rank. Arena's future pre-battle selection DOES NOT YET read Team6; no Arena logic has been silently changed.
+- The original JPTER78 upstream source revision remains inaccessible in full native builds. Android QA repacks and re-signs a verified baseline under a DISTINCT QA application ID; never deploy that APK as an in-place update to the official game.
