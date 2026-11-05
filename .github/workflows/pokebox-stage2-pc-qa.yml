@@ -1,0 +1,41 @@
+name: Pokebox Stage 2 isolated Windows QA artifact
+on:
+  push:
+    branches:
+      - feature/pokebox-stage1-isolated-qa
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  package-pc-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run Stage 1 and Stage 2 save/regression tests
+        run: npm run test:pokebox:stage2
+      - name: Download successful signed v1.5.93 Windows baseline
+        uses: actions/download-artifact@v4
+        with:
+          name: PKMSVV-LAN-Windows-Unpacked-Debug
+          run-id: 41693287957
+          github-token: ${{ github.token }}
+          path: dist/lan-windows/win-unpacked
+      - name: Build isolated Windows PokéBox QA folder
+        run: node scripts/build-pokebox-stage1-pc-qa.cjs
+      - name: Verify PC game and isolated save identity
+        run: |
+          test -s dist/pokebox-stage2-pc-qa/resources/app.asar
+          test -s dist/pokebox-stage2-pc-qa/resources/lan-site/game/js/ui/pkmsvv-box-stage2.js
+          test -s dist/pokebox-stage2-pc-qa/resources/lan-site/game/js/ui/pkmsvv-box-stage2-ui.js
+          grep -q pkmsvv-box-stage2 dist/pokebox-stage2-pc-qa/resources/lan-site/game/index.html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-PokeBox-Stage2-Windows-QA-ONLY
+          path: dist/pokebox-stage2-pc-qa
+          retention-days: 14
+          if-no-files-found: error
