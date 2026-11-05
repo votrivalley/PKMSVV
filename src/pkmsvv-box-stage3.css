@@ -1,0 +1,9 @@
+/* PokéBox Stage 3 QA — no changes to production theme. */
+.pkmbx-prism-reset{border:1px solid #8068ad;background:linear-gradient(135deg,#271b43,#152e47);border-radius:12px;padding:12px;margin:14px 0}
+.pkmbx-prism-reset h3{margin:0 0 5px!important;color:#e4ccff!important}
+.pkmbx-prism-reset p{margin:5px 0 12px}
+.pkmbx-prism-reset .btn{white-space:normal;min-height:38px}
+#pkmbx-prism-store{border:1px solid #8d78ad;border-radius:14px;background:linear-gradient(120deg,#1e264f,#163749);padding:14px;margin:16px 0;color:#f6f0ff}
+#pkmbx-prism-store h3{font-size:18px;color:#e7d4ff;margin:0 0 7px}
+#pkmbx-prism-store p{color:#d2e1ed;line-height:1.55;font-size:13px;margin:6px 0}
+#pkmbx-prism-store .btn{margin-top:6px}
