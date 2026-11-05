@@ -28,3 +28,5 @@ Test a **copy** of save JSON and confirm the backup is downloaded before clickin
 Use a successful baseline `dist/lan-windows/win-unpacked` and run `node scripts/build-pokebox-stage1-pc-qa.cjs`. The new standalone output is `dist/pokebox-stage1-pc-qa`. Never overlay the installed PC application or deploy to the public website.
 
 Local browser smoke tests are **not yet verified**: sandbox Chromium could not navigate even to its loopback server, although the game assets returned HTTP 200 from curl. Check the actual menu/selection and save restore manually on Windows/Android before merging.
+
+**PC save isolation:** the Windows QA builder patches the packaged Electron launcher to use a separate `PKMSVV-BOX-QA-1` user-data directory. The normal `PKMSVV-LAN-Beta` save directory is never opened by the QA client. User must explicitly import a **copy** of save into QA to test conversion.
