@@ -4,6 +4,10 @@ on:
     branches: [feature/pokebox-stage1-isolated-qa]
     paths:
       - 'src/pkmsvv-box-stage*.js'
+      - 'src/pkmsvv-box-hub*.js'
+      - 'src/pkmsvv-box-hub*.css'
+      - 'tests/pokebox-hub.test.cjs'
+      - 'package.json'
       - 'src/pkmsvv-box-stage*.css'
       - 'scripts/patch-pokebox-stage4-apk-qa.cjs'
       - '.github/workflows/pokebox-stage4-android-qa.yml'
@@ -69,6 +73,8 @@ jobs:
           ! grep -Eq 'android:authorities="[^"]*com.votrivalley.pkmsvv.fulllan' decoded-android/AndroidManifest.xml
           ! grep -q 'package="com.votrivalley.pkmsvv.fulllan"' decoded-android/AndroidManifest.xml
           grep -q 'pkmsvv-box-stage4.js' decoded-android/assets/public/index.html
+          grep -q 'pkmsvv-box-hub-ui.js' decoded-android/assets/public/index.html
+          test -s decoded-android/assets/public/css/pkmsvv-box-hub.css
       - name: Rebuild and sign separate APK with original permanent certificate
         shell: bash
         env:
