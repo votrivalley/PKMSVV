@@ -18,11 +18,11 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - name: Download verified QA APK from matching Stage4 commit 4088dbc2
+      - name: Download corrected QA APK with independent FileProvider
         uses: actions/download-artifact@v4
         with:
           name: PKMSVV-PokeBox-Stage4-Android-QA-SEPARATE-APP
-          run-id: 42090241123
+          run-id: 42093036110
           github-token: ${{ github.token }}
           path: qa-android
       - name: Download production APK to verify side-by-side install
