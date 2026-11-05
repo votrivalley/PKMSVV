@@ -66,6 +66,17 @@
    else html+='<h3>'+txt('Chọn hướng Rank 3 miễn phí','Choose your free Rank 3 path')+'</h3>'+
      '<div class="pkmbx-branches">'+api.branches(x.dex).map(t=>'<button class="btn small" data-pkmbx-branch="'+esc(t)+'">'+esc(typeName(t))+'</button>').join('')+'</div>';
   }
+  if(x.rank>=3&&x.rankBranch&&G.PKMSVVBox3){
+   const prism=G.PKMSVVBox3;
+   html+='<section class="pkmbx-prism-reset"><h3>🔮 '+
+    txt('Lăng Kính Tái Khắc','Reforge Prism')+'</h3>'+
+    '<p>'+txt('Trong túi: ','In Bag: ')+prism.count(s())+
+    ' · '+txt('Đổi nhánh không mất Rank, Nature hoặc Mega.','Switch paths without losing Rank, Nature or Mega.')+'</p>'+
+    '<div class="pkmbx-branches">'+api.branches(x.dex).filter(t=>t!==x.rankBranch)
+     .map(t=>'<button type="button" class="btn small gold" data-pkmbx-reforge="'+esc(t)+'" '+
+      (prism.count(s())<1?'disabled':'')+'>'+
+      txt('Đổi sang ','Change to ')+esc(typeName(t))+' · 🔮 ×1</button>').join('')+'</div></section>';
+  }
   if(all.length)html+='<h3>'+txt('Đổi bản sao thành Mảnh Rank','Convert an unused duplicate into shards')+'</h3>'+
    '<div class="pkmbx-materials">'+all.map(m=>'<div><span>'+esc(m.id)+'</span><button class="btn small" data-pkmbx-convert="'+esc(m.id)+'">'+txt('Đổi +1 mảnh','Convert +1 shard')+'</button></div>').join('')+'</div>';
   body.innerHTML=html;
@@ -89,6 +100,13 @@
   for(const b of body.querySelectorAll('[data-pkmbx-branch]'))b.onclick=()=>{
    if(!confirm(txt('Chốt hướng Rank này? Sau này đổi hướng cần Lăng Kính Tái Khắc.','Confirm this Rank path? A Reforge Prism will be required to reset it later.')))return;
    try{api.chooseBranch(x.id,b.dataset.pkmbxBranch);render();}catch(e){alert(e.message);}
+  };
+  for(const b of body.querySelectorAll('[data-pkmbx-reforge]'))b.onclick=()=>{
+   const prism=G.PKMSVVBox3;if(!prism)return;
+   const branch=b.dataset.pkmbxReforge;
+   if(!confirm(txt('Dùng 1 Lăng Kính để đổi nhánh Rank sang '+typeName(branch)+'? Rank và nâng cấp vẫn giữ nguyên.',
+     'Spend 1 Reforge Prism to switch to '+typeName(branch)+'? Rank and upgrades stay.')))return;
+   try{prism.resetBranch(x.id,branch);render();}catch(e){alert(e.message);}
   };
   for(const b of body.querySelectorAll('[data-pkmbx-convert]'))b.onclick=()=>{
    if(!confirm(txt('Chuyển Pokémon này thành 1 Mảnh Rank? Không thể hoàn tác.','Convert this Pokémon into one Rank shard? This cannot be undone.')))return;
