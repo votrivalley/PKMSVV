@@ -17,6 +17,16 @@
  const clean=(s)=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const tr=(vi,en)=>typeof G!=='undefined'&&G.I18n?.lang==='en'?en:vi;
  const getSave=()=>typeof G!=='undefined'?G.DB?.save:null;
+ function legacyFavorite(save,dex){
+   // Preserve a recognized old per-species favorite marker if present, but
+   // do not invent favorites from an unrelated setting.
+   for(const key of ['favorites','favs','fav','pfav']){
+     const old=save?.[key];
+     if(Array.isArray(old)&&old.some(v=>Number(v)===dex||v?.dex===dex))return true;
+     if(record(old)&&(old[dex]===true||old[dex]===1||old[dex]?.favorite===true))return true;
+   }
+   return false;
+ }
  function listLegacy(save,lookups={}){
    if(!record(save)||!record(save.owned)||!record(save.shiny))throw Error('Legacy save collection is invalid');
    const dexes=[...new Set([...Object.keys(save.owned),...Object.keys(save.shiny)]
@@ -27,7 +37,7 @@
      const ability=typeof lookups.abilityOf==='function'?lookups.abilityOf(dex):null;
      const natureId=typeof nature==='string'?nature:nature?.id;
      const abilitySlot=Number.isInteger(ability?.slot)?ability.slot:0;
-     const base={dex,natureId:natureId||'hardy',abilitySlot,rank:0,locked:false,favorite:false};
+     const base={dex,natureId:natureId||'hardy',abilitySlot,rank:0,locked:false,favorite:legacyFavorite(save,dex)};
      if(own(save.owned,String(dex))&&save.owned[dex])box.push({...base,id:'b1-'+dex+'-n',shiny:false});
      if(own(save.shiny,String(dex))&&save.shiny[dex])box.push({...base,id:'b1-'+dex+'-s',shiny:true});
    }
@@ -51,6 +61,7 @@
    next.pkmsvvBox=box;
    next.pkmsvvSelectedInstanceId=selectedId(save,box);
    next.pkmsvvTeam6=next.pkmsvvSelectedInstanceId?[next.pkmsvvSelectedInstanceId]:[];
+   const lead=box.find(x=>x.id===next.pkmsvvSelectedInstanceId);if(lead)lead.favorite=true;
    return {save:next,changed:true,count:box.length};
  }
  function validBox(save){
