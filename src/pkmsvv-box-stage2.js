@@ -175,7 +175,7 @@
   return item&&item.dex===Number(s.partner)&&!!item.shiny===!!s.partnerShiny?item:null;
  }
  function statBonus(mon,item){
-  if(!mon||!item)return mon;
+  if(!mon||!item||!item.rank)return mon;
   const factor=1+item.rank*0.06,copyMon={...mon};
   for(const k of ['hp','pa','sa'])if(typeof copyMon[k]==='number')copyMon[k]=Math.round(copyMon[k]*factor*100)/100;
   if(typeof copyMon.pa==='number'&&typeof copyMon.sa==='number')copyMon.atk=Math.max(copyMon.pa,copyMon.sa);
