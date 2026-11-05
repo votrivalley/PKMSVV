@@ -65,6 +65,8 @@ jobs:
           node scripts/patch-pokebox-stage4-apk-qa.cjs decoded-android
           test -s decoded-android/assets/public/js/ui/pkmsvv-box-stage4.js
           grep -q 'package="com.votrivalley.pkmsvv.box4qa0"' decoded-android/AndroidManifest.xml
+          grep -q 'android:authorities="com.votrivalley.pkmsvv.box4qa0.fileprovider"' decoded-android/AndroidManifest.xml
+          ! grep -Eq 'android:authorities="[^"]*com.votrivalley.pkmsvv.fulllan' decoded-android/AndroidManifest.xml
           ! grep -q 'package="com.votrivalley.pkmsvv.fulllan"' decoded-android/AndroidManifest.xml
           grep -q 'pkmsvv-box-stage4.js' decoded-android/assets/public/index.html
       - name: Rebuild and sign separate APK with original permanent certificate
