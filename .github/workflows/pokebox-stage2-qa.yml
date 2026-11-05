@@ -1,0 +1,46 @@
+name: Pokebox Stage 2 isolated QA artifact
+on:
+  push:
+    branches:
+      - feature/pokebox-stage1-isolated-qa
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-qa-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      PKMSVV_MEGA_SPRITE_PACK: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Load pinned original game
+        run: |
+          git init vendor/pokesurvivor
+          git -C vendor/pokesurvivor remote add origin https://github.com/JPTER78/pokesurvivor.git
+          git -C vendor/pokesurvivor fetch --depth 1 origin 11fe868c640b62ac37beacc222e056bc4d9ec892
+          git -C vendor/pokesurvivor checkout --detach FETCH_HEAD
+      - name: Install and test
+        run: |
+          npm install --no-audit --no-fund
+          npm run test:pokebox:stage2
+      - name: Build Web locally without deploying
+        run: npm run prepare:cloudflare
+      - name: Create isolated Stage 2 Web QA bundle
+        run: node scripts/build-pokebox-stage1-qa.cjs
+      - name: Verify QA scripts, game and save isolation
+        run: |
+          test -s dist/pokebox-stage2-qa/ai/game/index.html
+          test -s dist/pokebox-stage2-qa/ai/game/js/ui/pkmsvv-box-stage2.js
+          test -s dist/pokebox-stage2-qa/ai/game/js/ui/pkmsvv-box-stage2-ui.js
+          grep -q pkmsvv-box-stage2 dist/pokebox-stage2-qa/ai/game/index.html
+          test -s dist/pokebox-stage2-qa/game/js/app.min.js
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-PokeBox-Stage2-Web-QA-ONLY
+          path: dist/pokebox-stage2-qa
+          retention-days: 14
+          if-no-files-found: error
