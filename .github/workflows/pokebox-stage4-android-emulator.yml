@@ -25,6 +25,13 @@ jobs:
           run-id: 42090241123
           github-token: ${{ github.token }}
           path: qa-android
+      - name: Download production APK to verify side-by-side install
+        uses: actions/download-artifact@v4
+        with:
+          name: PKMSVV-Android-FULL-LAN-SIGNED-UPDATE
+          run-id: 41693287992
+          github-token: ${{ github.token }}
+          path: prod-android
       - name: Enable Android emulator KVM acceleration
         shell: bash
         run: |
@@ -42,9 +49,13 @@ jobs:
             set -e
             apk="$(find qa-android -name '*.apk' -type f -print -quit)"
             test -s "$apk"
+            prod="$(find prod-android -name '*.apk' -type f -print -quit)"
+            test -s "$prod"
+            adb install -r "$prod"
             adb install -r "$apk"
             adb shell pm list packages | grep -q 'com.votrivalley.pkmsvv.box4qa0'
-            if adb shell pm list packages | grep -q 'com.votrivalley.pkmsvv.fulllan'; then echo 'Production package unexpectedly installed in QA emulator'; exit 1; fi
+            adb shell pm list packages | grep -q 'com.votrivalley.pkmsvv.fulllan'
+            echo "Both official and QA APK are installed side-by-side."
             adb shell monkey -p com.votrivalley.pkmsvv.box4qa0 -c android.intent.category.LAUNCHER 1
             sleep 22
             adb shell pidof com.votrivalley.pkmsvv.box4qa0
