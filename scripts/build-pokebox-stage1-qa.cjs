@@ -15,7 +15,7 @@ for(const variant of ['game','ai/game']){
  fs.mkdirSync(path.dirname(pathJS),{recursive:true});fs.mkdirSync(path.dirname(pathCSS),{recursive:true});
  fs.copyFileSync(path.join(root,'src/pkmsvv-box-stage1.js'),pathJS);
  fs.copyFileSync(path.join(root,'src/pkmsvv-box-stage1.css'),pathCSS);
- for(const [filename,sub] of [['pkmsvv-box-stage2.js','js/ui'],['pkmsvv-box-stage2-ui.js','js/ui'],['pkmsvv-box-stage2.css','css'],['pkmsvv-box-stage3.js','js/ui'],['pkmsvv-box-stage3.css','css'],['pkmsvv-box-stage4.js','js/ui']]){
+ for(const [filename,sub] of [['pkmsvv-box-stage2.js','js/ui'],['pkmsvv-box-stage2-ui.js','js/ui'],['pkmsvv-box-stage2.css','css'],['pkmsvv-box-stage3.js','js/ui'],['pkmsvv-box-stage3.css','css'],['pkmsvv-box-stage4.js','js/ui'],['pkmsvv-box-hub.js','js/ui'],['pkmsvv-box-hub-ui.js','js/ui'],['pkmsvv-box-hub.css','css']]){
   fs.copyFileSync(path.join(root,'src',filename),path.join(dest,variant,sub,filename));
  }
  let body=fs.readFileSync(html,'utf8');
@@ -24,9 +24,9 @@ for(const variant of ['game','ai/game']){
  if(!body.includes('</head>')||!body.includes('</body>'))throw Error('QA game HTML structure changed');
  if(!body.includes('pkmsvv-box-stage1.css'))body=body.replace('</head>',css+'\n</head>');
  if(!body.includes('pkmsvv-box-stage1.js'))body=body.replace('</body>',script+'\n</body>');
- for(const cssName of ['pkmsvv-box-stage2.css','pkmsvv-box-stage3.css'])if(!body.includes(cssName))
+ for(const cssName of ['pkmsvv-box-stage2.css','pkmsvv-box-stage3.css','pkmsvv-box-hub.css'])if(!body.includes(cssName))
   body=body.replace('</head>','<link rel="stylesheet" href="css/'+cssName+'">\n</head>');
- for(const jsName of ['pkmsvv-box-stage2.js','pkmsvv-box-stage2-ui.js','pkmsvv-box-stage3.js','pkmsvv-box-stage4.js'])if(!body.includes(jsName))
+ for(const jsName of ['pkmsvv-box-stage2.js','pkmsvv-box-stage2-ui.js','pkmsvv-box-stage3.js','pkmsvv-box-stage4.js','pkmsvv-box-hub.js','pkmsvv-box-hub-ui.js'])if(!body.includes(jsName))
   body=body.replace('</body>','<script defer src="js/ui/'+jsName+'"></script>\n</body>');
  fs.writeFileSync(html,body);
 }
@@ -40,5 +40,6 @@ fs.writeFileSync(path.join(dest,'POKEBOX-STAGE1-QA.txt'),[
  'Stage 2: Gacha instances and Rank A+C are test-only; never deploy as production.',
  'Stage 3: Reforge Prism, kill-based pity and Kecleon 12%-daily slot are QA-only.',
  'Stage 4: Solo Rank traits + capped hybrid AoE + 5% cooldown; actual device QA pending.',
+ 'Hub UI: PokéBox replaces old picker; Pokédex becomes read-only evolution reference; Team 6, items/TM, Rank by individual.',
  ''].join('\n'), 'utf8');
 console.log('PokéBox Stage 4 isolated QA build:',dest);
