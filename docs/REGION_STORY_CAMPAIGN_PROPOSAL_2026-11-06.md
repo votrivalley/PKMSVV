@@ -52,3 +52,16 @@ Học từ bố cục màn hình chọn Region của PokéLit (9 vùng chính + 
 1. Region cards 5×2 với artwork/biome đại diện, phân biệt mở/khóa/đã thắng, tiến độ 0/10, nút chơi trực tiếp, vào lại.
 2. Sửa storytelling/Map độc đáo và nhiệm vụ phụ cho từng vùng, UI thưởng một lần; giữ luật 16 đấu và 10 Crown Seals.
 3. QA save và final Sky Pillar → Rayquaza → Chương 10, rồi mới triển khai hậu truyện Hall of Origin.
+
+
+## Quy tắc môi trường — chốt hướng thiết kế 2026-11-06
+
+**Mong muốn:** Các Region = từng map độc lập và cố định trong cả một lượt; Chương 10 = chế độ bản đồ chuyển cảnh theo pha. Giữ Survival tự do như cũ. Đây là thiết kế, không phải thay đổi đã cài đặt.
+
+- Kanto → Paldea (9 Region) và Tháp Thiên Không (Region 10) có *biome identity* cố định trong toàn bộ một tournament: farm chuẩn bị, countdown, trận Champion, chuyển vòng. Có thể thay trời sáng/tối, gió/mưa, hiệu ứng theo sự kiện trong trận nhưng **không đổi sang địa hình Region khác**.
+- Cần sửa mã `src/pkmsvv-champion-arena.js`: hiện `launch()` và `nextDuel()` gọi `G.World.setBiome(G.Tiles.arenaBiome(duelType), true)`, nhưng `beginPrep()` lại gọi `G.World.setArena(null); G.World.setBiome(0,true)`; đây là nguồn làm giai đoạn chuẩn bị quay về nền mặc định. Thiết kế mới cần khóa biome suốt cả vùng; khi thoát giải mới khôi phục thế giới tự do.
+- Giữ thứ tự mở khóa bằng Crown Seals đã có (9 vùng + Sky Pillar): một lần đánh bại Champion vùng mới cấp một Ấn Chứng. 10/10 mới vào Rayquaza và Chương 10.
+- **Chương 10 / Bầu Trời Hắc Hóa**: chế độ biến đổi đa biome có nhịp theo pha (ví dụ 0–25% rừng, 25–50% băng, 50–75% dung nham, 75–100% bầu trời tối). Các mốc là mục tiêu thiết kế, chưa phải timing cân bằng chính thức. Tránh chuyển địa hình dồn dập; cho cảnh báo trước 3–5 giây, hiệu ứng chuyển tiếp, không spawn tường/vực ngay dưới người chơi hay làm hỏng AI/pathfinding. Rayquaza vẫn là boss cuối sau đủ 10 Ấn Chứng.
+- **Chế độ Sống Sót thường**: không thay nguồn World biome gốc, không đổi điều kiện tiến hóa địa hình, không áp đặt khu vực cố định từ Region. Co-op/Tranh Trứng/Berry giữ hành vi map hiện hành ngoài những cập nhật đã được duyệt.
+- Đề xuất cho Chương 10 một mode story riêng/hook có phạm vi điều kiện rõ, chỉ kích hoạt khi thỏa Chapter 10; không globally patch `G.World.setBiome`, tránh làm hỏng Arena, Berry, Judgment, weather, save.
+- Cần thử thách QA: mỗi Region đi qua prep → countdown → duel → prep → Champion với cùng theme; chơi lại/thoát khôi phục map bình thường; Chương 10 chuyển pha không teleport, không reset mob, không phá nhạc hay multiplayer; save cũ 0/10, 9/10, 10/10.
