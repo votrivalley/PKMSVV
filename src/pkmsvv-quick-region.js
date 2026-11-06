@@ -208,19 +208,15 @@
   const copy=args.slice();copy[0]=current.biome;
   return prev.apply(this,copy);
  });
- wrap(G.Spawner,'update',function(prev,args){
-  const index=regionIndex();
-  if(index<0||getChampion()?.active||G.Coop?.active)return prev.apply(this,args);
-  const enemies=G.Enemies,original=enemies?.bagAt;
-  if(typeof original!=='function')return prev.apply(this,args);
-  enemies.bagAt=function(...params){
-   const bag=original.apply(this,params);
-   const mapped=typeof getChampion()?.regionizeBag==='function'?
-    getChampion().regionizeBag(bag,index):bag;
-   return enforceGeneration(mapped,index);
-  };
-  try{return prev.apply(this,args);}
-  finally{enemies.bagAt=original;}
+ // Enforce the selected generation for the ENTIRE run, not merely during
+ // Spawner.update. Other native spawn sources can call Enemies.bagAt between ticks.
+ // The mode guards prevent leaking Region restrictions into Arena or Co-op.
+ wrap(G.Enemies,'bagAt',function(prev,args){
+  const bag=prev.apply(this,args),index=regionIndex();
+  if(index<0||getChampion()?.active||G.Coop?.active)return bag;
+  const mapped=typeof getChampion()?.regionizeBag==='function'?
+   getChampion().regionizeBag(bag,index):bag;
+  return enforceGeneration(mapped,index);
  });
  for(const [obj,key] of [[G.Game,'toUI'],[G.Game,'quit'],[G.Flow,'goMenu']]){
   wrap(obj,key,function(prev,args){if(current)endRun();return prev.apply(this,args);});
