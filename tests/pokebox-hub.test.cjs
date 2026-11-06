@@ -50,15 +50,17 @@ test('Team 6 defaults to current Pokémon, contains six unique instance IDs and 
  assert.equal(hub.toggleTeam(copies[0].id,h.s).added,false);
  assert.equal(hub.team(h.s).length,5);
 });
-test('every favorite and team member is protected from direct Rank fodder or shard conversion',()=>{
+test('Ready Team and Favorites are independent; either protects Rank fodder',()=>{
  const h=setup(),m=add(h.s);
- hub.toggleTeam(m.id,h.s);
- assert.equal(stage2.eligible(h.s,hub.item(h.s,m.id)),false);
- hub.toggleTeam(m.id,h.s);
- assert.equal(stage2.eligible(h.s,hub.item(h.s,m.id)),false,'favorite remains protected after removing from Team');
- hub.toggleFavorite(m.id,h.s);
- assert.equal(stage2.eligible(h.s,hub.item(h.s,m.id)),true);
  assert.equal(hub.item(h.s,m.id).favorite,false);
+ hub.toggleTeam(m.id,h.s);
+ assert.equal(hub.item(h.s,m.id).favorite,false,'adding to Ready Team does not star the Pokémon');
+ assert.equal(stage2.eligible(h.s,hub.item(h.s,m.id)),false,'team membership protects fodder');
+ hub.toggleTeam(m.id,h.s);
+ assert.equal(stage2.eligible(h.s,hub.item(h.s,m.id)),true,'removing from team does not change favorite');
+ hub.toggleFavorite(m.id,h.s);
+ assert.equal(hub.item(h.s,m.id).favorite,true);
+ assert.equal(stage2.eligible(h.s,hub.item(h.s,m.id)),false,'a favorite is protected independently');
 });
 test('Mint changes only one specific individual and consumes exactly one Mint',()=>{
  const h=setup(),first=hub.item(h.s,'b1-6-n'),duplicate=add(h.s);
@@ -153,4 +155,46 @@ test('Pokédex QA UI restores all old filters, Gen 1 SVG icon and correct menu p
  assert.match(ui,/Đặc tính/);
  assert.match(css,/pkmbx-hub-stats/);
  assert.match(css,/pkmbx-gen1-icon/);
+});
+
+test('legacy saves can persist Ready Team 6 without migration or modifying Favorites',()=>{
+ const h=setup();
+ const legacy={owned:{6:{at:1},25:{at:2}},shiny:{6:{at:3}},
+  partner:6,partnerShiny:false,coins:300,
+  pnat:{6:['bold',100]},pabil:{6:[0,100]},pkmsvvLegacyFavoriteOverrides:{6:true}};
+ G.DB.save=legacy;
+ const original=JSON.stringify(legacy);
+ assert.deepEqual(hub.team(legacy),['b1-6-n']);
+ assert.equal(hub.toggleTeam('b1-25-n',legacy).added,true);
+ assert.deepEqual(hub.team(legacy),['b1-6-n','b1-25-n']);
+ assert.equal(legacy.pkmsvvBoxSchema,undefined);
+ assert.deepEqual(legacy.pkmsvvLegacyFavoriteOverrides,{6:true});
+ assert.deepEqual(legacy.pnat,{6:['bold',100]});
+ assert.equal(hub.toggleTeam('b1-6-n',legacy).added,false);
+ assert.deepEqual(hub.team(legacy),['b1-25-n']);
+ assert.throws(()=>hub.toggleTeam('b1-999-n',legacy),/not owned/);
+ assert.equal(legacy.pkmsvvBoxSchema,undefined);
+ const migrated=stage1.migrate(legacy).save;
+ assert.deepEqual(migrated.pkmsvvTeam6,['b1-25-n']);
+ assert.equal(migrated.pkmsvvBox.find(x=>x.id==='b1-6-n').favorite,true);
+ assert.deepEqual(legacy.pkmsvvLegacyFavoriteOverrides,{6:true});
+ // Failure must roll back the full save without touching the old team.
+ const snapshot=JSON.stringify(legacy);
+ h.fail=true;
+ assert.throws(()=>hub.toggleTeam('b1-6-s',legacy),/Could not save ready team/);
+ assert.equal(JSON.stringify(legacy),snapshot);
+ h.fail=false;
+ assert.notEqual(JSON.stringify(legacy),original,'only explicit ready-team edits were saved');
+});
+test('clean PokéBox UI keeps six visible slots and relocates migration to Save Manager',()=>{
+ const ui=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub-ui.js'),'utf8');
+ const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub.css'),'utf8');
+ assert.match(ui,/Đội hình 6 Pokémon sẵn sàng/);
+ assert.doesNotMatch(ui,/Đội hình 6 yêu thích|Favorite Team 6/);
+ assert.doesNotMatch(ui,/id="pkmbx-status"|id="pkmbx-warning"|id="pkmbx-export"|id="pkmbx-migrate"/);
+ assert.match(ui,/function attachMigrationToSaveManager/);
+ assert.match(ui,/pkmsvv.prepokebox/);
+ assert.match(ui,/renderTeam\(boxPane,s,items\)/);
+ assert.match(css,/grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/);
+ assert.match(css,/height:70px/);
 });
