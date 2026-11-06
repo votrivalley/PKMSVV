@@ -144,6 +144,11 @@ async function main(){
   assert.equal(inputQA.white,'rgb(247, 250, 246)','six Team tiles have white backgrounds');
   for(const k of ['focused','keyboard','padInstalled','padFocus','padBack','region','regionFocus','regionClosed'])
    assert.equal(inputQA[k],true,'Keyboard/controller modal navigation: '+k+' | '+JSON.stringify(inputQA));
+  const item3=await evaluate("(()=>{\n const scr=document.querySelector('#scr-item'),cards=document.querySelector('#item-cards');\n if(!scr||!cards)return {present:false};\n const hidden=scr.hidden,klass=scr.className,style=scr.getAttribute('style'),cardsClass=cards.className;\n let chosen=0;\n const actions=document.createElement('div');actions.className='pkmsvv-held-actions';\n for(let i=0;i<3;i++){\n  const b=document.createElement('button');b.type='button';b.className='pkmsvv-held-action';\n  b.textContent=String(i+1);b.onclick=()=>{if(i===2)chosen++;};actions.append(b);\n }\n try{\n  scr.hidden=false;scr.classList.remove('hidden');scr.style.display='block';scr.style.zIndex='25000';\n  cards.classList.add('pkmsvv-held-choices');cards.append(actions);\n  document.dispatchEvent(new KeyboardEvent('keydown',{key:'3',code:'Digit3',bubbles:true,cancelable:true}));\n  const digit=chosen===1;\n  document.dispatchEvent(new KeyboardEvent('keydown',{key:'3',code:'Numpad3',bubbles:true,cancelable:true}));\n  return {present:true,digit,numpad:chosen===2,active:G.PKMSVVModalNavQA.active()?.id};\n }finally{\n  actions.remove();scr.hidden=hidden;scr.className=klass;cards.className=cardsClass;\n  if(style===null)scr.removeAttribute('style');else scr.setAttribute('style',style);\n }\n})()");
+  assert.equal(item3.present,true,'real game has item-choice UI');
+  assert.equal(item3.active,'scr-item','item choice takes focus over underlying game');
+  assert.equal(item3.digit,true,'Digit3 activates the third item button');
+  assert.equal(item3.numpad,true,'Numpad3 activates the third item button');
   console.log('PASS Stage 4 real browser QA:',JSON.stringify({...state,rank5Hp:five,otherExceptions:errors.length}));
  }finally{
   try{ws?.close()}catch(_){}
