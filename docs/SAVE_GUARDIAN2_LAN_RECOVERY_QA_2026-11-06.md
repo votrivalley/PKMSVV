@@ -35,3 +35,8 @@ Branch: feature/pokebox-stage1-isolated-qa
 5. Only then merge into stable branch and package the signed, same-version PC/Web/Android release. Do not overwrite existing player saves in QA.
 
 **No public Cloudflare deployment and no change to the main production branch.**
+
+## Safety addendum — Shared Host match epochs
+- LAN server and Direct Wi-Fi room snapshots now carry a Host-issued `matchSerial` counter, incremented once when a new battle closes the lobby. If the native Co-op `cfg.seed` is not available, both sides use this verified shared epoch instead; reused room IDs alone can never authorize an old result.
+- Client disconnect to UI/menu is a **forfeit/connection loss, not a win**; no reward settlement is replayed. Late Host finish results for a previous match are ignored once a different match starts.
+- CI source test includes the Host epoch fallback, room reopen, stale result and duplicate terminal scenarios.
