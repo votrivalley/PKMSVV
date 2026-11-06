@@ -313,10 +313,14 @@ G.PKMSVVChampionArena=(()=>{
    b.className+=' '+(completed?'is-cleared ':'')+(unlocked?'is-unlocked':'is-locked');
    b.classList?.toggle?.('chosen',mode==='story'?region===i:mapChoice===String(i));
    const title=document.createElement('strong');title.textContent=(completed?'✓ ':unlocked?'🏟️ ':'🔒 ')+displayRegion(name);
+   const tier=Math.min(5,1+Math.floor(i/2));
+   const difficulty=document.createElement('small');difficulty.className='pkmsvv-region-difficulty';
+   difficulty.textContent=(i===9?tr('Rồng · Đa thế hệ','Dragon · Mixed Gen'):'Gen '+(i+1))+
+    ' · '+tr('Độ khó ','Difficulty ')+tier+'/5';
    const rule=document.createElement('small');rule.textContent=mapEffect(REGION_THEMES[i]).hint;
    const status=document.createElement('span');status.className='pkmsvv-region-status';
    status.textContent=completed?tr('Đã hoàn thành','Completed'):unlocked?tr('Đang mở','Unlocked'):tr('Chưa mở','Locked');
-   b.replaceChildren(title,rule,status);
+   b.replaceChildren(title,difficulty,rule,status);
    b.disabled=active||!unlocked;
    b.title=mapEffect(REGION_THEMES[i]).name+' · '+rule.textContent;
    b.onclick=()=>{if(mode==='league')mapChoice=String(i);else region=i;clearResult();updatePanel();};
