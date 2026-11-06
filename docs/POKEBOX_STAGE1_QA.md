@@ -150,3 +150,10 @@ Local browser smoke tests are **not yet verified**: sandbox Chromium could not n
 - JS parsing and in-memory functional smoke passed: legacy team add/remove, commit rollback, migrated lineage, favorites independent, Nature/Ability retained, and clean markup. Regression tests updated in tests/pokebox-hub.test.cjs.
 
 **Still outstanding:** actual Windows Electron QA with the 558-specimen save, Web/Android horizontal and narrow layouts, save migration under low-storage and restart, game launch after changing active fighter, all-item shop tests, CI/build and real-device testing. No release, no production deployment, no overwrite of player save.
+
+
+## 2026-11-06 — In-game PC navigation and Berry Rescue BGM
+
+- **PC refers to the in-game Pokémon computer**, not the Windows desktop build. The title menu now has a single **PC** entry. Inside it, the first tab is **Pokédex** (red Gen-1 vector icon) and the second is **PokéBox**, sharing one PC modal. The previous separate Pokédex title-menu button has been removed. Existing Bag/Ranks actions that open PokéBox still go directly to its tab.
+- Berry Rescue normal/easy modes reuse the **exact custom Egg Rush (Tranh Trứng) soundtrack** from bundled custom-music/eggrush.ogg, not the old forest track. Begin starts it immediately; the Berry-specific G.Audio.music wrapper also retains it during boss/biome refresh and releases routing after the mode ends.
+- Added browser smoke assertions for the unified PC and a dedicated Berry soundtrack routing test. Keep both changes on the isolated QA branch until the full real-device verification passes.
