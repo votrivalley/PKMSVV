@@ -1,0 +1,1068 @@
+{
+  "id": "butterfree-altcolor",
+  "pokemonDex": 12,
+  "spriteCollabPath": "0012/0002",
+  "status": "RESEARCH_ONLY",
+  "assetOnly": true,
+  "gameplayEnabled": false,
+  "source": {
+    "repository": "https://github.com/PMDCollab/SpriteCollab",
+    "ref": "13eb5a7733c5f5ba66031a2c5fb7bc67371d7310",
+    "portrait": "https://github.com/PMDCollab/SpriteCollab/tree/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002",
+    "sprite": "https://github.com/PMDCollab/SpriteCollab/tree/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002",
+    "portraitRevision": "47539496eb043ba69bf89f3862377706fb10eebb",
+    "license": "https://github.com/PMDCollab/SpriteCollab/blob/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/LICENSE.md",
+    "readme": "https://github.com/PMDCollab/SpriteCollab/blob/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/README.md",
+    "credits": [
+      "portrait/0012/0002/credits.txt",
+      "sprite/0012/0002/credits.txt"
+    ]
+  },
+  "rights": {
+    "repositoryPolicy": "CC BY-NC 4.0, attribution and noncommercial only",
+    "thirdPartyArtworkRights": "not-cleared-for-redistribution-in-public-PKMSVV",
+    "notes": "Some_Shinx contributed 15 portrait expressions in 2026. The Normal portrait predates that update; root motion credits attribute to another contributor with Discord ID <@!356635814668664832> using PMDCollab_1 marker. Do not attribute all sprites to Some_Shinx."
+  },
+  "inventory": {
+    "summary": {
+      "portraits": 16,
+      "rootMotionSheets": 12,
+      "rootOffsets": 12,
+      "rootShadows": 12,
+      "nestedFiles": 114,
+      "totalInventoryFiles": 169,
+      "sameAsNormalSpriteXml": true,
+      "sameAsNormalOffsets": true,
+      "sameAsNormalShadows": true,
+      "allAnimPngDistinctFromNormal": true,
+      "allPortraitDistinctFromNormal": true
+    },
+    "checksumAlgorithm": "git-blob-sha1",
+    "sha256Status": "NOT_COMPUTED: raw binary inspection and SHA-256 not available",
+    "immutableLinks": true,
+    "files": [
+      {
+        "path": "portrait/0012/0002/Angry.png",
+        "bytes": 1738,
+        "gitBlobSha1": "671040cc81a2e5bf7e4c8bde4e4be6b9230a9cfb",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Angry.png"
+      },
+      {
+        "path": "portrait/0012/0002/credits.txt",
+        "bytes": 251,
+        "gitBlobSha1": "9960d82f6b5d0d6fe36ea3d0c7810e4c015ba282",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/credits.txt"
+      },
+      {
+        "path": "portrait/0012/0002/Crying.png",
+        "bytes": 1787,
+        "gitBlobSha1": "51e6c90fd46c70d99f82e759835cc57d492481c1",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Crying.png"
+      },
+      {
+        "path": "portrait/0012/0002/Determined.png",
+        "bytes": 1684,
+        "gitBlobSha1": "75be8c5d934c3f647374af17f1ab31b87e77e56a",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Determined.png"
+      },
+      {
+        "path": "portrait/0012/0002/Dizzy.png",
+        "bytes": 1679,
+        "gitBlobSha1": "3fda5acc6b16e641cfa3f0086331b6bd3e7551ff",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Dizzy.png"
+      },
+      {
+        "path": "portrait/0012/0002/Happy.png",
+        "bytes": 1720,
+        "gitBlobSha1": "d8756affe31f63206b5f67d151912eafcc2673f5",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Happy.png"
+      },
+      {
+        "path": "portrait/0012/0002/Inspired.png",
+        "bytes": 1777,
+        "gitBlobSha1": "9da7dd3c6c12923ab58107b37974bfdfd4e41cce",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Inspired.png"
+      },
+      {
+        "path": "portrait/0012/0002/Joyous.png",
+        "bytes": 1629,
+        "gitBlobSha1": "8c6a3de585995a017564d6edfb63d1e0e126d52e",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Joyous.png"
+      },
+      {
+        "path": "portrait/0012/0002/Normal.png",
+        "bytes": 1697,
+        "gitBlobSha1": "8385fa1d204eec49c0f4aabf222e206de057c001",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Normal.png"
+      },
+      {
+        "path": "portrait/0012/0002/Pain.png",
+        "bytes": 1646,
+        "gitBlobSha1": "32451822e16d91754e079c9b179a4523af673707",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Pain.png"
+      },
+      {
+        "path": "portrait/0012/0002/Sad.png",
+        "bytes": 1664,
+        "gitBlobSha1": "6f47313faea7a4eae748be80490b7cd9f1d6bf59",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Sad.png"
+      },
+      {
+        "path": "portrait/0012/0002/Shouting.png",
+        "bytes": 1674,
+        "gitBlobSha1": "1e505e3c8222773b0030a46913fe15630025e740",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Shouting.png"
+      },
+      {
+        "path": "portrait/0012/0002/Sigh.png",
+        "bytes": 1717,
+        "gitBlobSha1": "021c9cf545bf9f792e1e637432518dfa63984731",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Sigh.png"
+      },
+      {
+        "path": "portrait/0012/0002/Stunned.png",
+        "bytes": 1718,
+        "gitBlobSha1": "da68bfbb290ba0e0b77305a87bb645b9f9ee2d7d",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Stunned.png"
+      },
+      {
+        "path": "portrait/0012/0002/Surprised.png",
+        "bytes": 1773,
+        "gitBlobSha1": "4b8adc4f2bb57dc37c43e1390370b17d75bb0548",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Surprised.png"
+      },
+      {
+        "path": "portrait/0012/0002/Teary-Eyed.png",
+        "bytes": 1696,
+        "gitBlobSha1": "5edaaf9867bd450b19545caa17d672582b85b14d",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Teary-Eyed.png"
+      },
+      {
+        "path": "portrait/0012/0002/Worried.png",
+        "bytes": 1639,
+        "gitBlobSha1": "86aac472a07579e7d387479e3736924e37bab012",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Worried.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/AnimData.xml",
+        "bytes": 5859,
+        "gitBlobSha1": "ee175bc8ad65a39ca337997e9473fd813f9eb9ec",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/AnimData.xml"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Attack-Anim.png",
+        "bytes": 36464,
+        "gitBlobSha1": "9555f2577d8db5ea5320560a03768cecc92a8437",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Attack-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Attack-Offsets.png",
+        "bytes": 3787,
+        "gitBlobSha1": "098c1e767071374879066670cc569ce8d77037c7",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Attack-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Attack-Shadow.png",
+        "bytes": 6333,
+        "gitBlobSha1": "c9bb867e59c44178303913b28eb295dcc1358438",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Attack-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Charge-Anim.png",
+        "bytes": 8202,
+        "gitBlobSha1": "25cc75fb1800a64c477955cbd8907d71d17f1fb3",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Charge-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Charge-Offsets.png",
+        "bytes": 1150,
+        "gitBlobSha1": "05ccdf6bd0473b6b3d38eac6bee8cad750e42365",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Charge-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Charge-Shadow.png",
+        "bytes": 2251,
+        "gitBlobSha1": "146cd370dc1156437af58665a8521923131a1490",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Charge-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/credits.txt",
+        "bytes": 149,
+        "gitBlobSha1": "c8fd1040476503504dd1cdac49181f52f6f21c45",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/credits.txt"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Double-Anim.png",
+        "bytes": 25695,
+        "gitBlobSha1": "65f27d8837b257e2f24b3f72c60c4032c609e728",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Double-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Double-Offsets.png",
+        "bytes": 3543,
+        "gitBlobSha1": "8982f7fba4f199c381b233ce9e539104f10d57d1",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Double-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Double-Shadow.png",
+        "bytes": 6896,
+        "gitBlobSha1": "8273cc272afb5db93d02cffed576deb98222baf6",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Double-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/FlapAround-Anim.png",
+        "bytes": 61387,
+        "gitBlobSha1": "d303cddbf5e3fa08c01972906736845bcaea24b8",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/FlapAround-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/FlapAround-Offsets.png",
+        "bytes": 3495,
+        "gitBlobSha1": "e95e783961e02320450b32661fad781054d12c04",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/FlapAround-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/FlapAround-Shadow.png",
+        "bytes": 2641,
+        "gitBlobSha1": "3a31a9e17d603f3c175d09975e967a8ed33dc363",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/FlapAround-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Hop-Anim.png",
+        "bytes": 26299,
+        "gitBlobSha1": "1c1b6d75c7d663f74cae2eb3ad4b2c8fea25752a",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Hop-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Hop-Offsets.png",
+        "bytes": 1913,
+        "gitBlobSha1": "e06a1222aacbda67aed1d95067f0e5b79850c67a",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Hop-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Hop-Shadow.png",
+        "bytes": 1856,
+        "gitBlobSha1": "efcc0cba09ea9f35d0d30d1331c778217a97bf8d",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Hop-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Hurt-Anim.png",
+        "bytes": 7447,
+        "gitBlobSha1": "dea35f47863af2178d9f9a11a8c38c0cbdb795e7",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Hurt-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Hurt-Offsets.png",
+        "bytes": 539,
+        "gitBlobSha1": "663b8e43798cfcbe5eabb53b3764fc1d9491bf62",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Hurt-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Hurt-Shadow.png",
+        "bytes": 969,
+        "gitBlobSha1": "738a10d4e3d28588098782b17c887b6084f111f2",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Hurt-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Idle-Anim.png",
+        "bytes": 11313,
+        "gitBlobSha1": "2eeff6d1e9bbdd298afd914f5b52b773fd877a67",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Idle-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Idle-Offsets.png",
+        "bytes": 672,
+        "gitBlobSha1": "6c7efc183973bb35010714c85e3cbf3ded5b82ab",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Idle-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Idle-Shadow.png",
+        "bytes": 991,
+        "gitBlobSha1": "8d8f640ee08f2f5d9ad60591aacbfe170d650efb",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Idle-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Rotate-Anim.png",
+        "bytes": 26960,
+        "gitBlobSha1": "4bde719c212f234e90b2d0a5ef8af52258947e6b",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Rotate-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Rotate-Offsets.png",
+        "bytes": 1332,
+        "gitBlobSha1": "45e2d117c412a638fd4860070de93be58b0e46a9",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Rotate-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Rotate-Shadow.png",
+        "bytes": 1297,
+        "gitBlobSha1": "33c22df9f94aa37520e99b529ae1515eb2260fc2",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Rotate-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Shoot-Anim.png",
+        "bytes": 41398,
+        "gitBlobSha1": "e94567428b6eb0f26d19ed056be2f50f44163ba5",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Shoot-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Shoot-Offsets.png",
+        "bytes": 2602,
+        "gitBlobSha1": "bdfa867cb1ebde3d0e0235e5fc93b5d30504403f",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Shoot-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Shoot-Shadow.png",
+        "bytes": 4199,
+        "gitBlobSha1": "253f2a404e479f304dab1334f9063d20f976a616",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Shoot-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Sleep-Anim.png",
+        "bytes": 876,
+        "gitBlobSha1": "a7bb5bff4d992bddaaf2d6a3ddcb6c407edd0402",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Sleep-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Sleep-Offsets.png",
+        "bytes": 119,
+        "gitBlobSha1": "3d65722f08378cd9edbfa283df173e354e9d2ef7",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Sleep-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Sleep-Shadow.png",
+        "bytes": 176,
+        "gitBlobSha1": "e16efbadd6a6dfef82125643804a8d49292cdbe3",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Sleep-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Swing-Anim.png",
+        "bytes": 33665,
+        "gitBlobSha1": "7b2ee9fcc5293f30f9018b7a36a624d1d11fcab1",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Swing-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Swing-Offsets.png",
+        "bytes": 2735,
+        "gitBlobSha1": "54c49065dd3cece0d594fd8ea4352f14fd041ead",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Swing-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Swing-Shadow.png",
+        "bytes": 4970,
+        "gitBlobSha1": "a7d4188fd575d08b8872883fcd48a02dd2427957",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Swing-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Walk-Anim.png",
+        "bytes": 20738,
+        "gitBlobSha1": "e8b79bd5c0300ec3e37e207cfe4c3b7858bd7d63",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Walk-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Walk-Offsets.png",
+        "bytes": 1745,
+        "gitBlobSha1": "6ee8f09e951e1b429da49657a76951bfdb15a8a6",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Walk-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0000/0002/Walk-Shadow.png",
+        "bytes": 3057,
+        "gitBlobSha1": "a806923f02e4376c3ca1ae8b5bf37334a0ba6600",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0000/0002/Walk-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/AnimData.xml",
+        "bytes": 5859,
+        "gitBlobSha1": "ee175bc8ad65a39ca337997e9473fd813f9eb9ec",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/AnimData.xml"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Attack-Anim.png",
+        "bytes": 35677,
+        "gitBlobSha1": "cb2d6e5326cd60822490fa1d184cb6583b82df4f",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Attack-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Attack-Offsets.png",
+        "bytes": 3787,
+        "gitBlobSha1": "098c1e767071374879066670cc569ce8d77037c7",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Attack-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Attack-Shadow.png",
+        "bytes": 6333,
+        "gitBlobSha1": "c9bb867e59c44178303913b28eb295dcc1358438",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Attack-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Charge-Anim.png",
+        "bytes": 8521,
+        "gitBlobSha1": "449090cc65fb5d844de945a525739c9e3c1a5c8f",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Charge-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Charge-Offsets.png",
+        "bytes": 1150,
+        "gitBlobSha1": "05ccdf6bd0473b6b3d38eac6bee8cad750e42365",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Charge-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Charge-Shadow.png",
+        "bytes": 2251,
+        "gitBlobSha1": "146cd370dc1156437af58665a8521923131a1490",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Charge-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/credits.txt",
+        "bytes": 284,
+        "gitBlobSha1": "13ce64f82bb25d829ebb7cfb2cb763d9aaccdf51",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/credits.txt"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Double-Anim.png",
+        "bytes": 23881,
+        "gitBlobSha1": "537ee5cb1e2f9b87760804959d928806c9d63519",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Double-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Double-Offsets.png",
+        "bytes": 3543,
+        "gitBlobSha1": "8982f7fba4f199c381b233ce9e539104f10d57d1",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Double-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Double-Shadow.png",
+        "bytes": 6896,
+        "gitBlobSha1": "8273cc272afb5db93d02cffed576deb98222baf6",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Double-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/FlapAround-Anim.png",
+        "bytes": 63364,
+        "gitBlobSha1": "2c8482976355889c33bba0ed13a56ff3d53cd4b3",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/FlapAround-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/FlapAround-Offsets.png",
+        "bytes": 3495,
+        "gitBlobSha1": "e95e783961e02320450b32661fad781054d12c04",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/FlapAround-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/FlapAround-Shadow.png",
+        "bytes": 2641,
+        "gitBlobSha1": "3a31a9e17d603f3c175d09975e967a8ed33dc363",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/FlapAround-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Hop-Anim.png",
+        "bytes": 25792,
+        "gitBlobSha1": "9e55b48c2cdad05e9d115e4e7dde1a9842b84774",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Hop-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Hop-Offsets.png",
+        "bytes": 1913,
+        "gitBlobSha1": "e06a1222aacbda67aed1d95067f0e5b79850c67a",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Hop-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Hop-Shadow.png",
+        "bytes": 1856,
+        "gitBlobSha1": "efcc0cba09ea9f35d0d30d1331c778217a97bf8d",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Hop-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Hurt-Anim.png",
+        "bytes": 7731,
+        "gitBlobSha1": "1bf0774e691230e3f1b89f8643e14986373a08e8",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Hurt-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Hurt-Offsets.png",
+        "bytes": 539,
+        "gitBlobSha1": "663b8e43798cfcbe5eabb53b3764fc1d9491bf62",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Hurt-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Hurt-Shadow.png",
+        "bytes": 969,
+        "gitBlobSha1": "738a10d4e3d28588098782b17c887b6084f111f2",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Hurt-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Idle-Anim.png",
+        "bytes": 11281,
+        "gitBlobSha1": "4ee92b38978299f8c7269de44102d5100f8e50ee",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Idle-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Idle-Offsets.png",
+        "bytes": 672,
+        "gitBlobSha1": "6c7efc183973bb35010714c85e3cbf3ded5b82ab",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Idle-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Idle-Shadow.png",
+        "bytes": 991,
+        "gitBlobSha1": "8d8f640ee08f2f5d9ad60591aacbfe170d650efb",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Idle-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Rotate-Anim.png",
+        "bytes": 26036,
+        "gitBlobSha1": "14351a556d1cfc689b44e1bd1ff0d269893375b5",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Rotate-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Rotate-Offsets.png",
+        "bytes": 1332,
+        "gitBlobSha1": "45e2d117c412a638fd4860070de93be58b0e46a9",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Rotate-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Rotate-Shadow.png",
+        "bytes": 1297,
+        "gitBlobSha1": "33c22df9f94aa37520e99b529ae1515eb2260fc2",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Rotate-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Shoot-Anim.png",
+        "bytes": 41140,
+        "gitBlobSha1": "84cebf513d136924e09915381fd76045cbb462e4",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Shoot-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Shoot-Offsets.png",
+        "bytes": 2602,
+        "gitBlobSha1": "bdfa867cb1ebde3d0e0235e5fc93b5d30504403f",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Shoot-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Shoot-Shadow.png",
+        "bytes": 4199,
+        "gitBlobSha1": "253f2a404e479f304dab1334f9063d20f976a616",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Shoot-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Sleep-Anim.png",
+        "bytes": 926,
+        "gitBlobSha1": "d85e30bf17000c99fc41847ce86a07d31109eb55",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Sleep-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Sleep-Offsets.png",
+        "bytes": 119,
+        "gitBlobSha1": "3d65722f08378cd9edbfa283df173e354e9d2ef7",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Sleep-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Sleep-Shadow.png",
+        "bytes": 176,
+        "gitBlobSha1": "e16efbadd6a6dfef82125643804a8d49292cdbe3",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Sleep-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Swing-Anim.png",
+        "bytes": 34095,
+        "gitBlobSha1": "29f6b824033b2657549656ab7d31d1868c080c5f",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Swing-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Swing-Offsets.png",
+        "bytes": 2735,
+        "gitBlobSha1": "54c49065dd3cece0d594fd8ea4352f14fd041ead",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Swing-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Swing-Shadow.png",
+        "bytes": 4970,
+        "gitBlobSha1": "a7d4188fd575d08b8872883fcd48a02dd2427957",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Swing-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Walk-Anim.png",
+        "bytes": 20525,
+        "gitBlobSha1": "014f8491b1903721f7b7d195160d20c1a9fd81c5",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Walk-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Walk-Offsets.png",
+        "bytes": 1745,
+        "gitBlobSha1": "6ee8f09e951e1b429da49657a76951bfdb15a8a6",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Walk-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/0002/Walk-Shadow.png",
+        "bytes": 3057,
+        "gitBlobSha1": "a806923f02e4376c3ca1ae8b5bf37334a0ba6600",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/0002/Walk-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/AnimData.xml",
+        "bytes": 5859,
+        "gitBlobSha1": "ee175bc8ad65a39ca337997e9473fd813f9eb9ec",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/AnimData.xml"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Attack-Anim.png",
+        "bytes": 35126,
+        "gitBlobSha1": "7125a38465e8110b6b95b8388869e5925859222c",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Attack-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Attack-Offsets.png",
+        "bytes": 3787,
+        "gitBlobSha1": "098c1e767071374879066670cc569ce8d77037c7",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Attack-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Attack-Shadow.png",
+        "bytes": 6333,
+        "gitBlobSha1": "c9bb867e59c44178303913b28eb295dcc1358438",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Attack-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Charge-Anim.png",
+        "bytes": 8402,
+        "gitBlobSha1": "2b074af3032e4c36cff6a829f0f0d745a893d83b",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Charge-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Charge-Offsets.png",
+        "bytes": 1150,
+        "gitBlobSha1": "05ccdf6bd0473b6b3d38eac6bee8cad750e42365",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Charge-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Charge-Shadow.png",
+        "bytes": 2251,
+        "gitBlobSha1": "146cd370dc1156437af58665a8521923131a1490",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Charge-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/credits.txt",
+        "bytes": 148,
+        "gitBlobSha1": "cba07f6b648dcfeb36796ff1766e2932e853a3ff",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/credits.txt"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Double-Anim.png",
+        "bytes": 24415,
+        "gitBlobSha1": "1c1a38fbced92f788ef5c6509cc692ae15698820",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Double-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Double-Offsets.png",
+        "bytes": 3543,
+        "gitBlobSha1": "8982f7fba4f199c381b233ce9e539104f10d57d1",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Double-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Double-Shadow.png",
+        "bytes": 6896,
+        "gitBlobSha1": "8273cc272afb5db93d02cffed576deb98222baf6",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Double-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/FlapAround-Anim.png",
+        "bytes": 63396,
+        "gitBlobSha1": "6c0bc8c22c13c9f4b8fe1026eeb1d36bdf3f94a5",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/FlapAround-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/FlapAround-Offsets.png",
+        "bytes": 3495,
+        "gitBlobSha1": "e95e783961e02320450b32661fad781054d12c04",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/FlapAround-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/FlapAround-Shadow.png",
+        "bytes": 2641,
+        "gitBlobSha1": "3a31a9e17d603f3c175d09975e967a8ed33dc363",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/FlapAround-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Hop-Anim.png",
+        "bytes": 25779,
+        "gitBlobSha1": "2c24f57e9159e22fe20f98ad48819a0c7a98f814",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Hop-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Hop-Offsets.png",
+        "bytes": 1913,
+        "gitBlobSha1": "e06a1222aacbda67aed1d95067f0e5b79850c67a",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Hop-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Hop-Shadow.png",
+        "bytes": 1856,
+        "gitBlobSha1": "efcc0cba09ea9f35d0d30d1331c778217a97bf8d",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Hop-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Hurt-Anim.png",
+        "bytes": 7699,
+        "gitBlobSha1": "44a17fe60da804877f45f6bfa966672aa9a1b623",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Hurt-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Hurt-Offsets.png",
+        "bytes": 539,
+        "gitBlobSha1": "663b8e43798cfcbe5eabb53b3764fc1d9491bf62",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Hurt-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Hurt-Shadow.png",
+        "bytes": 969,
+        "gitBlobSha1": "738a10d4e3d28588098782b17c887b6084f111f2",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Hurt-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Idle-Anim.png",
+        "bytes": 11061,
+        "gitBlobSha1": "f4af8e1ab7889da577dcc7434268ae18d7a57bef",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Idle-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Idle-Offsets.png",
+        "bytes": 672,
+        "gitBlobSha1": "6c7efc183973bb35010714c85e3cbf3ded5b82ab",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Idle-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Idle-Shadow.png",
+        "bytes": 991,
+        "gitBlobSha1": "8d8f640ee08f2f5d9ad60591aacbfe170d650efb",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Idle-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Rotate-Anim.png",
+        "bytes": 26005,
+        "gitBlobSha1": "0b3ea1f5decd9fa4b63b8143021ffb4a43c2593b",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Rotate-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Rotate-Offsets.png",
+        "bytes": 1332,
+        "gitBlobSha1": "45e2d117c412a638fd4860070de93be58b0e46a9",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Rotate-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Rotate-Shadow.png",
+        "bytes": 1297,
+        "gitBlobSha1": "33c22df9f94aa37520e99b529ae1515eb2260fc2",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Rotate-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Shoot-Anim.png",
+        "bytes": 40724,
+        "gitBlobSha1": "4dd07256be7a39de6a95a96e6bf1099218dc88a9",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Shoot-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Shoot-Offsets.png",
+        "bytes": 2602,
+        "gitBlobSha1": "bdfa867cb1ebde3d0e0235e5fc93b5d30504403f",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Shoot-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Shoot-Shadow.png",
+        "bytes": 4199,
+        "gitBlobSha1": "253f2a404e479f304dab1334f9063d20f976a616",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Shoot-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Sleep-Anim.png",
+        "bytes": 972,
+        "gitBlobSha1": "ef3569790956cf44d9c68a8abb4f69f5d08e5c88",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Sleep-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Sleep-Offsets.png",
+        "bytes": 119,
+        "gitBlobSha1": "3d65722f08378cd9edbfa283df173e354e9d2ef7",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Sleep-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Sleep-Shadow.png",
+        "bytes": 176,
+        "gitBlobSha1": "e16efbadd6a6dfef82125643804a8d49292cdbe3",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Sleep-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Swing-Anim.png",
+        "bytes": 34141,
+        "gitBlobSha1": "beb378f4b556b70f61f7df09edd65616e427cdac",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Swing-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Swing-Offsets.png",
+        "bytes": 2735,
+        "gitBlobSha1": "54c49065dd3cece0d594fd8ea4352f14fd041ead",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Swing-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Swing-Shadow.png",
+        "bytes": 4970,
+        "gitBlobSha1": "a7d4188fd575d08b8872883fcd48a02dd2427957",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Swing-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Walk-Anim.png",
+        "bytes": 20028,
+        "gitBlobSha1": "aa538cff9a5db3240a71254a98d2d2cd9c2f4b2c",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Walk-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Walk-Offsets.png",
+        "bytes": 1745,
+        "gitBlobSha1": "6ee8f09e951e1b429da49657a76951bfdb15a8a6",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Walk-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/0001/Walk-Shadow.png",
+        "bytes": 3057,
+        "gitBlobSha1": "a806923f02e4376c3ca1ae8b5bf37334a0ba6600",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/0001/Walk-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/AnimData.xml",
+        "bytes": 5859,
+        "gitBlobSha1": "ee175bc8ad65a39ca337997e9473fd813f9eb9ec",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/AnimData.xml"
+      },
+      {
+        "path": "sprite/0012/0002/Attack-Anim.png",
+        "bytes": 35571,
+        "gitBlobSha1": "b22ba46d66fafd4ca3c59bfe604a28e0e626f964",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Attack-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/Attack-Offsets.png",
+        "bytes": 3787,
+        "gitBlobSha1": "098c1e767071374879066670cc569ce8d77037c7",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Attack-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/Attack-Shadow.png",
+        "bytes": 6333,
+        "gitBlobSha1": "c9bb867e59c44178303913b28eb295dcc1358438",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Attack-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/Charge-Anim.png",
+        "bytes": 8123,
+        "gitBlobSha1": "186362c07db7759938c8a93038e8492bcedc680f",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Charge-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/Charge-Offsets.png",
+        "bytes": 1150,
+        "gitBlobSha1": "05ccdf6bd0473b6b3d38eac6bee8cad750e42365",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Charge-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/Charge-Shadow.png",
+        "bytes": 2251,
+        "gitBlobSha1": "146cd370dc1156437af58665a8521923131a1490",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Charge-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/credits.txt",
+        "bytes": 149,
+        "gitBlobSha1": "595378d42e1eb176114efe906818d3487bcf1a80",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/credits.txt"
+      },
+      {
+        "path": "sprite/0012/0002/Double-Anim.png",
+        "bytes": 25203,
+        "gitBlobSha1": "f444c6ccb423a9f8919dd776e99a2ea6b38881c0",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Double-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/Double-Offsets.png",
+        "bytes": 3543,
+        "gitBlobSha1": "8982f7fba4f199c381b233ce9e539104f10d57d1",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Double-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/Double-Shadow.png",
+        "bytes": 6896,
+        "gitBlobSha1": "8273cc272afb5db93d02cffed576deb98222baf6",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Double-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/FlapAround-Anim.png",
+        "bytes": 61918,
+        "gitBlobSha1": "c77b42dfa9c326f9b074585cabd7ad61ee01f5bf",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/FlapAround-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/FlapAround-Offsets.png",
+        "bytes": 3495,
+        "gitBlobSha1": "e95e783961e02320450b32661fad781054d12c04",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/FlapAround-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/FlapAround-Shadow.png",
+        "bytes": 2641,
+        "gitBlobSha1": "3a31a9e17d603f3c175d09975e967a8ed33dc363",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/FlapAround-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/Hop-Anim.png",
+        "bytes": 25373,
+        "gitBlobSha1": "288911f0a789481f9f43b415140c2185c41eecd8",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Hop-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/Hop-Offsets.png",
+        "bytes": 1913,
+        "gitBlobSha1": "e06a1222aacbda67aed1d95067f0e5b79850c67a",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Hop-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/Hop-Shadow.png",
+        "bytes": 1856,
+        "gitBlobSha1": "efcc0cba09ea9f35d0d30d1331c778217a97bf8d",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Hop-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/Hurt-Anim.png",
+        "bytes": 7442,
+        "gitBlobSha1": "32d5898eb11720d71ebaea5f76c7452196333e55",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Hurt-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/Hurt-Offsets.png",
+        "bytes": 539,
+        "gitBlobSha1": "663b8e43798cfcbe5eabb53b3764fc1d9491bf62",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Hurt-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/Hurt-Shadow.png",
+        "bytes": 969,
+        "gitBlobSha1": "738a10d4e3d28588098782b17c887b6084f111f2",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Hurt-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/Idle-Anim.png",
+        "bytes": 11297,
+        "gitBlobSha1": "d2094c12351c8523c33dfc204be0e3a7be7e809a",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Idle-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/Idle-Offsets.png",
+        "bytes": 672,
+        "gitBlobSha1": "6c7efc183973bb35010714c85e3cbf3ded5b82ab",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Idle-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/Idle-Shadow.png",
+        "bytes": 991,
+        "gitBlobSha1": "8d8f640ee08f2f5d9ad60591aacbfe170d650efb",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Idle-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/Rotate-Anim.png",
+        "bytes": 27177,
+        "gitBlobSha1": "58228448f686f35edd06e438249c8e45a8c24986",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Rotate-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/Rotate-Offsets.png",
+        "bytes": 1332,
+        "gitBlobSha1": "45e2d117c412a638fd4860070de93be58b0e46a9",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Rotate-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/Rotate-Shadow.png",
+        "bytes": 1297,
+        "gitBlobSha1": "33c22df9f94aa37520e99b529ae1515eb2260fc2",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Rotate-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/Shoot-Anim.png",
+        "bytes": 40937,
+        "gitBlobSha1": "b1831331dcf77a4e8918f175998311f8a4b6c74f",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Shoot-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/Shoot-Offsets.png",
+        "bytes": 2602,
+        "gitBlobSha1": "bdfa867cb1ebde3d0e0235e5fc93b5d30504403f",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Shoot-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/Shoot-Shadow.png",
+        "bytes": 4199,
+        "gitBlobSha1": "253f2a404e479f304dab1334f9063d20f976a616",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Shoot-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/Sleep-Anim.png",
+        "bytes": 923,
+        "gitBlobSha1": "dcd8a92f1587e16a2c998b6f173b25852a362a2c",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Sleep-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/Sleep-Offsets.png",
+        "bytes": 119,
+        "gitBlobSha1": "3d65722f08378cd9edbfa283df173e354e9d2ef7",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Sleep-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/Sleep-Shadow.png",
+        "bytes": 176,
+        "gitBlobSha1": "e16efbadd6a6dfef82125643804a8d49292cdbe3",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Sleep-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/Swing-Anim.png",
+        "bytes": 33362,
+        "gitBlobSha1": "eb8d77ef7e13f0c03b41a55440c1c2d955db0bef",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Swing-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/Swing-Offsets.png",
+        "bytes": 2735,
+        "gitBlobSha1": "54c49065dd3cece0d594fd8ea4352f14fd041ead",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Swing-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/Swing-Shadow.png",
+        "bytes": 4970,
+        "gitBlobSha1": "a7d4188fd575d08b8872883fcd48a02dd2427957",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Swing-Shadow.png"
+      },
+      {
+        "path": "sprite/0012/0002/Walk-Anim.png",
+        "bytes": 20222,
+        "gitBlobSha1": "9638b7fdca6952d8eba2cb7d3c510e12fdd27e8c",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Walk-Anim.png"
+      },
+      {
+        "path": "sprite/0012/0002/Walk-Offsets.png",
+        "bytes": 1745,
+        "gitBlobSha1": "6ee8f09e951e1b429da49657a76951bfdb15a8a6",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Walk-Offsets.png"
+      },
+      {
+        "path": "sprite/0012/0002/Walk-Shadow.png",
+        "bytes": 3057,
+        "gitBlobSha1": "a806923f02e4376c3ca1ae8b5bf37334a0ba6600",
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Walk-Shadow.png"
+      }
+    ]
+  },
+  "validation": {
+    "metadata": "AnimData.xml parsed from upstream: 13 animation declarations, 12 distinct sheets; Strike has CopyOf=Attack; frame-size and duration entries present; portrait 16 expressions",
+    "eightDirections": "NOT_VERIFIED_FROM_PNG",
+    "frameDimensionsAndAlpha": "NOT_VERIFIED_FROM_PNG",
+    "offsetCropAndClipping": "NOT_VERIFIED_FROM_PNG",
+    "duplicateAgainstPKMSVV": "No directly tracked #012 Butterfree sprite files found in PKMSVV branch; vendor/game runtime assets not available for full binary collision audit",
+    "branchPackaging": "Manifest-only; no runtime loader; no sprite bitmaps in public branch"
+  }
+}
