@@ -24,10 +24,9 @@
   const box=card('pkmsvv-pc-box','<span aria-hidden="true">📦</span>','PokéBox',()=>G.PKMSVVBoxHubUI?.openBox?.());
   const upgrade=card('pkmsvv-pc-upgrades','<span aria-hidden="true">⬆️</span>',L('Nâng cấp','Upgrades'),()=>{
    overlay.querySelector('.pkmsvv-pc-close')?.click();
-   if(typeof G.PKMSVVUpgradeChooser?.open==='function')G.PKMSVVUpgradeChooser.open();
-   else G.MenuUI?.openUpgrades?.();
+   G.PKMSVVBoxHubUI?.openUpgrades?.();
   });
-  grid.prepend(dex,box,upgrade);
+  grid.prepend(box,dex,upgrade);
   overlay.querySelector('.pkmsvv-pc-hint')?.remove();
   for(const btn of overlay.querySelectorAll('.pkmsvv-pc-learn button')){
    if(!/Sương Ký Ức|Memory Mist|Season(?:al)? Event|Sự kiện mùa/i.test(btn.textContent||''))continue;
@@ -77,7 +76,13 @@
  function syncHome(){
   const menu=$('#scr-menu');if(!menu)return;
   if(menu.querySelector('#pkmsvv-menu-wiki')){
-   menu.querySelector('[data-go="dex"]')?.remove();
+   const pokemon=menu.querySelector('[data-go="dex"]');
+   if(pokemon){
+    pokemon.setAttribute('aria-label','Pokémon');
+    const title=pokemon.querySelector('.pkmsvv-menu-label, strong, .menu-label');
+    if(title)title.textContent='Pokémon';
+   }
+   // Nâng cấp remains a tab within Pokémon; never remove the real upgrade screen.
    menu.querySelector('[data-go="upgrades"]')?.remove();
   }
   const left=menu.querySelector('.menu-left'),bottom=menu.querySelector('.pkmsvv-v15-bottom');
