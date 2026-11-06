@@ -80,10 +80,10 @@
    menu.querySelector('[data-go="dex"]')?.remove();
    menu.querySelector('[data-go="upgrades"]')?.remove();
   }
-  const left=menu.querySelector('.menu-left'),bottom=left?.querySelector('.pkmsvv-v15-bottom');
-  if(left&&bottom){
+  const left=menu.querySelector('.menu-left'),bottom=menu.querySelector('.pkmsvv-v15-bottom');
+  if(left){
    let banner=left.querySelector('.pkmsvv-save-banner')||left.querySelector('.pkmsvv-season-banner');
-   if(!banner){banner=d.createElement('p');bottom.before(banner);}
+   if(!banner){banner=d.createElement('p');if(bottom?.parentElement===left)bottom.before(banner);else left.append(banner);}
    for(const extra of left.querySelectorAll('.pkmsvv-season-banner'))if(extra!==banner)extra.remove();
    banner.className='pkmsvv-save-banner';banner.setAttribute('role','note');
    banner.textContent=L('💾 Thường xuyên sao lưu để tránh mất dữ liệu!','💾 Back up regularly to avoid losing your save!');
