@@ -25,7 +25,7 @@
  const abilityName=id=>G.Mons?.abilityName?.(id)||G.ABIL?.[id]?.[1]||L('Không có','None');
  const currentSave=()=>G.DB?.save;
  let boxPane=null,dexPane=null,focused=null,infoDex=1,query='',onlyFavorites=false,onlyShiny=false,
-  view='info',page=0,dexQuery='',dexPage=0,
+  onlyRankReady=false,boxSort='dex',view='info',page=0,dexQuery='',dexPage=0,
   dexGen=0,dexRarity=0,dexStatus='all',dexType='',dexSort='num',dexFavorites=false;
  const PAGE=30,DEX_PAGE=35;
  const getStored=()=>Hub.valid(currentSave());
@@ -87,6 +87,40 @@
  }
  function chooseFocus(id){focused=id;renderBox();}
  function badgeText(x){return '#'+x.dex+(x.shiny?' ✨':'')+' · R'+x.rank;}
+ function rankStars(rank){
+  const n=Math.max(0,Math.min(5,Number.isInteger(rank)?rank:0));
+  return '<span class="pkmbx-rank-stars" aria-label="'+L('Hạng ','Rank ')+n+'/5">'+
+   '★'.repeat(n)+'<span class="pkmbx-rank-empty">'+'☆'.repeat(5-n)+'</span></span>';
+ }
+ function rankBlock(it,progress){
+  const {rank,max,cost,copies,fragments,available,missing,enabled,canRank}=progress;
+  const next=G.PKMSVVBox2?.formatRank?.(Math.min(max,rank+1))||{hp:(rank+1)*6,damage:(rank+1)*6};
+  const current=G.PKMSVVBox2?.formatRank?.(rank)||{hp:rank*6,damage:rank*6};
+  const percent=cost?Math.round(100*available/cost):100;
+  const details=rank>=max?
+   '<p class="pkmbx-rank-status">'+L('Đã đạt hạng tối đa.','Maximum Rank reached.')+'</p>':
+   !enabled?
+    '<p class="pkmbx-rank-status">'+L('Save cũ đang xem trước. Nâng Rank chỉ dùng sau khi tạo PokéBox an toàn từ Sao lưu & Khôi phục.','Legacy save preview. Rank needs a safe PokéBox migration under Backup & Restore.')+'</p>':
+    '<div class="pkmbx-rank-progress" role="progressbar" aria-label="'+L('Nguyên liệu hợp lệ','Eligible materials')+
+     '" aria-valuemin="0" aria-valuemax="'+cost+'" aria-valuenow="'+available+'"><span style="width:'+percent+'%"></span></div>'+
+    '<p class="pkmbx-rank-materials">'+L('Nguyên liệu hợp lệ: ','Eligible materials: ')+
+      '<b>'+available+' / '+cost+'</b> · '+L('Bản sao dùng được','Usable copies')+': '+copies+
+      ' · '+L('Mảnh Rank','Rank shards')+': '+fragments+'</p>'+
+    '<p class="pkmbx-rank-status'+(canRank?' is-ready':'')+'">'+
+      (canRank?L('✓ Có thể nâng hạng!','✓ Ready to rank up!'):
+        L('Còn thiếu ','Need ')+missing+L(' nguyên liệu hợp lệ',' more eligible materials'))+'</p>';
+  return '<section class="pkmbx-rank-overview" aria-label="'+L('Tiến trình Rank','Rank progress')+'">'+
+   '<div class="pkmbx-rank-heading"><b>'+L('Hạng Pokémon','Pokémon Rank')+'</b>'+
+      rankStars(rank)+'<strong>'+rank+' / '+max+'</strong></div>'+
+   '<p class="pkmbx-rank-bonus">'+L('Hiện tại: ','Current: ')+
+     L('Máu ','HP ')+'+'+current.hp+'% · '+L('Sát thương ','Damage ')+'+'+current.damage+'%</p>'+
+   details+(rank<max?
+     '<p class="pkmbx-rank-next"><b>'+L('Hạng kế tiếp: ','Next Rank: ')+'</b>'+
+      L('Máu ','HP ')+'+'+next.hp+'% · '+L('Sát thương ','Damage ')+'+'+next.damage+'%'+
+      (rank===3?' · '+L('Hồi chiêu −5%','Cooldown −5%'):'')+'</p>':'')+
+   '<button type="button" class="btn small pkmbx-rank-shortcut" id="pkmbx-rank-shortcut">'+
+     L('Xem chi tiết Rank','View Rank details')+'</button></section>';
+ }
  function renderTeam(root,s,items){
   const team=Hub.team(s),holder=root.querySelector('#pkmbx-six');
   const byId=new Map(items.map(x=>[x.id,x]));
@@ -117,14 +151,16 @@
   }
   root.querySelector('#pkmbx-team-count').textContent=team.length+'/'+Hub.TEAM_MAX;
  }
- function slot(it,selected,pre=false,members){
+ function slot(it,selected,pre=false,members,progress,duplicates=1){
   const b=doc.createElement('button');b.type='button';
   b.className='pkmbx-slot pkmbx-hub-slot'+(it.id===focused?' focused':'')+
-   (it.id===selected?' selected':'');
+   (it.id===selected?' selected':'')+(progress?.canRank?' rank-ready':'');
   const team=(members||new Set(Hub.team(currentSave()))).has(it.id);
   b.innerHTML='<canvas width="76" height="76"></canvas>'+
    '<span class="pkmbx-name">'+clean(monName(it.dex))+'</span>'+
-   '<small>'+clean(badgeText(it))+'</small>'+
+   '<small>#'+it.dex+(it.shiny?' ✨':'')+'</small>'+
+   '<span class="pkmbx-slot-meta">'+rankStars(it.rank)+
+    (duplicates>1?'<span class="pkmbx-stack" title="'+L('Số cá thể cùng loài','Individuals of this species')+'">×'+duplicates+'</span>':'')+'</span>'+
    '<span class="pkmbx-mini-icons">'+(it.favorite?'★ ':'')+(team?'⑥ ':'')+
     (it.id===selected?'✓':'')+'</span>';
   b.onclick=()=>chooseFocus(it.id);
@@ -165,9 +201,11 @@
   const mon=G.DEX_BY?.[it.dex];
   const types=mon?.types||[];
   const team=Hub.team(currentSave()),member=team.includes(it.id);
+  const progress=Hub.rankOverview(s,it);
   profile.innerHTML='<div class="pkmbx-hub-hero"><canvas id="pkmbx-hero" width="176" height="176"></canvas>'+
     '<div><strong>'+clean(monName(it.dex))+'</strong><p>'+clean(badgeText(it))+'</p>'+
     '<p>'+types.map(typeName).map(clean).join(' · ')+'</p></div></div>'+
+    rankBlock(it,progress)+
     '<div class="pkmbx-hub-info">'+
     '<p><b>'+L('Tính cách','Nature')+':</b> '+clean(natureName(it.natureId))+'</p>'+ 
     '<p class="pkmbx-hint">'+clean(natureHint)+'</p>'+
@@ -188,6 +226,7 @@
     '<button class="btn small'+(view==='rank'?' gold':'')+'" data-box-tab="rank">⭐ Rank</button></div>'+
     '<div class="pkmbx-hub-tab-content" id="pkmbx-tab-content"></div>';
   draw(profile.querySelector('#pkmbx-hero'),it.dex,it.shiny,true);
+  profile.querySelector('#pkmbx-rank-shortcut').onclick=()=>{view='rank';renderBox();};
   profile.querySelector('#pkmbx-use').onclick=()=>saveAction(()=>{
    if(ready){
     if(!Hub.safeSelect(it.id))throw Error('Could not select this Pokémon');
@@ -271,7 +310,15 @@
    '<div class="pkmbx-actions pkmbx-hub-tools">'+
    '<input type="search" id="pkmbx-query" autocomplete="off" placeholder="'+L('Tìm Pokémon / #Dex','Search Pokémon / #Dex')+'"/>'+
    '<label><input type="checkbox" id="pkmbx-favorite"/> '+L('★ Yêu thích','★ Favorites')+'</label>'+
-   '<label><input type="checkbox" id="pkmbx-shiny"/> Shiny</label></div>'+
+   '<label><input type="checkbox" id="pkmbx-shiny"/> Shiny</label>'+
+   '<label><input type="checkbox" id="pkmbx-ready"/> '+L('Có thể nâng Rank','Rank ready')+'</label>'+
+   '<label class="pkmbx-box-sort">'+L('Sắp xếp','Sort')+': <select id="pkmbx-sort">'+
+    '<option value="dex">'+L('Số Pokédex','Dex number')+'</option>'+
+    '<option value="name">'+L('Tên','Name')+'</option>'+
+    '<option value="rank">Rank</option>'+
+    '<option value="copies">'+L('Số bản sao','Copies')+'</option>'+
+    '<option value="rarity">'+L('Độ hiếm','Rarity')+'</option></select></label>'+
+   '<span id="pkmbx-found-count" class="pkmbx-found-count" aria-live="polite"></span></div>'+
    '<div class="pkmbx-hub-main"><div class="pkmbx-hub-left">'+
    '<div class="pkmbx-grid" id="pkmbx-grid"></div><nav class="pkmbx-page">'+
    '<button class="btn small" id="pkmbx-prev">◀</button><span id="pkmbx-pagenum">1/1</span>'+
@@ -284,6 +331,8 @@
   boxPane.querySelector('#pkmbx-query').oninput=e=>{query=e.target.value;page=0;renderBox();};
   boxPane.querySelector('#pkmbx-favorite').onchange=e=>{onlyFavorites=e.target.checked;page=0;renderBox();};
   boxPane.querySelector('#pkmbx-shiny').onchange=e=>{onlyShiny=e.target.checked;page=0;renderBox();};
+  boxPane.querySelector('#pkmbx-ready').onchange=e=>{onlyRankReady=e.target.checked;page=0;renderBox();};
+  boxPane.querySelector('#pkmbx-sort').onchange=e=>{boxSort=e.target.value;page=0;renderBox();};
   boxPane.querySelector('#pkmbx-prev').onclick=()=>{page=Math.max(0,page-1);renderBox();};
   boxPane.querySelector('#pkmbx-next').onclick=()=>{page++;renderBox();};
  }
@@ -291,15 +340,33 @@
   if(!boxPane?.isConnected)return;
   const s=currentSave(),ready=getStored(),items=listPreview();
   const q=query.trim().toLocaleLowerCase();
+  const counts=new Map();
+  for(const x of items)counts.set(x.dex,(counts.get(x.dex)||0)+1);
+  const ranks=new Map(items.map(x=>[x.id,Hub.rankOverview(s,x)]));
   const shown=items.filter(x=>(!onlyFavorites||x.favorite)&&(!onlyShiny||x.shiny)&&
+   (!onlyRankReady||ranks.get(x.id)?.canRank)&&
    (!q||monName(x.dex).toLocaleLowerCase().includes(q)||String(x.dex).includes(q)));
+  shown.sort((a,b)=>{
+   if(boxSort==='name')return monName(a.dex).localeCompare(monName(b.dex))||a.dex-b.dex;
+   if(boxSort==='rank')return (ranks.get(b.id)?.rank||0)-(ranks.get(a.id)?.rank||0)||a.dex-b.dex;
+   if(boxSort==='copies')return (counts.get(b.dex)||0)-(counts.get(a.dex)||0)||a.dex-b.dex;
+   if(boxSort==='rarity')return (Number(G.DEX_BY?.[b.dex]?.rarity)||0)-(Number(G.DEX_BY?.[a.dex]?.rarity)||0)||a.dex-b.dex;
+   return a.dex-b.dex;
+  });
   const pages=Math.max(1,Math.ceil(shown.length/PAGE));page=Math.max(0,Math.min(page,pages-1));
   const selected=ready?Hub.active(s)?.id:
    items.find(x=>x.dex===Number(s?.partner)&&x.shiny===!!s?.partnerShiny)?.id;
   const grid=boxPane.querySelector('#pkmbx-grid');grid.replaceChildren();
   const members=new Set(Hub.team(s));
   for(const x of shown.slice(page*PAGE,(page+1)*PAGE))
-   grid.appendChild(slot(x,selected,!ready,members));
+   grid.appendChild(slot(x,selected,!ready,members,ranks.get(x.id),counts.get(x.dex)||1));
+  if(!shown.length){
+   const empty=doc.createElement('p');empty.className='pkmbx-box-empty';
+   empty.textContent=onlyRankReady?L('Chưa có Pokémon đủ nguyên liệu nâng Rank.','No Pokémon has enough eligible Rank materials.'):
+    L('Không tìm thấy Pokémon phù hợp.','No matching Pokémon found.');
+   grid.appendChild(empty);
+  }
+  boxPane.querySelector('#pkmbx-found-count').textContent=shown.length+' / '+items.length;
   if(!focused||!items.some(x=>x.id===focused))focused=selected||items[0]?.id||null;
   boxPane.querySelector('#pkmbx-pagenum').textContent=(page+1)+' / '+pages;
   boxPane.querySelector('#pkmbx-prev').disabled=page===0;
@@ -340,11 +407,14 @@
   if(!currentSave())return;
   closeBox();
   view=['items','rank','info'].includes(nextView)?nextView:'info';
-  page=0;query='';onlyFavorites=false;onlyShiny=false;
+  page=0;query='';onlyFavorites=false;onlyShiny=false;onlyRankReady=false;boxSort='dex';
   const s=currentSave();
   focused=Hub.active(s)?.id||
    listPreview().find(x=>x.dex===Number(s?.partner)&&x.shiny===!!s?.partnerShiny)?.id||null;
   ensureBox();
+  boxPane.querySelector('#pkmbx-query').value='';
+  for(const id of ['pkmbx-favorite','pkmbx-shiny','pkmbx-ready'])boxPane.querySelector('#'+id).checked=false;
+  boxPane.querySelector('#pkmbx-sort').value='dex';
   showPC(target);
  }
  function openBox(nextView='info'){openPC('box',nextView);}
