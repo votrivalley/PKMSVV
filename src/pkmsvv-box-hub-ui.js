@@ -354,55 +354,129 @@
  }
  function ensureDex(){
   if(dexPane?.isConnected)return;
+  const genOptions=Array.from({length:9},(_,i)=>'<option value="'+(i+1)+'">Gen '+(i+1)+'</option>').join('');
+  const typeOptions=Object.keys(typeVi).sort().map(t=>'<option value="'+clean(t)+'">'+clean(typeName(t))+'</option>').join('');
   dexPane=doc.createElement('div');dexPane.id='pkmbx-dex-overlay';dexPane.setAttribute('translate','no');
   dexPane.innerHTML='<section class="pkmbx-panel pkmbx-dex-panel" role="dialog" aria-modal="true" aria-label="Pokédex">'+
-   '<header class="pkmbx-head"><h2>📖 Pokédex</h2><button class="btn small" id="pkmbx-dex-close">'+L('✕ Đóng','✕ Close')+'</button></header>'+
-   '<p class="pkmbx-note">'+L('Bách khoa Pokémon — chỉ tra cứu loài và cách tiến hóa, không chọn Pokémon ở đây.','Species reference only: look up Pokémon and evolution paths. No team or item controls here.')+'</p>'+
-   '<input id="pkmbx-dex-search" type="search" autocomplete="off" placeholder="'+L('Tìm tên Pokémon hoặc số Pokédex','Search by Pokémon name or Dex number')+'"/>'+
+   '<header class="pkmbx-head"><h2 class="pkmbx-dex-heading">'+pokedexIcon()+' Pokédex</h2><button class="btn small" id="pkmbx-dex-close">'+L('✕ Đóng','✕ Close')+'</button></header>'+
+   '<p class="pkmbx-note">'+L('Tra cứu Pokémon, chỉ số và tiến hóa. Chọn ra trận hoặc yêu thích tại PokéBox.','Search species, stats and evolutions. Set a fighter or favorite in PokéBox.')+'</p>'+
+   '<div class="pkmbx-dex-toolbar"><input id="pkmbx-dex-search" type="search" autocomplete="off" placeholder="'+L('Tìm tên Pokémon hoặc số Pokédex','Search Pokémon name or Dex number')+'"/>'+
+   '<button type="button" class="btn small" id="pkmbx-dex-fav" aria-pressed="false">'+L('☆ Yêu thích','☆ Favorites')+'</button>'+
+   '<button type="button" class="btn small" id="pkmbx-dex-sort-toggle" aria-expanded="false">'+L('☷ Sắp xếp / Lọc','☷ Sort / Filter')+'</button></div>'+
+   '<div class="pkmbx-dex-filters" id="pkmbx-dex-filters" hidden>'+
+   '<label>'+L('Thế hệ','Generation')+'<select id="pkmbx-dex-gen"><option value="0">'+L('Tất cả Gen','All generations')+'</option>'+genOptions+'</select></label>'+
+   '<label>'+L('Tình trạng','Collection')+'<select id="pkmbx-dex-status"><option value="all">'+L('Tất cả','All')+'</option>'+
+    '<option value="owned">'+L('Đã có','Owned')+'</option><option value="missing">'+L('Chưa có','Missing')+'</option><option value="shiny">Shiny</option></select></label>'+
+   '<label>'+L('Độ hiếm','Rarity')+'<select id="pkmbx-dex-rarity"><option value="0">'+L('Tất cả độ hiếm','All rarities')+'</option>'+
+    [1,2,3,4,5].map((n)=>'<option value="'+n+'">'+L(['','Thường','Khá hiếm','Hiếm','Sử thi','Huyền thoại'][n],['','Common','Uncommon','Rare','Epic','Legendary'][n])+'</option>').join('')+'</select></label>'+
+   '<label>'+L('Hệ','Type')+'<select id="pkmbx-dex-type"><option value="">'+L('Tất cả hệ','All types')+'</option>'+typeOptions+'</select></label>'+
+   '<label>'+L('Thứ tự','Sort')+'<select id="pkmbx-dex-order"><option value="num">'+L('Số Pokédex','Dex number')+'</option>'+
+   '<option value="name">'+L('Tên','Name')+'</option><option value="rar">'+L('Độ hiếm','Rarity')+'</option>'+
+   '<option value="new">'+L('Mới thu thập','Recently caught')+'</option><option value="used">'+L('Chơi nhiều nhất','Most used')+'</option></select></label>'+
+   '<button type="button" class="btn small" id="pkmbx-dex-clear">'+L('Xóa lọc','Clear filters')+'</button>'+
+   '<button type="button" class="btn small" id="pkmbx-dex-sort-close">'+L('✕ Đóng bộ lọc','✕ Close filters')+'</button></div>'+
+   '<p class="pkmbx-dex-count" id="pkmbx-dex-count"></p>'+
    '<div class="pkmbx-dex-main"><div class="pkmbx-dex-results"><div id="pkmbx-dex-list" class="pkmbx-dex-grid"></div>'+
     '<nav class="pkmbx-page"><button class="btn small" id="pkmbx-dex-prev">◀</button><span id="pkmbx-dex-pages">1/1</span><button class="btn small" id="pkmbx-dex-next">▶</button></nav></div>'+
    '<aside id="pkmbx-dex-details" class="pkmbx-profile"></aside></div></section>';
   doc.body.appendChild(dexPane);
   dexPane.querySelector('#pkmbx-dex-close').onclick=closeDex;
   dexPane.addEventListener('click',e=>{if(e.target===dexPane)closeDex();});
+  const field=(id,fn)=>{dexPane.querySelector(id).onchange=e=>{fn(e.target.value);dexPage=0;renderDex();};};
   dexPane.querySelector('#pkmbx-dex-search').oninput=e=>{dexQuery=e.target.value;dexPage=0;renderDex();};
+  field('#pkmbx-dex-gen',v=>dexGen=Number(v));
+  field('#pkmbx-dex-status',v=>dexStatus=v);
+  field('#pkmbx-dex-rarity',v=>dexRarity=Number(v));
+  field('#pkmbx-dex-type',v=>dexType=v);
+  field('#pkmbx-dex-order',v=>dexSort=v);
+  dexPane.querySelector('#pkmbx-dex-fav').onclick=()=>{dexFavorites=!dexFavorites;dexPage=0;renderDex();};
+  const panel=dexPane.querySelector('#pkmbx-dex-filters'),toggle=dexPane.querySelector('#pkmbx-dex-sort-toggle');
+  const show=on=>{panel.hidden=!on;toggle.setAttribute('aria-expanded',String(on));};
+  toggle.onclick=()=>show(panel.hidden);
+  dexPane.querySelector('#pkmbx-dex-sort-close').onclick=()=>show(false);
+  dexPane.querySelector('#pkmbx-dex-clear').onclick=()=>{
+   dexQuery='';dexGen=0;dexRarity=0;dexStatus='all';dexType='';dexSort='num';dexFavorites=false;dexPage=0;
+   for(const id of ['#pkmbx-dex-search','#pkmbx-dex-gen','#pkmbx-dex-rarity','#pkmbx-dex-status','#pkmbx-dex-type','#pkmbx-dex-order'])
+    dexPane.querySelector(id).value=id==='#pkmbx-dex-search'?'':id==='#pkmbx-dex-status'?'all':id==='#pkmbx-dex-order'?'num':id==='#pkmbx-dex-type'?'':'0';
+   renderDex();show(false);
+  };
   dexPane.querySelector('#pkmbx-dex-prev').onclick=()=>{dexPage--;renderDex();};
   dexPane.querySelector('#pkmbx-dex-next').onclick=()=>{dexPage++;renderDex();};
  }
+ function pokedexIcon(){
+  // Editable vector inspired by the classic Gen 1 red handheld Pokédex.
+  return '<svg class="pkmbx-gen1-icon" viewBox="0 0 48 48" width="39" height="39" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">'+
+   '<rect x="6" y="2" width="35" height="44" rx="5" fill="#d72e39" stroke="#631b30" stroke-width="2"/>'+
+   '<rect x="10" y="6" width="27" height="4" rx="2" fill="#f57c79"/>'+
+   '<circle cx="14" cy="17" r="5" fill="#b9efff" stroke="#31506a" stroke-width="2"/>'+
+   '<circle cx="25" cy="15" r="2" fill="#64d8ba"/><circle cx="32" cy="15" r="2" fill="#f6c36b"/>'+
+   '<rect x="10" y="23" width="27" height="13" rx="2" fill="#203c4d" stroke="#7bdbcd" stroke-width="2"/>'+
+   '<rect x="14" y="26" width="19" height="7" rx="1" fill="#6ed0b6"/>'+
+   '<path d="M16 30h15" stroke="#2a725e" stroke-width="2"/>'+
+   '<rect x="12" y="39" width="12" height="3" rx="1" fill="#293b4b"/>'+
+   '<circle cx="32" cy="40" r="3" fill="#f5d36f" stroke="#5c3040"/>'+
+   '</svg>';
+ }
  function renderDex(){
   if(!dexPane?.isConnected)return;
-  const nums=Object.keys(G.DEX_BY||{}).map(Number).filter(n=>Number.isSafeInteger(n)&&n>0&&n<=1025&&G.DEX_BY[n])
-    .sort((a,b)=>a-b);
-  const q=dexQuery.trim().toLowerCase();
-  const list=nums.filter(n=>!q||String(n).includes(q)||monName(n).toLowerCase().includes(q));
+  const s=currentSave()||{},nums=Object.keys(G.DEX_BY||{}).map(Number)
+   .filter(n=>Number.isSafeInteger(n)&&n>0&&n<=1025&&G.DEX_BY[n]).sort((a,b)=>a-b);
+  const favorites=new Set((Hub.valid(s)?s.pkmsvvBox:listPreview()).filter(x=>x.favorite).map(x=>x.dex));
+  const q=dexQuery.trim().toLocaleLowerCase();
+  const has=n=>!!(s.owned?.[n]||s.shiny?.[n]);
+  const list=nums.filter(n=>{
+   const p=G.DEX_BY[n];
+   if(q&&!String(n).includes(q)&&!monName(n).toLocaleLowerCase().includes(q))return false;
+   if(dexGen&&p.gen!==dexGen)return false;
+   if(dexFavorites&&!favorites.has(n))return false;
+   if(dexType&&!(p.types||[]).includes(dexType))return false;
+   if(dexStatus==='owned'&&!has(n))return false;
+   if(dexStatus==='missing'&&has(n))return false;
+   if(dexStatus==='shiny'&&!s.shiny?.[n])return false;
+   if(dexRarity&&(dexRarity===5?!(p.rarity>=5):p.rarity!==dexRarity))return false;
+   return true;
+  });
+  if(dexSort==='name')list.sort((a,b)=>monName(a).localeCompare(monName(b))||a-b);
+  else if(dexSort==='rar')list.sort((a,b)=>(G.DEX_BY[b].rarity||0)-(G.DEX_BY[a].rarity||0)||a-b);
+  else if(dexSort==='new')list.sort((a,b)=>(Number(s.owned?.[b]?.at)||0)-(Number(s.owned?.[a]?.at)||0)||a-b);
+  else if(dexSort==='used')list.sort((a,b)=>(Number(s.pused?.[b])||0)-(Number(s.pused?.[a])||0)||a-b);
   const pages=Math.max(1,Math.ceil(list.length/DEX_PAGE));dexPage=Math.min(Math.max(0,dexPage),pages-1);
   const host=dexPane.querySelector('#pkmbx-dex-list');host.replaceChildren();
+  if(!list.length)host.innerHTML='<p class="pkmbx-dex-empty">'+L('Không có Pokémon phù hợp bộ lọc.','No Pokémon match these filters.')+'</p>';
   for(const dex of list.slice(dexPage*DEX_PAGE,(dexPage+1)*DEX_PAGE)){
    const b=doc.createElement('button');b.type='button';
    b.className='pkmbx-dex-card'+(infoDex===dex?' focused':'');
-   b.innerHTML='<canvas width="56" height="56"></canvas><span>#'+dex+'</span><b>'+clean(monName(dex))+'</b>';
+   b.innerHTML='<canvas width="56" height="56"></canvas><span>#'+dex+(favorites.has(dex)?' ★':'')+'</span><b>'+clean(monName(dex))+'</b>';
    b.onclick=()=>{infoDex=dex;renderDex();};
-   host.appendChild(b);draw(b.querySelector('canvas'),dex,false,false,!currentSave()?.owned?.[dex]);
+   host.appendChild(b);draw(b.querySelector('canvas'),dex,false,false,!has(dex));
   }
   dexPane.querySelector('#pkmbx-dex-pages').textContent=(dexPage+1)+' / '+pages;
   dexPane.querySelector('#pkmbx-dex-prev').disabled=dexPage===0;
-  dexPane.querySelector('#pkmbx-dex-next').disabled=dexPage===pages-1;
+  dexPane.querySelector('#pkmbx-dex-next').disabled=dexPage>=pages-1;
+  dexPane.querySelector('#pkmbx-dex-count').textContent=list.length+' / '+nums.length+' Pokémon';
+  const favButton=dexPane.querySelector('#pkmbx-dex-fav');favButton.classList.toggle('gold',dexFavorites);
+  favButton.setAttribute('aria-pressed',String(dexFavorites));
+  if(!list.includes(infoDex))infoDex=list[0]||null;
   const mon=G.DEX_BY?.[infoDex],detail=dexPane.querySelector('#pkmbx-dex-details');
-  if(!mon){detail.innerHTML='<p>'+L('Không có thông tin loài này.','Species not found.')+'</p>';return;}
-  const owned=!!currentSave()?.owned?.[infoDex];
-  const from=evoRules().filter(r=>r.to===infoDex),to=evoRules().filter(r=>r.from===infoDex);
+  if(!mon){detail.innerHTML='<p>'+L('Không có Pokémon phù hợp.','No matching species.')+'</p>';return;}
+  const owned=has(infoDex),from=evoRules().filter(r=>r.to===infoDex),to=evoRules().filter(r=>r.from===infoDex);
   const evos=(label,rules,target)=>'<section class="pkmbx-dex-evo"><h4>'+label+'</h4>'+
    (rules.length?rules.slice(0,15).map(r=>'<button type="button" data-evo-dex="'+r[target]+'" class="btn small">'+
     clean(monName(r[target]))+' (#'+r[target]+') · '+clean(evoLabel(r))+'</button>').join(''):
     '<p>'+L('Không có dữ liệu tiến hóa trong game.','No evolution records for this species.')+'</p>')+'</section>';
+  const rarity=['',L('Thường','Common'),L('Khá hiếm','Uncommon'),L('Hiếm','Rare'),L('Sử thi','Epic'),L('Huyền thoại','Legendary')][Math.min(Number(mon.rarity)||1,5)];
   detail.innerHTML='<div class="pkmbx-hub-hero"><canvas id="pkmbx-dex-hero" width="176" height="176"></canvas>'+
    '<div><strong>'+clean(monName(infoDex))+'</strong><p>#'+infoDex+' · '+clean((mon.types||[]).map(typeName).join(' / '))+'</p>'+
-   '<p>'+ (owned?L('✓ Đã khám phá','✓ Discovered'):L('Chưa sở hữu','Not yet owned'))+'</p></div></div>'+
+   '<p>'+clean(rarity)+'</p><p>'+ (owned?L('✓ Đã khám phá','✓ Discovered'):L('Chưa sở hữu','Not yet owned'))+'</p></div></div>'+
    evos(L('Tiến hóa từ','Evolves from'),from,'from')+
    evos(L('Tiến hóa thành','Evolves into'),to,'to');
   draw(detail.querySelector('#pkmbx-dex-hero'),infoDex,false,true,!owned);
   for(const button of detail.querySelectorAll('[data-evo-dex]'))button.onclick=()=>{
-   infoDex=Number(button.dataset.evoDex);dexQuery='';dexPane.querySelector('#pkmbx-dex-search').value='';dexPage=0;renderDex();
+   infoDex=Number(button.dataset.evoDex);dexQuery='';dexPane.querySelector('#pkmbx-dex-search').value='';dexGen=0;dexStatus='all';
+   dexPage=0;dexPane.querySelector('#pkmbx-dex-gen').value='0';dexPane.querySelector('#pkmbx-dex-status').value='all';
+   dexRarity=0;dexType='';dexFavorites=false;
+   dexPane.querySelector('#pkmbx-dex-rarity').value='0';dexPane.querySelector('#pkmbx-dex-type').value='';
+   renderDex();
   };
  }
  function openDex(){
@@ -427,9 +501,12 @@
   else dex.innerHTML='<span class="mi-ico">📦</span><span class="pkmsvv-menu-copy"><span class="pkmsvv-menu-label">PokéBox</span><small>'+L('Cá thể · Team 6 · Rank · TM','Individuals · Team 6 · Rank · TMs')+'</small></span>';
   const sub=dex.querySelector('small');if(sub)sub.textContent=L('Cá thể · Team 6 · Rank · TM','Individuals · Team 6 · Rank · TMs');
   ref.setAttribute('translate','no');
-  ref.innerHTML='<span class="mi-ico">📖</span><span class="pkmsvv-menu-copy">'+
+  ref.innerHTML='<span class="mi-ico">'+pokedexIcon()+'</span><span class="pkmsvv-menu-copy">'+
    '<span class="pkmsvv-menu-label">Pokédex</span><small>'+L('Tra cứu · Tiến hóa','Species · Evolutions')+'</small></span>';
   ref.onclick=null;
+  // Put Pokédex in the FIRST menu row on PC, ahead of PokéBox.
+  // Preserve the original button's event route and responsive classes.
+  if(dex.parentNode&&ref.previousElementSibling!==null) dex.parentNode.insertBefore(ref,dex);
  }
  let menuInitialized=false;
  function init(){
