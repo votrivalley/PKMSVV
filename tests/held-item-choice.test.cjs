@@ -7,7 +7,7 @@ function harness(){
    classList:{add(v){n.className+=' '+v},contains(v){return n.className.split(/\s+/).includes(v)}},
    setAttribute(k,v){this.attrs[k]=v},
    append(...v){this.children.push(...v)},replaceChildren(...v){this.children=[...v]},
-   onclick:null};records.push(n);return n;
+   onclick:null,click(){this.onclick?.()}};records.push(n);return n;
  }
  const box=el('section'),scr=el('section');scr.hidden=false;
  const actions=[],hits=[],listeners={};
