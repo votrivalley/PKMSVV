@@ -71,8 +71,15 @@
    next.pkmsvvBoxSchema=SCHEMA;
    next.pkmsvvBox=box;
    next.pkmsvvSelectedInstanceId=selectedId(save,box);
-   next.pkmsvvTeam6=next.pkmsvvSelectedInstanceId?[next.pkmsvvSelectedInstanceId]:[];
-   const lead=box.find(x=>x.id===next.pkmsvvSelectedInstanceId);if(lead)lead.favorite=true;
+   // Ready Team 6 is independent from Favorites. Preserve explicit old-save
+   // lineup (if any), or default only to the current fighter.
+   const allowed=new Set(box.map(x=>x.id)),seen=new Set();
+   const ready=Array.isArray(save.pkmsvvLegacyReady6)?save.pkmsvvLegacyReady6:
+    (next.pkmsvvSelectedInstanceId?[next.pkmsvvSelectedInstanceId]:[]);
+   next.pkmsvvTeam6=ready.filter(id=>{
+    if(typeof id!=='string'||!allowed.has(id)||seen.has(id))return false;
+    seen.add(id);return true;
+   }).slice(0,6);
    return {save:next,changed:true,count:box.length};
  }
  function validBox(save){
