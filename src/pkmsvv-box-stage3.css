@@ -7,3 +7,13 @@
 #pkmbx-prism-store h3{font-size:18px;color:#e7d4ff;margin:0 0 7px}
 #pkmbx-prism-store p{color:#d2e1ed;line-height:1.55;font-size:13px;margin:6px 0}
 #pkmbx-prism-store .btn{margin-top:6px}
+
+/* Purchase card with visible item, stock count and a real buy action. */
+#pkmbx-prism-store .pkmbx-prism-product{display:flex;align-items:flex-start;gap:12px}
+#pkmbx-prism-store .pkmbx-prism-product-icon{display:flex;align-items:center;justify-content:center;flex:0 0 72px;height:72px;font-size:42px;background:radial-gradient(circle at 35% 25%,#8061b9,#27234e 72%);border:2px solid #b9a4e0;border-radius:12px}
+#pkmbx-prism-store .pkmbx-prism-product-info{flex:1;min-width:0}
+#pkmbx-prism-store .pkmbx-prism-price{display:inline-block;margin:8px 0;color:#ffe6a4;font-size:16px}
+#pkmbx-prism-store .pkmbx-prism-buy{display:inline-flex;align-items:center;justify-content:center;min-height:45px;min-width:min(100%,240px);font-weight:800;cursor:pointer;white-space:normal}
+#pkmbx-prism-store .pkmbx-prism-buy:disabled{opacity:.65;cursor:not-allowed}
+#pkmbx-prism-store .pkmbx-prism-unavailable{color:#ffcd9c!important}
+@media(max-width:450px){#pkmbx-prism-store .pkmbx-prism-product-icon{flex-basis:54px;height:54px;font-size:32px}}
