@@ -91,18 +91,21 @@
  }
  function resetBranch(id,newBranch,s=getSave()){
   return atomic(s,draft=>{
-   const item=box2().get(draft,id);
-   if(!item||item.rank<3||!item.rankBranch)throw Error('Choose a Rank 3 branch first');
+   const chosen=box2().get(draft,id);
+   const progress=chosen&&box2().speciesProgress(draft,chosen.dex);
+   const item=progress&&box2().get(draft,progress.ownerId);
+   if(!item||progress.rank<3||!progress.rankBranch)throw Error('Choose a Rank 3 branch first');
    const choices=box2().branches(item.dex);
-   if(!choices.includes(newBranch)||newBranch===item.rankBranch)throw Error('Select a different, valid branch');
+   if(!choices.includes(newBranch)||newBranch===progress.rankBranch)throw Error('Select a different, valid branch');
    if(!integer(draft.pkmsvvReforgePrisms||0))throw Error('A Reforge Prism is required');
-   const from=item.rankBranch;
+   const from=progress.rankBranch;
    draft.pkmsvvReforgePrisms--;
+   for(const x of draft.pkmsvvBox)if(x.dex===item.dex&&x.rankBranch)x.rankBranch=null;
    item.rankBranch=newBranch;
    draft.pkmsvvBoxLog=Array.isArray(draft.pkmsvvBoxLog)?draft.pkmsvvBoxLog:[];
    draft.pkmsvvBoxLog.push({kind:'reforge',id,dex:item.dex,from,to:newBranch,at:Date.now()});
    draft.pkmsvvBoxLog=draft.pkmsvvBoxLog.slice(-30);
-   return {id,from,to:newBranch,remaining:draft.pkmsvvReforgePrisms,rank:item.rank};
+   return {id,from,to:newBranch,remaining:draft.pkmsvvReforgePrisms,rank:progress.rank};
   });
  }
  function isSoloPvE(s=getSave()){
