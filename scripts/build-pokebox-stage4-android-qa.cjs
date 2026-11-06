@@ -5,6 +5,7 @@
  */
 const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..');
+const {copyRegionCovers}=require('./copy-region-covers.cjs');
 const QA_ID='com.votrivalley.pkmsvv.pokeboxqa';
 const PROD_ID='com.votrivalley.pkmsvv.fulllan';
 const web=path.join(root,'mobile/www');
@@ -29,6 +30,7 @@ function inject(){
   fs.copyFileSync(path.join(root,'src',file),dest);
   if(!html.includes(file))html=html.replace('</head>','<link rel="stylesheet" href="css/'+file+'">\n</head>');
  }
+ copyRegionCovers(web);
  // The app title must unambiguously say this is a separate test build.
  html=html.replace(/<title>[^<]*<\/title>/,'<title>PokéBox 4/4 QA — KHÔNG PHẢI BẢN CHÍNH</title>');
  fs.writeFileSync(htmlFile,html,'utf8');
