@@ -4,6 +4,9 @@
  * a valid primary save with a backup from a different origin or profile.
  */
 (function(){
+ // Cloudflare may preload the guardian before the shared Web/PC/Android bundle.
+ // Never register duplicate timers or mutate two backup slots twice.
+ if(window.PKMSVVSaveGuardian?.compare)return;
  const PROFILE='pkmsvv_offline',SAVE='ps.save.'+PROFILE;
  const HEAD='pkmsvv.safe.v1.'+PROFILE;
  const PRIMARY=HEAD+'.latest',PREVIOUS=HEAD+'.previous';
