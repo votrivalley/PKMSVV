@@ -19,7 +19,7 @@ jobs:
         with:
           node-version: '22'
       - name: Run PokéBox unit tests
-        run: npm run test:pokebox:stage4 && npm run test:quick-region
+        run: npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs
       - name: Retrieve previously successful Web v1.5.93 build artifact
         uses: actions/download-artifact@v4
         with:
@@ -43,6 +43,8 @@ jobs:
           test -s dist/pokebox-stage4-qa/ai/game/css/pkmsvv-quick-region.css
           test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-pc-menu-clean-qa.js
           test -s dist/pokebox-stage4-qa/ai/game/css/pkmsvv-pc-menu-clean-qa.css
+          test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-modal-navigation-qa.js
+          test -s dist/pokebox-stage4-qa/ai/game/css/pkmsvv-modal-navigation-qa.css
           test -s dist/pokebox-stage4-qa/ai/game/css/pkmsvv-box-stage3.css
           grep -q pkmsvv-box-stage4 dist/pokebox-stage4-qa/ai/game/index.html
           test -s dist/pokebox-stage4-qa/game/js/app.min.js
@@ -56,6 +58,7 @@ jobs:
           node --check src/pkmsvv-box-hub-ui.js
           node --check src/pkmsvv-quick-region.js
           node --check src/pkmsvv-pc-menu-clean-qa.js
+          node --check src/pkmsvv-modal-navigation-qa.js
           node --check tests/quick-region.test.cjs
           node --check tests/pokebox-hub.test.cjs
           node --check tests/pokebox-stage4.test.cjs
