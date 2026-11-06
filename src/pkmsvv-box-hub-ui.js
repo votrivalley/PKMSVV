@@ -265,7 +265,7 @@
   boxPane=doc.createElement('div');boxPane.id='pkmsvv-pokebox-overlay';
   boxPane.setAttribute('translate','no');
   boxPane.innerHTML='<section class="pkmbx-panel pkmbx-hub-panel" role="dialog" aria-modal="true" aria-label="PokéBox">'+
-   '<header class="pkmbx-head"><h2>📦 PokéBox</h2><button class="btn small" id="pkmbx-close">'+L('✕ Đóng','✕ Close')+'</button></header>'+
+   '<header class="pkmbx-head"><h2>🖥️ PC</h2><button class="btn small" id="pkmbx-close">'+L('✕ Đóng','✕ Close')+'</button></header>'+pcTabs('box')+
    '<div class="pkmbx-hub-team-title"><h3>'+L('Đội hình 6 Pokémon sẵn sàng','Ready Team of 6')+'</h3><b id="pkmbx-team-count">0/6</b></div>'+
    '<div id="pkmbx-six" class="pkmbx-team-six"></div>'+
    '<div class="pkmbx-actions pkmbx-hub-tools">'+
@@ -279,6 +279,7 @@
    '<aside id="pkmbx-profile" class="pkmbx-profile"></aside></div></section>';
   doc.body.appendChild(boxPane);
   boxPane.querySelector('#pkmbx-close').onclick=closeBox;
+  bindPcTabs(boxPane);
   boxPane.addEventListener('click',e=>{if(e.target===boxPane)closeBox();});
   boxPane.querySelector('#pkmbx-query').oninput=e=>{query=e.target.value;page=0;renderBox();};
   boxPane.querySelector('#pkmbx-favorite').onchange=e=>{onlyFavorites=e.target.checked;page=0;renderBox();};
@@ -306,16 +307,48 @@
   renderTeam(boxPane,s,items);
   renderStats(boxPane,focusedItem(),ready);
  }
- function openBox(nextView='info'){
+ // Shared in-game PC window: Pokédex is the FIRST PC tab, not a separate
+ // home-menu button or a Windows-only feature.
+ function pcTabs(selected){
+  const tab=(id,label)=>'<button type="button" class="btn small pkmbx-pc-tab'+
+   (selected===id?' gold':'')+'" data-pc-tab="'+id+'" role="tab" aria-selected="'+
+   String(selected===id)+'">'+label+'</button>';
+  return '<nav class="pkmbx-pc-tabs" role="tablist" aria-label="PC">'+
+   tab('dex',pokedexIcon()+' Pokédex')+
+   tab('box','📦 PokéBox')+'</nav>';
+ }
+ function bindPcTabs(parent){
+  for(const button of parent.querySelectorAll('[data-pc-tab]'))
+   button.onclick=()=>showPC(button.dataset.pcTab);
+ }
+ function showPC(which){
+  if(!boxPane?.isConnected)return;
+  const isDex=which==='dex';
+  if(isDex)ensureDex();
+  const hubPanel=boxPane.querySelector('.pkmbx-hub-panel');
+  if(hubPanel)hubPanel.hidden=isDex;
+  if(dexPane?.isConnected)dexPane.hidden=!isDex;
+  for(const button of boxPane.querySelectorAll('[data-pc-tab]')){
+   const on=button.dataset.pcTab===(isDex?'dex':'box');
+   button.classList.toggle('gold',on);
+   button.setAttribute('aria-selected',String(on));
+  }
+  if(isDex)renderDex();
+  else renderBox();
+ }
+ function openPC(target='dex',nextView='info'){
   if(!currentSave())return;
-  if(boxPane?.isConnected)boxPane.remove();
-  boxPane=null;view=['items','rank','info'].includes(nextView)?nextView:'info';
+  closeBox();
+  view=['items','rank','info'].includes(nextView)?nextView:'info';
   page=0;query='';onlyFavorites=false;onlyShiny=false;
   const s=currentSave();
-  focused=Hub.active(s)?.id||listPreview().find(x=>x.dex===Number(s?.partner)&&x.shiny===!!s?.partnerShiny)?.id||null;
-  ensureBox();renderBox();
+  focused=Hub.active(s)?.id||
+   listPreview().find(x=>x.dex===Number(s?.partner)&&x.shiny===!!s?.partnerShiny)?.id||null;
+  ensureBox();
+  showPC(target);
  }
- function closeBox(){boxPane?.remove();boxPane=null;}
+ function openBox(nextView='info'){openPC('box',nextView);}
+ function closeBox(){boxPane?.remove();boxPane=null;dexPane=null;}
  function evoRules(){
   return G.PKMSVV_EVOLUTION_DATA?.rules||[];
  }
@@ -333,10 +366,11 @@
   if(dexPane?.isConnected)return;
   const genOptions=Array.from({length:9},(_,i)=>'<option value="'+(i+1)+'">Gen '+(i+1)+'</option>').join('');
   const typeOptions=Object.keys(typeVi).sort().map(t=>'<option value="'+clean(t)+'">'+clean(typeName(t))+'</option>').join('');
-  dexPane=doc.createElement('div');dexPane.id='pkmbx-dex-overlay';dexPane.setAttribute('translate','no');
+  dexPane=doc.createElement('div');dexPane.id='pkmbx-dex-overlay';
+  dexPane.className='pkmbx-dex-inside-pc';dexPane.setAttribute('translate','no');dexPane.hidden=true;
   dexPane.innerHTML='<section class="pkmbx-panel pkmbx-dex-panel" role="dialog" aria-modal="true" aria-label="Pokédex">'+
-   '<header class="pkmbx-head"><h2 class="pkmbx-dex-heading">'+pokedexIcon()+' Pokédex</h2><button class="btn small" id="pkmbx-dex-close">'+L('✕ Đóng','✕ Close')+'</button></header>'+
-   '<p class="pkmbx-note">'+L('Tra cứu Pokémon, chỉ số và tiến hóa. Chọn ra trận hoặc yêu thích tại PokéBox.','Search species, stats and evolutions. Set a fighter or favorite in PokéBox.')+'</p>'+
+   '<header class="pkmbx-head"><h2>🖥️ PC</h2><button class="btn small" id="pkmbx-dex-close">'+L('✕ Đóng','✕ Close')+'</button></header>'+pcTabs('dex')+
+
    '<div class="pkmbx-dex-toolbar"><input id="pkmbx-dex-search" type="search" autocomplete="off" placeholder="'+L('Tìm tên Pokémon hoặc số Pokédex','Search Pokémon name or Dex number')+'"/>'+
    '<button type="button" class="btn small" id="pkmbx-dex-fav" aria-pressed="false">'+L('☆ Yêu thích','☆ Favorites')+'</button>'+
    '<button type="button" class="btn small" id="pkmbx-dex-sort-toggle" aria-expanded="false">'+L('☷ Sắp xếp / Lọc','☷ Sort / Filter')+'</button></div>'+
@@ -356,9 +390,9 @@
    '<div class="pkmbx-dex-main"><div class="pkmbx-dex-results"><div id="pkmbx-dex-list" class="pkmbx-dex-grid"></div>'+
     '<nav class="pkmbx-page"><button class="btn small" id="pkmbx-dex-prev">◀</button><span id="pkmbx-dex-pages">1/1</span><button class="btn small" id="pkmbx-dex-next">▶</button></nav></div>'+
    '<aside id="pkmbx-dex-details" class="pkmbx-profile"></aside></div></section>';
-  doc.body.appendChild(dexPane);
-  dexPane.querySelector('#pkmbx-dex-close').onclick=closeDex;
-  dexPane.addEventListener('click',e=>{if(e.target===dexPane)closeDex();});
+  boxPane.appendChild(dexPane);
+  dexPane.querySelector('#pkmbx-dex-close').onclick=closeBox;
+  bindPcTabs(dexPane);
   const field=(id,fn)=>{dexPane.querySelector(id).onchange=e=>{fn(e.target.value);dexPage=0;renderDex();};};
   dexPane.querySelector('#pkmbx-dex-search').oninput=e=>{dexQuery=e.target.value;dexPage=0;renderDex();};
   field('#pkmbx-dex-gen',v=>dexGen=Number(v));
@@ -457,35 +491,27 @@
   };
  }
  function openDex(){
-  closeBox();dexPane?.remove();dexPane=null;dexQuery='';dexPage=0;
-  infoDex=Number(currentSave()?.partner)||1;ensureDex();renderDex();
+  if(!currentSave())return;
+  if(!boxPane?.isConnected){
+   dexQuery='';dexPage=0;infoDex=Number(currentSave()?.partner)||1;
+   openPC('dex');
+  }else showPC('dex');
  }
- function closeDex(){dexPane?.remove();dexPane=null;}
+ function closeDex(){closeBox();}
  function syncMenu(){
-  const dex=doc.querySelector('#scr-menu [data-go="dex"]');
-  if(!dex)return;
-  // The Stage 1 menu inserts a new PokéBox after the old Pokémon button.
-  // Reuse those same positions, now showing PokéBox first and Pokédex second.
-  let ref=$('pkmsvv-pokebox-button');
-  if(!ref){
-   ref=doc.createElement('button');ref.id='pkmsvv-pokebox-button';
-   ref.className=dex.className;dex.insertAdjacentElement('afterend',ref);
-  }
-  dex.setAttribute('translate','no');
-  const icon=dex.querySelector('.mi-ico'),label=dex.querySelector('.pkmsvv-menu-label');
-  if(icon)icon.textContent='📦';
-  if(label)label.textContent='PokéBox';
-  else dex.innerHTML='<span class="mi-ico">📦</span><span class="pkmsvv-menu-copy"><span class="pkmsvv-menu-label">PokéBox</span><small>'+L('Cá thể · Team 6 · Rank · TM','Individuals · Team 6 · Rank · TMs')+'</small></span>';
-  const sub=dex.querySelector('small');if(sub)sub.textContent=L('Cá thể · Team 6 · Rank · TM','Individuals · Team 6 · Rank · TMs');
-  ref.setAttribute('translate','no');
-  ref.innerHTML='<span class="mi-ico">'+pokedexIcon()+'</span><span class="pkmsvv-menu-copy">'+
-   '<span class="pkmsvv-menu-label">Pokédex</span><small>'+L('Tra cứu · Tiến hóa','Species · Evolutions')+'</small></span>';
-  ref.onclick=null;
-  // Put Pokédex in the FIRST menu row on PC, ahead of PokéBox.
-  // Preserve the original button's event route and responsive classes.
-  if(dex.parentNode&&ref.previousElementSibling!==null) dex.parentNode.insertBefore(ref,dex);
+  const pc=doc.querySelector('#scr-menu [data-go="dex"]');
+  if(!pc)return;
+  // PC contains Pokédex and PokéBox. Never insert a second title-menu item.
+  $('pkmsvv-pokebox-button')?.remove();
+  pc.setAttribute('translate','no');
+  const icon=pc.querySelector('.mi-ico'),label=pc.querySelector('.pkmsvv-menu-label');
+  if(icon)icon.textContent='🖥️';
+  if(label)label.textContent='PC';
+  else pc.innerHTML='<span class="mi-ico">🖥️</span><span class="pkmsvv-menu-copy">'+
+    '<span class="pkmsvv-menu-label">PC</span><small>Pokédex · PokéBox</small></span>';
+  const sub=pc.querySelector('small');
+  if(sub)sub.textContent='Pokédex · PokéBox';
  }
-
  // Keep migration in Save Management, never in the regular PokéBox UI.
  // It is explicit and reversible: original JSON is saved under the profile
  // BEFORE converting. If backup persistence fails, conversion is blocked.
@@ -553,7 +579,7 @@
 
   // The Stage 2 overlay is retained, but Rank works on the *focused* individual.
   Box.focusedId=()=>focused||currentSave()?.pkmsvvSelectedInstanceId||null;
-  Box.open=openBox;
+  Box.open=openBox; // External PokéBox actions still open the Box tab.
   if(G.MenuUI?.open&&!G.MenuUI._pkmbxHubWrapped){
    const old=G.MenuUI.open;
    G.MenuUI.open=function(...args){const ret=old.apply(this,args);syncMenu();return ret;};
@@ -564,8 +590,7 @@
    if(!b)return;
    if(b.matches('[data-go="bag"]')){e.preventDefault();e.stopImmediatePropagation();openBox('items');return;}
    e.preventDefault();e.stopImmediatePropagation();
-   if(b.id==='pkmsvv-pokebox-button')openDex();
-   else openBox('info');
+   openDex();
   },true);
   syncMenu();
  }
