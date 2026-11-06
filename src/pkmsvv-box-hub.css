@@ -332,3 +332,39 @@
  }
  #pkmsvv-pokebox-overlay .pkmbx-dex-badges{justify-content:flex-start}
 }
+/* V3: Pokédex collection takes the majority of the width; detailed information
+   is intentionally narrower than the grid, with readable trait chips. */
+#pkmsvv-pokebox-overlay .pkmbx-box-variants{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}
+#pkmsvv-pokebox-overlay .pkmbx-box-variants button{min-width:0;min-height:36px}
+#pkmsvv-pokebox-overlay .pkmbx-dex-summary .pkmbx-dex-possibilities{
+ margin:0 0 11px;padding:7px 0;border-bottom:1px solid #b7d1cd
+}
+#pkmsvv-pokebox-overlay .pkmbx-dex-summary .pkmbx-dex-possibilities>b{
+ display:block;font-size:13px;color:#133c4b;margin-bottom:6px
+}
+#pkmsvv-pokebox-overlay .pkmbx-dex-possible-list{display:flex;flex-wrap:wrap;gap:4px}
+#pkmsvv-pokebox-overlay .pkmbx-dex-possible-chip{
+ display:inline-flex;align-items:center;padding:4px 7px;
+ color:#163748;background:#f4faf7;border:1px solid #91b9b4;border-radius:5px;
+ font-size:11px;line-height:1.3;overflow-wrap:anywhere
+}
+#pkmsvv-pokebox-overlay .pkmbx-dex-ownership-note{
+ margin:9px 0 0;color:#244d59;font-size:12px;font-weight:700;line-height:1.5
+}
+@media(min-width:871px){
+ #pkmsvv-pokebox-overlay .pkmbx-dex-main{
+  grid-template-columns:minmax(0,1.75fr) minmax(330px,1fr);gap:12px
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-dex-grid{
+  grid-template-columns:repeat(5,minmax(0,1fr))
+ }
+ #pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-hub-hero canvas{
+  flex:0 0 138px;width:138px;height:138px
+ }
+}
+@media(min-width:1300px){
+ #pkmsvv-pokebox-overlay .pkmbx-dex-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
+}
+@media(min-width:641px) and (max-width:870px){
+ #pkmsvv-pokebox-overlay .pkmbx-dex-main{grid-template-columns:minmax(0,1.25fr) minmax(280px,1fr)}
+}
