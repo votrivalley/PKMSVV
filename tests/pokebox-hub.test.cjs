@@ -232,27 +232,27 @@ test('Rank overview uses only Stage 2 eligible copies/shards and never mutates s
  const plain=add(h.s),fav=add(h.s),inTeam=add(h.s),locked=add(h.s);
  hub.toggleFavorite(fav.id,h.s);
  hub.toggleTeam(inTeam.id,h.s);
- locked.locked=true;
+ hub.item(h.s,locked.id).locked=true;
  const saved=JSON.stringify(h.s);
- const initial=hub.rankOverview(h.s,target);
+ const initial=hub.rankOverview(h.s,hub.item(h.s,target.id));
  assert.deepEqual({rank:initial.rank,cost:initial.cost,copies:initial.copies,fragments:initial.fragments,
   available:initial.available,canRank:initial.canRank},{rank:0,cost:1,copies:1,fragments:0,
   available:1,canRank:true});
  assert.equal(JSON.stringify(h.s),saved,'render data must never consume copies or write to save');
- plain.locked=true;
- const noMaterial=hub.rankOverview(h.s,target);
+ hub.item(h.s,plain.id).locked=true;
+ const noMaterial=hub.rankOverview(h.s,hub.item(h.s,target.id));
  assert.equal(noMaterial.canRank,false);
  assert.equal(noMaterial.missing,1);
  h.s.pkmsvvRankFragments={6:2};
- target.rank=1;
- const shards=hub.rankOverview(h.s,target);
+ hub.item(h.s,target.id).rank=1;
+ const shards=hub.rankOverview(h.s,hub.item(h.s,target.id));
  assert.equal(shards.rank,1);
  assert.equal(shards.cost,2);
  assert.equal(shards.available,2);
  assert.equal(shards.canRank,true);
  assert.equal(shards.fragments,2);
- target.rank=5;
- const capped=hub.rankOverview(h.s,target);
+ hub.item(h.s,target.id).rank=5;
+ const capped=hub.rankOverview(h.s,hub.item(h.s,target.id));
  assert.equal(capped.cost,0);
  assert.equal(capped.canRank,false);
  assert.equal(capped.rank,5);
