@@ -218,6 +218,12 @@ test('Original PC remains, and Pokémon entry has Box, Dex and preserved upgrade
  assert.match(clean,/pkmsvv-v15-event/);
  assert.match(clean,/pkmsvv-save-banner/);
  assert.match(clean,/restorePartner/);
+ assert.match(clean,/reorderMainMenu\(menu\)/,'home menu must reorder launchers');
+ assert.match(clean,/const order=\[pokemon,pc,coop,arena\]/);
+ assert.match(clean,/PokéBox · Pokédex · Nâng cấp/,'Pokémon submenu summary must be correct');
+ assert.match(clean,/Pokémon hỗ trợ · Mega · Berry/,'PC submenu keeps its utility summary');
+ assert.match(clean,/banner\.setAttribute\('translate','no'\)/,'backup warning must opt out of auto translation');
+ assert.match(clean,/Nhớ sao lưu thường xuyên để tránh mất dữ liệu/);
  assert.match(src,/openDex\(\)/);
  assert.match(src,/function showPC\(which\)/);
  assert.match(src,/bindPcTabs\(dexPane\)/);
@@ -230,7 +236,7 @@ test('Original PC remains, and Pokémon entry has Box, Dex and preserved upgrade
  assert.ok(src.indexOf("tab('dex'") < src.indexOf("tab('upgrade'"),'Pokédex before Nâng cấp');
  assert.match(src,/G\.MenuUI\.openUpgrades\(\)/,'original single upgrade route');
  assert.match(src,/G\.GlobalPowerUI\.open\(\)/,'original global upgrade route');
- assert.match(clean,/grid\.prepend\(box,dex,upgrade\)/);
+ assert.doesNotMatch(clean,/grid\.prepend\(box,dex,upgrade\)/,'PC must not duplicate Pokémon-only tabs');
  assert.doesNotMatch(clean,/menu\.querySelector\('\[data-go="dex"\]'\)\?\.remove\(\)/);
  assert.match(css,/pkmbx-upgrade-overlay\[hidden\]/);
  assert.match(css,/pkmbx-dex-details/);
