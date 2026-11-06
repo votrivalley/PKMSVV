@@ -104,7 +104,7 @@ G.PKMSVVChampionArena=(()=>{
   [724,727,730,733,738,740,745,748,752,758,763,768,778,784,799],
   [812,815,818,823,826,834,839,841,844,849,858,861,865,870,887],
   [908,911,914,923,934,937,945,952,959,964,967,970,977,978,998],
-  [149,230,248,330,373,445,635,706,715,784,887,998]
+  [149,230,330,373,445,635,706,715,780,784,887,998]
  ]);
  const GEN_BOUNDS=[[1,151],[152,251],[252,386],[387,493],[494,649],[650,721],[722,809],[810,905],[906,1025]];
  const regionalPool=(index=region)=>GEN_POOLS[index]||GEN_POOLS[0];
@@ -996,6 +996,11 @@ G.PKMSVVChampionArena=(()=>{
   if(biome===null)return original.apply(this,args);
   const copy=args.slice();copy[0]=biome;
   return original.apply(this,copy);
+ });
+ // Optional ambient events can spawn random cross-generation Pokémon.
+ // Regional Champion farming is self-contained, unlike free Survival.
+ guardUpdate(G.Events,'update',function(original,args){
+  return active?undefined:original.apply(this,args);
  });
  guardUpdate(G.Rift,'update',function(original,args){
   return active?undefined:original.apply(this,args);
