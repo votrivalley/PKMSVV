@@ -1,4 +1,4 @@
-/* Isolated QA: one original PC with Pokédex, PokéBox and upgrades.
+/* Isolated QA: main Pokémon hub owns PokéBox/Pokédex/Upgrades, PC keeps utilities.
  * Display-only routing; never changes save, modes, Pokémon IDs or rewards. */
 (()=>{
  'use strict';
@@ -20,13 +20,7 @@
   const overlay=$('#pkmsvv-wiki-overlay'),grid=overlay?.querySelector('.pkmsvv-pc-grid');
   if(!grid||grid.dataset.pkmsvvUnified==='1')return false;
   grid.dataset.pkmsvvUnified='1';
-  const dex=card('pkmsvv-pc-dex',dexIcon,'Pokédex',()=>G.PKMSVVBoxHubUI?.openDex?.());
-  const box=card('pkmsvv-pc-box','<span aria-hidden="true">📦</span>','PokéBox',()=>G.PKMSVVBoxHubUI?.openBox?.());
-  const upgrade=card('pkmsvv-pc-upgrades','<span aria-hidden="true">⬆️</span>',L('Nâng cấp','Upgrades'),()=>{
-   overlay.querySelector('.pkmsvv-pc-close')?.click();
-   G.PKMSVVBoxHubUI?.openUpgrades?.();
-  });
-  grid.prepend(box,dex,upgrade);
+  // The Pokémon menu already has all three tabs. Do not duplicate them inside PC.
   overlay.querySelector('.pkmsvv-pc-hint')?.remove();
   for(const btn of overlay.querySelectorAll('.pkmsvv-pc-learn button')){
    if(!/Sương Ký Ức|Memory Mist|Season(?:al)? Event|Sự kiện mùa/i.test(btn.textContent||''))continue;
@@ -82,6 +76,34 @@
    stats.textContent=lines.join(' · ');
   }
  }
+ // Reorder only the four requested HOME launchers; preserve existing nodes,
+ // registered click handlers, and the position of all unrelated menu items.
+ function reorderMainMenu(menu){
+  const list=menu?.querySelector('.menu-right .menu-list');
+  if(!list)return false;
+  const nodes=[...list.children];
+  const entry=(selector,names)=>{
+   const found=list.querySelector(selector);
+   const item=found?.closest?.('.menu-item')||found;
+   if(item?.parentElement===list)return item;
+   return nodes.find(node=>names.some(name=>
+    (node.querySelector('.pkmsvv-menu-label')?.textContent||'').trim().toLowerCase()===name))||null;
+  };
+  const play=entry('[data-go="play"]',['chơi ngay','play','play now']);
+  const pokemon=entry('[data-go="dex"]',['pokémon','pokemon']);
+  const pc=entry('#pkmsvv-menu-wiki',['pc']);
+  const coop=entry('[data-go="coop"],[data-go="co-op"],[data-go="coOp"]',['co-op','coop']);
+  const arena=entry('[data-go="arena"]',['arena']);
+  const order=[pokemon,pc,coop,arena].filter((el,i,all)=>el&&all.indexOf(el)===i);
+  if(!order.length)return false;
+  const target=play?.parentElement===list?play.nextElementSibling:list.firstElementChild;
+  // insertBefore on the same container moves the original elements without re-binding handlers.
+  for(const item of order){
+   if(item===target)continue;
+   list.insertBefore(item,target);
+  }
+  return true;
+ }
  function syncHome(){
   const menu=$('#scr-menu');if(!menu)return;
   if(menu.querySelector('#pkmsvv-menu-wiki')){
@@ -90,17 +112,24 @@
     pokemon.setAttribute('aria-label','Pokémon');
     const title=pokemon.querySelector('.pkmsvv-menu-label, strong, .menu-label');
     if(title)title.textContent='Pokémon';
+    const sub=pokemon.querySelector('.pkmsvv-menu-copy small, small');
+    if(sub)sub.textContent=L('PokéBox · Pokédex · Nâng cấp','PokéBox · Pokédex · Upgrades');
    }
+   const pc=menu.querySelector('#pkmsvv-menu-wiki');
+   const pcSub=pc?.querySelector('.pkmsvv-menu-copy small, small');
+   if(pcSub)pcSub.textContent=L('Pokémon hỗ trợ · Mega · Berry','Support Pokémon · Mega · Berries');
    // Nâng cấp remains a tab within Pokémon; never remove the real upgrade screen.
    menu.querySelector('[data-go="upgrades"]')?.remove();
   }
+  reorderMainMenu(menu);
   const left=menu.querySelector('.menu-left'),bottom=menu.querySelector('.pkmsvv-v15-bottom');
   if(left){
    let banner=left.querySelector('.pkmsvv-save-banner')||left.querySelector('.pkmsvv-season-banner');
    if(!banner){banner=d.createElement('p');if(bottom?.parentElement===left)bottom.before(banner);else left.append(banner);}
    for(const extra of left.querySelectorAll('.pkmsvv-season-banner'))if(extra!==banner)extra.remove();
-   banner.className='pkmsvv-save-banner';banner.setAttribute('role','note');
-   banner.textContent=L('💾 Thường xuyên sao lưu để tránh mất save!','💾 Back up regularly to avoid losing your save!');
+   banner.className='pkmsvv-save-banner notranslate';banner.setAttribute('role','note');
+   banner.setAttribute('translate','no');banner.lang=isEn()?'en':'vi';
+   banner.textContent=L('💾 Nhớ sao lưu thường xuyên để tránh mất dữ liệu!','💾 Back up regularly to avoid losing your save!');
    left.querySelector('.pkmsvv-offline-save-note')?.remove();
    const event=menu.querySelector('.pkmsvv-v15-event');
    if(event){
@@ -124,7 +153,9 @@
    try{
     const event=$('#scr-menu .pkmsvv-v15-event span'),live=!!G.PKMSVVSeason?.nowActive?.();
     const expected=live?L('Sương Ký Ức · 01–30/11 · 3 cảnh quan ngẫu nhiên','Memory Mist · Nov 1–30 · 3 landscape variants'):L('Chưa có sự kiện mới','No current events');
-    if(event&&event.textContent!==expected)syncHome();
+    const banner=$('#scr-menu .pkmsvv-save-banner');
+    const expectedBanner=L('💾 Nhớ sao lưu thường xuyên để tránh mất dữ liệu!','💾 Back up regularly to avoid losing your save!');
+    if((event&&event.textContent!==expected)||(banner&&banner.textContent!==expectedBanner))syncHome();
     mountPC();
    }finally{observerBusy=false;}
   });
