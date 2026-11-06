@@ -97,10 +97,14 @@ G.PKMSVVMatchRecovery=(()=>{
   };
   const originalFinish=G.Social.finishMatch;
   G.Social.finishMatch=function(...args){
+   // Capture the current session BEFORE any asynchronous room request.
+   // A late response for an old match can never finish the next match.
+   const started=session?{room:session.room,seed:session.seed,mode:session.mode}:null;
    const out=originalFinish.apply(this,args);
-   // Only a successful authoritative Host finish can create a terminal token.
    return Promise.resolve(out).then(result=>{
-    confirmedEnd();return result;
+    if(started&&session?.room===started.room&&session?.seed===started.seed&&
+      session?.mode===started.mode)confirmedEnd();
+    return result;
    });
   };
   G.LanBus.on(msg=>{
