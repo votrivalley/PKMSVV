@@ -26,10 +26,10 @@ function setup(){
  return {s,get writes(){return writes},set failed(v){failed=v}};
 }
 const foe=(dex,attrs={})=>({dex,dead:true,remote:false,...attrs});
-test('item metadata remains fixed at accepted Stage 3 design',()=>{
+test('item metadata: always-stocked daily shop and rare Solo drops are separate',()=>{
  assert.equal(prism.ITEM,'reforge-prism');
  assert.equal(prism.PRICE,6500);
- assert.equal(prism.SHOP_RATE,.12);
+ assert.equal(prism.SHOP_RATE,1);
  assert.equal(prism.PITY,180);
  assert.equal(prism.MAX_DROPS_PER_RUN,1);
  assert.deepEqual({...prism.RATES},{type:.0035,species:.015,elite:.03,boss:.08});
@@ -48,16 +48,38 @@ test('daily stock is deterministic and buying is limited to one per day',()=>{
  assert.equal(s.pkmsvvReforgeBoughtDay,day);
  assert.equal(prism.shopOffer(day,s).bought,true);
  assert.equal(prism.shopOffer(day,s).canBuy,false);
- assert.throws(()=>prism.buy(s,day),/sold out/);
+ assert.throws(()=>prism.buy(s,day),/already purchased|unavailable/);
  assert.equal(s.coins,before-6500);
 });
-test('shop never rerolls if opened repeatedly or item unavailable',()=>{
+test('Kecleon always displays purchasable item once per day regardless of old daily lottery',()=>{
  const {s}=setup();
  let out;
  for(let i=1;i<200;i++){const d='no-sale-'+i;if(prism.slotRoll(d)>=.12){out=d;break}}
- assert.ok(out);assert.equal(prism.shopOffer(out,s).available,false);
- for(let i=0;i<100;i++)assert.equal(prism.shopOffer(out,s).available,false);
- assert.throws(()=>prism.buy(s,out),/sold out/);
+ assert.ok(out,'find date where prior 12% chance would block item');
+ assert.equal(prism.shopOffer(out,s).available,true);
+ for(let i=0;i<100;i++)assert.equal(prism.shopOffer(out,s).canBuy,true);
+ assert.equal(prism.buy(s,out).count,1);
+ assert.equal(prism.shopOffer(out,s).canBuy,false);
+ assert.equal(prism.shopOffer('following-day',s).canBuy,true);
+});
+test('a legacy save may buy one Prism before PokéBox migration without altering owned, nature or progress',()=>{
+ setup();
+ const legacy={owned:{6:{at:1}},shiny:{6:{at:2}},partner:6,partnerShiny:true,
+  pnat:{6:['bold',100]},pabil:{6:[0,100]},coins:19000,tickets:{t1:20},
+  pkmsvvBerry:{bag:{oran:2}}};
+ const old=JSON.parse(JSON.stringify(legacy));
+ G.DB.save=legacy;
+ assert.equal(prism.count(legacy),0);
+ assert.equal(prism.shopOffer('legacy-day',legacy).canBuy,true);
+ assert.equal(prism.buy(legacy,'legacy-day').count,1);
+ assert.equal(legacy.pkmsvvBoxSchema,undefined);
+ assert.deepEqual(legacy.owned,old.owned);
+ assert.deepEqual(legacy.shiny,old.shiny);
+ assert.deepEqual(legacy.pnat,old.pnat);
+ assert.deepEqual(legacy.pabil,old.pabil);
+ assert.equal(legacy.coins,12500);
+ assert.equal(prism.count(legacy),1);
+ assert.equal(prism.shopOffer('legacy-day',legacy).canBuy,false);
 });
 test('Rank 3/5 respec consumes one Prism, preserves Rank, Nature, Ability, Shiny, Mega and shards',()=>{
  const {s}=setup();const x=stage2.get(s,'b1-6-n');
