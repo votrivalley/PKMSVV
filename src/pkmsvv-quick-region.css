@@ -92,3 +92,17 @@
 @media(prefers-reduced-motion:reduce){
  #pkmsvv-quick-region .pkmsvv-quick-region-card{transition:none!important}
 }
+
+
+/* The region's signature Legendary sits over the user's illustrated WebP cover. */
+#pkmsvv-quick-region .region-art .region-sprite{
+ position:absolute;right:7px;bottom:-3px;width:90px;height:90px;
+ z-index:1;object-fit:contain;image-rendering:pixelated;
+ filter:drop-shadow(2px 3px 1px #091720ba)
+}
+#pkmsvv-quick-region .pkmsvv-quick-region-card.locked .region-art .region-sprite{
+ filter:brightness(0) drop-shadow(2px 3px 1px #b7c1d5);
+ opacity:.9
+}
+@media(max-width:600px){#pkmsvv-quick-region .region-art .region-sprite{
+ width:65px;height:65px;bottom:0;right:2px}}
