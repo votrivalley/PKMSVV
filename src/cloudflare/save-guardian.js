@@ -127,7 +127,7 @@
    ['Số Berry cứu thành công',['pkmsvvBerry','rescueWins']],['Lượt Gacha',['arenaGacha','pulls']]])
    note(name,qty(getAt(a,path)),qty(getAt(b,path)));
   const balances=balancePaths.map(([name,path])=>{
-   const before=getAt(a,path),after=getAt(b,path),asNumber=path.length===1||path[0]==='tickets'||path[0]==='arenaGacha';
+   const before=getAt(a,path),after=getAt(b,path),asNumber=path[0]==='coins'||path[0]==='tickets'||path[0]==='arenaGacha';
    return {name,before:asNumber?qty(before):total(before),after:asNumber?qty(after):total(after)};
   }).filter(x=>x.before!==x.after).map(x=>({...x,delta:x.after-x.before}));
   const risk=permanent.some(x=>x.change==='loss');
