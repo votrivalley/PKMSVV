@@ -15,7 +15,7 @@ for(const variant of ['game','ai/game']){
  fs.mkdirSync(path.dirname(pathJS),{recursive:true});fs.mkdirSync(path.dirname(pathCSS),{recursive:true});
  fs.copyFileSync(path.join(root,'src/pkmsvv-box-stage1.js'),pathJS);
  fs.copyFileSync(path.join(root,'src/pkmsvv-box-stage1.css'),pathCSS);
- for(const [filename,sub] of [['pkmsvv-box-stage2.js','js/ui'],['pkmsvv-box-stage2-ui.js','js/ui'],['pkmsvv-box-stage2.css','css'],['pkmsvv-box-stage3.js','js/ui'],['pkmsvv-box-stage3.css','css'],['pkmsvv-box-stage4.js','js/ui'],['pkmsvv-box-hub.js','js/ui'],['pkmsvv-box-hub-ui.js','js/ui'],['pkmsvv-box-hub.css','css']]){
+ for(const [filename,sub] of [['pkmsvv-box-stage2.js','js/ui'],['pkmsvv-box-stage2-ui.js','js/ui'],['pkmsvv-box-stage2.css','css'],['pkmsvv-box-stage3.js','js/ui'],['pkmsvv-box-stage3.css','css'],['pkmsvv-box-stage4.js','js/ui'],['pkmsvv-box-hub.js','js/ui'],['pkmsvv-box-hub-ui.js','js/ui'],['pkmsvv-box-hub.css','css',['pkmsvv-quick-region.js','js/ui'],['pkmsvv-quick-region.css','css']]]){
   fs.copyFileSync(path.join(root,'src',filename),path.join(dest,variant,sub,filename));
  }
  let body=fs.readFileSync(html,'utf8');
@@ -24,9 +24,9 @@ for(const variant of ['game','ai/game']){
  if(!body.includes('</head>')||!body.includes('</body>'))throw Error('QA game HTML structure changed');
  if(!body.includes('pkmsvv-box-stage1.css'))body=body.replace('</head>',css+'\n</head>');
  if(!body.includes('pkmsvv-box-stage1.js'))body=body.replace('</body>',script+'\n</body>');
- for(const cssName of ['pkmsvv-box-stage2.css','pkmsvv-box-stage3.css','pkmsvv-box-hub.css'])if(!body.includes(cssName))
+ for(const cssName of ['pkmsvv-box-stage2.css','pkmsvv-box-stage3.css','pkmsvv-box-hub.css','pkmsvv-quick-region.css'])if(!body.includes(cssName))
   body=body.replace('</head>','<link rel="stylesheet" href="css/'+cssName+'">\n</head>');
- for(const jsName of ['pkmsvv-box-stage2.js','pkmsvv-box-stage2-ui.js','pkmsvv-box-stage3.js','pkmsvv-box-stage4.js','pkmsvv-box-hub.js','pkmsvv-box-hub-ui.js'])if(!body.includes(jsName))
+ for(const jsName of ['pkmsvv-box-stage2.js','pkmsvv-box-stage2-ui.js','pkmsvv-box-stage3.js','pkmsvv-box-stage4.js','pkmsvv-box-hub.js','pkmsvv-box-hub-ui.js','pkmsvv-quick-region.js'])if(!body.includes(jsName))
   body=body.replace('</body>','<script defer src="js/ui/'+jsName+'"></script>\n</body>');
  fs.writeFileSync(html,body);
 }
