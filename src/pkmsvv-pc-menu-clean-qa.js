@@ -114,7 +114,8 @@
     mountPC();
    }finally{observerBusy=false;}
   });
-  observer.observe(d.body,{childList:true,subtree:true});
+  // Watch the home menu only; never observe combat HUD/FX mutations globally.
+  observer.observe($('#scr-menu')||d.body,{childList:true,subtree:true});
   syncHome();mountPC();
  }
  if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',install,{once:true});else install();
