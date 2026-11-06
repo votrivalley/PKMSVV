@@ -123,9 +123,9 @@
   if(overlay?.isConnected)return overlay;
   overlay=document.createElement('section');overlay.id='pkmsvv-quick-region';
   overlay.className='pkmsvv-quick-region-overlay';overlay.hidden=true;
-  overlay.setAttribute('aria-label',tr('Chọn Region','Choose Region'));
+  overlay.setAttribute('aria-label',tr('Chọn nơi bạn khám phá','Choose where to explore'));
   overlay.innerHTML='<div class="pkmsvv-quick-region-panel" role="dialog" aria-modal="true">'+
-   '<header><div class="region-heading"><h2>'+tr('Chọn Region','Choose Region')+'</h2>'+
+   '<header><div class="region-heading"><h2>'+tr('Chọn nơi bạn khám phá','Choose where to explore')+'</h2>'+
    '<p>'+tr('Nhận Ấn Chứng từng vùng để mở khóa vùng kế tiếp. Vùng sau khó hơn và thử thách đa dạng hơn.','Earn Seals to unlock the next region. Challenges get tougher as you progress.')+'</p></div>' +
    '<button type="button" id="pkmsvv-quick-region-close" aria-label="'+tr('Đóng','Close')+'">×</button></header>'+
    '<div id="pkmsvv-quick-region-grid" class="pkmsvv-quick-region-grid"></div></div>';
