@@ -137,3 +137,16 @@ Local browser smoke tests are **not yet verified**: sandbox Chromium could not n
 - Purchase is checked on cloned save data, protects old fields and rolls back if immediate save commit fails. Regression tests updated. Syntax/functional isolated checks passed; **not** a real device gameplay pass.
 
 **Remaining release blockers:** live menu/button and event smoke on actual Web/PC/Android, all Pokémon scroll/filter navigation, old-save import/reload, choose active fighter and start battle, Bag→Shop→Rank purchase/consumption, player progression and crashes, Android orientation, same-commit signed Android and Windows packaging. Keep QA branch unmerged; do not deploy to Cloudflare or release it to players.
+
+## Clean PokéBox UI + independent Ready Team 6 — 2026-11-06
+
+**User's PC QA screenshot:** The old 558-preview sentence, team-creation explanation, export/create footer buttons and generic editing note made PokéBox look unfinished. Replaced them in the isolated QA branch; public/production version remains unchanged.
+
+- PokéBox header is followed immediately by **Đội hình 6 Pokémon sẵn sàng** / **Ready Team of 6** and six compact cells in a single responsive row. Each cell displays a sprite, with name visible when width permits. Empty cells can add the currently focused Pokémon; occupied cells focus that Pokémon. Counter remains x/6.
+- **Ready Team 6 is NOT Favorites.** Team inclusion never toggles star state; starring a Pokémon does not automatically add it to the ready lineup. Existing team members are still Rank-fodder protected.
+- Unmigrated legacy profiles use the dedicated optional save key pkmsvvLegacyReady6. Initially the current fighter is shown (one slot); subsequent additions/removals are committed and rolled back on failure. Invalid/unknown box schemas do not mutate. When the player later explicitly migrates, valid ready IDs carry over to pkmsvvTeam6 while the old save fields remain unchanged.
+- Removed the top preview/help sentence, migration/export buttons, generic editing warning, and redundant prose in details, Items and Rank. Do not remove gameplay information such as Nature effects.
+- **Migration was not deleted from the product:** the opt-in conversion is located in **Sao lưu & Khôi phục → Dữ liệu PokéBox**. It saves an original JSON under a profile-specific localStorage key before calling the existing migration, and refuses conversion if the backup cannot be persisted. The regular export/import tools remain available separately in Save Management. No silent migration.
+- JS parsing and in-memory functional smoke passed: legacy team add/remove, commit rollback, migrated lineage, favorites independent, Nature/Ability retained, and clean markup. Regression tests updated in tests/pokebox-hub.test.cjs.
+
+**Still outstanding:** actual Windows Electron QA with the 558-specimen save, Web/Android horizontal and narrow layouts, save migration under low-storage and restart, game launch after changing active fighter, all-item shop tests, CI/build and real-device testing. No release, no production deployment, no overwrite of player save.
