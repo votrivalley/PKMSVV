@@ -35,7 +35,16 @@
       "sameAsNormalOffsets": true,
       "sameAsNormalShadows": true,
       "allAnimPngDistinctFromNormal": true,
-      "allPortraitDistinctFromNormal": true
+      "allPortraitDistinctFromNormal": true,
+      "rootPngHeaderAudit": {
+        "portraitsVerified": 16,
+        "animationsVerified": 12,
+        "offsetsVerified": 12,
+        "shadowsVerified": 12,
+        "eightRowAnimations": 11,
+        "oneRowSleep": 1,
+        "allGroupsDimensionAligned": true
+      }
     },
     "checksumAlgorithm": "git-blob-sha1",
     "sha256Status": "NOT_COMPUTED: raw binary inspection and SHA-256 not available",
@@ -45,7 +54,9 @@
         "path": "portrait/0012/0002/Angry.png",
         "bytes": 1738,
         "gitBlobSha1": "671040cc81a2e5bf7e4c8bde4e4be6b9230a9cfb",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Angry.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Angry.png",
+        "pixelWidth": 40,
+        "pixelHeight": 40
       },
       {
         "path": "portrait/0012/0002/credits.txt",
@@ -57,91 +68,121 @@
         "path": "portrait/0012/0002/Crying.png",
         "bytes": 1787,
         "gitBlobSha1": "51e6c90fd46c70d99f82e759835cc57d492481c1",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Crying.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Crying.png",
+        "pixelWidth": 40,
+        "pixelHeight": 40
       },
       {
         "path": "portrait/0012/0002/Determined.png",
         "bytes": 1684,
         "gitBlobSha1": "75be8c5d934c3f647374af17f1ab31b87e77e56a",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Determined.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Determined.png",
+        "pixelWidth": 40,
+        "pixelHeight": 40
       },
       {
         "path": "portrait/0012/0002/Dizzy.png",
         "bytes": 1679,
         "gitBlobSha1": "3fda5acc6b16e641cfa3f0086331b6bd3e7551ff",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Dizzy.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Dizzy.png",
+        "pixelWidth": 40,
+        "pixelHeight": 40
       },
       {
         "path": "portrait/0012/0002/Happy.png",
         "bytes": 1720,
         "gitBlobSha1": "d8756affe31f63206b5f67d151912eafcc2673f5",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Happy.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Happy.png",
+        "pixelWidth": 40,
+        "pixelHeight": 40
       },
       {
         "path": "portrait/0012/0002/Inspired.png",
         "bytes": 1777,
         "gitBlobSha1": "9da7dd3c6c12923ab58107b37974bfdfd4e41cce",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Inspired.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Inspired.png",
+        "pixelWidth": 40,
+        "pixelHeight": 40
       },
       {
         "path": "portrait/0012/0002/Joyous.png",
         "bytes": 1629,
         "gitBlobSha1": "8c6a3de585995a017564d6edfb63d1e0e126d52e",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Joyous.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Joyous.png",
+        "pixelWidth": 40,
+        "pixelHeight": 40
       },
       {
         "path": "portrait/0012/0002/Normal.png",
         "bytes": 1697,
         "gitBlobSha1": "8385fa1d204eec49c0f4aabf222e206de057c001",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Normal.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Normal.png",
+        "pixelWidth": 40,
+        "pixelHeight": 40
       },
       {
         "path": "portrait/0012/0002/Pain.png",
         "bytes": 1646,
         "gitBlobSha1": "32451822e16d91754e079c9b179a4523af673707",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Pain.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Pain.png",
+        "pixelWidth": 40,
+        "pixelHeight": 40
       },
       {
         "path": "portrait/0012/0002/Sad.png",
         "bytes": 1664,
         "gitBlobSha1": "6f47313faea7a4eae748be80490b7cd9f1d6bf59",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Sad.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Sad.png",
+        "pixelWidth": 40,
+        "pixelHeight": 40
       },
       {
         "path": "portrait/0012/0002/Shouting.png",
         "bytes": 1674,
         "gitBlobSha1": "1e505e3c8222773b0030a46913fe15630025e740",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Shouting.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Shouting.png",
+        "pixelWidth": 40,
+        "pixelHeight": 40
       },
       {
         "path": "portrait/0012/0002/Sigh.png",
         "bytes": 1717,
         "gitBlobSha1": "021c9cf545bf9f792e1e637432518dfa63984731",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Sigh.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Sigh.png",
+        "pixelWidth": 40,
+        "pixelHeight": 40
       },
       {
         "path": "portrait/0012/0002/Stunned.png",
         "bytes": 1718,
         "gitBlobSha1": "da68bfbb290ba0e0b77305a87bb645b9f9ee2d7d",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Stunned.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Stunned.png",
+        "pixelWidth": 40,
+        "pixelHeight": 40
       },
       {
         "path": "portrait/0012/0002/Surprised.png",
         "bytes": 1773,
         "gitBlobSha1": "4b8adc4f2bb57dc37c43e1390370b17d75bb0548",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Surprised.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Surprised.png",
+        "pixelWidth": 40,
+        "pixelHeight": 40
       },
       {
         "path": "portrait/0012/0002/Teary-Eyed.png",
         "bytes": 1696,
         "gitBlobSha1": "5edaaf9867bd450b19545caa17d672582b85b14d",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Teary-Eyed.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Teary-Eyed.png",
+        "pixelWidth": 40,
+        "pixelHeight": 40
       },
       {
         "path": "portrait/0012/0002/Worried.png",
         "bytes": 1639,
         "gitBlobSha1": "86aac472a07579e7d387479e3736924e37bab012",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Worried.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/portrait/0012/0002/Worried.png",
+        "pixelWidth": 40,
+        "pixelHeight": 40
       },
       {
         "path": "sprite/0012/0002/0000/0002/AnimData.xml",
@@ -837,37 +878,61 @@
         "path": "sprite/0012/0002/Attack-Anim.png",
         "bytes": 35571,
         "gitBlobSha1": "b22ba46d66fafd4ca3c59bfe604a28e0e626f964",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Attack-Anim.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Attack-Anim.png",
+        "pixelWidth": 1008,
+        "pixelHeight": 640,
+        "animationRows": 8,
+        "animationColumns": 14
       },
       {
         "path": "sprite/0012/0002/Attack-Offsets.png",
         "bytes": 3787,
         "gitBlobSha1": "098c1e767071374879066670cc569ce8d77037c7",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Attack-Offsets.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Attack-Offsets.png",
+        "pixelWidth": 1008,
+        "pixelHeight": 640,
+        "animationRows": 8,
+        "animationColumns": 14
       },
       {
         "path": "sprite/0012/0002/Attack-Shadow.png",
         "bytes": 6333,
         "gitBlobSha1": "c9bb867e59c44178303913b28eb295dcc1358438",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Attack-Shadow.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Attack-Shadow.png",
+        "pixelWidth": 1008,
+        "pixelHeight": 640,
+        "animationRows": 8,
+        "animationColumns": 14
       },
       {
         "path": "sprite/0012/0002/Charge-Anim.png",
         "bytes": 8123,
         "gitBlobSha1": "186362c07db7759938c8a93038e8492bcedc680f",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Charge-Anim.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Charge-Anim.png",
+        "pixelWidth": 320,
+        "pixelHeight": 448,
+        "animationRows": 8,
+        "animationColumns": 10
       },
       {
         "path": "sprite/0012/0002/Charge-Offsets.png",
         "bytes": 1150,
         "gitBlobSha1": "05ccdf6bd0473b6b3d38eac6bee8cad750e42365",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Charge-Offsets.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Charge-Offsets.png",
+        "pixelWidth": 320,
+        "pixelHeight": 448,
+        "animationRows": 8,
+        "animationColumns": 10
       },
       {
         "path": "sprite/0012/0002/Charge-Shadow.png",
         "bytes": 2251,
         "gitBlobSha1": "146cd370dc1156437af58665a8521923131a1490",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Charge-Shadow.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Charge-Shadow.png",
+        "pixelWidth": 320,
+        "pixelHeight": 448,
+        "animationRows": 8,
+        "animationColumns": 10
       },
       {
         "path": "sprite/0012/0002/credits.txt",
@@ -879,190 +944,444 @@
         "path": "sprite/0012/0002/Double-Anim.png",
         "bytes": 25203,
         "gitBlobSha1": "f444c6ccb423a9f8919dd776e99a2ea6b38881c0",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Double-Anim.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Double-Anim.png",
+        "pixelWidth": 896,
+        "pixelHeight": 640,
+        "animationRows": 8,
+        "animationColumns": 16
       },
       {
         "path": "sprite/0012/0002/Double-Offsets.png",
         "bytes": 3543,
         "gitBlobSha1": "8982f7fba4f199c381b233ce9e539104f10d57d1",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Double-Offsets.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Double-Offsets.png",
+        "pixelWidth": 896,
+        "pixelHeight": 640,
+        "animationRows": 8,
+        "animationColumns": 16
       },
       {
         "path": "sprite/0012/0002/Double-Shadow.png",
         "bytes": 6896,
         "gitBlobSha1": "8273cc272afb5db93d02cffed576deb98222baf6",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Double-Shadow.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Double-Shadow.png",
+        "pixelWidth": 896,
+        "pixelHeight": 640,
+        "animationRows": 8,
+        "animationColumns": 16
       },
       {
         "path": "sprite/0012/0002/FlapAround-Anim.png",
         "bytes": 61918,
         "gitBlobSha1": "c77b42dfa9c326f9b074585cabd7ad61ee01f5bf",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/FlapAround-Anim.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/FlapAround-Anim.png",
+        "pixelWidth": 768,
+        "pixelHeight": 448,
+        "animationRows": 8,
+        "animationColumns": 24
       },
       {
         "path": "sprite/0012/0002/FlapAround-Offsets.png",
         "bytes": 3495,
         "gitBlobSha1": "e95e783961e02320450b32661fad781054d12c04",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/FlapAround-Offsets.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/FlapAround-Offsets.png",
+        "pixelWidth": 768,
+        "pixelHeight": 448,
+        "animationRows": 8,
+        "animationColumns": 24
       },
       {
         "path": "sprite/0012/0002/FlapAround-Shadow.png",
         "bytes": 2641,
         "gitBlobSha1": "3a31a9e17d603f3c175d09975e967a8ed33dc363",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/FlapAround-Shadow.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/FlapAround-Shadow.png",
+        "pixelWidth": 768,
+        "pixelHeight": 448,
+        "animationRows": 8,
+        "animationColumns": 24
       },
       {
         "path": "sprite/0012/0002/Hop-Anim.png",
         "bytes": 25373,
         "gitBlobSha1": "288911f0a789481f9f43b415140c2185c41eecd8",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Hop-Anim.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Hop-Anim.png",
+        "pixelWidth": 320,
+        "pixelHeight": 768,
+        "animationRows": 8,
+        "animationColumns": 10
       },
       {
         "path": "sprite/0012/0002/Hop-Offsets.png",
         "bytes": 1913,
         "gitBlobSha1": "e06a1222aacbda67aed1d95067f0e5b79850c67a",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Hop-Offsets.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Hop-Offsets.png",
+        "pixelWidth": 320,
+        "pixelHeight": 768,
+        "animationRows": 8,
+        "animationColumns": 10
       },
       {
         "path": "sprite/0012/0002/Hop-Shadow.png",
         "bytes": 1856,
         "gitBlobSha1": "efcc0cba09ea9f35d0d30d1331c778217a97bf8d",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Hop-Shadow.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Hop-Shadow.png",
+        "pixelWidth": 320,
+        "pixelHeight": 768,
+        "animationRows": 8,
+        "animationColumns": 10
       },
       {
         "path": "sprite/0012/0002/Hurt-Anim.png",
         "bytes": 7442,
         "gitBlobSha1": "32d5898eb11720d71ebaea5f76c7452196333e55",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Hurt-Anim.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Hurt-Anim.png",
+        "pixelWidth": 112,
+        "pixelHeight": 576,
+        "animationRows": 8,
+        "animationColumns": 2
       },
       {
         "path": "sprite/0012/0002/Hurt-Offsets.png",
         "bytes": 539,
         "gitBlobSha1": "663b8e43798cfcbe5eabb53b3764fc1d9491bf62",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Hurt-Offsets.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Hurt-Offsets.png",
+        "pixelWidth": 112,
+        "pixelHeight": 576,
+        "animationRows": 8,
+        "animationColumns": 2
       },
       {
         "path": "sprite/0012/0002/Hurt-Shadow.png",
         "bytes": 969,
         "gitBlobSha1": "738a10d4e3d28588098782b17c887b6084f111f2",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Hurt-Shadow.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Hurt-Shadow.png",
+        "pixelWidth": 112,
+        "pixelHeight": 576,
+        "animationRows": 8,
+        "animationColumns": 2
       },
       {
         "path": "sprite/0012/0002/Idle-Anim.png",
         "bytes": 11297,
         "gitBlobSha1": "d2094c12351c8523c33dfc204be0e3a7be7e809a",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Idle-Anim.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Idle-Anim.png",
+        "pixelWidth": 128,
+        "pixelHeight": 448,
+        "animationRows": 8,
+        "animationColumns": 4
       },
       {
         "path": "sprite/0012/0002/Idle-Offsets.png",
         "bytes": 672,
         "gitBlobSha1": "6c7efc183973bb35010714c85e3cbf3ded5b82ab",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Idle-Offsets.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Idle-Offsets.png",
+        "pixelWidth": 128,
+        "pixelHeight": 448,
+        "animationRows": 8,
+        "animationColumns": 4
       },
       {
         "path": "sprite/0012/0002/Idle-Shadow.png",
         "bytes": 991,
         "gitBlobSha1": "8d8f640ee08f2f5d9ad60591aacbfe170d650efb",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Idle-Shadow.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Idle-Shadow.png",
+        "pixelWidth": 128,
+        "pixelHeight": 448,
+        "animationRows": 8,
+        "animationColumns": 4
       },
       {
         "path": "sprite/0012/0002/Rotate-Anim.png",
         "bytes": 27177,
         "gitBlobSha1": "58228448f686f35edd06e438249c8e45a8c24986",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Rotate-Anim.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Rotate-Anim.png",
+        "pixelWidth": 288,
+        "pixelHeight": 384,
+        "animationRows": 8,
+        "animationColumns": 9
       },
       {
         "path": "sprite/0012/0002/Rotate-Offsets.png",
         "bytes": 1332,
         "gitBlobSha1": "45e2d117c412a638fd4860070de93be58b0e46a9",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Rotate-Offsets.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Rotate-Offsets.png",
+        "pixelWidth": 288,
+        "pixelHeight": 384,
+        "animationRows": 8,
+        "animationColumns": 9
       },
       {
         "path": "sprite/0012/0002/Rotate-Shadow.png",
         "bytes": 1297,
         "gitBlobSha1": "33c22df9f94aa37520e99b529ae1515eb2260fc2",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Rotate-Shadow.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Rotate-Shadow.png",
+        "pixelWidth": 288,
+        "pixelHeight": 384,
+        "animationRows": 8,
+        "animationColumns": 9
       },
       {
         "path": "sprite/0012/0002/Shoot-Anim.png",
         "bytes": 40937,
         "gitBlobSha1": "b1831331dcf77a4e8918f175998311f8a4b6c74f",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Shoot-Anim.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Shoot-Anim.png",
+        "pixelWidth": 640,
+        "pixelHeight": 448,
+        "animationRows": 8,
+        "animationColumns": 16
       },
       {
         "path": "sprite/0012/0002/Shoot-Offsets.png",
         "bytes": 2602,
         "gitBlobSha1": "bdfa867cb1ebde3d0e0235e5fc93b5d30504403f",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Shoot-Offsets.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Shoot-Offsets.png",
+        "pixelWidth": 640,
+        "pixelHeight": 448,
+        "animationRows": 8,
+        "animationColumns": 16
       },
       {
         "path": "sprite/0012/0002/Shoot-Shadow.png",
         "bytes": 4199,
         "gitBlobSha1": "253f2a404e479f304dab1334f9063d20f976a616",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Shoot-Shadow.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Shoot-Shadow.png",
+        "pixelWidth": 640,
+        "pixelHeight": 448,
+        "animationRows": 8,
+        "animationColumns": 16
       },
       {
         "path": "sprite/0012/0002/Sleep-Anim.png",
         "bytes": 923,
         "gitBlobSha1": "dcd8a92f1587e16a2c998b6f173b25852a362a2c",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Sleep-Anim.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Sleep-Anim.png",
+        "pixelWidth": 64,
+        "pixelHeight": 32,
+        "animationRows": 1,
+        "animationColumns": 2
       },
       {
         "path": "sprite/0012/0002/Sleep-Offsets.png",
         "bytes": 119,
         "gitBlobSha1": "3d65722f08378cd9edbfa283df173e354e9d2ef7",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Sleep-Offsets.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Sleep-Offsets.png",
+        "pixelWidth": 64,
+        "pixelHeight": 32,
+        "animationRows": 1,
+        "animationColumns": 2
       },
       {
         "path": "sprite/0012/0002/Sleep-Shadow.png",
         "bytes": 176,
         "gitBlobSha1": "e16efbadd6a6dfef82125643804a8d49292cdbe3",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Sleep-Shadow.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Sleep-Shadow.png",
+        "pixelWidth": 64,
+        "pixelHeight": 32,
+        "animationRows": 1,
+        "animationColumns": 2
       },
       {
         "path": "sprite/0012/0002/Swing-Anim.png",
         "bytes": 33362,
         "gitBlobSha1": "eb8d77ef7e13f0c03b41a55440c1c2d955db0bef",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Swing-Anim.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Swing-Anim.png",
+        "pixelWidth": 648,
+        "pixelHeight": 704,
+        "animationRows": 8,
+        "animationColumns": 9
       },
       {
         "path": "sprite/0012/0002/Swing-Offsets.png",
         "bytes": 2735,
         "gitBlobSha1": "54c49065dd3cece0d594fd8ea4352f14fd041ead",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Swing-Offsets.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Swing-Offsets.png",
+        "pixelWidth": 648,
+        "pixelHeight": 704,
+        "animationRows": 8,
+        "animationColumns": 9
       },
       {
         "path": "sprite/0012/0002/Swing-Shadow.png",
         "bytes": 4970,
         "gitBlobSha1": "a7d4188fd575d08b8872883fcd48a02dd2427957",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Swing-Shadow.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Swing-Shadow.png",
+        "pixelWidth": 648,
+        "pixelHeight": 704,
+        "animationRows": 8,
+        "animationColumns": 9
       },
       {
         "path": "sprite/0012/0002/Walk-Anim.png",
         "bytes": 20222,
         "gitBlobSha1": "9638b7fdca6952d8eba2cb7d3c510e12fdd27e8c",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Walk-Anim.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Walk-Anim.png",
+        "pixelWidth": 384,
+        "pixelHeight": 448,
+        "animationRows": 8,
+        "animationColumns": 12
       },
       {
         "path": "sprite/0012/0002/Walk-Offsets.png",
         "bytes": 1745,
         "gitBlobSha1": "6ee8f09e951e1b429da49657a76951bfdb15a8a6",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Walk-Offsets.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Walk-Offsets.png",
+        "pixelWidth": 384,
+        "pixelHeight": 448,
+        "animationRows": 8,
+        "animationColumns": 12
       },
       {
         "path": "sprite/0012/0002/Walk-Shadow.png",
         "bytes": 3057,
         "gitBlobSha1": "a806923f02e4376c3ca1ae8b5bf37334a0ba6600",
-        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Walk-Shadow.png"
+        "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/13eb5a7733c5f5ba66031a2c5fb7bc67371d7310/sprite/0012/0002/Walk-Shadow.png",
+        "pixelWidth": 384,
+        "pixelHeight": 448,
+        "animationRows": 8,
+        "animationColumns": 12
       }
     ]
   },
   "validation": {
     "metadata": "AnimData.xml parsed from upstream: 13 animation declarations, 12 distinct sheets; Strike has CopyOf=Attack; frame-size and duration entries present; portrait 16 expressions",
-    "eightDirections": "NOT_VERIFIED_FROM_PNG",
-    "frameDimensionsAndAlpha": "NOT_VERIFIED_FROM_PNG",
-    "offsetCropAndClipping": "NOT_VERIFIED_FROM_PNG",
+    "eightDirections": "VERIFIED_AT_PNG_GRID_LEVEL: 11 active animations contain 8 complete frame rows; Sleep contains exactly 1 row by design. Pixel occupancy and cropped alpha edges still require visual review.",
+    "frameDimensionsAndAlpha": "ALL 16 root portrait PNGs verified 40×40 via actual IHDR. ALL 36 root motion/offset/shadow PNGs verified by PNG IHDR. Each 3-file animation group has identical pixel dimensions and matches XML frame grid.",
+    "offsetCropAndClipping": "All 12 Offsets and 12 Shadow PNGs have same image width/height as their motion sheet and Git-blob-identical data to ordinary Butterfree. Visual per-pixel crop/pivot assessment not performed.",
     "duplicateAgainstPKMSVV": "No directly tracked #012 Butterfree sprite files found in PKMSVV branch; vendor/game runtime assets not available for full binary collision audit",
-    "branchPackaging": "Manifest-only; no runtime loader; no sprite bitmaps in public branch"
+    "branchPackaging": "Manifest-only; no runtime loader; no sprite bitmaps in public branch",
+    "motionGrid": {
+      "Walk": {
+        "width": 384,
+        "height": 448,
+        "frameWidth": 32,
+        "frameHeight": 56,
+        "frames": 12,
+        "rows": 8,
+        "cols": 12,
+        "gridAligned": true,
+        "eightDirectionalRows": true
+      },
+      "Attack": {
+        "width": 1008,
+        "height": 640,
+        "frameWidth": 72,
+        "frameHeight": 80,
+        "frames": 14,
+        "rows": 8,
+        "cols": 14,
+        "gridAligned": true,
+        "eightDirectionalRows": true
+      },
+      "Shoot": {
+        "width": 640,
+        "height": 448,
+        "frameWidth": 40,
+        "frameHeight": 56,
+        "frames": 16,
+        "rows": 8,
+        "cols": 16,
+        "gridAligned": true,
+        "eightDirectionalRows": true
+      },
+      "FlapAround": {
+        "width": 768,
+        "height": 448,
+        "frameWidth": 32,
+        "frameHeight": 56,
+        "frames": 24,
+        "rows": 8,
+        "cols": 24,
+        "gridAligned": true,
+        "eightDirectionalRows": true
+      },
+      "Sleep": {
+        "width": 64,
+        "height": 32,
+        "frameWidth": 32,
+        "frameHeight": 32,
+        "frames": 2,
+        "rows": 1,
+        "cols": 2,
+        "gridAligned": true,
+        "eightDirectionalRows": false
+      },
+      "Hurt": {
+        "width": 112,
+        "height": 576,
+        "frameWidth": 56,
+        "frameHeight": 72,
+        "frames": 2,
+        "rows": 8,
+        "cols": 2,
+        "gridAligned": true,
+        "eightDirectionalRows": true
+      },
+      "Idle": {
+        "width": 128,
+        "height": 448,
+        "frameWidth": 32,
+        "frameHeight": 56,
+        "frames": 4,
+        "rows": 8,
+        "cols": 4,
+        "gridAligned": true,
+        "eightDirectionalRows": true
+      },
+      "Swing": {
+        "width": 648,
+        "height": 704,
+        "frameWidth": 72,
+        "frameHeight": 88,
+        "frames": 9,
+        "rows": 8,
+        "cols": 9,
+        "gridAligned": true,
+        "eightDirectionalRows": true
+      },
+      "Double": {
+        "width": 896,
+        "height": 640,
+        "frameWidth": 56,
+        "frameHeight": 80,
+        "frames": 16,
+        "rows": 8,
+        "cols": 16,
+        "gridAligned": true,
+        "eightDirectionalRows": true
+      },
+      "Hop": {
+        "width": 320,
+        "height": 768,
+        "frameWidth": 32,
+        "frameHeight": 96,
+        "frames": 10,
+        "rows": 8,
+        "cols": 10,
+        "gridAligned": true,
+        "eightDirectionalRows": true
+      },
+      "Charge": {
+        "width": 320,
+        "height": 448,
+        "frameWidth": 32,
+        "frameHeight": 56,
+        "frames": 10,
+        "rows": 8,
+        "cols": 10,
+        "gridAligned": true,
+        "eightDirectionalRows": true
+      },
+      "Rotate": {
+        "width": 288,
+        "height": 384,
+        "frameWidth": 32,
+        "frameHeight": 48,
+        "frames": 9,
+        "rows": 8,
+        "cols": 9,
+        "gridAligned": true,
+        "eightDirectionalRows": true
+      }
+    }
   }
 }
