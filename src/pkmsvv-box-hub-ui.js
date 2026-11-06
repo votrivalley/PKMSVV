@@ -628,15 +628,16 @@
     clean(monName(r[target]))+' (#'+r[target]+') · '+clean(evoLabel(r))+'</button>').join(''):
     '<p>'+L('Không có dữ liệu tiến hóa trong game.','No evolution records for this species.')+'</p>')+'</section>';
   const rarity=['',L('Thường','Common'),L('Khá hiếm','Uncommon'),L('Hiếm','Rare'),L('Sử thi','Epic'),L('Huyền thoại','Legendary')][Math.min(Number(mon.rarity)||1,5)];
-  const nature=G.Mons?.natureOf?.(infoDex)||null;
-  const ability=G.Mons?.abilityOf?.(infoDex)||null;
-  const abilityId=typeof ability==='string'?ability:ability?.id;
-  const natureLabel=nature?.id?natureName(nature.id):L('Chưa rõ','Unknown');
-  const statLabel={hp:L('Máu','HP'),pa:L('Tấn công','Attack'),sa:L('Đặc công','Sp. Atk'),df:L('Phòng thủ','Defense'),sd:L('Đặc thủ','Sp. Def'),spd:L('Tốc độ','Speed')};
-  const natureEffect=nature?.up&&nature?.down?
-   ' · <b class="pkmbx-stat-plus">+'+clean(statLabel[nature.up]||nature.up)+' 10%</b> · <b class="pkmbx-stat-minus">−'+clean(statLabel[nature.down]||nature.down)+' 10%</b>':'';
-  const knownTms=Array.isArray(s.ptm?.[infoDex])?s.ptm[infoDex]:[];
-  const tms=knownTms.map(move=>clean(G.Moves?.BY_ID?.[move]?G.T?.(G.Moves.BY_ID[move].name,'move')||move:move)).join(', ')||L('Chưa có','None');
+  // Pokédex is encyclopedic. Never show the player's equipped Nature/Ability/TM here.
+  // All species can roll any of the game's supported Natures; available Ability
+  // slots are specified by the species dex table (including hidden Ability).
+  const natureOptions=(Array.isArray(G.NATURES)&&G.NATURES.length?G.NATURES:
+   Object.keys(natVi).map(id=>({id}))).filter(n=>typeof n?.id==='string');
+  const natureLabels=[...new Set(natureOptions.map(n=>natureName(n.id)))];
+  const possibleAbilities=[...new Set((G.DEX_ABIL?.[infoDex]||[]).filter(Boolean))];
+  const abilityChips=possibleAbilities.map(id=>'<span class="pkmbx-dex-possible-chip">'+
+    clean(abilityName(id))+'</span>').join('');
+  const natureChips=natureLabels.map(name=>'<span class="pkmbx-dex-possible-chip">'+clean(name)+'</span>').join('');
   const used=Number(s.pused?.[infoDex]);
   const statLine=Number.isFinite(used)&&used>0?'<p>'+L('Lượt sử dụng: ','Times used: ')+used.toLocaleString(G.I18n?.lang==='en'?'en-US':'vi-VN')+'</p>':'';
   const shinyAvailable=!!s.shiny?.[infoDex];
@@ -650,9 +651,12 @@
     statLine+'</div></div>'+
    '<div class="pkmbx-dex-variants"><button type="button" data-dex-variant="normal" class="'+(!dexShinyView?'active':'')+'">'+L('Bình thường','Normal')+'</button>'+
    '<button type="button" data-dex-variant="shiny" class="'+(dexShinyView?'active':'')+'" '+(!shinyAvailable?'disabled':'')+'>✨ Shiny</button></div>'+
-   '<div class="pkmbx-dex-summary"><div><b>'+L('Tính cách','Nature')+':</b> '+clean(natureLabel)+natureEffect+'</div>'+
-   '<div><b>'+L('Đặc tính','Ability')+':</b> '+clean(abilityName(abilityId))+'</div>'+
-   '<div><b>TM:</b> '+tms+'</div></div>'+
+   '<div class="pkmbx-dex-summary">'+
+   '<div class="pkmbx-dex-possibilities"><b>'+L('Các tính cách có thể xuất hiện','Possible Natures')+' ('+natureLabels.length+')</b>'+
+     '<div class="pkmbx-dex-possible-list">'+natureChips+'</div></div>'+
+   '<div class="pkmbx-dex-possibilities"><b>'+L('Đặc tính có thể có','Possible Abilities')+' ('+possibleAbilities.length+')</b>'+
+     '<div class="pkmbx-dex-possible-list">'+(abilityChips||L('Chưa có dữ liệu','No data'))+'</div></div>'+
+   '<p class="pkmbx-dex-ownership-note">'+L('Tính cách, Đặc tính và TM đã sở hữu: xem trong PokéBox.','Equipped Nature, Ability and learned TMs: see PokéBox.')+'</p></div>'+
    evos(L('Tiến hóa từ','Evolves from'),from,'from')+
    evos(L('Tiến hóa thành','Evolves into'),to,'to');
   draw(detail.querySelector('#pkmbx-dex-hero'),infoDex,dexShinyView,true,!owned);
