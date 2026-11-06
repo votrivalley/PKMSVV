@@ -41,6 +41,8 @@ jobs:
           test -s dist/pokebox-stage4-qa/ai/game/css/pkmsvv-box-hub.css
           test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-quick-region.js
           test -s dist/pokebox-stage4-qa/ai/game/css/pkmsvv-quick-region.css
+          test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-pc-menu-clean-qa.js
+          test -s dist/pokebox-stage4-qa/ai/game/css/pkmsvv-pc-menu-clean-qa.css
           test -s dist/pokebox-stage4-qa/ai/game/css/pkmsvv-box-stage3.css
           grep -q pkmsvv-box-stage4 dist/pokebox-stage4-qa/ai/game/index.html
           test -s dist/pokebox-stage4-qa/game/js/app.min.js
@@ -53,6 +55,7 @@ jobs:
           node --check src/pkmsvv-box-hub.js
           node --check src/pkmsvv-box-hub-ui.js
           node --check src/pkmsvv-quick-region.js
+          node --check src/pkmsvv-pc-menu-clean-qa.js
           node --check tests/quick-region.test.cjs
           node --check tests/pokebox-hub.test.cjs
           node --check tests/pokebox-stage4.test.cjs
