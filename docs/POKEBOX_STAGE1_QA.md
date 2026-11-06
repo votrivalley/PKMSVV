@@ -124,3 +124,16 @@ Local browser smoke tests are **not yet verified**: sandbox Chromium could not n
 - Web headless Chromium checks Hub boot/menu and confirms the Pokédex has read-only search with no item actions. Web/PC/Android isolated QA bundles include the new assets.
 - Real-device Android landscape and actual Windows gameplay require manual inspection of scrolling, animated sprites, Team6, navigation, items/TMs and Rank. Arena's future pre-battle selection DOES NOT YET read Team6; no Arena logic has been silently changed.
 - The original JPTER78 upstream source revision remains inaccessible in full native builds. Android QA repacks and re-signs a verified baseline under a DISTINCT QA application ID; never deploy that APK as an in-place update to the official game.
+
+
+## PokéBox usability repair — 2026-11-06 (supersedes Stage 3 daily-shop lottery)
+
+**QA branch only. No production release or game save overwrite.**
+
+- Pokédex read-only encyclopedia is placed first in the PC menu; custom Gen 1-inspired red vector Pokédex icon. Filters restored: Gen 1–9, type, rarity, owned/missing/Shiny, favorites, sorting by number/name/rarity/new/used, clear/close and count.
+- PokéBox offers Choose Fighter and Favorite immediately on an unmigrated legacy save using existing partner/partnerShiny fields and an override map pkmsvvLegacyFavoriteOverrides, rather than silently migrating. Individual Items, Team 6 and Rank require explicit backup and migration.
+- Migration reads persisted pnat[dex] and pabil[dex] first; all old fields are unchanged. Details show Nature +10%/-10% hint, Ability name/description if available, learned TMs and six Nature-adjusted base stats.
+- Reforge Prism is a real Kecleon item: icon, inventory count, 6,500 PokéCoins, BUY/PURCHASED/insufficient funds, one per shop day; stock is **always available in QA**, replacing former 12% daily availability. Rare Solo loot odds and 180-KO pity unchanged. The player may buy the Prism before migrating the save; its use still requires a migrated Rank 3 Pokémon.
+- Purchase is checked on cloned save data, protects old fields and rolls back if immediate save commit fails. Regression tests updated. Syntax/functional isolated checks passed; **not** a real device gameplay pass.
+
+**Remaining release blockers:** live menu/button and event smoke on actual Web/PC/Android, all Pokémon scroll/filter navigation, old-save import/reload, choose active fighter and start battle, Bag→Shop→Rank purchase/consumption, player progression and crashes, Android orientation, same-commit signed Android and Windows packaging. Keep QA branch unmerged; do not deploy to Cloudflare or release it to players.
