@@ -165,7 +165,7 @@ test('Real mobs spawn in Champion preparation but stop during one-versus-one due
  const h=setup(),{lib,G}=h,spawns=[];
  G.Spawner.update=function(_dt,_p,t){spawns.push(t);};
  // Instrument installed wrapper in original game source instead of overriding mock in test.
- assert.match(read('src/pkmsvv-champion-arena.js'),/if\(stage==='prep'\)\{const copy=args\.slice\(\)/);
+ assert.match(read('src/pkmsvv-champion-arena.js'),/if\(stage==='prep'\)\s*\{\s*const copy=args\.slice\(\)/);
  assert.match(read('src/pkmsvv-champion-arena.js'),/G\.EnemyMgr\?\.clear\?\.\(\)/);
  lib.start();assert.equal(lib.stage,'prep');
  lib.update(90);assert.equal(lib.stage,'prep');
