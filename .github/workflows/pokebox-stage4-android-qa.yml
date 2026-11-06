@@ -14,6 +14,7 @@ on:
       - 'src/pkmsvv-modal-navigation-qa.*'
       - 'src/pkmsvv-held-item-ui.js'
       - 'tests/modal-input-qa.test.cjs'
+      - 'tests/pokebox-stage2-browser.cjs'
       - 'tests/held-item-choice.test.cjs'
       - 'AGENTS.md'
       - 'tests/quick-region.test.cjs'
