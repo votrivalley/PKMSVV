@@ -99,8 +99,7 @@
   const percent=cost?Math.round(100*available/cost):100;
   const details=rank>=max?
    '<p class="pkmbx-rank-status">'+L('Đã đạt hạng tối đa.','Maximum Rank reached.')+'</p>':
-   !enabled?
-    '<p class="pkmbx-rank-status">'+L('Save cũ đang xem trước. Nâng Rank chỉ dùng sau khi tạo PokéBox an toàn từ Sao lưu & Khôi phục.','Legacy save preview. Rank needs a safe PokéBox migration under Backup & Restore.')+'</p>':
+   !enabled?'':
     '<div class="pkmbx-rank-progress" role="progressbar" aria-label="'+L('Nguyên liệu hợp lệ','Eligible materials')+
      '" aria-valuemin="0" aria-valuemax="'+cost+'" aria-valuenow="'+available+'"><span style="width:'+percent+'%"></span></div>'+
     '<p class="pkmbx-rank-materials">'+L('Nguyên liệu hợp lệ: ','Eligible materials: ')+
@@ -316,6 +315,7 @@
   boxPane.setAttribute('translate','no');
   boxPane.innerHTML='<section class="pkmbx-panel pkmbx-hub-panel" role="dialog" aria-modal="true" aria-label="PokéBox">'+
    '<header class="pkmbx-head"><h2>◉ Pokémon</h2><button class="btn small" id="pkmbx-close">'+L('✕ Đóng','✕ Close')+'</button></header>'+pcTabs('box')+
+   '<div class="pkmbx-hub-main"><div class="pkmbx-hub-left">'+
    '<div class="pkmbx-hub-team-title"><h3>'+L('Đội hình 6 Pokémon sẵn sàng','Ready Team of 6')+'</h3><b id="pkmbx-team-count">0/6</b></div>'+
    '<div id="pkmbx-six" class="pkmbx-team-six"></div>'+
    '<div class="pkmbx-actions pkmbx-hub-tools">'+
@@ -330,7 +330,6 @@
     '<option value="copies">'+L('Số bản sao','Copies')+'</option>'+
     '<option value="rarity">'+L('Độ hiếm','Rarity')+'</option></select></label>'+
    '<span id="pkmbx-found-count" class="pkmbx-found-count" aria-live="polite"></span></div>'+
-   '<div class="pkmbx-hub-main"><div class="pkmbx-hub-left">'+
    '<div class="pkmbx-grid" id="pkmbx-grid"></div><nav class="pkmbx-page">'+
    '<button class="btn small" id="pkmbx-prev">◀</button><span id="pkmbx-pagenum">1/1</span>'+
    '<button class="btn small" id="pkmbx-next">▶</button></nav></div>'+
@@ -630,16 +629,23 @@
     clean(monName(r[target]))+' (#'+r[target]+') · '+clean(evoLabel(r))+'</button>').join(''):
     '<p>'+L('Không có dữ liệu tiến hóa trong game.','No evolution records for this species.')+'</p>')+'</section>';
   const rarity=['',L('Thường','Common'),L('Khá hiếm','Uncommon'),L('Hiếm','Rare'),L('Sử thi','Epic'),L('Huyền thoại','Legendary')][Math.min(Number(mon.rarity)||1,5)];
-  // Pokédex is encyclopedic. Never show the player's equipped Nature/Ability/TM here.
-  // All species can roll any of the game's supported Natures; available Ability
-  // slots are specified by the species dex table (including hidden Ability).
-  const natureOptions=(Array.isArray(G.NATURES)&&G.NATURES.length?G.NATURES:
-   Object.keys(natVi).map(id=>({id}))).filter(n=>typeof n?.id==='string');
-  const natureLabels=[...new Set(natureOptions.map(n=>natureName(n.id)))];
+  // The Pokédex displays all species abilities and their gameplay benefits.
+  // Equipped Nature/Ability/TMs remain available in the individual's PokéBox.
   const possibleAbilities=[...new Set((G.DEX_ABIL?.[infoDex]||[]).filter(Boolean))];
-  const abilityChips=possibleAbilities.map(id=>'<span class="pkmbx-dex-possible-chip">'+
-    clean(abilityName(id))+'</span>').join('');
-  const natureChips=natureLabels.map(name=>'<span class="pkmbx-dex-possible-chip">'+clean(name)+'</span>').join('');
+  function abilityBenefit(id){
+   const row=G.ABIL?.[id];
+   const desc=Array.isArray(row)?row[2]:(row?.description||row?.desc||null);
+   if(Array.isArray(desc))return String(desc[G.I18n?.lang==='en'?1:0]||desc[0]||'');
+   if(typeof desc==='string'&&desc.trim())return desc;
+   const fn=G.Mons?.abilityDesc||G.Mons?.abilityDescription;
+   if(typeof fn==='function'){
+    try{return String(fn(id)||'');}catch(_){}
+   }
+   return L('Chưa có mô tả hiệu ứng.','Effect description unavailable.');
+  }
+  const abilityRows=possibleAbilities.map(id=>
+   '<div class="pkmbx-dex-ability-row"><strong>'+clean(abilityName(id))+'</strong>'+
+   '<span>'+clean(abilityBenefit(id))+'</span></div>').join('');
   const used=Number(s.pused?.[infoDex]);
   const statLine=Number.isFinite(used)&&used>0?'<p>'+L('Lượt sử dụng: ','Times used: ')+used.toLocaleString(G.I18n?.lang==='en'?'en-US':'vi-VN')+'</p>':'';
   const shinyAvailable=!!s.shiny?.[infoDex];
@@ -653,12 +659,8 @@
     statLine+'</div></div>'+
    '<div class="pkmbx-dex-variants"><button type="button" data-dex-variant="normal" class="'+(!dexShinyView?'active':'')+'">'+L('Bình thường','Normal')+'</button>'+
    '<button type="button" data-dex-variant="shiny" class="'+(dexShinyView?'active':'')+'" '+(!shinyAvailable?'disabled':'')+'>✨ Shiny</button></div>'+
-   '<div class="pkmbx-dex-summary">'+
-   '<div class="pkmbx-dex-possibilities"><b>'+L('Các tính cách có thể xuất hiện','Possible Natures')+' ('+natureLabels.length+')</b>'+
-     '<div class="pkmbx-dex-possible-list">'+natureChips+'</div></div>'+
-   '<div class="pkmbx-dex-possibilities"><b>'+L('Đặc tính có thể có','Possible Abilities')+' ('+possibleAbilities.length+')</b>'+
-     '<div class="pkmbx-dex-possible-list">'+(abilityChips||L('Chưa có dữ liệu','No data'))+'</div></div>'+
-   '<p class="pkmbx-dex-ownership-note">'+L('Tính cách, Đặc tính và TM đã sở hữu: xem trong PokéBox.','Equipped Nature, Ability and learned TMs: see PokéBox.')+'</p></div>'+
+   '<div class="pkmbx-dex-summary"><h4>'+L('Đặc tính','Abilities')+'</h4>'+
+   (abilityRows||'<p>'+L('Chưa có dữ liệu','No data')+'</p>')+'</div>'+
    evos(L('Tiến hóa từ','Evolves from'),from,'from')+
    evos(L('Tiến hóa thành','Evolves into'),to,'to');
   draw(detail.querySelector('#pkmbx-dex-hero'),infoDex,dexShinyView,true,!owned);
