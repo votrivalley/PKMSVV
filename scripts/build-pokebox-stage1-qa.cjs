@@ -2,6 +2,7 @@
 /* QA-only overlay. Never writes to dist/cloudflare or invokes Cloudflare deploy. */
 const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..');
+const {copyRegionCovers}=require('./copy-region-covers.cjs');
 const source=path.resolve(process.env.PKMSVV_BOX_BASE||path.join(root,'dist/cloudflare'));
 const dest=path.resolve(process.env.PKMSVV_BOX_QA_OUT||path.join(root,'dist/pokebox-stage4-qa'));
 if(source===dest||dest.startsWith(source+path.sep)||source.startsWith(dest+path.sep))throw Error('Unsafe QA path');
@@ -18,6 +19,7 @@ for(const variant of ['game','ai/game']){
  for(const [filename,sub] of [['pkmsvv-box-stage2.js','js/ui'],['pkmsvv-box-stage2-ui.js','js/ui'],['pkmsvv-box-stage2.css','css'],['pkmsvv-box-stage3.js','js/ui'],['pkmsvv-box-stage3.css','css'],['pkmsvv-box-stage4.js','js/ui'],['pkmsvv-box-hub.js','js/ui'],['pkmsvv-box-hub-ui.js','js/ui'],['pkmsvv-box-hub.css','css'],['pkmsvv-quick-region.js','js/ui'],['pkmsvv-quick-region.css','css'],['pkmsvv-pc-menu-clean-qa.js','js/ui'],['pkmsvv-pc-menu-clean-qa.css','css']]){
   fs.copyFileSync(path.join(root,'src',filename),path.join(dest,variant,sub,filename));
  }
+ copyRegionCovers(path.join(dest,variant));
  let body=fs.readFileSync(html,'utf8');
  const css='<link rel="stylesheet" href="css/pkmsvv-box-stage1.css">';
  const script='<script defer src="js/ui/pkmsvv-box-stage1.js"></script>';
