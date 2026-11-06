@@ -24,7 +24,7 @@
  const natureName=id=>G.I18n?.lang==='en'?String(id):natVi[id]||String(id);
  const abilityName=id=>G.Mons?.abilityName?.(id)||G.ABIL?.[id]?.[1]||L('Không có','None');
  const currentSave=()=>G.DB?.save;
- let boxPane=null,dexPane=null,focused=null,infoDex=1,query='',onlyFavorites=false,onlyShiny=false,
+ let boxPane=null,dexPane=null,upgradePane=null,focused=null,infoDex=1,dexShinyView=false,query='',onlyFavorites=false,onlyShiny=false,
   onlyRankReady=false,boxSort='dex',view='info',page=0,dexQuery='',dexPage=0,
   dexGen=0,dexRarity=0,dexStatus='all',dexType='',dexSort='num',dexFavorites=false;
  const PAGE=30,DEX_PAGE=35;
@@ -304,7 +304,7 @@
   boxPane=doc.createElement('div');boxPane.id='pkmsvv-pokebox-overlay';
   boxPane.setAttribute('translate','no');
   boxPane.innerHTML='<section class="pkmbx-panel pkmbx-hub-panel" role="dialog" aria-modal="true" aria-label="PokéBox">'+
-   '<header class="pkmbx-head"><h2>🖥️ PC</h2><button class="btn small" id="pkmbx-close">'+L('✕ Đóng','✕ Close')+'</button></header>'+pcTabs('box')+
+   '<header class="pkmbx-head"><h2>◉ Pokémon</h2><button class="btn small" id="pkmbx-close">'+L('✕ Đóng','✕ Close')+'</button></header>'+pcTabs('box')+
    '<div class="pkmbx-hub-team-title"><h3>'+L('Đội hình 6 Pokémon sẵn sàng','Ready Team of 6')+'</h3><b id="pkmbx-team-count">0/6</b></div>'+
    '<div id="pkmbx-six" class="pkmbx-team-six"></div>'+
    '<div class="pkmbx-actions pkmbx-hub-tools">'+
@@ -380,27 +380,85 @@
   const tab=(id,label)=>'<button type="button" class="btn small pkmbx-pc-tab'+
    (selected===id?' gold':'')+'" data-pc-tab="'+id+'" role="tab" aria-selected="'+
    String(selected===id)+'">'+label+'</button>';
-  return '<nav class="pkmbx-pc-tabs" role="tablist" aria-label="PC">'+
+  return '<nav class="pkmbx-pc-tabs" role="tablist" aria-label="Pokémon">'+
+   tab('box','📦 PokéBox')+
    tab('dex',pokedexIcon()+' Pokédex')+
-   tab('box','📦 PokéBox')+'</nav>';
+   tab('upgrade','⬆️ '+L('Nâng cấp','Upgrades'))+'</nav>';
  }
  function bindPcTabs(parent){
   for(const button of parent.querySelectorAll('[data-pc-tab]'))
    button.onclick=()=>showPC(button.dataset.pcTab);
  }
+ // The legacy upgrade economy is authoritative. This tab is navigation only:
+ // save.pupg = one Pokémon; save.globalUpgrades = all Pokémon.
+ function openLegacyUpgrade(kind){
+  const single=kind==='single';
+  const fn=single?(G.MenuUI?.openUpgrades||G.PKMSVVUpgradeChooser?.open):G.GlobalPowerUI?.open;
+  if(typeof fn!=='function'){
+   alert(L('Bảng nâng cấp chưa sẵn sàng trong bản thử nghiệm này.','Upgrade screen is unavailable in this QA build.'));
+   return false;
+  }
+  closeBox();
+  if(single&&typeof G.MenuUI?.openUpgrades==='function'){
+   G.MenuUI.openUpgrades();
+  }else if(single){
+   G.PKMSVVUpgradeChooser.open();
+  }else{
+   G.GlobalPowerUI.open();
+  }
+  return true;
+ }
+ function ensureUpgrades(){
+  if(upgradePane?.isConnected)return;
+  upgradePane=doc.createElement('div');
+  upgradePane.id='pkmbx-upgrade-overlay';
+  upgradePane.className='pkmbx-upgrades-inside-pokemon';
+  upgradePane.hidden=true;
+  upgradePane.setAttribute('translate','no');
+  upgradePane.innerHTML='<section class="pkmbx-panel pkmbx-upgrade-panel" role="region" aria-label="'+L('Nâng cấp Pokémon','Pokémon upgrades')+'">'+
+   '<header class="pkmbx-head"><h2>◉ Pokémon</h2><button type="button" class="btn small" id="pkmbx-upgrade-close">'+L('✕ Đóng','✕ Close')+'</button></header>'+pcTabs('upgrade')+
+   '<div class="pkmbx-upgrade-heading"><h3>'+L('Nâng cấp Pokémon','Pokémon upgrades')+'</h3>'+
+   '<p>'+L('Hai nhánh nâng cấp thật của game — không đặt lại chỉ số hay chuyển đổi dữ liệu save.','Both original upgrade paths — no resets or save conversion.')+'</p></div>'+
+   '<div class="pkmbx-upgrade-options">'+
+   '<article class="pkmbx-upgrade-option"><span class="pkmbx-upgrade-symbol">✦</span><h4>'+L('Nâng cấp từng Pokémon','Individual Pokémon')+'</h4>'+
+   '<p>'+L('Áp dụng cho Pokémon đang chọn; dùng điểm nâng cấp và PokéCoins như trước.','Applies to your selected Pokémon using the existing PokéCoins economy.')+'</p>'+
+   '<p id="pkmbx-upgrade-single-info"></p><button type="button" class="btn gold" id="pkmbx-upgrade-single">'+L('Mở nâng cấp riêng','Open individual upgrades')+'</button></article>'+
+   '<article class="pkmbx-upgrade-option"><span class="pkmbx-upgrade-symbol">✧</span><h4>'+L('Nâng cấp toàn đội','Team upgrades')+'</h4>'+
+   '<p>'+L('Thưởng vĩnh viễn cho toàn bộ Pokémon, lưu riêng với nâng cấp từng con.','Permanent bonuses for every Pokémon, stored independently.')+'</p>'+
+   '<p id="pkmbx-upgrade-team-info"></p><button type="button" class="btn gold" id="pkmbx-upgrade-team">'+L('Mở nâng cấp toàn đội','Open team upgrades')+'</button></article></div>'+
+   '<p class="pkmbx-upgrade-footnote">'+L('Nâng Rank trong PokéBox là hệ thống riêng, không thay thế các nâng cấp hiện có.','PokéBox Rank is separate and does not replace existing upgrades.')+'</p></section>';
+  boxPane.appendChild(upgradePane);
+  bindPcTabs(upgradePane);
+  upgradePane.querySelector('#pkmbx-upgrade-close').onclick=closeBox;
+  upgradePane.querySelector('#pkmbx-upgrade-single').onclick=()=>openLegacyUpgrade('single');
+  upgradePane.querySelector('#pkmbx-upgrade-team').onclick=()=>openLegacyUpgrade('team');
+ }
+ function renderUpgrades(){
+  if(!upgradePane?.isConnected)return;
+  const s=currentSave()||{},dex=Number(s.partner);
+  const name=monName(dex)||('#'+dex);
+  const money=Number.isFinite(Number(s.coins))?Number(s.coins).toLocaleString(G.I18n?.lang==='en'?'en-US':'vi-VN'):'—';
+  upgradePane.querySelector('#pkmbx-upgrade-single-info').textContent=
+   L('Đang chọn: ','Selected: ')+name+' · '+L('PokéCoins: ','PokéCoins: ')+money;
+  upgradePane.querySelector('#pkmbx-upgrade-team-info').textContent=
+   L('PokéCoins hiện có: ','Available PokéCoins: ')+money;
+ }
  function showPC(which){
   if(!boxPane?.isConnected)return;
-  const isDex=which==='dex';
-  if(isDex)ensureDex();
+  const target=['box','dex','upgrade'].includes(which)?which:'box';
+  if(target==='dex')ensureDex();
+  if(target==='upgrade')ensureUpgrades();
   const hubPanel=boxPane.querySelector('.pkmbx-hub-panel');
-  if(hubPanel)hubPanel.hidden=isDex;
-  if(dexPane?.isConnected)dexPane.hidden=!isDex;
+  if(hubPanel)hubPanel.hidden=target!=='box';
+  if(dexPane?.isConnected)dexPane.hidden=target!=='dex';
+  if(upgradePane?.isConnected)upgradePane.hidden=target!=='upgrade';
   for(const button of boxPane.querySelectorAll('[data-pc-tab]')){
-   const on=button.dataset.pcTab===(isDex?'dex':'box');
+   const on=button.dataset.pcTab===target;
    button.classList.toggle('gold',on);
    button.setAttribute('aria-selected',String(on));
   }
-  if(isDex)renderDex();
+  if(target==='dex')renderDex();
+  else if(target==='upgrade')renderUpgrades();
   else renderBox();
  }
  function openPC(target='dex',nextView='info'){
@@ -418,7 +476,8 @@
   showPC(target);
  }
  function openBox(nextView='info'){openPC('box',nextView);}
- function closeBox(){boxPane?.remove();boxPane=null;dexPane=null;}
+ function openUpgrades(){if(!boxPane?.isConnected)openPC('upgrade');else showPC('upgrade');}
+ function closeBox(){boxPane?.remove();boxPane=null;dexPane=null;upgradePane=null;}
  function evoRules(){
   return G.PKMSVV_EVOLUTION_DATA?.rules||[];
  }
@@ -439,7 +498,7 @@
   dexPane=doc.createElement('div');dexPane.id='pkmbx-dex-overlay';
   dexPane.className='pkmbx-dex-inside-pc';dexPane.setAttribute('translate','no');dexPane.hidden=true;
   dexPane.innerHTML='<section class="pkmbx-panel pkmbx-dex-panel" role="dialog" aria-modal="true" aria-label="Pokédex">'+
-   '<header class="pkmbx-head"><h2>🖥️ PC</h2><button class="btn small" id="pkmbx-dex-close">'+L('✕ Đóng','✕ Close')+'</button></header>'+pcTabs('dex')+
+   '<header class="pkmbx-head"><h2>◉ Pokémon</h2><button class="btn small" id="pkmbx-dex-close">'+L('✕ Đóng','✕ Close')+'</button></header>'+pcTabs('dex')+
 
    '<div class="pkmbx-dex-toolbar"><input id="pkmbx-dex-search" type="search" autocomplete="off" placeholder="'+L('Tìm tên Pokémon hoặc số Pokédex','Search Pokémon name or Dex number')+'"/>'+
    '<button type="button" class="btn small" id="pkmbx-dex-fav" aria-pressed="false">'+L('☆ Yêu thích','☆ Favorites')+'</button>'+
@@ -574,10 +633,14 @@
   $('pkmsvv-pokebox-button')?.remove();
   // Keep the original PC that already owns Support, Mega, Berry and the guide.
   // Only remove the newer duplicated launcher, never the real PC.
-  if(original&&extra)extra.remove();
+  if(original&&extra){
+    extra.setAttribute('aria-label','Pokémon');
+    const label=extra.querySelector('.pkmsvv-menu-label, strong, .menu-label');
+    if(label)label.textContent='Pokémon';
+   }
   if(original){
    const sub=original.querySelector('small');
-   if(sub)sub.textContent=L('Pokédex · PokéBox · Nâng cấp · Hỗ trợ · Mega · Berry','Pokédex · PokéBox · Upgrades · Support · Mega · Berries');
+   if(sub)sub.textContent=L('PokéBox · Pokédex · Nâng cấp · Hỗ trợ · Mega · Berry','PokéBox · Pokédex · Upgrades · Support · Mega · Berries');
   }
  }
  // Keep migration in Save Management, never in the regular PokéBox UI.
@@ -658,12 +721,12 @@
    if(!b)return;
    if(b.matches('[data-go="bag"]')){e.preventDefault();e.stopImmediatePropagation();openBox('items');return;}
    e.preventDefault();e.stopImmediatePropagation();
-   openDex();
+   openBox();
   },true);
   syncMenu();
  }
  if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',init,{once:true});
  else init();
- G.PKMSVVBoxHubUI={openBox,openDex,closeBox,closeDex,renderBox,renderDex,
+ G.PKMSVVBoxHubUI={openBox,openDex,openUpgrades,closeBox,closeDex,renderBox,renderDex,
   focus:id=>{focused=id;renderBox();},focusedId:()=>focused};
 })();
