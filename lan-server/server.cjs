@@ -50,7 +50,7 @@ function startServer({root,port=37816,host='0.0.0.0'}={}){
  const rooms=new Map(),connections=new Map();
  const send=(ws,obj)=>{if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify(obj));};
  const broadcast=(room,obj)=>{for(const uid of room.members.keys()){const c=connections.get(uid);if(c)send(c.ws,obj);}};
- const snapshot=room=>({id:room.id,mode:room.mode,host:room.host,open:room.open,
+ const snapshot=room=>({id:room.id,mode:room.mode,host:room.host,open:room.open,matchSerial:room.matchSerial||0,
   visibility:room.visibility,members:[...room.members.values()]});
  function disconnect(c,closing=true){
   if(closing)connections.delete(c.uid);
@@ -154,7 +154,7 @@ function startServer({root,port=37816,host='0.0.0.0'}={}){
     if(c.room){reply(null,'Đã ở trong phòng khác.');return;}
     const mode=['coop','royale','eggrush','berry','berryeasy','arena','champion'].includes(m.mode)?m.mode:'coop';
     const id=randomBytes(12).toString('base64url');
-    const r={id,host:c.uid,mode,visibility:m.visibility==='public'?'public':'private',open:true,members:new Map()};
+    const r={id,host:c.uid,mode,visibility:m.visibility==='public'?'public':'private',open:true,matchSerial:0,members:new Map()};
     c.member={dex:Number.isInteger(m.dex)&&m.dex>0?m.dex:25,shiny:m.shiny===true,power:readPower(m.power)};
     r.members.set(c.uid,{uid:c.uid,name:c.name,...c.member});
     rooms.set(id,r);c.room=id;reply(snapshot(r));broadcast(r,{t:'room',room:snapshot(r)});return;
@@ -210,6 +210,7 @@ function startServer({root,port=37816,host='0.0.0.0'}={}){
    }
    if(m.action==='open'){
     if(r.host!==c.uid){reply(null,'Chỉ Host được mở/khóa phòng.');return;}
+    if(r.open&&m.open===false)r.matchSerial=(r.matchSerial||0)+1;
     r.open=!!m.open;reply(true);broadcast(r,{t:'room',room:snapshot(r)});return;
    }
    reply(null,'Unknown request');
