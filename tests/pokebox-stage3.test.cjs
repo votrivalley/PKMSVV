@@ -26,10 +26,10 @@ function setup(){
  return {s,get writes(){return writes},set failed(v){failed=v}};
 }
 const foe=(dex,attrs={})=>({dex,dead:true,remote:false,...attrs});
-test('item metadata: always-stocked daily shop and rare Solo drops are separate',()=>{
+test('item metadata: rotating daily shop and rare Solo drops are separate',()=>{
  assert.equal(prism.ITEM,'reforge-prism');
  assert.equal(prism.PRICE,6500);
- assert.equal(prism.SHOP_RATE,1);
+ assert.equal(prism.SHOP_RATE,.12);
  assert.equal(prism.PITY,180);
  assert.equal(prism.MAX_DROPS_PER_RUN,1);
  assert.deepEqual({...prism.RATES},{type:.0035,species:.015,elite:.03,boss:.08});
@@ -51,16 +51,26 @@ test('daily stock is deterministic and buying is limited to one per day',()=>{
  assert.throws(()=>prism.buy(s,day),/already purchased|unavailable/);
  assert.equal(s.coins,before-6500);
 });
-test('Kecleon always displays purchasable item once per day regardless of old daily lottery',()=>{
+test('Prism is a regular rotating shop item with a stable daily chance',()=>{
  const {s}=setup();
- let out;
- for(let i=1;i<200;i++){const d='no-sale-'+i;if(prism.slotRoll(d)>=.12){out=d;break}}
- assert.ok(out,'find date where prior 12% chance would block item');
- assert.equal(prism.shopOffer(out,s).available,true);
- for(let i=0;i<100;i++)assert.equal(prism.shopOffer(out,s).canBuy,true);
- assert.equal(prism.buy(s,out).count,1);
+ let out,stock;
+ for(let i=1;i<1000;i++){
+  const d='stock-test-'+i;
+  if(prism.slotRoll(d)>=prism.SHOP_RATE&&!out)out=d;
+  if(prism.slotRoll(d)<prism.SHOP_RATE&&!stock)stock=d;
+ }
+ assert.ok(out&&stock);
+ assert.equal(prism.shopOffer(out,s).available,false);
  assert.equal(prism.shopOffer(out,s).canBuy,false);
- assert.equal(prism.shopOffer('following-day',s).canBuy,true);
+ assert.throws(()=>prism.buy(s,out),/unavailable/);
+ assert.equal(prism.shopOffer(stock,s).available,true);
+ assert.equal(prism.shopOffer(stock,s).canBuy,true);
+ assert.equal(prism.buy(s,stock).count,1);
+ assert.equal(prism.shopOffer(stock,s).canBuy,false);
+ const source=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-stage3.js'),'utf8');
+ const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-stage3.css'),'utf8');
+ assert.match(source,/list\.querySelector\('\.pkmk-cards'\)/);
+ assert.match(css,/border:3px solid #0b1720/);
 });
 test('a legacy save may buy one Prism before PokéBox migration without altering owned, nature or progress',()=>{
  setup();
@@ -70,8 +80,11 @@ test('a legacy save may buy one Prism before PokéBox migration without altering
  const old=JSON.parse(JSON.stringify(legacy));
  G.DB.save=legacy;
  assert.equal(prism.count(legacy),0);
- assert.equal(prism.shopOffer('legacy-day',legacy).canBuy,true);
- assert.equal(prism.buy(legacy,'legacy-day').count,1);
+ let legacyDay;
+ for(let i=1;i<1000;i++){const d='legacy-day-'+i;if(prism.slotRoll(d)<prism.SHOP_RATE){legacyDay=d;break}}
+ assert.ok(legacyDay);
+ assert.equal(prism.shopOffer(legacyDay,legacy).canBuy,true);
+ assert.equal(prism.buy(legacy,legacyDay).count,1);
  assert.equal(legacy.pkmsvvBoxSchema,undefined);
  assert.deepEqual(legacy.owned,old.owned);
  assert.deepEqual(legacy.shiny,old.shiny);
@@ -79,7 +92,7 @@ test('a legacy save may buy one Prism before PokéBox migration without altering
  assert.deepEqual(legacy.pabil,old.pabil);
  assert.equal(legacy.coins,12500);
  assert.equal(prism.count(legacy),1);
- assert.equal(prism.shopOffer('legacy-day',legacy).canBuy,false);
+ assert.equal(prism.shopOffer(legacyDay,legacy).canBuy,false);
 });
 test('Rank 3/5 respec consumes one Prism, preserves Rank, Nature, Ability, Shiny, Mega and shards',()=>{
  const {s}=setup();const x=stage2.get(s,'b1-6-n');
