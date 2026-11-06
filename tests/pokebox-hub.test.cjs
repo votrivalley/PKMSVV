@@ -146,7 +146,13 @@ test('Pokédex QA UI restores all old filters, Gen 1 SVG icon and correct menu p
   assert.ok(ui.includes(key),'missing '+key);
  }
  assert.match(ui,/function pokedexIcon\(\)/);
- assert.match(ui,/insertBefore\(ref,dex\)/);
+ assert.match(ui,/function pcTabs\(selected\)/);
+ assert.match(ui,/tab\('dex',pokedexIcon\(\)/);
+ assert.match(ui,/tab\('box','📦 PokéBox'\)/);
+ assert.match(ui,/function showPC\(which\)/);
+ assert.match(ui,/function openPC\(target='dex'/);
+ assert.match(ui,/boxPane.appendChild\(dexPane\)/);
+ assert.match(ui,/\$\('pkmsvv-pokebox-button'\)\?\.remove\(\)/);
  assert.match(ui,/function legacySelect\(it\)/);
  assert.match(ui,/function legacyFavorite\(it\)/);
  assert.match(ui,/pkmbx-use/);
@@ -197,4 +203,18 @@ test('clean PokéBox UI keeps six visible slots and relocates migration to Save 
  assert.match(ui,/renderTeam\(boxPane,s,items\)/);
  assert.match(css,/grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/);
  assert.match(css,/height:70px/);
+});
+
+test('Pokédex is first inside the game PC, never another main-menu tile',()=>{
+ const src=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub-ui.js'),'utf8');
+ const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub.css'),'utf8');
+ assert.match(src,/label.textContent='PC'/);
+ assert.match(src,/if\(icon\)icon.textContent='🖥️'/);
+ assert.match(src,/openDex\(\)/);
+ assert.match(src,/function showPC\(which\)/);
+ assert.match(src,/bindPcTabs\(dexPane\)/);
+ assert.match(src,/showPC\(target\)/);
+ assert.doesNotMatch(src,/insertBefore\(ref,dex\)/);
+ assert.match(css,/pkmbx-dex-inside-pc\[hidden\]/);
+ assert.match(css,/\.pkmbx-pc-tabs/);
 });
