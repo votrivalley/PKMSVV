@@ -108,3 +108,11 @@
 .pkmsvv-arena-hub-choices button{min-height:116px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px;font-size:20px}
 .pkmsvv-arena-hub-choices small{font-size:12px;white-space:normal;font-weight:650}
 @media(max-width:530px){.pkmsvv-arena-hub-choices{grid-template-columns:1fr}.pkmsvv-arena-hub-choices button{min-height:90px}}
+
+/* Regional identity: compact Gen and difficulty label without extra help text. */
+.pkmsvv-champion-region .pkmsvv-region-difficulty{
+ font-size:10px;line-height:1.25;letter-spacing:.02em;
+ font-weight:900;color:#3f6f83;
+}
+.pkmsvv-champion-region.is-locked .pkmsvv-region-difficulty{color:#506670}
+@media(max-width:560px){.pkmsvv-champion-region .pkmsvv-region-difficulty{font-size:9px}}
