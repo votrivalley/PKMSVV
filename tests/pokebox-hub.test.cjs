@@ -205,11 +205,12 @@ test('clean PokéBox UI keeps six visible slots and relocates migration to Save 
  assert.match(css,/height:70px/);
 });
 
-test('Original PC is the only main-menu PC and provides Pokédex/PokéBox/Upgrades',()=>{
+test('Original PC remains, and Pokémon entry has Box, Dex and preserved upgrade actions',()=>{
  const src=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub-ui.js'),'utf8');
  const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub.css'),'utf8');
  const clean=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pc-menu-clean-qa.js'),'utf8');
- assert.match(src,/if\(original&&extra\)extra.remove\(\)/);
+ assert.match(src,/if\(original&&extra\)/);
+ assert.match(src,/extra\.setAttribute\('aria-label','Pokémon'\)/);
  assert.match(src,/pkmsvv-menu-wiki/);
  assert.match(clean,/pkmsvv-pc-dex/);
  assert.match(clean,/pkmsvv-pc-box/);
@@ -224,6 +225,16 @@ test('Original PC is the only main-menu PC and provides Pokédex/PokéBox/Upgrad
  assert.doesNotMatch(src,/insertBefore\(ref,dex\)/);
  assert.match(css,/pkmbx-dex-inside-pc\[hidden\]/);
  assert.match(css,/\.pkmbx-pc-tabs/);
+ assert.match(src,/tab\('upgrade'/);
+ assert.ok(src.indexOf("tab('box'") < src.indexOf("tab('dex'"),'PokéBox before Pokédex');
+ assert.ok(src.indexOf("tab('dex'") < src.indexOf("tab('upgrade'"),'Pokédex before Nâng cấp');
+ assert.match(src,/G\.MenuUI\.openUpgrades\(\)/,'original single upgrade route');
+ assert.match(src,/G\.GlobalPowerUI\.open\(\)/,'original global upgrade route');
+ assert.match(clean,/grid\.prepend\(box,dex,upgrade\)/);
+ assert.doesNotMatch(clean,/menu\.querySelector\('\[data-go="dex"\]'\)\?\.remove\(\)/);
+ assert.match(css,/pkmbx-upgrade-overlay\[hidden\]/);
+ assert.match(css,/pkmbx-dex-details/);
+
 });
 
 
