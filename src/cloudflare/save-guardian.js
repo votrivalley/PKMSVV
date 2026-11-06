@@ -223,7 +223,25 @@
   }
  }
  let last='',lastSaved=0;
+ function installCommitHook(){
+  // A confirmed local DB commit is the most reliable moment to record item
+  // purchases. Periodic snapshots remain a fallback if G.DB loads later.
+  try{
+   const db=typeof G!=='undefined'?G.DB:null;
+   if(!db||typeof db.commit!=='function'||db._pkmsvvGuardianV2Hook)return false;
+   const commit=db.commit;
+   db.commit=function(...args){
+    const outcome=commit.apply(this,args);
+    // Never record a failed or thrown transaction.
+    if(outcome!==false)snapshot('db-commit');
+    return outcome;
+   };
+   db._pkmsvvGuardianV2Hook=true;
+   return true;
+  }catch(_){return false;}
+ }
  function snapshot(reason='periodic'){
+  installCommitHook();
   if(pending)return false;
   const save=safeRead(SAVE);if(!good(save))return false;
   if(save===last)return;
