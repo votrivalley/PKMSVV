@@ -46,9 +46,18 @@
   const mon=G.DEX_BY?.[s.partner],meta=menu.querySelector('.pkmsvv-v15-meta');if(!mon||!meta)return;
   const name=meta.querySelector('#menu-partner-name'),info=meta.querySelector('#menu-partner-info'),stats=meta.querySelector('#menu-stats');
   const monName=typeof mon.name==='string'?mon.name:Array.isArray(mon.name)?mon.name[isEn()?1:0]:'Pokémon #'+s.partner;
-  if(name&&!name.textContent?.trim())name.textContent=monName;
+  // Always update: previous species' text can remain after returning from battle.
+  if(name)name.textContent=monName;
+  const portrait=menu.querySelector('#menu-partner');
+  const portraitKey=String(s.partner)+':'+String(!!s.partnerShiny);
+  if(portrait&&portrait.dataset.pkmsvvPortraitKey!==portraitKey&&G.UI?.sprite){
+   try{G.UI.sprite(portrait,Number(s.partner),{hero:true,lively:true,spin:false,scale:3,shiny:!!s.partnerShiny});
+    portrait.dataset.pkmsvvPortraitKey=portraitKey;
+   }catch(err){console.warn('[Pokemon home portrait]',err);}
+  }
   const types=Array.isArray(mon.types)?mon.types:[];
-  if(types.length&&name&&!meta.querySelector('#pkmsvv-home-types')&&!meta.querySelector('.type-pill,.pkmsvv-type-badge')){
+  meta.querySelector('#pkmsvv-home-types')?.remove();
+  if(types.length&&name&&!meta.querySelector('.type-pill,.pkmsvv-type-badge')){
    const row=d.createElement('div');row.id='pkmsvv-home-types';row.className='pkmsvv-home-type-row';
    for(const t of types){
     const code=String(t).toLowerCase(),chip=d.createElement('span');chip.className='pkmsvv-home-type-chip';
@@ -59,18 +68,18 @@
    name.insertAdjacentElement('afterend',row);
   }
   const st=s.stats||{};
-  if(info&&!info.textContent?.trim()){
+  if(info){
    const runs=number(st,['runs']),best=number(st,['bestTime']),lines=[];
    if(runs!==null)lines.push(L('Lượt chơi ','Runs ')+runs.toLocaleString(isEn()?'en-US':'vi-VN'));
    if(best!==null)lines.push(L('Kỷ lục sống sót ','Best survival ')+format(best));
-   if(lines.length)info.textContent=lines.join(' · ');
+   info.textContent=lines.join(' · ');
   }
-  if(stats&&!stats.textContent?.trim()){
+  if(stats){
    const level=number(st,['bestLevel','maxLevel','bestLv','highestLevel','maxLv','levelBest']);
    const kills=number(st,['kills','totalKills','enemiesKilled','defeated']),lines=[];
    if(level!==null)lines.push(L('Cấp cao nhất ','Highest level ')+level);
    if(kills!==null)lines.push(L('Đã hạ ','Defeated ')+kills.toLocaleString(isEn()?'en-US':'vi-VN'));
-   if(lines.length)stats.textContent=lines.join(' · ');
+   stats.textContent=lines.join(' · ');
   }
  }
  function syncHome(){
