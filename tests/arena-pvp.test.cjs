@@ -4,7 +4,7 @@ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
 const SOURCE=read('src/lan/arena-pvp.js');
 function instance(myUid,opts={}){
- const elements=new Map(),listeners=[],peers=[],roomListeners=[];
+ const elements=new Map(),listeners=[],peers=[],roomListeners=[],docEvents={},windowEvents={};
  function node(tag='div'){
   const n={tag,id:'',textContent:'',hidden:false,style:{},children:[],className:'',
    setAttribute(){},remove(){elements.delete(this.id);},
@@ -14,7 +14,7 @@ function instance(myUid,opts={}){
    addEventListener(){},classList:{toggle(){}}
   };return n;
  }
- const document={createElement:node,body:{append(e){if(e.id)elements.set(e.id,e);}},getElementById(id){return elements.get(id)||null}};
+ const document={hidden:false,addEventListener(name,fn){docEvents[name]=fn},createElement:node,body:{append(e){if(e.id)elements.set(e.id,e);}},getElementById(id){return elements.get(id)||null}};
  const members=[{uid:'host',name:'Host',dex:25},{uid:'guest',name:'Guest',dex:6}];
  if(opts.ai)members[1].bot=true;
  if(opts.members)members.splice(0,members.length,...opts.members);
@@ -39,7 +39,7 @@ function instance(myUid,opts={}){
   Coop:{get active(){return started},get isHost(){return started&&isHost},
    begin(){started=true},end(){started=false},leave(){started=false},
    cast(){origCast++},mate,local:me},
-  Net:{on(cb){listeners.push(cb)},onPeer(cb){peers.push(cb)},broadcast(msg){network.push(msg)}},
+  Net:{on(cb){listeners.push(cb)},onPeer(cb){peers.push(cb)},broadcast(msg){network.push(msg)},toHost(msg){network.push(msg)}},
   World:{arena:null,setArena(a){this.arena=a}},
   EnemyMgr:{update(){},clear(){}},Spawner:{update(){spawns++}},
   Rift:{update(){}},Judgment:{update(){}},
@@ -47,7 +47,7 @@ function instance(myUid,opts={}){
   FX:{burst(){damage++}}
  };
  let now=10000;
- vm.runInNewContext(SOURCE,{G,document,performance:{now(){return now}}});
+ vm.runInNewContext(SOURCE,{G,document,window:{addEventListener(name,fn){windowEvents[name]=fn}},performance:{now(){return now}}});
  const api=G.PKMSVVArenaPvp;
  const cfg={mode:opts.mode||'arena',seed,host:'host',members};
  function start(){G.Coop.begin(cfg,me,{});}
@@ -59,7 +59,7 @@ function instance(myUid,opts={}){
   for(let remain=dt;remain>0;remain-=Math.min(remain,1/30))
    G.EnemyMgr.update(Math.min(remain,1/30),[]);
  }
- return {G,api,me,other,document,elements,network,emit,disconnect,notifyRoom,frame,start,cfg,advance(t){now+=t},get damage(){return damage},
+ return {G,api,me,other,document,docEvents,windowEvents,elements,network,emit,disconnect,notifyRoom,frame,start,cfg,advance(t){now+=t},get damage(){return damage},
   get spawns(){return spawns},get gameQuit(){return gameQuit}};
 }
 test('Real Arena rooms use human identities and reject AI/no-second-player modes',()=>{
@@ -255,4 +255,50 @@ test('Unrelated or stale room notifications cannot terminate an active Arena mat
  assert.equal(guest.api.active,true);
  const stale=instance('guest');stale.G.Social.room.open=true;stale.start();stale.notifyRoom();
  assert.equal(stale.api.active,true,'initial lobby open is not a completed battle');
+});
+
+test('Android foreground requests Host resync after dropped Champion terminal; no duplicate winner or rewards',()=>{
+ const host=instance('host',{mode:'champion'}),guest=instance('guest',{mode:'champion'});
+ host.start();guest.start();host.frame(3.01);
+ // Force a real end via time expiry: two-human Champion series of 3 rounds.
+ for(let i=0;i<3;i++){
+  host.frame(181);
+  if(i<2)host.frame(3.01);
+ }
+ assert.equal(host.api.stage,'result');
+ host.network.length=0; // simulate all terminal packets dropped during app switch
+ guest.document.hidden=true;
+ guest.document.hidden=false;
+ guest.docEvents.visibilitychange();
+ assert.equal(guest.network.at(-1)?.k,'apvp-sync-request');
+ const req=guest.network.pop();
+ host.emit('attacker',req);
+ assert.equal(host.network.length,0,'forged requester cannot elicit state');
+ host.emit('guest',{...req,seed:req.seed+1});
+ assert.equal(host.network.length,0,'different match cannot elicit state');
+ host.emit('guest',req);
+ const terminal=host.network.at(-1);
+ assert.equal(terminal.stage,'result','Host sends authoritative final state');
+ guest.emit('host',terminal);
+ assert.equal(guest.api.stage,'result');
+ assert.equal(guest.api.winner,host.api.winner);
+ const received=guest.api.winner;
+ guest.emit('host',{...terminal,stage:'fight',seq:terminal.seq+10});
+ assert.equal(guest.api.stage,'result','late higher-sequence combat packet cannot reopen finished match');
+ assert.equal(guest.api.winner,received);
+ assert.equal(host.gameQuit,0);assert.equal(guest.gameQuit,0);
+});
+test('Resync requests are rate-limited on Android foreground and peer reconnection',()=>{
+ const host=instance('host'),guest=instance('guest');host.start();guest.start();
+ guest.docEvents.visibilitychange();
+ const n=guest.network.length;
+ guest.docEvents.visibilitychange();guest.windowEvents.pageshow();
+ assert.equal(guest.network.length,n,'rapid resume events should send one request');
+ guest.advance(1700);guest.windowEvents.pageshow();
+ assert.equal(guest.network.length,n+1);
+ const req=guest.network.at(-1);
+ host.emit('guest',req);
+ const sent=host.network.length;
+ host.emit('guest',req);
+ assert.equal(host.network.length,sent,'Host avoids responding repeatedly within 150ms');
 });
