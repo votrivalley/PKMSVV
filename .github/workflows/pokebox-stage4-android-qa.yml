@@ -11,6 +11,11 @@ on:
       - 'scripts/copy-region-covers.cjs'
       - 'scripts/build-pokebox-stage4-android-qa.cjs'
       - 'src/pkmsvv-pc-menu-clean-qa.*'
+      - 'src/pkmsvv-modal-navigation-qa.*'
+      - 'src/pkmsvv-held-item-ui.js'
+      - 'tests/modal-input-qa.test.cjs'
+      - 'tests/held-item-choice.test.cjs'
+      - 'AGENTS.md'
       - 'tests/quick-region.test.cjs'
       - 'tests/pokebox-hub.test.cjs'
       - 'package.json'
@@ -32,7 +37,7 @@ jobs:
         with:
           node-version: '22'
       - name: Test all four PokéBox phases
-        run: npm run test:pokebox:stage4 && npm run test:quick-region
+        run: npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs
       - name: Require permanent signing, no debug fallback
         shell: bash
         env:
@@ -85,6 +90,8 @@ jobs:
           test -s decoded-android/assets/public/css/pkmsvv-quick-region.css
           test -s decoded-android/assets/public/js/ui/pkmsvv-pc-menu-clean-qa.js
           test -s decoded-android/assets/public/css/pkmsvv-pc-menu-clean-qa.css
+          test -s decoded-android/assets/public/js/ui/pkmsvv-modal-navigation-qa.js
+          test -s decoded-android/assets/public/css/pkmsvv-modal-navigation-qa.css
       - name: Rebuild and sign separate APK with original permanent certificate
         shell: bash
         env:
