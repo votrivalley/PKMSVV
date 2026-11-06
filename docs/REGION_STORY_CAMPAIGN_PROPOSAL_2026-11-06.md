@@ -79,3 +79,17 @@ Học từ bố cục màn hình chọn Region của PokéLit (9 vùng chính + 
 - Giao diện Region hiển thị Gen và độ khó 1/5→5/5, Tháp Thiên Không ghi Rồng/Đa thế hệ. Có kiểm thử `tests/region-story-map.test.cjs` về danh sách Gen, spawn, cố định biome, phục hồi khi thoát, giới hạn tăng độ khó và save. Test đã nối vào `npm run test:web` và lệnh kiểm tra Champion.
 
 **Chưa hoàn tất:** artwork riêng của 10 Region (hiện dùng engine biome gốc), QA trực tiếp trên game PC/Android/Web với save 558 cá thể, xác nhận tất cả nguồn quái như các sự kiện mở rộng, cân bằng cảm giác trận 10–15 phút, và triển khai Chương 10 biến đổi bản đồ. Chưa đưa vào nhánh phát hành hay sửa save cũ.
+
+
+## Điều hướng Chơi ngay — QA 2026-11-06
+
+**Yêu cầu mới của người chơi:** Nhấn **Chơi ngay** ở menu chính không được bắt đầu Survival lập tức. Phải hiện **chọn Region** trước; nhấn Region hợp lệ mới gửi lại click một lần cho lối khởi động game gốc. **Không tự mở Arena/Champion** chỉ vì người chơi chọn một map.
+
+- Code QA độc lập: `src/pkmsvv-quick-region.js`, `src/pkmsvv-quick-region.css`. Chỉ được đưa vào Web/PC/Android bản QA cách ly qua các packager của nhánh `feature/pokebox-stage1-isolated-qa`.
+- 10 Region hiện trong overlay: Kanto–Paldea và Tháp Thiên Không; 5×2 desktop, 3 cột tablet, 2 cột mobile. Thiết kế bằng CSS/biểu tượng riêng; không sao chép hình PokéLit.
+- Mở khóa dùng **chính** `arenas.pkmChampion.seals` cùng thứ tự 10 Region. Save cũ giữ nguyên; chỉ Kanto mở với save mới. Chọn map không trao Ấn Chứng, vật phẩm, thưởng Arena hay tiến độ cốt truyện.
+- Game run sau khi chọn Region vẫn là **Chơi ngay** bình thường: không bracket, không 16 người, không thời gian chuẩn bị Champion, không Mega Champion pha 50%.
+- Map biome được cố định vào map đang chọn trong lượt và trở về biome ban đầu khi thoát; chỉ thay danh sách mob trong tick `G.Spawner.update` từ nhóm Gen tương ứng của hệ thống Region Champion hiện có. Không can thiệp các nguồn quái ngoài `Spawner` và boss thường chưa được kiểm chứng; cần xác nhận thủ công nếu muốn mọi nguồn 100% thuộc Gen.
+- Tất cả Co-op/Arena/Berry/Sống Còn/Tranh Trứng vẫn dùng đường vào riêng và không tự bật Region selector. Các thay đổi khác của save và Chương 10 vẫn tách biệt.
+- Có test `tests/quick-region.test.cjs` kiểm tra menu chỉ mở chọn vùng, click bắt đầu đúng một lần, biome và native spawn được giới hạn khi trận chạy, thoát khôi phục, save không đổi. Chromium QA kiểm tra click nút Chơi ngay trong game thật.
+- **Chưa phát hành:** cần xem thật thao tác từ Chơi ngay đến trận, kiểm tra đóng modal, viewport nhỏ, rời trận, chơi liên tiếp các Region, cắt cảnh đầu chương và tính ổn định trên Web/PC/Android.
