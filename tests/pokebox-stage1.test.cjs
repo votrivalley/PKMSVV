@@ -58,3 +58,18 @@ test('use original private save only as in-memory QA; never print or commit it',
  for(const k of Object.keys(json.save))assert.deepEqual(json.save[k],r.save[k]);
  assert.equal(api.validBox(r.save),true);
 });
+test('legacy persisted Nature and Ability outrank runtime defaults; favorite override survives migration',()=>{
+ const raw=base();
+ raw.pnat={6:['adamant',12]};raw.pabil={6:[2,98]};
+ raw.favorites={6:true};raw.pkmsvvLegacyFavoriteOverrides={6:false};
+ const dex=api.listLegacy(raw,lookups);
+ const normal=dex.find(x=>x.id==='b1-6-n');
+ assert.equal(normal.natureId,'adamant');
+ assert.equal(normal.abilitySlot,2);
+ assert.equal(normal.favorite,false,'explicit legacy favorite toggle overrides original favorite');
+ const moved=api.migrate(raw,lookups).save;
+ assert.deepEqual(moved.pnat,raw.pnat);
+ assert.deepEqual(moved.pabil,raw.pabil);
+ assert.equal(moved.pkmsvvBox.find(x=>x.id==='b1-6-n').favorite,false);
+ assert.equal(raw.pkmsvvBoxSchema,undefined,'read-only migration must not mutate original');
+});
