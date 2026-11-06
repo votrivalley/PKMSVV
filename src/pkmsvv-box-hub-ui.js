@@ -485,11 +485,66 @@
   // Preserve the original button's event route and responsive classes.
   if(dex.parentNode&&ref.previousElementSibling!==null) dex.parentNode.insertBefore(ref,dex);
  }
+
+ // Keep migration in Save Management, never in the regular PokéBox UI.
+ // It is explicit and reversible: original JSON is saved under the profile
+ // BEFORE converting. If backup persistence fails, conversion is blocked.
+ function attachMigrationToSaveManager(){
+  const wrap=doc.querySelector('#scr-pkmsvv-save-quick .pkm-backup');
+  const s=currentSave();
+  if(!wrap||!s||G.DB?.guest||getStored()||wrap.querySelector('#pkmbx-save-migration'))return;
+  const section=doc.createElement('details');
+  section.id='pkmbx-save-migration';
+  section.setAttribute('translate','no');
+  section.innerHTML='<summary>'+L('Dữ liệu PokéBox','PokéBox Data')+'</summary>'+
+   '<button class="btn small" type="button" id="pkmbx-save-convert">'+
+    L('Chuyển dữ liệu','Migrate Collection')+'</button>';
+  wrap.appendChild(section);
+  section.querySelector('#pkmbx-save-convert').onclick=()=>{
+   if(!confirm(L('Chuyển bộ sưu tập sang PokéBox? Bản lưu cũ sẽ được giữ riêng.',
+    'Convert this collection to PokéBox? The old save will be kept separately.')))return;
+   const button=section.querySelector('#pkmbx-save-convert');button.disabled=true;
+   try{
+    const text=G.PKMSVVSaveUI?.backup?.();
+    if(typeof text!=='string'||!text)throw Error('Save backup unavailable');
+    const session=JSON.parse(localStorage.getItem('ps.session')||'null');
+    if(typeof session!=='string'||!/^[a-z0-9_ñáéíóú-]{2,48}$/i.test(session))
+     throw Error('Active offline profile not found');
+    const key='pkmsvv.prepokebox.'+session;
+    if(!localStorage.getItem(key))localStorage.setItem(key,text);
+    if(!localStorage.getItem(key))throw Error('Could not preserve old save');
+    const result=Box.persistMigration();
+    if(!result||!Hub.valid(currentSave()))throw Error('PokéBox conversion was not saved');
+    G.UI?.toast?.(L('Đã cập nhật PokéBox','PokéBox collection updated'),2300);
+    section.remove();
+    if(boxPane?.isConnected)renderBox();
+   }catch(error){
+    alert(L('Không thể chuyển dữ liệu: ','Could not migrate: ')+error.message);
+   }finally{button.disabled=false;}
+  };
+ }
+ function installSaveManagerHook(){
+  // The original Save UI binds #btn-backup to a closed-over function,
+  // so support both direct method calls and the existing toolbar action.
+  if(G.PKMSVVSaveUI?.openQuick&&!G.PKMSVVSaveUI._pkmbxMigrationHook){
+   const old=G.PKMSVVSaveUI.openQuick;
+   G.PKMSVVSaveUI.openQuick=function(...args){
+    const result=old.apply(this,args);
+    Promise.resolve().then(attachMigrationToSaveManager);
+    return result;
+   };
+   G.PKMSVVSaveUI._pkmbxMigrationHook=true;
+  }
+  doc.addEventListener('click',event=>{
+   if(event.target?.closest?.('#btn-backup'))Promise.resolve().then(attachMigrationToSaveManager);
+  },true);
+ }
  let menuInitialized=false;
  function init(){
   if(menuInitialized)return;
   menuInitialized=true;
   if(G.Mons)Hub.installMons(G.Mons);
+  installSaveManagerHook();
   if(G.MenuUI?.openDex&&!G.MenuUI._pkmbxReadonlyDex){
    G.MenuUI.openDex=openDex;
    G.MenuUI._pkmbxReadonlyDex=true;
