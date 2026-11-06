@@ -15,8 +15,8 @@ function inject(){
  if(!html.includes('app.min.js')||!html.includes('</body>')||!html.includes('</head>'))
   throw Error('FULL Android game HTML anchor missing; refusing QA overlay');
  const scripts=['pkmsvv-box-stage1.js','pkmsvv-box-stage2.js',
-  'pkmsvv-box-stage2-ui.js','pkmsvv-box-stage3.js','pkmsvv-box-stage4.js','pkmsvv-box-hub.js','pkmsvv-box-hub-ui.js'];
- const css=['pkmsvv-box-stage1.css','pkmsvv-box-stage2.css','pkmsvv-box-stage3.css','pkmsvv-box-hub.css'];
+  'pkmsvv-box-stage2-ui.js','pkmsvv-box-stage3.js','pkmsvv-box-stage4.js','pkmsvv-box-hub.js','pkmsvv-box-hub-ui.js','pkmsvv-quick-region.js'];
+ const css=['pkmsvv-box-stage1.css','pkmsvv-box-stage2.css','pkmsvv-box-stage3.css','pkmsvv-box-hub.css','pkmsvv-quick-region.css'];
  for(const file of scripts){
   const dest=path.join(web,'js/ui',file);
   fs.mkdirSync(path.dirname(dest),{recursive:true});
