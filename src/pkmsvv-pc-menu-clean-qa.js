@@ -96,10 +96,10 @@
   const arena=entry('[data-go="arena"]',['arena']);
   const order=[pokemon,pc,coop,arena].filter((el,i,all)=>el&&all.indexOf(el)===i);
   if(!order.length)return false;
-  const target=play?.parentElement===list?play.nextElementSibling:list.firstElementChild;
-  // insertBefore on the same container moves the original elements without re-binding handlers.
+  let target=play?.parentElement===list?play.nextElementSibling:list.firstElementChild;
+  // Move actual buttons, not clones, so their handlers and state remain intact.
   for(const item of order){
-   if(item===target)continue;
+   if(item===target){target=target.nextElementSibling;continue;}
    list.insertBefore(item,target);
   }
   return true;
