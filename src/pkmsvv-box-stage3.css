@@ -3,17 +3,25 @@
 .pkmbx-prism-reset h3{margin:0 0 5px!important;color:#e4ccff!important}
 .pkmbx-prism-reset p{margin:5px 0 12px}
 .pkmbx-prism-reset .btn{white-space:normal;min-height:38px}
-#pkmbx-prism-store{border:1px solid #8d78ad;border-radius:14px;background:linear-gradient(120deg,#1e264f,#163749);padding:14px;margin:16px 0;color:#f6f0ff}
-#pkmbx-prism-store h3{font-size:18px;color:#e7d4ff;margin:0 0 7px}
-#pkmbx-prism-store p{color:#d2e1ed;line-height:1.55;font-size:13px;margin:6px 0}
-#pkmbx-prism-store .btn{margin-top:6px}
-
-/* Purchase card with visible item, stock count and a real buy action. */
-#pkmbx-prism-store .pkmbx-prism-product{display:flex;align-items:flex-start;gap:12px}
-#pkmbx-prism-store .pkmbx-prism-product-icon{display:flex;align-items:center;justify-content:center;flex:0 0 72px;height:72px;font-size:42px;background:radial-gradient(circle at 35% 25%,#8061b9,#27234e 72%);border:2px solid #b9a4e0;border-radius:12px}
-#pkmbx-prism-store .pkmbx-prism-product-info{flex:1;min-width:0}
-#pkmbx-prism-store .pkmbx-prism-price{display:inline-block;margin:8px 0;color:#ffe6a4;font-size:16px}
-#pkmbx-prism-store .pkmbx-prism-buy{display:inline-flex;align-items:center;justify-content:center;min-height:45px;min-width:min(100%,240px);font-weight:800;cursor:pointer;white-space:normal}
-#pkmbx-prism-store .pkmbx-prism-buy:disabled{opacity:.65;cursor:not-allowed}
-#pkmbx-prism-store .pkmbx-prism-unavailable{color:#ffcd9c!important}
-@media(max-width:450px){#pkmbx-prism-store .pkmbx-prism-product-icon{flex-basis:54px;height:54px;font-size:32px}}
+/* Reforge Prism appears inside the native shop card grid, not as a banner. */
+#scr-kecleon #pkmbx-prism-store.pkmk-card{
+ display:flex;flex-direction:column;align-items:stretch;gap:9px;
+ margin:0;padding:12px;border:3px solid #0b1720;
+ outline:1px solid #9db5be;background:#e8f3ef;color:#173848;
+ border-radius:11px;box-shadow:0 2px 0 #465f69, inset 0 0 0 1px #ffffff;
+ min-width:0;width:auto;box-sizing:border-box
+}
+#scr-kecleon #pkmbx-prism-store .pkmk-product-art{
+ width:100%;height:82px;flex:0 0 82px;display:flex;align-items:center;justify-content:center;
+ font-size:37px;background:radial-gradient(circle at 50% 35%,#8272ad,#302d56 78%);
+ color:#fff;border:2px solid #0a1322;border-radius:8px;box-sizing:border-box
+}
+#scr-kecleon #pkmbx-prism-store .pkmk-product-copy{display:flex;flex-direction:column;gap:5px;color:#173848;min-width:0}
+#scr-kecleon #pkmbx-prism-store .pkmk-product-copy b{font-size:15px;color:#142d3c}
+#scr-kecleon #pkmbx-prism-store .pkmk-product-copy small{color:#355363;font-size:12px;line-height:1.4}
+#scr-kecleon #pkmbx-prism-store .pkmk-product-tail{display:flex;flex-direction:column;gap:7px;margin-top:auto}
+#scr-kecleon #pkmbx-prism-store .pkmbx-prism-price{color:#423051;font-size:14px}
+#scr-kecleon #pkmbx-prism-store .pkmbx-prism-buy{width:100%;min-height:43px;white-space:normal;font-weight:800}
+#scr-kecleon #pkmbx-prism-store .pkmbx-prism-buy:disabled{opacity:.65;cursor:not-allowed}
+#scr-kecleon #pkmbx-prism-store .pkmbx-prism-unavailable{font-size:12px;color:#743f2c!important}
+@media(max-width:540px){#scr-kecleon #pkmbx-prism-store .pkmk-product-art{height:65px;flex-basis:65px}}
