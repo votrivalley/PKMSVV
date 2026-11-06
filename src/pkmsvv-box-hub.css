@@ -198,3 +198,42 @@
  #pkmsvv-pokebox-overlay #pkmbx-dex-overlay.pkmbx-dex-inside-pc>.pkmbx-dex-panel{padding:10px;overflow:auto}
  #pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab{font-size:12px;min-height:36px;padding:4px 9px}
 }
+
+
+/* PokéBox V2 — readable 5-star ranks and same-species counters, QA only.
+ * Uses PKMSVV teal / warm gold; no asset or player-save changes. */
+#pkmsvv-pokebox-overlay .pkmbx-hub-tools{align-items:center;flex-wrap:wrap}
+#pkmsvv-pokebox-overlay .pkmbx-box-sort{display:flex;gap:6px;align-items:center;white-space:nowrap;color:#eaf6fb;font-size:12px}
+#pkmsvv-pokebox-overlay #pkmbx-sort{background:#153c4e;color:#fff3d3;border:1px solid #7db8bd;border-radius:7px;padding:7px;max-width:160px;min-height:36px;font:inherit}
+#pkmsvv-pokebox-overlay .pkmbx-found-count{color:#c0dbe5;font-size:12px;margin-left:auto;white-space:nowrap}
+#pkmsvv-pokebox-overlay .pkmbx-hub-slot{min-height:128px;gap:2px}
+#pkmsvv-pokebox-overlay .pkmbx-hub-slot.rank-ready:not(.focused){border-color:#7ce7bb;box-shadow:inset 0 0 0 1px #7ce7bb}
+#pkmsvv-pokebox-overlay .pkmbx-slot-meta{display:flex;align-items:center;justify-content:center;gap:5px;min-height:18px;max-width:100%}
+#pkmsvv-pokebox-overlay .pkmbx-rank-stars{color:#ffda82;white-space:nowrap;letter-spacing:0;font-size:13px;font-weight:800}
+#pkmsvv-pokebox-overlay .pkmbx-rank-empty{color:#668293}
+#pkmsvv-pokebox-overlay .pkmbx-stack{display:inline-flex;align-items:center;justify-content:center;min-width:24px;padding:1px 4px;background:#0b2636;border:1px solid #8cc0bc;border-radius:6px;font-size:11px;font-weight:800;color:#fff0c5}
+#pkmsvv-pokebox-overlay .pkmbx-rank-overview{margin:11px 0;padding:10px 11px;background:linear-gradient(140deg,#163b4a,#0b293a);border:1px solid #82aaa8;border-radius:9px;color:#eaf6fb}
+#pkmsvv-pokebox-overlay .pkmbx-rank-heading{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:space-between;font-size:13px}
+#pkmsvv-pokebox-overlay .pkmbx-rank-heading b{color:#ffe2a0}
+#pkmsvv-pokebox-overlay .pkmbx-rank-heading strong{font-variant-numeric:tabular-nums;color:#fff0c8}
+#pkmsvv-pokebox-overlay .pkmbx-rank-heading .pkmbx-rank-stars{font-size:18px;letter-spacing:.5px}
+#pkmsvv-pokebox-overlay .pkmbx-rank-overview p{font-size:12px;line-height:1.55;margin:5px 0;overflow-wrap:anywhere;color:#e4f1f5}
+#pkmsvv-pokebox-overlay .pkmbx-rank-progress{height:9px;background:#092535;border:1px solid #587d8b;border-radius:4px;overflow:hidden;margin:8px 0 6px}
+#pkmsvv-pokebox-overlay .pkmbx-rank-progress span{display:block;height:100%;background:linear-gradient(90deg,#68b4bd,#e3ca80);transition:width .18s ease}
+#pkmsvv-pokebox-overlay .pkmbx-rank-status.is-ready{color:#a7ffd6;font-weight:800}
+#pkmsvv-pokebox-overlay .pkmbx-rank-next{padding:5px 7px;background:#244557;border-radius:6px}
+#pkmsvv-pokebox-overlay .pkmbx-rank-next b{color:#ffe0a0}
+#pkmsvv-pokebox-overlay .pkmbx-rank-shortcut{width:100%;min-height:34px;margin-top:7px}
+#pkmsvv-pokebox-overlay .pkmbx-box-empty{grid-column:1/-1;text-align:center;padding:18px 8px;color:#d3e9f3}
+@media(max-width:870px){
+ #pkmsvv-pokebox-overlay .pkmbx-hub-slot{min-height:118px}
+ #pkmsvv-pokebox-overlay .pkmbx-hub-tools input[type=search]{flex:1 1 160px;min-width:0}
+ #pkmsvv-pokebox-overlay .pkmbx-box-sort{flex:0 1 auto}
+}
+@media(max-width:640px){
+ #pkmsvv-pokebox-overlay .pkmbx-rank-heading .pkmbx-rank-stars{font-size:16px}
+ #pkmsvv-pokebox-overlay .pkmbx-rank-stars{font-size:11px}
+ #pkmsvv-pokebox-overlay .pkmbx-hub-slot{min-height:114px}
+ #pkmsvv-pokebox-overlay #pkmbx-sort{max-width:138px}
+ #pkmsvv-pokebox-overlay .pkmbx-found-count{margin-left:0}
+}
