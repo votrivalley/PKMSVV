@@ -153,6 +153,59 @@ G.PKMSVVSaveUI=(()=>{
     throw e;
    }
  }
+
+ function mountGuardianDetails(wrap,msg){
+  const guardian=window.PKMSVVSaveGuardian;
+  if(!guardian||guardian.currentProfile!==getKey())return;
+  const history=document.createElement('details');
+  history.className='pkmsvv-guardian-history';
+  const title=document.createElement('summary');
+  title.textContent=L('Lịch sử thay đổi Save (máy này)','Local save transaction history');
+  const list=document.createElement('div');
+  history.append(title,list);wrap.append(history);
+  history.addEventListener('toggle',()=>{
+   if(!history.open)return;
+   list.replaceChildren();
+   const rows=guardian.journal?.()||[];
+   if(!rows.length){list.textContent=L('Chưa có giao dịch được ghi nhận.','No recorded transactions yet.');return;}
+   for(const row of rows.slice(-30).reverse()){
+    const p=document.createElement('p');p.style.margin='7px 0';p.style.fontSize='12px';
+    const time=Number.isFinite(row.at)?new Date(row.at).toLocaleString():''; 
+    const delta=(row.balances||[]).slice(0,5).map(x=>x.name+' '+(x.delta>0?'+':'')+x.delta).join(' · ');
+    const protectedChanges=(row.permanent||[]).filter(x=>x.change==='loss').length;
+    p.textContent=time+' · '+String(row.type||'save').slice(0,48)+
+     (delta?' · '+delta:'')+
+     (protectedChanges?' · '+L('⚠ Tiến trình giảm: ','⚠ Progress loss: ')+protectedChanges:'');
+    list.append(p);
+   }
+  });
+  const recovery=document.createElement('details');
+  recovery.className='pkmsvv-guardian-recovery';
+  const summary=document.createElement('summary');
+  summary.textContent=L('Hai bản Save dự phòng','Two local fallback saves');
+  recovery.append(summary);
+  for(const [slot,label] of [['latest',L('Bản gần nhất','Latest')],
+    ['previous',L('Bản trước','Previous')]]){
+   const button=document.createElement('button');button.type='button';button.className='btn small';
+   button.style.margin='6px 7px 4px 0';button.textContent=label;
+   button.onclick=async()=>{
+    try{
+     const choice=guardian.previewRecovery?.().find(x=>x.slot===slot);
+     if(!choice?.available)throw Error(L('Bản này không có dữ liệu hợp lệ.','This backup is missing or invalid.'));
+     const key='pkmsvv.safe.v1.'+guardian.currentProfile+'.'+slot;
+     const text=localStorage.getItem(key);
+     if(!text||!guardian.good(text))throw Error(L('Không đọc được bản sao lưu.','Unable to read backup.'));
+     const target=JSON.parse(text);
+     if(!await reviewRestore(G.DB.save,target))return;
+     const done=guardian.restoreSnapshot(slot,true);
+     if(!done?.ok)throw Error(done?.reason||L('Không thể khôi phục.','Restore failed.'));
+     location.reload();
+    }catch(e){msg.textContent=L('Không thể khôi phục bản dự phòng: ','Could not restore fallback: ')+errorText(e);}
+   };
+   recovery.append(button);
+  }
+  wrap.append(recovery);
+ }
  function mount(box,prefix='pkmsvv-save'){
    if(!box||box.querySelector('.pkm-backup'))return;
    const wrap=document.createElement('div');wrap.className='pkm-backup';wrap.setAttribute('translate','no');
@@ -170,6 +223,7 @@ G.PKMSVVSaveUI=(()=>{
      )+'</p>';
    box.appendChild(wrap);
    const msg=wrap.querySelector('#'+prefix+'-msg'),file=wrap.querySelector('#'+prefix+'-file');
+   mountGuardianDetails(wrap,msg);
    wrap.querySelector('#'+prefix+'-export').onclick=async()=>{
      try{
        const data=backup(),filename='PokemonChuyenSinh-Save-'+new Date().toISOString().slice(0,10)+'.json';
