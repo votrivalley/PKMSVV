@@ -229,9 +229,10 @@
  }
  // Read-only status from Stage 2's existing rules; never alter or consume save.
  function rankOverview(s,x){
-  const max=5,rank=Number.isInteger(x?.rank)?Math.max(0,Math.min(max,x.rank)):0;
+  const max=5,api=typeof G!=='undefined'?G.PKMSVVBox2:null;
+  const species=x&&api?.speciesProgress?.(s,x.dex);
+  const rank=Math.max(0,Math.min(max,species?.rank??(Number.isInteger(x?.rank)?x.rank:0)));
   const cost=rank===max?0:rank+1;
-  const api=typeof G!=='undefined'?G.PKMSVVBox2:null;
   const enabled=!!(x&&valid(s)&&api?.valid?.(s)&&
    typeof api.candidateList==='function'&&typeof api.shards==='function');
   let copies=0,fragments=0;
