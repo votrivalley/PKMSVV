@@ -86,7 +86,7 @@
    if(!banner){banner=d.createElement('p');if(bottom?.parentElement===left)bottom.before(banner);else left.append(banner);}
    for(const extra of left.querySelectorAll('.pkmsvv-season-banner'))if(extra!==banner)extra.remove();
    banner.className='pkmsvv-save-banner';banner.setAttribute('role','note');
-   banner.textContent=L('💾 Thường xuyên sao lưu để tránh mất dữ liệu!','💾 Back up regularly to avoid losing your save!');
+   banner.textContent=L('💾 Thường xuyên sao lưu để tránh mất save!','💾 Back up regularly to avoid losing your save!');
    left.querySelector('.pkmsvv-offline-save-note')?.remove();
    const event=menu.querySelector('.pkmsvv-v15-event');
    if(event){
@@ -105,8 +105,14 @@
   if(typeof old==='function')G.MenuUI.open=function(...args){const result=old.apply(this,args);syncHome();return result;};
   d.addEventListener('click',e=>{if(e.target?.closest?.('#pkmsvv-menu-wiki'))Promise.resolve().then(mountPC);},true);
   const observer=new MutationObserver(()=>{
-   if(observerBusy||!$('#pkmsvv-wiki-overlay .pkmsvv-pc-grid'))return;
-   observerBusy=true;try{mountPC();}finally{observerBusy=false;}
+   if(observerBusy)return;
+   observerBusy=true;
+   try{
+    const event=$('#scr-menu .pkmsvv-v15-event span'),live=!!G.PKMSVVSeason?.nowActive?.();
+    const expected=live?L('Sương Ký Ức · 01–30/11 · 3 cảnh quan ngẫu nhiên','Memory Mist · Nov 1–30 · 3 landscape variants'):L('Chưa có sự kiện mới','No current events');
+    if(event&&event.textContent!==expected)syncHome();
+    mountPC();
+   }finally{observerBusy=false;}
   });
   observer.observe(d.body,{childList:true,subtree:true});
   syncHome();mountPC();
