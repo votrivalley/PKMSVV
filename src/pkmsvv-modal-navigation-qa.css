@@ -1,0 +1,15 @@
+/* High-contrast focus is required for every custom modal on keyboard and gamepad.
+ * Visual highlight is deliberate even when focus came from JS, not :focus-visible. */
+.pkmsvv-nav-focus,
+.pkmsvv-nav-focus:focus,
+.pkmsvv-nav-focus:focus-visible{
+ outline:3px solid #ffe06c!important;outline-offset:2px!important;
+ box-shadow:0 0 0 2px #081c2c,0 0 13px #ffe06c90!important;
+ position:relative;z-index:1
+}
+#pkmsvv-quick-region .pkmsvv-nav-focus{
+ outline-color:#fff2a4!important;box-shadow:0 0 0 3px #e9af44,0 0 19px #ffe39cbb!important
+}
+#pkmsvv-pokebox-overlay .pkmsvv-nav-focus{outline-color:#ffe9a0!important}
+#scr-item .pkmsvv-held-action.pkmsvv-nav-focus{border-color:#ffe06c!important}
+@media(prefers-reduced-motion:reduce){.pkmsvv-nav-focus{transition:none!important}}
