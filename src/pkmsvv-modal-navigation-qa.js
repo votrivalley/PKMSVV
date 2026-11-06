@@ -186,7 +186,9 @@
   wrapped._pkmsvvModalQA=true;
   pad.poll=wrapped;return true;
  }
- document.addEventListener('keydown',onKey,true);
+ // Window capture runs before legacy document handlers that otherwise steal
+ // Escape and focus the hidden story-name input behind the Region overlay.
+ (typeof window!=='undefined'?window:document).addEventListener('keydown',onKey,true);
  document.addEventListener('focusin',e=>{
   const root=active();
   if(root&&!root.contains(e.target))queue();
