@@ -219,9 +219,25 @@
   mons._pkmbxIndividualHub=true;
   return true;
  }
+ // Read-only status from Stage 2's existing rules; never alter or consume save.
+ function rankOverview(s,x){
+  const max=5,rank=Number.isInteger(x?.rank)?Math.max(0,Math.min(max,x.rank)):0;
+  const cost=rank===max?0:rank+1;
+  const api=typeof G!=='undefined'?G.PKMSVVBox2:null;
+  const enabled=!!(x&&valid(s)&&api?.valid?.(s)&&
+   typeof api.candidateList==='function'&&typeof api.shards==='function');
+  let copies=0,fragments=0;
+  if(enabled&&cost){
+   copies=api.candidateList(s,x.id).length;
+   fragments=api.shards(s,x.dex);
+  }
+  const available=enabled?Math.min(cost,copies+fragments):0;
+  return {rank,max,cost,copies,fragments,available,missing:Math.max(0,cost-available),
+   enabled,canRank:enabled&&cost>0&&available>=cost};
+ }
  function safeSelect(id){
   return !!box()?.selectInstance?.(id);
  }
  return {TEAM_MAX,valid,item,active,activeForDex,team,legacyTeam,isMember,toggleFavorite,toggleTeam,
-  reorderTeam,nature,ability,learned,useMint,useCapsule,canTeach,teach,installMons,safeSelect};
+  reorderTeam,nature,ability,learned,useMint,useCapsule,canTeach,teach,installMons,rankOverview,safeSelect};
 });
