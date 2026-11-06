@@ -124,3 +124,16 @@ test('Gen 1–9 wild waves never cross their generation even if upstream bags co
  assert.equal(JSON.stringify(input),preserved,'region filter must not mutate enemy source data');
  assert.equal(quick.enforceGeneration(input,9),input,'Sky Tower is intentionally mixed-generation');
 });
+
+test('The entire active Region uses a Gen-only bag, including between Spawner ticks',()=>{
+ const h=harness(),x=h.G.PKMSVVQuickRegion;
+ x.choose(0);
+ const enemies=h.G.Enemies;
+ const bag=enemies.bagAt();
+ assert.ok(bag.every(mon=>Number(mon.dex)>=1&&Number(mon.dex)<=151));
+ h.G.Game.toUI();
+ assert.deepEqual(enemies.bagAt().map(mon=>mon.dex),[1,152],'other modes retain native enemies');
+ const script=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-quick-region.js'),'utf8');
+ assert.match(script,/wrap\(G\.Enemies,'bagAt'/);
+ assert.doesNotMatch(script,/wrap\(G\.Spawner,'update'/);
+});
