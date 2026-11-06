@@ -38,7 +38,7 @@ fs.writeFileSync(path.join(dest,'POKEBOX-STAGE1-QA.txt'),[
  'Back up your original save OUTSIDE the app before enabling migration.',
  'Never publish this QA directory as production.',
  'Stage 2: Gacha instances and Rank A+C are test-only; never deploy as production.',
- 'Stage 3: Reforge Prism, kill-based pity and Kecleon 12%-daily slot are QA-only.',
+ 'Stage 3: Reforge Prism item available daily (one purchase/day) and kill-based pity are QA-only.',
  'Stage 4: Solo Rank traits + capped hybrid AoE + 5% cooldown; actual device QA pending.',
  'Hub UI: PokéBox replaces old picker; Pokédex becomes read-only evolution reference; Team 6, items/TM, Rank by individual.',
  ''].join('\n'), 'utf8');
