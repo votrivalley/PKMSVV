@@ -105,3 +105,22 @@ test('QA packages include chooser but production prepare script does not',()=>{
  }
  assert.doesNotMatch(fs.readFileSync(path.join(root,'scripts/prepare-game.cjs'),'utf8'),/pkmsvv-quick-region/);
 });
+
+
+test('Gen 1–9 wild waves never cross their generation even if upstream bags contain another Gen',()=>{
+ const h=harness(),quick=h.G.PKMSVVQuickRegion;
+ h.G.DEX_BY={12:{name:'Butterfree'},25:{name:'Pikachu'},152:{name:'Chikorita'},
+  252:{name:'Treecko'},387:{name:'Turtwig'}};
+ const input=[{dex:25},{dex:152},{dex:387},{dex:1025}];
+ const preserved=JSON.stringify(input);
+ for(let i=0;i<9;i++){
+  const out=quick.enforceGeneration(input,i);
+  const boundaries=[[1,151],[152,251],[252,386],[387,493],[494,649],
+   [650,721],[722,809],[810,905],[906,1025]];
+  const [low,high]=boundaries[i];
+  const eligible=Object.keys(h.G.DEX_BY).map(Number).filter(n=>n>=low&&n<=high);
+  if(eligible.length)assert.ok(out.every(x=>x.dex>=low&&x.dex<=high),'mixed generation in Region '+(i+1));
+ }
+ assert.equal(JSON.stringify(input),preserved,'region filter must not mutate enemy source data');
+ assert.equal(quick.enforceGeneration(input,9),input,'Sky Tower is intentionally mixed-generation');
+});
