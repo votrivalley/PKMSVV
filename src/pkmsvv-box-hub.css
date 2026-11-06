@@ -426,3 +426,22 @@
 @media(prefers-reduced-motion:reduce){
  #pkmsvv-pokebox-overlay .pkmbx-team-slot{animation:none!important}
 }
+
+/* Team Six: separate white collection tiles with dark legible text and gold edge. */
+#pkmsvv-pokebox-overlay .pkmbx-team-six .pkmbx-team-slot{
+ background:#f7faf6!important;color:#193e4c!important;
+ border:2px solid #e4b545!important;
+ box-shadow:inset 0 0 0 1px #fff4bd,0 2px 0 #a17927,0 0 9px #ffda7070!important;
+ opacity:1!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-team-six .pkmbx-team-slot span:not(.pkmbx-team-empty){
+ color:#15384a!important;font-weight:850;text-shadow:none!important
+}
+#pkmsvv-pokebox-overlay .pkmbx-team-six .pkmbx-team-slot .pkmbx-team-empty{color:#22626b}
+#pkmsvv-pokebox-overlay .pkmbx-team-six .pkmbx-team-slot.active{
+ background:#fff3d0!important;border-color:#d99b24!important;
+ box-shadow:inset 0 0 0 2px #fff,0 0 0 2px #c89027,0 0 14px #ffdc7b!important
+}
+#pkmsvv-pokebox-overlay .pkmbx-team-six .pkmbx-team-slot.focused{
+ outline:3px solid #ffeb7b!important;outline-offset:1px
+}
