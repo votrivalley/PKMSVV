@@ -68,10 +68,13 @@ async function main(){
   assert.equal(await evaluate('G.PKMSVVBox4.HIT_PROC'),0.16);
   assert.equal(await evaluate('G.PKMSVVBox4.HYBRID_MAX'),6);
   assert.equal(five,30);
-  const pureDex=await evaluate("(()=>{G.PKMSVVBoxHubUI.openDex();return ({overlay:!!document.querySelector('#pkmbx-dex-overlay'),search:!!document.querySelector('#pkmbx-dex-search'),hasEvolutionPane:!!document.querySelector('#pkmbx-dex-details'),itemActions:!!document.querySelector('#pkmbx-dex-overlay [data-hub-tm],#pkmbx-dex-overlay [data-pkmbx-use]'),cards:document.querySelectorAll('#pkmbx-dex-list button').length})})()");
+  const pureDex=await evaluate("(()=>{G.PKMSVVBoxHubUI.openDex();return ({overlay:!!document.querySelector('#pkmbx-dex-overlay'),search:!!document.querySelector('#pkmbx-dex-search'),hasEvolutionPane:!!document.querySelector('#pkmbx-dex-details'),itemActions:!!document.querySelector('#pkmbx-dex-overlay [data-hub-tm],#pkmbx-dex-overlay [data-pkmbx-use]'),cards:document.querySelectorAll('#pkmbx-dex-list button').length,insidePC:document.querySelector('#pkmsvv-pokebox-overlay')?.contains(document.querySelector('#pkmbx-dex-overlay')),tabs:[...document.querySelectorAll('#pkmbx-dex-overlay [data-pc-tab]')].map(b=>b.dataset.pcTab),pcHubHidden:document.querySelector('.pkmbx-hub-panel')?.hidden})})()");
   assert.equal(pureDex.overlay,true);
   assert.equal(pureDex.search,true);
   assert.equal(pureDex.hasEvolutionPane,true);
+  assert.equal(pureDex.insidePC,true,'Pokédex must be inside in-game PC');
+  assert.deepEqual(pureDex.tabs,['dex','box'],'Pokédex must be first PC tab');
+  assert.equal(pureDex.pcHubHidden,true,'PokéBox tab hidden while Pokédex is active');
   assert.equal(pureDex.itemActions,false,'Pokédex must remain read-only');
   assert.ok(pureDex.cards>0,'Pokédex must list species');
   const hasEvolution=await evaluate("!!(G.PKMSVV_EVOLUTION_DATA?.rules||[]).some(r=>r.from===1&&r.to===2)");
@@ -88,8 +91,8 @@ async function main(){
   assert.equal(hubScreen.rankTab,true);
   assert.equal(hubScreen.readOnlyDexHidden,true);
   const menuState=await evaluate("(()=>({oldMenu:document.querySelector('#scr-menu [data-go=dex] .pkmsvv-menu-label')?.textContent,second:document.querySelector('#pkmsvv-pokebox-button .pkmsvv-menu-label')?.textContent}))()");
-  if(menuState.oldMenu)assert.equal(menuState.oldMenu,'PokéBox');
-  if(menuState.second)assert.equal(menuState.second,'Pokédex');
+  if(menuState.oldMenu)assert.equal(menuState.oldMenu,'PC');
+  assert.equal(menuState.second,undefined,'no extra Pokédex tile on title menu');
 
   console.log('PASS Stage 4 real browser QA:',JSON.stringify({...state,rank5Hp:five,otherExceptions:errors.length}));
  }finally{
