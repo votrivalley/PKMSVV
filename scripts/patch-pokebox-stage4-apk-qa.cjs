@@ -6,6 +6,7 @@
  */
 const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..');
+const {copyRegionCovers}=require('./copy-region-covers.cjs');
 const decoded=path.resolve(process.argv[2]||'');
 if(!decoded||!fs.existsSync(path.join(decoded,'AndroidManifest.xml')))
  throw Error('Usage: node scripts/patch-pokebox-stage4-apk-qa.cjs <apktool-output>');
@@ -62,6 +63,7 @@ for(const filename of ['pkmsvv-box-stage1.css','pkmsvv-box-stage2.css','pkmsvv-b
  fs.copyFileSync(path.join(root,'src',filename),dest);
  if(!html.includes(filename))html=html.replace('</head>','<link rel="stylesheet" href="css/'+filename+'">\n</head>');
 }
+copyRegionCovers(web);
 html=html.replace(/<title>[^<]*<\/title>/,'<title>PokeBox QA — Not Production</title>');
 fs.writeFileSync(index,html);
 fs.writeFileSync(path.join(web,'POKEBOX-QA-ONLY.txt'),
