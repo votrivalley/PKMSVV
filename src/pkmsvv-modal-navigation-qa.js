@@ -99,9 +99,13 @@
   selected.click();return true;
  }
  function onKey(e){
-  if(e.defaultPrevented||e.altKey||e.ctrlKey||e.metaKey)return;
+  if(e.altKey||e.ctrlKey||e.metaKey)return;
   const root=active();if(!root)return;
   const key=String(e.key||'').toLowerCase(),code=e.code||'';
+  // Native key handlers may already call preventDefault for Escape or Digit3.
+  // These safety-critical modal actions must still reach the top overlay.
+  const critical=key==='escape'||key==='backspace'||key==='3'||code==='Digit3'||code==='Numpad3';
+  if(e.defaultPrevented&&!critical)return;
   // The item chooser renders a visible [3] label, which previously was inert.
   // Only intercept it while the actual held-item selection is showing.
   if(root.id==='scr-item'&&!isEditable(document.activeElement)&&
