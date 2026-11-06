@@ -62,7 +62,7 @@ test('Choose Kanto starts original native play exactly once and keeps biome plus
  assert.equal(h.G.World.biome,1,'world rotation cannot replace chosen Region');
  const bag=h.G.Spawner.update();
  assert.equal(bag.length,2);assert.ok(bag.every(y=>y.dex===12));
- assert.equal(h.G.Enemies.bagAt()[0].dex,999,'native bag restored after spawn tick');
+ assert.equal(h.G.Enemies.bagAt()[0].dex,12,'Gen restriction stays active between spawn ticks');
  h.G.Game.toUI();
  assert.equal(x.active,false);
  assert.equal(h.G.World.biome,17,'free world state restored');
@@ -132,7 +132,7 @@ test('The entire active Region uses a Gen-only bag, including between Spawner ti
  const bag=enemies.bagAt();
  assert.ok(bag.every(mon=>Number(mon.dex)>=1&&Number(mon.dex)<=151));
  h.G.Game.toUI();
- assert.deepEqual(enemies.bagAt().map(mon=>mon.dex),[1,152],'other modes retain native enemies');
+ assert.deepEqual(Array.from(enemies.bagAt(),mon=>mon.dex),[999,25],'other modes retain native enemies');
  const script=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-quick-region.js'),'utf8');
  assert.match(script,/wrap\(G\.Enemies,'bagAt'/);
  assert.doesNotMatch(script,/wrap\(G\.Spawner,'update'/);
