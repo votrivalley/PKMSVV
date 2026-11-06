@@ -5,7 +5,7 @@
  * No cloud, ranked rewards, guessed remote identity or combat debug shortcuts.
  */
 G.PKMSVVArenaPvp=(()=>{
- const COUNTDOWN=3,DUEL=180,HP=320,RADIUS=18,FRAME_RATE=.13;
+ const COUNTDOWN=3,DUEL=180,HP=320,RADIUS=18,FRAME_RATE=.13,RESYNC_COOLDOWN=1.2;
  const $=id=>document.getElementById(id);
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  const clamp=(n,lo,hi)=>Math.max(lo,Math.min(hi,Number.isFinite(Number(n))?Number(n):lo));
@@ -15,6 +15,7 @@ G.PKMSVVArenaPvp=(()=>{
     members().length===2&&members().every(m=>!m.bot&&typeof m.uid==='string');
  let active=false,host=false,uid='',hostUid='',seed=null,people=[],hp={},stage='idle',matchType='arena',round=1,scores={};
  let elapsed=0,serial=0,received=-1,frameClock=0,winner=null,casts=new Map(),orbClock=0;
+ let lastSyncRequest=-Infinity,lastSyncReply=-Infinity,lastSnapshotAt=-Infinity;
  let element=null,result=null;
  // The Host already repeats "apvp" result snapshots each frame. The only
  // fragile one-off was its exit packet. The lobby's authoritative open flag
@@ -54,6 +55,7 @@ G.PKMSVVArenaPvp=(()=>{
  function cleanup(){
   active=false;host=false;stage='idle';winner=null;people=[];hp={};matchType='arena';round=1;scores={};casts.clear();
   frameClock=0;orbClock=0;elapsed=0;received=-1;matchRoom='';startedWhileClosed=false;
+  lastSyncRequest=-Infinity;lastSyncReply=-Infinity;lastSnapshotAt=-Infinity;
   if(element){element.remove();element=null;}
   if(result){result.remove();result=null;}
   const count=$('pkmsvv-arena-pvp-count');if(count)count.remove();
@@ -93,6 +95,7 @@ G.PKMSVVArenaPvp=(()=>{
   if(!cfg.members.some(m=>m.uid===uid))return false;
   people=cfg.members.map(m=>({uid:m.uid,name:String(m.name||'Trainer').slice(0,24),dex:m.dex}));
   seed=cfg.seed;active=true;stage='countdown';elapsed=0;winner=null;
+  serial=0;received=-1;lastSyncRequest=-Infinity;lastSyncReply=-Infinity;lastSnapshotAt=-Infinity;
   matchType=cfg.mode;round=1;scores=Object.fromEntries(people.map(m=>[m.uid,0]));
   hp=Object.fromEntries(people.map(m=>[m.uid,HP]));
   normalize(pl);
@@ -173,6 +176,19 @@ G.PKMSVVArenaPvp=(()=>{
   sendState(true);
   return true;
  }
+ // App-switch, packet loss and returning from Android background may skip
+ // result frames. Request a fresh Host snapshot for THIS room and match only.
+ function requestSync(reason='resume'){
+  if(!active||host||!mode()||!matchRoom||!hostUid)return false;
+  const now=performance.now()/1000;
+  if(now-lastSyncRequest<RESYNC_COOLDOWN)return false;
+  lastSyncRequest=now;
+  const request={k:'apvp-sync-request',seed,room:matchRoom,matchType,
+   lastSeq:received,reason:String(reason).slice(0,20)};
+  if(typeof G.Net?.toHost==='function')G.Net.toHost(request);
+  else G.Net?.send?.(hostUid,request);
+  return true;
+ }
  function sendState(force=false){
   if(!mode()||!host)return;
   if(!force&&frameClock>0)return;
@@ -185,8 +201,11 @@ G.PKMSVVArenaPvp=(()=>{
   if(!active||!data||from!==hostUid||host||data.k!=='apvp'||
      data.matchType!==matchType||
      data.seed!==seed||!Number.isSafeInteger(data.seq)||data.seq<=received)return;
-  received=data.seq;
   if(!['countdown','fight','result'].includes(data.stage))return;
+  // A terminal result is immutable for this seed. Later packets cannot
+  // resurrect a fight or change its winner even with a greater sequence.
+  if(stage==='result'&&data.stage!=='result')return;
+  received=data.seq;lastSnapshotAt=performance.now()/1000;
   stage=data.stage;elapsed=clamp(data.time,0,DUEL+COUNTDOWN+5);
   round=clamp(data.round,1,3);
   for(const m of people)scores[m.uid]=clamp(data.scores?.[m.uid],0,3);
@@ -304,11 +323,20 @@ G.PKMSVVArenaPvp=(()=>{
   G.Net.on((from,data)=>{
    if(!active)return;
    if(data?.k==='apvp'){receive(from,data);return;}
+   if(data?.k==='apvp-sync-request'){
+    if(host&&from===peerId(uid)&&data.seed===seed&&data.room===matchRoom&&
+       data.matchType===matchType&&['countdown','fight','result'].includes(stage)){
+     const at=performance.now()/1000;
+     if(at-lastSyncReply>=.15){lastSyncReply=at;sendState(true);}
+    }
+    return;
+   }
    if(from===hostUid&&data?.k==='apvp-exit'&&data.seed===seed){
     exit(false);return;
    }
    if(host&&from===peerId(uid)&&data?.k==='apvp-exit-request'&&data.seed===seed){
-    winner=uid;stage='result';sendState(true);return;
+    if(stage!=='result'){winner=uid;stage='result';sendState(true);}
+    return;
    }
    if(host&&stage==='fight'&&from===peerId(uid)&&data?.k==='f'&&Array.isArray(data.ev)){
     for(const e of data.ev.slice(0,28))
@@ -361,16 +389,25 @@ G.PKMSVVArenaPvp=(()=>{
    if(what==='room'&&active&&!host&&startedWhileClosed&&matchRoom&&
       room?.id===matchRoom&&room.mode===matchType&&room.open===true)
     exit(false);
+   if(what==='room-closed'&&active&&!host)exit(false); // No stranded guest after Wi-Fi disconnect.
   });
   G.Net.onPeer?.((from,state)=>{
-   if(active&&host&&from===peerId(uid)&&['closed','failed'].includes(state)){
-    winner=uid;stage='result';render(); // Guest has left: show forfeit even without 2-member room.
+   if(!active||from!==peerId(uid))return;
+   if(host&&['closed','failed'].includes(state)&&stage!=='result'){
+    winner=uid;stage='result';sendState(true);render();
    }
+   if(!host&&['direct','connected','open'].includes(state))requestSync('peer-connected');
   });
+  // Hidden WebView/Android may freeze animation timers; request sync
+  // immediately on resume rather than waiting for the next render tick.
+  document.addEventListener?.('visibilitychange',()=>{
+   if(!document.hidden)requestSync('visibility');
+  });
+  if(typeof window!=='undefined')window.addEventListener?.('pageshow',()=>requestSync('pageshow'));
   return true;
  }
  install();
- return {begin,cleanup,update,receive,strike,canCast,loadout,render,exit,COUNTDOWN,DUEL,HP,
+ return {begin,cleanup,update,receive,strike,canCast,loadout,render,exit,requestSync,COUNTDOWN,DUEL,HP,
   get active(){return active},get stage(){return stage},get winner(){return winner},
   get health(){return {...hp}},get host(){return host},get matchType(){return matchType},get round(){return round},get scores(){return {...scores}}};
 })();
