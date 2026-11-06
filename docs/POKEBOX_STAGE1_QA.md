@@ -157,3 +157,16 @@ Local browser smoke tests are **not yet verified**: sandbox Chromium could not n
 - **PC refers to the in-game Pokémon computer**, not the Windows desktop build. The title menu now has a single **PC** entry. Inside it, the first tab is **Pokédex** (red Gen-1 vector icon) and the second is **PokéBox**, sharing one PC modal. The previous separate Pokédex title-menu button has been removed. Existing Bag/Ranks actions that open PokéBox still go directly to its tab.
 - Berry Rescue normal/easy modes reuse the **exact custom Egg Rush (Tranh Trứng) soundtrack** from bundled custom-music/eggrush.ogg, not the old forest track. Begin starts it immediately; the Berry-specific G.Audio.music wrapper also retains it during boss/biome refresh and releases routing after the mode ends.
 - Added browser smoke assertions for the unified PC and a dedicated Berry soundtrack routing test. Keep both changes on the isolated QA branch until the full real-device verification passes.
+
+
+## 2026-11-06 — PokéBox V2 Rank visibility (user screenshot reference)
+
+**Status: implemented as UI-only improvements on `feature/pokebox-stage1-isolated-qa`; NOT merged or deployed.** Inspired by readable PokéLit information hierarchy, without reusing its artwork, colors or code. Retain PKMSVV dark teal and gold identity.
+
+- Each individual card shows **5 Rank stars**, not 9: internal Stage 2 has `MAX_RANK=5`, current rank costs are 1/2/3/4/5 exact-species materials. The right profile shows stars, Rank n/5, current HP/damage bonus, next Rank preview and Rank 4 cooldown preview.
+- Rank progression uses `Hub.rankOverview()` calling the existing `PKMSVVBox2.candidateList()` and `shards()`. Only **eligible, unprotected, unselected, non-Shiny, Rank 0, same-species** individuals and species Rank Shards count. Ready state is determined from *real eligible materials*, not from the simple xN duplicate badge. At Rank 5 it always indicates max and never suggests a sixth level.
+- Each grid card displays **×N individuals of that species**; duplicates are **not collapsed** because Nature, Ability, Shiny, upgrades and favorites are per individual. Badge xN is a collection count, **not material count**.
+- Added quick filter `Có thể nâng Rank` / `Rank ready`, sorting by Dex, name, Rank, duplicate count or rarity, plus an accessible shown/total counter. Separate 6-slot Ready Team and Favorites remain unchanged.
+- Legacy/unmigrated saves display an explicitly labeled preview and cannot falsely claim valid rank materials. UI reads save only; it neither converts old saves nor edits Rank, inventory, team or gacha automatically.
+- CSS adapts from six columns on desktop to three on narrow layouts. Separate Rank material confirmation remains the only action that can consume eligible resources; the summary itself cannot.
+- Validation completed here: JavaScript syntax parsing, isolated dynamic overview smoke for valid copies, protected favorites and shards, and source-level UI assertions. **Full Node suite and real Chromium/Windows/Android QA have not yet been run for this change.** Do not publish before device QA and persistence/regression validation.
