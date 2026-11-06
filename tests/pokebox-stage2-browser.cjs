@@ -93,6 +93,15 @@ async function main(){
   const menuState=await evaluate("(()=>({oldMenu:document.querySelector('#scr-menu [data-go=dex] .pkmsvv-menu-label')?.textContent,second:document.querySelector('#pkmsvv-pokebox-button .pkmsvv-menu-label')?.textContent}))()");
   if(menuState.oldMenu)assert.equal(menuState.oldMenu,'PC');
   assert.equal(menuState.second,undefined,'no extra Pokédex tile on title menu');
+  assert.equal(await evaluate("!!G.PKMSVVQuickRegion"),true,'QuickRegion module must load');
+  const preplay=await evaluate("(()=>{const play=document.querySelector('#scr-menu [data-go=play]');if(!play)return {missingPlay:true};const before=G.Game?.state;play.click();const overlay=document.querySelector('#pkmsvv-quick-region');const out={missingPlay:false,before,after:G.Game?.state,open:!!overlay&&!overlay.hidden,count:overlay?.querySelectorAll('.pkmsvv-quick-region-card').length,available:overlay?.querySelectorAll('.pkmsvv-quick-region-card:not(:disabled)').length,active:!!G.PKMSVVQuickRegion.active};G.PKMSVVQuickRegion.close();return out})()");
+  assert.equal(preplay.missingPlay,false,'the native Chơi ngay button must be found');
+  assert.equal(preplay.open,true,'native Chơi ngay click must open Region selection');
+  assert.equal(preplay.count,10,'Kanto through Sky Pillar must be shown');
+  assert.ok(preplay.available>=1,'Kanto must remain playable for fresh saves');
+  assert.equal(preplay.active,false,'viewing regions must NOT start combat');
+  assert.equal(preplay.after,preplay.before,'the menu click must NOT start a run before selecting Region');
+
 
   console.log('PASS Stage 4 real browser QA:',JSON.stringify({...state,rank5Hp:five,otherExceptions:errors.length}));
  }finally{
