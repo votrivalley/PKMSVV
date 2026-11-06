@@ -79,3 +79,28 @@ test('Save UI requires visible comparison and cannot silently overwrite imported
  assert.match(src,/guardian\?\.beginTransaction/);
  assert.match(src,/location.reload\(\)/);
 });
+
+test('committed purchase is journaled once; failed or pending DB transaction cannot replace safe latest',async()=>{
+ const initial=save(),data=new Map([[SAVE,JSON.stringify(initial)]]),events={};
+ const storage={getItem:k=>data.get(k)||null,setItem(k,v){data.set(k,String(v))}};
+ const G={DB:{commit(){return true}}},window={addEventListener(k,fn){events[k]=fn}};
+ const document={hidden:false,addEventListener(k,fn){events[k]=fn}};
+ vm.runInNewContext(src,{G,window,document,localStorage:storage,
+  Date,Math,JSON,console,setInterval(){}});
+ const guardian=window.PKMSVVSaveGuardian;
+ assert.equal(G.DB._pkmsvvGuardianV2Hook,true);
+ const next=structuredClone(initial);next.coins=650;next.tickets.t1=2;
+ data.set(SAVE,JSON.stringify(next));G.DB.commit();
+ assert.deepEqual(JSON.parse(data.get(HEAD+'latest')),next);
+ assert.equal(guardian.journal().at(-1).type,'db-commit');
+ const count=guardian.journal().length;
+ G.DB.commit();assert.equal(guardian.journal().length,count,'unchanged save creates no duplicate journal row');
+ G.DB.commit=()=>false;
+ const failure=structuredClone(next);failure.coins=100;data.set(SAVE,JSON.stringify(failure));
+ assert.equal(G.DB.commit(),false);
+ assert.equal(guardian.journal().length,count,'false commit does not create new transaction');
+ const token=guardian.beginTransaction('shop');
+ assert.ok(token);assert.equal(guardian.snapshot(),false);
+ assert.deepEqual(JSON.parse(data.get(HEAD+'latest')),next);
+ guardian.endTransaction(token,false);
+});
