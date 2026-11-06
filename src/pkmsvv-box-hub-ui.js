@@ -159,7 +159,7 @@
   b.innerHTML='<canvas width="76" height="76"></canvas>'+
    '<span class="pkmbx-name">'+clean(monName(it.dex))+'</span>'+
    '<small>#'+it.dex+(it.shiny?' ✨':'')+'</small>'+
-   '<span class="pkmbx-slot-meta">'+rankStars(it.rank)+
+   '<span class="pkmbx-slot-meta">'+rankStars(progress?.rank??it.rank)+
     (duplicates>1?'<span class="pkmbx-stack" title="'+L('Số cá thể cùng loài','Individuals of this species')+'">×'+duplicates+'</span>':'')+'</span>'+
    '<span class="pkmbx-mini-icons">'+(it.favorite?'★ ':'')+(team?'⑥ ':'')+
     (it.id===selected?'✓':'')+'</span>';
@@ -204,6 +204,7 @@
   const progress=Hub.rankOverview(s,it);
   const allForms=listPreview().filter(x=>x.dex===it.dex);
   const normalForm=allForms.find(x=>!x.shiny),shinyForm=allForms.find(x=>x.shiny);
+  const sharedFav=allForms.some(x=>x.favorite);
   profile.innerHTML='<div class="pkmbx-hub-hero"><canvas id="pkmbx-hero" width="176" height="176"></canvas>'+
     '<div><strong>'+clean(monName(it.dex))+'</strong><p>#'+it.dex+' · Rank '+progress.rank+'/5</p>'+
     '<p>'+types.map(typeName).map(clean).join(' · ')+'</p></div></div>'+
@@ -222,7 +223,7 @@
     '<button class="btn small gold" id="pkmbx-use" '+(G.DB?.guest||isCurrent?'disabled':'')+'>'+
      (isCurrent?L('✓ Đang sử dụng','✓ Active'):L('✓ Chọn ra trận','✓ Set Active'))+'</button>'+
     '<button class="btn small" id="pkmbx-star" '+(G.DB?.guest?'disabled':'')+'>'+
-     (it.favorite?L('★ Bỏ yêu thích','★ Unfavorite'):L('☆ Yêu thích','☆ Favorite'))+'</button>'+
+     (sharedFav?L('★ Bỏ yêu thích','★ Unfavorite'):L('☆ Yêu thích','☆ Favorite'))+'</button>'+
     '<button class="btn small" id="pkmbx-team" '+(G.DB?.guest?'disabled':'')+'>'+
      (member?L('− Rút khỏi đội','− Remove from Team'):L('+ Vào đội hình','+ Add to Team'))+'</button>'+
     '</div><div class="pkmbx-hub-tabs">'+
@@ -242,7 +243,7 @@
    }else legacySelect(it);
    G.UI?.toast?.(L('Đã chọn ','Selected ')+monName(it.dex),2400);
   });
-  profile.querySelector('#pkmbx-star').onclick=()=>saveAction(()=>ready?Hub.toggleFavorite(it.id):legacyFavorite(it));
+  profile.querySelector('#pkmbx-star').onclick=()=>saveAction(()=>ready?Hub.toggleFavorite(normalForm?.id||it.id):legacyFavorite(normalForm||it));
   profile.querySelector('#pkmbx-team').onclick=()=>saveAction(()=>Hub.toggleTeam(it.id));
   for(const b of profile.querySelectorAll('[data-box-tab]'))
    b.onclick=()=>{view=b.dataset.boxTab;renderBox();};
@@ -295,10 +296,11 @@
   };
  }
  function renderRank(host,it,ready){
-  const data=G.PKMSVVBox2?.formatRank(it.rank);
-  host.innerHTML='<section class="pkmbx-hub-rank"><h3>⭐ Rank '+it.rank+'/5</h3>'+
+  const rank=Hub.rankOverview(currentSave(),it).rank;
+  const data=G.PKMSVVBox2?.formatRank(rank);
+  host.innerHTML='<section class="pkmbx-hub-rank"><h3>⭐ Rank '+rank+'/5</h3>'+
     '<p>'+L('HP & sát thương: ','HP & damage: ')+'+'+(data?.hp||0)+'%'+
-    (it.rank>=4?' · '+L('Hồi chiêu −5%','Cooldown −5%'):'')+'</p>'+
+    (rank>=4?' · '+L('Hồi chiêu −5%','Cooldown −5%'):'')+'</p>'+
     
     '<button id="pkmbx-rank-direct" class="btn gold" '+(!ready?'disabled':'')+'>'+
      L('⭐ Nâng Rank / Chọn đặc tính','⭐ Rank Up / Choose Trait')+'</button></section>';
