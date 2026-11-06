@@ -133,7 +133,7 @@ test('LAN and Direct-Wi-Fi provide a shared per-match epoch when native Co-op se
  assert.equal(guest.api.session.seed,'2');
  const server=fs.readFileSync(path.join(__dirname,'../lan-server/server.cjs'),'utf8');
  const wifi=fs.readFileSync(path.join(__dirname,'../src/lan/wifi-bus.js'),'utf8');
- assert.match(server,/matchSerial:room\\.matchSerial/);
- assert.match(server,/r\\.open&&m\\.open===false/);
- assert.match(wifi,/room\\.open&&data\\.open===false/);
+ assert.match(server,/matchSerial:room\.matchSerial/);
+ assert.match(server,/r\.open&&m\.open===false/);
+ assert.match(wifi,/room\.open&&data\.open===false/);
 });
