@@ -119,3 +119,21 @@ test('late Host finish response for an old match cannot finish a newly started m
  assert.equal(host.api.terminal,null,'old finish must not publish a terminal for the new seed');
  assert.equal(host.awardCount,0);
 });
+
+test('LAN and Direct-Wi-Fi provide a shared per-match epoch when native Co-op seed is absent',()=>{
+ const guest=participant('guest');
+ guest.room.matchSerial=1;
+ guest.G.Coop.begin({mode:'coop',host:'host'});
+ assert.equal(guest.api.session.seed,'1');
+ const old={k:'pkmsvv-match-terminal-v1',room:guest.room.id,host:'host',mode:'coop',seed:'1',finished:true};
+ guest.room.matchSerial=2;
+ guest.G.Coop.begin({mode:'coop',host:'host'});
+ guest.emit('host',old);
+ assert.equal(guest.api.session.finished,false,'old round must not close newly started round');
+ assert.equal(guest.api.session.seed,'2');
+ const server=fs.readFileSync(path.join(__dirname,'../lan-server/server.cjs'),'utf8');
+ const wifi=fs.readFileSync(path.join(__dirname,'../src/lan/wifi-bus.js'),'utf8');
+ assert.match(server,/matchSerial:room\\.matchSerial/);
+ assert.match(server,/r\\.open&&m\\.open===false/);
+ assert.match(wifi,/room\\.open&&data\\.open===false/);
+});
