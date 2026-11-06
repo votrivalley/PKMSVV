@@ -205,11 +205,18 @@ test('clean PokéBox UI keeps six visible slots and relocates migration to Save 
  assert.match(css,/height:70px/);
 });
 
-test('Pokédex is first inside the game PC, never another main-menu tile',()=>{
+test('Original PC is the only main-menu PC and provides Pokédex/PokéBox/Upgrades',()=>{
  const src=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub-ui.js'),'utf8');
  const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub.css'),'utf8');
- assert.match(src,/label.textContent='PC'/);
- assert.match(src,/if\(icon\)icon.textContent='🖥️'/);
+ const clean=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pc-menu-clean-qa.js'),'utf8');
+ assert.match(src,/if\(original&&extra\)extra.remove\(\)/);
+ assert.match(src,/pkmsvv-menu-wiki/);
+ assert.match(clean,/pkmsvv-pc-dex/);
+ assert.match(clean,/pkmsvv-pc-box/);
+ assert.match(clean,/pkmsvv-pc-upgrades/);
+ assert.match(clean,/pkmsvv-v15-event/);
+ assert.match(clean,/pkmsvv-save-banner/);
+ assert.match(clean,/restorePartner/);
  assert.match(src,/openDex\(\)/);
  assert.match(src,/function showPC\(which\)/);
  assert.match(src,/bindPcTabs\(dexPane\)/);
