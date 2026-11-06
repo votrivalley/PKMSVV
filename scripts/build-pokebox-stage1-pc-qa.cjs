@@ -33,7 +33,7 @@ fs.writeFileSync(asarPath,bytes);
 const out=path.join(dest,'resources/lan-site/game');
 fs.copyFileSync(path.join(root,'src/pkmsvv-box-stage1.js'),path.join(out,'js/ui/pkmsvv-box-stage1.js'));
 fs.copyFileSync(path.join(root,'src/pkmsvv-box-stage1.css'),path.join(out,'css/pkmsvv-box-stage1.css'));
-for(const [filename,sub] of [['pkmsvv-box-stage2.js','js/ui'],['pkmsvv-box-stage2-ui.js','js/ui'],['pkmsvv-box-stage2.css','css'],['pkmsvv-box-stage3.js','js/ui'],['pkmsvv-box-stage3.css','css'],['pkmsvv-box-stage4.js','js/ui'],['pkmsvv-box-hub.js','js/ui'],['pkmsvv-box-hub-ui.js','js/ui'],['pkmsvv-box-hub.css','css',['pkmsvv-quick-region.js','js/ui'],['pkmsvv-quick-region.css','css']]])
+for(const [filename,sub] of [['pkmsvv-box-stage2.js','js/ui'],['pkmsvv-box-stage2-ui.js','js/ui'],['pkmsvv-box-stage2.css','css'],['pkmsvv-box-stage3.js','js/ui'],['pkmsvv-box-stage3.css','css'],['pkmsvv-box-stage4.js','js/ui'],['pkmsvv-box-hub.js','js/ui'],['pkmsvv-box-hub-ui.js','js/ui'],['pkmsvv-box-hub.css','css'],['pkmsvv-quick-region.js','js/ui'],['pkmsvv-quick-region.css','css']])
  fs.copyFileSync(path.join(root,'src',filename),path.join(out,sub,filename));
 const entry=path.join(out,'index.html');let html=fs.readFileSync(entry,'utf8');
 if(!html.includes('</head>')||!html.includes('</body>'))throw Error('PC QA entry changed');
