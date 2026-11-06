@@ -284,7 +284,13 @@ test('PokéBox V2 QA UI provides visible five-star rank, material bar and sortin
  assert.match(src,/Hub\.rankOverview\(s,x\)/);
  assert.match(src,/rank===3\?' · '/);
  assert.match(src,/shown\.sort\(/);
- assert.match(src,/rankStars\(it\.rank\)/);
+ assert.match(src,/rankStars\(progress\?\.rank\?\?it\.rank\)/);
+ assert.match(src,/const counts=new Map\(\),groups=new Map\(\)/);
+ assert.match(src,/data-box-variant="normal"/);
+ assert.match(src,/data-box-variant="shiny"/);
+ assert.match(src,/G\.DEX_ABIL\?\.\[infoDex\]/);
+ assert.match(src,/Possible Natures/);
+ assert.match(css,/grid-template-columns:minmax\(0,1\.75fr\) minmax\(330px,1fr\)/);
  assert.match(css,/\.pkmbx-hub-slot\.rank-ready/);
  const prod=fs.readFileSync(path.join(__dirname,'../scripts/prepare-game.cjs'),'utf8');
  assert.doesNotMatch(prod,/pkmsvv-box-hub-ui/,'V2 must remain isolated from production');
