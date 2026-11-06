@@ -240,3 +240,73 @@
 
 #pkmsvv-pokebox-overlay #pkmbx-ready{accent-color:#81d5c8}
 #pkmsvv-pokebox-overlay .pkmbx-rank-materials{font-variant-numeric:tabular-nums}
+
+/* Pokémon Hub QA — restore three tabs, keep original upgrade economy. */
+#pkmsvv-pokebox-overlay #pkmbx-upgrade-overlay[hidden]{display:none!important}
+#pkmsvv-pokebox-overlay #pkmbx-upgrade-overlay.pkmbx-upgrades-inside-pokemon{
+ position:relative;inset:auto;z-index:auto;display:flex;justify-content:center;
+ width:min(1280px,100%);height:min(96dvh,900px);min-height:0;overflow:auto;
+}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-panel{
+ box-sizing:border-box;display:flex;flex-direction:column;
+ width:100%;min-width:0;min-height:0;padding:16px 18px;
+ background:#10273a;border:2px solid #75bbc0;overflow:auto;
+ color:#ebf6fb;border-radius:13px;
+}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-heading{padding:15px 15px 11px;background:#17384b;border-radius:10px;border:1px solid #5b91a0}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-heading h3{color:#ffe1a0;margin:0 0 5px;font-size:23px}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-heading p{margin:0;color:#dce8ec;font-size:13px;line-height:1.55}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:14px 0}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-option{display:flex;flex-direction:column;gap:9px;background:linear-gradient(150deg,#1e4b59,#112c40);border:1px solid #84b6b8;border-radius:12px;padding:19px}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-option h4{color:#ffe7a8;font-size:20px;margin:0}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-option p{font-size:14px;color:#d8eaf0;margin:0;line-height:1.55}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-option .btn{margin-top:auto;min-height:46px;font-size:15px}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-symbol{font-size:34px;color:#ffda89}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-footnote{color:#d0e2eb;font-size:12px;background:#183849;border:1px solid #507c89;padding:12px;border-radius:8px}
+/* Keep the original game palette outside, restore the clean high-contrast
+   light Pokémon detail panel and prominent sprite inside Pokédex. */
+#pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab{flex:0 1 auto;min-width:135px;font-weight:800}
+#pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab.gold{background:#f4f9f7;color:#19384b;border-color:#efc475;box-shadow:inset 0 0 0 1px #eac16b}
+#pkmsvv-pokebox-overlay .pkmbx-hub-panel>.pkmbx-head h2,#pkmsvv-pokebox-overlay .pkmbx-dex-panel>.pkmbx-head h2,#pkmsvv-pokebox-overlay .pkmbx-upgrade-panel>.pkmbx-head h2{color:#ffe39f}
+#pkmsvv-pokebox-overlay .pkmbx-dex-panel{background:#102b3c}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details.pkmbx-profile{
+ background:linear-gradient(165deg,#f1faf8,#d7ecea);
+ border:3px solid #95bfbb;box-shadow:inset 0 0 0 2px #f7ffff;
+ color:#173747;min-height:360px;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-hub-hero{
+ display:flex;flex-direction:column;align-items:center;gap:8px;
+ border-bottom:1px solid #a6cac7;margin-bottom:9px;padding:7px 0 12px;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-hub-hero canvas{
+ width:185px;height:185px;max-width:100%;flex:0 0 auto;
+ image-rendering:pixelated;background:linear-gradient(145deg,#293e60,#172d42);
+ border:2px solid #e64a93;border-radius:7px;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-hub-hero strong{
+ color:#173746;font-size:27px;letter-spacing:-.3px
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-hub-hero p{color:#355e66;font-size:13px;margin:4px 0}
+#pkmsvv-pokebox-overlay .pkmbx-dex-badges{display:flex;flex-wrap:wrap;justify-content:center;gap:7px}
+#pkmsvv-pokebox-overlay .pkmbx-dex-badge{display:inline-block;background:#f58fbb;color:#193247;padding:4px 10px;border-radius:6px;font-weight:750}
+#pkmsvv-pokebox-overlay .pkmbx-dex-variants{display:flex;gap:8px;margin:9px 0}
+#pkmsvv-pokebox-overlay .pkmbx-dex-variants button{flex:1;min-height:37px;border-radius:7px;background:#cbd9d7;color:#274350;border:1px solid #9caead;font:inherit;cursor:pointer}
+#pkmsvv-pokebox-overlay .pkmbx-dex-variants button.active{background:#ffe9a1;border-color:#cfaa45}
+#pkmsvv-pokebox-overlay .pkmbx-dex-summary{border-top:1px solid #abcfcc;border-bottom:1px solid #abcfcc;margin:10px 0;padding:10px 0;color:#244553;line-height:1.65;font-size:13px}
+#pkmsvv-pokebox-overlay .pkmbx-dex-summary b{color:#143544}
+#pkmsvv-pokebox-overlay .pkmbx-dex-evo{background:#e5f2f0;border-color:#b4d5d1}
+#pkmsvv-pokebox-overlay .pkmbx-dex-evo h4{color:#164555}
+#pkmsvv-pokebox-overlay .pkmbx-dex-evo p{color:#3c616c}
+#pkmsvv-pokebox-overlay .pkmbx-dex-evo .btn{color:#173747;background:#f6faf7;border:1px solid #a4c8c3}
+@media(max-width:870px){
+ #pkmsvv-pokebox-overlay .pkmbx-upgrade-panel{padding:10px}
+ #pkmsvv-pokebox-overlay .pkmbx-upgrade-options{grid-template-columns:1fr}
+ #pkmsvv-pokebox-overlay .pkmbx-upgrade-option{padding:12px}
+ #pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab{min-width:0;flex:1;padding:5px 7px}
+ #pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-hub-hero canvas{width:145px;height:145px}
+}
+@media(max-width:510px){
+ #pkmsvv-pokebox-overlay .pkmbx-pc-tabs{gap:4px}
+ #pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab{font-size:11px;padding:3px 4px;min-height:36px}
+ #pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab svg{width:18px;height:18px}
+}
