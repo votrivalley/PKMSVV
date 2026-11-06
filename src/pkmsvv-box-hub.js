@@ -20,8 +20,24 @@
  function active(s=save()){
   return valid(s)?item(s,s.pkmsvvSelectedInstanceId):null;
  }
+ // Old saves can assemble a ready-to-play team without migrating to the
+ // individual schema. This is NOT a favorites list; no starred state changes.
+ function legacyTeam(s){
+  if(!s||s.pkmsvvBoxSchema!==undefined||!box()?.listLegacy)return [];
+  let available;
+  try{available=box().listLegacy(s)}catch(_){return [];}
+  const ids=new Set(available.map(x=>x.id));
+  const selected=available.find(x=>x.dex===Number(s.partner)&&x.shiny===!!s.partnerShiny)?.id||
+   available.find(x=>x.dex===Number(s.partner))?.id||null;
+  const incoming=Array.isArray(s.pkmsvvLegacyReady6)?s.pkmsvvLegacyReady6:(selected?[selected]:[]);
+  const seen=new Set();
+  return incoming.filter(id=>{
+   if(typeof id!=='string'||!ids.has(id)||seen.has(id))return false;
+   seen.add(id);return true;
+  }).slice(0,TEAM_MAX);
+ }
  function team(s=save()){
-  if(!valid(s))return [];
+  if(!valid(s))return legacyTeam(s);
   const incoming=Array.isArray(s.pkmsvvTeam6)?s.pkmsvvTeam6:
     s.pkmsvvSelectedInstanceId?[s.pkmsvvSelectedInstanceId]:[];
   const seen=new Set();
@@ -57,14 +73,38 @@
   });
  }
  function toggleTeam(id,s=save()){
+  if(!valid(s)){
+   if(!s||s.pkmsvvBoxSchema!==undefined||!G?.DB?.commit)
+    throw Error('Invalid PokéBox schema; ready team unchanged');
+   let allowed;
+   try{allowed=box()?.listLegacy?.(s).some(x=>x.id===id);}catch(_){allowed=false;}
+   if(!allowed)throw Error('Pokémon is not owned');
+   const original=clone(s),draft=clone(s),ready=legacyTeam(draft),index=ready.indexOf(id);
+   if(index>=0)ready.splice(index,1);
+   else{
+    if(ready.length>=TEAM_MAX)throw Error('Team of six is full');
+    ready.push(id);
+   }
+   draft.pkmsvvLegacyReady6=ready;
+   if(JSON.stringify(draft).length>(G.PKMSVVBox2?.MAX_SAVE_CHARS||1400000))
+    throw Error('Save too large for safe update');
+   try{
+    for(const key of Object.keys(s))delete s[key];
+    Object.assign(s,draft);
+    if(G.DB.commit(true)===false)throw Error('Could not save ready team');
+    return {team:ready.slice(),added:index<0};
+   }catch(e){
+    for(const key of Object.keys(s))delete s[key];
+    Object.assign(s,original);throw e;
+   }
+  }
   return atomic(s,draft=>{
    const x=item(draft,id);if(!x)throw Error('Pokémon not found');
    const list=team(draft),idx=list.indexOf(id);
    if(idx>=0)list.splice(idx,1);
    else{
     if(list.length>=TEAM_MAX)throw Error('Team of six is full');
-    list.push(id);
-    x.favorite=true; // team members are protected from accidental consumption
+    list.push(id); // Team membership is separate from Favorite
    }
    draft.pkmsvvTeam6=list;
    return {team:list.slice(),added:idx<0};
@@ -182,6 +222,6 @@
  function safeSelect(id){
   return !!box()?.selectInstance?.(id);
  }
- return {TEAM_MAX,valid,item,active,activeForDex,team,isMember,toggleFavorite,toggleTeam,
+ return {TEAM_MAX,valid,item,active,activeForDex,team,legacyTeam,isMember,toggleFavorite,toggleTeam,
   reorderTeam,nature,ability,learned,useMint,useCapsule,canTeach,teach,installMons,safeSelect};
 });
