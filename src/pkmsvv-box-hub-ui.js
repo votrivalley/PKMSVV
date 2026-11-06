@@ -499,18 +499,16 @@
  }
  function closeDex(){closeBox();}
  function syncMenu(){
-  const pc=doc.querySelector('#scr-menu [data-go="dex"]');
-  if(!pc)return;
-  // PC contains Pokédex and PokéBox. Never insert a second title-menu item.
+  const extra=doc.querySelector('#scr-menu [data-go="dex"]');
+  const original=doc.querySelector('#scr-menu #pkmsvv-menu-wiki');
   $('pkmsvv-pokebox-button')?.remove();
-  pc.setAttribute('translate','no');
-  const icon=pc.querySelector('.mi-ico'),label=pc.querySelector('.pkmsvv-menu-label');
-  if(icon)icon.textContent='🖥️';
-  if(label)label.textContent='PC';
-  else pc.innerHTML='<span class="mi-ico">🖥️</span><span class="pkmsvv-menu-copy">'+
-    '<span class="pkmsvv-menu-label">PC</span><small>Pokédex · PokéBox</small></span>';
-  const sub=pc.querySelector('small');
-  if(sub)sub.textContent='Pokédex · PokéBox';
+  // Keep the original PC that already owns Support, Mega, Berry and the guide.
+  // Only remove the newer duplicated launcher, never the real PC.
+  if(original&&extra)extra.remove();
+  if(original){
+   const sub=original.querySelector('small');
+   if(sub)sub.textContent=L('Pokédex · PokéBox · Nâng cấp · Hỗ trợ · Mega · Berry','Pokédex · PokéBox · Upgrades · Support · Mega · Berries');
+  }
  }
  // Keep migration in Save Management, never in the regular PokéBox UI.
  // It is explicit and reversible: original JSON is saved under the profile
