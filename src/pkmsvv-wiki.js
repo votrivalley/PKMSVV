@@ -180,12 +180,13 @@ G.PKMSVVWiki=(()=>{
    [tr('🔗 Bond / Fusion tự do','🔗 Free Bond Fusion'),
     tr('Ghép 2 kỹ năng đã học bất kỳ. Miễn phí 1 lần/trận; kiếm thêm Bond từ huyền thoại khe nứt. Tối đa 4 kỹ năng/nhóm, hồi chiêu riêng. Dấu 🔗 báo kỹ năng có thể ghép. 10 cặp dưới đây là gợi ý.',
        'Link any 2 learned moves. One free Fusion per match; earn more Bonds from Rift legendaries. Up to 4 moves per group, each with its own cooldown. 🔗 marks compatible moves. The 10 pairs below are suggestions.')],
-   [tr('✨ Sương Ký Ức · Sự kiện mùa','✨ Memory Mist · Seasonal Event'),
-    tr('1–30/11/2026 (UTC): ba cảnh quan Lá Thu, Sương Lam và Đom Đóm chọn theo seed trận. Chỉ đổi trang trí hình ảnh ở Solo PvE và Co-op Sống Sót; không thêm chỉ số, boss, Pokémon hoặc tiền.',
-       'November 1–30, 2026 (UTC): Amber Leaves, Blue Mist and Firefly Dusk visuals selected by run seed. Decoration only in solo PvE and Co-op Survival; no stats, bosses, Pokémon or currency.')]
+
   ];
+  // The completed Skill Awakening chapter does not need a permanent guide row.
+  const skillAwakeningDone=!!G.DB?.save?.pkmsvvChapter2Seen;
   // Put Fusion recipes above Mystery Orb in the knowledge accordion.
-  for(const [name,description] of articles.sort((a,b)=>(b[0].includes('Fusion')?1:0)-(a[0].includes('Fusion')?1:0))){
+  for(const [name,description] of articles.filter(([name])=>
+   !skillAwakeningDone||name!==tr('Thức tỉnh kỹ năng','Skill Awakening')).sort((a,b)=>(b[0].includes('Fusion')?1:0)-(a[0].includes('Fusion')?1:0))){
    const detail=document.createElement('div');detail.className='pkmsvv-pc-learn';
    const toggle=document.createElement('button');toggle.type='button';toggle.textContent='▸ '+name;
    toggle.setAttribute('aria-expanded','false');
