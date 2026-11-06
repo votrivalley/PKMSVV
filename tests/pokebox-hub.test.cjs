@@ -225,3 +225,56 @@ test('Original PC is the only main-menu PC and provides Pokédex/PokéBox/Upgrad
  assert.match(css,/pkmbx-dex-inside-pc\[hidden\]/);
  assert.match(css,/\.pkmbx-pc-tabs/);
 });
+
+
+test('Rank overview uses only Stage 2 eligible copies/shards and never mutates save',()=>{
+ const h=setup(),target=hub.item(h.s,'b1-6-n');
+ const plain=add(h.s),fav=add(h.s),inTeam=add(h.s),locked=add(h.s);
+ hub.toggleFavorite(fav.id,h.s);
+ hub.toggleTeam(inTeam.id,h.s);
+ locked.locked=true;
+ const saved=JSON.stringify(h.s);
+ const initial=hub.rankOverview(h.s,target);
+ assert.deepEqual({rank:initial.rank,cost:initial.cost,copies:initial.copies,fragments:initial.fragments,
+  available:initial.available,canRank:initial.canRank},{rank:0,cost:1,copies:1,fragments:0,
+  available:1,canRank:true});
+ assert.equal(JSON.stringify(h.s),saved,'render data must never consume copies or write to save');
+ plain.locked=true;
+ const noMaterial=hub.rankOverview(h.s,target);
+ assert.equal(noMaterial.canRank,false);
+ assert.equal(noMaterial.missing,1);
+ h.s.pkmsvvRankFragments={6:2};
+ target.rank=1;
+ const shards=hub.rankOverview(h.s,target);
+ assert.equal(shards.rank,1);
+ assert.equal(shards.cost,2);
+ assert.equal(shards.available,2);
+ assert.equal(shards.canRank,true);
+ assert.equal(shards.fragments,2);
+ target.rank=5;
+ const capped=hub.rankOverview(h.s,target);
+ assert.equal(capped.cost,0);
+ assert.equal(capped.canRank,false);
+ assert.equal(capped.rank,5);
+ const unknown=hub.rankOverview({...h.s,pkmsvvBoxSchema:100},target);
+ assert.equal(unknown.enabled,false,'unknown save schema must never offer Rank');
+ assert.equal(unknown.canRank,false);
+});
+
+test('PokéBox V2 QA UI provides visible five-star rank, material bar and sorting without live deploy',()=>{
+ const src=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub-ui.js'),'utf8');
+ const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub.css'),'utf8');
+ for(const key of ['pkmbx-rank-stars','pkmbx-rank-overview','pkmbx-rank-progress',
+  'pkmbx-rank-materials','pkmbx-rank-shortcut','pkmbx-stack','pkmbx-ready',
+  'pkmbx-sort','pkmbx-found-count']){
+  assert.ok(src.includes(key),'missing PokéBox V2 widget '+key);
+  assert.ok(css.includes(key),'missing PokéBox V2 style '+key);
+ }
+ assert.match(src,/Hub\.rankOverview\(s,x\)/);
+ assert.match(src,/rank===3\?' · '/);
+ assert.match(src,/shown\.sort\(/);
+ assert.match(src,/rankStars\(it\.rank\)/);
+ assert.match(css,/\.pkmbx-hub-slot\.rank-ready/);
+ const prod=fs.readFileSync(path.join(__dirname,'../scripts/prepare-game.cjs'),'utf8');
+ assert.doesNotMatch(prod,/pkmsvv-box-hub-ui/,'V2 must remain isolated from production');
+});
