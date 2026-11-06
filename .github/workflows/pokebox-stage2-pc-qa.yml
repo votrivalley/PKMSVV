@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: '22'
       - name: Run Stage 1 and Stage 1/2/3 save/regression tests
-        run: npm run test:pokebox:stage4 && npm run test:quick-region
+        run: npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs
       - name: Download successful signed v1.5.93 Windows baseline
         uses: actions/download-artifact@v4
         with:
@@ -41,6 +41,8 @@ jobs:
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/css/pkmsvv-quick-region.css
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-pc-menu-clean-qa.js
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/css/pkmsvv-pc-menu-clean-qa.css
+          test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-modal-navigation-qa.js
+          test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/css/pkmsvv-modal-navigation-qa.css
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/css/pkmsvv-box-stage3.css
           grep -q pkmsvv-box-stage4 dist/pokebox-stage4-pc-qa/resources/lan-site/game/index.html
       - uses: actions/upload-artifact@v4
