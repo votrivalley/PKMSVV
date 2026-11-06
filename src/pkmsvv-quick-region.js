@@ -11,6 +11,24 @@
  const NAMES=['Kanto','Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar','Paldea','Votri Valley'];
  const SYMBOLS=['🔥','🌳','🌊','❄️','⚙️','✨','🌴','🏟️','⛰️','🐉'];
  const REGION_COUNT=10;
+ const GEN_BOUNDS=[[1,151],[152,251],[252,386],[387,493],[494,649],
+  [650,721],[722,809],[810,905],[906,1025]];
+ // Guard the ordinary wild spawn bag independently of the Champion transform.
+ // It never modifies story bosses, Arena or Co-op encounters.
+ function enforceGeneration(bag,index){
+  const range=GEN_BOUNDS[index];
+  if(!Array.isArray(bag)||!range)return bag; // Region 10 deliberately mixes Gen.
+  const candidates=Object.keys(G.DEX_BY||{}).map(Number)
+   .filter(dex=>Number.isInteger(dex)&&dex>=range[0]&&dex<=range[1]&&G.DEX_BY[dex]);
+  if(!candidates.length)return bag; // Incomplete test registry: never erase waves.
+  return bag.map((def,i)=>{
+   if(!def||typeof def!=='object'||!Number.isInteger(Number(def.dex)))return def;
+   const dex=Number(def.dex);
+   if(dex>=range[0]&&dex<=range[1])return def;
+   const next=candidates[i%candidates.length];
+   return {...def,dex:next,name:G.DEX_BY[next]?.name||'Pokémon '+next};
+  });
+ }
  // Fixed names; the WebP files are copied from assets/region-covers/ into each QA build.
  const COVER_FILES=[
   '01-kanto.webp','02-johto.webp','03-hoenn.webp','04-sinnoh.webp',
@@ -194,10 +212,12 @@
   const index=regionIndex();
   if(index<0||getChampion()?.active||G.Coop?.active)return prev.apply(this,args);
   const enemies=G.Enemies,original=enemies?.bagAt;
-  if(typeof original!=='function'||typeof getChampion()?.regionizeBag!=='function')
-   return prev.apply(this,args);
+  if(typeof original!=='function')return prev.apply(this,args);
   enemies.bagAt=function(...params){
-   return getChampion().regionizeBag(original.apply(this,params),index);
+   const bag=original.apply(this,params);
+   const mapped=typeof getChampion()?.regionizeBag==='function'?
+    getChampion().regionizeBag(bag,index):bag;
+   return enforceGeneration(mapped,index);
   };
   try{return prev.apply(this,args);}
   finally{enemies.bagAt=original;}
@@ -211,5 +231,5 @@
   return out;
  });
  G.PKMSVVQuickRegion={open,close,choose,entries,unlocked,beginRun,endRun,
-  get active(){return regionIndex()>=0},get selectedRegion(){return regionIndex()}};
+  enforceGeneration,get active(){return regionIndex()>=0},get selectedRegion(){return regionIndex()}};
 })();
