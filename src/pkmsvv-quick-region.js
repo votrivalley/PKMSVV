@@ -11,6 +11,12 @@
  const NAMES=['Kanto','Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar','Paldea','Votri Valley'];
  const SYMBOLS=['🔥','🌳','🌊','❄️','⚙️','✨','🌴','🏟️','⛰️','🐉'];
  const REGION_COUNT=10;
+ // Fixed names; the WebP files are copied from assets/region-covers/ into each QA build.
+ const COVER_FILES=[
+  '01-kanto.webp','02-johto.webp','03-hoenn.webp','04-sinnoh.webp',
+  '05-unova.webp','06-kalos.webp','07-alola.webp','08-galar.webp',
+  '09-paldea.webp','10-sky-tower.webp'
+ ];
  // Local SVG pixel scenery: original artwork; no PokéLit resources are copied.
  const SCENE_PALETTES=[
   ['#5ba9e8','#bceef7','#348b63'],['#7975b9','#e8ab75','#a65c53'],
@@ -37,7 +43,9 @@
    '<rect width="192" height="100" fill="url(#s)"/><circle cx="165" cy="20" r="12" fill="#fff1cb" opacity=".8"/>'+
    '<path d="M0 77L36 49 68 68 116 42 152 63 192 44V100H0" fill="'+p[2]+'"/>'+
    LANDMARKS[i]+'</svg>';
-  return 'background-image:url("data:image/svg+xml,'+encodeURIComponent(svg)+'")';
+  // Layer the user-provided WebP above the original built-in SVG fallback.
+  const cover=COVER_FILES[i]||COVER_FILES[0];
+  return 'background-image:url("images/regions/'+cover+'"),url("data:image/svg+xml,'+encodeURIComponent(svg)+'")';
  }
 
  const title=(n)=>n===9?tr('Tháp Thiên Không','Sky Pillar'):NAMES[n];
@@ -125,12 +133,7 @@
     const lock=document.createElement('span');lock.className='region-lock';
     lock.textContent='🔒';art.append(lock);
    }
-   const avatarDex=[150,250,384,483,643,716,791,889,1007,384][x.index];
-   if(G.UI?.sprite&&G.DEX_BY?.[avatarDex]){
-    const sprite=document.createElement('canvas');
-    sprite.width=76;sprite.height=76;sprite.className='region-sprite';
-    try{G.UI.sprite(sprite,avatarDex,{scale:2,shiny:false});art.append(sprite);}catch(_){}
-   }
+   // The new cover art is landscape-only: no overlaid Pokémon sprites or shadows.
    const body=document.createElement('div');body.className='region-card-info';
    const name=document.createElement('strong');name.textContent=x.icon+' '+x.name;
    const diff=document.createElement('small');diff.className='region-diff';
