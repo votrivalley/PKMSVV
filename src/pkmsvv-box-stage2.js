@@ -39,6 +39,7 @@
  }
  function skinTraits(s,item){
   if(!item)return null;
+  if(!item.shiny)return item;
   const same=s?.pkmsvvBox?.filter(x=>x.dex===item.dex)||[];
   const base=same.find(x=>x.id==='b1-'+item.dex+'-n')||
    same.find(x=>!x.shiny&&x.rank>0)||same.find(x=>!x.shiny)||item;
