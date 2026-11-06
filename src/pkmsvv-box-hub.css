@@ -162,3 +162,39 @@
  #pkmsvv-pokebox-overlay .pkmbx-team-slot span:not(.pkmbx-team-empty){display:none}
  #pkmsvv-pokebox-overlay .pkmbx-hub-team-title h3{font-size:12px}
 }
+
+
+/* One in-game PC: Pokédex first, PokéBox second (not two main-menu entries). */
+#pkmsvv-pokebox-overlay .pkmbx-hub-panel[hidden],
+#pkmsvv-pokebox-overlay .pkmbx-dex-inside-pc[hidden]{display:none!important}
+#pkmsvv-pokebox-overlay #pkmbx-dex-overlay.pkmbx-dex-inside-pc{
+ position:relative;inset:auto;z-index:auto;isolation:initial;
+ display:flex;align-items:center;justify-content:center;
+ background:transparent;padding:0;width:min(1280px,100%);height:96dvh;
+ max-height:96dvh;min-width:0;overflow:hidden;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-overlay.pkmbx-dex-inside-pc[hidden]{display:none!important}
+#pkmsvv-pokebox-overlay #pkmbx-dex-overlay.pkmbx-dex-inside-pc>.pkmbx-dex-panel{
+ width:100%;height:100%;max-height:100%;box-sizing:border-box;
+ padding:16px 18px;
+}
+#pkmsvv-pokebox-overlay .pkmbx-pc-tabs{
+ display:flex;align-items:center;gap:7px;flex-shrink:0;
+ margin:3px 0 9px;padding:0 0 8px;border-bottom:1px solid #3b6276;
+}
+#pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab{
+ display:inline-flex;align-items:center;justify-content:center;gap:5px;
+ min-height:39px;padding:6px 13px;color:#d5e9ef;border:1px solid #628f9e;
+ background:#1c4053;border-radius:8px;font-size:14px;
+}
+#pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab.gold{
+ color:#193b4a;background:#ffe1a0;border-color:#e4bd60;
+}
+#pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab svg{
+ width:22px;height:22px;vertical-align:middle;
+}
+@media(max-width:620px){
+ #pkmsvv-pokebox-overlay #pkmbx-dex-overlay.pkmbx-dex-inside-pc{max-height:calc(100dvh - 20px);height:calc(100dvh - 20px);overflow:auto}
+ #pkmsvv-pokebox-overlay #pkmbx-dex-overlay.pkmbx-dex-inside-pc>.pkmbx-dex-panel{padding:10px;overflow:auto}
+ #pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab{font-size:12px;min-height:36px;padding:4px 9px}
+}
