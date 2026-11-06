@@ -56,8 +56,8 @@ async function main(){
   };
   await cmd('Runtime.enable');await cmd('Page.enable');
   await cmd('Page.navigate',{url:'http://127.0.0.1:'+srv.address().port+'/ai/game/'});
-  const query="(()=>({stage1:!!window.G?.PKMSVVBox,stage2:!!window.G?.PKMSVVBox2,stage3:!!window.G?.PKMSVVBox3,stage4:!!window.G?.PKMSVVBox4,hub:!!window.G?.PKMSVVBoxHub,hubUI:!!window.G?.PKMSVVBoxHubUI,individualMons:!!window.G?.Mons?._pkmbxIndividualHub,rankCombat:!!window.G?.Player?.prototype?._pkmbxStage4Installed,hooked:!!window.G?.Gacha?._pkmbxStage2Wrapped,traits:!!window.G?.Mons?._pkmbxStage2Traits,rankUi:!!window.G?.PKMSVVBox?._pkmbxRankUiWrapped,enemyHook:!!window.G?.Enemy?.prototype?._pkmsvvReforgeHurtWrapped,shopHook:!!window.G?.KecleonUI?.render?.toString?.().includes('draw()'),title:document.title}))()";
-  const state=await until(()=>evaluate(query).then(x=>x?.stage1&&x.stage2&&x.stage3&&x.stage4&&x.hub&&x.hubUI&&x.individualMons&&x.rankCombat&&x.hooked&&x.traits&&x.rankUi&&x.enemyHook&&x.shopHook?x:null),45000).catch(async err=>{
+  const query="(()=>({stage1:!!window.G?.PKMSVVBox,stage2:!!window.G?.PKMSVVBox2,stage3:!!window.G?.PKMSVVBox3,stage4:!!window.G?.PKMSVVBox4,hub:!!window.G?.PKMSVVBoxHub,hubUI:!!window.G?.PKMSVVBoxHubUI,menuClean:!!window.G?.PKMSVVMenuCleanQA,individualMons:!!window.G?.Mons?._pkmbxIndividualHub,rankCombat:!!window.G?.Player?.prototype?._pkmbxStage4Installed,hooked:!!window.G?.Gacha?._pkmbxStage2Wrapped,traits:!!window.G?.Mons?._pkmbxStage2Traits,rankUi:!!window.G?.PKMSVVBox?._pkmbxRankUiWrapped,enemyHook:!!window.G?.Enemy?.prototype?._pkmsvvReforgeHurtWrapped,shopHook:!!window.G?.KecleonUI?.render?.toString?.().includes('draw()'),title:document.title}))()";
+  const state=await until(()=>evaluate(query).then(x=>x?.stage1&&x.stage2&&x.stage3&&x.stage4&&x.hub&&x.hubUI&&x.menuClean&&x.individualMons&&x.rankCombat&&x.hooked&&x.traits&&x.rankUi&&x.enemyHook&&x.shopHook?x:null),45000).catch(async err=>{
    const last=await evaluate(query).catch(e=>({cdpError:e.message}));
    throw Error(err.message+'; last='+JSON.stringify(last)+'; scriptExceptions='+JSON.stringify(errors.slice(-8)));
   });
@@ -90,17 +90,35 @@ async function main(){
   assert.ok(hubScreen.abilityButtons>=1);
   assert.equal(hubScreen.rankTab,true);
   assert.equal(hubScreen.readOnlyDexHidden,true);
-  const menuState=await evaluate("(()=>({oldMenu:document.querySelector('#scr-menu [data-go=dex] .pkmsvv-menu-label')?.textContent,second:document.querySelector('#pkmsvv-pokebox-button .pkmsvv-menu-label')?.textContent}))()");
-  if(menuState.oldMenu)assert.equal(menuState.oldMenu,'PC');
-  assert.equal(menuState.second,undefined,'no extra Pokédex tile on title menu');
-  const menuDiagnostic=await evaluate("(()=>{const m=document.querySelector('#scr-menu');const buttons=[...m.querySelectorAll('.menu-right button.menu-item')].map(b=>({id:b.id,go:b.dataset.go,cls:b.className,text:b.innerText?.replace(/\\s+/g,' ').slice(0,165),html:b.outerHTML.slice(0,350)}));const info=[...m.querySelectorAll('[id]')].filter(x=>/partner|pokemon|mon|event|news|offline|season/i.test(x.id)).slice(0,65).map(x=>({id:x.id,cls:x.className,text:x.textContent?.trim().slice(0,120)}));return {buttons,info,bottom:m.querySelector('.pkmsvv-v15-bottom')?.outerHTML.slice(0,1800),season:m.querySelector('.pkmsvv-season-banner')?.outerHTML,notice:m.querySelector('.pkmsvv-offline-save-note')?.outerHTML}})()");
-  console.log('MENU-STRUCTURE',JSON.stringify(menuDiagnostic));
-  const pcDiagnostic=await evaluate("(()=>{const buttons=[...document.querySelectorAll('#scr-menu .menu-right button.menu-item')];const old=buttons.find(b=>/Support Pokémon|Pokémon hỗ trợ/.test(b.textContent));if(!old)return {missing:true};old.click();const nodes=[...document.querySelectorAll('[role=dialog],section[id],div[id]')].filter(x=>/PC · POKÉMON|PC · POKEMON|Kiến thức Pokémon|Pokémon hỗ trợ/.test(x.textContent||'')&&(x.innerText||'').length<5000).slice(-35).map(x=>({tag:x.tagName,id:x.id,cls:String(x.className).slice(0,100),hidden:x.hidden,html:x.outerHTML.slice(0,1200)}));return {id:old.id,go:old.dataset.go,oldHtml:old.outerHTML.slice(0,550),nodes}})()");
-  console.log('PC-STRUCTURE',JSON.stringify(pcDiagnostic));
-  const extraDiagnostic=await evaluate("(()=>{const m=document.querySelector('#scr-menu');const p=document.querySelector('#pkmsvv-wiki-overlay');const news=document.querySelector('#btn-news'),css=news?getComputedStyle(news):null;const stat=m.querySelector('#menu-partner-info');const box=m.querySelector('.pkmsvv-v15-partner');return {pcHtml:p?.outerHTML.slice(0,8000),partner:box?.outerHTML.slice(0,6000),menuInfo:stat?.outerHTML,news:{cls:news?.className,disabled:news?.disabled,inline:news?.style?.cssText,parent:news?.parentElement?.className,computed:css&&{background:css.background,color:css.color,opacity:css.opacity,visibility:css.visibility,filter:css.filter,border:css.border,pointerEvents:css.pointerEvents,display:css.display}},event:m.querySelector('.pkmsvv-v15-event')?.outerHTML}})()");
-  console.log('EXTRA-DIAGNOSTIC',JSON.stringify(extraDiagnostic));
-
-
+  const menuState=await evaluate("(()=>{const m=document.querySelector('#scr-menu');const news=m.querySelector('#btn-news');const color=getComputedStyle(news).color;const season=G.PKMSVVSeason?.nowActive?.();const bar=m.querySelector('.pkmsvv-save-banner');return {nativePC:!!m.querySelector('#pkmsvv-menu-wiki'),pcButtons:[...m.querySelectorAll('.menu-right button')].filter(b=>b.querySelector('.pkmsvv-menu-label')?.textContent==='PC').length,duplicate:!!m.querySelector('[data-go=dex]'),outsideUpgrade:!!m.querySelector('[data-go=upgrades]'),banner:bar?.textContent,saveBanners:m.querySelectorAll('.pkmsvv-save-banner').length,seasonBanners:m.querySelectorAll('.pkmsvv-season-banner').length,event:m.querySelector('.pkmsvv-v15-event span')?.textContent,seasonActive:!!season,newsColor:color,newsEnabled:!news?.disabled,menuClean:!!G.PKMSVVMenuCleanQA}})()");
+  assert.equal(menuState.menuClean,true);
+  assert.equal(menuState.nativePC,true,'keep original Support/Mega/Berry PC');
+  assert.equal(menuState.pcButtons,1,'main menu must contain only ONE PC');
+  assert.equal(menuState.duplicate,false,'remove first duplicate PC');
+  assert.equal(menuState.outsideUpgrade,false,'upgrade selection belongs inside PC');
+  assert.match(menuState.banner,/sao lưu|back up/i,'restore old save reminder');
+  assert.equal(menuState.saveBanners,1);
+  assert.equal(menuState.seasonBanners,0,'season goes into Event card');
+  if(menuState.seasonActive)assert.match(menuState.event,/Sương Ký Ức|Memory Mist/);
+  assert.equal(menuState.newsEnabled,true);
+  assert.match(menuState.newsColor,/rgb\(25[0-5],\s*2[0-5]\d,\s*1\d\d\)/,'News text must contrast with its background');
+  const unifiedPc=await evaluate("(()=>{document.querySelector('#pkmsvv-menu-wiki')?.click();G.PKMSVVMenuCleanQA.mountPC();const p=document.querySelector('#pkmsvv-wiki-overlay');const grid=p?.querySelector('.pkmsvv-pc-grid');return {exists:!!p,cardCount:grid?.children.length,firstThree:[...grid?.children||[]].slice(0,3).map(x=>x.id),events:[...p?.querySelectorAll('.pkmsvv-pc-learn button')||[]].filter(b=>/Sương Ký Ức|Memory Mist|Season/.test(b.textContent)).length,hint:!!p?.querySelector('.pkmsvv-pc-hint'),support:!!p?.textContent.includes('Pokémon hỗ trợ'),mega:!!p?.textContent.includes('Mega'),berry:!!p?.textContent.includes('Berry')}})()");
+  assert.equal(unifiedPc.exists,true);
+  assert.equal(unifiedPc.cardCount,6,'PC must show Dex, Box, Upgrades, Support, Mega, Berry');
+  assert.deepEqual(unifiedPc.firstThree,['pkmsvv-pc-dex','pkmsvv-pc-box','pkmsvv-pc-upgrades']);
+  assert.equal(unifiedPc.events,0,'remove seasonal event from PC knowledge');
+  assert.equal(unifiedPc.hint,false,'no redundant navigation hint');
+  assert.ok(unifiedPc.support&&unifiedPc.mega&&unifiedPc.berry);
+  const shortcuts=await evaluate("(()=>{document.querySelector('#pkmsvv-pc-dex').click();const dex=!!document.querySelector('#pkmbx-dex-overlay');G.PKMSVVBoxHubUI.closeBox();document.querySelector('#pkmsvv-pc-box').click();const box=!!document.querySelector('#pkmbx-grid');G.PKMSVVBoxHubUI.closeBox();return {dex,box}})()");
+  assert.equal(shortcuts.dex,true,'Pokédex card must open existing encyclopedia');
+  assert.equal(shortcuts.box,true,'PokéBox card must open existing individual storage');
+  const restored=await evaluate("(()=>{const descriptor=Object.getOwnPropertyDescriptor(G.DB,'save');const original=['#menu-partner-name','#menu-partner-info','#menu-stats'].map(q=>document.querySelector(q)?.textContent);try{Object.defineProperty(G.DB,'save',{value:{partner:6,partnerShiny:false,stats:{runs:50,bestTime:626,bestLevel:35,kills:9684}},writable:true,configurable:true});for(const q of ['#menu-partner-name','#menu-partner-info','#menu-stats'])document.querySelector(q).textContent='';G.PKMSVVMenuCleanQA.restorePartner();return {name:document.querySelector('#menu-partner-name').textContent,info:document.querySelector('#menu-partner-info').textContent,stats:document.querySelector('#menu-stats').textContent,types:document.querySelectorAll('#pkmsvv-home-types .pkmsvv-home-type-chip').length}}finally{Object.defineProperty(G.DB,'save',descriptor);['#menu-partner-name','#menu-partner-info','#menu-stats'].forEach((q,i)=>document.querySelector(q).textContent=original[i]||'');document.querySelector('#pkmsvv-home-types')?.remove()}})()");
+  assert.ok(restored.name.length>0);
+  assert.match(restored.info,/50/);
+  assert.match(restored.info,/10:26/);
+  assert.match(restored.stats,/35/);
+  assert.match(restored.stats,/9\.684|9,684/);
+  assert.ok(restored.types>=1,'restore the Pokémon type badges');
   assert.equal(await evaluate("!!G.PKMSVVQuickRegion"),true,'QuickRegion module must load');
   const preplay=await evaluate("(()=>{const play=document.querySelector('#scr-menu [data-go=play]');if(!play)return {missingPlay:true};const before=G.Game?.state;play.click();const overlay=document.querySelector('#pkmsvv-quick-region');const out={missingPlay:false,before,after:G.Game?.state,open:!!overlay&&!overlay.hidden,count:overlay?.querySelectorAll('.pkmsvv-quick-region-card').length,available:overlay?.querySelectorAll('.pkmsvv-quick-region-card:not(:disabled)').length,active:!!G.PKMSVVQuickRegion.active};G.PKMSVVQuickRegion.close();return out})()");
   assert.equal(preplay.missingPlay,false,'the native Chơi ngay button must be found');
