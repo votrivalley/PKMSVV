@@ -26,3 +26,42 @@
 
 Keep the current maximum of 10 trainers. Read `docs/CLOUD_HANDOFF.md` before
 continuing. Preserve offline Wi-Fi hosting and the full existing test suite.
+
+
+## BẮT BUỘC — Keyboard + controller navigation for EVERY interactive screen
+
+- Treat **keyboard, controller and pointer/touch** as equal first-class inputs on
+  Windows, Android and Web. NO new or modified dialog, modal, chooser, Region
+  selector, inventory, PokéBox/Pokédex, gacha, pause, rank, Berry, Arena or
+  story option may be mouse/touch-only. This is a release-blocking QA gate.
+- Every visible actionable option must be reachable with **Tab / Shift+Tab** and
+  **arrow keys or WASD**, and the active option must have a **high-contrast,
+  visible focus border**. Focus must never go behind the highest open overlay.
+  Focus must move/scroll the selected control into view when needed, including
+  offscreen panels. Do not steal keyboard input while typing into a text field.
+- Default controller scheme: **D-pad or left stick = move focus; A / Cross =
+  confirm; B / Circle = back/close**. Respect current user bindings when
+  available. Back must dismiss ONLY the highest modal and must not destroy
+  saves, exit a match accidentally or award duplicate rewards. Avoid repeated
+  selection while A is held; allow repeated direction navigation after delay.
+- Numeric hints are contracts: **[1] and [2] choose item options; [3] skips
+  the newly dropped item (keeps the old one)**, including Numpad 3.
+  Implement real key handlers — never draw labels for non-working keys.
+  The cancel/skip choice must invoke the SAME existing callback as clicking
+  its button, exactly once, without changing the player's reward/save logic.
+- For **any new modal**: install native keyboard focus, arrow navigation,
+  controller focus, confirm, back, restore focus on close and a visible focus
+  style. Avoid rebinding the same handler on every render; never poll inputs
+  during gameplay unless a dialog is actually active.
+- Before merging or shipping, perform real Chromium and native QA: open each
+  option picker **without mouse/touch**, move across every row and column with
+  D-pad/arrow keys, confirm and cancel, test keyboard Digit3 and Numpad3,
+  long lists that scroll, gamepad button hold/release, no input leaking into
+  underlying gameplay and reopening a modal. Do this on **Web, Windows and
+  Android gamepad**; a unit-only pass does not replace device validation.
+- QA input implementation: `src/pkmsvv-modal-navigation-qa.js` +
+  `src/pkmsvv-modal-navigation-qa.css`, with a Web Chromium smoke test.
+  Apply fixes to reusable shared UI/navigation code; do not add fragile
+  one-off bindings per platform. Preserve offline LAN, existing save keys
+  and Android signing identity.
+
