@@ -94,7 +94,7 @@
   const play=entry('[data-go="play"]',['chơi ngay','play','play now']);
   const pokemon=entry('[data-go="dex"]',['pokémon','pokemon']);
   const pc=entry('#pkmsvv-menu-wiki',['pc']);
-  const coop=entry('[data-go="coop"],[data-go="co-op"],[data-go="coOp"]',['co-op','coop']);
+  const coop=entry('[data-go="multiplayer"],[data-go="coop"],[data-go="co-op"],[data-go="coOp"]',['co-op','coop']);
   const arena=entry('[data-go="arena"]',['arena']);
   const order=[pokemon,pc,coop,arena].filter((el,i,all)=>el&&all.indexOf(el)===i);
   if(!order.length)return false;
