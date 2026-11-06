@@ -9,7 +9,7 @@
  if(root&&root.G)root.G.PKMSVVBox3=api;
 })(typeof globalThis==='object'?globalThis:this,function(){
  'use strict';
- const ITEM='reforge-prism',PRICE=6500,SHOP_RATE=1,PITY=180,MAX_DROPS_PER_RUN=1;
+ const ITEM='reforge-prism',PRICE=6500,SHOP_RATE=0.12,PITY=180,MAX_DROPS_PER_RUN=1;
  const RATES=Object.freeze({type:0.0035,species:0.015,elite:0.03,boss:0.08});
  const own=(x,k)=>Object.prototype.hasOwnProperty.call(x,k);
  const deep=x=>JSON.parse(JSON.stringify(x));
@@ -50,8 +50,8 @@
   return (h>>>0)/4294967296;
  }
  function shopOffer(day=today(),s=getSave()){
-  // QA: always-stocked Prism (1 per day), independent of rare enemy drops.
-  const available=true;
+  // Stable, day-scoped rare item rotation: reopening shop cannot reroll.
+  const available=slotRoll(day)<SHOP_RATE;
   return {day,available,bought:!!(s&&s.pkmsvvReforgeBoughtDay===day),price:PRICE,
    canBuy:available&&validPurchase(s)&&s.pkmsvvReforgeBoughtDay!==day&&Number(s.coins)>=PRICE&&
     !(typeof G!=='undefined'&&G.DB?.save===s&&G.DB?.guest)};
@@ -213,9 +213,11 @@
    const inBag=!!document.getElementById('pkmk-tab-bag')?.classList?.contains('gold');
    if(!list||(!active&&!inBag)||list.querySelector('#pkmbx-prism-store'))return;
    const s=db?.save,offer=shopOffer(today(),s);
+   if(active&&!offer.available)return; // Stock controls whether card exists.
+   if(inBag&&!count(s))return;
    const section=document.createElement('section');section.id='pkmbx-prism-store';
    section.setAttribute('translate','no');
-   section.className='pkmbx-prism-store';
+   section.className='pkmbx-prism-store pkmk-item';
    const vi=G.I18n?.lang!=='en';
    const title=vi?'Lăng Kính Tái Khắc':'Reforge Prism';
    const status=offer.bought?(vi?'Đã mua hôm nay · mở bán lại ngày mai':'Purchased today · available again tomorrow'):
