@@ -232,7 +232,10 @@
    const commit=db.commit;
    db.commit=function(...args){
     const outcome=commit.apply(this,args);
-    // Never record a failed or thrown transaction.
+    // Wait for an asynchronous commit if the storage implementation uses one.
+    // Rejections or false results must never enter the journal.
+    if(outcome&&typeof outcome.then==='function')
+     return outcome.then(value=>{if(value!==false)snapshot('db-commit');return value;});
     if(outcome!==false)snapshot('db-commit');
     return outcome;
    };
