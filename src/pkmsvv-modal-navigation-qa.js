@@ -108,7 +108,7 @@
   if(e.defaultPrevented&&!critical)return;
   // The item chooser renders a visible [3] label, which previously was inert.
   // Only intercept it while the actual held-item selection is showing.
-  if(root.id==='scr-item'&&!isEditable(document.activeElement)&&
+  if(root.id==='scr-item'&&!(root.contains(document.activeElement)&&isEditable(document.activeElement))&&
     (key==='3'||code==='Digit3'||code==='Numpad3')){
    if(itemSkip()){e.preventDefault();e.stopImmediatePropagation?.();}return;
   }
@@ -120,10 +120,14 @@
    if(!e.shiftKey&&at===opts.length-1){setFocus(opts[0]);e.preventDefault();return;}
    return;
   }
+  const editing=root.contains(document.activeElement)&&isEditable(document.activeElement);
   if(key==='escape'||key==='backspace'){
-   if(!isEditable(document.activeElement)&&close(root)){e.preventDefault();e.stopImmediatePropagation?.();}return;
+   if((key==='escape'||!editing)&&close(root)){e.preventDefault();e.stopImmediatePropagation?.();}return;
   }
-  if(isEditable(document.activeElement))return;
+  if(editing)return;
+  // Some legacy story/menu code can steal focus underneath a newer modal.
+  // Route input to the highest overlay anyway, never to that hidden field.
+  if(!root.contains(document.activeElement))first(root);
   const dirs={arrowleft:'left',arrowright:'right',arrowup:'up',arrowdown:'down',
    a:'left',d:'right',w:'up',s:'down'};
   if(dirs[key]&&move(dirs[key])){e.preventDefault();e.stopImmediatePropagation?.();return;}
@@ -183,6 +187,10 @@
   pad.poll=wrapped;return true;
  }
  document.addEventListener('keydown',onKey,true);
+ document.addEventListener('focusin',e=>{
+  const root=active();
+  if(root&&!root.contains(e.target))queue();
+ },true);
  if(typeof MutationObserver==='function')new MutationObserver(records=>{
   if(records.some(r=>r.type==='childList'||r.attributeName==='hidden'||r.attributeName==='class'))queue();
  }).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});
