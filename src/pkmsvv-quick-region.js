@@ -151,7 +151,17 @@
     const lock=document.createElement('span');lock.className='region-lock';
     lock.textContent='🔒';art.append(lock);
    }
-   // The new cover art is landscape-only: no overlaid Pokémon sprites or shadows.
+   // Keep each generation's legendary/mascot sprite layered on the uploaded
+   // WebP landscape. Locked regions reveal a dark silhouette until unlocked.
+   const regionLegends=[150,250,384,483,643,716,791,889,1007,384];
+   const dex=regionLegends[x.index];
+   if(G.DEX_BY?.[dex]&&typeof G.UI?.sprite==='function'){
+    const sprite=document.createElement('canvas');
+    sprite.className='region-sprite';
+    sprite.width=76;sprite.height=76;
+    try{G.UI.sprite(sprite,dex,{scale:2,shiny:false});art.appendChild(sprite);}
+    catch(err){console.warn('[Region cover sprite]',dex,err);}
+   }
    const body=document.createElement('div');body.className='region-card-info';
    const name=document.createElement('strong');name.textContent=x.icon+' '+x.name;
    const diff=document.createElement('small');diff.className='region-diff';
