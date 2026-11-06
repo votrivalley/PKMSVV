@@ -114,3 +114,51 @@
  .pkmbx-dex-filters{grid-template-columns:repeat(2,minmax(0,1fr));max-height:45vh}
  .pkmbx-hub-stats{grid-template-columns:1fr}
 }
+
+
+/* v1.5.93 QA — six READY Pokémon, separate from Favorites.
+ * Keep all six cells on one row at desktop and handset widths.
+ */
+#pkmsvv-pokebox-overlay .pkmbx-hub-panel{gap:0}
+#pkmsvv-pokebox-overlay .pkmbx-hub-team-title{margin:6px 0 5px}
+#pkmsvv-pokebox-overlay .pkmbx-hub-team-title h3{font-size:14px;font-weight:800;color:#ffdc84}
+#pkmsvv-pokebox-overlay .pkmbx-team-six{
+ display:grid;grid-template-columns:repeat(6,minmax(0,1fr));
+ gap:7px;flex:0 0 auto;min-width:0;
+}
+#pkmsvv-pokebox-overlay .pkmbx-team-slot{
+ display:flex;flex-direction:row;align-items:center;justify-content:flex-start;
+ gap:7px;min-width:0;height:70px;min-height:70px;max-height:70px;
+ padding:5px 8px;text-align:left;
+}
+#pkmsvv-pokebox-overlay .pkmbx-team-slot canvas{
+ flex:0 0 auto;width:49px;height:49px;image-rendering:pixelated;
+}
+#pkmsvv-pokebox-overlay .pkmbx-team-slot span:not(.pkmbx-team-empty){
+ min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+ font-size:12px;line-height:1.2;
+}
+#pkmsvv-pokebox-overlay .pkmbx-team-slot.active{background:#235766;border-color:#84d4c3}
+#pkmsvv-pokebox-overlay .pkmbx-team-slot .pkmbx-team-empty{
+ width:100%;text-align:center;font-size:26px;font-weight:400;
+}
+#pkmsvv-pokebox-overlay .pkmbx-hub-tools{margin:9px 0 10px;gap:10px}
+#pkmsvv-pokebox-overlay .pkmbx-hub-main{min-height:0}
+@media(max-width:870px){
+ #pkmsvv-pokebox-overlay .pkmbx-team-six{gap:4px}
+ #pkmsvv-pokebox-overlay .pkmbx-team-slot{
+  height:62px;min-height:62px;max-height:62px;
+  flex-direction:column;justify-content:center;gap:0;padding:3px 2px;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-team-slot canvas{width:35px;height:35px}
+ #pkmsvv-pokebox-overlay .pkmbx-team-slot span:not(.pkmbx-team-empty){
+  max-width:100%;font-size:9px;flex:0 0 auto;
+ }
+}
+@media(max-width:420px){
+ #pkmsvv-pokebox-overlay .pkmbx-team-six{gap:3px}
+ #pkmsvv-pokebox-overlay .pkmbx-team-slot{height:51px;min-height:51px;max-height:51px}
+ #pkmsvv-pokebox-overlay .pkmbx-team-slot canvas{width:37px;height:37px}
+ #pkmsvv-pokebox-overlay .pkmbx-team-slot span:not(.pkmbx-team-empty){display:none}
+ #pkmsvv-pokebox-overlay .pkmbx-hub-team-title h3{font-size:12px}
+}
