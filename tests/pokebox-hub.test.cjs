@@ -212,9 +212,9 @@ test('Original PC remains, and Pokémon entry has Box, Dex and preserved upgrade
  assert.match(src,/if\(original&&extra\)/);
  assert.match(src,/extra\.setAttribute\('aria-label','Pokémon'\)/);
  assert.match(src,/pkmsvv-menu-wiki/);
- assert.match(clean,/pkmsvv-pc-dex/);
- assert.match(clean,/pkmsvv-pc-box/);
- assert.match(clean,/pkmsvv-pc-upgrades/);
+ assert.doesNotMatch(clean,/pkmsvv-pc-dex/,'Pokémon tabs must not be duplicated inside the PC utilities');
+ assert.doesNotMatch(clean,/pkmsvv-pc-box/,'Pokémon tabs must not be duplicated inside the PC utilities');
+ assert.doesNotMatch(clean,/pkmsvv-pc-upgrades/,'Pokémon tabs must not be duplicated inside the PC utilities');
  assert.match(clean,/pkmsvv-v15-event/);
  assert.match(clean,/pkmsvv-save-banner/);
  assert.match(clean,/restorePartner/);
