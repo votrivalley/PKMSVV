@@ -18,6 +18,10 @@
  const tr=(vi,en)=>typeof G!=='undefined'&&G.I18n?.lang==='en'?en:vi;
  const getSave=()=>typeof G!=='undefined'?G.DB?.save:null;
  function legacyFavorite(save,dex){
+   // An explicit favorite made in legacy-mode PokéBox wins over an old flag.
+   // Keep the original favorite structures unchanged until migration.
+   const override=save?.pkmsvvLegacyFavoriteOverrides;
+   if(record(override)&&own(override,String(dex))&&typeof override[dex]==='boolean')return override[dex];
    // Preserve a recognized old per-species favorite marker if present, but
    // do not invent favorites from an unrelated setting.
    for(const key of ['favorites','favs','fav','pfav']){
@@ -35,8 +39,15 @@
    for(const dex of dexes){
      const nature=typeof lookups.natureOf==='function'?lookups.natureOf(dex):null;
      const ability=typeof lookups.abilityOf==='function'?lookups.abilityOf(dex):null;
-     const natureId=typeof nature==='string'?nature:nature?.id;
-     const abilitySlot=Number.isInteger(ability?.slot)?ability.slot:0;
+     // Trust the original save's persisted species Nature/Ability before
+     // runtime lookups (which may already be patched for the active fighter).
+     const pn=save.pnat?.[dex],pa=save.pabil?.[dex];
+     const savedNature=Array.isArray(pn)?pn[0]:typeof pn==='string'?pn:pn?.id;
+     const natureId=(typeof savedNature==='string'&&savedNature)||
+       (typeof nature==='string'?nature:nature?.id);
+     const savedAbility=Array.isArray(pa)?pa[0]:pa?.slot;
+     const abilitySlot=Number.isInteger(savedAbility)&&savedAbility>=0&&savedAbility<=2?
+       savedAbility:Number.isInteger(ability?.slot)?ability.slot:0;
      const base={dex,natureId:natureId||'hardy',abilitySlot,rank:0,locked:false,favorite:legacyFavorite(save,dex)};
      if(own(save.owned,String(dex))&&save.owned[dex])box.push({...base,id:'b1-'+dex+'-n',shiny:false});
      if(own(save.shiny,String(dex))&&save.shiny[dex])box.push({...base,id:'b1-'+dex+'-s',shiny:true});
