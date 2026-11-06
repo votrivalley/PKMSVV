@@ -7,6 +7,7 @@ on:
       - 'src/pkmsvv-box-hub*.js'
       - 'src/pkmsvv-box-hub*.css'
       - 'src/pkmsvv-quick-region.*'
+      - 'src/pkmsvv-pc-menu-clean-qa.*'
       - 'tests/quick-region.test.cjs'
       - 'tests/pokebox-hub.test.cjs'
       - 'package.json'
@@ -79,6 +80,8 @@ jobs:
           test -s decoded-android/assets/public/css/pkmsvv-box-hub.css
           test -s decoded-android/assets/public/js/ui/pkmsvv-quick-region.js
           test -s decoded-android/assets/public/css/pkmsvv-quick-region.css
+          test -s decoded-android/assets/public/js/ui/pkmsvv-pc-menu-clean-qa.js
+          test -s decoded-android/assets/public/css/pkmsvv-pc-menu-clean-qa.css
       - name: Rebuild and sign separate APK with original permanent certificate
         shell: bash
         env:
