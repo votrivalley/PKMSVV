@@ -49,7 +49,7 @@ G.PKMSVVMatchRecovery=(()=>{
     cfg.mode!==r.mode||String(cfg.host)!==String(r.host)||
     seed===null||seed===undefined)return false;
   session={room:String(r.id),seed:String(seed),mode:cfg.mode,
-   host:cfg.host===uid(),finished:false};
+   host:cfg.host===uid(),finished:false,startedWhileClosed:r.open===false};
   lastRequest=0;return true;
  }
  function reconcile(data,from){
@@ -111,7 +111,7 @@ G.PKMSVVMatchRecovery=(()=>{
   });
   G.Social?.on?.(what=>{
    const r=room();
-   if(what==='room'&&session&&!session.host&&!session.finished&&
+   if(what==='room'&&session&&!session.host&&!session.finished&&session.startedWhileClosed&&
     r?.id===session.room&&r?.mode===session.mode&&r?.open===true){
     // Room's authoritative open state is also a durable recovery source.
     // It is never a substitute for a genuine finished match.
