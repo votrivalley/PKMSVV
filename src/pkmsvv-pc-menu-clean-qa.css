@@ -61,3 +61,35 @@
  #pkmsvv-wiki-overlay .pkmsvv-pc-gen1-icon{width:38px;height:38px}
  #scr-menu #btn-news{min-height:52px!important}
 }
+/* Home profile contrast pass: show active selected Pokémon clearly. */
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-partner{
+ background:#f2faf7!important;border:3px solid #3c7a83!important;
+ box-shadow:0 0 0 3px #f8fffb,0 12px 28px #102c3975!important;
+}
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-meta{
+ background:transparent!important;color:#102e3f!important;
+ -webkit-text-fill-color:#102e3f!important;text-shadow:none!important
+}
+#scr-menu.pkmsvv-v15-menu #menu-partner-name{
+ color:#0e3449!important;-webkit-text-fill-color:#0e3449!important;font-weight:900!important
+}
+#scr-menu.pkmsvv-v15-menu #menu-partner-info,
+#scr-menu.pkmsvv-v15-menu #menu-stats{
+ background:#e6f2ee!important;border:1px solid #a0c3c1!important;
+ padding:7px 9px!important;border-radius:7px!important;
+ color:#183f51!important;-webkit-text-fill-color:#183f51!important;
+ line-height:1.55!important;opacity:1!important
+}
+#scr-menu.pkmsvv-v15-menu .pkmsvv-home-type-chip{
+ color:#fff!important;-webkit-text-fill-color:#fff!important;
+ text-shadow:0 1px 2px #0e2339!important;
+ border:1px solid #193a4888!important;box-shadow:0 1px 2px #17323c55!important
+}
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-event,
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-bottom>.pkmsvv-v15-news-card{
+ background:#eaf6f1!important;border:2px solid #679a99!important;
+ color:#153749!important;-webkit-text-fill-color:#153749!important
+}
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-event span{
+ color:#173e4e!important;-webkit-text-fill-color:#173e4e!important
+}
