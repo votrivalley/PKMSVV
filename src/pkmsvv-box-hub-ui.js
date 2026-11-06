@@ -587,7 +587,7 @@
    const b=doc.createElement('button');b.type='button';
    b.className='pkmbx-dex-card'+(infoDex===dex?' focused':'');
    b.innerHTML='<canvas width="56" height="56"></canvas><span>#'+dex+(favorites.has(dex)?' ★':'')+'</span><b>'+clean(monName(dex))+'</b>';
-   b.onclick=()=>{infoDex=dex;renderDex();};
+   b.onclick=()=>{infoDex=dex;dexShinyView=false;renderDex();};
    host.appendChild(b);draw(b.querySelector('canvas'),dex,false,false,!has(dex));
   }
   dexPane.querySelector('#pkmbx-dex-pages').textContent=(dexPage+1)+' / '+pages;
@@ -605,12 +605,38 @@
     clean(monName(r[target]))+' (#'+r[target]+') · '+clean(evoLabel(r))+'</button>').join(''):
     '<p>'+L('Không có dữ liệu tiến hóa trong game.','No evolution records for this species.')+'</p>')+'</section>';
   const rarity=['',L('Thường','Common'),L('Khá hiếm','Uncommon'),L('Hiếm','Rare'),L('Sử thi','Epic'),L('Huyền thoại','Legendary')][Math.min(Number(mon.rarity)||1,5)];
+  const nature=G.Mons?.natureOf?.(infoDex)||null;
+  const ability=G.Mons?.abilityOf?.(infoDex)||null;
+  const abilityId=typeof ability==='string'?ability:ability?.id;
+  const natureLabel=nature?.id?natureName(nature.id):L('Chưa rõ','Unknown');
+  const statLabel={hp:L('Máu','HP'),pa:L('Tấn công','Attack'),sa:L('Đặc công','Sp. Atk'),df:L('Phòng thủ','Defense'),sd:L('Đặc thủ','Sp. Def'),spd:L('Tốc độ','Speed')};
+  const natureEffect=nature?.up&&nature?.down?
+   ' · <b class="pkmbx-stat-plus">+'+clean(statLabel[nature.up]||nature.up)+' 10%</b> · <b class="pkmbx-stat-minus">−'+clean(statLabel[nature.down]||nature.down)+' 10%</b>':'';
+  const knownTms=Array.isArray(s.ptm?.[infoDex])?s.ptm[infoDex]:[];
+  const tms=knownTms.map(move=>clean(G.Moves?.BY_ID?.[move]?G.T?.(G.Moves.BY_ID[move].name,'move')||move:move)).join(', ')||L('Chưa có','None');
+  const used=Number(s.pused?.[infoDex]);
+  const statLine=Number.isFinite(used)&&used>0?'<p>'+L('Lượt sử dụng: ','Times used: ')+used.toLocaleString(G.I18n?.lang==='en'?'en-US':'vi-VN')+'</p>':'';
+  const shinyAvailable=!!s.shiny?.[infoDex];
+  if(!shinyAvailable)dexShinyView=false;
   detail.innerHTML='<div class="pkmbx-hub-hero"><canvas id="pkmbx-dex-hero" width="176" height="176"></canvas>'+
-   '<div><strong>'+clean(monName(infoDex))+'</strong><p>#'+infoDex+' · '+clean((mon.types||[]).map(typeName).join(' / '))+'</p>'+
-   '<p>'+clean(rarity)+'</p><p>'+ (owned?L('✓ Đã khám phá','✓ Discovered'):L('Chưa sở hữu','Not yet owned'))+'</p></div></div>'+
+   '<div><strong>'+clean(monName(infoDex))+'</strong><div class="pkmbx-dex-badges">'+
+    '<span class="pkmbx-dex-badge">#'+infoDex+'</span>'+
+    '<span class="pkmbx-dex-badge">'+clean(rarity)+'</span>'+
+    (mon.types||[]).map(t=>'<span class="pkmbx-dex-badge">'+clean(typeName(t))+'</span>').join('')+'</div>'+
+    '<p>'+(owned?L('✓ Đã khám phá','✓ Discovered'):L('Chưa sở hữu','Not yet owned'))+'</p>'+
+    statLine+'</div></div>'+
+   '<div class="pkmbx-dex-variants"><button type="button" data-dex-variant="normal" class="'+(!dexShinyView?'active':'')+'">'+L('Bình thường','Normal')+'</button>'+
+   '<button type="button" data-dex-variant="shiny" class="'+(dexShinyView?'active':'')+'" '+(!shinyAvailable?'disabled':'')+'>✨ Shiny</button></div>'+
+   '<div class="pkmbx-dex-summary"><div><b>'+L('Tính cách','Nature')+':</b> '+clean(natureLabel)+natureEffect+'</div>'+
+   '<div><b>'+L('Đặc tính','Ability')+':</b> '+clean(abilityName(abilityId))+'</div>'+
+   '<div><b>TM:</b> '+tms+'</div></div>'+
    evos(L('Tiến hóa từ','Evolves from'),from,'from')+
    evos(L('Tiến hóa thành','Evolves into'),to,'to');
-  draw(detail.querySelector('#pkmbx-dex-hero'),infoDex,false,true,!owned);
+  draw(detail.querySelector('#pkmbx-dex-hero'),infoDex,dexShinyView,true,!owned);
+  for(const variant of detail.querySelectorAll('[data-dex-variant]'))variant.onclick=()=>{
+   if(variant.dataset.dexVariant==='shiny'&&!shinyAvailable)return;
+   dexShinyView=variant.dataset.dexVariant==='shiny';renderDex();
+  };
   for(const button of detail.querySelectorAll('[data-evo-dex]'))button.onclick=()=>{
    infoDex=Number(button.dataset.evoDex);dexQuery='';dexPane.querySelector('#pkmbx-dex-search').value='';dexGen=0;dexStatus='all';
    dexPage=0;dexPane.querySelector('#pkmbx-dex-gen').value='0';dexPane.querySelector('#pkmbx-dex-status').value='all';
