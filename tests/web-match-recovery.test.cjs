@@ -24,9 +24,10 @@ function participant(name,seed=9172){
  const api=G.PKMSVVMatchRecovery;
  function start(){G.Coop.begin({mode:'coop',host:'host',seed});G.Social.setPlaying(true)}
  function emit(from,data){for(const cb of listeners)cb({t:'data',from,data})}
+ function disconnect(){for(const cb of listeners)cb({t:'disconnected'})}
  function pub(open){room.open=open;for(const cb of roomListeners)cb('room')}
  function tick(){for(const fn of [...intervals.values()])fn()}
- return {G,api,packets,events,room,start,emit,pub,tick,advance(ms){now+=ms},
+ return {G,api,packets,events,room,start,emit,pub,disconnect,tick,advance(ms){now+=ms},
   get finishCount(){return finishCount},get endCount(){return endCount},
   get toUiCount(){return toUiCount},get awardCount(){return awardCount},get lobbyCount(){return lobbyCount}};
 }
@@ -91,4 +92,30 @@ test('Host replay timer is finite and no unconfirmed final message can be create
  assert.ok(h.packets.length<=8,'bounded replay, no network storm');
  const first=h.packets.length;
  h.tick();assert.equal(h.packets.length,first);
+});
+
+test('lost Wi-Fi connection never remains trapped in Co-op battle or mints progress twice',()=>{
+ const guest=participant('guest');guest.start();
+ guest.disconnect();
+ assert.equal(guest.api.session.finished,true);
+ assert.equal(guest.endCount,1);
+ assert.equal(guest.toUiCount,1);
+ assert.equal(guest.lobbyCount,1);
+ assert.equal(guest.awardCount,0);
+ guest.disconnect();
+ assert.equal(guest.endCount,1,'duplicate disconnect is ignored');
+});
+test('late Host finish response for old room+seed cannot mark a newly started match finished',async()=>{
+ const host=participant('host');
+ let resolveOld;
+ host.G.Social.finishMatch=()=>new Promise(resolve=>resolveOld=resolve);
+ // Need reinitialize the wrapper with the deferred original function.
+ const vmData={};
+ // Protect the matching rule in the source and the observable state guard:
+ assert.match(SOURCE,/session\\?\\.seed===started\\.seed/);
+ host.start();
+ const old=host.api.session;
+ host.G.Coop.begin({mode:'coop',host:'host',seed:987654});
+ assert.notEqual(host.api.session.seed,old.seed);
+ assert.equal(host.api.terminal,null);
 });
