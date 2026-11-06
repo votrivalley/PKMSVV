@@ -73,7 +73,7 @@ async function main(){
   assert.equal(pureDex.search,true);
   assert.equal(pureDex.hasEvolutionPane,true);
   assert.equal(pureDex.insidePC,true,'Pokédex must be inside in-game PC');
-  assert.deepEqual(pureDex.tabs,['dex','box'],'Pokédex must be first PC tab');
+  assert.deepEqual(pureDex.tabs,['box','dex','upgrade'],'Pokémon tabs must be Box → Dex → Upgrades');
   assert.equal(pureDex.pcHubHidden,true,'PokéBox tab hidden while Pokédex is active');
   assert.equal(pureDex.itemActions,false,'Pokédex must remain read-only');
   assert.ok(pureDex.cards>0,'Pokédex must list species');
@@ -94,7 +94,7 @@ async function main(){
   assert.equal(menuState.menuClean,true);
   assert.equal(menuState.nativePC,true,'keep original Support/Mega/Berry PC');
   assert.equal(menuState.pcButtons,1,'main menu must contain only ONE PC');
-  assert.equal(menuState.duplicate,false,'remove first duplicate PC');
+  assert.equal(menuState.duplicate,true,'keep the home Pokémon launcher');
   assert.equal(menuState.outsideUpgrade,false,'upgrade selection belongs inside PC');
   assert.match(menuState.banner,/sao lưu|back up/i,'restore old save reminder');
   assert.equal(menuState.saveBanners,1);
@@ -105,13 +105,18 @@ async function main(){
   const unifiedPc=await evaluate("(async()=>{document.querySelector('#pkmsvv-menu-wiki')?.click();await Promise.resolve();const p=document.querySelector('#pkmsvv-wiki-overlay');const grid=p?.querySelector('.pkmsvv-pc-grid');return {exists:!!p,cardCount:grid?.children.length,firstThree:[...grid?.children||[]].slice(0,3).map(x=>x.id),events:[...p?.querySelectorAll('.pkmsvv-pc-learn button')||[]].filter(b=>/Sương Ký Ức|Memory Mist|Season/.test(b.textContent)).length,hint:!!p?.querySelector('.pkmsvv-pc-hint'),support:!!p?.textContent.includes('Pokémon hỗ trợ'),mega:!!p?.textContent.includes('Mega'),berry:!!p?.textContent.includes('Berry')}})()");
   assert.equal(unifiedPc.exists,true);
   assert.equal(unifiedPc.cardCount,6,'PC must show Dex, Box, Upgrades, Support, Mega, Berry');
-  assert.deepEqual(unifiedPc.firstThree,['pkmsvv-pc-dex','pkmsvv-pc-box','pkmsvv-pc-upgrades']);
+  assert.deepEqual(unifiedPc.firstThree,['pkmsvv-pc-box','pkmsvv-pc-dex','pkmsvv-pc-upgrades']);
   assert.equal(unifiedPc.events,0,'remove seasonal event from PC knowledge');
   assert.equal(unifiedPc.hint,false,'no redundant navigation hint');
   assert.ok(unifiedPc.support&&unifiedPc.mega&&unifiedPc.berry);
   const shortcuts=await evaluate("(()=>{document.querySelector('#pkmsvv-pc-dex').click();const dex=!!document.querySelector('#pkmbx-dex-overlay');G.PKMSVVBoxHubUI.closeBox();document.querySelector('#pkmsvv-pc-box').click();const box=!!document.querySelector('#pkmbx-grid');G.PKMSVVBoxHubUI.closeBox();return {dex,box}})()");
   assert.equal(shortcuts.dex,true,'Pokédex card must open existing encyclopedia');
   assert.equal(shortcuts.box,true,'PokéBox card must open existing individual storage');
+   const upgradeTab=await evaluate("(()=>{G.PKMSVVBoxHubUI.openUpgrades();const overlay=document.querySelector('#pkmbx-upgrade-overlay');const result={visible:!!overlay&&!overlay.hidden,buttons:!!overlay?.querySelector('#pkmbx-upgrade-single')&&!!overlay?.querySelector('#pkmbx-upgrade-team'),tabs:[...overlay?.querySelectorAll('[data-pc-tab]')||[]].map(x=>x.dataset.pcTab)};G.PKMSVVBoxHubUI.closeBox();return result})()");
+   assert.equal(upgradeTab.visible,true,'Nâng cấp must open inside Pokémon');
+   assert.equal(upgradeTab.buttons,true,'Both legacy upgrade paths must exist');
+   assert.deepEqual(upgradeTab.tabs,['box','dex','upgrade']);
+
   const restored=await evaluate("(()=>{const descriptor=Object.getOwnPropertyDescriptor(G.DB,'save');const original=['#menu-partner-name','#menu-partner-info','#menu-stats'].map(q=>document.querySelector(q)?.textContent);try{Object.defineProperty(G.DB,'save',{value:{partner:6,partnerShiny:false,stats:{runs:50,bestTime:626,bestLevel:35,kills:9684}},writable:true,configurable:true});for(const q of ['#menu-partner-name','#menu-partner-info','#menu-stats'])document.querySelector(q).textContent='';G.PKMSVVMenuCleanQA.restorePartner();return {name:document.querySelector('#menu-partner-name').textContent,info:document.querySelector('#menu-partner-info').textContent,stats:document.querySelector('#menu-stats').textContent,types:document.querySelectorAll('#pkmsvv-home-types .pkmsvv-home-type-chip').length}}finally{Object.defineProperty(G.DB,'save',descriptor);['#menu-partner-name','#menu-partner-info','#menu-stats'].forEach((q,i)=>document.querySelector(q).textContent=original[i]||'');document.querySelector('#pkmsvv-home-types')?.remove()}})()");
   assert.ok(restored.name.length>0);
   assert.match(restored.info,/50/);
