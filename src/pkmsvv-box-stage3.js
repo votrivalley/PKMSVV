@@ -217,17 +217,17 @@
    if(inBag&&!count(s))return;
    const section=document.createElement('section');section.id='pkmbx-prism-store';
    section.setAttribute('translate','no');
-   section.className='pkmbx-prism-store pkmk-item';
+   section.className='pkmk-card pkmbx-prism-store';
    const vi=G.I18n?.lang!=='en';
    const title=vi?'Lăng Kính Tái Khắc':'Reforge Prism';
    const status=offer.bought?(vi?'Đã mua hôm nay · mở bán lại ngày mai':'Purchased today · available again tomorrow'):
     (vi?'Có bán hôm nay · giới hạn 1 viên/ngày':'In stock today · limit one per day');
-   section.innerHTML='<div class="pkmbx-prism-product">'+
-    '<span class="pkmbx-prism-product-icon" aria-hidden="true">🔮</span>'+
-    '<div class="pkmbx-prism-product-info"><h3>'+title+'</h3>'+
-    '<p>'+(vi?'Đổi hướng Rank 3/5 mà không mất cấp Rank.':'Change Rank 3/5 path without losing Rank.')+'</p>'+
-    '<p>'+(vi?'Trong túi: ':'In Bag: ')+count(s)+' · '+status+'</p>'+
-    '<strong class="pkmbx-prism-price">'+PRICE.toLocaleString('vi-VN')+' PokéCoins</strong></div></div>';
+   section.innerHTML='<div class="pkmk-product-art pkmbx-prism-product-icon" aria-hidden="true">🔮</div>'+
+    '<div class="pkmk-product-copy pkmbx-prism-product-info"><b>'+title+'</b>'+
+    '<small>'+(vi?'Đổi hướng Rank 3/5, giữ nguyên cấp Rank.':'Switch Rank 3/5 branch while keeping Rank level.')+'</small>'+
+    '<small>'+(vi?'Đang có: ':'Owned: ')+count(s)+' · '+status+'</small></div>'+
+    '<div class="pkmk-product-tail pkmbx-prism-actions"><strong class="pkmbx-prism-price">'+
+      PRICE.toLocaleString('vi-VN')+' PokéCoins</strong></div>';
    if(inBag){
     const info=document.createElement('p');
     info.textContent=vi?'Đã có trong Túi đồ. Dùng tại PokéBox → Rank → Đổi hướng.':'Owned item. Use from PokéBox → Rank → Change Path.';
@@ -236,7 +236,7 @@
     jump.textContent=vi?'🦎 Đến cửa hàng':'🦎 Go to Shop';
     jump.onclick=()=>ui.open('shop');
     section.appendChild(jump);
-    list.appendChild(section);return;
+    (list.querySelector('.pkmk-rows')||list).appendChild(section);return;
    }
    const button=document.createElement('button');
    button.className='btn small gold pkmbx-prism-buy';button.type='button';
@@ -248,7 +248,7 @@
     try{buy(db.save,offer.day);G.UI?.refreshCoins?.();ui.render();}
     catch(e){G.UI?.toast?.(e.message,3000);ui.render();}
    };
-   section.appendChild(button);
+   section.querySelector('.pkmbx-prism-actions').appendChild(button);
    if(!offer.canBuy&&!offer.bought){
     const reason=document.createElement('p');reason.className='pkmbx-prism-unavailable';
     reason.textContent=!validPurchase(s)?
@@ -257,7 +257,7 @@
      (vi?'Hồ sơ khách không thể mua vật phẩm.':'Guest profiles cannot buy items.');
     section.appendChild(reason);
    }
-   list.appendChild(section);
+   (list.querySelector('.pkmk-cards')||list).appendChild(section);
   }
   const oldRender=ui.render;
   ui.render=function(...args){const r=oldRender.apply(this,args);draw();return r;};
