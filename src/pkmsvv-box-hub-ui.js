@@ -25,7 +25,8 @@
  const abilityName=id=>G.Mons?.abilityName?.(id)||G.ABIL?.[id]?.[1]||L('Không có','None');
  const currentSave=()=>G.DB?.save;
  let boxPane=null,dexPane=null,focused=null,infoDex=1,query='',onlyFavorites=false,onlyShiny=false,
-  view='info',page=0,backupDone=false,dexQuery='',dexPage=0;
+  view='info',page=0,backupDone=false,dexQuery='',dexPage=0,
+  dexGen=0,dexRarity=0,dexStatus='all',dexType='',dexSort='num',dexFavorites=false;
  const PAGE=30,DEX_PAGE=35;
  const getStored=()=>Hub.valid(currentSave());
  function listPreview(){
@@ -42,6 +43,37 @@
   if(Hub.valid(s))return Hub.item(s,focused)||Hub.active(s)||s.pkmsvvBox[0]||null;
   const prev=listPreview();
   return prev.find(x=>x.id===focused)||prev.find(x=>x.dex===Number(s?.partner))||prev[0]||null;
+ }
+ // Legacy preview is still playable. Keep selection and favorites on the old
+ // schema without automatically migrating or touching Rank/items/save history.
+ function legacyCommit(mutator){
+  const s=currentSave();
+  if(!s||G.DB?.guest)throw Error(L('Hồ sơ này không thể lưu.','This profile cannot save.'));
+  const before=JSON.stringify(s);
+  try{
+   mutator(s);
+   if(G.DB.commit(true)===false)throw Error('Save commit failed');
+  }catch(e){
+   const old=JSON.parse(before);
+   for(const key of Object.keys(s))delete s[key];
+   Object.assign(s,old);throw e;
+  }
+ }
+ function legacySelect(it){
+  legacyCommit(s=>{
+   if(!s.owned?.[it.dex]||(it.shiny&&!s.shiny?.[it.dex]))
+    throw Error(L('Chưa sở hữu Pokémon này.','Pokémon is not owned.'));
+   s.partner=it.dex;s.partnerShiny=it.shiny;
+  });
+ }
+ function legacyFavorite(it){
+  legacyCommit(s=>{
+   const overrides=s.pkmsvvLegacyFavoriteOverrides;
+   if(overrides!==undefined&&(typeof overrides!=='object'||overrides===null||Array.isArray(overrides)))
+    throw Error('Invalid legacy favorites');
+   s.pkmsvvLegacyFavoriteOverrides=overrides||{};
+   s.pkmsvvLegacyFavoriteOverrides[it.dex]=!it.favorite;
+  });
  }
  function saveAction(fn){
   try{fn();renderBox();return true}
@@ -97,7 +129,9 @@
   return b;
  }
  function renderStats(root,it,ready){
-  const selected=Hub.active(currentSave()),isCurrent=!!(it&&selected?.id===it.id);
+  const s=currentSave(),selected=Hub.active(s);
+  const isCurrent=!!(it&&(ready?selected?.id===it.id:
+    Number(s?.partner)===it.dex&&!!s?.partnerShiny===!!it.shiny));
   const profile=root.querySelector('#pkmbx-profile');
   if(!it){
    profile.innerHTML='<p>'+L('Chưa có Pokémon trong kho.','No Pokémon in this box.')+'</p>';
@@ -105,6 +139,25 @@
   }
   const nature=Hub.nature(currentSave(),it),ability=Hub.ability(currentSave(),it);
   const abText=abilityName(ability?.id||'');
+  const abilityData=G.ABIL?.[ability?.id],desc=Array.isArray(abilityData)?
+   (typeof abilityData[2]==='string'?abilityData[2]:''):
+   (typeof abilityData?.description==='string'?abilityData.description:'');
+  const attr={hp:L('Máu','HP'),pa:L('Tấn công','Attack'),sa:L('Đặc công','Sp. Atk'),
+   df:L('Phòng thủ','Defense'),sd:L('Đặc thủ','Sp. Def'),spd:L('Tốc độ','Speed')};
+  const natureHint=nature?.up&&nature?.down?
+   L('Tăng 10% ','+10% ')+attr[nature.up]+L(' · Giảm 10% ',' · −10% ')+attr[nature.down]:
+   L('Tính cách trung tính, không tăng/giảm chỉ số.','Neutral Nature: no stat increases or penalties.');
+  const statRows=['hp','pa','sa','df','sd','spd'].map(k=>{
+   const base=Number(G.DEX_BY?.[it.dex]?.[k]);
+   if(!Number.isFinite(base))return '';
+   const mult=nature?.up===k?1.1:nature?.down===k?.9:1;
+   const val=base*mult;
+   const badge=mult===1?'':('<b class="'+(mult>1?'pkmbx-stat-plus':'pkmbx-stat-minus')+'">'+
+    (mult>1?'+10%':'−10%')+'</b>');
+   return '<div class="pkmbx-hub-stat"><span>'+attr[k]+'</span><strong>'+
+    (Number.isInteger(val)?val.toLocaleString('vi-VN'):val.toFixed(1))+'</strong>'+badge+'</div>';
+  }).join('');
+
   const mon=G.DEX_BY?.[it.dex];
   const types=mon?.types||[];
   const team=Hub.team(currentSave()),member=team.includes(it.id);
@@ -112,14 +165,16 @@
     '<div><strong>'+clean(monName(it.dex))+'</strong><p>'+clean(badgeText(it))+'</p>'+
     '<p>'+types.map(typeName).map(clean).join(' · ')+'</p></div></div>'+
     '<div class="pkmbx-hub-info">'+
-    '<p><b>'+L('Tính cách','Nature')+':</b> '+clean(natureName(it.natureId))+'</p>'+
-    '<p><b>'+L('Đặc tính','Ability')+':</b> '+clean(abText)+'</p>'+
+    '<p><b>'+L('Tính cách','Nature')+':</b> '+clean(natureName(it.natureId))+'</p>'+ 
+    '<p class="pkmbx-hint">'+clean(natureHint)+'</p>'+
+    '<p><b>'+L('Đặc tính','Ability')+':</b> '+clean(abText)+'</p>'+ 
+    (desc?'<p class="pkmbx-hint">'+clean(desc)+'</p>':'')+
     '<p><b>'+L('TM đã học','Learned TMs')+':</b> '+(Hub.learned(currentSave(),it)
       .map(id=>clean(G.Moves?.BY_ID?.[id]?G.T(G.Moves.BY_ID[id].name,'move'):id)).join(', ')||L('Chưa có','None'))+'</p>'+
     '</div><div class="pkmbx-hub-buttons">'+
-    '<button class="btn small gold" id="pkmbx-use" '+(!ready||isCurrent?'disabled':'')+'>'+
+    '<button class="btn small gold" id="pkmbx-use" '+(G.DB?.guest||isCurrent?'disabled':'')+'>'+
      (isCurrent?L('✓ Đang sử dụng','✓ Active'):L('✓ Chọn ra trận','✓ Set Active'))+'</button>'+
-    '<button class="btn small" id="pkmbx-star" '+(!ready?'disabled':'')+'>'+
+    '<button class="btn small" id="pkmbx-star" '+(G.DB?.guest?'disabled':'')+'>'+
      (it.favorite?L('★ Bỏ yêu thích','★ Unfavorite'):L('☆ Yêu thích','☆ Favorite'))+'</button>'+
     '<button class="btn small" id="pkmbx-team" '+(!ready?'disabled':'')+'>'+
      (member?L('− Bỏ khỏi Team 6','− Remove from Team 6'):L('+ Thêm vào Team 6','+ Add to Team 6'))+'</button>'+
@@ -130,10 +185,12 @@
     '<div class="pkmbx-hub-tab-content" id="pkmbx-tab-content"></div>';
   draw(profile.querySelector('#pkmbx-hero'),it.dex,it.shiny,true);
   profile.querySelector('#pkmbx-use').onclick=()=>saveAction(()=>{
-   if(!Hub.safeSelect(it.id))throw Error('Could not select this Pokémon');
+   if(ready?!Hub.safeSelect(it.id):!legacySelect(it)){
+    if(ready)throw Error('Could not select this Pokémon');
+   }
    G.UI?.toast?.(L('Đã chọn ','Selected ')+monName(it.dex),2400);
   });
-  profile.querySelector('#pkmbx-star').onclick=()=>saveAction(()=>Hub.toggleFavorite(it.id));
+  profile.querySelector('#pkmbx-star').onclick=()=>saveAction(()=>ready?Hub.toggleFavorite(it.id):legacyFavorite(it));
   profile.querySelector('#pkmbx-team').onclick=()=>saveAction(()=>Hub.toggleTeam(it.id));
   for(const b of profile.querySelectorAll('[data-box-tab]'))
    b.onclick=()=>{view=b.dataset.boxTab;renderBox();};
@@ -141,7 +198,10 @@
   else if(view==='rank')renderRank(profile.querySelector('#pkmbx-tab-content'),it,ready);
   else{
    const stats=G.PKMSVVBox2?.formatRank(it.rank);
-   profile.querySelector('#pkmbx-tab-content').innerHTML='<p>'+L('Cá thể riêng biệt: Nature, Ability, Shiny và Rank được giữ theo ID Pokémon.','Each individual retains its own Nature, Ability, Shiny and Rank.')+'</p>'+
+   profile.querySelector('#pkmbx-tab-content').innerHTML='<h3>'+L('Chỉ số Pokémon (theo tính cách)','Pokémon stats (with Nature)')+'</h3>'+ 
+    '<div class="pkmbx-hub-stats">'+statRows+'</div>'+ 
+    (!ready?'<p class="pkmbx-hint">'+L('Có thể chọn ra trận và yêu thích ngay với save cũ. Để quản lý từng cá thể, hãy xuất JSON và tạo PokéBox.','Choose a fighter and favorite now; back up JSON and migrate to manage individual items and Rank.')+'</p>':'')+ 
+    '<p>'+L('Cá thể riêng biệt: Nature, Ability, Shiny và Rank được giữ theo ID Pokémon.','Each individual retains its own Nature, Ability, Shiny and Rank.')+'</p>'+
     '<p>'+L('HP / sát thương Rank: ','Rank HP / damage: ')+'+'+(stats?.hp||0)+'%</p>'+
     '<p>'+L('Đội hình 6 ưu tiên khi chọn Pokémon cho Arena trong tương lai.','Your favorite Team 6 will be prioritized in future Arena selections.')+'</p>';
   }
@@ -260,7 +320,7 @@
   boxPane.querySelector('#pkmbx-migrate').textContent=ready?L('✓ Đã chuyển','✓ Migrated'):L('Tạo PokéBox từ save cũ','Create from old save');
   boxPane.querySelector('#pkmbx-migrate').disabled=ready||!backupDone||!!G.DB?.guest;
   boxPane.querySelector('#pkmbx-warning').textContent=!ready?
-   L('Các thao tác chỉnh sửa sẽ được mở sau khi sao lưu và chuyển save.','Edit controls unlock after backing up and migrating your save.'):
+   L('Đã mở Chọn ra trận và Yêu thích. Vật phẩm, Team 6 và Rank cần Xuất JSON → Tạo PokéBox.','Fighter selection and Favorites work now. Items, Team 6 and Rank require Export JSON → Create PokéBox.'):
    L('PokéBox lưu yêu thích, Team 6, Nature, Ability, TM và Rank theo cá thể.','PokéBox stores favorites, Team 6, Nature, Ability, TMs and Rank for each individual.');
   if(ready)renderTeam(boxPane,s);
   else{
@@ -274,7 +334,8 @@
   if(boxPane?.isConnected)boxPane.remove();
   boxPane=null;view=['items','rank','info'].includes(nextView)?nextView:'info';
   backupDone=false;page=0;query='';onlyFavorites=false;onlyShiny=false;
-  focused=Hub.active(currentSave())?.id||null;
+  const s=currentSave();
+  focused=Hub.active(s)?.id||listPreview().find(x=>x.dex===Number(s?.partner)&&x.shiny===!!s?.partnerShiny)?.id||null;
   ensureBox();renderBox();
  }
  function closeBox(){boxPane?.remove();boxPane=null;}
