@@ -85,7 +85,7 @@ test('normal open lobby does not pretend a match ended; a new match rejects old 
 });
 test('Host replay timer is finite and no unconfirmed final message can be created',async()=>{
  const h=participant('host');h.start();
- assert.equal(h.api.confirmedEnd(),true,'direct confirmedEnd used only after Host finish by runtime');
+ await h.G.Social.finishMatch(); // No fake terminal before Host's actual finish.
  h.packets.length=0;
  for(let i=0;i<15;i++)h.tick();
  assert.ok(h.packets.length<=8,'bounded replay, no network storm');
