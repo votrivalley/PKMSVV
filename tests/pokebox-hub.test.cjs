@@ -135,3 +135,22 @@ test('isolated QA packagers include Hub UI and never modify production prepare s
  assert.match(ui,/data-go="dex"/);
  assert.match(ui,/data-hub-tm/);
 });
+
+test('Pokédex QA UI restores all old filters, Gen 1 SVG icon and correct menu priority',()=>{
+ const ui=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub-ui.js'),'utf8');
+ const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub.css'),'utf8');
+ for(const key of ['pkmbx-dex-search','pkmbx-dex-gen','pkmbx-dex-rarity','pkmbx-dex-status',
+  'pkmbx-dex-type','pkmbx-dex-order','pkmbx-dex-fav','pkmbx-dex-sort-close']){
+  assert.ok(ui.includes(key),'missing '+key);
+ }
+ assert.match(ui,/function pokedexIcon\(\)/);
+ assert.match(ui,/insertBefore\(ref,dex\)/);
+ assert.match(ui,/function legacySelect\(it\)/);
+ assert.match(ui,/function legacyFavorite\(it\)/);
+ assert.match(ui,/pkmbx-use/);
+ assert.match(ui,/pkmbx-star/);
+ assert.match(ui,/Tăng 10%/);
+ assert.match(ui,/Đặc tính/);
+ assert.match(css,/pkmbx-hub-stats/);
+ assert.match(css,/pkmbx-gen1-icon/);
+});
