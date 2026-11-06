@@ -67,7 +67,7 @@
  }
  function toggleFavorite(id,s=save()){
   return atomic(s,draft=>{
-   const x=item(draft,id);if(!x)throw Error('Pokémon not found');
+   const x=speciesBase(draft,item(draft,id));if(!x)throw Error('Pokémon not found');
    x.favorite=!x.favorite;
    return {id,favorite:x.favorite};
   });
@@ -119,20 +119,28 @@
    return ids.slice();
   });
  }
- function nature(s,x){
+ // Shared species traits live on the earliest original Normal carrier when present.
+ // Old Shiny save data is retained for rollback; selecting a skin never resets traits.
+ function speciesBase(s,x){
   if(!x)return null;
-  return typeof G!=='undefined'?G.NATURE_BY?.[x.natureId]||null:null;
+  const same=Array.isArray(s?.pkmsvvBox)?s.pkmsvvBox.filter(v=>v.dex===x.dex):[];
+  return same.find(v=>v.id==='b1-'+x.dex+'-n')||
+   same.find(v=>!v.shiny&&v.rank>0)||same.find(v=>!v.shiny)||x;
+ }
+ function nature(s,x){
+  const base=speciesBase(s,x);
+  return base&&typeof G!=='undefined'?G.NATURE_BY?.[base.natureId]||null:null;
  }
  function ability(s,x){
-  if(!x)return null;
-  const slots=typeof G!=='undefined'?G.DEX_ABIL?.[x.dex]||[0,0,0]:[0,0,0];
-  const slot=Number.isInteger(x.abilitySlot)&&slots[x.abilitySlot]?x.abilitySlot:0;
+  const base=speciesBase(s,x);if(!base)return null;
+  const slots=typeof G!=='undefined'?G.DEX_ABIL?.[base.dex]||[0,0,0]:[0,0,0];
+  const slot=Number.isInteger(base.abilitySlot)&&slots[base.abilitySlot]?base.abilitySlot:0;
   return {slot,id:slots[slot]||0};
  }
  function learned(s,x){
-  if(!x)return [];
-  const arr=Array.isArray(x.taughtMoves)?x.taughtMoves:
-    x.id.startsWith('b1-')?(s?.ptm?.[x.dex]||[]):[];
+  const base=speciesBase(s,x);if(!base)return [];
+  const arr=Array.isArray(base.taughtMoves)?base.taughtMoves:
+    base.id.startsWith('b1-')?(s?.ptm?.[base.dex]||[]):[];
   return [...new Set(arr)].filter(id=>typeof id==='string');
  }
  function activeForDex(dex,s=save()){
@@ -142,7 +150,7 @@
  function useMint(id,natureId,s=save()){
   if(typeof G==='undefined'||!G.NATURE_BY?.[natureId])throw Error('Invalid Nature');
   return atomic(s,draft=>{
-   const x=item(draft,id);
+   const x=speciesBase(draft,item(draft,id));
    if(!x||x.natureId===natureId)throw Error('Select a different Nature');
    if(!(draft.bag?.mint>0))throw Error('No Nature Mint in Bag');
    draft.bag.mint--;if(!draft.bag.mint)delete draft.bag.mint;
@@ -173,7 +181,7 @@
  }
  function teach(id,moveId,s=save()){
   return atomic(s,draft=>{
-   const x=item(draft,id);
+   const x=speciesBase(draft,item(draft,id));
    if(!canTeach(draft,x,moveId))throw Error('TM is unavailable or already learned');
    const old=learned(draft,x);
    draft.tms[moveId]--;if(!draft.tms[moveId])delete draft.tms[moveId];
@@ -239,5 +247,5 @@
   return !!box()?.selectInstance?.(id);
  }
  return {TEAM_MAX,valid,item,active,activeForDex,team,legacyTeam,isMember,toggleFavorite,toggleTeam,
-  reorderTeam,nature,ability,learned,useMint,useCapsule,canTeach,teach,installMons,rankOverview,safeSelect};
+  reorderTeam,speciesBase,nature,ability,learned,useMint,useCapsule,canTeach,teach,installMons,rankOverview,safeSelect};
 });
