@@ -32,7 +32,7 @@
     "test:kecleon": "node --test tests/kecleon.test.cjs",
     "test:opening": "node --test tests/opening-spawns.test.cjs",
     "prepare:web": "node scripts/prepare-web.cjs",
-    "test:web": "node --test tests/pokebox-stage1.test.cjs tests/pokebox-stage2.test.cjs tests/pokebox-stage3.test.cjs tests/pokebox-stage4.test.cjs tests/pokebox-hub.test.cjs tests/story-intro.test.cjs tests/web-*.test.cjs tests/v15-eggs.test.cjs tests/v15-gacha-save-isolation.test.cjs tests/chapter-purple-rewards.test.cjs tests/competitive-nonblocking.test.cjs tests/royale-spectator.test.cjs tests/save-guardian-regression.test.cjs",
+    "test:web": "node --test tests/pokebox-stage1.test.cjs tests/pokebox-stage2.test.cjs tests/pokebox-stage3.test.cjs tests/pokebox-stage4.test.cjs tests/pokebox-hub.test.cjs tests/story-intro.test.cjs tests/web-*.test.cjs tests/v15-eggs.test.cjs tests/v15-gacha-save-isolation.test.cjs tests/chapter-purple-rewards.test.cjs tests/competitive-nonblocking.test.cjs tests/royale-spectator.test.cjs tests/save-guardian-regression.test.cjs tests/region-story-map.test.cjs",
     "test:v15": "node --test tests/story-intro.test.cjs tests/v15-eggs.test.cjs tests/v15-gacha-save-isolation.test.cjs tests/dex-header-actions.test.cjs tests/lan-hud-layout.test.cjs tests/lan-mode-rules.test.cjs tests/arena-v1529.test.cjs tests/lan-ai-modes.test.cjs tests/lan-support-animation.test.cjs tests/egg-rush-hidden-score.test.cjs tests/egg-rush-shiny.test.cjs tests/chapter-purple-rewards.test.cjs tests/competitive-nonblocking.test.cjs tests/royale-spectator.test.cjs",
     "prepare:lan": "node scripts/prepare-lan.cjs",
     "build:lan:win": "electron-builder --win portable --x64 --publish never --config lan-win.json",
@@ -67,7 +67,7 @@
     "test:mega:phase2": "node --test tests/mega-ui-phase2.test.cjs",
     "test:mega:phase3": "node --test tests/mega-phase3.test.cjs",
     "test:mega:shiny": "node --test tests/mega-shiny.test.cjs",
-    "test:arena:champion": "node --test tests/champion-arena.test.cjs",
+    "test:arena:champion": "node --test tests/champion-arena.test.cjs tests/region-story-map.test.cjs",
     "test:story:gates": "node --test tests/story-progression.test.cjs",
     "test:mega:gacha": "node --test tests/mega-arena-gacha.test.cjs",
     "test:arena:solo": "node --test tests/arena-solo.test.cjs tests/arena-pvp.test.cjs",
@@ -82,7 +82,7 @@
     "test:choice:queue": "node --test tests/double-item-choice.test.cjs tests/competitive-nonblocking.test.cjs",
     "test:chapter5:progress": "node --test tests/story-progression.test.cjs tests/champion-arena.test.cjs tests/android-berry-memory-routing.test.cjs",
     "test:ced": "node --test tests/held-item-choice.test.cjs tests/bond-fusion-svv.test.cjs tests/season-event.test.cjs",
-    "test:champion:qa": "node --test tests/champion-arena.test.cjs tests/mega-phase3.test.cjs tests/arena-solo.test.cjs"
+    "test:champion:qa": "node --test tests/champion-arena.test.cjs tests/mega-phase3.test.cjs tests/arena-solo.test.cjs tests/region-story-map.test.cjs"
   },
   "devDependencies": {
     "playwright": "^1.62.1",
