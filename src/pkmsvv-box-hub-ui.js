@@ -693,9 +693,13 @@
     const label=extra.querySelector('.pkmsvv-menu-label, strong, .menu-label');
     if(label)label.textContent='Pokémon';
    }
+  if(extra){
+   const sub=extra.querySelector('.pkmsvv-menu-copy small, small');
+   if(sub)sub.textContent=L('PokéBox · Pokédex · Nâng cấp','PokéBox · Pokédex · Upgrades');
+  }
   if(original){
-   const sub=original.querySelector('small');
-   if(sub)sub.textContent=L('PokéBox · Pokédex · Nâng cấp · Hỗ trợ · Mega · Berry','PokéBox · Pokédex · Upgrades · Support · Mega · Berries');
+   const sub=original.querySelector('.pkmsvv-menu-copy small, small');
+   if(sub)sub.textContent=L('Pokémon hỗ trợ · Mega · Berry','Support Pokémon · Mega · Berries');
   }
  }
  // Keep migration in Save Management, never in the regular PokéBox UI.
