@@ -44,7 +44,7 @@ G.PKMSVVMatchRecovery=(()=>{
  }
  function begin(cfg){
   stop();terminal=null;
-  const r=room(),seed=cfg?.seed;
+  const r=room(),seed=cfg?.seed??(Number.isSafeInteger(r?.matchSerial)&&r.matchSerial>0?r.matchSerial:null);
   if(!r||!validMode(cfg?.mode)||!validMode(r.mode)||
     cfg.mode!==r.mode||String(cfg.host)!==String(r.host)||
     seed===null||seed===undefined)return false;
