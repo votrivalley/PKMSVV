@@ -27,7 +27,7 @@ G.PKMSVVMatchRecovery=(()=>{
   return true;
  }
  function confirmedEnd(){
-  if(!session||!session.host||!isHost()||!validMode(session.mode))return false;
+  if(!session||!session.host||!isHost()||!validMode(session.mode)||room()?.open!==true)return false;
   if(terminal?.room===session.room&&terminal?.seed===session.seed)return false;
   terminal={k:KEY,room:session.room,seed:session.seed,mode:session.mode,
    host:uid(),seq:1,finished:true};
@@ -127,7 +127,7 @@ G.PKMSVVMatchRecovery=(()=>{
   return true;
  }
  install();
- return {begin,receive,reconcile,confirmedEnd,requestSync,transmit,stop,
+ return {begin,receive,reconcile,requestSync,transmit,stop,
   get session(){return session?{...session}:null},
   get terminal(){return terminal?{...terminal}:null}};
 })();
