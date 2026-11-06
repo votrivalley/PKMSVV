@@ -86,8 +86,10 @@
    const found=list.querySelector(selector);
    const item=found?.closest?.('.menu-item')||found;
    if(item?.parentElement===list)return item;
-   return nodes.find(node=>names.some(name=>
-    (node.querySelector('.pkmsvv-menu-label')?.textContent||'').trim().toLowerCase()===name))||null;
+   return nodes.find(node=>{
+    const label=(node.querySelector('.pkmsvv-menu-label,.menu-label,strong')?.textContent||node.textContent||'').trim().toLowerCase();
+    return names.some(name=>label===name||label.startsWith(name+' '));
+   })||null;
   };
   const play=entry('[data-go="play"]',['chơi ngay','play','play now']);
   const pokemon=entry('[data-go="dex"]',['pokémon','pokemon']);
