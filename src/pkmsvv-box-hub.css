@@ -237,3 +237,6 @@
  #pkmsvv-pokebox-overlay #pkmbx-sort{max-width:138px}
  #pkmsvv-pokebox-overlay .pkmbx-found-count{margin-left:0}
 }
+
+#pkmsvv-pokebox-overlay #pkmbx-ready{accent-color:#81d5c8}
+#pkmsvv-pokebox-overlay .pkmbx-rank-materials{font-variant-numeric:tabular-nums}
