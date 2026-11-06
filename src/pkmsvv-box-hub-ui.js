@@ -150,7 +150,7 @@
   const statRows=['hp','pa','sa','df','sd','spd'].map(k=>{
    const base=Number(G.DEX_BY?.[it.dex]?.[k]);
    if(!Number.isFinite(base))return '';
-   const mult=nature?.up===k?1.1:nature?.down===k?.9:1;
+   const mult=nature?.up===k?1.1:nature?.down===k?0.9:1;
    const val=base*mult;
    const badge=mult===1?'':('<b class="'+(mult>1?'pkmbx-stat-plus':'pkmbx-stat-minus')+'">'+
     (mult>1?'+10%':'−10%')+'</b>');
@@ -185,9 +185,9 @@
     '<div class="pkmbx-hub-tab-content" id="pkmbx-tab-content"></div>';
   draw(profile.querySelector('#pkmbx-hero'),it.dex,it.shiny,true);
   profile.querySelector('#pkmbx-use').onclick=()=>saveAction(()=>{
-   if(ready?!Hub.safeSelect(it.id):!legacySelect(it)){
-    if(ready)throw Error('Could not select this Pokémon');
-   }
+   if(ready){
+    if(!Hub.safeSelect(it.id))throw Error('Could not select this Pokémon');
+   }else legacySelect(it);
    G.UI?.toast?.(L('Đã chọn ','Selected ')+monName(it.dex),2400);
   });
   profile.querySelector('#pkmbx-star').onclick=()=>saveAction(()=>ready?Hub.toggleFavorite(it.id):legacyFavorite(it));
