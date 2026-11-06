@@ -93,3 +93,22 @@
 #scr-menu.pkmsvv-v15-menu .pkmsvv-v15-event span{
  color:#173e4e!important;-webkit-text-fill-color:#173e4e!important
 }
+
+
+/* News button legibility: dark text no longer disappears on a pale-yellow tile. */
+#scr-menu.pkmsvv-v15-menu #btn-news,
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-bottom>#btn-news,
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-bottom>.pkmsvv-v15-news-card{
+ background:linear-gradient(145deg,#194a59,#0d2e43)!important;
+ color:#fff0bd!important;-webkit-text-fill-color:#fff0bd!important;
+ border:2px solid #9ddbd3!important;
+ box-shadow:0 3px 0 #0a2334,0 0 0 1px #e1ba7b55!important
+}
+#scr-menu.pkmsvv-v15-menu #btn-news :is(span,strong,small,b,p,div),
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-news-card :is(span,strong,small,b,p,div){
+ color:#fff1c8!important;-webkit-text-fill-color:#fff1c8!important;
+ opacity:1!important;text-shadow:0 1px 2px #082131!important
+}
+#scr-menu.pkmsvv-v15-menu #btn-news:hover{
+ background:linear-gradient(145deg,#236675,#174354)!important;
+}
