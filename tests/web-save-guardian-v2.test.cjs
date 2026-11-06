@@ -104,3 +104,12 @@ test('committed purchase is journaled once; failed or pending DB transaction can
  assert.deepEqual(JSON.parse(data.get(HEAD+'latest')),next);
  guardian.endTransaction(token,false);
 });
+
+test('Guardian is bundled in PC, Android and Web and Cloudflare preloader cannot initialize it twice',()=>{
+ const prep=fs.readFileSync(path.join(__dirname,'../scripts/prepare-game.cjs'),'utf8');
+ const build=fs.readFileSync(path.join(__dirname,'../scripts/patch-save-guardian-v2.cjs'),'utf8');
+ assert.match(prep,/patch-save-guardian-v2\\.cjs/);
+ assert.match(build,/pkmsvv-save-guardian\\.js/);
+ assert.match(build,/pkmsvv-save-ui\\.js/);
+ assert.match(src,/if\\(window\\.PKMSVVSaveGuardian\\?\\.compare\\)return;/);
+});
