@@ -117,3 +117,31 @@ test('Guardian is bundled in PC, Android and Web and Cloudflare preloader cannot
  assert.match(build,/pkmsvv-save-ui\.js/);
  assert.match(src,/if\(window\.PKMSVVSaveGuardian\?\.compare\)return;/);
 });
+
+test('asynchronous DB commit is never logged before confirmation or after a rejected result',async()=>{
+ const initial=save(),data=new Map([[SAVE,JSON.stringify(initial)]]),callbacks=[],events={};
+ const storage={getItem:k=>data.get(k)||null,setItem(k,v){data.set(k,String(v))}};
+ const G={DB:{commit(){return new Promise(resolve=>callbacks.push(resolve))}}};
+ const window={addEventListener(k,fn){events[k]=fn}};
+ vm.runInNewContext(src,{G,window,document:{hidden:false,addEventListener(k,fn){events[k]=fn}},
+  localStorage:storage,Date,Math,JSON,console,setInterval(){}});
+ const guardian=window.PKMSVVSaveGuardian,count=guardian.journal().length;
+ const after=structuredClone(initial);after.coins=700;
+ data.set(SAVE,JSON.stringify(after));
+ const done=G.DB.commit();assert.equal(guardian.journal().length,count);
+ callbacks.shift()(false);assert.equal(await done,false);
+ assert.equal(guardian.journal().length,count);
+ const approved=G.DB.commit();callbacks.shift()(true);assert.equal(await approved,true);
+ assert.equal(guardian.journal().at(-1).type,'db-commit');
+});
+test('manual restore refuses to overwrite the only good save when pre-restore backup fails',()=>{
+ const initial=save(),older=structuredClone(initial);older.coins=30;
+ const data=new Map([[SAVE,JSON.stringify(initial)],[HEAD+'previous',JSON.stringify(older)]]);
+ const storage={getItem:k=>data.get(k)||null,
+  setItem(k,v){if(k.endsWith('.prerestore'))throw Error('quota');data.set(k,String(v))}};
+ const window={addEventListener(){}};
+ vm.runInNewContext(src,{window,document:{hidden:false,addEventListener(){}},
+  localStorage:storage,Date,Math,JSON,console,setInterval(){}});
+ assert.equal(window.PKMSVVSaveGuardian.restoreSnapshot('previous',true).ok,false);
+ assert.deepEqual(JSON.parse(data.get(SAVE)),initial);
+});
