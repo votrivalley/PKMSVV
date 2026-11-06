@@ -76,6 +76,10 @@ test('Save UI requires visible comparison and cannot silently overwrite imported
  assert.match(src,/Tiến trình & cờ chương/);
  assert.match(src,/Vật phẩm và số dư \(chỉ cảnh báo\)/);
  assert.match(src,/pkmsvv.preimport.previous/);
+ assert.match(src,/function mountGuardianDetails/);
+ assert.match(src,/Lịch sử thay đổi Save/);
+ assert.match(src,/Hai bản Save dự phòng/);
+ assert.match(src,/guardian\.restoreSnapshot\(slot,true\)/);
  assert.match(src,/guardian\?\.beginTransaction/);
  assert.match(src,/location.reload\(\)/);
 });
