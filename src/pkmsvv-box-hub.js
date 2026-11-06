@@ -122,7 +122,7 @@
  // Shared species traits live on the earliest original Normal carrier when present.
  // Old Shiny save data is retained for rollback; selecting a skin never resets traits.
  function speciesBase(s,x){
-  if(!x)return null;
+  if(!x||!x.shiny)return x;
   const same=Array.isArray(s?.pkmsvvBox)?s.pkmsvvBox.filter(v=>v.dex===x.dex):[];
   return same.find(v=>v.id==='b1-'+x.dex+'-n')||
    same.find(v=>!v.shiny&&v.rank>0)||same.find(v=>!v.shiny)||x;
