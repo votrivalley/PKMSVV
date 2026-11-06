@@ -41,7 +41,7 @@ test('Team 6 defaults to current Pokémon, contains six unique instance IDs and 
  assert.equal(hub.team(h.s).length,6);
  assert.equal(hub.team(h.s)[0],'b1-6-n');
  assert.ok(copies[0].id!=='b1-6-n');
- assert.ok(hub.item(h.s,copies[0].id).favorite);
+ assert.equal(hub.item(h.s,copies[0].id).favorite,false,'Ready Team must not auto-favorite');
  assert.throws(()=>hub.toggleTeam(copies[5].id,h.s),/full/);
  const kept=hub.team(h.s);
  assert.deepEqual(hub.team(JSON.parse(JSON.stringify(h.s))),kept);
