@@ -9,7 +9,7 @@
  if(root&&root.G)root.G.PKMSVVBox3=api;
 })(typeof globalThis==='object'?globalThis:this,function(){
  'use strict';
- const ITEM='reforge-prism',PRICE=6500,SHOP_RATE=0.12,PITY=180,MAX_DROPS_PER_RUN=1;
+ const ITEM='reforge-prism',PRICE=6500,SHOP_RATE=1,PITY=180,MAX_DROPS_PER_RUN=1;
  const RATES=Object.freeze({type:0.0035,species:0.015,elite:0.03,boss:0.08});
  const own=(x,k)=>Object.prototype.hasOwnProperty.call(x,k);
  const deep=x=>JSON.parse(JSON.stringify(x));
@@ -19,6 +19,13 @@
  const box2=()=>typeof G==='undefined'?null:G.PKMSVVBox2;
  let dropsThisRun=0,unflushedPityKills=0,pendingPitySave=null,enemyInstalled=false,shopInstalled=false;
  const PITY_BATCH=25; // far fewer synchronous save writes in crowded solo runs
+ function validPurchase(s){
+  if(!s||typeof s!=='object'||Array.isArray(s)||!Number.isFinite(Number(s.coins))||Number(s.coins)<0)return false;
+  if(s.pkmsvvBoxSchema!==undefined&&!box2()?.valid?.(s))return false;
+  if(s.pkmsvvReforgePrisms!==undefined&&!nonneg(s.pkmsvvReforgePrisms))return false;
+  if(s.pkmsvvReforgeBoughtDay!==undefined&&typeof s.pkmsvvReforgeBoughtDay!=='string')return false;
+  return true;
+ }
  function valid(s){
   if(!box2()?.valid?.(s))return false;
   if(s.pkmsvvReforgePrisms!==undefined&&!nonneg(s.pkmsvvReforgePrisms))return false;
@@ -26,7 +33,7 @@
   if(s.pkmsvvReforgeBoughtDay!==undefined&&typeof s.pkmsvvReforgeBoughtDay!=='string')return false;
   return true;
  }
- function count(s=getSave()){return valid(s)?s.pkmsvvReforgePrisms||0:0;}
+ function count(s=getSave()){return validPurchase(s)?s.pkmsvvReforgePrisms||0:0;}
  function pity(s=getSave()){return valid(s)?s.pkmsvvReforgePity||0:0;}
  function today(){
   if(typeof G!=='undefined'&&typeof G.Shop?.today==='function')return String(G.Shop.today());
@@ -43,12 +50,14 @@
   return (h>>>0)/4294967296;
  }
  function shopOffer(day=today(),s=getSave()){
-  const available=slotRoll(day)<SHOP_RATE;
+  // QA: always-stocked Prism (1 per day), independent of rare enemy drops.
+  const available=true;
   return {day,available,bought:!!(s&&s.pkmsvvReforgeBoughtDay===day),price:PRICE,
-   canBuy:available&&valid(s)&&s.pkmsvvReforgeBoughtDay!==day&&Number(s.coins)>=PRICE};
+   canBuy:available&&validPurchase(s)&&s.pkmsvvReforgeBoughtDay!==day&&Number(s.coins)>=PRICE&&
+    !(typeof G!=='undefined'&&G.DB?.save===s&&G.DB?.guest)};
  }
- function commitDraft(s,draft){
-  if(!valid(draft))throw Error('Corrupt PokéBox save; no item was changed');
+ function commitDraft(s,draft,validate=valid){
+  if(!validate(draft))throw Error('Invalid save; no item was changed');
   const max=box2()?.MAX_SAVE_CHARS||1400000;
   if(JSON.stringify(draft).length>max)throw Error('Save too large to commit safely');
   const previous=deep(s);
@@ -63,23 +72,22 @@
    throw e;
   }
  }
- function atomic(s,cb){
-  if(!valid(s))throw Error('Create PokéBox from a backup first');
+ function atomic(s,cb,validate=valid){
+  if(!validate(s))throw Error('Invalid save; operation blocked');
   const draft=deep(s);
   const result=cb(draft);
-  commitDraft(s,draft);
+  commitDraft(s,draft,validate);
   return result;
  }
  function buy(s=getSave(),day=today()){
-  if(!shopOffer(day,s).canBuy)throw Error('Prism sold out, absent or not enough PokéCoins');
+  if(!shopOffer(day,s).canBuy)throw Error('Prism unavailable, already purchased or not enough PokéCoins');
   return atomic(s,draft=>{
-   // Recheck with the draft to prevent double purchases.
-   if(!shopOffer(day,draft).canBuy)throw Error('Prism already purchased');
+   if(!shopOffer(day,draft).canBuy)throw Error('Prism already purchased or not enough PokéCoins');
    draft.coins-=PRICE;
    draft.pkmsvvReforgePrisms=(draft.pkmsvvReforgePrisms||0)+1;
    draft.pkmsvvReforgeBoughtDay=day;
    return {item:ITEM,price:PRICE,count:draft.pkmsvvReforgePrisms,day};
-  });
+  },validPurchase);
  }
  function resetBranch(id,newBranch,s=getSave()){
   return atomic(s,draft=>{
@@ -209,35 +217,43 @@
    section.setAttribute('translate','no');
    section.className='pkmbx-prism-store';
    const vi=G.I18n?.lang!=='en';
-   const title=vi?'🔮 Lăng Kính Tái Khắc':'🔮 Reforge Prism';
-   const status=offer.bought?(vi?'Đã mua hôm nay':'Purchased today'):
-    !offer.available?(vi?'Chưa xuất hiện hôm nay (12%/ngày)':'Not in stock today (12% per day)'):
-    (vi?'Hàng hiếm hôm nay · chỉ 1 viên':'Rare daily stock · one only');
-   section.innerHTML='<h3>'+title+'</h3><p>'+(vi?'Đổi hướng Rank 3/5 mà không mất Rank.':'Switch your Rank 3/5 branch without losing Rank.')+'</p>'+
-    '<p>'+(inBag?(vi?'Số lượng trong Túi đồ: ':'Owned: '):(status+' · '+(vi?'Túi hiện có: ':'In Bag: ')))+count(s)+'</p>';
+   const title=vi?'Lăng Kính Tái Khắc':'Reforge Prism';
+   const status=offer.bought?(vi?'Đã mua hôm nay · mở bán lại ngày mai':'Purchased today · available again tomorrow'):
+    (vi?'Có bán hôm nay · giới hạn 1 viên/ngày':'In stock today · limit one per day');
+   section.innerHTML='<div class="pkmbx-prism-product">'+
+    '<span class="pkmbx-prism-product-icon" aria-hidden="true">🔮</span>'+
+    '<div class="pkmbx-prism-product-info"><h3>'+title+'</h3>'+
+    '<p>'+(vi?'Đổi hướng Rank 3/5 mà không mất cấp Rank.':'Change Rank 3/5 path without losing Rank.')+'</p>'+
+    '<p>'+(vi?'Trong túi: ':'In Bag: ')+count(s)+' · '+status+'</p>'+
+    '<strong class="pkmbx-prism-price">'+PRICE.toLocaleString('vi-VN')+' PokéCoins</strong></div></div>';
    if(inBag){
     const info=document.createElement('p');
-    info.textContent=vi?'Dùng tại PokéBox → Rank → Đổi hướng.':'Use from PokéBox → Rank → Change Path.';
+    info.textContent=vi?'Đã có trong Túi đồ. Dùng tại PokéBox → Rank → Đổi hướng.':'Owned item. Use from PokéBox → Rank → Change Path.';
     section.appendChild(info);
-    list.appendChild(section);
-    return;
+    const jump=document.createElement('button');jump.type='button';jump.className='btn small';
+    jump.textContent=vi?'🦎 Đến cửa hàng':'🦎 Go to Shop';
+    jump.onclick=()=>ui.open('shop');
+    section.appendChild(jump);
+    list.appendChild(section);return;
    }
-   if(!valid(s)){
-    const info=document.createElement('p');
-    info.textContent=vi?'Cần tạo PokéBox từ bản sao save trước khi mua.':'Create PokéBox from a backed-up save before buying.';
-    section.appendChild(info);
-   }
-   if(offer.available&&!offer.bought){
-    const button=document.createElement('button');
-    button.className='btn small gold';button.type='button';
-    button.textContent=(vi?'Mua ':'Buy ')+PRICE.toLocaleString('vi-VN')+' PokéCoins';
-    button.disabled=!offer.canBuy;
-    button.onclick=()=>{
-     button.disabled=true;
-     try{buy(db.save,offer.day);G.UI?.refreshCoins?.();ui.render();}
-     catch(e){G.UI?.toast?.(e.message,3000);ui.render();}
-    };
-    section.appendChild(button);
+   const button=document.createElement('button');
+   button.className='btn small gold pkmbx-prism-buy';button.type='button';
+   button.textContent=offer.bought?(vi?'✓ Đã mua hôm nay':'✓ Bought today'):
+    (vi?'Mua Lăng Kính · ':'Buy Prism · ')+PRICE.toLocaleString('vi-VN')+' PokéCoins';
+   button.disabled=!offer.canBuy;
+   button.onclick=()=>{
+    button.disabled=true;
+    try{buy(db.save,offer.day);G.UI?.refreshCoins?.();ui.render();}
+    catch(e){G.UI?.toast?.(e.message,3000);ui.render();}
+   };
+   section.appendChild(button);
+   if(!offer.canBuy&&!offer.bought){
+    const reason=document.createElement('p');reason.className='pkmbx-prism-unavailable';
+    reason.textContent=!validPurchase(s)?
+     (vi?'Hồ sơ lưu không hợp lệ, chưa thể mua.':'Invalid save profile; purchase disabled.'):
+     Number(s?.coins)<PRICE?(vi?'Không đủ PokéCoins.':'Not enough PokéCoins.'):
+     (vi?'Hồ sơ khách không thể mua vật phẩm.':'Guest profiles cannot buy items.');
+    section.appendChild(reason);
    }
    list.appendChild(section);
   }
