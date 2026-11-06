@@ -1,0 +1,63 @@
+/* QA-only unified PC and restored home details. */
+#pkmsvv-wiki-overlay .pkmsvv-pc-panel{max-height:96dvh;overflow-y:auto}
+#pkmsvv-wiki-overlay .pkmsvv-pc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+#pkmsvv-wiki-overlay .pkmsvv-pc-unified-card{
+ display:flex;flex-direction:column;justify-content:center;align-items:center;
+ gap:10px;min-width:0;min-height:150px;padding:12px;
+ background:linear-gradient(155deg,#235e69,#1b4354);
+ border-color:#8adbc8;color:#ffe08c;cursor:pointer;
+}
+#pkmsvv-wiki-overlay .pkmsvv-pc-unified-card strong{font-size:clamp(15px,1.6vw,20px);text-align:center}
+#pkmsvv-wiki-overlay .pkmsvv-pc-unified-card:hover{border-color:#ffe49b;filter:brightness(1.08)}
+#pkmsvv-wiki-overlay .pkmsvv-pc-unified-card:focus-visible{outline:3px solid #ffe49b}
+#pkmsvv-wiki-overlay .pkmsvv-pc-unified-icon{font-size:48px;line-height:1;min-height:58px;display:grid;place-items:center}
+#pkmsvv-wiki-overlay .pkmsvv-pc-gen1-icon{width:54px;height:54px;image-rendering:pixelated}
+#pkmsvv-wiki-overlay .pkmsvv-pc-learn>button:empty{display:none}
+#pkmsvv-pokebox-overlay{z-index:21010!important}
+#pkmbx-dex-overlay{z-index:21011!important}
+#scr-menu .menu-left .pkmsvv-save-banner{
+ display:block;box-sizing:border-box;flex:0 0 auto;margin:6px auto 9px;
+ width:min(96%,680px);padding:9px 14px;text-align:center;
+ background:#fff0a6;border:2px solid #ae853a;border-radius:10px;
+ color:#233e4b!important;-webkit-text-fill-color:#233e4b!important;
+ box-shadow:0 2px 6px #112b3f50;font:800 clamp(12px,1.25vw,16px)/1.4 "Segoe UI",sans-serif;
+ text-shadow:none;opacity:1!important;letter-spacing:0;overflow-wrap:anywhere
+}
+#scr-menu .menu-left .pkmsvv-v15-event span{color:#244653!important;-webkit-text-fill-color:#244653!important;font-weight:600}
+#scr-menu .menu-left .pkmsvv-v15-event button[hidden]{display:none!important}
+#scr-menu #btn-news,#scr-menu .pkmsvv-v15-bottom #btn-news,#scr-menu .pkmsvv-v15-news .news-btn{
+ color:#fff3c6!important;-webkit-text-fill-color:#fff3c6!important;
+ background:linear-gradient(150deg,#256978,#164858)!important;
+ border:2px solid #81dfd0!important;border-radius:12px!important;
+ box-shadow:0 3px 9px #08273680!important;
+ text-shadow:none!important;opacity:1!important;filter:none!important;
+ pointer-events:auto!important;cursor:pointer!important;
+ min-height:66px!important;font-weight:800!important;
+}
+#scr-menu #btn-news img{filter:brightness(0) invert(1)!important;opacity:1!important}
+#scr-menu .pkmsvv-v15-partner .pkmsvv-v15-meta{
+ display:block!important;min-height:0!important;max-height:none!important;
+ overflow:visible!important;opacity:1!important;visibility:visible!important;
+ color:#1c4050!important;-webkit-text-fill-color:#1c4050!important
+}
+#scr-menu .pkmsvv-v15-partner #menu-partner-name{
+ display:block!important;font-weight:800!important;font-size:clamp(20px,2.2vw,30px)!important;
+ line-height:1.25!important;color:#214455!important;-webkit-text-fill-color:#214455!important
+}
+#scr-menu .pkmsvv-v15-partner #menu-partner-info,
+#scr-menu .pkmsvv-v15-partner #menu-stats{
+ display:block!important;white-space:normal!important;line-height:1.45!important;
+ margin-top:7px!important;font-size:clamp(13px,1.3vw,18px)!important;
+ color:#214455!important;-webkit-text-fill-color:#214455!important;
+}
+#scr-menu .pkmsvv-home-type-row{display:flex;flex-wrap:wrap;gap:6px;margin:7px 0}
+#scr-menu .pkmsvv-home-type-chip{display:inline-flex;align-items:center;
+ border-radius:7px;padding:5px 10px;color:#162e3a!important;
+ -webkit-text-fill-color:#162e3a!important;font-size:14px;font-weight:800}
+@media(max-width:680px){
+ #pkmsvv-wiki-overlay .pkmsvv-pc-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ #pkmsvv-wiki-overlay .pkmsvv-pc-unified-card{min-height:105px;padding:8px}
+ #pkmsvv-wiki-overlay .pkmsvv-pc-unified-icon{min-height:38px;font-size:34px}
+ #pkmsvv-wiki-overlay .pkmsvv-pc-gen1-icon{width:38px;height:38px}
+ #scr-menu #btn-news{min-height:52px!important}
+}
