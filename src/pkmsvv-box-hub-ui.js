@@ -202,12 +202,17 @@
   const types=mon?.types||[];
   const team=Hub.team(currentSave()),member=team.includes(it.id);
   const progress=Hub.rankOverview(s,it);
+  const allForms=listPreview().filter(x=>x.dex===it.dex);
+  const normalForm=allForms.find(x=>!x.shiny),shinyForm=allForms.find(x=>x.shiny);
   profile.innerHTML='<div class="pkmbx-hub-hero"><canvas id="pkmbx-hero" width="176" height="176"></canvas>'+
-    '<div><strong>'+clean(monName(it.dex))+'</strong><p>'+clean(badgeText(it))+'</p>'+
+    '<div><strong>'+clean(monName(it.dex))+'</strong><p>#'+it.dex+' · Rank '+progress.rank+'/5</p>'+
     '<p>'+types.map(typeName).map(clean).join(' · ')+'</p></div></div>'+
+    '<div class="pkmbx-box-variants" role="group" aria-label="'+L('Dạng Pokémon','Pokémon form')+'">'+
+    '<button type="button" data-box-variant="normal" class="btn small'+(!it.shiny?' gold':'')+'" '+(!normalForm?'disabled':'')+'>'+L('Bình thường','Normal')+'</button>'+
+    '<button type="button" data-box-variant="shiny" class="btn small'+(it.shiny?' gold':'')+'" '+(!shinyForm?'disabled':'')+'>✨ Shiny</button></div>'+
     rankBlock(it,progress)+
     '<div class="pkmbx-hub-info">'+
-    '<p><b>'+L('Tính cách','Nature')+':</b> '+clean(natureName(it.natureId))+'</p>'+ 
+    '<p><b>'+L('Tính cách','Nature')+':</b> '+clean(natureName(nature?.id||it.natureId))+'</p>'+ 
     '<p class="pkmbx-hint">'+clean(natureHint)+'</p>'+
     '<p><b>'+L('Đặc tính','Ability')+':</b> '+clean(abText)+'</p>'+ 
     (desc?'<p class="pkmbx-hint">'+clean(desc)+'</p>':'')+
@@ -226,6 +231,10 @@
     '<button class="btn small'+(view==='rank'?' gold':'')+'" data-box-tab="rank">⭐ Rank</button></div>'+
     '<div class="pkmbx-hub-tab-content" id="pkmbx-tab-content"></div>';
   draw(profile.querySelector('#pkmbx-hero'),it.dex,it.shiny,true);
+  for(const b of profile.querySelectorAll('[data-box-variant]'))b.onclick=()=>{
+   const variant=b.dataset.boxVariant==='shiny'?shinyForm:normalForm;
+   if(variant&&variant.id!==focused){focused=variant.id;renderBox();}
+  };
   profile.querySelector('#pkmbx-rank-shortcut').onclick=()=>{view='rank';renderBox();};
   profile.querySelector('#pkmbx-use').onclick=()=>saveAction(()=>{
    if(ready){
@@ -340,12 +349,26 @@
   if(!boxPane?.isConnected)return;
   const s=currentSave(),ready=getStored(),items=listPreview();
   const q=query.trim().toLocaleLowerCase();
-  const counts=new Map();
-  for(const x of items)counts.set(x.dex,(counts.get(x.dex)||0)+1);
+  const counts=new Map(),groups=new Map();
+  for(const x of items){
+   counts.set(x.dex,(counts.get(x.dex)||0)+1);
+   if(!groups.has(x.dex))groups.set(x.dex,[]);
+   groups.get(x.dex).push(x);
+  }
+  // One card per species; do not destroy legacy Normal/Shiny instance records.
   const ranks=new Map(items.map(x=>[x.id,Hub.rankOverview(s,x)]));
-  const shown=items.filter(x=>(!onlyFavorites||x.favorite)&&(!onlyShiny||x.shiny)&&
-   (!onlyRankReady||ranks.get(x.id)?.canRank)&&
-   (!q||monName(x.dex).toLocaleLowerCase().includes(q)||String(x.dex).includes(q)));
+  const shown=[...groups.values()].filter(group=>{
+   const species=group[0];
+   return (!onlyFavorites||group.some(x=>x.favorite))&&
+    (!onlyShiny||group.some(x=>x.shiny))&&
+    (!onlyRankReady||group.some(x=>ranks.get(x.id)?.canRank))&&
+    (!q||monName(species.dex).toLocaleLowerCase().includes(q)||String(species.dex).includes(q));
+  }).map(group=>{
+   const chosen=group.find(x=>x.id===focused);
+   return (onlyShiny?group.find(x=>x.shiny):null)||chosen||
+    group.find(x=>x.dex===Number(s?.partner)&&x.shiny===!!s?.partnerShiny)||
+    group.find(x=>!x.shiny)||group[0];
+  });
   shown.sort((a,b)=>{
    if(boxSort==='name')return monName(a.dex).localeCompare(monName(b.dex))||a.dex-b.dex;
    if(boxSort==='rank')return (ranks.get(b.id)?.rank||0)-(ranks.get(a.id)?.rank||0)||a.dex-b.dex;
@@ -366,7 +389,7 @@
     L('Không tìm thấy Pokémon phù hợp.','No matching Pokémon found.');
    grid.appendChild(empty);
   }
-  boxPane.querySelector('#pkmbx-found-count').textContent=shown.length+' / '+items.length;
+  boxPane.querySelector('#pkmbx-found-count').textContent=shown.length+' / '+groups.size+' '+L('loài','species');
   if(!focused||!items.some(x=>x.id===focused))focused=selected||items[0]?.id||null;
   boxPane.querySelector('#pkmbx-pagenum').textContent=(page+1)+' / '+pages;
   boxPane.querySelector('#pkmbx-prev').disabled=page===0;
