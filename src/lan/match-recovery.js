@@ -110,7 +110,14 @@ G.PKMSVVMatchRecovery=(()=>{
   G.LanBus.on(msg=>{
    if(msg?.t==='data'&&msg.data)receive(msg.from,msg.data);
    if(['room-closed','disconnected'].includes(msg?.t)){
-    stop();terminal=null;if(session)session.finished=true;
+    stop();terminal=null;
+    if(session&&!session.finished){
+     session.finished=true; // Disconnection is NOT a win or an earned reward.
+     G.Social?.setPlaying?.(false);
+     G.Coop?.end?.();
+     G.Game?.toUI?.();
+     G.Flow?.goMenu?.();
+    }
    }
   });
   G.Social?.on?.(what=>{
