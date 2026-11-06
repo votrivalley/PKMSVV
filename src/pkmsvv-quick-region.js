@@ -105,11 +105,11 @@
   render();overlay.hidden=false;return true;
  }
  function close(){if(overlay)overlay.hidden=true;}
- function beginRun(index){
+ function beginRun(index,formerBiome=null){
   if(!Number.isInteger(index)||!unlocked(index)||current)return false;
   const biome=targetBiome(index);
   current={index,biome};
-  previousBiome=Number.isFinite(G.World?.biome)?G.World.biome:null;
+  previousBiome=Number.isFinite(formerBiome)?formerBiome:(Number.isFinite(G.World?.biome)?G.World.biome:null);
   if(Number.isFinite(biome))G.World?.setBiome?.(biome,true);
   return true;
  }
@@ -130,9 +130,10 @@
  wrap(G.Game,'startRun',function(prev,args){
   if(current)endRun();
   const index=armed;armed=null;
+  const priorBiome=G.World?.biome;
   const out=prev.apply(this,args);
   if(index!==null&&index!==undefined&&!G.Coop?.active&&!getChampion()?.active)
-   beginRun(index);
+   beginRun(index,priorBiome);
   return out;
  });
  wrap(G.World,'setBiome',function(prev,args){
