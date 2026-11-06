@@ -149,3 +149,34 @@ test('Individual traits follow the selected PokéBox instance',()=>{
  assert.equal(G.Mons.natureOf(6).id,'hardy');
  assert.equal(G.Mons.abilityOf(6).id,11);
 });
+
+
+test('Normal and Shiny share earned species Rank/branch without altering save originals or consuming skins',()=>{
+ const h=setup(),s=h.s;
+ const normal=stage2.get(s,'b1-6-n'),shiny=stage2.get(s,'b1-6-s');
+ normal.rank=2;normal.rankBranch='fire';normal.natureId='jolly';normal.abilitySlot=1;
+ shiny.rank=0;shiny.natureId='hardy';shiny.abilitySlot=0;
+ const saved=JSON.stringify(s);
+ s.pkmsvvSelectedInstanceId=shiny.id;s.partnerShiny=true;
+ const skin=stage2.selected(s);
+ assert.equal(skin.id,shiny.id);
+ assert.equal(skin.shiny,true);
+ assert.equal(skin.rank,2);
+ assert.equal(skin.rankBranch,'fire');
+ assert.equal(skin.natureId,'jolly');
+ assert.equal(skin.abilitySlot,1);
+ assert.equal(shiny.rank,0,'legacy Shiny rank field remains intact until user ranks up');
+ assert.equal(shiny.natureId,'hardy','legacy Shiny traits stay in save for rollback');
+ assert.equal(stage2.speciesProgress(s,6).rank,2);
+ s.pkmsvvSelectedInstanceId=normal.id;s.partnerShiny=false;
+ assert.equal(stage2.selected(s).rank,2);
+ assert.equal(JSON.parse(saved).pkmsvvBox.length,s.pkmsvvBox.length);
+ const a=add(s,6),b=add(s,6),c=add(s,6);
+ const receipt=stage2.rankUp(shiny.id,[a.id,b.id,c.id],0,s);
+ assert.equal(receipt.from,2);assert.equal(receipt.to,3);
+ assert.equal(stage2.speciesProgress(s,6).rank,3);
+ assert.equal(stage2.selected(s).rank,3,'Normal benefits when Shiny earns Rank');
+ assert.equal(stage2.get(s,shiny.id).rank,3,'Shiny retains explicit earned progress');
+ assert.equal(stage2.get(s,normal.id).rank,2,'older Normal save record remains unchanged');
+ assert.equal(s.pkmsvvBox.filter(x=>x.dex===6&&x.shiny).length,1);
+});
