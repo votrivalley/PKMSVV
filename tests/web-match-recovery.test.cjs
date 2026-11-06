@@ -1,16 +1,18 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const SOURCE=fs.readFileSync(path.join(__dirname,'../src/lan/match-recovery.js'),'utf8');
-function participant(name,seed=9172){
+function participant(name,seed=9172,opts={}){
  const packets=[],listeners=[],roomListeners=[],events={},intervals=new Map();
- let intervalIndex=0,finishCount=0,endCount=0,toUiCount=0,awardCount=0,lobbyCount=0;
+ let intervalIndex=0,finishCount=0,endCount=0,toUiCount=0,awardCount=0,lobbyCount=0,finishPending=null;
  let now=Date.now();
  const room={id:'room-0001',host:'host',mode:'coop',open:false,
   members:[{uid:'host'},{uid:'guest'}]};
  const G={Social:{uid:name,room,
   on(fn){roomListeners.push(fn)},
   setPlaying(value){this.playing=!!value},
-  finishMatch(){finishCount++;this.room.open=true;return Promise.resolve(this.room)}},
+  finishMatch(){finishCount++;
+   if(opts.deferFinish)return new Promise(resolve=>{finishPending=()=>{this.room.open=true;resolve(this.room)}});
+   this.room.open=true;return Promise.resolve(this.room)}},
   DB:{commit(){awardCount++}},Game:{toUI(){toUiCount++}},
   LobbyUI:{open(){lobbyCount++}},Flow:{goMenu(){lobbyCount++}},
   Coop:{begin(){},end(){endCount++}},LanBus:{on(fn){listeners.push(fn)},
@@ -27,7 +29,8 @@ function participant(name,seed=9172){
  function disconnect(){for(const cb of listeners)cb({t:'disconnected'})}
  function pub(open){room.open=open;for(const cb of roomListeners)cb('room')}
  function tick(){for(const fn of [...intervals.values()])fn()}
- return {G,api,packets,events,room,start,emit,pub,disconnect,tick,advance(ms){now+=ms},
+ return {G,api,packets,events,room,start,emit,pub,disconnect,tick,
+  resolveFinish(){finishPending?.()},advance(ms){now+=ms},
   get finishCount(){return finishCount},get endCount(){return endCount},
   get toUiCount(){return toUiCount},get awardCount(){return awardCount},get lobbyCount(){return lobbyCount}};
 }
@@ -105,17 +108,14 @@ test('lost Wi-Fi connection never remains trapped in Co-op battle or mints progr
  guest.disconnect();
  assert.equal(guest.endCount,1,'duplicate disconnect is ignored');
 });
-test('late Host finish response for old room+seed cannot mark a newly started match finished',async()=>{
- const host=participant('host');
- let resolveOld;
- host.G.Social.finishMatch=()=>new Promise(resolve=>resolveOld=resolve);
- // Need reinitialize the wrapper with the deferred original function.
- const vmData={};
- // Protect the matching rule in the source and the observable state guard:
- assert.match(SOURCE,/session\\?\\.seed===started\\.seed/);
+test('late Host finish response for an old match cannot finish a newly started match',async()=>{
+ const host=participant('host',9172,{deferFinish:true});
  host.start();
- const old=host.api.session;
+ const older=host.G.Social.finishMatch(); // Host request is pending on the network
  host.G.Coop.begin({mode:'coop',host:'host',seed:987654});
- assert.notEqual(host.api.session.seed,old.seed);
- assert.equal(host.api.terminal,null);
+ assert.equal(host.api.session.seed,'987654');
+ host.resolveFinish();
+ await older;
+ assert.equal(host.api.terminal,null,'old finish must not publish a terminal for the new seed');
+ assert.equal(host.awardCount,0);
 });
