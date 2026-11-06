@@ -154,7 +154,7 @@ G.PKMSVVChampionArena=(()=>{
  // Crown Journey has three elite rivals; post-game Top 1 gives all 15 AI elite strength.
  function makeBracket(random=rand){
   const opponents=Array.from({length:15},(_,i)=>({id:'ai-'+i,name:'AI '+String(i+1).padStart(2,'0'),
-   dex:regionalPool()[Math.min(regionalPool().length-1,Math.floor(random()*regionalPool().length))],
+   dex:regionalPool(selectedRegion())[Math.min(regionalPool(selectedRegion()).length-1,Math.floor(random()*regionalPool(selectedRegion()).length))],
    tier:mode==='league'||i<3?'elite':random()<Math.min(.93,.64+region*.025)?'trained':'novice'}));
   const seats=[{id:'you',name:tr('Bạn','You'),dex:G.DB?.save?.partner||25,tier:'human'},...opponents];
   for(let i=seats.length-1;i>0;i--){const j=Math.min(i,Math.max(0,Math.floor(random()*(i+1))));[seats[i],seats[j]]=[seats[j],seats[i]];}
@@ -435,12 +435,12 @@ G.PKMSVVChampionArena=(()=>{
    pl.atkMul=1;pl.spdMul=1;
   }else pl.hp=pl.maxHp;
   const aiTier=opp.tier==='elite'?'elite':opp.tier==='trained'?'trained':'novice';
-  const power=region,profile=REGION_BALANCE[region]||REGION_BALANCE[0];
+  const power=selectedRegion(),profile=REGION_BALANCE[power]||REGION_BALANCE[0];
   const cadence=Math.max(.62,1-.04*power)*profile.tempo;
   const tierHp=aiTier==='elite'?1.38:aiTier==='trained'?1.16:1.03;
   const tierDmg=aiTier==='elite'?1.38:aiTier==='trained'?1.18:1.04;
   const raw={dex,name:targetName,hp:Math.round((340+26*power+12*round)*tierHp*profile.hp),
-    spd:112+Math.min(28,region*2.5+round*3),
+    spd:112+Math.min(28,power*2.5+round*3),
     dmg:Math.round((12.4+.95*power+.5*round)*tierDmg*profile.atk*10)/10,xp:0,behavior:'champion',
     shotCd:(aiTier==='elite'?1.35:aiTier==='trained'?1.95:2.7)*cadence};
   if(mode==='league'){
@@ -483,8 +483,8 @@ G.PKMSVVChampionArena=(()=>{
   if(mode==='story'&&!regionUnlocked(region)||mode==='league'&&!storyCompleted())return false;
   paid=false;round=0;elapsed=0;opp=null;target=null;semiLosers=[];lastPodium=null;farmBagTick=0;
   previousBiome=Number.isFinite(G.World?.biome)?G.World.biome:0;
-  bracket=makeBracket();
   duelType=mode==='story'?REGION_THEMES[region]:(mapChoice==='random'?REGION_THEMES[Math.floor(rand()*REGION_THEMES.length)]:REGION_THEMES[Math.max(0,Math.min(9,Number(mapChoice)||0))]);
+  bracket=makeBracket(); // Select Gen-native opponents AFTER choosing the arena map.
   active=true;stage='prep';
   startingOwnRun=true;
   try{G.Game.startRun(null);}finally{startingOwnRun=false;}
@@ -571,7 +571,7 @@ G.PKMSVVChampionArena=(()=>{
   // attacks remain avoidable on Android touchscreen (actual cadence uses ai.cd).
   for(const key of ['dmg','atk','pa','sa','baseAtk'])
    if(Number.isFinite(targetEnemy[key]))targetEnemy[key]*=2;
-  const speedBoost=sky?1.25:Math.min(1.32,1.16+region*.018);
+  const speedBoost=sky?1.25:Math.min(1.32,1.16+selectedRegion()*.018);
   for(const key of ['spd','baseSpd'])
    if(Number.isFinite(targetEnemy[key]))targetEnemy[key]*=speedBoost;
   if(Number.isFinite(targetEnemy.shotCd))targetEnemy.shotCd=Math.max(.5,targetEnemy.shotCd*.75);
@@ -640,7 +640,7 @@ G.PKMSVVChampionArena=(()=>{
    const original=enemy.bossEnd;
    enemy.bossEnd=function(...args){
     const out=original.apply(this,args);
-    const prof=REGION_BALANCE[region]||REGION_BALANCE[0];
+    const prof=REGION_BALANCE[selectedRegion()]||REGION_BALANCE[0];
     if(this.ai&&Number.isFinite(this.ai.cd)){
      const final=round===3||this._pkmsvvSkyBoss===true;
      const k=prof.tempo*(final?.90:1)*(this._pkmsvvMegaPhase2?.80:1);
