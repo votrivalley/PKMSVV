@@ -204,7 +204,7 @@ G.PKMSVVFusionEvolved=(()=>{
    }
   }else if(id==='mind-tackle'){
    fx(x,y,138,col,19);
-   for(const e of near(145)){hit(e,dmg*.95,col);push(e,x,y,20);slow(e,.5,2);}
+   for(const e of near(145)){hit(e,dmg*.95,col);push(e,player.x,player.y,20);slow(e,.5,2);}
   }else if(id==='fire-gust'){
    fx(x,y,160,col,19);
    zone(player,id,x,y,165,3.6,.33,dmg*.45,'fire-pull');
