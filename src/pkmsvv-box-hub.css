@@ -455,3 +455,22 @@
  border-color:#e4b545;background:#163d50;color:#fff1c1;
  pointer-events:none
 }
+
+
+/* Primary Pokémon actions first, above the portrait, on Web / PC / Android. */
+#pkmsvv-pokebox-overlay #pkmbx-profile>.pkmbx-hub-buttons{
+ position:sticky;top:0;z-index:4;margin:0 0 9px;padding:7px 0 8px;
+ background:#183d50;border-bottom:1px solid #63849a;
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
+}
+#pkmsvv-pokebox-overlay #pkmbx-profile>.pkmbx-hub-buttons>.btn{
+ min-width:0;min-height:38px;padding:6px 5px;overflow-wrap:anywhere;
+}
+@media(max-width:640px){
+ #pkmsvv-pokebox-overlay #pkmbx-profile>.pkmbx-hub-buttons{
+  grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;
+ }
+ #pkmsvv-pokebox-overlay #pkmbx-profile>.pkmbx-hub-buttons>.btn{
+  font-size:11px;min-height:34px;padding:4px 3px;
+ }
+}
