@@ -1,7 +1,8 @@
 /* Pokémon Chuyển Sinh: QA-only "Chơi ngay" Region chooser.
  * This is NORMAL free play, not the 16-player Champion tournament.
  * Only the current run uses a fixed biome and generation-filtered native waves.
- * Exploration uses its own safe Seal progression; Champion Crown Seals remain untouched.
+ * Exploration awards a Region Badge only for defeating the 15-minute area boss.
+ * Keep legacy Explore/Champion Seal save keys readable without rewriting them.
  */
 (function(){
  'use strict';
@@ -14,7 +15,7 @@
  const NAMES=['Kanto','Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar','Paldea','Votri Valley'];
  const SYMBOLS=['🌿','🏞️','🌊','❄️','⚙️','⛰️','🌴','🏟️','🔥','🐉'];
  const REGION_COUNT=10;
- const SEAL_SECONDS=15*60; // Exactly 15 minutes of active, alive exploration.
+ const SEAL_SECONDS=15*60; // Boss arrives after 15 minutes of actual gameplay.
  // National Dex mascots chosen for the nine exploration Gen covers.
  // Keep the tenth, mixed-generation Sky Pillar, using its existing Rayquaza art.
  const REGION_MASCOTS=Object.freeze([150,249,385,488,646,718,800,890,1024,384]);
@@ -249,37 +250,90 @@
   return hasSeal(index,save)||
    NAMES.slice(0,index).every((_,i)=>hasSeal(i,save));
  }
- function tryEarnSeal(){
-  // A deferred Berry start can turn Playing on after the native startRun
-  // wrapper has returned. Clear pending on the FIRST real playing tick,
-  // even if the EnemyMgr/regionIndex guard has not run yet.
+ // Keep the old pkmsvvExploreSeals save key for backward-compatible saves.
+ // "Huy hiệu Vùng" / "Region Badge" is the player-visible terminology.
+ function actualRunSeconds(run=current){
+  if(!run||G.Game?.state!=='playing'||preRunPending)return null;
+  const now=Number(G.Game?.st?.time??G.Game?.time);
+  if(!Number.isFinite(now)||now<0)return null;
+  if(run.startedAt===null)run.startedAt=now;
+  return Math.max(0,now-run.startedAt);
+ }
+ function canFightRegionBoss(run=current){
   if(preRunPending&&G.Game?.state==='playing')preRunPending=false;
-  const run=current;
-  if(!run||preRunPending||G.Game?.state!=='playing'||
-   G.Coop?.active||getChampion()?.active||G.Game?.player?.dead)return false;
-  const seconds=Number(G.Game?.st?.time??G.Game?.time);
-  if(!Number.isFinite(seconds)||seconds<0)return false;
-  // A fresh run starts at zero; Berry can defer the native game start.
-  if(run.startedAt===null)run.startedAt=seconds;
-  if(seconds-run.startedAt<SEAL_SECONDS)return false;
+  return !!run&&G.Game?.state==='playing'&&!preRunPending&&
+   !G.Coop?.active&&!getChampion()?.active&&
+   !G.Game?.player?.dead&&!(Number(G.Game?.player?.hp)<=0);
+ }
+ function spawnRegionBoss(run=current){
+  if(!canFightRegionBoss(run)||run.bossSpawned||actualRunSeconds(run)<SEAL_SECONDS)return false;
+  const hero=G.Game?.player,dex=REGION_MASCOTS[run.index],mon=G.DEX_BY?.[dex];
+  if(!hero||!mon||typeof G.Enemy!=='function'||typeof G.EnemyMgr?.add!=='function')return false;
+  try{
+   // Reuse native boss behaviour and attacks. A mascot is a REAL boss actor
+   // with HP/attack/sprite, not an overlay or auto-earned timer reward.
+   const source=G.Enemies?.BOSSES?.[0]||{};
+   const hp=Math.max(1500+run.index*340,(Number(hero.maxHp)||300)*(4+run.index*.38));
+   const def={...source,dex,name:mon.name||('Pokémon '+dex),
+    hp:Math.round(hp),dmg:Math.max(18+run.index*3,Number(source.dmg)||0),
+    spd:Math.max(70,Math.min(140,Number(source.spd)||90)),
+    xp:0,behavior:source.behavior||'boss',pkmsvvExploreBoss:true};
+   const enemy=new G.Enemy(def,Number(hero.x||0)+230,Number(hero.y||0)-95,
+    G.Enemies?.bossScale?.(SEAL_SECONDS)||{hp:1,dmg:1,spd:1},true);
+   enemy.pkmsvvExploreBoss=true;
+   enemy.pkmsvvExploreRegion=run.index;
+   // Avoid 15-minute double scaling through native enemy health multipliers.
+   enemy.hp=enemy.maxHp=Math.round(hp);
+   const created=G.EnemyMgr.add(enemy);
+   if(created===false||created===null)throw Error('Boss add failed');
+   run.bossEnemy=enemy;
+   run.bossSpawned=true;
+   G.Spawner?.say?.(tr('👑 BOSS VÙNG '+NAMES[run.index]+' XUẤT HIỆN!',
+    '👑 '+NAMES[run.index]+' REGION BOSS APPEARS!'),4);
+   G.UI?.toast?.(tr('Hạ Boss Vùng để nhận Huy hiệu Vùng!',
+    'Defeat the Region Boss to earn its Badge!'),4500);
+   return true;
+  }catch(error){
+   console.warn('[Explore Region Boss] Spawn failed; will retry',error);
+   return false;
+  }
+ }
+ function tryEarnSeal(){
+  // Timer alone NEVER rewards a Badge. Only the exact spawned encounter
+  // being actually defeated (dead AND <=0 HP) may unlock the next Region.
+  const run=current,boss=run?.bossEnemy;
+  if(!run?.bossSpawned||run.badgeClaimed||!boss||!boss.dead||
+   !(Number(boss.hp)<=0)||!canFightRegionBoss(run)||
+   actualRunSeconds(run)<SEAL_SECONDS)return false;
   const save=getSave(),name=NAMES[run.index];
-  if(!save||hasSeal(run.index,save))return false;
+  if(!save)return false;
+  if(hasSeal(run.index,save)){run.badgeClaimed=true;return false;}
   const original=save.pkmsvvExploreSeals;
   if(original!==undefined&&(!original||Array.isArray(original)||typeof original!=='object'))return false;
   save.pkmsvvExploreSeals={...(original||{}),[name]:true};
   try{
-   // Persist one boolean on the same offline save; do not touch Champion
-   // crowns, Pokémon, items, currency, or chapter progression.
-   if(G.DB?.commit?.(true)===false)throw Error('Save commit returned false');
+   // One atomic region unlock, unrelated currency/Champion records untouched.
+   if(typeof G.DB?.commit!=='function'||G.DB.commit(true)===false)
+    throw Error('Save commit failed');
   }catch(error){
    if(original===undefined)delete save.pkmsvvExploreSeals;
    else save.pkmsvvExploreSeals=original;
-   console.warn('[Explore Seal] Save commit failed',error);
+   console.warn('[Explore Region Badge] Save commit failed',error);
    return false;
   }
-  G.UI?.toast?.(tr('Nhận Ấn Chứng '+name+'! Đã mở vùng kế tiếp.',
-   name+' Seal earned! Next region unlocked.'),3800);
+  run.badgeClaimed=true;
+  G.Spawner?.say?.(tr('🏅 HUY HIỆU VÙNG '+name+'!',name+' REGION BADGE!'),4);
+  G.UI?.toast?.(tr('🏅 Đã hạ Boss! Nhận Huy hiệu Vùng '+name+' · Mở vùng kế tiếp.',
+   '🏅 Boss defeated! '+name+' Region Badge earned · Next region unlocked.'),5000);
   return true;
+ }
+ function updateRegionBoss(){
+  if(!canFightRegionBoss())return false;
+  const run=current;
+  // Repeated ticks after a failed spawn will retry; after a successful
+  // spawn, never create a duplicate even if the boss is killed/removed.
+  if(!run.bossSpawned)spawnRegionBoss(run);
+  return tryEarnSeal();
  }
  function regionIndex(){
   if(current&&preRunPending&&G.Game?.state==='playing')preRunPending=false;
@@ -356,7 +410,7 @@
   overlay.setAttribute('aria-label',tr('Chọn nơi bạn khám phá','Choose where to explore'));
   overlay.innerHTML='<div class="pkmsvv-quick-region-panel" role="dialog" aria-modal="true">'+
    '<header><div class="region-heading"><h2>'+tr('Chọn nơi bạn khám phá','Choose where to explore')+'</h2>'+
-   '<p>'+tr('Sống sót đủ 15 phút trong từng vùng để nhận Ấn Chứng và mở khóa vùng tiếp theo. Không cần đấu Champion.','Survive a full 15 minutes in each region to earn a Seal and unlock the next. Champion is not required.')+'</p></div>' +
+   '<p>'+tr('Sống sót 15 phút để Boss Vùng xuất hiện. Đánh bại Boss để nhận Huy hiệu Vùng và mở vùng tiếp theo. Không cần Champion.','Survive 15 minutes to summon the Region Boss. Defeat it to earn a Region Badge and unlock the next area. No Champion required.')+'</p></div>' +
    '<button type="button" id="pkmsvv-quick-region-close" aria-label="'+tr('Đóng','Close')+'">×</button></header>'+
    '<div id="pkmsvv-quick-region-grid" class="pkmsvv-quick-region-grid"></div></div>';
   document.body.append(overlay);
@@ -396,10 +450,10 @@
    const diff=document.createElement('small');diff.className='region-diff';
    diff.textContent='▥ '+tr('Độ khó ','Difficulty ')+x.difficulty+'/5';
    const status=document.createElement('small');status.className='region-status';
-   status.textContent=x.complete?'✓ '+tr('Đã hoàn thành · Có Ấn Chứng','Completed · Seal earned'):
-    x.unlocked?tr('▶ 15 phút → nhận Ấn Chứng','▶ 15 min → earn Seal'):
-    x.index===9?'🔒 '+tr('Cần đủ 9 Ấn Chứng','Requires all 9 Seals'):
-    '🔒 '+tr('Cần Ấn Chứng ','Requires Seal of ')+NAMES[x.index-1];
+   status.textContent=x.complete?'🏅 '+tr('Đã có Huy hiệu Vùng','Region Badge earned'):
+    x.unlocked?tr('▶ 15 phút → Boss Vùng','▶ 15 min → Region Boss'):
+    x.index===9?'🔒 '+tr('Cần đủ 9 Huy hiệu','Requires all 9 Badges'):
+    '🔒 '+tr('Cần Huy hiệu ','Requires Badge of ')+NAMES[x.index-1];
    body.append(name,diff,status);
    b.append(art,body);
    if(x.unlocked)b.onclick=()=>choose(x.index);
@@ -414,7 +468,7 @@
  function beginRun(index,formerBiome=null){
   if(!Number.isInteger(index)||!unlocked(index)||current)return false;
   const biome=targetBiome(index);
-  current={index,biome,startedAt:null};
+  current={index,biome,startedAt:null,bossSpawned:false,bossEnemy:null,badgeClaimed:false};
   showRegionBadge(index);
   // Berry pre-match selection defers the underlying native startRun for 10s.
   // Keep the region armed across that entire pending period; menu overlays
@@ -475,8 +529,9 @@
  let constructed=0;
  function regionEnemyDefinition(def,index,forceBoss=false){
   if(!def||typeof def!=='object'||index<0||index>=REGION_COUNT)return def;
-  // Guardians keep their canonical Support roster, unlike wild/mini-bosses.
-  if(isBossGuardian(def))return def;
+  // The explicitly summoned 15-minute mascot must never get transformed
+  // into random tier wildlife, even if it has a lower/higher rarity.
+  if(def.pkmsvvExploreBoss||isBossGuardian(def))return def;
   const dex=Number(def.dex);
   if(!Number.isInteger(dex))return def;
   return progressiveDefinition(def,index,encounterSeconds(),constructed++,forceBoss);
@@ -509,7 +564,8 @@
  // before adding it, and periodically check the manager for bypassing paths.
  // This is strictly scoped to the selected normal Region session.
  function enforceLiveEnemy(enemy,index){
-  if(!enemy||enemy.dead||enemy.remote||index<0||index>=REGION_COUNT)return false;
+  if(!enemy||enemy.dead||enemy.remote||enemy.pkmsvvExploreBoss||enemy.def?.pkmsvvExploreBoss||
+   index<0||index>=REGION_COUNT)return false;
   // A real Region is strict for ALL hostile wildlife and bosses. Do not
   // exempt named bosses of other generations during normal exploration.
   if(enemy.pkmsvvFriendly||enemy.friendly||enemy.isPlayer||enemy.isSupport||
@@ -548,7 +604,7 @@
  wrap(G.EnemyMgr,'update',function(prev,args){
   const out=prev.apply(this,args),index=regionIndex();
   if(index<0||getChampion()?.active||G.Coop?.active)return out;
-  tryEarnSeal();
+  updateRegionBoss();
   if(++integrityTick%10!==0||typeof G.EnemyMgr?.all!=='function')return out;
   const all=G.EnemyMgr.all();
   // Map / Set may be instantiated in another JS realm (WebViews, VM tests).
@@ -586,7 +642,8 @@
   if(current&&G.Game?.state==='ui'&&!preRunPending&&!G.PKMSVVBerry?.choosing)endRun();
   return out;
  });
- G.PKMSVVQuickRegion={open,close,choose,entries,unlocked,hasSeal,tryEarnSeal,beginRun,endRun,
+ G.PKMSVVQuickRegion={open,close,choose,entries,unlocked,hasSeal,tryEarnSeal,
+  spawnRegionBoss,updateRegionBoss,beginRun,endRun,
   SEAL_SECONDS,THEMES,targetBiome,distinctMapBiomes,
   mascots:REGION_MASCOTS,nationalGen,speciesFor,isAllowed,pokemonStrength,encounterTier,eligibleByTime,
   progressivePool,enforceGeneration,regionEnemyDefinition,enforceLiveEnemy,
