@@ -161,8 +161,8 @@
    '<small>#'+it.dex+(it.shiny?' ✨':'')+'</small>'+
    '<span class="pkmbx-slot-meta">'+rankStars(progress?.rank??it.rank)+'</span>'+
    (duplicates>1?'<span class="pkmbx-stack pkmbx-stack-count" title="'+
-     L('Tổng cá thể cùng loài, gồm thường và Shiny',
-       'Total same-species individuals, including normal and Shiny')+'">×'+duplicates+'</span>':'')+
+     L('Số bản trùng ngoài Pokémon gốc (bao gồm Shiny, không đồng nghĩa nguyên liệu chưa dùng)',
+       'Duplicates beyond the first individual (including Shiny, not necessarily unused Rank materials)')+'">×'+(duplicates-1)+'</span>':'')+
    '<span class="pkmbx-mini-icons">'+(it.favorite?'★ ':'')+(team?'⑥ ':'')+
     (it.id===selected?'✓':'')+'</span>';
   b.onclick=()=>chooseFocus(it.id);
@@ -304,7 +304,7 @@
   const save=currentSave(),progress=Hub.rankOverview(save,it),rank=progress.rank;
   const data=G.PKMSVVBox2?.formatRank(rank),total=listPreview().filter(x=>x.dex===it.dex).length;
   const countText=L('Đang sở hữu: ','Owned: ')+total+
-   L(' cá thể · Bản sao thường: ',' individuals · Ordinary copies: ')+progress.copies+
+   L(' cá thể (',' individuals (')+Math.max(0,total-1)+L(' bản trùng) · Bản sao thường: ',' duplicates) · Ordinary copies: ')+progress.copies+
    L(' · Shiny trùng giữ lại: ',' · Retained Shiny: ')+(progress.protectedForms||0)+
    L(' · Mảnh Rank: ',' · Rank shards: ')+progress.fragments;
   const remaining=progress.rank>=5?L('Đã đạt Rank tối đa.','Maximum Rank reached.'):
@@ -312,8 +312,11 @@
    (progress.copies+(progress.protectedForms||0)+progress.fragments)+'/'+progress.cost;
   const migration=L('Save cũ chưa bật dữ liệu PokéBox. Vào Quản lý Save → Dữ liệu PokéBox → Chuyển dữ liệu (chỉ một lần, sau khi xuất JSON dự phòng). Không mất Pokémon, nhưng các lượt quay trùng rất cũ có thể không còn được ghi riêng.',
    'This older save has no individual PokéBox records. Open Save Manager → PokéBox Data → Migrate Collection once, after exporting a JSON backup. No Pokémon is removed; old duplicate pulls may not have been recorded.');
-  const eligibleNote=L('Luật mới: mỗi lần tăng Rank cần đúng 1 bản trùng hoặc 1 Mảnh. Bản Shiny trùng được ghi nhận một lần mà không mất Shiny; bản thường bị tiêu thụ khi bạn xác nhận. Pokémon gốc từ save cũ không bị tiêu.',
-   'New rule: each Rank step uses exactly 1 duplicate or shard. Duplicate Shiny grants one safe credit without being consumed. Ordinary copies are consumed only on confirmation; migrated originals remain protected.');
+  const usedCredits=Number(save?.pkmsvvRankShinyCredits?.[String(it.dex)]?.length)||0;
+  const eligibleNote=L('Luật Rank: 1 bản trùng = +1 Rank (tối đa 5). Shiny có thể ghi nhận 1 lần mà không mất Pokémon; đã ghi nhận: ', 'Rank rule: 1 duplicate = +1 Rank (maximum 5). Shiny grants a safe one-time credit; already claimed: ')+usedCredits+
+   L(' lượt. Bản thường chỉ bị tiêu khi xác nhận; Pokémon gốc được giữ nguyên.', ' credit(s). Ordinary duplicates are consumed only on confirmation; original Pokémon remain safe.');
+  /*
+   Existing source rule (retained in AGENTS.md). */
   host.innerHTML='<section class="pkmbx-hub-rank"><h3>⭐ Rank '+rank+'/5</h3>'+
    '<p>'+L('HP & sát thương: ','HP & damage: ')+'+'+(data?.hp||0)+'%'+
    (rank>=4?' · '+L('Hồi chiêu −5%','Cooldown −5%'):'')+'</p>'+
