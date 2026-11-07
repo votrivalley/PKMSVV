@@ -163,3 +163,27 @@ test('Eevee can optionally convert highest-upgraded non-evolved Normal attack wi
    assert.equal(keep.moves[0].lvl,6);
  }finally {sandbox.G.Moves=original;}
 });
+
+test('Evolving any Pokémon can exchange one owned skill for one new species move at an equivalent upgrade level',()=>{
+ const oldMoves=sandbox.G.Moves;
+ sandbox.G.Moves={BY_ID:{
+  'ember':{id:'ember',type:'fire',maxLvl:7},
+  'fire-spin':{id:'fire-spin',type:'fire',maxLvl:6}
+ },poolFor:()=>['ember','fire-spin'],instance:(id,lvl)=>({id,kind:'projectile',lvl,cd:4,t:0})};
+ try{
+  const p=pl(4,16),old={id:'ember',type:'fire',kind:'projectile',lvl:5,cd:10,t:5,since:3};
+  p.moves=[old];p.slots=[[old]];p.bind={ember:1};
+  assert.equal(evo.evolve(p,rule(4,5),{convertNormal:false}),true);
+  assert.deepEqual(Array.from(evo.skillSwapOptions(p)),['fire-spin']);
+  const swapped=evo.swapSkill(p,'ember','fire-spin');
+  assert.equal(swapped.lvl,5);
+  assert.equal(p.moves.length,1);
+  assert.equal(p.moves[0].id,'fire-spin');
+  assert.equal(p.moves[0].lvl,5);
+  assert.equal(p.moves[0].t,2);
+  assert.equal(p.moves[0].since,3);
+  assert.equal(p.slots[0][0],p.moves[0]);
+  assert.equal(p.bind['fire-spin'],1);
+  assert.equal(evo.swapSkill(p,'fire-spin','ember'),false,'do not offer an unavailable or already learned species move');
+ }finally{sandbox.G.Moves=oldMoves;}
+});
