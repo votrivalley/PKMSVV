@@ -140,3 +140,28 @@ continuing. Preserve offline Wi-Fi hosting and the full existing test suite.
 - Use only existing game sprites (no image-concept replacement). Feature
   remains isolated QA until browser + Windows + Android and controller
   smoke tests pass. Verify actual compiled artifacts, never just source.
+
+
+## Region spawn integrity — Kanto regression 2026-11-07
+
+- In normal `Chơi ngay` with a selected Region, species from **every**
+  wild, scripted event, rift, miniboss and non-story boss must pass the
+  **same Gacha Gen roster** `G.DEX[].gen` + `G.SPRITE_META`. No mixing in
+  Kanto or other single-Gen areas. Mixed Gen is intentional only for Sky.
+- A Region must be applied **BEFORE** delegating the selected `startRun`:
+  native game logic can cache spawn bags, and Berry's 10-second pre-run
+  chooser may defer the real native start. Do not clear a selected Region
+  on incidental `G.MenuUI.open()` while that pre-run selection is pending.
+  Clear it on explicit run exit and before a new, unselected mode.
+- `G.Enemies.bagAt` alone is insufficient. Some scripted/legacy actors
+  bypass bag generation or use an earlier Enemy constructor. Keep the
+  `G.EnemyMgr.add` enforcement plus a throttled `G.EnemyMgr.update` scan of
+  existing actors to correct their displayed species/animator. Never touch
+  player/support team, save, boss HP/damage/rewards, or Arena/Co-op rosters.
+- Regressions required: delayed Berry start + incidental UI open retains
+  Kanto, cached initial waves restricted, manager-bypass actor corrected,
+  original boss stats unchanged, explicit exit restores unrestricted roster,
+  and the **real compiled Chromium QA bundle** uses the Gacha Gen catalog.
+- A green QA artifact is not a public deployment: the official Cloudflare
+  website and permanent signed Android app remain unchanged until explicitly
+  promoted after real-device/save verification.
