@@ -112,3 +112,22 @@
 #scr-menu.pkmsvv-v15-menu #btn-news:hover{
  background:linear-gradient(145deg,#236675,#174354)!important;
 }
+
+
+/* QA: draw a real retro newspaper, not the missing-font white square.
+   Preserve the actual #btn-news click handler and VI/EN label. */
+#scr-menu #btn-news::before,
+#scr-menu .pkmsvv-v15-news-card#btn-news::before{
+  content:"";display:inline-block;vertical-align:middle;
+  width:29px;height:29px;flex:0 0 29px;margin-right:7px;
+  background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2228%22%20height%3D%2228%22%20viewBox%3D%220%200%2028%2028%22%3E%3Cpath%20d%3D%22M3%203h17v19a3%203%200%200%200%203%203H6a3%203%200%200%201-3-3z%22%20fill%3D%22%23fff0c7%22%20stroke%3D%22%23153749%22%20stroke-width%3D%221.6%22%2F%3E%3Cpath%20d%3D%22M20%207h5v15a3%203%200%200%201-5%200z%22%20fill%3D%22%23ddad51%22%20stroke%3D%22%23153749%22%20stroke-width%3D%221.6%22%2F%3E%3Crect%20x%3D%225.5%22%20y%3D%226%22%20width%3D%2212%22%20height%3D%224%22%20rx%3D%221%22%20fill%3D%22%23e7ac50%22%2F%3E%3Cpath%20d%3D%22M6%2013h11M6%2016h11M6%2019h7%22%20stroke%3D%22%2323475c%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%2F%3E%3Crect%20x%3D%2214%22%20y%3D%2218%22%20width%3D%223%22%20height%3D%223%22%20fill%3D%22%23ecb35b%22%2F%3E%3C%2Fsvg%3E");background-size:contain;
+  background-repeat:no-repeat;background-position:center;
+  image-rendering:auto;
+}
+#scr-menu #btn-news > svg,
+#scr-menu #btn-news > i,
+#scr-menu #btn-news > img,
+#scr-menu .pkmsvv-v15-news-card#btn-news > svg,
+#scr-menu .pkmsvv-v15-news-card#btn-news > i,
+#scr-menu .pkmsvv-v15-news-card#btn-news > img{display:none!important}
+#scr-menu #btn-news{display:flex!important;align-items:center;justify-content:center;gap:2px}
