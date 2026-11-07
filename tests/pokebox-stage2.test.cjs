@@ -236,3 +236,52 @@ test('#191 Sunkern: two historical forms can Rank while a different Pokémon rem
  assert.equal(save.pkmsvvBox.filter(x=>x.dex===191).length,2,'Normal and Shiny both retained');
  assert.equal(stage2.shinyCreditList(save,'b1-191-n').length,0,'cannot reuse protected skin');
 });
+
+test('new duplicate Gacha pull is instantly eligible for one-click Rank without making shards',()=>{
+ const h=setup(),save=h.s,original='b1-25-n';
+ assert.equal(stage2.rankMaterials(save,original).available,0,'only the original exists initially');
+ const duplicate=add(save,25);
+ const before=stage2.rankMaterials(save,original);
+ assert.equal(before.cost,1);
+ assert.deepEqual(before.copies.map(x=>x.id),[duplicate.id]);
+ assert.equal(before.available,1,'fresh clone is rank material immediately');
+ assert.equal(stage2.shards(save,25),0,'no conversion into Rank shard is needed');
+ const receipt=stage2.rankUpAuto(duplicate.id,save);
+ assert.equal(receipt.to,1);
+ assert.equal(receipt.consumed,1);
+ assert.equal(stage2.get(save,duplicate.id),null,'the extra ordinary Gacha copy is consumed on confirmation');
+ assert.ok(stage2.get(save,original),'original survives the upgrade');
+ assert.equal(stage2.shards(save,25),0);
+ assert.equal(stage2.speciesProgress(save,25).rank,1);
+ const extra1=add(save,25),extra2=add(save,25);
+ assert.equal(stage2.rankMaterials(save,original).cost,2,'second Rank requires two additional clones');
+ const second=stage2.rankUpAuto(original,save);
+ assert.equal(second.to,2);
+ assert.equal(second.consumed,2);
+ assert.equal(stage2.get(save,extra1.id),null);
+ assert.equal(stage2.get(save,extra2.id),null);
+ assert.equal(stage2.speciesProgress(save,25).rank,2);
+});
+test('automatic Rank uses protected duplicate safely once, never credits it again',()=>{
+ const h=setup(),s=h.s,normal='b1-6-n',shiny='b1-6-s';
+ const beforeLength=s.pkmsvvBox.length;
+ assert.equal(stage2.rankMaterials(s,shiny).available,1,'normal + Shiny already count as two saved individuals');
+ const result=stage2.rankUpAuto(shiny,s);
+ assert.equal(result.to,1);
+ assert.equal(s.pkmsvvBox.length,beforeLength,'automatic Rank preserves Shiny and imported original');
+ assert.deepEqual(s.pkmsvvRankClaimedCopies['6'],[shiny]);
+ assert.equal(stage2.rankMaterials(s,normal).available,0,'spent protected duplicate cannot be used again');
+ const fresh=add(s,6),second=add(s,6);
+ assert.equal(stage2.rankUpAuto(normal,s).to,2);
+ assert.equal(stage2.get(s,fresh.id),null);
+ assert.equal(stage2.get(s,second.id),null);
+});
+test('automatic Rank is atomic: failed disk write preserves duplicates, saved rank and old currencies',()=>{
+ const h=setup(),s=h.s;
+ const clone=add(s,25),before=JSON.stringify(s);
+ h.fail=true;
+ assert.throws(()=>stage2.rankUpAuto(clone.id,s),/Persistence failed/);
+ assert.equal(JSON.stringify(s),before);
+ assert.equal(stage2.get(s,clone.id)?.dex,25);
+ assert.equal(stage2.speciesProgress(s,25).rank,0);
+});
