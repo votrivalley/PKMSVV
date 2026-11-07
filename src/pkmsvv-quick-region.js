@@ -111,6 +111,25 @@
 
  const title=(n)=>n===9?tr('Tháp Thiên Không','Sky Pillar'):NAMES[n];
  let overlay=null,armed=null,current=null,previousBiome=null,changing=false,bypass=false,preRunPending=false;
+ let regionBadge=null;
+ function showRegionBadge(index){
+  if(index<0||index>=GEN_BOUNDS.length){if(regionBadge)regionBadge.hidden=true;return;}
+  if(!regionBadge){
+   regionBadge=document.createElement('div');
+   regionBadge.id='pkmsvv-region-gen-badge';
+   regionBadge.setAttribute('aria-label',tr('Vùng Pokémon đang chơi','Active Pokémon region'));
+   regionBadge.setAttribute('style','position:fixed;top:52px;right:12px;'+
+    'z-index:1900;background:rgba(9,31,44,.92);color:#ffe7a7;'+
+    'border:1px solid #e7be5e;border-radius:8px;padding:4px 9px;'+
+    'pointer-events:none;font:700 11px/1.45 system-ui,sans-serif;'+
+    'box-shadow:0 2px 8px #04131d88;');
+   document.body.append(regionBadge);
+  }
+  const [lo,hi]=GEN_BOUNDS[index];
+  regionBadge.textContent=NAMES[index].toUpperCase()+' · GEN '+(index+1)+
+   ' · #'+String(lo).padStart(4,'0')+'–'+String(hi).padStart(4,'0');
+  regionBadge.hidden=false;
+ }
  const getChampion=()=>G.PKMSVVChampionArena;
  const getSave=()=>G.DB?.save;
  function unlocked(index,save=getSave()){
@@ -135,6 +154,7 @@
   try{
    const previous=previousBiome;
    current=null;armed=null;previousBiome=null;preRunPending=false;
+   showRegionBadge(-1);
    if(Number.isFinite(previous)&&typeof G.World?.setBiome==='function')
     G.World.setBiome(previous,true);
   }finally{changing=false;}
@@ -232,6 +252,7 @@
   if(!Number.isInteger(index)||!unlocked(index)||current)return false;
   const biome=targetBiome(index);
   current={index,biome};
+  showRegionBadge(index);
   // Berry pre-match selection defers the underlying native startRun for 10s.
   // Keep the region armed across that entire pending period; menu overlays
   // must not silently turn Kanto back into ALL GEN.
