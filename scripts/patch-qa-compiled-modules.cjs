@@ -1,5 +1,5 @@
 'use strict';
-/* Fail-closed QA-only replacement of five stale compiled v1.5.93 modules.
+/* Fail-closed QA-only replacement of six stale compiled v1.5.93 modules.
  * Never operate on a production build, versioned baseline, or player saves.
  * The minified bundle already embeds these modules: adding standalone scripts
  * at the end would DOUBLE-INSTALL them, so replace the original assignment
@@ -12,7 +12,8 @@ const mods=[
  ['PKMSVVArenaSolo','src/pkmsvv-arena-solo.js'],
  ['PKMSVVChampionArena','src/pkmsvv-champion-arena.js'],
  ['PKMSVVArenaPvp','src/lan/arena-pvp.js'],
- ['PKMSVVFusionPilot','src/pkmsvv-bond-fusion.js']
+ ['PKMSVVFusionPilot','src/pkmsvv-bond-fusion.js'],
+ ['PKMSVVWiki','src/pkmsvv-wiki.js']
 ];
 const targets=process.argv.slice(2).map(p=>path.resolve(p));
 if(!targets.length)throw Error('Pass one or more isolated QA app.min.js paths');
@@ -71,5 +72,5 @@ for(const filename of targets){
  new vm.Script(next,{filename:'patched-qa-app.min.js'});
  fs.writeFileSync(filename,next,'utf8');
  const stat=fs.statSync(filename);
- console.log('Replaced stale embedded Berry/Arena/Fusion modules in ISOLATED QA bundle:',filename,stat.size,'bytes');
+ console.log('Replaced stale embedded Berry/Arena/Fusion/Wiki modules in ISOLATED QA bundle:',filename,stat.size,'bytes');
 }
