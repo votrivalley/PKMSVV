@@ -43,7 +43,7 @@
   // re-introduce Pokémon not offered in the selected Gen.
   const fallback=!Array.isArray(dex)?Object.keys(by||{}).map(Number).filter(n=>
     !!by[n]&&nationalGen(n)===index+1):[];
-  const list=[...new Set(available.length||Array.isArray(dex)?available:fallback)];
+  const list=[...new Set(Array.isArray(dex)?available:fallback)];
   poolCache.set(index,list);poolSetCache.set(index,new Set(list));
   return list;
  }
@@ -382,7 +382,10 @@
   if(index<0||getChampion()?.active||G.Coop?.active)return out;
   if(++integrityTick%10!==0||typeof G.EnemyMgr?.all!=='function')return out;
   const all=G.EnemyMgr.all();
-  if(Array.isArray(all))for(const enemy of all)
+  const actors=Array.isArray(all)?all:all instanceof Map?[...all.values()]:
+   all instanceof Set?[...all]:all&&typeof all[Symbol.iterator]==='function'?
+   [...all]:all&&typeof all==='object'?Object.values(all):[];
+  for(const enemy of actors)
    if(enforceLiveEnemy(enemy,index))correctedSpawns++;
   return out;
  });
