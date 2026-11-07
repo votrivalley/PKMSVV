@@ -17,10 +17,11 @@ const targets=process.argv.slice(2).map(p=>path.resolve(p));
 if(!targets.length)throw Error('Pass one or more isolated QA app.min.js paths');
 function targetAllowed(filename){
  const rel=path.relative(root,filename).replace(/\\/g,'/');
- const isQa=rel.includes('/pokebox-stage4-qa/')||
-  rel.includes('/pokebox-stage4-pc-qa/')||
-  rel.includes('/decoded-android/')||
-  rel.includes('/pokebox-stage4-android-qa/');
+ const pathKey='/'+rel;
+ const isQa=pathKey.includes('/pokebox-stage4-qa/')||
+  pathKey.includes('/pokebox-stage4-pc-qa/')||
+  pathKey.includes('/decoded-android/')||
+  pathKey.includes('/pokebox-stage4-android-qa/');
  if(!isQa||!filename.endsWith('app.min.js'))
   throw Error('Refusing non-QA or non-bundle target: '+filename);
 }
