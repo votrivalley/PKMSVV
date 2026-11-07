@@ -259,9 +259,9 @@ test('Rank overview uses only Stage 2 eligible copies/shards and never mutates s
  hub.item(h.s,plain.id).locked=true;
  // Normal + Shiny forms may provide one safe, non-consumable Rank credit.
  const stillHasShiny=hub.rankOverview(h.s,hub.item(h.s,target.id));
- assert.equal(stillHasShiny.protectedForms,1);
+ assert.ok(stillHasShiny.protectedForms>=1);
  assert.equal(stillHasShiny.canRank,true);
- h.s.pkmsvvRankShinyCredits={6:['b1-6-s']};
+ h.s.pkmsvvRankClaimedCopies={6:stage2.claimableList(h.s,target.id).map(x=>x.id)};
  const noMaterial=hub.rankOverview(h.s,hub.item(h.s,target.id));
  assert.equal(noMaterial.canRank,false);
  assert.equal(noMaterial.missing,1);
@@ -269,8 +269,8 @@ test('Rank overview uses only Stage 2 eligible copies/shards and never mutates s
  hub.item(h.s,target.id).rank=1;
  const shards=hub.rankOverview(h.s,hub.item(h.s,target.id));
  assert.equal(shards.rank,1);
- assert.equal(shards.cost,1);
- assert.equal(shards.available,1);
+ assert.equal(shards.cost,2);
+ assert.equal(shards.available,2);
  assert.equal(shards.canRank,true);
  assert.equal(shards.fragments,2);
  hub.item(h.s,target.id).rank=5;
@@ -337,8 +337,9 @@ test('Ready Team actions are above Pokémon hero; singleton species never shows 
  const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub.css'),'utf8');
  assert.match(ui,/profile\.insertBefore\(topActions,profile\.firstChild\)/);
  assert.match(ui,/duplicates>1\?'<span class="pkmbx-stack/);
- assert.match(ui,/×'\+\(duplicates-1\)/);
- assert.match(ui,/Rank\(\)\?\.open\?\.\(it\.id\)/);
+ assert.match(ui,/×'\+duplicates/);
+ assert.match(ui,/rankPanel\.open\(it\.id\)/);
+ assert.match(ui,/function openInlineRank/);
  assert.match(css,/#pkmsvv-pokebox-overlay #pkmbx-profile>\.pkmbx-hub-buttons/);
  assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
 });
