@@ -66,6 +66,11 @@ async function main(){
   const runtimeAudit=await evaluate(`(()=>({
    bosses:(G.Enemies?.BOSSES||[]).slice(0,20).map(e=>({dex:e.dex,name:e.name,guard:e.guard,support:e.support})),
    minibosses:Object.keys(G.Enemies||{}).filter(k=>/mini|boss|guard/i.test(k)),
+   bossSlots:Array.isArray(G.Enemies?.BOSS_SLOTS)?G.Enemies.BOSS_SLOTS.slice(0,16):G.Enemies?.BOSS_SLOTS,
+   spawnBag:(()=>{try{return G.Enemies?.bagAt?.(0)?.slice?.(0,20)||null}catch(e){return String(e)}})(),
+   spawnerKeys:Object.keys(G.Spawner||{}).filter(k=>/mini|boss|elite|spawn/i.test(k)),
+   eventsKeys:Object.keys(G.Events||{}).filter(k=>/mini|boss|elite|spawn/i.test(k)),
+   supportCanonical:(G.PKMSVVBossSupport?.active?.()||[]).slice(0,8).map(x=>({dex:x.dex,role:x.pkmsvvRole})),
    gachaPool:String(G.Gacha?.pool||'').slice(0,2300),
    gachaPull:String(G.Gacha?.pull||'').slice(0,2600),
    enemyDie:String(G.Enemy?.prototype?.die||'').slice(0,1300),
