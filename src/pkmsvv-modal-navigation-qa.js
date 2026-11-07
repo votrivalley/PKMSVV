@@ -112,7 +112,8 @@
   // During Royale evolution arrows select; WASD keeps moving the fighter.
   if(root.classList?.contains('pkmsvv-evo')&&G.Royale?.active&&
     ['w','a','s','d'].includes(key))return;
-  const critical=key==='escape'||key==='backspace'||key==='1'||key==='2';
+  const critical=key==='escape'||key==='backspace'||key==='1'||key==='2'||
+    (root.classList?.contains('pkmsvv-evo')&&(key==='enter'||key===' '));
   if(e.defaultPrevented&&!critical)return;
   if(root.id==='scr-item'&&!(root.contains(document.activeElement)&&isEditable(document.activeElement))){
    const index=key==='1'||code==='Digit1'||code==='Numpad1'?0:
