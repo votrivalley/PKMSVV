@@ -465,3 +465,28 @@ test('Wiki describes ten Fusion effects, has corresponding WebP icons and replac
   assert.match(pilot,new RegExp("id:'"+id+"'[^\\n]+viEffect:"));
  }
 });
+
+test('Select to battle refreshes the HOME portrait immediately after successful saved instance choice',()=>{
+ const h=setup(),copy=add(h.s,6);
+ let painted=0;
+ G.PKMSVVMenuCleanQA={restorePartner(){painted++;}};
+ assert.equal(stage1.selectInstance(copy.id),true);
+ assert.equal(h.s.pkmsvvSelectedInstanceId,copy.id);
+ assert.equal(h.s.partner,copy.dex);
+ assert.equal(painted,1,'must redraw menu without waiting for game end or MenuUI.open');
+ assert.equal(stage1.selectInstance('no-such-pokemon'),false);
+ assert.equal(painted,1,'invalid selection must not redraw home');
+ h.fail=true;
+ const other=hub.item(h.s,'b1-6-n');
+ assert.equal(stage1.selectInstance(other.id),false,'persistence failure rolls back');
+ assert.equal(painted,1,'unsaved choice must never reach home');
+ assert.equal(h.s.pkmsvvSelectedInstanceId,copy.id,'failed commit preserves prior Pokémon');
+});
+test('Legacy Box Select immediately invokes same home redraw without an intermediate battle',()=>{
+ const ui=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub-ui.js'),'utf8');
+ const src=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pc-menu-clean-qa.js'),'utf8');
+ assert.match(ui,/function legacySelect\(it\)\{[\s\S]*?legacyCommit\(s=>[\s\S]*?PKMSVVMenuCleanQA\?\.restorePartner\?\.\(\)/);
+ assert.match(src,/function restorePartner\(\)/);
+ assert.match(src,/portrait\.dataset\.pkmsvvPortraitKey!==portraitKey/);
+ assert.match(src,/G\.UI\.sprite\(portrait,Number\(s\.partner\)/);
+});
