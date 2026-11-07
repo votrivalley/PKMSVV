@@ -356,6 +356,11 @@ async function main(){
   assert.equal(exploreMaps.kanto,0,'Kanto remains native beginner terrain');
   assert.equal(exploreMaps.paldea,exploreMaps.fire,'late Paldea receives the Fire biome');
   assert.match(exploreMaps.instruction,/15 phút|15 minutes/,'in-game 15-minute instruction is localized and visible');
+  assert.match(exploreMaps.instruction,/Boss Vùng|Region Boss/,'the player must understand a boss appears at minute 15');
+  assert.match(exploreMaps.instruction,/Huy hiệu Vùng|Region Badge/,'the player must understand a Badge requires defeating the boss');
+  assert.equal(await evaluate("typeof G.PKMSVVQuickRegion.spawnRegionBoss"),'function',
+   'actual browser game must bundle the new Region Boss actor, not just menu text');
+
 
 
   const instantHome=await evaluate("(()=>{const out=[];const saved=Object.getOwnPropertyDescriptor(G.DB,'save'),commit=G.DB.commit,previous=G.Game?.state;const menu=document.querySelector('#scr-menu');try{for(const migrated of [true,false]){const raw={owned:{6:{at:1},25:{at:2}},shiny:{},partner:6,partnerShiny:false,stats:{runs:7},coins:500};const fixture=migrated?G.PKMSVVBox.migrate(raw).save:raw;Object.defineProperty(G.DB,'save',{value:fixture,configurable:true,writable:true});G.DB.commit=()=>true;G.PKMSVVMenuCleanQA.restorePartner();const before=menu.querySelector('#menu-partner-name')?.textContent;G.PKMSVVBoxHubUI.openBox('info');G.PKMSVVBoxHubUI.focus(migrated?'b1-25-n':'b1-25-n');const btn=document.querySelector('#pkmbx-use');const enabled=!!btn&&!btn.disabled;btn?.click();const hero=menu.querySelector('#menu-partner');out.push({migrated,enabled,partner:fixture.partner,shiny:fixture.partnerShiny,portraitKey:hero?.dataset.pkmsvvPortraitKey,name:menu.querySelector('#menu-partner-name')?.textContent,before,overlayOpen:!!document.querySelector('#pkmsvv-pokebox-overlay'),gameUnchanged:G.Game?.state===previous});G.PKMSVVBoxHubUI.closeBox();}return out;}finally{G.PKMSVVBoxHubUI.closeBox();Object.defineProperty(G.DB,'save',saved);G.DB.commit=commit;G.PKMSVVMenuCleanQA.restorePartner();}})()");
