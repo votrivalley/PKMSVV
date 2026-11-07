@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: '22'
       - name: Run Stage 1 and Stage 1/2/3 save/regression tests
-        run: npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs
+        run: npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs && node --test tests/bond-fusion-svv.test.cjs
       - name: Download successful signed v1.5.93 Windows baseline
         uses: actions/download-artifact@v4
         with:
@@ -37,6 +37,11 @@ jobs:
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-box-hub.js
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-box-hub-ui.js
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/css/pkmsvv-box-hub.css
+          test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-fusion-evolved.js
+          test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/css/pkmsvv-fusion-evolved.css
+          for id in ember-quick water-tackle grass-spin spark-quick mind-tackle fire-gust bubble-ice leaf-rock shadow-mind thunder-claw; do
+            test -s "dist/pokebox-stage4-pc-qa/resources/lan-site/game/assets/fusion-icons/${id}.webp"
+          done
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-quick-region.js
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/css/pkmsvv-quick-region.css
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-pc-menu-clean-qa.js
