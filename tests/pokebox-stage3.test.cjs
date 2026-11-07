@@ -70,7 +70,11 @@ test('Prism is a regular rotating shop item with a stable daily chance',()=>{
  const source=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-stage3.js'),'utf8');
  const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-stage3.css'),'utf8');
  assert.match(source,/list\.querySelector\('\.pkmk-cards'\)/);
- assert.match(css,/border:3px solid #0b1720/);
+ assert.match(source,/pkmbx-prism-glass/, 'Prism must have an original magnifying-glass item icon');
+ assert.match(source,/if\(empty\)empty\.remove\(\)/,'Prism-only Bag cannot report empty');
+ assert.match(css,/#pkmbx-prism-store\.pkmk-card\{/, 'Prism uses an ordinary item card');
+ assert.match(css,/border:3px solid #0b1422/, 'black rim belongs to the item artwork');
+ assert.match(css,/\.pkmbx-prism-glass:|\.pkmbx-prism-glass\{/, 'magnifier artwork has its own responsive sizing');
 });
 test('a legacy save may buy one Prism before PokéBox migration without altering owned, nature or progress',()=>{
  setup();
