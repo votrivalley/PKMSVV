@@ -62,13 +62,59 @@ test('100-roll batch does not spend tickets or create partial individuals when c
  assert.equal(JSON.stringify(h.s),before);
  assert.equal(h.writes,0);
 });
-test('no migration: gacha keeps legacy behavior until the user backs up and opts in',()=>{
- const h=setup(),raw=mk();
- G.Gacha={pull(s,n){s.tickets.t1-=n;return [roll(6)];}};
- stage2.wrappedPull(G.Gacha,G.DB);
- const old=G.Gacha.pull(raw,1);
- assert.equal(old.length,1);assert.equal(raw.pkmsvvBox,undefined);assert.equal(raw.tickets.t1,104);
+
+test('first successful Gacha on legacy profile auto-safeguards and records ordinary clones atomically',()=>{
+ const h=setup(),raw=mk(),priorLocal=global.localStorage;
+ const stored=new Map([['ps.session','"poketrainer"']]);
+ global.localStorage={getItem:k=>stored.get(k)??null,setItem(k,v){stored.set(k,v)},removeItem:k=>stored.delete(k)};
+ G.DB.save=raw;
+ G.PKMSVVSaveUI={backup(){
+  const snapshot=JSON.stringify({format:'PKMSVV_SAVE',version:1,save:JSON.parse(JSON.stringify(G.DB.save))});
+  assert.equal(G.DB.save.pkmsvvBoxSchema,undefined,'backup must be of the untouched old save');
+  return snapshot;
+ }};
+ G.Gacha={pull(draft,n){draft.tickets.t1-=n;return [roll(6)]}};
+ try{
+  stage2.wrappedPull(G.Gacha,G.DB);
+  const original=JSON.stringify(raw);
+  const res=G.Gacha.pull(raw,1);
+  assert.equal(res.length,1);
+  assert.equal(base.validBox(raw),true,'a successful new Gacha activates the individual ledger');
+  assert.equal(raw.pkmsvvBox.length,4,'three historical originals plus exactly one new ordinary copy');
+  assert.equal(raw.pkmsvvBox.filter(x=>x.dex===6&&!x.shiny).length,2);
+  assert.equal(stage2.rankMaterials(raw,'b1-6-n').available,1);
+  assert.ok(stored.get('pkmsvv.prepokebox.poketrainer'),'original profile has persistent recovery JSON');
+  const backup=JSON.parse(stored.get('pkmsvv.prepokebox.poketrainer'));
+  assert.equal(backup.save.pkmsvvBoxSchema,undefined);
+  assert.equal(backup.save.tickets.t1,105,'backup is BEFORE Gacha ticket consumption');
+  assert.equal(raw.tickets.t1,104);
+  assert.equal(h.writes,1,'Gacha and new Box ledger commit once (backup mock does not write)');
+  assert.equal(stage2.rankUpAuto('b1-6-n',raw).to,1,'new clone can immediately Rank without confirming/material conversion');
+  assert.notEqual(JSON.stringify(raw),original);
+ }finally{global.localStorage=priorLocal;}
 });
+test('failed first Gacha does not migrate old profile or consume tickets',()=>{
+ const h=setup(),raw=mk(),old=JSON.stringify(raw);
+ G.DB.save=raw;G.Gacha={pull(){return null}};
+ stage2.wrappedPull(G.Gacha,G.DB);
+ assert.equal(G.Gacha.pull(raw,1),null);
+ assert.equal(JSON.stringify(raw),old);
+ assert.equal(raw.pkmsvvBoxSchema,undefined);
+});
+test('legacy Gacha cannot spend anything if recovery snapshot storage fails',()=>{
+ const h=setup(),raw=mk(),old=JSON.stringify(raw),priorLocal=global.localStorage;
+ const stored=new Map([['ps.session','"poketrainer"']]);
+ global.localStorage={getItem:k=>stored.get(k)??null,setItem(){throw Error('QuotaExceededError')}};
+ G.DB.save=raw;G.PKMSVVSaveUI={backup:()=>JSON.stringify({format:'PKMSVV_SAVE',save:raw})};
+ G.Gacha={pull(draft){draft.tickets.t1--;return [roll(6)]}};
+ try{
+  stage2.wrappedPull(G.Gacha,G.DB);
+  assert.throws(()=>G.Gacha.pull(raw,1),/QuotaExceededError/);
+  assert.equal(JSON.stringify(raw),old);
+  assert.equal(h.writes,0);
+ }finally{global.localStorage=priorLocal;}
+});
+
 test('only exact-species ordinary duplicates can become Rank shards',()=>{
  const h=setup(),a=add(h.s,6),p=add(h.s,25),shiny=add(h.s,6,true);
  assert.equal(stage2.eligible(h.s,a),true);
@@ -190,36 +236,37 @@ test('Normal and Shiny share earned species Rank/branch without altering save or
  assert.equal(stage2.get(s,b.id),null);assert.equal(stage2.get(s,c.id),null);
 });
 
-test('Normal + Shiny x2 grants one non-destructive Rank credit (one-time only)',()=>{
+
+test('Normal + Shiny is NOT x2; Shiny can neither be credited nor consumed as Rank material',()=>{
  const h=setup(),s=h.s,normal='b1-6-n',shiny='b1-6-s';
- assert.equal(stage2.candidateList(s,normal).length,0,'legacy originals are protected');
- assert.deepEqual(stage2.shinyCreditList(s,normal).map(x=>x.id),[shiny]);
- const beforeOwned=JSON.stringify(s.owned),beforeShiny=JSON.stringify(s.shiny);
- const beforeLength=s.pkmsvvBox.length;
- const r=stage2.rankUp(normal,[],0,s,[shiny]);
- assert.equal(r.to,1);assert.equal(r.shinyCredits,1);
- assert.equal(s.pkmsvvBox.length,beforeLength,'neither the normal nor Shiny form is destroyed');
- assert.equal(stage2.get(s,shiny).shiny,true);
- assert.deepEqual(s.pkmsvvRankClaimedCopies['6'],[shiny]);
- assert.equal(stage2.shinyCreditList(s,normal).length,0);
- assert.equal(JSON.stringify(s.owned),beforeOwned);
- assert.equal(JSON.stringify(s.shiny),beforeShiny);
- const snap=JSON.stringify(s);
- assert.throws(()=>stage2.rankUp(normal,[],0,s,[shiny,shiny]),/Duplicate material ID/);
- assert.equal(JSON.stringify(s),snap,'reused credit must never mutate save');
- const copy=add(s,6),extra=add(s,6);
- assert.equal(stage2.rankUp(normal,[copy.id,extra.id],0,s).to,2,'another earned copy increments Rank by one');
- assert.equal(stage2.selected(s).rank,2,'species-wide Rank follows the active fighter');
-});
-test('Shiny credit rolls back when save commit fails',()=>{
- const h=setup(),before=JSON.stringify(h.s);
- h.fail=true;
- assert.throws(()=>stage2.rankUp('b1-6-n',[],0,h.s,['b1-6-s']),/Persistence failed/);
- assert.equal(JSON.stringify(h.s),before);
- assert.equal(h.writes,0);
+ assert.equal(stage2.candidateList(s,normal).length,0);
+ assert.equal(stage2.claimableList(s,normal).length,0,'the shiny is not a free material');
+ assert.equal(stage2.rankMaterials(s,normal).available,0);
+ assert.equal(stage2.rankMaterials(s,shiny).available,0);
+ const before=JSON.stringify(s);
+ assert.throws(()=>stage2.rankUp(normal,[],0,s,[shiny]),/Shiny|protected|credit unavailable/);
+ assert.equal(JSON.stringify(s),before,'failed attempt must leave all save data unchanged');
+ const copy=add(s,6);
+ assert.equal(stage2.rankMaterials(s,normal).available,1,'one new ordinary Gacha clone counts');
+ assert.equal(stage2.rankUpAuto(normal,s).to,1);
+ assert.equal(stage2.get(s,copy.id),null);
+ assert.ok(stage2.get(s,shiny));
+ assert.equal(s.pkmsvvRankClaimedCopies?.['6']?.length||0,0,'Shiny is never marked as spent material');
 });
 
-test('#191 Sunkern: two historical forms can Rank while a different Pokémon remains active',()=>{
+
+test('real ordinary clone Rank rolls back on failed save commit; Shiny remains protected',()=>{
+ const h=setup(),s=h.s,copy=add(s,6),before=JSON.stringify(s);
+ h.fail=true;
+ assert.throws(()=>stage2.rankUpAuto('b1-6-n',s),/Persistence failed/);
+ assert.equal(JSON.stringify(s),before);
+ assert.equal(h.writes,0);
+ assert.ok(stage2.get(s,'b1-6-s')?.shiny);
+ assert.ok(stage2.get(s,copy.id),'failed rank must preserve Gacha clone');
+});
+
+
+test('#191 Sunkern: old Normal+Shiny alone cannot Rank; a new ordinary clone can, without switching fighter',()=>{
  const h=setup(),save=h.s;
  G.DEX_BY[191]={dex:191,name:'Sunkern',types:['grass'],rarity:1};
  save.owned[191]={at:30};save.shiny[191]={at:31};
@@ -227,14 +274,16 @@ test('#191 Sunkern: two historical forms can Rank while a different Pokémon rem
  save.pkmsvvBox.push({...original,id:'b1-191-n',shiny:false});
  save.pkmsvvBox.push({...original,id:'b1-191-s',shiny:true});
  const active=save.pkmsvvSelectedInstanceId;
- assert.equal(save.pkmsvvBox.filter(x=>x.dex===191).length,2);
- assert.deepEqual(stage2.shinyCreditList(save,'b1-191-n').map(x=>x.id),['b1-191-s']);
- const result=stage2.rankUp('b1-191-n',[],0,save,['b1-191-s']);
+ assert.equal(stage2.rankMaterials(save,'b1-191-n').available,0);
+ assert.equal(stage2.rankMaterials(save,'b1-191-s').available,0);
+ const newClone=add(save,191);
+ assert.equal(stage2.rankMaterials(save,'b1-191-n').available,1);
+ const result=stage2.rankUpAuto('b1-191-n',save);
  assert.equal(result.to,1);
  assert.equal(stage2.speciesProgress(save,191).rank,1);
- assert.equal(save.pkmsvvSelectedInstanceId,active,'viewing #191 must not switch active fighter');
- assert.equal(save.pkmsvvBox.filter(x=>x.dex===191).length,2,'Normal and Shiny both retained');
- assert.equal(stage2.shinyCreditList(save,'b1-191-n').length,0,'cannot reuse protected skin');
+ assert.equal(save.pkmsvvSelectedInstanceId,active);
+ assert.equal(stage2.get(save,'b1-191-s').shiny,true);
+ assert.equal(stage2.get(save,newClone.id),null);
 });
 
 test('new duplicate Gacha pull is instantly eligible for one-click Rank without making shards',()=>{
@@ -262,20 +311,23 @@ test('new duplicate Gacha pull is instantly eligible for one-click Rank without 
  assert.equal(stage2.get(save,extra2.id),null);
  assert.equal(stage2.speciesProgress(save,25).rank,2);
 });
-test('automatic Rank uses protected duplicate safely once, never credits it again',()=>{
- const h=setup(),s=h.s,normal='b1-6-n',shiny='b1-6-s';
- const beforeLength=s.pkmsvvBox.length;
- assert.equal(stage2.rankMaterials(s,shiny).available,1,'normal + Shiny already count as two saved individuals');
- const result=stage2.rankUpAuto(shiny,s);
- assert.equal(result.to,1);
- assert.equal(s.pkmsvvBox.length,beforeLength,'automatic Rank preserves Shiny and imported original');
- assert.deepEqual(s.pkmsvvRankClaimedCopies['6'],[shiny]);
- assert.equal(stage2.rankMaterials(s,normal).available,0,'spent protected duplicate cannot be used again');
- const fresh=add(s,6),second=add(s,6);
- assert.equal(stage2.rankUpAuto(normal,s).to,2);
- assert.equal(stage2.get(s,fresh.id),null);
- assert.equal(stage2.get(s,second.id),null);
+
+test('first ordinary in Shiny-only collection is protected; second ordinary can Rank without Shiny credit',()=>{
+ const h=setup(),s=h.s;
+ // Another species owned solely in Shiny form.
+ s.owned[191]={at:30};s.shiny[191]={at:31};
+ s.pkmsvvBox.push({id:'b1-191-s',dex:191,shiny:true,rank:0,locked:false,favorite:false});
+ const first=add(s,191);
+ assert.equal(stage2.rankMaterials(s,first.id).available,0,'one Normal plus one Shiny not x2');
+ const second=add(s,191);
+ assert.equal(stage2.rankMaterials(s,first.id).available,1);
+ assert.deepEqual(stage2.candidateList(s,first.id).map(x=>x.id),[second.id]);
+ assert.equal(stage2.rankUpAuto(first.id,s).to,1);
+ assert.ok(stage2.get(s,first.id),'first ordinary carrier must survive');
+ assert.equal(stage2.get(s,second.id),null,'second ordinary may be used as material');
+ assert.ok(stage2.get(s,'b1-191-s'),'Shiny is always preserved');
 });
+
 test('automatic Rank is atomic: failed disk write preserves duplicates, saved rank and old currencies',()=>{
  const h=setup(),s=h.s;
  const clone=add(s,25),before=JSON.stringify(s);
@@ -286,15 +338,23 @@ test('automatic Rank is atomic: failed disk write preserves duplicates, saved ra
  assert.equal(stage2.speciesProgress(s,25).rank,0);
 });
 
-test('fresh ordinary Gacha duplicate is spent before a protected old Shiny',()=>{
+
+test('protected additional ordinary favorite can count once, but neither the original nor Shiny is a material',()=>{
  const h=setup(),s=h.s,ordinary=add(s,6);
  assert.equal(stage2.rankMaterials(s,'b1-6-n').copies.length,1);
- assert.equal(stage2.rankMaterials(s,'b1-6-n').credits.length,1);
+ assert.equal(stage2.rankMaterials(s,'b1-6-n').credits.length,0,'normal+shiny does not grant a bonus');
  const receipt=stage2.rankUpAuto('b1-6-n',s);
  assert.equal(receipt.to,1);
- assert.equal(receipt.consumed,1,'the newly summoned disposable copy is the material');
+ assert.equal(receipt.consumed,1);
  assert.equal(stage2.get(s,ordinary.id),null);
  assert.ok(stage2.get(s,'b1-6-s')?.shiny);
- assert.equal(s.pkmsvvRankClaimedCopies?.['6']?.length||0,0,
-  'the Shiny credit stays available for a later Rank');
+ assert.equal(s.pkmsvvRankClaimedCopies?.['6']?.length||0,0);
+ const protectedCopy=add(s,6);protectedCopy.favorite=true;
+ assert.equal(stage2.rankMaterials(s,'b1-6-n').credits.length,1);
+ assert.equal(stage2.rankMaterials(s,'b1-6-n').cost,2);
+ const normalCopy=add(s,6);
+ assert.equal(stage2.rankUpAuto('b1-6-n',s).to,2);
+ assert.ok(stage2.get(s,protectedCopy.id)?.favorite,'favorite remains, credited once');
+ assert.equal(stage2.get(s,normalCopy.id),null);
+ assert.equal(stage2.rankMaterials(s,'b1-6-n').credits.length,0);
 });
