@@ -158,8 +158,10 @@
   b.innerHTML='<canvas width="76" height="76"></canvas>'+
    '<span class="pkmbx-name">'+clean(monName(it.dex))+'</span>'+
    '<small>#'+it.dex+(it.shiny?' ✨':'')+'</small>'+
-   '<span class="pkmbx-slot-meta">'+rankStars(progress?.rank??it.rank)+
-    '<span class="pkmbx-stack" title="'+L('Số cá thể cùng loài (không đồng nghĩa nguyên liệu Rank)','Individuals of this species (not necessarily Rank materials)')+'">×'+duplicates+'</span></span>'
+   '<span class="pkmbx-slot-meta">'+rankStars(progress?.rank??it.rank)+'</span>'+
+   '<span class="pkmbx-stack pkmbx-stack-count" title="'+
+     L('Số cá thể cùng loài (không đồng nghĩa nguyên liệu Rank)',
+       'Individuals of this species (not necessarily Rank materials)')+'">×'+duplicates+'</span>'+
    '<span class="pkmbx-mini-icons">'+(it.favorite?'★ ':'')+(team?'⑥ ':'')+
     (it.id===selected?'✓':'')+'</span>';
   b.onclick=()=>chooseFocus(it.id);
