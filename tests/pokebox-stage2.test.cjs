@@ -285,3 +285,16 @@ test('automatic Rank is atomic: failed disk write preserves duplicates, saved ra
  assert.equal(stage2.get(s,clone.id)?.dex,25);
  assert.equal(stage2.speciesProgress(s,25).rank,0);
 });
+
+test('fresh ordinary Gacha duplicate is spent before a protected old Shiny',()=>{
+ const h=setup(),s=h.s,ordinary=add(s,6);
+ assert.equal(stage2.rankMaterials(s,'b1-6-n').copies.length,1);
+ assert.equal(stage2.rankMaterials(s,'b1-6-n').credits.length,1);
+ const receipt=stage2.rankUpAuto('b1-6-n',s);
+ assert.equal(receipt.to,1);
+ assert.equal(receipt.consumed,1,'the newly summoned disposable copy is the material');
+ assert.equal(stage2.get(s,ordinary.id),null);
+ assert.ok(stage2.get(s,'b1-6-s')?.shiny);
+ assert.equal(s.pkmsvvRankClaimedCopies?.['6']?.length||0,0,
+  'the Shiny credit stays available for a later Rank');
+});
