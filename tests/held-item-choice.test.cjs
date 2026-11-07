@@ -13,7 +13,7 @@ function harness(){
  const actions=[],hits=[],listeners={};
  const document={createElement:el,
   getElementById:id=>id==='item-cards'?box:id==='scr-item'?scr:null,
-  querySelectorAll:selector=>selector.includes('#scr-item')?(box.children[2]?.children||[]):[],
+  querySelectorAll:selector=>selector.includes('#scr-item')?(box.children[1]?.children||[]):[],
   addEventListener:(name,fn)=>{listeners[name]=fn;},activeElement:null};
  const save={coins:888,bag:{mint:2},tickets:{t10:3}},before=JSON.stringify(save);
  const G={I18n:{lang:'vi'},Items:{BY:Object.fromEntries(
@@ -34,34 +34,32 @@ test('All 11 original held items get honest bilingual descriptions and condition
  assert.match(h.api.info('lifeorb').text,/tốn HP/);
  h.G.I18n.lang='en';assert.match(h.api.info('choicescarf').text,/\+35%/);
 });
-test('Keep / Replace / Skip are clear; callbacks fire exactly once and never spend saved currency',()=>{
- const h=harness();let selected=[];
+test('Exactly two item cards are selectable by mouse or gamepad and save is unchanged',()=>{
+ const h=harness(),selected=[];
  h.G.RunUI.showItemChoice('leftovers','quickclaw',id=>selected.push(id));
- assert.equal(h.box.children.length,3);
- const columns=h.box.children[1],actions=h.box.children[2].children;
+ assert.equal(h.box.children.length,2);
+ const columns=h.box.children[1];
  assert.equal(columns.children.length,2);
- assert.equal(actions.length,3);
+ assert.equal(columns.children[0].tagName,'button');
+ assert.equal(columns.children[1].tagName,'button');
  assert.match(h.box.children[0].textContent,/1 trang bị/);
- assert.match(actions[0].textContent,/Giữ/);
- assert.match(actions[1].textContent,/Đổi/);
- assert.match(actions[2].textContent,/Bỏ qua/);
- actions[1].onclick();actions[0].onclick();actions[2].onclick();
+ columns.children[1].onclick();columns.children[0].onclick();
  assert.deepEqual(selected,['quickclaw']);
  assert.deepEqual(Array.from(h.api.skipped()),[]);
  assert.equal(JSON.stringify(h.G.DB.save),h.before);
  h.G.RunUI.showItemChoice('leftovers','lifeorb',id=>selected.push(id));
- h.box.children[2].children[2].onclick();
- assert.deepEqual(selected,['quickclaw','leftovers'],'skip keeps original held item');
- assert.deepEqual(Array.from(h.api.skipped()),['lifeorb']);
- h.api.reset();assert.deepEqual(Array.from(h.api.skipped()),[],'discard only lasts the run');
+ h.box.children[1].children[0].onclick();
+ assert.deepEqual(selected,['quickclaw','leftovers']);
+ assert.deepEqual(Array.from(h.api.skipped()),['lifeorb'],'keeping equipped item declines new item');
+ h.api.reset();assert.deepEqual(h.api.skipped(),[]);
 });
 test('Stale old modal callbacks cannot modify a new run after reset',()=>{
  const h=harness(),picked=[];
  h.G.RunUI.showItemChoice('leftovers','lifeorb',id=>picked.push(id));
- const old=h.box.children[2].children[1];
+ const old=h.box.children[1].children[1];
  h.api.reset();old.onclick();assert.equal(picked.length,0);
  h.G.RunUI.showItemChoice('leftovers','quickclaw',id=>picked.push(id));
- h.box.children[2].children[0].onclick();
+ h.box.children[1].children[0].onclick();
  assert.deepEqual(picked,['leftovers']);
 });
 test('Installer preserves original single held slot and respects source patch order',()=>{
@@ -73,23 +71,22 @@ test('Installer preserves original single held slot and respects source patch or
  assert.match(read('src/kecleon/pkmsvv-kecleon-ui.js'),/pkmk-held-help/);
  assert.match(read('src/kecleon/pkmsvv-kecleon-ui.js'),/if\(btn\.disabled\)return/);
 });
-test('Digit3 and Numpad3 really skip a new item once without changing save or duplicating rewards',()=>{
+test('Digit1 / Digit2 and numpad equivalents choose either of the two items once',()=>{
  const h=harness(),picked=[];
  h.G.RunUI.showItemChoice('leftovers','lifeorb',id=>picked.push(id));
  assert.equal(typeof h.listeners.keydown,'function');
- const evt=(code,key='3')=>({key,code,repeat:false,defaultPrevented:false,
+ const evt=(code,key)=>({key,code,repeat:false,defaultPrevented:false,
   preventDefault(){this.defaultPrevented=true},
   stopImmediatePropagation(){this.stopped=true}});
- const event=evt('Digit3');h.listeners.keydown(event);
+ const event=evt('Digit1','1');h.listeners.keydown(event);
  assert.equal(event.defaultPrevented,true);
  assert.equal(event.stopped,true);
- assert.deepEqual(picked,['leftovers'],'the third choice keeps current equipment');
- assert.deepEqual(Array.from(h.api.skipped()),['lifeorb']);
- h.listeners.keydown(evt('Digit3'));
- assert.deepEqual(picked,['leftovers'],'a stale keypress cannot select twice');
+ assert.deepEqual(picked,['leftovers']);
+ assert.deepEqual(h.api.skipped(),['lifeorb']);
+ h.listeners.keydown(evt('Digit1','1'));
+ assert.deepEqual(picked,['leftovers']);
  h.G.RunUI.showItemChoice('leftovers','quickclaw',id=>picked.push(id));
- h.listeners.keydown(evt('Numpad3'));
- assert.deepEqual(picked,['leftovers','leftovers']);
- assert.deepEqual(Array.from(h.api.skipped()),['lifeorb','quickclaw']);
- assert.equal(JSON.stringify(h.G.DB.save),h.before,'input cannot mutate long-term save');
+ h.listeners.keydown(evt('Numpad2','2'));
+ assert.deepEqual(picked,['leftovers','quickclaw']);
+ assert.equal(JSON.stringify(h.G.DB.save),h.before);
 });
