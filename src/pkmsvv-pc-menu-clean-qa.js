@@ -112,8 +112,8 @@
     return names.some(name=>label===name||label.startsWith(name+' '));
    })||null;
   };
-  const play=entry('[data-go="play"]',['chơi ngay','play','play now']);
-  const pokemon=entry('[data-go="dex"]',['khám phá','explore','pokémon','pokemon']);
+  const play=entry('[data-go="play"]',['khám phá','explore','chơi ngay','play','play now']);
+  const pokemon=entry('[data-go="dex"]',['pokémon','pokemon']);
   const pc=entry('#pkmsvv-menu-wiki',['pc']);
   const coop=entry('[data-go="multiplayer"],[data-go="coop"],[data-go="co-op"],[data-go="coOp"]',['co-op','coop']);
   const arena=entry('[data-go="arena"]',['arena']);
@@ -127,36 +127,50 @@
   }
   return true;
  }
- function renameExploration(btn){
+ // Relabel the existing action in place; never append a second title
+ // underneath a native menu item's original text.
+ function relabel(btn,from,to){
   if(!btn)return;
-  const translated=L('Khám phá','Explore');
-  btn.setAttribute('aria-label',translated);
-  // Some v1.5.93 native menu buttons use a plain Text node rather than
-  // .pkmsvv-menu-label. Replace the label text itself without touching icon,
-  // subtitle or the existing native [data-go="dex"] click handler.
-  const label=btn.querySelector('.pkmsvv-menu-label,.menu-label,.mi-text,.mi-name,strong');
-  if(label){label.textContent=translated;return;}
-  const walk=[btn,...btn.querySelectorAll('*')];
+  btn.setAttribute('aria-label',to);
   let changed=false;
-  for(const parent of walk)for(const n of parent.childNodes){
-   if(n.nodeType!==3||!/^(\\s*)Pok[eé]mon(\\s*)$/i.test(n.nodeValue||''))continue;
-   n.nodeValue=(n.nodeValue||'').replace(/Pok[eé]mon/i,translated);
-   changed=true;
+  const old=from.map(w=>w.toLowerCase());
+  for(const el of [btn,...btn.querySelectorAll('*')]){
+   for(const n of el.childNodes){
+    if(n.nodeType!==3)continue;
+    const text=n.nodeValue||'',trimmed=text.trim();
+    if(old.includes(trimmed.toLowerCase())){
+     n.nodeValue=text.slice(0,text.indexOf(trimmed))+to+text.slice(text.indexOf(trimmed)+trimmed.length);
+     changed=true;
+    }
+   }
   }
+  // Support markup where the visible label is inside a dedicated element.
   if(!changed){
-   // Final fallback for a native button built with only icon+small markup.
-   const span=d.createElement('span');
-   span.className='pkmsvv-menu-label';
-   span.textContent=translated;
-   btn.insertBefore(span,btn.querySelector('small')||null);
+   const label=btn.querySelector('.pkmsvv-menu-label,.menu-label,.mi-text,.mi-name,strong');
+   if(label&&from.some(w=>label.textContent.trim().toLowerCase()===w.toLowerCase())){
+    label.textContent=to;changed=true;
+   }
   }
+  return changed;
+ }
+ function syncLauncherLabels(menu){
+  const play=menu.querySelector('[data-go="play"]');
+  relabel(play,['Chơi ngay','Play now','Play'],L('Khám phá','Explore'));
+  const pokemon=menu.querySelector('[data-go="dex"]');
+  if(!pokemon)return;
+  // Undo the accidental extra synthetic line added by the previous QA patch.
+  for(const label of [...pokemon.children].filter(e=>e.classList?.contains('pkmsvv-menu-label'))){
+   if(/^(Khám phá|Explore)$/i.test(label.textContent.trim())&&
+      [...pokemon.childNodes].some(n=>n!==label&&/Pok[eé]mon/i.test(n.textContent||'')))
+    label.remove();
+  }
+  relabel(pokemon,['Khám phá','Explore','Pokémon','Pokemon'],'Pokémon');
  }
  function syncHome(){
   const menu=$('#scr-menu');if(!menu)return;
   if(menu.querySelector('#pkmsvv-menu-wiki')){
    const pokemon=menu.querySelector('[data-go="dex"]');
    if(pokemon){
-    renameExploration(pokemon);
     const sub=pokemon.querySelector('.pkmsvv-menu-copy small, small');
     if(sub)sub.textContent=L('PokéBox · Pokédex · Nâng cấp','PokéBox · Pokédex · Upgrades');
    }
@@ -166,6 +180,7 @@
    // Nâng cấp remains a tab within Pokémon; never remove the real upgrade screen.
    menu.querySelector('[data-go="upgrades"]')?.remove();
   }
+  syncLauncherLabels(menu);
   reorderMainMenu(menu);
   const left=menu.querySelector('.menu-left'),bottom=menu.querySelector('.pkmsvv-v15-bottom');
   if(left){
