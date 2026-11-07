@@ -103,6 +103,48 @@ async function main(){
   assert.equal(hubScreen.statBars,4,'HP/Damage/Speed/Cooldown must render as four stat bars');
   assert.equal(hubScreen.rankButton,true,'one-click Rank button must exist in the detail panel');
   assert.equal(hubScreen.manualShardConversion,false,'legacy conversion action must not be displayed');
+  // Exercise the REAL Rank button in Chromium using a disposable in-memory
+  // save fixture. Never write or replace the user's on-disk JSON.
+  const directRank=await evaluate(`(()=>{
+   const descriptor=Object.getOwnPropertyDescriptor(G.DB,'save');
+   const priorCommit=G.DB.commit,priorConfirm=window.confirm;
+   let confirmCalls=0;
+   try{
+    const raw={owned:{6:{at:1}},shiny:{},partner:6,partnerShiny:false,
+     coins:10,bag:{},tms:{},ptm:{6:[]}};
+    const fixture=G.PKMSVVBox.migrate(raw).save;
+    G.PKMSVVBox2.makeOne(fixture,{dex:6,shiny:false},{random:()=>0,natures:[{id:'hardy'}]});
+    Object.defineProperty(G.DB,'save',{value:fixture,configurable:true,writable:true});
+    G.DB.commit=()=>true;
+    window.confirm=()=>{confirmCalls++;return false;};
+    G.PKMSVVBoxHubUI.openBox('rank');
+    const before=document.querySelector('#pkmbx-rank-shortcut');
+    const readyBefore=!before?.disabled;
+    const leftReadyBefore=document.querySelectorAll('.pkmbx-hub-slot.rank-ready').length;
+    before?.click();
+    const after=document.querySelector('#pkmbx-rank-shortcut');
+    const afterRank=G.PKMSVVBox2.speciesProgress(fixture,6).rank;
+    const cards=[...document.querySelectorAll('.pkmbx-hub-slot')];
+    return {readyBefore,leftReadyBefore,afterRank,afterDisabled:!!after?.disabled,
+     afterGray:after?.classList.contains('rank-disabled'),
+     tabGray:document.querySelector('[data-box-tab=rank]')?.classList.contains('rank-disabled'),
+     leftReadyAfter:cards.filter(el=>el.classList.contains('rank-ready')).length,
+     copiesLeft:fixture.pkmsvvBox.filter(x=>x.dex===6).length,confirmCalls};
+   }finally{
+    G.PKMSVVBoxHubUI.closeBox();
+    Object.defineProperty(G.DB,'save',descriptor);
+    G.DB.commit=priorCommit;window.confirm=priorConfirm;
+   }
+  })()`);
+  assert.equal(directRank.readyBefore,true,'one earned clone enables Rank button');
+  assert.equal(directRank.leftReadyBefore,1,'left Box immediately marks eligible species');
+  assert.equal(directRank.confirmCalls,0,'Rank cannot spawn a redundant native confirmation popup');
+  assert.equal(directRank.afterRank,1,'single click upgrades species Rank immediately');
+  assert.equal(directRank.copiesLeft,1,'one ordinary clone is consumed, original survives');
+  assert.equal(directRank.afterDisabled,true,'insufficient next-Rank materials disable button');
+  assert.equal(directRank.afterGray,true,'Rank button becomes gray after spent copies');
+  assert.equal(directRank.tabGray,true,'Rank tab also becomes gray when ineligible');
+  assert.equal(directRank.leftReadyAfter,0,'left Box must remove stale rank-ready highlight');
   const menuState=await evaluate("(()=>{const m=document.querySelector('#scr-menu');const news=m.querySelector('#btn-news');const color=getComputedStyle(news).color;const season=G.PKMSVVSeason?.nowActive?.();const bar=m.querySelector('.pkmsvv-save-banner');const pokemon=m.querySelector('[data-go=dex]');const pc=m.querySelector('#pkmsvv-menu-wiki');const nav=[...m.querySelector('.menu-right .menu-list')?.children||[]];const four=nav.map(n=>{const go=n.getAttribute('data-go')||n.querySelector('[data-go]')?.getAttribute('data-go')||'';const label=(n.querySelector('.pkmsvv-menu-label,.menu-label,strong')?.textContent||n.textContent||'').trim();if(go==='dex'||/^Khám phá\\b|^Explore\\b/i.test(label))return 'Khám phá';if(n.id==='pkmsvv-menu-wiki'||label==='PC')return 'PC';if(/multiplayer|coop|co-op/i.test(go)||/^Co-op\\b/i.test(label))return 'Co-op';if(/arena/i.test(go)||label==='Arena')return 'Arena';return null;}).filter(Boolean);return {navDebug:nav.map(n=>({id:n.id,go:n.getAttribute('data-go'),text:n.textContent?.trim().slice(0,95),label:n.querySelector('.pkmsvv-menu-label,.menu-label,strong')?.textContent?.trim()})),nativePC:!!pc,pcButtons:[...m.querySelectorAll('.menu-right button')].filter(b=>b.querySelector('.pkmsvv-menu-label')?.textContent==='PC').length,duplicate:!!pokemon,outsideUpgrade:!!m.querySelector('[data-go=upgrades]'),banner:bar?.textContent,bannerProtected:bar?.getAttribute('translate')==='no',pokemonDesc:pokemon?.querySelector('small')?.textContent,pcDesc:pc?.querySelector('small')?.textContent,four,saveBanners:m.querySelectorAll('.pkmsvv-save-banner').length,seasonBanners:m.querySelectorAll('.pkmsvv-season-banner').length,event:m.querySelector('.pkmsvv-v15-event span')?.textContent,seasonActive:!!season,newsColor:color,newsEnabled:!news?.disabled,menuClean:!!G.PKMSVVMenuCleanQA}})()");
   assert.equal(menuState.menuClean,true);
   assert.equal(menuState.nativePC,true,'keep original Support/Mega/Berry PC');
