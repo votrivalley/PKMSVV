@@ -386,7 +386,7 @@
  // original spawn definitions, save data, team Pokémon or other game modes.
  let constructed=0;
  function regionEnemyDefinition(def,index){
-  if(!def||typeof def!=='object'||index<0||index>=GEN_BOUNDS.length)return def;
+  if(!def||typeof def!=='object'||index<0||index>=REGION_COUNT)return def;
   // This is free-play exploration, not the linear story mode: even scripted
   // bosses must use the chosen Region. Boss status/HP are preserved separately.
   const dex=Number(def.dex);
@@ -421,13 +421,13 @@
  // before adding it, and periodically check the manager for bypassing paths.
  // This is strictly scoped to the selected normal Region session.
  function enforceLiveEnemy(enemy,index){
-  if(!enemy||enemy.dead||enemy.remote||index<0||index>=GEN_BOUNDS.length)return false;
+  if(!enemy||enemy.dead||enemy.remote||index<0||index>=REGION_COUNT)return false;
   // A real Region is strict for ALL hostile wildlife and bosses. Do not
   // exempt named bosses of other generations during normal exploration.
   if(enemy.pkmsvvFriendly||enemy.friendly||enemy.isPlayer||enemy.isSupport)return false;
   const old=Number(enemy.dex??enemy.def?.dex);
   if(!Number.isInteger(old))return false;
-  const replacement=regionEnemyDefinition({dex:old},index);
+  const replacement=regionEnemyDefinition({dex:old,boss:!!(enemy.boss||enemy.isBoss)},index);
   if(!replacement||replacement.dex===old)return false;
   const next=replacement.dex,mon=G.DEX_BY?.[next];
   if(!mon)return false;
