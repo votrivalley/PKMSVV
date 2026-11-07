@@ -82,7 +82,7 @@ test('only exact-species ordinary duplicates can become Rank shards',()=>{
  assert.equal(h.s.pkmsvvBox.find(x=>x.id==='b1-6-n').rank,0);
  assert.equal(h.s.owned[6].at,1,'Pokédex species flag is retained');
 });
-test('rank 0→1 uses one exact-species duplicate; mixing shards and originals works at Rank 1→2',()=>{
+test('each Rank up uses exactly one species duplicate or shard all the way to Rank 5',()=>{
  const h=setup(),lead='b1-6-n';
  const a=add(h.s,6),b=add(h.s,6),c=add(h.s,6);
  stage2.toFragments(a.id,h.s);
@@ -90,10 +90,16 @@ test('rank 0→1 uses one exact-species duplicate; mixing shards and originals w
  assert.deepEqual(stage2.rankUp(lead,[b.id],0,h.s),{id:lead,from:0,to:1,consumed:1,fragments:0});
  assert.equal(h.s.pkmsvvBox.find(x=>x.id===lead).rank,1);
  const d=add(h.s,6);
- stage2.rankUp(lead,[c.id],1,h.s);
+ stage2.rankUp(lead,[],1,h.s);
  assert.equal(h.s.pkmsvvBox.find(x=>x.id===lead).rank,2);
  assert.equal(stage2.shards(h.s,6),0);
  assert.equal(stage2.get(h.s,d.id).rank,0,'unselected duplicate survives');
+ stage2.rankUp(lead,[c.id],0,h.s);
+ stage2.rankUp(lead,[d.id],0,h.s);
+ const e=add(h.s,6);
+ stage2.rankUp(lead,[e.id],0,h.s);
+ assert.equal(stage2.speciesProgress(h.s,6).rank,5);
+ assert.throws(()=>stage2.rankUp(lead,[],1,h.s),/Rank 5/);
  assert.equal(h.s.pupg[6].atk,5,'old personal upgrades preserved');
 });
 test('cannot cross-evolution-family, reuse duplicate material ID, or consume protected originals',()=>{
@@ -172,11 +178,41 @@ test('Normal and Shiny share earned species Rank/branch without altering save or
  assert.equal(stage2.selected(s).rank,2);
  assert.equal(JSON.parse(saved).pkmsvvBox.length,s.pkmsvvBox.length);
  const a=add(s,6),b=add(s,6),c=add(s,6);
- const receipt=stage2.rankUp(shiny.id,[a.id,b.id,c.id],0,s);
+ const receipt=stage2.rankUp(shiny.id,[a.id],0,s);
  assert.equal(receipt.from,2);assert.equal(receipt.to,3);
  assert.equal(stage2.speciesProgress(s,6).rank,3);
  assert.equal(stage2.selected(s).rank,3,'Normal benefits when Shiny earns Rank');
  assert.equal(stage2.get(s,shiny.id).rank,3,'Shiny retains explicit earned progress');
  assert.equal(stage2.get(s,normal.id).rank,2,'older Normal save record remains unchanged');
  assert.equal(s.pkmsvvBox.filter(x=>x.dex===6&&x.shiny).length,1);
+ assert.ok(stage2.get(s,b.id)&&stage2.get(s,c.id),'other originals remain untouched');
+});
+
+test('Normal + Shiny x2 grants one non-destructive Rank credit (one-time only)',()=>{
+ const h=setup(),s=h.s,normal='b1-6-n',shiny='b1-6-s';
+ assert.equal(stage2.candidateList(s,normal).length,0,'legacy originals are protected');
+ assert.deepEqual(stage2.shinyCreditList(s,normal).map(x=>x.id),[shiny]);
+ const beforeOwned=JSON.stringify(s.owned),beforeShiny=JSON.stringify(s.shiny);
+ const beforeLength=s.pkmsvvBox.length;
+ const r=stage2.rankUp(normal,[],0,s,[shiny]);
+ assert.equal(r.to,1);assert.equal(r.shinyCredits,1);
+ assert.equal(s.pkmsvvBox.length,beforeLength,'neither the normal nor Shiny form is destroyed');
+ assert.equal(stage2.get(s,shiny).shiny,true);
+ assert.deepEqual(s.pkmsvvRankShinyCredits['6'],[shiny]);
+ assert.equal(stage2.shinyCreditList(s,normal).length,0);
+ assert.equal(JSON.stringify(s.owned),beforeOwned);
+ assert.equal(JSON.stringify(s.shiny),beforeShiny);
+ const snap=JSON.stringify(s);
+ assert.throws(()=>stage2.rankUp(normal,[],0,s,[shiny]),/already claimed|unavailable/);
+ assert.equal(JSON.stringify(s),snap,'reused credit must never mutate save');
+ const copy=add(s,6);
+ assert.equal(stage2.rankUp(normal,[copy.id],0,s).to,2,'another earned copy increments Rank by one');
+ assert.equal(stage2.selected(s).rank,2,'species-wide Rank follows the active fighter');
+});
+test('Shiny credit rolls back when save commit fails',()=>{
+ const h=setup(),before=JSON.stringify(h.s);
+ h.fail=true;
+ assert.throws(()=>stage2.rankUp('b1-6-n',[],0,h.s,['b1-6-s']),/Persistence failed/);
+ assert.equal(JSON.stringify(h.s),before);
+ assert.equal(h.writes,0);
 });
