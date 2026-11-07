@@ -84,7 +84,10 @@ G.PKMSVVHeldItems=(()=>{
   if(event.defaultPrevented||event.repeat||event.altKey||event.ctrlKey||event.metaKey)return;
   const index=event.key==='1'||event.code==='Digit1'||event.code==='Numpad1'?0:
    event.key==='2'||event.code==='Digit2'||event.code==='Numpad2'?1:-1;
-  if(index<0||document.activeElement?.matches?.('input,textarea,select,[contenteditable="true"]'))return;
+  if(index<0)return;
+  // Ignore text editing only when focus actually belongs to this item dialog.
+  const scr=document.getElementById('scr-item');
+  if(scr?.contains?.(document.activeElement)&&document.activeElement?.matches?.('input,textarea,select,[contenteditable="true"]'))return;
   const screen=document.getElementById('scr-item');
   if(!screen||screen.hidden||screen.classList?.contains('hidden'))return;
   const buttons=document.querySelectorAll?.('#scr-item #item-cards.pkmsvv-held-choices .pkmsvv-held-columns .pkmsvv-held-action');
