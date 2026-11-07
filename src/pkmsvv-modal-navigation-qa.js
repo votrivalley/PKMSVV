@@ -114,7 +114,7 @@
     ['w','a','s','d'].includes(key))return;
   const critical=key==='escape'||key==='backspace'||key==='1'||key==='2';
   if(e.defaultPrevented&&!critical)return;
-  if(root.id==='scr-item'&&!isEditable(document.activeElement)){
+  if(root.id==='scr-item'&&!(root.contains(document.activeElement)&&isEditable(document.activeElement))){
    const index=key==='1'||code==='Digit1'||code==='Numpad1'?0:
     key==='2'||code==='Digit2'||code==='Numpad2'?1:-1;
    if(index>=0){
