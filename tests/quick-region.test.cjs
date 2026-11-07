@@ -27,7 +27,7 @@ function harness(options={}){
   World:{biome:17,setBiome(n){this.biome=n;calls.push(n)}},
   Coop:{active:false},
   DEX_BY:{12:{dex:12,name:'Butterfree',types:['bug'],gen:1}},
-  Game:{state:'ui',startRun(){
+  Game:{state:'ui',st:{time:0},startRun(){
    if(options.deferred){
     deferredStart=()=>{this.state='playing';G.World.setBiome(0);};return;
    }
@@ -136,7 +136,8 @@ test('Gen 1–9 wild waves never cross their generation even if upstream bags co
   if(eligible.length)assert.ok(out.every(x=>x.dex>=low&&x.dex<=high),'mixed generation in Region '+(i+1));
  }
  assert.equal(JSON.stringify(input),preserved,'region filter must not mutate enemy source data');
- assert.equal(quick.enforceGeneration(input,9),input,'Sky Tower is intentionally mixed-generation');
+ assert.ok(quick.enforceGeneration(input,9).every(x=>x&&Number.isInteger(+x.dex)),
+  'Sky Tower mixes Generations while still using tier-appropriate local Gacha species');
 });
 
 test('The entire active Region uses a Gen-only bag, including between Spawner ticks',()=>{
@@ -358,4 +359,70 @@ test('Kanto cancelled during Berry wait does not leak into another mode',()=>{
  h.G.Coop.active=true;
  h.G.Game.startRun();
  assert.equal(region.active,false,'Co-op never inherits abandoned Kanto');
+});
+
+test('Wild Pokémon get progressively stronger across every Region and mixed-Gen Sky',()=>{
+ const h=harness(),q=h.G.PKMSVVQuickRegion;
+ const starters=[1,152,252,387,494,650,722,810,906];
+ const strong=[130,249,384,445,643,716,791,889,1007];
+ const stats=(dex,power,legendary=false)=>({
+  dex,name:'Species '+dex,hp:power,pa:power,df:power,
+  sa:power,sd:power,spd:power,rarity:legendary?5:1
+ });
+ h.G.DEX_BY={};
+ h.G.DEX=[];h.G.SPRITE_META={};
+ for(let i=0;i<9;i++){
+  h.G.DEX_BY[starters[i]]=stats(starters[i],40);
+  h.G.DEX_BY[strong[i]]=stats(strong[i],95,true);
+  h.G.DEX.push({dex:starters[i],gen:i+1},{dex:strong[i],gen:i+1});
+  h.G.SPRITE_META[starters[i]]={};h.G.SPRITE_META[strong[i]]={};
+ }
+ for(let region=0;region<10;region++){
+  h.G.Game.st.time=0;
+  const begin=q.enforceGeneration([{dex:strong[Math.min(region,8)],hp:12}],region);
+  assert.equal(begin.length,1);
+  assert.ok(starters.includes(begin[0].dex),
+   'minute zero must use weak, unevolved starters in Region '+region);
+  if(region<9)assert.equal(q.nationalGen(begin[0].dex),region+1);
+  h.G.Game.st.time=780;
+  const later=q.enforceGeneration([{dex:strong[Math.min(region,8)],hp:12}],region);
+  assert.equal(later.length,1);
+  assert.ok(strong.includes(later[0].dex),'late game must permit powerful species in Region '+region);
+ }
+});
+test('Kanto does not start with Gyarados, Kangaskhan or fully evolved starters',()=>{
+ const h=harness(),q=h.G.PKMSVVQuickRegion;
+ const specs=[
+  [10,45,30,35,20,20,45,1],[4,39,52,43,60,50,65,1],
+  [5,58,64,58,80,65,80,2],[6,78,84,78,109,85,100,3],
+  [115,105,95,80,40,80,90,3],[129,20,10,55,15,20,80,1],
+  [130,95,125,79,60,100,81,3],[150,106,110,90,154,90,130,5]
+ ];
+ h.G.DEX_BY={};h.G.DEX=[];h.G.SPRITE_META={};
+ for(const [dex,hp,pa,df,sa,sd,spd,rarity] of specs){
+  h.G.DEX_BY[dex]={dex,name:'Mon #'+dex,hp,pa,df,sa,sd,spd,rarity};
+  h.G.DEX.push({dex,gen:1});h.G.SPRITE_META[dex]={};
+ }
+ h.G.PKMSVV_EVOLUTION_DATA={rules:[{from:4,to:5},{from:5,to:6},{from:129,to:130}]};
+ q.choose(0);
+ for(const time of [0,73,119]){
+  h.G.Game.st.time=time;
+  const early=q.enforceGeneration([{dex:130},{dex:115},{dex:6},{dex:150}],0);
+  assert.ok(early.every(x=>[4,10,129].includes(x.dex)),
+   'minute '+time+' leaked advanced/legendary: '+early.map(x=>x.dex));
+ }
+ assert.equal(q.eligibleByTime(115,0,0),false);
+ assert.equal(q.eligibleByTime(130,0,0),false);
+ assert.equal(q.eligibleByTime(6,0,0),false);
+ assert.equal(q.eligibleByTime(130,0,610),true,'late Gyarados becomes possible');
+ assert.equal(q.eligibleByTime(6,0,610),true,'late Charizard becomes possible');
+ assert.equal(q.eligibleByTime(115,0,610),true,'late Kangaskhan becomes possible');
+ assert.equal(q.eligibleByTime(150,0,610),false,'legendary delayed further');
+ assert.equal(q.eligibleByTime(150,0,780),true,'late legend unlock');
+ const boss={dex:130,def:{dex:130},hp:600,boss:true};
+ h.G.Game.st.time=30;
+ h.G.EnemyMgr.add(boss);
+ assert.ok([4,10,129].includes(boss.dex),'early miniboss must not leak Gyarados');
+ assert.equal(boss.hp,600,'keep boss HP/difficulty multipliers');
+ h.G.Game.toUI();
 });
