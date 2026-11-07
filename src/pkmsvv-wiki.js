@@ -198,7 +198,9 @@ G.PKMSVVWiki=(()=>{
 
   ];
   // The completed Skill Awakening chapter does not need a permanent guide row.
-  const skillAwakeningDone=!!G.DB?.save?.pkmsvvChapter2Seen;
+  const skillAwakeningDone=!!G.DB?.save?.pkmsvvChapter2Seen ||
+   (G.PKMSVVSkillTrack?.progress?.(G.DB?.save)?.count||0)>=8 ||
+   (G.Game?.player?.moves?.length||0)>=8;
   // Put Fusion recipes above Mystery Orb in the knowledge accordion.
   for(const [name,description] of articles.filter(([name])=>
    !skillAwakeningDone||name!==tr('Thức tỉnh kỹ năng','Skill Awakening')).sort((a,b)=>(b[0].includes('Fusion')?1:0)-(a[0].includes('Fusion')?1:0))){
