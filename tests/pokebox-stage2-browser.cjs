@@ -108,8 +108,8 @@ async function main(){
   assert.equal(menuState.nativePC,true,'keep original Support/Mega/Berry PC');
   assert.equal(menuState.pcButtons,1,'main menu must contain only ONE PC');
   assert.equal(menuState.duplicate,true,'keep the home Pokémon launcher');
-  assert.equal(await evaluate("document.querySelector('#scr-menu [data-go=dex] .pkmsvv-menu-label')?.textContent"),'Khám phá',
-   'home Explore label must be visible in Vietnamese');
+  assert.equal(await evaluate("(()=>{const btn=document.querySelector('#scr-menu [data-go=dex]');return !!btn&&btn.getAttribute('aria-label')==='Khám phá'&&btn.textContent.includes('Khám phá')})()"),true,
+   'the native home launcher must visibly show Khám phá, not only change its aria-label');
   assert.equal(menuState.outsideUpgrade,false,'upgrade selection belongs inside Pokémon');
   assert.deepEqual(menuState.four,['Khám phá','PC','Co-op','Arena'],'main menu order');
   assert.match(menuState.pokemonDesc,/PokéBox.*Pokédex.*Nâng cấp|PokéBox.*Pokédex.*Upgrades/);
