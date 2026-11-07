@@ -236,15 +236,11 @@
   const cost=rank===max?0:rank+1;
   const enabled=!!(x&&valid(s)&&api?.valid?.(s)&&
    typeof api.candidateList==='function'&&typeof api.shards==='function');
-  let copies=0,fragments=0,protectedForms=0;
-  if(enabled&&cost){
-   // Rank is species-shared: prefer the Normal carrier for safely using a
-   // duplicate Shiny's one-time credit even while its Shiny skin is focused.
-   const carrier=x.shiny?(s.pkmsvvBox.find(v=>v.dex===x.dex&&!v.shiny)||x):x;
-   copies=api.candidateList(s,carrier.id).length;
-   fragments=api.shards(s,x.dex);
-   protectedForms=api.claimableList?.(s,carrier.id)?.length||0;
-  }
+  // All source counts come from the SAME deterministic automatic upgrade
+  // plan, so Box ×N and the Rank button never disagree about eligibility.
+  const plan=enabled&&cost?api.rankMaterials?.(s,x.id):null;
+  const copies=plan?.copies?.length||0,fragments=plan?.fragments||0;
+  const protectedForms=plan?.credits?.length||0;
   const available=enabled?Math.min(cost,copies+fragments+protectedForms):0;
   return {rank,max,cost,copies,fragments,protectedForms,available,missing:Math.max(0,cost-available),
    enabled,canRank:enabled&&cost>0&&available>=cost};
