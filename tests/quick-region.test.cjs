@@ -490,3 +490,41 @@ test('Paldea receives the late fire battlefield while old Champion Seals remain 
  h.save.pkmsvvExploreSeals={Paldea:true};
  assert.equal(q.unlocked(9),true,'Seals earned in Explore combine with legacy Arena progress');
 });
+
+
+test('Kanto mini-boss never remains a low-power Rattata when stronger safe basics exist',()=>{
+ const h=harness(),q=h.G.PKMSVVQuickRegion;
+ h.G.DEX_BY={
+  16:{dex:16,name:'Pidgey',hp:40,pa:45,df:40,sa:35,sd:35,spd:56,rarity:1},
+  19:{dex:19,name:'Rattata',hp:30,pa:56,df:35,sa:25,sd:35,spd:72,rarity:1},
+  1:{dex:1,name:'Bulbasaur',hp:45,pa:49,df:49,sa:65,sd:65,spd:45,rarity:1},
+  25:{dex:25,name:'Pikachu',hp:35,pa:55,df:40,sa:50,sd:50,spd:90,rarity:1},
+  43:{dex:43,name:'Oddish',hp:45,pa:50,df:55,sa:75,sd:65,spd:30,rarity:1}
+ };
+ h.G.DEX=Object.keys(h.G.DEX_BY).map(id=>({dex:Number(id),gen:1}));
+ h.G.SPRITE_META=Object.fromEntries(Object.keys(h.G.DEX_BY).map(id=>[id,{}]));
+ assert.equal(q.choose(0),true);
+ const wild=new h.G.Enemy({dex:19,name:'Rattata',hp:100},0,0,{},false);
+ assert.equal(wild.dex,19,'Rattata remains valid ordinary early wildlife');
+ const mini=new h.G.Enemy({dex:19,name:'Rattata',hp:700,boss:true},0,0,{},true);
+ assert.notEqual(mini.dex,19,'mini-boss prefers a safe stronger species');
+ assert.ok([1,25,43].includes(mini.dex),'boss stays in strong half of safe Gen1 basics');
+ assert.equal(mini.def.hp,700,'mini-boss actual HP and damage modifiers preserved');
+});
+test('Canonical Egg-support boss guards keep their sprite/dex even on Kanto maps',()=>{
+ const h=harness(),q=h.G.PKMSVVQuickRegion;
+ h.G.DEX_BY={25:{dex:25,name:'Pikachu',types:['electric']}};
+ h.G.DEX=[{dex:25,gen:1}];h.G.SPRITE_META={25:{}};
+ assert.equal(q.choose(0),true);
+ for(const dex of [172,447,173,360,174]){
+  const def={dex,name:'Original support',xp:1,behavior:'chase',hp:90};
+  const guardian=new h.G.Enemy(def,0,0,{hp:1},false);
+  guardian.pkmsvvBossGuard=true;guardian.pkmsvvGuardianOf=123;
+  h.G.EnemyMgr.add(guardian);
+  assert.equal(guardian.dex,dex,'constructor and manager retain canonical Boss Guardian #'+dex);
+ }
+ for(let i=0;i<10;i++)h.G.EnemyMgr.update(0.016);
+ assert.deepEqual(Array.from(h.alive,e=>e.dex),[172,447,173,360,174],
+  'live correction must not substitute any boss support with Zubat/other wild Pokémon');
+ h.G.Game.toUI();
+});
