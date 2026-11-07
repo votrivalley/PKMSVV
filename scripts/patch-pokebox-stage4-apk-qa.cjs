@@ -4,7 +4,7 @@
  * in the original Java namespace; every relative Activity name is expanded.
  * The rebuilt APK MUST be signed again with the existing stable keystore.
  */
-const fs=require('node:fs'),path=require('node:path');
+const fs=require('node:fs'),path=require('node:path'),{execFileSync}=require('node:child_process');
 const root=path.resolve(__dirname,'..');
 const {copyRegionCovers}=require('./copy-region-covers.cjs');
 const decoded=path.resolve(process.argv[2]||'');
@@ -64,6 +64,12 @@ for(const filename of ['pkmsvv-box-stage1.css','pkmsvv-box-stage2.css','pkmsvv-b
  if(!html.includes(filename))html=html.replace('</head>','<link rel="stylesheet" href="css/'+filename+'">\n</head>');
 }
 copyRegionCovers(web);
+const style=path.join(web,'css/pkmsvv-prebattle-qa.css');
+fs.copyFileSync(path.join(root,'src/pkmsvv-prebattle-qa.css'),style);
+if(!html.includes('pkmsvv-prebattle-qa.css'))
+ html=html.replace('</head>','<link rel="stylesheet" href="css/pkmsvv-prebattle-qa.css">\n</head>');
+execFileSync(process.execPath,[path.join(root,'scripts/patch-qa-compiled-modules.cjs'),
+ path.join(web,'js/app.min.js')],{stdio:'inherit'});
 html=html.replace(/<title>[^<]*<\/title>/,'<title>PokeBox QA — Not Production</title>');
 fs.writeFileSync(index,html);
 fs.writeFileSync(path.join(web,'POKEBOX-QA-ONLY.txt'),
