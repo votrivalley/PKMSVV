@@ -1,0 +1,232 @@
+/* QA-only unified PC and restored home details. */
+#pkmsvv-wiki-overlay .pkmsvv-pc-panel{max-height:96dvh;overflow-y:auto}
+#pkmsvv-wiki-overlay .pkmsvv-pc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+#pkmsvv-wiki-overlay .pkmsvv-pc-unified-card{
+ display:flex;flex-direction:column;justify-content:center;align-items:center;
+ gap:10px;min-width:0;min-height:150px;padding:12px;
+ background:linear-gradient(155deg,#235e69,#1b4354);
+ border-color:#8adbc8;color:#ffe08c;cursor:pointer;
+}
+#pkmsvv-wiki-overlay .pkmsvv-pc-unified-card strong{font-size:clamp(15px,1.6vw,20px);text-align:center}
+#pkmsvv-wiki-overlay .pkmsvv-pc-unified-card:hover{border-color:#ffe49b;filter:brightness(1.08)}
+#pkmsvv-wiki-overlay .pkmsvv-pc-unified-card:focus-visible{outline:3px solid #ffe49b}
+#pkmsvv-wiki-overlay .pkmsvv-pc-unified-icon{font-size:48px;line-height:1;min-height:58px;display:grid;place-items:center}
+#pkmsvv-wiki-overlay .pkmsvv-pc-gen1-icon{width:54px;height:54px;image-rendering:pixelated}
+#pkmsvv-wiki-overlay .pkmsvv-pc-learn>button:empty{display:none}
+#pkmsvv-pokebox-overlay{z-index:21010!important}
+#pkmbx-dex-overlay{z-index:21011!important}
+#scr-menu .menu-left .pkmsvv-save-banner{
+ display:block;box-sizing:border-box;flex:0 0 auto;margin:6px auto 9px;
+ width:min(96%,680px);padding:9px 14px;text-align:center;
+ background:#fff0a6;border:2px solid #ae853a;border-radius:10px;
+ color:#233e4b!important;-webkit-text-fill-color:#233e4b!important;
+ box-shadow:0 2px 6px #112b3f50;font:800 clamp(12px,1.25vw,16px)/1.4 "Segoe UI",sans-serif;
+ text-shadow:none;opacity:1!important;letter-spacing:0;overflow-wrap:anywhere
+}
+#scr-menu .menu-left .pkmsvv-v15-event span{color:#244653!important;-webkit-text-fill-color:#244653!important;font-weight:600}
+#scr-menu .menu-left .pkmsvv-v15-event button[hidden]{display:none!important}
+#scr-menu #btn-news,#scr-menu .pkmsvv-v15-bottom #btn-news,#scr-menu .pkmsvv-v15-news .news-btn{
+ color:#fff3c6!important;-webkit-text-fill-color:#fff3c6!important;
+ background:linear-gradient(150deg,#256978,#164858)!important;
+ border:2px solid #81dfd0!important;border-radius:12px!important;
+ box-shadow:0 3px 9px #08273680!important;
+ text-shadow:none!important;opacity:1!important;filter:none!important;
+ pointer-events:auto!important;cursor:pointer!important;
+ min-height:66px!important;font-weight:800!important;
+}
+#scr-menu #btn-news img{filter:brightness(0) invert(1)!important;opacity:1!important}
+#scr-menu .pkmsvv-v15-partner .pkmsvv-v15-meta{
+ display:block!important;min-height:0!important;max-height:none!important;
+ overflow:visible!important;opacity:1!important;visibility:visible!important;
+ color:#1c4050!important;-webkit-text-fill-color:#1c4050!important
+}
+#scr-menu .pkmsvv-v15-partner #menu-partner-name{
+ display:block!important;font-weight:800!important;font-size:clamp(20px,2.2vw,30px)!important;
+ line-height:1.25!important;color:#214455!important;-webkit-text-fill-color:#214455!important
+}
+#scr-menu .pkmsvv-v15-partner #menu-partner-info,
+#scr-menu .pkmsvv-v15-partner #menu-stats{
+ display:block!important;white-space:normal!important;line-height:1.45!important;
+ margin-top:7px!important;font-size:clamp(13px,1.3vw,18px)!important;
+ color:#214455!important;-webkit-text-fill-color:#214455!important;
+}
+#scr-menu .pkmsvv-home-type-row{display:flex;flex-wrap:wrap;gap:6px;margin:7px 0}
+#scr-menu .pkmsvv-home-type-chip{display:inline-flex;align-items:center;
+ border-radius:7px;padding:5px 10px;color:#162e3a!important;
+ -webkit-text-fill-color:#162e3a!important;font-size:14px;font-weight:800}
+@media(max-width:680px){
+ #pkmsvv-wiki-overlay .pkmsvv-pc-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ #pkmsvv-wiki-overlay .pkmsvv-pc-unified-card{min-height:105px;padding:8px}
+ #pkmsvv-wiki-overlay .pkmsvv-pc-unified-icon{min-height:38px;font-size:34px}
+ #pkmsvv-wiki-overlay .pkmsvv-pc-gen1-icon{width:38px;height:38px}
+ #scr-menu #btn-news{min-height:52px!important}
+}
+/* Home profile contrast pass: show active selected Pokémon clearly. */
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-partner{
+ background:#f2faf7!important;border:3px solid #3c7a83!important;
+ box-shadow:0 0 0 3px #f8fffb,0 12px 28px #102c3975!important;
+}
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-meta{
+ background:transparent!important;color:#102e3f!important;
+ -webkit-text-fill-color:#102e3f!important;text-shadow:none!important
+}
+#scr-menu.pkmsvv-v15-menu #menu-partner-name{
+ color:#0e3449!important;-webkit-text-fill-color:#0e3449!important;font-weight:900!important
+}
+#scr-menu.pkmsvv-v15-menu #menu-partner-info,
+#scr-menu.pkmsvv-v15-menu #menu-stats{
+ background:#e6f2ee!important;border:1px solid #a0c3c1!important;
+ padding:7px 9px!important;border-radius:7px!important;
+ color:#183f51!important;-webkit-text-fill-color:#183f51!important;
+ line-height:1.55!important;opacity:1!important
+}
+#scr-menu.pkmsvv-v15-menu .pkmsvv-home-type-chip{
+ color:#fff!important;-webkit-text-fill-color:#fff!important;
+ text-shadow:0 1px 2px #0e2339!important;
+ border:1px solid #193a4888!important;box-shadow:0 1px 2px #17323c55!important
+}
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-event,
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-bottom>.pkmsvv-v15-news-card{
+ background:#eaf6f1!important;border:2px solid #679a99!important;
+ color:#153749!important;-webkit-text-fill-color:#153749!important
+}
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-event span{
+ color:#173e4e!important;-webkit-text-fill-color:#173e4e!important
+}
+
+
+/* News button legibility: dark text no longer disappears on a pale-yellow tile. */
+#scr-menu.pkmsvv-v15-menu #btn-news,
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-bottom>#btn-news,
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-bottom>.pkmsvv-v15-news-card{
+ background:linear-gradient(145deg,#194a59,#0d2e43)!important;
+ color:#fff0bd!important;-webkit-text-fill-color:#fff0bd!important;
+ border:2px solid #9ddbd3!important;
+ box-shadow:0 3px 0 #0a2334,0 0 0 1px #e1ba7b55!important
+}
+#scr-menu.pkmsvv-v15-menu #btn-news :is(span,strong,small,b,p,div),
+#scr-menu.pkmsvv-v15-menu .pkmsvv-v15-news-card :is(span,strong,small,b,p,div){
+ color:#fff1c8!important;-webkit-text-fill-color:#fff1c8!important;
+ opacity:1!important;text-shadow:0 1px 2px #082131!important
+}
+#scr-menu.pkmsvv-v15-menu #btn-news:hover{
+ background:linear-gradient(145deg,#236675,#174354)!important;
+}
+
+
+/* QA: draw a real retro newspaper, not the missing-font white square.
+   Preserve the actual #btn-news click handler and VI/EN label. */
+#scr-menu #btn-news::before,
+#scr-menu .pkmsvv-v15-news-card#btn-news::before{
+  content:"";display:inline-block;vertical-align:middle;
+  width:29px;height:29px;flex:0 0 29px;margin-right:7px;
+  background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2228%22%20height%3D%2228%22%20viewBox%3D%220%200%2028%2028%22%3E%3Cpath%20d%3D%22M3%203h17v19a3%203%200%200%200%203%203H6a3%203%200%200%201-3-3z%22%20fill%3D%22%23fff0c7%22%20stroke%3D%22%23153749%22%20stroke-width%3D%221.6%22%2F%3E%3Cpath%20d%3D%22M20%207h5v15a3%203%200%200%201-5%200z%22%20fill%3D%22%23ddad51%22%20stroke%3D%22%23153749%22%20stroke-width%3D%221.6%22%2F%3E%3Crect%20x%3D%225.5%22%20y%3D%226%22%20width%3D%2212%22%20height%3D%224%22%20rx%3D%221%22%20fill%3D%22%23e7ac50%22%2F%3E%3Cpath%20d%3D%22M6%2013h11M6%2016h11M6%2019h7%22%20stroke%3D%22%2323475c%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%2F%3E%3Crect%20x%3D%2214%22%20y%3D%2218%22%20width%3D%223%22%20height%3D%223%22%20fill%3D%22%23ecb35b%22%2F%3E%3C%2Fsvg%3E");background-size:contain;
+  background-repeat:no-repeat;background-position:center;
+  image-rendering:auto;
+}
+#scr-menu #btn-news > svg,
+#scr-menu #btn-news > i,
+#scr-menu #btn-news > img,
+#scr-menu .pkmsvv-v15-news-card#btn-news > svg,
+#scr-menu .pkmsvv-v15-news-card#btn-news > i,
+#scr-menu .pkmsvv-v15-news-card#btn-news > img{display:none!important}
+#scr-menu #btn-news{display:flex!important;align-items:center;justify-content:center;gap:2px}
+
+
+/* Unified menu theme — outer home palette across PC, Box, Dex and Upgrade.
+   Keep type-color accents inside individual Pokémon panels. */
+#scr-menu,#pkmsvv-wiki-overlay,#pkmsvv-pokebox-overlay{
+ --pkmsvv-menu-ink:#183a4b;
+ --pkmsvv-menu-night:#102e40;
+ --pkmsvv-menu-deep:#0c2636;
+ --pkmsvv-menu-mid:#205161;
+ --pkmsvv-menu-teal:#8ad7c9;
+ --pkmsvv-menu-mint:#e4f2ee;
+ --pkmsvv-menu-gold:#ffdf85;
+ --pkmsvv-menu-border:#8bc9c2;
+}
+#pkmsvv-wiki-overlay .pkmsvv-pc-panel,
+#pkmsvv-pokebox-overlay .pkmbx-hub-panel,
+#pkmsvv-pokebox-overlay .pkmbx-dex-panel,
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-panel{
+ color:#eaf8f7!important;
+ background:linear-gradient(155deg,#163d4e,#102a3b 70%,#0b2435)!important;
+ border:2px solid var(--pkmsvv-menu-border)!important;
+ border-radius:14px!important;
+}
+#pkmsvv-wiki-overlay .pkmsvv-pc-panel h2,
+#pkmsvv-wiki-overlay .pkmsvv-pc-panel h3,
+#pkmsvv-pokebox-overlay .pkmbx-head h2,
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-heading h3{
+ color:var(--pkmsvv-menu-gold)!important;
+ text-shadow:0 1px 1px #071a25;
+}
+#pkmsvv-wiki-overlay .pkmsvv-pc-learn>button,
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-option,
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-heading,
+#pkmsvv-pokebox-overlay .pkmbx-hub-info,
+#pkmsvv-pokebox-overlay .pkmbx-dex-evo{
+ color:#effaf8!important;
+ background:linear-gradient(145deg,#205462,#153849)!important;
+ border:1px solid #79c6bd!important;
+ border-radius:10px!important;
+}
+#pkmsvv-wiki-overlay .pkmsvv-pc-learn>button{
+ font-weight:750!important;
+ color:#ffe5a5!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab:not(.gold),
+#pkmsvv-pokebox-overlay .pkmbx-hub-tabs>.btn:not(.gold):not(.rank-disabled),
+#pkmsvv-pokebox-overlay .pkmbx-box-variants>.btn:not(.gold),
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-option .btn:not(.gold){
+ background:linear-gradient(145deg,#def0eb,#c5dfdc)!important;
+ border:1px solid #81bfb9!important;
+ color:#193b4b!important;-webkit-text-fill-color:#193b4b!important;
+ box-shadow:0 2px 0 #09283870!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab.gold,
+#pkmsvv-pokebox-overlay .pkmbx-hub-tabs>.btn.gold:not(.rank-disabled){
+ background:linear-gradient(145deg,#fff1b1,#f5d06b)!important;
+ border:2px solid #e2af46!important;
+ color:#183849!important;-webkit-text-fill-color:#183849!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-hub-left,
+#pkmsvv-pokebox-overlay .pkmbx-box-frame{
+ border-color:#72c5bc!important;
+ background:linear-gradient(145deg,#164b55,#123645)!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-hub-tools input,
+#pkmsvv-pokebox-overlay .pkmbx-hub-tools select,
+#pkmsvv-pokebox-overlay .pkmbx-dex-toolbar input,
+#pkmsvv-pokebox-overlay .pkmbx-dex-toolbar select{
+ color:#f7fffc!important;
+ background:#0b293b!important;border:1px solid #80c6c1!important;
+ border-radius:8px!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-hub-tools label,
+#pkmsvv-pokebox-overlay .pkmbx-hub-team-title h3{
+ color:#ffe29a!important;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details.pkmbx-profile{
+ color:#ecf6fa!important;
+ background:linear-gradient(160deg,#235665,#153746)!important;
+ border:2px solid #85cfc5!important;
+ box-shadow:inset 0 0 0 1px #74c6be55!important;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details :is(.pkmbx-hub-hero strong,.pkmbx-dex-summary,.pkmbx-dex-summary b,.pkmbx-dex-evo h4,.pkmbx-dex-evo p,.pkmbx-hub-hero p){
+ color:#eefbf9!important;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-dex-badge{
+ background:#ffdda1!important;color:#213849!important;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-dex-evo .btn{
+ background:#e4f1eb!important;color:#1b4050!important;border:1px solid #98c7bf!important;
+}
+#pkmsvv-pokebox-overlay :is(.pkmbx-upgrade-panel,.pkmbx-dex-panel,.pkmbx-hub-panel) .pkmbx-head>.btn{
+ background:linear-gradient(#ffe9a0,#ffd46b)!important;
+ color:#16394a!important;border:2px solid #d6a841!important;
+}
+#pkmsvv-wiki-overlay :is(button,[role=button]):focus-visible,
+#pkmsvv-pokebox-overlay :is(button,[role=button],input,select):focus-visible{
+ outline:3px solid #ffe090!important;outline-offset:2px!important;
+}

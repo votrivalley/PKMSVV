@@ -1,0 +1,43 @@
+/* Shared QA prebattle choices. Same colors/layout for desktop, Web and Android. */
+#pkmsvv-champion-entry-pick,#pkmsvv-arena-pvp-pick{
+ position:fixed;inset:0;z-index:20110;padding:clamp(8px,2vw,20px);
+ display:flex;justify-content:center;align-items:center;
+ background:rgba(5,21,32,.96);overflow:auto;
+}
+#pkmsvv-champion-entry-pick[hidden],#pkmsvv-arena-pvp-pick[hidden]{display:none!important}
+.pkmsvv-champion-entry-card,.pkmsvv-arena-pvp-pick-card{
+ box-sizing:border-box;display:flex;flex-direction:column;
+ gap:9px;width:min(700px,100%);max-height:min(90dvh,850px);
+ min-height:0;overflow:auto;padding:clamp(12px,2vw,22px);
+ background:#16394d;border:2px solid #f5d275;border-radius:15px;
+ color:#f3fcff;box-shadow:0 16px 50px #0009;
+}
+.pkmsvv-champion-entry-card h2,.pkmsvv-arena-pvp-pick-card h2{
+ margin:0;color:#ffe19b;font-size:clamp(17px,2vw,25px);
+}
+#pkmsvv-champion-entry-clock,#pkmsvv-arena-pvp-pick-clock{
+ color:#fff3cc;font-weight:850;font-size:18px;
+}
+#pkmsvv-champion-entry-pick input,#pkmsvv-arena-pvp-pick input{
+ box-sizing:border-box;min-height:40px;width:100%;border-radius:9px;
+ border:1px solid #8fd6cf;background:#092535;color:#fff;
+ font:inherit;padding:8px;
+}
+.pkmsvv-champion-entry-list,#pkmsvv-arena-pvp-pick-options{
+ display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));
+ gap:7px;max-height:50dvh;overflow:auto;min-height:65px;
+}
+.pkmsvv-champion-entry-actions{display:flex;gap:8px;justify-content:center}
+.pkmsvv-champion-entry-actions button{flex:1}
+#pkmsvv-champion-entry-pick button:focus-visible,
+#pkmsvv-arena-pvp-pick button:focus-visible{
+ outline:3px solid #ffdb67;outline-offset:2px;
+}
+@media(max-width:620px){
+ .pkmsvv-champion-entry-list,#pkmsvv-arena-pvp-pick-options{
+  grid-template-columns:repeat(2,minmax(0,1fr));max-height:35dvh
+ }
+ #pkmsvv-champion-entry-pick button,#pkmsvv-arena-pvp-pick button{
+  min-height:40px;font-size:12px;
+ }
+}

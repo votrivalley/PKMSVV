@@ -1,0 +1,15 @@
+/* QA-only PokéBox — no changes to the existing Pokédex or game canvas. */
+#pkmsvv-pokebox-button{font:inherit;cursor:pointer}
+#pkmsvv-pokebox-overlay{position:fixed;inset:0;z-index:20050;background:rgba(2,8,20,.92);display:flex;align-items:center;justify-content:center;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));overflow:auto}
+#pkmsvv-pokebox-overlay .pkmbx-panel{width:min(980px,100%);max-height:96vh;overflow-y:auto;background:#11233a;border:2px solid #6f91b4;border-radius:16px;padding:16px;color:#e8f4ff;box-shadow:0 15px 60px #000}
+.pkmbx-head,.pkmbx-actions,.pkmbx-foot,.pkmbx-page{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.pkmbx-head h2{margin:0;color:#ffdc84;font-size:24px}.pkmbx-head small{font-size:12px;color:#a6c0de}
+.pkmbx-note{font-size:13px;color:#d7eafa;margin:10px 0}.pkmbx-warning{font-size:12px;color:#f8cd8a;line-height:1.5}
+.pkmbx-actions{justify-content:flex-start;margin:12px 0}.pkmbx-actions label{display:flex;align-items:center;gap:4px;font-size:13px}.pkmbx-actions input[type=search]{min-width:150px;flex:1;border:1px solid #567b9f;border-radius:9px;padding:10px;background:#0b182b;color:#fff}
+.pkmbx-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px;min-height:270px}
+.pkmbx-slot{border:1px solid #486787;border-radius:9px;background:#18344f;color:#fff;min-width:0;min-height:145px;padding:7px 5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer}
+.pkmbx-slot.selected{border:2px solid #ffda79;background:#274b5f}.pkmbx-slot:disabled{opacity:.78;cursor:default}
+.pkmbx-slot canvas{width:72px;height:72px;max-width:100%;image-rendering:pixelated}.pkmbx-slot .pkmbx-name{font-weight:700;font-size:12px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pkmbx-slot small{color:#c7d9ed;font-size:10px;line-height:1.25}
+.pkmbx-page{justify-content:center;margin:12px 0}.pkmbx-foot{justify-content:flex-end;border-top:1px solid #46617b;padding-top:12px}
+@media(max-width:690px){.pkmbx-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.pkmbx-slot{min-height:126px}.pkmbx-slot canvas{height:54px;width:54px}.pkmbx-head h2{font-size:18px}}
+@media(max-width:390px){.pkmbx-grid{grid-template-columns:repeat(3,minmax(0,1fr))}#pkmsvv-pokebox-overlay .pkmbx-panel{padding:10px}}

@@ -58,6 +58,21 @@ G.PKMSVVWiki=(()=>{
   .pkmsvv-pc-learn{margin-top:9px;border:1px solid #80bbb2;background:#204e55;border-radius:9px;padding:10px}
   .pkmsvv-pc-learn button{cursor:pointer;color:#ffe3a3;font-weight:bold;border:0;background:transparent;text-align:left;width:100%;padding:5px}
   .pkmsvv-pc-learn p{color:#d8efeb;font-size:13px;line-height:1.65}
+  .pkmsvv-fusion-recipes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}
+  .pkmsvv-fusion-recipe{display:grid;grid-template-columns:52px minmax(0,1fr);
+    gap:4px 10px;align-items:center;padding:9px;border:1px solid #82b9b5;
+    border-radius:9px;background:#173c4c;color:#f4faf8;min-width:0}
+  .pkmsvv-fusion-recipe .pkmsvv-fusion-icon{grid-row:1/5;width:52px;height:52px;
+    object-fit:contain;filter:drop-shadow(0 0 4px #ffe68c44)}
+  .pkmsvv-fusion-recipe .pkmsvv-fusion-move{display:inline-flex;align-items:center;
+    gap:5px;min-width:0;color:#d7eeeb;font-size:11px;overflow-wrap:anywhere}
+  .pkmsvv-fusion-recipe .pkmsvv-fusion-move svg,
+  .pkmsvv-fusion-recipe .pkmsvv-fusion-move img{width:19px;height:19px}
+  .pkmsvv-fusion-recipe .pkmsvv-fusion-result{color:#ffe19a;font-size:13px;line-height:1.3}
+  .pkmsvv-fusion-recipe .pkmsvv-fusion-benefit{margin:2px 0!important;
+    color:#f3fffb!important;font-size:12px!important;line-height:1.48!important}
+  @media(max-width:630px){.pkmsvv-fusion-recipes{grid-template-columns:1fr}}
+  
   .pkmsvv-pc-orb-details p{margin:7px 0;color:#e4f1ee;font-size:13px;line-height:1.6}
   .pkmsvv-pc-orb-item strong{color:#ffe29a}
 
@@ -177,15 +192,16 @@ G.PKMSVVWiki=(()=>{
    [tr('Thức tỉnh kỹ năng','Skill Awakening'),
     tr('Kỹ năng được mở và nâng cấp khi Pokémon lên cấp trong trận. Hãy chọn kỹ năng phù hợp để phát huy sức mạnh; các nâng cấp vĩnh viễn vẫn được giữ nguyên.',
        'Unlock and improve skills as your Pokémon levels up during a run. Choose skills that fit your play style; permanent upgrades remain intact.')],
-   [tr('🔗 Bond / Fusion tự do','🔗 Free Bond Fusion'),
-    tr('Ghép 2 kỹ năng đã học bất kỳ. Miễn phí 1 lần/trận; kiếm thêm Bond từ huyền thoại khe nứt. Tối đa 4 kỹ năng/nhóm, hồi chiêu riêng. Dấu 🔗 báo kỹ năng có thể ghép. 10 cặp dưới đây là gợi ý.',
-       'Link any 2 learned moves. One free Fusion per match; earn more Bonds from Rift legendaries. Up to 4 moves per group, each with its own cooldown. 🔗 marks compatible moves. The 10 pairs below are suggestions.')],
-   [tr('✨ Sương Ký Ức · Sự kiện mùa','✨ Memory Mist · Seasonal Event'),
-    tr('1–30/11/2026 (UTC): ba cảnh quan Lá Thu, Sương Lam và Đom Đóm chọn theo seed trận. Chỉ đổi trang trí hình ảnh ở Solo PvE và Co-op Sống Sót; không thêm chỉ số, boss, Pokémon hoặc tiền.',
-       'November 1–30, 2026 (UTC): Amber Leaves, Blue Mist and Firefly Dusk visuals selected by run seed. Decoration only in solo PvE and Co-op Survival; no stats, bosses, Pokémon or currency.')]
+   [tr('✨ Fusion — Tiến hóa tuyệt kỹ','✨ Fusion — Evolved Skills'),
+    tr('Chọn 1 trong 10 công thức. Cả hai chiêu gốc phải MAX, sau đó Fusion thay 2 chiêu bằng 1 tuyệt kỹ MAX, giải phóng một ô kỹ năng. Mỗi trận Fusion chỉ 1 lần; Bond nhận từ khe nứt vẫn là hệ thống liên kết riêng.',
+       'Choose one of ten recipes. Both source moves must be MAX. Fusion replaces them with one evolved MAX skill and frees one slot. One Fusion per match; Rift-earned Bonds remain a separate link system.')],
+
   ];
+  // The completed Skill Awakening chapter does not need a permanent guide row.
+  const skillAwakeningDone=!!G.DB?.save?.pkmsvvChapter2Seen;
   // Put Fusion recipes above Mystery Orb in the knowledge accordion.
-  for(const [name,description] of articles.sort((a,b)=>(b[0].includes('Fusion')?1:0)-(a[0].includes('Fusion')?1:0))){
+  for(const [name,description] of articles.filter(([name])=>
+   !skillAwakeningDone||name!==tr('Thức tỉnh kỹ năng','Skill Awakening')).sort((a,b)=>(b[0].includes('Fusion')?1:0)-(a[0].includes('Fusion')?1:0))){
    const detail=document.createElement('div');detail.className='pkmsvv-pc-learn';
    const toggle=document.createElement('button');toggle.type='button';toggle.textContent='▸ '+name;
    toggle.setAttribute('aria-expanded','false');
@@ -202,7 +218,16 @@ G.PKMSVVWiki=(()=>{
        const label=document.createElement('span');label.textContent=G.T?.(G.Moves?.BY_ID?.[id]?.name||id,'move')||id;
        pair.append(icon,label);row.append(pair);
       }
-      const result=document.createElement('strong');result.textContent=' · '+tr(formula.vi,formula.en);row.append(result);recipes.append(row);
+      const fusionIcon=document.createElement('img');
+      fusionIcon.className='pkmsvv-fusion-icon';fusionIcon.src='assets/fusion-icons/'+formula.id+'.webp';
+      fusionIcon.alt='';fusionIcon.width=52;fusionIcon.height=52;fusionIcon.loading='lazy';
+      row.prepend(fusionIcon);
+      const result=document.createElement('strong');result.className='pkmsvv-fusion-result';
+      result.textContent='▶ '+tr(formula.vi,formula.en)+' · MAX + MAX';row.append(result);
+      const effect=document.createElement('p');effect.className='pkmsvv-fusion-benefit';
+      effect.textContent=tr(formula.viEffect||'',formula.enEffect||'')||
+       tr('Hiệu ứng tùy theo kỹ năng Fusion.','Effect depends on the Fusion skill.');
+      row.append(effect);recipes.append(row);
      }
      p.append(recipes);
     }

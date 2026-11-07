@@ -86,6 +86,20 @@ G.PKMSVVHeldItems=(()=>{
   G.RunUI.showItemChoice=show;
   return true;
  }
+ // [3] is a real binding, not merely a label drawn on the button.
+ // Use capture so native gameplay keybinds never consume the skip first.
+ function keyboardSkip(event){
+  if(event.defaultPrevented||event.repeat||event.altKey||event.ctrlKey||event.metaKey)return;
+  if(event.key!=='3'&&event.code!=='Digit3'&&event.code!=='Numpad3')return;
+  const typing=document.activeElement?.matches?.('input,textarea,select,[contenteditable="true"]');
+  if(typing)return;
+  const screen=document.getElementById('scr-item');
+  if(!screen||screen.hidden||screen.classList?.contains('hidden'))return;
+  const buttons=document.querySelectorAll?.('#scr-item #item-cards.pkmsvv-held-choices .pkmsvv-held-actions button');
+  const skip=buttons?.[2];if(!skip||skip.disabled)return;
+  event.preventDefault?.();event.stopImmediatePropagation?.();skip.click();
+ }
+ document.addEventListener?.('keydown',keyboardSkip,true);
  // Installed after RunUI script and before gameplay; same UI for Web/PC/Android.
  install();
  return {effects,info,skipped,skip,reset,install};

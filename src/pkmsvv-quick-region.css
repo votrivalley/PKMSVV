@@ -1,0 +1,108 @@
+/* Pokémon Chuyển Sinh — Region selector. Original SVG pixel environments.
+   QA-only; this is a skin, not a rule or reward multiplier change. */
+#pkmsvv-quick-region.pkmsvv-quick-region-overlay{
+ position:fixed;inset:0;z-index:20080;display:flex;justify-content:center;align-items:center;
+ padding:clamp(8px,2vh,18px);background:rgba(3,11,22,.89);overflow:auto
+}
+#pkmsvv-quick-region[hidden]{display:none!important}
+#pkmsvv-quick-region .pkmsvv-quick-region-panel{
+ width:min(1410px,100%);max-height:calc(100dvh - 22px);box-sizing:border-box;
+ overflow:auto;padding:clamp(13px,2vw,25px);color:#f6f4e8;
+ background:linear-gradient(152deg,#0f233a,#0b1729);
+ border:2px solid #73acbd;border-radius:18px;
+ box-shadow:0 17px 65px #0009, inset 0 0 26px #194a5d55
+}
+#pkmsvv-quick-region header{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:17px}
+#pkmsvv-quick-region .region-heading{min-width:0;flex:1}
+#pkmsvv-quick-region h2{margin:0 0 4px;color:#ffe09b;font-size:clamp(23px,2.9vw,34px);font-weight:850;letter-spacing:.1px}
+#pkmsvv-quick-region .region-heading p{margin:0;color:#dce9f2;font-size:clamp(12px,1.15vw,15px);line-height:1.55}
+#pkmsvv-quick-region-close{
+ width:45px;height:45px;flex:0 0 45px;border-radius:9px;cursor:pointer;
+ background:#1a3449;color:#fff;border:1px solid #8ac0c9;font-size:29px
+}
+#pkmsvv-quick-region-close:hover{background:#285769}
+#pkmsvv-quick-region-grid.pkmsvv-quick-region-grid{
+ display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px
+}
+#pkmsvv-quick-region .pkmsvv-quick-region-card{
+ min-width:0;min-height:256px;padding:0;display:flex;flex-direction:column;align-items:stretch;
+ gap:0;text-align:left;overflow:hidden;border:2px solid #4e7082;border-radius:13px;
+ background:#0c1929;color:#f4f4f1;font:inherit;cursor:pointer;position:relative;
+ box-shadow:inset 0 0 0 1px #19394e;transition:border-color .16s,transform .16s,box-shadow .16s
+}
+#pkmsvv-quick-region .pkmsvv-quick-region-card:hover:not(:disabled){
+ border-color:#ffd778;transform:translateY(-3px);box-shadow:0 7px 24px #0009
+}
+#pkmsvv-quick-region .pkmsvv-quick-region-card:focus-visible{outline:3px solid #fce28a;outline-offset:3px}
+#pkmsvv-quick-region .pkmsvv-quick-region-card.locked:disabled{
+ cursor:not-allowed;opacity:1;filter:none;border-color:#475667
+}
+#pkmsvv-quick-region .pkmsvv-quick-region-card.locked .region-art{filter:saturate(.48) brightness(.69)}
+#pkmsvv-quick-region .pkmsvv-quick-region-card.locked .region-card-info{background:#141d2a}
+#pkmsvv-quick-region .pkmsvv-quick-region-card.cleared{border-color:#67cba8}
+#pkmsvv-quick-region .pkmsvv-quick-region-card:not(.locked):not(.cleared){border-color:#eed182;box-shadow:0 0 0 1px #e6b95d,0 0 19px #bd904e67}
+#pkmsvv-quick-region .region-art{
+ min-height:122px;height:47%;flex:0 0 122px;position:relative;
+ background-color:#417c9a;background-size:cover;background-position:center;
+ border-bottom:2px solid #597c83;image-rendering:pixelated
+}
+#pkmsvv-quick-region .region-gen{
+ position:absolute;left:9px;top:9px;z-index:2;padding:4px 7px;
+ background:rgba(12,23,35,.82);color:#fff4c6;font-weight:850;
+ border:1px solid #c3c4a3;border-radius:8px;font-size:10px;
+ letter-spacing:.15px;text-transform:uppercase;
+}
+#pkmsvv-quick-region .region-lock{
+ position:absolute;right:8px;top:7px;z-index:2;
+ font-size:16px;line-height:1;background:#0b1b2dc7;border-radius:7px;padding:4px
+}
+#pkmsvv-quick-region .region-sprite{
+ position:absolute;right:7px;bottom:0;width:83px;height:83px;
+ image-rendering:pixelated;filter:drop-shadow(1px 2px 2px #111a23)
+}
+#pkmsvv-quick-region .locked .region-sprite{filter:brightness(0) drop-shadow(2px 2px 2px #ddd6)}
+#pkmsvv-quick-region .region-card-info{
+ display:flex;flex:1;flex-direction:column;justify-content:flex-start;gap:6px;
+ background:linear-gradient(165deg,#1d3140,#0d1828);
+ padding:10px 11px 12px
+}
+#pkmsvv-quick-region .region-card-info strong{
+ font-size:clamp(15px,1.45vw,21px);color:#fff;line-height:1.25;
+ overflow-wrap:anywhere;text-shadow:0 1px 2px #0009
+}
+#pkmsvv-quick-region .region-card-info small{
+ color:#dfeaf2;font-size:clamp(11px,1vw,13px);line-height:1.45;overflow-wrap:anywhere
+}
+#pkmsvv-quick-region .region-card-info .region-status{color:#ffdb90;margin-top:auto}
+#pkmsvv-quick-region .locked .region-card-info .region-status{color:#cad9df}
+@media(max-width:1070px){
+ #pkmsvv-quick-region-grid.pkmsvv-quick-region-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+ #pkmsvv-quick-region .pkmsvv-quick-region-card{min-height:225px}
+}
+@media(max-width:600px){
+ #pkmsvv-quick-region-grid.pkmsvv-quick-region-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ #pkmsvv-quick-region .pkmsvv-quick-region-panel{padding:11px;max-height:calc(100dvh - 16px)}
+ #pkmsvv-quick-region .region-art{flex-basis:90px;min-height:90px}
+ #pkmsvv-quick-region .region-sprite{width:58px;height:58px}
+ #pkmsvv-quick-region .pkmsvv-quick-region-card{min-height:205px}
+ #pkmsvv-quick-region .region-card-info{padding:8px;gap:4px}
+ #pkmsvv-quick-region .region-card-info strong{font-size:15px}
+ #pkmsvv-quick-region .region-card-info small{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){
+ #pkmsvv-quick-region .pkmsvv-quick-region-card{transition:none!important}
+}
+
+
+/* The region's signature Legendary sits over the user's illustrated WebP cover. */
+#pkmsvv-quick-region .region-art .region-sprite{
+ position:absolute;right:7px;bottom:-3px;width:90px;height:90px;
+ z-index:1;object-fit:contain;image-rendering:pixelated;
+ filter:drop-shadow(2px 3px 1px #091720ba)
+}
+#pkmsvv-quick-region .pkmsvv-quick-region-card.locked .region-art .region-sprite{
+ filter:brightness(0) drop-shadow(2px 3px 1px #b7c1d5);
+ opacity:.9
+}
+@media(max-width:600px){#pkmsvv-quick-region .region-art .region-sprite{
+ width:65px;height:65px;bottom:0;right:2px}}

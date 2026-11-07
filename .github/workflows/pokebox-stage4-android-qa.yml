@@ -1,0 +1,142 @@
+name: Pokebox Stage 4 isolated Android QA APK
+on:
+  push:
+    branches: [feature/pokebox-stage1-isolated-qa]
+    paths:
+      - 'src/pkmsvv-box-stage*.js'
+      - 'src/pkmsvv-box-hub*.js'
+      - 'src/pkmsvv-box-hub*.css'
+      - 'src/pkmsvv-quick-region.*'
+      - 'assets/region-covers/**'
+      - 'scripts/copy-region-covers.cjs'
+      - 'scripts/build-pokebox-stage4-android-qa.cjs'
+      - 'src/pkmsvv-pc-menu-clean-qa.*'
+      - 'src/pkmsvv-modal-navigation-qa.*'
+      - 'src/pkmsvv-fusion-evolved.*'
+      - 'src/pkmsvv-bond-fusion.js'
+      - 'assets/fusion-icons/**'
+      - 'scripts/copy-fusion-icons.cjs'
+      - 'scripts/patch-qa-compiled-modules.cjs'
+      - 'tests/bond-fusion-svv.test.cjs'
+      - 'src/pkmsvv-held-item-ui.js'
+      - 'tests/modal-input-qa.test.cjs'
+      - 'tests/pokebox-stage2-browser.cjs'
+      - 'tests/held-item-choice.test.cjs'
+      - 'AGENTS.md'
+      - 'tests/quick-region.test.cjs'
+      - 'tests/pokebox-hub.test.cjs'
+      - 'package.json'
+      - 'src/pkmsvv-box-stage*.css'
+      - 'scripts/patch-pokebox-stage4-apk-qa.cjs'
+      - '.github/workflows/pokebox-stage4-android-qa.yml'
+      - 'tests/pokebox-stage*.test.cjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  android-pokebox-qa-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test all four PokéBox phases
+        run: npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs && node --test tests/bond-fusion-svv.test.cjs
+      - name: Require permanent signing, no debug fallback
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.PKMSVV_ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.PKMSVV_ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.PKMSVV_ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.PKMSVV_ANDROID_KEY_PASSWORD }}
+        run: |
+          for v in "$KEYSTORE_BASE64" "$STORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD"; do
+            if [ -z "$v" ]; then echo "::error::Missing permanent Android signing key"; exit 1; fi
+          done
+      - name: Fetch and verify Apktool 3.0.3 (Android 16 resource support)
+        shell: bash
+        run: |
+          curl --fail --location --retry 3 --silent --show-error \
+            https://github.com/iBotPeaches/Apktool/releases/download/v3.0.3/apktool_3.0.3.jar \
+            --output apktool_3.0.3.jar
+          echo "dbf930b076c6b9be08d57c449cacefc3bdd6b71ebd59b3066fc0e1f5b14f9423  apktool_3.0.3.jar" | sha256sum -c -
+          java -jar apktool_3.0.3.jar --version
+          test -s "$ANDROID_HOME/build-tools/36.0.0/apksigner" || sdkmanager --install "build-tools;36.0.0"
+      - name: Download prior successful signed Android v1.5.93 APK
+        uses: actions/download-artifact@v4
+        with:
+          name: PKMSVV-Android-FULL-LAN-SIGNED-UPDATE
+          run-id: 41693287992
+          github-token: ${{ github.token }}
+          path: baseline-android
+      - name: Confirm original package and decode baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="$(find baseline-android -name '*.apk' -type f -print -quit)"
+          test -s "$apk"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify "$apk"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk" | grep "package: name='com.votrivalley.pkmsvv.fulllan'"
+          java -jar apktool_3.0.3.jar d -f -s "$apk" -o decoded-android
+      - name: Apply QA-only Pokémon Box assets and DIFFERENT package
+        shell: bash
+        run: |
+          node scripts/patch-pokebox-stage4-apk-qa.cjs decoded-android
+          test -s decoded-android/assets/public/js/ui/pkmsvv-box-stage4.js
+          grep -q 'package="com.votrivalley.pkmsvv.box4qa0"' decoded-android/AndroidManifest.xml
+          grep -q 'android:authorities="com.votrivalley.pkmsvv.box4qa0.fileprovider"' decoded-android/AndroidManifest.xml
+          ! grep -Eq 'android:authorities="[^"]*com.votrivalley.pkmsvv.fulllan' decoded-android/AndroidManifest.xml
+          ! grep -q 'package="com.votrivalley.pkmsvv.fulllan"' decoded-android/AndroidManifest.xml
+          grep -q 'pkmsvv-box-stage4.js' decoded-android/assets/public/index.html
+          grep -q 'pkmsvv-box-hub-ui.js' decoded-android/assets/public/index.html
+          test -s decoded-android/assets/public/css/pkmsvv-box-hub.css
+          test -s decoded-android/assets/public/js/ui/pkmsvv-fusion-evolved.js
+          test -s decoded-android/assets/public/css/pkmsvv-fusion-evolved.css
+          for id in ember-quick water-tackle grass-spin spark-quick mind-tackle fire-gust bubble-ice leaf-rock shadow-mind thunder-claw; do
+            test -s "decoded-android/assets/public/assets/fusion-icons/${id}.webp"
+          done
+          test -s decoded-android/assets/public/js/ui/pkmsvv-quick-region.js
+          test -s decoded-android/assets/public/css/pkmsvv-quick-region.css
+          test -s decoded-android/assets/public/js/ui/pkmsvv-pc-menu-clean-qa.js
+          test -s decoded-android/assets/public/css/pkmsvv-pc-menu-clean-qa.css
+          test -s decoded-android/assets/public/js/ui/pkmsvv-modal-navigation-qa.js
+          test -s decoded-android/assets/public/css/pkmsvv-modal-navigation-qa.css
+      - name: Rebuild and sign separate APK with original permanent certificate
+        shell: bash
+        env:
+          PKMSVV_ANDROID_KEYSTORE_BASE64: ${{ secrets.PKMSVV_ANDROID_KEYSTORE_BASE64 }}
+          PKMSVV_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.PKMSVV_ANDROID_KEYSTORE_PASSWORD }}
+          PKMSVV_ANDROID_KEY_ALIAS: ${{ secrets.PKMSVV_ANDROID_KEY_ALIAS }}
+          PKMSVV_ANDROID_KEY_PASSWORD: ${{ secrets.PKMSVV_ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          umask 077
+          java -jar apktool_3.0.3.jar b decoded-android -o unsigned-pokebox-qa.apk
+          mkdir -p dist/pokebox-stage4-android-qa
+          unsigned="aligned-pokebox-qa.apk"
+          output="dist/pokebox-stage4-android-qa/PKMSVV-PokeBox-Stage4-QA-SEPARATE-APP.apk"
+          "$ANDROID_HOME/build-tools/36.0.0/zipalign" -p -f 4 unsigned-pokebox-qa.apk "$unsigned"
+          export PKMSVV_ANDROID_KEYSTORE_FILE="$RUNNER_TEMP/pkmsvv-qa-stable.jks"
+          trap 'rm -f "$PKMSVV_ANDROID_KEYSTORE_FILE"' EXIT
+          printf '%s' "$PKMSVV_ANDROID_KEYSTORE_BASE64" | base64 --decode > "$PKMSVV_ANDROID_KEYSTORE_FILE"
+          node scripts/verify-android-signing.cjs --keystore
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" sign --ks "$PKMSVV_ANDROID_KEYSTORE_FILE" \
+            --ks-key-alias "$PKMSVV_ANDROID_KEY_ALIAS" \
+            --ks-pass "pass:$PKMSVV_ANDROID_KEYSTORE_PASSWORD" \
+            --key-pass "pass:$PKMSVV_ANDROID_KEY_PASSWORD" \
+            --out "$output" "$unsigned"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$output"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$output" | grep "package: name='com.votrivalley.pkmsvv.box4qa0'"
+          unzip -t "$output" | tail -1
+          unzip -Z -1 "$output" | grep -q '^assets/public/js/ui/pkmsvv-box-stage4.js$'
+          unzip -Z -1 "$output" | grep -q '^assets/public/POKEBOX-QA-ONLY.txt$'
+          echo "QA Android package is separate and cannot replace production."
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-PokeBox-Stage4-Android-QA-SEPARATE-APP
+          path: dist/pokebox-stage4-android-qa/*.apk
+          if-no-files-found: error
+          retention-days: 14

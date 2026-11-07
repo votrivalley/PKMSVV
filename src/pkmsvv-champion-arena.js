@@ -81,7 +81,7 @@ G.PKMSVVChampionArena=(()=>{
  let startingOwnRun=false,transitionClock=0,transitionOrigin='fight',fightCue=0;
  const $=id=>document.getElementById(id);
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
- let region=0,stage='idle',round=0,elapsed=0,opp=null,bracket=[],target=null,active=false,paid=false,lastSecond=-1,prepBossStage=0,previewSeen=false,warnSeen=false,semiLosers=[],lastPodium=null,mode='story',mapChoice='random',duelType='normal';
+ let region=0,stage='idle',round=0,elapsed=0,opp=null,bracket=[],target=null,active=false,paid=false,lastSecond=-1,prepBossStage=0,previewSeen=false,warnSeen=false,semiLosers=[],lastPodium=null,mode='story',mapChoice='random',duelType='normal',farmBagTick=0,previousBiome=null;
  // The rival is not spawned until the center-screen 3-2-1 ends.
  function battleCountdown(text,kind='duel'){
   let el=$('pkmsvv-champion-countdown');
@@ -104,10 +104,45 @@ G.PKMSVVChampionArena=(()=>{
   [724,727,730,733,738,740,745,748,752,758,763,768,778,784,799],
   [812,815,818,823,826,834,839,841,844,849,858,861,865,870,887],
   [908,911,914,923,934,937,945,952,959,964,967,970,977,978,998],
-  [149,230,248,330,373,445,635,706,715,784,887,998]
+  [149,230,330,373,445,635,706,715,780,784,887,998]
  ]);
  const GEN_BOUNDS=[[1,151],[152,251],[252,386],[387,493],[494,649],[650,721],[722,809],[810,905],[906,1025]];
  const regionalPool=(index=region)=>GEN_POOLS[index]||GEN_POOLS[0];
+ // Gradual Region progression without an abrupt HP or spawn-rate cliff.
+ const REGION_FARM_BALANCE=Object.freeze(REGIONS.map((_,i)=>Object.freeze({
+  density:1+i*.025,hp:1+i*.045,dmg:1+i*.023,spd:1+i*.008
+ })));
+ const selectedRegion=()=>mode==='story'?region:Math.max(0,REGION_THEMES.indexOf(duelType));
+ const farmProfile=(index=selectedRegion())=>REGION_FARM_BALANCE[index]||REGION_FARM_BALANCE[0];
+ function farmSpecies(index=selectedRegion()){
+  const ids=regionalPool(index),range=GEN_BOUNDS[index];
+  return ids.filter(dex=>Number.isInteger(dex)&&!!G.DEX_BY?.[dex]&&
+   (index===9||!!range&&dex>=range[0]&&dex<=range[1]));
+ }
+ // Swap only the visible species in a wave, not enemy tier recipes or drops.
+ // The tenth (Sky Pillar) pool intentionally contains dragons across generations.
+ function regionizeBag(bag,index=selectedRegion()){
+  if(!Array.isArray(bag))return bag;
+  const pool=farmSpecies(index);
+  if(!pool.length)return bag;
+  const range=GEN_BOUNDS[index],shift=farmBagTick++ + Math.floor(Math.max(0,elapsed)/35);
+  return bag.map((def,i)=>{
+   if(!def||typeof def!=='object'||!Number.isInteger(Number(def.dex)))return def;
+   const dex0=Number(def.dex);
+   if(index!==9&&dex0>=range[0]&&dex0<=range[1]||index===9&&pool.includes(dex0))return def;
+   const dex=pool[(shift+i)%pool.length];
+   return {...def,dex,name:G.DEX_BY[dex]?.name||'Pokémon '+dex};
+  });
+ }
+ function regionBiome(){
+  const biome=G.Tiles?.arenaBiome?.(duelType);
+  return Number.isFinite(biome)?biome:null;
+ }
+ function applyRegionBiome(){
+  const biome=regionBiome();
+  if(biome!==null)G.World?.setBiome?.(biome,true);
+ }
+
  const rand=()=>Math.random();
  function ledger(save=G.DB?.save){
   if(!save)return null;
@@ -119,7 +154,7 @@ G.PKMSVVChampionArena=(()=>{
  // Crown Journey has three elite rivals; post-game Top 1 gives all 15 AI elite strength.
  function makeBracket(random=rand){
   const opponents=Array.from({length:15},(_,i)=>({id:'ai-'+i,name:'AI '+String(i+1).padStart(2,'0'),
-   dex:regionalPool()[Math.min(regionalPool().length-1,Math.floor(random()*regionalPool().length))],
+   dex:regionalPool(selectedRegion())[Math.min(regionalPool(selectedRegion()).length-1,Math.floor(random()*regionalPool(selectedRegion()).length))],
    tier:mode==='league'||i<3?'elite':random()<Math.min(.93,.64+region*.025)?'trained':'novice'}));
   const seats=[{id:'you',name:tr('Bạn','You'),dex:G.DB?.save?.partner||25,tier:'human'},...opponents];
   for(let i=seats.length-1;i>0;i--){const j=Math.min(i,Math.max(0,Math.floor(random()*(i+1))));[seats[i],seats[j]]=[seats[j],seats[i]];}
@@ -246,7 +281,7 @@ G.PKMSVVChampionArena=(()=>{
      '🏟️ '+mapEffect(REGION_THEMES[Number(mapChoice)||0]).name+' · '+
       mapEffect(REGION_THEMES[Number(mapChoice)||0]).hint;
    };
-  $('pkmsvv-champion-start').onclick=start;
+  $('pkmsvv-champion-start').onclick=()=>entryPick(()=>start());
   $('pkmsvv-champion-sky').onclick=()=>{if(storyCompleted()&&!G.DB?.save?.pkmsvvChapter10Done)startSky();};
   $('pkmsvv-champion-rematch').onclick=rematch;
   $('pkmsvv-champion-ready').onclick=()=>{if(active&&elapsed>=prepSeconds())nextDuel();};
@@ -278,10 +313,14 @@ G.PKMSVVChampionArena=(()=>{
    b.className+=' '+(completed?'is-cleared ':'')+(unlocked?'is-unlocked':'is-locked');
    b.classList?.toggle?.('chosen',mode==='story'?region===i:mapChoice===String(i));
    const title=document.createElement('strong');title.textContent=(completed?'✓ ':unlocked?'🏟️ ':'🔒 ')+displayRegion(name);
+   const tier=Math.min(5,1+Math.floor(i/2));
+   const difficulty=document.createElement('small');difficulty.className='pkmsvv-region-difficulty';
+   difficulty.textContent=(i===9?tr('Rồng · Đa thế hệ','Dragon · Mixed Gen'):'Gen '+(i+1))+
+    ' · '+tr('Độ khó ','Difficulty ')+tier+'/5';
    const rule=document.createElement('small');rule.textContent=mapEffect(REGION_THEMES[i]).hint;
    const status=document.createElement('span');status.className='pkmsvv-region-status';
    status.textContent=completed?tr('Đã hoàn thành','Completed'):unlocked?tr('Đang mở','Unlocked'):tr('Chưa mở','Locked');
-   b.replaceChildren(title,rule,status);
+   b.replaceChildren(title,difficulty,rule,status);
    b.disabled=active||!unlocked;
    b.title=mapEffect(REGION_THEMES[i]).name+' · '+rule.textContent;
    b.onclick=()=>{if(mode==='league')mapChoice=String(i);else region=i;clearResult();updatePanel();};
@@ -396,12 +435,12 @@ G.PKMSVVChampionArena=(()=>{
    pl.atkMul=1;pl.spdMul=1;
   }else pl.hp=pl.maxHp;
   const aiTier=opp.tier==='elite'?'elite':opp.tier==='trained'?'trained':'novice';
-  const power=region,profile=REGION_BALANCE[region]||REGION_BALANCE[0];
+  const power=selectedRegion(),profile=REGION_BALANCE[power]||REGION_BALANCE[0];
   const cadence=Math.max(.62,1-.04*power)*profile.tempo;
   const tierHp=aiTier==='elite'?1.38:aiTier==='trained'?1.16:1.03;
   const tierDmg=aiTier==='elite'?1.38:aiTier==='trained'?1.18:1.04;
   const raw={dex,name:targetName,hp:Math.round((340+26*power+12*round)*tierHp*profile.hp),
-    spd:112+Math.min(28,region*2.5+round*3),
+    spd:112+Math.min(28,power*2.5+round*3),
     dmg:Math.round((12.4+.95*power+.5*round)*tierDmg*profile.atk*10)/10,xp:0,behavior:'champion',
     shotCd:(aiTier==='elite'?1.35:aiTier==='trained'?1.95:2.7)*cadence};
   if(mode==='league'){
@@ -442,9 +481,10 @@ G.PKMSVVChampionArena=(()=>{
  function launch(championOnly=false){
   if(active||!G.PKMSVVStory?.arenaUnlocked?.()||G.Coop?.active)return false;
   if(mode==='story'&&!regionUnlocked(region)||mode==='league'&&!storyCompleted())return false;
-  paid=false;round=0;elapsed=0;opp=null;target=null;semiLosers=[];lastPodium=null;
-  bracket=makeBracket();
+  paid=false;round=0;elapsed=0;opp=null;target=null;semiLosers=[];lastPodium=null;farmBagTick=0;
+  previousBiome=Number.isFinite(G.World?.biome)?G.World.biome:0;
   duelType=mode==='story'?REGION_THEMES[region]:(mapChoice==='random'?REGION_THEMES[Math.floor(rand()*REGION_THEMES.length)]:REGION_THEMES[Math.max(0,Math.min(9,Number(mapChoice)||0))]);
+  bracket=makeBracket(); // Select Gen-native opponents AFTER choosing the arena map.
   active=true;stage='prep';
   startingOwnRun=true;
   try{G.Game.startRun(null);}finally{startingOwnRun=false;}
@@ -455,6 +495,70 @@ G.PKMSVVChampionArena=(()=>{
   bar.id='pkmsvv-champion-hud';bar.className='pkmsvv-champion-hud';
   document.body.append(bar);bar.hidden=false;
   beginPrep();return true;
+ }
+
+ // Champion vs AI: pick a real saved Pokémon for up to ten seconds BEFORE
+ // entering the Arena. Only a confirmed choice changes the active fighter.
+ let pendingPick=null;
+ function entryPick(next){
+  if(active||pendingPick)return false;
+  const save=G.DB?.save;if(!save)return false;
+  const dexes=Object.keys(save.owned||{}).map(Number).filter(d=>G.DEX_BY?.[d]);
+  if(save.partner&&!dexes.includes(Number(save.partner)))dexes.unshift(Number(save.partner));
+  if(!dexes.length)return next();
+  const shell=document.createElement('div');shell.id='pkmsvv-champion-entry-pick';
+  shell.setAttribute('translate','no');shell.setAttribute('role','dialog');
+  shell.setAttribute('aria-modal','true');
+  const box=document.createElement('div');box.className='pkmsvv-champion-entry-card';
+  const heading=document.createElement('h2');
+  heading.textContent=tr('⚔ Chọn Pokémon trước Arena','⚔ Choose Pokémon before Arena');
+  const clock=document.createElement('strong');clock.id='pkmsvv-champion-entry-clock';clock.textContent='10s';
+  const search=document.createElement('input');search.type='search';
+  search.placeholder=tr('Tìm Pokémon / #Dex','Search Pokémon / #Dex');
+  const list=document.createElement('div');list.className='pkmsvv-champion-entry-list';
+  const buttons=document.createElement('div');buttons.className='pkmsvv-champion-entry-actions';
+  const ok=document.createElement('button');ok.type='button';ok.className='btn gold';ok.textContent=tr('✓ Xác nhận','✓ Confirm');
+  const cancel=document.createElement('button');cancel.id='pkmsvv-champion-entry-cancel';cancel.type='button';cancel.className='btn ghost';cancel.textContent=tr('Hủy','Cancel');
+  buttons.append(ok,cancel);box.append(heading,clock,search,list,buttons);shell.append(box);document.body.append(shell);
+  let selected=Number(save.partner)||dexes[0],left=10,finished=false;
+  let timer=null;const oldFocus=document.activeElement;
+  const paint=()=>{
+   list.replaceChildren();
+   const query=search.value.trim().toLowerCase();
+   const filtered=dexes.filter(d=>(String(d).includes(query)||String(G.DEX_BY?.[d]?.name||'').toLowerCase().includes(query))).slice(0,100);
+   for(const dex of filtered){
+    const b=document.createElement('button');b.type='button';b.className='btn small';
+    b.classList.toggle('gold',dex===selected);
+    b.textContent=(dex===selected?'✓ ':'')+(G.DEX_BY[dex]?.name||('#'+dex))+' #'+dex;
+    b.onclick=()=>{selected=dex;paint();};
+    list.append(b);
+   }
+  };
+  const close=shouldStart=>{
+   if(finished)return;
+   finished=true;pendingPick=null;clearInterval(timer);shell.remove();oldFocus?.focus?.();
+   if(shouldStart){
+    if(selected!==Number(save.partner)){
+     const oldDex=save.partner,oldShiny=save.partnerShiny;
+     try{
+      const item=save.pkmsvvBox?.find(x=>x.dex===selected&&!x.shiny);
+      const success=item&&G.PKMSVVBoxHub?.safeSelect?.(item.id);
+      if(!success){save.partner=selected;save.partnerShiny=false;
+       if(G.DB.commit?.(true)===false)throw Error('Cannot save Pokémon choice');}
+     }catch(error){
+      save.partner=oldDex;save.partnerShiny=oldShiny;
+      G.UI?.toast?.(tr('Không lưu được Pokémon đã chọn, giữ lựa chọn cũ.',
+       'Could not save selection; previous Pokémon retained.'),2400);
+     }
+    }
+    next();
+   }
+  };
+  search.oninput=paint;ok.onclick=()=>close(true);cancel.onclick=()=>close(false);
+  paint();search.focus();
+  timer=setInterval(()=>{left--;clock.textContent=Math.max(0,left)+'s';if(left<=0)close(true);},1000);
+  pendingPick={cancel:()=>close(false)};
+  return true;
  }
  function start(){
   const save=G.DB?.save;
@@ -531,7 +635,7 @@ G.PKMSVVChampionArena=(()=>{
   // attacks remain avoidable on Android touchscreen (actual cadence uses ai.cd).
   for(const key of ['dmg','atk','pa','sa','baseAtk'])
    if(Number.isFinite(targetEnemy[key]))targetEnemy[key]*=2;
-  const speedBoost=sky?1.25:Math.min(1.32,1.16+region*.018);
+  const speedBoost=sky?1.25:Math.min(1.32,1.16+selectedRegion()*.018);
   for(const key of ['spd','baseSpd'])
    if(Number.isFinite(targetEnemy[key]))targetEnemy[key]*=speedBoost;
   if(Number.isFinite(targetEnemy.shotCd))targetEnemy.shotCd=Math.max(.5,targetEnemy.shotCd*.75);
@@ -600,7 +704,7 @@ G.PKMSVVChampionArena=(()=>{
    const original=enemy.bossEnd;
    enemy.bossEnd=function(...args){
     const out=original.apply(this,args);
-    const prof=REGION_BALANCE[region]||REGION_BALANCE[0];
+    const prof=REGION_BALANCE[selectedRegion()]||REGION_BALANCE[0];
     if(this.ai&&Number.isFinite(this.ai.cd)){
      const final=round===3||this._pkmsvvSkyBoss===true;
      const k=prof.tempo*(final?.90:1)*(this._pkmsvvMegaPhase2?.80:1);
@@ -645,8 +749,8 @@ G.PKMSVVChampionArena=(()=>{
   hideBattleCountdown();fightCue=0;
   restoreStats();
   stage='prep';elapsed=0;lastSecond=-1;prepBossStage=0;previewSeen=false;warnSeen=false;opp=null;target=null;
-  G.World?.setArena?.(null);
-  G.World?.setBiome?.(0,true); // farm area reset after 1v1
+  G.World?.setArena?.(null); // Open farming terrain, same Region biome.
+  applyRegionBiome();
   panel().hidden=true;
   // Previous builds created a floating skip button. Suppress it in timed Champion.
   const ready=$('pkmsvv-arena-ready-float');if(ready){ready.hidden=true;ready.disabled=true;}
@@ -676,12 +780,18 @@ G.PKMSVVChampionArena=(()=>{
   if(!active||stage!=='prep'||round!==0)return false;
   const pl=G.Game?.player,defs=G.Enemies?.BOSSES;
   if(!pl||!Array.isArray(defs)||!defs.length||!G.Enemy||!G.EnemyMgr?.add)return false;
-  const wave=prepBossStage,def=defs[Math.min(wave-1,defs.length-1)];
-  if(!def)return false;
+  const wave=prepBossStage,source=defs[Math.min(wave-1,defs.length-1)];
+  if(!source)return false;
+  const pool=farmSpecies(),dex=pool.length?pool[(region+wave*3)%pool.length]:Number(source.dex);
+  const def=Number.isInteger(dex)&&G.DEX_BY?.[dex]?
+   {...source,dex,name:G.DEX_BY[dex].name||'Pokémon '+dex}:source;
+  const balance=farmProfile();
   const boss=new G.Enemy(def,pl.x+(wave===1?210:-210),pl.y-130,
    G.Enemies.bossScale?.(elapsed)||{hp:1,dmg:1,spd:1},true);
   boss._pkmsvvChampionPrepBoss=wave;
-  boss.hp=boss.maxHp=Math.max(boss.maxHp||1,wave===1?450:850);
+  boss.hp=boss.maxHp=Math.round(Math.max(boss.maxHp||1,wave===1?450:850)*balance.hp);
+  if(Number.isFinite(boss.dmg))boss.dmg*=balance.dmg;
+  if(Number.isFinite(boss.spd))boss.spd*=balance.spd;
   G.EnemyMgr.add(boss);
   G.Spawner?.say?.('🏆 '+tr('BOSS CHUẨN BỊ','PREP BOSS')+' '+wave+'/2',3);
   return true;
@@ -737,6 +847,8 @@ G.PKMSVVChampionArena=(()=>{
   active=false;stage='idle';elapsed=0;lastSecond=-1;round=0;
   target=null;opp=null;transitionClock=0;fightCue=0;paid=false;
   G.World?.setArena?.(null);
+  if(previousBiome!==null)G.World?.setBiome?.(previousBiome,true);
+  previousBiome=null;
   hideBattleCountdown();
   for(const id of ['pkmsvv-champion-hud','pkmsvv-champion-preview',
    'pkmsvv-arena-ready-float']){
@@ -901,9 +1013,35 @@ G.PKMSVVChampionArena=(()=>{
  }
  guardUpdate(G.Spawner,'update',function(original,args){
   if(!active)return original.apply(this,args);
-  if(stage==='prep'){const copy=args.slice();if(copy.length>2)copy[2]=elapsed;
-   if(copy.length>0)copy[0]=Math.max(0,Number(copy[0])||0)*FARM_SPAWN_MULT;
-   return original.apply(this,copy);}
+  if(stage==='prep'){
+   const copy=args.slice(),profile=farmProfile();
+   if(copy.length>2)copy[2]=elapsed;
+   if(copy.length>0)copy[0]=Math.max(0,Number(copy[0])||0)*FARM_SPAWN_MULT*profile.density;
+   // Scope the native spawn bag and level scaling to this Champion tick.
+   const enemies=G.Enemies,bagAt=enemies?.bagAt,manager=G.EnemyMgr,add=manager?.add;
+   if(typeof bagAt==='function')enemies.bagAt=function(...args){
+    return regionizeBag(bagAt.apply(this,args));
+   };
+   if(typeof add==='function')manager.add=function(enemy,...rest){
+    if(enemy&&typeof enemy==='object'&&!enemy.pkmsvvChampion){
+     const max=Number(enemy.maxHp)||0;
+     if(max>0){
+      const health=Math.max(0,Math.min(1,(Number(enemy.hp)||max)/max));
+      enemy.maxHp=Math.max(1,Math.round(max*profile.hp));
+      enemy.hp=Math.max(1,Math.round(enemy.maxHp*health));
+     }
+     if(Number.isFinite(enemy.dmg))enemy.dmg*=profile.dmg;
+     if(Number.isFinite(enemy.spd))enemy.spd*=profile.spd;
+     enemy._pkmsvvRegionFarm=selectedRegion();
+    }
+    return add.call(this,enemy,...rest);
+   };
+   try{return original.apply(this,copy);}
+   finally{
+    if(typeof bagAt==='function')enemies.bagAt=bagAt;
+    if(typeof add==='function')manager.add=add;
+   }
+  }
   return undefined;
  });
  // Double XP applies strictly to the farming phases, never boss kills.
@@ -913,6 +1051,20 @@ G.PKMSVVChampionArena=(()=>{
    return original.apply(this,copy);
   }
   return original.apply(this,args);
+ });
+ // Native four-minute biome rotation cannot change an active Region.
+ // Outside Champion tournaments, preserve all original survival maps.
+ guardUpdate(G.World,'setBiome',function(original,args){
+  if(!active||stage==='sky')return original.apply(this,args);
+  const biome=regionBiome();
+  if(biome===null)return original.apply(this,args);
+  const copy=args.slice();copy[0]=biome;
+  return original.apply(this,copy);
+ });
+ // Optional ambient events can spawn random cross-generation Pokémon.
+ // Regional Champion farming is self-contained, unlike free Survival.
+ guardUpdate(G.Events,'update',function(original,args){
+  return active?undefined:original.apply(this,args);
  });
  guardUpdate(G.Rift,'update',function(original,args){
   return active?undefined:original.apply(this,args);
@@ -947,7 +1099,7 @@ G.PKMSVVChampionArena=(()=>{
  // Chapter 5 is explicitly accessible through Memories and Arena intro.
  // In particular, first LAN access must never be blocked by a cutscene.
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',menu,{once:true});else menu();
- return {REGIONS,REGION_THEMES,REGION_BALANCE,CHAMPION_PHASE_SECONDS,DUEL_COUNTDOWN,MEGA_TRANSITION_SECONDS,MAP_EFFECTS,mapEffect,MEGA_KEYS,TEMP_CHAMPIONS,GEN_POOLS,GEN_BOUNDS,regionalPool,displayRegion,megaPhase,regionChampion,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIRST_PREP_SECONDS,FIGHT_SECONDS,WARN_SECONDS,prepSeconds,previewSeconds,makeBracket,aiWinner,open,openArena,arenaHub,start,startSky,rematch,exit,nextDuel,renderPodium,
+ return {REGIONS,REGION_THEMES,REGION_BALANCE,REGION_FARM_BALANCE,regionizeBag,farmSpecies,farmProfile,CHAMPION_PHASE_SECONDS,DUEL_COUNTDOWN,MEGA_TRANSITION_SECONDS,MAP_EFFECTS,mapEffect,MEGA_KEYS,TEMP_CHAMPIONS,GEN_POOLS,GEN_BOUNDS,regionalPool,displayRegion,megaPhase,regionChampion,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIRST_PREP_SECONDS,FIGHT_SECONDS,WARN_SECONDS,prepSeconds,previewSeconds,makeBracket,aiWinner,open,openArena,arenaHub,start,startSky,rematch,exit,nextDuel,renderPodium,
   update,settle,claimSeal,ledger,cancelSession,get active(){return active},get stage(){return stage},get round(){return round},
   get opponent(){return opp}};
 })();
