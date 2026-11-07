@@ -263,6 +263,24 @@ async function main(){
   assert.match(restored.stats,/9\.684|9,684/);
   assert.ok(restored.types>=1,'restore the Pokémon type badges');
   assert.equal(await evaluate("!!G.PKMSVVQuickRegion"),true,'QuickRegion module must load');
+
+  const instantHome=await evaluate("(()=>{const out=[];const saved=Object.getOwnPropertyDescriptor(G.DB,'save'),commit=G.DB.commit,previous=G.Game?.state;const menu=document.querySelector('#scr-menu');try{for(const migrated of [true,false]){const raw={owned:{6:{at:1},25:{at:2}},shiny:{},partner:6,partnerShiny:false,stats:{runs:7},coins:500};const fixture=migrated?G.PKMSVVBox.migrate(raw).save:raw;Object.defineProperty(G.DB,'save',{value:fixture,configurable:true,writable:true});G.DB.commit=()=>true;G.PKMSVVMenuCleanQA.restorePartner();const before=menu.querySelector('#menu-partner-name')?.textContent;G.PKMSVVBoxHubUI.openBox('info');G.PKMSVVBoxHubUI.focus(migrated?'b1-25-n':'b1-25-n');const btn=document.querySelector('#pkmbx-use');const enabled=!!btn&&!btn.disabled;btn?.click();const hero=menu.querySelector('#menu-partner');out.push({migrated,enabled,partner:fixture.partner,shiny:fixture.partnerShiny,portraitKey:hero?.dataset.pkmsvvPortraitKey,name:menu.querySelector('#menu-partner-name')?.textContent,before,overlayOpen:!!document.querySelector('#pkmsvv-pokebox-overlay'),gameUnchanged:G.Game?.state===previous});G.PKMSVVBoxHubUI.closeBox();}return out;}finally{G.PKMSVVBoxHubUI.closeBox();Object.defineProperty(G.DB,'save',saved);G.DB.commit=commit;G.PKMSVVMenuCleanQA.restorePartner();}})()");
+  assert.equal(instantHome.length,2,'both migrated and old-save selection must redraw home');
+  for(const result of instantHome){
+   assert.equal(result.enabled,true,'Select to battle should be clickable for a new fighter');
+   assert.equal(result.partner,25,'selected partner changes without launching a match');
+   assert.equal(result.portraitKey,'25:false','home sprite must update while PokéBox overlay remains open');
+   assert.match(result.name,/Pikachu/i,'home name must update with selected sprite immediately');
+   assert.equal(result.overlayOpen,true,'selection should not require returning from gameplay');
+   assert.equal(result.gameUnchanged,true,'selecting a Pokémon must not start a match');
+  }
+  const coverMascots=await evaluate("(()=>{const q=G.PKMSVVQuickRegion,ids=[150,249,385,488,646,718,800,890,1024,384];q.open();const covers=[...document.querySelectorAll('#pkmsvv-quick-region-grid .region-art')];const sprites=covers.map(x=>x.querySelector('canvas.region-sprite'));const result={mascots:[...q.mascots],covers:covers.length,spriteCanvases:sprites.filter(Boolean).length,missingDex:ids.filter(id=>!G.DEX_BY?.[id]),missingSpriteMeta:ids.filter(id=>!G.SPRITE_META?.[id]),noSpawnsChanged:!q.active};q.close();return result})()");
+  assert.deepEqual(coverMascots.mascots,[150,249,385,488,646,718,800,890,1024,384],
+   'each Gen 1–9 has the exact requested mascot, mixed Sky Pillar unchanged');
+  assert.equal(coverMascots.covers,10);
+  assert.deepEqual(coverMascots.missingDex,[],'mascots must exist in the real game Dex');
+  assert.equal(coverMascots.spriteCanvases,10,'every actual cover must render its mascot canvas');
+  assert.equal(coverMascots.noSpawnsChanged,true,'only cover art changed, not regional combat');
   const preplay=await evaluate("(()=>{const play=document.querySelector('#scr-menu [data-go=play]');if(!play)return {missingPlay:true};const before=G.Game?.state;play.click();const overlay=document.querySelector('#pkmsvv-quick-region');const out={missingPlay:false,before,after:G.Game?.state,open:!!overlay&&!overlay.hidden,count:overlay?.querySelectorAll('.pkmsvv-quick-region-card').length,available:overlay?.querySelectorAll('.pkmsvv-quick-region-card:not(:disabled)').length,active:!!G.PKMSVVQuickRegion.active};G.PKMSVVQuickRegion.close();return out})()");
   assert.equal(preplay.missingPlay,false,'the native Chơi ngay button must be found');
   assert.equal(preplay.open,true,'native Chơi ngay click must open Region selection');
