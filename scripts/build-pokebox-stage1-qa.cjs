@@ -17,7 +17,7 @@ for(const variant of ['game','ai/game']){
  fs.mkdirSync(path.dirname(pathJS),{recursive:true});fs.mkdirSync(path.dirname(pathCSS),{recursive:true});
  fs.copyFileSync(path.join(root,'src/pkmsvv-box-stage1.js'),pathJS);
  fs.copyFileSync(path.join(root,'src/pkmsvv-box-stage1.css'),pathCSS);
- for(const [filename,sub] of [['pkmsvv-box-stage2.js','js/ui'],['pkmsvv-box-stage2-ui.js','js/ui'],['pkmsvv-box-stage2.css','css'],['pkmsvv-box-stage3.js','js/ui'],['pkmsvv-box-stage3.css','css'],['pkmsvv-box-stage4.js','js/ui'],['pkmsvv-box-hub.js','js/ui'],['pkmsvv-box-hub-ui.js','js/ui'],['pkmsvv-box-hub.css','css'],['pkmsvv-quick-region.js','js/ui'],['pkmsvv-quick-region.css','css'],['pkmsvv-pc-menu-clean-qa.js','js/ui'],['pkmsvv-pc-menu-clean-qa.css','css'],['pkmsvv-modal-navigation-qa.js','pkmsvv-dex-defeats-qa.js','js/ui'],['pkmsvv-modal-navigation-qa.css','css']]){
+ for(const [filename,sub] of [['pkmsvv-box-stage2.js','js/ui'],['pkmsvv-box-stage2-ui.js','js/ui'],['pkmsvv-box-stage2.css','css'],['pkmsvv-box-stage3.js','js/ui'],['pkmsvv-box-stage3.css','css'],['pkmsvv-box-stage4.js','js/ui'],['pkmsvv-box-hub.js','js/ui'],['pkmsvv-box-hub-ui.js','js/ui'],['pkmsvv-box-hub.css','css'],['pkmsvv-quick-region.js','js/ui'],['pkmsvv-quick-region.css','css'],['pkmsvv-pc-menu-clean-qa.js','js/ui'],['pkmsvv-pc-menu-clean-qa.css','css'],['pkmsvv-modal-navigation-qa.js','js/ui'],['pkmsvv-dex-defeats-qa.js','js/ui'],['pkmsvv-modal-navigation-qa.css','css']]){
   fs.copyFileSync(path.join(root,'src',filename),path.join(dest,variant,sub,filename));
  }
  copyRegionCovers(path.join(dest,variant));
