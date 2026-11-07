@@ -116,6 +116,19 @@ async function main(){
   assert.equal(legacyBoxQA.rankDisabled,true,'legacy Rank is disabled gray without new duplicate ledger');
   assert.match(legacyBoxQA.rankText,/Nâng Rank/,'button always says Nâng Rank, never Activate Box');
   assert.match(legacyBoxQA.explanation,/Save cũ/,'empty Rank filter needs an actionable explanation');
+  // Exercise the actual conversion button with a disposable JSON save and
+  // temporary storage key; never touch a player's existing session/backup.
+  const migrateQA=await evaluate("(()=>{const original=Object.getOwnPropertyDescriptor(G.DB,'save'),commit=G.DB.commit,backupFn=G.PKMSVVSaveUI?.backup,confirmFn=window.confirm,oldSession=localStorage.getItem('ps.session'),key='pkmsvv.prepokebox.boxqa01',oldCopy=localStorage.getItem(key);let committed=0;try{const raw={owned:{6:{at:1},25:{at:2}},shiny:{6:{at:3}},partner:6,partnerShiny:false,coins:123,megaStones:{6:1},pkmsvvBerry:{bag:{oran:2}}};Object.defineProperty(G.DB,'save',{value:raw,configurable:true,writable:true});G.DB.commit=()=>{committed++;return true};G.PKMSVVSaveUI.backup=()=>JSON.stringify(raw);window.confirm=()=>true;localStorage.setItem('ps.session',JSON.stringify('boxqa01'));localStorage.removeItem(key);G.PKMSVVBoxHubUI.openBox('rank');const btn=document.querySelector('#pkmbx-activate-migration');btn?.click();return {activated:G.PKMSVVBoxHub.valid(raw),originalPokemon:raw.pkmsvvBox?.length,duplicateInvented:raw.pkmsvvBox?.filter(x=>x.dex===6).length>2,backedUp:!!localStorage.getItem(key),coins:raw.coins,berry:raw.pkmsvvBerry?.bag?.oran,mega:raw.megaStones?.[6],wrote:committed,legacyActionGone:!!document.querySelector('#pkmbx-legacy-migration')?.hidden};}finally{G.PKMSVVBoxHubUI.closeBox();Object.defineProperty(G.DB,'save',original);G.DB.commit=commit;G.PKMSVVSaveUI.backup=backupFn;window.confirm=confirmFn;if(oldSession===null)localStorage.removeItem('ps.session');else localStorage.setItem('ps.session',oldSession);if(oldCopy===null)localStorage.removeItem(key);else localStorage.setItem(key,oldCopy);}})()");
+  assert.equal(migrateQA.activated,true,'in-Box one-click migration must activate the schema');
+  assert.equal(migrateQA.backedUp,true,'migration must preserve an original JSON backup BEFORE saving');
+  assert.equal(migrateQA.originalPokemon,3,'old normal/Shiny collection is preserved');
+  assert.equal(migrateQA.duplicateInvented,false,'no historic duplicate counts may be invented');
+  assert.equal(migrateQA.coins,123);
+  assert.equal(migrateQA.berry,2);
+  assert.equal(migrateQA.mega,1);
+  assert.equal(migrateQA.legacyActionGone,true,'migration banner disappears when successful');
+  assert.ok(migrateQA.wrote>0,'migration commits once');
+
   const abilityQA=await evaluate("(()=>{const id='blaze',mon=G.DEX_BY?.[4],text=G.PKMSVVAbilityText?.summary?.(id,mon,G.AbilityFX?.of?.(id,mon),false);G.PKMSVVBoxHubUI.openDex();try{const row=document.querySelector('#pkmbx-dex-details .pkmbx-dex-ability-row'),span=row?.querySelector('span');return {translated:text,rowBackground:row?getComputedStyle(row).backgroundColor:null,descriptionColor:span?getComputedStyle(span).color:null,abilityRows:document.querySelectorAll('#pkmbx-dex-details .pkmbx-dex-ability-row').length};}finally{G.PKMSVVBoxHubUI.closeDex()}})()");
   assert.match(abilityQA.translated,/35%|1\/3 HP/,'Ability description must use real game mechanics and Vietnamese');
   assert.ok(abilityQA.abilityRows>0,'Pokédex must render real Ability descriptions');
