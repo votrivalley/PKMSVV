@@ -382,9 +382,15 @@
   if(index<0||getChampion()?.active||G.Coop?.active)return out;
   if(++integrityTick%10!==0||typeof G.EnemyMgr?.all!=='function')return out;
   const all=G.EnemyMgr.all();
-  const actors=Array.isArray(all)?all:all instanceof Map?[...all.values()]:
-   all instanceof Set?[...all]:all&&typeof all[Symbol.iterator]==='function'?
-   [...all]:all&&typeof all==='object'?Object.values(all):[];
+  // Map / Set may be instantiated in another JS realm (WebViews, VM tests).
+  // instanceof fails cross-realm. Use the intrinsic collection tag and, for
+  // Map, always take VALUES rather than [key,enemy] iterator entries.
+  const collectionTag=Object.prototype.toString.call(all);
+  const actors=Array.isArray(all)?all:
+   collectionTag==='[object Map]'||collectionTag==='[object Set]'?
+    Array.from(all.values()):
+   all&&typeof all[Symbol.iterator]==='function'?Array.from(all):
+   all&&typeof all==='object'?Object.values(all):[];
   for(const enemy of actors)
    if(enforceLiveEnemy(enemy,index))correctedSpawns++;
   return out;
