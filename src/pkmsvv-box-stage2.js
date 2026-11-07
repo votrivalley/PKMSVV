@@ -69,7 +69,9 @@
   if(!valid(s))return [];
   const target=get(s,id);if(!target)return [];
   const same=s.pkmsvvBox.filter(x=>x.dex===target.dex);
-  return same.filter(x=>x.id!==id&&eligible(s,x,true,same.length));
+  const claimed=new Set([...(s.pkmsvvRankShinyCredits?.[String(target.dex)]||[]),
+   ...(s.pkmsvvRankClaimedCopies?.[String(target.dex)]||[])]);
+  return same.filter(x=>x.id!==id&&!claimed.has(x.id)&&eligible(s,x,true,same.length));
  }
  // Credits represent saved, same-species duplicates which must NOT be
  // deleted (Shiny, team members, favorites or old imported individuals).
@@ -82,6 +84,40 @@
   const expendable=new Set(candidateList(s,id).map(x=>x.id));
   return s.pkmsvvBox.filter(x=>x.dex===target.dex&&x.id!==id&&
    !claimed.has(x.id)&&!expendable.has(x.id));
+ }
+ // Species-wide Rank belongs to one safe, stable carrier. A later Gacha
+ // pull must never replace the protected original as the target.
+ function rankCarrier(s,id){
+  if(!valid(s))return null;
+  const focused=get(s,id);if(!focused)return null;
+  const group=s.pkmsvvBox.filter(x=>x.dex===focused.dex);
+  const level=speciesProgress(s,focused.dex).rank;
+  return (level>0?group.find(x=>x.rank===level):null)||
+   group.find(x=>x.id==='b1-'+focused.dex+'-n')||
+   group.find(x=>x.id==='b1-'+focused.dex+'-s')||
+   group.find(x=>x.id===s.pkmsvvSelectedInstanceId&&!x.shiny)||
+   group.find(x=>!x.shiny)||group[0]||null;
+ }
+ function rankMaterials(s,id){
+  const target=rankCarrier(s,id);
+  if(!target)return {target:null,cost:0,copies:[],credits:[],fragments:0,available:0};
+  const level=speciesProgress(s,target.dex).rank,cost=level>=MAX_RANK?0:level+1;
+  const copies=candidateList(s,target.id),credits=claimableList(s,target.id);
+  const fragments=shards(s,target.dex);
+  return {target,cost,copies,credits,fragments,available:copies.length+credits.length+fragments};
+ }
+ // No manual shard conversion or checkbox picking. Already-earned duplicates
+ // are spent at confirmation, protected copies are credited without deletion.
+ function rankUpAuto(id,s=save()){
+  if(!valid(s))throw Error('Migrate PokéBox first');
+  const plan=rankMaterials(s,id);
+  if(!plan.target||!plan.cost)throw Error('Pokémon already Rank 5 or missing');
+  if(plan.available<plan.cost)throw Error('Not enough same-species duplicates');
+  const credits=plan.credits.slice(0,plan.cost).map(x=>x.id);
+  const needCopies=plan.cost-credits.length;
+  const materials=plan.copies.slice(0,needCopies).map(x=>x.id);
+  const fragments=Math.max(0,plan.cost-credits.length-materials.length);
+  return rankUp(plan.target.id,materials,fragments,s,credits);
  }
  // Backwards-compatible API for QA saves/tests created before generic credits.
  const shinyCreditList=claimableList;
@@ -307,6 +343,6 @@
   }
  }
  return {MAX_RANK,MAX_SAVE_CHARS,formatRank,valid,get,shards,eligible,candidateList,makeOne,applyRolls,wrappedPull,
-  toFragments,rankUp,claimableList,shinyCreditList,branches,chooseBranch,speciesProgress,skinTraits,selected,statBonus,hookIndividualTraits,withIndividualNature,hookPveStats,init};
+  toFragments,rankUp,rankCarrier,rankMaterials,rankUpAuto,claimableList,shinyCreditList,branches,chooseBranch,speciesProgress,skinTraits,selected,statBonus,hookIndividualTraits,withIndividualNature,hookPveStats,init};
 });
 if(typeof window!=='undefined'&&window.G)window.G.PKMSVVBox2?.init?.();
