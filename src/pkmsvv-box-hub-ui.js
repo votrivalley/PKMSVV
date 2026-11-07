@@ -794,8 +794,8 @@
   favButton.setAttribute('aria-pressed',String(dexFavorites));
   if(!list.includes(infoDex))infoDex=list[0]||null;
   const mon=G.DEX_BY?.[infoDex],detail=dexPane.querySelector('#pkmbx-dex-details');
-  const dexType=String(mon?.types?.[0]||'normal').toLowerCase();
-  detail.style.setProperty('--pkmbx-type',TYPE_FRAME_COLORS[dexType]||'#e64a93');
+  const primaryDexType=String(mon?.types?.[0]||'normal').toLowerCase();
+  detail.style.setProperty('--pkmbx-type',TYPE_FRAME_COLORS[primaryDexType]||'#e64a93');
   if(!mon){detail.innerHTML='<p>'+L('Không có Pokémon phù hợp.','No matching species.')+'</p>';return;}
   const owned=has(infoDex),from=evoRules().filter(r=>r.to===infoDex),to=evoRules().filter(r=>r.from===infoDex);
   const evos=(label,rules,target)=>'<section class="pkmbx-dex-evo"><h4>'+label+'</h4>'+
