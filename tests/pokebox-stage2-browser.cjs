@@ -61,6 +61,20 @@ async function main(){
    const last=await evaluate(query).catch(e=>({cdpError:e.message}));
    throw Error(err.message+'; last='+JSON.stringify(last)+'; scriptExceptions='+JSON.stringify(errors.slice(-8)));
   });
+  // Read-only runtime audit for new defeated-only Dex and evolution QA.
+  // Logs only public engine source/definition names; never any user save.
+  const runtimeAudit=await evaluate(`(()=>({
+   bosses:(G.Enemies?.BOSSES||[]).slice(0,20).map(e=>({dex:e.dex,name:e.name,guard:e.guard,support:e.support})),
+   minibosses:Object.keys(G.Enemies||{}).filter(k=>/mini|boss|guard/i.test(k)),
+   gachaPool:String(G.Gacha?.pool||'').slice(0,2300),
+   gachaPull:String(G.Gacha?.pull||'').slice(0,2600),
+   enemyDie:String(G.Enemy?.prototype?.die||'').slice(0,1300),
+   evolution:String(G.PKMSVVEvo?.tryOpen||'').slice(0,1000),
+   royaleActive:!!G.Royale,
+   gameKeys:Object.keys(G.Game||{}).slice(0,60),
+   playerSkills:G.Game?.player?.moves?.length||0
+  }))()`);
+  console.log('QA_RUNTIME_AUDIT='+JSON.stringify(runtimeAudit));
   const five=await evaluate('G.PKMSVVBox2.formatRank(5).hp');
   assert.equal(await evaluate('G.PKMSVVBox3.PRICE'),6500);
   assert.equal(await evaluate('G.PKMSVVBox3.PITY'),180);
