@@ -287,3 +287,49 @@ continuing. Preserve offline Wi-Fi hosting and the full existing test suite.
   controls and long-match balance still need manual QA before promoting.
 - Never merge this QA feature or publish to production Cloudflare/signed
   Android unless explicitly approved; preserve players' existing save.
+
+
+## Rank/Dex/Wiki legacy fix — 2026-11-07
+
+- **Legacy saves are not duplicate ledgers.** Old `owned[dex]` is a
+  species-ownership flag, and older Gacha results did not retain individual
+  IDs. NEVER invent `×2`/materials or auto-convert a save just because the
+  user played many Gacha pulls. If `pkmsvvBoxSchema` is absent, explain
+  WHY the Rank-ready filter is empty, show a clear one-time **Sao lưu và
+  kích hoạt PokéBox** button inside the PokéBox, and keep Rank disabled gray.
+- The one-time conversion action is distinct from a Rank click:
+  require explicit consent; use `G.PKMSVVSaveUI.backup()` and preserve it at
+  `pkmsvv.prepokebox.<offline profile>` before `Box.persistMigration()`.
+  Validate commit / rollback, leave owned, Shiny, Team Six, Berry, Mega,
+  tickets, Coins, TMs untouched. After conversion, turn off the empty
+  Rank-ready filter and render the updated collection immediately. ONLY
+  future Gacha summons with saved individual IDs can be counted reliably.
+  No silent migration, no automatic deletion.
+- A Rank action itself is immediate once enough unused matching saved
+  copies exist; button ALWAYS reads **Nâng Rank**, with gold enabled and
+  gray disabled states. NEVER show the nonsense disabled label
+  "Bật PokéBox để nâng Rank".
+- **Ability descriptions must use the real game mechanics**, not the
+  third (French) language entry in `G.ABIL[id]`. For both Pokédex and
+  PokéBox, use `G.PKMSVVAbilityText.summary(id, mon,
+  G.AbilityFX.of(id,mon), english)` and strict foreground contrast:
+  dark ink on mint Ability rows and light text on dark Ability info.
+  Blaze low-HP +35% Fire; Compound Eyes +6% crit; Solar Power sunshine
+  +40% special damage with HP loss. Do not substitute mainline effects
+  for this survivor game's actual effect implementation.
+- The updated **Fusion Wiki module is a standalone script**, NOT a
+  `G.PKMSVVWiki` assignment in QA's compiled `app.min.js`.
+  Never append it to `scripts/patch-qa-compiled-modules.cjs` (fails
+  Android/Web/Windows builds); instead package updated `src/pkmsvv-wiki.js`
+  as `js/ui/pkmsvv-wiki-qa.js` in all three QA builds. It replaces the
+  old PC button's `onclick` cleanly and displays all **10 new WebP icons**
+  with source pair, MAX+MAX rules and actual Vietnamese/English skill
+  effects from `PKMSVVFusionPilot.RECIPES[].viEffect/enEffect`.
+- Required regressions: old 966-species saves explain missing Rank records,
+  in-Box backup-gated migration works on isolated browser fixture without
+  inventing past copies, migrated Gacha duplicates appear in
+  **Có thể nâng Rank** and disappear as soon as materials are consumed,
+  gray button wording, all 10 real Wiki skill descriptions, high-contrast
+  localized abilities, plus existing Web/PC/Android source and smoke tests.
+  Keep isolated QA branch: no Cloudflare production deploy or permanent
+  `com.votrivalley.pkmsvv.fulllan` APK update until real save QA approval.
