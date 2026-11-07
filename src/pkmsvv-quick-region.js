@@ -9,11 +9,12 @@
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  // Kanto uses the same default starter battlefield as normal Survival (biome 0).
  // Fire belongs to late-game Paldea, not the first region for newcomers.
- const THEMES=[null,'ground','water','ice','steel','rock','bug','fighting','fire','dragon'];
+ // Ten UNIQUE native terrain profiles; Gen 1–9 must never reuse a biome.
+ const THEMES=Object.freeze([null,'ground','water','ice','steel','rock','bug','fighting','fire','dragon']);
  const NAMES=['Kanto','Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar','Paldea','Votri Valley'];
- const SYMBOLS=['🔥','🌳','🌊','❄️','⚙️','✨','🌴','🏟️','⛰️','🐉'];
+ const SYMBOLS=['🌿','🏞️','🌊','❄️','⚙️','⛰️','🌴','🏟️','🔥','🐉'];
  const REGION_COUNT=10;
- const SEAL_SECONDS=180; // Earn the regional Seal before the first 4-minute boss.
+ const SEAL_SECONDS=15*60; // Exactly 15 minutes of active, alive exploration.
  // National Dex mascots chosen for the nine exploration Gen covers.
  // Keep the tenth, mixed-generation Sky Pillar, using its existing Rayquaza art.
  const REGION_MASCOTS=Object.freeze([150,249,385,488,646,718,800,890,1024,384]);
@@ -281,9 +282,17 @@
   return current?.index??-1;
  }
  function targetBiome(index){
-  if(index===0)return 0; // Native default world used by other opening modes.
+  if(!Number.isInteger(index)||index<0||index>=REGION_COUNT)return null;
+  if(index===0)return 0; // Native starting grassland map, NOT late-game Fire.
   const n=G.Tiles?.arenaBiome?.(THEMES[index]);
-  return Number.isFinite(n)?n:null;
+  return Number.isInteger(n)&&n>=0?n:null;
+ }
+ function distinctMapBiomes(){
+  // Validate the REAL native arenaBiome IDs, not just ten different theme
+  // names or the WebP covers. If an engine update collapses two terrains,
+  // block the unsafe selection rather than silently repeating a map.
+  const ids=NAMES.map((_,index)=>targetBiome(index));
+  return ids.every(Number.isInteger)&&new Set(ids).size===REGION_COUNT;
  }
  function endRun(){
   if(changing)return;
@@ -298,6 +307,12 @@
  }
  function choose(index){
   if(!unlocked(index)||getChampion()?.active||G.Coop?.active||G.Game?.state==='playing')return false;
+  if(!distinctMapBiomes()){
+   console.error('[Explore maps] Duplicate or missing biome: all nine regions and Sky need separate terrain');
+   G.UI?.toast?.(tr('Bản đồ vùng chưa đồng bộ; vui lòng cập nhật bản chơi thử.',
+    'Region maps are not ready; update your QA build.'),3000);
+   return false;
+  }
   const native=document.querySelector('#scr-menu [data-go="play"]');
   if(!native)return false;
   close();
@@ -337,7 +352,7 @@
   overlay.setAttribute('aria-label',tr('Chọn nơi bạn khám phá','Choose where to explore'));
   overlay.innerHTML='<div class="pkmsvv-quick-region-panel" role="dialog" aria-modal="true">'+
    '<header><div class="region-heading"><h2>'+tr('Chọn nơi bạn khám phá','Choose where to explore')+'</h2>'+
-   '<p>'+tr('Sống sót 3 phút trong mỗi vùng để nhận Ấn Chứng, mở khóa vùng tiếp theo. Không cần đấu Champion.','Survive 3 minutes in each region to earn its Seal and unlock the next. Champion is not required.')+'</p></div>' +
+   '<p>'+tr('Sống sót đủ 15 phút trong từng vùng để nhận Ấn Chứng và mở khóa vùng tiếp theo. Không cần đấu Champion.','Survive a full 15 minutes in each region to earn a Seal and unlock the next. Champion is not required.')+'</p></div>' +
    '<button type="button" id="pkmsvv-quick-region-close" aria-label="'+tr('Đóng','Close')+'">×</button></header>'+
    '<div id="pkmsvv-quick-region-grid" class="pkmsvv-quick-region-grid"></div></div>';
   document.body.append(overlay);
@@ -378,7 +393,7 @@
    diff.textContent='▥ '+tr('Độ khó ','Difficulty ')+x.difficulty+'/5';
    const status=document.createElement('small');status.className='region-status';
    status.textContent=x.complete?'✓ '+tr('Đã hoàn thành · Có Ấn Chứng','Completed · Seal earned'):
-    x.unlocked?tr('▶ 3 phút → nhận Ấn Chứng','▶ 3 min → earn Seal'):
+    x.unlocked?tr('▶ 15 phút → nhận Ấn Chứng','▶ 15 min → earn Seal'):
     x.index===9?'🔒 '+tr('Cần đủ 9 Ấn Chứng','Requires all 9 Seals'):
     '🔒 '+tr('Cần Ấn Chứng ','Requires Seal of ')+NAMES[x.index-1];
    body.append(name,diff,status);
@@ -568,7 +583,7 @@
   return out;
  });
  G.PKMSVVQuickRegion={open,close,choose,entries,unlocked,hasSeal,tryEarnSeal,beginRun,endRun,
-  SEAL_SECONDS,
+  SEAL_SECONDS,THEMES,targetBiome,distinctMapBiomes,
   mascots:REGION_MASCOTS,nationalGen,speciesFor,isAllowed,pokemonStrength,encounterTier,eligibleByTime,
   progressivePool,enforceGeneration,regionEnemyDefinition,enforceLiveEnemy,
   get active(){return regionIndex()>=0},
