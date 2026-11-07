@@ -96,30 +96,62 @@
   const {rank,max,cost,copies,fragments,protectedForms=0,available,missing,enabled,canRank}=progress;
   const next=G.PKMSVVBox2?.formatRank?.(Math.min(max,rank+1))||{hp:(rank+1)*6,damage:(rank+1)*6};
   const current=G.PKMSVVBox2?.formatRank?.(rank)||{hp:rank*6,damage:rank*6};
-  const percent=cost?Math.round(100*available/cost):100;
-  const details=rank>=max?
-   '<p class="pkmbx-rank-status">'+L('Đã đạt hạng tối đa.','Maximum Rank reached.')+'</p>':
-   !enabled?'':
-    '<div class="pkmbx-rank-progress" role="progressbar" aria-label="'+L('Nguyên liệu hợp lệ','Eligible materials')+
-     '" aria-valuemin="0" aria-valuemax="'+cost+'" aria-valuenow="'+available+'"><span style="width:'+percent+'%"></span></div>'+
-    '<p class="pkmbx-rank-materials">'+L('Nguyên liệu hợp lệ: ','Eligible materials: ')+
-      '<b>'+available+' / '+cost+'</b> · '+L('Bản sao dùng được','Usable copies')+': '+copies+
-      ' · '+L('Shiny trùng (giữ lại)','Retained Shiny')+': '+protectedForms+
-      ' · '+L('Mảnh Rank','Rank shards')+': '+fragments+'</p>'+
-    '<p class="pkmbx-rank-status'+(canRank?' is-ready':'')+'">'+
-      (canRank?L('✓ Đủ điều kiện nâng hạng (không tự tiêu Pokémon)!','✓ Rank ready (no automatic consumption)!'):
-        L('Còn thiếu ','Need ')+missing+L(' bản trùng hoặc mảnh',' additional duplicate or shard'))+'</p>';
+  const stored=copies+protectedForms,percent=cost?Math.round(100*available/cost):100;
+  const note=rank>=max?L('Đã đạt Rank tối đa.','Maximum Rank reached.'):
+    !enabled?L('Cần chuyển dữ liệu PokéBox một lần để sử dụng Rank.','One-time PokéBox migration is required.'):
+    canRank?L('✓ Bản trùng đã sẵn sàng — chỉ cần xác nhận.','✓ Duplicates ready — just confirm.'):
+    L('Thiếu ','Need ')+missing+L(' bản trùng để lên Rank kế tiếp.',' more duplicate(s) for next Rank.');
   return '<section class="pkmbx-rank-overview" aria-label="'+L('Tiến trình Rank','Rank progress')+'">'+
-   '<div class="pkmbx-rank-heading"><b>'+L('Hạng Pokémon','Pokémon Rank')+'</b>'+
-      rankStars(rank)+'<strong>'+rank+' / '+max+'</strong></div>'+
-   '<p class="pkmbx-rank-bonus">'+L('Hiện tại: ','Current: ')+
-     L('Máu ','HP ')+'+'+current.hp+'% · '+L('Sát thương ','Damage ')+'+'+current.damage+'%</p>'+
-   details+(rank<max?
-     '<p class="pkmbx-rank-next"><b>'+L('Hạng kế tiếp: ','Next Rank: ')+'</b>'+
-      L('Máu ','HP ')+'+'+next.hp+'% · '+L('Sát thương ','Damage ')+'+'+next.damage+'%'+
-      (rank===3?' · '+L('Hồi chiêu −5%','Cooldown −5%'):'')+'</p>':'')+
-   '<button type="button" class="btn small pkmbx-rank-shortcut" id="pkmbx-rank-shortcut">'+
-     L('Xem chi tiết Rank','View Rank details')+'</button></section>';
+   '<div class="pkmbx-rank-heading"><b>⭐ Rank</b>'+rankStars(rank)+
+   '<strong>'+rank+'/'+max+'</strong></div>'+
+   '<div class="pkmbx-rank-progress" role="progressbar" aria-label="'+
+      L('Tiến trình nguyên liệu','Material progress')+'" aria-valuemin="0" aria-valuemax="'+
+      (cost||1)+'" aria-valuenow="'+available+'"><span style="width:'+percent+'%"></span></div>'+
+   '<p class="pkmbx-rank-materials"><b>'+L('Bản trùng khả dụng: ','Usable duplicates: ')+
+      stored+'</b>'+(fragments?' · '+L('Mảnh cũ: ','Old shards: ')+fragments:'')+'</p>'+
+   (rank<max?'<p class="pkmbx-rank-requirement">'+L('Cần ','Need ')+cost+
+      L(' để lên Rank ',' for Rank ')+(rank+1)+'</p>':'')+
+   '<p class="pkmbx-rank-status'+(canRank?' is-ready':'')+'">'+note+'</p>'+
+   '<button type="button" class="btn gold pkmbx-rank-shortcut" id="pkmbx-rank-shortcut" '+
+      (rank>=max||G.DB?.guest?'disabled':'')+'>'+
+      (enabled?L('⬆ Nâng Rank','⬆ Rank Up'):L('Bật PokéBox để nâng Rank','Activate PokéBox for Rank'))+'</button>'+
+   '<p class="pkmbx-rank-auto-note">'+L('Pokémon quay trùng tự động được tính làm nguyên liệu. Không cần đổi thành Mảnh Rank.',
+      'Duplicate Gacha pulls count as materials automatically. No shard conversion needed.')+'</p>'+
+   '<p class="pkmbx-rank-next"><b>'+L('Hạng kế tiếp','Next Rank')+':</b> '+
+      (rank>=max?L('Tối đa','Max'):L('Máu ','HP ')+'+'+next.hp+
+      '% · '+L('Sát thương ','Damage ')+'+'+next.damage+'%'+
+      (rank===3?' · '+L('Hồi chiêu −5%','Cooldown −5%'):''))+
+   '</p></section>';
+ }
+ // The only Rank action: calculate the required saved copies automatically,
+ // confirm once, commit atomically, and redraw. Do not show the old shard picker.
+ function performRank(it,ready){
+  if(!ready){
+   alert(L('Hồ sơ cũ cần được chuyển sang PokéBox một lần. Hãy xuất file JSON dự phòng trước khi chuyển.',
+    'This older save needs a one-time PokéBox migration. Export a JSON backup first.'));
+   return false;
+  }
+  const api=G.PKMSVVBox2,s=currentSave();
+  const plan=api?.rankMaterials?.(s,it.id);
+  if(!plan?.cost){
+   G.UI?.toast?.(L('Đã đạt Rank tối đa.','Maximum Rank reached.'),2000);return false;
+  }
+  if(plan.available<plan.cost){
+   const missing=plan.cost-plan.available;
+   G.UI?.toast?.(L('Còn thiếu ','Need ')+missing+
+    L(' bản trùng cùng loài.',' more same-species duplicates.'),2600);
+   return false;
+  }
+  if(!confirm(L('Dùng '+plan.cost+' bản trùng để nâng '+monName(it.dex)+
+     ' lên Rank '+(api.speciesProgress(s,it.dex).rank+1)+
+     '? Pokémon Shiny, yêu thích và đội hình được giữ nguyên.',
+    'Use '+plan.cost+' duplicates to rank up '+monName(it.dex)+
+     '? Shiny, favorites and Ready Team members remain in the Box.')))return false;
+  return saveAction(()=>{
+   api.rankUpAuto(it.id,s);
+   view='info';
+   G.UI?.toast?.(L('Đã nâng Rank cho ','Rank upgraded for ')+monName(it.dex),2500);
+  });
  }
  function renderTeam(root,s,items){
   const team=Hub.team(s),holder=root.querySelector('#pkmbx-six');
