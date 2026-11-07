@@ -1013,7 +1013,14 @@
   doc.addEventListener('click',e=>{
    const b=e.target?.closest?.('#scr-menu [data-go="dex"], #pkmsvv-pokebox-button, #scr-menu [data-go="bag"]');
    if(!b)return;
-   if(b.matches('[data-go="bag"]')){e.preventDefault();e.stopImmediatePropagation();openBox('items');return;}
+   if(b.matches('[data-go="bag"]')){
+    e.preventDefault();e.stopImmediatePropagation();
+    // Main-menu Bag is the native Kecleon inventory, NOT a PokéBox tab.
+    // Preserve its Mint/Capsule/TM/Berry picker and normal controller focus.
+    if(typeof G.KecleonUI?.open==='function')G.KecleonUI.open('bag');
+    else G.UI?.toast?.(L('Túi đồ đang tải.','Bag is loading.'),2200);
+    return;
+   }
    e.preventDefault();e.stopImmediatePropagation();
    openBox();
   },true);
