@@ -312,17 +312,20 @@ test('PokéBox V2 QA UI provides visible five-star rank, material bar and sortin
  assert.doesNotMatch(prod,/pkmsvv-box-hub-ui/,'V2 must remain isolated from production');
 });
 
-test('Rank tab displays real material counts and offers safe legacy backup rather than a silent disabled button',()=>{
+test('Rank shows duplicates automatically and never requires conversion into fragments',()=>{
  const ui=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub-ui.js'),'utf8');
+ const dialog=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-stage2-ui.js'),'utf8');
  assert.match(ui,/function renderRank\(host,it,ready\)/);
+ assert.match(ui,/function performRank\(it,ready\)/);
+ assert.match(ui,/api\.rankUpAuto\(it\.id,s\)/);
  assert.match(ui,/progress\.copies/);
  assert.match(ui,/progress\.fragments/);
  assert.match(ui,/listPreview\(\)\.filter\(x=>x\.dex===it\.dex\)\.length/);
- assert.match(ui,/Mở quản lý Save \/ Bật PokéBox/);
- assert.match(ui,/PKMSVVSaveUI/);
- assert.match(ui,/pkmbx-stack/);
- assert.doesNotMatch(ui,/id="pkmbx-rank-direct" class="btn gold" '\+\(!ready\?'disabled'/,
-  'Rank help action must remain clickable for unmigrated legacy collection');
+ assert.match(ui,/Bản trùng khả dụng/);
+ assert.match(ui,/Không cần đổi thành Mảnh Rank/);
+ assert.match(dialog,/api\.rankUpAuto\(x\.id,s\(\)\)/);
+ assert.doesNotMatch(dialog,/data-pkmbx-convert|Đổi bản sao thành Mảnh Rank/,
+  'the legacy shard-conversion button must not be visible');
 });
 test('Newspaper graphic replaces unsupported News glyph while retaining button semantics',()=>{
  const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pc-menu-clean-qa.css'),'utf8');
@@ -338,8 +341,8 @@ test('Ready Team actions are above Pokémon hero; singleton species never shows 
  assert.match(ui,/profile\.insertBefore\(topActions,profile\.firstChild\)/);
  assert.match(ui,/duplicates>1\?'<span class="pkmbx-stack/);
  assert.match(ui,/×'\+duplicates/);
- assert.match(ui,/rankPanel\.open\(it\.id\)/);
- assert.match(ui,/function openInlineRank/);
+ assert.match(ui,/performRank\(it,ready\)/);
+ assert.doesNotMatch(ui,/function openInlineRank/);
  assert.match(css,/#pkmsvv-pokebox-overlay #pkmbx-profile>\.pkmbx-hub-buttons/);
  assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
 });
@@ -349,4 +352,25 @@ test('Normal and Shiny display the same available species Rank credit',()=>{
  assert.equal(a.protectedForms,1);assert.equal(b.protectedForms,1);
  assert.equal(a.cost,1);assert.equal(b.cost,1);
  assert.equal(a.canRank,true);assert.equal(b.canRank,true);
+});
+
+test('PokéBox has top BOX arrows and a six-column visible grid with type-themed detail and stat bars',()=>{
+ const ui=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub-ui.js'),'utf8');
+ const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub.css'),'utf8');
+ assert.match(ui,/pkmbx-box-carousel/);
+ assert.match(ui,/pkmbx-box-label/);
+ assert.match(ui,/BOX '\+\(page\+1\)/);
+ assert.match(ui,/pkmbx-empty-slot/);
+ assert.match(css,/\.pkmbx-box-frame>\.pkmbx-grid/);
+ assert.match(css,/grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/);
+ assert.match(ui,/const PALETTE=\{/);
+ for(const type of ['fire','water','electric','grass','psychic','ghost','steel','fairy']){
+  assert.ok(ui.includes(type+':['),'missing '+type+' theme');
+ }
+ for(const text of ['Máu','Sát thương','Tốc độ','Hồi chiêu']){
+  assert.ok(ui.includes(text),'missing localized stat '+text);
+ }
+ assert.match(ui,/pkmbx-meter-track/);
+ assert.match(css,/\.pkmbx-meter-fill/);
+ assert.match(css,/--pkmbx-type/);
 });
