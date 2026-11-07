@@ -346,6 +346,17 @@ async function main(){
   assert.match(restored.stats,/9\.684|9,684/);
   assert.ok(restored.types>=1,'restore the Pokémon type badges');
   assert.equal(await evaluate("!!G.PKMSVVQuickRegion"),true,'QuickRegion module must load');
+  // Inspect the REAL compiled Tiles engine, not the mock biome dictionary.
+  // All nine Gen battlefields (and the Sky bonus) require distinct terrain IDs.
+  const exploreMaps=await evaluate("(()=>{const q=G.PKMSVVQuickRegion,ids=Array.from({length:10},(_,i)=>q.targetBiome(i));q.open();const instruction=document.querySelector('#pkmsvv-quick-region .region-heading p')?.textContent||'';q.close();return {seconds:q.SEAL_SECONDS,ids,unique:q.distinctMapBiomes(),kanto:q.targetBiome(0),paldea:q.targetBiome(8),fire:G.Tiles.arenaBiome('fire'),instruction}})()");
+  console.log('Actual compiled Explore battlefield IDs:',JSON.stringify(exploreMaps));
+  assert.equal(exploreMaps.seconds,900,'15 minutes required to earn each new Seal');
+  assert.equal(exploreMaps.unique,true,'actual native engine reused terrain for two Explore regions');
+  assert.equal(new Set(exploreMaps.ids.slice(0,9)).size,9,'nine Gen maps must use nine different native biomes');
+  assert.equal(exploreMaps.kanto,0,'Kanto remains native beginner terrain');
+  assert.equal(exploreMaps.paldea,exploreMaps.fire,'late Paldea receives the Fire biome');
+  assert.match(exploreMaps.instruction,/15 phút|15 minutes/,'in-game 15-minute instruction is localized and visible');
+
 
   const instantHome=await evaluate("(()=>{const out=[];const saved=Object.getOwnPropertyDescriptor(G.DB,'save'),commit=G.DB.commit,previous=G.Game?.state;const menu=document.querySelector('#scr-menu');try{for(const migrated of [true,false]){const raw={owned:{6:{at:1},25:{at:2}},shiny:{},partner:6,partnerShiny:false,stats:{runs:7},coins:500};const fixture=migrated?G.PKMSVVBox.migrate(raw).save:raw;Object.defineProperty(G.DB,'save',{value:fixture,configurable:true,writable:true});G.DB.commit=()=>true;G.PKMSVVMenuCleanQA.restorePartner();const before=menu.querySelector('#menu-partner-name')?.textContent;G.PKMSVVBoxHubUI.openBox('info');G.PKMSVVBoxHubUI.focus(migrated?'b1-25-n':'b1-25-n');const btn=document.querySelector('#pkmbx-use');const enabled=!!btn&&!btn.disabled;btn?.click();const hero=menu.querySelector('#menu-partner');out.push({migrated,enabled,partner:fixture.partner,shiny:fixture.partnerShiny,portraitKey:hero?.dataset.pkmsvvPortraitKey,name:menu.querySelector('#menu-partner-name')?.textContent,before,overlayOpen:!!document.querySelector('#pkmsvv-pokebox-overlay'),gameUnchanged:G.Game?.state===previous});G.PKMSVVBoxHubUI.closeBox();}return out;}finally{G.PKMSVVBoxHubUI.closeBox();Object.defineProperty(G.DB,'save',saved);G.DB.commit=commit;G.PKMSVVMenuCleanQA.restorePartner();}})()");
   assert.equal(instantHome.length,2,'both migrated and old-save selection must redraw home');
