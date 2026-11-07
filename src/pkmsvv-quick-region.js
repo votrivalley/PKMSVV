@@ -84,7 +84,7 @@
  }
 
  const title=(n)=>n===9?tr('Tháp Thiên Không','Sky Pillar'):NAMES[n];
- let overlay=null,armed=null,current=null,previousBiome=null,changing=false,bypass=false;
+ let overlay=null,armed=null,current=null,previousBiome=null,changing=false,bypass=false,preRunPending=false;
  const getChampion=()=>G.PKMSVVChampionArena;
  const getSave=()=>G.DB?.save;
  function unlocked(index,save=getSave()){
@@ -95,7 +95,10 @@
   return seals[NAMES[index]]===true||
    NAMES.slice(0,index).every(name=>seals[name]===true);
  }
- function regionIndex(){return current?.index??-1;}
+ function regionIndex(){
+  if(current&&preRunPending&&G.Game?.state==='playing')preRunPending=false;
+  return current?.index??-1;
+ }
  function targetBiome(index){
   const n=G.Tiles?.arenaBiome?.(THEMES[index]);
   return Number.isFinite(n)?n:null;
@@ -105,7 +108,7 @@
   changing=true;
   try{
    const previous=previousBiome;
-   current=null;armed=null;previousBiome=null;
+   current=null;armed=null;previousBiome=null;preRunPending=false;
    if(Number.isFinite(previous)&&typeof G.World?.setBiome==='function')
     G.World.setBiome(previous,true);
   }finally{changing=false;}
@@ -203,6 +206,10 @@
   if(!Number.isInteger(index)||!unlocked(index)||current)return false;
   const biome=targetBiome(index);
   current={index,biome};
+  // Berry pre-match selection defers the underlying native startRun for 10s.
+  // Keep the region armed across that entire pending period; menu overlays
+  // must not silently turn Kanto back into ALL GEN.
+  preRunPending=G.Game?.state!=='playing';
   previousBiome=Number.isFinite(formerBiome)?formerBiome:(Number.isFinite(G.World?.biome)?G.World.biome:null);
   if(Number.isFinite(biome))G.World?.setBiome?.(biome,true);
   return true;
@@ -225,10 +232,18 @@
   if(current)endRun();
   const index=armed;armed=null;
   const priorBiome=G.World?.biome;
-  const out=prev.apply(this,args);
-  if(index!==null&&index!==undefined&&!G.Coop?.active&&!getChampion()?.active)
-   beginRun(index,priorBiome);
-  return out;
+  const chosen=index!==null&&index!==undefined&&!G.Coop?.active&&!getChampion()?.active;
+  // BEFORE calling native/third-party startRun: initial spawn bags can be
+  // cached synchronously, and Berry's wrapper may defer the actual run.
+  if(chosen)beginRun(index,priorBiome);
+  try{
+   const out=prev.apply(this,args);
+   if(chosen&&G.Game?.state==='playing')preRunPending=false;
+   return out;
+  }catch(err){
+   if(chosen&&current)endRun();
+   throw err;
+  }
  });
  wrap(G.World,'setBiome',function(prev,args){
   if(!current||!Number.isFinite(current.biome)||changing)return prev.apply(this,args);
@@ -306,7 +321,9 @@
  // explicit return to the home menu clears the scoped Region policy.
  if(typeof G.MenuUI?.open==='function')wrap(G.MenuUI,'open',function(prev,args){
   const out=prev.apply(this,args);
-  if(current&&G.Game?.state==='ui'&&!G.PKMSVVBerry?.choosing)endRun();
+  // During Berry's 10s pre-run choice, UI state is still 'ui'. An incidental
+  // menu render is NOT an instruction to abandon the selected generation.
+  if(current&&G.Game?.state==='ui'&&!preRunPending&&!G.PKMSVVBerry?.choosing)endRun();
   return out;
  });
  G.PKMSVVQuickRegion={open,close,choose,entries,unlocked,beginRun,endRun,
