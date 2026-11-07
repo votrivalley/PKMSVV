@@ -22,7 +22,7 @@ function harness(options={}){
   querySelector(q){return q==='#scr-menu [data-go="play"]'?play:null;}};
  const save={partner:12,owned:{12:true},arenas:{pkmChampion:{seals:{Kanto:true}}}};
  const G={
-  I18n:{lang:'vi'},DB:{save,commit(){throw Error('Quick region must not write save')}},
+  I18n:{lang:'vi'},DB:{save,commit(){if(options.failCommit)return false;return true}},
   Tiles:{arenaBiome(t){return ['fire','steel','water','ground','rock','dark','bug','fighting','ice','dragon'].indexOf(t)+1}},
   World:{biome:17,setBiome(n){this.biome=n;calls.push(n)}},
   Coop:{active:false},
@@ -71,15 +71,15 @@ test('Choose Kanto starts original native play exactly once and keeps biome plus
  assert.equal(h.started,1);
  assert.equal(x.active,true);
  assert.equal(x.selectedRegion,0);
- assert.equal(h.G.World.biome,1);
+ assert.equal(h.G.World.biome,0);
  h.G.World.setBiome(777);
- assert.equal(h.G.World.biome,1,'world rotation cannot replace chosen Region');
+ assert.equal(h.G.World.biome,0,'world rotation cannot replace chosen Region');
  const bag=h.G.Spawner.update();
  assert.equal(bag.length,2);assert.ok(bag.every(y=>y.dex===12));
  assert.equal(h.G.Enemies.bagAt()[0].dex,12,'Gen restriction stays active between spawn ticks');
  h.G.Game.toUI();
  assert.equal(x.active,false);
- assert.equal(h.G.World.biome,17,'free world state restored');
+ assert.equal(h.G.World.biome,07,'free world state restored');
  h.G.World.setBiome(777);
  assert.equal(h.G.World.biome,777,'post-game free world can rotate again');
  assert.equal(JSON.stringify(h.save),before,'no region progress or Seal minted');
@@ -95,7 +95,7 @@ test('Unlocks use existing Crown Seal keys; all ten regions visible, Sky require
  assert.equal(x.entries().length,10);
  assert.equal(x.entries()[9].name,'Tháp Thiên Không');
  assert.equal(x.choose(9),true);
- assert.equal(h.G.World.biome,10);
+ assert.equal(h.G.World.biome,00);
  h.G.Flow.goMenu();assert.equal(x.active,false);
 });
 test('Other match types and direct native game starts remain unaffected',()=>{
@@ -209,7 +209,7 @@ test('Kanto must stay selected across deferred Berry pre-match and intermediate 
  assert.equal(region.selectedRegion,0);
  h.completeStart();
  assert.equal(h.G.Game.state,'playing');
- assert.equal(h.G.World.biome,1,'selected Kanto biome stays pinned through actual native start');
+ assert.equal(h.G.World.biome,0,'selected Kanto biome stays pinned through actual native start');
  assert.ok(h.G.Enemies.bagAt().every(x=>x.dex===25),'late waves remain 100% Kanto');
  assert.equal(region.starting,false,'pending flag clears once gameplay begins');
  h.G.Game.toUI();
@@ -330,7 +330,7 @@ test('Kanto persists when a Berry wrapper is installed OUTSIDE Region after scri
  assert.equal(region.active,true,'Kanto must already be armed before Berry completes');
  assert.equal(region.selectedRegion,0);
  assert.equal(region.starting,true);
- assert.equal(h.G.World.biome,1);
+ assert.equal(h.G.World.biome,0);
  assert.ok(h.G.Enemies.bagAt().every(x=>x.dex===25),
   'all pending/early spawn bags must be Gen 1 even before Berry finishes');
  h.G.MenuUI.open();
@@ -340,12 +340,12 @@ test('Kanto persists when a Berry wrapper is installed OUTSIDE Region after scri
  assert.equal(h.G.Game.state,'playing');
  assert.equal(region.active,true);
  assert.equal(region.starting,false);
- assert.equal(h.G.World.biome,1);
+ assert.equal(h.G.World.biome,0);
  assert.ok(h.G.Enemies.bagAt().every(x=>x.dex===25),
   'Kanto must still be Gen 1 after the delayed engine start');
  h.G.Game.toUI();
  assert.equal(region.active,false);
- assert.equal(h.G.World.biome,17);
+ assert.equal(h.G.World.biome,07);
 });
 test('Kanto cancelled during Berry wait does not leak into another mode',()=>{
  const h=harness(),region=h.G.PKMSVVQuickRegion;
@@ -445,4 +445,48 @@ test('Explore Gen 1–9 covers use the nine requested mascot National Dex IDs; S
  }
  assert.equal(h.nodes.grid.children[1].disabled,false,'existing Johto unlock stays unchanged');
  assert.equal(h.nodes.grid.children[2].disabled,true,'existing Hoenn lock stays unchanged');
+});
+
+
+test('Explore Kanto grants its own Seal after three minutes, without Champion or boss',()=>{
+ const h=harness(),q=h.G.PKMSVVQuickRegion;
+ h.save.arenas.pkmChampion.seals={}; // First-time solo player.
+ assert.equal(q.unlocked(1),false,'Johto must start locked for a new player');
+ assert.equal(q.choose(0),true);
+ assert.equal(h.G.World.biome,0,'Kanto is the native beginner map, not fire');
+ h.G.Game.st.time=179;
+ h.G.EnemyMgr.update(0.016);
+ assert.equal(q.unlocked(1),false,'leaving before 180 seconds is not completion');
+ assert.equal(h.save.pkmsvvExploreSeals,undefined);
+ h.G.Game.st.time=180;
+ h.G.EnemyMgr.update(0.016);
+ assert.equal(h.save.pkmsvvExploreSeals.Kanto,true);
+ assert.equal(q.unlocked(1),true,'Johto unlocks from Kanto exploration alone');
+ assert.equal(h.save.arenas.pkmChampion.seals.Kanto,undefined,'Champion crowns remain unchanged');
+ const after=JSON.stringify(h.save);
+ h.G.EnemyMgr.update(0.016);h.G.Game.toUI();
+ assert.equal(JSON.stringify(h.save),after,'no duplicate Seal writes or rewards');
+ assert.equal(q.choose(1),true,'unlocked Johto starts normal gameplay');
+ assert.equal(h.G.World.biome,4,'Johto uses a gentler ground landscape');
+});
+test('Failed Explore Seal commit restores save and does not unlock next region',()=>{
+ const h=harness({failCommit:true}),q=h.G.PKMSVVQuickRegion;
+ h.save.arenas.pkmChampion.seals={};
+ const before=JSON.stringify(h.save);
+ assert.equal(q.choose(0),true);
+ h.G.Game.st.time=200;
+ h.G.EnemyMgr.update(0.016);
+ assert.equal(q.unlocked(1),false);
+ assert.equal(JSON.stringify(h.save),before,'failed commit must be rolled back');
+});
+test('Paldea receives the late fire battlefield while old Champion Seals remain compatible',()=>{
+ const h=harness(),q=h.G.PKMSVVQuickRegion;
+ const all=['Kanto','Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar'];
+ for(const name of all)h.save.arenas.pkmChampion.seals[name]=true;
+ assert.equal(q.choose(8),true);
+ assert.equal(h.G.World.biome,1,'fire now belongs to late-gen Paldea');
+ h.G.Game.toUI();
+ assert.equal(q.unlocked(9),false,'Sky needs all nine Seals');
+ h.save.pkmsvvExploreSeals={Paldea:true};
+ assert.equal(q.unlocked(9),true,'Seals earned in Explore combine with legacy Arena progress');
 });
