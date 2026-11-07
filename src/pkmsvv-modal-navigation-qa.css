@@ -13,3 +13,51 @@
 #pkmsvv-pokebox-overlay .pkmsvv-nav-focus{outline-color:#ffe9a0!important}
 #scr-item .pkmsvv-held-action.pkmsvv-nav-focus{border-color:#ffe06c!important}
 @media(prefers-reduced-motion:reduce){.pkmsvv-nav-focus{transition:none!important}}
+
+/* The two equipment cards are the two actions; no redundant bottom row. */
+#scr-item #item-cards.pkmsvv-held-choices .pkmsvv-held-columns{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;
+}
+#scr-item #item-cards.pkmsvv-held-choices .pkmsvv-held-comparison{
+ width:100%;font:inherit;cursor:pointer;position:relative;
+ min-width:0;min-height:125px;
+}
+#scr-item .pkmsvv-held-comparison .key{
+ position:absolute;right:8px;top:7px;padding:1px 6px;
+ border:1px solid #d9c36b;border-radius:5px;
+ background:#16384b;color:#ffe7a0;font-weight:800;
+}
+#scr-item .pkmsvv-held-action:focus-visible,
+.pkmsvv-evo .pkmsvv-evo-option:focus-visible,
+.pkmsvv-evo .pkmsvv-evo-skip:focus-visible{
+ outline:3px solid #ffe06c!important;outline-offset:2px;
+}
+@media(max-width:520px){
+ #scr-item #item-cards.pkmsvv-held-choices .pkmsvv-held-columns{gap:5px}
+ #scr-item .pkmsvv-held-comparison{padding:7px 5px}
+}
+/* Royale stays live: only the compact evolution panel captures pointer
+   interactions. Game canvas and other controls remain active underneath. */
+body.pkmsvv-competitive-evo .pkmsvv-evo{
+ position:fixed!important;inset:0!important;z-index:20000!important;
+ display:block!important;background:transparent!important;
+ pointer-events:none!important;
+}
+body.pkmsvv-competitive-evo .pkmsvv-evo>.pkmsvv-evo-panel{
+ position:absolute!important;right:max(10px,env(safe-area-inset-right))!important;
+ top:max(45px,env(safe-area-inset-top) + 10px)!important;
+ width:min(365px,46vw)!important;max-width:calc(100vw - 20px)!important;
+ max-height:75dvh!important;overflow:auto!important;
+ pointer-events:auto!important;margin:0!important;
+ padding:12px!important;border-radius:12px!important;
+ background:rgba(20,37,64,.96)!important;
+}
+body.pkmsvv-competitive-evo .pkmsvv-evo-panel h2{font-size:15px!important}
+body.pkmsvv-competitive-evo .pkmsvv-evo-panel .pkmsvv-evo-option{
+ min-height:33px!important;font-size:12px!important;padding:6px!important;
+}
+@media(max-width:650px){
+ body.pkmsvv-competitive-evo .pkmsvv-evo>.pkmsvv-evo-panel{
+  width:min(320px,56vw)!important;padding:7px!important;max-height:66dvh!important;
+ }
+}
