@@ -12,6 +12,12 @@ on:
       - 'scripts/build-pokebox-stage4-android-qa.cjs'
       - 'src/pkmsvv-pc-menu-clean-qa.*'
       - 'src/pkmsvv-modal-navigation-qa.*'
+      - 'src/pkmsvv-fusion-evolved.*'
+      - 'src/pkmsvv-bond-fusion.js'
+      - 'assets/fusion-icons/**'
+      - 'scripts/copy-fusion-icons.cjs'
+      - 'scripts/patch-qa-compiled-modules.cjs'
+      - 'tests/bond-fusion-svv.test.cjs'
       - 'src/pkmsvv-held-item-ui.js'
       - 'tests/modal-input-qa.test.cjs'
       - 'tests/pokebox-stage2-browser.cjs'
@@ -38,7 +44,7 @@ jobs:
         with:
           node-version: '22'
       - name: Test all four PokéBox phases
-        run: npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs
+        run: npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs && node --test tests/bond-fusion-svv.test.cjs
       - name: Require permanent signing, no debug fallback
         shell: bash
         env:
@@ -87,6 +93,11 @@ jobs:
           grep -q 'pkmsvv-box-stage4.js' decoded-android/assets/public/index.html
           grep -q 'pkmsvv-box-hub-ui.js' decoded-android/assets/public/index.html
           test -s decoded-android/assets/public/css/pkmsvv-box-hub.css
+          test -s decoded-android/assets/public/js/ui/pkmsvv-fusion-evolved.js
+          test -s decoded-android/assets/public/css/pkmsvv-fusion-evolved.css
+          for id in ember-quick water-tackle grass-spin spark-quick mind-tackle fire-gust bubble-ice leaf-rock shadow-mind thunder-claw; do
+            test -s "decoded-android/assets/public/assets/fusion-icons/${id}.webp"
+          done
           test -s decoded-android/assets/public/js/ui/pkmsvv-quick-region.js
           test -s decoded-android/assets/public/css/pkmsvv-quick-region.css
           test -s decoded-android/assets/public/js/ui/pkmsvv-pc-menu-clean-qa.js
