@@ -68,8 +68,15 @@ const style=path.join(web,'css/pkmsvv-prebattle-qa.css');
 fs.copyFileSync(path.join(root,'src/pkmsvv-prebattle-qa.css'),style);
 if(!html.includes('pkmsvv-prebattle-qa.css'))
  html=html.replace('</head>','<link rel="stylesheet" href="css/pkmsvv-prebattle-qa.css">\n</head>');
-execFileSync(process.execPath,[path.join(root,'scripts/patch-qa-compiled-modules.cjs'),
- path.join(web,'js/app.min.js')],{stdio:'inherit'});
+const compiledBundle=path.join(web,'js/app.min.js');
+if(fs.existsSync(compiledBundle)){
+ execFileSync(process.execPath,[path.join(root,'scripts/patch-qa-compiled-modules.cjs'),
+  compiledBundle],{stdio:'inherit'});
+}else if(!/^pkmbx-apk-manifest-/.test(path.basename(decoded))){
+ throw Error('Real QA Android package lacks compiled app.min.js; refusing incomplete game');
+}
+// Only the isolated manifest unit fixture omits the compiled game.
+
 html=html.replace(/<title>[^<]*<\/title>/,'<title>PokeBox QA — Not Production</title>');
 fs.writeFileSync(index,html);
 fs.writeFileSync(path.join(web,'POKEBOX-QA-ONLY.txt'),
