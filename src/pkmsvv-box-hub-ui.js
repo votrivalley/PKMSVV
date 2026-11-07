@@ -362,98 +362,27 @@
    closeBox();G.KecleonUI?.open?.('shop');
   };
  }
- // Never silently drop an upgrade click if an optional platform Rank modal
- // is not available; use the same atomic Stage 2 mutation inline.
- function openInlineRank(host,it){
-  const api=G.PKMSVVBox2,s=currentSave();
-  if(!api?.valid?.(s)){alert(L('Hãy sao lưu JSON và chuyển dữ liệu PokéBox một lần.','Back up JSON and migrate PokéBox once.'));return;}
-  const carrier=it.shiny?(s.pkmsvvBox.find(v=>v.dex===it.dex&&!v.shiny)||it):it;
-  const progress=Hub.rankOverview(s,carrier);
-  const regular=api.candidateList(s,carrier.id),retained=api.claimableList(s,carrier.id);
-  host.querySelector('.pkmbx-inline-rank-materials')?.remove();
-  const wrap=doc.createElement('section');wrap.className='pkmbx-inline-rank-materials';
-  const sources=[...regular.map(x=>({...x,isProtected:false})),...retained.map(x=>({...x,isProtected:true}))];
-  wrap.innerHTML='<h3>'+L('Nguyên liệu Rank','Rank materials')+' '+progress.rank+' → '+Math.min(5,progress.rank+1)+'</h3>'+
-   '<p>'+L('Cần ','Needs ')+progress.cost+L(' bản trùng hoặc mảnh. Pokémon được bảo vệ chỉ ghi nhận một lần, không bị xóa.',
-      ' duplicates/shards. Protected Pokémon are credited once, not deleted.')+'</p>'+
-   '<div class="pkmbx-inline-rank-list">'+sources.map(x=>'<label><input type="checkbox" data-rank-source="'+clean(x.id)+
-      '" data-rank-protected="'+(x.isProtected?'1':'0')+'"/> '+
-      clean(monName(x.dex))+' · '+clean(x.id)+(x.shiny?' ✨':'')+
-      (x.isProtected?' · '+L('Giữ lại','Retained'):'')+'</label>').join('')+'</div>'+
-   '<label>'+L('Dùng Mảnh Rank','Use Rank shards')+
-   ' <input id="pkmbx-inline-shards" type="number" min="0" max="'+Math.min(progress.cost,progress.fragments)+'" value="0"/></label>'+
-   '<p id="pkmbx-inline-rank-status"></p>'+
-   '<button class="btn gold" type="button" id="pkmbx-inline-rank-confirm">'+L('✓ Xác nhận nâng Rank','✓ Confirm Rank Up')+'</button>';
-  host.append(wrap);
-  const confirmBtn=wrap.querySelector('#pkmbx-inline-rank-confirm');
-  const calc=()=>{
-   const checks=[...wrap.querySelectorAll('[data-rank-source]:checked')];
-   const shards=Math.max(0,Math.min(progress.fragments,Math.floor(Number(wrap.querySelector('#pkmbx-inline-shards').value)||0)));
-   const count=checks.length+shards;
-   wrap.querySelector('#pkmbx-inline-rank-status').textContent=count+' / '+progress.cost;
-   confirmBtn.disabled=G.DB?.guest||!progress.cost||count!==progress.cost;
-   return {checks,shards};
-  };
-  for(const input of wrap.querySelectorAll('input'))input.addEventListener('change',calc);
-  confirmBtn.onclick=()=>{
-   const {checks,shards}=calc();if(checks.length+shards!==progress.cost)return;
-   const consumable=checks.filter(x=>x.dataset.rankProtected!=='1').map(x=>x.dataset.rankSource);
-   const credits=checks.filter(x=>x.dataset.rankProtected==='1').map(x=>x.dataset.rankSource);
-   if(!confirm(L('Xác nhận? Bản thường sẽ tiêu thụ, bản được bảo vệ không bị mất.',
-    'Confirm? Ordinary copies are consumed; protected Pokémon remain saved.')))return;
-   try{api.rankUp(carrier.id,consumable,shards,s,credits);renderBox();}
-   catch(e){alert(L('Không thể nâng Rank: ','Rank could not be upgraded: ')+(e?.message||e));}
-  };
-  calc();wrap.querySelector('input')?.focus?.();
- }
+ // Rank tab remains informative. One confirmation automatically picks usable
+ // Gacha duplicates; no checkbox step and no Convert-to-Shards action.
  function renderRank(host,it,ready){
-  const save=currentSave(),progress=Hub.rankOverview(save,it),rank=progress.rank;
-  const data=G.PKMSVVBox2?.formatRank(rank),total=listPreview().filter(x=>x.dex===it.dex).length;
-  const countText=L('Đang sở hữu: ','Owned: ')+total+
-   L(' cá thể (',' individuals (')+Math.max(0,total-1)+L(' bản trùng) · Bản sao thường: ',' duplicates) · Ordinary copies: ')+progress.copies+
-   L(' · Bản trùng giữ lại: ',' · Protected copies: ')+(progress.protectedForms||0)+
-   L(' · Mảnh Rank: ',' · Rank shards: ')+progress.fragments;
-  const remaining=progress.rank>=5?L('Đã đạt Rank tối đa.','Maximum Rank reached.'):
-   L('Cần ','Need ')+progress.cost+L(' nguyên liệu · Đang đủ ',' materials · Available ')+
-   Math.min(progress.cost,progress.copies+(progress.protectedForms||0)+progress.fragments)+'/'+progress.cost;
-  const migration=L('Save cũ chưa bật dữ liệu PokéBox. Vào Quản lý Save → Dữ liệu PokéBox → Chuyển dữ liệu (chỉ một lần, sau khi xuất JSON dự phòng). Không mất Pokémon, nhưng các lượt quay trùng rất cũ có thể không còn được ghi riêng.',
-   'This older save has no individual PokéBox records. Open Save Manager → PokéBox Data → Migrate Collection once, after exporting a JSON backup. No Pokémon is removed; old duplicate pulls may not have been recorded.');
-  const usedCredits=(save?.pkmsvvRankClaimedCopies?.[String(it.dex)]?.length||0)+(save?.pkmsvvRankShinyCredits?.[String(it.dex)]?.length||0);
-  const eligibleNote=L('Luật Rank: mỗi lần lên Rank tốn 1 / 2 / 3 / 4 / 5 bản trùng tương ứng. Shiny, yêu thích, đội hình và cá thể gốc được giữ nguyên khi ghi nhận một lần. Đã ghi nhận: ',
-   'Rank costs 1 / 2 / 3 / 4 / 5 additional copies. Shiny, favorites, team and legacy originals remain safe when credited once. Claimed: ')+usedCredits+
-   L(' bản. Gacha không tự nâng Rank.', ' copies. Gacha does not auto-upgrade Rank.');
-  host.innerHTML='<section class="pkmbx-hub-rank"><h3>⭐ Rank '+rank+'/5</h3>'+
-   '<p>'+L('HP & sát thương: ','HP & damage: ')+'+'+(data?.hp||0)+'%'+
-   (rank>=4?' · '+L('Hồi chiêu −5%','Cooldown −5%'):'')+'</p>'+
-   '<p class="pkmbx-rank-material-summary"><b>'+countText+'</b></p>'+
-   '<p class="pkmbx-rank-material-summary">'+remaining+'</p>'+
-   '<p class="pkmbx-rank-eligibility">'+(ready?eligibleNote:migration)+'</p>'+
-   '<button id="pkmbx-rank-direct" type="button" class="btn gold">'+
-   (ready?L('⭐ Xem nguyên liệu / Nâng Rank','⭐ Materials / Rank Up'):
-     L('🔐 Mở quản lý Save / Bật PokéBox','🔐 Save Manager / Activate PokéBox'))+'</button></section>';
-  host.querySelector('#pkmbx-rank-direct').onclick=()=>{
-   if(!ready){
-    closeBox();
-    const saveUI=G.PKMSVVSaveUI;
-    if(typeof saveUI?.openQuick==='function')saveUI.openQuick();
-    else if(typeof saveUI?.mount==='function')saveUI.mount();
-    else alert(L('Mở Sao lưu & Khôi phục trên menu chính để chuyển dữ liệu.','Open Backup & Restore from the home menu to migrate.'));
-    return;
-   }
-   // The Stage 2 Rank panel reads Box.focusedId() rather than
-   // replacing the active fighter just to upgrade a different Pokémon.
-   const rankPanel=Rank();
-   if(typeof rankPanel?.open==='function'){
-    try{
-     rankPanel.open(it.id);
-     const overlay=doc.getElementById('pkmbx-rank-overlay');
-     if(overlay?.isConnected){
-      overlay.hidden=false;overlay.querySelector('#pkmbx-rank-close')?.focus?.();return;
-     }
-    }catch(error){console.error('[PokéBox Rank]',error);}
-   }
-   openInlineRank(host,it);
-  };
+  const save=currentSave(),progress=Hub.rankOverview(save,it);
+  const total=listPreview().filter(x=>x.dex===it.dex).length;
+  const stock=progress.copies+progress.protectedForms;
+  const next=progress.rank+1;
+  host.innerHTML='<section class="pkmbx-hub-rank">'+
+   '<h3>⭐ Rank '+progress.rank+'/5</h3>'+
+   '<p class="pkmbx-rank-material-summary"><b>'+L('Đang sở hữu: ','Owned: ')+
+    total+L(' cá thể · Bản trùng khả dụng: ',' individuals · Usable duplicates: ')+stock+'</b></p>'+
+   (progress.fragments?'<p>'+L('Mảnh Rank cũ: ','Old Rank shards: ')+progress.fragments+'</p>':'')+
+   '<p>'+L('Lên Rank ','Next Rank ')+next+L(' cần thêm ',' requires ')+progress.cost+
+    L(' bản trùng. ',' duplicates. ')+
+    (progress.canRank?L('✓ Đã đủ.','✓ Ready.'):L('Còn thiếu ','Missing ')+progress.missing+'.')+'</p>'+
+   '<p class="pkmbx-rank-auto-note">'+L('Các bản trùng từ Gacha tự động nằm trong kho nguyên liệu. Không cần đổi Pokémon thành Mảnh Rank. Chỉ trừ nguyên liệu khi bạn xác nhận nâng cấp.',
+     'Duplicate Gacha pulls are automatically available for Rank. No shard conversion. Materials are spent only after your confirmation.')+'</p>'+
+   '<button type="button" id="pkmbx-rank-direct" class="btn gold" '+
+    (progress.rank>=5||G.DB?.guest?'disabled':'')+'>'+
+    L('⬆ Nâng Rank','⬆ Rank Up')+'</button></section>';
+  host.querySelector('#pkmbx-rank-direct').onclick=()=>performRank(it,ready);
  }
  function ensureBox(){
   if(boxPane?.isConnected)return;
