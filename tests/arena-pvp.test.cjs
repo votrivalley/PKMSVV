@@ -27,6 +27,7 @@ function instance(myUid,opts={}){
  const mate=id=>id===myUid?null:{pl:other};
  let seed=1234,network=[],origCast=0,spawns=0,damage=0,gameQuit=0;
  const G={
+  DB:{save:{partner:myUid==='host'?25:6,owned:{25:true,6:true}}},
   I18n:{lang:'vi'},Social:{uid:myUid,room:{id:'test',host:'host',mode:opts.mode||'arena',open:false,members},
    on(cb){roomListeners.push(cb)},setPlaying(p){this.playing=!!p},finishMatch(){this.room.open=true;for(const cb of roomListeners)cb('room');return Promise.resolve(this.room)}},
 
@@ -66,7 +67,9 @@ test('Real Arena rooms use human identities and reject AI/no-second-player modes
  const host=instance('host');host.start();
  assert.equal(host.api.active,true);
  assert.equal(host.api.host,true);
- assert.equal(host.api.stage,'countdown');
+ assert.equal(host.api.stage,'select');
+ assert.equal(host.api.SELECT,10);
+ host.frame(10.05);assert.equal(host.api.stage,'countdown');
  assert.equal(host.me.maxHp,320);
  assert.equal(host.G.World.arena.r,18);
  const fake=instance('host',{ai:true});fake.start();assert.equal(fake.api.active,false);
@@ -79,6 +82,7 @@ test('Host 3-2-1 is authoritative, spawns no enemies and enters Fight together',
  const relay=()=>{
   for(const packet of host.network.splice(0))guest.emit('host',packet);
  };
+ host.frame(10.05);relay();assert.equal(guest.api.stage,'countdown');
  host.frame(1);relay();assert.equal(guest.api.stage,'countdown');
  host.frame(1);relay();assert.equal(guest.api.stage,'countdown');
  host.frame(1.05);relay();
@@ -102,7 +106,7 @@ test('Guest cast reaches host and both players see same authentic damage result'
  assert.ok(host.damage>0,'hit VFX appears on the victim');
 });
 test('Host rejects forged sender, implausible levels and too-fast casts',()=>{
- const host=instance('host');host.start();host.frame(3.01);
+ const host=instance('host');host.start();host.frame(10.01);host.frame(3.01);
  const before=host.api.health.host;
  host.emit('attacker',{k:'f',ev:[['c','ember',90,Math.PI]]});
  assert.equal(host.api.health.host,before,'unauthorized uid cannot attack');
@@ -117,7 +121,7 @@ test('Host rejects forged sender, implausible levels and too-fast casts',()=>{
  assert.equal(host.api.health.host,once,'cast facing away must not damage rival');
 });
 test('Victory and rematch reset do not leak previous session health or UI',()=>{
- const host=instance('host');host.start();host.frame(3.01);
+ const host=instance('host');host.start();host.frame(10.01);host.frame(3.01);
  for(let i=0;i<20&&host.api.stage!=='result';i++){
   host.advance(600);
   host.emit('guest',{k:'f',ev:[['c','ember',5,Math.PI]]});
@@ -129,7 +133,7 @@ test('Victory and rematch reset do not leak previous session health or UI',()=>{
  assert.equal(host.api.active,false);
  assert.equal(host.document.getElementById('pkmsvv-arena-pvp-count'),null);
  assert.equal(host.G.World.arena,null);
- host.start();assert.equal(host.api.stage,'countdown');
+ host.start();assert.equal(host.api.stage,'select');
  assert.equal(host.api.health.host,320);
 });
 test('Arena Solo and Champion invitations have dedicated Host Join room modes',()=>{
@@ -153,7 +157,7 @@ test('Arena Solo and Champion invitations have dedicated Host Join room modes',(
 
 test('Leaving after real PvP is not a Survival endRun and also clears the guest',()=>{
  const host=instance('host'),guest=instance('guest');
- host.start();guest.start();host.frame(3.01);
+ host.start();guest.start();host.frame(10.01);host.frame(3.01);
  host.api.exit();
  assert.equal(host.api.active,false);
  assert.equal(host.gameQuit,0,'Arena must not call Game.quit/endRun and award Survival coins');
@@ -175,7 +179,7 @@ test('Equal PvP skill loadouts are level one and enemy IDs cannot replace a huma
 });
 
 test('Forfeit remains isolated even after remote player leaves the room',()=>{
- const host=instance('host');host.start();host.frame(3.01);
+ const host=instance('host');host.start();host.frame(10.01);host.frame(3.01);
  host.G.Social.room.members.splice(1);
  host.disconnect('guest');
  assert.equal(host.api.stage,'result');
@@ -188,7 +192,7 @@ test('Forfeit remains isolated even after remote player leaves the room',()=>{
 
 test('Champion PvP is a real human-only first-to-two series, synchronized across peers',()=>{
  const host=instance('host',{mode:'champion'}),guest=instance('guest',{mode:'champion'});
- host.start();guest.start();
+ host.start();guest.start();host.frame(10.01);
  assert.equal(host.api.matchType,'champion');assert.equal(host.api.round,1);
  for(let round=1;round<=2;round++){
   host.frame(3.01);
@@ -208,7 +212,7 @@ test('Champion PvP is a real human-only first-to-two series, synchronized across
 
 test('Periodic Host snapshots recover a lost result packet; forged/stale matches are ignored',()=>{
  const host=instance('host'),guest=instance('guest');host.start();guest.start();
- host.frame(3.05);
+ host.frame(10.01);host.frame(3.05);
  for(let n=0;n<24&&host.api.stage!=='result';n++){
   host.advance(700);
   host.emit('guest',{k:'f',ev:[['c','ember',1,Math.PI]]});
@@ -216,14 +220,14 @@ test('Periodic Host snapshots recover a lost result packet; forged/stale matches
  assert.equal(host.api.stage,'result');
  // Simulate the short disconnect dropping every packet through the final hit.
  host.network.length=0;
- assert.equal(guest.api.stage,'countdown');
+ assert.equal(guest.api.stage,'select');
  host.frame(.3);
  const terminal=host.network.find(p=>p.k==='apvp'&&p.stage==='result');
  assert.ok(terminal,'Host must keep publishing the authoritative terminal state');
  guest.emit('attacker',terminal);
- assert.equal(guest.api.stage,'countdown','unauthorized peer cannot finish match');
+ assert.equal(guest.api.stage,'select','unauthorized peer cannot finish match');
  guest.emit('host',{...terminal,seed:terminal.seed+99});
- assert.equal(guest.api.stage,'countdown','a different match seed cannot finish match');
+ assert.equal(guest.api.stage,'select','a different match seed cannot finish match');
  guest.emit('host',terminal);
  assert.equal(guest.api.stage,'result','guest recovers without the one-off event');
  assert.equal(guest.api.winner,host.api.winner);
@@ -232,7 +236,7 @@ test('Periodic Host snapshots recover a lost result packet; forged/stale matches
 });
 test('Guest leaves stale Arena when room reopens despite lost Host exit notice',()=>{
  const host=instance('host'),guest=instance('guest');
- host.start();guest.start();host.frame(3.01);
+ host.start();guest.start();host.frame(10.01);host.frame(3.01);
  host.api.exit();
  const lost=host.network.find(p=>p.k==='apvp-exit');
  assert.ok(lost);
@@ -259,7 +263,7 @@ test('Unrelated or stale room notifications cannot terminate an active Arena mat
 
 test('Android foreground requests Host resync after dropped Champion terminal; no duplicate winner or rewards',()=>{
  const host=instance('host',{mode:'champion'}),guest=instance('guest',{mode:'champion'});
- host.start();guest.start();host.frame(3.01);
+ host.start();guest.start();host.frame(10.01);host.frame(3.01);
  // Force a real end via time expiry: two-human Champion series of 3 rounds.
  for(let i=0;i<3;i++){
   host.frame(181);
@@ -301,4 +305,25 @@ test('Resync requests are rate-limited on Android foreground and peer reconnecti
  const sent=host.network.length;
  host.emit('guest',req);
  assert.equal(host.network.length,sent,'Host avoids responding repeatedly within 150ms');
+});
+
+test('Human Arena selection remains ten seconds unless both players explicitly ready',()=>{
+ const host=instance('host'),guest=instance('guest');host.start();guest.start();
+ assert.equal(host.api.stage,'select');
+ assert.equal(host.api.confirmPick(),true);
+ assert.equal(host.api.stage,'select','only Host ready cannot skip');
+ assert.equal(guest.api.confirmPick(),true);
+ const ready=guest.network.find(x=>x.k==='apvp-pick-ready');
+ assert.ok(ready,'Guest sends an authenticated ready event');
+ host.emit('guest',ready);
+ assert.equal(host.api.stage,'countdown','two humans ready may skip the ten seconds');
+ const sync=host.network.filter(x=>x.k==='apvp').at(-1);
+ assert.equal(sync.stage,'countdown');
+ guest.emit('host',sync);
+ assert.equal(guest.api.stage,'countdown');
+ const lone=instance('host');lone.start();
+ lone.api.confirmPick();lone.frame(5);
+ assert.equal(lone.api.stage,'select','no automatic early skip while guest is undecided');
+ lone.frame(5.1);
+ assert.equal(lone.api.stage,'countdown','timeout is authoritative');
 });
