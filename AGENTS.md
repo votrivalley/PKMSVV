@@ -109,3 +109,34 @@ continuing. Preserve offline Wi-Fi hosting and the full existing test suite.
 - QA builds must contain the actual modified Berry/Arena scripts; DO NOT
   claim the changes are tested in PC/APK/Web when using an older compiled
   v1.5.93 baseline missing these modules. Unit-only pass is not device QA.
+
+
+## PokéBox v5 UX — approved direct implementation (2026-11-07)
+
+- **NO manual \"Đổi bản sao thành Mảnh Rank\" step.** Every genuinely
+  persisted duplicate Gacha instance already contributes to its species
+  Rank-material balance. The player selects a Pokémon and presses **Nâng Rank**
+  once: the game deterministically selects exactly enough saved copies and
+  asks for one explicit confirmation; no checkbox/item-shard conversion UI.
+  Keep legacy shard balances usable as last-resort fallbacks, but do not
+  expose `toFragments` as an ordinary upgrade step.
+- **Rank cost stays escalating:** 1, then 2, then 3, then 4, then 5 EXTRA
+  same-species copies for successive Ranks. Preserve the one-time credit
+  ledger for protected Pokémon (Shiny/team/favorite/imported). Do not erase
+  protected originals, and do not allow reuse of already-credited IDs if
+  their protection status changes. Roll back all changes on failed commit.
+- Present clearly framed **BOX 1 / BOX 2 / ...** with left/right navigation
+  **above** the six-column Pokémon grid (30 slots per box). Keep Ready Team
+  Six white/gold and the three primary actions on top of the right panel.
+  Hide `×1` on singleton species; `×2`/ `×3` show stored totals, while
+  available unspent materials have their own explicit count.
+- The right Pokémon detail panel adapts its accent palette to the actual
+  primary Pokémon type (Fire orange-red, Water blue, Electric yellow, Grass
+  green, and all other types). Render four horizontal localized stat bars:
+  **Máu, Sát thương, Tốc độ, Hồi chiêu** in Vietnamese; HP/Damage/Speed/
+  Cooldown in English. Derive values from actual species stats and Rank
+  bonuses; never invent a base stat or claim real cooldown effects not in
+  the combat engine. Preserve Nature, Ability, TM and Normal/Shiny controls.
+- Use only existing game sprites (no image-concept replacement). Feature
+  remains isolated QA until browser + Windows + Android and controller
+  smoke tests pass. Verify actual compiled artifacts, never just source.
