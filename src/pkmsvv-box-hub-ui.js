@@ -159,7 +159,7 @@
    '<span class="pkmbx-name">'+clean(monName(it.dex))+'</span>'+
    '<small>#'+it.dex+(it.shiny?' ✨':'')+'</small>'+
    '<span class="pkmbx-slot-meta">'+rankStars(progress?.rank??it.rank)+
-    (duplicates>1?'<span class="pkmbx-stack" title="'+L('Số cá thể cùng loài','Individuals of this species')+'">×'+duplicates+'</span>':'')+'</span>'+
+    '<span class="pkmbx-stack" title="'+L('Số cá thể cùng loài (không đồng nghĩa nguyên liệu Rank)','Individuals of this species (not necessarily Rank materials)')+'">×'+duplicates+'</span></span>'
    '<span class="pkmbx-mini-icons">'+(it.favorite?'★ ':'')+(team?'⑥ ':'')+
     (it.id===selected?'✓':'')+'</span>';
   b.onclick=()=>chooseFocus(it.id);
@@ -295,17 +295,38 @@
   };
  }
  function renderRank(host,it,ready){
-  const rank=Hub.rankOverview(currentSave(),it).rank;
-  const data=G.PKMSVVBox2?.formatRank(rank);
+  const save=currentSave(),progress=Hub.rankOverview(save,it),rank=progress.rank;
+  const data=G.PKMSVVBox2?.formatRank(rank),total=listPreview().filter(x=>x.dex===it.dex).length;
+  const countText=L('Đang sở hữu: ','Owned: ')+total+
+   L(' cá thể · Bản sao dùng nâng Rank: ',' individuals · Eligible duplicates: ')+progress.copies+
+   L(' · Mảnh Rank: ',' · Rank shards: ')+progress.fragments;
+  const remaining=progress.rank>=5?L('Đã đạt Rank tối đa.','Maximum Rank reached.'):
+   L('Cần ','Need ')+progress.cost+L(' nguyên liệu · Đang đủ ',' materials · Available ')+
+   (progress.copies+progress.fragments)+'/'+progress.cost;
+  const migration=L('Save cũ chưa chuyển dữ liệu cá thể. Vào Sao lưu & Khôi phục → Dữ liệu PokéBox → Chuyển dữ liệu để mở Rank. Bản sao đã quay trước khi chuyển có thể không được ghi riêng; không tự tạo thêm Pokémon.',
+   'This is a legacy collection. Open Backup & Restore → PokéBox Data → Migrate Collection to enable Rank. Historical duplicate pulls may not have individual records; no copies will be invented.');
+  const eligibleNote=L('Bản sao dùng nâng Rank phải đúng loài, không Shiny, không yêu thích, không trong đội hình, không khóa và không phải Pokémon gốc từ save cũ.',
+   'Eligible duplicates must match species, be non-Shiny, not favorite, not on the Ready Team, not locked, and not original migrated Pokémon.');
   host.innerHTML='<section class="pkmbx-hub-rank"><h3>⭐ Rank '+rank+'/5</h3>'+
-    '<p>'+L('HP & sát thương: ','HP & damage: ')+'+'+(data?.hp||0)+'%'+
-    (rank>=4?' · '+L('Hồi chiêu −5%','Cooldown −5%'):'')+'</p>'+
-    
-    '<button id="pkmbx-rank-direct" class="btn gold" '+(!ready?'disabled':'')+'>'+
-     L('⭐ Nâng Rank / Chọn đặc tính','⭐ Rank Up / Choose Trait')+'</button></section>';
+   '<p>'+L('HP & sát thương: ','HP & damage: ')+'+'+(data?.hp||0)+'%'+
+   (rank>=4?' · '+L('Hồi chiêu −5%','Cooldown −5%'):'')+'</p>'+
+   '<p class="pkmbx-rank-material-summary"><b>'+countText+'</b></p>'+
+   '<p class="pkmbx-rank-material-summary">'+remaining+'</p>'+
+   '<p class="pkmbx-rank-eligibility">'+(ready?eligibleNote:migration)+'</p>'+
+   '<button id="pkmbx-rank-direct" type="button" class="btn gold">'+
+   (ready?L('⭐ Xem nguyên liệu / Nâng Rank','⭐ Materials / Rank Up'):
+     L('💾 Sao lưu để mở Rank','💾 Backup to enable Rank'))+'</button></section>';
   host.querySelector('#pkmbx-rank-direct').onclick=()=>{
-   // The Stage 2 Rank panel reads Box.focusedId() rather than forcing the
-   // selected active fighter to change merely to work on another individual.
+   if(!ready){
+    closeBox();
+    const saveUI=G.PKMSVVSaveUI;
+    if(typeof saveUI?.openQuick==='function')saveUI.openQuick();
+    else if(typeof saveUI?.mount==='function')saveUI.mount();
+    else alert(L('Mở Sao lưu & Khôi phục trên menu chính để chuyển dữ liệu.','Open Backup & Restore from the home menu to migrate.'));
+    return;
+   }
+   // The Stage 2 Rank panel reads Box.focusedId() rather than
+   // replacing the active fighter just to upgrade a different Pokémon.
    Rank()?.open?.();
   };
  }
