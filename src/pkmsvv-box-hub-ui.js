@@ -93,7 +93,7 @@
    '★'.repeat(n)+'<span class="pkmbx-rank-empty">'+'☆'.repeat(5-n)+'</span></span>';
  }
  function rankBlock(it,progress){
-  const {rank,max,cost,copies,fragments,available,missing,enabled,canRank}=progress;
+  const {rank,max,cost,copies,fragments,protectedForms=0,available,missing,enabled,canRank}=progress;
   const next=G.PKMSVVBox2?.formatRank?.(Math.min(max,rank+1))||{hp:(rank+1)*6,damage:(rank+1)*6};
   const current=G.PKMSVVBox2?.formatRank?.(rank)||{hp:rank*6,damage:rank*6};
   const percent=cost?Math.round(100*available/cost):100;
@@ -104,10 +104,11 @@
      '" aria-valuemin="0" aria-valuemax="'+cost+'" aria-valuenow="'+available+'"><span style="width:'+percent+'%"></span></div>'+
     '<p class="pkmbx-rank-materials">'+L('Nguyên liệu hợp lệ: ','Eligible materials: ')+
       '<b>'+available+' / '+cost+'</b> · '+L('Bản sao dùng được','Usable copies')+': '+copies+
+      ' · '+L('Shiny trùng (giữ lại)','Retained Shiny')+': '+protectedForms+
       ' · '+L('Mảnh Rank','Rank shards')+': '+fragments+'</p>'+
     '<p class="pkmbx-rank-status'+(canRank?' is-ready':'')+'">'+
-      (canRank?L('✓ Có thể nâng hạng!','✓ Ready to rank up!'):
-        L('Còn thiếu ','Need ')+missing+L(' nguyên liệu hợp lệ',' more eligible materials'))+'</p>';
+      (canRank?L('✓ Đủ điều kiện nâng hạng (không tự tiêu Pokémon)!','✓ Rank ready (no automatic consumption)!'):
+        L('Còn thiếu ','Need ')+missing+L(' bản trùng hoặc mảnh',' additional duplicate or shard'))+'</p>';
   return '<section class="pkmbx-rank-overview" aria-label="'+L('Tiến trình Rank','Rank progress')+'">'+
    '<div class="pkmbx-rank-heading"><b>'+L('Hạng Pokémon','Pokémon Rank')+'</b>'+
       rankStars(rank)+'<strong>'+rank+' / '+max+'</strong></div>'+
@@ -159,9 +160,9 @@
    '<span class="pkmbx-name">'+clean(monName(it.dex))+'</span>'+
    '<small>#'+it.dex+(it.shiny?' ✨':'')+'</small>'+
    '<span class="pkmbx-slot-meta">'+rankStars(progress?.rank??it.rank)+'</span>'+
-   '<span class="pkmbx-stack pkmbx-stack-count" title="'+
-     L('Số cá thể cùng loài (không đồng nghĩa nguyên liệu Rank)',
-       'Individuals of this species (not necessarily Rank materials)')+'">×'+duplicates+'</span>'+
+   (duplicates>1?'<span class="pkmbx-stack pkmbx-stack-count" title="'+
+     L('Tổng cá thể cùng loài, gồm thường và Shiny',
+       'Total same-species individuals, including normal and Shiny')+'">×'+duplicates+'</span>':'')+
    '<span class="pkmbx-mini-icons">'+(it.favorite?'★ ':'')+(team?'⑥ ':'')+
     (it.id===selected?'✓':'')+'</span>';
   b.onclick=()=>chooseFocus(it.id);
@@ -237,6 +238,9 @@
    const variant=b.dataset.boxVariant==='shiny'?shinyForm:normalForm;
    if(variant&&variant.id!==focused){focused=variant.id;renderBox();}
   };
+  // Primary actions belong ABOVE the Pokémon portrait and stats, not below.
+  const topActions=profile.querySelector('.pkmbx-hub-buttons');
+  if(topActions)profile.insertBefore(topActions,profile.firstChild);
   profile.querySelector('#pkmbx-rank-shortcut').onclick=()=>{view='rank';renderBox();};
   profile.querySelector('#pkmbx-use').onclick=()=>saveAction(()=>{
    if(ready){
@@ -300,15 +304,16 @@
   const save=currentSave(),progress=Hub.rankOverview(save,it),rank=progress.rank;
   const data=G.PKMSVVBox2?.formatRank(rank),total=listPreview().filter(x=>x.dex===it.dex).length;
   const countText=L('Đang sở hữu: ','Owned: ')+total+
-   L(' cá thể · Bản sao dùng nâng Rank: ',' individuals · Eligible duplicates: ')+progress.copies+
+   L(' cá thể · Bản sao thường: ',' individuals · Ordinary copies: ')+progress.copies+
+   L(' · Shiny trùng giữ lại: ',' · Retained Shiny: ')+(progress.protectedForms||0)+
    L(' · Mảnh Rank: ',' · Rank shards: ')+progress.fragments;
   const remaining=progress.rank>=5?L('Đã đạt Rank tối đa.','Maximum Rank reached.'):
    L('Cần ','Need ')+progress.cost+L(' nguyên liệu · Đang đủ ',' materials · Available ')+
-   (progress.copies+progress.fragments)+'/'+progress.cost;
-  const migration=L('Save cũ chưa chuyển dữ liệu cá thể. Vào Sao lưu & Khôi phục → Dữ liệu PokéBox → Chuyển dữ liệu để mở Rank. Bản sao đã quay trước khi chuyển có thể không được ghi riêng; không tự tạo thêm Pokémon.',
-   'This is a legacy collection. Open Backup & Restore → PokéBox Data → Migrate Collection to enable Rank. Historical duplicate pulls may not have individual records; no copies will be invented.');
-  const eligibleNote=L('Bản sao dùng nâng Rank phải đúng loài, không Shiny, không yêu thích, không trong đội hình, không khóa và không phải Pokémon gốc từ save cũ.',
-   'Eligible duplicates must match species, be non-Shiny, not favorite, not on the Ready Team, not locked, and not original migrated Pokémon.');
+   (progress.copies+(progress.protectedForms||0)+progress.fragments)+'/'+progress.cost;
+  const migration=L('Save cũ chưa bật dữ liệu PokéBox. Vào Quản lý Save → Dữ liệu PokéBox → Chuyển dữ liệu (chỉ một lần, sau khi xuất JSON dự phòng). Không mất Pokémon, nhưng các lượt quay trùng rất cũ có thể không còn được ghi riêng.',
+   'This older save has no individual PokéBox records. Open Save Manager → PokéBox Data → Migrate Collection once, after exporting a JSON backup. No Pokémon is removed; old duplicate pulls may not have been recorded.');
+  const eligibleNote=L('Luật mới: mỗi lần tăng Rank cần đúng 1 bản trùng hoặc 1 Mảnh. Bản Shiny trùng được ghi nhận một lần mà không mất Shiny; bản thường bị tiêu thụ khi bạn xác nhận. Pokémon gốc từ save cũ không bị tiêu.',
+   'New rule: each Rank step uses exactly 1 duplicate or shard. Duplicate Shiny grants one safe credit without being consumed. Ordinary copies are consumed only on confirmation; migrated originals remain protected.');
   host.innerHTML='<section class="pkmbx-hub-rank"><h3>⭐ Rank '+rank+'/5</h3>'+
    '<p>'+L('HP & sát thương: ','HP & damage: ')+'+'+(data?.hp||0)+'%'+
    (rank>=4?' · '+L('Hồi chiêu −5%','Cooldown −5%'):'')+'</p>'+
@@ -317,7 +322,7 @@
    '<p class="pkmbx-rank-eligibility">'+(ready?eligibleNote:migration)+'</p>'+
    '<button id="pkmbx-rank-direct" type="button" class="btn gold">'+
    (ready?L('⭐ Xem nguyên liệu / Nâng Rank','⭐ Materials / Rank Up'):
-     L('💾 Sao lưu để mở Rank','💾 Backup to enable Rank'))+'</button></section>';
+     L('🔐 Mở quản lý Save / Bật PokéBox','🔐 Save Manager / Activate PokéBox'))+'</button></section>';
   host.querySelector('#pkmbx-rank-direct').onclick=()=>{
    if(!ready){
     closeBox();
