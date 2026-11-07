@@ -278,6 +278,7 @@ async function main(){
   assert.deepEqual(coverMascots.mascots,[150,249,385,488,646,718,800,890,1024,384],
    'each Gen 1–9 has the exact requested mascot, mixed Sky Pillar unchanged');
   assert.equal(coverMascots.covers,10);
+  console.log('Explore exact mascot canvas and sprite coverage QA:',JSON.stringify(coverMascots));
   assert.deepEqual(coverMascots.missingDex,[],'mascots must exist in the real game Dex');
   assert.equal(coverMascots.spriteCanvases,10,'every actual cover must render its mascot canvas');
   assert.equal(coverMascots.noSpawnsChanged,true,'only cover art changed, not regional combat');
