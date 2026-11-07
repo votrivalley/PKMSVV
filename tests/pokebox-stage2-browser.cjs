@@ -104,6 +104,23 @@ async function main(){
   console.log('Ten actual compiled Fusion effects QA:',JSON.stringify(effectsLive));
 
  
+  const wikiFusion=await evaluate("(()=>{G.PKMSVVWiki.open();try{const heading=[...document.querySelectorAll('#pkmsvv-wiki-overlay .pkmsvv-pc-learn>button')].find(x=>x.textContent.includes('Fusion'));const panel=heading?.nextElementSibling;const rows=[...panel?.querySelectorAll('.pkmsvv-fusion-recipe')||[]];return {heading:heading?.textContent,rows:rows.length,icons:rows.filter(x=>x.querySelector('img.pkmsvv-fusion-icon[src$=\".webp\"]')).length,benefits:rows.filter(x=>x.querySelector('.pkmsvv-fusion-benefit')?.textContent?.length>15).length,oldBond:document.querySelector('#pkmsvv-wiki-overlay')?.textContent.includes('Fusion tự do')||false};}finally{G.PKMSVVWiki.close()}})()");
+  assert.match(wikiFusion.heading,/Fusion.*Tiến hóa/,'compiled Wiki must use latest Fusion system, not stale free Bond');
+  assert.equal(wikiFusion.rows,10,'compiled PC guide displays all ten Fusion recipes');
+  assert.equal(wikiFusion.icons,10,'compiled guide uses uploaded WebP icon for each recipe');
+  assert.equal(wikiFusion.benefits,10,'compiled guide describes each actual Fusion effect');
+  assert.equal(wikiFusion.oldBond,false,'old free-Fusion guide must not remain in compiled game');
+  const legacyBoxQA=await evaluate("(()=>{const descriptor=Object.getOwnPropertyDescriptor(G.DB,'save');try{Object.defineProperty(G.DB,'save',{value:{owned:{6:{at:1},25:{at:2}},shiny:{},partner:6,partnerShiny:false,coins:42},configurable:true,writable:true});G.PKMSVVBoxHubUI.openBox('rank');const checkbox=document.querySelector('#pkmbx-ready');checkbox.checked=true;checkbox.dispatchEvent(new Event('change',{bubbles:true}));const banner=document.querySelector('#pkmbx-legacy-migration');const button=document.querySelector('#pkmbx-rank-shortcut');return {banner:!!banner&&!banner.hidden,action:!!banner?.querySelector('#pkmbx-activate-migration'),rankDisabled:!!button?.disabled,rankText:button?.textContent,explanation:document.querySelector('.pkmbx-box-empty')?.textContent};}finally{const checkbox=document.querySelector('#pkmbx-ready');if(checkbox){checkbox.checked=false;checkbox.dispatchEvent(new Event('change',{bubbles:true}));}G.PKMSVVBoxHubUI.closeBox();Object.defineProperty(G.DB,'save',descriptor);}})()");
+  assert.equal(legacyBoxQA.banner,true,'legacy save must explain why Rank-ready filter is empty');
+  assert.equal(legacyBoxQA.action,true,'safe PokéBox migration action must be directly accessible');
+  assert.equal(legacyBoxQA.rankDisabled,true,'legacy Rank is disabled gray without new duplicate ledger');
+  assert.match(legacyBoxQA.rankText,/Nâng Rank/,'button always says Nâng Rank, never Activate Box');
+  assert.match(legacyBoxQA.explanation,/Save cũ/,'empty Rank filter needs an actionable explanation');
+  const abilityQA=await evaluate("(()=>{const id='blaze',mon=G.DEX_BY?.[4],text=G.PKMSVVAbilityText?.summary?.(id,mon,G.AbilityFX?.of?.(id,mon),false);G.PKMSVVBoxHubUI.openDex();try{const row=document.querySelector('#pkmbx-dex-details .pkmbx-dex-ability-row'),span=row?.querySelector('span');return {translated:text,rowBackground:row?getComputedStyle(row).backgroundColor:null,descriptionColor:span?getComputedStyle(span).color:null,abilityRows:document.querySelectorAll('#pkmbx-dex-details .pkmbx-dex-ability-row').length};}finally{G.PKMSVVBoxHubUI.closeDex()}})()");
+  assert.match(abilityQA.translated,/35%|1\/3 HP/,'Ability description must use real game mechanics and Vietnamese');
+  assert.ok(abilityQA.abilityRows>0,'Pokédex must render real Ability descriptions');
+  assert.notEqual(abilityQA.descriptionColor,abilityQA.rowBackground,
+   'Ability text must contrast with the pale background');
   const pureDex=await evaluate("(()=>{G.PKMSVVBoxHubUI.openDex();return ({overlay:!!document.querySelector('#pkmbx-dex-overlay'),search:!!document.querySelector('#pkmbx-dex-search'),hasEvolutionPane:!!document.querySelector('#pkmbx-dex-details'),itemActions:!!document.querySelector('#pkmbx-dex-overlay [data-hub-tm],#pkmbx-dex-overlay [data-pkmbx-use]'),cards:document.querySelectorAll('#pkmbx-dex-list button').length,insidePC:document.querySelector('#pkmsvv-pokebox-overlay')?.contains(document.querySelector('#pkmbx-dex-overlay')),tabs:[...document.querySelectorAll('#pkmbx-dex-overlay [data-pc-tab]')].map(b=>b.dataset.pcTab),pcHubHidden:document.querySelector('.pkmbx-hub-panel')?.hidden})})()");
   assert.equal(pureDex.overlay,true);
   assert.equal(pureDex.search,true);
@@ -151,7 +168,10 @@ async function main(){
     const before=document.querySelector('#pkmbx-rank-shortcut');
     const readyBefore=!before?.disabled;
     const leftReadyBefore=document.querySelectorAll('.pkmbx-hub-slot.rank-ready').length;
-    before?.click();
+    const filter=document.querySelector('#pkmbx-ready');filter.checked=true;
+    filter.dispatchEvent(new Event('change',{bubbles:true}));
+    const filteredBefore=document.querySelectorAll('.pkmbx-hub-slot').length;
+    document.querySelector('#pkmbx-rank-shortcut')?.click();
     const after=document.querySelector('#pkmbx-rank-shortcut');
     const afterRank=G.PKMSVVBox2.speciesProgress(fixture,6).rank;
     const cards=[...document.querySelectorAll('.pkmbx-hub-slot')];
@@ -159,7 +179,8 @@ async function main(){
      afterGray:after?.classList.contains('rank-disabled'),
      tabGray:document.querySelector('[data-box-tab=rank]')?.classList.contains('rank-disabled'),
      leftReadyAfter:cards.filter(el=>el.classList.contains('rank-ready')).length,
-     copiesLeft:fixture.pkmsvvBox.filter(x=>x.dex===6).length,confirmCalls};
+     copiesLeft:fixture.pkmsvvBox.filter(x=>x.dex===6).length,confirmCalls,
+     filteredBefore,filteredAfter:document.querySelectorAll('.pkmbx-hub-slot').length};
    }finally{
     G.PKMSVVBoxHubUI.closeBox();
     Object.defineProperty(G.DB,'save',descriptor);
@@ -175,6 +196,8 @@ async function main(){
   assert.equal(directRank.afterGray,true,'Rank button becomes gray after spent copies');
   assert.equal(directRank.tabGray,true,'Rank tab also becomes gray when ineligible');
   assert.equal(directRank.leftReadyAfter,0,'left Box must remove stale rank-ready highlight');
+  assert.equal(directRank.filteredBefore,1,'Rank-ready filter must show the eligible Gacha duplicate');
+  assert.equal(directRank.filteredAfter,0,'after spending its copy the Rank-ready filter removes the species');
   const menuState=await evaluate("(()=>{const m=document.querySelector('#scr-menu');const news=m.querySelector('#btn-news');const color=getComputedStyle(news).color;const season=G.PKMSVVSeason?.nowActive?.();const bar=m.querySelector('.pkmsvv-save-banner');const pokemon=m.querySelector('[data-go=dex]');const pc=m.querySelector('#pkmsvv-menu-wiki');const nav=[...m.querySelector('.menu-right .menu-list')?.children||[]];const four=nav.map(n=>{const go=n.getAttribute('data-go')||n.querySelector('[data-go]')?.getAttribute('data-go')||'';const label=(n.querySelector('.pkmsvv-menu-label,.menu-label,strong')?.textContent||n.textContent||'').trim();if(go==='dex'||/^Pok[eé]mon\\b/i.test(label))return 'Pokémon';if(n.id==='pkmsvv-menu-wiki'||label==='PC')return 'PC';if(/multiplayer|coop|co-op/i.test(go)||/^Co-op\\b/i.test(label))return 'Co-op';if(/arena/i.test(go)||label==='Arena')return 'Arena';return null;}).filter(Boolean);return {navDebug:nav.map(n=>({id:n.id,go:n.getAttribute('data-go'),text:n.textContent?.trim().slice(0,95),label:n.querySelector('.pkmsvv-menu-label,.menu-label,strong')?.textContent?.trim()})),nativePC:!!pc,pcButtons:[...m.querySelectorAll('.menu-right button')].filter(b=>b.querySelector('.pkmsvv-menu-label')?.textContent==='PC').length,duplicate:!!pokemon,outsideUpgrade:!!m.querySelector('[data-go=upgrades]'),banner:bar?.textContent,bannerProtected:bar?.getAttribute('translate')==='no',pokemonDesc:pokemon?.querySelector('small')?.textContent,pcDesc:pc?.querySelector('small')?.textContent,four,saveBanners:m.querySelectorAll('.pkmsvv-save-banner').length,seasonBanners:m.querySelectorAll('.pkmsvv-season-banner').length,event:m.querySelector('.pkmsvv-v15-event span')?.textContent,seasonActive:!!season,newsColor:color,newsEnabled:!news?.disabled,menuClean:!!G.PKMSVVMenuCleanQA}})()");
   assert.equal(menuState.menuClean,true);
   assert.equal(menuState.nativePC,true,'keep original Support/Mega/Berry PC');
