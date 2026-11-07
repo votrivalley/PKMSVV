@@ -74,6 +74,25 @@ async function main(){
   assert.equal(liveChoice.berry,10,'QA app.min.js still contains the stale 4-second Berry implementation');
   assert.equal(liveChoice.pvp,10,'QA app.min.js still contains the stale Arena PvP implementation');
 
+  // Real compiled Chromium smoke for every uploaded fusion WebP, the
+  // auto-casting evolved combat module, source MAX eligibility and slot use.
+  const fusionAssets=await evaluate("(async()=>{const ids=G.PKMSVVFusionPilot?.RECIPES?.map(x=>x.id)||[];const result=[];for(const id of ids){const r=await fetch('assets/fusion-icons/'+id+'.webp');const blob=await r.blob();result.push({id,ok:r.ok,bytes:blob.size,mime:r.headers.get('content-type')});}return {num:ids.length,result}})()");
+  assert.equal(fusionAssets.num,10,'compiled Fusion pilot must expose exactly ten named recipes');
+  for(const f of fusionAssets.result){
+   assert.equal(f.ok,true,'Web QA missing Fusion icon '+f.id);
+   assert.ok(f.bytes>1000,'empty Fusion image '+f.id);
+   assert.match(f.mime,/image\/webp/,'Fusion must load as a WebP image');
+  }
+  const fusionLive=await evaluate("(()=>{const f=G.PKMSVVFusionEvolved,api=G.PKMSVVFusionPilot;if(!f||!api)return {loaded:false};const a=G.Moves.instance('ember'),b=G.Moves.instance('quick-attack');if(!a||!b)return {loaded:true,instances:false};const pl={x:0,y:0,level:20,atkMul:1,baseAtk:1,moves:[a,b],slots:[[a],[b]],bind:{},active:0,bonds:2,dead:false,remote:false,lanBot:false};while(a.lvl<a.def.maxLvl)G.Moves.levelUp(a);while(b.lvl<b.def.maxLvl)G.Moves.levelUp(b);const ready=api.options(pl)?.recipes?.some(r=>r.id==='ember-quick')===true;const before=pl.moves.length;const oldRing=G.FX?.ring,oldBurst=G.FX?.burst,oldSfx=G.Audio?.sfx;try{if(G.FX){G.FX.ring=()=>{};G.FX.burst=()=>{};}if(G.Audio)G.Audio.sfx=()=>{};const newSkill=f.evolve(pl,'ember-quick');const icon=newSkill&&G.Icons.html('move:'+newSkill.id,32);if(newSkill)G.Player.prototype.cast.call(pl,newSkill);return {loaded:true,instances:true,ready,before,after:pl.moves.length,slots:pl.slots.length,once:pl._pkmsvvFusionUsed,compiledKind:newSkill?.kind,icon:icon?.includes('ember-quick.webp'),max:newSkill?.lvl===newSkill?.def?.maxLvl,second:f.evolve(pl,'ember-quick')===null}}finally{if(G.FX){G.FX.ring=oldRing;G.FX.burst=oldBurst;}if(G.Audio)G.Audio.sfx=oldSfx;}})()");
+  for(const k of ['loaded','instances','ready','icon','max','second'])
+   assert.equal(fusionLive[k],true,'compiled Fusion check '+k+': '+JSON.stringify(fusionLive));
+  assert.equal(fusionLive.before,2);
+  assert.equal(fusionLive.after,1,'two MAX skills must become exactly one evolved skill');
+  assert.equal(fusionLive.slots,1,'one skill slot must free up after Fusion');
+  assert.equal(fusionLive.once,1,'one Fusion per match');
+  assert.equal(fusionLive.compiledKind,'projectile','Fusion must use real autocast move kind');
+  console.log('Fusion MAX+MAX Chromium QA:',JSON.stringify(fusionLive));
+ 
   const pureDex=await evaluate("(()=>{G.PKMSVVBoxHubUI.openDex();return ({overlay:!!document.querySelector('#pkmbx-dex-overlay'),search:!!document.querySelector('#pkmbx-dex-search'),hasEvolutionPane:!!document.querySelector('#pkmbx-dex-details'),itemActions:!!document.querySelector('#pkmbx-dex-overlay [data-hub-tm],#pkmbx-dex-overlay [data-pkmbx-use]'),cards:document.querySelectorAll('#pkmbx-dex-list button').length,insidePC:document.querySelector('#pkmsvv-pokebox-overlay')?.contains(document.querySelector('#pkmbx-dex-overlay')),tabs:[...document.querySelectorAll('#pkmbx-dex-overlay [data-pc-tab]')].map(b=>b.dataset.pcTab),pcHubHidden:document.querySelector('.pkmbx-hub-panel')?.hidden})})()");
   assert.equal(pureDex.overlay,true);
   assert.equal(pureDex.search,true);
