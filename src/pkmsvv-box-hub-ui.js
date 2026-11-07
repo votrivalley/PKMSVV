@@ -334,7 +334,7 @@
    }
    // The Stage 2 Rank panel reads Box.focusedId() rather than
    // replacing the active fighter just to upgrade a different Pokémon.
-   Rank()?.open?.();
+   Rank()?.open?.(it.id);
   };
  }
  function ensureBox(){
