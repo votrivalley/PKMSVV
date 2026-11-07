@@ -131,3 +131,102 @@
 #scr-menu .pkmsvv-v15-news-card#btn-news > i,
 #scr-menu .pkmsvv-v15-news-card#btn-news > img{display:none!important}
 #scr-menu #btn-news{display:flex!important;align-items:center;justify-content:center;gap:2px}
+
+
+/* Unified menu theme — outer home palette across PC, Box, Dex and Upgrade.
+   Keep type-color accents inside individual Pokémon panels. */
+#scr-menu,#pkmsvv-wiki-overlay,#pkmsvv-pokebox-overlay{
+ --pkmsvv-menu-ink:#183a4b;
+ --pkmsvv-menu-night:#102e40;
+ --pkmsvv-menu-deep:#0c2636;
+ --pkmsvv-menu-mid:#205161;
+ --pkmsvv-menu-teal:#8ad7c9;
+ --pkmsvv-menu-mint:#e4f2ee;
+ --pkmsvv-menu-gold:#ffdf85;
+ --pkmsvv-menu-border:#8bc9c2;
+}
+#pkmsvv-wiki-overlay .pkmsvv-pc-panel,
+#pkmsvv-pokebox-overlay .pkmbx-hub-panel,
+#pkmsvv-pokebox-overlay .pkmbx-dex-panel,
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-panel{
+ color:#eaf8f7!important;
+ background:linear-gradient(155deg,#163d4e,#102a3b 70%,#0b2435)!important;
+ border:2px solid var(--pkmsvv-menu-border)!important;
+ border-radius:14px!important;
+}
+#pkmsvv-wiki-overlay .pkmsvv-pc-panel h2,
+#pkmsvv-wiki-overlay .pkmsvv-pc-panel h3,
+#pkmsvv-pokebox-overlay .pkmbx-head h2,
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-heading h3{
+ color:var(--pkmsvv-menu-gold)!important;
+ text-shadow:0 1px 1px #071a25;
+}
+#pkmsvv-wiki-overlay .pkmsvv-pc-learn>button,
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-option,
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-heading,
+#pkmsvv-pokebox-overlay .pkmbx-hub-info,
+#pkmsvv-pokebox-overlay .pkmbx-dex-evo{
+ color:#effaf8!important;
+ background:linear-gradient(145deg,#205462,#153849)!important;
+ border:1px solid #79c6bd!important;
+ border-radius:10px!important;
+}
+#pkmsvv-wiki-overlay .pkmsvv-pc-learn>button{
+ font-weight:750!important;
+ color:#ffe5a5!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab:not(.gold),
+#pkmsvv-pokebox-overlay .pkmbx-hub-tabs>.btn:not(.gold):not(.rank-disabled),
+#pkmsvv-pokebox-overlay .pkmbx-box-variants>.btn:not(.gold),
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-option .btn:not(.gold){
+ background:linear-gradient(145deg,#def0eb,#c5dfdc)!important;
+ border:1px solid #81bfb9!important;
+ color:#193b4b!important;-webkit-text-fill-color:#193b4b!important;
+ box-shadow:0 2px 0 #09283870!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab.gold,
+#pkmsvv-pokebox-overlay .pkmbx-hub-tabs>.btn.gold:not(.rank-disabled){
+ background:linear-gradient(145deg,#fff1b1,#f5d06b)!important;
+ border:2px solid #e2af46!important;
+ color:#183849!important;-webkit-text-fill-color:#183849!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-hub-left,
+#pkmsvv-pokebox-overlay .pkmbx-box-frame{
+ border-color:#72c5bc!important;
+ background:linear-gradient(145deg,#164b55,#123645)!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-hub-tools input,
+#pkmsvv-pokebox-overlay .pkmbx-hub-tools select,
+#pkmsvv-pokebox-overlay .pkmbx-dex-toolbar input,
+#pkmsvv-pokebox-overlay .pkmbx-dex-toolbar select{
+ color:#f7fffc!important;
+ background:#0b293b!important;border:1px solid #80c6c1!important;
+ border-radius:8px!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-hub-tools label,
+#pkmsvv-pokebox-overlay .pkmbx-hub-team-title h3{
+ color:#ffe29a!important;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details.pkmbx-profile{
+ color:#ecf6fa!important;
+ background:linear-gradient(160deg,#235665,#153746)!important;
+ border:2px solid #85cfc5!important;
+ box-shadow:inset 0 0 0 1px #74c6be55!important;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details :is(.pkmbx-hub-hero strong,.pkmbx-dex-summary,.pkmbx-dex-summary b,.pkmbx-dex-evo h4,.pkmbx-dex-evo p,.pkmbx-hub-hero p){
+ color:#eefbf9!important;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-dex-badge{
+ background:#ffdda1!important;color:#213849!important;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-dex-evo .btn{
+ background:#e4f1eb!important;color:#1b4050!important;border:1px solid #98c7bf!important;
+}
+#pkmsvv-pokebox-overlay :is(.pkmbx-upgrade-panel,.pkmbx-dex-panel,.pkmbx-hub-panel) .pkmbx-head>.btn{
+ background:linear-gradient(#ffe9a0,#ffd46b)!important;
+ color:#16394a!important;border:2px solid #d6a841!important;
+}
+#pkmsvv-wiki-overlay :is(button,[role=button]):focus-visible,
+#pkmsvv-pokebox-overlay :is(button,[role=button],input,select):focus-visible{
+ outline:3px solid #ffe090!important;outline-offset:2px!important;
+}
