@@ -27,7 +27,7 @@ function harness(options={}){
   World:{biome:17,setBiome(n){this.biome=n;calls.push(n)}},
   Coop:{active:false},
   DEX_BY:{12:{dex:12,name:'Butterfree',types:['bug'],gen:1}},
-  Game:{state:'ui',st:{time:0},startRun(){
+  Game:{state:'ui',st:{time:0},player:{x:30,y:40,maxHp:350,hp:350,dead:false},startRun(){
    if(options.deferred){
     deferredStart=()=>{this.state='playing';G.World.setBiome(0);};return;
    }
@@ -38,7 +38,7 @@ function harness(options={}){
   EnemyMgr:{add(enemy){alive.push(enemy);return enemy;},all(){return alive;},
    update(){this.updated=(this.updated||0)+1;}},
   Enemy:class Enemy {
-   constructor(def,x,y,scaling,boss){this.def=def;this.dex=def.dex;this.x=x;this.y=y;this.boss=!!boss;}
+   constructor(def,x,y,scaling,boss){this.def=def;this.dex=def.dex;this.x=x;this.y=y;this.boss=!!boss;this.maxHp=Number(def.hp)||100;this.hp=this.maxHp;this.dead=false;this.dmg=def.dmg;this.spd=def.spd;}
   },
   Enemies:{bagAt(){return [{dex:999},{dex:25}]}},
   Spawner:{update(){const out=G.Enemies.bagAt();records.push(out);return out}},
@@ -448,36 +448,79 @@ test('Explore Gen 1–9 covers use the nine requested mascot National Dex IDs; S
 });
 
 
-test('Explore Kanto grants its own Seal only after 15 complete minutes alive, without Champion',()=>{
+test('Explore Kanto spawns a Mewtwo Region Boss at 15:00; only a kill grants its Badge',()=>{
  const h=harness(),q=h.G.PKMSVVQuickRegion;
- h.save.arenas.pkmChampion.seals={}; // First-time solo player.
- assert.equal(q.unlocked(1),false,'Johto must start locked for a new player');
+ h.save.arenas.pkmChampion.seals={};
+ h.G.DEX_BY[150]={dex:150,name:'Mewtwo',rarity:5};
+ assert.equal(q.unlocked(1),false,'new player has no Johto Badge');
  assert.equal(q.choose(0),true);
- assert.equal(h.G.World.biome,0,'Kanto is the native beginner map, not fire');
  h.G.Game.st.time=899;
- h.G.EnemyMgr.update(0.016);
- assert.equal(q.unlocked(1),false,'899 seconds must not unlock Johto');
+ h.G.EnemyMgr.update(.016);
+ assert.equal(h.alive.filter(e=>e.pkmsvvExploreBoss).length,0,'no early boss');
  assert.equal(h.save.pkmsvvExploreSeals,undefined);
  h.G.Game.st.time=900;
- h.G.EnemyMgr.update(0.016);
- assert.equal(h.save.pkmsvvExploreSeals.Kanto,true);
- assert.equal(q.unlocked(1),true,'Johto unlocks from Kanto exploration alone');
- assert.equal(h.save.arenas.pkmChampion.seals.Kanto,undefined,'Champion crowns remain unchanged');
+ h.G.EnemyMgr.update(.016);
+ const boss=h.alive.find(e=>e.pkmsvvExploreBoss);
+ assert.ok(boss,'exactly at 15 minutes, Region Boss appears in the real hostile manager');
+ assert.equal(boss.dex,150,'Gen 1 Badge Boss must be Mewtwo');
+ assert.equal(boss.boss,true);
+ assert.ok(boss.hp>=1500);
+ assert.equal(q.unlocked(1),false,'simply surviving 15 minutes does not open Johto');
+ assert.equal(h.save.pkmsvvExploreSeals,undefined);
+ assert.equal(q.tryEarnSeal(),false,'alive boss cannot award a Badge');
+ h.G.EnemyMgr.update(.016);
+ assert.equal(h.alive.filter(e=>e.pkmsvvExploreBoss).length,1,'boss never duplicates on subsequent ticks');
+ const other=new h.G.Enemy({dex:12,hp:50},0,0,{},false);
+ h.G.EnemyMgr.add(other);
+ other.dead=true;other.hp=0;
+ h.G.EnemyMgr.update(.016);
+ assert.equal(q.unlocked(1),false,'defeating unrelated wild Pokémon does not award a Badge');
+ boss.dead=true;boss.hp=0;
+ h.G.EnemyMgr.update(.016);
+ assert.equal(h.save.pkmsvvExploreSeals.Kanto,true,'defeating the marked Region Boss grants Badge');
+ assert.equal(q.unlocked(1),true,'Johto unlocked only after Mewtwo defeat');
+ assert.equal(h.save.arenas.pkmChampion.seals.Kanto,undefined,'old Crown data untouched');
  const after=JSON.stringify(h.save);
- h.G.EnemyMgr.update(0.016);h.G.Game.toUI();
- assert.equal(JSON.stringify(h.save),after,'no duplicate Seal writes or rewards');
- assert.equal(q.choose(1),true,'unlocked Johto starts normal gameplay');
- assert.equal(h.G.World.biome,4,'Johto uses a gentler ground landscape');
+ h.G.EnemyMgr.update(.016);
+ h.G.Game.toUI();
+ assert.equal(JSON.stringify(h.save),after,'one kill is one persisted Badge without duplicate writes');
+ assert.equal(q.choose(1),true);
+ assert.equal(h.G.World.biome,4,'Johto remains a separate native environment');
 });
-test('Failed Explore Seal commit restores save and does not unlock next region',()=>{
- const h=harness({failCommit:true}),q=h.G.PKMSVVQuickRegion;
+test('Failed Region Boss Badge save transaction rolls back and can retry without respawn',()=>{
+ const settings={failCommit:true},h=harness(settings),q=h.G.PKMSVVQuickRegion;
  h.save.arenas.pkmChampion.seals={};
+ h.G.DEX_BY[150]={dex:150,name:'Mewtwo',rarity:5};
  const before=JSON.stringify(h.save);
  assert.equal(q.choose(0),true);
  h.G.Game.st.time=900;
- h.G.EnemyMgr.update(0.016);
+ h.G.EnemyMgr.update(.016);
+ const boss=h.alive.find(e=>e.pkmsvvExploreBoss);
+ assert.ok(boss);
+ boss.dead=true;boss.hp=0;
+ h.G.EnemyMgr.update(.016);
  assert.equal(q.unlocked(1),false);
- assert.equal(JSON.stringify(h.save),before,'failed commit must be rolled back');
+ assert.equal(JSON.stringify(h.save),before,'failed write may not unlock or corrupt save');
+ assert.equal(h.alive.filter(e=>e.pkmsvvExploreBoss).length,1,'no duplicate boss after failed commit');
+ settings.failCommit=false;
+ h.G.EnemyMgr.update(.016);
+ assert.equal(h.save.pkmsvvExploreSeals.Kanto,true,'can retry atomic Badge claim on the same defeat');
+});
+test('Player death before or during the Region Boss does not award Badge',()=>{
+ const h=harness(),q=h.G.PKMSVVQuickRegion;
+ h.save.arenas.pkmChampion.seals={};
+ h.G.DEX_BY[150]={dex:150,name:'Mewtwo',rarity:5};
+ q.choose(0);h.G.Game.st.time=900;h.G.Game.player.dead=true;
+ h.G.EnemyMgr.update(.016);
+ assert.equal(h.alive.filter(e=>e.pkmsvvExploreBoss).length,0);
+ assert.equal(q.unlocked(1),false);
+ h.G.Game.player.dead=false;
+ h.G.EnemyMgr.update(.016);
+ const boss=h.alive.find(e=>e.pkmsvvExploreBoss);
+ assert.ok(boss);
+ h.G.Game.player.hp=0;boss.dead=true;boss.hp=0;
+ h.G.EnemyMgr.update(.016);
+ assert.equal(q.unlocked(1),false,'no victory when player is knocked out');
 });
 test('Paldea receives the late fire battlefield while old Champion Seals remain compatible',()=>{
  const h=harness(),q=h.G.PKMSVVQuickRegion;
@@ -539,8 +582,8 @@ test('Nine Gen maps have nine different ACTIVE terrain IDs and nine different il
  assert.equal(new Set(biomes.slice(0,9)).size,9,'all Gen 1-9 maps must have different terrain IDs');
  assert.equal(new Set(q.THEMES.slice(1)).size,9,'each themed terrain is distinct');
  assert.equal(q.SEAL_SECONDS,900);
- assert.match(source,/Sống sót đủ 15 phút trong từng vùng/);
- assert.match(source,/15 min → earn Seal/);
+ assert.match(source,/Sống sót 15 phút để Boss Vùng xuất hiện/);
+ assert.match(source,/15 min → Region Boss/);
  // These are actual separate battle maps: inspect the biome selected when
  // replaying each normal native run, not merely the illustrated home cards.
  for(const region of ['Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar','Paldea'])
@@ -570,19 +613,41 @@ test('Duplicate or missing native biomes block the selection instead of silently
  assert.equal(h.started,0);
  assert.equal(JSON.stringify(h.save),saved,'broken terrain must not corrupt or advance player progress');
 });
-test('Delayed Berry entry does not count pre-match wait or leftover previous-run clock',()=>{
+test('Berry pre-match delay is excluded from 15-minute Boss appearance and Badge claim',()=>{
  const h=harness({deferred:true}),q=h.G.PKMSVVQuickRegion;
- h.save.arenas.pkmChampion.seals={};
- h.G.Game.st.time=700; // Stale clock until native startRun callback completes
+ h.save.arenas.pkmChampion.seals={};h.G.DEX_BY[150]={dex:150,name:'Mewtwo'};
+ h.G.Game.st.time=700; // stale previous run
  assert.equal(q.choose(0),true);
  h.G.Game.st.time=900;
- assert.equal(q.tryEarnSeal(),false,'Berry chooser does not award Seal');
- assert.equal(h.save.pkmsvvExploreSeals,undefined);
+ assert.equal(q.updateRegionBoss(),false,'Berry waiting room cannot spawn a boss');
+ assert.equal(h.alive.filter(e=>e.pkmsvvExploreBoss).length,0);
  h.completeStart();
- assert.equal(q.tryEarnSeal(),false,'start time must be captured at actual gameplay');
+ assert.equal(q.updateRegionBoss(),false,'new active run clock begins NOW');
  h.G.Game.st.time=1799;
- assert.equal(q.tryEarnSeal(),false,'14:59 minutes elapsed remains locked');
+ h.G.EnemyMgr.update(.016);
+ assert.equal(h.alive.filter(e=>e.pkmsvvExploreBoss).length,0,'14:59 elapsed is not enough');
  h.G.Game.st.time=1800;
- assert.equal(q.tryEarnSeal(),true);
+ h.G.EnemyMgr.update(.016);
+ const boss=h.alive.find(e=>e.pkmsvvExploreBoss);
+ assert.ok(boss,'the 15-minute Region Boss spawns when actual elapsed reaches 900');
+ assert.equal(q.unlocked(1),false,'boss appearance alone never awards Badge');
+ boss.dead=true;boss.hp=0;h.G.EnemyMgr.update(.016);
  assert.equal(h.save.pkmsvvExploreSeals.Kanto,true);
+});
+test('Each of nine Gen regions and Sky has its own mascot Region Boss',()=>{
+ const h=harness(),q=h.G.PKMSVVQuickRegion;
+ h.save.arenas.pkmChampion.seals={Kanto:true,Johto:true,Hoenn:true,Sinnoh:true,
+  Unova:true,Kalos:true,Alola:true,Galar:true,Paldea:true};
+ const dexes=[150,249,385,488,646,718,800,890,1024,384];
+ for(const dex of dexes)h.G.DEX_BY[dex]={dex,name:'Boss '+dex,rarity:5};
+ for(let i=0;i<10;i++){
+  h.G.Game.st.time=0;
+  assert.equal(q.choose(i),true,'region selection '+i);
+  h.G.Game.st.time=900;
+  h.G.EnemyMgr.update(.016);
+  const bosses=h.alive.filter(e=>e.pkmsvvExploreBoss&&e.pkmsvvExploreRegion===i);
+  assert.equal(bosses.length,1,'exactly one unique Region Boss for region '+i);
+  assert.equal(bosses[0].dex,dexes[i],'boss species must match corresponding legendary cover');
+  h.G.Game.toUI();
+ }
 });
