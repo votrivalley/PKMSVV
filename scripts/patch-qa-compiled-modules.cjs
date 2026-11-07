@@ -43,9 +43,23 @@ function replaceModule(bundle,label,filename){
   }catch(_){}
  }
  if(matched<0)throw Error('Could not safely isolate compiled '+label+' module');
- const replacement=fs.readFileSync(path.join(root,filename),'utf8');
- new vm.Script(replacement,{filename});
- return bundle.slice(0,index)+replacement+'\n'+bundle.slice(matched);
+ // Replace ONLY the expression, never append a standalone statement.
+ // Terser may combine assignments into one comma sequence. Also preserve the
+ // embedded Berry .install() side-effect that follows this assignment.
+ const source=fs.readFileSync(path.join(root,filename),'utf8');
+ const sourceAt=source.indexOf(assignment);
+ if(sourceAt<0)throw Error('Source module assignment missing: '+label);
+ const srcBoundary=/\}\)\(\)/g;srcBoundary.lastIndex=sourceAt+assignment.length;
+ let sourceEnd=-1,sm;
+ while((sm=srcBoundary.exec(source))){
+  const end=sm.index+sm[0].length;
+  try{new vm.Script(source.slice(sourceAt,end)+';',{filename:'new-'+label});
+   sourceEnd=end;break;
+  }catch(_){}
+ }
+ if(sourceEnd<0)throw Error('New source is not a self-contained assignment: '+label);
+ const replacement=source.slice(sourceAt,sourceEnd);
+ return bundle.slice(0,index)+replacement+bundle.slice(matched);
 }
 for(const filename of targets){
  targetAllowed(filename);
