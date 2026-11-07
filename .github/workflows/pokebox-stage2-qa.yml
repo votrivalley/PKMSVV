@@ -19,7 +19,7 @@ jobs:
         with:
           node-version: '22'
       - name: Run PokéBox unit tests
-        run: npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs
+        run: npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs && node --test tests/bond-fusion-svv.test.cjs
       - name: Retrieve previously successful Web v1.5.93 build artifact
         uses: actions/download-artifact@v4
         with:
@@ -39,6 +39,11 @@ jobs:
           test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-box-hub.js
           test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-box-hub-ui.js
           test -s dist/pokebox-stage4-qa/ai/game/css/pkmsvv-box-hub.css
+          test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-fusion-evolved.js
+          test -s dist/pokebox-stage4-qa/ai/game/css/pkmsvv-fusion-evolved.css
+          for id in ember-quick water-tackle grass-spin spark-quick mind-tackle fire-gust bubble-ice leaf-rock shadow-mind thunder-claw; do
+            test -s "dist/pokebox-stage4-qa/ai/game/assets/fusion-icons/${id}.webp"
+          done
           test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-quick-region.js
           test -s dist/pokebox-stage4-qa/ai/game/css/pkmsvv-quick-region.css
           test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-pc-menu-clean-qa.js
@@ -50,6 +55,9 @@ jobs:
           test -s dist/pokebox-stage4-qa/game/js/app.min.js
       - name: Check all Stage 4 scripts compile
         run: |
+          node --check src/pkmsvv-bond-fusion.js
+          node --check src/pkmsvv-fusion-evolved.js
+          node --check tests/bond-fusion-svv.test.cjs
           node --check src/pkmsvv-box-stage2.js
           node --check src/pkmsvv-box-stage2-ui.js
           node --check src/pkmsvv-box-stage3.js
