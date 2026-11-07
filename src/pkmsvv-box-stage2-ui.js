@@ -9,7 +9,7 @@
  const typeVi={fire:'Lửa',flying:'Bay',water:'Nước',grass:'Cỏ',electric:'Điện',ghost:'Ma',poison:'Độc',steel:'Thép',fighting:'Giác đấu',psychic:'Siêu linh',dragon:'Rồng',dark:'Bóng tối',rock:'Đá',ground:'Đất',ice:'Băng',fairy:'Tiên',bug:'Bọ',normal:'Thường',offense:'Tấn công',defense:'Phòng thủ'};
  const typeName=t=>G.I18n?.lang==='en'?t:(typeVi[t]||t);
  const s=()=>G.DB?.save;
- let panel=null,selectedMat=new Set(),shardCount=0,selectedProtected=null;
+ let panel=null,selectedMat=new Set(),shardCount=0,selectedProtected=null,requestedId=null;
  function attach(){
   const foot=document.querySelector('#pkmsvv-pokebox-overlay .pkmbx-foot');
   if(!foot||$('pkmbx-rank-open'))return;
@@ -23,7 +23,7 @@
   box.open=function(...args){const result=original.apply(this,args);attach();return result;};
   box._pkmbxRankUiWrapped=true;
  }
- function close(){panel?.remove();panel=null;selectedMat.clear();selectedProtected=null;shardCount=0;}
+ function close(){panel?.remove();panel=null;selectedMat.clear();selectedProtected=null;requestedId=null;shardCount=0;}
  function ensure(){
   if(panel?.isConnected)return;
   panel=document.createElement('div');panel.id='pkmbx-rank-overlay';panel.setAttribute('translate','no');
@@ -36,7 +36,11 @@
  }
  function render(){
   if(!panel)return;
-  const raw=api.get(s(),G.PKMSVVBox?.focusedId?.())||api.selected(s());
+  const requested=api.get(s(),requestedId)||api.get(s(),G.PKMSVVBox?.focusedId?.())||api.selected(s());
+  // Rank is shared across forms, but the source of the non-consumable Shiny
+  // credit is a different individual, so rank on the Normal carrier when present.
+  const raw=requested?.shiny?
+   s()?.pkmsvvBox?.find(v=>v.dex===requested.dex&&!v.shiny)||requested:requested;
   const species=raw?api.speciesProgress(s(),raw.dex):null;
   const x=raw?{...raw,rank:species?.rank??raw.rank,rankBranch:species?.rankBranch||raw.rankBranch}:null;
   const body=$('pkmbx-rank-body');
@@ -61,7 +65,7 @@
    if(all.length){
     html+='<div class="pkmbx-materials">'+all.map(m=>'<label><input type="checkbox" data-material="'+esc(m.id)+'" '+(selectedMat.has(m.id)?'checked':'')+'/> '+
       '#'+m.dex+' · '+esc(m.id)+' '+(m.shiny?'✨':'')+'</label>').join('')+'</div>';
-   }else html+='<p>'+txt('Không có bản sao thường đủ điều kiện.','No eligible unprotected duplicates.')+'</p>';
+   }else if(!protectedCopies.length&&!have)html+='<p>'+txt('Chưa có cá thể trùng chưa dùng.','No unused eligible duplicates yet.')+'</p>';
    if(protectedCopies.length){
     html+='<p>'+txt('Dạng Shiny trùng (giữ nguyên, chỉ ghi nhận 1 lần):',
       'Duplicate Shiny form (never consumed, credit once):')+'</p>'+
@@ -153,6 +157,6 @@
    try{api.toFragments(b.dataset.pkmbxConvert);selectedMat.delete(b.dataset.pkmbxConvert);render();}catch(e){alert(e.message);}
   };
  }
- function open(){ensure();selectedMat.clear();selectedProtected=null;shardCount=0;render();}
+ function open(id=null){requestedId=typeof id==='string'?id:null;ensure();selectedMat.clear();selectedProtected=null;shardCount=0;render();}
  G.PKMSVVRankUI={open,close,render};
 })();
