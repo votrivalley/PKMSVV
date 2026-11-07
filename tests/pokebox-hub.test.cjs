@@ -306,3 +306,23 @@ test('PokéBox V2 QA UI provides visible five-star rank, material bar and sortin
  const prod=fs.readFileSync(path.join(__dirname,'../scripts/prepare-game.cjs'),'utf8');
  assert.doesNotMatch(prod,/pkmsvv-box-hub-ui/,'V2 must remain isolated from production');
 });
+
+test('Rank tab displays real material counts and offers safe legacy backup rather than a silent disabled button',()=>{
+ const ui=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub-ui.js'),'utf8');
+ assert.match(ui,/function renderRank\(host,it,ready\)/);
+ assert.match(ui,/progress\.copies/);
+ assert.match(ui,/progress\.fragments/);
+ assert.match(ui,/listPreview\(\)\.filter\(x=>x\.dex===it\.dex\)\.length/);
+ assert.match(ui,/Sao lưu để mở Rank/);
+ assert.match(ui,/PKMSVVSaveUI/);
+ assert.match(ui,/pkmbx-stack/);
+ assert.doesNotMatch(ui,/id="pkmbx-rank-direct" class="btn gold" '\+\(!ready\?'disabled'/,
+  'Rank help action must remain clickable for unmigrated legacy collection');
+});
+test('Newspaper graphic replaces unsupported News glyph while retaining button semantics',()=>{
+ const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pc-menu-clean-qa.css'),'utf8');
+ assert.match(css,/#scr-menu #btn-news::before/);
+ assert.match(css,/data:image\/svg\+xml,/);
+ assert.match(css,/#scr-menu #btn-news > svg/);
+ assert.match(css,/#scr-menu #btn-news\{display:flex/);
+});
