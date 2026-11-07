@@ -51,7 +51,7 @@ test('Exactly two item cards are selectable by mouse or gamepad and save is unch
  h.box.children[1].children[0].onclick();
  assert.deepEqual(selected,['quickclaw','leftovers']);
  assert.deepEqual(Array.from(h.api.skipped()),['lifeorb'],'keeping equipped item declines new item');
- h.api.reset();assert.deepEqual(h.api.skipped(),[]);
+ h.api.reset();assert.deepEqual(Array.from(h.api.skipped()),[]);
 });
 test('Stale old modal callbacks cannot modify a new run after reset',()=>{
  const h=harness(),picked=[];
@@ -82,7 +82,7 @@ test('Digit1 / Digit2 and numpad equivalents choose either of the two items once
  assert.equal(event.defaultPrevented,true);
  assert.equal(event.stopped,true);
  assert.deepEqual(picked,['leftovers']);
- assert.deepEqual(h.api.skipped(),['lifeorb']);
+ assert.deepEqual(Array.from(h.api.skipped()),['lifeorb']);
  h.listeners.keydown(evt('Digit1','1'));
  assert.deepEqual(picked,['leftovers']);
  h.G.RunUI.showItemChoice('leftovers','quickclaw',id=>picked.push(id));
