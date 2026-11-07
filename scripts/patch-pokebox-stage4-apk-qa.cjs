@@ -52,7 +52,7 @@ let html=fs.readFileSync(index,'utf8');
 if(!html.includes('app.min.js')||!html.includes('</head>')||!html.includes('</body>'))
  throw Error('Baseline game HTML changed; refusing injection');
 for(const filename of ['pkmsvv-box-stage1.js','pkmsvv-box-stage2.js','pkmsvv-box-stage2-ui.js',
- 'pkmsvv-box-stage3.js','pkmsvv-box-stage4.js','pkmsvv-box-hub.js','pkmsvv-box-hub-ui.js','pkmsvv-quick-region.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-modal-navigation-qa.js']){
+ 'pkmsvv-box-stage3.js','pkmsvv-box-stage4.js','pkmsvv-box-hub.js','pkmsvv-box-hub-ui.js','pkmsvv-quick-region.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-modal-navigation-qa.js','pkmsvv-dex-defeats-qa.js']){
  const dest=path.join(web,'js/ui',filename);
  fs.mkdirSync(path.dirname(dest),{recursive:true});
  fs.copyFileSync(path.join(root,'src',filename),dest);
