@@ -66,6 +66,10 @@ for(const filename of ['pkmsvv-box-stage1.css','pkmsvv-box-stage2.css','pkmsvv-b
 }
 copyRegionCovers(web);
 copyFusionIcons(web);
+const wikiQA=path.join(web,'js/ui/pkmsvv-wiki-qa.js');
+fs.copyFileSync(path.join(root,'src/pkmsvv-wiki.js'),wikiQA);
+if(!html.includes('pkmsvv-wiki-qa.js'))
+ html=html.replace('</body>','<script defer src="js/ui/pkmsvv-wiki-qa.js"></script>\n</body>');
 const evolvedJS=path.join(web,'js/ui/pkmsvv-fusion-evolved.js');
 fs.copyFileSync(path.join(root,'src/pkmsvv-fusion-evolved.js'),evolvedJS);
 fs.copyFileSync(path.join(root,'src/pkmsvv-fusion-evolved.css'),path.join(web,'css/pkmsvv-fusion-evolved.css'));
