@@ -232,16 +232,18 @@
   const max=5,api=typeof G!=='undefined'?G.PKMSVVBox2:null;
   const species=x&&api?.speciesProgress?.(s,x.dex);
   const rank=Math.max(0,Math.min(max,species?.rank??(Number.isInteger(x?.rank)?x.rank:0)));
-  const cost=rank===max?0:rank+1;
+  // One same-species extra individual or shard per step, not 1+2+3+4+5.
+  const cost=rank===max?0:1;
   const enabled=!!(x&&valid(s)&&api?.valid?.(s)&&
    typeof api.candidateList==='function'&&typeof api.shards==='function');
-  let copies=0,fragments=0;
+  let copies=0,fragments=0,protectedForms=0;
   if(enabled&&cost){
    copies=api.candidateList(s,x.id).length;
    fragments=api.shards(s,x.dex);
+   protectedForms=api.shinyCreditList?.(s,x.id)?.length||0;
   }
-  const available=enabled?Math.min(cost,copies+fragments):0;
-  return {rank,max,cost,copies,fragments,available,missing:Math.max(0,cost-available),
+  const available=enabled?Math.min(cost,copies+fragments+protectedForms):0;
+  return {rank,max,cost,copies,fragments,protectedForms,available,missing:Math.max(0,cost-available),
    enabled,canRank:enabled&&cost>0&&available>=cost};
  }
  function safeSelect(id){
