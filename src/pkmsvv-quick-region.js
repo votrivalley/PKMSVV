@@ -11,6 +11,10 @@
  const NAMES=['Kanto','Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar','Paldea','Votri Valley'];
  const SYMBOLS=['🔥','🌳','🌊','❄️','⚙️','✨','🌴','🏟️','⛰️','🐉'];
  const REGION_COUNT=10;
+ // National Dex mascots chosen for the nine exploration Gen covers.
+ // Keep the tenth, mixed-generation Sky Pillar, using its existing Rayquaza art.
+ const REGION_MASCOTS=Object.freeze([150,249,385,488,646,718,800,890,1024,384]);
+
  // No gameplay badge: the selected place and Gen are already clear in chooser.
  // Progressive wildlife is shared by all ten exploration maps, Sky included.
  const WAVE_SECONDS=[0,120,240,360,480,600,720];
@@ -298,8 +302,7 @@
    }
    // Keep each generation's legendary/mascot sprite layered on the uploaded
    // WebP landscape. Locked regions reveal a dark silhouette until unlocked.
-   const regionLegends=[150,250,384,483,643,716,791,889,1007,384];
-   const dex=regionLegends[x.index];
+   const dex=REGION_MASCOTS[x.index];
    if(G.DEX_BY?.[dex]&&typeof G.UI?.sprite==='function'){
     const sprite=document.createElement('canvas');
     sprite.className='region-sprite';
@@ -494,7 +497,7 @@
   return out;
  });
  G.PKMSVVQuickRegion={open,close,choose,entries,unlocked,beginRun,endRun,
-  nationalGen,speciesFor,isAllowed,pokemonStrength,encounterTier,eligibleByTime,
+  mascots:REGION_MASCOTS,nationalGen,speciesFor,isAllowed,pokemonStrength,encounterTier,eligibleByTime,
   progressivePool,enforceGeneration,regionEnemyDefinition,enforceLiveEnemy,
   get active(){return regionIndex()>=0},
   get selectedRegion(){return regionIndex()},
