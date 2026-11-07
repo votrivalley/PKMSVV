@@ -396,7 +396,11 @@ test('One-click Rank updates display immediately, turns controls grey and never 
  assert.match(ui,/!canRank\|\|G\.DB\?\.guest\?'disabled'/);
  assert.match(css,/\.pkmbx-rank-overview\.is-rank-disabled/);
  assert.match(css,/\.pkmbx-rank-tab\.rank-disabled/);
- assert.doesNotMatch(modal,/\bconfirm\(/,'secondary Rank panel must also have no redundant prompt');
+ const upgradeStart=modal.indexOf("if(upgrade)upgrade.onclick");
+ const upgradeEnd=modal.indexOf("for(const b of body.querySelectorAll('[data-pkmbx-branch]'))",upgradeStart);
+ assert.ok(upgradeStart>=0&&upgradeEnd>upgradeStart);
+ assert.doesNotMatch(modal.slice(upgradeStart,upgradeEnd),/\bconfirm\(/,
+  'Rank Up needs no prompt; unrelated costly Prism/branch actions may still confirm');
 });
 test('PC knowledge hides completed Skill Awakening and removes obsolete seasonal row',()=>{
  const js=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pc-menu-clean-qa.js'),'utf8');
