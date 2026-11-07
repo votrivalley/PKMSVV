@@ -93,7 +93,7 @@ test('Host 3-2-1 is authoritative, spawns no enemies and enters Fight together',
 });
 test('Guest cast reaches host and both players see same authentic damage result',()=>{
  const host=instance('host'),guest=instance('guest');host.start();guest.start();
- host.frame(3.01);
+ host.frame(10.01);host.frame(3.01);
  const before=host.api.health.host;
  host.emit('guest',{k:'f',ev:[['c','ember',1,Math.PI]]});
  assert.ok(host.api.health.host<before,'real guest cast damages host');
