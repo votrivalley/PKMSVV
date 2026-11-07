@@ -210,7 +210,8 @@ test('Original PC remains, and Pokémon entry has Box, Dex and preserved upgrade
  const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub.css'),'utf8');
  const clean=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pc-menu-clean-qa.js'),'utf8');
  assert.match(src,/if\(original&&extra\)/);
- assert.match(src,/extra\.setAttribute\('aria-label','Pokémon'\)/);
+ assert.match(src,/extra\.setAttribute\('aria-label',L\('Khám phá','Explore'\)\)/);
+ assert.match(clean,/pokemon\.setAttribute\('aria-label',L\('Khám phá','Explore'\)\)/);
  assert.match(src,/pkmsvv-menu-wiki/);
  assert.doesNotMatch(clean,/pkmsvv-pc-dex/,'Pokémon tabs must not be duplicated inside the PC utilities');
  assert.doesNotMatch(clean,/pkmsvv-pc-box/,'Pokémon tabs must not be duplicated inside the PC utilities');
@@ -373,4 +374,39 @@ test('PokéBox has top BOX arrows and a six-column visible grid with type-themed
  assert.match(ui,/pkmbx-meter-track/);
  assert.match(css,/\.pkmbx-meter-fill/);
  assert.match(css,/--pkmbx-type/);
+});
+
+test('One-click Rank updates display immediately, turns controls grey and never opens native confirm',()=>{
+ const ui=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub-ui.js'),'utf8');
+ const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub.css'),'utf8');
+ const modal=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-stage2-ui.js'),'utf8');
+ const from=ui.indexOf('function performRank(it,ready){');
+ const to=ui.indexOf('function renderTeam(',from);
+ assert.ok(from>=0&&to>from);
+ const rank=ui.slice(from,to);
+ assert.doesNotMatch(rank,/\bconfirm\(/,'explicit click is enough to spend duplicates');
+ assert.match(rank,/rankBusy=true/,'rapid double click protection');
+ assert.match(rank,/api\.rankUpAuto\(it\.id,s\)/,'rank mutation runs immediately');
+ assert.match(ui,/function saveAction\(fn\)\{[\s\S]*?renderBox\(\)/,
+  'successful mutation must redraw the cards and details');
+ assert.match(ui,/progress\?\.canRank\?' rank-ready'/,
+  'left grid readiness must be calculated from fresh save');
+ assert.match(ui,/pkmbx-rank-tab/);
+ assert.match(ui,/rank-disabled/);
+ assert.match(ui,/!canRank\|\|G\.DB\?\.guest\?'disabled'/);
+ assert.match(css,/\.pkmbx-rank-overview\.is-rank-disabled/);
+ assert.match(css,/\.pkmbx-rank-tab\.rank-disabled/);
+ assert.doesNotMatch(modal,/\bconfirm\(/,'secondary Rank panel must also have no redundant prompt');
+});
+test('PC knowledge hides completed Skill Awakening and removes obsolete seasonal row',()=>{
+ const js=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pc-menu-clean-qa.js'),'utf8');
+ const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pc-menu-clean-qa.css'),'utf8');
+ assert.match(js,/tracker\.progress\(save\)\.count>=8/);
+ assert.match(js,/Skill Awakening\|Thức tỉnh kỹ năng/);
+ assert.match(js,/Sương Ký Ức\|Memory Mist/);
+ assert.match(js,/tidyPcKnowledge\(overlay\)/);
+ assert.match(js,/if\(grid\.dataset\.pkmsvvUnified==='1'\)return true/,
+  'PC knowledge cleanup must run when native menu rebuilds its rows');
+ for(const item of ['.pkmbx-hub-panel','.pkmbx-dex-panel','.pkmbx-upgrade-panel','.pkmsvv-pc-panel'])
+  assert.ok(css.includes(item),'missing shared palette for '+item);
 });
