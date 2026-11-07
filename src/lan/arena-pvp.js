@@ -271,7 +271,8 @@ G.PKMSVVArenaPvp=(()=>{
   if(!mode()||!host)return;
   if(!force&&frameClock>0)return;
   frameClock=FRAME_RATE;
-  const packet={k:'apvp',seed,seq:++serial,stage,time:elapsed,hp:{...hp},winner,matchType,round,scores:{...scores}};
+  const packet={k:'apvp',seed,seq:++serial,stage,time:elapsed,hp:{...hp},winner,matchType,round,scores:{...scores},
+   dexes:Object.fromEntries(people.map(m=>[m.uid,m.dex])),ready:[...pickReady]};
   G.Net?.broadcast?.(packet);
   render();
  }
@@ -279,17 +280,21 @@ G.PKMSVVArenaPvp=(()=>{
   if(!active||!data||from!==hostUid||host||data.k!=='apvp'||
      data.matchType!==matchType||
      data.seed!==seed||!Number.isSafeInteger(data.seq)||data.seq<=received)return;
-  if(!['countdown','fight','result'].includes(data.stage))return;
+  if(!['select','countdown','fight','result'].includes(data.stage))return;
   // A terminal result is immutable for this seed. Later packets cannot
   // resurrect a fight or change its winner even with a greater sequence.
   if(stage==='result'&&data.stage!=='result')return;
   received=data.seq;lastSnapshotAt=performance.now()/1000;
-  stage=data.stage;elapsed=clamp(data.time,0,DUEL+COUNTDOWN+5);
+  const oldStage=stage;stage=data.stage;elapsed=clamp(data.time,0,DUEL+COUNTDOWN+SELECT+5);
+  for(const person of people)if(Number.isInteger(Number(data.dexes?.[person.uid]))&&
+    G.DEX_BY?.[Number(data.dexes[person.uid])])person.dex=Number(data.dexes[person.uid]);
+  pickReady=new Set(Array.isArray(data.ready)?data.ready.filter(id=>people.some(m=>m.uid===id)):[]);
+  if(oldStage==='select'&&stage!=='select')applyFighterChoice();
   round=clamp(data.round,1,3);
   for(const m of people)scores[m.uid]=clamp(data.scores?.[m.uid],0,3);
   for(const m of people)hp[m.uid]=clamp(data.hp?.[m.uid],0,HP);
   winner=data.winner&&people.some(m=>m.uid===data.winner)?data.winner:null;
-  applyHp();render();
+  applyHp();renderPick();render();
  }
  function applyHp(){
   const p=local();if(!p)return;
@@ -321,11 +326,11 @@ G.PKMSVVArenaPvp=(()=>{
   if(!txt){txt=document.createElement('div');txt.className='pkmsvv-arena-pvp-time';element.append(txt);}
   const heading=matchType==='champion'?'🏆 CHAMPION '+round+'/3 · '+
    people.map(m=>(scores[m.uid]||0)).join('–')+' · ':tr('⚔ ĐẤU TRƯỜNG · ','⚔ ARENA · ');
-  txt.textContent=stage==='fight'?heading+Math.max(0,Math.ceil(DUEL-elapsed))+'s':stage==='countdown'?
+  txt.textContent=stage==='select'?heading+tr('CHỌN POKÉMON · ','POKÉMON PICK · ')+Math.max(0,Math.ceil(SELECT-elapsed))+'s':stage==='fight'?heading+Math.max(0,Math.ceil(DUEL-elapsed))+'s':stage==='countdown'?
    heading+tr('CHUẨN BỊ · ','READY · ')+Math.max(1,Math.ceil(COUNTDOWN-elapsed)):'';
   let count=$('pkmsvv-arena-pvp-count');
   if(!count){count=document.createElement('div');count.id='pkmsvv-arena-pvp-count';count.className='pkmsvv-arena-pvp-count';document.body.append(count);}
-  count.hidden=stage==='result'||stage==='fight'&&elapsed>.7;
+  count.hidden=stage==='select'||stage==='result'||stage==='fight'&&elapsed>.7;
   if(!count.hidden)count.textContent=stage==='countdown'?String(Math.max(1,Math.ceil(COUNTDOWN-elapsed))):tr('⚔ BẮT ĐẦU!','⚔ FIGHT!');
   if(result){
    result.hidden=stage!=='result';
@@ -344,7 +349,9 @@ G.PKMSVVArenaPvp=(()=>{
   const p=local();if(!p)return;
   if(host){
    const step=clamp(dt,0,.07);
+   if(stage==='select'&&G.PKMSVVBerry?.choosing){renderPick();return;}
    elapsed+=step;frameClock-=step;
+   if(stage==='select'&&(elapsed>=SELECT||pickReady.size===people.length))finishPick();
    if(stage==='countdown'&&elapsed>=COUNTDOWN){stage='fight';elapsed=0;casts.clear();sendState(true);}
    if(stage==='fight'){
     const a=coords(uid),b=coords(peerId(uid));
@@ -365,7 +372,7 @@ G.PKMSVVArenaPvp=(()=>{
    }
    sendState();
   }
-  applyHp();
+  applyHp();renderPick();
   if(!host)render();
  }
  function exit(notify=true){
@@ -401,6 +408,14 @@ G.PKMSVVArenaPvp=(()=>{
   G.Net.on((from,data)=>{
    if(!active)return;
    if(data?.k==='apvp'){receive(from,data);return;}
+   if(data?.k==='apvp-pick-ready'&&host&&stage==='select'&&from===peerId(uid)&&
+      data.seed===seed&&data.room===matchRoom&&data.matchType===matchType&&
+      G.DEX_BY?.[Number(data.dex)]){
+    const remote=people.find(m=>m.uid===from);
+    if(remote){remote.dex=Number(data.dex);pickReady.add(from);
+     if(pickReady.size===people.length)finishPick();else sendState(true);}
+    return;
+   }
    if(data?.k==='apvp-sync-request'){
     if(host&&from===peerId(uid)&&data.seed===seed&&data.room===matchRoom&&
        data.matchType===matchType&&['countdown','fight','result'].includes(stage)){
@@ -485,7 +500,7 @@ G.PKMSVVArenaPvp=(()=>{
   return true;
  }
  install();
- return {begin,cleanup,update,receive,strike,canCast,loadout,render,exit,requestSync,COUNTDOWN,DUEL,HP,
+ return {begin,cleanup,update,receive,strike,canCast,loadout,render,exit,requestSync,confirmPick,finishPick,SELECT,COUNTDOWN,DUEL,HP,
   get active(){return active},get stage(){return stage},get winner(){return winner},
   get health(){return {...hp}},get host(){return host},get matchType(){return matchType},get round(){return round},get scores(){return {...scores}}};
 })();
