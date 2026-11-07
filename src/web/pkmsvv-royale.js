@@ -1,6 +1,7 @@
 /* Votri Valley — Survival Royale beta, host-authoritative within WebRTC star. */
 G.Royale=(()=>{
  let active=false,roster=[],fallen={},outcome=null,lastAlive=-1,avatars=new Map(),hudBounds=null,expanded=false;
+ let lastEvolutionLevel=null,pendingEvolution=false;
  const sec=v=>Math.max(0,Math.floor(Number(v)||0));
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const L=(vi,en)=>G.I18n&&G.I18n.lang==='vi'?vi:en;
@@ -27,7 +28,8 @@ G.Royale=(()=>{
   return anim;
  }
  function begin(cfg){
-  hudBounds=null;expanded=false;
+  hudBounds=null;expanded=false;lastEvolutionLevel=null;pendingEvolution=false;
+  document.body?.classList?.remove?.('pkmsvv-competitive-evo');
   active=!!(cfg&&cfg.mode==='royale');
   roster=active?(cfg.members||[]).map(m=>({uid:m.uid,name:String(m.name||'Trainer').slice(0,32),dex:dexOf(m.dex),shiny:!!m.shiny})):[];
   fallen={};outcome=null;lastAlive=-1;avatars=new Map();
@@ -76,6 +78,18 @@ G.Royale=(()=>{
  }
  function draw(ctx,w,h,players){
   if(!active||!ctx)return;
+  // In Royale the personal skill cards do not call the solo evolution branch.
+  // Check on a NEW level after personal cards close. The match stays in
+  // 'playing' while this compact independent evolution chooser is open.
+  const pl=G.Game?.player,level=Number(pl?.level)||0;
+  if(pl&&!pl.dead&&level>0&&lastEvolutionLevel!==level&&!pendingEvolution&&
+     !G.UI?.isOpen?.('scr-levelup')&&!G.UI?.isOpen?.('scr-item')&&
+     !document.querySelector('.pkmsvv-evo')&&G.PKMSVVEvo?.tryOpen){
+   lastEvolutionLevel=level;pendingEvolution=true;
+   document.body?.classList?.add('pkmsvv-competitive-evo');
+   const done=()=>{pendingEvolution=false;document.body?.classList?.remove('pkmsvv-competitive-evo');};
+   if(!G.PKMSVVEvo.tryOpen(pl,G.Game?.st?.time||0,done))done();
+  }
   const livePlayers=(players||[]).filter(Boolean);
   const alive=new Set(livePlayers.filter(p=>!p.dead).map(p=>p.uid));
   const liveByUid=new Map(livePlayers.map(p=>[p.uid,p]));
