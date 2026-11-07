@@ -81,9 +81,11 @@ continuing. Preserve offline Wi-Fi hosting and the full existing test suite.
   confirmation and atomic save commit. Favorite, locked and six-member Ready
   Team Pokémon remain protected; Rank operations must retain owned/shiny,
   Mega, Berry, tickets and prior upgrades. Failed save writes fully roll back.
-- In PokéBox, count **all currently stored individuals**, but display the ×N
-  badge only for **N >= 2**. Clearly differentiate actual ordinary consumable
-  copies, safe Shiny credits, and Rank shards from mere form counts.
+- In PokéBox, keep all individuals grouped per species. Show the ×N badge
+  only when there is at least one duplicate beyond the first individual:
+  **N = total individuals - 1**, so one original shows no badge, two saved
+  individuals show ×1, three saved individuals show ×2. Distinguish total
+  saved duplicates from unspent Rank materials and already-used Shiny credits.
 - Keep **Chọn ra trận / Yêu thích / Đội hình** together ABOVE the Pokémon
   portrait in the RIGHT details pane on all three platforms. Keyboard/controller
   must reach these actions and the Rank confirmation dialog.
