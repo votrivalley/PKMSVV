@@ -113,10 +113,12 @@
   const plan=rankMaterials(s,id);
   if(!plan.target||!plan.cost)throw Error('Pokémon already Rank 5 or missing');
   if(plan.available<plan.cost)throw Error('Not enough same-species duplicates');
-  const credits=plan.credits.slice(0,plan.cost).map(x=>x.id);
-  const needCopies=plan.cost-credits.length;
-  const materials=plan.copies.slice(0,needCopies).map(x=>x.id);
-  const fragments=Math.max(0,plan.cost-credits.length-materials.length);
+  // Spend newly summoned, disposable ordinary clones FIRST, exactly as
+  // the player requested. Only if short, claim a protected individual once
+  // without deleting it; old Rank shards are the final legacy fallback.
+  const materials=plan.copies.slice(0,plan.cost).map(x=>x.id);
+  const credits=plan.credits.slice(0,plan.cost-materials.length).map(x=>x.id);
+  const fragments=Math.max(0,plan.cost-materials.length-credits.length);
   return rankUp(plan.target.id,materials,fragments,s,credits);
  }
  // Backwards-compatible API for QA saves/tests created before generic credits.
