@@ -65,3 +65,32 @@ continuing. Preserve offline Wi-Fi hosting and the full existing test suite.
   one-off bindings per platform. Preserve offline LAN, existing save keys
   and Android signing identity.
 
+
+
+## BẮT BUỘC — PokéBox Rank / same-species copies
+
+- Maximum Rank is **5** and the player must confirm each upgrade. Rank N -> N+1
+  costs exactly **ONE** additional same-species individual or same-species Rank
+  shard. Never silently restore the old escalating material costs 1+2+3+4+5.
+- Normal and Shiny variants share the **same species Rank**. A second saved
+  Shiny form may count as one **non-destructive, single-use Rank credit**;
+  its unique instance ID must be journaled on the save so it cannot be claimed
+  twice or farmed by changing selection. Never delete a Shiny or migrated
+  original, or auto-consume anything during Gacha.
+- An ordinary eligible disposable copy may be consumed only with an explicit
+  confirmation and atomic save commit. Favorite, locked and six-member Ready
+  Team Pokémon remain protected; Rank operations must retain owned/shiny,
+  Mega, Berry, tickets and prior upgrades. Failed save writes fully roll back.
+- In PokéBox, count **all currently stored individuals**, but display the ×N
+  badge only for **N >= 2**. Clearly differentiate actual ordinary consumable
+  copies, safe Shiny credits, and Rank shards from mere form counts.
+- Keep **Chọn ra trận / Yêu thích / Đội hình** together ABOVE the Pokémon
+  portrait in the RIGHT details pane on all three platforms. Keyboard/controller
+  must reach these actions and the Rank confirmation dialog.
+- Old saves may have only one Normal/one Shiny record per species (no historic
+  Gacha duplicate ledger). Do not fabricate lost historical pulls or require
+  "backing up" on every Rank upgrade. One-time conversion to PokéBox is an
+  explicit, save-safe action after creating an external JSON backup.
+- Gate merges/releases on regression tests for 0→5 per-copy Rank progression,
+  normal/shiny shared Rank, Shiny one-time credit, invalid/reused source IDs,
+  save rollback, no ×1 badge, and correct focused-species Rank dialogs.
