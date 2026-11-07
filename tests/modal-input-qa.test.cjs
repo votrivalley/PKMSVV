@@ -12,13 +12,14 @@ test('Shared modal navigation compiles and covers picker, Region, PokéBox and P
  const js=read('src/pkmsvv-modal-navigation-qa.js'),css=read('src/pkmsvv-modal-navigation-qa.css');
  new Function(js);
  for(const id of ['#pkmsvv-quick-region','#pkmsvv-pokebox-overlay','#pkmsvv-wiki-overlay',
-  '#scr-item','#scr-levelup','.pkmsvv-berry-overlay'])
+  '#scr-item','#scr-levelup','#pkmbx-rank-overlay','.pkmsvv-berry-overlay'])
   assert.ok(js.includes(id),'unhandled modal '+id);
  assert.match(js,/G\.Pad/,'controller poll is intercepted only for open overlays');
  assert.match(js,/getGamepads/);
  assert.match(js,/Arrow|arrowleft|arrowright|arrowup|arrowdown/);
  assert.match(js,/keyboardSkip|itemSkip/);
  assert.match(js,/Numpad3/);
+ assert.match(js,/#pkmbx-rank-close/,'controller B closes Rank panel without leaving the PokéBox');
  assert.match(js,/return original\.apply\(this,args\)/,'native gameplay control stays intact when no overlay is open');
  assert.match(js,/releaseGate/,'button-release protection prevents accidental gameplay actions');
  assert.match(css,/outline:3px solid/,'focus must be visible on dark and light cards');
