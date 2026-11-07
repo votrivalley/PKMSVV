@@ -251,3 +251,39 @@ continuing. Preserve offline Wi-Fi hosting and the full existing test suite.
   contains no #115 Kangaskhan / #130 Gyarados / #150 Mewtwo / fully
   evolved starters; the eligible pool expands after minutes pass; Chromium
   compiled Gacha+sprite data match policy; no visible Gen badge.
+
+
+## Evolved Fusion gameplay contract — 2026-11-07
+
+- Fusion is a **named evolution of a pair of MAX moves**, not the legacy
+  arbitrary two-learned-moves Bond. The only valid ten recipes and WebP names
+  are in `G.PKMSVVFusionPilot.RECIPES` and `assets/fusion-icons/`.
+  Require **both** source instances `lvl >= def.maxLvl`. No level-one Fusion,
+  no arbitrary pair, and do not claim ready from merely owning both moves.
+- The player's explicit choice can consume exactly **one Fusion per run**:
+  remove exactly two source move instances from `player.moves` AND
+  `player.slots`, insert one new evolved skill with its own effect,
+  cooldown and max rank, and free one learning slot. Keep unrelated moves,
+  active selection, `bind` and per-run state safe. Do not consume account
+  currency, delete owned Pokémon or mutate persistent JSON saves.
+- Keep **Rift-earned Bonds independent**. Original group-binding mechanics
+  still exist for those earned rewards and do NOT award an extra Fusion.
+  Never silently make all Bond pairs into special Fusion moves.
+- All ten evolved moves require **different real gameplay effects**, not
+  just names, icon recolors or FX: persistent fire trail, wave knockback,
+  vine pull, electric chain, psychic shock, fire tornado, ice stacking,
+  stone/leaf trap, delayed shadow detonation and metal-claw armor break.
+  Boss CC must be capped; keep bounded zone counts and cooldown floors.
+- Render the exact uploaded WebP icons in **both** DOM recipe cards and
+  Canvas skill HUD. Keep controller/keyboard focus in the Fusion selection;
+  use the pause action, not a fixed button obscuring combat.
+- Treat Fusion scripts, CSS and **all ten** assets as mandatory in the
+  separate Web/Windows/Android QA packages. Replace the stale *embedded*
+  `G.PKMSVVFusionPilot` module in QA `app.min.js`, rather than loading
+  the legacy implementation twice. Fail closed on any missing icon.
+- Run `tests/bond-fusion-svv.test.cjs` and real compiled Chromium Fusion
+  tests (both MAX conversion and ten actual damaged enemy simulations) as
+  **required release gates**. Real device, LAN host/client state sync,
+  controls and long-match balance still need manual QA before promoting.
+- Never merge this QA feature or publish to production Cloudflare/signed
+  Android unless explicitly approved; preserve players' existing save.
