@@ -7,7 +7,7 @@
  'use strict';
  if(typeof document==='undefined'||typeof G==='undefined')return;
  const SELECTORS=[
-  '#pkmsvv-quick-region','#pkmsvv-pokebox-overlay','#pkmsvv-wiki-overlay',
+  '#pkmsvv-quick-region','#pkmsvv-pokebox-overlay','#pkmsvv-wiki-overlay','#pkmbx-rank-overlay',
   '#pkmsvv-champion-screen','#pkmsvv-arena-solo-screen','#pkmsvv-support-catalog',
   '#pkmsvv-mega-phase1','.pkmsvv-memory-chooser','.pkmsvv-berry-overlay',
   '#pkmsvv-native-choice','#scr-item','#scr-levelup','#scr-bond'
@@ -84,7 +84,7 @@
  function close(root){
   if(!root)return false;
   if(root.id==='scr-item')return itemSkip();
-  const explicit=root.querySelector('[data-back]:not([disabled]),#pkmbx-close,#pkmbx-dex-close,#pkmbx-upgrade-close,#pkmsvv-quick-region-close,.pkmsvv-pc-close,[data-mega-close],#pkmsvv-champion-close,#pkmsvv-arena-solo-close');
+  const explicit=root.querySelector('[data-back]:not([disabled]),#pkmbx-close,#pkmbx-dex-close,#pkmbx-upgrade-close,#pkmbx-rank-close,#pkmsvv-quick-region-close,.pkmsvv-pc-close,[data-mega-close],#pkmsvv-champion-close,#pkmsvv-arena-solo-close');
   if(explicit&&visible(explicit)){explicit.click();return true;}
   if(root.id==='pkmsvv-pokebox-overlay'){G.PKMSVVBoxHubUI?.closeBox?.();return true;}
   if(root.id==='pkmsvv-quick-region'){G.PKMSVVQuickRegion?.close?.();return true;}
