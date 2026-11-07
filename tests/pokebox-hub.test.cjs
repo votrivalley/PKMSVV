@@ -305,7 +305,7 @@ test('PokéBox V2 QA UI provides visible five-star rank, material bar and sortin
  assert.match(src,/G\.DEX_ABIL\?\.\[infoDex\]/);
  assert.doesNotMatch(src,/Possible Natures|Các tính cách có thể xuất hiện/);
  assert.match(src,/pkmbx-dex-ability-row/);
- assert.match(src,/abilityBenefit\(id\)/);
+ assert.match(src,/abilityBenefit\(id,infoDex\)/);
  assert.match(src,/const possibleAbilities=/);
  assert.match(src,/pkmbx-hub-main"><div class="pkmbx-hub-left/);
  assert.doesNotMatch(src,/Save cũ đang xem trước/);
