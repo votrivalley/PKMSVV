@@ -2,8 +2,9 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const source=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-quick-region.js'),'utf8');
-function harness(){
- const calls=[],nodes={},records=[];
+function harness(options={}){
+ const calls=[],nodes={},records=[],alive=[];
+ let deferredStart=null;
  function node(tag='div'){
   const o={tagName:tag,hidden:false,disabled:false,isConnected:true,children:[],dataset:{},
    append(...items){this.children.push(...items);},replaceChildren(...items){this.children=items.slice();},
@@ -25,10 +26,16 @@ function harness(){
   Tiles:{arenaBiome(t){return ['fire','steel','water','ground','rock','dark','bug','fighting','ice','dragon'].indexOf(t)+1}},
   World:{biome:17,setBiome(n){this.biome=n;calls.push(n)}},
   Coop:{active:false},
-  Game:{state:'ui',startRun(){this.state='playing';G.World.setBiome(0)},toUI(){this.state='ui'},quit(){this.state='ui'}},
+  Game:{state:'ui',startRun(){
+   if(options.deferred){
+    deferredStart=()=>{this.state='playing';G.World.setBiome(0);};return;
+   }
+   this.state='playing';G.World.setBiome(0);
+  },toUI(){this.state='ui'},quit(){this.state='ui'}},
   Flow:{goMenu(){this.wasMenu=true}},
   MenuUI:{open(){this.wasOpen=true}},
-  EnemyMgr:{add(enemy){return enemy;}},
+  EnemyMgr:{add(enemy){alive.push(enemy);return enemy;},all(){return alive;},
+   update(){this.updated=(this.updated||0)+1;}},
   Enemy:class Enemy {
    constructor(def,x,y,scaling,boss){this.def=def;this.dex=def.dex;this.x=x;this.y=y;this.boss=!!boss;}
   },
@@ -38,7 +45,9 @@ function harness(){
    regionizeBag(bag,index){return bag.map(def=>({...def,dex:index===0?12:150+index}))}}
  };
  vm.runInNewContext(source,{G,document,console,Math});
- return {G,document,save,play,nodes,calls,records,get started(){return started}};
+ return {G,document,save,play,nodes,calls,records,alive,
+  completeStart(){deferredStart?.();},
+  get started(){return started}};
 }
 test('Normal Chơi ngay is intercepted into a Region chooser and does not start until region is selected',()=>{
  const h=harness(),x=h.G.PKMSVVQuickRegion;
@@ -182,4 +191,47 @@ test('Kanto wild bag, miniboss and custom spawns use the SAME Gacha gen pool, no
  assert.equal(boss.dex,25,'Boss constructor uses current region roster');
  h.G.Game.toUI();
  assert.equal(new h.G.Enemy({dex:152},0,0).dex,152,'outside Region play the registry is untouched');
+});
+
+test('Kanto must stay selected across deferred Berry pre-match and intermediate UI opens',()=>{
+ const h=harness({deferred:true}),region=h.G.PKMSVVQuickRegion;
+ h.G.DEX_BY={25:{name:'Pikachu'},152:{name:'Chikorita'}};
+ h.G.DEX=[{dex:25,gen:1},{dex:152,gen:2}];
+ h.G.SPRITE_META={25:{},152:{}};
+ assert.equal(region.choose(0),true,'clicking Kanto arms the Region');
+ assert.equal(h.G.Game.state,'ui','native start is correctly postponed by Berry');
+ assert.equal(region.active,true,'region is activated before deferred startRun');
+ assert.equal(region.starting,true,'Region knows Berry is still selecting');
+ h.G.MenuUI.open();
+ assert.equal(region.active,true,'incidental menu render cannot erase Kanto');
+ assert.equal(region.selectedRegion,0);
+ h.completeStart();
+ assert.equal(h.G.Game.state,'playing');
+ assert.equal(h.G.World.biome,1,'selected Kanto biome stays pinned through actual native start');
+ assert.ok(h.G.Enemies.bagAt().every(x=>x.dex===25),'late waves remain 100% Kanto');
+ assert.equal(region.starting,false,'pending flag clears once gameplay begins');
+ h.G.Game.toUI();
+ assert.equal(region.active,false,'explicit exit restores free world');
+});
+test('Kanto corrects mixed-gen enemies that bypass both constructor proxy and EnemyMgr.add',()=>{
+ const h=harness(),region=h.G.PKMSVVQuickRegion;
+ h.G.DEX_BY={25:{name:'Pikachu',types:['electric']},152:{name:'Chikorita',types:['grass']}};
+ h.G.DEX=[{dex:25,gen:1},{dex:152,gen:2}];
+ h.G.SPRITE_META={25:{},152:{}};
+ assert.equal(region.choose(0),true);
+ const e={dex:152,def:{dex:152,name:'Chikorita',types:['grass']},hp:785,maxHp:785,
+  spd:100,boss:true};
+ h.alive.push(e); // a scripted rift bypasses wrapped EnemyMgr.add
+ for(let i=0;i<10;i++)h.G.EnemyMgr.update(0.016);
+ assert.equal(e.dex,25,'already-living Pokémon corrected to selected Kanto generation');
+ assert.equal(e.def.dex,25,'visual definition also corrected');
+ assert.deepEqual(Array.from(e.def.types),['electric']);
+ assert.equal(e.hp,785,'correcting species must not change boss difficulty');
+ assert.equal(e.boss,true,'boss still retains boss mechanics');
+ assert.equal(region.correctedSpawns,1);
+ h.G.Game.toUI();
+ const e2={dex:152,def:{dex:152},hp:100};
+ h.alive.push(e2);
+ for(let i=0;i<10;i++)h.G.EnemyMgr.update(0.016);
+ assert.equal(e2.dex,152,'end of Region does not alter other modes');
 });
