@@ -216,3 +216,21 @@ test('Shiny credit rolls back when save commit fails',()=>{
  assert.equal(JSON.stringify(h.s),before);
  assert.equal(h.writes,0);
 });
+
+test('#191 Sunkern: two historical forms can Rank while a different Pokémon remains active',()=>{
+ const h=setup(),save=h.s;
+ G.DEX_BY[191]={dex:191,name:'Sunkern',types:['grass'],rarity:1};
+ save.owned[191]={at:30};save.shiny[191]={at:31};
+ const original={dex:191,natureId:'hardy',abilitySlot:0,rank:0,locked:false,favorite:false};
+ save.pkmsvvBox.push({...original,id:'b1-191-n',shiny:false});
+ save.pkmsvvBox.push({...original,id:'b1-191-s',shiny:true});
+ const active=save.pkmsvvSelectedInstanceId;
+ assert.equal(save.pkmsvvBox.filter(x=>x.dex===191).length,2);
+ assert.deepEqual(stage2.shinyCreditList(save,'b1-191-n').map(x=>x.id),['b1-191-s']);
+ const result=stage2.rankUp('b1-191-n',[],0,save,['b1-191-s']);
+ assert.equal(result.to,1);
+ assert.equal(stage2.speciesProgress(save,191).rank,1);
+ assert.equal(save.pkmsvvSelectedInstanceId,active,'viewing #191 must not switch active fighter');
+ assert.equal(save.pkmsvvBox.filter(x=>x.dex===191).length,2,'Normal and Shiny both retained');
+ assert.equal(stage2.shinyCreditList(save,'b1-191-n').length,0,'cannot reuse protected skin');
+});
