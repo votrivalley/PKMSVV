@@ -75,8 +75,7 @@ continuing. Preserve offline Wi-Fi hosting and the full existing test suite.
 - Every additional saved same-species Pokémon can count once for Rank,
   including shiny/legacy/team/favorite. Protected Pokémon stay intact; save
   the unique IDs of claimed protected duplicates in an atomic transaction to
-  prevent double credit. Ordinary unprotected fodder is consumed only with
-  explicit confirmation. Repeated Gacha never silently ranks up.
+  prevent double credit. Ordinary unprotected fodder is consumed only on the player's explicit **Nâng Rank click**; do not add a second browser confirmation popup. Repeated Gacha never silently ranks up.
 - Normal and Shiny share the same species Rank. Keep owned/shiny, tickets,
   Berry, Mega, personal upgrades and team when ranking. Roll back all writes
   if commit fails. Never manufacture historical Gacha pulls absent in JSON.
@@ -86,8 +85,7 @@ continuing. Preserve offline Wi-Fi hosting and the full existing test suite.
 - Keep the three primary actions Chọn ra trận / Yêu thích / Vào đội hình
   ABOVE the Pokémon portrait; support controller, keyboard and touch.
 - Preserve one-time safe backup/migration of legacy saves, but do not force
-  a backup for each Rank upgrade. If Rank modal unavailable, show working
-  material selection fallback rather than an inert button.
+  a backup for each Rank upgrade. Rank needs no extra modal or material checkbox: the main panel's **Nâng Rank** click atomically uses stored eligible duplicates and immediately refreshes the full PokéBox.
 - Gate releases on tests: costs 1+2+3+4+5, Team/Favorite/Shiny safe
   credits counted once, rollback, no singleton badge, focused #191/#070 Rank
   interactions and Controller-B/Escape modal closing.
@@ -97,7 +95,7 @@ continuing. Preserve offline Wi-Fi hosting and the full existing test suite.
 - Normal Chơi ngay Kanto/Johto/etc. must use the SAME Gacha generation
   catalogue (`G.DEX[].gen` + sprite eligibility), not arbitrary hardcoded
   pools. Native waves, custom spawns, mini-boss and ordinary bosses obey Gen.
-  Exempt only explicitly marked story-only bosses. No leak into Arena or Co-op.
+  Even scripted hostile bosses must respect the selected freeplay Region. No leak into Arena or Co-op.
 - Arena Pokémon selection: 10 seconds, Solo AI/Champion may start early
   on own confirmation. Real-human Arena only starts early after ALL human
   participants confirm, with Host-authoritative timer/ready packets. Otherwise
@@ -117,7 +115,7 @@ continuing. Preserve offline Wi-Fi hosting and the full existing test suite.
   persisted duplicate Gacha instance already contributes to its species
   Rank-material balance. The player selects a Pokémon and presses **Nâng Rank**
   once: the game deterministically selects exactly enough saved copies and
-  asks for one explicit confirmation; no checkbox/item-shard conversion UI.
+  applies the upgrade immediately on that click, **without native confirm()**; no checkbox/item-shard conversion UI.
   Keep legacy shard balances usable as last-resort fallbacks, but do not
   expose `toFragments` as an ordinary upgrade step.
 - **Rank cost stays escalating:** 1, then 2, then 3, then 4, then 5 EXTRA
@@ -195,3 +193,32 @@ continuing. Preserve offline Wi-Fi hosting and the full existing test suite.
   mis-tagged Gen metadata, foreign bosses, post-Berry delayed startup,
   arrays/Sets/Maps of live enemies, Chromium compiled catalogue, and no
   out-of-Gen sprites after 30+ seconds of play.
+
+## QA UI and Region delivery (2026-11-07 final direction)
+
+- **Nâng Rank** is itself consent: no extra JavaScript `confirm()` popup.
+  Render the freshly committed Rank and material balance immediately across
+  both left Pokémon cards and right detail without reopening menus. If the
+  next Rank lacks enough *unused* eligible duplicates, gray-out the primary
+  Rank button, its Rank tab marker and the Rank panel; keep the detail tab
+  inspectable. Preserve confirmation only for **separate** purchases such as
+  Reforge Prism / irreversible branch changes.
+- Rename the **home-menu launcher** `[data-go="dex"]` to **Khám phá**
+  (`Explore` in English), preserving its routes and native click handling.
+  Old builds may use a direct text node instead of `.pkmsvv-menu-label`;
+  repair both. Do not conflate with `Chơi ngay`, the Region selector.
+- PC: remove the obsolete **Sương Ký Ức / seasonal event** last
+  knowledge row. Hide **Skill Awakening / Thức tỉnh kỹ năng** only after
+  `G.PKMSVVSkillTrack.progress(save).count >= 8`; keep it for incomplete
+  players. Reapply after the native PC repaints, not just on initial mount.
+- Keep all shared overlay palettes (PC, PokéBox, Pokédex, Nâng cấp) consistent
+  with the main menu's dark teal, pale mint controls, gold headings/borders,
+  while preserving Pokémon-specific type colors in the detail hero.
+- CRITICAL KANTO START RACE: Berry may wrap `Game.startRun` *after*
+  QuickRegion has wrapped it, so choosing a Region may return before the real
+  game start callback. Always pin the Region **at card click** and keep it
+  active through the 10-second Berry selection, regardless of wrapper order.
+  Do not clear `armed` just because `native.click()` returned before
+  the delayed start. The wrapper must recognize an already-pinned Region
+  without resetting its selection; explicit quit clears it. Regression-test
+  both wrapper orders, Game/menu exit and every spawned hostile Gen.
