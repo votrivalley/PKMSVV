@@ -791,3 +791,16 @@
  color:#fff!important;-webkit-text-fill-color:#fff!important;
  text-shadow:0 1px 2px #061e30;
 }
+
+/* Undeafeated Pokémon stay black silhouettes, including full-size details. */
+#pkmsvv-pokebox-overlay .pkmbx-dex-card.is-undefeated canvas,
+#pkmsvv-pokebox-overlay .pkmbx-dex-undefeated #pkmbx-dex-hero{
+ filter:brightness(0) drop-shadow(0 3px 3px #061521)!important;
+ opacity:.92!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-dex-card.is-undefeated b{
+ color:#b4c5c6!important;font-weight:850;
+}
+#pkmsvv-pokebox-overlay .pkmbx-dex-undefeated .pkmbx-hub-hero strong{
+ color:#183948!important;
+}
