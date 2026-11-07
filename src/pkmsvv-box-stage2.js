@@ -59,8 +59,12 @@
      (Array.isArray(s.pkmsvvTeam6)&&s.pkmsvvTeam6.includes(item.id))||item.locked||item.favorite||
      item.shiny||item.rank!==0||item.upgraded||item.personalUpgrades) return false;
   if(item.id.startsWith('b1-'))return false; // migrated originals are never fodder
-  const copies=speciesCount===null?s.pkmsvvBox.filter(x=>x.dex===item.dex).length:speciesCount;
-  if(copies<=1)return false;
+  // A Shiny is a unique cosmetic form, NEVER an extra ordinary Rank clone.
+  // Protect the first ordinary specimen even if the profile initially owned
+  // only Shiny and its first Normal was summoned much later.
+  const ordinary=s.pkmsvvBox.filter(x=>x.dex===item.dex&&!x.shiny);
+  const first=ordinary.find(x=>x.id==='b1-'+item.dex+'-n')||ordinary[0];
+  if(ordinary.length<=1||item.id===first?.id)return false;
   const mon=typeof G==='undefined'?null:G.DEX_BY?.[item.dex];
   if(mon&&(mon.rarity>=5||mon.leg||mon.legendary))return false;
   return true;
@@ -68,21 +72,24 @@
  function candidateList(s,id){
   if(!valid(s))return [];
   const target=get(s,id);if(!target)return [];
-  const same=s.pkmsvvBox.filter(x=>x.dex===target.dex);
+  const same=s.pkmsvvBox.filter(x=>x.dex===target.dex&&!x.shiny);
   const claimed=new Set([...(s.pkmsvvRankShinyCredits?.[String(target.dex)]||[]),
    ...(s.pkmsvvRankClaimedCopies?.[String(target.dex)]||[])]);
   return same.filter(x=>x.id!==id&&!claimed.has(x.id)&&eligible(s,x,true,same.length));
  }
- // Credits represent saved, same-species duplicates which must NOT be
- // deleted (Shiny, team members, favorites or old imported individuals).
- // Each instance may contribute only once, recorded atomically.
+ // A protected, genuine EXTRA NORMAL may count once without destruction.
+ // Never count a Shiny (even an imported one), or the first ordinary
+ // individual as a Rank copy. Preserve already-earned Rank in older saves.
  function claimableList(s,id){
   if(!valid(s))return [];
   const target=get(s,id);if(!target)return [];
   const claimed=new Set([...(s.pkmsvvRankShinyCredits?.[String(target.dex)]||[]),
    ...(s.pkmsvvRankClaimedCopies?.[String(target.dex)]||[])]);
   const expendable=new Set(candidateList(s,id).map(x=>x.id));
-  return s.pkmsvvBox.filter(x=>x.dex===target.dex&&x.id!==id&&
+  const normals=s.pkmsvvBox.filter(x=>x.dex===target.dex&&!x.shiny);
+  const first=normals.find(x=>x.id==='b1-'+target.dex+'-n')||normals[0];
+  if(normals.length<=1)return [];
+  return normals.filter(x=>x.id!==id&&x.id!==first?.id&&
    !claimed.has(x.id)&&!expendable.has(x.id));
  }
  // Species-wide Rank belongs to one safe, stable carrier. A later Gacha
@@ -94,9 +101,8 @@
   const level=speciesProgress(s,focused.dex).rank;
   return (level>0?group.find(x=>x.rank===level):null)||
    group.find(x=>x.id==='b1-'+focused.dex+'-n')||
-   group.find(x=>x.id==='b1-'+focused.dex+'-s')||
-   group.find(x=>x.id===s.pkmsvvSelectedInstanceId&&!x.shiny)||
-   group.find(x=>!x.shiny)||group[0]||null;
+   group.find(x=>!x.shiny)||
+   group.find(x=>x.id==='b1-'+focused.dex+'-s')||group[0]||null;
  }
  function rankMaterials(s,id){
   const target=rankCarrier(s,id);
@@ -113,15 +119,14 @@
   const plan=rankMaterials(s,id);
   if(!plan.target||!plan.cost)throw Error('Pokémon already Rank 5 or missing');
   if(plan.available<plan.cost)throw Error('Not enough same-species duplicates');
-  // Spend newly summoned, disposable ordinary clones FIRST, exactly as
-  // the player requested. Only if short, claim a protected individual once
-  // without deleting it; old Rank shards are the final legacy fallback.
+  // Spend same-species ordinary Gacha clones first. Extra protected
+  // NORMAL copies can be credited once without deletion; Shiny NEVER counts.
   const materials=plan.copies.slice(0,plan.cost).map(x=>x.id);
   const credits=plan.credits.slice(0,plan.cost-materials.length).map(x=>x.id);
   const fragments=Math.max(0,plan.cost-materials.length-credits.length);
   return rankUp(plan.target.id,materials,fragments,s,credits);
  }
- // Backwards-compatible API for QA saves/tests created before generic credits.
+ // Legacy API is still present, but NEVER exposes Shiny as material.
  const shinyCreditList=claimableList;
  function validateMutation(before,after){
   if(!valid(after))throw Error('Invalid PokéBox after operation');
@@ -175,19 +180,51 @@
   results.forEach((r,i)=>r.instanceId=instances[i].id);
   return instances;
  }
+ // The old owned[] collection has no clone ledger. Until the player
+ // manually migrated, Gacha.pull used the old path and every new duplicate
+ // disappeared from Rank. Fix this at the TRANSACTION boundary: a successful
+ // Gacha purchase initializes an individual Box on a DRAFT, saves an original
+ // full JSON recovery snapshot, then commits the Gacha + ledger together.
+ // Existing past duplicates are NOT invented. Unknown future schemas fail
+ // closed rather than silently spending tickets without material records.
+ function safeguardLegacyGacha(s){
+  if(typeof G==='undefined'||!G.DB||G.DB.guest||!G.PKMSVVSaveUI?.backup)
+   throw Error('Cannot safeguard old Gacha save; open PokéBox backup/migration first');
+  if(typeof localStorage==='undefined')throw Error('Offline backup storage is unavailable');
+  let session=null;
+  try{session=JSON.parse(localStorage.getItem('ps.session')||'null');}catch(_){}
+  if(typeof session!=='string'||!/^[a-z0-9_ñáéíóú-]{2,48}$/i.test(session))
+   throw Error('Offline profile missing: export a backup from PokéBox first');
+  const key='pkmsvv.prepokebox.'+session;
+  if(!localStorage.getItem(key)){
+   const snapshot=G.PKMSVVSaveUI.backup();
+   if(typeof snapshot!=='string'||snapshot.length<30)
+    throw Error('Could not make recovery JSON before Gacha');
+   localStorage.setItem(key,snapshot);
+   if(localStorage.getItem(key)!==snapshot)
+    throw Error('Legacy Gacha backup verification failed');
+  }
+  return key;
+ }
  function wrappedPull(gacha,db){
   if(!gacha||typeof gacha.pull!=='function')throw Error('Gacha.pull unavailable');
   if(gacha._pkmbxStage2Wrapped)return true;
   const original=gacha.pull;
   gacha.pull=function(s,n,gen,use){
-   if(!valid(s))return original.apply(this,arguments); // not yet migrated; old behavior untouched
-   if(db?.save!==s) return original.apply(this,arguments); // never rewrite a guest/foreign profile
-   const draft=deep(s);
+   if(db?.save!==s||db?.guest)return original.apply(this,arguments);
+   const migrated=valid(s);
+   if(!migrated&&s?.pkmsvvBoxSchema!==undefined)
+    throw Error('Unknown PokéBox schema: refusing to spend Gacha tickets');
+   const draft=migrated?deep(s):stage1().migrate(s).save;
+   if(!valid(draft))throw Error('Gacha cannot create a safe individual PokéBox');
    const result=original.call(this,draft,n,gen,use);
-   if(!result)return result;
+   if(!result)return result; // Failed purchase: no migration and no tickets lost.
    if(!Array.isArray(result)||result.length!==n)throw Error('Gacha result mismatch; no tickets spent');
    applyRolls(draft,result);
-   // All draws, pity, coins, owned/shiny and box changes commit as one save.
+   // Back up BEFORE the only persistence mutation; inability to back up
+   // aborts this new purchase without changing the original save.
+   if(!migrated)safeguardLegacyGacha(s);
+   // Atomic receipt: tickets, pity, owned/shiny, and new individual clones.
    commitDraft(s,draft);
    return result;
   };
@@ -226,8 +263,9 @@
    if(materials.length+fragmentQty+shinyCredits.length!==cost)
     throw Error('Rank requires exactly '+cost+' same-species duplicates/shards');
    const allowedCredits=new Set(claimableList(draft,id).map(x=>x.id));
-   if(shinyCredits.some(key=>!allowedCredits.has(key)||materials.includes(key)))
-    throw Error('Shiny Rank credit unavailable or already claimed');
+   if(shinyCredits.some(key=>!allowedCredits.has(key)||materials.includes(key)||
+      get(draft,key)?.shiny))
+    throw Error('Protected ordinary Rank credit unavailable or already claimed; Shiny is never material');
    for(const mid of materials){
     const material=get(draft,mid);
     if(!material||material.dex!==item.dex||mid===id||!eligible(draft,material))
