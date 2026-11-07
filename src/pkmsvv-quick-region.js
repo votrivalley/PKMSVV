@@ -13,37 +13,63 @@
  const REGION_COUNT=10;
  const GEN_BOUNDS=[[1,151],[152,251],[252,386],[387,493],[494,649],
   [650,721],[722,809],[810,905],[906,1025]];
- // Use the EXACT same regional catalogue as Gacha:
- // G.DEX entries have .gen and the official sprite availability gate.
- // Range-based Dex IDs are only a fallback for older test registries.
- let poolDex=null,poolMeta=null;const poolCache=new Map();
+ // Canonical National Pokédex: https://pokemondb.net/pokedex/national
+ // The generation is the one in which the SPECIES was introduced, not the
+ // generation of the current biome, its regional form or its latest sprite.
+ // The ranges are immutable, contiguous and cover all 1025 National entries.
+ function nationalGen(dex){
+  const id=Number(dex);
+  if(!Number.isInteger(id)||id<1||id>1025)return 0;
+  for(let i=0;i<GEN_BOUNDS.length;i++)
+   if(id>=GEN_BOUNDS[i][0]&&id<=GEN_BOUNDS[i][1])return i+1;
+  return 0;
+ }
+ let poolDex=null,poolMeta=null,poolBy=null;
+ const poolCache=new Map(),poolSetCache=new Map();
  function speciesFor(index){
   if(!GEN_BOUNDS[index])return [];
-  const dex=G.DEX,meta=G.SPRITE_META;
-  if(dex!==poolDex||meta!==poolMeta){poolDex=dex;poolMeta=meta;poolCache.clear();}
+  const dex=G.DEX,meta=G.SPRITE_META,by=G.DEX_BY;
+  if(dex!==poolDex||meta!==poolMeta||by!==poolBy){
+   poolDex=dex;poolMeta=meta;poolBy=by;poolCache.clear();poolSetCache.clear();
+  }
   if(poolCache.has(index))return poolCache.get(index);
-  const fromGacha=Array.isArray(dex)?dex.filter(p=>p&&p.gen===index+1&&!!meta?.[p.dex])
-   .map(p=>Number(p.dex)).filter(n=>Number.isInteger(n)&&!!G.DEX_BY?.[n]):[];
-  const bounds=GEN_BOUNDS[index];
-  const fallback=Object.keys(G.DEX_BY||{}).map(Number).filter(n=>
-   Number.isInteger(n)&&n>=bounds[0]&&n<=bounds[1]&&G.DEX_BY[n]);
-  const list=fromGacha.length?fromGacha:fallback;
-  poolCache.set(index,list);return list;
+  // Gacha eligibility (actual DEX entries plus sprites), with the canonical
+  // National Dex number determining Gen regardless of incorrect .gen tags.
+  const available=Array.isArray(dex)?dex.filter(p=>
+    p&&!!meta?.[p.dex]&&nationalGen(p.dex)===index+1&&!!by?.[p.dex])
+   .map(p=>Number(p.dex)):[];
+  // The old test harness does not always provide G.DEX. Never use this
+  // fallback when a real Gacha list is present; otherwise it can silently
+  // re-introduce Pokémon not offered in the selected Gen.
+  const fallback=!Array.isArray(dex)?Object.keys(by||{}).map(Number).filter(n=>
+    !!by[n]&&nationalGen(n)===index+1):[];
+  const list=[...new Set(available.length||Array.isArray(dex)?available:fallback)];
+  poolCache.set(index,list);poolSetCache.set(index,new Set(list));
+  return list;
  }
- // Guard the ordinary wild spawn bag independently of the Champion transform.
- // It never modifies Arena or Co-op encounters.
+ function isAllowed(dex,index){
+  if(index===9)return true; // Sky Pillar explicitly mixes generations.
+  if(!GEN_BOUNDS[index])return false;
+  const pool=speciesFor(index),id=Number(dex);
+  if(!Number.isInteger(id)||nationalGen(id)!==index+1)return false;
+  if(Array.isArray(G.DEX))return poolSetCache.get(index)?.has(id)===true;
+  return true; // Older test registries use only the canonical range.
+ }
  function enforceGeneration(bag,index){
-  const range=GEN_BOUNDS[index];
-  if(!Array.isArray(bag)||!range)return bag; // Region 10 deliberately mixes Gen.
-  const candidates=speciesFor(index);
-  if(!candidates.length)return bag; // Incomplete test registry: never erase waves.
-  const strict=Array.isArray(G.DEX)&&G.DEX.some(p=>p&&p.gen===index+1&&!!G.SPRITE_META?.[p.dex]&&!!G.DEX_BY?.[p.dex]);
+  if(!Array.isArray(bag)||!GEN_BOUNDS[index])return bag;
+  const pool=speciesFor(index);
+  if(!pool.length){
+   // Never display mixed-Gen enemies just because the Gacha pool is empty.
+   // Empty waves are safer than leaking later-region Pokémon.
+   console.error('[Region] No eligible sprite-backed species in '+NAMES[index]);
+   return [];
+  }
   return bag.map((def,i)=>{
    if(!def||typeof def!=='object'||!Number.isInteger(Number(def.dex)))return def;
-   const dex=Number(def.dex);
-   if(strict?candidates.includes(dex):dex>=range[0]&&dex<=range[1])return def;
-   const next=candidates[i%candidates.length];
-   return {...def,dex:next,name:G.DEX_BY[next]?.name||'Pokémon '+next};
+   if(isAllowed(def.dex,index))return def;
+   const next=pool[i%pool.length],mon=G.DEX_BY?.[next];
+   return {...def,dex:next,name:mon?.name||('Pokémon '+next),
+    ...(Array.isArray(mon?.types)?{types:mon.types}:{})};
   });
  }
  // Fixed names; the WebP files are copied from assets/region-covers/ into each QA build.
@@ -257,12 +283,12 @@
  let constructed=0;
  function regionEnemyDefinition(def,index){
   if(!def||typeof def!=='object'||index<0||index>=GEN_BOUNDS.length)return def;
-  if(def.pkmsvvFinalBoss||def.pkmsvvStoryBoss||def.judge||def.pkmsvvJudgment)return def;
-  const dex=Number(def.dex),range=GEN_BOUNDS[index];
-  const strict=Array.isArray(G.DEX)&&G.DEX.some(p=>p&&p.gen===index+1&&!!G.SPRITE_META?.[p.dex]&&!!G.DEX_BY?.[p.dex]);
+  // This is free-play exploration, not the linear story mode: even scripted
+  // bosses must use the chosen Region. Boss status/HP are preserved separately.
+  const dex=Number(def.dex);
+  if(!Number.isInteger(dex)||isAllowed(dex,index))return def;
   const species=speciesFor(index);
-  if(!Number.isInteger(dex)||(strict?species.includes(dex):dex>=range[0]&&dex<=range[1]))return def;
-  if(!species.length)return def; // Never invent an unavailable species.
+  if(!species.length)return def; // Manager guard will reject this unsafe spawn.
   const target=species[(Math.abs(dex)+constructed++)%species.length],info=G.DEX_BY[target];
   return {...def,dex:target,name:info?.name||'Pokémon '+target,
    ...(Array.isArray(info?.types)?{types:info.types}:{})};
@@ -296,9 +322,9 @@
  // This is strictly scoped to the selected normal Region session.
  function enforceLiveEnemy(enemy,index){
   if(!enemy||enemy.dead||enemy.remote||index<0||index>=GEN_BOUNDS.length)return false;
-  if(enemy.pkmsvvStoryBoss||enemy.pkmsvvFinalBoss||enemy.pkmsvvJudgment||
-     enemy.def?.pkmsvvStoryBoss||enemy.def?.pkmsvvFinalBoss||
-     enemy.def?.pkmsvvJudgment||enemy.def?.judge)return false;
+  // A real Region is strict for ALL hostile wildlife and bosses. Do not
+  // exempt named bosses of other generations during normal exploration.
+  if(enemy.pkmsvvFriendly||enemy.friendly||enemy.isPlayer||enemy.isSupport)return false;
   const old=Number(enemy.dex??enemy.def?.dex);
   if(!Number.isInteger(old))return false;
   const replacement=regionEnemyDefinition({dex:old},index);
@@ -359,7 +385,7 @@
   return out;
  });
  G.PKMSVVQuickRegion={open,close,choose,entries,unlocked,beginRun,endRun,
-  enforceGeneration,regionEnemyDefinition,enforceLiveEnemy,
+  nationalGen,speciesFor,isAllowed,enforceGeneration,regionEnemyDefinition,enforceLiveEnemy,
   get active(){return regionIndex()>=0},
   get selectedRegion(){return regionIndex()},
   get starting(){return !!preRunPending},
