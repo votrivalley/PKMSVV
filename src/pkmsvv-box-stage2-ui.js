@@ -47,7 +47,7 @@
   $('pkmbx-rank-close').textContent=txt('✕ Đóng','✕ Close');
   $('pkmbx-rank-note').textContent=txt(
    'Rank 1 cần 1 bản trùng, Rank 2 cần thêm 2, tiếp tục 3, 4, 5. Bản trùng tự dùng khi nâng, không cần đổi Mảnh.',
-   'Rank costs 1, then 2 more, then 3, 4 and 5. Shiny, Ready Team, favorites, and old-save duplicates can count once without deletion.');
+   'Rank costs 1, then 2 more, then 3, 4 and 5 ordinary copies. Shiny never counts as a duplicate. Protected extra ordinary copies can count once without deletion.');
   if(!x){body.innerHTML='<p>'+txt('Hãy tạo PokéBox và chọn một cá thể ở danh sách trước.','Create PokéBox and select an individual first.')+'</p>';return;}
   const plan=api.rankMaterials(s(),x.id);
   const cost=plan.cost,available=plan.available,have=plan.fragments;
