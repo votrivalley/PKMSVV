@@ -92,7 +92,7 @@
    })||null;
   };
   const play=entry('[data-go="play"]',['chơi ngay','play','play now']);
-  const pokemon=entry('[data-go="dex"]',['pokémon','pokemon']);
+  const pokemon=entry('[data-go="dex"]',['khám phá','explore','pokémon','pokemon']);
   const pc=entry('#pkmsvv-menu-wiki',['pc']);
   const coop=entry('[data-go="multiplayer"],[data-go="coop"],[data-go="co-op"],[data-go="coOp"]',['co-op','coop']);
   const arena=entry('[data-go="arena"]',['arena']);
@@ -111,9 +111,9 @@
   if(menu.querySelector('#pkmsvv-menu-wiki')){
    const pokemon=menu.querySelector('[data-go="dex"]');
    if(pokemon){
-    pokemon.setAttribute('aria-label','Pokémon');
+    pokemon.setAttribute('aria-label',L('Khám phá','Explore'));
     const title=pokemon.querySelector('.pkmsvv-menu-label, strong, .menu-label');
-    if(title)title.textContent='Pokémon';
+    if(title)title.textContent=L('Khám phá','Explore');
     const sub=pokemon.querySelector('.pkmsvv-menu-copy small, small');
     if(sub)sub.textContent=L('PokéBox · Pokédex · Nâng cấp','PokéBox · Pokédex · Upgrades');
    }
