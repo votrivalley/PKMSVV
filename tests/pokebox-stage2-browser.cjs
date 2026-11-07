@@ -68,6 +68,12 @@ async function main(){
   assert.equal(await evaluate('G.PKMSVVBox4.HIT_PROC'),0.16);
   assert.equal(await evaluate('G.PKMSVVBox4.HYBRID_MAX'),6);
   assert.equal(five,30);
+  // Release blocker: the actual compiled v1.5.93 QA artifact, not merely
+  // source tests, must contain these newly repaired prebattle systems.
+  const liveChoice=await evaluate("(()=>({berry:G.PKMSVVBerry?.SELECT_SECONDS,pvp:G.PKMSVVArenaPvp?.SELECT,champion:G.PKMSVVChampionArena?.entryPickAvailable,solo:G.PKMSVVArenaSolo?.SELECT}))()");
+  assert.equal(liveChoice.berry,10,'QA app.min.js still contains the stale 4-second Berry implementation');
+  assert.equal(liveChoice.pvp,10,'QA app.min.js still contains the stale Arena PvP implementation');
+
   const pureDex=await evaluate("(()=>{G.PKMSVVBoxHubUI.openDex();return ({overlay:!!document.querySelector('#pkmbx-dex-overlay'),search:!!document.querySelector('#pkmbx-dex-search'),hasEvolutionPane:!!document.querySelector('#pkmbx-dex-details'),itemActions:!!document.querySelector('#pkmbx-dex-overlay [data-hub-tm],#pkmbx-dex-overlay [data-pkmbx-use]'),cards:document.querySelectorAll('#pkmbx-dex-list button').length,insidePC:document.querySelector('#pkmsvv-pokebox-overlay')?.contains(document.querySelector('#pkmbx-dex-overlay')),tabs:[...document.querySelectorAll('#pkmbx-dex-overlay [data-pc-tab]')].map(b=>b.dataset.pcTab),pcHubHidden:document.querySelector('.pkmbx-hub-panel')?.hidden})})()");
   assert.equal(pureDex.overlay,true);
   assert.equal(pureDex.search,true);
