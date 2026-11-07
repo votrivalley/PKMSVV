@@ -3,6 +3,7 @@
 const fs=require('node:fs'),path=require('node:path'),{execFileSync}=require('node:child_process');
 const root=path.resolve(__dirname,'..');
 const {copyRegionCovers}=require('./copy-region-covers.cjs');
+const {copyFusionIcons}=require('./copy-fusion-icons.cjs');
 const source=path.resolve(process.env.PKMSVV_BOX_BASE||path.join(root,'dist/cloudflare'));
 const dest=path.resolve(process.env.PKMSVV_BOX_QA_OUT||path.join(root,'dist/pokebox-stage4-qa'));
 if(source===dest||dest.startsWith(source+path.sep)||source.startsWith(dest+path.sep))throw Error('Unsafe QA path');
@@ -20,6 +21,11 @@ for(const variant of ['game','ai/game']){
   fs.copyFileSync(path.join(root,'src',filename),path.join(dest,variant,sub,filename));
  }
  copyRegionCovers(path.join(dest,variant));
+ copyFusionIcons(path.join(dest,variant));
+ fs.copyFileSync(path.join(root,'src/pkmsvv-fusion-evolved.js'),
+  path.join(dest,variant,'js/ui/pkmsvv-fusion-evolved.js'));
+ fs.copyFileSync(path.join(root,'src/pkmsvv-fusion-evolved.css'),
+  path.join(dest,variant,'css/pkmsvv-fusion-evolved.css'));
  // Patch EMBEDDED legacy modules in the QA snapshot itself. Merely
  // appending new scripts would double-install handlers or leave old Berry.
  execFileSync(process.execPath,[path.join(root,'scripts/patch-qa-compiled-modules.cjs'),
@@ -31,9 +37,9 @@ for(const variant of ['game','ai/game']){
  if(!body.includes('</head>')||!body.includes('</body>'))throw Error('QA game HTML structure changed');
  if(!body.includes('pkmsvv-box-stage1.css'))body=body.replace('</head>',css+'\n</head>');
  if(!body.includes('pkmsvv-box-stage1.js'))body=body.replace('</body>',script+'\n</body>');
- for(const cssName of ['pkmsvv-prebattle-qa.css','pkmsvv-box-stage2.css','pkmsvv-box-stage3.css','pkmsvv-box-hub.css','pkmsvv-quick-region.css','pkmsvv-pc-menu-clean-qa.css','pkmsvv-modal-navigation-qa.css'])if(!body.includes(cssName))
+ for(const cssName of ['pkmsvv-fusion-evolved.css','pkmsvv-prebattle-qa.css','pkmsvv-box-stage2.css','pkmsvv-box-stage3.css','pkmsvv-box-hub.css','pkmsvv-quick-region.css','pkmsvv-pc-menu-clean-qa.css','pkmsvv-modal-navigation-qa.css'])if(!body.includes(cssName))
   body=body.replace('</head>','<link rel="stylesheet" href="css/'+cssName+'">\n</head>');
- for(const jsName of ['pkmsvv-box-stage2.js','pkmsvv-box-stage2-ui.js','pkmsvv-box-stage3.js','pkmsvv-box-stage4.js','pkmsvv-box-hub.js','pkmsvv-box-hub-ui.js','pkmsvv-quick-region.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-modal-navigation-qa.js'])if(!body.includes(jsName))
+ for(const jsName of ['pkmsvv-fusion-evolved.js','pkmsvv-box-stage2.js','pkmsvv-box-stage2-ui.js','pkmsvv-box-stage3.js','pkmsvv-box-stage4.js','pkmsvv-box-hub.js','pkmsvv-box-hub-ui.js','pkmsvv-quick-region.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-modal-navigation-qa.js'])if(!body.includes(jsName))
   body=body.replace('</body>','<script defer src="js/ui/'+jsName+'"></script>\n</body>');
  fs.writeFileSync(html,body);
 }
