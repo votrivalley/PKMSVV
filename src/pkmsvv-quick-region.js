@@ -13,13 +13,25 @@
  const REGION_COUNT=10;
  const GEN_BOUNDS=[[1,151],[152,251],[252,386],[387,493],[494,649],
   [650,721],[722,809],[810,905],[906,1025]];
+ // Cache per-generation species once per loaded Dex table. Avoid scanning
+ // the entire Pokédex on every monster or wave (large saves can be busy).
+ let poolDex=null;const poolCache=new Map();
+ function speciesFor(index){
+  const dex=G.DEX_BY;
+  if(dex!==poolDex){poolDex=dex;poolCache.clear();}
+  if(!dex||!GEN_BOUNDS[index])return [];
+  if(poolCache.has(index))return poolCache.get(index);
+  const range=GEN_BOUNDS[index];
+  const list=Object.keys(dex).map(Number).filter(n=>
+   Number.isInteger(n)&&n>=range[0]&&n<=range[1]&&dex[n]);
+  poolCache.set(index,list);return list;
+ }
  // Guard the ordinary wild spawn bag independently of the Champion transform.
- // It never modifies story bosses, Arena or Co-op encounters.
+ // It never modifies Arena or Co-op encounters.
  function enforceGeneration(bag,index){
   const range=GEN_BOUNDS[index];
   if(!Array.isArray(bag)||!range)return bag; // Region 10 deliberately mixes Gen.
-  const candidates=Object.keys(G.DEX_BY||{}).map(Number)
-   .filter(dex=>Number.isInteger(dex)&&dex>=range[0]&&dex<=range[1]&&G.DEX_BY[dex]);
+  const candidates=speciesFor(index);
   if(!candidates.length)return bag; // Incomplete test registry: never erase waves.
   return bag.map((def,i)=>{
    if(!def||typeof def!=='object'||!Number.isInteger(Number(def.dex)))return def;
@@ -228,8 +240,7 @@
   if(def.pkmsvvFinalBoss||def.pkmsvvStoryBoss||def.judge||def.pkmsvvJudgment)return def;
   const dex=Number(def.dex),range=GEN_BOUNDS[index];
   if(!Number.isInteger(dex)||dex>=range[0]&&dex<=range[1])return def;
-  const species=Object.keys(G.DEX_BY||{}).map(Number).filter(n=>
-   Number.isInteger(n)&&n>=range[0]&&n<=range[1]&&G.DEX_BY[n]);
+  const species=speciesFor(index);
   if(!species.length)return def; // Never invent an unavailable species.
   const target=species[(Math.abs(dex)+constructed++)%species.length],info=G.DEX_BY[target];
   return {...def,dex:target,name:info?.name||'Pokémon '+target,
