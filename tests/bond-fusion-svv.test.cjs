@@ -197,7 +197,7 @@ test('Rift Bonds are separate: original Bond system not replaced or awarded as e
  assert.match(src,/maxPerRun=1/);
  assert.match(src,/pkmsvv-fusion-guide/);
  assert.doesNotMatch(src,/FUSION TỰ DO/);
- assert.match(read('src/pkmsvv-wiki.js'),/Hai chiêu/);
+ assert.match(read('src/pkmsvv-wiki.js'),/Cả hai chiêu/);
  assert.match(read('src/pkmsvv-story.js'),/luyện cả hai chiêu/);
 });
 test('skill card hints never incorrectly claim ready at low level; MAX upgrades notify once',()=>{
