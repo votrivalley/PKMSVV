@@ -45,6 +45,13 @@
   onlyRankReady=false,boxSort='dex',view='info',page=0,dexQuery='',dexPage=0,
   dexGen=0,dexRarity=0,dexStatus='all',dexType='',dexSort='num',dexFavorites=false;
  const PAGE=30,DEX_PAGE=35;
+ // Cache read-only preview until the next full Box render/save action.
+ let boxItemsCache=null;
+ const TYPE_FRAME_COLORS={normal:'#a7a9af',fire:'#ff7c48',water:'#4aabff',
+  electric:'#ffd447',grass:'#64d884',ice:'#7fe5ea',fighting:'#ec876a',
+  poison:'#bf80e8',ground:'#d6af67',flying:'#a6bffb',psychic:'#f982b4',
+  bug:'#aad36d',rock:'#c5ac83',ghost:'#aa90e7',dragon:'#9681ff',
+  dark:'#9e8a9c',steel:'#b0d1da',fairy:'#ffabd7'};
  const getStored=()=>Hub.valid(currentSave());
  function listPreview(){
   const s=currentSave();
@@ -58,7 +65,7 @@
  function focusedItem(){
   const s=currentSave();
   if(Hub.valid(s))return Hub.item(s,focused)||Hub.active(s)||s.pkmsvvBox[0]||null;
-  const prev=listPreview();
+  const prev=boxItemsCache||listPreview();
   return prev.find(x=>x.id===focused)||prev.find(x=>x.dex===Number(s?.partner))||prev[0]||null;
  }
  // Legacy preview is still playable. Keep selection and favorites on the old
@@ -106,7 +113,40 @@
     silhouette:unknown,scale:hero?3:2,shiny});}
   catch(_){try{G.UI.sprite(canvas,dex,{scale:2,shiny,silhouette:unknown});}catch(__){}}
  }
- function chooseFocus(id){focused=id;renderBox();}
+ // Read-only selection must not rebuild the grid or re-evaluate all species.
+ function chooseFocus(id){
+  if(!boxPane?.isConnected){focused=id;return;}
+  const s=currentSave(),items=boxItemsCache||listPreview();
+  const it=items.find(x=>x.id===id);
+  if(!it||focused===id)return;
+  focused=id;
+  const grid=boxPane.querySelector('#pkmbx-grid');
+  grid?.querySelector('.pkmbx-hub-slot.focused')?.classList.remove('focused');
+  const tile=Array.from(grid?.querySelectorAll('.pkmbx-hub-slot')||[])
+   .find(el=>Number(el.dataset.dex)===it.dex);
+  if(tile){
+   if(tile.dataset.boxId===id)tile.classList.add('focused');
+   else{
+    // Normal/Shiny switching redraws only this one card.
+    const active=Hub.valid(s)?Hub.active(s)?.id:
+     items.find(x=>x.dex===Number(s?.partner)&&x.shiny===!!s?.partnerShiny)?.id;
+    const count=items.reduce((n,x)=>n+(x.dex===it.dex&&!x.shiny?1:0),0);
+    tile.replaceWith(slot(it,active,!getStored(),new Set(Hub.team(s)),
+     Hub.rankOverview(s,it),count));
+   }
+  }
+  const members=Hub.team(s);
+  for(const t of boxPane.querySelectorAll('#pkmbx-six .pkmbx-team-slot')){
+   t.classList.toggle('focused',t.dataset.boxId===id);
+   if(t.dataset.boxId)continue;
+   const canAdd=!members.includes(id)&&!G.DB?.guest;
+   t.disabled=!canAdd;
+   t.title=canAdd?L('Thêm Pokémon đang chọn','Add selected Pokémon'):L('Ô trống','Empty slot');
+   t.setAttribute('aria-label',t.title);
+   t.onclick=canAdd?()=>saveAction(()=>Hub.toggleTeam(id)):null;
+  }
+  renderStats(boxPane,it,getStored());
+ }
  function badgeText(x){return '#'+x.dex+(x.shiny?' ✨':'')+' · R'+x.rank;}
  function rankStars(rank){
   const n=Math.max(0,Math.min(5,Number.isInteger(rank)?rank:0));
@@ -185,6 +225,7 @@
    b.type='button';
    b.className='pkmbx-team-slot'+(it?.id===focused?' focused':'')+(it?.id===active?' active':'');
    if(it){
+    b.dataset.boxId=it.id;
     b.title=monName(it.dex)+(it.shiny?' Shiny':'');
     b.setAttribute('aria-label',L('Xem ','View ')+monName(it.dex));
     b.innerHTML='<canvas width="56" height="56"></canvas><span>'+clean(monName(it.dex))+'</span>';
@@ -204,6 +245,7 @@
  }
  function slot(it,selected,pre=false,members,progress,duplicates=1){
   const b=doc.createElement('button');b.type='button';
+  b.dataset.boxId=it.id;b.dataset.dex=String(it.dex);
   b.className='pkmbx-slot pkmbx-hub-slot'+(it.id===focused?' focused':'')+
    (it.id===selected?' selected':'')+(progress?.canRank?' rank-ready':'');
   const team=(members||new Set(Hub.team(currentSave()))).has(it.id);
@@ -262,7 +304,7 @@
   }).join('');
   const team=Hub.team(s),member=team.includes(it.id);
   const progress=Hub.rankOverview(s,it);
-  const allForms=listPreview().filter(x=>x.dex===it.dex);
+  const allForms=(boxItemsCache||listPreview()).filter(x=>x.dex===it.dex);
   const normalForm=allForms.find(x=>!x.shiny),shinyForm=allForms.find(x=>x.shiny);
   const sharedFav=allForms.some(x=>x.favorite);
   const bonuses=G.PKMSVVBox2?.formatRank?.(progress.rank)||{hp:0,damage:0,cooldown:0};
@@ -312,7 +354,7 @@
   draw(profile.querySelector('#pkmbx-hero'),it.dex,it.shiny,true);
   for(const b of profile.querySelectorAll('[data-box-variant]'))b.onclick=()=>{
    const variant=b.dataset.boxVariant==='shiny'?shinyForm:normalForm;
-   if(variant&&variant.id!==focused){focused=variant.id;renderBox();}
+   if(variant&&variant.id!==focused)chooseFocus(variant.id);
   };
   // Primary actions belong ABOVE the Pokémon portrait and stats, not below.
   const topActions=profile.querySelector('.pkmbx-hub-buttons');
@@ -384,7 +426,7 @@
  // Gacha duplicates; no checkbox step and no Convert-to-Shards action.
  function renderRank(host,it,ready){
   const save=currentSave(),progress=Hub.rankOverview(save,it);
-  const total=listPreview().filter(x=>x.dex===it.dex).length;
+  const total=(boxItemsCache||listPreview()).filter(x=>x.dex===it.dex).length;
   const stock=progress.copies+progress.protectedForms;
   const next=progress.rank+1;
   host.innerHTML='<section class="pkmbx-hub-rank">'+
@@ -446,6 +488,7 @@
  function renderBox(){
   if(!boxPane?.isConnected)return;
   const s=currentSave(),ready=getStored(),items=listPreview();
+  boxItemsCache=items;
   const q=query.trim().toLocaleLowerCase();
   const counts=new Map(),groups=new Map();
   for(const x of items){
@@ -456,12 +499,18 @@
    groups.get(x.dex).push(x);
   }
   // One card per species; do not destroy legacy Normal/Shiny instance records.
-  const ranks=new Map(items.map(x=>[x.id,Hub.rankOverview(s,x)]));
+  // Rank checks scan individual copies. Only evaluate visible species,
+  // unless an explicit Rank filter/sort requires the full collection.
+  const ranks=new Map();
+  const rankFor=x=>{
+   if(!ranks.has(x.dex))ranks.set(x.dex,Hub.rankOverview(s,x));
+   return ranks.get(x.dex);
+  };
   const shown=[...groups.values()].filter(group=>{
    const species=group[0];
    return (!onlyFavorites||group.some(x=>x.favorite))&&
     (!onlyShiny||group.some(x=>x.shiny))&&
-    (!onlyRankReady||(ready&&group.some(x=>ranks.get(x.id)?.canRank)))&&
+    (!onlyRankReady||(ready&&group.some(x=>rankFor(x)?.canRank)))&&
     (!q||monName(species.dex).toLocaleLowerCase().includes(q)||String(species.dex).includes(q));
   }).map(group=>{
    const chosen=group.find(x=>x.id===focused);
@@ -471,7 +520,7 @@
   });
   shown.sort((a,b)=>{
    if(boxSort==='name')return monName(a.dex).localeCompare(monName(b.dex))||a.dex-b.dex;
-   if(boxSort==='rank')return (ranks.get(b.id)?.rank||0)-(ranks.get(a.id)?.rank||0)||a.dex-b.dex;
+   if(boxSort==='rank')return (rankFor(b)?.rank||0)-(rankFor(a)?.rank||0)||a.dex-b.dex;
    if(boxSort==='copies')return (counts.get(b.dex)||0)-(counts.get(a.dex)||0)||a.dex-b.dex;
    if(boxSort==='rarity')return (Number(G.DEX_BY?.[b.dex]?.rarity)||0)-(Number(G.DEX_BY?.[a.dex]?.rarity)||0)||a.dex-b.dex;
    return a.dex-b.dex;
@@ -482,7 +531,7 @@
   const grid=boxPane.querySelector('#pkmbx-grid');grid.replaceChildren();
   const members=new Set(Hub.team(s));
   for(const x of shown.slice(page*PAGE,(page+1)*PAGE))
-   grid.appendChild(slot(x,selected,!ready,members,ranks.get(x.id),counts.get(x.dex)||1));
+   grid.appendChild(slot(x,selected,!ready,members,rankFor(x),counts.get(x.dex)||1));
   // Real PC-style boxes keep the same 6-column capacity and visible empty
   // slots instead of a floating list of cards.
   if(shown.length){
@@ -745,6 +794,8 @@
   favButton.setAttribute('aria-pressed',String(dexFavorites));
   if(!list.includes(infoDex))infoDex=list[0]||null;
   const mon=G.DEX_BY?.[infoDex],detail=dexPane.querySelector('#pkmbx-dex-details');
+  const dexType=String(mon?.types?.[0]||'normal').toLowerCase();
+  detail.style.setProperty('--pkmbx-type',TYPE_FRAME_COLORS[dexType]||'#e64a93');
   if(!mon){detail.innerHTML='<p>'+L('Không có Pokémon phù hợp.','No matching species.')+'</p>';return;}
   const owned=has(infoDex),from=evoRules().filter(r=>r.to===infoDex),to=evoRules().filter(r=>r.from===infoDex);
   const evos=(label,rules,target)=>'<section class="pkmbx-dex-evo"><h4>'+label+'</h4>'+
@@ -932,5 +983,5 @@
  if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',init,{once:true});
  else init();
  G.PKMSVVBoxHubUI={openBox,openDex,openUpgrades,closeBox,closeDex,renderBox,renderDex,
-  focus:id=>{focused=id;renderBox();},focusedId:()=>focused};
+  focus:chooseFocus,focusedId:()=>focused};
 })();
