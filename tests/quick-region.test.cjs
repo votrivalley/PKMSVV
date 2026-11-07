@@ -237,6 +237,23 @@ test('Kanto corrects mixed-gen enemies that bypass both constructor proxy and En
  assert.equal(e2.dex,152,'end of Region does not alter other modes');
 });
 
+test('live manager correction supports non-array registries such as Sets and Maps',()=>{
+ const h=harness(),api=h.G.PKMSVVQuickRegion;
+ h.G.DEX_BY={25:{dex:25,name:'Pikachu'},235:{dex:235,name:'Smeargle'}};
+ h.G.DEX=[{dex:25,gen:1},{dex:235,gen:2}];
+ h.G.SPRITE_META={25:{},235:{}};
+ api.choose(0);
+ const foreign={dex:235,def:{dex:235},hp:10},other={dex:235,def:{dex:235},hp:11};
+ h.alive.push(foreign,other);
+ h.G.EnemyMgr.all=()=>new Set([foreign,other]);
+ for(let i=0;i<10;i++)h.G.EnemyMgr.update(0.016);
+ assert.equal(foreign.dex,25);assert.equal(other.dex,25);
+ assert.equal(api.correctedSpawns,2);
+ const third={dex:235,def:{dex:235},hp:12};
+ h.G.EnemyMgr.all=()=>new Map([['enemy3',third]]);
+ for(let i=0;i<10;i++)h.G.EnemyMgr.update(0.016);
+ assert.equal(third.dex,25,'Map-backed live enemy registries must also be filtered');
+});
 test('National Pokédex official boundaries map every single species to its INTRODUCTION generation',()=>{
  const h=harness(),api=h.G.PKMSVVQuickRegion;
  const boundaries=[
