@@ -227,6 +227,53 @@ async function main(){
   assert.equal(directRank.leftReadyAfter,0,'left Box must remove stale rank-ready highlight');
   assert.equal(directRank.filteredBefore,1,'Rank-ready filter must show the eligible Gacha duplicate');
   assert.equal(directRank.filteredAfter,0,'after spending its copy the Rank-ready filter removes the species');
+  // Perf regression: opening 200 species should evaluate Rank for only the
+  // displayed page. Focusing is read-only and must retain grid DOM/canvases.
+  const fastFocus=await evaluate(`(()=>{
+   const descriptor=Object.getOwnPropertyDescriptor(G.DB,'save');
+   const previousCommit=G.DB.commit,previousRank=G.PKMSVVBoxHub.rankOverview;
+   const raw={owned:{},shiny:{},partner:1,partnerShiny:false,bag:{},tms:{}};
+   Object.keys(G.DEX_BY).filter(n=>Number(n)>0&&Number(n)<=200).forEach(n=>raw.owned[n]={at:1});
+   const fixture=G.PKMSVVBox.migrate(raw).save;
+   let commits=0,rankCalls=0;
+   try{
+    Object.defineProperty(G.DB,'save',{value:fixture,writable:true,configurable:true});
+    G.DB.commit=()=>{commits++;return true;};
+    G.PKMSVVBoxHub.rankOverview=(...a)=>{rankCalls++;return previousRank(...a);};
+    G.PKMSVVBoxHubUI.openBox('info');
+    const grid=document.querySelector('#pkmbx-grid');
+    const originalTile=grid.firstElementChild;
+    const firstCalls=rankCalls;
+    G.PKMSVVBoxHubUI.focus('b1-25-n');
+    const focusCalls=rankCalls-firstCalls;
+    const sameTile=grid.firstElementChild===originalTile;
+    const highlighted=!!grid.querySelector('[data-box-id="b1-25-n"].focused');
+    const profile=document.querySelector('#pkmbx-profile');
+    const border=getComputedStyle(profile.querySelector('.pkmbx-hero-stage>canvas')).borderTopColor;
+    const typeColor=getComputedStyle(profile).getPropertyValue('--pkmbx-type').trim();
+    G.PKMSVVBoxHubUI.openDex();
+    const dexDetail=document.querySelector('#pkmbx-dex-details');
+    const dexBorder=getComputedStyle(dexDetail.querySelector('.pkmbx-hub-hero canvas')).borderTopColor;
+    const dexType=getComputedStyle(dexDetail).getPropertyValue('--pkmbx-type').trim();
+    const abilityHeading=getComputedStyle(dexDetail.querySelector('.pkmbx-dex-summary h4')).color;
+    return {count:Object.keys(raw.owned).length,firstCalls,focusCalls,sameTile,highlighted,
+     commits,border,typeColor,dexBorder,dexType,abilityHeading};
+   }finally{
+    G.PKMSVVBoxHubUI.closeBox();
+    Object.defineProperty(G.DB,'save',descriptor);
+    G.DB.commit=previousCommit;G.PKMSVVBoxHub.rankOverview=previousRank;
+   }
+  })()`);
+  assert.ok(fastFocus.count>=150,'fixture should represent a large owned collection');
+  assert.ok(fastFocus.firstCalls<=45,'opening Box must not compute Rank for every species');
+  assert.ok(fastFocus.focusCalls<=2,'focus must check Rank only for chosen species');
+  assert.equal(fastFocus.sameTile,true,'read-only focus must preserve grid DOM/canvases');
+  assert.equal(fastFocus.highlighted,true,'focused card must update visibly');
+  assert.equal(fastFocus.commits,0,'viewing/focusing must never write the save');
+  assert.equal(fastFocus.border,fastFocus.typeColor,'Box portrait border must follow primary type');
+  assert.equal(fastFocus.dexBorder,fastFocus.dexType,'Dex portrait border must follow primary type');
+  assert.equal(fastFocus.abilityHeading,'rgb(255, 255, 255)','Ability heading needs white text');
+
   const menuState=await evaluate("(()=>{const m=document.querySelector('#scr-menu');const news=m.querySelector('#btn-news');const color=getComputedStyle(news).color;const season=G.PKMSVVSeason?.nowActive?.();const bar=m.querySelector('.pkmsvv-save-banner');const pokemon=m.querySelector('[data-go=dex]');const pc=m.querySelector('#pkmsvv-menu-wiki');const nav=[...m.querySelector('.menu-right .menu-list')?.children||[]];const four=nav.map(n=>{const go=n.getAttribute('data-go')||n.querySelector('[data-go]')?.getAttribute('data-go')||'';const label=(n.querySelector('.pkmsvv-menu-label,.menu-label,strong')?.textContent||n.textContent||'').trim();if(go==='dex'||/^Pok[eé]mon\\b/i.test(label))return 'Pokémon';if(n.id==='pkmsvv-menu-wiki'||label==='PC')return 'PC';if(/multiplayer|coop|co-op/i.test(go)||/^Co-op\\b/i.test(label))return 'Co-op';if(/arena/i.test(go)||label==='Arena')return 'Arena';return null;}).filter(Boolean);return {navDebug:nav.map(n=>({id:n.id,go:n.getAttribute('data-go'),text:n.textContent?.trim().slice(0,95),label:n.querySelector('.pkmsvv-menu-label,.menu-label,strong')?.textContent?.trim()})),nativePC:!!pc,pcButtons:[...m.querySelectorAll('.menu-right button')].filter(b=>b.querySelector('.pkmsvv-menu-label')?.textContent==='PC').length,duplicate:!!pokemon,outsideUpgrade:!!m.querySelector('[data-go=upgrades]'),banner:bar?.textContent,bannerProtected:bar?.getAttribute('translate')==='no',pokemonDesc:pokemon?.querySelector('small')?.textContent,pcDesc:pc?.querySelector('small')?.textContent,four,saveBanners:m.querySelectorAll('.pkmsvv-save-banner').length,seasonBanners:m.querySelectorAll('.pkmsvv-season-banner').length,event:m.querySelector('.pkmsvv-v15-event span')?.textContent,seasonActive:!!season,newsColor:color,newsEnabled:!news?.disabled,menuClean:!!G.PKMSVVMenuCleanQA}})()");
   assert.equal(menuState.menuClean,true);
   assert.equal(menuState.nativePC,true,'keep original Support/Mega/Berry PC');
