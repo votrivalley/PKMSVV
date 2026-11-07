@@ -26,6 +26,7 @@ function harness(options={}){
   Tiles:{arenaBiome(t){return ['fire','steel','water','ground','rock','dark','bug','fighting','ice','dragon'].indexOf(t)+1}},
   World:{biome:17,setBiome(n){this.biome=n;calls.push(n)}},
   Coop:{active:false},
+  DEX_BY:{12:{dex:12,name:'Butterfree',types:['bug'],gen:1}},
   Game:{state:'ui',startRun(){
    if(options.deferred){
     deferredStart=()=>{this.state='playing';G.World.setBiome(0);};return;
@@ -169,7 +170,7 @@ test('Direct scripted Enemy spawns use Region Gen without touching original temp
  assert.equal(boss.boss,true,'boss status is retained');
  assert.equal(JSON.stringify(original),before,'native source must not be modified');
  const special=new h.G.Enemy({...original,pkmsvvStoryBoss:true},0,0,{hp:1},true);
- assert.equal(special.dex,777,'named story bosses retain their narrative identity');
+ assert.ok([1,12].includes(special.dex),'even scripted bosses in normal Kanto free play must be Gen 1');
  h.G.Game.toUI();
  assert.equal(new h.G.Enemy(original,0,0).dex,777,'mode restriction must end with battle');
  assert.equal(JSON.stringify(h.save).includes('pkmsvv'),false,'generation fix must not mutate save');
@@ -234,4 +235,63 @@ test('Kanto corrects mixed-gen enemies that bypass both constructor proxy and En
  h.alive.push(e2);
  for(let i=0;i<10;i++)h.G.EnemyMgr.update(0.016);
  assert.equal(e2.dex,152,'end of Region does not alter other modes');
+});
+
+test('National Pokédex official boundaries map every single species to its INTRODUCTION generation',()=>{
+ const h=harness(),api=h.G.PKMSVVQuickRegion;
+ const boundaries=[
+  [1,151],[152,251],[252,386],[387,493],[494,649],
+  [650,721],[722,809],[810,905],[906,1025]
+ ];
+ let last=0;
+ for(let i=0;i<boundaries.length;i++){
+  const [low,high]=boundaries[i];
+  assert.equal(low,last+1,'National Dex generations must have no gap');
+  assert.equal(api.nationalGen(low),i+1);
+  assert.equal(api.nationalGen(high),i+1);
+  assert.equal(api.nationalGen(high+1),i===8?0:i+2);
+  for(let dex=low;dex<=high;dex++){
+   assert.equal(api.nationalGen(dex),i+1,'wrong Gen for National Dex '+dex);
+   for(let candidate=0;candidate<9;candidate++)
+    if(candidate!==i)assert.equal(api.isAllowed(dex,candidate),false,
+     'foreign national species #'+dex+' must not be allowed in Gen '+(candidate+1));
+  }
+  last=high;
+ }
+ assert.equal(last,1025);
+ assert.equal(api.nationalGen(0),0);
+ assert.equal(api.nationalGen(1026),0);
+ assert.equal(api.nationalGen('Mewtwo'),0);
+});
+test('incorrect in-game Gen tags cannot override official National Pokédex species Gen',()=>{
+ const h=harness(),api=h.G.PKMSVVQuickRegion;
+ h.G.DEX_BY={
+  25:{dex:25,name:'Pikachu',types:['electric']},
+  235:{dex:235,name:'Smeargle',types:['normal']},
+  152:{dex:152,name:'Chikorita',types:['grass']}
+ };
+ // An incorrectly tagged Gen-2 Smeargle (Gen 1) cannot leak to Kanto.
+ h.G.DEX=[
+  {dex:25,gen:2},{dex:235,gen:1},{dex:152,gen:2}
+ ];
+ h.G.SPRITE_META={25:{},235:{},152:{}};
+ const kanto=api.speciesFor(0),johto=api.speciesFor(1);
+ assert.deepEqual(Array.from(kanto),[25]);
+ assert.deepEqual(Array.from(johto),[235,152]);
+ assert.equal(api.isAllowed(235,0),false,'Gen tag is wrong: national 235 is Johto');
+ api.choose(0);
+ const bag=h.G.Enemies.bagAt();
+ assert.ok(bag.every(x=>x.dex===25),'Kanto never offers a mis-tagged Johto spawn');
+ const boss=new h.G.Enemy({dex:235,pkmsvvStoryBoss:true,hp:777},0,0,{hp:1},true);
+ assert.equal(boss.dex,25,'Kanto applies even to a scripted foreign boss');
+ assert.equal(boss.def.hp,777);
+});
+test('no Gacha-eligible Pokémon fails closed rather than keeping a mixed-Gen wave',()=>{
+ const h=harness(),api=h.G.PKMSVVQuickRegion;
+ h.G.DEX=[{dex:152,gen:2}];
+ h.G.DEX_BY={152:{dex:152,name:'Chikorita'}};
+ h.G.SPRITE_META={152:{}};
+ assert.equal(api.speciesFor(0).length,0);
+ assert.equal(api.enforceGeneration([{dex:152},{dex:235}],0).length,0,
+  'never leave Johto monsters on Kanto because a pool is missing');
 });
