@@ -188,7 +188,7 @@ G.PKMSVVFusionEvolved=(()=>{
    zone(player,id,x,y,85,2.4,.45,dmg*.30,'burn');
   }else if(id==='water-tackle'){
    fx(x,y,105,col,15);
-   for(const e of near(135)){hit(e,dmg,col);push(e,x,y,26);slow(e,.28,2.2);}
+   for(const e of near(135)){hit(e,dmg,col);push(e,player.x,player.y,26);slow(e,.28,2.2);}
   }else if(id==='grass-spin'){
    fx(player.x,player.y,cfg.r,col,15);
    zone(player,id,player.x,player.y,145,3.2,.38,dmg*.52,'pull');
