@@ -221,46 +221,72 @@
   const natureHint=nature?.up&&nature?.down?
    L('Tăng 10% ','+10% ')+attr[nature.up]+L(' · Giảm 10% ',' · −10% ')+attr[nature.down]:
    L('Tính cách trung tính, không tăng/giảm chỉ số.','Neutral Nature: no stat increases or penalties.');
-  const statRows=['hp','pa','sa','df','sd','spd'].map(k=>{
-   const base=Number(G.DEX_BY?.[it.dex]?.[k]);
-   if(!Number.isFinite(base))return '';
-   const mult=nature?.up===k?1.1:nature?.down===k?0.9:1;
-   const val=base*mult;
-   const badge=mult===1?'':('<b class="'+(mult>1?'pkmbx-stat-plus':'pkmbx-stat-minus')+'">'+
-    (mult>1?'+10%':'−10%')+'</b>');
-   return '<div class="pkmbx-hub-stat"><span>'+attr[k]+'</span><strong>'+
-    (Number.isInteger(val)?val.toLocaleString('vi-VN'):val.toFixed(1))+'</strong>'+badge+'</div>';
+  const mon=G.DEX_BY?.[it.dex],types=Array.isArray(mon?.types)?mon.types:[];
+  const PALETTE={
+   normal:['#a7a9af','#515d72'],fire:['#ff7c48','#7c302f'],
+   water:['#4aabff','#174d83'],electric:['#ffd447','#806420'],
+   grass:['#64d884','#245b44'],ice:['#7fe5ea','#306b83'],
+   fighting:['#ec876a','#773b37'],poison:['#bf80e8','#603a86'],
+   ground:['#d6af67','#795d30'],flying:['#a6bffb','#546a9d'],
+   psychic:['#f982b4','#783853'],bug:['#aad36d','#53672d'],
+   rock:['#c5ac83','#685845'],ghost:['#aa90e7','#4b397c'],
+   dragon:['#9681ff','#473c96'],dark:['#9e8a9c','#413b55'],
+   steel:['#b0d1da','#466678'],fairy:['#ffabd7','#965675']
+  };
+  const primary=String(types[0]||'normal').toLowerCase();
+  const palette=PALETTE[primary]||PALETTE.normal;
+  profile.dataset.pkmType=primary;
+  profile.style.setProperty('--pkmbx-type',palette[0]);
+  profile.style.setProperty('--pkmbx-type-dark',palette[1]);
+  const typePills=types.map(t=>{
+   const color=(PALETTE[String(t).toLowerCase()]||PALETTE.normal)[0];
+   return '<span class="pkmbx-type-pill" style="--pkmbx-pill:'+color+'">'+
+    clean(typeName(t))+'</span>';
   }).join('');
-
-  const mon=G.DEX_BY?.[it.dex];
-  const types=mon?.types||[];
-  const team=Hub.team(currentSave()),member=team.includes(it.id);
+  const team=Hub.team(s),member=team.includes(it.id);
   const progress=Hub.rankOverview(s,it);
   const allForms=listPreview().filter(x=>x.dex===it.dex);
   const normalForm=allForms.find(x=>!x.shiny),shinyForm=allForms.find(x=>x.shiny);
   const sharedFav=allForms.some(x=>x.favorite);
-  profile.innerHTML='<div class="pkmbx-hub-hero"><canvas id="pkmbx-hero" width="176" height="176"></canvas>'+
-    '<div><strong>'+clean(monName(it.dex))+'</strong><p>#'+it.dex+' · Rank '+progress.rank+'/5</p>'+
-    '<p>'+types.map(typeName).map(clean).join(' · ')+'</p></div></div>'+
+  const bonuses=G.PKMSVVBox2?.formatRank?.(progress.rank)||{hp:0,damage:0,cooldown:0};
+  const number=k=>Number.isFinite(Number(mon?.[k]))?Number(mon[k]):null;
+  const hp=number('hp'),attack=Math.max(number('pa')||0,number('sa')||0);
+  const speed=number('spd'),cooldown=Number(bonuses.cooldown)||0;
+  const rows=[
+   ['hp','♥',L('Máu','HP'),hp,hp===null?'—':String(Math.round(hp))+' · +'+bonuses.hp+'%',hp===null?0:hp/255*100],
+   ['damage','✦',L('Sát thương','Damage'),attack,attack?String(Math.round(attack))+' · +'+bonuses.damage+'%':'—',attack/255*100],
+   ['speed','➤',L('Tốc độ','Speed'),speed,speed===null?'—':String(Math.round(speed)),speed===null?0:speed/255*100],
+   ['cooldown','⌛',L('Hồi chiêu','Cooldown'),cooldown,'−'+cooldown+'%',cooldown/20*100]
+  ];
+  const statRows=rows.map(([key,icon,label,value,display,width])=>
+   '<div class="pkmbx-stat-meter" data-stat="'+key+'">'+
+    '<span class="pkmbx-meter-label"><i aria-hidden="true">'+icon+'</i>'+label+'</span>'+
+    '<span class="pkmbx-meter-track" role="progressbar" aria-label="'+label+
+    '" aria-valuemin="0" aria-valuemax="'+(key==='cooldown'?20:255)+'" aria-valuenow="'+
+    Math.max(0,Number(value)||0)+'"><span class="pkmbx-meter-fill pkmbx-meter-'+key+
+    '" style="width:'+Math.min(100,Math.max(0,width)).toFixed(1)+'%"></span></span>'+
+    '<strong>'+clean(display)+'</strong></div>').join('');
+  profile.innerHTML='<div class="pkmbx-hub-hero">'+
+    '<div class="pkmbx-hero-title"><strong>#'+it.dex+' · '+clean(monName(it.dex))+'</strong>'+
+      '<span>'+L('Pokémon đã sở hữu','Owned Pokémon')+(it.shiny?' ✨ Shiny':'')+'</span></div>'+
+    '<div class="pkmbx-hero-stage"><canvas id="pkmbx-hero" width="176" height="176"></canvas>'+
+      '<div class="pkmbx-type-pills">'+typePills+'</div></div></div>'+
     '<div class="pkmbx-box-variants" role="group" aria-label="'+L('Dạng Pokémon','Pokémon form')+'">'+
     '<button type="button" data-box-variant="normal" class="btn small'+(!it.shiny?' gold':'')+'" '+(!normalForm?'disabled':'')+'>'+L('Bình thường','Normal')+'</button>'+
     '<button type="button" data-box-variant="shiny" class="btn small'+(it.shiny?' gold':'')+'" '+(!shinyForm?'disabled':'')+'>✨ Shiny</button></div>'+
     rankBlock(it,progress)+
-    '<div class="pkmbx-hub-info">'+
-    '<p><b>'+L('Tính cách','Nature')+':</b> '+clean(natureName(nature?.id||it.natureId))+'</p>'+ 
-    '<p class="pkmbx-hint">'+clean(natureHint)+'</p>'+
-    '<p><b>'+L('Đặc tính','Ability')+':</b> '+clean(abText)+'</p>'+ 
-    (desc?'<p class="pkmbx-hint">'+clean(desc)+'</p>':'')+
-    '<p><b>'+L('TM đã học','Learned TMs')+':</b> '+(Hub.learned(currentSave(),it)
-      .map(id=>clean(G.Moves?.BY_ID?.[id]?G.T(G.Moves.BY_ID[id].name,'move'):id)).join(', ')||L('Chưa có','None'))+'</p>'+
-    '</div><div class="pkmbx-hub-buttons">'+
+    '<section class="pkmbx-hub-stats" aria-label="'+L('Chỉ số Pokémon','Pokémon stats')+'">'+
+      '<h3>▥ '+L('Chỉ số','Stats')+'</h3>'+statRows+
+      '<p class="pkmbx-stat-caption">'+L('Thanh thể hiện chỉ số cơ bản. Tăng Rank cộng thêm sức mạnh khi chiến đấu.',
+       'Bars show base stats. Rank grants combat bonuses.')+'</p></section>'+
+    '<div class="pkmbx-hub-buttons">'+
     '<button class="btn small gold" id="pkmbx-use" '+(G.DB?.guest||isCurrent?'disabled':'')+'>'+
      (isCurrent?L('✓ Đang sử dụng','✓ Active'):L('✓ Chọn ra trận','✓ Set Active'))+'</button>'+
     '<button class="btn small" id="pkmbx-star" '+(G.DB?.guest?'disabled':'')+'>'+
      (sharedFav?L('★ Bỏ yêu thích','★ Unfavorite'):L('☆ Yêu thích','☆ Favorite'))+'</button>'+
     '<button class="btn small" id="pkmbx-team" '+(G.DB?.guest?'disabled':'')+'>'+
-     (member?L('− Rút khỏi đội','− Remove from Team'):L('+ Vào đội hình','+ Add to Team'))+'</button>'+
-    '</div><div class="pkmbx-hub-tabs">'+
+     (member?L('− Rút khỏi đội','− Remove from Team'):L('+ Vào đội hình','+ Add to Team'))+'</button></div>'+
+    '<div class="pkmbx-hub-tabs">'+
     '<button class="btn small'+(view==='info'?' gold':'')+'" data-box-tab="info">'+L('Thông tin','Details')+'</button>'+
     '<button class="btn small'+(view==='items'?' gold':'')+'" data-box-tab="items">'+L('Vật phẩm / TM','Items / TMs')+'</button>'+
     '<button class="btn small'+(view==='rank'?' gold':'')+'" data-box-tab="rank">⭐ Rank</button></div>'+
@@ -273,7 +299,7 @@
   // Primary actions belong ABOVE the Pokémon portrait and stats, not below.
   const topActions=profile.querySelector('.pkmbx-hub-buttons');
   if(topActions)profile.insertBefore(topActions,profile.firstChild);
-  profile.querySelector('#pkmbx-rank-shortcut').onclick=()=>{view='rank';renderBox();};
+  profile.querySelector('#pkmbx-rank-shortcut').onclick=()=>performRank(it,ready);
   profile.querySelector('#pkmbx-use').onclick=()=>saveAction(()=>{
    if(ready){
     if(!Hub.safeSelect(it.id))throw Error('Could not select this Pokémon');
@@ -287,10 +313,14 @@
   if(view==='items')renderItems(profile.querySelector('#pkmbx-tab-content'),it,ready);
   else if(view==='rank')renderRank(profile.querySelector('#pkmbx-tab-content'),it,ready);
   else{
-   const stats=G.PKMSVVBox2?.formatRank(it.rank);
-   profile.querySelector('#pkmbx-tab-content').innerHTML='<h3>'+L('Chỉ số Pokémon (theo tính cách)','Pokémon stats (with Nature)')+'</h3>'+ 
-    '<div class="pkmbx-hub-stats">'+statRows+'</div>'+ 
-    (ready&&it.rank?'<p>'+L('Tăng HP & sát thương: ','HP & damage: ')+'+'+(stats?.hp||0)+'%</p>':'');
+   profile.querySelector('#pkmbx-tab-content').innerHTML='<div class="pkmbx-hub-info">'+
+    '<p><b>'+L('Tính cách','Nature')+':</b> '+clean(natureName(nature?.id||it.natureId))+'</p>'+
+    '<p class="pkmbx-hint">'+clean(natureHint)+'</p>'+
+    '<p><b>'+L('Đặc tính','Ability')+':</b> '+clean(abText)+'</p>'+
+    (desc?'<p class="pkmbx-hint">'+clean(desc)+'</p>':'')+
+    '<p><b>'+L('TM đã học','Learned TMs')+':</b> '+
+     (Hub.learned(currentSave(),it).map(id=>clean(G.Moves?.BY_ID?.[id]?G.T(G.Moves.BY_ID[id].name,'move'):id)).join(', ')||L('Chưa có','None'))+
+    '</p></div>';
   }
  }
  function renderItems(host,it,ready){
