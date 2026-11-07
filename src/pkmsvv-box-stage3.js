@@ -225,13 +225,16 @@
    const title=vi?'Lăng Kính Tái Khắc':'Reforge Prism';
    const status=offer.bought?(vi?'Đã mua hôm nay · mở bán lại ngày mai':'Purchased today · available again tomorrow'):
     (vi?'Có bán hôm nay · giới hạn 1 viên/ngày':'In stock today · limit one per day');
-   section.innerHTML='<div class="pkmk-product-art pkmbx-prism-product-icon" aria-hidden="true">🔮</div>'+
+   section.innerHTML='<div class="pkmk-product-art pkmbx-prism-product-icon" aria-hidden="true"><svg class="pkmbx-prism-glass" viewBox="0 0 64 64" role="img" aria-label="Reforge Prism" xmlns="http://www.w3.org/2000/svg"><path d="M35 39L53 57 60 50 42 32" fill="#e6c7a4" stroke="#0c1120" stroke-width="4" stroke-linejoin="round"/><path d="M47 45L55 53" stroke="#866b51" stroke-width="2"/><circle cx="26" cy="24" r="20" fill="#322757" stroke="#0a1120" stroke-width="5"/><circle cx="26" cy="24" r="15.5" fill="#b497ef" stroke="#ede2ff" stroke-width="2"/><path d="M12 21L23 11 36 17 33 35 20 38 12 29Z" fill="#775ec4" opacity=".72"/><path d="M19 16L28 12 35 20 29 29 17 27Z" fill="#cdb5ff" opacity=".9"/><path d="M22 15L25 21 31 24 25 27 22 33 19 27 13 24 19 21Z" fill="#fff7d7"/><circle cx="36" cy="34" r="2" fill="#fff"/></svg></div>'+
     '<div class="pkmk-product-copy pkmbx-prism-product-info"><b>'+title+'</b>'+
     '<small>'+(vi?'Đổi hướng Rank 3/5, giữ nguyên cấp Rank.':'Switch Rank 3/5 branch while keeping Rank level.')+'</small>'+
     '<small>'+(vi?'Đang có: ':'Owned: ')+count(s)+' · '+status+'</small></div>'+
     '<div class="pkmk-product-tail pkmbx-prism-actions"><strong class="pkmbx-prism-price">'+
       PRICE.toLocaleString('vi-VN')+' PokéCoins</strong></div>';
    if(inBag){
+    // When Prism is the only held item, the native inventory renders its
+    // empty placeholder. Replace only that placeholder; preserve Mint/TM/Berry cards.
+    const empty=list.querySelector('.pkmk-empty');if(empty)empty.remove();
     const info=document.createElement('p');
     info.textContent=vi?'Đã có trong Túi đồ. Dùng tại PokéBox → Rank → Đổi hướng.':'Owned item. Use from PokéBox → Rank → Change Path.';
     section.appendChild(info);
@@ -239,7 +242,9 @@
     jump.textContent=vi?'🦎 Đến cửa hàng':'🦎 Go to Shop';
     jump.onclick=()=>ui.open('shop');
     section.appendChild(jump);
-    (list.querySelector('.pkmk-rows')||list).appendChild(section);return;
+    let cards=list.querySelector('.pkmk-cards');
+    if(!cards){cards=document.createElement('div');cards.className='pkmk-cards';list.appendChild(cards);}
+    cards.appendChild(section);return;
    }
    const button=document.createElement('button');
    button.className='btn small gold pkmbx-prism-buy';button.type='button';
@@ -260,7 +265,10 @@
      (vi?'Hồ sơ khách không thể mua vật phẩm.':'Guest profiles cannot buy items.');
     section.appendChild(reason);
    }
-   (list.querySelector('.pkmk-cards')||list).appendChild(section);
+   // Add alongside ordinary Mint/Capsule cards, not alone after the TM grid.
+   const cards=list.querySelector('.pkmk-cards');
+   if(cards)cards.appendChild(section);
+   else list.appendChild(section);
   }
   const oldRender=ui.render;
   ui.render=function(...args){const r=oldRender.apply(this,args);draw();return r;};
