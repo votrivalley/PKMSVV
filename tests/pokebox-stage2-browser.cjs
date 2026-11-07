@@ -404,6 +404,65 @@ async function main(){
   assert.equal(itemTwo.present,true,'real game has item-choice UI');
   assert.equal(itemTwo.active,'scr-item','item choice takes focus over underlying game');
   assert.deepEqual(itemTwo.picked,[0,1],'Both keyboard shortcuts select the two item cards');
+  // User's large collection: inspect browser response times without changing
+  // any persistent profile or requiring high-end desktop hardware.
+  const largeBoxTiming=await evaluate(`(()=>{
+   const descriptor=Object.getOwnPropertyDescriptor(G.DB,'save'),priorCommit=G.DB.commit;
+   const species=Object.keys(G.DEX_BY||{}).map(Number).filter(n=>n>=1&&n<=1025&&G.DEX_BY[n]).slice(0,966);
+   const owned=Object.fromEntries(species.map(n=>[n,{at:1}]));
+   const fixture=G.PKMSVVBox.migrate({owned,shiny:{},partner:species[0],partnerShiny:false,coins:200}).save;
+   let commits=0;
+   try{
+    Object.defineProperty(G.DB,'save',{value:fixture,configurable:true,writable:true});
+    G.DB.commit=()=>{commits++;return true;};
+    const a=performance.now();G.PKMSVVBoxHubUI.openBox('info');const openMs=performance.now()-a;
+    const grid=document.querySelector('#pkmbx-grid'),first=grid.firstElementChild;
+    const chosen='b1-'+(species[18]||species[0])+'-n';
+    const b=performance.now();G.PKMSVVBoxHubUI.focus(chosen);
+    const focusMs=performance.now()-b;
+    return {species:species.length,openMs,focusMs,keptGrid:first===grid.firstElementChild,commits,
+      selected:G.PKMSVVBoxHubUI.focusedId()===chosen};
+   }finally{
+    G.PKMSVVBoxHubUI.closeBox();
+    Object.defineProperty(G.DB,'save',descriptor);G.DB.commit=priorCommit;
+   }
+  })()`);
+  console.log('QA_LARGE_POKEBOX_TIMING='+JSON.stringify(largeBoxTiming));
+  assert.ok(largeBoxTiming.species>=900,'large Box fixture must exercise the long collection');
+  assert.equal(largeBoxTiming.commits,0,'viewing and focusing must not save');
+  assert.equal(largeBoxTiming.keptGrid,true,'focus must not rebuild large Box');
+  assert.equal(largeBoxTiming.selected,true,'focus still selects exact Pokémon');
+  assert.ok(largeBoxTiming.openMs<2000&&largeBoxTiming.focusMs<200,
+   'large Box should not freeze browser; '+JSON.stringify(largeBoxTiming));
+
+  const evolutionNav=await evaluate(`(()=>{
+   const nav=G.PKMSVVModalNavQA;
+   const modal=document.createElement('div');modal.className='scr pkmsvv-evo';
+   modal.style.cssText='position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.3)';
+   const choices=document.createElement('div');choices.className='pkmsvv-evo-panel';
+   choices.style.cssText='position:absolute;top:20%;left:30%';
+   const picked=[];
+   for(let i=0;i<2;i++){
+    const b=document.createElement('button');b.type='button';b.className='pkmsvv-evo-option';
+    b.textContent='Evolution '+i;b.onclick=()=>picked.push(i);choices.append(b);
+   }
+   const cancel=document.createElement('button');cancel.className='pkmsvv-evo-skip';
+   cancel.textContent='Keep';cancel.onclick=()=>picked.push(-1);choices.append(cancel);modal.append(choices);
+   document.body.append(modal);
+   try{
+    const active=nav.active()===modal;
+    const first=nav.first(modal)&&document.activeElement===choices.children[0];
+    nav.move('down');const second=document.activeElement===choices.children[1];
+    const event=new KeyboardEvent('keydown',{key:'Enter',code:'Enter',bubbles:true,cancelable:true});
+    document.dispatchEvent(event);
+    return {active,first,second,picked};
+   }finally{modal.remove();}
+  })()`);
+  assert.equal(evolutionNav.active,true,'evolution must own modal focus');
+  assert.equal(evolutionNav.first,true,'evolution must focus first unlocked route');
+  assert.equal(evolutionNav.second,true,'D-pad navigation must reach second route');
+  assert.deepEqual(evolutionNav.picked,[1],'confirm activates focused evolution');
+
   console.log('PASS Stage 4 real browser QA:',JSON.stringify({...state,rank5Hp:five,otherExceptions:errors.length}));
  }finally{
   try{ws?.close()}catch(_){}
