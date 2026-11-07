@@ -9,7 +9,7 @@
  const typeVi={fire:'Lửa',flying:'Bay',water:'Nước',grass:'Cỏ',electric:'Điện',ghost:'Ma',poison:'Độc',steel:'Thép',fighting:'Giác đấu',psychic:'Siêu linh',dragon:'Rồng',dark:'Bóng tối',rock:'Đá',ground:'Đất',ice:'Băng',fairy:'Tiên',bug:'Bọ',normal:'Thường',offense:'Tấn công',defense:'Phòng thủ'};
  const typeName=t=>G.I18n?.lang==='en'?t:(typeVi[t]||t);
  const s=()=>G.DB?.save;
- let panel=null,selectedMat=new Set(),shardCount=0;
+ let panel=null,selectedMat=new Set(),shardCount=0,selectedProtected=null;
  function attach(){
   const foot=document.querySelector('#pkmsvv-pokebox-overlay .pkmbx-foot');
   if(!foot||$('pkmbx-rank-open'))return;
@@ -23,7 +23,7 @@
   box.open=function(...args){const result=original.apply(this,args);attach();return result;};
   box._pkmbxRankUiWrapped=true;
  }
- function close(){panel?.remove();panel=null;selectedMat.clear();}
+ function close(){panel?.remove();panel=null;selectedMat.clear();selectedProtected=null;shardCount=0;}
  function ensure(){
   if(panel?.isConnected)return;
   panel=document.createElement('div');panel.id='pkmbx-rank-overlay';panel.setAttribute('translate','no');
@@ -42,23 +42,33 @@
   const body=$('pkmbx-rank-body');
   $('pkmbx-rank-close').textContent=txt('✕ Đóng','✕ Close');
   $('pkmbx-rank-note').textContent=txt(
-   'Bản QA: Chỉ dùng Pokémon trùng đúng loài. Không tự tiêu Shiny, Legendary, Pokémon yêu thích hoặc Pokémon gốc từ save cũ. Rank 3/5 đang lưu hướng và chờ đặc tính chiến đấu hoàn thiện.',
-   'QA: only exact species duplicates. Never consume Shiny, Legendary, favorites or migrated originals. Rank 3/5 branch metadata awaits final combat traits.');
+   'Mỗi lần lên Rank chỉ cần 1 bản sao cùng loài hoặc 1 Mảnh. Shiny trùng được tính 1 lượt duy nhất, nhưng luôn giữ nguyên Pokémon. Không tự tiêu Pokémon khi Gacha.',
+   'Each Rank step costs 1 same-species copy or shard. A duplicate Shiny form grants one claimable credit without being consumed. Gacha never auto-sacrifices Pokémon.');
   if(!x){body.innerHTML='<p>'+txt('Hãy tạo PokéBox và chọn một cá thể ở danh sách trước.','Create PokéBox and select an individual first.')+'</p>';return;}
-  const all=api.candidateList(s(),x.id),cost=x.rank+1,have=api.shards(s(),x.dex),name=G.DEX_BY?.[x.dex]?.name||('#'+x.dex);
+  const all=api.candidateList(s(),x.id),protectedCopies=api.shinyCreditList(s(),x.id);
+  const cost=x.rank>=5?0:1,have=api.shards(s(),x.dex),name=G.DEX_BY?.[x.dex]?.name||('#'+x.dex);
   selectedMat=new Set([...selectedMat].filter(id=>all.some(m=>m.id===id)));
-  shardCount=Math.max(0,Math.min(shardCount,have,Math.max(0,cost-selectedMat.size)));
+  if(selectedProtected&&!protectedCopies.some(m=>m.id===selectedProtected))selectedProtected=null;
+  shardCount=Math.max(0,Math.min(shardCount,have,Math.max(0,cost-selectedMat.size-(selectedProtected?1:0))));
   const stats=api.formatRank(x.rank),next=api.formatRank(Math.min(5,x.rank+1));
   let html='<div class="pkmbx-rank-card"><strong>'+esc(name)+'</strong><span>#'+x.dex+(x.shiny?' ✨':'')+' · Rank '+x.rank+'/5</span></div>'+
   '<p>'+txt('Máu / sát thương: ','HP / damage: ')+'+'+stats.hp+'%'+(x.rank<5?' → +'+next.hp+'%':'')+
   ' · '+txt('Mảnh ','Shards ')+esc(name)+': <b>'+have+'</b></p>';
   if(x.rank<5){
    html+='<h3>'+txt('Nguyên liệu để lên Rank ','Materials for Rank ')+(x.rank+1)+': '+cost+'</h3>'+
-     '<p>'+txt('Chọn từng cá thể trùng loài. Có thể phối hợp với Mảnh Rank.','Select exact-species duplicates; combine with species shards if desired.')+'</p>';
+     '<p>'+txt('Mỗi bản trùng tăng đúng 1 Rank. Bản sao thường được tiêu thụ khi xác nhận; Shiny trùng chỉ ghi nhận một lần và không mất Pokémon.',
+      'Each duplicate adds exactly 1 Rank. Ordinary duplicates are consumed on confirmation; Shiny duplicate credit is one-time and preserves the Pokémon.')+'</p>';
    if(all.length){
     html+='<div class="pkmbx-materials">'+all.map(m=>'<label><input type="checkbox" data-material="'+esc(m.id)+'" '+(selectedMat.has(m.id)?'checked':'')+'/> '+
       '#'+m.dex+' · '+esc(m.id)+' '+(m.shiny?'✨':'')+'</label>').join('')+'</div>';
    }else html+='<p>'+txt('Không có bản sao thường đủ điều kiện.','No eligible unprotected duplicates.')+'</p>';
+   if(protectedCopies.length){
+    html+='<p>'+txt('Dạng Shiny trùng (giữ nguyên, chỉ ghi nhận 1 lần):',
+      'Duplicate Shiny form (never consumed, credit once):')+'</p>'+
+     '<div class="pkmbx-materials">'+protectedCopies.map(m=>'<label>'+
+      '<input type="checkbox" data-protected-rank="'+esc(m.id)+'" '+(selectedProtected===m.id?'checked':'')+'/>'+
+      ' ✨ #'+m.dex+' · '+esc(m.id)+'</label>').join('')+'</div>';
+   }
    html+='<label class="pkmbx-shards">'+txt('Dùng Mảnh Rank: ','Use shards: ')+
      '<input type="number" id="pkmbx-shard-qty" min="0" max="'+Math.min(have,cost)+'" value="'+shardCount+'"/></label>'+
      '<p id="pkmbx-rank-count"></p><button class="btn gold" id="pkmbx-rank-up">'+
@@ -95,20 +105,36 @@
    '<div class="pkmbx-materials">'+all.map(m=>'<div><span>'+esc(m.id)+'</span><button class="btn small" data-pkmbx-convert="'+esc(m.id)+'">'+txt('Đổi +1 mảnh','Convert +1 shard')+'</button></div>').join('')+'</div>';
   body.innerHTML=html;
   for(const input of body.querySelectorAll('[data-material]'))input.onchange=()=>{
-   if(input.checked)selectedMat.add(input.dataset.material);else selectedMat.delete(input.dataset.material);
+   if(input.checked){selectedMat=new Set([input.dataset.material]);selectedProtected=null;shardCount=0;}
+   else selectedMat.delete(input.dataset.material);
+   render();
+  };
+  for(const input of body.querySelectorAll('[data-protected-rank]'))input.onchange=()=>{
+   selectedProtected=input.checked?input.dataset.protectedRank:null;
+   if(selectedProtected){selectedMat.clear();shardCount=0;}
    render();
   };
   const shardInput=$('pkmbx-shard-qty');if(shardInput)shardInput.onchange=()=>{
-   shardCount=Math.max(0,Math.min(have,cost,Number(shardInput.value)||0));render();
+   shardCount=Math.max(0,Math.min(have,cost,Number(shardInput.value)||0));
+   if(shardCount){selectedMat.clear();selectedProtected=null;}
+   render();
   };
   const count=$('pkmbx-rank-count'),up=$('pkmbx-rank-up');
   if(up){
-   const ready=selectedMat.size+shardCount===cost;
-   count.textContent=selectedMat.size+' '+txt('bản sao','duplicates')+' + '+shardCount+' '+txt('mảnh','shards')+' / '+cost;
+   const ready=selectedMat.size+shardCount+(selectedProtected?1:0)===cost;
+   count.textContent=selectedMat.size+' '+txt('bản sao thường','ordinary copies')+' + '+shardCount+
+    ' '+txt('mảnh','shards')+' + '+(selectedProtected?1:0)+' '+txt('dạng Shiny giữ lại','retained Shiny form')+' / '+cost;
    up.disabled=!ready;
    up.onclick=()=>{
-    if(!confirm(txt('Nâng Rank? Những Pokémon đã chọn sẽ bị tiêu thụ vĩnh viễn.','Rank up? Selected Pokémon will be permanently consumed.')))return;
-    try{api.rankUp(x.id,[...selectedMat],shardCount);selectedMat.clear();shardCount=0;render();}catch(e){alert(e.message);}
+    if(!confirm(txt(selectedProtected?
+       'Dùng 1 lượt ghi nhận Shiny để nâng Rank? Shiny được giữ nguyên.':
+       'Nâng Rank? Bản sao thường đã chọn sẽ bị tiêu thụ; Mảnh Rank sẽ giảm tương ứng.',
+       selectedProtected?
+       'Claim one Shiny duplicate credit for Rank? Your Shiny will be preserved.':
+       'Rank up? Selected ordinary copies are consumed and chosen shards spent.')))return;
+    try{api.rankUp(x.id,[...selectedMat],shardCount,s(),selectedProtected?[selectedProtected]:[]);
+     selectedMat.clear();shardCount=0;selectedProtected=null;render();
+    }catch(e){alert(e.message);}
    };
   }
   for(const b of body.querySelectorAll('[data-pkmbx-branch]'))b.onclick=()=>{
@@ -127,6 +153,6 @@
    try{api.toFragments(b.dataset.pkmbxConvert);selectedMat.delete(b.dataset.pkmbxConvert);render();}catch(e){alert(e.message);}
   };
  }
- function open(){ensure();selectedMat.clear();shardCount=0;render();}
+ function open(){ensure();selectedMat.clear();selectedProtected=null;shardCount=0;render();}
  G.PKMSVVRankUI={open,close,render};
 })();
