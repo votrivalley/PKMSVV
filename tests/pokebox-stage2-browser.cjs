@@ -145,15 +145,19 @@ async function main(){
   assert.equal(directRank.afterGray,true,'Rank button becomes gray after spent copies');
   assert.equal(directRank.tabGray,true,'Rank tab also becomes gray when ineligible');
   assert.equal(directRank.leftReadyAfter,0,'left Box must remove stale rank-ready highlight');
-  const menuState=await evaluate("(()=>{const m=document.querySelector('#scr-menu');const news=m.querySelector('#btn-news');const color=getComputedStyle(news).color;const season=G.PKMSVVSeason?.nowActive?.();const bar=m.querySelector('.pkmsvv-save-banner');const pokemon=m.querySelector('[data-go=dex]');const pc=m.querySelector('#pkmsvv-menu-wiki');const nav=[...m.querySelector('.menu-right .menu-list')?.children||[]];const four=nav.map(n=>{const go=n.getAttribute('data-go')||n.querySelector('[data-go]')?.getAttribute('data-go')||'';const label=(n.querySelector('.pkmsvv-menu-label,.menu-label,strong')?.textContent||n.textContent||'').trim();if(go==='dex'||/^Khám phá\\b|^Explore\\b/i.test(label))return 'Khám phá';if(n.id==='pkmsvv-menu-wiki'||label==='PC')return 'PC';if(/multiplayer|coop|co-op/i.test(go)||/^Co-op\\b/i.test(label))return 'Co-op';if(/arena/i.test(go)||label==='Arena')return 'Arena';return null;}).filter(Boolean);return {navDebug:nav.map(n=>({id:n.id,go:n.getAttribute('data-go'),text:n.textContent?.trim().slice(0,95),label:n.querySelector('.pkmsvv-menu-label,.menu-label,strong')?.textContent?.trim()})),nativePC:!!pc,pcButtons:[...m.querySelectorAll('.menu-right button')].filter(b=>b.querySelector('.pkmsvv-menu-label')?.textContent==='PC').length,duplicate:!!pokemon,outsideUpgrade:!!m.querySelector('[data-go=upgrades]'),banner:bar?.textContent,bannerProtected:bar?.getAttribute('translate')==='no',pokemonDesc:pokemon?.querySelector('small')?.textContent,pcDesc:pc?.querySelector('small')?.textContent,four,saveBanners:m.querySelectorAll('.pkmsvv-save-banner').length,seasonBanners:m.querySelectorAll('.pkmsvv-season-banner').length,event:m.querySelector('.pkmsvv-v15-event span')?.textContent,seasonActive:!!season,newsColor:color,newsEnabled:!news?.disabled,menuClean:!!G.PKMSVVMenuCleanQA}})()");
+  const menuState=await evaluate("(()=>{const m=document.querySelector('#scr-menu');const news=m.querySelector('#btn-news');const color=getComputedStyle(news).color;const season=G.PKMSVVSeason?.nowActive?.();const bar=m.querySelector('.pkmsvv-save-banner');const pokemon=m.querySelector('[data-go=dex]');const pc=m.querySelector('#pkmsvv-menu-wiki');const nav=[...m.querySelector('.menu-right .menu-list')?.children||[]];const four=nav.map(n=>{const go=n.getAttribute('data-go')||n.querySelector('[data-go]')?.getAttribute('data-go')||'';const label=(n.querySelector('.pkmsvv-menu-label,.menu-label,strong')?.textContent||n.textContent||'').trim();if(go==='dex'||/^Pok[eé]mon\\b/i.test(label))return 'Pokémon';if(n.id==='pkmsvv-menu-wiki'||label==='PC')return 'PC';if(/multiplayer|coop|co-op/i.test(go)||/^Co-op\\b/i.test(label))return 'Co-op';if(/arena/i.test(go)||label==='Arena')return 'Arena';return null;}).filter(Boolean);return {navDebug:nav.map(n=>({id:n.id,go:n.getAttribute('data-go'),text:n.textContent?.trim().slice(0,95),label:n.querySelector('.pkmsvv-menu-label,.menu-label,strong')?.textContent?.trim()})),nativePC:!!pc,pcButtons:[...m.querySelectorAll('.menu-right button')].filter(b=>b.querySelector('.pkmsvv-menu-label')?.textContent==='PC').length,duplicate:!!pokemon,outsideUpgrade:!!m.querySelector('[data-go=upgrades]'),banner:bar?.textContent,bannerProtected:bar?.getAttribute('translate')==='no',pokemonDesc:pokemon?.querySelector('small')?.textContent,pcDesc:pc?.querySelector('small')?.textContent,four,saveBanners:m.querySelectorAll('.pkmsvv-save-banner').length,seasonBanners:m.querySelectorAll('.pkmsvv-season-banner').length,event:m.querySelector('.pkmsvv-v15-event span')?.textContent,seasonActive:!!season,newsColor:color,newsEnabled:!news?.disabled,menuClean:!!G.PKMSVVMenuCleanQA}})()");
   assert.equal(menuState.menuClean,true);
   assert.equal(menuState.nativePC,true,'keep original Support/Mega/Berry PC');
   assert.equal(menuState.pcButtons,1,'main menu must contain only ONE PC');
   assert.equal(menuState.duplicate,true,'keep the home Pokémon launcher');
-  assert.equal(await evaluate("(()=>{const btn=document.querySelector('#scr-menu [data-go=dex]');return !!btn&&btn.getAttribute('aria-label')==='Khám phá'&&btn.textContent.includes('Khám phá')})()"),true,
-   'the native home launcher must visibly show Khám phá, not only change its aria-label');
+  const labels=await evaluate("(()=>{const play=document.querySelector('#scr-menu [data-go=play]'),mon=document.querySelector('#scr-menu [data-go=dex]');return {play:play?.getAttribute('aria-label'),playText:play?.textContent,mon:mon?.getAttribute('aria-label'),monText:mon?.textContent}})()");
+  assert.equal(labels.play,'Khám phá','Play must be renamed Khám phá');
+  assert.match(labels.playText,/Khám phá/,'Explore must appear inside the real Play button');
+  assert.equal(labels.mon,'Pokémon','collection launcher remains Pokémon');
+  assert.match(labels.monText,/Pokémon/,'Pokémon collection must remain visible');
+  assert.doesNotMatch(labels.monText,/Khám phá/,'no stray duplicate Khám phá line under Pokémon');
   assert.equal(menuState.outsideUpgrade,false,'upgrade selection belongs inside Pokémon');
-  assert.deepEqual(menuState.four,['Khám phá','PC','Co-op','Arena'],'main menu order');
+  assert.deepEqual(menuState.four,['Pokémon','PC','Co-op','Arena'],'main menu order');
   assert.match(menuState.pokemonDesc,/PokéBox.*Pokédex.*Nâng cấp|PokéBox.*Pokédex.*Upgrades/);
   assert.match(menuState.pcDesc,/hỗ trợ.*Mega.*Berry|Support.*Mega.*Berries/i);
   assert.match(menuState.banner,/sao lưu thường xuyên|back up regularly/i,'natural backup reminder');
@@ -209,9 +213,15 @@ async function main(){
   assert.equal(realKanto.selectedRegion,0,'Kanto is exactly Gen 1 in compiled game');
   const genAudit=await evaluate("(()=>{const mismatch=G.DEX.filter(p=>p&&G.PKMSVVQuickRegion.nationalGen(p.dex)!==Number(p.gen));return {count:mismatch.length,examples:mismatch.slice(0,12).map(p=>({dex:p.dex,name:p.name,gen:p.gen,expected:G.PKMSVVQuickRegion.nationalGen(p.dex)}))}})()");
   assert.equal(genAudit.count,0,'Gacha internal Gen tags must agree with the official National Pokédex: '+JSON.stringify(genAudit));
-  assert.equal(realKanto.badgeVisible,true,'in-game QA badge must prove Kanto selector is active');
-  assert.match(realKanto.badgeText,/KANTO · GEN 1 · #0001–0151/,
-   'in-game banner must display the official National Dex boundaries');
+  assert.equal(realKanto.badgeVisible,false,'Gen debug badge should not appear in combat');
+  const graduated=await evaluate("(()=>{const q=G.PKMSVVQuickRegion;const beginner=q.progressivePool(0,0),late=q.progressivePool(0,780);return {beginnerCount:beginner.length,lateCount:late.length,earlyGyarados:beginner.includes(130),earlyKangaskhan:beginner.includes(115),earlyMewtwo:beginner.includes(150),earlyBase:beginner.some(d=>q.pokemonStrength(d).total<=355),evolutionData:!!G.PKMSVV_EVOLUTION_DATA?.rules?.length}})()");
+  console.log('Progressive Kanto roster QA:',JSON.stringify(graduated));
+  assert.ok(graduated.beginnerCount>0,'opening Kanto wave must have weak Pokémon');
+  assert.equal(graduated.earlyGyarados,false,'opening Kanto must NOT include Gyarados');
+  assert.equal(graduated.earlyKangaskhan,false,'opening Kanto must NOT include Kangaskhan');
+  assert.equal(graduated.earlyMewtwo,false,'opening Kanto must NOT include Mewtwo');
+  assert.equal(graduated.earlyBase,true,'opening Kanto should include low-base-stat Pokémon');
+  assert.ok(graduated.lateCount>=graduated.beginnerCount,'later waves unlock more Pokémon');
   assert.deepEqual(realKanto.genChecks,[1,1,2,2,3,9],
    'the compiled game must use the official National Dex Gen boundaries');
 
