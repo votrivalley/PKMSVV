@@ -702,7 +702,7 @@
    '<div class="pkmbx-dex-filters" id="pkmbx-dex-filters" hidden>'+
    '<label>'+L('Thế hệ','Generation')+'<select id="pkmbx-dex-gen"><option value="0">'+L('Tất cả Gen','All generations')+'</option>'+genOptions+'</select></label>'+
    '<label>'+L('Tình trạng','Collection')+'<select id="pkmbx-dex-status"><option value="all">'+L('Tất cả','All')+'</option>'+
-    '<option value="owned">'+L('Đã có','Owned')+'</option><option value="missing">'+L('Chưa có','Missing')+'</option><option value="shiny">Shiny</option></select></label>'+
+    '<option value="owned">'+L('Đã đánh bại','Defeated')+'</option><option value="missing">'+L('Chưa đánh bại','Not defeated')+'</option><option value="shiny">Shiny</option></select></label>'+
    '<label>'+L('Độ hiếm','Rarity')+'<select id="pkmbx-dex-rarity"><option value="0">'+L('Tất cả độ hiếm','All rarities')+'</option>'+
     [1,2,3,4,5].map((n)=>'<option value="'+n+'">'+L(['','Thường','Khá hiếm','Hiếm','Sử thi','Huyền thoại'][n],['','Common','Uncommon','Rare','Epic','Legendary'][n])+'</option>').join('')+'</select></label>'+
    '<label>'+L('Hệ','Type')+'<select id="pkmbx-dex-type"><option value="">'+L('Tất cả hệ','All types')+'</option>'+typeOptions+'</select></label>'+
@@ -759,7 +759,7 @@
    .filter(n=>Number.isSafeInteger(n)&&n>0&&n<=1025&&G.DEX_BY[n]).sort((a,b)=>a-b);
   const favorites=new Set((Hub.valid(s)?s.pkmsvvBox:listPreview()).filter(x=>x.favorite).map(x=>x.dex));
   const q=dexQuery.trim().toLocaleLowerCase();
-  const has=n=>!!(s.owned?.[n]||s.shiny?.[n]);
+  const has=n=>G.PKMSVVDexDefeats?.unlocked?.(s,n)??!!(s.owned?.[n]||s.shiny?.[n]);
   const list=nums.filter(n=>{
    const p=G.DEX_BY[n];
    if(q&&!String(n).includes(q)&&!monName(n).toLocaleLowerCase().includes(q))return false;
@@ -781,8 +781,8 @@
   if(!list.length)host.innerHTML='<p class="pkmbx-dex-empty">'+L('Không có Pokémon phù hợp bộ lọc.','No Pokémon match these filters.')+'</p>';
   for(const dex of list.slice(dexPage*DEX_PAGE,(dexPage+1)*DEX_PAGE)){
    const b=doc.createElement('button');b.type='button';
-   b.className='pkmbx-dex-card'+(infoDex===dex?' focused':'');
-   b.innerHTML='<canvas width="56" height="56"></canvas><span>#'+dex+(favorites.has(dex)?' ★':'')+'</span><b>'+clean(monName(dex))+'</b>';
+   b.className='pkmbx-dex-card'+(infoDex===dex?' focused':'')+(has(dex)?'':' is-undefeated');
+   b.innerHTML='<canvas width="56" height="56"></canvas><span>#'+dex+(favorites.has(dex)&&has(dex)?' ★':'')+'</span><b>'+ (has(dex)?clean(monName(dex)):'???')+'</b>';
    b.onclick=()=>{infoDex=dex;dexShinyView=false;renderDex();};
    host.appendChild(b);draw(b.querySelector('canvas'),dex,false,false,!has(dex));
   }
@@ -797,6 +797,15 @@
   const primaryDexType=String(mon?.types?.[0]||'normal').toLowerCase();
   detail.style.setProperty('--pkmbx-type',TYPE_FRAME_COLORS[primaryDexType]||'#e64a93');
   if(!mon){detail.innerHTML='<p>'+L('Không có Pokémon phù hợp.','No matching species.')+'</p>';return;}
+  if(!has(infoDex)){
+   detail.classList.add('pkmbx-dex-undefeated');
+   detail.innerHTML='<div class="pkmbx-hub-hero"><canvas id="pkmbx-dex-hero" width="176" height="176"></canvas>'+
+    '<strong>#'+infoDex+' · ???</strong><p>'+L('Chưa đánh bại Pokémon này. Hãy gặp và hạ nó trong trận để khám phá và mở Gacha.',
+     'Defeat this Pokémon in a battle to reveal it and add it to your Gacha pool.')+'</p></div>';
+   draw(detail.querySelector('#pkmbx-dex-hero'),infoDex,false,true,true);
+   return;
+  }
+  detail.classList.remove('pkmbx-dex-undefeated');
   const owned=has(infoDex),from=evoRules().filter(r=>r.to===infoDex),to=evoRules().filter(r=>r.from===infoDex);
   const evos=(label,rules,target)=>'<section class="pkmbx-dex-evo"><h4>'+label+'</h4>'+
    (rules.length?rules.slice(0,15).map(r=>'<button type="button" data-evo-dex="'+r[target]+'" class="btn small">'+
