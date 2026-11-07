@@ -333,3 +333,31 @@ continuing. Preserve offline Wi-Fi hosting and the full existing test suite.
   localized abilities, plus existing Web/PC/Android source and smoke tests.
   Keep isolated QA branch: no Cloudflare production deploy or permanent
   `com.votrivalley.pkmsvv.fulllan` APK update until real save QA approval.
+
+## Exploration mascots & instant HOME fighter — 2026-11-07
+- The Exploration region cards use **actual sprite canvases on existing
+  illustrated WebP covers**. National Dex IDs by generation, in order:
+  **Gen 1 Mewtwo #150; Gen 2 Lugia #249; Gen 3 Jirachi #385;
+  Gen 4 Cresselia #488; Gen 5 Kyurem #646; Gen 6 Zygarde #718;
+  Gen 7 Necrozma #800; Gen 8 Eternatus #890; Gen 9 Terapagos #1024**.
+  The tenth **Tháp Thiên Không / Sky Pillar** retains Rayquaza #384.
+  Locked cards keep their silhouettes, unlock seals and difficulty values;
+  **DO NOT** alter wild spawns, generations, boss pools, or rewards when
+  changing these display-only mascots.
+- In PokéBox, choosing **✓ Chọn ra trận** must update the **HOME menu**
+  portrait canvas `#menu-partner`, visible `#menu-partner-name` and
+  Normal/Shiny variant **immediately after a successful save commit**, while
+  the PokéBox overlay is still open. For migrated saves, keep
+  `PKMSVVBox.selectInstance` atomic and call
+  `PKMSVVMenuCleanQA.restorePartner()` **after** successful persistence.
+  For old saves, invoke the same redraw after `legacySelect` commits.
+  Redraw is UI-only; failures must not rollback saved partner or count as a
+  combat run. Do not launch a battle or wait for game-over to refresh HOME.
+  Cancelled, unowned and commit-failed choices must not update the portrait.
+- QA gates: assert all 10 National Dex cover IDs (Sky unchanged) and render
+  sprite canvases, keep existing locked region visuals, then use the real
+  compiled Chromium game to click `#pkmbx-use` on an **ephemeral** saved
+  original & migrated Pokémon fixture, assert the HOME canvas key and name
+  update while the overlay remains open and `G.Game.state` is unchanged.
+  Preserve production Web, signed Android package and all player saves until
+  QA approved.
