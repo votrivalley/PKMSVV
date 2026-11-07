@@ -238,9 +238,12 @@
    typeof api.candidateList==='function'&&typeof api.shards==='function');
   let copies=0,fragments=0,protectedForms=0;
   if(enabled&&cost){
-   copies=api.candidateList(s,x.id).length;
+   // Rank is species-shared: prefer the Normal carrier for safely using a
+   // duplicate Shiny's one-time credit even while its Shiny skin is focused.
+   const carrier=x.shiny?(s.pkmsvvBox.find(v=>v.dex===x.dex&&!v.shiny)||x):x;
+   copies=api.candidateList(s,carrier.id).length;
    fragments=api.shards(s,x.dex);
-   protectedForms=api.shinyCreditList?.(s,x.id)?.length||0;
+   protectedForms=api.shinyCreditList?.(s,carrier.id)?.length||0;
   }
   const available=enabled?Math.min(cost,copies+fragments+protectedForms):0;
   return {rank,max,cost,copies,fragments,protectedForms,available,missing:Math.max(0,cost-available),
