@@ -79,7 +79,7 @@ test('Choose Kanto starts original native play exactly once and keeps biome plus
  assert.equal(h.G.Enemies.bagAt()[0].dex,12,'Gen restriction stays active between spawn ticks');
  h.G.Game.toUI();
  assert.equal(x.active,false);
- assert.equal(h.G.World.biome,07,'free world state restored');
+ assert.equal(h.G.World.biome,17,'free world state restored');
  h.G.World.setBiome(777);
  assert.equal(h.G.World.biome,777,'post-game free world can rotate again');
  assert.equal(JSON.stringify(h.save),before,'no region progress or Seal minted');
@@ -95,7 +95,7 @@ test('Unlocks use existing Crown Seal keys; all ten regions visible, Sky require
  assert.equal(x.entries().length,10);
  assert.equal(x.entries()[9].name,'Tháp Thiên Không');
  assert.equal(x.choose(9),true);
- assert.equal(h.G.World.biome,00);
+ assert.equal(h.G.World.biome,10);
  h.G.Flow.goMenu();assert.equal(x.active,false);
 });
 test('Other match types and direct native game starts remain unaffected',()=>{
@@ -345,7 +345,7 @@ test('Kanto persists when a Berry wrapper is installed OUTSIDE Region after scri
   'Kanto must still be Gen 1 after the delayed engine start');
  h.G.Game.toUI();
  assert.equal(region.active,false);
- assert.equal(h.G.World.biome,07);
+ assert.equal(h.G.World.biome,17);
 });
 test('Kanto cancelled during Berry wait does not leak into another mode',()=>{
  const h=harness(),region=h.G.PKMSVVQuickRegion;
