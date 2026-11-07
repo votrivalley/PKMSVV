@@ -337,6 +337,7 @@ test('Ready Team actions are above Pokémon hero; singleton species never shows 
  const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub.css'),'utf8');
  assert.match(ui,/profile\.insertBefore\(topActions,profile\.firstChild\)/);
  assert.match(ui,/duplicates>1\?'<span class="pkmbx-stack/);
+ assert.match(ui,/×'\+\(duplicates-1\)/);
  assert.match(ui,/Rank\(\)\?\.open\?\.\(it\.id\)/);
  assert.match(css,/#pkmsvv-pokebox-overlay #pkmbx-profile>\.pkmbx-hub-buttons/);
  assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
