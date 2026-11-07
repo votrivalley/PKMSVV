@@ -257,6 +257,11 @@ test('Rank overview uses only Stage 2 eligible copies/shards and never mutates s
   available:1,canRank:true});
  assert.equal(JSON.stringify(h.s),saved,'render data must never consume copies or write to save');
  hub.item(h.s,plain.id).locked=true;
+ // Normal + Shiny forms may provide one safe, non-consumable Rank credit.
+ const stillHasShiny=hub.rankOverview(h.s,hub.item(h.s,target.id));
+ assert.equal(stillHasShiny.protectedForms,1);
+ assert.equal(stillHasShiny.canRank,true);
+ h.s.pkmsvvRankShinyCredits={6:['b1-6-s']};
  const noMaterial=hub.rankOverview(h.s,hub.item(h.s,target.id));
  assert.equal(noMaterial.canRank,false);
  assert.equal(noMaterial.missing,1);
@@ -264,8 +269,8 @@ test('Rank overview uses only Stage 2 eligible copies/shards and never mutates s
  hub.item(h.s,target.id).rank=1;
  const shards=hub.rankOverview(h.s,hub.item(h.s,target.id));
  assert.equal(shards.rank,1);
- assert.equal(shards.cost,2);
- assert.equal(shards.available,2);
+ assert.equal(shards.cost,1);
+ assert.equal(shards.available,1);
  assert.equal(shards.canRank,true);
  assert.equal(shards.fragments,2);
  hub.item(h.s,target.id).rank=5;
@@ -313,7 +318,7 @@ test('Rank tab displays real material counts and offers safe legacy backup rathe
  assert.match(ui,/progress\.copies/);
  assert.match(ui,/progress\.fragments/);
  assert.match(ui,/listPreview\(\)\.filter\(x=>x\.dex===it\.dex\)\.length/);
- assert.match(ui,/Sao lưu để mở Rank/);
+ assert.match(ui,/Mở quản lý Save \/ Bật PokéBox/);
  assert.match(ui,/PKMSVVSaveUI/);
  assert.match(ui,/pkmbx-stack/);
  assert.doesNotMatch(ui,/id="pkmbx-rank-direct" class="btn gold" '\+\(!ready\?'disabled'/,
@@ -325,4 +330,21 @@ test('Newspaper graphic replaces unsupported News glyph while retaining button s
  assert.match(css,/data:image\/svg\+xml,/);
  assert.match(css,/#scr-menu #btn-news > svg/);
  assert.match(css,/#scr-menu #btn-news\{display:flex/);
+});
+
+test('Ready Team actions are above Pokémon hero; singleton species never shows x1',()=>{
+ const ui=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub-ui.js'),'utf8');
+ const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub.css'),'utf8');
+ assert.match(ui,/profile\.insertBefore\(topActions,profile\.firstChild\)/);
+ assert.match(ui,/duplicates>1\?'<span class="pkmbx-stack/);
+ assert.match(ui,/Rank\(\)\?\.open\?\.\(it\.id\)/);
+ assert.match(css,/#pkmsvv-pokebox-overlay #pkmbx-profile>\.pkmbx-hub-buttons/);
+ assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+});
+test('Normal and Shiny display the same available species Rank credit',()=>{
+ const h=setup(),original=hub.item(h.s,'b1-6-n'),skin=hub.item(h.s,'b1-6-s');
+ const a=hub.rankOverview(h.s,original),b=hub.rankOverview(h.s,skin);
+ assert.equal(a.protectedForms,1);assert.equal(b.protectedForms,1);
+ assert.equal(a.cost,1);assert.equal(b.cost,1);
+ assert.equal(a.canRank,true);assert.equal(b.canRank,true);
 });
