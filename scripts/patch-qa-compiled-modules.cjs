@@ -1,5 +1,5 @@
 'use strict';
-/* Fail-closed QA-only replacement of five stale compiled v1.5.93 modules.
+/* Fail-closed QA-only replacement of six stale compiled v1.5.93 modules.
  * Never operate on a production build, versioned baseline, or player saves.
  * The minified bundle already embeds these modules: adding standalone scripts
  * at the end would DOUBLE-INSTALL them, so replace the original assignment
@@ -12,7 +12,8 @@ const mods=[
  ['PKMSVVArenaSolo','src/pkmsvv-arena-solo.js'],
  ['PKMSVVChampionArena','src/pkmsvv-champion-arena.js'],
  ['PKMSVVArenaPvp','src/lan/arena-pvp.js'],
- ['PKMSVVFusionPilot','src/pkmsvv-bond-fusion.js']
+ ['PKMSVVFusionPilot','src/pkmsvv-bond-fusion.js'],
+ ['PKMSVVEvo','src/pkmsvv-evolution.js']
 ];
 const targets=process.argv.slice(2).map(p=>path.resolve(p));
 if(!targets.length)throw Error('Pass one or more isolated QA app.min.js paths');
@@ -47,7 +48,10 @@ function replaceModule(bundle,label,filename){
  // Replace ONLY the expression, never append a standalone statement.
  // Terser may combine assignments into one comma sequence. Also preserve the
  // embedded Berry .install() side-effect that follows this assignment.
- const source=fs.readFileSync(path.join(root,filename),'utf8');
+ let source=fs.readFileSync(path.join(root,filename),'utf8');
+ // The standard prepare-game build resolves this token before minification.
+ // Isolated QA reuses a signed baseline, so supply its tested 1.15 factor.
+ if(label==='PKMSVVEvo')source=source.replace('__PKMSVV_HP_FACTOR__','1.15');
  const sourceAt=source.indexOf(assignment);
  if(sourceAt<0)throw Error('Source module assignment missing: '+label);
  const srcBoundary=/\}\)\(\)/g;srcBoundary.lastIndex=sourceAt+assignment.length;
