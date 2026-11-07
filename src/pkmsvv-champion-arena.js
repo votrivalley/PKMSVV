@@ -281,7 +281,7 @@ G.PKMSVVChampionArena=(()=>{
      '🏟️ '+mapEffect(REGION_THEMES[Number(mapChoice)||0]).name+' · '+
       mapEffect(REGION_THEMES[Number(mapChoice)||0]).hint;
    };
-  $('pkmsvv-champion-start').onclick=start;
+  $('pkmsvv-champion-start').onclick=()=>entryPick(()=>start());
   $('pkmsvv-champion-sky').onclick=()=>{if(storyCompleted()&&!G.DB?.save?.pkmsvvChapter10Done)startSky();};
   $('pkmsvv-champion-rematch').onclick=rematch;
   $('pkmsvv-champion-ready').onclick=()=>{if(active&&elapsed>=prepSeconds())nextDuel();};
@@ -495,6 +495,70 @@ G.PKMSVVChampionArena=(()=>{
   bar.id='pkmsvv-champion-hud';bar.className='pkmsvv-champion-hud';
   document.body.append(bar);bar.hidden=false;
   beginPrep();return true;
+ }
+
+ // Champion vs AI: pick a real saved Pokémon for up to ten seconds BEFORE
+ // entering the Arena. Only a confirmed choice changes the active fighter.
+ let pendingPick=null;
+ function entryPick(next){
+  if(active||pendingPick)return false;
+  const save=G.DB?.save;if(!save)return false;
+  const dexes=Object.keys(save.owned||{}).map(Number).filter(d=>G.DEX_BY?.[d]);
+  if(save.partner&&!dexes.includes(Number(save.partner)))dexes.unshift(Number(save.partner));
+  if(!dexes.length)return next();
+  const shell=document.createElement('div');shell.id='pkmsvv-champion-entry-pick';
+  shell.setAttribute('translate','no');shell.setAttribute('role','dialog');
+  shell.setAttribute('aria-modal','true');
+  const box=document.createElement('div');box.className='pkmsvv-champion-entry-card';
+  const heading=document.createElement('h2');
+  heading.textContent=tr('⚔ Chọn Pokémon trước Arena','⚔ Choose Pokémon before Arena');
+  const clock=document.createElement('strong');clock.id='pkmsvv-champion-entry-clock';clock.textContent='10s';
+  const search=document.createElement('input');search.type='search';
+  search.placeholder=tr('Tìm Pokémon / #Dex','Search Pokémon / #Dex');
+  const list=document.createElement('div');list.className='pkmsvv-champion-entry-list';
+  const buttons=document.createElement('div');buttons.className='pkmsvv-champion-entry-actions';
+  const ok=document.createElement('button');ok.type='button';ok.className='btn gold';ok.textContent=tr('✓ Xác nhận','✓ Confirm');
+  const cancel=document.createElement('button');cancel.type='button';cancel.className='btn ghost';cancel.textContent=tr('Hủy','Cancel');
+  buttons.append(ok,cancel);box.append(heading,clock,search,list,buttons);shell.append(box);document.body.append(shell);
+  let selected=Number(save.partner)||dexes[0],left=10,finished=false;
+  let timer=null;const oldFocus=document.activeElement;
+  const paint=()=>{
+   list.replaceChildren();
+   const query=search.value.trim().toLowerCase();
+   const filtered=dexes.filter(d=>(String(d).includes(query)||String(G.DEX_BY?.[d]?.name||'').toLowerCase().includes(query))).slice(0,100);
+   for(const dex of filtered){
+    const b=document.createElement('button');b.type='button';b.className='btn small';
+    b.classList.toggle('gold',dex===selected);
+    b.textContent=(dex===selected?'✓ ':'')+(G.DEX_BY[dex]?.name||('#'+dex))+' #'+dex;
+    b.onclick=()=>{selected=dex;paint();};
+    list.append(b);
+   }
+  };
+  const close=shouldStart=>{
+   if(finished)return;
+   finished=true;pendingPick=null;clearInterval(timer);shell.remove();oldFocus?.focus?.();
+   if(shouldStart){
+    if(selected!==Number(save.partner)){
+     const oldDex=save.partner,oldShiny=save.partnerShiny;
+     try{
+      const item=save.pkmsvvBox?.find(x=>x.dex===selected&&!x.shiny);
+      const success=item&&G.PKMSVVBoxHub?.safeSelect?.(item.id);
+      if(!success){save.partner=selected;save.partnerShiny=false;
+       if(G.DB.commit?.(true)===false)throw Error('Cannot save Pokémon choice');}
+     }catch(error){
+      save.partner=oldDex;save.partnerShiny=oldShiny;
+      G.UI?.toast?.(tr('Không lưu được Pokémon đã chọn, giữ lựa chọn cũ.',
+       'Could not save selection; previous Pokémon retained.'),2400);
+     }
+    }
+    next();
+   }
+  };
+  search.oninput=paint;ok.onclick=()=>close(true);cancel.onclick=()=>close(false);
+  paint();search.focus();
+  timer=setInterval(()=>{left--;clock.textContent=Math.max(0,left)+'s';if(left<=0)close(true);},1000);
+  pendingPick={cancel:()=>close(false)};
+  return true;
  }
  function start(){
   const save=G.DB?.save;
