@@ -171,6 +171,89 @@ G.PKMSVVEvo = (() => {
     }
     return {from:old.id,to:upgraded.id,lvl:upgraded.lvl};
   }
+  // All evolutions may optionally exchange exactly ONE move for a move in
+  // the evolved species' natural pool. Preserve the old move's upgrade level,
+  // slot, cooldown proportion and existing global upgrades. No save mutation.
+  function skillSwapOptions(pl){
+    if(!pl?.mon||!Array.isArray(pl.moves)||typeof G.Moves?.poolFor!=='function')return [];
+    const learned=new Set(pl.moves.map(m=>m.id));
+    const ownTypes=new Set(pl.mon?.types||[]);
+    const pool=G.Moves.poolFor(pl.mon)||[];
+    return [...new Set(pool.map(x=>typeof x==='string'?x:x?.id).filter(Boolean))]
+      .filter(id=>!learned.has(id)&&G.Moves?.BY_ID?.[id])
+      .sort((a,b)=>Number(ownTypes.has(G.Moves.BY_ID[b].type))-Number(ownTypes.has(G.Moves.BY_ID[a].type))||
+        a.localeCompare(b));
+  }
+  function swapSkill(pl,fromId,toId){
+    if(!pl||!Array.isArray(pl.moves)||!skillSwapOptions(pl).includes(toId)||typeof G.Moves?.instance!=='function')return false;
+    const idx=pl.moves.findIndex(m=>m.id===fromId);
+    if(idx<0)return false;
+    const old=pl.moves[idx],def=G.Moves.BY_ID[toId];
+    const rank=Math.max(1,Math.min(Number(def.maxLvl)||1,Number(old.lvl)||1));
+    const next=G.Moves.instance(toId,rank);
+    if(!next)return false;
+    if(G.GlobalPower?.applyMove)G.GlobalPower.applyMove(next,pl);
+    next.since=old.since;
+    next.t=Number(old.cd)>0&&Number(next.cd)>0?
+      Math.max(0,Math.min(next.cd,(Number(old.t)||0)/old.cd*next.cd)):0;
+    pl.moves[idx]=next;
+    for(const group of pl.slots||[]){
+      const at=group.indexOf(old);if(at>=0)group[at]=next;
+    }
+    if(pl.bind&&pl.bind[fromId]!==undefined&&pl.bind[toId]===undefined)
+      pl.bind[toId]=pl.bind[fromId];
+    return {from:fromId,to:toId,lvl:rank};
+  }
+  function showSkillSwap(pl,done){
+    const options=skillSwapOptions(pl);
+    if(!options.length||!pl.moves?.length){done();return;}
+    const modal=document.createElement('div');
+    modal.className='scr pkmsvv-evo pkmsvv-evo-skill';
+    modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');
+    const panel=document.createElement('div');panel.className='pkmsvv-evo-panel';
+    modal.appendChild(panel);
+    const title=document.createElement('h2');
+    title.textContent=G.I18n?.lang==='en'?'✨ EVOLUTION · CHANGE ONE MOVE':'✨ TIẾN HÓA · ĐỔI 1 KỸ NĂNG';
+    const desc=document.createElement('p');
+    desc.textContent=G.I18n?.lang==='en'?
+      'Optional: choose one learned move, then one move of the evolved Pokémon. Upgrade level is preserved.':
+      'Tùy chọn: chọn một chiêu đang học, rồi chọn một chiêu của Pokémon mới. Giữ cấp nâng tương đương.';
+    panel.append(title,desc);
+    let finished=false;
+    const finish=()=>{if(finished)return;finished=true;modal.remove();done();};
+    const skip=document.createElement('button');
+    skip.type='button';skip.className='pkmsvv-evo-skip';skip.setAttribute('data-back','');
+    skip.textContent=G.I18n?.lang==='en'?'Keep current moves':'Giữ nguyên kỹ năng';
+    skip.onclick=finish;
+    const name=id=>{
+      const d=G.Moves?.BY_ID?.[id],raw=d?.name;
+      return typeof G.T==='function'&&raw?String(G.T(raw,'move')):Array.isArray(raw)?
+        String(raw[G.I18n?.lang==='en'?1:0]||raw[0]):String(raw||id);
+    };
+    function drawChoices(ids,onChoose){
+      for(const old of panel.querySelectorAll('.pkmsvv-evo-option'))old.remove();
+      for(const [id,level] of ids){
+        const btn=document.createElement('button');
+        btn.type='button';btn.className='pkmsvv-evo-option';
+        btn.textContent=name(id)+(level?' · Lv. '+level:'');
+        btn.onclick=()=>onChoose(id);
+        panel.insertBefore(btn,skip);
+      }
+      if(G.PKMSVVModalNavQA?.first)requestAnimationFrame(()=>G.PKMSVVModalNavQA.first(modal));
+      else G.Pad?.focusFirst?.();
+    }
+    panel.append(skip);
+    drawChoices(pl.moves.map(m=>[m.id,m.lvl||1]),oldId=>{
+      desc.textContent=(G.I18n?.lang==='en'?'Replace ':'Thay ')+name(oldId)+
+        (G.I18n?.lang==='en'?' with:':' bằng:');
+      drawChoices(options.map(id=>[id,null]),newId=>{
+        const receipt=swapSkill(pl,oldId,newId);
+        if(receipt){pl.pkmEvoHistory?.at(-1)&&(pl.pkmEvoHistory.at(-1).skillSwap=receipt);finish();}
+      });
+    });
+    document.body.appendChild(modal);
+    G.Pad?.focusFirst?.();
+  }
   function evolve(pl, r, options = {}) {
     if (!pl || !r || pl.dex !== r.from || !G.DEX_BY[r.to] || !G.SPRITE_META[r.to]) return false;
     const before = pl.mon, after = G.DEX_BY[r.to];
@@ -244,20 +327,7 @@ G.PKMSVVEvo = (() => {
       ? 'Eevee có 8 nhánh. Nhánh tối màu chưa đạt điều kiện; nhánh sáng có thể chọn ngay.'
       : 'Chọn dạng tiến hóa. Các chiêu thức, cấp và nâng cấp trận này được giữ lại.';
     panel.appendChild(hint);
-    let convertBox=null;
-    if(pl.dex===133) {
-      const caption=document.createElement('label');
-      caption.className='pkmsvv-evo-transform';
-      convertBox=document.createElement('input');
-      convertBox.type='checkbox';convertBox.checked=true;
-      convertBox.disabled=!pl.moves.some(m=>m.type==='normal'&&m.kind!=='buff'&&!m.evolved);
-      const explanation=document.createElement('span');
-      explanation.textContent=convertBox.disabled
-        ? 'Không có chiêu Normal phù hợp để chuyển hóa. Mọi chiêu hiện tại sẽ được giữ nguyên.'
-        : 'Chuyển 1 chiêu Normal chưa tiến hóa thành chiêu hệ mới (giữ cấp). Bỏ chọn để giữ nguyên mọi chiêu.';
-      caption.appendChild(convertBox);caption.appendChild(explanation);
-      panel.appendChild(caption);
-    }
+    // One common skill-swap screen follows ALL successful evolutions, including Eevee.
     function exit() { modal.remove(); done(); }
     for (const {rule:r,unlocked} of choices) {
       const b = document.createElement('button');
@@ -266,7 +336,9 @@ G.PKMSVVEvo = (() => {
       b.textContent=(unlocked?'✓ ':'🔒 ')+S(pl.dex)+' → '+S(r.to)+' · '+
         (unlocked?requirement(r):pendingReason(pl,t,r));
       if(unlocked) b.addEventListener('click', () => {
-        if (evolve(pl,r,{convertNormal:!!convertBox && convertBox.checked}))exit();
+        if(evolve(pl,r,{convertNormal:false})){
+          modal.remove();showSkillSwap(pl,done);
+        }
       });
       panel.appendChild(b);
     }
@@ -286,5 +358,5 @@ G.PKMSVVEvo = (() => {
     show(pl,options,t,done);
     return true;
   }
-  return { reset, tick, onCast, onHurt, eligible, evolve, requirement, friendship, tryOpen, routes: BY_FROM, choiceRoutes, pendingReason, conversionCandidate, convertNormal };
+  return { reset, tick, onCast, onHurt, eligible, evolve, requirement, friendship, tryOpen, routes: BY_FROM, choiceRoutes, pendingReason, conversionCandidate, convertNormal, skillSwapOptions, swapSkill, showSkillSwap };
 })();
