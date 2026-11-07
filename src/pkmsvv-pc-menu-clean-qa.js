@@ -16,18 +16,39 @@
   const name=d.createElement('strong');name.textContent=label;
   b.append(art,name);b.onclick=action;return b;
  }
- function mountPC(){
-  const overlay=$('#pkmsvv-wiki-overlay'),grid=overlay?.querySelector('.pkmsvv-pc-grid');
-  if(!grid||grid.dataset.pkmsvvUnified==='1')return false;
-  grid.dataset.pkmsvvUnified='1';
-  // The Pokémon menu already has all three tabs. Do not duplicate them inside PC.
+ function knowledgeDone(){
+  // Skill Awakening is complete when all eight permanent skill slots unlock.
+  // Never remove the guide from a save still missing unlock milestones.
+  const save=G.DB?.save,tracker=G.PKMSVVSkillTrack;
+  if(!save||typeof tracker?.progress!=='function')return false;
+  try{return tracker.progress(save).count>=8;}catch(error){
+   console.warn('[PC Skill Awakening status]',error);return false;
+  }
+ }
+ function tidyPcKnowledge(overlay){
+  if(!overlay)return;
   overlay.querySelector('.pkmsvv-pc-hint')?.remove();
-  for(const btn of overlay.querySelectorAll('.pkmsvv-pc-learn button')){
-   if(!/Sương Ký Ức|Memory Mist|Season(?:al)? Event|Sự kiện mùa/i.test(btn.textContent||''))continue;
-   const sibling=btn.nextElementSibling;
-   if(sibling?.classList?.contains('pkmsvv-pc-orb-details'))sibling.remove();
+  const allDone=knowledgeDone();
+  const labels=overlay.querySelectorAll('.pkmsvv-pc-learn>button');
+  for(const btn of labels){
+   const label=String(btn.textContent||'').trim();
+   const seasonal=/Sương Ký Ức|Memory Mist|Season(?:al)? Event|Sự kiện mùa/i.test(label);
+   const awakened=allDone&&/Skill Awakening|Thức tỉnh kỹ năng/i.test(label);
+   if(!seasonal&&!awakened)continue;
+   const detail=btn.nextElementSibling;
+   // A related expanded knowledge panel should not be orphaned.
+   if(detail?.matches?.('.pkmsvv-pc-orb-details,.pkmsvv-pc-learn-panel,[data-pkmsvv-knowledge-detail]'))detail.remove();
    btn.remove();
   }
+ }
+ function mountPC(){
+  const overlay=$('#pkmsvv-wiki-overlay'),grid=overlay?.querySelector('.pkmsvv-pc-grid');
+  if(!grid)return false;
+  // The native Wiki can rebuild its knowledge rows after initial mount,
+  // so reapply cleanup on every open and DOM change, not just once.
+  tidyPcKnowledge(overlay);
+  if(grid.dataset.pkmsvvUnified==='1')return true;
+  grid.dataset.pkmsvvUnified='1';
   return true;
  }
  function number(s,keys){
