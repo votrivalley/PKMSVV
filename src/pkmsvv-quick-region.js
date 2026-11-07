@@ -37,10 +37,11 @@
   if(!Array.isArray(bag)||!range)return bag; // Region 10 deliberately mixes Gen.
   const candidates=speciesFor(index);
   if(!candidates.length)return bag; // Incomplete test registry: never erase waves.
+  const strict=Array.isArray(G.DEX)&&G.DEX.some(p=>p&&p.gen===index+1&&!!G.SPRITE_META?.[p.dex]&&!!G.DEX_BY?.[p.dex]);
   return bag.map((def,i)=>{
    if(!def||typeof def!=='object'||!Number.isInteger(Number(def.dex)))return def;
    const dex=Number(def.dex);
-   if(dex>=range[0]&&dex<=range[1])return def;
+   if(strict?candidates.includes(dex):dex>=range[0]&&dex<=range[1])return def;
    const next=candidates[i%candidates.length];
    return {...def,dex:next,name:G.DEX_BY[next]?.name||'Pokémon '+next};
   });
@@ -243,8 +244,9 @@
   if(!def||typeof def!=='object'||index<0||index>=GEN_BOUNDS.length)return def;
   if(def.pkmsvvFinalBoss||def.pkmsvvStoryBoss||def.judge||def.pkmsvvJudgment)return def;
   const dex=Number(def.dex),range=GEN_BOUNDS[index];
-  if(!Number.isInteger(dex)||dex>=range[0]&&dex<=range[1])return def;
+  const strict=Array.isArray(G.DEX)&&G.DEX.some(p=>p&&p.gen===index+1&&!!G.SPRITE_META?.[p.dex]&&!!G.DEX_BY?.[p.dex]);
   const species=speciesFor(index);
+  if(!Number.isInteger(dex)||(strict?species.includes(dex):dex>=range[0]&&dex<=range[1]))return def;
   if(!species.length)return def; // Never invent an unavailable species.
   const target=species[(Math.abs(dex)+constructed++)%species.length],info=G.DEX_BY[target];
   return {...def,dex:target,name:info?.name||'Pokémon '+target,
