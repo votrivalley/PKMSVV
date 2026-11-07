@@ -99,10 +99,8 @@
   if(upgrade)upgrade.onclick=()=>{
    const latest=api.rankMaterials(s(),x.id);
    if(latest.available<latest.cost)return;
-   if(!confirm(txt('Dùng '+latest.cost+' bản trùng để nâng '+name+
-       '? Pokémon Shiny, yêu thích, đội hình và bản gốc vẫn được giữ.',
-       'Use '+latest.cost+' duplicates to rank up '+name+
-       '? Protected Pokémon remain in the Box.')))return;
+   // Apply directly; duplicate protection and atomic save rollback are in Stage2.
+   // The outdated native confirmation popup is intentionally removed.
    try{api.rankUpAuto(x.id,s());render();}
    catch(error){alert(error?.message||String(error));}
   };
