@@ -92,6 +92,17 @@ async function main(){
   assert.equal(fusionLive.once,1,'one Fusion per match');
   assert.equal(fusionLive.compiledKind,'projectile','Fusion must use real autocast move kind');
   console.log('Fusion MAX+MAX Chromium QA:',JSON.stringify(fusionLive));
+  // Exercise all ten UNIQUE combat effects with actual compiled game modules
+  // and disposable actor/enemy objects. No real save, combat or reward writes.
+  const effectsLive=await evaluate("(()=>{const f=G.PKMSVVFusionEvolved,pilot=G.PKMSVVFusionPilot,results=[];const oldAll=G.EnemyMgr.all,oldRing=G.FX?.ring,oldBurst=G.FX?.burst,oldSfx=G.Audio?.sfx;try{G.FX.ring=()=>{};G.FX.burst=()=>{};G.Audio.sfx=()=>{};for(const r of pilot.RECIPES){f.reset();let enemy={x:65,y:0,r:12,hp:2500,dead:false,remote:false,hurt(amount){this.hp-=amount},applySlow(v,t){this.slow=v},applyStun(t){this.stun=t}};G.EnemyMgr.all=()=>[enemy];const a=G.Moves.instance(r.ids[0]),b=G.Moves.instance(r.ids[1]);if(!a||!b){results.push({id:r.id,error:'source moves unavailable'});continue;}while(a.lvl<a.def.maxLvl)G.Moves.levelUp(a);while(b.lvl<b.def.maxLvl)G.Moves.levelUp(b);const pl={x:0,y:0,level:28,baseAtk:1,atkMul:1,moves:[a,b],slots:[[a],[b]],bind:{},active:0,dead:false,remote:false,lanBot:false};const m=f.evolve(pl,r.id);if(!m){results.push({id:r.id,error:'not evolved'});continue;}const startingHp=enemy.hp;f.cast(pl,m);for(let i=0;i<14;i++)f.tickZones(pl,.35);results.push({id:r.id,damage:Math.round(startingHp-enemy.hp),ready:pl._pkmsvvFusionUsed===1,move:m.id,icon:!!f.assets[r.id]});}return results;}finally{f.reset();G.EnemyMgr.all=oldAll;G.FX.ring=oldRing;G.FX.burst=oldBurst;G.Audio.sfx=oldSfx;}})()");
+  assert.equal(effectsLive.length,10,'all ten Fusion skills need compiled combat verification');
+  for(const effect of effectsLive){
+   assert.ok(effect.damage>0,'Fusion has no real damage in compiled combat: '+JSON.stringify(effect));
+   assert.equal(effect.ready,true,'Fusion did not consume its once-per-run chance: '+effect.id);
+   assert.equal(effect.icon,true,'Fusion icon mapping missing: '+effect.id);
+  }
+  console.log('Ten actual compiled Fusion effects QA:',JSON.stringify(effectsLive));
+
  
   const pureDex=await evaluate("(()=>{G.PKMSVVBoxHubUI.openDex();return ({overlay:!!document.querySelector('#pkmbx-dex-overlay'),search:!!document.querySelector('#pkmbx-dex-search'),hasEvolutionPane:!!document.querySelector('#pkmbx-dex-details'),itemActions:!!document.querySelector('#pkmbx-dex-overlay [data-hub-tm],#pkmbx-dex-overlay [data-pkmbx-use]'),cards:document.querySelectorAll('#pkmbx-dex-list button').length,insidePC:document.querySelector('#pkmsvv-pokebox-overlay')?.contains(document.querySelector('#pkmbx-dex-overlay')),tabs:[...document.querySelectorAll('#pkmbx-dex-overlay [data-pc-tab]')].map(b=>b.dataset.pcTab),pcHubHidden:document.querySelector('.pkmbx-hub-panel')?.hidden})})()");
   assert.equal(pureDex.overlay,true);
