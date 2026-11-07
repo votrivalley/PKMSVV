@@ -361,3 +361,46 @@ continuing. Preserve offline Wi-Fi hosting and the full existing test suite.
   update while the overlay remains open and `G.Game.state` is unchanged.
   Preserve production Web, signed Android package and all player saves until
   QA approved.
+
+## Ordinary-only Rank copies / first new Gacha migration — 2026-11-08
+- **Shiny is NOT a duplicate** for the ×N badge, usable Rank materials,
+  protected Rank credit, or readiness filter. One Normal + one Shiny is
+  **one normal**, **zero spare copies**, and Rank 0/5 (not 1/5).
+  Never display ×1. ×2 means **two separately recorded Normal individuals
+  of the same National Dex species**. A Shiny-only collection cannot
+  use its first ordinary Gacha pull as material: keep that ordinary as the
+  permanent base, and only a *second* ordinary Normal counts as fodder.
+  A new Shiny, even if repeated, never increments that ordinary count.
+  Preserve Shiny, original b1 species and first ordinary as protected.
+- **One-click Rank stays one-click**, NO native confirm/checkbox/shard
+  conversion. Rank N→N+1 needs exactly N+1 genuine extra ordinary
+  same-species materials. For a valid migrated Box, expendable ordinary
+  Gacha clones are used first. Additional protected, real Normal copies
+  (e.g. favorited or in Team Six) may contribute ONCE without deletion;
+  Shiny and the ordinary base never do. Preserve prior saved rank levels
+  and historic claimed-credit receipts in existing saves; just prevent
+  any NEW Shiny credit. The yellow/gray Rank button and `Có thể nâng Rank`
+  must derive from `rankMaterials` after every Gacha and Rank commit.
+- **Old-save next-Gacha repair:** the old `Gacha.pull` wrapper returned to
+  species-only legacy mode without recording new duplicate individuals.
+  On the next *successful* active offline profile Gacha transaction ONLY,
+  initialize a stage1 PokéBox in the mutable DRAFT, append all fresh
+  individual Gacha rolls, and commit together with tickets/pity. BEFORE
+  the single state-changing commit, verify an original pre-Gacha full
+  `PKMSVVSaveUI.backup()` stored at `pkmsvv.prepokebox.<session>`.
+  Any unavailable session, backup, storage quota, unknown schema or
+  invalid purchase **aborts without consuming a ticket or overwriting the
+  original save**. Explicit manual migration button remains available;
+  the special auto-migration is limited to successful Gacha, never mere
+  UI viewing or import. Already-migrated Gacha retains the existing
+  atomic clone path. Prior unrecorded historical duplicates cannot be
+  invented or reconstructed and must not be multiplied by Shiny.
+- Tests must include: one Normal+Shiny shows no ×2 and no Rank,
+  two Normal+Shiny shows ×2 and one-click Rank, post-Rank ×2 disappears,
+  Shiny never consumed, Shiny-only + first new Normal still insufficient,
+  protected extra Normal credits are one-time only, old save first Gacha
+  creates persistent backup BEFORE atomic individual record/ticket commit,
+  insufficient-tickets and storage/commit failures preserve old save.
+  Verify these on compiled Chromium and the Windows/Android QA packages;
+  keep production Cloudflare and the permanently signed main APK
+  untouched until approved by the user.
