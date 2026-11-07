@@ -210,10 +210,10 @@ test('Original PC remains, and Pokémon entry has Box, Dex and preserved upgrade
  const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub.css'),'utf8');
  const clean=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pc-menu-clean-qa.js'),'utf8');
  assert.match(src,/if\(original&&extra\)/);
- assert.match(src,/extra\.setAttribute\('aria-label',L\('Khám phá','Explore'\)\)/);
- assert.match(clean,/renameExploration\(pokemon\)/);
- assert.match(clean,/btn\.setAttribute\('aria-label',translated\)/);
- assert.match(clean,/if\(n\.nodeType!==3/,'native buttons with bare text must also be renamed');
+ assert.match(src,/extra\.setAttribute\('aria-label','Pokémon'\)/);
+ assert.match(clean,/syncLauncherLabels\(menu\)/);
+ assert.match(clean,/relabel\(play,\['Chơi ngay','Play now','Play'\],L\('Khám phá','Explore'\)\)/);
+ assert.match(clean,/if\(n\.nodeType!==3\)/,'native buttons with bare text must also be renamed');
  assert.match(src,/pkmsvv-menu-wiki/);
  assert.doesNotMatch(clean,/pkmsvv-pc-dex/,'Pokémon tabs must not be duplicated inside the PC utilities');
  assert.doesNotMatch(clean,/pkmsvv-pc-box/,'Pokémon tabs must not be duplicated inside the PC utilities');
