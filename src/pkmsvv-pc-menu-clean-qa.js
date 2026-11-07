@@ -8,7 +8,7 @@
  const typeVi={psychic:'Siêu linh',grass:'Cỏ',fire:'Lửa',water:'Nước',bug:'Bọ',normal:'Thường',dragon:'Rồng',flying:'Bay',electric:'Điện',ice:'Băng',poison:'Độc',ground:'Đất',rock:'Đá',steel:'Thép',dark:'Bóng tối',ghost:'Ma',fairy:'Tiên',fighting:'Giác đấu'};
  const typeColors={psychic:'#e7549a',grass:'#49bd64',fire:'#ee794b',water:'#5196d5',bug:'#7db44a',normal:'#9a9b91',dragon:'#7a70ce',flying:'#80acd0',electric:'#e2b23f',ice:'#7acbd0',poison:'#ab65c4',ground:'#bda25d',rock:'#ad8754',steel:'#779ca8',dark:'#696779',ghost:'#745b9d',fairy:'#c581ac',fighting:'#b95e4c'};
  const dexIcon='<svg class="pkmsvv-pc-gen1-icon" viewBox="0 0 48 48" width="57" height="57" aria-hidden="true"><rect x="6" y="2" width="35" height="44" rx="5" fill="#d72e39" stroke="#631b30" stroke-width="2"/><rect x="10" y="6" width="27" height="4" rx="2" fill="#f57c79"/><circle cx="14" cy="17" r="5" fill="#b9efff" stroke="#31506a" stroke-width="2"/><circle cx="25" cy="15" r="2" fill="#64d8ba"/><circle cx="32" cy="15" r="2" fill="#f6c36b"/><rect x="10" y="23" width="27" height="13" rx="2" fill="#203c4d" stroke="#7bdbcd" stroke-width="2"/><rect x="14" y="26" width="19" height="7" rx="1" fill="#6ed0b6"/><rect x="12" y="39" width="12" height="3" rx="1" fill="#293b4b"/><circle cx="32" cy="40" r="3" fill="#f5d36f" stroke="#5c3040"/></svg>';
- let observerBusy=false;
+ let observerBusy=false,knowledgeObserver=null,observedKnowledge=null;
  function card(id,icon,label,action){
   const b=d.createElement('button');b.id=id;b.type='button';b.className='pkmsvv-pc-card pkmsvv-pc-unified-card';
   b.setAttribute('aria-label',label);
@@ -21,7 +21,8 @@
   // Never remove the guide from a save still missing unlock milestones.
   const save=G.DB?.save,tracker=G.PKMSVVSkillTrack;
   if(!save||typeof tracker?.progress!=='function')return false;
-  try{return tracker.progress(save).count>=8;}catch(error){
+  try{return !!save.pkmsvvChapter2Seen || tracker.progress(save).count>=8 ||
+    (Array.isArray(G.Game?.player?.moves)&&G.Game.player.moves.length>=8);}catch(error){
    console.warn('[PC Skill Awakening status]',error);return false;
   }
  }
@@ -47,6 +48,13 @@
   // The native Wiki can rebuild its knowledge rows after initial mount,
   // so reapply cleanup on every open and DOM change, not just once.
   tidyPcKnowledge(overlay);
+  // Reapply knowledge cleanup if the legacy PC rebuilds its accordions.
+  const knowledge=overlay.querySelector('.pkmsvv-pc-learn');
+  if(knowledge&&knowledge!==observedKnowledge&&typeof MutationObserver==='function'){
+   knowledgeObserver?.disconnect();observedKnowledge=knowledge;
+   knowledgeObserver=new MutationObserver(()=>tidyPcKnowledge(overlay));
+   knowledgeObserver.observe(knowledge,{childList:true,subtree:true});
+  }
   if(grid.dataset.pkmsvvUnified==='1')return true;
   grid.dataset.pkmsvvUnified='1';
   return true;
@@ -206,7 +214,9 @@
   G.MenuUI._pkmsvvPcUnified=true;
   const old=G.MenuUI.open;
   if(typeof old==='function')G.MenuUI.open=function(...args){const result=old.apply(this,args);syncHome();return result;};
-  d.addEventListener('click',e=>{if(e.target?.closest?.('#pkmsvv-menu-wiki'))Promise.resolve().then(mountPC);},true);
+  d.addEventListener('click',e=>{if(e.target?.closest?.('#pkmsvv-menu-wiki')){
+   Promise.resolve().then(mountPC);requestAnimationFrame(mountPC);
+  }},true);
   const observer=new MutationObserver(()=>{
    if(observerBusy)return;
    observerBusy=true;
