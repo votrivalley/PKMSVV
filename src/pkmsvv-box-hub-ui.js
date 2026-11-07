@@ -405,9 +405,12 @@
     '<option value="copies">'+L('Số bản sao','Copies')+'</option>'+
     '<option value="rarity">'+L('Độ hiếm','Rarity')+'</option></select></label>'+
    '<span id="pkmbx-found-count" class="pkmbx-found-count" aria-live="polite"></span></div>'+
-   '<div class="pkmbx-grid" id="pkmbx-grid"></div><nav class="pkmbx-page">'+
-   '<button class="btn small" id="pkmbx-prev">◀</button><span id="pkmbx-pagenum">1/1</span>'+
-   '<button class="btn small" id="pkmbx-next">▶</button></nav></div>'+
+   '<nav class="pkmbx-page pkmbx-box-carousel" aria-label="'+L('Chuyển hộp Pokémon','Switch Pokémon boxes')+'">'+
+   '<button type="button" class="btn small" id="pkmbx-prev" aria-label="'+L('Hộp trước','Previous box')+'">❮</button>'+
+   '<div class="pkmbx-box-heading"><strong id="pkmbx-box-label">BOX 1</strong>'+
+   '<span id="pkmbx-pagenum">1/1</span></div>'+
+   '<button type="button" class="btn small" id="pkmbx-next" aria-label="'+L('Hộp tiếp','Next box')+'">❯</button></nav>'+
+   '<div class="pkmbx-box-frame"><div class="pkmbx-grid" id="pkmbx-grid"></div></div></div>'+
    '<aside id="pkmbx-profile" class="pkmbx-profile"></aside></div></section>';
   doc.body.appendChild(boxPane);
   boxPane.querySelector('#pkmbx-close').onclick=closeBox;
@@ -459,6 +462,15 @@
   const members=new Set(Hub.team(s));
   for(const x of shown.slice(page*PAGE,(page+1)*PAGE))
    grid.appendChild(slot(x,selected,!ready,members,ranks.get(x.id),counts.get(x.dex)||1));
+  // Real PC-style boxes keep the same 6-column capacity and visible empty
+  // slots instead of a floating list of cards.
+  if(shown.length){
+   const visibleCount=shown.slice(page*PAGE,(page+1)*PAGE).length;
+   for(let i=visibleCount;i<PAGE;i++){
+    const emptySlot=doc.createElement('div');emptySlot.className='pkmbx-empty-slot';
+    emptySlot.setAttribute('aria-hidden','true');grid.appendChild(emptySlot);
+   }
+  }
   if(!shown.length){
    const empty=doc.createElement('p');empty.className='pkmbx-box-empty';
    empty.textContent=onlyRankReady?L('Chưa có Pokémon đủ nguyên liệu nâng Rank.','No Pokémon has enough eligible Rank materials.'):
@@ -467,6 +479,8 @@
   }
   boxPane.querySelector('#pkmbx-found-count').textContent=shown.length+' / '+groups.size+' '+L('loài','species');
   if(!focused||!items.some(x=>x.id===focused))focused=selected||items[0]?.id||null;
+  boxPane.querySelector('#pkmbx-box-label').textContent='BOX '+(page+1)+' · '+
+   L('Kho Pokémon','Collection');
   boxPane.querySelector('#pkmbx-pagenum').textContent=(page+1)+' / '+pages;
   boxPane.querySelector('#pkmbx-prev').disabled=page===0;
   boxPane.querySelector('#pkmbx-next').disabled=page>=pages-1;
