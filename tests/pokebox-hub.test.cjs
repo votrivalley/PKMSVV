@@ -260,9 +260,10 @@ test('Rank overview uses only Stage 2 eligible copies/shards and never mutates s
   available:1,canRank:true});
  assert.equal(JSON.stringify(h.s),saved,'render data must never consume copies or write to save');
  hub.item(h.s,plain.id).locked=true;
- // Normal + Shiny forms may provide one safe, non-consumable Rank credit.
- const stillHasShiny=hub.rankOverview(h.s,hub.item(h.s,target.id));
- assert.ok(stillHasShiny.protectedForms>=1);
+ // A protected additional NORMAL (favorite/team/locked) can contribute once.
+ // Shiny does not contribute anything, even if the species has both forms.
+ const protectedOrdinary=hub.rankOverview(h.s,hub.item(h.s,target.id));
+ assert.ok(protectedOrdinary.protectedForms>=1);
  assert.equal(stillHasShiny.canRank,true);
  h.s.pkmsvvRankClaimedCopies={6:stage2.claimableList(h.s,target.id).map(x=>x.id)};
  const noMaterial=hub.rankOverview(h.s,hub.item(h.s,target.id));
@@ -300,6 +301,7 @@ test('PokéBox V2 QA UI provides visible five-star rank, material bar and sortin
  assert.match(src,/shown\.sort\(/);
  assert.match(src,/rankStars\(progress\?\.rank\?\?it\.rank\)/);
  assert.match(src,/const counts=new Map\(\),groups=new Map\(\)/);
+ assert.match(src,/if\(!x\.shiny\)counts\.set/,'Shiny does not inflate the visible xN badge');
  assert.match(src,/data-box-variant="normal"/);
  assert.match(src,/data-box-variant="shiny"/);
  assert.match(src,/G\.DEX_ABIL\?\.\[infoDex\]/);
@@ -342,19 +344,25 @@ test('Ready Team actions are above Pokémon hero; singleton species never shows 
  const ui=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub-ui.js'),'utf8');
  const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub.css'),'utf8');
  assert.match(ui,/profile\.insertBefore\(topActions,profile\.firstChild\)/);
- assert.match(ui,/duplicates>1\?'<span class="pkmbx-stack/);
+ assert.match(ui,/!it\.shiny&&duplicates>1\?'<span class="pkmbx-stack/);
  assert.match(ui,/×'\+duplicates/);
  assert.match(ui,/performRank\(it,ready\)/);
  assert.doesNotMatch(ui,/function openInlineRank/);
  assert.match(css,/#pkmsvv-pokebox-overlay #pkmbx-profile>\.pkmbx-hub-buttons/);
  assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
 });
-test('Normal and Shiny display the same available species Rank credit',()=>{
+test('Normal + Shiny alone does not show rank-ready; a new ordinary clone unlocks both species views',()=>{
  const h=setup(),original=hub.item(h.s,'b1-6-n'),skin=hub.item(h.s,'b1-6-s');
- const a=hub.rankOverview(h.s,original),b=hub.rankOverview(h.s,skin);
- assert.equal(a.protectedForms,1);assert.equal(b.protectedForms,1);
+ let a=hub.rankOverview(h.s,original),b=hub.rankOverview(h.s,skin);
+ assert.equal(a.protectedForms,0);assert.equal(b.protectedForms,0);
  assert.equal(a.cost,1);assert.equal(b.cost,1);
+ assert.equal(a.canRank,false);assert.equal(b.canRank,false);
+ const duplicate=add(h.s);
+ a=hub.rankOverview(h.s,original);b=hub.rankOverview(h.s,skin);
+ assert.equal(a.copies,1);assert.equal(b.copies,1);
  assert.equal(a.canRank,true);assert.equal(b.canRank,true);
+ assert.equal(stage2.rankUpAuto(skin.id,h.s).to,1);
+ assert.ok(stage2.get(h.s,skin.id)?.shiny,'Shiny survives the upgrade');
 });
 
 test('PokéBox has top BOX arrows and a six-column visible grid with type-themed detail and stat bars',()=>{
