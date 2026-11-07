@@ -127,14 +127,36 @@
   }
   return true;
  }
+ function renameExploration(btn){
+  if(!btn)return;
+  const translated=L('Khám phá','Explore');
+  btn.setAttribute('aria-label',translated);
+  // Some v1.5.93 native menu buttons use a plain Text node rather than
+  // .pkmsvv-menu-label. Replace the label text itself without touching icon,
+  // subtitle or the existing native [data-go="dex"] click handler.
+  const label=btn.querySelector('.pkmsvv-menu-label,.menu-label,.mi-text,.mi-name,strong');
+  if(label){label.textContent=translated;return;}
+  const walk=[btn,...btn.querySelectorAll('*')];
+  let changed=false;
+  for(const parent of walk)for(const n of parent.childNodes){
+   if(n.nodeType!==3||!/^(\\s*)Pok[eé]mon(\\s*)$/i.test(n.nodeValue||''))continue;
+   n.nodeValue=(n.nodeValue||'').replace(/Pok[eé]mon/i,translated);
+   changed=true;
+  }
+  if(!changed){
+   // Final fallback for a native button built with only icon+small markup.
+   const span=d.createElement('span');
+   span.className='pkmsvv-menu-label';
+   span.textContent=translated;
+   btn.insertBefore(span,btn.querySelector('small')||null);
+  }
+ }
  function syncHome(){
   const menu=$('#scr-menu');if(!menu)return;
   if(menu.querySelector('#pkmsvv-menu-wiki')){
    const pokemon=menu.querySelector('[data-go="dex"]');
    if(pokemon){
-    pokemon.setAttribute('aria-label',L('Khám phá','Explore'));
-    const title=pokemon.querySelector('.pkmsvv-menu-label, strong, .menu-label');
-    if(title)title.textContent=L('Khám phá','Explore');
+    renameExploration(pokemon);
     const sub=pokemon.querySelector('.pkmsvv-menu-copy small, small');
     if(sub)sub.textContent=L('PokéBox · Pokédex · Nâng cấp','PokéBox · Pokédex · Upgrades');
    }
