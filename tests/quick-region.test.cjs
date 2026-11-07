@@ -7,7 +7,7 @@ function harness(options={}){
  let deferredStart=null;
  function node(tag='div'){
   const o={tagName:tag,hidden:false,disabled:false,isConnected:true,children:[],dataset:{},
-   append(...items){this.children.push(...items);},replaceChildren(...items){this.children=items.slice();},
+   append(...items){this.children.push(...items);},appendChild(item){this.children.push(item);return item;},replaceChildren(...items){this.children=items.slice();},
    setAttribute(name,v){this[name]=v;},addEventListener(){},querySelector(q){
     return q==='#pkmsvv-quick-region-close'?nodes.close:q==='#pkmsvv-quick-region-grid'?nodes.grid:null;
    }};
@@ -425,4 +425,24 @@ test('Kanto does not start with Gyarados, Kangaskhan or fully evolved starters',
  assert.ok([4,10,129].includes(boss.dex),'early miniboss must not leak Gyarados');
  assert.equal(boss.hp,600,'keep boss HP/difficulty multipliers');
  h.G.Game.toUI();
+});
+
+test('Explore Gen 1–9 covers use the nine requested mascot National Dex IDs; Sky art is unchanged',()=>{
+ const h=harness(),q=h.G.PKMSVVQuickRegion;
+ const expected=[150,249,385,488,646,718,800,890,1024,384];
+ assert.deepEqual(Array.from(q.mascots),expected);
+ const drawn=[];
+ h.G.UI={sprite:(canvas,dex,opts)=>{drawn.push(dex);assert.equal(opts.shiny,false);}};
+ for(const dex of expected)h.G.DEX_BY[dex]={dex,name:'Mascot #'+dex};
+ assert.equal(q.open(),true);
+ assert.deepEqual(drawn,expected,'every generation must use its mascot in the actual canvas, not just in metadata');
+ assert.equal(h.nodes.grid.children.length,10);
+ for(let i=0;i<10;i++){
+  const art=h.nodes.grid.children[i].children[0];
+  const sprite=art.children.find(c=>c.className==='region-sprite');
+  assert.ok(sprite,'missing legendary cover canvas for Gen '+(i+1));
+  assert.equal(sprite.width,76);
+ }
+ assert.equal(h.nodes.grid.children[1].disabled,false,'existing Johto unlock stays unchanged');
+ assert.equal(h.nodes.grid.children[2].disabled,true,'existing Hoenn lock stays unchanged');
 });
