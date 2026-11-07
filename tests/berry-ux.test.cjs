@@ -58,7 +58,7 @@ test('Two-Berry HUD renders waiting/active/spent without modifying stats or save
  assert.equal(p.atkMul,1,'display-only HUD does not apply gameplay buffs');
  h.G.Game.state='ui';h.berry.renderHud(p,true);assert.equal(hud.hidden,true);
 });
-test('Berry four-second menu remains cancellable, never consumes stock on cancelled run',()=>{
+test('Berry ten-second menu remains cancellable, never consumes stock on cancelled run',()=>{
  const h=harness();h.berry.grant('oran',2);
  h.G.Game.startRun(null);
  const option=h.all.find(n=>n.tagName==='button'&&n.textContent.includes('Oran ×2'));
@@ -70,7 +70,7 @@ test('Berry four-second menu remains cancellable, never consumes stock on cancel
  assert.equal(h.berry.chapterProgress(),0);
  assert.equal(h.menuOpens,1);
 });
-test('Berry four-second selection consumes at most two unique Berry items and cannot duplicate callbacks',()=>{
+test('Berry ten-second selection consumes at most two unique Berry items and cannot duplicate callbacks',()=>{
  const h=harness();for(const id of ['oran','liechi','sitrus'])h.berry.grant(id,1);
  h.G.Game.startRun(null);
  for(const id of ['Oran','Liechi','Sitrus']){
@@ -78,7 +78,9 @@ test('Berry four-second selection consumes at most two unique Berry items and ca
   assert.ok(b);b.onclick();
  }
  assert.equal(h.berry.choosing,true);
- for(let i=0;i<4;i++)h.pulse();
+ for(let i=0;i<9;i++)h.pulse();
+ assert.equal(h.started,0,'all ten seconds must be available for choosing');
+ h.pulse();
  assert.equal(h.started,1);assert.equal(h.berry.data().last.length,2);
  assert.equal(h.berry.count('sitrus'),1,'third choice is ignored');
  assert.equal(h.berry.chapterProgress(),2);
@@ -98,8 +100,29 @@ test('failed pre-run startup never burns a Berry or marks chapter usage',()=>{
  const h=harness('vi',true);h.berry.grant('oran',1);
  h.G.Game.startRun(null);
  const b=h.all.find(n=>n.tagName==='button'&&n.textContent.includes('Oran ×1'));
- assert.ok(b);b.onclick();for(let i=0;i<3;i++)h.pulse();
+ assert.ok(b);b.onclick();for(let i=0;i<9;i++)h.pulse();
  assert.throws(()=>h.pulse(),/simulated engine start failure/);
  assert.equal(h.berry.count('oran'),1,'no item consumption when the engine cannot start');
  assert.equal(h.berry.chapterProgress(),0,'no phantom Chapter 6 progress');
+});
+
+test('Berry confirmation skips the ten-second timer immediately in Solo and fires callback once',()=>{
+ const h=harness();h.berry.grant('oran',1);
+ h.G.Game.startRun(null);
+ const option=h.all.find(n=>n.tagName==='button'&&n.textContent.includes('Oran ×1'));
+ option.onclick();
+ const button=h.all.find(n=>n.tagName==='button'&&n.textContent.includes('Xác nhận'));
+ assert.ok(button,'confirmation must be visible');button.onclick();
+ assert.equal(h.started,1);
+ assert.equal(h.berry.count('oran'),0);
+ for(let i=0;i<13;i++)h.pulse();
+ assert.equal(h.started,1,'late countdown must not start a second match');
+});
+test('Berry private-room confirmation must wait for all human players, not AI bots',()=>{
+ const src=read('src/pkmsvv-berry.js');
+ assert.match(src,/const SELECT_SECONDS=10/);
+ assert.match(src,/humans\(\)\.every\(id=>choiceReady\.has\(id\)\)/);
+ assert.match(src,/k:'berry-ready'/);
+ assert.match(src,/k:'berry-advance'/);
+ assert.match(src,/if\(!multiplayer\(\)\)\{done\(\);return;\}/);
 });
