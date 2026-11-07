@@ -13,7 +13,8 @@ const mods=[
  ['PKMSVVChampionArena','src/pkmsvv-champion-arena.js'],
  ['PKMSVVArenaPvp','src/lan/arena-pvp.js'],
  ['PKMSVVFusionPilot','src/pkmsvv-bond-fusion.js'],
- ['PKMSVVEvo','src/pkmsvv-evolution.js']
+ ['PKMSVVEvo','src/pkmsvv-evolution.js'],
+ ['Royale','src/web/pkmsvv-royale.js']
 ];
 const targets=process.argv.slice(2).map(p=>path.resolve(p));
 if(!targets.length)throw Error('Pass one or more isolated QA app.min.js paths');
