@@ -28,6 +28,7 @@ function harness(){
   Game:{state:'ui',startRun(){this.state='playing';G.World.setBiome(0)},toUI(){this.state='ui'},quit(){this.state='ui'}},
   Flow:{goMenu(){this.wasMenu=true}},
   MenuUI:{open(){this.wasOpen=true}},
+  EnemyMgr:{add(enemy){return enemy;}},
   Enemy:class Enemy {
    constructor(def,x,y,scaling,boss){this.def=def;this.dex=def.dex;this.x=x;this.y=y;this.boss=!!boss;}
   },
@@ -163,4 +164,22 @@ test('Direct scripted Enemy spawns use Region Gen without touching original temp
  h.G.Game.toUI();
  assert.equal(new h.G.Enemy(original,0,0).dex,777,'mode restriction must end with battle');
  assert.equal(JSON.stringify(h.save).includes('pkmsvv'),false,'generation fix must not mutate save');
+});
+
+test('Kanto wild bag, miniboss and custom spawns use the SAME Gacha gen pool, not only numeric Dex bounds',()=>{
+ const h=harness(),q=h.G.PKMSVVQuickRegion;
+ h.G.DEX_BY={12:{name:'Butterfree'},25:{name:'Pikachu',types:['electric']},152:{name:'Chikorita',types:['grass']}};
+ h.G.DEX=[{dex:25,gen:1},{dex:152,gen:2}];
+ h.G.SPRITE_META={25:{a:{Idle:true}},152:{a:{Idle:true}}};
+ assert.equal(q.choose(0),true);
+ const wave=h.G.Enemies.bagAt();
+ assert.ok(wave.every(x=>x.dex===25),'only catalogued Gacha Kanto species may spawn');
+ const mini=h.G.EnemyMgr.add({dex:152,def:{dex:152,name:'Johto'},hp:90,spds:2});
+ assert.equal(mini.dex,25,'manager-boundary miniboss cannot leak a Johto species');
+ assert.equal(mini.hp,90,'boss HP tier is retained');
+ assert.equal(mini.def.dex,25,'boss definition and sprite registry follow actual region');
+ const boss=new h.G.Enemy({dex:152,hp:400,behavior:'boss'},0,0,{hp:1},true);
+ assert.equal(boss.dex,25,'Boss constructor uses current region roster');
+ h.G.Game.toUI();
+ assert.equal(new h.G.Enemy({dex:152},0,0).dex,152,'outside Region play the registry is untouched');
 });
