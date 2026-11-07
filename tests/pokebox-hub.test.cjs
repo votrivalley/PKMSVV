@@ -325,7 +325,7 @@ test('Rank shows duplicates automatically and never requires conversion into fra
  assert.match(ui,/api\.rankUpAuto\(it\.id,s\)/);
  assert.match(ui,/progress\.copies/);
  assert.match(ui,/progress\.fragments/);
- assert.match(ui,/listPreview\(\)\.filter\(x=>x\.dex===it\.dex\)\.length/);
+ assert.match(ui,/\(boxItemsCache\|\|listPreview\(\)\)\.filter\(x=>x\.dex===it\.dex\)\.length/, 'Rank tab uses current snapshot without re-enumerating legacy Box');
  assert.match(ui,/Bản trùng khả dụng/);
  assert.match(ui,/Không cần đổi thành Mảnh Rank/);
  assert.match(dialog,/api\.rankUpAuto\(x\.id,s\(\)\)/);
