@@ -82,6 +82,10 @@
     throw Error(L('Chưa sở hữu Pokémon này.','Pokémon is not owned.'));
    s.partner=it.dex;s.partnerShiny=it.shiny;
   });
+  // The old-save collection has no individual IDs, but its chosen fighter
+  // still needs to appear at HOME immediately without entering a battle.
+  try{G.PKMSVVMenuCleanQA?.restorePartner?.();}
+  catch(error){console.warn('[PokéBox legacy home portrait refresh]',error);}
  }
  function legacyFavorite(it){
   legacyCommit(s=>{
