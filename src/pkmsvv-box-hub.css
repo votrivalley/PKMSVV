@@ -725,3 +725,52 @@
  cursor:not-allowed!important;pointer-events:none;
 }
 #pkmsvv-pokebox-overlay .pkmbx-rank-tab.rank-disabled{cursor:pointer;opacity:.8!important}
+
+
+/* Ability readability regression: the unified dark menu overrides a light
+   Pokédex summary. Give EVERY ability row an explicit readable foreground. */
+#pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-dex-ability-row{
+ background:#edf8f3!important;
+ color:#173d48!important;
+ border:1px solid #a8d3c9!important;
+ display:grid!important;
+ grid-template-columns:minmax(112px,.35fr) minmax(0,1fr)!important;
+ gap:10px!important;
+ font-size:13px!important;line-height:1.55!important;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-dex-ability-row strong{
+ color:#123846!important;-webkit-text-fill-color:#123846!important;
+ font-weight:900!important;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-dex-ability-row span{
+ color:#1b4450!important;-webkit-text-fill-color:#1b4450!important;
+ font-weight:600!important;overflow-wrap:anywhere;
+}
+#pkmsvv-pokebox-overlay .pkmbx-hub-info .pkmbx-hub-ability-explained{
+ background:#173e4d!important;border:1px solid #8cbeb9!important;
+ border-radius:9px;padding:10px;margin:8px 0;
+}
+#pkmsvv-pokebox-overlay .pkmbx-hub-info .pkmbx-hub-ability-explained b{
+ color:#ffe4a1!important;-webkit-text-fill-color:#ffe4a1!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-hub-info .pkmbx-ability-effect{
+ color:#edfaf7!important;-webkit-text-fill-color:#edfaf7!important;
+ font-size:13px!important;font-weight:650!important;
+ line-height:1.55!important;margin:7px 0 0!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-legacy-migration{
+ display:flex;flex-direction:column;gap:8px;margin:8px 0;
+ padding:12px;border:1px solid #e2c67c;border-radius:9px;
+ background:#244650;color:#f5faf8;font-size:12px;line-height:1.5;
+}
+#pkmsvv-pokebox-overlay .pkmbx-legacy-migration[hidden]{display:none!important}
+#pkmsvv-pokebox-overlay .pkmbx-legacy-migration strong{color:#ffe6a2}
+#pkmsvv-pokebox-overlay .pkmbx-legacy-migration button{
+ align-self:start;color:#153746!important;background:#ffdf8b!important;
+ border:2px solid #eac365!important;min-height:39px!important;
+}
+@media(max-width:520px){
+ #pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-dex-ability-row{
+  grid-template-columns:1fr!important;gap:4px!important;
+ }
+}
