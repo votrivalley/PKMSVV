@@ -148,10 +148,34 @@
   const start=boss?Math.floor(pool.length/2):0,span=pool.length-start;
   return pool[start+(Math.abs(pickCounter++ + offset)%span)];
  }
- function progressiveDefinition(def,index,time=encounterSeconds(),offset=0){
+ // Boss guards are spawned from the canonical Egg-support roster, NOT from
+ // native wild/mini-boss bags. Preserve the selected Pichu/Riolu/etc even in
+ // Kanto. The metadata signature covers the native compiled module, where
+ // pkmsvvBossGuard is set immediately AFTER new G.Enemy(...).
+ const BOSS_GUARD_DEX=new Set([172,447,173,360,174]);
+ function isBossGuardian(def){
+  if(!def||typeof def!=='object')return false;
+  if(def.pkmsvvBossGuard||def.pkmsvvGuardianOf!==undefined)return true;
+  return def.xp===1&&def.behavior==='chase'&&BOSS_GUARD_DEX.has(Number(def.dex));
+ }
+ function bossLike(def,flag=false){
+  return flag||!!(def.boss||def.isBoss||def.pkmsvvStoryBoss||def.elite||def.isElite);
+ }
+ function progressiveDefinition(def,index,time=encounterSeconds(),offset=0,forceBoss=false){
   if(!def||typeof def!=='object'||!Number.isInteger(Number(def.dex)))return def;
-  const id=Number(def.dex),boss=!!(def.boss||def.isBoss||def.pkmsvvStoryBoss);
-  if(eligibleByTime(id,index,time))return def;
+  if(isBossGuardian(def))return def;
+  const id=Number(def.dex),boss=bossLike(def,forceBoss);
+  const permitted=eligibleByTime(id,index,time);
+  if(permitted&&!boss)return def;
+  if(permitted&&boss){
+   const pool=progressivePool(index,time,true);
+   // A Ratatta-sized wild Pokémon can be a normal encounter, but a mini-
+   // boss should use the stronger half of the current SAFE minute's roster.
+   // No out-of-Gen species or opening legendaries are permitted.
+   if(pool.length<3||
+    pokemonStrength(id).power>=pokemonStrength(pool[Math.floor(pool.length/2)]).power)
+    return def;
+  }
   const target=pickProgressive(index,time,boss,offset);
   if(target===null)return null; // No eligible local species: fail closed.
   const mon=G.DEX_BY?.[target];
@@ -430,13 +454,13 @@
  // ONLY while normal Chơi ngay has an explicitly selected Region. Do not edit
  // original spawn definitions, save data, team Pokémon or other game modes.
  let constructed=0;
- function regionEnemyDefinition(def,index){
+ function regionEnemyDefinition(def,index,forceBoss=false){
   if(!def||typeof def!=='object'||index<0||index>=REGION_COUNT)return def;
-  // This is free-play exploration, not the linear story mode: even scripted
-  // bosses must use the chosen Region. Boss status/HP are preserved separately.
+  // Guardians keep their canonical Support roster, unlike wild/mini-bosses.
+  if(isBossGuardian(def))return def;
   const dex=Number(def.dex);
-  if(!Number.isInteger(dex)||eligibleByTime(dex,index))return def;
-  return progressiveDefinition(def,index,encounterSeconds(),constructed++);
+  if(!Number.isInteger(dex))return def;
+  return progressiveDefinition(def,index,encounterSeconds(),constructed++,forceBoss);
  }
  // Preserve native instanceof/class behavior through a constructor Proxy.
  // This also covers sources using new G.Enemy(...) instead of Enemies.bagAt().
@@ -447,7 +471,7 @@
     const index=regionIndex();
     if(index<0||getChampion()?.active||G.Coop?.active||!args.length)
      return Reflect.construct(Target,args,newTarget);
-    const replacement=regionEnemyDefinition(args[0],index);
+    const replacement=regionEnemyDefinition(args[0],index,!!args[4]);
     if(replacement===args[0])return Reflect.construct(Target,args,newTarget);
     const next=args.slice();next[0]=replacement;
     return Reflect.construct(Target,next,newTarget);
@@ -469,10 +493,11 @@
   if(!enemy||enemy.dead||enemy.remote||index<0||index>=REGION_COUNT)return false;
   // A real Region is strict for ALL hostile wildlife and bosses. Do not
   // exempt named bosses of other generations during normal exploration.
-  if(enemy.pkmsvvFriendly||enemy.friendly||enemy.isPlayer||enemy.isSupport)return false;
+  if(enemy.pkmsvvFriendly||enemy.friendly||enemy.isPlayer||enemy.isSupport||
+   enemy.pkmsvvBossGuard||enemy.pkmsvvGuardianOf!==undefined||isBossGuardian(enemy.def))return false;
   const old=Number(enemy.dex??enemy.def?.dex);
   if(!Number.isInteger(old))return false;
-  const replacement=regionEnemyDefinition({dex:old,boss:!!(enemy.boss||enemy.isBoss)},index);
+  const replacement=regionEnemyDefinition({dex:old,boss:bossLike(enemy)},index);
   if(!replacement||replacement.dex===old)return false;
   const next=replacement.dex,mon=G.DEX_BY?.[next];
   if(!mon)return false;
