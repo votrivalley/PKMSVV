@@ -5,7 +5,7 @@
  * No cloud, ranked rewards, guessed remote identity or combat debug shortcuts.
  */
 G.PKMSVVArenaPvp=(()=>{
- const COUNTDOWN=3,DUEL=180,HP=320,RADIUS=18,FRAME_RATE=.13,RESYNC_COOLDOWN=1.2;
+ const SELECT=10,COUNTDOWN=3,DUEL=180,HP=320,RADIUS=18,FRAME_RATE=.13,RESYNC_COOLDOWN=1.2;
  const $=id=>document.getElementById(id);
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  const clamp=(n,lo,hi)=>Math.max(lo,Math.min(hi,Number.isFinite(Number(n))?Number(n):lo));
@@ -21,6 +21,7 @@ G.PKMSVVArenaPvp=(()=>{
  // fragile one-off was its exit packet. The lobby's authoritative open flag
  // provides a separate recovery signal when that packet is lost.
  let matchRoom='',startedWhileClosed=false;
+ let pickReady=new Set(),pickedDex=null,pickPanel=null;
  // Keep duel isolation active after a rival disconnects; otherwise old
  // Survival spawners wake up as the room shrinks from two members to one.
  const mode=()=>!!(active&&G.Coop?.active);
@@ -51,6 +52,7 @@ G.PKMSVVArenaPvp=(()=>{
     '<button class="btn gold" type="button" id="pkmsvv-arena-pvp-exit">Về sảnh</button></div>';
   document.body.append(panel);result=panel;
   panel.querySelector('#pkmsvv-arena-pvp-exit').onclick=exit;
+  createPickPanel();
  }
  function cleanup(){
   active=false;host=false;stage='idle';winner=null;people=[];hp={};matchType='arena';round=1;scores={};casts.clear();
@@ -58,6 +60,7 @@ G.PKMSVVArenaPvp=(()=>{
   lastSyncRequest=-Infinity;lastSyncReply=-Infinity;lastSnapshotAt=-Infinity;
   if(element){element.remove();element=null;}
   if(result){result.remove();result=null;}
+  if(pickPanel){pickPanel.remove();pickPanel=null;}pickReady.clear();pickedDex=null;
   const count=$('pkmsvv-arena-pvp-count');if(count)count.remove();
   G.World?.setArena?.(null);
  }
@@ -94,7 +97,8 @@ G.PKMSVVArenaPvp=(()=>{
   startedWhileClosed=G.Social.room?.open===false;
   if(!cfg.members.some(m=>m.uid===uid))return false;
   people=cfg.members.map(m=>({uid:m.uid,name:String(m.name||'Trainer').slice(0,24),dex:m.dex}));
-  seed=cfg.seed;active=true;stage='countdown';elapsed=0;winner=null;
+  seed=cfg.seed;active=true;stage='select';elapsed=0;winner=null;
+  pickReady.clear();pickedDex=Number(cfg.members.find(m=>m.uid===uid)?.dex)||Number(G.DB?.save?.partner)||25;
   serial=0;received=-1;lastSyncRequest=-Infinity;lastSyncReply=-Infinity;lastSnapshotAt=-Infinity;
   matchType=cfg.mode;round=1;scores=Object.fromEntries(people.map(m=>[m.uid,0]));
   hp=Object.fromEntries(people.map(m=>[m.uid,HP]));
@@ -105,8 +109,82 @@ G.PKMSVVArenaPvp=(()=>{
   G.EnemyMgr?.clear?.();G.Pickups?.clear?.();G.Projectiles?.clear?.();
   G.Hazards?.clear?.();G.Combat?.clearFields?.();
   stageUi();
-  render();
+  renderPick();render();
   return true;
+ }
+
+ // The authenticated Host owns the 10s lobby and starts early only if both
+ // human players confirm. Never mutate the player's permanent saved partner.
+ function ownChoices(){
+  const owned=G.DB?.save?.owned||{};
+  const ids=Object.keys(owned).map(Number).filter(x=>x>0&&G.DEX_BY?.[x]);
+  return ids.length?ids:[Number(G.DB?.save?.partner)||25];
+ }
+ function createPickPanel(){
+  if(pickPanel)return;
+  const panel=document.createElement('section');panel.id='pkmsvv-arena-pvp-pick';
+  panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');
+  panel.setAttribute('translate','no');
+  panel.innerHTML='<div class="pkmsvv-arena-pvp-pick-card">'+
+   '<h2>'+tr('⚔ Chọn Pokémon trước Arena','⚔ Choose Pokémon before Arena')+'</h2>'+
+   '<p id="pkmsvv-arena-pvp-pick-clock">10s</p>'+
+   '<input id="pkmsvv-arena-pvp-pick-search" type="search" placeholder="'+tr('Tìm Pokémon / #Dex','Search Pokémon / #Dex')+'"/>'+
+   '<div id="pkmsvv-arena-pvp-pick-options"></div>'+
+   '<button type="button" class="btn gold" id="pkmsvv-arena-pvp-pick-confirm">'+tr('✓ Xác nhận','✓ Confirm')+'</button></div>';
+  document.body.append(panel);pickPanel=panel;
+  panel.querySelector('#pkmsvv-arena-pvp-pick-search').oninput=renderPickOptions;
+  panel.querySelector('#pkmsvv-arena-pvp-pick-confirm').onclick=confirmPick;
+ }
+ function renderPickOptions(){
+  if(!pickPanel||stage!=='select')return;
+  const grid=pickPanel.querySelector('#pkmsvv-arena-pvp-pick-options');if(!grid)return;
+  const query=(pickPanel.querySelector('#pkmsvv-arena-pvp-pick-search')?.value||'').trim().toLowerCase();
+  grid.replaceChildren();
+  for(const dex of ownChoices().filter(d=>String(d).includes(query)||String(G.DEX_BY[d]?.name||'').toLowerCase().includes(query)).slice(0,100)){
+   const button=document.createElement('button');button.type='button';button.className='btn small';
+   button.classList.toggle('gold',dex===pickedDex);
+   button.textContent=(dex===pickedDex?'✓ ':'')+(G.DEX_BY[dex]?.name||'Pokémon')+' #'+dex;
+   button.onclick=()=>{if(pickReady.has(uid))return;pickedDex=dex;renderPickOptions();};
+   grid.append(button);
+  }
+ }
+ function renderPick(){
+  if(!pickPanel)return;
+  pickPanel.hidden=stage!=='select'||!!G.PKMSVVBerry?.choosing;
+  if(pickPanel.hidden)return;
+  const clock=pickPanel.querySelector('#pkmsvv-arena-pvp-pick-clock');
+  if(clock)clock.textContent=tr('Chọn trong ','Choose in ')+Math.max(0,Math.ceil(SELECT-elapsed))+'s · '+
+   pickReady.size+'/'+people.length+' '+tr('người đã sẵn sàng','players ready');
+  const confirm=pickPanel.querySelector('#pkmsvv-arena-pvp-pick-confirm');
+  if(confirm){confirm.disabled=pickReady.has(uid);confirm.textContent=pickReady.has(uid)?
+   tr('✓ Đã sẵn sàng','✓ Ready'):tr('✓ Xác nhận','✓ Confirm');}
+  if(!pickPanel.dataset?.rendered){renderPickOptions();if(pickPanel.dataset)pickPanel.dataset.rendered='1';}
+ }
+ function confirmPick(){
+  if(stage!=='select'||pickReady.has(uid))return false;
+  const selected=ownChoices().includes(pickedDex)?pickedDex:Number(G.DB?.save?.partner)||25;
+  const member=people.find(m=>m.uid===uid);if(member)member.dex=selected;
+  pickReady.add(uid);renderPick();
+  if(host){if(pickReady.size===people.length)finishPick();else sendState(true);}
+  else G.Net?.toHost?.({k:'apvp-pick-ready',seed,room:matchRoom,matchType,dex:selected});
+  return true;
+ }
+ function applyFighterChoice(){
+  const member=people.find(m=>m.uid===uid),pl=local(),dex=member?.dex;
+  if(!pl||!G.DEX_BY?.[dex])return;
+  if(pl.dex!==dex){
+   pl.dex=dex;pl.mon=G.DEX_BY[dex];
+   if(G.Sprites?.Animator){
+    try{pl.anim=new G.Sprites.Animator(dex,G.Sprites.playerScale?.(dex)||1,false);}catch(_){}
+   }
+  }
+  normalize(pl);
+ }
+ function finishPick(){
+  if(!active||stage!=='select'||!host)return false;
+  stage='countdown';elapsed=0;frameClock=0;
+  applyFighterChoice();if(pickPanel)pickPanel.hidden=true;
+  sendState(true);return true;
  }
  function canCast(from,id,level,aim){
   if(!mode()||!host||stage!=='fight'||from!==uid&&!people.some(m=>m.uid===from))return null;
