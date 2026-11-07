@@ -1,16 +1,19 @@
 /* Pokémon Chuyển Sinh: QA-only "Chơi ngay" Region chooser.
  * This is NORMAL free play, not the 16-player Champion tournament.
  * Only the current run uses a fixed biome and generation-filtered native waves.
- * No Crown Seal, chapter or save flag is ever changed here.
+ * Exploration uses its own safe Seal progression; Champion Crown Seals remain untouched.
  */
 (function(){
  'use strict';
  if(typeof document==='undefined'||typeof G==='undefined')return;
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
- const THEMES=['fire','steel','water','ground','rock','dark','bug','fighting','ice','dragon'];
+ // Kanto uses the same default starter battlefield as normal Survival (biome 0).
+ // Fire belongs to late-game Paldea, not the first region for newcomers.
+ const THEMES=[null,'ground','water','ice','steel','rock','bug','fighting','fire','dragon'];
  const NAMES=['Kanto','Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar','Paldea','Votri Valley'];
  const SYMBOLS=['🔥','🌳','🌊','❄️','⚙️','✨','🌴','🏟️','⛰️','🐉'];
  const REGION_COUNT=10;
+ const SEAL_SECONDS=180; // Earn the regional Seal before the first 4-minute boss.
  // National Dex mascots chosen for the nine exploration Gen covers.
  // Keep the tenth, mixed-generation Sky Pillar, using its existing Rayquaza art.
  const REGION_MASCOTS=Object.freeze([150,249,385,488,646,718,800,890,1024,384]);
@@ -207,19 +210,54 @@
  function showRegionBadge(){const old=document.getElementById?.('pkmsvv-region-gen-badge');old?.remove?.();}
  const getChampion=()=>G.PKMSVVChampionArena;
  const getSave=()=>G.DB?.save;
+ function hasSeal(index,save=getSave()){
+  if(!Number.isInteger(index)||index<0||index>=REGION_COUNT)return false;
+  const name=NAMES[index];
+  // Existing Champion progress remains a valid unlock; never rewrite it.
+  return save?.pkmsvvExploreSeals?.[name]===true||
+   save?.arenas?.pkmChampion?.seals?.[name]===true;
+ }
  function unlocked(index,save=getSave()){
   if(!Number.isInteger(index)||index<0||index>=REGION_COUNT)return false;
   if(index===0)return true;
-  const seals=save?.arenas?.pkmChampion?.seals||{};
-  // Preserve existing Region/Crown Journey unlock logic and save keys.
-  return seals[NAMES[index]]===true||
-   NAMES.slice(0,index).every(name=>seals[name]===true);
+  // All nine preceding regions are required for Sky; no Arena obligation.
+  return hasSeal(index,save)||
+   NAMES.slice(0,index).every((_,i)=>hasSeal(i,save));
+ }
+ function tryEarnSeal(){
+  const run=current;
+  if(!run||preRunPending||G.Game?.state!=='playing'||
+   G.Coop?.active||getChampion()?.active||G.Game?.player?.dead)return false;
+  const seconds=Number(G.Game?.st?.time??G.Game?.time);
+  if(!Number.isFinite(seconds)||seconds<0)return false;
+  // A fresh run starts at zero; Berry can defer the native game start.
+  if(run.startedAt===null)run.startedAt=seconds;
+  if(seconds-run.startedAt<SEAL_SECONDS)return false;
+  const save=getSave(),name=NAMES[run.index];
+  if(!save||hasSeal(run.index,save))return false;
+  const original=save.pkmsvvExploreSeals;
+  if(original!==undefined&&(!original||Array.isArray(original)||typeof original!=='object'))return false;
+  save.pkmsvvExploreSeals={...(original||{}),[name]:true};
+  try{
+   // Persist one boolean on the same offline save; do not touch Champion
+   // crowns, Pokémon, items, currency, or chapter progression.
+   if(G.DB?.commit?.(true)===false)throw Error('Save commit returned false');
+  }catch(error){
+   if(original===undefined)delete save.pkmsvvExploreSeals;
+   else save.pkmsvvExploreSeals=original;
+   console.warn('[Explore Seal] Save commit failed',error);
+   return false;
+  }
+  G.UI?.toast?.(tr('Nhận Ấn Chứng '+name+'! Đã mở vùng kế tiếp.',
+   name+' Seal earned! Next region unlocked.'),3800);
+  return true;
  }
  function regionIndex(){
   if(current&&preRunPending&&G.Game?.state==='playing')preRunPending=false;
   return current?.index??-1;
  }
  function targetBiome(index){
+  if(index===0)return 0; // Native default world used by other opening modes.
   const n=G.Tiles?.arenaBiome?.(THEMES[index]);
   return Number.isFinite(n)?n:null;
  }
@@ -264,7 +302,7 @@
    champion:regions[i]?.[2]||'',
    difficulty:Math.min(5,1+Math.floor(i/2)),
    unlocked:unlocked(i,save),
-   complete:save?.arenas?.pkmChampion?.seals?.[name]===true,
+   complete:hasSeal(i,save),
    icon:SYMBOLS[i]
   }));
  }
@@ -275,7 +313,7 @@
   overlay.setAttribute('aria-label',tr('Chọn nơi bạn khám phá','Choose where to explore'));
   overlay.innerHTML='<div class="pkmsvv-quick-region-panel" role="dialog" aria-modal="true">'+
    '<header><div class="region-heading"><h2>'+tr('Chọn nơi bạn khám phá','Choose where to explore')+'</h2>'+
-   '<p>'+tr('Nhận Ấn Chứng từng vùng để mở khóa vùng kế tiếp. Vùng sau khó hơn và thử thách đa dạng hơn.','Earn Seals to unlock the next region. Challenges get tougher as you progress.')+'</p></div>' +
+   '<p>'+tr('Sống sót 3 phút trong mỗi vùng để nhận Ấn Chứng, mở khóa vùng tiếp theo. Không cần đấu Champion.','Survive 3 minutes in each region to earn its Seal and unlock the next. Champion is not required.')+'</p></div>' +
    '<button type="button" id="pkmsvv-quick-region-close" aria-label="'+tr('Đóng','Close')+'">×</button></header>'+
    '<div id="pkmsvv-quick-region-grid" class="pkmsvv-quick-region-grid"></div></div>';
   document.body.append(overlay);
@@ -316,7 +354,7 @@
    diff.textContent='▥ '+tr('Độ khó ','Difficulty ')+x.difficulty+'/5';
    const status=document.createElement('small');status.className='region-status';
    status.textContent=x.complete?'✓ '+tr('Đã hoàn thành · Có Ấn Chứng','Completed · Seal earned'):
-    x.unlocked?tr('▶ Chọn để chơi','▶ Select to play'):
+    x.unlocked?tr('▶ 3 phút → nhận Ấn Chứng','▶ 3 min → earn Seal'):
     x.index===9?'🔒 '+tr('Cần đủ 9 Ấn Chứng','Requires all 9 Seals'):
     '🔒 '+tr('Cần Ấn Chứng ','Requires Seal of ')+NAMES[x.index-1];
    body.append(name,diff,status);
@@ -333,7 +371,7 @@
  function beginRun(index,formerBiome=null){
   if(!Number.isInteger(index)||!unlocked(index)||current)return false;
   const biome=targetBiome(index);
-  current={index,biome};
+  current={index,biome,startedAt:null};
   showRegionBadge(index);
   // Berry pre-match selection defers the underlying native startRun for 10s.
   // Keep the region armed across that entire pending period; menu overlays
@@ -371,7 +409,11 @@
   }else if(!current)beginRun(index,priorBiome);
   try{
    const out=prev.apply(this,args);
-   if(chosen&&G.Game?.state==='playing')preRunPending=false;
+   if(chosen&&G.Game?.state==='playing'){
+    preRunPending=false;
+    if(current&&current.startedAt===null)
+     current.startedAt=Number(G.Game?.st?.time??G.Game?.time??0)||0;
+   }
    return out;
   }catch(err){
    if(chosen&&current)endRun();
@@ -462,6 +504,7 @@
  wrap(G.EnemyMgr,'update',function(prev,args){
   const out=prev.apply(this,args),index=regionIndex();
   if(index<0||getChampion()?.active||G.Coop?.active)return out;
+  tryEarnSeal();
   if(++integrityTick%10!==0||typeof G.EnemyMgr?.all!=='function')return out;
   const all=G.EnemyMgr.all();
   // Map / Set may be instantiated in another JS realm (WebViews, VM tests).
@@ -485,7 +528,10 @@
   return enforceGeneration(bag,index);
  });
  for(const [obj,key] of [[G.Game,'toUI'],[G.Game,'quit'],[G.Flow,'goMenu']]){
-  wrap(obj,key,function(prev,args){if(current)endRun();return prev.apply(this,args);});
+  wrap(obj,key,function(prev,args){
+   if(current){tryEarnSeal();endRun();}
+   return prev.apply(this,args);
+  });
  }
  // Opening in-game overlays must NOT cancel the selected region. Only an
  // explicit return to the home menu clears the scoped Region policy.
@@ -496,7 +542,8 @@
   if(current&&G.Game?.state==='ui'&&!preRunPending&&!G.PKMSVVBerry?.choosing)endRun();
   return out;
  });
- G.PKMSVVQuickRegion={open,close,choose,entries,unlocked,beginRun,endRun,
+ G.PKMSVVQuickRegion={open,close,choose,entries,unlocked,hasSeal,tryEarnSeal,beginRun,endRun,
+  SEAL_SECONDS,
   mascots:REGION_MASCOTS,nationalGen,speciesFor,isAllowed,pokemonStrength,encounterTier,eligibleByTime,
   progressivePool,enforceGeneration,regionEnemyDefinition,enforceLiveEnemy,
   get active(){return regionIndex()>=0},
