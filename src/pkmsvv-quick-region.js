@@ -289,23 +289,55 @@
  // Last-chance isolation for custom waves that captured Enemy BEFORE this
  // QA wrapper: refresh species and sprite at the manager boundary. Restrict
  // only normal Chơi ngay and never mutate global Gacha/boss catalogues.
- wrap(G.EnemyMgr,'add',function(prev,args){
-  const enemy=args[0],index=regionIndex();
-  if(index>=0&&index<GEN_BOUNDS.length&&!getChampion()?.active&&!G.Coop?.active&&enemy&&
-     Number.isInteger(Number(enemy.dex))){
-   const old=Number(enemy.dex),definition=regionEnemyDefinition({dex:old},index);
-   if(definition.dex!==old){
-    const next=definition.dex,mon=G.DEX_BY?.[next];
-    enemy.dex=next;
-    if(mon)enemy.mon=mon;
-    if(enemy.def&&typeof enemy.def==='object')
-     enemy.def={...enemy.def,dex:next,name:mon?.name||('Pokémon '+next)};
-    if(G.Sprites?.Animator&&enemy.anim){
-     try{enemy.anim=new G.Sprites.Animator(next,enemy.scale||1,!!enemy.shiny);}catch(_){}
-    }
-   }
+ // The compiled game and scripted events do not all use bagAt() or the
+ // exported G.Enemy constructor. Normal/mini-boss encounters can even enter
+ // EnemyMgr via a previously captured constructor. Sanitize the LIVE actor
+ // before adding it, and periodically check the manager for bypassing paths.
+ // This is strictly scoped to the selected normal Region session.
+ function enforceLiveEnemy(enemy,index){
+  if(!enemy||enemy.dead||enemy.remote||index<0||index>=GEN_BOUNDS.length)return false;
+  if(enemy.pkmsvvStoryBoss||enemy.pkmsvvFinalBoss||enemy.pkmsvvJudgment||
+     enemy.def?.pkmsvvStoryBoss||enemy.def?.pkmsvvFinalBoss||
+     enemy.def?.pkmsvvJudgment||enemy.def?.judge)return false;
+  const old=Number(enemy.dex??enemy.def?.dex);
+  if(!Number.isInteger(old))return false;
+  const replacement=regionEnemyDefinition({dex:old},index);
+  if(replacement.dex===old)return false;
+  const next=replacement.dex,mon=G.DEX_BY?.[next];
+  if(!mon)return false;
+  // Never change damage/HP, biome, boss flags, rewards or player Pokémon.
+  // Only the visible species identity and sprite are changed.
+  enemy.dex=next;
+  if(enemy.mon)enemy.mon=mon;
+  if(enemy.def&&typeof enemy.def==='object')
+   enemy.def={...enemy.def,dex:next,name:mon.name||('Pokémon '+next),
+    ...(Array.isArray(mon.types)?{types:mon.types}:{})};
+  if(G.Sprites?.Animator){
+   try{
+    enemy.anim=new G.Sprites.Animator(next,enemy.scale||1,!!enemy.shiny);
+    if(typeof G.Sprites.bodyRadius==='function')
+     enemy.r=G.Sprites.bodyRadius(next,enemy.scale||1)||enemy.r;
+   }catch(err){console.warn('[Region QA] sprite correction failed',next,err);}
   }
+  return true;
+ }
+ wrap(G.EnemyMgr,'add',function(prev,args){
+  const index=regionIndex();
+  if(index>=0&&!getChampion()?.active&&!G.Coop?.active)
+   enforceLiveEnemy(args[0],index);
   return prev.apply(this,args);
+ });
+ // Late correction catches waves which bypass EnemyMgr.add() entirely.
+ // Throttle to every ~10 ticks to avoid traversing large horde lists 60fps.
+ let integrityTick=0,correctedSpawns=0;
+ wrap(G.EnemyMgr,'update',function(prev,args){
+  const out=prev.apply(this,args),index=regionIndex();
+  if(index<0||getChampion()?.active||G.Coop?.active)return out;
+  if(++integrityTick%10!==0||typeof G.EnemyMgr?.all!=='function')return out;
+  const all=G.EnemyMgr.all();
+  if(Array.isArray(all))for(const enemy of all)
+   if(enforceLiveEnemy(enemy,index))correctedSpawns++;
+  return out;
  });
  wrap(G.Enemies,'bagAt',function(prev,args){
   const bag=prev.apply(this,args),index=regionIndex();
@@ -327,5 +359,9 @@
   return out;
  });
  G.PKMSVVQuickRegion={open,close,choose,entries,unlocked,beginRun,endRun,
-  enforceGeneration,regionEnemyDefinition,get active(){return regionIndex()>=0},get selectedRegion(){return regionIndex()}};
+  enforceGeneration,regionEnemyDefinition,enforceLiveEnemy,
+  get active(){return regionIndex()>=0},
+  get selectedRegion(){return regionIndex()},
+  get starting(){return !!preRunPending},
+  get correctedSpawns(){return correctedSpawns}};
 })();
