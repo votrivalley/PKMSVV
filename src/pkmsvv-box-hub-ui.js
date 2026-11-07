@@ -115,7 +115,7 @@
    '<p class="pkmbx-rank-status'+(canRank?' is-ready':'')+'">'+note+'</p>'+
    '<button type="button" class="btn pkmbx-rank-shortcut'+(canRank?' gold':' rank-disabled')+'" id="pkmbx-rank-shortcut" '+
       (!canRank||G.DB?.guest?'disabled':'')+'>'+
-      (enabled?L('⬆ Nâng Rank','⬆ Rank Up'):L('Bật PokéBox để nâng Rank','Activate PokéBox for Rank'))+'</button>'+
+      L('⬆ Nâng Rank','⬆ Rank Up')+'</button>'+
    '<p class="pkmbx-rank-auto-note">'+L('Pokémon quay trùng tự động được tính làm nguyên liệu. Không cần đổi thành Mảnh Rank.',
       'Duplicate Gacha pulls count as materials automatically. No shard conversion needed.')+'</p>'+
    '<p class="pkmbx-rank-next"><b>'+L('Hạng kế tiếp','Next Rank')+':</b> '+
@@ -405,6 +405,7 @@
     '<option value="copies">'+L('Số bản sao','Copies')+'</option>'+
     '<option value="rarity">'+L('Độ hiếm','Rarity')+'</option></select></label>'+
    '<span id="pkmbx-found-count" class="pkmbx-found-count" aria-live="polite"></span></div>'+
+   '<div id="pkmbx-legacy-migration" class="pkmbx-legacy-migration" hidden></div>'+
    '<nav class="pkmbx-page pkmbx-box-carousel" aria-label="'+L('Chuyển hộp Pokémon','Switch Pokémon boxes')+'">'+
    '<button type="button" class="btn small" id="pkmbx-prev" aria-label="'+L('Hộp trước','Previous box')+'">❮</button>'+
    '<div class="pkmbx-box-heading"><strong id="pkmbx-box-label">BOX 1</strong>'+
@@ -440,7 +441,7 @@
    const species=group[0];
    return (!onlyFavorites||group.some(x=>x.favorite))&&
     (!onlyShiny||group.some(x=>x.shiny))&&
-    (!onlyRankReady||group.some(x=>ranks.get(x.id)?.canRank))&&
+    (!onlyRankReady||(ready&&group.some(x=>ranks.get(x.id)?.canRank)))&&
     (!q||monName(species.dex).toLocaleLowerCase().includes(q)||String(species.dex).includes(q));
   }).map(group=>{
    const chosen=group.find(x=>x.id===focused);
@@ -473,11 +474,24 @@
   }
   if(!shown.length){
    const empty=doc.createElement('p');empty.className='pkmbx-box-empty';
-   empty.textContent=onlyRankReady?L('Chưa có Pokémon đủ nguyên liệu nâng Rank.','No Pokémon has enough eligible Rank materials.'):
+   empty.textContent=onlyRankReady&&!ready?
+     L('Save cũ chưa lưu số bản trùng. Hãy chuyển PokéBox để theo dõi Gacha mới.',
+       'Old save does not track duplicates. Migrate PokéBox to track future Gacha pulls.'):
+    onlyRankReady?L('Chưa có Pokémon đủ nguyên liệu nâng Rank.','No Pokémon has enough eligible Rank materials.'):
     L('Không tìm thấy Pokémon phù hợp.','No matching Pokémon found.');
    grid.appendChild(empty);
   }
   boxPane.querySelector('#pkmbx-found-count').textContent=shown.length+' / '+groups.size+' '+L('loài','species');
+  const banner=boxPane.querySelector('#pkmbx-legacy-migration');
+  banner.hidden=ready;
+  if(!ready){
+   banner.innerHTML='<strong>'+L('Save cũ chưa theo dõi Pokémon quay trùng.','This older save does not track individual duplicates.')+'</strong>'+
+    '<span>'+L('Không thể phục hồi chính xác lượt Gacha trùng trước đây. Hãy lưu bản gốc và chuyển PokéBox để các lượt Gacha mới được tính Rank.',
+      'Past duplicates cannot be reconstructed accurately. Back up and migrate to count all new Gacha duplicates toward Rank.')+'</span>'+
+    '<button type="button" class="btn small" id="pkmbx-activate-migration">'+
+    L('💾 Sao lưu và kích hoạt PokéBox','💾 Back up & activate PokéBox')+'</button>';
+   banner.querySelector('button').onclick=migrateLegacyFromBox;
+  }
   if(!focused||!items.some(x=>x.id===focused))focused=selected||items[0]?.id||null;
   boxPane.querySelector('#pkmbx-box-label').textContent='BOX '+(page+1)+' · '+
    L('Kho Pokémon','Collection');
@@ -793,6 +807,35 @@
   if(original){
    const sub=original.querySelector('.pkmsvv-menu-copy small, small');
    if(sub)sub.textContent=L('Pokémon hỗ trợ · Mega · Berry','Support Pokémon · Mega · Berries');
+  }
+ }
+ // The collection is visible even on old saves. A one-click, explicitly
+ // requested migration lives here rather than behind a different menu.
+ // Never infer historical duplicates: legacy owned[] is per species only.
+ function migrateLegacyFromBox(){
+  const s=currentSave();
+  if(getStored()||!s||G.DB?.guest)return false;
+  if(!confirm(L('Tạo bản sao lưu an toàn rồi kích hoạt PokéBox? Các lượt Gacha cũ không lưu bản trùng sẽ không thể khôi phục.',
+   'Back up the current save and enable individual PokéBox? Older duplicates were not recorded and cannot be recovered.')))return false;
+  try{
+   const backup=G.PKMSVVSaveUI?.backup?.();
+   if(typeof backup!=='string'||!backup)throw Error('Save backup is unavailable');
+   const session=JSON.parse(localStorage.getItem('ps.session')||'null');
+   if(typeof session!=='string'||!/^[a-z0-9_ñáéíóú-]{2,48}$/i.test(session))
+    throw Error('Active offline profile not found');
+   const key='pkmsvv.prepokebox.'+session;
+   if(!localStorage.getItem(key))localStorage.setItem(key,backup);
+   if(!localStorage.getItem(key))throw Error('Backup storage failed');
+   Box.persistMigration();
+   if(!getStored())throw Error('PokéBox migration was not saved');
+   onlyRankReady=false;page=0;
+   const filter=boxPane?.querySelector('#pkmbx-ready');if(filter)filter.checked=false;
+   G.UI?.toast?.(L('Đã kích hoạt PokéBox. Các lượt Gacha mới sẽ có bản trùng riêng.',
+     'PokéBox activated. New Gacha pulls now track duplicates.'),3600);
+   renderBox();return true;
+  }catch(error){
+   G.UI?.toast?.(L('Chưa chuyển PokéBox: ','Migration stopped: ')+error.message,3800);
+   return false;
   }
  }
  // Keep migration in Save Management, never in the regular PokéBox UI.
