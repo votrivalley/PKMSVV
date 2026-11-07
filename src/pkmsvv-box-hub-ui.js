@@ -107,11 +107,41 @@
   try{fn();renderBox();return true}
   catch(e){alert(L('Không thể lưu thay đổi: ','Could not save change: ')+e.message);return false;}
  }
- function draw(canvas,dex,shiny=false,hero=false,unknown=false){
-  if(!canvas||!G.UI?.sprite)return;
+ // Rendering dozens of animated PokéBox thumbnails in a single click can
+ // block the main thread. Paint the hero immediately, then distribute tiny
+ // collection thumbnails over animation frames (without touching any saves).
+ const thumbnailQueue=[],thumbnailSet=new WeakSet();
+ let thumbnailScheduled=false;
+ function paintSprite(canvas,dex,shiny,hero,unknown){
+  if(!canvas||!G.UI?.sprite||!canvas.isConnected)return;
   try{G.UI.sprite(canvas,dex,{lively:hero,spin:hero,hero,
     silhouette:unknown,scale:hero?3:2,shiny});}
   catch(_){try{G.UI.sprite(canvas,dex,{scale:2,shiny,silhouette:unknown});}catch(__){}}
+ }
+ function flushThumbnails(){
+  thumbnailScheduled=false;
+  const start=typeof performance==='object'?performance.now():Date.now();
+  let painted=0;
+  while(thumbnailQueue.length&&painted<5){
+   const [canvas,dex,shiny,unknown]=thumbnailQueue.shift();
+   if(canvas?.isConnected)paintSprite(canvas,dex,shiny,false,unknown);
+   painted++;
+   if((typeof performance==='object'?performance.now():Date.now())-start>7)break;
+  }
+  if(thumbnailQueue.length){
+   thumbnailScheduled=true;requestAnimationFrame(flushThumbnails);
+  }
+ }
+ function draw(canvas,dex,shiny=false,hero=false,unknown=false){
+  if(!canvas||!G.UI?.sprite)return;
+  if(hero||typeof requestAnimationFrame!=='function'){
+   paintSprite(canvas,dex,shiny,hero,unknown);return;
+  }
+  // Repeated focus changes never queue two paints for the same canvas.
+  if(thumbnailSet.has(canvas))return;
+  thumbnailSet.add(canvas);
+  thumbnailQueue.push([canvas,dex,shiny,unknown]);
+  if(!thumbnailScheduled){thumbnailScheduled=true;requestAnimationFrame(flushThumbnails);}
  }
  // Read-only selection must not rebuild the grid or re-evaluate all species.
  function chooseFocus(id){
