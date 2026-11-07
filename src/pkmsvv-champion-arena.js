@@ -66,7 +66,7 @@ G.PKMSVVChampionArena=(()=>{
   pl.atkMul*=e.atk;pl.spdMul*=playerSpeed;
   if(Number.isFinite(enemy.dmg))enemy.dmg*=e.atk;
   if(Number.isFinite(enemy.spd))enemy.spd*=enemySpeed;
-  G.UI?.toast?.('🏟️ '+e.name+' · '+e.hint,3300);
+  G.UI?.toast?.('🏟️ '+e.name+' · '+arenaHint(e.hint),3300);
  }
  // Progressive HP and boss tempo: difficulty grows without instant one-hit attacks.
  const REGION_BALANCE=Object.freeze([
@@ -80,6 +80,21 @@ G.PKMSVVChampionArena=(()=>{
  const DUEL_COUNTDOWN=3,MEGA_TRANSITION_SECONDS=1;
  let startingOwnRun=false,transitionClock=0,transitionOrigin='fight',fightCue=0;
  const $=id=>document.getElementById(id);
+ // Keep the Champion panel bilingual; do not let legacy automatic text
+ // translation mix English and Vietnamese after it is rendered.
+ const ownLanguage=el=>{el?.setAttribute('translate','no');el?.classList?.add('notranslate');};
+ const arenaHint=hint=>tr(hint,{
+  'Sát thương +8%':'Damage +8%','Sát thương -8%':'Damage -8%',
+  'Pokémon trên mặt đất chạy chậm 10%':'Grounded Pokémon move 10% slower',
+  'Tốc độ chạy -12%':'Movement speed -12%',
+  'Sát thương -5%, tốc độ -6%':'Damage -5%, speed -6%',
+  'Sát thương +6%, tốc độ -3%':'Damage +6%, speed -3%',
+  'Tốc độ chạy +12%':'Movement speed +12%',
+  'Sát thương +10%':'Damage +10%',
+  'Tốc độ chạy -10%':'Movement speed -10%',
+  'Sát thương +15%, tốc độ +5%':'Damage +15%, speed +5%'
+ }[hint]||hint);
+
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  let region=0,stage='idle',round=0,elapsed=0,opp=null,bracket=[],target=null,active=false,paid=false,lastSecond=-1,prepBossStage=0,previewSeen=false,warnSeen=false,semiLosers=[],lastPodium=null,mode='story',mapChoice='random',duelType='normal',farmBagTick=0,previousBiome=null;
  // The rival is not spawned until the center-screen 3-2-1 ends.
@@ -234,6 +249,7 @@ G.PKMSVVChampionArena=(()=>{
  function arenaHub(){
   let o=$('pkmsvv-arena-hub');if(o)return o;
   o=document.createElement('section');o.id='pkmsvv-arena-hub';o.className='pkmsvv-champion-overlay';o.hidden=true;
+  ownLanguage(o);
   o.innerHTML='<div class="pkmsvv-champion-panel pkmsvv-arena-hub-panel" role="dialog" aria-modal="true">'+
    '<div class="pkmsvv-champion-heading"><h2>⚔ Arena</h2><button class="btn ghost" id="pkmsvv-arena-hub-close" type="button">×</button></div>'+
    '<p>'+tr('Chọn Solo hoặc Champion','Choose Solo or Champion')+'</p><div class="pkmsvv-arena-hub-choices">'+
@@ -253,7 +269,7 @@ G.PKMSVVChampionArena=(()=>{
  function panel(){
   let overlay=$('pkmsvv-champion-screen');if(overlay)return overlay;
   overlay=document.createElement('section');overlay.id='pkmsvv-champion-screen';
-  overlay.className='pkmsvv-champion-overlay';overlay.hidden=true;
+  overlay.className='pkmsvv-champion-overlay';overlay.hidden=true;ownLanguage(overlay);
   overlay.innerHTML='<div class="pkmsvv-champion-panel" role="dialog" aria-modal="true" aria-labelledby="pkmsvv-champion-title">'+
    '<div class="pkmsvv-champion-heading"><h2 id="pkmsvv-champion-title">🏆 Arena · Champion</h2><div class="pkmsvv-champion-heading-actions"><button class="btn ghost" id="pkmsvv-champion-close" type="button">×</button></div></div>'+
    '<div class="pkmsvv-crown-journey"><button id="pkmsvv-arena-mode-champion" type="button" class="btn gold">'+tr('👑 Hành Trình Vương Miện','👑 Crown Journey')+'</button></div><p id="pkmsvv-champion-info"></p><div id="pkmsvv-champion-regions" class="pkmsvv-champion-regions"></div>'+
@@ -277,9 +293,9 @@ G.PKMSVVChampionArena=(()=>{
     mapChoice=String($('pkmsvv-champion-map').value||'random');
     const hint=$('pkmsvv-champion-map-row')?.querySelector?.('small');
     if(hint)hint.textContent=mapChoice==='random'?
-     '🎲 Chọn ngẫu nhiên trong 10 sân đã mở':
+     tr('🎲 Chọn ngẫu nhiên trong 10 sân đã mở','🎲 Random arena among 10 unlocked'):
      '🏟️ '+mapEffect(REGION_THEMES[Number(mapChoice)||0]).name+' · '+
-      mapEffect(REGION_THEMES[Number(mapChoice)||0]).hint;
+      arenaHint(mapEffect(REGION_THEMES[Number(mapChoice)||0]).hint);
    };
   $('pkmsvv-champion-start').onclick=()=>entryPick(()=>start());
   $('pkmsvv-champion-sky').onclick=()=>{if(storyCompleted()&&!G.DB?.save?.pkmsvvChapter10Done)startSky();};
@@ -301,7 +317,7 @@ G.PKMSVVChampionArena=(()=>{
   const mapRow=$('pkmsvv-champion-map-row');if(mapRow)mapRow.hidden=true; // select from the large region tiles, no dropdown
   const chooser=$('pkmsvv-champion-map');if(chooser&&mode==='league'){
    chooser.replaceChildren();
-   for(const [v,label] of [['random',tr('🎲 Ngẫu nhiên','🎲 Random')],...REGIONS.map(([name],i)=>[String(i),displayRegion(name)+' · '+mapEffect(REGION_THEMES[i]).hint])]){
+   for(const [v,label] of [['random',tr('🎲 Ngẫu nhiên','🎲 Random')],...REGIONS.map(([name],i)=>[String(i),displayRegion(name)+' · '+arenaHint(mapEffect(REGION_THEMES[i]).hint)])]){
     const option=document.createElement('option');option.value=v;option.textContent=label;option.selected=mapChoice===v;chooser.append(option);
    }
   }
@@ -317,12 +333,12 @@ G.PKMSVVChampionArena=(()=>{
    const difficulty=document.createElement('small');difficulty.className='pkmsvv-region-difficulty';
    difficulty.textContent=(i===9?tr('Rồng · Đa thế hệ','Dragon · Mixed Gen'):'Gen '+(i+1))+
     ' · '+tr('Độ khó ','Difficulty ')+tier+'/5';
-   const rule=document.createElement('small');rule.textContent=mapEffect(REGION_THEMES[i]).hint;
+   const rule=document.createElement('small');rule.textContent=arenaHint(mapEffect(REGION_THEMES[i]).hint);
    const status=document.createElement('span');status.className='pkmsvv-region-status';
    status.textContent=completed?tr('Đã hoàn thành','Completed'):unlocked?tr('Đang mở','Unlocked'):tr('Chưa mở','Locked');
    b.replaceChildren(title,difficulty,rule,status);
    b.disabled=active||!unlocked;
-   b.title=mapEffect(REGION_THEMES[i]).name+' · '+rule.textContent;
+   b.title=displayRegion(name)+' · '+rule.textContent;
    b.onclick=()=>{if(mode==='league')mapChoice=String(i);else region=i;clearResult();updatePanel();};
    regionBox.append(b);
   });
