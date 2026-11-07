@@ -232,8 +232,8 @@
   const max=5,api=typeof G!=='undefined'?G.PKMSVVBox2:null;
   const species=x&&api?.speciesProgress?.(s,x.dex);
   const rank=Math.max(0,Math.min(max,species?.rank??(Number.isInteger(x?.rank)?x.rank:0)));
-  // One same-species extra individual or shard per step, not 1+2+3+4+5.
-  const cost=rank===max?0:1;
+  // Rank step N requires N matching copies (1, 2, 3, 4, then 5).
+  const cost=rank===max?0:rank+1;
   const enabled=!!(x&&valid(s)&&api?.valid?.(s)&&
    typeof api.candidateList==='function'&&typeof api.shards==='function');
   let copies=0,fragments=0,protectedForms=0;
@@ -243,7 +243,7 @@
    const carrier=x.shiny?(s.pkmsvvBox.find(v=>v.dex===x.dex&&!v.shiny)||x):x;
    copies=api.candidateList(s,carrier.id).length;
    fragments=api.shards(s,x.dex);
-   protectedForms=api.shinyCreditList?.(s,carrier.id)?.length||0;
+   protectedForms=api.claimableList?.(s,carrier.id)?.length||0;
   }
   const available=enabled?Math.min(cost,copies+fragments+protectedForms):0;
   return {rank,max,cost,copies,fragments,protectedForms,available,missing:Math.max(0,cost-available),
