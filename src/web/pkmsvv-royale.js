@@ -29,7 +29,7 @@ G.Royale=(()=>{
  }
  function begin(cfg){
   hudBounds=null;expanded=false;lastEvolutionLevel=null;pendingEvolution=false;
-  document.body?.classList?.remove?.('pkmsvv-competitive-evo');
+  if(typeof document!=='undefined')document.body?.classList?.remove?.('pkmsvv-competitive-evo');
   active=!!(cfg&&cfg.mode==='royale');
   roster=active?(cfg.members||[]).map(m=>({uid:m.uid,name:String(m.name||'Trainer').slice(0,32),dex:dexOf(m.dex),shiny:!!m.shiny})):[];
   fallen={};outcome=null;lastAlive=-1;avatars=new Map();
