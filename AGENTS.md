@@ -69,30 +69,43 @@ continuing. Preserve offline Wi-Fi hosting and the full existing test suite.
 
 ## BẮT BUỘC — PokéBox Rank / same-species copies
 
-- Maximum Rank is **5** and the player must confirm each upgrade. Rank N -> N+1
-  costs exactly **ONE** additional same-species individual or same-species Rank
-  shard. Never silently restore the old escalating material costs 1+2+3+4+5.
-- Normal and Shiny variants share the **same species Rank**. A second saved
-  Shiny form may count as one **non-destructive, single-use Rank credit**;
-  its unique instance ID must be journaled on the save so it cannot be claimed
-  twice or farmed by changing selection. Never delete a Shiny or migrated
-  original, or auto-consume anything during Gacha.
-- An ordinary eligible disposable copy may be consumed only with an explicit
-  confirmation and atomic save commit. Favorite, locked and six-member Ready
-  Team Pokémon remain protected; Rank operations must retain owned/shiny,
-  Mega, Berry, tickets and prior upgrades. Failed save writes fully roll back.
-- In PokéBox, keep all individuals grouped per species. Show the ×N badge
-  only when there is at least one duplicate beyond the first individual:
-  **N = total individuals - 1**, so one original shows no badge, two saved
-  individuals show ×1, three saved individuals show ×2. Distinguish total
-  saved duplicates from unspent Rank materials and already-used Shiny credits.
-- Keep **Chọn ra trận / Yêu thích / Đội hình** together ABOVE the Pokémon
-  portrait in the RIGHT details pane on all three platforms. Keyboard/controller
-  must reach these actions and the Rank confirmation dialog.
-- Old saves may have only one Normal/one Shiny record per species (no historic
-  Gacha duplicate ledger). Do not fabricate lost historical pulls or require
-  "backing up" on every Rank upgrade. One-time conversion to PokéBox is an
-  explicit, save-safe action after creating an external JSON backup.
-- Gate merges/releases on regression tests for 0→5 per-copy Rank progression,
-  normal/shiny shared Rank, Shiny one-time credit, invalid/reused source IDs,
-  save rollback, no ×1 badge, and correct focused-species Rank dialogs.
+- MAX Rank 5. APPROVED cost escalation is **0→1:1; 1→2:2;
+  2→3:3; 3→4:4; 4→5:5 MORE same-species copies or matching Rank shards**.
+  Never change this to flat one copy per upgrade. User explicitly corrected it.
+- Every additional saved same-species Pokémon can count once for Rank,
+  including shiny/legacy/team/favorite. Protected Pokémon stay intact; save
+  the unique IDs of claimed protected duplicates in an atomic transaction to
+  prevent double credit. Ordinary unprotected fodder is consumed only with
+  explicit confirmation. Repeated Gacha never silently ranks up.
+- Normal and Shiny share the same species Rank. Keep owned/shiny, tickets,
+  Berry, Mega, personal upgrades and team when ranking. Roll back all writes
+  if commit fails. Never manufacture historical Gacha pulls absent in JSON.
+- The PokéBox ×N badge shows TOTAL stored individuals (Normal and Shiny):
+  **singleton: no badge; two stored: ×2; three stored: ×3**. Rank materials
+  already credited are shown separately.
+- Keep the three primary actions Chọn ra trận / Yêu thích / Vào đội hình
+  ABOVE the Pokémon portrait; support controller, keyboard and touch.
+- Preserve one-time safe backup/migration of legacy saves, but do not force
+  a backup for each Rank upgrade. If Rank modal unavailable, show working
+  material selection fallback rather than an inert button.
+- Gate releases on tests: costs 1+2+3+4+5, Team/Favorite/Shiny safe
+  credits counted once, rollback, no singleton badge, focused #191/#070 Rank
+  interactions and Controller-B/Escape modal closing.
+
+## Region and prebattle acceptance — November 2026
+
+- Normal Chơi ngay Kanto/Johto/etc. must use the SAME Gacha generation
+  catalogue (`G.DEX[].gen` + sprite eligibility), not arbitrary hardcoded
+  pools. Native waves, custom spawns, mini-boss and ordinary bosses obey Gen.
+  Exempt only explicitly marked story-only bosses. No leak into Arena or Co-op.
+- Arena Pokémon selection: 10 seconds, Solo AI/Champion may start early
+  on own confirmation. Real-human Arena only starts early after ALL human
+  participants confirm, with Host-authoritative timer/ready packets. Otherwise
+  auto-advance at time expiry. No NPC blocks human ready.
+- Berry selection: 10 seconds, Solo Confirm/No Berry skips instantly;
+  multiplayer early-skip only when ALL human participants confirm, otherwise
+  advance on timeout. No duplicate callback, no early death, no stock loss
+  if startRun fails.
+- QA builds must contain the actual modified Berry/Arena scripts; DO NOT
+  claim the changes are tested in PC/APK/Web when using an older compiled
+  v1.5.93 baseline missing these modules. Unit-only pass is not device QA.
