@@ -58,6 +58,21 @@ G.PKMSVVWiki=(()=>{
   .pkmsvv-pc-learn{margin-top:9px;border:1px solid #80bbb2;background:#204e55;border-radius:9px;padding:10px}
   .pkmsvv-pc-learn button{cursor:pointer;color:#ffe3a3;font-weight:bold;border:0;background:transparent;text-align:left;width:100%;padding:5px}
   .pkmsvv-pc-learn p{color:#d8efeb;font-size:13px;line-height:1.65}
+  .pkmsvv-fusion-recipes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}
+  .pkmsvv-fusion-recipe{display:grid;grid-template-columns:52px minmax(0,1fr);
+    gap:4px 10px;align-items:center;padding:9px;border:1px solid #82b9b5;
+    border-radius:9px;background:#173c4c;color:#f4faf8;min-width:0}
+  .pkmsvv-fusion-recipe .pkmsvv-fusion-icon{grid-row:1/5;width:52px;height:52px;
+    object-fit:contain;filter:drop-shadow(0 0 4px #ffe68c44)}
+  .pkmsvv-fusion-recipe .pkmsvv-fusion-move{display:inline-flex;align-items:center;
+    gap:5px;min-width:0;color:#d7eeeb;font-size:11px;overflow-wrap:anywhere}
+  .pkmsvv-fusion-recipe .pkmsvv-fusion-move svg,
+  .pkmsvv-fusion-recipe .pkmsvv-fusion-move img{width:19px;height:19px}
+  .pkmsvv-fusion-recipe .pkmsvv-fusion-result{color:#ffe19a;font-size:13px;line-height:1.3}
+  .pkmsvv-fusion-recipe .pkmsvv-fusion-benefit{margin:2px 0!important;
+    color:#f3fffb!important;font-size:12px!important;line-height:1.48!important}
+  @media(max-width:630px){.pkmsvv-fusion-recipes{grid-template-columns:1fr}}
+  
   .pkmsvv-pc-orb-details p{margin:7px 0;color:#e4f1ee;font-size:13px;line-height:1.6}
   .pkmsvv-pc-orb-item strong{color:#ffe29a}
 
@@ -204,9 +219,15 @@ G.PKMSVVWiki=(()=>{
        pair.append(icon,label);row.append(pair);
       }
       const fusionIcon=document.createElement('img');
-      fusionIcon.src='assets/fusion-icons/'+formula.id+'.webp';fusionIcon.alt='';fusionIcon.width=30;fusionIcon.height=30;
+      fusionIcon.className='pkmsvv-fusion-icon';fusionIcon.src='assets/fusion-icons/'+formula.id+'.webp';
+      fusionIcon.alt='';fusionIcon.width=52;fusionIcon.height=52;fusionIcon.loading='lazy';
       row.prepend(fusionIcon);
-      const result=document.createElement('strong');result.textContent=' · '+tr(formula.vi,formula.en)+' · MAX + MAX';row.append(result);recipes.append(row);
+      const result=document.createElement('strong');result.className='pkmsvv-fusion-result';
+      result.textContent='▶ '+tr(formula.vi,formula.en)+' · MAX + MAX';row.append(result);
+      const effect=document.createElement('p');effect.className='pkmsvv-fusion-benefit';
+      effect.textContent=tr(formula.viEffect||'',formula.enEffect||'')||
+       tr('Hiệu ứng tùy theo kỹ năng Fusion.','Effect depends on the Fusion skill.');
+      row.append(effect);recipes.append(row);
      }
      p.append(recipes);
     }
