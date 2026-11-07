@@ -312,3 +312,50 @@ test('no Gacha-eligible Pokémon fails closed rather than keeping a mixed-Gen wa
  assert.equal(api.enforceGeneration([{dex:152},{dex:235}],0).length,0,
   'never leave Johto monsters on Kanto because a pool is missing');
 });
+
+test('Kanto persists when a Berry wrapper is installed OUTSIDE Region after script load',()=>{
+ const h=harness(),region=h.G.PKMSVVQuickRegion;
+ h.G.DEX_BY={25:{name:'Pikachu'},152:{name:'Chikorita'}};
+ h.G.DEX=[{dex:25,gen:1},{dex:152,gen:2}];
+ h.G.SPRITE_META={25:{},152:{}};
+ // Reproduce the production ordering failure: Berry wraps G.Game.startRun
+ // AFTER QuickRegion; native click only schedules underlying start.
+ const start=h.G.Game.startRun;let deferred;
+ h.G.Game.startRun=function(...args){
+  const that=this;deferred=()=>start.apply(that,args);
+ };
+ assert.equal(region.choose(0),true);
+ assert.equal(h.G.Game.state,'ui','native start still awaits Berry confirmation');
+ assert.equal(region.active,true,'Kanto must already be armed before Berry completes');
+ assert.equal(region.selectedRegion,0);
+ assert.equal(region.starting,true);
+ assert.equal(h.G.World.biome,1);
+ assert.ok(h.G.Enemies.bagAt().every(x=>x.dex===25),
+  'all pending/early spawn bags must be Gen 1 even before Berry finishes');
+ h.G.MenuUI.open();
+ assert.equal(region.active,true,'intermediate menu render does not lose Region');
+ assert.equal(typeof deferred,'function');
+ deferred();
+ assert.equal(h.G.Game.state,'playing');
+ assert.equal(region.active,true);
+ assert.equal(region.starting,false);
+ assert.equal(h.G.World.biome,1);
+ assert.ok(h.G.Enemies.bagAt().every(x=>x.dex===25),
+  'Kanto must still be Gen 1 after the delayed engine start');
+ h.G.Game.toUI();
+ assert.equal(region.active,false);
+ assert.equal(h.G.World.biome,17);
+});
+test('Kanto cancelled during Berry wait does not leak into another mode',()=>{
+ const h=harness(),region=h.G.PKMSVVQuickRegion;
+ const orig=h.G.Game.startRun;
+ h.G.Game.startRun=()=>{};
+ assert.equal(region.choose(0),true);
+ assert.equal(region.active,true);
+ h.G.Game.quit();
+ assert.equal(region.active,false);
+ h.G.Game.startRun=orig;
+ h.G.Coop.active=true;
+ h.G.Game.startRun();
+ assert.equal(region.active,false,'Co-op never inherits abandoned Kanto');
+});
