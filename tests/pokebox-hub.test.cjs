@@ -416,3 +416,46 @@ test('PC knowledge hides completed Skill Awakening and removes obsolete seasonal
  for(const item of ['.pkmbx-hub-panel','.pkmbx-dex-panel','.pkmbx-upgrade-panel','.pkmsvv-pc-panel'])
   assert.ok(css.includes(item),'missing shared palette for '+item);
 });
+
+test('legacy Box explains Gacha duplicates truthfully and offers backup-gated migration in place',()=>{
+ const ui=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub-ui.js'),'utf8');
+ const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub.css'),'utf8');
+ assert.match(ui,/pkmbx-legacy-migration/);
+ assert.match(ui,/migrateLegacyFromBox/);
+ assert.match(ui,/PKMSVVSaveUI\?\.backup\?\.\(\)/);
+ assert.match(ui,/Box\.persistMigration\(\)/);
+ assert.match(ui,/pkmsvv\.prepokebox\./);
+ assert.match(ui,/pkmbx-ready/);
+ assert.match(ui,/onlyRankReady&&!ready/);
+ assert.match(ui,/Past duplicates cannot be reconstructed accurately/);
+ assert.match(ui,/L\('⬆ Nâng Rank','⬆ Rank Up'\)/);
+ assert.doesNotMatch(ui,/Bật PokéBox để nâng Rank|Activate PokéBox for Rank/);
+ assert.match(css,/\.pkmbx-legacy-migration\[hidden\]/);
+});
+test('Ability names, translated effect summaries and explicit contrast are used in BOTH Box and Dex',()=>{
+ const ui=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub-ui.js'),'utf8');
+ const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub.css'),'utf8');
+ const txt=fs.readFileSync(path.join(__dirname,'../src/kecleon/pkmsvv-ability-text.js'),'utf8');
+ assert.match(ui,/PKMSVVAbilityText\?\.summary\?\.\(id,mon,fx,english\)/);
+ assert.match(ui,/G\.AbilityFX\?\.of\?\.\(id,mon\)/);
+ assert.match(ui,/abilityBenefit\(id,infoDex\)/);
+ assert.match(ui,/abilityBenefit\(ability\?\.id\|\|'',it\.dex\)/);
+ assert.doesNotMatch(ui,/typeof abilityData\[2\]==='string'/,'a French name must not be used as an Ability effect');
+ assert.match(css,/\.pkmbx-dex-ability-row span\{[\s\S]*color:#1b4450!important/);
+ assert.match(css,/\.pkmbx-ability-effect\{[\s\S]*color:#edfaf7!important/);
+ for(const id of ['blaze','solar-power','compound-eyes','overgrow','chlorophyll'])
+  assert.match(txt,new RegExp('^'+id+'\\|','m'));
+});
+test('Wiki describes ten Fusion effects, has corresponding WebP icons and replaces the compiled legacy module',()=>{
+ const pilot=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-bond-fusion.js'),'utf8');
+ const wiki=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-wiki.js'),'utf8');
+ const compiled=fs.readFileSync(path.join(__dirname,'../scripts/patch-qa-compiled-modules.cjs'),'utf8');
+ assert.match(compiled,/\['PKMSVVWiki','src\/pkmsvv-wiki\.js'\]/);
+ assert.match(wiki,/formula\.id\+'\.webp'/);
+ assert.match(wiki,/formula\.viEffect/);
+ assert.match(wiki,/pkmsvv-fusion-benefit/);
+ assert.match(wiki,/pkmsvv-fusion-recipe-grid|pkmsvv-fusion-recipes/);
+ for(const id of ['ember-quick','water-tackle','grass-spin','spark-quick','mind-tackle','fire-gust','bubble-ice','leaf-rock','shadow-mind','thunder-claw']){
+  assert.match(pilot,new RegExp("id:'"+id+"'[^\\n]+viEffect:"));
+ }
+});
