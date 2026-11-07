@@ -14,7 +14,7 @@
   const foot=document.querySelector('#pkmsvv-pokebox-overlay .pkmbx-foot');
   if(!foot||$('pkmbx-rank-open'))return;
   const b=document.createElement('button');b.type='button';b.className='btn gold';
-  b.id='pkmbx-rank-open';b.setAttribute('translate','no');b.textContent=txt('⭐ Rank / Mảnh','⭐ Rank / Shards');
+  b.id='pkmbx-rank-open';b.setAttribute('translate','no');b.textContent=txt('⭐ Rank','⭐ Rank');
   b.onclick=open;
   foot.insertBefore(b,foot.firstChild);
  }
@@ -28,7 +28,7 @@
   if(panel?.isConnected)return;
   panel=document.createElement('div');panel.id='pkmbx-rank-overlay';panel.setAttribute('translate','no');
   panel.innerHTML='<section class="pkmbx-rank-panel" role="dialog" aria-modal="true" aria-label="PokéBox Rank">'+
-    '<header class="pkmbx-rank-head"><h2>⭐ Rank / Mảnh</h2><button class="btn small" id="pkmbx-rank-close"></button></header>'+
+    '<header class="pkmbx-rank-head"><h2>⭐ Rank</h2><button class="btn small" id="pkmbx-rank-close"></button></header>'+
     '<div id="pkmbx-rank-body"></div><p class="pkmbx-rank-note" id="pkmbx-rank-note"></p></section>';
   document.body.appendChild(panel);
   $('pkmbx-rank-close').onclick=close;
@@ -46,36 +46,25 @@
   const body=$('pkmbx-rank-body');
   $('pkmbx-rank-close').textContent=txt('✕ Đóng','✕ Close');
   $('pkmbx-rank-note').textContent=txt(
-   'Rank 1 cần 1 bản trùng, Rank 2 cần thêm 2, tiếp tục 3, 4, 5. Pokémon Shiny, đội hình, yêu thích và save cũ được ghi nhận 1 lần, không bị xóa.',
+   'Rank 1 cần 1 bản trùng, Rank 2 cần thêm 2, tiếp tục 3, 4, 5. Bản trùng tự dùng khi nâng, không cần đổi Mảnh.',
    'Rank costs 1, then 2 more, then 3, 4 and 5. Shiny, Ready Team, favorites, and old-save duplicates can count once without deletion.');
   if(!x){body.innerHTML='<p>'+txt('Hãy tạo PokéBox và chọn một cá thể ở danh sách trước.','Create PokéBox and select an individual first.')+'</p>';return;}
-  const all=api.candidateList(s(),x.id),protectedCopies=api.claimableList(s(),x.id);
-  const cost=x.rank>=5?0:x.rank+1,have=api.shards(s(),x.dex),name=G.DEX_BY?.[x.dex]?.name||('#'+x.dex);
-  selectedMat=new Set([...selectedMat].filter(id=>all.some(m=>m.id===id)));
-  selectedProtected=new Set([...selectedProtected].filter(id=>protectedCopies.some(m=>m.id===id)));
-  shardCount=Math.max(0,Math.min(shardCount,have,Math.max(0,cost-selectedMat.size-selectedProtected.size)));
+  const plan=api.rankMaterials(s(),x.id);
+  const cost=plan.cost,available=plan.available,have=plan.fragments;
+  const name=G.DEX_BY?.[x.dex]?.name||('#'+x.dex);
   const stats=api.formatRank(x.rank),next=api.formatRank(Math.min(5,x.rank+1));
-  let html='<div class="pkmbx-rank-card"><strong>'+esc(name)+'</strong><span>#'+x.dex+(x.shiny?' ✨':'')+' · Rank '+x.rank+'/5</span></div>'+
-  '<p>'+txt('Máu / sát thương: ','HP / damage: ')+'+'+stats.hp+'%'+(x.rank<5?' → +'+next.hp+'%':'')+
-  ' · '+txt('Mảnh ','Shards ')+esc(name)+': <b>'+have+'</b></p>';
+  let html='<div class="pkmbx-rank-card"><strong>'+esc(name)+'</strong><span>#'+x.dex+
+   (x.shiny?' ✨':'')+' · Rank '+x.rank+'/5</span></div>'+
+   '<p>'+txt('Máu / sát thương: ','HP / damage: ')+'+'+stats.hp+'%'+
+   (x.rank<5?' → +'+next.hp+'%':'')+'</p>';
   if(x.rank<5){
-   html+='<h3>'+txt('Nguyên liệu để lên Rank ','Materials for Rank ')+(x.rank+1)+': '+cost+'</h3>'+
-     '<p>'+txt('Mỗi lần nâng cần đúng số bản trùng theo Rank mới. Bản thường chỉ tiêu khi xác nhận; bản được bảo vệ giữ nguyên.',
-      'Each new Rank costs that many copies. Ordinary materials consume on confirmation; protected copies remain saved.')+'</p>';
-   if(all.length){
-    html+='<div class="pkmbx-materials">'+all.map(m=>'<label><input type="checkbox" data-material="'+esc(m.id)+'" '+(selectedMat.has(m.id)?'checked':'')+'/> '+
-      '#'+m.dex+' · '+esc(m.id)+' '+(m.shiny?'✨':'')+'</label>').join('')+'</div>';
-   }else if(!protectedCopies.length&&!have)html+='<p>'+txt('Chưa có cá thể trùng chưa dùng.','No unused eligible duplicates yet.')+'</p>';
-   if(protectedCopies.length){
-    html+='<p>'+txt('Các bản trùng được bảo vệ (chỉ ghi nhận một lần, không bị xóa):',
-      'Protected duplicates (credited once without deletion):')+'</p>'+
-     '<div class="pkmbx-materials">'+protectedCopies.map(m=>'<label>'+
-      '<input type="checkbox" data-protected-rank="'+esc(m.id)+'" '+(selectedProtected.has(m.id)?'checked':'')+'/>'+
-      ' ✨ #'+m.dex+' · '+esc(m.id)+'</label>').join('')+'</div>';
-   }
-   html+='<label class="pkmbx-shards">'+txt('Dùng Mảnh Rank: ','Use shards: ')+
-     '<input type="number" id="pkmbx-shard-qty" min="0" max="'+Math.min(have,cost)+'" value="'+shardCount+'"/></label>'+
-     '<p id="pkmbx-rank-count"></p><button class="btn gold" id="pkmbx-rank-up">'+
+   html+='<h3>'+txt('Bản trùng khả dụng: ','Usable duplicates: ')+
+    (plan.copies.length+plan.credits.length)+'</h3>'+
+    '<p>'+txt('Cần ','Need ')+cost+txt(' để lên Rank ',' for Rank ')+(x.rank+1)+
+    (have?' · '+txt('Mảnh cũ: ','Old shards: ')+have:'')+'</p>'+
+    '<p>'+txt('Pokémon trùng từ Gacha tự động được tính làm nguyên liệu. Không cần đổi thành Mảnh Rank.',
+      'Duplicate Gacha pulls count as materials automatically; no shard conversion is needed.')+'</p>'+
+    '<button class="btn gold" id="pkmbx-rank-up" '+(available<cost?'disabled':'')+'>'+
      txt('⬆ Nâng Rank','⬆ Rank Up')+'</button>';
   }else html+='<p>'+txt('Đã đạt Rank 5!','Rank 5 reached!')+'</p>';
   const effectName=t=>{
@@ -105,39 +94,18 @@
       (prism.count(s())<1?'disabled':'')+'>'+
       txt('Đổi sang ','Change to ')+esc(typeName(t))+' · 🔮 ×1</button>').join('')+'</div></section>';
   }
-  if(all.length)html+='<h3>'+txt('Đổi bản sao thành Mảnh Rank','Convert an unused duplicate into shards')+'</h3>'+
-   '<div class="pkmbx-materials">'+all.map(m=>'<div><span>'+esc(m.id)+'</span><button class="btn small" data-pkmbx-convert="'+esc(m.id)+'">'+txt('Đổi +1 mảnh','Convert +1 shard')+'</button></div>').join('')+'</div>';
   body.innerHTML=html;
-  for(const input of body.querySelectorAll('[data-material]'))input.onchange=()=>{
-   if(input.checked)selectedMat.add(input.dataset.material);
-   else selectedMat.delete(input.dataset.material);
-   render();
+  const upgrade=$('pkmbx-rank-up');
+  if(upgrade)upgrade.onclick=()=>{
+   const latest=api.rankMaterials(s(),x.id);
+   if(latest.available<latest.cost)return;
+   if(!confirm(txt('Dùng '+latest.cost+' bản trùng để nâng '+name+
+       '? Pokémon Shiny, yêu thích, đội hình và bản gốc vẫn được giữ.',
+       'Use '+latest.cost+' duplicates to rank up '+name+
+       '? Protected Pokémon remain in the Box.')))return;
+   try{api.rankUpAuto(x.id,s());render();}
+   catch(error){alert(error?.message||String(error));}
   };
-  for(const input of body.querySelectorAll('[data-protected-rank]'))input.onchange=()=>{
-   if(input.checked)selectedProtected.add(input.dataset.protectedRank);
-   else selectedProtected.delete(input.dataset.protectedRank);
-   if(selectedMat.size+selectedProtected.size+shardCount>cost)shardCount=0;
-   render();
-  };
-  const shardInput=$('pkmbx-shard-qty');if(shardInput)shardInput.onchange=()=>{
-   shardCount=Math.max(0,Math.min(have,cost,Number(shardInput.value)||0));
-   // Do not clear other choices; payment must equal the requirement.
-   render();
-  };
-  const count=$('pkmbx-rank-count'),up=$('pkmbx-rank-up');
-  if(up){
-   const ready=selectedMat.size+shardCount+selectedProtected.size===cost;
-   count.textContent=selectedMat.size+' '+txt('bản sao thường','ordinary copies')+' + '+shardCount+
-    ' '+txt('mảnh','shards')+' + '+selectedProtected.size+' '+txt('bản giữ lại','retained copies')+' / '+cost;
-   up.disabled=!ready;
-   up.onclick=()=>{
-    if(!confirm(txt('Nâng Rank? Bản thường đã chọn sẽ tiêu thụ. Pokémon bảo vệ vẫn giữ nguyên.',
-     'Rank up? Selected ordinary copies are consumed. Protected Pokémon remain in Box.')))return;
-    try{api.rankUp(x.id,[...selectedMat],shardCount,s(),[...selectedProtected]);
-     selectedMat.clear();shardCount=0;selectedProtected.clear();render();
-    }catch(e){alert(e.message);}
-   };
-  }
   for(const b of body.querySelectorAll('[data-pkmbx-branch]'))b.onclick=()=>{
    if(!confirm(txt('Chốt hướng Rank này? Sau này đổi hướng cần Lăng Kính Tái Khắc.','Confirm this Rank path? A Reforge Prism will be required to reset it later.')))return;
    try{api.chooseBranch(x.id,b.dataset.pkmbxBranch);render();}catch(e){alert(e.message);}
@@ -149,10 +117,7 @@
      'Spend 1 Reforge Prism to switch to '+typeName(branch)+'? Rank and upgrades stay.')))return;
    try{prism.resetBranch(x.id,branch);render();}catch(e){alert(e.message);}
   };
-  for(const b of body.querySelectorAll('[data-pkmbx-convert]'))b.onclick=()=>{
-   if(!confirm(txt('Chuyển Pokémon này thành 1 Mảnh Rank? Không thể hoàn tác.','Convert this Pokémon into one Rank shard? This cannot be undone.')))return;
-   try{api.toFragments(b.dataset.pkmbxConvert);selectedMat.delete(b.dataset.pkmbxConvert);render();}catch(e){alert(e.message);}
-  };
+
  }
  function open(id=null){requestedId=typeof id==='string'?id:null;ensure();selectedMat.clear();selectedProtected.clear();shardCount=0;render();}
  G.PKMSVVRankUI={open,close,render};
