@@ -518,7 +518,7 @@ G.PKMSVVChampionArena=(()=>{
   const list=document.createElement('div');list.className='pkmsvv-champion-entry-list';
   const buttons=document.createElement('div');buttons.className='pkmsvv-champion-entry-actions';
   const ok=document.createElement('button');ok.type='button';ok.className='btn gold';ok.textContent=tr('✓ Xác nhận','✓ Confirm');
-  const cancel=document.createElement('button');cancel.type='button';cancel.className='btn ghost';cancel.textContent=tr('Hủy','Cancel');
+  const cancel=document.createElement('button');cancel.id='pkmsvv-champion-entry-cancel';cancel.type='button';cancel.className='btn ghost';cancel.textContent=tr('Hủy','Cancel');
   buttons.append(ok,cancel);box.append(heading,clock,search,list,buttons);shell.append(box);document.body.append(shell);
   let selected=Number(save.partner)||dexes[0],left=10,finished=false;
   let timer=null;const oldFocus=document.activeElement;
