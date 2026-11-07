@@ -20,6 +20,10 @@ test('Shared modal navigation compiles and covers picker, Region, PokéBox and P
  assert.match(js,/keyboardSkip|itemSkip/);
  assert.match(js,/Numpad3/);
  assert.match(js,/#pkmbx-rank-close/,'controller B closes Rank panel without leaving the PokéBox');
+ assert.match(js,/#pkmsvv-champion-entry-pick/);
+ assert.match(js,/#pkmsvv-arena-pvp-pick/);
+ assert.match(js,/#pkmsvv-champion-entry-cancel/);
+ assert.match(js,/#pkmsvv-arena-pvp-pick-exit/);
  assert.match(js,/return original\.apply\(this,args\)/,'native gameplay control stays intact when no overlay is open');
  assert.match(js,/releaseGate/,'button-release protection prevents accidental gameplay actions');
  assert.match(css,/outline:3px solid/,'focus must be visible on dark and light cards');
