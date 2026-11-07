@@ -700,3 +700,28 @@
  #pkmsvv-pokebox-overlay .pkmbx-box-heading strong{font-size:14px}
  #pkmsvv-pokebox-overlay .pkmbx-box-heading span{font-size:10px;right:6px}
 }
+
+
+/* Rank eligibility is recalculated after every atomic upgrade. Empty stock
+ * MUST look gray rather than yellow, including the Rank tab and whole section. */
+#pkmsvv-pokebox-overlay .pkmbx-rank-overview.is-rank-disabled{
+ border-color:#6f7f8c!important;
+ background:linear-gradient(140deg,#273642,#1b2b39)!important;
+ box-shadow:none!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-rank-overview.is-rank-disabled .pkmbx-rank-heading,
+#pkmsvv-pokebox-overlay .pkmbx-rank-overview.is-rank-disabled .pkmbx-rank-requirement{
+ color:#bbc7cf!important;
+}
+#pkmsvv-pokebox-overlay :is(.pkmbx-rank-shortcut,.pkmbx-rank-tab,#pkmbx-rank-direct).rank-disabled,
+#pkmsvv-pokebox-overlay :is(.pkmbx-rank-shortcut,#pkmbx-rank-direct):disabled{
+ color:#d3dade!important;-webkit-text-fill-color:#d3dade!important;
+ background:linear-gradient(180deg,#6c7882,#4a5964)!important;
+ border:1px solid #89939a!important;
+ box-shadow:none!important;text-shadow:none!important;
+ opacity:.83!important;
+}
+#pkmsvv-pokebox-overlay :is(.pkmbx-rank-shortcut,#pkmbx-rank-direct):disabled{
+ cursor:not-allowed!important;pointer-events:none;
+}
+#pkmsvv-pokebox-overlay .pkmbx-rank-tab.rank-disabled{cursor:pointer;opacity:.8!important}
