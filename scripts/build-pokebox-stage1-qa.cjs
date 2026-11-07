@@ -24,6 +24,8 @@ for(const variant of ['game','ai/game']){
  copyFusionIcons(path.join(dest,variant));
  fs.copyFileSync(path.join(root,'src/pkmsvv-fusion-evolved.js'),
   path.join(dest,variant,'js/ui/pkmsvv-fusion-evolved.js'));
+ fs.copyFileSync(path.join(root,'src/pkmsvv-wiki.js'),
+  path.join(dest,variant,'js/ui/pkmsvv-wiki-qa.js'));
  fs.copyFileSync(path.join(root,'src/pkmsvv-fusion-evolved.css'),
   path.join(dest,variant,'css/pkmsvv-fusion-evolved.css'));
  // Patch EMBEDDED legacy modules in the QA snapshot itself. Merely
@@ -39,7 +41,7 @@ for(const variant of ['game','ai/game']){
  if(!body.includes('pkmsvv-box-stage1.js'))body=body.replace('</body>',script+'\n</body>');
  for(const cssName of ['pkmsvv-fusion-evolved.css','pkmsvv-prebattle-qa.css','pkmsvv-box-stage2.css','pkmsvv-box-stage3.css','pkmsvv-box-hub.css','pkmsvv-quick-region.css','pkmsvv-pc-menu-clean-qa.css','pkmsvv-modal-navigation-qa.css'])if(!body.includes(cssName))
   body=body.replace('</head>','<link rel="stylesheet" href="css/'+cssName+'">\n</head>');
- for(const jsName of ['pkmsvv-fusion-evolved.js','pkmsvv-box-stage2.js','pkmsvv-box-stage2-ui.js','pkmsvv-box-stage3.js','pkmsvv-box-stage4.js','pkmsvv-box-hub.js','pkmsvv-box-hub-ui.js','pkmsvv-quick-region.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-modal-navigation-qa.js'])if(!body.includes(jsName))
+ for(const jsName of ['pkmsvv-fusion-evolved.js','pkmsvv-box-stage2.js','pkmsvv-box-stage2-ui.js','pkmsvv-box-stage3.js','pkmsvv-box-stage4.js','pkmsvv-box-hub.js','pkmsvv-box-hub-ui.js','pkmsvv-quick-region.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-modal-navigation-qa.js','pkmsvv-wiki-qa.js'])if(!body.includes(jsName))
   body=body.replace('</body>','<script defer src="js/ui/'+jsName+'"></script>\n</body>');
  fs.writeFileSync(html,body);
 }
