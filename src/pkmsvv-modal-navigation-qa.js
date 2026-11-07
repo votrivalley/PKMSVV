@@ -109,6 +109,9 @@
   if(e.altKey||e.ctrlKey||e.metaKey)return;
   const root=active();if(!root)return;
   const key=String(e.key||'').toLowerCase(),code=e.code||'';
+  // During Royale evolution arrows select; WASD keeps moving the fighter.
+  if(root.classList?.contains('pkmsvv-evo')&&G.Royale?.active&&
+    ['w','a','s','d'].includes(key))return;
   const critical=key==='escape'||key==='backspace'||key==='1'||key==='2';
   if(e.defaultPrevented&&!critical)return;
   if(root.id==='scr-item'&&!isEditable(document.activeElement)){
@@ -166,7 +169,10 @@
   const right=pressed(15)||Number(pad.axes?.[0])>.55;
   const up=pressed(12)||Number(pad.axes?.[1])<-.55;
   const down=pressed(13)||Number(pad.axes?.[1])>.55;
-  const dir=left?'left':right?'right':up?'up':down?'down':null;
+  const evo=active()?.classList?.contains('pkmsvv-evo')&&G.Royale?.active;
+  // D-pad navigates the live evolution overlay; left stick stays movement.
+  const dir=evo?(pressed(14)?'left':pressed(15)?'right':pressed(12)?'up':pressed(13)?'down':null):
+   left?'left':right?'right':up?'up':down?'down':null;
   const now=typeof performance!=='undefined'?performance.now():Date.now();
   if(dir&&(dir!==lastDirection||now-lastMove>=210)){move(dir);lastMove=now;}
   lastDirection=dir;
@@ -183,7 +189,12 @@
   const original=pad.poll;
   const wrapped=function(...args){
    const root=active();
-   if(root){releaseGate=true;pollModal();return;}
+   if(root){
+    if(root.classList?.contains('pkmsvv-evo')&&G.Royale?.active){
+     const result=original.apply(this,args);releaseGate=true;pollModal();return result;
+    }
+    releaseGate=true;pollModal();return;
+   }
    if(releaseGate){
     const pads=typeof navigator!=='undefined'&&navigator.getGamepads?.();
     const busy=pads&&[...pads].some(p=>p?.connected&&p.buttons?.some(b=>b.pressed||b.value>.5));
