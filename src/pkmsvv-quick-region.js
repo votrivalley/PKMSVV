@@ -164,12 +164,20 @@
   const native=document.querySelector('#scr-menu [data-go="play"]');
   if(!native)return false;
   close();
+  // Arm BEFORE replaying native Play. Berry may wrap startRun after this
+  // module and delay the real startup by 10 seconds; the old code discarded
+  // "armed" after native.click(), causing a full-Gen mixed run.
+  const beforeBiome=G.World?.biome;
+  if(current)endRun();
+  if(!beginRun(index,beforeBiome))return false;
   armed=index;
   bypass=true;
-  try{native.click();}finally{
+  try{native.click();}
+  catch(error){endRun();throw error;}
+  finally{
    bypass=false;
-   // If old menu no longer calls Game.startRun, don't leave a phantom session.
-   if(armed!==null)armed=null;
+   // Keep the actual scoped Region across a deferred Berry choice.
+   // The next startRun consumes "armed"; an explicit exit clears it.
   }
   return true;
  }
@@ -276,13 +284,17 @@
  // The native Play button is replayed only once after choosing an unlocked Region.
  // Other game modes still use the original startup and their own map policies.
  wrap(G.Game,'startRun',function(prev,args){
-  if(current)endRun();
-  const index=armed;armed=null;
   const priorBiome=G.World?.biome;
+  const index=armed!==null?armed:(current&&preRunPending?current.index:null);
+  armed=null;
   const chosen=index!==null&&index!==undefined&&!G.Coop?.active&&!getChampion()?.active;
-  // BEFORE calling native/third-party startRun: initial spawn bags can be
-  // cached synchronously, and Berry's wrapper may defer the actual run.
-  if(chosen)beginRun(index,priorBiome);
+  // Do not reset a region already pinned at the card click: startup may be
+  // invoked after Berry's 10-second pre-run picker in either wrapper order.
+  if(!chosen){
+   if(current)endRun(); // A different mode must not inherit Kanto.
+  }else if(current&&current.index!==index){
+   endRun();beginRun(index,priorBiome);
+  }else if(!current)beginRun(index,priorBiome);
   try{
    const out=prev.apply(this,args);
    if(chosen&&G.Game?.state==='playing')preRunPending=false;
