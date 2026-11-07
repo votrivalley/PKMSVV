@@ -250,6 +250,10 @@
    NAMES.slice(0,index).every((_,i)=>hasSeal(i,save));
  }
  function tryEarnSeal(){
+  // A deferred Berry start can turn Playing on after the native startRun
+  // wrapper has returned. Clear pending on the FIRST real playing tick,
+  // even if the EnemyMgr/regionIndex guard has not run yet.
+  if(preRunPending&&G.Game?.state==='playing')preRunPending=false;
   const run=current;
   if(!run||preRunPending||G.Game?.state!=='playing'||
    G.Coop?.active||getChampion()?.active||G.Game?.player?.dead)return false;
