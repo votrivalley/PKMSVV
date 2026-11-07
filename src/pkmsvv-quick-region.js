@@ -649,6 +649,7 @@
   progressivePool,enforceGeneration,regionEnemyDefinition,enforceLiveEnemy,
   get active(){return regionIndex()>=0},
   get selectedRegion(){return regionIndex()},
+  get regionalBoss(){return current?.bossEnemy||null},
   get starting(){return !!preRunPending},
   get correctedSpawns(){return correctedSpawns}};
 })();
