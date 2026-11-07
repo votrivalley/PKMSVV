@@ -780,9 +780,9 @@
   // Keep the original PC that already owns Support, Mega, Berry and the guide.
   // Only remove the newer duplicated launcher, never the real PC.
   if(original&&extra){
-    extra.setAttribute('aria-label','Pokémon');
+    extra.setAttribute('aria-label',L('Khám phá','Explore'));
     const label=extra.querySelector('.pkmsvv-menu-label, strong, .menu-label');
-    if(label)label.textContent='Pokémon';
+    if(label)label.textContent=L('Khám phá','Explore');
    }
   if(extra){
    const sub=extra.querySelector('.pkmsvv-menu-copy small, small');
