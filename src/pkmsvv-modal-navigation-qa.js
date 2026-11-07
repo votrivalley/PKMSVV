@@ -10,7 +10,7 @@
   '#pkmsvv-fusion-guide','#pkmsvv-quick-region','#pkmsvv-pokebox-overlay','#pkmsvv-wiki-overlay','#pkmbx-rank-overlay',
   '#pkmsvv-champion-screen','#pkmsvv-arena-solo-screen','#pkmsvv-champion-entry-pick','#pkmsvv-arena-pvp-pick','#pkmsvv-support-catalog',
   '#pkmsvv-mega-phase1','.pkmsvv-memory-chooser','.pkmsvv-berry-overlay',
-  '#pkmsvv-native-choice','#scr-item','#scr-levelup','#scr-bond'
+  '#pkmsvv-native-choice','#scr-item','#scr-levelup','#scr-bond','.pkmsvv-evo'
  ];
  const NAV='button:not([disabled]),[role="button"]:not([aria-disabled="true"]),a[href],select:not([disabled]),input:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])';
  const isEditable=el=>!!el&&(/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName||'')||el.isContentEditable);
@@ -49,7 +49,9 @@
  function first(root){
   const opts=controls(root);
   const selected=opts.find(x=>x.matches?.('.pkmbx-team-slot.active,.pkmsvv-quick-region-card:not([disabled]),[aria-selected="true"]'));
-  return setFocus(selected||opts[0]);
+  const preferred=root.classList?.contains('pkmsvv-evo')?
+  opts.find(x=>x.classList?.contains('pkmsvv-evo-option')&&!x.disabled):null;
+ return setFocus(preferred||selected||opts[0]);
  }
  function center(el){
   const r=el.getBoundingClientRect();
@@ -74,16 +76,21 @@
   }
   return next?setFocus(next):false;
  }
+ // B on an item chooser keeps the equipped item; it no longer targets
+ // an invisible third button. Exactly two cards are keyboard/pad-selectable.
  function itemSkip(){
   const scr=document.querySelector('#scr-item');
-  const buttons=scr?.querySelectorAll('#item-cards.pkmsvv-held-choices .pkmsvv-held-actions .pkmsvv-held-action')||[];
-  const skip=buttons[2];
-  if(!visible(scr)||!skip||!visible(skip))return false;
-  skip.click();return true;
+  const keep=scr?.querySelector('#item-cards.pkmsvv-held-choices .pkmsvv-held-columns .pkmsvv-held-action.is-old');
+  if(!visible(scr)||!keep||!visible(keep))return false;
+  keep.click();return true;
  }
  function close(root){
   if(!root)return false;
   if(root.id==='scr-item')return itemSkip();
+ if(root.classList?.contains('pkmsvv-evo')){
+  const keep=root.querySelector('.pkmsvv-evo-skip');
+  if(keep&&visible(keep)){keep.click();return true;}
+ }
   const explicit=root.querySelector('[data-back]:not([disabled]),#pkmbx-close,#pkmbx-dex-close,#pkmbx-upgrade-close,#pkmbx-rank-close,#pkmsvv-quick-region-close,.pkmsvv-pc-close,[data-mega-close],#pkmsvv-champion-close,#pkmsvv-arena-solo-close,#pkmsvv-champion-entry-cancel,#pkmsvv-arena-pvp-pick-exit');
   if(explicit&&visible(explicit)){explicit.click();return true;}
   if(root.id==='pkmsvv-pokebox-overlay'){G.PKMSVVBoxHubUI?.closeBox?.();return true;}
@@ -102,15 +109,17 @@
   if(e.altKey||e.ctrlKey||e.metaKey)return;
   const root=active();if(!root)return;
   const key=String(e.key||'').toLowerCase(),code=e.code||'';
-  // Native key handlers may already call preventDefault for Escape or Digit3.
-  // These safety-critical modal actions must still reach the top overlay.
-  const critical=key==='escape'||key==='backspace'||key==='3'||code==='Digit3'||code==='Numpad3';
+  const critical=key==='escape'||key==='backspace'||key==='1'||key==='2';
   if(e.defaultPrevented&&!critical)return;
-  // The item chooser renders a visible [3] label, which previously was inert.
-  // Only intercept it while the actual held-item selection is showing.
-  if(root.id==='scr-item'&&!(root.contains(document.activeElement)&&isEditable(document.activeElement))&&
-    (key==='3'||code==='Digit3'||code==='Numpad3')){
-   if(itemSkip()){e.preventDefault();e.stopImmediatePropagation?.();}return;
+  if(root.id==='scr-item'&&!isEditable(document.activeElement)){
+   const index=key==='1'||code==='Digit1'||code==='Numpad1'?0:
+    key==='2'||code==='Digit2'||code==='Numpad2'?1:-1;
+   if(index>=0){
+    const buttons=root.querySelectorAll('#item-cards.pkmsvv-held-choices .pkmsvv-held-columns .pkmsvv-held-action');
+    const button=buttons[index];
+    if(button&&visible(button)){e.preventDefault();e.stopImmediatePropagation?.();button.click();}
+    return;
+   }
   }
   if(key==='tab'){
    const opts=controls(root);if(!opts.length)return;
