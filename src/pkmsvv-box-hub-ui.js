@@ -23,6 +23,22 @@
  const typeName=t=>G.I18n?.lang==='en'?String(t):typeVi[t]||String(t);
  const natureName=id=>G.I18n?.lang==='en'?String(id):natVi[id]||String(id);
  const abilityName=id=>G.Mons?.abilityName?.(id)||G.ABIL?.[id]?.[1]||L('Không có','None');
+ // Existing in-game AbilityText has localized descriptions of the ACTUAL
+ // PokéSurvivor mechanics (Blaze low HP, Compound Eyes critical +6%, etc).
+ // G.ABIL arrays contain language NAMES [es,en,fr,...], NOT descriptions.
+ function abilityBenefit(id,dex){
+  const mon=G.DEX_BY?.[Number(dex)]||{types:['normal']};
+  const english=G.I18n?.lang==='en';
+  try{
+   const fx=G.AbilityFX?.of?.(id,mon);
+   const text=G.PKMSVVAbilityText?.summary?.(id,mon,fx,english);
+   if(typeof text==='string'&&text.trim())return text;
+  }catch(_){/* missing optional AbilityFX must not crash the Box */ }
+  const by=G.PKMSVVAbilityText?.BY?.[id];
+  if(Array.isArray(by)&&by[english?1:0])return String(by[english?1:0]);
+  return L('Chưa có mô tả hiệu ứng chính xác trong phiên bản này.',
+   'No verified effect description in this version.');
+ }
  const currentSave=()=>G.DB?.save;
  let rankBusy=false;
  let boxPane=null,dexPane=null,upgradePane=null,focused=null,infoDex=1,dexShinyView=false,query='',onlyFavorites=false,onlyShiny=false,
@@ -212,9 +228,7 @@
   }
   const nature=Hub.nature(currentSave(),it),ability=Hub.ability(currentSave(),it);
   const abText=abilityName(ability?.id||'');
-  const abilityData=G.ABIL?.[ability?.id],desc=Array.isArray(abilityData)?
-   (typeof abilityData[2]==='string'?abilityData[2]:''):
-   (typeof abilityData?.description==='string'?abilityData.description:'');
+  const desc=abilityBenefit(ability?.id||'',it.dex);
   const attr={hp:L('Máu','HP'),pa:L('Tấn công','Attack'),sa:L('Đặc công','Sp. Atk'),
    df:L('Phòng thủ','Defense'),sd:L('Đặc thủ','Sp. Def'),spd:L('Tốc độ','Speed')};
   const natureHint=nature?.up&&nature?.down?
@@ -316,8 +330,8 @@
    profile.querySelector('#pkmbx-tab-content').innerHTML='<div class="pkmbx-hub-info">'+
     '<p><b>'+L('Tính cách','Nature')+':</b> '+clean(natureName(nature?.id||it.natureId))+'</p>'+
     '<p class="pkmbx-hint">'+clean(natureHint)+'</p>'+
-    '<p><b>'+L('Đặc tính','Ability')+':</b> '+clean(abText)+'</p>'+
-    (desc?'<p class="pkmbx-hint">'+clean(desc)+'</p>':'')+
+    '<div class="pkmbx-hub-ability-explained"><b>'+L('Đặc tính','Ability')+
+     ': '+clean(abText)+'</b><p class="pkmbx-ability-effect">'+clean(desc)+'</p></div>'+
     '<p><b>'+L('TM đã học','Learned TMs')+':</b> '+
      (Hub.learned(currentSave(),it).map(id=>clean(G.Moves?.BY_ID?.[id]?G.T(G.Moves.BY_ID[id].name,'move'):id)).join(', ')||L('Chưa có','None'))+
     '</p></div>';
@@ -735,20 +749,9 @@
   // The Pokédex displays all species abilities and their gameplay benefits.
   // Equipped Nature/Ability/TMs remain available in the individual's PokéBox.
   const possibleAbilities=[...new Set((G.DEX_ABIL?.[infoDex]||[]).filter(Boolean))];
-  function abilityBenefit(id){
-   const row=G.ABIL?.[id];
-   const desc=Array.isArray(row)?row[2]:(row?.description||row?.desc||null);
-   if(Array.isArray(desc))return String(desc[G.I18n?.lang==='en'?1:0]||desc[0]||'');
-   if(typeof desc==='string'&&desc.trim())return desc;
-   const fn=G.Mons?.abilityDesc||G.Mons?.abilityDescription;
-   if(typeof fn==='function'){
-    try{return String(fn(id)||'');}catch(_){}
-   }
-   return L('Chưa có mô tả hiệu ứng.','Effect description unavailable.');
-  }
   const abilityRows=possibleAbilities.map(id=>
    '<div class="pkmbx-dex-ability-row"><strong>'+clean(abilityName(id))+'</strong>'+
-   '<span>'+clean(abilityBenefit(id))+'</span></div>').join('');
+   '<span>'+clean(abilityBenefit(id,infoDex))+'</span></div>').join('');
   const used=Number(s.pused?.[infoDex]);
   const statLine=Number.isFinite(used)&&used>0?'<p>'+L('Lượt sử dụng: ','Times used: ')+used.toLocaleString(G.I18n?.lang==='en'?'en-US':'vi-VN')+'</p>':'';
   const shinyAvailable=!!s.shiny?.[infoDex];
