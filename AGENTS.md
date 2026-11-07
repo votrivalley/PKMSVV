@@ -142,9 +142,10 @@ continuing. Preserve offline Wi-Fi hosting and the full existing test suite.
 
 ## Region spawn integrity — Kanto regression 2026-11-07
 
-- In normal `Chơi ngay` with a selected Region, species from **every**
+- In normal `Khám phá` with a selected Region, species from **every**
   wild, scripted event, rift, miniboss and non-story boss must pass the
-  **same Gacha Gen roster** `G.DEX[].gen` + `G.SPRITE_META`. No mixing in
+  **same Gacha roster** restricted by canonical National Dex ranges and
+  `G.SPRITE_META` (raw `G.DEX[].gen` may be wrong). No mixing in
   Kanto or other single-Gen areas. Mixed Gen is intentional only for Sky.
 - A Region must be applied **BEFORE** delegating the selected `startRun`:
   native game logic can cache spawn bags, and Berry's 10-second pre-run
@@ -186,9 +187,9 @@ continuing. Preserve offline Wi-Fi hosting and the full existing test suite.
   visible console diagnostic; do not silently fall back to mixed-Gen monsters.
   Scripts must still work when Gacha metadata is unavailable in a test
   harness, but production eligibility requires sprite-backed catalogue data.
-- Keep a tiny QA gameplay badge showing the active Gen and National Dex range
-  (e.g. `KANTO · GEN 1 · #0001–0151`); if it is absent in the user's
-  screenshot, this QA Region build may not be loaded or active.
+- Do NOT display a Kanto/Gen/National Dex gameplay badge. The user explicitly
+  requested a clean HUD (2026-11-07). Debug details belong in console/tests,
+  never as a permanent floating overlay on top of gameplay.
 - Validate all **1,025** National Dex IDs in tests, plus intentionally
   mis-tagged Gen metadata, foreign bosses, post-Berry delayed startup,
   arrays/Sets/Maps of live enemies, Chromium compiled catalogue, and no
@@ -203,10 +204,11 @@ continuing. Preserve offline Wi-Fi hosting and the full existing test suite.
   Rank button, its Rank tab marker and the Rank panel; keep the detail tab
   inspectable. Preserve confirmation only for **separate** purchases such as
   Reforge Prism / irreversible branch changes.
-- Rename the **home-menu launcher** `[data-go="dex"]` to **Khám phá**
-  (`Explore` in English), preserving its routes and native click handling.
-  Old builds may use a direct text node instead of `.pkmsvv-menu-label`;
-  repair both. Do not conflate with `Chơi ngay`, the Region selector.
+- The **Play launcher** `[data-go="play"]` is **Khám phá** (Explore in
+  English); its click still opens the Region selector. The separate collection
+  launcher `[data-go="dex"]` MUST remain named **Pokémon** and open
+  PokéBox/Pokédex/Nâng cấp. Never add a second "Khám phá" label under Pokémon.
+  Preserve native click handlers, accessibility labels and old text-node UI.
 - PC: remove the obsolete **Sương Ký Ức / seasonal event** last
   knowledge row. Hide **Skill Awakening / Thức tỉnh kỹ năng** only after
   `G.PKMSVVSkillTrack.progress(save).count >= 8`; keep it for incomplete
@@ -222,3 +224,30 @@ continuing. Preserve offline Wi-Fi hosting and the full existing test suite.
   the delayed start. The wrapper must recognize an already-pinned Region
   without resetting its selection; explicit quit clears it. Regression-test
   both wrapper orders, Game/menu exit and every spawned hostile Gen.
+
+
+## Exploration wildlife progression — 2026-11-07
+
+- Across **all nine single-Gen Region maps plus mixed-Gen Sky Pillar**,
+  wild Pokémon MUST begin as weak/basic forms and grow in variety/strength
+  with **minutes elapsed within the active run**. A new run always starts
+  at zero (including Berry's pending 10-second choice).
+- Base species and low total base stats for minute 0–2; gradually add
+  stronger basics (2–4), mid evolutions (4–8), fully evolved/high stats
+  (8–12), then unrestricted local species after minute 12. A miniboss may
+  favor the stronger part of the **currently permitted** tier; it cannot
+  spawn Gyarados, Kangaskhan, Charizard, legendary forms, etc. as opening
+  wild encounters or opening mini-bosses.
+- Use actual base stats (HP, PA, DF, SA, SD, SPD), rarity and the existing
+  `G.PKMSVV_EVOLUTION_DATA.rules` ancestry to calculate tiers; do not
+  interpret National Dex order as strength. Keep Gen eligibility separate
+  from difficulty eligibility. Never let an in-Gen Pokémon bypass the
+  difficulty rule just because its Dex is inside the right numeric range.
+- Apply to normal wild bag, direct Enemy constructors, EnemyMgr.add and
+  throttled manager integrity scans. Preserve enemy HP/attack/rewards,
+  other modes, save data, region lock, actual evolution/loot rates, player
+  support, LAN, keyboard and gamepad controls.
+- QA must verify: all ten maps start with weak Pokémon; Kanto after ~73s
+  contains no #115 Kangaskhan / #130 Gyarados / #150 Mewtwo / fully
+  evolved starters; the eligible pool expands after minutes pass; Chromium
+  compiled Gacha+sprite data match policy; no visible Gen badge.
