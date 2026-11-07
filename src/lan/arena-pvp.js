@@ -130,10 +130,12 @@ G.PKMSVVArenaPvp=(()=>{
    '<p id="pkmsvv-arena-pvp-pick-clock">10s</p>'+
    '<input id="pkmsvv-arena-pvp-pick-search" type="search" placeholder="'+tr('Tìm Pokémon / #Dex','Search Pokémon / #Dex')+'"/>'+
    '<div id="pkmsvv-arena-pvp-pick-options"></div>'+
-   '<button type="button" class="btn gold" id="pkmsvv-arena-pvp-pick-confirm">'+tr('✓ Xác nhận','✓ Confirm')+'</button></div>';
+   '<button type="button" class="btn gold" id="pkmsvv-arena-pvp-pick-confirm">'+tr('✓ Xác nhận','✓ Confirm')+'</button>'+
+   '<button type="button" class="btn ghost" id="pkmsvv-arena-pvp-pick-exit">'+tr('Rời phòng','Leave room')+'</button></div>';
   document.body.append(panel);pickPanel=panel;
   panel.querySelector('#pkmsvv-arena-pvp-pick-search').oninput=renderPickOptions;
   panel.querySelector('#pkmsvv-arena-pvp-pick-confirm').onclick=confirmPick;
+  panel.querySelector('#pkmsvv-arena-pvp-pick-exit').onclick=exit;
  }
  function renderPickOptions(){
   if(!pickPanel||stage!=='select')return;
