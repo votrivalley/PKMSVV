@@ -26,9 +26,12 @@
    if(!toDex(dex)||!number(qty))return false;
   // Permanent per-instance proof: Shiny is NEVER discarded to upgrade Rank.
   if(s.pkmsvvRankShinyCredits!==undefined&&!obj(s.pkmsvvRankShinyCredits))return false;
-  for(const [dex,ids] of Object.entries(s.pkmsvvRankShinyCredits||{}))
-   if(!toDex(dex)||!Array.isArray(ids)||ids.some(id=>typeof id!=='string')||
-      new Set(ids).size!==ids.length)return false;
+  for(const key of ['pkmsvvRankShinyCredits','pkmsvvRankClaimedCopies']){
+   if(s[key]!==undefined&&!obj(s[key]))return false;
+   for(const [dex,ids] of Object.entries(s[key]||{}))
+    if(!toDex(dex)||!Array.isArray(ids)||ids.some(id=>typeof id!=='string')||
+       new Set(ids).size!==ids.length)return false;
+  }
   return true;
  }
  function get(s,id){return s?.pkmsvvBox?.find(x=>x.id===id)||null;}
@@ -68,15 +71,20 @@
   const same=s.pkmsvvBox.filter(x=>x.dex===target.dex);
   return same.filter(x=>x.id!==id&&eligible(s,x,true,same.length));
  }
- // A second owned form can act as ONE non-consumable species duplicate.
- // Each Shiny instance can be credited only once, even after save reload.
- // Gacha can still provide normal consumable copies via candidateList.
- function shinyCreditList(s,id){
+ // Credits represent saved, same-species duplicates which must NOT be
+ // deleted (Shiny, team members, favorites or old imported individuals).
+ // Each instance may contribute only once, recorded atomically.
+ function claimableList(s,id){
   if(!valid(s))return [];
-  const base=get(s,id);if(!base)return [];
-  const claimed=new Set(s.pkmsvvRankShinyCredits?.[String(base.dex)]||[]);
-  return s.pkmsvvBox.filter(x=>x.dex===base.dex&&x.shiny&&x.id!==id&&!claimed.has(x.id));
+  const target=get(s,id);if(!target)return [];
+  const claimed=new Set([...(s.pkmsvvRankShinyCredits?.[String(target.dex)]||[]),
+   ...(s.pkmsvvRankClaimedCopies?.[String(target.dex)]||[])]);
+  const expendable=new Set(candidateList(s,id).map(x=>x.id));
+  return s.pkmsvvBox.filter(x=>x.dex===target.dex&&x.id!==id&&
+   !claimed.has(x.id)&&!expendable.has(x.id));
  }
+ // Backwards-compatible API for QA saves/tests created before generic credits.
+ const shinyCreditList=claimableList;
  function validateMutation(before,after){
   if(!valid(after))throw Error('Invalid PokéBox after operation');
   if(JSON.stringify(after).length>MAX_SAVE_CHARS)throw Error('PokéBox save storage guard: too large to commit safely');
@@ -174,12 +182,12 @@
       !Array.isArray(shinyCredits))throw Error('Invalid materials');
    if(new Set(materials).size!==materials.length||new Set(shinyCredits).size!==shinyCredits.length)
     throw Error('Duplicate material ID');
-   // One additional same-species duplicate = one more Rank (maximum five).
-   // Do NOT charge 1+2+3+4+5 copies across successive upgrades.
-   const cost=1;
+   // Original user-approved rule: each successive Rank costs its new level
+   // (0->1: one duplicate, 1->2: two more, then three, four and five).
+   const cost=progress.rank+1;
    if(materials.length+fragmentQty+shinyCredits.length!==cost)
-    throw Error('Rank requires exactly one same-species duplicate or shard');
-   const allowedCredits=new Set(shinyCreditList(draft,id).map(x=>x.id));
+    throw Error('Rank requires exactly '+cost+' same-species duplicates/shards');
+   const allowedCredits=new Set(claimableList(draft,id).map(x=>x.id));
    if(shinyCredits.some(key=>!allowedCredits.has(key)||materials.includes(key)))
     throw Error('Shiny Rank credit unavailable or already claimed');
    for(const mid of materials){
@@ -192,9 +200,9 @@
    draft.pkmsvvRankFragments=draft.pkmsvvRankFragments||{};
    draft.pkmsvvRankFragments[item.dex]=shards(draft,item.dex)-fragmentQty;
    if(shinyCredits.length){
-    draft.pkmsvvRankShinyCredits=draft.pkmsvvRankShinyCredits||{};
+    draft.pkmsvvRankClaimedCopies=draft.pkmsvvRankClaimedCopies||{};
     const key=String(item.dex);
-    draft.pkmsvvRankShinyCredits[key]=[...(draft.pkmsvvRankShinyCredits[key]||[]),...shinyCredits];
+    draft.pkmsvvRankClaimedCopies[key]=[...(draft.pkmsvvRankClaimedCopies[key]||[]),...shinyCredits];
    }
    item.rank=oldRank+1;
    if(progress.rankBranch)item.rankBranch=progress.rankBranch;
@@ -299,6 +307,6 @@
   }
  }
  return {MAX_RANK,MAX_SAVE_CHARS,formatRank,valid,get,shards,eligible,candidateList,makeOne,applyRolls,wrappedPull,
-  toFragments,rankUp,shinyCreditList,branches,chooseBranch,speciesProgress,skinTraits,selected,statBonus,hookIndividualTraits,withIndividualNature,hookPveStats,init};
+  toFragments,rankUp,claimableList,shinyCreditList,branches,chooseBranch,speciesProgress,skinTraits,selected,statBonus,hookIndividualTraits,withIndividualNature,hookPveStats,init};
 });
 if(typeof window!=='undefined'&&window.G)window.G.PKMSVVBox2?.init?.();
