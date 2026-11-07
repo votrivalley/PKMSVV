@@ -218,6 +218,37 @@
   const copy=args.slice();copy[0]=current.biome;
   return prev.apply(this,copy);
  });
+ // The game has scripted encounters which instantiate Enemy directly,
+ // bypassing the ordinary spawn bag. Filter their species at construction time
+ // ONLY while normal Chơi ngay has an explicitly selected Region. Do not edit
+ // original spawn definitions, save data, team Pokémon or other game modes.
+ let constructed=0;
+ function regionEnemyDefinition(def,index){
+  if(!def||typeof def!=='object'||index<0||index>=GEN_BOUNDS.length)return def;
+  if(def.pkmsvvFinalBoss||def.pkmsvvStoryBoss||def.judge||def.pkmsvvJudgment)return def;
+  const dex=Number(def.dex),range=GEN_BOUNDS[index];
+  if(!Number.isInteger(dex)||dex>=range[0]&&dex<=range[1])return def;
+  const species=Object.keys(G.DEX_BY||{}).map(Number).filter(n=>
+   Number.isInteger(n)&&n>=range[0]&&n<=range[1]&&G.DEX_BY[n]);
+  if(!species.length)return def; // Never invent an unavailable species.
+  const target=species[(Math.abs(dex)+constructed++)%species.length],info=G.DEX_BY[target];
+  return {...def,dex:target,name:info?.name||'Pokémon '+target,
+   ...(Array.isArray(info?.types)?{types:info.types}:{})};
+ }
+ // Preserve native instanceof/class behavior through a constructor Proxy.
+ // This also covers sources using new G.Enemy(...) instead of Enemies.bagAt().
+ if(typeof G.Enemy==='function'&&typeof Proxy==='function'){
+  const NativeEnemy=G.Enemy;
+  G.Enemy=new Proxy(NativeEnemy,{construct(Target,args,newTarget){
+   const index=regionIndex();
+   if(index<0||getChampion()?.active||G.Coop?.active||!args.length)
+    return Reflect.construct(Target,args,newTarget);
+   const replacement=regionEnemyDefinition(args[0],index);
+   if(replacement===args[0])return Reflect.construct(Target,args,newTarget);
+   const next=args.slice();next[0]=replacement;
+   return Reflect.construct(Target,next,newTarget);
+  }});
+ }
  // Enforce the selected generation for the ENTIRE run, not merely during
  // Spawner.update. Other native spawn sources can call Enemies.bagAt between ticks.
  // The mode guards prevent leaking Region restrictions into Arena or Co-op.
@@ -237,5 +268,5 @@
   return out;
  });
  G.PKMSVVQuickRegion={open,close,choose,entries,unlocked,beginRun,endRun,
-  enforceGeneration,get active(){return regionIndex()>=0},get selectedRegion(){return regionIndex()}};
+  enforceGeneration,regionEnemyDefinition,get active(){return regionIndex()>=0},get selectedRegion(){return regionIndex()}};
 })();
