@@ -7,6 +7,7 @@
 const fs=require('node:fs'),path=require('node:path'),{execFileSync}=require('node:child_process');
 const root=path.resolve(__dirname,'..');
 const {copyRegionCovers}=require('./copy-region-covers.cjs');
+const {copyFusionIcons}=require('./copy-fusion-icons.cjs');
 const decoded=path.resolve(process.argv[2]||'');
 if(!decoded||!fs.existsSync(path.join(decoded,'AndroidManifest.xml')))
  throw Error('Usage: node scripts/patch-pokebox-stage4-apk-qa.cjs <apktool-output>');
@@ -64,6 +65,14 @@ for(const filename of ['pkmsvv-box-stage1.css','pkmsvv-box-stage2.css','pkmsvv-b
  if(!html.includes(filename))html=html.replace('</head>','<link rel="stylesheet" href="css/'+filename+'">\n</head>');
 }
 copyRegionCovers(web);
+copyFusionIcons(web);
+const evolvedJS=path.join(web,'js/ui/pkmsvv-fusion-evolved.js');
+fs.copyFileSync(path.join(root,'src/pkmsvv-fusion-evolved.js'),evolvedJS);
+fs.copyFileSync(path.join(root,'src/pkmsvv-fusion-evolved.css'),path.join(web,'css/pkmsvv-fusion-evolved.css'));
+if(!html.includes('pkmsvv-fusion-evolved.css'))
+ html=html.replace('</head>','<link rel="stylesheet" href="css/pkmsvv-fusion-evolved.css">\n</head>');
+if(!html.includes('pkmsvv-fusion-evolved.js'))
+ html=html.replace('</body>','<script defer src="js/ui/pkmsvv-fusion-evolved.js"></script>\n</body>');
 const style=path.join(web,'css/pkmsvv-prebattle-qa.css');
 fs.copyFileSync(path.join(root,'src/pkmsvv-prebattle-qa.css'),style);
 if(!html.includes('pkmsvv-prebattle-qa.css'))
