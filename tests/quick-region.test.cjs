@@ -448,17 +448,17 @@ test('Explore Gen 1–9 covers use the nine requested mascot National Dex IDs; S
 });
 
 
-test('Explore Kanto grants its own Seal after three minutes, without Champion or boss',()=>{
+test('Explore Kanto grants its own Seal only after 15 complete minutes alive, without Champion',()=>{
  const h=harness(),q=h.G.PKMSVVQuickRegion;
  h.save.arenas.pkmChampion.seals={}; // First-time solo player.
  assert.equal(q.unlocked(1),false,'Johto must start locked for a new player');
  assert.equal(q.choose(0),true);
  assert.equal(h.G.World.biome,0,'Kanto is the native beginner map, not fire');
- h.G.Game.st.time=179;
+ h.G.Game.st.time=899;
  h.G.EnemyMgr.update(0.016);
- assert.equal(q.unlocked(1),false,'leaving before 180 seconds is not completion');
+ assert.equal(q.unlocked(1),false,'899 seconds must not unlock Johto');
  assert.equal(h.save.pkmsvvExploreSeals,undefined);
- h.G.Game.st.time=180;
+ h.G.Game.st.time=900;
  h.G.EnemyMgr.update(0.016);
  assert.equal(h.save.pkmsvvExploreSeals.Kanto,true);
  assert.equal(q.unlocked(1),true,'Johto unlocks from Kanto exploration alone');
@@ -474,7 +474,7 @@ test('Failed Explore Seal commit restores save and does not unlock next region',
  h.save.arenas.pkmChampion.seals={};
  const before=JSON.stringify(h.save);
  assert.equal(q.choose(0),true);
- h.G.Game.st.time=200;
+ h.G.Game.st.time=900;
  h.G.EnemyMgr.update(0.016);
  assert.equal(q.unlocked(1),false);
  assert.equal(JSON.stringify(h.save),before,'failed commit must be rolled back');
@@ -527,4 +527,62 @@ test('Canonical Egg-support boss guards keep their sprite/dex even on Kanto maps
  assert.deepEqual(Array.from(h.alive,e=>e.dex),[172,447,173,360,174],
   'live correction must not substitute any boss support with Zubat/other wild Pokémon');
  h.G.Game.toUI();
+});
+
+
+test('Nine Gen maps have nine different ACTIVE terrain IDs and nine different illustrated covers',()=>{
+ const h=harness(),q=h.G.PKMSVVQuickRegion;
+ const expected=[0,4,3,9,2,5,7,8,1,10]; // Kanto beginner; Paldea late Fire; Sky Dragon.
+ const biomes=Array.from({length:10},(_,i)=>q.targetBiome(i));
+ assert.deepEqual(biomes,expected,'nine region battlefields plus Sky use specific native biomes');
+ assert.equal(q.distinctMapBiomes(),true);
+ assert.equal(new Set(biomes.slice(0,9)).size,9,'all Gen 1-9 maps must have different terrain IDs');
+ assert.equal(new Set(q.THEMES.slice(1)).size,9,'each themed terrain is distinct');
+ assert.equal(q.SEAL_SECONDS,900);
+ assert.match(source,/Sống sót đủ 15 phút trong từng vùng/);
+ assert.match(source,/15 min → earn Seal/);
+ // These are actual separate battle maps: inspect the biome selected when
+ // replaying each normal native run, not merely the illustrated home cards.
+ for(const region of ['Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar','Paldea'])
+  h.save.arenas.pkmChampion.seals[region]=true;
+ for(let i=0;i<10;i++){
+  assert.equal(q.choose(i),true,'cannot start region '+i);
+  assert.equal(h.G.World.biome,expected[i],'duplicate in-game terrain for region '+i);
+  h.G.Game.toUI();
+  assert.equal(h.G.World.biome,17,'must restore original free-play map');
+ }
+ const crypto=require('node:crypto');
+ const covers=['01-kanto','02-johto','03-hoenn','04-sinnoh','05-unova',
+  '06-kalos','07-alola','08-galar','09-paldea'];
+ const hashes=covers.map(name=>{
+  const file=path.join(__dirname,'../assets/region-covers',name+'.webp');
+  assert.ok(fs.existsSync(file),'missing cover for '+name);
+  return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+ });
+ assert.equal(new Set(hashes).size,9,'no two Region cover artworks should be copied/identical');
+});
+test('Duplicate or missing native biomes block the selection instead of silently repeating a map',()=>{
+ const h=harness(),q=h.G.PKMSVVQuickRegion;
+ const saved=JSON.stringify(h.save);
+ h.G.Tiles.arenaBiome=()=>4; // a broken upstream mapping collapses all nine
+ assert.equal(q.distinctMapBiomes(),false);
+ assert.equal(q.choose(0),false);
+ assert.equal(h.started,0);
+ assert.equal(JSON.stringify(h.save),saved,'broken terrain must not corrupt or advance player progress');
+});
+test('Delayed Berry entry does not count pre-match wait or leftover previous-run clock',()=>{
+ const h=harness({deferred:true}),q=h.G.PKMSVVQuickRegion;
+ h.save.arenas.pkmChampion.seals={};
+ h.G.Game.st.time=700; // Stale clock until native startRun callback completes
+ assert.equal(q.choose(0),true);
+ h.G.Game.st.time=900;
+ assert.equal(q.tryEarnSeal(),false,'Berry chooser does not award Seal');
+ assert.equal(h.save.pkmsvvExploreSeals,undefined);
+ h.completeStart();
+ assert.equal(q.tryEarnSeal(),false,'start time must be captured at actual gameplay');
+ h.G.Game.st.time=1799;
+ assert.equal(q.tryEarnSeal(),false,'14:59 minutes elapsed remains locked');
+ h.G.Game.st.time=1800;
+ assert.equal(q.tryEarnSeal(),true);
+ assert.equal(h.save.pkmsvvExploreSeals.Kanto,true);
 });
