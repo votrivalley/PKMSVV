@@ -264,7 +264,7 @@ test('Rank overview uses only Stage 2 eligible copies/shards and never mutates s
  // Shiny does not contribute anything, even if the species has both forms.
  const protectedOrdinary=hub.rankOverview(h.s,hub.item(h.s,target.id));
  assert.ok(protectedOrdinary.protectedForms>=1);
- assert.equal(stillHasShiny.canRank,true);
+ assert.equal(protectedOrdinary.canRank,true);
  h.s.pkmsvvRankClaimedCopies={6:stage2.claimableList(h.s,target.id).map(x=>x.id)};
  const noMaterial=hub.rankOverview(h.s,hub.item(h.s,target.id));
  assert.equal(noMaterial.canRank,false);
@@ -435,7 +435,7 @@ test('legacy Box explains Gacha duplicates truthfully and offers backup-gated mi
  assert.match(ui,/pkmsvv\.prepokebox\./);
  assert.match(ui,/pkmbx-ready/);
  assert.match(ui,/onlyRankReady&&!ready/);
- assert.match(ui,/Past duplicates cannot be reconstructed accurately/);
+ assert.match(ui,/Past Gacha duplicates without individual IDs cannot be reconstructed/);
  assert.match(ui,/L\('⬆ Nâng Rank','⬆ Rank Up'\)/);
  assert.doesNotMatch(ui,/Bật PokéBox để nâng Rank|Activate PokéBox for Rank/);
  assert.match(css,/\.pkmbx-legacy-migration\[hidden\]/);
