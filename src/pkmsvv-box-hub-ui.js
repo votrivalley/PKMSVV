@@ -780,9 +780,11 @@
   // Keep the original PC that already owns Support, Mega, Berry and the guide.
   // Only remove the newer duplicated launcher, never the real PC.
   if(original&&extra){
-    extra.setAttribute('aria-label',L('Khám phá','Explore'));
+    // The Pokémon hub stays Pokémon. "Khám phá" is the separate Play
+    // launcher [data-go=play], not the [data-go=dex] collection menu.
+    extra.setAttribute('aria-label','Pokémon');
     const label=extra.querySelector('.pkmsvv-menu-label, strong, .menu-label');
-    if(label)label.textContent=L('Khám phá','Explore');
+    if(label)label.textContent='Pokémon';
    }
   if(extra){
    const sub=extra.querySelector('.pkmsvv-menu-copy small, small');
