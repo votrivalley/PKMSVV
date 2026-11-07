@@ -28,6 +28,9 @@ function harness(){
   Game:{state:'ui',startRun(){this.state='playing';G.World.setBiome(0)},toUI(){this.state='ui'},quit(){this.state='ui'}},
   Flow:{goMenu(){this.wasMenu=true}},
   MenuUI:{open(){this.wasOpen=true}},
+  Enemy:class Enemy {
+   constructor(def,x,y,scaling,boss){this.def=def;this.dex=def.dex;this.x=x;this.y=y;this.boss=!!boss;}
+  },
   Enemies:{bagAt(){return [{dex:999},{dex:25}]}},
   Spawner:{update(){const out=G.Enemies.bagAt();records.push(out);return out}},
   PKMSVVChampionArena:{active:false,
@@ -136,4 +139,28 @@ test('The entire active Region uses a Gen-only bag, including between Spawner ti
  const script=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-quick-region.js'),'utf8');
  assert.match(script,/wrap\(G\.Enemies,'bagAt'/);
  assert.doesNotMatch(script,/wrap\(G\.Spawner,'update'/);
+});
+
+test('Direct scripted Enemy spawns use Region Gen without touching original templates or other modes',()=>{
+ const h=harness(),quick=h.G.PKMSVVQuickRegion;
+ h.G.DEX_BY={1:{name:'Bulbasaur',types:['grass']},12:{name:'Butterfree',types:['bug']},
+  152:{name:'Chikorita',types:['grass']},777:{name:'Togedemaru',types:['electric']}};
+ const original={dex:777,name:'Togedemaru',types:['electric'],hp:300};
+ const before=JSON.stringify(original);
+ const outside=new h.G.Enemy(original,10,20,{hp:2},false);
+ assert.equal(outside.dex,777,'free play with no selected Region stays native');
+ assert.equal(quick.choose(0),true);
+ const direct=new h.G.Enemy(original,10,20,{hp:2},false);
+ assert.ok(direct.dex===1||direct.dex===12,'scripted spawn must be Gen 1');
+ assert.equal(direct.def.hp,300,'encounter tier/HP stays intact');
+ assert.deepEqual(Array.from(direct.def.types),Array.from(h.G.DEX_BY[direct.dex].types),'types follow actual species');
+ const boss=new h.G.Enemy(original,30,40,{hp:5},true);
+ assert.ok(boss.dex===1||boss.dex===12,'normal Region bosses must respect Gen as well');
+ assert.equal(boss.boss,true,'boss status is retained');
+ assert.equal(JSON.stringify(original),before,'native source must not be modified');
+ const special=new h.G.Enemy({...original,pkmsvvStoryBoss:true},0,0,{hp:1},true);
+ assert.equal(special.dex,777,'named story bosses retain their narrative identity');
+ h.G.Game.toUI();
+ assert.equal(new h.G.Enemy(original,0,0).dex,777,'mode restriction must end with battle');
+ assert.equal(JSON.stringify(h.save).includes('pkmsvv'),false,'generation fix must not mutate save');
 });
