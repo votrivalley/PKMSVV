@@ -11,6 +11,9 @@
  const NAMES=['Kanto','Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar','Paldea','Votri Valley'];
  const SYMBOLS=['🔥','🌳','🌊','❄️','⚙️','✨','🌴','🏟️','⛰️','🐉'];
  const REGION_COUNT=10;
+ // No gameplay badge: the selected place and Gen are already clear in chooser.
+ // Progressive wildlife is shared by all ten exploration maps, Sky included.
+ const WAVE_SECONDS=[0,120,240,360,480,600,720];
  const GEN_BOUNDS=[[1,151],[152,251],[252,386],[387,493],[494,649],
   [650,721],[722,809],[810,905],[906,1025]];
  // Canonical National Pokédex: https://pokemondb.net/pokedex/national
@@ -27,7 +30,7 @@
  let poolDex=null,poolMeta=null,poolBy=null;
  const poolCache=new Map(),poolSetCache=new Map();
  function speciesFor(index){
-  if(!GEN_BOUNDS[index])return [];
+  if(index<0||index>=REGION_COUNT)return [];
   const dex=G.DEX,meta=G.SPRITE_META,by=G.DEX_BY;
   if(dex!==poolDex||meta!==poolMeta||by!==poolBy){
    poolDex=dex;poolMeta=meta;poolBy=by;poolCache.clear();poolSetCache.clear();
@@ -36,41 +39,126 @@
   // Gacha eligibility (actual DEX entries plus sprites), with the canonical
   // National Dex number determining Gen regardless of incorrect .gen tags.
   const available=Array.isArray(dex)?dex.filter(p=>
-    p&&!!meta?.[p.dex]&&nationalGen(p.dex)===index+1&&!!by?.[p.dex])
+    p&&!!meta?.[p.dex]&&(index===9||nationalGen(p.dex)===index+1)&&!!by?.[p.dex])
    .map(p=>Number(p.dex)):[];
   // The old test harness does not always provide G.DEX. Never use this
   // fallback when a real Gacha list is present; otherwise it can silently
   // re-introduce Pokémon not offered in the selected Gen.
   const fallback=!Array.isArray(dex)?Object.keys(by||{}).map(Number).filter(n=>
-    !!by[n]&&nationalGen(n)===index+1):[];
+    !!by[n]&&(index===9||nationalGen(n)===index+1)):[];
   const list=[...new Set(Array.isArray(dex)?available:fallback)];
   poolCache.set(index,list);poolSetCache.set(index,new Set(list));
   return list;
  }
  function isAllowed(dex,index){
-  if(index===9)return true; // Sky Pillar explicitly mixes generations.
-  if(!GEN_BOUNDS[index])return false;
-  const pool=speciesFor(index),id=Number(dex);
-  if(!Number.isInteger(id)||nationalGen(id)!==index+1)return false;
+  if(index<0||index>=REGION_COUNT)return false;
+  const id=Number(dex),pool=speciesFor(index);
+  if(!Number.isInteger(id)||!(index===9||nationalGen(id)===index+1))return false;
   if(Array.isArray(G.DEX))return poolSetCache.get(index)?.has(id)===true;
-  return true; // Older test registries use only the canonical range.
+  return pool.includes(id); // Minimal test registries use National range.
+ }
+ // Stages come from the game's existing evolution rules, not National Dex order.
+ // Single-stage high-stat species (Kangaskhan, Lapras...) are gated by stats.
+ let evolutionSource=null,evolutionParents=new Map(),evolutionMemo=new Map();
+ function evolutionDepth(id,ancestors=new Set()){
+  const rules=G.PKMSVV_EVOLUTION_DATA?.rules;
+  if(rules!==evolutionSource){
+   evolutionSource=rules;evolutionParents.clear();evolutionMemo.clear();
+   for(const row of Array.isArray(rules)?rules:[])
+    if(Number.isInteger(+row.from)&&Number.isInteger(+row.to)){
+     const parents=evolutionParents.get(+row.to)||[];
+     parents.push(+row.from);evolutionParents.set(+row.to,parents);
+    }
+  }
+  if(evolutionMemo.has(id))return evolutionMemo.get(id);
+  if(ancestors.has(id))return 0; // Corrupt cyclic evolution data must not hang.
+  ancestors.add(id);
+  const depth=Math.min(2,Math.max(0,...(evolutionParents.get(id)||[]).map(parent=>
+   1+evolutionDepth(parent,ancestors))));
+  ancestors.delete(id);evolutionMemo.set(id,depth);return depth;
+ }
+ function pokemonStrength(id){
+  const mon=G.DEX_BY?.[id]||{};
+  const stats=['hp','pa','df','sa','sd','spd'].map(k=>Number(mon[k]));
+  const total=stats.every(x=>Number.isFinite(x)&&x>0)?
+   stats.reduce((a,b)=>a+b,0):370;
+  const depth=evolutionDepth(id);
+  const rarity=Number(mon.rarity)||0;
+  // Tiers use both true battle stats and evolutionary maturity, never Dex ID.
+  const power=total+depth*28+(rarity>=5?90:rarity===4?25:0);
+  return {id,total,depth,rarity,power};
+ }
+ function encounterSeconds(){
+  // Berry's pending selection must always begin at time zero, even if
+  // the previous run's Game.st.time was never reset until native startRun.
+  if(preRunPending)return 0;
+  const value=Number(G.Game?.st?.time??G.Game?.time??0);
+  return Number.isFinite(value)?Math.max(0,value):0;
+ }
+ function encounterTier(time=encounterSeconds()){
+  const t=Math.max(0,Number(time)||0);
+  return Math.min(6,WAVE_SECONDS.reduce((n,at)=>t>=at?n+1:n,0)-1);
+ }
+ function eligibleByTime(id,index,time=encounterSeconds()){
+  if(!isAllowed(id,index))return false;
+  const {total,depth,rarity}=pokemonStrength(id);
+  const tier=encounterTier(time);
+  // The first TWO minutes: only unevolved, weak Pokémon. Progressive
+  // ceilings unlock mid-stage, fully evolved and rare monsters in sequence.
+  const levels=[
+   {total:355,depth:0,rarity:3},
+   {total:400,depth:0,rarity:3},
+   {total:445,depth:1,rarity:4},
+   {total:490,depth:1,rarity:4},
+   {total:545,depth:2,rarity:4},
+   {total:600,depth:2,rarity:5},
+   {total:9999,depth:2,rarity:999}
+  ];
+  const rule=levels[tier];
+  return total<=rule.total&&depth<=rule.depth&&rarity<=rule.rarity;
+ }
+ let pickCounter=0;
+ function progressivePool(index,time=encounterSeconds(),isBoss=false){
+  const all=speciesFor(index);
+  if(!all.length)return [];
+  // A boss may be a modestly stronger opponent at its scheduled time,
+  // but never an unrestricted endgame evolution in minute one.
+  const effectiveTime=Math.max(0,time+(isBoss?80:0));
+  let eligible=all.filter(id=>eligibleByTime(id,index,effectiveTime));
+  if(!eligible.length){
+   // Sparse catalogues: use the weakest available in THIS Gen, never
+   // jump to a mixed-Gen pool or let the enemy wave disappear.
+   const weakest=all.map(pokemonStrength).sort((a,b)=>a.power-b.power||a.id-b.id)[0];
+   eligible=weakest?[weakest.id]:[];
+  }
+  return eligible.sort((a,b)=>pokemonStrength(a).power-pokemonStrength(b).power||a-b);
+ }
+ function pickProgressive(index,time=encounterSeconds(),boss=false,offset=0){
+  const pool=progressivePool(index,time,boss);
+  if(!pool.length)return null;
+  // Normal waves rotate within the current strength band. Bosses prefer
+  // the stronger half of *currently available* species, not early legendaries.
+  const start=boss?Math.floor(pool.length/2):0,span=pool.length-start;
+  return pool[start+(Math.abs(pickCounter++ + offset)%span)];
+ }
+ function progressiveDefinition(def,index,time=encounterSeconds(),offset=0){
+  if(!def||typeof def!=='object'||!Number.isInteger(Number(def.dex)))return def;
+  const id=Number(def.dex),boss=!!(def.boss||def.isBoss||def.pkmsvvStoryBoss);
+  if(eligibleByTime(id,index,time))return def;
+  const target=pickProgressive(index,time,boss,offset);
+  if(target===null)return null; // No eligible local species: fail closed.
+  const mon=G.DEX_BY?.[target];
+  return {...def,dex:target,name:mon?.name||('Pokémon '+target),
+   ...(Array.isArray(mon?.types)?{types:mon.types}:{})};
  }
  function enforceGeneration(bag,index){
-  if(!Array.isArray(bag)||!GEN_BOUNDS[index])return bag;
-  const pool=speciesFor(index);
-  if(!pool.length){
-   // Never display mixed-Gen enemies just because the Gacha pool is empty.
-   // Empty waves are safer than leaking later-region Pokémon.
-   console.error('[Region] No eligible sprite-backed species in '+NAMES[index]);
+  if(!Array.isArray(bag)||index<0||index>=REGION_COUNT)return bag;
+  if(!speciesFor(index).length){
+   console.error('[Region] No sprite-backed Gacha species in '+NAMES[index]);
    return [];
   }
-  return bag.map((def,i)=>{
-   if(!def||typeof def!=='object'||!Number.isInteger(Number(def.dex)))return def;
-   if(isAllowed(def.dex,index))return def;
-   const next=pool[i%pool.length],mon=G.DEX_BY?.[next];
-   return {...def,dex:next,name:mon?.name||('Pokémon '+next),
-    ...(Array.isArray(mon?.types)?{types:mon.types}:{})};
-  });
+  return bag.map((def,i)=>progressiveDefinition(def,index,encounterSeconds(),i))
+   .filter(Boolean);
  }
  // Fixed names; the WebP files are copied from assets/region-covers/ into each QA build.
  const COVER_FILES=[
@@ -111,25 +199,8 @@
 
  const title=(n)=>n===9?tr('Tháp Thiên Không','Sky Pillar'):NAMES[n];
  let overlay=null,armed=null,current=null,previousBiome=null,changing=false,bypass=false,preRunPending=false;
- let regionBadge=null;
- function showRegionBadge(index){
-  if(index<0||index>=GEN_BOUNDS.length){if(regionBadge)regionBadge.hidden=true;return;}
-  if(!regionBadge){
-   regionBadge=document.createElement('div');
-   regionBadge.id='pkmsvv-region-gen-badge';
-   regionBadge.setAttribute('aria-label',tr('Vùng Pokémon đang chơi','Active Pokémon region'));
-   regionBadge.setAttribute('style','position:fixed;top:52px;right:12px;'+
-    'z-index:1900;background:rgba(9,31,44,.92);color:#ffe7a7;'+
-    'border:1px solid #e7be5e;border-radius:8px;padding:4px 9px;'+
-    'pointer-events:none;font:700 11px/1.45 system-ui,sans-serif;'+
-    'box-shadow:0 2px 8px #04131d88;');
-   document.body.append(regionBadge);
-  }
-  const [lo,hi]=GEN_BOUNDS[index];
-  regionBadge.textContent=NAMES[index].toUpperCase()+' · GEN '+(index+1)+
-   ' · #'+String(lo).padStart(4,'0')+'–'+String(hi).padStart(4,'0');
-  regionBadge.hidden=false;
- }
+ // No visible National Dex QA overlay in normal gameplay.
+ function showRegionBadge(){const old=document.getElementById?.('pkmsvv-region-gen-badge');old?.remove?.();}
  const getChampion=()=>G.PKMSVVChampionArena;
  const getSave=()=>G.DB?.save;
  function unlocked(index,save=getSave()){
@@ -319,12 +390,8 @@
   // This is free-play exploration, not the linear story mode: even scripted
   // bosses must use the chosen Region. Boss status/HP are preserved separately.
   const dex=Number(def.dex);
-  if(!Number.isInteger(dex)||isAllowed(dex,index))return def;
-  const species=speciesFor(index);
-  if(!species.length)return def; // Manager guard will reject this unsafe spawn.
-  const target=species[(Math.abs(dex)+constructed++)%species.length],info=G.DEX_BY[target];
-  return {...def,dex:target,name:info?.name||'Pokémon '+target,
-   ...(Array.isArray(info?.types)?{types:info.types}:{})};
+  if(!Number.isInteger(dex)||eligibleByTime(dex,index))return def;
+  return progressiveDefinition(def,index,encounterSeconds(),constructed++);
  }
  // Preserve native instanceof/class behavior through a constructor Proxy.
  // This also covers sources using new G.Enemy(...) instead of Enemies.bagAt().
@@ -361,7 +428,7 @@
   const old=Number(enemy.dex??enemy.def?.dex);
   if(!Number.isInteger(old))return false;
   const replacement=regionEnemyDefinition({dex:old},index);
-  if(replacement.dex===old)return false;
+  if(!replacement||replacement.dex===old)return false;
   const next=replacement.dex,mon=G.DEX_BY?.[next];
   if(!mon)return false;
   // Never change damage/HP, biome, boss flags, rewards or player Pokémon.
@@ -410,9 +477,9 @@
  wrap(G.Enemies,'bagAt',function(prev,args){
   const bag=prev.apply(this,args),index=regionIndex();
   if(index<0||getChampion()?.active||G.Coop?.active)return bag;
-  const mapped=typeof getChampion()?.regionizeBag==='function'?
-   getChampion().regionizeBag(bag,index):bag;
-  return enforceGeneration(mapped,index);
+  // Do not map through Champion's regional bosses; it is an Arena system.
+  // Exploration uses its own per-minute, sprite-backed local Gen tiers.
+  return enforceGeneration(bag,index);
  });
  for(const [obj,key] of [[G.Game,'toUI'],[G.Game,'quit'],[G.Flow,'goMenu']]){
   wrap(obj,key,function(prev,args){if(current)endRun();return prev.apply(this,args);});
@@ -427,7 +494,8 @@
   return out;
  });
  G.PKMSVVQuickRegion={open,close,choose,entries,unlocked,beginRun,endRun,
-  nationalGen,speciesFor,isAllowed,enforceGeneration,regionEnemyDefinition,enforceLiveEnemy,
+  nationalGen,speciesFor,isAllowed,pokemonStrength,encounterTier,eligibleByTime,
+  progressivePool,enforceGeneration,regionEnemyDefinition,enforceLiveEnemy,
   get active(){return regionIndex()>=0},
   get selectedRegion(){return regionIndex()},
   get starting(){return !!preRunPending},
