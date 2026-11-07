@@ -157,6 +157,8 @@ async function main(){
   for(const key of ['entered','active','mappedInKanto','corrected','target','keptHp','keptBoss','sourceUnchanged'])
    assert.equal(realKanto[key],true,'compiled Region / Gacha QA: '+key+' '+JSON.stringify(realKanto));
   assert.equal(realKanto.selectedRegion,0,'Kanto is exactly Gen 1 in compiled game');
+  const genAudit=await evaluate("(()=>{const mismatch=G.DEX.filter(p=>p&&G.PKMSVVQuickRegion.nationalGen(p.dex)!==Number(p.gen));return {count:mismatch.length,examples:mismatch.slice(0,12).map(p=>({dex:p.dex,name:p.name,gen:p.gen,expected:G.PKMSVVQuickRegion.nationalGen(p.dex)}))}})()");
+  assert.equal(genAudit.count,0,'Gacha internal Gen tags must agree with the official National Pokédex: '+JSON.stringify(genAudit));
   assert.equal(realKanto.badgeVisible,true,'in-game QA badge must prove Kanto selector is active');
   assert.match(realKanto.badgeText,/KANTO · GEN 1 · #0001–0151/,
    'in-game banner must display the official National Dex boundaries');
