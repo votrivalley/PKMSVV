@@ -36,8 +36,11 @@
    const seasonal=/Sương Ký Ức|Memory Mist|Season(?:al)? Event|Sự kiện mùa/i.test(label);
    const awakened=allDone&&/Skill Awakening|Thức tỉnh kỹ năng/i.test(label);
    if(!seasonal&&!awakened)continue;
+   // Each knowledge entry is a full framed .pkmsvv-pc-learn row.
+   // Removing only its button left an empty panel / repeated Awakening area.
+   const row=btn.closest('.pkmsvv-pc-learn');
+   if(row){row.remove();continue;}
    const detail=btn.nextElementSibling;
-   // A related expanded knowledge panel should not be orphaned.
    if(detail?.matches?.('.pkmsvv-pc-orb-details,.pkmsvv-pc-learn-panel,[data-pkmsvv-knowledge-detail]'))detail.remove();
    btn.remove();
   }
