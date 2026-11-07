@@ -177,9 +177,9 @@ G.PKMSVVWiki=(()=>{
    [tr('Thức tỉnh kỹ năng','Skill Awakening'),
     tr('Kỹ năng được mở và nâng cấp khi Pokémon lên cấp trong trận. Hãy chọn kỹ năng phù hợp để phát huy sức mạnh; các nâng cấp vĩnh viễn vẫn được giữ nguyên.',
        'Unlock and improve skills as your Pokémon levels up during a run. Choose skills that fit your play style; permanent upgrades remain intact.')],
-   [tr('🔗 Bond / Fusion tự do','🔗 Free Bond Fusion'),
-    tr('Ghép 2 kỹ năng đã học bất kỳ. Miễn phí 1 lần/trận; kiếm thêm Bond từ huyền thoại khe nứt. Tối đa 4 kỹ năng/nhóm, hồi chiêu riêng. Dấu 🔗 báo kỹ năng có thể ghép. 10 cặp dưới đây là gợi ý.',
-       'Link any 2 learned moves. One free Fusion per match; earn more Bonds from Rift legendaries. Up to 4 moves per group, each with its own cooldown. 🔗 marks compatible moves. The 10 pairs below are suggestions.')],
+   [tr('✨ Fusion — Tiến hóa tuyệt kỹ','✨ Fusion — Evolved Skills'),
+    tr('Chọn 1 trong 10 công thức. Cả hai chiêu gốc phải MAX, sau đó Fusion thay 2 chiêu bằng 1 tuyệt kỹ MAX, giải phóng một ô kỹ năng. Mỗi trận Fusion chỉ 1 lần; Bond nhận từ khe nứt vẫn là hệ thống liên kết riêng.',
+       'Choose one of ten recipes. Both source moves must be MAX. Fusion replaces them with one evolved MAX skill and frees one slot. One Fusion per match; Rift-earned Bonds remain a separate link system.')],
 
   ];
   // The completed Skill Awakening chapter does not need a permanent guide row.
@@ -203,7 +203,10 @@ G.PKMSVVWiki=(()=>{
        const label=document.createElement('span');label.textContent=G.T?.(G.Moves?.BY_ID?.[id]?.name||id,'move')||id;
        pair.append(icon,label);row.append(pair);
       }
-      const result=document.createElement('strong');result.textContent=' · '+tr(formula.vi,formula.en);row.append(result);recipes.append(row);
+      const fusionIcon=document.createElement('img');
+      fusionIcon.src='assets/fusion-icons/'+formula.id+'.webp';fusionIcon.alt='';fusionIcon.width=30;fusionIcon.height=30;
+      row.prepend(fusionIcon);
+      const result=document.createElement('strong');result.textContent=' · '+tr(formula.vi,formula.en)+' · MAX + MAX';row.append(result);recipes.append(row);
      }
      p.append(recipes);
     }
