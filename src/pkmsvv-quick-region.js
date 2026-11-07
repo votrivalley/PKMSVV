@@ -13,17 +13,21 @@
  const REGION_COUNT=10;
  const GEN_BOUNDS=[[1,151],[152,251],[252,386],[387,493],[494,649],
   [650,721],[722,809],[810,905],[906,1025]];
- // Cache per-generation species once per loaded Dex table. Avoid scanning
- // the entire Pokédex on every monster or wave (large saves can be busy).
- let poolDex=null;const poolCache=new Map();
+ // Use the EXACT same regional catalogue as Gacha:
+ // G.DEX entries have .gen and the official sprite availability gate.
+ // Range-based Dex IDs are only a fallback for older test registries.
+ let poolDex=null,poolMeta=null;const poolCache=new Map();
  function speciesFor(index){
-  const dex=G.DEX_BY;
-  if(dex!==poolDex){poolDex=dex;poolCache.clear();}
-  if(!dex||!GEN_BOUNDS[index])return [];
+  if(!GEN_BOUNDS[index])return [];
+  const dex=G.DEX,meta=G.SPRITE_META;
+  if(dex!==poolDex||meta!==poolMeta){poolDex=dex;poolMeta=meta;poolCache.clear();}
   if(poolCache.has(index))return poolCache.get(index);
-  const range=GEN_BOUNDS[index];
-  const list=Object.keys(dex).map(Number).filter(n=>
-   Number.isInteger(n)&&n>=range[0]&&n<=range[1]&&dex[n]);
+  const fromGacha=Array.isArray(dex)?dex.filter(p=>p&&p.gen===index+1&&!!meta?.[p.dex])
+   .map(p=>Number(p.dex)).filter(n=>Number.isInteger(n)&&!!G.DEX_BY?.[n]):[];
+  const bounds=GEN_BOUNDS[index];
+  const fallback=Object.keys(G.DEX_BY||{}).map(Number).filter(n=>
+   Number.isInteger(n)&&n>=bounds[0]&&n<=bounds[1]&&G.DEX_BY[n]);
+  const list=fromGacha.length?fromGacha:fallback;
   poolCache.set(index,list);return list;
  }
  // Guard the ordinary wild spawn bag independently of the Champion transform.
@@ -265,6 +269,27 @@
  // Enforce the selected generation for the ENTIRE run, not merely during
  // Spawner.update. Other native spawn sources can call Enemies.bagAt between ticks.
  // The mode guards prevent leaking Region restrictions into Arena or Co-op.
+ // Last-chance isolation for custom waves that captured Enemy BEFORE this
+ // QA wrapper: refresh species and sprite at the manager boundary. Restrict
+ // only normal Chơi ngay and never mutate global Gacha/boss catalogues.
+ wrap(G.EnemyMgr,'add',function(prev,args){
+  const enemy=args[0],index=regionIndex();
+  if(index>=0&&index<GEN_BOUNDS.length&&!getChampion()?.active&&!G.Coop?.active&&enemy&&
+     Number.isInteger(Number(enemy.dex))){
+   const old=Number(enemy.dex),definition=regionEnemyDefinition({dex:old},index);
+   if(definition.dex!==old){
+    const next=definition.dex,mon=G.DEX_BY?.[next];
+    enemy.dex=next;
+    if(mon)enemy.mon=mon;
+    if(enemy.def&&typeof enemy.def==='object')
+     enemy.def={...enemy.def,dex:next,name:mon?.name||('Pokémon '+next)};
+    if(G.Sprites?.Animator&&enemy.anim){
+     try{enemy.anim=new G.Sprites.Animator(next,enemy.scale||1,!!enemy.shiny);}catch(_){}
+    }
+   }
+  }
+  return prev.apply(this,args);
+ });
  wrap(G.Enemies,'bagAt',function(prev,args){
   const bag=prev.apply(this,args),index=regionIndex();
   if(index<0||getChampion()?.active||G.Coop?.active)return bag;
@@ -275,9 +300,11 @@
  for(const [obj,key] of [[G.Game,'toUI'],[G.Game,'quit'],[G.Flow,'goMenu']]){
   wrap(obj,key,function(prev,args){if(current)endRun();return prev.apply(this,args);});
  }
+ // Opening in-game overlays must NOT cancel the selected region. Only an
+ // explicit return to the home menu clears the scoped Region policy.
  if(typeof G.MenuUI?.open==='function')wrap(G.MenuUI,'open',function(prev,args){
   const out=prev.apply(this,args);
-  if(current)endRun();
+  if(current&&G.Game?.state==='ui'&&!G.PKMSVVBerry?.choosing)endRun();
   return out;
  });
  G.PKMSVVQuickRegion={open,close,choose,entries,unlocked,beginRun,endRun,
