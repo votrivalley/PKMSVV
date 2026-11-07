@@ -211,9 +211,9 @@
    '<span class="pkmbx-name">'+clean(monName(it.dex))+'</span>'+
    '<small>#'+it.dex+(it.shiny?' ✨':'')+'</small>'+
    '<span class="pkmbx-slot-meta">'+rankStars(progress?.rank??it.rank)+'</span>'+
-   (duplicates>1?'<span class="pkmbx-stack pkmbx-stack-count" title="'+
-     L('Tổng Pokémon cùng loài, gồm Normal và Shiny',
-       'Total same-species individuals, including Normal and Shiny')+'">×'+duplicates+'</span>':'')+
+   (!it.shiny&&duplicates>1?'<span class="pkmbx-stack pkmbx-stack-count" title="'+
+     L('Số Pokémon thường cùng loài. Shiny không tính bản trùng.',
+       'Number of ordinary individuals of the same species. Shiny does not count.')+'">×'+duplicates+'</span>':'')+
    '<span class="pkmbx-mini-icons">'+(it.favorite?'★ ':'')+(team?'⑥ ':'')+
     (it.id===selected?'✓':'')+'</span>';
   b.onclick=()=>chooseFocus(it.id);
@@ -449,7 +449,9 @@
   const q=query.trim().toLocaleLowerCase();
   const counts=new Map(),groups=new Map();
   for(const x of items){
-   counts.set(x.dex,(counts.get(x.dex)||0)+1);
+   // Do not label normal+Shiny as x2. Only independently summoned NORMAL
+   // instances count as ordinary copies; Shiny stays its own unique form.
+   if(!x.shiny)counts.set(x.dex,(counts.get(x.dex)||0)+1);
    if(!groups.has(x.dex))groups.set(x.dex,[]);
    groups.get(x.dex).push(x);
   }
@@ -504,8 +506,8 @@
   banner.hidden=ready;
   if(!ready){
    banner.innerHTML='<strong>'+L('Save cũ chưa theo dõi Pokémon quay trùng.','This older save does not track individual duplicates.')+'</strong>'+
-    '<span>'+L('Không thể phục hồi chính xác lượt Gacha trùng trước đây. Hãy lưu bản gốc và chuyển PokéBox để các lượt Gacha mới được tính Rank.',
-      'Past duplicates cannot be reconstructed accurately. Back up and migrate to count all new Gacha duplicates toward Rank.')+'</span>'+
+    '<span>'+L('Các lượt Gacha cũ không có nhật ký cá thể nên không thể khôi phục số bản trùng. Bạn có thể kích hoạt ngay, hoặc game sẽ sao lưu và tự kích hoạt PokéBox khi quay Gacha mới thành công.',
+      'Past Gacha duplicates without individual IDs cannot be reconstructed. Activate now, or the game will safely back up and activate PokéBox on your next successful Gacha purchase.')+'</span>'+
     '<button type="button" class="btn small" id="pkmbx-activate-migration">'+
     L('💾 Sao lưu và kích hoạt PokéBox','💾 Back up & activate PokéBox')+'</button>';
    banner.querySelector('button').onclick=migrateLegacyFromBox;
