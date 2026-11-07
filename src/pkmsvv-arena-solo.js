@@ -37,7 +37,8 @@ G.PKMSVVArenaSolo=(()=>{
    '<div id="pkmsvv-arena-solo-vs" class="pkmsvv-arena-solo-vs"></div>'+
    '<div class="pkmsvv-arena-solo-controls">'+
    '<button class="btn gold" type="button" id="pkmsvv-arena-solo-play">🤖 Random AI</button>'+ 
-   '<button class="btn ghost" type="button" id="pkmsvv-arena-solo-invite">🤝 Mời người chơi</button>'+ 
+   '<button class="btn ghost" type="button" id="pkmsvv-arena-solo-invite">🤝 Mời người chơi</button>'+
+   '<button class="btn gold" type="button" id="pkmsvv-arena-solo-confirm" hidden>'+tr('✓ Xác nhận Pokémon','✓ Confirm Pokémon')+'</button>'+ 
    '<button class="btn ghost" type="button" id="pkmsvv-arena-solo-close">Đóng</button></div></div>';
   document.body.append(screen);
   $('pkmsvv-arena-solo-play').onclick=()=>start(); // click handler must not pass PointerEvent as the RNG function
@@ -48,6 +49,7 @@ G.PKMSVVArenaSolo=(()=>{
    else G.UI?.toast?.(tr('Mời bạn qua Arena Solo trên PC Host / Wi-Fi.','Invite a friend via Arena Solo on PC Host / Wi-Fi.'));
   };
   $('pkmsvv-arena-solo-close').onclick=()=>{if(active)abort();else screen.hidden=true;};
+  $('pkmsvv-arena-solo-confirm').onclick=()=>{if(active&&stage==='select')startIntro();};
   return screen;
  }
  function open(){
@@ -58,6 +60,7 @@ G.PKMSVVArenaSolo=(()=>{
   const screen=frame();screen.hidden=false;
   $('pkmsvv-arena-solo-play').hidden=false;
   $('pkmsvv-arena-solo-invite').hidden=false;
+  $('pkmsvv-arena-solo-confirm').hidden=true;
   $('pkmsvv-arena-solo-info').textContent=tr(
    'Chọn Random AI (90–120% chỉ số của bạn) hoặc Mời người chơi qua Wi-Fi. AI: chuẩn bị 10–15 phút, cảnh báo 30 giây, chọn Pokémon 10 giây.',
    'Choose Random AI (90–120% of your stats) or Invite a real player via Wi-Fi. AI: 10–15-minute preparation, 30-second warning and 10-second Pokémon pick.');
@@ -120,6 +123,7 @@ G.PKMSVVArenaSolo=(()=>{
   stage='select';elapsed=0;const screen=frame();screen.hidden=false;
   $('pkmsvv-arena-solo-play').hidden=true;
   $('pkmsvv-arena-solo-invite').hidden=true;
+  $('pkmsvv-arena-solo-confirm').hidden=false;
   const picks=$('pkmsvv-arena-solo-picks');picks.replaceChildren();
   const options=owned();
   if(!options.includes(selected))options.unshift(selected);
@@ -158,6 +162,7 @@ G.PKMSVVArenaSolo=(()=>{
  }
  function startIntro(){
   stage='intro';elapsed=0;countView('3');
+  $('pkmsvv-arena-solo-confirm').hidden=true;
   const p=G.Game?.player;if(!p){abort();return;}
   normalize(p);
   G.EnemyMgr?.clear?.();G.Pickups?.clear?.();G.Projectiles?.clear?.();G.Hazards?.clear?.();
