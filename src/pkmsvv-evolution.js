@@ -185,7 +185,7 @@ G.PKMSVVEvo = (() => {
         a.localeCompare(b));
   }
   function swapSkill(pl,fromId,toId){
-    if(!pl||!Array.isArray(pl.moves)||!skillSwapOptions(pl).includes(toId)||typeof G.Moves?.instance!=='function')return false;
+    if(!pl||!pl.pkmEvoSwapAvailable||!Array.isArray(pl.moves)||!skillSwapOptions(pl).includes(toId)||typeof G.Moves?.instance!=='function')return false;
     const idx=pl.moves.findIndex(m=>m.id===fromId);
     if(idx<0)return false;
     const old=pl.moves[idx],def=G.Moves.BY_ID[toId];
@@ -202,6 +202,7 @@ G.PKMSVVEvo = (() => {
     }
     if(pl.bind&&pl.bind[fromId]!==undefined&&pl.bind[toId]===undefined)
       pl.bind[toId]=pl.bind[fromId];
+    pl.pkmEvoSwapAvailable=false;
     return {from:fromId,to:toId,lvl:rank};
   }
   function showSkillSwap(pl,done){
@@ -281,6 +282,7 @@ G.PKMSVVEvo = (() => {
     pl.shiny = pl.shiny && G.Sprites.hasShiny(after.dex);
     const converted=eeveeChoice?convertNormal(pl,after.dex):null;
     pl.pkmEvoHistory.push({ from: r.from, to: r.to, at: pl.level, converted:converted||null });
+    pl.pkmEvoSwapAvailable=true;
     pl.pkmEvoSkipLevel = -1;
     G.Sprites.preload([after.dex], 8000, pl.shiny);
     G.FX.ring(pl.x, pl.y, 8, 130, '#ffe082', 0.9, 6);
