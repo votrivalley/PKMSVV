@@ -165,3 +165,33 @@ continuing. Preserve offline Wi-Fi hosting and the full existing test suite.
 - A green QA artifact is not a public deployment: the official Cloudflare
   website and permanent signed Android app remain unchanged until explicitly
   promoted after real-device/save verification.
+
+
+## National Pokédex authoritative Gen mapping (2026-11-07)
+
+- External reference for introduction generation and dex numbering:
+  https://pokemondb.net/pokedex/national . Generation boundaries MUST remain:
+  **Kanto 1–151; Johto 152–251; Hoenn 252–386; Sinnoh 387–493;
+  Unova 494–649; Kalos 650–721; Alola 722–809; Galar 810–905;
+  Paldea 906–1025**. Sky Pillar is the only intentionally mixed-Gen area.
+- NEVER use `G.DEX[].gen` as the sole authority for an enemy's introduction
+  generation: that field could be incorrectly tagged. Use the canonical
+  **National Dex number + presence in Gacha eligible catalogue + sprite**.
+  Do not make Gen membership depend on local biome, type, evolution lineage
+  or a Pokémon's latest regional appearance.
+- A selected Kanto expedition is **strictly Gen 1 for the entire encounter**,
+  including all wilds, random events, rifts, mini-bosses and bosses; no
+  story-boss exemption in normal free-play Region runs. Preserve HP, damage,
+  rewards, actor type, save, player allies and controller input. Arena and
+  Co-op modes remain unaffected.
+- No Gacha-eligible species in the requested Gen means an empty wave and a
+  visible console diagnostic; do not silently fall back to mixed-Gen monsters.
+  Scripts must still work when Gacha metadata is unavailable in a test
+  harness, but production eligibility requires sprite-backed catalogue data.
+- Keep a tiny QA gameplay badge showing the active Gen and National Dex range
+  (e.g. `KANTO · GEN 1 · #0001–0151`); if it is absent in the user's
+  screenshot, this QA Region build may not be loaded or active.
+- Validate all **1,025** National Dex IDs in tests, plus intentionally
+  mis-tagged Gen metadata, foreign bosses, post-Berry delayed startup,
+  arrays/Sets/Maps of live enemies, Chromium compiled catalogue, and no
+  out-of-Gen sprites after 30+ seconds of play.
