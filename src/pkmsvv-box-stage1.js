@@ -115,6 +115,11 @@
    try{
      s.pkmsvvSelectedInstanceId=item.id;s.partner=item.dex;s.partnerShiny=item.shiny;
      if(G.DB.commit(true)===false)throw Error('Save commit failed');
+     // The selection is durable at this point. Refresh the HOME portrait
+     // immediately, even while PokéBox is still open above the menu.
+     // This is display-only: a failed redraw must NEVER revert the save.
+     try{G.PKMSVVMenuCleanQA?.restorePartner?.();}
+     catch(error){console.warn('[PokéBox home portrait refresh]',error);}
      return true;
    }catch(e){rollbackFields(s,old);return false;}
  }
