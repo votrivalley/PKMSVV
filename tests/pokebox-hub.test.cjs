@@ -450,7 +450,13 @@ test('Wiki describes ten Fusion effects, has corresponding WebP icons and replac
  const pilot=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-bond-fusion.js'),'utf8');
  const wiki=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-wiki.js'),'utf8');
  const compiled=fs.readFileSync(path.join(__dirname,'../scripts/patch-qa-compiled-modules.cjs'),'utf8');
- assert.match(compiled,/\['PKMSVVWiki','src\/pkmsvv-wiki\.js'\]/);
+ assert.doesNotMatch(compiled,/\['PKMSVVWiki','src\/pkmsvv-wiki\.js'\]/,
+  'PC Wiki is standalone; never assume the compiled game contains its assignment');
+ for(const p of ['scripts/build-pokebox-stage1-qa.cjs',
+  'scripts/build-pokebox-stage1-pc-qa.cjs','scripts/patch-pokebox-stage4-apk-qa.cjs']){
+  const build=fs.readFileSync(path.join(__dirname,'..',p),'utf8');
+  assert.match(build,/pkmsvv-wiki-qa\.js/,'isolated '+p+' must ship the corrected Wiki source');
+ }
  assert.match(wiki,/formula\.id\+'\.webp'/);
  assert.match(wiki,/formula\.viEffect/);
  assert.match(wiki,/pkmsvv-fusion-benefit/);
