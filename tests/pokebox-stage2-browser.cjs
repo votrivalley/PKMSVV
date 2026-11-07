@@ -280,6 +280,7 @@ async function main(){
   assert.equal(coverMascots.covers,10);
   console.log('Explore exact mascot canvas and sprite coverage QA:',JSON.stringify(coverMascots));
   assert.deepEqual(coverMascots.missingDex,[],'mascots must exist in the real game Dex');
+  assert.deepEqual(coverMascots.missingSpriteMeta,[],'every chosen legendary must have a real compiled sprite, not just an empty canvas');
   assert.equal(coverMascots.spriteCanvases,10,'every actual cover must render its mascot canvas');
   assert.equal(coverMascots.noSpawnsChanged,true,'only cover art changed, not regional combat');
   const preplay=await evaluate("(()=>{const play=document.querySelector('#scr-menu [data-go=play]');if(!play)return {missingPlay:true};const before=G.Game?.state;play.click();const overlay=document.querySelector('#pkmsvv-quick-region');const out={missingPlay:false,before,after:G.Game?.state,open:!!overlay&&!overlay.hidden,count:overlay?.querySelectorAll('.pkmsvv-quick-region-card').length,available:overlay?.querySelectorAll('.pkmsvv-quick-region-card:not(:disabled)').length,active:!!G.PKMSVVQuickRegion.active};G.PKMSVVQuickRegion.close();return out})()");
