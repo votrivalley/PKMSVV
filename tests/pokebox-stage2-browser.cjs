@@ -107,6 +107,21 @@ async function main(){
    scoreNodes:[...document.querySelectorAll('*')].filter(n=>/rank|leader|scoreboard/i.test(String(n.id||''))).slice(0,35).map(n=>({id:n.id,tag:n.tagName}))
   }))()`);
   console.log('PKMSVV_ARENA_RANK_SHINY_METHODS='+JSON.stringify(userUiAudit));
+  const coopHudAudit=await evaluate(`(()=>{
+   const sources=[['HUD',G.HUD?.draw],['Game',G.Game?.init],['CoopTick',G.Coop?.tick],
+    ['CoopStatus',G.Coop?.status],['RankUI',G.RankingUI?.open],
+    ['PU',G.PKMSVVRankUI?.render],['Shiny',G.Coop?.shinyCaught]];
+   return sources.map(([key,fn])=>{
+    const src=String(fn||''),marks=[];
+    for(const pattern of ['G.Coop','top','rank','kills','score','G.Ranking','G.onShinyCaught','caught']){
+     const at=src.toLowerCase().indexOf(pattern.toLowerCase());
+     if(at>=0)marks.push({pattern,at,snippet:src.slice(Math.max(0,at-155),at+265)});
+    }
+    return {key,length:src.length,marks:marks.slice(0,7)};
+   });
+  })()`);
+  console.log('PKMSVV_COOP_HUD_TARGET_AUDIT='+JSON.stringify(coopHudAudit));
+
 
   const five=await evaluate('G.PKMSVVBox2.formatRank(5).hp');
   assert.equal(await evaluate('G.PKMSVVBox3.PRICE'),6500);
