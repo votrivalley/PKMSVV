@@ -102,9 +102,13 @@ for(const filename of targets){
  if(coopAssignment<0)throw Error('Missing native Co-op net module');
  const look=next.slice(coopAssignment,coopAssignment+110000);
  const marker='G.Royale?.active||G.EggRush?.active';
- let diagAt=-1,index=0;
- while((diagAt=look.indexOf(marker,diagAt+1))>=0&&index++<15)
-  console.log('QA_NET_LEVEL_CONTEXT',index,look.slice(Math.max(0,diagAt-110),diagAt+marker.length+95).replace(/\\n/g,' '));
+ for(const marker2 of ['levelStart','localPicked','seenSeq','waiting','holdStart','pkmsvvCompetitive']){
+  let at=-1,count=0;
+  while((at=look.indexOf(marker2,at+1))>=0&&count++<6){
+   console.log('QA_NET_QUEUE_CONTEXT',marker2,count,at,
+    look.slice(Math.max(0,at-145),at+marker2.length+165).replace(/\\n/g,' '));
+  }
+ }
  // This baseline embeds the original pickup IIFE with minified per-run Orb
  // counter "e". Patch BOTH verified exact native Orb rolls (and only those).
  // 45% -> 22.5% boss, 6% -> 3% normal. The 150s stagger prevents the
