@@ -34,6 +34,33 @@ function setup(){
 function add(s,dex=6){
  return stage2.makeOne(s,{dex,shiny:false},{random:()=>0,natures:[{id:'hardy'}],abilities:{[dex]:[11,12,13]}});
 }
+test('Arena roster is precisely the six PokéBox Ready slots, never all owned or Favorites',()=>{
+ const h=setup();const copy=add(h.s,6);
+ assert.deepEqual(hub.arenaReady(h.s).map(x=>x.id),['b1-6-n']);
+ hub.toggleFavorite(copy.id,h.s);
+ assert.equal(hub.arenaReady(h.s).length,1,'favorite clone outside Team must not join Arena');
+ hub.toggleTeam(copy.id,h.s);
+ hub.toggleTeam('b1-6-s',h.s);
+ const ready=hub.arenaReady(h.s);
+ assert.deepEqual(ready.map(x=>x.id),hub.team(h.s));
+ assert.deepEqual(ready.map(x=>x.dex),[6,6,6],'same-species copies remain independent slots');
+ assert.equal(ready.filter(x=>x.shiny).length,1,'Shiny slot is independently eligible');
+ assert.equal(ready.find(x=>x.id==='b1-6-s').shiny,true);
+ assert.equal(hub.team(h.s).length,3,'reading Arena never mutates Ready Team');
+ hub.toggleTeam(copy.id,h.s);
+ assert.equal(hub.arenaReady(h.s).some(x=>x.id===copy.id),false,'removal takes effect immediately');
+});
+test('Arena roster supports old saves without migrating or rewriting their Box',()=>{
+ setup();
+ const old={owned:{6:{at:1},25:{at:2}},shiny:{6:{at:3}},partner:6,partnerShiny:false};
+ const first=hub.legacyTeam(old);
+ assert.equal(first.length,1);
+ old.pkmsvvLegacyReady6=[first[0]];
+ const ready=hub.arenaReady(old);
+ assert.deepEqual(ready.map(x=>x.id),first);
+ assert.equal(ready[0].dex,6);
+ assert.equal(old.pkmsvvBox,undefined,'read-only roster must not migrate an old save');
+});
 test('Team 6 defaults to current Pokémon, contains six unique instance IDs and survives reopen',()=>{
  const h=setup();assert.deepEqual(hub.team(h.s),['b1-6-n']);
  const copies=Array.from({length:6},()=>add(h.s));
