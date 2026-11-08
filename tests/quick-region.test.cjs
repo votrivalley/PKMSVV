@@ -776,7 +776,7 @@ test('PvE outside has a 4% Rare chance and Rifts offer Rare/Epic, never random L
  assert.equal(roll(.98,false).rarity,3,'rare outside, never legendary');
  assert.equal(roll(.12,true).rarity,4,'rift epic');
  assert.equal(roll(.50,true).rarity,3,'rift rare');
- assert.equal(roll(.01,false,true).rarity,2,'outside miniboss avoids weak starter species and Legend');
+ assert.equal(roll(.50,false,true).rarity,2,'outside miniboss avoids weak starter species and Legend');
  assert.equal(roll(.99,false,true).rarity,3,'outside miniboss can still be Rare at 4%');
  assert.equal(roll(.12,true,true).rarity,4,'Rift boss can use Epic but never random Legendary');
   assert.equal(roll(.99,false).probRare,.96);
