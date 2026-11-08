@@ -95,20 +95,24 @@ for(const filename of targets){
  if(soloCount<4)throw Error('Missing native Arena private-choice and pad guards: '+soloCount);
  next=next.replaceAll(soloPredicate,
   'G.PKMSVVChampionArena?.active||G.PKMSVVArenaSolo?.active||G.PKMSVVArenaPvp?.active');
- console.log('QA_ARENA_PVP_REALTIME_NATIVE_GUARDS',battleCount,soloCount);
- // The net Co-op module contains a separate competitive shared-level
- // detection. Scope its patch to G.Coop only (not unrelated Royale combat).
+ const reverseSolo='G.PKMSVVArenaSolo?.active||G.PKMSVVChampionArena?.active';
+ const reverseCount=next.split(reverseSolo).length-1;
+ if(reverseCount<1)throw Error('Missing competitive Forget Skill hook: '+reverseCount);
+ next=next.replaceAll(reverseSolo,
+  'G.PKMSVVArenaSolo?.active||G.PKMSVVChampionArena?.active||G.PKMSVVArenaPvp?.active');
+ console.log('QA_ARENA_PVP_REALTIME_NATIVE_GUARDS',battleCount,soloCount,reverseCount);
+ // The compiled Co-op net module has a minified personal-level predicate.
+ // Patch only its single local occurrence, not unrelated Royale loot logic.
  const coopAssignment=next.indexOf('G.Coop=');
  if(coopAssignment<0)throw Error('Missing native Co-op net module');
- const look=next.slice(coopAssignment,coopAssignment+110000);
- const marker='G.Royale?.active||G.EggRush?.active';
- for(const marker2 of ['levelStart','localPicked','seenSeq','waiting','holdStart','pkmsvvCompetitive']){
-  let at=-1,count=0;
-  while((at=look.indexOf(marker2,at+1))>=0&&count++<6){
-   console.log('QA_NET_QUEUE_CONTEXT',marker2,count,at,
-    look.slice(Math.max(0,at-145),at+marker2.length+165).replace(/\\n/g,' '));
-  }
- }
+ const localCoop=next.slice(coopAssignment,coopAssignment+21000);
+ const nativeNet='()=>!(!G.Royale?.active&&!G.EggRush?.active)';
+ const netCount=localCoop.split(nativeNet).length-1;
+ if(netCount!==1)throw Error('Expected one native Co-op personal-level predicate, got '+netCount);
+ const netAt=coopAssignment+localCoop.indexOf(nativeNet);
+ const withPvpNet='()=>!(!G.Royale?.active&&!G.EggRush?.active&&!G.PKMSVVArenaPvp?.active)';
+ next=next.slice(0,netAt)+withPvpNet+next.slice(netAt+nativeNet.length);
+ console.log('QA_ARENA_PVP_NONBLOCKING_NET_QUEUE_PATCHED',netCount);
  // This baseline embeds the original pickup IIFE with minified per-run Orb
  // counter "e". Patch BOTH verified exact native Orb rolls (and only those).
  // 45% -> 22.5% boss, 6% -> 3% normal. The 150s stagger prevents the
