@@ -167,6 +167,9 @@
  function syncLauncherLabels(menu){
   const play=menu.querySelector('[data-go="play"]');
   relabel(play,['Chơi ngay','Play now','Play'],L('Khám phá','Explore'));
+  const recruitment=menu.querySelector('[data-go="gacha"]');
+  if(recruitment)relabel(recruitment,
+   ['Gacha','Chiêu mộ','Recruitment'],L('Chiêu mộ','Recruitment'));
   const pokemon=menu.querySelector('[data-go="dex"]');
   if(!pokemon)return;
   // Undo the accidental extra synthetic line added by the previous QA patch.
