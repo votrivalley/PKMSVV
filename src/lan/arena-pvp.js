@@ -414,8 +414,31 @@ G.PKMSVVArenaPvp=(()=>{
    else G.Flow?.goMenu?.();
   });
  }
+ // LAN PvP must not be paused by one client. Solo/Champion vs AI
+ // deliberately keep the native Pause button and settings unchanged.
+ function guardPvpPause(){
+  const game=G.Game;
+  for(const key of ['pause','togglePause','setPaused']){
+   const previous=game?.[key];
+   if(typeof previous!=='function'||previous._pkmsvvArenaNoPause)continue;
+   const wrapped=function(...args){
+    if(active)return false;
+    return previous.apply(this,args);
+   };
+   wrapped._pkmsvvArenaNoPause=true;game[key]=wrapped;
+  }
+  const ui=G.UI,show=ui?.show;
+  if(typeof show==='function'&&!show._pkmsvvArenaNoPause){
+   const wrapped=function(id,...args){
+    if(active&&id==='scr-pause')return false;
+    return show.call(this,id,...args);
+   };
+   wrapped._pkmsvvArenaNoPause=true;ui.show=wrapped;
+  }
+ }
  function install(){
   if(!G.Coop?.begin||!G.Net?.on)return false;
+  guardPvpPause();
   const originalBegin=G.Coop.begin,originalEnd=G.Coop.end,originalLeave=G.Coop.leave;
   G.Coop.begin=function(cfg,pl,cb){
    if(isDuelMode(cfg?.mode)&&!ownChoices().length){
@@ -529,7 +552,7 @@ G.PKMSVVArenaPvp=(()=>{
   return true;
  }
  install();
- return {begin,cleanup,update,receive,strike,canCast,loadout,render,exit,requestSync,confirmPick,finishPick,SELECT,COUNTDOWN,DUEL,HP,
+ return {begin,cleanup,update,receive,strike,canCast,loadout,render,exit,requestSync,confirmPick,finishPick,guardPvpPause,SELECT,COUNTDOWN,DUEL,HP,
   get active(){return active},get stage(){return stage},get winner(){return winner},
   get health(){return {...hp}},get host(){return host},get matchType(){return matchType},get round(){return round},get scores(){return {...scores}}};
 })();
