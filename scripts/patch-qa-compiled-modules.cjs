@@ -82,21 +82,29 @@ for(const filename of targets){
  for(const [label,src] of mods)next=replaceModule(next,label,src);
  // Diagnose exactly which compiled competitive clauses remain after the
  // safe module swaps; QA Web, PC and Android all run this single patcher.
- for(const phrase of ['G.PKMSVVArenaSolo?.active',
-  'G.PKMSVVChampionArena?.active||G.PKMSVVArenaSolo?.active',
-  'G.Royale?.active||G.EggRush?.active',
-  'G.Coop?.active&&(G.Royale?.active||G.EggRush?.active)']){
-  console.log('QA_COMPETITIVE_NATIVE_SIGNATURE',phrase,next.split(phrase).length-1);
- }
- // Print short code context only; no private user data is stored in bundles.
+ // Extend ONLY the already-verified native competitive level-up and
+ // gamepad guards to real human Arena PvP. This ensures every contender
+ // receives a personal 3-card queue without freezing the whole LAN match.
+ const battlePredicate='G.Coop?.active&&(G.Royale?.active||G.EggRush?.active)';
+ const withPvp='G.Coop?.active&&(G.Royale?.active||G.EggRush?.active||G.PKMSVVArenaPvp?.active)';
+ const battleCount=next.split(battlePredicate).length-1;
+ if(battleCount<6)throw Error('Missing baseline competitive player-level guards: '+battleCount);
+ next=next.replaceAll(battlePredicate,withPvp);
+ const soloPredicate='G.PKMSVVChampionArena?.active||G.PKMSVVArenaSolo?.active';
+ const soloCount=next.split(soloPredicate).length-1;
+ if(soloCount<4)throw Error('Missing native Arena private-choice and pad guards: '+soloCount);
+ next=next.replaceAll(soloPredicate,
+  'G.PKMSVVChampionArena?.active||G.PKMSVVArenaSolo?.active||G.PKMSVVArenaPvp?.active');
+ console.log('QA_ARENA_PVP_REALTIME_NATIVE_GUARDS',battleCount,soloCount);
+ // The net Co-op module contains a separate competitive shared-level
+ // detection. Scope its patch to G.Coop only (not unrelated Royale combat).
  const coopAssignment=next.indexOf('G.Coop=');
- const searchPhrase='G.Royale?.active||G.EggRush?.active';
- let diagAt=-1,diagNumber=0;
- while((diagAt=next.indexOf(searchPhrase,diagAt+1))>=0&&diagNumber++<14){
-  console.log('QA_COMPETITIVE_CONTEXT',diagNumber,'at',diagAt,
-   'relative-to-Coop',diagAt-coopAssignment,
-   next.slice(Math.max(0,diagAt-90),diagAt+searchPhrase.length+82).replace(/\\n/g,' '));
- }
+ if(coopAssignment<0)throw Error('Missing native Co-op net module');
+ const look=next.slice(coopAssignment,coopAssignment+110000);
+ const marker='G.Royale?.active||G.EggRush?.active';
+ let diagAt=-1,index=0;
+ while((diagAt=look.indexOf(marker,diagAt+1))>=0&&index++<15)
+  console.log('QA_NET_LEVEL_CONTEXT',index,look.slice(Math.max(0,diagAt-110),diagAt+marker.length+95).replace(/\\n/g,' '));
  // This baseline embeds the original pickup IIFE with minified per-run Orb
  // counter "e". Patch BOTH verified exact native Orb rolls (and only those).
  // 45% -> 22.5% boss, 6% -> 3% normal. The 150s stagger prevents the
