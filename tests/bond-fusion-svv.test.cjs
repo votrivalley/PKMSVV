@@ -288,13 +288,12 @@ test('Flame Gale direct hit and repeat burn are impactful and AoE is bounded for
 test('Orb native QA rate guards are exactly halved and no longer tied to remaining skill slots',()=>{
  const script=read('scripts/patch-qa-compiled-modules.cjs');
  const original=read('scripts/patch-v14-orb-fifo.cjs');
- assert.match(script,/e<10&&Math\.random\(\)<\.45/);
- assert.match(script,/Math\.random\(\)<\.225/);
- assert.match(script,/e<10&&Math\.random\(\)<\.06/);
- assert.match(script,/Math\.random\(\)<\.03/);
+ assert.match(script,/const orbRoll=/,'QA patch handles the two minified counter variants');
+ assert.match(script,/odds==='45'\?'\.225'/,'boss Orb 45% becomes 22.5%');
+ assert.match(script,/odds==='45'\?'\.225':'\.03'/,'normal Orb 6% becomes 3%');
  assert.match(original,/0\.225/);
  assert.match(original,/0\.03/);
- assert.match(script,/e\*150/);
+ assert.match(script,/\*150&&Math\.random/);
  const orb=read('src/v14/orbs.js');
  assert.match(orb,/const ready=p=>!!p/,'Fusion frees one slot but never makes Orbs uncollectible');
 });
