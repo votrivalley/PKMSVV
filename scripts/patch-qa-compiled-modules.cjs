@@ -82,9 +82,20 @@ for(const filename of targets){
  for(const [label,src] of mods)next=replaceModule(next,label,src);
  // Diagnose exactly which compiled competitive clauses remain after the
  // safe module swaps; QA Web, PC and Android all run this single patcher.
- for(const phrase of ['G.PKMSVVArenaSolo?.active','G.Royale?.active||G.EggRush?.active',
+ for(const phrase of ['G.PKMSVVArenaSolo?.active',
+  'G.PKMSVVChampionArena?.active||G.PKMSVVArenaSolo?.active',
+  'G.Royale?.active||G.EggRush?.active',
   'G.Coop?.active&&(G.Royale?.active||G.EggRush?.active)']){
   console.log('QA_COMPETITIVE_NATIVE_SIGNATURE',phrase,next.split(phrase).length-1);
+ }
+ // Print short code context only; no private user data is stored in bundles.
+ const coopAssignment=next.indexOf('G.Coop=');
+ const searchPhrase='G.Royale?.active||G.EggRush?.active';
+ let diagAt=-1,diagNumber=0;
+ while((diagAt=next.indexOf(searchPhrase,diagAt+1))>=0&&diagNumber++<14){
+  console.log('QA_COMPETITIVE_CONTEXT',diagNumber,'at',diagAt,
+   'relative-to-Coop',diagAt-coopAssignment,
+   next.slice(Math.max(0,diagAt-90),diagAt+searchPhrase.length+82).replace(/\\n/g,' '));
  }
  // This baseline embeds the original pickup IIFE with minified per-run Orb
  // counter "e". Patch BOTH verified exact native Orb rolls (and only those).
