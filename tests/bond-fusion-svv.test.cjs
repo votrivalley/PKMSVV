@@ -5,7 +5,7 @@ const root=path.join(__dirname,'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const IDs=['ember-quick','water-tackle','grass-spin','spark-quick','mind-tackle',
  'fire-gust','bubble-ice','leaf-rock','shadow-mind','thunder-claw'];
-function setup(){
+function setup(options={}){
  const blasts=[],rings=[],toasts=[],enemies=[],saved={coins:250,owned:{25:{at:1}}};
  class Enemy{
   constructor(x=70,y=8,hp=1200){
@@ -43,7 +43,7 @@ function setup(){
   Game:{state:'playing',st:{time:90},player:null,togglePause(){this.state='playing'}},
   Combat:{tick(dt,pl){this.ticks=(this.ticks||0)+1}},
   UI:{toast:s=>toasts.push(s),isOpen:()=>false,hide(){}},
-  LevelUp:{offer(){return []}},
+  LevelUp:{offer(){return Array.from({length:3},(_,i)=>({type:'up',key:'up:'+i,apply:()=>true}));}},
   Icons:{html:key=>'<svg>'+key+'</svg>',draw(){return 'native'}},
   Coop:{active:false},Royale:{active:false},EggRush:{active:false},
   PKMSVVArenaSolo:{active:false},PKMSVVChampionArena:{active:false}
@@ -54,7 +54,9 @@ function setup(){
   constructor(){this.complete=true;this.naturalWidth=256;}
   set src(value){this._src=value;}
  },console,setInterval(){}};
- vm.createContext(sandbox);
+ if(Number.isFinite(options.random))sandbox.Math=Object.assign(Object.create(Math),
+  {random:()=>options.random});
+  vm.createContext(sandbox);
  vm.runInContext(read('src/pkmsvv-bond-fusion.js'),sandbox);
  vm.runInContext(read('src/pkmsvv-fusion-evolved.js'),sandbox);
  const m=(id,lvl=3)=>({id,name:id,type:'normal',lvl,
@@ -236,4 +238,63 @@ test('controller/pad and keyboard can enter and exit all Fusion choices',()=>{
  assert.match(ui,/e\.key==='Escape'/);
  assert.match(ui,/button\.disabled=!ready/);
  assert.match(ui,/\.focus\?\.\(\)/);
+});
+
+test('MAX+MAX levelup has fixed 80→70→60→50→40→30→30% chance once per level',()=>{
+ const h=setup({random:.99}),pl=h.pl,api=h.api;
+ h.stock(['flamethrower',3],['gust',3]);
+ assert.deepEqual(Array.from(api.FUSION_OFFER_RATES),[.8,.7,.6,.5,.4,.3]);
+ const rates=[.8,.7,.6,.5,.4,.3,.3];
+ for(let level=1;level<=7;level++){
+  pl.level=level;
+  assert.equal(api.chance(pl),rates[level-1]);
+  const cards=h.G.LevelUp.offer(pl,3);
+  assert.equal(cards.some(c=>c.type==='fusion'),false,'a failed roll must not yield Fusion card');
+  const attempts=pl._pkmsvvFusionOfferAttempts;
+  h.G.LevelUp.offer(pl,3);
+  assert.equal(pl._pkmsvvFusionOfferAttempts,attempts,
+   'rerolling the same level must not diminish or reroll probability');
+ }
+ assert.equal(api.chance(pl),.3,'30% floor never falls lower');
+});
+test('Fusion levelup cards can be selected normally; only one fusion per run',()=>{
+ const h=setup({random:0}),p=h.pl;
+ h.stock(['flamethrower',3],['gust',3]);
+ p.level=13;
+ const cards=h.G.LevelUp.offer(p,3);
+ assert.equal(cards.length,3);
+ assert.equal(cards[2].type,'fusion');
+ assert.match(cards[2].title,/Lốc Lửa/);
+ assert.ok(cards[2].apply(p));
+ assert.equal(p._pkmsvvFusionUsed,1);
+ assert.equal(p.moves.length,1);
+ assert.equal(p.moves[0].pkmsvvFusionId,'fire-gust');
+ p.level++;
+ assert.equal(h.G.LevelUp.offer(p,3).some(c=>c.type==='fusion'),false);
+});
+test('Flame Gale direct hit and repeat burn are impactful and AoE is bounded for busy runs',()=>{
+ const h=setup({random:0}),p=h.pl,e=new h.Enemy(70,0,8000);
+ h.stock(['flamethrower',3],['gust',3]);
+ assert.ok(h.fx.CONFIG['fire-gust'].power>=1);
+ assert.ok(h.fx.CONFIG['fire-gust'].cd<=3.5);
+ h.enemies.push(e);
+ p.cast(h.fx.evolve(p,'fire-gust'));
+ const immediately=8000-e.hp;
+ assert.ok(immediately>=20,'tornado must damage immediately, not merely show FX');
+ for(let i=0;i<12;i++)h.G.Combat.tick(.34,p);
+ assert.ok(8000-e.hp>immediately*2,'repeated burning must be strong enough to justify consuming two MAX skills');
+ assert.ok(h.fx.activeZones<=14);
+});
+test('Orb native QA rate guards are exactly halved and no longer tied to remaining skill slots',()=>{
+ const script=read('scripts/patch-qa-compiled-modules.cjs');
+ const original=read('scripts/patch-v14-orb-fifo.cjs');
+ assert.match(script,/e<10&&Math\.random\(\)<\.45/);
+ assert.match(script,/Math\.random\(\)<\.225/);
+ assert.match(script,/e<10&&Math\.random\(\)<\.06/);
+ assert.match(script,/Math\.random\(\)<\.03/);
+ assert.match(original,/0\.225/);
+ assert.match(original,/0\.03/);
+ assert.match(script,/e\*150/);
+ const orb=read('src/v14/orbs.js');
+ assert.match(orb,/const ready=p=>!!p/,'Fusion frees one slot but never makes Orbs uncollectible');
 });
