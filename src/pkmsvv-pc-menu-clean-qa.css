@@ -231,18 +231,22 @@
  outline:3px solid #ffe090!important;outline-offset:2px!important;
 }
 
-/* Original PC / Co-op / Arena pixel-art WebP strip integrated in game.
-   3 cells of 36px, rendered at 34px (native sidebar icon grid). */
+/* Original PC / Co-op / Arena pixel art, enlarged to match native icons. */
 #scr-menu .menu-item>.mi-ico.pkmsvv-new-menu-icon,
 #scr-menu .menu-right .menu-list .mi-ico.pkmsvv-new-menu-icon{
- display:block!important;width:34px!important;height:34px!important;
+ display:block!important;width:42px!important;height:42px!important;
  padding:0!important;margin:0!important;border:0!important;
  background-image:url('../images/pkmsvv-menu-icons.webp')!important;
  background-repeat:no-repeat!important;
- background-size:102px 34px!important;
+ background-size:126px 42px!important;
  image-rendering:pixelated!important;
  font-size:0!important;line-height:0!important;
 }
 #scr-menu .pkmsvv-menu-icon-pc{background-position:0 0!important}
-#scr-menu .pkmsvv-menu-icon-coop{background-position:-34px 0!important}
-#scr-menu .pkmsvv-menu-icon-arena{background-position:-68px 0!important}
+#scr-menu .pkmsvv-menu-icon-coop{background-position:-42px 0!important}
+#scr-menu .pkmsvv-menu-icon-arena{background-position:-84px 0!important}
+
+/* The original champion button already carries a trophy emoji.
+   Hide just that decorative glyph, leaving its button and click handler intact. */
+#scr-menu #pkmsvv-champion-entry .pkmsvv-champion-menu-icon{display:none!important}
+#scr-menu .pkmsvv-new-menu-icon{flex:0 0 42px!important;min-width:42px!important;min-height:42px!important}
