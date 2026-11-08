@@ -3,7 +3,7 @@
  * Only the host spawns trial bosses. */
 G.PKMSVV14=(()=>{
  const checkpoints=[
-  {at:900,label:['Thử thách 15 phút: Huyền Thoại!','15-minute Legendary Trial!'],hp:44000,dmg:64,bossRarity:5}
+  {at:900,label:['Thử thách Boss 15 phút!','15-minute Boss Challenge!'],hp:44000,dmg:64,bossRarity:4,legendChance:.30}
  ];
  let done=new Set();
  const L=pair=>G.I18n&&G.I18n.lang==='vi'?pair[0]:pair[1];
@@ -13,7 +13,15 @@ G.PKMSVV14=(()=>{
   const players=Array.isArray(who)?who:[who];
   const anchor=players.find(p=>p&&!p.dead)||G.Game.player;
   if(!anchor)return false;
-  const pool=G.DEX.filter(p=>G.SPRITE_META[p.dex]&&p.rarity>=c.bossRarity&&(c.bossRarity<5||p.leg));
+  const candidates=G.DEX.filter(p=>G.SPRITE_META[p.dex]);
+  const legendary=candidates.filter(p=>p.leg||Number(p.rarity)===5);
+  const epic=candidates.filter(p=>Number(p.rarity)===4&&!p.leg);
+  // Exact 30/70 weighted rarity roll, independent of the number of
+  // sprite-backed entries in each tier. No accidental 80% legend from
+  // pool sizes; fall back only if a tier is entirely unavailable.
+  const wantLegend=Math.random()<(c.legendChance??1);
+  const pool=wantLegend?(legendary.length?legendary:epic):
+   (epic.length?epic:legendary);
   if(!pool.length)return false;
   const mon=G.U.pick(pool);
   const angle=Math.random()*Math.PI*2,dist=400,center=G.Game.player;
