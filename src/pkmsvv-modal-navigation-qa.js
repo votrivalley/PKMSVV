@@ -113,8 +113,8 @@
   if(e.altKey||e.ctrlKey||e.metaKey)return;
   const root=active();if(!root)return;
   const key=String(e.key||'').toLowerCase(),code=e.code||'';
-  // During Royale evolution arrows select; WASD keeps moving the fighter.
-  if(root.classList?.contains('pkmsvv-evo')&&G.Royale?.active&&
+  // Live evolution: arrows/D-pad select; WASD/left stick still move the fighter.
+  if(root.classList?.contains('pkmsvv-evo-live')&&
     ['w','a','s','d'].includes(key))return;
   const critical=key==='escape'||key==='backspace'||key==='1'||key==='2'||
     (root.classList?.contains('pkmsvv-evo')&&(key==='enter'||key===' '));
@@ -128,6 +128,13 @@
     if(button&&visible(button)){e.preventDefault();e.stopImmediatePropagation?.();button.click();}
     return;
    }
+  }
+  if(root.classList?.contains('pkmsvv-evo-live')&&
+     ['1','2','3'].includes(key)&&
+     root.querySelector('.pkmsvv-evo-live-cards')?.dataset?.stage==='replacement'){
+    const option=root.querySelector('[data-evo-choice="'+key+'"]');
+    if(option&&visible(option)){e.preventDefault();e.stopImmediatePropagation?.();option.click();}
+    return;
   }
   if(key==='tab'){
    const opts=controls(root);if(!opts.length)return;
@@ -174,7 +181,7 @@
   const right=pressed(15)||Number(pad.axes?.[0])>.55;
   const up=pressed(12)||Number(pad.axes?.[1])<-.55;
   const down=pressed(13)||Number(pad.axes?.[1])>.55;
-  const evo=active()?.classList?.contains('pkmsvv-evo')&&G.Royale?.active;
+  const evo=active()?.classList?.contains('pkmsvv-evo-live');
   // D-pad navigates the live evolution overlay; left stick stays movement.
   const dir=evo?(pressed(14)?'left':pressed(15)?'right':pressed(12)?'up':pressed(13)?'down':null):
    left?'left':right?'right':up?'up':down?'down':null;
@@ -195,7 +202,7 @@
   const wrapped=function(...args){
    const root=active();
    if(root){
-    if(root.classList?.contains('pkmsvv-evo')&&G.Royale?.active){
+    if(root.classList?.contains('pkmsvv-evo-live')){
      const result=original.apply(this,args);releaseGate=true;pollModal();return result;
     }
     releaseGate=true;pollModal();return;
