@@ -48,7 +48,7 @@ test('Speed control uses real Game.debugSpeed 1×/1.5× and resets for a new run
  assert.equal(f.speeds.at(-1),1,'next run must not inherit accelerated simulation');
  assert.equal(f.started,1);
 });
-test('Auto active skill selects nearest hostile and aims without changing player's controller axis',()=>{
+test('Auto active skill aims toward nearest hostile without changing controller axis',()=>{
  const f=fixture();const original={x:-1,y:0};f.pl.lanBotAxis=original;
  assert.equal(f.api.toggleDash(),true);
  assert.equal(f.api.castTowardsNearest(),true);
