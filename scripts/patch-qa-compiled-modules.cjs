@@ -90,7 +90,7 @@ for(const filename of targets){
    !next.slice(Math.max(0,offset-130),offset).includes('G.Orbs.ready(G.Game.player)'))
    return source;
   patchedOrbRolls++;
-  const reduced=odds==='45'?'.225':'.03';
+  const reduced='.02'; // unified 2% Orb chance from any eligible drop
   return counter+'<10&&Number(G.Game?.st?.time??0)>='+counter+
    '*150&&Math.random()<'+reduced;
  });
