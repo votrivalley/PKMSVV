@@ -14,29 +14,33 @@
  let fast=false,autoDash=false,held=false,heldTimer=null,choiceToken=null,choicePending=false;
  let lastCast=0,lastUI=0,lastChoiceShow=false;
  function toast(vi,en){G.UI?.toast?.(L(vi,en),2000);}
- // Never speed up a real multiplayer simulation or any Arena match.
- // AI matches are eligible only when the room is host-owned and every other
- // member is a bot. Unknown peer metadata fails closed, rather than desyncing.
+ // Speed is a solo/AI training aid, never a competitive advantage.
+ // Explore must be single-player. Survival/Rescue Berry can accelerate only
+ // for the local AI-room host when EVERY other participant is a verified bot.
+ // Unknown participant metadata fails closed to avoid multiplayer desync.
  function arenaMatch(){
   return !!(G.PKMSVVArenaSolo?.active||G.PKMSVVChampionArena?.active||
    G.PKMSVVArenaPvp?.active||G.ArenaPvp?.active);
  }
  function isBot(member){return !!(member?.bot||member?.lanBot||member?.isAI||member?.ai);}
  function canSpeed(){
-  if(!playing()||arenaMatch())return false;
+  if(!playing()||arenaMatch()||G.Royale?.active||G.EggRush?.active)return false;
   const room=G.Social?.room,mode=String(room?.mode||'').toLowerCase();
-  if(['coop','co-op','arena','champion','pvp'].includes(mode))return false;
-  if(G.Coop?.mode==='coop'||G.Coop?.mode==='arena')return false;
-  const members=room?.members;
-  const humans=Array.isArray(members)?members.filter(m=>m&&!isBot(m)):null;
-  if(humans?.length>1)return false;
-  if(G.Coop?.active){
-   if(!room?.isHost||!['royale','eggrush'].includes(mode)||
-     !humans||humans.length!==1)return false;
-   const uid=G.Social?.uid||G.Game?.player?.uid;
-   if(uid&&humans[0]?.uid!==uid)return false;
-   if(!G.Royale?.active&&!G.EggRush?.active)return false;
+  // Competitive rooms remain blocked even if their match-mode flag has not
+  // initialized yet, including the AI-only Battle Royale / Egg Rush variants.
+  if(['royale','eggrush','arena','champion','pvp','solo'].includes(mode))return false;
+  if(!G.Coop?.active){
+   // Plain campaign, unselected home/menu and legacy modes are NOT Explore.
+   return G.PKMSVVQuickRegion?.active===true;
   }
+  if(!['coop','berry','berryeasy'].includes(mode)||!room?.isHost)return false;
+  const members=room.members;
+  if(!Array.isArray(members)||members.length<2||
+    members.some(m=>!m||!m.uid))return false;
+  const humans=members.filter(m=>!isBot(m));
+  if(humans.length!==1||members.length-humans.length<1)return false;
+  const uid=G.Social?.uid||G.Game?.player?.uid;
+  if(uid&&humans[0].uid!==uid)return false;
   return true;
  }
  function setSpeed(on){
