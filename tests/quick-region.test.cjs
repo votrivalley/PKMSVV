@@ -691,10 +691,12 @@ test('15-minute legend only, 30-minute Judgment only, no 10/20-minute or 5-secon
   SPRITE_META:{150:{}},Game:{player:actor},U:{pick:a=>a[0]},
   Enemy,Sprites:{preload(){}},Spawner:{say(){}},Audio:{sfx(){}},I18n:{lang:'vi'}};
  vm.runInNewContext(m,{G,Math,Set,Array});
- for(const t of [600,899,1199,1200])G.PKMSVV14.update(t,[actor]);
- assert.equal(spawns.length,0,'no off-schedule legendary spawns');
+ for(const t of [600,899])G.PKMSVV14.update(t,[actor]);
+ assert.equal(spawns.length,0,'no legendary before 15:00');
  G.PKMSVV14.update(900,[actor]);
  assert.equal(spawns.length,1);
+ for(const t of [1199,1200])G.PKMSVV14.update(t,[actor]);
+ assert.equal(spawns.length,1,'no extra 20-minute trial');
  assert.equal(spawns[0].dex,150);
  assert.equal(spawns[0].hp,44000);
  G.PKMSVV14.update(1800,[actor]);
