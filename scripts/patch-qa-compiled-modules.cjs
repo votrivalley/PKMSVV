@@ -85,8 +85,9 @@ for(const filename of targets){
   ['e<10&&Math.random()<.45','e<10&&Number(G.Game?.st?.time??0)>=e*150&&Math.random()<.225'],
   ['e<10&&Math.random()<.06','e<10&&Number(G.Game?.st?.time??0)>=e*150&&Math.random()<.03']
  ]){
-  if(next.split(old).length!==2)throw Error('QA Orb roll anchor drift: '+old);
-  next=next.replace(old,newValue);
+  const found=next.split(old).length-1;
+  if(found<1||found>3)throw Error('QA Orb roll anchor drift: '+old+' (found '+found+')');
+  next=next.replaceAll(old,newValue);
  }
  new vm.Script(next,{filename:'patched-qa-app.min.js'});
  fs.writeFileSync(filename,next,'utf8');
