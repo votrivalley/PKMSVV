@@ -757,7 +757,7 @@ test('15-minute normal-mode boss is weighted 30% Legendary, 70% Epic independent
 });
 test('PvE outside has a 4% Rare chance and Rifts offer Rare/Epic, never random Legendary',()=>{
  const src=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-encounter-rarity-qa.js'),'utf8');
- function roll(prob,rift){
+ function roll(prob,rift,boss=false){
   const fixed=Object.create(Math);fixed.random=()=>prob;
   const G={Rift:{inArena:rift},Game:{state:'playing'},Coop:{active:false,isHost:true},
    DEX:[{dex:1,rarity:1},{dex:2,rarity:2},{dex:3,rarity:3},{dex:4,rarity:4},{dex:5,rarity:5,leg:true}],
@@ -767,7 +767,7 @@ test('PvE outside has a 4% Rare chance and Rifts offer Rare/Epic, never random L
    Sprites:{Animator:class{}}
   };
   vm.runInNewContext(src,{G,Math:fixed,WeakSet,Map,Object});
-  const candidate={dex:5,def:{dex:5,hp:100},x:0,y:0,maxHp:100,hp:100,dmg:10};
+  const candidate={dex:5,def:{dex:5,hp:100},x:0,y:0,maxHp:100,hp:100,dmg:10,boss};
   G.EnemyMgr.add(candidate);
   return {dex:candidate.dex,rarity:G.DEX_BY[candidate.dex].rarity,probRare:G.PKMSVVEncounterRarity.COMMON_RATE,
    probEpic:G.PKMSVVEncounterRarity.RIFT_EPIC_RATE};
@@ -776,6 +776,9 @@ test('PvE outside has a 4% Rare chance and Rifts offer Rare/Epic, never random L
  assert.equal(roll(.98,false).rarity,3,'rare outside, never legendary');
  assert.equal(roll(.12,true).rarity,4,'rift epic');
  assert.equal(roll(.50,true).rarity,3,'rift rare');
- assert.equal(roll(.99,false).probRare,.96);
+ assert.equal(roll(.01,false,true).rarity,2,'outside miniboss avoids weak starter species and Legend');
+ assert.equal(roll(.99,false,true).rarity,3,'outside miniboss can still be Rare at 4%');
+ assert.equal(roll(.12,true,true).rarity,4,'Rift boss can use Epic but never random Legendary');
+  assert.equal(roll(.99,false).probRare,.96);
  assert.equal(roll(.99,true).probEpic,.25);
 });
