@@ -76,6 +76,18 @@ test('Prism is a regular rotating shop item with a stable daily chance',()=>{
  assert.match(css,/border:3px solid #0b1422/, 'black rim belongs to the item artwork');
  assert.match(css,/\.pkmbx-prism-glass:|\.pkmbx-prism-glass\{/, 'magnifier artwork has its own responsive sizing');
 });
+test('Reforge Prism uses ordinary compact item card and a Rank Use action',()=>{
+ const code=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-stage3.js'),'utf8');
+ const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-stage3.css'),'utf8');
+ assert.match(code,/Đổi nhánh Rank, giữ nguyên cấp\./);
+ assert.match(code,/Change Rank branch; keep Rank level\./);
+ assert.match(code,/pkmbx-prism-use/);
+ assert.match(code,/openBox\('rank'\)/,'Use goes straight to Rank without consuming the Prism');
+ assert.doesNotMatch(code,/Đã có trong Túi đồ\. Dùng tại PokéBox/,'remove duplicated long tutorial');
+ assert.doesNotMatch(code,/Mua Lăng Kính ·/,'buy button uses standard native shop price');
+ assert.match(css,/background:linear-gradient\(155deg,#1e365f,#162b53\)/,'same dark palette as normal Kecleon items');
+ assert.match(css,/flex-wrap:nowrap/,'the Prism must not form a standalone detail banner');
+});
 test('a legacy save may buy one Prism before PokéBox migration without altering owned, nature or progress',()=>{
  setup();
  const legacy={owned:{6:{at:1}},shiny:{6:{at:2}},partner:6,partnerShiny:true,
