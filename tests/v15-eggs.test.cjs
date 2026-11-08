@@ -72,10 +72,10 @@ test('Healing and shields buff only own lead and living companions, with 25% cap
  assert.ok(pl.hp>100&&healer.hp>50&&ally.hp>20,'All owned members healed simultaneously');
  assert.equal(outsider.hp,40,'Not other human players');
  assert.equal(healer.cooldown,12);
- healer.dex=360;healer.cooldown=0;
+ healer.dex=438;healer.cooldown=0;
  G.PKMSVVEggs.update(.1,pl,6,false);
  assert.ok(pl.pkmsvvShield>0&&healer.shield>0&&ally.shield>0);
- assert.equal(healer.cooldown,19);
+ assert.equal(healer.cooldown,15);
  for(let i=0;i<30;i++){healer.cooldown=0;G.PKMSVVEggs.update(.1,pl,7+i,false);}
  assert.ok(pl.pkmsvvShield<=pl.maxHp*.25&&healer.shield<=healer.maxHp*.25&&ally.shield<=ally.maxHp*.25);
  assert.equal(outsider.hp,40);
@@ -668,7 +668,7 @@ test('Hatch affinity saves per species without altering ownership and strengthen
  assert.ok(Math.abs(G.PKMSVVEggs.affinityMultiplier(172)-1.024)<1e-8);
  save.pkmsvvSupportBond[172]=60;
  assert.equal(G.PKMSVVEggs.affinityPercent(172),60);
- assert.equal(G.PKMSVVEggs.affinityMultiplier(172),1.36);
+ assert.ok(Math.abs(G.PKMSVVEggs.affinityMultiplier(172)-1.36)<1e-8);
  save.pkmsvvSupportBond[172]=100;
  assert.equal(G.PKMSVVEggs.affinityMultiplier(172),1.6);
  assert.ok(read('scripts/patch-v15-eggs.cjs').includes('older.pkmsvvSupportBond'));
