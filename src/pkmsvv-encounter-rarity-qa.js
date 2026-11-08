@@ -22,13 +22,16 @@ G.PKMSVVEncounterRarity=(()=>{
   if(!e||e.remote||e.dead||e.pkmsvvEncounterTiered||e.pkmsvvExploreBoss||
    e.pkmsvvMilestone||e.judge||e.arceus||e.pkmsvvBossGuard||
    e.pkmsvvGuardianOf!==undefined||e.pkmsvvFriendly||e.friendly||
-   e.isPlayer||e.isSupport||e.boss||e.isBoss)return false;
+   e.isPlayer||e.isSupport)return false; // Ordinary untimed minibosses also follow tier caps.
   if(G.Game?.state!=='playing'||G.PKMSVVChampionArena?.active||
    (G.Coop?.active&&!G.Coop.isHost))return false;
   return Number.isInteger(Number(e.dex??e.def?.dex));
  }
- function choose(index,rift){
+ function choose(index,rift,boss=false){
+  // Untimed minibosses choose at least uncommon tier 2 (and Rare 4%)
+  // rather than spawning a weak Rattata or leaking random Legendaries.
   const tier=rift?(Math.random()<RIFT_EPIC_RATE?4:3):
+   boss?(Math.random()<.04?3:2):
    (Math.random()<COMMON_RATE?(Math.random()<.5?1:2):3);
   let options=pool(index,tier,rift);
   if(!options.length)options=pool(index,rift?(tier===4?3:4):(tier===1?2:1),rift);
@@ -38,7 +41,7 @@ G.PKMSVVEncounterRarity=(()=>{
  function grade(e){
   if(!eligibleEnemy(e)||done.has(e))return false;
   done.add(e);e.pkmsvvEncounterTiered=true;
-  const isRift=!!G.Rift?.inArena,index=region(),dex=choose(index,isRift);
+  const isRift=!!G.Rift?.inArena,index=region(),dex=choose(index,isRift,!!(e.boss||e.isBoss));
   if(!dex||dex===Number(e.dex))return false;
   const mon=G.DEX_BY?.[dex];if(!mon)return false;
   const rarity=Number(mon.rarity)||1;
