@@ -242,6 +242,7 @@ test('competitive evolution is presented as live corner HUD, without pausing gam
  function node(tag){
   return {tagName:tag.toUpperCase(),children:[],attrs:{},className:'',textContent:'',
    dataset:{},append(...items){this.children.push(...items);items.forEach(x=>{x.parent=this})},
+   appendChild(el){this.append(el);return el},
    replaceChildren(){this.children=[]},
    setAttribute(k,v){this.attrs[k]=v},
    querySelector(selector){return selector==='button'?this.children.find(x=>x.tagName==='BUTTON'):null},
