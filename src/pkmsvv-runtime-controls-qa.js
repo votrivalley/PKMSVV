@@ -172,6 +172,104 @@
    'Auto active skill OFF.');
   refreshLabels();return true;
  }
+ // A reversible Co-op ranking panel, derived from LIVE party states.
+ // It never modifies kills, rank rewards or a player's save.
+ let rankingOpen=false,wasCoop=false,prevPadSpeed=false,prevPadRank=false;
+ function canRanking(){
+  if(!playing()||!G.Coop?.active||arenaMatch()||G.Royale?.active||G.EggRush?.active)return false;
+  const mode=String(G.Social?.room?.mode||'coop').toLowerCase();
+  return ['coop','berry','berryeasy','survival'].includes(mode);
+ }
+ function rankingRows(){
+  const members=G.Social?.room?.members||[];
+  const raw=G.Coop?.players?.()||[];
+  const list=Array.isArray(raw)?raw:[...raw||[]];
+  const seen=new Set();
+  return list.filter(p=>p&&!p.isEnemy&&!p.enemy).map((p,i)=>{
+   const uid=String(p.uid||p.id||'player-'+i);
+   if(seen.has(uid))return null;seen.add(uid);
+   const member=members.find(m=>String(m?.uid)===uid);
+   return {uid,name:String(member?.name||p.name||p.mon?.name||'Trainer').slice(0,25),
+    kills:Math.max(0,Math.floor(Number(p.kills)||0)),
+    bosses:Math.max(0,Math.floor(Number(p.bosses)||0)),
+    level:Math.max(1,Math.floor(Number(p.level)||1))};
+  }).filter(Boolean).sort((a,b)=>b.kills-a.kills||b.bosses-a.bosses||b.level-a.level||a.uid.localeCompare(b.uid));
+ }
+ function toggleRanking(){
+  if(!canRanking())return false;
+  rankingOpen=!rankingOpen;ensureRanking();return true;
+ }
+ function ensureRanking(){
+  const eligible=canRanking();
+  if(!eligible){rankingOpen=false;wasCoop=false;}
+  let button=byId('pkmsvv-coop-ranking-toggle');
+  if(!button&&eligible){
+   button=document.createElement('button');button.id='pkmsvv-coop-ranking-toggle';
+   button.type='button';button.className='pkmsvv-coop-ranking-toggle';
+   button.addEventListener('click',e=>{e?.preventDefault?.();e?.stopPropagation?.();toggleRanking();});
+   document.body.append(button);
+  }
+  if(button){
+   button.hidden=!eligible;
+   button.textContent=rankingOpen?L('🏆 Ẩn TOP','🏆 Hide TOP'):L('🏆 TOP','🏆 TOP');
+   button.setAttribute?.('aria-expanded',String(rankingOpen&&eligible));
+   button.setAttribute?.('aria-label',L('Bật hoặc tắt bảng xếp hạng Co-op','Toggle Co-op ranking'));
+  }
+  let panel=byId('pkmsvv-coop-ranking-list');
+  if(!panel&&eligible&&rankingOpen){
+   panel=document.createElement('section');panel.id='pkmsvv-coop-ranking-list';
+   panel.className='pkmsvv-coop-ranking-list';panel.setAttribute('role','region');
+   panel.setAttribute('aria-label',L('Bảng xếp hạng Co-op','Co-op ranking'));
+   document.body.append(panel);
+  }
+  if(panel){
+   panel.hidden=!eligible||!rankingOpen;
+   if(!panel.hidden){
+    const rows=rankingRows();
+    panel.replaceChildren();
+    const title=document.createElement('strong');
+    title.textContent=L('🏆 Bảng hạng Co-op','🏆 Co-op Top');
+    panel.append(title);
+    for(let i=0;i<rows.length;i++){
+     const p=rows[i],line=document.createElement('div');
+     line.className='pkmsvv-coop-rank-row';
+     line.textContent=(i+1)+'. '+p.name+' · '+p.kills+
+      L(' hạ · Lv.',' KOs · Lv.')+p.level;
+     panel.append(line);
+    }
+    if(!rows.length){
+     const pending=document.createElement('div');
+     pending.textContent=L('Đang đợi dữ liệu đồng đội…','Waiting for teammate data…');
+     panel.append(pending);
+    }
+   }
+  }
+  wasCoop=eligible;
+ }
+ function actionKey(id,fallback){
+  const saved=G.PKMSVVPadOrb?.keyboardBindings?.()?.[id]||
+   G.Settings?.get?.('keys')?.[id]||fallback;
+  return String(saved).toLowerCase();
+ }
+ function isEditing(){
+  const target=document.activeElement;
+  return !!target&&(target.isContentEditable||
+   target.matches?.('input,textarea,select,[contenteditable="true"]'));
+ }
+ function pollPadShortcuts(){
+  const pads=typeof navigator!=='undefined'&&navigator.getGamepads?.();
+  const pad=pads&&[...pads].find(p=>p?.connected);
+  if(!pad){prevPadSpeed=false;prevPadRank=false;return;}
+  const map=G.PKMSVVPadOrb?.bindings?.()||{};
+  const pressed=index=>Number.isInteger(index)&&!!pad.buttons?.[index]&&
+   (pad.buttons[index].pressed||pad.buttons[index].value>.5);
+  const speed=pressed(Number.isInteger(map.speed)?map.speed:5);
+  const board=pressed(Number.isInteger(map.leaderboard)?map.leaderboard:11);
+  const editing=!!G.SettingsUI?.isOpen||isEditing();
+  if(!editing&&speed&&!prevPadSpeed&&canSpeed())setSpeed(!fast);
+  if(!editing&&board&&!prevPadRank&&canRanking())toggleRanking();
+  prevPadSpeed=speed;prevPadRank=board;
+ }
  function dashKey(){
   const raw=G.PKMSVVPadOrb?.keyboardBindings?.()?.dash||
    G.Settings?.get?.('keys')?.dash||'keyf';
@@ -182,8 +280,15 @@
   if(heldTimer!==null){clearTimeout(heldTimer);heldTimer=null;}
  }
  document.addEventListener('keydown',e=>{
-  if(e.repeat||e.altKey||e.ctrlKey||e.metaKey||!playing()||
-     String(e.code||'').toLowerCase()!==dashKey())return;
+  if(e.repeat||e.altKey||e.ctrlKey||e.metaKey||!playing()||isEditing())return;
+  const code=String(e.code||'').toLowerCase();
+  if(code===actionKey('speed','keyg')&&canSpeed()){
+   e.preventDefault?.();setSpeed(!fast);return;
+  }
+  if(code===actionKey('leaderboard','keyl')&&canRanking()){
+   e.preventDefault?.();toggleRanking();return;
+  }
+  if(code!==dashKey())return;
   cancelHold();held=true;
   heldTimer=setTimeout(()=>{heldTimer=null;if(held){held=false;toggleDash();}},2000);
  },true);
@@ -216,7 +321,7 @@
  const oldStart=G.Game?.startRun;
  if(typeof oldStart==='function'&&!oldStart._pkmsvvRuntimeControls){
   function wrapped(...args){
-   fast=false;autoDash=false;cancelHold();choiceToken=null;choicePending=false;lastSpeedState=null;
+   fast=false;autoDash=false;rankingOpen=false;cancelHold();choiceToken=null;choicePending=false;lastSpeedState=null;
    G.Game?.debugSpeed?.(1);
    return oldStart.apply(this,args);
   }
@@ -224,7 +329,7 @@
  }
  function frame(ts){
   if(ts-lastUI>=250){
-   lastUI=ts;installAutoPick();ensureArenaShinyGuard();ensureSpeed();ensureSettings();ensureLevelup();
+   lastUI=ts;installAutoPick();ensureArenaShinyGuard();ensureSpeed();ensureRanking();ensureSettings();ensureLevelup();
     const state=G.Game?.state;
     if(fast&&state==='playing'&&lastSpeedState!=='playing'&&canSpeed())
      G.Game?.debugSpeed?.(1.5); // restore after a level/choice popup
@@ -235,9 +340,10 @@
     G.PKMSVVEvo?.tryLiveCompetitive?.(G.Game?.player,G.Game?.st?.time||0);
    }
   }
+  pollPadShortcuts();
   if(autoDash&&ts-lastCast>=180){lastCast=ts;castTowardsNearest();}
   if(typeof requestAnimationFrame==='function')requestAnimationFrame(frame);
  }
  if(typeof requestAnimationFrame==='function')requestAnimationFrame(frame);
- G.PKMSVVRuntimeControlsQA={full,maxLevel,enabled,setEnabled,canSpeed,arenaMatch,setSpeed,toggleDash,target,castTowardsNearest,ensureLevelup,installAutoPick,ensureArenaShinyGuard,ensureSettings,ensureSpeed};
+ G.PKMSVVRuntimeControlsQA={full,maxLevel,enabled,setEnabled,canSpeed,arenaMatch,setSpeed,toggleDash,target,castTowardsNearest,ensureLevelup,installAutoPick,ensureArenaShinyGuard,canRanking,rankingRows,toggleRanking,ensureRanking,pollPadShortcuts,actionKey,ensureSettings,ensureSpeed};
 })();
