@@ -84,11 +84,12 @@ G.Royale=(()=>{
   const pl=G.Game?.player,level=Number(pl?.level)||0;
   if(pl&&!pl.dead&&level>0&&lastEvolutionLevel!==level&&!pendingEvolution&&
      !G.UI?.isOpen?.('scr-levelup')&&!G.UI?.isOpen?.('scr-item')&&
-     !document.querySelector('.pkmsvv-evo')&&G.PKMSVVEvo?.tryOpen){
-   lastEvolutionLevel=level;pendingEvolution=true;
-   document.body?.classList?.add('pkmsvv-competitive-evo');
-   const done=()=>{pendingEvolution=false;document.body?.classList?.remove('pkmsvv-competitive-evo');};
-   if(!G.PKMSVVEvo.tryOpen(pl,G.Game?.st?.time||0,done))done();
+     !document.querySelector('.pkmsvv-evo')&&G.PKMSVVEvo?.tryLiveCompetitive){
+   lastEvolutionLevel=level;
+   // Native tryOpen is intentionally disabled in ALL competitive modes:
+   // it freezes the Game into state='choice' and strands queued skill cards.
+   // The live picker owns its own duplicate/level guard and never pauses.
+   G.PKMSVVEvo.tryLiveCompetitive(pl,G.Game?.st?.time||0);
   }
   const livePlayers=(players||[]).filter(Boolean);
   const alive=new Set(livePlayers.filter(p=>!p.dead).map(p=>p.uid));
