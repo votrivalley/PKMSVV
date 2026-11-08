@@ -16,8 +16,8 @@ function inject(){
  if(!html.includes('app.min.js')||!html.includes('</body>')||!html.includes('</head>'))
   throw Error('FULL Android game HTML anchor missing; refusing QA overlay');
  const scripts=['pkmsvv-box-stage1.js','pkmsvv-box-stage2.js',
-  'pkmsvv-box-stage2-ui.js','pkmsvv-box-stage3.js','pkmsvv-box-stage4.js','pkmsvv-box-hub.js','pkmsvv-box-hub-ui.js','pkmsvv-quick-region.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-modal-navigation-qa.js'];
- const css=['pkmsvv-box-stage1.css','pkmsvv-box-stage2.css','pkmsvv-box-stage3.css','pkmsvv-box-hub.css','pkmsvv-quick-region.css','pkmsvv-pc-menu-clean-qa.css','pkmsvv-modal-navigation-qa.css'];
+  'pkmsvv-box-stage2-ui.js','pkmsvv-box-stage3.js','pkmsvv-box-stage4.js','pkmsvv-box-hub.js','pkmsvv-box-hub-ui.js','pkmsvv-quick-region.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-modal-navigation-qa.js','pkmsvv-v20-ui-qa.js','pkmsvv-changelog-v20-qa.js'];
+ const css=['pkmsvv-box-stage1.css','pkmsvv-box-stage2.css','pkmsvv-box-stage3.css','pkmsvv-box-hub.css','pkmsvv-quick-region.css','pkmsvv-pc-menu-clean-qa.css','pkmsvv-modal-navigation-qa.css','pkmsvv-v20-ui-qa.css'];
  for(const file of scripts){
   const dest=path.join(web,'js/ui',file);
   fs.mkdirSync(path.dirname(dest),{recursive:true});
