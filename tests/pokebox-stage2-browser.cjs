@@ -400,6 +400,17 @@ async function main(){
    assert.equal(icon.height,'42px','incorrect native menu icon height');
   }
   console.log('DOM menu icon rerender/keyboard/semantics QA:',JSON.stringify(menuIconDomRegression));
+  const supportSkillQa=await evaluate("(()=>{const save=G.DB?.save; if(!save)return {missingSave:true}; const old=save.pkmsvvSupportBond,ids=[447,173,360,174,440]; try{save.pkmsvvSupportBond={...(old||{}),447:1,173:1,360:1,174:1,440:1};G.PKMSVVSupportCatalog?.open?.();const root=document.querySelector('#pkmsvv-support-catalog'),heading=root?.querySelector('#pkmsvv-support-heading');const result=ids.map(id=>{root?.querySelector('[data-support-dex=\\\"'+id+'\\\"]')?.click();const detail=root?.querySelector('#pkmsvv-support-detail');return {id,skill:detail?.querySelector('.pkmsvv-support-skill-title')?.textContent,desc:detail?.querySelector('.pkmsvv-support-skill-description')?.textContent,canvas:!!detail?.querySelector('canvas')};});return {missingSave:false,result,headingColor:heading&&getComputedStyle(heading).color,heading:heading?.textContent,autoControls:!!G.PKMSVVRuntimeControlsQA,speedButton:!!document.getElementById('pkmsvv-speed-button'),arenaTrophyHidden:getComputedStyle(document.querySelector('#pkmsvv-champion-entry .pkmsvv-champion-menu-icon')).display==='none'};}finally{G.PKMSVVSupportCatalog?.close?.();if(old===undefined)delete save.pkmsvvSupportBond;else save.pkmsvvSupportBond=old;}})()");
+  console.log('QA_SUPPORT_SKILLS_AND_GAMEPLAY_CONTROLS='+JSON.stringify(supportSkillQa));
+  assert.equal(supportSkillQa.missingSave,false);
+  for(const info of supportSkillQa.result){
+   assert.ok(info.skill&&info.desc&&info.canvas,'Support '+info.id+' must show its skill and sprite');
+  }
+  assert.match(supportSkillQa.heading,/Pokémon hỗ trợ|Support Pokémon/);
+  assert.notEqual(supportSkillQa.headingColor,'rgb(23, 66, 83)','Support title must be legible gold');
+  assert.equal(supportSkillQa.autoControls,true,'QA runtime controls must load in actual compiled browser');
+  assert.equal(supportSkillQa.speedButton,true,'1.5x speed button must exist in actual game');
+  assert.equal(supportSkillQa.arenaTrophyHidden,true,'new Arena icon replaces old trophy, not duplicates it');
   const coverMascots=await evaluate("(()=>{const q=G.PKMSVVQuickRegion,ids=[150,249,385,488,646,718,800,890,1024,384];q.open();const covers=[...document.querySelectorAll('#pkmsvv-quick-region-grid .region-art')];const sprites=covers.map(x=>x.querySelector('canvas.region-sprite'));const result={mascots:[...q.mascots],covers:covers.length,spriteCanvases:sprites.filter(Boolean).length,missingDex:ids.filter(id=>!G.DEX_BY?.[id]),missingSpriteMeta:ids.filter(id=>!G.SPRITE_META?.[id]),noSpawnsChanged:!q.active};q.close();return result})()");
   assert.deepEqual(coverMascots.mascots,[150,249,385,488,646,718,800,890,1024,384],
    'each Gen 1–9 has the exact requested mascot, mixed Sky Pillar unchanged');
