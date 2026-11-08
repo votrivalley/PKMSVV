@@ -272,6 +272,18 @@ test('competitive evolution is presented as live corner HUD, without pausing gam
  }finally{sandbox.G.Moves=previousMoves;sandbox.document=previousDoc;delete sandbox.G.Royale;delete sandbox.G.Game;}
 });
 
+test('an evolved Arena fighter retains every permanently awakened slot up to eight',()=>{
+ const before=sandbox.G.PKMSVVSkillTrack,oldDb=sandbox.G.DB;
+ try{
+  sandbox.G.PKMSVVSkillTrack={progress(){return {count:8}}};
+  sandbox.G.DB={save:{pkmsvvSkillMarks:{k50:true,k100:true,k200:true,u10:true,u20:true}},commit(){}};
+  const p=pl(4,20);p.moves=[{id:'ember',type:'fire',lvl:3}];p.maxMoves=3;
+  assert.equal(evo.evolve(p,rule(4,5),{convertNormal:false}),true);
+  assert.equal(p.maxMoves,8,'already unlocked eight Skill Awakening slots remain usable');
+  assert.equal(p.moves.length,1,'slots unlock capacity but do not mint free skills');
+  assert.equal(p.moves[0].lvl,3,'existing learned move rank stays intact');
+ }finally{sandbox.G.PKMSVVSkillTrack=before;sandbox.G.DB=oldDb;}
+});
 test('native Arena evolution never sets choice/paused state or stalls pending skill level-ups',()=>{
  const original={Game:sandbox.G.Game,Champion:sandbox.G.PKMSVVChampionArena,
   UI:sandbox.G.UI,Moves:sandbox.G.Moves,document:sandbox.document};
