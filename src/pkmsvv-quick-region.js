@@ -115,6 +115,7 @@
   // Pokémon. Gen mascots enter only as the marked 15-minute Region Boss.
   const mon=G.DEX_BY?.[id];
   if(mon?.leg||mon?.legendary||Number(mon?.rarity)>=5)return false;
+  if(G.Rift?.inArena)return Number(mon?.rarity)>=3&&Number(mon?.rarity)<=4;
   const {total,depth,rarity}=pokemonStrength(id);
   const tier=encounterTier(time);
   // The first TWO minutes: only unevolved, weak Pokémon. Progressive
