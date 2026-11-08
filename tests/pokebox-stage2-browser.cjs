@@ -411,6 +411,16 @@ async function main(){
   assert.equal(supportSkillQa.autoControls,true,'QA runtime controls must load in actual compiled browser');
   assert.equal(supportSkillQa.speedButton,true,'1.5x speed button must exist in actual game');
   assert.equal(supportSkillQa.arenaTrophyHidden,true,'new Arena icon replaces old trophy, not duplicates it');
+  const prismCardSmoke=await evaluate("(()=>{\n const s=G.DB?.save,shop=G.KecleonUI;\n if(!s||typeof shop?.open!=='function')return {missing:true};\n const old=s.pkmsvvReforgePrisms;\n try{\n  s.pkmsvvReforgePrisms=1;\n  shop.open('bag');\n  const card=document.querySelector('#scr-kecleon #pkmbx-prism-store');\n  const desc=card?.querySelectorAll('.pkmk-product-copy small');\n  const btn=card?.querySelector('.pkmbx-prism-use');\n  const snapshot={\n   missing:false,found:!!card,descriptionCount:desc?.length||0,\n   description:desc?.[0]?.textContent||'',\n   useButton:btn?.textContent||'',oldShopButton:!!card?.querySelector('.pkmbx-prism-buy'),\n   cardWidth:card?.getBoundingClientRect().width||0,\n   style:card?getComputedStyle(card).backgroundImage:null\n  };\n  btn?.click();\n  snapshot.rankOpen=!!document.querySelector('#pkmsvv-pokebox-overlay .pkmbx-hub-panel:not([hidden])');\n  snapshot.countUnchanged=s.pkmsvvReforgePrisms===1;\n  return snapshot;\n }finally{\n  G.PKMSVVBoxHubUI?.closeBox?.();G.UI?.hide?.('scr-kecleon');\n  if(old===undefined)delete s.pkmsvvReforgePrisms;else s.pkmsvvReforgePrisms=old;\n }\n})()");
+  console.log('QA_PRISM_NORMAL_ITEM='+JSON.stringify(prismCardSmoke));
+  assert.equal(prismCardSmoke.missing,false,'Kecleon UI must be available in QA browser');
+  assert.equal(prismCardSmoke.found,true,'Reforge Prism must be a native inventory item');
+  assert.equal(prismCardSmoke.descriptionCount,1,'Prism should have one short description like Mint');
+  assert.match(prismCardSmoke.description,/Đổi nhánh Rank|Change Rank branch/);
+  assert.match(prismCardSmoke.useButton,/Sử dụng|Use/);
+  assert.equal(prismCardSmoke.oldShopButton,false,'Bag must not show another shop-buy action');
+  assert.equal(prismCardSmoke.rankOpen,true,'Use must open PokéBox Rank tab');
+  assert.equal(prismCardSmoke.countUnchanged,true,'Opening Rank must not consume a Prism');
   const coverMascots=await evaluate("(()=>{const q=G.PKMSVVQuickRegion,ids=[150,249,385,488,646,718,800,890,1024,384];q.open();const covers=[...document.querySelectorAll('#pkmsvv-quick-region-grid .region-art')];const sprites=covers.map(x=>x.querySelector('canvas.region-sprite'));const result={mascots:[...q.mascots],covers:covers.length,spriteCanvases:sprites.filter(Boolean).length,missingDex:ids.filter(id=>!G.DEX_BY?.[id]),missingSpriteMeta:ids.filter(id=>!G.SPRITE_META?.[id]),noSpawnsChanged:!q.active};q.close();return result})()");
   assert.deepEqual(coverMascots.mascots,[150,249,385,488,646,718,800,890,1024,384],
    'each Gen 1–9 has the exact requested mascot, mixed Sky Pillar unchanged');
