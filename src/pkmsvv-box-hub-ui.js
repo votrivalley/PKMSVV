@@ -575,7 +575,7 @@
    const empty=doc.createElement('p');empty.className='pkmbx-box-empty';
    empty.textContent=onlyRankReady&&!ready?
      L('Save cũ chưa lưu số bản trùng. Hãy chuyển PokéBox để theo dõi Chiêu mộ mới.',
-       'Old save does not track duplicates. Migrate PokéBox to track future Gacha pulls.'):
+       'Old save does not track duplicates. Migrate PokéBox to track future Recruitment pulls.'):
     onlyRankReady?L('Chưa có Pokémon đủ nguyên liệu nâng Rank.','No Pokémon has enough eligible Rank materials.'):
     L('Không tìm thấy Pokémon phù hợp.','No matching Pokémon found.');
    grid.appendChild(empty);
@@ -586,7 +586,7 @@
   if(!ready){
    banner.innerHTML='<strong>'+L('Save cũ chưa theo dõi Pokémon quay trùng.','This older save does not track individual duplicates.')+'</strong>'+
     '<span>'+L('Các lượt Chiêu mộ cũ không có nhật ký cá thể nên không thể khôi phục số bản trùng. Bạn có thể kích hoạt ngay, hoặc game sẽ sao lưu và tự kích hoạt PokéBox khi quay Chiêu mộ mới thành công.',
-      'Past Recruitment duplicates without individual IDs cannot be reconstructed. Activate now, or the game will safely back up and activate PokéBox on your next successful Gacha purchase.')+'</span>'+
+      'Past Recruitment duplicates without individual IDs cannot be reconstructed. Activate now, or the game will safely back up and activate PokéBox on your next successful Recruitment purchase.')+'</span>'+
     '<button type="button" class="btn small" id="pkmbx-activate-migration">'+
     L('💾 Sao lưu và kích hoạt PokéBox','💾 Back up & activate PokéBox')+'</button>';
    banner.querySelector('button').onclick=migrateLegacyFromBox;
@@ -830,7 +830,7 @@
   if(!has(infoDex)){
    detail.classList.add('pkmbx-dex-undefeated');
    detail.innerHTML='<div class="pkmbx-hub-hero"><canvas id="pkmbx-dex-hero" width="176" height="176"></canvas>'+
-    '<strong>#'+infoDex+' · ???</strong><p>'+L('Chưa đánh bại Pokémon này. Hãy tìm gặp Pokémon này trong bản đồ để mở Chiêu mộ.',
+    '<strong>#'+infoDex+' · ???</strong><p>'+L('Chưa gặp Pokémon này. Hãy khám phá bản đồ để mở khóa Chiêu mộ.',
      'Encounter this Pokémon on a map to reveal it and add it to your Recruitment pool.')+'</p></div>';
    draw(detail.querySelector('#pkmbx-dex-hero'),infoDex,false,true,true);
    return;
@@ -930,7 +930,7 @@
    onlyRankReady=false;page=0;
    const filter=boxPane?.querySelector('#pkmbx-ready');if(filter)filter.checked=false;
    G.UI?.toast?.(L('Đã kích hoạt PokéBox. Các lượt Chiêu mộ mới sẽ có bản trùng riêng.',
-     'PokéBox activated. New Gacha pulls now track duplicates.'),3600);
+     'PokéBox activated. New Recruitment pulls now track duplicates.'),3600);
    renderBox();return true;
   }catch(error){
    G.UI?.toast?.(L('Chưa chuyển PokéBox: ','Migration stopped: ')+error.message,3800);
