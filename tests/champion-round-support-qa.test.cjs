@@ -57,6 +57,13 @@ function setup(){
  vm.runInNewContext(source,{G,document,Math,Date,console});
  return {G,player,save,actors,events,lib:G.PKMSVVChampionArena};
 }
+test('Champion keeps eight already awakened move slots on start even if base Player starts at three',()=>{
+ const h=setup();h.player.maxMoves=3;
+ h.G.PKMSVVSkillTrack={progress(){return {count:8}}};
+ assert.equal(h.lib.start(),true);
+ assert.equal(h.player.maxMoves,8,'Arena must refresh permanent slots from same PokéBox save as Explore');
+ assert.equal(h.player.moves,undefined,'unlocking capacity must not invent free moves');
+});
 test('Champion uses the Explore generation map mapping with Kanto biome zero',()=>{
  const h=setup(),{lib,G}=h;
  assert.equal(lib.regionBiome(),0);
