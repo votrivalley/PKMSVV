@@ -286,3 +286,18 @@
   grid-template-columns:1fr;
  }
 }
+
+/* Direct-child specificity wins over the original v2.0
+ * #overlay>#dex>.panel {overflow:hidden!important} rule. WebView did
+ * scroll with JavaScript but ignored the user's finger until this override.
+ */
+@media (max-height:720px) and (orientation:landscape), (max-width:870px){
+ #pkmsvv-pokebox-overlay>#pkmbx-dex-overlay.pkmbx-dex-inside-pc>.pkmbx-dex-panel,
+ #pkmsvv-pokebox-overlay>#pkmbx-upgrade-overlay.pkmbx-upgrades-inside-pokemon>.pkmbx-upgrade-panel{
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  overscroll-behavior:contain!important;
+  touch-action:pan-y!important;
+  -webkit-overflow-scrolling:touch;
+ }
+}
