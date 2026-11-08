@@ -7,11 +7,14 @@ G.PKMSVVSupportCatalog=(()=>{
  const t=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  const roles={
   attack:['Tấn công','Attack','Tấn công đối thủ gần nhất.','Attacks the nearest enemy.'],
+  physical:['Tăng công vật lý','Physical boost','Riolu tăng sát thương chiêu Vật lý trong 8 giây.','Riolu increases Physical move damage for 8 seconds.'],
+  special:['Tăng công đặc biệt','Special boost','Wynaut tăng sát thương chiêu Đặc biệt trong 8 giây.','Wynaut increases Special move damage for 8 seconds.'],
+  sleep:['Gây ngủ','Sleep','Igglybuff khiến kẻ địch xung quanh ngủ trong thời gian ngắn.','Igglybuff briefly puts nearby enemies to sleep.'],
   paralyze:['Tê liệt','Paralysis','Pichu gây tê liệt tối đa 4 quái trong vùng 95, 1,1 giây; hồi chiêu 10 giây. Boss chỉ 0,35 giây.','Pichu stuns up to 4 foes in a 95-radius area for 1.1s every 10s; bosses for 0.35s.'],
   heal:['Hồi phục','Healing','Hồi máu cho Pokémon chính và tất cả đồng hành còn sống của chính mình.','Heals your lead Pokémon and all your living companions.'],
   shield:['Bảo vệ','Shield','Tạo khiên cho Pokémon chính và tất cả đồng hành của mình; tối đa 25% HP từng mục tiêu.','Shields your own lead Pokémon and companions, capped at 25% of each max HP.'],
   magnet:['Thu hút','Magnet','Thu hút vật phẩm trong tầm.','Attracts nearby pickups.'],
-  slow:['Làm chậm','Slow','Làm chậm những kẻ địch ở gần.','Slows nearby enemies.'],
+  slow:['Làm chậm','Slow','Cleffa làm chậm nhiều kẻ địch xung quanh.','Cleffa slows several nearby enemies.'],
   ditto:['Biến hình','Transform','Biến thành Pokémon chính và sao chép kỹ năng, sau đó trở lại Ditto để hồi sức.','Copies your lead Pokémon and its moves, then returns to Ditto to recover.'],
   mew:['Sức mạnh tâm linh','Psychic Burst','Liên tục sử dụng đòn đánh diện rộng ngẫu nhiên.','Continuously casts random area attacks.']
  };
@@ -73,8 +76,8 @@ G.PKMSVVSupportCatalog=(()=>{
   if(shinyUnlocked&&showShiny){
    const note=document.createElement('p');
    note.className='pkmsvv-shiny-support-bonus';
-   note.textContent=t('✦ Shiny: Chỉ số vượt trội · Kỹ năng vượt trội',
-    '✦ Shiny: Superior stats · Enhanced abilities');
+   note.textContent=t('✦ Shiny: Hiệu quả hỗ trợ ×2 · Hồi chiêu nhanh',
+    '✦ Shiny: Double effect · Faster cooldowns');
    area.append(note);
   }
   if(shinyUnlocked){
@@ -104,7 +107,10 @@ G.PKMSVVSupportCatalog=(()=>{
    const max=document.createElement('small');max.className='pkmsvv-support-bond-max';
    max.textContent=t('Thân thiết tối đa ★','Maximum friendship ★');bond.append(max);
   }
-  area.append(skill,description,bond);
+  const note=document.createElement('small');note.className='pkmsvv-support-bond-note';
+  note.textContent=t('Càng thân thiết, hiệu quả càng cao và hồi chiêu càng ngắn.',
+   'More friendship boosts potency and shortens cooldowns.');
+  area.append(skill,description,bond,note);
  }
  function choose(dex){
   if(selected===dex)return;
