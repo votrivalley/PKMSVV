@@ -166,7 +166,7 @@ async function main(){
   assert.equal(patchedGameplay.arenaLevel,'function');
   const approved20=await evaluate("(()=>{\n const shop=G.Shop,news=G.CHANGELOG;\n return {title:news?.[0]?.title?.[0],date:news?.[0]?.d,\n  keptHistory:!!news?.slice(1).some(x=>String(x.title?.[0]||'').includes('Chuyển Sinh')),\n  hiddenNotForSale:shop?.ITEMS?.caph?.unavailableInShop,\n  hiddenPrice:shop?.ITEMS?.caph?.price,hasSell:typeof shop?.sell,\n  drops:shop?.DROP_RATE,saleButtonSource:typeof G.KecleonUI?.render,\n  htmlStyle:!![...document.styleSheets].some(x=>String(x.href||'').includes('pkmsvv-v20-ui-qa.css')),\n  v20Polish:typeof G.PKMSVV20UIPolish?.sync};\n})()");
   console.log('PKMSVV_APPROVED_20_QA='+JSON.stringify(approved20));
-  assert.equal(approved20.title,'Pokémon Chuyển Sinh 2.0','approved What's New headline missing');
+  assert.equal(approved20.title,'Pokémon Chuyển Sinh 2.0',"approved What’s New headline missing");
   assert.equal(approved20.date,'2026-11-09','2.0 should show the new release date');
   assert.equal(approved20.keptHistory,true,'older history must remain visible');
   assert.equal(approved20.hiddenNotForSale,true,'Hidden Capsule was not removed from shop');
