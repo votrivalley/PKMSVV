@@ -86,6 +86,17 @@ test('all ten original Fusion WebP files exist, unique and match exact recipes',
   assert.match(h.fx.assets[r.id],new RegExp(r.id+'\\.webp$'));
  }
 });
+test('Wave-type Fusion names reflect knockback effects, not a player dash',()=>{
+ const h=setup(),wave=h.api.RECIPES.find(x=>x.id==='water-tackle');
+ const mind=h.api.RECIPES.find(x=>x.id==='mind-tackle');
+ assert.equal(wave.vi,'Sóng Xô');assert.equal(wave.en,'Tidal Surge');
+ assert.equal(mind.vi,'Chấn Động Tâm Linh');assert.equal(mind.en,'Mind Shockwave');
+ assert.match(wave.viEffect,/đẩy lùi/);assert.match(mind.viEffect,/hất lùi/);
+ const effects=read('src/pkmsvv-fusion-evolved.js');
+ assert.match(effects,/id==='water-tackle'/);
+ assert.match(effects,/id==='mind-tackle'/);
+ assert.doesNotMatch([wave.vi,mind.vi].join(' · '),/Húc/);
+});
 test('MAX+MAX is mandatory; one below MAX blocks Fusion, even with real Rift Bonds',()=>{
  const h=setup();
  h.stock(['ember',3],['quick-attack',2]);
