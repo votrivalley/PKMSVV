@@ -223,33 +223,37 @@
    section.className='pkmk-card pkmbx-prism-store';
    const vi=G.I18n?.lang!=='en';
    const title=vi?'Lăng Kính Tái Khắc':'Reforge Prism';
-   const status=offer.bought?(vi?'Đã mua hôm nay · mở bán lại ngày mai':'Purchased today · available again tomorrow'):
-    (vi?'Có bán hôm nay · giới hạn 1 viên/ngày':'In stock today · limit one per day');
+   // Render Prism like a native Mint/Capsule: artwork, one short description,
+   // ordinary stock/price button, no extra tutorial banner or metadata paragraph.
+   const itemDescription=vi?'Đổi nhánh Rank, giữ nguyên cấp.':'Change Rank branch; keep Rank level.';
    section.innerHTML='<div class="pkmk-product-art pkmbx-prism-product-icon" aria-hidden="true"><svg class="pkmbx-prism-glass" viewBox="0 0 64 64" role="img" aria-label="Reforge Prism" xmlns="http://www.w3.org/2000/svg"><path d="M35 39L53 57 60 50 42 32" fill="#e6c7a4" stroke="#0c1120" stroke-width="4" stroke-linejoin="round"/><path d="M47 45L55 53" stroke="#866b51" stroke-width="2"/><circle cx="26" cy="24" r="20" fill="#322757" stroke="#0a1120" stroke-width="5"/><circle cx="26" cy="24" r="15.5" fill="#b497ef" stroke="#ede2ff" stroke-width="2"/><path d="M12 21L23 11 36 17 33 35 20 38 12 29Z" fill="#775ec4" opacity=".72"/><path d="M19 16L28 12 35 20 29 29 17 27Z" fill="#cdb5ff" opacity=".9"/><path d="M22 15L25 21 31 24 25 27 22 33 19 27 13 24 19 21Z" fill="#fff7d7"/><circle cx="36" cy="34" r="2" fill="#fff"/></svg></div>'+
-    '<div class="pkmk-product-copy pkmbx-prism-product-info"><b>'+title+'</b>'+
-    '<small>'+(vi?'Đổi hướng Rank 3/5, giữ nguyên cấp Rank.':'Switch Rank 3/5 branch while keeping Rank level.')+'</small>'+
-    '<small>'+(vi?'Đang có: ':'Owned: ')+count(s)+' · '+status+'</small></div>'+
-    '<div class="pkmk-product-tail pkmbx-prism-actions"><strong class="pkmbx-prism-price">'+
-      PRICE.toLocaleString('vi-VN')+' PokéCoins</strong></div>';
+    '<div class="pkmk-product-copy pkmbx-prism-product-info"><b>'+title+'</b><small>'+itemDescription+'</small></div>'+
+    '<div class="pkmk-product-tail pkmbx-prism-actions"></div>';
    if(inBag){
     // When Prism is the only held item, the native inventory renders its
     // empty placeholder. Replace only that placeholder; preserve Mint/TM/Berry cards.
     const empty=list.querySelector('.pkmk-empty');if(empty)empty.remove();
-    const info=document.createElement('p');
-    info.textContent=vi?'Đã có trong Túi đồ. Dùng tại PokéBox → Rank → Đổi hướng.':'Owned item. Use from PokéBox → Rank → Change Path.';
-    section.appendChild(info);
-    const jump=document.createElement('button');jump.type='button';jump.className='btn small';
-    jump.textContent=vi?'🦎 Đến cửa hàng':'🦎 Go to Shop';
-    jump.onclick=()=>ui.open('shop');
-    section.appendChild(jump);
+    const action=document.createElement('button');action.type='button';
+    action.className='btn small pkmbx-prism-use';action.textContent=vi?'Sử dụng':'Use';
+    action.onclick=()=>{
+     if(typeof G.PKMSVVBoxHubUI?.openBox!=='function'){
+      G.UI?.toast?.(vi?'Vào PokéBox để đổi nhánh Rank.':'Open PokéBox to change your Rank branch.',2200);
+      return;
+     }
+     G.UI?.hide?.('scr-kecleon');
+     G.PKMSVVBoxHubUI.openBox('rank');
+    };
+    section.querySelector('.pkmbx-prism-actions').append(action);
+    const stock=document.createElement('span');stock.className='pkmk-stock';
+    stock.textContent='×'+count(s);section.querySelector('.pkmbx-prism-actions').append(stock);
     let cards=list.querySelector('.pkmk-cards');
     if(!cards){cards=document.createElement('div');cards.className='pkmk-cards';list.appendChild(cards);}
     cards.appendChild(section);return;
    }
    const button=document.createElement('button');
    button.className='btn small gold pkmbx-prism-buy';button.type='button';
-   button.textContent=offer.bought?(vi?'✓ Đã mua hôm nay':'✓ Bought today'):
-    (vi?'Mua Lăng Kính · ':'Buy Prism · ')+PRICE.toLocaleString('vi-VN')+' PokéCoins';
+   button.textContent=offer.bought?(vi?'✓ Đã mua':'✓ Purchased'):
+    PRICE.toLocaleString('vi-VN')+' PokéCoins';
    button.disabled=!offer.canBuy;
    button.onclick=()=>{
     button.disabled=true;
@@ -257,6 +261,8 @@
     catch(e){G.UI?.toast?.(e.message,3000);ui.render();}
    };
    section.querySelector('.pkmbx-prism-actions').appendChild(button);
+   const stock=document.createElement('span');stock.className='pkmk-stock';
+   stock.textContent='×'+count(s);section.querySelector('.pkmbx-prism-actions').appendChild(stock);
    if(!offer.canBuy&&!offer.bought){
     const reason=document.createElement('p');reason.className='pkmbx-prism-unavailable';
     reason.textContent=!validPurchase(s)?
