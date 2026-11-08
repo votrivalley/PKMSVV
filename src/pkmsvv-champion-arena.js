@@ -450,6 +450,67 @@ G.PKMSVVChampionArena=(()=>{
   return tr('Champion ','Champion ')+displayRegion(ch[0])+' · '+standIn.name+
    (standIn.temporary?tr(' (tạm thời)',' (stand-in)'):'');
  }
+ // Champion challengers arrive with REAL, separately targetable Support
+ // Pokémon (not a floating decorative aura). Round 16: 1–2; later rounds:
+ // two. These are hostile non-boss actors with 0 XP and modest offense.
+ const SUPPORT_DEX=Object.freeze([172,173,174,360,440,447]);
+ let opponentSupports=[];
+ function clearOpponentSupports(){
+  for(const it of opponentSupports){
+   if(!it)continue;
+   it.dead=true;it.hp=0;it.pkmsvvChampionSupportOwner=null;
+  }
+  opponentSupports=[];
+ }
+ function supportCount(at=round,random=rand){
+  return at===0?(Number(random())<.5?1:2):2;
+ }
+ function spawnOpponentSupports(champion,pl,random=rand){
+  clearOpponentSupports();
+  if(!champion||!pl||!G.Enemy||!G.EnemyMgr?.add)return [];
+  const pool=SUPPORT_DEX.filter(dex=>!!G.DEX_BY?.[dex]);
+  if(!pool.length)return [];
+  const count=Math.min(supportCount(round,random),pool.length);
+  const available=pool.slice();
+  for(let i=0;i<count;i++){
+   const index=Math.min(available.length-1,Math.max(0,Math.floor(Math.max(0,Number(random())||0)*available.length)));
+   const dex=available.splice(index,1)[0],source=G.DEX_BY[dex];
+   const hp=Math.max(15,Math.round(Math.max(1,Number(pl.maxHp)||320)*.22));
+   const def={dex,name:source?.name||'Support Pokémon',hp,
+    spd:Math.max(50,Math.round((Number(pl.baseSpd)||112)*.90)),
+    dmg:Math.max(.1,Math.round((Number(champion.dmg)||12)*.23*100)/100),
+    xp:0,behavior:'chase',pkmsvvChampionSupport:true};
+   const ally=new G.Enemy(def,champion.x+(i===0?-65:65),
+    champion.y+64,{hp:1,spd:1,dmg:1},false);
+   ally.maxHp=hp;ally.hp=hp;ally.dmg=def.dmg;ally.spd=def.spd;
+   ally.boss=false;ally.isBoss=false;ally.xp=0;
+   ally.pkmsvvChampionSupport=true;
+   ally.pkmsvvChampionSupportOwner=champion;
+   ally.pkmsvvSupportRole=dex===440?'heal':dex===173?'slow':
+    dex===174?'sleep':dex===447?'physical':dex===360?'special':'attack';
+   ally.pkmsvvSupportHealClock=0;
+   G.EnemyMgr.add(ally);
+   opponentSupports.push(ally);
+  }
+  champion.pkmsvvChampionSupports=opponentSupports.slice();
+  return opponentSupports.slice();
+ }
+ function updateOpponentSupports(dt){
+  if(!opponentSupports.length)return;
+  if(!target||target.dead||stage!=='fight'){
+   clearOpponentSupports();return;
+  }
+  for(const it of opponentSupports){
+   if(!it||it.dead||it.hp<=0||it.pkmsvvSupportRole!=='heal')continue;
+   it.pkmsvvSupportHealClock+=Math.max(0,Number(dt)||0);
+   if(it.pkmsvvSupportHealClock<12)continue;
+   it.pkmsvvSupportHealClock-=12;
+   if(target._pkmsvvMegaTransition||target.dead)continue;
+   const restored=Math.max(1,Math.round((Number(target.maxHp)||1)*.035));
+   target.hp=Math.min(target.maxHp,target.hp+restored);
+   G.FX?.ring?.(target.x,target.y,12,45,'#70e9a3',.28,2);
+  }
+ }
  function spawn(){
   const pl=G.Game?.player;
   if(!pl||!G.Enemy||!G.EnemyMgr)return false;
@@ -486,14 +547,15 @@ G.PKMSVVChampionArena=(()=>{
    shotCd:Math.max(.7,1.85/ratios.dmg)};
   // The full build is retained in postgame; do not additionally scale by
   // Region, AI tier or native boss difficulty outside the agreed range.
-  target=G.EnemyMgr.add(new G.Enemy(raw,pl.x+Math.min(300,190+round*15),pl.y-35,
-    {hp:1,spd:1,dmg:1},true));
-  // Native Enemy constructor applies its own boss scaling. Undo it so the
-  // round's HP/dmg/speed percentages stay true to the player's actual stats.
-  if(target){
-   target.maxHp=raw.hp;target.hp=raw.hp;target.dmg=raw.dmg;target.spd=raw.spd;
-   target.pkmsvvArenaStatRatios=ratios;target.pkmsvvArenaPlayerBaseline=playerStats;
-  }
+  const champion=new G.Enemy(raw,pl.x+Math.min(300,190+round*15),pl.y-35,
+    {hp:1,spd:1,dmg:1},true);
+  // Native boss constructor must not override the agreed player-relative stats.
+  champion.maxHp=raw.hp;champion.hp=raw.hp;champion.dmg=raw.dmg;champion.spd=raw.spd;
+  champion.pkmsvvArenaStatRatios=ratios;champion.pkmsvvArenaPlayerBaseline=playerStats;
+  // Add companions BEFORE the Champion so the boss remains the last added
+  // entity, preserving current target selection and QA actor identity.
+  spawnOpponentSupports(champion,pl);
+  target=G.EnemyMgr.add(champion);
 
   // Duel opponents still use boss combat mechanics, but MUST draw like normal
   // player Pokémon rather than the enlarged boss species artwork.
@@ -816,6 +878,7 @@ G.PKMSVVChampionArena=(()=>{
   delete p._arenaOriginal;
  }
  function beginPrep(){
+  clearOpponentSupports(); // No hostile followers carry across bracket rounds.
   hideBattleCountdown();fightCue=0;
   restoreStats();
   stage='prep';elapsed=0;lastSecond=-1;prepBossStage=0;previewSeen=false;warnSeen=false;opp=null;target=null;
@@ -912,6 +975,7 @@ G.PKMSVVChampionArena=(()=>{
  // Session owns only its own startRun. A new Berry/Co-op/Solo run,
  // quit or external menu action MUST invalidate every Arena timer/actor.
  function cancelSession(){
+  clearOpponentSupports();
   if(!active)return false;
   restoreStats();
   active=false;stage='idle';elapsed=0;lastSecond=-1;round=0;
@@ -1144,6 +1208,7 @@ G.PKMSVVChampionArena=(()=>{
  });
  guardUpdate(G.EnemyMgr,'update',function(original,args){
   const out=original.apply(this,args);
+  updateOpponentSupports(args[0]);
   update(args[0]); // observe actual boss HP/death AFTER combat manager update
   return out;
  });
@@ -1169,7 +1234,7 @@ G.PKMSVVChampionArena=(()=>{
  // Chapter 5 is explicitly accessible through Memories and Arena intro.
  // In particular, first LAN access must never be blocked by a cutscene.
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',menu,{once:true});else menu();
- return {REGIONS,REGION_THEMES,REGION_BALANCE,REGION_FARM_BALANCE,ROUND_STAT_RANGES,roundStatRange,sampleRoundRatio,regionBiome,regionizeBag,farmSpecies,farmProfile,CHAMPION_PHASE_SECONDS,DUEL_COUNTDOWN,MEGA_TRANSITION_SECONDS,MAP_EFFECTS,mapEffect,MEGA_KEYS,TEMP_CHAMPIONS,GEN_POOLS,GEN_BOUNDS,regionalPool,displayRegion,megaPhase,regionChampion,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIRST_PREP_SECONDS,FIGHT_SECONDS,WARN_SECONDS,prepSeconds,previewSeconds,makeBracket,aiWinner,open,openArena,arenaHub,entryPick,start,startSky,rematch,exit,nextDuel,renderPodium,
+ return {REGIONS,REGION_THEMES,REGION_BALANCE,REGION_FARM_BALANCE,ROUND_STAT_RANGES,roundStatRange,sampleRoundRatio,regionBiome,SUPPORT_DEX,supportCount,spawnOpponentSupports,updateOpponentSupports,clearOpponentSupports,regionizeBag,farmSpecies,farmProfile,CHAMPION_PHASE_SECONDS,DUEL_COUNTDOWN,MEGA_TRANSITION_SECONDS,MAP_EFFECTS,mapEffect,MEGA_KEYS,TEMP_CHAMPIONS,GEN_POOLS,GEN_BOUNDS,regionalPool,displayRegion,megaPhase,regionChampion,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIRST_PREP_SECONDS,FIGHT_SECONDS,WARN_SECONDS,prepSeconds,previewSeconds,makeBracket,aiWinner,open,openArena,arenaHub,entryPick,start,startSky,rematch,exit,nextDuel,renderPodium,
   update,settle,claimSeal,ledger,cancelSession,get active(){return active},get stage(){return stage},get round(){return round},
   get opponent(){return opp}};
 })();
