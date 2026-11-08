@@ -391,6 +391,9 @@ async function main(){
   assert.equal(preplay.after,preplay.before,'the menu click must NOT start a run before selecting Region');
   const nativeHooks=await evaluate("(()=>({gameKeys:Object.keys(G.Game||{}),pickupKeys:Object.keys(G.Pickups||{}),drop:String(G.Pickups?.drop||'').slice(0,1400),dropXp:String(G.Pickups?.dropXp||'').slice(0,1400),rarityKeys:Object.keys(G.Spawner||{}),endFns:Object.fromEntries(Object.entries(G.Game||{}).filter(([k,v])=>typeof v==='function').map(([k])=>[k,true]))}))()");
   console.log('REAL engine hooks for Orb and finishing Region:',JSON.stringify(nativeHooks));
+  const combatInspect=await evaluate("(()=>({keys:Object.keys(G.Combat||{}),impls:Object.fromEntries(Object.entries(G.Combat||{}).filter(([,v])=>typeof v==='function').map(([k,v])=>[k,String(v).slice(0,900)])),playerKeys:Object.keys(G.Game?.player||{}).filter(k=>/atk|special|sa|physical|mul/i.test(k))}))()");
+  console.log('REAL compiled combat entrypoints:',JSON.stringify(combatInspect));
+
   const nativeFunctions=await evaluate("(()=>({quit:String(G.Game?.quit||'').slice(0,1700),toUI:String(G.Game?.toUI||'').slice(0,1700),levelOffer:String(G.LevelUp?.offer||'').slice(0,600),endScreenKeys:Object.keys(G.RunUI||{})}))()");
   console.log('REAL victory entrypoints:',JSON.stringify(nativeFunctions));
   const nativeOrbSnippets=await evaluate("(async()=>{const src=await fetch('js/app.min.js').then(r=>r.text());const needle='G.Orbs.roll';let at=0,out=[];while((at=src.indexOf(needle,at))>=0&&out.length<7){out.push(src.slice(Math.max(0,at-320),Math.min(src.length,at+180)));at+=needle.length;}return {count:out.length,out}})()");
