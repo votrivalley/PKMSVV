@@ -13,8 +13,8 @@ permissions:
   contents: read
   actions: read
 env:
-  V20_SOURCE_RUN: '42516317677'
-  V20_SOURCE_SHA: '6c82e42afefbfe4e4c920d450298d5308e12d5d2'
+  V20_SOURCE_RUN: '42520192007'
+  V20_SOURCE_SHA: '81a1101a948be0fb2944ce302c8781eace1f21fa'
 jobs:
   validate-web-v20:
     runs-on: ubuntu-latest
@@ -45,7 +45,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: PKMSVV-PokeBox-Stage4-Web-QA-ONLY
-          run-id: 42516317677
+          run-id: 42520192007
           github-token: ${{ github.token }}
           path: dist/pokebox-stage4-qa
       - name: Smoke test real Web snapshot in Chromium
