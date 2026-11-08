@@ -595,6 +595,12 @@ G.PKMSVVChampionArena=(()=>{
   active=true;stage='prep';
   startingOwnRun=true;
   try{G.Game.startRun(null);}finally{startingOwnRun=false;}
+  // Champion and Sky use the same permanent Skill Awakening capacity as
+  // Explore; changing Arena mode must never revert an unlocked team to 3.
+  const fighter=G.Game?.player,skillSave=G.DB?.save;
+  const unlocked=Number(G.PKMSVVSkillTrack?.progress?.(skillSave,fighter?.kills)?.count);
+  if(fighter&&Number.isFinite(unlocked)&&unlocked>=3&&unlocked<=8)
+   fighter.maxMoves=Math.max(Number(fighter.maxMoves)||3,unlocked);
   const zoneType=mode==='league'?'normal':duelType;
   G.World?.setArena?.({tx:0,ty:0,r:22,type:zoneType});
   applyRegionBiome();
@@ -709,6 +715,12 @@ G.PKMSVVChampionArena=(()=>{
   active=true;stage='sky';paid=false;target=null;opp=null;elapsed=0;
   startingOwnRun=true;
   try{G.Game.startRun(null);}finally{startingOwnRun=false;}
+  // Champion and Sky use the same permanent Skill Awakening capacity as
+  // Explore; changing Arena mode must never revert an unlocked team to 3.
+  const fighter=G.Game?.player,skillSave=G.DB?.save;
+  const unlocked=Number(G.PKMSVVSkillTrack?.progress?.(skillSave,fighter?.kills)?.count);
+  if(fighter&&Number.isFinite(unlocked)&&unlocked>=3&&unlocked<=8)
+   fighter.maxMoves=Math.max(Number(fighter.maxMoves)||3,unlocked);
   const hero=G.Game?.player;
   if(!hero){active=false;stage='idle';return false;}
   G.World?.setArena?.({tx:0,ty:0,r:25,type:'dragon'});
