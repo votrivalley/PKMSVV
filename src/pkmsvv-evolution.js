@@ -412,6 +412,11 @@ G.PKMSVVEvo = (() => {
     if (G.Pad && G.Pad.name && G.Pad.focusFirst) G.Pad.focusFirst();
   }
   function tryOpen(pl, t, done) {
+    // Native single-player Game.update immediately sets state='choice' when
+    // this hook returns true. In Arena that freezes time and can strand the
+    // personal skill-upgrade queue at three learned moves. Only the floating
+    // REAL-TIME picker below may open Arena evolution.
+    if(liveChoiceMode())return false;
     if (!pl || pl.dead || pl.pkmEvoSkipLevel === pl.level) return false;
     const options=choiceRoutes(pl,t);
     if(!options.some(o=>o.unlocked))return false;
@@ -423,9 +428,13 @@ G.PKMSVVEvo = (() => {
     if(pl.pkmEvoLiveLevelSeen===pl.level||document.querySelector?.('.pkmsvv-evo'))return false;
     if(G.UI?.isOpen?.('scr-levelup')||G.UI?.isOpen?.('scr-item')||G.UI?.isOpen?.('scr-bond'))return false;
     if(!Array.isArray(pl.pkmEvoHistory))reset(pl);
-    const found=tryOpen(pl,t,()=>{});
-    if(found)pl.pkmEvoLiveLevelSeen=pl.level;
-    return found;
+    if(pl.pkmEvoSkipLevel===pl.level)return false;
+    const options=choiceRoutes(pl,t);
+    if(!options.some(o=>o.unlocked))return false;
+    // Do not change Game.state, pause, pendingLevels or any Move slots.
+    pl.pkmEvoLiveLevelSeen=pl.level;
+    show(pl,options,t,()=>{});
+    return true;
   }
   return { reset, tick, onCast, onHurt, eligible, evolve, requirement, friendship, tryOpen,
     routes: BY_FROM, choiceRoutes, pendingReason, conversionCandidate, convertNormal,
