@@ -163,7 +163,8 @@ test('no drop mutation if game is not playing and Prism cap resets at run bounda
  assert.equal(stage3.defeated({dex:6,dead:true},()=>0,h.s).dropped,true);
  assert.equal(h.writes,1);
  const other=stage3.defeated({dex:6,dead:true},()=>0,h.s);
- assert.equal(other.eligible,false);
+ assert.equal(other.eligible,true,'2.0 drops are no longer capped to one each run');
+ assert.equal(other.dropped,true);
  // This mocked EnemyMgr is not wrapped in this test: simulate the new-run boundary explicitly.
  stage3.resetRun();
  assert.equal(stage3.runDrops(),0);
