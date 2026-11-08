@@ -23,11 +23,25 @@ G.PKMSVVPadOrb=(()=>{
   if(!o||typeof o!=='object')return false;
   const b=merged(o);
   if(!PAD_IDS.every(k=>Number.isInteger(b[k])&&BUTTONS.includes(b[k])))return false;
-  return new Set(PAD_IDS.map(k=>b[k])).size===PAD_IDS.length;
+  return [
+   ['dash','use','mega','pause','speed','leaderboard'],
+   ['confirm','back','pause','speed','leaderboard']
+  ].every(group=>new Set(group.map(k=>b[k])).size===group.length);
  }
  function bindings(){
   const stored=G.Settings.get(KEY);
-  return valid(stored)?merged(stored):{...DEFAULT};
+  if(!stored||typeof stored!=='object')return {...DEFAULT};
+  // Existing user mappings had only six actions. Assign the NEW shortcuts
+  // to genuinely unused buttons rather than resetting their old bindings.
+  const migrated=merged(stored);
+  const occupied=new Set(Object.keys(DEFAULT).filter(k=>k!=='speed'&&k!=='leaderboard').map(k=>migrated[k]));
+  for(const id of ['speed','leaderboard']){
+   const previous=stored[id],preferred=Number.isInteger(previous)?previous:DEFAULT[id];
+   migrated[id]=BUTTONS.includes(preferred)&&!occupied.has(preferred)?
+    preferred:(BUTTONS.find(button=>!occupied.has(button))??DEFAULT[id]);
+   occupied.add(migrated[id]);
+  }
+  return valid(migrated)?migrated:{...DEFAULT};
  }
  function describe(key){return NAMES[bindings()[key]]||'?';}
  const actionName=(k,keyboard)=>({
@@ -70,9 +84,9 @@ G.PKMSVVPadOrb=(()=>{
     '<button class="btn small '+(active==='keyboard'?'gold':'')+'" role="tab" aria-selected="'+(active==='keyboard')+'" data-control-tab="keyboard">'+tr('Bàn phím','Keyboard')+'</button>'+
     '<button class="btn small '+(active==='pad'?'gold':'')+'" role="tab" aria-selected="'+(active==='pad')+'" data-control-tab="pad">'+tr('Tay cầm','Controller')+'</button></div>'+
     (active==='keyboard'?
-      '<p class="sub">'+tr('Chọn một dòng rồi nhấn phím muốn dùng.','Choose an action, then press its new key.')+'</p>'+
+      '<p class="sub">'+tr('Chọn dòng để gán phím. Mặc định G = tốc độ ×1/×1,5 (khi cho phép), L = bật/tắt TOP Co-op. Nhấn Lưu sau khi gán.','Choose an action to remap. Default G = speed ×1/×1.5 (where allowed), L = Co-op TOP on/off. Press Save afterward.')+'</p>'+
       KB_IDS.map(k=>'<div class="set-row pkmsvv-control-row"><span>'+actionName(k,true)+'</span><button type="button" class="btn small" data-key-action="'+k+'">'+printable(keyDraft[k])+'</button></div>').join(''):
-      '<p class="sub">'+tr('Di chuyển: analog trái hoặc D-pad · Ngắm/cuộn: analog phải (cố định).','Move: left stick or D-pad · Aim/scroll: right stick (fixed).')+'</p>'+
+      '<p class="sub">'+tr('Chọn dòng Tốc độ hoặc TOP rồi chọn nút còn trống, sau đó Lưu. Mặc định RB/R1 = tốc độ, R3 = bảng hạng Co-op. Analog trái/D-pad di chuyển, analog phải ngắm/cuộn.','Select Speed or TOP, pick an unused button and Save. Defaults: RB/R1 for speed; R3 for Co-op TOP. Left stick/D-pad moves, right stick aims/scrolls.')+'</p>'+
       PAD_IDS.map(k=>'<label class="set-row pkmsvv-control-row"><span>'+actionName(k,false)+'</span><select class="btn small" data-padorb="'+k+'">'+
        BUTTONS.map(i=>'<option value="'+i+'"'+(padDraft[k]===i?' selected':'')+'>'+NAMES[i]+'</option>').join('')+'</select></label>').join(''))+
     '<p id="pkmsvv-control-message" class="note" role="status"></p>'+
