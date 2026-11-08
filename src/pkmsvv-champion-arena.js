@@ -76,6 +76,21 @@ G.PKMSVVChampionArena=(()=>{
   {hp:1.12,atk:1.04,tempo:.90},{hp:1.13,atk:1.05,tempo:.88},
   {hp:1.14,atk:1.06,tempo:.86},{hp:1.15,atk:1.07,tempo:.84}
  ]);
+ // Stage-specific AI scaling is measured against the ACTUAL player fighter
+ // after story normalization. No off-spec regional/tier multiplier may push
+ // HP, damage or speed above these round-dependent percentile ranges.
+ const ROUND_STAT_RANGES=Object.freeze([
+  Object.freeze([.90,1.10]), // 16 entrants
+  Object.freeze([.95,1.15]), // final 8
+  Object.freeze([1.00,1.20]), // final 4
+  Object.freeze([1.10,1.25]), // championship final
+  Object.freeze([1.00,1.20])  // third place
+ ]);
+ function roundStatRange(at=round){return ROUND_STAT_RANGES[Math.min(4,Math.max(0,Math.round(Number(at)||0)))];}
+ function sampleRoundRatio(at=round,random=rand){
+  const [low,high]=roundStatRange(at),n=Number(random());
+  return low+(high-low)*Math.max(0,Math.min(1,Number.isFinite(n)?n:0));
+ }
  const FARM_SPAWN_MULT=2,FARM_XP_MULT=2;
  const DUEL_COUNTDOWN=3,MEGA_TRANSITION_SECONDS=1;
  let startingOwnRun=false,transitionClock=0,transitionOrigin='fight',fightCue=0;
@@ -457,22 +472,28 @@ G.PKMSVVChampionArena=(()=>{
    pl.atkMul=1;pl.spdMul=1;
   }else pl.hp=pl.maxHp;
   const aiTier=opp.tier==='elite'?'elite':opp.tier==='trained'?'trained':'novice';
-  const power=selectedRegion(),profile=REGION_BALANCE[power]||REGION_BALANCE[0];
-  const cadence=Math.max(.62,1-.04*power)*profile.tempo;
-  const tierHp=aiTier==='elite'?1.38:aiTier==='trained'?1.16:1.03;
-  const tierDmg=aiTier==='elite'?1.38:aiTier==='trained'?1.18:1.04;
-  const raw={dex,name:targetName,hp:Math.round((340+26*power+12*round)*tierHp*profile.hp),
-    spd:112+Math.min(28,power*2.5+round*3),
-    dmg:Math.round((12.4+.95*power+.5*round)*tierDmg*profile.atk*10)/10,xp:0,behavior:'champion',
-    shotCd:(aiTier==='elite'?1.35:aiTier==='trained'?1.95:2.7)*cadence};
-  if(mode==='league'){
-   raw.hp=Math.max(raw.hp,userBaseline.hp);
-   raw.dmg=Math.max(raw.dmg,userBaseline.dmg);
-   raw.spd=Math.max(raw.spd,userBaseline.spd);
-   raw.shotCd=Math.min(raw.shotCd,1.3);
-  }
+  const playerStats={hp:Math.max(1,Number(pl.maxHp)||320),
+   dmg:Math.max(.1,12.4*Math.max(.1,Number(pl.baseAtk)||1.3)/1.3*
+    Math.max(.1,Number(pl.atkMul)||1)),
+   spd:Math.max(1,(Number(pl.baseSpd)||112)*Math.max(.1,Number(pl.spdMul)||1))};
+  // A separate seeded roll per stat; ALL stay inside the exact requested range.
+  const ratios={hp:sampleRoundRatio(),dmg:sampleRoundRatio(),spd:sampleRoundRatio()};
+  const raw={dex,name:targetName,
+   hp:Math.max(1,Math.round(playerStats.hp*ratios.hp)),
+   spd:Math.max(1,Math.round(playerStats.spd*ratios.spd)),
+   dmg:Math.round(playerStats.dmg*ratios.dmg*100)/100,
+   xp:0,behavior:'champion',
+   shotCd:Math.max(.7,1.85/ratios.dmg)};
+  // The full build is retained in postgame; do not additionally scale by
+  // Region, AI tier or native boss difficulty outside the agreed range.
   target=G.EnemyMgr.add(new G.Enemy(raw,pl.x+Math.min(300,190+round*15),pl.y-35,
     {hp:1,spd:1,dmg:1},true));
+  // Native Enemy constructor applies its own boss scaling. Undo it so the
+  // round's HP/dmg/speed percentages stay true to the player's actual stats.
+  if(target){
+   target.maxHp=raw.hp;target.hp=raw.hp;target.dmg=raw.dmg;target.spd=raw.spd;
+   target.pkmsvvArenaStatRatios=ratios;target.pkmsvvArenaPlayerBaseline=playerStats;
+  }
 
   // Duel opponents still use boss combat mechanics, but MUST draw like normal
   // player Pokémon rather than the enlarged boss species artwork.
@@ -493,7 +514,9 @@ G.PKMSVVChampionArena=(()=>{
   target._pkmsvvMegaSprite=opp?.pkmsvvMegaSprite||null;
   target._pkmsvvMegaPhase2=false;
   target._pkmsvvMegaTransition=0;
-  target.skillCd=(aiTier==='elite'?.75:aiTier==='trained'?1.55:2.5)*cadence;
+  target.skillCd=Math.max(.55,2.2/ratios.dmg);
+  // AI difficulty comes from the measured round ratio and real Support
+  // companions, not hidden 1.38× multipliers exceeding the stated limits.
   installChampionCombat(target);
   stage='fight';elapsed=0;lastSecond=-1;
   fightCue=.65;battleCountdown(tr('⚔ BẮT ĐẦU!','⚔ FIGHT!'),'start');panel().hidden=true;
@@ -1146,7 +1169,7 @@ G.PKMSVVChampionArena=(()=>{
  // Chapter 5 is explicitly accessible through Memories and Arena intro.
  // In particular, first LAN access must never be blocked by a cutscene.
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',menu,{once:true});else menu();
- return {REGIONS,REGION_THEMES,REGION_BALANCE,REGION_FARM_BALANCE,regionizeBag,farmSpecies,farmProfile,CHAMPION_PHASE_SECONDS,DUEL_COUNTDOWN,MEGA_TRANSITION_SECONDS,MAP_EFFECTS,mapEffect,MEGA_KEYS,TEMP_CHAMPIONS,GEN_POOLS,GEN_BOUNDS,regionalPool,displayRegion,megaPhase,regionChampion,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIRST_PREP_SECONDS,FIGHT_SECONDS,WARN_SECONDS,prepSeconds,previewSeconds,makeBracket,aiWinner,open,openArena,arenaHub,entryPick,start,startSky,rematch,exit,nextDuel,renderPodium,
+ return {REGIONS,REGION_THEMES,REGION_BALANCE,REGION_FARM_BALANCE,ROUND_STAT_RANGES,roundStatRange,sampleRoundRatio,regionBiome,regionizeBag,farmSpecies,farmProfile,CHAMPION_PHASE_SECONDS,DUEL_COUNTDOWN,MEGA_TRANSITION_SECONDS,MAP_EFFECTS,mapEffect,MEGA_KEYS,TEMP_CHAMPIONS,GEN_POOLS,GEN_BOUNDS,regionalPool,displayRegion,megaPhase,regionChampion,regionUnlocked,storyCompleted,ROUNDS,PREP_SECONDS,FIRST_PREP_SECONDS,FIGHT_SECONDS,WARN_SECONDS,prepSeconds,previewSeconds,makeBracket,aiWinner,open,openArena,arenaHub,entryPick,start,startSky,rematch,exit,nextDuel,renderPodium,
   update,settle,claimSeal,ledger,cancelSession,get active(){return active},get stage(){return stage},get round(){return round},
   get opponent(){return opp}};
 })();
