@@ -84,6 +84,7 @@ test('all rounds use actual player relative ranges, never native boss/tier multi
   lib.update(3.01);
   assert.equal(lib.stage,'fight');
   const boss=G.EnemyMgr.last;
+  assert.equal(boss.pkmsvvArenaLevel,G.Game.player.level+10,'every Champion AI is 10 levels higher');
   const measured=boss.pkmsvvArenaStatRatios;
   assert.ok(measured,'record source ratios on the real boss');
   for(const key of ['hp','dmg','spd'])
