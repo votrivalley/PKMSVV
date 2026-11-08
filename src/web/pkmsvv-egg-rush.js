@@ -375,6 +375,7 @@ G.EggRush=(()=>{
    case 447:case 360:{
     const key=pet.dex===447?'pkmsvvSupportPhysical':'pkmsvvSupportSpecial';
     const affinity=1+.6*(G.PKMSVVEggs?.affinityPercent?.(pet.dex)||0)/100;
+    G.PKMSVVEggs?.applyAttackBuffs?.(pl);
     pl[key]={amount:Math.min(.6,.12*(pet.statScale||.65)*affinity*
       (pet.shiny?SHINY_SKILL_POWER:1)),until:(G.Game?.st?.time||0)+8};
     break;
