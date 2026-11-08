@@ -107,3 +107,64 @@ test('Every isolated QA builder copies the same runtime controls and CSS',()=>{
  const nav=fs.readFileSync(path.resolve(__dirname,'../src/pkmsvv-modal-navigation-qa.js'),'utf8');
  assert.ok(nav.includes('#pkmsvv-forget-skill'),'Forget Skill needs controller access');
 });
+
+test('speed toggle is absent in every Arena mode including AI tournaments',()=>{
+ const f=fixture();
+ for(const key of ['PKMSVVArenaSolo','PKMSVVChampionArena','PKMSVVArenaPvp','ArenaPvp']){
+  f.G[key]={active:true};
+  assert.equal(f.api.canSpeed(),false,key);
+  assert.equal(f.api.setSpeed(true),false,key+' must never accelerate');
+  f.api.ensureSpeed();
+  assert.equal(f.elements['pkmsvv-speed-button'].hidden,true,key+' hides button');
+  delete f.G[key];
+ }
+});
+test('Co-op and sessions with even one human peer cannot accelerate',()=>{
+ const f=fixture();
+ f.G.Coop={active:true};
+ f.G.Social={uid:'host',room:{isHost:true,mode:'coop',members:[{uid:'host',bot:false},{uid:'ai',bot:true}]}};
+ assert.equal(f.api.canSpeed(),false,'Co-op mode is always blocked even with AI partners');
+ assert.equal(f.api.setSpeed(true),false);
+ f.G.Social.room.mode='royale';f.G.Royale={active:true};
+ assert.equal(f.api.canSpeed(),true,'host Royale with bots only may speed up');
+ assert.equal(f.api.setSpeed(true),true);
+ f.G.Social.room.members.push({uid:'guest',bot:false});
+ assert.equal(f.api.canSpeed(),false,'joining human must block speed');
+ f.api.ensureSpeed();
+ assert.equal(f.speeds.at(-1),1,'speed resets immediately after humans join');
+ assert.equal(f.elements['pkmsvv-speed-button'].hidden,true);
+ f.G.Social.room.members.pop();f.G.Social.room.isHost=false;
+ assert.equal(f.api.canSpeed(),false,'remote client may never change host simulation time');
+});
+test('solo Explore and verified AI-only Egg Rush have bottom-left speed control',()=>{
+ const f=fixture();
+ f.G.PKMSVVQuickRegion={active:true};
+ assert.equal(f.api.canSpeed(),true,'solo exploration');
+ f.api.ensureSpeed();
+ assert.equal(f.elements['pkmsvv-speed-button'].hidden,false);
+ f.G.Coop={active:true};
+ f.G.Social={uid:'solo',room:{mode:'eggrush',isHost:true,
+  members:[{uid:'solo',bot:false},{uid:'bot1',bot:true},{uid:'bot2',lanBot:true}]}};
+ f.G.EggRush={active:true};
+ assert.equal(f.api.canSpeed(),true,'AI-only Egg Rush hosted locally');
+ f.G.Social.room.members[1].bot=false;
+ assert.equal(f.api.canSpeed(),false,'AI slot turning human immediately removes speed');
+ const css=fs.readFileSync(path.resolve(__dirname,'../src/pkmsvv-runtime-controls-qa.css'),'utf8');
+ assert.match(css,/#pkmsvv-speed-button\.pkmsvv-speed-button\{[^}]*bottom:/s);
+ assert.match(css,/#pkmsvv-speed-button\.pkmsvv-speed-button\{[^}]*left:/s);
+ assert.doesNotMatch(css,/#pkmsvv-speed-button\.pkmsvv-speed-button\{[^}]*top:max/s);
+});
+test('real-time evolution polling only activates for Arena/Egg Rush (not duplicate Royale draw)',()=>{
+ const f=fixture(),calls=[];
+ f.G.PKMSVVEvo={tryLiveCompetitive(...args){calls.push(args);return true}};
+ f.G.Game.st={time:61};
+ f.G.EggRush={active:true};f.frame(1000);
+ assert.equal(calls.length,1);
+ assert.equal(calls[0][0],f.pl);
+ assert.equal(calls[0][1],61);
+ f.G.Royale={active:true};f.frame(1500);
+ assert.equal(calls.length,1,'Royale has its own evolution hook');
+ f.G.Royale.active=false;f.G.EggRush.active=false;
+ f.G.PKMSVVArenaSolo={active:true};f.frame(2000);
+ assert.equal(calls.length,2,'Arena Solo evolution is checked without pausing');
+});
