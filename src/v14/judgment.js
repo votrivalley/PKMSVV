@@ -33,7 +33,7 @@
 G.Judgment = (() => {
   const AT = 30 * 60;
   const ARENA_R = 24;                 // en tiles (la arena de la grieta: 11)
-  const BOSS_EVERY = 5;               // sin tope: siguen saliendo mientras aguantes
+  const BOSS_EVERY = 1e9;             // ONE legendary at 30:00, no 5-second boss spam
   const TOUCH = 0.4;                  // vida que quita tocar a Arceus
   /*
    * Contra la huida sin fin (18-10-2026: con toda la velocidad subida se
@@ -199,8 +199,8 @@ G.Judgment = (() => {
     G.Progress.event('judge');
     // Vida del primer legendario: unos 3 s de vuestro daño a un enemigo (y un mínimo).
     const n = G.Game.everyone().length, t = G.Game.st.time;
-    const floor = (3200 + t * 9) * 0.35 * G.Coop.scaleHp(n);
-    base = Math.max(floor, singleDps() * 3);
+    const floor = (3200 + t * 9) * 1.15 * G.Coop.scaleHp(n);
+    base = Math.max(floor, singleDps() * 7); // one tougher 30m legendary, not endless spam
     G.Spawner.say('¡Arceus lleva la ' + PLATES[cfg.pl] + '! Ahora es de tipo ' + G.U.TYPE_NAME[cfg.pl], 4, true);
     if (authority()) addTarget();
   }
