@@ -30,9 +30,9 @@ test('item metadata: rotating daily shop and rare Solo drops are separate',()=>{
  assert.equal(prism.ITEM,'reforge-prism');
  assert.equal(prism.PRICE,6500);
  assert.equal(prism.SHOP_RATE,.12);
- assert.equal(prism.PITY,180);
- assert.equal(prism.MAX_DROPS_PER_RUN,1);
- assert.deepEqual({...prism.RATES},{type:.0035,species:.015,elite:.03,boss:.08});
+ assert.equal(prism.PITY,0,'2.0 uses actual drop odds, not guaranteed pity at 180');
+ assert.equal(prism.MAX_DROPS_PER_RUN,999,'2.0 allows more than one rare drop per run');
+ assert.deepEqual({...prism.RATES},{normal:.004,elite:.008,legend:.016});
 });
 test('daily stock is deterministic and buying is limited to one per day',()=>{
  const {s}=setup();
@@ -135,41 +135,44 @@ test('no free or invalid respec: different branch required and Rank 3 gate',()=>
  assert.throws(()=>prism.resetBranch(x.id,'flying',s),/required/);
  assert.equal(x.rankBranch,'fire');
 });
-test('eligible kills calculate highest single rate, not double for dual types',()=>{
+test('2.0 Prism uses 0.4% / elite 0.8% / legend 1.6%, irrespective of attacker species',()=>{
  const {s}=setup();
- assert.equal(prism.enemyInfo(foe(6),s).rate,.015);
- assert.equal(prism.enemyInfo(foe(6,{boss:true}),s).rate,.08);
- assert.equal(prism.enemyInfo(foe(25,{types:['electric','fire']}),s).rate,.0035);
- assert.equal(prism.enemyInfo(foe(25,{types:['electric','fire'],elite:true}),s).rate,.03);
- assert.equal(prism.enemyInfo(foe(7),s),null);
+ assert.equal(prism.enemyInfo(foe(6),s).rate,.004);
+ assert.equal(prism.enemyInfo(foe(6,{boss:true}),s).rate,.016);
+ assert.equal(prism.enemyInfo(foe(150),s).rate,.016,'legendary species gets ×4');
+ assert.equal(prism.enemyInfo(foe(25,{types:['electric','fire']}),s).rate,.004);
+ assert.equal(prism.enemyInfo(foe(25,{types:['electric','fire'],elite:true}),s).rate,.008);
+ assert.equal(prism.enemyInfo(foe(7),s).rate,.004,'no species/type gating remains');
  assert.equal(prism.enemyInfo(foe(25,{remote:true,types:['fire']}),s),null);
  assert.equal(prism.enemyInfo(foe(150,{arceus:true,boss:true,types:['fire']}),s),null);
- assert.equal(prism.enemyInfo(foe(6,{pkmsvvBossGuard:true,boss:false}),s),null,'boss escort must never count as wild kill');
+ assert.equal(prism.enemyInfo(foe(6,{pkmsvvBossGuard:true,boss:false}),s),null);
 });
-test('pity counts eligible KOs only, guaranteed 180th, and max one drop per run',()=>{
- const {s}=setup();
- for(let i=1;i<180;i++){
-  const r=prism.defeated(foe(6),()=>1,s);
-  assert.equal(r.eligible,true);assert.equal(r.dropped,false);assert.equal(prism.pity(s),i);
- }
- const guaranteed=prism.defeated(foe(6),()=>1,s);
- assert.equal(guaranteed.dropped,true);assert.equal(guaranteed.pity,0);
- assert.equal(prism.count(s),1);assert.equal(prism.runDrops(),1);
- const blocked=prism.defeated(foe(6),()=>0,s);
- assert.equal(blocked.eligible,false);assert.equal(prism.count(s),1);
- prism.resetRun();
- assert.equal(prism.runDrops(),0);
- assert.equal(prism.defeated(foe(7),()=>0,s).eligible,false);
- assert.equal(prism.pity(s),0);
-});
-test('standard species 1.5% success resets pity, shop purchase does not',()=>{
+test('2.0 Prism does not silently guarantee a drop on the 180th kill',()=>{
  const {s}=setup();s.pkmsvvReforgePity=175;
- s.pkmsvvReforgePrisms=1;
- const res=prism.defeated(foe(6),()=>0,s);
- assert.equal(res.dropped,true);
- assert.equal(res.rate,.015);
- assert.equal(prism.pity(s),0);
+ for(let i=0;i<8;i++){
+  const result=prism.defeated(foe(6),()=>1,s);
+  assert.equal(result.eligible,true);
+  assert.equal(result.dropped,false);
+ }
+ assert.equal(prism.count(s),0);
+ assert.equal(prism.pity(s),183);
+ const receipt=prism.defeated(foe(6),()=>0,s);
+ assert.equal(receipt.dropped,true);assert.equal(receipt.pity,0);
+ assert.equal(prism.count(s),1);
+ const next=prism.defeated(foe(7),()=>0,s);
+ assert.equal(next.eligible,true,'a second Prism can drop in the same run');
  assert.equal(prism.count(s),2);
+ prism.resetRun();assert.equal(prism.runDrops(),0);
+});
+test('Prism sells for half its purchase price without touching Rank or purchased day',()=>{
+ const {s}=setup();s.pkmsvvReforgePrisms=2;
+ const priorCoins=s.coins,priorDay=s.pkmsvvReforgeBoughtDay;
+ const a=prism.sell(s);
+ assert.equal(a.ok,true);
+ assert.equal(a.refund,3250);
+ assert.equal(prism.count(s),1);
+ assert.equal(s.coins,priorCoins+3250);
+ assert.equal(s.pkmsvvReforgeBoughtDay,priorDay);
 });
 test('Co-op, Arena and idle state block drops, and enemy kill is never credited twice',()=>{
  const {s}=setup();
