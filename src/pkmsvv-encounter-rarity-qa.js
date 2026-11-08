@@ -45,8 +45,9 @@ G.PKMSVVEncounterRarity=(()=>{
   // Every ordinary Rift enemy gets 2× HP, including a same-species roll.
   // Mark the instance so regrade / respawn hooks never double-multiply it.
   if(isRift&&!e.pkmsvvRiftDoubleHp&&Number.isFinite(e.maxHp)&&e.maxHp>0){
+   const currentHp=Number.isFinite(e.hp)?e.hp:e.maxHp;
    e.maxHp=Math.max(1,Math.round(e.maxHp*2));
-   e.hp=Math.min(e.maxHp,Math.max(1,Math.round((Number(e.hp)||e.maxHp/2)*2)));
+   e.hp=Math.min(e.maxHp,Math.max(0,Math.round(currentHp*2)));
    e.pkmsvvRiftDoubleHp=true;
   }
   if(!dex||dex===Number(e.dex))return false;
