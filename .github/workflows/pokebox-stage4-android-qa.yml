@@ -12,6 +12,7 @@ on:
       - 'scripts/build-pokebox-stage4-android-qa.cjs'
       - 'src/pkmsvv-pc-menu-clean-qa.*'
       - 'src/pkmsvv-modal-navigation-qa.*'
+      - 'src/pkmsvv-v20-ui-qa.*'
       - 'src/pkmsvv-runtime-controls-qa.*'
       - 'src/pkmsvv-evolution.js'
       - 'src/web/pkmsvv-royale.js'
@@ -127,6 +128,12 @@ jobs:
           test -s decoded-android/assets/public/images/pkmsvv-menu-icons.webp
           test -s decoded-android/assets/public/js/ui/pkmsvv-modal-navigation-qa.js
           test -s decoded-android/assets/public/css/pkmsvv-modal-navigation-qa.css
+          test -s decoded-android/assets/public/css/pkmsvv-v20-ui-qa.css
+          test -s decoded-android/assets/public/js/ui/pkmsvv-v20-ui-qa.js
+          grep -q 'max-height:720px' decoded-android/assets/public/css/pkmsvv-v20-ui-qa.css
+          grep -q 'touch-action:pan-y' decoded-android/assets/public/css/pkmsvv-v20-ui-qa.css
+          grep -q 'const shoulderL=pressed(4),shoulderR=pressed(5)' decoded-android/assets/public/js/ui/pkmsvv-modal-navigation-qa.js
+          grep -q 'function cycleTab(step)' decoded-android/assets/public/js/ui/pkmsvv-box-hub-ui.js
           test -s decoded-android/assets/public/js/ui/pkmsvv-runtime-controls-qa.js
           test -s decoded-android/assets/public/css/pkmsvv-runtime-controls-qa.css
       - name: Rebuild and sign separate APK with original permanent certificate
