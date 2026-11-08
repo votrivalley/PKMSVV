@@ -724,6 +724,28 @@ test('Explore Badge at 15m unlocks Johto, only 30m Legendary kill completes Kant
  assert.equal(q.active,false);
 });
 
+test('Sky Pillar is also completed only after its 30-minute Rayquaza falls',()=>{
+ const h=harness(),q=h.G.PKMSVVQuickRegion;
+ h.save.arenas.pkmChampion.seals={Kanto:true,Johto:true,Hoenn:true,Sinnoh:true,
+  Unova:true,Kalos:true,Alola:true,Galar:true,Paldea:true};
+ h.G.DEX_BY[384]={dex:384,name:'Rayquaza',rarity:5,leg:true};
+ assert.equal(q.choose(9),true,'all nine region badges unlock Sky');
+ h.G.Game.st.time=900;h.G.EnemyMgr.update(.016);
+ const badgeBoss=q.regionalBoss;
+ assert.ok(badgeBoss,'Sky gets the 15-minute checkpoint boss');
+ badgeBoss.dead=true;badgeBoss.hp=0;h.G.EnemyMgr.update(.016);
+ assert.equal(h.G.Game.state,'playing','Sky must continue after the 15-minute checkpoint');
+ assert.equal(q.finalBoss,null);
+ h.G.Game.st.time=1800;h.G.EnemyMgr.update(.016);
+ const final=q.finalBoss;
+ assert.ok(final,'Sky gets a second boss at minute 30');
+ assert.equal(final.dex,384,'Sky final boss must be Rayquaza');
+ assert.equal(h.G.Game.state,'playing','spawning Rayquaza is not victory');
+ final.dead=true;final.hp=0;h.G.EnemyMgr.update(.016);
+ assert.equal(h.G.Game.state,'ui','Sky ends only when final Rayquaza is defeated');
+ assert.equal(q.active,false,'Sky region run is cleared after the final victory');
+});
+
 test('15-minute normal-mode boss is weighted 30% Legendary, 70% Epic independently of pool sizes',()=>{
  const src=fs.readFileSync(path.join(__dirname,'../src/v14/milestones.js'),'utf8');
  function trial(random){
