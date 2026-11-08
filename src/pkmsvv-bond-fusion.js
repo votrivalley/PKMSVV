@@ -7,10 +7,10 @@ G.PKMSVVFusionPilot=(()=>{
  const tr=(a,b)=>G.I18n?.lang==='en'?b:a;
  const RECIPES=Object.freeze([
   {id:'ember-quick',ids:['ember','quick-attack'],vi:'Hỏa Vệt',en:'Blaze Trail',viEffect:"Đòn lửa chớp nhoáng, để lại vệt cháy gây sát thương theo thời gian.",enEffect:"Quick fire strike leaves a burning area that damages enemies over time."},
-  {id:'water-tackle',ids:['water-gun','tackle'],vi:'Húc Sóng',en:'Tidal Charge',viEffect:"Sóng nước gây sát thương, đẩy lùi và làm chậm quái.",enEffect:"Water wave damages, pushes back and slows enemies."},
+  {id:'water-tackle',ids:['water-gun','tackle'],vi:'Sóng Xô',en:'Tidal Surge',viEffect:"Sóng nước gây sát thương, đẩy lùi và làm chậm quái.",enEffect:"Water wave damages, pushes back and slows enemies."},
   {id:'grass-spin',ids:['vine-whip','rapid-spin'],vi:'Dây Leo Xoáy',en:'Vine Cyclone',viEffect:"Xoáy dây leo kéo quái nhỏ lại gần và gây sát thương liên tục.",enEffect:"Spinning vines pull small foes inward and deal damage over time."},
   {id:'spark-quick',ids:['thunder-shock','quick-attack'],vi:'Lôi Liên Kích',en:'Chain Thunder',viEffect:"Điện giật lan đến tối đa 5 mục tiêu, có thể gây choáng ngắn.",enEffect:"Chain lightning strikes up to five enemies and briefly stuns them."},
-  {id:'mind-tackle',ids:['confusion','tackle'],vi:'Húc Tâm Linh',en:'Psychic Impact',viEffect:"Sóng tâm linh hất lùi kẻ địch, giảm tốc độ di chuyển.",enEffect:"Psychic shock knocks enemies back and slows their movement."},
+  {id:'mind-tackle',ids:['confusion','tackle'],vi:'Chấn Động Tâm Linh',en:'Mind Shockwave',viEffect:"Sóng tâm linh hất lùi kẻ địch, giảm tốc độ di chuyển.",enEffect:"Psychic shock knocks enemies back and slows their movement."},
   {id:'fire-gust',ids:['flamethrower','gust'],vi:'Lốc Lửa',en:'Flame Gale',viEffect:"Lốc lửa cuốn quái nhỏ vào tâm, thiêu đốt liên tục.",enEffect:"A fire tornado pulls in small foes and repeatedly burns them."},
   {id:'bubble-ice',ids:['bubble-beam','ice-shard'],vi:'Bong Bóng Băng',en:'Frost Tide',viEffect:"Bong bóng băng làm chậm, trúng đủ hai lần sẽ đóng băng.",enEffect:"Ice bubbles slow foes; two hits build up a freeze."},
   {id:'leaf-rock',ids:['razor-leaf','rock-tomb'],vi:'Lá Sắc Đá Rơi',en:'Stoneleaf Trap',viEffect:"Bẫy lá và đá làm chậm, gây sát thương liên tục trong vùng.",enEffect:"Stone and leaf trap slows foes and deals area damage over time."},
