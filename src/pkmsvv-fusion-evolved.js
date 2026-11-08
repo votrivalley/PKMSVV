@@ -18,7 +18,7 @@ G.PKMSVVFusionEvolved=(()=>{
   'grass-spin':{cd:4,r:142,power:.56,kind:'vineVortex'},
   'spark-quick':{cd:3.5,r:210,power:.86,kind:'lightningChain'},
   'mind-tackle':{cd:3.7,r:148,power:1.08,kind:'psychicShock'},
-  'fire-gust':{cd:4.5,r:165,power:.48,kind:'fireTornado'},
+  'fire-gust':{cd:3.4,r:175,power:1.05,kind:'fireTornado'},
   'bubble-ice':{cd:4,r:155,power:.76,kind:'iceBubble'},
   'leaf-rock':{cd:4.6,r:151,power:.57,kind:'stoneLeaves'},
   'shadow-mind':{cd:5,r:162,power:.82,kind:'darkOrb'},
@@ -170,7 +170,9 @@ G.PKMSVVFusionEvolved=(()=>{
  }
  const zones=[];
  function zone(player,id,x,y,r,life,interval,potency,tag){
-  if(zones.length>=40)zones.shift();
+  // Crowded runs can carry hundreds of enemies. Cap active hazards so
+  // per-tick AoE never scales with an unbounded series of skill casts.
+  if(zones.length>=14)zones.shift();
   zones.push({player,id,x,y,r,life,total:life,interval,tick:0,
    potency,tag,marked:new Set()});
  }
@@ -206,8 +208,11 @@ G.PKMSVVFusionEvolved=(()=>{
    fx(x,y,138,col,19);
    for(const e of near(145)){hit(e,dmg*.95,col);push(e,player.x,player.y,20);slow(e,.5,2);}
   }else if(id==='fire-gust'){
-   fx(x,y,160,col,19);
-   zone(player,id,x,y,165,3.6,.33,dmg*.45,'fire-pull');
+   fx(x,y,175,col,12);
+   // Immediate impact prevents the old Flame Gale feeling weaker than
+   // the two MAX skills consumed. Subsequent burns retain continuous AoE.
+   for(const e of near(145)){hit(e,dmg*1.35,col);slow(e,.35,1.5);}
+   zone(player,id,x,y,175,3.8,.33,dmg*.85,'fire-pull');
   }else if(id==='bubble-ice'){
    fx(x,y,90,col,12);
    for(const e of near(135)){
@@ -252,23 +257,36 @@ G.PKMSVVFusionEvolved=(()=>{
   wrapped._pkmsvvFusionShred=true;E.hurt=wrapped;return true;
  }
  function tickZones(player,dt){
+  if(!zones.length)return;
+  // Snapshot hostile actors ONLY when a zone is ready to hit. All due
+  // zones share one snapshot; no per-zone EnemyMgr.all + filter allocation.
+  let hostile=null;
   for(let i=zones.length-1;i>=0;i--){
-   const z=zones[i];if(z.player!==player||!z.player||player.dead){if(z.player===player)zones.splice(i,1);continue;}
+   const z=zones[i];if(z.player!==player||!z.player||player.dead){
+    if(z.player===player)zones.splice(i,1);continue;
+   }
    z.life-=dt;z.tick-=dt;
    if(z.tick<=0){
-    z.tick+=z.interval;
-    const es=enemiesNear(z.x,z.y,z.r),c=COLORS[z.id];
-    for(const e of es){
-     if(z.tag==='pull'||z.tag==='fire-pull'){push(e,z.x,z.y,z.tag==='pull'?13:8,true);slow(e,.22,.55);}
+    z.tick=Math.max(z.tick+z.interval,.05);
+    if(hostile===null)hostile=actors();
+    const c=COLORS[z.id],radius2=z.r*z.r;
+    for(const e of hostile){
+     const dx=e.x-z.x,dy=e.y-z.y;
+     if(dx*dx+dy*dy>radius2)continue;
+     if(z.tag==='pull'||z.tag==='fire-pull'){
+      push(e,z.x,z.y,z.tag==='pull'?13:8,true);slow(e,.22,.55);
+     }
      if(z.tag==='stone')slow(e,.65,.75);
      if(z.tag==='shadow'){z.marked.add(e);slow(e,.3,.6);}
      else hit(e,z.potency,c);
     }
-    G.FX?.ring?.(z.x,z.y,8,z.r*.9,c,.23,2);
+    // Decorative particles are throttled; combat ticks and damage are not.
+    z.visualTick=(z.visualTick||0)+1;
+    if(z.visualTick%3===1)G.FX?.ring?.(z.x,z.y,8,z.r*.9,c,.23,2);
    }
    if(z.life<=0){
     if(z.tag==='shadow'){
-     fx(z.x,z.y,z.r,COLORS[z.id],24);
+     fx(z.x,z.y,z.r,COLORS[z.id],12);
      for(const e of z.marked)if(!e.dead&&distance(e,z)<z.r*1.3)
       hit(e,z.potency*3.3,COLORS[z.id]);
     }
