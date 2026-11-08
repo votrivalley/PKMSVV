@@ -7,7 +7,7 @@
  'use strict';
  if(typeof document==='undefined'||typeof G==='undefined')return;
  const SELECTORS=[
-  '#pkmsvv-fusion-guide','#pkmsvv-quick-region','#pkmsvv-pokebox-overlay','#pkmsvv-wiki-overlay','#pkmbx-rank-overlay',
+  '#pkmsvv-forget-skill','#pkmsvv-fusion-guide','#pkmsvv-quick-region','#pkmsvv-pokebox-overlay','#pkmsvv-wiki-overlay','#pkmbx-rank-overlay',
   '#pkmsvv-champion-screen','#pkmsvv-arena-solo-screen','#pkmsvv-champion-entry-pick','#pkmsvv-arena-pvp-pick','#pkmsvv-support-catalog',
   '#pkmsvv-mega-phase1','.pkmsvv-memory-chooser','.pkmsvv-berry-overlay',
   '#pkmsvv-native-choice','#scr-item','#scr-levelup','#scr-bond','.pkmsvv-evo'
@@ -48,7 +48,7 @@
  }
  function first(root){
   const opts=controls(root);
-  const selected=opts.find(x=>x.matches?.('.pkmbx-team-slot.active,.pkmsvv-quick-region-card:not([disabled]),[aria-selected="true"]'));
+  const selected=opts.find(x=>x.matches?.('.pkmbx-team-slot.active,.pkmsvv-forget-choice:first-child,.pkmsvv-quick-region-card:not([disabled]),[aria-selected="true"]'));
   const preferred=root.classList?.contains('pkmsvv-evo')?
   opts.find(x=>x.classList?.contains('pkmsvv-evo-option')&&!x.disabled):null;
  return setFocus(preferred||selected||opts[0]);
@@ -87,6 +87,10 @@
  function close(root){
   if(!root)return false;
   if(root.id==='scr-item')return itemSkip();
+  if(root.id==='pkmsvv-forget-skill'){
+   const back=root.querySelector('.pkmsvv-forget-close');
+   if(back&&visible(back)){back.click();return true;}
+  }
  if(root.classList?.contains('pkmsvv-evo')){
   const keep=root.querySelector('.pkmsvv-evo-skip');
   if(keep&&visible(keep)){keep.click();return true;}
