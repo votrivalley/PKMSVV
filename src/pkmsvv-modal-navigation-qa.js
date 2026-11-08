@@ -198,9 +198,45 @@
   }
   prevConfirm=a;prevBack=b;return true;
  }
+ // A legacy PadDialogs MutationObserver also calls Pad.focusFirst and
+ // Pad.focusElement whenever Arena's bracket DOM redraws. Those native
+ // methods scrollIntoView, fighting the user's mouse wheel in windowed mode.
+ // Route automatic focus through our preventScroll-first controller layer.
+ function installFocusGuard(){
+  const pad=G.Pad;
+  if(!pad)return false;
+  const firstOld=pad.focusFirst;
+  if(typeof firstOld==='function'&&!firstOld._pkmsvvNoAutoScroll){
+   const wrapped=function(...args){
+    const root=active();
+    if(root){
+     const current=document.activeElement;
+     if(current&&root.contains(current)&&visible(current))return true;
+     return first(root);
+    }
+    return firstOld.apply(this,args);
+   };
+   wrapped._pkmsvvNoAutoScroll=true;pad.focusFirst=wrapped;
+  }
+  const focusOld=pad.focusElement;
+  if(typeof focusOld==='function'&&!focusOld._pkmsvvNoAutoScroll){
+   const wrapped=function(el,...args){
+    const root=active();
+    if(root&&el&&root.contains(el)){
+     if(root.contains(document.activeElement)&&visible(document.activeElement))
+      return true; // preserve user's current wheel position
+     return setFocus(el,false);
+    }
+    return focusOld.call(this,el,...args);
+   };
+   wrapped._pkmsvvNoAutoScroll=true;pad.focusElement=wrapped;
+  }
+  return true;
+ }
  function installPad(){
   const pad=G.Pad;
   if(!pad||typeof pad.poll!=='function'||pad.poll._pkmsvvModalQA)return false;
+  installFocusGuard();
   const original=pad.poll;
   const wrapped=function(...args){
    const root=active();
@@ -238,5 +274,5 @@
   requestAnimationFrame(retry);
  }
  document.addEventListener('DOMContentLoaded',queue,{once:true});queue();
- G.PKMSVVModalNavQA={active,controls,first,move,close,itemSkip,installPad,onKey,pollModal};
+ G.PKMSVVModalNavQA={active,controls,setFocus,first,move,close,itemSkip,installPad,installFocusGuard,onKey,pollModal};
 })();
