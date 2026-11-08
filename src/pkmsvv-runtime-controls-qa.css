@@ -1,0 +1,47 @@
+/* QA gameplay controls: compact speed, active skill auto and max-level selection. */
+#pkmsvv-speed-button.pkmsvv-speed-button{
+ position:fixed;z-index:8000;top:max(75px,calc(env(safe-area-inset-top) + 65px));
+ right:max(12px,env(safe-area-inset-right));min-height:42px;min-width:88px;
+ background:linear-gradient(160deg,#204f67,#132b47)!important;
+ color:#fff0af!important;-webkit-text-fill-color:#fff0af!important;
+ border:2px solid #e9ca72!important;border-radius:12px!important;
+ box-shadow:0 2px 8px #00182a88!important;
+ font-weight:900;font-size:15px;cursor:pointer;
+ touch-action:manipulation;user-select:none;
+}
+#pkmsvv-speed-button[hidden],#pkmsvv-active-auto[hidden],
+#pkmsvv-maxskill-autopick[hidden]{display:none!important}
+#pkmsvv-speed-button:focus-visible{outline:3px solid #ffdf80;outline-offset:3px}
+#pkmsvv-active-auto.pkmsvv-active-auto{
+ position:fixed;z-index:7999;top:max(122px,calc(env(safe-area-inset-top) + 114px));
+ right:max(12px,env(safe-area-inset-right));
+ padding:5px 10px;border-radius:8px;border:2px solid #80e2bf;
+ color:#edffea;background:#155349;font:800 12px/1.2 sans-serif;
+ pointer-events:none;
+}
+#scr-levelup #pkmsvv-maxskill-autopick.pkmsvv-maxskill-toggle{
+ display:block;max-width:min(98%,450px);margin:8px auto 10px;
+ padding:9px 14px;white-space:normal;line-height:1.4;
+ border:2px solid #d2b16b;color:#ffe6ab;background:#17394c;
+ font-size:14px;font-weight:800;
+}
+#scr-levelup #pkmsvv-maxskill-autopick[aria-pressed=true]{
+ border-color:#6be0ad;background:#174e41;color:#f0ffda;
+}
+#scr-settings .pkmsvv-qa-auto-option{
+ display:flex;align-items:center;justify-content:space-between;gap:14px;
+ border:1px solid #4e8e95;border-radius:8px;padding:12px;
+ font-weight:700;
+}
+#scr-settings #pkmsvv-settings-autopick{
+ accent-color:#32bf98;min-width:21px;min-height:21px;cursor:pointer;
+}
+#pkmsvv-forget-skill .pkmsvv-forget-choice.pkmsvv-nav-focus,
+#pkmsvv-forget-skill .pkmsvv-forget-close.pkmsvv-nav-focus{
+ outline:3px solid #ffe188!important;outline-offset:2px!important;
+ border-color:#ffeb91!important;box-shadow:0 0 0 2px #634b36!important;
+}
+@media(max-width:680px){
+ #pkmsvv-speed-button.pkmsvv-speed-button{min-width:67px;min-height:36px;font-size:12px;top:max(58px,calc(env(safe-area-inset-top) + 48px))}
+ #pkmsvv-active-auto.pkmsvv-active-auto{top:max(101px,calc(env(safe-area-inset-top) + 90px))}
+}
