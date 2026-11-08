@@ -140,8 +140,11 @@ G.PKMSVVFusionEvolved=(()=>{
   return enemiesNear(player.x,player.y,r).sort((a,b)=>distance(player,a)-distance(player,b))[0]||null;
  }
  function power(player,config){
-  const atk=clamp(player.atkMul??1,.4,4);
-  const base=clamp(player.baseAtk??1,.4,3);
+  // Endgame attack multipliers can exceed ×200 (see Pause stats). The former
+  // clamp at ×4 effectively erased all rank/skill upgrades from Fusion and
+  // made Flame Gale far weaker than the two MAX skills it replaced.
+  const atk=clamp(player.atkMul??1,.4,300);
+  const base=clamp(player.baseAtk??1,.4,5);
   return Math.max(2,(9+clamp(player.level,1,90)*.68)*atk*base*config.power);
  }
  function hit(e,amount,col){
