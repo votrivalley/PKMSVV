@@ -8,6 +8,8 @@
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.resolve(__dirname,'..');
 const mods=[
+ ['Judgment','src/v14/judgment.js'],
+ ['PKMSVV14','src/v14/milestones.js'],
  ['PKMSVVBerry','src/pkmsvv-berry.js'],
  ['PKMSVVArenaSolo','src/pkmsvv-arena-solo.js'],
  ['PKMSVVChampionArena','src/pkmsvv-champion-arena.js'],
@@ -53,6 +55,7 @@ function replaceModule(bundle,label,filename){
  // The standard prepare-game build resolves this token before minification.
  // Isolated QA reuses a signed baseline, so supply its tested 1.15 factor.
  if(label==='PKMSVVEvo')source=source.replace('__PKMSVV_HP_FACTOR__','1.15').replace(/G\.PKMSVVEvo\s*=\s*/, 'G.PKMSVVEvo=');
+ if(label==='Judgment')source=source.replace(/G\.Judgment\s*=\s*/, 'G.Judgment=');
  const sourceAt=source.indexOf(assignment);
  if(sourceAt<0)throw Error('Source module assignment missing: '+label);
  const srcBoundary=/\}\)\(\)/g;srcBoundary.lastIndex=sourceAt+assignment.length;
