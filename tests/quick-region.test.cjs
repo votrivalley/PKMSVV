@@ -387,7 +387,8 @@ test('Wild Pokémon get progressively stronger across every Region and mixed-Gen
   h.G.Game.st.time=780;
   const later=q.enforceGeneration([{dex:strong[Math.min(region,8)],hp:12}],region);
   assert.equal(later.length,1);
-  assert.ok(strong.includes(later[0].dex),'late game must permit powerful species in Region '+region);
+  assert.ok((h.G.DEX_BY[later[0].dex].rarity||0)<5,
+   'late ordinary encounters cannot leak legendary rarity in Region '+region);
  }
 });
 test('Kanto does not start with Gyarados, Kangaskhan or fully evolved starters',()=>{
@@ -418,7 +419,7 @@ test('Kanto does not start with Gyarados, Kangaskhan or fully evolved starters',
  assert.equal(q.eligibleByTime(6,0,610),true,'late Charizard becomes possible');
  assert.equal(q.eligibleByTime(115,0,610),true,'late Kangaskhan becomes possible');
  assert.equal(q.eligibleByTime(150,0,610),false,'legendary delayed further');
- assert.equal(q.eligibleByTime(150,0,780),true,'late legend unlock');
+ assert.equal(q.eligibleByTime(150,0,780),false,'legendary never spawns as wild; only the 15m Boss may use it');
  const boss={dex:130,def:{dex:130},hp:600,boss:true};
  h.G.Game.st.time=30;
  h.G.EnemyMgr.add(boss);
@@ -650,4 +651,22 @@ test('Each of nine Gen regions and Sky has its own mascot Region Boss',()=>{
   assert.equal(bosses[0].dex,dexes[i],'boss species must match corresponding legendary cover');
   h.G.Game.toUI();
  }
+});
+
+test('Legendary wild Pokémon cannot bypass the 15-minute Region Boss, even after 30 minutes',()=>{
+ const h=harness(),q=h.G.PKMSVVQuickRegion;
+ h.G.DEX_BY={25:{dex:25,name:'Pikachu',hp:35,pa:55,df:40,sa:50,sd:50,spd:90,rarity:1},
+  150:{dex:150,name:'Mewtwo',hp:106,pa:110,df:90,sa:154,sd:90,spd:130,rarity:5,leg:true}};
+ h.G.DEX=[{dex:25,gen:1},{dex:150,gen:1}];
+ h.G.SPRITE_META={25:{},150:{}};
+ assert.equal(q.choose(0),true);
+ for(const t of [0,600,899,900,1200,1800]){
+  assert.equal(q.eligibleByTime(150,0,t),false,'no wild Mewtwo at '+t+' seconds');
+  assert.equal(q.progressivePool(0,t).includes(150),false);
+  h.G.Game.st.time=t;
+  assert.equal(q.enforceGeneration([{dex:150,hp:150}],0)[0].dex,25);
+ }
+ h.G.EnemyMgr.update(.016);
+ assert.equal(q.regionalBoss?.dex,150,'the explicit timed boss still uses its legendary identity');
+ assert.ok(q.regionalBoss.hp>=28000,'timed mascot boss gets substantial encounter HP');
 });
