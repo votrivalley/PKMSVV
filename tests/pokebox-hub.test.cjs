@@ -435,7 +435,7 @@ test('legacy Box explains Gacha duplicates truthfully and offers backup-gated mi
  assert.match(ui,/pkmsvv\.prepokebox\./);
  assert.match(ui,/pkmbx-ready/);
  assert.match(ui,/onlyRankReady&&!ready/);
- assert.match(ui,/Past Gacha duplicates without individual IDs cannot be reconstructed/);
+ assert.match(ui,/Past Recruitment duplicates without individual IDs cannot be reconstructed/);
  assert.match(ui,/L\('⬆ Nâng Rank','⬆ Rank Up'\)/);
  assert.doesNotMatch(ui,/Bật PokéBox để nâng Rank|Activate PokéBox for Rank/);
  assert.match(css,/\.pkmbx-legacy-migration\[hidden\]/);
