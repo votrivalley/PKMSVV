@@ -122,6 +122,13 @@ G.PKMSVVArenaSolo=(()=>{
   elapsed=0;lastSecond=-1;active=true;stage='prep';target=null;
   startingOwnRun=true;
   try{G.Game.startRun(null);}finally{startingOwnRun=false;}
+  // Arena must inherit the account's permanent 3–8 Skill Awakening capacity.
+  // Native room setup and evolution must never reset a fully awakened Pokémon
+  // to the default three slots. Do not create free moves or change old saves.
+  const fighter=G.Game?.player,skillSave=G.DB?.save;
+  const unlocked=Number(G.PKMSVVSkillTrack?.progress?.(skillSave,fighter?.kills)?.count);
+  if(fighter&&Number.isFinite(unlocked)&&unlocked>=3&&unlocked<=8)
+   fighter.maxMoves=Math.max(Number(fighter.maxMoves)||3,unlocked);
   G.World?.setBiome?.(0,true); // isolated instance, no LAN room or remote player
   frame().hidden=true;hud();
   G.UI?.toast?.(tr('Solo 1v1: quái ×2 và EXP ×2 khi farm trước trận!',
