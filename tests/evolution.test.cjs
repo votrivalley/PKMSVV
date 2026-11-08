@@ -187,3 +187,86 @@ test('Evolving any Pokémon can exchange one owned skill for one new species mov
   assert.equal(evo.swapSkill(p,'fire-spin','ember'),false,'do not offer an unavailable or already learned species move');
  }finally{sandbox.G.Moves=oldMoves;}
 });
+
+test('evolution offers exactly three random species moves, prioritizing evolved-exclusive moves',()=>{
+ const original=sandbox.G.Moves;
+ const defs=Object.fromEntries(['ember','tackle','quick-attack','flame-wheel','fire-spin','heat-wave','smokescreen','flare-blitz']
+  .map(id=>[id,{id,type:id.includes('fire')||id.includes('flame')?'fire':'normal',maxLvl:7}]));
+ const before=['ember','tackle','quick-attack'];
+ const after=[...before,'flame-wheel','fire-spin','heat-wave','smokescreen','flare-blitz'];
+ sandbox.G.Moves={BY_ID:defs,poolFor:mon=>mon?.dex===4?before:after,
+  instance:(id,lvl)=>({id,lvl,cd:4,t:0})};
+ try{
+  const p=pl(4,16),old={id:'ember',lvl:5,cd:10,t:5,type:'fire'};
+  p.moves=[old];p.slots=[[old]];p.bind={ember:1};
+  assert.equal(evo.evolve(p,rule(4,5),{convertNormal:false}),true);
+  const chosen=Array.from(evo.skillSwapChoices(p,()=>.7));
+  assert.equal(chosen.length,3);
+  assert.equal(new Set(chosen).size,3);
+  assert.ok(chosen.every(id=>!before.includes(id)),'prioritize moves unavailable to Charmander');
+  assert.deepEqual(Array.from(evo.skillSwapChoices(p,()=>0)),chosen,'offer does not reroll when viewing a different old move');
+  const unoffered=after.find(id=>!before.includes(id)&&!chosen.includes(id));
+  assert.equal(evo.swapSkill(p,'ember',unoffered),false,'cannot silently choose an unoffered fourth skill');
+  const got=evo.swapSkill(p,'ember',chosen[0]);
+  assert.equal(got.to,chosen[0]);assert.equal(got.lvl,5);
+  assert.equal(p.moves[0].lvl,5);assert.equal(p.slots[0][0],p.moves[0]);
+  assert.equal(p.pkmEvoSwapAvailable,false);
+  assert.equal(evo.swapSkill(p,chosen[0],chosen[1]),false,'only one swap per evolution');
+ }finally{sandbox.G.Moves=original;}
+});
+test('when only two moves are newly evolved, third offer comes from the natural shared pool',()=>{
+ const previous=sandbox.G.Moves;
+ sandbox.G.Moves={BY_ID:Object.fromEntries(['old','shared1','shared2','new1','new2'].map(id=>[id,{id,maxLvl:4,type:'normal'}])),
+  poolFor:mon=>mon?.dex===4?['old','shared1','shared2']:['old','shared1','shared2','new1','new2'],
+  instance:(id,lvl)=>({id,lvl,cd:3,t:0})};
+ try{
+  const p=pl(4,16),old={id:'old',lvl:2,cd:3,t:0};p.moves=[old];p.slots=[[old]];
+  evo.evolve(p,rule(4,5),{convertNormal:false});
+  const offers=Array.from(evo.skillSwapChoices(p,()=>.2));
+  assert.equal(offers.length,3);
+  assert.ok(offers.includes('new1')&&offers.includes('new2'));
+  assert.ok(offers.some(id=>id.startsWith('shared')));
+ }finally{sandbox.G.Moves=previous;}
+});
+test('competitive evolution is presented as live corner HUD, without pausing gameplay',()=>{
+ const previousMoves=sandbox.G.Moves,previousDoc=sandbox.document;
+ const state=sandbox.G.Game={state:'playing',st:{time:90},player:null};
+ sandbox.G.Royale={active:true};
+ sandbox.G.Moves={BY_ID:{
+  'ember':{id:'ember',type:'fire',name:'Ember',maxLvl:7},
+  'flame-wheel':{id:'flame-wheel',type:'fire',name:'Flame Wheel',maxLvl:7},
+  'fire-spin':{id:'fire-spin',type:'fire',name:'Fire Spin',maxLvl:7},
+  'heat-wave':{id:'heat-wave',type:'fire',name:'Heat Wave',maxLvl:7}},
+  poolFor:mon=>mon?.dex===4?['ember']:['ember','flame-wheel','fire-spin','heat-wave'],
+  instance:(id,lvl)=>({id,lvl,cd:4,t:0})};
+ function node(tag){
+  return {tagName:tag.toUpperCase(),children:[],attrs:{},className:'',textContent:'',
+   dataset:{},append(...items){this.children.push(...items);items.forEach(x=>{x.parent=this})},
+   replaceChildren(){this.children=[]},
+   setAttribute(k,v){this.attrs[k]=v},
+   querySelector(selector){return selector==='button'?this.children.find(x=>x.tagName==='BUTTON'):null},
+   focus(){},remove(){this.removed=true;this.parent?.children?.splice(this.parent.children.indexOf(this),1)}};
+ }
+ const body=node('body');body.appendChild=function(el){this.append(el)};
+ sandbox.document={body,createElement:node};
+ try{
+  const p=pl(4,16);p.moves=[{id:'ember',lvl:4,cd:5,t:3}];p.slots=[[p.moves[0]]];
+  state.player=p;
+  evo.evolve(p,rule(4,5),{convertNormal:false});
+  let done=0;evo.showSkillSwap(p,()=>done++);
+  const modal=body.children.at(-1);
+  assert.match(modal.className,/pkmsvv-evo-live/);
+  assert.equal(modal.attrs['aria-modal'],undefined,'unpaused overlay must not be a blocking dialog');
+  const cards=modal.children[0].children.find(x=>x.className==='pkmsvv-evo-live-cards');
+  assert.equal(cards.dataset.stage,'current');
+  cards.children[0].onclick();
+  assert.equal(cards.dataset.stage,'replacement');
+  assert.equal(cards.children.length,3);
+  assert.equal(state.state,'playing','no pause or state transition');
+  cards.children[1].onclick();
+  assert.equal(done,1);
+  assert.equal(p.moves.length,1);
+  assert.equal(modal.removed,true);
+  assert.equal(state.state,'playing');
+ }finally{sandbox.G.Moves=previousMoves;sandbox.document=previousDoc;delete sandbox.G.Royale;delete sandbox.G.Game;}
+});
