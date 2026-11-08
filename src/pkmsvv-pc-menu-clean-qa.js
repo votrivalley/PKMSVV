@@ -189,7 +189,18 @@
    ['[data-go="arena"]','arena']
   ];
   for(const [selector,type] of definitions){
-   const button=menu.querySelector(selector);if(!button)continue;
+   // Arena's existing native action has different data-go identifiers
+   // across PC/Web/Android builds. Use its visible menu label as a fallback,
+   // while keeping the ORIGINAL interactive button and handler intact.
+   let button=menu.querySelector(selector);
+   if(!button&&type==='arena'){
+    button=[...menu.querySelectorAll('.menu-right .menu-list .menu-item')].find(node=>{
+     const label=(node.querySelector('.pkmsvv-menu-label,.menu-label,strong')?.textContent||
+      node.textContent||'').trim().toLowerCase();
+     return label==='arena'||label.startsWith('arena ');
+    })||null;
+   }
+   if(!button)continue;
    let art=button.querySelector(':scope > .mi-ico');
    if(!art){art=d.createElement('span');art.className='mi-ico';button.prepend(art);}
    if(art.classList.contains('pkmsvv-menu-icon-'+type))continue;
