@@ -80,6 +80,17 @@ async function main(){
    playerSkills:G.Game?.player?.moves?.length||0
   }))()`);
   console.log('QA_RUNTIME_AUDIT='+JSON.stringify(runtimeAudit));
+  const gameAudit=await evaluate(`(()=>({
+   rankObjects:Object.keys(G).filter(k=>/rank|leader|score|coop|hud|board/i.test(k)).slice(0,80),
+   shinyObjects:Object.keys(G).filter(k=>/shiny|loot|reward|result|pickup/i.test(k)).slice(0,60),
+   coopKeys:Object.keys(G.Coop||{}).slice(0,75),
+   runKeys:Object.keys(G.RunUI||{}).slice(0,75),
+   gameKeys:Object.keys(G.Game||{}).slice(0,85),
+   rankNodes:[...document.querySelectorAll('[id],[class]')].filter(n=>/leader|ranking|ranklist|scoreboard|top.?rank/i.test(String(n.id||'')+' '+String(n.className||''))).slice(0,30).map(n=>({tag:n.tagName,id:n.id,cls:String(n.className).slice(0,80)})),
+   padKeys:G.PKMSVVPadOrb?.PAD_IDS||[],
+   captureFunctions:Object.keys(G).filter(k=>/gacha|shiny|run|loot|pick|spawner/i.test(k)).slice(0,60)
+  }))()`);
+  console.log('PKMSVV_RANK_SHINY_BINDING_AUDIT='+JSON.stringify(gameAudit));
   const five=await evaluate('G.PKMSVVBox2.formatRank(5).hp');
   assert.equal(await evaluate('G.PKMSVVBox3.PRICE'),6500);
   assert.equal(await evaluate('G.PKMSVVBox3.PITY'),180);
