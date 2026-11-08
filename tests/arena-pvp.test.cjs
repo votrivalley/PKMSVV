@@ -6,7 +6,7 @@ const SOURCE=read('src/lan/arena-pvp.js');
 function instance(myUid,opts={}){
  const elements=new Map(),listeners=[],peers=[],roomListeners=[],docEvents={},windowEvents={};
  function node(tag='div'){
-  const n={tag,id:'',textContent:'',hidden:false,style:{},children:[],className:'',
+  const n={tag,id:'',textContent:'',hidden:false,style:{},children:[],className:'',dataset:{},
    setAttribute(){},remove(){elements.delete(this.id);},
    append(...nodes){this.children.push(...nodes);for(const c of nodes)if(c.id)elements.set(c.id,c);},
    replaceChildren(...nodes){this.children=[...nodes];},
