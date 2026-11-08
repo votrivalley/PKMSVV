@@ -49,6 +49,8 @@ jobs:
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/images/pkmsvv-menu-icons.webp
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-modal-navigation-qa.js
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/css/pkmsvv-modal-navigation-qa.css
+          test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-runtime-controls-qa.js
+          test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/css/pkmsvv-runtime-controls-qa.css
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/css/pkmsvv-box-stage3.css
           grep -q pkmsvv-box-stage4 dist/pokebox-stage4-pc-qa/resources/lan-site/game/index.html
       - uses: actions/upload-artifact@v4
