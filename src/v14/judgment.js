@@ -285,6 +285,8 @@ G.Judgment = (() => {
 
   /** En la pelea (lo llama game.js en cada fotograma de juego). */
   function update(dt, pl, time) {
+    // Explore owns its own 15m and 30m bosses; never teleport into Judgment.
+    if(G.PKMSVVQuickRegion?.active)return;
     if (!phase) {
       sampleDps(dt);                        // (para la vida del primer legendario)
       if (authority() && time >= AT && !G.Rift.inArena) start();
