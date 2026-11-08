@@ -21,7 +21,7 @@ G.PKMSVVArenaPvp=(()=>{
  // fragile one-off was its exit packet. The lobby's authoritative open flag
  // provides a separate recovery signal when that packet is lost.
  let matchRoom='',startedWhileClosed=false;
- let pickReady=new Set(),pickedDex=null,pickPanel=null;
+ let pickReady=new Set(),pickedDex=null,pickedId=null,pickedShiny=false,pickPanel=null;
  // Keep duel isolation active after a rival disconnects; otherwise old
  // Survival spawners wake up as the room shrinks from two members to one.
  const mode=()=>!!(active&&G.Coop?.active);
@@ -60,7 +60,7 @@ G.PKMSVVArenaPvp=(()=>{
   lastSyncRequest=-Infinity;lastSyncReply=-Infinity;lastSnapshotAt=-Infinity;
   if(element){element.remove();element=null;}
   if(result){result.remove();result=null;}
-  if(pickPanel){pickPanel.remove();pickPanel=null;}pickReady.clear();pickedDex=null;
+  if(pickPanel){pickPanel.remove();pickPanel=null;}pickReady.clear();pickedDex=null;pickedId=null;pickedShiny=false;
   const count=$('pkmsvv-arena-pvp-count');if(count)count.remove();
   G.World?.setArena?.(null);
  }
@@ -96,9 +96,16 @@ G.PKMSVVArenaPvp=(()=>{
   matchRoom=String(G.Social.room?.id||'');
   startedWhileClosed=G.Social.room?.open===false;
   if(!cfg.members.some(m=>m.uid===uid))return false;
-  people=cfg.members.map(m=>({uid:m.uid,name:String(m.name||'Trainer').slice(0,24),dex:m.dex}));
+  people=cfg.members.map(m=>({uid:m.uid,name:String(m.name||'Trainer').slice(0,24),dex:m.dex,shiny:!!m.shiny}));
   seed=cfg.seed;active=true;stage='select';elapsed=0;winner=null;
-  pickReady.clear();pickedDex=Number(cfg.members.find(m=>m.uid===uid)?.dex)||Number(G.DB?.save?.partner)||25;
+  pickReady.clear();
+  const saved=G.DB?.save,ready=ownChoices();
+  const initial=ready.find(x=>x.id===saved?.pkmsvvSelectedInstanceId)||
+   ready.find(x=>x.dex===Number(saved?.partner)&&x.shiny===!!saved?.partnerShiny)||ready[0];
+  if(!initial)return false;
+  pickedId=initial.id;pickedDex=initial.dex;pickedShiny=initial.shiny;
+  const member=people.find(m=>m.uid===uid);
+  if(member){member.dex=pickedDex;member.shiny=pickedShiny;}
   serial=0;received=-1;lastSyncRequest=-Infinity;lastSyncReply=-Infinity;lastSnapshotAt=-Infinity;
   matchType=cfg.mode;round=1;scores=Object.fromEntries(people.map(m=>[m.uid,0]));
   hp=Object.fromEntries(people.map(m=>[m.uid,HP]));
@@ -116,9 +123,7 @@ G.PKMSVVArenaPvp=(()=>{
  // The authenticated Host owns the 10s lobby and starts early only if both
  // human players confirm. Never mutate the player's permanent saved partner.
  function ownChoices(){
-  const owned=G.DB?.save?.owned||{};
-  const ids=Object.keys(owned).map(Number).filter(x=>x>0&&G.DEX_BY?.[x]);
-  return ids.length?ids:[Number(G.DB?.save?.partner)||25];
+  return G.PKMSVVBoxHub?.arenaReady?.(G.DB?.save)||[];
  }
  function createPickPanel(){
   if(pickPanel)return;
@@ -126,27 +131,34 @@ G.PKMSVVArenaPvp=(()=>{
   panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');
   panel.setAttribute('translate','no');
   panel.innerHTML='<div class="pkmsvv-arena-pvp-pick-card">'+
-   '<h2>'+tr('⚔ Chọn Pokémon trước Arena','⚔ Choose Pokémon before Arena')+'</h2>'+
+   '<h2>'+tr('⚔ Chọn 1 trong Đội hình 6 Pokémon sẵn sàng','⚔ Choose 1 from PokéBox Ready Team of 6')+'</h2>'+
    '<p id="pkmsvv-arena-pvp-pick-clock">10s</p>'+
-   '<input id="pkmsvv-arena-pvp-pick-search" type="search" placeholder="'+tr('Tìm Pokémon / #Dex','Search Pokémon / #Dex')+'"/>'+
+   '<p class="pkmsvv-arena-ready-hint">'+tr('Đội hình đã chọn trong PokéBox','Selected in PokéBox Ready Team')+'</p>'+
    '<div id="pkmsvv-arena-pvp-pick-options"></div>'+
    '<button type="button" class="btn gold" id="pkmsvv-arena-pvp-pick-confirm">'+tr('✓ Xác nhận','✓ Confirm')+'</button>'+
    '<button type="button" class="btn ghost" id="pkmsvv-arena-pvp-pick-exit">'+tr('Rời phòng','Leave room')+'</button></div>';
   document.body.append(panel);pickPanel=panel;
-  panel.querySelector('#pkmsvv-arena-pvp-pick-search').oninput=renderPickOptions;
   panel.querySelector('#pkmsvv-arena-pvp-pick-confirm').onclick=confirmPick;
   panel.querySelector('#pkmsvv-arena-pvp-pick-exit').onclick=exit;
  }
  function renderPickOptions(){
   if(!pickPanel||stage!=='select')return;
   const grid=pickPanel.querySelector('#pkmsvv-arena-pvp-pick-options');if(!grid)return;
-  const query=(pickPanel.querySelector('#pkmsvv-arena-pvp-pick-search')?.value||'').trim().toLowerCase();
   grid.replaceChildren();
-  for(const dex of ownChoices().filter(d=>String(d).includes(query)||String(G.DEX_BY[d]?.name||'').toLowerCase().includes(query)).slice(0,100)){
-   const button=document.createElement('button');button.type='button';button.className='btn small';
-   button.classList.toggle('gold',dex===pickedDex);
-   button.textContent=(dex===pickedDex?'✓ ':'')+(G.DEX_BY[dex]?.name||'Pokémon')+' #'+dex;
-   button.onclick=()=>{if(pickReady.has(uid))return;pickedDex=dex;renderPickOptions();};
+  for(const item of ownChoices()){
+   const button=document.createElement('button');button.type='button';
+   button.className='btn small pkmsvv-arena-ready-option'+(item.id===pickedId?' gold':'');
+   button.dataset.readyId=item.id;button.dataset.dex=String(item.dex);
+   button.setAttribute('aria-pressed',String(item.id===pickedId));
+   button.textContent=(item.id===pickedId?'✓ ':'')+(G.DEX_BY?.[item.dex]?.name||'Pokémon')+
+    ' #'+item.dex+(item.shiny?' ✨ Shiny':'');
+   if(G.UI?.sprite){
+    const sprite=document.createElement('canvas');sprite.width=56;sprite.height=56;
+    sprite.className='pkmsvv-arena-ready-art';
+    try{G.UI.sprite(sprite,item.dex,{shiny:item.shiny});button.append(sprite);}catch(_){}
+   }
+   button.onclick=()=>{if(pickReady.has(uid))return;
+    pickedId=item.id;pickedDex=item.dex;pickedShiny=item.shiny;renderPickOptions();};
    grid.append(button);
   }
  }
@@ -164,22 +176,28 @@ G.PKMSVVArenaPvp=(()=>{
  }
  function confirmPick(){
   if(stage!=='select'||pickReady.has(uid))return false;
-  const selected=ownChoices().includes(pickedDex)?pickedDex:Number(G.DB?.save?.partner)||25;
-  const member=people.find(m=>m.uid===uid);if(member)member.dex=selected;
+  const choice=ownChoices().find(x=>x.id===pickedId);
+  if(!choice)return false;
+  const selected=choice.dex;
+  pickedDex=selected;pickedShiny=choice.shiny;
+  const member=people.find(m=>m.uid===uid);
+  if(member){member.dex=selected;member.shiny=choice.shiny;}
   pickReady.add(uid);renderPick();
   if(host){if(pickReady.size===people.length)finishPick();else sendState(true);}
-  else G.Net?.toHost?.({k:'apvp-pick-ready',seed,room:matchRoom,matchType,dex:selected});
+  else G.Net?.toHost?.({k:'apvp-pick-ready',seed,room:matchRoom,matchType,dex:selected,shiny:choice.shiny});
   return true;
  }
  function applyFighterChoice(){
   const member=people.find(m=>m.uid===uid),pl=local(),dex=member?.dex;
   if(!pl||!G.DEX_BY?.[dex])return;
-  if(pl.dex!==dex){
-   pl.dex=dex;pl.mon=G.DEX_BY[dex];
+  const shiny=!!member.shiny;
+  if(pl.dex!==dex||!!pl.shiny!==shiny){
+   pl.dex=dex;pl.mon=G.DEX_BY[dex];pl.shiny=shiny;
    if(G.Sprites?.Animator){
-    try{pl.anim=new G.Sprites.Animator(dex,G.Sprites.playerScale?.(dex)||1,false);}catch(_){}
+    try{pl.anim=new G.Sprites.Animator(dex,G.Sprites.playerScale?.(dex)||1,shiny);}catch(_){}
    }
   }
+  pl.pkmsvvArenaReadyInstanceId=pickedId; // per-match slot, never change PokéBox selection
   normalize(pl);
  }
  function finishPick(){
@@ -274,7 +292,8 @@ G.PKMSVVArenaPvp=(()=>{
   if(!force&&frameClock>0)return;
   frameClock=FRAME_RATE;
   const packet={k:'apvp',seed,seq:++serial,stage,time:elapsed,hp:{...hp},winner,matchType,round,scores:{...scores},
-   dexes:Object.fromEntries(people.map(m=>[m.uid,m.dex])),ready:[...pickReady]};
+   dexes:Object.fromEntries(people.map(m=>[m.uid,m.dex])),
+   shiny:Object.fromEntries(people.map(m=>[m.uid,!!m.shiny])),ready:[...pickReady]};
   G.Net?.broadcast?.(packet);
   render();
  }
@@ -289,7 +308,10 @@ G.PKMSVVArenaPvp=(()=>{
   received=data.seq;lastSnapshotAt=performance.now()/1000;
   const oldStage=stage;stage=data.stage;elapsed=clamp(data.time,0,DUEL+COUNTDOWN+SELECT+5);
   for(const person of people)if(Number.isInteger(Number(data.dexes?.[person.uid]))&&
-    G.DEX_BY?.[Number(data.dexes[person.uid])])person.dex=Number(data.dexes[person.uid]);
+    G.DEX_BY?.[Number(data.dexes[person.uid])]){
+   person.dex=Number(data.dexes[person.uid]);
+   person.shiny=!!data.shiny?.[person.uid];
+  }
   pickReady=new Set(Array.isArray(data.ready)?data.ready.filter(id=>people.some(m=>m.uid===id)):[]);
   if(oldStage==='select'&&stage!=='select')applyFighterChoice();
   round=clamp(data.round,1,3);
@@ -396,6 +418,11 @@ G.PKMSVVArenaPvp=(()=>{
   if(!G.Coop?.begin||!G.Net?.on)return false;
   const originalBegin=G.Coop.begin,originalEnd=G.Coop.end,originalLeave=G.Coop.leave;
   G.Coop.begin=function(cfg,pl,cb){
+   if(isDuelMode(cfg?.mode)&&!ownChoices().length){
+    G.UI?.toast?.(tr('Chọn Pokémon trong Đội hình 6 sẵn sàng tại PokéBox trước khi vào Arena.',
+     'Choose Pokémon in PokéBox Ready Team of 6 before joining Arena.'),2600);
+    return false;
+   }
    const r=originalBegin.call(this,cfg,pl,cb);
    begin(cfg,pl);return r;
   };
@@ -414,7 +441,7 @@ G.PKMSVVArenaPvp=(()=>{
       data.seed===seed&&data.room===matchRoom&&data.matchType===matchType&&
       G.DEX_BY?.[Number(data.dex)]){
     const remote=people.find(m=>m.uid===from);
-    if(remote){remote.dex=Number(data.dex);pickReady.add(from);
+    if(remote){remote.dex=Number(data.dex);remote.shiny=!!data.shiny;pickReady.add(from);
      if(pickReady.size===people.length)finishPick();else sendState(true);}
     return;
    }
