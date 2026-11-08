@@ -181,14 +181,16 @@
   return ['coop','berry','berryeasy','survival'].includes(mode);
  }
  function rankingRows(){
-  const members=G.Social?.room?.members||[];
+  const members=Array.isArray(G.Social?.room?.members)?G.Social.room.members:[];
+  const mates=Array.isArray(G.Coop?.mates)?G.Coop.mates:[];
   const raw=G.Coop?.players?.()||[];
   const list=Array.isArray(raw)?raw:(raw&&typeof raw[Symbol.iterator]==='function'?[...raw]:[]);
   const seen=new Set();
   return list.filter(p=>p&&!p.isEnemy&&!p.enemy).map((p,i)=>{
    const uid=String(p.uid||p.id||'player-'+i);
    if(seen.has(uid))return null;seen.add(uid);
-   const member=members.find(m=>String(m?.uid)===uid);
+   const member=members.find(m=>String(m?.uid)===uid)||
+    mates.find(m=>String(m?.uid)===uid||m?.pl===p);
    return {uid,name:String(member?.name||p.name||p.mon?.name||'Trainer').slice(0,25),
     kills:Math.max(0,Math.floor(Number(p.kills)||0)),
     bosses:Math.max(0,Math.floor(Number(p.bosses)||0)),
