@@ -133,6 +133,37 @@ async function main(){
 
 
 
+  const patchedGameplay=await evaluate(`(()=>{
+   G.PKMSVVRuntimeControlsQA?.installAutoPick?.();
+   G.PKMSVVRuntimeControlsQA?.ensureArenaShinyGuard?.();
+   const moves=['whirlwind','body-slam','hyper-beam'].map(id=>G.Moves?.BY_ID?.[id]||null);
+   return {
+    controller:G.PKMSVVPadOrb?.PAD_IDS||[],
+    keys:G.PKMSVVPadOrb?.keyboardBindings?.(),
+    full:String(G.PKMSVVRuntimeControlsQA?.full||'').slice(0,1300),
+    autopick:!!G.RunUI?.showLevelUp?._pkmsvvMaxAutoPick,
+    shiny:!!G.onShinyCaught?._pkmsvvArenaNoShiny,
+    grantShiny:!!G.DB?.grantShiny?._pkmsvvArenaNoShiny,
+    gamepadScroll:String(G.PKMSVVModalNavQA?.setFocus||'').includes('if(reveal'),
+    rankingApi:typeof G.PKMSVVRuntimeControlsQA?.toggleRanking,
+    speedApi:typeof G.PKMSVVRuntimeControlsQA?.setSpeed,
+    arenaLevel:typeof G.PKMSVVChampionArena?.sampleRoundRatio,
+    effects:G.PKMSVVEggs?.DITTO_FORM,
+    moveKinds:moves.map(m=>m?.kind||null)
+   };
+  })()`);
+  console.log('PKMSVV_QA_COMPILED_GAMEPLAY='+JSON.stringify(patchedGameplay));
+  assert.ok(patchedGameplay.controller.includes('speed')&&patchedGameplay.controller.includes('leaderboard'),
+   'QA compiled gamepad missing new Speed/Co-op TOP mappings');
+  assert.equal(patchedGameplay.keys?.speed,'keyg');
+  assert.equal(patchedGameplay.keys?.leaderboard,'keyl');
+  assert.equal(patchedGameplay.autopick,true,'real app LevelUp did not install hidden native auto-completion');
+  assert.equal(patchedGameplay.shiny,true,'real app did not block Arena wild shiny callback');
+  assert.equal(patchedGameplay.grantShiny,true,'real app did not guard persistent Shiny credits');
+  assert.equal(patchedGameplay.gamepadScroll,true,'real game still auto scrolls modal to focused option');
+  assert.equal(patchedGameplay.rankingApi,'function','Co-op ranking toggle missing from native QA app');
+  assert.equal(patchedGameplay.speedApi,'function');
+  assert.equal(patchedGameplay.arenaLevel,'function');
   const five=await evaluate('G.PKMSVVBox2.formatRank(5).hp');
   assert.equal(await evaluate('G.PKMSVVBox3.PRICE'),6500);
   assert.equal(await evaluate('G.PKMSVVBox3.PITY'),180);
