@@ -17,7 +17,8 @@ function setup(){
  let state='ui';const save={partner:25,owned:{25:1,6:1,149:1},pkmsvvChapter6Seen:true};
  const player={dex:25,mon:{dex:25},maxHp:300,hp:300,baseSpd:100,baseAtk:1,
   x:0,y:0,dead:false};
- const G={DB:{save},Coop:{active:false},PKMSVVStory:{arenaUnlocked(){return save.pkmsvvChapter6Seen}},
+ const G={DB:{save},Coop:{active:false},
+  PKMSVVBoxHub:{arenaReady(){return [25,6,149].map(dex=>({id:'b1-'+dex+'-n',dex,shiny:false}));}},PKMSVVStory:{arenaUnlocked(){return save.pkmsvvChapter6Seen}},
   UI:{toast(s){msgs.push(s)}},I18n:{lang:'vi'},
   DEX_BY:new Proxy({},{get(_t,k){return {dex:Number(k),name:'Pokémon '+k,types:['normal']}}}),
   Game:{player,get state(){return state},startRun(){state='playing'},toUI(){state='ui'}},
