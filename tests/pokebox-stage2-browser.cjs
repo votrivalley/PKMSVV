@@ -392,8 +392,8 @@ async function main(){
     'validSemanticLabel','hiddenFromScreenReaders','pixelated'])
     assert.equal(icon[key],true,'DOM icon '+icon.name+' violated '+key);
    assert.equal(icon.childCount,1,'duplicate menu icon for '+icon.name);
-   assert.equal(icon.width,'34px','incorrect native menu icon width');
-   assert.equal(icon.height,'34px','incorrect native menu icon height');
+   assert.equal(icon.width,'42px','incorrect native menu icon width');
+   assert.equal(icon.height,'42px','incorrect native menu icon height');
   }
   console.log('DOM menu icon rerender/keyboard/semantics QA:',JSON.stringify(menuIconDomRegression));
   const coverMascots=await evaluate("(()=>{const q=G.PKMSVVQuickRegion,ids=[150,249,385,488,646,718,800,890,1024,384];q.open();const covers=[...document.querySelectorAll('#pkmsvv-quick-region-grid .region-art')];const sprites=covers.map(x=>x.querySelector('canvas.region-sprite'));const result={mascots:[...q.mascots],covers:covers.length,spriteCanvases:sprites.filter(Boolean).length,missingDex:ids.filter(id=>!G.DEX_BY?.[id]),missingSpriteMeta:ids.filter(id=>!G.SPRITE_META?.[id]),noSpawnsChanged:!q.active};q.close();return result})()");
