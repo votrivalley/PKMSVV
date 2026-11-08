@@ -12,6 +12,12 @@ on:
       - 'scripts/build-pokebox-stage4-android-qa.cjs'
       - 'src/pkmsvv-pc-menu-clean-qa.*'
       - 'src/pkmsvv-modal-navigation-qa.*'
+      - 'src/pkmsvv-runtime-controls-qa.*'
+      - 'src/pkmsvv-support-scroll-fix.css'
+      - 'src/pkmsvv-support-catalog.js'
+      - 'src/v15/eggs.js'
+      - 'src/pkmsvv-encounter-rarity-qa.js'
+      - 'tests/runtime-controls-qa.test.cjs'
       - 'src/pkmsvv-fusion-evolved.*'
       - 'src/pkmsvv-bond-fusion.js'
       - 'assets/fusion-icons/**'
@@ -59,7 +65,7 @@ jobs:
       - name: Fetch and verify Apktool 3.0.3 (Android 16 resource support)
         shell: bash
         run: |
-          curl --fail --location --retry 3 --silent --show-error \
+          curl --fail --location --retry 8 --retry-all-errors --retry-delay 2 --silent --show-error \
             https://github.com/iBotPeaches/Apktool/releases/download/v3.0.3/apktool_3.0.3.jar \
             --output apktool_3.0.3.jar
           echo "dbf930b076c6b9be08d57c449cacefc3bdd6b71ebd59b3066fc0e1f5b14f9423  apktool_3.0.3.jar" | sha256sum -c -
@@ -105,6 +111,8 @@ jobs:
           test -s decoded-android/assets/public/images/pkmsvv-menu-icons.webp
           test -s decoded-android/assets/public/js/ui/pkmsvv-modal-navigation-qa.js
           test -s decoded-android/assets/public/css/pkmsvv-modal-navigation-qa.css
+          test -s decoded-android/assets/public/js/ui/pkmsvv-runtime-controls-qa.js
+          test -s decoded-android/assets/public/css/pkmsvv-runtime-controls-qa.css
       - name: Rebuild and sign separate APK with original permanent certificate
         shell: bash
         env:
