@@ -39,20 +39,20 @@ G.PKMSVVChampionArena=(()=>{
  const FIRST_PREVIEW_SECONDS=60,NEXT_PREVIEW_SECONDS=30,WARN_SECONDS=15;
  const clock=secs=>{const n=Math.max(0,Math.ceil(secs));return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');};
  const DUEL_TYPES=['normal','fighting','psychic','steel','rock','ghost'];
- // Ten distinct built-in biomes; bespoke outlined stadium art is still pending.
- const REGION_THEMES=['fire','steel','water','ground','rock','dark','bug','fighting','ice','dragon'];
+ // EXACT same Gen -> native terrain mapping as Explore (Kanto = starter map 0).
+ const REGION_THEMES=['normal','ground','water','ice','steel','rock','bug','fighting','fire','dragon'];
  // Each regional arena has a distinct symmetrical combat rule. These affect
  // the match actors only and never permanently modify Pokémon or save stats.
  const MAP_EFFECTS=Object.freeze({
-  fire:{name:'Kanto · Lửa',hint:'Sát thương +8%',atk:1.08,spd:1},
-  steel:{name:'Johto · Thép',hint:'Sát thương -8%',atk:.92,spd:1},
+  normal:{name:'Kanto · Đồng cỏ',hint:'Sân đấu cân bằng',atk:1,spd:1},
+  ground:{name:'Johto · Đất',hint:'Tốc độ chạy -8%',atk:1,spd:.92},
   water:{name:'Hoenn · Nước',hint:'Pokémon trên mặt đất chạy chậm 10%',atk:1,spd:.90,groundOnly:true},
-  ground:{name:'Sinnoh · Đất',hint:'Tốc độ chạy -12%',atk:1,spd:.88},
-  rock:{name:'Unova · Đá',hint:'Sát thương -5%, tốc độ -6%',atk:.95,spd:.94},
-  dark:{name:'Kalos · Bóng tối',hint:'Sát thương +6%, tốc độ -3%',atk:1.06,spd:.97},
+  ice:{name:'Sinnoh · Băng',hint:'Tốc độ chạy -10%',atk:1,spd:.90},
+  steel:{name:'Unova · Thép',hint:'Sát thương -8%',atk:.92,spd:1},
+  rock:{name:'Kalos · Núi đá',hint:'Sát thương -5%, tốc độ -6%',atk:.95,spd:.94},
   bug:{name:'Alola · Rừng',hint:'Tốc độ chạy +12%',atk:1,spd:1.12},
   fighting:{name:'Galar · Võ đài',hint:'Sát thương +10%',atk:1.10,spd:1},
-  ice:{name:'Paldea · Băng',hint:'Tốc độ chạy -10%',atk:1,spd:.90},
+  fire:{name:'Paldea · Lửa',hint:'Sát thương +8%',atk:1.08,spd:1},
   dragon:{name:'Tháp Thiên Không · Rồng',hint:'Sát thương +15%, tốc độ +5%',atk:1.15,spd:1.05}
  });
  function mapEffect(type=duelType){return MAP_EFFECTS[type]||MAP_EFFECTS.fire;}
@@ -84,6 +84,7 @@ G.PKMSVVChampionArena=(()=>{
  // translation mix English and Vietnamese after it is rendered.
  const ownLanguage=el=>{el?.setAttribute('translate','no');el?.classList?.add('notranslate');};
  const arenaHint=hint=>tr(hint,{
+  'Sân đấu cân bằng':'Balanced arena','Tốc độ chạy -8%':'Movement speed -8%',
   'Sát thương +8%':'Damage +8%','Sát thương -8%':'Damage -8%',
   'Pokémon trên mặt đất chạy chậm 10%':'Grounded Pokémon move 10% slower',
   'Tốc độ chạy -12%':'Movement speed -12%',
@@ -150,7 +151,12 @@ G.PKMSVVChampionArena=(()=>{
   });
  }
  function regionBiome(){
-  const biome=G.Tiles?.arenaBiome?.(duelType);
+  const index=selectedRegion();
+  // Explore is authoritative; do not compute a second, drifting Gen map.
+  const shared=G.PKMSVVQuickRegion?.targetBiome?.(index);
+  if(Number.isInteger(shared)&&shared>=0)return shared;
+  if(index===0)return 0; // Even while QuickRegion is still initializing.
+  const biome=G.Tiles?.arenaBiome?.(REGION_THEMES[index]);
   return Number.isFinite(biome)?biome:null;
  }
  function applyRegionBiome(){
@@ -506,7 +512,7 @@ G.PKMSVVChampionArena=(()=>{
   try{G.Game.startRun(null);}finally{startingOwnRun=false;}
   const zoneType=mode==='league'?'normal':duelType;
   G.World?.setArena?.({tx:0,ty:0,r:22,type:zoneType});
-  if(G.Tiles?.arenaBiome)G.World?.setBiome?.(G.Tiles.arenaBiome(duelType),true);
+  applyRegionBiome();
   const bar=$('pkmsvv-champion-hud')||document.createElement('div');
   bar.id='pkmsvv-champion-hud';bar.className='pkmsvv-champion-hud';
   document.body.append(bar);bar.hidden=false;
@@ -941,7 +947,7 @@ G.PKMSVVChampionArena=(()=>{
   G.EnemyMgr?.clear?.();G.Pickups?.clear?.();G.Projectiles?.clear?.();G.Hazards?.clear?.();
   const surfaceType=mode==='league'?'normal':duelType;
   G.World?.setArena?.({tx:0,ty:0,r:20,type:surfaceType});
-  if(G.Tiles?.arenaBiome)G.World?.setBiome?.(G.Tiles.arenaBiome(duelType),true);
+  applyRegionBiome();
   const pl=G.Game?.player;if(pl){pl.x=0;pl.y=100;pl.invuln=2;}
   const ready=$('pkmsvv-arena-ready-float');if(ready)ready.hidden=true;
   const preview=$('pkmsvv-champion-preview');if(preview)preview.hidden=true;
