@@ -110,6 +110,10 @@
  }
  function eligibleByTime(id,index,time=encounterSeconds()){
   if(!isAllowed(id,index))return false;
+  // Ordinary wilds, Rifts and minibosses may NEVER generate legendary-tier
+  // Pokémon. Gen mascots enter only as the marked 15-minute Region Boss.
+  const mon=G.DEX_BY?.[id];
+  if(mon?.leg||mon?.legendary||Number(mon?.rarity)>=5)return false;
   const {total,depth,rarity}=pokemonStrength(id);
   const tier=encounterTier(time);
   // The first TWO minutes: only unevolved, weak Pokémon. Progressive
@@ -273,9 +277,9 @@
    // Reuse native boss behaviour and attacks. A mascot is a REAL boss actor
    // with HP/attack/sprite, not an overlay or auto-earned timer reward.
    const source=G.Enemies?.BOSSES?.[0]||{};
-   const hp=Math.max(1500+run.index*340,(Number(hero.maxHp)||300)*(4+run.index*.38));
+   const hp=Math.max(28000+run.index*8000,(Number(hero.maxHp)||300)*(22+run.index*4));
    const def={...source,dex,name:mon.name||('Pokémon '+dex),
-    hp:Math.round(hp),dmg:Math.max(18+run.index*3,Number(source.dmg)||0),
+    hp:Math.round(hp),dmg:Math.max(24+run.index*4,Number(source.dmg)||0),
     spd:Math.max(70,Math.min(140,Number(source.spd)||90)),
     xp:0,behavior:source.behavior||'boss',pkmsvvExploreBoss:true};
    const enemy=new G.Enemy(def,Number(hero.x||0)+230,Number(hero.y||0)-95,
