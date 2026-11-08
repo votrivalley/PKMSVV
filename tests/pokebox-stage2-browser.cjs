@@ -373,6 +373,13 @@ async function main(){
    assert.equal(result.overlayOpen,true,'selection should not require returning from gameplay');
    assert.equal(result.gameUnchanged,true,'selecting a Pokémon must not start a match');
   }
+  const integratedIcons=await evaluate("(async()=>{const menu=document.getElementById('scr-menu');G.PKMSVVMenuCleanQA?.syncHome?.();const defs=[['pc','#pkmsvv-menu-wiki'],['coop','[data-go=multiplayer]'],['arena','[data-go=arena]']];const out=defs.map(([name,selector])=>{const el=menu?.querySelector(selector),art=el?.querySelector(':scope > .pkmsvv-new-menu-icon'),style=art?getComputedStyle(art):null;return {name,button:!!el,art:!!art,webp:!!style?.backgroundImage?.includes('pkmsvv-menu-icons.webp')}});const image=new Image;const loaded=await new Promise(resolve=>{image.onload=()=>resolve(true);image.onerror=()=>resolve(false);image.src='images/pkmsvv-menu-icons.webp';});return {out,loaded,width:image.naturalWidth,height:image.naturalHeight}})()");
+  console.log('Native in-game pixel art PC / Co-op / Arena icons:',JSON.stringify(integratedIcons));
+  assert.equal(integratedIcons.loaded,true,'3-icon WEBP must exist inside actual compiled game');
+  assert.equal(integratedIcons.width,108);
+  assert.equal(integratedIcons.height,36);
+  for(const icon of integratedIcons.out)
+   for(const k of ['button','art','webp'])assert.equal(icon[k],true,icon.name+' should use newly embedded pixel art: '+k);
   const coverMascots=await evaluate("(()=>{const q=G.PKMSVVQuickRegion,ids=[150,249,385,488,646,718,800,890,1024,384];q.open();const covers=[...document.querySelectorAll('#pkmsvv-quick-region-grid .region-art')];const sprites=covers.map(x=>x.querySelector('canvas.region-sprite'));const result={mascots:[...q.mascots],covers:covers.length,spriteCanvases:sprites.filter(Boolean).length,missingDex:ids.filter(id=>!G.DEX_BY?.[id]),missingSpriteMeta:ids.filter(id=>!G.SPRITE_META?.[id]),noSpawnsChanged:!q.active};q.close();return result})()");
   assert.deepEqual(coverMascots.mascots,[150,249,385,488,646,718,800,890,1024,384],
    'each Gen 1–9 has the exact requested mascot, mixed Sky Pillar unchanged');
