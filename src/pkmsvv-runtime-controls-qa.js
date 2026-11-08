@@ -8,11 +8,20 @@
  const settings=()=>G.Settings;
  const enabled=()=>settings()?.get?.(KEY)===true;
  const setEnabled=value=>{settings()?.set?.(KEY,!!value);refreshLabels();};
- const full=()=>Array.isArray(G.Game?.player?.moves)&&G.Game.player.moves.length>=8;
+ // MAX means eight learned moves each at its true catalog max level.
+ const maxLevel=m=>Number(m?.def?.maxLvl??G.Moves?.BY_ID?.[m?.id]?.maxLvl??G.Moves?.BY?.[m?.id]?.maxLvl);
+ const full=()=>Array.isArray(G.Game?.player?.moves)&&G.Game.player.moves.length>=8&&
+  G.Game.player.moves.slice(0,8).every(m=>{
+   const cap=maxLevel(m);return Number.isFinite(cap)&&cap>=1&&Number(m?.lvl)>=cap;
+  });
  const playing=()=>G.Game?.state==='playing'&&!G.Game?.player?.dead;
+ // Level-up and selection dialogs temporarily suspend 'playing', but may
+ // NEVER cancel the user's chosen 1.5x speed for this SAME active run.
+ const runContext=()=>!!G.Game?.player&&!G.Game.player.dead&&
+  !['ui','over','ended','idle'].includes(String(G.Game?.state||'ui'));
  const byId=id=>document.getElementById(id);
  let fast=false,autoDash=false,held=false,heldTimer=null,choiceToken=null,choicePending=false;
- let lastCast=0,lastUI=0,lastChoiceShow=false;
+ let lastCast=0,lastUI=0,lastChoiceShow=false,lastSpeedState=null;
  function toast(vi,en){G.UI?.toast?.(L(vi,en),2000);}
  // Speed is a solo/AI training aid, never a competitive advantage.
  // Explore must be single-player. Survival/Rescue Berry can accelerate only
@@ -24,7 +33,7 @@
  }
  function isBot(member){return !!(member?.bot||member?.lanBot||member?.isAI||member?.ai);}
  function canSpeed(){
-  if(!playing()||arenaMatch()||G.Royale?.active||G.EggRush?.active)return false;
+  if(!runContext()||arenaMatch()||G.Royale?.active||G.EggRush?.active)return false;
   const room=G.Social?.room,mode=String(room?.mode||'').toLowerCase();
   // Competitive rooms remain blocked even if their match-mode flag has not
   // initialized yet, including the AI-only Battle Royale / Egg Rush variants.
@@ -50,7 +59,7 @@
   G.Game.debugSpeed(fast?1.5:1);
   refreshLabels();return true;
  }
- function autoButtonLabel(){return L('⚡ Tự chọn sau 8 kỹ năng: ','⚡ Auto-pick after 8 skills: ')+
+ function autoButtonLabel(){return L('⚡ Tự chọn khi 8 kỹ năng MAX: ','⚡ Auto-pick when all 8 moves MAX: ')+
   (enabled()?L('BẬT','ON'):L('TẮT','OFF'));}
  function refreshLabels(){
   const b=byId('pkmsvv-maxskill-autopick');if(b){
@@ -71,7 +80,7 @@
   if(body.querySelector('#pkmsvv-settings-autopick'))return;
   const row=document.createElement('label');row.className='set-row pkmsvv-qa-auto-option';
   const name=document.createElement('span');
-  name.textContent=L('Tự chọn 1/3 phần thưởng khi đủ 8 kỹ năng','Auto-pick 1 of 3 rewards after learning 8 skills');
+  name.textContent=L('Tự chọn không hiện popup khi cả 8 kỹ năng đã MAX','Auto-pick without popup after all 8 moves reach MAX');
   const input=document.createElement('input');input.id='pkmsvv-settings-autopick';
   input.type='checkbox';input.checked=enabled();input.addEventListener('change',()=>setEnabled(input.checked));
   row.append(name,input);body.append(row);
@@ -88,22 +97,25 @@
   const shown=!screen.classList.contains('hidden')&&!screen.hidden;
   if(!shown||!full()){choicePending=false;choiceToken=null;lastChoiceShow=false;return;}
   if(!lastChoiceShow){refreshLabels();lastChoiceShow=true;}
-  // Respect the user's first encounter: turning on auto mode is a deliberate
-  // button or Settings action; we never silently select on a new profile.
-  if(!enabled()||choicePending)return;
-  const choices=[...cards.children].filter(el=>!el.disabled&&!el.hidden&&
-   el.getAttribute('aria-disabled')!=='true').slice(0,3);
-  if(!choices.length)return;
-  const token=choices[0];if(choiceToken===token)return;
-  choiceToken=token;choicePending=true;
-  setTimeout(()=>{
-   choicePending=false;
-   if(!enabled()||!full()||screen.classList.contains('hidden')||!token.isConnected)return;
-   const current=[...cards.children].filter(el=>!el.disabled&&!el.hidden&&
-    el.getAttribute('aria-disabled')!=='true').slice(0,3);
-   if(current[0]!==token||!current.length)return;
-   current[Math.floor(Math.random()*current.length)]?.click?.();
-  },180);
+  // See installAutoPick: handle the native completion callback BEFORE
+  // opening any level-up popup, never click a card after it is rendered.
+ }
+ function installAutoPick(){
+  const run=G.RunUI,original=run?.showLevelUp;
+  if(typeof original!=='function'||original._pkmsvvMaxAutoPick)return false;
+  function wrapped(level,offers,complete,...rest){
+   if(!enabled()||!full()||!Array.isArray(offers)||!offers.length||
+      typeof complete!=='function')
+    return original.call(this,level,offers,complete,...rest);
+   const available=offers.filter(card=>card&&typeof card.apply==='function');
+   if(!available.length)return original.call(this,level,offers,complete,...rest);
+   const selected=available[Math.floor(Math.random()*available.length)];
+   // Complete the exact native level-up queue, without showing a card UI.
+   // A new task frame avoids reentrancy when several levels are pending.
+   setTimeout(()=>complete(selected),0);
+   return undefined;
+  }
+  wrapped._pkmsvvMaxAutoPick=true;run.showLevelUp=wrapped;return true;
  }
  function ensureSpeed(){
   let button=byId('pkmsvv-speed-button'),indicator=byId('pkmsvv-active-auto');
@@ -173,7 +185,7 @@
  const oldStart=G.Game?.startRun;
  if(typeof oldStart==='function'&&!oldStart._pkmsvvRuntimeControls){
   function wrapped(...args){
-   fast=false;autoDash=false;cancelHold();choiceToken=null;choicePending=false;
+   fast=false;autoDash=false;cancelHold();choiceToken=null;choicePending=false;lastSpeedState=null;
    G.Game?.debugSpeed?.(1);
    return oldStart.apply(this,args);
   }
@@ -181,7 +193,11 @@
  }
  function frame(ts){
   if(ts-lastUI>=250){
-   lastUI=ts;ensureSpeed();ensureSettings();ensureLevelup();
+   lastUI=ts;installAutoPick();ensureSpeed();ensureSettings();ensureLevelup();
+    const state=G.Game?.state;
+    if(fast&&state==='playing'&&lastSpeedState!=='playing'&&canSpeed())
+     G.Game?.debugSpeed?.(1.5); // restore after a level/choice popup
+    lastSpeedState=state;
    // Royale already checks this from its native draw loop; avoid a duplicate.
    if(!G.Royale?.active&&(G.EggRush?.active||G.PKMSVVArenaSolo?.active||
      G.PKMSVVChampionArena?.active||G.PKMSVVArenaPvp?.active)){
@@ -192,5 +208,5 @@
   if(typeof requestAnimationFrame==='function')requestAnimationFrame(frame);
  }
  if(typeof requestAnimationFrame==='function')requestAnimationFrame(frame);
- G.PKMSVVRuntimeControlsQA={full,enabled,setEnabled,canSpeed,arenaMatch,setSpeed,toggleDash,target,castTowardsNearest,ensureLevelup,ensureSettings,ensureSpeed};
+ G.PKMSVVRuntimeControlsQA={full,maxLevel,enabled,setEnabled,canSpeed,arenaMatch,setSpeed,toggleDash,target,castTowardsNearest,ensureLevelup,installAutoPick,ensureSettings,ensureSpeed};
 })();
