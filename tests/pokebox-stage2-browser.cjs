@@ -355,7 +355,7 @@ async function main(){
   assert.equal(new Set(exploreMaps.ids.slice(0,9)).size,9,'nine Gen maps must use nine different native biomes');
   assert.equal(exploreMaps.kanto,0,'Kanto remains native beginner terrain');
   assert.equal(exploreMaps.paldea,exploreMaps.fire,'late Paldea receives the Fire biome');
-  assert.match(exploreMaps.instruction,/15 phút|15 minutes/,'in-game 15-minute instruction is localized and visible');
+  assert.match(exploreMaps.instruction,/Phút 15|15 min/,'in-game 15-minute instruction is localized and visible');
   assert.match(exploreMaps.instruction,/Boss Vùng|Region Boss/,'the player must understand a boss appears at minute 15');
   assert.match(exploreMaps.instruction,/Huy hiệu Vùng|Region Badge/,'the player must understand a Badge requires defeating the boss');
   assert.equal(await evaluate("typeof G.PKMSVVQuickRegion.spawnRegionBoss"),'function',
