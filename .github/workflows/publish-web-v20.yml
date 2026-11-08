@@ -1,0 +1,129 @@
+name: Publish Pokémon Chuyển Sinh 2.0 Web
+on:
+  push:
+    branches:
+      - release/pokemon-chuyen-sinh-2.0-web
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish the validated Pokémon Chuyển Sinh 2.0 release to Cloudflare Pages'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+  actions: read
+env:
+  V20_SOURCE_RUN: '42516317677'
+  V20_SOURCE_SHA: '6c82e42afefbfe4e4c920d450298d5308e12d5d2'
+jobs:
+  validate-web-v20:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify the pinned source artifact was approved by Chromium QA
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${V20_SOURCE_RUN}" \
+            --jq '{head_sha,conclusion,status}' > /tmp/v20-source-run.json
+          cat /tmp/v20-source-run.json
+          jq -e --arg sha "$V20_SOURCE_SHA" \
+            '.head_sha == $sha and .status == "completed" and .conclusion == "success"' \
+            /tmp/v20-source-run.json
+      - name: Source regression: PokéBox, gameplay and approved 2.0 economy
+        run: |
+          npm run test:pokebox:stage4
+          node --test tests/pkmsvv-v20.test.cjs
+          npm run test:quick-region
+      - name: Retrieve exact tested webgame snapshot, no mutable live build
+        uses: actions/download-artifact@v4
+        with:
+          name: PKMSVV-PokeBox-Stage4-Web-QA-ONLY
+          run-id: 42516317677
+          github-token: ${{ github.token }}
+          path: dist/pokebox-stage4-qa
+      - name: Smoke test real Web snapshot in Chromium
+        run: node tests/pokebox-stage2-browser.cjs
+      - name: Promote QA runtime to production-candidate website
+        run: node scripts/promote-web-v20.cjs
+      - name: Check production candidate structure and PWA save guardian
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s dist/cloudflare-v20-release/index.html
+          test -s dist/cloudflare-v20-release/save-guardian.js
+          test -s dist/cloudflare-v20-release/save-rescue.html
+          test -s dist/cloudflare-v20-release/ai/game/index.html
+          test -s dist/cloudflare-v20-release/game/index.html
+          test -s dist/cloudflare-v20-release/ai/game/js/ui/pkmsvv-changelog-v20-qa.js
+          test -s dist/cloudflare-v20-release/game/css/pkmsvv-v20-ui-qa.css
+          test ! -e dist/cloudflare-v20-release/POKEBOX-STAGE1-QA.txt
+          jq -e '.version=="2.0" and .localSave==true and .releaseType=="public-web"' dist/cloudflare-v20-release/build-info.json
+      - name: Preserve rollback-ready release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-Pokemon-Chuyen-Sinh-2.0-Web-Release
+          path: dist/cloudflare-v20-release/
+          retention-days: 30
+          if-no-files-found: error
+  publish-web-v20:
+    needs: validate-web-v20
+    if: ${{ github.repository == 'votrivalley/PKMSVV' && ((github.event_name == 'workflow_dispatch' && inputs.publish) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[publish-web-v20]'))) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Retrieve verified candidate from THIS workflow run
+        uses: actions/download-artifact@v4
+        with:
+          name: PKMSVV-Pokemon-Chuyen-Sinh-2.0-Web-Release
+          path: dist/cloudflare-v20-release
+      - name: Verify Pages authentication and release path
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::Cloudflare API token/account ID secrets are missing; refusing to mark 2.0 published"
+            exit 1
+          fi
+          test -s dist/cloudflare-v20-release/build-info.json
+          jq -e '.version=="2.0" and .releaseType=="public-web"' dist/cloudflare-v20-release/build-info.json
+      - name: Publish Pokémon Chuyển Sinh 2.0 on existing Cloudflare Pages project
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4 pages deploy dist/cloudflare-v20-release \
+            --project-name pkmsvv-web --branch pkmsvv-web
+      - name: Verify new live version metadata, no change to player save storage
+        shell: bash
+        run: |
+          set -euo pipefail
+          found=0
+          for n in 1 2 3 4 5 6 7 8 9 10; do
+            if curl -fsSL --max-time 20 -H 'Cache-Control: no-cache' \
+              "https://pkmsvv-web.pages.dev/build-info.json?release=2.0-${GITHUB_SHA}-${n}" \
+              -o /tmp/pkmsvv-live-version.json &&
+              jq -e '.version=="2.0" and .releaseType=="public-web"' /tmp/pkmsvv-live-version.json; then
+              found=1
+              break
+            fi
+            sleep 5
+          done
+          if [ "$found" != 1 ]; then
+            echo "::error::Pages upload may have succeeded, but live version 2.0 could not be verified yet"
+            exit 1
+          fi
+          curl -fsSL --max-time 30 "https://pkmsvv-web.pages.dev/ai/game/index.html?version=2.0" \
+            | grep -q 'pkmsvv-changelog-v20-qa.js'
+          echo 'Verified: Pokémon Chuyển Sinh 2.0 is live with the new changelog.'
