@@ -11,7 +11,11 @@ function fixture(){
  }
  const G={DEX:mons,DEX_BY:Object.fromEntries(mons.map(m=>[m.dex,m])),
   DB:{save:s,get guest(){return false},commit(){if(failure)return false;commits++;return true}},
-  Enemy,Gacha:{
+  Enemy,Game:{state:'playing',player:{x:0,y:0}},
+  Camera:{sees(x,y){return Math.abs(x)<=450&&Math.abs(y)<=300;}},
+  EnemyMgr:{_list:[],add(e){this._list.push(e);return e;},
+   all(){return this._list;},update(){}},
+  Gacha:{
    pool(rarity){return G.DEX.filter(m=>m.rarity===rarity)},
    pull(save,n,gen){const pool=G.DEX.filter(m=>m.rarity===1);if(!pool.length)return null;
     if(save.tickets.t1<n)return null;
@@ -69,4 +73,38 @@ test('QA UI and packaging must show black silhouettes until a defeated entry exi
   const body=fs.readFileSync(path.join(__dirname,'..',filename),'utf8');
   assert.match(body,/pkmsvv-dex-defeats-qa\.js/);
  }
+});
+
+test('Seen-on-map Pokédex unlock is persistent without killing; hidden spawns never count',()=>{
+ const f=fixture();
+ const offscreen=new f.Enemy(25);offscreen.x=2000;offscreen.y=2000;
+ f.G.EnemyMgr.add(offscreen);
+ assert.equal(f.api.unlocked(f.s,25),false,'off-camera spawn must not reveal species');
+ assert.equal(f.s.pkmsvvSeenDex,undefined);
+ offscreen.x=40;offscreen.y=10;
+ for(let i=0;i<30;i++)f.G.EnemyMgr.update(.016);
+ assert.equal(f.api.unlocked(f.s,25),true,'seeing living enemy unlocks it immediately');
+ assert.equal(offscreen.dead,false);
+ assert.equal(f.s.pkmsvvSeenDex[25],true);
+ assert.equal(f.commits,1,'encounter committed exactly once');
+ f.G.EnemyMgr.update(.016);
+ assert.equal(f.commits,1,'already-seen species never double-commits');
+ assert.equal(f.api.unlocked(f.s,4),false,'other unrevealed Pokémon stays locked');
+ const prior=f.s.tickets.t1;
+ const unavailable=f.G.Gacha.pull(f.s,1,1);
+ assert.equal(unavailable,null,'rarity group with no seen species cannot roll');
+ assert.equal(f.s.tickets.t1,prior,'no tickets spent without unlocked tier');
+});
+test('Failed seen-on-map commit restores save and does not unlock a species',()=>{
+ const f=fixture(),before=JSON.stringify(f.s);f.failure=true;
+ const seen=new f.Enemy(19);seen.x=0;seen.y=0;
+ f.G.EnemyMgr.add(seen);
+ assert.equal(JSON.stringify(f.s),before);
+ assert.equal(f.api.unlocked(f.s,19),false);
+ f.failure=false;
+ assert.equal(f.api.noteSight(seen),true);
+ assert.equal(f.s.pkmsvvSeenDex[19],true);
+ const guard=new f.Enemy(4);guard.x=0;guard.y=0;guard.pkmsvvBossGuard=true;
+ f.G.EnemyMgr.add(guard);
+ assert.equal(f.api.unlocked(f.s,4),false,'boss guard must not be a player-visible wild discovery');
 });
