@@ -46,6 +46,19 @@
    seen.add(id);return true;
   }).slice(0,TEAM_MAX);
  }
+ // Arena selection is ALWAYS scoped to the 1–6 explicit Ready Team slots.
+ // Keep instance IDs and Shiny skins distinct: two copies of a species are
+ // two different eligible cards. Neither favorites nor the full Box qualify.
+ function arenaReady(s=save()){
+  if(!s)return [];
+  let available=[];
+  try{available=valid(s)?s.pkmsvvBox:(box()?.listLegacy?.(s)||[]);}
+  catch(_){return [];}
+  const items=new Map(available.filter(x=>x&&typeof x.id==='string').map(x=>[x.id,x]));
+  return team(s).map(id=>items.get(id)).filter(x=>x&&Number.isInteger(Number(x.dex))&&
+   Number(x.dex)>0&&!!(typeof G!=='undefined'&&G.DEX_BY?.[Number(x.dex)]))
+   .map(x=>({id:x.id,dex:Number(x.dex),shiny:!!x.shiny}));
+ }
  function isMember(s,id){return team(s).includes(id);}
  function atomic(s,change){
   if(!valid(s)||!G?.DB?.commit)throw Error('Create PokéBox from a backup before editing');
@@ -248,6 +261,6 @@
  function safeSelect(id){
   return !!box()?.selectInstance?.(id);
  }
- return {TEAM_MAX,valid,item,active,activeForDex,team,legacyTeam,isMember,toggleFavorite,toggleTeam,
+ return {TEAM_MAX,valid,item,active,activeForDex,team,legacyTeam,arenaReady,isMember,toggleFavorite,toggleTeam,
   reorderTeam,speciesBase,nature,ability,learned,useMint,useCapsule,canTeach,teach,installMons,rankOverview,safeSelect};
 });
