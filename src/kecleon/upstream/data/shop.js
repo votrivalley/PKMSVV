@@ -68,6 +68,41 @@ G.Shop=(()=>{
   }
   const tmPrice = id => G.TM_PRICE[id] || 400;
 
+  // Wild item drops. Each roll is independent per item. A Hidden Capsule
+  // is deliberately scarcer than standard Mints/Capsules and remains off-sale.
+  const DROP_RATE=Object.freeze({mint:.008,cap:.008,caph:.002});
+  function enemyMultiplier(enemy){
+    const rarity=Number(enemy?.rarity??enemy?.mon?.rarity??G.DEX_BY?.[enemy?.dex]?.rarity??0);
+    return enemy?.legendary||enemy?.isLegendary||rarity>=5||enemy?.boss?4:
+      (enemy?.elite||enemy?.isElite||enemy?.kind==='elite'?2:1);
+  }
+  function dropFromEnemy(enemy,random=Math.random){
+    const s=save();
+    if(!s||G.DB?.guest||!enemy||enemy._pkmsvvShopDropCounted||
+      enemy.remote||enemy.arceus||enemy.isCompanion||
+      enemy.pkmsvvChampionSupport||enemy._pkmsvvBossSupport||
+      G.Game?.state!=='playing'||G.PKMSVVArenaSolo?.active||
+      G.PKMSVVChampionArena?.active||G.PKMSVVArenaPvp?.active||
+      G.Royale?.active||G.EggRush?.active)return [];
+    enemy._pkmsvvShopDropCounted=true;
+    const multiplier=enemyMultiplier(enemy),found=[];
+    for(const [key,base] of Object.entries(DROP_RATE)){
+      if(Number(random())<base*multiplier&&Number(s.bag?.[key]||0)<999)found.push(key);
+    }
+    if(!found.length)return [];
+    const previous=JSON.stringify(s.bag||{});
+    s.bag=s.bag||{};
+    for(const key of found)s.bag[key]=(s.bag[key]||0)+1;
+    try{
+      if(G.DB.commit(true)===false)throw Error('Cannot save dropped items');
+      return found;
+    }catch(_){
+      s.bag=JSON.parse(previous);
+      enemy._pkmsvvShopDropCounted=false;
+      return [];
+    }
+  }
+
   // ---------------- comprar ----------------
 
   /** Compra un objeto ('mint'...) o una MT ('tm:flamethrower'). → { ok, error? } */
@@ -109,5 +144,5 @@ G.Shop=(()=>{
       return {ok:false};
     }
   }
-  return { ITEMS, ORDER, count, take, tmCount, takeTm, dailyTms, tmPrice, buy, sell, today };
+  return { ITEMS, ORDER, DROP_RATE, enemyMultiplier, dropFromEnemy, count, take, tmCount, takeTm, dailyTms, tmPrice, buy, sell, today };
 })();
