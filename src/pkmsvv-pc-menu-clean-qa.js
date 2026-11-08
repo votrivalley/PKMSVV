@@ -186,7 +186,7 @@
   const definitions=[
    ['#pkmsvv-menu-wiki','pc'],
    ['[data-go="multiplayer"],[data-go="coop"],[data-go="co-op"]','coop'],
-   ['[data-go="arena"]','arena']
+   ['#pkmsvv-champion-entry,[data-go="arena"]','arena']
   ];
   for(const [selector,type] of definitions){
    // Arena's existing native action has different data-go identifiers
