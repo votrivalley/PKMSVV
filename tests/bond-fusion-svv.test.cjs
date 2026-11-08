@@ -297,3 +297,18 @@ test('Orb native QA rate guards are exactly halved and no longer tied to remaini
  const orb=read('src/v14/orbs.js');
  assert.match(orb,/const ready=p=>!!p/,'Fusion frees one slot but never makes Orbs uncollectible');
 });
+
+test('Fusion damage honors real endgame ×224 Attack instead of silently clamping at ×4',()=>{
+ const run=(atkMul)=>{
+  const h=setup(),p=h.pl;
+  h.stock(['flamethrower',3],['gust',3]);
+  p.atkMul=atkMul;
+  const target=new h.Enemy(70,0,10000000);h.enemies.push(target);
+  p.cast(h.fx.evolve(p,'fire-gust'));
+  for(let i=0;i<12;i++)h.G.Combat.tick(.34,p);
+  return 10000000-target.hp;
+ };
+ const low=run(4),high=run(224);
+ assert.ok(low>0);
+ assert.ok(high>low*40,'endgame Fusion must scale with actual huge Attack buffs, not tiny cap');
+});
