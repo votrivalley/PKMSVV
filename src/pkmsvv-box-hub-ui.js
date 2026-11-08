@@ -606,7 +606,7 @@
   const tab=(id,label)=>'<button type="button" class="btn small pkmbx-pc-tab'+
    (selected===id?' gold':'')+'" data-pc-tab="'+id+'" role="tab" aria-selected="'+
    String(selected===id)+'">'+label+'</button>';
-  return '<nav class="pkmbx-pc-tabs" role="tablist" aria-label="Pokémon">'+
+  return '<nav class="pkmbx-pc-tabs" role="tablist" aria-label="Pokémon · L1/R1 chuyển tab" title="L1 / R1: PokéBox ↔ Pokédex ↔ Nâng cấp">'+
    tab('box','📦 PokéBox')+
    tab('dex',pokedexIcon()+' Pokédex')+
    tab('upgrade','⬆️ '+L('Nâng cấp','Upgrades'))+'</nav>';
@@ -686,6 +686,25 @@
   if(target==='dex')renderDex();
   else if(target==='upgrade')renderUpgrades();
   else renderBox();
+ }
+ // Controller shoulder navigation works in the SAME overlay, preserving the
+ // focused Pokémon, filters, search and team. No save mutation, no recreation.
+ const PC_TAB_ORDER=Object.freeze(['box','dex','upgrade']);
+ function currentTab(){
+  if(!boxPane?.isConnected)return null;
+  if(dexPane?.isConnected&&!dexPane.hidden)return 'dex';
+  if(upgradePane?.isConnected&&!upgradePane.hidden)return 'upgrade';
+  return 'box';
+ }
+ function cycleTab(step){
+  const now=currentTab();
+  if(!now)return false;
+  const move=Number(step);
+  if(!Number.isFinite(move)||move===0)return false;
+  const at=PC_TAB_ORDER.indexOf(now);
+  const next=PC_TAB_ORDER[(at+(move>0?1:-1)+PC_TAB_ORDER.length)%PC_TAB_ORDER.length];
+  showPC(next);
+  return currentTab()===next;
  }
  function openPC(target='dex',nextView='info'){
   if(!currentSave())return;
@@ -1029,6 +1048,6 @@
  }
  if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',init,{once:true});
  else init();
- G.PKMSVVBoxHubUI={openBox,openDex,openUpgrades,closeBox,closeDex,renderBox,renderDex,
+ G.PKMSVVBoxHubUI={openBox,openDex,openUpgrades,closeBox,closeDex,renderBox,renderDex,currentTab,cycleTab,PC_TAB_ORDER,
   focus:chooseFocus,focusedId:()=>focused};
 })();
