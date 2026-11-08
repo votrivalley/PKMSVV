@@ -27,7 +27,33 @@ G.PKMSVVEggs=(()=>{
  // Preserve historical save flags but do not require or rewrite them.
  function limit(){return 2;}
  function unlocked(){return !!G.DB?.save;}
+ function attackChannel(move){
+  // Native move instances carry .cat, or keep category in .def/.move.
+  const id=move?.id||move?.moveId||move?.def?.id;
+  const data=G.Moves?.BY_ID?.[id]||G.Moves?.BY?.[id];
+  const cat=move?.cat||move?.def?.cat||move?.move?.cat||data?.cat;
+  return cat==='physical'?'pkmsvvSupportPhysical':
+   cat==='special'?'pkmsvvSupportSpecial':null;
+ }
+ function applyAttackBuffs(pl){
+  // The compiled engine calls pl.atkFor(move) for the real offensive
+  // damage of every learned skill. Respect its category without globally
+  // inflating both physical/special stats or changing any persistent save.
+  if(!pl||typeof pl.atkFor!=='function')return false;
+  if(pl.atkFor._pkmsvvSupportChannels)return true;
+  const original=pl.atkFor;
+  const wrapped=function(move,...args){
+   const amount=original.call(this,move,...args);
+   if(!(Number.isFinite(amount)&&amount>0))return amount;
+   const channel=attackChannel(move),buff=channel&&this[channel];
+   const now=Number(G.Game?.st?.time??0);
+   if(!buff||!Number.isFinite(now)||now>=Number(buff.until))return amount;
+   return amount*(1+Math.max(0,Math.min(.6,Number(buff.amount)||0)));
+  };
+  wrapped._pkmsvvSupportChannels=true;pl.atkFor=wrapped;return true;
+ }
  function begin(pl,coop){
+  applyAttackBuffs(pl);
   player=pl;items=[];nests=[];trail=pl?[{x:pl.x,y:pl.y}]:[];spawnAt=55;seq=0;runTime=0;lastDir={x:0,y:1};wasInArena=!!G.Rift?.inArena;kills=pl?.kills||0;lv=pl?.level||1;
   if(!coop&&unlocked())G.Sprites?.preload?.(SPECIES.map(s=>s.dex),7000);
  }
@@ -342,6 +368,7 @@ G.PKMSVVEggs=(()=>{
    affinityMultiplier(it.dex)*(it.shiny?SHINY_SKILL_POWER:1)));
   const old=pl[key];
   if(old&&Number(old.until)>runTime&&Number(old.amount)>=strength)return false;
+  applyAttackBuffs(pl);
   pl[key]={amount:strength,until:runTime+8};
   return true;
  }
@@ -629,5 +656,6 @@ G.PKMSVVEggs=(()=>{
   ctx.fillStyle='#fff3bd';ctx.font='bold 11px sans-serif';ctx.textAlign='left';
   ctx.fillText(tr('Đồng hành','Companions')+' '+ready+'/'+limit(),x+8,y+16);ctx.restore();
  }
- return {SPECIES,rollSpecies,affinityFor,affinityGoal,affinityPercent,maxAffinity,affinityMultiplier,castCooldown,speciesChanceFor,shinyChanceFor,DITTO_FORM,DITTO_REST,SUPPORT_VISUAL_SCALE,NEST_VISUAL_SCALE,SHINY_CHANCE,COLLECT_TIME,HATCH_BASE,HATCH_MIN,SHINY_CAST_RATIO,SHINY_SKILL_POWER,begin,update,onHurt,hurtSupport,enemyTarget,interceptProjectile,hitHazard,remaining,draw,drawables,hud,limit,unlocked,get followers(){return items;},get nests(){return nests;},get occupied(){return occupied();}};
+ return {SPECIES,rollSpecies,affinityFor,affinityGoal,affinityPercent,maxAffinity,affinityMultiplier,castCooldown,
+  attackChannel,applyAttackBuffs,speciesChanceFor,shinyChanceFor,DITTO_FORM,DITTO_REST,SUPPORT_VISUAL_SCALE,NEST_VISUAL_SCALE,SHINY_CHANCE,COLLECT_TIME,HATCH_BASE,HATCH_MIN,SHINY_CAST_RATIO,SHINY_SKILL_POWER,begin,update,onHurt,hurtSupport,enemyTarget,interceptProjectile,hitHazard,remaining,draw,drawables,hud,limit,unlocked,get followers(){return items;},get nests(){return nests;},get occupied(){return occupied();}};
 })();
