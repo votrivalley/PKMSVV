@@ -1,7 +1,7 @@
 /* QA gameplay controls: compact speed, active skill auto and max-level selection. */
 #pkmsvv-speed-button.pkmsvv-speed-button{
- position:fixed;z-index:8000;top:max(75px,calc(env(safe-area-inset-top) + 65px));
- right:max(12px,env(safe-area-inset-right));min-height:42px;min-width:88px;
+ position:fixed;z-index:8000;bottom:max(86px,calc(env(safe-area-inset-bottom) + 86px));
+ left:max(14px,env(safe-area-inset-left));top:auto;right:auto;min-height:42px;min-width:88px;
  background:linear-gradient(160deg,#204f67,#132b47)!important;
  color:#fff0af!important;-webkit-text-fill-color:#fff0af!important;
  border:2px solid #e9ca72!important;border-radius:12px!important;
@@ -42,6 +42,89 @@
  border-color:#ffeb91!important;box-shadow:0 0 0 2px #634b36!important;
 }
 @media(max-width:680px){
- #pkmsvv-speed-button.pkmsvv-speed-button{min-width:67px;min-height:36px;font-size:12px;top:max(58px,calc(env(safe-area-inset-top) + 48px))}
+ #pkmsvv-speed-button.pkmsvv-speed-button{min-width:67px;min-height:36px;font-size:12px;bottom:max(94px,calc(env(safe-area-inset-bottom) + 94px));left:max(8px,env(safe-area-inset-left));top:auto;right:auto}
  #pkmsvv-active-auto.pkmsvv-active-auto{top:max(101px,calc(env(safe-area-inset-top) + 90px))}
+}
+
+/* Live evolution cards use the same readable icon/skill layout as level-up,
+ * but stay in a small corner panel; mouse/touch outside them keeps moving. */
+.pkmsvv-evo.pkmsvv-evo-live{
+ position:fixed!important;inset:0!important;
+ width:100vw!important;height:100dvh!important;
+ display:block!important;visibility:visible!important;
+ background:transparent!important;backdrop-filter:none!important;
+ pointer-events:none!important;z-index:9500!important;
+ overflow:visible!important;
+}
+.pkmsvv-evo.pkmsvv-evo-live .pkmsvv-evo-panel{
+ position:absolute!important;right:max(12px,env(safe-area-inset-right))!important;
+ bottom:max(88px,calc(env(safe-area-inset-bottom) + 88px))!important;
+ top:auto!important;left:auto!important;
+ width:min(358px,34vw)!important;max-width:calc(100vw - 28px)!important;
+ max-height:min(68dvh,600px)!important;min-width:0!important;
+ overflow-x:hidden!important;overflow-y:auto!important;
+ box-sizing:border-box!important;pointer-events:auto!important;
+ padding:13px 14px!important;margin:0!important;
+ border:2px solid #ebcc89!important;border-radius:13px!important;
+ background:linear-gradient(150deg,#1d314d,#172b42)!important;
+ color:#f5f7ff!important;box-shadow:0 9px 32px #0009!important;
+}
+.pkmsvv-evo.pkmsvv-evo-live .pkmsvv-evo-panel h2{
+ font-size:clamp(13px,1.5vw,17px)!important;line-height:1.3!important;
+ color:#ffe5a1!important;-webkit-text-fill-color:#ffe5a1!important;
+ margin:0 0 6px!important;text-align:left!important;
+}
+.pkmsvv-evo.pkmsvv-evo-live .pkmsvv-evo-live-note,
+.pkmsvv-evo.pkmsvv-evo-live .pkmsvv-evo-panel>p{
+ font-size:12px!important;line-height:1.4!important;color:#d4e5fc!important;
+ -webkit-text-fill-color:#d4e5fc!important;margin:3px 0 8px!important;
+}
+.pkmsvv-evo.pkmsvv-evo-live .pkmsvv-evo-live-cards{
+ display:grid!important;grid-template-columns:1fr!important;gap:5px!important;
+ overflow:visible!important;
+}
+.pkmsvv-evo.pkmsvv-evo-live .pkmsvv-evo-option,
+.pkmsvv-evo.pkmsvv-evo-live .pkmsvv-evo-skip{
+ display:flex!important;align-items:center!important;justify-content:flex-start!important;
+ box-sizing:border-box!important;min-height:43px!important;width:100%!important;
+ padding:7px 9px!important;gap:8px!important;
+ background:#304366!important;color:#fff!important;
+ border:2px solid #ad9acd!important;border-radius:9px!important;
+ text-align:left!important;cursor:pointer!important;
+ font-size:12px!important;font-weight:800!important;white-space:normal!important;
+}
+.pkmsvv-evo.pkmsvv-evo-live .pkmsvv-evo-option:focus-visible,
+.pkmsvv-evo.pkmsvv-evo-live .pkmsvv-evo-option.pkmsvv-nav-focus,
+.pkmsvv-evo.pkmsvv-evo-live .pkmsvv-evo-skip.pkmsvv-nav-focus{
+ outline:3px solid #ffe180!important;outline-offset:1px!important;
+ background:#4c5680!important;border-color:#ffe180!important;
+}
+.pkmsvv-evo.pkmsvv-evo-live .pkmsvv-evo-option[disabled]{
+ opacity:.45!important;cursor:not-allowed!important;
+}
+.pkmsvv-evo.pkmsvv-evo-live .pkmsvv-evo-live-card kbd{
+ min-width:18px;border:1px solid #c5bddb;border-radius:4px;padding:2px 4px;
+ color:#fff9ca;background:#28304b;text-align:center;font-size:11px;flex:0 0 auto;
+}
+.pkmsvv-evo.pkmsvv-evo-live .pkmsvv-evo-live-icon{
+ flex:0 0 32px;width:32px;height:32px;display:grid;place-items:center;
+}
+.pkmsvv-evo.pkmsvv-evo-live .pkmsvv-evo-live-icon img{
+ width:32px;height:32px;image-rendering:pixelated;
+}
+.pkmsvv-evo.pkmsvv-evo-live .pkmsvv-evo-live-label{flex:1;min-width:0}
+.pkmsvv-evo.pkmsvv-evo-live .pkmsvv-evo-skip{
+ min-height:32px!important;justify-content:center!important;margin-top:8px!important;
+ background:#29334f!important;border-color:#778cb0!important;
+}
+@media(max-width:750px){
+ .pkmsvv-evo.pkmsvv-evo-live .pkmsvv-evo-panel{
+  width:min(275px,56vw)!important;max-height:65dvh!important;
+  right:max(8px,env(safe-area-inset-right))!important;
+  bottom:max(80px,calc(env(safe-area-inset-bottom) + 80px))!important;
+  padding:9px!important;
+ }
+ .pkmsvv-evo.pkmsvv-evo-live .pkmsvv-evo-option{
+  min-height:40px!important;padding:5px 7px!important;
+ }
 }
