@@ -31,7 +31,7 @@ G.PKMSVVEncounterRarity=(()=>{
   // Untimed minibosses choose at least uncommon tier 2 (and Rare 4%)
   // rather than spawning a weak Rattata or leaking random Legendaries.
   const tier=rift?(Math.random()<RIFT_EPIC_RATE?4:3):
-   boss?(Math.random()<.04?3:2):
+   boss?(Math.random()<COMMON_RATE?2:3):
    (Math.random()<COMMON_RATE?(Math.random()<.5?1:2):3);
   let options=pool(index,tier,rift);
   if(!options.length)options=pool(index,rift?(tier===4?3:4):(tier===1?2:1),rift);
