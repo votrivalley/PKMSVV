@@ -302,7 +302,25 @@
    return false;
   }
  }
- function tryEarnSeal(){
+ // The native Quit action ends a run and records normal match statistics.
+ // Schedule it outside EnemyMgr.update to avoid tearing down arrays mid-frame.
+ function finishRegionMatch(run){
+  if(!run||run.index>=9||run.victoryScheduled)return false;
+  run.victoryScheduled=true;
+  const end=()=>{
+   if(current!==run||G.Game?.state!=='playing')return;
+   // The Badge has ALREADY been committed. Quit is a match transition, never
+   // the mechanism that awards currency/Badges.
+   try{G.Game?.quit?.();}
+   catch(error){console.warn('[Explore] Victory transition failed',error);return;}
+   G.UI?.toast?.(tr('🏆 HOÀN THÀNH VÙNG '+NAMES[run.index]+'!',
+    '🏆 '+NAMES[run.index]+' REGION COMPLETED!'),5200);
+  };
+  if(typeof setTimeout==='function')setTimeout(end,0);
+  else end();
+  return true;
+ }
+  function tryEarnSeal(){
   // Timer alone NEVER rewards a Badge. Only the exact spawned encounter
   // being actually defeated (dead AND <=0 HP) may unlock the next Region.
   const run=current,boss=run?.bossEnemy;
@@ -329,6 +347,9 @@
   G.Spawner?.say?.(tr('🏅 HUY HIỆU VÙNG '+name+'!',name+' REGION BADGE!'),4);
   G.UI?.toast?.(tr('🏅 Đã hạ Boss! Nhận Huy hiệu Vùng '+name+' · Mở vùng kế tiếp.',
    '🏅 Boss defeated! '+name+' Region Badge earned · Next region unlocked.'),5000);
+  // Regions 1–9 end IMMEDIATELY after the legendary boss victory (the
+  // next animation frame). Sky's separate 30-minute endgame remains playable.
+  finishRegionMatch(run);
   return true;
  }
  function updateRegionBoss(){
