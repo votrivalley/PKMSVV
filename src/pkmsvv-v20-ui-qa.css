@@ -1,0 +1,81 @@
+/* Pokémon Chuyển Sinh 2.0: shared Pokémon workspace dimensions
+ * and equal-height Recruitment / Kecleon item cards, QA-only. */
+#pkmsvv-pokebox-overlay{
+ --pkmsvv-pokemon-width:min(1500px,calc(100vw - 20px));
+ --pkmsvv-pokemon-height:min(96dvh,900px);
+}
+#pkmsvv-pokebox-overlay .pkmbx-hub-panel,
+#pkmsvv-pokebox-overlay #pkmbx-dex-overlay.pkmbx-dex-inside-pc,
+#pkmsvv-pokebox-overlay #pkmbx-upgrade-overlay.pkmbx-upgrades-inside-pokemon{
+ box-sizing:border-box!important;
+ width:var(--pkmsvv-pokemon-width)!important;
+ max-width:var(--pkmsvv-pokemon-width)!important;
+ height:var(--pkmsvv-pokemon-height)!important;
+ max-height:var(--pkmsvv-pokemon-height)!important;
+ min-height:0!important;
+ margin:0 auto!important;
+ flex:0 0 auto!important;
+ overflow:hidden!important;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-overlay.pkmbx-dex-inside-pc>.pkmbx-dex-panel,
+#pkmsvv-pokebox-overlay #pkmbx-upgrade-overlay.pkmbx-upgrades-inside-pokemon>.pkmbx-upgrade-panel{
+ box-sizing:border-box!important;width:100%!important;height:100%!important;
+ max-height:100%!important;overflow:hidden!important;
+ display:flex!important;flex-direction:column!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-panel .pkmbx-upgrade-options{
+ overflow-y:auto;min-height:0;align-content:start;
+}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-panel .pkmbx-upgrade-options .pkmbx-upgrade-option{
+ align-self:stretch;min-height:210px;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-overlay .pkmbx-dex-main{
+ min-height:0;flex:1;overflow:hidden;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-overlay .pkmbx-dex-results{
+ overflow:hidden;min-height:0;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-overlay .pkmbx-dex-grid{
+ overflow-y:auto;min-height:0;
+}
+#scr-gacha .pkmsvv-v20-gacha-actions{
+ display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;
+}
+#scr-gacha button.pkmsvv-v20-gacha-card{
+ flex:1 1 135px;display:flex!important;flex-direction:column;
+ align-items:center;justify-content:center;gap:5px;
+ height:112px!important;min-height:112px!important;max-height:112px!important;
+ min-width:112px!important;max-width:none!important;
+ margin:0!important;padding:10px 9px!important;
+ white-space:normal!important;text-align:center!important;
+ font-size:clamp(12px,1.15vw,16px)!important;line-height:1.3!important;
+ box-sizing:border-box!important;
+}
+#scr-kecleon .pkmk-cards .pkmk-card{
+ min-height:110px;box-sizing:border-box;align-items:center;
+}
+#scr-kecleon .pkmk-product-tail{max-width:120px;min-width:85px}
+#scr-kecleon .pkmk-product-tail .btn{white-space:normal}
+#scr-kecleon .pkmk-sell,
+#scr-kecleon .pkmbx-prism-sell{
+ font-size:11px;min-height:31px!important;
+ background:#193d4e;color:#eff7f8;border:1px solid #9dc7c3;
+}
+@media(max-width:870px){
+ #pkmsvv-pokebox-overlay{--pkmsvv-pokemon-height:calc(100dvh - 20px)}
+ #scr-gacha button.pkmsvv-v20-gacha-card{
+  flex:1 1 115px;min-width:95px!important;height:104px!important;
+  min-height:104px!important;max-height:104px!important;
+ }
+ #scr-kecleon .pkmk-cards .pkmk-card{min-height:105px}
+}
+@media(max-width:620px){
+ #pkmsvv-pokebox-overlay .pkmbx-hub-panel,
+ #pkmsvv-pokebox-overlay #pkmbx-dex-overlay.pkmbx-dex-inside-pc,
+ #pkmsvv-pokebox-overlay #pkmbx-upgrade-overlay.pkmbx-upgrades-inside-pokemon{
+  overflow-y:auto!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-upgrade-panel .pkmbx-upgrade-options{
+  grid-template-columns:1fr;
+ }
+}
