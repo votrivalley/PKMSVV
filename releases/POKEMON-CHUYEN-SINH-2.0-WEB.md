@@ -28,3 +28,14 @@ The owner approved publishing the tested Web QA game to https://pkmsvv-web.pages
 
 Re-deploy the previous Cloudflare Pages deployment if a critical public issue arises.
 Never reset browser-local save data, erase stored Pokémon, or overwrite a player's JSON backup.
+
+## Android UI hotfix — 2026-11-09
+
+- Fix PokéBox/Pokédex/Upgrade tabs being enlarged, cut off and impossible to scroll in Android Chrome and Android WebView in landscape mode.
+- Fit each Pokémon tab to the **actual dynamic viewport** including system safe-area; allow native finger scroll to reach Team Six, the collection, details and all upgrade buttons.
+- Fix Android APK's home screen topbar spacing, preventing its primary actions from being pushed underneath the header.
+- Enable Gamepad **L1/R1** for three-tab Pokémon navigation, preserving selection and never repeating while held.
+- Tested with real Chromium phone emulation at **390×844 portrait**, **844×390 landscape** and **980×460 landscape**, with real DOM measurements and controller input.
+- QA release snapshot run **42520192007**, source commit **81a1101a948be0fb2944ce302c8781eace1f21fa**.
+- Independently signed Android QA APK run **42520191975**, separate install ID, not the official Android package.
+- Refresh the PWA service-worker cache namespace to safely evict 2.0's broken mobile styles. Do not change JSON saves, PokéBox rank data, save schema or game economy.
