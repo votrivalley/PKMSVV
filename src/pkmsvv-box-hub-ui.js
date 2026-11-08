@@ -207,7 +207,7 @@
       (!canRank||G.DB?.guest?'disabled':'')+'>'+
       L('⬆ Nâng Rank','⬆ Rank Up')+'</button>'+
    '<p class="pkmbx-rank-auto-note">'+L('Pokémon quay trùng tự động được tính làm nguyên liệu. Không cần đổi thành Mảnh Rank.',
-      'Duplicate Gacha pulls count as materials automatically. No shard conversion needed.')+'</p>'+
+      'Duplicate Recruitment pulls count as materials automatically. No shard conversion needed.')+'</p>'+
    '<p class="pkmbx-rank-next"><b>'+L('Hạng kế tiếp','Next Rank')+':</b> '+
       (rank>=max?L('Tối đa','Max'):L('Máu ','HP ')+'+'+next.hp+
       '% · '+L('Sát thương ','Damage ')+'+'+next.damage+'%'+
@@ -467,8 +467,8 @@
    '<p>'+L('Lên Rank ','Next Rank ')+next+L(' cần thêm ',' requires ')+progress.cost+
     L(' bản trùng. ',' duplicates. ')+
     (progress.canRank?L('✓ Đã đủ.','✓ Ready.'):L('Còn thiếu ','Missing ')+progress.missing+'.')+'</p>'+
-   '<p class="pkmbx-rank-auto-note">'+L('Các bản trùng từ Gacha tự động nằm trong kho nguyên liệu. Không cần đổi Pokémon thành Mảnh Rank. Chỉ trừ nguyên liệu khi bạn xác nhận nâng cấp.',
-     'Duplicate Gacha pulls are automatically available for Rank. No shard conversion. Materials are spent only after your confirmation.')+'</p>'+
+   '<p class="pkmbx-rank-auto-note">'+L('Các bản trùng từ Chiêu mộ tự động nằm trong kho nguyên liệu. Không cần đổi Pokémon thành Mảnh Rank. Chỉ trừ nguyên liệu khi bạn xác nhận nâng cấp.',
+     'Duplicate Recruitment pulls are automatically available for Rank. No shard conversion. Materials are spent only after your confirmation.')+'</p>'+
    '<button type="button" id="pkmbx-rank-direct" class="btn'+(progress.canRank?' gold':' rank-disabled')+'" '+
     (!progress.canRank||G.DB?.guest?'disabled':'')+'>'+
     L('⬆ Nâng Rank','⬆ Rank Up')+'</button></section>';
@@ -574,7 +574,7 @@
   if(!shown.length){
    const empty=doc.createElement('p');empty.className='pkmbx-box-empty';
    empty.textContent=onlyRankReady&&!ready?
-     L('Save cũ chưa lưu số bản trùng. Hãy chuyển PokéBox để theo dõi Gacha mới.',
+     L('Save cũ chưa lưu số bản trùng. Hãy chuyển PokéBox để theo dõi Chiêu mộ mới.',
        'Old save does not track duplicates. Migrate PokéBox to track future Gacha pulls.'):
     onlyRankReady?L('Chưa có Pokémon đủ nguyên liệu nâng Rank.','No Pokémon has enough eligible Rank materials.'):
     L('Không tìm thấy Pokémon phù hợp.','No matching Pokémon found.');
@@ -585,8 +585,8 @@
   banner.hidden=ready;
   if(!ready){
    banner.innerHTML='<strong>'+L('Save cũ chưa theo dõi Pokémon quay trùng.','This older save does not track individual duplicates.')+'</strong>'+
-    '<span>'+L('Các lượt Gacha cũ không có nhật ký cá thể nên không thể khôi phục số bản trùng. Bạn có thể kích hoạt ngay, hoặc game sẽ sao lưu và tự kích hoạt PokéBox khi quay Gacha mới thành công.',
-      'Past Gacha duplicates without individual IDs cannot be reconstructed. Activate now, or the game will safely back up and activate PokéBox on your next successful Gacha purchase.')+'</span>'+
+    '<span>'+L('Các lượt Chiêu mộ cũ không có nhật ký cá thể nên không thể khôi phục số bản trùng. Bạn có thể kích hoạt ngay, hoặc game sẽ sao lưu và tự kích hoạt PokéBox khi quay Chiêu mộ mới thành công.',
+      'Past Recruitment duplicates without individual IDs cannot be reconstructed. Activate now, or the game will safely back up and activate PokéBox on your next successful Gacha purchase.')+'</span>'+
     '<button type="button" class="btn small" id="pkmbx-activate-migration">'+
     L('💾 Sao lưu và kích hoạt PokéBox','💾 Back up & activate PokéBox')+'</button>';
    banner.querySelector('button').onclick=migrateLegacyFromBox;
@@ -830,8 +830,8 @@
   if(!has(infoDex)){
    detail.classList.add('pkmbx-dex-undefeated');
    detail.innerHTML='<div class="pkmbx-hub-hero"><canvas id="pkmbx-dex-hero" width="176" height="176"></canvas>'+
-    '<strong>#'+infoDex+' · ???</strong><p>'+L('Chưa đánh bại Pokémon này. Hãy gặp và hạ nó trong trận để khám phá và mở Gacha.',
-     'Defeat this Pokémon in a battle to reveal it and add it to your Gacha pool.')+'</p></div>';
+    '<strong>#'+infoDex+' · ???</strong><p>'+L('Chưa đánh bại Pokémon này. Hãy tìm gặp Pokémon này trong bản đồ để mở Chiêu mộ.',
+     'Encounter this Pokémon on a map to reveal it and add it to your Recruitment pool.')+'</p></div>';
    draw(detail.querySelector('#pkmbx-dex-hero'),infoDex,false,true,true);
    return;
   }
@@ -914,7 +914,7 @@
  function migrateLegacyFromBox(){
   const s=currentSave();
   if(getStored()||!s||G.DB?.guest)return false;
-  if(!confirm(L('Tạo bản sao lưu an toàn rồi kích hoạt PokéBox? Các lượt Gacha cũ không lưu bản trùng sẽ không thể khôi phục.',
+  if(!confirm(L('Tạo bản sao lưu an toàn rồi kích hoạt PokéBox? Các lượt Chiêu mộ cũ không lưu bản trùng sẽ không thể khôi phục.',
    'Back up the current save and enable individual PokéBox? Older duplicates were not recorded and cannot be recovered.')))return false;
   try{
    const backup=G.PKMSVVSaveUI?.backup?.();
@@ -929,7 +929,7 @@
    if(!getStored())throw Error('PokéBox migration was not saved');
    onlyRankReady=false;page=0;
    const filter=boxPane?.querySelector('#pkmbx-ready');if(filter)filter.checked=false;
-   G.UI?.toast?.(L('Đã kích hoạt PokéBox. Các lượt Gacha mới sẽ có bản trùng riêng.',
+   G.UI?.toast?.(L('Đã kích hoạt PokéBox. Các lượt Chiêu mộ mới sẽ có bản trùng riêng.',
      'PokéBox activated. New Gacha pulls now track duplicates.'),3600);
    renderBox();return true;
   }catch(error){
