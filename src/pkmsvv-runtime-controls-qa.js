@@ -21,7 +21,7 @@
   !['ui','over','ended','idle'].includes(String(G.Game?.state||'ui'));
  const byId=id=>document.getElementById(id);
  let fast=false,autoDash=false,held=false,heldTimer=null,choiceToken=null,choicePending=false;
- let lastCast=0,lastUI=0,lastChoiceShow=false,lastSpeedState=null;
+ let lastCast=0,lastUI=0,lastChoiceShow=false,lastSpeedState=null,lastRiftState=false,riftPassage=false;
  function toast(vi,en){G.UI?.toast?.(L(vi,en),2000);}
  // Speed is a solo/AI training aid, never a competitive advantage.
  // Explore must be single-player. Survival/Rescue Berry can accelerate only
@@ -52,6 +52,12 @@
   if(uid&&humans[0].uid!==uid)return false;
   return true;
  }
+ // Rift entry/exit briefly changes native Game.state. Preserve the selected
+ // multiplier only for this same solo Explore run, never for competitive modes.
+ function riftActive(){return G.Rift?.inArena===true;}
+ function riftSpeedContext(){return !!G.Game?.player&&!G.Game.player.dead&&
+  G.PKMSVVQuickRegion?.active===true&&!G.Coop?.active&&
+  !arenaMatch()&&!G.Royale?.active&&!G.EggRush?.active;}
  function setSpeed(on){
   if(typeof G.Game?.debugSpeed!=='function')return false;
   if(on&&!canSpeed())return false;
@@ -159,8 +165,9 @@
   }
   if(!indicator){indicator=document.createElement('span');indicator.id='pkmsvv-active-auto';
    indicator.className='pkmsvv-active-auto';document.body.append(indicator);}
-  if(fast&&!canSpeed())setSpeed(false); // room mode/peer changed mid-run
-  button.hidden=!canSpeed();indicator.hidden=!playing()||!autoDash;
+  const available=canSpeed(),passingRift=fast&&riftSpeedContext()&&(riftPassage||riftActive());
+  if(fast&&!available&&!passingRift)setSpeed(false);
+  button.hidden=!(available||(passingRift&&playing()));indicator.hidden=!playing()||!autoDash;
   refreshLabels();
  }
  function toggleDash(){
@@ -324,7 +331,7 @@
  const oldStart=G.Game?.startRun;
  if(typeof oldStart==='function'&&!oldStart._pkmsvvRuntimeControls){
   function wrapped(...args){
-   fast=false;autoDash=false;rankingOpen=false;cancelHold();choiceToken=null;choicePending=false;lastSpeedState=null;
+   fast=false;autoDash=false;rankingOpen=false;cancelHold();choiceToken=null;choicePending=false;lastSpeedState=null;lastRiftState=false;riftPassage=false;
    G.Game?.debugSpeed?.(1);
    return oldStart.apply(this,args);
   }
@@ -333,10 +340,13 @@
  function frame(ts){
   if(ts-lastUI>=250){
    lastUI=ts;installAutoPick();ensureArenaShinyGuard();ensureSpeed();ensureRanking();ensureSettings();ensureLevelup();
-    const state=G.Game?.state;
-    if(fast&&state==='playing'&&lastSpeedState!=='playing'&&canSpeed())
-     G.Game?.debugSpeed?.(1.5); // restore after a level/choice popup
-    lastSpeedState=state;
+    const state=G.Game?.state,riftNow=riftActive();
+    if(riftNow&&riftSpeedContext())riftPassage=true;
+    if(fast&&state==='playing'&&(canSpeed()||(riftPassage&&riftSpeedContext()))&&
+       (lastSpeedState!=='playing'||lastRiftState!==riftNow))
+     G.Game?.debugSpeed?.(1.5); // restore after popup and Rift enter/exit
+    if(state==='playing'&&!riftNow)riftPassage=false;
+    lastSpeedState=state;lastRiftState=riftNow;
    // Royale already checks this from its native draw loop; avoid a duplicate.
    if(!G.Royale?.active&&(G.EggRush?.active||G.PKMSVVArenaSolo?.active||
      G.PKMSVVChampionArena?.active||G.PKMSVVArenaPvp?.active)){
@@ -348,5 +358,5 @@
   if(typeof requestAnimationFrame==='function')requestAnimationFrame(frame);
  }
  if(typeof requestAnimationFrame==='function')requestAnimationFrame(frame);
- G.PKMSVVRuntimeControlsQA={full,maxLevel,enabled,setEnabled,canSpeed,arenaMatch,setSpeed,toggleDash,target,castTowardsNearest,ensureLevelup,installAutoPick,ensureArenaShinyGuard,canRanking,rankingRows,toggleRanking,ensureRanking,pollPadShortcuts,actionKey,ensureSettings,ensureSpeed};
+ G.PKMSVVRuntimeControlsQA={full,maxLevel,enabled,setEnabled,canSpeed,riftActive,riftSpeedContext,arenaMatch,setSpeed,toggleDash,target,castTowardsNearest,ensureLevelup,installAutoPick,ensureArenaShinyGuard,canRanking,rankingRows,toggleRanking,ensureRanking,pollPadShortcuts,actionKey,ensureSettings,ensureSpeed};
 })();

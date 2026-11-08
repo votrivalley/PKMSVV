@@ -346,6 +346,8 @@ G.PKMSVVEvo = (() => {
         pl.maxMoves=Math.max(Number(pl.maxMoves)||3,capacity);
     }
     pl.pkmEvoHistory.push({ from: r.from, to: r.to, at: pl.level, converted:converted||null });
+    // Genuine local evolution also counts as Pokédex discovery.
+    G.PKMSVVDexDefeats?.markEvolved?.(G.DB?.save,r.from,r.to,pl);
     pl.pkmEvoFromMon=before;
     pl.pkmEvoSwapChoices=null;
     pl.pkmEvoSwapAvailable=true;

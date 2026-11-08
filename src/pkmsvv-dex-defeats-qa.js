@@ -64,6 +64,44 @@
  }
 
  function markDefeated(s,dex){return inExplore()&&persistDefeat(s,dex);}
+ // Only the ACTUAL player's completed evolution history registers the new form.
+ function markEvolved(s,from,to,pl){
+  const source=dexId(from),target=dexId(to);
+  if(!source||!target||source===target||!pl||pl.remote||
+   pl!==G.Game?.player||Number(pl.dex)!==target)return false;
+  const hist=pl.pkmEvoHistory;
+  if(!Array.isArray(hist)||!hist.some(x=>Number(x?.from)===source&&Number(x?.to)===target))return false;
+  return persistDefeat(s,target);
+ }
+ // Compiled 2.0 has closure-local evolve(); polling the engine's real tick
+ // observes its authentic history without modifying the pinned game bundle.
+ const seenEvolution=new WeakMap();
+ function observeEvolution(pl){
+  if(!pl||pl!==G.Game?.player||pl.remote)return false;
+  const hist=pl.pkmEvoHistory;
+  if(!Array.isArray(hist)||!hist.length)return false;
+  const row=hist[hist.length-1];
+  if(!row||Number(row.to)!==Number(pl.dex))return false;
+  const stamp=hist.length+':'+row.from+':'+row.to+':'+row.at;
+  if(seenEvolution.get(pl)===stamp)return false;
+  seenEvolution.set(pl,stamp);
+  return markEvolved(G.DB?.save,row.from,row.to,pl);
+ }
+ function installEvolution(){
+  const evo=G.PKMSVVEvo;
+  if(!evo||typeof evo.tick!=='function')return false;
+  if(!evo.tick._pkmsvvDexEvolution){
+   const previous=evo.tick;
+   function tick(pl,...args){const result=previous.call(this,pl,...args);observeEvolution(pl);return result;}
+   tick._pkmsvvDexEvolution=true;evo.tick=tick;
+  }
+  if(typeof evo.evolve==='function'&&!evo.evolve._pkmsvvDexEvolution){
+   const previous=evo.evolve;
+   function evolve(pl,r,...args){const result=previous.call(this,pl,r,...args);if(result)observeEvolution(pl);return result;}
+   evolve._pkmsvvDexEvolution=true;evo.evolve=evolve;
+  }
+  return true;
+ }
 
  // Sightings do not create progress. Do not hook EnemyMgr.add/update.
 
@@ -95,7 +133,7 @@
    if(!s||!Array.isArray(originals))return previous.apply(this,arguments);
    const allowed=originals.filter(p=>unlocked(s,p?.dex));
    if(!allowed.length){
-    G.UI?.toast?.(L('Hãy hạ Pokémon trong Khám phá để mở Chiêu mộ!','Defeat Pokémon in Explore to unlock Recruitment!'),2600);
+    G.UI?.toast?.(L('Hãy hạ Pokémon trong Khám phá hoặc tiến hóa để mở Chiêu mộ!','Defeat Pokémon in Explore or evolve to unlock Recruitment!'),2600);
     return null;
    }
    // Native Gacha's private rarity pool reads G.DEX synchronously. Temporarily
@@ -119,7 +157,7 @@
   wrapped._pkmsvvDexDefeats=true;gacha.pull=wrapped;
   return true;
  }
- function install(){return installEnemy()&&installGacha();}
+ function install(){const enemy=installEnemy(),gacha=installGacha();installEvolution();return enemy&&gacha;}
  install();
- G.PKMSVVDexDefeats={unlocked,markDefeated,inExplore,isDefeatable,ensureLedger,install,legacyProfile};
+ G.PKMSVVDexDefeats={unlocked,markDefeated,markEvolved,observeEvolution,installEvolution,inExplore,isDefeatable,ensureLedger,install,legacyProfile};
 })();
