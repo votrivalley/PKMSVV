@@ -6,7 +6,7 @@ function fixture(){
  let seq=0,started=0,raf;
  const pl={x:0,y:0,dead:false,moves:Array.from({length:8},(_,i)=>({id:i}))};
  const G={
-  I18n:{lang:'vi'},
+  I18n:{lang:'vi'},PKMSVVQuickRegion:{active:true},
   Game:{state:'playing',player:pl,debugSpeed(v){speeds.push(v)},startRun(){started++;return true;}},
   Settings:{get(k){return vals.get(k)},set(k,v){vals.set(k,v)}},
   UI:{toast(v){toasts.push(v)}},
@@ -119,40 +119,72 @@ test('speed toggle is absent in every Arena mode including AI tournaments',()=>{
   delete f.G[key];
  }
 });
-test('Co-op and sessions with even one human peer cannot accelerate',()=>{
- const f=fixture();
- f.G.Coop={active:true};
- f.G.Social={uid:'host',room:{isHost:true,mode:'coop',members:[{uid:'host',bot:false},{uid:'ai',bot:true}]}};
- assert.equal(f.api.canSpeed(),false,'Co-op mode is always blocked even with AI partners');
- assert.equal(f.api.setSpeed(true),false);
- f.G.Social.room.mode='royale';f.G.Royale={active:true};
- assert.equal(f.api.canSpeed(),true,'host Royale with bots only may speed up');
- assert.equal(f.api.setSpeed(true),true);
- f.G.Social.room.members.push({uid:'guest',bot:false});
- assert.equal(f.api.canSpeed(),false,'joining human must block speed');
- f.api.ensureSpeed();
- assert.equal(f.speeds.at(-1),1,'speed resets immediately after humans join');
- assert.equal(f.elements['pkmsvv-speed-button'].hidden,true);
- f.G.Social.room.members.pop();f.G.Social.room.isHost=false;
- assert.equal(f.api.canSpeed(),false,'remote client may never change host simulation time');
+test('AI-only Sống Sót and both Giải cứu Berry difficulties may accelerate',()=>{
+ for(const mode of ['coop','berry','berryeasy']){
+  const f=fixture();
+  f.G.Coop={active:true};
+  f.G.PKMSVVQuickRegion.active=false;
+  f.G.Social={uid:'host',room:{isHost:true,mode,members:[
+   {uid:'host',bot:false},{uid:'ai1',bot:true},{uid:'ai2',lanBot:true}]}};
+  assert.equal(f.api.canSpeed(),true,mode+' must allow AI-only local host');
+  assert.equal(f.api.setSpeed(true),true,mode+' may toggle 1.5x');
+  assert.equal(f.speeds.at(-1),1.5,mode);
+  f.api.ensureSpeed();
+  assert.equal(f.elements['pkmsvv-speed-button'].hidden,false,mode+' shows speed button');
+  f.G.Social.room.members.push({uid:'guest',bot:false});
+  assert.equal(f.api.canSpeed(),false,mode+' cannot speed with a second human');
+  f.api.ensureSpeed();
+  assert.equal(f.speeds.at(-1),1,mode+' immediately resets to 1x');
+  assert.equal(f.elements['pkmsvv-speed-button'].hidden,true,mode+' hides button');
+  assert.equal(f.api.setSpeed(true),false,mode+' must reject bypass attempts');
+ }
 });
-test('solo Explore and verified AI-only Egg Rush have bottom-left speed control',()=>{
+test('Sống Còn and Tranh Trứng always disable speed, even with bots only',()=>{
+ for(const [mode,flag] of [['royale','Royale'],['eggrush','EggRush']]){
+  const f=fixture();
+  f.G.Coop={active:true};f.G[flag]={active:true};
+  f.G.Social={uid:'host',room:{isHost:true,mode,members:[
+   {uid:'host',bot:false},{uid:'bot1',bot:true},{uid:'bot2',bot:true}]}};
+  assert.equal(f.api.canSpeed(),false,mode+' is a competitive mode');
+  assert.equal(f.api.setSpeed(true),false,mode+' speed API must refuse');
+  f.api.ensureSpeed();
+  assert.equal(f.elements['pkmsvv-speed-button'].hidden,true,mode+' speed button stays hidden');
+  // Initial room mode is already enough to block acceleration, even when
+  // competitive runtime flags are not initialized yet.
+  f.G[flag].active=false;
+  assert.equal(f.api.canSpeed(),false,mode+' is blocked before round starts');
+  assert.equal(f.api.setSpeed(true),false,mode+' cannot bypass early in countdown');
+ }
+});
+test('solo Explore has bottom-left speed; ordinary non-Explore solo has none',()=>{
  const f=fixture();
- f.G.PKMSVVQuickRegion={active:true};
  assert.equal(f.api.canSpeed(),true,'solo exploration');
  f.api.ensureSpeed();
  assert.equal(f.elements['pkmsvv-speed-button'].hidden,false);
- f.G.Coop={active:true};
- f.G.Social={uid:'solo',room:{mode:'eggrush',isHost:true,
-  members:[{uid:'solo',bot:false},{uid:'bot1',bot:true},{uid:'bot2',lanBot:true}]}};
- f.G.EggRush={active:true};
- assert.equal(f.api.canSpeed(),true,'AI-only Egg Rush hosted locally');
- f.G.Social.room.members[1].bot=false;
- assert.equal(f.api.canSpeed(),false,'AI slot turning human immediately removes speed');
+ f.G.PKMSVVQuickRegion.active=false;
+ assert.equal(f.api.canSpeed(),false,'ordinary campaign solo is not Explore');
+ assert.equal(f.api.setSpeed(true),false,'no speed when Explore is inactive');
  const css=fs.readFileSync(path.resolve(__dirname,'../src/pkmsvv-runtime-controls-qa.css'),'utf8');
  assert.match(css,/#pkmsvv-speed-button\.pkmsvv-speed-button\{[^}]*bottom:/s);
  assert.match(css,/#pkmsvv-speed-button\.pkmsvv-speed-button\{[^}]*left:/s);
  assert.doesNotMatch(css,/#pkmsvv-speed-button\.pkmsvv-speed-button\{[^}]*top:max/s);
+});
+test('AI rooms fail closed on unverified peers or if user is not the host',()=>{
+ const f=fixture();
+ f.G.Coop={active:true};
+ f.G.Social={uid:'host',room:{mode:'coop',isHost:true,members:[
+  {uid:'host',bot:false},{uid:'bot1',bot:true}]}};
+ assert.equal(f.api.canSpeed(),true);
+ f.G.Social.room.isHost=false;
+ assert.equal(f.api.canSpeed(),false,'remote LAN client must not change speed');
+ f.G.Social.room.isHost=true;
+ f.G.Social.room.members.push({uid:'unknown'});
+ assert.equal(f.api.canSpeed(),false,'unspecified human-or-AI membership blocks speed');
+ f.G.Social.room.members.pop();
+ f.G.Social.uid='guest';
+ assert.equal(f.api.canSpeed(),false,'unknown local human identity blocks speed');
+ f.G.Social.uid='host';f.G.Social.room.members=[{uid:'host',bot:false}];
+ assert.equal(f.api.canSpeed(),false,'an AI-only match needs at least one actual bot');
 });
 test('real-time evolution polling only activates for Arena/Egg Rush (not duplicate Royale draw)',()=>{
  const f=fixture(),calls=[];
