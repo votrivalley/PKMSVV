@@ -395,6 +395,9 @@ async function main(){
   console.log('REAL victory entrypoints:',JSON.stringify(nativeFunctions));
   const nativeOrbSnippets=await evaluate("(async()=>{const src=await fetch('js/app.min.js').then(r=>r.text());const needle='G.Orbs.roll';let at=0,out=[];while((at=src.indexOf(needle,at))>=0&&out.length<7){out.push(src.slice(Math.max(0,at-320),Math.min(src.length,at+180)));at+=needle.length;}return {count:out.length,out}})()");
   console.log('REAL compiled Orb probability fragments:',JSON.stringify(nativeOrbSnippets));
+  const endFlow=await evaluate("(async()=>{const js=await fetch('js/app.min.js').then(r=>r.text()),from=js.indexOf('G.Game='),game=js.slice(from,from+30000),keys=['showOver(','.showOver(', 'quit:', 'toUI:', 'finish:', 'end:', 'gameOver'];return {from,occurrences:keys.map(k=>{let i=game.indexOf(k);return {key:k,index:i,near:i<0?'':game.slice(Math.max(0,i-230),i+360)}}),runui:js.includes('G.RunUI.showOver')}})()");
+  console.log('REAL compiled game-end anchors:',JSON.stringify(endFlow));
+
 
   // Exercise the REAL compiled Gacha roster + Region patch under Chromium,
   // not only the isolated Node harness which uses simplified Enemy mocks.
