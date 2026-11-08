@@ -282,14 +282,24 @@ G.PKMSVVEggs=(()=>{
    if(inside)hurtSupport(it,h.pct?Math.max(h.dmg||0,it.maxHp*h.pct):h.dmg);
   }
  }
- const DITTO_KINDS=new Set(['projectile','nova','beam','melee','cone','homing','bounce','chain']);
+ // Move instances may omit .kind: consult their original catalog definition.
+ // In real player builds (Whirlwind/Body Slam/Hyper Beam included), filtering
+ // only eight old kinds silently left Ditto with ZERO copied skills.
+ const DITTO_NONATTACK=new Set(['buff','passive','dash','heal']);
+ function dittoAttackKind(m){
+  return m?.kind||m?.def?.kind||G.Moves?.BY_ID?.[m?.id]?.kind||
+   G.Moves?.BY?.[m?.id]?.kind||'attack';
+ }
  function updateDittoSkills(it,pl){
   if(!Array.isArray(pl?.moves))return;
-  const taken=new Set(it.copiedSkills.map(x=>x.move.id||x.move.key||x.move.name));
-  const pool=pl.moves.filter(m=>m&&DITTO_KINDS.has(m.kind)&&!taken.has(m.id||m.key||m.name));
+  const known=new Set((it.copiedSkills||[]).map(x=>x.move.id||x.move.key||x.move.name));
+  const pool=pl.moves.filter(m=>m&&m.id&&!DITTO_NONATTACK.has(dittoAttackKind(m))&&
+   !known.has(m.id||m.key||m.name));
+  it.copiedSkills=it.copiedSkills||[];
   while(pool.length&&it.copiedSkills.length<3){
    const i=Math.floor(Math.random()*pool.length);
-   it.copiedSkills.push({move:{...pool.splice(i,1)[0]},timer:0});
+   const learned=pool.splice(i,1)[0];
+   it.copiedSkills.push({move:{...learned,kind:dittoAttackKind(learned)},timer:0});
   }
  }
  function dittoCast(it,pl){
@@ -297,8 +307,27 @@ G.PKMSVVEggs=(()=>{
   updateDittoSkills(it,pl);let did=false;
   for(const entry of it.copiedSkills){
    if(entry.timer>0)continue;
-   if(G.Combat?.pkmsvvSupportCast?.(pl,it,entry.move)){
-    entry.timer=Math.max(1.5,(entry.move.cd||3)*1.35)*(it.shiny?SHINY_CAST_RATIO:1);did=true;
+   const original=G.Combat?.pkmsvvSupportCast?.(pl,it,entry.move);
+   // Some imported attack shapes are not recognized by the original proxy.
+   // If so, use a small REAL fallback hit against one nearby enemy instead
+   // of reporting a cast that produced no projectile/damage.
+   let hit=!!original;
+   if(!hit){
+    const nearest=(G.EnemyMgr?.all?.()||[]).filter(e=>e&&!e.dead&&!e.remote&&
+     G.U.dist2(e.x,e.y,it.x,it.y)<360*360).sort((a,b)=>
+      G.U.dist2(a.x,a.y,it.x,it.y)-G.U.dist2(b.x,b.y,it.x,it.y))[0];
+    if(nearest){
+     nearest.hurt?.(Math.max(1,(6+(Number(pl.level)||1)*.46)*
+      (it.statScale||.65)*(it.affinityBoost||1)*(it.shiny?SHINY_SKILL_POWER:1)),
+      '#bda0ff',0,0,0);
+     hit=true;
+    }
+   }
+   if(hit){
+    entry.timer=Math.max(1.2,(entry.move.cd||3)*1.15)*(it.shiny?SHINY_CAST_RATIO:1);
+    it.effectFlash=.65;
+    G.FX?.ring?.(it.x,it.y,6,38,'#bd9aff',.44,2);
+    did=true;
    }
   }
   return did;
