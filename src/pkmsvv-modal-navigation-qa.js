@@ -172,12 +172,28 @@
  }
  function queue(){if(pending)return;pending=true;requestAnimationFrame(sync);}
  let lastDirection=null,lastMove=0,prevConfirm=false,prevBack=false,releaseGate=false;
+ let prevL1=false,prevR1=false;
  function pollModal(){
   const pads=typeof navigator!=='undefined'&&navigator.getGamepads?.();
   const pad=pads&&[...pads].find(p=>p?.connected);
-  if(!pad)return false;
+  if(!pad){prevL1=false;prevR1=false;return false;}
   const pressed=index=>!!pad.buttons?.[index]&&(pad.buttons[index].pressed||pad.buttons[index].value>.5);
   const map=G.PKMSVVPadOrb?.bindings?.()||{};
+  // L1/R1 = standard Gamepad API buttons 4/5. Consume only while the
+  // Pokémon hub owns the modal; outside it, native gameplay controls and
+  // remapped buttons remain unchanged. Trigger on the DOWN edge only.
+  const shoulderL=pressed(4),shoulderR=pressed(5);
+  const pokemon=document.querySelector('#pkmsvv-pokebox-overlay');
+  const owns=active(),inside=!!pokemon?.isConnected&&
+   !!owns&&(owns===pokemon||pokemon.contains(owns));
+  const pressedL=shoulderL&&!prevL1,pressedR=shoulderR&&!prevR1;
+  prevL1=shoulderL;prevR1=shoulderR;
+  if(inside&&typeof G.PKMSVVBoxHubUI?.cycleTab==='function'&&
+     (pressedL||pressedR)){
+    G.PKMSVVBoxHubUI.cycleTab(pressedR?1:-1);
+    lastDirection=null;
+    return true;
+  }
   const confirm=Number.isInteger(map.confirm)?map.confirm:0;
   const back=Number.isInteger(map.back)?map.back:1;
   const left=pressed(14)||Number(pad.axes?.[0])<-.55;
