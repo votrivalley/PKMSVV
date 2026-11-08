@@ -395,6 +395,15 @@ async function main(){
   console.log('REAL victory entrypoints:',JSON.stringify(nativeFunctions));
   const nativeOrbSnippets=await evaluate("(async()=>{const src=await fetch('js/app.min.js').then(r=>r.text());const needle='G.Orbs.roll';let at=0,out=[];while((at=src.indexOf(needle,at))>=0&&out.length<7){out.push(src.slice(Math.max(0,at-320),Math.min(src.length,at+180)));at+=needle.length;}return {count:out.length,out}})()");
   console.log('REAL compiled Orb probability fragments:',JSON.stringify(nativeOrbSnippets));
+  const rateSource=nativeOrbSnippets.out.join(' ');
+  assert.match(rateSource,/Math\\.random\\(\\)<\\.225/,'boss Orb chance in real compiled game must be halved');
+  assert.match(rateSource,/Math\\.random\\(\\)<\\.03/,'ordinary Orb chance in real compiled game must be halved');
+  assert.match(rateSource,/\\*150&&Math\\.random/,'Orb cap cannot run out too early after Fusion');
+  const legendaryPacing=await evaluate("(()=>({checkpoints:G.PKMSVV14?.checkpoints?.map(c=>({at:c.at,hp:c.hp,rarity:c.bossRarity})),judgment:typeof G.Judgment?.update==='function'}))()");
+  console.log('Real compiled Legendary milestones:',JSON.stringify(legendaryPacing));
+  assert.deepEqual(legendaryPacing.checkpoints,[{at:900,hp:44000,rarity:5}],
+   'only the 15m Legendary Trial; one separate Judgment boss at 30m');
+  assert.equal(legendaryPacing.judgment,true);
   const endFlow=await evaluate("(async()=>{const js=await fetch('js/app.min.js').then(r=>r.text()),from=js.indexOf('G.Game='),game=js.slice(from,from+30000),keys=['showOver(','.showOver(', 'quit:', 'toUI:', 'finish:', 'end:', 'gameOver'];return {from,occurrences:keys.map(k=>{let i=game.indexOf(k);return {key:k,index:i,near:i<0?'':game.slice(Math.max(0,i-230),i+360)}}),runui:js.includes('G.RunUI.showOver')}})()");
   console.log('REAL compiled game-end anchors:',JSON.stringify(endFlow));
 
