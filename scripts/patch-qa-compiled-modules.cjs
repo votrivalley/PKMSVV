@@ -81,16 +81,20 @@ for(const filename of targets){
  // 45% -> 22.5% boss, 6% -> 3% normal. The 150s stagger prevents the
  // former 10-drop run cap being exhausted before a MAX+MAX Fusion mid-run.
  // Guaranteed starter Orb and the player's FIFO bag are untouched.
- const orbPos=next.indexOf('G.Orbs.roll()');
- console.log('QA native Orb signature', {orbPos,fragment:orbPos<0?'missing':next.slice(Math.max(0,orbPos-160),orbPos+40)});
-  for(const [old,newValue] of [
-  ['e<10&&Math.random()<.45','e<10&&Number(G.Game?.st?.time??0)>=e*150&&Math.random()<.225'],
-  ['e<10&&Math.random()<.06','e<10&&Number(G.Game?.st?.time??0)>=e*150&&Math.random()<.03']
- ]){
-  const found=next.split(old).length-1;
-  if(found<1||found>3)throw Error('QA Orb roll anchor drift: '+old+' (found '+found+')');
-  next=next.replaceAll(old,newValue);
- }
+ // Both real bundle variants (game, ai/game) have different minifier
+ // counter names. Match only the TWO native orb rolls, not other odds.
+ const orbRoll=/([a-zA-Z_$][\\w$]*)<10&&Math\\.random\\(\\)<\\.(45|06)/g;
+ let patchedOrbRolls=0;
+ next=next.replace(orbRoll,(source,counter,odds,offset)=>{
+  if(!next.slice(offset,offset+210).includes('G.Orbs.roll()')||
+   !next.slice(Math.max(0,offset-130),offset).includes('G.Orbs.ready(G.Game.player)'))
+   return source;
+  patchedOrbRolls++;
+  const reduced=odds==='45'?'.225':'.03';
+  return counter+'<10&&Number(G.Game?.st?.time??0)>='+counter+
+   '*150&&Math.random()<'+reduced;
+ });
+ if(patchedOrbRolls!==2)throw Error('Expected exact two original native Orb rolls, got '+patchedOrbRolls);
  new vm.Script(next,{filename:'patched-qa-app.min.js'});
  fs.writeFileSync(filename,next,'utf8');
  const stat=fs.statSync(filename);
