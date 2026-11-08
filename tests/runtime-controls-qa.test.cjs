@@ -4,7 +4,7 @@ const source=fs.readFileSync(path.resolve(__dirname,'../src/pkmsvv-runtime-contr
 function fixture(){
  const handlers={},timers=new Map(),vals=new Map(),speeds=[],casts=[],toasts=[];
  let seq=0,started=0,raf;
- const pl={x:0,y:0,dead:false,moves:Array.from({length:8},(_,i)=>({id:i}))};
+ const pl={x:0,y:0,dead:false,moves:Array.from({length:8},(_,i)=>({id:'move-'+i,lvl:5,def:{maxLvl:5}}))};
  const G={
   I18n:{lang:'vi'},PKMSVVQuickRegion:{active:true},
   Game:{state:'playing',player:pl,debugSpeed(v){speeds.push(v)},startRun(){started++;return true;}},
@@ -70,20 +70,40 @@ test('Holding active-skill F for 2s toggles AUTO; quick tap does not',()=>{
  assert.equal(f.api.castTowardsNearest(),false,'another 2s F disables auto');
  assert.equal(f.toasts.length,2,'both state transitions give feedback');
 });
-test('After eight skills, auto-pick is opt-in and chooses one of three real cards',()=>{
- const f=fixture(),picked=[];const cards={children:[],before(el){f.elements[el.id]=el}};
- cards.children=[0,1,2].map(i=>({disabled:false,hidden:false,isConnected:true,getAttribute(){return null},click(){picked.push(i)}}));
- f.elements.cards=cards;
- f.elements['scr-levelup']={hidden:false,classList:{contains(){return false}}};
- f.api.ensureLevelup();f.runTimer(180);
- assert.equal(picked.length,0,'no automatic selection until enabled');
- assert.ok(f.elements['pkmsvv-maxskill-autopick'],'in-run button must exist');
+test('Auto-pick is offered only when ALL eight moves MAX; after opting in it never opens a card UI',()=>{
+ const f=fixture(),picked=[],opened=[];
+ f.G.RunUI={showLevelUp(level,offers,complete){opened.push(level);return 'opened'}};
+ f.api.installAutoPick();
+ const cards=[{id:'one',apply(){picked.push('one')}},{id:'two',apply(){picked.push('two')}},
+  {id:'three',apply(){picked.push('three')}}];
+ const onPick=c=>c.apply(f.pl);
+ assert.equal(f.api.full(),true);
+ f.G.RunUI.showLevelUp(35,cards,onPick,false);
+ assert.equal(opened.length,1,'opt-in never happens automatically');
  f.api.setEnabled(true);
- f.api.ensureLevelup();f.runTimer(180);
- assert.equal(picked.length,1);
- assert.ok([0,1,2].includes(picked[0]),'must click an existing native upgrade card');
- f.pl.moves.pop();
- assert.equal(f.api.full(),false,'never auto-pick before all eight moves are learned');
+ f.G.RunUI.showLevelUp(36,cards,onPick,false);
+ assert.equal(opened.length,1,'auto mode must skip card rendering completely');
+ f.runTimer(0);
+ assert.equal(picked.length,1,'complete the original callback and apply one card');
+ f.pl.moves[0].lvl=4;
+ assert.equal(f.api.full(),false,'one sub-MAX move disables auto mode');
+ f.G.RunUI.showLevelUp(37,cards,onPick,false);
+ assert.equal(opened.length,2,'normal choice still opens before all eight MAX');
+ f.pl.moves[0].lvl=5;f.pl.moves.pop();
+ assert.equal(f.api.full(),false,'seven maxed moves are still below the requirement');
+});
+test('1.5x speed remains selected during temporary levelup/choice and is restored on return',()=>{
+ const f=fixture();
+ f.api.setSpeed(true);f.frame(500);
+ f.G.Game.state='levelup';f.frame(1000);
+ assert.equal(f.api.canSpeed(),true,'levelup is a temporary screen, not a new run');
+ assert.equal(f.speeds.at(-1),1.5,'no forced reset during levelup');
+ f.G.Game.state='choice';f.frame(1500);
+ assert.equal(f.speeds.at(-1),1.5,'item/evolution selection also keeps speed');
+ f.G.Game.state='playing';f.frame(2000);
+ assert.equal(f.speeds.at(-1),1.5,'restore multiplier after returning from popups');
+ assert.equal(f.api.setSpeed(false),true);
+ assert.equal(f.speeds.at(-1),1);
 });
 test('Auto-pick setting is persistent and available in Settings, not written to save',()=>{
  const f=fixture();
@@ -92,7 +112,7 @@ test('Auto-pick setting is persistent and available in Settings, not written to 
  f.elements['set-body']=body;
  f.api.ensureSettings();
  assert.equal(body.rows.length,1);
- assert.match(body.rows[0].children[0].textContent,/Tự chọn 1\/3/);
+ assert.match(body.rows[0].children[0].textContent,/8 kỹ năng đã MAX/);
  f.api.setEnabled(true);
  assert.equal(f.vals.get('pkmsvvAutoPickMaxSkill'),true);
  assert.equal(f.api.enabled(),true);
