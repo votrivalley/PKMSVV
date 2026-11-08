@@ -380,6 +380,19 @@ async function main(){
   assert.equal(integratedIcons.height,36);
   for(const icon of integratedIcons.out)
    for(const k of ['button','art','webp'])assert.equal(icon[k],true,icon.name+' should use newly embedded pixel art: '+k);
+  const menuIconDomRegression=await evaluate("(()=>{\n const menu=document.querySelector('#scr-menu'),get=(name)=>{\n  if(name==='pc')return menu.querySelector('#pkmsvv-menu-wiki');\n  if(name==='coop')return menu.querySelector('[data-go=\"multiplayer\"],[data-go=\"coop\"],[data-go=\"co-op\"]');\n  return menu.querySelector('[data-go=\"arena\"]')||[...menu.querySelectorAll('.menu-right .menu-list .menu-item')]\n   .find(el=>el.textContent?.trim()?.toLowerCase().startsWith('arena'));\n };\n const types=['pc','coop','arena'];\n const entries=types.map(name=>{\n  const node=get(name);\n  return {name,node,icon:node?.querySelector(':scope > .pkmsvv-new-menu-icon'),\n   action:node?.getAttribute('data-go')||'',tabIndex:node?.tabIndex,\n   label:node?.textContent?.trim()||''};\n });\n const list=menu.querySelector('.menu-right .menu-list');\n const order=list?[...list.children]:[];\n const dexIcon=menu.querySelector('[data-go=\"dex\"] .mi-ico');\n G.PKMSVVMenuCleanQA.syncHome();\n G.PKMSVVMenuCleanQA.syncHome();\n return {\n  counts:menu.querySelectorAll('.pkmsvv-new-menu-icon').length,\n  stableOrder:!list||order.length===[...list.children].length&&order.every((e,i)=>list.children[i]===e),\n  preservedDexIcon:!dexIcon||menu.querySelector('[data-go=\"dex\"] .mi-ico')===dexIcon,\n  icons:entries.map(x=>{\n   const node=get(x.name),art=node?.querySelector(':scope > .pkmsvv-new-menu-icon'),style=art?getComputedStyle(art):null;\n   return {name:x.name,preservedButton:node===x.node,preservedArt:art===x.icon,\n    childCount:node?.querySelectorAll('.pkmsvv-new-menu-icon').length||0,\n    preservedAction:(node?.getAttribute('data-go')||'')===x.action,\n    preservedTabIndex:node?.tabIndex===x.tabIndex,\n    preservedLabel:node?.textContent?.trim()===x.label,\n    hiddenFromScreenReaders:art?.getAttribute('aria-hidden')==='true',\n    pixelated:style?.imageRendering==='pixelated',\n    width:style?.width,height:style?.height};\n  })\n };\n})()");
+  assert.equal(menuIconDomRegression.counts,3,'exactly three custom icons after repeated menu renders');
+  assert.equal(menuIconDomRegression.stableOrder,true,'repeat sync must not reorder native menu controls');
+  assert.equal(menuIconDomRegression.preservedDexIcon,true,'Pokémon native menu art remains unchanged');
+  for(const icon of menuIconDomRegression.icons){
+   for(const key of ['preservedButton','preservedArt','preservedAction','preservedTabIndex',
+    'preservedLabel','hiddenFromScreenReaders','pixelated'])
+    assert.equal(icon[key],true,'DOM icon '+icon.name+' violated '+key);
+   assert.equal(icon.childCount,1,'duplicate menu icon for '+icon.name);
+   assert.equal(icon.width,'34px','incorrect native menu icon width');
+   assert.equal(icon.height,'34px','incorrect native menu icon height');
+  }
+  console.log('DOM menu icon rerender/keyboard/semantics QA:',JSON.stringify(menuIconDomRegression));
   const coverMascots=await evaluate("(()=>{const q=G.PKMSVVQuickRegion,ids=[150,249,385,488,646,718,800,890,1024,384];q.open();const covers=[...document.querySelectorAll('#pkmsvv-quick-region-grid .region-art')];const sprites=covers.map(x=>x.querySelector('canvas.region-sprite'));const result={mascots:[...q.mascots],covers:covers.length,spriteCanvases:sprites.filter(Boolean).length,missingDex:ids.filter(id=>!G.DEX_BY?.[id]),missingSpriteMeta:ids.filter(id=>!G.SPRITE_META?.[id]),noSpawnsChanged:!q.active};q.close();return result})()");
   assert.deepEqual(coverMascots.mascots,[150,249,385,488,646,718,800,890,1024,384],
    'each Gen 1–9 has the exact requested mascot, mixed Sky Pillar unchanged');
