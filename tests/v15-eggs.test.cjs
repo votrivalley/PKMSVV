@@ -50,7 +50,7 @@ test('Pichu paralyzes at most four nearby enemies using real stun, with 7s prote
  assert.ok(fx.some(e=>e[3]===95),'Area visual radius matches gameplay');
 });
 
-test('Healing and shields buff only own lead and living companions, with 25% cap',()=>{
+test('Happiny heals all friendly co-op team members; shields remain owned and capped at 25%',()=>{
  const pl={x:0,y:0,kills:0,level:1,dead:false,maxHp:200,hp:100,pkmsvvShield:0,
   heal(n){this.hp=Math.min(this.maxHp,this.hp+n);}};
  const G={I18n:{lang:'vi'},DB:{save:{pkmsvvChapter3Seen:true,pkmsvvEggSlot2:true,stats:{}},commit(){}},
@@ -67,10 +67,11 @@ test('Healing and shields buff only own lead and living companions, with 25% cap
   cooldown:999,statScale:.7,spd:100,hitCooldown:0,shield:0};
  G.PKMSVVEggs.followers.push(healer,ally);
  const outsider={hp:40,maxHp:100};
- G.Coop.players=()=>[outsider];
+ G.Coop.players=()=>[outsider];G.Coop.active=true;
  G.PKMSVVEggs.update(.1,pl,5,false);
  assert.ok(pl.hp>100&&healer.hp>50&&ally.hp>20,'All owned members healed simultaneously');
- assert.equal(outsider.hp,40,'Not other human players');
+ assert.ok(outsider.hp>40,'Happiny must heal other friendly Co-op members');
+ const healedCoopHp=outsider.hp;
  assert.equal(healer.cooldown,12);
  healer.dex=438;healer.cooldown=0;
  G.PKMSVVEggs.update(.1,pl,6,false);
@@ -78,7 +79,8 @@ test('Healing and shields buff only own lead and living companions, with 25% cap
  assert.equal(healer.cooldown,15);
  for(let i=0;i<30;i++){healer.cooldown=0;G.PKMSVVEggs.update(.1,pl,7+i,false);}
  assert.ok(pl.pkmsvvShield<=pl.maxHp*.25&&healer.shield<=healer.maxHp*.25&&ally.shield<=ally.maxHp*.25);
- assert.equal(outsider.hp,40);
+ assert.equal(outsider.hp,healedCoopHp,'Shield must not change remote teammate HP');
+ assert.equal(outsider.pkmsvvShield,undefined,'Shield remains scoped to owner and supports');
 });
 
 test('Chapter 3 continues existing arc, unlocks on six USED types, and preserves replay',()=>{
