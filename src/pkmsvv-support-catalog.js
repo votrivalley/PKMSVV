@@ -64,15 +64,30 @@ G.PKMSVVSupportCatalog=(()=>{
   title.textContent=owned?(G.DEX_BY?.[m.dex]?.name||'Pokémon'):'???';
   const rar=document.createElement('span');rar.className='pkmsvv-support-rarity '+(m.dex===151?'super':m.dex===132?'rare':'common');
   rar.textContent=t(...rarity(m.dex));
+  // Use canonical species ID even with an outdated/partial cached role object.
+  // Show the actual skill BEFORE the art so short/mobile detail panes do not
+  // accidentally clip every new support's description below a large canvas.
+  const correctedRole=({447:'physical',360:'special',173:'slow',174:'sleep',440:'heal'})[m.dex]||m.role;
+  const skillText=roles[correctedRole]||roles.attack;
+  if(owned){
+   const skill=document.createElement('h4');
+   skill.className='pkmsvv-support-skill-title';
+   skill.textContent=t(...skillText.slice(0,2));
+   const description=document.createElement('p');
+   description.className='pkmsvv-support-skill-description';
+   description.textContent=t(...skillText.slice(2,4));
+   area.append(skill,description);
+  }
   const art=document.createElement('canvas');
   art.width=220;art.height=185;art.className='stage pkmsvv-support-stage';
   art.style.setProperty('--stage-c',owned?'#367b87':'#304553');
-  area.append(title,rar,art);
-  // Exactly the same sprite painter, scaling and silhouette logic as Pokédex.
-  G.UI?.sprite?.(art,m.dex,{
+  area.prepend(title,rar);
+  area.append(art);
+  // Drawing bugs must never suppress the actual support skill description.
+  try{G.UI?.sprite?.(art,m.dex,{
    lively:owned,spin:owned,silhouette:!owned,scale:3,hero:true,
    shiny:owned&&showShiny&&shinyUnlocked
-  });
+  });}catch(error){console.warn('[Support art]',m.dex,error);}
   if(shinyUnlocked&&showShiny){
    const note=document.createElement('p');
    note.className='pkmsvv-shiny-support-bonus';
@@ -96,8 +111,6 @@ G.PKMSVVSupportCatalog=(()=>{
    lock.textContent=t('Chưa khám phá — hãy ấp nở Pokémon này để mở khóa.','Undiscovered — hatch this Pokémon to reveal it.');
    area.append(lock);return;
   }
-  const skill=document.createElement('h4');skill.textContent=t(...roles[m.role].slice(0,2));
-  const description=document.createElement('p');description.textContent=t(...roles[m.role].slice(2,4));
   const bond=document.createElement('div');bond.className='pkmsvv-support-bond';
   const label=document.createElement('strong');label.textContent=t('Thân thiết','Friendship');
   const track=document.createElement('div');track.className='pkmsvv-bond-track';
@@ -110,7 +123,7 @@ G.PKMSVVSupportCatalog=(()=>{
   const note=document.createElement('small');note.className='pkmsvv-support-bond-note';
   note.textContent=t('Càng thân thiết, hiệu quả càng cao và hồi chiêu càng ngắn.',
    'More friendship boosts potency and shortens cooldowns.');
-  area.append(skill,description,bond,note);
+  area.append(bond,note);
  }
  function choose(dex){
   if(selected===dex)return;
