@@ -384,8 +384,8 @@ test('3% Shiny support exists only within run at 100% of main Pokemon stats; nor
  assert.equal(shiny.G.PKMSVVEggs.SHINY_CHANCE,.03);
  assert.equal(shiny.it.shiny,true);
  assert.equal(shiny.it.statScale,1);
- assert.equal(shiny.it.maxHp,160);
- assert.equal(shiny.it.hp,160);
+ assert.equal(shiny.it.maxHp,320,'Shiny support receives 2× HP');
+ assert.equal(shiny.it.hp,320,'Freshly hatched Shiny starts at full doubled HP');
  assert.equal(shiny.it.atk,80);
  assert.equal(shiny.it.spd,140);
  assert.equal(shiny.it.anim.shiny,true);
@@ -395,7 +395,7 @@ test('3% Shiny support exists only within run at 100% of main Pokemon stats; nor
  assert.equal(regular.it.shiny,false,'Exactly .03 is outside the 3% range');
  assert.equal(regular.save.pkmsvvSupportShiny?.[regular.it.dex],undefined);
  assert.equal(regular.it.statScale,.65);
- assert.equal(regular.it.maxHp,104);
+ assert.equal(regular.it.maxHp,208,'Regular support also receives 2× HP');
  assert.equal(regular.it.atk,52);
  assert.ok(Math.abs(regular.it.spd-119)<1e-8);
  assert.ok(Math.abs(regular.it.spdScale-.85)<1e-8);
