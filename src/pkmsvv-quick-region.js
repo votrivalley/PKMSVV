@@ -344,7 +344,7 @@
   return true;
  }
  function finishRegionMatch(run=current){
-  if(!run||run.index>=9||run.victoryScheduled||!run.finalBoss||
+  if(!run||run.victoryScheduled||!run.finalBoss||
    !run.finalBoss.dead||Number(run.finalBoss.hp)>0)return false;
   run.victoryScheduled=true;
   const done=()=>{
