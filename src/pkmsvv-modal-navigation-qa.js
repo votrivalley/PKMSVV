@@ -36,14 +36,17 @@
   }).at(-1)||null;
  }
  function controls(root){return root?[...root.querySelectorAll(NAV)].filter(el=>!el.disabled&&visible(el)):[];}
- function setFocus(el){
+ function setFocus(el,reveal=false){
   if(!el||!visible(el))return false;
   const root=active();
   if(!root||!root.contains(el))return false;
   for(const old of root.querySelectorAll('.pkmsvv-nav-focus'))if(old!==el)old.classList.remove('pkmsvv-nav-focus');
   el.classList.add('pkmsvv-nav-focus');
   if(typeof el.focus==='function')el.focus({preventScroll:true});
-  if(typeof el.scrollIntoView==='function')el.scrollIntoView({block:'nearest',inline:'nearest'});
+  // Initial focus and background DOM refresh must NEVER scroll a user-opened
+   // window/menu back to the top. Scroll only for an actual D-pad/key move.
+   if(reveal&&typeof el.scrollIntoView==='function')
+    el.scrollIntoView({block:'nearest',inline:'nearest'});
   return true;
  }
  function first(root){
@@ -74,7 +77,7 @@
    const score=primary+cross*2.4;
    if(score<best){best=score;next=item;}
   }
-  return next?setFocus(next):false;
+  return next?setFocus(next,true):false;
  }
  // B on an item chooser keeps the equipped item; it no longer targets
  // an invisible third button. Exactly two cards are keyboard/pad-selectable.
@@ -140,8 +143,8 @@
    const opts=controls(root);if(!opts.length)return;
    const at=opts.indexOf(document.activeElement);
    if(at<0){first(root);e.preventDefault();return;}
-   if(e.shiftKey&&at===0){setFocus(opts[opts.length-1]);e.preventDefault();return;}
-   if(!e.shiftKey&&at===opts.length-1){setFocus(opts[0]);e.preventDefault();return;}
+   if(e.shiftKey&&at===0){setFocus(opts[opts.length-1],true);e.preventDefault();return;}
+   if(!e.shiftKey&&at===opts.length-1){setFocus(opts[0],true);e.preventDefault();return;}
    return;
   }
   const editing=root.contains(document.activeElement)&&isEditable(document.activeElement);
