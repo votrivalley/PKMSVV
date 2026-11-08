@@ -38,9 +38,19 @@ for(const prefix of ['game','ai/game']){
  assert(shopBundle.includes('unavailableInShop'),'hidden capsule restriction missing from compiled '+prefix);
  assert(shopBundle.includes('dropFromEnemy'),'2.0 enemy item drops not compiled in '+prefix);
 }
+// Copy the reviewed mobile two-column CSS into BOTH promoted routes.
+// The pinned QA artifact is immutable; without this step source CSS hotfixes
+// would never reach the public game despite a successful release workflow.
+const mobileCss=fs.readFileSync(path.join(root,'src/pkmsvv-v20-ui-qa.css'),'utf8');
+assert(mobileCss.includes('PKMSVV_MOBILE_SPLIT_V21'),'mobile two-pane layout patch missing');
+for(const prefix of ['game','ai/game']){
+ fs.writeFileSync(path.join(to,prefix+'/css/pkmsvv-v20-ui-qa.css'),mobileCss);
+ assert(read(prefix+'/css/pkmsvv-v20-ui-qa.css').includes('PKMSVV_MOBILE_SPLIT_V21'),
+  'stale mobile CSS in '+prefix);
+}
 const sw=path.join(to,'sw.js');assert(file('sw.js'),'PWA service worker missing');
 const oldSW=fs.readFileSync(sw,'utf8');
-const oldKey='pkmsvv-cloudflare-v1529-1',newKey='pkmsvv-cloudflare-v20-20261109-mobile-hotfix-2';
+const oldKey='pkmsvv-cloudflare-v1529-1',newKey='pkmsvv-cloudflare-v20-20261109-mobile-split-v21';
 assert(oldSW.includes(oldKey),'existing service worker revision differs');
 fs.writeFileSync(sw,oldSW.replace(oldKey,newKey));
 // A new worker cache namespace ensures the published version refreshes reliably.
@@ -49,7 +59,7 @@ const info=JSON.parse(read('build-info.json'));
 assert(info.localSave===true,'existing browser-save architecture changed');
 Object.assign(info,{version:'2.0',displayVersion:'Pokémon Chuyển Sinh 2.0',
  releaseDate:'2026-11-09',releaseSourceRevision:EXPECTED_SHA,
- releaseQAWorkflowRun:42520192007,releaseType:'public-web',mobileUiHotfix:'android-landscape-scroll-and-l1-r1',saveMode:'existing-browser-local',
+ releaseQAWorkflowRun:42520192007,releaseType:'public-web',mobileUiHotfix:'two-pane-android-pokebox-and-pokedex',saveMode:'existing-browser-local',
  rollbackSourceArtifact:'PKMSVV-PokeBox-Stage4-Web-QA-ONLY'});
 fs.writeFileSync(path.join(to,'build-info.json'),JSON.stringify(info,null,2)+'\n');
 const maxBytes=25*1024*1024;let files=0,bytes=0,largest=0;

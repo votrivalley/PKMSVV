@@ -1,7 +1,8 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),os=require('node:os'),assert=require('node:assert/strict');
 const {spawn,spawnSync}=require('node:child_process');
-const root=path.resolve(__dirname,'../dist/pokebox-stage4-qa');
+const root=path.resolve(__dirname,'..',process.env.PKMSVV_BROWSER_ROOT||'dist/pokebox-stage4-qa');
+const splitRelease=!!process.env.PKMSVV_BROWSER_ROOT;
 const sleep=t=>new Promise(r=>setTimeout(r,t));
 async function until(fn,ms=30000){
  const deadline=Date.now()+ms;
@@ -683,11 +684,66 @@ async function main(){
      'horizontal clipped '+device.label+' '+v.tab+JSON.stringify(v));
     assert.ok(v.rect.top>=-2&&v.rect.bottom<=views.height+3,
      'vertical clipped '+device.label+' '+v.tab+JSON.stringify(v));
-    assert.ok(['auto','scroll'].includes(v.overflow),
-     'Android cannot scroll '+device.label+' '+v.tab+JSON.stringify(v));
-    if(device.height<500)
-     assert.ok(v.scrollHeight>v.height+8&&v.scrollTo>v.old,
-      'Android cannot reach lower '+v.tab+' controls: '+JSON.stringify(v));
+    if(splitRelease&&v.tab!=='upgrade'){
+     assert.equal(v.overflow,'hidden','Two-column Pokémon tab must not scroll as one long page');
+    }else{
+     assert.ok(['auto','scroll'].includes(v.overflow),
+      'Android cannot scroll '+device.label+' '+v.tab+JSON.stringify(v));
+     if(device.height<500)
+      assert.ok(v.scrollHeight>v.height+8&&v.scrollTo>v.old,
+       'Android cannot reach lower '+v.tab+' controls: '+JSON.stringify(v));
+    }
+   }
+   if(splitRelease){
+    // Inspect real computed geometry, not only the presence of overflow:auto.
+    // Both panes must be visible without scrolling the entire Pokémon dialog.
+    const pair=await evaluate(`(()=>{
+     const desc=Object.getOwnPropertyDescriptor(G.DB,'save');
+     const save=G.PKMSVVBox.migrate({owned:{6:{at:1},25:{at:2},4:{at:3}},
+      shiny:{},partner:6,partnerShiny:false}).save;
+     const check=tab=>{
+      const parent=document.querySelector(tab==='box'?'.pkmbx-hub-main':'.pkmbx-dex-main');
+      const left=parent?.querySelector(tab==='box'?'.pkmbx-hub-left':'.pkmbx-dex-results');
+      const right=parent?.querySelector(tab==='box'?'#pkmbx-profile':'#pkmbx-dex-details');
+      const scroll=parent?.querySelector(tab==='box'?'#pkmbx-grid':'#pkmbx-dex-list');
+      const cards=parent?.querySelectorAll(tab==='box'?'.pkmbx-hub-slot':'.pkmbx-dex-card');
+      if(!parent||!left||!right||!scroll)return {missing:true};
+      const l=left.getBoundingClientRect(),r=right.getBoundingClientRect();
+      const old=scroll.scrollTop;scroll.scrollTop=scroll.scrollHeight;
+      const out={display:getComputedStyle(parent).display,
+       left:{x:l.left,right:l.right,top:l.top,width:l.width,height:l.height},
+       right:{x:r.left,right:r.right,top:r.top,width:r.width,height:r.height},
+       scroll:scroll.scrollTop,old,scrollHeight:scroll.scrollHeight,
+       clientHeight:scroll.clientHeight,overflow:getComputedStyle(scroll).overflowY,
+       cardHeight:cards?.[0]?.getBoundingClientRect().height||0};
+      scroll.scrollTop=old;return out;
+     };
+     try{
+      Object.defineProperty(G.DB,'save',{value:save,configurable:true,writable:true});
+      G.PKMSVVBoxHubUI.openBox();const box=check('box');
+      G.PKMSVVBoxHubUI.cycleTab(1);const dex=check('dex');
+      return {box,dex};
+     }finally{
+      G.PKMSVVBoxHubUI.closeBox();Object.defineProperty(G.DB,'save',desc);
+     }
+    })()`);
+    console.log('QA_MOBILE_TWO_PANES_'+device.label+'='+JSON.stringify(pair));
+    for(const [name,v] of Object.entries(pair)){
+     assert.equal(v.missing,undefined,'Missing '+device.label+' '+name+' two-pane elements');
+     assert.equal(v.display,'grid',name+' must retain PC side-by-side grid');
+     assert.ok(v.left.width>=120&&v.right.width>=110,
+      name+' pane is squashed '+JSON.stringify(v));
+     assert.ok(v.right.x>=v.left.right-2,
+      name+' panes stacked or overlapping '+JSON.stringify(v));
+     assert.ok(Math.abs(v.left.top-v.right.top)<8,
+      name+' detail pane not aligned with Pokémon list '+JSON.stringify(v));
+     assert.ok(v.cardHeight>=80,
+      name+' Pokémon tiles still flattened '+JSON.stringify(v));
+     assert.ok(v.clientHeight>=45&&v.scrollHeight>v.clientHeight&&v.scroll>v.old,
+      name+' collection must scroll independently '+JSON.stringify(v));
+     assert.ok(v.right.right<=views.width+3,
+      name+' detail clipped beyond viewport '+JSON.stringify(v));
+    }
    }
    assert.equal(views.l1,'dex','L1 cycles Upgrade to Pokédex');
    assert.equal(views.held,'dex','holding L1 does not skip another tab');

@@ -301,3 +301,208 @@
   -webkit-overflow-scrolling:touch;
  }
 }
+
+
+/* PKMSVV_MOBILE_SPLIT_V21 — restore the PC two-pane Pokémon workspace.
+ * The previous landscape hotfix made each full tab a vertical scroller and
+ * capped the collection at 260px, hiding the selected Pokémon detail panel.
+ * One viewport, two independently scrollable columns; touch and gamepad safe.
+ */
+@media (max-height:720px) and (orientation:landscape), (max-width:870px){
+ #pkmsvv-pokebox-overlay>.pkmbx-hub-panel,
+ #pkmsvv-pokebox-overlay>#pkmbx-dex-overlay.pkmbx-dex-inside-pc{
+  overflow:hidden!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-hub-panel,
+ #pkmsvv-pokebox-overlay>#pkmbx-dex-overlay.pkmbx-dex-inside-pc>.pkmbx-dex-panel{
+  display:flex!important;flex-direction:column!important;
+  height:100%!important;min-height:0!important;max-height:100%!important;
+  overflow:hidden!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-hub-main,
+ #pkmsvv-pokebox-overlay .pkmbx-dex-main{
+  display:grid!important;
+  grid-template-columns:minmax(0,1.58fr) minmax(0,1fr)!important;
+  align-items:stretch!important;gap:8px!important;
+  flex:1 1 auto!important;height:auto!important;
+  min-width:0!important;min-height:0!important;
+  overflow:hidden!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-hub-left{
+  display:flex!important;flex-direction:column!important;
+  min-width:0!important;min-height:0!important;
+  flex:1 1 auto!important;overflow:hidden!important;padding:6px!important;
+ }
+ #pkmsvv-pokebox-overlay #pkmbx-profile,
+ #pkmsvv-pokebox-overlay #pkmbx-dex-details.pkmbx-profile{
+  flex:1 1 auto!important;align-self:stretch!important;
+  min-width:0!important;min-height:0!important;
+  height:auto!important;max-height:none!important;
+  overflow-y:auto!important;overflow-x:hidden!important;
+  overscroll-behavior:contain!important;touch-action:pan-y!important;
+  -webkit-overflow-scrolling:touch;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-hub-team-title{margin:2px 0 4px!important}
+ #pkmsvv-pokebox-overlay .pkmbx-hub-team-title h3{font-size:12px!important}
+ #pkmsvv-pokebox-overlay .pkmbx-team-six{flex:0 0 auto!important;gap:4px!important}
+ #pkmsvv-pokebox-overlay .pkmbx-team-slot{
+  height:54px!important;min-height:54px!important;max-height:54px!important;
+  padding:2px!important;gap:0!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-team-slot canvas{width:35px!important;height:35px!important}
+ #pkmsvv-pokebox-overlay .pkmbx-hub-tools{
+  display:flex!important;flex:0 0 auto!important;flex-wrap:wrap!important;
+  align-items:center!important;gap:4px 7px!important;margin:5px 0!important;
+  font-size:11px!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-hub-tools #pkmbx-query{
+  flex:1 1 100%!important;width:100%!important;min-width:0!important;
+  min-height:33px!important;height:33px!important;padding:4px 8px!important;
+  font-size:13px!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-hub-tools label{font-size:11px!important;margin:0!important;white-space:nowrap}
+ #pkmsvv-pokebox-overlay .pkmbx-hub-tools input[type=checkbox]{width:16px!important;height:16px!important}
+ #pkmsvv-pokebox-overlay .pkmbx-hub-tools select{min-height:30px!important;padding:3px!important;font-size:11px!important}
+ #pkmsvv-pokebox-overlay .pkmbx-found-count{font-size:11px!important}
+ /* The old-save warning stays readable and its backup action always reachable,
+    without pushing the box or selected profile entirely below the screen. */
+ #pkmsvv-pokebox-overlay .pkmbx-legacy-migration:not([hidden]){
+  display:grid!important;grid-template-columns:minmax(0,1fr) minmax(105px,auto)!important;
+  grid-template-rows:auto minmax(0,1fr)!important;
+  gap:2px 8px!important;align-items:center!important;
+  flex:0 0 auto!important;min-height:0!important;max-height:80px!important;
+  margin:3px 0!important;padding:5px 7px!important;
+  overflow:hidden!important;font-size:11px!important;line-height:1.25!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-legacy-migration>strong{
+  grid-area:1 / 1!important;min-width:0!important;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-legacy-migration>span{
+  grid-area:2 / 1!important;min-width:0!important;min-height:0!important;
+  max-height:47px!important;overflow-y:auto!important;overscroll-behavior:contain!important;
+  touch-action:pan-y!important;-webkit-overflow-scrolling:touch;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-legacy-migration>button{
+  grid-area:1 / 2 / 3 / 3!important;min-width:0!important;max-width:155px!important;
+  min-height:42px!important;padding:5px!important;font-size:11px!important;
+  line-height:1.25!important;white-space:normal!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-box-carousel{
+  flex:0 0 auto!important;grid-template-columns:34px minmax(0,1fr) 34px!important;
+  gap:4px!important;margin:4px 0!important;padding:0!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-box-carousel>.btn{
+  width:34px!important;height:34px!important;min-height:34px!important;font-size:17px!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-box-heading{min-height:34px!important}
+ #pkmsvv-pokebox-overlay .pkmbx-box-heading strong{font-size:12px!important}
+ #pkmsvv-pokebox-overlay .pkmbx-box-frame{
+  flex:1 1 auto!important;min-width:0!important;min-height:0!important;
+  height:auto!important;max-height:none!important;
+  padding:4px!important;overflow:hidden!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-box-frame>.pkmbx-grid{
+  display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  grid-auto-rows:minmax(102px,auto)!important;
+  height:100%!important;min-height:0!important;max-height:none!important;
+  align-content:start!important;overflow-y:auto!important;
+  overscroll-behavior:contain!important;touch-action:pan-y!important;
+  -webkit-overflow-scrolling:touch;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-box-frame .pkmbx-hub-slot,
+ #pkmsvv-pokebox-overlay .pkmbx-empty-slot{
+  min-height:102px!important;height:auto!important;max-height:none!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-box-frame .pkmbx-hub-slot canvas{
+  width:clamp(44px,6vh,60px)!important;height:clamp(44px,6vh,60px)!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-dex-rule{
+  flex:0 0 auto!important;margin:4px 0 6px!important;
+  padding:5px 8px!important;font-size:11px!important;line-height:1.35!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-dex-toolbar{
+  flex:0 0 auto!important;gap:5px!important;margin:4px 0!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-dex-toolbar input{min-height:34px!important;font-size:13px!important}
+ #pkmsvv-pokebox-overlay .pkmbx-dex-toolbar button{min-height:34px!important;font-size:11px!important}
+ #pkmsvv-pokebox-overlay .pkmbx-dex-filters:not([hidden]){
+  flex:0 0 auto!important;max-height:30dvh!important;overflow-y:auto!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-dex-count{
+  flex:0 0 auto!important;margin:3px 0!important;font-size:11px!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-dex-results{
+  display:flex!important;flex-direction:column!important;
+  flex:1 1 auto!important;min-width:0!important;min-height:0!important;
+  height:auto!important;max-height:none!important;overflow:hidden!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-dex-grid{
+  display:grid!important;flex:1 1 auto!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  grid-auto-rows:minmax(102px,auto)!important;
+  min-width:0!important;min-height:0!important;
+  height:auto!important;max-height:none!important;
+  align-content:start!important;overflow-y:auto!important;
+  overscroll-behavior:contain!important;touch-action:pan-y!important;
+  -webkit-overflow-scrolling:touch;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-dex-card{
+  min-width:0!important;min-height:102px!important;height:auto!important;
+  padding:5px 3px!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-dex-card canvas{width:52px!important;height:52px!important}
+ #pkmsvv-pokebox-overlay .pkmbx-dex-results>.pkmbx-page{
+  flex:0 0 auto!important;margin:4px 0 0!important;
+ }
+ #pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-hub-hero canvas{
+  width:min(120px,100%)!important;height:120px!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-profile .pkmbx-hub-buttons>.btn{
+  min-height:38px!important;white-space:normal!important;
+ }
+}
+@media (orientation:portrait) and (max-width:620px){
+ #pkmsvv-pokebox-overlay .pkmbx-hub-main,
+ #pkmsvv-pokebox-overlay .pkmbx-dex-main{
+  grid-template-columns:minmax(0,1.16fr) minmax(0,1fr)!important;gap:5px!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-hub-panel,
+ #pkmsvv-pokebox-overlay .pkmbx-dex-panel{padding:6px!important}
+ #pkmsvv-pokebox-overlay .pkmbx-team-six{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-team-slot{
+  height:44px!important;min-height:44px!important;max-height:44px!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-team-slot canvas{width:26px!important;height:26px!important}
+ #pkmsvv-pokebox-overlay .pkmbx-team-slot span:not(.pkmbx-team-empty){font-size:8px!important}
+ #pkmsvv-pokebox-overlay .pkmbx-box-frame>.pkmbx-grid,
+ #pkmsvv-pokebox-overlay .pkmbx-dex-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:4px!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-dex-card,
+ #pkmsvv-pokebox-overlay .pkmbx-box-frame .pkmbx-hub-slot{
+  min-height:93px!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-hub-tools label{font-size:10px!important}
+ #pkmsvv-pokebox-overlay .pkmbx-legacy-migration:not([hidden]){
+  grid-template-columns:minmax(0,1fr)!important;
+  max-height:110px!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-legacy-migration>strong{grid-area:auto!important}
+ #pkmsvv-pokebox-overlay .pkmbx-legacy-migration>span{grid-area:auto!important;max-height:24px!important}
+ #pkmsvv-pokebox-overlay .pkmbx-legacy-migration>button{
+  grid-area:auto!important;max-width:100%!important;min-height:33px!important;
+ }
+ #pkmsvv-pokebox-overlay #pkmbx-profile>.pkmbx-hub-buttons{
+  grid-template-columns:1fr!important;
+ }
+ #pkmsvv-pokebox-overlay #pkmbx-profile>.pkmbx-hub-buttons>.btn{
+  min-height:30px!important;font-size:11px!important;
+ }
+ #pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-hub-hero canvas{
+  width:min(95px,100%)!important;height:95px!important;
+ }
+}
