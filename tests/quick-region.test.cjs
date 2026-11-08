@@ -723,3 +723,59 @@ test('Explore Badge at 15m unlocks Johto, only 30m Legendary kill completes Kant
  assert.equal(h.G.Game.state,'ui','native Quit must finish only after the 30m Legendary dies');
  assert.equal(q.active,false);
 });
+
+test('15-minute normal-mode boss is weighted 30% Legendary, 70% Epic independently of pool sizes',()=>{
+ const src=fs.readFileSync(path.join(__dirname,'../src/v14/milestones.js'),'utf8');
+ function trial(random){
+  const spawned=[];
+  const G={
+   Coop:{active:false,isHost:true},Rift:{inArena:false},
+   Judgment:{active:false},PKMSVVQuickRegion:{active:false},
+   EnemyMgr:{bossAlive:()=>false,add:e=>spawned.push(e)},
+   DEX:[{dex:150,name:'Mewtwo',rarity:5,leg:true,types:['psychic']},
+    {dex:130,name:'Gyarados',rarity:4,leg:false,types:['water']}],
+   SPRITE_META:{150:{},130:{}},
+   Game:{player:{x:0,y:0,dead:false}},
+   U:{pick:pool=>pool[0]},
+   Enemy:class{constructor(def){this.dex=def.dex;this.hp=def.hp;}},
+   Sprites:{preload(){}},Spawner:{say(){}},Audio:{sfx(){}},
+   I18n:{lang:'vi'}
+  };
+  const fixed=Object.create(Math);fixed.random=()=>random;
+  vm.runInNewContext(src,{G,Math:fixed,Set,Array});
+  G.PKMSVV14.update(899,G.Game.player);
+  assert.equal(spawned.length,0);
+  G.PKMSVV14.update(900,G.Game.player);
+  assert.equal(spawned.length,1);
+  G.PKMSVV14.update(1200,G.Game.player);
+  assert.equal(spawned.length,1,'do not spawn additional legendary at minute 20');
+  return spawned[0].dex;
+ }
+ assert.equal(trial(.2999),150,'legendary at 29.99% roll');
+ assert.equal(trial(.30),130,'epic at 30.00% roll');
+ assert.equal(trial(.99),130,'epic at 99% roll');
+});
+test('PvE outside has a 4% Rare chance and Rifts offer Rare/Epic, never random Legendary',()=>{
+ const src=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-encounter-rarity-qa.js'),'utf8');
+ function roll(prob,rift){
+  const fixed=Object.create(Math);fixed.random=()=>prob;
+  const G={Rift:{inArena:rift},Game:{state:'playing'},Coop:{active:false,isHost:true},
+   DEX:[{dex:1,rarity:1},{dex:2,rarity:2},{dex:3,rarity:3},{dex:4,rarity:4},{dex:5,rarity:5,leg:true}],
+   SPRITE_META:{1:{},2:{},3:{},4:{},5:{}},
+   DEX_BY:{1:{rarity:1},2:{rarity:2},3:{rarity:3},4:{rarity:4},5:{rarity:5}},
+   EnemyMgr:{add(e){return e;}},
+   Sprites:{Animator:class{}}
+  };
+  vm.runInNewContext(src,{G,Math:fixed,WeakSet,Map,Object});
+  const candidate={dex:5,def:{dex:5,hp:100},x:0,y:0,maxHp:100,hp:100,dmg:10};
+  G.EnemyMgr.add(candidate);
+  return {dex:candidate.dex,rarity:G.DEX_BY[candidate.dex].rarity,probRare:G.PKMSVVEncounterRarity.COMMON_RATE,
+   probEpic:G.PKMSVVEncounterRarity.RIFT_EPIC_RATE};
+ }
+ assert.equal(roll(.01,false).rarity,1,'common outside');
+ assert.equal(roll(.98,false).rarity,3,'rare outside, never legendary');
+ assert.equal(roll(.12,true).rarity,4,'rift epic');
+ assert.equal(roll(.50,true).rarity,3,'rift rare');
+ assert.equal(roll(.99,false).probRare,.96);
+ assert.equal(roll(.99,true).probEpic,.25);
+});
