@@ -757,6 +757,40 @@ test('Ditto cycles seven seconds transformed and three seconds resting, no casts
  assert.ok(casts>before,'Casts resume when the 7-second transformed phase restarts');
 });
 
+test('Ditto really copies three common offensive moves with native catalog kinds and attacks even if proxy rejects shape',()=>{
+ const hits=[],rings=[];
+ const pl={x:0,y:0,spd:120,level:24,kills:0,hp:300,maxHp:300,dead:false,
+  moves:[
+   {id:'whirlwind',lvl:4,cd:1,def:{kind:'wave'}},
+   {id:'body-slam',lvl:3,cd:1,kind:'contact'},
+   {id:'hyper-beam',lvl:2,cd:1},
+   {id:'calm-mind',lvl:5,cd:3,kind:'buff'}
+  ]};
+ const foe={x:45,y:10,dead:false,remote:false,hurt(n){hits.push(n)}};
+ const G={I18n:{lang:'vi'},DB:{save:{stats:{},pkmsvvSupportBond:{}},commit(){}},
+  Moves:{BY_ID:{'hyper-beam':{kind:'beam'},'calm-mind':{kind:'buff'}}},
+  Sprites:{preload(){},dirFromAngle:()=>0,Animator:class{loop(){}update(){}draw(){}}},
+  Combat:{pkmsvvSupportCast(){return false}},
+  Game:{st:{time:1}},U:{dist2:(a,b,c,d)=>(a-c)**2+(b-d)**2},
+  World:{isFree:()=>true,isLiquid:()=>false},Spawner:{say(){}},
+  FX:{ring(...args){rings.push(args)},burst(){}},
+  Coop:{active:false},EnemyMgr:{all:()=>[foe]}};
+ vm.runInNewContext(read('src/v15/eggs.js'),{G,Math,Number,Object});
+ G.PKMSVVEggs.begin(pl,false);
+ const ditto={dex:132,id:2,hatched:true,active:true,x:13,y:12,hp:90,maxHp:90,
+  cooldown:0,hitCooldown:0,effectFlash:0,penalty:0,age:0,statScale:.8,
+  affinityBoost:1,spd:110,copiedSkills:[],copyDex:25,
+  dittoPhase:'transform',dittoTime:7,anim:new G.Sprites.Animator()};
+ G.PKMSVVEggs.followers.push(ditto);
+ G.PKMSVVEggs.update(.25,pl,1,false);
+ assert.equal(ditto.copiedSkills.length,3,'not restricted to a stale fixed list of move kinds');
+ const names=ditto.copiedSkills.map(x=>x.move.id);
+ assert.ok(names.includes('whirlwind')&&names.includes('body-slam')&&names.includes('hyper-beam'));
+ assert.equal(names.includes('calm-mind'),false,'Ditto cannot cast a passive buff as an attack');
+ assert.equal(hits.length,3,'each copied offensive move must visibly damage a real target');
+ assert.ok(hits.every(x=>x>0));
+ assert.ok(rings.length>=3,'copy attacks show gameplay FX and are not silent');
+});
 test('Companion catalog shows actual Pokémon sprites and rarity labels without numerical odds',()=>{
  const code=read('src/pkmsvv-support-catalog.js');
  assert.ok(code.includes('G.UI?.spriteCanvas?.('));
