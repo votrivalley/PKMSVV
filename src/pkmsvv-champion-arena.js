@@ -539,7 +539,8 @@ G.PKMSVVChampionArena=(()=>{
    spd:Math.max(1,(Number(pl.baseSpd)||112)*Math.max(.1,Number(pl.spdMul)||1))};
   // A separate seeded roll per stat; ALL stay inside the exact requested range.
   const ratios={hp:sampleRoundRatio(),dmg:sampleRoundRatio(),spd:sampleRoundRatio()};
-  const raw={dex,name:targetName,
+  const level=Math.min(255,Math.max(1,Math.floor(Number(pl.level)||1)+10));
+  const raw={dex,name:targetName,level,
    hp:Math.max(1,Math.round(playerStats.hp*ratios.hp)),
    spd:Math.max(1,Math.round(playerStats.spd*ratios.spd)),
    dmg:Math.round(playerStats.dmg*ratios.dmg*100)/100,
@@ -552,6 +553,10 @@ G.PKMSVVChampionArena=(()=>{
   // Native boss constructor must not override the agreed player-relative stats.
   champion.maxHp=raw.hp;champion.hp=raw.hp;champion.dmg=raw.dmg;champion.spd=raw.spd;
   champion.pkmsvvArenaStatRatios=ratios;champion.pkmsvvArenaPlayerBaseline=playerStats;
+  champion.level=level;champion.pkmsvvArenaLevel=level;
+  // A ten-level tactical advantage grants quicker boss casts, while base
+  // HP/damage/speed remain inside their exact agreed round percentages.
+  champion.pkmsvvArenaSkillTempo=Math.max(.68,1-.04*round);
   // Add companions BEFORE the Champion so the boss remains the last added
   // entity, preserving current target selection and QA actor identity.
   spawnOpponentSupports(champion,pl);
@@ -576,13 +581,15 @@ G.PKMSVVChampionArena=(()=>{
   target._pkmsvvMegaSprite=opp?.pkmsvvMegaSprite||null;
   target._pkmsvvMegaPhase2=false;
   target._pkmsvvMegaTransition=0;
-  target.skillCd=Math.max(.55,2.2/ratios.dmg);
+  target.skillCd=Math.max(.45,1.4/ratios.dmg);
+  if(target.ai&&Number.isFinite(target.ai.cd))
+   target.ai.cd=Math.min(target.ai.cd,1.2);
   // AI difficulty comes from the measured round ratio and real Support
   // companions, not hidden 1.38× multipliers exceeding the stated limits.
   installChampionCombat(target);
   stage='fight';elapsed=0;lastSecond=-1;
   fightCue=.65;battleCountdown(tr('⚔ BẮT ĐẦU!','⚔ FIGHT!'),'start');panel().hidden=true;
-  G.UI?.toast?.(tr('Arena · ','Arena · ')+(ROUNDS[round]||'')+' — '+opp.name,3000);
+  G.UI?.toast?.(tr('Arena · ','Arena · ')+(ROUNDS[round]||'')+' — '+opp.name+' · Lv.'+level,3000);
   return true;
  }
  function launch(championOnly=false){
