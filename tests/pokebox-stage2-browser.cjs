@@ -664,6 +664,42 @@ async function main(){
   assert.ok(largeBoxTiming.openMs<2000&&largeBoxTiming.focusMs<200,
    'large Box should not freeze browser; '+JSON.stringify(largeBoxTiming));
 
+  // Reproduce the actual short-viewport Android APK/WebView screenshot.
+  // No save writes: all Pokémon and coins are a temporary in-memory fixture.
+  for(const device of [{width:390,height:844,label:'portrait'},
+   {width:844,height:390,label:'landscape'},
+   {width:980,height:460,label:'large-landscape'}]){
+   await cmd('Emulation.setDeviceMetricsOverride',{
+    width:device.width,height:device.height,deviceScaleFactor:2,mobile:true,
+    screenWidth:device.width,screenHeight:device.height});
+   await cmd('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:1});
+   const views=await evaluate("(()=>{\n const desc=Object.getOwnPropertyDescriptor(G.DB,'save'),commit=G.DB.commit,\n  getPads=Object.getOwnPropertyDescriptor(navigator,'getGamepads'),\n  immersive=document.documentElement.classList.contains('pkmsvv-native-immersive');\n const fixture=G.PKMSVVBox.migrate({owned:{6:{at:1},25:{at:2},4:{at:3}},\n  shiny:{},partner:6,partnerShiny:false,coins:15000}).save;\n const snap=tab=>{\n  const root=document.querySelector('#pkmsvv-pokebox-overlay');\n  const p=root?.querySelector(tab==='box'?'.pkmbx-hub-panel':\n   tab==='dex'?'#pkmbx-dex-overlay>.pkmbx-dex-panel':\n   '#pkmbx-upgrade-overlay>.pkmbx-upgrade-panel');\n  if(!p)return {tab,missing:true};\n  const rect=p.getBoundingClientRect();\n  const old=p.scrollTop;p.scrollTop=p.scrollHeight;\n  const button=p.querySelector(tab==='upgrade'?'#pkmbx-upgrade-team':\n   tab==='dex'?'#pkmbx-dex-next':'#pkmbx-profile button');\n  return {tab,rect:{left:rect.left,right:rect.right,top:rect.top,bottom:rect.bottom},\n   active:p.querySelector('[data-pc-tab][aria-selected=\"true\"]')?.dataset.pcTab,\n   scrollHeight:p.scrollHeight,height:p.clientHeight,old,scrollTo:p.scrollTop,\n   overflow:getComputedStyle(p).overflowY,button:!!button};\n };\n try{\n  Object.defineProperty(G.DB,'save',{value:fixture,configurable:true,writable:true});\n  G.DB.commit=()=>{throw Error('Mobile UI QA cannot mutate a player save')};\n  G.PKMSVVBoxHubUI.openBox();const box=snap('box');\n  G.PKMSVVBoxHubUI.cycleTab(1);const dex=snap('dex');\n  G.PKMSVVBoxHubUI.cycleTab(1);const upgrade=snap('upgrade');\n  const buttons=Array.from({length:18},()=>({pressed:false,value:0}));\n  const pad={connected:true,buttons,axes:[0,0]};\n  Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>[pad]});\n  buttons[4].pressed=true;G.PKMSVVModalNavQA.pollModal();\n  const l1=G.PKMSVVBoxHubUI.currentTab();\n  G.PKMSVVModalNavQA.pollModal();\n  const held=G.PKMSVVBoxHubUI.currentTab();\n  buttons[4].pressed=false;G.PKMSVVModalNavQA.pollModal();\n  buttons[5].pressed=true;G.PKMSVVModalNavQA.pollModal();\n  const r1=G.PKMSVVBoxHubUI.currentTab();\n  buttons[5].pressed=false;G.PKMSVVModalNavQA.pollModal();\n  G.PKMSVVBoxHubUI.closeBox();\n  document.documentElement.classList.add('pkmsvv-native-immersive');\n  const menu=document.querySelector('#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav');\n  const home=menu?{overflow:getComputedStyle(menu).overflowY,\n   paddingTop:parseFloat(getComputedStyle(menu).paddingTop)}:null;\n  return {box,dex,upgrade,l1,held,r1,home,width:innerWidth,height:innerHeight};\n }finally{\n  G.PKMSVVBoxHubUI.closeBox();\n  Object.defineProperty(G.DB,'save',desc);G.DB.commit=commit;\n  if(getPads)Object.defineProperty(navigator,'getGamepads',getPads);\n  else delete navigator.getGamepads;\n  document.documentElement.classList.toggle('pkmsvv-native-immersive',immersive);\n }\n})()");
+   console.log('QA_ANDROID_POKEMON_'+device.label+'='+JSON.stringify(views));
+   for(const v of [views.box,views.dex,views.upgrade]){
+    assert.equal(v.missing,undefined,'Missing '+device.label+' '+v.tab);
+    assert.equal(v.active,v.tab,'wrong active Pokémon tab '+v.tab);
+    assert.equal(v.button,true,'missing actionable '+v.tab+' button');
+    assert.ok(v.rect.left>=-2&&v.rect.right<=views.width+3,
+     'horizontal clipped '+device.label+' '+v.tab+JSON.stringify(v));
+    assert.ok(v.rect.top>=-2&&v.rect.bottom<=views.height+3,
+     'vertical clipped '+device.label+' '+v.tab+JSON.stringify(v));
+    assert.ok(['auto','scroll'].includes(v.overflow),
+     'Android cannot scroll '+device.label+' '+v.tab+JSON.stringify(v));
+    if(device.height<500)
+     assert.ok(v.scrollHeight>v.height+8&&v.scrollTo>v.old,
+      'Android cannot reach lower '+v.tab+' controls: '+JSON.stringify(v));
+   }
+   assert.equal(views.l1,'dex','L1 cycles Upgrade to Pokédex');
+   assert.equal(views.held,'dex','holding L1 does not skip another tab');
+   assert.equal(views.r1,'upgrade','R1 cycles Pokédex to Upgrade');
+   if(views.home&&device.height<500){
+    assert.equal(views.home.overflow,'auto','Android main menu must scroll');
+    assert.ok(views.home.paddingTop<100,'duplicate APK header spacing persists');
+   }
+  }
+  await cmd('Emulation.clearDeviceMetricsOverride');
+  await cmd('Emulation.setTouchEmulationEnabled',{enabled:false});
+
   const evolutionNav=await evaluate(`(()=>{
    const nav=G.PKMSVVModalNavQA;
    const modal=document.createElement('div');modal.className='scr pkmsvv-evo';
