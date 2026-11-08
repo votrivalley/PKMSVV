@@ -8,7 +8,7 @@ function setup(){
    textContent:'',onclick:null,classList:{add(){},remove(){},toggle(){}},
    append(...kids){this.children.push(...kids);for(const k of kids)if(k.id)nodes.set(k.id,k)},
    replaceChildren(...kids){this.children=[];this.append(...kids)},
-   setAttribute(){},querySelector(){return null},after(){},remove(){nodes.delete(this.id)}};
+   setAttribute(){},addEventListener(){},querySelector(){return null},after(){},remove(){nodes.delete(this.id)}};
   Object.defineProperty(x,'id',{get(){return this._id},set(id){this._id=id;nodes.set(id,this)}});
   Object.defineProperty(x,'innerHTML',{get(){return this._html||''},set(value){
    this._html=value;for(const match of value.matchAll(/id="([^"]+)"/g))
