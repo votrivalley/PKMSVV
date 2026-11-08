@@ -271,3 +271,49 @@ test('competitive evolution is presented as live corner HUD, without pausing gam
   assert.equal(state.state,'playing');
  }finally{sandbox.G.Moves=previousMoves;sandbox.document=previousDoc;delete sandbox.G.Royale;delete sandbox.G.Game;}
 });
+
+test('native Arena evolution never sets choice/paused state or stalls pending skill level-ups',()=>{
+ const original={Game:sandbox.G.Game,Champion:sandbox.G.PKMSVVChampionArena,
+  UI:sandbox.G.UI,Moves:sandbox.G.Moves,document:sandbox.document};
+ const plr=pl(4,20),known={id:'ember',lvl:3,type:'fire',cd:5,t:1};
+ plr.moves=[known];plr.slots=[[known]];plr.maxMoves=8;
+ sandbox.G.Game={state:'playing',player:plr,st:{time:96,pendingLevels:2}};
+ sandbox.G.PKMSVVChampionArena={active:true};
+ sandbox.G.UI={isOpen(){return false}};
+ sandbox.G.Moves={BY_ID:{ember:{id:'ember',maxLvl:7}},
+  poolFor(){return []},instance(id,lvl){return {id,lvl}}};
+ const body={children:[],appendChild(el){this.children.push(el);el.parent=this}};
+ function el(tag){
+  return {tagName:tag.toUpperCase(),children:[],className:'',disabled:false,
+   addEventListener(_name,fn){this.onclick=fn},
+   setAttribute(){},appendChild(item){this.children.push(item);item.parent=this},
+   append(...items){for(const item of items)this.appendChild(item)},
+   remove(){this.removed=true;const i=this.parent?.children.indexOf(this);if(i>=0)this.parent.children.splice(i,1)}};
+ }
+ sandbox.document={body,createElement:el,querySelector(){return null}};
+ try{
+  assert.equal(evo.tryOpen(plr,96,()=>{sandbox.G.Game.state='choice'}),false,
+   'legacy native hook must not enter blocking choice state in Arena');
+  assert.equal(sandbox.G.Game.state,'playing');
+  assert.equal(evo.tryLiveCompetitive(plr,96),true,
+   'live picker still opens independently of the native hook');
+  assert.equal(sandbox.G.Game.state,'playing');
+  assert.equal(body.children.length,1);
+  const modal=body.children[0],panel=modal.children[0];
+  assert.match(modal.className,/pkmsvv-evo-live/);
+  const selection=panel.children.find(x=>x.tagName==='BUTTON'&&!x.disabled);
+  assert.ok(selection);
+  selection.onclick();
+  assert.equal(plr.dex,5);
+  assert.equal(plr.level,20);
+  assert.equal(plr.moves[0],known,'evolution does not wipe the learned move');
+  assert.equal(plr.slots[0][0],known,'evolution retains move slots');
+  assert.equal(plr.maxMoves,8,'evolution never reduces maximum skills to three');
+  assert.equal(sandbox.G.Game.st.pendingLevels,2,'queued level-up rewards must not be erased');
+  assert.equal(sandbox.G.Game.state,'playing','battle time keeps moving during evolution');
+  assert.equal(evo.tryLiveCompetitive(plr,96),false,'evolution does not reopen endlessly');
+ }finally{
+  sandbox.G.Game=original.Game;sandbox.G.PKMSVVChampionArena=original.Champion;
+  sandbox.G.UI=original.UI;sandbox.G.Moves=original.Moves;sandbox.document=original.document;
+ }
+});
