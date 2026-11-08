@@ -13,10 +13,10 @@
 G.Shop = (() => {
   const ITEMS = {
     mint: { name: 'Menta', icon: 'mint', price: 1500,
-            desc: 'Cambia la naturaleza de un Pokémon por la que tú elijas.' },
+            desc: 'Rerolls a Pokémon Nature randomly.' },
     cap:  { name: 'Cápsula Habilidad', icon: 'capsule', price: 1500,
-            desc: 'Cambia la habilidad de un Pokémon por otra de las suyas (no la oculta).' },
-    caph: { name: 'Cápsula Habilidad Oculta', icon: 'capsuleh', price: 5000, hidden: true,
+            desc: 'Rerolls one of the Pokémon’s standard Abilities.' },
+    caph: { name: 'Cápsula Habilidad Oculta', icon: 'capsuleh', price: 10000, hidden: true, unavailableInShop: true,
             desc: 'Cambia la habilidad de un Pokémon por cualquiera de las suyas, también la oculta.' }
   };
   const ORDER = ['mint', 'cap', 'caph'];
@@ -76,7 +76,7 @@ G.Shop = (() => {
     if (!s) return { ok: false };
     const tm = key.startsWith('tm:') ? key.slice(3) : null;
     if (tm && !dailyTms().includes(tm)) return { ok: false, error: 'Esa MT ya no está a la venta.' };
-    if (!tm && !ITEMS[key]) return { ok: false };
+    if (!tm && (!ITEMS[key] || ITEMS[key].unavailableInShop)) return { ok: false };
     const price = tm ? tmPrice(tm) : ITEMS[key].price;
     if (s.coins < price) return { ok: false, error: 'No tienes Pokémonedas suficientes.' };
     s.coins -= price;
@@ -86,5 +86,28 @@ G.Shop = (() => {
     return { ok: true };
   }
 
-  return { ITEMS, ORDER, count, take, tmCount, takeTm, dailyTms, tmPrice, buy, today };
+  // Selling is an atomic Bag operation, including TM copies. The Hidden
+  // Capsule cannot be purchased but an existing/dropped copy is sellable.
+  function sell(key) {
+    const s=save(),tm=typeof key==='string'&&key.startsWith('tm:')?key.slice(3):null;
+    if(!s||G.DB.guest||(!tm&&!ITEMS[key])||
+      (tm&&!G.Moves?.BY_ID?.[tm]))return {ok:false};
+    const store=tm?s.tms:s.bag,id=tm||key;
+    if(!store||!Number.isSafeInteger(store[id])||store[id]<1)return {ok:false};
+    const refund=Math.floor((tm?tmPrice(tm):ITEMS[key].price)/2);
+    if(!Number.isSafeInteger(s.coins)||s.coins<0||!Number.isSafeInteger(s.coins+refund))
+      return {ok:false};
+    const previous={coins:s.coins,count:store[id]};
+    store[id]--;
+    if(!store[id])delete store[id];
+    s.coins+=refund;
+    try{
+      if(G.DB.commit(true)===false)throw Error('Save commit failed');
+      return {ok:true,key,refund,coins:s.coins};
+    }catch(_){
+      s.coins=previous.coins;store[id]=previous.count;
+      return {ok:false};
+    }
+  }
+  return { ITEMS, ORDER, count, take, tmCount, takeTm, dailyTms, tmPrice, buy, sell, today };
 })();
