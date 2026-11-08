@@ -41,6 +41,9 @@ G.PKMSVVEvo = (() => {
     pl.pkmEvoLastX = pl.x; pl.pkmEvoLastY = pl.y;
     pl.pkmEvoSkipLevel = -1;
     pl.pkmEvoHistory = [];
+    pl.pkmEvoFromMon = null;
+    pl.pkmEvoSwapChoices = null;
+    pl.pkmEvoLiveLevelSeen = 0;
   }
   function onCast(pl, m) {
     if (!m || pl.remote) return;
@@ -184,8 +187,32 @@ G.PKMSVVEvo = (() => {
       .sort((a,b)=>Number(ownTypes.has(G.Moves.BY_ID[b].type))-Number(ownTypes.has(G.Moves.BY_ID[a].type))||
         a.localeCompare(b));
   }
+  // One fixed random three-card draw per evolution; newly learned species-only
+  // moves are drawn first. Never reroll by switching which old skill is selected.
+  function skillSwapChoices(pl,random=Math.random){
+    if(!pl?.pkmEvoSwapAvailable)return [];
+    if(Array.isArray(pl.pkmEvoSwapChoices))return pl.pkmEvoSwapChoices.slice();
+    const options=skillSwapOptions(pl);
+    const oldPool=new Set((G.Moves?.poolFor?.(pl.pkmEvoFromMon)||[])
+      .map(x=>typeof x==='string'?x:x?.id).filter(Boolean));
+    const exclusive=options.filter(id=>!oldPool.has(id));
+    const regular=options.filter(id=>oldPool.has(id));
+    const shuffled=a=>{
+      const b=a.slice();
+      for(let i=b.length-1;i>0;i--){
+        const roll=Number(random());
+        const j=Math.max(0,Math.min(i,Math.floor((Number.isFinite(roll)?roll:0)* (i+1))));
+        [b[i],b[j]]=[b[j],b[i]];
+      }
+      return b;
+    };
+    const chosen=shuffled(exclusive).slice(0,3);
+    chosen.push(...shuffled(regular).slice(0,3-chosen.length));
+    pl.pkmEvoSwapChoices=chosen;
+    return chosen.slice();
+  }
   function swapSkill(pl,fromId,toId){
-    if(!pl||!pl.pkmEvoSwapAvailable||!Array.isArray(pl.moves)||!skillSwapOptions(pl).includes(toId)||typeof G.Moves?.instance!=='function')return false;
+    if(!pl||!pl.pkmEvoSwapAvailable||!Array.isArray(pl.moves)||!(Array.isArray(pl.pkmEvoSwapChoices)?pl.pkmEvoSwapChoices:skillSwapOptions(pl)).includes(toId)||typeof G.Moves?.instance!=='function')return false;
     const idx=pl.moves.findIndex(m=>m.id===fromId);
     if(idx<0)return false;
     const old=pl.moves[idx],def=G.Moves.BY_ID[toId];
@@ -203,58 +230,87 @@ G.PKMSVVEvo = (() => {
     if(pl.bind&&pl.bind[fromId]!==undefined&&pl.bind[toId]===undefined)
       pl.bind[toId]=pl.bind[fromId];
     pl.pkmEvoSwapAvailable=false;
+    pl.pkmEvoSwapChoices=null;
     return {from:fromId,to:toId,lvl:rank};
   }
+  function liveChoiceMode(){
+    return !!(G.Royale?.active||G.EggRush?.active||G.PKMSVVArenaSolo?.active||
+      G.PKMSVVChampionArena?.active||G.PKMSVVArenaPvp?.active);
+  }
   function showSkillSwap(pl,done){
-    const options=skillSwapOptions(pl);
-    if(!options.length||!pl.moves?.length){done();return;}
+    const options=skillSwapChoices(pl);
+    if(!options.length||!pl.moves?.length){pl.pkmEvoSwapAvailable=false;done?.();return;}
     const modal=document.createElement('div');
-    modal.className='scr pkmsvv-evo pkmsvv-evo-skill';
-    modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');
+    modal.className='scr pkmsvv-evo pkmsvv-evo-skill pkmsvv-evo-live';
+    modal.setAttribute('role','region');
+    modal.setAttribute('aria-label',G.I18n?.lang==='en'?
+      'Live evolution move selection':'Đổi kỹ năng tiến hóa trong trận');
     const panel=document.createElement('div');panel.className='pkmsvv-evo-panel';
     modal.appendChild(panel);
     const title=document.createElement('h2');
-    title.textContent=G.I18n?.lang==='en'?'✨ EVOLUTION · CHANGE ONE MOVE':'✨ TIẾN HÓA · ĐỔI 1 KỸ NĂNG';
-    const desc=document.createElement('p');
+    title.textContent=G.I18n?.lang==='en'?'✨ EVOLUTION · MOVE SWAP':'✨ TIẾN HÓA · ĐỔI KỸ NĂNG';
+    const desc=document.createElement('p');desc.className='pkmsvv-evo-live-note';
     desc.textContent=G.I18n?.lang==='en'?
-      'Optional: choose one learned move, then one move of the evolved Pokémon. Upgrade level is preserved.':
-      'Tùy chọn: chọn một chiêu đang học, rồi chọn một chiêu của Pokémon mới. Giữ cấp nâng tương đương.';
-    panel.append(title,desc);
+      'Choose a current move while still moving. D-pad / arrows to select, A / Enter to confirm.':
+      'Vừa di chuyển vừa chọn chiêu đang có. D-pad / phím mũi tên để chọn, A / Enter xác nhận.';
+    const cards=document.createElement('div');cards.className='pkmsvv-evo-live-cards';
+    panel.append(title,desc,cards);
     let finished=false;
-    const finish=()=>{if(finished)return;finished=true;modal.remove();done();};
-    const skip=document.createElement('button');
-    skip.type='button';skip.className='pkmsvv-evo-skip';skip.setAttribute('data-back','');
+    const finish=()=>{if(finished)return;finished=true;modal.remove();done?.();};
+    const skip=document.createElement('button');skip.type='button';
+    skip.className='pkmsvv-evo-skip';
+    skip.setAttribute('data-back','');
     skip.textContent=G.I18n?.lang==='en'?'Keep current moves':'Giữ nguyên kỹ năng';
     skip.onclick=finish;
+    panel.append(skip);
     const name=id=>{
       const d=G.Moves?.BY_ID?.[id],raw=d?.name;
       return typeof G.T==='function'&&raw?String(G.T(raw,'move')):Array.isArray(raw)?
         String(raw[G.I18n?.lang==='en'?1:0]||raw[0]):String(raw||id);
     };
-    function drawChoices(ids,onChoose){
-      for(const old of panel.querySelectorAll('.pkmsvv-evo-option'))old.remove();
-      for(const [id,level] of ids){
-        const btn=document.createElement('button');
-        btn.type='button';btn.className='pkmsvv-evo-option';
-        btn.textContent=name(id)+(level?' · Lv. '+level:'');
+    const focusFirst=()=>{
+      if(G.PKMSVVModalNavQA?.first){
+        if(typeof requestAnimationFrame==='function')requestAnimationFrame(()=>G.PKMSVVModalNavQA.first(modal));
+        else G.PKMSVVModalNavQA.first(modal);
+      }else cards.querySelector('button')?.focus?.({preventScroll:true});
+    };
+    function drawChoices(entries,onChoose,stage){
+      cards.replaceChildren();
+      cards.dataset.stage=stage;
+      for(const [i,[id,level]] of entries.entries()){
+        const btn=document.createElement('button');btn.type='button';
+        btn.className='pkmsvv-evo-option pkmsvv-evo-live-card';
+        btn.setAttribute('data-evo-choice',String(i+1));
+        const label=document.createElement('span');label.className='pkmsvv-evo-live-label';
+        label.textContent=name(id)+(level?' · Lv. '+level:'');
+        const number=document.createElement('kbd');number.textContent=String(i+1);
+        const icon=document.createElement('span');icon.className='pkmsvv-evo-live-icon';
+        if(typeof G.Icons?.html==='function'){
+          const html=G.Icons.html('move:'+id,32);
+          if(typeof html==='string')icon.innerHTML=html;
+        }
+        btn.append(number,icon,label);
         btn.onclick=()=>onChoose(id);
-        panel.insertBefore(btn,skip);
+        cards.append(btn);
       }
-      if(G.PKMSVVModalNavQA?.first)requestAnimationFrame(()=>G.PKMSVVModalNavQA.first(modal));
-      else G.Pad?.focusFirst?.();
+      focusFirst();
     }
-    panel.append(skip);
     drawChoices(pl.moves.map(m=>[m.id,m.lvl||1]),oldId=>{
       desc.textContent=(G.I18n?.lang==='en'?'Replace ':'Thay ')+name(oldId)+
-        (G.I18n?.lang==='en'?' with:':' bằng:');
+        (G.I18n?.lang==='en'?' with one of these 3 evolved moves:':' bằng 1 trong 3 kỹ năng tiến hóa:');
       drawChoices(options.map(id=>[id,null]),newId=>{
         const receipt=swapSkill(pl,oldId,newId);
-        if(receipt){pl.pkmEvoHistory?.at(-1)&&(pl.pkmEvoHistory.at(-1).skillSwap=receipt);finish();}
-      });
-    });
+        if(receipt){
+          const history=pl.pkmEvoHistory?.at(-1);
+          if(history)history.skillSwap=receipt;
+          finish();
+        }
+      },'replacement');
+    },'current');
     document.body.appendChild(modal);
-    G.Pad?.focusFirst?.();
+    focusFirst();
   }
+
   function evolve(pl, r, options = {}) {
     if (!pl || !r || pl.dex !== r.from || !G.DEX_BY[r.to] || !G.SPRITE_META[r.to]) return false;
     const before = pl.mon, after = G.DEX_BY[r.to];
@@ -282,6 +338,8 @@ G.PKMSVVEvo = (() => {
     pl.shiny = pl.shiny && G.Sprites.hasShiny(after.dex);
     const converted=eeveeChoice?convertNormal(pl,after.dex):null;
     pl.pkmEvoHistory.push({ from: r.from, to: r.to, at: pl.level, converted:converted||null });
+    pl.pkmEvoFromMon=before;
+    pl.pkmEvoSwapChoices=null;
     pl.pkmEvoSwapAvailable=true;
     pl.pkmEvoSkipLevel = -1;
     G.Sprites.preload([after.dex], 8000, pl.shiny);
@@ -315,7 +373,7 @@ G.PKMSVVEvo = (() => {
   }
   function show(pl, choices, t, done) {
     const modal = document.createElement('div');
-    modal.className = 'scr pkmsvv-evo'; // Register as highest modal in G.Pad.topScreen()
+    modal.className = 'scr pkmsvv-evo'+(liveChoiceMode()?' pkmsvv-evo-live':''); // D-pad selects while the movement stick stays live
     const panel = document.createElement('div');
     panel.className = 'pkmsvv-evo-panel';
     modal.appendChild(panel);
@@ -360,5 +418,16 @@ G.PKMSVVEvo = (() => {
     show(pl,options,t,done);
     return true;
   }
-  return { reset, tick, onCast, onHurt, eligible, evolve, requirement, friendship, tryOpen, routes: BY_FROM, choiceRoutes, pendingReason, conversionCandidate, convertNormal, skillSwapOptions, swapSkill, showSkillSwap };
+  function tryLiveCompetitive(pl,t){
+    if(!liveChoiceMode()||!pl||pl.dead||G.Game?.state!=='playing'||!Number.isFinite(pl.level))return false;
+    if(pl.pkmEvoLiveLevelSeen===pl.level||document.querySelector?.('.pkmsvv-evo'))return false;
+    if(G.UI?.isOpen?.('scr-levelup')||G.UI?.isOpen?.('scr-item')||G.UI?.isOpen?.('scr-bond'))return false;
+    if(!Array.isArray(pl.pkmEvoHistory))reset(pl);
+    const found=tryOpen(pl,t,()=>{});
+    if(found)pl.pkmEvoLiveLevelSeen=pl.level;
+    return found;
+  }
+  return { reset, tick, onCast, onHurt, eligible, evolve, requirement, friendship, tryOpen,
+    routes: BY_FROM, choiceRoutes, pendingReason, conversionCandidate, convertNormal,
+    skillSwapOptions, skillSwapChoices, swapSkill, showSkillSwap,liveChoiceMode,tryLiveCompetitive };
 })();
