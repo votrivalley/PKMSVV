@@ -32,7 +32,10 @@ function instance(myUid,opts={}){
   I18n:{lang:'vi'},Social:{uid:myUid,room:{id:'test',host:'host',mode:opts.mode||'arena',open:false,members},
    on(cb){roomListeners.push(cb)},setPlaying(p){this.playing=!!p},finishMatch(){this.room.open=true;for(const cb of roomListeners)cb('room');return Promise.resolve(this.room)}},
 
-  Game:{player:me,state:'playing',quit(){gameQuit++;}},
+  Game:{player:me,state:'playing',quit(){gameQuit++;},
+    pause(){this.pauseCount=(this.pauseCount||0)+1;return true},
+    togglePause(){this.pauseCount=(this.pauseCount||0)+1;return true}},
+  UI:{show(id){this.shown=(this.shown||[]).concat(id);return true}},
   Flow:{goMenu(){}},Moves:{BY_ID:{ember:{id:'ember',kind:'projectile',type:'fire',dmg:25,cd:.5,speed:300,life:1.5},
     tackle:{id:'tackle',kind:'melee',type:'normal',dmg:18,cd:1,radius:75}},
    instance(id,lvl){return {...this.BY_ID[id],id,lvl}}},
@@ -88,6 +91,21 @@ test('PvP confirmation rechecks Ready Team after a pending lobby selection',()=>
  ready.length=0; // e.g. a save change while the ten-second picker is open
  assert.equal(host.api.confirmPick(),false,'stale ready slot cannot confirm');
  assert.equal(host.api.stage,'select');
+});
+test('human Arena PvP never pauses even if a player presses Pause; Solo AI is not blocked',()=>{
+ const host=instance('host'),{G,api}=host;
+ assert.equal(G.Game.pause(),true,'native Pause works outside PvP');
+ assert.equal(G.UI.show('scr-pause'),true);
+ const count=G.Game.pauseCount;
+ host.start();
+ assert.equal(api.active,true);
+ assert.equal(G.Game.pause(),false,'direct Pause cannot freeze a LAN rival');
+ assert.equal(G.Game.togglePause(),false,'toggle Pause also blocked');
+ assert.equal(G.UI.show('scr-pause'),false,'Pause overlay cannot cover real-time PvP');
+ assert.equal(G.Game.pauseCount,count);
+ api.cleanup();
+ assert.equal(G.Game.pause(),true,'normal Pause restores immediately after PvP ends');
+ assert.equal(G.Game.pauseCount,count+1);
 });
 test('Real Arena rooms use human identities and reject AI/no-second-player modes',()=>{
  const host=instance('host');host.start();
