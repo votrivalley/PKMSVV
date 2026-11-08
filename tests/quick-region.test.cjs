@@ -670,3 +670,45 @@ test('Legendary wild Pokémon cannot bypass the 15-minute Region Boss, even afte
  assert.equal(q.regionalBoss?.dex,150,'the explicit timed boss still uses its legendary identity');
  assert.ok(q.regionalBoss.hp>=28000,'timed mascot boss gets substantial encounter HP');
 });
+
+test('15-minute legend only, 30-minute Judgment only, no 10/20-minute or 5-second spam',()=>{
+ const m=fs.readFileSync(path.join(__dirname,'../src/v14/milestones.js'),'utf8');
+ const j=fs.readFileSync(path.join(__dirname,'../src/v14/judgment.js'),'utf8');
+ assert.match(m,/at:900/);
+ assert.doesNotMatch(m,/at:600|at:1200/);
+ assert.match(m,/hp:44000/);
+ assert.match(m,/G\.PKMSVVQuickRegion\?\.active/,'Region own 15m boss must suppress extra global trial');
+ assert.match(j,/BOSS_EVERY = 1e9/,'Judgment must not generate legendary every 5 seconds');
+ assert.match(j,/singleDps\(\) \* 7/,'the one 30-minute legend has more HP');
+ const spawns=[],actor={x:0,y:0,dead:false};
+ class Enemy {
+  constructor(def){this.def=def;this.dex=def.dex;this.maxHp=def.hp;this.hp=def.hp;this.boss=true;}
+ }
+ const G={Coop:{active:false,isHost:true},Rift:{inArena:false},Judgment:{active:false},
+  PKMSVVQuickRegion:{active:false},
+  EnemyMgr:{bossAlive:()=>false,add:e=>{spawns.push(e);return e;}},
+  DEX:[{dex:150,name:'Mewtwo',leg:true,rarity:5,types:['psychic']}],
+  SPRITE_META:{150:{}},Game:{player:actor},U:{pick:a=>a[0]},
+  Enemy,Sprites:{preload(){}},Spawner:{say(){}},Audio:{sfx(){}},I18n:{lang:'vi'}};
+ vm.runInNewContext(m,{G,Math,Set,Array});
+ for(const t of [600,899,1199,1200])G.PKMSVV14.update(t,[actor]);
+ assert.equal(spawns.length,0,'no off-schedule legendary spawns');
+ G.PKMSVV14.update(900,[actor]);
+ assert.equal(spawns.length,1);
+ assert.equal(spawns[0].dex,150);
+ assert.equal(spawns[0].hp,44000);
+ G.PKMSVV14.update(1800,[actor]);
+ assert.equal(spawns.length,1,'30m second boss belongs to Judgment, no duplicate trial');
+});
+test('Each Gen1–9 Boss defeat schedules native match completion after Badge commit',()=>{
+ const h=harness(),q=h.G.PKMSVVQuickRegion;
+ h.save.arenas.pkmChampion.seals={};
+ h.G.DEX_BY[150]={dex:150,name:'Mewtwo',rarity:5};
+ assert.equal(q.choose(0),true);
+ h.G.Game.st.time=900;h.G.EnemyMgr.update(.016);
+ const boss=q.regionalBoss;assert.ok(boss);
+ boss.dead=true;boss.hp=0;h.G.EnemyMgr.update(.016);
+ assert.equal(h.save.pkmsvvExploreSeals.Kanto,true);
+ assert.equal(h.G.Game.state,'ui','native Quit must end the Gen1–9 run, not remain in endless combat');
+ assert.equal(q.active,false);
+});
