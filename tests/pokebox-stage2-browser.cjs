@@ -91,6 +91,23 @@ async function main(){
    captureFunctions:Object.keys(G).filter(k=>/gacha|shiny|run|loot|pick|spawner/i.test(k)).slice(0,60)
   }))()`);
   console.log('PKMSVV_RANK_SHINY_BINDING_AUDIT='+JSON.stringify(gameAudit));
+  const userUiAudit=await evaluate(`(()=>({
+   rank:Object.keys(G.Ranking||{}),
+   rankingUI:Object.keys(G.RankingUI||{}),
+   svvRank:Object.keys(G.PKMSVVRankUI||{}),
+   rankingDraw:String(G.RankingUI?.draw||G.RankingUI?.render||'').slice(0,2500),
+   rankingNative:String(G.Ranking?.draw||G.Ranking?.update||'').slice(0,2500),
+   hudDraw:String(G.HUD?.draw||'').slice(0,2500),
+   shinyCaught:String(G.onShinyCaught||'').slice(0,4500),
+   pickupKeys:Object.keys(G.Pickups||{}),
+   pickupUpdate:String(G.Pickups?.update||'').slice(0,3000),
+   over:String(G.RunUI?.showOver||'').slice(0,3000),
+   gameQuit:String(G.Game?.quit||'').slice(0,2200),
+   gameToUI:String(G.Game?.toUI||'').slice(0,1700),
+   scoreNodes:[...document.querySelectorAll('*')].filter(n=>/rank|leader|scoreboard/i.test(String(n.id||''))).slice(0,35).map(n=>({id:n.id,tag:n.tagName}))
+  }))()`);
+  console.log('PKMSVV_ARENA_RANK_SHINY_METHODS='+JSON.stringify(userUiAudit));
+
   const five=await evaluate('G.PKMSVVBox2.formatRank(5).hp');
   assert.equal(await evaluate('G.PKMSVVBox3.PRICE'),6500);
   assert.equal(await evaluate('G.PKMSVVBox3.PITY'),180);
