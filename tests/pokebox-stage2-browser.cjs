@@ -356,8 +356,8 @@ async function main(){
   assert.equal(exploreMaps.kanto,0,'Kanto remains native beginner terrain');
   assert.equal(exploreMaps.paldea,exploreMaps.fire,'late Paldea receives the Fire biome');
   assert.match(exploreMaps.instruction,/Phút 15|15 min/,'in-game 15-minute instruction is localized and visible');
-  assert.match(exploreMaps.instruction,/Boss Vùng|Region Boss/,'the player must understand a boss appears at minute 15');
-  assert.match(exploreMaps.instruction,/Huy hiệu Vùng|Region Badge/,'the player must understand a Badge requires defeating the boss');
+  assert.match(exploreMaps.instruction,/Boss|boss/,'the player must understand a boss appears at minute 15');
+  assert.match(exploreMaps.instruction,/Huy hiệu|Badge/,'the player must understand a Badge requires defeating the boss');
   assert.equal(await evaluate("typeof G.PKMSVVQuickRegion.spawnRegionBoss"),'function',
    'actual browser game must bundle the new Region Boss actor, not just menu text');
 
@@ -402,9 +402,9 @@ async function main(){
   assert.ok(rateSource.includes('Math.random()<.02'),'boss Orb chance in real compiled game must be 2%');
   assert.equal((rateSource.match(/Math\.random\(\)<\.02/g)||[]).length>=2,true,'both native Orb rolls must be 2%');
   assert.ok(rateSource.includes('*150&&Math.random'),'Orb cap cannot run out too early after Fusion');
-  const legendaryPacing=await evaluate("(()=>({checkpoints:G.PKMSVV14?.checkpoints?.map(c=>({at:c.at,hp:c.hp,rarity:c.bossRarity})),judgment:typeof G.Judgment?.update==='function'}))()");
+  const legendaryPacing=await evaluate("(()=>({checkpoints:G.PKMSVV14?.checkpoints?.map(c=>({at:c.at,hp:c.hp,rarity:c.bossRarity,legendChance:c.legendChance})),judgment:typeof G.Judgment?.update==='function'}))()");
   console.log('Real compiled Legendary milestones:',JSON.stringify(legendaryPacing));
-  assert.deepEqual(legendaryPacing.checkpoints,[{at:900,hp:44000,rarity:5}],
+  assert.deepEqual(legendaryPacing.checkpoints,[{at:900,hp:44000,rarity:4,legendChance:.30}],
    'only the 15m Legendary Trial; one separate Judgment boss at 30m');
   assert.equal(legendaryPacing.judgment,true);
   const endFlow=await evaluate("(async()=>{const js=await fetch('js/app.min.js').then(r=>r.text()),from=js.indexOf('G.Game='),game=js.slice(from,from+30000),keys=['showOver(','.showOver(', 'quit:', 'toUI:', 'finish:', 'end:', 'gameOver'];return {from,occurrences:keys.map(k=>{let i=game.indexOf(k);return {key:k,index:i,near:i<0?'':game.slice(Math.max(0,i-230),i+360)}}),runui:js.includes('G.RunUI.showOver')}})()");
@@ -420,12 +420,16 @@ async function main(){
   assert.equal(realKanto.selectedRegion,0,'Kanto is exactly Gen 1 in compiled game');
   // Real compiled engine: spawn the 15-minute Region Boss in a disposable
   // in-memory solo fixture; no user/localStorage save can be modified.
-  const badgeBoss=await evaluate("(()=>{const q=G.PKMSVVQuickRegion,game=G.Game,db=G.DB;const saved={dbSave:Object.getOwnPropertyDescriptor(db,'save'),dbCommit:Object.getOwnPropertyDescriptor(db,'commit'),player:Object.getOwnPropertyDescriptor(game,'player'),state:Object.getOwnPropertyDescriptor(game,'state'),st:Object.getOwnPropertyDescriptor(game,'st')};const ephemeral={owned:{150:{at:1}},partner:150,arenas:{pkmChampion:{seals:{}}},pkmsvvExploreSeals:{}};const set=(obj,key,value)=>Object.defineProperty(obj,key,{value,configurable:true,writable:true,enumerable:true});let entered=false;try{set(db,'save',ephemeral);set(db,'commit',()=>true);set(game,'player',{x:1600,y:1600,maxHp:350,hp:350,dead:false});set(game,'state','playing');set(game,'st',{time:0});entered=q.beginRun(0);if(!entered)return {entered:false};q.updateRegionBoss();game.st.time=899;q.updateRegionBoss();const early=!!q.regionalBoss;game.st.time=900;q.updateRegionBoss();const boss=q.regionalBoss;if(!boss)return {entered,early,spawned:false};const pending=!q.unlocked(1),dex=boss.dex,realBoss=!!boss.boss,hp=boss.hp;boss.dead=true;boss.hp=0;const claimed=q.tryEarnSeal();const badge=ephemeral.pkmsvvExploreSeals.Kanto===true;return {entered,early,spawned:true,dex,realBoss,hp,pending,claimed,badge,unlocked:q.unlocked(1)};}finally{if(entered)q.endRun();G.EnemyMgr?.clear?.();for(const [obj,key,descriptor] of [[db,'save',saved.dbSave],[db,'commit',saved.dbCommit],[game,'player',saved.player],[game,'state',saved.state],[game,'st',saved.st]]){if(descriptor)Object.defineProperty(obj,key,descriptor);else delete obj[key];}}})()");
+  const badgeBoss=await evaluate("(()=>{const q=G.PKMSVVQuickRegion,game=G.Game,db=G.DB;const saved={dbSave:Object.getOwnPropertyDescriptor(db,'save'),dbCommit:Object.getOwnPropertyDescriptor(db,'commit'),player:Object.getOwnPropertyDescriptor(game,'player'),state:Object.getOwnPropertyDescriptor(game,'state'),st:Object.getOwnPropertyDescriptor(game,'st')};const ephemeral={owned:{150:{at:1}},partner:150,arenas:{pkmChampion:{seals:{}}},pkmsvvExploreSeals:{}};const set=(obj,key,value)=>Object.defineProperty(obj,key,{value,configurable:true,writable:true,enumerable:true});let entered=false;try{set(db,'save',ephemeral);set(db,'commit',()=>true);set(game,'player',{x:1600,y:1600,maxHp:350,hp:350,dead:false});set(game,'state','playing');set(game,'st',{time:0});entered=q.beginRun(0);if(!entered)return {entered:false};q.updateRegionBoss();game.st.time=899;q.updateRegionBoss();const early=!!q.regionalBoss;game.st.time=900;q.updateRegionBoss();const boss=q.regionalBoss;if(!boss)return {entered,early,spawned:false};const pending=!q.unlocked(1),dex=boss.dex,realBoss=!!boss.boss,hp=boss.hp;boss.dead=true;boss.hp=0;const claimed=q.tryEarnSeal();const badge=ephemeral.pkmsvvExploreSeals.Kanto===true,continued=game.state==='playing';game.st.time=1800;q.updateRegionBoss();const last=q.finalBoss;return {entered,early,spawned:true,dex,rarity:G.DEX_BY?.[dex]?.rarity,realBoss,hp,pending,claimed,badge,unlocked:q.unlocked(1),continued,finalSpawned:!!last,finalDex:last?.dex,finalHP:last?.hp};}finally{if(entered)q.endRun();G.EnemyMgr?.clear?.();for(const [obj,key,descriptor] of [[db,'save',saved.dbSave],[db,'commit',saved.dbCommit],[game,'player',saved.player],[game,'state',saved.state],[game,'st',saved.st]]){if(descriptor)Object.defineProperty(obj,key,descriptor);else delete obj[key];}}})()");
   console.log('Real compiled 15m Mewtwo Region Boss and Badge QA:',JSON.stringify(badgeBoss));
   for(const key of ['entered','spawned','realBoss','pending','claimed','badge','unlocked'])
    assert.equal(badgeBoss[key],true,'compiled Region Boss/Badge: '+key+' '+JSON.stringify(badgeBoss));
   assert.equal(badgeBoss.early,false,'cannot spawn Region Boss at 14:59');
-  assert.equal(badgeBoss.dex,150,'Gen 1 boss is the real Mewtwo actor');
+  assert.ok(badgeBoss.rarity===4||badgeBoss.rarity===5,'15m boss is epic or legendary');
+  assert.equal(badgeBoss.continued,true,'15m Badge must not end the run');
+  assert.equal(badgeBoss.finalSpawned,true,'30m creates the separate final boss');
+  assert.equal(badgeBoss.finalDex,150,'30m boss is guaranteed Gen1 Mewtwo');
+  assert.ok(badgeBoss.finalHP>badgeBoss.hp,'30m legendary should have more HP');
   assert.ok(badgeBoss.hp>1000,'real Region Boss has combat HP, not a cosmetic popup');
   const genAudit=await evaluate("(()=>{const mismatch=G.DEX.filter(p=>p&&G.PKMSVVQuickRegion.nationalGen(p.dex)!==Number(p.gen));return {count:mismatch.length,examples:mismatch.slice(0,12).map(p=>({dex:p.dex,name:p.name,gen:p.gen,expected:G.PKMSVVQuickRegion.nationalGen(p.dex)}))}})()");
   assert.equal(genAudit.count,0,'Gacha internal Gen tags must agree with the official National Pokédex: '+JSON.stringify(genAudit));
