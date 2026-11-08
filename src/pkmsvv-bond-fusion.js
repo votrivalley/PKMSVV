@@ -34,6 +34,43 @@ G.PKMSVVFusionPilot=(()=>{
   const choices=G.PKMSVVFusionEvolved?.choices(pl)||[];
   return choices.length?{mode:'evolved',pilot:true,recipes:choices}:null;
  }
+ // One roll PER NEW LEVEL while a valid MAX+MAX recipe exists.
+ // Re-rolling the same level cannot reroll the 80% chance or reset pity.
+ // Declines/nonappearance decrease by 10 points: 80,70,60,50,40,30,30...
+ const FUSION_OFFER_RATES=Object.freeze([.8,.7,.6,.5,.4,.3]);
+ function chance(pl){return FUSION_OFFER_RATES[Math.min(FUSION_OFFER_RATES.length-1,
+  Math.max(0,Number(pl?._pkmsvvFusionOfferAttempts)||0))];}
+ function levelFusionCard(pl){
+  const opts=options(pl);
+  if(!opts?.recipes?.length)return null;
+  const level=Number(pl.level);
+  if(pl._pkmsvvFusionOfferLevel!==level){
+   pl._pkmsvvFusionOfferLevel=level;
+   const attempt=Math.max(0,Number(pl._pkmsvvFusionOfferAttempts)||0);
+   const rate=FUSION_OFFER_RATES[Math.min(attempt,FUSION_OFFER_RATES.length-1)];
+   pl._pkmsvvFusionOfferAttempts=attempt+1;
+   const rolled=Math.random()<rate;
+   const picked=rolled?opts.recipes[Math.floor(Math.random()*opts.recipes.length)]:null;
+   pl._pkmsvvFusionOfferRecipe=picked?.id||null;
+  }
+  const recipe=RECIPES.find(x=>x.id===pl._pkmsvvFusionOfferRecipe);
+  if(!recipe||!G.PKMSVVFusionEvolved?.canUse(pl,recipe.id))return null;
+  return {type:'fusion',key:'pkmsvv:fusion:'+recipe.id,w:1000,
+   icon:'move:pkmsvv-fusion:'+recipe.id,color:'#ffd777',
+   tag:tr('TIẾN HÓA FUSION','FUSION EVOLUTION'),
+   title:tr(recipe.vi,recipe.en),
+   desc:tr('Ghép '+moveLabel(recipe.ids[0])+' + '+moveLabel(recipe.ids[1])+
+    ' (cả hai MAX), trống thêm 1 ô kỹ năng.',
+    'Fuse MAX '+moveLabel(recipe.ids[0])+' + '+moveLabel(recipe.ids[1])+
+    ', freeing one move slot.'),
+   apply:target=>{
+    const actor=target||pl;
+    const evolved=G.PKMSVVFusionEvolved?.evolve(actor,recipe.id);
+    if(evolved)G.UI?.toast?.(tr('✨ Tiến hóa Fusion: '+recipe.vi,
+     '✨ Fusion evolved: '+recipe.en),2700);
+    return evolved;
+   }};
+ }
  function confirm(pl,picked){
   if(!Array.isArray(picked)||picked.length!==1)return false;
   const id=typeof picked[0]==='string'?picked[0]:picked[0]?.id;
@@ -93,7 +130,11 @@ G.PKMSVVFusionPilot=(()=>{
   if(typeof G.LevelUp?.offer==='function'&&!G.LevelUp.offer._pkmsvvFusionHint){
    const old=G.LevelUp.offer;
    const wrapped=function(pl,...args){
-    return decorateOffers(pl,old.call(this,pl,...args));
+    const cards=decorateOffers(pl,old.call(this,pl,...args));
+    if(!Array.isArray(cards)||!cards.length)return cards;
+    const card=levelFusionCard(pl);
+    if(card)cards[Math.min(cards.length-1,Math.max(0,(Number(args[0])||cards.length)-1))]=card;
+    return cards;
    };
    wrapped._pkmsvvFusionHint=true;G.LevelUp.offer=wrapped;
   }
@@ -219,7 +260,8 @@ G.PKMSVVFusionPilot=(()=>{
  installSkillHints();
  if(document.body?.appendChild)mount();
  else document.addEventListener?.('DOMContentLoaded',mount,{once:true});
- return {RECIPES,maxPerRun,maxGroup,readyMove,pilotEligible,looseMoves,learnedCount,
+ return {RECIPES,maxPerRun,maxGroup,FUSION_OFFER_RATES,chance,levelFusionCard,
+  readyMove,pilotEligible,looseMoves,learnedCount,
   potentialPairs,pairFor,options,confirm,progress,learnedIds,offerHint,decorateOffers,
   notifyLearned,installSkillHints,install,competitive,openFusion,openFromPause,
   showGuide,mount,sync};
