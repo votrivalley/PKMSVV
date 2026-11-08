@@ -15,7 +15,8 @@
  const NAMES=['Kanto','Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar','Paldea','Votri Valley'];
  const SYMBOLS=['🌿','🏞️','🌊','❄️','⚙️','⛰️','🌴','🏟️','🔥','🐉'];
  const REGION_COUNT=10;
- const SEAL_SECONDS=15*60; // Boss arrives after 15 minutes of actual gameplay.
+ const SEAL_SECONDS=15*60; // Badge at 15:00; a second legendary victory at 30:00 ends the run.
+ const FINAL_BOSS_SECONDS=30*60;
  // National Dex mascots chosen for the nine exploration Gen covers.
  // Keep the tenth, mixed-generation Sky Pillar, using its existing Rayquaza art.
  const REGION_MASCOTS=Object.freeze([150,249,385,488,646,718,800,890,1024,384]);
@@ -269,96 +270,105 @@
    !G.Coop?.active&&!getChampion()?.active&&
    !G.Game?.player?.dead&&!(Number(G.Game?.player?.hp)<=0);
  }
- function spawnRegionBoss(run=current){
-  if(!canFightRegionBoss(run)||run.bossSpawned||actualRunSeconds(run)<SEAL_SECONDS)return false;
-  const hero=G.Game?.player,dex=REGION_MASCOTS[run.index],mon=G.DEX_BY?.[dex];
+
+ function localEpic(index){
+  const source=G.DEX||[];
+  const allowed=source.filter(p=>p&&Number(p.rarity)===4&&
+   G.SPRITE_META?.[p.dex]&&isAllowed(p.dex,index));
+  return allowed.length?allowed[Math.floor(Math.random()*allowed.length)]:null;
+ }
+ function spawnRegionBoss(run=current,final=false){
+  if(!canFightRegionBoss(run))return false;
+  const elapsed=actualRunSeconds(run),threshold=final?FINAL_BOSS_SECONDS:SEAL_SECONDS;
+  const key=final?'finalBoss':'badgeBoss';
+  if(run[key]||elapsed===null||elapsed<threshold)return false;
+  // 15:00: 30% Legendary and 70% Epic (rare region-specific species).
+  // 30:00: guaranteed Legendary mascot from this Gen, a real killable actor.
+  const mascot=REGION_MASCOTS[run.index];
+  const epic=!final&&Math.random()>=.30?localEpic(run.index):null;
+  const dex=final?mascot:(epic?.dex||mascot);
+  const hero=G.Game?.player,mon=G.DEX_BY?.[dex];
   if(!hero||!mon||typeof G.Enemy!=='function'||typeof G.EnemyMgr?.add!=='function')return false;
+  const source=G.Enemies?.BOSSES?.[0]||{};
+  const hp=Math.round((final?62000:28000)+run.index*(final?14000:8000));
+  const def={...source,dex,name:mon.name||('Pokémon '+dex),
+   hp,dmg:Math.max((final?43:24)+run.index*4,Number(source.dmg)||0),
+   spd:Math.max(70,Math.min(145,Number(source.spd)||90)),
+   xp:0,behavior:source.behavior||'boss',pkmsvvExploreBoss:true};
   try{
-   // Reuse native boss behaviour and attacks. A mascot is a REAL boss actor
-   // with HP/attack/sprite, not an overlay or auto-earned timer reward.
-   const source=G.Enemies?.BOSSES?.[0]||{};
-   const hp=Math.max(28000+run.index*8000,(Number(hero.maxHp)||300)*(22+run.index*4));
-   const def={...source,dex,name:mon.name||('Pokémon '+dex),
-    hp:Math.round(hp),dmg:Math.max(24+run.index*4,Number(source.dmg)||0),
-    spd:Math.max(70,Math.min(140,Number(source.spd)||90)),
-    xp:0,behavior:source.behavior||'boss',pkmsvvExploreBoss:true};
    const enemy=new G.Enemy(def,Number(hero.x||0)+230,Number(hero.y||0)-95,
-    G.Enemies?.bossScale?.(SEAL_SECONDS)||{hp:1,dmg:1,spd:1},true);
-   enemy.pkmsvvExploreBoss=true;
-   enemy.pkmsvvExploreRegion=run.index;
-   // Avoid 15-minute double scaling through native enemy health multipliers.
-   enemy.hp=enemy.maxHp=Math.round(hp);
+    {hp:1,dmg:1,spd:1},true);
+   enemy.pkmsvvExploreBoss=true;enemy.pkmsvvExploreRegion=run.index;
+   enemy.pkmsvvExploreFinal=final;enemy.hp=enemy.maxHp=hp;
    const created=G.EnemyMgr.add(enemy);
-   if(created===false||created===null)throw Error('Boss add failed');
-   run.bossEnemy=enemy;
-   run.bossSpawned=true;
-   G.Spawner?.say?.(tr('👑 BOSS VÙNG '+NAMES[run.index]+' XUẤT HIỆN!',
-    '👑 '+NAMES[run.index]+' REGION BOSS APPEARS!'),4);
-   G.UI?.toast?.(tr('Hạ Boss Vùng để nhận Huy hiệu Vùng!',
-    'Defeat the Region Boss to earn its Badge!'),4500);
+   if(created===false||created===null)throw Error('Region Boss add failed');
+   run[key]=enemy;
+   G.Sprites?.preload?.([dex],4000);
+   G.Spawner?.say?.(tr(final?'👑 HUYỀN THOẠI CUỐI CÙNG!':'👑 THỬ THÁCH 15 PHÚT!',
+    final?'👑 FINAL LEGENDARY!':'👑 15-MINUTE BOSS!'),4);
+   G.UI?.toast?.(tr(final?'Hạ Boss Huyền Thoại 30 phút để hoàn thành vùng!':'Hạ Boss 15 phút để nhận Huy hiệu Vùng!',
+    final?'Defeat the 30-minute Legendary to finish the region!':'Defeat the 15-minute boss to earn the Region Badge!'),4000);
    return true;
-  }catch(error){
-   console.warn('[Explore Region Boss] Spawn failed; will retry',error);
+  }catch(err){console.warn('[Explore] timed boss failed',err);return false;}
+ }
+ // The original save.pkmsvvExploreSeals is retained as the Badge ledger;
+ // only one successful save transaction earns it, no duplicate rewards.
+ function tryEarnSeal(){
+  const run=current,boss=run?.badgeBoss;
+  if(!run||run.badgeClaimed||!boss||!boss.dead||Number(boss.hp)>0||
+   !canFightRegionBoss(run)||actualRunSeconds(run)<SEAL_SECONDS)return false;
+  const save=getSave(),name=NAMES[run.index];
+  if(!save)return false;
+  if(hasSeal(run.index,save)){
+   run.badgeClaimed=true;
+   G.UI?.toast?.(tr('🏅 Đã vượt Boss 15 phút! Hãy trụ đến phút 30.',
+    '🏅 First boss defeated! Survive until minute 30.'),3300);
+   return true;
+  }
+  const original=save.pkmsvvExploreSeals;
+  if(original!==undefined&&(!original||Array.isArray(original)||typeof original!=='object'))return false;
+  save.pkmsvvExploreSeals={...(original||{}),[name]:true};
+  try{
+   if(typeof G.DB?.commit!=='function'||G.DB.commit(true)===false)
+    throw Error('Badge save failed');
+  }catch(err){
+   if(original===undefined)delete save.pkmsvvExploreSeals;
+   else save.pkmsvvExploreSeals=original;
+   console.warn('[Explore] Badge rollback',err);
    return false;
   }
+  run.badgeClaimed=true;
+  G.UI?.toast?.(tr('🏅 Huy hiệu Vùng '+name+'! Vùng mới đã mở. Tiếp tục đến phút 30.',
+   '🏅 '+name+' Badge earned! Next region unlocked. Continue to minute 30.'),5000);
+  return true;
  }
- // The native Quit action ends a run and records normal match statistics.
- // Schedule it outside EnemyMgr.update to avoid tearing down arrays mid-frame.
- function finishRegionMatch(run){
-  if(!run||run.index>=9||run.victoryScheduled)return false;
+ function finishRegionMatch(run=current){
+  if(!run||run.index>=9||run.victoryScheduled||!run.finalBoss||
+   !run.finalBoss.dead||Number(run.finalBoss.hp)>0)return false;
   run.victoryScheduled=true;
-  const end=()=>{
+  const done=()=>{
    if(current!==run||G.Game?.state!=='playing')return;
-   // The Badge has ALREADY been committed. Quit is a match transition, never
-   // the mechanism that awards currency/Badges.
    try{G.Game?.quit?.();}
    catch(error){console.warn('[Explore] Victory transition failed',error);return;}
    G.UI?.toast?.(tr('🏆 HOÀN THÀNH VÙNG '+NAMES[run.index]+'!',
     '🏆 '+NAMES[run.index]+' REGION COMPLETED!'),5200);
   };
-  if(typeof setTimeout==='function')setTimeout(end,0);
-  else end();
-  return true;
- }
-  function tryEarnSeal(){
-  // Timer alone NEVER rewards a Badge. Only the exact spawned encounter
-  // being actually defeated (dead AND <=0 HP) may unlock the next Region.
-  const run=current,boss=run?.bossEnemy;
-  if(!run?.bossSpawned||run.badgeClaimed||!boss||!boss.dead||
-   !(Number(boss.hp)<=0)||!canFightRegionBoss(run)||
-   actualRunSeconds(run)<SEAL_SECONDS)return false;
-  const save=getSave(),name=NAMES[run.index];
-  if(!save)return false;
-  if(hasSeal(run.index,save)){run.badgeClaimed=true;return false;}
-  const original=save.pkmsvvExploreSeals;
-  if(original!==undefined&&(!original||Array.isArray(original)||typeof original!=='object'))return false;
-  save.pkmsvvExploreSeals={...(original||{}),[name]:true};
-  try{
-   // One atomic region unlock, unrelated currency/Champion records untouched.
-   if(typeof G.DB?.commit!=='function'||G.DB.commit(true)===false)
-    throw Error('Save commit failed');
-  }catch(error){
-   if(original===undefined)delete save.pkmsvvExploreSeals;
-   else save.pkmsvvExploreSeals=original;
-   console.warn('[Explore Region Badge] Save commit failed',error);
-   return false;
-  }
-  run.badgeClaimed=true;
-  G.Spawner?.say?.(tr('🏅 HUY HIỆU VÙNG '+name+'!',name+' REGION BADGE!'),4);
-  G.UI?.toast?.(tr('🏅 Đã hạ Boss! Nhận Huy hiệu Vùng '+name+' · Mở vùng kế tiếp.',
-   '🏅 Boss defeated! '+name+' Region Badge earned · Next region unlocked.'),5000);
-  // Regions 1–9 end IMMEDIATELY after the legendary boss victory (the
-  // next animation frame). Sky's separate 30-minute endgame remains playable.
-  finishRegionMatch(run);
+  if(typeof setTimeout==='function')setTimeout(done,0);
+  else done();
   return true;
  }
  function updateRegionBoss(){
   if(!canFightRegionBoss())return false;
-  const run=current;
-  // Repeated ticks after a failed spawn will retry; after a successful
-  // spawn, never create a duplicate even if the boss is killed/removed.
-  if(!run.bossSpawned)spawnRegionBoss(run);
-  return tryEarnSeal();
+  const run=current,elapsed=actualRunSeconds(run);
+  if(elapsed===null)return false;
+  if(elapsed>=SEAL_SECONDS&&!run.badgeBoss)spawnRegionBoss(run,false);
+  if(run.badgeBoss?.dead)tryEarnSeal();
+  // The 30-minute boss only starts AFTER the first boss has been defeated.
+  // Prevent two giant bosses occupying the field simultaneously.
+  if(run.badgeClaimed&&elapsed>=FINAL_BOSS_SECONDS&&!run.finalBoss)
+   spawnRegionBoss(run,true);
+  if(run.finalBoss?.dead)finishRegionMatch(run);
+  return true;
  }
  function regionIndex(){
   if(current&&preRunPending&&G.Game?.state==='playing')preRunPending=false;
@@ -435,7 +445,7 @@
   overlay.setAttribute('aria-label',tr('Chọn nơi bạn khám phá','Choose where to explore'));
   overlay.innerHTML='<div class="pkmsvv-quick-region-panel" role="dialog" aria-modal="true">'+
    '<header><div class="region-heading"><h2>'+tr('Chọn nơi bạn khám phá','Choose where to explore')+'</h2>'+
-   '<p>'+tr('Sống sót 15 phút để Boss Vùng xuất hiện. Đánh bại Boss để nhận Huy hiệu Vùng và mở vùng tiếp theo. Không cần Champion.','Survive 15 minutes to summon the Region Boss. Defeat it to earn a Region Badge and unlock the next area. No Champion required.')+'</p></div>' +
+   '<p>'+tr('Phút 15: hạ Boss để nhận Huy hiệu, mở vùng tiếp theo. Phút 30: hạ Boss Huyền Thoại để hoàn thành trận.','15 min: defeat the boss to unlock the next region. 30 min: defeat the Legendary to finish the run.')+'</p></div>' +
    '<button type="button" id="pkmsvv-quick-region-close" aria-label="'+tr('Đóng','Close')+'">×</button></header>'+
    '<div id="pkmsvv-quick-region-grid" class="pkmsvv-quick-region-grid"></div></div>';
   document.body.append(overlay);
@@ -476,7 +486,7 @@
    diff.textContent='▥ '+tr('Độ khó ','Difficulty ')+x.difficulty+'/5';
    const status=document.createElement('small');status.className='region-status';
    status.textContent=x.complete?'🏅 '+tr('Đã có Huy hiệu Vùng','Region Badge earned'):
-    x.unlocked?tr('▶ 15 phút → Boss Vùng','▶ 15 min → Region Boss'):
+    x.unlocked?tr('▶ Boss 15p + 30p','▶ Bosses at 15 + 30 min'):
     x.index===9?'🔒 '+tr('Cần đủ 9 Huy hiệu','Requires all 9 Badges'):
     '🔒 '+tr('Cần Huy hiệu ','Requires Badge of ')+NAMES[x.index-1];
    body.append(name,diff,status);
@@ -493,7 +503,7 @@
  function beginRun(index,formerBiome=null){
   if(!Number.isInteger(index)||!unlocked(index)||current)return false;
   const biome=targetBiome(index);
-  current={index,biome,startedAt:null,bossSpawned:false,bossEnemy:null,badgeClaimed:false};
+  current={index,biome,startedAt:null,badgeBoss:null,finalBoss:null,badgeClaimed:false,victoryScheduled:false};
   showRegionBadge(index);
   // Berry pre-match selection defers the underlying native startRun for 10s.
   // Keep the region armed across that entire pending period; menu overlays
@@ -668,13 +678,14 @@
   return out;
  });
  G.PKMSVVQuickRegion={open,close,choose,entries,unlocked,hasSeal,tryEarnSeal,
-  spawnRegionBoss,updateRegionBoss,beginRun,endRun,
-  SEAL_SECONDS,THEMES,targetBiome,distinctMapBiomes,
+  spawnRegionBoss,finishRegionMatch,updateRegionBoss,beginRun,endRun,
+  SEAL_SECONDS,FINAL_BOSS_SECONDS,THEMES,targetBiome,distinctMapBiomes,
   mascots:REGION_MASCOTS,nationalGen,speciesFor,isAllowed,pokemonStrength,encounterTier,eligibleByTime,
   progressivePool,enforceGeneration,regionEnemyDefinition,enforceLiveEnemy,
   get active(){return regionIndex()>=0},
   get selectedRegion(){return regionIndex()},
-  get regionalBoss(){return current?.bossEnemy||null},
+  get regionalBoss(){return current?.badgeBoss||null},
+  get finalBoss(){return current?.finalBoss||null},
   get starting(){return !!preRunPending},
   get correctedSpawns(){return correctedSpawns}};
 })();
