@@ -11,6 +11,7 @@ const mods=[
  ['Judgment','src/v14/judgment.js'],
  ['PKMSVV14','src/v14/milestones.js'],
  ['PKMSVVEggs','src/v15/eggs.js'],
+ ['PKMSVVSupportCatalog','src/pkmsvv-support-catalog.js'],
  ['PKMSVVBossSupport','src/v15/boss-support.js'],
  ['EggRush','src/web/pkmsvv-egg-rush.js'],
  ['PKMSVVBerry','src/pkmsvv-berry.js'],
