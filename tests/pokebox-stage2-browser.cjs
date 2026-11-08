@@ -396,9 +396,9 @@ async function main(){
   const nativeOrbSnippets=await evaluate("(async()=>{const src=await fetch('js/app.min.js').then(r=>r.text());const needle='G.Orbs.roll';let at=0,out=[];while((at=src.indexOf(needle,at))>=0&&out.length<7){out.push(src.slice(Math.max(0,at-320),Math.min(src.length,at+180)));at+=needle.length;}return {count:out.length,out}})()");
   console.log('REAL compiled Orb probability fragments:',JSON.stringify(nativeOrbSnippets));
   const rateSource=nativeOrbSnippets.out.join(' ');
-  assert.match(rateSource,/Math\\.random\\(\\)<\\.225/,'boss Orb chance in real compiled game must be halved');
-  assert.match(rateSource,/Math\\.random\\(\\)<\\.03/,'ordinary Orb chance in real compiled game must be halved');
-  assert.match(rateSource,/\\*150&&Math\\.random/,'Orb cap cannot run out too early after Fusion');
+  assert.ok(rateSource.includes('Math.random()<.225'),'boss Orb chance in real compiled game must be halved');
+  assert.ok(rateSource.includes('Math.random()<.03'),'ordinary Orb chance in real compiled game must be halved');
+  assert.ok(rateSource.includes('*150&&Math.random'),'Orb cap cannot run out too early after Fusion');
   const legendaryPacing=await evaluate("(()=>({checkpoints:G.PKMSVV14?.checkpoints?.map(c=>({at:c.at,hp:c.hp,rarity:c.bossRarity})),judgment:typeof G.Judgment?.update==='function'}))()");
   console.log('Real compiled Legendary milestones:',JSON.stringify(legendaryPacing));
   assert.deepEqual(legendaryPacing.checkpoints,[{at:900,hp:44000,rarity:5}],
