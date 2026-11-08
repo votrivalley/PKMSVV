@@ -72,7 +72,7 @@ test('Holding active-skill F for 2s toggles AUTO; quick tap does not',()=>{
 });
 test('After eight skills, auto-pick is opt-in and chooses one of three real cards',()=>{
  const f=fixture(),picked=[];const cards={children:[],before(el){f.elements[el.id]=el}};
- cards.children=[0,1,2].map(i=>({disabled:false,hidden:false,isConnected:true,click(){picked.push(i)}}));
+ cards.children=[0,1,2].map(i=>({disabled:false,hidden:false,isConnected:true,getAttribute(){return null},click(){picked.push(i)}}));
  f.elements.cards=cards;
  f.elements['scr-levelup']={hidden:false,classList:{contains(){return false}}};
  f.api.ensureLevelup();f.runTimer(180);
