@@ -151,10 +151,16 @@ G.PKMSVVArenaSolo=(()=>{
    button.dataset.dex=String(item.dex);button.dataset.readyId=item.id;
    button.textContent=(item.id===selectedInstanceId?'✓ ':'')+
     (G.DEX_BY?.[item.dex]?.name||'Pokémon '+item.dex)+(item.shiny?' ✨ Shiny':'');
+   if(G.UI?.sprite){
+    const sprite=document.createElement('canvas');sprite.width=56;sprite.height=56;
+    sprite.className='pkmsvv-arena-ready-art';
+    try{G.UI.sprite(sprite,item.dex,{shiny:item.shiny});button.append(sprite);}catch(_){}
+   }
    button.onclick=()=>{if(stage!=='select'||!selectReady(item))return;selectionPaint();};
    picks.append(button);
   }
   selectionPaint();
+  G.PKMSVVModalNavQA?.first?.(screen); // D-pad/Enter selects among the six Ready slots
  }
  function selectionPaint(){
   const picks=$('pkmsvv-arena-solo-picks');
