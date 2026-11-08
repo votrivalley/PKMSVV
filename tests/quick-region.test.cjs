@@ -583,8 +583,8 @@ test('Nine Gen maps have nine different ACTIVE terrain IDs and nine different il
  assert.equal(new Set(biomes.slice(0,9)).size,9,'all Gen 1-9 maps must have different terrain IDs');
  assert.equal(new Set(q.THEMES.slice(1)).size,9,'each themed terrain is distinct');
  assert.equal(q.SEAL_SECONDS,900);
- assert.match(source,/Sống sót 15 phút để Boss Vùng xuất hiện/);
- assert.match(source,/15 min → Region Boss/);
+ assert.match(source,/Phút 15: hạ Boss để nhận Huy hiệu/);
+ assert.match(source,/Bosses at 15 \+ 30 min/);
  // These are actual separate battle maps: inspect the biome selected when
  // replaying each normal native run, not merely the illustrated home cards.
  for(const region of ['Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar','Paldea'])
@@ -620,10 +620,10 @@ test('Berry pre-match delay is excluded from 15-minute Boss appearance and Badge
  h.G.Game.st.time=700; // stale previous run
  assert.equal(q.choose(0),true);
  h.G.Game.st.time=900;
- assert.equal(q.updateRegionBoss(),false,'Berry waiting room cannot spawn a boss');
+ q.updateRegionBoss();assert.equal(q.regionalBoss,null,'Berry waiting room cannot spawn a boss');
  assert.equal(h.alive.filter(e=>e.pkmsvvExploreBoss).length,0);
  h.completeStart();
- assert.equal(q.updateRegionBoss(),false,'new active run clock begins NOW');
+ q.updateRegionBoss();assert.equal(q.regionalBoss,null,'new active run clock begins NOW');
  h.G.Game.st.time=1799;
  h.G.EnemyMgr.update(.016);
  assert.equal(h.alive.filter(e=>e.pkmsvvExploreBoss).length,0,'14:59 elapsed is not enough');
@@ -702,15 +702,24 @@ test('15-minute legend only, 30-minute Judgment only, no 10/20-minute or 5-secon
  G.PKMSVV14.update(1800,[actor]);
  assert.equal(spawns.length,1,'30m second boss belongs to Judgment, no duplicate trial');
 });
-test('Each Gen1–9 Boss defeat schedules native match completion after Badge commit',()=>{
+test('Explore Badge at 15m unlocks Johto, only 30m Legendary kill completes Kanto',()=>{
  const h=harness(),q=h.G.PKMSVVQuickRegion;
  h.save.arenas.pkmChampion.seals={};
  h.G.DEX_BY[150]={dex:150,name:'Mewtwo',rarity:5};
  assert.equal(q.choose(0),true);
  h.G.Game.st.time=900;h.G.EnemyMgr.update(.016);
- const boss=q.regionalBoss;assert.ok(boss);
- boss.dead=true;boss.hp=0;h.G.EnemyMgr.update(.016);
+ const first=q.regionalBoss;assert.ok(first);
+ first.dead=true;first.hp=0;h.G.EnemyMgr.update(.016);
  assert.equal(h.save.pkmsvvExploreSeals.Kanto,true);
- assert.equal(h.G.Game.state,'ui','native Quit must end the Gen1–9 run, not remain in endless combat');
+ assert.equal(q.unlocked(1),true,'Johto unlocked immediately after first boss');
+ assert.equal(h.G.Game.state,'playing','15m boss is a checkpoint, not game over');
+ assert.equal(q.finalBoss,null,'30m final boss must not appear early');
+ h.G.Game.st.time=1800;h.G.EnemyMgr.update(.016);
+ const final=q.finalBoss;assert.ok(final,'30m creates an actual second boss');
+ assert.equal(final.dex,150,'30m boss is guaranteed legendary');
+ assert.ok(final.maxHp>first.maxHp);
+ assert.equal(h.G.Game.state,'playing','30m boss spawning is not automatic victory');
+ final.dead=true;final.hp=0;h.G.EnemyMgr.update(.016);
+ assert.equal(h.G.Game.state,'ui','native Quit must finish only after the 30m Legendary dies');
  assert.equal(q.active,false);
 });
