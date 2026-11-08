@@ -81,7 +81,9 @@ for(const filename of targets){
  // 45% -> 22.5% boss, 6% -> 3% normal. The 150s stagger prevents the
  // former 10-drop run cap being exhausted before a MAX+MAX Fusion mid-run.
  // Guaranteed starter Orb and the player's FIFO bag are untouched.
- for(const [old,newValue] of [
+ const orbPos=next.indexOf('G.Orbs.roll()');
+ console.log('QA native Orb signature', {orbPos,fragment:orbPos<0?'missing':next.slice(Math.max(0,orbPos-160),orbPos+40)});
+  for(const [old,newValue] of [
   ['e<10&&Math.random()<.45','e<10&&Number(G.Game?.st?.time??0)>=e*150&&Math.random()<.225'],
   ['e<10&&Math.random()<.06','e<10&&Number(G.Game?.st?.time??0)>=e*150&&Math.random()<.03']
  ]){
