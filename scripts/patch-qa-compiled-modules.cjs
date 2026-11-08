@@ -8,6 +8,8 @@
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.resolve(__dirname,'..');
 const mods=[
+ ['Shop','src/kecleon/upstream/data/shop.js'],
+ ['KecleonUI','src/kecleon/pkmsvv-kecleon-ui.js'],
  ['Judgment','src/v14/judgment.js'],
  ['PKMSVV14','src/v14/milestones.js'],
  ['PKMSVVPadOrb','src/v14/pad-orb-map.js'],
