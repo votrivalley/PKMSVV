@@ -221,7 +221,8 @@ G.PKMSVVArenaSolo=(()=>{
   const p=G.Game?.player;if(!p||!G.Enemy||!G.EnemyMgr){abort();return;}
   stage='fight';elapsed=0;frame().hidden=true;fightCue=.65;countView(tr('⚔ BẮT ĐẦU!','⚔ FIGHT!'));
   const dex=enemyDex===selected?chooseEnemy():enemyDex;
-  const def={dex,name:G.DEX_BY?.[dex]?.name||'AI',...balanceAi(p),
+  const level=Math.min(255,Math.max(1,Math.floor(Number(p.level)||1)+10));
+  const def={dex,name:G.DEX_BY?.[dex]?.name||'AI',level,...balanceAi(p),
    xp:0,behavior:'champion'};
   target=G.EnemyMgr.add(new G.Enemy(def,p.x+170,p.y-45,{hp:1,spd:1,dmg:1},true));
   // Native boss constructor may apply its own run scaling. The chosen Solo
@@ -241,8 +242,11 @@ G.PKMSVVArenaSolo=(()=>{
     target.bodyH=G.Sprites.bodyHeight?.(dex,visualScale)??target.bodyH;
    }
   }
-  target.pkmsvvArenaSolo=true;
-  G.UI?.toast?.(tr('⚔ BẮT ĐẦU!','⚔ FIGHT!'),850);
+  target.pkmsvvArenaSolo=true;target.level=level;target.pkmsvvArenaLevel=level;
+  target.skillCd=Math.max(.45,1.4/Math.max(.9,aiFactor));
+  if(target.ai&&Number.isFinite(target.ai.cd))
+   target.ai.cd=Math.min(target.ai.cd,1.25);
+  G.UI?.toast?.(tr('⚔ BẮT ĐẦU!','⚔ FIGHT!')+' · AI Lv.'+level,850);
  }
  function update(dt){
   if(!active||G.Game?.state!=='playing')return;
