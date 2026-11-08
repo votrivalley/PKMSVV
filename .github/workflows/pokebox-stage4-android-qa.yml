@@ -1,11 +1,12 @@
 name: Pokebox Stage 4 isolated Android QA APK
 on:
   push:
-    branches: [feature/pokebox-stage1-isolated-qa]
+    branches: [feature/pokebox-stage1-isolated-qa, release/pokemon-chuyen-sinh-2.0-web]
     paths:
       - 'src/pkmsvv-box-stage*.js'
       - 'src/pkmsvv-box-hub*.js'
       - 'src/pkmsvv-box-hub*.css'
+      - 'src/pkmsvv-v20-ui-qa.css'
       - 'src/pkmsvv-quick-region.*'
       - 'assets/region-covers/**'
       - 'scripts/copy-region-covers.cjs'
@@ -115,6 +116,7 @@ jobs:
           grep -q 'pkmsvv-box-stage4.js' decoded-android/assets/public/index.html
           grep -q 'pkmsvv-box-hub-ui.js' decoded-android/assets/public/index.html
           test -s decoded-android/assets/public/css/pkmsvv-box-hub.css
+          grep -q 'PKMSVV_MOBILE_SPLIT_V21' decoded-android/assets/public/css/pkmsvv-v20-ui-qa.css
           test -s decoded-android/assets/public/js/ui/pkmsvv-fusion-evolved.js
           test -s decoded-android/assets/public/css/pkmsvv-fusion-evolved.css
           for id in ember-quick water-tackle grass-spin spark-quick mind-tackle fire-gust bubble-ice leaf-rock shadow-mind thunder-claw; do
