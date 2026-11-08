@@ -10,7 +10,7 @@
  * MT a la venta: 8 cada día, iguales para todos (semilla: la fecha en España).
  * Si ninguna sirve a tu compañero, la última se cambia por una que sí aprenda.
  */
-G.Shop = (() => {
+G.Shop=(()=>{
   const ITEMS = {
     mint: { name: 'Menta', icon: 'mint', price: 1500,
             desc: 'Rerolls a Pokémon Nature randomly.' },
