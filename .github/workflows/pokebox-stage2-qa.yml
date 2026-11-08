@@ -48,6 +48,7 @@ jobs:
           test -s dist/pokebox-stage4-qa/ai/game/css/pkmsvv-quick-region.css
           test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-pc-menu-clean-qa.js
           test -s dist/pokebox-stage4-qa/ai/game/css/pkmsvv-pc-menu-clean-qa.css
+          test -s dist/pokebox-stage4-qa/ai/game/images/pkmsvv-menu-icons.webp
           test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-modal-navigation-qa.js
           test -s dist/pokebox-stage4-qa/ai/game/css/pkmsvv-modal-navigation-qa.css
           test -s dist/pokebox-stage4-qa/ai/game/css/pkmsvv-box-stage3.css
