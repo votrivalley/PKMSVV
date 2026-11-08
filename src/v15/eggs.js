@@ -3,23 +3,24 @@
 G.PKMSVVEggs=(()=>{
  const SPECIES=[
   {dex:172,role:'paralyze',period:10,power:1.1}, // Pichu — actual stun, not damage or slowdown
-  {dex:447,role:'attack',period:4.3,power:16}, // Riolu
-  {dex:173,role:'heal',period:12,power:.035}, // Cleffa
-  {dex:360,role:'shield',period:19,power:.09}, // Wynaut
+  {dex:447,role:'physical',period:13,power:.12}, // Riolu: physical attack buff
+  {dex:173,role:'slow',period:10,power:.35}, // Cleffa: AoE slow
+  {dex:360,role:'special',period:13,power:.12}, // Wynaut: special attack buff
+  {dex:440,role:'heal',period:12,power:.035}, // Happiny: team healer
   {dex:438,role:'shield',period:15,power:.05}, // Bonsly
   {dex:175,role:'magnet',period:12,power:18}, // Togepi
-  {dex:174,role:'slow',period:9,power:.32}, // Igglybuff
+  {dex:174,role:'sleep',period:12,power:1.6}, // Igglybuff: nearby sleep
   {dex:132,role:'ditto',period:1,power:1}, // Ditto 8%
   {dex:151,role:'mew',period:1,power:1} // Mew 4%
  ];
  const byDex=Object.fromEntries(SPECIES.map(x=>[x.dex,x]));
  const COLLECT_TIME=2, NEST_RADIUS=38, HATCH_BASE=24, HATCH_MIN=32/3;
  const REPLACEMENT_MIN=20, REPLACEMENT_MAX=60;
- const SHINY_CAST_RATIO=2/3,SHINY_SKILL_POWER=1.5;
+ const SHINY_CAST_RATIO=2/3,SHINY_SKILL_POWER=2;
  const SHINY_CHANCE=.03, MIN_STAT=.5, MAX_STAT=.8, HIT_COOLDOWN=1.25, EGG_HIT_PENALTY=3, EGG_HIT_LOCKOUT=5;
  const DITTO_FORM=7,DITTO_REST=3;
  const SUPPORT_VISUAL_SCALE=.6, NEST_VISUAL_SCALE=.8;
- const FX_COLOR={attack:'#ffd472',heal:'#66ffad',shield:'#6edaff',magnet:'#ffe078',slow:'#e99aff',paralyze:'#ffdb55'};
+ const FX_COLOR={attack:'#ffd472',physical:'#ffcf6f',special:'#b79bff',heal:'#66ffad',shield:'#6edaff',magnet:'#ffe078',slow:'#e99aff',sleep:'#7ac9ff',paralyze:'#ffdb55'};
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  let player=null,items=[],nests=[],trail=[],spawnAt=55,seq=0,kills=0,lv=1,runTime=0,lastDir={x:0,y:1},wasInArena=false;
  // Exactly two support slots from the first run, regardless of Chapter 3.
@@ -33,7 +34,7 @@ G.PKMSVVEggs=(()=>{
  const support=()=>items.filter(x=>x.hatched&&x.active&&x.hp>0);
  const occupied=()=>items.filter(x=>!x.hatched||(x.active&&x.hp>0)).length;
  const vacancy=()=>Math.max(0,limit()-occupied());
- function roleName(s){return {attack:tr('Tấn công','Attack'),heal:tr('Hồi phục','Healing'),shield:tr('Tạo khiên','Shield'),magnet:tr('Hút vật phẩm','Magnet'),slow:tr('Làm chậm','Slow'),paralyze:tr('Tê liệt','Paralysis')}[s.role]||s.role;}
+ function roleName(s){return {attack:tr('Tấn công','Attack'),physical:tr('Tăng công vật lý','Physical attack buff'),special:tr('Tăng công đặc biệt','Special attack buff'),sleep:tr('Gây ngủ','Sleep'),heal:tr('Hồi phục','Healing'),shield:tr('Tạo khiên','Shield'),magnet:tr('Hút vật phẩm','Magnet'),slow:tr('Làm chậm','Slow'),paralyze:tr('Tê liệt','Paralysis')}[s.role]||s.role;}
  function nestSpawn(){
   if(!player||G.Rift?.inArena||nests.length>=1||vacancy()<=nests.length)return false;
   // At least one FULL camera diagonal from the player, plus a safety margin.
@@ -56,7 +57,9 @@ G.PKMSVVEggs=(()=>{
  function affinityGoal(dex){return Number(dex)===151?25:Number(dex)===132?50:100;}
  function affinityPercent(dex){return Math.min(100,Math.floor(100*affinityFor(dex)/affinityGoal(dex)));}
  function maxAffinity(dex){return affinityFor(dex)>=affinityGoal(dex);}
- function affinityMultiplier(dex){return 1+.3*affinityPercent(dex)/100;}
+ function affinityMultiplier(dex){return 1+.6*affinityPercent(dex)/100;}
+ function castCooldown(it){return byDex[it.dex].period*(it.shiny?SHINY_CAST_RATIO:1)*
+  (1-.45*affinityPercent(it.dex)/100);}
  function speciesChanceFor(dex){
   const mul=maxAffinity(dex)?2:1;
   return Number(dex)===132?.08*mul:Number(dex)===151?.04*mul:0;
@@ -123,7 +126,7 @@ G.PKMSVVEggs=(()=>{
   }
   if(it.shiny){
    G.Sprites?.preload?.([it.dex],5000,true);
-   G.Spawner?.say?.(tr('Hỗ trợ Shiny: 100% chỉ số, tung chiêu nhanh và mạnh ×1,5!','Shiny support: full stats, 1.5× faster and stronger casts!'),4,true);
+   G.Spawner?.say?.(tr('Hỗ trợ Shiny: 100% chỉ số, hiệu quả kỹ năng ×2, hồi chiêu nhanh!','Shiny support: full stats, double skill effect and faster casts!'),4,true);
    G.FX?.ring?.(it.x,it.y,10,80,'#ffe773',.8,3);
   }else{
    G.Spawner?.say?.(tr('Pokémon hỗ trợ nở: '+Math.round(it.statScale*100)+'% chỉ số!',
@@ -331,14 +334,45 @@ G.PKMSVVEggs=(()=>{
   }
   return affected;
  }
+ function boostAllyAttack(pl,it,spec){
+  // Buffs are additive within each channel, finite, and reapply only after
+  // expiration. Combat reads these two multipliers, not the sprite's stats.
+  const key=spec.role==='physical'?'pkmsvvSupportPhysical':'pkmsvvSupportSpecial';
+  const strength=Math.max(0,Math.min(.6,spec.power*it.statScale*
+   affinityMultiplier(it.dex)*(it.shiny?SHINY_SKILL_POWER:1)));
+  const old=pl[key];
+  if(old&&Number(old.until)>runTime&&Number(old.amount)>=strength)return false;
+  pl[key]={amount:strength,until:runTime+8};
+  return true;
+ }
+ function affectNearby(it,enemies,spec){
+  const seen=[],range=190*190;
+  for(const e of enemies){
+   if(G.U.dist2(e.x,e.y,it.x,it.y)>range)continue;
+   if(seen.length>=8)break;
+   const factor=it.statScale*affinityMultiplier(it.dex)*
+    (it.shiny?SHINY_SKILL_POWER:1);
+   if(spec.role==='sleep'){
+    const dur=Math.min(4,(e.boss?0.45:spec.power)*factor);
+    if(typeof e.applySleep==='function')e.applySleep(dur);
+    else if(typeof e.applyStun==='function')e.applyStun(dur);
+    else continue;
+   }else if(spec.role==='slow'){
+    if(typeof e.applySlow!=='function')continue;
+    e.applySlow(Math.min(.8,spec.power*factor),Math.min(6,2.8*factor));
+   }else continue;
+   seen.push(e);
+  }
+  return seen;
+ }
  function effect(it,pl){
   const spec=byDex[it.dex];if(!spec||!it.active||it.hp<=0||pl.dead)return false;
   const enemies=(G.EnemyMgr?.all?.()||[]).filter(e=>e&&!e.dead&&!e.remote&&G.U.dist2(e.x,e.y,it.x,it.y)<260*260);
   const target=enemies.reduce((acc,e)=>!acc||G.U.dist2(e.x,e.y,it.x,it.y)<G.U.dist2(acc.x,acc.y,it.x,it.y)?e:acc,null);
-  if((spec.role==='attack'||spec.role==='slow')&&!target)return false;
+  if(spec.role==='attack'&&!target)return false;
   if(spec.role==='ditto')return dittoCast(it,pl);
   if(spec.role==='mew')return mewCast(it,pl);
-  let buffed=[],paralyzed=[];
+  let buffed=[],paralyzed=[],affected=[];
   if(spec.role==='attack')target.hurt(Math.max(1,(spec.power+pl.level*.55)*it.statScale*(it.shiny?SHINY_SKILL_POWER:1)),'#ffe8a1',0,0,0);
   else if(spec.role==='paralyze'){
    paralyzed=paralyze(it,enemies);
@@ -346,7 +380,11 @@ G.PKMSVVEggs=(()=>{
   }else if(spec.role==='heal'||spec.role==='shield'){
    buffed=teamBuff(pl,it,spec);
    if(!buffed.length)return false; // no full cooldown wasted on capped HP or shield
-  }else if(spec.role==='slow')target.applySlow(Math.min(.85,spec.power*it.statScale*(it.affinityBoost||1)*(it.shiny?SHINY_SKILL_POWER:1)),2.8);
+  }else if(spec.role==='slow'||spec.role==='sleep'){
+   affected=affectNearby(it,enemies,spec);if(!affected.length)return false;
+  }else if(spec.role==='physical'||spec.role==='special'){
+   if(!boostAllyAttack(pl,it,spec))return false;
+  }
   else if(spec.role==='magnet')G.Pickups?.pullAll?.();
   const c=FX_COLOR[spec.role];
   it.effectFlash=.85;
@@ -358,10 +396,10 @@ G.PKMSVVEggs=(()=>{
     G.FX?.burst?.(e.x,e.y-9,c,5,55);
     G.FX?.dmgText?.(e.x,e.y-27,tr('TÊ LIỆT!','PARALYZED!'),c);
    }
-  }else if(spec.role==='slow'){
-   G.FX?.ring?.(target.x,target.y,6,48,c,.55,2);
-   G.FX?.burst?.(target.x,target.y-9,c,7,70);
-   G.FX?.dmgText?.(target.x,target.y-26,tr('CHẬM!','SLOWED!'),c);
+  }else if(spec.role==='slow'||spec.role==='sleep'){
+   G.FX?.ring?.(it.x,it.y,6,190,c,.55,2);
+   for(const enemy of affected)G.FX?.dmgText?.(enemy.x,enemy.y-26,
+    spec.role==='sleep'?tr('NGỦ!','ASLEEP!'):tr('CHẬM!','SLOWED!'),c);
   }else if(buffed.length){
    for(const recipient of buffed){
     G.FX?.ring?.(recipient.x,recipient.y,8,56,c,.45,2);
@@ -369,6 +407,9 @@ G.PKMSVVEggs=(()=>{
    }
    G.FX?.dmgText?.(it.x,it.y-38,
     spec.role==='heal'?tr('HỒI MÁU TOÀN ĐỘI','TEAM HEAL'):tr('KHIÊN TOÀN ĐỘI','TEAM SHIELD'),c);
+  }else if(spec.role==='physical'||spec.role==='special'){
+   G.FX?.ring?.(pl.x,pl.y,8,56,c,.45,2);
+   G.FX?.dmgText?.(pl.x,pl.y-35,spec.role==='physical'?tr('TĂNG CÔNG VẬT LÝ','PHYSICAL UP'):tr('TĂNG CÔNG ĐẶC BIỆT','SPECIAL UP'),c);
   }else if(spec.role==='magnet'){
    G.FX?.ring?.(pl.x,pl.y,8,56,c,.45,2);
    G.FX?.burst?.(pl.x,pl.y-12,c,6,65);
@@ -480,7 +521,8 @@ G.PKMSVVEggs=(()=>{
     }
     it.cooldown-=dt;
     if(it.dex!==132||it.dittoPhase==='transform'){
-     if(it.cooldown<=0)it.cooldown=effect(it,pl)?byDex[it.dex].period*(it.shiny?SHINY_CAST_RATIO:1):.5;
+     if(it.cooldown<=0){it.affinityBoost=affinityMultiplier(it.dex);
+      it.cooldown=effect(it,pl)?castCooldown(it):.5;}
     }
    }
   }
@@ -587,5 +629,5 @@ G.PKMSVVEggs=(()=>{
   ctx.fillStyle='#fff3bd';ctx.font='bold 11px sans-serif';ctx.textAlign='left';
   ctx.fillText(tr('Đồng hành','Companions')+' '+ready+'/'+limit(),x+8,y+16);ctx.restore();
  }
- return {SPECIES,rollSpecies,affinityFor,affinityGoal,affinityPercent,maxAffinity,affinityMultiplier,speciesChanceFor,shinyChanceFor,DITTO_FORM,DITTO_REST,SUPPORT_VISUAL_SCALE,NEST_VISUAL_SCALE,SHINY_CHANCE,COLLECT_TIME,HATCH_BASE,HATCH_MIN,SHINY_CAST_RATIO,SHINY_SKILL_POWER,begin,update,onHurt,hurtSupport,enemyTarget,interceptProjectile,hitHazard,remaining,draw,drawables,hud,limit,unlocked,get followers(){return items;},get nests(){return nests;},get occupied(){return occupied();}};
+ return {SPECIES,rollSpecies,affinityFor,affinityGoal,affinityPercent,maxAffinity,affinityMultiplier,castCooldown,speciesChanceFor,shinyChanceFor,DITTO_FORM,DITTO_REST,SUPPORT_VISUAL_SCALE,NEST_VISUAL_SCALE,SHINY_CHANCE,COLLECT_TIME,HATCH_BASE,HATCH_MIN,SHINY_CAST_RATIO,SHINY_SKILL_POWER,begin,update,onHurt,hurtSupport,enemyTarget,interceptProjectile,hitHazard,remaining,draw,drawables,hud,limit,unlocked,get followers(){return items;},get nests(){return nests;},get occupied(){return occupied();}};
 })();
