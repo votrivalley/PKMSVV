@@ -3,7 +3,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const source=fs.readFileSync(path.resolve(__dirname,'../src/pkmsvv-runtime-controls-qa.js'),'utf8');
 function fixture(){
  const handlers={},timers=new Map(),vals=new Map(),speeds=[],casts=[],toasts=[];
- let seq=0,started=0,raf;
+ let seq=0,started=0,raf,pads=[];
  const pl={x:0,y:0,dead:false,moves:Array.from({length:8},(_,i)=>({id:'move-'+i,lvl:5,def:{maxLvl:5}}))};
  const G={
   I18n:{lang:'vi'},PKMSVVQuickRegion:{active:true},
@@ -20,7 +20,7 @@ function fixture(){
   createElement(tag){
    return {tagName:tag.toUpperCase(),isConnected:true,className:'',hidden:false,
     children:[],attributes:{},classList:{contains(){return false}},
-    append(...nodes){this.children.push(...nodes)},
+    append(...nodes){this.children.push(...nodes)},replaceChildren(...nodes){this.children=[...nodes]},
     before(){},setAttribute(k,v){this.attributes[k]=v},
     addEventListener(k,fn){this['on'+k]=fn}};
   },
@@ -28,12 +28,12 @@ function fixture(){
   addEventListener(k,fn){handlers[k]=fn}
  };
  const win={addEventListener(k,fn){handlers['window:'+k]=fn}};
- vm.runInNewContext(source,{G,document,window:win,console,
+ vm.runInNewContext(source,{G,document,window:win,navigator:{getGamepads(){return pads}},console,
   setTimeout(fn,ms){const id=++seq;timers.set(id,{fn,ms});return id},
   clearTimeout(id){timers.delete(id)},
   requestAnimationFrame(fn){raf=fn}});
  return {G,document,handlers,timers,vals,speeds,casts,toasts,pl,elements,
-  api:G.PKMSVVRuntimeControlsQA,get started(){return started},
+  api:G.PKMSVVRuntimeControlsQA,setPads(v){pads=v},get started(){return started},
   runTimer(ms){for(const [id,t] of [...timers])if(t.ms===ms){timers.delete(id);t.fn();}},
   frame(ts){raf(ts)}};
 }
@@ -219,4 +219,74 @@ test('real-time evolution polling only activates for Arena/Egg Rush (not duplica
  f.G.Royale.active=false;f.G.EggRush.active=false;
  f.G.PKMSVVArenaSolo={active:true};f.frame(2000);
  assert.equal(calls.length,2,'Arena Solo evolution is checked without pausing');
+});
+
+test('G/L keyboard and RB/R3 controller shortcuts toggle the real speed/Co-op ranking independently',()=>{
+ const f=fixture();
+ f.G.PKMSVVPadOrb={keyboardBindings(){return {speed:'keyg',leaderboard:'keyl'}},
+  bindings(){return {speed:5,leaderboard:11}}};
+ f.G.SettingsUI={isOpen:false};
+ const press=code=>f.handlers.keydown({repeat:false,code,altKey:false,ctrlKey:false,metaKey:false,
+  preventDefault(){}});
+ press('KeyG');
+ assert.equal(f.speeds.at(-1),1.5,'G enables speed in Explore');
+ press('KeyG');
+ assert.equal(f.speeds.at(-1),1,'G switches speed back off');
+ const buttons=Array.from({length:12},()=>({pressed:false,value:0}));
+ const pad={connected:true,buttons};
+ f.setPads([pad]);
+ buttons[5].pressed=true;f.api.pollPadShortcuts();
+ assert.equal(f.speeds.at(-1),1.5,'RB toggles the same speed control');
+ f.api.pollPadShortcuts();
+ assert.equal(f.speeds.at(-1),1.5,'holding RB does not toggle repeatedly');
+ buttons[5].pressed=false;f.api.pollPadShortcuts();
+ f.G.Coop={active:true,players(){return [
+  {uid:'host',kills:12,level:20},{uid:'friend',kills:35,level:14},
+  {uid:'bot',kills:18,level:30}]}};
+ f.G.Social={room:{mode:'coop',members:[
+  {uid:'host',name:'Host'},{uid:'friend',name:'Friend'},{uid:'bot',name:'Bot'}]}};
+ f.G.PKMSVVQuickRegion.active=false;
+ assert.equal(f.api.canRanking(),true);
+ f.api.ensureRanking();
+ assert.equal(f.elements['pkmsvv-coop-ranking-toggle'].hidden,false);
+ assert.deepEqual(f.api.rankingRows().map(x=>x.name),['Friend','Bot','Host']);
+ press('KeyL');
+ assert.equal(f.elements['pkmsvv-coop-ranking-list'].hidden,false);
+ assert.match(f.elements['pkmsvv-coop-ranking-list'].children[1].textContent,/Friend/);
+ buttons[11].pressed=true;f.api.pollPadShortcuts();
+ assert.equal(f.elements['pkmsvv-coop-ranking-list'].hidden,true,'R3 hides TOP list');
+ buttons[11].pressed=false;f.api.pollPadShortcuts();
+ buttons[11].pressed=true;f.api.pollPadShortcuts();
+ assert.equal(f.elements['pkmsvv-coop-ranking-list'].hidden,false,'R3 reopens TOP list');
+ f.G.Coop.active=false;f.api.ensureRanking();
+ assert.equal(f.elements['pkmsvv-coop-ranking-toggle'].hidden,true);
+ assert.equal(f.elements['pkmsvv-coop-ranking-list'].hidden,true);
+});
+test('Arena Shiny hook rejects actual collection/grant and summary but retains normal Explore claims',()=>{
+ const f=fixture(),awards=[],summaries=[];
+ f.G.DB={grantShiny(dex){awards.push(dex);return true}};
+ f.G.onShinyCaught=e=>f.G.DB.grantShiny(e.dex);
+ f.G.RunUI={showOver(s){summaries.push(s);return true}};
+ f.api.ensureArenaShinyGuard();
+ f.G.PKMSVVChampionArena={active:true};
+ assert.equal(f.G.onShinyCaught({dex:25}),false);
+ assert.equal(f.G.DB.grantShiny(25),false);
+ assert.equal(awards.length,0,'no Shiny persistence in Champion');
+ f.G.RunUI.showOver({caught:[{dex:25}]});
+ assert.equal(summaries.at(-1).caught.length,0,'Arena results never show claimed Shiny');
+ f.G.PKMSVVChampionArena.active=false;
+ assert.equal(f.G.onShinyCaught({dex:25}),true);
+ assert.deepEqual(awards,[25],'normal Explore Shiny collection preserved');
+ f.G.RunUI.showOver({caught:[{dex:25}]});
+ assert.equal(summaries.at(-1).caught.length,1);
+});
+test('remapping screen describes all four new inputs and does not commandeer existing Orb/Mega buttons',()=>{
+ const src=fs.readFileSync(path.resolve(__dirname,'../src/v14/pad-orb-map.js'),'utf8');
+ assert.match(src,/speed:'keyg'/);
+ assert.match(src,/leaderboard:'keyl'/);
+ assert.match(src,/speed:5,leaderboard:11/);
+ assert.match(src,/KB_IDS=.*speed.*leaderboard/);
+ assert.match(src,/PAD_IDS=.*speed.*leaderboard/);
+ const bundle=fs.readFileSync(path.resolve(__dirname,'../scripts/patch-qa-compiled-modules.cjs'),'utf8');
+ assert.match(bundle,/'PKMSVVPadOrb','src\/v14\/pad-orb-map\.js'/);
 });
