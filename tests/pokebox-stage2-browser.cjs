@@ -121,6 +121,16 @@ async function main(){
    });
   })()`);
   console.log('PKMSVV_COOP_HUD_TARGET_AUDIT='+JSON.stringify(coopHudAudit));
+  const coopDrawAudit=await evaluate(`(()=>{
+   const src=String(G.HUD?.draw||''),marks=[];
+   for(const token of ['G.Coop','G.Ranking','G.Coop.mates','G.Coop.players','sorted','sort(','ranking','leader','top']){
+    let p=-1,n=0;while((p=src.indexOf(token,p+1))>=0&&n++<18)
+     marks.push({token,at:p,ctx:src.slice(Math.max(0,p-120),p+225)});
+   }
+   return {length:src.length,marks};
+  })()`);
+  console.log('PKMSVV_NATIVE_COOP_DRAW_SEARCH='+JSON.stringify(coopDrawAudit));
+
 
 
   const five=await evaluate('G.PKMSVVBox2.formatRank(5).hp');
