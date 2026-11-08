@@ -83,7 +83,7 @@ for(const filename of targets){
  // Guaranteed starter Orb and the player's FIFO bag are untouched.
  // Both real bundle variants (game, ai/game) have different minifier
  // counter names. Match only the TWO native orb rolls, not other odds.
- const orbRoll=/([a-zA-Z_$][\\w$]*)<10&&Math\\.random\\(\\)<\\.(45|06)/g;
+ const orbRoll=/([a-zA-Z_$][\w$]*)<10&&Math\.random\(\)<\.(45|06)/g;
  let patchedOrbRolls=0;
  next=next.replace(orbRoll,(source,counter,odds,offset)=>{
   if(!next.slice(offset,offset+210).includes('G.Orbs.roll()')||
