@@ -52,13 +52,13 @@ let html=fs.readFileSync(index,'utf8');
 if(!html.includes('app.min.js')||!html.includes('</head>')||!html.includes('</body>'))
  throw Error('Baseline game HTML changed; refusing injection');
 for(const filename of ['pkmsvv-box-stage1.js','pkmsvv-box-stage2.js','pkmsvv-box-stage2-ui.js',
- 'pkmsvv-box-stage3.js','pkmsvv-box-stage4.js','pkmsvv-box-hub.js','pkmsvv-box-hub-ui.js','pkmsvv-quick-region.js','pkmsvv-encounter-rarity-qa.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-modal-navigation-qa.js','pkmsvv-runtime-controls-qa.js','pkmsvv-dex-defeats-qa.js','pkmsvv-recruitment-qa.js']){
+ 'pkmsvv-box-stage3.js','pkmsvv-box-stage4.js','pkmsvv-box-hub.js','pkmsvv-box-hub-ui.js','pkmsvv-quick-region.js','pkmsvv-encounter-rarity-qa.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-modal-navigation-qa.js','pkmsvv-runtime-controls-qa.js','pkmsvv-dex-defeats-qa.js','pkmsvv-recruitment-qa.js','pkmsvv-v20-ui-qa.js','pkmsvv-changelog-v20-qa.js']){
  const dest=path.join(web,'js/ui',filename);
  fs.mkdirSync(path.dirname(dest),{recursive:true});
  fs.copyFileSync(path.join(root,'src',filename),dest);
  if(!html.includes(filename))html=html.replace('</body>','<script defer src="js/ui/'+filename+'"></script>\n</body>');
 }
-for(const filename of ['pkmsvv-box-stage1.css','pkmsvv-box-stage2.css','pkmsvv-box-stage3.css','pkmsvv-box-hub.css','pkmsvv-quick-region.css','pkmsvv-pc-menu-clean-qa.css','pkmsvv-modal-navigation-qa.css','pkmsvv-support-scroll-fix.css','pkmsvv-runtime-controls-qa.css']){
+for(const filename of ['pkmsvv-box-stage1.css','pkmsvv-box-stage2.css','pkmsvv-box-stage3.css','pkmsvv-box-hub.css','pkmsvv-quick-region.css','pkmsvv-pc-menu-clean-qa.css','pkmsvv-modal-navigation-qa.css','pkmsvv-support-scroll-fix.css','pkmsvv-runtime-controls-qa.css','pkmsvv-v20-ui-qa.css']){
  const dest=path.join(web,'css',filename);
  fs.mkdirSync(path.dirname(dest),{recursive:true});
  fs.copyFileSync(path.join(root,'src',filename),dest);
