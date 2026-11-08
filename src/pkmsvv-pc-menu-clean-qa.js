@@ -194,11 +194,16 @@
    // while keeping the ORIGINAL interactive button and handler intact.
    let button=menu.querySelector(selector);
    if(!button&&type==='arena'){
-    button=[...menu.querySelectorAll('.menu-right .menu-list .menu-item')].find(node=>{
+    const list=menu.querySelector('.menu-right .menu-list');
+    const item=[...list?.children||[]].find(node=>{
      const label=(node.querySelector('.pkmsvv-menu-label,.menu-label,strong')?.textContent||
       node.textContent||'').trim().toLowerCase();
      return label==='arena'||label.startsWith('arena ');
-    })||null;
+    });
+    // Some compiled builds render Arena as a plain button, not .menu-item.
+    // Keep the native event target and keyboard focus rather than a proxy.
+    button=item?.matches?.('button,[role="button"]')?item:
+     item?.querySelector?.('button,[role="button"]')||item||null;
    }
    if(!button)continue;
    let art=button.querySelector(':scope > .mi-ico');
