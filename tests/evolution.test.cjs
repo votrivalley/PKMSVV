@@ -44,6 +44,18 @@ test('Charmander evolves exactly at level 16 while retaining combat progression'
  p.level=35;assert.equal(evo.eligible(p,100,rule(5,6)),false);
  p.level=36;assert.equal(evo.eligible(p,100,rule(5,6)),true);
 });
+test('Successful local evolution notifies Pokédex with real from/to after history commit',()=>{
+ const p=pl(4,16),events=[];
+ sandbox.G.Game={player:p};
+ sandbox.G.PKMSVVDexDefeats={markEvolved(...args){events.push(args)}};
+ try{
+  assert.equal(evo.evolve(p,rule(4,5)),true);
+  assert.equal(events.length,1);
+  assert.equal(events[0][1],4);
+  assert.equal(events[0][2],5);
+  assert.equal(events[0][3],p);
+ }finally{delete sandbox.G.Game;delete sandbox.G.PKMSVVDexDefeats;}
+});
 test('Evolution stones require boss-earned shards and consume one',()=>{
  const p=pl(25,20),r=rule(25,26);
  assert.equal(r.item,'thunder-stone');

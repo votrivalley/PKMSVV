@@ -40,6 +40,7 @@ jobs:
         run: |
           npm run test:pokebox:stage4
           node --test tests/pkmsvv-v20.test.cjs
+          node --test tests/dex-defeats-qa.test.cjs tests/runtime-controls-qa.test.cjs tests/evolution.test.cjs
           npm run test:quick-region
       - name: Retrieve exact tested webgame snapshot, no mutable live build
         uses: actions/download-artifact@v4

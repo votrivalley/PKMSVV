@@ -21,7 +21,7 @@ fs.rmSync(to,{recursive:true,force:true});fs.cpSync(from,to,{recursive:true});
 fs.rmSync(path.join(to,'POKEBOX-STAGE1-QA.txt'),{force:true});
 for(const prefix of ['game','ai/game']){
  const html=read(prefix+'/index.html');
- for(const name of ['pkmsvv-changelog-v20-qa.js','pkmsvv-v20-ui-qa.js','pkmsvv-box-stage1.js','pkmsvv-box-stage2.js','pkmsvv-box-stage3.js','pkmsvv-box-stage4.js','pkmsvv-box-hub-ui.js','pkmsvv-dex-defeats-qa.js']){
+ for(const name of ['pkmsvv-changelog-v20-qa.js','pkmsvv-v20-ui-qa.js','pkmsvv-box-stage1.js','pkmsvv-box-stage2.js','pkmsvv-box-stage3.js','pkmsvv-box-stage4.js','pkmsvv-box-hub-ui.js','pkmsvv-dex-defeats-qa.js','pkmsvv-runtime-controls-qa.js']){
   assert(file(prefix+'/js/ui/'+name),'missing '+prefix+'/'+name);
   assert(html.includes(name),'2.0 script not injected in '+prefix+': '+name);
  }
@@ -42,15 +42,29 @@ for(const prefix of ['game','ai/game']){
 // The pinned QA artifact is immutable; without this step source CSS hotfixes
 // would never reach the public game despite a successful release workflow.
 const mobileCss=fs.readFileSync(path.join(root,'src/pkmsvv-v20-ui-qa.css'),'utf8');
-assert(mobileCss.includes('PKMSVV_MOBILE_SPLIT_V21'),'mobile two-pane layout patch missing');
+assert(mobileCss.includes('PKMSVV_COLLECTION_FIRST_V22'),'collection-first mobile layout patch missing');
 for(const prefix of ['game','ai/game']){
  fs.writeFileSync(path.join(to,prefix+'/css/pkmsvv-v20-ui-qa.css'),mobileCss);
- assert(read(prefix+'/css/pkmsvv-v20-ui-qa.css').includes('PKMSVV_MOBILE_SPLIT_V21'),
+ assert(read(prefix+'/css/pkmsvv-v20-ui-qa.css').includes('PKMSVV_COLLECTION_FIRST_V22'),
   'stale mobile CSS in '+prefix);
+ // Pinned source artifact is immutable; promote VERIFIED source-only JS fixes
+ // into BOTH actual game routes (the app.min.js engine is unchanged).
+ for(const name of ['pkmsvv-changelog-v20-qa.js','pkmsvv-box-hub-ui.js',
+  'pkmsvv-dex-defeats-qa.js','pkmsvv-runtime-controls-qa.js']){
+  const fresh=fs.readFileSync(path.join(root,'src',name),'utf8');
+  assert(fresh.length>100,'empty promoted script: '+name);
+  fs.writeFileSync(path.join(to,prefix+'/js/ui/'+name),fresh);
+ }
+ assert(read(prefix+'/js/ui/pkmsvv-box-hub-ui.js').includes('pkmbx-dex-discovered'),
+  'new discovered button missing from '+prefix);
+ assert(read(prefix+'/js/ui/pkmsvv-dex-defeats-qa.js').includes('markEvolved'),
+  'evolution unlock missing from '+prefix);
+ assert(read(prefix+'/js/ui/pkmsvv-runtime-controls-qa.js').includes('riftPassage'),
+  'Rift speed patch missing from '+prefix);
 }
 const sw=path.join(to,'sw.js');assert(file('sw.js'),'PWA service worker missing');
 const oldSW=fs.readFileSync(sw,'utf8');
-const oldKey='pkmsvv-cloudflare-v1529-1',newKey='pkmsvv-cloudflare-v20-20261109-mobile-split-v21';
+const oldKey='pkmsvv-cloudflare-v1529-1',newKey='pkmsvv-cloudflare-v20-20261109-collection-first-v22';
 assert(oldSW.includes(oldKey),'existing service worker revision differs');
 fs.writeFileSync(sw,oldSW.replace(oldKey,newKey));
 // A new worker cache namespace ensures the published version refreshes reliably.
@@ -59,7 +73,7 @@ const info=JSON.parse(read('build-info.json'));
 assert(info.localSave===true,'existing browser-save architecture changed');
 Object.assign(info,{version:'2.0',displayVersion:'Pokémon Chuyển Sinh 2.0',
  releaseDate:'2026-11-09',releaseSourceRevision:EXPECTED_SHA,
- releaseQAWorkflowRun:42520192007,releaseType:'public-web',mobileUiHotfix:'two-pane-android-pokebox-and-pokedex',saveMode:'existing-browser-local',
+ releaseQAWorkflowRun:42520192007,releaseType:'public-web',mobileUiHotfix:'collection-first-dex-evolution-rift-speed-v22',saveMode:'existing-browser-local',
  rollbackSourceArtifact:'PKMSVV-PokeBox-Stage4-Web-QA-ONLY'});
 fs.writeFileSync(path.join(to,'build-info.json'),JSON.stringify(info,null,2)+'\n');
 const maxBytes=25*1024*1024;let files=0,bytes=0,largest=0;

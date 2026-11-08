@@ -105,6 +105,21 @@ test('1.5x speed remains selected during temporary levelup/choice and is restore
  assert.equal(f.api.setSpeed(false),true);
  assert.equal(f.speeds.at(-1),1);
 });
+test('Rift entry and exit retain 1.5× without accidentally enabling competitive speed',()=>{
+ const f=fixture();f.G.Rift={inArena:false};
+ f.api.setSpeed(true);f.frame(500);
+ const before=f.speeds.length;
+ f.G.Rift.inArena=true;f.G.Game.state='ui';f.frame(1000);
+ assert.equal(f.speeds.length,before,'transition cannot reset speed to 1x');
+ f.G.Game.state='playing';f.frame(1500);
+ assert.equal(f.speeds.at(-1),1.5);
+ const entering=f.speeds.length;
+ f.G.Rift.inArena=false;f.frame(2000);
+ assert.equal(f.speeds.length,entering+1,'speed re-applies after leaving Rift');
+ assert.equal(f.speeds.at(-1),1.5);
+ f.G.PKMSVVArenaSolo={active:true};f.frame(2500);
+ assert.equal(f.speeds.at(-1),1,'Arena remains at native speed');
+});
 test('Auto-pick setting is persistent and available in Settings, not written to save',()=>{
  const f=fixture();
  const body={rows:[],querySelector(){return null},append(row){this.rows.push(row);for(const x of row.children)if(x.id)f.elements[x.id]=x}};

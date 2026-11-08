@@ -27,6 +27,10 @@ test('approved Chuyển Sinh 2.0 log replaces no 1.0 history and remains idempot
  const rows=[...G.CHANGELOG[0].new,...G.CHANGELOG[0].chg,...G.CHANGELOG[0].fix];
  assert.ok(rows.every(x=>Array.isArray(x)&&x.length===2&&x.every(Boolean)));
  assert.ok(rows.some(x=>/Pokédex/.test(x[0])&&/Khám phá/.test(x[0])));
+ assert.ok(rows.some(x=>/Fusion/.test(x[0])));
+ assert.ok(rows.some(x=>/Rank/.test(x[0])));
+ assert.ok(rows.some(x=>/tiến hóa/.test(x[0])&&/Chiêu mộ/.test(x[0])));
+ assert.ok(rows.some(x=>/Khe Nứt/.test(x[0])));
  assert.ok(rows.some(x=>/bán vật phẩm/.test(x[0])));
  assert.ok(rows.some(x=>/Pokémon hỗ trợ/.test(x[0])));
  G.PKMSVVChangelog20.install();

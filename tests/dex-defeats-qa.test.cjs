@@ -120,15 +120,46 @@ test('Historical seen-only flags are preserved in JSON but no longer grant new u
  assert.equal(f.s.pkmsvvSeenDex[25],true,'never delete old save fields');
  assert.equal(f.s.pkmsvvDefeatedDex[25],true);
 });
-test('Pokédex clearly explains Explore-only defeats and shows silhouettes until then',()=>{
+test('Real player evolution unlocks its evolved form and makes it recruitable',()=>{
+ const f=fixture(),pl=f.G.Game.player;
+ pl.dex=4;pl.pkmEvoHistory=[{from:1,to:4,at:16}];
+ assert.equal(f.api.markEvolved(f.s,1,4,pl),true);
+ assert.equal(f.api.unlocked(f.s,4),true);
+ assert.equal(f.commits,1);
+ assert.equal(f.api.markEvolved(f.s,1,4,pl),false,'no duplicate commit');
+ assert.deepEqual(f.G.Gacha.pool(1).map(x=>x.dex),[4]);
+});
+test('Evolution never unlocks on sightings, NPCs, false histories or failed save commits',()=>{
+ const f=fixture(),pl=f.G.Game.player;
+ pl.dex=4;pl.pkmEvoHistory=[];
+ assert.equal(f.api.markEvolved(f.s,1,4,pl),false);
+ pl.pkmEvoHistory=[{from:1,to:4,at:16}];
+ assert.equal(f.api.markEvolved(f.s,1,4,{...pl}),false);
+ assert.equal(f.api.markEvolved(f.s,1,25,pl),false);
+ pl.remote=true;assert.equal(f.api.markEvolved(f.s,1,4,pl),false);
+ pl.remote=false;f.failure=true;const before=JSON.stringify(f.s);
+ assert.equal(f.api.markEvolved(f.s,1,4,pl),false);
+ assert.equal(JSON.stringify(f.s),before,'failed commit must roll back');
+});
+test('Evolution watcher observes internal evolved history on next engine tick',()=>{
+ const f=fixture(),pl=f.G.Game.player;let calls=0;
+ f.G.PKMSVVEvo={tick(){calls++}};
+ assert.equal(f.api.installEvolution(),true);
+ pl.dex=25;pl.pkmEvoHistory=[{from:4,to:25,at:30}];
+ f.G.PKMSVVEvo.tick(pl,42);f.G.PKMSVVEvo.tick(pl,43);
+ assert.equal(calls,2);assert.equal(f.commits,1);
+ assert.equal(f.api.unlocked(f.s,25),true);
+});
+test('Pokédex explains Explore defeats OR evolution and shows silhouettes until then',()=>{
  const ui=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub-ui.js'),'utf8');
  const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub.css'),'utf8');
  assert.match(ui,/PKMSVVDexDefeats\?\.unlocked/);
  assert.match(ui,/pkmbx-dex-undefeated/);
- assert.match(ui,/Chưa hạ Pokémon này trong Khám phá/);
- assert.match(ui,/Chỉ hạ Pokémon trong Khám phá mới mở Pokédex và Chiêu mộ/);
+ assert.match(ui,/Chưa phát hiện Pokémon này/);
+ assert.match(ui,/Hạ gục Pokémon trong Khám phá hoặc tiến hóa/);
  assert.match(ui,/Co-op, Arena và các chế độ khác không tính/);
- assert.match(ui,/Only Pokémon defeated in Explore/,'English language rule');
+ assert.match(ui,/Defeat Pokémon in Explore or evolve into/,'English language rule');
+ assert.match(ui,/pkmbx-dex-discovered/,'discovered-only filter must be a real button');
  assert.match(css,/#pkmbx-dex-rule/);
  assert.match(css,/pkmbx-dex-card\.is-undefeated/);
  for(const filename of ['scripts/build-pokebox-stage1-qa.cjs','scripts/build-pokebox-stage1-pc-qa.cjs','scripts/patch-pokebox-stage4-apk-qa.cjs']){

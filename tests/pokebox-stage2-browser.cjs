@@ -272,9 +272,14 @@ async function main(){
   const pureDex=await evaluate("(()=>{G.PKMSVVBoxHubUI.openDex();return ({overlay:!!document.querySelector('#pkmbx-dex-overlay'),search:!!document.querySelector('#pkmbx-dex-search'),hasEvolutionPane:!!document.querySelector('#pkmbx-dex-details'),itemActions:!!document.querySelector('#pkmbx-dex-overlay [data-hub-tm],#pkmbx-dex-overlay [data-pkmbx-use]'),cards:document.querySelectorAll('#pkmbx-dex-list button').length,insidePC:document.querySelector('#pkmsvv-pokebox-overlay')?.contains(document.querySelector('#pkmbx-dex-overlay')),tabs:[...document.querySelectorAll('#pkmbx-dex-overlay [data-pc-tab]')].map(b=>b.dataset.pcTab),pcHubHidden:document.querySelector('.pkmbx-hub-panel')?.hidden,exploreRule:document.querySelector('#pkmbx-dex-rule')?.textContent,exploreRuleVisible:(()=>{const node=document.querySelector('#pkmbx-dex-rule');return !!node&&getComputedStyle(node).display!=='none'&&node.getClientRects().length>0})()})})()");
   assert.equal(pureDex.overlay,true);
   assert.equal(pureDex.search,true);
-  assert.match(pureDex.exploreRule,/Chỉ hạ Pokémon trong Khám phá|Only Pokémon defeated in Explore/,'Pokédex must describe Explore-only defeats');
+  assert.match(pureDex.exploreRule,/tiến hóa thành Pokémon đó|evolve into that Pokémon/,'Pokédex must describe evolution discovery');
   assert.equal(pureDex.exploreRuleVisible,true,'Explore rule must be visible above filters');
   assert.equal(pureDex.hasEvolutionPane,true);
+  const discoveredToggle=await evaluate("(()=>{const b=document.querySelector('#pkmbx-dex-discovered');if(!b)return {missing:true};b.click();const on=b.getAttribute('aria-pressed'),status=document.querySelector('#pkmbx-dex-status').value;b.click();return {on,status,off:b.getAttribute('aria-pressed')};})()");
+  assert.equal(discoveredToggle.missing,undefined,'discovered-only toggle must exist');
+  assert.equal(discoveredToggle.on,'true');
+  assert.equal(discoveredToggle.status,'owned','discovered filter must use actual unlock predicate');
+  assert.equal(discoveredToggle.off,'false');
   assert.equal(pureDex.insidePC,true,'Pokédex must be inside in-game PC');
   assert.deepEqual(pureDex.tabs,['box','dex','upgrade'],'Pokémon tabs must be Box → Dex → Upgrades');
   assert.equal(pureDex.pcHubHidden,true,'PokéBox tab hidden while Pokédex is active');
@@ -287,6 +292,11 @@ async function main(){
   console.log('QA Hub fixture:',JSON.stringify(hubScreen));
   assert.equal(hubScreen.overlay,true);
   assert.equal(hubScreen.teamSlots,6);
+  const compactBoxFilter=await evaluate("(()=>{G.PKMSVVBoxHubUI.openBox();const b=document.querySelector('#pkmbx-box-filter-toggle'),fields=document.querySelector('#pkmbx-box-filter-fields');if(!b||!fields)return {missing:true};b.click();const expanded=b.getAttribute('aria-expanded'),open=fields.dataset.open;b.click();const closed=fields.dataset.open;G.PKMSVVBoxHubUI.closeBox();return {expanded,open,closed};})()");
+  assert.equal(compactBoxFilter.missing,undefined,'mobile Box filter must exist');
+  assert.equal(compactBoxFilter.expanded,'true');
+  assert.equal(compactBoxFilter.open,'true');
+  assert.equal(compactBoxFilter.closed,'false');
   assert.ok(hubScreen.cards>=2);
   assert.equal(hubScreen.animatedHero,true);
   assert.equal(hubScreen.natureSelect,true);
@@ -715,7 +725,9 @@ async function main(){
        right:{x:r.left,right:r.right,top:r.top,width:r.width,height:r.height},
        scroll:scroll.scrollTop,old,scrollHeight:scroll.scrollHeight,
        clientHeight:scroll.clientHeight,overflow:getComputedStyle(scroll).overflowY,
-       cardHeight:cards?.[0]?.getBoundingClientRect().height||0};
+       cardHeight:cards?.[0]?.getBoundingClientRect().height||0,
+       listShare:scroll.getBoundingClientRect().height/Math.max(1,l.height),
+       boxFiltersToggle:tab==='box'?!!parent.querySelector('#pkmbx-box-filter-toggle'):null};
       scroll.scrollTop=old;return out;
      };
      try{
@@ -741,6 +753,11 @@ async function main(){
       name+' Pokémon tiles still flattened '+JSON.stringify(v));
      assert.ok(v.clientHeight>=45&&v.scrollHeight>v.clientHeight&&v.scroll>v.old,
       name+' collection must scroll independently '+JSON.stringify(v));
+     if(device.height<500){
+      assert.ok(v.clientHeight>=85,'mobile Pokémon list still a thin strip '+JSON.stringify(v));
+      assert.ok(v.listShare>=.33,'mobile Pokémon list should occupy at least one-third of collection column '+JSON.stringify(v));
+     }
+     if(name==='box')assert.equal(v.boxFiltersToggle,true,'Box needs compact filter control');
      assert.ok(v.right.right<=views.width+3,
       name+' detail clipped beyond viewport '+JSON.stringify(v));
     }
