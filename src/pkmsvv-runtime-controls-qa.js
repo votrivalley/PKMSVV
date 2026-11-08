@@ -176,14 +176,14 @@
  // It never modifies kills, rank rewards or a player's save.
  let rankingOpen=false,wasCoop=false,prevPadSpeed=false,prevPadRank=false;
  function canRanking(){
-  if(!playing()||!G.Coop?.active||arenaMatch()||G.Royale?.active||G.EggRush?.active)return false;
+  if(!runContext()||!G.Coop?.active||arenaMatch()||G.Royale?.active||G.EggRush?.active)return false;
   const mode=String(G.Social?.room?.mode||'coop').toLowerCase();
   return ['coop','berry','berryeasy','survival'].includes(mode);
  }
  function rankingRows(){
   const members=G.Social?.room?.members||[];
   const raw=G.Coop?.players?.()||[];
-  const list=Array.isArray(raw)?raw:[...raw||[]];
+  const list=Array.isArray(raw)?raw:(raw&&typeof raw[Symbol.iterator]==='function'?[...raw]:[]);
   const seen=new Set();
   return list.filter(p=>p&&!p.isEnemy&&!p.enemy).map((p,i)=>{
    const uid=String(p.uid||p.id||'player-'+i);
@@ -265,7 +265,8 @@
    (pad.buttons[index].pressed||pad.buttons[index].value>.5);
   const speed=pressed(Number.isInteger(map.speed)?map.speed:5);
   const board=pressed(Number.isInteger(map.leaderboard)?map.leaderboard:11);
-  const editing=!!G.SettingsUI?.isOpen||isEditing();
+  const open=typeof G.SettingsUI?.isOpen==='function'?G.SettingsUI.isOpen():!!G.SettingsUI?.isOpen;
+  const editing=open||isEditing();
   if(!editing&&speed&&!prevPadSpeed&&canSpeed())setSpeed(!fast);
   if(!editing&&board&&!prevPadRank&&canRanking())toggleRanking();
   prevPadSpeed=speed;prevPadRank=board;
