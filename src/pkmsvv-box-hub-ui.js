@@ -484,7 +484,9 @@
    '<div class="pkmbx-hub-team-title"><h3>'+L('Đội hình 6 Pokémon sẵn sàng','Ready Team of 6')+'</h3><b id="pkmbx-team-count">0/6</b></div>'+
    '<div id="pkmbx-six" class="pkmbx-team-six"></div>'+
    '<div class="pkmbx-actions pkmbx-hub-tools">'+
-   '<input type="search" id="pkmbx-query" autocomplete="off" placeholder="'+L('Tìm Pokémon / #Dex','Search Pokémon / #Dex')+'"/>'+
+   '<input type="search" id="pkmbx-query" autocomplete="off" placeholder="'+L('Tìm Pokémon / #Dex','Search Pokémon / #Dex')+'"/>'+ 
+   '<button type="button" class="btn small pkmbx-box-filter-toggle" id="pkmbx-box-filter-toggle" aria-expanded="false" aria-controls="pkmbx-box-filter-fields">'+L('☷ Lọc','☷ Filter')+'</button>'+ 
+   '<div class="pkmbx-box-filter-fields" id="pkmbx-box-filter-fields" data-open="false">'+
    '<label><input type="checkbox" id="pkmbx-favorite"/> '+L('★ Yêu thích','★ Favorites')+'</label>'+
    '<label><input type="checkbox" id="pkmbx-shiny"/> Shiny</label>'+
    '<label><input type="checkbox" id="pkmbx-ready"/> '+L('Có thể nâng Rank','Rank ready')+'</label>'+
@@ -494,7 +496,7 @@
     '<option value="rank">Rank</option>'+
     '<option value="copies">'+L('Số bản sao','Copies')+'</option>'+
     '<option value="rarity">'+L('Độ hiếm','Rarity')+'</option></select></label>'+
-   '<span id="pkmbx-found-count" class="pkmbx-found-count" aria-live="polite"></span></div>'+
+   '</div><span id="pkmbx-found-count" class="pkmbx-found-count" aria-live="polite"></span></div>'+
    '<div id="pkmbx-legacy-migration" class="pkmbx-legacy-migration" hidden></div>'+
    '<nav class="pkmbx-page pkmbx-box-carousel" aria-label="'+L('Chuyển hộp Pokémon','Switch Pokémon boxes')+'">'+
    '<button type="button" class="btn small" id="pkmbx-prev" aria-label="'+L('Hộp trước','Previous box')+'">❮</button>'+
@@ -507,6 +509,13 @@
   boxPane.querySelector('#pkmbx-close').onclick=closeBox;
   bindPcTabs(boxPane);
   boxPane.addEventListener('click',e=>{if(e.target===boxPane)closeBox();});
+  const boxFilterToggle=boxPane.querySelector('#pkmbx-box-filter-toggle');
+  const boxFilters=boxPane.querySelector('#pkmbx-box-filter-fields');
+  boxFilterToggle.onclick=()=>{
+   const open=boxFilters.dataset.open!=='true';
+   boxFilters.dataset.open=String(open);
+   boxFilterToggle.setAttribute('aria-expanded',String(open));
+  };
   boxPane.querySelector('#pkmbx-query').oninput=e=>{query=e.target.value;page=0;renderBox();};
   boxPane.querySelector('#pkmbx-favorite').onchange=e=>{onlyFavorites=e.target.checked;page=0;renderBox();};
   boxPane.querySelector('#pkmbx-shiny').onchange=e=>{onlyShiny=e.target.checked;page=0;renderBox();};
@@ -745,14 +754,15 @@
   dexPane.innerHTML='<section class="pkmbx-panel pkmbx-dex-panel" role="dialog" aria-modal="true" aria-label="Pokédex">'+
    '<header class="pkmbx-head"><h2>◉ Pokémon</h2><button class="btn small" id="pkmbx-dex-close">'+L('✕ Đóng','✕ Close')+'</button></header>'+pcTabs('dex')+
 
-   '<p class="pkmbx-dex-rule" id="pkmbx-dex-rule" role="note">'+L('Chỉ hạ Pokémon trong Khám phá mới mở Pokédex và Chiêu mộ. Co-op, Arena và các chế độ khác không tính.', 'Only Pokémon defeated in Explore unlock Pokédex entries and Recruitment. Co-op, Arena and other modes do not count.')+'</p>'+
+   '<p class="pkmbx-dex-rule" id="pkmbx-dex-rule" role="note">'+L('Hạ gục Pokémon trong Khám phá hoặc tiến hóa thành Pokémon đó để mở Pokédex và Chiêu mộ. Hạ quái trong Co-op, Arena và các chế độ khác không tính.', 'Defeat Pokémon in Explore or evolve into that Pokémon to unlock Pokédex and Recruitment. KOs in Co-op, Arena and other modes do not count.')+'</p>'+
    '<div class="pkmbx-dex-toolbar"><input id="pkmbx-dex-search" type="search" autocomplete="off" placeholder="'+L('Tìm tên Pokémon hoặc số Pokédex','Search Pokémon name or Dex number')+'"/>'+
+   '<button type="button" class="btn small" id="pkmbx-dex-discovered" aria-pressed="false">'+L('✓ Đã phát hiện','✓ Discovered')+'</button>'+ 
    '<button type="button" class="btn small" id="pkmbx-dex-fav" aria-pressed="false">'+L('☆ Yêu thích','☆ Favorites')+'</button>'+
    '<button type="button" class="btn small" id="pkmbx-dex-sort-toggle" aria-expanded="false">'+L('☷ Sắp xếp / Lọc','☷ Sort / Filter')+'</button></div>'+
    '<div class="pkmbx-dex-filters" id="pkmbx-dex-filters" hidden>'+
    '<label>'+L('Thế hệ','Generation')+'<select id="pkmbx-dex-gen"><option value="0">'+L('Tất cả Gen','All generations')+'</option>'+genOptions+'</select></label>'+
    '<label>'+L('Tình trạng','Collection')+'<select id="pkmbx-dex-status"><option value="all">'+L('Tất cả','All')+'</option>'+
-    '<option value="owned">'+L('Đã đánh bại','Defeated')+'</option><option value="missing">'+L('Chưa đánh bại','Not defeated')+'</option><option value="shiny">Shiny</option></select></label>'+
+    '<option value="owned">'+L('Đã phát hiện','Discovered')+'</option><option value="missing">'+L('Chưa đánh bại','Not defeated')+'</option><option value="shiny">Shiny</option></select></label>'+
    '<label>'+L('Độ hiếm','Rarity')+'<select id="pkmbx-dex-rarity"><option value="0">'+L('Tất cả độ hiếm','All rarities')+'</option>'+
     [1,2,3,4,5].map((n)=>'<option value="'+n+'">'+L(['','Thường','Khá hiếm','Hiếm','Sử thi','Huyền thoại'][n],['','Common','Uncommon','Rare','Epic','Legendary'][n])+'</option>').join('')+'</select></label>'+
    '<label>'+L('Hệ','Type')+'<select id="pkmbx-dex-type"><option value="">'+L('Tất cả hệ','All types')+'</option>'+typeOptions+'</select></label>'+
@@ -775,6 +785,11 @@
   field('#pkmbx-dex-rarity',v=>dexRarity=Number(v));
   field('#pkmbx-dex-type',v=>dexType=v);
   field('#pkmbx-dex-order',v=>dexSort=v);
+  dexPane.querySelector('#pkmbx-dex-discovered').onclick=()=>{
+   dexStatus=dexStatus==='owned'?'all':'owned';dexPage=0;
+   dexPane.querySelector('#pkmbx-dex-status').value=dexStatus;
+   renderDex();
+  };
   dexPane.querySelector('#pkmbx-dex-fav').onclick=()=>{dexFavorites=!dexFavorites;dexPage=0;renderDex();};
   const panel=dexPane.querySelector('#pkmbx-dex-filters'),toggle=dexPane.querySelector('#pkmbx-dex-sort-toggle');
   const show=on=>{panel.hidden=!on;toggle.setAttribute('aria-expanded',String(on));};
@@ -840,6 +855,9 @@
   dexPane.querySelector('#pkmbx-dex-prev').disabled=dexPage===0;
   dexPane.querySelector('#pkmbx-dex-next').disabled=dexPage>=pages-1;
   dexPane.querySelector('#pkmbx-dex-count').textContent=list.length+' / '+nums.length+' Pokémon';
+  const discoveredButton=dexPane.querySelector('#pkmbx-dex-discovered');
+  discoveredButton.classList.toggle('gold',dexStatus==='owned');
+  discoveredButton.setAttribute('aria-pressed',String(dexStatus==='owned'));
   const favButton=dexPane.querySelector('#pkmbx-dex-fav');favButton.classList.toggle('gold',dexFavorites);
   favButton.setAttribute('aria-pressed',String(dexFavorites));
   if(!list.includes(infoDex))infoDex=list[0]||null;
@@ -850,8 +868,8 @@
   if(!has(infoDex)){
    detail.classList.add('pkmbx-dex-undefeated');
    detail.innerHTML='<div class="pkmbx-hub-hero"><canvas id="pkmbx-dex-hero" width="176" height="176"></canvas>'+
-    '<strong>#'+infoDex+' · ???</strong><p>'+L('Chưa hạ Pokémon này trong Khám phá. Chỉ chiến thắng tại Khám phá mới mở Pokédex và Chiêu mộ.',
-     'Not defeated in Explore. Only Explore victories unlock Pokédex entries and Recruitment.')+'</p></div>';
+    '<strong>#'+infoDex+' · ???</strong><p>'+L('Chưa phát hiện Pokémon này. Hạ gục trong Khám phá hoặc tiến hóa thành loài này để mở Pokédex và Chiêu mộ.',
+     'Not discovered. Defeat it in Explore or evolve into this species to unlock Pokédex and Recruitment.')+'</p></div>';
    draw(detail.querySelector('#pkmbx-dex-hero'),infoDex,false,true,true);
    return;
   }
