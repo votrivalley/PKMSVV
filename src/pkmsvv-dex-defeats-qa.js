@@ -45,9 +45,9 @@
    !e.pkmsvvFriendly&&!e.friendly&&!e.isSupport&&!e.isPlayer&&
    !e.def?.pkmsvvFriendly&&!e.def?.friendly;
  }
- function markDefeated(s,dex){
+ function persistDefeat(s,dex){
   const id=dexId(dex),db=G.DB;
-  if(!inExplore()||!id||!G.DEX_BY?.[id]||!s||db?.guest||db?.save!==s)return false;
+  if(!id||!G.DEX_BY?.[id]||!s||db?.guest||db?.save!==s)return false;
   if(unlocked(s,id))return false;
   const previous=s.pkmsvvDefeatedDex,had=own(s,'pkmsvvDefeatedDex');
   const next=ensureLedger(s);next[id]=true;
@@ -63,6 +63,8 @@
   }
  }
 
+ function markDefeated(s,dex){return inExplore()&&persistDefeat(s,dex);}
+
  // Sightings do not create progress. Do not hook EnemyMgr.add/update.
 
  function installEnemy(){
@@ -72,9 +74,10 @@
   const wrapped=function(...args){
    const wasDead=!!this.dead;
    const validExploreKill=inExplore()&&isDefeatable(this);
-   const dex=dexId(this.dex??this.def?.dex);
+   const dex=dexId(this.dex??this.def?.dex),profile=G.DB?.save;
    const result=prior.apply(this,args);
-   if(validExploreKill&&!wasDead&&this.dead&&dex)markDefeated(G.DB?.save,dex);
+   // The last boss may synchronously end the run in die(). Trust the pre-death mode snapshot.
+   if(validExploreKill&&!wasDead&&this.dead&&dex)persistDefeat(profile,dex);
    return result;
   };
   wrapped._pkmsvvDexDefeats=true;
