@@ -10,7 +10,7 @@ test('Canonical support roster matches runtime and silhouette entries are not in
   [360,'special'],[440,'heal'],[438,'shield'],[175,'magnet'],[174,'sleep'],[132,'ditto'],[151,'mew']];
  const G={};vm.runInNewContext(solo,{G,Math,Number,Object});
  assert.deepEqual(Array.from(G.PKMSVVEggs.SPECIES,x=>[x.dex,x.role]),expected);
- assert.match(online,/EGG_SPECIES=\[172,447,173,360,438,175,174\]/);
+ assert.match(online,/EGG_SPECIES=\[172,447,173,360,440,438,175,174\]/);
  assert.doesNotMatch(solo,/{dex:707[,}]/);
  const catalog=read('src/pkmsvv-support-catalog.js');
  assert.match(catalog,/paralyze:\['Tê liệt'/);
