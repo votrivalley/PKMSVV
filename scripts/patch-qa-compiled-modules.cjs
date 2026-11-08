@@ -10,6 +10,8 @@ const root=path.resolve(__dirname,'..');
 const mods=[
  ['Judgment','src/v14/judgment.js'],
  ['PKMSVV14','src/v14/milestones.js'],
+ ['PKMSVVEggs','src/v15/eggs.js'],
+ ['PKMSVVBossSupport','src/v15/boss-support.js'],
  ['PKMSVVBerry','src/pkmsvv-berry.js'],
  ['PKMSVVArenaSolo','src/pkmsvv-arena-solo.js'],
  ['PKMSVVChampionArena','src/pkmsvv-champion-arena.js'],
