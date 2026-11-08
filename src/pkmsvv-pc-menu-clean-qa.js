@@ -177,6 +177,24 @@
   }
   relabel(pokemon,['Khám phá','Explore','Pokémon','Pokemon'],'Pokémon');
  }
+ function syncMenuIcons(menu){
+  // Three tiny WebP sprite cells; do not affect routing, click handlers,
+  // controller focus or the other Pokémon/Ký Ức menu icons.
+  const definitions=[
+   ['#pkmsvv-menu-wiki','pc'],
+   ['[data-go="multiplayer"],[data-go="coop"],[data-go="co-op"]','coop'],
+   ['[data-go="arena"]','arena']
+  ];
+  for(const [selector,type] of definitions){
+   const button=menu.querySelector(selector);if(!button)continue;
+   let art=button.querySelector(':scope > .mi-ico');
+   if(!art){art=d.createElement('span');art.className='mi-ico';button.prepend(art);}
+   if(art.classList.contains('pkmsvv-menu-icon-'+type))continue;
+   art.replaceChildren();
+   art.className='mi-ico pkmsvv-new-menu-icon pkmsvv-menu-icon-'+type;
+   art.setAttribute('aria-hidden','true');
+  }
+ }
  function syncHome(){
   const menu=$('#scr-menu');if(!menu)return;
   if(menu.querySelector('#pkmsvv-menu-wiki')){
@@ -193,6 +211,7 @@
   }
   syncLauncherLabels(menu);
   reorderMainMenu(menu);
+  syncMenuIcons(menu);
   const left=menu.querySelector('.menu-left'),bottom=menu.querySelector('.pkmsvv-v15-bottom');
   if(left){
    let banner=left.querySelector('.pkmsvv-save-banner')||left.querySelector('.pkmsvv-season-banner');
