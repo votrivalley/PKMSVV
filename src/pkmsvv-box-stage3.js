@@ -9,8 +9,8 @@
  if(root&&root.G)root.G.PKMSVVBox3=api;
 })(typeof globalThis==='object'?globalThis:this,function(){
  'use strict';
- const ITEM='reforge-prism',PRICE=6500,SHOP_RATE=0.12,PITY=180,MAX_DROPS_PER_RUN=1;
- const RATES=Object.freeze({type:0.0035,species:0.015,elite:0.03,boss:0.08});
+ const ITEM='reforge-prism',PRICE=6500,SHOP_RATE=0.12,PITY=0,MAX_DROPS_PER_RUN=999;
+ const RATES=Object.freeze({normal:.004,elite:.008,legend:.016});
  const own=(x,k)=>Object.prototype.hasOwnProperty.call(x,k);
  const deep=x=>JSON.parse(JSON.stringify(x));
  const nonneg=n=>Number.isSafeInteger(n)&&n>=0;
@@ -89,6 +89,17 @@
    return {item:ITEM,price:PRICE,count:draft.pkmsvvReforgePrisms,day};
   },validPurchase);
  }
+ function sell(s=getSave()){
+  if(!validPurchase(s)||!count(s))throw Error('No Reforge Prism in Bag');
+  return atomic(s,draft=>{
+   if(!nonneg(draft.pkmsvvReforgePrisms)||draft.pkmsvvReforgePrisms<1)
+    throw Error('No Reforge Prism available');
+   draft.pkmsvvReforgePrisms--;
+   const refund=Math.floor(PRICE/2);
+   draft.coins+=refund;
+   return {ok:true,refund,remaining:draft.pkmsvvReforgePrisms};
+  },validPurchase);
+ }
  function resetBranch(id,newBranch,s=getSave()){
   return atomic(s,draft=>{
    const chosen=box2().get(draft,id);
@@ -123,18 +134,12 @@
     enemy._pkmsvvBossSupport||enemy._pkmsvvSupportGuard||enemy.pkmsvvBossGuard)return null;
   const dex=Number(enemy.dex||enemy.mon?.dex||enemy.data?.dex);
   if(!Number.isSafeInteger(dex)||dex<1||dex>1025)return null;
-  const played=box2()?.selected?.(s),me=typeof G!=='undefined'?G.DEX_BY?.[played?.dex]:null;
   const foe=typeof G!=='undefined'?G.DEX_BY?.[dex]:null;
-  const a=me?.types,b=enemy.types||enemy.mon?.types||foe?.types;
-  const myTypes=Array.isArray(a)?a:[],theirTypes=Array.isArray(b)?b:[];
-  const sameSpecies=dex===played?.dex;
-  if(!sameSpecies&&!myTypes.some(t=>theirTypes.includes(t)))return null;
-  let rate=sameSpecies?RATES.species:RATES.type,kind=sameSpecies?'species':'type';
-  if(enemy.elite||enemy.isElite||enemy.kind==='elite'){
-   rate=Math.max(rate,RATES.elite);kind='elite';
-  }
-  if(enemy.boss){rate=RATES.boss;kind='boss';}
-  return {dex,rate,kind};
+  const rarity=Number(enemy.rarity??enemy.mon?.rarity??foe?.rarity??0);
+  const legend=!!(enemy.legendary||enemy.isLegendary||enemy.boss||rarity>=5);
+  const elite=!legend&&!!(enemy.elite||enemy.isElite||enemy.kind==='elite');
+  return {dex,rate:legend?RATES.legend:elite?RATES.elite:RATES.normal,
+   kind:legend?'legend':elite?'elite':'normal'};
  }
  function eligibleDefeat(enemy,s=getSave()){
   if(!isSoloPvE(s)||dropsThisRun>=MAX_DROPS_PER_RUN)return null;
@@ -145,7 +150,7 @@
   if(!info)return {eligible:false,dropped:false};
   enemy._pkmsvvPrismCounted=true; // a defeat can only increment pity once
   const counter=pity(s)+1;
-  const drops=counter>=PITY||random()<info.rate;
+  const drops=Number(random())<info.rate; // pure 0.4% / 0.8% / 1.6% rolls; no hidden pity boost
   const nextDrops=dropsThisRun+(drops?1:0);
   try{
    // Regular kills update in-memory pity without forcing a localStorage write
@@ -195,6 +200,14 @@
       G.UI?.toast?.(vi?'🔮 Nhặt được Lăng Kính Tái Khắc!':'🔮 Reforge Prism obtained!',3600);
      }
     }catch(e){if(typeof console!=='undefined')console.warn('[PokéBox Prism reward]',e.message);}
+    // Independent standard-item loot rolls, including Co-op PvE. Save writes
+    // happen only on a successful Mint/Capsule drop.
+    try{
+     const items=G.Shop?.dropFromEnemy?.(this)||[];
+     if(items.length)G.UI?.toast?.(
+      G.I18n?.lang==='en'?'🎒 Dropped: '+items.join(', '):
+       '🎒 Nhặt được: '+items.map(x=>x==='mint'?'Bạc hà':x==='cap'?'Viên nang Đặc tính':'Viên nang Đặc tính Ẩn').join(', '),2600);
+    }catch(e){if(typeof console!=='undefined')console.warn('[PKMSVV item loot]',e.message);}
    }
    return result;
   };
@@ -244,6 +257,15 @@
      G.PKMSVVBoxHubUI.openBox('rank');
     };
     section.querySelector('.pkmbx-prism-actions').append(action);
+    const sellAction=document.createElement('button');
+    sellAction.type='button';sellAction.className='btn small ghost pkmbx-prism-sell';
+    sellAction.textContent=vi?'Bán 3.250':'Sell 3,250';
+    sellAction.onclick=()=>{
+     try{sell(db.save);G.UI?.refreshCoins?.();ui.render();
+      G.UI?.toast?.(vi?'Đã bán Lăng Kính +3.250 PokéCoins.':'Reforge Prism sold for 3,250 PokéCoins.',2500);
+     }catch(e){G.UI?.toast?.(e.message,2500);}
+    };
+    section.querySelector('.pkmbx-prism-actions').append(sellAction);
     const stock=document.createElement('span');stock.className='pkmk-stock';
     stock.textContent='×'+count(s);section.querySelector('.pkmbx-prism-actions').append(stock);
     let cards=list.querySelector('.pkmk-cards');
@@ -303,7 +325,7 @@
   }
  }
  return {ITEM,PRICE,SHOP_RATE,PITY,MAX_DROPS_PER_RUN,RATES,valid,count,pity,today,slotRoll,
-  shopOffer,buy,resetBranch,enemyInfo,eligibleDefeat,defeated,resetRun,runDrops,isSoloPvE,enemyHook,
+  shopOffer,buy,sell,resetBranch,enemyInfo,eligibleDefeat,defeated,resetRun,runDrops,isSoloPvE,enemyHook,
   PITY_BATCH,flushPity,
   installShop,init};
 });
