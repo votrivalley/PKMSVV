@@ -726,6 +726,7 @@
   dexPane.innerHTML='<section class="pkmbx-panel pkmbx-dex-panel" role="dialog" aria-modal="true" aria-label="Pokédex">'+
    '<header class="pkmbx-head"><h2>◉ Pokémon</h2><button class="btn small" id="pkmbx-dex-close">'+L('✕ Đóng','✕ Close')+'</button></header>'+pcTabs('dex')+
 
+   '<p class="pkmbx-dex-rule" id="pkmbx-dex-rule" role="note">'+L('Chỉ hạ Pokémon trong Khám phá mới mở Pokédex và Chiêu mộ. Co-op, Arena và các chế độ khác không tính.', 'Only Pokémon defeated in Explore unlock Pokédex entries and Recruitment. Co-op, Arena and other modes do not count.')+'</p>'+
    '<div class="pkmbx-dex-toolbar"><input id="pkmbx-dex-search" type="search" autocomplete="off" placeholder="'+L('Tìm tên Pokémon hoặc số Pokédex','Search Pokémon name or Dex number')+'"/>'+
    '<button type="button" class="btn small" id="pkmbx-dex-fav" aria-pressed="false">'+L('☆ Yêu thích','☆ Favorites')+'</button>'+
    '<button type="button" class="btn small" id="pkmbx-dex-sort-toggle" aria-expanded="false">'+L('☷ Sắp xếp / Lọc','☷ Sort / Filter')+'</button></div>'+
@@ -830,8 +831,8 @@
   if(!has(infoDex)){
    detail.classList.add('pkmbx-dex-undefeated');
    detail.innerHTML='<div class="pkmbx-hub-hero"><canvas id="pkmbx-dex-hero" width="176" height="176"></canvas>'+
-    '<strong>#'+infoDex+' · ???</strong><p>'+L('Chưa gặp Pokémon này. Hãy khám phá bản đồ để mở khóa Chiêu mộ.',
-     'Encounter this Pokémon on a map to reveal it and add it to your Recruitment pool.')+'</p></div>';
+    '<strong>#'+infoDex+' · ???</strong><p>'+L('Chưa hạ Pokémon này trong Khám phá. Chỉ chiến thắng tại Khám phá mới mở Pokédex và Chiêu mộ.',
+     'Not defeated in Explore. Only Explore victories unlock Pokédex entries and Recruitment.')+'</p></div>';
    draw(detail.querySelector('#pkmbx-dex-hero'),infoDex,false,true,true);
    return;
   }
