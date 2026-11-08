@@ -36,7 +36,7 @@ jobs:
           jq -e --arg sha "$V20_SOURCE_SHA" \
             '.head_sha == $sha and .status == "completed" and .conclusion == "success"' \
             /tmp/v20-source-run.json
-      - name: Source regression: PokéBox, gameplay and approved 2.0 economy
+      - name: Source regression for PokéBox, gameplay and approved 2.0 economy
         run: |
           npm run test:pokebox:stage4
           node --test tests/pkmsvv-v20.test.cjs
