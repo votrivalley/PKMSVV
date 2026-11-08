@@ -28,6 +28,7 @@ function instance(myUid,opts={}){
  let seed=1234,network=[],origCast=0,spawns=0,damage=0,gameQuit=0;
  const G={
   DB:{save:{partner:myUid==='host'?25:6,owned:{25:true,6:true}}},
+  PKMSVVBoxHub:{arenaReady(){return [25,6].map(dex=>({id:'b1-'+dex+'-n',dex,shiny:false}));}},
   I18n:{lang:'vi'},Social:{uid:myUid,room:{id:'test',host:'host',mode:opts.mode||'arena',open:false,members},
    on(cb){roomListeners.push(cb)},setPlaying(p){this.playing=!!p},finishMatch(){this.room.open=true;for(const cb of roomListeners)cb('room');return Promise.resolve(this.room)}},
 
