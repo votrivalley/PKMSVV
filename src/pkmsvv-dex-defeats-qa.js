@@ -1,4 +1,4 @@
-/* Pokédex defeat discovery and Gacha gating — isolated QA only.
+/* Pokédex sighting and Recruitment gate — isolated QA only.
  * Current profile is never overwritten on failed Gacha or defeat save.
  * Old owned collections are grandfathered because historical defeated IDs
  * were not recorded; we never invent a fake enemy-kill history.
@@ -15,6 +15,8 @@
  }
  function unlocked(s,dex){
   const id=dexId(dex);if(!id||!s)return false;
+  // A visible encounter unlocks a species. Previously defeated ones stay valid.
+  if(s.pkmsvvSeenDex?.[id])return true;
   if(own(s,'pkmsvvDefeatedDex'))return !!s.pkmsvvDefeatedDex?.[id];
   // Legacy migration: don't erase previously earned collection progress.
   return legacyProfile(s)&&!!(s.owned?.[id]||s.shiny?.[id]);
@@ -46,6 +48,47 @@
    return false;
   }
  }
+
+ function markSeen(s,dex){
+  const id=dexId(dex),db=G.DB;
+  if(!id||!G.DEX_BY?.[id]||!s||db?.guest||unlocked(s,id))return false;
+  const old=s.pkmsvvSeenDex,had=own(s,'pkmsvvSeenDex');
+  if(had&&(!old||typeof old!=='object'||Array.isArray(old)))return false;
+  s.pkmsvvSeenDex={...(old||{}),[id]:true};
+  try{
+   if(db?.save===s&&db?.commit?.(true)===false)throw Error('Sighting commit failed');
+   return true;
+  }catch(err){
+   if(had)s.pkmsvvSeenDex=old;else delete s.pkmsvvSeenDex;
+   console.warn('[Pokédex encounter rollback]',err);return false;
+  }
+ }
+ function visible(e){
+  if(!e||e.dead||e.remote||e.pkmsvvBossGuard||e.pkmsvvGuardianOf!==undefined||
+   e.pkmsvvFriendly||e.isSupport||e.isPlayer||G.Game?.state!=='playing')return false;
+  if(G.Camera?.sees)return !!G.Camera.sees(e.x,e.y,72);
+  const pl=G.Game?.player;
+  return !!pl&&Math.abs(e.x-pl.x)<=500&&Math.abs(e.y-pl.y)<=340;
+ }
+ function noteSight(e){return visible(e)&&markSeen(G.DB?.save,e.dex||e.def?.dex);}
+ function installSight(){
+  const mgr=G.EnemyMgr;
+  if(typeof mgr?.add!=='function'||mgr.add._pkmsvvSight)return false;
+  const old=mgr.add;
+  function add(...args){const result=old.apply(this,args);if(result!==false&&args[0])noteSight(args[0]);return result;}
+  add._pkmsvvSight=true;mgr.add=add;
+  if(typeof mgr.update==='function'){
+   const prior=mgr.update;let tick=0;
+   mgr.update=function(...args){
+    const result=prior.apply(this,args);
+    if(++tick%30!==0||G.Game?.state!=='playing')return result;
+    const all=mgr.all?.();if(!all)return result;
+    let n=0;for(const enemy of all){if(++n>450)break;if(visible(enemy))noteSight(enemy);}
+    return result;
+   };
+  }
+  return true;
+ }
  function installEnemy(){
   const proto=G.Enemy?.prototype;
   if(!proto||typeof proto.die!=='function'||proto.die._pkmsvvDexDefeats)return false;
@@ -74,7 +117,7 @@
    if(!s||!Array.isArray(originals))return previous.apply(this,arguments);
    const allowed=originals.filter(p=>unlocked(s,p?.dex));
    if(!allowed.length){
-    G.UI?.toast?.(L('Hãy đánh bại Pokémon để mở khóa Gacha!','Defeat Pokémon to unlock Gacha!'),2600);
+    G.UI?.toast?.(L('Hãy gặp Pokémon ngoài bản đồ để mở Chiêu mộ!','Encounter Pokémon on the map to unlock Recruitment!'),2600);
     return null;
    }
    // Native Gacha's private rarity pool reads G.DEX synchronously. Temporarily
@@ -98,7 +141,7 @@
   wrapped._pkmsvvDexDefeats=true;gacha.pull=wrapped;
   return true;
  }
- function install(){return installEnemy()&&installGacha();}
+ function install(){return installEnemy()&&installGacha()&&installSight();}
  install();
- G.PKMSVVDexDefeats={unlocked,markDefeated,ensureLedger,install,legacyProfile};
+ G.PKMSVVDexDefeats={unlocked,markDefeated,markSeen,noteSight,ensureLedger,install,legacyProfile};
 })();
