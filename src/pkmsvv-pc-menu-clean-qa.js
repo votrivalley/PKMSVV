@@ -196,9 +196,10 @@
    if(!button&&type==='arena'){
     const list=menu.querySelector('.menu-right .menu-list');
     const item=[...list?.children||[]].find(node=>{
+     const go=node.getAttribute('data-go')||node.querySelector('[data-go]')?.getAttribute('data-go')||'';
      const label=(node.querySelector('.pkmsvv-menu-label,.menu-label,strong')?.textContent||
       node.textContent||'').trim().toLowerCase();
-     return label==='arena'||label.startsWith('arena ');
+     return /arena/i.test(go)||label==='arena'||label.startsWith('arena ');
     });
     // Some compiled builds render Arena as a plain button, not .menu-item.
     // Keep the native event target and keyboard focus rather than a proxy.
