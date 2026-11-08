@@ -337,6 +337,14 @@ G.PKMSVVEvo = (() => {
     pl.anim.dir = dir;
     pl.shiny = pl.shiny && G.Sprites.hasShiny(after.dex);
     const converted=eeveeChoice?convertNormal(pl,after.dex):null;
+    // Evolution must NEVER shrink earned 3–8 permanent Skill Awakening slots.
+    // Accounts that already unlocked 8 slots retain them after any form change.
+    // PvP uses its independent equalized fixed three-move duel loadout.
+    if(!G.PKMSVVArenaPvp?.active){
+      const capacity=Number(G.PKMSVVSkillTrack?.progress?.(G.DB?.save,pl.kills)?.count);
+      if(Number.isFinite(capacity)&&capacity>=3&&capacity<=8)
+        pl.maxMoves=Math.max(Number(pl.maxMoves)||3,capacity);
+    }
     pl.pkmEvoHistory.push({ from: r.from, to: r.to, at: pl.level, converted:converted||null });
     pl.pkmEvoFromMon=before;
     pl.pkmEvoSwapChoices=null;
