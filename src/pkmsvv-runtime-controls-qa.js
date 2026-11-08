@@ -14,8 +14,34 @@
  let fast=false,autoDash=false,held=false,heldTimer=null,choiceToken=null,choicePending=false;
  let lastCast=0,lastUI=0,lastChoiceShow=false;
  function toast(vi,en){G.UI?.toast?.(L(vi,en),2000);}
+ // Never speed up a real multiplayer simulation or any Arena match.
+ // AI matches are eligible only when the room is host-owned and every other
+ // member is a bot. Unknown peer metadata fails closed, rather than desyncing.
+ function arenaMatch(){
+  return !!(G.PKMSVVArenaSolo?.active||G.PKMSVVChampionArena?.active||
+   G.PKMSVVArenaPvp?.active||G.ArenaPvp?.active);
+ }
+ function isBot(member){return !!(member?.bot||member?.lanBot||member?.isAI||member?.ai);}
+ function canSpeed(){
+  if(!playing()||arenaMatch())return false;
+  const room=G.Social?.room,mode=String(room?.mode||'').toLowerCase();
+  if(['coop','co-op','arena','champion','pvp'].includes(mode))return false;
+  if(G.Coop?.mode==='coop'||G.Coop?.mode==='arena')return false;
+  const members=room?.members;
+  const humans=Array.isArray(members)?members.filter(m=>m&&!isBot(m)):null;
+  if(humans?.length>1)return false;
+  if(G.Coop?.active){
+   if(!room?.isHost||!['royale','eggrush'].includes(mode)||
+     !humans||humans.length!==1)return false;
+   const uid=G.Social?.uid||G.Game?.player?.uid;
+   if(uid&&humans[0]?.uid!==uid)return false;
+   if(!G.Royale?.active&&!G.EggRush?.active)return false;
+  }
+  return true;
+ }
  function setSpeed(on){
   if(typeof G.Game?.debugSpeed!=='function')return false;
+  if(on&&!canSpeed())return false;
   fast=!!on;
   G.Game.debugSpeed(fast?1.5:1);
   refreshLabels();return true;
@@ -86,7 +112,8 @@
   }
   if(!indicator){indicator=document.createElement('span');indicator.id='pkmsvv-active-auto';
    indicator.className='pkmsvv-active-auto';document.body.append(indicator);}
-  button.hidden=!playing();indicator.hidden=!playing()||!autoDash;
+  if(fast&&!canSpeed())setSpeed(false); // room mode/peer changed mid-run
+  button.hidden=!canSpeed();indicator.hidden=!playing()||!autoDash;
   refreshLabels();
  }
  function toggleDash(){
@@ -149,10 +176,17 @@
   wrapped._pkmsvvRuntimeControls=true;G.Game.startRun=wrapped;
  }
  function frame(ts){
-  if(ts-lastUI>=250){lastUI=ts;ensureSpeed();ensureSettings();ensureLevelup();}
+  if(ts-lastUI>=250){
+   lastUI=ts;ensureSpeed();ensureSettings();ensureLevelup();
+   // Royale already checks this from its native draw loop; avoid a duplicate.
+   if(!G.Royale?.active&&(G.EggRush?.active||G.PKMSVVArenaSolo?.active||
+     G.PKMSVVChampionArena?.active||G.PKMSVVArenaPvp?.active)){
+    G.PKMSVVEvo?.tryLiveCompetitive?.(G.Game?.player,G.Game?.st?.time||0);
+   }
+  }
   if(autoDash&&ts-lastCast>=180){lastCast=ts;castTowardsNearest();}
   if(typeof requestAnimationFrame==='function')requestAnimationFrame(frame);
  }
  if(typeof requestAnimationFrame==='function')requestAnimationFrame(frame);
- G.PKMSVVRuntimeControlsQA={full,enabled,setEnabled,setSpeed,toggleDash,target,castTowardsNearest,ensureLevelup,ensureSettings};
+ G.PKMSVVRuntimeControlsQA={full,enabled,setEnabled,canSpeed,arenaMatch,setSpeed,toggleDash,target,castTowardsNearest,ensureLevelup,ensureSettings,ensureSpeed};
 })();
