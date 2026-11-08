@@ -230,3 +230,18 @@
 #pkmsvv-pokebox-overlay :is(button,[role=button],input,select):focus-visible{
  outline:3px solid #ffe090!important;outline-offset:2px!important;
 }
+
+/* Original PC / Co-op / Arena pixel-art WebP strip integrated in game.
+   3 cells of 36px, rendered at 34px (native sidebar icon grid). */
+#scr-menu .menu-item>.mi-ico.pkmsvv-new-menu-icon{
+ display:block!important;width:34px!important;height:34px!important;
+ padding:0!important;margin:0!important;border:0!important;
+ background-image:url('../images/pkmsvv-menu-icons.webp')!important;
+ background-repeat:no-repeat!important;
+ background-size:102px 34px!important;
+ image-rendering:pixelated!important;
+ font-size:0!important;line-height:0!important;
+}
+#scr-menu .menu-item>.pkmsvv-menu-icon-pc{background-position:0 0!important}
+#scr-menu .menu-item>.pkmsvv-menu-icon-coop{background-position:-34px 0!important}
+#scr-menu .menu-item>.pkmsvv-menu-icon-arena{background-position:-68px 0!important}
