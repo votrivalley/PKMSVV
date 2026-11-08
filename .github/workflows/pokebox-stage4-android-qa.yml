@@ -65,9 +65,16 @@ jobs:
       - name: Fetch and verify Apktool 3.0.3 (Android 16 resource support)
         shell: bash
         run: |
-          curl --fail --location --retry 8 --retry-all-errors --retry-delay 2 --silent --show-error \
+          # GitHub release CDN sometimes returns 504 to Actions runners.
+          # SourceForge is a third-party mirror, so ALWAYS verify the upstream SHA256.
+          if ! curl --fail --location --retry 3 --retry-all-errors --retry-delay 2 --silent --show-error \
             https://github.com/iBotPeaches/Apktool/releases/download/v3.0.3/apktool_3.0.3.jar \
-            --output apktool_3.0.3.jar
+            --output apktool_3.0.3.jar; then
+            rm -f apktool_3.0.3.jar
+            curl --fail --location --retry 5 --retry-all-errors --retry-delay 3 --silent --show-error \
+              https://downloads.sourceforge.net/project/apktool.mirror/v3.0.3/apktool_3.0.3.jar \
+              --output apktool_3.0.3.jar
+          fi
           echo "dbf930b076c6b9be08d57c449cacefc3bdd6b71ebd59b3066fc0e1f5b14f9423  apktool_3.0.3.jar" | sha256sum -c -
           java -jar apktool_3.0.3.jar --version
           test -s "$ANDROID_HOME/build-tools/36.0.0/apksigner" || sdkmanager --install "build-tools;36.0.0"
