@@ -169,9 +169,11 @@ async function main(){
   assert.ok(abilityQA.abilityRows>0,'Pokédex must render real Ability descriptions');
   assert.notEqual(abilityQA.descriptionColor,abilityQA.rowBackground,
    'Ability text must contrast with the pale background');
-  const pureDex=await evaluate("(()=>{G.PKMSVVBoxHubUI.openDex();return ({overlay:!!document.querySelector('#pkmbx-dex-overlay'),search:!!document.querySelector('#pkmbx-dex-search'),hasEvolutionPane:!!document.querySelector('#pkmbx-dex-details'),itemActions:!!document.querySelector('#pkmbx-dex-overlay [data-hub-tm],#pkmbx-dex-overlay [data-pkmbx-use]'),cards:document.querySelectorAll('#pkmbx-dex-list button').length,insidePC:document.querySelector('#pkmsvv-pokebox-overlay')?.contains(document.querySelector('#pkmbx-dex-overlay')),tabs:[...document.querySelectorAll('#pkmbx-dex-overlay [data-pc-tab]')].map(b=>b.dataset.pcTab),pcHubHidden:document.querySelector('.pkmbx-hub-panel')?.hidden})})()");
+  const pureDex=await evaluate("(()=>{G.PKMSVVBoxHubUI.openDex();return ({overlay:!!document.querySelector('#pkmbx-dex-overlay'),search:!!document.querySelector('#pkmbx-dex-search'),hasEvolutionPane:!!document.querySelector('#pkmbx-dex-details'),itemActions:!!document.querySelector('#pkmbx-dex-overlay [data-hub-tm],#pkmbx-dex-overlay [data-pkmbx-use]'),cards:document.querySelectorAll('#pkmbx-dex-list button').length,insidePC:document.querySelector('#pkmsvv-pokebox-overlay')?.contains(document.querySelector('#pkmbx-dex-overlay')),tabs:[...document.querySelectorAll('#pkmbx-dex-overlay [data-pc-tab]')].map(b=>b.dataset.pcTab),pcHubHidden:document.querySelector('.pkmbx-hub-panel')?.hidden,exploreRule:document.querySelector('#pkmbx-dex-rule')?.textContent,exploreRuleVisible:(()=>{const node=document.querySelector('#pkmbx-dex-rule');return !!node&&getComputedStyle(node).display!=='none'&&node.getClientRects().length>0})()})})()");
   assert.equal(pureDex.overlay,true);
   assert.equal(pureDex.search,true);
+  assert.match(pureDex.exploreRule,/Chỉ hạ Pokémon trong Khám phá|Only Pokémon defeated in Explore/,'Pokédex must describe Explore-only defeats');
+  assert.equal(pureDex.exploreRuleVisible,true,'Explore rule must be visible above filters');
   assert.equal(pureDex.hasEvolutionPane,true);
   assert.equal(pureDex.insidePC,true,'Pokédex must be inside in-game PC');
   assert.deepEqual(pureDex.tabs,['box','dex','upgrade'],'Pokémon tabs must be Box → Dex → Upgrades');
