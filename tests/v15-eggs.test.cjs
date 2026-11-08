@@ -919,3 +919,29 @@ test('Mew AOE is 1.5x wide with a visible high contrast ring; both hatch clocks 
  assert.match(solo,/cx,cy,9,radius\*\.78,'#ffffff',\.75,3/);
  assert.match(solo,/G\.U\.dist2\(e\.x,e\.y,it\.x,it\.y\)<375\*375/);
 });
+
+
+test('Riolu/Wynaut buffs modify real physical/special move damage, expire and never stack by wrapping twice',()=>{
+ const G={Game:{st:{time:10}},Moves:{BY_ID:{
+  tackle:{cat:'physical'},'shadow-ball':{cat:'special'}}},I18n:{lang:'vi'}};
+ vm.runInNewContext(read('src/v15/eggs.js'),{G,Math,Number,Object});
+ const q=G.PKMSVVEggs;
+ const pl={atkFor:()=>100};
+ assert.equal(q.applyAttackBuffs(pl),true);
+ const original=pl.atkFor;
+ assert.equal(q.applyAttackBuffs(pl),true);
+ assert.equal(pl.atkFor,original,'multiple installs must not compound damage bonuses');
+ pl.pkmsvvSupportPhysical={amount:.25,until:18};
+ pl.pkmsvvSupportSpecial={amount:.30,until:15};
+ assert.equal(pl.atkFor({id:'tackle'}),125);
+ assert.equal(pl.atkFor({id:'shadow-ball'}),130);
+ assert.equal(pl.atkFor({id:'unknown',cat:'status'}),100);
+ G.Game.st.time=16;
+ assert.equal(pl.atkFor({id:'shadow-ball'}),100,'special buff expiration');
+ assert.equal(pl.atkFor({id:'tackle'}),125);
+ G.Game.st.time=18;
+ assert.equal(pl.atkFor({id:'tackle'}),100,'physical buff expiration');
+ const bogus={atkFor:()=>123};
+ q.applyAttackBuffs(bogus);
+ assert.equal(bogus.atkFor({cat:'physical'}),123,'no lingering cross-actor attack effects');
+});
