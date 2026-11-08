@@ -1,11 +1,9 @@
-/* PKMSVV v1.4 — milestone trial boss encounters at 10 and 20 minutes.
- * Existing Judgment at 30:00 is the third milestone.
- * Only host spawns bosses; enemies synchronize through existing Co-op events.
- */
+/* PKMSVV legendary pacing: one 15-minute trial, one 30-minute Judgment.
+ * Never interrupt a Region Badge boss; regular modes keep their own rules.
+ * Only the host spawns trial bosses. */
 G.PKMSVV14=(()=>{
  const checkpoints=[
-  {at:600,label:['Thử thách 10 phút: Đợt Tinh Anh!','10-minute challenge: Elite Wave!'],hp:7300,dmg:42,bossRarity:4},
-  {at:1200,label:['Thử thách 20 phút: Huyền Thoại!','20-minute challenge: Legendary Trial!'],hp:18500,dmg:61,bossRarity:5}
+  {at:900,label:['Thử thách 15 phút: Huyền Thoại!','15-minute Legendary Trial!'],hp:44000,dmg:64,bossRarity:5}
  ];
  let done=new Set();
  const L=pair=>G.I18n&&G.I18n.lang==='vi'?pair[0]:pair[1];
@@ -24,7 +22,7 @@ G.PKMSVV14=(()=>{
     xp:Math.round(c.hp/10),behavior:mon.types.some(x=>['psychic','electric','ghost','fire'].includes(x))?'ranged':'charger',
     shotDmg:Math.round(c.dmg*0.55),shotCd:2,range:290};
   const e=new G.Enemy(def,x,y,{hp:1,spd:1,dmg:1},true);
-  e.pkmsvvMilestone=c.at;
+  e.pkmsvvMilestone=c.at; // whitelist for legend-only timing rules
   G.EnemyMgr.add(e);
   G.Sprites.preload([mon.dex],5000);
   G.Spawner.say(L(c.label)+' '+mon.name,4,true);
@@ -32,7 +30,9 @@ G.PKMSVV14=(()=>{
   return true;
  }
  function update(t,who){
-  if(G.Rift.inArena||G.Judgment.active||G.EnemyMgr.bossAlive())return;
+  // In Explore the named Region Boss is the sole minute-15 legend; in
+  // regular modes the 30-minute Judgment owns the second milestone.
+  if(G.PKMSVVQuickRegion?.active||G.Rift?.inArena||G.Judgment?.active||G.EnemyMgr?.bossAlive?.())return;
   for(const c of checkpoints){
     if(done.has(c.at)||t<c.at)continue;
     // Do not spawn two milestone bosses at once.
