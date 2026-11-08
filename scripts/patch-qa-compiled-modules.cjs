@@ -76,6 +76,18 @@ for(const filename of targets){
  const original=fs.readFileSync(filename,'utf8');
  let next=original;
  for(const [label,src] of mods)next=replaceModule(next,label,src);
+ // This baseline embeds the original pickup IIFE with minified per-run Orb
+ // counter "e". Patch BOTH verified exact native Orb rolls (and only those).
+ // 45% -> 22.5% boss, 6% -> 3% normal. The 150s stagger prevents the
+ // former 10-drop run cap being exhausted before a MAX+MAX Fusion mid-run.
+ // Guaranteed starter Orb and the player's FIFO bag are untouched.
+ for(const [old,newValue] of [
+  ['e<10&&Math.random()<.45','e<10&&Number(G.Game?.st?.time??0)>=e*150&&Math.random()<.225'],
+  ['e<10&&Math.random()<.06','e<10&&Number(G.Game?.st?.time??0)>=e*150&&Math.random()<.03']
+ ]){
+  if(next.split(old).length!==2)throw Error('QA Orb roll anchor drift: '+old);
+  next=next.replace(old,newValue);
+ }
  new vm.Script(next,{filename:'patched-qa-app.min.js'});
  fs.writeFileSync(filename,next,'utf8');
  const stat=fs.statSync(filename);
