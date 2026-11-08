@@ -63,7 +63,7 @@ test('QA UI and packaging must show black silhouettes until a defeated entry exi
  const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub.css'),'utf8');
  assert.match(ui,/PKMSVVDexDefeats\?\.unlocked/);
  assert.match(ui,/pkmbx-dex-undefeated/);
- assert.match(ui,/Chưa đánh bại Pokémon này/);
+ assert.match(ui,/Chưa gặp Pokémon này/);
  assert.match(css,/pkmbx-dex-card\.is-undefeated/);
  for(const filename of ['scripts/build-pokebox-stage1-qa.cjs','scripts/build-pokebox-stage1-pc-qa.cjs','scripts/patch-pokebox-stage4-apk-qa.cjs']){
   const body=fs.readFileSync(path.join(__dirname,'..',filename),'utf8');
