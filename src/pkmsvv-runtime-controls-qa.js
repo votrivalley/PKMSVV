@@ -117,6 +117,37 @@
   }
   wrapped._pkmsvvMaxAutoPick=true;run.showLevelUp=wrapped;return true;
  }
+ // Arena gives tournament wins/points, never persistent wild Shiny claims.
+ // Suppress the REAL callback and DB grant, not only the results decoration.
+ // Both wrappers are guarded by active mode, so Explore/normal Co-op continue
+ // granting catches with the original implementation.
+ function ensureArenaShinyGuard(){
+  const caught=G.onShinyCaught;
+  if(typeof caught==='function'&&!caught._pkmsvvArenaNoShiny){
+   const wrapper=function(...args){
+    if(arenaMatch())return false;
+    return caught.apply(this,args);
+   };
+   wrapper._pkmsvvArenaNoShiny=true;G.onShinyCaught=wrapper;
+  }
+  const db=G.DB,grant=db?.grantShiny;
+  if(typeof grant==='function'&&!grant._pkmsvvArenaNoShiny){
+   const wrapper=function(...args){
+    if(arenaMatch())return false;
+    return grant.apply(this,args);
+   };
+   wrapper._pkmsvvArenaNoShiny=true;db.grantShiny=wrapper;
+  }
+  const show=G.RunUI?.showOver;
+  if(typeof show==='function'&&!show._pkmsvvArenaNoShiny){
+   const wrapper=function(summary,...rest){
+    if(arenaMatch()&&summary&&typeof summary==='object')
+     summary={...summary,caught:[]};
+    return show.call(this,summary,...rest);
+   };
+   wrapper._pkmsvvArenaNoShiny=true;G.RunUI.showOver=wrapper;
+  }
+ }
  function ensureSpeed(){
   let button=byId('pkmsvv-speed-button'),indicator=byId('pkmsvv-active-auto');
   if(!button){
@@ -193,7 +224,7 @@
  }
  function frame(ts){
   if(ts-lastUI>=250){
-   lastUI=ts;installAutoPick();ensureSpeed();ensureSettings();ensureLevelup();
+   lastUI=ts;installAutoPick();ensureArenaShinyGuard();ensureSpeed();ensureSettings();ensureLevelup();
     const state=G.Game?.state;
     if(fast&&state==='playing'&&lastSpeedState!=='playing'&&canSpeed())
      G.Game?.debugSpeed?.(1.5); // restore after a level/choice popup
@@ -208,5 +239,5 @@
   if(typeof requestAnimationFrame==='function')requestAnimationFrame(frame);
  }
  if(typeof requestAnimationFrame==='function')requestAnimationFrame(frame);
- G.PKMSVVRuntimeControlsQA={full,maxLevel,enabled,setEnabled,canSpeed,arenaMatch,setSpeed,toggleDash,target,castTowardsNearest,ensureLevelup,installAutoPick,ensureSettings,ensureSpeed};
+ G.PKMSVVRuntimeControlsQA={full,maxLevel,enabled,setEnabled,canSpeed,arenaMatch,setSpeed,toggleDash,target,castTowardsNearest,ensureLevelup,installAutoPick,ensureArenaShinyGuard,ensureSettings,ensureSpeed};
 })();
