@@ -113,6 +113,12 @@ for(const filename of targets){
  const withPvpNet='()=>!(!G.Royale?.active&&!G.EggRush?.active&&!G.PKMSVVArenaPvp?.active)';
  next=next.slice(0,netAt)+withPvpNet+next.slice(netAt+nativeNet.length);
  console.log('QA_ARENA_PVP_NONBLOCKING_NET_QUEUE_PATCHED',netCount);
+ // QA audit: base Player must allow continued move training after evolution.
+ for(const key of ['maxMoves=','maxMoves =','maxMoves:']){
+  const at=next.indexOf(key);
+  console.log('QA_NATIVE_MAX_MOVES',key,next.split(key).length-1,
+   at<0?'absent':next.slice(Math.max(0,at-70),at+key.length+45));
+ }
  // This baseline embeds the original pickup IIFE with minified per-run Orb
  // counter "e". Patch BOTH verified exact native Orb rolls (and only those).
  // 45% -> 22.5% boss, 6% -> 3% normal. The 150s stagger prevents the
