@@ -28,7 +28,7 @@ function instance(myUid,opts={}){
  let seed=1234,network=[],origCast=0,spawns=0,damage=0,gameQuit=0;
  const G={
   DB:{save:{partner:myUid==='host'?25:6,owned:{25:true,6:true}}},
-  PKMSVVBoxHub:{arenaReady(){return [25,6].map(dex=>({id:'b1-'+dex+'-n',dex,shiny:false}));}},
+  PKMSVVBoxHub:{arenaReady(){return opts.ready===undefined?[25,6].map(dex=>({id:'b1-'+dex+'-n',dex,shiny:false})):opts.ready;}},
   I18n:{lang:'vi'},Social:{uid:myUid,room:{id:'test',host:'host',mode:opts.mode||'arena',open:false,members},
    on(cb){roomListeners.push(cb)},setPlaying(p){this.playing=!!p},finishMatch(){this.room.open=true;for(const cb of roomListeners)cb('room');return Promise.resolve(this.room)}},
 
@@ -64,6 +64,31 @@ function instance(myUid,opts={}){
  return {G,api,me,other,document,docEvents,windowEvents,elements,network,emit,disconnect,notifyRoom,frame,start,cfg,advance(t){now+=t},get damage(){return damage},
   get spawns(){return spawns},get gameQuit(){return gameQuit}};
 }
+test('Human Arena PvP chooses only a Ready Team Pokémon, not the unready active partner',()=>{
+ const ready=[{id:'ready-6',dex:6,shiny:false}];
+ const host=instance('host',{ready});
+ assert.equal(host.G.DB.save.partner,25);
+ host.start();
+ assert.equal(host.api.active,true);
+ assert.equal(host.api.confirmPick(),true);
+ host.frame(10.1);
+ assert.equal(host.me.dex,6,'the first Ready slot wins over an owned but unready partner');
+ assert.equal(host.G.DB.save.partner,25,'PvP choice does not rewrite PokéBox active partner');
+ assert.equal(ready.length,1,'Ready Team cannot be consumed by PvP');
+});
+test('Human Arena PvP refuses an empty team and does not silently pick all owned species',()=>{
+ const host=instance('host',{ready:[]});
+ host.start();
+ assert.equal(host.api.active,false);
+ assert.equal(host.G.Coop.active,false,'must not leave an unguarded LAN match running');
+});
+test('PvP confirmation rechecks Ready Team after a pending lobby selection',()=>{
+ const ready=[{id:'ready-25',dex:25,shiny:false}];
+ const host=instance('host',{ready});host.start();
+ ready.length=0; // e.g. a save change while the ten-second picker is open
+ assert.equal(host.api.confirmPick(),false,'stale ready slot cannot confirm');
+ assert.equal(host.api.stage,'select');
+});
 test('Real Arena rooms use human identities and reject AI/no-second-player modes',()=>{
  const host=instance('host');host.start();
  assert.equal(host.api.active,true);
