@@ -7,10 +7,10 @@ const save=(p,s)=>fs.writeFileSync(path.join(game,p),s,'utf8');
 function patch(p,a,b){const s=load(p);if(s.split(a).length!==2)throw Error('Orb FIFO anchor changed '+p+': '+a.slice(0,85));save(p,s.replace(a,b));}
 patch('js/entities/pickup.js',
  "      if (plain) return;\n      if(runOrbDrops<10&&Math.random()<0.45)",
- "      if (plain) return;\n      if((G.Coop.active?G.Coop.players().some(G.Orbs.eligible):G.Orbs.ready(G.Game.player))&&runOrbDrops<10&&Math.random()<0.45)");
+ "      if (plain) return;\n      if((G.Coop.active?G.Coop.players().some(G.Orbs.eligible):G.Orbs.ready(G.Game.player))&&runOrbDrops<10&&Number(G.Game?.st?.time??0)>=runOrbDrops*150&&Math.random()<0.225)");
 patch('js/entities/pickup.js',
  "    if(runOrbDrops<10&&Math.random()<0.06)",
- "    if((G.Coop.active?G.Coop.players().some(G.Orbs.eligible):G.Orbs.ready(G.Game.player))&&runOrbDrops<10&&Math.random()<0.06)");
+ "    if((G.Coop.active?G.Coop.players().some(G.Orbs.eligible):G.Orbs.ready(G.Game.player))&&runOrbDrops<10&&Number(G.Game?.st?.time??0)>=runOrbDrops*150&&Math.random()<0.03)");
 patch('js/entities/pickup.js',
  "        if (o.dead && players.length > 1) continue;",
  "        if (o.dead && players.length > 1) continue;\n        if(p.kind==='orb'&&!G.Orbs.canTake(o,p.value))continue;");
@@ -33,4 +33,4 @@ patch('js/game.js',
  const hud=fs.readFileSync(path.join(root,'src','v14','orb-hud-block.txt'),'utf8');
  save(p,s.slice(0,start)+hud+s.slice(end));
 }
-console.log('PKMSVV v1.4: learned-eight gating, FIFO Orb collection, per-player Co-op eligibility, minimal 3/1 HUD.');
+console.log('PKMSVV v1.4: learned-eight gating, 50% rarer, time-spaced FIFO Orb collection, per-player Co-op eligibility, minimal 3/1 HUD.');
