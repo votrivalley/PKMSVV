@@ -130,7 +130,7 @@ G.PKMSVVEggs=(()=>{
   G.DB.commit(true); // Persist BOTH normal hatch discovery and special Shiny discovery.
   it.statScale=it.shiny?1:MIN_STAT+Math.random()*(MAX_STAT-MIN_STAT);
   if(it.shiny)it.cooldown=Math.max(0,it.cooldown||0)*SHINY_CAST_RATIO;
-  it.maxHp=Math.max(1,Math.round((player.maxHp||100)*it.statScale));
+  it.maxHp=Math.max(1,Math.round((player.maxHp||100)*it.statScale*2));
   it.hp=it.maxHp;
   it.atk=Math.max(1,Number(player.atk||player.baseAtk||10)*it.statScale);
   it.def=Math.max(0,Number(player.reduction||0)*it.statScale);
@@ -317,12 +317,28 @@ G.PKMSVVEggs=(()=>{
   }
   it.effectFlash=.45;return true;
  }
- // Explicit owner group. Co-op human teammates and enemy boss guardians are NOT
- // part of the player's owned-support buff group.
- function ownSquad(pl){return [pl,...support().filter(a=>a!==pl)];}
+ // Team heals include every living member of a cooperative party, while
+ // offensive boosts and shields remain with the owner's support squad.
+ // Never heal opponents in Royale / Egg Rush / Arena.
+ function ownSquad(pl,heal=false){
+  const members=[pl,...support().filter(a=>a!==pl)];
+  const coop=G.Coop;
+  if(heal&&coop?.active&&!G.Royale?.active&&!G.EggRush?.active&&
+   !G.PKMSVVArenaSolo?.active&&!G.PKMSVVChampionArena?.active){
+   const remote=typeof coop.players==='function'?coop.players():[];
+   for(const mate of Array.isArray(remote)?remote:[]){
+    if(!mate||mate.dead||mate.isEnemy||mate.enemy||mate.hostile||
+       (pl.team!==undefined&&mate.team!==undefined&&pl.team!==mate.team)||
+       (pl.teamId!==undefined&&mate.teamId!==undefined&&pl.teamId!==mate.teamId)||
+       members.includes(mate))continue;
+    members.push(mate);
+   }
+  }
+  return members;
+ }
  function teamBuff(pl,it,spec){
   const affected=[];
-  for(const ally of ownSquad(pl)){
+  for(const ally of ownSquad(pl,spec.role==='heal')){
    if(ally.dead||!Number.isFinite(ally.maxHp)||ally.maxHp<=0||!Number.isFinite(ally.hp))continue;
    const amount=Math.max(1,ally.maxHp*spec.power*it.statScale*(it.affinityBoost||1)*(it.shiny?SHINY_SKILL_POWER:1));
    if(spec.role==='heal'){
