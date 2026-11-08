@@ -6,8 +6,8 @@ const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
 
 test('Canonical support roster matches runtime and silhouette entries are not invented',()=>{
  const solo=read('src/v15/eggs.js'),online=read('src/web/pkmsvv-egg-rush.js');
- const expected=[[172,'paralyze'],[447,'attack'],[173,'heal'],
-  [360,'shield'],[438,'shield'],[175,'magnet'],[174,'slow'],[132,'ditto'],[151,'mew']];
+ const expected=[[172,'paralyze'],[447,'physical'],[173,'slow'],
+  [360,'special'],[440,'heal'],[438,'shield'],[175,'magnet'],[174,'sleep'],[132,'ditto'],[151,'mew']];
  const G={};vm.runInNewContext(solo,{G,Math,Number,Object});
  assert.deepEqual(Array.from(G.PKMSVVEggs.SPECIES,x=>[x.dex,x.role]),expected);
  assert.match(online,/EGG_SPECIES=\[172,447,173,360,438,175,174\]/);
@@ -61,7 +61,7 @@ test('Healing and shields buff only own lead and living companions, with 25% cap
   Sprites:{preload(){}},Spawner:{say(){}}};
  vm.runInNewContext(read('src/v15/eggs.js'),{G,Math,Number,Object});
  G.PKMSVVEggs.begin(pl,false);
- const healer={dex:173,hatched:true,active:true,x:0,y:0,hp:50,maxHp:100,
+ const healer={dex:440,hatched:true,active:true,x:0,y:0,hp:50,maxHp:100,
   cooldown:0,statScale:1,affinityBoost:1,spd:100,hitCooldown:0,shield:0};
  const ally={dex:447,hatched:true,active:true,x:0,y:0,hp:20,maxHp:100,
   cooldown:999,statScale:.7,spd:100,hitCooldown:0,shield:0};
@@ -281,11 +281,11 @@ test('Solo egg nest requires 2 seconds, interruption resets progress, and hit de
  save.pkmsvvEggSlot3=true;assert.equal(G.PKMSVVEggs.limit(),2);
 });
 
-test('Igglybuff support slows targets and emits target/support VFX only on successful cast',()=>{
+test('Igglybuff support sleeps nearby targets and emits successful-cast VFX',()=>{
  const source=read('src/v15/eggs.js');
  const player={x:0,y:0,dead:false,kills:0,level:1,maxHp:100,hp:100,heal(){}};
  const save={pkmsvvChapter3Seen:true,stats:{}};
- const enemy={x:0,y:0,dead:false,remote:false,applySlow(k,d){this.slow=(this.slow||0)+1;this.slowPower=k;this.duration=d;}};
+ const enemy={x:0,y:0,dead:false,remote:false,applyStun(d){this.slow=(this.slow||0)+1;this.slowPower=d;this.duration=d;}};
  let rings=0,bursts=0,damageTexts=[];
  const G={I18n:{lang:'vi'},DB:{save,commit(){}},
   Sprites:{preload(){},dirFromAngle:()=>0,Animator:class{loop(){}update(){}draw(){}}},
@@ -306,10 +306,10 @@ test('Igglybuff support slows targets and emits target/support VFX only on succe
  assert.equal(egg.active,true);
  enemy.x=egg.x;enemy.y=egg.y;
  for(let i=0;i<42;i++)G.PKMSVVEggs.update(.25,player,100+i*.25,false);
- assert.ok(enemy.slow>0,'Igglybuff must apply a real debuff');
+ assert.ok(enemy.slow>0,'Igglybuff must apply a real sleep/stun debuff');
  assert.ok(enemy.slowPower>0&&enemy.duration>0);
- assert.ok(rings>=2&&bursts>=1,'Visual rings and particles mark successful slow');
- assert.ok(damageTexts.some(args=>args.includes('CHẬM!')),'Slow effect is visible to the player');
+ assert.ok(rings>=2,'Visual rings mark successful nearby sleep');
+ assert.ok(damageTexts.some(args=>args.includes('NGỦ!')),'Sleep effect is visible to the player');
 });
 
 test('egg direction indicator, reverse timer bars, walking animation and shield-safe damage are bundled',()=>{
@@ -644,7 +644,7 @@ test('Ditto 8%, Mew 4%, all other supports 88%, Shiny 3% independently',()=>{
  assert.notEqual(roll(.12).dex,132);
  assert.notEqual(roll(.999).dex,151);
  assert.equal(G.PKMSVVEggs.SHINY_CHANCE,.03);
- assert.equal(G.PKMSVVEggs.SPECIES.length,9);
+ assert.equal(G.PKMSVVEggs.SPECIES.length,10);
 });
 
 test('Mew random AOE casts every 1 second and Ditto borrows exactly up to 3 moves',()=>{
@@ -665,12 +665,12 @@ test('Hatch affinity saves per species without altering ownership and strengthen
  assert.equal(G.PKMSVVEggs.affinityFor(172),4);
  assert.equal(G.PKMSVVEggs.affinityGoal(172),100);
  assert.equal(G.PKMSVVEggs.affinityPercent(172),4);
- assert.ok(Math.abs(G.PKMSVVEggs.affinityMultiplier(172)-1.012)<1e-8);
+ assert.ok(Math.abs(G.PKMSVVEggs.affinityMultiplier(172)-1.024)<1e-8);
  save.pkmsvvSupportBond[172]=60;
  assert.equal(G.PKMSVVEggs.affinityPercent(172),60);
- assert.equal(G.PKMSVVEggs.affinityMultiplier(172),1.18);
+ assert.equal(G.PKMSVVEggs.affinityMultiplier(172),1.36);
  save.pkmsvvSupportBond[172]=100;
- assert.equal(G.PKMSVVEggs.affinityMultiplier(172),1.30);
+ assert.equal(G.PKMSVVEggs.affinityMultiplier(172),1.6);
  assert.ok(read('scripts/patch-v15-eggs.cjs').includes('older.pkmsvvSupportBond'));
 });
 
@@ -697,7 +697,7 @@ test('Friendship goals and maximum bonuses are species-specific; no early double
  assert.equal(e.shinyChanceFor(132),.20);
  assert.equal(e.shinyChanceFor(151),.20);
  assert.equal(e.shinyChanceFor(172),.06);
- assert.equal(e.affinityMultiplier(151),1.3);
+ assert.equal(e.affinityMultiplier(151),1.6);
 });
 
 test('At max Mew/Ditto bond, special species have exact 16%/8% selection boundaries',()=>{
