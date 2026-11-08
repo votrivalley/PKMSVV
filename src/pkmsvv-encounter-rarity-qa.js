@@ -42,6 +42,13 @@ G.PKMSVVEncounterRarity=(()=>{
   if(!eligibleEnemy(e)||done.has(e))return false;
   done.add(e);e.pkmsvvEncounterTiered=true;
   const isRift=!!G.Rift?.inArena,index=region(),dex=choose(index,isRift,!!(e.boss||e.isBoss));
+  // Every ordinary Rift enemy gets 2× HP, including a same-species roll.
+  // Mark the instance so regrade / respawn hooks never double-multiply it.
+  if(isRift&&!e.pkmsvvRiftDoubleHp&&Number.isFinite(e.maxHp)&&e.maxHp>0){
+   e.maxHp=Math.max(1,Math.round(e.maxHp*2));
+   e.hp=Math.min(e.maxHp,Math.max(1,Math.round((Number(e.hp)||e.maxHp/2)*2)));
+   e.pkmsvvRiftDoubleHp=true;
+  }
   if(!dex||dex===Number(e.dex))return false;
   const mon=G.DEX_BY?.[dex];if(!mon)return false;
   const rarity=Number(mon.rarity)||1;
