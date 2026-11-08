@@ -80,6 +80,7 @@ test('Solo has a real timed selection/VS transition and 320 HP duel normalizatio
  assert.equal(lib.stage,'intro');lib.update(3);
  assert.equal(lib.stage,'fight');
  assert.equal(h.player.maxHp,320);assert.equal(G.EnemyMgr.last.maxHp,288);assert.equal(lib.aiFactor,.9);
+ assert.equal(G.EnemyMgr.last.pkmsvvArenaLevel,(h.player.level||1)+10,'AI Solo is ten levels above the player');
  assert.equal(G.World.arena.r,20);
 });
 test('Actual enemy kill decides Solo win; a lobby exit cannot grant rewards',()=>{
