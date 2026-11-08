@@ -233,7 +233,8 @@
 
 /* Original PC / Co-op / Arena pixel-art WebP strip integrated in game.
    3 cells of 36px, rendered at 34px (native sidebar icon grid). */
-#scr-menu .menu-item>.mi-ico.pkmsvv-new-menu-icon{
+#scr-menu .menu-item>.mi-ico.pkmsvv-new-menu-icon,
+#scr-menu .menu-right .menu-list .mi-ico.pkmsvv-new-menu-icon{
  display:block!important;width:34px!important;height:34px!important;
  padding:0!important;margin:0!important;border:0!important;
  background-image:url('../images/pkmsvv-menu-icons.webp')!important;
@@ -242,6 +243,6 @@
  image-rendering:pixelated!important;
  font-size:0!important;line-height:0!important;
 }
-#scr-menu .menu-item>.pkmsvv-menu-icon-pc{background-position:0 0!important}
-#scr-menu .menu-item>.pkmsvv-menu-icon-coop{background-position:-34px 0!important}
-#scr-menu .menu-item>.pkmsvv-menu-icon-arena{background-position:-68px 0!important}
+#scr-menu .pkmsvv-menu-icon-pc{background-position:0 0!important}
+#scr-menu .pkmsvv-menu-icon-coop{background-position:-34px 0!important}
+#scr-menu .pkmsvv-menu-icon-arena{background-position:-68px 0!important}
