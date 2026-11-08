@@ -166,8 +166,10 @@ async function main(){
   assert.equal(patchedGameplay.arenaLevel,'function');
   const five=await evaluate('G.PKMSVVBox2.formatRank(5).hp');
   assert.equal(await evaluate('G.PKMSVVBox3.PRICE'),6500);
-  assert.equal(await evaluate('G.PKMSVVBox3.PITY'),180);
-  assert.equal(await evaluate('G.PKMSVVBox3.RATES.boss'),0.08);
+  assert.equal(await evaluate('G.PKMSVVBox3.PITY'),0,'2.0 uses actual drop odds without hidden pity');
+  assert.equal(await evaluate('G.PKMSVVBox3.RATES.normal'),0.004);
+  assert.equal(await evaluate('G.PKMSVVBox3.RATES.elite'),0.008);
+  assert.equal(await evaluate('G.PKMSVVBox3.RATES.legend'),0.016);
   assert.equal(await evaluate('G.PKMSVVBox4.HIT_PROC'),0.16);
   assert.equal(await evaluate('G.PKMSVVBox4.HYBRID_MAX'),6);
   assert.equal(five,30);
