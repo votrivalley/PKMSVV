@@ -941,10 +941,6 @@ async function main(){
     let traced=0;
     window.requestAnimationFrame=function(cb){
      return prior.call(window,function(ts){
-      if(window.__qaPickupActive&&cb?.name==='sync'){
-       console.log('QA_TRACE:raf:SKIP_SYNC_FOR_AB');
-       return;
-      }
       const show=window.__qaPickupActive&&traced<40;
       if(show)console.log('QA_TRACE:raf:enter '+(cb?.name||'anonymous'));
       try{return cb(ts);}finally{
@@ -1013,6 +1009,15 @@ async function main(){
    console.log('EXPLORE_MANUAL_LEVELUP_CHOOSER='+JSON.stringify(chooser));
    assert.equal(chooser.visible,true,'Native 3-card level-up menu failed to open: '+JSON.stringify(chooser));
    assert.ok(chooser.cards.length>=3,'Missing native level-up cards');
+   // Controller/arrow focus must still work without the deadly AUTO-focus.
+   const padChoice=await evaluate(`(()=>{
+    const nav=G.PKMSVVModalNavQA;
+    const moved=nav.move('down');
+    return {moved,focused:document.activeElement?.textContent?.slice(0,100),active:nav.active()?.id};
+   })()`);
+   console.log('EXPLORE_MANUAL_LEVELUP_DPAD='+JSON.stringify(padChoice));
+   assert.equal(padChoice.moved,true,'Controller D-pad cannot navigate native level-up cards');
+   await sleep(250);
    await cmd('Input.dispatchKeyEvent',{type:'keyDown',key:'1',code:'Digit1',windowsVirtualKeyCode:49,nativeVirtualKeyCode:49,text:'1'});
    await cmd('Input.dispatchKeyEvent',{type:'keyUp',key:'1',code:'Digit1',windowsVirtualKeyCode:49,nativeVirtualKeyCode:49});
    await sleep(900);
