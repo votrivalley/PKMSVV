@@ -30,7 +30,7 @@ test('Web and isolated Android/PC packages use real Berry Rescue and AI sources 
  assert.ok(fs.statSync(path.join(root,'custom-music/eggrush.ogg')).size>100000);
 });
 test('Berry reward and HUD location are compatible with the corrected LAN bot steering',()=>{
- assert.match(read('src/pkmsvv-berry-rescue.js'),/surviving\.every\(x=>x===true\|\|Number\(x\)>0\)/);
+ assert.match(read('src/pkmsvv-berry-rescue.js'),/result\.trees\.slice\(0,3\)\.every\(h=>h===true\|\|Number\(h\)>0\)/);
  assert.match(read('src/pkmsvv-berry-rescue.js'),/const left=Math\.max\(8,Math\.round\(\(w-202\)\/2\)\)/);
  assert.match(read('src/lan/lan-ai.js'),/function chooseBerryAxis\(/);
  const pack=read('scripts/promote-web-v20.cjs');
