@@ -149,3 +149,57 @@ test('2.0 hotfix: single Ability disables selection, recruitment rule stays insi
   'never add a flex sibling beside the whole Gacha overlay');
  assert.ok(css.includes('position:static!important'),'note must not float over the HOME menu');
 });
+
+test('Recruitment note stays in the real Gen panel even with concatenated ALL GEN subtitle',()=>{
+ const panel={children:[]},gen={parentElement:panel},card={parentElement:panel};
+ panel.children=[gen,card];
+ gen.insertAdjacentElement=(pos,node)=>{
+  assert.equal(pos,'afterend');
+  node.parentElement=panel;node.previousElementSibling=gen;
+  panel.children.splice(1,0,node);
+ };
+ const allGen={textContent:'ALL GENTất cả',parentElement:gen,closest:()=>gen};
+ const screen={
+  querySelectorAll:s=>s.includes('button')?[allGen]:[],
+  querySelector:s=>s==='#pkmsvv-recruitment-rule'?
+   panel.children.find(n=>n.id==='pkmsvv-recruitment-rule')||null:null
+ };
+ const listeners={},document={
+  readyState:'loading',querySelector:()=>null,
+  getElementById:id=>id==='scr-gacha'?screen:null,
+  createTreeWalker:()=>({nextNode:()=>null}),
+  createElement:tag=>({tag,setAttribute(key,val){this[key]=val},textContent:''}),
+  addEventListener:(type,fn)=>{listeners[type]=fn}
+ };
+ const G={I18n:{lang:'vi'}};
+ vm.runInNewContext(read('src/pkmsvv-recruitment-qa.js'),{G,document,NodeFilter:{SHOW_TEXT:4}});
+ listeners.DOMContentLoaded();
+ const note=panel.children[1];
+ assert.equal(note.id,'pkmsvv-recruitment-rule');
+ assert.equal(note.parentElement,panel,'note must never be a sibling of entire dialog');
+ assert.equal(note.previousElementSibling,gen,'notice belongs after Gen tabs');
+ assert.match(note.textContent,/Pokédex/);
+});
+test('One-Ability details button is disabled before spending and restored for species with alternatives',()=>{
+ const button={
+  textContent:'⚙ Đổi đặc tính',disabled:false,dataset:{},
+  hasAttribute(name){return name==='data-pkmsvv-ability-original-disabled'&&
+   Object.hasOwn(this.dataset,'pkmsvvAbilityOriginalDisabled');},
+  removeAttribute(name){if(name==='data-pkmsvv-ability-original-disabled')
+   delete this.dataset.pkmsvvAbilityOriginalDisabled;}
+ };
+ const profile={querySelectorAll:()=>[button]},document={
+  readyState:'loading',addEventListener(){},
+  querySelector:s=>s==='#pkmsvv-pokebox-overlay #pkmbx-profile'?profile:null
+ };
+ const G={I18n:{lang:'vi'},DB:{save:{partner:643}},
+  DEX_ABIL:{643:[55]},PKMSVVBox:{focusedId:()=> 'b1-643-n'},
+  PKMSVVBoxHub:{item:()=>({dex:643})}};
+ vm.runInNewContext(read('src/pkmsvv-v20-ui-qa.js'),{G,document});
+ G.PKMSVV20UIPolish.guardAbilityButtons();
+ assert.equal(button.disabled,true);
+ assert.match(button.title,/chỉ có 1 Đặc tính/);
+ G.DEX_ABIL[643]=[55,56];
+ G.PKMSVV20UIPolish.guardAbilityButtons();
+ assert.equal(button.disabled,false,'species with alternate Ability should be actionable again');
+});
