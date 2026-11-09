@@ -339,11 +339,15 @@
   const sharedFav=allForms.some(x=>x.favorite);
   const bonuses=G.PKMSVVBox2?.formatRank?.(progress.rank)||{hp:0,damage:0,cooldown:0};
   const number=k=>Number.isFinite(Number(mon?.[k]))?Number(mon[k]):null;
-  const hp=number('hp'),attack=Math.max(number('pa')||0,number('sa')||0);
+  // In PokéSurvivor pa/sa/atk are DAMAGE MULTIPLIERS (e.g. Reshiram ×1.52),
+  // not 0–255 raw attack points. Rounding to integer hid every difference.
+  const hp=number('hp');
+  const attack=Math.max(number('pa')||0,number('sa')||0,number('atk')||0);
+  const attackLabel=attack>0?'×'+attack.toFixed(2):'—';
   const speed=number('spd'),cooldown=Number(bonuses.cooldown)||0;
   const rows=[
    ['hp','♥',L('Máu','HP'),hp,hp===null?'—':String(Math.round(hp))+' · +'+bonuses.hp+'%',hp===null?0:hp/255*100],
-   ['damage','✦',L('Sát thương','Damage'),attack,attack?String(Math.round(attack))+' · +'+bonuses.damage+'%':'—',attack/255*100],
+   ['damage','✦',L('Sát thương','Damage'),attack,attack>0?attackLabel+' · +'+bonuses.damage+'%':'—',attack/2.4*100],
    ['speed','➤',L('Tốc độ','Speed'),speed,speed===null?'—':String(Math.round(speed)),speed===null?0:speed/255*100],
    ['cooldown','⌛',L('Hồi chiêu','Cooldown'),cooldown,'−'+cooldown+'%',cooldown/20*100]
   ];
@@ -351,7 +355,7 @@
    '<div class="pkmbx-stat-meter" data-stat="'+key+'">'+
     '<span class="pkmbx-meter-label"><i aria-hidden="true">'+icon+'</i>'+label+'</span>'+
     '<span class="pkmbx-meter-track" role="progressbar" aria-label="'+label+
-    '" aria-valuemin="0" aria-valuemax="'+(key==='cooldown'?20:255)+'" aria-valuenow="'+
+    '" aria-valuemin="0" aria-valuemax="'+(key==='cooldown'?20:key==='damage'?2.4:255)+'" aria-valuenow="'+
     Math.max(0,Number(value)||0)+'"><span class="pkmbx-meter-fill pkmbx-meter-'+key+
     '" style="width:'+Math.min(100,Math.max(0,width)).toFixed(1)+'%"></span></span>'+
     '<strong>'+clean(display)+'</strong></div>').join('');
@@ -367,7 +371,7 @@
     '<section class="pkmbx-hub-stats" aria-label="'+L('Chỉ số Pokémon','Pokémon stats')+'">'+
       '<h3>▥ '+L('Chỉ số','Stats')+'</h3>'+statRows+
       '<p class="pkmbx-stat-caption">'+L('Thanh thể hiện chỉ số cơ bản. Tăng Rank cộng thêm sức mạnh khi chiến đấu.',
-       'Bars show base stats. Rank grants combat bonuses.')+'</p></section>'+
+       'Bars show base stats. Damage is a multiplier (×1.00 = normal); Rank grants combat bonuses.')+'</p></section>'+
     '<div class="pkmbx-hub-buttons">'+
     '<button class="btn small gold" id="pkmbx-use" '+(G.DB?.guest||isCurrent?'disabled':'')+'>'+
      (isCurrent?L('✓ Đang sử dụng','✓ Active'):L('✓ Chọn ra trận','✓ Set Active'))+'</button>'+
@@ -407,7 +411,10 @@
     '<p><b>'+L('Tính cách','Nature')+':</b> '+clean(natureName(nature?.id||it.natureId))+'</p>'+
     '<p class="pkmbx-hint">'+clean(natureHint)+'</p>'+
     '<div class="pkmbx-hub-ability-explained"><b>'+L('Đặc tính','Ability')+
-     ': '+clean(abText)+'</b><p class="pkmbx-ability-effect">'+clean(desc)+'</p></div>'+
+     ': '+clean(abText)+'</b><p class="pkmbx-ability-effect">'+clean(desc)+'</p>'+
+     ([...new Set((G.DEX_ABIL?.[it.dex]||[]).filter(Boolean))].length<2?
+      '<p class="pkmbx-only-ability">'+L('Pokémon này chỉ có một Đặc tính; không thể sử dụng Viên nang.',
+       'This Pokémon has only one Ability, so Capsules cannot change it.')+'</p>':'')+'</div>'+
     '<p><b>'+L('TM đã học','Learned TMs')+':</b> '+
      (Hub.learned(currentSave(),it).map(id=>clean(G.Moves?.BY_ID?.[id]?G.T(G.Moves.BY_ID[id].name,'move'):id)).join(', ')||L('Chưa có','None'))+
     '</p></div>';
@@ -416,6 +423,8 @@
  function renderItems(host,it,ready){
   const s=currentSave(),bag=s?.bag||{},tms=s?.tms||{};
   const natList=G.NATURES||[],abilities=G.DEX_ABIL?.[it.dex]||[],current=Hub.ability(s,it)?.slot||0;
+  const currentAbility=Hub.ability(s,it)?.id;
+  const oneAbility=[...new Set(abilities.filter(Boolean))].length<2;
   const learns=Object.keys(tms).filter(id=>tms[id]>0&&G.Moves?.BY_ID?.[id]);
   host.innerHTML='<section class="pkmbx-hub-items"><h3>'+L('Dùng vật phẩm cho ','Use items on ')+clean(monName(it.dex))+'</h3>'+
    '<div class="pkmbx-hub-inventory">'+
@@ -427,11 +436,13 @@
      ' · '+L('Ẩn','Hidden')+' ×'+(bag.caph||0)+'</h4><div class="pkmbx-hub-ability">'+
     abilities.map((id,slot)=>{
       if(!id)return '';
-      const hidden=slot===2,dup=slot===1&&id===abilities[0];
-      return '<button class="btn small" data-hub-ability="'+slot+'" '+(!ready||slot===current||dup||
-       !(hidden?bag.caph:bag.cap)?'disabled':'')+'>'+clean(abilityName(id))+
+      const hidden=slot===2;
+      const unavailable=oneAbility||id===currentAbility||!ready||!(hidden?bag.caph:bag.cap);
+      return '<button class="btn small" data-hub-ability="'+slot+'" '+(unavailable?'disabled':'')+'>'+clean(abilityName(id))+
        (hidden?' ★':'')+(slot===current?' ✓':'')+'</button>';
     }).join('')+'</div>'+
+    (oneAbility?'<p class="pkmbx-only-ability">'+L('Pokémon này chỉ có 1 Đặc tính. Không trừ Viên nang.',
+      'Only one Ability is available. No Capsule will be consumed.')+'</p>':'')+
    '<h4>TM</h4>'+
    '<div class="pkmbx-hub-tms">'+(learns.length?learns.map(id=>{
      const title=G.T?G.T(G.Moves.BY_ID[id].name,'move'):id;
@@ -885,6 +896,7 @@
    '<div><strong>'+clean(monName(infoDex))+'</strong><div class="pkmbx-dex-badges">'+
     '<span class="pkmbx-dex-badge">#'+infoDex+'</span>'+
     '<span class="pkmbx-dex-badge">'+clean(rarity)+'</span>'+
+    '</div><div class="pkmbx-type-pills pkmbx-dex-type-pills">'+
     (mon.types||[]).map(t=>'<span class="pkmbx-type-pill" style="--pkmbx-pill:'+clean(TYPE_FRAME_COLORS[String(t).toLowerCase()]||TYPE_FRAME_COLORS.normal)+'">'+clean(typeName(t))+'</span>').join('')+'</div>'+
     '<p>'+(owned?L('✓ Đã khám phá','✓ Discovered'):L('Chưa sở hữu','Not yet owned'))+'</p>'+
     statLine+'</div></div>'+
