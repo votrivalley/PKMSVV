@@ -91,7 +91,7 @@ test('Ready Team and Favorites are independent; either protects Rank fodder',()=
 });
 test('Mint rerolls one individual randomly and excludes current Nature',()=>{
  const h=setup(),copy=add(h.s),before=h.s.bag.mint;
- const receipt=hub.useMint(copy.id,h.s,()=>0);
+ const receipt=hub.useMint(copy.id,h.s,()=>.9);
  assert.equal(receipt.natureId,'jolly');
  assert.equal(hub.item(h.s,copy.id).natureId,'jolly');
  assert.equal(hub.item(h.s,'b1-6-n').natureId,'bold');
@@ -138,7 +138,7 @@ test('failed save commit atomically restores team, items, inventory and TM',()=>
 });
 test('selected instance affects Nature, Ability and learned TM in combat, without changing another instance',()=>{
  const h=setup(),duplicate=add(h.s);
- hub.useMint(duplicate.id,h.s,()=>0);
+ hub.useMint(duplicate.id,h.s,()=>.9);
  hub.useCapsule(duplicate.id,h.s,()=>0);
  hub.teach(duplicate.id,'shadow-ball',h.s);
  assert.equal(hub.installMons(G.Mons),true);
