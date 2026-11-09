@@ -74,7 +74,16 @@ G.PKMSVVWiki=(()=>{
   @media(max-width:630px){.pkmsvv-fusion-recipes{grid-template-columns:1fr}}
   
   .pkmsvv-pc-orb-details p{margin:7px 0;color:#e4f1ee;font-size:13px;line-height:1.6}
-  .pkmsvv-pc-orb-item strong{color:#ffe29a}
+  .pkmsvv-pc-orb-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0;min-width:0}
+  .pkmsvv-pc-orb-item{display:flex;align-items:center;gap:10px;min-width:0;padding:9px;
+   border:1px solid #5f959d;border-radius:10px;background:#163d4e}
+  .pkmsvv-pc-orb-art{display:block;width:48px;height:48px;flex:0 0 48px;
+   object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 2px 4px #061724aa)}
+  .pkmsvv-pc-orb-copy{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .pkmsvv-pc-orb-item strong{color:#ffe29a;font-size:13px}
+  .pkmsvv-pc-orb-copy span{color:#e4f1ee;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+  @media(max-width:570px){.pkmsvv-pc-orb-list{grid-template-columns:1fr}
+   .pkmsvv-pc-orb-art{width:42px;height:42px;flex-basis:42px}}
 
   .pkmsvv-pc-card .pkmsvv-pc-action{margin-top:auto;border-radius:8px;background:#ffdc68;
     color:#103841;padding:7px 12px;font-weight:900;font-size:13px}
@@ -238,12 +247,24 @@ G.PKMSVVWiki=(()=>{
     intro.textContent=tr('Mystery Orb xuất hiện ngay từ đầu mỗi trận, không cần đầy kỹ năng. Hàng đợi tối đa 10 Orb; dùng đúng thứ tự đã nhặt (FIFO), hồi 5 giây giữa hai lần kích hoạt. Kẻ địch boss chịu hiệu ứng khống chế yếu hơn.',
       'Mystery Orbs appear from the start of each run without a skill requirement. Hold up to 10 in first-in-first-out order, with 5 seconds between uses. Bosses resist crowd-control effects.');
     p.append(intro);
+    // Use the exact six bundled Mystery Orb sprites already used for
+    // in-world pickups and the HUD (G.OrbSprites). Never substitute emojis.
+    const orbGrid=document.createElement('div');orbGrid.className='pkmsvv-pc-orb-list';
+    const officialOrbIds=new Set(G.OrbSprites?.ids||['slumber','slow','blowback','focus','luminous','quick']);
     for(const orb of G.Orbs?.LIST||[]){
-     const item=document.createElement('p');item.className='pkmsvv-pc-orb-item';
-     const strong=document.createElement('strong');strong.textContent=orb.name?.[G.I18n?.lang==='en'?1:0]||orb.id;
-     item.append(strong,document.createTextNode(' — '+(orb.desc?.[G.I18n?.lang==='en'?1:0]||'')));
-     p.append(item);
+     if(!officialOrbIds.has(orb.id))continue;
+     const item=document.createElement('div');item.className='pkmsvv-pc-orb-item';
+     const art=document.createElement('img');art.className='pkmsvv-pc-orb-art';
+     art.src='assets/orbs/'+encodeURIComponent(orb.id)+'.svg';
+     art.alt=orb.name?.[G.I18n?.lang==='en'?1:0]||orb.id;
+     art.loading='lazy';art.decoding='async';art.width=48;art.height=48;
+     const copy=document.createElement('div');copy.className='pkmsvv-pc-orb-copy';
+     const name=document.createElement('strong');name.textContent=art.alt;
+     const effect=document.createElement('span');
+     effect.textContent=orb.desc?.[G.I18n?.lang==='en'?1:0]||'';
+     copy.append(name,effect);item.append(art,copy);orbGrid.append(item);
     }
+    p.append(orbGrid);
     const note=document.createElement('p');note.textContent=tr('Chương Orb: sử dụng đủ 6 loại khác nhau. Phím Orb theo thiết lập tay cầm/bàn phím hiện tại; không tự thêm cơ chế Orb mới.',
       'Orb chapter: use all 6 distinct types. The Orb shortcut follows current controls; no new Orb mechanics added.');
     p.append(note);
