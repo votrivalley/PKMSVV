@@ -52,8 +52,8 @@ jobs:
         env:
           PKMSVV_PC_GAME_ROOT: dist/pokebox-stage4-pc-qa/resources/lan-site
         run: |
-          npm ci --ignore-scripts --no-audit --no-fund
-          node tests/android-berry-memories-browser.cjs
+          npm install --no-save --no-package-lock --ignore-scripts --no-audit --no-fund playwright@1.62.1
+          PKMSVV_BROWSER="$(command -v google-chrome)" node tests/android-berry-memories-browser.cjs
       - name: Verify PC game and isolated save identity
         run: |
           test -s dist/pokebox-stage4-pc-qa/resources/app.asar
