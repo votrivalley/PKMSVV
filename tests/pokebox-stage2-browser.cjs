@@ -224,7 +224,7 @@ async function main(){
 
  
   const wikiFusion=await evaluate("(()=>{G.PKMSVVWiki.open();try{const heading=[...document.querySelectorAll('#pkmsvv-wiki-overlay .pkmsvv-pc-learn>button')].find(x=>x.textContent.includes('Fusion'));const panel=heading?.nextElementSibling;const rows=[...panel?.querySelectorAll('.pkmsvv-fusion-recipe')||[]];return {heading:heading?.textContent,rows:rows.length,icons:rows.filter(x=>x.querySelector('img.pkmsvv-fusion-icon[src$=\".webp\"]')).length,benefits:rows.filter(x=>x.querySelector('.pkmsvv-fusion-benefit')?.textContent?.length>15).length,oldBond:document.querySelector('#pkmsvv-wiki-overlay')?.textContent.includes('Fusion tự do')||false};}finally{G.PKMSVVWiki.close()}})()");
-  assert.match(wikiFusion.heading,/Fusion.*Tiến hóa/,'compiled Wiki must use latest Fusion system, not stale free Bond');
+  assert.match(wikiFusion.heading,/Fusion.*Dung hợp/,'compiled Wiki must describe real skill creation, not older evolved/link-only Fusion');
   assert.equal(wikiFusion.rows,10,'compiled PC guide displays all ten Fusion recipes');
   assert.equal(wikiFusion.icons,10,'compiled guide uses uploaded WebP icon for each recipe');
   assert.equal(wikiFusion.benefits,10,'compiled guide describes each actual Fusion effect');
