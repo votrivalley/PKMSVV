@@ -14,6 +14,20 @@
   if(busy)return;busy=true;
   try{
    const target=G.I18n?.lang==='en'?'Recruitment':'Chiêu mộ';
+   const gacha=document.getElementById('scr-gacha');
+   if(gacha&&!gacha.querySelector('#pkmsvv-gacha-dex-requirement')){
+    const hint=document.createElement('p');
+    hint.id='pkmsvv-gacha-dex-requirement';
+    hint.setAttribute('role','note');
+    hint.textContent=G.I18n?.lang==='en'?
+     'Only Pokémon unlocked in the Pokédex can be recruited. A Gen without discovered Pokémon cannot be rolled.':
+     'Chỉ những Pokémon đã mở trong Pokédex mới có thể Chiêu mộ. Gen chưa mở loài nào sẽ không thể quay.';
+    gacha.insertBefore(hint,gacha.firstChild);
+   }
+   const hint=gacha?.querySelector('#pkmsvv-gacha-dex-requirement');
+   if(hint)hint.textContent=G.I18n?.lang==='en'?
+    'Only Pokémon unlocked in the Pokédex can be recruited. A Gen without discovered Pokémon cannot be rolled.':
+    'Chỉ những Pokémon đã mở trong Pokédex mới có thể Chiêu mộ. Gen chưa mở loài nào sẽ không thể quay.';
    for(const root of roots()){
     const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
     const nodes=[];

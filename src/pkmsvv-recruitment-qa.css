@@ -1,0 +1,10 @@
+/* Pokédex-only Recruitment message; no big empty banner. */
+#scr-gacha #pkmsvv-gacha-dex-requirement{
+ box-sizing:border-box;max-width:100%;margin:4px 9px 7px;
+ padding:6px 10px;border-radius:7px;border:1px solid #8ebebc;
+ background:#173e4de8;color:#e9f9f2;font-weight:650;
+ font-size:clamp(11px,1.25vw,14px);line-height:1.35;
+}
+@media(max-height:550px) and (orientation:landscape){
+ #scr-gacha #pkmsvv-gacha-dex-requirement{padding:3px 7px;margin:1px 7px 3px;font-size:11px;}
+}

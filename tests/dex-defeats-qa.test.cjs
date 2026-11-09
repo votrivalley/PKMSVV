@@ -2,7 +2,8 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const source=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-dex-defeats-qa.js'),'utf8');
 function fixture(){
- const mons=[{dex:1,rarity:1},{dex:4,rarity:1},{dex:25,rarity:2},{dex:19,rarity:1}];
+ const mons=[{dex:1,rarity:1,gen:1},{dex:4,rarity:1,gen:1},{dex:25,rarity:2,gen:1},{dex:19,rarity:1,gen:1},
+ {dex:152,rarity:1,gen:2},{dex:155,rarity:1,gen:2}];
  const s={owned:{1:{at:1}},shiny:{},partner:1,stats:{runs:0},tickets:{t1:2}};
  let commits=0,failure=false;
  class Enemy{
@@ -165,4 +166,32 @@ test('Pokédex explains Explore defeats OR evolution and shows silhouettes until
   const body=fs.readFileSync(path.join(__dirname,'..',filename),'utf8');
   assert.match(body,/pkmsvv-dex-defeats-qa\.js/);
  }
+});
+
+test('Gen 2 has no Pokémon in Pokédex: block BEFORE tickets are consumed even if Gen 1 is open',()=>{
+ const f=fixture(),alerts=[];f.G.UI.toast=x=>alerts.push(x);
+ new f.Enemy(4).die();
+ const tickets=f.s.tickets.t1,before=JSON.stringify(f.s),dex=f.G.DEX;
+ assert.equal(f.G.Gacha.pull(f.s,1,2),null);
+ assert.equal(f.s.tickets.t1,tickets,'cannot spend ticket for locked Gen');
+ assert.equal(JSON.stringify(f.s),before,'pity/save not changed');
+ assert.equal(f.G.DEX,dex,'global Dex not scoped on rejected pull');
+ assert.match(alerts.at(-1),/Johto/,'actual Gen name, not Kanto');
+ new f.Enemy(152).die();
+ assert.ok(f.G.Gacha.pool(1,2).some(x=>x.dex===152));
+ assert.equal(f.G.Gacha.pull(f.s,1,2)?.[0]?.dex,152);
+});
+test('Kanto unlock never borrows Johto species and ALL GEN still uses any unlocked Pokémon',()=>{
+ const f=fixture(),alerts=[];f.G.UI.toast=x=>alerts.push(x);
+ new f.Enemy(152).die();
+ const n=f.s.tickets.t1;
+ assert.equal(f.G.Gacha.pull(f.s,1,1),null);
+ assert.match(alerts.at(-1),/Kanto/);
+ assert.equal(f.s.tickets.t1,n);
+ assert.equal(f.G.Gacha.pull(f.s,1,0)?.[0]?.dex,152,'ALL GEN may use Johto if unlocked');
+});
+test('Recruitment UI explains Pokédex gate regardless of the selected Gen',()=>{
+ const src=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-recruitment-qa.js'),'utf8');
+ assert.match(src,/Chỉ những Pokémon đã mở trong Pokédex mới có thể Chiêu mộ/);
+ assert.match(src,/pkmsvv-gacha-dex-requirement/);
 });

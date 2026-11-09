@@ -131,7 +131,22 @@
   const wrapped=function(s,...args){
    const originals=G.DEX;
    if(!s||!Array.isArray(originals))return previous.apply(this,arguments);
+   const gen=Number(args[1]);
+   const selectedGen=Number.isInteger(gen)&&gen>=1&&gen<=9?gen:0;
    const allowed=originals.filter(p=>unlocked(s,p?.dex));
+   // A Gen tab MUST NOT borrow an unlocked Pokémon from another generation.
+   // Guard before the native paid pull, so tickets, pity and save are intact.
+   const available=selectedGen?allowed.filter(p=>Number(p.gen??G.DEX_BY?.[p.dex]?.gen)===selectedGen):allowed;
+   if(!available.length){
+    const names=['','Kanto','Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar','Paldea'];
+    const where=names[selectedGen]||'';
+    G.UI?.toast?.(selectedGen?
+     L('Bạn chưa có Pokémon nào thuộc '+where+' trong Pokédex. Hãy hạ gục hoặc tiến hóa để mở khóa!',
+       'You have no '+where+' Pokémon unlocked in your Pokédex. Defeat or evolve one first!'):
+     L('Chỉ Pokémon đã mở trong Pokédex mới có thể Chiêu mộ. Hãy hạ gục hoặc tiến hóa để mở!',
+       'Only Pokédex-unlocked Pokémon can be recruited. Defeat or evolve one first!'),3400);
+    return null;
+   }
    if(!allowed.length){
     G.UI?.toast?.(L('Hãy hạ Pokémon trong Khám phá hoặc tiến hóa để mở Chiêu mộ!','Defeat Pokémon in Explore or evolve to unlock Recruitment!'),2600);
     return null;

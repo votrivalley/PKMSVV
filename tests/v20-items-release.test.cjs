@@ -31,3 +31,10 @@ test('all platforms ship random-only rerolls with save-compatible legacy item re
  assert.match(ui,/pkmbx-action-dialog/);
  assert.doesNotMatch(ui,/data-box-tab="items"/);
 });
+
+test('Recruitment checks selected Gen ledger BEFORE paid roll',()=>{
+ const src=read('src/pkmsvv-dex-defeats-qa.js');
+ assert.match(src,/const available=selectedGen\?allowed\.filter/);
+ assert.match(src,/Bạn chưa có Pokémon nào thuộc/);
+ assert.match(src,/names\[selectedGen\]/);
+});
