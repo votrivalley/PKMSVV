@@ -38,3 +38,30 @@ test('Recruitment checks selected Gen ledger BEFORE paid roll',()=>{
  assert.match(src,/Bạn chưa có Pokémon nào thuộc/);
  assert.match(src,/names\[selectedGen\]/);
 });
+
+test('latest game UX fixes are shipped to both QA packagers, not only source mockups',()=>{
+ const box=read('src/pkmsvv-box-hub-ui.js');
+ const css=read('src/pkmsvv-box-hub.css');
+ const nav=read('src/pkmsvv-modal-navigation-qa.js');
+ const runtime=read('src/pkmsvv-runtime-controls-qa.js');
+ const wiki=read('src/pkmsvv-wiki.js');
+ const recruitment=read('src/pkmsvv-recruitment-qa.js');
+ const menu=read('src/pkmsvv-pc-menu-clean-qa.js');
+ assert.match(box,/baseAttack=number\('atk'\)/);
+ assert.match(box,/pkmbx-dex-type-pill/);
+ assert.match(css,/\.pkmbx-dex-type-pill/);
+ assert.match(nav,/G\.RunUI\.pick\(index\)/);
+ assert.match(runtime,/installHoverWater/);
+ assert.match(runtime,/Number\(this\.dex\?\?this\.mon\?\.dex\)===643/);
+ assert.match(wiki,/pkmsvv-orb-guide-icon/);
+ assert.match(wiki,/assets\/orbs\//);
+ assert.match(recruitment,/Chỉ những Pokémon đã mở trong Pokédex mới có thể chiêu mộ/);
+ assert.doesNotMatch(recruitment,/Gen chưa mở loài nào sẽ không thể quay/);
+ assert.match(menu,/node\.setAttribute\('translate','no'\)/);
+ for(const builder of ['scripts/patch-pokebox-stage4-apk-qa.cjs','scripts/build-pokebox-stage1-pc-qa.cjs'])
+  assert.match(read(builder),/pkmsvv-modal-navigation-qa\.js/);
+ const web=read('scripts/promote-web-v20.cjs');
+ assert.match(web,/pkmsvv-modal-navigation-qa\.js/);
+ assert.match(web,/pkmsvv-box-hub\.css/);
+ assert.match(web,/patchPickupFile/);
+});
