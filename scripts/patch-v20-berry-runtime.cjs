@@ -44,7 +44,7 @@ function patchBundle(bundle){
  }
  if((hasLanAI&&!next.includes('function chooseBerryAxis('))||
     !next.includes('function rewardBerry(')||
-    !next.includes('Math.round((w-202)/2)'))
+    !next.includes('Math.round((h-95)/2)'))
   throw Error('Berry fix absent after compiled module replacement');
  new vm.Script(next,{filename:'berry-v2-compiled.js'});
  return next;
