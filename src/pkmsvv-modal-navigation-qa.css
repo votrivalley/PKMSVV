@@ -61,3 +61,13 @@ body.pkmsvv-competitive-evo .pkmsvv-evo-panel .pkmsvv-evo-option{
   width:min(320px,56vw)!important;padding:7px!important;max-height:66dvh!important;
  }
 }
+
+/* Safe native level-up controller focus. Only a data attribute changes:
+   never programmatically focus the card or change its role/tabindex/class. */
+#scr-levelup[data-pkmsvv-nav-index="0"] #cards .card:nth-child(1),
+#scr-levelup[data-pkmsvv-nav-index="1"] #cards .card:nth-child(2),
+#scr-levelup[data-pkmsvv-nav-index="2"] #cards .card:nth-child(3){
+ outline:3px solid #ffe06c!important;outline-offset:2px!important;
+ box-shadow:0 0 0 2px #081c2c,0 0 13px #ffe06c90!important;
+ position:relative;z-index:1;
+}
