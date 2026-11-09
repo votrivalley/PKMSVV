@@ -16,6 +16,7 @@
  const isEditable=el=>!!el&&(/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName||'')||el.isContentEditable);
  const OVERLAYS=SELECTORS.join(',');
  let cachedRoot=null,dirty=true,scanCount=0,cacheEnabled=true;
+ let levelCursor=-1;
  function visible(el){
   if(!el||!el.isConnected)return false;
   for(let n=el;n&&n.nodeType===1;n=n.parentElement){
@@ -24,6 +25,16 @@
    if(style&&(style.display==='none'||style.visibility==='hidden'||style.visibility==='collapse'))return false;
   }
   return !el.getClientRects||el.getClientRects().length>0;
+ }
+ // Native level-up cards must not be mutated or focused by the DOM nav.
+ // Legacy PadDialogs observers can enter an infinite microtask cycle after
+ // class, role, tabindex or browser-focus changes inside #scr-levelup.
+ function levelCards(root){return [...(root?.querySelectorAll('#cards .card')||[])].filter(visible);}
+ function levelSelect(root,index){
+  const cards=levelCards(root);if(!cards.length)return false;
+  levelCursor=((index%cards.length)+cards.length)%cards.length;
+  root.setAttribute('data-pkmsvv-nav-index',String(levelCursor));
+  return true;
  }
  function scanActive(){
   scanCount++;
@@ -58,15 +69,9 @@
  function invalidate(){dirty=true;queue();}
  function controls(root){
   if(!root)return [];
-  // Native level-up options are .card DIVs, not <button> elements. Without
-  // explicit tabindex they were invisible to keyboard and gamepad navigation.
   if(root.id==='scr-levelup'){
-   for(const [index,card] of [...root.querySelectorAll('#cards .card')].entries()){
-    if(card.tabIndex<0)card.tabIndex=0;
-    card.setAttribute('role','button');
-    card.setAttribute('aria-label',card.getAttribute('aria-label')||
-     (String(index+1)+' · '+String(card.textContent||'').trim()));
-   }
+   const candidates=[...levelCards(root),...root.querySelectorAll(NAV)];
+   return [...new Set(candidates)].filter(el=>!el.disabled&&visible(el));
   }
   return [...root.querySelectorAll(NAV)].filter(el=>!el.disabled&&visible(el));
  }
@@ -74,6 +79,10 @@
   if(!el||!visible(el))return false;
   const root=active();
   if(!root||!root.contains(el))return false;
+  if(root.id==='scr-levelup'){
+   const index=levelCards(root).indexOf(el);
+   return index>=0?levelSelect(root,index):false;
+  }
   for(const old of root.querySelectorAll('.pkmsvv-nav-focus'))if(old!==el)old.classList.remove('pkmsvv-nav-focus');
   el.classList.add('pkmsvv-nav-focus');
   if(typeof el.focus==='function')el.focus({preventScroll:true});
@@ -84,6 +93,7 @@
   return true;
  }
  function first(root){
+  if(root?.id==='scr-levelup')return levelSelect(root,0);
   const opts=controls(root);
   const selected=opts.find(x=>x.matches?.('.pkmbx-team-slot.active,.pkmsvv-forget-choice:first-child,.pkmsvv-quick-region-card:not([disabled]),[aria-selected="true"]'));
   const preferred=root.id==='scr-levelup'?
@@ -97,6 +107,10 @@
  }
  function move(direction){
   const root=active();if(!root)return false;
+  if(root.id==='scr-levelup'){
+   const step=direction==='down'||direction==='right'?1:-1;
+   return levelSelect(root,levelCursor<0?0:levelCursor+step);
+  }
   const opts=controls(root);if(!opts.length)return false;
   let selected=document.activeElement;
   if(!opts.includes(selected))return first(root);
@@ -141,6 +155,13 @@
   return false;
  }
  function activate(root){
+  if(root?.id==='scr-levelup'){
+   const cards=levelCards(root);if(!cards.length)return false;
+   const index=levelCursor>=0&&levelCursor<cards.length?levelCursor:0;
+   if(typeof G.RunUI?.pick==='function')G.RunUI.pick(index);
+   else cards[index].click();
+   return true;
+  }
   const current=document.activeElement,opts=controls(root);
   const selected=opts.includes(current)?current:(opts[0]||null);
   if(!selected)return false;
@@ -184,6 +205,12 @@
     if(option&&visible(option)){e.preventDefault();e.stopImmediatePropagation?.();option.click();}
     return;
   }
+  if(root.id==='scr-levelup'&&key==='tab'){
+   if(move(e.shiftKey?'up':'down')){
+    e.preventDefault();e.stopImmediatePropagation?.();
+   }
+   return;
+  }
   if(key==='tab'){
    const opts=controls(root);if(!opts.length)return;
    const at=opts.indexOf(document.activeElement);
@@ -199,7 +226,7 @@
   if(editing)return;
   // Some legacy story/menu code can steal focus underneath a newer modal.
   // Route input to the highest overlay anyway, never to that hidden field.
-  if(!root.contains(document.activeElement))first(root);
+  if(root.id!=='scr-levelup'&&!root.contains(document.activeElement))first(root);
   const dirs={arrowleft:'left',arrowright:'right',arrowup:'up',arrowdown:'down',
    a:'left',d:'right',w:'up',s:'down'};
   if(dirs[key]&&move(dirs[key])){e.preventDefault();e.stopImmediatePropagation?.();return;}
@@ -210,12 +237,18 @@
  let pending=false,lastRoot=null;
  function sync(){
   pending=false;const root=active();
-  if(!root){lastRoot=null;return;}
+  if(!root){lastRoot=null;levelCursor=-1;return;}
   // Native RunUI already renders the three level-up choices and handles 1/2/3.
   // Auto-focusing a newly mounted .card inside the RAF sync causes recursive
   // focus/MutationObserver callbacks and can lock the entire renderer.
   // Leave focus untouched until an ACTUAL keyboard/gamepad navigation input.
-  if(root.id==='scr-levelup'){lastRoot=root;return;}
+  if(root.id==='scr-levelup'){
+   if(lastRoot!==root){
+    levelCursor=-1;
+    root.removeAttribute('data-pkmsvv-nav-index');
+   }
+   lastRoot=root;return;
+  }
   const current=document.activeElement;
   if(root!==lastRoot||!root.contains(current)||!visible(current))first(root);
   lastRoot=root;
