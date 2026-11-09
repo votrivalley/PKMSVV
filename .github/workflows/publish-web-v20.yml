@@ -68,6 +68,8 @@ jobs:
           test -s dist/cloudflare-v20-release/game/css/pkmsvv-v20-ui-qa.css
           grep -q 'PKMSVV_STORY_SPLIT_V23' dist/cloudflare-v20-release/ai/game/css/pkmsvv-story-ui-fix.css
           grep -q 'PKMSVV_MOBILE_SPEED_EDGE_23' dist/cloudflare-v20-release/game/css/pkmsvv-runtime-controls-qa.css
+          grep -q 'PKMSVV_POKEMON_HEADER_V24' dist/cloudflare-v20-release/game/css/pkmsvv-v20-ui-qa.css
+          grep -q 'installTouchAuto' dist/cloudflare-v20-release/game/js/ui/pkmsvv-runtime-controls-qa.js
           grep -q 'pkmsvv-awakening-milestones' dist/cloudflare-v20-release/ai/game/js/ui/pkmsvv-wiki-qa.js
           grep -q 'Fusion là dung hợp hai kỹ năng đã luyện MAX' dist/cloudflare-v20-release/ai/game/js/app.min.js
           test ! -e dist/cloudflare-v20-release/POKEBOX-STAGE1-QA.txt

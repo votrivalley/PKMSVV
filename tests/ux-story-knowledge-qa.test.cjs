@@ -29,6 +29,9 @@ test('Beginner guide is first, expanded, and only hidden at permanent 8 of 8',()
  const s=read('src/pkmsvv-wiki.js'),clean=read('src/pkmsvv-pc-menu-clean-qa.js');
  assert.ok(s.indexOf("[tr('Thức tỉnh kỹ năng','Skill Awakening')")<s.indexOf("[tr('✨ Fusion"));
  assert.match(s,/pkmsvv-awakening-milestones/);
+ assert.match(s,/detail.dataset.pkmsvvKnowledge='awakening'/);
+ assert.match(clean,/querySelectorAll\('\[data-pkmsvv-knowledge="awakening"\]'\)/);
+ assert.match(clean,/row=>row.remove\(\)/);
  assert.match(s,/const skillAwakeningDone=!!G.DB\?\.save&&/);
  assert.match(s,/p.hidden=!awakening/);
  assert.match(clean,/try\{return tracker.progress\(save\).count>=8;/);
