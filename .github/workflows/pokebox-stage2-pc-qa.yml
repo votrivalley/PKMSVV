@@ -62,7 +62,7 @@ jobs:
           grep -q 'input.axis=()=>aim' dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-runtime-controls-qa.js
           grep -q 'speedOwnerSafe' dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-runtime-controls-qa.js
           grep -q 'pickRandom' dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-box-hub.js
-          grep -Fq "const ORDER = ['mint', 'cap']" dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/app.min.js
+          grep -Fq "const ORDER = ['mint', 'cap', 'caph']" dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/app.min.js
           grep -q 'pkmsvv-horde-performance.js' dist/pokebox-stage4-pc-qa/resources/lan-site/game/index.html
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/css/pkmsvv-fusion-evolved.css
           for id in ember-quick water-tackle grass-spin spark-quick mind-tackle fire-gust bubble-ice leaf-rock shadow-mind thunder-claw; do
