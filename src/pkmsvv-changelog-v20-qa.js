@@ -47,7 +47,15 @@
    ['Sửa menu cuộn tự kéo ngược lên.',
     'Fixed menus automatically scrolling back to the top.'],
    ['Sửa các lỗi popup nâng kỹ năng, thao tác nhanh và một số logic vật phẩm / hỗ trợ.',
-    'Fixed skill-up popups, shortcuts and several item/Support issues.']
+    'Fixed skill-up popups, shortcuts and several item/Support issues.'],
+   ['Ngăn dùng Viên nang khi Pokémon chỉ có một Đặc tính, không tiêu hao vật phẩm; đồng bộ Đặc tính với dạng Shiny.',
+    'Prevent Capsule use on single-Ability Pokémon without consuming stock; synchronize Shiny Ability changes.'],
+   ['Sửa ghi chú Chiêu mộ bị trôi khỏi khung khi mở trên màn hình lớn hoặc mobile.',
+    'Fixed the Recruitment unlock notice appearing outside the dialog on desktop and mobile.'],
+   ['Hiển thị hệ trong Pokédex bằng màu riêng đồng bộ với PokéBox.',
+    'Pokédex now uses the same type-specific color labels as PokéBox.'],
+   ['Sát thương hiển thị hệ số chính xác như ×1.52 thay vì làm tròn thành số nguyên.',
+    'Damage now shows the actual multiplier, such as ×1.52, instead of rounding to a whole number.']
   ],
   credit:['Votri Valley — Dự án Việt hóa và mở rộng phi thương mại dựa trên PokéSurvivor của JPTER78.',
           'Votri Valley — Noncommercial localization and expansion based on JPTER78’s PokéSurvivor.']
