@@ -272,8 +272,8 @@ async function main(){
   const pureDex=await evaluate("(()=>{G.PKMSVVBoxHubUI.openDex();return ({overlay:!!document.querySelector('#pkmbx-dex-overlay'),search:!!document.querySelector('#pkmbx-dex-search'),hasEvolutionPane:!!document.querySelector('#pkmbx-dex-details'),itemActions:!!document.querySelector('#pkmbx-dex-overlay [data-hub-tm],#pkmbx-dex-overlay [data-pkmbx-use]'),cards:document.querySelectorAll('#pkmbx-dex-list button').length,insidePC:document.querySelector('#pkmsvv-pokebox-overlay')?.contains(document.querySelector('#pkmbx-dex-overlay')),tabs:[...document.querySelectorAll('#pkmbx-dex-overlay [data-pc-tab]')].map(b=>b.dataset.pcTab),pcHubHidden:document.querySelector('.pkmbx-hub-panel')?.hidden,exploreRule:document.querySelector('#pkmbx-dex-rule')?.textContent,exploreRuleVisible:(()=>{const node=document.querySelector('#pkmbx-dex-rule');return !!node&&getComputedStyle(node).display!=='none'&&node.getClientRects().length>0})()})})()");
   assert.equal(pureDex.overlay,true);
   assert.equal(pureDex.search,true);
-  assert.match(pureDex.exploreRule,/tiến hóa thành Pokémon đó|evolve into that Pokémon/,'Pokédex must describe evolution discovery');
-  assert.equal(pureDex.exploreRuleVisible,true,'Explore rule must be visible above filters');
+  assert.equal(pureDex.exploreRule,undefined,'the long introduction must be removed from Pokédex');
+  assert.equal(pureDex.exploreRuleVisible,false,'no wasted line above Dex search and list');
   assert.equal(pureDex.hasEvolutionPane,true);
   const discoveredToggle=await evaluate("(()=>{const b=document.querySelector('#pkmbx-dex-discovered');if(!b)return {missing:true};b.click();const on=b.getAttribute('aria-pressed'),status=document.querySelector('#pkmbx-dex-status').value;b.click();return {on,status,off:b.getAttribute('aria-pressed')};})()");
   assert.equal(discoveredToggle.missing,undefined,'discovered-only toggle must exist');
