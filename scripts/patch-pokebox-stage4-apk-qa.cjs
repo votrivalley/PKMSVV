@@ -8,6 +8,7 @@ const fs=require('node:fs'),path=require('node:path'),{execFileSync}=require('no
 const root=path.resolve(__dirname,'..');
 const {copyRegionCovers}=require('./copy-region-covers.cjs');
 const {copyFusionIcons}=require('./copy-fusion-icons.cjs');
+const {copyOrbIcons}=require('./copy-orb-icons.cjs');
 const decoded=path.resolve(process.argv[2]||'');
 if(!decoded||!fs.existsSync(path.join(decoded,'AndroidManifest.xml')))
  throw Error('Usage: node scripts/patch-pokebox-stage4-apk-qa.cjs <apktool-output>');
@@ -66,6 +67,7 @@ for(const filename of ['pkmsvv-box-stage1.css','pkmsvv-box-stage2.css','pkmsvv-b
 }
 copyRegionCovers(web);
 copyFusionIcons(web);
+copyOrbIcons(web);
 fs.mkdirSync(path.join(web,'images'),{recursive:true});
 fs.copyFileSync(path.join(root,'src/pkmsvv-menu-icons.webp'),path.join(web,'images/pkmsvv-menu-icons.webp'));
 const wikiQA=path.join(web,'js/ui/pkmsvv-wiki-qa.js');
