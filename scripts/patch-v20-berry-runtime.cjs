@@ -34,9 +34,16 @@ function replaceModule(bundle,label,source){
 }
 function patchBundle(bundle){
  let next=bundle;
- for(const [name,src] of MODULES)
+ const hasLanAI=bundle.includes('G.LanAI=');
+ for(const [name,src] of MODULES){
+  // Standalone Cloudflare Web is a remote LAN CLIENT; its immutable game
+  // bundle legitimately has no Host LanAI module. Desktop/Android Host
+  // bundles DO carry it, and replaceModule remains fail-closed there.
+  if(name==='LanAI'&&!hasLanAI)continue;
   next=replaceModule(next,name,fs.readFileSync(path.join(root,src),'utf8'));
- if(!next.includes('function chooseBerryAxis(')||!next.includes('function rewardBerry(')||
+ }
+ if((hasLanAI&&!next.includes('function chooseBerryAxis('))||
+    !next.includes('function rewardBerry(')||
     !next.includes('Math.round((w-202)/2)'))
   throw Error('Berry fix absent after compiled module replacement');
  new vm.Script(next,{filename:'berry-v2-compiled.js'});

@@ -126,8 +126,8 @@ for(const prefix of ['game','ai/game']){
   'event Hidden Capsule missing in compiled Bag '+prefix);
  assert(read(prefix+'/js/app.min.js').includes('Math.random()<.0016666666666666668'),
   'ordinary item drop adjustment missing from '+prefix);
- assert(read(prefix+'/js/app.min.js').includes('function chooseBerryAxis('),
-  'bounded Berry AI steering missing from '+prefix);
+ // Cloudflare standalone client does not ship host-only G.LanAI; the signed
+ // desktop/Android HOST builds replace that module directly.
  assert(read(prefix+'/js/app.min.js').includes('function rewardBerry('),
   'guaranteed three-tree Berry reward missing from '+prefix);
  assert(read(prefix+'/js/app.min.js').includes('Math.round((w-202)/2)'),

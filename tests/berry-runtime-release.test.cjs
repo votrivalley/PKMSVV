@@ -36,3 +36,10 @@ test('Berry reward and HUD location are compatible with the corrected LAN bot st
  const pack=read('scripts/promote-web-v20.cjs');
  assert.match(pack,/berry-freeze-reward-music-v32/);
 });
+
+test('Web-only pinned client may omit Host LanAI but still receives Berry rewards',()=>{
+ const client='const G={};G.PKMSVVBerryRescue=(()=>{return {legacy:true}})();';
+ const out=patchBundle(client);
+ assert.match(out,/function rewardBerry\(/);
+ assert.doesNotMatch(out,/G\.LanAI=/);
+});
