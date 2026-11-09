@@ -102,6 +102,9 @@ test('Mint rerolls one individual randomly and excludes current Nature',()=>{
 });
 test('Normal Capsule rolls a different standard slot, hidden stays rare and protected',()=>{
  const h=setup(),copy=add(h.s);
+ // Stage2 may legitimately roll a rare Hidden Ability from generation RNG.
+ // Standard capsules cannot overwrite that rare state; use a normal carrier.
+ hub.item(h.s,copy.id).abilitySlot=0;
  const out=hub.useCapsule(copy.id,h.s,()=>0);
  assert.equal(out.slot,1);
  assert.equal(hub.item(h.s,copy.id).abilitySlot,1);
@@ -138,6 +141,7 @@ test('failed save commit atomically restores team, items, inventory and TM',()=>
 });
 test('selected instance affects Nature, Ability and learned TM in combat, without changing another instance',()=>{
  const h=setup(),duplicate=add(h.s);
+ hub.item(h.s,duplicate.id).abilitySlot=0;
  hub.useMint(duplicate.id,h.s,()=>.9);
  hub.useCapsule(duplicate.id,h.s,()=>0);
  hub.teach(duplicate.id,'shadow-ball',h.s);

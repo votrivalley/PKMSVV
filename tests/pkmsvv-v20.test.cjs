@@ -65,18 +65,18 @@ test('Mint/Ability/TM sales consume exactly one copy and refund half',()=>{
  assert.equal(G.Shop.sell('tm:surf').ok,false);
  assert.equal(JSON.stringify(s),snapshot,'save failure refunds both item and coins');
 });
-test('2.0 item drops: normal 0.8%, elite 1.6%, legend 3.2%, hidden 0.2%',()=>{
+test('2.0 item drops: standard consumables only; rare Hidden Abilities cannot be manufactured',()=>{
  const {G,s}=shop();
  assert.equal(G.Shop.DROP_RATE.mint,.008);
  assert.equal(G.Shop.DROP_RATE.cap,.008);
- assert.equal(G.Shop.DROP_RATE.caph,.002,'Hidden Capsules are harder to find');
+ assert.equal(G.Shop.DROP_RATE.caph,undefined,'retired Hidden Capsule must not drop');
  assert.equal(G.Shop.enemyMultiplier({rarity:1}),1);
  assert.equal(G.Shop.enemyMultiplier({elite:true}),2);
  assert.equal(G.Shop.enemyMultiplier({dex:150}),4);
  const normal={dex:25};assert.deepEqual(Array.from(G.Shop.dropFromEnemy(normal,()=>.01)),[]);
  assert.deepEqual(Array.from(G.Shop.dropFromEnemy({dex:25,elite:true},()=>.01)),['mint','cap']);
- assert.deepEqual(Array.from(G.Shop.dropFromEnemy({dex:150},()=>.007)),['mint','cap','caph']);
- assert.equal(s.bag.mint,2);assert.equal(s.bag.cap,2);assert.equal(s.bag.caph,1);
+ assert.deepEqual(Array.from(G.Shop.dropFromEnemy({dex:150},()=>.007)),['mint','cap']);
+ assert.equal(s.bag.mint,2);assert.equal(s.bag.cap,2);assert.equal(s.bag.caph,undefined);
  const same={dex:25};G.Shop.dropFromEnemy(same,()=>0);
  assert.equal(G.Shop.dropFromEnemy(same,()=>0).length,0,'one kill counted once');
  G.PKMSVVArenaSolo={active:true};
