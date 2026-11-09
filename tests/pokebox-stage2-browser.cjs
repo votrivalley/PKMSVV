@@ -55,6 +55,11 @@ async function main(){
   ws.addEventListener('message',evt=>{
    let m;try{m=JSON.parse(String(evt.data))}catch(_){return}
    if(m.method==='Runtime.exceptionThrown')errors.push(m.params.exceptionDetails?.exception?.description||'Browser JS exception');
+   if(m.method==='Runtime.consoleAPICalled'){
+    const parts=(m.params?.args||[]).map(x=>String(x.value??x.description??''));
+    if(parts.some(x=>x.startsWith('QA_TRACE:')))console.log(parts.join(' | ').slice(0,1600));
+   }
+   
    const task=waiting.get(m.id);
    if(task){waiting.delete(m.id);m.error?task.reject(Error(m.error.message)):task.resolve(m.result)}
   });
@@ -932,12 +937,38 @@ async function main(){
    // Reproduce REAL 3-card level-up (not auto-level). Exercise browser key.
    // No automatic picking: prior QA never exercised the blocked choice.
    await evaluate(`(()=>{
+    const trace=(name,data='')=>console.log('QA_TRACE:'+name+' '+String(data).slice(0,300));
+    const offer=G.LevelUp.offer;
+    G.LevelUp.offer=function(...args){
+     trace('offer:enter','level='+args[0]?.level);
+     const cards=offer.apply(this,args);trace('offer:return','cards='+cards?.length);return cards;
+    };
+    const uiShow=G.UI.show;
+    G.UI.show=function(...args){
+     if(String(args[0]).includes('levelup'))trace('ui.show:enter',args[0]);
+     const ret=uiShow.apply(this,args);
+     if(String(args[0]).includes('levelup'))trace('ui.show:return',args[0]);
+     return ret;
+    };
+    const pickup=G.Pickups.update;
+    let pickupTraces=0;
+    G.Pickups.update=function(...args){
+     const active=window.__qaPickupActive;
+     if(active&&pickupTraces++<4)trace('pickup.update:enter',pickupTraces);
+     const result=pickup.apply(this,args);
+     if(active&&pickupTraces<=4)trace('pickup.update:return',pickupTraces);
+     return result;
+    };
+   })()`);
+   await evaluate(`(()=>{
     const original=G.RunUI.showLevelUp;
     G.RunUI.showLevelUp=function(...args){
      const events=window.__pkmsvvRunProbe.events;
      events.push({name:'levelup-enter',clock:G.Game?.st?.time,args:args.length,offers:args[1]?.length});
+     console.log('QA_TRACE:showLevelUp:enter offers='+args[1]?.length);
      const result=original.apply(this,args);
      events.push({name:'levelup-rendered',clock:G.Game?.st?.time});
+     console.log('QA_TRACE:showLevelUp:return');
      return result;
     };
    })()`);
@@ -947,6 +978,7 @@ async function main(){
    const levelTrigger=await evaluate(`(()=>{
     const pl=G.Game.player,before={level:pl.level,xp:pl.xp,xpNext:pl.xpNext};
     const xp=Math.ceil(pl.xpNext-pl.xp+7);
+    window.__qaPickupActive=true;
     G.Pickups.drop('xp',pl.x,pl.y,xp);
     return {before,xp,state:G.Game?.state,pickups:G.Pickups?.count};
    })()`);
