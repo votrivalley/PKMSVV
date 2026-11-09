@@ -442,10 +442,15 @@ test('Hovering Reshiram and Flying-type Pokémon ignore WATER slowdown without g
  assert.equal(reshiram.spd,60,'do not silently bypass damaging liquid terrain');
  assert.equal(f.api.installHoverWater(),true,'idempotent reinstallation');
 });
-test('Level-up controller exposes non-button cards and routes A to native pick',()=>{
- const source=require('node:fs').readFileSync(require('node:path').resolve(__dirname,'../src/pkmsvv-modal-navigation-qa.js'),'utf8');
+test('Level-up controller uses virtual card selection without unsafe DOM focus writes',()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const source=fs.readFileSync(path.resolve(__dirname,'../src/pkmsvv-modal-navigation-qa.js'),'utf8');
+ const css=fs.readFileSync(path.resolve(__dirname,'../src/pkmsvv-modal-navigation-qa.css'),'utf8');
  assert.match(source,/root\.id==='scr-levelup'/);
  assert.match(source,/#cards \.card/);
  assert.match(source,/G\.RunUI\.pick\(index\)/);
- assert.match(source,/card\.tabIndex=0/);
+ assert.match(source,/function levelSelect\(/);
+ assert.match(source,/data-pkmsvv-nav-index/);
+ assert.match(css,/data-pkmsvv-nav-index/);
+ assert.doesNotMatch(source,/card\.tabIndex=0/,'never modify level-up card tabindex in observer');
 });
