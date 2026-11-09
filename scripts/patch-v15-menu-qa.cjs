@@ -97,6 +97,12 @@ fs.appendFileSync(js,`
     pcSub.textContent=english?'Support Pokémon · Mega · Berries':'Pokémon hỗ trợ · Mega · Berry';
     pcSub.setAttribute('translate','no');
    }
+   const pokemon=menuList.querySelector('[data-go="dex"]');
+   const pokemonSub=pokemon?.querySelector('.pkmsvv-menu-copy small, small');
+   if(pokemonSub){
+    pokemonSub.textContent=english?'PokéBox · Pokédex · Upgrades':'PokéBox · Pokédex · Nâng cấp';
+    pokemonSub.setAttribute('translate','no');
+   }
   }
   const link=document.getElementById('pkmsvv-v15-discord');
   if(link){

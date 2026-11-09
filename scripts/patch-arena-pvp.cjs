@@ -8,12 +8,14 @@ const root=path.resolve(__dirname,'..'),game=path.join(root,'vendor','pokesurviv
 const html=path.join(game,'dev.html');
 const src=path.join(root,'src','lan','arena-pvp.js');
 const dst=path.join(game,'js','net','pkmsvv-arena-pvp.js');
+const recovery=path.join(game,'js','net','pkmsvv-match-recovery.js');
+fs.copyFileSync(path.join(root,'src','lan','match-recovery.js'),recovery);
 fs.mkdirSync(path.dirname(dst),{recursive:true});fs.copyFileSync(src,dst);
 const original=fs.readFileSync(html,'utf8');
 const anchor='<script defer src="js/net/coop.js"></script>';
 if(!original.includes(anchor))throw Error('Arena PvP missing source Co-op loader');
-if(original.includes('pkmsvv-arena-pvp.js'))throw Error('Arena PvP registered twice');
-fs.writeFileSync(html,original.replace(anchor,anchor+'\n<script defer src="js/net/pkmsvv-arena-pvp.js"></script>'));
+if(original.includes('pkmsvv-arena-pvp.js')||original.includes('pkmsvv-match-recovery.js'))throw Error('LAN recovery modules registered twice');
+fs.writeFileSync(html,original.replace(anchor,anchor+'\n<script defer src="js/net/pkmsvv-match-recovery.js"></script>\n<script defer src="js/net/pkmsvv-arena-pvp.js"></script>'));
 fs.appendFileSync(path.join(game,'css','style.css'),'\n'+
  fs.readFileSync(path.join(root,'src','lan','arena-pvp.css'),'utf8')+'\n');
 console.log('Arena 1v1: real LAN humans only, host authoritative 3-2-1, skill damage and result.');

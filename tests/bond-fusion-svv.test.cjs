@@ -1,279 +1,325 @@
 'use strict';
-const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
-const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
-function setup(){
- const G={I18n:{lang:'vi'},Coop:{active:false},Royale:{active:false},EggRush:{active:false},
-  PKMSVVBerryRescue:{active:false},PKMSVVArenaSolo:{active:false},
-  PKMSVVChampionArena:{active:false},Moves:{ALL:Array.from({length:103},(_,i)=>({id:'skill-'+i}))},
-  RunUI:{showBond(){}},DB:{save:{coins:122,pkmsvvBerry:{bag:{oran:1}}}}};
- const document={getElementById(){return null},querySelector(){return null}};
- vm.runInNewContext(read('src/pkmsvv-bond-fusion.js'),{G,document});
- const m=id=>({id,name:id,evolved:false,lvl:1,def:{maxLvl:6},type:'normal'});
- const pl={slots:[[m('ember')],[m('tackle')],[m('water-gun')]],bonds:0,
-  bondOptions(){
-   const loose=this.slots.filter(s=>s.length===1).map(s=>s[0]);
-   const grow=this.slots.find(s=>s.length>1&&s.length<4);
-   if(grow)return loose.length?{mode:'add',group:grow,loose}:null;
-   return loose.length>=2?{mode:'pair',group:null,loose}:null;
-  },
-  fuse(picked,group=null){
-   this.bonds=Math.max(0,this.bonds-1);
-   const target=group||this.slots.find(s=>s[0]===picked[0]);
-   for(const move of picked){
-    if(target.includes(move))continue;
-    const index=this.slots.findIndex(s=>s.length===1&&s[0]===move);
-    if(index<0)continue;
-    this.slots.splice(index,1);target.push(move);
-   }
-   return target;
+const test=require('node:test'),assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const root=path.join(__dirname,'..');
+const read=p=>fs.readFileSync(path.join(root,p),'utf8');
+const IDs=['ember-quick','water-tackle','grass-spin','spark-quick','mind-tackle',
+ 'fire-gust','bubble-ice','leaf-rock','shadow-mind','thunder-claw'];
+function setup(options={}){
+ const blasts=[],rings=[],toasts=[],enemies=[],saved={coins:250,owned:{25:{at:1}}};
+ class Enemy{
+  constructor(x=70,y=8,hp=1200){
+   this.x=x;this.y=y;this.hp=hp;this.maxHp=hp;this.dead=false;
+   this.hits=[];this.slowed=[];this.stunned=[];this.r=10;
   }
- };
- return {G,api:G.PKMSVVFusionPilot,pl,m};
-}
-test('Original 103 moves offer 5253 theoretical pairs, no fixed recipe gate',()=>{
- const {api}=setup();
- assert.equal(api.learnedCount(),103);
- assert.equal(api.potentialPairs(),5253);
- assert.equal(api.maxGroup,4);
- assert.equal(api.maxPerRun,1);
- assert.equal(api.RECIPES.length,10,'ten suggestions, not mandatory recipes');
- assert.equal(api.readyMove({id:'tackle',lvl:1,evolved:false}),true);
-});
-test('Any two distinct learned moves can be fused, even if unevolved and level one',()=>{
- const {api,pl}=setup();
- const opt=api.options(pl);
- assert.equal(opt.mode,'pair');assert.equal(opt.pilot,true);
- assert.equal(opt.loose.length,3,'all three learned moves remain available');
- assert.equal(api.confirm(pl,[opt.loose[0],opt.loose[2]]),true,'not a named recipe pair');
- assert.equal(pl._pkmsvvFusionUsed,1);
- assert.equal(api.options(pl),null,'free Fusion cannot be spent twice');
- assert.equal(api.confirm(pl,[opt.loose[0],opt.loose[1]]),false);
-});
-test('Fusion rejects same move twice, unknown moves and stale selections',()=>{
- const {api,pl,m}=setup(),opt=api.options(pl);
- assert.equal(api.confirm(pl,[opt.loose[0],opt.loose[0]]),false);
- assert.equal(api.confirm(pl,[opt.loose[0],m('unlearned')]),false);
- assert.equal(api.confirm(pl,[opt.loose[0]]),false);
- assert.equal(Number(pl._pkmsvvFusionUsed)||0,0);
-});
-test('With an existing group, free Fusion adds one learned loose move up to group size four',()=>{
- const {api,pl,m}=setup();
- const group=pl.slots[0];
- group.push(m('quick-attack'));
- const opt=api.options(pl);assert.equal(opt.mode,'add');
- assert.equal(opt.group,group);
- assert.equal(api.confirm(pl,[opt.loose[1]]),true);
- const {api:other,pl:p2,m:move}=setup();
- p2.slots=[[move('a'),move('b'),move('c'),move('d')],[move('e')]];
- assert.equal(other.options(p2),null,'full groups have no addable Bond target');
-});
-test('Co-op, Berry Rescue, Royale, Egg Rush, Solo and Champion all allow free Fusion',()=>{
- const {api,G,pl}=setup();
- for(const obj of [G.Coop,G.Royale,G.EggRush,G.PKMSVVBerryRescue,G.PKMSVVArenaSolo,G.PKMSVVChampionArena]){
-  obj.active=true;assert.equal(api.pilotEligible(pl),true);assert.equal(api.options(pl).mode,'pair');
-  obj.active=false;
+  hurt(amount){this.hp-=amount;this.hits.push(amount);if(this.hp<=0)this.dead=true;}
+  applySlow(a,t){this.slowed.push({a,t});}
+  applyStun(t){this.stunned.push(t);}
  }
- pl.remote=true;assert.equal(api.options(pl),null);
- pl.remote=false;pl.lanBot=true;assert.equal(api.options(pl),null);
- pl.lanBot=false;pl.dead=true;assert.equal(api.options(pl),null);
-});
-test('Rift-earned Bonds are never overridden by the free Fusion patch',()=>{
- const {api,pl}=setup(),old=JSON.stringify(api.progress(pl)),save=JSON.stringify(setup().G.DB.save);
- assert.equal(typeof api.openFusion,'function');
- assert.equal(typeof api.showGuide,'function');
- assert.equal(typeof api.potentialPairs,'function');
- assert.ok(old.includes('ember-quick'));
- const patch=read('scripts/patch-bond-fusion.cjs');
- assert.doesNotMatch(patch,/patch\('js\/game\.js'/);
- assert.match(patch,/pl\.bondOptions\(\)/,'original Bond code must remain in game');
- assert.match(read('src/pkmsvv-bond-fusion.js'),/p\.fuse\(picked,opt\.group\)/);
- assert.match(read('src/pkmsvv-bond-fusion.js'),/p\.bonds=\(Number\(p\.bonds\)\|\|0\)\+1/);
- assert.ok(save.includes('coins'));
-});
-test('Fusion Chapter 2 tutorials and Wiki explain all pairings without changing progression',()=>{
- const story=read('src/pkmsvv-story.js'),wiki=read('src/pkmsvv-wiki.js');
- const passage=story.slice(story.indexOf('  chapter1:['),story.indexOf('  chapter2:['));
- assert.match(passage,/Fusion/);assert.match(passage,/Không có công thức bắt buộc/);
- assert.match(passage,/tối đa bốn chiêu/);
- assert.match(wiki,/10 cặp dưới đây là gợi ý/);
- assert.match(wiki,/Miễn phí 1 lần\/trận/);
- assert.match(read('scripts/prepare-game.cjs'),/patch-bond-fusion\.cjs/);
-});
-
-test('All ten suggestions are distinct pairs of real pinned PokéSurvivor skills',()=>{
- const source=read('src/pkmsvv-bond-fusion.js');
- const m=source.match(/id:'fire-gust'/);assert.ok(m);
- const {api}=setup();
- const original=['tackle','quick-attack','ember','water-gun','vine-whip','rapid-spin',
-  'thunder-shock','confusion','flamethrower','gust','bubble-beam','ice-shard',
-  'razor-leaf','rock-tomb','shadow-ball','psychic','thunderbolt','metal-claw'];
- const pairs=new Set();
- for(const r of api.RECIPES){
+ class Player{
+  constructor(){
+   this.x=0;this.y=0;this.level=25;this.baseAtk=1;this.atkMul=1;
+   this.moves=[];this.slots=[];this.active=0;this.bind={};this.bonds=2;
+   this.dead=false;this.remote=false;this.lanBot=false;this.baseCasts=0;
+  }
+  cast(){this.baseCasts++;}
+  bondOptions(){return {mode:'pair',loose:this.slots.flat(),group:null};}
+  fuse(){this.bonds--;return [];}
+ }
+ const G={
+  I18n:{lang:'vi'},DB:{save:saved},Moves:{
+   ALL:Array.from({length:103},(_,i)=>({id:'skill-'+i})),
+   BY_ID:Object.fromEntries(['ember','quick-attack','water-gun','tackle',
+    'vine-whip','rapid-spin','thunder-shock','confusion','flamethrower','gust',
+    'bubble-beam','ice-shard','razor-leaf','rock-tomb','shadow-ball','psychic',
+    'thunderbolt','metal-claw'].map(id=>[id,{id,name:id,kind:'projectile',maxLvl:3}])),
+   levelUp(m){m.lvl=Math.min(m.def?.maxLvl||3,m.lvl+1);}
+  },
+  Player,Enemy,
+  EnemyMgr:{all:()=>enemies},
+  FX:{ring(...args){rings.push(args)},burst(...args){blasts.push(args)}},
+  Audio:{sfx(){}},U:{dist2:(x,y,a,b)=>(x-a)**2+(y-b)**2},
+  World:{isFree:()=>true},
+  Game:{state:'playing',st:{time:90},player:null,togglePause(){this.state='playing'}},
+  Combat:{tick(dt,pl){this.ticks=(this.ticks||0)+1}},
+  UI:{toast:s=>toasts.push(s),isOpen:()=>false,hide(){}},
+  LevelUp:{offer(){return Array.from({length:3},(_,i)=>({type:'up',key:'up:'+i,apply:()=>true}));}},
+  Icons:{html:key=>'<svg>'+key+'</svg>',draw(){return 'native'}},
+  Coop:{active:false},Royale:{active:false},EggRush:{active:false},
+  PKMSVVArenaSolo:{active:false},PKMSVVChampionArena:{active:false}
+ };
+ const document={getElementById(){return null},querySelector(){return null},
+  addEventListener(){},body:null};
+ const sandbox={G,document,Image:class{
+  constructor(){this.complete=true;this.naturalWidth=256;}
+  set src(value){this._src=value;}
+ },console,setInterval(){}};
+ if(Number.isFinite(options.random))sandbox.Math=Object.assign(Object.create(Math),
+  {random:()=>options.random});
+  vm.createContext(sandbox);
+ vm.runInContext(read('src/pkmsvv-bond-fusion.js'),sandbox);
+ vm.runInContext(read('src/pkmsvv-fusion-evolved.js'),sandbox);
+ const m=(id,lvl=3)=>({id,name:id,type:'normal',lvl,
+  kind:'projectile',cd:2.2,t:0,def:{id,name:id,kind:'projectile',maxLvl:3,cd:2.2}});
+ const pl=new Player();G.Game.player=pl;
+ const stock=(...skills)=>{
+  pl.moves=skills.map(([id,lvl])=>m(id,lvl??3));
+  pl.slots=pl.moves.map(x=>[x]);
+  return pl.moves;
+ };
+ return {G,api:G.PKMSVVFusionPilot,fx:G.PKMSVVFusionEvolved,pl,m,
+  stock,enemies,blasts,rings,toasts,saved,Enemy};
+}
+test('all ten original Fusion WebP files exist, unique and match exact recipes',()=>{
+ const h=setup();
+ assert.equal(h.api.RECIPES.length,10);
+ assert.deepEqual(Array.from(h.api.RECIPES,r=>r.id),IDs);
+ assert.equal(h.fx.EFFECTS.length,10);
+ assert.equal(new Set(Object.values(h.fx.CONFIG).map(x=>x.kind)).size,10,
+  'every evolved skill must use a distinct effect behavior');
+ for(const r of h.api.RECIPES){
   assert.equal(r.ids.length,2);
   assert.notEqual(r.ids[0],r.ids[1]);
-  for(const id of r.ids)assert.ok(original.includes(id),id);
-  const key=[...r.ids].sort().join('|');
-  assert.equal(pairs.has(key),false,'duplicate named pair '+key);
-  pairs.add(key);
- }
- const compiled=path.join(__dirname,'..','vendor','pokesurvivor','js','data','moves.js');
- if(fs.existsSync(compiled)){
-  const skills=fs.readFileSync(compiled,'utf8');
-  for(const id of original)assert.ok(skills.includes("id: '"+id+"'"),'missing move in real game: '+id);
+  const filename=path.join(root,'assets/fusion-icons',r.id+'.webp');
+  assert.ok(fs.existsSync(filename),'missing '+filename);
+  assert.ok(fs.statSync(filename).size>1000);
+  assert.match(h.fx.assets[r.id],new RegExp(r.id+'\\.webp$'));
  }
 });
-test('Level-up cards label a known partner, two offered halves, and any free Fusion',()=>{
- const {api,G,pl,m}=setup();
- G.Moves.BY_ID=Object.fromEntries([
-  'tackle','ember','flamethrower','gust','rock-tomb','razor-leaf','ice-shard','bubble-beam',
-  'metal-claw','thunderbolt','spikes','quick-attack'
- ].map(id=>[id,{name:id}]));
- G.T=(v)=>v;
- G.Game={player:pl,state:'playing'};
- G.UI={toast(){}};
- const cards=[
-  {type:'new',key:'new:flamethrower',desc:'Fire',apply:p=>p.slots.push([m('flamethrower')])},
-  {type:'new',key:'new:gust',desc:'Wind',apply:p=>p.slots.push([m('gust')])},
-  {type:'new',key:'new:spikes',desc:'Normal',apply:p=>p.slots.push([m('spikes')])}
- ];
- api.decorateOffers(pl,cards);
- assert.match(cards[0].desc,/CẶP TIỀM NĂNG/);
- assert.match(cards[1].desc,/chọn 1, học chiêu kia sau/);
- assert.match(cards[2].desc,/Có thể Fusion với skill đã học/);
- assert.equal(cards[0]._pkmsvvFusionHint,'offered');
- assert.ok(!cards[0].desc.includes('FUSION SẴN SÀNG'),
-  'two offered halves cannot both be picked at once');
- const more=[{type:'new',key:'new:quick-attack',desc:'Quick',apply:p=>p.slots.push([m('quick-attack')])}];
- api.decorateOffers(pl,more);
- assert.equal(more[0]._pkmsvvFusionHint,'ready','Ember is already owned');
- assert.match(more[0].desc,/Đã có ember/);
- assert.equal(cards[0].desc.includes('<script'),false);
+test('Wave-type Fusion names reflect knockback effects, not a player dash',()=>{
+ const h=setup(),wave=h.api.RECIPES.find(x=>x.id==='water-tackle');
+ const mind=h.api.RECIPES.find(x=>x.id==='mind-tackle');
+ assert.equal(wave.vi,'Sóng Xô');assert.equal(wave.en,'Tidal Surge');
+ assert.equal(mind.vi,'Chấn Động Tâm Linh');assert.equal(mind.en,'Mind Shockwave');
+ assert.match(wave.viEffect,/đẩy lùi/);assert.match(mind.viEffect,/hất lùi/);
+ const effects=read('src/pkmsvv-fusion-evolved.js');
+ assert.match(effects,/id==='water-tackle'/);
+ assert.match(effects,/id==='mind-tackle'/);
+ assert.doesNotMatch([wave.vi,mind.vi].join(' · '),/Húc/);
 });
-test('A newly learned complementary skill alerts once per pair and highlights Pause Fusion',()=>{
- const {api,G,pl,m}=setup();let toasts=[];
- G.Moves.BY_ID=Object.fromEntries(['ember','quick-attack','flamethrower','gust']
-  .map(id=>[id,{name:id}]));
- G.T=v=>v;G.UI={toast:(s)=>toasts.push(s)};
- G.Game={player:pl,state:'playing'};
- G.LevelUp={offer(){
-  return [
-   {type:'new',key:'new:quick-attack',desc:'move',
-    apply:p=>p.slots.push([m('quick-attack')])},
-   {type:'stat',key:'stat:hp',desc:'heal',apply(){}}
-  ];
- }};
- assert.equal(api.installSkillHints(),true);
- assert.equal(api.installSkillHints(),true,'do not wrap twice');
- let cards=G.LevelUp.offer(pl);
- assert.equal(cards.length,2,'no extra card slots or altered RNG');
- assert.match(cards[0].desc,/FUSION GỢI Ý/);
- assert.equal(cards[1].desc,'heal','stats are not marked');
- const initial=G.DB.save,old=JSON.stringify(initial);
- cards[0].apply(pl);
- assert.equal(toasts.length,1,'new matching pair notifies after actual learn');
- assert.match(toasts[0],/FUSION SẴN SÀNG/);
- assert.ok(Number(pl._pkmsvvFusionHintUntil)>Date.now());
- assert.equal(JSON.stringify(G.DB.save),old,'no persistent state mutation');
- cards=G.LevelUp.offer(pl);
- cards[0].apply(pl);
- assert.equal(toasts.length,1,'relearning/same card cannot notify repeatedly');
- assert.equal(api.RECIPES.length,10);
+test('MAX+MAX is mandatory; one below MAX blocks Fusion, even with real Rift Bonds',()=>{
+ const h=setup();
+ h.stock(['ember',3],['quick-attack',2]);
+ assert.equal(h.fx.maxed(h.pl.moves[0]),true);
+ assert.equal(h.fx.maxed(h.pl.moves[1]),false);
+ assert.equal(h.api.options(h.pl),null);
+ assert.equal(h.fx.evolve(h.pl,'ember-quick'),null);
+ assert.equal(h.pl.moves.length,2);
+ assert.equal(h.pl.bonds,2,'earned Rift Bonds stay independent');
+ h.G.Moves.levelUp(h.pl.moves[1]);
+ assert.equal(h.api.progress(h.pl)[0].maxed,2);
+ assert.deepEqual(Array.from(h.fx.choices(h.pl),r=>r.id),['ember-quick']);
+ assert.equal(h.api.options(h.pl).mode,'evolved');
 });
-test('First generic pair notifies once even without named recipe, but no notifications before owning two',()=>{
- const {api,G,pl,m}=setup();const seen=[];
- G.Game={player:pl,state:'playing'};G.UI={toast:t=>seen.push(t)};
- pl.slots=[[m('tackle')]];
- const before=api.learnedIds(pl);
- pl.slots.push([m('ice-beam')]);
- assert.equal(api.notifyLearned(pl,'ice-beam',before),true);
- assert.match(seen[0],/2 skill rồi/);
- const after=api.learnedIds(pl);
- pl.slots.push([m('aura-sphere')]);
- assert.equal(api.notifyLearned(pl,'aura-sphere',after),false);
- assert.equal(seen.length,1);
+test('successful MAX+MAX Fusion replaces TWO source moves with ONE maxed new skill, frees a slot',()=>{
+ const h=setup();
+ const [ember,quick,other]=h.stock(['ember',3],['quick-attack',3],['tackle',3]);
+ const saveBefore=JSON.stringify(h.saved),originalBonds=h.pl.bonds;
+ const upgraded=h.fx.evolve(h.pl,'ember-quick');
+ assert.ok(upgraded);
+ assert.equal(upgraded.id,'pkmsvv-fusion:ember-quick');
+ assert.equal(upgraded.pkmsvvFusionId,'ember-quick');
+ assert.equal(upgraded.kind,'projectile');
+ assert.equal(upgraded.lvl,1);
+ assert.equal(upgraded.def.maxLvl,1,'evolved Fusion is a MAX skill');
+ assert.equal(h.pl.moves.length,2,'two MAX skills become exactly one');
+ assert.equal(h.pl.slots.length,2,'an extra learning slot is freed');
+ assert.equal(h.pl.moves.filter(m=>m===upgraded).length,1);
+ assert.equal(h.pl.moves.includes(ember),false);
+ assert.equal(h.pl.moves.includes(quick),false);
+ assert.equal(h.pl.moves.includes(other),true,'unrelated skill survives');
+ assert.equal(h.pl._pkmsvvFusionUsed,1);
+ assert.equal(h.api.options(h.pl),null);
+ assert.equal(h.fx.evolve(h.pl,'water-tackle'),null,'only one evolved Fusion per run');
+ assert.equal(JSON.stringify(h.saved),saveBefore,'Fusion must not alter account JSON');
+ assert.equal(h.pl.bonds,originalBonds,'existing Rift Bonds must not be spent');
 });
-
-test('All ten Fusion suggestions use clear Pokémon-style Vietnamese labels without changing recipes',()=>{
- const {api}=setup();
- const names=new Map([
-  ['ember-quick','Lướt Lửa'],
-  ['water-tackle','Húc Sóng'],
-  ['grass-spin','Dây Leo Xoáy'],
-  ['spark-quick','Lướt Điện'],
-  ['mind-tackle','Húc Tâm Linh'],
-  ['fire-gust','Lốc Lửa'],
-  ['bubble-ice','Bong Bóng Băng'],
-  ['leaf-rock','Lá Sắc Đá Rơi'],
-  ['shadow-mind','Bóng Ma Siêu Năng'],
-  ['thunder-claw','Vuốt Sét']
- ]);
- assert.equal(api.RECIPES.length,names.size);
- assert.equal(new Set(api.RECIPES.map(r=>r.vi)).size,names.size);
- for(const recipe of api.RECIPES){
-  assert.equal(recipe.vi,names.get(recipe.id),'stable recipe '+recipe.id);
-  assert.equal(recipe.ids.length,2,'must preserve two learned move ids');
+test('all ten recipes perform actual enemy damage and custom combat effects',()=>{
+ for(const r of setup().api.RECIPES){
+  const h=setup();
+  h.stock([r.ids[0],3],[r.ids[1],3],['tackle',3]);
+  const actor=new h.Enemy(70,6,3000),other=new h.Enemy(80,23,3000);
+  h.enemies.push(actor,other);
+  const upgraded=h.fx.evolve(h.pl,r.id);
+  assert.ok(upgraded,'could not evolve '+r.id);
+  const pre=actor.hp;
+  h.pl.cast(upgraded);
+  for(let i=0;i<11;i++)h.G.Combat.tick(.35,h.pl,0);
+  assert.ok(actor.hp<pre,'no actual enemy.hurt damage for '+r.id);
+  assert.ok(h.rings.length>0&&h.blasts.length>0,'no visual Fusion FX '+r.id);
+  assert.equal(h.pl.baseCasts,0,'Fusion must not recast the consumed base skill');
  }
- const oldNames=['Thủy Kích','Tâm Lực','Hỏa Phong','Băng Triều','Thạch Diệp','Tâm Ảnh','Lôi Trảo'];
- for(const forbidden of oldNames){
-  assert.ok(!api.RECIPES.some(r=>r.vi===forbidden),forbidden+' is still used');
- }
+});
+test('Water wave knocks back and slows, Lightning Chain hits multiple targets and stuns',()=>{
+ let h=setup();h.stock(['water-gun',3],['tackle',3]);
+ const e=new h.Enemy(70,0);h.enemies.push(e);
+ const fused=h.fx.evolve(h.pl,'water-tackle');h.pl.cast(fused);
+ assert.ok(e.x!==70,'water-wave push changes real NPC position');
+ assert.ok(e.slowed.length>0);
+ h=setup();h.stock(['thunder-shock',3],['quick-attack',3]);
+ h.enemies.push(new h.Enemy(70,0),new h.Enemy(100,10),new h.Enemy(160,40));
+ h.pl.cast(h.fx.evolve(h.pl,'spark-quick'));
+ assert.ok(h.enemies.every(x=>x.hp<1200),'chain lightning must hit multiple targets');
+ assert.ok(h.enemies.some(x=>x.stunned.length),'lightning stun must be real');
+});
+test('Ice stacks freeze after two hits; Thunder Claw armor break increases later ordinary damage',()=>{
+ let h=setup();h.stock(['bubble-beam',3],['ice-shard',3]);
+ const e=new h.Enemy(70,0);h.enemies.push(e);
+ const icy=h.fx.evolve(h.pl,'bubble-ice');
+ h.pl.cast(icy);h.pl.cast(icy);
+ assert.ok(e.stunned.length>=1,'ice shards freeze after stacked hits');
+ h=setup();h.stock(['thunderbolt',3],['metal-claw',3]);
+ const metal=h.fx.evolve(h.pl,'thunder-claw'),foe=new h.Enemy(70,0);
+ h.enemies.push(foe);h.pl.cast(metal);
+ assert.ok(foe.pkmsvvFusionShredUntil>h.G.Game.st.time);
+ const before=foe.hp;foe.hurt(100);
+ assert.ok(foe.hp<=before-116+1e-6,'armor break must amplify ordinary attacks too');
+});
+test('Shadows mark and detonate after delay; fire vortex has repeating damage ticks',()=>{
+ let h=setup();h.stock(['shadow-ball',3],['psychic',3]);
+ const e=new h.Enemy(70,0);h.enemies.push(e);
+ h.pl.cast(h.fx.evolve(h.pl,'shadow-mind'));
+ const first=e.hp;
+ for(let i=0;i<10;i++)h.G.Combat.tick(.3,h.pl,0);
+ assert.ok(e.hp<first,'dark orb must detonate, not only draw purple FX');
+ assert.equal(h.fx.activeZones,0);
+ h=setup();h.stock(['flamethrower',3],['gust',3]);
+ const e2=new h.Enemy(70,0);h.enemies.push(e2);
+ h.pl.cast(h.fx.evolve(h.pl,'fire-gust'));
+ const initial=e2.hp;
+ for(let i=0;i<9;i++)h.G.Combat.tick(.34,h.pl,0);
+ assert.ok(e2.hp<initial,'flame tornado must burn repeatedly');
+});
+test('Fusion icons render in HTML and Canvas skill HUD, not fallback plain sprites',()=>{
+ const h=setup(),r=h.api.RECIPES[0];
+ h.stock([r.ids[0],3],[r.ids[1],3]);
+ const m=h.fx.evolve(h.pl,r.id);
+ const img=h.G.Icons.html('move:'+m.id,32);
+ assert.match(img,/ember-quick\.webp/);
+ assert.match(img,/<img class="pkmsvv-fusion-skill-icon"/);
+ let drawn=0;
+ h.G.Icons.draw({drawImage(){drawn++;}},'move:'+m.id,0,0,48);
+ assert.equal(drawn,1);
+});
+test('Rift Bonds are separate: original Bond system not replaced or awarded as extra evolved Fusion',()=>{
  const src=read('src/pkmsvv-bond-fusion.js');
- const wiki=read('src/pkmsvv-wiki.js');
- assert.match(src,/hint\.recipe\.vi/,'skill pick hints use the updated labels');
- assert.match(src,/tr\(r\.vi,r\.en\)/,'Fusion guide uses the updated labels');
- assert.match(wiki,/tr\(formula\.vi,formula\.en\)/,'Wiki uses the updated labels');
+ const patch=read('scripts/patch-bond-fusion.cjs');
+ assert.doesNotMatch(patch,/patch\('js\/game\.js'/);
+ assert.doesNotMatch(src,/\.fuse\(picked,opt\.group\)/);
+ assert.match(src,/Rift Bonds remain/);
+ assert.match(src,/maxPerRun=1/);
+ assert.match(src,/pkmsvv-fusion-guide/);
+ assert.doesNotMatch(src,/FUSION TỰ DO/);
+ assert.match(read('src/pkmsvv-wiki.js'),/Cả hai chiêu/);
+ assert.match(read('src/pkmsvv-story.js'),/luyện cả hai chiêu/);
+});
+test('skill card hints never incorrectly claim ready at low level; MAX upgrades notify once',()=>{
+ const h=setup();h.stock(['ember',2],['quick-attack',2]);
+ const hint=h.api.offerHint(h.pl,'quick-attack');
+ assert.equal(hint.recipe.id,'ember-quick');
+ assert.equal(h.api.notifyLearned(h.pl),false,'two learned but non-MAX cannot notify');
+ h.G.Moves.levelUp(h.pl.moves[0]);
+ assert.equal(h.toasts.length,0);
+ h.G.Moves.levelUp(h.pl.moves[1]);
+ assert.equal(h.toasts.length,1);
+ assert.match(h.toasts[0],/Hai kỹ năng đã MAX/);
+ h.G.Moves.levelUp(h.pl.moves[1]);
+ assert.equal(h.toasts.length,1,'only once per match');
+});
+test('visual assets and evolved module are packaged in isolated Web, Windows, Android QA',()=>{
+ const web=read('scripts/build-pokebox-stage1-qa.cjs');
+ const pc=read('scripts/build-pokebox-stage1-pc-qa.cjs');
+ const android=read('scripts/patch-pokebox-stage4-apk-qa.cjs');
+ const compiled=read('scripts/patch-qa-compiled-modules.cjs');
+ const copy=read('scripts/copy-fusion-icons.cjs');
+ for(const src of [web,pc,android]){
+  assert.match(src,/copyFusionIcons\(/);
+  assert.match(src,/pkmsvv-fusion-evolved\.js/);
+  assert.match(src,/pkmsvv-fusion-evolved\.css/);
+ }
+ assert.match(compiled,/PKMSVVFusionPilot/);
+ for(const id of IDs)assert.ok(copy.includes(id),'QA copy manifest missing '+id);
+});
+test('controller/pad and keyboard can enter and exit all Fusion choices',()=>{
+ const ui=read('src/pkmsvv-bond-fusion.js');
+ const nav=read('src/pkmsvv-modal-navigation-qa.js');
+ assert.match(nav,/#pkmsvv-fusion-guide/);
+ assert.match(ui,/ArrowUp/);
+ assert.match(ui,/ArrowDown/);
+ assert.match(ui,/e\.key==='Escape'/);
+ assert.match(ui,/button\.disabled=!ready/);
+ assert.match(ui,/\.focus\?\.\(\)/);
 });
 
-test('Fusion appears only inside Pause and opens real Bond picker on PC and mobile',()=>{
- const script=read('src/pkmsvv-bond-fusion.js'),css=read('scripts/patch-bond-fusion.cjs');
- assert.doesNotMatch(script,/pkmsvv-fusion-action/,'old floating HUD action must be removed');
- assert.match(script,/pkmsvv-pause-fusion/);
- assert.match(script,/querySelector\?\.\('\.pause-box \.row'\)/);
- assert.match(script,/G\.Game\?\.togglePause\?\.\(\)/);
- assert.match(script,/openFromPause\(\)/);
- assert.match(css,/#pkmsvv-pause-fusion/);
- assert.doesNotMatch(css,/#pkmsvv-fusion-action/);
- const wiki=read('src/pkmsvv-wiki.js');
- assert.match(wiki,/Ghép 2 kỹ năng đã học bất kỳ/);
- assert.doesNotMatch(wiki,/POKÉSURVIVOR GỐC: Bất kỳ hai chiêu/);
-});
-test('Pause Fusion resumes solo before selection; empty recipes stay paused',()=>{
- const source=read('src/pkmsvv-bond-fusion.js');
- const children=[],buttonNodes={};
- function element(tag){
-  return {tag,hidden:false,style:{},classList:{toggle(){}},
-   addEventListener(k,cb){this[k]=cb;},setAttribute(){},
-   append(...xs){this.children=(this.children||[]).concat(xs);},
-   appendChild(el){this.append(el);},
-   querySelector(){return null},
-   remove(){},insertBefore(el){children.push(el);}
-  };
+test('MAX+MAX levelup has fixed 80→70→60→50→40→30→30% chance once per level',()=>{
+ const h=setup({random:.99}),pl=h.pl,api=h.api;
+ h.stock(['flamethrower',3],['gust',3]);
+ assert.deepEqual(Array.from(api.FUSION_OFFER_RATES),[.8,.7,.6,.5,.4,.3]);
+ const rates=[.8,.7,.6,.5,.4,.3,.3];
+ for(let level=1;level<=7;level++){
+  pl.level=level;
+  assert.equal(api.chance(pl),rates[level-1]);
+  const cards=h.G.LevelUp.offer(pl,3);
+  assert.equal(cards.some(c=>c.type==='fusion'),false,'a failed roll must not yield Fusion card');
+  const attempts=pl._pkmsvvFusionOfferAttempts;
+  h.G.LevelUp.offer(pl,3);
+  assert.equal(pl._pkmsvvFusionOfferAttempts,attempts,
+   'rerolling the same level must not diminish or reroll probability');
  }
- const row=element('div'),pause=element('section'),settings=element('button');
- pause.querySelector=()=>row;settings.parentElement=row;
- buttonNodes['scr-pause']=pause;buttonNodes['btn-pause-settings']=settings;
- const document={body:{appendChild(){}},createElement:element,
-  getElementById(id){return buttonNodes[id]||null},
-  querySelector(){return null;}};
- const moves=[{id:'ember',name:'Ember'},{id:'tackle',name:'Tackle'}];
- const pl={dead:false,slots:moves.map(m=>[m]),bonds:0,
-  bondOptions(){return {mode:'pair',group:null,loose:moves};},
-  fuse(picked){this.bonds--;return picked;}};
- let state='paused',shown=true,pausedToggles=0,pickers=0;
- const G={I18n:{lang:'vi'},Moves:{ALL:[],BY_ID:{}},
-  Game:{player:pl,get state(){return state},
-   togglePause(){pausedToggles++;state='playing';shown=false;}},
-  UI:{isOpen(id){return id==='scr-pause'&&shown},hide(id){if(id==='scr-pause')shown=false;}},
-  RunUI:{showBond(opt,cb){pickers++;}},
-  Coop:{active:false},DB:{save:{}}};
- vm.runInNewContext(source,{G,document,setInterval(){}});
- const api=G.PKMSVVFusionPilot;
- assert.equal(children.length,1,'one button in pause row');
- assert.equal(children[0].id,'pkmsvv-pause-fusion');
- assert.equal(children[0].hidden,false);
- assert.equal(api.openFromPause(),true);
- assert.equal(pausedToggles,1);
- assert.equal(pickers,1);
- assert.equal(shown,false);
- assert.equal(api.openFromPause(),false,'must not open outside pause');
+ assert.equal(api.chance(pl),.3,'30% floor never falls lower');
+});
+test('Fusion levelup cards can be selected normally; only one fusion per run',()=>{
+ const h=setup({random:0}),p=h.pl;
+ h.stock(['flamethrower',3],['gust',3]);
+ p.level=13;
+ const cards=h.G.LevelUp.offer(p,3);
+ assert.equal(cards.length,3);
+ assert.equal(cards[2].type,'fusion');
+ assert.match(cards[2].title,/Lốc Lửa/);
+ assert.ok(cards[2].apply(p));
+ assert.equal(p._pkmsvvFusionUsed,1);
+ assert.equal(p.moves.length,1);
+ assert.equal(p.moves[0].pkmsvvFusionId,'fire-gust');
+ p.level++;
+ assert.equal(h.G.LevelUp.offer(p,3).some(c=>c.type==='fusion'),false);
+});
+test('Flame Gale direct hit and repeat burn are impactful and AoE is bounded for busy runs',()=>{
+ const h=setup({random:0}),p=h.pl,e=new h.Enemy(70,0,8000);
+ h.stock(['flamethrower',3],['gust',3]);
+ assert.ok(h.fx.CONFIG['fire-gust'].power>=1);
+ assert.ok(h.fx.CONFIG['fire-gust'].cd<=3.5);
+ h.enemies.push(e);
+ p.cast(h.fx.evolve(p,'fire-gust'));
+ const immediately=8000-e.hp;
+ assert.ok(immediately>=20,'tornado must damage immediately, not merely show FX');
+ for(let i=0;i<12;i++)h.G.Combat.tick(.34,p);
+ assert.ok(8000-e.hp>immediately*2,'repeated burning must be strong enough to justify consuming two MAX skills');
+ assert.ok(h.fx.activeZones<=14);
+});
+test('Orb native QA rate guards are fixed at 2% and no longer tied to remaining skill slots',()=>{
+ const script=read('scripts/patch-qa-compiled-modules.cjs');
+ const original=read('scripts/patch-v14-orb-fifo.cjs');
+ assert.match(script,/const orbRoll=/,'QA patch handles the two minified counter variants');
+ assert.match(script,/const reduced='\.02'/,'all eligible Orb drops use 2%');
+ assert.doesNotMatch(script,/const reduced='\.225'/,'old boss odds must not remain');
+ assert.match(original,/0\.02/);
+ assert.doesNotMatch(original,/0\.225|0\.03/);
+ assert.match(script,/\*150&&Math\.random/);
+ const orb=read('src/v14/orbs.js');
+ assert.match(orb,/const ready=p=>!!p/,'Fusion frees one slot but never makes Orbs uncollectible');
+});
+
+test('Fusion damage honors real endgame ×224 Attack instead of silently clamping at ×4',()=>{
+ const run=(atkMul)=>{
+  const h=setup(),p=h.pl;
+  h.stock(['flamethrower',3],['gust',3]);
+  p.atkMul=atkMul;
+  const target=new h.Enemy(70,0,10000000);h.enemies.push(target);
+  p.cast(h.fx.evolve(p,'fire-gust'));
+  for(let i=0;i<12;i++)h.G.Combat.tick(.34,p);
+  return 10000000-target.hp;
+ };
+ const low=run(4),high=run(224);
+ assert.ok(low>0);
+ assert.ok(high>low*40,'endgame Fusion must scale with actual huge Attack buffs, not tiny cap');
 });

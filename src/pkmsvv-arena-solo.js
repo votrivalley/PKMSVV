@@ -13,13 +13,21 @@ G.PKMSVVArenaSolo=(()=>{
  const DUEL_TYPES=['normal','fighting','psychic','steel','rock','ghost'];
  const FARM_SPAWN_MULT=2,FARM_XP_MULT=2;
  let startingOwnRun=false,fightCue=0;
- let active=false,stage='idle',prepTotal=0,elapsed=0,opponent=null,target=null,selected=null,enemyDex=null,lastSecond=-1,shrunk=0,duelType='normal',aiFactor=1;
+ let active=false,stage='idle',prepTotal=0,elapsed=0,opponent=null,target=null,selected=null,selectedInstanceId=null,selectedShiny=false,enemyDex=null,lastSecond=-1,shrunk=0,duelType='normal',aiFactor=1;
  const canEnter=()=>!!(G.PKMSVVStory?.arenaUnlocked?.()&&!G.Coop?.active);
  function owned(){
-  const s=G.DB?.save||{},collection=s.owned||{},ids=Object.keys(collection)
-   .map(Number).filter(d=>d>0&&G.DEX_BY?.[d]);
-  if(s.partner&&!ids.includes(s.partner)&&G.DEX_BY?.[s.partner])ids.unshift(s.partner);
-  return ids.slice(0,24);
+  // Only the six individual slots explicitly assembled in PokéBox qualify.
+  return G.PKMSVVBoxHub?.arenaReady?.(G.DB?.save)||[];
+ }
+ function preferredReady(choices=owned()){
+  const s=G.DB?.save||{};
+  return choices.find(x=>x.id===s.pkmsvvSelectedInstanceId)||
+   choices.find(x=>x.dex===Number(s.partner)&&x.shiny===!!s.partnerShiny)||
+   choices[0]||null;
+ }
+ function selectReady(item){
+  if(!item||!owned().some(x=>x.id===item.id))return false;
+  selected=item.dex;selectedInstanceId=item.id;selectedShiny=!!item.shiny;return true;
  }
  function chooseEnemy(choices=pool,random=Math.random){
   const possibilities=choices.filter(d=>d!==selected&&G.DEX_BY?.[d]);
@@ -37,7 +45,8 @@ G.PKMSVVArenaSolo=(()=>{
    '<div id="pkmsvv-arena-solo-vs" class="pkmsvv-arena-solo-vs"></div>'+
    '<div class="pkmsvv-arena-solo-controls">'+
    '<button class="btn gold" type="button" id="pkmsvv-arena-solo-play">🤖 Random AI</button>'+ 
-   '<button class="btn ghost" type="button" id="pkmsvv-arena-solo-invite">🤝 Mời người chơi</button>'+ 
+   '<button class="btn ghost" type="button" id="pkmsvv-arena-solo-invite">🤝 Mời người chơi</button>'+
+   '<button class="btn gold" type="button" id="pkmsvv-arena-solo-confirm" hidden>'+tr('✓ Xác nhận Pokémon','✓ Confirm Pokémon')+'</button>'+ 
    '<button class="btn ghost" type="button" id="pkmsvv-arena-solo-close">Đóng</button></div></div>';
   document.body.append(screen);
   $('pkmsvv-arena-solo-play').onclick=()=>start(); // click handler must not pass PointerEvent as the RNG function
@@ -48,6 +57,7 @@ G.PKMSVVArenaSolo=(()=>{
    else G.UI?.toast?.(tr('Mời bạn qua Arena Solo trên PC Host / Wi-Fi.','Invite a friend via Arena Solo on PC Host / Wi-Fi.'));
   };
   $('pkmsvv-arena-solo-close').onclick=()=>{if(active)abort();else screen.hidden=true;};
+  $('pkmsvv-arena-solo-confirm').onclick=()=>{if(active&&stage==='select')startIntro();};
   return screen;
  }
  function open(){
@@ -58,6 +68,7 @@ G.PKMSVVArenaSolo=(()=>{
   const screen=frame();screen.hidden=false;
   $('pkmsvv-arena-solo-play').hidden=false;
   $('pkmsvv-arena-solo-invite').hidden=false;
+  $('pkmsvv-arena-solo-confirm').hidden=true;
   $('pkmsvv-arena-solo-info').textContent=tr(
    'Chọn Random AI (90–120% chỉ số của bạn) hoặc Mời người chơi qua Wi-Fi. AI: chuẩn bị 10–15 phút, cảnh báo 30 giây, chọn Pokémon 10 giây.',
    'Choose Random AI (90–120% of your stats) or Invite a real player via Wi-Fi. AI: 10–15-minute preparation, 30-second warning and 10-second Pokémon pick.');
@@ -74,6 +85,7 @@ G.PKMSVVArenaSolo=(()=>{
  function hideCountView(){const el=$('pkmsvv-arena-solo-countdown');if(el)el.hidden=true;}
  function reset(){
   active=false;stage='idle';target=null;opponent=null;lastSecond=-1;fightCue=0;
+  selectedInstanceId=null;selectedShiny=false;
   hideCountView();
   G.World?.setArena?.(null);
   const hud=$('pkmsvv-arena-solo-hud');if(hud)hud.hidden=true;
@@ -98,14 +110,25 @@ G.PKMSVVArenaSolo=(()=>{
   el.hidden=false;return el;
  }
  function start(random=Math.random){
-  if(active||!canEnter()||!G.DB?.save?.partner)return false;
-  selected=G.DB.save.partner;
+  if(active||!canEnter())return false;
+  if(!selectReady(preferredReady())){
+   G.UI?.toast?.(tr('Vào PokéBox và chọn ít nhất 1 Pokémon trong Đội hình 6 sẵn sàng.',
+    'Choose at least one Pokémon in PokéBox Ready Team of 6.'),3100);
+   return false;
+  }
   enemyDex=chooseEnemy(pool,random);
   prepTotal=Math.round(PREP_MIN+Math.max(0,Math.min(1,random()))*(PREP_MAX-PREP_MIN));
   aiFactor=.9+Math.max(0,Math.min(1,Number(random())||0))*.3;
   elapsed=0;lastSecond=-1;active=true;stage='prep';target=null;
   startingOwnRun=true;
   try{G.Game.startRun(null);}finally{startingOwnRun=false;}
+  // Arena must inherit the account's permanent 3–8 Skill Awakening capacity.
+  // Native room setup and evolution must never reset a fully awakened Pokémon
+  // to the default three slots. Do not create free moves or change old saves.
+  const fighter=G.Game?.player,skillSave=G.DB?.save;
+  const unlocked=Number(G.PKMSVVSkillTrack?.progress?.(skillSave,fighter?.kills)?.count);
+  if(fighter&&Number.isFinite(unlocked)&&unlocked>=3&&unlocked<=8)
+   fighter.maxMoves=Math.max(Number(fighter.maxMoves)||3,unlocked);
   G.World?.setBiome?.(0,true); // isolated instance, no LAN room or remote player
   frame().hidden=true;hud();
   G.UI?.toast?.(tr('Solo 1v1: quái ×2 và EXP ×2 khi farm trước trận!',
@@ -120,37 +143,51 @@ G.PKMSVVArenaSolo=(()=>{
   stage='select';elapsed=0;const screen=frame();screen.hidden=false;
   $('pkmsvv-arena-solo-play').hidden=true;
   $('pkmsvv-arena-solo-invite').hidden=true;
+  $('pkmsvv-arena-solo-confirm').hidden=false;
   const picks=$('pkmsvv-arena-solo-picks');picks.replaceChildren();
   const options=owned();
-  if(!options.includes(selected))options.unshift(selected);
-  for(const dex of options){
+  const current=options.find(x=>x.id===selectedInstanceId)||preferredReady(options);
+  if(!current){abort();return;}
+  selectReady(current);
+  const label=$('pkmsvv-arena-solo-info');
+  if(label)label.textContent=tr('Chọn 1 trong Đội hình 6 Pokémon sẵn sàng · 10 giây',
+   'Choose 1 from PokéBox Ready Team of 6 · 10 seconds');
+  for(const item of options){
    const button=document.createElement('button');button.type='button';
    button.className='pkmsvv-arena-solo-pick';
-   button.textContent=(dex===selected?'✓ ':'')+(G.DEX_BY?.[dex]?.name||'Pokémon '+dex);
-   button.disabled=dex===enemyDex;
-   button.onclick=()=>{if(stage!=='select'||dex===enemyDex)return;
-    selected=dex;selectionPaint();};
-   button.dataset.dex=String(dex);picks.append(button);
+   button.dataset.dex=String(item.dex);button.dataset.readyId=item.id;
+   button.textContent=(item.id===selectedInstanceId?'✓ ':'')+
+    (G.DEX_BY?.[item.dex]?.name||'Pokémon '+item.dex)+(item.shiny?' ✨ Shiny':'');
+   if(G.UI?.sprite){
+    const sprite=document.createElement('canvas');sprite.width=56;sprite.height=56;
+    sprite.className='pkmsvv-arena-ready-art';
+    try{G.UI.sprite(sprite,item.dex,{shiny:item.shiny});button.append(sprite);}catch(_){}
+   }
+   button.onclick=()=>{if(stage!=='select'||!selectReady(item))return;selectionPaint();};
+   picks.append(button);
   }
   selectionPaint();
+  G.PKMSVVModalNavQA?.first?.(screen); // D-pad/Enter selects among the six Ready slots
  }
  function selectionPaint(){
   const picks=$('pkmsvv-arena-solo-picks');
   if(!picks)return;
   for(const element of picks.children){
-   const dex=Number(element.dataset?.dex);
-   element.classList?.toggle?.('on',dex===selected);
+   const on=element.dataset?.readyId===selectedInstanceId;
+   element.classList?.toggle?.('on',on);
+   element.setAttribute?.('aria-pressed',String(on));
   }
  }
  function normalize(p){
   const dex=selected,mon=G.DEX_BY?.[dex];
-  if(mon&&p.dex!==dex){
-   p.dex=dex;p.mon=mon;p.shiny=!!G.DB?.save?.partnerShiny&&G.DB?.ownsShiny?.(dex);
+  if(mon&&(p.dex!==dex||p.shiny!==selectedShiny)){
+   p.dex=dex;p.mon=mon;p.shiny=selectedShiny;
    const scale=G.Sprites?.playerScale?.(dex)||1;
    if(G.Sprites?.Animator){p.scale=scale;p.anim=new G.Sprites.Animator(dex,scale,p.shiny);}
    p.r=G.Sprites?.playerRadius?.(dex)||p.r;p.bodyH=G.Sprites?.bodyHeight?.(dex,scale)||p.bodyH;
    G.Sprites?.preload?.([dex],3500,!!p.shiny);
   }
+  p.pkmsvvArenaReadyInstanceId=selectedInstanceId; // Exact PokéBox slot; do not mutate lineup
   // Account upgrades do not determine PvP baseline; prepared move choices remain.
   p.mon={...p.mon,hp:320,pa:130,sa:130,atk:130,df:110,sd:110,spd:112};
   p.maxHp=320;p.hp=320;p.baseAtk=1.3;p.baseSpd=112;
@@ -158,6 +195,7 @@ G.PKMSVVArenaSolo=(()=>{
  }
  function startIntro(){
   stage='intro';elapsed=0;countView('3');
+  $('pkmsvv-arena-solo-confirm').hidden=true;
   const p=G.Game?.player;if(!p){abort();return;}
   normalize(p);
   G.EnemyMgr?.clear?.();G.Pickups?.clear?.();G.Projectiles?.clear?.();G.Hazards?.clear?.();
@@ -183,7 +221,8 @@ G.PKMSVVArenaSolo=(()=>{
   const p=G.Game?.player;if(!p||!G.Enemy||!G.EnemyMgr){abort();return;}
   stage='fight';elapsed=0;frame().hidden=true;fightCue=.65;countView(tr('⚔ BẮT ĐẦU!','⚔ FIGHT!'));
   const dex=enemyDex===selected?chooseEnemy():enemyDex;
-  const def={dex,name:G.DEX_BY?.[dex]?.name||'AI',...balanceAi(p),
+  const level=Math.min(255,Math.max(1,Math.floor(Number(p.level)||1)+10));
+  const def={dex,name:G.DEX_BY?.[dex]?.name||'AI',level,...balanceAi(p),
    xp:0,behavior:'champion'};
   target=G.EnemyMgr.add(new G.Enemy(def,p.x+170,p.y-45,{hp:1,spd:1,dmg:1},true));
   // Native boss constructor may apply its own run scaling. The chosen Solo
@@ -203,8 +242,11 @@ G.PKMSVVArenaSolo=(()=>{
     target.bodyH=G.Sprites.bodyHeight?.(dex,visualScale)??target.bodyH;
    }
   }
-  target.pkmsvvArenaSolo=true;
-  G.UI?.toast?.(tr('⚔ BẮT ĐẦU!','⚔ FIGHT!'),850);
+  target.pkmsvvArenaSolo=true;target.level=level;target.pkmsvvArenaLevel=level;
+  target.skillCd=Math.max(.45,1.4/Math.max(.9,aiFactor));
+  if(target.ai&&Number.isFinite(target.ai.cd))
+   target.ai.cd=Math.min(target.ai.cd,1.25);
+  G.UI?.toast?.(tr('⚔ BẮT ĐẦU!','⚔ FIGHT!')+' · AI Lv.'+level,850);
  }
  function update(dt){
   if(!active||G.Game?.state!=='playing')return;
@@ -294,7 +336,7 @@ G.PKMSVVArenaSolo=(()=>{
   if(active)reset();return previous.apply(this,args);
  });
  return {PREP_MIN,PREP_MAX,WARN,SELECT,INTRO,DUEL_LIMIT,SHRINK_FROM,
-  open,start,abort,finish,owned,chooseEnemy,selection,beginDuel,balanceAi,update,
+  open,start,abort,finish,owned,preferredReady,selectReady,chooseEnemy,selection,beginDuel,balanceAi,update,
   get active(){return active},get stage(){return stage},get prepTotal(){return prepTotal},
-  get chosen(){return selected},get rival(){return enemyDex},get aiFactor(){return aiFactor}};
+  get chosen(){return selected},get chosenInstance(){return selectedInstanceId},get chosenShiny(){return selectedShiny},get rival(){return enemyDex},get aiFactor(){return aiFactor}};
 })();

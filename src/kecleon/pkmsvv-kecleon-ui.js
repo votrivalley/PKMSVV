@@ -4,7 +4,7 @@
 */
 G.KecleonUI=(()=>{
  const $=id=>document.getElementById(id);
- const L=(vi,en)=>G.I18n&&G.I18n.lang==='vi'?vi:en;
+ const L=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const money=n=>Math.floor(n||0).toLocaleString(G.I18n&&G.I18n.locale||'vi-VN');
  const NATURE_VI={
@@ -16,7 +16,7 @@ G.KecleonUI=(()=>{
    serious:'Nghiêm túc'
  };
  const STAT={pa:['Tấn công','Attack'],sa:['Tấn công ĐB','Sp. Atk'],df:['Phòng thủ','Defense'],sd:['Phòng thủ ĐB','Sp. Def'],spd:['Tốc độ','Speed']};
- const natName=n=>G.I18n.lang==='vi'?(NATURE_VI[n.id]||n.n[1]):n.n[1];
+ const natName=n=>G.I18n?.lang==='en'?n.n[1]:(NATURE_VI[n.id]||n.n[1]);
  const abilName=id=>{const a=G.ABIL[id];return a?(a[1]||a[0]):L('Không có','None');};
  const statName=id=>STAT[id]?L(...STAT[id]):id;
  const natureDesc=n=>!n.up?L('Không đổi chỉ số','Neutral stats'):
@@ -32,9 +32,9 @@ G.KecleonUI=(()=>{
    caph:L('Viên nang Đặc tính Ẩn','Hidden Ability Capsule')
  })[key]||key;
  const text=key=>({
-   mint:L('Đổi tính cách của một Pokémon đã mở khóa.','Choose a different nature for an unlocked Pokémon.'),
-   cap:L('Chuyển sang Đặc tính thường còn lại.','Switch to another standard ability.'),
-   caph:L('Có thể chọn cả Đặc tính ẩn.','Allows selection of the hidden ability.')
+   mint:L('Đổi Tính cách ngẫu nhiên.','Reroll a random Nature.'),
+   cap:L('Đổi Đặc tính thường ngẫu nhiên.','Reroll a random standard Ability.'),
+   caph:L('Đặc tính hiếm, có thể ra Đặc tính ẩn.','Rare reroll that may grant a Hidden Ability.')
  })[key]||'';
  let selected=null,tab='shop',sceneActive=false;
  const Scene=()=>G.PKMSVVKecleonScene;
@@ -140,17 +140,14 @@ G.KecleonUI=(()=>{
   $('pkmk-list').querySelectorAll('[data-pkmk-use]').forEach(btn=>btn.onclick=()=>{
     apply(btn.dataset.pkmkUse);render();
   });
-  $('pkmk-list').querySelectorAll('[data-pkmk-nature]').forEach(btn=>btn.onclick=()=>{
-    const id=btn.dataset.pkmkNature;
-    if(!G.Shop.count('mint')||!G.NATURE_BY[id]||!G.Shop.take('mint'))return;
-    G.Mons.setNature(selected,id);G.DB.commit(true);
-    G.Audio.sfx('buy');toast('Đã đổi tính cách.','Nature changed.');render();
-  });
-  $('pkmk-list').querySelectorAll('[data-pkmk-ability]').forEach(btn=>btn.onclick=()=>{
-    const kind=btn.dataset.pkmkKind,slot=Number(btn.dataset.pkmkAbility);
-    if(!G.Mons.abilityChoices(selected,kind==='caph').includes(slot)||!G.Shop.take(kind))return;
-    G.Mons.setAbility(selected,slot);G.DB.commit(true);
-    G.Audio.sfx('buy');toast('Đã đổi Đặc tính.','Ability changed.');render();
+  $('pkmk-list').querySelectorAll('[data-pkmk-sell]').forEach(btn=>btn.onclick=()=>{
+    if(btn.disabled)return;
+    btn.disabled=true;
+    const receipt=G.Shop.sell(btn.dataset.pkmkSell);
+    G.UI?.refreshCoins?.();render();
+    if(receipt.ok)toast('Đã bán +'+money(receipt.refund)+' PokéCoins.',
+     'Sold for +'+money(receipt.refund)+' PokéCoins.');
+    else toast('Không bán được vật phẩm.','Could not sell the item.');
   });
   $('pkmk-list').querySelectorAll('[data-pkmk-tm]').forEach(btn=>btn.onclick=()=>{
     if(!G.Mons.teach(selected,btn.dataset.pkmkTm))return;
@@ -168,6 +165,7 @@ G.KecleonUI=(()=>{
   s+='<h3 class="pkmk-group-title">'+L('Vật phẩm','Items')+'</h3><div class="pkmk-cards">';
   for(const key of G.Shop.ORDER){
     const it=G.Shop.ITEMS[key];
+    if(it.unavailableInShop)continue; // Hidden Capsules only drop in battles.
     s+=card(itemIcon(key==='cap'?'capsule':key==='caph'?'capsuleh':'mint'),
       esc(label(key)),esc(text(key)),
       buyBtn(key,it.price)+'<span class="pkmk-stock">×'+G.Shop.count(key)+'</span>');
@@ -190,10 +188,38 @@ G.KecleonUI=(()=>{
   }
   return s+'</div>';
  }
- let picker='';
- function apply(kind){picker=picker===kind?'':kind;}
+ function apply(kind){
+  const dex=selected;
+  if(!G.Shop.count(kind))return false;
+  if(kind==='mint'){
+   const choices=G.NATURES.filter(n=>n.id!==G.Mons.natureOf(dex).id);
+   if(!choices.length)return false;
+   const chosen=choices[Math.floor(Math.random()*choices.length)];
+   if(!G.Shop.take(kind))return false;
+   G.Mons.setNature(dex,chosen.id);
+   G.DB.commit(true);G.Audio?.sfx?.('buy');
+   toast('Tính cách ngẫu nhiên: '+natName(chosen),'Random Nature: '+natName(chosen));
+   return true;
+  }
+  if(kind==='cap'||kind==='caph'){
+   const choices=G.Mons.abilityChoices(dex,kind==='caph');
+   if(!choices.length)return false;
+   const slot=choices[Math.floor(Math.random()*choices.length)];
+   if(!G.Shop.take(kind))return false;
+   G.Mons.setAbility(dex,slot);
+   G.DB.commit(true);G.Audio?.sfx?.('buy');
+   toast('Đặc tính mới: '+abilName(G.Mons.abilityOf(dex).id),
+    'New Ability: '+abilName(G.Mons.abilityOf(dex).id));
+   return true;
+  }
+  return false;
+ }
  function useBtn(kind,enabled){
   return '<button class="btn small" data-pkmk-use="'+kind+'" '+(!enabled?'disabled':'')+'>'+L('Sử dụng','Use')+'</button>';
+ }
+ function sellBtn(kind,price){
+  return '<button class="btn small ghost pkmk-sell" data-pkmk-sell="'+esc(kind)+'">'+
+   L('Bán ','Sell ')+money(Math.floor(price/2))+'</button>';
  }
  function bagHtml(){
   const total=G.Shop.ORDER.some(k=>G.Shop.count(k)) ||
@@ -204,25 +230,16 @@ G.KecleonUI=(()=>{
     '<button type="button" class="btn gold" data-pkmk-goshop>'+itemIcon('shop',18)+' '+
      L('Đi tới Cửa hàng Kecleon','Go to the Kecleon Shop')+'</button></div>';
   let s='<p class="pkmk-lead">'+L(
-    'Chọn Pokémon ở trên để sử dụng vật phẩm. Các TM đã dạy sẽ có trong trận tiếp theo.',
-    'Choose a Pokémon above to use your items. TMs you teach will be available in later runs.')+'</p>';
+    'Dùng Bạc hà/Viên nang sẽ đổi ngẫu nhiên. Bạn cũng có thể bán vật phẩm với nửa giá mua.',
+    'Mints/Capsules reroll at random. Sell items for half their shop price.')+'</p>';
   s+='<div class="pkmk-cards">';
   for(const k of G.Shop.ORDER)if(G.Shop.count(k)){
     const choices=k==='mint'?G.NATURES.filter(n=>n.id!==G.Mons.natureOf(selected).id):
        G.Mons.abilityChoices(selected,k==='caph');
     s+=card(itemIcon(k==='mint'?'mint':k==='cap'?'capsule':'capsuleh'),
       esc(label(k)),esc(text(k)),useBtn(k,choices.length>0)+
+      sellBtn(k,G.Shop.ITEMS[k].price)+
       '<span class="pkmk-stock">×'+G.Shop.count(k)+'</span>');
-    if(picker===k&&choices.length){
-      s+='<div class="pkmk-choices pkmk-choice-full">';
-      for(const n of choices){
-        const val=k==='mint'?n.id:n,name=k==='mint'?natName(n):abilName(G.Mons.slots(selected)[n]);
-        s+='<button class="btn small ghost" '+(k==='mint'?'data-pkmk-nature="'+esc(val)+'"':
-           'data-pkmk-ability="'+val+'" data-pkmk-kind="'+k+'"')+'>'+esc(name)+
-           (k==='mint'?'<small>'+natureDesc(n)+'</small>':'')+'</button>';
-      }
-      s+='</div>';
-    }
   }
   s+='</div>';
   const tms=Object.keys(G.DB.save.tms||{}).filter(id=>G.Shop.tmCount(id)&&G.Moves.BY_ID[id]);
@@ -230,7 +247,7 @@ G.KecleonUI=(()=>{
   for(const id of tms)s+=card(itemIcon('move:'+id),esc(title(id)),
     L('Số lượng trong túi: ','In Bag: ')+G.Shop.tmCount(id),
    '<button class="btn small gold" data-pkmk-tm="'+esc(id)+'" '+
-    (!G.Mons.canLearn(selected,id)?'disabled':'')+'>'+L('Dạy chiêu','Teach')+'</button>');
+    (!G.Mons.canLearn(selected,id)?'disabled':'')+'>'+L('Dạy chiêu','Teach')+'</button>'+sellBtn('tm:'+id,G.Shop.tmPrice(id)));
   if(tms.length)s+='</div>';
   const berry=G.PKMSVVBerry,owned=berry?.TYPES?.filter(t=>berry.count(t.id)>0)||[];
   if(owned.length){
@@ -256,7 +273,7 @@ G.KecleonUI=(()=>{
   pane.innerHTML=
    '<p><b>'+L('Tính cách','Nature')+':</b> '+esc(natName(n))+' <small>'+natureDesc(n)+'</small></p>'+
    '<p><b>'+L('Đặc tính','Ability')+':</b> '+esc(abilName(a.id))+(a.slot===2?' ★':'')+
-   ' <small class="pkmk-ability-benefit">('+esc(G.PKMSVVAbilityText.summary(a.id,G.DEX_BY[dex],fx,G.I18n.lang!=='vi'))+')</small></p>'+
+   ' <small class="pkmk-ability-benefit">('+esc(G.PKMSVVAbilityText.summary(a.id,G.DEX_BY[dex],fx,G.I18n?.lang==='en'))+')</small></p>'+
    '<p><b>'+L('TM đã học','Learned TMs')+':</b> '+(taught.length?taught.map(x=>esc(title(x))).join(', '):L('Chưa có','None'))+'</p>'+
    '<button class="btn small gold" id="pkmk-open-dex">'+L('Dùng vật phẩm / TM','Use Items / TMs')+'</button>';
   host.appendChild(pane);

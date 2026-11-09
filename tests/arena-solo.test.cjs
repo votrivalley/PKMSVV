@@ -17,7 +17,8 @@ function setup(){
  let state='ui';const save={partner:25,owned:{25:1,6:1,149:1},pkmsvvChapter6Seen:true};
  const player={dex:25,mon:{dex:25},maxHp:300,hp:300,baseSpd:100,baseAtk:1,
   x:0,y:0,dead:false};
- const G={DB:{save},Coop:{active:false},PKMSVVStory:{arenaUnlocked(){return save.pkmsvvChapter6Seen}},
+ const G={DB:{save},Coop:{active:false},
+  PKMSVVBoxHub:{arenaReady(){return save.qaReady||[25,6,149].map(dex=>({id:'b1-'+dex+'-n',dex,shiny:false}));}},PKMSVVStory:{arenaUnlocked(){return save.pkmsvvChapter6Seen}},
   UI:{toast(s){msgs.push(s)}},I18n:{lang:'vi'},
   DEX_BY:new Proxy({},{get(_t,k){return {dex:Number(k),name:'Pokémon '+k,types:['normal']}}}),
   Game:{player,get state(){return state},startRun(){state='playing'},toUI(){state='ui'}},
@@ -33,6 +34,37 @@ function setup(){
  vm.runInNewContext(read('src/pkmsvv-arena-solo.js'),{G,document,Math});
  return {G,lib:G.PKMSVVArenaSolo,save,player,dom,msgs};
 }
+test('Solo Arena chooses exactly one of six Ready Team slots, not unready owned Pokémon',()=>{
+ const h=setup(),{G,lib,save,dom}=h;
+ save.qaReady=[
+  {id:'ready-6-normal',dex:6,shiny:false},
+  {id:'ready-6-shiny',dex:6,shiny:true},
+  {id:'ready-149',dex:149,shiny:false}
+ ];
+ save.partner=25; // Owned, but not among the three Ready slots.
+ assert.equal(lib.start(()=>0),true);
+ assert.equal(lib.chosenInstance,'ready-6-normal','unready partner must not be auto-injected');
+ assert.equal(lib.chosen,6);
+ lib.update(570);lib.update(20);
+ const cards=dom.get('pkmsvv-arena-solo-picks').children;
+ assert.equal(cards.length,3,'only Ready slots in the actual 10-second picker');
+ assert.deepEqual(cards.map(x=>x.dataset.readyId),save.qaReady.map(x=>x.id));
+ assert.equal(cards.some(x=>x.dataset.dex==='25'),false,'owned but unready species is unavailable');
+ cards[1].onclick();
+ assert.equal(lib.chosenInstance,'ready-6-shiny','same species Shiny is a separate choice');
+ assert.equal(lib.chosenShiny,true);
+ lib.update(10);
+ assert.equal(G.Game.player.shiny,true);
+ assert.equal(G.Game.player.pkmsvvArenaReadyInstanceId,'ready-6-shiny');
+ assert.deepEqual(save.qaReady.map(x=>x.id),['ready-6-normal','ready-6-shiny','ready-149'],'Arena does not edit Ready Team');
+ assert.equal(save.partner,25,'Solo duel does not change permanent PokéBox active fighter');
+});
+test('Solo Arena cannot start without a Ready Team; random owned Pokémon never leak in',()=>{
+ const h=setup();h.save.qaReady=[];
+ assert.equal(h.lib.start(()=>0),false);
+ assert.equal(h.lib.active,false);
+ assert.ok(h.msgs.some(s=>/PokéBox/.test(s)));
+});
 test('Arena Solo has random 10–15 min prep and warns 30s before duel',()=>{
  const h=setup(),{lib}=h;
  assert.equal(lib.PREP_MIN,600);assert.equal(lib.PREP_MAX,900);
@@ -48,6 +80,7 @@ test('Solo has a real timed selection/VS transition and 320 HP duel normalizatio
  assert.equal(lib.stage,'intro');lib.update(3);
  assert.equal(lib.stage,'fight');
  assert.equal(h.player.maxHp,320);assert.equal(G.EnemyMgr.last.maxHp,288);assert.equal(lib.aiFactor,.9);
+ assert.equal(G.EnemyMgr.last.pkmsvvArenaLevel,(h.player.level||1)+10,'AI Solo is ten levels above the player');
  assert.equal(G.World.arena.r,20);
 });
 test('Actual enemy kill decides Solo win; a lobby exit cannot grant rewards',()=>{

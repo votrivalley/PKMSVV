@@ -1,0 +1,129 @@
+name: Pokebox Stage 4 isolated QA artifact
+on:
+  push:
+    branches:
+      - feature/pokebox-stage1-isolated-qa
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  build-qa-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      PKMSVV_MEGA_SPRITE_PACK: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run PokéBox unit tests
+        run: npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs && node --test tests/bond-fusion-svv.test.cjs
+      - name: Retrieve previously successful Web v1.5.93 build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: PKMSVV-Cloudflare-Pages-FULL-HTML5
+          run-id: 41693288005
+          github-token: ${{ github.token }}
+          path: dist/cloudflare
+      - name: Create isolated Stage 4 Web QA bundle
+        run: node scripts/build-pokebox-stage1-qa.cjs
+      - name: Verify QA scripts, game and save isolation
+        run: |
+          test -s dist/pokebox-stage4-qa/ai/game/index.html
+          test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-box-stage2.js
+          test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-box-stage2-ui.js
+          test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-box-stage3.js
+          test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-box-stage4.js
+          test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-box-hub.js
+          test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-box-hub-ui.js
+          test -s dist/pokebox-stage4-qa/ai/game/css/pkmsvv-box-hub.css
+          test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-fusion-evolved.js
+          test -s dist/pokebox-stage4-qa/ai/game/css/pkmsvv-fusion-evolved.css
+          for id in ember-quick water-tackle grass-spin spark-quick mind-tackle fire-gust bubble-ice leaf-rock shadow-mind thunder-claw; do
+            test -s "dist/pokebox-stage4-qa/ai/game/assets/fusion-icons/${id}.webp"
+          done
+          test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-quick-region.js
+          test -s dist/pokebox-stage4-qa/ai/game/css/pkmsvv-quick-region.css
+          test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-pc-menu-clean-qa.js
+          test -s dist/pokebox-stage4-qa/ai/game/css/pkmsvv-pc-menu-clean-qa.css
+          test -s dist/pokebox-stage4-qa/ai/game/images/pkmsvv-menu-icons.webp
+          for orb in slumber slow blowback focus luminous quick; do
+            test -s "dist/pokebox-stage4-qa/ai/game/assets/orbs/${orb}.svg"
+            test -s "dist/pokebox-stage4-qa/game/assets/orbs/${orb}.svg"
+          done
+          test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-wiki-qa.js
+          test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-modal-navigation-qa.js
+          test -s dist/pokebox-stage4-qa/ai/game/css/pkmsvv-modal-navigation-qa.css
+          test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-runtime-controls-qa.js
+          test -s dist/pokebox-stage4-qa/ai/game/css/pkmsvv-runtime-controls-qa.css
+          test -s dist/pokebox-stage4-qa/ai/game/css/pkmsvv-box-stage3.css
+          grep -q pkmsvv-box-stage4 dist/pokebox-stage4-qa/ai/game/index.html
+          test -s dist/pokebox-stage4-qa/game/js/app.min.js
+      - name: Check all Stage 4 scripts compile
+        run: |
+          node --check src/pkmsvv-bond-fusion.js
+          node --check src/pkmsvv-fusion-evolved.js
+          node --check tests/bond-fusion-svv.test.cjs
+          node --check src/pkmsvv-box-stage2.js
+          node --check src/pkmsvv-box-stage2-ui.js
+          node --check src/pkmsvv-box-stage3.js
+          node --check src/pkmsvv-box-stage4.js
+          node --check src/pkmsvv-box-hub.js
+          node --check src/pkmsvv-box-hub-ui.js
+          node --check src/pkmsvv-quick-region.js
+          node --check src/pkmsvv-pc-menu-clean-qa.js
+          node --check scripts/copy-orb-icons.cjs
+          node --check src/pkmsvv-wiki.js
+          node --check src/pkmsvv-modal-navigation-qa.js
+          node --check src/pkmsvv-runtime-controls-qa.js
+          node --check tests/runtime-controls-qa.test.cjs
+          node --check tests/quick-region.test.cjs
+          node --check tests/pokebox-hub.test.cjs
+          node --check tests/pokebox-stage4.test.cjs
+          node --check tests/pokebox-stage3.test.cjs
+          node --check tests/pokebox-stage2-browser.cjs
+      - name: Real Chromium smoke of isolated Web QA injection
+        run: node tests/pokebox-stage2-browser.cjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-PokeBox-Stage4-Web-QA-ONLY
+          path: dist/pokebox-stage4-qa
+          retention-days: 14
+          if-no-files-found: error
+      - name: Validate Cloudflare preview payload and permanent production isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s dist/pokebox-stage4-qa/index.html
+          test -s dist/pokebox-stage4-qa/ai/game/index.html
+          test -s dist/pokebox-stage4-qa/ai/game/js/app.min.js
+          test -s dist/pokebox-stage4-qa/POKEBOX-STAGE1-QA.txt
+          test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-v20-ui-qa.js
+          test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-recruitment-qa.js
+          test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-dex-defeats-qa.js
+          if find dist/pokebox-stage4-qa -type f -size +25M -print -quit | grep -q .; then
+            echo "::error::Cloudflare Pages disallows individual files over 25 MiB."
+            exit 1
+          fi
+          if find dist/pokebox-stage4-qa -type f \( -name '*.zip' -o -name '*.apk' -o -name '*.exe' \) | grep -q .; then
+            echo "::error::QA site must not include Android/Windows installers or ZIP files."
+            exit 1
+          fi
+      - name: Publish only a QA preview to Cloudflare Pages (not public production)
+        if: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[preview-web]') }}
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::Missing CF_API_TOKEN or CF_ACCOUNT_ID secrets."
+            exit 1
+          fi
+          # Fixed preview-only branch; never touch pkmsvv-web (production).
+          npx --yes wrangler@4 pages deploy dist/pokebox-stage4-qa \
+            --project-name pkmsvv-web --branch pokemon-2-qa
+          echo "QA-only preview: https://pokemon-2-qa.pkmsvv-web.pages.dev/ai/game/"

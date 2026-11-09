@@ -7,7 +7,7 @@ if(new URLSearchParams(location.search).get('pkmsvvWifi')==='1'){
   const random=n=>Array.from(crypto.getRandomValues(new Uint8Array(n)),x=>x.toString(16).padStart(2,'0')).join('');
   let uid='lan-'+random(10),name='Trainer',room=null,owner=false,next=0;
   const emit=m=>listeners.forEach(fn=>{try{fn(m);}catch(e){console.error('Wi-Fi event',e);}});
-  const snapshot=()=>room?JSON.parse(JSON.stringify(room)):null;
+  const snapshot=()=>room?JSON.parse(JSON.stringify(room)):null; // includes Host-issued matchSerial
   const limit=()=>room?.mode==='royale'?10:(room?.mode==='arena'||room?.mode==='champion')?2:4;
   const dex=d=>G.DEX_BY?.[Number(d)]?Number(d):25;
   const power=v=>{
@@ -42,7 +42,7 @@ if(new URLSearchParams(location.search).get('pkmsvvWifi')==='1'){
    if(action==='list')return [];
    if(action==='create'){
     if(who!==uid||room||links.size)throw Error('Rời phòng hoặc hủy ghép nối trước khi tạo phòng khác');
-    owner=true;room={id:'wifi-'+random(12),host:uid,mode:['coop','royale','eggrush','berry','berryeasy','arena','champion'].includes(data.mode)?data.mode:'coop',visibility:'private',open:true,
+    owner=true;room={id:'wifi-'+random(12),host:uid,mode:['coop','royale','eggrush','berry','berryeasy','arena','champion'].includes(data.mode)?data.mode:'coop',visibility:'private',open:true,matchSerial:0,
      members:[{uid,name,dex:dex(data.dex),shiny:!!data.shiny,power:power(data.power)}]};publish();return snapshot();
    }
    if(action==='join'){
@@ -63,7 +63,8 @@ if(new URLSearchParams(location.search).get('pkmsvvWifi')==='1'){
     return true;
    }
    if(!host)throw Error('Chỉ Host được thực hiện thao tác này');
-   if(action==='open'){room.open=!!data.open;publish();return true;}
+   if(action==='open'){if(room.open&&data.open===false)room.matchSerial=(room.matchSerial||0)+1;
+    room.open=!!data.open;publish();return true;}
    if(action==='finish'){room.open=true;room.members=room.members.filter(m=>!m.bot);publish();return snapshot();}
    if(!room.open)throw Error('Hãy trở về sảnh trước');
    if(action==='addBot'){
