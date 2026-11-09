@@ -203,3 +203,39 @@ test('One-Ability details button is disabled before spending and restored for sp
  G.PKMSVV20UIPolish.guardAbilityButtons();
  assert.equal(button.disabled,false,'species with alternate Ability should be actionable again');
 });
+
+test('Mystery Orb PC guide uses the six actual offline HUD sprites on all QA platforms',()=>{
+ const {copyOrbIcons,IDS}=require('../scripts/copy-orb-icons.cjs');
+ const os=require('node:os');
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'pkmsvv-real-orb-'));
+ try{
+  const output=copyOrbIcons(dir);
+  assert.equal(output.length,6);
+  for(const id of IDS){
+   const source=path.join(__dirname,'../src/v14/orb-art',id+'.svg');
+   const actual=path.join(dir,'assets/orbs',id+'.svg');
+   assert.ok(fs.statSync(source).size>500,id+' original art missing');
+   assert.equal(fs.readFileSync(actual,'utf8'),fs.readFileSync(source,'utf8'),
+    id+' displayed image must match the live HUD and pickup asset exactly');
+  }
+ }finally{fs.rmSync(dir,{recursive:true,force:true});}
+ const wiki=read('src/pkmsvv-wiki.js');
+ assert.match(wiki,/G\.OrbSprites\?\.ids/);
+ assert.match(wiki,/assets\/orbs\/'\+encodeURIComponent\(orb\.id\)\+'\.svg'/);
+ assert.match(wiki,/pkmsvv-pc-orb-art/);
+ assert.match(wiki,/orb\.desc/,'localized gameplay explanations stay visible');
+ for(const build of ['scripts/build-pokebox-stage1-qa.cjs',
+  'scripts/build-pokebox-stage1-pc-qa.cjs',
+  'scripts/patch-pokebox-stage4-apk-qa.cjs',
+  'scripts/build-pokebox-stage4-android-qa.cjs']){
+  const src=read(build);
+  assert.match(src,/copyOrbIcons\(/,build+' does not include the real Orb icons');
+  assert.match(src,/pkmsvv-wiki-qa\.js/,build+' does not package the Orb wiki');
+ }
+});
+test('Recruitment notice has no confusing half-translated Locked Gen suffix',()=>{
+ const src=read('src/pkmsvv-recruitment-qa.js');
+ assert.match(src,/Chỉ Pokémon đã mở khóa trong Pokédex mới có thể Chiêu mộ\./);
+ assert.match(src,/Only Pokémon unlocked in the Pokédex can be recruited\./);
+ assert.doesNotMatch(src,/Gen Locked|Thế hệ chưa mở khóa không thể quay/);
+});
