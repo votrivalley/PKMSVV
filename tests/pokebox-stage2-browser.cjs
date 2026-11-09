@@ -910,9 +910,6 @@ async function main(){
    assert.equal(survived.state,'playing','Explore ended without player action: '+JSON.stringify(survived));
    assert.ok(Number(survived.time)>=7,'Explore simulation stalled: '+JSON.stringify(survived));
    assert.deepEqual(errors,[],'Actual battle crashed in Chromium: '+JSON.stringify(errors.slice(-5)));
-   // A/B: disable v31 controller modal cache, returning to pre-v31 DOM handling.
-   await evaluate("G.PKMSVVModalNavQA?.setCacheEnabled(false)");
-   console.log('EXPLORE_MODAL_CACHE_AB_OFF=true');
    // A user reports Explore eventually stalling around the first minute.
    // After checking the unprotected first 10 seconds, prevent ordinary
    // monster damage so this measures ENGINE continuity, not combat skill.
@@ -921,48 +918,56 @@ async function main(){
     await evaluate("G.PKMSVVHordePerformance?.setEnabled(false)");
     console.log('EXPLORE_PERF_AB_OFF=true');
    }
-   // Exercise REAL native level-up UI. The earlier diagnostic bypassed
-   // RunUI.showLevelUp completely, so it could not catch a popup deadlock.
+   // Reproduce REAL 3-card level-up (not auto-level). Exercise browser key.
+   const autoSetting=await evaluate(`(()=>{
+    const settings=G.Settings,before=settings?.autoLevel;
+    const desc=Object.getOwnPropertyDescriptor(settings||{},'autoLevel');
+    const errors=[];
+    try{settings?.set?.('autoLevel',0);}catch(e){errors.push('set: '+String(e));}
+    try{settings.autoLevel=0;}catch(e){errors.push('assign: '+String(e));}
+    return {before,after:settings?.autoLevel,descriptor:desc?{writable:desc.writable,setter:typeof desc.set==='function'}:null,errors};
+   })()`);
+   console.log('EXPLORE_MANUAL_LEVELUP_SETTINGS='+JSON.stringify(autoSetting));
+   // No automatic picking: prior QA never exercised the blocked choice.
    await evaluate(`(()=>{
     const original=G.RunUI.showLevelUp;
     G.RunUI.showLevelUp=function(...args){
-     const probe=window.__pkmsvvRunProbe.events;
-     probe.push({name:'levelup-enter',elapsed:Date.now()-window.__pkmsvvRunProbe.started});
+     const events=window.__pkmsvvRunProbe.events;
+     events.push({name:'levelup-enter',clock:G.Game?.st?.time,args:args.length,offers:args[1]?.length});
      const result=original.apply(this,args);
-     probe.push({name:'levelup-rendered',elapsed:Date.now()-window.__pkmsvvRunProbe.started});
-     setTimeout(()=>{
-      try{
-       const card=document.querySelector('#scr-levelup #cards .card');
-       if(card){G.RunUI.pick(0);probe.push({name:'levelup-native-picked',elapsed:Date.now()-window.__pkmsvvRunProbe.started});}
-      }catch(error){probe.push({name:'levelup-pick-error',text:String(error?.stack||error)});}
-     },150);
+     events.push({name:'levelup-rendered',clock:G.Game?.st?.time});
      return result;
     };
    })()`);
-   console.log('EXPLORE_LEVELUP_REAL_UI=true');
-   // Trigger EXP by the player's real progression method, not debugLevelUp.
-   // The native debugLevelUp flips private engine flags and can lock without
-   // actually opening a level-up, making it an invalid user-path regression.
    const levelTrigger=await evaluate(`(()=>{
-    const pl=G.Game.player;
-    const methods=Object.getOwnPropertyNames(Object.getPrototypeOf(pl)||{}).filter(k=>/xp|exp|level/i.test(k));
-    const before={level:pl.level,xp:pl.xp,xpNext:pl.xpNext,methods};
-    const gain=['gainXp','gainXP','addXp','addXP','receiveXp','getXp','addExp','gainExp'].find(n=>typeof pl[n]==='function');
-    if(gain)pl[gain](Math.max(100,pl.xpNext*2));
-    else pl.xp=Math.max(pl.xp,pl.xpNext-1);
-    return {triggered:true,method:gain||'native-near-threshold',before,state:G.Game.state};
+    const pl=G.Game.player,before={level:pl.level,xp:pl.xp,xpNext:pl.xpNext};
+    const gain=typeof pl.gainXp==='function';
+    if(gain)pl.gainXp(Math.max(1,pl.xpNext-pl.xp+1));
+    return {gain,before,state:G.Game?.state,now:{level:pl.level,xp:pl.xp,xpNext:pl.xpNext}};
    })()`);
-   console.log('EXPLORE_LEVELUP_FORCED='+JSON.stringify(levelTrigger));
-   await sleep(3500);
-   const nativeChoice=await evaluate("(()=>({state:G.Game?.state,level:G.Game?.player?.level,xp:G.Game?.player?.xp,xpNext:G.Game?.player?.xpNext,events:window.__pkmsvvRunProbe.events.slice(-10)}))()");
-   console.log('EXPLORE_LEVELUP_NATIVE_RESULT='+JSON.stringify(nativeChoice));
-   assert.ok(Number(nativeChoice.level)>=2,'Real gainXp must advance level without hanging: '+JSON.stringify(nativeChoice));
-   assert.equal(nativeChoice.state,'playing','Real EXP level-up must return to gameplay');
-   // Native auto-level modes may resolve choices without ever opening a modal.
-   // When a real popup DOES open, it must be selectable and return to play.
-   if(nativeChoice.events.some(e=>e.name==='levelup-enter'))
-    assert.ok(nativeChoice.events.some(e=>e.name==='levelup-native-picked'),
-     'Native level-up popup opened but never accepted a selection');
+   console.log('EXPLORE_MANUAL_LEVELUP_TRIGGER='+JSON.stringify(levelTrigger));
+   await sleep(900);
+   const chooser=await evaluate(`(()=>{
+    const el=document.getElementById('scr-levelup');
+    return {state:G.Game?.state,time:G.Game?.st?.time,level:G.Game?.player?.level,
+     visible:!!el&&!el.hidden&&!el.classList.contains('hidden'),className:el?.className,
+     cards:[...(el?.querySelectorAll('#cards .card')||[])].map(x=>({text:x.textContent.slice(0,120),onclick:typeof x.onclick,tab:x.tabIndex})),
+     events:window.__pkmsvvRunProbe.events.slice(-8)};
+   })()`);
+   console.log('EXPLORE_MANUAL_LEVELUP_CHOOSER='+JSON.stringify(chooser));
+   assert.equal(chooser.visible,true,'Native 3-card level-up menu failed to open: '+JSON.stringify(chooser));
+   assert.ok(chooser.cards.length>=3,'Missing native level-up cards');
+   await cmd('Input.dispatchKeyEvent',{type:'keyDown',key:'1',code:'Digit1',windowsVirtualKeyCode:49,nativeVirtualKeyCode:49,text:'1'});
+   await cmd('Input.dispatchKeyEvent',{type:'keyUp',key:'1',code:'Digit1',windowsVirtualKeyCode:49,nativeVirtualKeyCode:49});
+   await sleep(900);
+   const picked=await evaluate(`(()=>{
+    const el=document.getElementById('scr-levelup');
+    return {state:G.Game?.state,time:G.Game?.st?.time,level:G.Game?.player?.level,
+     visible:!!el&&!el.hidden&&!el.classList.contains('hidden'),events:window.__pkmsvvRunProbe.events.slice(-8)};
+   })()`);
+   console.log('EXPLORE_MANUAL_LEVELUP_PICKED='+JSON.stringify(picked));
+   assert.equal(picked.visible,false,'Digit1 did not close level-up: '+JSON.stringify(picked));
+   assert.equal(picked.state,'playing','Explore must resume after level-up selection');
    let minute=null;
    for(let i=0;i<11;i++){
     await sleep(5000);
