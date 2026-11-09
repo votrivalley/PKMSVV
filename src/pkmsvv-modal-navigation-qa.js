@@ -226,11 +226,14 @@
   // Pokémon hub owns the modal; outside it, native gameplay controls and
   // remapped buttons remain unchanged. Trigger on the DOWN edge only.
   const shoulderL=pressed(4),shoulderR=pressed(5);
-  const pokemon=document.querySelector('#pkmsvv-pokebox-overlay');
-  const owns=active(true),inside=!!pokemon?.isConnected&&
-   !!owns&&(owns===pokemon||pokemon.contains(owns));
   const pressedL=shoulderL&&!prevL1,pressedR=shoulderR&&!prevR1;
   prevL1=shoulderL;prevR1=shoulderR;
+  const pokemon=document.querySelector('#pkmsvv-pokebox-overlay');
+  // On a NEW shoulder press, resolve the newly opened PokéBox
+  // synchronously; its DOM MutationObserver may not have fired yet.
+  // Held/idle frames keep the cached zero-layout path.
+  const owns=active(!(pressedL||pressedR)),inside=!!pokemon?.isConnected&&
+   !!owns&&(owns===pokemon||pokemon.contains(owns));
   if(inside&&typeof G.PKMSVVBoxHubUI?.cycleTab==='function'&&
      (pressedL||pressedR)){
     G.PKMSVVBoxHubUI.cycleTab(pressedR?1:-1);
