@@ -48,6 +48,10 @@
    const nested=child.querySelector?.('button,.card,.level-card,.skill-card,.choice,[data-choice],[data-pick],[role="button"],[onclick]');
    return nested?[nested]:[];
   });
+  // Some compiled builds use plain child <div>s with delegated #cards
+  // click listeners. The three visible offer tiles still need focus and A.
+  if(!candidates.length&&tray.children.length>=2&&tray.children.length<=6)
+   candidates.push(...tray.children);
   const found=[];
   for(const card of candidates){
    if(card.disabled||card.getAttribute?.('aria-disabled')==='true'||!visible(card)||found.includes(card))continue;
