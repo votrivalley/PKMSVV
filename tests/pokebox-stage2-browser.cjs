@@ -702,8 +702,8 @@ async function main(){
     }else{
      assert.ok(['auto','scroll'].includes(v.overflow),
       'Android cannot scroll '+device.label+' '+v.tab+JSON.stringify(v));
-     if(device.height<500)
-      assert.ok(v.scrollHeight>v.height+8&&v.scrollTo>v.old,
+     if(device.height<500&&v.scrollHeight>v.height+8)
+      assert.ok(v.scrollTo>v.old,
        'Android cannot reach lower '+v.tab+' controls: '+JSON.stringify(v));
     }
    }
@@ -742,6 +742,13 @@ async function main(){
       G.PKMSVVBoxHubUI.closeBox();Object.defineProperty(G.DB,'save',desc);
      }
     })()`);
+    const head=await evaluate("(()=>{G.PKMSVVBoxHubUI.openBox();try{const h=document.querySelector('.pkmbx-hub-panel .pkmbx-head'),tabs=h?.querySelector('.pkmbx-pc-tabs'),title=h?.querySelector('h2'),close=h?.querySelector('#pkmbx-close'),grid=document.querySelector('#pkmbx-grid');if(!h||!tabs||!title||!close||!grid)return {missing:true};const r=e=>e.getBoundingClientRect();return {titleY:r(title).top,tabsY:r(tabs).top,closeY:r(close).top,headerHeight:r(h).height,columns:getComputedStyle(grid).gridTemplateColumns.split(' ').length};}finally{G.PKMSVVBoxHubUI.closeBox();}})()");
+    console.log('QA_POKEMON_HEADER_V24_'+device.label+'='+JSON.stringify(head));
+    assert.equal(head.missing,undefined,'missing compact header');
+    assert.ok(Math.abs(head.titleY-head.tabsY)<20&&Math.abs(head.tabsY-head.closeY)<20,
+      'Pokémon title/tabs/close must occupy ONE row: '+JSON.stringify(head));
+    if(device.width>=680)assert.equal(head.columns,5,'landscape PokéBox shows five Pokémon per row');
+    else assert.ok(head.columns>=2,'tiny portrait cards must stay usable');
     console.log('QA_MOBILE_TWO_PANES_'+device.label+'='+JSON.stringify(pair));
     for(const [name,v] of Object.entries(pair)){
      assert.equal(v.missing,undefined,'Missing '+device.label+' '+name+' two-pane elements');

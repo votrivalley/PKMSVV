@@ -11,7 +11,7 @@ function fixture(){
   Settings:{get(k){return vals.get(k)},set(k,v){vals.set(k,v)}},
   UI:{toast(v){toasts.push(v)}},
   EnemyMgr:{all(){return [{x:50,y:0,dead:false},{x:800,y:800,dead:false}]}},
-  Combat:{manualDash(p){casts.push({...p.lanBotAxis});return true;}}
+  Combat:{manualDash(p){casts.push(Array.isArray(p.lanBotAxis)?[...p.lanBotAxis]:p.lanBotAxis);return true;}}
  };
  const elements={};
  const document={
@@ -53,8 +53,8 @@ test('Auto active skill aims toward nearest hostile without changing controller 
  assert.equal(f.api.toggleDash(),true);
  assert.equal(f.api.castTowardsNearest(),true);
  assert.equal(f.casts.length,1);
- assert.equal(f.casts[0].x,1);
- assert.equal(f.casts[0].y,0);
+ assert.equal(f.casts[0][0],1,'AUTO must pass real x-axis input to native dash');
+ assert.equal(f.casts[0][1],0,'AUTO must pass real y-axis input to native dash');
  assert.equal(f.pl.lanBotAxis,original,'manual input must be restored');
  f.G.Game.state='ui';
  assert.equal(f.api.castTowardsNearest(),false,'never cast in menus');
@@ -70,6 +70,53 @@ test('Holding active-skill F for 2s toggles AUTO; quick tap does not',()=>{
  assert.equal(f.api.castTowardsNearest(),false,'another 2s F disables auto');
  assert.equal(f.toasts.length,2,'both state transitions give feedback');
 });
+
+test('holding the native mobile active-skill canvas button 2 seconds toggles AUTO without an extra dash',()=>{
+ const f=fixture();let manual=0;
+ const nativeCalls=[],events={},canvas={id:'game',width:780,height:437,
+  addEventListener(type,fn){events[type]=fn},
+  getBoundingClientRect(){return {left:0,top:0,width:780,height:437}}};
+ f.elements.game=canvas;
+ f.G.PKMSVVDash={preview(){return {ready:true,move:{id:'quick-attack'}}}};
+ f.G.Touch={addButton(...args){nativeCalls.push(args)}};
+ assert.equal(f.api.installTouchAuto(),true);
+ f.G.Touch.addButton(100,100,64,64,()=>{manual++;return true},4);
+ const btn=nativeCalls.at(-1)[4],event=(id,x,y)=>({pointerId:id,pointerType:'touch',clientX:x,clientY:y,
+  preventDefault(){},stopPropagation(){},stopImmediatePropagation(){}});
+ events.pointerdown(event(1,125,125));
+ f.runTimer(2000);
+ f.handlers.pointerup(event(1,125,125));
+ btn();
+ assert.equal(manual,0,'long press must NOT fire a stray manual dash');
+ assert.equal(f.api.castTowardsNearest(),true,'AUTO now triggers the real manualDash');
+ const after=f.casts.length;
+ // The second 2-second hold disables AUTO.
+ f.G.Touch.addButton(100,100,64,64,()=>{manual++;return true},4);
+ events.pointerdown(event(2,125,125));f.runTimer(2000);f.handlers.pointerup(event(2,125,125));
+ assert.equal(f.api.castTowardsNearest(),false);
+ assert.equal(f.casts.length,after);
+ assert.equal(f.toasts.length,2);
+});
+test('short touch taps still use native dash, and dragging away never toggles AUTO',()=>{
+ const f=fixture();let native=0,events={},canvas={width:780,height:437,
+  addEventListener(type,fn){events[type]=fn},
+  getBoundingClientRect(){return {left:0,top:0,width:780,height:437}}};
+ f.elements.game=canvas;
+ f.G.PKMSVVDash={preview(){return {ready:true}}};
+ const calls=[];f.G.Touch={addButton(...args){calls.push(args)}};
+ f.api.installTouchAuto();
+ f.G.Touch.addButton(100,100,64,64,()=>{native++;return true},4);
+ const mk=(id,x,y)=>({pointerId:id,pointerType:'touch',clientX:x,clientY:y});
+ events.pointerdown(mk(1,125,125));f.handlers.pointerup(mk(1,125,125));
+ calls.at(-1)[4]();
+ assert.equal(native,1,'ordinary tap must use original Touch callback');
+ f.G.Touch.addButton(100,100,64,64,()=>{native++;return true},4);
+ events.pointerdown(mk(2,120,120));events.pointermove(mk(2,175,130));
+ f.runTimer(2000);
+ assert.equal(f.api.castTowardsNearest(),false,'dragged touch must not toggle');
+ assert.equal(f.toasts.length,0);
+});
+
 test('Auto-pick is offered only when ALL eight moves MAX; after opting in it never opens a card UI',()=>{
  const f=fixture(),picked=[],opened=[];
  f.G.RunUI={showLevelUp(level,offers,complete){opened.push(level);return 'opened'}};

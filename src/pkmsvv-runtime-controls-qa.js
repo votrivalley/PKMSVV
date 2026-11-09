@@ -22,6 +22,11 @@
  const byId=id=>document.getElementById(id);
  let fast=false,autoDash=false,held=false,heldTimer=null,choiceToken=null,choicePending=false;
  let lastCast=0,lastUI=0,lastChoiceShow=false,lastSpeedState=null,lastRiftState=false,riftPassage=false;
+ // The HUD's native touch dash is a canvas button, not a DOM <button>.
+ // Track only G.Touch.addButton's pad=4 active-skill hitbox. Its callback is
+ // kept for ordinary taps; a 2s stationary press toggles automatic casting.
+ let nativeDashBox=null,nativeDashStamp=0,touchHeld=null,touchHoldTimer=null;
+ let touchBoundCanvas=null,suppressNativeDashUntil=0;
  function toast(vi,en){G.UI?.toast?.(L(vi,en),2000);}
  // Speed is a solo/AI training aid, never a competitive advantage.
  // Explore must be single-player. Survival/Rescue Berry can accelerate only
@@ -305,7 +310,7 @@
  document.addEventListener('keyup',e=>{
   if(String(e.code||'').toLowerCase()===dashKey())cancelHold();
  },true);
- if(typeof window!=='undefined')window.addEventListener('blur',cancelHold);
+ if(typeof window!=='undefined')window.addEventListener('blur',()=>{cancelHold();clearTouchHold();});
  function target(pl){
   const enemies=G.EnemyMgr?.all?.()||[];let nearest=null,dist=Infinity;
   for(const e of enemies){
@@ -324,14 +329,99 @@
   if(!(distance>2))return false;
   const before=pl.lanBotAxis;
   try{
-   pl.lanBotAxis={x:dx/distance,y:dy/distance};
+   // The real compiled Combat.manualDash passes lanBotAxis into
+   // PKMSVVDash.direction(axis[0],axis[1]). An {x,y} object was ignored!
+   // Only AUTO supplies enemy direction; manual joystick/keyboard dash remains
+   // untouched and the original axis is restored even if casting fails.
+   pl.lanBotAxis=[dx/distance,dy/distance];
    return !!G.Combat.manualDash(pl);
   }finally{pl.lanBotAxis=before;}
  }
+
+ // Mobile WebView renders the active dash using G.Touch.addButton(x,y,w,h,
+ // callback,4) in canvas#game. Listen to its TRUE hitbox instead of guessing
+ // a CSS position which breaks at different resolutions, DPR and safe areas.
+ function nativeDashHit(e){
+  const canvas=touchBoundCanvas;
+  if(!canvas||!nativeDashBox||Date.now()-nativeDashStamp>1000||!playing())return null;
+  const rect=canvas.getBoundingClientRect?.();
+  if(!rect||rect.width<=0||rect.height<=0)return null;
+  const px=Number(e.clientX),py=Number(e.clientY);
+  if(!Number.isFinite(px)||!Number.isFinite(py))return null;
+  const x=(px-rect.left)*(canvas.width/rect.width);
+  const y=(py-rect.top)*(canvas.height/rect.height);
+  const b=nativeDashBox;
+  return x>=b.x-3&&x<=b.x+b.w+3&&y>=b.y-3&&y<=b.y+b.h+3
+   ?{x,y}:null;
+ }
+ function clearTouchHold(){
+  if(touchHoldTimer!==null){clearTimeout(touchHoldTimer);touchHoldTimer=null;}
+  touchHeld=null;
+ }
+ function startTouchHold(e){
+  if(touchHeld||!G.PKMSVVDash?.preview?.(G.Game?.player))return;
+  if(e.pointerType==='mouse'&&e.button!==0)return;
+  const at=nativeDashHit(e);if(!at)return;
+  const token=e.pointerId??'touch';
+  touchHeld={token,x:at.x,y:at.y,triggered:false};
+  touchHoldTimer=setTimeout(()=>{
+   touchHoldTimer=null;
+   if(!touchHeld||touchHeld.token!==token||!playing())return;
+   touchHeld.triggered=true;
+   suppressNativeDashUntil=Date.now()+1400;
+   toggleDash();
+  },2000);
+ }
+ function moveTouchHold(e){
+  if(!touchHeld||touchHeld.token!==(e.pointerId??'touch'))return;
+  const canvas=touchBoundCanvas,r=canvas?.getBoundingClientRect?.();
+  if(!r||!r.width||!r.height)return;
+  const x=(e.clientX-r.left)*(canvas.width/r.width);
+  const y=(e.clientY-r.top)*(canvas.height/r.height);
+  // Native touch joystick gestures must not accidentally enable AUTO.
+  if(Math.hypot(x-touchHeld.x,y-touchHeld.y)>18)clearTouchHold();
+ }
+ function endTouchHold(e){
+  if(!touchHeld||touchHeld.token!==(e.pointerId??'touch'))return;
+  const long=touchHeld.triggered;clearTouchHold();
+  if(long){
+   suppressNativeDashUntil=Date.now()+1400;
+   e.preventDefault?.();e.stopPropagation?.();e.stopImmediatePropagation?.();
+  }
+ }
+ function installTouchAuto(){
+  const t=G.Touch,canvas=byId('game');
+  if(!t||typeof t.addButton!=='function'||!canvas)return false;
+  if(!t.addButton._pkmsvvLongPressAuto){
+   const original=t.addButton;
+   const wrapped=function(x,y,w,h,callback,pad=6){
+    if(pad===4&&typeof callback==='function'&&
+       [x,y,w,h].every(Number.isFinite)){
+     nativeDashBox={x,y,w,h};nativeDashStamp=Date.now();
+     const nativeCallback=callback;
+     callback=function(...args){
+      if(Date.now()<suppressNativeDashUntil)return false;
+      return nativeCallback.apply(this,args);
+     };
+    }
+    return original.call(this,x,y,w,h,callback,pad);
+   };
+   wrapped._pkmsvvLongPressAuto=true;t.addButton=wrapped;
+  }
+  if(touchBoundCanvas!==canvas){
+   touchBoundCanvas=canvas;
+   canvas.addEventListener('pointerdown',startTouchHold,{capture:true,passive:true});
+   canvas.addEventListener('pointermove',moveTouchHold,{capture:true,passive:true});
+   document.addEventListener('pointerup',endTouchHold,true);
+   document.addEventListener('pointercancel',clearTouchHold,true);
+  }
+  return true;
+ }
+
  const oldStart=G.Game?.startRun;
  if(typeof oldStart==='function'&&!oldStart._pkmsvvRuntimeControls){
   function wrapped(...args){
-   fast=false;autoDash=false;rankingOpen=false;cancelHold();choiceToken=null;choicePending=false;lastSpeedState=null;lastRiftState=false;riftPassage=false;
+   fast=false;autoDash=false;rankingOpen=false;cancelHold();clearTouchHold();nativeDashBox=null;choiceToken=null;choicePending=false;lastSpeedState=null;lastRiftState=false;riftPassage=false;
    G.Game?.debugSpeed?.(1);
    return oldStart.apply(this,args);
   }
@@ -339,7 +429,7 @@
  }
  function frame(ts){
   if(ts-lastUI>=250){
-   lastUI=ts;installAutoPick();ensureArenaShinyGuard();ensureSpeed();ensureRanking();ensureSettings();ensureLevelup();
+   lastUI=ts;installAutoPick();ensureArenaShinyGuard();installTouchAuto();ensureSpeed();ensureRanking();ensureSettings();ensureLevelup();
     const state=G.Game?.state,riftNow=riftActive();
     if(riftNow&&riftSpeedContext())riftPassage=true;
     if(fast&&state==='playing'&&(canSpeed()||(riftPassage&&riftSpeedContext()))&&
@@ -358,5 +448,5 @@
   if(typeof requestAnimationFrame==='function')requestAnimationFrame(frame);
  }
  if(typeof requestAnimationFrame==='function')requestAnimationFrame(frame);
- G.PKMSVVRuntimeControlsQA={full,maxLevel,enabled,setEnabled,canSpeed,riftActive,riftSpeedContext,arenaMatch,setSpeed,toggleDash,target,castTowardsNearest,ensureLevelup,installAutoPick,ensureArenaShinyGuard,canRanking,rankingRows,toggleRanking,ensureRanking,pollPadShortcuts,actionKey,ensureSettings,ensureSpeed};
+ G.PKMSVVRuntimeControlsQA={full,maxLevel,enabled,setEnabled,canSpeed,riftActive,riftSpeedContext,arenaMatch,setSpeed,toggleDash,target,castTowardsNearest,ensureLevelup,installAutoPick,ensureArenaShinyGuard,canRanking,rankingRows,toggleRanking,ensureRanking,pollPadShortcuts,actionKey,ensureSettings,ensureSpeed,installTouchAuto,nativeDashHit};
 })();
