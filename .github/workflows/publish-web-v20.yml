@@ -40,7 +40,7 @@ jobs:
         run: |
           npm run test:pokebox:stage4
           node --test tests/pkmsvv-v20.test.cjs
-          node --test tests/dex-defeats-qa.test.cjs tests/runtime-controls-qa.test.cjs tests/evolution.test.cjs
+          node --test tests/dex-defeats-qa.test.cjs tests/runtime-controls-qa.test.cjs tests/evolution.test.cjs tests/story-intro.test.cjs tests/ux-story-knowledge-qa.test.cjs
           npm run test:quick-region
       - name: Retrieve exact tested webgame snapshot, no mutable live build
         uses: actions/download-artifact@v4
@@ -66,6 +66,10 @@ jobs:
           test -s dist/cloudflare-v20-release/game/index.html
           test -s dist/cloudflare-v20-release/ai/game/js/ui/pkmsvv-changelog-v20-qa.js
           test -s dist/cloudflare-v20-release/game/css/pkmsvv-v20-ui-qa.css
+          grep -q 'PKMSVV_STORY_SPLIT_V23' dist/cloudflare-v20-release/ai/game/css/pkmsvv-story-ui-fix.css
+          grep -q 'PKMSVV_MOBILE_SPEED_EDGE_23' dist/cloudflare-v20-release/game/css/pkmsvv-runtime-controls-qa.css
+          grep -q 'pkmsvv-awakening-milestones' dist/cloudflare-v20-release/ai/game/js/ui/pkmsvv-wiki-qa.js
+          grep -q 'Fusion là dung hợp hai kỹ năng đã luyện MAX' dist/cloudflare-v20-release/ai/game/js/app.min.js
           test ! -e dist/cloudflare-v20-release/POKEBOX-STAGE1-QA.txt
           jq -e '.version=="2.0" and .localSave==true and .releaseType=="public-web"' dist/cloudflare-v20-release/build-info.json
       - name: Preserve rollback-ready release artifact

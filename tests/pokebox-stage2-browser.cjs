@@ -762,6 +762,16 @@ async function main(){
       name+' detail clipped beyond viewport '+JSON.stringify(v));
     }
    }
+   if(splitRelease){
+    const story=await evaluate("(()=>{const root=document.querySelector('#scr-pkmsvv-story'),panel=root?.querySelector('.pkmsvv-story-screen'),frame=root?.querySelector('.pkmsvv-story-frame'),dialog=root?.querySelector('.pkmsvv-story-dialog');if(!panel||!frame||!dialog)return {missing:true};const hidden=root.classList.contains('hidden'),oldDisplay=root.style.display;try{root.classList.remove('hidden');root.style.display='flex';const rect=e=>{const r=e.getBoundingClientRect();return {top:r.top,bottom:r.bottom,height:r.height}};return {panel:rect(panel),frame:rect(frame),dialog:rect(dialog),overflow:getComputedStyle(panel).overflowY};}finally{root.classList.toggle('hidden',hidden);root.style.display=oldDisplay;}})()");
+    console.log('QA_STORY_IMAGE_DIALOG_'+device.label+'='+JSON.stringify(story));
+    assert.equal(story.missing,undefined,'Story UI not mounted');
+    assert.ok(story.frame.height>=80,'image not visible '+JSON.stringify(story));
+    assert.ok(story.dialog.height>=75,'story text is missing '+JSON.stringify(story));
+    assert.ok(story.frame.bottom<=story.dialog.top+2,'artwork overlaps text '+JSON.stringify(story));
+    assert.ok(story.dialog.bottom<=views.height+3,'text below mobile viewport '+JSON.stringify(story));
+    assert.equal(story.overflow,'hidden','full story screen must not scroll');
+   }
    assert.equal(views.l1,'dex','L1 cycles Upgrade to Pokédex');
    assert.equal(views.held,'dex','holding L1 does not skip another tab');
    assert.equal(views.r1,'upgrade','R1 cycles Pokédex to Upgrade');
