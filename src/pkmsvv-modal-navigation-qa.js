@@ -15,7 +15,7 @@
  const NAV='button:not([disabled]),[role="button"]:not([aria-disabled="true"]),a[href],select:not([disabled]),input:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])';
  const isEditable=el=>!!el&&(/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName||'')||el.isContentEditable);
  const OVERLAYS=SELECTORS.join(',');
- let cachedRoot=null,dirty=true,scanCount=0;
+ let cachedRoot=null,dirty=true,scanCount=0,cacheEnabled=true;
  function visible(el){
   if(!el||!el.isConnected)return false;
   for(let n=el;n&&n.nodeType===1;n=n.parentElement){
@@ -39,6 +39,8 @@
   }).at(-1)||null;
  }
  function active(cached=false){
+  // Reversible A/B for regression after the v31 gamepad DOM cache patch.
+  if(!cacheEnabled)return scanActive();
   // Gamepad polling runs every native battle frame; query/layout inspection
   // must be cached there. Explicit UI lookups still rescan synchronously:
   // an item/Region dialog can be opened just before a key event, before a
@@ -359,5 +361,6 @@
  document.addEventListener('DOMContentLoaded',queue,{once:true});queue();
  G.PKMSVVModalNavQA={active,controls,setFocus,first,move,close,itemSkip,
   installPad,installFocusGuard,onKey,pollModal,invalidate,
+  setCacheEnabled(on){cacheEnabled=on!==false;dirty=true;return cacheEnabled;},
   get scanCount(){return scanCount;}};
 })();
