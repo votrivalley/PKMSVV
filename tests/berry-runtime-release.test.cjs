@@ -43,3 +43,17 @@ test('Web-only pinned client may omit Host LanAI but still receives Berry reward
  assert.match(out,/function rewardBerry\(/);
  assert.doesNotMatch(out,/G\.LanAI=/);
 });
+
+
+test('Berry team result is bundled, keyboard/controller accessible, and preserves local save grants',()=>{
+ const runtime=read('src/pkmsvv-berry-rescue.js');
+ const nav=read('src/pkmsvv-modal-navigation-qa.js');
+ const css=read('src/pkmsvv-berry.css');
+ const builder=read('scripts/promote-web-v20.cjs');
+ assert.ok(runtime.includes('result.berryAwards'),'Host must forward confirmed per-member awards');
+ assert.ok(runtime.includes("close.setAttribute('data-back','')"),'B/Escape closes result sheet');
+ assert.ok(nav.includes("'#pkmsvv-berry-team-result'"),'Gamepad navigation sees result sheet');
+ assert.ok(css.includes('.pkmsvv-berry-team-result'),'Result sheet must be visible');
+ assert.ok(builder.includes("'pkmsvv-berry.css'"),'Latest result styling must be copied into Web');
+ assert.ok(builder.includes('berry-team-performance-kanto-v35'),'Fresh cache required');
+});
