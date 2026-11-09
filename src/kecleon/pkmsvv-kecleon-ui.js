@@ -4,7 +4,7 @@
 */
 G.KecleonUI=(()=>{
  const $=id=>document.getElementById(id);
- const L=(vi,en)=>G.I18n&&G.I18n.lang==='vi'?vi:en;
+ const L=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const money=n=>Math.floor(n||0).toLocaleString(G.I18n&&G.I18n.locale||'vi-VN');
  const NATURE_VI={
@@ -16,7 +16,7 @@ G.KecleonUI=(()=>{
    serious:'Nghiêm túc'
  };
  const STAT={pa:['Tấn công','Attack'],sa:['Tấn công ĐB','Sp. Atk'],df:['Phòng thủ','Defense'],sd:['Phòng thủ ĐB','Sp. Def'],spd:['Tốc độ','Speed']};
- const natName=n=>G.I18n.lang==='vi'?(NATURE_VI[n.id]||n.n[1]):n.n[1];
+ const natName=n=>G.I18n?.lang==='en'?n.n[1]:(NATURE_VI[n.id]||n.n[1]);
  const abilName=id=>{const a=G.ABIL[id];return a?(a[1]||a[0]):L('Không có','None');};
  const statName=id=>STAT[id]?L(...STAT[id]):id;
  const natureDesc=n=>!n.up?L('Không đổi chỉ số','Neutral stats'):
@@ -273,7 +273,7 @@ G.KecleonUI=(()=>{
   pane.innerHTML=
    '<p><b>'+L('Tính cách','Nature')+':</b> '+esc(natName(n))+' <small>'+natureDesc(n)+'</small></p>'+
    '<p><b>'+L('Đặc tính','Ability')+':</b> '+esc(abilName(a.id))+(a.slot===2?' ★':'')+
-   ' <small class="pkmk-ability-benefit">('+esc(G.PKMSVVAbilityText.summary(a.id,G.DEX_BY[dex],fx,G.I18n.lang!=='vi'))+')</small></p>'+
+   ' <small class="pkmk-ability-benefit">('+esc(G.PKMSVVAbilityText.summary(a.id,G.DEX_BY[dex],fx,G.I18n?.lang==='en'))+')</small></p>'+
    '<p><b>'+L('TM đã học','Learned TMs')+':</b> '+(taught.length?taught.map(x=>esc(title(x))).join(', '):L('Chưa có','None'))+'</p>'+
    '<button class="btn small gold" id="pkmk-open-dex">'+L('Dùng vật phẩm / TM','Use Items / TMs')+'</button>';
   host.appendChild(pane);
