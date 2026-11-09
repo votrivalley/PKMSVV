@@ -19,7 +19,7 @@ test('all platforms ship random-only rerolls with save-compatible legacy item re
  assert.match(hub,/function useMint\(id,s=save\(\),random=Math.random\)/);
  assert.match(hub,/function useCapsule\(id,kind='cap',s=save\(\),random=Math.random\)/);
  assert.doesNotMatch(ui,/pkmbx-mint-select|data-hub-ability/);
- assert.match(shop,/const DROP_RATE=Object.freeze\(\{mint:\.008,cap:\.008\}\)/);
+ assert.match(shop,/const DROP_RATE=Object.freeze\(\{mint:\.008\*2\/3,cap:\.008\*2\/3\}\)/);
  assert.match(shop,/const ORDER = \['mint', 'cap', 'caph'\]/);
  assert.match(hub,/HIDDEN_RATE=0\.05/);
  for(const builder of ['scripts/promote-web-v20.cjs','scripts/patch-pokebox-stage4-apk-qa.cjs','scripts/build-pokebox-stage1-pc-qa.cjs'])

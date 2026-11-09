@@ -423,3 +423,29 @@ test('remapping screen describes all four new inputs and does not commandeer exi
  const bundle=fs.readFileSync(path.resolve(__dirname,'../scripts/patch-qa-compiled-modules.cjs'),'utf8');
  assert.match(bundle,/'PKMSVVPadOrb','src\/v14\/pad-orb-map\.js'/);
 });
+
+test('Hovering Reshiram and Flying-type Pokémon ignore WATER slowdown without global speed buffs',()=>{
+ const f=fixture();
+ class Player{
+  constructor(dex,types){this.dex=dex;this.mon={dex,types};this.inLiquid=true;this.baseSpd=100;}
+  get spd(){return this.baseSpd*(this.inLiquid?.6:1);}
+ }
+ f.G.Player=Player;
+ f.G.World={liquidEffect:()=>({slow:.6,dmg:0,slide:false})};
+ assert.equal(f.api.installHoverWater(),true);
+ assert.equal(new Player(643,['dragon','fire']).spd,100,'Reshiram hovers');
+ assert.equal(new Player(6,['fire','flying']).spd,100,'Flying species hover');
+ assert.equal(new Player(7,['water']).spd,60,'non-flying species keep native terrain behavior');
+ const reshiram=new Player(643,['dragon','fire']);assert.equal(reshiram.spd,100);
+ assert.equal(reshiram.inLiquid,true,'speed read must never change subsequent terrain/collision state');
+ f.G.World.liquidEffect=()=>({slow:.6,dmg:.02,slide:false});
+ assert.equal(reshiram.spd,60,'do not silently bypass damaging liquid terrain');
+ assert.equal(f.api.installHoverWater(),true,'idempotent reinstallation');
+});
+test('Level-up controller exposes non-button cards and routes A to native pick',()=>{
+ const source=require('node:fs').readFileSync(require('node:path').resolve(__dirname,'../src/pkmsvv-modal-navigation-qa.js'),'utf8');
+ assert.match(source,/root\.id==='scr-levelup'/);
+ assert.match(source,/#cards \.card/);
+ assert.match(source,/G\.RunUI\.pick\(index\)/);
+ assert.match(source,/card\.tabIndex=0/);
+});

@@ -67,8 +67,8 @@ test('Mint/Ability/TM sales consume exactly one copy and refund half',()=>{
 });
 test('2.0 item drops: normal drops only; event Hidden Capsules remain usable',()=>{
  const {G,s}=shop();
- assert.equal(G.Shop.DROP_RATE.mint,.008);
- assert.equal(G.Shop.DROP_RATE.cap,.008);
+ assert.equal(G.Shop.DROP_RATE.mint,.008*2/3);
+ assert.equal(G.Shop.DROP_RATE.cap,.008*2/3);
  assert.equal(G.Shop.DROP_RATE.caph,undefined,'retired Hidden Capsule must not drop');
  assert.equal(G.Shop.enemyMultiplier({rarity:1}),1);
  assert.equal(G.Shop.enemyMultiplier({elite:true}),2);

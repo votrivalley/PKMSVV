@@ -462,9 +462,40 @@
   }
   wrapped._pkmsvvRuntimeControls=true;G.Game.startRun=wrapped;
  }
+ // Terrain exemption for actual hovering species, not for every Dragon type.
+ // Reshiram (#643) floats despite its Dragon/Fire typing; all Flying-types
+ // also fly above water and swamp. Other species retain normal slowdown.
+ // Reuse the native speed getter so combat buffs, weather and Rank remain exact.
+ function installHoverWater(){
+  const proto=G.Player?.prototype;
+  if(!proto)return false;
+  const descriptor=Object.getOwnPropertyDescriptor(proto,'spd');
+  if(!descriptor?.configurable||typeof descriptor.get!=='function')return false;
+  if(descriptor.get._pkmsvvHoverWater)return true;
+  const native=descriptor.get;
+  function getSpeed(){
+   const types=Array.isArray(this.mon?.types)?this.mon.types:[];
+   const flying=types.some(x=>String(x).toLowerCase()==='flying')||
+    Number(this.dex??this.mon?.dex)===643;
+   if(!flying||!this.inLiquid)return native.call(this);
+   const liquid=G.World?.liquidEffect?.(types);
+   // Only shallow water/swamp movement penalty, never rewrite damaging
+   // terrain behavior (lava, acid) or ice-slide physics.
+   if(!liquid||!Number.isFinite(Number(liquid.slow))||
+     !(Number(liquid.slow)>0&&Number(liquid.slow)<1)||
+     Number(liquid.dmg)>0||liquid.slide)return native.call(this);
+   const was=this.inLiquid;this.inLiquid=false;
+   try{return native.call(this);}
+   finally{this.inLiquid=was;}
+  }
+  getSpeed._pkmsvvHoverWater=true;
+  Object.defineProperty(proto,'spd',{...descriptor,get:getSpeed});
+  return true;
+ }
+ installHoverWater();
  function frame(ts){
   if(ts-lastUI>=250){
-   lastUI=ts;installAutoPick();ensureArenaShinyGuard();installTouchAuto();ensureSpeed();ensureRanking();ensureSettings();ensureLevelup();
+   lastUI=ts;installHoverWater();installAutoPick();ensureArenaShinyGuard();installTouchAuto();ensureSpeed();ensureRanking();ensureSettings();ensureLevelup();
     const state=G.Game?.state,riftNow=riftActive();
     if(riftNow&&riftSpeedContext())riftPassage=true;
     if(fast&&state==='playing'&&(canSpeed()||speedOwnerSafe())&&
@@ -489,5 +520,5 @@
   if(typeof requestAnimationFrame==='function')requestAnimationFrame(frame);
  }
  if(typeof requestAnimationFrame==='function')requestAnimationFrame(frame);
- G.PKMSVVRuntimeControlsQA={full,maxLevel,enabled,setEnabled,canSpeed,riftActive,riftSpeedContext,arenaMatch,setSpeed,toggleDash,target,castTowardsNearest,ensureLevelup,installAutoPick,ensureArenaShinyGuard,canRanking,rankingRows,toggleRanking,ensureRanking,pollPadShortcuts,actionKey,ensureSettings,ensureSpeed,installTouchAuto,nativeDashHit};
+ G.PKMSVVRuntimeControlsQA={full,maxLevel,enabled,setEnabled,canSpeed,riftActive,riftSpeedContext,arenaMatch,setSpeed,toggleDash,target,castTowardsNearest,ensureLevelup,installAutoPick,ensureArenaShinyGuard,canRanking,rankingRows,toggleRanking,ensureRanking,pollPadShortcuts,actionKey,ensureSettings,ensureSpeed,installTouchAuto,nativeDashHit,installHoverWater};
 })();
