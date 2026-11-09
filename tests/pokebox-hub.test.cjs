@@ -525,3 +525,26 @@ test('Legacy Box Select immediately invokes same home redraw without an intermed
  assert.match(src,/portrait\.dataset\.pkmsvvPortraitKey!==portraitKey/);
  assert.match(src,/G\.UI\.sprite\(portrait,Number\(s\.partner\)/);
 });
+
+test('One-Ability Reshiram never consumes capsules; Shiny capsules change the shared visible Ability',()=>{
+ const h=setup(),s=h.s;
+ // Reshiram is canonically a single-Ability species; emulate its Ability
+ // array on an owned fixture so the mutation is tested without changing DEX.
+ G.DEX_ABIL[6]=[11,11,null];
+ const before=JSON.stringify(s),beforeWrites=h.writes;
+ assert.throws(()=>hub.useCapsule('b1-6-n',1,false,s),/only one Ability/);
+ assert.throws(()=>hub.useCapsule('b1-6-s',1,true,s),/only one Ability/);
+ assert.equal(JSON.stringify(s),before,'refused reroll must preserve the full save');
+ assert.equal(h.writes,beforeWrites,'refused reroll must not commit');
+ G.DEX_ABIL[6]=[11,12,13];
+ assert.equal(hub.ability(s,hub.item(s,'b1-6-s')).id,11);
+ const result=hub.useCapsule('b1-6-s',1,false,s);
+ assert.equal(result.slot,1);
+ assert.equal(hub.item(s,'b1-6-n').abilitySlot,1,
+  'cosmetic Shiny capsule changes base carrier instead of an invisible Shiny-only slot');
+ assert.equal(hub.ability(s,hub.item(s,'b1-6-s')).id,12);
+ assert.equal(s.bag.cap,1,'consumes exactly one ordinary capsule on an actual change');
+ const second=JSON.stringify(s);
+ assert.throws(()=>hub.useCapsule('b1-6-s',1,false,s),/unavailable/);
+ assert.equal(JSON.stringify(s),second,'cannot spend again on the current Ability');
+});
