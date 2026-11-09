@@ -56,7 +56,8 @@ for(const prefix of ['game','ai/game']){
  for(const name of ['pkmsvv-changelog-v20-qa.js','pkmsvv-box-hub-ui.js',
   'pkmsvv-dex-defeats-qa.js','pkmsvv-runtime-controls-qa.js',
   'pkmsvv-quick-region.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-fusion-evolved.js',
-  'pkmsvv-box-hub.js','pkmsvv-recruitment-qa.js']){
+  'pkmsvv-box-hub.js','pkmsvv-recruitment-qa.js',
+  'pkmsvv-modal-navigation-qa.js']){
   const fresh=fs.readFileSync(path.join(root,'src',name),'utf8');
   assert(fresh.length>100,'empty promoted script: '+name);
   fs.writeFileSync(path.join(to,prefix+'/js/ui/'+name),fresh);
@@ -82,7 +83,7 @@ for(const prefix of ['game','ai/game']){
  // Promote actual UI scripts and styles. Add Story styling AFTER baseline CSS.
  fs.writeFileSync(path.join(to,prefix+'/js/ui/pkmsvv-wiki-qa.js'),
   fs.readFileSync(path.join(root,'src/pkmsvv-wiki.js'),'utf8'));
- for(const name of ['pkmsvv-runtime-controls-qa.css','pkmsvv-pc-menu-clean-qa.css'])
+ for(const name of ['pkmsvv-runtime-controls-qa.css','pkmsvv-pc-menu-clean-qa.css','pkmsvv-box-hub.css'])
   fs.writeFileSync(path.join(to,prefix+'/css/'+name),
    fs.readFileSync(path.join(root,'src',name),'utf8'));
  const recruitCss='pkmsvv-recruitment-qa.css';
@@ -112,6 +113,14 @@ for(const prefix of ['game','ai/game']){
   'in-Details confirmation missing from '+prefix);
  assert(read(prefix+'/js/ui/pkmsvv-dex-defeats-qa.js').includes('selectedGen'),
   'regional Recruitment lock missing from '+prefix);
+ assert(read(prefix+'/js/ui/pkmsvv-modal-navigation-qa.js').includes('G.RunUI.pick(index)'),
+  'native controller level-up selection missing from '+prefix);
+ assert(read(prefix+'/js/ui/pkmsvv-box-hub.css').includes('pkmbx-dex-type-pill'),
+  'colored Pokédex type badges missing from '+prefix);
+ assert(read(prefix+'/js/ui/pkmsvv-runtime-controls-qa.js').includes('installHoverWater'),
+  'hovering Reshiram speed correction missing from '+prefix);
+ assert(read(prefix+'/js/ui/pkmsvv-wiki-qa.js').includes('pkmsvv-orb-guide-icon'),
+  'real Orb guide artwork missing from '+prefix);
  assert(read(prefix+'/js/app.min.js').includes('Fusion là dung hợp hai kỹ năng đã luyện MAX'),
   'Story still stale in compiled '+prefix);
  assert(read(prefix+'/js/ui/pkmsvv-wiki-qa.js').includes('pkmsvv-awakening-milestones'),
@@ -119,7 +128,7 @@ for(const prefix of ['game','ai/game']){
 }
 const sw=path.join(to,'sw.js');assert(file('sw.js'),'PWA service worker missing');
 const oldSW=fs.readFileSync(sw,'utf8');
-const oldKey='pkmsvv-cloudflare-v1529-1',newKey='pkmsvv-cloudflare-v20-20261109-gen-dex-items-v29';
+const oldKey='pkmsvv-cloudflare-v1529-1',newKey='pkmsvv-cloudflare-v20-20261109-water-orbs-controllers-v30';
 assert(oldSW.includes(oldKey),'existing service worker revision differs');
 fs.writeFileSync(sw,oldSW.replace(oldKey,newKey));
 // A new worker cache namespace ensures the published version refreshes reliably.
@@ -128,7 +137,7 @@ const info=JSON.parse(read('build-info.json'));
 assert(info.localSave===true,'existing browser-save architecture changed');
 Object.assign(info,{version:'2.0',displayVersion:'Pokémon Chuyển Sinh 2.0',
  releaseDate:'2026-11-09',releaseSourceRevision:EXPECTED_SHA,
- releaseQAWorkflowRun:42520192007,releaseType:'public-web',mobileUiHotfix:'one-row-tabs-five-box-cards-touch-auto-v24',combatHotfix:'event-hidden-capsule-and-gen-dex-gate-v29',saveMode:'existing-browser-local',
+ releaseQAWorkflowRun:42520192007,releaseType:'public-web',mobileUiHotfix:'one-row-tabs-five-box-cards-touch-auto-v24',combatHotfix:'hover-water-real-stats-controllers-item-drops-v30',saveMode:'existing-browser-local',
  rollbackSourceArtifact:'PKMSVV-PokeBox-Stage4-Web-QA-ONLY'});
 fs.writeFileSync(path.join(to,'build-info.json'),JSON.stringify(info,null,2)+'\n');
 const maxBytes=25*1024*1024;let files=0,bytes=0,largest=0;

@@ -185,8 +185,8 @@ async function main(){
   assert.equal(approved20.hiddenNotForSale,true,'Hidden Capsule was not removed from shop');
   assert.equal(approved20.hiddenPrice,10000,'Hidden Capsule value should be doubled');
   assert.equal(approved20.hasSell,'function','half-price resale was not compiled');
-  assert.equal(approved20.drops?.mint,.008);
-  assert.equal(approved20.drops?.cap,.008);
+  assert.equal(approved20.drops?.mint,.008*2/3);
+  assert.equal(approved20.drops?.cap,.008*2/3);
   assert.equal(approved20.drops?.caph,undefined,'retired Hidden Capsule must never drop');
   assert.deepEqual(await evaluate('Array.from(G.Shop.ORDER)'),['mint','cap','caph'],
    'event Hidden Capsules must remain usable from existing Bag inventory');
