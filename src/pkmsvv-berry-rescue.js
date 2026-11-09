@@ -10,6 +10,8 @@ G.PKMSVVBerryRescue=(()=>{
  const NAMES=['Oran','Sitrus','Lum'];
  let active=false,easy=false,time=0,trees=[],bossStage=0,won=false,claimed=false,sendClock=0,endClock=0;
  let sprites=[],treeAtlas=null,treeTargets=[];
+ let threatClock=0,threatStage=-1,threatReady=false;
+ const cachedThreats=[0,0,0],cachedBossNear=[false,false,false];
  // Track which trees the native entity pass actually rendered this frame.
  // Android may skip the entity layer after a WebView context recreation.
  const drawnTrees=new Set();
@@ -27,7 +29,8 @@ G.PKMSVVBerryRescue=(()=>{
   }
   drawnTrees.clear();lastAwards=[];
   if(typeof document!=='undefined')document.getElementById?.('pkmsvv-berry-team-result')?.remove?.();
-  sendClock=0;endClock=0;
+  sendClock=0;endClock=0;threatClock=0;threatStage=-1;threatReady=false;
+  cachedThreats.fill(0);cachedBossNear.fill(false);
   const hp=easy?220:180;
   trees=POS.map(([x,y],i)=>({id:i,x,y,hp,maxHp:hp,guard:0}));
   // Reuse target actors: enemies call targetFor each simulation frame.
@@ -218,23 +221,30 @@ G.PKMSVVBerryRescue=(()=>{
   while(bossStage<BOSS_TIMES.length&&time>=BOSS_TIMES[bossStage]){
    bossStage++;bosses();
   }
-  const enemies=G.EnemyMgr?.all?.()||[];
   const stage=Math.floor(time/120);
-  for(const e of enemies)rebalanceEnemy(e,stage);
-  // One enemy pass for all three objectives, instead of three array filters
-  // and repeated square roots on each of 60 simulation frames per second.
-  const threats=[0,0,0],bossNear=[false,false,false];
-  for(const e of enemies){
-   if(!e||e.dead)continue;
-   for(const tree of trees){
-    if(tree.hp<=0)continue;
-    const dx=(Number(e.x)||0)-tree.x,dy=(Number(e.y)||0)-tree.y;
-    if(dx*dx+dy*dy<105*105){
-     threats[tree.id]++;
-     if(e.boss)bossNear[tree.id]=true;
+  // Host-only objective damage remains integrated at full dt, but proximity
+  // and per-enemy speed scaling are sampled at 5Hz. At minute 5+ this removes
+  // hundreds of redundant full-horde traversals each second, without dropping
+  // monsters, damage, XP, loot, hitboxes, or objective HP calculation.
+  threatClock+=Math.max(0,Number(dt)||0);
+  if(!threatReady||threatClock>=.20||stage!==threatStage||time>=DURATION){
+   threatReady=true;threatClock=0;threatStage=stage;
+   cachedThreats.fill(0);cachedBossNear.fill(false);
+   const enemies=G.EnemyMgr?.all?.()||[];
+   for(const e of enemies){
+    if(!e||e.dead)continue;
+    rebalanceEnemy(e,stage);
+    for(const tree of trees){
+     if(tree.hp<=0)continue;
+     const dx=(Number(e.x)||0)-tree.x,dy=(Number(e.y)||0)-tree.y;
+     if(dx*dx+dy*dy<105*105){
+      cachedThreats[tree.id]++;
+      if(e.boss)cachedBossNear[tree.id]=true;
+     }
     }
    }
   }
+  const threats=cachedThreats,bossNear=cachedBossNear;
   for(const tree of trees)if(tree.hp>0){
    const danger=threats[tree.id]?
     Math.min(3,threats[tree.id]*.11)*(bossNear[tree.id]?1.8:1):0;
@@ -247,7 +257,7 @@ G.PKMSVVBerryRescue=(()=>{
   const survivors=trees.filter(t=>t.hp>0).length;
   if(!survivors){active=false;if(typeof document!=='undefined')document.body?.classList?.remove?.('pkmsvv-berry-defense');G.Spawner?.say?.(tr('PHÒNG THỦ THẤT BẠI!','DEFENSE FAILED!'),4);finish?.({success:false,trees:[0,0,0],easy,time:Math.floor(time)});return;}
   if(time>=DURATION){
-   const lastBossAlive=enemies.some(e=>e&&!e.dead&&e._pkmsvvBerryBoss===2);
+   const lastBossAlive=(G.EnemyMgr?.all?.()||[]).some(e=>e&&!e.dead&&e._pkmsvvBerryBoss===2);
    if(!lastBossAlive||time>=DURATION+30){
     won=true;active=false;if(typeof document!=='undefined')document.body?.classList?.remove?.('pkmsvv-berry-defense');finish?.({success:true,trees:state(),easy,time:Math.floor(time)});
    }
@@ -316,22 +326,36 @@ G.PKMSVVBerryRescue=(()=>{
   if(!active||!pl)return null;
   const live=trees.filter(t=>t.hp>0);
   if(!live.length)return {x:0,y:0};
-  const cx=live.reduce((n,t)=>n+t.x,0)/live.length,cy=live.reduce((n,t)=>n+t.y,0)/live.length;
-  if(Math.hypot(pl.x-cx,pl.y-cy)>DEFENSE_RADIUS)return {x:cx,y:cy};
+  const cx=live.reduce((n,t)=>n+t.x,0)/live.length;
+  const cy=live.reduce((n,t)=>n+t.y,0)/live.length;
+  const px=pl.x-cx,py=pl.y-cy;
+  if(px*px+py*py>DEFENSE_RADIUS*DEFENSE_RADIUS)return {x:cx,y:cy};
   const defendPosition=(t,dx,dy)=>{
-   // Stand beside a tree, not *on top of* its trunk or under its canopy.
    let len=Math.hypot(dx,dy);
    if(len<.01){dx=cx-t.x;dy=cy-t.y;len=Math.hypot(dx,dy)||1;}
    return {x:t.x+dx/len*76,y:t.y+dy/len*76};
   };
-  const threats=(enemies||[]).filter(e=>e&&!e.dead&&
-   live.some(t=>Math.hypot(e.x-t.x,e.y-t.y)<THREAT_RADIUS));
-  if(threats.length){
-   const enemy=threats.reduce((a,b)=>(Math.hypot(pl.x-a.x,pl.y-a.y)<
-    Math.hypot(pl.x-b.x,pl.y-b.y)?a:b));
-   const base=live.reduce((a,b)=>(Math.hypot(enemy.x-a.x,enemy.y-a.y)<
-    Math.hypot(enemy.x-b.x,enemy.y-b.y)?a:b));
-   return defendPosition(base,enemy.x-base.x,enemy.y-base.y);
+  // Avoid per-bot filter/some/reduce chains with Math.hypot on EVERY enemy.
+  // Squared ranges preserve the original patrol strategy and combat behavior.
+  let nearest=null,dist=Infinity;
+  for(const e of enemies){
+   if(!e||e.dead)continue;
+   let threatens=false;
+   for(const tree of live){
+    const dx=e.x-tree.x,dy=e.y-tree.y;
+    if(dx*dx+dy*dy<THREAT_RADIUS*THREAT_RADIUS){threatens=true;break;}
+   }
+   if(!threatens)continue;
+   const dx=pl.x-e.x,dy=pl.y-e.y,d2=dx*dx+dy*dy;
+   if(d2<dist){dist=d2;nearest=e;}
+  }
+  if(nearest){
+   let base=live[0],best=Infinity;
+   for(const tree of live){
+    const dx=nearest.x-tree.x,dy=nearest.y-tree.y,d2=dx*dx+dy*dy;
+    if(d2<best){best=d2;base=tree;}
+   }
+   return defendPosition(base,nearest.x-base.x,nearest.y-base.y);
   }
   const tree=live[Math.abs(slot|0)%live.length];
   return defendPosition(tree,cx-tree.x,cy-tree.y);
@@ -353,10 +377,10 @@ G.PKMSVVBerryRescue=(()=>{
  function hud(ctx,w,h){
   if(!active)return;
   ctx.save();ctx.font='bold 12px sans-serif';ctx.textBaseline='top';
-  // Berry objective HUD goes to the bottom CENTER but clears the
-  // Orb/skill hotbar by sitting above it. Bottom-left belongs to x1.5.
-  const left=Math.max(8,Math.round((w-202)/2));
-  const top=Math.max(100,Math.min(h-112,h-250));
+  // Anchor the objective status at the LEFT EDGE, halfway down the screen.
+  // The speed button remains bottom-left and all skill slots remain clear.
+  const left=Math.max(8,Math.min(18,Math.round(w*.012)));
+  const top=Math.max(112,Math.min(h-108,Math.round((h-95)/2)));
   ctx.fillStyle='#0c2738df';ctx.fillRect(left,top,202,95);
   ctx.fillStyle='#ffe9ab';ctx.fillText('🍓 '+tr('GIẢI CỨU BERRY','RESCUE BERRY')+' · EXP ×1',left+8,top+7);
   trees.forEach((tree,i)=>{
