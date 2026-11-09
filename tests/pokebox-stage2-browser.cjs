@@ -930,19 +930,6 @@ async function main(){
     console.log('EXPLORE_PERF_AB_OFF=true');
    }
    // Reproduce REAL 3-card level-up (not auto-level). Exercise browser key.
-   const autoSetting=await evaluate(`(()=>{
-    const settings=G.Settings,before=settings?.autoLevel;
-    const desc=Object.getOwnPropertyDescriptor(settings||{},'autoLevel');
-    const errors=[];
-    try{settings?.set?.('autoLevel',0);}catch(e){errors.push('set: '+String(e));}
-    try{settings.autoLevel=0;}catch(e){errors.push('assign: '+String(e));}
-    const nativeGetter=String(desc?.get||'').slice(0,1000);
-    try{
-     if(desc?.configurable)Object.defineProperty(settings,'autoLevel',{configurable:true,enumerable:true,get:()=>0});
-    }catch(e){errors.push('override: '+String(e));}
-    return {before,after:settings?.autoLevel,descriptor:desc?{writable:desc.writable,configurable:desc.configurable,setter:typeof desc.set==='function'}:null,nativeGetter,errors};
-   })()`);
-   console.log('EXPLORE_MANUAL_LEVELUP_SETTINGS='+JSON.stringify(autoSetting));
    // No automatic picking: prior QA never exercised the blocked choice.
    await evaluate(`(()=>{
     const original=G.RunUI.showLevelUp;
@@ -954,13 +941,16 @@ async function main(){
      return result;
     };
    })()`);
+   // Collect actual EXP as the player does. Native pickup loop increments
+   // Game's private pending-level queue; calling Player.gainXp directly skips
+   // that queue and cannot reproduce the blocked 3-card screen.
    const levelTrigger=await evaluate(`(()=>{
     const pl=G.Game.player,before={level:pl.level,xp:pl.xp,xpNext:pl.xpNext};
-    const gain=typeof pl.gainXp==='function';
-    if(gain)pl.gainXp(Math.max(1,pl.xpNext-pl.xp+1));
-    return {gain,before,state:G.Game?.state,now:{level:pl.level,xp:pl.xp,xpNext:pl.xpNext}};
+    const xp=Math.ceil(pl.xpNext-pl.xp+7);
+    G.Pickups.drop('xp',pl.x,pl.y,xp);
+    return {before,xp,state:G.Game?.state,pickups:G.Pickups?.count};
    })()`);
-   console.log('EXPLORE_MANUAL_LEVELUP_TRIGGER='+JSON.stringify(levelTrigger));
+   console.log('EXPLORE_MANUAL_LEVELUP_PICKUP='+JSON.stringify(levelTrigger));
    await sleep(900);
    const chooser=await evaluate(`(()=>{
     const el=document.getElementById('scr-levelup');
