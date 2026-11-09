@@ -43,6 +43,8 @@ copyFusionIcons(out);
  fs.copyFileSync(path.join(root,'src/pkmsvv-menu-icons.webp'),path.join(out,'images/pkmsvv-menu-icons.webp'));
 fs.copyFileSync(path.join(root,'src/pkmsvv-fusion-evolved.js'),
  path.join(out,'js/ui/pkmsvv-fusion-evolved.js'));
+fs.copyFileSync(path.join(root,'src/pkmsvv-horde-performance.js'),
+ path.join(out,'js/ui/pkmsvv-horde-performance.js'));
 fs.copyFileSync(path.join(root,'src/pkmsvv-wiki.js'),
  path.join(out,'js/ui/pkmsvv-wiki-qa.js'));
 fs.copyFileSync(path.join(root,'src/pkmsvv-fusion-evolved.css'),
@@ -55,7 +57,7 @@ if(!html.includes('</head>')||!html.includes('</body>'))throw Error('PC QA entry
 if(!html.includes('pkmsvv-box-stage1.css'))html=html.replace('</head>','<link rel="stylesheet" href="css/pkmsvv-box-stage1.css">\n</head>');
 if(!html.includes('pkmsvv-box-stage1.js'))html=html.replace('</body>','<script defer src="js/ui/pkmsvv-box-stage1.js"></script>\n</body>');
 for(const cssName of ['pkmsvv-fusion-evolved.css','pkmsvv-prebattle-qa.css','pkmsvv-box-stage2.css','pkmsvv-box-stage3.css','pkmsvv-box-hub.css','pkmsvv-quick-region.css','pkmsvv-pc-menu-clean-qa.css','pkmsvv-modal-navigation-qa.css','pkmsvv-support-scroll-fix.css','pkmsvv-runtime-controls-qa.css','pkmsvv-v20-ui-qa.css'])if(!html.includes(cssName))html=html.replace('</head>','<link rel="stylesheet" href="css/'+cssName+'">\n</head>');
-for(const name of ['pkmsvv-fusion-evolved.js','pkmsvv-box-stage2.js','pkmsvv-box-stage2-ui.js','pkmsvv-box-stage3.js','pkmsvv-box-stage4.js','pkmsvv-box-hub.js','pkmsvv-box-hub-ui.js','pkmsvv-quick-region.js','pkmsvv-encounter-rarity-qa.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-modal-navigation-qa.js','pkmsvv-runtime-controls-qa.js','pkmsvv-dex-defeats-qa.js','pkmsvv-recruitment-qa.js','pkmsvv-wiki-qa.js','pkmsvv-v20-ui-qa.js','pkmsvv-changelog-v20-qa.js'])
+for(const name of ['pkmsvv-horde-performance.js','pkmsvv-fusion-evolved.js','pkmsvv-box-stage2.js','pkmsvv-box-stage2-ui.js','pkmsvv-box-stage3.js','pkmsvv-box-stage4.js','pkmsvv-box-hub.js','pkmsvv-box-hub-ui.js','pkmsvv-quick-region.js','pkmsvv-encounter-rarity-qa.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-modal-navigation-qa.js','pkmsvv-runtime-controls-qa.js','pkmsvv-dex-defeats-qa.js','pkmsvv-recruitment-qa.js','pkmsvv-wiki-qa.js','pkmsvv-v20-ui-qa.js','pkmsvv-changelog-v20-qa.js'])
  if(!html.includes(name))html=html.replace('</body>','<script defer src="js/ui/'+name+'"></script>\n</body>');
 fs.writeFileSync(entry,html);
 fs.writeFileSync(path.join(dest,'POKEBOX-STAGE1-QA.txt'),'PokéBox Stage 1+2+3+4 QA only. Extract to a separate folder; never overwrite your existing installed game. Export JSON backup before migration. No production release.\n');

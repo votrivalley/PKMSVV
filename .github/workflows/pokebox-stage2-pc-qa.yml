@@ -6,6 +6,10 @@ on:
       - release/pokemon-chuyen-sinh-2.0-web
     paths:
       - 'src/pkmsvv-fusion-evolved.js'
+      - 'src/pkmsvv-horde-performance.js'
+      - 'src/pkmsvv-quick-region.js'
+      - 'tests/horde-performance.test.cjs'
+      - 'tests/quick-region.test.cjs'
       - 'tests/bond-fusion-svv.test.cjs'
       - 'scripts/build-pokebox-stage1-pc-qa.cjs'
       - 'scripts/patch-qa-compiled-modules.cjs'
@@ -24,7 +28,7 @@ jobs:
         with:
           node-version: '22'
       - name: Run Stage 1 and Stage 1/2/3 save/regression tests
-        run: npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs && node --test tests/bond-fusion-svv.test.cjs
+        run: npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs && node --test tests/bond-fusion-svv.test.cjs tests/horde-performance.test.cjs
       - name: Download successful signed v1.5.93 Windows baseline
         uses: actions/download-artifact@v4
         with:
@@ -46,6 +50,8 @@ jobs:
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/css/pkmsvv-box-hub.css
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-fusion-evolved.js
           grep -q 'installVisualBudget' dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-fusion-evolved.js
+          grep -q 'PKMSVVHordePerformance' dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-horde-performance.js
+          grep -q 'pkmsvv-horde-performance.js' dist/pokebox-stage4-pc-qa/resources/lan-site/game/index.html
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/css/pkmsvv-fusion-evolved.css
           for id in ember-quick water-tackle grass-spin spark-quick mind-tackle fire-gust bubble-ice leaf-rock shadow-mind thunder-claw; do
             test -s "dist/pokebox-stage4-pc-qa/resources/lan-site/game/assets/fusion-icons/${id}.webp"

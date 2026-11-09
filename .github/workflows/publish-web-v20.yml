@@ -42,6 +42,7 @@ jobs:
           node --test tests/pkmsvv-v20.test.cjs
           node --test tests/dex-defeats-qa.test.cjs tests/runtime-controls-qa.test.cjs tests/evolution.test.cjs tests/story-intro.test.cjs tests/ux-story-knowledge-qa.test.cjs
           npm run test:quick-region
+          node --test tests/bond-fusion-svv.test.cjs tests/horde-performance.test.cjs
       - name: Retrieve exact tested webgame snapshot, no mutable live build
         uses: actions/download-artifact@v4
         with:
@@ -71,6 +72,8 @@ jobs:
           grep -q 'PKMSVV_POKEMON_HEADER_V24' dist/cloudflare-v20-release/game/css/pkmsvv-v20-ui-qa.css
           grep -q 'installTouchAuto' dist/cloudflare-v20-release/game/js/ui/pkmsvv-runtime-controls-qa.js
           grep -q 'installVisualBudget' dist/cloudflare-v20-release/game/js/ui/pkmsvv-fusion-evolved.js
+          grep -q 'PKMSVVHordePerformance' dist/cloudflare-v20-release/game/js/ui/pkmsvv-horde-performance.js
+          grep -q 'pkmsvv-horde-performance.js' dist/cloudflare-v20-release/ai/game/index.html
           grep -q 'pkmsvv-awakening-milestones' dist/cloudflare-v20-release/ai/game/js/ui/pkmsvv-wiki-qa.js
           grep -q 'Fusion là dung hợp hai kỹ năng đã luyện MAX' dist/cloudflare-v20-release/ai/game/js/app.min.js
           test ! -e dist/cloudflare-v20-release/POKEBOX-STAGE1-QA.txt

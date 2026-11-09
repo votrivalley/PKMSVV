@@ -79,6 +79,10 @@ const wikiQA=path.join(web,'js/ui/pkmsvv-wiki-qa.js');
 fs.copyFileSync(path.join(root,'src/pkmsvv-wiki.js'),wikiQA);
 if(!html.includes('pkmsvv-wiki-qa.js'))
  html=html.replace('</body>','<script defer src="js/ui/pkmsvv-wiki-qa.js"></script>\n</body>');
+const hordeName='pkmsvv-horde-performance.js';
+fs.copyFileSync(path.join(root,'src',hordeName),path.join(web,'js/ui',hordeName));
+if(!html.includes(hordeName))
+ html=html.replace('</body>','<script defer src="js/ui/'+hordeName+'"></script>\n</body>');
 const evolvedJS=path.join(web,'js/ui/pkmsvv-fusion-evolved.js');
 fs.copyFileSync(path.join(root,'src/pkmsvv-fusion-evolved.js'),evolvedJS);
 fs.copyFileSync(path.join(root,'src/pkmsvv-fusion-evolved.css'),path.join(web,'css/pkmsvv-fusion-evolved.css'));

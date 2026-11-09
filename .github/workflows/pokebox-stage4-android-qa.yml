@@ -33,6 +33,8 @@ on:
       - 'src/pkmsvv-encounter-rarity-qa.js'
       - 'tests/runtime-controls-qa.test.cjs'
       - 'src/pkmsvv-fusion-evolved.*'
+      - 'src/pkmsvv-horde-performance.js'
+      - 'tests/horde-performance.test.cjs'
       - 'src/pkmsvv-bond-fusion.js'
       - 'assets/fusion-icons/**'
       - 'scripts/copy-fusion-icons.cjs'
@@ -64,7 +66,7 @@ jobs:
         with:
           node-version: '22'
       - name: Test all four PokéBox phases
-        run: npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs && node --test tests/bond-fusion-svv.test.cjs tests/ux-story-knowledge-qa.test.cjs
+        run: npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs && node --test tests/bond-fusion-svv.test.cjs tests/horde-performance.test.cjs tests/ux-story-knowledge-qa.test.cjs
       - name: Require permanent signing, no debug fallback
         shell: bash
         env:
@@ -126,6 +128,8 @@ jobs:
           grep -q 'PKMSVV_POKEMON_HEADER_V24' decoded-android/assets/public/css/pkmsvv-v20-ui-qa.css
           grep -q 'installTouchAuto' decoded-android/assets/public/js/ui/pkmsvv-runtime-controls-qa.js
           grep -q 'installVisualBudget' decoded-android/assets/public/js/ui/pkmsvv-fusion-evolved.js
+          grep -q 'PKMSVVHordePerformance' decoded-android/assets/public/js/ui/pkmsvv-horde-performance.js
+          grep -q 'pkmsvv-horde-performance.js' decoded-android/assets/public/index.html
           grep -q 'pkmsvv-awakening-milestones' decoded-android/assets/public/js/ui/pkmsvv-wiki-qa.js
           grep -q 'Fusion là dung hợp hai kỹ năng đã luyện MAX' decoded-android/assets/public/js/app.min.js
           test -s decoded-android/assets/public/js/ui/pkmsvv-fusion-evolved.js
