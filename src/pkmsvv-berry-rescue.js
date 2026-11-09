@@ -279,7 +279,10 @@ G.PKMSVVBerryRescue=(()=>{
  function hud(ctx,w,h){
   if(!active)return;
   ctx.save();ctx.font='bold 12px sans-serif';ctx.textBaseline='top';
-  const left=15,top=Math.max(130,h-124);
+  // Berry objective HUD goes to the bottom CENTER but clears the
+  // Orb/skill hotbar by sitting above it. Bottom-left belongs to x1.5.
+  const left=Math.max(8,Math.round((w-202)/2));
+  const top=Math.max(100,Math.min(h-112,h-250));
   ctx.fillStyle='#0c2738df';ctx.fillRect(left,top,202,95);
   ctx.fillStyle='#ffe9ab';ctx.fillText('🍓 '+tr('GIẢI CỨU BERRY','RESCUE BERRY')+' · EXP ×1',left+8,top+7);
   trees.forEach((tree,i)=>{
