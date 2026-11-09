@@ -10,6 +10,16 @@
  const own=(s,k)=>Object.prototype.hasOwnProperty.call(s||{},k);
  const dexId=n=>Number.isInteger(Number(n))&&Number(n)>0&&Number(n)<=1025?Number(n):null;
  const L=(vi,en)=>G.I18n?.lang==='en'?en:vi;
+ const GEN_END=[0,151,251,386,493,649,721,809,905,1025];
+ const GEN_NAMES=['','Kanto','Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar','Paldea'];
+ function generationOf(dex){
+  const n=dexId(dex);if(!n)return 0;
+  for(let gen=1;gen<=9;gen++)if(n<=GEN_END[gen])return gen;
+  return 0;
+ }
+ function eligibleInGen(s,gen){
+  return (G.DEX||[]).filter(p=>unlocked(s,p?.dex)&&(!gen||generationOf(p.dex)===gen));
+ }
  function legacyProfile(s){
   const count=Object.keys(s?.owned||{}).length;
   return count>5 || (Number(s?.stats?.runs)||0)>0;
@@ -93,9 +103,18 @@
   const wrapped=function(s,...args){
    const originals=G.DEX;
    if(!s||!Array.isArray(originals))return previous.apply(this,arguments);
-   const allowed=originals.filter(p=>unlocked(s,p?.dex));
+   // Gacha.pull(save, count, generation): generation must be scoped by the
+   // National Dex, not by potentially inaccurate DEX[].gen metadata.
+   const requested=Number(args[1]);
+   const generation=Number.isInteger(requested)&&requested>=1&&requested<=9?requested:0;
+   const allowed=eligibleInGen(s,generation);
    if(!allowed.length){
-    G.UI?.toast?.(L('Hãy hạ Pokémon trong Khám phá để mở Chiêu mộ!','Defeat Pokémon in Explore to unlock Recruitment!'),2600);
+    if(generation){
+     const region=GEN_NAMES[generation];
+     G.UI?.toast?.(L('Bạn chưa có Pokémon nào thuộc '+region+' trong Pokédex cả.',
+      'You have no '+region+' Pokémon unlocked in your Pokédex yet.'),3100);
+    }else G.UI?.toast?.(L('Hãy hạ Pokémon trong Khám phá để mở Chiêu mộ!',
+     'Defeat Pokémon in Explore to unlock Recruitment!'),2600);
     return null;
    }
    // Native Gacha's private rarity pool reads G.DEX synchronously. Temporarily
@@ -121,5 +140,5 @@
  }
  function install(){return installEnemy()&&installGacha();}
  install();
- G.PKMSVVDexDefeats={unlocked,markDefeated,inExplore,isDefeatable,ensureLedger,install,legacyProfile};
+ G.PKMSVVDexDefeats={unlocked,markDefeated,inExplore,isDefeatable,ensureLedger,install,legacyProfile,generationOf,eligibleInGen};
 })();
