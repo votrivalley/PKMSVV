@@ -87,7 +87,7 @@ for(const prefix of ['game','ai/game']){
  // Promote actual UI scripts and styles. Add Story styling AFTER baseline CSS.
  fs.writeFileSync(path.join(to,prefix+'/js/ui/pkmsvv-wiki-qa.js'),
   fs.readFileSync(path.join(root,'src/pkmsvv-wiki.js'),'utf8'));
- for(const name of ['pkmsvv-runtime-controls-qa.css','pkmsvv-pc-menu-clean-qa.css','pkmsvv-box-hub.css'])
+ for(const name of ['pkmsvv-runtime-controls-qa.css','pkmsvv-pc-menu-clean-qa.css','pkmsvv-box-hub.css','pkmsvv-berry.css'])
   fs.writeFileSync(path.join(to,prefix+'/css/'+name),
    fs.readFileSync(path.join(root,'src',name),'utf8'));
  // Ship the virtual-card focus stylesheet alongside the exact JS hotfix.
@@ -138,7 +138,7 @@ for(const prefix of ['game','ai/game']){
  // desktop/Android HOST builds replace that module directly.
  assert(read(prefix+'/js/app.min.js').includes('function rewardBerry('),
   'guaranteed three-tree Berry reward missing from '+prefix);
- assert(read(prefix+'/js/app.min.js').includes('Math.round((w-202)/2)'),
+ assert(read(prefix+'/js/app.min.js').includes('Math.round((h-95)/2)'),
   'centered Berry objective HUD missing from '+prefix);
  assert(read(prefix+'/js/ui/pkmsvv-box-hub-ui.js').includes('pkmbx-action-dialog'),
   'in-Details confirmation missing from '+prefix);
