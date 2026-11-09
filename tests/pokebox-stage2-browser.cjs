@@ -527,6 +527,27 @@ async function main(){
    assert.equal(icon.height,'42px','incorrect native menu icon height');
   }
   console.log('DOM menu icon rerender/keyboard/semantics QA:',JSON.stringify(menuIconDomRegression));
+  const recruitmentHeader=await evaluate(`(()=>{
+   const g=document.getElementById('scr-gacha');
+   G.PKMSVVRecruitmentQA?.sync?.();
+   const hint=g?.querySelector('#pkmsvv-gacha-dex-requirement');
+   const head=[...g?.querySelectorAll('h1,h2,h3')||[]].find(x=>/^(Chiêu mộ|Recruitment|Gacha)$/i.test(x.textContent.trim()));
+   const back=[...g?.querySelectorAll('button,a')||[]].find(x=>/^(Quay lại|Back|Return)$/i.test(x.textContent.trim()));
+   return {hasHint:!!hint,hasHeader:!!head,hasBack:!!back,
+    inHeader:!!hint&&!!back&&hint.parentElement===back.parentElement,
+    beforeBack:!!hint&&hint.nextSibling===back,
+    italic:hint?getComputedStyle(hint).fontStyle:'',
+    gold:hint?getComputedStyle(hint).color:'',
+    text:hint?.textContent||''};
+  })()`);
+  console.log('QA_RECRUITMENT_HEADER='+JSON.stringify(recruitmentHeader));
+  assert.equal(recruitmentHeader.hasHint,true,'Pokédex recruitment notice must exist');
+  assert.equal(recruitmentHeader.hasHeader,true,'Recruitment heading must exist');
+  assert.equal(recruitmentHeader.hasBack,true,'Recruitment Back action must exist');
+  assert.equal(recruitmentHeader.inHeader,true,'Notice belongs between title and Back, not floating over main menu');
+  assert.equal(recruitmentHeader.beforeBack,true,'Back remains to the right of recruitment note');
+  assert.equal(recruitmentHeader.italic,'italic','Recruitment rule must be italic');
+  assert.match(recruitmentHeader.text,/Pokédex/);
   const supportSkillQa=await evaluate("(()=>{const save=G.DB?.save; if(!save)return {missingSave:true}; const old=save.pkmsvvSupportBond,ids=[447,173,360,174,440]; try{save.pkmsvvSupportBond={...(old||{}),447:1,173:1,360:1,174:1,440:1};G.PKMSVVSupportCatalog?.open?.();const root=document.querySelector('#pkmsvv-support-catalog'),heading=root?.querySelector('#pkmsvv-support-heading');const result=ids.map(id=>{root?.querySelector('[data-support-dex=\\\"'+id+'\\\"]')?.click();const detail=root?.querySelector('#pkmsvv-support-detail');return {id,skill:detail?.querySelector('.pkmsvv-support-skill-title')?.textContent,desc:detail?.querySelector('.pkmsvv-support-skill-description')?.textContent,canvas:!!detail?.querySelector('canvas')};});return {missingSave:false,result,headingColor:heading&&getComputedStyle(heading).color,heading:heading?.textContent,autoControls:!!G.PKMSVVRuntimeControlsQA,speedButton:!!document.getElementById('pkmsvv-speed-button'),arenaTrophyHidden:getComputedStyle(document.querySelector('#pkmsvv-champion-entry .pkmsvv-champion-menu-icon')).display==='none'};}finally{G.PKMSVVSupportCatalog?.close?.();if(old===undefined)delete save.pkmsvvSupportBond;else save.pkmsvvSupportBond=old;}})()");
   console.log('QA_SUPPORT_SKILLS_AND_GAMEPLAY_CONTROLS='+JSON.stringify(supportSkillQa));
   assert.equal(supportSkillQa.missingSave,false);
