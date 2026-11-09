@@ -175,7 +175,9 @@ async function main(){
   assert.equal(approved20.hasSell,'function','half-price resale was not compiled');
   assert.equal(approved20.drops?.mint,.008);
   assert.equal(approved20.drops?.cap,.008);
-  assert.equal(approved20.drops?.caph,.002);
+  assert.equal(approved20.drops?.caph,undefined,'retired Hidden Capsule must never drop');
+  assert.deepEqual(await evaluate('Array.from(G.Shop.ORDER)'),['mint','cap'],
+   'Shop and Bag must never expose retired Hidden Capsule');
   assert.equal(approved20.htmlStyle,true,'uniform 2.0 UI stylesheet missing');
   assert.equal(approved20.v20Polish,'function','Recruitment equal-size card script missing');
   const five=await evaluate('G.PKMSVVBox2.formatRank(5).hp');

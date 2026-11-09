@@ -6,6 +6,7 @@
  */
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const {patchFile:patchStoryFile}=require('./patch-v20-story-bundle.cjs');
+const {patchFile:patchItemsFile}=require('./patch-v20-items-bundle.cjs');
 const root=path.resolve(__dirname,'..');
 const from=path.join(root,'dist/pokebox-stage4-qa');
 const to=path.join(root,'dist/cloudflare-v20-release');
@@ -54,7 +55,8 @@ for(const prefix of ['game','ai/game']){
  // into BOTH actual game routes (the app.min.js engine is unchanged).
  for(const name of ['pkmsvv-changelog-v20-qa.js','pkmsvv-box-hub-ui.js',
   'pkmsvv-dex-defeats-qa.js','pkmsvv-runtime-controls-qa.js',
-  'pkmsvv-quick-region.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-fusion-evolved.js']){
+  'pkmsvv-quick-region.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-fusion-evolved.js',
+  'pkmsvv-box-hub.js']){
   const fresh=fs.readFileSync(path.join(root,'src',name),'utf8');
   assert(fresh.length>100,'empty promoted script: '+name);
   fs.writeFileSync(path.join(to,prefix+'/js/ui/'+name),fresh);
@@ -96,6 +98,11 @@ for(const prefix of ['game','ai/game']){
  // The source QA game embeds a Story IIFE in app.min.js. Replace that EXACT
  // assignment, not a duplicate script that could cause old dialogue to win.
  patchStoryFile(path.join(to,prefix+'/js/app.min.js'));
+ patchItemsFile(path.join(to,prefix+'/js/app.min.js'));
+ assert(read(prefix+'/js/ui/pkmsvv-box-hub.js').includes('pickRandom'),
+  'old direct-choice PokéBox still in '+prefix);
+ assert(read(prefix+'/js/app.min.js').includes("const ORDER = ['mint', 'cap']"),
+  'retired Hidden Capsule still in compiled Shop '+prefix);
  assert(read(prefix+'/js/app.min.js').includes('Fusion là dung hợp hai kỹ năng đã luyện MAX'),
   'Story still stale in compiled '+prefix);
  assert(read(prefix+'/js/ui/pkmsvv-wiki-qa.js').includes('pkmsvv-awakening-milestones'),
@@ -103,7 +110,7 @@ for(const prefix of ['game','ai/game']){
 }
 const sw=path.join(to,'sw.js');assert(file('sw.js'),'PWA service worker missing');
 const oldSW=fs.readFileSync(sw,'utf8');
-const oldKey='pkmsvv-cloudflare-v1529-1',newKey='pkmsvv-cloudflare-v20-20261109-real-auto-axis-v27';
+const oldKey='pkmsvv-cloudflare-v1529-1',newKey='pkmsvv-cloudflare-v20-20261109-rift-random-items-v28';
 assert(oldSW.includes(oldKey),'existing service worker revision differs');
 fs.writeFileSync(sw,oldSW.replace(oldKey,newKey));
 // A new worker cache namespace ensures the published version refreshes reliably.
@@ -112,7 +119,7 @@ const info=JSON.parse(read('build-info.json'));
 assert(info.localSave===true,'existing browser-save architecture changed');
 Object.assign(info,{version:'2.0',displayVersion:'Pokémon Chuyển Sinh 2.0',
  releaseDate:'2026-11-09',releaseSourceRevision:EXPECTED_SHA,
- releaseQAWorkflowRun:42520192007,releaseType:'public-web',mobileUiHotfix:'one-row-tabs-five-box-cards-touch-auto-v24',combatHotfix:'native-input-axis-auto-skill-v27',saveMode:'existing-browser-local',
+ releaseQAWorkflowRun:42520192007,releaseType:'public-web',mobileUiHotfix:'one-row-tabs-five-box-cards-touch-auto-v24',combatHotfix:'rift-speed-restore-and-random-mint-capsule-v28',saveMode:'existing-browser-local',
  rollbackSourceArtifact:'PKMSVV-PokeBox-Stage4-Web-QA-ONLY'});
 fs.writeFileSync(path.join(to,'build-info.json'),JSON.stringify(info,null,2)+'\n');
 const maxBytes=25*1024*1024;let files=0,bytes=0,largest=0;

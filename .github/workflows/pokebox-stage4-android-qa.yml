@@ -18,6 +18,10 @@ on:
       - 'src/pkmsvv-pc-menu-clean-qa.*'
       - 'src/pkmsvv-modal-navigation-qa.*'
       - 'src/pkmsvv-runtime-controls-qa.*'
+      - 'src/pkmsvv-box-hub.*'
+      - 'src/kecleon/upstream/data/shop.js'
+      - 'src/kecleon/pkmsvv-kecleon-ui.js'
+      - 'tests/v20-items-release.test.cjs'
       - 'src/pkmsvv-evolution.js'
       - 'src/web/pkmsvv-royale.js'
       - 'src/pkmsvv-arena-solo.js'
@@ -66,7 +70,7 @@ jobs:
         with:
           node-version: '22'
       - name: Test all four PokéBox phases
-        run: npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs && node --test tests/bond-fusion-svv.test.cjs tests/horde-performance.test.cjs tests/ux-story-knowledge-qa.test.cjs
+        run: npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs && node --test tests/bond-fusion-svv.test.cjs tests/horde-performance.test.cjs tests/ux-story-knowledge-qa.test.cjs tests/pokebox-hub.test.cjs tests/kecleon.test.cjs tests/v20-items-release.test.cjs
       - name: Require permanent signing, no debug fallback
         shell: bash
         env:
@@ -128,6 +132,9 @@ jobs:
           grep -q 'PKMSVV_POKEMON_HEADER_V24' decoded-android/assets/public/css/pkmsvv-v20-ui-qa.css
           grep -q 'installTouchAuto' decoded-android/assets/public/js/ui/pkmsvv-runtime-controls-qa.js
           grep -q 'input.axis=()=>aim' decoded-android/assets/public/js/ui/pkmsvv-runtime-controls-qa.js
+          grep -q 'speedOwnerSafe' decoded-android/assets/public/js/ui/pkmsvv-runtime-controls-qa.js
+          grep -q 'pickRandom' decoded-android/assets/public/js/ui/pkmsvv-box-hub.js
+          grep -Fq "const ORDER = ['mint', 'cap']" decoded-android/assets/public/js/app.min.js
           grep -q 'installVisualBudget' decoded-android/assets/public/js/ui/pkmsvv-fusion-evolved.js
           grep -q 'PKMSVVHordePerformance' decoded-android/assets/public/js/ui/pkmsvv-horde-performance.js
           grep -q 'pkmsvv-horde-performance.js' decoded-android/assets/public/index.html

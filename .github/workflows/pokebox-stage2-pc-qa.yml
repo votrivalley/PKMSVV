@@ -8,6 +8,12 @@ on:
       - 'src/pkmsvv-fusion-evolved.js'
       - 'src/pkmsvv-horde-performance.js'
       - 'src/pkmsvv-quick-region.js'
+      - 'src/pkmsvv-runtime-controls-qa.js'
+      - 'src/pkmsvv-box-hub.js'
+      - 'src/pkmsvv-box-hub-ui.js'
+      - 'src/kecleon/upstream/data/shop.js'
+      - 'src/kecleon/pkmsvv-kecleon-ui.js'
+      - 'tests/v20-items-release.test.cjs'
       - 'tests/horde-performance.test.cjs'
       - 'tests/quick-region.test.cjs'
       - 'tests/bond-fusion-svv.test.cjs'
@@ -28,7 +34,7 @@ jobs:
         with:
           node-version: '22'
       - name: Run Stage 1 and Stage 1/2/3 save/regression tests
-        run: npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs && node --test tests/bond-fusion-svv.test.cjs tests/horde-performance.test.cjs
+        run: npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs && node --test tests/bond-fusion-svv.test.cjs tests/horde-performance.test.cjs tests/pokebox-hub.test.cjs tests/kecleon.test.cjs tests/runtime-controls-qa.test.cjs tests/v20-items-release.test.cjs
       - name: Download successful signed v1.5.93 Windows baseline
         uses: actions/download-artifact@v4
         with:
@@ -52,6 +58,9 @@ jobs:
           grep -q 'installVisualBudget' dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-fusion-evolved.js
           grep -q 'PKMSVVHordePerformance' dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-horde-performance.js
           grep -q 'input.axis=()=>aim' dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-runtime-controls-qa.js
+          grep -q 'speedOwnerSafe' dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-runtime-controls-qa.js
+          grep -q 'pickRandom' dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-box-hub.js
+          grep -Fq "const ORDER = ['mint', 'cap']" dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/app.min.js
           grep -q 'pkmsvv-horde-performance.js' dist/pokebox-stage4-pc-qa/resources/lan-site/game/index.html
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/css/pkmsvv-fusion-evolved.css
           for id in ember-quick water-tackle grass-spin spark-quick mind-tackle fire-gust bubble-ice leaf-rock shadow-mind thunder-claw; do
