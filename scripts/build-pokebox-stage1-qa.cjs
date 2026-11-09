@@ -4,6 +4,7 @@ const fs=require('node:fs'),path=require('node:path'),{execFileSync}=require('no
 const root=path.resolve(__dirname,'..');
 const {copyRegionCovers}=require('./copy-region-covers.cjs');
 const {copyFusionIcons}=require('./copy-fusion-icons.cjs');
+const {copyOrbIcons}=require('./copy-orb-icons.cjs');
 const source=path.resolve(process.env.PKMSVV_BOX_BASE||path.join(root,'dist/cloudflare'));
 const dest=path.resolve(process.env.PKMSVV_BOX_QA_OUT||path.join(root,'dist/pokebox-stage4-qa'));
 if(source===dest||dest.startsWith(source+path.sep)||source.startsWith(dest+path.sep))throw Error('Unsafe QA path');
@@ -22,6 +23,7 @@ for(const variant of ['game','ai/game']){
  }
  copyRegionCovers(path.join(dest,variant));
  copyFusionIcons(path.join(dest,variant));
+ copyOrbIcons(path.join(dest,variant));
  fs.mkdirSync(path.join(path.join(dest,variant),'images'),{recursive:true});
  fs.copyFileSync(path.join(root,'src/pkmsvv-menu-icons.webp'),path.join(path.join(dest,variant),'images/pkmsvv-menu-icons.webp'));
  fs.copyFileSync(path.join(root,'src/pkmsvv-fusion-evolved.js'),
