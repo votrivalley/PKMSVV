@@ -113,8 +113,39 @@ test('2.0 Pokédex types use species-specific colors and Kecleon defaults to Vie
   'Pokédex must read each actual Pokémon type palette');
  assert.match(hub,/class="pkmbx-type-pill" style="--pkmbx-pill:/,
   'Pokédex must render type-specific pills, not uniform rarity badges');
- assert.match(css,/pkmbx-dex-badges \.pkmbx-type-pill/,
-  'type pills need readable contrast in Pokédex detail');
+ assert.ok(css.includes('#pkmbx-dex-details .pkmbx-dex-type-pills .pkmbx-type-pill'),
+  'Pokédex must use the very same dark type pills as PokéBox');
  assert.match(ui,/const L=\(vi,en\)=>G\.I18n\?\.lang==='en'\?en:vi/,
   'during menu transitions undefined locale must keep Vietnamese rather than English');
+});
+
+test('2.0 hotfix: damage shows precise multiplier, not rounded integer, with a real multiplier bar',()=>{
+ const ui=read('src/pkmsvv-box-hub-ui.js');
+ assert.ok(ui.includes("number('atk')||0"),'legacy attack multiplier fallback');
+ assert.ok(ui.includes("attack.toFixed(2)"),'preserve ×1.52 instead of displaying 2 or 1');
+ assert.ok(!ui.includes("Math.round(attack)"),'never round a multiplier to an integer');
+ assert.ok(ui.includes('attack/2.4*100'),'meter must use ×2.4, not raw 255 attack points');
+ assert.ok(ui.includes("key==='damage'?2.4:255"),'correct accessibility progressbar maximum');
+ assert.equal('×'+Math.max(1.36,1.52).toFixed(2),'×1.52',
+  'Reshiram example from the actual combat multiplier schema');
+});
+test('2.0 hotfix: single Ability disables selection, recruitment rule stays inside Gen panel',()=>{
+ const hub=read('src/pkmsvv-box-hub-ui.js');
+ const engine=read('src/pkmsvv-box-hub.js');
+ const polish=read('src/pkmsvv-v20-ui-qa.js');
+ const recruit=read('src/pkmsvv-recruitment-qa.js');
+ const css=read('src/pkmsvv-v20-ui-qa.css');
+ assert.ok(hub.includes('oneAbility||id===currentAbility'),
+  'current or only Ability cannot be selected in the Bag');
+ assert.ok(engine.includes('distinct.length<2'),'engine blocks one-Ability consumption');
+ assert.ok(engine.includes('speciesBase(draft,item(draft,id))'),
+  'Shiny skin should change the visible base Ability');
+ assert.ok(polish.includes('guardAbilityButtons'),'older details UI is protected too');
+ assert.ok(polish.includes('event.stopImmediatePropagation()'),
+  'one-Ability click cannot open an old confirmation dialog');
+ assert.ok(recruit.includes("tabRow.insertAdjacentElement('afterend',note)"),
+  'rule must be a child of the Gen tabs container, not the shell flex row');
+ assert.ok(!recruit.includes("screen.insertBefore(note,screen.firstChild)"),
+  'never add a flex sibling beside the whole Gacha overlay');
+ assert.ok(css.includes('position:static!important'),'note must not float over the HOME menu');
 });
