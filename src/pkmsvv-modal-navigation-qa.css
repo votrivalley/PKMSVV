@@ -61,3 +61,15 @@ body.pkmsvv-competitive-evo .pkmsvv-evo-panel .pkmsvv-evo-option{
   width:min(320px,56vw)!important;padding:7px!important;max-height:66dvh!important;
  }
 }
+
+/* Native level-up offers can be plain div.card instead of buttons.
+ * Make the actual currently selected skill tile obvious on gamepad/WebView. */
+#scr-levelup #cards .pkmsvv-nav-focus,
+#scr-levelup #cards > .pkmsvv-nav-focus,
+#scr-levelup #cards [role="button"]:focus-visible{
+ outline:3px solid #ffe06c!important;
+ outline-offset:2px!important;
+ box-shadow:0 0 0 3px #11263c,0 0 18px #ffdf6aa8!important;
+ border-radius:10px!important;
+ cursor:pointer;
+}
