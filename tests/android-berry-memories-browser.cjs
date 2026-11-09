@@ -71,6 +71,14 @@ async function main(){
    await page.waitForFunction(expected=>G?.Social?.room?.mode===expected&&G.Social.room.members.length===4,mode);
    await page.evaluate(()=>{
     window.__berryRunProbe=[];
+    const originalError=console.error;
+    console.error=function(...args){
+     if(String(args[0]||'').includes('[Game]')){
+      window.__berryRunProbe.push({key:'console.error',
+       details:args.map(x=>String(x?.stack||x)).join(' | ').slice(0,2500)});
+     }
+     return originalError.apply(this,args);
+    };
     for(const [obj,key] of [[G.Coop,'over'],[G.RunUI,'showOver'],[G.Game,'quit'],[G.Game,'toUI']]){
      const old=obj?.[key];if(typeof old!=='function')continue;
      obj[key]=function(...args){
