@@ -415,23 +415,22 @@
  }
  function renderItems(host,it,ready){
   const s=currentSave(),bag=s?.bag||{},tms=s?.tms||{};
-  const natList=G.NATURES||[],abilities=G.DEX_ABIL?.[it.dex]||[],current=Hub.ability(s,it)?.slot||0;
+  const abilities=G.DEX_ABIL?.[it.dex]||[],current=Hub.ability(s,it)?.slot||0;
+  const base=Hub.speciesBase(s,it);
+  const natureChoices=(G.NATURES||[]).filter(n=>n?.id!==base?.natureId&&G.NATURE_BY?.[n.id]);
+  const standardOptions=[0,1].filter(slot=>abilities[slot]&&slot!==current&&
+    !(slot===1&&abilities[1]===abilities[0]));
   const learns=Object.keys(tms).filter(id=>tms[id]>0&&G.Moves?.BY_ID?.[id]);
   host.innerHTML='<section class="pkmbx-hub-items"><h3>'+L('Dùng vật phẩm cho ','Use items on ')+clean(monName(it.dex))+'</h3>'+
    '<div class="pkmbx-hub-inventory">'+
-    '<label><b>'+L('Bạc hà','Nature Mint')+' ×'+(bag.mint||0)+'</b>'+
-     '<select id="pkmbx-mint-select">'+natList.map(n=>'<option value="'+clean(n.id)+'"'+(n.id===it.natureId?' selected':'')+'>'+
-      clean(natureName(n.id))+'</option>').join('')+'</select></label>'+
-    '<button class="btn small gold" id="pkmbx-mint-use" '+(!ready||!bag.mint?'disabled':'')+'>'+L('Đổi tính cách','Change Nature')+'</button>'+
-   '</div><h4>'+L('Viên nang Đặc tính','Ability Capsules')+' · '+L('Thường','Normal')+' ×'+(bag.cap||0)+
-     ' · '+L('Ẩn','Hidden')+' ×'+(bag.caph||0)+'</h4><div class="pkmbx-hub-ability">'+
-    abilities.map((id,slot)=>{
-      if(!id)return '';
-      const hidden=slot===2,dup=slot===1&&id===abilities[0];
-      return '<button class="btn small" data-hub-ability="'+slot+'" '+(!ready||slot===current||dup||
-       !(hidden?bag.caph:bag.cap)?'disabled':'')+'>'+clean(abilityName(id))+
-       (hidden?' ★':'')+(slot===current?' ✓':'')+'</button>';
-    }).join('')+'</div>'+
+    '<b>'+L('Bạc hà','Nature Mint')+' ×'+(bag.mint||0)+'</b>'+
+    '<span>'+L('Đổi tính cách ngẫu nhiên, không được chọn trước.','Rerolls to a random different Nature; no direct selection.')+'</span>'+
+    '<button class="btn small gold" id="pkmbx-mint-use" '+(!ready||!bag.mint||!natureChoices.length?'disabled':'')+'>'+L('Dùng ngẫu nhiên','Random reroll')+'</button>'+
+   '</div><h4>'+L('Viên nang Đặc tính','Ability Capsule')+' ×'+(bag.cap||0)+'</h4>'+
+   '<div class="pkmbx-hub-ability">'+
+    '<p>'+L('Đổi ngẫu nhiên một Đặc tính thường khác. Đặc tính Ẩn không thể dùng Viên nang để đổi.','Reroll to another standard Ability. Hidden Abilities cannot be rerolled with Capsules.')+'</p>'+
+    '<button class="btn small" id="pkmbx-cap-use" '+(!ready||!bag.cap||current===2||!standardOptions.length?'disabled':'')+'>'+L('Dùng ngẫu nhiên','Random reroll')+'</button>'+
+   '</div>'+
    '<h4>TM</h4>'+
    '<div class="pkmbx-hub-tms">'+(learns.length?learns.map(id=>{
      const title=G.T?G.T(G.Moves.BY_ID[id].name,'move'):id;
@@ -440,12 +439,14 @@
     }).join(''):'<p>'+L('Chưa có TM trong Túi đồ.','No TM in your Bag.')+'</p>')+'</div>'+
     '<button class="btn small" id="pkmbx-shop-open">'+L('🦎 Đến Cửa hàng Kecleon','🦎 Open Kecleon Shop')+'</button></section>';
   host.querySelector('#pkmbx-mint-use').onclick=()=>saveAction(()=>{
-   const nat=host.querySelector('#pkmbx-mint-select').value;
-   Hub.useMint(it.id,nat);
+   const result=Hub.useMint(it.id);
+   G.UI?.toast?.(L('Tính cách ngẫu nhiên: ','Random Nature: ')+
+    natureName(result.natureId),2400);
   });
-  for(const b of host.querySelectorAll('[data-hub-ability]'))b.onclick=()=>saveAction(()=>{
-   const slot=Number(b.dataset.hubAbility);
-   Hub.useCapsule(it.id,slot,slot===2);
+  host.querySelector('#pkmbx-cap-use').onclick=()=>saveAction(()=>{
+   const result=Hub.useCapsule(it.id);
+   G.UI?.toast?.(L('Đặc tính ngẫu nhiên: ','Random Ability: ')+
+    abilityName(result.abilityId),2400);
   });
   for(const b of host.querySelectorAll('[data-hub-tm]'))b.onclick=()=>saveAction(()=>Hub.teach(it.id,b.dataset.hubTm));
   host.querySelector('#pkmbx-shop-open').onclick=()=>{

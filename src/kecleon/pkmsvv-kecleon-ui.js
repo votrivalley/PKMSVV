@@ -165,7 +165,7 @@ G.KecleonUI=(()=>{
   s+='<h3 class="pkmk-group-title">'+L('Vật phẩm','Items')+'</h3><div class="pkmk-cards">';
   for(const key of G.Shop.ORDER){
     const it=G.Shop.ITEMS[key];
-    if(it.unavailableInShop)continue; // Hidden Capsules only drop in battles.
+    if(it.unavailableInShop)continue; // legacy Hidden Capsule is fully retired.
     s+=card(itemIcon(key==='cap'?'capsule':key==='caph'?'capsuleh':'mint'),
       esc(label(key)),esc(text(key)),
       buyBtn(key,it.price)+'<span class="pkmk-stock">×'+G.Shop.count(key)+'</span>');
@@ -201,8 +201,8 @@ G.KecleonUI=(()=>{
    toast('Tính cách ngẫu nhiên: '+natName(chosen),'Random Nature: '+natName(chosen));
    return true;
   }
-  if(kind==='cap'||kind==='caph'){
-   const choices=G.Mons.abilityChoices(dex,kind==='caph');
+  if(kind==='cap'){
+   const choices=G.Mons.abilityChoices(dex,false);
    if(!choices.length)return false;
    const slot=choices[Math.floor(Math.random()*choices.length)];
    if(!G.Shop.take(kind))return false;
@@ -235,7 +235,7 @@ G.KecleonUI=(()=>{
   s+='<div class="pkmk-cards">';
   for(const k of G.Shop.ORDER)if(G.Shop.count(k)){
     const choices=k==='mint'?G.NATURES.filter(n=>n.id!==G.Mons.natureOf(selected).id):
-       G.Mons.abilityChoices(selected,k==='caph');
+       G.Mons.abilityChoices(selected,false);
     s+=card(itemIcon(k==='mint'?'mint':k==='cap'?'capsule':'capsuleh'),
       esc(label(k)),esc(text(k)),useBtn(k,choices.length>0)+
       sellBtn(k,G.Shop.ITEMS[k].price)+

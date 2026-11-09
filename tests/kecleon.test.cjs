@@ -38,6 +38,11 @@ test('Kecleon store purchases Mint and Capsule with PokéCoins into Bag',()=>{
  s.coins=0;
  assert.equal(G.Shop.buy('caph').ok,false);
  assert.equal(s.bag.caph||0,0);
+ assert.deepEqual(Array.from(G.Shop.ORDER),['mint','cap']);
+ assert.deepEqual(Object.keys(G.Shop.DROP_RATE).sort(),['cap','mint']);
+ s.bag.caph=4; // legacy inventory survives loading but cannot be consumed
+ assert.equal(G.Shop.take('caph'),false);
+ assert.equal(s.bag.caph,4);
 });
 test('TM taught to compatible Pokémon is consumed once, permanent and never duplicated',()=>{
  const G=game(),s=G.DB.save;
@@ -231,4 +236,24 @@ test('Pokédex shows nature-adjusted real stats and green/red +10%/-10% hints',(
  assert.ok(Math.abs(m.spd-99)<1e-9,'+10% speed must be visible');
  assert.ok(Math.abs(m.sa-1.35)<1e-9,'-10% special attack must be visible');
  assert.equal(G.DEX_BY[25].spd,90);
+});
+
+test('retired Hidden Capsule is never newly dropped, even at 100% deterministic RNG',()=>{
+ const G=game();G.Game={state:'playing'};
+ G.DB.save.bag.caph=3;
+ const found=G.Shop.dropFromEnemy({dex:25,rarity:5},()=>0);
+ assert.deepEqual(Array.from(found).sort(),['cap','mint']);
+ assert.equal(G.DB.save.bag.caph,3);
+ assert.equal(G.Shop.buy('caph').ok,false);
+});
+test('PokéBox never renders explicit Nature or Ability picks or the Hidden Capsule',()=>{
+ const ui=read('src/pkmsvv-box-hub-ui.js');
+ assert.doesNotMatch(ui,/pkmbx-mint-select/);
+ assert.doesNotMatch(ui,/data-hub-ability/);
+ assert.doesNotMatch(ui,/bag\.caph/);
+ assert.match(ui,/Hub\.useMint\(it\.id\)/);
+ assert.match(ui,/Hub\.useCapsule\(it\.id\)/);
+ const shop=read('src/kecleon/upstream/data/shop.js');
+ assert.match(shop,/const ORDER = \['mint', 'cap'\]/);
+ assert.doesNotMatch(shop,/caph:\.002/);
 });

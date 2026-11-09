@@ -89,26 +89,30 @@ test('Ready Team and Favorites are independent; either protects Rank fodder',()=
  assert.equal(hub.item(h.s,m.id).favorite,true);
  assert.equal(stage2.eligible(h.s,hub.item(h.s,m.id)),false,'a favorite is protected independently');
 });
-test('Mint changes only one specific individual and consumes exactly one Mint',()=>{
- const h=setup(),first=hub.item(h.s,'b1-6-n'),duplicate=add(h.s);
- assert.equal(first.natureId,'bold');
- hub.useMint(duplicate.id,'jolly',h.s);
- assert.equal(hub.item(h.s,duplicate.id).natureId,'jolly');
+test('Mint rerolls one individual randomly and excludes current Nature',()=>{
+ const h=setup(),copy=add(h.s),before=h.s.bag.mint;
+ const receipt=hub.useMint(copy.id,h.s,()=>0);
+ assert.equal(receipt.natureId,'jolly');
+ assert.equal(hub.item(h.s,copy.id).natureId,'jolly');
  assert.equal(hub.item(h.s,'b1-6-n').natureId,'bold');
- assert.equal(h.s.bag.mint,2);
+ assert.equal(h.s.bag.mint,before-1);
  assert.equal(h.s.pnat[6][0],'bold');
- assert.throws(()=>hub.useMint(duplicate.id,'jolly',h.s),/different Nature/);
+ assert.throws(()=>hub.useMint(copy.id,h.s,()=>-1),/Invalid random draw/);
+ assert.equal(h.s.bag.mint,before-1);
 });
-test('Ability Capsule and hidden capsule use correct inventory per individual',()=>{
- const h=setup(),duplicate=add(h.s);
- hub.useCapsule(duplicate.id,1,false,h.s);
- assert.equal(hub.item(h.s,duplicate.id).abilitySlot,1);
+test('Normal Capsule rolls a different standard slot, hidden stays rare and protected',()=>{
+ const h=setup(),copy=add(h.s);
+ const out=hub.useCapsule(copy.id,h.s,()=>0);
+ assert.equal(out.slot,1);
+ assert.equal(hub.item(h.s,copy.id).abilitySlot,1);
  assert.equal(h.s.bag.cap,1);
- assert.throws(()=>hub.useCapsule(duplicate.id,2,false,h.s),/unavailable/);
- hub.useCapsule(duplicate.id,2,true,h.s);
- assert.equal(hub.item(h.s,duplicate.id).abilitySlot,2);
- assert.equal(h.s.bag.caph,undefined);
+ assert.equal(h.s.bag.caph,1,'legacy hidden capsule inventory preserved');
  assert.equal(hub.item(h.s,'b1-6-n').abilitySlot,0);
+ const extra=add(h.s);
+ extra.abilitySlot=2; // legitimate rare Hidden-Ability carrier
+ const original=JSON.stringify(h.s);
+ assert.throws(()=>hub.useCapsule(extra.id,h.s,()=>0),/Hidden Ability is protected/);
+ assert.equal(JSON.stringify(h.s),original,'failed random capsule must be atomic');
 });
 test('TM is consumed only for the selected individual, preserving old species TM and other duplicates',()=>{
  const h=setup(),dupe1=add(h.s),dupe2=add(h.s);
@@ -127,15 +131,15 @@ test('failed save commit atomically restores team, items, inventory and TM',()=>
  h.fail=true;
  assert.throws(()=>hub.toggleTeam(duplicate.id,h.s),/Could not save/);
  assert.equal(JSON.stringify(h.s),before);
- assert.throws(()=>hub.useMint(duplicate.id,'jolly',h.s),/Could not save/);
+ assert.throws(()=>hub.useMint(duplicate.id,h.s,()=>0),/Could not save/);
  assert.equal(JSON.stringify(h.s),before);
  assert.throws(()=>hub.teach(duplicate.id,'shadow-ball',h.s),/Could not save/);
  assert.equal(JSON.stringify(h.s),before);
 });
 test('selected instance affects Nature, Ability and learned TM in combat, without changing another instance',()=>{
  const h=setup(),duplicate=add(h.s);
- hub.useMint(duplicate.id,'jolly',h.s);
- hub.useCapsule(duplicate.id,1,false,h.s);
+ hub.useMint(duplicate.id,h.s,()=>0);
+ hub.useCapsule(duplicate.id,h.s,()=>0);
  hub.teach(duplicate.id,'shadow-ball',h.s);
  assert.equal(hub.installMons(G.Mons),true);
  assert.equal(hub.installMons(G.Mons),false);

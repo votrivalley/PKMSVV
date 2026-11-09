@@ -160,29 +160,47 @@
   const x=active(s);
   return x&&x.dex===Number(dex)?x:null;
  }
- function useMint(id,natureId,s=save()){
-  if(typeof G==='undefined'||!G.NATURE_BY?.[natureId])throw Error('Invalid Nature');
+ // Nature Mint and normal Ability Capsule are true rerolls: no requested
+ // target can be passed by UI, controller or another caller. Inject RNG only
+ // in tests; the real game always supplies Math.random.
+ function pickRandom(candidates,random){
+  if(!candidates.length)return null;
+  const r=Number(random());
+  if(!Number.isFinite(r)||r<0||r>=1)throw Error('Invalid random draw');
+  return candidates[Math.floor(r*candidates.length)];
+ }
+ function useMint(id,s=save(),random=Math.random){
   return atomic(s,draft=>{
    const x=speciesBase(draft,item(draft,id));
-   if(!x||x.natureId===natureId)throw Error('Select a different Nature');
+   if(!x)throw Error('Pokémon not found');
    if(!(draft.bag?.mint>0))throw Error('No Nature Mint in Bag');
+   const choices=(typeof G==='undefined'?[]:G.NATURES||[])
+    .filter(n=>n&&G.NATURE_BY?.[n.id]&&n.id!==x.natureId);
+   const chosen=pickRandom(choices,random);
+   if(!chosen)throw Error('No alternative Nature is available');
+   const before=x.natureId;
    draft.bag.mint--;if(!draft.bag.mint)delete draft.bag.mint;
-   x.natureId=natureId;
-   return {id,natureId,left:draft.bag.mint||0};
+   x.natureId=chosen.id;
+   return {id,from:before,natureId:chosen.id,left:draft.bag.mint||0};
   });
  }
- function useCapsule(id,slot,hidden=false,s=save()){
+ function useCapsule(id,s=save(),random=Math.random){
   return atomic(s,draft=>{
-   const x=item(draft,id);if(!x)throw Error('Pokémon not found');
-   const arr=typeof G!=='undefined'?G.DEX_ABIL?.[x.dex]||[]:[];
-   if(!Number.isInteger(slot)||slot<0||slot>2||!arr[slot]||slot===x.abilitySlot||
-    (slot===1&&arr[1]===arr[0])||(slot===2&&!hidden))
-    throw Error('Ability slot is unavailable');
-   const key=hidden?'caph':'cap';
-   if(!(draft.bag?.[key]>0))throw Error('No Ability Capsule in Bag');
-   draft.bag[key]--;if(!draft.bag[key])delete draft.bag[key];
+   const x=speciesBase(draft,item(draft,id));
+   if(!x)throw Error('Pokémon not found');
+   if(!(draft.bag?.cap>0))throw Error('No Ability Capsule in Bag');
+   const arr=typeof G==='undefined'?[]:G.DEX_ABIL?.[x.dex]||[];
+   // A standard Capsule cannot manufacture or overwrite the rare Hidden
+   // Ability. Those appear only through legitimate rare natural rolls.
+   if(x.abilitySlot===2)throw Error('Hidden Ability is protected');
+   const choices=[0,1].filter(slot=>arr[slot]&&slot!==x.abilitySlot&&
+     !(slot===1&&arr[1]===arr[0]));
+   const slot=pickRandom(choices,random);
+   if(slot===null)throw Error('No alternative standard Ability is available');
+   const before=x.abilitySlot;
+   draft.bag.cap--;if(!draft.bag.cap)delete draft.bag.cap;
    x.abilitySlot=slot;
-   return {id,slot,left:draft.bag[key]||0};
+   return {id,from:before,slot,abilityId:arr[slot],left:draft.bag.cap||0};
   });
  }
  function canTeach(s,x,moveId){
