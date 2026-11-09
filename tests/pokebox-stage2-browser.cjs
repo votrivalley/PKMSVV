@@ -48,7 +48,19 @@ async function main(){
    if(task){waiting.delete(m.id);m.error?task.reject(Error(m.error.message)):task.resolve(m.result)}
   });
   function cmd(method,params={}){
-   return new Promise((resolve,reject)=>{const id=++seq;waiting.set(id,{resolve,reject});ws.send(JSON.stringify({id,method,params}))});
+   return new Promise((resolve,reject)=>{
+    const id=++seq;
+    const watch=setTimeout(()=>{
+     waiting.delete(id);
+     reject(Error('Chromium CDP stalled '+method+': '+String(params.expression||'').slice(0,420)));
+    },15000);
+    waiting.set(id,{
+     resolve:value=>{clearTimeout(watch);resolve(value);},
+     reject:error=>{clearTimeout(watch);reject(error);}
+    });
+    try{ws.send(JSON.stringify({id,method,params}));}
+    catch(e){clearTimeout(watch);waiting.delete(id);reject(e);}
+   });
   }
   const evaluate=async expression=>{
    const data=await cmd('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});

@@ -55,7 +55,7 @@ jobs:
       - name: Chromium smoke + two-pane geometry on final Web candidate
         env:
           PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
-        run: node tests/pokebox-stage2-browser.cjs
+        run: timeout 180s node tests/pokebox-stage2-browser.cjs
       - name: Check production candidate structure and PWA save guardian
         shell: bash
         run: |
