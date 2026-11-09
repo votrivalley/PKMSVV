@@ -106,6 +106,7 @@ test('2.0 uniform UI is present in each QA packager and keeps old live buttons',
 
 test('2.0 Pokédex types use species-specific colors and Kecleon defaults to Vietnamese',()=>{
  const hub=read('src/pkmsvv-box-hub-ui.js');
+ assert.match(hub,/PKMSVVMenuCleanQA\?\.syncHome\?\.\(\)/,'leaving Pokémon must restore localized home labels');
  const css=read('src/pkmsvv-v20-ui-qa.css');
  const ui=read('src/kecleon/pkmsvv-kecleon-ui.js');
  assert.match(hub,/TYPE_FRAME_COLORS\[String\(t\)\.toLowerCase\(\)\]/,
