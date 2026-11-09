@@ -119,7 +119,7 @@ for(const prefix of ['game','ai/game']){
   'regional Recruitment lock missing from '+prefix);
  assert(read(prefix+'/js/ui/pkmsvv-modal-navigation-qa.js').includes('G.RunUI.pick(index)'),
   'native controller level-up selection missing from '+prefix);
- assert(read(prefix+'/js/ui/pkmsvv-box-hub.css').includes('pkmbx-dex-type-pill'),
+ assert(read(prefix+'/css/pkmsvv-box-hub.css').includes('pkmbx-dex-type-pill'),
   'colored Pokédex type badges missing from '+prefix);
  assert(read(prefix+'/js/ui/pkmsvv-runtime-controls-qa.js').includes('installHoverWater'),
   'hovering Reshiram speed correction missing from '+prefix);
