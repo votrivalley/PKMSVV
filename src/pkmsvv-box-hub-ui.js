@@ -876,7 +876,7 @@
    '<div><strong>'+clean(monName(infoDex))+'</strong><div class="pkmbx-dex-badges">'+
     '<span class="pkmbx-dex-badge">#'+infoDex+'</span>'+
     '<span class="pkmbx-dex-badge">'+clean(rarity)+'</span>'+
-    (mon.types||[]).map(t=>'<span class="pkmbx-dex-badge">'+clean(typeName(t))+'</span>').join('')+'</div>'+
+    (mon.types||[]).map(t=>'<span class="pkmbx-type-pill" style="--pkmbx-pill:'+clean(TYPE_FRAME_COLORS[String(t).toLowerCase()]||TYPE_FRAME_COLORS.normal)+'">'+clean(typeName(t))+'</span>').join('')+'</div>'+
     '<p>'+(owned?L('✓ Đã khám phá','✓ Discovered'):L('Chưa sở hữu','Not yet owned'))+'</p>'+
     statLine+'</div></div>'+
    '<div class="pkmbx-dex-variants"><button type="button" data-dex-variant="normal" class="'+(!dexShinyView?'active':'')+'">'+L('Bình thường','Normal')+'</button>'+
