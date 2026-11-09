@@ -105,8 +105,13 @@ async function main(){
     await image.decode();return [image.naturalWidth,image.naturalHeight];
    });
    assert.deepEqual(atlas,[1152,576],'All Berry tree HP sprites must be installed on Android');
-   // A successful render on the first frame is NOT proof of a playable
-   // match. Watch at least 6 live seconds, including enemy/AI updates.
+   // The pre-battle Berry selection intentionally freezes simulation while
+   // G.Game.state is already 'playing'. Confirm first, then time LIVE play.
+   await page.evaluate(()=>{
+    const options=[...document.querySelectorAll('.pkmsvv-berry-overlay button')];
+    options.find(b=>/Không dùng Berry|No Berry/i.test(b.textContent))?.click();
+   });
+   await page.waitForFunction(()=>!G.PKMSVVBerry?.choosing,null,{timeout:18000});
    await page.waitForTimeout(6500);
    const ongoing=await page.evaluate(()=>({
     state:G.Game?.state,time:G.Game?.st?.time,
