@@ -16,7 +16,68 @@ env:
   V20_SOURCE_RUN: '42520192007'
   V20_SOURCE_SHA: '81a1101a948be0fb2944ce302c8781eace1f21fa'
 jobs:
+  rollback-web-pre-v31:
+    if: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[rollback-web-pre-v31]') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify the exact previously published stable Web 2.0 snapshot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/42590170099" --jq '{head_sha,status,conclusion}' > /tmp/web-rollback-pinned.json
+          jq -e '.head_sha == "fe356131d776e9c558f508be3be60b8d7d95bfe5" and .status == "completed" and .conclusion == "success"' /tmp/web-rollback-pinned.json
+      - name: Retrieve original pre-v31 published Web bundle (immutable Actions artifact)
+        uses: actions/download-artifact@v4
+        with:
+          name: PKMSVV-Pokemon-Chuyen-Sinh-2.0-Web-Release
+          run-id: 42590170099
+          github-token: ${{ github.token }}
+          path: dist/web-rollback-pre-v31
+      - name: Check rollback Web structure and save compatibility
+        shell: bash
+        run: |
+          set -euo pipefail
+          site=dist/web-rollback-pre-v31
+          test -s "$site/index.html"
+          test -s "$site/ai/game/index.html"
+          test -s "$site/game/index.html"
+          test -s "$site/sw.js"
+          test -s "$site/save-guardian.js"
+          test -s "$site/save-rescue.html"
+          test -s "$site/build-info.json"
+          jq -e '.version == "2.0" and .releaseType == "public-web" and .localSave == true' "$site/build-info.json"
+          sha256sum "$site/ai/game/index.html" | tee /tmp/rollback-web-expected-sha.txt
+      - name: Restore proven pre-v31 bundle to existing Cloudflare Pages project
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID}"
+          npx --yes wrangler@4 pages deploy dist/web-rollback-pre-v31 --project-name pkmsvv-web --branch pkmsvv-web
+      - name: Verify live site now serves the rollback revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected=$(cut -d' ' -f1 /tmp/rollback-web-expected-sha.txt)
+          found=0
+          for n in 1 2 3 4 5 6 7 8 9 10; do
+            if curl -fsSL --max-time 30 -H 'Cache-Control: no-cache' "https://pkmsvv-web.pages.dev/ai/game/index.html?rollback=pre-v31-${GITHUB_SHA}-${n}" -o /tmp/pkmsvv-live-rollback.html; then
+              actual=$(sha256sum /tmp/pkmsvv-live-rollback.html | cut -d' ' -f1)
+              if [ "$actual" = "$expected" ]; then found=1; break; fi
+            fi
+            sleep 5
+          done
+          test "$found" = 1 || { echo '::error::Web rollback not verified: deployed content mismatch'; exit 1; }
+          echo 'PASS: Cloudflare Web 2.0 restored exact pre-v31 snapshot; browser saves untouched'
   validate-web-v20:
+    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[rollback-web-pre-v31]') }}
     runs-on: ubuntu-latest
     timeout-minutes: 50
     steps:
