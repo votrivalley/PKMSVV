@@ -339,7 +339,12 @@
   const sharedFav=allForms.some(x=>x.favorite);
   const bonuses=G.PKMSVVBox2?.formatRank?.(progress.rank)||{hp:0,damage:0,cooldown:0};
   const number=k=>Number.isFinite(Number(mon?.[k]))?Number(mon[k]):null;
-  const hp=number('hp'),attack=Math.max(number('pa')||0,number('sa')||0);
+  // The actual combat engine uses mon.atk as base attack. The pa/sa
+  // coefficients belong to the physical/special category fit, NOT a damage stat.
+  // Display the same number used by Player.baseAtk instead of a misleading "1".
+  const hp=number('hp'),baseAttack=number('atk');
+  const attack=baseAttack!==null&&baseAttack>0?baseAttack:
+   Math.max(number('pa')||0,number('sa')||0);
   const speed=number('spd'),cooldown=Number(bonuses.cooldown)||0;
   const rows=[
    ['hp','♥',L('Máu','HP'),hp,hp===null?'—':String(Math.round(hp))+' · +'+bonuses.hp+'%',hp===null?0:hp/255*100],
@@ -949,7 +954,11 @@
    '<div><strong>'+clean(monName(infoDex))+'</strong><div class="pkmbx-dex-badges">'+
     '<span class="pkmbx-dex-badge">#'+infoDex+'</span>'+
     '<span class="pkmbx-dex-badge">'+clean(rarity)+'</span>'+
-    (mon.types||[]).map(t=>'<span class="pkmbx-dex-badge">'+clean(typeName(t))+'</span>').join('')+'</div>'+
+    (mon.types||[]).map(t=>{
+     const color=TYPE_FRAME_COLORS[String(t).toLowerCase()]||TYPE_FRAME_COLORS.normal;
+     return '<span class="pkmbx-type-pill pkmbx-dex-type-pill" style="--pkmbx-pill:'+color+'">'+
+      clean(typeName(t))+'</span>';
+    }).join('')+'</div>'+
     '<p>'+(owned?L('✓ Đã khám phá','✓ Discovered'):L('Chưa sở hữu','Not yet owned'))+'</p>'+
     statLine+'</div></div>'+
    '<div class="pkmbx-dex-variants"><button type="button" data-dex-variant="normal" class="'+(!dexShinyView?'active':'')+'">'+L('Bình thường','Normal')+'</button>'+

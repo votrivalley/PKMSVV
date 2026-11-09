@@ -19,16 +19,19 @@
     const hint=document.createElement('p');
     hint.id='pkmsvv-gacha-dex-requirement';
     hint.setAttribute('role','note');
+    hint.setAttribute('translate','no');
+    hint.classList.add('notranslate');
     hint.textContent=G.I18n?.lang==='en'?
-     'Only Pokémon unlocked in the Pokédex can be recruited. A Gen without discovered Pokémon cannot be rolled.':
-     'Chỉ những Pokémon đã mở trong Pokédex mới có thể Chiêu mộ. Gen chưa mở loài nào sẽ không thể quay.';
+     'Only Pokémon unlocked in the Pokédex can be recruited.':
+     'Chỉ những Pokémon đã mở trong Pokédex mới có thể chiêu mộ.';
     gacha.insertBefore(hint,gacha.firstChild);
    }
    const hint=gacha?.querySelector('#pkmsvv-gacha-dex-requirement');
    if(hint){
     const translation=G.I18n?.lang==='en'?
-     'Only Pokémon unlocked in the Pokédex can be recruited. A Gen without discovered Pokémon cannot be rolled.':
-     'Chỉ những Pokémon đã mở trong Pokédex mới có thể Chiêu mộ. Gen chưa mở loài nào sẽ không thể quay.';
+     'Only Pokémon unlocked in the Pokédex can be recruited.':
+     'Chỉ những Pokémon đã mở trong Pokédex mới có thể chiêu mộ.';
+    hint.lang=G.I18n?.lang==='en'?'en':'vi';
     if(hint.textContent!==translation)hint.textContent=translation;
    }
    for(const root of roots()){
@@ -36,8 +39,12 @@
     const nodes=[];
     for(let node;node=walker.nextNode();)nodes.push(node);
     for(const n of nodes){
-     const old=n.nodeValue||'',updated=old
-      .replace(/Gacha|Recruitment|Chiêu mộ/gi,target);
+     // Preserve complete localized sentences and gameplay descriptions:
+     // only translate standalone launcher labels, not embedded prose.
+     if(n.parentElement?.closest?.('[translate="no"],.notranslate'))continue;
+     const old=n.nodeValue||'',word=old.trim();
+     if(!/^(Gacha|Recruitment|Chiêu mộ)$/i.test(word))continue;
+     const updated=old.replace(word,target);
      if(updated!==old)n.nodeValue=updated;
     }
     if(root.title)root.title=root.title.replace(/Gacha|Recruitment|Chiêu mộ/gi,target);

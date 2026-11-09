@@ -73,6 +73,14 @@
   const menu=$('#scr-menu'),s=G.DB?.save;if(!menu||!s||!Number.isFinite(Number(s.partner)))return;
   const mon=G.DEX_BY?.[s.partner],meta=menu.querySelector('.pkmsvv-v15-meta');if(!mon||!meta)return;
   const name=meta.querySelector('#menu-partner-name'),info=meta.querySelector('#menu-partner-info'),stats=meta.querySelector('#menu-stats');
+  // Native localization can rerun after closing PokéBox/PC/Gacha. Keep only
+  // these already-localized labels out of translation; data saves stay intact.
+  for(const node of [name,info,stats]){
+   if(!node)continue;
+   node.setAttribute('translate','no');
+   node.classList.add('notranslate');
+   node.lang=isEn()?'en':'vi';
+  }
   const monName=typeof mon.name==='string'?mon.name:Array.isArray(mon.name)?mon.name[isEn()?1:0]:'Pokémon #'+s.partner;
   // Always update: previous species' text can remain after returning from battle.
   if(name)name.textContent=monName;

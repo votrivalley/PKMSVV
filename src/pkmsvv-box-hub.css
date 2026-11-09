@@ -863,3 +863,12 @@
 @media(max-width:620px){
  #pkmsvv-pokebox-overlay .pkmbx-action-dialog{max-height:80dvh}
 }
+
+/* Pokédex type badges share the PokéBox type palette; only rarity/#Dex stay gold. */
+#pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-dex-badges .pkmbx-dex-type-pill{
+ display:inline-flex;align-items:center;justify-content:center;
+ border:1px solid var(--pkmbx-pill);border-radius:999px;padding:4px 10px;
+ background:color-mix(in srgb,var(--pkmbx-pill) 75%,#122d40);
+ color:#fff;font-weight:800;text-shadow:0 1px 2px #061c30bf;
+ white-space:nowrap;
+}
