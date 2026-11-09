@@ -103,3 +103,17 @@ test('2.0 uniform UI is present in each QA packager and keeps old live buttons',
   assert.match(src,/pkmsvv-v20-ui-qa\.js/);
  }
 });
+
+test('2.0 Pokédex types use species-specific colors and Kecleon defaults to Vietnamese',()=>{
+ const hub=read('src/pkmsvv-box-hub-ui.js');
+ const css=read('src/pkmsvv-v20-ui-qa.css');
+ const ui=read('src/kecleon/pkmsvv-kecleon-ui.js');
+ assert.match(hub,/TYPE_FRAME_COLORS\[String\(t\)\.toLowerCase\(\)\]/,
+  'Pokédex must read each actual Pokémon type palette');
+ assert.match(hub,/class="pkmbx-type-pill" style="--pkmbx-pill:/,
+  'Pokédex must render type-specific pills, not uniform rarity badges');
+ assert.match(css,/pkmbx-dex-badges \.pkmbx-type-pill/,
+  'type pills need readable contrast in Pokédex detail');
+ assert.match(ui,/const L=\(vi,en\)=>G\.I18n\?\.lang==='en'\?en:vi/,
+  'during menu transitions undefined locale must keep Vietnamese rather than English');
+});
