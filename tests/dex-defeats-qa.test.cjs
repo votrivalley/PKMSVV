@@ -192,6 +192,7 @@ test('Kanto unlock never borrows Johto species and ALL GEN still uses any unlock
 });
 test('Recruitment UI explains Pokédex gate regardless of the selected Gen',()=>{
  const src=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-recruitment-qa.js'),'utf8');
- assert.match(src,/Chỉ những Pokémon đã mở trong Pokédex mới có thể Chiêu mộ/);
+ assert.match(src,/Chỉ những Pokémon đã mở trong Pokédex mới có thể chiêu mộ/);
+ assert.doesNotMatch(src,/Gen chưa mở loài nào sẽ không thể quay/);
  assert.match(src,/pkmsvv-gacha-dex-requirement/);
 });
