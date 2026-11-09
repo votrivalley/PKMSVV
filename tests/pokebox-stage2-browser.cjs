@@ -856,6 +856,54 @@ async function main(){
   assert.equal(evolutionNav.second,true,'D-pad navigation must reach second route');
   assert.deepEqual(evolutionNav.picked,[1],'confirm activates focused evolution');
 
+  // Mandatory true simulation smoke: menu/geometry tests alone previously
+  // passed while Explore could silently end after the first 1-60 seconds.
+  if(splitRelease){
+   const kickoff=await evaluate(`(()=>{
+    window.__pkmsvvRunProbe={events:[],started:Date.now()};
+    const probe=(name,fn)=>{
+     const old=G[name[0]]?.[name[1]];
+     if(typeof old!=='function')return;
+     G[name[0]][name[1]]=function(...args){
+      window.__pkmsvvRunProbe.events.push({
+       name:name.join('.'),elapsed:Date.now()-window.__pkmsvvRunProbe.started,
+       summary:String(JSON.stringify(args[0])||'').slice(0,300),
+       stack:String(new Error().stack).slice(0,1800)
+      });
+      return old.apply(this,args);
+     };
+    };
+    for(const hook of [['RunUI','showOver'],['Game','quit'],['Game','toUI'],['Coop','over']])probe(hook);
+    window.addEventListener('error',e=>window.__pkmsvvRunProbe.events.push({name:'error',text:e.message,stack:e.error?.stack}),true);
+    window.addEventListener('unhandledrejection',e=>window.__pkmsvvRunProbe.events.push({name:'rejection',text:String(e.reason)}),true);
+    G.DB.save.partner=25;G.DB.save.pkmsvvStorySeen=true;G.DB.save.pkmsvvNameChosen=true;
+    G.MenuUI.open();
+    const started=G.PKMSVVQuickRegion.choose(0);
+    return {started,state:G.Game?.state,choosing:G.PKMSVVBerry?.choosing,region:G.PKMSVVQuickRegion?.active};
+   })()`);
+   console.log('QA_COMBAT_EXPLORE_START='+JSON.stringify(kickoff));
+   assert.equal(kickoff.started,true,'Explore Kanto must launch from the actual Region UI');
+   // Berries may gate the native start; click the same skip button a real
+   // player uses, or let the 10s countdown progress naturally.
+   await until(async()=>{
+    await evaluate(`(()=>{
+     const buttons=[...document.querySelectorAll('.pkmsvv-berry-overlay button')];
+     const b=buttons.find(x=>/Không dùng Berry|No Berry/i.test(x.textContent));
+     if(b)b.click();
+     return G.Game?.state;
+    })()`);
+    return await evaluate("G.Game?.state==='playing'");
+   },30000);
+   const liveStart=await evaluate("(()=>({state:G.Game?.state,time:G.Game?.st?.time,hp:G.Game?.player?.hp,region:G.PKMSVVQuickRegion?.active,errors:window.__pkmsvvRunProbe.events}))()");
+   console.log('QA_COMBAT_EXPLORE_LIVE='+JSON.stringify(liveStart));
+   await sleep(10000);
+   const survived=await evaluate("(()=>({state:G.Game?.state,time:G.Game?.st?.time,hp:G.Game?.player?.hp,dead:G.Game?.player?.dead,kills:G.Game?.st?.kills,enemies:G.EnemyMgr?.count,probe:window.__pkmsvvRunProbe.events}))()");
+   console.log('QA_COMBAT_EXPLORE_10S='+JSON.stringify(survived));
+   assert.equal(survived.state,'playing','Explore ended without player action: '+JSON.stringify(survived));
+   assert.ok(Number(survived.time)>=7,'Explore simulation stalled: '+JSON.stringify(survived));
+   assert.deepEqual(errors,[],'Actual battle crashed in Chromium: '+JSON.stringify(errors.slice(-5)));
+  }
+
   console.log('PASS Stage 4 real browser QA:',JSON.stringify({...state,rank5Hp:five,otherExceptions:errors.length}));
  }finally{
   try{ws?.close()}catch(_){}
