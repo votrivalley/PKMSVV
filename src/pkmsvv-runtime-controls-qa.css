@@ -165,3 +165,16 @@
   padding:5px 9px!important;font-size:13px!important;
  }
 }
+
+/* Clearly show AUTO next to the native Quick Attack F/X button. */
+#pkmsvv-active-auto.pkmsvv-active-auto{
+ top:auto!important;bottom:max(176px,calc(env(safe-area-inset-bottom) + 176px))!important;
+ right:max(12px,env(safe-area-inset-right))!important;
+ color:#dcffe9!important;background:#11634edb!important;
+}
+@media (pointer:coarse), (max-height:650px){
+ #pkmsvv-active-auto.pkmsvv-active-auto{
+  bottom:max(172px,calc(env(safe-area-inset-bottom) + 172px))!important;
+  right:max(9px,env(safe-area-inset-right))!important;
+ }
+}

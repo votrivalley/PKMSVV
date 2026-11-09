@@ -51,6 +51,7 @@ jobs:
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-fusion-evolved.js
           grep -q 'installVisualBudget' dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-fusion-evolved.js
           grep -q 'PKMSVVHordePerformance' dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-horde-performance.js
+          grep -q 'input.axis=()=>aim' dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-runtime-controls-qa.js
           grep -q 'pkmsvv-horde-performance.js' dist/pokebox-stage4-pc-qa/resources/lan-site/game/index.html
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/css/pkmsvv-fusion-evolved.css
           for id in ember-quick water-tackle grass-spin spark-quick mind-tackle fire-gust bubble-ice leaf-rock shadow-mind thunder-claw; do

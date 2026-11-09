@@ -71,6 +71,7 @@ jobs:
           grep -q 'PKMSVV_MOBILE_SPEED_EDGE_23' dist/cloudflare-v20-release/game/css/pkmsvv-runtime-controls-qa.css
           grep -q 'PKMSVV_POKEMON_HEADER_V24' dist/cloudflare-v20-release/game/css/pkmsvv-v20-ui-qa.css
           grep -q 'installTouchAuto' dist/cloudflare-v20-release/game/js/ui/pkmsvv-runtime-controls-qa.js
+          grep -q 'input.axis=()=>aim' dist/cloudflare-v20-release/game/js/ui/pkmsvv-runtime-controls-qa.js
           grep -q 'installVisualBudget' dist/cloudflare-v20-release/game/js/ui/pkmsvv-fusion-evolved.js
           grep -q 'PKMSVVHordePerformance' dist/cloudflare-v20-release/game/js/ui/pkmsvv-horde-performance.js
           grep -q 'pkmsvv-horde-performance.js' dist/cloudflare-v20-release/ai/game/index.html

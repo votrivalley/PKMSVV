@@ -11,7 +11,14 @@ function fixture(){
   Settings:{get(k){return vals.get(k)},set(k,v){vals.set(k,v)}},
   UI:{toast(v){toasts.push(v)}},
   EnemyMgr:{all(){return [{x:50,y:0,dead:false},{x:800,y:800,dead:false}]}},
-  Combat:{manualDash(p){casts.push(Array.isArray(p.lanBotAxis)?[...p.lanBotAxis]:p.lanBotAxis);return true;}}
+  Input:{axis(){return [-1,0]}},
+  Combat:{manualDash(p){
+   // Mirror actual native Combat.manualDash dispatch:
+   // G.PKMSVVDash.direction(pl,G.Input.axis()) — never lanBotAxis.
+   const axis=G.Input.axis();
+   casts.push(Array.isArray(axis)?[...axis]:axis);
+   return true;
+  }}
  };
  const elements={};
  const document={
@@ -55,9 +62,54 @@ test('Auto active skill aims toward nearest hostile without changing controller 
  assert.equal(f.casts.length,1);
  assert.equal(f.casts[0][0],1,'AUTO must pass real x-axis input to native dash');
  assert.equal(f.casts[0][1],0,'AUTO must pass real y-axis input to native dash');
- assert.equal(f.pl.lanBotAxis,original,'manual input must be restored');
+ assert.equal(f.pl.lanBotAxis,original,'LAN bot input must be restored');
+ assert.deepEqual(Array.from(f.G.Input.axis()),[-1,0],
+  'keyboard, controller and joystick direction must remain unchanged after AUTO');
  f.G.Game.state='ui';
  assert.equal(f.api.castTowardsNearest(),false,'never cast in menus');
+});
+test('AUTO casting passes enemy direction into the real native Input.axis() read and restores it even on failure',()=>{
+ const f=fixture(),was=f.G.Input.axis,aimed=[];
+ f.G.Combat.manualDash=function(pl){
+  const axis=this===f.G.Combat?f.G.Input.axis():null;
+  aimed.push({axis:[...axis],nativeAngle:Math.atan2(axis[1],axis[0])});
+  return true;
+ };
+ f.G.EnemyMgr.all=()=>[{x:0,y:100,dead:false,remote:false}];
+ f.api.toggleDash();
+ assert.equal(f.api.castTowardsNearest(),true);
+ assert.ok(Math.abs(aimed[0].nativeAngle-Math.PI/2)<.001,
+  'native dash must aim DOWN at the nearby enemy, not use keyboard LEFT');
+ assert.equal(f.G.Input.axis,was,'original function identity restored, not just its values');
+ const other=fixture(),oldAxis=other.G.Input.axis,oldBot=other.pl.lanBotAxis;
+ other.G.Combat.manualDash=()=>{
+  assert.equal(other.G.Input.axis()[0],1,'native sees target while dispatch is executing');
+  throw Error('native dash failed');
+ };
+ other.api.toggleDash();
+ assert.throws(()=>other.api.castTowardsNearest(),/native dash failed/);
+ assert.equal(other.G.Input.axis,oldAxis,'exception must restore keyboard axis');
+ assert.equal(other.pl.lanBotAxis,oldBot,'exception must restore player axis');
+});
+test('AUTO remains active and automatically retries native dash on later frames after cooldown rejection',()=>{
+ const f=fixture(),axes=[],original=f.G.Input.axis;
+ let ready=false;
+ f.G.Combat.manualDash=()=>{
+  axes.push([...f.G.Input.axis()]);
+  return ready;
+ };
+ f.api.toggleDash();
+ f.frame(200);
+ assert.equal(axes.length,1,'AUTO must try native combat without another F press');
+ assert.deepEqual(axes[0],[1,0]);
+ assert.equal(f.G.Input.axis,original);
+ ready=true;
+ f.frame(400);
+ assert.equal(axes.length,2,'AUTO must retry when native combat becomes ready');
+ assert.equal(f.G.Input.axis,original);
+ f.api.toggleDash();
+ f.frame(600);
+ assert.equal(axes.length,2,'no casts after turning AUTO off');
 });
 test('Holding active-skill F for 2s toggles AUTO; quick tap does not',()=>{
  const f=fixture();

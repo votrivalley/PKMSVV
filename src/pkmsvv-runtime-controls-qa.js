@@ -83,7 +83,7 @@
    speed.setAttribute('aria-label',L('Tốc độ trận đấu ','Battle speed ')+(fast?'1,5×':'1×'));
   }
   const tag=byId('pkmsvv-active-auto');if(tag){
-   tag.hidden=!autoDash;tag.textContent=L('F · TỰ DÙNG','F · AUTO CAST');
+   tag.hidden=!autoDash;tag.textContent=L('✓ F/X · TỰ DÙNG','✓ F/X · AUTO');
   }
  }
  function ensureSettings(){
@@ -327,15 +327,25 @@
   const pl=G.Game.player,e=target(pl);if(!e)return false;
   const dx=e.x-pl.x,dy=e.y-pl.y,distance=Math.hypot(dx,dy);
   if(!(distance>2))return false;
-  const before=pl.lanBotAxis;
+  // Native manualDash() actually calls G.PKMSVVDash.direction(pl,
+  // G.Input.axis()), NOT pl.lanBotAxis. Previous AUTO only changed
+  // lanBotAxis, so the real dash kept reading an idle/joystick direction.
+  // Supply the target vector through the exact native input path for this
+  // ONE synchronous cast. Restore every manual controller value afterward.
+  const input=G.Input,priorAxis=input?.axis,priorBotAxis=pl.lanBotAxis;
+  const aim=[dx/distance,dy/distance];
+  let scopedAxis=false;
   try{
-   // The real compiled Combat.manualDash passes lanBotAxis into
-   // PKMSVVDash.direction(axis[0],axis[1]). An {x,y} object was ignored!
-   // Only AUTO supplies enemy direction; manual joystick/keyboard dash remains
-   // untouched and the original axis is restored even if casting fails.
-   pl.lanBotAxis=[dx/distance,dy/distance];
+   pl.lanBotAxis=aim; // compatibility with older LAN bot dispatch
+   if(input&&typeof priorAxis==='function'){
+    input.axis=()=>aim;
+    scopedAxis=input.axis!==priorAxis;
+   }
    return !!G.Combat.manualDash(pl);
-  }finally{pl.lanBotAxis=before;}
+  }finally{
+   if(scopedAxis)input.axis=priorAxis;
+   pl.lanBotAxis=priorBotAxis;
+  }
  }
 
  // Mobile WebView renders the active dash using G.Touch.addButton(x,y,w,h,

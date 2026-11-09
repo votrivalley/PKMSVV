@@ -127,6 +127,7 @@ jobs:
           grep -q 'PKMSVV_MOBILE_SPEED_EDGE_23' decoded-android/assets/public/css/pkmsvv-runtime-controls-qa.css
           grep -q 'PKMSVV_POKEMON_HEADER_V24' decoded-android/assets/public/css/pkmsvv-v20-ui-qa.css
           grep -q 'installTouchAuto' decoded-android/assets/public/js/ui/pkmsvv-runtime-controls-qa.js
+          grep -q 'input.axis=()=>aim' decoded-android/assets/public/js/ui/pkmsvv-runtime-controls-qa.js
           grep -q 'installVisualBudget' decoded-android/assets/public/js/ui/pkmsvv-fusion-evolved.js
           grep -q 'PKMSVVHordePerformance' decoded-android/assets/public/js/ui/pkmsvv-horde-performance.js
           grep -q 'pkmsvv-horde-performance.js' decoded-android/assets/public/index.html
