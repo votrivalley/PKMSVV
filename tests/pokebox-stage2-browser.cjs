@@ -910,6 +910,9 @@ async function main(){
    assert.equal(survived.state,'playing','Explore ended without player action: '+JSON.stringify(survived));
    assert.ok(Number(survived.time)>=7,'Explore simulation stalled: '+JSON.stringify(survived));
    assert.deepEqual(errors,[],'Actual battle crashed in Chromium: '+JSON.stringify(errors.slice(-5)));
+   // A/B: disable v31 controller modal cache, returning to pre-v31 DOM handling.
+   await evaluate("G.PKMSVVModalNavQA?.setCacheEnabled(false)");
+   console.log('EXPLORE_MODAL_CACHE_AB_OFF=true');
    // A user reports Explore eventually stalling around the first minute.
    // After checking the unprotected first 10 seconds, prevent ordinary
    // monster damage so this measures ENGINE continuity, not combat skill.
