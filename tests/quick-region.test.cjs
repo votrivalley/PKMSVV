@@ -584,7 +584,9 @@ test('Nine Gen maps have nine different ACTIVE terrain IDs and nine different il
  assert.equal(new Set(q.THEMES.slice(1)).size,9,'each themed terrain is distinct');
  assert.equal(q.SEAL_SECONDS,900);
  assert.match(source,/Phút 15: hạ Boss để nhận Huy hiệu/);
- assert.match(source,/Bosses at 15 \+ 30 min/);
+ assert.match(source,/15m Boss to unlock next/);
+ assert.match(source,/Hạ Boss 15p để qua màn/);
+ assert.match(source,/Boss 30p để kết màn/);
  // These are actual separate battle maps: inspect the biome selected when
  // replaying each normal native run, not merely the illustrated home cards.
  for(const region of ['Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar','Paldea'])
