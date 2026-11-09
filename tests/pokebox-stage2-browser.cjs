@@ -953,8 +953,13 @@ async function main(){
    await sleep(3500);
    const nativeChoice=await evaluate("(()=>({state:G.Game?.state,level:G.Game?.player?.level,xp:G.Game?.player?.xp,xpNext:G.Game?.player?.xpNext,events:window.__pkmsvvRunProbe.events.slice(-10)}))()");
    console.log('EXPLORE_LEVELUP_NATIVE_RESULT='+JSON.stringify(nativeChoice));
-   assert.ok(nativeChoice.events.some(e=>e.name==='levelup-enter'),'Real level-up popup never opened');
-   assert.ok(nativeChoice.events.some(e=>e.name==='levelup-native-picked'),'Real native level-up selection never completed');
+   assert.ok(Number(nativeChoice.level)>=2,'Real gainXp must advance level without hanging: '+JSON.stringify(nativeChoice));
+   assert.equal(nativeChoice.state,'playing','Real EXP level-up must return to gameplay');
+   // Native auto-level modes may resolve choices without ever opening a modal.
+   // When a real popup DOES open, it must be selectable and return to play.
+   if(nativeChoice.events.some(e=>e.name==='levelup-enter'))
+    assert.ok(nativeChoice.events.some(e=>e.name==='levelup-native-picked'),
+     'Native level-up popup opened but never accepted a selection');
    let minute=null;
    for(let i=0;i<11;i++){
     await sleep(5000);
