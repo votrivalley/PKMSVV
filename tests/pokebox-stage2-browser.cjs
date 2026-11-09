@@ -941,6 +941,10 @@ async function main(){
     let traced=0;
     window.requestAnimationFrame=function(cb){
      return prior.call(window,function(ts){
+      if(window.__qaPickupActive&&cb?.name==='sync'){
+       console.log('QA_TRACE:raf:SKIP_SYNC_FOR_AB');
+       return;
+      }
       const show=window.__qaPickupActive&&traced<40;
       if(show)console.log('QA_TRACE:raf:enter '+(cb?.name||'anonymous'));
       try{return cb(ts);}finally{
