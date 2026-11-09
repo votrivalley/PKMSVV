@@ -185,7 +185,7 @@ G.PKMSVVBerryRescue=(()=>{
     (own.length?own.map(id=>(G.PKMSVVBerry?.byId?.[id]?.name||id)+' Berry').join(', '):
      tr('Không có','None'));
    const close=document.createElement('button');close.type='button';
-   close.className='pkmsvv-berry-team-close';close.textContent=tr('Đóng','Close');
+   close.className='pkmsvv-berry-team-close';close.setAttribute('data-back','');close.textContent=tr('Đóng','Close');
    close.addEventListener('click',()=>layer.remove());
    panel.append(title,info,list,yours,close);layer.append(panel);document.body.append(layer);
   };
