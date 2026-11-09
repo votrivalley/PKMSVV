@@ -1034,6 +1034,17 @@ async function main(){
     await sleep(5000);
     minute=await evaluate("(()=>({state:G.Game?.state,time:G.Game?.st?.time,hp:G.Game?.player?.hp,dead:G.Game?.player?.dead,level:G.Game?.player?.level,kills:G.Game?.player?.kills,enemies:G.EnemyMgr?.count,levelPopup:G.UI?.isOpen?.('scr-levelup'),navScans:G.PKMSVVModalNavQA?.scanCount,fx:G.PKMSVVHordePerformance?.stats,probe:window.__pkmsvvRunProbe.events.slice(-5)}))()");
     console.log('QA_COMBAT_EXPLORE_PROGRESS_'+(i+1)*5+'S='+JSON.stringify(minute));
+    if(minute.state==='levelup'&&minute.levelPopup){
+     // Real recurring EXP also opens a pause menu: choose via keyboard/Pad path.
+     for(const key of [{name:'ArrowDown',vk:40},{name:'Enter',vk:13}]){
+      await cmd('Input.dispatchKeyEvent',{type:'keyDown',key:key.name,code:key.name,windowsVirtualKeyCode:key.vk,nativeVirtualKeyCode:key.vk});
+      await cmd('Input.dispatchKeyEvent',{type:'keyUp',key:key.name,code:key.name,windowsVirtualKeyCode:key.vk,nativeVirtualKeyCode:key.vk});
+     }
+     await sleep(260);
+     minute=await evaluate("(()=>({state:G.Game?.state,time:G.Game?.st?.time,level:G.Game?.player?.level,levelPopup:G.UI?.isOpen?.('scr-levelup'),probe:window.__pkmsvvRunProbe.events.slice(-5)}))()");
+     console.log('QA_REPEAT_LEVELUP_NATIVE_CONFIRM='+JSON.stringify(minute));
+     assert.equal(minute.state,'playing','Second native level-up did not resume after ArrowDown+Enter');
+    }
     if(minute.state!=='playing'||minute.probe.some(x=>x.name==='caught-game-error'))break;
    }
    console.log('QA_COMBAT_EXPLORE_65S='+JSON.stringify(minute));
