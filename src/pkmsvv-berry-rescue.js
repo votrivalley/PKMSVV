@@ -10,7 +10,7 @@ G.PKMSVVBerryRescue=(()=>{
  const NAMES=['Oran','Sitrus','Lum'];
  let active=false,easy=false,time=0,trees=[],bossStage=0,won=false,claimed=false,sendClock=0,endClock=0;
  let sprites=[],treeAtlas=null,treeTargets=[];
- let threatClock=0,threatStage=-1,threatReady=false;
+ let threatClock=0,threatStage=-1,threatReady=false,cachedFinalBossAlive=false;
  const cachedThreats=[0,0,0],cachedBossNear=[false,false,false];
  // Track which trees the native entity pass actually rendered this frame.
  // Android may skip the entity layer after a WebView context recreation.
@@ -29,7 +29,7 @@ G.PKMSVVBerryRescue=(()=>{
   }
   drawnTrees.clear();lastAwards=[];
   if(typeof document!=='undefined')document.getElementById?.('pkmsvv-berry-team-result')?.remove?.();
-  sendClock=0;endClock=0;threatClock=0;threatStage=-1;threatReady=false;
+  sendClock=0;endClock=0;threatClock=0;threatStage=-1;threatReady=false;cachedFinalBossAlive=false;
   cachedThreats.fill(0);cachedBossNear.fill(false);
   const hp=easy?220:180;
   trees=POS.map(([x,y],i)=>({id:i,x,y,hp,maxHp:hp,guard:0}));
@@ -227,12 +227,13 @@ G.PKMSVVBerryRescue=(()=>{
   // hundreds of redundant full-horde traversals each second, without dropping
   // monsters, damage, XP, loot, hitboxes, or objective HP calculation.
   threatClock+=Math.max(0,Number(dt)||0);
-  if(!threatReady||threatClock>=.20||stage!==threatStage||time>=DURATION){
+  if(!threatReady||threatClock>=.20||stage!==threatStage){
    threatReady=true;threatClock=0;threatStage=stage;
-   cachedThreats.fill(0);cachedBossNear.fill(false);
+   cachedThreats.fill(0);cachedBossNear.fill(false);cachedFinalBossAlive=false;
    const enemies=G.EnemyMgr?.all?.()||[];
    for(const e of enemies){
     if(!e||e.dead)continue;
+    if(e._pkmsvvBerryBoss===2)cachedFinalBossAlive=true;
     rebalanceEnemy(e,stage);
     for(const tree of trees){
      if(tree.hp<=0)continue;
@@ -257,7 +258,7 @@ G.PKMSVVBerryRescue=(()=>{
   const survivors=trees.filter(t=>t.hp>0).length;
   if(!survivors){active=false;if(typeof document!=='undefined')document.body?.classList?.remove?.('pkmsvv-berry-defense');G.Spawner?.say?.(tr('PHÒNG THỦ THẤT BẠI!','DEFENSE FAILED!'),4);finish?.({success:false,trees:[0,0,0],easy,time:Math.floor(time)});return;}
   if(time>=DURATION){
-   const lastBossAlive=(G.EnemyMgr?.all?.()||[]).some(e=>e&&!e.dead&&e._pkmsvvBerryBoss===2);
+   const lastBossAlive=cachedFinalBossAlive;
    if(!lastBossAlive||time>=DURATION+30){
     won=true;active=false;if(typeof document!=='undefined')document.body?.classList?.remove?.('pkmsvv-berry-defense');finish?.({success:true,trees:state(),easy,time:Math.floor(time)});
    }
