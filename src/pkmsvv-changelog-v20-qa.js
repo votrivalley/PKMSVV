@@ -55,7 +55,13 @@
    ['Hiển thị hệ trong Pokédex bằng màu riêng đồng bộ với PokéBox.',
     'Pokédex now uses the same type-specific color labels as PokéBox.'],
    ['Sát thương hiển thị hệ số chính xác như ×1.52 thay vì làm tròn thành số nguyên.',
-    'Damage now shows the actual multiplier, such as ×1.52, instead of rounding to a whole number.']
+    'Damage now shows the actual multiplier, such as ×1.52, instead of rounding to a whole number.'],
+   ['Sửa thao tác chọn kỹ năng khi lên cấp bằng D-pad/analog và nút A/Cross trên tay cầm, kể cả khi trận đang tạm dừng.',
+    'Fixed level-up skill choices with D-pad/stick and A/Cross even while the match is paused.'],
+   ['Rút gọn lời nhắc điều kiện Chiêu mộ, không còn dòng “Gen Locked” lẫn Anh–Việt.',
+    'Simplified the Recruitment eligibility note and removed the mixed-language Locked Gen wording.'],
+   ['Minh họa 6 Mystery Orb bằng đúng sprite đang dùng trong trận, kèm mô tả hiệu ứng.',
+    'Illustrated all six Mystery Orbs with their actual in-game sprites and effects.']
   ],
   credit:['Votri Valley — Dự án Việt hóa và mở rộng phi thương mại dựa trên PokéSurvivor của JPTER78.',
           'Votri Valley — Noncommercial localization and expansion based on JPTER78’s PokéSurvivor.']
