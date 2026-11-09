@@ -829,3 +829,26 @@ test('exploration horde identity cache skips repeated species validation but not
  assert.equal(enemy.dex,25);
  assert.ok(lookups>0,'changed species must re-check the catalog');
 });
+
+
+test('Kanto entry eases only regular wilds in first 12m, never bosses or other game modes',()=>{
+ const h=harness(),q=h.G.PKMSVVQuickRegion;
+ assert.equal(q.choose(0),true);
+ const intro={dex:12,maxHp:1000,hp:1000,dmg:20,dead:false};
+ assert.equal(q.balanceKantoEnemy(intro,60),true);
+ assert.equal(intro.maxHp,830);assert.ok(Math.abs(intro.dmg-14.4)<1e-8);
+ assert.equal(q.balanceKantoEnemy(intro,60),false,'one-time balance, never multiply each frame');
+ assert.equal(intro.hp,830);
+ const middle={dex:12,maxHp:1000,hp:1000,dmg:20,dead:false};
+ assert.equal(q.balanceKantoEnemy(middle,320),true);
+ assert.equal(middle.maxHp,900);assert.equal(middle.dmg,16);
+ const late={dex:12,maxHp:1000,hp:1000,dmg:20,dead:false};
+ assert.equal(q.balanceKantoEnemy(late,800),false,'after onboarding full difficulty');
+ assert.equal(late.maxHp,1000);
+ const boss={dex:12,maxHp:1000,hp:1000,dmg:20,boss:true,dead:false};
+ assert.equal(q.balanceKantoEnemy(boss,60),false,'mini and stage bosses not nerfed');
+ assert.equal(boss.maxHp,1000);
+ h.G.Coop.active=true;
+ const coop={dex:12,maxHp:1000,hp:1000,dmg:20};
+ assert.equal(q.balanceKantoEnemy(coop,60),false,'no changes outside Explore');
+});
