@@ -90,6 +90,8 @@ for(const prefix of ['game','ai/game']){
  for(const name of ['pkmsvv-runtime-controls-qa.css','pkmsvv-pc-menu-clean-qa.css','pkmsvv-box-hub.css','pkmsvv-berry.css'])
   fs.writeFileSync(path.join(to,prefix+'/css/'+name),
    fs.readFileSync(path.join(root,'src',name),'utf8'));
+ if(!html.includes('pkmsvv-berry.css'))html=html.replace('</head>',
+  '<link rel="stylesheet" href="css/pkmsvv-berry.css">\\n</head>');
  // Ship the virtual-card focus stylesheet alongside the exact JS hotfix.
  const navCss='pkmsvv-modal-navigation-qa.css';
  fs.writeFileSync(path.join(to,prefix+'/css/'+navCss),
