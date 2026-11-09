@@ -813,3 +813,53 @@
  font-size:clamp(12px,1.1vw,14px);font-weight:750;line-height:1.55;
  overflow-wrap:anywhere;
 }
+
+/* Direct Nature / Ability / TM actions within Details (no oversized Items tab). */
+#pkmsvv-pokebox-overlay .pkmbx-inline-actions{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
+ margin-top:8px;
+}
+#pkmsvv-pokebox-overlay .pkmbx-inline-actions button{
+ min-width:0;min-height:36px;padding:5px 3px;font-size:clamp(10px,1.1vw,13px);
+ white-space:normal;line-height:1.2;
+}
+#pkmsvv-pokebox-overlay .pkmbx-action-feedback{
+ margin:8px 0 0;border:1px solid #7dd8a0;border-radius:8px;
+ background:#145d50;padding:8px;color:#d7ffde;font-size:13px;
+}
+#pkmsvv-pokebox-overlay .pkmbx-action-backdrop{
+ position:fixed;inset:0;z-index:300000;
+ display:flex;align-items:center;justify-content:center;
+ padding:12px;background:#02121bba;
+}
+#pkmsvv-pokebox-overlay .pkmbx-action-dialog{
+ width:min(440px,95vw);max-height:85dvh;overflow:auto;
+ display:flex;flex-direction:column;gap:10px;padding:clamp(12px,2vw,20px);
+ color:#ebfafc;background:linear-gradient(145deg,#1d4b5b,#0e2c40);
+ border:2px solid #91dde2;border-radius:13px;box-shadow:0 12px 45px #000a;
+}
+#pkmsvv-pokebox-overlay .pkmbx-action-dialog h3{
+ color:#ffe5a7;font-size:clamp(18px,2.5vw,24px);margin:0;
+}
+#pkmsvv-pokebox-overlay .pkmbx-action-dialog p{
+ font-size:clamp(12px,1.4vw,15px);margin:2px 0;line-height:1.4;
+}
+#pkmsvv-pokebox-overlay .pkmbx-action-dialog label{
+ display:block;border:1px solid #7fa9b5;border-radius:8px;padding:8px;
+ color:#eefcfc;font-size:14px;cursor:pointer;
+}
+#pkmsvv-pokebox-overlay .pkmbx-action-dialog input{accent-color:#f4d36f}
+#pkmsvv-pokebox-overlay .pkmbx-confirm-warning{color:#ffe0a8}
+#pkmsvv-pokebox-overlay .pkmbx-confirm-note{
+ padding:9px;background:#254e60;border-radius:8px;color:#dbf8fb;
+}
+#pkmsvv-pokebox-overlay .pkmbx-confirm-tm{width:100%;min-height:36px}
+#pkmsvv-pokebox-overlay .pkmbx-confirm-buttons{
+ display:flex;gap:8px;justify-content:flex-end;align-items:center;
+}
+#pkmsvv-pokebox-overlay .pkmbx-confirm-buttons button{
+ min-height:37px;min-width:90px;
+}
+@media(max-width:620px){
+ #pkmsvv-pokebox-overlay .pkmbx-action-dialog{max-height:80dvh}
+}

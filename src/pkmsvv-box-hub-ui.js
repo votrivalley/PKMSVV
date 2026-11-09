@@ -40,7 +40,7 @@
    'No verified effect description in this version.');
  }
  const currentSave=()=>G.DB?.save;
- let rankBusy=false;
+ let rankBusy=false,feedback=null;
  let boxPane=null,dexPane=null,upgradePane=null,focused=null,infoDex=1,dexShinyView=false,query='',onlyFavorites=false,onlyShiny=false,
   onlyRankReady=false,boxSort='dex',view='info',page=0,dexQuery='',dexPage=0,
   dexGen=0,dexRarity=0,dexStatus='all',dexType='',dexSort='num',dexFavorites=false;
@@ -377,7 +377,6 @@
      (member?L('− Rời đội','− Leave Team'):L('+ Vào đội hình','+ Add to Team'))+'</button></div>'+
     '<div class="pkmbx-hub-tabs">'+
     '<button class="btn small'+(view==='info'?' gold':'')+'" data-box-tab="info">'+L('Thông tin','Details')+'</button>'+
-    '<button class="btn small'+(view==='items'?' gold':'')+'" data-box-tab="items">'+L('Vật phẩm / TM','Items / TMs')+'</button>'+
     '<button class="btn small pkmbx-rank-tab'+(progress.canRank?(view==='rank'?' gold':''):' rank-disabled')+'" data-box-tab="rank" aria-label="'+
      (progress.canRank?L('Có thể nâng Rank','Rank available'):L('Chưa đủ nguyên liệu nâng Rank','Not enough Rank duplicates'))+'">⭐ Rank</button></div>'+
     '<div class="pkmbx-hub-tab-content" id="pkmbx-tab-content"></div>';
@@ -400,8 +399,7 @@
   profile.querySelector('#pkmbx-team').onclick=()=>saveAction(()=>Hub.toggleTeam(it.id));
   for(const b of profile.querySelectorAll('[data-box-tab]'))
    b.onclick=()=>{view=b.dataset.boxTab;renderBox();};
-  if(view==='items')renderItems(profile.querySelector('#pkmbx-tab-content'),it,ready);
-  else if(view==='rank')renderRank(profile.querySelector('#pkmbx-tab-content'),it,ready);
+  if(view==='rank')renderRank(profile.querySelector('#pkmbx-tab-content'),it,ready);
   else{
    profile.querySelector('#pkmbx-tab-content').innerHTML='<div class="pkmbx-hub-info">'+
     '<p><b>'+L('Tính cách','Nature')+':</b> '+clean(natureName(nature?.id||it.natureId))+'</p>'+
@@ -410,49 +408,105 @@
      ': '+clean(abText)+'</b><p class="pkmbx-ability-effect">'+clean(desc)+'</p></div>'+
     '<p><b>'+L('TM đã học','Learned TMs')+':</b> '+
      (Hub.learned(currentSave(),it).map(id=>clean(G.Moves?.BY_ID?.[id]?G.T(G.Moves.BY_ID[id].name,'move'):id)).join(', ')||L('Chưa có','None'))+
-    '</p></div>';
+    '</p>'+
+    '<div class="pkmbx-inline-actions">'+
+     '<button type="button" class="btn small" data-pkmbx-action="mint">'+L('✧ Đổi tính cách','✧ Reroll Nature')+'</button>'+
+     '<button type="button" class="btn small" data-pkmbx-action="ability">'+L('⚙ Đổi đặc tính','⚙ Reroll Ability')+'</button>'+
+     '<button type="button" class="btn small" data-pkmbx-action="tm">TM</button></div>'+
+    (feedback?.id===it.id?'<div class="pkmbx-action-feedback" role="status">✓ '+clean(feedback.message)+'</div>':'')+
+    '</div>';
+   for(const btn of profile.querySelectorAll('[data-pkmbx-action]'))
+    btn.onclick=()=>openItemConfirmation(profile,it,ready,btn.dataset.pkmbxAction);
   }
  }
- function renderItems(host,it,ready){
-  const s=currentSave(),bag=s?.bag||{},tms=s?.tms||{};
-  const abilities=G.DEX_ABIL?.[it.dex]||[],current=Hub.ability(s,it)?.slot||0;
-  const base=Hub.speciesBase(s,it);
-  const natureChoices=(G.NATURES||[]).filter(n=>n?.id!==base?.natureId&&G.NATURE_BY?.[n.id]);
-  const standardOptions=[0,1].filter(slot=>abilities[slot]&&slot!==current&&
-    !(slot===1&&abilities[1]===abilities[0]));
-  const learns=Object.keys(tms).filter(id=>tms[id]>0&&G.Moves?.BY_ID?.[id]);
-  host.innerHTML='<section class="pkmbx-hub-items"><h3>'+L('Dùng vật phẩm cho ','Use items on ')+clean(monName(it.dex))+'</h3>'+
-   '<div class="pkmbx-hub-inventory">'+
-    '<b>'+L('Bạc hà','Nature Mint')+' ×'+(bag.mint||0)+'</b>'+
-    '<span>'+L('Đổi tính cách ngẫu nhiên, không được chọn trước.','Rerolls to a random different Nature; no direct selection.')+'</span>'+
-    '<button class="btn small gold" id="pkmbx-mint-use" '+(!ready||!bag.mint||!natureChoices.length?'disabled':'')+'>'+L('Dùng ngẫu nhiên','Random reroll')+'</button>'+
-   '</div><h4>'+L('Viên nang Đặc tính','Ability Capsule')+' ×'+(bag.cap||0)+'</h4>'+
-   '<div class="pkmbx-hub-ability">'+
-    '<p>'+L('Đổi ngẫu nhiên một Đặc tính thường khác. Đặc tính Ẩn không thể dùng Viên nang để đổi.','Reroll to another standard Ability. Hidden Abilities cannot be rerolled with Capsules.')+'</p>'+
-    '<button class="btn small" id="pkmbx-cap-use" '+(!ready||!bag.cap||current===2||!standardOptions.length?'disabled':'')+'>'+L('Dùng ngẫu nhiên','Random reroll')+'</button>'+
-   '</div>'+
-   '<h4>TM</h4>'+
-   '<div class="pkmbx-hub-tms">'+(learns.length?learns.map(id=>{
-     const title=G.T?G.T(G.Moves.BY_ID[id].name,'move'):id;
-     return '<button class="btn small" data-hub-tm="'+clean(id)+'" '+
-      (!ready||!Hub.canTeach(s,it,id)?'disabled':'')+'>'+clean(title)+' ×'+tms[id]+'</button>';
-    }).join(''):'<p>'+L('Chưa có TM trong Túi đồ.','No TM in your Bag.')+'</p>')+'</div>'+
-    '<button class="btn small" id="pkmbx-shop-open">'+L('🦎 Đến Cửa hàng Kecleon','🦎 Open Kecleon Shop')+'</button></section>';
-  host.querySelector('#pkmbx-mint-use').onclick=()=>saveAction(()=>{
-   const result=Hub.useMint(it.id);
-   G.UI?.toast?.(L('Tính cách ngẫu nhiên: ','Random Nature: ')+
-    natureName(result.natureId),2400);
+
+ // All item actions happen in Details. The player picks an ITEM TYPE, never
+ // a target Nature or Ability. Confirmation is required BEFORE any save write.
+ function openItemConfirmation(profile,it,ready,action){
+  profile.querySelector('.pkmbx-action-backdrop')?.remove();
+  const s=currentSave(),bag=s?.bag||{},tmBag=s?.tms||{};
+  if(!ready||G.DB?.guest){
+   G.UI?.toast?.(L('Hãy sao lưu và chuyển PokéBox trước khi dùng vật phẩm.',
+    'Back up and migrate your PokéBox before using items.'),2600);return;
+  }
+  const base=Hub.speciesBase(s,it),ability=Hub.ability(s,it);
+  const validMoves=Object.keys(tmBag).filter(k=>tmBag[k]>0&&Hub.canTeach(s,base,k));
+  const abilities=G.DEX_ABIL?.[it.dex]||[];
+  const alternatives=Hub.abilityAlternatives(abilities,ability?.slot||0);
+  const choices=action==='ability'?['cap','caph']:action==='mint'?['mint']:validMoves;
+  const name=clean(monName(it.dex));
+  const body=action==='ability'?
+   '<p>'+L('Chọn loại Viên nang cho ','Choose a Capsule for ')+name+
+    '. '+L('Đặc tính được quay ngẫu nhiên.','Ability is randomly rerolled.')+'</p>'+
+    '<p class="pkmbx-confirm-note">'+L('Viên thường: 5% ra Đặc tính Ẩn. Viên Ẩn: 15% (gấp 3). Không có Đặc tính khác thì không mất vật phẩm.',
+      'Standard: 5% Hidden. Hidden Capsule: 15% (3×). No item is lost if there is no alternative.')+'</p>'+
+    '<label><input type="radio" name="pkmbx-confirm-choice" value="cap" checked /> '+
+     L('Viên nang Đặc tính','Ability Capsule')+' ×'+(bag.cap||0)+'</label>'+
+    '<label><input type="radio" name="pkmbx-confirm-choice" value="caph" /> '+
+     L('Viên nang Đặc tính Ẩn','Hidden Ability Capsule')+' ×'+(bag.caph||0)+'</label>'+
+    (!alternatives.length?'<p class="pkmbx-confirm-warning">'+
+     L('Pokémon này chỉ có một Đặc tính khả dụng. Không thể đổi và sẽ không trừ Viên nang.',
+       'This Pokémon has only one available Ability. No Capsule can be spent.')+'</p>':''):
+   action==='mint'?
+    '<p>'+L('Dùng 1 Bạc hà để đổi ngẫu nhiên Tính cách cho ','Use 1 Mint to reroll the Nature of ')+
+     name+'?</p><strong>'+L('Bạc hà hiện có: ','Mints: ')+(bag.mint||0)+'</strong>':
+    '<p>'+L('Chọn TM để dạy cho ','Choose a TM to teach ')+name+':</p>'+
+    (validMoves.length?'<select class="pkmbx-confirm-tm" aria-label="TM">'+
+      validMoves.map(id=>'<option value="'+clean(id)+'">'+clean(G.T?G.T(G.Moves.BY_ID[id].name,'move'):id)+
+      ' ×'+tmBag[id]+'</option>').join('')+'</select>':
+      '<p>'+L('Chưa có TM tương thích trong Túi đồ.','No compatible TM available in your Bag.')+'</p>');
+  const modal=doc.createElement('div');
+  modal.className='pkmbx-action-backdrop';
+  modal.innerHTML='<section class="pkmbx-action-dialog" role="dialog" aria-modal="true" aria-label="'+
+   clean(action==='ability'?L('Đổi đặc tính','Reroll Ability'):action==='mint'?L('Đổi tính cách','Reroll Nature'):'TM')+'">'+
+   '<h3>'+clean(action==='ability'?L('Đổi đặc tính?','Reroll Ability?'):
+    action==='mint'?L('Đổi tính cách?','Reroll Nature?'):L('Dạy TM?','Teach TM?'))+'</h3>'+
+   body+'<div class="pkmbx-confirm-buttons">'+
+   '<button type="button" class="btn small" data-confirm-cancel>'+L('Hủy','Cancel')+'</button>'+
+   '<button type="button" class="btn small gold" data-confirm-apply>'+L('Xác nhận','Confirm')+'</button></div></section>';
+  profile.appendChild(modal);
+  const apply=modal.querySelector('[data-confirm-apply]');
+  const radios=Array.from(modal.querySelectorAll('[name="pkmbx-confirm-choice"]'));
+  function refresh(){
+   const which=radios.find(x=>x.checked)?.value||'cap';
+   const allowed=action==='ability'?!!bag[which]&&alternatives.length>0:
+    action==='mint'?!!bag.mint:(validMoves.length>0);
+   apply.disabled=!allowed;
+  }
+  radios.forEach(x=>x.onchange=refresh);refresh();
+  function dismiss(){modal.remove();profile.querySelector('[data-pkmbx-action="'+action+'"]')?.focus();}
+  modal.querySelector('[data-confirm-cancel]').onclick=dismiss;
+  modal.addEventListener('keydown',e=>{
+   if(e.key==='Escape'){e.preventDefault();dismiss();}
+   if(e.key==='Tab'){
+    const nodes=Array.from(modal.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled)'));
+    const first=nodes[0],last=nodes.at(-1);
+    if(e.shiftKey&&doc.activeElement===first){e.preventDefault();last?.focus();}
+    else if(!e.shiftKey&&doc.activeElement===last){e.preventDefault();first?.focus();}
+   }
   });
-  host.querySelector('#pkmbx-cap-use').onclick=()=>saveAction(()=>{
-   const result=Hub.useCapsule(it.id);
-   G.UI?.toast?.(L('Đặc tính ngẫu nhiên: ','Random Ability: ')+
-    abilityName(result.abilityId),2400);
-  });
-  for(const b of host.querySelectorAll('[data-hub-tm]'))b.onclick=()=>saveAction(()=>Hub.teach(it.id,b.dataset.hubTm));
-  host.querySelector('#pkmbx-shop-open').onclick=()=>{
-   closeBox();G.KecleonUI?.open?.('shop');
+  apply.onclick=()=>{
+   if(apply.disabled)return;
+   apply.disabled=true; // no accidental double spend on touch/controller
+   const selected=radios.find(x=>x.checked)?.value||'cap';
+   const move=modal.querySelector('.pkmbx-confirm-tm')?.value;
+   let receipt=null;
+   const ok=saveAction(()=>{
+    if(action==='ability')receipt=Hub.useCapsule(it.id,selected);
+    else if(action==='mint')receipt=Hub.useMint(it.id);
+    else receipt=Hub.teach(it.id,move);
+    feedback={id:it.id,message:action==='ability'?
+     L('Đặc tính mới: ','New Ability: ')+abilityName(receipt.abilityId):
+     action==='mint'?L('Tính cách mới: ','New Nature: ')+natureName(receipt.natureId):
+     L('Đã học TM: ','TM learned: ')+String(G.T?G.T(G.Moves.BY_ID[move].name,'move'):move)};
+   });
+   if(!ok){apply.disabled=false;refresh();}
   };
+  modal.querySelector('[name="pkmbx-confirm-choice"]:checked')?.focus()||
+   modal.querySelector('.pkmbx-confirm-tm')?.focus();
+  if(!doc.activeElement||doc.activeElement===doc.body)apply.focus();
  }
+
  // Rank tab remains informative. One confirmation automatically picks usable
  // Gacha duplicates; no checkbox step and no Convert-to-Shards action.
  function renderRank(host,it,ready){
@@ -719,7 +773,7 @@
  function openPC(target='dex',nextView='info'){
   if(!currentSave())return;
   closeBox();
-  view=['items','rank','info'].includes(nextView)?nextView:'info';
+  view=['rank','info'].includes(nextView)?nextView:'info';
   page=0;query='';onlyFavorites=false;onlyShiny=false;onlyRankReady=false;boxSort='dex';
   const s=currentSave();
   focused=Hub.active(s)?.id||
