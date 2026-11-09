@@ -6,7 +6,7 @@ test('Web rebuild replaces compiled Shop and Kecleon UI exactly once',()=>{
  const old='const G={};G.Shop=(()=>{return {oldShop:true}})();G.KecleonUI=(()=>{return {oldUI:true}})();const after=42;';
  const next=patchItemsBundle(old);
  assert.doesNotMatch(next,/oldShop|oldUI/);
- assert.match(next,/const ORDER = \['mint', 'cap'\]/);
+ assert.match(next,/const ORDER = \['mint', 'cap', 'caph'\]/);
  assert.match(next,/G.Mons.abilityChoices\(dex,false\)/);
  assert.match(next,/const after=42/);
  assert.equal(next.split('G.Shop=').length-1,1);

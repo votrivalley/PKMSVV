@@ -25,9 +25,12 @@
     gacha.insertBefore(hint,gacha.firstChild);
    }
    const hint=gacha?.querySelector('#pkmsvv-gacha-dex-requirement');
-   if(hint)hint.textContent=G.I18n?.lang==='en'?
-    'Only Pokémon unlocked in the Pokédex can be recruited. A Gen without discovered Pokémon cannot be rolled.':
-    'Chỉ những Pokémon đã mở trong Pokédex mới có thể Chiêu mộ. Gen chưa mở loài nào sẽ không thể quay.';
+   if(hint){
+    const translation=G.I18n?.lang==='en'?
+     'Only Pokémon unlocked in the Pokédex can be recruited. A Gen without discovered Pokémon cannot be rolled.':
+     'Chỉ những Pokémon đã mở trong Pokédex mới có thể Chiêu mộ. Gen chưa mở loài nào sẽ không thể quay.';
+    if(hint.textContent!==translation)hint.textContent=translation;
+   }
    for(const root of roots()){
     const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
     const nodes=[];

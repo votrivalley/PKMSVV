@@ -29,8 +29,8 @@ function patchItemsBundle(bundle,sources){
   const source=sources?.[label]??fs.readFileSync(path.join(root,sourcePath),'utf8');
   next=installModule(next,label,source);
  }
- if(!next.includes("const ORDER = ['mint', 'cap']"))
-  throw Error('Retired Hidden Capsules still appear in Shop');
+ if(!next.includes("const ORDER = ['mint', 'cap', 'caph']"))
+  throw Error('Event Hidden Capsule missing from Bag');
  if(!next.includes('G.Mons.abilityChoices(dex,false)'))
   throw Error('Legacy hidden reroll still active in Bag');
  new vm.Script(next,{filename:'web-2.0-reroll-v28.js'});
