@@ -144,6 +144,10 @@ jobs:
           grep -q 'PKMSVVHordePerformance' dist/cloudflare-v20-release/game/js/ui/pkmsvv-horde-performance.js
           grep -Fq 'MIN_ENEMIES=8' dist/cloudflare-v20-release/game/js/ui/pkmsvv-horde-performance.js
           grep -Fq 'function scanActive()' dist/cloudflare-v20-release/ai/game/js/ui/pkmsvv-modal-navigation-qa.js
+          for route in game ai/game; do
+            grep -Fq 'function levelSelect(' "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-modal-navigation-qa.js"
+            grep -Fq 'data-pkmsvv-nav-index' "dist/cloudflare-v20-release/$route/css/pkmsvv-modal-navigation-qa.css"
+          done
           grep -Fq 'function rewardBerry(' dist/cloudflare-v20-release/ai/game/js/app.min.js
           test -s dist/cloudflare-v20-release/ai/game/assets/music-custom/eggrush.ogg
           grep -q 'pkmsvv-horde-performance.js' dist/cloudflare-v20-release/ai/game/index.html
