@@ -136,3 +136,25 @@ test('Pokédex clearly explains Explore-only defeats and shows silhouettes until
   assert.match(body,/pkmsvv-dex-defeats-qa\.js/);
  }
 });
+
+test('Recruitment blocks empty generations without consuming tickets and uses National Dex boundaries',()=>{
+ const f=fixture();
+ const {G,s,api,Enemy}=f;
+ const limits=[[1,1],[151,1],[152,2],[251,2],[252,3],[386,3],[387,4],[493,4],
+  [494,5],[649,5],[650,6],[721,6],[722,7],[809,7],[810,8],[905,8],[906,9],[1025,9]];
+ for(const [dex,gen] of limits)assert.equal(api.generationOf(dex),gen);
+ assert.equal(api.generationOf(1026),0);
+ const johto={dex:152,rarity:1,gen:1}; // deliberately incorrect metadata
+ G.DEX.push(johto);G.DEX_BY[152]=johto;
+ const ticketsBefore=s.tickets.t1;
+ assert.equal(G.Gacha.pull(s,1,2),null,'no defeated Johto species');
+ assert.equal(s.tickets.t1,ticketsBefore,'empty Johto must not cost a ticket');
+ new Enemy(152).die();
+ assert.deepEqual(api.eligibleInGen(s,2).map(x=>x.dex),[152],
+  'National Dex generation wins over incorrect Gacha metadata');
+ assert.equal(G.Gacha.pull(s,1,1),null,'Kanto remains empty');
+ assert.equal(s.tickets.t1,ticketsBefore,'empty Kanto must not cost a ticket');
+ const reward=G.Gacha.pull(s,1,2);
+ assert.equal(reward?.[0]?.dex,152);
+ assert.equal(s.tickets.t1,ticketsBefore-1,'only successful Johto pull costs a ticket');
+});
