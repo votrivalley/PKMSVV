@@ -314,3 +314,13 @@
  padding:3px 9px!important;
  min-height:24px;
 }
+
+/* Recruitment gating is an actual rule, not a decorative prompt. */
+#scr-gacha .pkmsvv-recruitment-rule {
+ box-sizing:border-box; width:100%; max-width:720px;
+ margin:5px auto 10px; padding:7px 11px;
+ border:1px solid rgba(160,219,197,.55);border-radius:9px;
+ background:rgba(11,46,58,.88);color:#e6fff2;
+ font-size:clamp(11px,1.8vh,14px);line-height:1.35;
+ text-align:center;
+}
