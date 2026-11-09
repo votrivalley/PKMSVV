@@ -41,8 +41,8 @@
     // entire Gacha panel to the right (visible on large Web screens).
     // Place it directly AFTER the real ALL GEN tab row within the panel.
     const tabs=[...screen.querySelectorAll('button,[role="tab"],[data-gen]')];
-    const allGen=tabs.find(b=>/^(?:ALL GEN|ALL GENERATIONS|TẤT CẢ|ALL)$/i.test(
-     String(b.textContent||'').trim().split(/\n/)[0].trim()))||
+    const allGen=tabs.find(b=>/^(?:ALL GEN\b|ALL GENERATIONS\b|TẤT CẢ\b|ALL$)/i.test(
+     String(b.textContent||'').replace(/\s+/g,' ').trim()))||
      screen.querySelector('[data-gen="0"],[data-gacha-gen="0"]');
     const tabRow=allGen?.closest('[role="tablist"],.gacha-regions,.gacha-gen-tabs,.gen-tabs,.pkmsvv-gen-tabs')||
      allGen?.parentElement;
