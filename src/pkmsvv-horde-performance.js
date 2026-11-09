@@ -6,9 +6,14 @@
  */
 G.PKMSVVHordePerformance=(()=>{
  'use strict';
- const MIN_ENEMIES=24,WINDOW_MS=100;
+ // Previous FX guard never ran below 24 enemies; 8 AUTO moves at Lv20 can
+ // already flood the canvas with particle bursts even in a small crowd.
+ const MIN_ENEMIES=8,HEAVY_ENEMIES=24,WINDOW_MS=100;
  const LIMIT=Object.freeze({burst:10,dmgText:14});
+ const HEAVY_LIMIT=Object.freeze({burst:7,dmgText:10});
+ const PARTICLE_LIMIT=6;
  const skipped={burst:0,dmgText:0};
+ let particlesReduced=0;
  let enabled=true,at=-1,spent={burst:0,dmgText:0};
  let sampledAt=-Infinity,cachedCount=0;
  const time=()=>typeof performance!=='undefined'&&typeof performance.now==='function'?
@@ -43,7 +48,14 @@ G.PKMSVVHordePerformance=(()=>{
     if(at<0||now-at>=WINDOW_MS||now<at){
      at=now;spent={burst:0,dmgText:0};
     }
-    if(++spent[name]>LIMIT[name]){skipped[name]++;return;}
+    const max=countEnemies()>=HEAVY_ENEMIES?HEAVY_LIMIT[name]:LIMIT[name];
+    if(++spent[name]>max){skipped[name]++;return;}
+    // Only FX.burst's cosmetic particle-count argument is limited.
+    // Damage, cooldowns, enemy events, XP and loot never pass this wrapper.
+    if(name==='burst'&&Number.isFinite(args[3])&&args[3]>PARTICLE_LIMIT){
+     particlesReduced+=args[3]-PARTICLE_LIMIT;
+     args[3]=PARTICLE_LIMIT;
+    }
    }
    return before.apply(this,args);
   }
@@ -62,6 +74,7 @@ G.PKMSVVHordePerformance=(()=>{
  function setEnabled(on){enabled=on!==false;return enabled;}
  install();
  return {install,setEnabled,get enabled(){return enabled;},
-  get stats(){return {threshold:MIN_ENEMIES,windowMs:WINDOW_MS,
-   enemies:countEnemies(),skipped:{...skipped}};}};
+  get stats(){return {threshold:MIN_ENEMIES,heavyThreshold:HEAVY_ENEMIES,
+   windowMs:WINDOW_MS,particleLimit:PARTICLE_LIMIT,
+   enemies:countEnemies(),particlesReduced,skipped:{...skipped}};}};
 })();
