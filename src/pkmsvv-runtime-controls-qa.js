@@ -21,6 +21,7 @@
   !['ui','over','ended','idle'].includes(String(G.Game?.state||'ui'));
  const byId=id=>document.getElementById(id);
  let fast=false,autoDash=false,held=false,heldTimer=null,choiceToken=null,choicePending=false;
+ let speedOwner=null,lastSpeedRepairTs=0;
  let lastCast=0,lastUI=0,lastChoiceShow=false,lastSpeedState=null,lastRiftState=false,riftPassage=false;
  // The HUD's native touch dash is a canvas button, not a DOM <button>.
  // Track only G.Touch.addButton's pad=4 active-skill hitbox. Its callback is
@@ -63,10 +64,22 @@
  function riftSpeedContext(){return !!G.Game?.player&&!G.Game.player.dead&&
   G.PKMSVVQuickRegion?.active===true&&!G.Coop?.active&&
   !arenaMatch()&&!G.Royale?.active&&!G.EggRush?.active;}
+ // Keep the chosen multiplier with the SAME battle/player, not with the
+ // transient Explore/Rift UI flag. Rift transitions can temporarily clear
+ // QuickRegion.active and sometimes reset native Game.debugSpeed silently.
+ function speedOwnerSafe(){
+  const pl=G.Game?.player,mode=String(G.Social?.room?.mode||'').toLowerCase();
+  return !!fast&&!!pl&&pl===speedOwner&&!pl.dead&&
+   !['over','ended','idle'].includes(String(G.Game?.state||'ui'))&&
+   !arenaMatch()&&!G.Royale?.active&&!G.EggRush?.active&&!G.Coop?.active&&
+   !['royale','eggrush','arena','champion','pvp','solo'].includes(mode);
+ }
  function setSpeed(on){
   if(typeof G.Game?.debugSpeed!=='function')return false;
   if(on&&!canSpeed())return false;
   fast=!!on;
+  speedOwner=fast?G.Game?.player:null;
+  lastSpeedRepairTs=0;
   G.Game.debugSpeed(fast?1.5:1);
   refreshLabels();return true;
  }
@@ -170,9 +183,11 @@
   }
   if(!indicator){indicator=document.createElement('span');indicator.id='pkmsvv-active-auto';
    indicator.className='pkmsvv-active-auto';document.body.append(indicator);}
-  const available=canSpeed(),passingRift=fast&&riftSpeedContext()&&(riftPassage||riftActive());
-  if(fast&&!available&&!passingRift)setSpeed(false);
-  button.hidden=!(available||(passingRift&&playing()));indicator.hidden=!playing()||!autoDash;
+  const available=canSpeed(),preserved=speedOwnerSafe();
+  // A Rift UI transfer must not clear ×1.5 merely because Explore.active
+  // becomes false for one tick. A different player, Arena or Co-op does clear it.
+  if(fast&&!available&&!preserved)setSpeed(false);
+  button.hidden=!(available||(preserved&&playing()));indicator.hidden=!playing()||!autoDash;
   refreshLabels();
  }
  function toggleDash(){
@@ -431,9 +446,19 @@
  const oldStart=G.Game?.startRun;
  if(typeof oldStart==='function'&&!oldStart._pkmsvvRuntimeControls){
   function wrapped(...args){
-   fast=false;autoDash=false;rankingOpen=false;cancelHold();clearTouchHold();nativeDashBox=null;choiceToken=null;choicePending=false;lastSpeedState=null;lastRiftState=false;riftPassage=false;
+   const riftTransfer=speedOwnerSafe()&&(riftActive()||riftPassage);
+   fast=false;speedOwner=null;lastSpeedRepairTs=0;
+   autoDash=false;rankingOpen=false;cancelHold();clearTouchHold();nativeDashBox=null;choiceToken=null;choicePending=false;lastSpeedState=null;lastRiftState=false;riftPassage=false;
    G.Game?.debugSpeed?.(1);
-   return oldStart.apply(this,args);
+   const result=oldStart.apply(this,args);
+   if(riftTransfer&&G.Game?.player&&!G.Game.player.dead&&
+      !arenaMatch()&&!G.Coop?.active&&!G.Royale?.active&&!G.EggRush?.active){
+    // Some Rift implementations reuse startRun() to return to the map.
+    // Preserve the choice only for an explicit Rift transfer, never a
+    // normal newly started match.
+    fast=true;speedOwner=G.Game.player;G.Game?.debugSpeed?.(1.5);
+   }
+   return result;
   }
   wrapped._pkmsvvRuntimeControls=true;G.Game.startRun=wrapped;
  }
@@ -442,10 +467,16 @@
    lastUI=ts;installAutoPick();ensureArenaShinyGuard();installTouchAuto();ensureSpeed();ensureRanking();ensureSettings();ensureLevelup();
     const state=G.Game?.state,riftNow=riftActive();
     if(riftNow&&riftSpeedContext())riftPassage=true;
-    if(fast&&state==='playing'&&(canSpeed()||(riftPassage&&riftSpeedContext()))&&
-       (lastSpeedState!=='playing'||lastRiftState!==riftNow))
-     G.Game?.debugSpeed?.(1.5); // restore after popup and Rift enter/exit
-    if(state==='playing'&&!riftNow)riftPassage=false;
+    if(fast&&state==='playing'&&(canSpeed()||speedOwnerSafe())&&
+       (lastSpeedState!=='playing'||lastRiftState!==riftNow||
+        ts-lastSpeedRepairTs>=750)){
+     // Native Rift transitions may reset speed without changing Game.state.
+     // Reassert at most once per 750 ms while the ORIGINAL safe solo battle
+     // is still alive. Never do this in competitive or multiplayer matches.
+     G.Game?.debugSpeed?.(1.5);
+     lastSpeedRepairTs=ts;
+    }
+    if(state==='playing'&&!riftNow&&G.PKMSVVQuickRegion?.active)riftPassage=false;
     lastSpeedState=state;lastRiftState=riftNow;
    // Royale already checks this from its native draw loop; avoid a duplicate.
    if(!G.Royale?.active&&(G.EggRush?.active||G.PKMSVVArenaSolo?.active||

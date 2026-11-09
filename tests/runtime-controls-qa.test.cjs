@@ -204,6 +204,25 @@ test('1.5x speed remains selected during temporary levelup/choice and is restore
  assert.equal(f.api.setSpeed(false),true);
  assert.equal(f.speeds.at(-1),1);
 });
+test('Rift reset and transient Explore.active=false never turn off selected ×1.5',()=>{
+ const f=fixture();f.G.Rift={inArena:false};
+ f.api.setSpeed(true);
+ f.frame(500);
+ f.G.Rift.inArena=true;f.G.Game.state='ui';f.G.PKMSVVQuickRegion.active=false;
+ f.frame(1000);
+ assert.equal(f.speeds.at(-1),1.5,'transition UI must not cancel selected speed');
+ f.G.Game.state='playing';f.G.Rift.inArena=false;
+ f.G.Game.debugSpeed(1); // simulate native Rift exit resetting speed invisibly
+ f.frame(1500);
+ assert.equal(f.speeds.at(-1),1.5,'same battle must restore ×1.5 even without flag flip detected');
+ f.api.ensureSpeed();
+ assert.equal(f.elements['pkmsvv-speed-button'].hidden,false,'speed button stays visible on return');
+ f.G.PKMSVVQuickRegion.active=true;
+ f.frame(2500);
+ assert.equal(f.speeds.at(-1),1.5);
+ f.G.Game.startRun();
+ assert.equal(f.speeds.at(-1),1,'new battle must reset speed');
+});
 test('Rift entry and exit retain 1.5× without accidentally enabling competitive speed',()=>{
  const f=fixture();f.G.Rift={inArena:false};
  f.api.setSpeed(true);f.frame(500);
