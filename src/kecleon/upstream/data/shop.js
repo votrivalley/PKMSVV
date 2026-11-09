@@ -15,9 +15,9 @@ G.Shop=(()=>{
     mint: { name: 'Menta', icon: 'mint', price: 1500,
             desc: 'Rerolls a Pokémon Nature randomly.' },
     cap:  { name: 'Cápsula Habilidad', icon: 'capsule', price: 1500,
-            desc: 'Rerolls one of the Pokémon’s standard Abilities.' },
+            desc: 'Random Ability reroll, with a 5% chance for Hidden when available.' },
     caph: { name: 'Cápsula Habilidad Oculta', icon: 'capsuleh', price: 10000, hidden: true, unavailableInShop: true,
-            desc: 'Cambia la habilidad de un Pokémon por cualquiera de las suyas, también la oculta.' }
+            desc: 'Event-only random Ability reroll: 15% chance for Hidden, 3× a regular Capsule.' }
   };
   // Hidden Capsules are rare/event-only: never on the regular Shop shelf,
   // but usable in Bag and PokéBox. Preserve existing JSON inventory.

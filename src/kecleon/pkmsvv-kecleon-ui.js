@@ -33,8 +33,8 @@ G.KecleonUI=(()=>{
  })[key]||key;
  const text=key=>({
    mint:L('Đổi Tính cách ngẫu nhiên.','Reroll a random Nature.'),
-   cap:L('Đổi Đặc tính thường ngẫu nhiên.','Reroll a random standard Ability.'),
-   caph:L('Đặc tính hiếm, có thể ra Đặc tính ẩn.','Rare reroll that may grant a Hidden Ability.')
+   cap:L('Đổi ngẫu nhiên. Có 5% cơ hội ra Đặc tính Ẩn.','Random reroll. 5% chance for a Hidden Ability.'),
+   caph:L('Viên sự kiện: 15% ra Đặc tính Ẩn, cao gấp 3 lần.','Event Capsule: 15% Hidden chance, 3× the normal rate.')
  })[key]||'';
  let selected=null,tab='shop',sceneActive=false;
  const Scene=()=>G.PKMSVVKecleonScene;
