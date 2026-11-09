@@ -124,6 +124,9 @@ G.PKMSVVFusionEvolved=(()=>{
   }
   return true;
  }
+ // A crowded horde needs ONE EnemyMgr snapshot per cast. The former nearest()
+ // created a full filtered+sorted array, then near() scanned the manager again;
+ // other skills were already performing their own scans in this same tick.
  function actors(){
   const raw=G.EnemyMgr?.all?.();
   const type=Object.prototype.toString.call(raw);
@@ -133,11 +136,21 @@ G.PKMSVVFusionEvolved=(()=>{
    Number.isFinite(e.x)&&Number.isFinite(e.y)&&typeof e.hurt==='function');
  }
  function distance(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
- function enemiesNear(x,y,r){
-  return actors().filter(e=>Math.hypot(e.x-x,e.y-y)<=r);
+ function enemiesNear(x,y,r,list){
+  const result=[],r2=r*r;
+  for(const e of list||actors()){
+   const dx=e.x-x,dy=e.y-y;
+   if(dx*dx+dy*dy<=r2)result.push(e);
+  }
+  return result;
  }
- function nearest(player,r=290){
-  return enemiesNear(player.x,player.y,r).sort((a,b)=>distance(player,a)-distance(player,b))[0]||null;
+ function nearest(player,r=290,list){
+  let found=null,limit=r*r;
+  for(const e of list||actors()){
+   const dx=e.x-player.x,dy=e.y-player.y,d2=dx*dx+dy*dy;
+   if(d2<=limit){limit=d2;found=e;}
+  }
+  return found;
  }
  function power(player,config){
   // Endgame attack multipliers can exceed ×200 (see Pause stats). The former
@@ -147,9 +160,40 @@ G.PKMSVVFusionEvolved=(()=>{
   const base=clamp(player.baseAtk??1,.4,5);
   return Math.max(2,(9+clamp(player.level,1,90)*.68)*atk*base*config.power);
  }
- function hit(e,amount,col){
+ // Cosmetic-only traffic control: preserve every native Enemy.hurt, reward,
+ // crowd-control effect and DPS tick. Under 24+ hostiles, hit numbers and
+ // impact particles are sampled, not damage. Normal encounters are unchanged.
+ let denseDamage=0,visualWindow=-1,visualTexts=0,visualBursts=0;
+ const VISUAL_WINDOW_MS=100,MAX_TEXTS=12,MAX_BURSTS=8;
+ const visualSkipped={text:0,burst:0};
+ function installVisualBudget(){
+  const fx=G.FX;if(!fx)return false;
+  for(const [name,max,key] of [
+   ['dmgText',MAX_TEXTS,'text'],['burst',MAX_BURSTS,'burst']]){
+   const old=fx[name];
+   if(typeof old!=='function'||old._pkmsvvFusionCosmeticBudget)continue;
+   function wrapped(...args){
+    if(denseDamage>0){
+     const now=typeof performance==='object'&&performance.now?
+      performance.now():Date.now();
+     if(visualWindow<0||now-visualWindow>=VISUAL_WINDOW_MS){
+      visualWindow=now;visualTexts=0;visualBursts=0;
+     }
+     if(name==='dmgText'){
+      if(++visualTexts>max){visualSkipped[key]++;return;}
+     }else if(++visualBursts>max){visualSkipped[key]++;return;}
+    }
+    return old.apply(this,args);
+   }
+   wrapped._pkmsvvFusionCosmeticBudget=true;fx[name]=wrapped;
+  }
+  return true;
+ }
+ function hit(e,amount,col,crowded=false){
   if(!e||e.dead||e.remote||typeof e.hurt!=='function')return false;
-  e.hurt(Math.max(1,amount),col,0,0,0);
+  if(crowded)denseDamage++;
+  try{e.hurt(Math.max(1,amount),col,0,0,0);}
+  finally{if(crowded)denseDamage--;}
   return true;
  }
  function slow(e,amount=0.25,duration=1.2){
@@ -182,44 +226,47 @@ G.PKMSVVFusionEvolved=(()=>{
  function cast(player,m){
   const id=m?.pkmsvvFusionId,cfg=CONFIG[id];
   if(!cfg||player.dead||player.remote)return false;
-  const col=COLORS[id],dmg=power(player,cfg),t=nearest(player,300);
+  // Snapshot once; a Rift with few enemies keeps all full visuals, while a
+  // normal-map horde only limits repetitive impact particles/floating numbers.
+  const mob=actors(),crowded=mob.length>=24;
+  const col=COLORS[id],dmg=power(player,cfg),t=nearest(player,300,mob);
   if(!t){fx(player.x,player.y,cfg.r*.7,col,7);return true;}
-  const x=t.x,y=t.y;const near=(r=cfg.r)=>enemiesNear(x,y,r);
+  const x=t.x,y=t.y;const near=(r=cfg.r)=>enemiesNear(x,y,r,mob);
   if(id==='ember-quick'){
    // Fast fire dash animation plus lingering scorched wake. No forced player
    // displacement into enemy collision (controller-safe auto-combat).
    fx(x,y,64,col,13);fx(player.x,player.y,45,col,5);
-   for(const e of near(75)){hit(e,dmg,col);slow(e,.16,1.8);}
+   for(const e of near(75)){hit(e,dmg,col,crowded);slow(e,.16,1.8);}
    zone(player,id,x,y,85,2.4,.45,dmg*.30,'burn');
   }else if(id==='water-tackle'){
    fx(x,y,105,col,15);
-   for(const e of near(135)){hit(e,dmg,col);push(e,player.x,player.y,26);slow(e,.28,2.2);}
+   for(const e of near(135)){hit(e,dmg,col,crowded);push(e,player.x,player.y,26);slow(e,.28,2.2);}
   }else if(id==='grass-spin'){
    fx(player.x,player.y,cfg.r,col,15);
    zone(player,id,player.x,player.y,145,3.2,.38,dmg*.52,'pull');
   }else if(id==='spark-quick'){
-   const chain=[t],rest=enemiesNear(x,y,240).filter(e=>e!==t);
+   const chain=[t],rest=enemiesNear(x,y,240,mob).filter(e=>e!==t);
    while(chain.length<5&&rest.length){
     rest.sort((a,b)=>distance(a,chain[chain.length-1])-distance(b,chain[chain.length-1]));
     chain.push(rest.shift());
    }
    for(let i=0;i<chain.length;i++){
-    const e=chain[i];hit(e,dmg*Math.pow(.8,i),col);
+    const e=chain[i];hit(e,dmg*Math.pow(.8,i),col,crowded);
     if(i<3)stun(e,.26);fx(e.x,e.y,38,col,6);
    }
   }else if(id==='mind-tackle'){
    fx(x,y,138,col,19);
-   for(const e of near(145)){hit(e,dmg*.95,col);push(e,player.x,player.y,20);slow(e,.5,2);}
+   for(const e of near(145)){hit(e,dmg*.95,col,crowded);push(e,player.x,player.y,20);slow(e,.5,2);}
   }else if(id==='fire-gust'){
    fx(x,y,175,col,12);
    // Immediate impact prevents the old Flame Gale feeling weaker than
    // the two MAX skills consumed. Subsequent burns retain continuous AoE.
-   for(const e of near(145)){hit(e,dmg*1.35,col);slow(e,.35,1.5);}
+   for(const e of near(145)){hit(e,dmg*1.35,col,crowded);slow(e,.35,1.5);}
    zone(player,id,x,y,175,3.8,.33,dmg*.85,'fire-pull');
   }else if(id==='bubble-ice'){
    fx(x,y,90,col,12);
    for(const e of near(135)){
-    hit(e,dmg*.65,col);slow(e,.43,2.6);
+    hit(e,dmg*.65,col,crowded);slow(e,.43,2.6);
     e.pkmsvvIceStacks=clamp((e.pkmsvvIceStacks||0)+1,0,3);
     if(e.pkmsvvIceStacks>=2){
      stun(e,.65);e.pkmsvvIceStacks=0;fx(e.x,e.y,37,col,8);
@@ -236,7 +283,7 @@ G.PKMSVVFusionEvolved=(()=>{
   }else if(id==='thunder-claw'){
    fx(x,y,112,col,20);
    for(const e of near(160)){
-    hit(e,dmg*1.20,col);
+    hit(e,dmg*1.20,col,crowded);
     e.pkmsvvFusionShredUntil=clock()+3;
     fx(e.x,e.y,28,'#c5d2eb',3);
    }
@@ -281,7 +328,7 @@ G.PKMSVVFusionEvolved=(()=>{
      }
      if(z.tag==='stone')slow(e,.65,.75);
      if(z.tag==='shadow'){z.marked.add(e);slow(e,.3,.6);}
-     else hit(e,z.potency,c);
+     else hit(e,z.potency,c,hostile.length>=24);
     }
     // Decorative particles are throttled; combat ticks and damage are not.
     z.visualTick=(z.visualTick||0)+1;
@@ -290,8 +337,14 @@ G.PKMSVVFusionEvolved=(()=>{
    if(z.life<=0){
     if(z.tag==='shadow'){
      fx(z.x,z.y,z.r,COLORS[z.id],12);
-     for(const e of z.marked)if(!e.dead&&distance(e,z)<z.r*1.3)
-      hit(e,z.potency*3.3,COLORS[z.id]);
+     const denseMark=z.marked.size>=24;
+     const radius2=(z.r*1.3)**2;
+     for(const e of z.marked){
+      if(e.dead)continue;
+      const dx=e.x-z.x,dy=e.y-z.y;
+      if(dx*dx+dy*dy<radius2)
+       hit(e,z.potency*3.3,COLORS[z.id],denseMark);
+     }
     }
     zones.splice(i,1);
    }
@@ -320,8 +373,9 @@ G.PKMSVVFusionEvolved=(()=>{
  // No client-only HP changes to NPCs in a nonhost LAN view.
  const applyCast=cast;
  function reset(){zones.length=0;}
- installIcons();installArmorShred();installCombat();
+ installIcons();installVisualBudget();installArmorShred();installCombat();
  return {PREFIX,CONFIG,EFFECTS,assets,maxed,eligible,choices,canUse,newMove,
   evolve,cast:applyCast,tickZones,reset,installIcons,installCombat,installArmorShred,
+  installVisualBudget,get visualSkipped(){return {...visualSkipped};},
   get activeZones(){return zones.length;}};
 })();

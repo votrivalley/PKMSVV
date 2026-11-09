@@ -6,13 +6,17 @@ const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const IDs=['ember-quick','water-tackle','grass-spin','spark-quick','mind-tackle',
  'fire-gust','bubble-ice','leaf-rock','shadow-mind','thunder-claw'];
 function setup(options={}){
- const blasts=[],rings=[],toasts=[],enemies=[],saved={coins:250,owned:{25:{at:1}}};
+ const blasts=[],rings=[],texts=[],toasts=[],enemies=[],saved={coins:250,owned:{25:{at:1}}};
  class Enemy{
   constructor(x=70,y=8,hp=1200){
    this.x=x;this.y=y;this.hp=hp;this.maxHp=hp;this.dead=false;
    this.hits=[];this.slowed=[];this.stunned=[];this.r=10;
   }
-  hurt(amount){this.hp-=amount;this.hits.push(amount);if(this.hp<=0)this.dead=true;}
+  hurt(amount){
+   // Optional native FX-like work triggered once for every damage event.
+   if(options.hitFx){G.FX.dmgText(this.x,this.y,amount);G.FX.burst(this.x,this.y,'#fff',3,12);}
+   this.hp-=amount;this.hits.push(amount);if(this.hp<=0)this.dead=true;
+  }
   applySlow(a,t){this.slowed.push({a,t});}
   applyStun(t){this.stunned.push(t);}
  }
@@ -37,7 +41,8 @@ function setup(options={}){
   },
   Player,Enemy,
   EnemyMgr:{all:()=>enemies},
-  FX:{ring(...args){rings.push(args)},burst(...args){blasts.push(args)}},
+  FX:{ring(...args){rings.push(args)},burst(...args){blasts.push(args)},
+   dmgText(...args){texts.push(args)}},
   Audio:{sfx(){}},U:{dist2:(x,y,a,b)=>(x-a)**2+(y-b)**2},
   World:{isFree:()=>true},
   Game:{state:'playing',st:{time:90},player:null,togglePause(){this.state='playing'}},
@@ -68,7 +73,7 @@ function setup(options={}){
   return pl.moves;
  };
  return {G,api:G.PKMSVVFusionPilot,fx:G.PKMSVVFusionEvolved,pl,m,
-  stock,enemies,blasts,rings,toasts,saved,Enemy};
+  stock,enemies,blasts,texts,rings,toasts,saved,Enemy};
 }
 test('all ten original Fusion WebP files exist, unique and match exact recipes',()=>{
  const h=setup();
@@ -322,4 +327,36 @@ test('Fusion damage honors real endgame ×224 Attack instead of silently clampin
  const low=run(4),high=run(224);
  assert.ok(low>0);
  assert.ok(high>low*40,'endgame Fusion must scale with actual huge Attack buffs, not tiny cap');
+});
+
+test('Crowded Mind Shockwave damages every foe with one EnemyMgr snapshot while capping only costly cosmetics',()=>{
+ const h=setup({hitFx:true}),p=h.pl;
+ p.level=164;p.atkMul=316;p.baseAtk=1;
+ h.stock(['confusion',3],['tackle',3]);
+ let scans=0;h.G.EnemyMgr.all=()=>{scans++;return h.enemies;};
+ for(let i=0;i<60;i++)h.enemies.push(new h.Enemy(70+(i%8)*4,5+(i%7)*3,100000000));
+ const fusion=h.fx.evolve(p,'mind-tackle');
+ assert.ok(fusion);
+ scans=0;h.blasts.length=0;h.texts.length=0;
+ const hp=h.enemies.map(e=>e.hp);
+ assert.equal(p.cast(fusion),true);
+ assert.equal(scans,1,'high-level Mind Shockwave must scan EnemyMgr exactly once per cast');
+ for(let i=0;i<60;i++){
+  assert.equal(h.enemies[i].hits.length,1,'all 60 mobs retain direct damage');
+  assert.ok(h.enemies[i].hp<hp[i],'damage unchanged for target '+i);
+  assert.equal(h.enemies[i].slowed.length,1,'all 60 mobs retain slow');
+ }
+ assert.ok(h.blasts.length<=9,'at most one cast burst plus 8 native hit bursts');
+ assert.ok(h.texts.length<=12,'no more than 12 floating damage numbers per horde burst');
+ assert.ok(h.fx.visualSkipped.burst>=40&&h.fx.visualSkipped.text>=40);
+ assert.equal(p.atkMul,316,'no damage multiplier change to character');
+});
+test('Solo Rift or 3-target Mind Shockwave keeps every damage number and particle',()=>{
+ const h=setup({hitFx:true});h.stock(['confusion',3],['tackle',3]);
+ for(let i=0;i<3;i++)h.enemies.push(new h.Enemy(65+i*7,10,100000));
+ const fusion=h.fx.evolve(h.pl,'mind-tackle');h.blasts.length=0;
+ h.pl.cast(fusion);
+ assert.equal(h.texts.length,3);
+ assert.equal(h.blasts.length,4,'three native hit bursts plus one shockwave burst');
+ assert.deepEqual(Array.from(h.enemies,e=>e.slowed.length),[1,1,1]);
 });

@@ -54,7 +54,7 @@ for(const prefix of ['game','ai/game']){
  // into BOTH actual game routes (the app.min.js engine is unchanged).
  for(const name of ['pkmsvv-changelog-v20-qa.js','pkmsvv-box-hub-ui.js',
   'pkmsvv-dex-defeats-qa.js','pkmsvv-runtime-controls-qa.js',
-  'pkmsvv-quick-region.js','pkmsvv-pc-menu-clean-qa.js']){
+  'pkmsvv-quick-region.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-fusion-evolved.js']){
   const fresh=fs.readFileSync(path.join(root,'src',name),'utf8');
   assert(fresh.length>100,'empty promoted script: '+name);
   fs.writeFileSync(path.join(to,prefix+'/js/ui/'+name),fresh);
@@ -63,6 +63,8 @@ for(const prefix of ['game','ai/game']){
   'new discovered button missing from '+prefix);
  assert(read(prefix+'/js/ui/pkmsvv-dex-defeats-qa.js').includes('markEvolved'),
   'evolution unlock missing from '+prefix);
+ assert(read(prefix+'/js/ui/pkmsvv-fusion-evolved.js').includes('installVisualBudget'),
+  'hotfix Fusion horde performance missing in '+prefix);
  assert(read(prefix+'/js/ui/pkmsvv-runtime-controls-qa.js').includes('installTouchAuto'),
   'native touchscreen 2-second AUTO cast patch missing from '+prefix);
  assert(read(prefix+'/js/ui/pkmsvv-runtime-controls-qa.js').includes('riftPassage'),
@@ -93,7 +95,7 @@ for(const prefix of ['game','ai/game']){
 }
 const sw=path.join(to,'sw.js');assert(file('sw.js'),'PWA service worker missing');
 const oldSW=fs.readFileSync(sw,'utf8');
-const oldKey='pkmsvv-cloudflare-v1529-1',newKey='pkmsvv-cloudflare-v20-20261109-pokemon-header-auto-v24';
+const oldKey='pkmsvv-cloudflare-v1529-1',newKey='pkmsvv-cloudflare-v20-20261109-fusion-horde-perf-v25';
 assert(oldSW.includes(oldKey),'existing service worker revision differs');
 fs.writeFileSync(sw,oldSW.replace(oldKey,newKey));
 // A new worker cache namespace ensures the published version refreshes reliably.
@@ -102,7 +104,7 @@ const info=JSON.parse(read('build-info.json'));
 assert(info.localSave===true,'existing browser-save architecture changed');
 Object.assign(info,{version:'2.0',displayVersion:'Pokémon Chuyển Sinh 2.0',
  releaseDate:'2026-11-09',releaseSourceRevision:EXPECTED_SHA,
- releaseQAWorkflowRun:42520192007,releaseType:'public-web',mobileUiHotfix:'one-row-tabs-five-box-cards-touch-auto-v24',saveMode:'existing-browser-local',
+ releaseQAWorkflowRun:42520192007,releaseType:'public-web',mobileUiHotfix:'one-row-tabs-five-box-cards-touch-auto-v24',combatHotfix:'mind-shockwave-horde-visuals-v25',saveMode:'existing-browser-local',
  rollbackSourceArtifact:'PKMSVV-PokeBox-Stage4-Web-QA-ONLY'});
 fs.writeFileSync(path.join(to,'build-info.json'),JSON.stringify(info,null,2)+'\n');
 const maxBytes=25*1024*1024;let files=0,bytes=0,largest=0;

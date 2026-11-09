@@ -125,6 +125,7 @@ jobs:
           grep -q 'PKMSVV_MOBILE_SPEED_EDGE_23' decoded-android/assets/public/css/pkmsvv-runtime-controls-qa.css
           grep -q 'PKMSVV_POKEMON_HEADER_V24' decoded-android/assets/public/css/pkmsvv-v20-ui-qa.css
           grep -q 'installTouchAuto' decoded-android/assets/public/js/ui/pkmsvv-runtime-controls-qa.js
+          grep -q 'installVisualBudget' decoded-android/assets/public/js/ui/pkmsvv-fusion-evolved.js
           grep -q 'pkmsvv-awakening-milestones' decoded-android/assets/public/js/ui/pkmsvv-wiki-qa.js
           grep -q 'Fusion là dung hợp hai kỹ năng đã luyện MAX' decoded-android/assets/public/js/app.min.js
           test -s decoded-android/assets/public/js/ui/pkmsvv-fusion-evolved.js
