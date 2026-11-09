@@ -918,18 +918,25 @@ async function main(){
     await evaluate("G.PKMSVVHordePerformance?.setEnabled(false)");
     console.log('EXPLORE_PERF_AB_OFF=true');
    }
-   if(process.env.PKMSVV_LEVELUP_SKIP==='1'){
-    await evaluate(`(()=>{
-     const old=G.RunUI.showLevelUp;
-     G.RunUI.showLevelUp=function(level,offers,complete,...rest){
-      if(Array.isArray(offers)&&offers[0]&&typeof complete==='function'){
-       setTimeout(()=>complete(offers[0]),0);return;
-      }
-      return old.call(this,level,offers,complete,...rest);
-     };
-    })()`);
-    console.log('EXPLORE_LEVELUP_AB_BYPASS=true');
-   }
+   // Exercise REAL native level-up UI. The earlier diagnostic bypassed
+   // RunUI.showLevelUp completely, so it could not catch a popup deadlock.
+   await evaluate(`(()=>{
+    const original=G.RunUI.showLevelUp;
+    G.RunUI.showLevelUp=function(...args){
+     const probe=window.__pkmsvvRunProbe.events;
+     probe.push({name:'levelup-enter',elapsed:Date.now()-window.__pkmsvvRunProbe.started});
+     const result=original.apply(this,args);
+     probe.push({name:'levelup-rendered',elapsed:Date.now()-window.__pkmsvvRunProbe.started});
+     setTimeout(()=>{
+      try{
+       const card=document.querySelector('#scr-levelup #cards .card');
+       if(card){G.RunUI.pick(0);probe.push({name:'levelup-native-picked',elapsed:Date.now()-window.__pkmsvvRunProbe.started});}
+      }catch(error){probe.push({name:'levelup-pick-error',text:String(error?.stack||error)});}
+     },150);
+     return result;
+    };
+   })()`);
+   console.log('EXPLORE_LEVELUP_REAL_UI=true');
    let minute=null;
    for(let i=0;i<11;i++){
     await sleep(5000);
