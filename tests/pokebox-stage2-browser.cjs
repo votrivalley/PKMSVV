@@ -976,12 +976,6 @@ async function main(){
     };
    })()`);
    await evaluate(`(()=>{
-    const oldPick=G.RunUI.pick;
-    G.RunUI.pick=function(...args){
-     window.__pkmsvvRunProbe.events.push({name:'native-pick',index:args[0],clock:G.Game?.st?.time});
-     console.log('QA_TRACE:RunUI.pick '+String(args[0]));
-     return oldPick.apply(this,args);
-    };
     const original=G.RunUI.showLevelUp;
     G.RunUI.showLevelUp=function(...args){
      const events=window.__pkmsvvRunProbe.events;
@@ -1047,7 +1041,7 @@ async function main(){
       await cmd('Input.dispatchKeyEvent',{type:'keyUp',key:key.name,code:key.name,windowsVirtualKeyCode:key.vk,nativeVirtualKeyCode:key.vk});
      }
      await sleep(260);
-     minute=await evaluate("(()=>({state:G.Game?.state,time:G.Game?.st?.time,level:G.Game?.player?.level,levelPopup:G.UI?.isOpen?.('scr-levelup'),cursor:document.getElementById('scr-levelup')?.getAttribute('data-pkmsvv-nav-index'),probe:window.__pkmsvvRunProbe.events.slice(-8)}))()");
+     minute=await evaluate("(()=>({state:G.Game?.state,time:G.Game?.st?.time,level:G.Game?.player?.level,levelPopup:G.UI?.isOpen?.('scr-levelup'),probe:window.__pkmsvvRunProbe.events.slice(-5)}))()");
      console.log('QA_REPEAT_LEVELUP_NATIVE_CONFIRM='+JSON.stringify(minute));
      assert.equal(minute.state,'playing','Second native level-up did not resume after ArrowDown+Enter');
     }
