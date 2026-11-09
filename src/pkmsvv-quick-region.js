@@ -604,6 +604,32 @@
  // is immutable in normal gameplay; cache per actor+region+dex in a WeakMap.
  // If an event legitimately changes a species, the dex mismatch rechecks it.
  const checkedIdentity=new WeakMap();
+ const kantoBalanced=new WeakSet();
+ // New-player Kanto: only early ordinary wildlife is softened. Keep all
+ // wave density, XP, drops, mini-bosses, 15m/30m bosses and other Regions.
+ function balanceKantoEnemy(enemy,elapsed=encounterSeconds()){
+  if(!enemy||typeof enemy!=='object'||kantoBalanced.has(enemy)||
+   regionIndex()!==0||G.Coop?.active||getChampion()?.active||
+   enemy.dead||enemy.remote||enemy.boss||enemy.elite||enemy.isBoss||
+   enemy.pkmsvvExploreBoss||enemy.pkmsvvBossGuard||
+   enemy.pkmsvvFriendly||enemy.friendly||enemy.isPlayer||enemy.isSupport||
+   !Number.isInteger(Number(enemy.dex??enemy.def?.dex)))return false;
+  const t=Math.max(0,Number(elapsed)||0);
+  if(t>=720)return false;
+  const hpFactor=t<240?.83:t<480?.90:.96;
+  const dmgFactor=t<240?.72:t<480?.80:.91;
+  if(!Number.isFinite(enemy.maxHp)||!Number.isFinite(enemy.hp)||
+   !Number.isFinite(enemy.dmg)||enemy.maxHp<=0||enemy.dmg<=0)return false;
+  kantoBalanced.add(enemy);
+  try{
+   const ratio=Math.max(0,Math.min(1,enemy.hp/enemy.maxHp));
+   enemy.maxHp=Math.max(1,Math.round(enemy.maxHp*hpFactor));
+   enemy.hp=Math.max(1,Math.round(enemy.maxHp*ratio));
+   enemy.dmg=Math.max(.1,enemy.dmg*dmgFactor);
+   return true;
+  }catch(_){return false;}
+ }
+
  function enforceLiveEnemy(enemy,index){
   if(!enemy||enemy.dead||enemy.remote||enemy.pkmsvvExploreBoss||enemy.def?.pkmsvvExploreBoss||
    index<0||index>=REGION_COUNT)return false;
@@ -641,8 +667,10 @@
  }
  wrap(G.EnemyMgr,'add',function(prev,args){
   const index=regionIndex();
-  if(index>=0&&!getChampion()?.active&&!G.Coop?.active)
+  if(index>=0&&!getChampion()?.active&&!G.Coop?.active){
    enforceLiveEnemy(args[0],index);
+   if(index===0)balanceKantoEnemy(args[0]);
+  }
   return prev.apply(this,args);
  });
  // Late correction catches waves which bypass EnemyMgr.add() entirely.
@@ -652,7 +680,8 @@
   const out=prev.apply(this,args),index=regionIndex();
   if(index<0||getChampion()?.active||G.Coop?.active)return out;
   updateRegionBoss();
-  if(++integrityTick%10!==0||typeof G.EnemyMgr?.all!=='function')return out;
+  const sweepEvery=Number(G.EnemyMgr?.count)>75?24:10;
+  if(++integrityTick%sweepEvery!==0||typeof G.EnemyMgr?.all!=='function')return out;
   const all=G.EnemyMgr.all();
   // Map / Set may be instantiated in another JS realm (WebViews, VM tests).
   // instanceof fails cross-realm. Use the intrinsic collection tag and, for
@@ -663,8 +692,10 @@
     Array.from(all.values()):
    all&&typeof all[Symbol.iterator]==='function'?Array.from(all):
    all&&typeof all==='object'?Object.values(all):[];
-  for(const enemy of actors)
+  for(const enemy of actors){
    if(enforceLiveEnemy(enemy,index))correctedSpawns++;
+   if(index===0)balanceKantoEnemy(enemy);
+  }
   return out;
  });
  wrap(G.Enemies,'bagAt',function(prev,args){
@@ -693,7 +724,7 @@
   spawnRegionBoss,finishRegionMatch,updateRegionBoss,beginRun,endRun,
   SEAL_SECONDS,FINAL_BOSS_SECONDS,THEMES,targetBiome,distinctMapBiomes,
   mascots:REGION_MASCOTS,nationalGen,speciesFor,isAllowed,pokemonStrength,encounterTier,eligibleByTime,
-  progressivePool,enforceGeneration,regionEnemyDefinition,enforceLiveEnemy,
+  progressivePool,enforceGeneration,regionEnemyDefinition,enforceLiveEnemy,balanceKantoEnemy,
   get active(){return regionIndex()>=0},
   get selectedRegion(){return regionIndex()},
   get regionalBoss(){return current?.badgeBoss||null},
