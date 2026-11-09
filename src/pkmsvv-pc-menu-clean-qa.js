@@ -21,8 +21,7 @@
   // Never remove the guide from a save still missing unlock milestones.
   const save=G.DB?.save,tracker=G.PKMSVVSkillTrack;
   if(!save||typeof tracker?.progress!=='function')return false;
-  try{return !!save.pkmsvvChapter2Seen || tracker.progress(save).count>=8 ||
-    (Array.isArray(G.Game?.player?.moves)&&G.Game.player.moves.length>=8);}catch(error){
+  try{return tracker.progress(save).count>=8;}catch(error){
    console.warn('[PC Skill Awakening status]',error);return false;
   }
  }

@@ -170,3 +170,92 @@ body>.pkmsvv-memory-chooser .pkmsvv-memory-chapter.is-locked .pkmsvv-memory-requ
  body>.pkmsvv-memory-chooser .pkmsvv-memory-chapter .pkmsvv-memory-name{font-size:12px!important}
  body>.pkmsvv-memory-chooser .pkmsvv-memory-chapter .pkmsvv-memory-requirement{font-size:10px!important}
 }
+
+/* PKMSVV_STORY_SPLIT_V23 — image and dialogue MUST be on screen together.
+ * The original 16:9 width-driven canvas overflowed Android landscape and
+ * forced readers to scroll between the artwork and the actual story text. */
+#scr-pkmsvv-story{
+ box-sizing:border-box!important;
+ padding:max(6px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right))
+         max(6px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))!important;
+ overflow:hidden!important;
+}
+#scr-pkmsvv-story .pkmsvv-story-screen{
+ box-sizing:border-box!important;
+ display:flex!important;flex-direction:column!important;
+ width:min(1050px,100%)!important;
+ height:min(750px,calc(100dvh - 12px))!important;
+ max-height:calc(100dvh - 12px)!important;
+ min-height:0!important;overflow:hidden!important;
+ padding:clamp(5px,1.3vh,9px)!important;
+}
+#scr-pkmsvv-story .pkmsvv-story-frame{
+ box-sizing:border-box!important;
+ flex:1 1 auto!important;height:0!important;
+ min-height:0!important;max-height:none!important;
+ overflow:hidden!important;
+}
+#scr-pkmsvv-story #pkmsvv-story-image{
+ display:block!important;height:100%!important;width:100%!important;
+ min-height:0!important;max-height:100%!important;
+ aspect-ratio:auto!important;
+ object-fit:contain!important;object-position:center!important;
+}
+#scr-pkmsvv-story .pkmsvv-story-dialog{
+ box-sizing:border-box!important;
+ display:flex!important;flex-direction:column!important;
+ flex:0 0 auto!important;min-height:0!important;
+ max-height:min(42dvh,235px)!important;
+ overflow-y:auto!important;overflow-x:hidden!important;
+ overscroll-behavior:contain!important;touch-action:pan-y!important;
+ -webkit-overflow-scrolling:touch;
+ margin-top:clamp(4px,.9vh,8px)!important;
+ padding:clamp(6px,1.2vh,11px) 12px!important;
+}
+#scr-pkmsvv-story #pkmsvv-story-speaker{
+ flex:0 0 auto!important;
+ font-size:clamp(12px,1.75vh,15px)!important;
+ margin:0 0 clamp(3px,.6vh,6px)!important;
+}
+#scr-pkmsvv-story #pkmsvv-story-line{
+ font-size:clamp(13px,2.1vh,18px)!important;
+ line-height:1.34!important;
+ min-height:clamp(28px,5vh,48px)!important;
+ font-weight:650!important;overflow-wrap:anywhere!important;
+}
+#scr-pkmsvv-story .pkmsvv-story-controls{
+ flex:0 0 auto!important;
+ margin-top:clamp(5px,1vh,9px)!important;
+ gap:clamp(6px,1.5vw,11px)!important;
+}
+#scr-pkmsvv-story .pkmsvv-story-controls button{
+ min-height:clamp(32px,6vh,40px)!important;
+ padding:4px clamp(9px,1.6vw,15px)!important;
+ font-size:clamp(12px,1.8vh,16px)!important;
+ touch-action:manipulation!important;
+}
+#scr-pkmsvv-story .pkmsvv-story-chapter{
+ top:6px!important;left:7px!important;
+ padding:4px 7px!important;
+ font-size:clamp(10px,1.6vh,13px)!important;
+ max-width:calc(100% - 15px)!important;
+}
+#scr-pkmsvv-story .pkmsvv-story-name-form{
+ flex:0 0 auto!important;
+ max-height:min(22dvh,155px)!important;overflow-y:auto!important;
+ margin:4px 0!important;padding:5px!important;
+}
+@media (orientation:landscape) and (max-height:490px){
+ #scr-pkmsvv-story .pkmsvv-story-screen{
+  height:calc(100dvh - 10px)!important;max-height:calc(100dvh - 10px)!important;
+  padding:4px!important;
+ }
+ #scr-pkmsvv-story .pkmsvv-story-dialog{
+  max-height:min(47dvh,177px)!important;
+  padding:5px 10px!important;
+ }
+ #scr-pkmsvv-story #pkmsvv-story-line{
+  font-size:clamp(12px,3.5vh,15px)!important;line-height:1.28!important;
+ }
+ #scr-pkmsvv-story .pkmsvv-story-controls{margin-top:4px!important}
+}

@@ -487,7 +487,7 @@
    diff.textContent='▥ '+tr('Độ khó ','Difficulty ')+x.difficulty+'/5';
    const status=document.createElement('small');status.className='region-status';
    status.textContent=x.complete?'🏅 '+tr('Đã có Huy hiệu Vùng','Region Badge earned'):
-    x.unlocked?tr('▶ Boss 15p + 30p','▶ Bosses at 15 + 30 min'):
+    x.unlocked?tr('▶ Hạ Boss 15p để qua màn · Boss 30p để kết màn','▶ Defeat the 15m Boss to unlock next · 30m Boss to finish'):
     x.index===9?'🔒 '+tr('Cần đủ 9 Huy hiệu','Requires all 9 Badges'):
     '🔒 '+tr('Cần Huy hiệu ','Requires Badge of ')+NAMES[x.index-1];
    body.append(name,diff,status);

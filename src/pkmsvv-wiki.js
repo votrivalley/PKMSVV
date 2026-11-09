@@ -188,28 +188,38 @@ G.PKMSVVWiki=(()=>{
   const sub=document.createElement('h3');sub.textContent=tr('Kiến thức Pokémon','Pokémon knowledge');
   help.append(sub);
   const articles=[
-   [tr('Mystery Orb','Mystery Orb'),null],
    [tr('Thức tỉnh kỹ năng','Skill Awakening'),
-    tr('Kỹ năng được mở và nâng cấp khi Pokémon lên cấp trong trận. Hãy chọn kỹ năng phù hợp để phát huy sức mạnh; các nâng cấp vĩnh viễn vẫn được giữ nguyên.',
-       'Unlock and improve skills as your Pokémon levels up during a run. Choose skills that fit your play style; permanent upgrades remain intact.')],
-   [tr('✨ Fusion — Tiến hóa tuyệt kỹ','✨ Fusion — Evolved Skills'),
-    tr('Chọn 1 trong 10 công thức. Cả hai chiêu gốc phải MAX, sau đó Fusion thay 2 chiêu bằng 1 tuyệt kỹ MAX, giải phóng một ô kỹ năng. Mỗi trận Fusion chỉ 1 lần; Bond nhận từ khe nứt vẫn là hệ thống liên kết riêng.',
-       'Choose one of ten recipes. Both source moves must be MAX. Fusion replaces them with one evolved MAX skill and frees one slot. One Fusion per match; Rift-earned Bonds remain a separate link system.')],
-
+    tr('Bắt đầu với 3 ô kỹ năng. Mở thêm 5 ô vĩnh viễn bằng cách hạ tổng 50, 100, 200 quái và đạt tổng 10, 20 cấp Nâng cấp. Tiến độ cộng dồn qua nhiều trận và áp dụng cho MỌI Pokémon. Khi lên cấp trong trận, bạn chọn chiêu để học/nâng cấp; mở ô không tự tặng chiêu.',
+       'Start with 3 move slots. Permanently unlock 5 more by defeating 50, 100 and 200 enemies in total and earning 10 and 20 combined Upgrade ranks. Progress carries across runs for ALL Pokémon. Choose moves on level-up; unlocking a slot does not grant a free move.')],
+   [tr('✨ Fusion — Dung hợp kỹ năng','✨ Fusion — Skill Fusion'),
+    tr('Chọn một công thức Fusion, luyện cả hai chiêu gốc lên MAX rồi dung hợp để tạo một kỹ năng MỚI đạt MAX. Hai chiêu gốc được thay bằng một chiêu mới, giải phóng một ô kỹ năng. Mỗi trận chỉ Fusion một lần; Bond từ Khe Nứt là cơ chế riêng.',
+       'Choose a Fusion recipe, train both source moves to MAX and merge them into an entirely NEW MAX-level move. This replaces two moves with one and frees a slot. One Fusion per run; Rift Bonds are separate.')],
+   [tr('Mystery Orb','Mystery Orb'),null]
   ];
-  // The completed Skill Awakening chapter does not need a permanent guide row.
-  const skillAwakeningDone=!!G.DB?.save?.pkmsvvChapter2Seen ||
-   (G.PKMSVVSkillTrack?.progress?.(G.DB?.save)?.count||0)>=8 ||
-   (G.Game?.player?.moves?.length||0)>=8;
-  // Put Fusion recipes above Mystery Orb in the knowledge accordion.
+  // The permanent Skill Awakening achievement is 8/8 shared move SLOTS.
+  // A completed story chapter or eight temporarily learned run moves must
+  // never hide this beginner guide before permanent unlock is complete.
+  const skillAwakeningDone=!!G.DB?.save&&
+    (G.PKMSVVSkillTrack?.progress?.(G.DB.save)?.count||0)>=8;
   for(const [name,description] of articles.filter(([name])=>
-   !skillAwakeningDone||name!==tr('Thức tỉnh kỹ năng','Skill Awakening')).sort((a,b)=>(b[0].includes('Fusion')?1:0)-(a[0].includes('Fusion')?1:0))){
+   !skillAwakeningDone||name!==tr('Thức tỉnh kỹ năng','Skill Awakening'))){
    const detail=document.createElement('div');detail.className='pkmsvv-pc-learn';
-   const toggle=document.createElement('button');toggle.type='button';toggle.textContent='▸ '+name;
-   toggle.setAttribute('aria-expanded','false');
-   const p=document.createElement('div');p.hidden=true;p.className='pkmsvv-pc-orb-details';
+   const awakening=name===tr('Thức tỉnh kỹ năng','Skill Awakening');
+   const toggle=document.createElement('button');toggle.type='button';toggle.textContent=(awakening?'▾ ':'▸ ')+name;
+   toggle.setAttribute('aria-expanded',String(awakening));
+   const p=document.createElement('div');p.hidden=!awakening;p.className='pkmsvv-pc-orb-details';
    if(description!==null){
     const paragraph=document.createElement('p');paragraph.textContent=description;p.append(paragraph);
+    if(awakening){
+     const guide=G.PKMSVVSkillTrack?.guide?.(G.DB?.save,G.I18n?.lang);
+     if(guide){
+      const title=document.createElement('strong');title.className='pkmsvv-awakening-progress';title.textContent=guide.headline;p.append(title);
+      const note=document.createElement('p');note.textContent=guide.note;p.append(note);
+      const list=document.createElement('ul');list.className='pkmsvv-awakening-milestones';
+      for(const line of guide.lines){const item=document.createElement('li');item.textContent=line;list.append(item);}
+      p.append(list);
+     }
+    }
     if(name.includes('Fusion')){
      const recipes=document.createElement('div');recipes.className='pkmsvv-fusion-recipes';
      for(const formula of G.PKMSVVFusionPilot?.RECIPES||[]){

@@ -153,3 +153,15 @@
  #pkmsvv-coop-ranking-toggle.pkmsvv-coop-ranking-toggle{top:max(92px,env(safe-area-inset-top) + 82px);min-height:30px}
  #pkmsvv-coop-ranking-list.pkmsvv-coop-ranking-list{top:max(130px,env(safe-area-inset-top) + 119px);width:min(230px,63vw);max-height:45dvh}
 }
+
+/* PKMSVV_MOBILE_SPEED_EDGE_23 — touch & short-landscape WebView HUD.
+ * In eligible non-competitive battles, put ×1.5 right at the lower left safe edge. */
+@media (pointer:coarse), (orientation:landscape) and (max-height:650px){
+ #pkmsvv-speed-button.pkmsvv-speed-button{
+  left:max(6px,env(safe-area-inset-left))!important;
+  bottom:max(9px,env(safe-area-inset-bottom))!important;
+  right:auto!important;top:auto!important;
+  min-height:39px!important;min-width:74px!important;
+  padding:5px 9px!important;font-size:13px!important;
+ }
+}
