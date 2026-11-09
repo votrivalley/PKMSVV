@@ -25,6 +25,26 @@
     }
     if(root.title)root.title=root.title.replace(/Gacha|Recruitment|Chiêu mộ/gi,target);
    }
+   // Keep the recruitment prerequisite visible even before a pull.
+   // This is a note only; actual ticket/Gen safety is enforced by Gacha.pull.
+   const screen=document.getElementById('scr-gacha');
+   if(screen){
+    let note=screen.querySelector('#pkmsvv-recruitment-rule');
+    if(!note){
+     const host=screen.querySelector('.gacha-panel,.panel,.gacha-content')||screen;
+     note=document.createElement('p');
+     note.id='pkmsvv-recruitment-rule';
+     note.className='pkmsvv-recruitment-rule';
+     note.setAttribute('role','note');
+     const heading=host.querySelector('h1,h2,h3');
+     if(heading?.parentElement===host)heading.insertAdjacentElement('afterend',note);
+     else host.insertBefore(note,host.firstChild);
+    }
+    const label=G.I18n?.lang==='en'?
+     'Only Pokémon defeated in Explore and recorded in your Pokédex can be recruited. Empty generations cannot be drawn.':
+     'Chỉ những Pokémon đã hạ trong Khám phá và có trong Pokédex mới có thể Chiêu mộ. Thế hệ chưa mở khóa không thể quay.';
+    if(note.textContent!==label)note.textContent=label;
+   }
   }finally{busy=false;}
  }
  function install(){
