@@ -25,7 +25,8 @@ G.PKMSVVBerryRescue=(()=>{
    G.World?.flattenForBerry?.(); // Clear cached wall chunks.
    G.Audio?.music?.('eggrush'); // Same bundled BGM as Egg Rush, from match start.
   }
-  drawnTrees.clear();
+  drawnTrees.clear();lastAwards=[];
+  if(typeof document!=='undefined')document.getElementById?.('pkmsvv-berry-team-result')?.remove?.();
   sendClock=0;endClock=0;
   const hp=easy?220:180;
   trees=POS.map(([x,y],i)=>({id:i,x,y,hp,maxHp:hp,guard:0}));
@@ -62,7 +63,7 @@ G.PKMSVVBerryRescue=(()=>{
   bossStage=Math.max(bossStage,Number(ev[4])||0);
   time=Math.max(time,Math.min(DURATION+45,Number(ev[5])||0));
  }
- function state(){return trees.map(t=>Math.max(0,Math.round(100*t.hp/t.maxHp)));}
+ function state(){return trees.map(t=>t.hp>0?Math.max(1,Math.round(100*t.hp/t.maxHp)):0);}
  function chanceForHp(pct,isEasy=easy){
   if(!Number.isFinite(pct)||pct<=0)return 0;
   const rates=isEasy?EASY_REWARDS:NORMAL_REWARDS;
@@ -115,27 +116,100 @@ G.PKMSVVBerryRescue=(()=>{
  function rewardBerry(){
   const r=Math.random(),types=G.PKMSVVBerry?.TYPES||[];
   return r<.015?'enigma':r<.045?'starf':r<.12?'petaya':r<.2?'lum':
-   types[Math.floor(Math.random()*Math.min(6,types.length))]?.id;
+   types[Math.floor(Math.random()*Math.min(6,types.length))]?.id||types[0]?.id||'oran';
+ }
+ // A completed rescue awards each human independently. The host records all
+ // rolls inside the existing result packet, so the whole team sees the same
+ // confirmed names; AI companions have no persistent Berry inventory.
+ function rollRewards(result){
+  const won=[];
+  for(const hp of result.trees.slice(0,3)){
+   const pct=hp===true?100:Math.max(0,Number(hp)||0);
+   if(pct>0&&Math.random()<chanceForHp(pct,result.easy===true))won.push(rewardBerry());
+  }
+  if(result.trees.length>=3&&result.trees.slice(0,3).every(h=>h===true||Number(h)>0))
+   won.push(rewardBerry()); // guaranteed at ANY positive HP, not only full trees
+  return won.filter(Boolean);
+ }
+ function members(){
+  const roster=Array.isArray(G.Social?.room?.members)?G.Social.room.members:[];
+  const list=[],seen=new Set();
+  for(const m of roster)if(typeof m?.uid==='string'&&!seen.has(m.uid)){
+   seen.add(m.uid);list.push({uid:m.uid,bot:!!m.bot,
+    name:String(m.name||m.nick||m.label||(m.bot?'AI':tr('Người chơi','Player'))).slice(0,48)});
+  }
+  const uid=G.Social?.uid;
+  if(typeof uid==='string'&&!seen.has(uid))list.unshift({uid,bot:false,name:tr('Bạn','You')});
+  if(!list.length)list.push({uid:'self',bot:false,name:tr('Bạn','You')});
+  return list;
+ }
+ let lastAwards=[];
+ function renderRewardPanel(result,rows,own){
+  if(typeof document==='undefined'||!document.createElement||!document.body?.append)return;
+  const render=()=>{
+   document.getElementById('pkmsvv-berry-team-result')?.remove?.();
+   const layer=document.createElement('section');layer.id='pkmsvv-berry-team-result';
+   layer.className='pkmsvv-berry-team-result';layer.setAttribute('translate','no');
+   layer.setAttribute('role','dialog');
+   const panel=document.createElement('div');panel.className='pkmsvv-berry-team-panel';
+   const title=document.createElement('h2');
+   title.textContent=tr('🍓 GIẢI CỨU THÀNH CÔNG!','🍓 BERRY RESCUE COMPLETE!');
+   const info=document.createElement('p');
+   info.textContent=tr('Cây còn sống: ','Trees saved: ')+
+    result.trees.filter(h=>h===true||Number(h)>0).length+
+    '/3 · '+tr('Phần thưởng cả đội','Team rewards');
+   const list=document.createElement('div');list.className='pkmsvv-berry-team-list';
+   for(const row of rows){
+    const item=document.createElement('div');item.className='pkmsvv-berry-team-row';
+    const name=document.createElement('strong');name.textContent=row.name;
+    const items=document.createElement('div');
+    if(row.bot||!row.berries.length){
+     items.textContent=row.bot?tr('AI · không có túi Berry','AI · no Berry bag'):
+      tr('Không trúng Berry ngẫu nhiên','No bonus Berry roll');
+    }else for(const id of row.berries){
+     const badge=document.createElement('span');badge.className='pkmsvv-berry-team-award';
+     const img=document.createElement('img');img.width=24;img.height=24;
+     img.src=G.PKMSVVBerry?.spriteUrl?.(id)||'assets/berry/'+id+'.png';
+     img.alt=id+' Berry';
+     const text=document.createElement('span');
+     text.textContent=(G.PKMSVVBerry?.byId?.[id]?.name||id)+' Berry';
+     badge.append(img,text);items.append(badge);
+    }
+    item.append(name,items);list.append(item);
+   }
+   const yours=document.createElement('p');yours.className='pkmsvv-berry-team-own';
+   yours.textContent=tr('Túi của bạn nhận: ','Added to your bag: ')+
+    (own.length?own.map(id=>(G.PKMSVVBerry?.byId?.[id]?.name||id)+' Berry').join(', '):
+     tr('Không có','None'));
+   const close=document.createElement('button');close.type='button';
+   close.className='pkmsvv-berry-team-close';close.textContent=tr('Đóng','Close');
+   close.addEventListener('click',()=>layer.remove());
+   panel.append(title,info,list,yours,close);layer.append(panel);document.body.append(layer);
+  };
+  // Co-op's native finish screen is mounted immediately after the host
+  // reward callback; defer our panel until it is safely visible on top.
+  if(typeof setTimeout==='function')setTimeout(render,120);else render();
  }
  function reward(result){
   if(claimed||!result||!Array.isArray(result.trees))return [];claimed=true;
+  if(!result.success)return [];
+  const me=G.Social?.uid||'self';
+  if(!Array.isArray(result.berryAwards)&&G.Coop?.isHost!==false)
+   result.berryAwards=members().map(m=>({...m,berries:m.bot?[]:rollRewards(result)}));
+  // Legacy/older-host result still awards locally without risking save loss.
+  const source=Array.isArray(result.berryAwards)?result.berryAwards:
+   [{uid:me,name:tr('Bạn','You'),bot:false,berries:rollRewards(result)}];
+  const valid=G.PKMSVVBerry?.byId||{};
+  const rows=source.slice(0,20).filter(m=>typeof m?.uid==='string').map(m=>({
+   uid:m.uid,name:String(m.name||tr('Người chơi','Player')).slice(0,48),bot:!!m.bot,
+   berries:Array.isArray(m.berries)?m.berries.filter(id=>typeof id==='string'&&
+    (valid[id]||G.PKMSVVBerry?.TYPES?.some(t=>t.id===id))).slice(0,4):[]
+  }));
   const awarded=[];
-  if(!result.success)return awarded;
-  const surviving=result.trees.slice(0,3);
-  for(const health of surviving){
-   const pct=health===true?100:Math.max(0,Number(health)||0);
-   if(Math.random()>=chanceForHp(pct,result.easy===true))continue;
-   const id=rewardBerry();
-   if(id&&G.PKMSVVBerry?.grant?.(id,1))awarded.push(id);
-  }
-  // NEW guaranteed bonus: finish the complete 8-minute rescue with
-  // all THREE objective trees alive = +1 extra random Berry, independent
-  // of the existing 3 per-tree HP-tier reward rolls. No duplicate claims.
-  if(surviving.length===3&&surviving.every(x=>x===true||Number(x)>0)){
-   const id=rewardBerry();
-   if(id&&G.PKMSVVBerry?.grant?.(id,1))awarded.push(id);
-  }
-  if(awarded.length)G.UI?.toast?.(tr('🍓 Nhận Berry: ','🍓 Awarded Berries: ')+awarded.join(', '),4500);
+  for(const id of rows.find(r=>r.uid===me&&!r.bot)?.berries||[])
+   if(G.PKMSVVBerry?.grant?.(id,1))awarded.push(id);
+  lastAwards=rows;
+  renderRewardPanel(result,rows,awarded);
   return awarded;
  }
  function tick(dt,t,players,finish){
@@ -292,7 +366,8 @@ G.PKMSVVBerryRescue=(()=>{
  }
  return {DURATION,BOSS_TIMES,REWARD_CHANCE,NORMAL_REWARDS,EASY_REWARDS,XP_MULT,DEFENSE_RADIUS,chanceForHp,difficultyFor,targetFor,defendGoal,keepOutsideTrunks,begin,beginFrame,drawMissing,tick,onEvent,reward,draw,drawables,hud,state,
   get easy(){return easy},
-  get active(){return active},get trees(){return trees},get bossStage(){return bossStage}};
+  get active(){return active},get trees(){return trees},get bossStage(){return bossStage},
+  get lastAwards(){return lastAwards.map(r=>({...r,berries:r.berries.slice()}))}};
 })();
 // Berry Rescue must use the exact Egg Rush BGM (custom-music/eggrush.ogg).
 // Intercept subsequent biome/boss refreshes without touching other modes;
