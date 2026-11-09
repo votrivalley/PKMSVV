@@ -244,3 +244,18 @@ test('v1.5.34 competitive Host/Guests/AI all receive the same best-real-trainer 
   assert.equal(G.LanAI.coopDifficulty(),1,'competitive never receives Co-op allied difficulty');
  }
 });
+
+test('Berry and Berry Easy never use an uninitialized roam waypoint (real 3-second Game Over regression)',()=>{
+ for(const mode of ['berry','berryeasy']){
+  const h=harness(mode);
+  // Berry skips roaming by design. The previous AI mistakenly passed
+  // undefined s.roam to sq(pl,goal), throwing once per frame.
+  h.G.PKMSVVBerryRescue={
+   defendGoal:(pl,enemies,slot)=>({x:slot*30,y:70})
+  };
+  assert.doesNotThrow(()=>{
+   for(let i=0;i<240;i++)h.G.LanAI.update(.016,i*.016);
+  },mode+' must survive 240 continuous AI frames with no roaming destination');
+  assert.ok(Number.isFinite(h.pl.x)&&Number.isFinite(h.pl.y),mode+' Bot position must remain finite');
+ }
+});

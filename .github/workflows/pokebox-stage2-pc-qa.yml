@@ -7,6 +7,8 @@ on:
     paths:
       - 'src/pkmsvv-fusion-evolved.js'
       - 'src/pkmsvv-horde-performance.js'
+      - 'src/lan/lan-ai.js'
+      - 'tests/lan-ai-modes.test.cjs'
       - 'src/pkmsvv-quick-region.js'
       - 'src/pkmsvv-runtime-controls-qa.js'
       - 'src/pkmsvv-modal-navigation-qa.js'
@@ -39,7 +41,7 @@ jobs:
         with:
           node-version: '22'
       - name: Run Stage 1 and Stage 1/2/3 save/regression tests
-        run: npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs && node --test tests/bond-fusion-svv.test.cjs tests/horde-performance.test.cjs tests/pokebox-hub.test.cjs tests/kecleon.test.cjs tests/runtime-controls-qa.test.cjs tests/v20-items-release.test.cjs
+        run: node --test tests/lan-ai-modes.test.cjs && npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs && node --test tests/bond-fusion-svv.test.cjs tests/horde-performance.test.cjs tests/pokebox-hub.test.cjs tests/kecleon.test.cjs tests/runtime-controls-qa.test.cjs tests/v20-items-release.test.cjs
       - name: Download successful signed v1.5.93 Windows baseline
         uses: actions/download-artifact@v4
         with:

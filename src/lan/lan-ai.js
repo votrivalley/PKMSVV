@@ -350,7 +350,13 @@ G.LanAI=(()=>{
      s.roam=dryPoint(pl,{x:host.x+Math.cos(a)*radius,y:host.y+Math.sin(a)*radius})||{x:pl.x,y:pl.y};
      s.anchor={x:host.x,y:host.y};s.wander=4+Math.random()*5;
     }
-    let goal=['royale','coop','berry','berryeasy'].includes(mode)?s.roam:host;
+    // IMPORTANT: Berry deliberately has no roaming state. Reusing s.roam
+    // (undefined) here made the shared AI sq(pl, goal) throw each frame,
+    // and native Game auto-closed EVERY affected battle after 180 errors.
+    // Start Berry from the real host anchor; the grove defense override below
+    // then replaces that destination before movement is computed.
+    let goal=['royale','coop'].includes(mode)?s.roam:host;
+    if(!goal)goal={x:pl.x,y:pl.y};
     let objective=mode==='berry'||mode==='berryeasy'?null:G.EggRush?.objective?.(pl);
     if(['coop','berry','berryeasy'].includes(mode)&&objective&&sq(objective,host)>520**2)objective=null;
     const nests=objective?[objective]:mode==='eggrush'?(G.EggRush?.nests||[]).filter(n=>!n.taken):[];
