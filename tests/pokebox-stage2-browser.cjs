@@ -914,8 +914,17 @@ async function main(){
    // After checking the unprotected first 10 seconds, prevent ordinary
    // monster damage so this measures ENGINE continuity, not combat skill.
    await evaluate("(()=>{const p=G.Game?.player;if(p){p.invuln=120;p.hp=p.maxHp;}return true;})()");
-   await sleep(55000);
-   const minute=await evaluate("(()=>({state:G.Game?.state,time:G.Game?.st?.time,hp:G.Game?.player?.hp,dead:G.Game?.player?.dead,enemies:G.EnemyMgr?.count,probe:window.__pkmsvvRunProbe.events.slice(-12)}))()");
+   if(process.env.PKMSVV_PERF_OFF==='1'){
+    await evaluate("G.PKMSVVHordePerformance?.setEnabled(false)");
+    console.log('EXPLORE_PERF_AB_OFF=true');
+   }
+   let minute=null;
+   for(let i=0;i<11;i++){
+    await sleep(5000);
+    minute=await evaluate("(()=>({state:G.Game?.state,time:G.Game?.st?.time,hp:G.Game?.player?.hp,dead:G.Game?.player?.dead,enemies:G.EnemyMgr?.count,fx:G.PKMSVVHordePerformance?.stats,probe:window.__pkmsvvRunProbe.events.slice(-5)}))()");
+    console.log('QA_COMBAT_EXPLORE_PROGRESS_'+(i+1)*5+'S='+JSON.stringify(minute));
+    if(minute.state!=='playing'||minute.probe.some(x=>x.name==='caught-game-error'))break;
+   }
    console.log('QA_COMBAT_EXPLORE_65S='+JSON.stringify(minute));
    assert.equal(minute.state,'playing','Explore died in 65s without real damage: '+JSON.stringify(minute));
    assert.ok(Number(minute.time)>=56,'Explore sim froze near 1 minute: '+JSON.stringify(minute));

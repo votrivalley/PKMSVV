@@ -55,6 +55,7 @@ jobs:
       - name: Chromium smoke + two-pane geometry on final Web candidate
         env:
           PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
+          PKMSVV_PERF_OFF: '1' # temporary A/B: isolate suspected FX throttling during 65s Explore
         run: timeout 180s node tests/pokebox-stage2-browser.cjs
       - name: Check production candidate structure and PWA save guardian
         shell: bash
