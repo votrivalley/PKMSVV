@@ -196,7 +196,7 @@
   if(kind!=='cap'&&kind!=='caph')throw Error('Unknown Capsule kind');
   const alternatives=abilityAlternatives(abilities,current);
   const hiddenAvailable=alternatives.includes(2);
-  const chance=HIDDEN_RATE*(kind==='caph'?3:1);
+  const chance=kind==='caph'?0.15:HIDDEN_RATE;
   const roll=Number(random());
   if(!Number.isFinite(roll)||roll<0||roll>=1)throw Error('Invalid random draw');
   if(hiddenAvailable&&roll<chance)return 2;
@@ -217,7 +217,7 @@
    draft.bag[kind]--;if(!draft.bag[kind])delete draft.bag[kind];
    x.abilitySlot=slot;
    return {id,kind,from:before,slot,hidden:slot===2,
-    chance:HIDDEN_RATE*(kind==='caph'?3:1),
+    chance:kind==='caph'?0.15:HIDDEN_RATE,
     abilityId:arr[slot],left:draft.bag[kind]||0};
   });
  }

@@ -184,7 +184,9 @@ test('isolated QA packagers include Hub UI and never modify production prepare s
  const ui=fs.readFileSync(path.join(root,'src/pkmsvv-box-hub-ui.js'),'utf8');
  assert.match(ui,/pok(e|é)dex/i);
  assert.match(ui,/data-go="dex"/);
- assert.match(ui,/data-hub-tm/);
+ assert.match(ui,/data-pkmbx-action="tm"/);
+ assert.match(ui,/pkmbx-action-dialog/);
+ assert.doesNotMatch(ui,/data-box-tab="items"/);
 });
 
 test('Pokédex QA UI restores all old filters, Gen 1 SVG icon and correct menu priority',()=>{

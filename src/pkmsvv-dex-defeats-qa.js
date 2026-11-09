@@ -154,10 +154,14 @@
    // Native Gacha's private rarity pool reads G.DEX synchronously. Temporarily
    // scope that collection to defeated species; always restore, even on throw.
    try{
-    G.DEX=allowed;
-    if(G.DEX!==allowed)throw Error('Dex gate could not be installed');
+    // Scope the actual prize list to the chosen Gen, not merely the global
+    // unlocked Dex. Even a native Gacha implementation that ignores the gen
+    // argument can never award a Pokémon from another tab.
+    G.DEX=available;
+    if(G.DEX!==available)throw Error('Dex gate could not be installed');
     const res=previous.apply(this,arguments);
-    if(res&&(!Array.isArray(res)||res.some(x=>!unlocked(s,x.dex))))
+    if(res&&(!Array.isArray(res)||res.some(x=>!unlocked(s,x.dex)||
+       (selectedGen&&Number(G.DEX_BY?.[x.dex]?.gen)!==selectedGen))))
      throw Error('Gacha tried to award undiscovered Pokémon');
     if(!res)G.UI?.toast?.(L('Chưa có Pokémon đủ điều kiện cho lượt quay này; vé được giữ nguyên.',
      'No eligible Pokémon for this pull; your ticket was not spent.'),2700);
