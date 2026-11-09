@@ -173,10 +173,16 @@
  }
  function useCapsule(id,slot,hidden=false,s=save()){
   return atomic(s,draft=>{
-   const x=item(draft,id);if(!x)throw Error('Pokémon not found');
+   // Shiny shares its base species traits; do not spend a capsule on a
+   // cosmetic instance while leaving the visible base Ability unchanged.
+   const x=speciesBase(draft,item(draft,id));
+   if(!x)throw Error('Pokémon not found');
    const arr=typeof G!=='undefined'?G.DEX_ABIL?.[x.dex]||[]:[];
-   if(!Number.isInteger(slot)||slot<0||slot>2||!arr[slot]||slot===x.abilitySlot||
-    (slot===1&&arr[1]===arr[0])||(slot===2&&!hidden))
+   const distinct=[...new Set(arr.filter(Boolean))];
+   if(distinct.length<2)throw Error('This Pokémon has only one Ability');
+   const currentAbility=arr[x.abilitySlot]||arr[0];
+   if(!Number.isInteger(slot)||slot<0||slot>2||!arr[slot]||
+    arr[slot]===currentAbility||(slot===2&&!hidden))
     throw Error('Ability slot is unavailable');
    const key=hidden?'caph':'cap';
    if(!(draft.bag?.[key]>0))throw Error('No Ability Capsule in Bag');
