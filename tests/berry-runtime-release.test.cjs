@@ -34,7 +34,7 @@ test('Berry reward and HUD location are compatible with the corrected LAN bot st
  assert.match(read('src/pkmsvv-berry-rescue.js'),/const left=Math\.max\(8,Math\.min\(18,Math\.round\(w\*\.012\)\)\)/);
  assert.match(read('src/lan/lan-ai.js'),/function chooseBerryAxis\(/);
  const pack=read('scripts/promote-web-v20.cjs');
- assert.match(pack,/levelup-virtual-focus-v34/);
+ assert.match(pack,/berry-team-performance-kanto-v35/);
 });
 
 test('Web-only pinned client may omit Host LanAI but still receives Berry rewards',()=>{
