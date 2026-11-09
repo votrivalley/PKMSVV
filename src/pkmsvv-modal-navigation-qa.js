@@ -35,7 +35,20 @@
    return a.compareDocumentPosition(b)&Node.DOCUMENT_POSITION_FOLLOWING? -1:1;
   }).at(-1)||null;
  }
- function controls(root){return root?[...root.querySelectorAll(NAV)].filter(el=>!el.disabled&&visible(el)):[];}
+ function controls(root){
+  if(!root)return [];
+  // Native level-up options are .card DIVs, not <button> elements. Without
+  // explicit tabindex they were invisible to keyboard and gamepad navigation.
+  if(root.id==='scr-levelup'){
+   for(const [index,card] of [...root.querySelectorAll('#cards .card')].entries()){
+    if(card.tabIndex<0)card.tabIndex=0;
+    card.setAttribute('role','button');
+    card.setAttribute('aria-label',card.getAttribute('aria-label')||
+     (String(index+1)+' · '+String(card.textContent||'').trim()));
+   }
+  }
+  return [...root.querySelectorAll(NAV)].filter(el=>!el.disabled&&visible(el));
+ }
  function setFocus(el,reveal=false){
   if(!el||!visible(el))return false;
   const root=active();
@@ -52,8 +65,9 @@
  function first(root){
   const opts=controls(root);
   const selected=opts.find(x=>x.matches?.('.pkmbx-team-slot.active,.pkmsvv-forget-choice:first-child,.pkmsvv-quick-region-card:not([disabled]),[aria-selected="true"]'));
-  const preferred=root.classList?.contains('pkmsvv-evo')?
-  opts.find(x=>x.classList?.contains('pkmsvv-evo-option')&&!x.disabled):null;
+  const preferred=root.id==='scr-levelup'?
+   opts.find(x=>x.matches?.('#cards .card')):root.classList?.contains('pkmsvv-evo')?
+   opts.find(x=>x.classList?.contains('pkmsvv-evo-option')&&!x.disabled):null;
  return setFocus(preferred||selected||opts[0]);
  }
  function center(el){
@@ -110,6 +124,16 @@
   const selected=opts.includes(current)?current:(opts[0]||null);
   if(!selected)return false;
   if(selected.tagName==='SELECT'||isEditable(selected))return setFocus(selected);
+  if(root.id==='scr-levelup'&&selected.matches?.('#cards .card')){
+   // Use the exact native selection callback, preserving level-up queue and
+   // 3-card anti-double-pick logic in Solo, Arena and Co-op.
+   const options=[...root.querySelectorAll('#cards .card')];
+   const index=options.indexOf(selected);
+   if(index<0)return false;
+   if(typeof G.RunUI?.pick==='function')G.RunUI.pick(index);
+   else selected.click();
+   return true;
+  }
   selected.click();return true;
  }
  function onKey(e){

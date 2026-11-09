@@ -72,7 +72,9 @@ G.Shop=(()=>{
 
   // Hidden Capsules remain event-only (no ordinary Shop or enemy drops).
   // Existing/special-event Hidden Capsules remain usable and sellable.
-  const DROP_RATE=Object.freeze({mint:.008,cap:.008});
+  // Balance v2.0: reduce ordinary battle consumable drops to 2/3 of
+  // previous odds. Boss/elite multipliers and event-only rules are unchanged.
+  const DROP_RATE=Object.freeze({mint:.008*2/3,cap:.008*2/3});
   function enemyMultiplier(enemy){
     const rarity=Number(enemy?.rarity??enemy?.mon?.rarity??G.DEX_BY?.[enemy?.dex]?.rarity??0);
     return enemy?.legendary||enemy?.isLegendary||rarity>=5||enemy?.boss?4:

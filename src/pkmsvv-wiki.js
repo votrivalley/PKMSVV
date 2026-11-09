@@ -74,7 +74,16 @@ G.PKMSVVWiki=(()=>{
   @media(max-width:630px){.pkmsvv-fusion-recipes{grid-template-columns:1fr}}
   
   .pkmsvv-pc-orb-details p{margin:7px 0;color:#e4f1ee;font-size:13px;line-height:1.6}
-  .pkmsvv-pc-orb-item strong{color:#ffe29a}
+  .pkmsvv-pc-orb-item{display:flex;align-items:flex-start;gap:12px;
+   border:1px solid #568a94;border-radius:9px;background:#153c4a;padding:7px 9px}
+  .pkmsvv-pc-orb-item img.pkmsvv-orb-guide-icon{
+   width:44px;height:44px;flex:0 0 44px;object-fit:contain;
+   image-rendering:pixelated;filter:drop-shadow(0 2px 5px #031e38b0)}
+  .pkmsvv-pc-orb-item .pkmsvv-orb-guide-copy{flex:1;min-width:0;line-height:1.5}
+  .pkmsvv-pc-orb-item strong{color:#ffe29a;display:block;margin-bottom:2px}
+  @media(max-width:540px){.pkmsvv-pc-orb-item img.pkmsvv-orb-guide-icon{
+   width:37px;height:37px;flex-basis:37px}}
+
 
   .pkmsvv-pc-card .pkmsvv-pc-action{margin-top:auto;border-radius:8px;background:#ffdc68;
     color:#103841;padding:7px 12px;font-weight:900;font-size:13px}
@@ -249,11 +258,20 @@ G.PKMSVVWiki=(()=>{
     intro.textContent=tr('Mystery Orb xuất hiện ngay từ đầu mỗi trận, không cần đầy kỹ năng. Hàng đợi tối đa 10 Orb; dùng đúng thứ tự đã nhặt (FIFO), hồi 5 giây giữa hai lần kích hoạt. Kẻ địch boss chịu hiệu ứng khống chế yếu hơn.',
       'Mystery Orbs appear from the start of each run without a skill requirement. Hold up to 10 in first-in-first-out order, with 5 seconds between uses. Bosses resist crowd-control effects.');
     p.append(intro);
+    const spriteIds=new Set(['slumber','slow','blowback','focus','luminous','quick']);
     for(const orb of G.Orbs?.LIST||[]){
      const item=document.createElement('p');item.className='pkmsvv-pc-orb-item';
-     const strong=document.createElement('strong');strong.textContent=orb.name?.[G.I18n?.lang==='en'?1:0]||orb.id;
-     item.append(strong,document.createTextNode(' — '+(orb.desc?.[G.I18n?.lang==='en'?1:0]||'')));
-     p.append(item);
+     const label=orb.name?.[G.I18n?.lang==='en'?1:0]||orb.id;
+     if(spriteIds.has(orb.id)){
+      // Same six offline SVG sprites used by the real in-game Orb renderer.
+      const art=document.createElement('img');art.className='pkmsvv-orb-guide-icon';
+      art.src='assets/orbs/'+orb.id+'.svg';art.alt=label;art.loading='lazy';
+      item.append(art);
+     }
+     const copy=document.createElement('span');copy.className='pkmsvv-orb-guide-copy';
+     const strong=document.createElement('strong');strong.textContent=label;
+     copy.append(strong,document.createTextNode(orb.desc?.[G.I18n?.lang==='en'?1:0]||''));
+     item.append(copy);p.append(item);
     }
     const note=document.createElement('p');note.textContent=tr('Chương Orb: sử dụng đủ 6 loại khác nhau. Phím Orb theo thiết lập tay cầm/bàn phím hiện tại; không tự thêm cơ chế Orb mới.',
       'Orb chapter: use all 6 distinct types. The Orb shortcut follows current controls; no new Orb mechanics added.');
