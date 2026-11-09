@@ -56,8 +56,8 @@
       heading.insertAdjacentElement('afterend',note);
     }
     const label=G.I18n?.lang==='en'?
-     'Only Pokémon defeated in Explore and recorded in your Pokédex can be recruited. Empty generations cannot be drawn.':
-     'Chỉ những Pokémon đã hạ trong Khám phá và có trong Pokédex mới có thể Chiêu mộ. Thế hệ chưa mở khóa không thể quay.';
+     'Only Pokémon unlocked in the Pokédex can be recruited.':
+     'Chỉ Pokémon đã mở khóa trong Pokédex mới có thể Chiêu mộ.';
     if(note.textContent!==label)note.textContent=label;
    }
   }finally{busy=false;}
