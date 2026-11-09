@@ -937,12 +937,21 @@ async function main(){
     };
    })()`);
    console.log('EXPLORE_LEVELUP_REAL_UI=true');
-   // Force one *native* level-up; do not accept a 65s smoke that stays Lv1.
-   const levelTrigger=await evaluate("(()=>{const before={levelXp:String(G.Game?.levelXp).slice(0,900),level:G.Game?.player?.level,xp:G.Game?.player?.xp,need:G.Game?.player?.xpNeed,keys:Object.keys(G.Game?.player||{}).filter(k=>/xp|level/i.test(k)),state:G.Game?.state};const triggered=typeof G.Game?.debugLevelUp==='function'?(G.Game.debugLevelUp(),true):false;return {triggered,before,state:G.Game?.state,events:window.__pkmsvvRunProbe.events.slice(-8),levelPopup:G.UI?.isOpen?.('scr-levelup')};})()");
+   // Trigger EXP by the player's real progression method, not debugLevelUp.
+   // The native debugLevelUp flips private engine flags and can lock without
+   // actually opening a level-up, making it an invalid user-path regression.
+   const levelTrigger=await evaluate(`(()=>{
+    const pl=G.Game.player;
+    const methods=Object.getOwnPropertyNames(Object.getPrototypeOf(pl)||{}).filter(k=>/xp|exp|level/i.test(k));
+    const before={level:pl.level,xp:pl.xp,xpNext:pl.xpNext,methods};
+    const gain=['gainXp','gainXP','addXp','addXP','receiveXp','getXp','addExp','gainExp'].find(n=>typeof pl[n]==='function');
+    if(gain)pl[gain](Math.max(100,pl.xpNext*2));
+    else pl.xp=Math.max(pl.xp,pl.xpNext-1);
+    return {triggered:true,method:gain||'native-near-threshold',before,state:G.Game.state};
+   })()`);
    console.log('EXPLORE_LEVELUP_FORCED='+JSON.stringify(levelTrigger));
-   assert.equal(levelTrigger.triggered,true,'Native level-up trigger is missing');
-   await sleep(1200);
-   const nativeChoice=await evaluate("(()=>({state:G.Game?.state,level:G.Game?.player?.level,events:window.__pkmsvvRunProbe.events.slice(-10)}))()");
+   await sleep(3500);
+   const nativeChoice=await evaluate("(()=>({state:G.Game?.state,level:G.Game?.player?.level,xp:G.Game?.player?.xp,xpNext:G.Game?.player?.xpNext,events:window.__pkmsvvRunProbe.events.slice(-10)}))()");
    console.log('EXPLORE_LEVELUP_NATIVE_RESULT='+JSON.stringify(nativeChoice));
    assert.ok(nativeChoice.events.some(e=>e.name==='levelup-enter'),'Real level-up popup never opened');
    assert.ok(nativeChoice.events.some(e=>e.name==='levelup-native-picked'),'Real native level-up selection never completed');
