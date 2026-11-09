@@ -10,7 +10,7 @@
   '#pkmsvv-forget-skill','#pkmsvv-fusion-guide','#pkmsvv-quick-region','#pkmsvv-pokebox-overlay','#pkmsvv-wiki-overlay','#pkmbx-rank-overlay',
   '#pkmsvv-champion-screen','#pkmsvv-arena-solo-screen','#pkmsvv-champion-entry-pick','#pkmsvv-arena-pvp-pick','#pkmsvv-support-catalog',
   '#pkmsvv-mega-phase1','.pkmsvv-memory-chooser','.pkmsvv-berry-overlay',
-  '#pkmsvv-native-choice','#scr-item','#scr-levelup','#scr-bond','.pkmsvv-evo'
+  '#pkmsvv-native-choice','#scr-item','#scr-levelup','#scr-bond','.pkmsvv-evo','#pkmsvv-berry-team-result'
  ];
  const NAV='button:not([disabled]),[role="button"]:not([aria-disabled="true"]),a[href],select:not([disabled]),input:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])';
  const isEditable=el=>!!el&&(/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName||'')||el.isContentEditable);
