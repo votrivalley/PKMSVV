@@ -15,7 +15,7 @@ on:
       - 'src/pkmsvv-box-hub-ui.js'
       - 'src/kecleon/upstream/data/shop.js'
       - 'src/kecleon/pkmsvv-kecleon-ui.js'
-      - 'tests/v20-items-release.test.cjs'
+      - 'tests/v20-items-release.test.cjs tests/berry-rescue.test.cjs tests/web-berry-music.test.cjs tests/berry-runtime-release.test.cjs'
       - 'tests/pokebox-hub.test.cjs'
       - 'tests/pkmsvv-v20.test.cjs'
       - 'tests/horde-performance.test.cjs'

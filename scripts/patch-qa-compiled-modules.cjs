@@ -19,6 +19,8 @@ const mods=[
  ['PKMSVVBossSupport','src/v15/boss-support.js'],
  ['EggRush','src/web/pkmsvv-egg-rush.js'],
  ['PKMSVVBerry','src/pkmsvv-berry.js'],
+ ['PKMSVVBerryRescue','src/pkmsvv-berry-rescue.js'],
+ ['LanAI','src/lan/lan-ai.js'],
  ['PKMSVVArenaSolo','src/pkmsvv-arena-solo.js'],
  ['PKMSVVChampionArena','src/pkmsvv-champion-arena.js'],
  ['PKMSVVArenaPvp','src/lan/arena-pvp.js'],

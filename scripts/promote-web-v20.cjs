@@ -8,6 +8,7 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
 const {patchFile:patchStoryFile}=require('./patch-v20-story-bundle.cjs');
 const {patchFile:patchItemsFile}=require('./patch-v20-items-bundle.cjs');
 const {patchFile:patchPickupFile}=require('./patch-v20-pickup-drops.cjs');
+const {patchFile:patchBerryFile}=require('./patch-v20-berry-runtime.cjs');
 const root=path.resolve(__dirname,'..');
 const from=path.join(root,'dist/pokebox-stage4-qa');
 const to=path.join(root,'dist/cloudflare-v20-release');
@@ -109,12 +110,28 @@ for(const prefix of ['game','ai/game']){
  patchStoryFile(path.join(to,prefix+'/js/app.min.js'));
  patchItemsFile(path.join(to,prefix+'/js/app.min.js'));
  patchPickupFile(path.join(to,prefix+'/js/app.min.js'));
+ patchBerryFile(path.join(to,prefix+'/js/app.min.js'));
+ // Always bundle exact offline Tranh Trứng music in BOTH public routes.
+ const bgm=path.join(root,'custom-music/eggrush.ogg');
+ const audioDir=path.join(to,prefix+'/assets/music-custom');
+ assert(fs.existsSync(bgm)&&fs.statSync(bgm).size>100000,
+  'real Egg Rush OGG is missing');
+ fs.mkdirSync(audioDir,{recursive:true});
+ fs.copyFileSync(bgm,path.join(audioDir,'eggrush.ogg'));
+ assert(file(prefix+'/assets/music-custom/eggrush.ogg'),
+  'Berry/Egg Rush OGG missing from '+prefix);
  assert(read(prefix+'/js/ui/pkmsvv-box-hub.js').includes('pickRandom'),
   'old direct-choice PokéBox still in '+prefix);
  assert(read(prefix+'/js/app.min.js').includes("const ORDER = ['mint', 'cap', 'caph']"),
   'event Hidden Capsule missing in compiled Bag '+prefix);
  assert(read(prefix+'/js/app.min.js').includes('Math.random()<.0016666666666666668'),
   'ordinary item drop adjustment missing from '+prefix);
+ assert(read(prefix+'/js/app.min.js').includes('function chooseBerryAxis('),
+  'bounded Berry AI steering missing from '+prefix);
+ assert(read(prefix+'/js/app.min.js').includes('function rewardBerry('),
+  'guaranteed three-tree Berry reward missing from '+prefix);
+ assert(read(prefix+'/js/app.min.js').includes('Math.round((w-202)/2)'),
+  'centered Berry objective HUD missing from '+prefix);
  assert(read(prefix+'/js/ui/pkmsvv-box-hub-ui.js').includes('pkmbx-action-dialog'),
   'in-Details confirmation missing from '+prefix);
  assert(read(prefix+'/js/ui/pkmsvv-dex-defeats-qa.js').includes('selectedGen'),
@@ -136,7 +153,7 @@ for(const prefix of ['game','ai/game']){
 }
 const sw=path.join(to,'sw.js');assert(file('sw.js'),'PWA service worker missing');
 const oldSW=fs.readFileSync(sw,'utf8');
-const oldKey='pkmsvv-cloudflare-v1529-1',newKey='pkmsvv-cloudflare-v20-20261109-battle-perf-modal-fx-v31';
+const oldKey='pkmsvv-cloudflare-v1529-1',newKey='pkmsvv-cloudflare-v20-20261109-berry-freeze-reward-music-v32';
 assert(oldSW.includes(oldKey),'existing service worker revision differs');
 fs.writeFileSync(sw,oldSW.replace(oldKey,newKey));
 // A new worker cache namespace ensures the published version refreshes reliably.
@@ -145,7 +162,7 @@ const info=JSON.parse(read('build-info.json'));
 assert(info.localSave===true,'existing browser-save architecture changed');
 Object.assign(info,{version:'2.0',displayVersion:'Pokémon Chuyển Sinh 2.0',
  releaseDate:'2026-11-09',releaseSourceRevision:EXPECTED_SHA,
- releaseQAWorkflowRun:42520192007,releaseType:'public-web',mobileUiHotfix:'one-row-tabs-five-box-cards-touch-auto-v24',combatHotfix:'battle-perf-modal-cache-and-auto-fx-budget-v31',saveMode:'existing-browser-local',
+ releaseQAWorkflowRun:42520192007,releaseType:'public-web',mobileUiHotfix:'one-row-tabs-five-box-cards-touch-auto-v24',combatHotfix:'berry-ai-steering-guaranteed-berry-audio-header-v32',saveMode:'existing-browser-local',
  rollbackSourceArtifact:'PKMSVV-PokeBox-Stage4-Web-QA-ONLY'});
 fs.writeFileSync(path.join(to,'build-info.json'),JSON.stringify(info,null,2)+'\n');
 const maxBytes=25*1024*1024;let files=0,bytes=0,largest=0;

@@ -42,7 +42,7 @@ jobs:
           node --test tests/pkmsvv-v20.test.cjs
           node --test tests/dex-defeats-qa.test.cjs tests/runtime-controls-qa.test.cjs tests/evolution.test.cjs tests/story-intro.test.cjs tests/ux-story-knowledge-qa.test.cjs
           npm run test:quick-region
-          node --test tests/bond-fusion-svv.test.cjs tests/horde-performance.test.cjs tests/kecleon.test.cjs tests/pokebox-hub.test.cjs tests/v20-items-release.test.cjs tests/pickup-drop-balance.test.cjs
+          node --test tests/bond-fusion-svv.test.cjs tests/horde-performance.test.cjs tests/kecleon.test.cjs tests/pokebox-hub.test.cjs tests/v20-items-release.test.cjs tests/pickup-drop-balance.test.cjs tests/berry-rescue.test.cjs tests/web-berry-music.test.cjs tests/berry-runtime-release.test.cjs
       - name: Retrieve exact tested webgame snapshot, no mutable live build
         uses: actions/download-artifact@v4
         with:
@@ -83,6 +83,9 @@ jobs:
           grep -q 'PKMSVVHordePerformance' dist/cloudflare-v20-release/game/js/ui/pkmsvv-horde-performance.js
           grep -Fq 'MIN_ENEMIES=8' dist/cloudflare-v20-release/game/js/ui/pkmsvv-horde-performance.js
           grep -Fq 'function scanActive()' dist/cloudflare-v20-release/ai/game/js/ui/pkmsvv-modal-navigation-qa.js
+          grep -Fq 'function chooseBerryAxis(' dist/cloudflare-v20-release/ai/game/js/app.min.js
+          grep -Fq 'function rewardBerry(' dist/cloudflare-v20-release/ai/game/js/app.min.js
+          test -s dist/cloudflare-v20-release/ai/game/assets/music-custom/eggrush.ogg
           grep -q 'pkmsvv-horde-performance.js' dist/cloudflare-v20-release/ai/game/index.html
           grep -q 'pkmsvv-awakening-milestones' dist/cloudflare-v20-release/ai/game/js/ui/pkmsvv-wiki-qa.js
           grep -q 'Fusion là dung hợp hai kỹ năng đã luyện MAX' dist/cloudflare-v20-release/ai/game/js/app.min.js

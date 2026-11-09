@@ -39,6 +39,11 @@ for(const [filename,sub] of [['pkmsvv-box-stage2.js','js/ui'],['pkmsvv-box-stage
  fs.copyFileSync(path.join(root,'src',filename),path.join(out,sub,filename));
 copyRegionCovers(out);
 copyFusionIcons(out);
+const eggMusic=path.join(root,'custom-music/eggrush.ogg');
+if(!fs.existsSync(eggMusic)||fs.statSync(eggMusic).size<100000)
+ throw Error('Berry QA needs real Tranh Trứng OGG');
+fs.mkdirSync(path.join(out,'assets/music-custom'),{recursive:true});
+fs.copyFileSync(eggMusic,path.join(out,'assets/music-custom/eggrush.ogg'));
  fs.mkdirSync(path.join(out,'images'),{recursive:true});
  fs.copyFileSync(path.join(root,'src/pkmsvv-menu-icons.webp'),path.join(out,'images/pkmsvv-menu-icons.webp'));
 fs.copyFileSync(path.join(root,'src/pkmsvv-fusion-evolved.js'),

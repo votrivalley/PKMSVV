@@ -22,7 +22,7 @@ on:
       - 'src/pkmsvv-recruitment-qa.*'
       - 'src/kecleon/upstream/data/shop.js'
       - 'src/kecleon/pkmsvv-kecleon-ui.js'
-      - 'tests/v20-items-release.test.cjs'
+      - 'tests/v20-items-release.test.cjs tests/berry-rescue.test.cjs tests/web-berry-music.test.cjs tests/berry-runtime-release.test.cjs'
       - 'src/pkmsvv-evolution.js'
       - 'src/web/pkmsvv-royale.js'
       - 'src/pkmsvv-arena-solo.js'

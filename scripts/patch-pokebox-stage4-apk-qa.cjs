@@ -66,6 +66,11 @@ for(const filename of ['pkmsvv-box-stage1.css','pkmsvv-box-stage2.css','pkmsvv-b
 }
 copyRegionCovers(web);
 copyFusionIcons(web);
+const eggMusic=path.join(root,'custom-music/eggrush.ogg');
+if(!fs.existsSync(eggMusic)||fs.statSync(eggMusic).size<100000)
+ throw Error('Berry QA needs real Tranh Trứng OGG');
+fs.mkdirSync(path.join(web,'assets/music-custom'),{recursive:true});
+fs.copyFileSync(eggMusic,path.join(web,'assets/music-custom/eggrush.ogg'));
 fs.mkdirSync(path.join(web,'images'),{recursive:true});
 fs.copyFileSync(path.join(root,'src/pkmsvv-menu-icons.webp'),path.join(web,'images/pkmsvv-menu-icons.webp'));
 // Keep the same illustrated story and compact layout in Android WebView.
