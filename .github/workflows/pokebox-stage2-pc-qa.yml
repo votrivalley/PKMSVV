@@ -14,6 +14,8 @@ on:
       - 'src/kecleon/upstream/data/shop.js'
       - 'src/kecleon/pkmsvv-kecleon-ui.js'
       - 'tests/v20-items-release.test.cjs'
+      - 'tests/pokebox-hub.test.cjs'
+      - 'tests/pkmsvv-v20.test.cjs'
       - 'tests/horde-performance.test.cjs'
       - 'tests/quick-region.test.cjs'
       - 'tests/bond-fusion-svv.test.cjs'

@@ -301,8 +301,8 @@ async function main(){
   assert.equal(compactBoxFilter.closed,'false');
   assert.ok(hubScreen.cards>=2);
   assert.equal(hubScreen.animatedHero,true);
-  assert.equal(hubScreen.natureSelect,true);
-  assert.ok(hubScreen.abilityButtons>=1);
+  assert.equal(hubScreen.natureSelect,false,'no selectable Nature dropdown after random rerolls');
+  assert.equal(hubScreen.abilityButtons,0,'no direct Ability slot buttons in PokéBox');
   assert.equal(hubScreen.rankTab,true);
   assert.equal(hubScreen.readOnlyDexHidden,true);
   assert.match(hubScreen.boxLabel,/BOX 1/,'box carousel heading must appear above the collection');
