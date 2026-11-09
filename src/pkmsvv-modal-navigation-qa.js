@@ -329,19 +329,20 @@
  // Watch relevant modal mutations only. Native battle HUD/particles may
  // mutate the DOM thousands of times without showing any modal. Those
  // changes must NOT trigger a full query/layout scan in the next RAF.
+ // Only modal OPEN/CLOSE/visibility changes invalidate the cache.
+ // Native level-up cards continuously update their internal DOM during
+ // selection. Treating *every descendant mutation* as a new modal caused
+ // per-frame full CSS/layout scans and could lock the game at level-up.
  const modalChange=r=>{
   const target=r.target;
   if(r.type==='attributes'){
-   return !!(target?.matches?.(OVERLAYS)||
-    (cachedRoot&&(target===cachedRoot||
-      target?.contains?.(cachedRoot))));
+   // Changes to controls INSIDE an already-open popup are not visibility
+   // changes. The controller reads its controls live on each real input.
+   return !!target?.matches?.(OVERLAYS);
   }
-  if(target?.matches?.(OVERLAYS)||
-     (cachedRoot&&cachedRoot.contains?.(target)))return true;
   for(const node of [...(r.addedNodes||[]),...(r.removedNodes||[])]){
    if(node.nodeType!==1)continue;
-   if(node.matches?.(OVERLAYS)||node.querySelector?.(OVERLAYS)||
-      (cachedRoot&&(node===cachedRoot||node.contains?.(cachedRoot))))return true;
+   if(node.matches?.(OVERLAYS)||node.querySelector?.(OVERLAYS))return true;
   }
   return false;
  };
