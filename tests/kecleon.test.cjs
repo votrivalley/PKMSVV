@@ -246,14 +246,14 @@ test('retired Hidden Capsule is never newly dropped, even at 100% deterministic 
  assert.equal(G.DB.save.bag.caph,3);
  assert.equal(G.Shop.buy('caph').ok,false);
 });
-test('PokéBox never renders explicit Nature or Ability picks or the Hidden Capsule',()=>{
+test('PokéBox permits confirmed random Nature, standard and event Hidden Capsules but no exact choice',()=>{
  const ui=read('src/pkmsvv-box-hub-ui.js');
  assert.doesNotMatch(ui,/pkmbx-mint-select/);
  assert.doesNotMatch(ui,/data-hub-ability/);
- assert.doesNotMatch(ui,/bag\.caph/);
+ assert.match(ui,/bag\.caph/,'rare event capsules must remain visible in confirmation');
  assert.match(ui,/Hub\.useMint\(it\.id\)/);
- assert.match(ui,/Hub\.useCapsule\(it\.id\)/);
+ assert.match(ui,/Hub\.useCapsule\(it\.id,selected\)/);
  const shop=read('src/kecleon/upstream/data/shop.js');
- assert.match(shop,/const ORDER = \['mint', 'cap'\]/);
+ assert.match(shop,/const ORDER = \['mint', 'cap', 'caph'\]/);
  assert.doesNotMatch(shop,/caph:\.002/);
 });

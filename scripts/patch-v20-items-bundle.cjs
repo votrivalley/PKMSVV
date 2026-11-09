@@ -31,8 +31,8 @@ function patchItemsBundle(bundle,sources){
  }
  if(!next.includes("const ORDER = ['mint', 'cap', 'caph']"))
   throw Error('Event Hidden Capsule missing from Bag');
- if(!next.includes('G.Mons.abilityChoices(dex,false)'))
-  throw Error('Legacy hidden reroll still active in Bag');
+ if(!next.includes('G.PKMSVVBoxHub?.rollAbilitySlot'))
+  throw Error('Weighted Hidden reroll missing from Bag');
  new vm.Script(next,{filename:'web-2.0-reroll-v28.js'});
  return next;
 }

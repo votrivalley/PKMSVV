@@ -7,7 +7,7 @@ test('Web rebuild replaces compiled Shop and Kecleon UI exactly once',()=>{
  const next=patchItemsBundle(old);
  assert.doesNotMatch(next,/oldShop|oldUI/);
  assert.match(next,/const ORDER = \['mint', 'cap', 'caph'\]/);
- assert.match(next,/G.Mons.abilityChoices\(dex,false\)/);
+ assert.match(next,/G.PKMSVVBoxHub\?\.rollAbilitySlot/);
  assert.match(next,/const after=42/);
  assert.equal(next.split('G.Shop=').length-1,1);
  assert.equal(next.split('G.KecleonUI=').length-1,1);
@@ -17,7 +17,7 @@ test('Web rebuild replaces compiled Shop and Kecleon UI exactly once',()=>{
 test('all platforms ship random-only rerolls with save-compatible legacy item retention',()=>{
  const hub=read('src/pkmsvv-box-hub.js'),ui=read('src/pkmsvv-box-hub-ui.js'),shop=read('src/kecleon/upstream/data/shop.js');
  assert.match(hub,/function useMint\(id,s=save\(\),random=Math.random\)/);
- assert.match(hub,/function useCapsule\(id,s=save\(\),random=Math.random\)/);
+ assert.match(hub,/function useCapsule\(id,kind='cap',s=save\(\),random=Math.random\)/);
  assert.doesNotMatch(ui,/pkmbx-mint-select|data-hub-ability/);
  assert.match(shop,/const DROP_RATE=Object.freeze\(\{mint:\.008,cap:\.008\}\)/);
  assert.match(shop,/const ORDER = \['mint', 'cap', 'caph'\]/);
