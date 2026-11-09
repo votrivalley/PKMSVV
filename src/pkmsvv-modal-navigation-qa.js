@@ -186,6 +186,7 @@
   if(root.classList?.contains('pkmsvv-evo-live')&&
     ['w','a','s','d'].includes(key))return;
   const critical=key==='escape'||key==='backspace'||key==='1'||key==='2'||
+    (root.id==='scr-levelup'&&['arrowleft','arrowright','arrowup','arrowdown','w','a','s','d','enter',' ','tab'].includes(key))||
     (root.classList?.contains('pkmsvv-evo')&&(key==='enter'||key===' '));
   if(e.defaultPrevented&&!critical)return;
   if(root.id==='scr-item'&&!(root.contains(document.activeElement)&&isEditable(document.activeElement))){
