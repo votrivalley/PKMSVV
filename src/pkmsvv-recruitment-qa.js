@@ -46,7 +46,11 @@
  }
  function install(){
   sync();
-  for(const id of ['scr-gacha','scr-menu']){
+  // Gacha re-renders its own child nodes while animating. Observing that
+  // subtree and writing an injected hint in the observer's callback can
+  // self-trigger repeated DOM work and stall headless/mobile WebViews.
+  // Keep menu observation; the click handler already refreshes Gacha on open.
+  for(const id of ['scr-menu']){
    const root=document.getElementById(id);
    if(root&&typeof MutationObserver==='function'){
     const ob=new MutationObserver(()=>sync());
