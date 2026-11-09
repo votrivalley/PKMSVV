@@ -269,3 +269,46 @@ test('Berry LAN AI uses bounded direct grove steering and skips expensive A* per
  assert.match(src,/function chooseBerryAxis\(/);
  assert.match(src,/s\.axis=chooseBerryAxis\(pl,goal,nearby,nearbyShots,hazards\)/);
 });
+
+
+test('Berry host sends consistent per-human award ledger; all 3 living trees always pay once',()=>{
+ const source=read('src/pkmsvv-berry-rescue.js');
+ const members=[{uid:'ron',name:'Ron'},{uid:'friend',name:'Teammate'},
+  {uid:'ai-1234567890abcdef',bot:true,name:'AI Magby'}];
+ const awarded={ron:[],friend:[]};
+ const create=(uid,host)=>{
+  const G={I18n:{lang:'vi'},Social:{uid,room:{members}},
+   Coop:{isHost:host},Audio:{music(){}},World:{flattenForBerry(){}},UI:{toast(){}},
+   PKMSVVBerry:{TYPES:[{id:'oran'},{id:'sitrus'},{id:'lum'}],
+    byId:{oran:{name:'Oran'},sitrus:{name:'Sitrus'},lum:{name:'Lum'}},
+    grant(id){awarded[uid].push(id);return true;}}};
+  const rng=Object.create(Math);rng.random=()=>.99;
+  vm.runInNewContext(source,{G,Math:rng,Image:undefined,Number});
+  return G.PKMSVVBerryRescue;
+ };
+ const host=create('ron',true),guest=create('friend',false);
+ host.begin('berry');guest.begin('berry');
+ const result={success:true,easy:false,trees:[1,1,1]};
+ const a=host.reward(result);
+ assert.equal(a.length,1,'host gets exactly guaranteed roll when HP tier rolls fail');
+ assert.equal(result.berryAwards.length,3,'all team entries travel in result packet');
+ assert.equal(result.berryAwards[0].berries.length,1);
+ assert.equal(result.berryAwards[1].berries.length,1);
+ assert.equal(result.berryAwards[2].berries.length,0,'AI has no persistent Berry bag');
+ assert.equal(guest.reward(result).length,1,'guest credits only their own packet entry');
+ assert.equal(awarded.ron.length,1);assert.equal(awarded.friend.length,1);
+ assert.equal(host.reward(result).length,0,'host cannot claim twice');
+ assert.equal(guest.reward(result).length,0,'guest cannot claim twice');
+ assert.equal(host.lastAwards.length,3);
+});
+test('Berry objective pressure uses bounded 5Hz hostile scans through minute five',()=>{
+ const h=harness();h.game.begin({mode:'berry'});
+ const enemies=Array.from({length:130},(_,i)=>({
+  x:800+i*3,y:800,spd:80,dmg:5,hp:50,maxHp:50,dead:false
+ }));
+ let calls=0;h.G.EnemyMgr.all=()=>{calls++;return enemies};
+ for(let i=0;i<18750;i++)h.step(.016,i*.016);
+ assert.equal(h.game.active,true,'sampling does not end the 8-minute objective');
+ assert.ok(calls<1800,'do not scan 130 enemies on all 18,750 frames: '+calls);
+ assert.ok(calls>1200,'threat scan remains live and accurate: '+calls);
+});
