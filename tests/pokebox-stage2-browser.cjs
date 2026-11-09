@@ -861,6 +861,14 @@ async function main(){
   if(splitRelease){
    const kickoff=await evaluate(`(()=>{
     window.__pkmsvvRunProbe={events:[],started:Date.now()};
+    const oldError=console.error;
+    console.error=function(...args){
+     if(String(args[0]||'').includes('[Game]')){
+      window.__pkmsvvRunProbe.events.push({name:'caught-game-error',
+       text:args.map(x=>String(x?.stack||x)).join(' | ').slice(0,1500)});
+     }
+     return oldError.apply(this,args);
+    };
     const probe=(name,fn)=>{
      const old=G[name[0]]?.[name[1]];
      if(typeof old!=='function')return;
@@ -902,6 +910,17 @@ async function main(){
    assert.equal(survived.state,'playing','Explore ended without player action: '+JSON.stringify(survived));
    assert.ok(Number(survived.time)>=7,'Explore simulation stalled: '+JSON.stringify(survived));
    assert.deepEqual(errors,[],'Actual battle crashed in Chromium: '+JSON.stringify(errors.slice(-5)));
+   // A user reports Explore eventually stalling around the first minute.
+   // After checking the unprotected first 10 seconds, prevent ordinary
+   // monster damage so this measures ENGINE continuity, not combat skill.
+   await evaluate("(()=>{const p=G.Game?.player;if(p){p.invuln=120;p.hp=p.maxHp;}return true;})()");
+   await sleep(55000);
+   const minute=await evaluate("(()=>({state:G.Game?.state,time:G.Game?.st?.time,hp:G.Game?.player?.hp,dead:G.Game?.player?.dead,enemies:G.EnemyMgr?.count,probe:window.__pkmsvvRunProbe.events.slice(-12)}))()");
+   console.log('QA_COMBAT_EXPLORE_65S='+JSON.stringify(minute));
+   assert.equal(minute.state,'playing','Explore died in 65s without real damage: '+JSON.stringify(minute));
+   assert.ok(Number(minute.time)>=56,'Explore sim froze near 1 minute: '+JSON.stringify(minute));
+   assert.equal(minute.probe.some(x=>x.name==='caught-game-error'),false,
+    'Engine swallowed repeated frame exceptions: '+JSON.stringify(minute.probe));
   }
 
   console.log('PASS Stage 4 real browser QA:',JSON.stringify({...state,rank5Hp:five,otherExceptions:errors.length}));
