@@ -7,7 +7,7 @@ const assert=require('node:assert/strict'),path=require('node:path');
 
 async function main(){
  const android=process.env.PKMSVV_PLATFORM==='android';
- const root=path.resolve(android?'mobile/www':'dist/lan');
+ const root=path.resolve(android?'mobile/www':process.env.PKMSVV_PC_GAME_ROOT||'dist/lan');
  const server=await startServer({root,host:'127.0.0.1',port:0});
  const browser=await chromium.launch({headless:true,...(process.env.PKMSVV_BROWSER?{executablePath:process.env.PKMSVV_BROWSER}:{})});
  const origin='http://127.0.0.1:'+server.port,errors=[];
@@ -69,6 +69,17 @@ async function main(){
    if(mode==='berryeasy')await page.locator('[data-difficulty="berryeasy"]').click();
    await page.locator('#pkmsvv-coop-actions [data-role="ai"]').click();
    await page.waitForFunction(expected=>G?.Social?.room?.mode===expected&&G.Social.room.members.length===4,mode);
+   await page.evaluate(()=>{
+    window.__berryRunProbe=[];
+    for(const [obj,key] of [[G.Coop,'over'],[G.RunUI,'showOver'],[G.Game,'quit'],[G.Game,'toUI']]){
+     const old=obj?.[key];if(typeof old!=='function')continue;
+     obj[key]=function(...args){
+      window.__berryRunProbe.push({key,reason:JSON.stringify(args[0]||{}).slice(0,800),
+       stack:String(new Error().stack).slice(0,1900)});
+      return old.apply(this,args);
+     };
+    }
+   });
    await page.locator('#lobby-start').click();
    await page.waitForFunction(()=>G.Game.state==='playing'&&G.PKMSVVBerryRescue?.active,
     null,{timeout:18000});
@@ -94,6 +105,20 @@ async function main(){
     await image.decode();return [image.naturalWidth,image.naturalHeight];
    });
    assert.deepEqual(atlas,[1152,576],'All Berry tree HP sprites must be installed on Android');
+   // A successful render on the first frame is NOT proof of a playable
+   // match. Watch at least 6 live seconds, including enemy/AI updates.
+   await page.waitForTimeout(6500);
+   const ongoing=await page.evaluate(()=>({
+    state:G.Game?.state,time:G.Game?.st?.time,
+    dead:G.Game?.player?.dead,hp:G.Game?.player?.hp,
+    remaining:G.PKMSVVBerryRescue?.trees?.map(t=>t.hp),
+    active:G.PKMSVVBerryRescue?.active,coop:G.Coop?.active,
+    probe:window.__berryRunProbe
+   }));
+   console.log('BERRY_REAL_MATCH_'+mode+'='+JSON.stringify(ongoing));
+   assert.equal(ongoing.state,'playing','Berry ended on first seconds: '+JSON.stringify(ongoing));
+   assert.equal(ongoing.active,true,'Berry objective deactivated early: '+JSON.stringify(ongoing));
+   assert.ok(Number(ongoing.time)>3,'Berry simulation did not progress: '+JSON.stringify(ongoing));
    console.log('PASS '+(android?'Android':'PC')+' '+mode+': 3 real trees, scene drawables, 3 AI and atlas');
   }
   assert.deepEqual(errors,[],'Browser must not throw while navigating Memories/Berry');
