@@ -31,14 +31,29 @@
    if(screen){
     let note=screen.querySelector('#pkmsvv-recruitment-rule');
     if(!note){
-     const host=screen.querySelector('.gacha-panel,.panel,.gacha-content')||screen;
      note=document.createElement('p');
      note.id='pkmsvv-recruitment-rule';
      note.className='pkmsvv-recruitment-rule';
      note.setAttribute('role','note');
-     const heading=host.querySelector('h1,h2,h3');
-     if(heading?.parentElement===host)heading.insertAdjacentElement('afterend',note);
-     else host.insertBefore(note,host.firstChild);
+    }
+    // The screen is a flex/overlay shell, not the Recruitment card. Appending
+    // the note directly there creates a separate flex column and pushes the
+    // entire Gacha panel to the right (visible on large Web screens).
+    // Place it directly AFTER the real ALL GEN tab row within the panel.
+    const tabs=[...screen.querySelectorAll('button,[role="tab"],[data-gen]')];
+    const allGen=tabs.find(b=>/^(?:ALL GEN|ALL GENERATIONS|TẤT CẢ|ALL)$/i.test(
+     String(b.textContent||'').trim().split(/\n/)[0].trim()))||
+     screen.querySelector('[data-gen="0"],[data-gacha-gen="0"]');
+    const tabRow=allGen?.closest('[role="tablist"],.gacha-regions,.gacha-gen-tabs,.gen-tabs,.pkmsvv-gen-tabs')||
+     allGen?.parentElement;
+    if(tabRow?.parentElement){
+     if(note.previousElementSibling!==tabRow||note.parentElement!==tabRow.parentElement)
+      tabRow.insertAdjacentElement('afterend',note);
+    }else{
+     const heading=[...screen.querySelectorAll('h1,h2,h3')].find(h=>
+      /Chiêu mộ|Recruitment/i.test(h.textContent||''));
+     if(heading?.parentElement&&note.previousElementSibling!==heading)
+      heading.insertAdjacentElement('afterend',note);
     }
     const label=G.I18n?.lang==='en'?
      'Only Pokémon defeated in Explore and recorded in your Pokédex can be recruited. Empty generations cannot be drawn.':
