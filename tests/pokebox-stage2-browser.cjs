@@ -1038,9 +1038,12 @@ async function main(){
      // Real recurring EXP also opens a pause menu: choose via keyboard/Pad path.
      for(const key of [{name:'ArrowDown',vk:40},{name:'Enter',vk:13}]){
       await cmd('Input.dispatchKeyEvent',{type:'keyDown',key:key.name,code:key.name,windowsVirtualKeyCode:key.vk,nativeVirtualKeyCode:key.vk});
+      // Sample a real held button rather than DOWN+UP in the same event tick.
+      await sleep(140);
       await cmd('Input.dispatchKeyEvent',{type:'keyUp',key:key.name,code:key.name,windowsVirtualKeyCode:key.vk,nativeVirtualKeyCode:key.vk});
+      await sleep(150);
      }
-     await sleep(260);
+     await sleep(350);
      minute=await evaluate("(()=>({state:G.Game?.state,time:G.Game?.st?.time,level:G.Game?.player?.level,levelPopup:G.UI?.isOpen?.('scr-levelup'),probe:window.__pkmsvvRunProbe.events.slice(-5)}))()");
      console.log('QA_REPEAT_LEVELUP_NATIVE_CONFIRM='+JSON.stringify(minute));
      assert.equal(minute.state,'playing','Second native level-up did not resume after ArrowDown+Enter');
