@@ -211,6 +211,11 @@
  function sync(){
   pending=false;const root=active();
   if(!root){lastRoot=null;return;}
+  // Native RunUI already renders the three level-up choices and handles 1/2/3.
+  // Auto-focusing a newly mounted .card inside the RAF sync causes recursive
+  // focus/MutationObserver callbacks and can lock the entire renderer.
+  // Leave focus untouched until an ACTUAL keyboard/gamepad navigation input.
+  if(root.id==='scr-levelup'){lastRoot=root;return;}
   const current=document.activeElement;
   if(root!==lastRoot||!root.contains(current)||!visible(current))first(root);
   lastRoot=root;
