@@ -79,3 +79,49 @@ test('Android WebView landscape and portrait Pokémon layout remains reachable',
  assert.match(browser,/Emulation\.setDeviceMetricsOverride/);
  assert.match(browser,/scrollTo>v\.old/);
 });
+
+test('Battle gamepad polling does not query/layout-scan DOM each frame; modal open/close still works',()=>{
+ const vm=require('node:vm'),source=read('src/pkmsvv-modal-navigation-qa.js');
+ let scans=0,native=0,visibleModal=null,watch;
+ const node={
+  nodeType:1,isConnected:true,hidden:false,parentElement:null,
+  classList:{contains:()=>false},getAttribute:()=>null,
+  matches:()=>false,contains:()=>false,querySelector:()=>null,
+  getClientRects:()=>[{width:150}],focus(){},
+ };
+ const doc={
+  body:node,readyState:'complete',
+  addEventListener(){},activeElement:node,
+  querySelectorAll(){scans++;return visibleModal?[visibleModal]:[];},
+  querySelector(){return null;}
+ };
+ const G={Pad:{poll(){native++;}},PKMSVVPadOrb:{bindings:()=>({})}};
+ function MutationObserver(cb){watch=cb;this.observe=()=>{};}
+ vm.runInNewContext(source,{
+  G,document:doc,window:{addEventListener(){}},navigator:{getGamepads:()=>[]},
+  requestAnimationFrame(){},getComputedStyle:()=>({display:'block',visibility:'visible',zIndex:'900'}),
+  MutationObserver,Node:{DOCUMENT_POSITION_FOLLOWING:4},Date,performance:{now:()=>1000}
+ });
+ assert.equal(G.PKMSVVModalNavQA.active(),null);
+ for(let i=0;i<1000;i++)G.Pad.poll();
+ assert.equal(native,1000);
+ assert.equal(scans,1,'zero repeated DOM and computed-style scans across 1k gameplay frames');
+ watch([{type:'childList',target:node,addedNodes:[node],removedNodes:[]}]);
+ G.Pad.poll();
+ assert.equal(scans,1,'unrelated combat DOM change must not trigger full modal scan');
+ visibleModal={
+  ...node,hidden:false,matches:()=>true,parentElement:node,
+  querySelectorAll:()=>[],contains:()=>false
+ };
+ watch([{type:'childList',target:node,addedNodes:[visibleModal],removedNodes:[]}]);
+ G.Pad.poll();
+ assert.equal(scans,2,'new modal must invalidate cache on appearance');
+ assert.equal(native,1001,'gameplay poll is withheld while modal is open');
+ for(let i=0;i<100;i++)G.Pad.poll();
+ assert.equal(scans,2,'modal stays cached even while gamepad polls');
+ visibleModal.hidden=true;
+ watch([{type:'attributes',target:visibleModal,attributeName:'hidden'}]);
+ G.Pad.poll();
+ assert.equal(scans,3,'hiding modal returns to gameplay without stale focus');
+ assert.equal(native,1002);
+});
