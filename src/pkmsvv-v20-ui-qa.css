@@ -302,25 +302,40 @@
  }
 }
 
-/* Pokédex type badges share the PokéBox palette; rarity stays separate. */
-#pkmsvv-pokebox-overlay .pkmbx-dex-badges .pkmbx-type-pill {
- display:inline-flex;align-items:center;justify-content:center;
- background:var(--pkmbx-pill,#a7a9af)!important;
- border:1px solid rgba(21,35,45,.48)!important;
- border-radius:999px!important;
- color:#132735!important;
- font-weight:800!important;
- text-shadow:none!important;
- padding:3px 9px!important;
- min-height:24px;
+/* Pokédex type pills use the SAME artwork/colors as the PokéBox
+ * portrait. National Dex number and rarity keep their own neutral badges. */
+#pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-dex-type-pills {
+ display:flex;justify-content:flex-start;flex-wrap:wrap;
+ gap:7px;margin:8px 0;min-width:0;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-dex-type-pills .pkmbx-type-pill {
+ display:inline-flex!important;align-items:center;justify-content:center;
+ background:color-mix(in srgb,var(--pkmbx-pill) 62%,#0e2636)!important;
+ border:1px solid var(--pkmbx-pill)!important;
+ border-radius:30px!important;
+ color:#fff!important;font-weight:850!important;
+ text-shadow:0 1px 2px #0b1926aa!important;
+ padding:4px 13px!important;min-height:24px;
 }
 
 /* Recruitment gating is an actual rule, not a decorative prompt. */
 #scr-gacha .pkmsvv-recruitment-rule {
- box-sizing:border-box; width:100%; max-width:720px;
- margin:5px auto 10px; padding:7px 11px;
+ box-sizing:border-box!important;position:static!important;
+ inset:auto!important;float:none!important;transform:none!important;
+ display:block!important;width:100%!important;max-width:100%!important;
+ min-width:0!important;flex:0 0 100%;grid-column:1/-1;
+ margin:8px 0 10px!important;padding:7px 11px!important;
  border:1px solid rgba(160,219,197,.55);border-radius:9px;
  background:rgba(11,46,58,.88);color:#e6fff2;
  font-size:clamp(11px,1.8vh,14px);line-height:1.35;
- text-align:center;
+ text-align:left;overflow-wrap:anywhere;
+}
+
+#pkmsvv-pokebox-overlay .pkmbx-only-ability {
+ color:#f4e7af;line-height:1.4;font-size:12px;
+ background:#173b48;border:1px solid #b89e6c;
+ border-radius:7px;padding:7px 9px;margin:7px 0;
+}
+#pkmsvv-pokebox-overlay button[data-hub-ability]:disabled {
+ opacity:.5;cursor:not-allowed;filter:grayscale(.35);
 }
