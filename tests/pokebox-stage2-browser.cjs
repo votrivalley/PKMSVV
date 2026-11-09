@@ -23,6 +23,17 @@ const srv=http.createServer((req,res)=>{
 });
 async function main(){
  assert.ok(fs.existsSync(path.join(root,'ai/game/index.html')));
+ const native=fs.readFileSync(path.join(root,'ai/game/js/app.min.js'),'utf8');
+ const snippets={};
+ for(const token of ['get autoLevel(){return o}','showLevelUp(','autoLevel','gainXp(','levelXp()']){
+  const all=[];let from=0,index;
+  while((index=native.indexOf(token,from))>=0&&all.length<5){
+   all.push(native.slice(Math.max(0,index-550),Math.min(native.length,index+1050)));
+   from=index+token.length;
+  }
+  snippets[token]=all;
+ }
+ console.log('QA_NATIVE_LEVELUP_FORENSICS='+JSON.stringify(snippets));
  const chrome=process.env.PKMSVV_BROWSER||'google-chrome';
  assert.equal(spawnSync('which',[chrome]).status,0,'Chromium required');
  await new Promise(resolve=>srv.listen(0,'127.0.0.1',resolve));
