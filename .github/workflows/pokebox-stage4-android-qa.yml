@@ -19,6 +19,7 @@ on:
       - 'src/pkmsvv-modal-navigation-qa.*'
       - 'src/pkmsvv-runtime-controls-qa.*'
       - 'src/pkmsvv-box-hub.*'
+      - 'src/pkmsvv-recruitment-qa.*'
       - 'src/kecleon/upstream/data/shop.js'
       - 'src/kecleon/pkmsvv-kecleon-ui.js'
       - 'tests/v20-items-release.test.cjs'
@@ -134,7 +135,7 @@ jobs:
           grep -q 'input.axis=()=>aim' decoded-android/assets/public/js/ui/pkmsvv-runtime-controls-qa.js
           grep -q 'speedOwnerSafe' decoded-android/assets/public/js/ui/pkmsvv-runtime-controls-qa.js
           grep -q 'pickRandom' decoded-android/assets/public/js/ui/pkmsvv-box-hub.js
-          grep -Fq "const ORDER = ['mint', 'cap']" decoded-android/assets/public/js/app.min.js
+          grep -Fq "const ORDER = ['mint', 'cap', 'caph']" decoded-android/assets/public/js/app.min.js
           grep -q 'installVisualBudget' decoded-android/assets/public/js/ui/pkmsvv-fusion-evolved.js
           grep -q 'PKMSVVHordePerformance' decoded-android/assets/public/js/ui/pkmsvv-horde-performance.js
           grep -q 'pkmsvv-horde-performance.js' decoded-android/assets/public/index.html

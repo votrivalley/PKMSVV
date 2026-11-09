@@ -74,7 +74,10 @@ jobs:
           grep -q 'input.axis=()=>aim' dist/cloudflare-v20-release/game/js/ui/pkmsvv-runtime-controls-qa.js
           grep -q 'speedOwnerSafe' dist/cloudflare-v20-release/game/js/ui/pkmsvv-runtime-controls-qa.js
           grep -q 'pickRandom' dist/cloudflare-v20-release/game/js/ui/pkmsvv-box-hub.js
-          grep -Fq "const ORDER = ['mint', 'cap']" dist/cloudflare-v20-release/ai/game/js/app.min.js
+          grep -q 'selectedGen' dist/cloudflare-v20-release/game/js/ui/pkmsvv-dex-defeats-qa.js
+          grep -q 'pkmsvv-gacha-dex-requirement' dist/cloudflare-v20-release/ai/game/js/ui/pkmsvv-recruitment-qa.js
+          test -s dist/cloudflare-v20-release/ai/game/css/pkmsvv-recruitment-qa.css
+          grep -Fq "const ORDER = ['mint', 'cap', 'caph']" dist/cloudflare-v20-release/ai/game/js/app.min.js
           grep -q 'installVisualBudget' dist/cloudflare-v20-release/game/js/ui/pkmsvv-fusion-evolved.js
           grep -q 'PKMSVVHordePerformance' dist/cloudflare-v20-release/game/js/ui/pkmsvv-horde-performance.js
           grep -q 'pkmsvv-horde-performance.js' dist/cloudflare-v20-release/ai/game/index.html
