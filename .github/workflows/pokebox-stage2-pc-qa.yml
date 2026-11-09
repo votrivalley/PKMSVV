@@ -20,6 +20,7 @@ on:
       - 'tests/pkmsvv-v20.test.cjs'
       - 'tests/horde-performance.test.cjs'
       - 'tests/quick-region.test.cjs'
+      - 'tests/android-berry-memories-browser.cjs'
       - 'tests/bond-fusion-svv.test.cjs'
       - 'scripts/build-pokebox-stage1-pc-qa.cjs'
       - 'scripts/patch-qa-compiled-modules.cjs'
