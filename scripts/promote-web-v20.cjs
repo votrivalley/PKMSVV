@@ -90,6 +90,14 @@ for(const prefix of ['game','ai/game']){
  for(const name of ['pkmsvv-runtime-controls-qa.css','pkmsvv-pc-menu-clean-qa.css','pkmsvv-box-hub.css'])
   fs.writeFileSync(path.join(to,prefix+'/css/'+name),
    fs.readFileSync(path.join(root,'src',name),'utf8'));
+ // Ship the virtual-card focus stylesheet alongside the exact JS hotfix.
+ const navCss='pkmsvv-modal-navigation-qa.css';
+ fs.writeFileSync(path.join(to,prefix+'/css/'+navCss),
+  fs.readFileSync(path.join(root,'src/'+navCss),'utf8'));
+ if(!html.includes(navCss))html=html.replace('</head>',
+  '<link rel="stylesheet" href="css/'+navCss+'">\\n</head>');
+ assert(read(prefix+'/css/'+navCss).includes('data-pkmsvv-nav-index'),
+  'native level-up cursor CSS missing in '+prefix);
  const recruitCss='pkmsvv-recruitment-qa.css';
  fs.writeFileSync(path.join(to,prefix+'/css/'+recruitCss),
   fs.readFileSync(path.join(root,'src/'+recruitCss),'utf8'));
