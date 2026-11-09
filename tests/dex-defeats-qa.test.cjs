@@ -196,3 +196,12 @@ test('Recruitment UI explains Pokédex gate regardless of the selected Gen',()=>
  assert.doesNotMatch(src,/Gen chưa mở loài nào sẽ không thể quay/);
  assert.match(src,/pkmsvv-gacha-dex-requirement/);
 });
+
+test('Recruitment notice relocates BETWEEN title and Back button and stays golden italic',()=>{
+ const js=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-recruitment-qa.js'),'utf8');
+ const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-recruitment-qa.css'),'utf8');
+ assert.match(js,/function relocateRequirement\(gacha,hint\)/);
+ assert.match(js,/bar\.insertBefore\(hint,back\)/);
+ assert.match(css,/font-style:italic/);
+ assert.match(css,/color:#ffe08b/);
+});

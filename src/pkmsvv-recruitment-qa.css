@@ -1,10 +1,21 @@
 /* Pokédex-only Recruitment message; no big empty banner. */
 #scr-gacha #pkmsvv-gacha-dex-requirement{
- box-sizing:border-box;max-width:100%;margin:4px 9px 7px;
- padding:6px 10px;border-radius:7px;border:1px solid #8ebebc;
- background:#173e4de8;color:#e9f9f2;font-weight:650;
- font-size:clamp(11px,1.25vw,14px);line-height:1.35;
+ box-sizing:border-box;max-width:100%;margin:0 12px;
+ padding:2px 4px;flex:1 1 auto;min-width:0;
+ border:0;background:none;color:#ffe08b!important;
+ -webkit-text-fill-color:#ffe08b!important;
+ font-weight:750;font-style:italic;text-align:center;
+ font-size:clamp(11px,1.1vw,15px);line-height:1.25;
+ pointer-events:none;
 }
-@media(max-height:550px) and (orientation:landscape){
- #scr-gacha #pkmsvv-gacha-dex-requirement{padding:3px 7px;margin:1px 7px 3px;font-size:11px;}
+#scr-gacha .pkmsvv-gacha-header-hint{
+ display:flex;align-items:center;gap:8px;
+}
+#scr-gacha .pkmsvv-gacha-header-hint #pkmsvv-gacha-dex-requirement{
+ align-self:center;
+}
+@media(max-width:780px), (max-height:550px) and (orientation:landscape){
+ #scr-gacha #pkmsvv-gacha-dex-requirement{
+  font-size:11px;margin:0 5px;padding:0 2px;
+ }
 }

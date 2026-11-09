@@ -10,6 +10,21 @@
   document.getElementById('pkmsvv-pokebox-overlay')
  ].filter(Boolean);
  let busy=false;
+ function relocateRequirement(gacha,hint){
+  if(!gacha||!hint)return;
+  // The approved Chiêu mộ header has a title on the left and Quay lại
+  // on the right. Put one compact italic note BETWEEN them, not as a
+  // floating line over the Pokémon portrait behind the overlay.
+  const headings=[...gacha.querySelectorAll('h1,h2,h3')];
+  const title=headings.find(el=>/^(Chiêu mộ|Recruitment|Gacha)$/i.test((el.textContent||'').trim()));
+  const back=[...gacha.querySelectorAll('button,a')].find(el=>/^(Quay lại|Back|Return)$/i.test((el.textContent||'').trim()));
+  if(!title||!back)return;
+  let bar=title.parentElement;
+  if(bar&&!bar.contains(back)&&bar.parentElement?.contains(back))bar=bar.parentElement;
+  if(!bar||!bar.contains(back))return;
+  if(!bar.contains(hint)||hint.nextSibling!==back)bar.insertBefore(hint,back);
+  bar.classList.add('pkmsvv-gacha-header-hint');
+ }
  function sync(){
   if(busy)return;busy=true;
   try{
@@ -33,6 +48,7 @@
      'Chỉ những Pokémon đã mở trong Pokédex mới có thể chiêu mộ.';
     hint.lang=G.I18n?.lang==='en'?'en':'vi';
     if(hint.textContent!==translation)hint.textContent=translation;
+    relocateRequirement(gacha,hint);
    }
    for(const root of roots()){
     const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);

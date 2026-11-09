@@ -450,8 +450,8 @@
     '<label><input type="radio" name="pkmbx-confirm-choice" value="caph" /> '+
      L('Viên nang Đặc tính Ẩn','Hidden Ability Capsule')+' ×'+(bag.caph||0)+'</label>'+
     (!alternatives.length?'<p class="pkmbx-confirm-warning">'+
-     L('Pokémon này chỉ có một Đặc tính khả dụng. Không thể đổi và sẽ không trừ Viên nang.',
-       'This Pokémon has only one available Ability. No Capsule can be spent.')+'</p>':''):
+     L('Pokémon này chỉ có một Đặc tính.',
+       'This Pokémon has only one Ability.')+'</p>':''):
    action==='mint'?
     '<p>'+L('Dùng 1 Bạc hà để đổi ngẫu nhiên Tính cách cho ','Use 1 Mint to reroll the Nature of ')+
      name+'?</p><strong>'+L('Bạc hà hiện có: ','Mints: ')+(bag.mint||0)+'</strong>':
