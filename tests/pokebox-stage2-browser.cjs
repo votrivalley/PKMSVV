@@ -972,6 +972,9 @@ async function main(){
      return result;
     };
    })()`);
+   // A/B: isolate the native gamepad/frame modal polling after the popup opens.
+   await evaluate("(()=>{G.Pad.poll=()=>{};return true;})()");
+   console.log('EXPLORE_AB_NO_PAD_POLL=true');
    // Collect actual EXP as the player does. Native pickup loop increments
    // Game's private pending-level queue; calling Player.gainXp directly skips
    // that queue and cannot reproduce the blocked 3-card screen.
