@@ -918,10 +918,22 @@ async function main(){
     await evaluate("G.PKMSVVHordePerformance?.setEnabled(false)");
     console.log('EXPLORE_PERF_AB_OFF=true');
    }
+   if(process.env.PKMSVV_LEVELUP_SKIP==='1'){
+    await evaluate(`(()=>{
+     const old=G.RunUI.showLevelUp;
+     G.RunUI.showLevelUp=function(level,offers,complete,...rest){
+      if(Array.isArray(offers)&&offers[0]&&typeof complete==='function'){
+       setTimeout(()=>complete(offers[0]),0);return;
+      }
+      return old.call(this,level,offers,complete,...rest);
+     };
+    })()`);
+    console.log('EXPLORE_LEVELUP_AB_BYPASS=true');
+   }
    let minute=null;
    for(let i=0;i<11;i++){
     await sleep(5000);
-    minute=await evaluate("(()=>({state:G.Game?.state,time:G.Game?.st?.time,hp:G.Game?.player?.hp,dead:G.Game?.player?.dead,enemies:G.EnemyMgr?.count,fx:G.PKMSVVHordePerformance?.stats,probe:window.__pkmsvvRunProbe.events.slice(-5)}))()");
+    minute=await evaluate("(()=>({state:G.Game?.state,time:G.Game?.st?.time,hp:G.Game?.player?.hp,dead:G.Game?.player?.dead,level:G.Game?.player?.level,kills:G.Game?.player?.kills,enemies:G.EnemyMgr?.count,levelPopup:G.UI?.isOpen?.('scr-levelup'),navScans:G.PKMSVVModalNavQA?.scanCount,fx:G.PKMSVVHordePerformance?.stats,probe:window.__pkmsvvRunProbe.events.slice(-5)}))()");
     console.log('QA_COMBAT_EXPLORE_PROGRESS_'+(i+1)*5+'S='+JSON.stringify(minute));
     if(minute.state!=='playing'||minute.probe.some(x=>x.name==='caught-game-error'))break;
    }
