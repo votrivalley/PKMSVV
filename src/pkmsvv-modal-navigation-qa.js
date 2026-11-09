@@ -35,7 +35,39 @@
    return a.compareDocumentPosition(b)&Node.DOCUMENT_POSITION_FOLLOWING? -1:1;
   }).at(-1)||null;
  }
- function controls(root){return root?[...root.querySelectorAll(NAV)].filter(el=>!el.disabled&&visible(el)):[];}
+ // Native level-up offers are often div.card with a delegated click handler,
+ // not <button>. Register the REAL card element for A/Cross and D-pad input.
+ // Never add a duplicate synthetic button or bypass the native pick callback.
+ function levelCards(root){
+  if(root?.id!=='scr-levelup')return [];
+  const tray=root.querySelector('#cards');
+  if(!tray)return [];
+  const candidates=[...tray.children].flatMap(child=>{
+   const matches=el=>el.matches?.('button,.card,.level-card,.skill-card,.choice,[data-choice],[data-pick],[role="button"],[onclick]');
+   if(matches(child)||typeof child.onclick==='function')return [child];
+   const nested=child.querySelector?.('button,.card,.level-card,.skill-card,.choice,[data-choice],[data-pick],[role="button"],[onclick]');
+   return nested?[nested]:[];
+  });
+  const found=[];
+  for(const card of candidates){
+   if(card.disabled||card.getAttribute?.('aria-disabled')==='true'||!visible(card)||found.includes(card))continue;
+   if(!card.matches?.('button,a[href],input,select,[role="button"]')){
+    card.setAttribute('role','button');
+    if(!card.hasAttribute('tabindex'))card.tabIndex=0;
+   }
+   found.push(card);
+  }
+  return found;
+ }
+ function controls(root){
+  if(!root)return [];
+  const ordinary=[...root.querySelectorAll(NAV)].filter(el=>!el.disabled&&visible(el));
+  if(root.id!=='scr-levelup')return ordinary;
+  const cards=levelCards(root);
+  // Put choices first: A must select a skill, not a nearby reroll/back button.
+  return [...cards,...ordinary.filter(el=>!cards.includes(el)&&
+   !cards.some(card=>card.contains(el)))];
+ }
  function setFocus(el,reveal=false){
   if(!el||!visible(el))return false;
   const root=active();
@@ -163,6 +195,15 @@
   }
  }
  let pending=false,lastRoot=null;
+ // Paused level-up screens can suspend native G.Pad.poll; keep an independent
+ // view-only polling heartbeat for gamepad navigation (never updates gameplay).
+ let lastNativePoll=0;
+ const nowMs=()=>typeof performance!=='undefined'?performance.now():Date.now();
+ function levelupPadHeartbeat(){
+  const level=document.getElementById('scr-levelup');
+  if(level&&visible(level)&&nowMs()-lastNativePoll>55)pollModal();
+  requestAnimationFrame(levelupPadHeartbeat);
+ }
  function sync(){
   pending=false;const root=active();
   if(!root){lastRoot=null;return;}
@@ -255,6 +296,7 @@
   installFocusGuard();
   const original=pad.poll;
   const wrapped=function(...args){
+   lastNativePoll=nowMs();
    const root=active();
    if(root){
     if(root.classList?.contains('pkmsvv-evo-live')){
@@ -289,6 +331,8 @@
   const retry=()=>{if(installPad()||++tries>120)return;requestAnimationFrame(retry);};
   requestAnimationFrame(retry);
  }
+ // Keep controller choice working while the game is waiting for a skill card.
+ if(typeof requestAnimationFrame==='function')requestAnimationFrame(levelupPadHeartbeat);
  document.addEventListener('DOMContentLoaded',queue,{once:true});queue();
- G.PKMSVVModalNavQA={active,controls,setFocus,first,move,close,itemSkip,installPad,installFocusGuard,onKey,pollModal};
+ G.PKMSVVModalNavQA={active,controls,levelCards,setFocus,first,move,close,itemSkip,installPad,installFocusGuard,onKey,pollModal};
 })();
