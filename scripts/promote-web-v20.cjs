@@ -7,6 +7,7 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const {patchFile:patchStoryFile}=require('./patch-v20-story-bundle.cjs');
 const {patchFile:patchItemsFile}=require('./patch-v20-items-bundle.cjs');
+const {patchFile:patchPickupFile}=require('./patch-v20-pickup-drops.cjs');
 const root=path.resolve(__dirname,'..');
 const from=path.join(root,'dist/pokebox-stage4-qa');
 const to=path.join(root,'dist/cloudflare-v20-release');
@@ -105,10 +106,13 @@ for(const prefix of ['game','ai/game']){
  // assignment, not a duplicate script that could cause old dialogue to win.
  patchStoryFile(path.join(to,prefix+'/js/app.min.js'));
  patchItemsFile(path.join(to,prefix+'/js/app.min.js'));
+ patchPickupFile(path.join(to,prefix+'/js/app.min.js'));
  assert(read(prefix+'/js/ui/pkmsvv-box-hub.js').includes('pickRandom'),
   'old direct-choice PokéBox still in '+prefix);
  assert(read(prefix+'/js/app.min.js').includes("const ORDER = ['mint', 'cap', 'caph']"),
   'event Hidden Capsule missing in compiled Bag '+prefix);
+ assert(read(prefix+'/js/app.min.js').includes('Math.random()<.0016666666666666668'),
+  'ordinary item drop adjustment missing from '+prefix);
  assert(read(prefix+'/js/ui/pkmsvv-box-hub-ui.js').includes('pkmbx-action-dialog'),
   'in-Details confirmation missing from '+prefix);
  assert(read(prefix+'/js/ui/pkmsvv-dex-defeats-qa.js').includes('selectedGen'),

@@ -42,7 +42,7 @@ jobs:
           node --test tests/pkmsvv-v20.test.cjs
           node --test tests/dex-defeats-qa.test.cjs tests/runtime-controls-qa.test.cjs tests/evolution.test.cjs tests/story-intro.test.cjs tests/ux-story-knowledge-qa.test.cjs
           npm run test:quick-region
-          node --test tests/bond-fusion-svv.test.cjs tests/horde-performance.test.cjs tests/kecleon.test.cjs tests/pokebox-hub.test.cjs tests/v20-items-release.test.cjs
+          node --test tests/bond-fusion-svv.test.cjs tests/horde-performance.test.cjs tests/kecleon.test.cjs tests/pokebox-hub.test.cjs tests/v20-items-release.test.cjs tests/pickup-drop-balance.test.cjs
       - name: Retrieve exact tested webgame snapshot, no mutable live build
         uses: actions/download-artifact@v4
         with:
@@ -78,6 +78,7 @@ jobs:
           grep -q 'pkmsvv-gacha-dex-requirement' dist/cloudflare-v20-release/ai/game/js/ui/pkmsvv-recruitment-qa.js
           test -s dist/cloudflare-v20-release/ai/game/css/pkmsvv-recruitment-qa.css
           grep -Fq "const ORDER = ['mint', 'cap', 'caph']" dist/cloudflare-v20-release/ai/game/js/app.min.js
+          grep -Fq 'Math.random()<.0016666666666666668' dist/cloudflare-v20-release/game/js/app.min.js
           grep -q 'installVisualBudget' dist/cloudflare-v20-release/game/js/ui/pkmsvv-fusion-evolved.js
           grep -q 'PKMSVVHordePerformance' dist/cloudflare-v20-release/game/js/ui/pkmsvv-horde-performance.js
           grep -q 'pkmsvv-horde-performance.js' dist/cloudflare-v20-release/ai/game/index.html

@@ -7,6 +7,7 @@
  */
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.resolve(__dirname,'..');
+const {patchPickupDrops}=require('./patch-v20-pickup-drops.cjs');
 const mods=[
  ['Shop','src/kecleon/upstream/data/shop.js'],
  ['KecleonUI','src/kecleon/pkmsvv-kecleon-ui.js'],
@@ -141,6 +142,8 @@ for(const filename of targets){
    '*150&&Math.random()<'+reduced;
  });
  if(patchedOrbRolls!==2)throw Error('Expected exact two original native Orb rolls, got '+patchedOrbRolls);
+ // Reduce randomized held-item drops without touching Orb 2% or XP.
+ next=patchPickupDrops(next);
  new vm.Script(next,{filename:'patched-qa-app.min.js'});
  fs.writeFileSync(filename,next,'utf8');
  const stat=fs.statSync(filename);
