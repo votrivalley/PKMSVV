@@ -45,6 +45,7 @@ for(const prefix of ['game','ai/game']){
 const mobileCss=fs.readFileSync(path.join(root,'src/pkmsvv-v20-ui-qa.css'),'utf8');
 assert(mobileCss.includes('PKMSVV_COLLECTION_FIRST_V22'),'collection-first mobile layout patch missing');
 for(const prefix of ['game','ai/game']){
+ let html=read(prefix+'/index.html');
  fs.writeFileSync(path.join(to,prefix+'/css/pkmsvv-v20-ui-qa.css'),mobileCss);
  assert(read(prefix+'/css/pkmsvv-v20-ui-qa.css').includes('PKMSVV_COLLECTION_FIRST_V22'),
   'stale mobile CSS in '+prefix);
