@@ -722,7 +722,16 @@
  }
  function openBox(nextView='info'){openPC('box',nextView);}
  function openUpgrades(){if(!boxPane?.isConnected)openPC('upgrade');else showPC('upgrade');}
- function closeBox(){boxPane?.remove();boxPane=null;dexPane=null;upgradePane=null;}
+ function closeBox(){
+  const wasOpen=!!boxPane?.isConnected;
+  boxPane?.remove();boxPane=null;dexPane=null;upgradePane=null;
+  // Closing Pokémon does not necessarily call MenuUI.open. Explicitly
+  // restore the home screen's currently selected locale and partner details.
+  if(wasOpen){
+   try{G.PKMSVVMenuCleanQA?.syncHome?.();}
+   catch(error){console.warn('[Pokémon home language refresh]',error);}
+  }
+ }
  function evoRules(){
   return G.PKMSVV_EVOLUTION_DATA?.rules||[];
  }
