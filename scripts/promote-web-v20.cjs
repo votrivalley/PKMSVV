@@ -73,6 +73,8 @@ for(const prefix of ['game','ai/game']){
  if(!html.includes(hordePerfName))
   html=html.replace('</body>','<script defer src="js/ui/'+hordePerfName+'"></script>\n</body>');
  assert(html.includes(hordePerfName),'missing native non-Fusion FX guard in '+prefix);
+ assert(read(prefix+'/js/ui/'+hordePerfName).includes('MIN_ENEMIES=8'),
+  'Lv20/low-crowd FX budget was not promoted '+prefix);
  assert(read(prefix+'/js/ui/pkmsvv-fusion-evolved.js').includes('installVisualBudget'),
   'hotfix Fusion horde performance missing in '+prefix);
  assert(read(prefix+'/js/ui/pkmsvv-runtime-controls-qa.js').includes('input.axis=()=>aim'),
@@ -119,6 +121,8 @@ for(const prefix of ['game','ai/game']){
   'regional Recruitment lock missing from '+prefix);
  assert(read(prefix+'/js/ui/pkmsvv-modal-navigation-qa.js').includes('G.RunUI.pick(index)'),
   'native controller level-up selection missing from '+prefix);
+ assert(read(prefix+'/js/ui/pkmsvv-modal-navigation-qa.js').includes('function scanActive()'),
+  'gamepad modal cache optimization missing from '+prefix);
  assert(read(prefix+'/css/pkmsvv-box-hub.css').includes('pkmbx-dex-type-pill'),
   'colored Pokédex type badges missing from '+prefix);
  assert(read(prefix+'/js/ui/pkmsvv-runtime-controls-qa.js').includes('installHoverWater'),
@@ -132,7 +136,7 @@ for(const prefix of ['game','ai/game']){
 }
 const sw=path.join(to,'sw.js');assert(file('sw.js'),'PWA service worker missing');
 const oldSW=fs.readFileSync(sw,'utf8');
-const oldKey='pkmsvv-cloudflare-v1529-1',newKey='pkmsvv-cloudflare-v20-20261109-water-orbs-controllers-v30';
+const oldKey='pkmsvv-cloudflare-v1529-1',newKey='pkmsvv-cloudflare-v20-20261109-battle-perf-modal-fx-v31';
 assert(oldSW.includes(oldKey),'existing service worker revision differs');
 fs.writeFileSync(sw,oldSW.replace(oldKey,newKey));
 // A new worker cache namespace ensures the published version refreshes reliably.
@@ -141,7 +145,7 @@ const info=JSON.parse(read('build-info.json'));
 assert(info.localSave===true,'existing browser-save architecture changed');
 Object.assign(info,{version:'2.0',displayVersion:'Pokémon Chuyển Sinh 2.0',
  releaseDate:'2026-11-09',releaseSourceRevision:EXPECTED_SHA,
- releaseQAWorkflowRun:42520192007,releaseType:'public-web',mobileUiHotfix:'one-row-tabs-five-box-cards-touch-auto-v24',combatHotfix:'hover-water-real-stats-controllers-item-drops-v30',saveMode:'existing-browser-local',
+ releaseQAWorkflowRun:42520192007,releaseType:'public-web',mobileUiHotfix:'one-row-tabs-five-box-cards-touch-auto-v24',combatHotfix:'battle-perf-modal-cache-and-auto-fx-budget-v31',saveMode:'existing-browser-local',
  rollbackSourceArtifact:'PKMSVV-PokeBox-Stage4-Web-QA-ONLY'});
 fs.writeFileSync(path.join(to,'build-info.json'),JSON.stringify(info,null,2)+'\n');
 const maxBytes=25*1024*1024;let files=0,bytes=0,largest=0;

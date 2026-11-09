@@ -9,6 +9,8 @@ on:
       - 'src/pkmsvv-horde-performance.js'
       - 'src/pkmsvv-quick-region.js'
       - 'src/pkmsvv-runtime-controls-qa.js'
+      - 'src/pkmsvv-modal-navigation-qa.js'
+      - 'tests/modal-input-qa.test.cjs'
       - 'src/pkmsvv-box-hub.js'
       - 'src/pkmsvv-box-hub-ui.js'
       - 'src/kecleon/upstream/data/shop.js'
@@ -74,6 +76,7 @@ jobs:
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/css/pkmsvv-pc-menu-clean-qa.css
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/images/pkmsvv-menu-icons.webp
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-modal-navigation-qa.js
+          grep -Fq 'function scanActive()' dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-modal-navigation-qa.js
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/css/pkmsvv-modal-navigation-qa.css
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-runtime-controls-qa.js
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/css/pkmsvv-runtime-controls-qa.css

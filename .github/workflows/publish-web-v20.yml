@@ -81,6 +81,8 @@ jobs:
           grep -Fq 'Math.random()<.0016666666666666668' dist/cloudflare-v20-release/game/js/app.min.js
           grep -q 'installVisualBudget' dist/cloudflare-v20-release/game/js/ui/pkmsvv-fusion-evolved.js
           grep -q 'PKMSVVHordePerformance' dist/cloudflare-v20-release/game/js/ui/pkmsvv-horde-performance.js
+          grep -Fq 'MIN_ENEMIES=8' dist/cloudflare-v20-release/game/js/ui/pkmsvv-horde-performance.js
+          grep -Fq 'function scanActive()' dist/cloudflare-v20-release/ai/game/js/ui/pkmsvv-modal-navigation-qa.js
           grep -q 'pkmsvv-horde-performance.js' dist/cloudflare-v20-release/ai/game/index.html
           grep -q 'pkmsvv-awakening-milestones' dist/cloudflare-v20-release/ai/game/js/ui/pkmsvv-wiki-qa.js
           grep -q 'Fusion là dung hợp hai kỹ năng đã luyện MAX' dist/cloudflare-v20-release/ai/game/js/app.min.js
