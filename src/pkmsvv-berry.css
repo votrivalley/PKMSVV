@@ -130,3 +130,38 @@ body.pkmsvv-berry-defense .pkmsvv-berry-active-hud{
  color:#fff!important;opacity:1!important;
  text-shadow:0 1px 2px rgba(0,15,22,.6)!important;
 }
+
+
+/* Post-run Berry reward sheet: host-synchronized human team results.
+   Never takes focus away from the underlying game-over view. */
+.pkmsvv-berry-team-result{
+ position:fixed;inset:0;z-index:40000;
+ display:flex;align-items:center;justify-content:center;
+ padding:14px;box-sizing:border-box;
+ background:rgba(3,18,29,.79);font-family:inherit;color:#f6fff2;
+}
+.pkmsvv-berry-team-panel{
+ width:min(560px,96vw);max-height:min(82dvh,710px);overflow:auto;
+ box-sizing:border-box;background:linear-gradient(150deg,#20505b,#102b40);
+ border:2px solid #ffe6a0;border-radius:14px;
+ box-shadow:0 16px 40px #000b;padding:16px;
+}
+.pkmsvv-berry-team-panel h2{font-size:clamp(17px,2.2vw,23px);margin:0 0 8px;
+ text-align:center;color:#ffe9a9}
+.pkmsvv-berry-team-panel p{font-size:13px;line-height:1.5;color:#e5f5e9}
+.pkmsvv-berry-team-list{display:grid;gap:7px;margin:12px 0}
+.pkmsvv-berry-team-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+ gap:6px 10px;background:#0c2639d9;border:1px solid #6e9896;
+ padding:8px;border-radius:8px;font-size:13px}
+.pkmsvv-berry-team-row>strong{color:#fff0b9;min-width:90px}
+.pkmsvv-berry-team-row>div{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.pkmsvv-berry-team-award{display:inline-flex;align-items:center;gap:5px;
+ background:#254c46;border:1px solid #99c794;border-radius:7px;
+ padding:3px 6px;font-weight:700}
+.pkmsvv-berry-team-award img{image-rendering:pixelated;width:24px;height:24px;object-fit:contain}
+.pkmsvv-berry-team-own{color:#ffe6ac!important;font-weight:700}
+.pkmsvv-berry-team-close{display:block;margin:12px auto 0;padding:9px 26px;
+ border-radius:8px;color:#142b35;background:#ffe6a0;border:1px solid #fff7cf;
+ font:inherit;font-weight:800;cursor:pointer}
+@media(max-width:520px){.pkmsvv-berry-team-panel{padding:10px}
+.pkmsvv-berry-team-row{font-size:11px;gap:4px}.pkmsvv-berry-team-award{padding:2px 4px}}
