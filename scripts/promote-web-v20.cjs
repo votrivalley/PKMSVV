@@ -5,6 +5,7 @@
  * head 81a1101a948be0fb2944ce302c8781eace1f21fa.
  */
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+const {patchFile:patchStoryFile}=require('./patch-v20-story-bundle.cjs');
 const root=path.resolve(__dirname,'..');
 const from=path.join(root,'dist/pokebox-stage4-qa');
 const to=path.join(root,'dist/cloudflare-v20-release');
@@ -20,7 +21,7 @@ fs.rmSync(to,{recursive:true,force:true});fs.cpSync(from,to,{recursive:true});
 // Remove the QA-only deployment warning, leaving all tested runtime assets intact.
 fs.rmSync(path.join(to,'POKEBOX-STAGE1-QA.txt'),{force:true});
 for(const prefix of ['game','ai/game']){
- const html=read(prefix+'/index.html');
+ let html=read(prefix+'/index.html');
  for(const name of ['pkmsvv-changelog-v20-qa.js','pkmsvv-v20-ui-qa.js','pkmsvv-box-stage1.js','pkmsvv-box-stage2.js','pkmsvv-box-stage3.js','pkmsvv-box-stage4.js','pkmsvv-box-hub-ui.js','pkmsvv-dex-defeats-qa.js','pkmsvv-runtime-controls-qa.js']){
   assert(file(prefix+'/js/ui/'+name),'missing '+prefix+'/'+name);
   assert(html.includes(name),'2.0 script not injected in '+prefix+': '+name);
@@ -50,7 +51,8 @@ for(const prefix of ['game','ai/game']){
  // Pinned source artifact is immutable; promote VERIFIED source-only JS fixes
  // into BOTH actual game routes (the app.min.js engine is unchanged).
  for(const name of ['pkmsvv-changelog-v20-qa.js','pkmsvv-box-hub-ui.js',
-  'pkmsvv-dex-defeats-qa.js','pkmsvv-runtime-controls-qa.js']){
+  'pkmsvv-dex-defeats-qa.js','pkmsvv-runtime-controls-qa.js',
+  'pkmsvv-quick-region.js','pkmsvv-pc-menu-clean-qa.js']){
   const fresh=fs.readFileSync(path.join(root,'src',name),'utf8');
   assert(fresh.length>100,'empty promoted script: '+name);
   fs.writeFileSync(path.join(to,prefix+'/js/ui/'+name),fresh);
@@ -61,10 +63,33 @@ for(const prefix of ['game','ai/game']){
   'evolution unlock missing from '+prefix);
  assert(read(prefix+'/js/ui/pkmsvv-runtime-controls-qa.js').includes('riftPassage'),
   'Rift speed patch missing from '+prefix);
+ // Promote actual UI scripts and styles. Add Story styling AFTER baseline CSS.
+ fs.writeFileSync(path.join(to,prefix+'/js/ui/pkmsvv-wiki-qa.js'),
+  fs.readFileSync(path.join(root,'src/pkmsvv-wiki.js'),'utf8'));
+ for(const name of ['pkmsvv-runtime-controls-qa.css','pkmsvv-pc-menu-clean-qa.css'])
+  fs.writeFileSync(path.join(to,prefix+'/css/'+name),
+   fs.readFileSync(path.join(root,'src',name),'utf8'));
+ const cssName='pkmsvv-story-ui-fix.css';
+ fs.writeFileSync(path.join(to,prefix+'/css/'+cssName),
+  fs.readFileSync(path.join(root,'src/pkmsvv-story.css'),'utf8'));
+ if(!html.includes(cssName))html=html.replace('</head>',
+  '<link rel="stylesheet" href="css/'+cssName+'">\\n</head>');
+ assert(html.includes(cssName),'Story layout not linked into '+prefix);
+ fs.writeFileSync(path.join(to,prefix+'/index.html'),html);
+ const storyFile=path.join(to,prefix+'/js/ui/pkmsvv-story.js');
+ if(fs.existsSync(storyFile))fs.writeFileSync(storyFile,
+  fs.readFileSync(path.join(root,'src/pkmsvv-story.js'),'utf8'));
+ // The source QA game embeds a Story IIFE in app.min.js. Replace that EXACT
+ // assignment, not a duplicate script that could cause old dialogue to win.
+ patchStoryFile(path.join(to,prefix+'/js/app.min.js'));
+ assert(read(prefix+'/js/app.min.js').includes('Fusion là dung hợp hai kỹ năng đã luyện MAX'),
+  'Story still stale in compiled '+prefix);
+ assert(read(prefix+'/js/ui/pkmsvv-wiki-qa.js').includes('pkmsvv-awakening-milestones'),
+  'Beginner Skill Awakening guide missing from '+prefix);
 }
 const sw=path.join(to,'sw.js');assert(file('sw.js'),'PWA service worker missing');
 const oldSW=fs.readFileSync(sw,'utf8');
-const oldKey='pkmsvv-cloudflare-v1529-1',newKey='pkmsvv-cloudflare-v20-20261109-collection-first-v22';
+const oldKey='pkmsvv-cloudflare-v1529-1',newKey='pkmsvv-cloudflare-v20-20261109-story-ux-v23';
 assert(oldSW.includes(oldKey),'existing service worker revision differs');
 fs.writeFileSync(sw,oldSW.replace(oldKey,newKey));
 // A new worker cache namespace ensures the published version refreshes reliably.
@@ -73,7 +98,7 @@ const info=JSON.parse(read('build-info.json'));
 assert(info.localSave===true,'existing browser-save architecture changed');
 Object.assign(info,{version:'2.0',displayVersion:'Pokémon Chuyển Sinh 2.0',
  releaseDate:'2026-11-09',releaseSourceRevision:EXPECTED_SHA,
- releaseQAWorkflowRun:42520192007,releaseType:'public-web',mobileUiHotfix:'collection-first-dex-evolution-rift-speed-v22',saveMode:'existing-browser-local',
+ releaseQAWorkflowRun:42520192007,releaseType:'public-web',mobileUiHotfix:'story-guide-mobile-speed-region-boss-v23',saveMode:'existing-browser-local',
  rollbackSourceArtifact:'PKMSVV-PokeBox-Stage4-Web-QA-ONLY'});
 fs.writeFileSync(path.join(to,'build-info.json'),JSON.stringify(info,null,2)+'\n');
 const maxBytes=25*1024*1024;let files=0,bytes=0,largest=0;

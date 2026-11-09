@@ -68,6 +68,13 @@ copyRegionCovers(web);
 copyFusionIcons(web);
 fs.mkdirSync(path.join(web,'images'),{recursive:true});
 fs.copyFileSync(path.join(root,'src/pkmsvv-menu-icons.webp'),path.join(web,'images/pkmsvv-menu-icons.webp'));
+// Keep the same illustrated story and compact layout in Android WebView.
+const storyCssName='pkmsvv-story-ui-fix.css';
+fs.copyFileSync(path.join(root,'src/pkmsvv-story.css'),path.join(web,'css',storyCssName));
+if(!html.includes(storyCssName))html=html.replace('</head>',
+ '<link rel="stylesheet" href="css/'+storyCssName+'">\\n</head>');
+const nativeStory=path.join(web,'js/ui/pkmsvv-story.js');
+if(fs.existsSync(nativeStory))fs.copyFileSync(path.join(root,'src/pkmsvv-story.js'),nativeStory);
 const wikiQA=path.join(web,'js/ui/pkmsvv-wiki-qa.js');
 fs.copyFileSync(path.join(root,'src/pkmsvv-wiki.js'),wikiQA);
 if(!html.includes('pkmsvv-wiki-qa.js'))
@@ -87,12 +94,14 @@ const compiledBundle=path.join(web,'js/app.min.js');
 if(fs.existsSync(compiledBundle)){
  execFileSync(process.execPath,[path.join(root,'scripts/patch-qa-compiled-modules.cjs'),
   compiledBundle],{stdio:'inherit'});
+ require('./patch-v20-story-bundle.cjs').patchFile(compiledBundle);
 }else if(!/^pkmbx-apk-manifest-/.test(path.basename(decoded))){
  throw Error('Real QA Android package lacks compiled app.min.js; refusing incomplete game');
 }
 // Only the isolated manifest unit fixture omits the compiled game.
 
 html=html.replace(/<title>[^<]*<\/title>/,'<title>PokeBox QA — Not Production</title>');
+if(!html.includes('pkmsvv-story-ui-fix.css'))throw Error('Story split stylesheet missing');
 fs.writeFileSync(index,html);
 fs.writeFileSync(path.join(web,'POKEBOX-QA-ONLY.txt'),
  'QA-only Android package com.votrivalley.pkmsvv.box4qa0. Never install over production. Import only a backup copy of JSON save.');
