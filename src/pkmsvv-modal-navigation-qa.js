@@ -38,11 +38,12 @@
    return a.compareDocumentPosition(b)&Node.DOCUMENT_POSITION_FOLLOWING?-1:1;
   }).at(-1)||null;
  }
- function active(){
-  // G.Pad.poll() is called by the native battle loop. On an ordinary
-  // gameplay frame there is NO modal: re-querying selectors plus
-  // getComputedStyle/getClientRects each frame forced expensive layouts.
-  if(!dirty){
+ function active(cached=false){
+  // Gamepad polling runs every native battle frame; query/layout inspection
+  // must be cached there. Explicit UI lookups still rescan synchronously:
+  // an item/Region dialog can be opened just before a key event, before a
+  // MutationObserver microtask has run. Never steal input from a fresh modal.
+  if(cached&&!dirty){
    if(!cachedRoot)return null;
    if(cachedRoot.isConnected&&!cachedRoot.hidden&&
       cachedRoot.getAttribute?.('aria-hidden')!=='true'&&
@@ -226,7 +227,7 @@
   // remapped buttons remain unchanged. Trigger on the DOWN edge only.
   const shoulderL=pressed(4),shoulderR=pressed(5);
   const pokemon=document.querySelector('#pkmsvv-pokebox-overlay');
-  const owns=active(),inside=!!pokemon?.isConnected&&
+  const owns=active(true),inside=!!pokemon?.isConnected&&
    !!owns&&(owns===pokemon||pokemon.contains(owns));
   const pressedL=shoulderL&&!prevL1,pressedR=shoulderR&&!prevR1;
   prevL1=shoulderL;prevR1=shoulderR;
@@ -242,14 +243,14 @@
   const right=pressed(15)||Number(pad.axes?.[0])>.55;
   const up=pressed(12)||Number(pad.axes?.[1])<-.55;
   const down=pressed(13)||Number(pad.axes?.[1])>.55;
-  const evo=active()?.classList?.contains('pkmsvv-evo-live');
+  const evo=active(true)?.classList?.contains('pkmsvv-evo-live');
   // D-pad navigates the live evolution overlay; left stick stays movement.
   const dir=evo?(pressed(14)?'left':pressed(15)?'right':pressed(12)?'up':pressed(13)?'down':null):
    left?'left':right?'right':up?'up':down?'down':null;
   const now=typeof performance!=='undefined'?performance.now():Date.now();
   if(dir&&(dir!==lastDirection||now-lastMove>=210)){move(dir);lastMove=now;}
   lastDirection=dir;
-  const root=active(),a=pressed(confirm),b=pressed(back);
+  const root=active(true),a=pressed(confirm),b=pressed(back);
   if(root){
    if(a&&!prevConfirm)activate(root);
    if(b&&!prevBack)close(root);
@@ -297,7 +298,7 @@
   installFocusGuard();
   const original=pad.poll;
   const wrapped=function(...args){
-   const root=active();
+   const root=active(true);
    if(root){
     if(root.classList?.contains('pkmsvv-evo-live')){
      const result=original.apply(this,args);releaseGate=true;pollModal();return result;
