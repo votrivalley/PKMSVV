@@ -38,11 +38,11 @@ test('Kecleon store purchases Mint and Capsule with PokéCoins into Bag',()=>{
  s.coins=0;
  assert.equal(G.Shop.buy('caph').ok,false);
  assert.equal(s.bag.caph||0,0);
- assert.deepEqual(Array.from(G.Shop.ORDER),['mint','cap']);
+ assert.deepEqual(Array.from(G.Shop.ORDER),['mint','cap','caph']);
  assert.deepEqual(Object.keys(G.Shop.DROP_RATE).sort(),['cap','mint']);
- s.bag.caph=4; // legacy inventory survives loading but cannot be consumed
- assert.equal(G.Shop.take('caph'),false);
- assert.equal(s.bag.caph,4);
+ s.bag.caph=4; // legacy/event stock remains usable but not for sale
+ assert.equal(G.Shop.take('caph'),true);
+ assert.equal(s.bag.caph,3);
 });
 test('TM taught to compatible Pokémon is consumed once, permanent and never duplicated',()=>{
  const G=game(),s=G.DB.save;

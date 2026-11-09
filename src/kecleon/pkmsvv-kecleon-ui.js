@@ -201,10 +201,14 @@ G.KecleonUI=(()=>{
    toast('Tính cách ngẫu nhiên: '+natName(chosen),'Random Nature: '+natName(chosen));
    return true;
   }
-  if(kind==='cap'){
-   const choices=G.Mons.abilityChoices(dex,false);
-   if(!choices.length)return false;
-   const slot=choices[Math.floor(Math.random()*choices.length)];
+  if(kind==='cap'||kind==='caph'){
+   const now=G.Mons.abilityOf(dex),abilities=G.DEX_ABIL?.[dex]||[];
+   const slot=G.PKMSVVBoxHub?.rollAbilitySlot?.(abilities,now.slot,kind);
+   if(slot===null||slot===undefined){
+    toast('Không quay được Đặc tính khác, vật phẩm vẫn được giữ.',
+      'No alternative Ability was rolled; item was not spent.');
+    return false;
+   }
    if(!G.Shop.take(kind))return false;
    G.Mons.setAbility(dex,slot);
    G.DB.commit(true);G.Audio?.sfx?.('buy');
@@ -235,7 +239,8 @@ G.KecleonUI=(()=>{
   s+='<div class="pkmk-cards">';
   for(const k of G.Shop.ORDER)if(G.Shop.count(k)){
     const choices=k==='mint'?G.NATURES.filter(n=>n.id!==G.Mons.natureOf(selected).id):
-       G.Mons.abilityChoices(selected,false);
+       G.PKMSVVBoxHub?.abilityAlternatives?.(
+        G.DEX_ABIL?.[selected]||[],G.Mons.abilityOf(selected).slot)||[];
     s+=card(itemIcon(k==='mint'?'mint':k==='cap'?'capsule':'capsuleh'),
       esc(label(k)),esc(text(k)),useBtn(k,choices.length>0)+
       sellBtn(k,G.Shop.ITEMS[k].price)+

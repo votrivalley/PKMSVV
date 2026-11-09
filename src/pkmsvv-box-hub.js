@@ -184,23 +184,41 @@
    return {id,from:before,natureId:chosen.id,left:draft.bag.mint||0};
   });
  }
- function useCapsule(id,s=save(),random=Math.random){
+ // Base 5% Hidden rate mirrors natural rolls; the event-grade Hidden
+ // Capsule triples only that probability (15%), never guarantees a Hidden.
+ // Both items can roll standard abilities; no chosen target is accepted.
+ const HIDDEN_RATE=0.05;
+ function abilityAlternatives(abilities,current){
+  return [0,1,2].filter(slot=>abilities?.[slot]&&slot!==current&&
+    ![0,1].some(other=>other!==slot&&abilities[other]===abilities[slot]));
+ }
+ function rollAbilitySlot(abilities,current,kind='cap',random=Math.random){
+  if(kind!=='cap'&&kind!=='caph')throw Error('Unknown Capsule kind');
+  const alternatives=abilityAlternatives(abilities,current);
+  const hiddenAvailable=alternatives.includes(2);
+  const chance=HIDDEN_RATE*(kind==='caph'?3:1);
+  const roll=Number(random());
+  if(!Number.isFinite(roll)||roll<0||roll>=1)throw Error('Invalid random draw');
+  if(hiddenAvailable&&roll<chance)return 2;
+  const standard=alternatives.filter(x=>x<2);
+  if(!standard.length)return null; // no item spent on a failed reroll
+  return pickRandom(standard,random);
+ }
+ function useCapsule(id,kind='cap',s=save(),random=Math.random){
   return atomic(s,draft=>{
    const x=speciesBase(draft,item(draft,id));
    if(!x)throw Error('Pokémon not found');
-   if(!(draft.bag?.cap>0))throw Error('No Ability Capsule in Bag');
+   if(kind!=='cap'&&kind!=='caph')throw Error('Unknown Capsule kind');
+   if(!(draft.bag?.[kind]>0))throw Error('No Capsule in Bag');
    const arr=typeof G==='undefined'?[]:G.DEX_ABIL?.[x.dex]||[];
-   // A standard Capsule cannot manufacture or overwrite the rare Hidden
-   // Ability. Those appear only through legitimate rare natural rolls.
-   if(x.abilitySlot===2)throw Error('Hidden Ability is protected');
-   const choices=[0,1].filter(slot=>arr[slot]&&slot!==x.abilitySlot&&
-     !(slot===1&&arr[1]===arr[0]));
-   const slot=pickRandom(choices,random);
-   if(slot===null)throw Error('No alternative standard Ability is available');
+   const slot=rollAbilitySlot(arr,x.abilitySlot,kind,random);
+   if(slot===null)throw Error('No alternative Ability rolled; Capsule not consumed');
    const before=x.abilitySlot;
-   draft.bag.cap--;if(!draft.bag.cap)delete draft.bag.cap;
+   draft.bag[kind]--;if(!draft.bag[kind])delete draft.bag[kind];
    x.abilitySlot=slot;
-   return {id,from:before,slot,abilityId:arr[slot],left:draft.bag.cap||0};
+   return {id,kind,from:before,slot,hidden:slot===2,
+    chance:HIDDEN_RATE*(kind==='caph'?3:1),
+    abilityId:arr[slot],left:draft.bag[kind]||0};
   });
  }
  function canTeach(s,x,moveId){
@@ -280,5 +298,6 @@
   return !!box()?.selectInstance?.(id);
  }
  return {TEAM_MAX,valid,item,active,activeForDex,team,legacyTeam,arenaReady,isMember,toggleFavorite,toggleTeam,
-  reorderTeam,speciesBase,nature,ability,learned,useMint,useCapsule,canTeach,teach,installMons,rankOverview,safeSelect};
+  reorderTeam,speciesBase,nature,ability,learned,useMint,useCapsule,
+  rollAbilitySlot,abilityAlternatives,HIDDEN_RATE,canTeach,teach,installMons,rankOverview,safeSelect};
 });

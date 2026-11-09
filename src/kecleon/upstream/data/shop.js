@@ -19,9 +19,9 @@ G.Shop=(()=>{
     caph: { name: 'Cápsula Habilidad Oculta', icon: 'capsuleh', price: 10000, hidden: true, unavailableInShop: true,
             desc: 'Cambia la habilidad de un Pokémon por cualquiera de las suyas, también la oculta.' }
   };
-  // Hidden Capsules were removed from gameplay in 2.0. Preserve the key in
-  // ITEMS only to read old JSON saves without discarding legacy inventory.
-  const ORDER = ['mint', 'cap'];
+  // Hidden Capsules are rare/event-only: never on the regular Shop shelf,
+  // but usable in Bag and PokéBox. Preserve existing JSON inventory.
+  const ORDER = ['mint', 'cap', 'caph'];
   const DAILY = 8;
 
   const save = () => G.DB.save;
@@ -30,8 +30,7 @@ G.Shop=(()=>{
 
   const count = id => { const s = save(); return (s && s.bag && s.bag[id]) || 0; };
   function take(id) {
-    if(id==='caph')return false; // legacy item cannot activate Hidden Ability
-    const s = save();
+     const s = save();
     if (!count(id)) return false;
     if (--s.bag[id] <= 0) delete s.bag[id];
     return true;
@@ -71,8 +70,8 @@ G.Shop=(()=>{
   }
   const tmPrice = id => G.TM_PRICE[id] || 400;
 
-  // Hidden Abilities stay rare through natural acquisition, never via a
-  // hidden Capsule item. No new hidden Capsules are purchased or dropped.
+  // Hidden Capsules remain event-only (no ordinary Shop or enemy drops).
+  // Existing/special-event Hidden Capsules remain usable and sellable.
   const DROP_RATE=Object.freeze({mint:.008,cap:.008});
   function enemyMultiplier(enemy){
     const rarity=Number(enemy?.rarity??enemy?.mon?.rarity??G.DEX_BY?.[enemy?.dex]?.rarity??0);

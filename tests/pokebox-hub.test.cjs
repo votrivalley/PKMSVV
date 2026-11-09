@@ -100,22 +100,36 @@ test('Mint rerolls one individual randomly and excludes current Nature',()=>{
  assert.throws(()=>hub.useMint(copy.id,h.s,()=>-1),/Invalid random draw/);
  assert.equal(h.s.bag.mint,before-1);
 });
-test('Normal Capsule rolls a different standard slot, hidden stays rare and protected',()=>{
- const h=setup(),copy=add(h.s);
- // Stage2 may legitimately roll a rare Hidden Ability from generation RNG.
- // Standard capsules cannot overwrite that rare state; use a normal carrier.
- hub.item(h.s,copy.id).abilitySlot=0;
- const out=hub.useCapsule(copy.id,h.s,()=>0);
- assert.equal(out.slot,1);
- assert.equal(hub.item(h.s,copy.id).abilitySlot,1);
+test('Standard Capsule has 5% Hidden chance; event Capsule 15%, both atomic',()=>{
+ const h=setup(),a=add(h.s),b=add(h.s),c=add(h.s);
+ hub.item(h.s,a.id).abilitySlot=0;
+ hub.item(h.s,b.id).abilitySlot=0;
+ hub.item(h.s,c.id).abilitySlot=0;
+ const ordinary=hub.useCapsule(a.id,'cap',h.s,()=>0);
+ assert.equal(ordinary.slot,2,'standard Capsule can award Hidden');
+ assert.equal(ordinary.chance,.05);
  assert.equal(h.s.bag.cap,1);
- assert.equal(h.s.bag.caph,1,'legacy hidden capsule inventory preserved');
- assert.equal(hub.item(h.s,'b1-6-n').abilitySlot,0);
- const extra=add(h.s);
- extra.abilitySlot=2; // legitimate rare Hidden-Ability carrier
- const original=JSON.stringify(h.s);
- assert.throws(()=>hub.useCapsule(extra.id,h.s,()=>0),/Hidden Ability is protected/);
- assert.equal(JSON.stringify(h.s),original,'failed random capsule must be atomic');
+ const rare=hub.useCapsule(b.id,'caph',h.s,()=>.14);
+ assert.equal(rare.slot,2,'rare Capsule grants Hidden under 15% roll');
+ assert.equal(rare.chance,.15);
+ assert.equal(h.s.bag.caph,undefined);
+ const standard=hub.useCapsule(c.id,'cap',h.s,()=>.6);
+ assert.equal(standard.slot,1);
+ assert.equal(h.s.bag.cap,undefined);
+ const before=JSON.stringify(h.s);
+ assert.throws(()=>hub.useCapsule(c.id,'cap',h.s,()=>0),/No Capsule/);
+ assert.equal(JSON.stringify(h.s),before);
+});
+test('Single-Ability Pokémon cannot waste Capsules and hidden-only outcomes refund failed rolls',()=>{
+ const h=setup(),one=add(h.s),x=hub.item(h.s,one.id);x.abilitySlot=0;
+ G.DEX_ABIL[6]=[11,0,0];
+ const before=JSON.stringify(h.s);
+ assert.throws(()=>hub.useCapsule(one.id,'cap',h.s,()=>.7),/No alternative/);
+ assert.equal(JSON.stringify(h.s),before);
+ G.DEX_ABIL[6]=[11,0,13];
+ assert.throws(()=>hub.useCapsule(one.id,'cap',h.s,()=>.7),/No alternative/);
+ assert.equal(JSON.stringify(h.s),before,'missed Hidden roll never consumes a capsule');
+ assert.equal(hub.useCapsule(one.id,'cap',h.s,()=>.01).slot,2);
 });
 test('TM is consumed only for the selected individual, preserving old species TM and other duplicates',()=>{
  const h=setup(),dupe1=add(h.s),dupe2=add(h.s);
@@ -143,7 +157,7 @@ test('selected instance affects Nature, Ability and learned TM in combat, withou
  const h=setup(),duplicate=add(h.s);
  hub.item(h.s,duplicate.id).abilitySlot=0;
  hub.useMint(duplicate.id,h.s,()=>.9);
- hub.useCapsule(duplicate.id,h.s,()=>0);
+ hub.useCapsule(duplicate.id,'cap',h.s,()=>.5);
  hub.teach(duplicate.id,'shadow-ball',h.s);
  assert.equal(hub.installMons(G.Mons),true);
  assert.equal(hub.installMons(G.Mons),false);

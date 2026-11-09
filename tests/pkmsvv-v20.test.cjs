@@ -65,7 +65,7 @@ test('Mint/Ability/TM sales consume exactly one copy and refund half',()=>{
  assert.equal(G.Shop.sell('tm:surf').ok,false);
  assert.equal(JSON.stringify(s),snapshot,'save failure refunds both item and coins');
 });
-test('2.0 item drops: standard consumables only; rare Hidden Abilities cannot be manufactured',()=>{
+test('2.0 item drops: normal drops only; event Hidden Capsules remain usable',()=>{
  const {G,s}=shop();
  assert.equal(G.Shop.DROP_RATE.mint,.008);
  assert.equal(G.Shop.DROP_RATE.cap,.008);
