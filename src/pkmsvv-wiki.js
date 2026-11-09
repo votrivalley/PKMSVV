@@ -12,8 +12,13 @@ G.PKMSVVWiki=(()=>{
   return f?.spriteId||150; // Fallback preserves a recognizable Mewtwo, never a fake Mega sprite.
  }
  function installStyle(){
-  if($('pkmsvv-pc-style'))return;
-  const css=document.createElement('style');css.id='pkmsvv-pc-style';
+  // The compiled baseline may already have installed the older PC CSS.
+  // Keep that style for compatibility, but inject our guide/icon rules once.
+  const old=$('pkmsvv-pc-style');
+  if($('pkmsvv-pc-style-orb-qa')||old?.dataset?.pkmsvvOrbGuide==='1')return;
+  const css=document.createElement('style');
+  css.id=old?'pkmsvv-pc-style-orb-qa':'pkmsvv-pc-style';
+  css.dataset.pkmsvvOrbGuide='1';
   css.textContent=`
   #pkmsvv-wiki-overlay.pkmsvv-pc-overlay{position:fixed;inset:0;z-index:20000;
    display:flex;align-items:center;justify-content:center;box-sizing:border-box;
