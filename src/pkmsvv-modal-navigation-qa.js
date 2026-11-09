@@ -14,6 +14,8 @@
  ];
  const NAV='button:not([disabled]),[role="button"]:not([aria-disabled="true"]),a[href],select:not([disabled]),input:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])';
  const isEditable=el=>!!el&&(/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName||'')||el.isContentEditable);
+ const OVERLAYS=SELECTORS.join(',');
+ let cachedRoot=null,dirty=true,scanCount=0;
  function visible(el){
   if(!el||!el.isConnected)return false;
   for(let n=el;n&&n.nodeType===1;n=n.parentElement){
@@ -23,18 +25,34 @@
   }
   return !el.getClientRects||el.getClientRects().length>0;
  }
- function active(){
-  const all=[...document.querySelectorAll(SELECTORS.join(','))].filter(visible);
+ function scanActive(){
+  scanCount++;
+  const all=[...document.querySelectorAll(OVERLAYS)].filter(visible);
   if(!all.length)return null;
-  // The highest visible overlay must own input, not the screen underneath it.
+  // Resolve z-order only when a modal opens/closes, not in every game tick.
   return all.sort((a,b)=>{
    const az=parseInt(getComputedStyle(a).zIndex,10)||0,bz=parseInt(getComputedStyle(b).zIndex,10)||0;
    if(az!==bz)return az-bz;
    if(a.contains(b))return -1;
    if(b.contains(a))return 1;
-   return a.compareDocumentPosition(b)&Node.DOCUMENT_POSITION_FOLLOWING? -1:1;
+   return a.compareDocumentPosition(b)&Node.DOCUMENT_POSITION_FOLLOWING?-1:1;
   }).at(-1)||null;
  }
+ function active(){
+  // G.Pad.poll() is called by the native battle loop. On an ordinary
+  // gameplay frame there is NO modal: re-querying selectors plus
+  // getComputedStyle/getClientRects each frame forced expensive layouts.
+  if(!dirty){
+   if(!cachedRoot)return null;
+   if(cachedRoot.isConnected&&!cachedRoot.hidden&&
+      cachedRoot.getAttribute?.('aria-hidden')!=='true'&&
+      !cachedRoot.classList?.contains('hidden'))return cachedRoot;
+  }
+  dirty=false;
+  cachedRoot=scanActive();
+  return cachedRoot;
+ }
+ function invalidate(){dirty=true;queue();}
  function controls(root){
   if(!root)return [];
   // Native level-up options are .card DIVs, not <button> elements. Without
@@ -304,9 +322,29 @@
   const root=active();
   if(root&&!root.contains(e.target))queue();
  },true);
+ // Watch relevant modal mutations only. Native battle HUD/particles may
+ // mutate the DOM thousands of times without showing any modal. Those
+ // changes must NOT trigger a full query/layout scan in the next RAF.
+ const modalChange=r=>{
+  const target=r.target;
+  if(r.type==='attributes'){
+   return !!(target?.matches?.(OVERLAYS)||
+    (cachedRoot&&(target===cachedRoot||
+      target?.contains?.(cachedRoot))));
+  }
+  if(target?.matches?.(OVERLAYS)||
+     (cachedRoot&&cachedRoot.contains?.(target)))return true;
+  for(const node of [...(r.addedNodes||[]),...(r.removedNodes||[])]){
+   if(node.nodeType!==1)continue;
+   if(node.matches?.(OVERLAYS)||node.querySelector?.(OVERLAYS)||
+      (cachedRoot&&(node===cachedRoot||node.contains?.(cachedRoot))))return true;
+  }
+  return false;
+ };
  if(typeof MutationObserver==='function')new MutationObserver(records=>{
-  if(records.some(r=>r.type==='childList'||r.attributeName==='hidden'||r.attributeName==='class'))queue();
- }).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});
+  if(records.some(modalChange))invalidate();
+ }).observe(document.body,{childList:true,subtree:true,attributes:true,
+  attributeFilter:['hidden','class','style','aria-hidden']});
  // Also install when the base gamepad initializes later than the QA scripts.
  if(!installPad()){
   let tries=0;
@@ -314,5 +352,7 @@
   requestAnimationFrame(retry);
  }
  document.addEventListener('DOMContentLoaded',queue,{once:true});queue();
- G.PKMSVVModalNavQA={active,controls,setFocus,first,move,close,itemSkip,installPad,installFocusGuard,onKey,pollModal};
+ G.PKMSVVModalNavQA={active,controls,setFocus,first,move,close,itemSkip,
+  installPad,installFocusGuard,onKey,pollModal,invalidate,
+  get scanCount(){return scanCount;}};
 })();
