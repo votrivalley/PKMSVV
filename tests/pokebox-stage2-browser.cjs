@@ -925,7 +925,11 @@ async function main(){
     const errors=[];
     try{settings?.set?.('autoLevel',0);}catch(e){errors.push('set: '+String(e));}
     try{settings.autoLevel=0;}catch(e){errors.push('assign: '+String(e));}
-    return {before,after:settings?.autoLevel,descriptor:desc?{writable:desc.writable,setter:typeof desc.set==='function'}:null,errors};
+    const nativeGetter=String(desc?.get||'').slice(0,1000);
+    try{
+     if(desc?.configurable)Object.defineProperty(settings,'autoLevel',{configurable:true,enumerable:true,get:()=>0});
+    }catch(e){errors.push('override: '+String(e));}
+    return {before,after:settings?.autoLevel,descriptor:desc?{writable:desc.writable,configurable:desc.configurable,setter:typeof desc.set==='function'}:null,nativeGetter,errors};
    })()`);
    console.log('EXPLORE_MANUAL_LEVELUP_SETTINGS='+JSON.stringify(autoSetting));
    // No automatic picking: prior QA never exercised the blocked choice.
