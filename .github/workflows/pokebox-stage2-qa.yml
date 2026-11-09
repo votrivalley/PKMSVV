@@ -49,6 +49,11 @@ jobs:
           test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-pc-menu-clean-qa.js
           test -s dist/pokebox-stage4-qa/ai/game/css/pkmsvv-pc-menu-clean-qa.css
           test -s dist/pokebox-stage4-qa/ai/game/images/pkmsvv-menu-icons.webp
+          for orb in slumber slow blowback focus luminous quick; do
+            test -s "dist/pokebox-stage4-qa/ai/game/assets/orbs/${orb}.svg"
+            test -s "dist/pokebox-stage4-qa/game/assets/orbs/${orb}.svg"
+          done
+          test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-wiki-qa.js
           test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-modal-navigation-qa.js
           test -s dist/pokebox-stage4-qa/ai/game/css/pkmsvv-modal-navigation-qa.css
           test -s dist/pokebox-stage4-qa/ai/game/js/ui/pkmsvv-runtime-controls-qa.js
@@ -69,6 +74,8 @@ jobs:
           node --check src/pkmsvv-box-hub-ui.js
           node --check src/pkmsvv-quick-region.js
           node --check src/pkmsvv-pc-menu-clean-qa.js
+          node --check scripts/copy-orb-icons.cjs
+          node --check src/pkmsvv-wiki.js
           node --check src/pkmsvv-modal-navigation-qa.js
           node --check src/pkmsvv-runtime-controls-qa.js
           node --check tests/runtime-controls-qa.test.cjs
