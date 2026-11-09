@@ -3,6 +3,13 @@ on:
   push:
     branches:
       - feature/pokebox-stage1-isolated-qa
+      - release/pokemon-chuyen-sinh-2.0-web
+    paths:
+      - 'src/pkmsvv-fusion-evolved.js'
+      - 'tests/bond-fusion-svv.test.cjs'
+      - 'scripts/build-pokebox-stage1-pc-qa.cjs'
+      - 'scripts/patch-qa-compiled-modules.cjs'
+      - '.github/workflows/pokebox-stage2-pc-qa.yml'
   workflow_dispatch:
 permissions:
   contents: read
@@ -38,6 +45,7 @@ jobs:
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-box-hub-ui.js
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/css/pkmsvv-box-hub.css
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-fusion-evolved.js
+          grep -q 'installVisualBudget' dist/pokebox-stage4-pc-qa/resources/lan-site/game/js/ui/pkmsvv-fusion-evolved.js
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/css/pkmsvv-fusion-evolved.css
           for id in ember-quick water-tackle grass-spin spark-quick mind-tackle fire-gust bubble-ice leaf-rock shadow-mind thunder-claw; do
             test -s "dist/pokebox-stage4-pc-qa/resources/lan-site/game/assets/fusion-icons/${id}.webp"
