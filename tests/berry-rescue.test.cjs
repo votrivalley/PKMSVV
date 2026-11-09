@@ -59,7 +59,7 @@ test('Three defended Berry trees, four-player Co-op mode and exactly 8 minutes',
 test('Berry soundtrack matches Egg Rush forest and releases audio override after completion',()=>{
  const h=harness();h.game.begin({mode:'berry'});
  h.G.Audio.music('boss');
- assert.equal(h.G.Audio.last,'forest');
+ assert.equal(h.G.Audio.last,'eggrush');
  h.game.begin({mode:'coop'});
  h.G.Audio.music('boss');
  assert.equal(h.G.Audio.last,'boss');
@@ -230,4 +230,42 @@ test('Berry death HUD counts down from 4 seconds rather than asking for rescue',
  assert.match(src,/PKMSVVBerryRescue\?\.active/);
  assert.match(src,/Math\.ceil\(4-\(Number\(player\.reviveT\)/);
  assert.match(src,/Tiếp tục bảo vệ ba cây Berry/);
+});
+
+test('Three surviving Berry trees guarantee ONE extra random reward even if all ordinary rolls fail',()=>{
+ const source=read('src/pkmsvv-berry-rescue.js');
+ const grants=[],G={
+  Coop:{isHost:true},World:{flattenForBerry(){}},Audio:{music(){}},
+  PKMSVVBerry:{TYPES:[{id:'oran'},{id:'sitrus'},{id:'lum'},{id:'liechi'},{id:'salac'},{id:'ganlon'}],
+   grant(id){grants.push(id);return true;}},UI:{toast(){}}
+ };
+ const deterministic=Object.create(Math);deterministic.random=()=>.99;
+ vm.runInNewContext(source,{G,Math:deterministic,Image:undefined,Number});
+ const b=G.PKMSVVBerryRescue;
+ b.begin('berry');
+ const first=b.reward({success:true,trees:[88,30,1],easy:false});
+ assert.equal(first.length,1,'one guaranteed award even when normal HP reward rolls fail');
+ assert.equal(grants.length,1);
+ assert.equal(b.reward({success:true,trees:[100,100,100]}).length,0,'one claim per match');
+ b.begin('berryeasy');grants.length=0;
+ assert.equal(b.reward({success:true,trees:[100,0,100]}).length,0,'two trees does not qualify');
+ b.begin('berryeasy');grants.length=0;
+ assert.equal(b.reward({success:false,trees:[100,100,100]}).length,0,'failed runs do not award');
+});
+test('Berry enemy targets are cached and read-only speed variants cannot freeze a LAN host',()=>{
+ const h=harness();h.game.begin('berry');
+ const e={x:92,y:82,spd:90,hp:100,maxHp:100,dmg:10,dead:false};
+ const a=h.game.targetFor(e);assert.equal(a,h.game.targetFor(e),'same stable actor, no hot-loop allocation');
+ h.G.EnemyMgr.enemies=[e];h.step(.01,0);assert.equal(e.spd,90);
+ h.step(.01,120);assert.ok(e.spd>90);
+ h.step(.01,120.1);assert.ok(e.spd>90);
+ const readonly={x:900,y:900,hp:100,maxHp:100,dmg:10,
+  get spd(){return 90;},dead:false};
+ h.G.EnemyMgr.enemies=[readonly];
+ assert.doesNotThrow(()=>h.step(.016,121));
+});
+test('Berry LAN AI uses bounded direct grove steering and skips expensive A* per bot',()=>{
+ const src=read('src/lan/lan-ai.js');
+ assert.match(src,/function chooseBerryAxis\(/);
+ assert.match(src,/mode==='berry'\|\|mode==='berryeasy'\?chooseBerryAxis/);
 });

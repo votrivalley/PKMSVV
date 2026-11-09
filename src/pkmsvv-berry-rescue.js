@@ -9,7 +9,7 @@ G.PKMSVVBerryRescue=(()=>{
  const POS=[[-92,82],[92,82],[0,-72]];
  const NAMES=['Oran','Sitrus','Lum'];
  let active=false,easy=false,time=0,trees=[],bossStage=0,won=false,claimed=false,sendClock=0,endClock=0;
- let sprites=[],treeAtlas=null;
+ let sprites=[],treeAtlas=null,treeTargets=[];
  // Track which trees the native entity pass actually rendered this frame.
  // Android may skip the entity layer after a WebView context recreation.
  const drawnTrees=new Set();
@@ -29,6 +29,10 @@ G.PKMSVVBerryRescue=(()=>{
   sendClock=0;endClock=0;
   const hp=easy?220:180;
   trees=POS.map(([x,y],i)=>({id:i,x,y,hp,maxHp:hp,guard:0}));
+  // Reuse target actors: enemies call targetFor each simulation frame.
+  // Avoid allocating/filtering tree arrays for each Pokémon on every tick.
+  treeTargets=trees.map(t=>({x:t.x,y:t.y,r:34,level:1,dead:false,
+    _vx:0,_vy:0,_pkmsvvBerryTree:t.id}));
   treeAtlas=typeof Image==='function'?new Image():null;
   if(treeAtlas){treeAtlas.decoding='async';treeAtlas.src=TREE_ATLAS_URL;}
   sprites=['oran','sitrus','lum'].map(id=>{
@@ -67,11 +71,14 @@ G.PKMSVVBerryRescue=(()=>{
  // Enemy pathing and boss attacks use a living tree as their destination.
  function targetFor(enemy){
   if(!active||!enemy)return null;
-  const live=trees.filter(t=>t.hp>0);
-  if(!live.length)return null;
-  const tree=live.reduce((a,b)=>
-   (enemy.x-b.x)**2+(enemy.y-b.y)**2<(enemy.x-a.x)**2+(enemy.y-a.y)**2?b:a);
-  return {x:tree.x,y:tree.y,r:34,level:1,dead:false,_vx:0,_vy:0,_pkmsvvBerryTree:tree.id};
+  let chosen=null,nearest=Infinity;
+  for(const t of trees){
+   if(t.hp<=0)continue;
+   const dx=(Number(enemy.x)||0)-t.x,dy=(Number(enemy.y)||0)-t.y;
+   const d2=dx*dx+dy*dy;
+   if(d2<nearest){nearest=d2;chosen=t;}
+  }
+  return chosen?treeTargets[chosen.id]:null;
  }
  // Reduced per-stage enemy speed escalation to two thirds of the prior increment.
   const SPEED_GAIN_NORMAL=.20*2/3,SPEED_GAIN_EASY=.15*2/3,XP_MULT=1;
@@ -87,19 +94,45 @@ G.PKMSVVBerryRescue=(()=>{
    }
   }
   const next=difficultyFor(stage),old=e._pkmsvvBerrySpeedFactor||1;
-  if(Number.isFinite(e.spd))e.spd=e.spd/old*next;
-  e._pkmsvvBerrySpeedFactor=next;
+  // Never write enemy speed each frame: many LAN bots + enemies and the
+  // continuous float reassignments caused avoidable hot-loop work. Some
+  // imported enemy variants expose a read-only speed getter; that would
+  // throw from the Host update and stop the whole Berry run.
+  if(next!==old){
+   const speed=Number(e.spd);
+   if(Number.isFinite(speed)){
+    const own=Object.getOwnPropertyDescriptor(e,'spd');
+    const proto=!own&&Object.getOwnPropertyDescriptor(Object.getPrototypeOf(e),'spd');
+    const field=own||proto;
+    if(!field||field.writable||typeof field.set==='function'){
+     try{e.spd=speed/old*next;}
+     catch(err){/* Read-only custom enemy variant: preserve native speed. */}
+    }
+   }
+   e._pkmsvvBerrySpeedFactor=next;
+  }
+ }
+ function rewardBerry(){
+  const r=Math.random(),types=G.PKMSVVBerry?.TYPES||[];
+  return r<.015?'enigma':r<.045?'starf':r<.12?'petaya':r<.2?'lum':
+   types[Math.floor(Math.random()*Math.min(6,types.length))]?.id;
  }
  function reward(result){
   if(claimed||!result||!Array.isArray(result.trees))return [];claimed=true;
   const awarded=[];
   if(!result.success)return awarded;
-  for(const health of result.trees.slice(0,3)){
+  const surviving=result.trees.slice(0,3);
+  for(const health of surviving){
    const pct=health===true?100:Math.max(0,Number(health)||0);
    if(Math.random()>=chanceForHp(pct,result.easy===true))continue;
-   const r=Math.random(),types=G.PKMSVVBerry?.TYPES||[];
-   const id=r<.015?'enigma':r<.045?'starf':r<.12?'petaya':r<.2?'lum':
-    types[Math.floor(Math.random()*Math.min(6,types.length))]?.id;
+   const id=rewardBerry();
+   if(id&&G.PKMSVVBerry?.grant?.(id,1))awarded.push(id);
+  }
+  // NEW guaranteed bonus: finish the complete 8-minute rescue with
+  // all THREE objective trees alive = +1 extra random Berry, independent
+  // of the existing 3 per-tree HP-tier reward rolls. No duplicate claims.
+  if(surviving.length===3&&surviving.every(x=>x===true||Number(x)>0)){
+   const id=rewardBerry();
    if(id&&G.PKMSVVBerry?.grant?.(id,1))awarded.push(id);
   }
   if(awarded.length)G.UI?.toast?.(tr('🍓 Nhận Berry: ','🍓 Awarded Berries: ')+awarded.join(', '),4500);
@@ -112,10 +145,25 @@ G.PKMSVVBerryRescue=(()=>{
    bossStage++;bosses();
   }
   const enemies=G.EnemyMgr?.all?.()||[];
-  for(const e of enemies)rebalanceEnemy(e,Math.floor(time/120));
+  const stage=Math.floor(time/120);
+  for(const e of enemies)rebalanceEnemy(e,stage);
+  // One enemy pass for all three objectives, instead of three array filters
+  // and repeated square roots on each of 60 simulation frames per second.
+  const threats=[0,0,0],bossNear=[false,false,false];
+  for(const e of enemies){
+   if(!e||e.dead)continue;
+   for(const tree of trees){
+    if(tree.hp<=0)continue;
+    const dx=(Number(e.x)||0)-tree.x,dy=(Number(e.y)||0)-tree.y;
+    if(dx*dx+dy*dy<105*105){
+     threats[tree.id]++;
+     if(e.boss)bossNear[tree.id]=true;
+    }
+   }
+  }
   for(const tree of trees)if(tree.hp>0){
-   const nearby=enemies.filter(e=>e&&!e.dead&&Math.hypot((e.x||0)-tree.x,(e.y||0)-tree.y)<105);
-   const danger=nearby.length?Math.min(3,nearby.length*.11)*(nearby.some(e=>e.boss)?1.8:1):0;
+   const danger=threats[tree.id]?
+    Math.min(3,threats[tree.id]*.11)*(bossNear[tree.id]?1.8:1):0;
    tree.hp=Math.max(0,tree.hp-Math.max(0,dt)*danger);
   }
   sendClock+=dt;
