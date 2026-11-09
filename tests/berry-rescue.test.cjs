@@ -267,5 +267,5 @@ test('Berry enemy targets are cached and read-only speed variants cannot freeze 
 test('Berry LAN AI uses bounded direct grove steering and skips expensive A* per bot',()=>{
  const src=read('src/lan/lan-ai.js');
  assert.match(src,/function chooseBerryAxis\(/);
- assert.match(src,/mode==='berry'\|\|mode==='berryeasy'\?\s*chooseBerryAxis/);
+ assert.match(src,/s\.axis=chooseBerryAxis\(pl,goal,nearby,nearbyShots,hazards\)/);
 });
