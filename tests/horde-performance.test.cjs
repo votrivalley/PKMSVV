@@ -55,10 +55,10 @@ test('budget is idempotent and can be disabled for controlled A/B QA; no enemy a
  assert.equal(p.install(),true);
  assert.equal(p.install(),true);
  for(let i=0;i<50;i++)h.G.FX.dmgText(0,0,'200');
- assert.equal(h.v.dmgText,14);
+ assert.equal(h.v.dmgText,10,'crowd above 24 gets stronger visual budget');
  p.setEnabled(false);
  for(let i=0;i<50;i++)h.G.FX.dmgText(0,0,'200');
- assert.equal(h.v.dmgText,64,'QA can disable cosmetic budget to compare FPS');
+ assert.equal(h.v.dmgText,60,'QA can disable cosmetic budget to compare FPS');
  p.setEnabled(true);
 });
 test('Web / Android QA / Windows PC QA packages contain the SAME adaptive FX module',()=>{
