@@ -205,6 +205,7 @@ G.PKMSVVWiki=(()=>{
    !skillAwakeningDone||name!==tr('Thức tỉnh kỹ năng','Skill Awakening'))){
    const detail=document.createElement('div');detail.className='pkmsvv-pc-learn';
    const awakening=name===tr('Thức tỉnh kỹ năng','Skill Awakening');
+   if(awakening)detail.dataset.pkmsvvKnowledge='awakening';
    const toggle=document.createElement('button');toggle.type='button';toggle.textContent=(awakening?'▾ ':'▸ ')+name;
    toggle.setAttribute('aria-expanded',String(awakening));
    const p=document.createElement('div');p.hidden=!awakening;p.className='pkmsvv-pc-orb-details';

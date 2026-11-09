@@ -687,3 +687,64 @@
   min-height:32px!important;font-size:10px!important;
  }
 }
+
+/* PKMSVV_POKEMON_HEADER_V24 — three tabs share ONE row with title and Close.
+ * Do not use JS height hacks: each overlay owns the same accessible header. */
+#pkmsvv-pokebox-overlay .pkmbx-head{
+ display:grid!important;
+ grid-template-columns:max-content minmax(0,1fr) max-content!important;
+ align-items:center!important;gap:clamp(4px,.75vw,12px)!important;
+ min-width:0!important;min-height:43px!important;
+ margin:0 0 clamp(5px,.8vh,9px)!important;
+ padding:0 0 5px!important;border-bottom:1px solid #4b7987!important;
+ flex:0 0 auto!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-head h2{
+ margin:0!important;white-space:nowrap!important;min-width:0!important;
+ font-size:clamp(13px,1.65vw,22px)!important;line-height:1.18!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-head .pkmbx-pc-tabs{
+ display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ width:100%!important;min-width:0!important;max-width:100%!important;
+ padding:0!important;margin:0!important;border:0!important;
+ flex:1 1 auto!important;gap:clamp(3px,.5vw,9px)!important;
+ align-items:stretch!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-head .pkmbx-pc-tab{
+ box-sizing:border-box!important;display:flex!important;
+ align-items:center!important;justify-content:center!important;
+ min-width:0!important;max-width:100%!important;width:100%!important;
+ min-height:38px!important;flex:1 1 auto!important;
+ padding:4px clamp(2px,.8vw,11px)!important;
+ font-size:clamp(10px,1.25vw,16px)!important;
+ line-height:1.12!important;text-align:center!important;
+ white-space:normal!important;overflow-wrap:anywhere!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-head .pkmbx-pc-tab svg{
+ width:clamp(13px,1.8vw,22px)!important;
+ height:clamp(13px,1.8vw,22px)!important;
+ flex:0 0 auto!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-head>button[id$="-close"]{
+ min-height:38px!important;margin:0!important;white-space:nowrap!important;
+ padding:4px clamp(5px,.9vw,13px)!important;
+ font-size:clamp(11px,1.25vw,17px)!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-box-frame>.pkmbx-grid{
+ grid-template-columns:repeat(5,minmax(0,1fr))!important;
+}
+/* Prevent tiny phone portraits becoming 35px-wide unselectable Pokémon. */
+@media (orientation:portrait) and (max-width:620px){
+ #pkmsvv-pokebox-overlay .pkmbx-head{gap:3px!important;min-height:38px!important}
+ #pkmsvv-pokebox-overlay .pkmbx-head h2{font-size:11px!important}
+ #pkmsvv-pokebox-overlay .pkmbx-head .pkmbx-pc-tab{
+  min-height:33px!important;font-size:10px!important;padding:3px 1px!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-head .pkmbx-pc-tab svg{display:none!important}
+ #pkmsvv-pokebox-overlay .pkmbx-head>button[id$="-close"]{
+  padding:3px!important;font-size:10px!important;min-height:33px!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-box-frame>.pkmbx-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ }
+}

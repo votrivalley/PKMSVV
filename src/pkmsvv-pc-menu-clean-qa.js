@@ -29,6 +29,9 @@
   if(!overlay)return;
   overlay.querySelector('.pkmsvv-pc-hint')?.remove();
   const allDone=knowledgeDone();
+  // Hide the ENTIRE accordion row at 8/8, never leave an empty heading.
+  if(allDone)overlay.querySelectorAll('[data-pkmsvv-knowledge="awakening"]')
+   .forEach(row=>row.remove());
   const labels=overlay.querySelectorAll('.pkmsvv-pc-learn>button');
   for(const btn of labels){
    const label=String(btn.textContent||'').trim();

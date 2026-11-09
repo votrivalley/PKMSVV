@@ -370,11 +370,11 @@
        'Bars show base stats. Rank grants combat bonuses.')+'</p></section>'+
     '<div class="pkmbx-hub-buttons">'+
     '<button class="btn small gold" id="pkmbx-use" '+(G.DB?.guest||isCurrent?'disabled':'')+'>'+
-     (isCurrent?L('✓ Đang sử dụng','✓ Active'):L('✓ Chọn ra trận','✓ Set Active'))+'</button>'+
+     (isCurrent?L('✓ Sử dụng','✓ Use'):L('✓ Sử dụng','✓ Use'))+'</button>'+
     '<button class="btn small" id="pkmbx-star" '+(G.DB?.guest?'disabled':'')+'>'+
      (sharedFav?L('★ Bỏ yêu thích','★ Unfavorite'):L('☆ Yêu thích','☆ Favorite'))+'</button>'+
     '<button class="btn small" id="pkmbx-team" '+(G.DB?.guest?'disabled':'')+'>'+
-     (member?L('− Rút khỏi đội','− Remove from Team'):L('+ Vào đội hình','+ Add to Team'))+'</button></div>'+
+     (member?L('− Rời đội','− Leave Team'):L('+ Vào đội hình','+ Add to Team'))+'</button></div>'+
     '<div class="pkmbx-hub-tabs">'+
     '<button class="btn small'+(view==='info'?' gold':'')+'" data-box-tab="info">'+L('Thông tin','Details')+'</button>'+
     '<button class="btn small'+(view==='items'?' gold':'')+'" data-box-tab="items">'+L('Vật phẩm / TM','Items / TMs')+'</button>'+
@@ -479,7 +479,7 @@
   boxPane=doc.createElement('div');boxPane.id='pkmsvv-pokebox-overlay';
   boxPane.setAttribute('translate','no');
   boxPane.innerHTML='<section class="pkmbx-panel pkmbx-hub-panel" role="dialog" aria-modal="true" aria-label="PokéBox">'+
-   '<header class="pkmbx-head"><h2>◉ Pokémon</h2><button class="btn small" id="pkmbx-close">'+L('✕ Đóng','✕ Close')+'</button></header>'+pcTabs('box')+
+   '<header class="pkmbx-head"><h2>◉ Pokémon</h2>'+pcTabs('box')+'<button class="btn small" id="pkmbx-close">'+L('✕ Đóng','✕ Close')+'</button></header>'+
    '<div class="pkmbx-hub-main"><div class="pkmbx-hub-left">'+
    '<div class="pkmbx-hub-team-title"><h3>'+L('Đội hình 6 Pokémon sẵn sàng','Ready Team of 6')+'</h3><b id="pkmbx-team-count">0/6</b></div>'+
    '<div id="pkmbx-six" class="pkmbx-team-six"></div>'+
@@ -651,7 +651,7 @@
   upgradePane.hidden=true;
   upgradePane.setAttribute('translate','no');
   upgradePane.innerHTML='<section class="pkmbx-panel pkmbx-upgrade-panel" role="region" aria-label="'+L('Nâng cấp Pokémon','Pokémon upgrades')+'">'+
-   '<header class="pkmbx-head"><h2>◉ Pokémon</h2><button type="button" class="btn small" id="pkmbx-upgrade-close">'+L('✕ Đóng','✕ Close')+'</button></header>'+pcTabs('upgrade')+
+   '<header class="pkmbx-head"><h2>◉ Pokémon</h2>'+pcTabs('upgrade')+'<button type="button" class="btn small" id="pkmbx-upgrade-close">'+L('✕ Đóng','✕ Close')+'</button></header>'+
    '<div class="pkmbx-upgrade-heading"><h3>'+L('Nâng cấp Pokémon','Pokémon upgrades')+'</h3>'+
    '<p>'+L('Hai nhánh nâng cấp thật của game — không đặt lại chỉ số hay chuyển đổi dữ liệu save.','Both original upgrade paths — no resets or save conversion.')+'</p></div>'+
    '<div class="pkmbx-upgrade-options">'+
@@ -752,9 +752,9 @@
   dexPane=doc.createElement('div');dexPane.id='pkmbx-dex-overlay';
   dexPane.className='pkmbx-dex-inside-pc';dexPane.setAttribute('translate','no');dexPane.hidden=true;
   dexPane.innerHTML='<section class="pkmbx-panel pkmbx-dex-panel" role="dialog" aria-modal="true" aria-label="Pokédex">'+
-   '<header class="pkmbx-head"><h2>◉ Pokémon</h2><button class="btn small" id="pkmbx-dex-close">'+L('✕ Đóng','✕ Close')+'</button></header>'+pcTabs('dex')+
+   '<header class="pkmbx-head"><h2>◉ Pokémon</h2>'+pcTabs('dex')+'<button class="btn small" id="pkmbx-dex-close">'+L('✕ Đóng','✕ Close')+'</button></header>'+
 
-   '<p class="pkmbx-dex-rule" id="pkmbx-dex-rule" role="note">'+L('Hạ gục Pokémon trong Khám phá hoặc tiến hóa thành Pokémon đó để mở Pokédex và Chiêu mộ. Hạ quái trong Co-op, Arena và các chế độ khác không tính.', 'Defeat Pokémon in Explore or evolve into that Pokémon to unlock Pokédex and Recruitment. KOs in Co-op, Arena and other modes do not count.')+'</p>'+
+
    '<div class="pkmbx-dex-toolbar"><input id="pkmbx-dex-search" type="search" autocomplete="off" placeholder="'+L('Tìm tên Pokémon hoặc số Pokédex','Search Pokémon name or Dex number')+'"/>'+
    '<button type="button" class="btn small" id="pkmbx-dex-discovered" aria-pressed="false">'+L('✓ Đã phát hiện','✓ Discovered')+'</button>'+ 
    '<button type="button" class="btn small" id="pkmbx-dex-fav" aria-pressed="false">'+L('☆ Yêu thích','☆ Favorites')+'</button>'+
