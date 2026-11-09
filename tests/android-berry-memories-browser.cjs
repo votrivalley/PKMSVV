@@ -121,6 +121,22 @@ async function main(){
     probe:window.__berryRunProbe
    }));
    console.log('BERRY_REAL_MATCH_'+mode+'='+JSON.stringify(ongoing));
+   if(ongoing.state!=='playing'){
+    const detail=await page.evaluate(async()=>{
+     const src=[...document.scripts].find(x=>x.src.includes('app.min.js'))?.src;
+     const t=await(await fetch(src)).text(),lines=t.split('\n'),line=lines[7151]||'';
+     return {
+      script:src?.split('/').slice(-1)[0],lines:lines.length,lineLength:line.length,
+      updateAround:line.slice(600,1650),
+      endingAround:line.slice(7000,8150),
+      frameAround:line.slice(19400,20800),
+      coopMode:G.Social?.room?.mode,coopHost:G.Coop?.isHost,
+      roomMembers:G.Social?.room?.members?.map(x=>({uid:x.uid,bot:x.bot})),
+      finalState:G.Game?.state
+     };
+    });
+    console.log('BERRY_GAMEOVER_NATIVE_CONTEXT='+JSON.stringify(detail));
+   }
    assert.equal(ongoing.state,'playing','Berry ended on first seconds: '+JSON.stringify(ongoing));
    assert.equal(ongoing.active,true,'Berry objective deactivated early: '+JSON.stringify(ongoing));
    assert.ok(Number(ongoing.time)>3,'Berry simulation did not progress: '+JSON.stringify(ongoing));
