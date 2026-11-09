@@ -938,7 +938,7 @@ async function main(){
    })()`);
    console.log('EXPLORE_LEVELUP_REAL_UI=true');
    // Force one *native* level-up; do not accept a 65s smoke that stays Lv1.
-   const levelTrigger=await evaluate("(()=>({triggered:typeof G.Game?.debugLevelUp==='function'?(G.Game.debugLevelUp(),true):false,state:G.Game?.state}))()");
+   const levelTrigger=await evaluate("(()=>{const before={levelXp:String(G.Game?.levelXp).slice(0,900),level:G.Game?.player?.level,xp:G.Game?.player?.xp,need:G.Game?.player?.xpNeed,keys:Object.keys(G.Game?.player||{}).filter(k=>/xp|level/i.test(k)),state:G.Game?.state};const triggered=typeof G.Game?.debugLevelUp==='function'?(G.Game.debugLevelUp(),true):false;return {triggered,before,state:G.Game?.state,events:window.__pkmsvvRunProbe.events.slice(-8),levelPopup:G.UI?.isOpen?.('scr-levelup')};})()");
    console.log('EXPLORE_LEVELUP_FORCED='+JSON.stringify(levelTrigger));
    assert.equal(levelTrigger.triggered,true,'Native level-up trigger is missing');
    await sleep(1200);
