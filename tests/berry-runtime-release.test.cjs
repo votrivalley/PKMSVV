@@ -10,7 +10,7 @@ test('Web build replaces original embedded Berry and LanAI modules instead of do
  assert.equal((out.match(/G\.LanAI=/g)||[]).length,1);
  assert.match(out,/function chooseBerryAxis\(/);
  assert.match(out,/function rewardBerry\(/);
- assert.match(out,/Math\.round\(\(w-202\)\/2\)/);
+ assert.match(out,/Math\.round\(\(h-95\)\/2\)/);
  assert.doesNotMatch(out,/legacy:true/);
  new vm.Script(out);
 });
@@ -31,7 +31,7 @@ test('Web and isolated Android/PC packages use real Berry Rescue and AI sources 
 });
 test('Berry reward and HUD location are compatible with the corrected LAN bot steering',()=>{
  assert.match(read('src/pkmsvv-berry-rescue.js'),/result\.trees\.slice\(0,3\)\.every\(h=>h===true\|\|Number\(h\)>0\)/);
- assert.match(read('src/pkmsvv-berry-rescue.js'),/const left=Math\.max\(8,Math\.round\(\(w-202\)\/2\)\)/);
+ assert.match(read('src/pkmsvv-berry-rescue.js'),/const left=Math\.max\(8,Math\.min\(18,Math\.round\(w\*\.012\)\)\)/);
  assert.match(read('src/lan/lan-ai.js'),/function chooseBerryAxis\(/);
  const pack=read('scripts/promote-web-v20.cjs');
  assert.match(pack,/levelup-virtual-focus-v34/);
