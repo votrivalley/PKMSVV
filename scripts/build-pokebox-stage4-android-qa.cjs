@@ -37,7 +37,7 @@ function inject(){
  fs.mkdirSync(path.dirname(wikiQA),{recursive:true});
  fs.copyFileSync(path.join(root,'src/pkmsvv-wiki.js'),wikiQA);
  if(!html.includes('pkmsvv-wiki-qa.js'))
-  html=html.replace('</body>','<script defer src="js/ui/pkmsvv-wiki-qa.js"></script>\\n</body>');
+  html=html.replace('</body>','<script defer src="js/ui/pkmsvv-wiki-qa.js"></script>\n</body>');
  // The app title must unambiguously say this is a separate test build.
  html=html.replace(/<title>[^<]*<\/title>/,'<title>PokéBox 4/4 QA — KHÔNG PHẢI BẢN CHÍNH</title>');
  fs.writeFileSync(htmlFile,html,'utf8');
