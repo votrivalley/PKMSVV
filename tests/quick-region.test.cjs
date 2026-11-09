@@ -806,3 +806,26 @@ test('PvE outside has a 4% Rare chance and Rifts offer Rare/Epic, never random L
   assert.equal(roll(.99,false).probRare,.96);
  assert.equal(roll(.99,true).probEpic,.25);
 });
+
+// Cache must avoid repeated validity work on stable horde sprites, but permit
+// a real scripted species mutation to be corrected next time.
+test('exploration horde identity cache skips repeated species validation but notices a changed dex',()=>{
+ const h=harness(),quick=h.G.PKMSVVQuickRegion;
+ h.G.DEX_BY={25:{dex:25,name:'Pikachu',types:['electric']},
+  152:{dex:152,name:'Chikorita',types:['grass']}};
+ h.G.DEX=[{dex:25,gen:1},{dex:152,gen:2}];
+ h.G.SPRITE_META={25:{},152:{}};
+ assert.equal(quick.choose(0),true);
+ const enemy={dex:152,def:{dex:152,name:'Chikorita'},hp:200,maxHp:200};
+ assert.equal(quick.enforceLiveEnemy(enemy,0),true);
+ assert.equal(enemy.dex,25);
+ let lookups=0;
+ const before=h.G.DEX_BY;
+ h.G.DEX_BY=new Proxy(before,{get(target,key){lookups++;return target[key]}});
+ assert.equal(quick.enforceLiveEnemy(enemy,0),false);
+ assert.equal(lookups,0,'stable enemy must not reopen the per-Gen species lookup');
+ enemy.dex=152;enemy.def.dex=152;
+ assert.equal(quick.enforceLiveEnemy(enemy,0),true,'scripted transformation must still be sanitized');
+ assert.equal(enemy.dex,25);
+ assert.ok(lookups>0,'changed species must re-check the catalog');
+});

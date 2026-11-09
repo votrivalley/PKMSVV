@@ -599,6 +599,11 @@
  // EnemyMgr via a previously captured constructor. Sanitize the LIVE actor
  // before adding it, and periodically check the manager for bypassing paths.
  // This is strictly scoped to the selected normal Region session.
+ // Repeated full-crowd validation (every 10 game ticks) used to re-resolve
+ // species/rarity/sprite eligibility for every ALREADY VALID enemy. Identity
+ // is immutable in normal gameplay; cache per actor+region+dex in a WeakMap.
+ // If an event legitimately changes a species, the dex mismatch rechecks it.
+ const checkedIdentity=new WeakMap();
  function enforceLiveEnemy(enemy,index){
   if(!enemy||enemy.dead||enemy.remote||enemy.pkmsvvExploreBoss||enemy.def?.pkmsvvExploreBoss||
    index<0||index>=REGION_COUNT)return false;
@@ -608,13 +613,19 @@
    enemy.pkmsvvBossGuard||enemy.pkmsvvGuardianOf!==undefined||isBossGuardian(enemy.def))return false;
   const old=Number(enemy.dex??enemy.def?.dex);
   if(!Number.isInteger(old))return false;
+  const previous=checkedIdentity.get(enemy);
+  if(previous&&previous.index===index&&previous.dex===old)return false;
   const replacement=regionEnemyDefinition({dex:old,boss:bossLike(enemy)},index);
-  if(!replacement||replacement.dex===old)return false;
+  if(!replacement||replacement.dex===old){
+   if(replacement)checkedIdentity.set(enemy,{index,dex:old});
+   return false;
+  }
   const next=replacement.dex,mon=G.DEX_BY?.[next];
   if(!mon)return false;
   // Never change damage/HP, biome, boss flags, rewards or player Pokémon.
   // Only the visible species identity and sprite are changed.
   enemy.dex=next;
+  checkedIdentity.set(enemy,{index,dex:next});
   if(enemy.mon)enemy.mon=mon;
   if(enemy.def&&typeof enemy.def==='object')
    enemy.def={...enemy.def,dex:next,name:mon.name||('Pokémon '+next),
