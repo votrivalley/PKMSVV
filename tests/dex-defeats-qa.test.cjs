@@ -156,11 +156,10 @@ test('Pokédex explains Explore defeats OR evolution and shows silhouettes until
  assert.match(ui,/PKMSVVDexDefeats\?\.unlocked/);
  assert.match(ui,/pkmbx-dex-undefeated/);
  assert.match(ui,/Chưa phát hiện Pokémon này/);
- assert.match(ui,/Hạ gục Pokémon trong Khám phá hoặc tiến hóa/);
- assert.match(ui,/Co-op, Arena và các chế độ khác không tính/);
- assert.match(ui,/Defeat Pokémon in Explore or evolve into/,'English language rule');
+ assert.doesNotMatch(ui,/id="pkmbx-dex-rule"/,'long introductory Dex rule must not consume a line');
+ assert.match(ui,/Chưa phát hiện Pokémon này/,'undiscovered detail still teaches unlock');
+ assert.match(ui,/Defeat it in Explore or evolve into this species/,'English detail still teaches unlock');
  assert.match(ui,/pkmbx-dex-discovered/,'discovered-only filter must be a real button');
- assert.match(css,/#pkmbx-dex-rule/);
  assert.match(css,/pkmbx-dex-card\.is-undefeated/);
  for(const filename of ['scripts/build-pokebox-stage1-qa.cjs','scripts/build-pokebox-stage1-pc-qa.cjs','scripts/patch-pokebox-stage4-apk-qa.cjs']){
   const body=fs.readFileSync(path.join(__dirname,'..',filename),'utf8');
