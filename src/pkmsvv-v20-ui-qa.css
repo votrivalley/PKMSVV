@@ -301,3 +301,16 @@
   -webkit-overflow-scrolling:touch;
  }
 }
+
+/* Pokédex type badges share the PokéBox palette; rarity stays separate. */
+#pkmsvv-pokebox-overlay .pkmbx-dex-badges .pkmbx-type-pill {
+ display:inline-flex;align-items:center;justify-content:center;
+ background:var(--pkmbx-pill,#a7a9af)!important;
+ border:1px solid rgba(21,35,45,.48)!important;
+ border-radius:999px!important;
+ color:#132735!important;
+ font-weight:800!important;
+ text-shadow:none!important;
+ padding:3px 9px!important;
+ min-height:24px;
+}
