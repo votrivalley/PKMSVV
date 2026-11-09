@@ -263,6 +263,29 @@ G.LanAI=(()=>{
   }
   return score+liquidCost(pl,p.x,p.y)*9;
  }
+ // Berry's grove is flattened into open walkable ground. Running the ordinary
+ // 700-node A* route for EACH of 3 defending bots several times a second can
+ // monopolize the JS thread, visibly freezing an otherwise tiny battle.
+ // Use bounded 9-direction local steering ONLY in Berry/Easy Berry; still
+ // test collisions, enemies and incoming hazards. Other modes keep A*.
+ function chooseBerryAxis(pl,goal,enemies,shots,hazards){
+  if(!goal||!Number.isFinite(goal.x)||!Number.isFinite(goal.y))return [0,0];
+  const dx=goal.x-pl.x,dy=goal.y-pl.y,d=Math.hypot(dx,dy);
+  if(!Number.isFinite(d)||d<14)return [0,0];
+  const angle=Math.atan2(dy,dx),step=Math.min(20,Math.max(9,(Number(pl.spd)||90)*.12));
+  let best=[0,0],cost=d+18;
+  const offsets=[0,Math.PI/4,-Math.PI/4,Math.PI/2,-Math.PI/2,
+   Math.PI*.75,-Math.PI*.75,Math.PI];
+  for(const offset of offsets){
+   const a=angle+offset,axis=[Math.cos(a),Math.sin(a)];
+   const next={x:pl.x+axis[0]*step,y:pl.y+axis[1]*step};
+   if(!segment(pl,pl,next))continue;
+   const risk=danger(pl,next,enemies,shots,hazards);
+   const score=Math.hypot(goal.x-next.x,goal.y-next.y)+risk*.24;
+   if(score<cost){cost=score;best=axis;}
+  }
+  return best;
+ }
  function chooseAxis(pl,s,goal,enemies,shots,hazards){
   const unsafe=liquidCost(pl,pl.x,pl.y)>0;
   if(unsafe)goal=dryPoint(pl,pl)||goal;
@@ -322,13 +345,13 @@ G.LanAI=(()=>{
      s.roam=dryPoint(pl,{x:s.home.x+Math.cos(a)*300,y:s.home.y+Math.sin(a)*300})||s.home;
      s.wander=5+Math.random()*6;
     }
-    if(['coop','berry','berryeasy'].includes(mode)&&(!s.roam||s.wander<=0||!s.anchor||sq(host,s.anchor)>180**2||sq(pl,host)>430**2)){
+    if(mode==='coop'&&(!s.roam||s.wander<=0||!s.anchor||sq(host,s.anchor)>180**2||sq(pl,host)>430**2)){
      const a=Math.random()*Math.PI*2,radius=140+Math.random()*120;
      s.roam=dryPoint(pl,{x:host.x+Math.cos(a)*radius,y:host.y+Math.sin(a)*radius})||{x:pl.x,y:pl.y};
      s.anchor={x:host.x,y:host.y};s.wander=4+Math.random()*5;
     }
     let goal=['royale','coop','berry','berryeasy'].includes(mode)?s.roam:host;
-    let objective=G.EggRush?.objective?.(pl);
+    let objective=mode==='berry'||mode==='berryeasy'?null:G.EggRush?.objective?.(pl);
     if(['coop','berry','berryeasy'].includes(mode)&&objective&&sq(objective,host)>520**2)objective=null;
     const nests=objective?[objective]:mode==='eggrush'?(G.EggRush?.nests||[]).filter(n=>!n.taken):[];
     if(nests.length)goal=nests.reduce((a,b)=>sq(pl,a)<sq(pl,b)?a:b);
@@ -352,7 +375,9 @@ G.LanAI=(()=>{
      if(defense)goal=defense;
     }
     if(G.Arena?.active)goal=G.Arena.clampGoal(goal,pl);
-    s.axis=chooseAxis(pl,s,goal,enemies,shots,hazards);
+    s.axis=mode==='berry'||mode==='berryeasy'?
+     chooseBerryAxis(pl,goal,enemies,shots,hazards):
+     chooseAxis(pl,s,goal,enemies,shots,hazards);
     s.think=s.personality.think*(.9+Math.random()*.2);
     const dash=G.PKMSVVDash?.preview(pl);
     if(mode!=='berry'&&mode!=='berryeasy'&&dash?.ready&&Math.random()<s.personality.dash&&Math.hypot(...s.axis)>.5&&
