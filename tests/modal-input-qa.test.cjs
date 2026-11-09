@@ -79,3 +79,53 @@ test('Android WebView landscape and portrait Pokémon layout remains reachable',
  assert.match(browser,/Emulation\.setDeviceMetricsOverride/);
  assert.match(browser,/scrollTo>v\.old/);
 });
+
+test('Native level-up skill divs respond to D-pad and A during paused simulation',()=>{
+ const callbacks=[],clicked=[];
+ const makeClass=()=>{const s=new Set();return{add:x=>s.add(x),remove:x=>s.delete(x),contains:x=>s.has(x)};};
+ let doc;
+ function el(name,x=0){return {
+  name,nodeType:1,tagName:'DIV',classList:makeClass(),hidden:false,isConnected:true,
+  attrs:{},children:[],parentElement:null,
+  getAttribute(k){return this.attrs[k]??null},hasAttribute(k){return Object.hasOwn(this.attrs,k)},
+  setAttribute(k,v){this.attrs[k]=v},getClientRects(){return [{}]},
+  getBoundingClientRect(){return {left:x,top:50,width:100,height:80}},
+  matches:s=>s.includes('.card')&&name.startsWith('card'),
+  focus(){doc.activeElement=this},click(){clicked.push(name)},
+  contains(c){return c===this||this.children.some(e=>e.contains?.(c))},
+  querySelectorAll(){return[]}
+ };}
+ const root=el('screen');root.id='scr-levelup';
+ const tray=el('tray');root.children=[tray];tray.parentElement=root;
+ tray.children=[el('card0',20),el('card1',150),el('card2',280)];
+ tray.children.forEach(e=>{e.parentElement=tray});
+ root.querySelector=q=>q==='#cards'?tray:null;
+ doc={body:root,readyState:'loading',activeElement:null,
+  querySelectorAll:()=>[root],querySelector:()=>null,
+  getElementById:id=>id==='scr-levelup'?root:null,addEventListener(){}};
+ const pad={connected:true,axes:[0,0],
+  buttons:Array.from({length:18},()=>({pressed:false,value:0}))};
+ let nativeCalls=0;
+ const G={Game:{state:'levelup'},PKMSVVPadOrb:{bindings:()=>({confirm:0,back:1})},
+  Pad:{poll(){nativeCalls++}}};
+ const nav=new Function('G','document','navigator','getComputedStyle',
+  'requestAnimationFrame','window','Node','performance',
+  read('src/pkmsvv-modal-navigation-qa.js')+'\nreturn G.PKMSVVModalNavQA;')
+   (G,doc,{getGamepads:()=>[pad]},
+    ()=>({display:'block',visibility:'visible',zIndex:'2000'}),
+    fn=>{callbacks.push(fn)},{addEventListener(){}},
+    {DOCUMENT_POSITION_FOLLOWING:4},{now:()=>1000});
+ const cards=nav.controls(root);
+ assert.equal(cards.length,3);
+ assert.ok(cards.every(c=>c.attrs.role==='button'&&c.tabIndex===0));
+ assert.equal(nav.first(root),true);
+ assert.equal(nav.move('right'),true);
+ assert.equal(doc.activeElement,cards[1]);
+ pad.buttons[0].pressed=true;
+ const heartbeat=callbacks.find(fn=>fn.name==='levelupPadHeartbeat');
+ assert.equal(typeof heartbeat,'function');
+ heartbeat();
+ assert.deepEqual(clicked,['card1'],'A selects the second skill using the real click');
+ assert.equal(nativeCalls,0,'gameplay should remain paused');
+ assert.equal(nav.controls(root).length,3,'no duplicate controls');
+});
