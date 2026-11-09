@@ -377,13 +377,18 @@ G.LanAI=(()=>{
     // Berry Rescue overrides ordinary wandering, distant rescues and monster chase.
     // The grove coordinates are authoritative and all bots patrol/defend close to it.
     if(mode==='berry'||mode==='berryeasy'){
-     const defense=G.PKMSVVBerryRescue?.defendGoal?.(pl,enemies,activeBots().findIndex(x=>x.uid===bot.uid));
+     // Defenders only need nearby threats. Keep every hostile actor active,
+     // while avoiding 8 x full-horde distance scans per bot per decision.
+     const nearby=enemies.filter(e=>sq(pl,e)<470*470);
+     const nearbyShots=shots.filter(e=>sq(pl,e)<360*360);
+     const defense=G.PKMSVVBerryRescue?.defendGoal?.(pl,nearby,activeBots().findIndex(x=>x.uid===bot.uid));
      if(defense)goal=defense;
+     if(G.Arena?.active)goal=G.Arena.clampGoal(goal,pl);
+     s.axis=chooseBerryAxis(pl,goal,nearby,nearbyShots,hazards);
+    }else{
+     if(G.Arena?.active)goal=G.Arena.clampGoal(goal,pl);
+     s.axis=chooseAxis(pl,s,goal,enemies,shots,hazards);
     }
-    if(G.Arena?.active)goal=G.Arena.clampGoal(goal,pl);
-    s.axis=mode==='berry'||mode==='berryeasy'?
-     chooseBerryAxis(pl,goal,enemies,shots,hazards):
-     chooseAxis(pl,s,goal,enemies,shots,hazards);
     s.think=s.personality.think*(.9+Math.random()*.2);
     const dash=G.PKMSVVDash?.preview(pl);
     if(mode!=='berry'&&mode!=='berryeasy'&&dash?.ready&&Math.random()<s.personality.dash&&Math.hypot(...s.axis)>.5&&
