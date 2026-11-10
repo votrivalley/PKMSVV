@@ -53,6 +53,8 @@ jobs:
               assert len(blob)>100,f'empty sprite {dex}'
               print('offline sprite',dex,w,h,len(blob))
           PY
+      - name: Install icon generator
+        run: python3 -m pip install --disable-pip-version-check pillow
       - name: Build 3 independent NRO diagnostics (no ZL needed)
         working-directory: switch/native-demo
         shell: bash
@@ -71,14 +73,29 @@ jobs:
           if(![0,1,2].includes(mode))throw Error('Invalid diagnostic render mode');
           fs.writeFileSync('romfs/main.js',src.replace(anchor,'const DIAG_BOOT_MODE='+mode+';'));
           NODE
-            npm run nro
-            test -s pkmsvv-switch-native-demo.nro
+            # Make each NRO unmistakable in hbmenu: embedded title,
+            # version, unique title ID, and a distinctive square icon.
+            node - <<'NODE'
+          const fs=require('node:fs');
+          const mode=Number(process.env.PKMSVV_RENDER_MODE);
+          const names=['MIN','STATIC','FULL'];
+          const p=JSON.parse(fs.readFileSync('package.json','utf8'));
+          p.name='pkmsvv-diag-'+names[mode].toLowerCase();
+          p.version='0.0.7';
+          p.nacp={...(p.nacp||{}),
+            id:'01473656560'+String(mode+1)+'0000',
+            title:'PKMSVV '+names[mode]+' 07'};
+          fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\\n');
+          NODE
             case "$mode" in
-              0) suffix=MIN ;;
-              1) suffix=STATIC ;;
-              2) suffix=FULL-NO-SPRITES ;;
+              0) suffix=MIN; icon=MIN ;;
+              1) suffix=STATIC; icon=STATIC ;;
+              2) suffix=FULL-NO-SPRITES; icon=FULL ;;
             esac
-            cp pkmsvv-switch-native-demo.nro "../../dist/switch-native-demo/PKMSVV-Switch-Diag-v006-$suffix.nro"
+            python3 make_icon.py "$icon"
+            npm run nro
+            test -s "pkmsvv-diag-${icon,,}.nro"
+            cp "pkmsvv-diag-${icon,,}.nro" "../../dist/switch-native-demo/PKMSVV-Switch-Diag-v007-$suffix.nro"
           done
           ls -lh ../../dist/switch-native-demo/
       - name: Confirm all three independent render variants
@@ -86,11 +103,11 @@ jobs:
         run: |
           set -euo pipefail
           for suffix in MIN STATIC FULL-NO-SPRITES; do
-            test -s "dist/switch-native-demo/PKMSVV-Switch-Diag-v006-$suffix.nro"
+            test -s "dist/switch-native-demo/PKMSVV-Switch-Diag-v007-$suffix.nro"
           done
       - uses: actions/upload-artifact@v4
         with:
-          name: PKMSVV-Switch-Diagnostic-v006-Three-NROs
+          name: PKMSVV-Switch-Diagnostic-v007-Labeled-NROs
           path: dist/switch-native-demo/*.nro
           retention-days: 14
           if-no-files-found: error
