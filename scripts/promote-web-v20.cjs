@@ -57,7 +57,7 @@ for(const prefix of ['game','ai/game']){
  // into BOTH actual game routes (the app.min.js engine is unchanged).
  for(const name of ['pkmsvv-changelog-v20-qa.js','pkmsvv-box-hub-ui.js',
   'pkmsvv-dex-defeats-qa.js','pkmsvv-runtime-controls-qa.js',
-  'pkmsvv-quick-region.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-fusion-evolved.js',
+  'pkmsvv-quick-region.js','pkmsvv-forget-skill.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-fusion-evolved.js',
   'pkmsvv-box-hub.js','pkmsvv-recruitment-qa.js',
   'pkmsvv-modal-navigation-qa.js']){
   const fresh=fs.readFileSync(path.join(root,'src',name),'utf8');

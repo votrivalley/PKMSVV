@@ -88,3 +88,28 @@ body.pkmsvv-competitive-evo .pkmsvv-evo-panel .pkmsvv-evo-option{
  display:block;grid-column:1/-1;text-align:center;
  font:700 12px/1.4 sans-serif;color:#ffe39c;padding:5px;
 }
+
+/* Skill forgetting: same three-choice R+X/Y/B layout as live level-up.
+   Hidden cards must remain hidden even against legacy author display:flex. */
+#pkmsvv-forget-skill .pkmsvv-forget-choice[hidden]{display:none!important}
+#pkmsvv-forget-skill .pkmsvv-forget-grid{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;
+}
+#pkmsvv-forget-skill .pkmsvv-forget-choice{
+ position:relative;min-width:0;padding-top:23px;
+}
+#pkmsvv-forget-skill .pkmsvv-forget-choice::before{
+ position:absolute;right:5px;top:4px;font:700 11px/1 sans-serif;
+ color:#ffe9aa;background:#132c48;padding:3px 5px;border-radius:4px;
+}
+#pkmsvv-forget-skill .pkmsvv-forget-choice[data-pkmsvv-forget-slot="0"]::before{content:"R + X"}
+#pkmsvv-forget-skill .pkmsvv-forget-choice[data-pkmsvv-forget-slot="1"]::before{content:"R + Y"}
+#pkmsvv-forget-skill .pkmsvv-forget-choice[data-pkmsvv-forget-slot="2"]::before{content:"R + B"}
+#pkmsvv-forget-skill .pkmsvv-forget-page{
+ margin:8px 0 2px;text-align:center;color:#ffe59e;font-weight:800;
+}
+@media(max-width:620px){
+ #pkmsvv-forget-skill .pkmsvv-forget-grid{gap:3px}
+ #pkmsvv-forget-skill .pkmsvv-forget-choice{font-size:10px;padding:22px 4px 5px;min-height:49px}
+ #pkmsvv-forget-skill .pkmsvv-forget-icon{display:none}
+}
