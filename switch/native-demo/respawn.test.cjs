@@ -108,7 +108,7 @@ test('Fixed diagnostic NRO does not change render mode when ZL is pressed',()=>{
 test('Compiled NRO modes 0, 1, 2 boot directly without touching ZL',()=>{
  for(const mode of [0,1,2]){
   const patched=js.replace('const DIAG_BOOT_MODE=0;','const DIAG_BOOT_MODE='+mode+';');
-  assert.notEqual(patched,js||'','diagnostic source has boot-mode anchor');
+  assert.equal(patched.includes('const DIAG_BOOT_MODE='+mode+';'),true,'diagnostic source has expected boot-mode value');
   const canvas={fillRect(){},beginPath(){},moveTo(){},lineTo(){},stroke(){},arc(){},fill(){},fillText(){},strokeRect(){}};
   let frame;
   const c=vm.createContext({
