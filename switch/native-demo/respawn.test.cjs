@@ -136,7 +136,7 @@ test('L loads Pikachu and Rattata exactly once, limits Rattata to four draws',()
 });
 test('Pidgey and Zubat use vector fallback even with sprites enabled',()=>{
  const t=boot();
- t.get("spritesEnabled=true;loaded.pikachu=true;loaded.rattata=true;SPRITES.pikachu={};SPRITES.rattata={};enemies=[{species:'pidgey',x:60,y:300,r:15,hp:3,speed:0},{species:'zubat',x:100,y:300,r:15,hp:3,speed:0}]");
+ t.get("spritesEnabled=true;loaded.pikachu=true;loaded.rattata=true;SPRITES.pikachu={};SPRITES.rattata={};spawnAt=Infinity;enemies=[{species:'pidgey',x:60,y:300,r:15,hp:3,speed:0},{species:'zubat',x:100,y:300,r:15,hp:3,speed:0}]");
  t.frame(1000);
  assert.equal(t.ops.drawImage,1,'only the player sprite should render');
  assert.equal(t.get('enemySpritesDrawn'),0);
