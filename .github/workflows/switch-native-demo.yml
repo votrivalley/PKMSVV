@@ -53,20 +53,44 @@ jobs:
               assert len(blob)>100,f'empty sprite {dex}'
               print('offline sprite',dex,w,h,len(blob))
           PY
-      - name: Build self-contained NRO
+      - name: Build 3 independent NRO diagnostics (no ZL needed)
         working-directory: switch/native-demo
-        run: npm run nro
-      - name: Verify and stage standalone NRO
         shell: bash
         run: |
           set -euo pipefail
-          test -s switch/native-demo/pkmsvv-switch-native-demo.nro
-          mkdir -p dist/switch-native-demo
-          cp switch/native-demo/pkmsvv-switch-native-demo.nro dist/switch-native-demo/
-          ls -lh dist/switch-native-demo/
+          cp romfs/main.js /tmp/pkmsvv-switch-diag-main.js
+          mkdir -p ../../dist/switch-native-demo
+          for mode in 0 1 2; do
+            export PKMSVV_RENDER_MODE="$mode"
+            node - <<'NODE'
+          const fs=require('node:fs');
+          const src=fs.readFileSync('/tmp/pkmsvv-switch-diag-main.js','utf8');
+          const anchor='const DIAG_BOOT_MODE=0;';
+          if(src.split(anchor).length!==2)throw Error('Diagnostic boot-mode anchor drift');
+          const mode=Number(process.env.PKMSVV_RENDER_MODE);
+          if(![0,1,2].includes(mode))throw Error('Invalid diagnostic render mode');
+          fs.writeFileSync('romfs/main.js',src.replace(anchor,'const DIAG_BOOT_MODE='+mode+';'));
+          NODE
+            npm run nro
+            test -s pkmsvv-switch-native-demo.nro
+            case "$mode" in
+              0) suffix=MIN ;;
+              1) suffix=STATIC ;;
+              2) suffix=FULL-NO-SPRITES ;;
+            esac
+            cp pkmsvv-switch-native-demo.nro "../../dist/switch-native-demo/PKMSVV-Switch-Diag-v006-$suffix.nro"
+          done
+          ls -lh ../../dist/switch-native-demo/
+      - name: Confirm all three independent render variants
+        shell: bash
+        run: |
+          set -euo pipefail
+          for suffix in MIN STATIC FULL-NO-SPRITES; do
+            test -s "dist/switch-native-demo/PKMSVV-Switch-Diag-v006-$suffix.nro"
+          done
       - uses: actions/upload-artifact@v4
         with:
-          name: PKMSVV-Switch-Native-Demo-NRO
+          name: PKMSVV-Switch-Diagnostic-v006-Three-NROs
           path: dist/switch-native-demo/*.nro
           retention-days: 14
           if-no-files-found: error
