@@ -1,0 +1,52 @@
+name: Switch Native Demo (nx.js - no Brewser)
+on:
+  push:
+    branches: [feature/switch-native-nxjs-demo]
+    paths:
+      - 'switch/native-demo/**'
+      - '.github/workflows/switch-native-demo.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify demo has no browser dependencies
+        shell: bash
+        run: |
+          node --check switch/native-demo/main.js
+          ! grep -E 'document\.|window\.location|WebApplet|Brewser' switch/native-demo/main.js
+          node -e "const p=require('./switch/native-demo/package.json'); if(!p.nacp.id.startsWith('01')||!p.nacp.id.endsWith('0000'))process.exit(1)"
+      - name: Install pinned-by-lockfile runtime packagers
+        working-directory: switch/native-demo
+        run: npm install --no-audit --no-fund
+      - name: Bundle demo into RomFS
+        working-directory: switch/native-demo
+        run: npm run build
+      - name: Build self-contained NRO
+        working-directory: switch/native-demo
+        run: npm run nro
+      - name: Build self-contained NSP
+        working-directory: switch/native-demo
+        run: npm run nsp
+      - name: Verify native deliverables
+        shell: bash
+        run: |
+          set -euo pipefail
+          find switch/native-demo -maxdepth 2 -type f \( -name '*.nro' -o -name '*.nsp' \) -print -exec ls -lh {} \;
+          test "$(find switch/native-demo -maxdepth 2 -name '*.nro' | wc -l)" -ge 1
+          test "$(find switch/native-demo -maxdepth 2 -name '*.nsp' | wc -l)" -ge 1
+          mkdir -p dist/switch-native-demo
+          find switch/native-demo -maxdepth 2 -type f \( -name '*.nro' -o -name '*.nsp' \) -exec cp {} dist/switch-native-demo/ \;
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-Switch-Native-Demo-NRO-NSP
+          path: dist/switch-native-demo/
+          retention-days: 14
+          if-no-files-found: error
