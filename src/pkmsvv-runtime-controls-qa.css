@@ -178,3 +178,21 @@
   right:max(9px,env(safe-area-inset-right))!important;
  }
 }
+
+/* Adaptive FPS visual quality, shares existing Settings menu layout. */
+#scr-settings .pkmsvv-fx-setting{
+ display:flex;align-items:center;justify-content:space-between;gap:14px;
+ border:1px solid #4e8e95;border-radius:8px;padding:12px;
+ font-weight:700;line-height:1.45;
+}
+#scr-settings #pkmsvv-fx-quality{
+ min-height:38px;max-width:min(56%,250px);
+ background:#173b4e;color:#fff9dc;border:2px solid #98c9c3;
+ border-radius:7px;padding:6px 8px;font:700 13px/1.3 inherit;
+ cursor:pointer;
+}
+#scr-settings #pkmsvv-fx-quality:focus-visible{outline:3px solid #ffe188;outline-offset:2px}
+@media(max-width:520px){
+ #scr-settings .pkmsvv-fx-setting{gap:7px;padding:8px;font-size:12px}
+ #scr-settings #pkmsvv-fx-quality{max-width:58%;font-size:12px}
+}
