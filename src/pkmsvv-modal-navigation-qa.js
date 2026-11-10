@@ -16,7 +16,39 @@
  const isEditable=el=>!!el&&(/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName||'')||el.isContentEditable);
  const OVERLAYS=SELECTORS.join(',');
  let cachedRoot=null,dirty=true,scanCount=0,cacheEnabled=true;
- let levelCursor=-1;
+ let levelCursor=-1,levelSession=null;
+ let previousLevelButtons=[false,false,false,false];
+ function installLevelPages(){
+  const ui=G.RunUI;
+  if(!ui||typeof ui.showLevelUp!=='function')return false;
+  if(ui.showLevelUp._pkmsvvThreePage)return true;
+  const original=ui.showLevelUp;
+  const wrapped=function(level,offers,complete,...rest){
+   if(!Array.isArray(offers)||offers.length<=3){
+    levelSession=null;return original.call(this,level,offers,complete,...rest);
+   }
+   const session={ui:this,level,offers:offers.slice(),rest,page:0};
+   session.finish=(choice,...args)=>{
+    if(levelSession===session)levelSession=null;
+    return complete?.(choice,...args);
+   };
+   levelSession=session;
+   return original.call(this,level,session.offers.slice(0,3),session.finish,...rest);
+  };
+  wrapped._pkmsvvThreePage=true;
+  wrapped._pkmsvvRenderPage=(session)=>original.call(session.ui,session.level,
+   session.offers.slice(session.page*3,session.page*3+3),session.finish,...session.rest);
+  ui.showLevelUp=wrapped;return true;
+ }
+ function levelPage(root){
+  const session=levelSession;
+  if(root?.id!=='scr-levelup'||!session||session.offers.length<=3)return false;
+  const pages=Math.ceil(session.offers.length/3);
+  session.page=(session.page+1)%pages;
+  G.RunUI.showLevelUp._pkmsvvRenderPage(session);
+  root.setAttribute('data-pkmsvv-page-label',(session.page+1)+' / '+pages);
+  return true;
+ }
  function visible(el){
   if(!el||!el.isConnected)return false;
   for(let n=el;n&&n.nodeType===1;n=n.parentElement){
@@ -182,11 +214,13 @@
   if(e.altKey||e.ctrlKey||e.metaKey)return;
   const root=active();if(!root)return;
   const key=String(e.key||'').toLowerCase(),code=e.code||'';
+  // Keep movement keys free while skill choices are open.
+  if(root.id==='scr-levelup'&&['arrowleft','arrowright','arrowup','arrowdown','w','a','s','d'].includes(key))return;
   // Live evolution: arrows/D-pad select; WASD/left stick still move the fighter.
   if(root.classList?.contains('pkmsvv-evo-live')&&
     ['w','a','s','d'].includes(key))return;
   const critical=key==='escape'||key==='backspace'||key==='1'||key==='2'||
-    (root.id==='scr-levelup'&&['arrowleft','arrowright','arrowup','arrowdown','w','a','s','d','enter',' ','tab'].includes(key))||
+    (root.id==='scr-levelup'&&key==='tab')||
     (root.classList?.contains('pkmsvv-evo')&&(key==='enter'||key===' '));
   if(e.defaultPrevented&&!critical)return;
   if(root.id==='scr-item'&&!(root.contains(document.activeElement)&&isEditable(document.activeElement))){
@@ -281,6 +315,32 @@
     lastDirection=null;
     return true;
   }
+  const level=active(true);
+  if(level?.id==='scr-levelup'){
+   // Standard Gamepad API: R=5, X=2, Y=3, B=1, A=0.
+   // R+X/Y/B select three visible cards; A pages; no stick/D-pad capture.
+   const buttons=[pressed(2),pressed(3),pressed(1),pressed(0)];
+   const edges=buttons.map((on,i)=>on&&!previousLevelButtons[i]);
+   previousLevelButtons=buttons;
+   if(level.getAttribute?.('data-pkmsvv-pad-mode')!=='true')
+    level.setAttribute('data-pkmsvv-pad-mode','true');
+   if(levelSession?.offers.length>3)
+    level.setAttribute('data-pkmsvv-page-label',
+     (levelSession.page+1)+' / '+Math.ceil(levelSession.offers.length/3));
+   if(edges[3])levelPage(level);
+   if(shoulderR){
+    const index=edges.findIndex((on,i)=>i<3&&on);
+    if(index>=0){
+     const cards=levelCards(level);
+     if(index<cards.length){
+      if(typeof G.RunUI?.pick==='function')G.RunUI.pick(index);
+      else cards[index].click();
+     }
+    }
+   }
+   prevConfirm=buttons[3];prevBack=buttons[2];return true;
+  }
+  previousLevelButtons=[false,false,false,false];
   const confirm=Number.isInteger(map.confirm)?map.confirm:0;
   const back=Number.isInteger(map.back)?map.back:1;
   const left=pressed(14)||Number(pad.axes?.[0])<-.55;
@@ -392,14 +452,15 @@
  }).observe(document.body,{childList:true,subtree:true,attributes:true,
   attributeFilter:['hidden','class','style','aria-hidden']});
  // Also install when the base gamepad initializes later than the QA scripts.
+ installLevelPages();
  if(!installPad()){
   let tries=0;
   const retry=()=>{if(installPad()||++tries>120)return;requestAnimationFrame(retry);};
   requestAnimationFrame(retry);
  }
- document.addEventListener('DOMContentLoaded',queue,{once:true});queue();
+ document.addEventListener('DOMContentLoaded',()=>{installLevelPages();queue();},{once:true});queue();
  G.PKMSVVModalNavQA={active,controls,setFocus,first,move,close,itemSkip,
-  installPad,installFocusGuard,onKey,pollModal,invalidate,
+  installPad,installFocusGuard,installLevelPages,levelPage,onKey,pollModal,invalidate,
   setCacheEnabled(on){cacheEnabled=on!==false;dirty=true;return cacheEnabled;},
   get scanCount(){return scanCount;}};
 })();
