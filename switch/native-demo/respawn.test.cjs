@@ -61,18 +61,13 @@ test('Native diagnostic demo survives 150 seconds including the 25-second specie
  assert.ok(s.enemies<=32&&s.shots<=32,'bounded gameplay actor counts');
  assert.equal(s.spritesEnabled,false,'safe vector rendering default must remain off');
 });
-test('Switch L toggles sprite path on a rising edge without affecting gameplay',()=>{
+test('Stable renderer does not decode native textures even if L is pressed',()=>{
  const pad={connected:true,buttons:Array.from({length:18},()=>({pressed:false,value:0})),axes:[0,0]};
  const t=boot(pad);
  t.frame(1000);t.frame(1016);
- assert.equal(t.inspect().spritesEnabled,false);
- assert.equal(vm.runInContext('spriteLoadStarted',t.context),false,'never decode images in default vector mode');
+ assert.equal(vm.runInContext('spriteLoadStarted',t.context),false);
  pad.buttons[4].pressed=true;t.frame(1032);
- assert.equal(vm.runInContext('spriteLoadStarted',t.context),true,'load sprites only after L');
- assert.equal(t.inspect().spritesEnabled,true);
- t.frame(1048);assert.equal(t.inspect().spritesEnabled,true,'holding L must not retrigger');
- pad.buttons[4].pressed=false;t.frame(1064);
- pad.buttons[4].pressed=true;t.frame(1080);
+ assert.equal(vm.runInContext('spriteLoadStarted',t.context),false);
  assert.equal(t.inspect().spritesEnabled,false);
 });
 
@@ -105,18 +100,22 @@ test('Fixed diagnostic NRO does not change render mode when ZL is pressed',()=>{
  assert.equal(vm.runInContext('renderMode',t.context),0);
  assert.equal(t.inspect().lastError,'');
 });
-test('Compiled NRO modes 0, 1, 2 boot directly without touching ZL',()=>{
- for(const mode of [0,1,2]){
-  const patched=js.replace('const DIAG_BOOT_MODE=0;','const DIAG_BOOT_MODE='+mode+';');
-  assert.equal(patched.includes('const DIAG_BOOT_MODE='+mode+';'),true,'diagnostic source has expected boot-mode value');
-  const canvas={fillRect(){},beginPath(){},moveTo(){},lineTo(){},stroke(){},arc(){},fill(){},fillText(){},strokeRect(){}};
-  let frame;
-  const c=vm.createContext({
-   screen:{getContext:()=>canvas},navigator:{getGamepads:()=>[]},
-   requestAnimationFrame(fn){frame=fn},console:{error(){}}
-  });
-  vm.runInContext(patched,c);frame(1000);frame(1016);
-  assert.equal(vm.runInContext('renderMode',c),mode);
-  assert.equal(vm.runInContext('lastError',c),'');
- }
+test('Stable source never enters the complex full renderer',()=>{
+ assert.match(js,/const SAFE_RENDER_MS=30/);
+ const start=js.indexOf('function draw(){');
+ const end=js.indexOf('\\nfunction frame(now){',start);
+ const render=js.slice(start,end);
+ for(const method of ['drawImage','fillText','arc(','beginPath(','stroke('])
+  assert.equal(render.includes(method),false,'unsafe Canvas operation in stable draw: '+method);
+ assert.match(js,/if\\(now-lastDrawAt>=SAFE_RENDER_MS\\)/);
+});
+test('R+X/Y/B selects a three-card skill without stopping movement simulation',()=>{
+ const pad={connected:true,buttons:Array.from({length:18},()=>({pressed:false,value:0})),axes:[1,0]};
+ const t=boot(pad);t.frame(1000);t.frame(1016);
+ vm.runInContext('setChoices()',t.context);
+ const old=vm.runInContext('px',t.context);
+ pad.buttons[5].pressed=true;pad.buttons[3].pressed=true;t.frame(1032);
+ assert.equal(vm.runInContext('pickOpen',t.context),false);
+ assert.equal(vm.runInContext('attack',t.context),2);
+ assert.ok(vm.runInContext('px',t.context)>old,'movement must remain live');
 });
