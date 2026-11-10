@@ -295,7 +295,12 @@
   const speed=pressed(Number.isInteger(map.speed)?map.speed:5);
   const board=pressed(Number.isInteger(map.leaderboard)?map.leaderboard:11);
   const open=typeof G.SettingsUI?.isOpen==='function'?G.SettingsUI.isOpen():!!G.SettingsUI?.isOpen;
-  const editing=open||isEditing();
+  // R becomes the level-up skill-choice modifier; it must not toggle speed.
+  const level=document.getElementById?.('scr-levelup');
+  const levelShown=!!level&&!level.hidden&&
+   !level.classList?.contains?.('hidden')&&
+   level.getAttribute?.('aria-hidden')!=='true';
+  const editing=open||isEditing()||levelShown;
   if(!editing&&speed&&!prevPadSpeed&&canSpeed())setSpeed(!fast);
   if(!editing&&board&&!prevPadRank&&canRanking())toggleRanking();
   prevPadSpeed=speed;prevPadRank=board;
