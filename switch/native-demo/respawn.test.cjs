@@ -18,7 +18,7 @@ function boot(pad=null){
  const get=x=>vm.runInContext(x,context);
  return {ops,context,frame,get};
 }
-test('FULL 60Hz renderer retains circles/grid and adds static HUD text without images',()=>{
+test('FULL 60Hz renderer retains circles/grid and renders dynamic HUD without images',()=>{
  const t=boot();
  t.frame(1000);t.frame(1016);t.frame(1032);t.frame(1048);
  assert.equal(t.get('renderMode'),2);
@@ -65,11 +65,36 @@ test('No native image decode on L and no renderer switching with ZL',()=>{
  assert.equal(t.get('spriteLoadStarted'),false);
  assert.equal(t.get('renderMode'),2);
 });
-test('FULL render uses fixed font labels but no images even on level-up and pause',()=>{
+test('FULL render uses dynamic HUD but no images even on level-up and pause',()=>{
  const t=boot();
  t.get('setChoices();paused=true');
  t.frame(1000);t.frame(1016);
  assert.ok(t.ops.fillText>0);
  assert.equal(t.ops.drawImage,0);
  assert.equal(t.get('lastError'),'');
+});
+
+test('Live HUD values change as game time and HP change without image draws',()=>{
+ const values=[];
+ const ctx=new Proxy({},{
+  get(o,k){if(k in o)return o[k];return k==='fillText'?(...args)=>values.push(String(args[0])):()=>{}},
+  set(o,k,v){o[k]=v;return true}});
+ let next=null;
+ const context=vm.createContext({
+  screen:{getContext:()=>ctx},
+  navigator:{getGamepads:()=>[]},
+  requestAnimationFrame(cb){next=cb},console:{error(){}}
+ });
+ vm.runInContext(js,context);
+ next(1000);next(1016);
+ assert.ok(values.some(v=>v.includes('HP: 100')));
+ assert.ok(values.some(v=>v.includes('FPS:')));
+ values.length=0;
+ vm.runInContext('hp=43;xp=7;kills=18;time=72.5',context);
+ next(1032);
+ assert.ok(values.some(v=>v.includes('HP: 43')));
+ assert.ok(values.some(v=>v.includes('XP: 7/12')));
+ assert.ok(values.some(v=>v.includes('KO: 18')));
+ assert.ok(values.some(v=>v.includes('TIME: 72s')));
+ assert.equal(vm.runInContext('lastError',context),'');
 });
