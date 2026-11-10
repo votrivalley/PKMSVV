@@ -31,6 +31,28 @@ jobs:
       - name: Bundle demo into RomFS
         working-directory: switch/native-demo
         run: npm run build
+      - name: Bundle pinned offline Kanto Pokemon PNG sprites
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p switch/native-demo/romfs/sprites
+          upstream=1b3b7c0a538dd2226ae08d0d2f8955125075bbd4
+          for dex in 25 19 16 41; do
+            curl --fail --location --retry 4 --retry-all-errors --retry-delay 2 \
+              "https://raw.githubusercontent.com/PokeAPI/sprites/$upstream/sprites/pokemon/$dex.png" \
+              --output "switch/native-demo/romfs/sprites/$dex.png"
+          done
+          python3 - <<'PY'
+          from pathlib import Path
+          from struct import unpack
+          for dex in (25,19,16,41):
+              blob=Path(f'switch/native-demo/romfs/sprites/{dex}.png').read_bytes()
+              assert blob[:8]==b'\\x89PNG\\r\\n\\x1a\\n',f'invalid PNG dex={dex}'
+              w,h=unpack('>II',blob[16:24])
+              assert 24<=w<=256 and 24<=h<=256,f'unexpected sprite size {dex}: {w}x{h}'
+              assert len(blob)>100,f'empty sprite {dex}'
+              print('offline sprite',dex,w,h,len(blob))
+          PY
       - name: Build self-contained NRO
         working-directory: switch/native-demo
         run: npm run nro
