@@ -91,6 +91,11 @@ G.PKMSVVHordePerformance=(()=>{
   rafInstalled=true;requestAnimationFrame(frame);return true;
  }
  function budget(name,count){
+  // A deliberate Quality choice always renders all decorative effects.
+  // In Auto, verified steady 56+ FPS also gets full visuals; any sustained
+  // dip quickly restores protective budgets without affecting gameplay.
+  if(mode==='quality'||(mode==='auto'&&tier==='high'&&fps>=56))
+   return {max:Infinity,particles:Infinity,minimum:Infinity};
   if(tier==='low'){
    return {max:name==='burst'?4:6,particles:2,minimum:0};
   }
@@ -137,6 +142,7 @@ G.PKMSVVHordePerformance=(()=>{
  function allyAlpha(base=.68){
   const a=Number(base);
   const original=Number.isFinite(a)?a:.68;
+  if(mode==='quality')return original;
   return tier==='low'?Math.min(original,.34):
    tier==='medium'?Math.min(original,.49):Math.min(original,.68);
  }
