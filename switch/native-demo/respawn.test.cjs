@@ -93,16 +93,30 @@ test('Default MIN mode avoids Canvas text, arcs, images and stroke for 150 secon
  assert.ok(ops.fillRect>1000);
  assert.equal(vm.runInContext('lastError',context),'');
 });
-test('ZL switches MIN -> static -> full renderer without changing battle state',()=>{
+test('Fixed diagnostic NRO does not change render mode when ZL is pressed',()=>{
  const pad={connected:true,buttons:Array.from({length:18},()=>({pressed:false,value:0})),axes:[0,0]};
  const t=boot(pad);
  t.frame(1000);
  assert.equal(vm.runInContext('renderMode',t.context),0);
  pad.buttons[6].pressed=true;t.frame(1016);
- assert.equal(vm.runInContext('renderMode',t.context),1);
- t.frame(1032);assert.equal(vm.runInContext('renderMode',t.context),1);
- pad.buttons[6].pressed=false;t.frame(1048);
- pad.buttons[6].pressed=true;t.frame(1064);
- assert.equal(vm.runInContext('renderMode',t.context),2);
+ assert.equal(vm.runInContext('renderMode',t.context),0);
+ pad.buttons[6].pressed=false;t.frame(1032);
+ pad.buttons[6].pressed=true;t.frame(1048);
+ assert.equal(vm.runInContext('renderMode',t.context),0);
  assert.equal(t.inspect().lastError,'');
+});
+test('Compiled NRO modes 0, 1, 2 boot directly without touching ZL',()=>{
+ for(const mode of [0,1,2]){
+  const patched=js.replace('const DIAG_BOOT_MODE=0;','const DIAG_BOOT_MODE='+mode+';');
+  assert.notEqual(patched,js||'','diagnostic source has boot-mode anchor');
+  const canvas={fillRect(){},beginPath(){},moveTo(){},lineTo(){},stroke(){},arc(){},fill(){},fillText(){},strokeRect(){}};
+  let frame;
+  const c=vm.createContext({
+   screen:{getContext:()=>canvas},navigator:{getGamepads:()=>[]},
+   requestAnimationFrame(fn){frame=fn},console:{error(){}}
+  });
+  vm.runInContext(patched,c);frame(1000);frame(1016);
+  assert.equal(vm.runInContext('renderMode',c),mode);
+  assert.equal(vm.runInContext('lastError',c),'');
+ }
 });
