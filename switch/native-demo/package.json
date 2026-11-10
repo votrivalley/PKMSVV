@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-switch-native-demo",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "private": true,
-  "description": "Native Switch proof-of-concept: canvas gameplay simulation, no browser",
+  "description": "Native Kanto offline sprite demo, incremental waves and 3-card controller upgrades",
   "author": "Votri Valley",
   "type": "module",
   "nacp": {
