@@ -2,6 +2,16 @@
 // This is NOT the full Pokémon Chuyển Sinh gameplay engine. No official Pokémon assets.
 // Controller indices here follow nx.js / Switch ordering: B0 A1 Y2 X3 L4 R5.
 const W=1280,H=720,ctx=screen.getContext('2d');
+// Native Kanto config is COMPILED from src/pkmsvv-quick-region.js by build-kanto.cjs.
+// Fallback keeps Node gameplay tests executable before RomFS generation.
+const KANTO_CONFIG=/*__PKMSVV_KANTO_CONFIG__*/{"region":"Kanto","gen":1,"nationalMin":1,"nationalMax":151,"waveSeconds":[0,120,240,360,480,600,720],"sealSeconds":900,"finalBossSeconds":1800,"mascotDex":150,"palette":["#5ba9e8","#bceef7","#348b63"],"trialSpecies":[{"name":"rattata","dex":19,"sprite":"19.png","minTier":0},{"name":"pidgey","dex":16,"sprite":"16.png","minTier":0},{"name":"zubat","dex":41,"sprite":"41.png","minTier":1}]};
+let kantoTier=0;
+function kantoWaveAt(seconds){
+ let tier=0;
+ for(let i=1;i<KANTO_CONFIG.waveSeconds.length;i++)
+  if(seconds>=KANTO_CONFIG.waveSeconds[i])tier=i;
+ return tier;
+}
 const MAX_ENEMIES=32,MAX_SHOTS=32,MAX_SPRITES_PER_FRAME=5;
 const MAX_ENEMY_SPRITES=4;
 // Diagnostic: safe vector renderer is the default. Press L to toggle sprites.
@@ -11,7 +21,7 @@ let spritesEnabled=false,prevL=false,drawnSprites=0,wave='RATTATA/PIDGEY';
  // switching. This separates native render faults from gamepad input faults.
 const DIAG_BOOT_MODE=2;
 const DIAG_FIXED_MODE=true;
-const NO_NATIVE_FONTS=false; // v0.0.13 retains stable FULL HUD, opts into one enemy species
+const NO_NATIVE_FONTS=false; // v0.0.14 bridges source-derived Kanto generation and wave pacing
 let renderMode=DIAG_BOOT_MODE,prevZL=false,drawCount=0;
 // Render modes: 0=minimum Canvas rectangles, 1=static frame (only redraw every 3s),
 // 2=full original Canvas paths/text. ZL cycles; sprite mode is independently toggled by L.
@@ -97,19 +107,20 @@ function update(dt){
  }else if(toggle&&!r)paused=!paused;
  if(paused)return;
  time+=dt;spawnShield=Math.max(0,spawnShield-dt);
+ kantoTier=kantoWaveAt(time);
  let dx=Number(p?.axes?.[0])||0,dy=Number(p?.axes?.[1])||0;
  if(button(p,14))dx=-1;if(button(p,15))dx=1;
  if(button(p,12))dy=-1;if(button(p,13))dy=1;
  const mag=Math.hypot(dx,dy);if(mag>.15){dx/=Math.max(1,mag);dy/=Math.max(1,mag);px=clamp(px+dx*moveSpeed*dt,30,W-30);py=clamp(py+dy*moveSpeed*dt,82,H-40)}
  // Spawn budget deliberately caps actors; useful to validate sustained native FPS.
- wave=time<25?'RATTATA/PIDGEY':'ZUBAT/GEN1';
+ wave=kantoTier===0?'KANTO: RATTATA/PIDGEY':'KANTO: GEN1 TIER '+(kantoTier+1);
  if(time>=spawnAt&&enemies.length<MAX_ENEMIES){
-  spawnAt=time+Math.max(.15,.55-time*.005);
+  spawnAt=time+Math.max(.20,.58-kantoTier*.055);
   const side=Math.floor(rng()*4),a=rng();
   const x=side===0?0:side===1?W:side===2?a*W:a*W;
   const y=side===2?75:side===3?H:75+a*(H-75);
-  const species=time<25?(rng()<.52?'rattata':'pidgey'):(rng()<.32?'zubat':rng()<.56?'pidgey':'rattata');
-  enemies.push({x,y,species,hp:2+(time>60?1:0),r:14+Math.floor(rng()*6),speed:35+rng()*28});
+  const species=kantoTier===0?(rng()<.55?'rattata':'pidgey'):(rng()<.28?'zubat':rng()<.56?'pidgey':'rattata');
+  enemies.push({x,y,species,hp:2+Math.floor(kantoTier/2),r:14+Math.floor(rng()*6),speed:35+rng()*28+kantoTier*3});
  }
  if(time>=fireAt&&enemies.length){
   fireAt=time+fireRate;
@@ -138,9 +149,15 @@ function update(dt){
  if(hp<=0)respawn();
 }
 function draw(){
- // FULL 60Hz geometry + live HUD, opt-in player plus at most 4 Rattata sprites.
+ // FULL 60Hz + official Kanto palette/wave timings, opt-in limited sprite trial.
  // Keep original grid/paths/arc visual treatment for honest comparison.
  ctx.fillStyle='#101a20';ctx.fillRect(0,0,W,H);
+ // Native Kanto field: first survival biome palette from official QuickRegion.
+ // Decorative rectangles only; no new path/texture memory pressure.
+ ctx.fillStyle=KANTO_CONFIG.palette[0];ctx.fillRect(0,70,W,110);
+ ctx.fillStyle=KANTO_CONFIG.palette[1];ctx.fillRect(0,170,W,22);
+ ctx.fillStyle=KANTO_CONFIG.palette[2];ctx.fillRect(0,193,W,12);
+ ctx.fillStyle='#17302e';ctx.fillRect(0,207,W,H-207);
  ctx.strokeStyle='#1c3038';ctx.lineWidth=1;
  for(let x=0;x<W;x+=64){ctx.beginPath();ctx.moveTo(x,70);ctx.lineTo(x,H);ctx.stroke()}
  for(let y=70;y<H;y+=64){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
@@ -160,11 +177,11 @@ function draw(){
  // Keep native geometry and game logic identical to known stable v0.0.10.
  ctx.fillStyle='#fff4cc';
  ctx.font='20px sans-serif';
- ctx.fillText('PKMSVV SWITCH - ENEMY SPRITE v0.0.13',24,105);
+ ctx.fillText('KANTO GEN 1 - NATIVE BRIDGE v0.0.14',24,105);
  ctx.fillText('HP: '+Math.ceil(hp),24,135);
  ctx.fillText('XP: '+xp+'/12   LEVEL: '+level,24,165);
- ctx.fillText('KO: '+kills+'   ENEMIES: '+enemies.length,24,195);
- ctx.fillText('FPS: '+fps+'   TIME: '+Math.floor(time)+'s   RESPAWNS: '+deaths,24,225);
+ ctx.fillText('KO: '+kills+'   GEN '+KANTO_CONFIG.gen+'   WAVE '+(kantoTier+1)+'   ENEMIES: '+enemies.length,24,235);
+ ctx.fillText('FPS: '+fps+'   TIME: '+Math.floor(time)+'s   SEAL: '+KANTO_CONFIG.sealSeconds+'s   FINAL: '+KANTO_CONFIG.finalBossSeconds+'s',24,265);
  ctx.fillText('L: SPRITES '+(spritesEnabled?(loaded.pikachu&&loaded.rattata?'ON':'LOADING'):'OFF')+'  RATTATA 4 MAX  B: PAUSE',24,692);
  // Text-free health, XP and level bars. Avoid changing canvas.font per frame.
  ctx.fillStyle='#294963';ctx.fillRect(16,17,390,18);
