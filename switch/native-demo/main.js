@@ -5,6 +5,10 @@ const W=1280,H=720,ctx=screen.getContext('2d');
 const MAX_ENEMIES=32,MAX_SHOTS=32,MAX_SPRITES_PER_FRAME=18;
 // Diagnostic: safe vector renderer is the default. Press L to toggle sprites.
 let spritesEnabled=false,prevL=false,drawnSprites=0,wave='RATTATA/PIDGEY';
+let renderMode=0,prevZL=false,drawCount=0;
+// Render modes: 0=minimum Canvas rectangles, 1=static frame (only redraw every 3s),
+// 2=full original Canvas paths/text. ZL cycles; sprite mode is independently toggled by L.
+const RENDER_NAMES=['MIN','TINH','DAY'];
 if(!ctx)throw new Error('Switch Canvas 2D unavailable');
 let px=W/2,py=H/2,hp=100,kills=0,time=0,shots=[],enemies=[],last=0,spawnAt=0,fireAt=0,frames=0,fps=0,fpsAt=0,prevB=false,paused=false,spawnShield=1.5,deaths=0,lastError='';
 const SPRITES={pikachu:null,rattata:null,pidgey:null,zubat:null};
@@ -65,9 +69,10 @@ function respawn(){
 function update(dt){
  const p=navigator.getGamepads?.()?.find?.(x=>x?.connected)||navigator.getGamepads?.()?.[0];
  const r=button(p,5),b=button(p,0),toggle=b&&!prevB;prevB=b;
- const l=button(p,4);
+ const l=button(p,4),zl=button(p,6);
  if(l&&!prevL){spritesEnabled=!spritesEnabled;if(spritesEnabled)loadSprites();}
- prevL=l;
+ if(zl&&!prevZL){renderMode=(renderMode+1)%3;drawCount=0;}
+ prevL=l;prevZL=zl;
  const choice=[button(p,3),button(p,2),button(p,0),button(p,1)];
  const edges=choice.map((on,i)=>on&&!prevChoice[i]);prevChoice=choice;
  if(pickOpen){
@@ -118,6 +123,25 @@ function update(dt){
  if(hp<=0)respawn();
 }
 function draw(){
+ drawCount++;
+ if(renderMode===1&&drawCount>1&&drawCount%180!==0)return;
+ if(renderMode!==2){
+  // Diagnostics avoid font rasterization, beginPath/arc, Image, and stroke
+  // in the default mode, so an engine crash can be isolated by subsystem.
+  ctx.fillStyle='#091922';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#245563';ctx.fillRect(20,20,420,35);
+  ctx.fillStyle='#67dac2';ctx.fillRect(20,20,Math.max(0,Math.min(420,hp/100*420)),35);
+  ctx.fillStyle='#65d5c3';ctx.fillRect(px-15,py-15,30,30);
+  ctx.fillStyle='#d36b7d';
+  for(const e of enemies)ctx.fillRect(e.x-9,e.y-9,18,18);
+  ctx.fillStyle='#ffd875';
+  for(const s of shots)ctx.fillRect(s.x-3,s.y-3,6,6);
+  // Mode 1 draws a static frame; the simulation and collision still run 60 Hz.
+  // Small counter tiles show rendering works without font allocations.
+  ctx.fillStyle=renderMode===0?'#6feab5':'#e7cf7d';
+  ctx.fillRect(20,70,renderMode===0?80:160,9);
+  return;
+ }
  drawnSprites=0;
  ctx.fillStyle='#101a20';ctx.fillRect(0,0,W,H);
  ctx.strokeStyle='#1c3038';ctx.lineWidth=1;
@@ -133,7 +157,7 @@ function draw(){
  ctx.fillText('HP '+Math.ceil(hp)+'  LV '+level+'  XP '+xp+'/12  KO '+kills+'  QUAI '+enemies.length+'  FPS '+fps+'  '+Math.floor(time)+'s  HOI SINH '+deaths,25,110);
  ctx.fillStyle=spritesEnabled?'#ffe39c':'#a7f4d4';
  ctx.fillText('HINH: '+(spritesEnabled?'SPRITE (L DE TAT)':'VECTOR AN TOAN (L BAT SPRITE)')+'  |  DOT: '+wave,25,168);
- ctx.fillText('Stick/D-Pad: Di chuyen   B: Tam dung   L: Bat/Tat sprite   |   Native v0.0.4',25,H-23);
+ ctx.fillText('B: Tam dung  L: Sprites  ZL: Render '+RENDER_NAMES[renderMode]+'  |  Native v0.0.5',25,H-23);
  if(spawnShield>0){ctx.fillStyle='#a5f7e6';ctx.fillText('BAT TU TAM THOI '+spawnShield.toFixed(1)+'s',25,142)}
  if(lastError){ctx.fillStyle='#ff9a8f';ctx.fillText('LOI: '+lastError.slice(0,100),25,210)}
  if(pickOpen){
