@@ -59,6 +59,7 @@ on:
       - 'scripts/patch-pokebox-stage4-apk-qa.cjs'
       - '.github/workflows/pokebox-stage4-android-qa.yml'
       - 'tests/pokebox-stage*.test.cjs'
+  # QA fallback rebuild requested after upstream fetch failed on 2026-11-11.
   workflow_dispatch:
 permissions:
   contents: read
