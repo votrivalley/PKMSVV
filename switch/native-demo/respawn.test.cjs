@@ -75,3 +75,34 @@ test('Switch L toggles sprite path on a rising edge without affecting gameplay',
  pad.buttons[4].pressed=true;t.frame(1080);
  assert.equal(t.inspect().spritesEnabled,false);
 });
+
+test('Default MIN mode avoids Canvas text, arcs, images and stroke for 150 seconds',()=>{
+ const ops={fillText:0,beginPath:0,arc:0,drawImage:0,stroke:0,fillRect:0};
+ const ctx=new Proxy({}, {get(o,k){if(k in o)return o[k];if(k in ops)return ()=>{ops[k]++};return ()=>{}},set(o,k,v){o[k]=v;return true}});
+ let next=null;
+ const context=vm.createContext({screen:{getContext:()=>ctx},
+  navigator:{getGamepads:()=>[]},requestAnimationFrame(fn){next=fn},
+  console:{error(){}}});
+ vm.runInContext(js,context);
+ next(1000);
+ for(let i=1;i<=9000;i++){const fn=next;fn(1000+i*16.66667)}
+ assert.equal(ops.fillText,0);
+ assert.equal(ops.drawImage,0);
+ assert.equal(ops.arc,0);
+ assert.equal(ops.beginPath,0);
+ assert.ok(ops.fillRect>1000);
+ assert.equal(vm.runInContext('lastError',context),'');
+});
+test('ZL switches MIN -> static -> full renderer without changing battle state',()=>{
+ const pad={connected:true,buttons:Array.from({length:18},()=>({pressed:false,value:0})),axes:[0,0]};
+ const t=boot(pad);
+ t.frame(1000);
+ assert.equal(vm.runInContext('renderMode',t.context),0);
+ pad.buttons[6].pressed=true;t.frame(1016);
+ assert.equal(vm.runInContext('renderMode',t.context),1);
+ t.frame(1032);assert.equal(vm.runInContext('renderMode',t.context),1);
+ pad.buttons[6].pressed=false;t.frame(1048);
+ pad.buttons[6].pressed=true;t.frame(1064);
+ assert.equal(vm.runInContext('renderMode',t.context),2);
+ assert.equal(t.inspect().lastError,'');
+});
