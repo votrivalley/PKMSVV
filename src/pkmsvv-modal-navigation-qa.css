@@ -71,3 +71,20 @@ body.pkmsvv-competitive-evo .pkmsvv-evo-panel .pkmsvv-evo-option{
  box-shadow:0 0 0 2px #081c2c,0 0 13px #ffe06c90!important;
  position:relative;z-index:1;
 }
+
+/* R+X/Y/B selects the three visible skills. D-pad and left stick stay free. */
+#scr-levelup[data-pkmsvv-pad-mode="true"] #cards .card{position:relative}
+#scr-levelup[data-pkmsvv-pad-mode="true"] #cards .card::after{
+ content:"";display:block;position:absolute;right:5px;top:5px;
+ padding:2px 5px;border-radius:5px;border:1px solid #ffd96a;
+ color:#fff1b8;background:#15304c;font:700 11px/1.2 sans-serif;
+ pointer-events:none;z-index:2;
+}
+#scr-levelup[data-pkmsvv-pad-mode="true"] #cards .card:nth-child(1)::after{content:"R + X"}
+#scr-levelup[data-pkmsvv-pad-mode="true"] #cards .card:nth-child(2)::after{content:"R + Y"}
+#scr-levelup[data-pkmsvv-pad-mode="true"] #cards .card:nth-child(3)::after{content:"R + B"}
+#scr-levelup[data-pkmsvv-pad-mode="true"] #cards[data-pkmsvv-page-label]::after{
+ content:"A: Trang tiếp  " attr(data-pkmsvv-page-label);
+ display:block;grid-column:1/-1;text-align:center;
+ font:700 12px/1.4 sans-serif;color:#ffe39c;padding:5px;
+}
