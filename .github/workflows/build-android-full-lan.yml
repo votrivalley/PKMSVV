@@ -1,7 +1,7 @@
 name: Build Android FULL Game + Co-op LAN Beta
 on:
   push:
-    branches: [feature/lan-local-beta]
+    branches: [feature/lan-local-beta, release/pokemon-chuyen-sinh-2.0-web]
     paths:
       - 'scripts/build-mega-shiny.cjs'
       - 'tests/mega-shiny.test.cjs'
