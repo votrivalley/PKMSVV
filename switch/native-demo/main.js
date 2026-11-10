@@ -10,7 +10,7 @@ let spritesEnabled=false,prevL=false,drawnSprites=0,wave='RATTATA/PIDGEY';
  // switching. This separates native render faults from gamepad input faults.
 const DIAG_BOOT_MODE=2;
 const DIAG_FIXED_MODE=true;
-const NO_NATIVE_FONTS=false; // v0.0.11 exercises live-changing HUD glyphs, but not sprite images
+const NO_NATIVE_FONTS=false; // v0.0.12 retains stable live HUD, adds opt-in player sprite only
 let renderMode=DIAG_BOOT_MODE,prevZL=false,drawCount=0;
 // Render modes: 0=minimum Canvas rectangles, 1=static frame (only redraw every 3s),
 // 2=full original Canvas paths/text. ZL cycles; sprite mode is independently toggled by L.
@@ -22,17 +22,17 @@ const loaded={pikachu:false,rattata:false,pidgey:false,zubat:false};
 const spriteFiles={pikachu:'25.png',rattata:'19.png',pidgey:'16.png',zubat:'41.png'};
 let spriteLoadStarted=false;
 function loadSprites(){
+ // Controlled single-image experiment: ONLY player Pikachu.
+ // Never decode Rattata/Pidgey/Zubat until a future separate test.
  if(spriteLoadStarted)return;
  spriteLoadStarted=true;
  if(typeof Image!=='function')return;
- for(const name of Object.keys(SPRITES)){
-  try{
-   const img=new Image();
-   img.onload=()=>{SPRITES[name]=img;loaded[name]=true};
-   img.onerror=()=>{loaded[name]=false};
-   img.src='romfs:/sprites/'+spriteFiles[name];
-  }catch(_){loaded[name]=false}
- }
+ try{
+  const img=new Image();
+  img.onload=()=>{SPRITES.pikachu=img;loaded.pikachu=true};
+  img.onerror=()=>{loaded.pikachu=false};
+  img.src='romfs:/sprites/25.png';
+ }catch(_){loaded.pikachu=false}
 }
 let xp=0,level=1,attack=1,fireRate=.21,moveSpeed=230,skillPage=0,pickOpen=false,prevChoice=[false,false,false,false],skillChoices=[];
 const SKILLS=[
@@ -51,7 +51,7 @@ function pickSkill(slot){
  skill.apply();pickOpen=false;xp=0;return true;
 }
 function renderSprite(name,x,y,size,mirror=false){
- if(!spritesEnabled||drawnSprites>=MAX_SPRITES_PER_FRAME)return false;
+ if(name!=='pikachu'||!spritesEnabled||drawnSprites>=1)return false;
  if(x+size<0||x-size>W||y+size<0||y-size>H)return false;
  const img=SPRITES[name];
  if(img&&loaded[name]){
@@ -76,7 +76,8 @@ function update(dt){
  const p=navigator.getGamepads?.()?.find?.(x=>x?.connected)||navigator.getGamepads?.()?.[0];
  const r=button(p,5),b=button(p,0),toggle=b&&!prevB;prevB=b;
  const l=button(p,4),zl=button(p,6);
- // Keep image loading completely off in this FULL-paths/no-font isolation build.
+ // L toggles ONE player texture. Baseline vector mode remains unchanged.
+ if(l&&!prevL){spritesEnabled=!spritesEnabled;if(spritesEnabled)loadSprites();}
  if(!DIAG_FIXED_MODE&&zl&&!prevZL){renderMode=(renderMode+1)%3;drawCount=0;}
  prevL=l;prevZL=zl;
  const choice0=button(p,3),choice1=button(p,2),choice2=button(p,0),choice3=button(p,1);
@@ -131,7 +132,7 @@ function update(dt){
  if(hp<=0)respawn();
 }
 function draw(){
- // FULL 60 FPS native geometry, but NO font rasterization, no images.
+ // FULL 60Hz native geometry + live HUD, opt-in ONE player sprite.
  // Keep original grid/paths/arc visual treatment for honest comparison.
  ctx.fillStyle='#101a20';ctx.fillRect(0,0,W,H);
  ctx.strokeStyle='#1c3038';ctx.lineWidth=1;
@@ -139,19 +140,22 @@ function draw(){
  for(let y=70;y<H;y+=64){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
  for(const shot of shots){ctx.fillStyle='#ffce69';ctx.beginPath();ctx.arc(shot.x,shot.y,5,0,Math.PI*2);ctx.fill()}
  for(const enemy of enemies){ctx.fillStyle='#dc697e';ctx.beginPath();ctx.arc(enemy.x,enemy.y,enemy.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#441e30';ctx.stroke()}
- ctx.fillStyle='#65d5c3';ctx.beginPath();ctx.arc(px,py,19,0,Math.PI*2);ctx.fill();
- ctx.strokeStyle='#e6fff7';ctx.lineWidth=3;ctx.stroke();
+ drawnSprites=0;
+ if(!renderSprite('pikachu',px,py,78)){
+  ctx.fillStyle='#65d5c3';ctx.beginPath();ctx.arc(px,py,19,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#e6fff7';ctx.lineWidth=3;ctx.stroke();
+ }
  ctx.fillStyle='#0a1218';ctx.fillRect(0,0,W,70);
  // v0.0.11 dynamic HUD isolation: six changing text batches per frame.
  // Keep native geometry and game logic identical to known stable v0.0.10.
  ctx.fillStyle='#fff4cc';
  ctx.font='20px sans-serif';
- ctx.fillText('PKMSVV SWITCH - LIVE HUD v0.0.11',24,105);
+ ctx.fillText('PKMSVV SWITCH - ONE SPRITE v0.0.12',24,105);
  ctx.fillText('HP: '+Math.ceil(hp),24,135);
  ctx.fillText('XP: '+xp+'/12   LEVEL: '+level,24,165);
  ctx.fillText('KO: '+kills+'   ENEMIES: '+enemies.length,24,195);
  ctx.fillText('FPS: '+fps+'   TIME: '+Math.floor(time)+'s   RESPAWNS: '+deaths,24,225);
- ctx.fillText('B: PAUSE   R+X/Y/B: SKILL   A: PAGE',24,692);
+ ctx.fillText('L: PLAYER SPRITE '+(spritesEnabled?(loaded.pikachu?'ON':'LOADING'):'OFF')+'  B: PAUSE  R+X/Y/B: SKILL',24,692);
  // Text-free health, XP and level bars. Avoid changing canvas.font per frame.
  ctx.fillStyle='#294963';ctx.fillRect(16,17,390,18);
  ctx.fillStyle='#7cdec4';ctx.fillRect(16,17,Math.max(0,Math.min(390,hp*3.9)),18);
