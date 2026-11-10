@@ -4,6 +4,43 @@
 const W=1280,H=720,ctx=screen.getContext('2d');
 if(!ctx)throw new Error('Switch Canvas 2D unavailable');
 let px=W/2,py=H/2,hp=100,kills=0,time=0,shots=[],enemies=[],last=0,spawnAt=0,fireAt=0,frames=0,fps=0,fpsAt=0,prevB=false,paused=false,spawnShield=1.5,deaths=0,lastError='';
+const SPRITES={pikachu:null,rattata:null,pidgey:null,zubat:null};
+const loaded={pikachu:false,rattata:false,pidgey:false,zubat:false};
+const spriteFiles={pikachu:'25.png',rattata:'19.png',pidgey:'16.png',zubat:'41.png'};
+for(const name of Object.keys(SPRITES)){
+ if(typeof Image!=='function')break;
+ try{
+  const img=new Image();
+  img.onload=()=>{SPRITES[name]=img;loaded[name]=true};
+  img.onerror=()=>{loaded[name]=false};
+  img.src='romfs:/sprites/'+spriteFiles[name];
+ }catch(_){loaded[name]=false}
+}
+let xp=0,level=1,attack=1,fireRate=.21,moveSpeed=230,skillPage=0,pickOpen=false,prevChoice=[false,false,false,false],skillChoices=[];
+const SKILLS=[
+ {name:'Tang sat thuong',description:'Dan manh hon',apply(){attack+=1}},
+ {name:'Ban nhanh',description:'Toc do ban tang',apply(){fireRate=Math.max(.08,fireRate-.035)}},
+ {name:'Chay nhanh',description:'Toc do di chuyen tang',apply(){moveSpeed+=27}},
+ {name:'Hoi phuc',description:'Hoi 35 HP',apply(){hp=Math.min(100,hp+35)}},
+ {name:'Xuyen pha',description:'Tang toc do dan',apply(){attack+=1;moveSpeed+=10}},
+ {name:'Sinh luc',description:'Day HP len toi da',apply(){hp=100}}
+];
+function setChoices(){skillChoices=SKILLS.slice();skillPage=0;pickOpen=true}
+function pickSkill(slot){
+ if(!pickOpen||slot<0||slot>2)return false;
+ const skill=skillChoices[skillPage*3+slot];
+ if(!skill)return false;
+ skill.apply();pickOpen=false;xp=0;return true;
+}
+function renderSprite(name,x,y,size,mirror=false){
+ const img=SPRITES[name];
+ if(img&&loaded[name]){
+  // Source art is 96x96 transparent pixel sprites. Keep a safe vector fallback.
+  ctx.drawImage(img,x-size/2,y-size/2,size,size);
+  return true;
+ }
+ return false;
+}
 const rng=(()=>{let v=0x13072026;return()=>((v=(Math.imul(v,1664525)+1013904223)>>>0)/4294967296)})();
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,n));
 function button(p,n){return !!p?.buttons?.[n]?.pressed}
@@ -16,24 +53,31 @@ function respawn(){
 }
 function update(dt){
  const p=navigator.getGamepads?.()?.find?.(x=>x?.connected)||navigator.getGamepads?.()?.[0];
- const b=button(p,0),toggle=b&&!prevB;prevB=b;
- if(toggle)paused=!paused;
+ const r=button(p,5),b=button(p,0),toggle=b&&!prevB;prevB=b;
+ const choice=[button(p,3),button(p,2),button(p,0),button(p,1)];
+ const edges=choice.map((on,i)=>on&&!prevChoice[i]);prevChoice=choice;
+ if(pickOpen){
+  // Controller can still move during a level-up choice.
+  if(edges[3])skillPage=(skillPage+1)%Math.ceil(skillChoices.length/3);
+  if(r){const slot=edges.findIndex((on,i)=>i<3&&on);if(slot>=0)pickSkill(slot)}
+ }else if(toggle&&!r)paused=!paused;
  if(paused)return;
  time+=dt;spawnShield=Math.max(0,spawnShield-dt);
  let dx=Number(p?.axes?.[0])||0,dy=Number(p?.axes?.[1])||0;
  if(button(p,14))dx=-1;if(button(p,15))dx=1;
  if(button(p,12))dy=-1;if(button(p,13))dy=1;
- const mag=Math.hypot(dx,dy);if(mag>.15){dx/=Math.max(1,mag);dy/=Math.max(1,mag);px=clamp(px+dx*230*dt,30,W-30);py=clamp(py+dy*230*dt,82,H-40)}
+ const mag=Math.hypot(dx,dy);if(mag>.15){dx/=Math.max(1,mag);dy/=Math.max(1,mag);px=clamp(px+dx*moveSpeed*dt,30,W-30);py=clamp(py+dy*moveSpeed*dt,82,H-40)}
  // Spawn budget deliberately caps actors; useful to validate sustained native FPS.
  if(time>=spawnAt&&enemies.length<90){
   spawnAt=time+Math.max(.15,.55-time*.005);
   const side=Math.floor(rng()*4),a=rng();
   const x=side===0?0:side===1?W:side===2?a*W:a*W;
   const y=side===2?75:side===3?H:75+a*(H-75);
-  enemies.push({x,y,hp:2+(time>60?1:0),r:14+Math.floor(rng()*6),speed:35+rng()*28});
+  const species=time<25?(rng()<.52?'rattata':'pidgey'):(rng()<.32?'zubat':rng()<.56?'pidgey':'rattata');
+  enemies.push({x,y,species,hp:2+(time>60?1:0),r:14+Math.floor(rng()*6),speed:35+rng()*28});
  }
  if(time>=fireAt&&enemies.length){
-  fireAt=time+.21;
+  fireAt=time+fireRate;
   let target=null,dist=Infinity;
   for(const e of enemies){const d=(e.x-px)**2+(e.y-py)**2;if(d<dist){dist=d;target=e}}
   if(target){const d=Math.sqrt(dist)||1;shots.push({x:px,y:py,vx:(target.x-px)/d*610,vy:(target.y-py)/d*610,ttl:1.3})}
@@ -43,7 +87,7 @@ function update(dt){
   let hit=false;
   for(let k=enemies.length-1;k>=0;k--){
    const e=enemies[k],d=(e.x-s.x)**2+(e.y-s.y)**2;
-   if(d<(e.r+5)**2){e.hp--;hit=true;if(e.hp<=0){enemies.splice(k,1);kills++}break}
+   if(d<(e.r+5)**2){e.hp-=attack;hit=true;if(e.hp<=0){enemies.splice(k,1);kills++;xp++;if(xp>=12&&!pickOpen){level++;setChoices()}}break}
   }
   if(hit||s.ttl<=0||s.x<0||s.x>W||s.y<0||s.y>H)shots.splice(i,1);
  }
@@ -64,16 +108,31 @@ function draw(){
  for(let x=0;x<W;x+=64){ctx.beginPath();ctx.moveTo(x,70);ctx.lineTo(x,H);ctx.stroke()}
  for(let y=70;y<H;y+=64){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
  for(const s of shots){ctx.fillStyle='#ffce69';ctx.beginPath();ctx.arc(s.x,s.y,5,0,Math.PI*2);ctx.fill()}
- for(const e of enemies){ctx.fillStyle='#dc697e';ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#441e30';ctx.stroke()}
- ctx.fillStyle='#65d5c3';ctx.beginPath();ctx.arc(px,py,19,0,Math.PI*2);ctx.fill();
- ctx.strokeStyle='#e6fff7';ctx.lineWidth=3;ctx.stroke();
+ for(const e of enemies){if(!renderSprite(e.species||'rattata',e.x,e.y,60)){ctx.fillStyle='#dc697e';ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#441e30';ctx.stroke()}}
+ if(!renderSprite('pikachu',px,py,78)){ctx.fillStyle='#65d5c3';ctx.beginPath();ctx.arc(px,py,19,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#e6fff7';ctx.lineWidth=3;ctx.stroke()}
  ctx.fillStyle='#0a1218';ctx.fillRect(0,0,W,70);
  ctx.fillStyle='#fff5de';ctx.font='bold 26px sans-serif';ctx.fillText('POKEMON CHUYEN SINH  -  SWITCH NATIVE TECH DEMO',24,43);
  ctx.font='20px sans-serif';ctx.fillStyle='#b9d3dc';
- ctx.fillText('HP '+Math.ceil(hp)+'   KO '+kills+'   QUAI '+enemies.length+'   FPS '+fps+'   '+Math.floor(time)+'s   HOI SINH '+deaths,25,110);
- ctx.fillText('Stick / D-Pad: Di chuyen      B: Tam dung   |  Native v0.0.2',25,H-23);
+ ctx.fillText('HP '+Math.ceil(hp)+'   LV '+level+'  XP '+xp+'/12  KO '+kills+'  QUAI '+enemies.length+'  FPS '+fps+'  '+Math.floor(time)+'s  HOI SINH '+deaths,25,110);
+ ctx.fillText('Stick/D-Pad: Di chuyen  B: Tam dung  R+X/Y/B: Hoc skill  A: Trang   |   Native v0.0.3',25,H-23);
  if(spawnShield>0){ctx.fillStyle='#a5f7e6';ctx.fillText('BAT TU TAM THOI '+spawnShield.toFixed(1)+'s',25,142)}
  if(lastError){ctx.fillStyle='#ff9a8f';ctx.fillText('LOI: '+lastError.slice(0,100),25,170)}
+ if(pickOpen){
+  ctx.fillStyle='rgba(8,18,35,.94)';ctx.fillRect(W-418,128,396,330);
+  ctx.strokeStyle='#ffe2a0';ctx.strokeRect(W-418,128,396,330);
+  ctx.fillStyle='#ffeab1';ctx.font='bold 25px sans-serif';ctx.fillText('LEN CAP '+level,W-395,166);
+  for(let i=0;i<3;i++){
+   const sk=skillChoices[skillPage*3+i];if(!sk)continue;
+   const y=195+i*72;
+   ctx.fillStyle='#294764';ctx.fillRect(W-395,y,350,64);
+   ctx.fillStyle='#fff7c5';ctx.font='bold 17px sans-serif';
+   ctx.fillText('R + '+['X','Y','B'][i]+'  '+sk.name,W-385,y+25);
+   ctx.font='14px sans-serif';ctx.fillStyle='#cbdfe6';ctx.fillText(sk.description,W-385,y+47);
+  }
+  ctx.fillStyle='#ffeab1';ctx.font='16px sans-serif';
+  ctx.fillText('A: Trang '+(skillPage+1)+'/'+Math.ceil(skillChoices.length/3),W-395,438);
+ }
  if(paused){ctx.fillStyle='rgba(0,0,0,.7)';ctx.fillRect(0,0,W,H);ctx.fillStyle='#fff';ctx.font='bold 56px sans-serif';ctx.fillText('TAM DUNG',W/2-170,H/2)}
 }
 function frame(now){
