@@ -25,6 +25,8 @@
     'Added a Discovered filter to show recruitable Pokémon.']
   ],
   chg:[
+   ['Thêm hiệu ứng thích ứng FPS: Tự động / Đẹp / Mượt trong Cài đặt. Giảm hạt và ánh sáng Fusion đồng minh khi quá tải; không đổi hitbox, sát thương, thưởng hay cảnh báo Boss.',
+    'Added adaptive FPS effects: Auto / Quality / Performance in Settings. Trims particles and allied Fusion glow under load without changing hitboxes, damage, rewards or Boss warnings.'],
    ['Bạc hà nay đổi Tính cách ngẫu nhiên, không chọn trực tiếp nữa.',
     'Nature Mints now reroll a random Nature instead of direct selection.'],
    ['Viên nang Đặc tính nay đổi Đặc tính ngẫu nhiên, không chọn trực tiếp nữa.',
