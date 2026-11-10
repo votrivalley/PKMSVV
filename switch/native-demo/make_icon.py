@@ -8,11 +8,12 @@ MODES={
     'MIN': ((12,90,103),(91,238,216),'MIN','01'),
     'STATIC': ((111,66,9),(255,222,123),'STATIC','02'),
     'FULL': ((89,26,71),(255,161,205),'FULL','03'),
+    'STABLE': ((7,65,77),(117,249,181),'SAFE','08'),
 }
 
 def main():
     if len(sys.argv)!=2 or sys.argv[1] not in MODES:
-        raise SystemExit('usage: make_icon.py MIN|STATIC|FULL')
+        raise SystemExit('usage: make_icon.py MIN|STATIC|FULL|STABLE')
     mode=sys.argv[1]
     bg,accent,title,num=MODES[mode]
     im=Image.new('RGB',(256,256),bg)
