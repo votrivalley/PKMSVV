@@ -132,21 +132,31 @@
   const rule=levels[tier];
   return total<=rule.total&&depth<=rule.depth&&rarity<=rule.rarity;
  }
+ // Spawn rosters are fixed per Region + difficulty tier + Rift state.
+ // Rebuild only when a tier changes or the underlying dex/evolution catalogue changes.
+ // Never filter/sort the full eligible roster on each enemy spawn.
+ const progressivePools=new Map();
  let pickCounter=0;
  function progressivePool(index,time=encounterSeconds(),isBoss=false){
   const all=speciesFor(index);
   if(!all.length)return [];
-  // A boss may be a modestly stronger opponent at its scheduled time,
-  // but never an unrestricted endgame evolution in minute one.
   const effectiveTime=Math.max(0,time+(isBoss?80:0));
+  const tier=encounterTier(effectiveTime);
+  const rift=!!G.Rift?.inArena;
+  const key=index+':'+tier+':'+(rift?1:0)+':'+(isBoss?1:0);
+  const rules=G.PKMSVV_EVOLUTION_DATA?.rules;
+  const cached=progressivePools.get(key);
+  if(cached&&cached.source===all&&cached.rules===rules&&cached.dexBy===G.DEX_BY)
+   return cached.list;
   let eligible=all.filter(id=>eligibleByTime(id,index,effectiveTime));
   if(!eligible.length){
-   // Sparse catalogues: use the weakest available in THIS Gen, never
-   // jump to a mixed-Gen pool or let the enemy wave disappear.
+   // Preserve the original same-Gen fallback for sparse catalogues.
    const weakest=all.map(pokemonStrength).sort((a,b)=>a.power-b.power||a.id-b.id)[0];
    eligible=weakest?[weakest.id]:[];
   }
-  return eligible.sort((a,b)=>pokemonStrength(a).power-pokemonStrength(b).power||a-b);
+  const list=eligible.sort((a,b)=>pokemonStrength(a).power-pokemonStrength(b).power||a-b);
+  progressivePools.set(key,{source:all,rules,dexBy:G.DEX_BY,list});
+  return list;
  }
  function pickProgressive(index,time=encounterSeconds(),boss=false,offset=0){
   const pool=progressivePool(index,time,boss);
