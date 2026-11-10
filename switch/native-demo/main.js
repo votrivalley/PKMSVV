@@ -8,10 +8,10 @@ let spritesEnabled=false,prevL=false,drawnSprites=0,wave='RATTATA/PIDGEY';
 // Build matrix replaces DIAG_BOOT_MODE in ROMFS with 0, 1 or 2.
  // Each NRO boots directly into the requested renderer, with NO ZL mode
  // switching. This separates native render faults from gamepad input faults.
-const DIAG_BOOT_MODE=0;
+const DIAG_BOOT_MODE=2;
 const DIAG_FIXED_MODE=true;
-let renderMode=0,prevZL=false,drawCount=0,lastDrawAt=-Infinity;
-const SAFE_RENDER_MS=30; // target about 30 presented FPS, simulation stays at native RAF rate
+const NO_NATIVE_FONTS=true; // A/B isolate font rasterization; keep fast native paths
+let renderMode=DIAG_BOOT_MODE,prevZL=false,drawCount=0;
 // Render modes: 0=minimum Canvas rectangles, 1=static frame (only redraw every 3s),
 // 2=full original Canvas paths/text. ZL cycles; sprite mode is independently toggled by L.
 const RENDER_NAMES=['MIN','TINH','DAY'];
@@ -51,9 +51,6 @@ function pickSkill(slot){
  skill.apply();pickOpen=false;xp=0;return true;
 }
 function renderSprite(name,x,y,size,mirror=false){
- // Stable v0.0.8 intentionally never calls native drawImage; the asset
- // pipeline is kept for a future isolated texture stress test.
- return false;
  if(!spritesEnabled||drawnSprites>=MAX_SPRITES_PER_FRAME)return false;
  if(x+size<0||x-size>W||y+size<0||y-size>H)return false;
  const img=SPRITES[name];
@@ -76,19 +73,20 @@ function respawn(){
  spawnAt=.8;fireAt=.3;spawnShield=2;
 }
 function update(dt){
- const pads=navigator.getGamepads?.();
- let p=null;
- if(pads)for(let i=0;i<pads.length;i++){if(pads[i]?.connected){p=pads[i];break}}
-
+ const p=navigator.getGamepads?.()?.find?.(x=>x?.connected)||navigator.getGamepads?.()?.[0];
  const r=button(p,5),b=button(p,0),toggle=b&&!prevB;prevB=b;
- // No native texture decoding or mode changes: L/ZL stay unused.
- // Avoid allocating input arrays on every 60 Hz simulation tick.
- const x=button(p,3),y=button(p,2),bb=button(p,0),a=button(p,1);
- const ex=x&&!prevChoice[0],ey=y&&!prevChoice[1],eb=bb&&!prevChoice[2],ea=a&&!prevChoice[3];
- prevChoice[0]=x;prevChoice[1]=y;prevChoice[2]=bb;prevChoice[3]=a;
+ const l=button(p,4),zl=button(p,6);
+ // Keep image loading completely off in this FULL-paths/no-font isolation build.
+ if(!DIAG_FIXED_MODE&&zl&&!prevZL){renderMode=(renderMode+1)%3;drawCount=0;}
+ prevL=l;prevZL=zl;
+ const choice0=button(p,3),choice1=button(p,2),choice2=button(p,0),choice3=button(p,1);
+ const edge0=choice0&&!prevChoice[0],edge1=choice1&&!prevChoice[1],
+  edge2=choice2&&!prevChoice[2],edge3=choice3&&!prevChoice[3];
+ prevChoice[0]=choice0;prevChoice[1]=choice1;prevChoice[2]=choice2;prevChoice[3]=choice3;
  if(pickOpen){
-  if(ea)skillPage=(skillPage+1)%Math.ceil(skillChoices.length/3);
-  if(r){if(ex)pickSkill(0);else if(ey)pickSkill(1);else if(eb)pickSkill(2)}
+  // Controller can still move during a level-up choice.
+  if(edge3)skillPage=(skillPage+1)%Math.ceil(skillChoices.length/3);
+  if(r){if(edge0)pickSkill(0);else if(edge1)pickSkill(1);else if(edge2)pickSkill(2)}
  }else if(toggle&&!r)paused=!paused;
  if(paused)return;
  time+=dt;spawnShield=Math.max(0,spawnShield-dt);
@@ -132,64 +130,52 @@ function update(dt){
  if(touching>0&&spawnShield<=0)hp=Math.max(0,hp-Math.min(touching,4)*8*dt);
  if(hp<=0)respawn();
 }
-// Native-safe renderer: ONLY solid fillRect. No native font rasterizer,
-// canvas paths, strokes or textures, even when a level-up opens.
-// This is a temporary stable demo, not the full Pokémon UI.
 function draw(){
- ctx.fillStyle='#081821';ctx.fillRect(0,0,W,H);
- ctx.fillStyle='#183844';ctx.fillRect(16,16,450,37);
- ctx.fillStyle='#50d6b2';ctx.fillRect(16,16,Math.max(0,Math.min(450,hp*4.5)),37);
- ctx.fillStyle='#355169';ctx.fillRect(16,64,350,12);
- ctx.fillStyle='#f3c76c';ctx.fillRect(16,64,Math.max(0,Math.min(350,xp/12*350)),12);
- // Scene: keep fill calls bounded by the existing 32-enemy/32-bullet limits.
- ctx.fillStyle='#78dfc6';ctx.fillRect(px-17,py-17,34,34);
- ctx.fillStyle='#d86d80';
- for(let i=0;i<enemies.length;i++){
-  const e=enemies[i];ctx.fillRect(e.x-10,e.y-10,20,20);
- }
- ctx.fillStyle='#ffd476';
- for(let i=0;i<shots.length;i++){
-  const s=shots[i];ctx.fillRect(s.x-4,s.y-4,8,8);
- }
- // HUD: count bars instead of expensive changing text glyphs.
- ctx.fillStyle='#587f94';
- for(let i=0;i<Math.min(10,level);i++)ctx.fillRect(20+i*20,93,13,10);
- if(spawnShield>0){ctx.fillStyle='#8aecff';ctx.fillRect(px-22,py+22,44,4)}
+ // FULL 60 FPS native geometry, but NO font rasterization, no images.
+ // Keep original grid/paths/arc visual treatment for honest comparison.
+ ctx.fillStyle='#101a20';ctx.fillRect(0,0,W,H);
+ ctx.strokeStyle='#1c3038';ctx.lineWidth=1;
+ for(let x=0;x<W;x+=64){ctx.beginPath();ctx.moveTo(x,70);ctx.lineTo(x,H);ctx.stroke()}
+ for(let y=70;y<H;y+=64){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+ for(const shot of shots){ctx.fillStyle='#ffce69';ctx.beginPath();ctx.arc(shot.x,shot.y,5,0,Math.PI*2);ctx.fill()}
+ for(const enemy of enemies){ctx.fillStyle='#dc697e';ctx.beginPath();ctx.arc(enemy.x,enemy.y,enemy.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#441e30';ctx.stroke()}
+ ctx.fillStyle='#65d5c3';ctx.beginPath();ctx.arc(px,py,19,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle='#e6fff7';ctx.lineWidth=3;ctx.stroke();
+ ctx.fillStyle='#0a1218';ctx.fillRect(0,0,W,70);
+ // Text-free health, XP and level bars. Avoid changing canvas.font per frame.
+ ctx.fillStyle='#294963';ctx.fillRect(16,17,390,18);
+ ctx.fillStyle='#7cdec4';ctx.fillRect(16,17,Math.max(0,Math.min(390,hp*3.9)),18);
+ ctx.fillStyle='#415375';ctx.fillRect(16,42,390,12);
+ ctx.fillStyle='#ffd277';ctx.fillRect(16,42,Math.max(0,Math.min(390,(xp/12)*390)),12);
+ ctx.fillStyle='#556d86';
+ for(let i=0;i<Math.min(10,level);i++)ctx.fillRect(430+i*18,25,12,15);
+ if(spawnShield>0){ctx.fillStyle='#7cebdc';ctx.fillRect(px-25,py+26,50,5)}
  if(pickOpen){
-  ctx.fillStyle='#11283a';ctx.fillRect(W-360,110,342,292);
-  const start=skillPage*3;
+  ctx.fillStyle='rgba(8,18,35,.94)';ctx.fillRect(W-418,128,396,330);
+  ctx.strokeStyle='#ffe2a0';ctx.lineWidth=2;ctx.strokeRect(W-418,128,396,330);
   for(let i=0;i<3;i++){
-   if(!skillChoices[start+i])continue;
-   const y=131+i*79;
-   ctx.fillStyle=i===0?'#335d76':i===1?'#476179':'#645374';
-   ctx.fillRect(W-340,y,303,66);
-   ctx.fillStyle='#ffcf66';ctx.fillRect(W-334,y+7,9,52);
-   // One/two/three ticks mean R+X / R+Y / R+B.
-   for(let k=0;k<=i;k++)ctx.fillRect(W-312+k*17,y+18,12,10);
+   if(!skillChoices[skillPage*3+i])continue;
+   const y=195+i*72;
+   ctx.fillStyle='#294764';ctx.fillRect(W-395,y,350,64);
+   ctx.fillStyle='#fff7c5';ctx.fillRect(W-390,y+8,10,48);
+   for(let k=0;k<=i;k++)ctx.fillRect(W-370+k*15,y+15,10,10);
   }
-  ctx.fillStyle='#dfd386';ctx.fillRect(W-342,380,skillPage===0?100:220,9);
+  ctx.fillStyle='#ffeab1';ctx.fillRect(W-395,438,(skillPage+1)*120,9);
  }
- if(paused){ctx.fillStyle='#020e16';ctx.fillRect(220,270,840,185);
-  ctx.fillStyle='#e7c97d';ctx.fillRect(260,312,760,8)}
- if(lastError){ctx.fillStyle='#ef557c';ctx.fillRect(0,0,W,18)}
+ if(paused){ctx.fillStyle='rgba(0,0,0,.7)';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#fff';ctx.fillRect(W/2-100,H/2-15,200,30)}
+ if(lastError){ctx.fillStyle='#f55';ctx.fillRect(0,0,W,10)}
 }
 function frame(now){
  const dt=last?clamp((now-last)/1000,0,.05):0;last=now;
  frames++;if(now-fpsAt>=1000){fps=Math.round(frames*1000/(now-fpsAt));fpsAt=now;frames=0}
  // A JS exception should remain visible for debugging instead of silently
  // ending the animation loop. Render a diagnostic overlay on following frames.
- try{
-  if(!lastError)update(dt);
-  // Keep simulation/controller input on native animation frames, while
-  // throttling only the graphics submission (not game logic).
-  if(now-lastDrawAt>=SAFE_RENDER_MS){lastDrawAt=now;draw()}
- }catch(err){
+ try{if(!lastError)update(dt);draw()}catch(err){
   lastError=String(err?.stack||err?.message||err);
   try{console.error('[PKMSVV Switch native demo]',lastError)}catch(_){}
   try{ctx.fillStyle='#220c13';ctx.fillRect(0,0,W,H);
-   ctx.fillStyle='#fff';ctx.font='24px sans-serif';
-   ctx.fillText('PKMSVV NATIVE DEMO ERROR',30,65);
-   ctx.fillText(lastError.slice(0,120),30,110)}catch(_){}
+   ctx.fillStyle='#fff';ctx.fillRect(0,0,W,32)}catch(_){}
  }
  requestAnimationFrame(frame);
 }
