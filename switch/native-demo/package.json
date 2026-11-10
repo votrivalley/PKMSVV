@@ -1,0 +1,21 @@
+{
+  "name": "pkmsvv-switch-native-demo",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Native Switch proof-of-concept: canvas gameplay simulation, no browser",
+  "author": "Votri Valley",
+  "type": "module",
+  "nacp": {
+    "id": "0147365656000000",
+    "title": "PKMSVV Native Demo"
+  },
+  "scripts": {
+    "build": "node -e \"require('fs').mkdirSync('romfs',{recursive:true});require('fs').copyFileSync('main.js','romfs/main.js')\" ",
+    "nro": "nxjs-nro --fat",
+    "nsp": "nxjs-nsp --fat"
+  },
+  "devDependencies": {
+    "@nx.js/nro": "latest",
+    "@nx.js/nsp": "latest"
+  }
+}
