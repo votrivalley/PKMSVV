@@ -6,6 +6,31 @@ G.PKMSVVForgetSkill=(()=>{
  function full(p){return !!(p&&!p.dead&&!p.remote&&!p.lanBot&&p===G.Game?.player&&
    G.DB?.upgradesOf?.(p.dex)?.forget>0&&p.maxMoves>=8&&p.slots?.length>=8&&p.moves?.length>=8&&!p._pkmsvvForgetUsed);}
  function options(p){return (p?.moves||[]).slice(0,8);}
+ let picker=null;
+ function current(){return picker?.shade?.isConnected?picker:null;}
+ function closePicker(){const p=current();if(!p)return false;p.shade.remove();picker=null;return true;}
+ function renderPage(){
+  const p=current();if(!p)return false;
+  const offset=p.page*3;
+  for(let i=0;i<p.buttons.length;i++){
+   p.buttons[i].hidden=i<offset||i>=offset+3;
+   p.buttons[i].setAttribute?.('data-pkmsvv-forget-slot',String(i-offset));
+  }
+  p.shade.setAttribute('data-pkmsvv-forget-page',String(p.page+1));
+  p.pageLabel.textContent=(p.page+1)+' / '+Math.ceil(p.buttons.length/3);
+  return true;
+ }
+ function nextPage(){
+  const p=current();if(!p||p.buttons.length<=3)return false;
+  p.page=(p.page+1)%Math.ceil(p.buttons.length/3);
+  return renderPage();
+ }
+ function selectSlot(slot){
+  const p=current();if(!p||!Number.isInteger(slot)||slot<0||slot>2)return false;
+  const absolute=p.page*3+slot;
+  if(absolute>=p.buttons.length||p.buttons[absolute].hidden)return false;
+  p.buttons[absolute].click();return true;
+ }
  const competitive=()=>!!((G.Coop?.active&&(G.Royale?.active||G.EggRush?.active))||G.PKMSVVArenaSolo?.active||G.PKMSVVChampionArena?.active);
  function remove(p,m){
   if(!p||!m||!p.moves?.includes(m))return false;
@@ -37,7 +62,11 @@ G.PKMSVVForgetSkill=(()=>{
   const title=document.createElement('h2');title.textContent='🧠 QUÊN KỸ NĂNG';
   const hint=document.createElement('p');hint.textContent='Chọn 1 trong 8 kỹ năng để quên. Chỉ xuất hiện một lần sau khi đủ 8 kỹ năng.';
   const grid=document.createElement('div');grid.className='pkmsvv-forget-grid';
-  panel.append(title,hint,grid);
+  hint.textContent+=' Tay cầm: giữ R + X/Y/B để chọn, A sang trang.';
+  const pageLabel=document.createElement('p');
+  pageLabel.className='pkmsvv-forget-page';
+  panel.append(title,hint,grid,pageLabel);
+  const buttons=[];
   for(const m of choices){
    const button=document.createElement('button');button.type='button';button.className='pkmsvv-forget-choice';
    const icon=document.createElement('span');icon.className='pkmsvv-forget-icon';
@@ -52,11 +81,13 @@ G.PKMSVVForgetSkill=(()=>{
      e.preventDefault();e.stopPropagation();choose();
     }
    });
-   grid.append(button);
+   grid.append(button);buttons.push(button);
   }
   const close=document.createElement('button');close.type='button';close.className='pkmsvv-forget-close';
-  close.textContent='Đóng';close.onclick=()=>shade.remove();panel.append(close);
+  close.textContent='Đóng';close.onclick=()=>closePicker();panel.append(close);
+  picker={shade,buttons,pageLabel,page:0};
   shade.append(panel);document.body.append(shade);
+  renderPage();
   if(!competitive())panel.querySelector?.('button')?.focus?.();
   return true;
  }
@@ -74,5 +105,5 @@ G.PKMSVVForgetSkill=(()=>{
    return out;
   };
  }
- return {full,options,remove,open};
+ return {full,options,remove,open,current,nextPage,selectSlot,closePicker};
 })();
