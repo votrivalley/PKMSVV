@@ -47,7 +47,7 @@ jobs:
           from struct import unpack
           for dex in (25,19,16,41):
               blob=Path(f'switch/native-demo/romfs/sprites/{dex}.png').read_bytes()
-              assert blob[:8]==b'\\x89PNG\\r\\n\\x1a\\n',f'invalid PNG dex={dex}'
+              assert blob[:8]==bytes([137,80,78,71,13,10,26,10]),f'invalid PNG dex={dex}'
               w,h=unpack('>II',blob[16:24])
               assert 24<=w<=256 and 24<=h<=256,f'unexpected sprite size {dex}: {w}x{h}'
               assert len(blob)>100,f'empty sprite {dex}'
