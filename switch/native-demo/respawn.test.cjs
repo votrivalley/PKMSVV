@@ -33,7 +33,7 @@ test('Simulation survives 180 seconds through the 60s enemy HP change and 25s wa
  t.get('spawnShield=Infinity');t.frame(1000);
  for(let i=1;i<=10800;i++)t.frame(1000+i*16.6667);
  assert.ok(t.get('time')>170);
- assert.equal(t.get('wave'),'ZUBAT/GEN1');
+ assert.equal(t.get('wave'),'KANTO: GEN1 TIER 2');
  assert.equal(t.get('lastError'),'');
  assert.ok(t.get('enemies.length')<=32&&t.get('shots.length')<=32);
  assert.ok(t.ops.fillText>0);
@@ -141,4 +141,40 @@ test('Pidgey and Zubat use vector fallback even with sprites enabled',()=>{
  assert.equal(t.ops.drawImage,1,'only the player sprite should render');
  assert.equal(t.get('enemySpritesDrawn'),0);
  assert.equal(t.get('lastError'),'');
+});
+
+test('Native Kanto bridge shares official region, generation, 15/30-minute milestones and waves',()=>{
+ const t=boot();
+ const config=t.get('KANTO_CONFIG');
+ assert.equal(config.region,'Kanto');
+ assert.equal(config.gen,1);
+ assert.equal(config.nationalMin,1);
+ assert.equal(config.nationalMax,151);
+ assert.equal(config.mascotDex,150);
+ assert.equal(config.sealSeconds,900);
+ assert.equal(config.finalBossSeconds,1800);
+ assert.equal(JSON.stringify(config.waveSeconds),JSON.stringify([0,120,240,360,480,600,720]));
+ assert.equal(t.get('kantoWaveAt(119.9)'),0);
+ assert.equal(t.get('kantoWaveAt(120)'),1);
+ assert.equal(t.get('kantoWaveAt(720)'),6);
+ assert.ok(config.trialSpecies.every(p=>p.dex>=1&&p.dex<=151));
+});
+test('Native Kanto first two minutes excludes Zubat and later waves unlock it',()=>{
+ const t=boot();
+ t.get('spawnShield=Infinity');
+ t.frame(1000);
+ for(let i=1;i<=1000;i++)t.frame(1000+i*16.6667);
+ assert.equal(t.get('kantoTier'),0);
+ assert.equal(t.get('enemies.some(e=>e.species==="zubat")'),false);
+ t.get('time=120;enemies.length=0;spawnAt=0;');
+ t.frame(19000);
+ assert.equal(t.get('kantoTier'),1);
+ assert.equal(t.get('enemies.every(e=>["rattata","pidgey","zubat"].includes(e.species))'),true);
+});
+test('Build bridge reads official QuickRegion and compiles Kanto data to RomFS',()=>{
+ const src=fs.readFileSync(path.join(__dirname,'../../src/pkmsvv-quick-region.js'),'utf8');
+ assert.match(src,/const SEAL_SECONDS=15\*60/);
+ assert.match(src,/const FINAL_BOSS_SECONDS=30\*60/);
+ assert.match(src,/const WAVE_SECONDS=\[0,120,240,360,480,600,720\]/);
+ assert.match(js,/__PKMSVV_KANTO_CONFIG__/);
 });
