@@ -85,7 +85,7 @@ jobs:
           p.nacp={...(p.nacp||{}),
             id:'01473656560'+String(mode+1)+'0000',
             title:'PKMSVV '+names[mode]+' 07'};
-          fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\\n');
+          fs.writeFileSync('package.json',JSON.stringify(p,null,2));
           NODE
             case "$mode" in
               0) suffix=MIN; icon=MIN ;;
