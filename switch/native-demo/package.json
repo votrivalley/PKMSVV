@@ -10,7 +10,7 @@
     "title": "PKMSVV Native Demo"
   },
   "scripts": {
-    "build": "node -e \"require('fs').mkdirSync('romfs',{recursive:true});require('fs').copyFileSync('main.js','romfs/main.js')\" ",
+    "build": "node build-kanto.cjs",
     "nro": "nxjs-nro --fat",
     "nsp": "nxjs-nsp --fat"
   },
