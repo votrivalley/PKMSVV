@@ -55,59 +55,28 @@ jobs:
           PY
       - name: Install icon generator
         run: python3 -m pip install --disable-pip-version-check pillow
-      - name: Build 3 independent NRO diagnostics (no ZL needed)
+      - name: Package one stable NRO with its own menu title and icon
         working-directory: switch/native-demo
         shell: bash
         run: |
           set -euo pipefail
-          cp romfs/main.js /tmp/pkmsvv-switch-diag-main.js
-          mkdir -p ../../dist/switch-native-demo
-          for mode in 0 1 2; do
-            export PKMSVV_RENDER_MODE="$mode"
-            node - <<'NODE'
+          node - <<'NODE'
           const fs=require('node:fs');
-          const src=fs.readFileSync('/tmp/pkmsvv-switch-diag-main.js','utf8');
-          const anchor='const DIAG_BOOT_MODE=0;';
-          if(src.split(anchor).length!==2)throw Error('Diagnostic boot-mode anchor drift');
-          const mode=Number(process.env.PKMSVV_RENDER_MODE);
-          if(![0,1,2].includes(mode))throw Error('Invalid diagnostic render mode');
-          fs.writeFileSync('romfs/main.js',src.replace(anchor,'const DIAG_BOOT_MODE='+mode+';'));
-          NODE
-            # Make each NRO unmistakable in hbmenu: embedded title,
-            # version, unique title ID, and a distinctive square icon.
-            node - <<'NODE'
-          const fs=require('node:fs');
-          const mode=Number(process.env.PKMSVV_RENDER_MODE);
-          const names=['MIN','STATIC','FULL'];
           const p=JSON.parse(fs.readFileSync('package.json','utf8'));
-          p.name='pkmsvv-diag-'+names[mode].toLowerCase();
-          p.version='0.0.7';
-          p.nacp={...(p.nacp||{}),
-            id:'01473656560'+String(mode+1)+'0000',
-            title:'PKMSVV '+names[mode]+' 07'};
+          p.name='pkmsvv-switch-stable';
+          p.version='0.0.8';
+          p.nacp={...(p.nacp||{}),id:'0147365656080000',title:'PKMSVV SAFE 08'};
           fs.writeFileSync('package.json',JSON.stringify(p,null,2));
           NODE
-            case "$mode" in
-              0) suffix=MIN; icon=MIN ;;
-              1) suffix=STATIC; icon=STATIC ;;
-              2) suffix=FULL-NO-SPRITES; icon=FULL ;;
-            esac
-            python3 make_icon.py "$icon"
-            npm run nro
-            test -s "pkmsvv-diag-${icon,,}.nro"
-            cp "pkmsvv-diag-${icon,,}.nro" "../../dist/switch-native-demo/PKMSVV-Switch-Diag-v007-$suffix.nro"
-          done
+          python3 make_icon.py STABLE
+          npm run nro
+          test -s pkmsvv-switch-stable.nro
+          mkdir -p ../../dist/switch-native-demo
+          cp pkmsvv-switch-stable.nro ../../dist/switch-native-demo/PKMSVV-Switch-Stable-v008.nro
           ls -lh ../../dist/switch-native-demo/
-      - name: Confirm all three independent render variants
-        shell: bash
-        run: |
-          set -euo pipefail
-          for suffix in MIN STATIC FULL-NO-SPRITES; do
-            test -s "dist/switch-native-demo/PKMSVV-Switch-Diag-v007-$suffix.nro"
-          done
       - uses: actions/upload-artifact@v4
         with:
-          name: PKMSVV-Switch-Diagnostic-v007-Labeled-NROs
+          name: PKMSVV-Switch-Stable-v008-NRO
           path: dist/switch-native-demo/*.nro
           retention-days: 14
           if-no-files-found: error
