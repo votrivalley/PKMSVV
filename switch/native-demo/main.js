@@ -10,14 +10,19 @@ let px=W/2,py=H/2,hp=100,kills=0,time=0,shots=[],enemies=[],last=0,spawnAt=0,fir
 const SPRITES={pikachu:null,rattata:null,pidgey:null,zubat:null};
 const loaded={pikachu:false,rattata:false,pidgey:false,zubat:false};
 const spriteFiles={pikachu:'25.png',rattata:'19.png',pidgey:'16.png',zubat:'41.png'};
-for(const name of Object.keys(SPRITES)){
- if(typeof Image!=='function')break;
- try{
-  const img=new Image();
-  img.onload=()=>{SPRITES[name]=img;loaded[name]=true};
-  img.onerror=()=>{loaded[name]=false};
-  img.src='romfs:/sprites/'+spriteFiles[name];
- }catch(_){loaded[name]=false}
+let spriteLoadStarted=false;
+function loadSprites(){
+ if(spriteLoadStarted)return;
+ spriteLoadStarted=true;
+ if(typeof Image!=='function')return;
+ for(const name of Object.keys(SPRITES)){
+  try{
+   const img=new Image();
+   img.onload=()=>{SPRITES[name]=img;loaded[name]=true};
+   img.onerror=()=>{loaded[name]=false};
+   img.src='romfs:/sprites/'+spriteFiles[name];
+  }catch(_){loaded[name]=false}
+ }
 }
 let xp=0,level=1,attack=1,fireRate=.21,moveSpeed=230,skillPage=0,pickOpen=false,prevChoice=[false,false,false,false],skillChoices=[];
 const SKILLS=[
@@ -61,7 +66,7 @@ function update(dt){
  const p=navigator.getGamepads?.()?.find?.(x=>x?.connected)||navigator.getGamepads?.()?.[0];
  const r=button(p,5),b=button(p,0),toggle=b&&!prevB;prevB=b;
  const l=button(p,4);
- if(l&&!prevL)spritesEnabled=!spritesEnabled;
+ if(l&&!prevL){spritesEnabled=!spritesEnabled;if(spritesEnabled)loadSprites();}
  prevL=l;
  const choice=[button(p,3),button(p,2),button(p,0),button(p,1)];
  const edges=choice.map((on,i)=>on&&!prevChoice[i]);prevChoice=choice;
