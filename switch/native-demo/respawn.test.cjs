@@ -64,7 +64,9 @@ test('Switch L toggles sprite path on a rising edge without affecting gameplay',
  const t=boot(pad);
  t.frame(1000);t.frame(1016);
  assert.equal(t.inspect().spritesEnabled,false);
+ assert.equal(vm.runInContext('spriteLoadStarted',t.context),false,'never decode images in default vector mode');
  pad.buttons[4].pressed=true;t.frame(1032);
+ assert.equal(vm.runInContext('spriteLoadStarted',t.context),true,'load sprites only after L');
  assert.equal(t.inspect().spritesEnabled,true);
  t.frame(1048);assert.equal(t.inspect().spritesEnabled,true,'holding L must not retrigger');
  pad.buttons[4].pressed=false;t.frame(1064);
