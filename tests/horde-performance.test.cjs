@@ -97,3 +97,61 @@ test('Small fights remain visually identical, and FX budgets are opt-out for QA'
  h.G.FX.burst(1,2,'#fff',30,160);
  assert.equal(h.v.lastBurst[3],30);
 });
+
+test('Adaptive quality: sustained FPS changes cosmetic budget without changing combat or boss telegraphs',()=>{
+ const h=setup(30),p=h.G.PKMSVVHordePerformance;
+ assert.equal(p.mode,'auto');
+ assert.equal(p.tier,'high');
+ p.recordFPS(46);assert.equal(p.tier,'medium');
+ h.G.FX.burst(1,1,'#dce',22,100);
+ assert.equal(h.v.lastBurst[3],4,'medium trims cosmetic count only');
+ p.recordFPS(29);assert.equal(p.tier,'low');
+ h.advance(101);h.G.FX.burst(1,1,'#abc',25,150);
+ assert.equal(h.v.lastBurst[3],2,'low mode caps decorative particles');
+ for(let i=0;i<90;i++){
+  h.G.Enemy.prototype.hurt(50);
+  h.G.Enemy.prototype.applySlow(.25);
+  h.G.FX.burst(1,2,'#fff',20,150);
+  h.G.FX.dmgText(1,2,'200');
+ }
+ assert.equal(h.hits.damage,90);
+ assert.equal(h.hits.slows,90);
+ h.G.FX.dmgText(1,2,'BOSS ATTACK','#fff');
+ h.G.FX.ring(1,2,15,200,'#f00',.95,5);
+ assert.equal(h.v.ring,1,'all enemy/boss warnings retain full rendering');
+ assert.ok(h.v.dmgText>=1,'boss text remains visible');
+ assert.equal(p.allyAlpha(.86),.34,'only tagged allied Fusion glow fades');
+ p.recordFPS(60);p.recordFPS(60);p.recordFPS(60);
+ assert.equal(p.tier,'medium','recover one tier only after 3 good samples');
+ p.recordFPS(60);p.recordFPS(60);p.recordFPS(60);
+ assert.equal(p.tier,'high');
+});
+test('Beautiful and Smooth are persistent opt-ins; fixed quality ignores FPS changes',()=>{
+ const h=setup(4),p=h.G.PKMSVVHordePerformance;
+ const saved={};
+ h.G.Settings={get(k){return saved[k];},set(k,v){saved[k]=v;}};
+ p.setMode('performance');
+ assert.equal(p.mode,'performance');
+ assert.equal(p.tier,'low');
+ for(let i=0;i<35;i++)h.G.FX.burst(0,0,'#aaa',22,100);
+ assert.equal(h.v.burst,4,'performance profile affects 4-enemy crowds');
+ assert.equal(h.v.lastBurst[3],2);
+ p.recordFPS(120);assert.equal(p.tier,'low');
+ p.setMode('quality');p.recordFPS(10);assert.equal(p.tier,'high');
+ assert.equal(saved.pkmsvvFxQualityV36,'quality');
+ assert.equal(p.allyAlpha(.86),.68);
+ p.setMode('auto');assert.equal(saved.pkmsvvFxQualityV36,'auto');
+ assert.equal(p.tier,'high');
+});
+test('Runtime exposes translated quality selector and softens only Fusion visual rings',()=>{
+ const perf=fs.readFileSync(path.join(root,'src/pkmsvv-horde-performance.js'),'utf8');
+ const fusion=fs.readFileSync(path.join(root,'src/pkmsvv-fusion-evolved.js'),'utf8');
+ const css=fs.readFileSync(path.join(root,'src/pkmsvv-runtime-controls-qa.css'),'utf8');
+ for(const term of ['pkmsvv-fx-quality','Tự động (theo FPS)','Mượt','Đẹp','attributeFilter',
+  'document.hidden','function recordFPS','function allyAlpha']){
+  assert.ok(perf.includes(term),'adaptive quality missing '+term);
+ }
+ assert.match(fusion,/PKMSVVHordePerformance\?\.allyAlpha/);
+ assert.match(css,/pkmsvv-fx-quality/);
+ assert.doesNotMatch(perf,/fx\s*,\s*['"]ring['"]/,'do not wrap globally shared warning FX');
+});
