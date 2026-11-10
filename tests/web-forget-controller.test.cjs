@@ -26,13 +26,13 @@ function harness(){
 test('Eight forgettable skills show 3/3/2 and preserve the original skill ordering',()=>{
  const f=harness();assert.equal(f.lib.open(f.actor),true);
  const p=f.lib.current();assert.ok(p);assert.equal(p.buttons.length,8);
- assert.deepEqual(p.buttons.map(x=>x.hidden),[false,false,false,true,true,true,true,true]);
+ assert.deepEqual(Array.from(p.buttons,x=>x.hidden),[false,false,false,true,true,true,true,true]);
  assert.equal(p.pageLabel.textContent,'1 / 3');
  assert.equal(f.lib.nextPage(),true);
- assert.deepEqual(p.buttons.map(x=>x.hidden),[true,true,true,false,false,false,true,true]);
+ assert.deepEqual(Array.from(p.buttons,x=>x.hidden),[true,true,true,false,false,false,true,true]);
  assert.equal(p.pageLabel.textContent,'2 / 3');
  assert.equal(f.lib.nextPage(),true);
- assert.deepEqual(p.buttons.map(x=>x.hidden),[true,true,true,true,true,true,false,false]);
+ assert.deepEqual(Array.from(p.buttons,x=>x.hidden),[true,true,true,true,true,true,false,false]);
  assert.equal(p.pageLabel.textContent,'3 / 3');
  assert.equal(f.lib.nextPage(),true);assert.equal(p.pageLabel.textContent,'1 / 3');
  assert.equal(f.actor.moves.length,8,'pagination must never remove skills');
