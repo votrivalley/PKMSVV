@@ -1,8 +1,8 @@
 {
   "name": "pkmsvv-switch-native-demo",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "private": true,
-  "description": "Native Kanto offline sprite demo, incremental waves and 3-card controller upgrades",
+  "description": "Native Switch diagnostic tech demo: minimal renderer by default, ZL cycles render modes",
   "author": "Votri Valley",
   "type": "module",
   "nacp": {
