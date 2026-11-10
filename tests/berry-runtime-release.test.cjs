@@ -34,7 +34,7 @@ test('Berry reward and HUD location are compatible with the corrected LAN bot st
  assert.match(read('src/pkmsvv-berry-rescue.js'),/const left=Math\.max\(8,Math\.min\(18,Math\.round\(w\*\.012\)\)\)/);
  assert.match(read('src/lan/lan-ai.js'),/function chooseBerryAxis\(/);
  const pack=read('scripts/promote-web-v20.cjs');
- assert.match(pack,/berry-team-performance-kanto-v35/);
+ assert.match(pack,/adaptive-fps-v36/);
 });
 
 test('Web-only pinned client may omit Host LanAI but still receives Berry rewards',()=>{
@@ -55,5 +55,5 @@ test('Berry team result is bundled, keyboard/controller accessible, and preserve
  assert.ok(nav.includes("'#pkmsvv-berry-team-result'"),'Gamepad navigation sees result sheet');
  assert.ok(css.includes('.pkmsvv-berry-team-result'),'Result sheet must be visible');
  assert.ok(builder.includes("'pkmsvv-berry.css'"),'Latest result styling must be copied into Web');
- assert.ok(builder.includes('berry-team-performance-kanto-v35'),'Fresh cache required');
+ assert.ok(builder.includes('adaptive-fps-v36'),'Fresh cache required');
 });
