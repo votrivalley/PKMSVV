@@ -32,21 +32,20 @@ jobs:
       - name: Build self-contained NRO
         working-directory: switch/native-demo
         run: npm run nro
-      - name: Build self-contained NSP
-        working-directory: switch/native-demo
-        run: npm run nsp
-      - name: Verify native deliverables
+      - name: Verify and stage standalone NRO
         shell: bash
         run: |
           set -euo pipefail
-          find switch/native-demo -maxdepth 2 -type f \( -name '*.nro' -o -name '*.nsp' \) -print -exec ls -lh {} \;
-          test "$(find switch/native-demo -maxdepth 2 -name '*.nro' | wc -l)" -ge 1
-          test "$(find switch/native-demo -maxdepth 2 -name '*.nsp' | wc -l)" -ge 1
+          test -s switch/native-demo/pkmsvv-switch-native-demo.nro
           mkdir -p dist/switch-native-demo
-          find switch/native-demo -maxdepth 2 -type f \( -name '*.nro' -o -name '*.nsp' \) -exec cp {} dist/switch-native-demo/ \;
+          cp switch/native-demo/pkmsvv-switch-native-demo.nro dist/switch-native-demo/
+          ls -lh dist/switch-native-demo/
       - uses: actions/upload-artifact@v4
         with:
-          name: PKMSVV-Switch-Native-Demo-NRO-NSP
-          path: dist/switch-native-demo/
+          name: PKMSVV-Switch-Native-Demo-NRO
+          path: dist/switch-native-demo/*.nro
           retention-days: 14
           if-no-files-found: error
+      # nxjs-nsp --fat currently requires a keyset; don't mishandle console keys.
+      # NSP build must be a separately reviewed workflow once legal key material
+      # and packaging prerequisites are established.
