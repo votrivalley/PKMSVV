@@ -1035,18 +1035,15 @@ async function main(){
     minute=await evaluate("(()=>({state:G.Game?.state,time:G.Game?.st?.time,hp:G.Game?.player?.hp,dead:G.Game?.player?.dead,level:G.Game?.player?.level,kills:G.Game?.player?.kills,enemies:G.EnemyMgr?.count,levelPopup:G.UI?.isOpen?.('scr-levelup'),navScans:G.PKMSVVModalNavQA?.scanCount,fx:G.PKMSVVHordePerformance?.stats,probe:window.__pkmsvvRunProbe.events.slice(-5)}))()");
     console.log('QA_COMBAT_EXPLORE_PROGRESS_'+(i+1)*5+'S='+JSON.stringify(minute));
     if(minute.state==='levelup'&&minute.levelPopup){
-     // Real recurring EXP also opens a pause menu: choose via keyboard/Pad path.
-     for(const key of [{name:'ArrowDown',vk:40},{name:'Enter',vk:13}]){
-      await cmd('Input.dispatchKeyEvent',{type:'keyDown',key:key.name,code:key.name,windowsVirtualKeyCode:key.vk,nativeVirtualKeyCode:key.vk});
-      // Sample a real held button rather than DOWN+UP in the same event tick.
-      await sleep(140);
-      await cmd('Input.dispatchKeyEvent',{type:'keyUp',key:key.name,code:key.name,windowsVirtualKeyCode:key.vk,nativeVirtualKeyCode:key.vk});
-      await sleep(150);
-     }
+     // Keyboard 1/2/3 select skills while WASD/arrows remain free for movement.
+     // ArrowDown+Enter was an old focus-navigation rule and no longer applies.
+     await cmd('Input.dispatchKeyEvent',{type:'keyDown',key:'1',code:'Digit1',windowsVirtualKeyCode:49,nativeVirtualKeyCode:49,text:'1'});
+     await sleep(140);
+     await cmd('Input.dispatchKeyEvent',{type:'keyUp',key:'1',code:'Digit1',windowsVirtualKeyCode:49,nativeVirtualKeyCode:49});
      await sleep(350);
      minute=await evaluate("(()=>({state:G.Game?.state,time:G.Game?.st?.time,level:G.Game?.player?.level,levelPopup:G.UI?.isOpen?.('scr-levelup'),probe:window.__pkmsvvRunProbe.events.slice(-5)}))()");
      console.log('QA_REPEAT_LEVELUP_NATIVE_CONFIRM='+JSON.stringify(minute));
-     assert.equal(minute.state,'playing','Second native level-up did not resume after ArrowDown+Enter');
+     assert.equal(minute.state,'playing','Second native level-up did not resume after Digit1');
     }
     if(minute.state!=='playing'||minute.probe.some(x=>x.name==='caught-game-error'))break;
    }
