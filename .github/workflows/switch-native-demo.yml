@@ -23,6 +23,8 @@ jobs:
           node --check switch/native-demo/main.js
           ! grep -E 'document\.|window\.location|WebApplet|Brewser' switch/native-demo/main.js
           node -e "const p=require('./switch/native-demo/package.json'); if(!p.nacp.id.startsWith('01')||!p.nacp.id.endsWith('0000'))process.exit(1)"
+      - name: Stress test HP zero, respawn, repeated collisions and diagnostic frames
+        run: node --test switch/native-demo/respawn.test.cjs
       - name: Install pinned-by-lockfile runtime packagers
         working-directory: switch/native-demo
         run: npm install --no-audit --no-fund
