@@ -2,6 +2,9 @@
 // This is NOT the full Pokémon Chuyển Sinh gameplay engine. No official Pokémon assets.
 // Controller indices here follow nx.js / Switch ordering: B0 A1 Y2 X3 L4 R5.
 const W=1280,H=720,ctx=screen.getContext('2d');
+const MAX_ENEMIES=32,MAX_SHOTS=32,MAX_SPRITES_PER_FRAME=18;
+// Diagnostic: safe vector renderer is the default. Press L to toggle sprites.
+let spritesEnabled=false,prevL=false,drawnSprites=0,wave='RATTATA/PIDGEY';
 if(!ctx)throw new Error('Switch Canvas 2D unavailable');
 let px=W/2,py=H/2,hp=100,kills=0,time=0,shots=[],enemies=[],last=0,spawnAt=0,fireAt=0,frames=0,fps=0,fpsAt=0,prevB=false,paused=false,spawnShield=1.5,deaths=0,lastError='';
 const SPRITES={pikachu:null,rattata:null,pidgey:null,zubat:null};
@@ -33,10 +36,13 @@ function pickSkill(slot){
  skill.apply();pickOpen=false;xp=0;return true;
 }
 function renderSprite(name,x,y,size,mirror=false){
+ if(!spritesEnabled||drawnSprites>=MAX_SPRITES_PER_FRAME)return false;
+ if(x+size<0||x-size>W||y+size<0||y-size>H)return false;
  const img=SPRITES[name];
  if(img&&loaded[name]){
   // Source art is 96x96 transparent pixel sprites. Keep a safe vector fallback.
   ctx.drawImage(img,x-size/2,y-size/2,size,size);
+  drawnSprites++;
   return true;
  }
  return false;
@@ -54,6 +60,9 @@ function respawn(){
 function update(dt){
  const p=navigator.getGamepads?.()?.find?.(x=>x?.connected)||navigator.getGamepads?.()?.[0];
  const r=button(p,5),b=button(p,0),toggle=b&&!prevB;prevB=b;
+ const l=button(p,4);
+ if(l&&!prevL)spritesEnabled=!spritesEnabled;
+ prevL=l;
  const choice=[button(p,3),button(p,2),button(p,0),button(p,1)];
  const edges=choice.map((on,i)=>on&&!prevChoice[i]);prevChoice=choice;
  if(pickOpen){
@@ -68,7 +77,8 @@ function update(dt){
  if(button(p,12))dy=-1;if(button(p,13))dy=1;
  const mag=Math.hypot(dx,dy);if(mag>.15){dx/=Math.max(1,mag);dy/=Math.max(1,mag);px=clamp(px+dx*moveSpeed*dt,30,W-30);py=clamp(py+dy*moveSpeed*dt,82,H-40)}
  // Spawn budget deliberately caps actors; useful to validate sustained native FPS.
- if(time>=spawnAt&&enemies.length<90){
+ wave=time<25?'RATTATA/PIDGEY':'ZUBAT/GEN1';
+ if(time>=spawnAt&&enemies.length<MAX_ENEMIES){
   spawnAt=time+Math.max(.15,.55-time*.005);
   const side=Math.floor(rng()*4),a=rng();
   const x=side===0?0:side===1?W:side===2?a*W:a*W;
@@ -80,7 +90,7 @@ function update(dt){
   fireAt=time+fireRate;
   let target=null,dist=Infinity;
   for(const e of enemies){const d=(e.x-px)**2+(e.y-py)**2;if(d<dist){dist=d;target=e}}
-  if(target){const d=Math.sqrt(dist)||1;shots.push({x:px,y:py,vx:(target.x-px)/d*610,vy:(target.y-py)/d*610,ttl:1.3})}
+  if(target&&shots.length<MAX_SHOTS){const d=Math.sqrt(dist)||1;shots.push({x:px,y:py,vx:(target.x-px)/d*610,vy:(target.y-py)/d*610,ttl:1.3})}
  }
  for(let i=shots.length-1;i>=0;i--){
   const s=shots[i];s.x+=s.vx*dt;s.y+=s.vy*dt;s.ttl-=dt;
@@ -103,6 +113,7 @@ function update(dt){
  if(hp<=0)respawn();
 }
 function draw(){
+ drawnSprites=0;
  ctx.fillStyle='#101a20';ctx.fillRect(0,0,W,H);
  ctx.strokeStyle='#1c3038';ctx.lineWidth=1;
  for(let x=0;x<W;x+=64){ctx.beginPath();ctx.moveTo(x,70);ctx.lineTo(x,H);ctx.stroke()}
@@ -114,10 +125,12 @@ function draw(){
  ctx.fillStyle='#0a1218';ctx.fillRect(0,0,W,70);
  ctx.fillStyle='#fff5de';ctx.font='bold 26px sans-serif';ctx.fillText('POKEMON CHUYEN SINH  -  SWITCH NATIVE TECH DEMO',24,43);
  ctx.font='20px sans-serif';ctx.fillStyle='#b9d3dc';
- ctx.fillText('HP '+Math.ceil(hp)+'   LV '+level+'  XP '+xp+'/12  KO '+kills+'  QUAI '+enemies.length+'  FPS '+fps+'  '+Math.floor(time)+'s  HOI SINH '+deaths,25,110);
- ctx.fillText('Stick/D-Pad: Di chuyen  B: Tam dung  R+X/Y/B: Hoc skill  A: Trang   |   Native v0.0.3',25,H-23);
+ ctx.fillText('HP '+Math.ceil(hp)+'  LV '+level+'  XP '+xp+'/12  KO '+kills+'  QUAI '+enemies.length+'  FPS '+fps+'  '+Math.floor(time)+'s  HOI SINH '+deaths,25,110);
+ ctx.fillStyle=spritesEnabled?'#ffe39c':'#a7f4d4';
+ ctx.fillText('HINH: '+(spritesEnabled?'SPRITE (L DE TAT)':'VECTOR AN TOAN (L BAT SPRITE)')+'  |  DOT: '+wave,25,168);
+ ctx.fillText('Stick/D-Pad: Di chuyen   B: Tam dung   L: Bat/Tat sprite   |   Native v0.0.4',25,H-23);
  if(spawnShield>0){ctx.fillStyle='#a5f7e6';ctx.fillText('BAT TU TAM THOI '+spawnShield.toFixed(1)+'s',25,142)}
- if(lastError){ctx.fillStyle='#ff9a8f';ctx.fillText('LOI: '+lastError.slice(0,100),25,170)}
+ if(lastError){ctx.fillStyle='#ff9a8f';ctx.fillText('LOI: '+lastError.slice(0,100),25,210)}
  if(pickOpen){
   ctx.fillStyle='rgba(8,18,35,.94)';ctx.fillRect(W-418,128,396,330);
   ctx.strokeStyle='#ffe2a0';ctx.strokeRect(W-418,128,396,330);
