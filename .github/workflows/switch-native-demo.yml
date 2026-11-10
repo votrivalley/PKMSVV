@@ -63,20 +63,20 @@ jobs:
           node - <<'NODE'
           const fs=require('node:fs');
           const p=JSON.parse(fs.readFileSync('package.json','utf8'));
-          p.name='pkmsvv-switch-full-nofont';
-          p.version='0.0.9';
-          p.nacp={...(p.nacp||{}),id:'0147365656090000',title:'PKMSVV FULL 09'};
+          p.name='pkmsvv-switch-full-fonttest';
+          p.version='0.0.10';
+          p.nacp={...(p.nacp||{}),id:'0147365656100000',title:'PKMSVV FONT 10'};
           fs.writeFileSync('package.json',JSON.stringify(p,null,2));
           NODE
           python3 make_icon.py FULL
           npm run nro
-          test -s pkmsvv-switch-full-nofont.nro
+          test -s pkmsvv-switch-full-fonttest.nro
           mkdir -p ../../dist/switch-native-demo
-          cp pkmsvv-switch-full-nofont.nro ../../dist/switch-native-demo/PKMSVV-Switch-FULL60-NoFont-v009.nro
+          cp pkmsvv-switch-full-fonttest.nro ../../dist/switch-native-demo/PKMSVV-Switch-FULL60-FontTest-v010.nro
           ls -lh ../../dist/switch-native-demo/
       - uses: actions/upload-artifact@v4
         with:
-          name: PKMSVV-Switch-FULL60-NoFont-v009-NRO
+          name: PKMSVV-Switch-FULL60-FontTest-v010-NRO
           path: dist/switch-native-demo/*.nro
           retention-days: 14
           if-no-files-found: error
