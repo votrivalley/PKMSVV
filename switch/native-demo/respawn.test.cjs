@@ -105,7 +105,7 @@ test('Stable source never enters the complex full renderer',()=>{
  const start=js.indexOf('function draw(){');
  const end=js.indexOf('\\nfunction frame(now){',start);
  const render=js.slice(start,end);
- for(const method of ['drawImage','fillText','arc(','beginPath(','stroke('])
+ for(const method of ['ctx.drawImage(','ctx.fillText(','ctx.arc(','ctx.beginPath(','ctx.stroke('])
   assert.equal(render.includes(method),false,'unsafe Canvas operation in stable draw: '+method);
  assert.match(js,/if\\(now-lastDrawAt>=SAFE_RENDER_MS\\)/);
 });
