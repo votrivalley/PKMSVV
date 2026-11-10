@@ -125,6 +125,9 @@ test('Adaptive quality: sustained FPS changes cosmetic budget without changing c
  assert.equal(p.tier,'medium','recover one tier only after 3 good samples');
  p.recordFPS(60);p.recordFPS(60);p.recordFPS(60);
  assert.equal(p.tier,'high');
+ const beforeFull=h.v.burst;
+ for(let i=0;i<24;i++)h.G.FX.burst(1,1,'#aaa',22,100);
+ assert.equal(h.v.burst-beforeFull,24,'Auto restores full visuals after stable FPS recovery');
 });
 test('Beautiful and Smooth are persistent opt-ins; fixed quality ignores FPS changes',()=>{
  const h=setup(4),p=h.G.PKMSVVHordePerformance;
@@ -139,7 +142,11 @@ test('Beautiful and Smooth are persistent opt-ins; fixed quality ignores FPS cha
  p.recordFPS(120);assert.equal(p.tier,'low');
  p.setMode('quality');p.recordFPS(10);assert.equal(p.tier,'high');
  assert.equal(saved.pkmsvvFxQualityV36,'quality');
- assert.equal(p.allyAlpha(.86),.68);
+ assert.equal(p.allyAlpha(.86),.86,'Beautiful mode preserves full allied glow');
+ const fullBefore=h.v.burst;
+ for(let i=0;i<36;i++)h.G.FX.burst(0,0,'#aaa',22,100);
+ assert.equal(h.v.burst-fullBefore,36,'Beautiful mode must not drop cosmetic bursts');
+ assert.equal(h.v.lastBurst[3],22);
  p.setMode('auto');assert.equal(saved.pkmsvvFxQualityV36,'auto');
  assert.equal(p.tier,'high');
 });
