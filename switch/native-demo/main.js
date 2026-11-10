@@ -3,16 +3,23 @@
 // Controller indices here follow nx.js / Switch ordering: B0 A1 Y2 X3 L4 R5.
 const W=1280,H=720,ctx=screen.getContext('2d');
 if(!ctx)throw new Error('Switch Canvas 2D unavailable');
-let px=W/2,py=H/2,hp=100,kills=0,time=0,shots=[],enemies=[],last=0,spawnAt=0,fireAt=0,frames=0,fps=0,fpsAt=0,prevB=false,paused=false;
+let px=W/2,py=H/2,hp=100,kills=0,time=0,shots=[],enemies=[],last=0,spawnAt=0,fireAt=0,frames=0,fps=0,fpsAt=0,prevB=false,paused=false,spawnShield=1.5,deaths=0,lastError='';
 const rng=(()=>{let v=0x13072026;return()=>((v=(Math.imul(v,1664525)+1013904223)>>>0)/4294967296)})();
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,n));
 function button(p,n){return !!p?.buttons?.[n]?.pressed}
+// Never replace actor arrays or reset the simulation while iterating them.
+function respawn(){
+ deaths++;
+ px=W/2;py=H/2;hp=100;kills=0;time=0;
+ enemies.length=0;shots.length=0;
+ spawnAt=.8;fireAt=.3;spawnShield=2;
+}
 function update(dt){
  const p=navigator.getGamepads?.()?.find?.(x=>x?.connected)||navigator.getGamepads?.()?.[0];
  const b=button(p,0),toggle=b&&!prevB;prevB=b;
  if(toggle)paused=!paused;
  if(paused)return;
- time+=dt;
+ time+=dt;spawnShield=Math.max(0,spawnShield-dt);
  let dx=Number(p?.axes?.[0])||0,dy=Number(p?.axes?.[1])||0;
  if(button(p,14))dx=-1;if(button(p,15))dx=1;
  if(button(p,12))dy=-1;if(button(p,13))dy=1;
@@ -40,11 +47,16 @@ function update(dt){
   }
   if(hit||s.ttl<=0||s.x<0||s.x>W||s.y<0||s.y>H)shots.splice(i,1);
  }
+ let touching=0;
  for(const e of enemies){
   const dx=px-e.x,dy=py-e.y,d=Math.hypot(dx,dy)||1;
   e.x+=dx/d*e.speed*dt;e.y+=dy/d*e.speed*dt;
-  if(d<e.r+14){hp=Math.max(0,hp-8*dt);if(hp===0){hp=100;kills=0;time=0;enemies=[];shots=[]}}
+  if(d<e.r+14)touching++;
  }
+ // Cap stacked collision damage so a crowd cannot kill in a single frame.
+ // Resolve death only AFTER finishing every iteration.
+ if(touching>0&&spawnShield<=0)hp=Math.max(0,hp-Math.min(touching,4)*8*dt);
+ if(hp<=0)respawn();
 }
 function draw(){
  ctx.fillStyle='#101a20';ctx.fillRect(0,0,W,H);
@@ -58,13 +70,25 @@ function draw(){
  ctx.fillStyle='#0a1218';ctx.fillRect(0,0,W,70);
  ctx.fillStyle='#fff5de';ctx.font='bold 26px sans-serif';ctx.fillText('POKEMON CHUYEN SINH  -  SWITCH NATIVE TECH DEMO',24,43);
  ctx.font='20px sans-serif';ctx.fillStyle='#b9d3dc';
- ctx.fillText('HP '+Math.ceil(hp)+'   KO '+kills+'   QUAI '+enemies.length+'   FPS '+fps+'   '+Math.floor(time)+'s',25,110);
- ctx.fillText('Stick / D-Pad: Di chuyen      B: Tam dung',25,H-23);
+ ctx.fillText('HP '+Math.ceil(hp)+'   KO '+kills+'   QUAI '+enemies.length+'   FPS '+fps+'   '+Math.floor(time)+'s   HOI SINH '+deaths,25,110);
+ ctx.fillText('Stick / D-Pad: Di chuyen      B: Tam dung   |  Native v0.0.2',25,H-23);
+ if(spawnShield>0){ctx.fillStyle='#a5f7e6';ctx.fillText('BAT TU TAM THOI '+spawnShield.toFixed(1)+'s',25,142)}
+ if(lastError){ctx.fillStyle='#ff9a8f';ctx.fillText('LOI: '+lastError.slice(0,100),25,170)}
  if(paused){ctx.fillStyle='rgba(0,0,0,.7)';ctx.fillRect(0,0,W,H);ctx.fillStyle='#fff';ctx.font='bold 56px sans-serif';ctx.fillText('TAM DUNG',W/2-170,H/2)}
 }
 function frame(now){
  const dt=last?clamp((now-last)/1000,0,.05):0;last=now;
  frames++;if(now-fpsAt>=1000){fps=Math.round(frames*1000/(now-fpsAt));fpsAt=now;frames=0}
- update(dt);draw();requestAnimationFrame(frame);
+ // A JS exception should remain visible for debugging instead of silently
+ // ending the animation loop. Render a diagnostic overlay on following frames.
+ try{if(!lastError)update(dt);draw()}catch(err){
+  lastError=String(err?.stack||err?.message||err);
+  try{console.error('[PKMSVV Switch native demo]',lastError)}catch(_){}
+  try{ctx.fillStyle='#220c13';ctx.fillRect(0,0,W,H);
+   ctx.fillStyle='#fff';ctx.font='24px sans-serif';
+   ctx.fillText('PKMSVV NATIVE DEMO ERROR',30,65);
+   ctx.fillText(lastError.slice(0,120),30,110)}catch(_){}
+ }
+ requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
