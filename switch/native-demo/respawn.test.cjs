@@ -50,6 +50,8 @@ test('A thrown simulation exception appears on screen; RAF remains scheduled',()
 
 test('Native diagnostic demo survives 150 seconds including the 25-second species transition',()=>{
  const t=boot();
+ // Isolate elapsed wave/sprite behavior from intentional battle death resets.
+ vm.runInContext('spawnShield=Infinity',t.context);
  t.frame(1000);
  for(let i=1;i<=9000;i++)t.frame(1000+i*16.6667);
  const s=t.inspect();
