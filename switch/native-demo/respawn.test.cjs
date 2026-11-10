@@ -103,11 +103,11 @@ test('Fixed diagnostic NRO does not change render mode when ZL is pressed',()=>{
 test('Stable source never enters the complex full renderer',()=>{
  assert.match(js,/const SAFE_RENDER_MS=30/);
  const start=js.indexOf('function draw(){');
- const end=js.indexOf('\\nfunction frame(now){',start);
+ const end=js.indexOf('function frame(now){',start);
  const render=js.slice(start,end);
  for(const method of ['ctx.drawImage(','ctx.fillText(','ctx.arc(','ctx.beginPath(','ctx.stroke('])
   assert.equal(render.includes(method),false,'unsafe Canvas operation in stable draw: '+method);
- assert.match(js,/if\\(now-lastDrawAt>=SAFE_RENDER_MS\\)/);
+ assert.ok(js.includes('if(now-lastDrawAt>=SAFE_RENDER_MS)'));
 });
 test('R+X/Y/B selects a three-card skill without stopping movement simulation',()=>{
  const pad={connected:true,buttons:Array.from({length:18},()=>({pressed:false,value:0})),axes:[1,0]};
