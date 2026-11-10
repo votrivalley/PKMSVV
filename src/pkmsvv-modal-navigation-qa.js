@@ -46,7 +46,7 @@
   const pages=Math.ceil(session.offers.length/3);
   session.page=(session.page+1)%pages;
   G.RunUI.showLevelUp._pkmsvvRenderPage(session);
-  root.setAttribute('data-pkmsvv-page-label',(session.page+1)+' / '+pages);
+  root.querySelector?.('#cards')?.setAttribute('data-pkmsvv-page-label',(session.page+1)+' / '+pages);
   return true;
  }
  function visible(el){
@@ -325,7 +325,7 @@
    if(level.getAttribute?.('data-pkmsvv-pad-mode')!=='true')
     level.setAttribute('data-pkmsvv-pad-mode','true');
    if(levelSession?.offers.length>3)
-    level.setAttribute('data-pkmsvv-page-label',
+    level.querySelector?.('#cards')?.setAttribute('data-pkmsvv-page-label',
      (levelSession.page+1)+' / '+Math.ceil(levelSession.offers.length/3));
    if(edges[3])levelPage(level);
    if(shoulderR){
