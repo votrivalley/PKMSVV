@@ -5,7 +5,12 @@ const W=1280,H=720,ctx=screen.getContext('2d');
 const MAX_ENEMIES=32,MAX_SHOTS=32,MAX_SPRITES_PER_FRAME=18;
 // Diagnostic: safe vector renderer is the default. Press L to toggle sprites.
 let spritesEnabled=false,prevL=false,drawnSprites=0,wave='RATTATA/PIDGEY';
-let renderMode=0,prevZL=false,drawCount=0;
+// Build matrix replaces DIAG_BOOT_MODE in ROMFS with 0, 1 or 2.
+ // Each NRO boots directly into the requested renderer, with NO ZL mode
+ // switching. This separates native render faults from gamepad input faults.
+const DIAG_BOOT_MODE=0;
+const DIAG_FIXED_MODE=true;
+let renderMode=DIAG_BOOT_MODE,prevZL=false,drawCount=0;
 // Render modes: 0=minimum Canvas rectangles, 1=static frame (only redraw every 3s),
 // 2=full original Canvas paths/text. ZL cycles; sprite mode is independently toggled by L.
 const RENDER_NAMES=['MIN','TINH','DAY'];
@@ -71,7 +76,7 @@ function update(dt){
  const r=button(p,5),b=button(p,0),toggle=b&&!prevB;prevB=b;
  const l=button(p,4),zl=button(p,6);
  if(l&&!prevL){spritesEnabled=!spritesEnabled;if(spritesEnabled)loadSprites();}
- if(zl&&!prevZL){renderMode=(renderMode+1)%3;drawCount=0;}
+ if(!DIAG_FIXED_MODE&&zl&&!prevZL){renderMode=(renderMode+1)%3;drawCount=0;}
  prevL=l;prevZL=zl;
  const choice=[button(p,3),button(p,2),button(p,0),button(p,1)];
  const edges=choice.map((on,i)=>on&&!prevChoice[i]);prevChoice=choice;
@@ -157,7 +162,7 @@ function draw(){
  ctx.fillText('HP '+Math.ceil(hp)+'  LV '+level+'  XP '+xp+'/12  KO '+kills+'  QUAI '+enemies.length+'  FPS '+fps+'  '+Math.floor(time)+'s  HOI SINH '+deaths,25,110);
  ctx.fillStyle=spritesEnabled?'#ffe39c':'#a7f4d4';
  ctx.fillText('HINH: '+(spritesEnabled?'SPRITE (L DE TAT)':'VECTOR AN TOAN (L BAT SPRITE)')+'  |  DOT: '+wave,25,168);
- ctx.fillText('B: Tam dung  L: Sprites  ZL: Render '+RENDER_NAMES[renderMode]+'  |  Native v0.0.5',25,H-23);
+ ctx.fillText('B: Tam dung  L: Sprites  MODE '+RENDER_NAMES[renderMode]+'  |  Native v0.0.6',25,H-23);
  if(spawnShield>0){ctx.fillStyle='#a5f7e6';ctx.fillText('BAT TU TAM THOI '+spawnShield.toFixed(1)+'s',25,142)}
  if(lastError){ctx.fillStyle='#ff9a8f';ctx.fillText('LOI: '+lastError.slice(0,100),25,210)}
  if(pickOpen){
