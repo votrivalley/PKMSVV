@@ -10,7 +10,7 @@ let spritesEnabled=false,prevL=false,drawnSprites=0,wave='RATTATA/PIDGEY';
  // switching. This separates native render faults from gamepad input faults.
 const DIAG_BOOT_MODE=2;
 const DIAG_FIXED_MODE=true;
-const NO_NATIVE_FONTS=true; // A/B isolate font rasterization; keep fast native paths
+const NO_NATIVE_FONTS=false; // v0.0.10 intentionally enables only a handful of static HUD labels
 let renderMode=DIAG_BOOT_MODE,prevZL=false,drawCount=0;
 // Render modes: 0=minimum Canvas rectangles, 1=static frame (only redraw every 3s),
 // 2=full original Canvas paths/text. ZL cycles; sprite mode is independently toggled by L.
@@ -142,6 +142,17 @@ function draw(){
  ctx.fillStyle='#65d5c3';ctx.beginPath();ctx.arc(px,py,19,0,Math.PI*2);ctx.fill();
  ctx.strokeStyle='#e6fff7';ctx.lineWidth=3;ctx.stroke();
  ctx.fillStyle='#0a1218';ctx.fillRect(0,0,W,70);
+ // v0.0.10 font isolation: fixed HUD labels, cached text content.
+ // Do not construct changing strings every frame or use fonts during
+ // scene rendering. Only six fixed glyph batches are drawn at 60Hz.
+ ctx.fillStyle='#fff4cc';
+ ctx.font='20px sans-serif';
+ ctx.fillText('PKMSVV SWITCH - FULL FONT TEST v0.0.10',24,105);
+ ctx.fillText('HP',24,135);
+ ctx.fillText('XP',24,165);
+ ctx.fillText('KO',24,195);
+ ctx.fillText('FPS',24,225);
+ ctx.fillText('B: PAUSE   R+X/Y/B: SKILL   A: PAGE',24,692);
  // Text-free health, XP and level bars. Avoid changing canvas.font per frame.
  ctx.fillStyle='#294963';ctx.fillRect(16,17,390,18);
  ctx.fillStyle='#7cdec4';ctx.fillRect(16,17,Math.max(0,Math.min(390,hp*3.9)),18);
