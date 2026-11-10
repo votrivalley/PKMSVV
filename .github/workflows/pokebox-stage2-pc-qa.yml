@@ -27,6 +27,7 @@ on:
       - 'scripts/build-pokebox-stage1-pc-qa.cjs'
       - 'scripts/patch-qa-compiled-modules.cjs'
       - '.github/workflows/pokebox-stage2-pc-qa.yml'
+  # QA fallback rebuild requested after upstream fetch failed on 2026-11-11.
   workflow_dispatch:
 permissions:
   contents: read
