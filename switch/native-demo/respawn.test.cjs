@@ -1,0 +1,49 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict');
+const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+const js=fs.readFileSync(path.join(__dirname,'main.js'),'utf8');
+function boot(){
+ const ops=[];
+ const ctx=new Proxy({}, {get(obj,k){
+  if(k in obj)return obj[k];
+  if(k==='fillText')return (...a)=>{ops.push(a)};
+  return ()=>{};
+ },set(o,k,v){o[k]=v;return true}});
+ const screen={getContext:type=>type==='2d'?ctx:null};
+ let next=null,errors=[];
+ const context=vm.createContext({screen,navigator:{getGamepads:()=>[]},
+  requestAnimationFrame(fn){next=fn},console:{error(...args){errors.push(args)}}});
+ vm.runInContext(js,context);
+ function inspect(){return vm.runInContext('({hp,kills,time,deaths,spawnShield,enemies:enemies.length,shots:shots.length,lastError})',context)}
+ function frame(ms){assert.ok(next);const fn=next;next=null;fn(ms)}
+ return {context,frame,inspect,ops,errors};
+}
+test('Crowded collision damage never reassigns enemies mid-loop or breaks animation',()=>{
+ const t=boot();
+ vm.runInContext('spawnShield=0;hp=.1;enemies=Array.from({length:70},()=>({x:px,y:py,hp:2,r:15,speed:0}));shots=[]',t.context);
+ t.frame(1000);t.frame(1016);
+ const state=t.inspect();
+ assert.equal(state.hp,100);
+ assert.equal(state.deaths,1);
+ assert.equal(state.enemies,0);
+ assert.equal(state.shots,0);
+ assert.ok(state.spawnShield>1);
+ assert.equal(state.lastError,'');
+ for(let i=0;i<650;i++)t.frame(1032+i*16);
+ assert.equal(t.inspect().lastError,'');
+});
+test('Contact with many enemies is bounded, and death triggers once',()=>{
+ const t=boot();
+ vm.runInContext('spawnShield=0;hp=100;enemies=Array.from({length:80},()=>({x:px,y:py,hp:2,r:15,speed:0}))',t.context);
+ t.frame(1000);t.frame(1016);
+ const hp=t.inspect().hp;
+ assert.ok(hp<100&&hp>=99,'damage cap protects against one-frame instant-death');
+ assert.equal(t.inspect().deaths,0);
+});
+test('A thrown simulation exception appears on screen; RAF remains scheduled',()=>{
+ const t=boot();
+ vm.runInContext('enemies=[null];spawnAt=Infinity',t.context);
+ t.frame(1000);t.frame(1016);
+ assert.match(t.inspect().lastError,/TypeError/);
+ t.frame(1032);assert.ok(t.ops.some(x=>String(x[0]).includes('ERROR')));
+});
