@@ -215,7 +215,20 @@
   const root=active();if(!root)return;
   const key=String(e.key||'').toLowerCase(),code=e.code||'';
   // Keep movement keys free while skill choices are open.
-  if(root.id==='scr-levelup'&&['arrowleft','arrowright','arrowup','arrowdown','w','a','s','d'].includes(key))return;
+  if((root.id==='scr-levelup'||root.id==='pkmsvv-forget-skill')&&
+   ['arrowleft','arrowright','arrowup','arrowdown','w','a','s','d'].includes(key))return;
+  if(root.id==='pkmsvv-forget-skill'&&['1','2','3'].includes(key)){
+   if(G.PKMSVVForgetSkill?.selectSlot?.(Number(key)-1)){
+    e.preventDefault();e.stopImmediatePropagation?.();
+   }
+   return;
+  }
+  if(root.id==='pkmsvv-forget-skill'&&(key==='4'||key==='pagedown')){
+   if(G.PKMSVVForgetSkill?.nextPage?.()){
+    e.preventDefault();e.stopImmediatePropagation?.();
+   }
+   return;
+  }
   // Live evolution: arrows/D-pad select; WASD/left stick still move the fighter.
   if(root.classList?.contains('pkmsvv-evo-live')&&
     ['w','a','s','d'].includes(key))return;
@@ -316,6 +329,20 @@
     return true;
   }
   const level=active(true);
+  if(level?.id==='pkmsvv-forget-skill'){
+   // The same live combat shortcut as level-up: R+X/Y/B, A next page.
+   // Neither D-pad nor analog directions navigate or select this overlay.
+   const buttons=[pressed(2),pressed(3),pressed(1),pressed(0)];
+   const edges=buttons.map((on,i)=>on&&!previousLevelButtons[i]);
+   previousLevelButtons=buttons;
+   if(edges[3])G.PKMSVVForgetSkill?.nextPage?.();
+   if(shoulderR){
+    const index=edges.findIndex((on,i)=>i<3&&on);
+    if(index>=0)G.PKMSVVForgetSkill?.selectSlot?.(index);
+   }
+   prevConfirm=buttons[3];prevBack=buttons[2];
+   return true;
+  }
   if(level?.id==='scr-levelup'){
    // Standard Gamepad API: R=5, X=2, Y=3, B=1, A=0.
    // R+X/Y/B select three visible cards; A pages; no stick/D-pad capture.
@@ -404,7 +431,8 @@
   const wrapped=function(...args){
    const root=active(true);
    if(root){
-    if(root.classList?.contains('pkmsvv-evo-live')){
+    if(root.classList?.contains('pkmsvv-evo-live')||
+       (root.id==='pkmsvv-forget-skill'&&root.classList?.contains('pkmsvv-forget-competitive'))){
      const result=original.apply(this,args);releaseGate=true;pollModal();return result;
     }
     releaseGate=true;pollModal();return;
