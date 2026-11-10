@@ -48,7 +48,9 @@ if(data.trialSpecies.some(p=>p.dex<data.nationalMin||p.dex>data.nationalMax))
  throw Error('Out-of-generation native trial species');
 const marker='/*__PKMSVV_KANTO_CONFIG__*/';
 if(!sourceJs.includes(marker))throw Error('Native Kanto insertion anchor missing');
-const output=sourceJs.replace(marker,JSON.stringify(data));
+const assignment=/const KANTO_CONFIG=\\/\\*__PKMSVV_KANTO_CONFIG__\\*\\/[^;]+;/;
+if(!assignment.test(sourceJs))throw Error('Native config declaration missing');
+const output=sourceJs.replace(assignment,'const KANTO_CONFIG='+JSON.stringify(data)+';');
 const outPath=path.join(__dirname,'romfs/main.js');
 fs.mkdirSync(path.dirname(outPath),{recursive:true});
 fs.writeFileSync(outPath,output);
