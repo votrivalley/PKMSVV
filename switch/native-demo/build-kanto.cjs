@@ -25,8 +25,8 @@ function parseExpression(expr,key){
 const waves=parseExpression(matchScalar('WAVE_SECONDS'),'WAVE_SECONDS');
 const bounds=parseExpression(matchScalar('GEN_BOUNDS'),'GEN_BOUNDS');
 const mascots=parseExpression(matchScalar('REGION_MASCOTS').replace(/^Object\.freeze\(/,'').replace(/\)$/,''),'REGION_MASCOTS');
-const names=parseExpression(matchScalar('NAMES').replace(/'([^']+)'/g,'"$1"'),'NAMES');
-const palettes=parseExpression(matchScalar('SCENE_PALETTES').replace(/'/g,'"'),'SCENE_PALETTES');
+const names=JSON.parse(matchScalar('NAMES').replace(/'([^']+)'/g,'"$1"'));
+const palettes=JSON.parse(matchScalar('SCENE_PALETTES').replace(/'/g,'"'));
 const seal=parseExpression(matchScalar('SEAL_SECONDS'),'SEAL_SECONDS');
 const final=parseExpression(matchScalar('FINAL_BOSS_SECONDS'),'FINAL_BOSS_SECONDS');
 if(names[0]!=='Kanto'||bounds[0][0]!==1||bounds[0][1]!==151||
