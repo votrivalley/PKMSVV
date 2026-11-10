@@ -4,6 +4,8 @@ on:
     branches: [release/pokemon-chuyen-sinh-2.0-web]
     paths:
       - '.github/workflows/package-pc-fast-v20.yml'
+      - 'src/pkmsvv-forget-skill.js'
+      - 'src/pkmsvv-modal-navigation-qa.js'
   workflow_dispatch:
 permissions:
   contents: read
