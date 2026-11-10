@@ -74,6 +74,12 @@ for(const prefix of ['game','ai/game']){
  if(!html.includes(hordePerfName))
   html=html.replace('</body>','<script defer src="js/ui/'+hordePerfName+'"></script>\n</body>');
  assert(html.includes(hordePerfName),'missing native non-Fusion FX guard in '+prefix);
+ assert(read(prefix+'/js/ui/'+hordePerfName).includes('function recordFPS('),
+  'adaptive FPS sampler missing from '+prefix);
+ assert(read(prefix+'/js/ui/'+hordePerfName).includes('pkmsvvFxQualityV36'),
+  'three-mode graphics selector missing from '+prefix);
+ assert(read(prefix+'/js/ui/pkmsvv-fusion-evolved.js').includes('allyAlpha'),
+  'Fusion ally opacity not applied in '+prefix);
  assert(read(prefix+'/js/ui/'+hordePerfName).includes('MIN_ENEMIES=8'),
   'Lv20/low-crowd FX budget was not promoted '+prefix);
  assert(read(prefix+'/js/ui/pkmsvv-fusion-evolved.js').includes('installVisualBudget'),
@@ -165,7 +171,7 @@ for(const prefix of ['game','ai/game']){
 }
 const sw=path.join(to,'sw.js');assert(file('sw.js'),'PWA service worker missing');
 const oldSW=fs.readFileSync(sw,'utf8');
-const oldKey='pkmsvv-cloudflare-v1529-1',newKey='pkmsvv-cloudflare-v20-20261110-berry-team-performance-kanto-v35';
+const oldKey='pkmsvv-cloudflare-v1529-1',newKey='pkmsvv-cloudflare-v20-20261110-adaptive-fps-v36';
 assert(oldSW.includes(oldKey),'existing service worker revision differs');
 fs.writeFileSync(sw,oldSW.replace(oldKey,newKey));
 // A new worker cache namespace ensures the published version refreshes reliably.
@@ -173,8 +179,8 @@ fs.writeFileSync(sw,oldSW.replace(oldKey,newKey));
 const info=JSON.parse(read('build-info.json'));
 assert(info.localSave===true,'existing browser-save architecture changed');
 Object.assign(info,{version:'2.0',displayVersion:'Pokémon Chuyển Sinh 2.0',
- releaseDate:'2026-11-09',releaseSourceRevision:EXPECTED_SHA,
- releaseQAWorkflowRun:42520192007,releaseType:'public-web',mobileUiHotfix:'one-row-tabs-five-box-cards-touch-auto-v24',combatHotfix:'berry-team-perf-and-kanto-tutorial-v35',saveMode:'existing-browser-local',
+ releaseDate:'2026-11-10',releaseSourceRevision:EXPECTED_SHA,
+ releaseQAWorkflowRun:42520192007,releaseType:'public-web',mobileUiHotfix:'one-row-tabs-five-box-cards-touch-auto-v24',combatHotfix:'adaptive-fps-visual-only-v36',saveMode:'existing-browser-local',
  rollbackSourceArtifact:'PKMSVV-PokeBox-Stage4-Web-QA-ONLY'});
 fs.writeFileSync(path.join(to,'build-info.json'),JSON.stringify(info,null,2)+'\n');
 const maxBytes=25*1024*1024;let files=0,bytes=0,largest=0;
