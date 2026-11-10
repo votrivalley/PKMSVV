@@ -75,7 +75,8 @@ G.PKMSVVFusionEvolved=(()=>{
     player.bind[combined.id]=player.slots.findIndex(g=>g.includes(combined));
    }
    player._pkmsvvFusionUsed=1;
-   G.FX?.ring?.(player.x,player.y,12,145,COLORS[recipeId],.86,6);
+   G.FX?.ring?.(player.x,player.y,12,145,COLORS[recipeId],
+     G.PKMSVVHordePerformance?.allyAlpha?.(.86)??.86,6);
    G.FX?.burst?.(player.x,player.y-12,COLORS[recipeId],16,105);
    G.Audio?.sfx?.('legend');
    return combined;
@@ -212,7 +213,8 @@ G.PKMSVVFusionEvolved=(()=>{
   e.x=nx;e.y=ny;
  }
  function fx(x,y,r,color,burst=8){
-  G.FX?.ring?.(x,y,8,r,color,.68,4);
+  G.FX?.ring?.(x,y,8,r,color,
+    G.PKMSVVHordePerformance?.allyAlpha?.(.68)??.68,4);
   if(burst)G.FX?.burst?.(x,y-12,color,burst,Math.max(25,r*.7));
  }
  const zones=[];
@@ -332,7 +334,8 @@ G.PKMSVVFusionEvolved=(()=>{
     }
     // Decorative particles are throttled; combat ticks and damage are not.
     z.visualTick=(z.visualTick||0)+1;
-    if(z.visualTick%3===1)G.FX?.ring?.(z.x,z.y,8,z.r*.9,c,.23,2);
+    if(z.visualTick%3===1)G.FX?.ring?.(z.x,z.y,8,z.r*.9,c,
+     G.PKMSVVHordePerformance?.allyAlpha?.(.23)??.23,2);
    }
    if(z.life<=0){
     if(z.tag==='shadow'){
