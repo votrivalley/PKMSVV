@@ -1,0 +1,80 @@
+name: PC Fast Start - Pokémon Chuyển Sinh 2.0 (manual/release)
+on:
+  push:
+    branches: [release/pokemon-chuyen-sinh-2.0-web]
+    paths:
+      - '.github/workflows/package-pc-fast-v20.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pkmsvv-pc-fast-v20-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  pc-fast:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    env:
+      PKMSVV_MEGA_SPRITE_PACK: '1' # Full 36 normal + 32 Shiny pack on build, not test-only
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch pinned original PokéSurvivor source
+        shell: bash
+        run: |
+          git init vendor/pokesurvivor
+          git -C vendor/pokesurvivor remote add origin https://github.com/JPTER78/pokesurvivor.git
+          git -C vendor/pokesurvivor fetch --depth 1 origin 11fe868c640b62ac37beacc222e056bc4d9ec892
+          git -C vendor/pokesurvivor checkout --detach FETCH_HEAD
+      - name: Install PC build dependencies
+        run: npm install --no-audit --no-fund
+      - name: Compile latest offline + LAN game
+        run: npm run prepare:lan
+      - name: Validate full 36-Mega pack before PC distribution
+        run: node tests/mega-platform-parity.test.cjs pc
+      - name: Validate bilingual 1.0–current changelog and preserve Vietnamese UI
+        run: npm run test:localization
+        env:
+          PKMSVV_MEGA_SPRITE_PACK: '1'
+      - name: Phase A+B — Berry UX and safe item/Bond selections
+        run: npm run test:berry:ux && npm run test:choice:queue
+      - name: C+D+E — Held item selection, Solo Fusion pilot and deterministic season
+        run: npm run test:ced
+      - name: Quick regressions for controls, Mega, Orb, supports and Champion
+        run: node --test tests/arena-pvp.test.cjs tests/berry.test.cjs tests/berry-rescue.test.cjs tests/unified-coop.test.cjs tests/mega-arena-gacha.test.cjs tests/forget-skill.test.cjs tests/controller.test.cjs tests/mega-phase3.test.cjs tests/champion-arena.test.cjs tests/story-progression.test.cjs tests/chapter-purple-rewards.test.cjs tests/support-fast-shiny.test.cjs tests/competitive-nonblocking.test.cjs tests/royale-spectator.test.cjs
+      - name: Package portable PC executable
+        run: npm run build:lan:win
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Verify executable, LAN game and new hotkeys
+        shell: pwsh
+        run: |
+          $dir='dist/lan-windows/win-unpacked'
+          $exe=Get-ChildItem $dir -Filter '*.exe' | Select-Object -First 1
+          if(!$exe -or $exe.Length -lt 100KB){throw 'Windows Fast Start EXE missing'}
+          foreach($file in @('resources/lan-site/game/index.html','resources/lan-site/game/js/app.min.js','resources/lan-site/game/assets/icons/icon-192.png')){
+            if(!(Test-Path (Join-Path $dir $file))){throw "Missing PC asset: $file"}
+          }
+          $app=Get-Content (Join-Path $dir 'resources/lan-site/game/js/app.min.js') -Raw
+          if(!$app.Contains('pkmsvv-mega')){throw 'Mega control is not bundled'}
+          if(!$app.Contains('pkmk-tab-berry')){throw 'Kecleon Berry shop missing'}
+          if(!$app.Contains('PKMSVVBerryRescue')){throw 'Four-player Berry Rescue runtime missing'}
+           if(!$app.Contains('PKMSVVArenaPvp')){throw 'Real Host/Guest Arena PvP runtime missing'}
+          $berryIcons=Get-ChildItem (Join-Path $dir 'resources/lan-site/game/assets/berry') -Filter '*.png'
+          if($berryIcons.Count -ne 10){throw 'Exactly 10 Berry pixel sprites must be packaged'}
+          Write-Host "Fast Start is ready: $($exe.Name) ($($exe.Length) bytes)"
+      - name: Include Fast Start instructions
+        shell: pwsh
+        run: |
+          Copy-Item docs/LAN_FAST_START_WINDOWS.md dist/lan-windows/win-unpacked/README-FAST-START.md
+          "Source: ${{ github.sha }}" | Add-Content dist/lan-windows/win-unpacked/README-FAST-START.md
+          "Controls: Mega = 4, Orb = 5 (customizable in Settings)." | Add-Content dist/lan-windows/win-unpacked/README-FAST-START.md
+      - name: Upload PC Fast Start for testing
+        uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-PC-Fast-V20-Spawn-Pool-Optimized
+          path: dist/lan-windows/win-unpacked/
+          retention-days: 14
+          if-no-files-found: error
