@@ -18,14 +18,14 @@ function boot(pad=null){
  const get=x=>vm.runInContext(x,context);
  return {ops,context,frame,get};
 }
-test('FULL 60Hz renderer retains native circles and grid without native font and texture calls',()=>{
+test('FULL 60Hz renderer retains circles/grid and adds static HUD text without images',()=>{
  const t=boot();
  t.frame(1000);t.frame(1016);t.frame(1032);t.frame(1048);
  assert.equal(t.get('renderMode'),2);
  assert.ok(t.ops.arc>0,'full circle geometry must remain');
  assert.ok(t.ops.stroke>0,'grid must remain');
  assert.equal(t.ops.drawImage,0);
- assert.equal(t.ops.fillText,0);
+ assert.ok(t.ops.fillText>0,'static font label path is exercised');
  assert.equal(t.get('lastError'),'');
 });
 test('Simulation survives 180 seconds through the 60s enemy HP change and 25s wave transition',()=>{
@@ -36,7 +36,7 @@ test('Simulation survives 180 seconds through the 60s enemy HP change and 25s wa
  assert.equal(t.get('wave'),'ZUBAT/GEN1');
  assert.equal(t.get('lastError'),'');
  assert.ok(t.get('enemies.length')<=32&&t.get('shots.length')<=32);
- assert.equal(t.ops.fillText,0);
+ assert.ok(t.ops.fillText>0);
  assert.equal(t.ops.drawImage,0);
 });
 test('HP=0 safely respawns without mutation during enemy loop',()=>{
@@ -65,11 +65,11 @@ test('No native image decode on L and no renderer switching with ZL',()=>{
  assert.equal(t.get('spriteLoadStarted'),false);
  assert.equal(t.get('renderMode'),2);
 });
-test('FULL render has no font or texture path even on level-up and pause',()=>{
+test('FULL render uses fixed font labels but no images even on level-up and pause',()=>{
  const t=boot();
  t.get('setChoices();paused=true');
  t.frame(1000);t.frame(1016);
- assert.equal(t.ops.fillText,0);
+ assert.ok(t.ops.fillText>0);
  assert.equal(t.ops.drawImage,0);
  assert.equal(t.get('lastError'),'');
 });
