@@ -55,7 +55,7 @@ jobs:
           PY
       - name: Install icon generator
         run: python3 -m pip install --disable-pip-version-check pillow
-      - name: Package FULL 60Hz geometry NRO without native fonts or images
+      - name: Package FULL 60Hz one-opt-in-sprite diagnostic NRO
         working-directory: switch/native-demo
         shell: bash
         run: |
@@ -63,20 +63,20 @@ jobs:
           node - <<'NODE'
           const fs=require('node:fs');
           const p=JSON.parse(fs.readFileSync('package.json','utf8'));
-          p.name='pkmsvv-switch-live-hud';
-          p.version='0.0.11';
-          p.nacp={...(p.nacp||{}),id:'0147365656110000',title:'PKMSVV HUD 11'};
+          p.name='pkmsvv-switch-one-sprite';
+          p.version='0.0.12';
+          p.nacp={...(p.nacp||{}),id:'0147365656120000',title:'PKMSVV ONE 12'};
           fs.writeFileSync('package.json',JSON.stringify(p,null,2));
           NODE
           python3 make_icon.py FULL
           npm run nro
-          test -s pkmsvv-switch-live-hud.nro
+          test -s pkmsvv-switch-one-sprite.nro
           mkdir -p ../../dist/switch-native-demo
-          cp pkmsvv-switch-live-hud.nro ../../dist/switch-native-demo/PKMSVV-Switch-FULL60-LiveHUD-v011.nro
+          cp pkmsvv-switch-one-sprite.nro ../../dist/switch-native-demo/PKMSVV-Switch-FULL60-OneSprite-v012.nro
           ls -lh ../../dist/switch-native-demo/
       - uses: actions/upload-artifact@v4
         with:
-          name: PKMSVV-Switch-FULL60-LiveHUD-v011-NRO
+          name: PKMSVV-Switch-FULL60-OneSprite-v012-NRO
           path: dist/switch-native-demo/*.nro
           retention-days: 14
           if-no-files-found: error
