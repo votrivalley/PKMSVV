@@ -2,7 +2,8 @@
 // This is NOT the full Pokémon Chuyển Sinh gameplay engine. No official Pokémon assets.
 // Controller indices here follow nx.js / Switch ordering: B0 A1 Y2 X3 L4 R5.
 const W=1280,H=720,ctx=screen.getContext('2d');
-const MAX_ENEMIES=32,MAX_SHOTS=32,MAX_SPRITES_PER_FRAME=18;
+const MAX_ENEMIES=32,MAX_SHOTS=32,MAX_SPRITES_PER_FRAME=5;
+const MAX_ENEMY_SPRITES=4;
 // Diagnostic: safe vector renderer is the default. Press L to toggle sprites.
 let spritesEnabled=false,prevL=false,drawnSprites=0,wave='RATTATA/PIDGEY';
 // Build matrix replaces DIAG_BOOT_MODE in ROMFS with 0, 1 or 2.
@@ -10,7 +11,7 @@ let spritesEnabled=false,prevL=false,drawnSprites=0,wave='RATTATA/PIDGEY';
  // switching. This separates native render faults from gamepad input faults.
 const DIAG_BOOT_MODE=2;
 const DIAG_FIXED_MODE=true;
-const NO_NATIVE_FONTS=false; // v0.0.12 retains stable live HUD, adds opt-in player sprite only
+const NO_NATIVE_FONTS=false; // v0.0.13 retains stable FULL HUD, opts into one enemy species
 let renderMode=DIAG_BOOT_MODE,prevZL=false,drawCount=0;
 // Render modes: 0=minimum Canvas rectangles, 1=static frame (only redraw every 3s),
 // 2=full original Canvas paths/text. ZL cycles; sprite mode is independently toggled by L.
@@ -20,19 +21,21 @@ let px=W/2,py=H/2,hp=100,kills=0,time=0,shots=[],enemies=[],last=0,spawnAt=0,fir
 const SPRITES={pikachu:null,rattata:null,pidgey:null,zubat:null};
 const loaded={pikachu:false,rattata:false,pidgey:false,zubat:false};
 const spriteFiles={pikachu:'25.png',rattata:'19.png',pidgey:'16.png',zubat:'41.png'};
-let spriteLoadStarted=false;
+let spriteLoadStarted=false,enemySpritesDrawn=0;
 function loadSprites(){
- // Controlled single-image experiment: ONLY player Pikachu.
- // Never decode Rattata/Pidgey/Zubat until a future separate test.
+ // Controlled two-image experiment: player Pikachu + Rattata only.
+ // Pidgey/Zubat remain vector. Images are decoded once on first L.
  if(spriteLoadStarted)return;
  spriteLoadStarted=true;
  if(typeof Image!=='function')return;
- try{
-  const img=new Image();
-  img.onload=()=>{SPRITES.pikachu=img;loaded.pikachu=true};
-  img.onerror=()=>{loaded.pikachu=false};
-  img.src='romfs:/sprites/25.png';
- }catch(_){loaded.pikachu=false}
+ for(const name of ['pikachu','rattata']){
+  try{
+   const img=new Image();
+   img.onload=()=>{SPRITES[name]=img;loaded[name]=true};
+   img.onerror=()=>{loaded[name]=false};
+   img.src='romfs:/sprites/'+spriteFiles[name];
+  }catch(_){loaded[name]=false}
+ }
 }
 let xp=0,level=1,attack=1,fireRate=.21,moveSpeed=230,skillPage=0,pickOpen=false,prevChoice=[false,false,false,false],skillChoices=[];
 const SKILLS=[
@@ -51,13 +54,16 @@ function pickSkill(slot){
  skill.apply();pickOpen=false;xp=0;return true;
 }
 function renderSprite(name,x,y,size,mirror=false){
- if(name!=='pikachu'||!spritesEnabled||drawnSprites>=1)return false;
+ if(!spritesEnabled||drawnSprites>=MAX_SPRITES_PER_FRAME)return false;
+ if(name!=='pikachu'&&name!=='rattata')return false;
+ if(name==='rattata'&&enemySpritesDrawn>=MAX_ENEMY_SPRITES)return false;
  if(x+size<0||x-size>W||y+size<0||y-size>H)return false;
  const img=SPRITES[name];
  if(img&&loaded[name]){
   // Source art is 96x96 transparent pixel sprites. Keep a safe vector fallback.
   ctx.drawImage(img,x-size/2,y-size/2,size,size);
   drawnSprites++;
+  if(name==='rattata')enemySpritesDrawn++;
   return true;
  }
  return false;
@@ -76,7 +82,7 @@ function update(dt){
  const p=navigator.getGamepads?.()?.find?.(x=>x?.connected)||navigator.getGamepads?.()?.[0];
  const r=button(p,5),b=button(p,0),toggle=b&&!prevB;prevB=b;
  const l=button(p,4),zl=button(p,6);
- // L toggles ONE player texture. Baseline vector mode remains unchanged.
+ // L toggles Pikachu and up to 4 Rattata sprites. Vector mode stays default.
  if(l&&!prevL){spritesEnabled=!spritesEnabled;if(spritesEnabled)loadSprites();}
  if(!DIAG_FIXED_MODE&&zl&&!prevZL){renderMode=(renderMode+1)%3;drawCount=0;}
  prevL=l;prevZL=zl;
@@ -132,15 +138,19 @@ function update(dt){
  if(hp<=0)respawn();
 }
 function draw(){
- // FULL 60Hz native geometry + live HUD, opt-in ONE player sprite.
+ // FULL 60Hz geometry + live HUD, opt-in player plus at most 4 Rattata sprites.
  // Keep original grid/paths/arc visual treatment for honest comparison.
  ctx.fillStyle='#101a20';ctx.fillRect(0,0,W,H);
  ctx.strokeStyle='#1c3038';ctx.lineWidth=1;
  for(let x=0;x<W;x+=64){ctx.beginPath();ctx.moveTo(x,70);ctx.lineTo(x,H);ctx.stroke()}
  for(let y=70;y<H;y+=64){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
  for(const shot of shots){ctx.fillStyle='#ffce69';ctx.beginPath();ctx.arc(shot.x,shot.y,5,0,Math.PI*2);ctx.fill()}
- for(const enemy of enemies){ctx.fillStyle='#dc697e';ctx.beginPath();ctx.arc(enemy.x,enemy.y,enemy.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#441e30';ctx.stroke()}
- drawnSprites=0;
+ drawnSprites=0;enemySpritesDrawn=0;
+ for(const enemy of enemies){
+  if(!renderSprite(enemy.species,enemy.x,enemy.y,60)){
+   ctx.fillStyle='#dc697e';ctx.beginPath();ctx.arc(enemy.x,enemy.y,enemy.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#441e30';ctx.stroke();
+  }
+ }
  if(!renderSprite('pikachu',px,py,78)){
   ctx.fillStyle='#65d5c3';ctx.beginPath();ctx.arc(px,py,19,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle='#e6fff7';ctx.lineWidth=3;ctx.stroke();
@@ -150,12 +160,12 @@ function draw(){
  // Keep native geometry and game logic identical to known stable v0.0.10.
  ctx.fillStyle='#fff4cc';
  ctx.font='20px sans-serif';
- ctx.fillText('PKMSVV SWITCH - ONE SPRITE v0.0.12',24,105);
+ ctx.fillText('PKMSVV SWITCH - ENEMY SPRITE v0.0.13',24,105);
  ctx.fillText('HP: '+Math.ceil(hp),24,135);
  ctx.fillText('XP: '+xp+'/12   LEVEL: '+level,24,165);
  ctx.fillText('KO: '+kills+'   ENEMIES: '+enemies.length,24,195);
  ctx.fillText('FPS: '+fps+'   TIME: '+Math.floor(time)+'s   RESPAWNS: '+deaths,24,225);
- ctx.fillText('L: PLAYER SPRITE '+(spritesEnabled?(loaded.pikachu?'ON':'LOADING'):'OFF')+'  B: PAUSE  R+X/Y/B: SKILL',24,692);
+ ctx.fillText('L: SPRITES '+(spritesEnabled?(loaded.pikachu&&loaded.rattata?'ON':'LOADING'):'OFF')+'  RATTATA 4 MAX  B: PAUSE',24,692);
  // Text-free health, XP and level bars. Avoid changing canvas.font per frame.
  ctx.fillStyle='#294963';ctx.fillRect(16,17,390,18);
  ctx.fillStyle='#7cdec4';ctx.fillRect(16,17,Math.max(0,Math.min(390,hp*3.9)),18);
