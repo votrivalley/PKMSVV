@@ -10,7 +10,8 @@ let spritesEnabled=false,prevL=false,drawnSprites=0,wave='RATTATA/PIDGEY';
  // switching. This separates native render faults from gamepad input faults.
 const DIAG_BOOT_MODE=0;
 const DIAG_FIXED_MODE=true;
-let renderMode=DIAG_BOOT_MODE,prevZL=false,drawCount=0;
+let renderMode=0,prevZL=false,drawCount=0,lastDrawAt=-Infinity;
+const SAFE_RENDER_MS=30; // target about 30 presented FPS, simulation stays at native RAF rate
 // Render modes: 0=minimum Canvas rectangles, 1=static frame (only redraw every 3s),
 // 2=full original Canvas paths/text. ZL cycles; sprite mode is independently toggled by L.
 const RENDER_NAMES=['MIN','TINH','DAY'];
@@ -50,6 +51,9 @@ function pickSkill(slot){
  skill.apply();pickOpen=false;xp=0;return true;
 }
 function renderSprite(name,x,y,size,mirror=false){
+ // Stable v0.0.8 intentionally never calls native drawImage; the asset
+ // pipeline is kept for a future isolated texture stress test.
+ return false;
  if(!spritesEnabled||drawnSprites>=MAX_SPRITES_PER_FRAME)return false;
  if(x+size<0||x-size>W||y+size<0||y-size>H)return false;
  const img=SPRITES[name];
@@ -72,18 +76,19 @@ function respawn(){
  spawnAt=.8;fireAt=.3;spawnShield=2;
 }
 function update(dt){
- const p=navigator.getGamepads?.()?.find?.(x=>x?.connected)||navigator.getGamepads?.()?.[0];
+ const pads=navigator.getGamepads?.();
+ let p=null;
+ if(pads)for(let i=0;i<pads.length;i++){if(pads[i]?.connected){p=pads[i];break}}
+
  const r=button(p,5),b=button(p,0),toggle=b&&!prevB;prevB=b;
- const l=button(p,4),zl=button(p,6);
- if(l&&!prevL){spritesEnabled=!spritesEnabled;if(spritesEnabled)loadSprites();}
- if(!DIAG_FIXED_MODE&&zl&&!prevZL){renderMode=(renderMode+1)%3;drawCount=0;}
- prevL=l;prevZL=zl;
- const choice=[button(p,3),button(p,2),button(p,0),button(p,1)];
- const edges=choice.map((on,i)=>on&&!prevChoice[i]);prevChoice=choice;
+ // No native texture decoding or mode changes: L/ZL stay unused.
+ // Avoid allocating input arrays on every 60 Hz simulation tick.
+ const x=button(p,3),y=button(p,2),bb=button(p,0),a=button(p,1);
+ const ex=x&&!prevChoice[0],ey=y&&!prevChoice[1],eb=bb&&!prevChoice[2],ea=a&&!prevChoice[3];
+ prevChoice[0]=x;prevChoice[1]=y;prevChoice[2]=bb;prevChoice[3]=a;
  if(pickOpen){
-  // Controller can still move during a level-up choice.
-  if(edges[3])skillPage=(skillPage+1)%Math.ceil(skillChoices.length/3);
-  if(r){const slot=edges.findIndex((on,i)=>i<3&&on);if(slot>=0)pickSkill(slot)}
+  if(ea)skillPage=(skillPage+1)%Math.ceil(skillChoices.length/3);
+  if(r){if(ex)pickSkill(0);else if(ey)pickSkill(1);else if(eb)pickSkill(2)}
  }else if(toggle&&!r)paused=!paused;
  if(paused)return;
  time+=dt;spawnShield=Math.max(0,spawnShield-dt);
@@ -127,67 +132,58 @@ function update(dt){
  if(touching>0&&spawnShield<=0)hp=Math.max(0,hp-Math.min(touching,4)*8*dt);
  if(hp<=0)respawn();
 }
+// Native-safe renderer: ONLY solid fillRect. No native font rasterizer,
+// canvas paths, strokes or textures, even when a level-up opens.
+// This is a temporary stable demo, not the full Pokémon UI.
 function draw(){
- drawCount++;
- if(renderMode===1&&drawCount>1&&drawCount%180!==0)return;
- if(renderMode!==2){
-  // Diagnostics avoid font rasterization, beginPath/arc, Image, and stroke
-  // in the default mode, so an engine crash can be isolated by subsystem.
-  ctx.fillStyle='#091922';ctx.fillRect(0,0,W,H);
-  ctx.fillStyle='#245563';ctx.fillRect(20,20,420,35);
-  ctx.fillStyle='#67dac2';ctx.fillRect(20,20,Math.max(0,Math.min(420,hp/100*420)),35);
-  ctx.fillStyle='#65d5c3';ctx.fillRect(px-15,py-15,30,30);
-  ctx.fillStyle='#d36b7d';
-  for(const e of enemies)ctx.fillRect(e.x-9,e.y-9,18,18);
-  ctx.fillStyle='#ffd875';
-  for(const s of shots)ctx.fillRect(s.x-3,s.y-3,6,6);
-  // Mode 1 draws a static frame; the simulation and collision still run 60 Hz.
-  // Small counter tiles show rendering works without font allocations.
-  ctx.fillStyle=renderMode===0?'#6feab5':'#e7cf7d';
-  ctx.fillRect(20,70,renderMode===0?80:160,9);
-  return;
+ ctx.fillStyle='#081821';ctx.fillRect(0,0,W,H);
+ ctx.fillStyle='#183844';ctx.fillRect(16,16,450,37);
+ ctx.fillStyle='#50d6b2';ctx.fillRect(16,16,Math.max(0,Math.min(450,hp*4.5)),37);
+ ctx.fillStyle='#355169';ctx.fillRect(16,64,350,12);
+ ctx.fillStyle='#f3c76c';ctx.fillRect(16,64,Math.max(0,Math.min(350,xp/12*350)),12);
+ // Scene: keep fill calls bounded by the existing 32-enemy/32-bullet limits.
+ ctx.fillStyle='#78dfc6';ctx.fillRect(px-17,py-17,34,34);
+ ctx.fillStyle='#d86d80';
+ for(let i=0;i<enemies.length;i++){
+  const e=enemies[i];ctx.fillRect(e.x-10,e.y-10,20,20);
  }
- drawnSprites=0;
- ctx.fillStyle='#101a20';ctx.fillRect(0,0,W,H);
- ctx.strokeStyle='#1c3038';ctx.lineWidth=1;
- for(let x=0;x<W;x+=64){ctx.beginPath();ctx.moveTo(x,70);ctx.lineTo(x,H);ctx.stroke()}
- for(let y=70;y<H;y+=64){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
- for(const s of shots){ctx.fillStyle='#ffce69';ctx.beginPath();ctx.arc(s.x,s.y,5,0,Math.PI*2);ctx.fill()}
- for(const e of enemies){if(!renderSprite(e.species||'rattata',e.x,e.y,60)){ctx.fillStyle='#dc697e';ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#441e30';ctx.stroke()}}
- if(!renderSprite('pikachu',px,py,78)){ctx.fillStyle='#65d5c3';ctx.beginPath();ctx.arc(px,py,19,0,Math.PI*2);ctx.fill();
-  ctx.strokeStyle='#e6fff7';ctx.lineWidth=3;ctx.stroke()}
- ctx.fillStyle='#0a1218';ctx.fillRect(0,0,W,70);
- ctx.fillStyle='#fff5de';ctx.font='bold 26px sans-serif';ctx.fillText('POKEMON CHUYEN SINH  -  SWITCH NATIVE TECH DEMO',24,43);
- ctx.font='20px sans-serif';ctx.fillStyle='#b9d3dc';
- ctx.fillText('HP '+Math.ceil(hp)+'  LV '+level+'  XP '+xp+'/12  KO '+kills+'  QUAI '+enemies.length+'  FPS '+fps+'  '+Math.floor(time)+'s  HOI SINH '+deaths,25,110);
- ctx.fillStyle=spritesEnabled?'#ffe39c':'#a7f4d4';
- ctx.fillText('HINH: '+(spritesEnabled?'SPRITE (L DE TAT)':'VECTOR AN TOAN (L BAT SPRITE)')+'  |  DOT: '+wave,25,168);
- ctx.fillText('B: Tam dung  L: Sprites  MODE '+RENDER_NAMES[renderMode]+'  |  Native v0.0.6',25,H-23);
- if(spawnShield>0){ctx.fillStyle='#a5f7e6';ctx.fillText('BAT TU TAM THOI '+spawnShield.toFixed(1)+'s',25,142)}
- if(lastError){ctx.fillStyle='#ff9a8f';ctx.fillText('LOI: '+lastError.slice(0,100),25,210)}
+ ctx.fillStyle='#ffd476';
+ for(let i=0;i<shots.length;i++){
+  const s=shots[i];ctx.fillRect(s.x-4,s.y-4,8,8);
+ }
+ // HUD: count bars instead of expensive changing text glyphs.
+ ctx.fillStyle='#587f94';
+ for(let i=0;i<Math.min(10,level);i++)ctx.fillRect(20+i*20,93,13,10);
+ if(spawnShield>0){ctx.fillStyle='#8aecff';ctx.fillRect(px-22,py+22,44,4)}
  if(pickOpen){
-  ctx.fillStyle='rgba(8,18,35,.94)';ctx.fillRect(W-418,128,396,330);
-  ctx.strokeStyle='#ffe2a0';ctx.strokeRect(W-418,128,396,330);
-  ctx.fillStyle='#ffeab1';ctx.font='bold 25px sans-serif';ctx.fillText('LEN CAP '+level,W-395,166);
+  ctx.fillStyle='#11283a';ctx.fillRect(W-360,110,342,292);
+  const start=skillPage*3;
   for(let i=0;i<3;i++){
-   const sk=skillChoices[skillPage*3+i];if(!sk)continue;
-   const y=195+i*72;
-   ctx.fillStyle='#294764';ctx.fillRect(W-395,y,350,64);
-   ctx.fillStyle='#fff7c5';ctx.font='bold 17px sans-serif';
-   ctx.fillText('R + '+['X','Y','B'][i]+'  '+sk.name,W-385,y+25);
-   ctx.font='14px sans-serif';ctx.fillStyle='#cbdfe6';ctx.fillText(sk.description,W-385,y+47);
+   if(!skillChoices[start+i])continue;
+   const y=131+i*79;
+   ctx.fillStyle=i===0?'#335d76':i===1?'#476179':'#645374';
+   ctx.fillRect(W-340,y,303,66);
+   ctx.fillStyle='#ffcf66';ctx.fillRect(W-334,y+7,9,52);
+   // One/two/three ticks mean R+X / R+Y / R+B.
+   for(let k=0;k<=i;k++)ctx.fillRect(W-312+k*17,y+18,12,10);
   }
-  ctx.fillStyle='#ffeab1';ctx.font='16px sans-serif';
-  ctx.fillText('A: Trang '+(skillPage+1)+'/'+Math.ceil(skillChoices.length/3),W-395,438);
+  ctx.fillStyle='#dfd386';ctx.fillRect(W-342,380,skillPage===0?100:220,9);
  }
- if(paused){ctx.fillStyle='rgba(0,0,0,.7)';ctx.fillRect(0,0,W,H);ctx.fillStyle='#fff';ctx.font='bold 56px sans-serif';ctx.fillText('TAM DUNG',W/2-170,H/2)}
+ if(paused){ctx.fillStyle='#020e16';ctx.fillRect(220,270,840,185);
+  ctx.fillStyle='#e7c97d';ctx.fillRect(260,312,760,8)}
+ if(lastError){ctx.fillStyle='#ef557c';ctx.fillRect(0,0,W,18)}
 }
 function frame(now){
  const dt=last?clamp((now-last)/1000,0,.05):0;last=now;
  frames++;if(now-fpsAt>=1000){fps=Math.round(frames*1000/(now-fpsAt));fpsAt=now;frames=0}
  // A JS exception should remain visible for debugging instead of silently
  // ending the animation loop. Render a diagnostic overlay on following frames.
- try{if(!lastError)update(dt);draw()}catch(err){
+ try{
+  if(!lastError)update(dt);
+  // Keep simulation/controller input on native animation frames, while
+  // throttling only the graphics submission (not game logic).
+  if(now-lastDrawAt>=SAFE_RENDER_MS){lastDrawAt=now;draw()}
+ }catch(err){
   lastError=String(err?.stack||err?.message||err);
   try{console.error('[PKMSVV Switch native demo]',lastError)}catch(_){}
   try{ctx.fillStyle='#220c13';ctx.fillRect(0,0,W,H);
