@@ -88,7 +88,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: PKMSVV-Switch-Alpha-v0101-OnePass
-          path: dist/switch-native-demo/*.nro
+          path: dist/switch-native-demo/
           retention-days: 14
           if-no-files-found: error
       # nxjs-nsp --fat currently requires a keyset; don't mishandle console keys.
