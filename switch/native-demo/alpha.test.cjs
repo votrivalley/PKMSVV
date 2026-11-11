@@ -33,6 +33,11 @@ test('Compiled game uses real Kanto, Orb, Fusion, Mega and Evolution sources',()
  assert.equal(data.finalBossSeconds,1800);
  assert.equal(data.nativeAlpha.orbs.length,6);
  assert.equal(data.nativeAlpha.fusions.length,10);
+ assert.equal(data.nativeAlpha.nativeMoves.length,18);
+ assert.equal(Object.keys(data.nativeAlpha.cooldownFloors).length,23);
+ assert.equal(data.nativeAlpha.cooldownFloors.melee,.48);
+ assert.equal(data.nativeAlpha.cooldownFloors.chain,.85);
+ assert.equal(data.nativeAlpha.cooldownFloors.nova,.9);
  assert.equal(JSON.stringify(data.nativeAlpha.fusionOfferRates),JSON.stringify([.8,.7,.6,.5,.4,.3]));
  assert.equal(data.nativeAlpha.evolutionSprites.length,6);
  assert.equal(data.nativeAlpha.mega.cooldown,200);
@@ -210,4 +215,33 @@ test('Extra sprite loads are staggered, not decoded in a single game frame',()=>
  assert.ok(t.images.some(x=>x._src==='romfs:/sprites/4.png'));
  assert.ok(t.images.some(x=>x._src==='romfs:/sprites/16.png'));
  assert.ok(t.images.some(x=>x._src==='romfs:/sprites/41.png'));
+});
+
+test('Native move adapter targets different enemy geometries, not one global damage circle',()=>{
+ const t=boot();t.frame(1000);
+ t.get('spawnAt=Infinity;enemies=[{x:px+190,y:py,species:"rattata",dex:19,hp:60,r:16,speed:0},{x:px+230,y:py+25,species:"rattata",dex:19,hp:60,r:16,speed:0},{x:px+450,y:py-180,species:"zubat",dex:41,hp:60,r:16,speed:0}]');
+ assert.equal(t.get('alpha.castMove({id:"tackle",lvl:1})'),false,'melee cannot hit an enemy 190px away');
+ assert.equal(t.get('enemies.every(e=>e.hp===60)'),true);
+ assert.equal(t.get('alpha.castMove({id:"ember",lvl:1})'),true,'projectile targets nearest enemy');
+ assert.equal(t.get('enemies[0].hp<60'),true);
+ assert.equal(t.get('enemies[1].hp'),60,'projectile must not become global AoE');
+ assert.equal(t.get('alpha.castMove({id:"thunder-shock",lvl:1})'),true,'chain chains near the primary target');
+ assert.equal(t.get('enemies[1].hp<60'),true);
+ assert.equal(t.get('enemies[2].hp'),60,'distant out-of-chain enemy untouched');
+ assert.equal(t.get('lastError'),'');
+});
+test('Per-skill cooldowns are preserved and combat effects stay bounded over 3 minutes',()=>{
+ const t=boot();t.frame(1000);
+ t.get('spawnAt=Infinity;enemies=[{x:px+190,y:py,species:"rattata",dex:19,hp:500,r:16,speed:0}];alpha.moves.splice(0,alpha.moves.length,{id:"ember",lvl:1})');
+ t.frame(1016);
+ assert.ok(t.get('alpha.castCount')>=1);
+ const casts=t.get('alpha.castCount'),cd=t.get('alpha.moves[0].cooldown');
+ assert.ok(cd>=data.nativeAlpha.cooldownFloors.projectile-.03);
+ t.frame(1032);
+ assert.equal(t.get('alpha.castCount'),casts,'cannot cast every native frame');
+ t.get('alpha.moves.push({id:"thunder-shock",lvl:1})');
+ for(let i=3;i<10800;i++)t.frame(1000+i*16.6667);
+ assert.ok(t.get('effects.length')<=14);
+ assert.ok(t.get('alpha.castCount')>casts);
+ assert.equal(t.get('lastError'),'');
 });
