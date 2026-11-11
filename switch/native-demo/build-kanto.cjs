@@ -49,6 +49,7 @@ if(data.trialSpecies.some(p=>p.dex<data.nationalMin||p.dex>data.nationalMax))
 // Pull *actual* gameplay constants from PKMSVV source. Native implementations
 // are narrower than the browser modules: no fabricated save unlocks.
 const orbsSource=fs.readFileSync(path.join(root,'src/v14/orbs.js'),'utf8');
+const balanceSource=fs.readFileSync(path.join(root,'src/pkmsvv-skill-balance.js'),'utf8');
 const fusionSource=fs.readFileSync(path.join(root,'src/pkmsvv-bond-fusion.js'),'utf8');
 const megaSource=fs.readFileSync(path.join(root,'src/pkmsvv-mega-phase3.js'),'utf8');
 const evolutions=JSON.parse(fs.readFileSync(path.join(root,'data/evolution-rules.json'),'utf8'));
@@ -65,12 +66,38 @@ if(JSON.stringify(fusionOfferRates)!==JSON.stringify([.8,.7,.6,.5,.4,.3]))
 
 if(orbs.length!==6||fusions.length!==10||!megaMatch)
  throw Error('PKMSVV source changed: orb/fusion/mega bridge needs review');
+// Reuse documented cooldown floors for the 23 native move categories.
+// These are *adapter* categories; the complete 103 Web move implementations
+// are not available inside nx.js, so do not claim parity.
+const profileMatch=balanceSource.match(/const profiles\s*=\s*\{([\s\S]*?)\n  \};/);
+if(!profileMatch)throw Error('PKMSVV cooldown profile table missing');
+const cooldownFloors={};
+for(const m of profileMatch[1].matchAll(/^\s*(\w+):\s*\{([^}]+)\}/gm)){
+ const floor=m[2].match(/\bfloor:([\d.]+)/);
+ if(floor)cooldownFloors[m[1]]=Number(floor[1]);
+}
+if(Object.keys(cooldownFloors).length!==23||
+ !Number.isFinite(cooldownFloors.projectile)||
+ !Number.isFinite(cooldownFloors.nova))
+ throw Error('PKMSVV cooldown profiles changed: review Switch adaptation');
+const nativeMoves=[
+ ['thunder-shock','chain'],['quick-attack','melee'],
+ ['ember','projectile'],['water-gun','projectile'],
+ ['vine-whip','cone'],['tackle','melee'],
+ ['thunderbolt','chain'],['spark','chain'],['gust','cone'],
+ ['ice-shard','projectile'],['razor-leaf','projectile'],
+ ['rock-tomb','mine'],['confusion','nova'],['shadow-ball','homing'],
+ ['flamethrower','beam'],['metal-claw','melee'],
+ ['psychic','nova'],['bubble-beam','projectile']
+].map(([id,kind])=>({id,kind,cooldown:cooldownFloors[kind]}));
+if(nativeMoves.length!==18)throw Error('Invalid native move subset');
+
 const evolutionRows=evolutions.rules.filter(row=>row.from>=1&&row.from<=151&&
  row.to>=1&&row.to<=151&&row.trigger==='1'&&Number.isInteger(row.level))
  .map(row=>({from:row.from,to:row.to,level:row.level}));
 if(!evolutionRows.length)throw Error('No Kanto evolution rules were read');
 data.nativeAlpha={
- orbs, fusions, fusionOfferRates, mega:{duration:+megaMatch[1],cooldown:+megaMatch[2],cdFactor:+megaMatch[3]},
+ orbs, fusions, fusionOfferRates, cooldownFloors, nativeMoves, mega:{duration:+megaMatch[1],cooldown:+megaMatch[2],cdFactor:+megaMatch[3]},
  evolutions:evolutionRows,
  testOnly:true,
  // Native Alpha battle subset; do not represent this as the official full engine.
