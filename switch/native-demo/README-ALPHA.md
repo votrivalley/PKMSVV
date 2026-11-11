@@ -13,7 +13,7 @@ Chép `PKMSVV-Switch-Alpha-v0100.nro` vào `sd:/switch/` và mở trong hbmenu. 
 - Menu TEAM: **Y** chọn bản thử Pokémon tiếp theo, **A** bắt đầu lại trận với Pokémon đó, **B** quay lại.
 - Trong trận: **Y** dùng Orb đầu hàng (FIFO, CD 5s); **R+X / R+Y / R+B** chọn một trong ba thẻ nâng cấp; **B** tạm dừng.
 - **ZR** kích hoạt Mega ở chế độ preview QA *chỉ khi* đáp ứng điều kiện mô phỏng (Charizard, cấp >=36, đủ 100 năng lượng, đã chủ động bật QA). Không cấp Mega Stone hay sở hữu Mega vào save.
-- **ZL+R** bật/tắt đồng hồ QA **x12** để thử nhanh boss 15 và 30 phút. Đây là chế độ TEST, không phản ánh nhịp chơi chính thức.
+- **ZL+R** bật/tắt đồng hồ QA **x12** để thử nhanh boss 15 và 30 phút. QA cũng giảm 99% sát thương người chơi nhận và tăng 6 lần sát thương gây lên boss để thử đủ trận trong một lượt; huy hiệu thắng boss trong QA **không lưu**. Đây là chế độ TEST, không phản ánh cân bằng game chính thức.
 
 ## Những gì chạy được
 - Địa hình và mốc đợt quái Kanto từ `src/pkmsvv-quick-region.js`, quái Gen1 có các cấp độ thử nghiệm.
