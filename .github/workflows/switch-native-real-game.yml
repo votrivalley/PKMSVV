@@ -1,0 +1,119 @@
+name: Switch Native Real Game Data Integration (nx.js, no Brewser)
+on:
+  push:
+    branches: [feature/switch-native-full-port]
+    paths:
+      - 'switch/native-demo/**'
+      - 'src/pkmsvv-quick-region.js'
+      - 'src/v14/orbs.js'
+      - 'src/pkmsvv-bond-fusion.js'
+      - 'src/pkmsvv-mega-phase3.js'
+      - 'src/pkmsvv-skill-balance.js'
+      - 'data/evolution-rules.json'
+      - 'switch/native-demo/extract-native-catalog.cjs'
+      - '.github/workflows/switch-native-real-game.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  native-demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify native launcher does not require browser
+        shell: bash
+        run: |
+          node --check switch/native-demo/main.js
+          node --check switch/native-demo/alpha-runtime.js
+          node --check switch/native-demo/build-kanto.cjs
+          ! grep -E 'document\.|window\.location|WebApplet|Brewser' switch/native-demo/main.js
+          node -e "const p=require('./switch/native-demo/package.json'); if(!p.nacp.id.startsWith('01')||!p.nacp.id.endsWith('0000'))process.exit(1)"
+      - name: Stress test HP zero, respawn, repeated collisions and diagnostic frames
+        run: node --test switch/native-demo/respawn.test.cjs
+      - name: Install pinned-by-lockfile runtime packagers
+        working-directory: switch/native-demo
+        run: npm install --no-audit --no-fund
+      - name: Fetch actual PKMSVV game engine from last successful full APK
+        uses: actions/download-artifact@v4
+        with:
+          name: PKMSVV-PokeBox-Stage4-Android-QA-SEPARATE-APP
+          run-id: 42868942245
+          github-token: ${{ github.token }}
+          path: baseline-native
+      - name: Extract source move/Pokémon catalogs, not HTML or browser runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="$(find baseline-native -type f -name '*.apk' -print -quit)"
+          test -s "$apk"
+          mkdir -p real-game-compiled
+          unzip -qq "$apk" 'assets/public/js/data/moves.js' 'assets/public/js/data/pokedex.js' -d real-game-compiled
+          node --check switch/native-demo/extract-native-catalog.cjs
+          node switch/native-demo/extract-native-catalog.cjs real-game-compiled/assets/public switch/native-demo/romfs/real-game-catalog.json
+      - name: Bundle actual game data into native nx.js RomFS
+        working-directory: switch/native-demo
+        run: npm run build
+      - name: Assert source-derived real game catalog
+        run: node --test switch/native-demo/real-catalog.test.cjs
+      - name: Native Alpha integrated Kanto Orb Fusion Mega and save QA
+        run: node --test switch/native-demo/alpha.test.cjs
+      - name: Bundle Gen1 #1-151 offline PNG sprites (bounded parallel downloads)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p switch/native-demo/romfs/sprites
+          upstream=1b3b7c0a538dd2226ae08d0d2f8955125075bbd4
+          export upstream
+          seq 1 151 | xargs -P 12 -I '{}' sh -c '
+            curl --fail --silent --show-error --location --retry 4 --retry-all-errors --retry-delay 2 \
+              "https://raw.githubusercontent.com/PokeAPI/sprites/$upstream/sprites/pokemon/$1.png" \
+              --output "switch/native-demo/romfs/sprites/$1.png"' _ '{}'
+          python3 - <<'PY'
+          from pathlib import Path
+          from struct import unpack
+          for dex in range(1,152):
+              blob=Path(f'switch/native-demo/romfs/sprites/{dex}.png').read_bytes()
+              assert blob[:8]==bytes([137,80,78,71,13,10,26,10]),f'invalid PNG dex={dex}'
+              w,h=unpack('>II',blob[16:24])
+              assert 24<=w<=256 and 24<=h<=256,f'unexpected sprite size {dex}: {w}x{h}'
+              assert len(blob)>100,f'empty sprite {dex}'
+              print('offline sprite',dex,w,h,len(blob))
+          PY
+      - name: Install icon generator
+        run: python3 -m pip install --disable-pip-version-check pillow
+      - name: Package native integrated PKMSVV v0.2.0 NRO
+        working-directory: switch/native-demo
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs=require('node:fs');
+          const p=JSON.parse(fs.readFileSync('package.json','utf8'));
+          p.name='pkmsvv-switch-kanto-real';
+          p.version='0.2.0';
+          p.nacp={...(p.nacp||{}),id:'0147365656230000',title:'PKMSVV NATIVE KANTO'};
+          fs.writeFileSync('package.json',JSON.stringify(p,null,2));
+          NODE
+          python3 make_icon.py ALPHA
+          npm run nro
+          test -s pkmsvv-switch-kanto-real.nro
+          mkdir -p ../../dist/switch-native-demo
+          cp pkmsvv-switch-kanto-real.nro ../../dist/switch-native-demo/PKMSVV-Switch-Native-RealData-v020.nro
+          cp README-ALPHA.md ../../dist/switch-native-demo/README-ALPHA.md
+          cp romfs/kanto-config.json ../../dist/switch-native-demo/kanto-config.json
+          cp romfs/real-game-catalog.json ../../dist/switch-native-demo/real-game-catalog.json
+          ls -lh ../../dist/switch-native-demo/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-Switch-Native-RealGameData-v020
+          path: dist/switch-native-demo/
+          retention-days: 14
+          if-no-files-found: error
+      # nxjs-nsp --fat currently requires a keyset; don't mishandle console keys.
+      # NSP build must be a separately reviewed workflow once legal key material
+      # and packaging prerequisites are established.
