@@ -152,3 +152,14 @@ test('Sustained 3 minute native Alpha simulation has capped enemies and projecti
  assert.ok(t.get('shots.length')<=32);
  assert.ok(t.get('time')>170);
 });
+
+test('QA time acceleration cannot grant permanent Kanto badge',()=>{
+ const t=boot();t.frame(1000);
+ t.buttons[6].pressed=true;t.buttons[5].pressed=true;t.frame(1016);
+ assert.equal(t.get('alpha.accelerated'),true);
+ assert.equal(t.get('alpha.incomingDamageMultiplier'),.01);
+ assert.equal(t.get('alpha.bossDamageMultiplier'),6);
+ t.get('alpha.onKill({dex:150,boss:15})');
+ assert.equal(t.get('alpha.profile.badges.kanto'),undefined);
+ assert.equal(t.get('lastError'),'');
+});
