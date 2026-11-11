@@ -13,10 +13,10 @@ const alpha=(()=>{
  const foeNames=foes.map(p=>p.name.toLowerCase());
  const species=new Map([...roster,...foes].map(p=>[p.name.toLowerCase(),p]));
  const byDex=new Map([...(realDex||[]),...roster,...foes].map(p=>[p.dex,p]));
- const spriteNames=new Set([...rosterNames,...foeNames,...data.evolutionSprites.map(p=>p.name.toLowerCase()),'mewtwo']);
+ const spriteNames=new Set([...rosterNames,...foeNames,...(realDex||[]).map(p=>p.name.toLowerCase()),...data.evolutionSprites.map(p=>p.name.toLowerCase()),'mewtwo']);
  const SAVE_PATH='sdmc:/switch/pkmsvv-native-alpha/';
  const MOVE_MAX=5,MAX_MOVES=8;
- let profile={version:1,seq:0,pokedex:{},box:{25:1},bestKO:0,badges:{},selected:25,kantoClears:0,bestSurvivalSec:0,bestKantoClearSec:0};
+ let profile={version:1,seq:0,pokedex:{},box:{25:1},bestKO:0,badges:{},selected:25,kantoClears:0,bestSurvivalSec:0,bestKantoClearSec:0,recruitTickets:0,recruitKO:0,recruitPity:0};
  let saveStatus='UNAVAILABLE',saveDirty=false,lastSaveAt=0,saveSlot=0;
  let menu=false,menuTab=0,menuIndex=0,started=false,clockScale=1,accelerated=false,runUsedQA=false;
  let lastStart=false,lastA=false,lastB=false,lastY=false,lastX=false,lastZR=false,lastZL=false;
@@ -30,6 +30,7 @@ const alpha=(()=>{
  let skillClock=0,killAward=0,spriteLoadTick=0;
  const spriteRequested=new Set();
  let fusionOfferLevel=-1,fusionOfferAttempts=0,fusionOfferRecipe=null;
+ let lastRecruitOutcome='',recruitTotalPulls=0;
  const name=p=>p?.name||'Unknown';
  const getMon=dex=>roster.find(x=>x.dex===dex)||byDex.get(dex);
  const orbById=id=>data.orbs.find(o=>o.id===id);
@@ -52,13 +53,21 @@ const alpha=(()=>{
    const kept={};
    for(const key of Object.keys(found))if(+key>=1&&+key<=151&&found[key]===1)kept[key]=1;
    profile={version:1,seq:saved.seq,pokedex:kept,
-    box:saved.box&&typeof saved.box==='object'?saved.box:{25:1},
+    box:Object.fromEntries(Object.entries(saved.box&&typeof saved.box==='object'?saved.box:{25:1})
+      .filter(([key,count])=>Number.isInteger(+key)&&+key>=1&&+key<=151&&
+        Number.isFinite(+count)&&+count>=1)
+      .map(([key,count])=>[key,Math.min(9999,Math.floor(+count))])),
     bestKO:Math.max(0,Math.min(1000000,+saved.bestKO||0)),
     badges:saved.badges&&typeof saved.badges==='object'?saved.badges:{},
-    selected:roster.some(r=>r.dex===saved.selected)?saved.selected:25,
+    selected:(roster.some(r=>r.dex===saved.selected)||
+      Number(saved.box?.[saved.selected]||0)>=1&&Number(saved.selected)>=1&&Number(saved.selected)<=151)
+      ?saved.selected:25,
      kantoClears:Math.max(0,Math.min(100000,Math.floor(+saved.kantoClears||0))),
      bestSurvivalSec:Math.max(0,Math.min(86400,Math.floor(+saved.bestSurvivalSec||0))),
-     bestKantoClearSec:Math.max(0,Math.min(86400,Math.floor(+saved.bestKantoClearSec||0)))};
+     bestKantoClearSec:Math.max(0,Math.min(86400,Math.floor(+saved.bestKantoClearSec||0))),
+     recruitTickets:Math.max(0,Math.min(9999,Math.floor(+saved.recruitTickets||0))),
+     recruitKO:Math.max(0,Math.min(1000000,Math.floor(+saved.recruitKO||0))),
+     recruitPity:Math.max(0,Math.min(99,Math.floor(+saved.recruitPity||0)))};
    saveSlot=a&&a.seq===saved.seq?1:2;
    saveStatus='RESTORED';
   }else saveStatus=typeof Switch==='undefined'?'TEST ONLY':'NEW';
@@ -91,7 +100,15 @@ const alpha=(()=>{
    4:['ember','quick-attack'],
    1:['vine-whip','tackle'],
    7:['water-gun','tackle']
-  }[profile.selected]||['thunder-shock','quick-attack'];
+  }[profile.selected]||(()=>{
+    // Native type-matching attacks, not a claim of original species learnsets.
+    const mon=getMon(profile.selected);
+    const picked=(data.realMoves||[]).filter(m=>m.kind!=='buff'&&
+     mon?.types?.some(t=>String(t).toLowerCase()===String(m.type).toLowerCase()))
+     .slice(0,2).map(m=>m.id);
+    while(picked.length<2)picked.push(picked.length?'quick-attack':'tackle');
+    return picked;
+   })();
   moveList.push(...starterMoves.map(id=>({id,lvl:1})));
   offers=[];fusionUsed=false;fusionName='';
   effects.length=0;zones.length=0;megEnergy=0;megaActive=0;megaCooldown=0;
@@ -124,7 +141,7 @@ const alpha=(()=>{
   const entry=[...roster,...data.evolutionSprites].find(p=>p.dex===id);
   return entry?.name.toLowerCase()||getMon(profile.selected)?.name.toLowerCase()||'pikachu';
  }
- const artByName=new Map([...roster,...foes,...data.evolutionSprites,
+ const artByName=new Map([...roster,...foes,...(realDex||[]).map(p=>({name:p.name,sprite:p.dex+'.png'})),...data.evolutionSprites,
   {name:'Mewtwo',sprite:'150.png'}].map(p=>[p.name.toLowerCase(),p.sprite]));
  const spriteOrder=[];
  const MAX_CACHED_EXTRA_SPRITES=18;
