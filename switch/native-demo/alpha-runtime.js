@@ -409,7 +409,8 @@ const alpha=(()=>{
   const persistent=new Set(['mine','meteor','trail','orbit','quake','vortex','stun','turret','aura','charge']);
   const conical=new Set(['cone','beam','charge','dash']);
   const chaining=new Set(['chain','bounce']);
-  const radius=Math.min(700,Math.round((shortRange.has(kind)?120:area.has(kind)||persistent.has(kind)?170:570)*mods.radius));
+  const longTargetZones=new Set(['meteor','vortex','stun','charge','quake','turret']);
+  const radius=Math.min(700,Math.round((shortRange.has(kind)?120:longTargetZones.has(kind)?470:area.has(kind)||persistent.has(kind)?170:570)*mods.radius));
   if(distance>radius)return false;
   // Scaled real move damage, with safety ceiling for Switch crowded battles.
   const base= fusion?9:source?Math.max(.8,Math.min(16,Number(source.dmg||6)/6)):2;
