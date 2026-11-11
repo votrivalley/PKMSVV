@@ -9,7 +9,7 @@ const alpha=(()=>{
  const foes=data.trialEnemies,foeNames=foes.map(p=>p.name.toLowerCase());
  const species=new Map([...roster,...foes].map(p=>[p.name.toLowerCase(),p]));
  const byDex=new Map([...roster,...foes].map(p=>[p.dex,p]));
- const spriteNames=new Set([...rosterNames,...foeNames,'mewtwo','charizard']);
+ const spriteNames=new Set([...rosterNames,...foeNames,...data.evolutionSprites.map(p=>p.name.toLowerCase()),'mewtwo']);
  const SAVE_PATH='sdmc:/switch/pkmsvv-native-alpha/';
  const MOVE_MAX=5,MAX_MOVES=8;
  let profile={version:1,seq:0,pokedex:{},box:{25:1},bestKO:0,badges:{},selected:25};
@@ -301,9 +301,9 @@ const alpha=(()=>{
   ctx.fillStyle=color;ctx.font=font;ctx.fillText(String(value),x,y)
  }
  function draw(){
-  text(820,44,'PKMSVV SWITCH ALPHA 0.1.0','#ffe39d');
+  text(820,44,'PKMSVV SWITCH ALPHA 0.1.1','#ffe39d');
   text(820,74,'KANTO • GEN 1 • '+(accelerated?'QA x12':'REAL TIME'),'#a7e7f6');
-  text(820,103,'TEAM: '+name(getMon(profile.selected))+'   MOVE: '+moveList.length+'/8');
+  text(820,103,'TEAM: '+name(getMon(profile.selected))+'  EVOLVE: #'+evolvedDex()+'  SKILL: '+moveList.length+'/8');
   text(820,132,'ORB: '+orbQueue.length+'/10   CD '+orbCooldown.toFixed(1)+'s');
   text(820,161,'MEGA: '+megEnergy+'/100  CD '+Math.ceil(megaCooldown)+'s');
   text(820,190,'DEX: '+Object.keys(profile.pokedex).length+'  BADGE: '+(badgeWon?'YES':'NO'));
@@ -366,6 +366,7 @@ const alpha=(()=>{
    text(145,298,'No PC/Web/Android save import; no real gacha or permanent Mega unlock.');
    text(145,339,'Modes not ported: Co-op, Arena, Berry Rescue, 10 chapters.');
    text(145,380,'ZL+R: x12 clock, 99% less damage, 6x boss damage. QA badges not saved.');
+   text(145,421,'Fusion MAX+MAX offer: 80/70/60/50/40/30%, 1 roll per level.');
   }
  }
  // Keep persistent progress isolated; no automatic ownership grants.
@@ -377,6 +378,7 @@ const alpha=(()=>{
   get boss15(){return boss15},get boss30(){return boss30},get gameWon(){return gameWon},
   get fusionUsed(){return fusionUsed},get megaPreview(){return megaPreview},
   get fusionOfferAttempts(){return fusionOfferAttempts},get fusionOfferRecipe(){return fusionOfferRecipe},
+  get evolvedDex(){return evolvedDex()},
   get menuTab(){return menuTab},get menuIndex(){return menuIndex},
   get orbCooldown(){return orbCooldown},
   get offers(){return offers},
