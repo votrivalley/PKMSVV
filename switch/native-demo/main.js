@@ -124,7 +124,9 @@ function update(dt){
   const y=side===2?75:side===3?H:75+a*(H-75);
   const selected=(typeof alpha==='object'&&alpha.enabled)?alpha.selectSpecies(kantoTier):null;
   const species=selected?selected.name.toLowerCase():(kantoTier===0?(rng()<.55?'rattata':'pidgey'):(rng()<.28?'zubat':rng()<.56?'pidgey':'rattata'));
-  enemies.push({x,y,species,dex:selected?.dex||0,hp:2+Math.floor(kantoTier/2),r:14+Math.floor(rng()*6),speed:35+rng()*28+kantoTier*3});
+  const realHp=selected?.hp?Math.max(2,Math.min(36,Math.round(selected.hp/26*(1+kantoTier*.35)))):2+Math.floor(kantoTier/2);
+  const realSpeed=selected?.spd?clamp(selected.spd*.47+kantoTier*4,30,125):35+rng()*28+kantoTier*3;
+  enemies.push({x,y,species,dex:selected?.dex||0,hp:realHp,r:14+Math.floor(rng()*6),speed:realSpeed});
  }
  if(time>=fireAt&&enemies.length){
   fireAt=time+fireRate;
@@ -183,12 +185,12 @@ function draw(){
  // Keep native geometry and game logic identical to known stable v0.0.10.
  ctx.fillStyle='#fff4cc';
  ctx.font='20px sans-serif';
- ctx.fillText('KANTO GEN 1 - NATIVE BRIDGE v0.0.14',24,105);
+ ctx.fillText('POKEMON CHUYEN SINH - NATIVE KANTO v0.2.0',24,105);
  ctx.fillText('HP: '+Math.ceil(hp),24,135);
  ctx.fillText('XP: '+xp+'/12   LEVEL: '+level,24,165);
  ctx.fillText('KO: '+kills+'   GEN '+KANTO_CONFIG.gen+'   WAVE '+(kantoTier+1)+'   ENEMIES: '+enemies.length,24,235);
  ctx.fillText('FPS: '+fps+'   TIME: '+Math.floor(time)+'s   SEAL: '+KANTO_CONFIG.sealSeconds+'s   FINAL: '+KANTO_CONFIG.finalBossSeconds+'s',24,265);
- ctx.fillText('L: SPRITES '+(spritesEnabled?(loaded.pikachu&&loaded.rattata?'ON':'LOADING'):'OFF')+'  RATTATA 4 MAX  B: PAUSE',24,692);
+ ctx.fillText('L: SPRITES '+(spritesEnabled?(loaded.pikachu&&loaded.rattata?'ON':'LOADING'):'OFF')+'  KANTO 151  B: PAUSE',24,692);
  // Text-free health, XP and level bars. Avoid changing canvas.font per frame.
  ctx.fillStyle='#294963';ctx.fillRect(16,17,390,18);
  ctx.fillStyle='#7cdec4';ctx.fillRect(16,17,Math.max(0,Math.min(390,hp*3.9)),18);
