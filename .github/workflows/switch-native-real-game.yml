@@ -52,7 +52,7 @@ jobs:
           apk="$(find baseline-native -type f -name '*.apk' -print -quit)"
           test -s "$apk"
           mkdir -p real-game-compiled
-          unzip -qq "$apk" 'assets/public/js/data/moves.js' 'assets/public/js/data/pokedex.js' -d real-game-compiled
+          unzip -qq "$apk" 'assets/public/js/data/moves.js' 'assets/public/js/data/pokedex.js' 'assets/public/js/systems/gacha.js' -d real-game-compiled
           node --check switch/native-demo/extract-native-catalog.cjs
           node switch/native-demo/extract-native-catalog.cjs real-game-compiled/assets/public switch/native-demo/romfs/real-game-catalog.json
       - name: Bundle actual game data into native nx.js RomFS
@@ -86,7 +86,7 @@ jobs:
           PY
       - name: Install icon generator
         run: python3 -m pip install --disable-pip-version-check pillow
-      - name: Package native Kanto victory/defeat results v0.2.3 NRO
+      - name: Package native Kanto recruitment and PokéBox v0.2.4 NRO
         working-directory: switch/native-demo
         shell: bash
         run: |
@@ -95,22 +95,22 @@ jobs:
           const fs=require('node:fs');
           const p=JSON.parse(fs.readFileSync('package.json','utf8'));
           p.name='pkmsvv-switch-kanto-real';
-          p.version='0.2.3';
-          p.nacp={...(p.nacp||{}),id:'0147365656260000',title:'PKMSVV NATIVE 023'};
+          p.version='0.2.4';
+          p.nacp={...(p.nacp||{}),id:'0147365656270000',title:'PKMSVV NATIVE 024'};
           fs.writeFileSync('package.json',JSON.stringify(p,null,2));
           NODE
           python3 make_icon.py ALPHA
           npm run nro
           test -s pkmsvv-switch-kanto-real.nro
           mkdir -p ../../dist/switch-native-demo
-          cp pkmsvv-switch-kanto-real.nro ../../dist/switch-native-demo/PKMSVV-Switch-Native-KantoResults-v023.nro
+          cp pkmsvv-switch-kanto-real.nro ../../dist/switch-native-demo/PKMSVV-Switch-Native-RecruitBox-v024.nro
           cp README-NATIVE.md ../../dist/switch-native-demo/README-NATIVE.md
           cp romfs/kanto-config.json ../../dist/switch-native-demo/kanto-config.json
           cp romfs/real-game-catalog.json ../../dist/switch-native-demo/real-game-catalog.json
           ls -lh ../../dist/switch-native-demo/
       - uses: actions/upload-artifact@v4
         with:
-          name: PKMSVV-Switch-Native-KantoResults-v023
+          name: PKMSVV-Switch-Native-RecruitBox-v024
           path: dist/switch-native-demo/
           retention-days: 14
           if-no-files-found: error
