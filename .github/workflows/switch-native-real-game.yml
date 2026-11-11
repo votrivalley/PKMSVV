@@ -104,7 +104,7 @@ jobs:
           test -s pkmsvv-switch-kanto-real.nro
           mkdir -p ../../dist/switch-native-demo
           cp pkmsvv-switch-kanto-real.nro ../../dist/switch-native-demo/PKMSVV-Switch-Native-RealData-v020.nro
-          cp README-ALPHA.md ../../dist/switch-native-demo/README-ALPHA.md
+          cp README-NATIVE.md ../../dist/switch-native-demo/README-NATIVE.md
           cp romfs/kanto-config.json ../../dist/switch-native-demo/kanto-config.json
           cp romfs/real-game-catalog.json ../../dist/switch-native-demo/real-game-catalog.json
           ls -lh ../../dist/switch-native-demo/
