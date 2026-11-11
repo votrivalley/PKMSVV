@@ -1,4 +1,4 @@
-# Pokémon Chuyển Sinh — Switch Native Kanto v0.2.2
+# Pokémon Chuyển Sinh — Switch Native Kanto v0.2.3
 
 **NRO nx.js thật; KHÔNG Brewser, KHÔNG WebView, KHÔNG tải game HTML.**
 Nền đồ họa của Switch Alpha v0.1.2 được giữ lại. Đây là đợt tích hợp game thật vào native, **chưa phải bản port hoàn toàn**.
@@ -12,12 +12,14 @@ Nền đồ họa của Switch Alpha v0.1.2 được giữ lại. Đây là đ�
 - Hệ thống native dùng loại chiêu thật để xác định cơ chế đánh gần/tia/chùm/đạn/lan điện và các hiệu ứng đơn giản; áp dụng một phần nâng cấp gốc lên sát thương, hồi chiêu, diện tích và số mục tiêu.
 - **v0.2.2 — cơ chế kỹ năng kéo dài theo thời gian:** mìn đặt trên đất chờ quái dẫm; thiên thạch có thời gian cảnh báo trước khi rơi; tháp bắn tự đánh nhiều nhịp; vùng hào quang/orbit/trail gây sát thương nhiều đợt; xoáy hút quái; stun trì hoãn rồi làm choáng; sóng địa chấn quét theo hướng; tia charge tích tụ rồi phát nổ. Có hiệu ứng vòng cảnh báo/trạng thái tương ứng.
 - **Bảo vệ FPS:** giới hạn tối đa 12 vùng kỹ năng cùng lúc, tối đa 6 mục tiêu mỗi vùng mỗi lần kích hoạt, tự dọn khi hết hạn/đổi Pokémon; không tự giảm sát thương hoặc số hitbox thật ngoài các giới hạn minh bạch của bản native adapter.
+- **v0.2.3 – Kanto Results:** boss 15 phút phải được hạ trước khi boss 30 phút xuất hiện; khi thắng boss cuối, trận thực sự dừng và hiện tổng kết. Hết HP hiện màn thua thay vì tự hồi sinh vô hạn. **A** chơi lại từ đầu, **+** vào menu. Kanto clears và thời gian tốt nhất của bản native được ghi vào hai bản save dự phòng.
+- **QA an toàn:** nếu bật đồng hồ QA x12 dù chỉ một lần trong trận, toàn bộ trận đó là TEST; không cộng huy hiệu, Pokédex, số lần clear hoặc thành tích chính thức, kể cả sau khi tắt x12. Bắt đầu trận mới để trở lại chế độ thường.
 
 **Quan trọng:** Chỉ *dữ liệu gốc* được chuyển đầy đủ ở bước này. **Toàn bộ logic và hình ảnh của 103 hiệu ứng kỹ năng, hệ thống nhân vật, co-op, gacha/rank, 10 chương và game mode chưa được port 1:1.** NRO không chạy mã HTML/DOM của game gốc. Những loại chiêu chưa có bộ mô phỏng native chuyên biệt vẫn dùng xử lý thuộc nhóm tương đương. Không quảng bá bản này là FULL.
 
 ## Cài đặt
-1. Trong GitHub Actions tải artifact `PKMSVV-Switch-Native-SkillZones-v022`.
-2. Giải nén, chép `PKMSVV-Switch-Native-SkillZones-v022.nro` vào `sd:/switch/`.
+1. Trong GitHub Actions tải artifact `PKMSVV-Switch-Native-KantoResults-v023`.
+2. Giải nén, chép `PKMSVV-Switch-Native-KantoResults-v023.nro` vào `sd:/switch/`.
 3. Mở HBMenu **full RAM** (giữ R khi mở game hợp lệ) và chạy NRO. Không cần cài Brewser.
 4. Giữ bản NRO v0.1.2 trước đó làm phương án ổn định. Hai tệp không cần ghi đè nhau.
 
@@ -40,8 +42,8 @@ Dữ liệu *Alpha native* lưu độc lập tại `sdmc:/switch/pkmsvv-native-a
 3. Vào màn **chọn kỹ năng**, kiểm tra **X/Y/B = 1/2/3**, **A = trang 2**, rồi chọn kỹ năng ở trang 2. Xác nhận **Y không dùng Orb** và **B không Pause** khi popup đang mở.
 4. Quay lại chiến đấu: thử **Y đơn** và **B đơn** (không kích hoạt hành động), sau đó **R+Y** để dùng Orb và **R+B** để Pause/Resume. Vào **+ → CONTROLLER** xem hướng dẫn đúng mapping.
 5. Chọn starter khác; kiểm tra kỹ năng, hiệu ứng, menu và Pokédex.
-6. Dùng ZL+R tăng thời gian QA để kiểm tra boss 15/30 phút (nếu muốn).
-7. Thoát hẳn, mở lại để thử khôi phục Dex. Nếu báo SAVE FAILED, giữ thẻ/tệp để chẩn đoán.
+6. Nếu muốn test kết thúc Kanto, dùng ZL+R tăng thời gian QA tới boss 15/30 phút; **đánh boss 15 trước**, sau đó boss 30. Thắng boss 30 phải hiện tổng kết, trận dừng. Nhấn **A** để chơi lại. QA không được cộng thành tích thực.
+7. Chơi trận thường (không bật QA) và thử mất hết HP để xem màn thua và nút chơi lại. Thoát hẳn, vào lại để thử khôi phục Dex và các kỷ lục Kanto của save native; nếu báo SAVE FAILED, giữ thẻ/tệp để chẩn đoán.
 
 ## Giới hạn kỹ thuật 
 CI kiểm được NRO, các kỹ năng có thời gian tồn tại và mô phỏng trận dài trên Node, nhưng không xác nhận FPS hay độ ổn định trên phần cứng Switch thật. Nếu lỗi, báo số phút, hành động ngay trước lỗi và tình trạng bật/tắt sprite. 
