@@ -272,6 +272,19 @@ const alpha=(()=>{
  // not a claim of parity with the 103 web-engine moves.
  const sourceMoves=Array.isArray(data.realMoves)&&data.realMoves.length===103?data.realMoves:data.nativeMoves;
  const nativeMoveById=new Map(sourceMoves.map(m=>[m.id,m]));
+ function levelMods(move){
+  const source=nativeMoveById.get(move.id);
+  const mods={dmg:1,cd:1,radius:1,count:0};
+  if(!source?.upgrades)return mods;
+  for(const upgrade of source.upgrades.slice(0,Math.min(4,Math.max(0,(move.lvl||1)-1)))){
+   const u=upgrade.mods||{};
+   if(Number.isFinite(u.dmg))mods.dmg*=Math.max(.1,Math.min(3,u.dmg));
+   if(Number.isFinite(u.cd))mods.cd*=Math.max(.3,Math.min(2,u.cd));
+   if(Number.isFinite(u.radius))mods.radius*=Math.max(.5,Math.min(2,u.radius));
+   if(Number.isFinite(u.count))mods.count+=Math.max(0,Math.min(6,u.count));
+  }
+  return mods;
+ }
  const fusionKind={
   'ember-quick':'projectile','water-tackle':'cone','grass-spin':'nova',
   'spark-quick':'chain','mind-tackle':'cone','fire-gust':'nova',
@@ -298,7 +311,8 @@ const alpha=(()=>{
  }
  function castMove(m){
   const fusion=m.id.startsWith('fusion:');
-  const source= nativeMoveById.get(m.id);
+  const source=nativeMoveById.get(m.id);
+  const mods=levelMods(m);
   const kind=fusion?fusionKind[m.id.slice(7)]||'nova':source?.kind||'projectile';
   const origin=kind==='mine'?{x:px,y:py}:null;
   let target=null,min=Infinity;
@@ -317,17 +331,17 @@ const alpha=(()=>{
   const area=new Set(['nova','mine','meteor','trail','orbit','quake','vortex','shove','stun','turret','aura','spin']);
   const conical=new Set(['cone','beam','charge','dash']);
   const chaining=new Set(['chain','bounce']);
-  const radius=shortRange.has(kind)?120:area.has(kind)?170:570;
+  const radius=Math.min(700,Math.round((shortRange.has(kind)?120:area.has(kind)?170:570)*mods.radius));
   if(distance>radius)return false;
   // Scaled real move damage, with safety ceiling for Switch crowded battles.
   const base= fusion?9:source?Math.max(.8,Math.min(16,Number(source.dmg||6)/6)):2;
-  const skillBoost=1+(Math.max(1,m.lvl)-1)*.24;
+  const skillBoost=source?.upgrades?.length?mods.dmg:1+(Math.max(1,m.lvl)-1)*.24;
   const mult=(megaActive>0?1.5:1)*(activeBuffs.focus>0?1.15:1);
   const power=base*skillBoost*mult;
   let hits=0;
   const hit=e=>{if(strike(e,power,kind)){}hits++};
   if(area.has(kind)){
-   const r=shortRange.has(kind)?120:170;
+   const r=Math.min(270,Math.round((shortRange.has(kind)?120:170)*mods.radius));
    for(let i=enemies.length-1;i>=0;i--){
     const e=enemies[i];
     if((e.x-px)**2+(e.y-py)**2<=r*r)hit(e);
@@ -347,9 +361,10 @@ const alpha=(()=>{
    const ordered=enemies.slice().sort((a,b)=>
     (a.x-target.x)**2+(a.y-target.y)**2-
     ((b.x-target.x)**2+(b.y-target.y)**2));
+   const limit=Math.max(2,Math.min(6,(source?.count||2)+mods.count));
    for(const e of ordered){
     if((e.x-target.x)**2+(e.y-target.y)**2>145*145)continue;
-    hit(e);if(hits>=4)break;
+    hit(e);if(hits>=limit)break;
    }
    if(hits)effects.push({x:target.x,y:target.y,r:58,ttl:.20});
   }else{
@@ -371,7 +386,8 @@ const alpha=(()=>{
    const fusion=move.id.startsWith('fusion:');
    const kind=fusion?fusionKind[move.id.slice(7)]||'nova':nativeMoveById.get(move.id)?.kind||'projectile';
    const source=nativeMoveById.get(move.id);
-   const cd=fusion?1.65:Math.max(data.cooldownFloors[kind]||.55,source?.cd||.7);
+   const mods=levelMods(move);
+   const cd=fusion?1.65:Math.max(data.cooldownFloors[kind]||.55,(source?.cd||.7)*mods.cd);
    move.cooldown=Math.max(0,(move.cooldown||0)-dt);
    if(move.cooldown>0||budget<=0)continue;
    const fired=castMove(move);
