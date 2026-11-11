@@ -30,6 +30,35 @@ test('Runtime remains native and keeps real source provenance separate from save
  const ctx={screen:{getContext(){return new Proxy({},{
   get(o,k){return k in o?o[k]:()=>{}},set(o,k,v){o[k]=v;return true}})}},
  navigator:{getGamepads(){return []}},requestAnimationFrame(){},console:{error(){}}};
- vm.runInNewContext(main,ctx,{timeout:6000});
- assert.ok(ctx.screen);
+ const context=vm.createContext(ctx);
+ vm.runInContext(main,context,{timeout:6000});
+ assert.equal(vm.runInContext('alpha.availableMoveCount',context),103);
+ assert.equal(vm.runInContext('alpha.availablePokemonCount',context),151);
+ assert.equal(vm.runInContext('alpha.realDexLength',context),151);
+ assert.equal(vm.runInContext('lastError',context),'');
+});
+
+test('Native gameplay selects Gen1 wild opponents from original stats and source rarity',()=>{
+ const ctx={
+  screen:{getContext(){return new Proxy({},{
+   get(o,k){return k in o?o[k]:()=>{}},set(o,k,v){o[k]=v;return true}
+  })}},
+  navigator:{getGamepads(){return []}},requestAnimationFrame(){},console:{error(){}}
+ };
+ const context=vm.createContext(ctx);
+ vm.runInContext(main,context,{timeout:6000});
+ const result=vm.runInContext(
+  'Array.from({length:300},()=>alpha.selectSpecies(5)).map(p=>({dex:p.dex,rarity:p.rarity,legendary:p.legendary}))',context);
+ assert.ok(result.every(p=>p.dex>=1&&p.dex<=151&&p.rarity<=3&&!p.legendary));
+ assert.ok(new Set(result.map(p=>p.dex)).size>=20,'later Kanto waves must contain many authentic species');
+ const opening=vm.runInContext('Array.from({length:80},()=>alpha.selectSpecies(0).dex)',context);
+ assert.ok(opening.every(dex=>dex===16||dex===19),'keep safe opening Rattata/Pidgey');
+});
+test('Every starter move references original catalogue without fabricated IDs',()=>{
+ for(const id of ['tackle','quick-attack','ember','water-gun','vine-whip','thunder-shock'])
+  assert.ok(real.moves.some(m=>m.id===id),'missing real move '+id);
+ const originalKinds=new Set(real.moves.map(m=>m.kind));
+ assert.ok(originalKinds.has('beam'));
+ assert.ok(originalKinds.has('chain'));
+ assert.ok(originalKinds.has('orbit'));
 });
