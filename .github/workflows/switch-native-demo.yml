@@ -1,10 +1,14 @@
-name: Switch Native Demo (nx.js - no Brewser)
+name: Switch Native Alpha PKMSVV (nx.js - no Brewser)
 on:
   push:
     branches: [feature/switch-native-nxjs-demo]
     paths:
       - 'switch/native-demo/**'
       - 'src/pkmsvv-quick-region.js'
+      - 'src/v14/orbs.js'
+      - 'src/pkmsvv-bond-fusion.js'
+      - 'src/pkmsvv-mega-phase3.js'
+      - 'data/evolution-rules.json'
       - '.github/workflows/switch-native-demo.yml'
   workflow_dispatch:
 permissions:
@@ -22,6 +26,8 @@ jobs:
         shell: bash
         run: |
           node --check switch/native-demo/main.js
+          node --check switch/native-demo/alpha-runtime.js
+          node --check switch/native-demo/build-kanto.cjs
           ! grep -E 'document\.|window\.location|WebApplet|Brewser' switch/native-demo/main.js
           node -e "const p=require('./switch/native-demo/package.json'); if(!p.nacp.id.startsWith('01')||!p.nacp.id.endsWith('0000'))process.exit(1)"
       - name: Stress test HP zero, respawn, repeated collisions and diagnostic frames
@@ -32,13 +38,15 @@ jobs:
       - name: Bundle demo into RomFS
         working-directory: switch/native-demo
         run: npm run build
+      - name: Native Alpha integrated Kanto Orb Fusion Mega and save QA
+        run: node --test switch/native-demo/alpha.test.cjs
       - name: Bundle pinned offline Kanto Pokemon PNG sprites
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p switch/native-demo/romfs/sprites
           upstream=1b3b7c0a538dd2226ae08d0d2f8955125075bbd4
-          for dex in 25 19 16 41; do
+          for dex in 25 19 16 41 1 4 7 10 21 43 6 150; do
             curl --fail --location --retry 4 --retry-all-errors --retry-delay 2 \
               "https://raw.githubusercontent.com/PokeAPI/sprites/$upstream/sprites/pokemon/$dex.png" \
               --output "switch/native-demo/romfs/sprites/$dex.png"
@@ -46,7 +54,7 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           from struct import unpack
-          for dex in (25,19,16,41):
+          for dex in (25,19,16,41,1,4,7,10,21,43,6,150):
               blob=Path(f'switch/native-demo/romfs/sprites/{dex}.png').read_bytes()
               assert blob[:8]==bytes([137,80,78,71,13,10,26,10]),f'invalid PNG dex={dex}'
               w,h=unpack('>II',blob[16:24])
@@ -56,7 +64,7 @@ jobs:
           PY
       - name: Install icon generator
         run: python3 -m pip install --disable-pip-version-check pillow
-      - name: Package native Kanto Gen1 source-derived bridge v0.0.14 NRO
+      - name: Package native integrated Alpha v0.1.0 NRO
         working-directory: switch/native-demo
         shell: bash
         run: |
@@ -64,20 +72,22 @@ jobs:
           node - <<'NODE'
           const fs=require('node:fs');
           const p=JSON.parse(fs.readFileSync('package.json','utf8'));
-          p.name='pkmsvv-switch-kanto-bridge';
-          p.version='0.0.14';
-          p.nacp={...(p.nacp||{}),id:'0147365656140000',title:'PKMSVV KANTO 14'};
+          p.name='pkmsvv-switch-alpha';
+          p.version='0.1.0';
+          p.nacp={...(p.nacp||{}),id:'0147365656200000',title:'PKMSVV ALPHA A1'};
           fs.writeFileSync('package.json',JSON.stringify(p,null,2));
           NODE
-          python3 make_icon.py FULL
+          python3 make_icon.py ALPHA
           npm run nro
-          test -s pkmsvv-switch-kanto-bridge.nro
+          test -s pkmsvv-switch-alpha.nro
           mkdir -p ../../dist/switch-native-demo
-          cp pkmsvv-switch-kanto-bridge.nro ../../dist/switch-native-demo/PKMSVV-Switch-KantoBridge-v014.nro
+          cp pkmsvv-switch-kanto-bridge.nro ../../dist/switch-native-demo/PKMSVV-Switch-Alpha-v0100.nro
+          cp README-ALPHA.md ../../dist/switch-native-demo/README-ALPHA.md
+          cp romfs/kanto-config.json ../../dist/switch-native-demo/kanto-config.json
           ls -lh ../../dist/switch-native-demo/
       - uses: actions/upload-artifact@v4
         with:
-          name: PKMSVV-Switch-KantoBridge-v014-NRO
+          name: PKMSVV-Switch-Alpha-v0100-OnePass
           path: dist/switch-native-demo/*.nro
           retention-days: 14
           if-no-files-found: error
