@@ -18,7 +18,7 @@ const alpha=(()=>{
  const MOVE_MAX=5,MAX_MOVES=8;
  let profile={version:1,seq:0,pokedex:{},box:{25:1},bestKO:0,badges:{},selected:25,kantoClears:0,bestSurvivalSec:0,bestKantoClearSec:0};
  let saveStatus='UNAVAILABLE',saveDirty=false,lastSaveAt=0,saveSlot=0;
- let menu=false,menuTab=0,menuIndex=0,started=false,clockScale=1,accelerated=false;
+ let menu=false,menuTab=0,menuIndex=0,started=false,clockScale=1,accelerated=false,runUsedQA=false;
  let lastStart=false,lastA=false,lastB=false,lastY=false,lastX=false,lastZR=false,lastZL=false;
  let lastLeft=false,lastRight=false,lastL=false,lastR=false;
  let orbQueue=[],orbCooldown=0,activeBuffs={},moveList=[],offers=[],fusionUsed=false,fusionName='';
@@ -96,7 +96,7 @@ const alpha=(()=>{
   offers=[];fusionUsed=false;fusionName='';
   effects.length=0;zones.length=0;megEnergy=0;megaActive=0;megaCooldown=0;
   boss15=false;boss30=false;badgeWon=false;gameWon=false;bossMessage='';matchResult=null;runEndTime=0;runEndKOs=0;
-  skillClock=0;killAward=0;fusionOfferLevel=-1;fusionOfferAttempts=0;fusionOfferRecipe=null;started=true;
+  skillClock=0;killAward=0;fusionOfferLevel=-1;fusionOfferAttempts=0;fusionOfferRecipe=null;runUsedQA=false;accelerated=false;clockScale=1;started=true;
  }
  function selectSpecies(index){
   // Kanto's opening remains safe; at later waves draw from REAL Gen1 catalog.
@@ -159,7 +159,7 @@ const alpha=(()=>{
  function newOrb(){
   if(orbQueue.length>=10)return false;
   const entry=data.orbs[Math.floor(rng()*data.orbs.length)];
-  orbQueue.push(entry.id);markDirty();return true;
+  orbQueue.push(entry.id);return true;
  }
  function orbUse(){
   if(!orbQueue.length||orbCooldown>0)return false;
@@ -178,18 +178,20 @@ const alpha=(()=>{
  function onKill(e){
   if(!e)return;
   const dex=Number(e.dex||species.get(e.species)?.dex);
-  if(Number.isInteger(dex)&&dex>=1&&dex<=151){
-   profile.pokedex[dex]=1;
-   // Dex discoverability != gacha ownership: do not grant Pokémon to Box.
-   markDirty();
+  if(!runUsedQA){
+   if(Number.isInteger(dex)&&dex>=1&&dex<=151&&!profile.pokedex[dex]){
+    profile.pokedex[dex]=1;
+    // Dex discovery only in normal play, never after QA mode used.
+    markDirty();
+   }
+   if(kills+1>profile.bestKO){profile.bestKO=kills+1;markDirty()}
   }
-  profile.bestKO=Math.max(profile.bestKO,kills+1);
   megEnergy=Math.min(100,megEnergy+(e.boss?3:2));
   killAward++;
   if(killAward===1||rng()<.02)newOrb();
-  if(e.boss===15){badgeWon=true;if(!accelerated){profile.badges.kanto=1;markDirty()}bossMessage=accelerated?'QA REGION BOSS CLEAR':'KANTO REGION BADGE'}
+  if(e.boss===15){badgeWon=true;if(!runUsedQA){profile.badges.kanto=1;markDirty()}bossMessage=runUsedQA?'QA REGION BOSS CLEAR':'KANTO REGION BADGE'}
   if(e.boss===30&&!matchResult){
-   gameWon=true;bossMessage=accelerated?'KANTO QA COMPLETE':'KANTO CLEAR';
+   gameWon=true;bossMessage=runUsedQA?'KANTO QA COMPLETE':'KANTO CLEAR';
    finishRun('victory');
   }
  }
@@ -199,7 +201,7 @@ const alpha=(()=>{
   matchResult=outcome;runEndTime=Math.floor(time);runEndKOs=kills+(outcome==='victory'?1:0);
   pickOpen=false;skillChoices=[];paused=false;
   // The debug clock is a test convenience, never a source of unlocks.
-  if(!accelerated){
+  if(!runUsedQA){
    profile.bestSurvivalSec=Math.max(profile.bestSurvivalSec||0,runEndTime);
    if(outcome==='victory'){
     profile.kantoClears=(profile.kantoClears||0)+1;
@@ -264,7 +266,7 @@ const alpha=(()=>{
    if(moveList.length>=MAX_MOVES)return false;
    moveList.push({id:o.id,lvl:1});
   }else hp=Math.min(100,hp+35);
-  pickOpen=false;xp=0;markDirty();return true;
+  pickOpen=false;xp=0;return true;
  }
  function spawnBoss(which){
   const mon={x:W/2,y:90,species:'mewtwo',dex:KANTO_CONFIG.mascotDex,
@@ -528,7 +530,10 @@ const alpha=(()=>{
   const plus=btn(9),a=btn(1),b=btn(0),y=btn(2),x=btn(3),zr=btn(7),zl=btn(6),
    left=btn(14),right=btn(15),r=btn(5),l=btn(4);
   if(plus&&!lastStart&&!pickOpen){menu=!menu;menuIndex=0;if(menu){persist()}}
-  if(zl&&r&&!lastZL&&!pickOpen&&!menu){accelerated=!accelerated;clockScale=accelerated?12:1}
+  if(zl&&r&&!lastZL&&!pickOpen&&!menu){
+   accelerated=!accelerated;clockScale=accelerated?12:1;
+   if(accelerated)runUsedQA=true;
+  }
   let consumedMenuClose=false;
   if(matchResult&&!menu){
    if(a&&!lastA)resetBattle();
@@ -579,7 +584,7 @@ const alpha=(()=>{
  }
  function draw(){
   text(820,44,'PKMSVV SWITCH NATIVE 0.2.3','#ffe39d');
-  text(820,74,'KANTO • GEN 1 • '+(accelerated?'QA x12':'REAL TIME'),'#a7e7f6');
+  text(820,74,'KANTO • GEN 1 • '+(runUsedQA?(accelerated?'QA x12':'QA - CLOCK NORMAL'):'REAL TIME'),'#a7e7f6');
   text(820,103,'TEAM: '+name(getMon(profile.selected))+'  EVOLVE: #'+evolvedDex()+'  SKILL: '+moveList.length+'/8');
   text(820,132,'ORB: '+orbQueue.length+'/10   CD '+orbCooldown.toFixed(1)+'s');
   text(820,161,'MEGA: '+megEnergy+'/100  CD '+Math.ceil(megaCooldown)+'s');
@@ -619,7 +624,7 @@ const alpha=(()=>{
   ctx.lineWidth=3;ctx.strokeRect(215,120,850,475);
   text(275,178,matchResult==='victory'?'KANTO COMPLETE':'RUN ENDED',
    matchResult==='victory'?'#fff1a7':'#ffb9b9','bold 34px sans-serif');
-  text(275,228,accelerated?'QA x12 - NO OFFICIAL CLEAR RECORD':'NORMAL SURVIVAL RUN','#b9e2f3');
+  text(275,228,runUsedQA?'QA USED - NO OFFICIAL CLEAR RECORD':'NORMAL SURVIVAL RUN','#b9e2f3');
   text(275,270,'TIME: '+Math.floor(runEndTime/60)+'m '+runEndTime%60+'s   KO: '+runEndKOs+'   LEVEL: '+level);
   text(275,312,'POKEDEX FOUND: '+Object.keys(profile.pokedex).length+'/151');
   text(275,354,'KANTO RECORDS: '+(profile.kantoClears||0)+'   SAVE: '+saveStatus);
@@ -689,7 +694,7 @@ const alpha=(()=>{
  load();resetBattle();
  return {enabled:true,data,spriteNames,preUpdate,postUpdate,onKill,offersForLevel,
   pickOffer,selectSpecies,draw,persist,loadExtraSprites,chooseBattleSprite,onRespawn,resetBattle,onDefeat,
-  get profile(){return profile},get menu(){return menu},get accelerated(){return accelerated},
+  get profile(){return profile},get menu(){return menu},get accelerated(){return accelerated},get runUsedQA(){return runUsedQA},
    get matchResult(){return matchResult},get runEndTime(){return runEndTime},get runEndKOs(){return runEndKOs},
   get orbQueue(){return orbQueue},get moves(){return moveList},
   get boss15(){return boss15},get boss30(){return boss30},get gameWon(){return gameWon},
