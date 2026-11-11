@@ -238,24 +238,102 @@ const alpha=(()=>{
   megaActive=Math.max(0,megaActive-dt);
   megaCooldown=Math.max(0,megaCooldown-dt);
  }
+ // Native adapter: 18 move names from the PKMSVV move pool, class cooldown
+ // floors from the 23-kind balance source. Different cast geometry per kind;
+ // not a claim of parity with the 103 web-engine moves.
+ const nativeMoveById=new Map(data.nativeMoves.map(m=>[m.id,m]));
+ const fusionKind={
+  'ember-quick':'projectile','water-tackle':'cone','grass-spin':'nova',
+  'spark-quick':'chain','mind-tackle':'cone','fire-gust':'nova',
+  'bubble-ice':'chain','leaf-rock':'mine','shadow-mind':'nova',
+  'thunder-claw':'melee'
+ };
+ let castCount=0,damageCount=0;
+ function strike(e,power,kind){
+  if(!e||e.hp<=0)return false;
+  e.hp-=power*(e.boss&&accelerated?6:1);
+  megEnergy=Math.min(100,megEnergy+1);
+  damageCount++;
+  if(kind==='mine'||kind==='cone')e.slowLeft=Math.max(e.slowLeft||0,.35);
+  if(kind==='chain'&&rng()<.1)e.sleepLeft=Math.max(e.sleepLeft||0,.2);
+  if(e.hp<=0){
+   onKill(e);
+   const index=enemies.indexOf(e);
+   if(index>=0)enemies.splice(index,1);
+   kills++;xp++;
+   if(xp>=12&&!pickOpen){level++;offersForLevel()}
+   return true;
+  }
+  return false;
+ }
+ function castMove(m){
+  const fusion=m.id.startsWith('fusion:');
+  const kind=fusion?fusionKind[m.id.slice(7)]||'nova':nativeMoveById.get(m.id)?.kind||'projectile';
+  const origin=kind==='mine'?{x:px,y:py}:null;
+  let target=null,min=Infinity;
+  for(const e of enemies){
+   const dx=e.x-px,dy=e.y-py,d=dx*dx+dy*dy;
+   if(d<min){min=d;target=e}
+  }
+  if(!target)return false;
+  const distance=Math.sqrt(min);
+  const radius=kind==='melee'?105:kind==='nova'?160:kind==='mine'?130:560;
+  if(distance>radius&&kind!=='mine')return false;
+  const base=(fusion?9:2)+(Math.max(1,m.lvl)-1)*(fusion?2:1.1);
+  const mult=(megaActive>0?1.5:1)*(activeBuffs.focus>0?1.15:1);
+  const power=base*mult;
+  let hits=0;
+  const hit=e=>{if(strike(e,power,kind)){}hits++};
+  if(kind==='nova'||kind==='mine'){
+   const r=kind==='nova'?160:130;
+   for(let i=enemies.length-1;i>=0;i--){
+    const e=enemies[i];
+    if((e.x-px)**2+(e.y-py)**2<=r*r)hit(e);
+   }
+   if(hits)effects.push({x:px,y:py,r,ttl:.20});
+  }else if(kind==='cone'||kind==='beam'){
+   const dx=(target.x-px)/(distance||1),dy=(target.y-py)/(distance||1);
+   // Cone: 0.65 radians half width; beam: narrow 0.22.
+   const width=kind==='beam'?.98:.74;
+   for(let i=enemies.length-1;i>=0;i--){
+    const e=enemies[i],ex=e.x-px,ey=e.y-py,d=Math.hypot(ex,ey)||1;
+    if(d<=460&&(ex*dx+ey*dy)/d>=width)hit(e);
+    if(hits>=5)break;
+   }
+   if(hits)effects.push({x:px+dx*120,y:py+dy*120,r:kind==='beam'?32:70,ttl:.18});
+  }else if(kind==='chain'){
+   const ordered=enemies.slice().sort((a,b)=>
+    (a.x-target.x)**2+(a.y-target.y)**2-
+    ((b.x-target.x)**2+(b.y-target.y)**2));
+   for(const e of ordered){
+    if((e.x-target.x)**2+(e.y-target.y)**2>145*145)continue;
+    hit(e);if(hits>=4)break;
+   }
+   if(hits)effects.push({x:target.x,y:target.y,r:58,ttl:.20});
+  }else{
+   // Projectile/homing/melee: focused nearest target rather than full circle.
+   hit(target);
+   effects.push({x:target.x,y:target.y,r:kind==='melee'?38:27,ttl:.16});
+  }
+  if(effects.length>14)effects.splice(0,effects.length-14);
+  if(hits)castCount++;
+  return hits>0;
+ }
  function extraCombat(dt){
-  if(!moveList.length||pickOpen||paused)return;
-  skillClock+=dt;
-  const interval=megaActive>0?.7:1;
-  if(skillClock<interval)return;
-  skillClock=0;
-  // Native subset: extra auto-skill impacts nearby enemies. These are NOT
-  // the browser engine's 103 individual move implementations.
-  const power=moveList.reduce((n,m)=>n+(m.id.startsWith('fusion:')?12:m.lvl),0);
-  const radius=moveList.some(m=>m.id.startsWith('fusion:'))?185:110;
-  effects.push({x:px,y:py,r:radius,ttl:.22});
-  if(effects.length>6)effects.shift();
-  for(let i=enemies.length-1;i>=0;i--){
-   const e=enemies[i],dist=Math.hypot(e.x-px,e.y-py);
-   if(dist>radius)continue;
-   e.hp-=Math.max(1,Math.floor(power*.35))*(megaActive>0?1.5:1)*(e.boss&&accelerated?6:1);
-   megEnergy=Math.min(100,megEnergy+1);
-   if(e.hp<=0){onKill(e);enemies.splice(i,1);kills++;xp++;if(xp>=12&&!pickOpen){level++;offersForLevel()}}
+  if(!moveList.length||pickOpen||paused||menu)return;
+  const faster=megaActive>0?data.mega.cdFactor:1;
+  // Each learned skill owns its own cooldown, rather than a single circle
+  // cast that overpowers all move kinds. Clamp work per frame.
+  let budget=2;
+  for(const move of moveList){
+   const fusion=move.id.startsWith('fusion:');
+   const kind=fusion?fusionKind[move.id.slice(7)]||'nova':nativeMoveById.get(move.id)?.kind||'projectile';
+   const cd=fusion?1.65:data.cooldownFloors[kind]||1;
+   move.cooldown=Math.max(0,(move.cooldown||0)-dt);
+   if(move.cooldown>0||budget<=0)continue;
+   const fired=castMove(move);
+   move.cooldown=cd*faster;
+   if(fired)budget--;
   }
  }
  function input(dt){
@@ -301,7 +379,7 @@ const alpha=(()=>{
   ctx.fillStyle=color;ctx.font=font;ctx.fillText(String(value),x,y)
  }
  function draw(){
-  text(820,44,'PKMSVV SWITCH ALPHA 0.1.1','#ffe39d');
+  text(820,44,'PKMSVV SWITCH ALPHA 0.1.2','#ffe39d');
   text(820,74,'KANTO • GEN 1 • '+(accelerated?'QA x12':'REAL TIME'),'#a7e7f6');
   text(820,103,'TEAM: '+name(getMon(profile.selected))+'  EVOLVE: #'+evolvedDex()+'  SKILL: '+moveList.length+'/8');
   text(820,132,'ORB: '+orbQueue.length+'/10   CD '+orbCooldown.toFixed(1)+'s');
@@ -311,7 +389,7 @@ const alpha=(()=>{
   text(820,251,'Y ORB  ZR MEGA QA  + MENU','#ffe0ad','17px sans-serif');
   text(820,277,'ZL+R: QA CLOCK x12  L: SPRITE','#ffe0ad','17px sans-serif');
   if(moveList.length){
-   const list=moveList.map(m=>m.id+(m.lvl<5?' '+m.lvl:' MAX'));
+   const list=moveList.map(m=>m.id+(m.lvl<5?' '+m.lvl:' MAX')+' '+Math.ceil(m.cooldown||0)+'s');
    for(let i=0;i<list.length;i++)text(840,322+i*25,list[i],'#caefcc','16px sans-serif');
   }
   for(const fx of effects){ctx.strokeStyle='#f9d977';ctx.lineWidth=2;
@@ -385,6 +463,8 @@ const alpha=(()=>{
   get saveStatus(){return saveStatus},get clockScale(){return clockScale},
   get incomingDamageMultiplier(){return accelerated?.01:1},
   get bossDamageMultiplier(){return accelerated?6:1},
-  get moveMultiplier(){return activeBuffs.quick>0?1.25:1}
+  get moveMultiplier(){return activeBuffs.quick>0?1.25:1},
+  get castCount(){return castCount},get damageCount(){return damageCount},
+  castMove
  };
 })();
