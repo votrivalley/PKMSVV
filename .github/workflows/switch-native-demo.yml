@@ -81,7 +81,7 @@ jobs:
           npm run nro
           test -s pkmsvv-switch-alpha.nro
           mkdir -p ../../dist/switch-native-demo
-          cp pkmsvv-switch-kanto-bridge.nro ../../dist/switch-native-demo/PKMSVV-Switch-Alpha-v0100.nro
+          cp pkmsvv-switch-alpha.nro ../../dist/switch-native-demo/PKMSVV-Switch-Alpha-v0100.nro
           cp README-ALPHA.md ../../dist/switch-native-demo/README-ALPHA.md
           cp romfs/kanto-config.json ../../dist/switch-native-demo/kanto-config.json
           ls -lh ../../dist/switch-native-demo/
