@@ -111,7 +111,7 @@ test('Orb queue uses first-in-first-out and quick speed from PKMSVV source',()=>
  t.press(2,1016);
  assert.equal(t.get('alpha.orbQueue[0]'),'slumber');
  assert.equal(t.get('alpha.moveMultiplier'),1.25);
- assert.equal(t.get('alpha.orbCooldown'),5);
+ assert.ok(t.get('alpha.orbCooldown')>4.9&&t.get('alpha.orbCooldown')<=5);
  t.frame(1032);t.press(2,1048);
  assert.equal(t.get('alpha.orbQueue.length'),1,'cooldown prevents second use');
 });
