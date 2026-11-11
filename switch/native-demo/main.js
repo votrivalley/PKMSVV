@@ -12,7 +12,7 @@ function kantoWaveAt(seconds){
   if(seconds>=KANTO_CONFIG.waveSeconds[i])tier=i;
  return tier;
 }
-const MAX_ENEMIES=32,MAX_SHOTS=32,MAX_SPRITES_PER_FRAME=5;
+const MAX_ENEMIES=32,MAX_SHOTS=32,MAX_SPRITES_PER_FRAME=12;
 const MAX_ENEMY_SPRITES=4;
 // Diagnostic: safe vector renderer is the default. Press L to toggle sprites.
 let spritesEnabled=false,prevL=false,drawnSprites=0,wave='RATTATA/PIDGEY';
@@ -56,8 +56,9 @@ const SKILLS=[
  {name:'Xuyen pha',description:'Tang toc do dan',apply(){attack+=1;moveSpeed+=10}},
  {name:'Sinh luc',description:'Day HP len toi da',apply(){hp=100}}
 ];
-function setChoices(){skillChoices=SKILLS.slice();skillPage=0;pickOpen=true}
+function setChoices(){if(typeof alpha==='object'&&alpha.enabled)return alpha.offersForLevel();skillChoices=SKILLS.slice();skillPage=0;pickOpen=true}
 function pickSkill(slot){
+ if(typeof alpha==='object'&&alpha.enabled)return alpha.pickOffer(slot);
  if(!pickOpen||slot<0||slot>2)return false;
  const skill=skillChoices[skillPage*3+slot];
  if(!skill)return false;
@@ -65,8 +66,8 @@ function pickSkill(slot){
 }
 function renderSprite(name,x,y,size,mirror=false){
  if(!spritesEnabled||drawnSprites>=MAX_SPRITES_PER_FRAME)return false;
- if(name!=='pikachu'&&name!=='rattata')return false;
- if(name==='rattata'&&enemySpritesDrawn>=MAX_ENEMY_SPRITES)return false;
+ if(name!=='pikachu'&&name!=='rattata'&&!(typeof alpha==='object'&&alpha.spriteNames.has(name)))return false;
+ if(name!=='pikachu'&&enemySpritesDrawn>=MAX_ENEMY_SPRITES&&!(typeof alpha==='object'&&alpha.enabled))return false;
  if(x+size<0||x-size>W||y+size<0||y-size>H)return false;
  const img=SPRITES[name];
  if(img&&loaded[name]){
@@ -87,8 +88,10 @@ function respawn(){
  px=W/2;py=H/2;hp=100;kills=0;time=0;
  enemies.length=0;shots.length=0;
  spawnAt=.8;fireAt=.3;spawnShield=2;
+ if(typeof alpha==='object'&&alpha.enabled)alpha.onRespawn();
 }
 function update(dt){
+ if(typeof alpha==='object'&&alpha.enabled&&alpha.preUpdate(dt))return;
  const p=navigator.getGamepads?.()?.find?.(x=>x?.connected)||navigator.getGamepads?.()?.[0];
  const r=button(p,5),b=button(p,0),toggle=b&&!prevB;prevB=b;
  const l=button(p,4),zl=button(p,6);
@@ -106,12 +109,12 @@ function update(dt){
   if(r){if(edge0)pickSkill(0);else if(edge1)pickSkill(1);else if(edge2)pickSkill(2)}
  }else if(toggle&&!r)paused=!paused;
  if(paused)return;
- time+=dt;spawnShield=Math.max(0,spawnShield-dt);
+ time+=dt*(typeof alpha==='object'&&alpha.enabled?alpha.clockScale:1);spawnShield=Math.max(0,spawnShield-dt);
  kantoTier=kantoWaveAt(time);
  let dx=Number(p?.axes?.[0])||0,dy=Number(p?.axes?.[1])||0;
  if(button(p,14))dx=-1;if(button(p,15))dx=1;
  if(button(p,12))dy=-1;if(button(p,13))dy=1;
- const mag=Math.hypot(dx,dy);if(mag>.15){dx/=Math.max(1,mag);dy/=Math.max(1,mag);px=clamp(px+dx*moveSpeed*dt,30,W-30);py=clamp(py+dy*moveSpeed*dt,82,H-40)}
+ const mag=Math.hypot(dx,dy);if(mag>.15){dx/=Math.max(1,mag);dy/=Math.max(1,mag);const boost=typeof alpha==='object'&&alpha.enabled?alpha.moveMultiplier:1;px=clamp(px+dx*moveSpeed*boost*dt,30,W-30);py=clamp(py+dy*moveSpeed*boost*dt,82,H-40)}
  // Spawn budget deliberately caps actors; useful to validate sustained native FPS.
  wave=kantoTier===0?'KANTO: RATTATA/PIDGEY':'KANTO: GEN1 TIER '+(kantoTier+1);
  if(time>=spawnAt&&enemies.length<MAX_ENEMIES){
@@ -119,8 +122,9 @@ function update(dt){
   const side=Math.floor(rng()*4),a=rng();
   const x=side===0?0:side===1?W:side===2?a*W:a*W;
   const y=side===2?75:side===3?H:75+a*(H-75);
-  const species=kantoTier===0?(rng()<.55?'rattata':'pidgey'):(rng()<.28?'zubat':rng()<.56?'pidgey':'rattata');
-  enemies.push({x,y,species,hp:2+Math.floor(kantoTier/2),r:14+Math.floor(rng()*6),speed:35+rng()*28+kantoTier*3});
+  const selected=(typeof alpha==='object'&&alpha.enabled)?alpha.selectSpecies(kantoTier):null;
+  const species=selected?selected.name.toLowerCase():(kantoTier===0?(rng()<.55?'rattata':'pidgey'):(rng()<.28?'zubat':rng()<.56?'pidgey':'rattata'));
+  enemies.push({x,y,species,dex:selected?.dex||0,hp:2+Math.floor(kantoTier/2),r:14+Math.floor(rng()*6),speed:35+rng()*28+kantoTier*3});
  }
  if(time>=fireAt&&enemies.length){
   fireAt=time+fireRate;
@@ -133,20 +137,22 @@ function update(dt){
   let hit=false;
   for(let k=enemies.length-1;k>=0;k--){
    const e=enemies[k],d=(e.x-s.x)**2+(e.y-s.y)**2;
-   if(d<(e.r+5)**2){e.hp-=attack;hit=true;if(e.hp<=0){enemies.splice(k,1);kills++;xp++;if(xp>=12&&!pickOpen){level++;setChoices()}}break}
+   if(d<(e.r+5)**2){e.hp-=attack;hit=true;if(e.hp<=0){if(typeof alpha==='object'&&alpha.enabled)alpha.onKill(e);enemies.splice(k,1);kills++;xp++;if(xp>=12&&!pickOpen){level++;setChoices()}}break}
   }
   if(hit||s.ttl<=0||s.x<0||s.x>W||s.y<0||s.y>H)shots.splice(i,1);
  }
  let touching=0;
  for(const e of enemies){
   const dx=px-e.x,dy=py-e.y,d=Math.hypot(dx,dy)||1;
-  e.x+=dx/d*e.speed*dt;e.y+=dy/d*e.speed*dt;
+  const slow=e.sleepLeft>0?0:e.slowLeft>0?.6:1;
+  e.x+=dx/d*e.speed*slow*dt;e.y+=dy/d*e.speed*slow*dt;
   if(d<e.r+14)touching++;
  }
  // Cap stacked collision damage so a crowd cannot kill in a single frame.
  // Resolve death only AFTER finishing every iteration.
  if(touching>0&&spawnShield<=0)hp=Math.max(0,hp-Math.min(touching,4)*8*dt);
  if(hp<=0)respawn();
+ if(typeof alpha==='object'&&alpha.enabled)alpha.postUpdate(dt);
 }
 function draw(){
  // FULL 60Hz + official Kanto palette/wave timings, opt-in limited sprite trial.
@@ -168,7 +174,7 @@ function draw(){
    ctx.fillStyle='#dc697e';ctx.beginPath();ctx.arc(enemy.x,enemy.y,enemy.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#441e30';ctx.stroke();
   }
  }
- if(!renderSprite('pikachu',px,py,78)){
+ if(!renderSprite(typeof alpha==='object'&&alpha.enabled?alpha.chooseBattleSprite():'pikachu',px,py,78)){
   ctx.fillStyle='#65d5c3';ctx.beginPath();ctx.arc(px,py,19,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle='#e6fff7';ctx.lineWidth=3;ctx.stroke();
  }
@@ -206,6 +212,7 @@ function draw(){
  if(paused){ctx.fillStyle='rgba(0,0,0,.7)';ctx.fillRect(0,0,W,H);
   ctx.fillStyle='#fff';ctx.fillRect(W/2-100,H/2-15,200,30)}
  if(lastError){ctx.fillStyle='#f55';ctx.fillRect(0,0,W,10)}
+ if(typeof alpha==='object'&&alpha.enabled)alpha.draw();
 }
 function frame(now){
  const dt=last?clamp((now-last)/1000,0,.05):0;last=now;
