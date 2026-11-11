@@ -79,3 +79,9 @@ for(const rel of ['js/data/moves.js','js/core/db.js','js/systems/spawner.js','js
 }
 console.log('NATIVE PORT MODULE CANDIDATES:',modulePaths.filter(
  x=>/data|move|pokemon|dex|world|combat|projectile|enemy/i.test(x)).slice(0,65).join(' | '));
+
+for(const rel of ['js/data/moves.js','js/data/pokedex.js','js/data/enemies.js','js/data/starters.js']){
+ const code=fs.readFileSync(path.join(root,rel),'utf8');
+ console.log('NATIVE MODULE TAIL:',rel,'bytes',code.length);
+ console.log(code.slice(-6000));
+}
