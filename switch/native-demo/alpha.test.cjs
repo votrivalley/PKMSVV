@@ -33,6 +33,8 @@ test('Compiled game uses real Kanto, Orb, Fusion, Mega and Evolution sources',()
  assert.equal(data.finalBossSeconds,1800);
  assert.equal(data.nativeAlpha.orbs.length,6);
  assert.equal(data.nativeAlpha.fusions.length,10);
+ assert.equal(JSON.stringify(data.nativeAlpha.fusionOfferRates),JSON.stringify([.8,.7,.6,.5,.4,.3]));
+ assert.equal(data.nativeAlpha.evolutionSprites.length,6);
  assert.equal(data.nativeAlpha.mega.cooldown,200);
  assert.equal(data.nativeAlpha.mega.duration,30);
  assert.equal(data.nativeAlpha.mega.cdFactor,.7);
@@ -91,18 +93,30 @@ test('First KO unlocks Pokédex but not gacha, awards first source Orb',()=>{
  assert.equal(t.get('alpha.orbQueue.length'),1);
  assert.ok(data.nativeAlpha.orbs.map(o=>o.id).includes(t.get('alpha.orbQueue[0]')));
 });
-test('Fusion strictly requires both original moves MAX and is once per run',()=>{
+test('Fusion requires MAX+MAX and respects source rates, one roll per level, once per run',()=>{
  const t=boot();t.frame(1000);
  t.get('alpha.offersForLevel()');
  assert.equal(t.get('alpha.offers[0].kind'), 'upgrade');
+ assert.equal(t.get('alpha.fusionOfferAttempts'),0);
  t.get("alpha.moves.find(x=>x.id==='thunder-shock').lvl=5");
  t.get("alpha.moves.find(x=>x.id==='quick-attack').lvl=5");
  t.get('alpha.offersForLevel()');
+ assert.equal(t.get('alpha.fusionOfferAttempts'),0,'no reroll at same level');
+ let hasOffer=false;
+ for(let i=0;i<16;i++){
+  t.get('level++');t.get('alpha.offersForLevel()');
+  const first=t.get('alpha.offers[0]');
+  if(first?.kind==='fusion'){hasOffer=true;break}
+ }
+ assert.equal(hasOffer,true,'seeded RNG must eventually offer Fusion');
+ const attempts=t.get('alpha.fusionOfferAttempts');
+ t.get('alpha.offersForLevel()');
+ assert.equal(t.get('alpha.fusionOfferAttempts'),attempts,'one roll per level only');
  assert.equal(t.get('alpha.offers[0].id'),'spark-quick');
  assert.equal(t.get('alpha.pickOffer(0)'),true);
  assert.equal(t.get('alpha.fusionUsed'),true);
  assert.equal(t.get('alpha.moves.some(x=>x.id==="fusion:spark-quick")'),true);
- t.get('alpha.offersForLevel()');
+ t.get('level++');t.get('alpha.offersForLevel()');
  assert.notEqual(t.get('alpha.offers[0].kind'),'fusion');
 });
 test('Orb queue uses first-in-first-out and quick speed from PKMSVV source',()=>{
@@ -162,4 +176,38 @@ test('QA time acceleration cannot grant permanent Kanto badge',()=>{
  t.get('alpha.onKill({dex:150,boss:15})');
  assert.equal(t.get('alpha.profile.badges.kanto'),undefined);
  assert.equal(t.get('lastError'),'');
+});
+
+test('Kanto starter-specific moves and actual two-step evolved sprite selection',()=>{
+ const choices=[
+  {dex:25,moves:['thunder-shock','quick-attack'],levels:[[1,'pikachu']]},
+  {dex:4,moves:['ember','quick-attack'],levels:[[1,'charmander'],[16,'charmeleon'],[36,'charizard']]},
+  {dex:1,moves:['vine-whip','tackle'],levels:[[1,'bulbasaur'],[16,'ivysaur'],[32,'venusaur']]},
+  {dex:7,moves:['water-gun','tackle'],levels:[[1,'squirtle'],[16,'wartortle'],[36,'blastoise']]}
+ ];
+ for(const c of choices){
+  const t=boot();t.frame(1000);
+  t.get('alpha.profile.selected='+c.dex+';alpha.resetBattle()');
+  assert.equal(JSON.stringify(t.get('alpha.moves.map(x=>x.id)')),JSON.stringify(c.moves));
+  for(const [lvl,sprite] of c.levels){
+   t.get('level='+lvl);
+   assert.equal(t.get('alpha.chooseBattleSprite()'),sprite);
+   assert.ok(t.get('alpha.spriteNames.has("'+sprite+'")'));
+  }
+  assert.equal(t.get('alpha.profile.box[4]'),undefined);
+ }
+});
+test('Extra sprite loads are staggered, not decoded in a single game frame',()=>{
+ const t=boot();t.frame(1000);
+ t.get('spritesEnabled=true;alpha.profile.selected=4;alpha.resetBattle();spawnAt=Infinity');
+ t.get("enemies=[{species:'pidgey',x:120,y:350,r:14,hp:3,speed:0},{species:'zubat',x:200,y:350,r:14,hp:3,speed:0}]");
+ for(let i=1;i<=12;i++)t.frame(1000+i*16.6667);
+ assert.equal(t.images.length,1,'only Charmander may load after first 12 ticks');
+ for(let i=13;i<=24;i++)t.frame(1000+i*16.6667);
+ assert.equal(t.images.length,2,'second visible species loads after 24 ticks');
+ for(let i=25;i<=36;i++)t.frame(1000+i*16.6667);
+ assert.equal(t.images.length,3,'third visible species loads after 36 ticks');
+ assert.ok(t.images.some(x=>x._src==='romfs:/sprites/4.png'));
+ assert.ok(t.images.some(x=>x._src==='romfs:/sprites/16.png'));
+ assert.ok(t.images.some(x=>x._src==='romfs:/sprites/41.png'));
 });
