@@ -48,12 +48,12 @@ test('HP=0 safely respawns without mutation during enemy loop',()=>{
  assert.equal(t.get('enemies.length'),0);
  assert.equal(t.get('lastError'),'');
 });
-test('R+X picks first skill while left stick keeps movement live',()=>{
+test('X directly picks first skill without R while left stick movement stays live',()=>{
  const pad={connected:true,buttons:Array.from({length:18},()=>({pressed:false,value:0})),axes:[1,0]};
  const t=boot(pad);
  t.frame(1000);t.frame(1016);
  t.get('setChoices()');const x=t.get('px');
- pad.buttons[5].pressed=true;pad.buttons[3].pressed=true;t.frame(1032);
+ pad.buttons[3].pressed=true;t.frame(1032);
  assert.equal(t.get('pickOpen'),false);
  assert.equal(t.get('attack'),2);
  assert.ok(t.get('px')>x);
@@ -177,4 +177,28 @@ test('Build bridge reads official QuickRegion and compiles Kanto data to RomFS',
  assert.match(src,/const FINAL_BOSS_SECONDS=30\*60/);
  assert.match(src,/const WAVE_SECONDS=\[0,120,240,360,480,600,720\]/);
  assert.match(js,/__PKMSVV_KANTO_CONFIG__/);
+});
+
+test('Standalone native fallback: X/Y/B direct, A pages without R; B alone never pauses',()=>{
+ const pad={connected:true,buttons:Array.from({length:18},()=>({pressed:false,value:0})),axes:[0,0]};
+ const t=boot(pad);t.frame(1000);
+ // Existing fallback skill catalog has 6 skills = two pages.
+ t.get('setChoices()');
+ assert.equal(t.get('skillChoices.length'),6);
+ pad.buttons[1].pressed=true;t.frame(1016);
+ assert.equal(t.get('skillPage'),1,'A changes to next page');
+ pad.buttons[1].pressed=false;t.frame(1032);
+ pad.buttons[2].pressed=true;t.frame(1048);
+ assert.equal(t.get('pickOpen'),false,'Y directly selects second skill on page two');
+ assert.equal(t.get('hp'),100);
+ pad.buttons[2].pressed=false;t.frame(1064);
+ pad.buttons[0].pressed=true;t.frame(1080);
+ assert.equal(t.get('paused'),false,'B alone no longer pauses gameplay');
+ pad.buttons[0].pressed=false;t.frame(1096);
+ pad.buttons[5].pressed=true;pad.buttons[0].pressed=true;t.frame(1112);
+ assert.equal(t.get('paused'),true,'R+B pauses while not choosing skills');
+ pad.buttons[0].pressed=false;t.frame(1128);
+ pad.buttons[0].pressed=true;t.frame(1144);
+ assert.equal(t.get('paused'),false,'R+B resumes when pressed again');
+ assert.equal(t.get('lastError'),'');
 });
