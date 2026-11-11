@@ -350,6 +350,8 @@ const alpha=(()=>{
   get orbQueue(){return orbQueue},get moves(){return moveList},
   get boss15(){return boss15},get boss30(){return boss30},get gameWon(){return gameWon},
   get fusionUsed(){return fusionUsed},get megaPreview(){return megaPreview},
+  get menuTab(){return menuTab},get menuIndex(){return menuIndex},
+  get orbCooldown(){return orbCooldown},
   get saveStatus(){return saveStatus},get clockScale(){return clockScale},
   get moveMultiplier(){return activeBuffs.quick>0?1.25:1}
  };
