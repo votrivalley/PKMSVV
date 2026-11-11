@@ -509,6 +509,7 @@ const alpha=(()=>{
   get moveMultiplier(){return activeBuffs.quick>0?1.25:1},
   get castCount(){return castCount},get damageCount(){return damageCount},
   get availableMoveCount(){return sourceMoves.length},get availablePokemonCount(){return realDex?.length||0},
+  get realDexLength(){return realDex?.length||0},
   get effectCount(){return effects.length},
   castMove
  };
