@@ -146,7 +146,7 @@ const alpha=(()=>{
   megEnergy=Math.min(100,megEnergy+(e.boss?3:2));
   killAward++;
   if(killAward===1||rng()<.02)newOrb();
-  if(e.boss===15){badgeWon=true;profile.badges.kanto=1;bossMessage='KANTO REGION BADGE';markDirty()}
+  if(e.boss===15){badgeWon=true;if(!accelerated){profile.badges.kanto=1;markDirty()}bossMessage=accelerated?'QA REGION BOSS CLEAR':'KANTO REGION BADGE'}
   if(e.boss===30){gameWon=true;bossMessage='KANTO ALPHA COMPLETE';markDirty()}
  }
  function offersForLevel(){
@@ -227,7 +227,7 @@ const alpha=(()=>{
   for(let i=enemies.length-1;i>=0;i--){
    const e=enemies[i],dist=Math.hypot(e.x-px,e.y-py);
    if(dist>radius)continue;
-   e.hp-=Math.max(1,Math.floor(power*.35))*(megaActive>0?1.5:1);
+   e.hp-=Math.max(1,Math.floor(power*.35))*(megaActive>0?1.5:1)*(e.boss&&accelerated?6:1);
    megEnergy=Math.min(100,megEnergy+1);
    if(e.hp<=0){onKill(e);enemies.splice(i,1);kills++;xp++;if(xp>=12&&!pickOpen){level++;offersForLevel()}}
   }
@@ -339,7 +339,7 @@ const alpha=(()=>{
    text(145,257,'Save: sdmc:/switch/pkmsvv-native-alpha/ (two independent copies)');
    text(145,298,'No PC/Web/Android save import; no real gacha or permanent Mega unlock.');
    text(145,339,'Modes not ported: Co-op, Arena, Berry Rescue, 10 chapters.');
-   text(145,380,'ZL+R accelerates QA clock only; QA Mega preview is never saved.');
+   text(145,380,'ZL+R: x12 clock, 99% less damage, 6x boss damage. QA badges not saved.');
   }
  }
  // Keep persistent progress isolated; no automatic ownership grants.
@@ -354,6 +354,8 @@ const alpha=(()=>{
   get orbCooldown(){return orbCooldown},
   get offers(){return offers},
   get saveStatus(){return saveStatus},get clockScale(){return clockScale},
+  get incomingDamageMultiplier(){return accelerated?.01:1},
+  get bossDamageMultiplier(){return accelerated?6:1},
   get moveMultiplier(){return activeBuffs.quick>0?1.25:1}
  };
 })();
