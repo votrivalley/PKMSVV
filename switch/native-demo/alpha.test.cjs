@@ -47,8 +47,8 @@ test('Kanto Alpha boots HUD, auto-combat, menu and six controller tabs',()=>{
  assert.equal(t.get('alpha.menu'),false);
  assert.ok(t.ops.fillText>0&&t.ops.arc>0);
  t.press(9,1032);assert.equal(t.get('alpha.menu'),true);
- t.frame(1048);t.press(5,1064);assert.equal(t.get('menuTab'),1);
- t.press(5,1080);assert.equal(t.get('menuTab'),1,'shoulder is edge triggered');
+ t.frame(1048);t.press(5,1064);assert.equal(t.get('alpha.menuTab'),1);
+ t.press(5,1080);assert.equal(t.get('alpha.menuTab'),1,'shoulder is edge triggered');
  t.frame(1096);t.press(0,1112);
  assert.equal(t.get('alpha.menu'),false);
  assert.equal(t.get('lastError'),'');
@@ -57,7 +57,7 @@ test('Trial roster selection changes visual lead only, never grants Box ownershi
  const t=boot();t.frame(1000);
  t.press(9,1016);
  t.frame(1032);t.press(2,1048);
- assert.equal(t.get('menuIndex'),1);
+ assert.equal(t.get('alpha.menuIndex'),1);
  t.frame(1064);t.press(1,1080);
  assert.equal(t.get('alpha.profile.selected'),4);
  assert.equal(t.get('alpha.profile.box[4]'),undefined);
@@ -94,16 +94,16 @@ test('First KO unlocks Pokédex but not gacha, awards first source Orb',()=>{
 test('Fusion strictly requires both original moves MAX and is once per run',()=>{
  const t=boot();t.frame(1000);
  t.get('alpha.offersForLevel()');
- assert.equal(t.get('offers[0].kind'), 'upgrade');
+ assert.equal(t.get('alpha.offers[0].kind'), 'upgrade');
  t.get("alpha.moves.find(x=>x.id==='thunder-shock').lvl=5");
  t.get("alpha.moves.find(x=>x.id==='quick-attack').lvl=5");
  t.get('alpha.offersForLevel()');
- assert.equal(t.get('offers[0].id'),'spark-quick');
+ assert.equal(t.get('alpha.offers[0].id'),'spark-quick');
  assert.equal(t.get('alpha.pickOffer(0)'),true);
  assert.equal(t.get('alpha.fusionUsed'),true);
  assert.equal(t.get('alpha.moves.some(x=>x.id==="fusion:spark-quick")'),true);
  t.get('alpha.offersForLevel()');
- assert.notEqual(t.get('offers[0].kind'),'fusion');
+ assert.notEqual(t.get('alpha.offers[0].kind'),'fusion');
 });
 test('Orb queue uses first-in-first-out and quick speed from PKMSVV source',()=>{
  const t=boot();t.frame(1000);
@@ -111,7 +111,7 @@ test('Orb queue uses first-in-first-out and quick speed from PKMSVV source',()=>
  t.press(2,1016);
  assert.equal(t.get('alpha.orbQueue[0]'),'slumber');
  assert.equal(t.get('alpha.moveMultiplier'),1.25);
- assert.equal(t.get('orbCooldown'),5);
+ assert.equal(t.get('alpha.orbCooldown'),5);
  t.frame(1032);t.press(2,1048);
  assert.equal(t.get('alpha.orbQueue.length'),1,'cooldown prevents second use');
 });
