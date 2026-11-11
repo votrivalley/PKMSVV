@@ -192,6 +192,80 @@ const alpha=(()=>{
   if(id==='focus'||id==='quick'||id==='luminous')activeBuffs[id]=orb.duration;
   markDirty();return true;
  }
+ // Switch-native recruitment adapter. Odds/pity use the actual compiled
+ // PKMSVV gacha constants, while tickets are earned only in native Kanto.
+ // Discovery alone never grants ownership.
+ const recruitRules=data.recruitment||{rates:[[1,45.5],[2,30],[3,17],[4,6.5],[5,1]],pity5:100};
+ function discoveredPool(){
+  if(!realDex)return [];
+  return realDex.filter(p=>profile.pokedex[p.dex]===1&&p.rarity>=1&&p.rarity<=5);
+ }
+ function ownedIds(){
+  return Object.keys(profile.box).map(Number)
+   .filter(dex=>Number.isInteger(dex)&&dex>=1&&dex<=151&&profile.box[dex]>=1)
+   .sort((a,b)=>a-b);
+ }
+ function teamOptions(){
+  const trial=roster.map(p=>p.dex);
+  return trial.concat(ownedIds().filter(id=>!trial.includes(id)));
+ }
+ function recruitOne(guaranteeHigh=false){
+  if(profile.recruitTickets<1)return null;
+  const pool=discoveredPool();
+  if(!pool.length){lastRecruitOutcome='DISCOVER A POKEMON FIRST';return null}
+  const starPool=pool.filter(p=>p.rarity>=4);
+  const legendPool=pool.filter(p=>p.rarity===5);
+  const rateRows=recruitRules.rates
+   .map(([star,weight])=>({star,weight,pool:pool.filter(p=>p.rarity===star)}))
+   .filter(row=>row.pool.length>0&&row.weight>0);
+  if(!rateRows.length)return null;
+  // Hard pity is meaningful only after a 5-star species is actually
+  // discoverable. An undiscovered legendary can never leak into the pool.
+  const pityEligible=legendPool.length>0;
+  let star=5;
+  if(!(pityEligible&&profile.recruitPity+1>=recruitRules.pity5)){
+   let choices=rateRows;
+   if(guaranteeHigh&&starPool.length)choices=rateRows.filter(row=>row.star>=4);
+   let sum=0;for(const row of choices)sum+=row.weight;
+   let roll=rng()*sum;
+   star=choices[choices.length-1].star;
+   for(const row of choices){roll-=row.weight;if(roll<0){star=row.star;break}}
+  }
+  const targets=pool.filter(p=>p.rarity===star);
+  if(!targets.length)return null;
+  const mon=targets[Math.floor(rng()*targets.length)];
+  profile.recruitTickets--;
+  if(pityEligible)profile.recruitPity=star===5?0:Math.min(recruitRules.pity5-1,profile.recruitPity+1);
+  else profile.recruitPity=0;
+  const old=profile.box[mon.dex]||0;
+  profile.box[mon.dex]=Math.min(9999,old+1);
+  recruitTotalPulls++;
+  lastRecruitOutcome=(old?'DUPLICATE ':'NEW ')+mon.name+' #'+mon.dex+' '+star+' STAR'+
+    (old?' / COPY '+profile.box[mon.dex]:'');
+  markDirty();
+  return {dex:mon.dex,star,isNew:!old,remaining:profile.recruitTickets};
+ }
+ function recruitMany(requested){
+  const count=Math.floor(requested);
+  if(!Number.isInteger(count)||count<1||count>10)return [];
+  const pool=discoveredPool();
+  if(!pool.length){lastRecruitOutcome='NO DISCOVERED POKEMON';return []}
+  if(profile.recruitTickets<count){lastRecruitOutcome='NOT ENOUGH TICKETS';return []}
+  const pulled=[];
+  const hasRare=pool.some(p=>p.rarity>=4);
+  for(let i=0;i<count;i++){
+   const force= count===10&&hasRare&&i===9&&!pulled.some(p=>p.star>=4);
+   const result=recruitOne(force);
+   if(result)pulled.push(result);
+  }
+  if(pulled.length){
+   const fresh=pulled.filter(p=>p.isNew).length;
+   lastRecruitOutcome=(count===10?'TEN PULL':'SINGLE PULL')+
+    ': '+fresh+' NEW / '+(pulled.length-fresh)+' DUPLICATE; LAST #'+pulled[pulled.length-1].dex;
+   persist();
+  }
+  return pulled;
+ }
  function onKill(e){
   if(!e)return;
   const dex=Number(e.dex||species.get(e.species)?.dex);
@@ -202,6 +276,16 @@ const alpha=(()=>{
     markDirty();
    }
    if(kills+1>profile.bestKO){profile.bestKO=kills+1;markDirty()}
+   profile.recruitKO=(profile.recruitKO||0)+1;
+   // One native trial ticket for every 30 real Kanto KOs.
+   if(profile.recruitKO%30===0){
+    profile.recruitTickets=Math.min(9999,profile.recruitTickets+1);
+    markDirty();
+   }
+   if(e.boss===15||e.boss===30){
+    profile.recruitTickets=Math.min(9999,profile.recruitTickets+(e.boss===15?2:3));
+    markDirty();
+   }
   }
   megEnergy=Math.min(100,megEnergy+(e.boss?3:2));
   killAward++;
@@ -714,6 +798,10 @@ const alpha=(()=>{
   get profile(){return profile},get menu(){return menu},get accelerated(){return accelerated},get runUsedQA(){return runUsedQA},
    get matchResult(){return matchResult},get runEndTime(){return runEndTime},get runEndKOs(){return runEndKOs},
   get orbQueue(){return orbQueue},get moves(){return moveList},
+  get lastRecruitOutcome(){return lastRecruitOutcome},
+  get recruitmentOdds(){return recruitRules},
+  get recruitableCount(){return discoveredPool().length},
+  recruitMany,ownedIds,teamOptions,
   get boss15(){return boss15},get boss30(){return boss30},get gameWon(){return gameWon},
   get fusionUsed(){return fusionUsed},get megaPreview(){return megaPreview},
   get fusionOfferAttempts(){return fusionOfferAttempts},get fusionOfferRecipe(){return fusionOfferRecipe},
