@@ -45,15 +45,27 @@ const gen1=pokedex.filter(p=>Number.isInteger(p.dex)&&p.dex>=1&&p.dex<=151)
  }));
 if(gen1.length!==151||gen1.some((p,i)=>p.dex!==i+1))
  throw Error('Kanto Pokédex must contain exact National Dex #1-151; got '+gen1.length);
+// The native port consumes the upstream *rates*, not its browser/DOM gacha UI.
+const gachaSource=fs.readFileSync(path.join(root,'js/systems/gacha.js'),'utf8');
+const ratesMatch=gachaSource.match(/const RATES\\s*=\\s*(\\[\\[[^;]+\\]\\])\\s*;/);
+const pityMatch=gachaSource.match(/const PITY_5\\s*=\\s*(\\d+)\\s*;/);
+if(!ratesMatch||!pityMatch)throw Error('Actual compiled gacha odds/pity missing');
+const nativeRates=JSON.parse(ratesMatch[1]);
+if(nativeRates.length!==5||nativeRates.some(r=>!Array.isArray(r)||r.length!==2||r[1]<0)||
+ Math.abs(nativeRates.reduce((a,r)=>a+r[1],0)-100)>0.001)throw Error('Invalid real gacha rates');
+const nativePity=Number(pityMatch[1]);
+if(nativePity<10||nativePity>250)throw Error('Real gacha hard pity out of supported bounds: '+nativePity);
 const catalog={
  format:'pkmsvv-switch-native-real-catalog-v1',
  originalGame:'PKMSVV compiled Android QA build 42868942245',
  runtime:'nx.js native - extracted data only, NO DOM / Brewser',
  moves:cleanMoves,
- pokemon:gen1
+ pokemon:gen1,
+ recruitment:{rates:nativeRates,pity5:nativePity,source:'js/systems/gacha.js'}
 };
 fs.mkdirSync(path.dirname(out),{recursive:true});
 fs.writeFileSync(out,JSON.stringify(catalog,null,2)+'\n');
+console.log('REAL PKMSVV RECRUITMENT RATES:',JSON.stringify(nativeRates),'pity',nativePity);
 console.log('REAL PKMSVV CATALOG EXTRACTED: moves',cleanMoves.length,
  'move kinds',new Set(cleanMoves.map(m=>m.kind)).size,'Kanto Pokémon',gen1.length,
  'sample',cleanMoves.slice(0,3).map(m=>m.id).join(', '));
