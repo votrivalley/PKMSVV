@@ -86,7 +86,7 @@ jobs:
           PY
       - name: Install icon generator
         run: python3 -m pip install --disable-pip-version-check pillow
-      - name: Package native persistent-skill engine v0.2.2 NRO
+      - name: Package native Kanto victory/defeat results v0.2.3 NRO
         working-directory: switch/native-demo
         shell: bash
         run: |
@@ -95,22 +95,22 @@ jobs:
           const fs=require('node:fs');
           const p=JSON.parse(fs.readFileSync('package.json','utf8'));
           p.name='pkmsvv-switch-kanto-real';
-          p.version='0.2.2';
-          p.nacp={...(p.nacp||{}),id:'0147365656250000',title:'PKMSVV NATIVE 022'};
+          p.version='0.2.3';
+          p.nacp={...(p.nacp||{}),id:'0147365656260000',title:'PKMSVV NATIVE 023'};
           fs.writeFileSync('package.json',JSON.stringify(p,null,2));
           NODE
           python3 make_icon.py ALPHA
           npm run nro
           test -s pkmsvv-switch-kanto-real.nro
           mkdir -p ../../dist/switch-native-demo
-          cp pkmsvv-switch-kanto-real.nro ../../dist/switch-native-demo/PKMSVV-Switch-Native-SkillZones-v022.nro
+          cp pkmsvv-switch-kanto-real.nro ../../dist/switch-native-demo/PKMSVV-Switch-Native-KantoResults-v023.nro
           cp README-NATIVE.md ../../dist/switch-native-demo/README-NATIVE.md
           cp romfs/kanto-config.json ../../dist/switch-native-demo/kanto-config.json
           cp romfs/real-game-catalog.json ../../dist/switch-native-demo/real-game-catalog.json
           ls -lh ../../dist/switch-native-demo/
       - uses: actions/upload-artifact@v4
         with:
-          name: PKMSVV-Switch-Native-SkillZones-v022
+          name: PKMSVV-Switch-Native-KantoResults-v023
           path: dist/switch-native-demo/
           retention-days: 14
           if-no-files-found: error
