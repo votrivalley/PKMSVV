@@ -372,7 +372,7 @@ const alpha=(()=>{
  // Keep persistent progress isolated; no automatic ownership grants.
  load();resetBattle();
  return {enabled:true,data,spriteNames,preUpdate,postUpdate,onKill,offersForLevel,
-  pickOffer,selectSpecies,draw,persist,loadExtraSprites,chooseBattleSprite,onRespawn,
+  pickOffer,selectSpecies,draw,persist,loadExtraSprites,chooseBattleSprite,onRespawn,resetBattle,
   get profile(){return profile},get menu(){return menu},get accelerated(){return accelerated},
   get orbQueue(){return orbQueue},get moves(){return moveList},
   get boss15(){return boss15},get boss30(){return boss30},get gameWon(){return gameWon},
