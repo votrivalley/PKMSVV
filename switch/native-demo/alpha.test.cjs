@@ -245,3 +245,14 @@ test('Per-skill cooldowns are preserved and combat effects stay bounded over 3 m
  assert.ok(t.get('alpha.castCount')>casts);
  assert.equal(t.get('lastError'),'');
 });
+
+test('Out-of-range native skill does not consume cooldown before a target appears',()=>{
+ const t=boot();t.frame(1000);
+ t.get("spawnAt=Infinity;enemies=[{x:px+600,y:py,species:'rattata',dex:19,hp:1000,r:16,speed:0}];alpha.moves.splice(0,alpha.moves.length,{id:'tackle',lvl:1})");
+ t.frame(1016);
+ assert.equal(t.get('alpha.moves[0].cooldown||0'),0);
+ t.get('enemies[0].x=px+45');
+ t.frame(1032);
+ assert.ok(t.get('alpha.moves[0].cooldown')>.4);
+ assert.equal(t.get('lastError'),'');
+});
