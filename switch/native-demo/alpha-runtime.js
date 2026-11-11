@@ -15,6 +15,8 @@ const alpha=(()=>{
  const byDex=new Map([...(realDex||[]),...roster,...foes].map(p=>[p.dex,p]));
  const spriteNames=new Set([...rosterNames,...foeNames,...(realDex||[]).map(p=>p.name.toLowerCase()),...data.evolutionSprites.map(p=>p.name.toLowerCase()),'mewtwo']);
  const SAVE_PATH='sdmc:/switch/pkmsvv-native-alpha/';
+ const SAVE_PREFIX='progress-v024-';
+ const LEGACY_SAVE_PREFIX='progress-';
  const MOVE_MAX=5,MAX_MOVES=8;
  let profile={version:1,seq:0,pokedex:{},box:{25:1},bestKO:0,badges:{},selected:25,kantoClears:0,bestSurvivalSec:0,bestKantoClearSec:0,recruitTickets:0,recruitKO:0,recruitPity:0};
  let saveStatus='UNAVAILABLE',saveDirty=false,lastSaveAt=0,saveSlot=0;
@@ -35,10 +37,10 @@ const alpha=(()=>{
  const getMon=dex=>roster.find(x=>x.dex===dex)||byDex.get(dex);
  const orbById=id=>data.orbs.find(o=>o.id===id);
  function fnv(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return(h>>>0).toString(16)}
- function readSlot(i){
+ function readSlot(i,prefix=SAVE_PREFIX){
   if(typeof Switch==='undefined'||typeof Switch.readFileSync!=='function'||typeof TextDecoder!=='function')return null;
   try{
-   const bytes=Switch.readFileSync(SAVE_PATH+'progress-'+i+'.json');
+   const bytes=Switch.readFileSync(SAVE_PATH+prefix+i+'.json');
    if(!bytes)return null;
    const row=JSON.parse(new TextDecoder().decode(bytes));
    if(row?.app!=='pkmsvv-switch-alpha'||row?.schema!==1||!row.data||
@@ -47,7 +49,13 @@ const alpha=(()=>{
   }catch(_){return null}
  }
  function load(){
-  const a=readSlot(1),b=readSlot(2),saved=(!a?b:!b?a:a.seq>b.seq?a:b);
+  const currentA=readSlot(1),currentB=readSlot(2);
+   const migrating=!currentA&&!currentB;
+   // First v0.2.4 boot imports v0.2.3 progression without overwriting
+   // its save slots; older NROs cannot erase new recruit tickets/Box.
+   const a=migrating?readSlot(1,LEGACY_SAVE_PREFIX):currentA;
+   const b=migrating?readSlot(2,LEGACY_SAVE_PREFIX):currentB;
+   const saved=(!a?b:!b?a:a.seq>b.seq?a:b);
   if(saved&&Number.isInteger(saved.seq)&&saved.seq>=0){
    const found=saved.pokedex&&typeof saved.pokedex==='object'?saved.pokedex:{};
    const kept={};
@@ -68,8 +76,12 @@ const alpha=(()=>{
      recruitTickets:Math.max(0,Math.min(9999,Math.floor(+saved.recruitTickets||0))),
      recruitKO:Math.max(0,Math.min(1000000,Math.floor(+saved.recruitKO||0))),
      recruitPity:Math.max(0,Math.min(99,Math.floor(+saved.recruitPity||0)))};
-   saveSlot=a&&a.seq===saved.seq?1:2;
-   saveStatus='RESTORED';
+   saveSlot=migrating?0:a&&a.seq===saved.seq?1:2;
+   saveStatus=migrating?'LEGACY FOUND':'RESTORED';
+   if(migrating){
+    markDirty();
+    if(persist())saveStatus='MIGRATED';
+   }
   }else saveStatus=typeof Switch==='undefined'?'TEST ONLY':'NEW';
  }
  function persist(){
@@ -79,7 +91,7 @@ const alpha=(()=>{
   const text=JSON.stringify(p);
   const payload=JSON.stringify({app:'pkmsvv-switch-alpha',schema:1,checksum:fnv(text),data:p});
   try{
-   Switch.writeFileSync(SAVE_PATH+'progress-'+next+'.json',payload);
+   Switch.writeFileSync(SAVE_PATH+SAVE_PREFIX+next+'.json',payload);
    // Read back and validate before declaring the rotating backup committed.
    const verify=readSlot(next);
    if(!verify||verify.seq!==p.seq)throw Error('Read-back failed');
