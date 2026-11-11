@@ -323,3 +323,77 @@ test('Switch controller settings tab shows direct bindings and does not affect m
  t.frame(1250);t.press(0,1266);
  assert.equal(t.get('alpha.menu'),false,'B still backs out of menu');
 });
+
+test('Real meteor and stun skills telegraph before dealing damage, stun suspends movement',()=>{
+ const t=boot();t.frame(1000);
+ const meteor=t.get('alpha.data.realMoves.find(m=>m.kind==="meteor")?.id');
+ const stun=t.get('alpha.data.realMoves.find(m=>m.kind==="stun")?.id');
+ assert.ok(meteor&&stun);
+ t.get("spawnAt=Infinity;enemies=[{x:px+90,y:py,species:'rattata',dex:19,hp:1000,r:16,speed:0}]");
+ t.get('alpha.castMove({id:'+JSON.stringify(meteor)+',lvl:1})');
+ assert.equal(t.get('enemies[0].hp'),1000,'meteor must show warning before impact');
+ assert.equal(t.get('alpha.zoneCount'),1);
+ t.get('alpha.advanceZones(.2)');
+ assert.equal(t.get('enemies[0].hp'),1000);
+ t.get('alpha.advanceZones(.4)');
+ assert.ok(t.get('enemies[0].hp')<1000,'meteor delivers delayed damage');
+ assert.equal(t.get('alpha.zoneCount'),0,'one-shot impact must expire');
+ t.get('alpha.castMove({id:'+JSON.stringify(stun)+',lvl:1})');
+ assert.equal(t.get('enemies[0].sleepLeft||0'),0);
+ t.get('alpha.advanceZones(.30)');
+ assert.ok(t.get('enemies[0].sleepLeft')>=1);
+});
+test('Mine stays on the ground and triggers when an enemy enters its zone',()=>{
+ const t=boot();t.frame(1000);
+ const id=t.get('alpha.data.realMoves.find(m=>m.kind==="mine")?.id');
+ assert.ok(id);
+ t.get("spawnAt=Infinity;enemies=[{x:px+120,y:py,species:'rattata',dex:19,hp:1000,r:16,speed:0}]");
+ assert.equal(t.get('alpha.castMove({id:'+JSON.stringify(id)+',lvl:1})'),true);
+ t.get('alpha.advanceZones(.5)');
+ assert.equal(t.get('enemies[0].hp'),1000);
+ assert.equal(t.get('alpha.zoneCount'),1);
+ t.get('enemies[0].x=px+60');
+ t.get('alpha.advanceZones(.5)');
+ assert.ok(t.get('enemies[0].hp')<1000);
+ assert.equal(t.get('alpha.zoneCount'),0);
+});
+test('Real turret persists, attacks independently and stops at expiry',()=>{
+ const t=boot();t.frame(1000);
+ const id=t.get('alpha.data.realMoves.find(m=>m.kind==="turret")?.id');
+ assert.ok(id);
+ t.get("spawnAt=Infinity;enemies=[{x:px+160,y:py,species:'rattata',dex:19,hp:1000,r:16,speed:0}]");
+ t.get('alpha.castMove({id:'+JSON.stringify(id)+',lvl:1})');
+ const h=t.get('enemies[0].hp');
+ for(let i=0;i<8;i++)t.get('alpha.advanceZones(.55)');
+ assert.ok(t.get('enemies[0].hp')<h);
+ assert.equal(t.get('alpha.zoneCount'),1);
+ t.get('alpha.advanceZones(1.2)');
+ assert.equal(t.get('alpha.zoneCount'),0);
+});
+test('Vortex pulls toward source center without teleporting out of battle bounds',()=>{
+ const t=boot();t.frame(1000);
+ const id=t.get('alpha.data.realMoves.find(m=>m.kind==="vortex")?.id');
+ assert.ok(id);
+ t.get("spawnAt=Infinity;enemies=[{x:px+180,y:py,species:'rattata',dex:19,hp:1000,r:16,speed:0},{x:px+235,y:py,species:'pidgey',dex:16,hp:1000,r:16,speed:0}]");
+ t.get('alpha.castMove({id:'+JSON.stringify(id)+',lvl:1})');
+ const before=t.get('enemies[1].x');
+ t.get('alpha.advanceZones(.5)');
+ assert.ok(t.get('enemies[1].x')<before);
+ assert.ok(t.get('enemies.every(e=>e.x>=15&&e.x<=W-15)'));
+});
+test('Persistent effects budget is capped at 12 across crowded fights and reset',()=>{
+ const t=boot();t.frame(1000);
+ const id=t.get('alpha.data.realMoves.find(m=>m.kind==="mine")?.id');
+ t.get("spawnAt=Infinity;enemies=[{x:px+80,y:py,species:'rattata',dex:19,hp:100000,r:16,speed:0}]");
+ for(let i=0;i<42;i++)t.get('alpha.castMove({id:'+JSON.stringify(id)+',lvl:1})');
+ assert.equal(t.get('alpha.zoneCount'),12);
+ assert.equal(t.get('alpha.zoneLimit'),12);
+ assert.ok(t.get('alpha.effectCount')<=14);
+ t.get('alpha.advanceZones(.5)');
+ assert.equal(t.get('alpha.zoneCount'),0,'mines all detonate safely on nearby enemy');
+ t.get('alpha.castMove({id:'+JSON.stringify(id)+',lvl:1})');
+ assert.equal(t.get('alpha.zoneCount'),1);
+ t.get('alpha.resetBattle()');
+ assert.equal(t.get('alpha.zoneCount'),0,'changing starter clears old skill zones');
+ assert.equal(t.get('lastError'),'');
+});
