@@ -318,8 +318,8 @@ test('Switch controller settings tab shows direct bindings and does not affect m
  assert.match(compiled,/R\+Y = USE ORB\s+R\+B = PAUSE/);
  t.press(9,1016);
  assert.equal(t.get('alpha.menu'),true);
- for(let i=0;i<5;i++){t.frame(1032+i*40);t.press(5,1048+i*40)}
- assert.equal(t.get('alpha.menuTab'),5);
+ for(let i=0;i<6;i++){t.frame(1032+i*40);t.press(5,1048+i*40)}
+ assert.equal(t.get('alpha.menuTab'),6);
  t.frame(1250);t.press(0,1266);
  assert.equal(t.get('alpha.menu'),false,'B still backs out of menu');
 });
@@ -473,4 +473,115 @@ test('Once QA x12 was used, turning it off cannot unlock Dex, badge, clear or be
  assert.equal(files.size,0,'no QA-only progression should create a save');
  t.press(1,1064);
  assert.equal(t.get('alpha.runUsedQA'),false,'QA flag clears only on new run');
+});
+
+test('Native recruitment only rolls species already discovered in real Kanto Pokédex',()=>{
+ const t=boot();t.frame(1000);
+ t.get('alpha.profile.recruitTickets=20;alpha.profile.pokedex[19]=1;alpha.profile.pokedex[16]=1');
+ const outcomes=t.get('alpha.recruitMany(10)');
+ assert.equal(outcomes.length,10);
+ assert.ok(outcomes.every(x=>x.dex===19||x.dex===16));
+ assert.equal(t.get('alpha.profile.recruitTickets'),10);
+ assert.equal(t.get('alpha.profile.box[150]'),undefined);
+ assert.equal(t.get('alpha.recruitableCount'),2);
+ assert.equal(t.get('alpha.ownedIds().includes(19)||alpha.ownedIds().includes(16)'),true);
+ assert.equal(t.get('lastError'),'');
+});
+test('No discovered Pokémon blocks recruitment without charging a ticket',()=>{
+ const t=boot();t.frame(1000);
+ t.get('alpha.profile.recruitTickets=10;alpha.profile.pokedex={}');
+ assert.equal(t.get('alpha.recruitMany(10).length'),0);
+ assert.equal(t.get('alpha.profile.recruitTickets'),10);
+ assert.equal(t.get('alpha.profile.box[19]'),undefined);
+ assert.equal(t.get('alpha.lastRecruitOutcome'),'NO DISCOVERED POKEMON');
+});
+test('30 real native KOs award one trial ticket, bosses 2 and 3, QA awards none',()=>{
+ const t=boot();t.frame(1000);
+ for(let i=0;i<30;i++)t.get('alpha.onKill({dex:19})');
+ assert.equal(t.get('alpha.profile.recruitKO'),30);
+ assert.equal(t.get('alpha.profile.recruitTickets'),1);
+ t.get('alpha.onKill({dex:150,boss:15})');
+ assert.equal(t.get('alpha.profile.recruitTickets'),3);
+ t.get('alpha.onKill({dex:150,boss:30})');
+ assert.equal(t.get('alpha.profile.recruitTickets'),6);
+ const t2=boot();t2.frame(1000);
+ t2.buttons[6].pressed=true;t2.buttons[5].pressed=true;t2.frame(1016);
+ for(let i=0;i<30;i++)t2.get('alpha.onKill({dex:19})');
+ assert.equal(t2.get('alpha.profile.recruitTickets'),0);
+ assert.equal(t2.get('alpha.profile.recruitKO'),0);
+});
+test('Real 5-star pity guarantees an unlocked Legendary at ceiling, never undiscovered',()=>{
+ const t=boot();t.frame(1000);
+ const star=t.get('alpha.data.realPokedex.find(p=>p.rarity===5)?.dex');
+ assert.ok(Number.isInteger(star));
+ t.get('alpha.profile.recruitTickets=2;alpha.profile.pokedex['+star+']=1;alpha.profile.recruitPity=99');
+ const result=t.get('alpha.recruitMany(1)');
+ assert.equal(result.length,1);
+ assert.equal(result[0].dex,star);
+ assert.equal(result[0].star,5);
+ assert.equal(t.get('alpha.profile.recruitPity'),0);
+ const noLegend=boot();noLegend.frame(1000);
+ noLegend.get('alpha.profile.recruitTickets=2;alpha.profile.pokedex[19]=1;alpha.profile.recruitPity=99');
+ const q=noLegend.get('alpha.recruitMany(1)');
+ assert.equal(q.length,1);
+ assert.equal(q[0].dex,19);
+ assert.equal(noLegend.get('alpha.profile.box['+star+']'),undefined);
+});
+test('Ten-pull guarantees one accessible 4+ star and duplicates accumulate copies',()=>{
+ const t=boot();t.frame(1000);
+ const p4=t.get('alpha.data.realPokedex.find(p=>p.rarity===4)?.dex');
+ const p1=t.get('alpha.data.realPokedex.find(p=>p.rarity===1)?.dex');
+ assert.ok(p4&&p1);
+ t.get('alpha.profile.pokedex['+p4+']=1;alpha.profile.pokedex['+p1+']=1;alpha.profile.recruitTickets=30');
+ const result=t.get('alpha.recruitMany(10)');
+ assert.equal(result.length,10);
+ assert.ok(result.some(p=>p.star>=4));
+ const copies=t.get('alpha.profile.box['+p4+']||0')+t.get('alpha.profile.box['+p1+']||0');
+ assert.equal(copies,10);
+ assert.equal(t.get('alpha.profile.recruitTickets'),20);
+ assert.equal(t.get('alpha.teamOptions().includes('+p4+')'),true);
+});
+test('Recruited non-starter becomes selectable in PokéBox, uses authentic sprite/moves',()=>{
+ const t=boot();t.frame(1000);
+ t.get('alpha.profile.pokedex[19]=1;alpha.profile.recruitTickets=1');
+ assert.equal(t.get('alpha.recruitMany(1)[0].dex'),19);
+ t.press(9,1016);t.frame(1032);t.press(5,1048);
+ assert.equal(t.get('alpha.menuTab'),1,'PokéBox tab');
+ assert.equal(t.get('alpha.ownedIds().includes(19)'),true);
+ t.frame(1064);t.press(2,1080);t.frame(1096);t.press(1,1112);
+ assert.equal(t.get('alpha.menu'),false);
+ assert.equal(t.get('alpha.profile.selected'),19);
+ assert.equal(t.get('alpha.chooseBattleSprite()'),'rattata');
+ assert.equal(t.get('alpha.moves.length'),2);
+ assert.ok(t.get('alpha.moves.every(m=>alpha.data.realMoves.some(x=>x.id===m.id))'));
+ assert.equal(t.get('lastError'),'');
+});
+test('Native recruitment selection persists through two-checksum saves without touching browser save',()=>{
+ const files=new Map(),t=boot(files);t.frame(1000);
+ t.get('alpha.profile.pokedex[19]=1;alpha.profile.recruitTickets=12');
+ t.get('alpha.recruitMany(10)');
+ assert.equal(t.get('alpha.profile.recruitTickets'),2);
+ assert.equal(t.get('alpha.profile.box[19]'),10);
+ assert.equal(files.size,1);
+ t.get('alpha.recruitMany(1)');
+ assert.equal(files.size,2);
+ const restored=boot(files);restored.frame(1000);
+ assert.equal(restored.get('alpha.profile.recruitTickets'),1);
+ assert.equal(restored.get('alpha.profile.box[19]'),11);
+ assert.ok([...files.keys()].every(x=>x.includes('pkmsvv-native-alpha')));
+});
+test('Recruitment menu A one/Y ten handles controller, prevents unaffordable ten-pull',()=>{
+ const t=boot();t.frame(1000);
+ t.get('alpha.profile.pokedex[19]=1;alpha.profile.recruitTickets=11');
+ t.press(9,1016);
+ for(let i=0;i<3;i++){t.frame(1032+i*42);t.press(5,1048+i*42)}
+ assert.equal(t.get('alpha.menuTab'),3);
+ t.frame(1170);t.press(1,1186);
+ assert.equal(t.get('alpha.profile.recruitTickets'),10);
+ t.frame(1202);t.press(2,1218);
+ assert.equal(t.get('alpha.profile.recruitTickets'),0);
+ assert.equal(t.get('alpha.profile.box[19]'),11);
+ t.frame(1234);t.press(2,1250);
+ assert.equal(t.get('alpha.profile.recruitTickets'),0);
+ assert.equal(t.get('alpha.lastRecruitOutcome'),'NOT ENOUGH TICKETS');
 });
