@@ -231,6 +231,7 @@ const alpha=(()=>{
    left=btn(14),right=btn(15),r=btn(5);
   if(plus&&!lastStart){menu=!menu;menuIndex=0;if(menu){persist()}}
   if(zl&&r&&!lastZL){accelerated=!accelerated;clockScale=accelerated?12:1}
+  let consumedMenuClose=false;
   if(menu){
    if(left&&!lastLeft)menuTab=(menuTab+4)%5;
    if(right&&!lastRight)menuTab=(menuTab+1)%5;
@@ -238,7 +239,7 @@ const alpha=(()=>{
     if(a&&!lastA){profile.selected=roster[menuIndex%roster.length].dex;markDirty();resetBattle();menu=false}
     if(y&&!lastY)menuIndex=(menuIndex+1)%roster.length;
    }
-   if(b&&!lastB)menu=false;
+   if(b&&!lastB){menu=false;consumedMenuClose=true}
   }else{
    if(y&&!lastY&&!r)orbUse();
    if(zr&&!lastZR&&!r)activateMega();
@@ -246,9 +247,14 @@ const alpha=(()=>{
   }
   lastStart=plus;lastA=a;lastB=b;lastY=y;lastX=x;lastZR=zr;lastZL=zl;
   lastLeft=left;lastRight=right;
-  return menu;
+  return menu||consumedMenuClose||plus;
  }
  function preUpdate(dt){return input(dt)}
+ function onRespawn(){
+  boss15=false;boss30=false;bossMessage='';
+  orbQueue.length=0;orbCooldown=0;activeBuffs={};effects.length=0;
+  megaActive=0;megaCooldown=0;megEnergy=0;
+ }
  function postUpdate(dt){
   if(paused||menu||!started)return;
   updateEffects(dt);
@@ -326,11 +332,12 @@ const alpha=(()=>{
  // Keep persistent progress isolated; no automatic ownership grants.
  load();resetBattle();
  return {enabled:true,data,spriteNames,preUpdate,postUpdate,onKill,offersForLevel,
-  pickOffer,selectSpecies,draw,persist,loadExtraSprites,chooseBattleSprite,
+  pickOffer,selectSpecies,draw,persist,loadExtraSprites,chooseBattleSprite,onRespawn,
   get profile(){return profile},get menu(){return menu},get accelerated(){return accelerated},
   get orbQueue(){return orbQueue},get moves(){return moveList},
   get boss15(){return boss15},get boss30(){return boss30},get gameWon(){return gameWon},
   get fusionUsed(){return fusionUsed},get megaPreview(){return megaPreview},
-  get saveStatus(){return saveStatus},get clockScale(){return clockScale}
+  get saveStatus(){return saveStatus},get clockScale(){return clockScale},
+  get moveMultiplier(){return activeBuffs.quick>0?1.25:1}
  };
 })();
