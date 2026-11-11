@@ -125,6 +125,19 @@ data.nativeAlpha={
  ]
 };
 
+const catalogPath=path.join(__dirname,'romfs/real-game-catalog.json');
+if(fs.existsSync(catalogPath)){
+ const catalog=JSON.parse(fs.readFileSync(catalogPath,'utf8'));
+ if(catalog.format!=='pkmsvv-switch-native-real-catalog-v1'||
+  catalog.moves.length!==103||catalog.pokemon.length!==151||
+  catalog.pokemon.some((p,i)=>p.dex!==i+1))
+  throw Error('Real game catalog incomplete; native bundle MUST fail closed');
+ data.nativeAlpha.realMoves=catalog.moves;
+ data.nativeAlpha.realPokedex=catalog.pokemon;
+ data.nativeAlpha.realSource=catalog.originalGame;
+ console.log('Bundling actual PKMSVV data',catalog.moves.length,'moves',catalog.pokemon.length,'Kanto Pokémon');
+}
+
 const marker='/*__PKMSVV_KANTO_CONFIG__*/';
 if(!sourceJs.includes(marker))throw Error('Native Kanto insertion anchor missing');
 const start=sourceJs.indexOf('const KANTO_CONFIG='+marker);
