@@ -205,7 +205,7 @@ test('Kanto starter-specific moves and actual two-step evolved sprite selection'
 test('Extra sprite loads are staggered, not decoded in a single game frame',()=>{
  const t=boot();t.frame(1000);
  t.get('spritesEnabled=true;alpha.profile.selected=4;alpha.resetBattle();spawnAt=Infinity');
- t.get("enemies=[{species:'pidgey',x:120,y:350,r:14,hp:3,speed:0},{species:'zubat',x:200,y:350,r:14,hp:3,speed:0}]");
+ t.get("enemies=[{species:'pidgey',x:120,y:350,r:14,hp:1000,speed:0},{species:'zubat',x:200,y:350,r:14,hp:1000,speed:0}]");
  for(let i=1;i<=12;i++)t.frame(1000+i*16.6667);
  assert.equal(t.images.length,1,'only Charmander may load after first 12 ticks');
  for(let i=13;i<=24;i++)t.frame(1000+i*16.6667);
@@ -241,7 +241,7 @@ test('Per-skill cooldowns are preserved and combat effects stay bounded over 3 m
  assert.equal(t.get('alpha.castCount'),casts,'cannot cast every native frame');
  t.get('alpha.moves.push({id:"thunder-shock",lvl:1})');
  for(let i=3;i<10800;i++)t.frame(1000+i*16.6667);
- assert.ok(t.get('effects.length')<=14);
+ assert.ok(t.get('alpha.effectCount')<=14);
  assert.ok(t.get('alpha.castCount')>casts);
  assert.equal(t.get('lastError'),'');
 });
