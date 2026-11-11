@@ -47,8 +47,8 @@ if(gen1.length!==151||gen1.some((p,i)=>p.dex!==i+1))
  throw Error('Kanto Pokédex must contain exact National Dex #1-151; got '+gen1.length);
 // The native port consumes the upstream *rates*, not its browser/DOM gacha UI.
 const gachaSource=fs.readFileSync(path.join(root,'js/systems/gacha.js'),'utf8');
-const ratesMatch=gachaSource.match(/const RATES\\s*=\\s*(\\[\\[[^;]+\\]\\])\\s*;/);
-const pityMatch=gachaSource.match(/const PITY_5\\s*=\\s*(\\d+)\\s*;/);
+const ratesMatch=gachaSource.match(/const RATES\s*=\s*(\[\[[^;]+\]\])\s*;/);
+const pityMatch=gachaSource.match(/const PITY_5\s*=\s*(\d+)\s*;/);
 if(!ratesMatch||!pityMatch)throw Error('Actual compiled gacha odds/pity missing');
 const nativeRates=JSON.parse(ratesMatch[1]);
 if(nativeRates.length!==5||nativeRates.some(r=>!Array.isArray(r)||r.length!==2||r[1]<0)||
