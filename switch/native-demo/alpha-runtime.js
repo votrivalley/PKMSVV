@@ -20,7 +20,9 @@ const alpha=(()=>{
  let orbQueue=[],orbCooldown=0,activeBuffs={},moveList=[],offers=[],fusionUsed=false,fusionName='';
  let effects=[],megEnergy=0,megaActive=0,megaCooldown=0,megaPreview=false;
  let boss15=false,boss30=false,badgeWon=false,gameWon=false,bossMessage='';
- let skillClock=0,killAward=0,alphaImageLoaded=false;
+ let skillClock=0,killAward=0,spriteLoadTick=0;
+ const spriteRequested=new Set();
+ let fusionOfferLevel=-1,fusionOfferAttempts=0,fusionOfferRecipe=null;
  const name=p=>p?.name||'Unknown';
  const getMon=dex=>roster.find(x=>x.dex===dex)||byDex.get(dex);
  const orbById=id=>data.orbs.find(o=>o.id===id);
@@ -74,11 +76,17 @@ const alpha=(()=>{
   attack=1;fireRate=.21;moveSpeed=230;
   paused=false;pickOpen=false;skillChoices=[];
   orbQueue.length=0;orbCooldown=0;activeBuffs={};moveList=[];
-  moveList.push({id:'thunder-shock',lvl:1},{id:'quick-attack',lvl:1});
+  const starterMoves={
+   25:['thunder-shock','quick-attack'],
+   4:['ember','quick-attack'],
+   1:['vine-whip','tackle'],
+   7:['water-gun','tackle']
+  }[profile.selected]||['thunder-shock','quick-attack'];
+  moveList.push(...starterMoves.map(id=>({id,lvl:1})));
   offers=[];fusionUsed=false;fusionName='';
   effects.length=0;megEnergy=0;megaActive=0;megaCooldown=0;
   boss15=false;boss30=false;badgeWon=false;gameWon=false;bossMessage='';
-  skillClock=0;killAward=0;started=true;
+  skillClock=0;killAward=0;fusionOfferLevel=-1;fusionOfferAttempts=0;fusionOfferRecipe=null;started=true;
  }
  function selectSpecies(index){
   const pool=foes.filter(p=>p.minTier<=index);
@@ -94,25 +102,31 @@ const alpha=(()=>{
   return id;
  }
  function chooseBattleSprite(){
-  const evolved=evolvedDex();
-  if(evolved===6)return 'charizard';
-  if(evolved!==profile.selected)return getMon(profile.selected)?.name.toLowerCase()||'pikachu';
-  return getMon(profile.selected)?.name.toLowerCase()||'pikachu';
+  const id=evolvedDex();
+  const entry=[...roster,...data.evolutionSprites].find(p=>p.dex===id);
+  return entry?.name.toLowerCase()||getMon(profile.selected)?.name.toLowerCase()||'pikachu';
  }
+ const artByName=new Map([...roster,...foes,...data.evolutionSprites,
+  {name:'Mewtwo',sprite:'150.png'}].map(p=>[p.name.toLowerCase(),p.sprite]));
  function loadExtraSprites(){
-  if(alphaImageLoaded||typeof Image!=='function')return;
-  alphaImageLoaded=true;
-  for(const entry of [...roster,...foes,{name:'Mewtwo',sprite:'150.png'},
-    {name:'Charizard',sprite:'6.png'}]){
-   const key=entry.name.toLowerCase();
-   if(key==='pikachu'||key==='rattata')continue; // loaded by proven baseline
-   if(SPRITES[key])continue;
+  // Load at most one new tiny sprite per ~12 input ticks. No decode burst.
+  // Unseen starters and evolved forms are loaded only when first needed.
+  if(!spritesEnabled||typeof Image!=='function')return;
+  if(++spriteLoadTick%12!==0)return;
+  const needed=[chooseBattleSprite()];
+  for(const e of enemies)if(needed.length<14&&!needed.includes(e.species))needed.push(e.species);
+  for(const key of needed){
+   if(key==='pikachu'||key==='rattata'||spriteRequested.has(key))continue;
+   const file=artByName.get(key);
+   if(!file)continue;
+   spriteRequested.add(key);
    try{
     const img=new Image();
     img.onload=()=>{SPRITES[key]=img;loaded[key]=true};
     img.onerror=()=>{loaded[key]=false};
-    img.src='romfs:/sprites/'+entry.sprite;
+    img.src='romfs:/sprites/'+file;
    }catch(_){loaded[key]=false}
+   break;
   }
  }
  function newOrb(){
@@ -152,8 +166,20 @@ const alpha=(()=>{
  function offersForLevel(){
   const maxed=id=>moveList.some(m=>m.id===id&&m.lvl>=MOVE_MAX);
   const canFuse=data.fusions.find(r=>!fusionUsed&&r.moves.every(maxed));
+  // Exactly one roll per NEW level while both source moves are MAX.
+  // These probabilities are compiled from the production Fusion module.
+  if(fusionOfferLevel!==level){
+   fusionOfferLevel=level;
+   fusionOfferRecipe=null;
+   if(canFuse){
+    const rate=data.fusionOfferRates[Math.min(fusionOfferAttempts,data.fusionOfferRates.length-1)];
+    fusionOfferAttempts++;
+    if(rng()<rate)fusionOfferRecipe=canFuse.id;
+   }
+  }
   offers=[];
-  if(canFuse)offers.push({kind:'fusion',id:canFuse.id,name:canFuse.name});
+  if(canFuse&&fusionOfferRecipe===canFuse.id)
+   offers.push({kind:'fusion',id:canFuse.id,name:canFuse.name});
   for(const m of moveList)if(m.lvl<MOVE_MAX&&offers.length<3)
    offers.push({kind:'upgrade',id:m.id,name:m.id+' LV '+(m.lvl+1)});
   const ids=['ember','tackle','water-gun','vine-whip','thunderbolt',
@@ -174,7 +200,7 @@ const alpha=(()=>{
    if(!recipe||!recipe.moves.every(id=>moveList.some(m=>m.id===id&&m.lvl>=MOVE_MAX)))return false;
    moveList=moveList.filter(m=>!recipe.moves.includes(m.id));
    moveList.push({id:'fusion:'+recipe.id,lvl:MOVE_MAX});
-   fusionUsed=true;fusionName=recipe.name;
+   fusionUsed=true;fusionName=recipe.name;fusionOfferRecipe=null;
   }else if(o.kind==='upgrade'){
    const move=moveList.find(m=>m.id===o.id);if(move)move.lvl=Math.min(MOVE_MAX,move.lvl+1);
   }else if(o.kind==='new'){
@@ -350,6 +376,7 @@ const alpha=(()=>{
   get orbQueue(){return orbQueue},get moves(){return moveList},
   get boss15(){return boss15},get boss30(){return boss30},get gameWon(){return gameWon},
   get fusionUsed(){return fusionUsed},get megaPreview(){return megaPreview},
+  get fusionOfferAttempts(){return fusionOfferAttempts},get fusionOfferRecipe(){return fusionOfferRecipe},
   get menuTab(){return menuTab},get menuIndex(){return menuIndex},
   get orbCooldown(){return orbCooldown},
   get offers(){return offers},
