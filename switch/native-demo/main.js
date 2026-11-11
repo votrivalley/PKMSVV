@@ -163,7 +163,10 @@ function update(dt){
  // Cap stacked collision damage so a crowd cannot kill in a single frame.
  // Resolve death only AFTER finishing every iteration.
  if(touching>0&&spawnShield<=0)hp=Math.max(0,hp-Math.min(touching,4)*8*dt*(typeof alpha==='object'&&alpha.enabled?alpha.incomingDamageMultiplier:1));
- if(hp<=0)respawn();
+ if(hp<=0){
+  if(typeof alpha==='object'&&alpha.enabled)alpha.onDefeat();
+  else respawn();
+ }
  if(typeof alpha==='object'&&alpha.enabled)alpha.postUpdate(dt);
 }
 function draw(){
@@ -195,7 +198,7 @@ function draw(){
  // Keep native geometry and game logic identical to known stable v0.0.10.
  ctx.fillStyle='#fff4cc';
  ctx.font='20px sans-serif';
- ctx.fillText('POKEMON CHUYEN SINH - NATIVE KANTO v0.2.0',24,105);
+ ctx.fillText('POKEMON CHUYEN SINH - NATIVE KANTO v0.2.3',24,105);
  ctx.fillText('HP: '+Math.ceil(hp),24,135);
  ctx.fillText('XP: '+xp+'/12   LEVEL: '+level,24,165);
  ctx.fillText('KO: '+kills+'   GEN '+KANTO_CONFIG.gen+'   WAVE '+(kantoTier+1)+'   ENEMIES: '+enemies.length,24,235);
