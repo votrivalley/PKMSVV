@@ -1,10 +1,10 @@
-# Pokémon Chuyển Sinh – Nintendo Switch Native Alpha v0.1.1
+# Pokémon Chuyển Sinh – Nintendo Switch Native Alpha v0.1.2
 
 **BẢN ALPHA TEST TỔNG HỢP, KHÔNG PHẢI BẢN GAME PC/ANDROID PORT ĐẦY ĐỦ.**
 Đây là gameplay adapter mới bằng nx.js (không Brewser/WebApplet). Dữ liệu vùng Kanto, 6 Orb, 10 công thức Fusion, thông số Mega và quy tắc tiến hóa được sinh từ chính mã PKMSVV khi build.
 
 ## Chép vào thẻ
-Chép `PKMSVV-Switch-Alpha-v0101.nro` vào `sd:/switch/` và mở trong hbmenu. File `kanto-config.json` bên cạnh chỉ dùng đối chiếu, NRO đã nhúng toàn bộ dữ liệu.
+Chép `PKMSVV-Switch-Alpha-v0102.nro` vào `sd:/switch/` và mở trong hbmenu. File `kanto-config.json` bên cạnh chỉ dùng đối chiếu, NRO đã nhúng toàn bộ dữ liệu.
 
 ## Tay cầm
 - Stick trái / D-pad: di chuyển; auto attack.
@@ -17,7 +17,7 @@ Chép `PKMSVV-Switch-Alpha-v0101.nro` vào `sd:/switch/` và mở trong hbmenu. 
 
 ## Những gì chạy được
 - Địa hình và mốc đợt quái Kanto từ `src/pkmsvv-quick-region.js`, quái Gen1 có các cấp độ thử nghiệm.
-- Auto attack, phát sinh sát thương, lên cấp, tối đa 8 ô kỹ năng thử nghiệm, thêm các hiệu ứng đánh diện rộng.
+- Auto attack, lên cấp, tối đa 8 ô kỹ năng thử nghiệm. **v0.1.2:** 18 chiêu trong bộ thử dùng hồi chiêu riêng, đối chiếu giới hạn theo 23 kiểu kỹ năng từ `src/pkmsvv-skill-balance.js`. Chiêu melee, projectile/homing, cone, beam, chain, nova/mine khác nhau về vùng trúng đòn; không còn tất cả đánh một vòng tròn. Có hiệu ứng hiển thị gọn và giới hạn số lượng để tránh lag. Chiêu chưa có địch trong tầm sẽ chưa tiêu hồi chiêu.
 - Dữ liệu 6 Orb từ `src/v14/orbs.js`: hàng đợi 10, CD 5s; hiệu ứng chính đơn giản (ngủ/chậm/đẩy/tăng tốc). Focus/Luminous hiện là dữ liệu thử nghiệm, **chưa tái tạo camera/chí mạng chuẩn game**.
 - 10 công thức Fusion từ `src/pkmsvv-bond-fusion.js`; yêu cầu **hai kỹ năng MAX**, chỉ 1 Fusion/trận. **Tỉ lệ đề xuất mỗi cấp mới** lấy từ bản gốc: 80% → 70% → 60% → 50% → 40% → 30% (sàn), không quay lại nhiều lần trong cùng một cấp. Hiệu ứng chiến đấu của Fusion là bản native đơn giản, không phải 10 hiệu ứng Web đầy đủ.
 - Boss thử nghiệm Kanto Dex #150 tại phút 15 và 30. Thắng boss 15 đánh dấu badge nội bộ Alpha; thắng boss 30 đánh dấu hoàn thành trận thử nghiệm. HP và AI boss **không giống boss production**.
@@ -30,7 +30,7 @@ Engine 103 kỹ năng gốc và hiệu ứng Fusion hoàn chỉnh, hình sprite 
 
 ## Một lượt test tổng hợp
 1. Khởi động và đi lại 2 phút, kiểm tra FPS và crash; nhấn **L** để bật nhiều sprite và tiếp tục 5 phút. Sprite mới được tải từng đợt, không bung tất cả cùng lúc.
-2. Thử **Y** dùng Orb, nhặt XP và chọn skill bằng **R + X/Y/B**.
+2. Thử **Y** dùng Orb, nhặt XP và chọn skill bằng **R + X/Y/B**. Đổi starter và quan sát sát thương chiêu cận chiến chỉ trúng địch gần, trong khi các chiêu đạn/điện đánh được ở xa hơn; nhìn bộ đếm hồi chiêu cạnh tên mỗi kỹ năng.
 3. Nhấn **+**, duyệt cả 6 tab bằng L/R; chọn starter khác bằng Y/A; kiểm tra **chiêu mở màn** theo starter và Pokédex không tự thêm vào Box. Với các starter 3 bậc, kiểm tra đổi sprite khi nâng cấp tới cấp 16/32/36.
 4. Nhấn **ZL+R** chuyển đồng hồ QA x12; đánh boss 15/30 phút. Muốn test toàn bộ, đợi đến boss 30 phút theo đồng hồ QA (khoảng 2 phút 30 giây thực kể từ mốc 0).
 5. Thoát/mở lại NRO, xem Pokédex/Badge còn lưu hay không; nếu báo SAVE FAILED, giữ tệp để điều tra.
