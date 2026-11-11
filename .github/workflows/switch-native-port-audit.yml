@@ -1,0 +1,54 @@
+name: Switch NATIVE Port - Real Game Engine Inventory (NO Brewser)
+
+on:
+  push:
+    branches: [feature/switch-native-full-port]
+    paths:
+      - 'switch/native-demo/audit-full-game.cjs'
+      - '.github/workflows/switch-native-port-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inventory:
+    name: Analyze real game source as foundation for native port
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Recover actual PKMSVV gameplay modules from last successful full-game APK
+        uses: actions/download-artifact@v4
+        with:
+          name: PKMSVV-PokeBox-Stage4-Android-QA-SEPARATE-APP
+          run-id: 42868942245
+          github-token: ${{ github.token }}
+          path: baseline-game
+      - name: Validate compiled game and audit native migration requirements
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="$(find baseline-game -type f -name '*.apk' -print -quit)"
+          test -s "$apk"
+          mkdir -p game-runtime
+          unzip -qq "$apk" 'assets/public/*' -d game-runtime
+          node --check switch/native-demo/audit-full-game.cjs
+          node switch/native-demo/audit-full-game.cjs game-runtime/assets/public build/native-port/PORTING-INVENTORY.json
+          test -s build/native-port/PORTING-INVENTORY.json
+          node - <<'NODE'
+          const x=require('./build/native-port/PORTING-INVENTORY.json');
+          if(x.runtimeTarget.includes('Brewser')===false)throw Error('Must explicitly exclude Brewser');
+          if(x.counts.files<1000)throw Error('Not real game assets');
+          if(!x.moduleAudit['combat-and-skills'].some(m=>m.path==='js/systems/combat.js'&&m.present))
+            throw Error('Missing real game combat system');
+          console.log('Real game inventory ready for nx.js native port. NOT a compiled FULL native game yet.');
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-Switch-Native-Port-Engine-Inventory
+          path: build/native-port/PORTING-INVENTORY.json
+          retention-days: 14
+          if-no-files-found: error
