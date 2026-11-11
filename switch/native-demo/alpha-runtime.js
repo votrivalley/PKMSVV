@@ -352,6 +352,7 @@ const alpha=(()=>{
   get fusionUsed(){return fusionUsed},get megaPreview(){return megaPreview},
   get menuTab(){return menuTab},get menuIndex(){return menuIndex},
   get orbCooldown(){return orbCooldown},
+  get offers(){return offers},
   get saveStatus(){return saveStatus},get clockScale(){return clockScale},
   get moveMultiplier(){return activeBuffs.quick>0?1.25:1}
  };
