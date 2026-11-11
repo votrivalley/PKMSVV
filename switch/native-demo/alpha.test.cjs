@@ -225,7 +225,8 @@ test('Native move adapter targets different enemy geometries, not one global dam
  assert.equal(t.get('alpha.castMove({id:"ember",lvl:1})'),true,'projectile targets nearest enemy');
  assert.equal(t.get('enemies[0].hp<60'),true);
  assert.equal(t.get('enemies[1].hp'),60,'projectile must not become global AoE');
- assert.equal(t.get('alpha.castMove({id:"thunder-shock",lvl:1})'),true,'chain chains near the primary target');
+ const actualChain=t.get('alpha.data.realMoves.find(m=>m.kind==="chain")?.id')||'thunder-shock';
+ assert.equal(t.get('alpha.castMove({id:'+JSON.stringify(actualChain)+',lvl:1})'),true,'actual PKMSVV chain move hits nearby secondary targets');
  assert.equal(t.get('enemies[1].hp<60'),true);
  assert.equal(t.get('enemies[2].hp'),60,'distant out-of-chain enemy untouched');
  assert.equal(t.get('lastError'),'');
