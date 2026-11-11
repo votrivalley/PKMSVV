@@ -27,7 +27,7 @@ let renderMode=DIAG_BOOT_MODE,prevZL=false,drawCount=0;
 // 2=full original Canvas paths/text. ZL cycles; sprite mode is independently toggled by L.
 const RENDER_NAMES=['MIN','TINH','DAY'];
 if(!ctx)throw new Error('Switch Canvas 2D unavailable');
-let px=W/2,py=H/2,hp=100,kills=0,time=0,shots=[],enemies=[],last=0,spawnAt=0,fireAt=0,frames=0,fps=0,fpsAt=0,prevB=false,paused=false,spawnShield=1.5,deaths=0,lastError='';
+let px=W/2,py=H/2,hp=100,kills=0,time=0,shots=[],enemies=[],last=0,spawnAt=0,fireAt=0,frames=0,fps=0,fpsAt=0,prevPauseCombo=false,paused=false,spawnShield=1.5,deaths=0,lastError='';
 const SPRITES={pikachu:null,rattata:null,pidgey:null,zubat:null};
 const loaded={pikachu:false,rattata:false,pidgey:false,zubat:false};
 const spriteFiles={pikachu:'25.png',rattata:'19.png',pidgey:'16.png',zubat:'41.png'};
@@ -98,7 +98,7 @@ function respawn(){
 function update(dt){
  if(typeof alpha==='object'&&alpha.enabled&&alpha.preUpdate(dt))return;
  const p=navigator.getGamepads?.()?.find?.(x=>x?.connected)||navigator.getGamepads?.()?.[0];
- const r=button(p,5),b=button(p,0),toggle=r&&b&&!prevB;prevB=b;
+ const r=button(p,5),b=button(p,0),pauseCombo=r&&b,toggle=pauseCombo&&!prevPauseCombo;prevPauseCombo=pauseCombo;
  const l=button(p,4),zl=button(p,6);
  // L toggles Pikachu and up to 4 Rattata sprites. Vector mode stays default.
  if(l&&!prevL){spritesEnabled=!spritesEnabled;if(spritesEnabled)loadSprites();}
@@ -200,7 +200,7 @@ function draw(){
  ctx.fillText('XP: '+xp+'/12   LEVEL: '+level,24,165);
  ctx.fillText('KO: '+kills+'   GEN '+KANTO_CONFIG.gen+'   WAVE '+(kantoTier+1)+'   ENEMIES: '+enemies.length,24,235);
  ctx.fillText('FPS: '+fps+'   TIME: '+Math.floor(time)+'s   SEAL: '+KANTO_CONFIG.sealSeconds+'s   FINAL: '+KANTO_CONFIG.finalBossSeconds+'s',24,265);
- ctx.fillText('L: SPRITES '+(spritesEnabled?(loaded.pikachu&&loaded.rattata?'ON':'LOADING'):'OFF')+'  KANTO 151  B: PAUSE',24,692);
+ ctx.fillText('L: SPRITES '+(spritesEnabled?(loaded.pikachu&&loaded.rattata?'ON':'LOADING'):'OFF')+'  KANTO 151  R+B: PAUSE',24,692);
  // Text-free health, XP and level bars. Avoid changing canvas.font per frame.
  ctx.fillStyle='#294963';ctx.fillRect(16,17,390,18);
  ctx.fillStyle='#7cdec4';ctx.fillRect(16,17,Math.max(0,Math.min(390,hp*3.9)),18);
