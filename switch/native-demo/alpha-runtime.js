@@ -16,7 +16,7 @@ const alpha=(()=>{
  const spriteNames=new Set([...rosterNames,...foeNames,...data.evolutionSprites.map(p=>p.name.toLowerCase()),'mewtwo']);
  const SAVE_PATH='sdmc:/switch/pkmsvv-native-alpha/';
  const MOVE_MAX=5,MAX_MOVES=8;
- let profile={version:1,seq:0,pokedex:{},box:{25:1},bestKO:0,badges:{},selected:25};
+ let profile={version:1,seq:0,pokedex:{},box:{25:1},bestKO:0,badges:{},selected:25,kantoClears:0,bestSurvivalSec:0,bestKantoClearSec:0};
  let saveStatus='UNAVAILABLE',saveDirty=false,lastSaveAt=0,saveSlot=0;
  let menu=false,menuTab=0,menuIndex=0,started=false,clockScale=1,accelerated=false;
  let lastStart=false,lastA=false,lastB=false,lastY=false,lastX=false,lastZR=false,lastZL=false;
@@ -26,7 +26,7 @@ const alpha=(()=>{
  // Bounded persistent native skill effects (no DOM/canvas object allocation per tick).
  let zones=[],zoneSeq=0;
  const MAX_SKILL_ZONES=12,MAX_ZONE_HITS_PER_TICK=6;
- let boss15=false,boss30=false,badgeWon=false,gameWon=false,bossMessage='';
+ let boss15=false,boss30=false,badgeWon=false,gameWon=false,bossMessage='',matchResult=null,runEndTime=0,runEndKOs=0;
  let skillClock=0,killAward=0,spriteLoadTick=0;
  const spriteRequested=new Set();
  let fusionOfferLevel=-1,fusionOfferAttempts=0,fusionOfferRecipe=null;
@@ -55,7 +55,10 @@ const alpha=(()=>{
     box:saved.box&&typeof saved.box==='object'?saved.box:{25:1},
     bestKO:Math.max(0,Math.min(1000000,+saved.bestKO||0)),
     badges:saved.badges&&typeof saved.badges==='object'?saved.badges:{},
-    selected:roster.some(r=>r.dex===saved.selected)?saved.selected:25};
+    selected:roster.some(r=>r.dex===saved.selected)?saved.selected:25,
+     kantoClears:Math.max(0,Math.min(100000,Math.floor(+saved.kantoClears||0))),
+     bestSurvivalSec:Math.max(0,Math.min(86400,Math.floor(+saved.bestSurvivalSec||0))),
+     bestKantoClearSec:Math.max(0,Math.min(86400,Math.floor(+saved.bestKantoClearSec||0)))};
    saveSlot=a&&a.seq===saved.seq?1:2;
    saveStatus='RESTORED';
   }else saveStatus=typeof Switch==='undefined'?'TEST ONLY':'NEW';
@@ -92,7 +95,7 @@ const alpha=(()=>{
   moveList.push(...starterMoves.map(id=>({id,lvl:1})));
   offers=[];fusionUsed=false;fusionName='';
   effects.length=0;zones.length=0;megEnergy=0;megaActive=0;megaCooldown=0;
-  boss15=false;boss30=false;badgeWon=false;gameWon=false;bossMessage='';
+  boss15=false;boss30=false;badgeWon=false;gameWon=false;bossMessage='';matchResult=null;runEndTime=0;runEndKOs=0;
   skillClock=0;killAward=0;fusionOfferLevel=-1;fusionOfferAttempts=0;fusionOfferRecipe=null;started=true;
  }
  function selectSpecies(index){
@@ -185,8 +188,30 @@ const alpha=(()=>{
   killAward++;
   if(killAward===1||rng()<.02)newOrb();
   if(e.boss===15){badgeWon=true;if(!accelerated){profile.badges.kanto=1;markDirty()}bossMessage=accelerated?'QA REGION BOSS CLEAR':'KANTO REGION BADGE'}
-  if(e.boss===30){gameWon=true;bossMessage='KANTO ALPHA COMPLETE';markDirty()}
+  if(e.boss===30&&!matchResult){
+   gameWon=true;bossMessage=accelerated?'KANTO QA COMPLETE':'KANTO CLEAR';
+   finishRun('victory');
+  }
  }
+ function finishRun(outcome){
+  if(matchResult)return false;
+  if(outcome!=='victory'&&outcome!=='defeat')return false;
+  matchResult=outcome;runEndTime=Math.floor(time);runEndKOs=kills+(outcome==='victory'?1:0);
+  pickOpen=false;skillChoices=[];paused=false;
+  // The debug clock is a test convenience, never a source of unlocks.
+  if(!accelerated){
+   profile.bestSurvivalSec=Math.max(profile.bestSurvivalSec||0,runEndTime);
+   if(outcome==='victory'){
+    profile.kantoClears=(profile.kantoClears||0)+1;
+    const old=profile.bestKantoClearSec||0;
+    profile.bestKantoClearSec=old?Math.min(old,runEndTime):runEndTime;
+   }
+   markDirty();
+  }
+  persist();
+  return true;
+ }
+ function onDefeat(){return finishRun('defeat')}
  function offersForLevel(){
   const maxed=id=>moveList.some(m=>m.id===id&&m.lvl>=MOVE_MAX);
   const canFuse=data.fusions.find(r=>!fusionUsed&&r.moves.every(maxed));
@@ -505,6 +530,12 @@ const alpha=(()=>{
   if(plus&&!lastStart&&!pickOpen){menu=!menu;menuIndex=0;if(menu){persist()}}
   if(zl&&r&&!lastZL&&!pickOpen&&!menu){accelerated=!accelerated;clockScale=accelerated?12:1}
   let consumedMenuClose=false;
+  if(matchResult&&!menu){
+   if(a&&!lastA)resetBattle();
+   lastStart=plus;lastA=a;lastB=b;lastY=y;lastX=x;lastZR=zr;lastZL=zl;
+   lastLeft=left;lastRight=right;lastL=l;lastR=r;
+   return true;
+  }
   if(menu){
    if((left&&!lastLeft)||(l&&!lastL))menuTab=(menuTab+6)%7;
    if((right&&!lastRight)||(r&&!lastR))menuTab=(menuTab+1)%7;
@@ -523,7 +554,7 @@ const alpha=(()=>{
   }
   lastStart=plus;lastA=a;lastB=b;lastY=y;lastX=x;lastZR=zr;lastZL=zl;
   lastLeft=left;lastRight=right;lastL=l;lastR=r;
-  return menu||consumedMenuClose||(!pickOpen&&plus);
+  return menu||consumedMenuClose||!!matchResult||(!pickOpen&&plus);
  }
  function preUpdate(dt){return input(dt)}
  function onRespawn(){
@@ -532,25 +563,28 @@ const alpha=(()=>{
   megaActive=0;megaCooldown=0;megEnergy=0;
  }
  function postUpdate(dt){
-  if(paused||menu||!started)return;
+  if(paused||menu||!started||matchResult)return;
   updateEffects(dt);
   advanceZones(dt);
   extraCombat(dt);
   if(!boss15&&time>=KANTO_CONFIG.sealSeconds){boss15=true;spawnBoss(15)}
-  if(!boss30&&time>=KANTO_CONFIG.finalBossSeconds){boss30=true;spawnBoss(30)}
+  // At 30:00 the final boss waits until the 15:00 boss is defeated.
+  if(!boss30&&time>=KANTO_CONFIG.finalBossSeconds&&!enemies.some(e=>e.boss===15)){
+   boss30=true;spawnBoss(30);
+  }
   if(saveDirty&&time-lastSaveAt>30){persist();lastSaveAt=time}
  }
  function text(x,y,value,color='#eaf9f0',font='19px sans-serif'){
   ctx.fillStyle=color;ctx.font=font;ctx.fillText(String(value),x,y)
  }
  function draw(){
-  text(820,44,'PKMSVV SWITCH NATIVE 0.2.2','#ffe39d');
+  text(820,44,'PKMSVV SWITCH NATIVE 0.2.3','#ffe39d');
   text(820,74,'KANTO • GEN 1 • '+(accelerated?'QA x12':'REAL TIME'),'#a7e7f6');
   text(820,103,'TEAM: '+name(getMon(profile.selected))+'  EVOLVE: #'+evolvedDex()+'  SKILL: '+moveList.length+'/8');
   text(820,132,'ORB: '+orbQueue.length+'/10   CD '+orbCooldown.toFixed(1)+'s');
   text(820,161,'MEGA: '+megEnergy+'/100  CD '+Math.ceil(megaCooldown)+'s');
   text(820,190,'DEX: '+Object.keys(profile.pokedex).length+'  BADGE: '+(badgeWon?'YES':'NO'));
-  text(820,218,'SAVE: '+saveStatus,'#acc7ff');
+  text(820,218,'SAVE: '+saveStatus+'  KANTO CLEARS: '+(profile.kantoClears||0),'#acc7ff');
   text(820,251,'R+Y ORB  R+B PAUSE  ZR MEGA  + MENU','#ffe0ad','17px sans-serif');
   text(820,277,'ZL+R: QA CLOCK x12  L: SPRITE','#ffe0ad','17px sans-serif');
   if(moveList.length){
@@ -576,8 +610,22 @@ const alpha=(()=>{
     '#f9d9a0','17px sans-serif');
   }
   if(bossMessage)text(455,123,bossMessage,'#fff0a2','bold 28px sans-serif');
-  if(gameWon)text(390,355,'KANTO ALPHA CLEARED','#ffee88','bold 35px sans-serif');
   if(menu)drawMenu();
+  else if(matchResult)drawResult();
+ }
+ function drawResult(){
+  ctx.fillStyle='rgba(4,14,25,.96)';ctx.fillRect(215,120,850,475);
+  ctx.strokeStyle=matchResult==='victory'?'#f4da83':'#d4a6a6';
+  ctx.lineWidth=3;ctx.strokeRect(215,120,850,475);
+  text(275,178,matchResult==='victory'?'KANTO COMPLETE':'RUN ENDED',
+   matchResult==='victory'?'#fff1a7':'#ffb9b9','bold 34px sans-serif');
+  text(275,228,accelerated?'QA x12 - NO OFFICIAL CLEAR RECORD':'NORMAL SURVIVAL RUN','#b9e2f3');
+  text(275,270,'TIME: '+Math.floor(runEndTime/60)+'m '+runEndTime%60+'s   KO: '+runEndKOs+'   LEVEL: '+level);
+  text(275,312,'POKEDEX FOUND: '+Object.keys(profile.pokedex).length+'/151');
+  text(275,354,'KANTO RECORDS: '+(profile.kantoClears||0)+'   SAVE: '+saveStatus);
+  text(275,402,matchResult==='victory'?'Kanto cleared. Johto is not yet ported.':'Try another build or starter.');
+  text(275,464,'A: RESTART KANTO   +: TEAM / POKEDEX MENU','#f4dda4','22px sans-serif');
+  text(275,510,'No automatic restart. Your native save remains separate.','#b9c9d2','17px sans-serif');
  }
  function drawMenu(){
   ctx.fillStyle='rgba(6,17,29,.97)';ctx.fillRect(95,65,1080,590);
@@ -640,8 +688,9 @@ const alpha=(()=>{
  // Keep persistent progress isolated; no automatic ownership grants.
  load();resetBattle();
  return {enabled:true,data,spriteNames,preUpdate,postUpdate,onKill,offersForLevel,
-  pickOffer,selectSpecies,draw,persist,loadExtraSprites,chooseBattleSprite,onRespawn,resetBattle,
+  pickOffer,selectSpecies,draw,persist,loadExtraSprites,chooseBattleSprite,onRespawn,resetBattle,onDefeat,
   get profile(){return profile},get menu(){return menu},get accelerated(){return accelerated},
+   get matchResult(){return matchResult},get runEndTime(){return runEndTime},get runEndKOs(){return runEndKOs},
   get orbQueue(){return orbQueue},get moves(){return moveList},
   get boss15(){return boss15},get boss30(){return boss30},get gameWon(){return gameWon},
   get fusionUsed(){return fusionUsed},get megaPreview(){return megaPreview},
