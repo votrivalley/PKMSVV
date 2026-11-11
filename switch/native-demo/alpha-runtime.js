@@ -16,7 +16,7 @@ const alpha=(()=>{
  let saveStatus='UNAVAILABLE',saveDirty=false,lastSaveAt=0,saveSlot=0;
  let menu=false,menuTab=0,menuIndex=0,started=false,clockScale=1,accelerated=false;
  let lastStart=false,lastA=false,lastB=false,lastY=false,lastX=false,lastZR=false,lastZL=false;
- let lastLeft=false,lastRight=false;
+ let lastLeft=false,lastRight=false,lastL=false,lastR=false;
  let orbQueue=[],orbCooldown=0,activeBuffs={},moveList=[],offers=[],fusionUsed=false,fusionName='';
  let effects=[],megEnergy=0,megaActive=0,megaCooldown=0,megaPreview=false;
  let boss15=false,boss30=false,badgeWon=false,gameWon=false,bossMessage='';
@@ -84,12 +84,20 @@ const alpha=(()=>{
   const pool=foes.filter(p=>p.minTier<=index);
   return pool[Math.floor(rng()*pool.length)]||foes[0];
  }
+ function evolvedDex(){
+  let id=profile.selected;
+  for(let i=0;i<3;i++){
+   const ev=data.evolutions.find(e=>e.from===id&&e.level<=level);
+   if(!ev)break;
+   id=ev.to;
+  }
+  return id;
+ }
  function chooseBattleSprite(){
-  const player=getMon(profile.selected);
-  if(!player)return 'pikachu';
-  const ev=data.evolutions.find(e=>e.from===player.dex&&e.level<=level);
-  if(ev&&ev.to===6)return 'charizard';
-  return player.name.toLowerCase();
+  const evolved=evolvedDex();
+  if(evolved===6)return 'charizard';
+  if(evolved!==profile.selected)return getMon(profile.selected)?.name.toLowerCase()||'pikachu';
+  return getMon(profile.selected)?.name.toLowerCase()||'pikachu';
  }
  function loadExtraSprites(){
   if(alphaImageLoaded||typeof Image!=='function')return;
@@ -184,7 +192,7 @@ const alpha=(()=>{
  function activateMega(){
   // No fake official Mega unlock. Native preview requires explicit TEST mode,
   // a Charizard-compatible evolutionary line and 100 energy.
-  if(!accelerated||!(profile.selected===4)||level<36||
+  if(!accelerated||evolvedDex()!==6||
      megEnergy<100||megaCooldown>0||megaActive>0)return false;
   megEnergy=0;megaActive=data.mega.duration;megaCooldown=data.mega.cooldown;
   megaPreview=true;return true;
@@ -228,13 +236,13 @@ const alpha=(()=>{
   const pad=navigator.getGamepads?.()?.find?.(p=>p?.connected)||navigator.getGamepads?.()?.[0];
   const btn=n=>!!pad?.buttons?.[n]?.pressed;
   const plus=btn(9),a=btn(1),b=btn(0),y=btn(2),x=btn(3),zr=btn(7),zl=btn(6),
-   left=btn(14),right=btn(15),r=btn(5);
+   left=btn(14),right=btn(15),r=btn(5),l=btn(4);
   if(plus&&!lastStart){menu=!menu;menuIndex=0;if(menu){persist()}}
   if(zl&&r&&!lastZL){accelerated=!accelerated;clockScale=accelerated?12:1}
   let consumedMenuClose=false;
   if(menu){
-   if(left&&!lastLeft)menuTab=(menuTab+4)%5;
-   if(right&&!lastRight)menuTab=(menuTab+1)%5;
+   if((left&&!lastLeft)||(l&&!lastL))menuTab=(menuTab+5)%6;
+   if((right&&!lastRight)||(r&&!lastR))menuTab=(menuTab+1)%6;
    if(menuTab===0){
     if(a&&!lastA){profile.selected=roster[menuIndex%roster.length].dex;markDirty();resetBattle();menu=false}
     if(y&&!lastY)menuIndex=(menuIndex+1)%roster.length;
@@ -246,7 +254,7 @@ const alpha=(()=>{
    if(spritesEnabled)loadExtraSprites();
   }
   lastStart=plus;lastA=a;lastB=b;lastY=y;lastX=x;lastZR=zr;lastZL=zl;
-  lastLeft=left;lastRight=right;
+  lastLeft=left;lastRight=right;lastL=l;lastR=r;
   return menu||consumedMenuClose||plus;
  }
  function preUpdate(dt){return input(dt)}
@@ -292,27 +300,32 @@ const alpha=(()=>{
  function drawMenu(){
   ctx.fillStyle='rgba(6,17,29,.97)';ctx.fillRect(95,65,1080,590);
   ctx.strokeStyle='#92dccb';ctx.strokeRect(95,65,1080,590);
-  const tabs=['TEAM','POKEDEX','ORB','FUSION','INFO'];
-  for(let i=0;i<5;i++)text(127+i*207,110,(i===menuTab?'[':'')+tabs[i]+(i===menuTab?']':''),
+  const tabs=['TEAM','BOX','POKEDEX','ORB','FUSION','INFO'];
+  for(let i=0;i<6;i++)text(127+i*166,110,(i===menuTab?'[':'')+tabs[i]+(i===menuTab?']':''),
    i===menuTab?'#fff0a2':'#b8d5d6','20px sans-serif');
   if(menuTab===0){
-   text(135,170,'Y NEXT • A SELECT AND RESTART • B BACK','#cfeadf');
+   text(135,170,'Y NEXT • A TRIAL SELECT • L/R TABS • B BACK','#cfeadf');
    for(let i=0;i<roster.length;i++){
     const p=roster[i];text(160,230+i*65,(i===menuIndex?'▶ ':'   ')+p.name+' #'+p.dex+
      (p.dex===profile.selected?'  (ACTIVE)':''),i===menuIndex?'#ffdc94':'#dce9e7','23px sans-serif');
    }
   }
   if(menuTab===1){
+   text(135,170,'BOX: actual native Alpha ownership, never grants trial Pokémon','#d6ede4');
+   const owned=Object.keys(profile.box).filter(id=>profile.box[id]);
+   for(let i=0;i<owned.length;i++)text(165,220+i*60,'OWNED #'+owned[i]+'  '+(getMon(+owned[i])?.name||''));
+  }
+  if(menuTab===2){
    text(135,170,'DEX: defeated species only, NOT owned Pokémon','#d6ede4');
    let ids=Object.keys(profile.pokedex).sort((a,b)=>Number(a)-Number(b));
    for(let i=0;i<Math.min(ids.length,18);i++)text(165+(i%3)*330,220+Math.floor(i/3)*60,'#'+ids[i]+'  DISCOVERED');
    if(!ids.length)text(165,235,'No Pokémon defeated yet','#fff0ad');
   }
-  if(menuTab===2){
+  if(menuTab===3){
    text(135,170,'Orb queue (FIFO, max 10, 5s cooldown) • Y uses first');
    for(let i=0;i<orbQueue.length;i++)text(165,213+i*37,(i+1)+'. '+orbQueue[i],'#ffe5b2');
   }
-  if(menuTab===3){
+  if(menuTab===4){
    text(135,170,'Fusion: 2 source moves MAX, once per match','#ffdfa4');
    for(let i=0;i<data.fusions.length;i++){
     const f=data.fusions[i],known=id=>moveList.some(m=>m.id===id&&m.lvl>=MOVE_MAX);
@@ -320,7 +333,7 @@ const alpha=(()=>{
      f.moves.every(known)?'#a3ffc7':'#c5ccd1','16px sans-serif');
    }
   }
-  if(menuTab===4){
+  if(menuTab===5){
    text(145,175,'Native Alpha QA: real Kanto waves, six source Orbs, 10 Fusion recipes');
    text(145,216,'Partial battle adapter: not yet the production browser gameplay engine.');
    text(145,257,'Save: sdmc:/switch/pkmsvv-native-alpha/ (two independent copies)');
