@@ -127,7 +127,7 @@ test('Fusion requires MAX+MAX and respects source rates, one roll per level, onc
 test('Orb queue uses first-in-first-out and quick speed from PKMSVV source',()=>{
  const t=boot();t.frame(1000);
  t.get("alpha.orbQueue.push('quick','slumber')");
- t.press(2,1016);
+ t.buttons[5].pressed=true;t.press(2,1016);
  assert.equal(t.get('alpha.orbQueue[0]'),'slumber');
  assert.equal(t.get('alpha.moveMultiplier'),1.25);
  assert.ok(t.get('alpha.orbCooldown')>4.9&&t.get('alpha.orbCooldown')<=5);
@@ -256,4 +256,70 @@ test('Out-of-range native skill does not consume cooldown before a target appear
  t.frame(1032);
  assert.ok(t.get('alpha.moves[0].cooldown')>.4);
  assert.equal(t.get('lastError'),'');
+});
+
+test('Switch controller: X/Y/B directly choose skill 1/2/3 without holding R',()=>{
+ for(const [btn,slot] of [[3,0],[2,1],[0,2]]){
+  const t=boot();t.frame(1000);
+  t.get("alpha.orbQueue.push('quick');alpha.offersForLevel()");
+  assert.equal(t.get('alpha.offers.length'),6);
+  const offered=t.get('alpha.offers['+slot+']');
+  assert.ok(offered);
+  t.press(btn,1016);
+  assert.equal(t.get('pickOpen'),false,'skill should be picked by button '+btn);
+  assert.equal(t.get('alpha.orbQueue.length'),1,'selecting with Y must not consume Orb');
+  assert.equal(t.get('paused'),false,'selecting with B must not pause');
+  assert.equal(t.get('lastError'),'');
+ }
+});
+test('A turns page and direct B selects third skill on page two',()=>{
+ const t=boot();t.frame(1000);
+ t.get("alpha.offersForLevel()");
+ const page2=t.get('alpha.offers[5]');
+ assert.equal(t.get('skillPage'),0);
+ t.press(1,1016);
+ assert.equal(t.get('skillPage'),1);
+ assert.equal(t.get('pickOpen'),true);
+ t.frame(1032);
+ t.press(0,1048);
+ assert.equal(t.get('pickOpen'),false);
+ if(page2.kind==='new')assert.equal(t.get('alpha.moves.some(m=>m.id==='+JSON.stringify(page2.id)+')'),true);
+ assert.equal(t.get('paused'),false);
+ assert.equal(t.get('lastError'),'');
+});
+test('Combat actions moved away from plain Y/B: R+Y Orb and R+B pause',()=>{
+ const t=boot();t.frame(1000);
+ t.get("alpha.orbQueue.push('quick')");
+ t.press(2,1016);
+ assert.equal(t.get('alpha.orbQueue.length'),1,'plain Y cannot use Orb');
+ t.frame(1032);
+ t.press(0,1048);
+ assert.equal(t.get('paused'),false,'plain B cannot pause');
+ t.frame(1064);
+ t.buttons[5].pressed=true;
+ t.press(2,1080);
+ assert.equal(t.get('alpha.orbQueue.length'),0,'R+Y uses Orb');
+ t.frame(1096);
+ t.press(0,1112);
+ assert.equal(t.get('paused'),true,'R+B pauses');
+ t.frame(1128);t.press(0,1144);
+ assert.equal(t.get('paused'),false,'R+B resumes');
+ assert.equal(t.get('lastError'),'');
+});
+test('Switch controller settings tab shows direct bindings and does not affect menu navigation',()=>{
+ const t=boot();t.frame(1000);
+ assert.equal(JSON.stringify(t.get('SWITCH_PAD_BINDINGS.skill')),JSON.stringify([3,2,0]));
+ assert.equal(t.get('SWITCH_PAD_BINDINGS.page'),1);
+ assert.equal(JSON.stringify(t.get('SWITCH_PAD_BINDINGS.orb')),JSON.stringify([5,2]));
+ assert.equal(JSON.stringify(t.get('SWITCH_PAD_BINDINGS.pause')),JSON.stringify([5,0]));
+ const compiled=fs.readFileSync(path.join(__dirname,'alpha-runtime.js'),'utf8');
+ assert.match(compiled,/CONTROLLER BINDINGS - Nintendo Switch only/);
+ assert.match(compiled,/LEVEL UP: X = SKILL 1\s+Y = SKILL 2\s+B = SKILL 3/);
+ assert.match(compiled,/R\+Y = USE ORB\s+R\+B = PAUSE/);
+ t.press(9,1016);
+ assert.equal(t.get('alpha.menu'),true);
+ for(let i=0;i<5;i++){t.frame(1032+i*40);t.press(5,1048+i*40)}
+ assert.equal(t.get('alpha.menuTab'),5);
+ t.frame(1250);t.press(0,1266);
+ assert.equal(t.get('alpha.menu'),false,'B still backs out of menu');
 });
