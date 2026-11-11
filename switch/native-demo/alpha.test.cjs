@@ -548,7 +548,8 @@ test('Recruited non-starter becomes selectable in PokéBox, uses authentic sprit
  t.press(9,1016);t.frame(1032);t.press(5,1048);
  assert.equal(t.get('alpha.menuTab'),1,'PokéBox tab');
  assert.equal(t.get('alpha.ownedIds().includes(19)'),true);
- t.frame(1064);t.press(2,1080);t.frame(1096);t.press(1,1112);
+ // Owned list sorts by National Dex: #19 first, #25 second. Select #19 directly.
+ t.frame(1064);t.press(1,1080);
  assert.equal(t.get('alpha.menu'),false);
  assert.equal(t.get('alpha.profile.selected'),19);
  assert.equal(t.get('alpha.chooseBattleSprite()'),'rattata');
