@@ -59,7 +59,7 @@ const fusions=[...fusionSource.matchAll(/\{id:'([^']+)',ids:\['([^']+)','([^']+)
 const megaMatch=megaSource.match(/const STONE_CHANCE=\.01,DURATION=(\d+),REUSE_COOLDOWN=(\d+),CD_FACTOR=([\d.]+);/);
 const fusionRatesMatch=fusionSource.match(/const FUSION_OFFER_RATES=Object\.freeze\(\[([^\]]+)\]\)/);
 if(!fusionRatesMatch)throw Error('Fusion offer rates missing from official source');
-const fusionOfferRates=JSON.parse('['+fusionRatesMatch[1].replace(/(^|,)\s*\./g,'$10.')+']');
+const fusionOfferRates=JSON.parse('['+fusionRatesMatch[1].replace(/(^|,)\s*\./g,(_,sep)=>sep+'0.')+']');
 if(JSON.stringify(fusionOfferRates)!==JSON.stringify([.8,.7,.6,.5,.4,.3]))
  throw Error('Fusion rates changed: native adapter requires review');
 
