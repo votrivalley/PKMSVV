@@ -62,3 +62,11 @@ test('Every starter move references original catalogue without fabricated IDs',(
  assert.ok(originalKinds.has('chain'));
  assert.ok(originalKinds.has('orbit'));
 });
+
+test('Real PKMSVV compiled gacha rates and pity are exported into native build',()=>{
+ assert.equal(real.recruitment.source,'js/systems/gacha.js');
+ assert.equal(JSON.stringify(real.recruitment.rates),JSON.stringify([[1,45.5],[2,30],[3,17],[4,6.5],[5,1]]));
+ assert.equal(real.recruitment.pity5,100);
+ assert.equal(JSON.stringify(built.nativeAlpha.recruitment.rates),JSON.stringify(real.recruitment.rates));
+ assert.equal(built.nativeAlpha.recruitment.pity5,100);
+});
