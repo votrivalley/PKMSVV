@@ -57,6 +57,12 @@ const orbs=[...orbsSource.matchAll(/\{id:'([^']+)',col:'([^']+)',kind:'([^']+)'(
 const fusions=[...fusionSource.matchAll(/\{id:'([^']+)',ids:\['([^']+)','([^']+)'\],vi:'([^']+)',en:'([^']+)'/g)]
  .map(m=>({id:m[1],moves:[m[2],m[3]],name:m[4],en:m[5]}));
 const megaMatch=megaSource.match(/const STONE_CHANCE=\.01,DURATION=(\d+),REUSE_COOLDOWN=(\d+),CD_FACTOR=([\d.]+);/);
+const fusionRatesMatch=fusionSource.match(/const FUSION_OFFER_RATES=Object\.freeze\(\[([^\]]+)\]\)/);
+if(!fusionRatesMatch)throw Error('Fusion offer rates missing from official source');
+const fusionOfferRates=JSON.parse('['+fusionRatesMatch[1].replace(/(^|,)\s*\./g,'$10.')+']');
+if(JSON.stringify(fusionOfferRates)!==JSON.stringify([.8,.7,.6,.5,.4,.3]))
+ throw Error('Fusion rates changed: native adapter requires review');
+
 if(orbs.length!==6||fusions.length!==10||!megaMatch)
  throw Error('PKMSVV source changed: orb/fusion/mega bridge needs review');
 const evolutionRows=evolutions.rules.filter(row=>row.from>=1&&row.from<=151&&
@@ -64,7 +70,7 @@ const evolutionRows=evolutions.rules.filter(row=>row.from>=1&&row.from<=151&&
  .map(row=>({from:row.from,to:row.to,level:row.level}));
 if(!evolutionRows.length)throw Error('No Kanto evolution rules were read');
 data.nativeAlpha={
- orbs, fusions, mega:{duration:+megaMatch[1],cooldown:+megaMatch[2],cdFactor:+megaMatch[3]},
+ orbs, fusions, fusionOfferRates, mega:{duration:+megaMatch[1],cooldown:+megaMatch[2],cdFactor:+megaMatch[3]},
  evolutions:evolutionRows,
  testOnly:true,
  // Native Alpha battle subset; do not represent this as the official full engine.
@@ -73,6 +79,14 @@ data.nativeAlpha={
   {dex:4,name:'Charmander',sprite:'4.png'},
   {dex:1,name:'Bulbasaur',sprite:'1.png'},
   {dex:7,name:'Squirtle',sprite:'7.png'}
+ ],
+ evolutionSprites:[
+  {dex:2,name:'Ivysaur',sprite:'2.png'},
+  {dex:3,name:'Venusaur',sprite:'3.png'},
+  {dex:5,name:'Charmeleon',sprite:'5.png'},
+  {dex:6,name:'Charizard',sprite:'6.png'},
+  {dex:8,name:'Wartortle',sprite:'8.png'},
+  {dex:9,name:'Blastoise',sprite:'9.png'}
  ],
  trialEnemies:[
   {dex:19,name:'Rattata',sprite:'19.png',minTier:0},
