@@ -70,3 +70,12 @@ console.log('REAL PKMSVV GAME ENGINE AUDIT',JSON.stringify({counts,groups:Object
  Object.entries(moduleAudit).map(([k,v])=>[k,{found:v.filter(x=>x.present).length,total:v.length,usesBrowser:v.filter(x=>x.browserDependencies.length).length}])
 )},null,2));
 console.log('Report: '+out);
+for(const rel of ['js/data/moves.js','js/core/db.js','js/systems/spawner.js','js/data/mons.js']){
+ const file=path.join(root,rel);
+ if(!fs.existsSync(file)){console.log('NATIVE PORT SOURCE NOT FOUND:',rel);continue}
+ const code=fs.readFileSync(file,'utf8');
+ console.log('NATIVE PORT SOURCE SAMPLE:',rel,'total bytes',Buffer.byteLength(code));
+ console.log(code.slice(0,7600));
+}
+console.log('NATIVE PORT MODULE CANDIDATES:',modulePaths.filter(
+ x=>/data|move|pokemon|dex|world|combat|projectile|enemy/i.test(x)).slice(0,65).join(' | '));
