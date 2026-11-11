@@ -1,0 +1,44 @@
+# Pokémon Chuyển Sinh — Switch Native Kanto v0.2.0
+
+**NRO nx.js thật; KHÔNG Brewser, KHÔNG WebView, KHÔNG tải game HTML.**
+Nền đồ họa của Switch Alpha v0.1.2 được giữ lại. Đây là đợt tích hợp game thật vào native, **chưa phải bản port hoàn toàn**.
+
+## Nguồn dữ liệu thực đã chuyển
+
+- **103 kỹ năng gốc**: ID, tên, loại tấn công, sát thương cơ bản, cooldown, số đòn, bán kính và các cấp nâng được xuất từ `js/data/moves.js` của game PKMSVV đã biên dịch, không nhập tay bản demo.
+- **151 Pokémon Kanto**: National Dex #1–151, hệ, chỉ số máu/tốc độ/công/độ hiếm lấy từ `js/data/pokedex.js` trong bản game thật.
+- **151 PNG Pokémon** cho Kanto có sẵn offline. Sprite được tải theo nhu cầu và giữ cache có giới hạn; mặc định tắt cho đến khi nhấn L.
+- Bảng Kanto, mốc wave/boss, Fusion, Orb, Mega và tiến hóa lấy từ mã PKMSVV tại repo.
+- Hệ thống native dùng loại chiêu thật để xác định cơ chế đánh gần/tia/chùm/đạn/lan điện và các hiệu ứng đơn giản; áp dụng một phần nâng cấp gốc lên sát thương, hồi chiêu, diện tích và số mục tiêu.
+
+**Quan trọng:** Chỉ *dữ liệu gốc* được chuyển đầy đủ ở bước này. **Toàn bộ logic và hình ảnh của 103 hiệu ứng kỹ năng, hệ thống nhân vật, co-op, gacha/rank, 10 chương và game mode chưa được port 1:1.** NRO không chạy mã HTML/DOM của game gốc. Những loại chiêu chưa có bộ mô phỏng native chuyên biệt vẫn dùng xử lý thuộc nhóm tương đương. Không quảng bá bản này là FULL.
+
+## Cài đặt
+1. Trong GitHub Actions tải artifact `PKMSVV-Switch-Native-RealGameData-v020`.
+2. Giải nén, chép `PKMSVV-Switch-Native-RealData-v020.nro` vào `sd:/switch/`.
+3. Mở HBMenu **full RAM** (giữ R khi mở game hợp lệ) và chạy NRO. Không cần cài Brewser.
+4. Giữ bản NRO v0.1.2 trước đó làm phương án ổn định. Hai tệp không cần ghi đè nhau.
+
+## Điều khiển 
+- Left Stick/D-pad: di chuyển; các đòn đánh thường tự kích hoạt.
+- **L:** bật/tắt sprite Pokémon (mặc định vector).
+- **+**: menu TEAM/BOX/POKÉDEX/ORB/FUSION/INFO. **L/R** chuyển tab, **B** đóng.
+- TEAM: **Y** chọn starter thử nghiệm, **A** vào lại trận. Việc chọn thử không cấp Pokémon thật vào PokéBox.
+- Trận: **Y** dùng Orb; **R+X / R+Y / R+B** chọn kỹ năng khi lên cấp; **B** tạm dừng.
+- **ZL+R**: bật đồng hồ QA x12, giảm sát thương người chơi nhận để thử boss 15/30 phút. Huy hiệu QA không lưu.
+- **ZR**: Mega preview trong chế độ QA nếu đủ điều kiện kỹ thuật; không phải quyền sở hữu Mega Stone thật.
+
+## Save
+Dữ liệu *Alpha native* lưu độc lập tại `sdmc:/switch/pkmsvv-native-alpha/`, hai tệp xoay vòng và checksum. Không tự nhập hoặc ghi đè save JSON PC/Web/Android. Hãy xuất bản sao save chính trước mọi thử nghiệm.
+
+## Một lượt test
+1. Khởi động và chơi **5 phút**: kiểm tra không văng, FPS ổn và có thể chọn nhiều chiêu mới từ pool thật.
+2. Nhấn **L** bật sprite; xem quái Kanto nhiều loài xuất hiện sau mốc 120s, không lọt Pokémon Gen2+.
+3. Chọn starter khác; kiểm tra lên cấp, kỹ năng, hiệu ứng, menu và Pokédex.
+4. Dùng ZL+R tăng thời gian QA để kiểm tra boss 15/30 phút (nếu muốn).
+5. Thoát hẳn, mở lại để thử khôi phục Dex. Nếu báo SAVE FAILED, giữ thẻ/tệp để chẩn đoán.
+
+## Giới hạn kỹ thuật 
+CI kiểm được NRO và khởi tạo engine native trong mô phỏng Node, nhưng không xác nhận FPS hay độ ổn định trên phần cứng Switch thật. Nếu lỗi, báo số phút, hành động ngay trước lỗi và tình trạng bật/tắt sprite. 
+
+Đây là fan-made phi thương mại, không được Nintendo/The Pokémon Company bảo trợ.
