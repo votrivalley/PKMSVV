@@ -1,0 +1,129 @@
+name: Switch FULL Game - PKMSVV HTML5 One File NRO
+
+on:
+  push:
+    branches: [feature/switch-full-game-integrated]
+    paths:
+      - '.github/workflows/switch-full-game.yml'
+      - 'scripts/stage-switch-full-game.cjs'
+      - 'scripts/prepare-switch.cjs'
+      - 'src/switch/boot-health.js'
+      - 'switch/nro-forwarder/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  full-game-switch:
+    name: Embed REAL PKMSVV compiled gameplay and build self-contained NRO
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Recover full compiled gameplay from signed Android build
+        uses: actions/download-artifact@v4
+        with:
+          name: PKMSVV-PokeBox-Stage4-Android-QA-SEPARATE-APP
+          run-id: 42868942245
+          github-token: ${{ github.token }}
+          path: baseline-apk
+      - name: Unpack and verify REAL game engine + assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="$(find baseline-apk -type f -name '*.apk' -print -quit)"
+          test -s "$apk"
+          unzip -t "$apk" | tail -1
+          mkdir -p extracted-android
+          unzip -qq "$apk" 'assets/public/*' -d extracted-android
+          test -s extracted-android/assets/public/index.html
+          test -s extracted-android/assets/public/js/app.min.js
+          test -s extracted-android/assets/public/js/ui/pkmsvv-quick-region.js
+          test -s extracted-android/assets/public/js/ui/pkmsvv-fusion-evolved.js
+          test -s extracted-android/assets/public/js/ui/pkmsvv-box-stage4.js
+          grep -q pkmsvv-box-stage4 extracted-android/assets/public/index.html
+          echo "Actual compiled game verified, not a Switch tech demo"
+          node scripts/stage-switch-full-game.cjs extracted-android/assets/public
+      - name: Adapt the complete offline game for Switch Brewser
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run prepare:switch
+          dir=dist/switch-package/switch/brewser/apps/com.votrivalley.pkmsvv
+          test -s "$dir/index.html"
+          test -s "$dir/js/app.min.js"
+          test -s "$dir/js/ui/pkmsvv-box-stage4.js"
+          test -s "$dir/js/ui/pkmsvv-fusion-evolved.js"
+          test -s "$dir/manifest.json"
+          test -s "$dir/pkmsvv-switch-boot.js"
+          test -s "$dir/pkmsvv-switch-health.js"
+          node - <<'NODE'
+          const fs=require('node:fs'),path=require('node:path');
+          const dir='dist/switch-package/switch/brewser/apps/com.votrivalley.pkmsvv';
+          const html=fs.readFileSync(path.join(dir,'index.html'),'utf8');
+          if(!html.includes('app.min.js')||!html.includes('pkmsvv-switch-health.js'))
+           throw Error('Incomplete HTML5 game entry');
+          let files=0,size=0;
+          const folders=[dir];
+          while(folders.length){
+           const base=folders.pop();
+           for(const row of fs.readdirSync(base,{withFileTypes:true})){
+            const p=path.join(base,row.name);
+            if(row.isDirectory())folders.push(p);
+            else if(row.isFile()){files++;size+=fs.statSync(p).size}
+           }
+          }
+          if(files<500||size<10000000)throw Error('Full compiled assets missing: files='+files+' bytes='+size);
+          console.log('REAL GAME QA PASSED: '+files+' files, '+(size/1048576).toFixed(1)+' MiB');
+          NODE
+      - name: Embed official pinned Brewser runtime and REAL offline game
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p switch/nro-forwarder/romfs/game
+          cp -a dist/switch-package/switch/brewser/apps/com.votrivalley.pkmsvv/. switch/nro-forwarder/romfs/game/
+          printf 'full-game-2.0-from-android-42868942245-%s\n' "${GITHUB_SHA:0:12}" > switch/nro-forwarder/romfs/version.txt
+          curl --fail --location --retry 4 --retry-all-errors --retry-delay 2 --connect-timeout 30 \
+            -o switch/nro-forwarder/romfs/brewser.nro \
+            "https://github.com/natureglass/Brewser/releases/download/v0.1.1.31/brewser.nro"
+          echo "8ce31f5b7dfb617c18a705d0c5fc955b59f60d445b5a76e250a1dd98ccd04b13  switch/nro-forwarder/romfs/brewser.nro" | sha256sum -c -
+          curl -fL --retry 3 -o switch/nro-forwarder/romfs/BREWSER_LICENSE.txt \
+            "https://raw.githubusercontent.com/natureglass/Brewser/v0.1.1.31/LICENSE"
+          test -s switch/nro-forwarder/romfs/game/js/app.min.js
+          test -s switch/nro-forwarder/romfs/game/pkmsvv-switch-full-provenance.json
+          du -sh switch/nro-forwarder/romfs
+      - name: Prepare icon and build full-game NRO
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check Pillow
+          python3 - <<'PY'
+          from PIL import Image
+          Image.open('build/icon.png').convert('RGB').resize((256,256)).save('switch/nro-forwarder/icon.jpg',quality=90)
+          PY
+          docker run --rm -v "$PWD:/workspace" -w /workspace/switch/nro-forwarder \
+            -e DEVKITPRO=/opt/devkitpro devkitpro/devkita64:20260219 \
+            make -j2 APP_VERSION="2.0-FULL"
+          python3 - <<'PY'
+          from pathlib import Path
+          data=Path('switch/nro-forwarder/PKMSVV.nro').read_bytes()
+          assert data[0x10:0x14]==b'NRO0','Incorrect NRO header'
+          assert len(data)>90000000,'Runtime/game payload unexpectedly small'
+          for token in (b'com.votrivalley.pkmsvv',b'app.min.js',b'pkmsvv-switch-full-provenance.json'):
+              assert token in data,'Game payload marker missing: '+token.decode()
+          print('FULL GAME NRO VERIFIED',len(data)/1048576,'MiB')
+          PY
+          mkdir -p dist/switch-full-game
+          cp switch/nro-forwarder/PKMSVV.nro dist/switch-full-game/PKMSVV-FULL-GAME.nro
+          ls -lh dist/switch-full-game/PKMSVV-FULL-GAME.nro
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-Switch-FULL-Game-HTML5-ONE-NRO
+          path: dist/switch-full-game/*.nro
+          if-no-files-found: error
+          retention-days: 14
