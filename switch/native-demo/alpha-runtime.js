@@ -6,9 +6,13 @@ const alpha=(()=>{
  const data=KANTO_CONFIG.nativeAlpha;
  if(!data)throw Error('Native Alpha compiled game data absent');
  const roster=data.trialRoster,rosterNames=roster.map(p=>p.name.toLowerCase());
- const foes=data.trialEnemies,foeNames=foes.map(p=>p.name.toLowerCase());
+ const realDex=Array.isArray(data.realPokedex)&&data.realPokedex.length===151?data.realPokedex:null;
+ const foes=realDex?realDex.filter(p=>p.rarity<=3&&!p.legendary).map(p=>({
+  ...p,sprite:p.dex+'.png',minTier:p.rarity<=1?1:p.rarity<=2?2:4
+ })):data.trialEnemies;
+ const foeNames=foes.map(p=>p.name.toLowerCase());
  const species=new Map([...roster,...foes].map(p=>[p.name.toLowerCase(),p]));
- const byDex=new Map([...roster,...foes].map(p=>[p.dex,p]));
+ const byDex=new Map([...(realDex||[]),...roster,...foes].map(p=>[p.dex,p]));
  const spriteNames=new Set([...rosterNames,...foeNames,...data.evolutionSprites.map(p=>p.name.toLowerCase()),'mewtwo']);
  const SAVE_PATH='sdmc:/switch/pkmsvv-native-alpha/';
  const MOVE_MAX=5,MAX_MOVES=8;
@@ -89,8 +93,16 @@ const alpha=(()=>{
   skillClock=0;killAward=0;fusionOfferLevel=-1;fusionOfferAttempts=0;fusionOfferRecipe=null;started=true;
  }
  function selectSpecies(index){
-  const pool=foes.filter(p=>p.minTier<=index);
-  return pool[Math.floor(rng()*pool.length)]||foes[0];
+  // Kanto's opening remains safe; at later waves draw from REAL Gen1 catalog.
+  // Rare/legendary Pokémon are not silently added to ordinary mobs.
+  if(index===0){
+   const opening=data.trialEnemies.filter(p=>p.minTier===0);
+   const entry=opening[Math.floor(rng()*opening.length)]||data.trialEnemies[0];
+   return byDex.get(entry.dex)||entry;
+  }
+  const rarityCeiling=index<3?2:3;
+  const pool=foes.filter(p=>p.rarity<=rarityCeiling&&p.minTier<=index);
+  return pool[Math.floor(rng()*pool.length)]||byDex.get(19)||foes[0];
  }
  function evolvedDex(){
   let id=profile.selected;
@@ -108,6 +120,8 @@ const alpha=(()=>{
  }
  const artByName=new Map([...roster,...foes,...data.evolutionSprites,
   {name:'Mewtwo',sprite:'150.png'}].map(p=>[p.name.toLowerCase(),p.sprite]));
+ const spriteOrder=[];
+ const MAX_CACHED_EXTRA_SPRITES=18;
  function loadExtraSprites(){
   // Load at most one new tiny sprite per ~12 input ticks. No decode burst.
   // Unseen starters and evolved forms are loaded only when first needed.
@@ -122,7 +136,14 @@ const alpha=(()=>{
    spriteRequested.add(key);
    try{
     const img=new Image();
-    img.onload=()=>{SPRITES[key]=img;loaded[key]=true};
+    img.onload=()=>{
+     SPRITES[key]=img;loaded[key]=true;
+     spriteOrder.push(key);
+     while(spriteOrder.length>MAX_CACHED_EXTRA_SPRITES){
+      const old=spriteOrder.shift();
+      if(old&&old!==chooseBattleSprite()){SPRITES[old]=null;loaded[old]=false;spriteRequested.delete(old)}
+     }
+    };
     img.onerror=()=>{loaded[key]=false};
     img.src='romfs:/sprites/'+file;
    }catch(_){loaded[key]=false}
@@ -182,11 +203,19 @@ const alpha=(()=>{
    offers.push({kind:'fusion',id:canFuse.id,name:canFuse.name});
   for(const m of moveList)if(m.lvl<MOVE_MAX&&offers.length<3)
    offers.push({kind:'upgrade',id:m.id,name:m.id+' LV '+(m.lvl+1)});
-  const ids=['ember','tackle','water-gun','vine-whip','thunderbolt',
+  const ids=(Array.isArray(data.realMoves)&&data.realMoves.length===103?
+   data.realMoves.filter(m=>m.kind!=='buff').map(m=>m.id):
+   ['ember','tackle','water-gun','vine-whip','thunderbolt',
    'spark','gust','ice-shard','razor-leaf','rock-tomb','confusion','shadow-ball',
-   'flamethrower','metal-claw','psychic','bubble-beam'];
-  for(const id of ids)if(offers.length<3&&moveList.length<MAX_MOVES&&!moveList.some(m=>m.id===id))
-   offers.push({kind:'new',id,name:id});
+   'flamethrower','metal-claw','psychic','bubble-beam']);
+  const offset=Math.floor(rng()*ids.length);
+  for(let i=0;i<ids.length&&offers.length<3;i++){
+   const id=ids[(offset+i)%ids.length];
+   if(moveList.length<MAX_MOVES&&!moveList.some(m=>m.id===id)){
+    const source=data.realMoves?.find(m=>m.id===id);
+    offers.push({kind:'new',id,name:source?.name||id});
+   }
+  }
   while(offers.length<3)offers.push({kind:'heal',id:'heal',name:'HEAL 35 HP'});
   skillChoices=offers.map(o=>({name:o.name,description:o.kind}));
   skillPage=0;pickOpen=true;
@@ -241,7 +270,8 @@ const alpha=(()=>{
  // Native adapter: 18 move names from the PKMSVV move pool, class cooldown
  // floors from the 23-kind balance source. Different cast geometry per kind;
  // not a claim of parity with the 103 web-engine moves.
- const nativeMoveById=new Map(data.nativeMoves.map(m=>[m.id,m]));
+ const sourceMoves=Array.isArray(data.realMoves)&&data.realMoves.length===103?data.realMoves:data.nativeMoves;
+ const nativeMoveById=new Map(sourceMoves.map(m=>[m.id,m]));
  const fusionKind={
   'ember-quick':'projectile','water-tackle':'cone','grass-spin':'nova',
   'spark-quick':'chain','mind-tackle':'cone','fire-gust':'nova',
@@ -268,30 +298,42 @@ const alpha=(()=>{
  }
  function castMove(m){
   const fusion=m.id.startsWith('fusion:');
-  const kind=fusion?fusionKind[m.id.slice(7)]||'nova':nativeMoveById.get(m.id)?.kind||'projectile';
+  const source= nativeMoveById.get(m.id);
+  const kind=fusion?fusionKind[m.id.slice(7)]||'nova':source?.kind||'projectile';
   const origin=kind==='mine'?{x:px,y:py}:null;
   let target=null,min=Infinity;
   for(const e of enemies){
    const dx=e.x-px,dy=e.y-py,d=dx*dx+dy*dy;
    if(d<min){min=d;target=e}
   }
+  if(kind==='buff'){
+   activeBuffs.focus=Math.max(activeBuffs.focus||0,5);
+   castCount++;
+   return true;
+  }
   if(!target)return false;
   const distance=Math.sqrt(min);
-  const radius=kind==='melee'?105:kind==='nova'?160:kind==='mine'?130:560;
-  if(distance>radius&&kind!=='mine')return false;
-  const base=(fusion?9:2)+(Math.max(1,m.lvl)-1)*(fusion?2:1.1);
+  const shortRange=new Set(['melee','spin','shove','aura']);
+  const area=new Set(['nova','mine','meteor','trail','orbit','quake','vortex','shove','stun','turret','aura','spin']);
+  const conical=new Set(['cone','beam','charge','dash']);
+  const chaining=new Set(['chain','bounce']);
+  const radius=shortRange.has(kind)?120:area.has(kind)?170:570;
+  if(distance>radius)return false;
+  // Scaled real move damage, with safety ceiling for Switch crowded battles.
+  const base= fusion?9:source?Math.max(.8,Math.min(16,Number(source.dmg||6)/6)):2;
+  const skillBoost=1+(Math.max(1,m.lvl)-1)*.24;
   const mult=(megaActive>0?1.5:1)*(activeBuffs.focus>0?1.15:1);
-  const power=base*mult;
+  const power=base*skillBoost*mult;
   let hits=0;
   const hit=e=>{if(strike(e,power,kind)){}hits++};
-  if(kind==='nova'||kind==='mine'){
-   const r=kind==='nova'?160:130;
+  if(area.has(kind)){
+   const r=shortRange.has(kind)?120:170;
    for(let i=enemies.length-1;i>=0;i--){
     const e=enemies[i];
     if((e.x-px)**2+(e.y-py)**2<=r*r)hit(e);
    }
    if(hits)effects.push({x:px,y:py,r,ttl:.20});
-  }else if(kind==='cone'||kind==='beam'){
+  }else if(conical.has(kind)){
    const dx=(target.x-px)/(distance||1),dy=(target.y-py)/(distance||1);
    // Cone: 0.65 radians half width; beam: narrow 0.22.
    const width=kind==='beam'?.98:.74;
@@ -301,7 +343,7 @@ const alpha=(()=>{
     if(hits>=5)break;
    }
    if(hits)effects.push({x:px+dx*120,y:py+dy*120,r:kind==='beam'?32:70,ttl:.18});
-  }else if(kind==='chain'){
+  }else if(chaining.has(kind)){
    const ordered=enemies.slice().sort((a,b)=>
     (a.x-target.x)**2+(a.y-target.y)**2-
     ((b.x-target.x)**2+(b.y-target.y)**2));
@@ -328,7 +370,8 @@ const alpha=(()=>{
   for(const move of moveList){
    const fusion=move.id.startsWith('fusion:');
    const kind=fusion?fusionKind[move.id.slice(7)]||'nova':nativeMoveById.get(move.id)?.kind||'projectile';
-   const cd=fusion?1.65:data.cooldownFloors[kind]||1;
+   const source=nativeMoveById.get(move.id);
+   const cd=fusion?1.65:Math.max(data.cooldownFloors[kind]||.55,source?.cd||.7);
    move.cooldown=Math.max(0,(move.cooldown||0)-dt);
    if(move.cooldown>0||budget<=0)continue;
    const fired=castMove(move);
@@ -379,7 +422,7 @@ const alpha=(()=>{
   ctx.fillStyle=color;ctx.font=font;ctx.fillText(String(value),x,y)
  }
  function draw(){
-  text(820,44,'PKMSVV SWITCH ALPHA 0.1.2','#ffe39d');
+  text(820,44,'PKMSVV SWITCH NATIVE 0.2.0','#ffe39d');
   text(820,74,'KANTO • GEN 1 • '+(accelerated?'QA x12':'REAL TIME'),'#a7e7f6');
   text(820,103,'TEAM: '+name(getMon(profile.selected))+'  EVOLVE: #'+evolvedDex()+'  SKILL: '+moveList.length+'/8');
   text(820,132,'ORB: '+orbQueue.length+'/10   CD '+orbCooldown.toFixed(1)+'s');
@@ -465,6 +508,7 @@ const alpha=(()=>{
   get bossDamageMultiplier(){return accelerated?6:1},
   get moveMultiplier(){return activeBuffs.quick>0?1.25:1},
   get castCount(){return castCount},get damageCount(){return damageCount},
+  get availableMoveCount(){return sourceMoves.length},get availablePokemonCount(){return realDex?.length||0},
   get effectCount(){return effects.length},
   castMove
  };
