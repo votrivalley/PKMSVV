@@ -332,8 +332,8 @@ const alpha=(()=>{
    move.cooldown=Math.max(0,(move.cooldown||0)-dt);
    if(move.cooldown>0||budget<=0)continue;
    const fired=castMove(move);
-   move.cooldown=cd*faster;
-   if(fired)budget--;
+   // Missing/out-of-range targets do not waste a complete skill cooldown.
+   if(fired){move.cooldown=cd*faster;budget--}
   }
  }
  function input(dt){
