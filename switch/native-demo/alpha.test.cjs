@@ -156,7 +156,7 @@ test('Dual rotating save files survive reload, remain isolated from Web and Andr
  assert.equal(t2.get('alpha.profile.pokedex[19]'),1);
  assert.equal(t2.get('alpha.profile.pokedex[16]'),1);
  assert.equal(t2.get('alpha.profile.seq'),2);
- const key=[...files.keys()].find(k=>k.endsWith('progress-2.json'));
+ const key=[...files.keys()].find(k=>k.endsWith('progress-v024-2.json'));
  files.set(key,'CORRUPT');
  const t3=boot(files);t3.frame(1000);
  assert.equal(t3.get('alpha.profile.pokedex[19]'),1);
@@ -585,4 +585,31 @@ test('Recruitment menu A one/Y ten handles controller, prevents unaffordable ten
  t.frame(1234);t.press(2,1250);
  assert.equal(t.get('alpha.profile.recruitTickets'),0);
  assert.equal(t.get('alpha.lastRecruitOutcome'),'NOT ENOUGH TICKETS');
+});
+
+test('First v0.2.4 boot migrates legacy v0.2.3 save into separate slots without overwriting it',()=>{
+ const files=new Map(),legacy={
+  version:1,seq:7,pokedex:{19:1,16:1},box:{25:1},bestKO:42,
+  badges:{kanto:1},selected:25,kantoClears:1,bestSurvivalSec:1800,bestKantoClearSec:1840
+ };
+ function fnv(src){let h=2166136261;for(let i=0;i<src.length;i++){h^=src.charCodeAt(i);h=Math.imul(h,16777619)}return(h>>>0).toString(16)}
+ const legacyText=JSON.stringify({app:'pkmsvv-switch-alpha',schema:1,
+   checksum:fnv(JSON.stringify(legacy)),data:legacy});
+ const legacyPath='sdmc:/switch/pkmsvv-native-alpha/progress-1.json';
+ files.set(legacyPath,legacyText);
+ const t=boot(files);t.frame(1000);
+ assert.equal(t.get('alpha.profile.kantoClears'),1);
+ assert.equal(t.get('alpha.profile.pokedex[19]'),1);
+ assert.equal(t.get('alpha.profile.bestKO'),42);
+ assert.equal(t.get('alpha.profile.recruitTickets'),0);
+ assert.equal(t.get('alpha.saveStatus'),'MIGRATED');
+ assert.equal(files.get(legacyPath),legacyText,'must preserve original rollback save byte-for-byte');
+ assert.ok([...files.keys()].some(k=>k.endsWith('progress-v024-1.json')));
+ assert.equal(t.get('alpha.profile.seq'),8);
+ const migrated=boot(files);migrated.frame(1000);
+ assert.equal(migrated.get('alpha.profile.seq'),8);
+ assert.equal(migrated.get('alpha.saveStatus'),'RESTORED');
+ migrated.get('alpha.profile.pokedex[19]=1;alpha.profile.recruitTickets=3;alpha.recruitMany(1)');
+ assert.equal(files.get(legacyPath),legacyText,'native v024 recruitment cannot modify legacy v023 slot');
+ assert.equal(migrated.get('alpha.profile.recruitTickets'),2);
 });
