@@ -132,8 +132,12 @@ if(fs.existsSync(catalogPath)){
   catalog.moves.length!==103||catalog.pokemon.length!==151||
   catalog.pokemon.some((p,i)=>p.dex!==i+1))
   throw Error('Real game catalog incomplete; native bundle MUST fail closed');
+ if(!catalog.recruitment||catalog.recruitment.rates.length!==5||
+  !Number.isInteger(catalog.recruitment.pity5))
+  throw Error('Real-game Kanto recruitment rules missing; refuse native build');
  data.nativeAlpha.realMoves=catalog.moves;
  data.nativeAlpha.realPokedex=catalog.pokemon;
+ data.nativeAlpha.recruitment=catalog.recruitment;
  data.nativeAlpha.realSource=catalog.originalGame;
  console.log('Bundling actual PKMSVV data',catalog.moves.length,'moves',catalog.pokemon.length,'Kanto Pokémon');
 }
