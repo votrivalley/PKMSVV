@@ -23,6 +23,9 @@ const alpha=(()=>{
  let lastLeft=false,lastRight=false,lastL=false,lastR=false;
  let orbQueue=[],orbCooldown=0,activeBuffs={},moveList=[],offers=[],fusionUsed=false,fusionName='';
  let effects=[],megEnergy=0,megaActive=0,megaCooldown=0,megaPreview=false;
+ // Bounded persistent native skill effects (no DOM/canvas object allocation per tick).
+ let zones=[],zoneSeq=0;
+ const MAX_SKILL_ZONES=12,MAX_ZONE_HITS_PER_TICK=6;
  let boss15=false,boss30=false,badgeWon=false,gameWon=false,bossMessage='';
  let skillClock=0,killAward=0,spriteLoadTick=0;
  const spriteRequested=new Set();
@@ -88,7 +91,7 @@ const alpha=(()=>{
   }[profile.selected]||['thunder-shock','quick-attack'];
   moveList.push(...starterMoves.map(id=>({id,lvl:1})));
   offers=[];fusionUsed=false;fusionName='';
-  effects.length=0;megEnergy=0;megaActive=0;megaCooldown=0;
+  effects.length=0;zones.length=0;megEnergy=0;megaActive=0;megaCooldown=0;
   boss15=false;boss30=false;badgeWon=false;gameWon=false;bossMessage='';
   skillClock=0;killAward=0;fusionOfferLevel=-1;fusionOfferAttempts=0;fusionOfferRecipe=null;started=true;
  }
@@ -309,12 +312,86 @@ const alpha=(()=>{
   }
   return false;
  }
+ function addZone(kind,x,y,power,params={}){
+  // Ring buffer: keep at most 12 active persistent effects on weak hardware.
+  if(zones.length>=MAX_SKILL_ZONES)zones.shift();
+  const z={id:++zoneSeq,kind,x,y,power,ttl:params.ttl||3,
+   delay:params.delay||0,interval:params.interval||.4,
+   tick:0,radius:params.radius||110,range:params.range||260,
+   dx:params.dx||0,dy:params.dy||0,step:0};
+  zones.push(z);
+  return z;
+ }
+ function advanceZones(dt){
+  // Maximum ~12 effects * 32 enemies and 6 hit operations per effect per tick.
+  if(!dt||paused||menu||pickOpen)return;
+  for(let i=zones.length-1;i>=0;i--){
+   const z=zones[i];z.ttl-=dt;
+   if(z.delay>0){z.delay-=dt;if(z.delay>0)continue}
+   z.tick-=dt;
+   if(z.tick>0&&z.ttl>0)continue;
+   z.tick=z.interval;
+   let hits=0,finished=false;
+   const nearby=e=>(e.x-z.x)**2+(e.y-z.y)**2<=z.radius*z.radius;
+   const hit=e=>{
+    if(hits>=MAX_ZONE_HITS_PER_TICK||!enemies.includes(e))return;
+    strike(e,z.power,z.kind);hits++;
+   };
+   if(z.kind==='meteor'||z.kind==='stun'||z.kind==='charge'){
+    // Telegraph first; then deliver the impact once.
+    for(const e of enemies.slice()){
+     if(z.kind==='charge'){
+      const ex=e.x-z.x,ey=e.y-z.y,d=Math.hypot(ex,ey)||1;
+      if(d<=460&&(ex*z.dx+ey*z.dy)/d>.94)hit(e);
+     }else if(nearby(e))hit(e);
+    }
+    if(z.kind==='stun')for(const e of enemies)if(nearby(e))
+     e.sleepLeft=Math.max(e.sleepLeft||0,1.25);
+    finished=true;
+   }else if(z.kind==='mine'){
+    const victim=enemies.find(nearby);
+    if(victim){for(const e of enemies.slice())if(nearby(e))hit(e);finished=true}
+   }else if(z.kind==='turret'){
+    let best=null,dist=Infinity;
+    for(const e of enemies){
+     const d=(e.x-z.x)**2+(e.y-z.y)**2;
+     if(d<dist&&d<=z.range*z.range){dist=d;best=e}
+    }
+    if(best)hit(best);
+   }else if(z.kind==='vortex'){
+    for(const e of enemies.slice()){
+     if(!nearby(e))continue;
+     const d=Math.hypot(e.x-z.x,e.y-z.y)||1;
+     // Safe bounded suction. Does not alter hitbox count or physics step rate.
+     e.x=clamp(e.x+(z.x-e.x)/d*Math.min(16,d*.15),15,W-15);
+     e.y=clamp(e.y+(z.y-e.y)/d*Math.min(16,d*.15),80,H-18);
+     hit(e);
+    }
+   }else if(z.kind==='quake'){
+    z.step++;
+    const centerX=z.x+z.dx*z.step*65,centerY=z.y+z.dy*z.step*65;
+    for(const e of enemies.slice()){
+     if((e.x-centerX)**2+(e.y-centerY)**2<=z.radius*z.radius)hit(e);
+    }
+    if(z.step>=5)finished=true;
+   }else{
+    // Aura/orbit/trail are real persistent area attacks, not single-frame nova.
+    const cx=(z.kind==='aura'||z.kind==='orbit')?px:z.x;
+    const cy=(z.kind==='aura'||z.kind==='orbit')?py:z.y;
+    for(const e of enemies.slice()){
+     if((e.x-cx)**2+(e.y-cy)**2<=z.radius*z.radius)hit(e);
+    }
+   }
+   if(hits){effects.push({x:z.x,y:z.y,r:Math.min(110,z.radius),ttl:.16});
+    if(effects.length>14)effects.splice(0,effects.length-14)}
+   if(finished||z.ttl<=0)zones.splice(i,1);
+  }
+ }
  function castMove(m){
   const fusion=m.id.startsWith('fusion:');
   const source=nativeMoveById.get(m.id);
   const mods=levelMods(m);
   const kind=fusion?fusionKind[m.id.slice(7)]||'nova':source?.kind||'projectile';
-  const origin=kind==='mine'?{x:px,y:py}:null;
   let target=null,min=Infinity;
   for(const e of enemies){
    const dx=e.x-px,dy=e.y-py,d=dx*dx+dy*dy;
@@ -328,10 +405,11 @@ const alpha=(()=>{
   if(!target)return false;
   const distance=Math.sqrt(min);
   const shortRange=new Set(['melee','spin','shove','aura']);
-  const area=new Set(['nova','mine','meteor','trail','orbit','quake','vortex','shove','stun','turret','aura','spin']);
+  const area=new Set(['nova','spin','shove']);
+  const persistent=new Set(['mine','meteor','trail','orbit','quake','vortex','stun','turret','aura','charge']);
   const conical=new Set(['cone','beam','charge','dash']);
   const chaining=new Set(['chain','bounce']);
-  const radius=Math.min(700,Math.round((shortRange.has(kind)?120:area.has(kind)?170:570)*mods.radius));
+  const radius=Math.min(700,Math.round((shortRange.has(kind)?120:area.has(kind)||persistent.has(kind)?170:570)*mods.radius));
   if(distance>radius)return false;
   // Scaled real move damage, with safety ceiling for Switch crowded battles.
   const base= fusion?9:source?Math.max(.8,Math.min(16,Number(source.dmg||6)/6)):2;
@@ -339,8 +417,31 @@ const alpha=(()=>{
   const mult=(megaActive>0?1.5:1)*(activeBuffs.focus>0?1.15:1);
   const power=base*skillBoost*mult;
   let hits=0;
-  const hit=e=>{if(strike(e,power,kind)){}hits++};
-  if(area.has(kind)){
+  const hit=e=>{strike(e,power,kind);hits++};
+  if(persistent.has(kind)){
+   const dx=(target.x-px)/(distance||1),dy=(target.y-py)/(distance||1);
+   const originAtPlayer=new Set(['mine','trail','aura','orbit','turret','quake','charge']);
+   const cx=originAtPlayer.has(kind)?px:target.x,cy=originAtPlayer.has(kind)?py:target.y;
+   const delay=kind==='meteor'?.48:kind==='stun'?.25:kind==='charge'?.6:0;
+   const interval=kind==='orbit'?.35:kind==='turret'?.55:kind==='quake'?.23:.45;
+   const ttl=kind==='mine'?7:kind==='turret'?5:kind==='trail'?4:kind==='vortex'?3:kind==='meteor'||kind==='charge'||kind==='stun'?1.2:kind==='quake'?1.5:4;
+   const zoneRadius=kind==='mine'?95:kind==='meteor'?95:kind==='turret'?60:kind==='quake'?58:kind==='stun'?115:kind==='orbit'?130:Math.min(220,Math.round(145*mods.radius));
+   addZone(kind,cx,cy,power,{delay,interval,ttl,radius:zoneRadius,dx,dy});
+   effects.push({x:cx,y:cy,r:kind==='meteor'?95:25,ttl:.24});
+   if(effects.length>14)effects.splice(0,effects.length-14);
+   castCount++;
+   return true;
+  }
+  if(kind==='shove'){
+   for(const e of enemies.slice()){
+    const dx=e.x-px,dy=e.y-py,d=Math.hypot(dx,dy)||1;
+    if(d>radius)continue;
+    e.x=clamp(e.x+dx/d*95,15,W-15);
+    e.y=clamp(e.y+dy/d*95,80,H-18);
+    hit(e);
+   }
+   if(hits)effects.push({x:px,y:py,r:radius,ttl:.18});
+  }else if(area.has(kind)){
    const r=Math.min(270,Math.round((shortRange.has(kind)?120:170)*mods.radius));
    for(let i=enemies.length-1;i>=0;i--){
     const e=enemies[i];
@@ -426,12 +527,13 @@ const alpha=(()=>{
  function preUpdate(dt){return input(dt)}
  function onRespawn(){
   boss15=false;boss30=false;bossMessage='';
-  orbQueue.length=0;orbCooldown=0;activeBuffs={};effects.length=0;
+  orbQueue.length=0;orbCooldown=0;activeBuffs={};effects.length=0;zones.length=0;
   megaActive=0;megaCooldown=0;megEnergy=0;
  }
  function postUpdate(dt){
   if(paused||menu||!started)return;
   updateEffects(dt);
+  advanceZones(dt);
   extraCombat(dt);
   if(!boss15&&time>=KANTO_CONFIG.sealSeconds){boss15=true;spawnBoss(15)}
   if(!boss30&&time>=KANTO_CONFIG.finalBossSeconds){boss30=true;spawnBoss(30)}
@@ -441,7 +543,7 @@ const alpha=(()=>{
   ctx.fillStyle=color;ctx.font=font;ctx.fillText(String(value),x,y)
  }
  function draw(){
-  text(820,44,'PKMSVV SWITCH NATIVE 0.2.1','#ffe39d');
+  text(820,44,'PKMSVV SWITCH NATIVE 0.2.2','#ffe39d');
   text(820,74,'KANTO • GEN 1 • '+(accelerated?'QA x12':'REAL TIME'),'#a7e7f6');
   text(820,103,'TEAM: '+name(getMon(profile.selected))+'  EVOLVE: #'+evolvedDex()+'  SKILL: '+moveList.length+'/8');
   text(820,132,'ORB: '+orbQueue.length+'/10   CD '+orbCooldown.toFixed(1)+'s');
@@ -453,6 +555,13 @@ const alpha=(()=>{
   if(moveList.length){
    const list=moveList.map(m=>m.id+(m.lvl<5?' '+m.lvl:' MAX')+' '+Math.ceil(m.cooldown||0)+'s');
    for(let i=0;i<list.length;i++)text(840,322+i*25,list[i],'#caefcc','16px sans-serif');
+  }
+  for(const z of zones){
+   ctx.strokeStyle=z.kind==='meteor'?'#ef8b70':z.kind==='mine'?'#fce07b':'#77c8de';
+   ctx.lineWidth=2;ctx.beginPath();
+   ctx.arc(z.kind==='aura'||z.kind==='orbit'?px:z.x,
+    z.kind==='aura'||z.kind==='orbit'?py:z.y,
+    Math.min(110,z.radius),0,Math.PI*2);ctx.stroke();
   }
   for(const fx of effects){ctx.strokeStyle='#f9d977';ctx.lineWidth=2;
    ctx.beginPath();ctx.arc(fx.x,fx.y,fx.r,0,Math.PI*2);ctx.stroke()}
@@ -548,6 +657,8 @@ const alpha=(()=>{
   get availableMoveCount(){return sourceMoves.length},get availablePokemonCount(){return realDex?.length||0},
   get realDexLength(){return realDex?.length||0},
   get effectCount(){return effects.length},
+  get zoneCount(){return zones.length},get zones(){return zones},
+  get zoneLimit(){return MAX_SKILL_ZONES},advanceZones,
   castMove
  };
 })();
