@@ -104,7 +104,7 @@ jobs:
           python3 -m pip install --disable-pip-version-check Pillow
           python3 - <<'PY'
           from PIL import Image
-          Image.open('build/icon.png').convert('RGB').resize((256,256)).save('switch/nro-forwarder/icon.jpg',quality=90)
+          Image.open('dist/switch-package/switch/brewser/apps/com.votrivalley.pkmsvv/assets/icons/icon-512.png').convert('RGB').resize((256,256)).save('switch/nro-forwarder/icon.jpg',quality=90)
           PY
           docker run --rm -v "$PWD:/workspace" -w /workspace/switch/nro-forwarder \
             -e DEVKITPRO=/opt/devkitpro devkitpro/devkita64:20260219 \
