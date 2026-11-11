@@ -47,6 +47,11 @@ function loadSprites(){
   }catch(_){loaded[name]=false}
  }
 }
+// Switch-only bindings: dialog keys are direct and take precedence over combat.
+const SWITCH_PAD_BINDINGS=Object.freeze({
+ skill:[3,2,0],page:1,orb:[5,2],pause:[5,0],
+ menu:9,menuBack:0,mega:7,sprites:4
+});
 let xp=0,level=1,attack=1,fireRate=.21,moveSpeed=230,skillPage=0,pickOpen=false,prevChoice=[false,false,false,false],skillChoices=[];
 const SKILLS=[
  {name:'Tang sat thuong',description:'Dan manh hon',apply(){attack+=1}},
@@ -93,21 +98,26 @@ function respawn(){
 function update(dt){
  if(typeof alpha==='object'&&alpha.enabled&&alpha.preUpdate(dt))return;
  const p=navigator.getGamepads?.()?.find?.(x=>x?.connected)||navigator.getGamepads?.()?.[0];
- const r=button(p,5),b=button(p,0),toggle=b&&!prevB;prevB=b;
+ const r=button(p,5),b=button(p,0),toggle=r&&b&&!prevB;prevB=b;
  const l=button(p,4),zl=button(p,6);
  // L toggles Pikachu and up to 4 Rattata sprites. Vector mode stays default.
  if(l&&!prevL){spritesEnabled=!spritesEnabled;if(spritesEnabled)loadSprites();}
  if(!DIAG_FIXED_MODE&&zl&&!prevZL){renderMode=(renderMode+1)%3;drawCount=0;}
  prevL=l;prevZL=zl;
- const choice0=button(p,3),choice1=button(p,2),choice2=button(p,0),choice3=button(p,1);
+ const choice0=button(p,SWITCH_PAD_BINDINGS.skill[0]);
+ const choice1=button(p,SWITCH_PAD_BINDINGS.skill[1]);
+ const choice2=button(p,SWITCH_PAD_BINDINGS.skill[2]);
+ const choice3=button(p,SWITCH_PAD_BINDINGS.page);
  const edge0=choice0&&!prevChoice[0],edge1=choice1&&!prevChoice[1],
   edge2=choice2&&!prevChoice[2],edge3=choice3&&!prevChoice[3];
  prevChoice[0]=choice0;prevChoice[1]=choice1;prevChoice[2]=choice2;prevChoice[3]=choice3;
  if(pickOpen){
-  // Controller can still move during a level-up choice.
-  if(edge3)skillPage=(skillPage+1)%Math.ceil(skillChoices.length/3);
-  if(r){if(edge0)pickSkill(0);else if(edge1)pickSkill(1);else if(edge2)pickSkill(2)}
- }else if(toggle&&!r)paused=!paused;
+  // X / Y / B directly select slots 1 / 2 / 3; A pages. No R modifier.
+  if(edge3)skillPage=(skillPage+1)%Math.max(1,Math.ceil(skillChoices.length/3));
+  else if(edge0)pickSkill(0);
+  else if(edge1)pickSkill(1);
+  else if(edge2)pickSkill(2);
+ }else if(toggle)paused=!paused;
  if(paused)return;
  time+=dt*(typeof alpha==='object'&&alpha.enabled?alpha.clockScale:1);spawnShield=Math.max(0,spawnShield-dt);
  kantoTier=kantoWaveAt(time);
@@ -209,7 +219,7 @@ function draw(){
    ctx.fillStyle='#fff7c5';ctx.fillRect(W-390,y+8,10,48);
    for(let k=0;k<=i;k++)ctx.fillRect(W-370+k*15,y+15,10,10);
   }
-  ctx.fillStyle='#ffeab1';ctx.fillRect(W-395,438,(skillPage+1)*120,9);
+  ctx.fillStyle='#ffeab1';ctx.fillRect(W-395,438,Math.min(360,(skillPage+1)*120),9);
  }
  if(paused){ctx.fillStyle='rgba(0,0,0,.7)';ctx.fillRect(0,0,W,H);
   ctx.fillStyle='#fff';ctx.fillRect(W/2-100,H/2-15,200,30)}
