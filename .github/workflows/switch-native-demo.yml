@@ -46,7 +46,7 @@ jobs:
           set -euo pipefail
           mkdir -p switch/native-demo/romfs/sprites
           upstream=1b3b7c0a538dd2226ae08d0d2f8955125075bbd4
-          for dex in 25 19 16 41 1 4 7 10 21 43 6 150; do
+          for dex in 25 19 16 41 1 2 3 4 5 6 7 8 9 10 21 43 150; do
             curl --fail --location --retry 4 --retry-all-errors --retry-delay 2 \
               "https://raw.githubusercontent.com/PokeAPI/sprites/$upstream/sprites/pokemon/$dex.png" \
               --output "switch/native-demo/romfs/sprites/$dex.png"
@@ -54,7 +54,7 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           from struct import unpack
-          for dex in (25,19,16,41,1,4,7,10,21,43,6,150):
+          for dex in (25,19,16,41,1,2,3,4,5,6,7,8,9,10,21,43,150):
               blob=Path(f'switch/native-demo/romfs/sprites/{dex}.png').read_bytes()
               assert blob[:8]==bytes([137,80,78,71,13,10,26,10]),f'invalid PNG dex={dex}'
               w,h=unpack('>II',blob[16:24])
@@ -64,7 +64,7 @@ jobs:
           PY
       - name: Install icon generator
         run: python3 -m pip install --disable-pip-version-check pillow
-      - name: Package native integrated Alpha v0.1.0 NRO
+      - name: Package native integrated Alpha v0.1.1 NRO
         working-directory: switch/native-demo
         shell: bash
         run: |
@@ -73,21 +73,21 @@ jobs:
           const fs=require('node:fs');
           const p=JSON.parse(fs.readFileSync('package.json','utf8'));
           p.name='pkmsvv-switch-alpha';
-          p.version='0.1.0';
-          p.nacp={...(p.nacp||{}),id:'0147365656200000',title:'PKMSVV ALPHA A1'};
+          p.version='0.1.1';
+          p.nacp={...(p.nacp||{}),id:'0147365656210000',title:'PKMSVV ALPHA A2'};
           fs.writeFileSync('package.json',JSON.stringify(p,null,2));
           NODE
           python3 make_icon.py ALPHA
           npm run nro
           test -s pkmsvv-switch-alpha.nro
           mkdir -p ../../dist/switch-native-demo
-          cp pkmsvv-switch-alpha.nro ../../dist/switch-native-demo/PKMSVV-Switch-Alpha-v0100.nro
+          cp pkmsvv-switch-alpha.nro ../../dist/switch-native-demo/PKMSVV-Switch-Alpha-v0101.nro
           cp README-ALPHA.md ../../dist/switch-native-demo/README-ALPHA.md
           cp romfs/kanto-config.json ../../dist/switch-native-demo/kanto-config.json
           ls -lh ../../dist/switch-native-demo/
       - uses: actions/upload-artifact@v4
         with:
-          name: PKMSVV-Switch-Alpha-v0100-OnePass
+          name: PKMSVV-Switch-Alpha-v0101-OnePass
           path: dist/switch-native-demo/*.nro
           retention-days: 14
           if-no-files-found: error
