@@ -414,7 +414,7 @@ const alpha=(()=>{
   }else{
    if(!pickOpen){
     // Outside level-up dialogs R+Y uses Orb; R+B pause is in main.js.
-    if(r&&y&&!lastY&&!zl)orbUse();
+    if(r&&y&&!(lastR&&lastY)&&!zl)orbUse();
     if(zr&&!lastZR&&!r)activateMega();
    }
    if(spritesEnabled)loadExtraSprites();
