@@ -201,7 +201,7 @@ const alpha=(()=>{
   offers=[];
   if(canFuse&&fusionOfferRecipe===canFuse.id)
    offers.push({kind:'fusion',id:canFuse.id,name:canFuse.name});
-  for(const m of moveList)if(m.lvl<MOVE_MAX&&offers.length<3)
+  for(const m of moveList)if(m.lvl<MOVE_MAX&&offers.length<6)
    offers.push({kind:'upgrade',id:m.id,name:m.id+' LV '+(m.lvl+1)});
   const ids=(Array.isArray(data.realMoves)&&data.realMoves.length===103?
    data.realMoves.filter(m=>m.kind!=='buff').map(m=>m.id):
@@ -209,20 +209,20 @@ const alpha=(()=>{
    'spark','gust','ice-shard','razor-leaf','rock-tomb','confusion','shadow-ball',
    'flamethrower','metal-claw','psychic','bubble-beam']);
   const offset=Math.floor(rng()*ids.length);
-  for(let i=0;i<ids.length&&offers.length<3;i++){
+  for(let i=0;i<ids.length&&offers.length<6;i++){
    const id=ids[(offset+i)%ids.length];
    if(moveList.length<MAX_MOVES&&!moveList.some(m=>m.id===id)){
     const source=data.realMoves?.find(m=>m.id===id);
     offers.push({kind:'new',id,name:source?.name||id});
    }
   }
-  while(offers.length<3)offers.push({kind:'heal',id:'heal',name:'HEAL 35 HP'});
+  while(offers.length<6)offers.push({kind:'heal',id:'heal',name:'HEAL 35 HP'});
   skillChoices=offers.map(o=>({name:o.name,description:o.kind}));
   skillPage=0;pickOpen=true;
  }
  function pickOffer(slot){
   if(!pickOpen||slot<0||slot>2)return false;
-  const o=offers[slot];if(!o)return false;
+  const o=offers[skillPage*3+slot];if(!o)return false;
   if(o.kind==='fusion'){
    if(fusionUsed)return false;
    const recipe=data.fusions.find(f=>f.id===o.id);
@@ -400,25 +400,28 @@ const alpha=(()=>{
   const btn=n=>!!pad?.buttons?.[n]?.pressed;
   const plus=btn(9),a=btn(1),b=btn(0),y=btn(2),x=btn(3),zr=btn(7),zl=btn(6),
    left=btn(14),right=btn(15),r=btn(5),l=btn(4);
-  if(plus&&!lastStart){menu=!menu;menuIndex=0;if(menu){persist()}}
-  if(zl&&r&&!lastZL){accelerated=!accelerated;clockScale=accelerated?12:1}
+  if(plus&&!lastStart&&!pickOpen){menu=!menu;menuIndex=0;if(menu){persist()}}
+  if(zl&&r&&!lastZL&&!pickOpen&&!menu){accelerated=!accelerated;clockScale=accelerated?12:1}
   let consumedMenuClose=false;
   if(menu){
-   if((left&&!lastLeft)||(l&&!lastL))menuTab=(menuTab+5)%6;
-   if((right&&!lastRight)||(r&&!lastR))menuTab=(menuTab+1)%6;
+   if((left&&!lastLeft)||(l&&!lastL))menuTab=(menuTab+6)%7;
+   if((right&&!lastRight)||(r&&!lastR))menuTab=(menuTab+1)%7;
    if(menuTab===0){
     if(a&&!lastA){profile.selected=roster[menuIndex%roster.length].dex;markDirty();resetBattle();menu=false}
     if(y&&!lastY)menuIndex=(menuIndex+1)%roster.length;
    }
    if(b&&!lastB){menu=false;consumedMenuClose=true}
   }else{
-   if(y&&!lastY&&!r)orbUse();
-   if(zr&&!lastZR&&!r)activateMega();
+   if(!pickOpen){
+    // Outside level-up dialogs R+Y uses Orb; R+B pause is in main.js.
+    if(r&&y&&!lastY&&!zl)orbUse();
+    if(zr&&!lastZR&&!r)activateMega();
+   }
    if(spritesEnabled)loadExtraSprites();
   }
   lastStart=plus;lastA=a;lastB=b;lastY=y;lastX=x;lastZR=zr;lastZL=zl;
   lastLeft=left;lastRight=right;lastL=l;lastR=r;
-  return menu||consumedMenuClose||plus;
+  return menu||consumedMenuClose||(!pickOpen&&plus);
  }
  function preUpdate(dt){return input(dt)}
  function onRespawn(){
@@ -438,14 +441,14 @@ const alpha=(()=>{
   ctx.fillStyle=color;ctx.font=font;ctx.fillText(String(value),x,y)
  }
  function draw(){
-  text(820,44,'PKMSVV SWITCH NATIVE 0.2.0','#ffe39d');
+  text(820,44,'PKMSVV SWITCH NATIVE 0.2.1','#ffe39d');
   text(820,74,'KANTO • GEN 1 • '+(accelerated?'QA x12':'REAL TIME'),'#a7e7f6');
   text(820,103,'TEAM: '+name(getMon(profile.selected))+'  EVOLVE: #'+evolvedDex()+'  SKILL: '+moveList.length+'/8');
   text(820,132,'ORB: '+orbQueue.length+'/10   CD '+orbCooldown.toFixed(1)+'s');
   text(820,161,'MEGA: '+megEnergy+'/100  CD '+Math.ceil(megaCooldown)+'s');
   text(820,190,'DEX: '+Object.keys(profile.pokedex).length+'  BADGE: '+(badgeWon?'YES':'NO'));
   text(820,218,'SAVE: '+saveStatus,'#acc7ff');
-  text(820,251,'Y ORB  ZR MEGA QA  + MENU','#ffe0ad','17px sans-serif');
+  text(820,251,'R+Y ORB  R+B PAUSE  ZR MEGA  + MENU','#ffe0ad','17px sans-serif');
   text(820,277,'ZL+R: QA CLOCK x12  L: SPRITE','#ffe0ad','17px sans-serif');
   if(moveList.length){
    const list=moveList.map(m=>m.id+(m.lvl<5?' '+m.lvl:' MAX')+' '+Math.ceil(m.cooldown||0)+'s');
@@ -454,7 +457,13 @@ const alpha=(()=>{
   for(const fx of effects){ctx.strokeStyle='#f9d977';ctx.lineWidth=2;
    ctx.beginPath();ctx.arc(fx.x,fx.y,fx.r,0,Math.PI*2);ctx.stroke()}
   if(pickOpen){
-   for(let i=0;i<offers.length;i++)text(W-390,210+i*72,'R+'+['X','Y','B'][i]+' '+offers[i].name,'#ffe7b0','17px sans-serif');
+   const start=skillPage*3;
+   for(let i=0;i<3;i++){
+    const offer=offers[start+i];if(!offer)continue;
+    text(W-390,210+i*72,['X','Y','B'][i]+'  '+offer.name,'#ffe7b0','17px sans-serif');
+   }
+   text(W-390,420,'A: NEXT PAGE '+(skillPage+1)+'/'+Math.ceil(offers.length/3),
+    '#f9d9a0','17px sans-serif');
   }
   if(bossMessage)text(455,123,bossMessage,'#fff0a2','bold 28px sans-serif');
   if(gameWon)text(390,355,'KANTO ALPHA CLEARED','#ffee88','bold 35px sans-serif');
@@ -463,8 +472,8 @@ const alpha=(()=>{
  function drawMenu(){
   ctx.fillStyle='rgba(6,17,29,.97)';ctx.fillRect(95,65,1080,590);
   ctx.strokeStyle='#92dccb';ctx.strokeRect(95,65,1080,590);
-  const tabs=['TEAM','BOX','POKEDEX','ORB','FUSION','INFO'];
-  for(let i=0;i<6;i++)text(127+i*166,110,(i===menuTab?'[':'')+tabs[i]+(i===menuTab?']':''),
+  const tabs=['TEAM','BOX','POKEDEX','ORB','FUSION','CONTROLLER','INFO'];
+  for(let i=0;i<tabs.length;i++)text(115+i*151,110,(i===menuTab?'[':'')+tabs[i]+(i===menuTab?']':''),
    i===menuTab?'#fff0a2':'#b8d5d6','20px sans-serif');
   if(menuTab===0){
    text(135,170,'Y NEXT • A TRIAL SELECT • L/R TABS • B BACK','#cfeadf');
@@ -485,7 +494,7 @@ const alpha=(()=>{
    if(!ids.length)text(165,235,'No Pokémon defeated yet','#fff0ad');
   }
   if(menuTab===3){
-   text(135,170,'Orb queue (FIFO, max 10, 5s cooldown) • Y uses first');
+   text(135,170,'Orb queue (FIFO, max 10, 5s cooldown) • R+Y uses first');
    for(let i=0;i<orbQueue.length;i++)text(165,213+i*37,(i+1)+'. '+orbQueue[i],'#ffe5b2');
   }
   if(menuTab===4){
@@ -497,6 +506,18 @@ const alpha=(()=>{
    }
   }
   if(menuTab===5){
+   text(145,169,'CONTROLLER BINDINGS - Nintendo Switch only','#fff0a2','23px sans-serif');
+   text(155,219,'LEVEL UP: X = SKILL 1     Y = SKILL 2     B = SKILL 3');
+   text(155,259,'LEVEL UP: A = NEXT PAGE (3 skills per page)');
+   text(155,299,'BATTLE: R+Y = USE ORB     R+B = PAUSE / RESUME');
+   text(155,339,'BATTLE: ZR = MEGA (QA)     L = SPRITES');
+   text(155,379,'MENU: + = OPEN     L/R = TABS     B = BACK');
+   text(155,419,'TEAM: Y = NEXT     A = SELECT AND START');
+   text(155,470,'X/Y/B select skills only with level-up panel open','#c1ffd5','17px sans-serif');
+   text(155,506,'R+X / R+Y / R+B are not skill shortcuts','#ffe9b1','17px sans-serif');
+   text(155,551,'Active Switch controller mapping (fixed preset)','#bacfe4','17px sans-serif');
+  }
+  if(menuTab===6){
    text(145,175,'Native Alpha QA: real Kanto waves, six source Orbs, 10 Fusion recipes');
    text(145,216,'Partial battle adapter: not yet the production browser gameplay engine.');
    text(145,257,'Save: sdmc:/switch/pkmsvv-native-alpha/ (two independent copies)');
