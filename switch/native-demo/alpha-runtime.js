@@ -465,6 +465,7 @@ const alpha=(()=>{
   get bossDamageMultiplier(){return accelerated?6:1},
   get moveMultiplier(){return activeBuffs.quick>0?1.25:1},
   get castCount(){return castCount},get damageCount(){return damageCount},
+  get effectCount(){return effects.length},
   castMove
  };
 })();
