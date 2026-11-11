@@ -64,8 +64,8 @@ function pickSkill(slot){
  if(!skill)return false;
  skill.apply();pickOpen=false;xp=0;return true;
 }
-function renderSprite(name,x,y,size,mirror=false){
- if(!spritesEnabled||drawnSprites>=MAX_SPRITES_PER_FRAME)return false;
+function renderSprite(name,x,y,size,mirror=false,isPlayer=false){
+ if(!spritesEnabled||drawnSprites>=MAX_SPRITES_PER_FRAME||(!isPlayer&&drawnSprites>=MAX_SPRITES_PER_FRAME-1))return false;
  if(name!=='pikachu'&&name!=='rattata'&&!(typeof alpha==='object'&&alpha.spriteNames.has(name)))return false;
  if(name!=='pikachu'&&enemySpritesDrawn>=MAX_ENEMY_SPRITES&&!(typeof alpha==='object'&&alpha.enabled))return false;
  if(x+size<0||x-size>W||y+size<0||y-size>H)return false;
@@ -137,7 +137,7 @@ function update(dt){
   let hit=false;
   for(let k=enemies.length-1;k>=0;k--){
    const e=enemies[k],d=(e.x-s.x)**2+(e.y-s.y)**2;
-   if(d<(e.r+5)**2){e.hp-=attack;hit=true;if(e.hp<=0){if(typeof alpha==='object'&&alpha.enabled)alpha.onKill(e);enemies.splice(k,1);kills++;xp++;if(xp>=12&&!pickOpen){level++;setChoices()}}break}
+   if(d<(e.r+5)**2){e.hp-=attack*(e.boss&&typeof alpha==='object'&&alpha.enabled?alpha.bossDamageMultiplier:1);hit=true;if(e.hp<=0){if(typeof alpha==='object'&&alpha.enabled)alpha.onKill(e);enemies.splice(k,1);kills++;xp++;if(xp>=12&&!pickOpen){level++;setChoices()}}break}
   }
   if(hit||s.ttl<=0||s.x<0||s.x>W||s.y<0||s.y>H)shots.splice(i,1);
  }
@@ -150,7 +150,7 @@ function update(dt){
  }
  // Cap stacked collision damage so a crowd cannot kill in a single frame.
  // Resolve death only AFTER finishing every iteration.
- if(touching>0&&spawnShield<=0)hp=Math.max(0,hp-Math.min(touching,4)*8*dt);
+ if(touching>0&&spawnShield<=0)hp=Math.max(0,hp-Math.min(touching,4)*8*dt*(typeof alpha==='object'&&alpha.enabled?alpha.incomingDamageMultiplier:1));
  if(hp<=0)respawn();
  if(typeof alpha==='object'&&alpha.enabled)alpha.postUpdate(dt);
 }
@@ -174,7 +174,7 @@ function draw(){
    ctx.fillStyle='#dc697e';ctx.beginPath();ctx.arc(enemy.x,enemy.y,enemy.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#441e30';ctx.stroke();
   }
  }
- if(!renderSprite(typeof alpha==='object'&&alpha.enabled?alpha.chooseBattleSprite():'pikachu',px,py,78)){
+ if(!renderSprite(typeof alpha==='object'&&alpha.enabled?alpha.chooseBattleSprite():'pikachu',px,py,78,false,true)){
   ctx.fillStyle='#65d5c3';ctx.beginPath();ctx.arc(px,py,19,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle='#e6fff7';ctx.lineWidth=3;ctx.stroke();
  }
