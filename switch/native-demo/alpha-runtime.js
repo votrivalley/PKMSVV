@@ -643,11 +643,33 @@ const alpha=(()=>{
    return true;
   }
   if(menu){
-   if((left&&!lastLeft)||(l&&!lastL))menuTab=(menuTab+6)%7;
-   if((right&&!lastRight)||(r&&!lastR))menuTab=(menuTab+1)%7;
+   const previousTab=menuTab;
+   if((left&&!lastLeft)||(l&&!lastL))menuTab=(menuTab+7)%8;
+   if((right&&!lastRight)||(r&&!lastR))menuTab=(menuTab+1)%8;
+   if(menuTab!==previousTab)menuIndex=0;
    if(menuTab===0){
-    if(a&&!lastA){profile.selected=roster[menuIndex%roster.length].dex;markDirty();resetBattle();menu=false}
-    if(y&&!lastY)menuIndex=(menuIndex+1)%roster.length;
+    const choices=teamOptions();
+    if(a&&!lastA&&choices.length){
+     profile.selected=choices[menuIndex%choices.length];
+     markDirty();resetBattle();menu=false;
+    }
+    if(y&&!lastY)menuIndex=(menuIndex+1)%Math.max(1,choices.length);
+   }
+   if(menuTab===1){
+    const ids=ownedIds();
+    if(y&&!lastY)menuIndex=(menuIndex+1)%Math.max(1,ids.length);
+    if(a&&!lastA&&ids.length){
+     profile.selected=ids[menuIndex%ids.length];
+     markDirty();resetBattle();menu=false;
+    }
+   }
+   if(menuTab===2&&y&&!lastY){
+    const pages=Math.max(1,Math.ceil(Object.keys(profile.pokedex).length/18));
+    menuIndex=(menuIndex+1)%pages;
+   }
+   if(menuTab===3){
+    if(a&&!lastA)recruitMany(1);
+    if(y&&!lastY)recruitMany(10);
    }
    if(b&&!lastB){menu=false;consumedMenuClose=true}
   }else{
@@ -684,7 +706,7 @@ const alpha=(()=>{
   ctx.fillStyle=color;ctx.font=font;ctx.fillText(String(value),x,y)
  }
  function draw(){
-  text(820,44,'PKMSVV SWITCH NATIVE 0.2.3','#ffe39d');
+  text(820,44,'PKMSVV SWITCH NATIVE 0.2.4','#ffe39d');
   text(820,74,'KANTO • GEN 1 • '+(runUsedQA?(accelerated?'QA x12':'QA - CLOCK NORMAL'):'REAL TIME'),'#a7e7f6');
   text(820,103,'TEAM: '+name(getMon(profile.selected))+'  EVOLVE: #'+evolvedDex()+'  SKILL: '+moveList.length+'/8');
   text(820,132,'ORB: '+orbQueue.length+'/10   CD '+orbCooldown.toFixed(1)+'s');
@@ -736,32 +758,56 @@ const alpha=(()=>{
  function drawMenu(){
   ctx.fillStyle='rgba(6,17,29,.97)';ctx.fillRect(95,65,1080,590);
   ctx.strokeStyle='#92dccb';ctx.strokeRect(95,65,1080,590);
-  const tabs=['TEAM','BOX','POKEDEX','ORB','FUSION','CONTROLLER','INFO'];
-  for(let i=0;i<tabs.length;i++)text(115+i*151,110,(i===menuTab?'[':'')+tabs[i]+(i===menuTab?']':''),
+  const tabs=['TEAM','BOX','POKEDEX','RECRUIT','ORB','FUSION','CONTROLLER','INFO'];
+  for(let i=0;i<tabs.length;i++)text(105+i*131,110,(i===menuTab?'[':'')+tabs[i]+(i===menuTab?']':''),
    i===menuTab?'#fff0a2':'#b8d5d6','20px sans-serif');
   if(menuTab===0){
    text(135,170,'Y NEXT • A TRIAL SELECT • L/R TABS • B BACK','#cfeadf');
-   for(let i=0;i<roster.length;i++){
-    const p=roster[i];text(160,230+i*65,(i===menuIndex?'▶ ':'   ')+p.name+' #'+p.dex+
-     (p.dex===profile.selected?'  (ACTIVE)':''),i===menuIndex?'#ffdc94':'#dce9e7','23px sans-serif');
+   const choices=teamOptions();
+   const offset=Math.max(0,Math.min(choices.length-7,menuIndex-3));
+   for(let i=offset;i<Math.min(offset+7,choices.length);i++){
+    const mon=getMon(choices[i]),trial=roster.some(r=>r.dex===choices[i]);
+    text(160,220+(i-offset)*57,(i===menuIndex?'▶ ':'   ')+(mon?.name||'#'+choices[i])+' #'+choices[i]+
+     (trial?' [TRIAL]':' [OWNED]')+(choices[i]===profile.selected?' ACTIVE':''),
+     i===menuIndex?'#ffdc94':'#dce9e7','21px sans-serif');
    }
   }
   if(menuTab===1){
-   text(135,170,'BOX: actual native Alpha ownership, never grants trial Pokémon','#d6ede4');
-   const owned=Object.keys(profile.box).filter(id=>profile.box[id]);
-   for(let i=0;i<owned.length;i++)text(165,220+i*60,'OWNED #'+owned[i]+'  '+(getMon(+owned[i])?.name||''));
+   text(135,164,'POKEBOX  Y NEXT  A USE  (duplicates stored as copies)','#d6ede4');
+   const owned=ownedIds(),offset=Math.max(0,Math.min(owned.length-8,menuIndex-3));
+   for(let i=offset;i<Math.min(owned.length,offset+8);i++){
+    const dex=owned[i];
+    text(165,207+(i-offset)*53,(i===menuIndex?'▶ ':'   ')+
+     '#'+dex+' '+(getMon(dex)?.name||'Unknown')+'   x'+profile.box[dex]+
+     (profile.selected===dex?'  IN BATTLE':''),
+     i===menuIndex?'#ffe4a8':'#d9ebde','21px sans-serif');
+   }
   }
   if(menuTab===2){
-   text(135,170,'DEX: defeated species only, NOT owned Pokémon','#d6ede4');
    let ids=Object.keys(profile.pokedex).sort((a,b)=>Number(a)-Number(b));
-   for(let i=0;i<Math.min(ids.length,18);i++)text(165+(i%3)*330,220+Math.floor(i/3)*60,'#'+ids[i]+'  DISCOVERED');
-   if(!ids.length)text(165,235,'No Pokémon defeated yet','#fff0ad');
+   const pages=Math.max(1,Math.ceil(ids.length/18));
+   text(135,170,'POKEDEX: discovered by defeating Kanto Pokemon. Y NEXT PAGE '+(menuIndex+1)+'/'+pages,'#d6ede4');
+   ids=ids.slice(menuIndex*18,menuIndex*18+18);
+   for(let i=0;i<ids.length;i++)text(165+(i%3)*330,220+Math.floor(i/3)*60,'#'+ids[i]+' '+(getMon(+ids[i])?.name||'DISCOVERED'));
+   if(!Object.keys(profile.pokedex).length)text(165,235,'Defeat a Pokemon in normal Kanto mode first','#fff0ad');
   }
   if(menuTab===3){
+   text(135,162,'CHIEU MO / RECRUITMENT — Pokédex-discovered species only','#ffe5ad','23px sans-serif');
+   text(145,209,'Native tickets: '+profile.recruitTickets+'   KO Progress: '+(profile.recruitKO%30)+'/30');
+   text(145,249,'5-Star pity: '+profile.recruitPity+'/'+recruitRules.pity5+' (when 5-Star unlocked)');
+   text(145,289,'Available discovered species: '+discoveredPool().length+'   Box owned: '+ownedIds().length);
+   text(145,329,'A: RECRUIT x1 (1 ticket)       Y: RECRUIT x10 (10 tickets)','#a9ffe0');
+   text(145,373,'Duplicates become extra copies in PokéBox. No automatic rank upgrade.');
+   text(145,412,'Last: '+(lastRecruitOutcome||'NONE YET'),'#ffe9ad','18px sans-serif');
+   text(145,455,'Earn 1 ticket per 30 normal KOs; bosses award 2 / 3 tickets.');
+   text(145,494,'Trial native economy. Original star rates, not original save/wallet.');
+   text(145,534,'Undiscovered Pokémon cannot be rolled, including Legendary Pokémon.');
+  }
+  if(menuTab===4){
    text(135,170,'Orb queue (FIFO, max 10, 5s cooldown) • R+Y uses first');
    for(let i=0;i<orbQueue.length;i++)text(165,213+i*37,(i+1)+'. '+orbQueue[i],'#ffe5b2');
   }
-  if(menuTab===4){
+  if(menuTab===5){
    text(135,170,'Fusion: 2 source moves MAX, once per match','#ffdfa4');
    for(let i=0;i<data.fusions.length;i++){
     const f=data.fusions[i],known=id=>moveList.some(m=>m.id===id&&m.lvl>=MOVE_MAX);
@@ -769,19 +815,19 @@ const alpha=(()=>{
      f.moves.every(known)?'#a3ffc7':'#c5ccd1','16px sans-serif');
    }
   }
-  if(menuTab===5){
+  if(menuTab===6){
    text(145,169,'CONTROLLER BINDINGS - Nintendo Switch only','#fff0a2','23px sans-serif');
    text(155,219,'LEVEL UP: X = SKILL 1     Y = SKILL 2     B = SKILL 3');
    text(155,259,'LEVEL UP: A = NEXT PAGE (3 skills per page)');
    text(155,299,'BATTLE: R+Y = USE ORB     R+B = PAUSE / RESUME');
    text(155,339,'BATTLE: ZR = MEGA (QA)     L = SPRITES');
    text(155,379,'MENU: + = OPEN     L/R = TABS     B = BACK');
-   text(155,419,'TEAM: Y = NEXT     A = SELECT AND START');
+   text(155,419,'TEAM/BOX: Y NEXT, A USE  |  RECRUIT: A x1, Y x10');
    text(155,470,'X/Y/B select skills only with level-up panel open','#c1ffd5','17px sans-serif');
    text(155,506,'R+X / R+Y / R+B are not skill shortcuts','#ffe9b1','17px sans-serif');
    text(155,551,'Active Switch controller mapping (fixed preset)','#bacfe4','17px sans-serif');
   }
-  if(menuTab===6){
+  if(menuTab===7){
    text(145,175,'Native Alpha QA: real Kanto waves, six source Orbs, 10 Fusion recipes');
    text(145,216,'Partial battle adapter: not yet the production browser gameplay engine.');
    text(145,257,'Save: sdmc:/switch/pkmsvv-native-alpha/ (two independent copies)');
