@@ -52,7 +52,7 @@ Nền đồ họa của Switch Alpha v0.1.2 được giữ lại. Đây là đ�
 - **Khi lên cấp:** **X** chọn kỹ năng 1, **Y** chọn kỹ năng 2, **B** chọn kỹ năng 3 **ngay lập tức, không cần giữ R**. **R+A** sang trang kế tiếp (mỗi trang 3 kỹ năng, hiện có 2 trang). **Ưu tiên phím của popup**, không kích hoạt Orb/Pause khi chọn.
 - **Khi chiến đấu bình thường:** **R+Y** dùng Orb; **R+B** tạm dừng/tiếp tục; X/Y/B nhấn đơn không gọi hành động cũ. Phần cài đặt controller của Web/Android/PC cũng hiển thị ZL/L2 là nút tốc độ mặc định trên tay cầm tương thích; chưa phát hành bản chính thức.
 - **EVOLVE:** Sau boss 15:00, chọn **+ → EVOLVE**, **Y** chọn nhánh Đá/Dây Liên Kết, **A** dùng 1 Mảnh. Chỉ tiến hóa Pokémon đang trong trận. Mảnh không ghi save; sau tiến hóa không nhận miễn phí một cấp chiêu.
-- **ZL**: bật/tắt tốc độ trận 1×/1,5× (không thay thưởng). **ZL+R**: bật đồng hồ QA x12, giảm sát thương người chơi nhận để thử boss 15/30 phút. Huy hiệu QA không lưu.
+- **ZL**: bật/tắt tốc độ trận 1×/1,5× (không thay thưởng). **L3 (ấn analog trái)**: bật/tắt TOP Co-op ở bản Web/Android/PC; Switch Native Kanto chưa có Co-op nên chưa có bảng TOP để bật. **ZL+R**: bật đồng hồ QA x12, giảm sát thương người chơi nhận để thử boss 15/30 phút. Huy hiệu QA không lưu.
 - **ZR**: Mega preview trong chế độ QA nếu đủ điều kiện kỹ thuật; không phải quyền sở hữu Mega Stone thật.
 
 ## Save
