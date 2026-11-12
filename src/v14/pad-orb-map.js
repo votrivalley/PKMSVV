@@ -2,7 +2,7 @@
    Only mappings implemented by G.Input and G.Pad are editable. */
 G.PKMSVVPadOrb=(()=>{
  const KEY='pkmsvvPadMap';
- const DEFAULT=Object.freeze({dash:0,use:3,mega:4,pause:9,confirm:0,back:1,speed:5,leaderboard:11});
+ const DEFAULT=Object.freeze({dash:0,use:3,mega:4,pause:9,confirm:0,back:1,speed:6,leaderboard:11});
  // 8 (View/Share) is reserved as emergency back; D-pad/sticks remain navigation.
  const BUTTONS=[0,1,2,3,4,5,6,7,9,10,11];
  const NAMES={0:'A / ×',1:'B / ○',2:'X / □',3:'Y / △',4:'LB / L1',5:'RB / R1',6:'LT / L2',7:'RT / R2',9:'Start / Options',10:'L3',11:'R3'};
@@ -86,7 +86,7 @@ G.PKMSVVPadOrb=(()=>{
     (active==='keyboard'?
       '<p class="sub">'+tr('Chọn dòng để gán phím. Mặc định G = tốc độ ×1/×1,5 (khi cho phép), L = bật/tắt TOP Co-op. Nhấn Lưu sau khi gán.','Choose an action to remap. Default G = speed ×1/×1.5 (where allowed), L = Co-op TOP on/off. Press Save afterward.')+'</p>'+
       KB_IDS.map(k=>'<div class="set-row pkmsvv-control-row"><span>'+actionName(k,true)+'</span><button type="button" class="btn small" data-key-action="'+k+'">'+printable(keyDraft[k])+'</button></div>').join(''):
-      '<p class="sub">'+tr('Chọn dòng Tốc độ hoặc TOP rồi chọn nút còn trống, sau đó Lưu. Mặc định RB/R1 = tốc độ, R3 = bảng hạng Co-op. Analog trái/D-pad di chuyển, analog phải ngắm/cuộn.','Select Speed or TOP, pick an unused button and Save. Defaults: RB/R1 for speed; R3 for Co-op TOP. Left stick/D-pad moves, right stick aims/scrolls.')+'</p>'+
+      '<p class="sub">'+tr('Chọn dòng Tốc độ hoặc TOP rồi chọn nút còn trống, sau đó Lưu. Mặc định ZL/L2 = tốc độ, R3 = bảng hạng Co-op. Analog trái/D-pad di chuyển, analog phải ngắm/cuộn.','Select Speed or TOP, pick an unused button and Save. Defaults: ZL/L2 for speed; R3 for Co-op TOP. Left stick/D-pad moves, right stick aims/scrolls.')+'</p>'+
       PAD_IDS.map(k=>'<label class="set-row pkmsvv-control-row"><span>'+actionName(k,false)+'</span><select class="btn small" data-padorb="'+k+'">'+
        BUTTONS.map(i=>'<option value="'+i+'"'+(padDraft[k]===i?' selected':'')+'>'+NAMES[i]+'</option>').join('')+'</select></label>').join(''))+
     '<p id="pkmsvv-control-message" class="note" role="status"></p>'+
