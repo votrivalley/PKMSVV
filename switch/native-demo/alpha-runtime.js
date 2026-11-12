@@ -962,6 +962,8 @@ skillChoices=offers.map(o=>({name:o.name,description:o.kind}));
   const plus=btn(9),a=btn(1),b=btn(0),y=btn(2),x=btn(3),zr=btn(7),zl=btn(6),
    left=btn(14),right=btn(15),r=btn(5),l=btn(4);
   if(plus&&!lastStart&&!pickOpen&&!branchPromptDex){menu=!menu;menuIndex=0;if(menu){persist()}}
+  // ZL alone toggles normal 1.5x; QA remains an explicit ZL+R chord.
+  if(zl&&!lastZL&&!r&&!pickOpen&&!menu&&!branchPromptDex&&!matchResult)fastMode=!fastMode;
   if(zl&&r&&!lastZL&&!pickOpen&&!menu){
    accelerated=!accelerated;clockScale=accelerated?12:1;
    if(accelerated)runUsedQA=true;
@@ -1251,6 +1253,7 @@ if(pickOpen){
  // Keep persistent progress isolated; no automatic ownership grants.
  load();resetBattle();
  return {enabled:true,data,spriteNames,preUpdate,postUpdate,onKill,offersForLevel,
+  get speedMultiplier(){return fastMode?1.5:1},get fastMode(){return fastMode},
   pickOffer,selectSpecies,draw,persist,loadExtraSprites,chooseBattleSprite,onRespawn,resetBattle,onDefeat,
   get profile(){return profile},get menu(){return menu},get accelerated(){return accelerated},get runUsedQA(){return runUsedQA},
    get matchResult(){return matchResult},get runEndTime(){return runEndTime},get runEndKOs(){return runEndKOs},
