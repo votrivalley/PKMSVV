@@ -15,11 +15,12 @@ const alpha=(()=>{
  const byDex=new Map([...(realDex||[]),...roster,...foes].map(p=>[p.dex,p]));
  const spriteNames=new Set([...rosterNames,...foeNames,...(realDex||[]).map(p=>p.name.toLowerCase()),...data.evolutionSprites.map(p=>p.name.toLowerCase()),'mewtwo']);
  const SAVE_PATH='sdmc:/switch/pkmsvv-native-alpha/';
-const SAVE_PREFIX='progress-v028-';
- const PREVIOUS_SAVE_PREFIX='progress-v027-';
- const OLDER_SAVE_PREFIX='progress-v026-';
- const OLDEST_SAVE_PREFIX='progress-v025-';
- const ANCIENT_SAVE_PREFIX='progress-v024-';
+const SAVE_PREFIX='progress-v029-';
+ const PREVIOUS_SAVE_PREFIX='progress-v028-';
+ const OLDER_SAVE_PREFIX='progress-v027-';
+ const OLDEST_SAVE_PREFIX='progress-v026-';
+ const ANCIENT_SAVE_PREFIX='progress-v025-';
+ const LEGACY_PREVIOUS_SAVE_PREFIX='progress-v024-';
  const LEGACY_SAVE_PREFIX='progress-';
  const MOVE_MAX=5,MAX_MOVES=8;
  const RANK_RULES=data.rankRules||{max:5,perRankStatBonus:.06,rank4CooldownReduction:.05};
@@ -60,10 +61,11 @@ const SAVE_PREFIX='progress-v028-';
     [readSlot(1,OLDER_SAVE_PREFIX),readSlot(2,OLDER_SAVE_PREFIX)],
 [readSlot(1,OLDEST_SAVE_PREFIX),readSlot(2,OLDEST_SAVE_PREFIX)],
     [readSlot(1,ANCIENT_SAVE_PREFIX),readSlot(2,ANCIENT_SAVE_PREFIX)],
+    [readSlot(1,LEGACY_PREVIOUS_SAVE_PREFIX),readSlot(2,LEGACY_PREVIOUS_SAVE_PREFIX)],
     [readSlot(1,LEGACY_SAVE_PREFIX),readSlot(2,LEGACY_SAVE_PREFIX)]
    ];
    const chosen=groups.find(g=>g[0]||g[1])||groups[0],migrating=chosen!==groups[0];
-   // Keep every v027/v026/v025/v024/legacy save intact as rollback backups.
+   // Keep v028/v027/v026/v025/v024/legacy saves intact as rollback backups.
    const [a,b]=chosen,saved=(!a?b:!b?a:a.seq>b.seq?a:b);
   if(saved&&Number.isInteger(saved.seq)&&saved.seq>=0){
    const found=saved.pokedex&&typeof saved.pokedex==='object'?saved.pokedex:{};
@@ -242,6 +244,10 @@ const previous=stage;
   // PokéBox, Rank and Rank3 branch stay attached to the original dex.
   return true;
  }
+ function naturalMovePool(dex){
+  const pool=data.realMovePools?.[dex];
+  return Array.isArray(pool)?pool:[];
+ }
  function resetBattle(){
 level=1;battleEvolutionDex=profile.selected;evolutionNotice='';evolutionNoticeLeft=0;evolutionEvents=0;
    evoQueue=[];evoStage='';evoOldMove='';evoChoices=[];evoStep=null;
@@ -258,11 +264,9 @@ level=1;battleEvolutionDex=profile.selected;evolutionNotice='';evolutionNoticeLe
    1:['vine-whip','tackle'],
    7:['water-gun','tackle']
   }[profile.selected]||(()=>{
-    // Native type-matching attacks, not a claim of original species learnsets.
-    const mon=getMon(profile.selected);
-    const picked=(data.realMoves||[]).filter(m=>m.kind!=='buff'&&
-     mon?.types?.some(t=>String(t).toLowerCase()===String(m.type).toLowerCase()))
-     .slice(0,2).map(m=>m.id);
+    // Real game move pool for an owned Kanto species (trial starter presets stay fixed).
+    const picked=naturalMovePool(profile.selected)
+     .filter(id=>sourceMoves.some(m=>m.id===id&&m.kind!=='buff')).slice(0,2);
     while(picked.length<2)picked.push(picked.length?'quick-attack':'tackle');
     return picked;
    })();
@@ -467,25 +471,23 @@ pickOpen=false;skillChoices=[];paused=false;
  }
  function onDefeat(){return finishRun('defeat')}
 function evoCandidateMoves(fromDex,toDex){
-  const known=new Set(moveList.map(m=>m.id));
-  const nextTypes=new Set((realByDex.get(toDex)?.types||getMon(toDex)?.types||[]).map(x=>String(x).toLowerCase()));
-  const oldTypes=new Set((realByDex.get(fromDex)?.types||getMon(fromDex)?.types||[]).map(x=>String(x).toLowerCase()));
-  // Uses the real PKMSVV move catalog. Native species-specific learnsets are
-  // not ported yet, so evolved-form types are a transparent approximation.
-  const available=sourceMoves.filter(m=>m&&m.id&&m.kind!=='buff'&&!known.has(m.id));
-  const matched=available.filter(m=>nextTypes.has(String(m.type).toLowerCase()));
-  const eligible=matched.length?matched:available;
-  const exclusive=eligible.filter(m=>!oldTypes.has(String(m.type).toLowerCase()));
-  const shared=eligible.filter(m=>oldTypes.has(String(m.type).toLowerCase()));
+  const learned=new Set(moveList.map(m=>m.id));
+  const oldPool=new Set(naturalMovePool(fromDex));
+  // Exactly the game source's moves for the newly evolved species.
+  const pool=naturalMovePool(toDex).filter(id=>
+   !learned.has(id)&&sourceMoves.some(m=>m.id===id&&m.kind!=='buff'));
+  const exclusive=pool.filter(id=>!oldPool.has(id));
+  const shared=pool.filter(id=>oldPool.has(id));
   function shuffle(values){
-   const a=values.slice();
-   for(let i=a.length-1;i>0;i--){
+   const list=values.slice();
+   for(let i=list.length-1;i>0;i--){
     const j=Math.floor(rng()*(i+1));
-    [a[i],a[j]]=[a[j],a[i]];
+    [list[i],list[j]]=[list[j],list[i]];
    }
-   return a;
+   return list;
   }
-  return shuffle(exclusive).concat(shuffle(shared)).slice(0,3).map(m=>m.id);
+  // Fixed one-to-three cards per evolution, prioritizing new form-only skills.
+  return shuffle(exclusive).concat(shuffle(shared)).slice(0,3);
  }
  function showEvoCards(cards){
   offers=cards;skillChoices=cards.map(o=>({name:o.name,description:o.kind}));
@@ -556,11 +558,8 @@ function evoCandidateMoves(fromDex,toDex){
    offers.push({kind:'fusion',id:canFuse.id,name:canFuse.name});
   for(const m of moveList)if(m.lvl<MOVE_MAX&&offers.length<6)
    offers.push({kind:'upgrade',id:m.id,name:m.id+' LV '+(m.lvl+1)});
-  const ids=(Array.isArray(data.realMoves)&&data.realMoves.length===103?
-   data.realMoves.filter(m=>m.kind!=='buff').map(m=>m.id):
-   ['ember','tackle','water-gun','vine-whip','thunderbolt',
-   'spark','gust','ice-shard','razor-leaf','rock-tomb','confusion','shadow-ball',
-   'flamethrower','metal-claw','psychic','bubble-beam']);
+  const ids=naturalMovePool(evolvedDex()).filter(id=>
+   sourceMoves.some(m=>m.id===id&&m.kind!=='buff'));
   const offset=Math.floor(rng()*ids.length);
   for(let i=0;i<ids.length&&offers.length<6;i++){
    const id=ids[(offset+i)%ids.length];
@@ -1023,7 +1022,7 @@ skillChoices=offers.map(o=>({name:o.name,description:o.kind}));
   ctx.fillStyle=color;ctx.font=font;ctx.fillText(String(value),x,y)
  }
  function draw(){
-  text(820,44,'PKMSVV SWITCH NATIVE 0.2.8','#ffe39d');
+  text(820,44,'PKMSVV SWITCH NATIVE 0.2.9','#ffe39d');
   text(820,74,'KANTO • GEN 1 • '+(runUsedQA?(accelerated?'QA x12':'QA - CLOCK NORMAL'):'REAL TIME'),'#a7e7f6');
   text(820,103,'TEAM: '+name(getMon(profile.selected))+' R'+currentRank()+
    '  ACTIVE '+(realByDex.get(evolvedDex())?.name||name(getMon(profile.selected)))+
@@ -1221,6 +1220,7 @@ get evolutionNotice(){return evolutionNotice},
     get evolutionSwapStage(){return evoStage},get evolutionSwapCount(){return evoSwapCount},
     get evolutionSwapQueue(){return evoQueue},get evolutionSwapChoices(){return evoChoices},
     get levelOffersAfterEvolution(){return levelOffersAfterEvolution},
+    naturalMovePool,
   get menuTab(){return menuTab},get menuIndex(){return menuIndex},
   get orbCooldown(){return orbCooldown},
   get offers(){return offers},
