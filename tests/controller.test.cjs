@@ -111,7 +111,8 @@ test('v1.5 controller mapping saves six real actions, migrates old maps and reje
   Settings:{get:k=>settings[k],set:(k,v)=>{settings[k]=v;}}};
  vm.runInNewContext(source,{G,Number,Set,Object});
  const map=G.PKMSVVPadOrb;
- assert.equal(map.describe('dash'),'A / ×');
+ assert.match(map.describe('dash'),/A \/ ×/);
+ assert.equal(map.bindings().speed,6,'ZL/L2 becomes the default speed button');
  assert.equal(map.describe('use'),'Y / △');
  assert.equal(map.describe('pause'),'Start / Options');
  assert.equal(map.describe('mega'),'LB / L1');
