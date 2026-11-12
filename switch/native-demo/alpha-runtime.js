@@ -1220,7 +1220,7 @@ if(pickOpen){
    text(155,453,'RECRUIT: A x1, Y x10. Rank3 branch: X / Y; B later.','#d8ffe1','17px sans-serif');
    text(155,480,'EVOLUTION: X/Y/B choose old/new; R+A next page','#c1ffd5','17px sans-serif');
    text(155,506,'EVOLVE TAB: Y NEXT BRANCH / A USE SHARD','#ffe9b1','17px sans-serif');
-   text(155,551,'CONTROLS: L = SPRITES     ZL+R = QA x12 (test only)','#bacfe4','17px sans-serif');
+   text(155,551,'L3: TOP Co-op (unavailable in Native Kanto)  ZL+R: QA x12','#bacfe4','17px sans-serif');
   }
   if(menuTab===8){
    text(145,175,'Native Alpha QA: real Kanto waves, six source Orbs, 10 Fusion recipes');
