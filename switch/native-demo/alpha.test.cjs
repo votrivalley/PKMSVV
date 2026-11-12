@@ -56,6 +56,15 @@ test('Native battle draws eight bounded cooldown cards with the current starter 
  assert.equal(t.get('alpha.moves.length'),2,'starter has two genuine skills');
  assert.equal(t.get('lastError'),'');
 });
+test('Native Kanto starts with actual sprites enabled, with L to disable and re-enable',()=>{
+ const t=boot();t.frame(1000);
+ assert.equal(t.get('spritesEnabled'),true);
+ assert.equal(t.get('spriteLoadStarted'),true);
+ assert.ok(t.images.some(x=>x._src==='romfs:/sprites/25.png'));
+ t.press(4,1016);assert.equal(t.get('spritesEnabled'),false);
+ t.frame(1032);t.press(4,1048);assert.equal(t.get('spritesEnabled'),true);
+ assert.equal(t.get('lastError'),'');
+});
 test('Kanto native boots HUD, auto-combat and ten controller tabs',()=>{
  const t=boot();t.frame(1000);t.frame(1016);
  assert.equal(t.get('alpha.profile.selected'),25);
@@ -223,14 +232,15 @@ test('Kanto starter-specific moves and actual two-step evolved sprite selection'
 });
 test('Extra sprite loads are staggered, not decoded in a single game frame',()=>{
  const t=boot();t.frame(1000);
+ const baseline=t.images.length;
  t.get('spritesEnabled=true;alpha.profile.selected=4;alpha.resetBattle();spawnAt=Infinity');
  t.get("enemies=[{species:'pidgey',x:120,y:350,r:14,hp:1000,speed:0},{species:'zubat',x:200,y:350,r:14,hp:1000,speed:0}]");
  for(let i=1;i<=12;i++)t.frame(1000+i*16.6667);
- assert.equal(t.images.length,1,'only Charmander may load after first 12 ticks');
+ assert.equal(t.images.length,baseline+1,'only Charmander added after first 12 ticks');
  for(let i=13;i<=24;i++)t.frame(1000+i*16.6667);
- assert.equal(t.images.length,2,'second visible species loads after 24 ticks');
+ assert.equal(t.images.length,baseline+2,'second visible species added after 24 ticks');
  for(let i=25;i<=36;i++)t.frame(1000+i*16.6667);
- assert.equal(t.images.length,3,'third visible species loads after 36 ticks');
+ assert.equal(t.images.length,baseline+3,'third visible species added after 36 ticks');
  assert.ok(t.images.some(x=>x._src==='romfs:/sprites/4.png'));
  assert.ok(t.images.some(x=>x._src==='romfs:/sprites/16.png'));
  assert.ok(t.images.some(x=>x._src==='romfs:/sprites/41.png'));
