@@ -318,7 +318,7 @@
   const level=active(true);
   if(level?.id==='scr-levelup'){
    // Standard Gamepad API: R=5, X=2, Y=3, B=1, A=0.
-   // R+X/Y/B select three visible cards; A pages; no stick/D-pad capture.
+   // X/Y/B select three visible cards directly; R+A changes page.
    const buttons=[pressed(2),pressed(3),pressed(1),pressed(0)];
    const edges=buttons.map((on,i)=>on&&!previousLevelButtons[i]);
    previousLevelButtons=buttons;
@@ -327,7 +327,7 @@
    if(levelSession?.offers.length>3)
     level.querySelector?.('#cards')?.setAttribute('data-pkmsvv-page-label',
      (levelSession.page+1)+' / '+Math.ceil(levelSession.offers.length/3));
-   if(edges[3])levelPage(level);
+   if(shoulderR&&edges[3])levelPage(level);
    if(shoulderR){
     const index=edges.findIndex((on,i)=>i<3&&on);
     if(index>=0){
