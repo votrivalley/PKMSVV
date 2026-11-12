@@ -48,7 +48,7 @@ test('Compiled game uses real Kanto, Orb, Fusion, Mega and Evolution sources',()
  assert.ok(data.nativeAlpha.trialEnemies.every(e=>e.dex>=1&&e.dex<=151));
  assert.equal(data.nativeAlpha.testOnly,true);
 });
-test('Kanto Alpha boots HUD, auto-combat, menu and six controller tabs',()=>{
+test('Kanto native boots HUD, auto-combat and nine controller tabs',()=>{
  const t=boot();t.frame(1000);t.frame(1016);
  assert.equal(t.get('alpha.profile.selected'),25);
  assert.equal(t.get('alpha.menu'),false);
@@ -156,7 +156,7 @@ test('Dual rotating save files survive reload, remain isolated from Web and Andr
  assert.equal(t2.get('alpha.profile.pokedex[19]'),1);
  assert.equal(t2.get('alpha.profile.pokedex[16]'),1);
  assert.equal(t2.get('alpha.profile.seq'),2);
- const key=[...files.keys()].find(k=>k.endsWith('progress-v024-2.json'));
+ const key=[...files.keys()].find(k=>k.endsWith('progress-v025-2.json'));
  files.set(key,'CORRUPT');
  const t3=boot(files);t3.frame(1000);
  assert.equal(t3.get('alpha.profile.pokedex[19]'),1);
@@ -318,8 +318,8 @@ test('Switch controller settings tab shows direct bindings and does not affect m
  assert.match(compiled,/R\+Y = USE ORB\s+R\+B = PAUSE/);
  t.press(9,1016);
  assert.equal(t.get('alpha.menu'),true);
- for(let i=0;i<6;i++){t.frame(1032+i*40);t.press(5,1048+i*40)}
- assert.equal(t.get('alpha.menuTab'),6);
+ for(let i=0;i<7;i++){t.frame(1032+i*40);t.press(5,1048+i*40)}
+ assert.equal(t.get('alpha.menuTab'),7);
  t.frame(1250);t.press(0,1266);
  assert.equal(t.get('alpha.menu'),false,'B still backs out of menu');
 });
@@ -575,8 +575,8 @@ test('Recruitment menu A one/Y ten handles controller, prevents unaffordable ten
  const t=boot();t.frame(1000);
  t.get('alpha.profile.pokedex[19]=1;alpha.profile.recruitTickets=11');
  t.press(9,1016);
- for(let i=0;i<3;i++){t.frame(1032+i*42);t.press(5,1048+i*42)}
- assert.equal(t.get('alpha.menuTab'),3);
+ for(let i=0;i<4;i++){t.frame(1032+i*42);t.press(5,1048+i*42)}
+ assert.equal(t.get('alpha.menuTab'),4);
  t.frame(1170);t.press(1,1186);
  assert.equal(t.get('alpha.profile.recruitTickets'),10);
  t.frame(1202);t.press(2,1218);
@@ -587,7 +587,7 @@ test('Recruitment menu A one/Y ten handles controller, prevents unaffordable ten
  assert.equal(t.get('alpha.lastRecruitOutcome'),'NOT ENOUGH TICKETS');
 });
 
-test('First v0.2.4 boot migrates legacy v0.2.3 save into separate slots without overwriting it',()=>{
+test('First v0.2.5 boot migrates legacy v0.2.3 save into separate slots without overwriting it',()=>{
  const files=new Map(),legacy={
   version:1,seq:7,pokedex:{19:1,16:1},box:{25:1},bestKO:42,
   badges:{kanto:1},selected:25,kantoClears:1,bestSurvivalSec:1800,bestKantoClearSec:1840
@@ -604,7 +604,7 @@ test('First v0.2.4 boot migrates legacy v0.2.3 save into separate slots without 
  assert.equal(t.get('alpha.profile.recruitTickets'),0);
  assert.equal(t.get('alpha.saveStatus'),'MIGRATED');
  assert.equal(files.get(legacyPath),legacyText,'must preserve original rollback save byte-for-byte');
- assert.ok([...files.keys()].some(k=>k.endsWith('progress-v024-1.json')));
+ assert.ok([...files.keys()].some(k=>k.endsWith('progress-v025-1.json')));
  assert.equal(t.get('alpha.profile.seq'),8);
  const migrated=boot(files);migrated.frame(1000);
  assert.equal(migrated.get('alpha.profile.seq'),8);
@@ -612,4 +612,117 @@ test('First v0.2.4 boot migrates legacy v0.2.3 save into separate slots without 
  migrated.get('alpha.profile.pokedex[19]=1;alpha.profile.recruitTickets=3;alpha.recruitMany(1)');
  assert.equal(files.get(legacyPath),legacyText,'native v024 recruitment cannot modify legacy v023 slot');
  assert.equal(migrated.get('alpha.profile.recruitTickets'),2);
+});
+
+test('Rank 0-5 costs 1,2,3,4,5 ordinary duplicates and protects the base copy',()=>{
+ const files=new Map(),t=boot(files);t.frame(1000);
+ const dex=25;
+ t.get('alpha.profile.box[25]=16');
+ assert.equal(t.get('alpha.rankOf(25)'),0);
+ for(let rank=1;rank<=5;rank++){
+  const p=t.get('alpha.rankPlan(25)');
+  assert.equal(p.cost,rank);
+  assert.equal(p.eligible,true);
+  assert.equal(t.get('alpha.upgradeRank(25)'),true);
+  assert.equal(t.get('alpha.rankOf(25)'),rank);
+  assert.equal(t.get('alpha.profile.box[25]'),16-rank*(rank+1)/2);
+ }
+ assert.equal(t.get('alpha.profile.box[25]'),1,'one original always remains in Box');
+ assert.equal(t.get('alpha.rankPlan(25).reason'),'RANK MAX');
+ assert.equal(t.get('alpha.upgradeRank(25)'),false);
+ assert.equal(t.get('alpha.profile.box[25]'),1);
+ assert.equal(t.get('alpha.rankDamageMultiplier'),1.3);
+ t.get('alpha.resetBattle()');
+ assert.equal(t.get('hp'),130);
+ assert.equal(t.get('alpha.rankMaxHp'),130);
+ assert.equal(t.get('alpha.profile.ranks[25]'),5);
+ assert.equal(files.size,2,'dual rotating checkpoints only');
+ const restored=boot(files);restored.frame(1000);
+ assert.equal(restored.get('alpha.rankOf(25)'),5);
+ assert.equal(restored.get('alpha.profile.box[25]'),1);
+});
+test('Rank cannot use Shiny, other-species copies, missing Pokémon or Legendary clones',()=>{
+ const t=boot();t.frame(1000);
+ t.get('alpha.profile.box[25]=1;alpha.profile.box[19]=20');
+ assert.equal(t.get('alpha.rankPlan(25).eligible'),false,'Rattata copies do not upgrade Pikachu');
+ assert.equal(t.get('alpha.upgradeRank(25)'),false);
+ assert.equal(t.get('alpha.profile.box[19]'),20);
+ // Shiny cosmetic is not part of native box's ordinary copy ledger.
+ t.get('alpha.profile.shiny={25:1}');
+ assert.equal(t.get('alpha.rankPlan(25).available'),0);
+ assert.equal(t.get('alpha.rankPlan(150).reason'),'NOT OWNED');
+ t.get('alpha.profile.box[150]=20');
+ assert.equal(t.get('alpha.rankPlan(150).eligible'),false);
+ assert.equal(t.get('alpha.rankPlan(150).reason'),'LEGENDARY LOCKED');
+ assert.equal(t.get('alpha.profile.box[150]'),20);
+});
+test('Rank upgrade is atomic: failed readback rolls back copies, rank and sequence',()=>{
+ const files=new Map(),t=boot(files);t.frame(1000);
+ t.get('alpha.profile.box[25]=2');
+ const before=t.get('JSON.stringify(alpha.profile)');
+ t.c.Switch.writeFileSync=()=>{throw Error('SD card unavailable')};
+ assert.equal(t.get('alpha.upgradeRank(25)'),false);
+ assert.equal(t.get('JSON.stringify(alpha.profile)'),before);
+ assert.equal(t.get('alpha.lastRankOutcome'),'SAVE FAILED - MATERIALS KEPT');
+ assert.equal(files.size,0);
+ t.c.Switch.writeFileSync=(path,value)=>files.set(path,String(value));
+ assert.equal(t.get('alpha.upgradeRank(25)'),true);
+ assert.equal(t.get('alpha.rankOf(25)'),1);
+ assert.equal(t.get('alpha.profile.box[25]'),1);
+});
+test('Rank 4 native cooldown is a single 5% modifier, not cumulative 5% each level',()=>{
+ const t=boot();t.frame(1000);
+ t.get('alpha.profile.ranks[25]=4;alpha.resetBattle()');
+ t.get('spawnAt=Infinity;enemies=[{x:px+90,y:py,species:"rattata",dex:19,hp:100000,r:16,speed:0}];alpha.moves.splice(0,alpha.moves.length,{id:"thunder-shock",lvl:1})');
+ t.frame(1016);
+ const cd=t.get('alpha.moves[0].cooldown');
+ const original=t.get('alpha.data.realMoves.find(m=>m.id==="thunder-shock")');
+ const floor=t.get('alpha.data.cooldownFloors.chain');
+ const expected=Math.max(floor,original.cd)*.95;
+ assert.ok(Math.abs(cd-expected)<.045,'Rank4 once-per-cast factor');
+ t.get('alpha.profile.ranks[25]=5;alpha.resetBattle()');
+ t.get('spawnAt=Infinity;enemies=[{x:px+90,y:py,species:"rattata",dex:19,hp:100000,r:16,speed:0}];alpha.moves.splice(0,alpha.moves.length,{id:"thunder-shock",lvl:1})');
+ t.frame(1032);
+ assert.ok(Math.abs(t.get('alpha.moves[0].cooldown')-expected)<.045,'Rank5 retains 5% cooldown');
+});
+test('Native Rank tab follows PokéBox, uses Y to choose and A for immediate upgrade',()=>{
+ const t=boot();t.frame(1000);
+ t.get('alpha.profile.box[19]=2;alpha.profile.box[25]=2');
+ t.press(9,1016);
+ t.frame(1032);t.press(5,1048);
+ t.frame(1064);t.press(5,1080);
+ assert.equal(t.get('alpha.menuTab'),2);
+ assert.equal(t.get('alpha.rankOf(19)'),0);
+ t.frame(1096);t.press(1,1112);
+ assert.equal(t.get('alpha.rankOf(19)'),1,'no confirmation prompt');
+ assert.equal(t.get('alpha.menu'),true,'remain in menu');
+ assert.equal(t.get('alpha.profile.box[19]'),1);
+ t.frame(1128);t.press(2,1144);
+ t.frame(1160);t.press(1,1176);
+ assert.equal(t.get('alpha.rankOf(25)'),1,'Y selects next owned Pokémon');
+ assert.equal(t.get('alpha.profile.box[25]'),1);
+ assert.equal(t.get('alpha.menu'),true);
+ assert.equal(t.get('lastError'),'');
+});
+test('Native v025 imports v024 recruitment and Box intact, never overwrites v024 slots',()=>{
+ const files=new Map();
+ const original=boot(files);original.frame(1000);
+ original.get('alpha.profile.pokedex[19]=1;alpha.profile.box[19]=3;alpha.profile.recruitTickets=5;alpha.profile.recruitPity=47');
+ assert.equal(original.get('alpha.persist()'),true);
+ const v025Key=[...files.keys()].find(k=>k.includes('progress-v025-'));
+ const oldValue=files.get(v025Key);
+ const legacyKey=v025Key.replace('progress-v025-','progress-v024-');
+ files.delete(v025Key);files.set(legacyKey,oldValue);
+ const migrated=boot(files);migrated.frame(1000);
+ assert.equal(migrated.get('alpha.saveStatus'),'MIGRATED');
+ assert.equal(migrated.get('alpha.profile.box[19]'),3);
+ assert.equal(migrated.get('alpha.profile.recruitTickets'),5);
+ assert.equal(migrated.get('alpha.profile.recruitPity'),47);
+ assert.equal(migrated.get('alpha.rankOf(19)'),0);
+ assert.equal(files.get(legacyKey),oldValue,'v024 save remains untouched');
+ assert.ok([...files.keys()].some(k=>k.includes('progress-v025-')));
+ migrated.get('alpha.upgradeRank(19)');
+ assert.equal(migrated.get('alpha.profile.box[19]'),2);
+ assert.equal(migrated.get('alpha.rankOf(19)'),1);
+ assert.equal(files.get(legacyKey),oldValue,'rank changes cannot modify v024 rollback copy');
 });
