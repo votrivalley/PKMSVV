@@ -55,6 +55,10 @@ Nền đồ họa của Switch Alpha v0.1.2 được giữ lại. Đây là đ�
 - **ZL**: bật/tắt tốc độ trận 1×/1,5× (không thay thưởng). **L3 (ấn analog trái)**: bật/tắt TOP Co-op ở bản Web/Android/PC; Switch Native Kanto chưa có Co-op nên chưa có bảng TOP để bật. **ZL+R**: bật đồng hồ QA x12, giảm sát thương người chơi nhận để thử boss 15/30 phút. Huy hiệu QA không lưu.
 - **ZR**: Mega preview trong chế độ QA nếu đủ điều kiện kỹ thuật; không phải quyền sở hữu Mega Stone thật.
 
+## Xác nhận bản NRO thực sự đã cập nhật
+
+Ở HUD góc trái phía dưới và dòng tiêu đề, game hiển thị `BUILD <9 ký tự SHA>`. Đối chiếu 9 ký tự này với SHA của workflow tạo artifact; nếu khác, Switch đang chạy NRO cũ, dù file tải xuống được đặt tên phiên bản mới. Cập nhật phải chép đè đúng `sd:/switch/PKMSVV.nro` hoặc đường dẫn NRO bạn đang khởi chạy. Đây là Switch Native Kanto, chưa phải toàn bộ game Web/Android/PC.
+
 ## Save
 Dữ liệu *Alpha native* lưu độc lập tại `sdmc:/switch/pkmsvv-native-alpha/`, hai tệp xoay vòng và checksum. **v0.3.0** ưu tiên đọc `progress-v030-1/2.json`, nếu chưa có sẽ chuyển dữ liệu từ `progress-v029-1/2.json`, `progress-v028-1/2.json`, `progress-v027-1/2.json`, `progress-v026-1/2.json`, `progress-v025-1/2.json`, `progress-v024-1/2.json` hoặc `progress-1/2.json`. Sau đó tạo **`progress-v030-1/2.json`**, giữ nguyên save cũ để rollback. Không tự đồng bộ ngược tiến trình đã chiêu mộ khi chạy bản cũ. Không tự nhập hoặc ghi đè save JSON PC/Web/Android. Hãy xuất bản sao save chính trước mọi thử nghiệm.
 
