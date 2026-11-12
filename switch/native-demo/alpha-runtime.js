@@ -468,8 +468,9 @@ const alpha=(()=>{
   megEnergy=0;megaActive=data.mega.duration;megaCooldown=data.mega.cooldown;
   megaPreview=true;return true;
  }
+ function advanceRankClock(dt){if(Number.isFinite(dt)&&dt>=0&&dt<=60)rankCombatSeconds+=dt}
  function updateEffects(dt){
-  rankCombatSeconds+=dt;
+  advanceRankClock(dt);
   for(const key of Object.keys(activeBuffs)){
    activeBuffs[key]-=dt;if(activeBuffs[key]<=0)delete activeBuffs[key];
   }
@@ -1051,6 +1052,7 @@ const alpha=(()=>{
   onRankHit,
   get rankProcCount(){return rankProcCount},get rankHybridCount(){return rankHybridCount},
   get rankCombatSeconds(){return rankCombatSeconds},
+  advanceRankClock,
   get lastRecruitOutcome(){return lastRecruitOutcome},
   get recruitmentOdds(){return recruitRules},
   get recruitableCount(){return discoveredPool().length},
