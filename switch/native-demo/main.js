@@ -149,7 +149,7 @@ function update(dt){
   let hit=false;
   for(let k=enemies.length-1;k>=0;k--){
    const e=enemies[k],d=(e.x-s.x)**2+(e.y-s.y)**2;
-   if(d<(e.r+5)**2){e.hp-=attack*(e.boss&&typeof alpha==='object'&&alpha.enabled?alpha.bossDamageMultiplier:1);hit=true;if(e.hp<=0){if(typeof alpha==='object'&&alpha.enabled)alpha.onKill(e);enemies.splice(k,1);kills++;xp++;if(xp>=12&&!pickOpen){level++;setChoices()}}break}
+   if(d<(e.r+5)**2){e.hp-=attack*(typeof alpha==='object'&&alpha.enabled?alpha.rankDamageMultiplier:1)*(e.boss&&typeof alpha==='object'&&alpha.enabled?alpha.bossDamageMultiplier:1);hit=true;if(e.hp<=0){if(typeof alpha==='object'&&alpha.enabled)alpha.onKill(e);enemies.splice(k,1);kills++;xp++;if(xp>=12&&!pickOpen){level++;setChoices()}}break}
   }
   if(hit||s.ttl<=0||s.x<0||s.x>W||s.y<0||s.y>H)shots.splice(i,1);
  }
@@ -198,7 +198,7 @@ function draw(){
  // Keep native geometry and game logic identical to known stable v0.0.10.
  ctx.fillStyle='#fff4cc';
  ctx.font='20px sans-serif';
- ctx.fillText('POKEMON CHUYEN SINH - NATIVE KANTO v0.2.3',24,105);
+ ctx.fillText('POKEMON CHUYEN SINH - NATIVE KANTO v0.2.5',24,105);
  ctx.fillText('HP: '+Math.ceil(hp),24,135);
  ctx.fillText('XP: '+xp+'/12   LEVEL: '+level,24,165);
  ctx.fillText('KO: '+kills+'   GEN '+KANTO_CONFIG.gen+'   WAVE '+(kantoTier+1)+'   ENEMIES: '+enemies.length,24,235);
@@ -206,7 +206,7 @@ function draw(){
  ctx.fillText('L: SPRITES '+(spritesEnabled?(loaded.pikachu&&loaded.rattata?'ON':'LOADING'):'OFF')+'  KANTO 151  R+B: PAUSE',24,692);
  // Text-free health, XP and level bars. Avoid changing canvas.font per frame.
  ctx.fillStyle='#294963';ctx.fillRect(16,17,390,18);
- ctx.fillStyle='#7cdec4';ctx.fillRect(16,17,Math.max(0,Math.min(390,hp*3.9)),18);
+ ctx.fillStyle='#7cdec4';ctx.fillRect(16,17,Math.max(0,Math.min(390,hp/(typeof alpha==='object'&&alpha.enabled?alpha.rankMaxHp:100)*390)),18);
  ctx.fillStyle='#415375';ctx.fillRect(16,42,390,12);
  ctx.fillStyle='#ffd277';ctx.fillRect(16,42,Math.max(0,Math.min(390,(xp/12)*390)),12);
  ctx.fillStyle='#556d86';
