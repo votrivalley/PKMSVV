@@ -273,24 +273,27 @@ test('Switch controller: X/Y/B directly choose skill 1/2/3 without holding R',()
   assert.equal(t.get('lastError'),'');
  }
 });
-test('A turns page and direct B selects third skill on page two',()=>{
+test('R+A turns page and direct B selects third skill on page two',()=>{
  const t=boot();t.frame(1000);
  t.get("alpha.offersForLevel()");
  const page2=t.get('alpha.offers[5]');
  assert.equal(t.get('skillPage'),0);
  t.press(1,1016);
+ assert.equal(t.get('skillPage'),0,'A alone is reserved for dash');
+ t.frame(1032);t.buttons[5].pressed=true;t.press(1,1048);t.buttons[5].pressed=false;
  assert.equal(t.get('skillPage'),1);
  assert.equal(t.get('pickOpen'),true);
- t.frame(1032);
- t.press(0,1048);
+ t.frame(1064);
+ t.press(0,1080);
  assert.equal(t.get('pickOpen'),false);
  if(page2.kind==='new')assert.equal(t.get('alpha.moves.some(m=>m.id==='+JSON.stringify(page2.id)+')'),true);
  assert.equal(t.get('paused'),false);
  assert.equal(t.get('lastError'),'');
 });
-test('Combat actions moved away from plain Y/B: R+Y Orb and R+B pause',()=>{
+test('A dash, R+Y Orb and R+B pause',()=>{
  const t=boot();t.frame(1000);
  t.get("alpha.orbQueue.push('quick')");
+ t.press(1,1008);assert.ok(t.get('dashReady')>0,'A triggers dash cooldown in battle');
  t.press(2,1016);
  assert.equal(t.get('alpha.orbQueue.length'),1,'plain Y cannot use Orb');
  t.frame(1032);
@@ -310,7 +313,8 @@ test('Combat actions moved away from plain Y/B: R+Y Orb and R+B pause',()=>{
 test('Switch controller settings tab shows direct bindings and does not affect menu navigation',()=>{
  const t=boot();t.frame(1000);
  assert.equal(JSON.stringify(t.get('SWITCH_PAD_BINDINGS.skill')),JSON.stringify([3,2,0]));
- assert.equal(t.get('SWITCH_PAD_BINDINGS.page'),1);
+ assert.equal(JSON.stringify(t.get('SWITCH_PAD_BINDINGS.page')),JSON.stringify([5,1]));
+ assert.equal(t.get('SWITCH_PAD_BINDINGS.dash'),1);
  assert.equal(JSON.stringify(t.get('SWITCH_PAD_BINDINGS.orb')),JSON.stringify([5,2]));
  assert.equal(JSON.stringify(t.get('SWITCH_PAD_BINDINGS.pause')),JSON.stringify([5,0]));
  const compiled=fs.readFileSync(path.join(__dirname,'alpha-runtime.js'),'utf8');
