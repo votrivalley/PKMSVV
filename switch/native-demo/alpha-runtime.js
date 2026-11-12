@@ -198,7 +198,7 @@ const alpha=(()=>{
   offers=[];fusionUsed=false;fusionName='';
   effects.length=0;zones.length=0;megEnergy=0;megaActive=0;megaCooldown=0;
   boss15=false;boss30=false;badgeWon=false;gameWon=false;bossMessage='';matchResult=null;runEndTime=0;runEndKOs=0;
-  skillClock=0;killAward=0;fusionOfferLevel=-1;fusionOfferAttempts=0;fusionOfferRecipe=null;branchPromptDex=0;runUsedQA=false;accelerated=false;clockScale=1;started=true;
+  skillClock=0;killAward=0;fusionOfferLevel=-1;fusionOfferAttempts=0;fusionOfferRecipe=null;branchPromptDex=0;rankCombatSeconds=0;rankHitReadyAt=0;rankHybridReadyAt=0;rankProcCount=0;rankHybridCount=0;runUsedQA=false;accelerated=false;clockScale=1;started=true;
  }
  function selectSpecies(index){
   // Kanto's opening remains safe; at later waves draw from REAL Gen1 catalog.
@@ -469,12 +469,22 @@ const alpha=(()=>{
   megaPreview=true;return true;
  }
  function updateEffects(dt){
+  rankCombatSeconds+=dt;
   for(const key of Object.keys(activeBuffs)){
    activeBuffs[key]-=dt;if(activeBuffs[key]<=0)delete activeBuffs[key];
   }
-  for(const e of enemies){
+  for(const e of enemies.slice()){
    e.sleepLeft=Math.max(0,(e.sleepLeft||0)-dt);
    e.slowLeft=Math.max(0,(e.slowLeft||0)-dt);
+   if(e.rankDotLeft>0&&e.hp>0){
+    e.rankDotLeft=Math.max(0,e.rankDotLeft-dt);
+    e.rankDotTick=(e.rankDotTick||.5)-dt;
+    if(e.rankDotTick<=0){
+     e.hp-=Math.max(1,e.rankDotDps||3)*Math.min(2,Math.max(1,Math.ceil(dt/.5)));
+     e.rankDotTick=.5;
+     removeRankKilledEnemy(e);
+    }
+   }
   }
   for(let i=effects.length-1;i>=0;i--){
    effects[i].ttl-=dt;if(effects[i].ttl<=0)effects.splice(i,1);
@@ -508,9 +518,68 @@ const alpha=(()=>{
   'thunder-claw':'melee'
  };
  let castCount=0,damageCount=0;
+ let rankCombatSeconds=0,rankHitReadyAt=0,rankHybridReadyAt=0,rankProcCount=0,rankHybridCount=0;
+ // Native Rank3/5 adapter uses the original Box Stage4 proc, lock and area rules.
+ // Does not execute the browser Ability hook on Switch.
+ function rankStatus(e,kind){
+  if(!e||e.hp<=0||e.remote||e.arceus)return false;
+  if(kind==='burn'||kind==='poison'){
+   e.rankDotLeft=Math.max(e.rankDotLeft||0,kind==='burn'?3:4);
+   e.rankDotTick=Math.max(.01,e.rankDotTick||.5);
+   e.rankDotDps=kind==='burn'?4:3;
+   return true;
+  }
+  if(kind==='slow'){e.slowLeft=Math.max(e.slowLeft||0,e.boss?1.25:2.8);return true}
+  if(kind==='heal'){hp=Math.min(rankMaxHp(),hp+Math.max(1,rankMaxHp()*.015));return true}
+  if(kind==='guard'||kind==='evade')return true;
+  e.hp-=Math.min(75,7+level*1.3)*(e.boss?.4:1);
+  return true;
+ }
+ function removeRankKilledEnemy(e){
+  if(!e||e.hp>0)return false;
+  const index=enemies.indexOf(e);if(index<0)return false;
+  onKill(e);enemies.splice(index,1);
+  kills++;xp++;if(xp>=12&&!pickOpen){level++;offersForLevel()}
+  return true;
+ }
+ function onRankHit(e){
+  const rank=currentRank(),branch=rankBranch(profile.selected);
+  if(rank<3||!branch||!e)return {proc:false,hybrid:0};
+  const statuses=RANK_TRAITS.branchStatuses||{},effect=statuses[branch]||'strike';
+  let proc=false,hybrid=0;
+  if(e.hp>0&&rankCombatSeconds>=rankHitReadyAt&&rng()<RANK_TRAITS.hitChance){
+   rankHitReadyAt=rankCombatSeconds+RANK_TRAITS.hitCooldownMs/1000;
+   proc=rankStatus(e,effect);
+   if(proc)rankProcCount++;
+  }
+  // Original Rank5 hybrid also triggers on fatal blows, up to six nearby enemies.
+  if(rank>=5&&rankCombatSeconds>=rankHybridReadyAt){
+   rankHybridReadyAt=rankCombatSeconds+RANK_TRAITS.hybridCooldownMs/1000;
+   const types=getMon(profile.selected)?.types||[];
+   const secondary=types.find(t=>String(t).toLowerCase()!==branch);
+   const otherEffect=statuses[secondary]||effect,radius=RANK_TRAITS.hybridRadius;
+   for(const target of enemies.slice()){
+    if(hybrid>=RANK_TRAITS.hybridMaxTargets)break;
+    if(target===e||target.hp<=0||target.remote||target.arceus||
+       target._pkmsvvBossSupport||target.pkmsvvBossGuard)continue;
+    if((target.x-e.x)**2+(target.y-e.y)**2>radius*radius)continue;
+    target.hp-=Math.min(100,8+level*1.5)*(target.boss?.35:1);
+    if(target.hp>0)rankStatus(target,otherEffect);
+    removeRankKilledEnemy(target);
+    hybrid++;
+   }
+   if(hybrid){
+    rankHybridCount+=hybrid;
+    effects.push({x:e.x,y:e.y,r:Math.min(radius,110),ttl:.2});
+    if(effects.length>14)effects.splice(0,effects.length-14);
+   }
+  }
+  return {proc,hybrid};
+ }
  function strike(e,power,kind){
   if(!e||e.hp<=0)return false;
   e.hp-=power*rankDamageMultiplier()*(e.boss&&accelerated?6:1);
+  onRankHit(e);
   megEnergy=Math.min(100,megEnergy+1);
   damageCount++;
   if(kind==='mine'||kind==='cone')e.slowLeft=Math.max(e.slowLeft||0,.35);
@@ -796,7 +865,7 @@ const alpha=(()=>{
   ctx.fillStyle=color;ctx.font=font;ctx.fillText(String(value),x,y)
  }
  function draw(){
-  text(820,44,'PKMSVV SWITCH NATIVE 0.2.5','#ffe39d');
+  text(820,44,'PKMSVV SWITCH NATIVE 0.2.6','#ffe39d');
   text(820,74,'KANTO • GEN 1 • '+(runUsedQA?(accelerated?'QA x12':'QA - CLOCK NORMAL'):'REAL TIME'),'#a7e7f6');
   text(820,103,'TEAM: '+name(getMon(profile.selected))+' R'+currentRank()+'  EVOLVE #'+evolvedDex()+'  SKILL '+moveList.length+'/8');
   text(820,132,'ORB: '+orbQueue.length+'/10   CD '+orbCooldown.toFixed(1)+'s');
@@ -954,6 +1023,9 @@ const alpha=(()=>{
   rankPlan,upgradeRank,rankOf,
   get rankMaxHp(){return rankMaxHp()},get rankDamageMultiplier(){return rankDamageMultiplier()},
   get rankCooldownMultiplier(){return rankCooldownMultiplier()},
+  onRankHit,
+  get rankProcCount(){return rankProcCount},get rankHybridCount(){return rankHybridCount},
+  get rankCombatSeconds(){return rankCombatSeconds},
   get lastRecruitOutcome(){return lastRecruitOutcome},
   get recruitmentOdds(){return recruitRules},
   get recruitableCount(){return discoveredPool().length},
@@ -966,7 +1038,14 @@ const alpha=(()=>{
   get orbCooldown(){return orbCooldown},
   get offers(){return offers},
   get saveStatus(){return saveStatus},get clockScale(){return clockScale},
-  get incomingDamageMultiplier(){return accelerated?.01:1},
+  get incomingDamageMultiplier(){
+   const rank=currentRank(),branch=rankBranch(profile.selected);
+   const effect=RANK_TRAITS.branchStatuses?.[branch];
+   let factor=accelerated?.01:1;
+   if(rank>=3&&effect==='guard')factor*=rank>=5?.90:.94;
+   if(rank>=3&&effect==='evade'&&rng()<(rank>=5?.12:.08))return 0;
+   return factor;
+  },
   get bossDamageMultiplier(){return accelerated?6:1},
   get moveMultiplier(){return activeBuffs.quick>0?1.25:1},
   get castCount(){return castCount},get damageCount(){return damageCount},
