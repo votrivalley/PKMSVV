@@ -293,7 +293,7 @@
   const pressed=index=>Number.isInteger(index)&&!!pad.buttons?.[index]&&
    (pad.buttons[index].pressed||pad.buttons[index].value>.5);
   const speed=pressed(Number.isInteger(map.speed)?map.speed:6);
-  const board=pressed(Number.isInteger(map.leaderboard)?map.leaderboard:11);
+  const board=pressed(Number.isInteger(map.leaderboard)?map.leaderboard:10);
   const open=typeof G.SettingsUI?.isOpen==='function'?G.SettingsUI.isOpen():!!G.SettingsUI?.isOpen;
   // Speed trigger is ZL/L2 by default; never toggle while a dialog or settings owns input.
   const level=document.getElementById?.('scr-levelup');
