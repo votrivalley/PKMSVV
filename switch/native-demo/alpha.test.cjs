@@ -69,7 +69,7 @@ test('Kanto native boots HUD, auto-combat and ten controller tabs',()=>{
  const t=boot();t.frame(1000);t.frame(1016);
  assert.equal(t.get('alpha.profile.selected'),25);
  assert.equal(t.get('alpha.menu'),false);
- assert.ok(t.ops.fillText>0&&t.ops.arc>0);
+ assert.ok(t.ops.fillText>0&&(t.ops.arc>0||t.ops.drawImage>0),'battle renders with sprites or fallback vectors');
  t.press(9,1032);assert.equal(t.get('alpha.menu'),true);
  t.frame(1048);t.press(5,1064);assert.equal(t.get('alpha.menuTab'),1);
  t.press(5,1080);assert.equal(t.get('alpha.menuTab'),1,'shoulder is edge triggered');
