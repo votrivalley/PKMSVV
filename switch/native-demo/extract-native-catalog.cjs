@@ -12,7 +12,8 @@ function evaluate(rel){
  vm.runInContext(text,ctx,{timeout:4500,filename:rel});
  return ctx.G;
 }
-const moves=evaluate('js/data/moves.js').Moves;
+const moveGlobals=evaluate('js/data/moves.js');
+const moves=moveGlobals.Moves;
 const pokedex=evaluate('js/data/pokedex.js').DEX;
 if(!moves||!moves.BY_ID||!Array.isArray(moves.ALL))
  throw Error('Real moves.js exports missing or unexpected');
@@ -35,6 +36,7 @@ const cleanMoves=defs.map(m=>{
  };
 });
 if(!Array.isArray(pokedex))throw Error('Real Pokédex exports missing');
+moveGlobals.DEX=pokedex;
 const gen1=pokedex.filter(p=>Number.isInteger(p.dex)&&p.dex>=1&&p.dex<=151)
  .sort((a,b)=>a.dex-b.dex).map(p=>({
  dex:p.dex,name:String(p.name),types:Array.isArray(p.types)?p.types.map(String):[],
@@ -45,6 +47,20 @@ const gen1=pokedex.filter(p=>Number.isInteger(p.dex)&&p.dex>=1&&p.dex<=151)
  }));
 if(gen1.length!==151||gen1.some((p,i)=>p.dex!==i+1))
  throw Error('Kanto Pokédex must contain exact National Dex #1-151; got '+gen1.length);
+// Export source-authentic move availability for all 151 Kanto species.
+// Only JSON data enters RomFS, not the original browser engine.
+if(typeof moves.poolFor!=='function')throw Error('Official Moves.poolFor missing');
+const legal=new Set(cleanMoves.map(m=>m.id)),movePools={};
+for(const mon of pokedex.filter(p=>Number.isInteger(p.dex)&&p.dex>=1&&p.dex<=151)){
+ let candidates;
+ try{candidates=moves.poolFor(mon)}catch(e){throw Error('Moves.poolFor failed #'+mon.dex+': '+e)}
+ if(!Array.isArray(candidates))throw Error('Invalid source move pool #'+mon.dex);
+ const ids=[...new Set(candidates.map(v=>typeof v==='string'?v:v?.id).filter(Boolean))];
+ if(ids.some(id=>typeof id!=='string'||!legal.has(id)))throw Error('Unknown source move in pool #'+mon.dex);
+ movePools[mon.dex]=ids;
+}
+const covered=Object.values(movePools).filter(pool=>pool.length>0).length;
+if(covered<120)throw Error('Unexpected source move-pool coverage: '+covered);
 // The native port consumes the upstream *rates*, not its browser/DOM gacha UI.
 const gachaSource=fs.readFileSync(path.join(root,'js/systems/gacha.js'),'utf8');
 const ratesMatch=gachaSource.match(/const RATES\s*=\s*(\[\[[^;]+\]\])\s*;/);
@@ -61,6 +77,8 @@ const catalog={
  runtime:'nx.js native - extracted data only, NO DOM / Brewser',
  moves:cleanMoves,
  pokemon:gen1,
+ movePools,
+ movePoolSource:'js/data/moves.js:Moves.poolFor',
  recruitment:{rates:nativeRates,pity5:nativePity,source:'js/systems/gacha.js'}
 };
 fs.mkdirSync(path.dirname(out),{recursive:true});
@@ -68,4 +86,5 @@ fs.writeFileSync(out,JSON.stringify(catalog,null,2)+'\n');
 console.log('REAL PKMSVV RECRUITMENT RATES:',JSON.stringify(nativeRates),'pity',nativePity);
 console.log('REAL PKMSVV CATALOG EXTRACTED: moves',cleanMoves.length,
  'move kinds',new Set(cleanMoves.map(m=>m.kind)).size,'Kanto Pokémon',gen1.length,
+ 'original move pools',covered,
  'sample',cleanMoves.slice(0,3).map(m=>m.id).join(', '));

@@ -171,6 +171,12 @@ if(fs.existsSync(catalogPath)){
  if(!catalog.recruitment||catalog.recruitment.rates.length!==5||
   !Number.isInteger(catalog.recruitment.pity5))
   throw Error('Real-game Kanto recruitment rules missing; refuse native build');
+ if(catalog.movePoolSource!=='js/data/moves.js:Moves.poolFor'||
+  !catalog.movePools||Object.keys(catalog.movePools).length!==151||
+  Object.values(catalog.movePools).some(pool=>!Array.isArray(pool)||
+   pool.some(id=>!catalog.moves.some(move=>move.id===id))))
+  throw Error('Original Moves.poolFor source data absent or invalid');
+ data.nativeAlpha.realMovePools=catalog.movePools;
  data.nativeAlpha.realMoves=catalog.moves;
  data.nativeAlpha.realPokedex=catalog.pokemon;
  data.nativeAlpha.recruitment=catalog.recruitment;

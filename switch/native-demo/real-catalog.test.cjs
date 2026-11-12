@@ -70,3 +70,14 @@ test('Real PKMSVV compiled gacha rates and pity are exported into native build',
  assert.equal(JSON.stringify(built.nativeAlpha.recruitment.rates),JSON.stringify(real.recruitment.rates));
  assert.equal(built.nativeAlpha.recruitment.pity5,100);
 });
+
+test('Source-authentic Kanto move pools are embedded for all 151 species',()=>{
+ assert.equal(real.movePoolSource,'js/data/moves.js:Moves.poolFor');
+ assert.equal(Object.keys(real.movePools).length,151);
+ assert.equal(JSON.stringify(built.nativeAlpha.realMovePools),JSON.stringify(real.movePools));
+ const all=new Set(real.moves.map(m=>m.id));
+ assert.ok(Object.values(real.movePools).filter(pool=>pool.length>0).length>=120);
+ assert.ok(Object.values(real.movePools).every(pool=>Array.isArray(pool)&&
+  pool.every(id=>all.has(id))&&new Set(pool).size===pool.length));
+ assert.ok(new Set(Object.values(real.movePools).map(pool=>pool.join('|'))).size>=6);
+});
