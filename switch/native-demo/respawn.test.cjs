@@ -186,8 +186,11 @@ test('Standalone native fallback: X/Y/B direct, R+A pages; B alone never pauses'
  t.get('setChoices()');
  assert.equal(t.get('skillChoices.length'),6);
  pad.buttons[1].pressed=true;t.frame(1016);
- assert.equal(t.get('skillPage'),1,'A changes to next page');
+ assert.equal(t.get('skillPage'),0,'A alone does not change pages');
  pad.buttons[1].pressed=false;t.frame(1032);
+ pad.buttons[5].pressed=true;pad.buttons[1].pressed=true;t.frame(1040);
+ assert.equal(t.get('skillPage'),1,'R+A changes to next page');
+ pad.buttons[5].pressed=false;pad.buttons[1].pressed=false;
  pad.buttons[2].pressed=true;t.frame(1048);
  assert.equal(t.get('pickOpen'),false,'Y directly selects second skill on page two');
  assert.equal(t.get('hp'),100);
