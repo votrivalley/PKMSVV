@@ -142,6 +142,7 @@ const alpha=(()=>{
  function currentRank(){return rankOf(profile.selected)}
  function rankMaxHp(){return 100*(1+currentRank()*RANK_RULES.perRankStatBonus)}
  function rankDamageMultiplier(){return 1+currentRank()*RANK_RULES.perRankStatBonus}
+ function rankCooldownMultiplier(){return currentRank()>=4?1-RANK_RULES.rank4CooldownReduction:1}
  function resetBattle(){
   px=W/2;py=H/2;hp=rankMaxHp();kills=0;time=0;xp=0;level=1;
   enemies.length=0;shots.length=0;
@@ -662,7 +663,7 @@ const alpha=(()=>{
  }
  function extraCombat(dt){
   if(!moveList.length||pickOpen||paused||menu)return;
-  const faster=(megaActive>0?data.mega.cdFactor:1)*(currentRank()>=4?1-RANK_RULES.rank4CooldownReduction:1);
+  const faster=(megaActive>0?data.mega.cdFactor:1)*rankCooldownMultiplier();
   // Each learned skill owns its own cooldown, rather than a single circle
   // cast that overpowers all move kinds. Clamp work per frame.
   let budget=2;
@@ -920,6 +921,7 @@ const alpha=(()=>{
   get rankRules(){return RANK_RULES},get lastRankOutcome(){return lastRankOutcome},
   rankPlan,upgradeRank,rankOf,
   get rankMaxHp(){return rankMaxHp()},get rankDamageMultiplier(){return rankDamageMultiplier()},
+  get rankCooldownMultiplier(){return rankCooldownMultiplier()},
   get lastRecruitOutcome(){return lastRecruitOutcome},
   get recruitmentOdds(){return recruitRules},
   get recruitableCount(){return discoveredPool().length},
