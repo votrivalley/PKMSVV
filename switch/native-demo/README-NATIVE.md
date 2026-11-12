@@ -13,7 +13,7 @@ Nền đồ họa của Switch Alpha v0.1.2 được giữ lại. Đây là đ�
 
 - **103 kỹ năng gốc**: ID, tên, loại tấn công, sát thương cơ bản, cooldown, số đòn, bán kính và các cấp nâng được xuất từ `js/data/moves.js` của game PKMSVV đã biên dịch, không nhập tay bản demo.
 - **151 Pokémon Kanto**: National Dex #1–151, hệ, chỉ số máu/tốc độ/công/độ hiếm lấy từ `js/data/pokedex.js` trong bản game thật.
-- **151 PNG Pokémon** cho Kanto có sẵn offline. Sprite được tải theo nhu cầu và giữ cache có giới hạn; mặc định tắt cho đến khi nhấn L.
+- **151 PNG Pokémon** cho Kanto có sẵn offline. Sprite được tải theo nhu cầu và giữ cache có giới hạn; mặc định bật khi vào Kanto; nhấn L để chuyển sang vector nhẹ khi máy gặp vấn đề hiệu năng.
 - Bảng Kanto, mốc wave/boss, Fusion, Orb, Mega và tiến hóa lấy từ mã PKMSVV tại repo.
 - Hệ thống native dùng loại chiêu thật để xác định cơ chế đánh gần/tia/chùm/đạn/lan điện và các hiệu ứng đơn giản; áp dụng một phần nâng cấp gốc lên sát thương, hồi chiêu, diện tích và số mục tiêu.
 - **v0.2.2 — cơ chế kỹ năng kéo dài theo thời gian:** mìn đặt trên đất chờ quái dẫm; thiên thạch có thời gian cảnh báo trước khi rơi; tháp bắn tự đánh nhiều nhịp; vùng hào quang/orbit/trail gây sát thương nhiều đợt; xoáy hút quái; stun trì hoãn rồi làm choáng; sóng địa chấn quét theo hướng; tia charge tích tụ rồi phát nổ. Có hiệu ứng vòng cảnh báo/trạng thái tương ứng.
@@ -51,7 +51,7 @@ Nền đồ họa của Switch Alpha v0.1.2 được giữ lại. Đây là đ�
 
 ## Điều khiển 
 - Left Stick/D-pad: di chuyển; các đòn đánh thường tự kích hoạt.
-- **L:** bật/tắt sprite Pokémon (mặc định vector).
+- **L:** bật/tắt sprite Pokémon (mặc định bật; tắt để chuyển sang vector nhẹ).
 - **+**: menu TEAM/BOX/**RANK**/POKÉDEX/**RECRUIT**/ORB/FUSION/**CONTROLLER**/INFO/**EVOLVE**. **L/R** chuyển tab, **B** đóng. CONTROLLER hiển thị sơ đồ gán nút Switch mới.
 - TEAM: **Y** chọn Pokémon đội hình (starter thử nghiệm hoặc đã sở hữu), **A** vào lại trận. Việc chọn starter thử không cấp Pokémon thật vào PokéBox.
 - **RANK:** **Y** chọn Pokémon trong PokéBox; **A** nâng Rank ngay nếu đủ bản sao (không có hộp xác nhận). Màu sáng báo có thể nâng.
@@ -72,7 +72,7 @@ Dữ liệu *Alpha native* lưu độc lập tại `sdmc:/switch/pkmsvv-native-a
 
 ## Một lượt test
 1. Khởi động và chơi **5–10 phút**: kiểm tra không văng và FPS ổn. Dùng Caterpie nếu đã chiêu mộ (tiến hóa cấp 7→10), hoặc starter Charmander (cấp 16→36), để kiểm tra sprite, HP, thông báo tiến hóa và Pokédex sau trận. Kiểm tra Rank và bản trùng trong PokéBox vẫn giữ nguyên. Nếu mở được chiêu mìn, thiên thạch, tháp bắn hoặc vùng xoáy, xem hiệu ứng có tồn tại sau khi thi triển, có gây sát thương đúng lúc và có tự biến mất.
-2. Nhấn **L** bật sprite; xem quái Kanto nhiều loài xuất hiện sau mốc 120s, không lọt Pokémon Gen2+.
+2. Vào trận kiểm tra sprite Pokémon tự hiện, sau đó nhấn **L** tắt/bật sprite; xem quái Kanto nhiều loài xuất hiện sau mốc 120s, không lọt Pokémon Gen2+.
 3. Kiểm tra đổi chiêu khi tiến hóa (chọn cũ → mới, thử KEEP cả hai bước); không mất lượt chọn nâng cấp thường, R+Y/R+B không xuyên popup.
 4. Thử Pikachu với Đá Sét, Eevee 3 nhánh và Haunter bằng Link Cable sau khi hạ boss lấy 1 Mảnh. Kiểm tra không tự tiến hóa khi lên cấp, không mất Rank/PokéBox và không tặng lượt nâng kỹ năng.
 5. Thử Pokémon chiêu mộ ngoài 4 starter: chiêu đầu phải thuộc bộ chiêu của loài. Sau tiến hóa, chiêu mới khi lên cấp phải thuộc dạng đã tiến hóa.
