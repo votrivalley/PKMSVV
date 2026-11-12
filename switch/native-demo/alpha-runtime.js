@@ -15,9 +15,10 @@ const alpha=(()=>{
  const byDex=new Map([...(realDex||[]),...roster,...foes].map(p=>[p.dex,p]));
  const spriteNames=new Set([...rosterNames,...foeNames,...(realDex||[]).map(p=>p.name.toLowerCase()),...data.evolutionSprites.map(p=>p.name.toLowerCase()),'mewtwo']);
  const SAVE_PATH='sdmc:/switch/pkmsvv-native-alpha/';
- const SAVE_PREFIX='progress-v026-';
- const PREVIOUS_SAVE_PREFIX='progress-v025-';
- const OLDER_SAVE_PREFIX='progress-v024-';
+ const SAVE_PREFIX='progress-v027-';
+ const PREVIOUS_SAVE_PREFIX='progress-v026-';
+ const OLDER_SAVE_PREFIX='progress-v025-';
+ const OLDEST_SAVE_PREFIX='progress-v024-';
  const LEGACY_SAVE_PREFIX='progress-';
  const MOVE_MAX=5,MAX_MOVES=8;
  const RANK_RULES=data.rankRules||{max:5,perRankStatBonus:.06,rank4CooldownReduction:.05};
@@ -56,10 +57,11 @@ const alpha=(()=>{
     [readSlot(1),readSlot(2)],
     [readSlot(1,PREVIOUS_SAVE_PREFIX),readSlot(2,PREVIOUS_SAVE_PREFIX)],
     [readSlot(1,OLDER_SAVE_PREFIX),readSlot(2,OLDER_SAVE_PREFIX)],
+    [readSlot(1,OLDEST_SAVE_PREFIX),readSlot(2,OLDEST_SAVE_PREFIX)],
     [readSlot(1,LEGACY_SAVE_PREFIX),readSlot(2,LEGACY_SAVE_PREFIX)]
    ];
    const chosen=groups.find(g=>g[0]||g[1])||groups[0],migrating=chosen!==groups[0];
-   // Never touch earlier generations: v025/v024/legacy are rollback backups.
+   // Never touch earlier generations: v026/v025/v024/legacy are rollback backups.
    const [a,b]=chosen,saved=(!a?b:!b?a:a.seq>b.seq?a:b);
   if(saved&&Number.isInteger(saved.seq)&&saved.seq>=0){
    const found=saved.pokedex&&typeof saved.pokedex==='object'?saved.pokedex:{};
@@ -170,11 +172,56 @@ const alpha=(()=>{
   return true;
  }
  function currentRank(){return rankOf(profile.selected)}
- function rankMaxHp(){return 100*(1+currentRank()*RANK_RULES.perRankStatBonus)}
- function rankDamageMultiplier(){return 1+currentRank()*RANK_RULES.perRankStatBonus}
+ function rankMaxHp(){return 100*(1+currentRank()*RANK_RULES.perRankStatBonus)*statsAtEvolution(evolvedDex()).hp}
+ function rankDamageMultiplier(){return (1+currentRank()*RANK_RULES.perRankStatBonus)*statsAtEvolution(evolvedDex()).damage}
  function rankCooldownMultiplier(){return currentRank()>=4?1-RANK_RULES.rank4CooldownReduction:1}
+ // Only pure level-based Gen1 evolutions are handled automatically.
+ // Stone/trade/friendship branches cannot be inferred from a player level.
+ let battleEvolutionDex=25,evolutionNotice='',evolutionNoticeLeft=0,evolutionEvents=0;
+ const realByDex=new Map((realDex||[]).map(p=>[p.dex,p]));
+ function statsAtEvolution(dex){
+  const base=realByDex.get(profile.selected),current=realByDex.get(dex);
+  if(!base||!current)return {hp:1,damage:1,speed:1};
+  const ratio=(from,to,power,ceiling)=>{
+   if(!Number.isFinite(from)||!Number.isFinite(to)||from<=0||to<=0)return 1;
+   return Math.min(ceiling,Math.max(1,Math.pow(to/from,power)));
+  };
+  const atk=p=>Math.max(1,Number(p?.pa)||0,Number(p?.sa)||0,Number(p?.atk)||0);
+  return {hp:ratio(base.hp,current.hp,.55,1.50),
+   damage:ratio(atk(base),atk(current),.45,1.45),
+   speed:ratio(base.spd,current.spd,.25,1.15)};
+ }
+ function evolutionChainAt(dex,atLevel){
+  let current=dex;
+  const visited=new Set([current]);
+  for(let i=0;i<3;i++){
+   const rule=data.evolutions.find(e=>e.from===current&&e.level<=atLevel);
+   if(!rule||visited.has(rule.to)||rule.to<1||rule.to>151)break;
+   current=rule.to;visited.add(current);
+  }
+  return current;
+ }
+ function onLevelUp(){
+  // Merely previewing an evolved sprite cannot create Pokédex ownership.
+  const next=evolutionChainAt(profile.selected,level);
+  if(next===battleEvolutionDex)return false;
+  const before=statsAtEvolution(battleEvolutionDex),after=statsAtEvolution(next);
+  const rankFactor=100*(1+currentRank()*RANK_RULES.perRankStatBonus);
+  const oldMax=rankFactor*before.hp,newMax=rankFactor*after.hp;
+  hp=Math.min(newMax,Math.max(0,hp/Math.max(1,oldMax)*newMax));
+  const old=battleEvolutionDex;battleEvolutionDex=next;evolutionEvents++;
+  evolutionNotice=(realByDex.get(old)?.name||getMon(old)?.name||'#'+old)+
+   ' > '+(realByDex.get(next)?.name||getMon(next)?.name||'#'+next);
+  evolutionNoticeLeft=5;
+  if(!runUsedQA&&!profile.pokedex[next]){
+   profile.pokedex[next]=1;markDirty();
+  }
+  // PokéBox, Rank and Rank3 branch stay attached to the original dex.
+  return true;
+ }
  function resetBattle(){
-  px=W/2;py=H/2;hp=rankMaxHp();kills=0;time=0;xp=0;level=1;
+  level=1;battleEvolutionDex=profile.selected;evolutionNotice='';evolutionNoticeLeft=0;evolutionEvents=0;
+  px=W/2;py=H/2;hp=rankMaxHp();kills=0;time=0;xp=0;
   enemies.length=0;shots.length=0;
   spawnAt=0;fireAt=.2;spawnShield=2;
   attack=1;fireRate=.21;moveSpeed=230;
@@ -212,19 +259,11 @@ const alpha=(()=>{
   const pool=foes.filter(p=>p.rarity<=rarityCeiling&&p.minTier<=index);
   return pool[Math.floor(rng()*pool.length)]||byDex.get(19)||foes[0];
  }
- function evolvedDex(){
-  let id=profile.selected;
-  for(let i=0;i<3;i++){
-   const ev=data.evolutions.find(e=>e.from===id&&e.level<=level);
-   if(!ev)break;
-   id=ev.to;
-  }
-  return id;
- }
+ function evolvedDex(){return evolutionChainAt(profile.selected,level)}
  function chooseBattleSprite(){
   const id=evolvedDex();
-  const entry=[...roster,...data.evolutionSprites].find(p=>p.dex===id);
-  return entry?.name.toLowerCase()||getMon(profile.selected)?.name.toLowerCase()||'pikachu';
+  return (realByDex.get(id)?.name||getMon(id)?.name||
+   getMon(profile.selected)?.name||'Pikachu').toLowerCase();
  }
  const artByName=new Map([...roster,...foes,...(realDex||[]).map(p=>({name:p.name,sprite:p.dex+'.png'})),...data.evolutionSprites,
   {name:'Mewtwo',sprite:'150.png'}].map(p=>[p.name.toLowerCase(),p.sprite]));
@@ -470,6 +509,7 @@ const alpha=(()=>{
  }
  function advanceRankClock(dt){if(Number.isFinite(dt)&&dt>=0&&dt<=60)rankCombatSeconds+=dt}
  function updateEffects(dt){
+  evolutionNoticeLeft=Math.max(0,evolutionNoticeLeft-dt);
   advanceRankClock(dt);
   for(const key of Object.keys(activeBuffs)){
    activeBuffs[key]-=dt;if(activeBuffs[key]<=0)delete activeBuffs[key];
@@ -540,7 +580,7 @@ const alpha=(()=>{
   if(!e||e.hp>0)return false;
   const index=enemies.indexOf(e);if(index<0)return false;
   onKill(e);enemies.splice(index,1);
-  kills++;xp++;if(xp>=12&&!pickOpen){level++;offersForLevel()}
+  kills++;xp++;if(xp>=12&&!pickOpen){level++;onLevelUp();offersForLevel()}
   return true;
  }
  function onRankHit(e){
@@ -590,7 +630,7 @@ const alpha=(()=>{
    const index=enemies.indexOf(e);
    if(index>=0)enemies.splice(index,1);
    kills++;xp++;
-   if(xp>=12&&!pickOpen){level++;offersForLevel()}
+   if(xp>=12&&!pickOpen){level++;onLevelUp();offersForLevel()}
    return true;
   }
   return false;
@@ -880,9 +920,11 @@ const alpha=(()=>{
   ctx.fillStyle=color;ctx.font=font;ctx.fillText(String(value),x,y)
  }
  function draw(){
-  text(820,44,'PKMSVV SWITCH NATIVE 0.2.6','#ffe39d');
+  text(820,44,'PKMSVV SWITCH NATIVE 0.2.7','#ffe39d');
   text(820,74,'KANTO • GEN 1 • '+(runUsedQA?(accelerated?'QA x12':'QA - CLOCK NORMAL'):'REAL TIME'),'#a7e7f6');
-  text(820,103,'TEAM: '+name(getMon(profile.selected))+' R'+currentRank()+'  EVOLVE #'+evolvedDex()+'  SKILL '+moveList.length+'/8');
+  text(820,103,'TEAM: '+name(getMon(profile.selected))+' R'+currentRank()+
+   '  ACTIVE '+(realByDex.get(evolvedDex())?.name||name(getMon(profile.selected)))+
+   '  SKILL '+moveList.length+'/8');
   text(820,132,'ORB: '+orbQueue.length+'/10   CD '+orbCooldown.toFixed(1)+'s');
   text(820,161,'MEGA: '+megEnergy+'/100  CD '+Math.ceil(megaCooldown)+'s');
   text(820,190,'DEX: '+Object.keys(profile.pokedex).length+'  BADGE: '+(badgeWon?'YES':'NO'));
@@ -912,6 +954,11 @@ const alpha=(()=>{
     '#f9d9a0','17px sans-serif');
   }
   if(bossMessage)text(455,123,bossMessage,'#fff0a2','bold 28px sans-serif');
+  if(evolutionNoticeLeft>0&&!menu&&!matchResult){
+   ctx.fillStyle='rgba(8,29,33,.93)';ctx.fillRect(355,93,560,72);
+   ctx.strokeStyle='#ffe39d';ctx.lineWidth=2;ctx.strokeRect(355,93,560,72);
+   text(386,139,'EVOLVED: '+evolutionNotice,'#ffe39d','bold 22px sans-serif');
+  }
   if(menu)drawMenu();
   else if(matchResult)drawResult();
  }
@@ -1060,7 +1107,10 @@ const alpha=(()=>{
   get boss15(){return boss15},get boss30(){return boss30},get gameWon(){return gameWon},
   get fusionUsed(){return fusionUsed},get megaPreview(){return megaPreview},
   get fusionOfferAttempts(){return fusionOfferAttempts},get fusionOfferRecipe(){return fusionOfferRecipe},
-  get evolvedDex(){return evolvedDex()},
+  get evolvedDex(){return evolvedDex()},onLevelUp,evolutionChainAt,statsAtEvolution,
+   get battleEvolutionDex(){return battleEvolutionDex},
+   get evolutionEvents(){return evolutionEvents},
+   get evolutionNotice(){return evolutionNotice},
   get menuTab(){return menuTab},get menuIndex(){return menuIndex},
   get orbCooldown(){return orbCooldown},
   get offers(){return offers},
@@ -1074,7 +1124,7 @@ const alpha=(()=>{
    return factor;
   },
   get bossDamageMultiplier(){return accelerated?6:1},
-  get moveMultiplier(){return activeBuffs.quick>0?1.25:1},
+  get moveMultiplier(){return (activeBuffs.quick>0?1.25:1)*statsAtEvolution(evolvedDex()).speed},
   get castCount(){return castCount},get damageCount(){return damageCount},
   get availableMoveCount(){return sourceMoves.length},get availablePokemonCount(){return realDex?.length||0},
   get realDexLength(){return realDex?.length||0},
