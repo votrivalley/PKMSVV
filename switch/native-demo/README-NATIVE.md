@@ -49,7 +49,7 @@ Nền đồ họa của Switch Alpha v0.1.2 được giữ lại. Đây là đ�
 - **+**: menu TEAM/BOX/**RANK**/POKÉDEX/**RECRUIT**/ORB/FUSION/**CONTROLLER**/INFO/**EVOLVE**. **L/R** chuyển tab, **B** đóng. CONTROLLER hiển thị sơ đồ gán nút Switch mới.
 - TEAM: **Y** chọn Pokémon đội hình (starter thử nghiệm hoặc đã sở hữu), **A** vào lại trận. Việc chọn starter thử không cấp Pokémon thật vào PokéBox.
 - **RANK:** **Y** chọn Pokémon trong PokéBox; **A** nâng Rank ngay nếu đủ bản sao (không có hộp xác nhận). Màu sáng báo có thể nâng.
-- **Khi lên cấp:** **X** chọn kỹ năng 1, **Y** chọn kỹ năng 2, **B** chọn kỹ năng 3 **ngay lập tức, không cần giữ R**. **A** sang trang kế tiếp (mỗi trang 3 kỹ năng, hiện có 2 trang). **Ưu tiên phím của popup**, không kích hoạt Orb/Pause khi chọn.
+- **Khi lên cấp:** **X** chọn kỹ năng 1, **Y** chọn kỹ năng 2, **B** chọn kỹ năng 3 **ngay lập tức, không cần giữ R**. **R+A** sang trang kế tiếp (mỗi trang 3 kỹ năng, hiện có 2 trang). **Ưu tiên phím của popup**, không kích hoạt Orb/Pause khi chọn.
 - **Khi chiến đấu bình thường:** **R+Y** dùng Orb; **R+B** tạm dừng/tiếp tục; X/Y/B nhấn đơn không gọi hành động cũ. Phần đổi này chỉ áp dụng cho **Switch Native**, không đổi gán nút PC/Web/Android.
 - **EVOLVE:** Sau boss 15:00, chọn **+ → EVOLVE**, **Y** chọn nhánh Đá/Dây Liên Kết, **A** dùng 1 Mảnh. Chỉ tiến hóa Pokémon đang trong trận. Mảnh không ghi save; sau tiến hóa không nhận miễn phí một cấp chiêu.
 - **ZL+R**: bật đồng hồ QA x12, giảm sát thương người chơi nhận để thử boss 15/30 phút. Huy hiệu QA không lưu.
@@ -66,7 +66,7 @@ Dữ liệu *Alpha native* lưu độc lập tại `sdmc:/switch/pkmsvv-native-a
 3. Kiểm tra đổi chiêu khi tiến hóa (chọn cũ → mới, thử KEEP cả hai bước); không mất lượt chọn nâng cấp thường, R+Y/R+B không xuyên popup.
 4. Thử Pikachu với Đá Sét, Eevee 3 nhánh và Haunter bằng Link Cable sau khi hạ boss lấy 1 Mảnh. Kiểm tra không tự tiến hóa khi lên cấp, không mất Rank/PokéBox và không tặng lượt nâng kỹ năng.
 5. Thử Pokémon chiêu mộ ngoài 4 starter: chiêu đầu phải thuộc bộ chiêu của loài. Sau tiến hóa, chiêu mới khi lên cấp phải thuộc dạng đã tiến hóa.
-6. Vào màn **chọn kỹ năng**, kiểm tra **X/Y/B = 1/2/3**, **A = trang 2**, rồi chọn kỹ năng ở trang 2. Xác nhận **Y không dùng Orb** và **B không Pause** khi popup đang mở.
+6. Vào màn **chọn kỹ năng**, kiểm tra **X/Y/B = 1/2/3**, **R+A = trang 2**, rồi chọn kỹ năng ở trang 2. Xác nhận **Y không dùng Orb** và **B không Pause** khi popup đang mở.
 7. Trong menu **RECRUIT**, kiểm tra chỉ Pokémon đã mở Pokédex mới chiêu mộ được; **A** chiêu mộ 1, **Y** chiêu mộ 10 khi đủ vé. Vào BOX xem Pokémon mới và bản trùng, rồi chọn A để đưa ra trận. Quay lại chiến đấu: thử **Y đơn** và **B đơn** (không kích hoạt hành động), sau đó **R+Y** để dùng Orb và **R+B** để Pause/Resume. Vào **+ → CONTROLLER** xem hướng dẫn đúng mapping.
 8. Vào **RANK**, dùng bản trùng để nâng. Khi đạt **Rank 3**, bảng chọn nhánh hiện ra: **X** nhánh đầu, **Y** nhánh sau, **B** chọn sau. Kiểm tra nhánh lưu và không thể chọn lại; tại Rank 5 thử hiệu ứng lan vào nhóm quái. Không dùng Shiny hoặc bản trùng khác loài. Thử Pokémon đã chiêu mộ, kiểm tra TEAM/BOX, hiệu ứng và Pokédex.
 9. Nếu muốn test kết thúc Kanto, dùng ZL+R tăng thời gian QA tới boss 15/30 phút; **đánh boss 15 trước**, sau đó boss 30. Thắng boss 30 phải hiện tổng kết, trận dừng. Nhấn **A** để chơi lại. QA không được cộng thành tích thực.
