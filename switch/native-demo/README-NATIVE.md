@@ -1,4 +1,4 @@
-# Pokémon Chuyển Sinh — Switch Native Kanto v0.2.6
+# Pokémon Chuyển Sinh — Switch Native Kanto v0.2.7
 
 **NRO nx.js thật; KHÔNG Brewser, KHÔNG WebView, KHÔNG tải game HTML.**
 Nền đồ họa của Switch Alpha v0.1.2 được giữ lại. Đây là đợt tích hợp game thật vào native, **chưa phải bản port hoàn toàn**.
@@ -23,13 +23,17 @@ Nền đồ họa của Switch Alpha v0.1.2 được giữ lại. Đây là đ�
 - **Rank 3 chiến đấu:** 16% kích hoạt với 3,5 giây khóa theo quy tắc gốc; bản native có các hiệu ứng bỏng/độc/làm chậm/hồi HP/đòn bổ sung/đỡ/né nhưng chưa tương đương hoàn toàn Ability ở engine Web.
 - **Rank 5 hybrid:** sát thương lan trong bán kính 140, tối đa 6 mục tiêu, tối thiểu 12 giây giữa các đợt; có thể kích hoạt khi mục tiêu chính vừa chết. Giữ nguyên ngân sách xử lý hiệu ứng để bảo vệ FPS.
 - **Save v0.2.6:** tự chuyển dữ liệu v0.2.5/v0.2.4 sang `progress-v026-1/2.json`; file cũ không bị ghi đè. Nếu lỗi ghi save, nhánh được hoàn nguyên.
+- **v0.2.7 – Tiến hóa Kanto trong trận:** cập nhật **52 quy tắc tiến hóa bằng cấp độ** từ `data/evolution-rules.json`, áp dụng cho cả 151 Pokémon Gen1 được chiêu mộ chứ không chỉ starter. Khi đủ cấp, loài đang chiến đấu đổi sprite thực tương ứng, tăng HP/sát thương/tốc độ theo tỉ lệ chỉ số Pokédex gốc (có giới hạn bảo vệ cân bằng) và giữ nguyên phần trăm HP. Chuyển hai giai đoạn liên tiếp sẽ mở đủ các mục Pokédex trung gian. **Không tự tiến hóa** dạng yêu cầu đá, trao đổi hoặc điều kiện khác.
+- **PokéBox & Pokédex:** tiến hóa chỉ thay đổi **dạng trong trận**; Pokémon sở hữu, số bản trùng, Rank và nhánh Rank vẫn gắn với loài gốc trong PokéBox. Dạng đã tiến hóa được mở Pokédex để chiêu mộ trong trận thường, nhưng **QA x12 không mở Pokédex**. Chưa triển khai màn chọn đổi một kỹ năng khi tiến hóa.
+- **Save v0.2.7:** ưu tiên `progress-v027-1/2.json`, tự chuyển từ save v0.2.6/v0.2.5/v0.2.4 và giữ nguyên mọi bản cũ để rollback.
+
 
 
 **Quan trọng:** Chỉ *dữ liệu gốc* và một phần vòng chơi gốc được chuyển ở bước này. **Toàn bộ logic và hình ảnh của 103 hiệu ứng kỹ năng, chi tiết Rank 3/5 trong engine browser, Co-op, Arena, 10 chương và game mode chưa được port 1:1.** NRO không chạy mã HTML/DOM của game gốc. Những loại chiêu chưa có bộ mô phỏng native chuyên biệt vẫn dùng xử lý thuộc nhóm tương đương. Không quảng bá bản này là FULL.
 
 ## Cài đặt
-1. Trong GitHub Actions tải artifact `PKMSVV-Switch-Native-RankBranches-v026`.
-2. Giải nén, chép `PKMSVV-Switch-Native-RankBranches-v026.nro` vào `sd:/switch/`.
+1. Trong GitHub Actions tải artifact `PKMSVV-Switch-Native-KantoEvolution-v027`.
+2. Giải nén, chép `PKMSVV-Switch-Native-KantoEvolution-v027.nro` vào `sd:/switch/`.
 3. Mở HBMenu **full RAM** (giữ R khi mở game hợp lệ) và chạy NRO. Không cần cài Brewser.
 4. Giữ bản NRO v0.1.2 trước đó làm phương án ổn định. Hai tệp không cần ghi đè nhau.
 
@@ -45,10 +49,12 @@ Nền đồ họa của Switch Alpha v0.1.2 được giữ lại. Đây là đ�
 - **ZR**: Mega preview trong chế độ QA nếu đủ điều kiện kỹ thuật; không phải quyền sở hữu Mega Stone thật.
 
 ## Save
-Dữ liệu *Alpha native* lưu độc lập tại `sdmc:/switch/pkmsvv-native-alpha/`, hai tệp xoay vòng và checksum. **v0.2.6** ưu tiên đọc `progress-v026-1/2.json`, nếu chưa có sẽ chuyển dữ liệu từ `progress-v025-1/2.json`, `progress-v024-1/2.json` hoặc `progress-1/2.json`. Sau đó tạo **`progress-v026-1/2.json`**, giữ nguyên save cũ để rollback. Không tự đồng bộ ngược tiến trình đã chiêu mộ khi chạy bản cũ. Không tự nhập hoặc ghi đè save JSON PC/Web/Android. Hãy xuất bản sao save chính trước mọi thử nghiệm.
+Dữ liệu *Alpha native* lưu độc lập tại `sdmc:/switch/pkmsvv-native-alpha/`, hai tệp xoay vòng và checksum. **v0.2.7** ưu tiên đọc `progress-v027-1/2.json`, nếu chưa có sẽ chuyển dữ liệu từ `progress-v026-1/2.json`, `progress-v025-1/2.json`, `progress-v024-1/2.json` hoặc `progress-1/2.json`. Sau đó tạo **`progress-v027-1/2.json`**, giữ nguyên save cũ để rollback. Không tự đồng bộ ngược tiến trình đã chiêu mộ khi chạy bản cũ. Không tự nhập hoặc ghi đè save JSON PC/Web/Android. Hãy xuất bản sao save chính trước mọi thử nghiệm.
+
+**Tiến hóa không cần nút mới:** Khi đạt cấp tiến hóa, game tự thay dạng chiến đấu và hiện dòng EVOLVED trong vài giây. Menu CONTROLLER và nút **X/Y/B chọn kỹ năng, A chuyển trang** không đổi.
 
 ## Một lượt test
-1. Khởi động và chơi **5–10 phút**: kiểm tra không văng, FPS ổn và có thể chọn nhiều chiêu mới từ pool thật. Nếu mở được chiêu mìn, thiên thạch, tháp bắn hoặc vùng xoáy, xem hiệu ứng có tồn tại sau khi thi triển, có gây sát thương đúng lúc và có tự biến mất.
+1. Khởi động và chơi **5–10 phút**: kiểm tra không văng và FPS ổn. Dùng Caterpie nếu đã chiêu mộ (tiến hóa cấp 7→10), hoặc starter Charmander (cấp 16→36), để kiểm tra sprite, HP, thông báo tiến hóa và Pokédex sau trận. Kiểm tra Rank và bản trùng trong PokéBox vẫn giữ nguyên. Nếu mở được chiêu mìn, thiên thạch, tháp bắn hoặc vùng xoáy, xem hiệu ứng có tồn tại sau khi thi triển, có gây sát thương đúng lúc và có tự biến mất.
 2. Nhấn **L** bật sprite; xem quái Kanto nhiều loài xuất hiện sau mốc 120s, không lọt Pokémon Gen2+.
 3. Vào màn **chọn kỹ năng**, kiểm tra **X/Y/B = 1/2/3**, **A = trang 2**, rồi chọn kỹ năng ở trang 2. Xác nhận **Y không dùng Orb** và **B không Pause** khi popup đang mở.
 4. Trong menu **RECRUIT**, kiểm tra chỉ Pokémon đã mở Pokédex mới chiêu mộ được; **A** chiêu mộ 1, **Y** chiêu mộ 10 khi đủ vé. Vào BOX xem Pokémon mới và bản trùng, rồi chọn A để đưa ra trận. Quay lại chiến đấu: thử **Y đơn** và **B đơn** (không kích hoạt hành động), sau đó **R+Y** để dùng Orb và **R+B** để Pause/Resume. Vào **+ → CONTROLLER** xem hướng dẫn đúng mapping.
