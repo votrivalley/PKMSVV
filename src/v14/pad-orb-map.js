@@ -2,7 +2,7 @@
    Only mappings implemented by G.Input and G.Pad are editable. */
 G.PKMSVVPadOrb=(()=>{
  const KEY='pkmsvvPadMap';
- const DEFAULT=Object.freeze({dash:2,use:3,mega:4,pause:9,confirm:0,back:1,speed:5,leaderboard:11});
+ const DEFAULT=Object.freeze({dash:0,use:3,mega:4,pause:9,confirm:0,back:1,speed:5,leaderboard:11});
  // 8 (View/Share) is reserved as emergency back; D-pad/sticks remain navigation.
  const BUTTONS=[0,1,2,3,4,5,6,7,9,10,11];
  const NAMES={0:'A / ×',1:'B / ○',2:'X / □',3:'Y / △',4:'LB / L1',5:'RB / R1',6:'LT / L2',7:'RT / R2',9:'Start / Options',10:'L3',11:'R3'};
