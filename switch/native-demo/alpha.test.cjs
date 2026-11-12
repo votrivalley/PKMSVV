@@ -789,7 +789,7 @@ test('Rank3 proc/status uses original 16% chance and 3.5s lock, not every hit',(
  assert.ok(t.get('enemies[0].rankDotLeft')>0,'fire branch applies native burn');
  for(let i=0;i<100;i++)t.get('alpha.onRankHit(enemies[0])');
  assert.equal(t.get('alpha.rankProcCount'),1,'3.5s lock prevents repeated activation');
- t.get('rankCombatSeconds+=3.6');
+ t.get('alpha.advanceRankClock(3.6)');
  for(let i=0;i<100&&t.get('alpha.rankProcCount')===1;i++)t.get('alpha.onRankHit(enemies[0])');
  assert.equal(t.get('alpha.rankProcCount'),2);
 });
@@ -805,7 +805,7 @@ test('Rank5 hybrid hits at most 6 other targets per 12s and triggers on fatal at
  assert.ok(t.get('enemies.reduce((n,e)=>n+e.hp,0)')<before);
  const next=t.get('alpha.onRankHit(enemies[0])');
  assert.equal(next.hybrid,0,'12s lock active');
- t.get('rankCombatSeconds+=12.1');
+ t.get('alpha.advanceRankClock(12.1)');
  assert.equal(t.get('alpha.onRankHit(enemies[0]).hybrid'),6);
  assert.equal(t.get('alpha.rankHybridCount'),12);
  assert.ok(t.get('alpha.effectCount')<=14);
