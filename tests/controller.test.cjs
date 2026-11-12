@@ -113,6 +113,11 @@ test('v1.5 controller mapping saves six real actions, migrates old maps and reje
  const map=G.PKMSVVPadOrb;
  assert.match(map.describe('dash'),/A \/ ×/);
  assert.equal(map.bindings().speed,6,'ZL/L2 becomes the default speed button');
+ assert.equal(map.bindings().leaderboard,10,'L3 toggles Co-op ranking');
+ assert.equal(map.keyboardBindings().leaderboard,'keyl','keyboard L already maps to Co-op ranking');
+ settings[map.KEY]={dash:2,use:3,mega:4,pause:9,confirm:0,back:1,speed:6,leaderboard:11};
+ assert.equal(map.bindings().leaderboard,10,'previous R3 default migrates to L3');
+ delete settings[map.KEY];
  assert.match(map.describe('use'),/Y \/ △/);
  assert.match(map.describe('pause'),/Start \/ Options/);
  assert.match(map.describe('mega'),/LB \/ L1/);
