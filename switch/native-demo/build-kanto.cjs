@@ -50,6 +50,7 @@ if(data.trialSpecies.some(p=>p.dex<data.nationalMin||p.dex>data.nationalMax))
 // are narrower than the browser modules: no fabricated save unlocks.
 const orbsSource=fs.readFileSync(path.join(root,'src/v14/orbs.js'),'utf8');
 const balanceSource=fs.readFileSync(path.join(root,'src/pkmsvv-skill-balance.js'),'utf8');
+const rankSource=fs.readFileSync(path.join(root,'src/pkmsvv-box-stage2.js'),'utf8');
 const fusionSource=fs.readFileSync(path.join(root,'src/pkmsvv-bond-fusion.js'),'utf8');
 const megaSource=fs.readFileSync(path.join(root,'src/pkmsvv-mega-phase3.js'),'utf8');
 const evolutions=JSON.parse(fs.readFileSync(path.join(root,'data/evolution-rules.json'),'utf8'));
@@ -80,6 +81,15 @@ if(Object.keys(cooldownFloors).length!==23||
  !Number.isFinite(cooldownFloors.projectile)||
  !Number.isFinite(cooldownFloors.nova))
  throw Error('PKMSVV cooldown profiles changed: review Switch adaptation');
+// Native Rank follows original Box Stage2: extra ordinary copies 1,2,3,4,5
+// per next level; per rank +6% HP/damage and one-time -5% cooldown at Rank4.
+if(!/MAX_RANK=5/.test(rankSource)||
+ !/const cost=progress\.rank\+1/.test(rankSource)||
+ !/factor=1\+item\.rank\*0\.06/.test(rankSource)||
+ !/cooldown:n>=4\?5:0/.test(rankSource))
+ throw Error('Source Rank mechanics changed: Switch adapter needs review');
+const nativeRank={max:5,perRankStatBonus:.06,rank4CooldownReduction:.05,
+ nextRankCost:'rank+1',legendaryMaterialRestricted:true,shinyExcluded:true};
 const nativeMoves=[
  ['thunder-shock','chain'],['quick-attack','melee'],
  ['ember','projectile'],['water-gun','projectile'],
@@ -97,7 +107,7 @@ const evolutionRows=evolutions.rules.filter(row=>row.from>=1&&row.from<=151&&
  .map(row=>({from:row.from,to:row.to,level:row.level}));
 if(!evolutionRows.length)throw Error('No Kanto evolution rules were read');
 data.nativeAlpha={
- orbs, fusions, fusionOfferRates, cooldownFloors, nativeMoves, mega:{duration:+megaMatch[1],cooldown:+megaMatch[2],cdFactor:+megaMatch[3]},
+ orbs, fusions, fusionOfferRates, cooldownFloors, nativeMoves, rankRules:nativeRank, mega:{duration:+megaMatch[1],cooldown:+megaMatch[2],cdFactor:+megaMatch[3]},
  evolutions:evolutionRows,
  testOnly:true,
  // Native Alpha battle subset; do not represent this as the official full engine.
