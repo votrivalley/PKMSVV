@@ -15,11 +15,12 @@ const alpha=(()=>{
  const byDex=new Map([...(realDex||[]),...roster,...foes].map(p=>[p.dex,p]));
  const spriteNames=new Set([...rosterNames,...foeNames,...(realDex||[]).map(p=>p.name.toLowerCase()),...data.evolutionSprites.map(p=>p.name.toLowerCase()),'mewtwo']);
  const SAVE_PATH='sdmc:/switch/pkmsvv-native-alpha/';
-const SAVE_PREFIX='progress-v029-';
- const PREVIOUS_SAVE_PREFIX='progress-v028-';
- const OLDER_SAVE_PREFIX='progress-v027-';
- const OLDEST_SAVE_PREFIX='progress-v026-';
- const ANCIENT_SAVE_PREFIX='progress-v025-';
+const SAVE_PREFIX='progress-v030-';
+ const PREVIOUS_SAVE_PREFIX='progress-v029-';
+ const OLDER_SAVE_PREFIX='progress-v028-';
+ const OLDEST_SAVE_PREFIX='progress-v027-';
+ const ANCIENT_SAVE_PREFIX='progress-v026-';
+ const ANTIQUE_SAVE_PREFIX='progress-v025-';
  const LEGACY_PREVIOUS_SAVE_PREFIX='progress-v024-';
  const LEGACY_SAVE_PREFIX='progress-';
  const MOVE_MAX=5,MAX_MOVES=8;
@@ -61,11 +62,12 @@ const SAVE_PREFIX='progress-v029-';
     [readSlot(1,OLDER_SAVE_PREFIX),readSlot(2,OLDER_SAVE_PREFIX)],
 [readSlot(1,OLDEST_SAVE_PREFIX),readSlot(2,OLDEST_SAVE_PREFIX)],
     [readSlot(1,ANCIENT_SAVE_PREFIX),readSlot(2,ANCIENT_SAVE_PREFIX)],
+    [readSlot(1,ANTIQUE_SAVE_PREFIX),readSlot(2,ANTIQUE_SAVE_PREFIX)],
     [readSlot(1,LEGACY_PREVIOUS_SAVE_PREFIX),readSlot(2,LEGACY_PREVIOUS_SAVE_PREFIX)],
     [readSlot(1,LEGACY_SAVE_PREFIX),readSlot(2,LEGACY_SAVE_PREFIX)]
    ];
    const chosen=groups.find(g=>g[0]||g[1])||groups[0],migrating=chosen!==groups[0];
-   // Keep v028/v027/v026/v025/v024/legacy saves intact as rollback backups.
+   // Keep v029/v028/v027/v026/v025/v024/legacy saves intact as rollback backups.
    const [a,b]=chosen,saved=(!a?b:!b?a:a.seq>b.seq?a:b);
   if(saved&&Number.isInteger(saved.seq)&&saved.seq>=0){
    const found=saved.pokedex&&typeof saved.pokedex==='object'?saved.pokedex:{};
@@ -184,6 +186,7 @@ const SAVE_PREFIX='progress-v029-';
 let battleEvolutionDex=25,evolutionNotice='',evolutionNoticeLeft=0,evolutionEvents=0;
  // Per-evolution optional move swap, in-memory only. Never mutate PokéBox or Rank.
  let evoQueue=[],evoStage='',evoOldMove='',evoChoices=[],evoStep=null;
+ let evolutionShards=0,lastSpecialEvolutionOutcome='',shardBossMilestones=new Set();
  let levelOffersAfterEvolution=null,evoSwapCount=0;
  const realByDex=new Map((realDex||[]).map(p=>[p.dex,p]));
  const evolutionStatCache=new Map();
@@ -217,7 +220,7 @@ let battleEvolutionDex=25,evolutionNotice='',evolutionNoticeLeft=0,evolutionEven
  }
  function onLevelUp(){
   // Merely previewing an evolved sprite cannot create Pokédex ownership.
-  const next=evolutionChainAt(profile.selected,level);
+  const next=evolutionChainAt(battleEvolutionDex,level);
   if(next===battleEvolutionDex)return false;
   const before=statsAtEvolution(battleEvolutionDex),after=statsAtEvolution(next);
   const rankFactor=100*(1+currentRank()*RANK_RULES.perRankStatBonus);
@@ -248,10 +251,37 @@ const previous=stage;
   const pool=data.realMovePools?.[dex];
   return Array.isArray(pool)?pool:[];
  }
+ function specialEvolutionOptions(){
+  return (data.specialEvolutions||[]).filter(e=>e.from===battleEvolutionDex);
+ }
+ function chooseSpecialEvolution(toDex){
+  if(matchResult||pickOpen||evolutionShards<1){
+   lastSpecialEvolutionOutcome='NEED ONE BOSS SHARD / ACTIVE MATCH';return false;
+  }
+  const rule=specialEvolutionOptions().find(e=>e.to===Number(toDex));
+  if(!rule||rule.to<1||rule.to>151||!realByDex.has(rule.to)){
+   lastSpecialEvolutionOutcome='NO VALID EVOLUTION FOR CURRENT FORM';return false;
+  }
+  const from=battleEvolutionDex,before=statsAtEvolution(from),after=statsAtEvolution(rule.to);
+  const factor=100*(1+currentRank()*RANK_RULES.perRankStatBonus);
+  hp=Math.min(factor*after.hp,Math.max(0,hp/Math.max(1,factor*before.hp)*factor*after.hp));
+  evolutionShards--;battleEvolutionDex=rule.to;evolutionEvents++;
+  evoQueue.push({from,to:rule.to});
+  const target=realByDex.get(rule.to)?.name||('#'+rule.to);
+  evolutionNotice=(realByDex.get(from)?.name||'#'+from)+' > '+target;
+  evolutionNoticeLeft=5;lastSpecialEvolutionOutcome=rule.item.toUpperCase()+' > '+target;
+  if(!runUsedQA&&!profile.pokedex[rule.to]){
+   profile.pokedex[rule.to]=1;markDirty();
+  }
+  // No extra level-up reward; use the standard optional skill exchange.
+  levelOffersAfterEvolution=null;beginNextEvoSwap();
+  return true;
+ }
  function resetBattle(){
 level=1;battleEvolutionDex=profile.selected;evolutionNotice='';evolutionNoticeLeft=0;evolutionEvents=0;
    evoQueue=[];evoStage='';evoOldMove='';evoChoices=[];evoStep=null;
    levelOffersAfterEvolution=null;evoSwapCount=0;
+   evolutionShards=0;shardBossMilestones=new Set();lastSpecialEvolutionOutcome='';
   px=W/2;py=H/2;hp=rankMaxHp();kills=0;time=0;xp=0;
   enemies.length=0;shots.length=0;
   spawnAt=0;fireAt=.2;spawnShield=2;
@@ -288,7 +318,7 @@ level=1;battleEvolutionDex=profile.selected;evolutionNotice='';evolutionNoticeLe
   const pool=foes.filter(p=>p.rarity<=rarityCeiling&&p.minTier<=index);
   return pool[Math.floor(rng()*pool.length)]||byDex.get(19)||foes[0];
  }
- function evolvedDex(){return evolutionChainAt(profile.selected,level)}
+ function evolvedDex(){return evolutionChainAt(battleEvolutionDex,level)}
  function chooseBattleSprite(){
   const id=evolvedDex();
   return (realByDex.get(id)?.name||getMon(id)?.name||
@@ -421,6 +451,10 @@ level=1;battleEvolutionDex=profile.selected;evolutionNotice='';evolutionNoticeLe
  }
  function onKill(e){
   if(!e)return;
+  // Same 1 boss => 1 shard rule as src/pkmsvv-evolution.js.
+  if((e.boss===15||e.boss===30)&&!shardBossMilestones.has(e.boss)){
+   shardBossMilestones.add(e.boss);evolutionShards=Math.min(9,evolutionShards+1);
+  }
   const dex=Number(e.dex||species.get(e.species)?.dex);
   if(!runUsedQA){
    if(Number.isInteger(dex)&&dex>=1&&dex<=151&&!profile.pokedex[dex]){
@@ -508,7 +542,7 @@ function evoCandidateMoves(fromDex,toDex){
   evoStep=null;evoStage='';evoOldMove='';evoChoices=[];
   if(levelOffersAfterEvolution){
    showEvoCards(levelOffersAfterEvolution);levelOffersAfterEvolution=null;
-  }
+  }else{offers=[];skillChoices=[];pickOpen=false}
   return false;
  }
  function moveCooldownAt(move){
@@ -951,8 +985,8 @@ skillChoices=offers.map(o=>({name:o.name,description:o.kind}));
   }
   if(menu){
    const previousTab=menuTab;
-   if((left&&!lastLeft)||(l&&!lastL))menuTab=(menuTab+8)%9;
-   if((right&&!lastRight)||(r&&!lastR))menuTab=(menuTab+1)%9;
+   if((left&&!lastLeft)||(l&&!lastL))menuTab=(menuTab+9)%10;
+   if((right&&!lastRight)||(r&&!lastR))menuTab=(menuTab+1)%10;
    if(menuTab!==previousTab)menuIndex=0;
    if(menuTab===0){
     const choices=teamOptions();
@@ -986,6 +1020,13 @@ skillChoices=offers.map(o=>({name:o.name,description:o.kind}));
    if(menuTab===4){
     if(a&&!lastA)recruitMany(1);
     if(y&&!lastY)recruitMany(10);
+   }
+   if(menuTab===9){
+    const opts=specialEvolutionOptions();
+    if(y&&!lastY)menuIndex=(menuIndex+1)%Math.max(1,opts.length);
+    if(a&&!lastA&&opts.length&&chooseSpecialEvolution(opts[menuIndex%opts.length].to)){
+     menu=false;consumedMenuClose=true;
+    }
    }
    if(b&&!lastB){menu=false;consumedMenuClose=true}
   }else{
@@ -1022,12 +1063,12 @@ skillChoices=offers.map(o=>({name:o.name,description:o.kind}));
   ctx.fillStyle=color;ctx.font=font;ctx.fillText(String(value),x,y)
  }
  function draw(){
-  text(820,44,'PKMSVV SWITCH NATIVE 0.2.9','#ffe39d');
+  text(820,44,'PKMSVV SWITCH NATIVE 0.3.0','#ffe39d');
   text(820,74,'KANTO • GEN 1 • '+(runUsedQA?(accelerated?'QA x12':'QA - CLOCK NORMAL'):'REAL TIME'),'#a7e7f6');
   text(820,103,'TEAM: '+name(getMon(profile.selected))+' R'+currentRank()+
    '  ACTIVE '+(realByDex.get(evolvedDex())?.name||name(getMon(profile.selected)))+
    '  SKILL '+moveList.length+'/8');
-  text(820,132,'ORB: '+orbQueue.length+'/10   CD '+orbCooldown.toFixed(1)+'s');
+  text(820,132,'ORB: '+orbQueue.length+'/10   CD '+orbCooldown.toFixed(1)+'s   SHARD '+evolutionShards);
   text(820,161,'MEGA: '+megEnergy+'/100  CD '+Math.ceil(megaCooldown)+'s');
   text(820,190,'DEX: '+Object.keys(profile.pokedex).length+'  BADGE: '+(badgeWon?'YES':'NO'));
   text(820,218,'SAVE: '+saveStatus+'  KANTO CLEARS: '+(profile.kantoClears||0),'#acc7ff');
@@ -1085,9 +1126,9 @@ if(pickOpen){
  function drawMenu(){
   ctx.fillStyle='rgba(6,17,29,.97)';ctx.fillRect(95,65,1080,590);
   ctx.strokeStyle='#92dccb';ctx.strokeRect(95,65,1080,590);
-  const tabs=['TEAM','BOX','RANK','POKEDEX','RECRUIT','ORB','FUSION','CONTROLLER','INFO'];
-  for(let i=0;i<tabs.length;i++)text(103+i*116,110,(i===menuTab?'[':'')+tabs[i]+(i===menuTab?']':''),
-   i===menuTab?'#fff0a2':'#b8d5d6','20px sans-serif');
+  const tabs=['TEAM','BOX','RANK','POKEDEX','RECRUIT','ORB','FUSION','CONTROLLER','INFO','EVOLVE'];
+  for(let i=0;i<tabs.length;i++)text(103+i*110,110,(i===menuTab?'[':'')+tabs[i]+(i===menuTab?']':''),
+   i===menuTab?'#fff0a2':'#b8d5d6','17px sans-serif');
   if(menuTab===0){
    text(135,170,'Y NEXT • A TRIAL SELECT • L/R TABS • B BACK','#cfeadf');
    const choices=teamOptions();
@@ -1176,7 +1217,7 @@ if(pickOpen){
    text(155,419,'TEAM/BOX: Y NEXT, A USE  |  RANK: Y NEXT, A UPGRADE');
    text(155,453,'RECRUIT: A x1, Y x10. Rank3 branch: X / Y; B later.','#d8ffe1','17px sans-serif');
    text(155,480,'EVOLUTION: X/Y/B choose old/new; A next page','#c1ffd5','17px sans-serif');
-   text(155,506,'EVOLUTION: KEEP skips; normal LEVEL UP follows','#ffe9b1','17px sans-serif');
+   text(155,506,'EVOLVE TAB: Y NEXT BRANCH / A USE SHARD','#ffe9b1','17px sans-serif');
    text(155,551,'Active Switch controller mapping (fixed preset)','#bacfe4','17px sans-serif');
   }
   if(menuTab===8){
@@ -1187,6 +1228,24 @@ if(pickOpen){
    text(145,339,'Modes not ported: Co-op, Arena, Berry Rescue, 10 chapters.');
    text(145,380,'ZL+R: x12 clock, 99% less damage, 6x boss damage. QA badges not saved.');
    text(145,421,'Fusion MAX+MAX offer: 80/70/60/50/40/30%, 1 roll per level.');
+  }
+  if(menuTab===9){
+   text(140,176,'EVOLVE - STONE / LINK CABLE    SHARDS: '+evolutionShards,'#ffe3a3','24px sans-serif');
+   text(150,218,'Boss 15:00 grants one Evolution Shard. Shards do not save.','#bcebdd','18px sans-serif');
+   text(150,253,'Y: NEXT BRANCH    A: USE 1 SHARD    B: BACK','#ffe0a0','18px sans-serif');
+   const options=specialEvolutionOptions();
+   text(150,298,'CURRENT: '+(realByDex.get(battleEvolutionDex)?.name||'#'+battleEvolutionDex)+
+    '   Original PokéBox slot / Rank kept','#d5f8e2','19px sans-serif');
+   if(!options.length)text(150,358,'No stone/link evolution for current form.','#ffe7b0','20px sans-serif');
+   for(let i=0;i<options.length;i++){
+    const ev=options[i],active=i===menuIndex%options.length;
+    text(160,355+i*66,(active?'▶ ':'  ')+(realByDex.get(ev.to)?.name||'#'+ev.to)+
+     '  ['+(ev.item==='link-cable'?'LINK CABLE':ev.item.toUpperCase())+']  '+
+     (evolutionShards>0?'READY':'BOSS SHARD REQUIRED'),
+     active?'#ffe39d':'#cadfe2','20px sans-serif');
+   }
+   text(145,584,'Last: '+(lastSpecialEvolutionOutcome||'NONE'),'#d0f5ee','18px sans-serif');
+   text(145,623,'Eevee: 3 branches. Haunter / Kadabra: Link Cable.','#bcd8d1','18px sans-serif');
   }
  }
  // Keep persistent progress isolated; no automatic ownership grants.
@@ -1220,7 +1279,9 @@ get evolutionNotice(){return evolutionNotice},
     get evolutionSwapStage(){return evoStage},get evolutionSwapCount(){return evoSwapCount},
     get evolutionSwapQueue(){return evoQueue},get evolutionSwapChoices(){return evoChoices},
     get levelOffersAfterEvolution(){return levelOffersAfterEvolution},
-    naturalMovePool,
+    naturalMovePool,specialEvolutionOptions,chooseSpecialEvolution,
+   get evolutionShards(){return evolutionShards},
+   get lastSpecialEvolutionOutcome(){return lastSpecialEvolutionOutcome},
   get menuTab(){return menuTab},get menuIndex(){return menuIndex},
   get orbCooldown(){return orbCooldown},
   get offers(){return offers},
