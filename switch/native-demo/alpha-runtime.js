@@ -698,8 +698,8 @@ const alpha=(()=>{
   }
   if(menu){
    const previousTab=menuTab;
-   if((left&&!lastLeft)||(l&&!lastL))menuTab=(menuTab+7)%8;
-   if((right&&!lastRight)||(r&&!lastR))menuTab=(menuTab+1)%8;
+   if((left&&!lastLeft)||(l&&!lastL))menuTab=(menuTab+8)%9;
+   if((right&&!lastRight)||(r&&!lastR))menuTab=(menuTab+1)%9;
    if(menuTab!==previousTab)menuIndex=0;
    if(menuTab===0){
     const choices=teamOptions();
@@ -717,11 +717,16 @@ const alpha=(()=>{
      markDirty();resetBattle();menu=false;
     }
    }
-   if(menuTab===2&&y&&!lastY){
+   if(menuTab===2){
+    const ids=ownedIds();
+    if(y&&!lastY)menuIndex=(menuIndex+1)%Math.max(1,ids.length);
+    if(a&&!lastA&&ids.length)upgradeRank(ids[menuIndex%ids.length]);
+   }
+   if(menuTab===3&&y&&!lastY){
     const pages=Math.max(1,Math.ceil(Object.keys(profile.pokedex).length/18));
     menuIndex=(menuIndex+1)%pages;
    }
-   if(menuTab===3){
+   if(menuTab===4){
     if(a&&!lastA)recruitMany(1);
     if(y&&!lastY)recruitMany(10);
    }
@@ -812,8 +817,8 @@ const alpha=(()=>{
  function drawMenu(){
   ctx.fillStyle='rgba(6,17,29,.97)';ctx.fillRect(95,65,1080,590);
   ctx.strokeStyle='#92dccb';ctx.strokeRect(95,65,1080,590);
-  const tabs=['TEAM','BOX','POKEDEX','RECRUIT','ORB','FUSION','CONTROLLER','INFO'];
-  for(let i=0;i<tabs.length;i++)text(105+i*131,110,(i===menuTab?'[':'')+tabs[i]+(i===menuTab?']':''),
+  const tabs=['TEAM','BOX','RANK','POKEDEX','RECRUIT','ORB','FUSION','CONTROLLER','INFO'];
+  for(let i=0;i<tabs.length;i++)text(103+i*116,110,(i===menuTab?'[':'')+tabs[i]+(i===menuTab?']':''),
    i===menuTab?'#fff0a2':'#b8d5d6','20px sans-serif');
   if(menuTab===0){
    text(135,170,'Y NEXT • A TRIAL SELECT • L/R TABS • B BACK','#cfeadf');
@@ -833,11 +838,24 @@ const alpha=(()=>{
     const dex=owned[i];
     text(165,207+(i-offset)*53,(i===menuIndex?'▶ ':'   ')+
      '#'+dex+' '+(getMon(dex)?.name||'Unknown')+'   x'+profile.box[dex]+
-     (profile.selected===dex?'  IN BATTLE':''),
+     '  R'+rankOf(dex)+(profile.selected===dex?'  IN BATTLE':''),
      i===menuIndex?'#ffe4a8':'#d9ebde','21px sans-serif');
    }
   }
   if(menuTab===2){
+   text(135,157,'NANG RANK / UPGRADES  Y NEXT  A UPGRADE (no confirmation)','#ffe3a0','22px sans-serif');
+   const ids=ownedIds(),offset=Math.max(0,Math.min(ids.length-7,menuIndex-3));
+   for(let i=offset;i<Math.min(ids.length,offset+7);i++){
+    const dex=ids[i],plan=rankPlan(dex);
+    text(155,214+(i-offset)*51,(i===menuIndex?'▶ ':'  ')+
+     '#'+dex+' '+(getMon(dex)?.name||'')+' R'+plan.rank+'/5  '+
+     plan.available+'/'+plan.cost+' COPIES  '+(plan.eligible?'READY':plan.reason),
+     i===menuIndex?(plan.eligible?'#ffe28d':'#d3d4d6'):'#d4e6e0','18px sans-serif');
+   }
+   text(150,598,'R0>1 costs 1 duplicate; R1>2 costs 2 ... R4>5 costs 5. Base copy protected.','#c0efd8','17px sans-serif');
+   text(150,626,'Last: '+(lastRankOutcome||'NONE YET')+'  |  Shiny never counts as a duplicate.','#ffeca8','16px sans-serif');
+  }
+  if(menuTab===3){
    let ids=Object.keys(profile.pokedex).sort((a,b)=>Number(a)-Number(b));
    const pages=Math.max(1,Math.ceil(ids.length/18));
    text(135,170,'POKEDEX: discovered by defeating Kanto Pokemon. Y NEXT PAGE '+(menuIndex+1)+'/'+pages,'#d6ede4');
@@ -845,7 +863,7 @@ const alpha=(()=>{
    for(let i=0;i<ids.length;i++)text(165+(i%3)*330,220+Math.floor(i/3)*60,'#'+ids[i]+' '+(getMon(+ids[i])?.name||'DISCOVERED'));
    if(!Object.keys(profile.pokedex).length)text(165,235,'Defeat a Pokemon in normal Kanto mode first','#fff0ad');
   }
-  if(menuTab===3){
+  if(menuTab===4){
    text(135,162,'CHIEU MO / RECRUITMENT — Pokédex-discovered species only','#ffe5ad','23px sans-serif');
    text(145,209,'Native tickets: '+profile.recruitTickets+'   KO Progress: '+(profile.recruitKO%30)+'/30');
    text(145,249,'5-Star pity: '+profile.recruitPity+'/'+recruitRules.pity5+' (when 5-Star unlocked)');
@@ -857,11 +875,11 @@ const alpha=(()=>{
    text(145,494,'Trial native economy. Original star rates, not original save/wallet.');
    text(145,534,'Undiscovered Pokémon cannot be rolled, including Legendary Pokémon.');
   }
-  if(menuTab===4){
+  if(menuTab===5){
    text(135,170,'Orb queue (FIFO, max 10, 5s cooldown) • R+Y uses first');
    for(let i=0;i<orbQueue.length;i++)text(165,213+i*37,(i+1)+'. '+orbQueue[i],'#ffe5b2');
   }
-  if(menuTab===5){
+  if(menuTab===6){
    text(135,170,'Fusion: 2 source moves MAX, once per match','#ffdfa4');
    for(let i=0;i<data.fusions.length;i++){
     const f=data.fusions[i],known=id=>moveList.some(m=>m.id===id&&m.lvl>=MOVE_MAX);
@@ -869,23 +887,24 @@ const alpha=(()=>{
      f.moves.every(known)?'#a3ffc7':'#c5ccd1','16px sans-serif');
    }
   }
-  if(menuTab===6){
+  if(menuTab===7){
    text(145,169,'CONTROLLER BINDINGS - Nintendo Switch only','#fff0a2','23px sans-serif');
    text(155,219,'LEVEL UP: X = SKILL 1     Y = SKILL 2     B = SKILL 3');
    text(155,259,'LEVEL UP: A = NEXT PAGE (3 skills per page)');
    text(155,299,'BATTLE: R+Y = USE ORB     R+B = PAUSE / RESUME');
    text(155,339,'BATTLE: ZR = MEGA (QA)     L = SPRITES');
    text(155,379,'MENU: + = OPEN     L/R = TABS     B = BACK');
-   text(155,419,'TEAM/BOX: Y NEXT, A USE  |  RECRUIT: A x1, Y x10');
-   text(155,470,'X/Y/B select skills only with level-up panel open','#c1ffd5','17px sans-serif');
+   text(155,419,'TEAM/BOX: Y NEXT, A USE  |  RANK: Y NEXT, A UPGRADE');
+   text(155,453,'RECRUIT: A x1, Y x10. No Rank-confirmation dialog.','#d8ffe1','17px sans-serif');
+   text(155,480,'X/Y/B select skills only with level-up panel open','#c1ffd5','17px sans-serif');
    text(155,506,'R+X / R+Y / R+B are not skill shortcuts','#ffe9b1','17px sans-serif');
    text(155,551,'Active Switch controller mapping (fixed preset)','#bacfe4','17px sans-serif');
   }
-  if(menuTab===7){
+  if(menuTab===8){
    text(145,175,'Native Alpha QA: real Kanto waves, six source Orbs, 10 Fusion recipes');
    text(145,216,'Partial battle adapter: not yet the production browser gameplay engine.');
    text(145,257,'Save: sdmc:/switch/pkmsvv-native-alpha/ (two independent copies)');
-   text(145,298,'No PC/Web/Android save import; no real gacha or permanent Mega unlock.');
+   text(145,298,'Real Kanto recruitment odds and 5 Rank levels; no PC/Web save import.');
    text(145,339,'Modes not ported: Co-op, Arena, Berry Rescue, 10 chapters.');
    text(145,380,'ZL+R: x12 clock, 99% less damage, 6x boss damage. QA badges not saved.');
    text(145,421,'Fusion MAX+MAX offer: 80/70/60/50/40/30%, 1 roll per level.');
