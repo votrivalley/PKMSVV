@@ -125,9 +125,13 @@ const nativeMoves=[
 if(nativeMoves.length!==18)throw Error('Invalid native move subset');
 
 const evolutionRows=evolutions.rules.filter(row=>row.from>=1&&row.from<=151&&
- row.to>=1&&row.to<=151&&row.trigger==='1'&&Number.isInteger(row.level))
+ row.to>=1&&row.to<=151&&row.trigger==='1'&&Number.isInteger(row.level)&&
+ Object.keys(row).every(key=>['from','to','trigger','level'].includes(key)))
  .map(row=>({from:row.from,to:row.to,level:row.level}));
-if(!evolutionRows.length)throw Error('No Kanto evolution rules were read');
+if(evolutionRows.length!==52||
+ evolutionRows.some(row=>row.level<2||row.level>100||row.from===row.to))
+ throw Error('Kanto level-evolution source changed: review nx.js adapter');
+// Stone, trading and other conditional evolutions must not be auto-triggered.
 data.nativeAlpha={
  orbs, fusions, fusionOfferRates, cooldownFloors, nativeMoves, rankRules:nativeRank, mega:{duration:+megaMatch[1],cooldown:+megaMatch[2],cdFactor:+megaMatch[3]},
  evolutions:evolutionRows,
