@@ -2,6 +2,7 @@
 // This is NOT the full Pokémon Chuyển Sinh gameplay engine. No official Pokémon assets.
 // Controller indices here follow nx.js / Switch ordering: B0 A1 Y2 X3 L4 R5.
 const W=1280,H=720,ctx=screen.getContext('2d');
+const NATIVE_BUILD_ID='__PKMSVV_BUILD_ID__';
 // Native Kanto config is COMPILED from src/pkmsvv-quick-region.js by build-kanto.cjs.
 // Fallback keeps Node gameplay tests executable before RomFS generation.
 const KANTO_CONFIG=/*__PKMSVV_KANTO_CONFIG__*/{"region":"Kanto","gen":1,"nationalMin":1,"nationalMax":151,"waveSeconds":[0,120,240,360,480,600,720],"sealSeconds":900,"finalBossSeconds":1800,"mascotDex":150,"palette":["#5ba9e8","#bceef7","#348b63"],"trialSpecies":[{"name":"rattata","dex":19,"sprite":"19.png","minTier":0},{"name":"pidgey","dex":16,"sprite":"16.png","minTier":0},{"name":"zubat","dex":41,"sprite":"41.png","minTier":1}]};
@@ -209,12 +210,12 @@ function draw(){
  // Keep native geometry and game logic identical to known stable v0.0.10.
  ctx.fillStyle='#fff4cc';
  ctx.font='20px sans-serif';
- ctx.fillText('POKEMON CHUYEN SINH - NATIVE KANTO v0.3.0',24,105);
+ ctx.fillText('POKEMON CHUYEN SINH - NATIVE KANTO  |  BUILD '+NATIVE_BUILD_ID,24,105);
  ctx.fillText('HP: '+Math.ceil(hp),24,135);
  ctx.fillText('XP: '+xp+'/12   LEVEL: '+level,24,165);
  ctx.fillText('KO: '+kills+'   GEN '+KANTO_CONFIG.gen+'   WAVE '+(kantoTier+1)+'   ENEMIES: '+enemies.length,24,235);
  ctx.fillText('FPS: '+fps+'   TIME: '+Math.floor(time)+'s   SEAL: '+KANTO_CONFIG.sealSeconds+'s   FINAL: '+KANTO_CONFIG.finalBossSeconds+'s',24,265);
- ctx.fillText('L: SPRITES '+(spritesEnabled?(loaded.pikachu&&loaded.rattata?'ON':'LOADING'):'OFF')+'  KANTO 151  R+B: PAUSE',24,692);
+ ctx.fillText('BUILD '+NATIVE_BUILD_ID+'   ZL SPEED '+(typeof alpha==='object'&&alpha.enabled&&alpha.fastMode?'x1.5':'x1')+'  A DASH  R+A PAGE  L SPRITES  R+B PAUSE',24,692);
  // Text-free health, XP and level bars. Avoid changing canvas.font per frame.
  ctx.fillStyle='#294963';ctx.fillRect(16,17,390,18);
  ctx.fillStyle='#7cdec4';ctx.fillRect(16,17,Math.max(0,Math.min(390,hp/(typeof alpha==='object'&&alpha.enabled?alpha.rankMaxHp:100)*390)),18);
