@@ -120,7 +120,11 @@ function update(dt){
   else if(edge1)pickSkill(1);
   else if(edge2)pickSkill(2);
  }else if(toggle)paused=!paused;
+ const dash=button(p,SWITCH_PAD_BINDINGS.dash);
+ if(!pickOpen&&!paused&&!r&&dash&&!prevDash&&dashReady<=0){dashBurst=.22;dashReady=1.4;}
+ prevDash=dash;
  if(paused)return;
+ dashBurst=Math.max(0,dashBurst-dt);dashReady=Math.max(0,dashReady-dt);
  time+=dt*(typeof alpha==='object'&&alpha.enabled?alpha.clockScale:1);spawnShield=Math.max(0,spawnShield-dt);
  kantoTier=kantoWaveAt(time);
  let dx=Number(p?.axes?.[0])||0,dy=Number(p?.axes?.[1])||0;
