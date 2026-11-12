@@ -135,6 +135,17 @@ test('Orb queue uses first-in-first-out and quick speed from PKMSVV source',()=>
  t.frame(1032);t.press(2,1048);
  assert.equal(t.get('alpha.orbQueue.length'),1,'cooldown prevents second use');
 });
+test('ZL toggles x1.5 native simulation without entering QA',()=>{
+ const t=boot();t.frame(1000);
+ assert.equal(t.get('alpha.speedMultiplier'),1);
+ t.press(6,1016);
+ assert.equal(t.get('alpha.speedMultiplier'),1.5);
+ assert.equal(t.get('alpha.runUsedQA'),false);
+ t.frame(1032);t.press(6,1048);
+ assert.equal(t.get('alpha.speedMultiplier'),1);
+ t.press(9,1064);t.frame(1080);t.press(6,1096);
+ assert.equal(t.get('alpha.speedMultiplier'),1,'ZL cannot toggle speed inside menu');
+});
 test('Diagnostic acceleration requires explicit ZL+R, does not persist Mega unlock',()=>{
  const t=boot();t.frame(1000);
  t.buttons[6].pressed=true;t.buttons[5].pressed=true;t.frame(1016);
@@ -315,6 +326,7 @@ test('Switch controller settings tab shows direct bindings and does not affect m
  assert.equal(JSON.stringify(t.get('SWITCH_PAD_BINDINGS.skill')),JSON.stringify([3,2,0]));
  assert.equal(JSON.stringify(t.get('SWITCH_PAD_BINDINGS.page')),JSON.stringify([5,1]));
  assert.equal(t.get('SWITCH_PAD_BINDINGS.dash'),1);
+ assert.equal(t.get('SWITCH_PAD_BINDINGS.speed'),6);
  assert.equal(JSON.stringify(t.get('SWITCH_PAD_BINDINGS.orb')),JSON.stringify([5,2]));
  assert.equal(JSON.stringify(t.get('SWITCH_PAD_BINDINGS.pause')),JSON.stringify([5,0]));
  const compiled=fs.readFileSync(path.join(__dirname,'alpha-runtime.js'),'utf8');
