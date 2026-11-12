@@ -17,6 +17,7 @@ const MAX_ENEMIES=32,MAX_SHOTS=32,MAX_SPRITES_PER_FRAME=12;
 const MAX_ENEMY_SPRITES=4;
 // Diagnostic: safe vector renderer is the default. Press L to toggle sprites.
 let spritesEnabled=false,prevL=false,drawnSprites=0,wave='RATTATA/PIDGEY';
+let nativeSpriteBooted=false;
 // Build matrix replaces DIAG_BOOT_MODE in ROMFS with 0, 1 or 2.
  // Each NRO boots directly into the requested renderer, with NO ZL mode
  // switching. This separates native render faults from gamepad input faults.
@@ -98,6 +99,11 @@ function respawn(){
  if(typeof alpha==='object'&&alpha.enabled)alpha.onRespawn();
 }
 function update(dt){
+ // Enable actual offline Kanto sprites by default in packaged native builds.
+ // Keep the standalone fallback renderer in safe vector mode for diagnostics.
+ if(!nativeSpriteBooted&&typeof alpha==='object'&&alpha.enabled){
+  nativeSpriteBooted=true;spritesEnabled=true;loadSprites();
+ }
  if(typeof alpha==='object'&&alpha.enabled){
   if(alpha.preUpdate(dt))return;
   // Advance the same simulation faster, not merely the displayed battle clock.
@@ -106,7 +112,7 @@ function update(dt){
  const p=navigator.getGamepads?.()?.find?.(x=>x?.connected)||navigator.getGamepads?.()?.[0];
  const r=button(p,5),b=button(p,0),pauseCombo=r&&b,toggle=pauseCombo&&!prevPauseCombo;prevPauseCombo=pauseCombo;
  const l=button(p,4),zl=button(p,6);
- // L toggles Pikachu and up to 4 Rattata sprites. Vector mode stays default.
+ // L toggles sprite mode (ON by default in native Kanto; OFF in fallback).
  if(l&&!prevL){spritesEnabled=!spritesEnabled;if(spritesEnabled)loadSprites();}
  if(!DIAG_FIXED_MODE&&zl&&!r&&!prevZL){renderMode=(renderMode+1)%3;drawCount=0;}
  prevL=l;prevZL=zl;
@@ -182,7 +188,7 @@ function update(dt){
  if(typeof alpha==='object'&&alpha.enabled)alpha.postUpdate(dt);
 }
 function draw(){
- // FULL 60Hz + official Kanto palette/wave timings, opt-in limited sprite trial.
+ // FULL 60Hz + official Kanto palette/wave timings; offline sprites default ON in native Kanto.
  // Keep original grid/paths/arc visual treatment for honest comparison.
  ctx.fillStyle='#101a20';ctx.fillRect(0,0,W,H);
  // Native Kanto field: first survival biome palette from official QuickRegion.
