@@ -971,3 +971,28 @@ test('v0.2.7 migrates Rank3 branch and PokéBox from v0.2.6 without rewriting th
  assert.equal(files.get(legacy),content,'old v026 rollback save remains byte-identical');
  assert.ok([...files.keys()].some(k=>k.includes('progress-v027-')));
 });
+
+test('Real native projectile kill evolves Charmander at level 16 and keeps direct X skill choice',()=>{
+ const t=boot();t.frame(1000);
+ t.get("alpha.profile.selected=4;alpha.resetBattle();level=15;xp=11;spawnAt=Infinity;fireAt=Infinity;shots.push({x:px+90,y:py,vx:0,vy:0,ttl:1.3});enemies.push({x:px+90,y:py,dex:19,species:'rattata',hp:.5,r:16,speed:0})");
+ t.frame(1016);
+ assert.equal(t.get('level'),16);
+ assert.equal(t.get('alpha.evolvedDex'),5);
+ assert.equal(t.get('alpha.battleEvolutionDex'),5);
+ assert.equal(t.get('alpha.profile.pokedex[5]'),1);
+ assert.equal(t.get('pickOpen'),true,'evolution does not suppress skill popup');
+ t.press(3,1032);
+ assert.equal(t.get('pickOpen'),false,'X still chooses first skill directly');
+ assert.equal(t.get('paused'),false);
+ assert.equal(t.get('lastError'),'');
+});
+test('Real native skill KO evolves Pidgey through normal XP route',()=>{
+ const t=boot();t.frame(1000);
+ t.get("alpha.profile.selected=16;alpha.resetBattle();level=17;xp=11;spawnAt=Infinity;enemies.push({x:px+75,y:py,dex:19,species:'rattata',hp:1,r:16,speed:0})");
+ assert.equal(t.get("alpha.castMove({id:'tackle',lvl:1})"),true);
+ assert.equal(t.get('level'),18);
+ assert.equal(t.get('alpha.evolvedDex'),17);
+ assert.equal(t.get('alpha.chooseBattleSprite()'),'pidgeotto');
+ assert.equal(t.get('alpha.profile.pokedex[17]'),1);
+ assert.equal(t.get('lastError'),'');
+});
