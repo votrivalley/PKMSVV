@@ -27,7 +27,7 @@ const SAVE_PREFIX='progress-v030-';
  const RANK_RULES=data.rankRules||{max:5,perRankStatBonus:.06,rank4CooldownReduction:.05};
  let profile={version:1,seq:0,pokedex:{},box:{25:1},bestKO:0,badges:{},selected:25,kantoClears:0,bestSurvivalSec:0,bestKantoClearSec:0,recruitTickets:0,recruitKO:0,recruitPity:0,ranks:{},rankBranches:{}};
  let saveStatus='UNAVAILABLE',saveDirty=false,lastSaveAt=0,saveSlot=0;
- let menu=false,menuTab=0,menuIndex=0,started=false,clockScale=1,accelerated=false,runUsedQA=false;
+ let menu=false,menuTab=0,menuIndex=0,started=false,clockScale=1,accelerated=false,runUsedQA=false,fastMode=false;
  let lastStart=false,lastA=false,lastB=false,lastY=false,lastX=false,lastZR=false,lastZL=false;
  let lastLeft=false,lastRight=false,lastL=false,lastR=false;
  let orbQueue=[],orbCooldown=0,activeBuffs={},moveList=[],offers=[],fusionUsed=false,fusionName='';
@@ -304,7 +304,7 @@ level=1;battleEvolutionDex=profile.selected;evolutionNotice='';evolutionNoticeLe
   offers=[];fusionUsed=false;fusionName='';
   effects.length=0;zones.length=0;megEnergy=0;megaActive=0;megaCooldown=0;
   boss15=false;boss30=false;badgeWon=false;gameWon=false;bossMessage='';matchResult=null;runEndTime=0;runEndKOs=0;
-  skillClock=0;killAward=0;fusionOfferLevel=-1;fusionOfferAttempts=0;fusionOfferRecipe=null;branchPromptDex=0;rankCombatSeconds=0;rankHitReadyAt=0;rankHybridReadyAt=0;rankProcCount=0;rankHybridCount=0;runUsedQA=false;accelerated=false;clockScale=1;started=true;
+  skillClock=0;killAward=0;fusionOfferLevel=-1;fusionOfferAttempts=0;fusionOfferRecipe=null;branchPromptDex=0;rankCombatSeconds=0;rankHitReadyAt=0;rankHybridReadyAt=0;rankProcCount=0;rankHybridCount=0;runUsedQA=false;accelerated=false;clockScale=1;fastMode=false;started=true;
  }
  function selectSpecies(index){
   // Kanto's opening remains safe; at later waves draw from REAL Gen1 catalog.
@@ -1073,7 +1073,7 @@ skillChoices=offers.map(o=>({name:o.name,description:o.kind}));
   text(820,190,'DEX: '+Object.keys(profile.pokedex).length+'  BADGE: '+(badgeWon?'YES':'NO'));
   text(820,218,'SAVE: '+saveStatus+'  KANTO CLEARS: '+(profile.kantoClears||0),'#acc7ff');
   text(820,251,'R+Y ORB  R+B PAUSE  ZR MEGA  + MENU','#ffe0ad','17px sans-serif');
-  text(820,277,'ZL+R: QA CLOCK x12  L: SPRITE','#ffe0ad','17px sans-serif');
+  text(820,277,'ZL SPEED '+(fastMode?'x1.5':'x1')+'  ZL+R QA x12   L SPRITE','#ffe0ad','17px sans-serif');
   if(moveList.length){
    const list=moveList.map(m=>m.id+(m.lvl<5?' '+m.lvl:' MAX')+' '+Math.ceil(m.cooldown||0)+'s');
    for(let i=0;i<list.length;i++)text(840,322+i*25,list[i],'#caefcc','16px sans-serif');
@@ -1212,13 +1212,13 @@ if(pickOpen){
    text(155,219,'LEVEL UP: X = SKILL 1     Y = SKILL 2     B = SKILL 3');
    text(155,259,'LEVEL UP: R+A = NEXT PAGE (3 skills per page)');
    text(155,299,'BATTLE: A = DASH     R+Y = USE ORB     R+B = PAUSE');
-   text(155,339,'BATTLE: ZR = MEGA (QA)     L = SPRITES');
+   text(155,339,'BATTLE: ZL = SPEED x1 / x1.5   ZR = MEGA (QA)');
    text(155,379,'MENU: + = OPEN     L/R = TABS     B = BACK');
    text(155,419,'TEAM/BOX: Y NEXT, A USE  |  RANK: Y NEXT, A UPGRADE');
    text(155,453,'RECRUIT: A x1, Y x10. Rank3 branch: X / Y; B later.','#d8ffe1','17px sans-serif');
    text(155,480,'EVOLUTION: X/Y/B choose old/new; R+A next page','#c1ffd5','17px sans-serif');
    text(155,506,'EVOLVE TAB: Y NEXT BRANCH / A USE SHARD','#ffe9b1','17px sans-serif');
-   text(155,551,'Active Switch controller mapping (fixed preset)','#bacfe4','17px sans-serif');
+   text(155,551,'CONTROLS: L = SPRITES     ZL+R = QA x12 (test only)','#bacfe4','17px sans-serif');
   }
   if(menuTab===8){
    text(145,175,'Native Alpha QA: real Kanto waves, six source Orbs, 10 Fusion recipes');
