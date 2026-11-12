@@ -205,7 +205,9 @@ const start=sourceJs.indexOf('const KANTO_CONFIG='+marker);
 if(start<0)throw Error('Native config declaration missing');
 const end=sourceJs.indexOf(';',start);
 if(end<0)throw Error('Native config declaration is unterminated');
-const output=sourceJs.slice(0,start)+'const KANTO_CONFIG='+JSON.stringify(data)+';'+sourceJs.slice(end+1);
+const buildId=String(process.env.GITHUB_SHA||'LOCAL').slice(0,9);
+const output=(sourceJs.slice(0,start)+'const KANTO_CONFIG='+JSON.stringify(data)+';'+sourceJs.slice(end+1))
+ .replace('__PKMSVV_BUILD_ID__',buildId);
 const outPath=path.join(__dirname,'romfs/main.js');
 fs.mkdirSync(path.dirname(outPath),{recursive:true});
 const alphaSource=fs.readFileSync(path.join(__dirname,'alpha-runtime.js'),'utf8');
