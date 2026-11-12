@@ -49,7 +49,7 @@ function loadSprites(){
 }
 // Switch-only bindings: dialog keys are direct and take precedence over combat.
 const SWITCH_PAD_BINDINGS=Object.freeze({
- skill:[3,2,0],page:[5,1],dash:1,orb:[5,2],pause:[5,0],
+ skill:[3,2,0],page:[5,1],dash:1,speed:6,orb:[5,2],pause:[5,0],
  menu:9,menuBack:0,mega:7,sprites:4
 });
 let xp=0,level=1,attack=1,fireRate=.21,moveSpeed=230,skillPage=0,pickOpen=false,prevChoice=[false,false,false,false],skillChoices=[];
@@ -97,13 +97,17 @@ function respawn(){
  if(typeof alpha==='object'&&alpha.enabled)alpha.onRespawn();
 }
 function update(dt){
- if(typeof alpha==='object'&&alpha.enabled&&alpha.preUpdate(dt))return;
+ if(typeof alpha==='object'&&alpha.enabled){
+  if(alpha.preUpdate(dt))return;
+  // Advance the same simulation faster, not merely the displayed battle clock.
+  dt*=alpha.speedMultiplier;
+ }
  const p=navigator.getGamepads?.()?.find?.(x=>x?.connected)||navigator.getGamepads?.()?.[0];
  const r=button(p,5),b=button(p,0),pauseCombo=r&&b,toggle=pauseCombo&&!prevPauseCombo;prevPauseCombo=pauseCombo;
  const l=button(p,4),zl=button(p,6);
  // L toggles Pikachu and up to 4 Rattata sprites. Vector mode stays default.
  if(l&&!prevL){spritesEnabled=!spritesEnabled;if(spritesEnabled)loadSprites();}
- if(!DIAG_FIXED_MODE&&zl&&!prevZL){renderMode=(renderMode+1)%3;drawCount=0;}
+ if(!DIAG_FIXED_MODE&&zl&&!r&&!prevZL){renderMode=(renderMode+1)%3;drawCount=0;}
  prevL=l;prevZL=zl;
  const choice0=button(p,SWITCH_PAD_BINDINGS.skill[0]);
  const choice1=button(p,SWITCH_PAD_BINDINGS.skill[1]);
