@@ -1076,9 +1076,25 @@ skillChoices=offers.map(o=>({name:o.name,description:o.kind}));
   text(820,218,'SAVE: '+saveStatus+'  KANTO CLEARS: '+(profile.kantoClears||0),'#acc7ff');
   text(820,251,'R+Y ORB  R+B PAUSE  ZR MEGA  + MENU','#ffe0ad','17px sans-serif');
   text(820,277,'ZL SPEED '+(fastMode?'x1.5':'x1')+'  ZL+R QA x12   L SPRITE','#ffe0ad','17px sans-serif');
-  if(moveList.length){
-   const list=moveList.map(m=>m.id+(m.lvl<5?' '+m.lvl:' MAX')+' '+Math.ceil(m.cooldown||0)+'s');
-   for(let i=0;i<list.length;i++)text(840,322+i*25,list[i],'#caefcc','16px sans-serif');
+  // Visible eight-slot skill HUD: names, levels and live cooldown bars.
+  // Fixed canvas geometry avoids unbounded image/DOM work on Switch.
+  for(let i=0;i<8;i++){
+   const m=moveList[i],x=820+(i%2)*224,y=310+Math.floor(i/2)*65,w=212,h=56;
+   ctx.fillStyle=m?'rgba(22,54,63,.94)':'rgba(21,30,43,.8)';
+   ctx.fillRect(x,y,w,h);
+   ctx.strokeStyle=m?(m.cooldown>0?'#7099ac':'#e8d17f'):'#41566a';
+   ctx.lineWidth=1;ctx.strokeRect(x,y,w,h);
+   if(!m){text(x+9,y+34,(i+1)+'  --','#687f91','16px sans-serif');continue}
+   const def=sourceMoves.find(src=>src.id===m.id);
+   const title=String(def?.name||m.id).slice(0,18);
+   const levelText=m.lvl>=MOVE_MAX?'MAX':'Lv.'+m.lvl;
+   text(x+9,y+21,(i+1)+' '+title,'#e8f6e8','15px sans-serif');
+   text(x+9,y+40,levelText+(m.cooldown>0?'  '+m.cooldown.toFixed(1)+'s':'  READY'),
+    m.cooldown>0?'#b2cada':'#ffe5a1','14px sans-serif');
+   const base=Math.max(.5,Number(def?.cd)||1),remaining=Math.max(0,Math.min(1,(m.cooldown||0)/base));
+   ctx.fillStyle='#273a49';ctx.fillRect(x+8,y+47,w-16,4);
+   ctx.fillStyle=m.cooldown>0?'#76becb':'#f4d279';
+   ctx.fillRect(x+8,y+47,(w-16)*(1-remaining),4);
   }
   for(const z of zones){
    ctx.strokeStyle=z.kind==='meteor'?'#ef8b70':z.kind==='mine'?'#fce07b':'#77c8de';
@@ -1099,7 +1115,7 @@ if(pickOpen){
     const offer=offers[start+i];if(!offer)continue;
     text(W-390,210+i*72,['X','Y','B'][i]+'  '+offer.name,'#ffe7b0','17px sans-serif');
    }
-   text(W-390,420,'A: NEXT PAGE '+(skillPage+1)+'/'+Math.ceil(offers.length/3),
+   text(W-390,420,'R+A: NEXT PAGE '+(skillPage+1)+'/'+Math.ceil(offers.length/3),
     '#f9d9a0','17px sans-serif');
   }
   if(bossMessage)text(455,123,bossMessage,'#fff0a2','bold 28px sans-serif');
