@@ -15,10 +15,11 @@ const alpha=(()=>{
  const byDex=new Map([...(realDex||[]),...roster,...foes].map(p=>[p.dex,p]));
  const spriteNames=new Set([...rosterNames,...foeNames,...(realDex||[]).map(p=>p.name.toLowerCase()),...data.evolutionSprites.map(p=>p.name.toLowerCase()),'mewtwo']);
  const SAVE_PATH='sdmc:/switch/pkmsvv-native-alpha/';
- const SAVE_PREFIX='progress-v027-';
- const PREVIOUS_SAVE_PREFIX='progress-v026-';
- const OLDER_SAVE_PREFIX='progress-v025-';
- const OLDEST_SAVE_PREFIX='progress-v024-';
+const SAVE_PREFIX='progress-v028-';
+ const PREVIOUS_SAVE_PREFIX='progress-v027-';
+ const OLDER_SAVE_PREFIX='progress-v026-';
+ const OLDEST_SAVE_PREFIX='progress-v025-';
+ const ANCIENT_SAVE_PREFIX='progress-v024-';
  const LEGACY_SAVE_PREFIX='progress-';
  const MOVE_MAX=5,MAX_MOVES=8;
  const RANK_RULES=data.rankRules||{max:5,perRankStatBonus:.06,rank4CooldownReduction:.05};
@@ -57,11 +58,12 @@ const alpha=(()=>{
     [readSlot(1),readSlot(2)],
     [readSlot(1,PREVIOUS_SAVE_PREFIX),readSlot(2,PREVIOUS_SAVE_PREFIX)],
     [readSlot(1,OLDER_SAVE_PREFIX),readSlot(2,OLDER_SAVE_PREFIX)],
-    [readSlot(1,OLDEST_SAVE_PREFIX),readSlot(2,OLDEST_SAVE_PREFIX)],
+[readSlot(1,OLDEST_SAVE_PREFIX),readSlot(2,OLDEST_SAVE_PREFIX)],
+    [readSlot(1,ANCIENT_SAVE_PREFIX),readSlot(2,ANCIENT_SAVE_PREFIX)],
     [readSlot(1,LEGACY_SAVE_PREFIX),readSlot(2,LEGACY_SAVE_PREFIX)]
    ];
    const chosen=groups.find(g=>g[0]||g[1])||groups[0],migrating=chosen!==groups[0];
-   // Never touch earlier generations: v026/v025/v024/legacy are rollback backups.
+   // Keep every v027/v026/v025/v024/legacy save intact as rollback backups.
    const [a,b]=chosen,saved=(!a?b:!b?a:a.seq>b.seq?a:b);
   if(saved&&Number.isInteger(saved.seq)&&saved.seq>=0){
    const found=saved.pokedex&&typeof saved.pokedex==='object'?saved.pokedex:{};
@@ -177,7 +179,10 @@ const alpha=(()=>{
  function rankCooldownMultiplier(){return currentRank()>=4?1-RANK_RULES.rank4CooldownReduction:1}
  // Only pure level-based Gen1 evolutions are handled automatically.
  // Stone/trade/friendship branches cannot be inferred from a player level.
- let battleEvolutionDex=25,evolutionNotice='',evolutionNoticeLeft=0,evolutionEvents=0;
+let battleEvolutionDex=25,evolutionNotice='',evolutionNoticeLeft=0,evolutionEvents=0;
+ // Per-evolution optional move swap, in-memory only. Never mutate PokéBox or Rank.
+ let evoQueue=[],evoStage='',evoOldMove='',evoChoices=[],evoStep=null;
+ let levelOffersAfterEvolution=null,evoSwapCount=0;
  const realByDex=new Map((realDex||[]).map(p=>[p.dex,p]));
  const evolutionStatCache=new Map();
  function statsAtEvolution(dex){
@@ -222,7 +227,9 @@ const alpha=(()=>{
   for(let i=0;i<3;i++){
    const step=data.evolutions.find(e=>e.from===stage&&e.level<=level);
    if(!step||visited.has(step.to)||step.to<1||step.to>151)break;
-   stage=step.to;visited.add(stage);evolutionEvents++;
+const previous=stage;
+    stage=step.to;visited.add(stage);evolutionEvents++;
+    evoQueue.push({from:previous,to:stage});
    if(!runUsedQA&&!profile.pokedex[stage]){
     profile.pokedex[stage]=1;markDirty();
    }
@@ -236,7 +243,9 @@ const alpha=(()=>{
   return true;
  }
  function resetBattle(){
-  level=1;battleEvolutionDex=profile.selected;evolutionNotice='';evolutionNoticeLeft=0;evolutionEvents=0;
+level=1;battleEvolutionDex=profile.selected;evolutionNotice='';evolutionNoticeLeft=0;evolutionEvents=0;
+   evoQueue=[];evoStage='';evoOldMove='';evoChoices=[];evoStep=null;
+   levelOffersAfterEvolution=null;evoSwapCount=0;
   px=W/2;py=H/2;hp=rankMaxHp();kills=0;time=0;xp=0;
   enemies.length=0;shots.length=0;
   spawnAt=0;fireAt=.2;spawnShield=2;
@@ -440,8 +449,10 @@ const alpha=(()=>{
   if(matchResult)return false;
   if(outcome!=='victory'&&outcome!=='defeat')return false;
   matchResult=outcome;runEndTime=Math.floor(time);runEndKOs=kills+(outcome==='victory'?1:0);
-  pickOpen=false;skillChoices=[];paused=false;
-  // The debug clock is a test convenience, never a source of unlocks.
+pickOpen=false;skillChoices=[];paused=false;
+   evoQueue=[];evoStage='';evoOldMove='';evoChoices=[];evoStep=null;
+   levelOffersAfterEvolution=null;
+   // The debug clock is a test convenience, never a source of unlocks.
   if(!runUsedQA){
    profile.bestSurvivalSec=Math.max(profile.bestSurvivalSec||0,runEndTime);
    if(outcome==='victory'){
@@ -455,6 +466,77 @@ const alpha=(()=>{
   return true;
  }
  function onDefeat(){return finishRun('defeat')}
+function evoCandidateMoves(fromDex,toDex){
+  const known=new Set(moveList.map(m=>m.id));
+  const nextTypes=new Set((realByDex.get(toDex)?.types||getMon(toDex)?.types||[]).map(x=>String(x).toLowerCase()));
+  const oldTypes=new Set((realByDex.get(fromDex)?.types||getMon(fromDex)?.types||[]).map(x=>String(x).toLowerCase()));
+  // Uses the real PKMSVV move catalog. Native species-specific learnsets are
+  // not ported yet, so evolved-form types are a transparent approximation.
+  const available=sourceMoves.filter(m=>m&&m.id&&m.kind!=='buff'&&!known.has(m.id));
+  const matched=available.filter(m=>nextTypes.has(String(m.type).toLowerCase()));
+  const eligible=matched.length?matched:available;
+  const exclusive=eligible.filter(m=>!oldTypes.has(String(m.type).toLowerCase()));
+  const shared=eligible.filter(m=>oldTypes.has(String(m.type).toLowerCase()));
+  function shuffle(values){
+   const a=values.slice();
+   for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(rng()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+   }
+   return a;
+  }
+  return shuffle(exclusive).concat(shuffle(shared)).slice(0,3).map(m=>m.id);
+ }
+ function showEvoCards(cards){
+  offers=cards;skillChoices=cards.map(o=>({name:o.name,description:o.kind}));
+  skillPage=0;pickOpen=true;
+ }
+ function beginNextEvoSwap(){
+  while(evoQueue.length){
+   const step=evoQueue.shift();
+   const current=moveList.filter(m=>!m.id.startsWith('fusion:'));
+   const options=evoCandidateMoves(step.from,step.to);
+   if(!current.length||!options.length)continue;
+   evoStep=step;evoChoices=options;evoStage='old';evoOldMove='';
+   showEvoCards(current.map(m=>({kind:'evo-old',id:m.id,
+    name:'REPLACE '+(nativeMoveById.get(m.id)?.name||m.id)+' LV '+m.lvl
+   })).concat([{kind:'evo-keep',id:'keep',name:'KEEP CURRENT MOVES'}]));
+   return true;
+  }
+  evoStep=null;evoStage='';evoOldMove='';evoChoices=[];
+  if(levelOffersAfterEvolution){
+   showEvoCards(levelOffersAfterEvolution);levelOffersAfterEvolution=null;
+  }
+  return false;
+ }
+ function moveCooldownAt(move){
+  const def=nativeMoveById.get(move.id),mods=levelMods(move);
+  return Math.max(data.cooldownFloors[def?.kind]||.55,(def?.cd||.7)*mods.cd);
+ }
+ function pickEvoCard(slot){
+  if(!pickOpen||!evoStage||slot<0||slot>2)return false;
+  const card=offers[skillPage*3+slot];
+  if(!card)return false;
+  if(card.kind==='evo-keep'){beginNextEvoSwap();return true}
+  if(evoStage==='old'&&card.kind==='evo-old'){
+   if(!moveList.some(m=>m.id===card.id&&!m.id.startsWith('fusion:')))return false;
+   evoOldMove=card.id;evoStage='new';
+   showEvoCards(evoChoices.map(id=>({kind:'evo-new',id,
+    name:nativeMoveById.get(id)?.name||id
+   })).concat([{kind:'evo-keep',id:'keep',name:'KEEP ORIGINAL MOVE'}]));
+   return true;
+  }
+  if(evoStage!=='new'||card.kind!=='evo-new'||!evoChoices.includes(card.id))return false;
+  const index=moveList.findIndex(m=>m.id===evoOldMove),def=nativeMoveById.get(card.id);
+  if(index<0||!def||moveList.some(m=>m.id===card.id))return false;
+  const old=moveList[index];
+  const next={id:card.id,lvl:Math.max(1,Math.min(MOVE_MAX,def.maxLvl||MOVE_MAX,old.lvl||1))};
+  const formerCd=moveCooldownAt(old),nextCd=moveCooldownAt(next);
+  next.cooldown=Math.min(nextCd,Math.max(0,old.cooldown||0)/Math.max(.01,formerCd)*nextCd);
+  moveList[index]=next;evoSwapCount++;beginNextEvoSwap();
+  return true;
+ }
+
  function offersForLevel(){
   const maxed=id=>moveList.some(m=>m.id===id&&m.lvl>=MOVE_MAX);
   const canFuse=data.fusions.find(r=>!fusionUsed&&r.moves.every(maxed));
@@ -488,11 +570,16 @@ const alpha=(()=>{
    }
   }
   while(offers.length<6)offers.push({kind:'heal',id:'heal',name:'HEAL 35 HP'});
-  skillChoices=offers.map(o=>({name:o.name,description:o.kind}));
-  skillPage=0;pickOpen=true;
- }
- function pickOffer(slot){
-  if(!pickOpen||slot<0||slot>2)return false;
+skillChoices=offers.map(o=>({name:o.name,description:o.kind}));
+   skillPage=0;pickOpen=true;
+   if(evoQueue.length){
+    levelOffersAfterEvolution=offers.slice();
+    beginNextEvoSwap();
+   }
+  }
+  function pickOffer(slot){
+   if(evoStage)return pickEvoCard(slot);
+   if(!pickOpen||slot<0||slot>2)return false;
   const o=offers[skillPage*3+slot];if(!o)return false;
   if(o.kind==='fusion'){
    if(fusionUsed)return false;
@@ -936,7 +1023,7 @@ const alpha=(()=>{
   ctx.fillStyle=color;ctx.font=font;ctx.fillText(String(value),x,y)
  }
  function draw(){
-  text(820,44,'PKMSVV SWITCH NATIVE 0.2.7','#ffe39d');
+  text(820,44,'PKMSVV SWITCH NATIVE 0.2.8','#ffe39d');
   text(820,74,'KANTO • GEN 1 • '+(runUsedQA?(accelerated?'QA x12':'QA - CLOCK NORMAL'):'REAL TIME'),'#a7e7f6');
   text(820,103,'TEAM: '+name(getMon(profile.selected))+' R'+currentRank()+
    '  ACTIVE '+(realByDex.get(evolvedDex())?.name||name(getMon(profile.selected)))+
@@ -960,8 +1047,12 @@ const alpha=(()=>{
   }
   for(const fx of effects){ctx.strokeStyle='#f9d977';ctx.lineWidth=2;
    ctx.beginPath();ctx.arc(fx.x,fx.y,fx.r,0,Math.PI*2);ctx.stroke()}
-  if(pickOpen){
-   const start=skillPage*3;
+if(pickOpen){
+    if(evoStage){
+     text(W-390,158,'EVOLUTION - MOVE SWAP','#ffe39d','bold 19px sans-serif');
+     text(W-390,180,evoStage==='old'?'1/2 SELECT OLD MOVE':'2/2 CHOOSE NEW MOVE','#bbf4ec','17px sans-serif');
+    }
+    const start=skillPage*3;
    for(let i=0;i<3;i++){
     const offer=offers[start+i];if(!offer)continue;
     text(W-390,210+i*72,['X','Y','B'][i]+'  '+offer.name,'#ffe7b0','17px sans-serif');
@@ -1085,8 +1176,8 @@ const alpha=(()=>{
    text(155,379,'MENU: + = OPEN     L/R = TABS     B = BACK');
    text(155,419,'TEAM/BOX: Y NEXT, A USE  |  RANK: Y NEXT, A UPGRADE');
    text(155,453,'RECRUIT: A x1, Y x10. Rank3 branch: X / Y; B later.','#d8ffe1','17px sans-serif');
-   text(155,480,'X/Y/B select skills only with level-up panel open','#c1ffd5','17px sans-serif');
-   text(155,506,'R+X / R+Y / R+B are not skill shortcuts','#ffe9b1','17px sans-serif');
+   text(155,480,'EVOLUTION: X/Y/B choose old/new; A next page','#c1ffd5','17px sans-serif');
+   text(155,506,'EVOLUTION: KEEP skips; normal LEVEL UP follows','#ffe9b1','17px sans-serif');
    text(155,551,'Active Switch controller mapping (fixed preset)','#bacfe4','17px sans-serif');
   }
   if(menuTab===8){
@@ -1126,7 +1217,10 @@ const alpha=(()=>{
   get evolvedDex(){return evolvedDex()},onLevelUp,evolutionChainAt,statsAtEvolution,
    get battleEvolutionDex(){return battleEvolutionDex},
    get evolutionEvents(){return evolutionEvents},
-   get evolutionNotice(){return evolutionNotice},
+get evolutionNotice(){return evolutionNotice},
+    get evolutionSwapStage(){return evoStage},get evolutionSwapCount(){return evoSwapCount},
+    get evolutionSwapQueue(){return evoQueue},get evolutionSwapChoices(){return evoChoices},
+    get levelOffersAfterEvolution(){return levelOffersAfterEvolution},
   get menuTab(){return menuTab},get menuIndex(){return menuIndex},
   get orbCooldown(){return orbCooldown},
   get offers(){return offers},

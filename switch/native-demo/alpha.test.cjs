@@ -156,7 +156,7 @@ test('Dual rotating save files survive reload, remain isolated from Web and Andr
  assert.equal(t2.get('alpha.profile.pokedex[19]'),1);
  assert.equal(t2.get('alpha.profile.pokedex[16]'),1);
  assert.equal(t2.get('alpha.profile.seq'),2);
- const key=[...files.keys()].find(k=>k.endsWith('progress-v027-2.json'));
+ const key=[...files.keys()].find(k=>k.endsWith('progress-v028-2.json'));
  files.set(key,'CORRUPT');
  const t3=boot(files);t3.frame(1000);
  assert.equal(t3.get('alpha.profile.pokedex[19]'),1);
@@ -604,7 +604,7 @@ test('First v0.2.5 boot migrates legacy v0.2.3 save into separate slots without 
  assert.equal(t.get('alpha.profile.recruitTickets'),0);
  assert.equal(t.get('alpha.saveStatus'),'MIGRATED');
  assert.equal(files.get(legacyPath),legacyText,'must preserve original rollback save byte-for-byte');
- assert.ok([...files.keys()].some(k=>k.endsWith('progress-v027-1.json')));
+ assert.ok([...files.keys()].some(k=>k.endsWith('progress-v028-1.json')));
  assert.equal(t.get('alpha.profile.seq'),8);
  const migrated=boot(files);migrated.frame(1000);
  assert.equal(migrated.get('alpha.profile.seq'),8);
@@ -704,9 +704,9 @@ test('Native v026 imports v024 recruitment and Box intact, never overwrites v024
  const original=boot(files);original.frame(1000);
  original.get('alpha.onKill({dex:19});alpha.profile.box[19]=3;alpha.profile.recruitTickets=5;alpha.profile.recruitPity=47');
  assert.equal(original.get('alpha.persist()'),true);
- const v026Key=[...files.keys()].find(k=>k.includes('progress-v027-'));
+ const v026Key=[...files.keys()].find(k=>k.includes('progress-v028-'));
  const oldValue=files.get(v026Key);
- const legacyKey=v026Key.replace('progress-v027-','progress-v024-');
+ const legacyKey=v026Key.replace('progress-v028-','progress-v024-');
  files.delete(v026Key);files.set(legacyKey,oldValue);
  const migrated=boot(files);migrated.frame(1000);
  assert.equal(migrated.get('alpha.saveStatus'),'MIGRATED');
@@ -715,7 +715,7 @@ test('Native v026 imports v024 recruitment and Box intact, never overwrites v024
  assert.equal(migrated.get('alpha.profile.recruitPity'),47);
  assert.equal(migrated.get('alpha.rankOf(19)'),0);
  assert.equal(files.get(legacyKey),oldValue,'v024 save remains untouched');
- assert.ok([...files.keys()].some(k=>k.includes('progress-v027-')));
+ assert.ok([...files.keys()].some(k=>k.includes('progress-v028-')));
  migrated.get('alpha.upgradeRank(19)');
  assert.equal(migrated.get('alpha.profile.box[19]'),2);
  assert.equal(migrated.get('alpha.rankOf(19)'),1);
@@ -823,8 +823,8 @@ test('Native v026 preserves v025 rank/Box save and never overwrites its rollback
  const files=new Map(),source=boot(files);source.frame(1000);
  source.get('alpha.profile.box[19]=3;alpha.profile.ranks[19]=3;alpha.profile.recruitTickets=7;alpha.onKill({dex:19})');
  assert.equal(source.get('alpha.persist()'),true);
- const current=[...files.keys()].find(k=>k.includes('progress-v027-'));
- const old=files.get(current),prev=current.replace('progress-v027-','progress-v025-');
+ const current=[...files.keys()].find(k=>k.includes('progress-v028-'));
+ const old=files.get(current),prev=current.replace('progress-v028-','progress-v025-');
  files.delete(current);files.set(prev,old);
  const t=boot(files);t.frame(1000);
  assert.equal(t.get('alpha.saveStatus'),'MIGRATED');
@@ -833,7 +833,7 @@ test('Native v026 preserves v025 rank/Box save and never overwrites its rollback
  assert.equal(t.get('alpha.profile.recruitTickets'),7);
  assert.equal(t.get('alpha.rankBranch(19)'),null);
  assert.equal(files.get(prev),old);
- assert.ok([...files.keys()].some(k=>k.includes('progress-v027-')));
+ assert.ok([...files.keys()].some(k=>k.includes('progress-v028-')));
  assert.equal(t.get("alpha.chooseRankBranch(19,'defense')"),true);
  assert.equal(files.get(prev),old);
 });
@@ -953,14 +953,14 @@ test('Evolution unlocks persist across native dual saves and retained Pokémon i
  assert.equal(restored.get('alpha.profile.box[4]'),3);
  assert.equal(restored.get('alpha.profile.box[5]'),undefined);
  assert.equal(restored.get('alpha.profile.ranks[4]'),1);
- assert.ok([...files.keys()].every(k=>k.includes('progress-v027-')));
+ assert.ok([...files.keys()].every(k=>k.includes('progress-v028-')));
 });
-test('v0.2.7 migrates Rank3 branch and PokéBox from v0.2.6 without rewriting the old save',()=>{
+test('v0.2.8 migrates Rank3 branch and PokéBox from v0.2.7 without rewriting the old save',()=>{
  const files=new Map(),t=boot(files);t.frame(1000);
  t.get("alpha.profile.box[16]=2;alpha.profile.ranks[16]=3;alpha.profile.rankBranches[16]='flying';alpha.profile.recruitTickets=4;alpha.onKill({dex:19})");
  assert.equal(t.get('alpha.persist()'),true);
- const current=[...files.keys()].find(k=>k.includes('progress-v027-')),content=files.get(current);
- const legacy=current.replace('progress-v027-','progress-v026-');
+ const current=[...files.keys()].find(k=>k.includes('progress-v028-')),content=files.get(current);
+ const legacy=current.replace('progress-v028-','progress-v027-');
  files.delete(current);files.set(legacy,content);
  const restored=boot(files);restored.frame(1000);
  assert.equal(restored.get('alpha.profile.box[16]'),2);
@@ -969,7 +969,7 @@ test('v0.2.7 migrates Rank3 branch and PokéBox from v0.2.6 without rewriting th
  assert.equal(restored.get('alpha.profile.recruitTickets'),4);
  assert.equal(restored.get('alpha.saveStatus'),'MIGRATED');
  assert.equal(files.get(legacy),content,'old v026 rollback save remains byte-identical');
- assert.ok([...files.keys()].some(k=>k.includes('progress-v027-')));
+ assert.ok([...files.keys()].some(k=>k.includes('progress-v028-')));
 });
 
 test('Real native projectile kill evolves Charmander at level 16 and keeps direct X skill choice',()=>{
@@ -981,8 +981,12 @@ test('Real native projectile kill evolves Charmander at level 16 and keeps direc
  assert.equal(t.get('alpha.battleEvolutionDex'),5);
  assert.equal(t.get('alpha.profile.pokedex[5]'),1);
  assert.equal(t.get('pickOpen'),true,'evolution does not suppress skill popup');
- t.press(3,1032);
- assert.equal(t.get('pickOpen'),false,'X still chooses first skill directly');
+assert.equal(t.get('alpha.evolutionSwapStage'),'old');
+  t.press(0,1032); // B selects KEEP (third card)
+  assert.equal(t.get('alpha.evolutionSwapStage'),'');
+  assert.equal(t.get('pickOpen'),true,'normal upgrade remains selectable');
+  t.frame(1048);t.press(3,1064);
+  assert.equal(t.get('pickOpen'),false,'X still picks first normal upgrade');
  assert.equal(t.get('paused'),false);
  assert.equal(t.get('lastError'),'');
 });
@@ -995,4 +999,86 @@ test('Real native skill KO evolves Pidgey through normal XP route',()=>{
  assert.equal(t.get('alpha.chooseBattleSprite()'),'pidgeotto');
  assert.equal(t.get('alpha.profile.pokedex[17]'),1);
  assert.equal(t.get('lastError'),'');
+});
+
+test('Evolved type move pool has three stable real-game candidates',()=>{
+ const t=boot();t.frame(1000);
+ t.get('alpha.profile.selected=4;alpha.resetBattle();level=16;alpha.onLevelUp();alpha.offersForLevel()');
+ assert.equal(t.get('alpha.evolutionSwapStage'),'old');
+ assert.equal(t.get('alpha.evolutionSwapChoices.length'),3);
+ const initial=t.get('JSON.stringify(alpha.evolutionSwapChoices)');
+ assert.ok(t.get("alpha.evolutionSwapChoices.every(id=>alpha.data.realMoves.some(m=>m.id===id&&m.type==='fire'))"));
+ t.get('alpha.pickOffer(0)');
+ assert.equal(t.get('alpha.evolutionSwapStage'),'new');
+ assert.equal(t.get('JSON.stringify(alpha.evolutionSwapChoices)'),initial);
+ assert.equal(t.get('alpha.offers.length'),4);
+});
+test('Evolution replaces exactly one skill, preserves level and Rank, and normal level-up remains',()=>{
+ const t=boot();t.frame(1000);
+ t.get("alpha.profile.selected=4;alpha.profile.box[4]=3;alpha.profile.ranks[4]=4;alpha.resetBattle();alpha.moves[0].lvl=4;alpha.moves[0].cooldown=.28;level=16;alpha.onLevelUp();alpha.offersForLevel()");
+ const second=t.get('alpha.moves[1].id');
+ assert.equal(t.get('alpha.pickOffer(0)'),true);
+ const chosen=t.get('alpha.offers[0].id');
+ assert.equal(t.get('alpha.pickOffer(0)'),true);
+ assert.equal(t.get('alpha.moves[0].id'),chosen);
+ assert.equal(t.get('alpha.moves[0].lvl'),4);
+ assert.ok(t.get('alpha.moves[0].cooldown')>0);
+ assert.equal(t.get('alpha.moves[1].id'),second);
+ assert.equal(t.get('alpha.rankOf(4)'),4);
+ assert.equal(t.get('alpha.profile.box[4]'),3);
+ assert.equal(t.get('alpha.evolutionSwapCount'),1);
+ assert.equal(t.get('alpha.evolutionSwapStage'),'');
+ assert.equal(t.get('pickOpen'),true);
+ assert.equal(t.get('alpha.pickOffer(0)'),true);
+ assert.equal(t.get('pickOpen'),false);
+});
+test('Both KEEP stages preserve move list and consume no normal upgrade',()=>{
+ for(const late of [false,true]){
+  const t=boot();t.frame(1000);
+  t.get('alpha.profile.selected=4;alpha.resetBattle();level=16;alpha.onLevelUp();alpha.offersForLevel()');
+  const before=t.get('JSON.stringify(alpha.moves)');
+  if(late){t.get('alpha.pickOffer(0)');t.get('skillPage=1')}
+  t.get('alpha.pickOffer('+(late?0:2)+')');
+  assert.equal(t.get('JSON.stringify(alpha.moves)'),before);
+  assert.equal(t.get('alpha.evolutionSwapCount'),0);
+  assert.equal(t.get('alpha.evolutionSwapStage'),'');
+  assert.equal(t.get('pickOpen'),true);
+ }
+});
+test('Two skipped-level evolutions each get a separate swap; original Box remains',()=>{
+ const t=boot();t.frame(1000);
+ t.get('alpha.profile.selected=10;alpha.profile.box[10]=2;alpha.resetBattle();level=12;alpha.onLevelUp();alpha.offersForLevel()');
+ assert.equal(t.get('alpha.evolutionEvents'),2);
+ for(let i=0;i<2;i++){
+  assert.equal(t.get('alpha.evolutionSwapStage'),'old');
+  t.get('skillPage=Math.floor((alpha.offers.length-1)/3)');
+  t.get('alpha.pickOffer((alpha.offers.length-1)%3)');
+ }
+ assert.equal(t.get('alpha.evolutionSwapStage'),'');
+ assert.equal(t.get('pickOpen'),true);
+ assert.equal(t.get('alpha.profile.box[10]'),2);
+ assert.equal(t.get('alpha.profile.box[11]'),undefined);
+});
+test('R+Y Orb, R+B Pause and + menu cannot override evolution popup',()=>{
+ const t=boot();t.frame(1000);
+ t.get("alpha.profile.selected=4;alpha.resetBattle();alpha.orbQueue.push('quick');level=16;alpha.onLevelUp();alpha.offersForLevel()");
+ t.buttons[5].pressed=true;t.press(2,1016);
+ assert.equal(t.get('alpha.evolutionSwapStage'),'new');
+ assert.equal(t.get('alpha.orbQueue.length'),1);
+ t.buttons[5].pressed=false;t.frame(1032);
+ t.buttons[5].pressed=true;t.press(0,1048);
+ assert.equal(t.get('paused'),false);
+ t.buttons[5].pressed=false;t.frame(1064);t.press(9,1080);
+ assert.equal(t.get('alpha.menu'),false);
+ assert.equal(t.get('lastError'),'');
+});
+test('Move swap is run-only and only v028 save slots are written',()=>{
+ const files=new Map(),t=boot(files);t.frame(1000);
+ t.get('alpha.profile.selected=4;alpha.profile.box[4]=2;alpha.resetBattle();level=16;alpha.onLevelUp();alpha.offersForLevel()');
+ const original=t.get('JSON.stringify(alpha.profile)');
+ t.get('alpha.pickOffer(0);alpha.pickOffer(0)');
+ assert.equal(t.get('JSON.stringify(alpha.profile)'),original);
+ assert.equal(t.get('alpha.persist()'),true);
+ assert.ok([...files.keys()].every(k=>k.includes('progress-v028-')));
+ assert.ok([...files.values()].every(v=>!v.includes('evoQueue')));
 });
