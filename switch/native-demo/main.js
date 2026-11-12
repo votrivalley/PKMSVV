@@ -199,7 +199,7 @@ function draw(){
  // Keep native geometry and game logic identical to known stable v0.0.10.
  ctx.fillStyle='#fff4cc';
  ctx.font='20px sans-serif';
- ctx.fillText('POKEMON CHUYEN SINH - NATIVE KANTO v0.2.7',24,105);
+ ctx.fillText('POKEMON CHUYEN SINH - NATIVE KANTO v0.3.0',24,105);
  ctx.fillText('HP: '+Math.ceil(hp),24,135);
  ctx.fillText('XP: '+xp+'/12   LEVEL: '+level,24,165);
  ctx.fillText('KO: '+kills+'   GEN '+KANTO_CONFIG.gen+'   WAVE '+(kantoTier+1)+'   ENEMIES: '+enemies.length,24,235);
