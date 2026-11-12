@@ -49,6 +49,13 @@ test('Compiled game uses real Kanto, Orb, Fusion, Mega and Evolution sources',()
  assert.ok(data.nativeAlpha.trialEnemies.every(e=>e.dex>=1&&e.dex<=151));
  assert.equal(data.nativeAlpha.testOnly,true);
 });
+test('Native battle draws eight bounded cooldown cards with the current starter skills',()=>{
+ const t=boot();t.frame(1000);
+ t.ops.fillRect=0;t.frame(1016);
+ assert.ok(t.ops.fillRect>=24,'eight skill slots and cooldown tracks render each frame');
+ assert.equal(t.get('alpha.moves.length'),2,'starter has two genuine skills');
+ assert.equal(t.get('lastError'),'');
+});
 test('Kanto native boots HUD, auto-combat and ten controller tabs',()=>{
  const t=boot();t.frame(1000);t.frame(1016);
  assert.equal(t.get('alpha.profile.selected'),25);
