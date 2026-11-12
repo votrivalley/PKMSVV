@@ -49,10 +49,11 @@ function loadSprites(){
 }
 // Switch-only bindings: dialog keys are direct and take precedence over combat.
 const SWITCH_PAD_BINDINGS=Object.freeze({
- skill:[3,2,0],page:1,orb:[5,2],pause:[5,0],
+ skill:[3,2,0],page:[5,1],dash:1,orb:[5,2],pause:[5,0],
  menu:9,menuBack:0,mega:7,sprites:4
 });
 let xp=0,level=1,attack=1,fireRate=.21,moveSpeed=230,skillPage=0,pickOpen=false,prevChoice=[false,false,false,false],skillChoices=[];
+let dashBurst=0,dashReady=0,prevDash=false;
 const SKILLS=[
  {name:'Tang sat thuong',description:'Dan manh hon',apply(){attack+=1}},
  {name:'Ban nhanh',description:'Toc do ban tang',apply(){fireRate=Math.max(.08,fireRate-.035)}},
@@ -107,12 +108,13 @@ function update(dt){
  const choice0=button(p,SWITCH_PAD_BINDINGS.skill[0]);
  const choice1=button(p,SWITCH_PAD_BINDINGS.skill[1]);
  const choice2=button(p,SWITCH_PAD_BINDINGS.skill[2]);
- const choice3=button(p,SWITCH_PAD_BINDINGS.page);
+ const pageCombo=r&&button(p,SWITCH_PAD_BINDINGS.page[1]);
+ const choice3=pageCombo;
  const edge0=choice0&&!prevChoice[0],edge1=choice1&&!prevChoice[1],
   edge2=choice2&&!prevChoice[2],edge3=choice3&&!prevChoice[3];
  prevChoice[0]=choice0;prevChoice[1]=choice1;prevChoice[2]=choice2;prevChoice[3]=choice3;
  if(pickOpen){
-  // X / Y / B directly select slots 1 / 2 / 3; A pages. No R modifier.
+  // X / Y / B select 1 / 2 / 3; only R+A advances pages.
   if(edge3)skillPage=(skillPage+1)%Math.max(1,Math.ceil(skillChoices.length/3));
   else if(edge0)pickSkill(0);
   else if(edge1)pickSkill(1);
@@ -124,7 +126,7 @@ function update(dt){
  let dx=Number(p?.axes?.[0])||0,dy=Number(p?.axes?.[1])||0;
  if(button(p,14))dx=-1;if(button(p,15))dx=1;
  if(button(p,12))dy=-1;if(button(p,13))dy=1;
- const mag=Math.hypot(dx,dy);if(mag>.15){dx/=Math.max(1,mag);dy/=Math.max(1,mag);const boost=typeof alpha==='object'&&alpha.enabled?alpha.moveMultiplier:1;px=clamp(px+dx*moveSpeed*boost*dt,30,W-30);py=clamp(py+dy*moveSpeed*boost*dt,82,H-40)}
+ const mag=Math.hypot(dx,dy);if(mag>.15){dx/=Math.max(1,mag);dy/=Math.max(1,mag);const boost=(typeof alpha==='object'&&alpha.enabled?alpha.moveMultiplier:1)*(dashBurst>0?2.6:1);px=clamp(px+dx*moveSpeed*boost*dt,30,W-30);py=clamp(py+dy*moveSpeed*boost*dt,82,H-40)}
  // Spawn budget deliberately caps actors; useful to validate sustained native FPS.
  wave=kantoTier===0?'KANTO: RATTATA/PIDGEY':'KANTO: GEN1 TIER '+(kantoTier+1);
  if(time>=spawnAt&&enemies.length<MAX_ENEMIES){
