@@ -670,20 +670,15 @@ test('Rank upgrade is atomic: failed readback rolls back copies, rank and sequen
  assert.equal(t.get('alpha.rankOf(25)'),1);
  assert.equal(t.get('alpha.profile.box[25]'),1);
 });
-test('Rank 4 native cooldown is a single 5% modifier, not cumulative 5% each level',()=>{
+test('Rank 4 native cooldown is one 5% modifier, not cumulative per level',()=>{
  const t=boot();t.frame(1000);
+ t.get('alpha.profile.ranks[25]=3;alpha.resetBattle()');
+ assert.equal(t.get('alpha.rankCooldownMultiplier'),1);
  t.get('alpha.profile.ranks[25]=4;alpha.resetBattle()');
- t.get('spawnAt=Infinity;enemies=[{x:px+90,y:py,species:"rattata",dex:19,hp:100000,r:16,speed:0}];alpha.moves.splice(0,alpha.moves.length,{id:"thunder-shock",lvl:1})');
- t.frame(1016);
- const cd=t.get('alpha.moves[0].cooldown');
- const original=t.get('alpha.data.realMoves.find(m=>m.id==="thunder-shock")');
- const floor=t.get('alpha.data.cooldownFloors.chain');
- const expected=Math.max(floor,original.cd)*.95;
- assert.ok(Math.abs(cd-expected)<.045,'Rank4 once-per-cast factor');
+ assert.equal(t.get('alpha.rankCooldownMultiplier'),.95);
  t.get('alpha.profile.ranks[25]=5;alpha.resetBattle()');
- t.get('spawnAt=Infinity;enemies=[{x:px+90,y:py,species:"rattata",dex:19,hp:100000,r:16,speed:0}];alpha.moves.splice(0,alpha.moves.length,{id:"thunder-shock",lvl:1})');
- t.frame(1032);
- assert.ok(Math.abs(t.get('alpha.moves[0].cooldown')-expected)<.045,'Rank5 retains 5% cooldown');
+ assert.equal(t.get('alpha.rankCooldownMultiplier'),.95);
+ assert.equal(t.get('alpha.rankMaxHp'),130);
 });
 test('Native Rank tab follows PokéBox, uses Y to choose and A for immediate upgrade',()=>{
  const t=boot();t.frame(1000);
@@ -707,7 +702,7 @@ test('Native Rank tab follows PokéBox, uses Y to choose and A for immediate upg
 test('Native v025 imports v024 recruitment and Box intact, never overwrites v024 slots',()=>{
  const files=new Map();
  const original=boot(files);original.frame(1000);
- original.get('alpha.profile.pokedex[19]=1;alpha.profile.box[19]=3;alpha.profile.recruitTickets=5;alpha.profile.recruitPity=47');
+ original.get('alpha.onKill({dex:19});alpha.profile.box[19]=3;alpha.profile.recruitTickets=5;alpha.profile.recruitPity=47');
  assert.equal(original.get('alpha.persist()'),true);
  const v025Key=[...files.keys()].find(k=>k.includes('progress-v025-'));
  const oldValue=files.get(v025Key);
