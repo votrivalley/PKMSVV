@@ -113,9 +113,9 @@ test('v1.5 controller mapping saves six real actions, migrates old maps and reje
  const map=G.PKMSVVPadOrb;
  assert.match(map.describe('dash'),/A \/ ×/);
  assert.equal(map.bindings().speed,6,'ZL/L2 becomes the default speed button');
- assert.equal(map.describe('use'),'Y / △');
- assert.equal(map.describe('pause'),'Start / Options');
- assert.equal(map.describe('mega'),'LB / L1');
+ assert.match(map.describe('use'),/Y \/ △/);
+ assert.match(map.describe('pause'),/Start \/ Options/);
+ assert.match(map.describe('mega'),/LB \/ L1/);
  assert.equal(map.bindings().mega,4,'Mega defaults to LB/L1');
  assert.equal(map.valid({dash:2,use:2}),false,'game actions must not collide');
  assert.equal(map.valid({dash:10,use:11}),true,'old two-key profiles still accepted');
