@@ -15,12 +15,13 @@ const alpha=(()=>{
  const byDex=new Map([...(realDex||[]),...roster,...foes].map(p=>[p.dex,p]));
  const spriteNames=new Set([...rosterNames,...foeNames,...(realDex||[]).map(p=>p.name.toLowerCase()),...data.evolutionSprites.map(p=>p.name.toLowerCase()),'mewtwo']);
  const SAVE_PATH='sdmc:/switch/pkmsvv-native-alpha/';
- const SAVE_PREFIX='progress-v025-';
- const PREVIOUS_SAVE_PREFIX='progress-v024-';
+ const SAVE_PREFIX='progress-v026-';
+ const PREVIOUS_SAVE_PREFIX='progress-v025-';
+ const OLDER_SAVE_PREFIX='progress-v024-';
  const LEGACY_SAVE_PREFIX='progress-';
  const MOVE_MAX=5,MAX_MOVES=8;
  const RANK_RULES=data.rankRules||{max:5,perRankStatBonus:.06,rank4CooldownReduction:.05};
- let profile={version:1,seq:0,pokedex:{},box:{25:1},bestKO:0,badges:{},selected:25,kantoClears:0,bestSurvivalSec:0,bestKantoClearSec:0,recruitTickets:0,recruitKO:0,recruitPity:0,ranks:{}};
+ let profile={version:1,seq:0,pokedex:{},box:{25:1},bestKO:0,badges:{},selected:25,kantoClears:0,bestSurvivalSec:0,bestKantoClearSec:0,recruitTickets:0,recruitKO:0,recruitPity:0,ranks:{},rankBranches:{}};
  let saveStatus='UNAVAILABLE',saveDirty=false,lastSaveAt=0,saveSlot=0;
  let menu=false,menuTab=0,menuIndex=0,started=false,clockScale=1,accelerated=false,runUsedQA=false;
  let lastStart=false,lastA=false,lastB=false,lastY=false,lastX=false,lastZR=false,lastZL=false;
@@ -51,14 +52,15 @@ const alpha=(()=>{
   }catch(_){return null}
  }
  function load(){
-  const currentA=readSlot(1),currentB=readSlot(2);
-   const prevA=readSlot(1,PREVIOUS_SAVE_PREFIX),prevB=readSlot(2,PREVIOUS_SAVE_PREFIX);
-   const a=currentA||currentB?currentA:prevA||prevB?prevA:readSlot(1,LEGACY_SAVE_PREFIX);
-   const b=currentA||currentB?currentB:prevA||prevB?prevB:readSlot(2,LEGACY_SAVE_PREFIX);
-   const migrating=!currentA&&!currentB;
-   // v0.2.5 is forward-only: never overwrite v0.2.4 or legacy rollback
-   // slots. Choose newest checksum-valid slot from the selected generation.
-   const saved=(!a?b:!b?a:a.seq>b.seq?a:b);
+  const groups=[
+    [readSlot(1),readSlot(2)],
+    [readSlot(1,PREVIOUS_SAVE_PREFIX),readSlot(2,PREVIOUS_SAVE_PREFIX)],
+    [readSlot(1,OLDER_SAVE_PREFIX),readSlot(2,OLDER_SAVE_PREFIX)],
+    [readSlot(1,LEGACY_SAVE_PREFIX),readSlot(2,LEGACY_SAVE_PREFIX)]
+   ];
+   const chosen=groups.find(g=>g[0]||g[1])||groups[0],migrating=chosen!==groups[0];
+   // Never touch earlier generations: v025/v024/legacy are rollback backups.
+   const [a,b]=chosen,saved=(!a?b:!b?a:a.seq>b.seq?a:b);
   if(saved&&Number.isInteger(saved.seq)&&saved.seq>=0){
    const found=saved.pokedex&&typeof saved.pokedex==='object'?saved.pokedex:{};
    const kept={};
@@ -81,7 +83,10 @@ const alpha=(()=>{
      recruitPity:Math.max(0,Math.min(99,Math.floor(+saved.recruitPity||0))),
      ranks:Object.fromEntries(Object.entries(saved.ranks&&typeof saved.ranks==='object'?saved.ranks:{})
       .filter(([k,v])=>Number.isInteger(+k)&&+k>=1&&+k<=151&&Number.isInteger(+v)&&+v>=0)
-      .map(([k,v])=>[k,Math.min(5,v)]))};
+      .map(([k,v])=>[k,Math.min(5,v)])),
+     rankBranches:Object.fromEntries(Object.entries(saved.rankBranches&&typeof saved.rankBranches==='object'?saved.rankBranches:{})
+      .filter(([k,v])=>Number.isInteger(+k)&&+k>=1&&+k<=151&&
+       Number(saved.ranks?.[k]||0)>=3&&typeof v==='string'&&branchOptions(+k).includes(v)))};
    saveSlot=migrating?0:a&&a.seq===saved.seq?1:2;
    saveStatus=migrating?'LEGACY FOUND':'RESTORED';
    if(migrating){
@@ -109,8 +114,32 @@ const alpha=(()=>{
  // Pokémon Rank stage2 native adapter: the first ordinary copy is never
  // consumed. Rank 0->1 needs one duplicate, Rank1->2 two, etc.
  // Shiny skins are not represented by box[] and can NEVER be materials.
- let lastRankOutcome='';
+ let lastRankOutcome='',branchPromptDex=0;
+ const RANK_TRAITS=RANK_RULES.traits||{branchStatuses:{fire:'burn',water:'slow',offense:'strike',defense:'guard'},hitChance:.16,hitCooldownMs:3500,hybridCooldownMs:12000,hybridMaxTargets:6,hybridRadius:140};
  const rankOf=dex=>Math.max(0,Math.min(RANK_RULES.max,Math.floor(+profile.ranks[dex]||0)));
+ function branchOptions(dex){
+  const raw=getMon(Number(dex))?.types||[];
+  const types=[...new Set(raw.filter(x=>typeof x==='string').map(x=>x.toLowerCase()))];
+  return types.length>=2?types.slice(0,2):['offense','defense'];
+ }
+ function rankBranch(dex){return profile.rankBranches[Number(dex)]||null}
+ function chooseRankBranch(dex,branch){
+  dex=Number(dex);
+  const options=branchOptions(dex);
+  if(!Number.isInteger(dex)||rankOf(dex)<3||!profile.box[dex]||
+   rankBranch(dex)||!options.includes(branch)){
+   lastRankOutcome='BRANCH LOCKED OR INVALID';return false;
+  }
+  const oldDirty=saveDirty;
+  profile.rankBranches[dex]=branch;markDirty();
+  if(!persist()){
+   delete profile.rankBranches[dex];saveDirty=oldDirty;
+   lastRankOutcome='SAVE FAILED - BRANCH NOT CHANGED';return false;
+  }
+  branchPromptDex=0;
+  lastRankOutcome='RANK 3 BRANCH: '+branch.toUpperCase();
+  return true;
+ }
  function rankPlan(dex){
   if(!Number.isInteger(+dex)||+dex<1||+dex>151)return {dex:Number(dex)||0,rank:0,cost:0,available:0,eligible:false,reason:'INVALID DEX'};
   dex=+dex;
@@ -137,6 +166,7 @@ const alpha=(()=>{
    return false;
   }
   lastRankOutcome=(getMon(plan.dex)?.name||('#'+plan.dex))+' RANK '+(plan.rank+1)+' / '+RANK_RULES.max;
+  if(plan.rank+1>=3&&!rankBranch(plan.dex))branchPromptDex=plan.dex;
   return true;
  }
  function currentRank(){return rankOf(profile.selected)}
@@ -168,7 +198,7 @@ const alpha=(()=>{
   offers=[];fusionUsed=false;fusionName='';
   effects.length=0;zones.length=0;megEnergy=0;megaActive=0;megaCooldown=0;
   boss15=false;boss30=false;badgeWon=false;gameWon=false;bossMessage='';matchResult=null;runEndTime=0;runEndKOs=0;
-  skillClock=0;killAward=0;fusionOfferLevel=-1;fusionOfferAttempts=0;fusionOfferRecipe=null;runUsedQA=false;accelerated=false;clockScale=1;started=true;
+  skillClock=0;killAward=0;fusionOfferLevel=-1;fusionOfferAttempts=0;fusionOfferRecipe=null;branchPromptDex=0;runUsedQA=false;accelerated=false;clockScale=1;started=true;
  }
  function selectSpecies(index){
   // Kanto's opening remains safe; at later waves draw from REAL Gen1 catalog.
@@ -919,6 +949,8 @@ const alpha=(()=>{
    get matchResult(){return matchResult},get runEndTime(){return runEndTime},get runEndKOs(){return runEndKOs},
   get orbQueue(){return orbQueue},get moves(){return moveList},
   get rankRules(){return RANK_RULES},get lastRankOutcome(){return lastRankOutcome},
+  get branchPromptDex(){return branchPromptDex},get rankTraits(){return RANK_TRAITS},
+  branchOptions,rankBranch,chooseRankBranch,
   rankPlan,upgradeRank,rankOf,
   get rankMaxHp(){return rankMaxHp()},get rankDamageMultiplier(){return rankDamageMultiplier()},
   get rankCooldownMultiplier(){return rankCooldownMultiplier()},
