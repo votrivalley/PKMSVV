@@ -1253,7 +1253,7 @@ if(pickOpen){
  // Keep persistent progress isolated; no automatic ownership grants.
  load();resetBattle();
  return {enabled:true,data,spriteNames,preUpdate,postUpdate,onKill,offersForLevel,
-  get speedMultiplier(){return fastMode?1.5:1},get fastMode(){return fastMode},
+  get speedMultiplier(){return accelerated?1:fastMode?1.5:1},get fastMode(){return fastMode},
   pickOffer,selectSpecies,draw,persist,loadExtraSprites,chooseBattleSprite,onRespawn,resetBattle,onDefeat,
   get profile(){return profile},get menu(){return menu},get accelerated(){return accelerated},get runUsedQA(){return runUsedQA},
    get matchResult(){return matchResult},get runEndTime(){return runEndTime},get runEndKOs(){return runEndKOs},
