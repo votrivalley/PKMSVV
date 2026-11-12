@@ -179,7 +179,7 @@ test('Build bridge reads official QuickRegion and compiles Kanto data to RomFS',
  assert.match(js,/__PKMSVV_KANTO_CONFIG__/);
 });
 
-test('Standalone native fallback: X/Y/B direct, A pages without R; B alone never pauses',()=>{
+test('Standalone native fallback: X/Y/B direct, R+A pages; B alone never pauses',()=>{
  const pad={connected:true,buttons:Array.from({length:18},()=>({pressed:false,value:0})),axes:[0,0]};
  const t=boot(pad);t.frame(1000);
  // Existing fallback skill catalog has 6 skills = two pages.
