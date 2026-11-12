@@ -292,10 +292,10 @@
   const map=G.PKMSVVPadOrb?.bindings?.()||{};
   const pressed=index=>Number.isInteger(index)&&!!pad.buttons?.[index]&&
    (pad.buttons[index].pressed||pad.buttons[index].value>.5);
-  const speed=pressed(Number.isInteger(map.speed)?map.speed:5);
+  const speed=pressed(Number.isInteger(map.speed)?map.speed:6);
   const board=pressed(Number.isInteger(map.leaderboard)?map.leaderboard:11);
   const open=typeof G.SettingsUI?.isOpen==='function'?G.SettingsUI.isOpen():!!G.SettingsUI?.isOpen;
-  // R becomes the level-up skill-choice modifier; it must not toggle speed.
+  // Speed trigger is ZL/L2 by default; never toggle while a dialog or settings owns input.
   const level=document.getElementById?.('scr-levelup');
   const levelShown=!!level&&!level.hidden&&
    !level.classList?.contains?.('hidden')&&
