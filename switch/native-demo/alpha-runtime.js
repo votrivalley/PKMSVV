@@ -968,7 +968,7 @@ skillChoices=offers.map(o=>({name:o.name,description:o.kind}));
   }
   let consumedMenuClose=false;
   if(matchResult&&!menu){
-   if(a&&!lastA)resetBattle();
+   if(a&&!r&&!lastA)resetBattle();
    lastStart=plus;lastA=a;lastB=b;lastY=y;lastX=x;lastZR=zr;lastZL=zl;
    lastLeft=left;lastRight=right;lastL=l;lastR=r;
    return true;
@@ -1210,13 +1210,13 @@ if(pickOpen){
   if(menuTab===7){
    text(145,169,'CONTROLLER BINDINGS - Nintendo Switch only','#fff0a2','23px sans-serif');
    text(155,219,'LEVEL UP: X = SKILL 1     Y = SKILL 2     B = SKILL 3');
-   text(155,259,'LEVEL UP: A = NEXT PAGE (3 skills per page)');
-   text(155,299,'BATTLE: R+Y = USE ORB     R+B = PAUSE / RESUME');
+   text(155,259,'LEVEL UP: R+A = NEXT PAGE (3 skills per page)');
+   text(155,299,'BATTLE: A = DASH     R+Y = USE ORB     R+B = PAUSE');
    text(155,339,'BATTLE: ZR = MEGA (QA)     L = SPRITES');
    text(155,379,'MENU: + = OPEN     L/R = TABS     B = BACK');
    text(155,419,'TEAM/BOX: Y NEXT, A USE  |  RANK: Y NEXT, A UPGRADE');
    text(155,453,'RECRUIT: A x1, Y x10. Rank3 branch: X / Y; B later.','#d8ffe1','17px sans-serif');
-   text(155,480,'EVOLUTION: X/Y/B choose old/new; A next page','#c1ffd5','17px sans-serif');
+   text(155,480,'EVOLUTION: X/Y/B choose old/new; R+A next page','#c1ffd5','17px sans-serif');
    text(155,506,'EVOLVE TAB: Y NEXT BRANCH / A USE SHARD','#ffe9b1','17px sans-serif');
    text(155,551,'Active Switch controller mapping (fixed preset)','#bacfe4','17px sans-serif');
   }
