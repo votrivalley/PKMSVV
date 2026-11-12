@@ -15,10 +15,12 @@ const alpha=(()=>{
  const byDex=new Map([...(realDex||[]),...roster,...foes].map(p=>[p.dex,p]));
  const spriteNames=new Set([...rosterNames,...foeNames,...(realDex||[]).map(p=>p.name.toLowerCase()),...data.evolutionSprites.map(p=>p.name.toLowerCase()),'mewtwo']);
  const SAVE_PATH='sdmc:/switch/pkmsvv-native-alpha/';
- const SAVE_PREFIX='progress-v024-';
+ const SAVE_PREFIX='progress-v025-';
+ const PREVIOUS_SAVE_PREFIX='progress-v024-';
  const LEGACY_SAVE_PREFIX='progress-';
  const MOVE_MAX=5,MAX_MOVES=8;
- let profile={version:1,seq:0,pokedex:{},box:{25:1},bestKO:0,badges:{},selected:25,kantoClears:0,bestSurvivalSec:0,bestKantoClearSec:0,recruitTickets:0,recruitKO:0,recruitPity:0};
+ const RANK_RULES=data.rankRules||{max:5,perRankStatBonus:.06,rank4CooldownReduction:.05};
+ let profile={version:1,seq:0,pokedex:{},box:{25:1},bestKO:0,badges:{},selected:25,kantoClears:0,bestSurvivalSec:0,bestKantoClearSec:0,recruitTickets:0,recruitKO:0,recruitPity:0,ranks:{}};
  let saveStatus='UNAVAILABLE',saveDirty=false,lastSaveAt=0,saveSlot=0;
  let menu=false,menuTab=0,menuIndex=0,started=false,clockScale=1,accelerated=false,runUsedQA=false;
  let lastStart=false,lastA=false,lastB=false,lastY=false,lastX=false,lastZR=false,lastZL=false;
@@ -50,11 +52,12 @@ const alpha=(()=>{
  }
  function load(){
   const currentA=readSlot(1),currentB=readSlot(2);
+   const prevA=readSlot(1,PREVIOUS_SAVE_PREFIX),prevB=readSlot(2,PREVIOUS_SAVE_PREFIX);
+   const a=currentA||currentB?currentA:prevA||prevB?prevA:readSlot(1,LEGACY_SAVE_PREFIX);
+   const b=currentA||currentB?currentB:prevA||prevB?prevB:readSlot(2,LEGACY_SAVE_PREFIX);
    const migrating=!currentA&&!currentB;
-   // First v0.2.4 boot imports v0.2.3 progression without overwriting
-   // its save slots; older NROs cannot erase new recruit tickets/Box.
-   const a=migrating?readSlot(1,LEGACY_SAVE_PREFIX):currentA;
-   const b=migrating?readSlot(2,LEGACY_SAVE_PREFIX):currentB;
+   // v0.2.5 is forward-only: never overwrite v0.2.4 or legacy rollback
+   // slots. Choose newest checksum-valid slot from the selected generation.
    const saved=(!a?b:!b?a:a.seq>b.seq?a:b);
   if(saved&&Number.isInteger(saved.seq)&&saved.seq>=0){
    const found=saved.pokedex&&typeof saved.pokedex==='object'?saved.pokedex:{};
@@ -75,7 +78,10 @@ const alpha=(()=>{
      bestKantoClearSec:Math.max(0,Math.min(86400,Math.floor(+saved.bestKantoClearSec||0))),
      recruitTickets:Math.max(0,Math.min(9999,Math.floor(+saved.recruitTickets||0))),
      recruitKO:Math.max(0,Math.min(1000000,Math.floor(+saved.recruitKO||0))),
-     recruitPity:Math.max(0,Math.min(99,Math.floor(+saved.recruitPity||0)))};
+     recruitPity:Math.max(0,Math.min(99,Math.floor(+saved.recruitPity||0))),
+     ranks:Object.fromEntries(Object.entries(saved.ranks&&typeof saved.ranks==='object'?saved.ranks:{})
+      .filter(([k,v])=>Number.isInteger(+k)&&+k>=1&&+k<=151&&Number.isInteger(+v)&&+v>=0)
+      .map(([k,v])=>[k,Math.min(5,v)]))};
    saveSlot=migrating?0:a&&a.seq===saved.seq?1:2;
    saveStatus=migrating?'LEGACY FOUND':'RESTORED';
    if(migrating){
@@ -100,8 +106,44 @@ const alpha=(()=>{
   }catch(err){saveStatus='SAVE FAILED';return false}
  }
  function markDirty(){saveDirty=true}
+ // Pokémon Rank stage2 native adapter: the first ordinary copy is never
+ // consumed. Rank 0->1 needs one duplicate, Rank1->2 two, etc.
+ // Shiny skins are not represented by box[] and can NEVER be materials.
+ let lastRankOutcome='';
+ const rankOf=dex=>Math.max(0,Math.min(RANK_RULES.max,Math.floor(+profile.ranks[dex]||0)));
+ function rankPlan(dex){
+  if(!Number.isInteger(+dex)||+dex<1||+dex>151)return {dex:Number(dex)||0,rank:0,cost:0,available:0,eligible:false,reason:'INVALID DEX'};
+  dex=+dex;
+  const count=Math.floor(+profile.box[dex]||0),rank=rankOf(dex);
+  const mon=getMon(dex),legend=!!(mon?.legendary||mon?.leg||mon?.rarity>=5);
+  const cost=rank>=RANK_RULES.max?0:rank+1;
+  const available=Math.max(0,count-1);
+  const reason=count<1?'NOT OWNED':legend?'LEGENDARY LOCKED':rank>=RANK_RULES.max?'RANK MAX':available<cost?'NEED '+cost+' DUPLICATES':'READY';
+  return {dex,rank,cost,available,eligible:reason==='READY',reason};
+ }
+ function upgradeRank(dex){
+  const plan=rankPlan(dex);
+  if(!plan.eligible){lastRankOutcome=plan.reason;return false}
+  // Save before surfacing success. If the commit fails, restore all changed
+  // fields; never consume a duplicate or fake a rank-up on disk error.
+  const oldCount=profile.box[plan.dex],oldRank=profile.ranks[plan.dex],oldDirty=saveDirty;
+  profile.box[plan.dex]=oldCount-plan.cost;
+  profile.ranks[plan.dex]=plan.rank+1;markDirty();
+  if(!persist()){
+   profile.box[plan.dex]=oldCount;
+   if(oldRank===undefined)delete profile.ranks[plan.dex];else profile.ranks[plan.dex]=oldRank;
+   saveDirty=oldDirty;
+   lastRankOutcome='SAVE FAILED - MATERIALS KEPT';
+   return false;
+  }
+  lastRankOutcome=(getMon(plan.dex)?.name||('#'+plan.dex))+' RANK '+(plan.rank+1)+' / '+RANK_RULES.max;
+  return true;
+ }
+ function currentRank(){return rankOf(profile.selected)}
+ function rankMaxHp(){return 100*(1+currentRank()*RANK_RULES.perRankStatBonus)}
+ function rankDamageMultiplier(){return 1+currentRank()*RANK_RULES.perRankStatBonus}
  function resetBattle(){
-  px=W/2;py=H/2;hp=100;kills=0;time=0;xp=0;level=1;
+  px=W/2;py=H/2;hp=rankMaxHp();kills=0;time=0;xp=0;level=1;
   enemies.length=0;shots.length=0;
   spawnAt=0;fireAt=.2;spawnShield=2;
   attack=1;fireRate=.21;moveSpeed=230;
@@ -378,7 +420,7 @@ const alpha=(()=>{
   }else if(o.kind==='new'){
    if(moveList.length>=MAX_MOVES)return false;
    moveList.push({id:o.id,lvl:1});
-  }else hp=Math.min(100,hp+35);
+  }else hp=Math.min(rankMaxHp(),hp+35);
   pickOpen=false;xp=0;return true;
  }
  function spawnBoss(which){
@@ -437,7 +479,7 @@ const alpha=(()=>{
  let castCount=0,damageCount=0;
  function strike(e,power,kind){
   if(!e||e.hp<=0)return false;
-  e.hp-=power*(e.boss&&accelerated?6:1);
+  e.hp-=power*rankDamageMultiplier()*(e.boss&&accelerated?6:1);
   megEnergy=Math.min(100,megEnergy+1);
   damageCount++;
   if(kind==='mine'||kind==='cone')e.slowLeft=Math.max(e.slowLeft||0,.35);
@@ -620,7 +662,7 @@ const alpha=(()=>{
  }
  function extraCombat(dt){
   if(!moveList.length||pickOpen||paused||menu)return;
-  const faster=megaActive>0?data.mega.cdFactor:1;
+  const faster=(megaActive>0?data.mega.cdFactor:1)*(currentRank()>=4?1-RANK_RULES.rank4CooldownReduction:1);
   // Each learned skill owns its own cooldown, rather than a single circle
   // cast that overpowers all move kinds. Clamp work per frame.
   let budget=2;
@@ -718,9 +760,9 @@ const alpha=(()=>{
   ctx.fillStyle=color;ctx.font=font;ctx.fillText(String(value),x,y)
  }
  function draw(){
-  text(820,44,'PKMSVV SWITCH NATIVE 0.2.4','#ffe39d');
+  text(820,44,'PKMSVV SWITCH NATIVE 0.2.5','#ffe39d');
   text(820,74,'KANTO • GEN 1 • '+(runUsedQA?(accelerated?'QA x12':'QA - CLOCK NORMAL'):'REAL TIME'),'#a7e7f6');
-  text(820,103,'TEAM: '+name(getMon(profile.selected))+'  EVOLVE: #'+evolvedDex()+'  SKILL: '+moveList.length+'/8');
+  text(820,103,'TEAM: '+name(getMon(profile.selected))+' R'+currentRank()+'  EVOLVE #'+evolvedDex()+'  SKILL '+moveList.length+'/8');
   text(820,132,'ORB: '+orbQueue.length+'/10   CD '+orbCooldown.toFixed(1)+'s');
   text(820,161,'MEGA: '+megEnergy+'/100  CD '+Math.ceil(megaCooldown)+'s');
   text(820,190,'DEX: '+Object.keys(profile.pokedex).length+'  BADGE: '+(badgeWon?'YES':'NO'));
@@ -856,6 +898,9 @@ const alpha=(()=>{
   get profile(){return profile},get menu(){return menu},get accelerated(){return accelerated},get runUsedQA(){return runUsedQA},
    get matchResult(){return matchResult},get runEndTime(){return runEndTime},get runEndKOs(){return runEndKOs},
   get orbQueue(){return orbQueue},get moves(){return moveList},
+  get rankRules(){return RANK_RULES},get lastRankOutcome(){return lastRankOutcome},
+  rankPlan,upgradeRank,rankOf,
+  get rankMaxHp(){return rankMaxHp()},get rankDamageMultiplier(){return rankDamageMultiplier()},
   get lastRecruitOutcome(){return lastRecruitOutcome},
   get recruitmentOdds(){return recruitRules},
   get recruitableCount(){return discoveredPool().length},
