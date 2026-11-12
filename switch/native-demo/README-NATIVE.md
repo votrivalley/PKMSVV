@@ -3,6 +3,12 @@
 **NRO nx.js thật; KHÔNG Brewser, KHÔNG WebView, KHÔNG tải game HTML.**
 Nền đồ họa của Switch Alpha v0.1.2 được giữ lại. Đây là đợt tích hợp game thật vào native, **chưa phải bản port hoàn toàn**.
 
+## Bản cập nhật HUD kỹ năng
+
+- Trong trận có **8 ô kỹ năng hiển thị liên tục** ở cạnh phải, mỗi ô ghi tên kỹ năng, cấp và **thanh hồi chiêu trực tiếp**; ô chưa mở để trống. Đây là phần hiển thị native thực, có thể thấy ngay khi vào Kanto.
+- Popup tiến hóa và lên cấp hiển thị **R+A = trang tiếp theo**, không còn nhầm A đơn.
+- Các ô chỉ hiển thị trạng thái, không đổi lượng đạn, sát thương hoặc số lần kỹ năng đánh trúng.
+
 ## Nguồn dữ liệu thực đã chuyển
 
 - **103 kỹ năng gốc**: ID, tên, loại tấn công, sát thương cơ bản, cooldown, số đòn, bán kính và các cấp nâng được xuất từ `js/data/moves.js` của game PKMSVV đã biên dịch, không nhập tay bản demo.
