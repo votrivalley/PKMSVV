@@ -51,6 +51,7 @@ if(data.trialSpecies.some(p=>p.dex<data.nationalMin||p.dex>data.nationalMax))
 const orbsSource=fs.readFileSync(path.join(root,'src/v14/orbs.js'),'utf8');
 const balanceSource=fs.readFileSync(path.join(root,'src/pkmsvv-skill-balance.js'),'utf8');
 const rankSource=fs.readFileSync(path.join(root,'src/pkmsvv-box-stage2.js'),'utf8');
+const rankEffectSource=fs.readFileSync(path.join(root,'src/pkmsvv-box-stage4.js'),'utf8');
 const fusionSource=fs.readFileSync(path.join(root,'src/pkmsvv-bond-fusion.js'),'utf8');
 const megaSource=fs.readFileSync(path.join(root,'src/pkmsvv-mega-phase3.js'),'utf8');
 const evolutions=JSON.parse(fs.readFileSync(path.join(root,'data/evolution-rules.json'),'utf8'));
@@ -90,6 +91,27 @@ if(!/MAX_RANK=5/.test(rankSource)||
  throw Error('Source Rank mechanics changed: Switch adapter needs review');
 const nativeRank={max:5,perRankStatBonus:.06,rank4CooldownReduction:.05,
  nextRankCost:'rank+1',legendaryMaterialRestricted:true,shinyExcluded:true};
+// Keep the Rank3 / Rank5 mechanics synchronized with original Stage 2/4.
+const branchMatch=rankSource.match(/function branches\(dex\)\{([\s\S]*?)\n  \}/);
+if(!branchMatch||!branchMatch[1].includes("['offense','defense']")||
+ !branchMatch[1].includes('slice(0,2)'))throw Error('Box Rank branch rules changed');
+const traitsMatch=rankEffectSource.match(/const ST=\{([\s\S]*?)\};/);
+const timingMatch=rankEffectSource.match(/const HIT_PROC=([\d.]+),HIT_LOCK_MS=(\d+),HYBRID_LOCK_MS=(\d+),HYBRID_MAX=(\d+);/);
+if(!traitsMatch||!timingMatch||!rankEffectSource.includes('queryCircle?.(e.x,e.y,140)'))
+ throw Error('Box Rank 3/5 combat constants changed');
+const rankStatuses={};
+for(const match of traitsMatch[1].matchAll(/(\w+):'(\w+)'/g))
+ rankStatuses[match[1]]=match[2];
+if(Object.keys(rankStatuses).length<20||
+ Number(timingMatch[1])!==.16||Number(timingMatch[2])!==3500||
+ Number(timingMatch[3])!==12000||Number(timingMatch[4])!==6)
+ throw Error('Invalid original Rank traits');
+nativeRank.traits={
+ branchStatuses:rankStatuses,
+ hitChance:+timingMatch[1],hitCooldownMs:+timingMatch[2],
+ hybridCooldownMs:+timingMatch[3],hybridMaxTargets:+timingMatch[4],
+ hybridRadius:140
+};
 const nativeMoves=[
  ['thunder-shock','chain'],['quick-attack','melee'],
  ['ember','projectile'],['water-gun','projectile'],
