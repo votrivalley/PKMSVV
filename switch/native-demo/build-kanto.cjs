@@ -131,10 +131,25 @@ const evolutionRows=evolutions.rules.filter(row=>row.from>=1&&row.from<=151&&
 if(evolutionRows.length!==52||
  evolutionRows.some(row=>row.level<2||row.level>100||row.from===row.to))
  throw Error('Kanto level-evolution source changed: review nx.js adapter');
+// Original conditional branches are MANUAL: one boss-earned shard, no auto-evolution.
+const specialEvolutionRows=evolutions.rules.filter(row=>row.from>=1&&row.from<=151&&
+ row.to>=1&&row.to<=151&&
+ ((row.trigger==='3'&&typeof row.item==='string'&&row.item.endsWith('-stone'))||
+ (row.trigger==='2'&&!row.held&&!row.item)))
+ .map(row=>({from:row.from,to:row.to,trigger:row.trigger,
+  item:row.trigger==='2'?'link-cable':row.item}));
+const counts={};
+for(const row of specialEvolutionRows)counts[row.item]=(counts[row.item]||0)+1;
+if(specialEvolutionRows.length!==20||
+ JSON.stringify(counts)!==JSON.stringify({'thunder-stone':2,'moon-stone':4,
+  'fire-stone':3,'leaf-stone':3,'water-stone':4,'link-cable':4})||
+ specialEvolutionRows.filter(row=>row.from===133).length!==3)
+ throw Error('Kanto stone/link data drift: adapter requires review');
 // Stone, trading and other conditional evolutions must not be auto-triggered.
 data.nativeAlpha={
  orbs, fusions, fusionOfferRates, cooldownFloors, nativeMoves, rankRules:nativeRank, mega:{duration:+megaMatch[1],cooldown:+megaMatch[2],cdFactor:+megaMatch[3]},
  evolutions:evolutionRows,
+ specialEvolutions:specialEvolutionRows,
  testOnly:true,
  // Native Alpha battle subset; do not represent this as the official full engine.
  trialRoster:[
