@@ -179,7 +179,11 @@ const alpha=(()=>{
  // Stone/trade/friendship branches cannot be inferred from a player level.
  let battleEvolutionDex=25,evolutionNotice='',evolutionNoticeLeft=0,evolutionEvents=0;
  const realByDex=new Map((realDex||[]).map(p=>[p.dex,p]));
+ const evolutionStatCache=new Map();
  function statsAtEvolution(dex){
+  const key=profile.selected+':'+dex;
+  const cached=evolutionStatCache.get(key);
+  if(cached)return cached;
   const base=realByDex.get(profile.selected),current=realByDex.get(dex);
   if(!base||!current)return {hp:1,damage:1,speed:1};
   const ratio=(from,to,power,ceiling)=>{
@@ -187,9 +191,12 @@ const alpha=(()=>{
    return Math.min(ceiling,Math.max(1,Math.pow(to/from,power)));
   };
   const atk=p=>Math.max(1,Number(p?.pa)||0,Number(p?.sa)||0,Number(p?.atk)||0);
-  return {hp:ratio(base.hp,current.hp,.55,1.50),
+  const mods={hp:ratio(base.hp,current.hp,.55,1.50),
    damage:ratio(atk(base),atk(current),.45,1.45),
    speed:ratio(base.spd,current.spd,.25,1.15)};
+  if(evolutionStatCache.size>151)evolutionStatCache.clear();
+  evolutionStatCache.set(key,mods);
+  return mods;
  }
  function evolutionChainAt(dex,atLevel){
   let current=dex;
@@ -209,13 +216,22 @@ const alpha=(()=>{
   const rankFactor=100*(1+currentRank()*RANK_RULES.perRankStatBonus);
   const oldMax=rankFactor*before.hp,newMax=rankFactor*after.hp;
   hp=Math.min(newMax,Math.max(0,hp/Math.max(1,oldMax)*newMax));
-  const old=battleEvolutionDex;battleEvolutionDex=next;evolutionEvents++;
+  const old=battleEvolutionDex;
+  let stage=old;
+  const visited=new Set([stage]);
+  for(let i=0;i<3;i++){
+   const step=data.evolutions.find(e=>e.from===stage&&e.level<=level);
+   if(!step||visited.has(step.to)||step.to<1||step.to>151)break;
+   stage=step.to;visited.add(stage);evolutionEvents++;
+   if(!runUsedQA&&!profile.pokedex[stage]){
+    profile.pokedex[stage]=1;markDirty();
+   }
+   if(stage===next)break;
+  }
+  battleEvolutionDex=next;
   evolutionNotice=(realByDex.get(old)?.name||getMon(old)?.name||'#'+old)+
    ' > '+(realByDex.get(next)?.name||getMon(next)?.name||'#'+next);
   evolutionNoticeLeft=5;
-  if(!runUsedQA&&!profile.pokedex[next]){
-   profile.pokedex[next]=1;markDirty();
-  }
   // PokéBox, Rank and Rank3 branch stay attached to the original dex.
   return true;
  }
