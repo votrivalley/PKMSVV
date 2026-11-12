@@ -488,6 +488,8 @@ test('Once QA x12 was used, turning it off cannot unlock Dex, badge, clear or be
  assert.equal(t.get('alpha.profile.bestKO'),0);
  assert.equal(t.get('alpha.profile.bestSurvivalSec'),0);
  assert.equal(files.size,0,'no QA-only progression should create a save');
+ t.buttons[5].pressed=false;t.buttons[6].pressed=false;
+ t.frame(1056);
  t.press(1,1064);
  assert.equal(t.get('alpha.runUsedQA'),false,'QA flag clears only on new run');
 });
