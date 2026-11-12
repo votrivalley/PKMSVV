@@ -784,7 +784,7 @@ const alpha=(()=>{
   const btn=n=>!!pad?.buttons?.[n]?.pressed;
   const plus=btn(9),a=btn(1),b=btn(0),y=btn(2),x=btn(3),zr=btn(7),zl=btn(6),
    left=btn(14),right=btn(15),r=btn(5),l=btn(4);
-  if(plus&&!lastStart&&!pickOpen){menu=!menu;menuIndex=0;if(menu){persist()}}
+  if(plus&&!lastStart&&!pickOpen&&!branchPromptDex){menu=!menu;menuIndex=0;if(menu){persist()}}
   if(zl&&r&&!lastZL&&!pickOpen&&!menu){
    accelerated=!accelerated;clockScale=accelerated?12:1;
    if(accelerated)runUsedQA=true;
@@ -792,6 +792,16 @@ const alpha=(()=>{
   let consumedMenuClose=false;
   if(matchResult&&!menu){
    if(a&&!lastA)resetBattle();
+   lastStart=plus;lastA=a;lastB=b;lastY=y;lastX=x;lastZR=zr;lastZL=zl;
+   lastLeft=left;lastRight=right;lastL=l;lastR=r;
+   return true;
+  }
+  if(menu&&branchPromptDex){
+   const choices=branchOptions(branchPromptDex);
+   // A branch modal consumes X/Y, never moves menu focus or triggers skill UI.
+   if(x&&!lastX)chooseRankBranch(branchPromptDex,choices[0]);
+   else if(y&&!lastY)chooseRankBranch(branchPromptDex,choices[1]);
+   else if(b&&!lastB)branchPromptDex=0;
    lastStart=plus;lastA=a;lastB=b;lastY=y;lastX=x;lastZR=zr;lastZL=zl;
    lastLeft=left;lastRight=right;lastL=l;lastR=r;
    return true;
@@ -820,7 +830,11 @@ const alpha=(()=>{
    if(menuTab===2){
     const ids=ownedIds();
     if(y&&!lastY)menuIndex=(menuIndex+1)%Math.max(1,ids.length);
-    if(a&&!lastA&&ids.length)upgradeRank(ids[menuIndex%ids.length]);
+    if(a&&!lastA&&ids.length){
+     const dex=ids[menuIndex%ids.length];
+     if(rankOf(dex)>=3&&!rankBranch(dex))branchPromptDex=dex;
+     else upgradeRank(dex);
+    }
    }
    if(menuTab===3&&y&&!lastY){
     const pages=Math.max(1,Math.ceil(Object.keys(profile.pokedex).length/18));
@@ -938,7 +952,8 @@ const alpha=(()=>{
     const dex=owned[i];
     text(165,207+(i-offset)*53,(i===menuIndex?'▶ ':'   ')+
      '#'+dex+' '+(getMon(dex)?.name||'Unknown')+'   x'+profile.box[dex]+
-     '  R'+rankOf(dex)+(profile.selected===dex?'  IN BATTLE':''),
+     '  R'+rankOf(dex)+(rankBranch(dex)?' '+rankBranch(dex).toUpperCase():'')+
+     (profile.selected===dex?'  IN BATTLE':''),
      i===menuIndex?'#ffe4a8':'#d9ebde','21px sans-serif');
    }
   }
@@ -949,8 +964,18 @@ const alpha=(()=>{
     const dex=ids[i],plan=rankPlan(dex);
     text(155,214+(i-offset)*51,(i===menuIndex?'▶ ':'  ')+
      '#'+dex+' '+(getMon(dex)?.name||'')+' R'+plan.rank+'/5  '+
-     plan.available+'/'+plan.cost+' COPIES  '+(plan.eligible?'READY':plan.reason),
+     plan.available+'/'+plan.cost+' COPIES  '+(rankOf(dex)>=3&&!rankBranch(dex)?'CHOOSE BRANCH':plan.eligible?'READY':plan.reason)+
+     (rankBranch(dex)?' ['+rankBranch(dex)+']':''),
      i===menuIndex?(plan.eligible?'#ffe28d':'#d3d4d6'):'#d4e6e0','18px sans-serif');
+   }
+   if(branchPromptDex){
+    const choices=branchOptions(branchPromptDex),mon=getMon(branchPromptDex);
+    ctx.fillStyle='rgba(5,16,29,.98)';ctx.fillRect(223,218,820,310);
+    ctx.strokeStyle='#ffd77e';ctx.lineWidth=3;ctx.strokeRect(223,218,820,310);
+    text(270,276,'RANK 3: '+(mon?.name||'#'+branchPromptDex)+' - CHOOSE BRANCH','#ffe9a4','bold 26px sans-serif');
+    text(270,339,'X: '+choices[0].toUpperCase()+'       Y: '+choices[1].toUpperCase(),'#bcffe5','24px sans-serif');
+    text(270,402,'B: LATER (NO MATERIALS CONSUMED)','#c9deec','18px sans-serif');
+    text(270,455,'Branch is permanent; Rank 5 inherits the same choice.','#ffdfa0','17px sans-serif');
    }
    text(150,598,'R0>1 costs 1 duplicate; R1>2 costs 2 ... R4>5 costs 5. Base copy protected.','#c0efd8','17px sans-serif');
    text(150,626,'Last: '+(lastRankOutcome||'NONE YET')+'  |  Shiny never counts as a duplicate.','#ffeca8','16px sans-serif');
@@ -995,7 +1020,7 @@ const alpha=(()=>{
    text(155,339,'BATTLE: ZR = MEGA (QA)     L = SPRITES');
    text(155,379,'MENU: + = OPEN     L/R = TABS     B = BACK');
    text(155,419,'TEAM/BOX: Y NEXT, A USE  |  RANK: Y NEXT, A UPGRADE');
-   text(155,453,'RECRUIT: A x1, Y x10. No Rank-confirmation dialog.','#d8ffe1','17px sans-serif');
+   text(155,453,'RECRUIT: A x1, Y x10. Rank3 branch: X / Y; B later.','#d8ffe1','17px sans-serif');
    text(155,480,'X/Y/B select skills only with level-up panel open','#c1ffd5','17px sans-serif');
    text(155,506,'R+X / R+Y / R+B are not skill shortcuts','#ffe9b1','17px sans-serif');
    text(155,551,'Active Switch controller mapping (fixed preset)','#bacfe4','17px sans-serif');
@@ -1004,7 +1029,7 @@ const alpha=(()=>{
    text(145,175,'Native Alpha QA: real Kanto waves, six source Orbs, 10 Fusion recipes');
    text(145,216,'Partial battle adapter: not yet the production browser gameplay engine.');
    text(145,257,'Save: sdmc:/switch/pkmsvv-native-alpha/ (two independent copies)');
-   text(145,298,'Real Kanto recruitment odds and 5 Rank levels; no PC/Web save import.');
+   text(145,298,'Rank3 branch + Rank5 hybrid native adapter; no PC/Web import.');
    text(145,339,'Modes not ported: Co-op, Arena, Berry Rescue, 10 chapters.');
    text(145,380,'ZL+R: x12 clock, 99% less damage, 6x boss damage. QA badges not saved.');
    text(145,421,'Fusion MAX+MAX offer: 80/70/60/50/40/30%, 1 roll per level.');
