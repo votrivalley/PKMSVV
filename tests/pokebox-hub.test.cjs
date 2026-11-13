@@ -243,6 +243,14 @@ test('legacy saves can persist Ready Team 6 without migration or modifying Favor
  h.fail=false;
  assert.notEqual(JSON.stringify(legacy),original,'only explicit ready-team edits were saved');
 });
+test('Hidden-only Capsule miss has localized no-spend feedback instead of a blocking Android alert',()=>{
+ const src=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub-ui.js'),'utf8');
+ assert.match(src,/hiddenOnly=alternatives\.length===1&&alternatives\[0\]===2/);
+ assert.match(src,/Chỉ còn Đặc tính Ẩn/);
+ assert.match(src,/Chưa trúng Đặc tính Ẩn\. Không mất Viên nang/);
+ assert.match(src,/quietCapsuleMiss&&e\?\.message===/);
+ assert.match(src,/\},action==='ability'\);/);
+});
 test('clean PokéBox UI keeps six visible slots and relocates migration to Save Manager',()=>{
  const ui=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub-ui.js'),'utf8');
  const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub.css'),'utf8');
