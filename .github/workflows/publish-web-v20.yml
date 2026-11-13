@@ -150,7 +150,7 @@ jobs:
             grep -Fq 'allyAlpha' "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-fusion-evolved.js"
             grep -Fq '#pkmsvv-fx-quality' "dist/cloudflare-v20-release/$route/css/pkmsvv-runtime-controls-qa.css"
           done
-          grep -Fq 'adaptive-fps-v36' dist/cloudflare-v20-release/sw.js
+          grep -Fq 'story-icons-auto-v37' dist/cloudflare-v20-release/sw.js
           grep -Fq 'MIN_ENEMIES=8' dist/cloudflare-v20-release/game/js/ui/pkmsvv-horde-performance.js
           grep -Fq 'function scanActive()' dist/cloudflare-v20-release/ai/game/js/ui/pkmsvv-modal-navigation-qa.js
           for route in game ai/game; do
