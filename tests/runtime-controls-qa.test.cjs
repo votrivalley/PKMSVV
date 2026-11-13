@@ -3,7 +3,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const source=fs.readFileSync(path.resolve(__dirname,'../src/pkmsvv-runtime-controls-qa.js'),'utf8');
 function fixture(){
  const handlers={},timers=new Map(),vals=new Map(),speeds=[],casts=[],toasts=[];
- let seq=0,started=0,raf,pads=[];
+ let seq=0,started=0,raf,pads=[],clock=0;
  const pl={x:0,y:0,dead:false,moves:Array.from({length:8},(_,i)=>({id:'move-'+i,lvl:5,def:{maxLvl:5}}))};
  const G={
   I18n:{lang:'vi'},PKMSVVQuickRegion:{active:true},
@@ -35,12 +35,12 @@ function fixture(){
   addEventListener(k,fn){handlers[k]=fn}
  };
  const win={addEventListener(k,fn){handlers['window:'+k]=fn}};
- vm.runInNewContext(source,{G,document,window:win,navigator:{getGamepads(){return pads}},console,
+ vm.runInNewContext(source,{G,document,window:win,navigator:{getGamepads(){return pads}},performance:{now:()=>clock},console,
   setTimeout(fn,ms){const id=++seq;timers.set(id,{fn,ms});return id},
   clearTimeout(id){timers.delete(id)},
   requestAnimationFrame(fn){raf=fn}});
  return {G,document,handlers,timers,vals,speeds,casts,toasts,pl,elements,
-  api:G.PKMSVVRuntimeControlsQA,setPads(v){pads=v},get started(){return started},
+  api:G.PKMSVVRuntimeControlsQA,setPads(v){pads=v},setClock(v){clock=v},get started(){return started},
   runTimer(ms){for(const [id,t] of [...timers])if(t.ms===ms){timers.delete(id);t.fn();}},
   frame(ts){raf(ts)}};
 }
@@ -237,6 +237,46 @@ test('Rift entry and exit retain 1.5× without accidentally enabling competitive
  assert.equal(f.speeds.at(-1),1.5);
  f.G.PKMSVVArenaSolo={active:true};f.frame(2500);
  assert.equal(f.speeds.at(-1),1,'Arena remains at native speed');
+});
+test('2s configured gamepad active-skill hold toggles AUTO once per hold',()=>{
+ const f=fixture();
+ f.G.PKMSVVPadOrb={bindings(){return {dash:2,speed:5,leaderboard:11}}};
+ const buttons=Array.from({length:12},()=>({pressed:false,value:0}));
+ f.setPads([{connected:true,buttons}]);
+ f.setClock(100);buttons[2].pressed=true;f.api.pollPadShortcuts();
+ f.setClock(1800);f.api.pollPadShortcuts();
+ assert.equal(f.api.castTowardsNearest(),false,'short hold keeps manual skill');
+ f.setClock(2101);f.api.pollPadShortcuts();
+ assert.equal(f.api.castTowardsNearest(),true,'holding active skill for two seconds enables AUTO');
+ f.setClock(4400);f.api.pollPadShortcuts();
+ assert.equal(f.toasts.length,1,'holding longer must not toggle AUTO back off');
+ buttons[2].pressed=false;f.api.pollPadShortcuts();
+ buttons[2].pressed=true;f.setClock(5000);f.api.pollPadShortcuts();
+ f.setClock(7001);f.api.pollPadShortcuts();
+ assert.equal(f.api.castTowardsNearest(),false,'next 2-second hold disables AUTO');
+});
+test('Native active-skill button itself is tinted in AUTO without blocking touch',()=>{
+ const f=fixture(),calls=[],events={},canvas={
+  width:800,height:450,
+  getBoundingClientRect(){return {left:50,top:100,width:400,height:225}},
+  addEventListener(name,fn){events[name]=fn}
+ };
+ f.elements.game=canvas;
+ f.G.Touch={addButton(...args){calls.push(args)}};
+ assert.equal(f.api.installTouchAuto(),true);
+ f.G.Touch.addButton(100,100,80,80,()=>true,4);
+ assert.equal(f.api.toggleDash(),true);
+ const layer=f.elements['pkmsvv-auto-skill-highlight'];
+ assert.ok(layer,'AUTO must create a visible skill-button tint');
+ assert.equal(layer.hidden,false);
+ assert.equal(layer.style.left,'100px');
+ assert.equal(layer.style.top,'150px');
+ assert.equal(layer.style.width,'40px');
+ assert.equal(layer.style.height,'40px');
+ f.api.toggleDash();assert.equal(layer.hidden,true);
+ const css=fs.readFileSync(path.resolve(__dirname,'../src/pkmsvv-runtime-controls-qa.css'),'utf8');
+ assert.match(css,/#pkmsvv-auto-skill-highlight/);
+ assert.match(css,/pointer-events:none/,'skill tint must not steal native touch input');
 });
 test('Auto-pick setting is persistent and available in Settings, not written to save',()=>{
  const f=fixture();
