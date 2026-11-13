@@ -124,12 +124,18 @@ test('Single-Ability Pokémon cannot waste Capsules and hidden-only outcomes ref
  const h=setup(),one=add(h.s),x=hub.item(h.s,one.id);x.abilitySlot=0;
  G.DEX_ABIL[6]=[11,0,0];
  const before=JSON.stringify(h.s);
- assert.throws(()=>hub.useCapsule(one.id,'cap',h.s,()=>.7),/No alternative/);
+ const blocked=hub.useCapsule(one.id,'cap',h.s,()=>.7);
+ assert.equal(blocked.changed,false);
+ assert.equal(blocked.reason,'no-alternative');
  assert.equal(JSON.stringify(h.s),before);
  G.DEX_ABIL[6]=[11,0,13];
- assert.throws(()=>hub.useCapsule(one.id,'cap',h.s,()=>.7),/No alternative/);
+ const missed=hub.useCapsule(one.id,'cap',h.s,()=>.7);
+ assert.equal(missed.changed,false);
+ assert.equal(missed.reason,'hidden-missed');
  assert.equal(JSON.stringify(h.s),before,'missed Hidden roll never consumes a capsule');
+ assert.equal(h.writes,0,'failed capsule must not commit a save');
  assert.equal(hub.useCapsule(one.id,'cap',h.s,()=>.01).slot,2);
+ assert.equal(h.writes,1,'successful reroll commits once');
 });
 test('TM is consumed only for the selected individual, preserving old species TM and other duplicates',()=>{
  const h=setup(),dupe1=add(h.s),dupe2=add(h.s);
@@ -242,6 +248,12 @@ test('legacy saves can persist Ready Team 6 without migration or modifying Favor
  assert.equal(JSON.stringify(legacy),snapshot);
  h.fail=false;
  assert.notEqual(JSON.stringify(legacy),original,'only explicit ready-team edits were saved');
+});
+test('Capsule no-op feedback is localized, and hidden-only odds are explained',()=>{
+ const ui=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub-ui.js'),'utf8');
+ assert.match(ui,/receipt\.changed===false/);
+ assert.match(ui,/Chưa trúng Đặc tính Ẩn\. Không mất Viên nang/);
+ assert.match(ui,/Chỉ còn Đặc tính Ẩn/);
 });
 test('clean PokéBox UI keeps six visible slots and relocates migration to Save Manager',()=>{
  const ui=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub-ui.js'),'utf8');
