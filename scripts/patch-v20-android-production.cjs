@@ -13,13 +13,22 @@ const prod='com.votrivalley.pkmsvv.fulllan';
 const manifest=path.join(decoded,'AndroidManifest.xml');
 let xml=fs.readFileSync(manifest,'utf8');
 if(!xml.includes('package="'+prod+'"'))throw Error('Unexpected original Android package');
-// VersionCode must be strictly newer for Android's in-place install.
-const version=xml.match(/android:versionCode="(\d+)"/);
-if(!version)throw Error('Original Android versionCode missing');
-const nextCode=Math.max(250001,Number(version[1])+1);
+// Apktool 3 stores versionCode under apktool.yml/versionInfo on many APKs,
+// not inside the decoded AndroidManifest. Update both locations when present.
+const toolMeta=path.join(decoded,'apktool.yml');
+if(!fs.existsSync(toolMeta))throw Error('Apktool metadata missing');
+let yaml=fs.readFileSync(toolMeta,'utf8');
+const manifestCode=xml.match(/android:versionCode="(\d+)"/);
+const metaCode=yaml.match(/^(\s*versionCode:\s*)['"]?(\d+)['"]?\s*$/m);
+if(!manifestCode&&!metaCode)throw Error('Original Android versionCode missing from manifest AND apktool.yml');
+const oldCode=Number(manifestCode?.[1]||metaCode?.[2]);
+const nextCode=Math.max(250001,oldCode+1);
 if(!Number.isSafeInteger(nextCode)||nextCode>=2100000000)
  throw Error('Unsafe Android versionCode');
-xml=xml.replace(version[0],'android:versionCode="'+nextCode+'"');
+if(manifestCode)xml=xml.replace(manifestCode[0],'android:versionCode="'+nextCode+'"');
+if(metaCode)yaml=yaml.replace(metaCode[0],metaCode[1]+"'"+nextCode+"'");
+yaml=yaml.replace(/^(\s*versionName:\s*)['"]?[^\n'"]+['"]?\s*$/m,(_,prefix)=>prefix+"'2.0.1'");
+fs.writeFileSync(toolMeta,yaml);
 if(/android:versionName="[^"]+"/.test(xml))
  xml=xml.replace(/android:versionName="[^"]+"/,'android:versionName="2.0.1"');
 // Keep exact production application ID and ContentProvider authorities.
