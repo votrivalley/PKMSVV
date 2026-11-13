@@ -438,6 +438,7 @@
   const validMoves=Object.keys(tmBag).filter(k=>tmBag[k]>0&&Hub.canTeach(s,base,k));
   const abilities=G.DEX_ABIL?.[it.dex]||[];
   const alternatives=Hub.abilityAlternatives(abilities,ability?.slot||0);
+  const hiddenOnly=alternatives.length===1&&alternatives[0]===2;
   const choices=action==='ability'?['cap','caph']:action==='mint'?['mint']:validMoves;
   const name=clean(monName(it.dex));
   const body=action==='ability'?
@@ -449,7 +450,10 @@
      L('Viên nang Đặc tính','Ability Capsule')+' ×'+(bag.cap||0)+'</label>'+
     '<label><input type="radio" name="pkmbx-confirm-choice" value="caph" /> '+
      L('Viên nang Đặc tính Ẩn','Hidden Ability Capsule')+' ×'+(bag.caph||0)+'</label>'+
-    (!alternatives.length?'<p class="pkmbx-confirm-warning">'+
+    (hiddenOnly?'<p class="pkmbx-confirm-warning">'+
+     L('Chỉ còn Đặc tính Ẩn: Viên thường 5% cơ hội, Viên Ẩn 15%. Quay trượt không mất viên.',
+      'Only Hidden Ability remains: 5% normal, 15% Hidden Capsule. Misses cost nothing.')+'</p>':
+     !alternatives.length?'<p class="pkmbx-confirm-warning">'+
      L('Pokémon này chỉ có một Đặc tính.',
        'This Pokémon has only one Ability.')+'</p>':''):
    action==='mint'?
@@ -500,6 +504,14 @@
     if(action==='ability')receipt=Hub.useCapsule(it.id,selected);
     else if(action==='mint')receipt=Hub.useMint(it.id);
     else receipt=Hub.teach(it.id,move);
+    if(action==='ability'&&receipt.changed===false){
+     G.UI?.toast?.(receipt.reason==='hidden-missed'?
+      L('Chưa trúng Đặc tính Ẩn. Không mất Viên nang, có thể thử lại.',
+       'Hidden Ability roll missed. No Capsule spent; try again.'):
+      L('Pokémon này không có Đặc tính khác. Không mất Viên nang.',
+       'No other Ability available; no Capsule spent.'),2800);
+     return;
+    }
     feedback={id:it.id,message:action==='ability'?
      L('Đặc tính mới: ','New Ability: ')+abilityName(receipt.abilityId):
      action==='mint'?L('Tính cách mới: ','New Nature: ')+natureName(receipt.natureId):
