@@ -46,6 +46,20 @@ test('Full Android reuses one Co-op row and calls native LAN instead of Online',
  assert.match(js,/icon\.textContent='🤝'/);
 });
 
+test('Android landscape keeps home navigation icons legible and pixel sharp',()=>{
+ const css=read('src/android/compact-landscape.css');
+ const scoped=css.slice(css.indexOf('/* Keep Android\'s touch rows compact'));
+ assert.ok(scoped.includes('grid-template-columns:32px minmax(0,1fr)!important'),
+  'Android navigation must reserve full-width icon grid columns');
+ assert.ok(scoped.includes('width:32px!important;height:32px!important'),
+  'Android navigation must not reduce icons to 21px');
+ assert.ok(scoped.includes('image-rendering:pixelated!important'),
+  'Pixel sprite art must not blur in Android WebView');
+ assert.ok(!/width:21px!important|font-size:18px!important;flex:0 0 21px/.test(css),
+  'Regressed tiny Android menu icons');
+ assert.match(read('scripts/prepare-full-lan-android.cjs'),/pkmsvv-android-compact-style/);
+});
+
 test('Android landscape uses scoped compact mobile layout and native Wi-Fi discovery',()=>{
  const css=read('src/android/compact-landscape.css');
  assert.match(css,/max-height:700px/);
