@@ -55,5 +55,5 @@ test('Berry team result is bundled, keyboard/controller accessible, and preserve
  assert.ok(nav.includes("'#pkmsvv-berry-team-result'"),'Gamepad navigation sees result sheet');
  assert.ok(css.includes('.pkmsvv-berry-team-result'),'Result sheet must be visible');
  assert.ok(builder.includes("'pkmsvv-berry.css'"),'Latest result styling must be copied into Web');
- assert.ok(builder.includes('adaptive-fps-v36'),'Fresh cache required');
+ assert.ok(builder.includes('story-icons-auto-v37'),'Fresh cache required');
 });
