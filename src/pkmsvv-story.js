@@ -69,11 +69,11 @@ G.PKMSVVStory=(()=>{
    {art:16,speaker:['Tôi','Me'],text:['Dưới chân mình... có dấu chân của những Pokémon khác!','There are other Pokémon footprints here!']},
    {art:16,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Cánh cửa Đồng Hành đã mở. Ngươi không cần chiến đấu một mình nữa.','The Gate of Companions is open. You need not fight alone.']},
    {art:16,speaker:['Tôi','Me'],text:['Mình có thể đi cùng bạn bè và thử sức với họ sao?','I can team up with friends, or compete with them?']},
-   {art:17,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Sống Còn, Tranh Trứng và Co-op là ba thử thách khác nhau.','Survival, Egg Rush, and Co-op are three different challenges.']},
-   {art:17,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Có thể kết nối chung mạng LAN. Thiếu người sẽ có những huấn luyện viên AI tham gia.','Join on a local network. AI trainers can fill empty slots.']},
+   {art:17,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Sống Sót đồng đội, Sống Còn và Tranh Trứng là ba thử thách khác nhau.','Survival, Egg Rush, and Co-op are three different challenges.']},
+   {art:17,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Bạn có thể kết nối cùng bạn bè qua mạng nội bộ (LAN). Nếu thiếu người, các huấn luyện viên máy sẽ tham gia.','Join on a local network. AI trainers can fill empty slots.']},
    {art:17,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Tranh Trứng chỉ tính điểm khi trứng nở cuối trận. Nhiều trứng chưa chắc đã thắng.','Egg Rush reveals points only after the eggs hatch at match end. More eggs do not guarantee victory.']},
-   {art:17,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Sống Còn và Tranh Trứng không chờ lựa chọn kỹ năng; chỉ Co-op mới được đồng lòng đợi nhau.','Survival and Egg Rush never pause for your skill choices; only Co-op can wait together.']},
-   {art:17,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Hoàn thành Sống Sót và Sống Còn để mở Chương 6: Bí Mật Berry. Tranh Trứng là thử thách tự chọn. Sử dụng đủ năm loại Berry mới mở Arena Chương 7.','Complete Co-op Survival and Battle Royale for Chapter 6 Berry Secrets. Egg Rush is optional. Use five Berry types to open Chapter 7 Arena.']},
+   {art:17,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Sống Còn và Tranh Trứng không chờ chọn kỹ năng; chỉ chế độ Sống Sót đồng đội mới có thể đợi nhau.','Survival and Egg Rush never pause for your skill choices; only Co-op can wait together.']},
+   {art:17,speaker:['Giọng nói bí ẩn','Mysterious voice'],text:['Hoàn thành Sống Sót và Sống Còn để mở Chương 6: Bí Mật Berry. Tranh Trứng là thử thách tự chọn. Dùng đủ năm loại Berry để mở Đấu Trường ở Chương 7.','Complete Co-op Survival and Battle Royale for Chapter 6 Berry Secrets. Egg Rush is optional. Use five Berry types to open Chapter 7 Arena.']},
    {art:17,speaker:['Tôi','Me'],text:['Lần này mình sẽ tìm lại ký ức cùng những người bạn!','This time I will recover my memories with friends!']}
   ],
   // Chapter 6: independent Berry journey; previous Arena/Mega save flags stay untouched.
@@ -261,7 +261,7 @@ G.PKMSVVStory=(()=>{
      key==='chapter3-nest'?tr('Ổ trứng còn sót lại giữa vùng đất ký ức','An abandoned nest in the land of lost memories'):
     key==='chapter3-hatch'?tr('Quả trứng nở, Pokémon con đi theo người sống sót','An egg hatches and a baby Pokémon joins the survivor'):
     key==='chapter5-gate'?tr('Cổng Đồng Hành mở ra giữa vùng đất ký ức','The Gate of Companions opens in the land of lost memories'):
-    key==='chapter5-trials'?tr('Ba thử thách Co-op, Sống Còn và Tranh Trứng','Three challenges: Co-op, Survival and Egg Rush'):
+    key==='chapter5-trials'?tr('Ba thử thách Sống Sót, Sống Còn và Tranh Trứng','Three challenges: Co-op, Survival and Egg Rush'):
     key==='chapter6-arena'?tr('Đấu trường vương miện xuất hiện giữa bầu trời','A crown arena rises into the sky'):
     key==='chapter6-champion'?tr('Trận thách đấu Champion quyết định Ấn Chứng Vương Miện','A Champion duel for the Crown Seal'):
     key==='chapter7-seal'?tr('Ấn Chứng đầu tiên đánh thức sức mạnh Mega','The first Crown Seal awakens Mega power'):
