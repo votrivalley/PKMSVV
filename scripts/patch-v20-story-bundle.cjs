@@ -19,14 +19,17 @@ function patchStoryBundle(bundle,source){
   throw Error('Expected precisely one compiled Story assignment');
  const end=findEnd(bundle,a,'old-story'),srcEnd=findEnd(source,b,'new-story');
  const next=bundle.slice(0,a)+source.slice(b,srcEnd)+bundle.slice(end);
- if(!next.includes('Fusion là dung hợp hai kỹ năng đã luyện MAX'))
+ if(!next.includes('Sống Sót đồng đội, Sống Còn và Tranh Trứng là ba thử thách khác nhau.')||
+     !next.includes('Nếu thiếu người, các huấn luyện viên máy sẽ tham gia.'))
+   throw Error('Chapter 5 Vietnamese mode dialogue still stale in compiled bundle');
+  if(!next.includes('Fusion là dung hợp hai kỹ năng đã luyện MAX'))
   throw Error('Fusion source not installed');
  new vm.Script(next,{filename:'pkmsvv-story-v23.js'});
  return next;
 }
 function patchFile(filename){
  const dest=path.resolve(filename),rel=path.relative(root,dest).replace(/\\/g,'/');
- if(!['dist/cloudflare-v20-release/','dist/pokebox-stage4-qa/','decoded-android/']
+ if(!['dist/cloudflare-v20-release/','dist/pokebox-stage4-qa/','dist/pokebox-stage4-pc-qa/','decoded-android/']
    .some(prefix=>rel.startsWith(prefix))||!rel.endsWith('/js/app.min.js'))
   throw Error('Unsafe Story bundle output '+rel);
  const old=fs.readFileSync(dest,'utf8');
