@@ -103,9 +103,16 @@
    s.pkmsvvLegacyFavoriteOverrides[it.dex]=!it.favorite;
   });
  }
- function saveAction(fn){
+ function saveAction(fn,quietCapsuleMiss=false){
   try{fn();renderBox();return true}
-  catch(e){alert(L('Không thể lưu thay đổi: ','Could not save change: ')+e.message);return false;}
+  catch(e){
+   if(quietCapsuleMiss&&e?.message==='No alternative Ability rolled; Capsule not consumed'){
+    G.UI?.toast?.(L('Chưa trúng Đặc tính Ẩn. Không mất Viên nang, có thể thử lại.',
+     'Hidden Ability roll missed. No Capsule spent; try again.'),2800);
+    return false;
+   }
+   alert(L('Không thể lưu thay đổi: ','Could not save change: ')+e.message);return false;
+  }
  }
  // Rendering dozens of animated PokéBox thumbnails in a single click can
  // block the main thread. Paint the hero immediately, then distribute tiny
@@ -438,6 +445,7 @@
   const validMoves=Object.keys(tmBag).filter(k=>tmBag[k]>0&&Hub.canTeach(s,base,k));
   const abilities=G.DEX_ABIL?.[it.dex]||[];
   const alternatives=Hub.abilityAlternatives(abilities,ability?.slot||0);
+  const hiddenOnly=alternatives.length===1&&alternatives[0]===2;
   const choices=action==='ability'?['cap','caph']:action==='mint'?['mint']:validMoves;
   const name=clean(monName(it.dex));
   const body=action==='ability'?
@@ -449,7 +457,10 @@
      L('Viên nang Đặc tính','Ability Capsule')+' ×'+(bag.cap||0)+'</label>'+
     '<label><input type="radio" name="pkmbx-confirm-choice" value="caph" /> '+
      L('Viên nang Đặc tính Ẩn','Hidden Ability Capsule')+' ×'+(bag.caph||0)+'</label>'+
-    (!alternatives.length?'<p class="pkmbx-confirm-warning">'+
+    (hiddenOnly?'<p class="pkmbx-confirm-warning">'+
+     L('Chỉ còn Đặc tính Ẩn: Viên thường có 5% cơ hội, Viên Ẩn có 15%. Trượt không mất viên.',
+      'Only Hidden Ability remains: 5% normal / 15% Hidden Capsule. Misses cost nothing.')+'</p>':
+     !alternatives.length?'<p class="pkmbx-confirm-warning">'+
      L('Pokémon này chỉ có một Đặc tính.',
        'This Pokémon has only one Ability.')+'</p>':''):
    action==='mint'?
@@ -504,7 +515,7 @@
      L('Đặc tính mới: ','New Ability: ')+abilityName(receipt.abilityId):
      action==='mint'?L('Tính cách mới: ','New Nature: ')+natureName(receipt.natureId):
      L('Đã học TM: ','TM learned: ')+String(G.T?G.T(G.Moves.BY_ID[move].name,'move'):move)};
-   });
+   },action==='ability');
    if(!ok){apply.disabled=false;refresh();}
   };
   modal.querySelector('[name="pkmbx-confirm-choice"]:checked')?.focus()||
