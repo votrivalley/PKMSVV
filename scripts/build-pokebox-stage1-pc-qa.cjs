@@ -57,6 +57,8 @@ fs.copyFileSync(path.join(root,'src/pkmsvv-fusion-evolved.css'),
 fs.copyFileSync(path.join(root,'src/pkmsvv-prebattle-qa.css'),path.join(out,'css/pkmsvv-prebattle-qa.css'));
 execFileSync(process.execPath,[path.join(root,'scripts/patch-qa-compiled-modules.cjs'),
  path.join(out,'js/app.min.js')],{stdio:'inherit'});
+// The Windows baseline embeds old Chapter 5 text: replace it in compiled JS.
+require('./patch-v20-story-bundle.cjs').patchFile(path.join(out,'js/app.min.js'));
 const entry=path.join(out,'index.html');let html=fs.readFileSync(entry,'utf8');
 if(!html.includes('</head>')||!html.includes('</body>'))throw Error('PC QA entry changed');
 if(!html.includes('pkmsvv-box-stage1.css'))html=html.replace('</head>','<link rel="stylesheet" href="css/pkmsvv-box-stage1.css">\n</head>');
