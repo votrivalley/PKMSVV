@@ -1,0 +1,211 @@
+name: Pokémon Chuyển Sinh 2.0 Signed Android Update Candidate
+on:
+  push:
+    branches: [release/pokemon-chuyen-sinh-2.0-web]
+    paths:
+      - 'src/pkmsvv-box-stage*.js'
+      - 'src/pkmsvv-box-hub*.js'
+      - 'src/pkmsvv-box-hub*.css'
+      - 'src/pkmsvv-v20-ui-qa.css'
+      - 'src/pkmsvv-quick-region.*'
+      - 'src/pkmsvv-story.*'
+      - 'src/pkmsvv-wiki.js'
+      - 'scripts/patch-v20-story-bundle.cjs'
+      - 'tests/ux-story-knowledge-qa.test.cjs'
+      - 'assets/region-covers/**'
+      - 'scripts/copy-region-covers.cjs'
+      - 'scripts/build-pokebox-stage4-android-qa.cjs'
+      - 'src/pkmsvv-pc-menu-clean-qa.*'
+      - 'src/pkmsvv-modal-navigation-qa.*'
+      - 'src/pkmsvv-runtime-controls-qa.*'
+      - 'src/pkmsvv-box-hub.*'
+      - 'src/pkmsvv-recruitment-qa.*'
+      - 'src/kecleon/upstream/data/shop.js'
+      - 'src/kecleon/pkmsvv-kecleon-ui.js'
+      - 'tests/v20-items-release.test.cjs tests/berry-rescue.test.cjs tests/web-berry-music.test.cjs tests/berry-runtime-release.test.cjs'
+      - 'src/pkmsvv-evolution.js'
+      - 'src/web/pkmsvv-royale.js'
+      - 'src/pkmsvv-arena-solo.js'
+      - 'src/pkmsvv-champion-arena.js'
+      - 'src/lan/arena-pvp.js'
+      - 'tests/champion-round-support-qa.test.cjs'
+      - 'tests/evolution.test.cjs'
+      - 'tests/competitive-nonblocking.test.cjs'
+      - 'tests/arena-pvp.test.cjs'
+      - 'src/pkmsvv-support-scroll-fix.css'
+      - 'src/pkmsvv-support-catalog.js'
+      - 'src/v15/eggs.js'
+      - 'src/pkmsvv-encounter-rarity-qa.js'
+      - 'tests/runtime-controls-qa.test.cjs'
+      - 'src/pkmsvv-fusion-evolved.*'
+      - 'src/pkmsvv-horde-performance.js'
+      - 'src/lan/lan-ai.js'
+      - 'tests/lan-ai-modes.test.cjs'
+      - 'tests/horde-performance.test.cjs'
+      - 'src/pkmsvv-bond-fusion.js'
+      - 'assets/fusion-icons/**'
+      - 'scripts/copy-fusion-icons.cjs'
+      - 'scripts/patch-qa-compiled-modules.cjs'
+      - 'tests/bond-fusion-svv.test.cjs'
+      - 'src/pkmsvv-held-item-ui.js'
+      - 'tests/modal-input-qa.test.cjs'
+      - 'tests/pokebox-stage2-browser.cjs'
+      - 'tests/held-item-choice.test.cjs'
+      - 'AGENTS.md'
+      - 'tests/quick-region.test.cjs'
+      - 'tests/pokebox-hub.test.cjs'
+      - 'package.json'
+      - 'src/pkmsvv-box-stage*.css'
+      - 'scripts/patch-v20-android-production.cjs'
+      - '.github/workflows/build-v20-android-update.yml'
+      - '.github/workflows/pokebox-stage4-android-qa.yml'
+      - 'tests/pokebox-stage*.test.cjs'
+  # QA fallback rebuild requested after upstream fetch failed on 2026-11-11.
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  android-production-update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test complete 2.0 runtime and save compatibility
+        run: node --test tests/lan-ai-modes.test.cjs && npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs && node --test tests/bond-fusion-svv.test.cjs tests/horde-performance.test.cjs tests/ux-story-knowledge-qa.test.cjs tests/pokebox-hub.test.cjs tests/kecleon.test.cjs tests/v20-items-release.test.cjs
+      - name: Require permanent signing, no debug fallback
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.PKMSVV_ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.PKMSVV_ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.PKMSVV_ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.PKMSVV_ANDROID_KEY_PASSWORD }}
+        run: |
+          for v in "$KEYSTORE_BASE64" "$STORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD"; do
+            if [ -z "$v" ]; then echo "::error::Missing permanent Android signing key"; exit 1; fi
+          done
+      - name: Fetch and verify Apktool 3.0.3 (Android 16 resource support)
+        shell: bash
+        run: |
+          # GitHub release CDN sometimes returns 504 to Actions runners.
+          # SourceForge is a third-party mirror, so ALWAYS verify the upstream SHA256.
+          if ! curl --fail --location --retry 3 --retry-all-errors --retry-delay 2 --silent --show-error \
+            https://github.com/iBotPeaches/Apktool/releases/download/v3.0.3/apktool_3.0.3.jar \
+            --output apktool_3.0.3.jar; then
+            rm -f apktool_3.0.3.jar
+            curl --fail --location --retry 5 --retry-all-errors --retry-delay 3 --silent --show-error \
+              https://downloads.sourceforge.net/project/apktool.mirror/v3.0.3/apktool_3.0.3.jar \
+              --output apktool_3.0.3.jar
+          fi
+          echo "dbf930b076c6b9be08d57c449cacefc3bdd6b71ebd59b3066fc0e1f5b14f9423  apktool_3.0.3.jar" | sha256sum -c -
+          java -jar apktool_3.0.3.jar --version
+          test -s "$ANDROID_HOME/build-tools/36.0.0/apksigner" || sdkmanager --install "build-tools;36.0.0"
+      - name: Download prior successful signed Android v1.5.93 APK
+        uses: actions/download-artifact@v4
+        with:
+          name: PKMSVV-Android-FULL-LAN-SIGNED-UPDATE
+          run-id: 41693287992
+          github-token: ${{ github.token }}
+          path: baseline-android
+      - name: Confirm original package and decode baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="$(find baseline-android -name '*.apk' -type f -print -quit)"
+          test -s "$apk"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify "$apk"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk" | grep "package: name='com.votrivalley.pkmsvv.fulllan'"
+          java -jar apktool_3.0.3.jar d -f -s "$apk" -o decoded-android
+      - name: Apply tested 2.0 assets, preserve original Android app ID
+        shell: bash
+        run: |
+          node scripts/patch-v20-android-production.cjs decoded-android
+          test -s decoded-android/assets/public/js/ui/pkmsvv-box-stage4.js
+          grep -q 'package="com.votrivalley.pkmsvv.fulllan"' decoded-android/AndroidManifest.xml
+          grep -q 'android:authorities="com.votrivalley.pkmsvv.fulllan.fileprovider"' decoded-android/AndroidManifest.xml
+          ! grep -Eq 'android:authorities="[^"]*com.votrivalley.pkmsvv.box4qa0' decoded-android/AndroidManifest.xml
+          ! grep -q 'package="com.votrivalley.pkmsvv.box4qa0"' decoded-android/AndroidManifest.xml
+          grep -q 'pkmsvv-box-stage4.js' decoded-android/assets/public/index.html
+          grep -q 'pkmsvv-box-hub-ui.js' decoded-android/assets/public/index.html
+          test -s decoded-android/assets/public/css/pkmsvv-box-hub.css
+          grep -q 'PKMSVV_COLLECTION_FIRST_V22' decoded-android/assets/public/css/pkmsvv-v20-ui-qa.css
+          grep -q 'PKMSVV_STORY_SPLIT_V23' decoded-android/assets/public/css/pkmsvv-story-ui-fix.css
+          grep -q 'PKMSVV_MOBILE_SPEED_EDGE_23' decoded-android/assets/public/css/pkmsvv-runtime-controls-qa.css
+          grep -q 'PKMSVV_POKEMON_HEADER_V24' decoded-android/assets/public/css/pkmsvv-v20-ui-qa.css
+          grep -q 'installTouchAuto' decoded-android/assets/public/js/ui/pkmsvv-runtime-controls-qa.js
+          grep -q 'input.axis=()=>aim' decoded-android/assets/public/js/ui/pkmsvv-runtime-controls-qa.js
+          grep -q 'speedOwnerSafe' decoded-android/assets/public/js/ui/pkmsvv-runtime-controls-qa.js
+          grep -q 'pickRandom' decoded-android/assets/public/js/ui/pkmsvv-box-hub.js
+          grep -Fq "const ORDER = ['mint', 'cap', 'caph']" decoded-android/assets/public/js/app.min.js
+          grep -q 'installVisualBudget' decoded-android/assets/public/js/ui/pkmsvv-fusion-evolved.js
+          grep -q 'PKMSVVHordePerformance' decoded-android/assets/public/js/ui/pkmsvv-horde-performance.js
+          grep -q 'pkmsvv-horde-performance.js' decoded-android/assets/public/index.html
+          grep -q 'pkmsvv-awakening-milestones' decoded-android/assets/public/js/ui/pkmsvv-wiki-qa.js
+          grep -q 'Fusion là dung hợp hai kỹ năng đã luyện MAX' decoded-android/assets/public/js/app.min.js
+          test -s decoded-android/assets/public/js/ui/pkmsvv-fusion-evolved.js
+          test -s decoded-android/assets/public/css/pkmsvv-fusion-evolved.css
+          for id in ember-quick water-tackle grass-spin spark-quick mind-tackle fire-gust bubble-ice leaf-rock shadow-mind thunder-claw; do
+            test -s "decoded-android/assets/public/assets/fusion-icons/${id}.webp"
+          done
+          test -s decoded-android/assets/public/js/ui/pkmsvv-quick-region.js
+          test -s decoded-android/assets/public/css/pkmsvv-quick-region.css
+          test -s decoded-android/assets/public/js/ui/pkmsvv-pc-menu-clean-qa.js
+          test -s decoded-android/assets/public/css/pkmsvv-pc-menu-clean-qa.css
+          test -s decoded-android/assets/public/images/pkmsvv-menu-icons.webp
+          test -s decoded-android/assets/public/js/ui/pkmsvv-modal-navigation-qa.js
+          test -s decoded-android/assets/public/css/pkmsvv-modal-navigation-qa.css
+          test -s decoded-android/assets/public/js/ui/pkmsvv-runtime-controls-qa.js
+          test -s decoded-android/assets/public/css/pkmsvv-runtime-controls-qa.css
+      - name: Rebuild and sign same-package Android update with original certificate
+        shell: bash
+        env:
+          PKMSVV_ANDROID_KEYSTORE_BASE64: ${{ secrets.PKMSVV_ANDROID_KEYSTORE_BASE64 }}
+          PKMSVV_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.PKMSVV_ANDROID_KEYSTORE_PASSWORD }}
+          PKMSVV_ANDROID_KEY_ALIAS: ${{ secrets.PKMSVV_ANDROID_KEY_ALIAS }}
+          PKMSVV_ANDROID_KEY_PASSWORD: ${{ secrets.PKMSVV_ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          umask 077
+          java -jar apktool_3.0.3.jar b decoded-android -o unsigned-v20-hotfix.apk
+          mkdir -p dist/android-v20-update
+          unsigned="aligned-v20-hotfix.apk"
+          output="dist/android-v20-update/Pokemon-Chuyen-Sinh-2.0.1-Android-Signed-Update-CANDIDATE.apk"
+          "$ANDROID_HOME/build-tools/36.0.0/zipalign" -p -f 4 unsigned-v20-hotfix.apk "$unsigned"
+          export PKMSVV_ANDROID_KEYSTORE_FILE="$RUNNER_TEMP/pkmsvv-original-stable.jks"
+          trap 'rm -f "$PKMSVV_ANDROID_KEYSTORE_FILE"' EXIT
+          printf '%s' "$PKMSVV_ANDROID_KEYSTORE_BASE64" | base64 --decode > "$PKMSVV_ANDROID_KEYSTORE_FILE"
+          node scripts/verify-android-signing.cjs --keystore
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" sign --ks "$PKMSVV_ANDROID_KEYSTORE_FILE" \
+            --ks-key-alias "$PKMSVV_ANDROID_KEY_ALIAS" \
+            --ks-pass "pass:$PKMSVV_ANDROID_KEYSTORE_PASSWORD" \
+            --key-pass "pass:$PKMSVV_ANDROID_KEY_PASSWORD" \
+            --out "$output" "$unsigned"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$output"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$output" | grep "package: name='com.votrivalley.pkmsvv.fulllan'"
+                     original="$(find baseline-android -name '*.apk' -type f -print -quit)"
+           original_cert="$("$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs "$original" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -1)"
+           output_cert="$("$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs "$output" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -1)"
+           test -n "$original_cert" && test "$original_cert" = "$output_cert" || { echo "::error::Signing certificate differs from existing app"; exit 1; }
+           "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$output" | grep -q "versionCode='"
+           echo "Original signing certificate matches update candidate."
+           unzip -t "$output" | tail -1
+          unzip -Z -1 "$output" | grep -q '^assets/public/js/ui/pkmsvv-box-stage4.js$'
+          unzip -Z -1 "$output" | grep -q '^assets/public/PKMSVV-PRODUCTION-CANDIDATE.txt
+          echo "Signed candidate preserves original Android package and player save sandbox."
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-Pokemon-Chuyen-Sinh-2.0.1-Android-Update-Candidate
+          path: dist/android-v20-update/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+          echo "QA Android package is separate and cannot replace production."
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-PokeBox-Stage4-Android-QA-SEPARATE-APP
+          path: dist/android-v20-update/*.apk
+          if-no-files-found: error
+          retention-days: 14
