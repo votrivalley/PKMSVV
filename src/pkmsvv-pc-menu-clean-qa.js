@@ -199,7 +199,7 @@
     const old=node.nodeValue||'';
     const updated=old.replace(/^\s*[\p{Extended_Pictographic}\uFE0F\u200D]+\s*/u,'');
     if(updated!==old)node.nodeValue=updated;
-   }else if(node.nodeType===1&&node.matches?.('.pkmsvv-champion-menu-icon,.menu-emoji,.mi-emoji,.mi-icon')){
+   }else if(node.nodeType===1&&node.matches?.('.menu-emoji,.mi-emoji,.mi-icon')){
     node.remove();
    }
   }
