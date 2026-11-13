@@ -124,11 +124,13 @@ test('Single-Ability Pokémon cannot waste Capsules and hidden-only outcomes ref
  const h=setup(),one=add(h.s),x=hub.item(h.s,one.id);x.abilitySlot=0;
  G.DEX_ABIL[6]=[11,0,0];
  const before=JSON.stringify(h.s);
- assert.throws(()=>hub.useCapsule(one.id,'cap',h.s,()=>.7),/No alternative/);
- assert.equal(JSON.stringify(h.s),before);
+ const noAlternative=hub.useCapsule(one.id,'cap',h.s,()=>.7);
+ assert.deepEqual({changed:noAlternative.changed,reason:noAlternative.reason},{changed:false,reason:'no-alternative'});
+ assert.equal(JSON.stringify(h.s),before,'single-Ability action must not mutate save');
  G.DEX_ABIL[6]=[11,0,13];
- assert.throws(()=>hub.useCapsule(one.id,'cap',h.s,()=>.7),/No alternative/);
- assert.equal(JSON.stringify(h.s),before,'missed Hidden roll never consumes a capsule');
+ const hiddenMiss=hub.useCapsule(one.id,'cap',h.s,()=>.7);
+ assert.deepEqual({changed:hiddenMiss.changed,reason:hiddenMiss.reason},{changed:false,reason:'hidden-missed'});
+ assert.equal(JSON.stringify(h.s),before,'missed Hidden roll must not commit or consume a capsule');
  assert.equal(hub.useCapsule(one.id,'cap',h.s,()=>.01).slot,2);
 });
 test('TM is consumed only for the selected individual, preserving old species TM and other duplicates',()=>{
@@ -248,7 +250,7 @@ test('Hidden-only Capsule miss has localized no-spend feedback instead of a bloc
  assert.match(src,/hiddenOnly=alternatives\.length===1&&alternatives\[0\]===2/);
  assert.match(src,/Chỉ còn Đặc tính Ẩn/);
  assert.match(src,/Chưa trúng Đặc tính Ẩn\. Không mất Viên nang/);
- assert.match(src,/quietCapsuleMiss&&e\?\.message===/);
+ assert.match(src,/receipt\.changed===false/);
  assert.match(src,/\},action==='ability'\);/);
 });
 test('clean PokéBox UI keeps six visible slots and relocates migration to Save Manager',()=>{
