@@ -134,9 +134,11 @@ once('dev.html','<script defer src="js/ui/lan-compact-ui.js"></script>',
  '<script defer src="js/ui/lan-compact-ui.js"></script>\n<script defer src="js/ui/pkmsvv-local-shell.js"></script>\n<script defer src="js/ui/pkmsvv-coop-unified.js"></script>');
 // Change labels without assuming the exact Web markup after prior patches.
 let html=read('dev.html');
-const linkPattern=/(<button\b[^>]*\bdata-go="multiplayer"[^>]*>)[^<]*/;
+const linkPattern=/(<button\b[^>]*\bdata-go="multiplayer"[^>]*>)([^<]*)/;
 if(!linkPattern.test(html))throw Error('LAN: Co-op menu button missing');
-html=html.replace(linkPattern,'$1🤝 Co-op');
+// Local-shell owns the Co-op icon and label. Do not prepend a bare emoji,
+// which becomes an anonymous CSS grid row beside the existing icon.
+html=html.replace(linkPattern,(_match,opening,existingText)=>opening+(existingText?.trim()?'Co-op':''));
 const headerPattern=/(<section\b[^>]*id="scr-multiplayer"[\s\S]*?<h2[^>]*>)[^<]*/;
 if(!headerPattern.test(html))throw Error('LAN: Co-op room heading missing');
 html=html.replace(headerPattern,'$1🤝 Co-op · LAN');
