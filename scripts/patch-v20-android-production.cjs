@@ -22,7 +22,7 @@ const manifestCode=xml.match(/android:versionCode="(\d+)"/);
 const metaCode=yaml.match(/^(\s*versionCode:\s*)['"]?(\d+)['"]?\s*$/m);
 if(!manifestCode&&!metaCode)throw Error('Original Android versionCode missing from manifest AND apktool.yml');
 const oldCode=Number(manifestCode?.[1]||metaCode?.[2]);
-const nextCode=Math.max(250001,oldCode+1);
+const nextCode=Math.max(2000114,oldCode+1);
 if(!Number.isSafeInteger(nextCode)||nextCode>=2100000000)
  throw Error('Unsafe Android versionCode');
 if(manifestCode)xml=xml.replace(manifestCode[0],'android:versionCode="'+nextCode+'"');
