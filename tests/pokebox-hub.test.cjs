@@ -131,7 +131,9 @@ test('Single-Ability Pokémon cannot waste Capsules and hidden-only outcomes ref
  const hiddenMiss=hub.useCapsule(one.id,'cap',h.s,()=>.7);
  assert.deepEqual({changed:hiddenMiss.changed,reason:hiddenMiss.reason},{changed:false,reason:'hidden-missed'});
  assert.equal(JSON.stringify(h.s),before,'missed Hidden roll must not commit or consume a capsule');
+ assert.equal(h.writes,0,'no-op must bypass DB.commit entirely');
  assert.equal(hub.useCapsule(one.id,'cap',h.s,()=>.01).slot,2);
+ assert.equal(h.writes,1,'successful reroll commits exactly once');
 });
 test('TM is consumed only for the selected individual, preserving old species TM and other duplicates',()=>{
  const h=setup(),dupe1=add(h.s),dupe2=add(h.s);
