@@ -190,6 +190,23 @@
   }
   relabel(pokemon,['Khám phá','Explore','Pokémon','Pokemon'],'Pokémon');
  }
+ function removeOldMenuGlyphs(button,newIcon){
+  // Legacy launchers carry emoji plus an icon. Remove only purely decorative
+  // glyphs to avoid two icons alongside Co-op and Arena on Android/Web/PC.
+  for(const node of [...button.childNodes]){
+   if(node===newIcon)continue;
+   if(node.nodeType===3){
+    const old=node.nodeValue||'';
+    const updated=old.replace(/^\s*[\p{Extended_Pictographic}\uFE0F\u200D]+\s*/u,'');
+    if(updated!==old)node.nodeValue=updated;
+   }else if(node.nodeType===1&&node.matches?.('.pkmsvv-champion-menu-icon,.menu-emoji,.mi-emoji,.mi-icon')){
+    node.remove();
+   }
+  }
+  for(const icon of [...button.querySelectorAll(':scope > .mi-ico')]){
+   if(icon!==newIcon)icon.remove();
+  }
+ }
  function syncMenuIcons(menu){
   // Three tiny WebP sprite cells; do not affect routing, click handlers,
   // controller focus or the other Pokémon/Ký Ức menu icons.
@@ -219,6 +236,7 @@
    if(!button)continue;
    let art=button.querySelector(':scope > .mi-ico');
    if(!art){art=d.createElement('span');art.className='mi-ico';button.prepend(art);}
+   removeOldMenuGlyphs(button,art);
    if(art.classList.contains('pkmsvv-menu-icon-'+type))continue;
    art.replaceChildren();
    art.className='mi-ico pkmsvv-new-menu-icon pkmsvv-menu-icon-'+type;
