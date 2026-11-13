@@ -37,6 +37,16 @@ test('Beginner guide is first, expanded, and only hidden at permanent 8 of 8',()
  assert.match(clean,/try\{return tracker.progress\(save\).count>=8;/);
  assert.doesNotMatch(clean,/save.pkmsvvChapter2Seen \|\|/);
 });
+test('Chapter 5 names modes and AI LAN join entirely in Vietnamese',()=>{
+ const story=read('src/pkmsvv-story.js');
+ assert.match(story,/Sống Sót đồng đội, Sống Còn và Tranh Trứng là ba thử thách khác nhau/);
+ assert.match(story,/Nếu thiếu người, các huấn luyện viên máy sẽ tham gia/);
+ assert.doesNotMatch(story,/Survival Royale, Egg Rush và Co-op|Có thể Connect chung mạng LAN/);
+ const menu=read('src/pkmsvv-pc-menu-clean-qa.js');
+ assert.match(menu,/function removeOldMenuGlyphs/);
+ assert.match(menu,/removeOldMenuGlyphs\(button,art\)/);
+ assert.match(read('src/pkmsvv-pc-menu-clean-qa.css'),/HOME_MENU_ONE_ICON_V37/);
+});
 test('Source Story replaces exactly one compiled module without appending a second handler',()=>{
  const old='const G={};G.PKMSVVStory=(()=>{return {old:true}})();const after=42;';
  const next=patchStoryBundle(old,read('src/pkmsvv-story.js'));
