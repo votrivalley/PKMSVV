@@ -31,15 +31,37 @@
   padding:clamp(7px,1.4vh,12px)!important;max-width:100%!important;
   margin:0!important;flex:0 0 auto!important;
  }
+ /* Keep Android's touch rows compact, but do not shrink pixel menu art.
+  * The old 21px !important rule overrode 34px PC artwork / the 26px
+  * mobile fallback. On high-density Android screens it made PC, Co-op,
+  * Arena and Pokédex glyphs look like tiny, blurry fragments.
+  * Reserve one 32px column for EVERY menu icon, regardless of source. */
  #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item{
   box-sizing:border-box!important;width:100%!important;
-  min-height:clamp(30px,6.4vh,37px)!important;
-  padding:clamp(3px,1vh,6px) 8px!important;
+  display:grid!important;grid-template-columns:32px minmax(0,1fr)!important;
+  justify-content:stretch!important;align-items:center!important;
+  column-gap:10px!important;
+  min-height:clamp(40px,7.5vh,50px)!important;
+  padding:4px 8px!important;
   font-size:clamp(12px,2.5vh,16px)!important;line-height:1.16!important;
  }
- #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item .mi-ico{
-  width:21px!important;height:21px!important;min-width:21px!important;
-  font-size:18px!important;flex:0 0 21px!important
+ #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item>.mi-ico{
+  box-sizing:border-box!important;
+  grid-column:1!important;grid-row:1 / span 2!important;
+  display:grid!important;place-items:center!important;
+  width:32px!important;height:32px!important;min-width:32px!important;
+  font-size:27px!important;line-height:1!important;flex:0 0 32px!important;
+  margin:0!important;padding:0!important;
+  image-rendering:pixelated!important;
+ }
+ /* The menu mixes pixel sprites, inline image icons and emoji.
+  * Scale artwork to the same slot without browser bilinear smoothing. */
+ #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item>.mi-ico img,
+ #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item>.mi-ico canvas,
+ #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item>.mi-ico svg{
+  display:block!important;width:100%!important;height:100%!important;
+  max-width:100%!important;max-height:100%!important;
+  object-fit:contain!important;image-rendering:pixelated!important;
  }
  #scr-menu.pkmsvv-v15-menu .menu-left .logo{margin-bottom:8px!important}
  #scr-menu.pkmsvv-v15-menu .menu-left .logo>.t1{font-size:clamp(20px,6vh,31px)!important}
@@ -54,5 +76,5 @@
  #scr-menu.pkmsvv-v15-menu .menu-left{padding-top:40px!important}
  #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav{padding-top:42px!important}
  #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item{
-  min-height:29px!important;font-size:13px!important;padding:3px 6px!important}
+  min-height:40px!important;font-size:13px!important;padding:3px 6px!important}
 }
