@@ -460,7 +460,7 @@ test('One-click Rank updates display immediately, turns controls grey and never 
  assert.doesNotMatch(rank,/\bconfirm\(/,'explicit click is enough to spend duplicates');
  assert.match(rank,/rankBusy=true/,'rapid double click protection');
  assert.match(rank,/api\.rankUpAuto\(it\.id,s\)/,'rank mutation runs immediately');
- assert.match(ui,/function saveAction\(fn\)\{[\s\S]*?renderBox\(\)/,
+ assert.match(ui,/function saveAction\(fn(?:,quietCapsuleMiss=false)?\)\{[\s\S]*?renderBox\(\)/,
   'successful mutation must redraw the cards and details');
  assert.match(ui,/progress\?\.canRank\?' rank-ready'/,
   'left grid readiness must be calculated from fresh save');
