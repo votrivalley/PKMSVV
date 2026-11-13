@@ -1,0 +1,28 @@
+name: Pokebox Capsule Global Regression
+on:
+  push:
+    branches: [feature/switch-native-full-port]
+    paths:
+      - 'src/pkmsvv-box-hub.js'
+      - 'src/pkmsvv-box-hub-ui.js'
+      - 'tests/pokebox-hub.test.cjs'
+      - '.github/workflows/pokebox-capsule-regression.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  capsule-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check Hub source syntax
+        run: |
+          node --check src/pkmsvv-box-hub.js
+          node --check src/pkmsvv-box-hub-ui.js
+          node --check tests/pokebox-hub.test.cjs
+      - name: Verify old-save migration and every capsule outcome
+        run: node --test tests/pokebox-hub.test.cjs
