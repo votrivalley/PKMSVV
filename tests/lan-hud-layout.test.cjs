@@ -109,3 +109,14 @@ test('v1.5.30 compiled HUD wires one notice and suppresses duplicate mode notice
  assert.match(fs.readFileSync(require.resolve('../src/web/pkmsvv-royale.js'),'utf8'),/player\?\.dead&&!G\.PKMSVVDeathHUD/);
  assert.match(fs.readFileSync(require.resolve('../src/web/pkmsvv-egg-rush.js'),'utf8'),/pl\?\.dead&&active&&!G\.PKMSVVDeathHUD/);
 });
+
+test('Android LAN menu keeps a single icon cell, without anonymous emoji grid items',()=>{
+ const script=fs.readFileSync(require.resolve('../scripts/patch-lan.cjs'),'utf8');
+ const shell=fs.readFileSync(require.resolve('../src/shared/local-shell.js'),'utf8');
+ const css=fs.readFileSync(require.resolve('../src/android/compact-landscape.css'),'utf8');
+ assert.ok(!script.includes("html=html.replace(linkPattern,'$1🤝 Co-op')"));
+ assert.ok(shell.includes("copy.className='pkmsvv-menu-copy'"));
+ assert.ok(shell.includes("icon.replaceChildren(document.createTextNode('🤝'))"));
+ assert.ok(shell.includes("child.nodeType===Node.TEXT_NODE&&child.textContent.trim()"));
+ assert.ok(css.includes('grid-template-columns:32px minmax(0,1fr)'));
+});
