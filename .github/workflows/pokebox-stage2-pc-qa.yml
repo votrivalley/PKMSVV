@@ -10,6 +10,11 @@ on:
       - 'src/lan/lan-ai.js'
       - 'tests/lan-ai-modes.test.cjs'
       - 'src/pkmsvv-quick-region.js'
+      - 'src/pkmsvv-runtime-controls-qa.css'
+      - 'src/pkmsvv-pc-menu-clean-qa.*'
+      - 'src/pkmsvv-story.js'
+      - 'scripts/patch-v20-story-bundle.cjs'
+      - 'tests/ux-story-knowledge-qa.test.cjs'
       - 'src/pkmsvv-runtime-controls-qa.js'
       - 'src/pkmsvv-modal-navigation-qa.js'
       - 'tests/modal-input-qa.test.cjs'
@@ -92,6 +97,14 @@ jobs:
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/css/pkmsvv-runtime-controls-qa.css
           test -s dist/pokebox-stage4-pc-qa/resources/lan-site/game/css/pkmsvv-box-stage3.css
           grep -q pkmsvv-box-stage4 dist/pokebox-stage4-pc-qa/resources/lan-site/game/index.html
+      - name: Verify newest Chapter 5, menu and AUTO skills in packaged PC
+        run: |
+          root="dist/pokebox-stage4-pc-qa/resources/lan-site/game"
+          grep -Fq 'Sống Sót đồng đội, Sống Còn và Tranh Trứng là ba thử thách khác nhau.' "$root/js/app.min.js"
+          grep -Fq 'removeOldMenuGlyphs' "$root/js/ui/pkmsvv-pc-menu-clean-qa.js"
+          grep -Fq 'HOME_MENU_ONE_ICON_V37' "$root/css/pkmsvv-pc-menu-clean-qa.css"
+          grep -Fq 'refreshAutoSkillHighlight' "$root/js/ui/pkmsvv-runtime-controls-qa.js"
+          grep -Fq 'AUTO_ACTIVE_SKILL_TINT_V37' "$root/css/pkmsvv-runtime-controls-qa.css"
       - uses: actions/upload-artifact@v4
         with:
           name: PKMSVV-PokeBox-Stage4-Windows-QA-ONLY
