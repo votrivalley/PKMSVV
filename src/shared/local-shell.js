@@ -84,25 +84,38 @@
      else if(isPages)openLanDialog();else window.PKMSVVOpenAndroidLan?.();
     };
    }
-   // MenuUI.init inserts its original Online picture inside .mi-ico.
-   // REPLACE that picture instead of adding a second emoji next to the text.
-   const icons=Array.from(coop.querySelectorAll?.(':scope > .mi-ico')||[]);
-   let icon=icons[0]||coop.querySelector?.('.mi-ico');
-   if(!icon&&typeof coop.insertBefore==='function'){
+   // A menu item is a CSS grid: naked text nodes become anonymous grid
+   // children and push icon artwork into another row on Android WebView.
+   // Keep exactly one icon cell and one labeled text column on every refresh.
+   const icons=[...coop.children].filter(n=>n.classList?.contains('mi-ico'));
+   let icon=icons[0]||coop.querySelector('.mi-ico');
+   if(!icon){
     icon=document.createElement('span');icon.className='mi-ico pkmsvv-coop-icon';
     coop.insertBefore(icon,coop.firstChild);
-   }
-   if(icon){icon.textContent='🤝';icon.setAttribute?.('aria-hidden','true');}
+   }else if(icon.parentElement!==coop)coop.insertBefore(icon,coop.firstChild);
+   icon.replaceChildren(document.createTextNode('🤝'));
+   icon.setAttribute('aria-hidden','true');
    for(const extra of icons.slice(1))extra.remove();
-   let label=Array.from(coop.childNodes).find(n=>n.nodeType===Node.TEXT_NODE&&n.textContent.trim());
-   if(label)label.textContent=' Co-op'; // NO extra 🤝 in label.
-   else{
-    label=coop.querySelector('.pkmsvv-local-coop');
-    if(!label){label=document.createElement('span');label.className='pkmsvv-local-coop';coop.appendChild(label);}
-    label.textContent='Co-op';
+   let copy=[...coop.children].find(n=>n.classList?.contains('pkmsvv-menu-copy'));
+   if(!copy){
+    copy=document.createElement('span');copy.className='pkmsvv-menu-copy';
+    coop.appendChild(copy);
    }
-   const small=coop.querySelector('small');
+   let label=copy.querySelector('.pkmsvv-menu-label');
+   if(!label){
+    label=document.createElement('span');label.className='pkmsvv-menu-label';
+    copy.prepend(label);
+   }
+   label.textContent='Co-op';
+   const small=coop.querySelector(':scope > small')||copy.querySelector('small');
+   if(small&&small.parentElement!==copy)copy.appendChild(small);
    if(small)small.textContent=isPages?L('PC Host cùng Wi-Fi · nhập IP','PC Host on same Wi-Fi · enter IP'):L('Co-op LAN · cùng Wi-Fi','Co-op LAN · same Wi-Fi');
+   // Remove old label/emoji nodes. Do not replace the parent button or its
+   // handlers, dataset, lock state or focus — controller support stays intact.
+   for(const child of [...coop.childNodes]){
+    if(child.nodeType===Node.TEXT_NODE&&child.textContent.trim())child.remove();
+    if(child.classList?.contains('pkmsvv-local-coop'))child.remove();
+   }
   }
   const topbar=el('topbar');
   if(topbar){
