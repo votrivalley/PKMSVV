@@ -205,18 +205,28 @@
   return pickRandom(standard,random);
  }
  function useCapsule(id,kind='cap',s=save(),random=Math.random){
+  // A failed hidden-only roll or a single-Ability Pokémon is a no-op:
+  // never mutate the old save, write a new commit, or spend a Capsule.
+  if(!valid(s))throw Error('Create PokéBox from a backup before editing');
+  const current=speciesBase(s,item(s,id));
+  if(!current)throw Error('Pokémon not found');
+  if(kind!=='cap'&&kind!=='caph')throw Error('Unknown Capsule kind');
+  if(!(s.bag?.[kind]>0))throw Error('No Capsule in Bag');
+  const arr=typeof G==='undefined'?[]:G.DEX_ABIL?.[current.dex]||[];
+  const alternatives=abilityAlternatives(arr,current.abilitySlot);
+  if(!alternatives.length)
+   return {id,kind,changed:false,reason:'no-alternative',left:s.bag[kind]||0};
+  const slot=rollAbilitySlot(arr,current.abilitySlot,kind,random);
+  if(slot===null)
+   return {id,kind,changed:false,reason:'hidden-missed',
+    chance:kind==='caph'?0.15:HIDDEN_RATE,left:s.bag[kind]||0};
   return atomic(s,draft=>{
    const x=speciesBase(draft,item(draft,id));
    if(!x)throw Error('Pokémon not found');
-   if(kind!=='cap'&&kind!=='caph')throw Error('Unknown Capsule kind');
-   if(!(draft.bag?.[kind]>0))throw Error('No Capsule in Bag');
-   const arr=typeof G==='undefined'?[]:G.DEX_ABIL?.[x.dex]||[];
-   const slot=rollAbilitySlot(arr,x.abilitySlot,kind,random);
-   if(slot===null)throw Error('No alternative Ability rolled; Capsule not consumed');
    const before=x.abilitySlot;
    draft.bag[kind]--;if(!draft.bag[kind])delete draft.bag[kind];
    x.abilitySlot=slot;
-   return {id,kind,from:before,slot,hidden:slot===2,
+   return {id,kind,changed:true,from:before,slot,hidden:slot===2,
     chance:kind==='caph'?0.15:HIDDEN_RATE,
     abilityId:arr[slot],left:draft.bag[kind]||0};
   });
