@@ -266,3 +266,13 @@
 #pkmsvv-wiki-overlay .pkmsvv-pc-learn>button:focus-visible{
  outline:3px solid #ffe590!important;outline-offset:2px;
 }
+
+/* HOME_MENU_ONE_ICON_V37: the launcher preserves labels/handlers; only the
+ decorative legacy emoji is suppressed when a WebP sprite is installed. */
+#scr-menu :is(.menu-item,[data-go])>.pkmsvv-new-menu-icon+.pkmsvv-champion-menu-icon,
+#scr-menu :is(.menu-item,[data-go])>.pkmsvv-champion-menu-icon,
+#scr-menu :is(.menu-item,[data-go])>.menu-emoji,
+#scr-menu :is(.menu-item,[data-go])>.mi-emoji{display:none!important}
+#scr-menu .menu-right .menu-list .mi-ico.pkmsvv-new-menu-icon{
+ display:inline-block!important;vertical-align:middle!important;flex-shrink:0!important
+}
