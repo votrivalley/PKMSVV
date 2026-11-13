@@ -26,7 +26,7 @@ const nextCode=Math.max(250001,oldCode+1);
 if(!Number.isSafeInteger(nextCode)||nextCode>=2100000000)
  throw Error('Unsafe Android versionCode');
 if(manifestCode)xml=xml.replace(manifestCode[0],'android:versionCode="'+nextCode+'"');
-if(metaCode)yaml=yaml.replace(metaCode[0],metaCode[1]+"'"+nextCode+"'");
+if(metaCode)yaml=yaml.replace(metaCode[0],metaCode[1]+String(nextCode));
 yaml=yaml.replace(/^(\s*versionName:\s*)['"]?[^\n'"]+['"]?\s*$/m,(_,prefix)=>prefix+"'2.0.1'");
 fs.writeFileSync(toolMeta,yaml);
 if(/android:versionName="[^"]+"/.test(xml))
