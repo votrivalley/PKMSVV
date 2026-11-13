@@ -511,6 +511,14 @@
     if(action==='ability')receipt=Hub.useCapsule(it.id,selected);
     else if(action==='mint')receipt=Hub.useMint(it.id);
     else receipt=Hub.teach(it.id,move);
+    if(action==='ability'&&receipt.changed===false){
+     G.UI?.toast?.(receipt.reason==='hidden-missed'?
+      L('Chưa trúng Đặc tính Ẩn. Không mất Viên nang, có thể thử lại.',
+       'Hidden Ability roll missed; no Capsule spent. Try again.'):
+      L('Pokémon này không có Đặc tính khác để đổi. Không mất Viên nang.',
+       'No other Ability available. No Capsule spent.'),2800);
+     return;
+    }
     feedback={id:it.id,message:action==='ability'?
      L('Đặc tính mới: ','New Ability: ')+abilityName(receipt.abilityId):
      action==='mint'?L('Tính cách mới: ','New Nature: ')+natureName(receipt.natureId):
