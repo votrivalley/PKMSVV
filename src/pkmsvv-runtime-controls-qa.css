@@ -196,3 +196,17 @@
  #scr-settings .pkmsvv-fx-setting{gap:7px;padding:8px;font-size:12px}
  #scr-settings #pkmsvv-fx-quality{max-width:58%;font-size:12px}
 }
+
+/* AUTO_ACTIVE_SKILL_TINT_V37: exact touch skill hitbox, never blocks input. */
+#pkmsvv-auto-skill-highlight.pkmsvv-auto-skill-highlight{
+ position:fixed!important;z-index:7900!important;pointer-events:none!important;
+ box-sizing:border-box!important;border:3px solid #63ffaf!important;
+ border-radius:13px!important;background:rgba(36,204,122,.32)!important;
+ box-shadow:0 0 0 2px rgba(5,76,42,.8),inset 0 0 14px rgba(62,255,138,.3),0 0 15px rgba(71,255,135,.72)!important;
+ display:flex!important;align-items:flex-end!important;justify-content:center!important;
+}
+#pkmsvv-auto-skill-highlight::after{content:'AUTO';display:block;
+ background:#0b6648;color:#f2ffcf;border:1px solid #9af9c7;
+ border-radius:5px;padding:1px 4px;font:900 clamp(9px,1.4vw,13px)/1.1 sans-serif;
+ text-shadow:0 1px 1px #143b2d;transform:translateY(3px)}
+#pkmsvv-auto-skill-highlight[hidden]{display:none!important}
