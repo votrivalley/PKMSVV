@@ -27,6 +27,7 @@
  // Track only G.Touch.addButton's pad=4 active-skill hitbox. Its callback is
  // kept for ordinary taps; a 2s stationary press toggles automatic casting.
  let nativeDashBox=null,nativeDashStamp=0,touchHeld=null,touchHoldTimer=null;
+ let padDashHeldSince=null,padDashToggled=false,autoSkillHighlight=null;
  let touchBoundCanvas=null,suppressNativeDashUntil=0;
  function toast(vi,en){G.UI?.toast?.(L(vi,en),2000);}
  // Speed is a solo/AI training aid, never a competitive advantage.
@@ -197,7 +198,7 @@
    'Đã TẮT tự động dùng kỹ năng.',
    autoDash?'Auto active skill ON (hold F for 2 seconds to disable).':
    'Auto active skill OFF.');
-  refreshLabels();return true;
+  refreshLabels();refreshAutoSkillHighlight();return true;
  }
  // A reversible Co-op ranking panel, derived from LIVE party states.
  // It never modifies kills, rank rewards or a player's save.
@@ -288,7 +289,7 @@
  function pollPadShortcuts(){
   const pads=typeof navigator!=='undefined'&&navigator.getGamepads?.();
   const pad=pads&&[...pads].find(p=>p?.connected);
-  if(!pad){prevPadSpeed=false;prevPadRank=false;return;}
+  if(!pad){prevPadSpeed=false;prevPadRank=false;padDashHeldSince=null;padDashToggled=false;return;}
   const map=G.PKMSVVPadOrb?.bindings?.()||{};
   const pressed=index=>Number.isInteger(index)&&!!pad.buttons?.[index]&&
    (pad.buttons[index].pressed||pad.buttons[index].value>.5);
@@ -303,6 +304,18 @@
   const editing=open||isEditing()||levelShown;
   if(!editing&&speed&&!prevPadSpeed&&canSpeed())setSpeed(!fast);
   if(!editing&&board&&!prevPadRank&&canRanking())toggleRanking();
+  // Hold the configured active-skill pad button for 2 seconds. Native quick
+  // taps still go to the actual game combat handler.
+  const dashPressed=pressed(Number.isInteger(map.dash)?map.dash:2);
+  if(editing||!playing()||!dashPressed){padDashHeldSince=null;padDashToggled=false;}
+  else{
+   const now=typeof performance!=='undefined'&&typeof performance.now==='function'?
+    performance.now():Date.now();
+   if(padDashHeldSince===null)padDashHeldSince=now;
+   if(!padDashToggled&&now-padDashHeldSince>=2000){
+    padDashToggled=true;toggleDash();
+   }
+  }
   prevPadSpeed=speed;prevPadRank=board;
  }
  function dashKey(){
@@ -388,8 +401,32 @@
   if(touchHoldTimer!==null){clearTimeout(touchHoldTimer);touchHoldTimer=null;}
   touchHeld=null;
  }
+ // Tint the exact native active-skill canvas hitbox, regardless of resolution.
+ // The highlight receives NO pointers, so it never steals the normal dash.
+ function refreshAutoSkillHighlight(){
+  let layer=autoSkillHighlight;
+  if(!layer&&autoDash){
+   layer=document.createElement('span');layer.id='pkmsvv-auto-skill-highlight';
+   layer.className='pkmsvv-auto-skill-highlight';
+   layer.setAttribute('aria-hidden','true');
+   document.body.append(layer);autoSkillHighlight=layer;
+  }
+  if(!layer)return;
+  const cv=touchBoundCanvas||byId('game'),box=nativeDashBox;
+  const rect=cv?.getBoundingClientRect?.();
+  const shown=autoDash&&playing()&&!!box&&!!rect&&rect.width>0&&rect.height>0&&
+   Number(cv?.width)>0&&Number(cv?.height)>0&&Date.now()-nativeDashStamp<1200;
+  layer.hidden=!shown;
+  if(!shown)return;
+  if(!layer.style)layer.style={};
+  const scaleX=rect.width/cv.width,scaleY=rect.height/cv.height;
+  layer.style.left=(rect.left+box.x*scaleX)+'px';
+  layer.style.top=(rect.top+box.y*scaleY)+'px';
+  layer.style.width=(box.w*scaleX)+'px';
+  layer.style.height=(box.h*scaleY)+'px';
+ }
  function startTouchHold(e){
-  if(touchHeld||!G.PKMSVVDash?.preview?.(G.Game?.player))return;
+  if(touchHeld||!playing())return;
   if(e.pointerType==='mouse'&&e.button!==0)return;
   const at=nativeDashHit(e);if(!at)return;
   const token=e.pointerId??'touch';
@@ -453,7 +490,7 @@
   function wrapped(...args){
    const riftTransfer=speedOwnerSafe()&&(riftActive()||riftPassage);
    fast=false;speedOwner=null;lastSpeedRepairTs=0;
-   autoDash=false;rankingOpen=false;cancelHold();clearTouchHold();nativeDashBox=null;choiceToken=null;choicePending=false;lastSpeedState=null;lastRiftState=false;riftPassage=false;
+   autoDash=false;rankingOpen=false;cancelHold();clearTouchHold();nativeDashBox=null;padDashHeldSince=null;padDashToggled=false;refreshAutoSkillHighlight();choiceToken=null;choicePending=false;lastSpeedState=null;lastRiftState=false;riftPassage=false;
    G.Game?.debugSpeed?.(1);
    const result=oldStart.apply(this,args);
    if(riftTransfer&&G.Game?.player&&!G.Game.player.dead&&
@@ -500,7 +537,7 @@
  installHoverWater();
  function frame(ts){
   if(ts-lastUI>=250){
-   lastUI=ts;installHoverWater();installAutoPick();ensureArenaShinyGuard();installTouchAuto();ensureSpeed();ensureRanking();ensureSettings();ensureLevelup();
+   lastUI=ts;installHoverWater();installAutoPick();ensureArenaShinyGuard();installTouchAuto();ensureSpeed();refreshAutoSkillHighlight();ensureRanking();ensureSettings();ensureLevelup();
     const state=G.Game?.state,riftNow=riftActive();
     if(riftNow&&riftSpeedContext())riftPassage=true;
     if(fast&&state==='playing'&&(canSpeed()||speedOwnerSafe())&&
@@ -525,5 +562,5 @@
   if(typeof requestAnimationFrame==='function')requestAnimationFrame(frame);
  }
  if(typeof requestAnimationFrame==='function')requestAnimationFrame(frame);
- G.PKMSVVRuntimeControlsQA={full,maxLevel,enabled,setEnabled,canSpeed,riftActive,riftSpeedContext,arenaMatch,setSpeed,toggleDash,target,castTowardsNearest,ensureLevelup,installAutoPick,ensureArenaShinyGuard,canRanking,rankingRows,toggleRanking,ensureRanking,pollPadShortcuts,actionKey,ensureSettings,ensureSpeed,installTouchAuto,nativeDashHit,installHoverWater};
+ G.PKMSVVRuntimeControlsQA={full,maxLevel,enabled,setEnabled,canSpeed,riftActive,riftSpeedContext,arenaMatch,setSpeed,toggleDash,target,castTowardsNearest,ensureLevelup,installAutoPick,ensureArenaShinyGuard,canRanking,rankingRows,toggleRanking,ensureRanking,pollPadShortcuts,actionKey,ensureSettings,ensureSpeed,installTouchAuto,nativeDashHit,refreshAutoSkillHighlight,installHoverWater};
 })();
