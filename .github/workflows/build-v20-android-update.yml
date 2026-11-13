@@ -159,7 +159,7 @@ jobs:
           test -s decoded-android/assets/public/css/pkmsvv-modal-navigation-qa.css
           test -s decoded-android/assets/public/js/ui/pkmsvv-runtime-controls-qa.js
           test -s decoded-android/assets/public/css/pkmsvv-runtime-controls-qa.css
-      - name: Rebuild and sign same-package Android update with original certificate
+      - name: Rebuild signed in-place update candidate
         shell: bash
         env:
           PKMSVV_ANDROID_KEYSTORE_BASE64: ${{ secrets.PKMSVV_ANDROID_KEYSTORE_BASE64 }}
@@ -185,27 +185,18 @@ jobs:
             --out "$output" "$unsigned"
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$output"
           "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$output" | grep "package: name='com.votrivalley.pkmsvv.fulllan'"
-                     original="$(find baseline-android -name '*.apk' -type f -print -quit)"
-           original_cert="$("$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs "$original" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -1)"
-           output_cert="$("$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs "$output" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -1)"
-           test -n "$original_cert" && test "$original_cert" = "$output_cert" || { echo "::error::Signing certificate differs from existing app"; exit 1; }
-           "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$output" | grep -q "versionCode='"
-           echo "Original signing certificate matches update candidate."
-           unzip -t "$output" | tail -1
+          original="$(find baseline-android -name '*.apk' -type f -print -quit)"
+          original_cert="$("$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs "$original" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -1)"
+          output_cert="$("$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs "$output" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -1)"
+          test -n "$original_cert" && test "$original_cert" = "$output_cert" || { echo "::error::Signing certificate differs from installed app"; exit 1; }
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$output" | grep -q "versionCode='"
+          unzip -t "$output" | tail -1
           unzip -Z -1 "$output" | grep -q '^assets/public/js/ui/pkmsvv-box-stage4.js$'
-          unzip -Z -1 "$output" | grep -q '^assets/public/PKMSVV-PRODUCTION-CANDIDATE.txt
-          echo "Signed candidate preserves original Android package and player save sandbox."
+          unzip -Z -1 "$output" | grep -q '^assets/public/PKMSVV-PRODUCTION-CANDIDATE.txt$'
+          echo "Signed candidate retains original package, signature and save sandbox."
       - uses: actions/upload-artifact@v4
         with:
           name: PKMSVV-Pokemon-Chuyen-Sinh-2.0.1-Android-Update-Candidate
-          path: dist/android-v20-update/*.apk
-          if-no-files-found: error
-          retention-days: 14
-
-          echo "QA Android package is separate and cannot replace production."
-      - uses: actions/upload-artifact@v4
-        with:
-          name: PKMSVV-PokeBox-Stage4-Android-QA-SEPARATE-APP
           path: dist/android-v20-update/*.apk
           if-no-files-found: error
           retention-days: 14
