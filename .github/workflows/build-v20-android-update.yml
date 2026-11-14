@@ -16,6 +16,12 @@ on:
       - 'scripts/copy-region-covers.cjs'
       - 'scripts/build-pokebox-stage4-android-qa.cjs'
       - 'src/pkmsvv-pc-menu-clean-qa.*'
+      - 'src/pkmsvv-pippi.*'
+      - 'src/pkmsvv-global-power*.js'
+      - 'scripts/patch-qa-compiled-modules.cjs'
+      - 'scripts/prepare-game.cjs'
+      - 'tests/pippi-companion.test.cjs'
+      - 'tests/global-upgrades.test.cjs'
       - 'src/pkmsvv-modal-navigation-qa.*'
       - 'src/pkmsvv-runtime-controls-qa.*'
       - 'src/pkmsvv-box-hub.*'
@@ -75,7 +81,7 @@ jobs:
         with:
           node-version: '22'
       - name: Test complete 2.0 runtime and save compatibility
-        run: node --test tests/lan-ai-modes.test.cjs && npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs && node --test tests/bond-fusion-svv.test.cjs tests/horde-performance.test.cjs tests/ux-story-knowledge-qa.test.cjs tests/pokebox-hub.test.cjs tests/kecleon.test.cjs tests/v20-items-release.test.cjs
+        run: node --test tests/pippi-companion.test.cjs tests/global-upgrades.test.cjs && node --test tests/lan-ai-modes.test.cjs && npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs && node --test tests/bond-fusion-svv.test.cjs tests/horde-performance.test.cjs tests/ux-story-knowledge-qa.test.cjs tests/pokebox-hub.test.cjs tests/kecleon.test.cjs tests/v20-items-release.test.cjs
       - name: Require permanent signing, no debug fallback
         shell: bash
         env:
@@ -153,6 +159,11 @@ jobs:
           test -s decoded-android/assets/public/js/ui/pkmsvv-quick-region.js
           test -s decoded-android/assets/public/css/pkmsvv-quick-region.css
           test -s decoded-android/assets/public/js/ui/pkmsvv-pc-menu-clean-qa.js
+          test -s decoded-android/assets/public/js/ui/pkmsvv-pippi.js
+          test -s decoded-android/assets/public/css/pkmsvv-pippi.css
+          grep -q 'pkmsvv-pippi.js' decoded-android/assets/public/index.html
+          grep -q 'pkmsvv-pippi.css' decoded-android/assets/public/index.html
+          grep -q 'G.PKMSVVPippi' decoded-android/assets/public/js/app.min.js
           test -s decoded-android/assets/public/css/pkmsvv-pc-menu-clean-qa.css
           test -s decoded-android/assets/public/images/pkmsvv-menu-icons.webp
           test -s decoded-android/assets/public/js/ui/pkmsvv-modal-navigation-qa.js
