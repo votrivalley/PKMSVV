@@ -117,12 +117,15 @@ test('LAN menu preserves pixel icons and aligns the PC art with its text',()=>{
  const androidCss=fs.readFileSync(require.resolve('../src/android/compact-landscape.css'),'utf8');
  const native=fs.readFileSync(require.resolve('../src/android/full-lan-ui.js'),'utf8');
  const lan=fs.readFileSync(require.resolve('../scripts/patch-lan.cjs'),'utf8');
+ const web=fs.readFileSync(require.resolve('../scripts/prepare-web.cjs'),'utf8');
  assert.ok(shell.includes("icons.find(n=>n.querySelector('img,svg,canvas'))"));
  assert.ok(shell.includes("G.Icons?.html?.('online',28)"));
  assert.ok(!shell.includes("icon.replaceChildren(document.createTextNode('🤝'))"));
  assert.ok(native.includes("G?.Icons?.html?.('online',28)"));
  assert.ok(!native.includes("icon.textContent='🤝'"));
  assert.ok(!lan.includes("html=html.replace(linkPattern,'$1🤝 Co-op')"));
+ assert.ok(!web.includes('aria-hidden="true">🤝</span>'));
+ assert.ok(web.includes('pkmsvv-menu-copy'));
  assert.ok(localCss.includes('grid-row:1 / span 2!important'));
  assert.ok(localCss.includes('grid-template-columns:34px minmax(0,1fr)!important'));
  assert.ok(androidCss.includes('grid-template-columns:32px minmax(0,1fr)!important'));
