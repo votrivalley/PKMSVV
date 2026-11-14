@@ -45,7 +45,8 @@
   padding:4px 8px!important;
   font-size:clamp(12px,2.5vh,16px)!important;line-height:1.16!important;
  }
- #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item>.mi-ico{
+ #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item>.mi-ico,
+ #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item>.pkmsvv-champion-menu-icon{
   box-sizing:border-box!important;
   grid-column:1!important;grid-row:1 / span 2!important;
   display:grid!important;place-items:center!important;
