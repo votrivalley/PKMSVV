@@ -136,43 +136,80 @@
  // recorded movement trail instead of sticking to a viewport offset.
  // Sampling actual player displacement inherently respects water/terrain
  // slowdowns and speed multipliers (including x1.5).
+ const FOLLOW_DISTANCE=72;
+ const SAFE_DISTANCE=56;
+ function followTarget(history,offset=FOLLOW_DISTANCE){
+  if(!history?.length)return null;
+  let remain=offset;
+  for(let i=history.length-1;i>0;i--){
+   const newer=history[i],older=history[i-1];
+   const dx=newer.x-older.x,dy=newer.y-older.y;
+   const segment=Math.hypot(dx,dy);
+   if(segment<.001)continue;
+   if(segment>=remain){
+    const share=remain/segment;
+    return {x:newer.x-dx*share,y:newer.y-dy*share};
+   }
+   remain-=segment;
+  }
+  return {x:history[0].x,y:history[0].y};
+ }
+ // PMD follower moves in its OWN world coordinates, following a point 72
+ // world pixels behind the player ALONG THE PLAYER'S TRAVELLED PATH. It never
+ // targets pl.x/pl.y directly; that was the cause of the two sprites merging.
  function advanceFollower(run,pl,now){
-  if(!run||!pl||!Number.isFinite(pl.x)||!Number.isFinite(pl.y))return null;
-  const state=run.motion||(run.motion={x:pl.x-26,y:pl.y+18,px:pl.x,py:pl.y,last:now,
-   speed:0,moving:false,history:[{x:pl.x,y:pl.y}],direction:0});
-  const dt=clamp(now-state.last,0,.4);state.last=now;
-  const vx=pl.x-state.px,vy=pl.y-state.py,dist=Math.hypot(vx,vy);
-  if(dist>3){
-   state.history.push({x:pl.x,y:pl.y});
-   if(state.history.length>90)state.history.shift();
-  }
-  const observed=dist/Math.max(dt,.05);
-  if(dist>.6&&dist<400)state.speed=state.speed?
-    state.speed*.65+observed*.35:observed;
-  state.px=pl.x;state.py=pl.y;
-  // Follow a short trail (22px separation). Avoid teleporting except if
-  // player abruptly moves across a portal or the follower is truly stranded.
+  if(!run||!pl||!Number.isFinite(+pl.x)||!Number.isFinite(+pl.y))return null;
+  const init={x:pl.x-FOLLOW_DISTANCE,y:pl.y+18};
+  const state=run.motion||(run.motion={
+   x:init.x,y:init.y,px:pl.x,py:pl.y,last:now,
+   speed:0,moving:false,
+   history:[{...init},{x:pl.x,y:pl.y}],direction:0
+  });
+  const dt=clamp(now-state.last,0,.4);
+  state.last=now;
+  const dx=pl.x-state.px,dy=pl.y-state.py,travel=Math.hypot(dx,dy);
   const gap=Math.hypot(pl.x-state.x,pl.y-state.y);
-  if(gap>480||dist>500){
-   state.x=pl.x-26;state.y=pl.y+18;state.history.length=0;
+  // A portal/map warp is the ONLY normal reason to instantly relocate Pippi.
+  // Never teleport just because the player is running or swimming.
+  if(travel>450||gap>650){
+   const ux=travel>0?dx/travel:1,uy=travel>0?dy/travel:0;
+   state.x=pl.x-ux*FOLLOW_DISTANCE;
+   state.y=pl.y-uy*FOLLOW_DISTANCE;
+   state.history=[{x:state.x,y:state.y},{x:pl.x,y:pl.y}];
+   state.speed=0;state.moving=false;
+   state.px=pl.x;state.py=pl.y;
+   return state;
+  }
+  if(travel>1.5){
    state.history.push({x:pl.x,y:pl.y});
-   state.moving=false;return state;
+   if(state.history.length>180)state.history.splice(0,state.history.length-180);
   }
-  let target=state.history[0]||{x:pl.x,y:pl.y};
-  while(state.history.length>1&&Math.hypot(target.x-state.x,target.y-state.y)<22){
-   state.history.shift();target=state.history[0];
+  // 4 Hz updates use actual movement distance, so player speed modifiers,
+  // x1.5, water and terrain naturally propagate to Pippi's travel speed.
+  if(dt>.01&&travel>.4){
+   const observed=Math.min(850,travel/dt);
+   state.speed=state.speed>0?state.speed*.45+observed*.55:observed;
   }
-  const tx=target.x-state.x,ty=target.y-state.y,remaining=Math.hypot(tx,ty);
-  // Never get faster merely because of the terrain: speed is taken from the
-  // player's observed world movement. Catch-up only after a larger gap.
-  const pace=Math.max(state.speed,dist/Math.max(dt,.05));
-  const moveSpeed=pace*(gap>110?1.25:1);
-  const step=Math.min(remaining,Math.max(0,moveSpeed*dt));
-  state.moving=remaining>5&&step>.5;
+  state.px=pl.x;state.py=pl.y;
+  const target=followTarget(state.history);
+  const vx=target.x-state.x,vy=target.y-state.y;
+  const distance=Math.hypot(vx,vy);
+  const pace=state.speed*(gap>180?1.15:1); // rare bounded catch-up
+  const step=Math.min(distance,Math.max(0,pace*dt));
+  state.moving=distance>2&&step>.15;
   if(state.moving){
-   const oldX=state.x,oldY=state.y;
-   state.x+=tx/remaining*step;state.y+=ty/remaining*step;
-   state.direction=(Math.round(Math.atan2(state.y-oldY,state.x-oldX)/(Math.PI/4))+8)%8;
+   const mx=vx/distance*step,my=vy/distance*step;
+   state.x+=mx;state.y+=my;
+   state.direction=(Math.round(Math.atan2(my,mx)/(Math.PI/4))+8)%8;
+  }
+  // Tight turns may cross the player's path. Never let Pippi enter the
+  // player's footprint: no merged or overlapping sprites while standing.
+  const apartX=state.x-pl.x,apartY=state.y-pl.y;
+  const apart=Math.hypot(apartX,apartY);
+  if(apart<SAFE_DISTANCE){
+   const ux=apart>1?apartX/apart:-1,uy=apart>1?apartY/apart:0;
+   state.x=pl.x+ux*SAFE_DISTANCE;
+   state.y=pl.y+uy*SAFE_DISTANCE;
   }
   return state;
  }
