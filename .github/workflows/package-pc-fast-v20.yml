@@ -14,7 +14,7 @@ on:
       - 'src/pkmsvv-modal-navigation-qa.js'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 concurrency:
   group: pkmsvv-pc-fast-v20-${{ github.ref }}
   cancel-in-progress: true
@@ -117,3 +117,19 @@ jobs:
           path: dist/lan-windows/win-unpacked/
           retention-days: 14
           if-no-files-found: error
+
+      - name: Compress PC QA portable for direct download
+        shell: pwsh
+        run: |
+          $source='dist/lan-windows/win-unpacked'
+          $archive='dist/PKMSVV-Pippi-Coop-Follow-PC-QA.zip'
+          if(!(Test-Path $source)){throw 'PC portable directory missing'}
+          Compress-Archive -Path (Join-Path $source '*') -DestinationPath $archive -CompressionLevel Optimal -Force
+          if((Get-Item $archive).Length -lt 1MB){throw 'PC QA ZIP unexpectedly small'}
+      - name: Upload PC QA directly alongside Android APK (public Web unchanged)
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload 'pkmsvv-pippi-follow-coop-qa-20261115' 'dist/PKMSVV-Pippi-Coop-Follow-PC-QA.zip' --clobber
+          if($LASTEXITCODE -ne 0){throw 'Failed to attach PC ZIP to QA prerelease'}
