@@ -685,6 +685,12 @@ if (process.env.PKMSVV_SWITCH_BOOT === '1') {
  const pippiDir=path.join(game,'js','ui');
  fs.mkdirSync(pippiDir,{recursive:true});
  fs.copyFileSync(path.join(project,'src',jsName),path.join(pippiDir,jsName));
+ // PC and local staged Web reuse the same authored menu icon WebP and DOM cleanup.
+ const menuName='pkmsvv-pc-menu-clean-qa.js';
+ fs.copyFileSync(path.join(project,'src',menuName),path.join(pippiDir,menuName));
+ fs.copyFileSync(path.join(project,'src','pkmsvv-menu-icons.webp'),path.join(game,'images','pkmsvv-menu-icons.webp'));
+ fs.appendFileSync(path.join(game,'css','style.css'),'\\n'+fs.readFileSync(path.join(project,'src','pkmsvv-pc-menu-clean-qa.css'),'utf8'));
+
  // PC and staged Web should use the exact same OFFLINE PMD animation and
  // portrait assets as Android, instead of silently falling back to SVG art.
  const pmdSource=path.join(project,'assets','pippi-pmd');
@@ -699,6 +705,7 @@ if (process.env.PKMSVV_SWITCH_BOOT === '1') {
  if(!source.includes('</body>')||source.includes('js/ui/pkmsvv-pippi.js'))
   throw Error('Pippi: unexpected source bootstrap state');
  fs.writeFileSync(devFile,source.replace('</body>',
+  '<script defer src="js/ui/pkmsvv-pc-menu-clean-qa.js"></script>\n'+
   '<script defer src="js/ui/pkmsvv-pippi.js"></script>\n</body>'));
 }
 // Windows and Android remain strictly offline-first: do NOT inject the external
