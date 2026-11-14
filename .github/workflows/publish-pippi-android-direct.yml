@@ -1,0 +1,91 @@
+name: Publish Pippi Android 2.0.1 QA Direct APK
+on:
+  push:
+    branches:
+      - release/pokemon-chuyen-sinh-2.0-web
+    paths:
+      - '.github/workflows/publish-pippi-android-direct.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish_signed_qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve successful signed Android build from pinned workflow run
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Pinned tested/verified successful run; never pull an unknown latest artifact.
+          run_id=43625177489
+          result="$(gh api repos/votrivalley/PKMSVV/actions/runs/"$run_id" --jq '.conclusion')"
+          test "$result" = success || { echo "::error::Pinned APK run not successful"; exit 1; }
+          mkdir -p release-assets
+          gh run download "$run_id" -R votrivalley/PKMSVV \
+            --name PKMSVV-Pokemon-Chuyen-Sinh-2.0.1-Android-Update-Candidate \
+            --dir release-assets
+          count=$(find release-assets -maxdepth 1 -type f -name '*.apk' | wc -l)
+          test "$count" -eq 1 || { echo "::error::Expected exactly one signed APK"; exit 1; }
+          mv release-assets/*.apk release-assets/Pokemon-Chuyen-Sinh-2.0.1-Pippi-Android-QA.apk
+          unzip -t release-assets/*.apk | grep -q 'No errors detected' \
+            || { echo "::error::Corrupt APK archive"; exit 1; }
+          for entry in \
+            'assets/public/js/ui/pkmsvv-pippi.js' \
+            'assets/public/css/pkmsvv-pippi.css' \
+            'assets/public/images/pippi/Walk-Anim.png' \
+            'assets/public/images/pippi/Idle-Anim.png' \
+            'assets/public/images/pippi/Sleep-Anim.png' \
+            'assets/public/images/pippi/portrait/Happy.png'; do
+            unzip -Z -1 release-assets/*.apk | grep -Fxq "$entry" \
+              || { echo "::error::Missing APK Pippi asset: $entry"; exit 1; }
+          done
+          (cd release-assets && sha256sum Pokemon-Chuyen-Sinh-2.0.1-Pippi-Android-QA.apk > SHA256SUMS.txt)
+          cat release-assets/SHA256SUMS.txt
+      - name: Prepare player-safe test notes
+        shell: bash
+        run: |
+          cat > release-notes.md <<'EOF'
+          ## Pokémon Chuyển Sinh 2.0.1 – Pippi AI (Android QA)
+          
+          **Bản thử nghiệm dành cho Android; chưa QA trên thiết bị thật.**
+          
+          - Pippi AI hỗ trợ khi Khám phá; Bond Level 1–10.
+          - Đi/Đứng/Ngủ 8 hướng và 16 portrait Clefairy đóng gói offline.
+          - Hồi máu, buff công, làm chậm và cứu nguy.
+          - Bond 10: Moon Miracle hồi sinh 40% HP, bất tử 3 giây, Pippi ngủ 75 giây.
+          - Nâng cấp hồi sinh cũ 50.000 PokéCoins được gỡ khỏi cửa hàng; người đã mua được hoàn tiền đúng một lần.
+          - Gói Android giữ package và chữ ký bản chính, cập nhật tại chỗ.
+          
+          **Trước khi cài đè: xuất save JSON dự phòng. Không gỡ ứng dụng cũ.**
+          
+          Đây là APK từ GitHub Actions thành công #43625177489, *không* phải bản được build lại không kiểm chứng.
+          File SHA256SUMS.txt đính kèm giúp xác minh file APK sau khi tải.
+          
+          Ảnh Pippi: PMDCollab SpriteCollab #035 (CHUNSOFT, ESTELSTARLIGHT), chỉ sử dụng phi thương mại có ghi công.
+          EOF
+      - name: Publish public prerelease with a real direct APK download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag='pkmsvv-2.0.1-pippi-android-qa-20261115'
+          if gh release view "$tag" -R votrivalley/PKMSVV >/dev/null 2>&1; then
+            echo "A release with this tag exists; updating only the APK files on this exact prerelease."
+            gh release upload "$tag" release-assets/*.apk release-assets/SHA256SUMS.txt \
+              -R votrivalley/PKMSVV --clobber
+          else
+            gh release create "$tag" release-assets/*.apk release-assets/SHA256SUMS.txt \
+              -R votrivalley/PKMSVV \
+              --target "${{ github.sha }}" \
+              --title 'Pokémon Chuyển Sinh 2.0.1 – Pippi Android (QA)' \
+              --notes-file release-notes.md \
+              --prerelease
+          fi
+          gh release view "$tag" -R votrivalley/PKMSVV \
+            --json url,assets --jq '{url:.url,assets:[.assets[].name]}'
