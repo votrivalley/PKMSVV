@@ -9,6 +9,7 @@ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.resolve(__dirname,'..');
 const {patchPickupDrops}=require('./patch-v20-pickup-drops.cjs');
 const mods=[
+ ['GlobalPower','src/pkmsvv-global-power.js'],
  ['Shop','src/kecleon/upstream/data/shop.js'],
  ['KecleonUI','src/kecleon/pkmsvv-kecleon-ui.js'],
  ['Judgment','src/v14/judgment.js'],
