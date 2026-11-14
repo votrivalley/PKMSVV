@@ -161,10 +161,37 @@ jobs:
       - name: Fetch pinned upstream full game
         shell: bash
         run: |
+          set -euo pipefail
+          pin=11fe868c640b62ac37beacc222e056bc4d9ec892
           git init vendor/pokesurvivor
-          git -C vendor/pokesurvivor remote add origin https://github.com/JPTER78/pokesurvivor.git
-          git -C vendor/pokesurvivor fetch --depth 1 origin 11fe868c640b62ac37beacc222e056bc4d9ec892
+          # The author's repository may be unavailable. Identical commit hashes
+          # mean identical Git trees; do not substitute any mirror's HEAD.
+          sources=(
+            https://github.com/JPTER78/pokesurvivor.git
+            https://github.com/Lucas-Vargas-0307/pokesurvivor.git
+            https://github.com/IvanFreireDacoba/pokesurvivor.git
+          )
+          found=0
+          for source in "${sources[@]}"; do
+            echo "Checking exact upstream commit in ${source}"
+            git -C vendor/pokesurvivor remote remove origin >/dev/null 2>&1 || true
+            git -C vendor/pokesurvivor remote add origin "$source"
+            if GIT_TERMINAL_PROMPT=0 git -C vendor/pokesurvivor -c credential.helper= fetch --no-tags --depth 1 origin "$pin"; then
+              found=1
+              break
+            fi
+            echo "::warning::Pinned source unavailable from ${source}; checking next preserved mirror."
+          done
+          if [ "$found" -ne 1 ]; then
+            echo "::error::Cannot retrieve pinned original revision from any verified source."
+            exit 1
+          fi
           git -C vendor/pokesurvivor checkout --detach FETCH_HEAD
+          test "$(git -C vendor/pokesurvivor rev-parse HEAD)" = "$pin" || {
+            echo "::error::Upstream Git SHA mismatch — refusing to compile changed engine."
+            exit 1
+          }
+          echo "Verified original game at pinned commit: $pin"
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Validate stable Android signing guardrails
