@@ -150,7 +150,7 @@
  function install(w){
   const G=w.G,d=w.document;
   if(G.PKMSVVPippi?.installed)return G.PKMSVVPippi;
-  let run=null,ui=null,lastSave=null;
+  let run=null,ui=null,lastSave=null,follower=null;
   const language=()=>G.I18n?.lang==='en';
   const copy=(vi,en)=>language()?en:vi;
   function getUI(){
@@ -161,6 +161,40 @@
    el.innerHTML='<span class="pippi-portrait"></span><span class="pippi-message"><b>Pippi</b><span class="pippi-line"></span><small class="pippi-bond"></small></span>';
    d.body.appendChild(el);
    ui=el;return el;
+  }
+  function follow(pl){
+   if(!d.body)return;
+   if(!follower?.isConnected){
+    follower=d.createElement('div');
+    follower.id='pkmsvv-pippi-follower';
+    follower.setAttribute('aria-label','Pippi — bạn đồng hành');
+    follower.innerHTML=faceSVG('smile',false);
+    d.body.appendChild(follower);
+   }
+   follower.hidden=false;
+   const canvas=d.getElementById('game'),rect=canvas?.getBoundingClientRect?.();
+   if(!rect||!rect.width||!rect.height)return;
+   // G.Camera tracks the world centre in Explore. This is a visual-only
+   // follower; it has no body/collision/skill projectile/hitbox.
+   const zoomX=rect.width/(Number(canvas.width)||rect.width);
+   const zoomY=rect.height/(Number(canvas.height)||rect.height);
+   const camX=Number(G.Camera?.x),camY=Number(G.Camera?.y);
+   let x=rect.left+rect.width*.5-40,y=rect.top+rect.height*.5+18;
+   if(Number.isFinite(camX)&&Number.isFinite(camY)){
+    x+=Math.max(-rect.width*.33,Math.min(rect.width*.33,(pl.x-camX)*zoomX));
+    y+=Math.max(-rect.height*.33,Math.min(rect.height*.33,(pl.y-camY)*zoomY));
+   }
+   // The initial portrait marker is intentionally a lightweight placeholder.
+   // PMD's eight directional animation replaces this one visual element only.
+   const last=run.lastPos,dx=last?pl.x-last.x:0,dy=last?pl.y-last.y:0;
+   if(Math.hypot(dx,dy)>2){
+    run.direction=(Math.round(Math.atan2(dy,dx)/(Math.PI/4))+8)%8;
+   }
+   run.lastPos={x:pl.x,y:pl.y};
+   follower.style.left=Math.round(x)+'px';
+   follower.style.top=Math.round(y)+'px';
+   follower.dataset.direction=String(run.direction);
+   follower.classList.toggle('sleeping',run.now<run.sleepUntil);
   }
   function say(event,force=false){
    if(!run)return;
@@ -207,6 +241,7 @@
     if(!eligible(G)){
      if(run){finish(run);run=null;}
      if(ui)ui.hidden=true;
+     if(follower)follower.hidden=true;
      return;
     }
     const now=Math.max(0,Number(G.Game?.st?.time??G.Game?.time)||0);
@@ -214,11 +249,13 @@
      finish(run);run=newRun(pl,now);say('intro',true);say('tutorial');
     }
     run.now=now;
+    follow(pl);
     endEffects(run,now);
     if(ui&&!ui.hidden&&now>=Number(ui.dataset.until))ui.hidden=true;
     const p=data(G.DB?.save),lv=p.bond;
     const isSleeping=now<run.sleepUntil;
     if(isSleeping)return;
+    if(now>=35&&!run.marks.has(35)){run.marks.add(35);say('tutorial');}
     for(const marker of [120,300,900,1800]){
      if(now>=marker&&!run.marks.has(marker)){
       run.marks.add(marker);
