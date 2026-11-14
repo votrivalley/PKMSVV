@@ -119,6 +119,13 @@ test('LAN menu preserves pixel icons and aligns the PC art with its text',()=>{
  const lan=fs.readFileSync(require.resolve('../scripts/patch-lan.cjs'),'utf8');
  const web=fs.readFileSync(require.resolve('../scripts/prepare-web.cjs'),'utf8');
  assert.ok(shell.includes("icons.find(n=>n.querySelector('img,svg,canvas'))"));
+ assert.ok(shell.includes('function normalizeNavigationLayout(menu)'));
+ assert.ok(shell.includes("const isPC=label==='PC'"));
+ assert.ok(shell.includes("const isArena=item.id==='pkmsvv-champion-entry'"));
+ assert.ok(shell.includes('normalizeNavigationLayout(menu);'));
+ assert.ok(shell.includes('requestAnimationFrame'));
+ assert.ok(localCss.includes('width:100%!important;height:100%!important'));
+ assert.ok(androidCss.includes('.menu-item>.pkmsvv-champion-menu-icon'));
  assert.ok(shell.includes("G.Icons?.html?.('online',28)"));
  assert.ok(!shell.includes("icon.replaceChildren(document.createTextNode('🤝'))"));
  assert.ok(native.includes("G?.Icons?.html?.('online',28)"));
