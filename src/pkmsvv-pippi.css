@@ -24,3 +24,25 @@
  #pkmsvv-pippi{bottom:10px;left:8px;max-width:min(330px,48vw);padding:4px 8px 4px 4px}
  #pkmsvv-pippi .pippi-portrait{width:38px;height:38px;flex-basis:38px}
 }
+
+#pkmsvv-pippi-follower{
+ position:fixed;z-index:140;pointer-events:none;
+ width:42px;height:42px;transform:translate(-50%,-100%);
+ transform-origin:center bottom;
+ filter:drop-shadow(0 2px 1px #2b253780);
+ animation:pippi-follow-bob 1.2s ease-in-out infinite;
+}
+#pkmsvv-pippi-follower[hidden]{display:none!important}
+#pkmsvv-pippi-follower svg{
+ display:block;width:100%;height:100%;image-rendering:pixelated;
+}
+#pkmsvv-pippi-follower[data-direction="3"] svg,
+#pkmsvv-pippi-follower[data-direction="4"] svg,
+#pkmsvv-pippi-follower[data-direction="5"] svg{transform:scaleX(-1)}
+#pkmsvv-pippi-follower.sleeping{animation:none;opacity:.65;filter:grayscale(.3) drop-shadow(0 2px 1px #2b253780)}
+@keyframes pippi-follow-bob{
+ 0%,100%{margin-top:0}50%{margin-top:-4px}
+}
+@media(prefers-reduced-motion:reduce){
+ #pkmsvv-pippi-follower{animation:none!important}
+}
