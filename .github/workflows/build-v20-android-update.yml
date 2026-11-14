@@ -17,6 +17,7 @@ on:
       - 'scripts/build-pokebox-stage4-android-qa.cjs'
       - 'src/pkmsvv-pc-menu-clean-qa.*'
       - 'src/pkmsvv-pippi.*'
+      - 'scripts/fetch-pippi-pmd.cjs'
       - 'src/pkmsvv-global-power*.js'
       - 'scripts/patch-qa-compiled-modules.cjs'
       - 'scripts/prepare-game.cjs'
@@ -125,6 +126,8 @@ jobs:
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify "$apk"
           "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk" | grep "package: name='com.votrivalley.pkmsvv.fulllan'"
           java -jar apktool_3.0.3.jar d -f -s "$apk" -o decoded-android
+      - name: Fetch pinned noncommercial Clefairy PMD artwork with hash checks
+        run: node scripts/fetch-pippi-pmd.cjs
       - name: Apply tested 2.0 assets, preserve original Android app ID
         shell: bash
         run: |
@@ -161,6 +164,11 @@ jobs:
           test -s decoded-android/assets/public/js/ui/pkmsvv-pc-menu-clean-qa.js
           test -s decoded-android/assets/public/js/ui/pkmsvv-pippi.js
           test -s decoded-android/assets/public/css/pkmsvv-pippi.css
+          test -s decoded-android/assets/public/images/pippi/Walk-Anim.png
+          test -s decoded-android/assets/public/images/pippi/Idle-Anim.png
+          test -s decoded-android/assets/public/images/pippi/Sleep-Anim.png
+          test -s decoded-android/assets/public/images/pippi/portrait/Happy.png
+          test -s decoded-android/assets/public/images/pippi/portrait/Worried.png
           grep -q 'pkmsvv-pippi.js' decoded-android/assets/public/index.html
           grep -q 'pkmsvv-pippi.css' decoded-android/assets/public/index.html
           grep -q 'G.PKMSVVPippi' decoded-android/assets/public/js/app.min.js
