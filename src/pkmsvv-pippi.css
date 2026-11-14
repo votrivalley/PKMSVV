@@ -62,3 +62,18 @@
  border-color:#fff1a8;box-shadow:0 0 12px #fbe4ad;
  background:radial-gradient(circle,#fff9ca,#f7d6ff);
 }
+
+/* Three-second Moon Miracle transformation — original Mega overworld art
+ * will replace the visual skin after creator-use permissions are cleared. */
+#pkmsvv-pippi-follower.mega{
+ filter:drop-shadow(0 0 5px #fff3a5) drop-shadow(0 0 10px #e7a5fa);
+ transform:translate(-50%,-110%) scale(1.3);
+}
+#pkmsvv-pippi-follower.mega::before,
+#pkmsvv-pippi-follower.mega::after{
+ content:"";position:absolute;width:18px;height:28px;top:5px;
+ background:linear-gradient(#ffd7ef,#ec9acb);border:1px solid #b17dab;
+ border-radius:90% 8% 80% 12%;z-index:-1;
+}
+#pkmsvv-pippi-follower.mega::before{left:-12px;transform:rotate(-35deg)}
+#pkmsvv-pippi-follower.mega::after{right:-12px;transform:rotate(35deg) scaleX(-1)}
