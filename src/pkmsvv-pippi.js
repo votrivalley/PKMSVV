@@ -70,7 +70,7 @@
  }
  function newRun(pl,now=0){return {player:pl,now,healAt:8,buffAt:12,slowAt:15,guardAt:0,
   sleepUntil:0,megaUntil:0,reviveAt:0,sleepTalked:false,revived:false,lastTalk:-100,marks:new Set(),lastPos:null,direction:0,
-  activeBuff:null,slowed:[]};}
+  activeBuff:null,slowed:[],motion:null,emoteUntil:0};}
  function heal(pl,lv){
   if(!pl||!Number.isFinite(pl.maxHp)||pl.maxHp<=0||pl.hp/pl.maxHp>.65)return false;
   const gain=pl.maxHp*(.12+lv*.011);
@@ -132,6 +132,70 @@
   run.sleepUntil=now+75;
   return true;
  }
+ // Eight-direction autonomous follower in world units. Follow the player's
+ // recorded movement trail instead of sticking to a viewport offset.
+ // Sampling actual player displacement inherently respects water/terrain
+ // slowdowns and speed multipliers (including x1.5).
+ function advanceFollower(run,pl,now){
+  if(!run||!pl||!Number.isFinite(pl.x)||!Number.isFinite(pl.y))return null;
+  const state=run.motion||(run.motion={x:pl.x-26,y:pl.y+18,px:pl.x,py:pl.y,last:now,
+   speed:0,moving:false,history:[{x:pl.x,y:pl.y}],direction:0});
+  const dt=clamp(now-state.last,0,.4);state.last=now;
+  const vx=pl.x-state.px,vy=pl.y-state.py,dist=Math.hypot(vx,vy);
+  if(dist>3){
+   state.history.push({x:pl.x,y:pl.y});
+   if(state.history.length>90)state.history.shift();
+  }
+  const observed=dist/Math.max(dt,.05);
+  if(dist>.6&&dist<400)state.speed=state.speed?
+    state.speed*.65+observed*.35:observed;
+  state.px=pl.x;state.py=pl.y;
+  // Follow a short trail (22px separation). Avoid teleporting except if
+  // player abruptly moves across a portal or the follower is truly stranded.
+  const gap=Math.hypot(pl.x-state.x,pl.y-state.y);
+  if(gap>480||dist>500){
+   state.x=pl.x-26;state.y=pl.y+18;state.history.length=0;
+   state.history.push({x:pl.x,y:pl.y});
+   state.moving=false;return state;
+  }
+  let target=state.history[0]||{x:pl.x,y:pl.y};
+  while(state.history.length>1&&Math.hypot(target.x-state.x,target.y-state.y)<22){
+   state.history.shift();target=state.history[0];
+  }
+  const tx=target.x-state.x,ty=target.y-state.y,remaining=Math.hypot(tx,ty);
+  // Never get faster merely because of the terrain: speed is taken from the
+  // player's observed world movement. Catch-up only after a larger gap.
+  const pace=Math.max(state.speed,dist/Math.max(dt,.05));
+  const moveSpeed=pace*(gap>110?1.25:1);
+  const step=Math.min(remaining,Math.max(0,moveSpeed*dt));
+  state.moving=remaining>5&&step>.5;
+  if(state.moving){
+   const oldX=state.x,oldY=state.y;
+   state.x+=tx/remaining*step;state.y+=ty/remaining*step;
+   state.direction=(Math.round(Math.atan2(state.y-oldY,state.x-oldX)/(Math.PI/4))+8)%8;
+  }
+  return state;
+ }
+ // Pixel-art white speech-bubble emotes inspired by Ragnarok's emotion
+ // vocabulary, but drawn independently: no extracted RO sticker assets.
+ const EMOTES={
+  intro:'heart',heal:'heart',buff:'sparkle',slow:'angry',
+  shield:'alarm',revive:'heart',sleep:'sleep',boss:'alarm',
+  bond:'sparkle',tutorial:'question'
+ };
+ function emoteSVG(type){
+  const fill='#fff9ef',ink='#574453',pink='#f26893';
+  const shell="<path d='M9 2h22v3h5v5h3v20h-5v4H21l-7 7v-7H9v-3H5V9h4z' fill='"+fill+"' stroke='"+ink+"' stroke-width='2' stroke-linejoin='miter'/>";
+  const p={
+   heart:"<path d='M15 13h5v3h4v-3h6v4h3v6l-10 9-11-9v-6h3z' fill='"+pink+"' stroke='#a63861' stroke-width='2'/>",
+   angry:"<path d='M12 13l9 7-7 2m20-9-9 7 7 2' fill='none' stroke='#bd4559' stroke-width='3'/><path d='M17 29l6-4 6 4' fill='none' stroke='#a34156' stroke-width='2'/>",
+   alarm:"<path d='M18 11h9v14h-9zM18 28h9v5h-9z' fill='#ed5e80'/>",
+   question:"<path d='M16 13h12v3h3v8h-7v4h-5v-8h7v-4H16zM19 30h5v4h-5z' fill='#7d69b5'/>",
+   sleep:"<path d='M14 15h15v4L21 27h8v4H14v-4l8-8h-8z' fill='#8c77ba'/>",
+   sparkle:"<path d='M23 10l4 10 10 4-10 3-4 9-4-9-10-3 10-4z' fill='#ffc961' stroke='#b68548' stroke-width='2'/>"
+  };
+  return "<svg viewBox='0 0 44 44' xmlns='http://www.w3.org/2000/svg' shape-rendering='crispEdges' aria-hidden='true'>"+shell+(p[type]||p.heart)+"</svg>";
+ }
  // Tiny 16-bit-style placeholder portrait; replaced by cleared original
  // sprite atlas without changing the skill/chat/save contracts.
  const PORTRAIT_FILES=Object.freeze({
@@ -180,7 +244,7 @@
     follower=d.createElement('div');
     follower.id='pkmsvv-pippi-follower';
     follower.setAttribute('aria-label','Pippi — bạn đồng hành');
-    follower.innerHTML=faceSVG('smile',false)+'<span class="pippi-pmd-sprite"></span>';
+    follower.innerHTML=faceSVG('smile',false)+'<span class="pippi-pmd-sprite"></span><span class="pippi-world-emote"></span>';
     d.body.appendChild(follower);
     const probe=d.createElement('img');
     probe.onload=()=>follower?.classList.add('has-pmd');
@@ -190,32 +254,32 @@
    follower.hidden=false;
    const canvas=d.getElementById('game'),rect=canvas?.getBoundingClientRect?.();
    if(!rect||!rect.width||!rect.height)return;
-   // G.Camera tracks the world centre in Explore. This is a visual-only
-   // follower; it has no body/collision/skill projectile/hitbox.
+   const state=advanceFollower(run,pl,run.now);if(!state)return;
    const zoomX=rect.width/(Number(canvas.width)||rect.width);
    const zoomY=rect.height/(Number(canvas.height)||rect.height);
    const camX=Number(G.Camera?.x),camY=Number(G.Camera?.y);
-   let x=rect.left+rect.width*.5-40,y=rect.top+rect.height*.5+18;
+   let x,y;
    if(Number.isFinite(camX)&&Number.isFinite(camY)){
-    x+=Math.max(-rect.width*.33,Math.min(rect.width*.33,(pl.x-camX)*zoomX));
-    y+=Math.max(-rect.height*.33,Math.min(rect.height*.33,(pl.y-camY)*zoomY));
+    x=rect.left+rect.width*.5+(state.x-camX)*zoomX;
+    y=rect.top+rect.height*.5+(state.y-camY)*zoomY;
+   }else{
+    // Fallback for camera implementations with no exported centre.
+    x=rect.left+rect.width*.5+(state.x-pl.x)*zoomX;
+    y=rect.top+rect.height*.5+(state.y-pl.y)*zoomY;
    }
-   // The initial portrait marker is intentionally a lightweight placeholder.
-   // PMD's eight directional animation replaces this one visual element only.
-   const last=run.lastPos,dx=last?pl.x-last.x:0,dy=last?pl.y-last.y:0;
-   if(Math.hypot(dx,dy)>2){
-    run.direction=(Math.round(Math.atan2(dy,dx)/(Math.PI/4))+8)%8;
-   }
-   run.lastPos={x:pl.x,y:pl.y};
    follower.style.left=Math.round(x)+'px';
    follower.style.top=Math.round(y)+'px';
+   run.direction=state.direction;
+   follower.classList.toggle('moving',state.moving);
+   const emote=follower.querySelector('.pippi-world-emote');
+   if(emote)emote.hidden=run.now>=run.emoteUntil;
    follower.dataset.direction=String(run.direction);
    const mega=run.now<run.megaUntil;
    const asleep=!mega&&run.now<run.sleepUntil;
    follower.classList.toggle('sleeping',asleep);
    follower.classList.toggle('mega',mega);
    if(follower.classList.contains('has-pmd')){
-    const moving=Math.hypot(dx,dy)>2;
+    const moving=!!state.moving;
     const file=asleep?'Sleep-Anim.png':moving?'Walk-Anim.png':'Idle-Anim.png';
     const width=asleep?24:moving?24:32,height=asleep?24:40,cols=asleep?2:moving?8:6;
     const frame=Math.floor(run.now*(asleep?1.2:moving?6:3))%cols;
@@ -232,6 +296,12 @@
    const now=run.now;
    if(!force&&now-run.lastTalk<8)return;
    run.lastTalk=now;
+   run.emoteUntil=now+(force?3.8:2.6);
+   const worldEmote=follower?.querySelector('.pippi-world-emote');
+   if(worldEmote){
+    worldEmote.innerHTML=emoteSVG(EMOTES[event]||'heart');
+    worldEmote.hidden=false;
+   }
    const lines=LINES[event]||LINES.intro;
    const [face,message]=lines[Math.floor(Math.random()*lines.length)];
    const el=getUI();if(!el)return;
@@ -360,5 +430,5 @@
   else if(typeof w.setInterval==='function')w.setInterval(tick,350);
   return api;
  }
- return {rank,data,refund,earn,eligible,newRun,heal,buff,slow,endEffects,finish,tryRevive,faceSVG,install};
+ return {rank,data,refund,earn,eligible,newRun,advanceFollower,emoteSVG,heal,buff,slow,endEffects,finish,tryRevive,faceSVG,install};
 });
