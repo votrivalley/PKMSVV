@@ -132,18 +132,19 @@
    const icons=[...coop.children].filter(n=>n.classList?.contains('mi-ico'));
    // Preserve the game's ORIGINAL pixel-art icon, including svg/img/canvas.
    // Never overwrite a custom menu icon with an OS-dependent emoji.
-   let icon=icons.find(n=>n.querySelector('img,svg,canvas'))||
+   // Prefer the authored WebP sprite over stale online SVG/hand artwork.
+   let icon=icons.find(n=>n.classList?.contains('pkmsvv-menu-icon-coop'))||
+    icons.find(n=>n.querySelector('img,svg,canvas'))||
     icons.find(n=>n.textContent.trim()!=='🤝')||icons[0];
    if(!icon){
-    icon=document.createElement('span');icon.className='mi-ico pkmsvv-coop-icon';
-    icon.innerHTML=G.Icons?.html?.('online',28)||'';
+    icon=document.createElement('span');
+    icon.className='mi-ico pkmsvv-new-menu-icon pkmsvv-menu-icon-coop';
     coop.insertBefore(icon,coop.firstChild);
-   }else if(!icon.querySelector('img,svg,canvas')&&
-    (icon.textContent.trim()==='🤝'||
-     (coop.id==='pkmsvv-coop-lan-entry'&&!icon.childNodes.length))){
-    // Repair a blank/static icon or emoji-only element from older Android builds
-    // using the EXISTING pixel icon definition, not a new emoji.
-    icon.innerHTML=G.Icons?.html?.('online',28)||'';
+   }else if(icon.classList?.contains('pkmsvv-menu-icon-coop')){
+    // Its artwork is a CSS background, so children can only be stale glyphs.
+    if(icon.hasChildNodes())icon.replaceChildren();
+   }else if(icon.textContent.trim()==='🤝'&&!icon.querySelector('img,svg,canvas')){
+    icon.replaceChildren();
    }
    if(icon!==coop.firstElementChild)coop.insertBefore(icon,coop.firstChild);
    icon.setAttribute('aria-hidden','true');
