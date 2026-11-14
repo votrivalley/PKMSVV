@@ -62,6 +62,25 @@ for(const filename of ['pkmsvv-box-stage1.css','pkmsvv-box-stage2.css','pkmsvv-b
  fs.copyFileSync(path.join(root,'src',filename),dest);
  if(!html.includes(filename))html=html.replace('</head>','<link rel="stylesheet" href="css/'+filename+'">\n</head>');
 }
+// PMDCollab Clefairy #035: build-time bundled local sprites (never CDN).
+// Each file is verified by Git blob SHA at its immutable source revision.
+{
+ const pmd=path.join(root,'assets','pippi-pmd');
+ const dest=path.join(web,'images','pippi');
+ for(const filename of ['Walk-Anim.png','Idle-Anim.png','Sleep-Anim.png']){
+  const input=path.join(pmd,filename);
+  if(!fs.existsSync(input))throw Error('Missing verified Pippi art: '+filename);
+  fs.mkdirSync(dest,{recursive:true});fs.copyFileSync(input,path.join(dest,filename));
+ }
+ const portraits=path.join(pmd,'portrait'),out=path.join(dest,'portrait');
+ const {PORTRAITS}=require('./fetch-pippi-pmd.cjs');
+ fs.mkdirSync(out,{recursive:true});
+ for(const name of Object.keys(PORTRAITS)){
+  const input=path.join(portraits,name);
+  if(!fs.existsSync(input))throw Error('Missing Pippi portrait: '+name);
+  fs.copyFileSync(input,path.join(out,name));
+ }
+}
 copyRegionCovers(web);
 copyFusionIcons(web);
 const eggMusic=path.join(root,'custom-music/eggrush.ogg');
