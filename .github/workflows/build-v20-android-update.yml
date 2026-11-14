@@ -18,6 +18,7 @@ on:
       - 'src/pkmsvv-pc-menu-clean-qa.*'
       - 'src/pkmsvv-pippi.*'
       - 'scripts/fetch-pippi-pmd.cjs'
+      - 'scripts/build-pippi-portrait-gallery.cjs'
       - 'src/pkmsvv-global-power*.js'
       - 'scripts/patch-qa-compiled-modules.cjs'
       - 'scripts/prepare-game.cjs'
@@ -128,6 +129,8 @@ jobs:
           java -jar apktool_3.0.3.jar d -f -s "$apk" -o decoded-android
       - name: Fetch pinned noncommercial Clefairy PMD artwork with hash checks
         run: node scripts/fetch-pippi-pmd.cjs
+      - name: Produce offline Pippi portrait gallery (16 embedded verified PNGs)
+        run: node scripts/build-pippi-portrait-gallery.cjs
       - name: Apply tested 2.0 assets, preserve original Android app ID
         shell: bash
         run: |
@@ -217,5 +220,11 @@ jobs:
         with:
           name: PKMSVV-Pokemon-Chuyen-Sinh-2.0.1-Android-Update-Candidate
           path: dist/android-v20-update/*.apk
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-Pippi-16-Portraits-Offline-Gallery
+          path: dist/pippi/Pippi-16-portraits-OFFLINE.html
           if-no-files-found: error
           retention-days: 14
