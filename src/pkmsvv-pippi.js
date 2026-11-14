@@ -157,9 +157,11 @@
  // PMD follower moves in its OWN world coordinates, following a point 72
  // world pixels behind the player ALONG THE PLAYER'S TRAVELLED PATH. It never
  // targets pl.x/pl.y directly; that was the cause of the two sprites merging.
- function advanceFollower(run,pl,now){
+ function advanceFollower(run,pl,now,requestedGap=FOLLOW_DISTANCE){
   if(!run||!pl||!Number.isFinite(+pl.x)||!Number.isFinite(+pl.y))return null;
-  const init={x:pl.x-FOLLOW_DISTANCE,y:pl.y+18};
+  const followGap=clamp(requestedGap,FOLLOW_DISTANCE,260);
+  const minimumGap=Math.max(SAFE_DISTANCE,followGap*.82);
+  const init={x:pl.x-followGap,y:pl.y+18};
   const state=run.motion||(run.motion={
    x:init.x,y:init.y,px:pl.x,py:pl.y,last:now,
    speed:0,moving:false,
@@ -173,8 +175,8 @@
   // Never teleport just because the player is running or swimming.
   if(travel>450||gap>650){
    const ux=travel>0?dx/travel:1,uy=travel>0?dy/travel:0;
-   state.x=pl.x-ux*FOLLOW_DISTANCE;
-   state.y=pl.y-uy*FOLLOW_DISTANCE;
+   state.x=pl.x-ux*followGap;
+   state.y=pl.y-uy*followGap;
    state.history=[{x:state.x,y:state.y},{x:pl.x,y:pl.y}];
    state.speed=0;state.moving=false;
    state.px=pl.x;state.py=pl.y;
@@ -191,7 +193,7 @@
    state.speed=state.speed>0?state.speed*.45+observed*.55:observed;
   }
   state.px=pl.x;state.py=pl.y;
-  const target=followTarget(state.history);
+  const target=followTarget(state.history,followGap);
   const vx=target.x-state.x,vy=target.y-state.y;
   const distance=Math.hypot(vx,vy);
   const pace=state.speed*(gap>180?1.15:1); // rare bounded catch-up
@@ -206,10 +208,10 @@
   // player's footprint: no merged or overlapping sprites while standing.
   const apartX=state.x-pl.x,apartY=state.y-pl.y;
   const apart=Math.hypot(apartX,apartY);
-  if(apart<SAFE_DISTANCE){
+  if(apart<minimumGap){
    const ux=apart>1?apartX/apart:-1,uy=apart>1?apartY/apart:0;
-   state.x=pl.x+ux*SAFE_DISTANCE;
-   state.y=pl.y+uy*SAFE_DISTANCE;
+   state.x=pl.x+ux*minimumGap;
+   state.y=pl.y+uy*minimumGap;
   }
   return state;
  }
@@ -291,9 +293,14 @@
    follower.hidden=false;
    const canvas=d.getElementById('game'),rect=canvas?.getBoundingClientRect?.();
    if(!rect||!rect.width||!rect.height)return;
-   const state=advanceFollower(run,pl,run.now);if(!state)return;
    const zoomX=rect.width/(Number(canvas.width)||rect.width);
    const zoomY=rect.height/(Number(canvas.height)||rect.height);
+   // Android WebView frequently has a high-DPI backing canvas; 72 world
+   // units could render as only 25 CSS pixels and visually overlap Celebi.
+   // Keep at least 62 CSS pixels behind the player at any display density.
+   const visualScale=Math.max(.24,Math.min(zoomX,zoomY));
+   const desiredGap=Math.max(FOLLOW_DISTANCE,62/visualScale);
+   const state=advanceFollower(run,pl,run.now,desiredGap);if(!state)return;
    const camX=Number(G.Camera?.x),camY=Number(G.Camera?.y);
    let x,y;
    if(Number.isFinite(camX)&&Number.isFinite(camY)){
