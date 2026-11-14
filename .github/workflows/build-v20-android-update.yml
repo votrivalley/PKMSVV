@@ -1,7 +1,7 @@
 name: Pokémon Chuyển Sinh 2.0 Signed Android Update Candidate
 on:
   push:
-    branches: [release/pokemon-chuyen-sinh-2.0-web]
+    branches: [fix/pippi-follow-menu-qa-20261115]
     paths:
       - 'src/pkmsvv-box-stage*.js'
       - 'src/pkmsvv-box-hub*.js'
@@ -71,7 +71,7 @@ on:
   # QA fallback rebuild requested after upstream fetch failed on 2026-11-11.
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
   actions: read
 jobs:
   android-production-update:
@@ -173,6 +173,9 @@ jobs:
           test -s decoded-android/assets/public/images/pippi/portrait/Happy.png
           test -s decoded-android/assets/public/images/pippi/portrait/Worried.png
           grep -q 'pkmsvv-pippi.js' decoded-android/assets/public/index.html
+          grep -q 'FOLLOW_DISTANCE=72' decoded-android/assets/public/js/ui/pkmsvv-pippi.js
+          grep -q 'COOP_SINGLE_PIXEL_ICON_R3' decoded-android/assets/public/css/pkmsvv-pc-menu-clean-qa.css
+          grep -q 'if(art.hasChildNodes())art.replaceChildren()' decoded-android/assets/public/js/ui/pkmsvv-pc-menu-clean-qa.js
           grep -q 'pkmsvv-pippi.css' decoded-android/assets/public/index.html
           grep -q 'G.PKMSVVPippi' decoded-android/assets/public/js/app.min.js
           test -s decoded-android/assets/public/css/pkmsvv-pc-menu-clean-qa.css
@@ -228,3 +231,27 @@ jobs:
           path: dist/pippi/Pippi-16-portraits-OFFLINE.html
           if-no-files-found: error
           retention-days: 14
+
+      - name: Publish direct-download Android QA prerelease (NO Web deployment)
+        if: github.ref_name == 'fix/pippi-follow-menu-qa-20261115'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          original="dist/android-v20-update/Pokemon-Chuyen-Sinh-2.0.1-Android-Signed-Update-CANDIDATE.apk"
+          release_file="dist/android-v20-update/Pokemon-Chuyen-Sinh-2.0.1-Pippi-Follow-Coop-QA.apk"
+          test -s "$original"
+          cp "$original" "$release_file"
+          tag='pkmsvv-pippi-follow-coop-qa-20261115'
+          printf 'This is a noncommercial Android QA candidate.\n\n- Co-op: preserve only its authored 42px pixel icon; remove the leftover handshake.\n- Pippi: follow at 72px distance along the player trail; no overlapping idle sprite.\n- Includes the same PC/Web source changes on a separate QA branch. Public Web is intentionally UNCHANGED.\n- Save: back up JSON before installing; do not uninstall your existing app.\n- Android versionCode 2000115, same signed application identity.\n- Automatic tests pass, physical device QA still required.\n' > qa-release-notes.txt
+          sha256sum "$release_file" > dist/android-v20-update/SHA256SUMS-PIPPI-QA.txt
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "$release_file" dist/android-v20-update/SHA256SUMS-PIPPI-QA.txt --clobber
+          else
+            gh release create "$tag" "$release_file" dist/android-v20-update/SHA256SUMS-PIPPI-QA.txt \
+              --target "$GITHUB_SHA" \
+              --title 'PKMSVV 2.0.1 Pippi Follow + Co-op Icon (Android QA)' \
+              --notes-file qa-release-notes.txt --prerelease
+          fi
+          gh release view "$tag" --json url,assets --jq '{url:.url,assets:[.assets[].name]}'
