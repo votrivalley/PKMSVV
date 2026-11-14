@@ -678,6 +678,21 @@ if (process.env.PKMSVV_SWITCH_BOOT === '1') {
     "  if (document.readyState === 'loading') { addEventListener('DOMContentLoaded',bootOnce); setTimeout(bootOnce,500); } else bootOnce();");
 }
 
+// Pippi companion is packaged into the offline executable after all gameplay
+// patches. No remote sprites or assets are fetched at runtime.
+{
+ const jsName='pkmsvv-pippi.js',cssName='pkmsvv-pippi.css';
+ const pippiDir=path.join(game,'js','ui');
+ fs.mkdirSync(pippiDir,{recursive:true});
+ fs.copyFileSync(path.join(project,'src',jsName),path.join(pippiDir,jsName));
+ fs.appendFileSync(path.join(game,'css','style.css'),'\n'+fs.readFileSync(path.join(project,'src',cssName),'utf8'));
+ const devFile=path.join(game,'dev.html');
+ const source=fs.readFileSync(devFile,'utf8');
+ if(!source.includes('</body>')||source.includes('js/ui/pkmsvv-pippi.js'))
+  throw Error('Pippi: unexpected source bootstrap state');
+ fs.writeFileSync(devFile,source.replace('</body>',
+  '<script defer src="js/ui/pkmsvv-pippi.js"></script>\n</body>'));
+}
 // Windows and Android remain strictly offline-first: do NOT inject the external
 // browser Online mode switch. The existing native save identity remains unchanged.
 // Invoke the installed minifier directly: npx.cmd + shell splits Windows paths
