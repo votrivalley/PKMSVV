@@ -69,7 +69,7 @@
    !['arena','pvp','royale','eggrush','coop','survival'].includes(room);
  }
  function newRun(pl,now=0){return {player:pl,now,healAt:8,buffAt:12,slowAt:15,guardAt:0,
-  sleepUntil:0,revived:false,lastTalk:-100,marks:new Set(),lastPos:null,direction:0,
+  sleepUntil:0,megaUntil:0,reviveAt:0,sleepTalked:false,revived:false,lastTalk:-100,marks:new Set(),lastPos:null,direction:0,
   activeBuff:null,slowed:[]};}
  function heal(pl,lv){
   if(!pl||!Number.isFinite(pl.maxHp)||pl.maxHp<=0||pl.hp/pl.maxHp>.65)return false;
@@ -85,8 +85,12 @@
   return true;
  }
  function slow(G,run,now,lv){
-  const pl=run.player,arr=G.EnemyMgr?.all?.();
-  if(!Array.isArray(arr)||!pl)return false;
+  const pl=run.player,raw=G.EnemyMgr?.all?.();
+  const tag=Object.prototype.toString.call(raw);
+  const arr=Array.isArray(raw)?raw:
+   tag==='[object Map]'||tag==='[object Set]'?Array.from(raw.values()):
+   raw&&typeof raw[Symbol.iterator]==='function'?Array.from(raw):[];
+  if(!arr.length||!pl)return false;
   let affected=0;
   for(const e of arr){
    if(!e||e.dead||!Number.isFinite(+e.x)||!Number.isFinite(+e.y)||
@@ -121,6 +125,7 @@
      !pl||pl.dead||!(Number(pl.hp)<=0)||typeof pl.revive!=='function')return false;
   if(data(G.DB?.save).bond<10)return false;
   run.revived=true;
+  run.reviveAt=now;run.megaUntil=now+3.6;
   pl.extraRevives=0;
   pl.revive(.4);
   pl.invuln=Math.max(Number(pl.invuln)||0,3);
@@ -205,8 +210,10 @@
    follower.style.left=Math.round(x)+'px';
    follower.style.top=Math.round(y)+'px';
    follower.dataset.direction=String(run.direction);
-   const asleep=run.now<run.sleepUntil;
+   const mega=run.now<run.megaUntil;
+   const asleep=!mega&&run.now<run.sleepUntil;
    follower.classList.toggle('sleeping',asleep);
+   follower.classList.toggle('mega',mega);
    if(follower.classList.contains('has-pmd')){
     const moving=Math.hypot(dx,dy)>2;
     const file=asleep?'Sleep-Anim.png':moving?'Walk-Anim.png':'Idle-Anim.png';
@@ -286,7 +293,12 @@
     if(ui&&!ui.hidden&&now>=Number(ui.dataset.until))ui.hidden=true;
     const p=data(G.DB?.save),lv=p.bond;
     const isSleeping=now<run.sleepUntil;
-    if(isSleeping)return;
+    if(isSleeping){
+     if(!run.sleepTalked&&now>=run.megaUntil&&run.revived){
+      run.sleepTalked=true;say('sleep',true);
+     }
+     return;
+    }
     if(now>=35&&!run.marks.has(35)){run.marks.add(35);say('tutorial');}
     for(const marker of [120,300,900,1800]){
      if(now>=marker&&!run.marks.has(marker)){
