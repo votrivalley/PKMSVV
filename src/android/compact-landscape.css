@@ -54,7 +54,13 @@
   margin:0!important;padding:0!important;
   image-rendering:pixelated!important;
  }
- /* The menu mixes pixel sprites, inline image icons and emoji.
+ #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item>.pkmsvv-menu-copy{
+  grid-column:2!important;grid-row:1 / span 2!important;
+  display:flex!important;flex-direction:column!important;
+  justify-content:center!important;align-items:flex-start!important;
+  min-width:0!important;text-align:left!important;
+ }
+ /* Keep existing pixel sprites and inline artwork at their native aspect ratio.
   * Scale artwork to the same slot without browser bilinear smoothing. */
  #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item>.mi-ico img,
  #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item>.mi-ico canvas,
