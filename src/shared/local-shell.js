@@ -96,8 +96,8 @@
     icon=document.createElement('span');icon.className='mi-ico pkmsvv-coop-icon';
     icon.innerHTML=G.Icons?.html?.('online',28)||'';
     coop.insertBefore(icon,coop.firstChild);
-   }else if(icon.textContent.trim()==='🤝'&&!icon.querySelector('img,svg,canvas')){
-    // Repair the temporary emoji-only element from older Android builds
+   }else if(!icon.querySelector('img,svg,canvas')&&(!icon.textContent.trim()||icon.textContent.trim()==='🤝')){
+    // Repair a blank/static icon or emoji-only element from older Android builds
     // using the EXISTING pixel icon definition, not a new emoji.
     icon.innerHTML=G.Icons?.html?.('online',28)||'';
    }
