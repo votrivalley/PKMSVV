@@ -10,6 +10,7 @@ const root=path.resolve(__dirname,'..');
 const {patchPickupDrops}=require('./patch-v20-pickup-drops.cjs');
 const mods=[
  ['GlobalPower','src/pkmsvv-global-power.js'],
+ ['GlobalPowerUI','src/pkmsvv-global-power-ui.js'],
  ['Shop','src/kecleon/upstream/data/shop.js'],
  ['KecleonUI','src/kecleon/pkmsvv-kecleon-ui.js'],
  ['Judgment','src/v14/judgment.js'],
@@ -68,6 +69,7 @@ function replaceModule(bundle,label,filename){
  if(label==='PKMSVVEvo')source=source.replace('__PKMSVV_HP_FACTOR__','1.15').replace(/G\.PKMSVVEvo\s*=\s*/, 'G.PKMSVVEvo=');
  if(label==='Judgment')source=source.replace(/G\.Judgment\s*=\s*/, 'G.Judgment=');
  if(label==='GlobalPower')source=source.replace(/G\.GlobalPower\s*=\s*/, 'G.GlobalPower=');
+ if(label==='GlobalPowerUI')source=source.replace(/G\.GlobalPowerUI\s*=\s*/, 'G.GlobalPowerUI=');
  const sourceAt=source.indexOf(assignment);
  if(sourceAt<0)throw Error('Source module assignment missing: '+label);
  const srcBoundary=/\}\)\(\)/g;srcBoundary.lastIndex=sourceAt+assignment.length;
