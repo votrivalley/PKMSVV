@@ -129,6 +129,13 @@
  }
  // Tiny 16-bit-style placeholder portrait; replaced by cleared original
  // sprite atlas without changing the skill/chat/save contracts.
+ const PORTRAIT_FILES=Object.freeze({
+  smile:'Normal',proud:'Determined',love:'Joyous',wink:'Happy',
+  happy:'Happy',angry:'Angry',panic:'Surprised',sleep:'Sigh',
+  mega:'Inspired',sparkle:'Inspired',thinking:'Worried',
+  dizzy:'Dizzy',cry:'Crying',sad:'Sad',help:'Shouting',
+  danger:'Pain',shock:'Stunned',teary:'Teary-Eyed'
+ });
  function faceSVG(face='smile',mega=false){
   const eyes=face==='sleep'?"<path d='M18 29h7m12 0h7' stroke='#633c53' stroke-width='3'/>":
    face==='panic'?"<circle cx='22' cy='29' r='4'/><circle cx='40' cy='29' r='4'/>":
@@ -168,8 +175,12 @@
     follower=d.createElement('div');
     follower.id='pkmsvv-pippi-follower';
     follower.setAttribute('aria-label','Pippi — bạn đồng hành');
-    follower.innerHTML=faceSVG('smile',false);
+    follower.innerHTML=faceSVG('smile',false)+'<span class="pippi-pmd-sprite"></span>';
     d.body.appendChild(follower);
+    const probe=d.createElement('img');
+    probe.onload=()=>follower?.classList.add('has-pmd');
+    probe.onerror=()=>follower?.classList.remove('has-pmd');
+    probe.src='images/pippi/Walk-Anim.png';
    }
    follower.hidden=false;
    const canvas=d.getElementById('game'),rect=canvas?.getBoundingClientRect?.();
@@ -194,7 +205,20 @@
    follower.style.left=Math.round(x)+'px';
    follower.style.top=Math.round(y)+'px';
    follower.dataset.direction=String(run.direction);
-   follower.classList.toggle('sleeping',run.now<run.sleepUntil);
+   const asleep=run.now<run.sleepUntil;
+   follower.classList.toggle('sleeping',asleep);
+   if(follower.classList.contains('has-pmd')){
+    const moving=Math.hypot(dx,dy)>2;
+    const file=asleep?'Sleep-Anim.png':moving?'Walk-Anim.png':'Idle-Anim.png';
+    const width=asleep?24:moving?24:32,height=asleep?24:40,cols=asleep?2:moving?8:6;
+    const frame=Math.floor(run.now*(asleep?1.2:moving?6:3))%cols;
+    // PMD rows: S, SW, W, NW, N, NE, E, SE.
+    const row=(run.direction+6)%8;
+    const part=follower.querySelector('.pippi-pmd-sprite');
+    part.style.width=width+'px';part.style.height=height+'px';
+    part.style.backgroundImage="url('images/pippi/"+file+"')";
+    part.style.backgroundPosition=(-width*frame)+'px '+(-height*row)+'px';
+   }
   }
   function say(event,force=false){
    if(!run)return;
@@ -204,7 +228,15 @@
    const lines=LINES[event]||LINES.intro;
    const [face,message]=lines[Math.floor(Math.random()*lines.length)];
    const el=getUI();if(!el)return;
-   el.querySelector('.pippi-portrait').innerHTML=faceSVG(face,face==='mega');
+   const portrait=el.querySelector('.pippi-portrait');
+   const fallback=faceSVG(face,face==='mega');
+   const filename=PORTRAIT_FILES[face]||'Normal';
+   const img=d.createElement('img');
+   img.alt='Pippi';
+   img.src='images/pippi/portrait/'+filename+'.png';
+   img.onerror=()=>{if(portrait.contains(img))portrait.innerHTML=fallback;};
+   portrait.replaceChildren(img);
+   portrait.classList.toggle('mega',face==='mega');
    el.querySelector('.pippi-line').textContent=message;
    el.querySelector('.pippi-bond').textContent='Bond '+data(G.DB?.save).bond+'/10';
    el.hidden=false;
