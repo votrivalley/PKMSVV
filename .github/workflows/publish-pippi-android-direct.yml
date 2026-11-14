@@ -22,7 +22,7 @@ jobs:
         run: |
           set -euo pipefail
           # Pinned tested/verified successful run; never pull an unknown latest artifact.
-          run_id=43625177489
+          run_id=43629834437
           result="$(gh api repos/votrivalley/PKMSVV/actions/runs/"$run_id" --jq '.conclusion')"
           test "$result" = success || { echo "::error::Pinned APK run not successful"; exit 1; }
           mkdir -p release-assets
@@ -31,7 +31,7 @@ jobs:
             --dir release-assets
           count=$(find release-assets -maxdepth 1 -type f -name '*.apk' | wc -l)
           test "$count" -eq 1 || { echo "::error::Expected exactly one signed APK"; exit 1; }
-          mv release-assets/*.apk release-assets/Pokemon-Chuyen-Sinh-2.0.1-Pippi-Android-QA.apk
+          mv release-assets/*.apk release-assets/Pokemon-Chuyen-Sinh-2.0.1-Pippi-Movement-Emotes-QA.apk
           unzip -t release-assets/*.apk | grep -q 'No errors detected' \
             || { echo "::error::Corrupt APK archive"; exit 1; }
           for entry in \
@@ -55,17 +55,17 @@ jobs:
             echo "::error::Gallery must embed exactly 16 portraits"
             exit 1
           }
-          (cd release-assets && sha256sum Pokemon-Chuyen-Sinh-2.0.1-Pippi-Android-QA.apk > SHA256SUMS.txt)
+          (cd release-assets && sha256sum Pokemon-Chuyen-Sinh-2.0.1-Pippi-Movement-Emotes-QA.apk > SHA256SUMS.txt)
           cat release-assets/SHA256SUMS.txt
       - name: Prepare player-safe test notes
         shell: bash
         run: |
           cat > release-notes.md <<'EOF'
-          ## Pokémon Chuyển Sinh 2.0.1 – Pippi AI (Android QA)
+          ## Pokémon Chuyển Sinh 2.0.1 – Pippi Movement/Emotes (Android QA)
           
           **Bản thử nghiệm dành cho Android; chưa QA trên thiết bị thật.**
           
-          - Pippi AI hỗ trợ khi Khám phá; Bond Level 1–10.
+          - Pippi AI hỗ trợ khi Khám phá; Bond Level 1–10.\n          - Pippi có vị trí trong thế giới riêng, đi theo dấu chân người chơi với tốc độ lấy từ di chuyển thực tế và các vùng nước/địa hình.\n          - Bong bóng pixel biểu cảm kiểu Ragnarok (vẽ mới): tim, giận, hoảng, hỏi, ngủ và sáng ý; không dùng emoji điện thoại.\n          - Khung chat Pippi ở góc phải giữa, không che nút x1.5.\n          - Menu Android mỗi mục chỉ có một icon pixel và cột chữ xếp ngay bên cạnh; bỏ chữ Co-op trùng.
           - Đi/Đứng/Ngủ 8 hướng và 16 portrait Clefairy đóng gói offline.
           - Hồi máu, buff công, làm chậm và cứu nguy.
           - Bond 10: Moon Miracle hồi sinh 40% HP, bất tử 3 giây, Pippi ngủ 75 giây.
@@ -74,7 +74,7 @@ jobs:
           
           **Trước khi cài đè: xuất save JSON dự phòng. Không gỡ ứng dụng cũ.**
           
-          Đây là APK từ GitHub Actions thành công #43625177489, *không* phải bản được build lại không kiểm chứng.
+          Đây là APK từ GitHub Actions thành công #43629834437, *không* phải bản được build lại không kiểm chứng.
           File SHA256SUMS.txt đính kèm giúp xác minh file APK sau khi tải.
           
           Ảnh Pippi: PMDCollab SpriteCollab #035 (CHUNSOFT, ESTELSTARLIGHT), chỉ sử dụng phi thương mại có ghi công.
@@ -85,7 +85,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          tag='pkmsvv-2.0.1-pippi-android-qa-20261115'
+          tag='pkmsvv-2.0.1-pippi-android-qa-r2-20261115'
           if gh release view "$tag" -R votrivalley/PKMSVV >/dev/null 2>&1; then
             echo "A release with this tag exists; updating only the APK files on this exact prerelease."
             gh release upload "$tag" release-assets/*.apk release-assets/SHA256SUMS.txt release-assets/*.html \
