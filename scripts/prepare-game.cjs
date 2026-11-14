@@ -685,6 +685,14 @@ if (process.env.PKMSVV_SWITCH_BOOT === '1') {
  const pippiDir=path.join(game,'js','ui');
  fs.mkdirSync(pippiDir,{recursive:true});
  fs.copyFileSync(path.join(project,'src',jsName),path.join(pippiDir,jsName));
+ // PC and staged Web should use the exact same OFFLINE PMD animation and
+ // portrait assets as Android, instead of silently falling back to SVG art.
+ const pmdSource=path.join(project,'assets','pippi-pmd');
+ if(fs.existsSync(pmdSource)){
+  const pmdOutput=path.join(game,'images','pippi');
+  fs.mkdirSync(path.dirname(pmdOutput),{recursive:true});
+  fs.cpSync(pmdSource,pmdOutput,{recursive:true});
+ }
  fs.appendFileSync(path.join(game,'css','style.css'),'\n'+fs.readFileSync(path.join(project,'src',cssName),'utf8'));
  const devFile=path.join(game,'dev.html');
  const source=fs.readFileSync(devFile,'utf8');
