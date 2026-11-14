@@ -208,38 +208,43 @@
   }
  }
  function normalizeLauncherGrid(button,art,type){
-  // Android 2.0.1 repacks a signed baseline APK with the existing WebP sheet.
-  // Keep its handlers and ensure there are exactly two grid children:
-  // original pixel icon + a column containing the title and subtitle.
+  // One coherent row: [original 42px sprite] [title + subtitle].
+  // Android's legacy menu injects text nodes and nested copies during refresh.
   const title={pc:'PC',coop:'Co-op',arena:'Arena'}[type];
   let copy=[...button.children].find(el=>el.classList.contains('pkmsvv-menu-copy'));
-  if(!copy){
-   copy=d.createElement('span');copy.className='pkmsvv-menu-copy';
-   button.appendChild(copy);
-  }
+  if(!copy){copy=d.createElement('span');copy.className='pkmsvv-menu-copy';}
   let label=copy.querySelector('.pkmsvv-menu-label');
-  if(!label){
-   label=d.createElement('span');label.className='pkmsvv-menu-label';
-   copy.prepend(label);
-  }
-  if(label.textContent!==title)label.textContent=title;
-  const description=button.querySelector(':scope > small');
-  if(description&&description.parentElement!==copy)copy.appendChild(description);
+  if(!label){label=d.createElement('span');label.className='pkmsvv-menu-label';copy.prepend(label);}
+  label.textContent=title;
+  const subtitles={
+   pc:L('Pokémon hỗ trợ · Mega · Berry','Support Pokémon · Mega · Berry'),
+   coop:L('Co-op LAN · cùng Wi-Fi','Co-op LAN · same Wi-Fi'),
+   arena:L('Hoàn thành Chương 6 để mở Arena','Complete Chapter 6 to unlock Arena')
+  };
+  let small=copy.querySelector('small')||button.querySelector(':scope > small');
+  if(!small){small=d.createElement('small');}
+  if(small.parentElement!==copy)copy.appendChild(small);
+  if(type==='pc'||type==='coop')small.textContent=subtitles[type];
+  else if(!small.textContent.trim()&&!button.classList.contains('locked'))small.textContent='';
+  else if(!small.textContent.trim())small.textContent=subtitles[type];
+  // All legacy glyphs, standalone labels, text nodes and duplicated icon
+  // containers are decorative. Preserve the button itself and its listeners.
   for(const node of [...button.childNodes]){
-   if(node.nodeType===3){
-    // Bare text becomes an anonymous grid item and shifts icon to another row.
-    if(node.textContent.trim())node.remove();
-   }else if(node.nodeType===1&&node!==art&&node!==copy){
-    // Remove only the obsolete glyph/title of these three known launchers.
-    if(node.matches('.mi-ico,.pkmsvv-champion-menu-icon,.menu-emoji,.mi-emoji,.mi-icon,.menu-icon,.menu-label,.mi-text,.mi-name,.pkmsvv-menu-label')||
-       node.matches('strong')&&node.textContent.trim().toLowerCase()===title.toLowerCase())
-     node.remove();
+   if(node===art||node===copy)continue;
+   if(node.nodeType===1&&node.matches?.('.menu-lock,.lock-badge,[data-lock]')){
+    copy.appendChild(node);continue;
    }
+   if(node.nodeType===1&&node.matches?.('small')&&!copy.querySelector('small')){
+    copy.appendChild(node);continue;
+   }
+   node.remove();
   }
+  art.className='mi-ico pkmsvv-new-menu-icon pkmsvv-menu-icon-'+type;
+  art.setAttribute('aria-hidden','true');
   if(art!==button.firstElementChild)button.prepend(art);
   if(copy!==art.nextElementSibling)art.after(copy);
-  if(!button.classList.contains('pkmsvv-icon-unified'))
-   button.classList.add('pkmsvv-icon-unified');
+  button.classList.add('pkmsvv-icon-unified');
+  button.dataset.pkmMenuRow='true';
  }
  function syncMenuIcons(menu){
   // Three tiny WebP sprite cells; do not affect routing, click handlers,
