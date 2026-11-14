@@ -44,6 +44,17 @@ jobs:
             unzip -Z -1 release-assets/*.apk | grep -Fxq "$entry" \
               || { echo "::error::Missing APK Pippi asset: $entry"; exit 1; }
           done
+          # Also publish the exact standalone portrait gallery that the user
+          # cannot download from the Actions artifact screen.
+          gh run download "$run_id" -R votrivalley/PKMSVV \
+            --name PKMSVV-Pippi-16-Portraits-Offline-Gallery \
+            --dir release-assets
+          gallery=release-assets/Pippi-16-portraits-OFFLINE.html
+          test -s "$gallery" || { echo "::error::Missing 16-portrait HTML"; exit 1; }
+          test "$(grep -o 'data:image/png;base64,' "$gallery" | wc -l)" -eq 16 || {
+            echo "::error::Gallery must embed exactly 16 portraits"
+            exit 1
+          }
           (cd release-assets && sha256sum Pokemon-Chuyen-Sinh-2.0.1-Pippi-Android-QA.apk > SHA256SUMS.txt)
           cat release-assets/SHA256SUMS.txt
       - name: Prepare player-safe test notes
@@ -77,10 +88,10 @@ jobs:
           tag='pkmsvv-2.0.1-pippi-android-qa-20261115'
           if gh release view "$tag" -R votrivalley/PKMSVV >/dev/null 2>&1; then
             echo "A release with this tag exists; updating only the APK files on this exact prerelease."
-            gh release upload "$tag" release-assets/*.apk release-assets/SHA256SUMS.txt \
+            gh release upload "$tag" release-assets/*.apk release-assets/SHA256SUMS.txt release-assets/*.html \
               -R votrivalley/PKMSVV --clobber
           else
-            gh release create "$tag" release-assets/*.apk release-assets/SHA256SUMS.txt \
+            gh release create "$tag" release-assets/*.apk release-assets/SHA256SUMS.txt release-assets/*.html \
               -R votrivalley/PKMSVV \
               --target "${{ github.sha }}" \
               --title 'Pokémon Chuyển Sinh 2.0.1 – Pippi Android (QA)' \
