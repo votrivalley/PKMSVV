@@ -28,12 +28,15 @@
    if(settings)list.insertBefore(b,settings);else list.appendChild(b);
   }
   if(b.id==='pkmsvv-full-lan-entry'){
-   b.innerHTML='<span class="mi-ico" aria-hidden="true">🤝</span> Co-op'+
-    '<small>'+(vi()?'Chơi cùng Wi-Fi':'Play over Wi-Fi')+'</small>';
+   b.innerHTML='<span class="mi-ico" aria-hidden="true">'+
+    (window.G?.Icons?.html?.('online',28)||'')+'</span>'+
+    '<span class="pkmsvv-menu-copy"><span class="pkmsvv-menu-label">Co-op</span><small>'+
+    (vi()?'Chơi cùng Wi-Fi':'Play over Wi-Fi')+'</small></span>';
   }else{
-   const icon=b.querySelector('.mi-ico');
-   if(icon)icon.textContent='🤝';
-   for(const n of [...b.childNodes])if(n.nodeType===Node.TEXT_NODE&&n.textContent.trim())n.textContent=' Co-op';
+   // Retain the existing custom icon — only update the title.
+   const title=b.querySelector('.pkmsvv-menu-label');
+   if(title)title.textContent='Co-op';
+   else for(const n of [...b.childNodes])if(n.nodeType===Node.TEXT_NODE&&n.textContent.trim())n.textContent=' Co-op';
   }
   b.disabled=false;b.removeAttribute('aria-disabled');
   b.onclick=e=>{e?.preventDefault?.();e?.stopPropagation?.();openCoop();};
