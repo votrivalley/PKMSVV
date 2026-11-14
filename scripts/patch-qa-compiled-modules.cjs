@@ -67,6 +67,7 @@ function replaceModule(bundle,label,filename){
  // Isolated QA reuses a signed baseline, so supply its tested 1.15 factor.
  if(label==='PKMSVVEvo')source=source.replace('__PKMSVV_HP_FACTOR__','1.15').replace(/G\.PKMSVVEvo\s*=\s*/, 'G.PKMSVVEvo=');
  if(label==='Judgment')source=source.replace(/G\.Judgment\s*=\s*/, 'G.Judgment=');
+ if(label==='GlobalPower')source=source.replace(/G\.GlobalPower\s*=\s*/, 'G.GlobalPower=');
  const sourceAt=source.indexOf(assignment);
  if(sourceAt<0)throw Error('Source module assignment missing: '+label);
  const srcBoundary=/\}\)\(\)/g;srcBoundary.lastIndex=sourceAt+assignment.length;
