@@ -27,3 +27,11 @@
 - Only after Android/PC approval: merge the QA branch, test staged Web, then explicitly deploy Web.
 
 This is **QA only**, not proof of real-device visual correctness. Back up your save JSON before installing.
+
+
+## QA build findings and known limitations
+- Android signed QA: automatic runtime suites passed; versionCode 2000115 and stable signing certificate verified. APK available as a **direct prerelease asset**, not only Actions Artifacts.
+- High-density screens: the renderer chooses at least 62 CSS pixels of visible separation, scaling the 72-world-unit trailing distance up if needed.
+- PC build: legacy `tests/berry.test.cjs` currently has two failing countdown assumptions in the baseline; they are recorded as a **nonblocking QA warning**, not silently fixed or deleted. Pippi/Co-op regression remains blocking.
+- The scripted companion follows the player movement route and speed, but does not yet perform independent physics collision/pathfinding like a second player. Real-device water/obstacle QA is needed.
+- No live Web deployment occurred from this branch; do not merge into the Web release branch until approved.
