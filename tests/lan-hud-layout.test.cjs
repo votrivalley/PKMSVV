@@ -110,13 +110,21 @@ test('v1.5.30 compiled HUD wires one notice and suppresses duplicate mode notice
  assert.match(fs.readFileSync(require.resolve('../src/web/pkmsvv-egg-rush.js'),'utf8'),/pl\?\.dead&&active&&!G\.PKMSVVDeathHUD/);
 });
 
-test('Android LAN menu keeps a single icon cell, without anonymous emoji grid items',()=>{
- const script=fs.readFileSync(require.resolve('../scripts/patch-lan.cjs'),'utf8');
+
+test('LAN menu preserves pixel icons and aligns the PC art with its text',()=>{
  const shell=fs.readFileSync(require.resolve('../src/shared/local-shell.js'),'utf8');
- const css=fs.readFileSync(require.resolve('../src/android/compact-landscape.css'),'utf8');
- assert.ok(!script.includes("html=html.replace(linkPattern,'$1🤝 Co-op')"));
- assert.ok(shell.includes("copy.className='pkmsvv-menu-copy'"));
- assert.ok(shell.includes("icon.replaceChildren(document.createTextNode('🤝'))"));
- assert.ok(shell.includes("child.nodeType===Node.TEXT_NODE&&child.textContent.trim()"));
- assert.ok(css.includes('grid-template-columns:32px minmax(0,1fr)'));
+ const localCss=fs.readFileSync(require.resolve('../src/shared/local-shell.css'),'utf8');
+ const androidCss=fs.readFileSync(require.resolve('../src/android/compact-landscape.css'),'utf8');
+ const native=fs.readFileSync(require.resolve('../src/android/full-lan-ui.js'),'utf8');
+ const lan=fs.readFileSync(require.resolve('../scripts/patch-lan.cjs'),'utf8');
+ assert.ok(shell.includes("icons.find(n=>n.querySelector('img,svg,canvas'))"));
+ assert.ok(shell.includes("G.Icons?.html?.('online',28)"));
+ assert.ok(!shell.includes("icon.replaceChildren(document.createTextNode('🤝'))"));
+ assert.ok(native.includes("G?.Icons?.html?.('online',28)"));
+ assert.ok(!native.includes("icon.textContent='🤝'"));
+ assert.ok(!lan.includes("html=html.replace(linkPattern,'$1🤝 Co-op')"));
+ assert.ok(localCss.includes('grid-row:1 / span 2!important'));
+ assert.ok(localCss.includes('grid-template-columns:34px minmax(0,1fr)!important'));
+ assert.ok(androidCss.includes('grid-template-columns:32px minmax(0,1fr)!important'));
+ assert.ok(androidCss.includes('.menu-item>.pkmsvv-menu-copy'));
 });
