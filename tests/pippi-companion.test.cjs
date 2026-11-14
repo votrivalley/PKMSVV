@@ -96,7 +96,8 @@ test('Pippi has real independent world position and does not snap to player',()=
  player.x+=15;
  follower=P.advanceFollower(run,player,.2);
  assert.notEqual(follower.x,player.x,'Pippi has independent coordinates');
- assert.ok(follower.x>74,'Pippi begins following trail');
+ assert.ok(follower.x>25,'Pippi begins following the recorded route');
+ assert.ok(Math.hypot(follower.x-player.x,follower.y-player.y)>=56,'Pippi never overlaps the player');
  player.x+=30;
  follower=P.advanceFollower(run,player,.4);
  assert.ok(follower.speed>0,'Follower uses measured player speed');
@@ -116,7 +117,7 @@ test('Pippi inherits slow-water movement by observing player actual displacement
  const lastX=f.x;
  player.x+=600;
  f=P.advanceFollower(run,player,.6);
- assert.ok(Math.abs(player.x-f.x)<50,'Only a portal-like distance triggers safe catch-up');
+ assert.ok(Math.abs(Math.hypot(player.x-f.x,player.y-f.y)-72)<1,'Portal catch-up keeps a safe 72px gap');
 });
 test('Ragnarok-like expression indicators use original SVG pixel paths, not emoji text',()=>{
  for(const kind of ['heart','angry','alarm','question','sleep','sparkle']){
@@ -139,4 +140,41 @@ test('Android menu uses one original icon and one stacked text column',()=>{
  assert.match(css,/Android launcher 2\.0\.2/);
  assert.match(css,/grid-template-columns:42px minmax\(0,1fr\)!important/);
  assert.match(css,/white-space:nowrap!important/);
+});
+
+
+test('Pippi remains separate after player stops and on tight reversals',()=>{
+ const player={x:300,y:300},run=P.newRun(player,0);
+ let p=P.advanceFollower(run,player,0);
+ assert.ok(Math.hypot(p.x-player.x,p.y-player.y)>68);
+ for(let i=1;i<=12;i++){
+  player.x+=9;
+  p=P.advanceFollower(run,player,i*.2);
+  assert.ok(Math.hypot(p.x-player.x,p.y-player.y)>=55.9,
+   'Pippi must not merge into the hero while moving');
+ }
+ for(let i=13;i<=20;i++){
+  p=P.advanceFollower(run,player,i*.2);
+  assert.ok(Math.hypot(p.x-player.x,p.y-player.y)>=55.9,
+   'Pippi must wait behind the stopped player');
+ }
+ for(let i=21;i<=30;i++){
+  player.x-=10;
+  p=P.advanceFollower(run,player,i*.2);
+  assert.ok(Math.hypot(p.x-player.x,p.y-player.y)>=55.9,
+   'Pippi cannot overlap when the player reverses direction');
+ }
+});
+test('Co-op keeps only authored WebP and prevents late injected online handshake',()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const read=pathName=>fs.readFileSync(path.join(__dirname,'..',pathName),'utf8');
+ const menu=read('src/pkmsvv-pc-menu-clean-qa.js');
+ const shell=read('src/shared/local-shell.js');
+ const css=read('src/pkmsvv-pc-menu-clean-qa.css');
+ assert.match(menu,/if\(art\.hasChildNodes\(\)\)art\.replaceChildren\(\)/);
+ assert.match(menu,/iconObserver\.observe\(nav,\{childList:true,subtree:true\}\)/);
+ assert.match(shell,/icons\.find\(n=>n\.classList\?\.contains\('pkmsvv-menu-icon-coop'\)\)/);
+ assert.doesNotMatch(shell,/G\.Icons\?\.html\?\.\('online',28\)/);
+ assert.match(css,/COOP_SINGLE_PIXEL_ICON_R3/);
+ assert.match(css,/\.mi-ico\.pkmsvv-menu-icon-coop::before/);
 });
