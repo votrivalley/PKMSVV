@@ -57,6 +57,48 @@
   close.onclick=()=>panel.remove();
   panel.append(line,rescue,close);document.body.append(panel);
  }
+
+ // Normalize only the structural layout of home-navigation items. The pixel
+ // drawings are owned by MenuUI/Icons; never recreate, crop or replace them.
+ function normalizeNavigationLayout(menu){
+  const list=menu.querySelector('.menu-right .menu-list');
+  if(!list)return;
+  for(const item of list.querySelectorAll(':scope > .menu-item')){
+   const label=item.querySelector('.pkmsvv-menu-label')?.textContent?.trim();
+   const isPC=label==='PC'||[...item.childNodes].some(n=>n.nodeType===3&&n.textContent.trim()==='PC');
+   const isArena=item.id==='pkmsvv-champion-entry';
+   const isCoop=item.id==='pkmsvv-coop-lan-entry'||
+    item.id==='pkmsvv-full-lan-entry'||['multiplayer','online'].includes(item.dataset.go);
+   if(!isPC&&!isArena&&!isCoop)continue;
+   const art=[...item.children].filter(n=>n.matches?.('.mi-ico,.pkmsvv-champion-menu-icon'));
+   const icon=art.find(n=>n.querySelector('img,svg,canvas'))||
+    art.find(n=>n.textContent.trim()!=='🤝')||art[0];
+   if(icon){
+    if(item.firstElementChild!==icon)item.insertBefore(icon,item.firstElementChild);
+    for(const extra of art)if(extra!==icon)extra.remove();
+    icon.setAttribute('aria-hidden','true');
+   }
+   let copy=[...item.children].find(n=>n.classList?.contains('pkmsvv-menu-copy'));
+   if(!copy&&isPC){
+    // Original PC markup sometimes exposes a naked "PC" text node and a
+    // separate <small>. Both become anonymous grid items on Android WebView.
+    copy=document.createElement('span');copy.className='pkmsvv-menu-copy';
+    const title=document.createElement('span');title.className='pkmsvv-menu-label';
+    title.textContent='PC';copy.appendChild(title);
+    const desc=item.querySelector(':scope > small');
+    if(desc)copy.appendChild(desc);
+    item.appendChild(copy);
+   }
+   if(copy){
+    const desc=item.querySelector(':scope > small');
+    if(desc&&desc.parentNode!==copy)copy.appendChild(desc);
+    for(const n of [...item.childNodes]){
+     if(n.nodeType===3 && (isPC&&n.textContent.trim()==='PC'||
+        isCoop&&/^(?:🤝\\s*)?Co-op$/.test(n.textContent.trim())))n.remove();
+    }
+   }
+  }
+ }
  function refresh(){
   const menu=el('scr-menu');
   if(!menu)return;
@@ -96,7 +138,9 @@
     icon=document.createElement('span');icon.className='mi-ico pkmsvv-coop-icon';
     icon.innerHTML=G.Icons?.html?.('online',28)||'';
     coop.insertBefore(icon,coop.firstChild);
-   }else if(!icon.querySelector('img,svg,canvas')&&(!icon.textContent.trim()||icon.textContent.trim()==='🤝')){
+   }else if(!icon.querySelector('img,svg,canvas')&&
+    (icon.textContent.trim()==='🤝'||
+     (coop.id==='pkmsvv-coop-lan-entry'&&!icon.childNodes.length))){
     // Repair a blank/static icon or emoji-only element from older Android builds
     // using the EXISTING pixel icon definition, not a new emoji.
     icon.innerHTML=G.Icons?.html?.('online',28)||'';
@@ -125,6 +169,7 @@
     if(child.classList?.contains('pkmsvv-local-coop'))child.remove();
    }
   }
+  normalizeNavigationLayout(menu);
   const topbar=el('topbar');
   if(topbar){
    // Use the tested JSON backup modal; the upstream hosted UI does not
@@ -162,7 +207,12 @@
   }
   if(window.G?.MenuUI?.open){
    const old=G.MenuUI.open;
-   G.MenuUI.open=function(...args){const result=old.apply(this,args);refresh();return result;};
+   G.MenuUI.open=function(...args){const result=old.apply(this,args);refresh();
+    // Arena may insert its menu entry in another open() wrapper.
+    if(typeof requestAnimationFrame==='function')requestAnimationFrame(()=>{
+     const m=el('scr-menu');if(m&&!m.classList.contains('hidden'))normalizeNavigationLayout(m);
+    });
+    return result;};
   }
   guardLegacyOnline();
   refresh();
