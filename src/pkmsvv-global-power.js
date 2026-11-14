@@ -18,7 +18,7 @@ G.GlobalPower = (() => {
     {id:'crit',     icon:'star',   vi:'Đòn chí mạng',      en:'Critical Chance',      viUnit:'+4% tỷ lệ chí mạng / cấp',enUnit:'+4% critical chance / rank',max:6,base:140,grow:1.40},
     {id:'opening',  icon:'cards',  vi:'Khởi đầu áp đảo',   en:'Strong Start',          viUnit:'Bắt đầu với 2 chiêu thay vì 1',enUnit:'Start every run with 2 moves',max:1,base:250,grow:1.00},
     {id:'reroll',   icon:'up',     vi:'Đổi thẻ',           en:'Extra Rerolls',        viUnit:'+1 đổi thẻ lên cấp / trận',enUnit:'+1 level-up reroll / run',max:3,base:180,grow:1.85},
-    {id:'revive',   icon:'heart',  vi:'Hồi Sinh Huyền Thoại',en:'Legendary Revival',     viUnit:'Mua 1 lần, tự hồi sinh 1 lần mỗi trận (60% HP, miễn thương 3 giây)',enUnit:'Buy once; revive once per run (60% HP, 3s invulnerability)',max:1,base:50000,grow:1.00}
+    {id:'revive',   icon:'heart',  vi:'Hồi Sinh Huyền Thoại',en:'Legendary Revival',     viUnit:'Đã ngừng bán: Pippi nhận quyền hồi sinh',enUnit:'Retired: Pippi owns the revival',max:1,base:50000,grow:1.00,retired:true}
   ];
   const BY = Object.fromEntries(LIST.map(u => [u.id,u]));
   const rank = (levels,id) => {
@@ -74,7 +74,7 @@ G.GlobalPower = (() => {
     return save?spent(save.globalUpgrades,save.globalSpent):0;
   }
   function purchase(save,id) {
-    if(!save || !BY[id]) return false;
+    if(!save || !BY[id] || BY[id].retired) return false;
     const levels=clean(save.globalUpgrades), n=rank(levels,id);
     if(n>=BY[id].max) return false;
     const price=cost(id,n);
@@ -121,7 +121,7 @@ G.GlobalPower = (() => {
       coinMul:(per.coinMul||1)*(1+0.12*L('fortune')),
       crit:Math.min(0.75,(per.crit||0)+0.04*L('crit')),
       startMoves:Math.min(2,Math.max(per.startMoves||1,1+L('opening'))),
-      revives:L('revive'),
+      revives:0, // Pippi alone may revive in Explore; never grant passive revives.
       rerolls:(per.rerolls||0)+L('reroll')
     };
   }
@@ -144,15 +144,11 @@ G.GlobalPower = (() => {
     move.pkmGlobalScaled=true;
     return move;
   }
-  /** A paid permanent unlock provides one automatic revival per run.
-   *  Does not trigger if Focus Sash already saved the fatal blow.
+  /** Legacy native Player.hurt still calls this hook at the fatal threshold.
+   * Only Pippi at Bond 10 may rescue, strictly within solo Explore.
    */
   function tryRevive(pl) {
-    if(!pl || pl.dead || pl.hp>0 || !(pl.extraRevives>0)) return false;
-    pl.extraRevives--;
-    pl.revive(0.6); // reset dead state, animation and HP; existing mechanic
-    pl.invuln=Math.max(pl.invuln,3);
-    return true;
+    return !!G.PKMSVVPippi?.tryRevive?.(pl);
   }
   return {LIST,BY,rank,clean,cost,originalCost,PRICE_MULTIPLIER,legacyLedger,cleanLedger,spent,refundable,purchase,refundAll,merge,combine,applyMove,tryRevive};
 })();
