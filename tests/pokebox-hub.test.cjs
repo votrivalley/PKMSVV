@@ -561,3 +561,27 @@ test('Legacy Box Select immediately invokes same home redraw without an intermed
  assert.match(src,/portrait\.dataset\.pkmsvvPortraitKey!==portraitKey/);
  assert.match(src,/G\.UI\.sprite\(portrait,Number\(s\.partner\)/);
 });
+
+
+test('Android 2.0.1 home icons preserve all three authored WebP sprites and one grid cell',()=>{
+ const js=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pc-menu-clean-qa.js'),'utf8');
+ const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-v20-ui-qa.css'),'utf8');
+ const original=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pc-menu-clean-qa.css'),'utf8');
+ const packaging=fs.readFileSync(path.join(__dirname,'../scripts/patch-v20-android-production.cjs'),'utf8');
+ assert.match(js,/function normalizeLauncherGrid\(button,art,type\)/);
+ assert.match(js,/const title=\{pc:'PC',coop:'Co-op',arena:'Arena'\}/);
+ assert.match(js,/normalizeLauncherGrid\(button,art,type\)/);
+ assert.match(js,/node\.nodeType===3/);
+ assert.match(js,/node\.remove\(\)/);
+ assert.match(js,/pkmsvv-icon-unified/);
+ assert.match(css,/Android 2\.0\.1 icon-grid hotfix/);
+ assert.match(css,/grid-template-columns:42px minmax\(0,1fr\)!important/);
+ assert.match(css,/grid-column:1!important/);
+ assert.match(css,/grid-column:2!important/);
+ assert.match(css,/background-size:126px 42px!important/);
+ for(const cls of ['pkmsvv-menu-icon-pc','pkmsvv-menu-icon-coop','pkmsvv-menu-icon-arena'])
+  assert.ok(original.includes(cls),'missing custom-designed '+cls+' sprite');
+ assert.match(packaging,/pkmsvv-pc-menu-clean-qa\.js/);
+ assert.match(packaging,/pkmsvv-v20-ui-qa\.css/);
+ assert.match(packaging,/pkmsvv-menu-icons\.webp/);
+});
