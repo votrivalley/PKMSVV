@@ -94,7 +94,7 @@
     if(desc&&desc.parentNode!==copy)copy.appendChild(desc);
     for(const n of [...item.childNodes]){
      if(n.nodeType===3 && (isPC&&n.textContent.trim()==='PC'||
-        isCoop&&/^(?:🤝\\s*)?Co-op$/.test(n.textContent.trim())))n.remove();
+        isCoop&&/^(?:🤝\s*)?Co-op$/.test(n.textContent.trim())))n.remove();
     }
    }
   }
