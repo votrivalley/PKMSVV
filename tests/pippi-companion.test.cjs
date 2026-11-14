@@ -178,3 +178,17 @@ test('Co-op keeps only authored WebP and prevents late injected online handshake
  assert.match(css,/COOP_SINGLE_PIXEL_ICON_R3/);
  assert.match(css,/\.mi-ico\.pkmsvv-menu-icon-coop::before/);
 });
+
+
+test('High-DPI canvas gives Pippi a larger world gap but the same on-screen clearance',()=>{
+ const player={x:500,y:400},run=P.newRun(player,0);
+ let p=P.advanceFollower(run,player,0,188);
+ assert.ok(Math.hypot(p.x-player.x,p.y-player.y)>188,
+   'DPR-scaled companion starts fully outside the player footprint');
+ for(let i=1;i<=10;i++){
+  player.y+=5;
+  p=P.advanceFollower(run,player,i*.2,188);
+  assert.ok(Math.hypot(p.x-player.x,p.y-player.y)>150,
+   'DPR-scaled follow must stay at least 50 CSS pixels away');
+ }
+});
