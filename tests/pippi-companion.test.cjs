@@ -87,3 +87,56 @@ test('production Android overlays Pippi and swaps the obsolete compiled GlobalPo
  assert.match(power,/return !!G\.PKMSVVPippi\?\.tryRevive/);
  assert.match(ui,/filter\(u=>!u\.retired\)/);
 });
+
+
+test('Pippi has real independent world position and does not snap to player',()=>{
+ const player={x:100,y:120},run=P.newRun(player,0);
+ let follower=P.advanceFollower(run,player,0);
+ assert.ok(follower&&follower.x!==player.x,'Pippi should spawn next to player, not on top');
+ player.x+=15;
+ follower=P.advanceFollower(run,player,.2);
+ assert.notEqual(follower.x,player.x,'Pippi has independent coordinates');
+ assert.ok(follower.x>74,'Pippi begins following trail');
+ player.x+=30;
+ follower=P.advanceFollower(run,player,.4);
+ assert.ok(follower.speed>0,'Follower uses measured player speed');
+ assert.equal(typeof follower.direction,'number');
+ assert.ok(follower.direction>=0&&follower.direction<8);
+});
+test('Pippi inherits slow-water movement by observing player actual displacement',()=>{
+ const player={x:100,y:100},run=P.newRun(player,0);
+ P.advanceFollower(run,player,0);
+ player.x+=6;
+ let f=P.advanceFollower(run,player,.2);
+ const slow=f.speed;
+ assert.ok(slow>0&&slow<70);
+ player.x+=20;
+ f=P.advanceFollower(run,player,.4);
+ assert.ok(f.speed>slow,'Real measured player speed increases on faster terrain');
+ const lastX=f.x;
+ player.x+=600;
+ f=P.advanceFollower(run,player,.6);
+ assert.ok(Math.abs(player.x-f.x)<50,'Only a portal-like distance triggers safe catch-up');
+});
+test('Ragnarok-like expression indicators use original SVG pixel paths, not emoji text',()=>{
+ for(const kind of ['heart','angry','alarm','question','sleep','sparkle']){
+  const xml=P.emoteSVG(kind);
+  assert.match(xml,/<svg /);
+  assert.match(xml,/shape-rendering='crispEdges'/);
+  assert.doesNotMatch(xml,/[🌀-🫿]/u);
+ }
+ const css=require('node:fs').readFileSync(require('node:path').join(__dirname,'../src/pkmsvv-pippi.css'),'utf8');
+ assert.match(css,/#pkmsvv-pippi-follower \.pippi-world-emote/);
+ assert.match(css,/top:30%!important/);
+ assert.match(css,/right:max\(10px,env\(safe-area-inset-right\)\)!important/);
+});
+test('Android menu uses one original icon and one stacked text column',()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const menu=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pc-menu-clean-qa.js'),'utf8');
+ const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-v20-ui-qa.css'),'utf8');
+ assert.match(menu,/button\.dataset\.pkmMenuRow='true'/);
+ assert.match(menu,/if\(node===art\|\|node===copy\)continue/);
+ assert.match(css,/Android launcher 2\.0\.2/);
+ assert.match(css,/grid-template-columns:42px minmax\(0,1fr\)!important/);
+ assert.match(css,/white-space:nowrap!important/);
+});
