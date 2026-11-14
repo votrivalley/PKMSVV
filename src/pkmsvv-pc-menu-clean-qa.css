@@ -276,3 +276,20 @@
 #scr-menu .menu-right .menu-list .mi-ico.pkmsvv-new-menu-icon{
  display:inline-block!important;vertical-align:middle!important;flex-shrink:0!important
 }
+
+
+/* COOP_SINGLE_PIXEL_ICON_R3: the Co-op button already owns the 42px WebP
+ * sprite. Never draw the legacy handshake pseudo-element in another layer. */
+#scr-menu .menu-right .menu-list > :is(
+ [data-go="multiplayer"],[data-go="coop"],[data-go="co-op"],
+ #pkmsvv-full-lan-entry,#pkmsvv-coop-lan-entry
+).pkmsvv-icon-unified::before,
+#scr-menu .menu-right .menu-list > :is(
+ [data-go="multiplayer"],[data-go="coop"],[data-go="co-op"],
+ #pkmsvv-full-lan-entry,#pkmsvv-coop-lan-entry
+).pkmsvv-icon-unified::after,
+#scr-menu .menu-right .menu-list .mi-ico.pkmsvv-menu-icon-coop::before,
+#scr-menu .menu-right .menu-list .mi-ico.pkmsvv-menu-icon-coop::after,
+#scr-menu .menu-right .menu-list .pkmsvv-icon-unified .pkmsvv-menu-copy::before{
+ display:none!important;content:none!important;background:none!important;
+}
