@@ -140,6 +140,7 @@
 #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item>.mi-ico img,
 #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item>.mi-ico svg,
 #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item>.mi-ico canvas{
- display:block!important;max-width:100%!important;max-height:100%!important;
+ display:block!important;width:100%!important;height:100%!important;
+ max-width:100%!important;max-height:100%!important;
  object-fit:contain!important;image-rendering:pixelated!important;
 }
