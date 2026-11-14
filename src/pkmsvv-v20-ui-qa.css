@@ -748,3 +748,51 @@
   grid-template-columns:repeat(2,minmax(0,1fr))!important;
  }
 }
+
+
+/* Android 2.0.1 icon-grid hotfix. These launchers use the AUTHORED 42px
+ * three-frame WebP sprite sheet. Their pre-existing text nodes were rendered
+ * as anonymous CSS grid items, while Android's old 21/25px column cropped
+ * the artwork. Make exactly one 42px icon + one label column; never use emoji. */
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.pkmsvv-icon-unified{
+ display:grid!important;
+ grid-template-columns:42px minmax(0,1fr)!important;
+ grid-template-rows:auto!important;
+ grid-auto-flow:row!important;
+ justify-content:stretch!important;
+ align-items:center!important;
+ column-gap:12px!important;
+ text-align:left!important;
+ box-sizing:border-box!important;
+ min-height:54px!important;
+ padding:5px 12px!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.pkmsvv-icon-unified>.mi-ico.pkmsvv-new-menu-icon{
+ grid-column:1!important;
+ grid-row:1!important;
+ display:block!important;
+ width:42px!important;height:42px!important;
+ min-width:42px!important;min-height:42px!important;
+ max-width:42px!important;max-height:42px!important;
+ margin:0!important;padding:0!important;
+ align-self:center!important;justify-self:center!important;
+ box-sizing:border-box:content-box!important;
+ background-size:126px 42px!important;
+ background-repeat:no-repeat!important;
+ image-rendering:pixelated!important;
+ overflow:visible!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.pkmsvv-icon-unified>.pkmsvv-menu-copy{
+ grid-column:2!important;grid-row:1!important;
+ display:flex!important;flex-direction:column!important;
+ justify-content:center!important;align-items:flex-start!important;
+ min-width:0!important;max-width:100%!important;
+ text-align:left!important;margin:0!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.pkmsvv-icon-unified>.pkmsvv-menu-copy>.pkmsvv-menu-label{
+ display:block!important;white-space:normal!important;
+ line-height:1.16!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.pkmsvv-icon-unified::before{
+ display:none!important;content:none!important;
+}
