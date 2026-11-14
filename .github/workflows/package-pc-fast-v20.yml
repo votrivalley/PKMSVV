@@ -1,9 +1,15 @@
 name: PC Fast Start - Pokémon Chuyển Sinh 2.0 (manual/release)
 on:
   push:
-    branches: [release/pokemon-chuyen-sinh-2.0-web]
+    branches: [fix/pippi-follow-menu-qa-20261115]
     paths:
       - '.github/workflows/package-pc-fast-v20.yml'
+      - 'src/pkmsvv-pippi.*'
+      - 'src/pkmsvv-pc-menu-clean-qa.*'
+      - 'src/shared/local-shell.js'
+      - 'src/pkmsvv-menu-icons.webp'
+      - 'scripts/prepare-game.cjs'
+      - 'tests/pippi-companion.test.cjs'
       - 'src/pkmsvv-forget-skill.js'
       - 'src/pkmsvv-modal-navigation-qa.js'
   workflow_dispatch:
@@ -26,12 +32,31 @@ jobs:
       - name: Fetch pinned original PokéSurvivor source
         shell: bash
         run: |
+          set -euo pipefail
+          pin=11fe868c640b62ac37beacc222e056bc4d9ec892
           git init vendor/pokesurvivor
-          git -C vendor/pokesurvivor remote add origin https://github.com/JPTER78/pokesurvivor.git
-          git -C vendor/pokesurvivor fetch --depth 1 origin 11fe868c640b62ac37beacc222e056bc4d9ec892
+          available=0
+          for source in https://github.com/JPTER78/pokesurvivor.git \
+                        https://github.com/Lucas-Vargas-0307/pokesurvivor.git \
+                        https://github.com/IvanFreireDacoba/pokesurvivor.git; do
+            git -C vendor/pokesurvivor remote remove origin >/dev/null 2>&1 || true
+            git -C vendor/pokesurvivor remote add origin "$source"
+            if GIT_TERMINAL_PROMPT=0 git -C vendor/pokesurvivor -c credential.helper= fetch --no-tags --depth 1 origin "$pin"; then
+              available=1
+              break
+            fi
+          done
+          test "$available" -eq 1 || { echo "Pinned upstream Pokémon engine unavailable"; exit 1; }
           git -C vendor/pokesurvivor checkout --detach FETCH_HEAD
+          test "$(git -C vendor/pokesurvivor rev-parse HEAD)" = "$pin" || {
+            echo "Pinned engine commit mismatch"; exit 1;
+          }
       - name: Install PC build dependencies
         run: npm install --no-audit --no-fund
+      - name: Fetch exact PMD Pippi sprites and 16 offline portraits
+        run: node scripts/fetch-pippi-pmd.cjs
+      - name: Regression test Pippi following and Co-op artwork
+        run: node --test tests/pippi-companion.test.cjs
       - name: Compile latest offline + LAN game
         run: npm run prepare:lan
       - name: Validate full 36-Mega pack before PC distribution
@@ -56,7 +81,16 @@ jobs:
           $dir='dist/lan-windows/win-unpacked'
           $exe=Get-ChildItem $dir -Filter '*.exe' | Select-Object -First 1
           if(!$exe -or $exe.Length -lt 100KB){throw 'Windows Fast Start EXE missing'}
-          foreach($file in @('resources/lan-site/game/index.html','resources/lan-site/game/js/app.min.js','resources/lan-site/game/assets/icons/icon-192.png')){
+          foreach($file in @(
+            'resources/lan-site/game/index.html',
+            'resources/lan-site/game/js/app.min.js',
+            'resources/lan-site/game/js/ui/pkmsvv-pippi.js',
+            'resources/lan-site/game/js/ui/pkmsvv-pc-menu-clean-qa.js',
+            'resources/lan-site/game/images/pkmsvv-menu-icons.webp',
+            'resources/lan-site/game/images/pippi/Walk-Anim.png',
+            'resources/lan-site/game/images/pippi/portrait/Happy.png',
+            'resources/lan-site/game/assets/icons/icon-192.png'
+          )){
             if(!(Test-Path (Join-Path $dir $file))){throw "Missing PC asset: $file"}
           }
           $app=Get-Content (Join-Path $dir 'resources/lan-site/game/js/app.min.js') -Raw
