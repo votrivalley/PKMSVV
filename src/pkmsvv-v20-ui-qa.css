@@ -796,3 +796,55 @@
 #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.pkmsvv-icon-unified::before{
  display:none!important;content:none!important;
 }
+
+/* Android launcher 2.0.2: single consistent horizontal row per menu entry.
+ * One 42px original sprite, then vertically stacked title and subtitle.
+ * Overrides old two-row Android grid and legacy duplicated Co-op label. */
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list{
+ display:flex!important;flex-direction:column!important;align-items:stretch!important;
+ gap:8px!important;min-width:0!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item,
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.pkmsvv-icon-unified{
+ display:grid!important;
+ grid-template-columns:42px minmax(0,1fr)!important;
+ grid-template-rows:minmax(56px,auto)!important;
+ grid-auto-rows:auto!important;grid-auto-flow:row!important;
+ align-items:center!important;justify-items:stretch!important;
+ width:100%!important;min-width:0!important;max-width:100%!important;
+ min-height:62px!important;height:auto!important;
+ gap:0 12px!important;padding:8px 12px!important;
+ box-sizing:border-box!important;text-align:left!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.pkmsvv-icon-unified>.mi-ico.pkmsvv-new-menu-icon{
+ grid-column:1!important;grid-row:1!important;align-self:center!important;
+ justify-self:center!important;position:relative!important;
+ width:42px!important;height:42px!important;min-width:42px!important;
+ margin:0!important;padding:0!important;float:none!important;
+ transform:none!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.pkmsvv-icon-unified>.pkmsvv-menu-copy{
+ grid-column:2!important;grid-row:1!important;
+ align-self:center!important;justify-self:stretch!important;
+ display:flex!important;flex-direction:column!important;justify-content:center!important;
+ align-items:flex-start!important;gap:2px!important;
+ min-width:0!important;width:100%!important;
+ text-align:left!important;position:static!important;
+ margin:0!important;padding:0!important;transform:none!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.pkmsvv-icon-unified>.pkmsvv-menu-copy>.pkmsvv-menu-label{
+ font-size:clamp(15px,2vw,24px)!important;font-weight:700!important;
+ line-height:1.2!important;white-space:nowrap!important;overflow:hidden!important;
+ text-overflow:ellipsis!important;display:block!important;width:100%!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.pkmsvv-icon-unified>.pkmsvv-menu-copy>small{
+ font-size:clamp(11px,1.25vw,16px)!important;line-height:1.22!important;
+ display:block!important;white-space:normal!important;overflow-wrap:normal!important;
+ width:100%!important;min-width:0!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.pkmsvv-icon-unified>.pkmsvv-menu-copy>*{
+ float:none!important;position:static!important;transform:none!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.pkmsvv-icon-unified::after{
+ content:none!important;display:none!important;
+}
