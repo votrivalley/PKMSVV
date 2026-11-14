@@ -109,3 +109,37 @@
 }
 #scr-menu a.pkmsvv-coop-lan-link small{grid-column:2}
 #scr-menu a.pkmsvv-coop-lan-link:focus-visible{outline:3px solid #ffe277!important;outline-offset:2px}
+
+
+/* Shared LAN/Web/Android menu: keep ORIGINAL icons centered beside both
+ * text lines. Never turn an existing pixel sprite into an emoji. */
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item{
+ display:grid!important;
+ grid-template-columns:34px minmax(0,1fr)!important;
+ column-gap:12px!important;
+ align-items:center!important;
+ text-align:left!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item>.mi-ico,
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item>.pkmsvv-champion-menu-icon{
+ grid-column:1!important;grid-row:1 / span 2!important;
+ display:grid!important;place-items:center!important;
+ box-sizing:border-box!important;
+ width:34px!important;height:34px!important;min-width:34px!important;
+ padding:0!important;margin:0!important;
+ line-height:1!important;overflow:visible!important;
+ align-self:center!important;justify-self:center!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item>.pkmsvv-menu-copy{
+ grid-column:2!important;grid-row:1 / span 2!important;
+ display:flex!important;flex-direction:column!important;
+ justify-content:center!important;align-items:flex-start!important;
+ min-width:0!important;margin:0!important;
+ text-align:left!important;
+}
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item>.mi-ico img,
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item>.mi-ico svg,
+#scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item>.mi-ico canvas{
+ display:block!important;max-width:100%!important;max-height:100%!important;
+ object-fit:contain!important;image-rendering:pixelated!important;
+}
