@@ -215,7 +215,7 @@
   if(!copy){copy=d.createElement('span');copy.className='pkmsvv-menu-copy';}
   let label=copy.querySelector('.pkmsvv-menu-label');
   if(!label){label=d.createElement('span');label.className='pkmsvv-menu-label';copy.prepend(label);}
-  label.textContent=title;
+  if(label.textContent!==title)label.textContent=title;
   const subtitles={
    pc:L('Pokémon hỗ trợ · Mega · Berry','Support Pokémon · Mega · Berry'),
    coop:L('Co-op LAN · cùng Wi-Fi','Co-op LAN · same Wi-Fi'),
@@ -224,7 +224,7 @@
   let small=copy.querySelector('small')||button.querySelector(':scope > small');
   if(!small){small=d.createElement('small');}
   if(small.parentElement!==copy)copy.appendChild(small);
-  if(type==='pc'||type==='coop')small.textContent=subtitles[type];
+  if((type==='pc'||type==='coop')&&small.textContent!==subtitles[type])small.textContent=subtitles[type];
   else if(!small.textContent.trim()&&!button.classList.contains('locked'))small.textContent='';
   else if(!small.textContent.trim())small.textContent=subtitles[type];
   // All legacy glyphs, standalone labels, text nodes and duplicated icon
@@ -276,10 +276,11 @@
    let art=button.querySelector(':scope > .mi-ico');
    if(!art){art=d.createElement('span');art.className='mi-ico';button.prepend(art);}
    removeOldMenuGlyphs(button,art);
-   if(!art.classList.contains('pkmsvv-menu-icon-'+type)){
-    art.replaceChildren();
+   // The sprite lives in the CSS background. Any inner node here is a
+   // re-injected legacy handshake/online icon and must not be rendered.
+   if(art.hasChildNodes())art.replaceChildren();
+   if(!art.classList.contains('pkmsvv-menu-icon-'+type))
     art.className='mi-ico pkmsvv-new-menu-icon pkmsvv-menu-icon-'+type;
-   }
    art.setAttribute('aria-hidden','true');
    normalizeLauncherGrid(button,art,type);
   }
@@ -342,6 +343,23 @@
   });
   // Watch the home menu only; never observe combat HUD/FX mutations globally.
   observer.observe($('#scr-menu')||d.body,{childList:true,subtree:true});
+  // Old Android/Web menu scripts can add icon children AFTER MenuUI.open().
+  // Reconcile only menu structure mutations; never observe combat/HUD nodes.
+  const nav=$('#scr-menu .menu-right .menu-list');
+  if(nav){
+   let scheduled=false;
+   const iconObserver=new MutationObserver(records=>{
+    if(scheduled||!records.some(m=>m.addedNodes.length||m.removedNodes.length))return;
+    scheduled=true;
+    requestAnimationFrame(()=>{
+     scheduled=false;
+     const current=$('#scr-menu');
+     if(current&&current.contains(nav))syncMenuIcons(current);
+    });
+   });
+   iconObserver.observe(nav,{childList:true,subtree:true});
+  }
+
   syncHome();mountPC();
  }
  if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',install,{once:true});else install();
