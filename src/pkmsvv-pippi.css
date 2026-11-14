@@ -46,3 +46,19 @@
 @media(prefers-reduced-motion:reduce){
  #pkmsvv-pippi-follower{animation:none!important}
 }
+
+/* PMD Collab authored eight-direction sprites and Clefairy emotion portraits. */
+#pkmsvv-pippi-follower .pippi-pmd-sprite{display:none}
+#pkmsvv-pippi-follower.has-pmd svg{display:none!important}
+#pkmsvv-pippi-follower.has-pmd .pippi-pmd-sprite{
+ display:block;position:absolute;left:50%;bottom:0;
+ background-repeat:no-repeat;image-rendering:pixelated;
+ transform:translateX(-50%) scale(1.15);transform-origin:center bottom;
+}
+#pkmsvv-pippi .pippi-portrait img{
+ display:block;width:100%;height:100%;image-rendering:pixelated;object-fit:contain;
+}
+#pkmsvv-pippi .pippi-portrait.mega{
+ border-color:#fff1a8;box-shadow:0 0 12px #fbe4ad;
+ background:radial-gradient(circle,#fff9ca,#f7d6ff);
+}
