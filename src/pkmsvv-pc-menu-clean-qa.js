@@ -207,6 +207,40 @@
    if(icon!==newIcon)icon.remove();
   }
  }
+ function normalizeLauncherGrid(button,art,type){
+  // Android 2.0.1 repacks a signed baseline APK with the existing WebP sheet.
+  // Keep its handlers and ensure there are exactly two grid children:
+  // original pixel icon + a column containing the title and subtitle.
+  const title={pc:'PC',coop:'Co-op',arena:'Arena'}[type];
+  let copy=[...button.children].find(el=>el.classList.contains('pkmsvv-menu-copy'));
+  if(!copy){
+   copy=d.createElement('span');copy.className='pkmsvv-menu-copy';
+   button.appendChild(copy);
+  }
+  let label=copy.querySelector('.pkmsvv-menu-label');
+  if(!label){
+   label=d.createElement('span');label.className='pkmsvv-menu-label';
+   copy.prepend(label);
+  }
+  if(label.textContent!==title)label.textContent=title;
+  const description=button.querySelector(':scope > small');
+  if(description&&description.parentElement!==copy)copy.appendChild(description);
+  for(const node of [...button.childNodes]){
+   if(node.nodeType===3){
+    // Bare text becomes an anonymous grid item and shifts icon to another row.
+    if(node.textContent.trim())node.remove();
+   }else if(node.nodeType===1&&node!==art&&node!==copy){
+    // Remove only the obsolete glyph/title of these three known launchers.
+    if(node.matches('.mi-ico,.pkmsvv-champion-menu-icon,.menu-emoji,.mi-emoji,.mi-icon,.menu-icon,.menu-label,.mi-text,.mi-name,.pkmsvv-menu-label')||
+       node.matches('strong')&&node.textContent.trim().toLowerCase()===title.toLowerCase())
+     node.remove();
+   }
+  }
+  if(art!==button.firstElementChild)button.prepend(art);
+  if(copy!==art.nextElementSibling)art.after(copy);
+  if(!button.classList.contains('pkmsvv-icon-unified'))
+   button.classList.add('pkmsvv-icon-unified');
+ }
  function syncMenuIcons(menu){
   // Three tiny WebP sprite cells; do not affect routing, click handlers,
   // controller focus or the other Pokémon/Ký Ức menu icons.
@@ -237,10 +271,12 @@
    let art=button.querySelector(':scope > .mi-ico');
    if(!art){art=d.createElement('span');art.className='mi-ico';button.prepend(art);}
    removeOldMenuGlyphs(button,art);
-   if(art.classList.contains('pkmsvv-menu-icon-'+type))continue;
-   art.replaceChildren();
-   art.className='mi-ico pkmsvv-new-menu-icon pkmsvv-menu-icon-'+type;
+   if(!art.classList.contains('pkmsvv-menu-icon-'+type)){
+    art.replaceChildren();
+    art.className='mi-ico pkmsvv-new-menu-icon pkmsvv-menu-icon-'+type;
+   }
    art.setAttribute('aria-hidden','true');
+   normalizeLauncherGrid(button,art,type);
   }
  }
  function syncHome(){
