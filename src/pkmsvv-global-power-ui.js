@@ -9,8 +9,8 @@ G.GlobalPowerUI = (() => {
     if(!save) return;
     const box=$('pkmg-list'), levels=G.GlobalPower.clean(save.globalUpgrades);
     if(!box) return;
-    const all=G.GlobalPower.LIST.reduce((sum,u)=>sum+G.GlobalPower.rank(levels,u.id),0);
-    const max=G.GlobalPower.LIST.reduce((sum,u)=>sum+u.max,0);
+    const all=G.GlobalPower.LIST.filter(u=>!u.retired).reduce((sum,u)=>sum+G.GlobalPower.rank(levels,u.id),0);
+    const max=G.GlobalPower.LIST.filter(u=>!u.retired).reduce((sum,u)=>sum+u.max,0);
     $('pkmg-title').textContent=txt('NÂNG CẤP TOÀN ĐỘI','TEAM POWERUPS');
     $('pkmg-subtitle').textContent=txt(
       'Tác dụng vĩnh viễn lên TẤT CẢ Pokémon, cộng dồn với nâng cấp riêng. Mua bằng PokéCoins; có thể hoàn trả 100%.',
@@ -19,7 +19,7 @@ G.GlobalPowerUI = (() => {
     $('pkmg-balance').textContent=money(save.coins)+' PokéCoins';
     $('pkmg-back').textContent=txt('Trở về','Back');
     box.innerHTML='';
-    for(const u of G.GlobalPower.LIST) {
+    for(const u of G.GlobalPower.LIST.filter(u=>!u.retired)) {
       const lvl=G.GlobalPower.rank(levels,u.id), full=lvl===u.max, price=G.GlobalPower.cost(u.id,lvl);
       const line=document.createElement('div');
       line.className='pkmg-card';
