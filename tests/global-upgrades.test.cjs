@@ -79,33 +79,17 @@ test('compiled game has the new menu, save schema, and start move integration',(
  assert.match(read('js/app.min.js'),/GlobalPower|globalUpgrades|pkmg-list/);
 });
 
-test('revival is deliberately expensive, bought exactly once permanently',()=>{
- const unaffordable={coins:49999,globalUpgrades:{}};
- assert.equal(P.purchase(unaffordable,'revive'),false);
- assert.equal(P.cost('revive',0),50000);
+test('old 50k revival is retired; Pippi exclusively owns new resurrection',()=>{
+ const poor={coins:49999,globalUpgrades:{}};
+ assert.equal(P.purchase(poor,'revive'),false);
  assert.equal(P.originalCost('revive',0),50000);
- const s={coins:50100,globalUpgrades:{}};
- assert.equal(P.purchase(s,'revive'),true);
- assert.equal(s.coins,100);
- assert.equal(P.purchase(s,'revive'),false);
- assert.equal(P.combine({},s.globalUpgrades).revives,1);
- assert.equal(P.cost('revive',1),0);
-});
-test('the purchased revival activates at fatal HP only once per run',()=>{
- const pl={hp:-24,maxHp:200,dead:false,extraRevives:1,invuln:0,
-   revive(fraction){this.hp=Math.round(this.maxHp*fraction);this.dead=false;this.invuln=2;}
- };
- assert.equal(P.tryRevive(pl),true);
- assert.equal(pl.hp,120);
- assert.equal(pl.invuln,3);
- assert.equal(pl.extraRevives,0);
- pl.hp=0;pl.invuln=0;
- assert.equal(P.tryRevive(pl),false);
- const sashSaved={...pl,hp:1,extraRevives:1};
- assert.equal(P.tryRevive(sashSaved),false);
- assert.equal(sashSaved.extraRevives,1);
- const noUnlock={...pl,hp:0,extraRevives:0};
- assert.equal(P.tryRevive(noUnlock),false);
+ assert.equal(P.cost('revive',0),50000); // historical refund calculation only
+ const rich={coins:100000,globalUpgrades:{}};
+ assert.equal(P.purchase(rich,'revive'),false);
+ assert.equal(rich.coins,100000);
+ assert.equal(P.combine({}, {revive:1}).revives,0);
+ assert.equal(P.BY.revive.retired,true);
+ assert.equal(P.tryRevive({hp:0,extraRevives:1}),false);
 });
 test('an earlier 3-skill save is capped at two and returns legacy second-rank cost',()=>{
  assert.equal(P.combine({}, {opening:2}).startMoves,2);
