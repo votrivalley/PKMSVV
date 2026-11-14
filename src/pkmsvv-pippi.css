@@ -1,0 +1,26 @@
+/* PKMSVV Pippi: light DOM-only companion overlay, no gameplay hitboxes. */
+#pkmsvv-pippi{
+ position:fixed;left:max(12px,env(safe-area-inset-left));bottom:max(18px,env(safe-area-inset-bottom));
+ z-index:2200;box-sizing:border-box;pointer-events:none;
+ display:flex;align-items:center;gap:8px;max-width:min(380px,67vw);
+ background:linear-gradient(140deg,rgba(59,39,75,.96),rgba(37,49,76,.96));
+ border:2px solid #f2c3db;border-radius:14px;padding:7px 10px 7px 6px;
+ color:#fff6fc;box-shadow:0 5px 18px #12182780;
+ font:600 clamp(11px,1.3vw,15px)/1.25 "Segoe UI",Tahoma,Arial,sans-serif;
+}
+#pkmsvv-pippi[hidden]{display:none!important}
+#pkmsvv-pippi .pippi-portrait{
+ flex:0 0 clamp(38px,5vw,56px);display:block;
+ width:clamp(38px,5vw,56px);height:clamp(38px,5vw,56px);
+ background:#fff0f5;border:2px solid #eaa8c6;border-radius:10px;
+ overflow:hidden;
+}
+#pkmsvv-pippi .pippi-portrait svg{display:block;width:100%;height:100%;image-rendering:pixelated}
+#pkmsvv-pippi .pippi-message{display:flex;flex-direction:column;gap:2px;min-width:0}
+#pkmsvv-pippi .pippi-message b{color:#ffe39b;font-size:1.03em}
+#pkmsvv-pippi .pippi-line{color:#fff8fa;overflow-wrap:anywhere}
+#pkmsvv-pippi .pippi-bond{font-size:.76em;color:#ffd9e8}
+@media(max-height:480px) and (orientation:landscape){
+ #pkmsvv-pippi{bottom:10px;left:8px;max-width:min(330px,48vw);padding:4px 8px 4px 4px}
+ #pkmsvv-pippi .pippi-portrait{width:38px;height:38px;flex-basis:38px}
+}
