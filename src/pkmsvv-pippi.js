@@ -376,6 +376,9 @@
    ui=el;return el;
   }
   function follow(pl){
+   // CI-only A/B switch. Do not render companion DOM when explicitly disabled;
+   // the native combat and Pippi skills still run, isolating UI layout pressure.
+   if(w.__pkmsvvPippiRenderDisabled===true)return;
    if(!d.body)return;
    if(!follower?.isConnected){
     follower=d.createElement('div');

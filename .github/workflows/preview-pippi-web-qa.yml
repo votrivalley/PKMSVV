@@ -65,6 +65,11 @@ jobs:
           PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
           PKMSVV_BROWSER_WITHOUT_PIPPI: '1'
         run: timeout 240s node tests/pokebox-stage2-browser.cjs
+      - name: A/B diagnostic — Pippi skills enabled, world follower DOM disabled
+        env:
+          PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
+          PKMSVV_DISABLE_PIPPI_RENDER: '1'
+        run: timeout 240s node tests/pokebox-stage2-browser.cjs
       - name: Chromium regression — PC companion, 150s first Explore and 45s restart
         env:
           PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release

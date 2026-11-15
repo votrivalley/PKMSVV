@@ -95,6 +95,10 @@ async function main(){
    const last=await evaluate(query).catch(e=>({cdpError:e.message}));
    throw Error(err.message+'; last='+JSON.stringify(last)+'; scriptExceptions='+JSON.stringify(errors.slice(-8)));
   });
+  if(process.env.PKMSVV_DISABLE_PIPPI_RENDER==='1'){
+   await evaluate("window.__pkmsvvPippiRenderDisabled=true");
+   console.log('PIPPI_RENDER_AB_DISABLED=true');
+  }
   // Read-only runtime audit for new defeated-only Dex and evolution QA.
   // Logs only public engine source/definition names; never any user save.
   const runtimeAudit=await evaluate(`(()=>({
