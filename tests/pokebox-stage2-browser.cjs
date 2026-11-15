@@ -981,6 +981,29 @@ async function main(){
     console.log('QA_COMBAT_GRIETA_RIFT_ENTER='+JSON.stringify(enter));
     assert.equal(enter.inArena,true,
      'Native Grieta/Rift must open and remain inArena; '+JSON.stringify(enter));
+    if(process.env.PKMSVV_TRACE_RIFT==='1'){
+     // Sample entry/exit once per game-second for each native stage. A
+     // synchronous infinite loop will leave a BEGIN without a paired END;
+     // unlike setInterval this still produces evidence if CDP stops replying.
+     await evaluate(`(()=>{
+      const hooks=[['Rift','update'],['EnemyMgr','update'],
+       ['Spawner','update'],['Pickups','update'],['Combat','tick'],
+       ['Weather','update'],['HUD','draw'],['Render','draw']];
+      for(const [name,key] of hooks){
+       const obj=G[name],prev=obj?.[key];
+       if(typeof prev!=='function')continue;
+       let previous=-1;
+       obj[key]=function(...args){
+        const sec=Math.floor(Number(G.Game?.st?.time)||0);
+        const trace=!!G.Rift?.inArena&&sec!==previous&&sec<65;
+        if(trace){previous=sec;console.log('QA_RIFT_STAGE_BEGIN:'+name+'.'+key+':'+sec)}
+        try{return prev.apply(this,args)}
+        finally{if(trace)console.log('QA_RIFT_STAGE_END:'+name+'.'+key+':'+sec)}
+       };
+      }
+     })()`);
+     console.log('QA_RIFT_STAGE_DIAGNOSTICS_INSTALLED');
+    }
    }
 
    await sleep(10000);
