@@ -384,15 +384,9 @@
     follower.innerHTML=faceSVG('smile',false)+'<span class="pippi-pmd-sprite"></span>'+
      '<span class="pippi-clefable-sprite"></span><span class="pippi-world-emote"></span>'+
      '<span class="pippi-cousin" hidden></span>';
-    try{
-     const clefable=G.UI?.spriteCanvas?.(36,48,48,{lively:true,scale:1.2,hero:true});
-     if(clefable?.nodeType)follower.querySelector('.pippi-clefable-sprite').append(clefable);
-    }catch(_){/* sprite may not yet be initialized; leave original PMD art */}
-    try{
-     const pikachu=G.UI?.spriteCanvas?.(25,48,48,{lively:true,scale:1.1,hero:true});
-     if(pikachu?.nodeType)follower.querySelector('.pippi-cousin').append(pikachu);
-    }catch(_){/* optional visual; game sprite data remains unchanged */}
-    G.Sprites?.preload?.([25,36],6000);
+    // Do NOT create two extra live Pokémon sprite canvases at Explore start.
+    // Animated UI sprite loops may outlive their elements across repeated
+    // runs, exhausting Web/Android renderers. PMD Pippi remains independent.
     d.body.appendChild(follower);
     const probe=d.createElement('img');
     probe.onload=()=>follower?.classList.add('has-pmd');
@@ -425,7 +419,17 @@
    run.direction=state.direction;
    follower.classList.toggle('moving',state.moving);
    const cousin=follower.querySelector('.pippi-cousin');
-   if(cousin)cousin.hidden=run.now>=run.cousinUntil;
+   if(cousin){
+    cousin.hidden=run.now>=run.cousinUntil;
+    // Spawn the real game Pikachu sprite ONLY when the learned proc fires.
+    // Still/static sprite: never start an extra perpetual RAF loop.
+    if(!cousin.hidden&&!cousin.firstElementChild){
+     try{
+      const art=G.UI?.spriteCanvas?.(25,48,48,{lively:false,scale:1.1,hero:false});
+      if(art?.nodeType)cousin.append(art);
+     }catch(_){/* optional art, lightning effect stays functional */}
+    }
+   }
    const emote=follower.querySelector('.pippi-world-emote');
    if(emote)emote.hidden=run.now>=run.emoteUntil;
    follower.dataset.direction=String(run.direction);
@@ -435,6 +439,15 @@
    follower.classList.toggle('evolving',evolving);
    follower.classList.toggle('sleeping',asleep);
    follower.classList.toggle('mega',mega);
+   if(evolving||mega){
+    const artBox=follower.querySelector('.pippi-clefable-sprite');
+    if(artBox&&!artBox.firstElementChild){
+     try{
+      const art=G.UI?.spriteCanvas?.(36,48,48,{lively:false,scale:1.2,hero:false});
+      if(art?.nodeType)artBox.append(art);
+     }catch(_){/* local Pippi portrait remains the fallback */}
+    }
+   }
    if(follower.classList.contains('has-pmd')){
     const moving=!!state.moving;
     const file=asleep?'Sleep-Anim.png':moving?'Walk-Anim.png':'Idle-Anim.png';
