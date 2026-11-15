@@ -479,7 +479,7 @@ async function main(){
   assert.equal(companionBrowser.visible,true,'fourth PC tile must be present');
   assert.equal(companionBrowser.overlay,true,'companion learning dialog must open on click');
   assert.ok(companionBrowser.controls.includes('cousin'),'Pikachu cousin skill must be learnable');
-  await evaluate("G.PKMSVVWiki?.close?.()");
+  await evaluate("G.PKMSVVWiki?.open?.()");
 
   const doneKnowledge=await evaluate("(()=>{const panel=document.querySelector('#pkmsvv-wiki-overlay .pkmsvv-pc-learn'),save=G.DB.save; if(!panel||!save||!G.PKMSVVSkillTrack)return {mounted:false};const old=save.pkmsvvSkillMarks;const skill=document.createElement('button');skill.textContent='Skill Awakening';const seasonal=document.createElement('button');seasonal.textContent='Sương Ký Ức · Sự kiện mùa';try{save.pkmsvvSkillMarks={k50:true,k100:true,k200:true,u10:true,u20:true};panel.append(skill,seasonal);G.PKMSVVMenuCleanQA.mountPC();return {mounted:true,skillHidden:!skill.isConnected,seasonHidden:!seasonal.isConnected,slots:G.PKMSVVSkillTrack.progress(save).count};}finally{if(old===undefined)delete save.pkmsvvSkillMarks;else save.pkmsvvSkillMarks=old;skill.remove();seasonal.remove()}})()");
   assert.equal(doneKnowledge.mounted,true,'PC knowledge panel and Skill Track must be present');
