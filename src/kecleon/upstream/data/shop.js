@@ -10,13 +10,13 @@
  * MT a la venta: 8 cada día, iguales para todos (semilla: la fecha en España).
  * Si ninguna sirve a tu compañero, la última se cambia por una que sí aprenda.
  */
-G.Shop = (() => {
+G.Shop=(()=>{
   const ITEMS = {
     mint: { name: 'Menta', icon: 'mint', price: 1500,
-            desc: 'Cambia la naturaleza de un Pokémon por la que tú elijas.' },
+            desc: 'Rerolls a Pokémon Nature randomly.' },
     cap:  { name: 'Cápsula Habilidad', icon: 'capsule', price: 1500,
-            desc: 'Cambia la habilidad de un Pokémon por otra de las suyas (no la oculta).' },
-    caph: { name: 'Cápsula Habilidad Oculta', icon: 'capsuleh', price: 5000, hidden: true,
+            desc: 'Rerolls one of the Pokémon’s standard Abilities.' },
+    caph: { name: 'Cápsula Habilidad Oculta', icon: 'capsuleh', price: 10000, hidden: true, unavailableInShop: true,
             desc: 'Cambia la habilidad de un Pokémon por cualquiera de las suyas, también la oculta.' }
   };
   const ORDER = ['mint', 'cap', 'caph'];
@@ -68,6 +68,41 @@ G.Shop = (() => {
   }
   const tmPrice = id => G.TM_PRICE[id] || 400;
 
+  // Wild item drops. Each roll is independent per item. A Hidden Capsule
+  // is deliberately scarcer than standard Mints/Capsules and remains off-sale.
+  const DROP_RATE=Object.freeze({mint:.008,cap:.008,caph:.002});
+  function enemyMultiplier(enemy){
+    const rarity=Number(enemy?.rarity??enemy?.mon?.rarity??G.DEX_BY?.[enemy?.dex]?.rarity??0);
+    return enemy?.legendary||enemy?.isLegendary||rarity>=5||enemy?.boss?4:
+      (enemy?.elite||enemy?.isElite||enemy?.kind==='elite'?2:1);
+  }
+  function dropFromEnemy(enemy,random=Math.random){
+    const s=save();
+    if(!s||G.DB?.guest||!enemy||enemy._pkmsvvShopDropCounted||
+      enemy.remote||enemy.arceus||enemy.isCompanion||
+      enemy.pkmsvvChampionSupport||enemy._pkmsvvBossSupport||
+      G.Game?.state!=='playing'||G.PKMSVVArenaSolo?.active||
+      G.PKMSVVChampionArena?.active||G.PKMSVVArenaPvp?.active||
+      G.Royale?.active||G.EggRush?.active)return [];
+    enemy._pkmsvvShopDropCounted=true;
+    const multiplier=enemyMultiplier(enemy),found=[];
+    for(const [key,base] of Object.entries(DROP_RATE)){
+      if(Number(random())<base*multiplier&&Number(s.bag?.[key]||0)<999)found.push(key);
+    }
+    if(!found.length)return [];
+    const previous=JSON.stringify(s.bag||{});
+    s.bag=s.bag||{};
+    for(const key of found)s.bag[key]=(s.bag[key]||0)+1;
+    try{
+      if(G.DB.commit(true)===false)throw Error('Cannot save dropped items');
+      return found;
+    }catch(_){
+      s.bag=JSON.parse(previous);
+      enemy._pkmsvvShopDropCounted=false;
+      return [];
+    }
+  }
+
   // ---------------- comprar ----------------
 
   /** Compra un objeto ('mint'...) o una MT ('tm:flamethrower'). → { ok, error? } */
@@ -76,7 +111,7 @@ G.Shop = (() => {
     if (!s) return { ok: false };
     const tm = key.startsWith('tm:') ? key.slice(3) : null;
     if (tm && !dailyTms().includes(tm)) return { ok: false, error: 'Esa MT ya no está a la venta.' };
-    if (!tm && !ITEMS[key]) return { ok: false };
+    if (!tm && (!ITEMS[key] || ITEMS[key].unavailableInShop)) return { ok: false };
     const price = tm ? tmPrice(tm) : ITEMS[key].price;
     if (s.coins < price) return { ok: false, error: 'No tienes Pokémonedas suficientes.' };
     s.coins -= price;
@@ -86,5 +121,28 @@ G.Shop = (() => {
     return { ok: true };
   }
 
-  return { ITEMS, ORDER, count, take, tmCount, takeTm, dailyTms, tmPrice, buy, today };
+  // Selling is an atomic Bag operation, including TM copies. The Hidden
+  // Capsule cannot be purchased but an existing/dropped copy is sellable.
+  function sell(key) {
+    const s=save(),tm=typeof key==='string'&&key.startsWith('tm:')?key.slice(3):null;
+    if(!s||G.DB.guest||(!tm&&!ITEMS[key])||
+      (tm&&!G.Moves?.BY_ID?.[tm]))return {ok:false};
+    const store=tm?s.tms:s.bag,id=tm||key;
+    if(!store||!Number.isSafeInteger(store[id])||store[id]<1)return {ok:false};
+    const refund=Math.floor((tm?tmPrice(tm):ITEMS[key].price)/2);
+    if(!Number.isSafeInteger(s.coins)||s.coins<0||!Number.isSafeInteger(s.coins+refund))
+      return {ok:false};
+    const previous={coins:s.coins,count:store[id]};
+    store[id]--;
+    if(!store[id])delete store[id];
+    s.coins+=refund;
+    try{
+      if(G.DB.commit(true)===false)throw Error('Save commit failed');
+      return {ok:true,key,refund,coins:s.coins};
+    }catch(_){
+      s.coins=previous.coins;store[id]=previous.count;
+      return {ok:false};
+    }
+  }
+  return { ITEMS, ORDER, DROP_RATE, enemyMultiplier, dropFromEnemy, count, take, tmCount, takeTm, dailyTms, tmPrice, buy, sell, today };
 })();

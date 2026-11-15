@@ -539,6 +539,8 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-global-upgrade
 execFileSync(process.execPath,[path.join(project,'scripts','patch-power015.cjs')],{cwd:project,stdio:'inherit'});
 // Gacha ALL GEN, Pokédex milestones, daily/weekly Pokemon missions and manual backup.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-collection.cjs')],{cwd:project,stdio:'inherit'});
+// P0 Save Guardian 2.0: one idempotent local backup/transaction journal on PC, Android and Web.
+execFileSync(process.execPath,[path.join(project,'scripts','patch-save-guardian-v2.cjs')],{cwd:project,stdio:'inherit'});
 // v0.9.1: Switch/Android/PC controller navigation and one-press play from Pokedex.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-controller.cjs')],{cwd:project,stdio:'inherit'});
 // v0.9.2: restore WebAudio music after focus/sleep and gamepad-only input.

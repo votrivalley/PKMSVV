@@ -44,6 +44,29 @@ G.PKMSVVBerry=(()=>{
   '<span class="pkmsvv-berry-details"><b>'+esc(d.rarity)+'</b> · '+esc(d.trigger)+'<span> · '+esc(d.duration)+'</span><span> · '+esc(d.limit)+'</span></span>':'';}
  const cap=n=>Math.max(0,Math.min(999,Math.floor(Number(n)||0)));
  let choiceOpen=false,turn=0,current=null,chooseTimer=null,menuAdded=false,modals=[];
+ const SELECT_SECONDS=10;
+ let choiceReady=new Set(),choiceDone=null,choiceRoom=null,choiceConfirmed=false,netHook=false;
+ const humans=()=>Array.isArray(G.Social?.room?.members)?
+   G.Social.room.members.filter(m=>!m.bot&&typeof m.uid==='string').map(m=>m.uid):[];
+ const multiplayer=()=>!!G.Coop?.active&&humans().length>1;
+ function berryReadyMessage(from,data){
+  if(!choiceOpen||!multiplayer()||!choiceRoom||data?.room!==choiceRoom||
+    !humans().includes(from)||!['berry-ready','berry-advance'].includes(data.k))return;
+  if(data.k==='berry-advance'){
+   if(from===G.Social?.room?.host&&!G.Coop?.isHost)choiceDone?.();
+   return;
+  }
+  if(!G.Coop?.isHost)return;
+  choiceReady.add(from);
+  if(humans().every(id=>choiceReady.has(id))){
+   G.Net?.broadcast?.({k:'berry-advance',room:choiceRoom,mode:G.Social?.room?.mode});
+   choiceDone?.();
+  }
+ }
+ function installBerryNetwork(){
+  if(netHook||typeof G.Net?.on!=='function')return;
+  G.Net.on((from,data)=>berryReadyMessage(from,data));netHook=true;
+ }
  let hudEl=null,hudStamp='',hudClock=0;
  function hideHud(){
   if(hudEl)hudEl.hidden=true;
@@ -51,7 +74,7 @@ G.PKMSVVBerry=(()=>{
  }
  function cancelOffer(){
   if(!choiceOpen)return false;
-  choiceOpen=false;turn++;
+  choiceOpen=false;turn++;choiceDone=null;choiceReady.clear();choiceRoom=null;choiceConfirmed=false;
   if(chooseTimer!==null){clearInterval(chooseTimer);chooseTimer=null;}
   clearModal();return true;
  }
@@ -295,14 +318,19 @@ G.PKMSVVBerry=(()=>{
   if(choiceOpen){onDone?.([]);return false;}
   const d=data();
   if(!d){onDone?.([]);return false;}
-  choiceOpen=true;const token=++turn;let seconds=4;
+  choiceOpen=true;const token=++turn;let seconds=SELECT_SECONDS;
+  installBerryNetwork();choiceReady.clear();choiceConfirmed=false;
+  choiceRoom=multiplayer()?String(G.Social.room.id||''):null;
   const picked=[];let locked=false;
   const panel=shell(tr('CHỌN BERRY TRƯỚC TRẬN','CHOOSE PRE-BATTLE BERRIES'),
-    tr('Còn 4 giây · Chọn tối đa 2 Berry · Có thể bỏ qua','4 seconds · Max 2 Berries · You may skip'));
-  const clock=document.createElement('strong');clock.className='pkmsvv-berry-clock';clock.textContent='04s';panel.append(clock);
+    tr('Còn 10 giây · Chọn tối đa 2 Berry · Xác nhận để vào trận sớm',
+       '10 seconds · Up to 2 Berries · Confirm to start early'));
+  const clock=document.createElement('strong');clock.className='pkmsvv-berry-clock';clock.textContent='10s';panel.append(clock);
   const grid=document.createElement('div');grid.className='pkmsvv-berry-grid';panel.append(grid);
   const done=()=>{
-   if(token!==turn||!choiceOpen)return;choiceOpen=false;clearInterval(chooseTimer);chooseTimer=null;
+   if(token!==turn||!choiceOpen)return;
+   choiceOpen=false;choiceDone=null;choiceRoom=null;choiceConfirmed=false;choiceReady.clear();
+   clearInterval(chooseTimer);chooseTimer=null;
    clearModal();finishChoice(picked,onDone,mode||'pve',preRun);
   };
   for(const type of TYPES.filter(t=>count(t.id)>0)){
@@ -316,12 +344,34 @@ G.PKMSVVBerry=(()=>{
    meta.textContent=berryDetails(type.id)?.text||'';b.append(meta);
    b.append(image(type.id,36));grid.append(b);
   }
-  if(!grid.children.length){const empty=document.createElement('p');empty.className='pkmsvv-berry-empty';empty.textContent=tr('Túi đang trống. Trận sẽ bắt đầu sau 4 giây.','No Berries yet. Match begins in 4 seconds.');grid.append(empty);}
-  panel.append(button(tr('Xác nhận','Confirm'),()=>{locked=true;clock.textContent='✓ '+seconds+'s';},'primary'));
-  panel.append(button(tr('Không dùng Berry','No Berry'),()=>{picked.length=0;locked=true;clock.textContent='✓ '+seconds+'s';},'ghost'));
-  chooseTimer=setInterval(()=>{if(token!==turn)return;seconds--;clock.textContent='0'+seconds+'s';if(seconds<=0)done();},1000);
-  // During the four-second selection, prevent unavoidable early deaths.
-  const pl=!preRun&&G.Game?.player;if(pl)pl.invuln=Math.max(pl.invuln||0,5);
+  if(!grid.children.length){const empty=document.createElement('p');empty.className='pkmsvv-berry-empty';empty.textContent=tr('Túi trống. Xác nhận để bắt đầu ngay hoặc đợi 10 giây.','Bag empty. Confirm to start now or wait 10 seconds.');grid.append(empty);}
+  choiceDone=done;
+  const markReady=(skip=false)=>{
+   if(!choiceOpen||choiceConfirmed)return;
+   if(skip)picked.length=0;
+   choiceConfirmed=true;locked=true;
+   if(!multiplayer()){done();return;}
+   const uid=G.Social?.uid;
+   if(uid)choiceReady.add(uid);
+   clock.textContent='✓ '+tr('Đã sẵn sàng · ','Ready · ')+seconds+'s';
+   const packet={k:'berry-ready',room:choiceRoom,mode:G.Social?.room?.mode};
+   if(G.Coop?.isHost){
+    if(humans().every(id=>choiceReady.has(id))){
+     G.Net?.broadcast?.({k:'berry-advance',room:choiceRoom,mode:G.Social?.room?.mode});
+     done();
+    }
+   }else G.Net?.toHost?.(packet);
+  };
+  panel.append(button(tr('✓ Xác nhận','✓ Confirm'),()=>markReady(false),'primary'));
+  panel.append(button(tr('Không dùng Berry','No Berry'),()=>markReady(true),'ghost'));
+  chooseTimer=setInterval(()=>{
+   if(token!==turn||!choiceOpen)return;
+   seconds=Math.max(0,seconds-1);
+   clock.textContent=(choiceConfirmed?'✓ ':'')+String(seconds).padStart(2,'0')+'s';
+   if(seconds<=0)done();
+  },1000);
+  const pl=!preRun&&G.Game?.player;
+  if(pl)pl.invuln=Math.max(pl.invuln||0,SELECT_SECONDS+1);
   return true;
  }
  function ratio(pl,key,val){
@@ -416,6 +466,7 @@ G.PKMSVVBerry=(()=>{
    const old=G.MenuUI.open;G.MenuUI._pkmsvvBerryMenuWrapped=true;
    G.MenuUI.open=function(...args){cancelOffer();hideHud();const ret=old.apply(this,args);mountMenu();return ret;};
   }
+  installBerryNetwork();
   mountMenu();
  }
  function mountMenu(){
@@ -424,7 +475,7 @@ G.PKMSVVBerry=(()=>{
   // Do not reintroduce a floating button that overlays the main menu.
  }
  // Stable public QA interface.
- return {TYPES,byId,berryDetails,effectState,renderHud,hideHud,cancelOffer,data,count,grant,buy,chapterProgress,markUsed,offer,openBag,rescue,kecleonHtml,spriteUrl,image,install,tick,apply,hurt,get choosing(){return choiceOpen;}};
+ return {SELECT_SECONDS,TYPES,byId,berryDetails,effectState,renderHud,hideHud,cancelOffer,data,count,grant,buy,chapterProgress,markUsed,offer,openBag,rescue,kecleonHtml,spriteUrl,image,install,tick,apply,hurt,get choosing(){return choiceOpen;}};
 })();
 // This deferred file executes before js/game.js. Bind startRun again after
 // all deferred scripts finish, otherwise no four-second pre-match picker.

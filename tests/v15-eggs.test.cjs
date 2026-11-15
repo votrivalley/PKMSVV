@@ -6,11 +6,11 @@ const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
 
 test('Canonical support roster matches runtime and silhouette entries are not invented',()=>{
  const solo=read('src/v15/eggs.js'),online=read('src/web/pkmsvv-egg-rush.js');
- const expected=[[172,'paralyze'],[447,'attack'],[173,'heal'],
-  [360,'shield'],[438,'shield'],[175,'magnet'],[174,'slow'],[132,'ditto'],[151,'mew']];
+ const expected=[[172,'paralyze'],[447,'physical'],[173,'slow'],
+  [360,'special'],[440,'heal'],[438,'shield'],[175,'magnet'],[174,'sleep'],[132,'ditto'],[151,'mew']];
  const G={};vm.runInNewContext(solo,{G,Math,Number,Object});
  assert.deepEqual(Array.from(G.PKMSVVEggs.SPECIES,x=>[x.dex,x.role]),expected);
- assert.match(online,/EGG_SPECIES=\[172,447,173,360,438,175,174\]/);
+ assert.match(online,/EGG_SPECIES=\[172,447,173,360,440,438,175,174\]/);
  assert.doesNotMatch(solo,/{dex:707[,}]/);
  const catalog=read('src/pkmsvv-support-catalog.js');
  assert.match(catalog,/paralyze:\['Tê liệt'/);
@@ -50,7 +50,7 @@ test('Pichu paralyzes at most four nearby enemies using real stun, with 7s prote
  assert.ok(fx.some(e=>e[3]===95),'Area visual radius matches gameplay');
 });
 
-test('Healing and shields buff only own lead and living companions, with 25% cap',()=>{
+test('Happiny heals all friendly co-op team members; shields remain owned and capped at 25%',()=>{
  const pl={x:0,y:0,kills:0,level:1,dead:false,maxHp:200,hp:100,pkmsvvShield:0,
   heal(n){this.hp=Math.min(this.maxHp,this.hp+n);}};
  const G={I18n:{lang:'vi'},DB:{save:{pkmsvvChapter3Seen:true,pkmsvvEggSlot2:true,stats:{}},commit(){}},
@@ -61,24 +61,26 @@ test('Healing and shields buff only own lead and living companions, with 25% cap
   Sprites:{preload(){}},Spawner:{say(){}}};
  vm.runInNewContext(read('src/v15/eggs.js'),{G,Math,Number,Object});
  G.PKMSVVEggs.begin(pl,false);
- const healer={dex:173,hatched:true,active:true,x:0,y:0,hp:50,maxHp:100,
+ const healer={dex:440,hatched:true,active:true,x:0,y:0,hp:50,maxHp:100,
   cooldown:0,statScale:1,affinityBoost:1,spd:100,hitCooldown:0,shield:0};
  const ally={dex:447,hatched:true,active:true,x:0,y:0,hp:20,maxHp:100,
   cooldown:999,statScale:.7,spd:100,hitCooldown:0,shield:0};
  G.PKMSVVEggs.followers.push(healer,ally);
  const outsider={hp:40,maxHp:100};
- G.Coop.players=()=>[outsider];
+ G.Coop.players=()=>[outsider];G.Coop.active=true;
  G.PKMSVVEggs.update(.1,pl,5,false);
  assert.ok(pl.hp>100&&healer.hp>50&&ally.hp>20,'All owned members healed simultaneously');
- assert.equal(outsider.hp,40,'Not other human players');
+ assert.ok(outsider.hp>40,'Happiny must heal other friendly Co-op members');
+ const healedCoopHp=outsider.hp;
  assert.equal(healer.cooldown,12);
- healer.dex=360;healer.cooldown=0;
+ healer.dex=438;healer.cooldown=0;
  G.PKMSVVEggs.update(.1,pl,6,false);
  assert.ok(pl.pkmsvvShield>0&&healer.shield>0&&ally.shield>0);
- assert.equal(healer.cooldown,19);
+ assert.equal(healer.cooldown,15);
  for(let i=0;i<30;i++){healer.cooldown=0;G.PKMSVVEggs.update(.1,pl,7+i,false);}
  assert.ok(pl.pkmsvvShield<=pl.maxHp*.25&&healer.shield<=healer.maxHp*.25&&ally.shield<=ally.maxHp*.25);
- assert.equal(outsider.hp,40);
+ assert.equal(outsider.hp,healedCoopHp,'Shield must not change remote teammate HP');
+ assert.equal(outsider.pkmsvvShield,undefined,'Shield remains scoped to owner and supports');
 });
 
 test('Chapter 3 continues existing arc, unlocks on six USED types, and preserves replay',()=>{
@@ -281,11 +283,11 @@ test('Solo egg nest requires 2 seconds, interruption resets progress, and hit de
  save.pkmsvvEggSlot3=true;assert.equal(G.PKMSVVEggs.limit(),2);
 });
 
-test('Igglybuff support slows targets and emits target/support VFX only on successful cast',()=>{
+test('Igglybuff support sleeps nearby targets and emits successful-cast VFX',()=>{
  const source=read('src/v15/eggs.js');
  const player={x:0,y:0,dead:false,kills:0,level:1,maxHp:100,hp:100,heal(){}};
  const save={pkmsvvChapter3Seen:true,stats:{}};
- const enemy={x:0,y:0,dead:false,remote:false,applySlow(k,d){this.slow=(this.slow||0)+1;this.slowPower=k;this.duration=d;}};
+ const enemy={x:0,y:0,dead:false,remote:false,applyStun(d){this.slow=(this.slow||0)+1;this.slowPower=d;this.duration=d;}};
  let rings=0,bursts=0,damageTexts=[];
  const G={I18n:{lang:'vi'},DB:{save,commit(){}},
   Sprites:{preload(){},dirFromAngle:()=>0,Animator:class{loop(){}update(){}draw(){}}},
@@ -306,10 +308,10 @@ test('Igglybuff support slows targets and emits target/support VFX only on succe
  assert.equal(egg.active,true);
  enemy.x=egg.x;enemy.y=egg.y;
  for(let i=0;i<42;i++)G.PKMSVVEggs.update(.25,player,100+i*.25,false);
- assert.ok(enemy.slow>0,'Igglybuff must apply a real debuff');
+ assert.ok(enemy.slow>0,'Igglybuff must apply a real sleep/stun debuff');
  assert.ok(enemy.slowPower>0&&enemy.duration>0);
- assert.ok(rings>=2&&bursts>=1,'Visual rings and particles mark successful slow');
- assert.ok(damageTexts.some(args=>args.includes('CHẬM!')),'Slow effect is visible to the player');
+ assert.ok(rings>=2,'Visual rings mark successful nearby sleep');
+ assert.ok(damageTexts.some(args=>args.includes('NGỦ!')),'Sleep effect is visible to the player');
 });
 
 test('egg direction indicator, reverse timer bars, walking animation and shield-safe damage are bundled',()=>{
@@ -384,8 +386,8 @@ test('3% Shiny support exists only within run at 100% of main Pokemon stats; nor
  assert.equal(shiny.G.PKMSVVEggs.SHINY_CHANCE,.03);
  assert.equal(shiny.it.shiny,true);
  assert.equal(shiny.it.statScale,1);
- assert.equal(shiny.it.maxHp,160);
- assert.equal(shiny.it.hp,160);
+ assert.equal(shiny.it.maxHp,320,'Shiny support receives 2× HP');
+ assert.equal(shiny.it.hp,320,'Freshly hatched Shiny starts at full doubled HP');
  assert.equal(shiny.it.atk,80);
  assert.equal(shiny.it.spd,140);
  assert.equal(shiny.it.anim.shiny,true);
@@ -395,7 +397,7 @@ test('3% Shiny support exists only within run at 100% of main Pokemon stats; nor
  assert.equal(regular.it.shiny,false,'Exactly .03 is outside the 3% range');
  assert.equal(regular.save.pkmsvvSupportShiny?.[regular.it.dex],undefined);
  assert.equal(regular.it.statScale,.65);
- assert.equal(regular.it.maxHp,104);
+ assert.equal(regular.it.maxHp,208,'Regular support also receives 2× HP');
  assert.equal(regular.it.atk,52);
  assert.ok(Math.abs(regular.it.spd-119)<1e-8);
  assert.ok(Math.abs(regular.it.spdScale-.85)<1e-8);
@@ -644,7 +646,7 @@ test('Ditto 8%, Mew 4%, all other supports 88%, Shiny 3% independently',()=>{
  assert.notEqual(roll(.12).dex,132);
  assert.notEqual(roll(.999).dex,151);
  assert.equal(G.PKMSVVEggs.SHINY_CHANCE,.03);
- assert.equal(G.PKMSVVEggs.SPECIES.length,9);
+ assert.equal(G.PKMSVVEggs.SPECIES.length,10);
 });
 
 test('Mew random AOE casts every 1 second and Ditto borrows exactly up to 3 moves',()=>{
@@ -665,12 +667,12 @@ test('Hatch affinity saves per species without altering ownership and strengthen
  assert.equal(G.PKMSVVEggs.affinityFor(172),4);
  assert.equal(G.PKMSVVEggs.affinityGoal(172),100);
  assert.equal(G.PKMSVVEggs.affinityPercent(172),4);
- assert.ok(Math.abs(G.PKMSVVEggs.affinityMultiplier(172)-1.012)<1e-8);
+ assert.ok(Math.abs(G.PKMSVVEggs.affinityMultiplier(172)-1.024)<1e-8);
  save.pkmsvvSupportBond[172]=60;
  assert.equal(G.PKMSVVEggs.affinityPercent(172),60);
- assert.equal(G.PKMSVVEggs.affinityMultiplier(172),1.18);
+ assert.ok(Math.abs(G.PKMSVVEggs.affinityMultiplier(172)-1.36)<1e-8);
  save.pkmsvvSupportBond[172]=100;
- assert.equal(G.PKMSVVEggs.affinityMultiplier(172),1.30);
+ assert.equal(G.PKMSVVEggs.affinityMultiplier(172),1.6);
  assert.ok(read('scripts/patch-v15-eggs.cjs').includes('older.pkmsvvSupportBond'));
 });
 
@@ -697,7 +699,7 @@ test('Friendship goals and maximum bonuses are species-specific; no early double
  assert.equal(e.shinyChanceFor(132),.20);
  assert.equal(e.shinyChanceFor(151),.20);
  assert.equal(e.shinyChanceFor(172),.06);
- assert.equal(e.affinityMultiplier(151),1.3);
+ assert.equal(e.affinityMultiplier(151),1.6);
 });
 
 test('At max Mew/Ditto bond, special species have exact 16%/8% selection boundaries',()=>{
@@ -755,6 +757,40 @@ test('Ditto cycles seven seconds transformed and three seconds resting, no casts
  assert.ok(casts>before,'Casts resume when the 7-second transformed phase restarts');
 });
 
+test('Ditto really copies three common offensive moves with native catalog kinds and attacks even if proxy rejects shape',()=>{
+ const hits=[],rings=[];
+ const pl={x:0,y:0,spd:120,level:24,kills:0,hp:300,maxHp:300,dead:false,
+  moves:[
+   {id:'whirlwind',lvl:4,cd:1,def:{kind:'wave'}},
+   {id:'body-slam',lvl:3,cd:1,kind:'contact'},
+   {id:'hyper-beam',lvl:2,cd:1},
+   {id:'calm-mind',lvl:5,cd:3,kind:'buff'}
+  ]};
+ const foe={x:45,y:10,dead:false,remote:false,hurt(n){hits.push(n)}};
+ const G={I18n:{lang:'vi'},DB:{save:{stats:{},pkmsvvSupportBond:{}},commit(){}},
+  Moves:{BY_ID:{'hyper-beam':{kind:'beam'},'calm-mind':{kind:'buff'}}},
+  Sprites:{preload(){},dirFromAngle:()=>0,Animator:class{loop(){}update(){}draw(){}}},
+  Combat:{pkmsvvSupportCast(){return false}},
+  Game:{st:{time:1}},U:{dist2:(a,b,c,d)=>(a-c)**2+(b-d)**2},
+  World:{isFree:()=>true,isLiquid:()=>false},Spawner:{say(){}},
+  FX:{ring(...args){rings.push(args)},burst(){}},
+  Coop:{active:false},EnemyMgr:{all:()=>[foe]}};
+ vm.runInNewContext(read('src/v15/eggs.js'),{G,Math,Number,Object});
+ G.PKMSVVEggs.begin(pl,false);
+ const ditto={dex:132,id:2,hatched:true,active:true,x:13,y:12,hp:90,maxHp:90,
+  cooldown:0,hitCooldown:0,effectFlash:0,penalty:0,age:0,statScale:.8,
+  affinityBoost:1,spd:110,copiedSkills:[],copyDex:25,
+  dittoPhase:'transform',dittoTime:7,anim:new G.Sprites.Animator()};
+ G.PKMSVVEggs.followers.push(ditto);
+ G.PKMSVVEggs.update(.25,pl,1,false);
+ assert.equal(ditto.copiedSkills.length,3,'not restricted to a stale fixed list of move kinds');
+ const names=ditto.copiedSkills.map(x=>x.move.id);
+ assert.ok(names.includes('whirlwind')&&names.includes('body-slam')&&names.includes('hyper-beam'));
+ assert.equal(names.includes('calm-mind'),false,'Ditto cannot cast a passive buff as an attack');
+ assert.equal(hits.length,3,'each copied offensive move must visibly damage a real target');
+ assert.ok(hits.every(x=>x>0));
+ assert.ok(rings.length>=3,'copy attacks show gameplay FX and are not silent');
+});
 test('Companion catalog shows actual Pokémon sprites and rarity labels without numerical odds',()=>{
  const code=read('src/pkmsvv-support-catalog.js');
  assert.ok(code.includes('G.UI?.spriteCanvas?.('));
@@ -918,4 +954,30 @@ test('Mew AOE is 1.5x wide with a visible high contrast ring; both hatch clocks 
  assert.match(solo,/cx,cy,13,radius,col,\.90,5/);
  assert.match(solo,/cx,cy,9,radius\*\.78,'#ffffff',\.75,3/);
  assert.match(solo,/G\.U\.dist2\(e\.x,e\.y,it\.x,it\.y\)<375\*375/);
+});
+
+
+test('Riolu/Wynaut buffs modify real physical/special move damage, expire and never stack by wrapping twice',()=>{
+ const G={Game:{st:{time:10}},Moves:{BY_ID:{
+  tackle:{cat:'physical'},'shadow-ball':{cat:'special'}}},I18n:{lang:'vi'}};
+ vm.runInNewContext(read('src/v15/eggs.js'),{G,Math,Number,Object});
+ const q=G.PKMSVVEggs;
+ const pl={atkFor:()=>100};
+ assert.equal(q.applyAttackBuffs(pl),true);
+ const original=pl.atkFor;
+ assert.equal(q.applyAttackBuffs(pl),true);
+ assert.equal(pl.atkFor,original,'multiple installs must not compound damage bonuses');
+ pl.pkmsvvSupportPhysical={amount:.25,until:18};
+ pl.pkmsvvSupportSpecial={amount:.30,until:15};
+ assert.equal(pl.atkFor({id:'tackle'}),125);
+ assert.equal(pl.atkFor({id:'shadow-ball'}),130);
+ assert.equal(pl.atkFor({id:'unknown',cat:'status'}),100);
+ G.Game.st.time=16;
+ assert.equal(pl.atkFor({id:'shadow-ball'}),100,'special buff expiration');
+ assert.equal(pl.atkFor({id:'tackle'}),125);
+ G.Game.st.time=18;
+ assert.equal(pl.atkFor({id:'tackle'}),100,'physical buff expiration');
+ const bogus={atkFor:()=>123};
+ q.applyAttackBuffs(bogus);
+ assert.equal(bogus.atkFor({cat:'physical'}),123,'no lingering cross-actor attack effects');
 });

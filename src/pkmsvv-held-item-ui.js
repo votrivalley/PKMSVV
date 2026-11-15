@@ -1,4 +1,4 @@
-/* C — One held item per run: explicit compare / keep / replace / skip.
+/* C — One held item per run: choose directly between current and new.
    Purely an interface over the original G.Items effects and game choice callback.
    No second equip slot, shop purchase, permanent blacklist or save mutation. */
 G.PKMSVVHeldItems=(()=>{
@@ -45,8 +45,11 @@ G.PKMSVVHeldItems=(()=>{
     'You can hold only one item during a run — choose once to continue.');
    box.append(title);
    const columns=document.createElement('div');columns.className='pkmsvv-held-columns';
+   const panels=[];
    for(const [data,kind] of [[left,'old'],[right,'new']]){
-    const panel=document.createElement('section');panel.className='pkmsvv-held-comparison is-'+kind;
+    const panel=document.createElement('button');panel.type='button';
+    panel.className='pkmsvv-held-comparison pkmsvv-held-action is-'+kind;
+    panel.setAttribute('aria-label',kind==='old'?tr('Giữ trang bị hiện tại','Keep current item'):tr('Trang bị món mới','Equip new item'));
     const badge=document.createElement('b');badge.className='pkmsvv-held-label';
     badge.textContent=kind==='old'?tr('ĐANG MANG','CURRENT ITEM'):tr('VỪA NHẶT','NEW ITEM');
     const art=document.createElement('div');art.className='pkmsvv-held-art';
@@ -54,31 +57,21 @@ G.PKMSVVHeldItems=(()=>{
     const name=document.createElement('strong');name.textContent=data.name;
     const effect=document.createElement('p');effect.textContent=data.text;
     const detail=document.createElement('small');detail.textContent=data.badge;
-    panel.append(badge,art,name,effect,detail);columns.append(panel);
+    panel.append(badge,art,name,effect,detail);
+    const key=document.createElement('span');key.className='key';key.textContent=kind==='old'?'1':'2';panel.append(key);
+    columns.append(panel);panels.push(panel);
    }
    box.append(columns);
-   const actions=document.createElement('div');actions.className='pkmsvv-held-actions';
    let chosen=false;
    function choose(id,skipNew){
     if(chosen||epoch!==myEpoch)return;
     chosen=true;
-    if(skipNew)skip(next);
+    if(skipNew)skip(next); // Keeping the old item discards this newly found one.
     G.UI?.hide?.('scr-item');
     cb(id);
    }
-   const options=[
-    [tr('Giữ trang bị cũ','Keep current'),cur,'1',false],
-    [tr('Đổi sang đồ mới','Equip new item'),next,'2',false],
-    [tr('Bỏ qua món mới','Skip this drop'),cur,'3',true]
-   ];
-   for(const [label,id,key,skipNew] of options){
-    const b=document.createElement('button');b.type='button';
-    b.className='card pkmsvv-held-action'+(id===next?' evo':'');
-    b.textContent=label;b.setAttribute('aria-label',label);b.setAttribute('title',label);
-    b.onclick=()=>choose(id,skipNew);
-    const k=document.createElement('span');k.className='key';k.textContent=key;b.append(k);actions.append(b);
-   }
-   box.append(actions);
+   panels[0].onclick=()=>choose(cur,true);
+   panels[1].onclick=()=>choose(next,false);
    G.UI?.show?.('scr-item');
    G.Pad?.focusFirst?.();
   };
@@ -86,6 +79,22 @@ G.PKMSVVHeldItems=(()=>{
   G.RunUI.showItemChoice=show;
   return true;
  }
+ // Direct keyboard shortcuts match the only two visible item cards.
+ function keyboardSkip(event){
+  if(event.defaultPrevented||event.repeat||event.altKey||event.ctrlKey||event.metaKey)return;
+  const index=event.key==='1'||event.code==='Digit1'||event.code==='Numpad1'?0:
+   event.key==='2'||event.code==='Digit2'||event.code==='Numpad2'?1:-1;
+  if(index<0)return;
+  // Ignore text editing only when focus actually belongs to this item dialog.
+  const scr=document.getElementById('scr-item');
+  if(scr?.contains?.(document.activeElement)&&document.activeElement?.matches?.('input,textarea,select,[contenteditable="true"]'))return;
+  const screen=document.getElementById('scr-item');
+  if(!screen||screen.hidden||screen.classList?.contains('hidden'))return;
+  const buttons=document.querySelectorAll?.('#scr-item #item-cards.pkmsvv-held-choices .pkmsvv-held-columns .pkmsvv-held-action');
+  const button=buttons?.[index];if(!button||button.disabled)return;
+  event.preventDefault?.();event.stopImmediatePropagation?.();button.click();
+ }
+ document.addEventListener?.('keydown',keyboardSkip,true);
  // Installed after RunUI script and before gameplay; same UI for Web/PC/Android.
  install();
  return {effects,info,skipped,skip,reset,install};

@@ -43,3 +43,10 @@ test('Arena chapter gate remains intact: no fake completion or automatic unlock'
  assert.match(arena,/pkmsvvBerryChapterDone/);
  assert.match(story,/pkmsvvChapter6Seen&&\(allMultiplayerCompleted\(save\)\|\|oldArenaCup\(save\)\)/);
 });
+
+test('PC knowledge removes the redundant seasonal row and hides finished Skill Awakening',()=>{
+ const wiki=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-wiki.js'),'utf8');
+ assert.doesNotMatch(wiki,/✨ Sương Ký Ức · Sự kiện mùa/);
+ assert.match(wiki,/skillAwakeningDone=!!G\.DB\?\.save\?\.pkmsvvChapter2Seen/);
+ assert.match(wiki,/articles\.filter\(/);
+});

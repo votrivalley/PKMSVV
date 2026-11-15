@@ -1,0 +1,71 @@
+/* Evolved Fusion Skill chooser — shared Web/Windows/Android QA styling. */
+.pkmsvv-fusion-guide{
+ position:fixed!important;inset:0!important;z-index:13050!important;
+ display:flex!important;justify-content:center;align-items:center;
+ padding:clamp(8px,2vw,20px)!important;
+ background:#061827e8!important;
+}
+.pkmsvv-fusion-guide-panel{
+ box-sizing:border-box;display:flex;flex-direction:column;gap:9px;
+ width:min(780px,97vw)!important;max-height:90dvh!important;
+ overflow:auto!important;padding:clamp(12px,2vw,22px)!important;
+ background:linear-gradient(160deg,#183f4e,#0e293c)!important;
+ border:2px solid #91cfc3!important;border-radius:15px!important;
+ color:#f5fcfc!important;box-shadow:0 10px 36px #000a!important;
+}
+.pkmsvv-fusion-guide-panel h2{
+ margin:0!important;font-size:clamp(17px,2.4vw,25px)!important;color:#ffdc82!important;
+}
+.pkmsvv-fusion-guide-panel>p{margin:0 0 5px!important;color:#e0f3ed!important;line-height:1.5}
+.pkmsvv-fusion-recipe-grid{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:8px;max-height:64dvh;overflow:auto;
+ scrollbar-color:#73bbb7 #113548;
+}
+.pkmsvv-fusion-recipe-choice{
+ display:flex;align-items:center;gap:12px;min-width:0;min-height:84px;
+ border:1px solid #6c9e9c;border-radius:10px;padding:8px;
+ background:linear-gradient(145deg,#1c4252,#133547);
+ color:#e0ebef;font:inherit;text-align:left;cursor:not-allowed;
+}
+.pkmsvv-fusion-recipe-choice>img{
+ width:58px;height:58px;flex:none;object-fit:contain;
+ image-rendering:auto;
+ filter:grayscale(.65) brightness(.7);
+}
+.pkmsvv-fusion-recipe-body{display:flex;flex-direction:column;gap:3px;min-width:0}
+.pkmsvv-fusion-recipe-body strong{
+ font-size:clamp(13px,1.6vw,17px);font-weight:900;color:#ffecba;
+}
+.pkmsvv-fusion-recipe-body small{font-size:11px;color:#c3d5dd;overflow-wrap:anywhere}
+.pkmsvv-fusion-recipe-status{
+ display:inline-flex;width:fit-content;padding:3px 7px;border-radius:7px;
+ background:#384d5e;color:#d3dfe6;font-size:11px;font-weight:800;
+}
+.pkmsvv-fusion-recipe-choice.is-ready{
+ border:2px solid #ffd873;cursor:pointer;
+ background:linear-gradient(145deg,#305e61,#1b4955);
+ box-shadow:0 0 10px #f9c96e42;
+}
+.pkmsvv-fusion-recipe-choice.is-ready>img{filter:drop-shadow(0 0 7px #ffdf7377)}
+.pkmsvv-fusion-recipe-choice.is-ready .pkmsvv-fusion-recipe-status{
+ background:linear-gradient(#ffe58e,#e6bc53);color:#223547;
+}
+.pkmsvv-fusion-recipe-choice:focus-visible,
+.pkmsvv-fusion-guide-panel>button:focus-visible{
+ outline:3px solid #ffe68b!important;outline-offset:3px;
+}
+.pkmsvv-fusion-skill-icon{object-fit:contain;vertical-align:middle}
+@media(max-width:640px){
+ .pkmsvv-fusion-recipe-grid{grid-template-columns:1fr;max-height:57dvh}
+ .pkmsvv-fusion-recipe-choice{min-height:62px}
+ .pkmsvv-fusion-recipe-choice>img{width:45px;height:45px}
+}
+@media(max-height:430px){
+ .pkmsvv-fusion-recipe-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-height:42dvh}
+ .pkmsvv-fusion-recipe-choice{min-height:50px;padding:4px;gap:5px}
+ .pkmsvv-fusion-recipe-choice>img{width:35px;height:35px}
+}
+@media(prefers-reduced-motion:reduce){
+ .pkmsvv-fusion-recipe-choice{animation:none!important;transition:none!important}
+}

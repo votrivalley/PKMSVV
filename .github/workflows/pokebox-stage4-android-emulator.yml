@@ -1,0 +1,57 @@
+name: Pokebox Stage4 Android QA emulator smoke
+on:
+  push:
+    branches: [feature/pokebox-stage1-isolated-qa]
+    paths:
+      - '.github/workflows/pokebox-stage4-android-emulator.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  emulator-smoke-qa-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Download corrected QA APK with independent FileProvider
+        uses: actions/download-artifact@v4
+        with:
+          name: PKMSVV-PokeBox-Stage4-Android-QA-SEPARATE-APP
+          run-id: 42093036110
+          github-token: ${{ github.token }}
+          path: qa-android
+      - name: Download production APK to verify side-by-side install
+        uses: actions/download-artifact@v4
+        with:
+          name: PKMSVV-Android-FULL-LAN-SIGNED-UPDATE
+          run-id: 41693287992
+          github-token: ${{ github.token }}
+          path: prod-android
+      - name: Enable Android emulator KVM acceleration
+        shell: bash
+        run: |
+          if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
+      - name: Launch separate QA APK in Android WebView emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
+          emulator-options: -no-window -no-audio -no-snapshot -gpu swiftshader_indirect
+          disable-animations: true
+          script: bash scripts/pokebox-stage4-android-emulator-smoke.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: PKMSVV-PokeBox-Stage4-Android-Emulator-Smoke
+          path: |
+            qa-android-logcat.txt
+            qa-android-screenshot.png
+          if-no-files-found: ignore
+          retention-days: 7

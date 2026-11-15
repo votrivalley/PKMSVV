@@ -28,13 +28,13 @@ for(const lang of ['vi','en'])test('Issue 20: '+lang+' Berry overlay remains tra
  const ctx=boot(lang);
  ctx.G.Game.startRun(null);
  const overlay=ctx.elements.find(e=>e.className==='pkmsvv-berry-overlay');
- assert.ok(overlay,'non-empty stock shows the four-second picker');
+ assert.ok(overlay,'non-empty stock shows the ten-second picker');
  assert.equal(overlay.attributes.translate,'no',
   'Berry dialog already uses tr(vi,en); skip global DOM MutationObserver');
  assert.equal(overlay.attributes.role,'dialog');
  assert.equal(ctx.G.Game.state,'ui');
  assert.equal(ctx.launches,0);
- for(let i=0;i<4;i++)ctx.tick();
+ for(let i=0;i<10;i++)ctx.tick();
  assert.equal(ctx.G.Game.state,'playing');
  assert.equal(ctx.launches,1);
  assert.equal(ctx.save.pkmsvvBerry.bag.oran,1,'unused Berry cannot disappear');
@@ -48,7 +48,7 @@ for(const lang of ['vi','en'])test('Issue 20: '+lang+' selected Berry HUD is alr
  const option=ctx.elements.find(e=>e.tagName==='button'&&String(e.textContent).includes('Oran ×1'));
  assert.ok(option);
  option.onclick();
- for(let i=0;i<4;i++)ctx.tick();
+ for(let i=0;i<10;i++)ctx.tick();
  assert.equal(ctx.G.Game.state,'playing');
  assert.equal(ctx.launches,1);
  assert.equal(ctx.save.pkmsvvBerry.bag.oran,0);

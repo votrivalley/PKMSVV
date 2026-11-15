@@ -163,3 +163,169 @@ test('Eevee can optionally convert highest-upgraded non-evolved Normal attack wi
    assert.equal(keep.moves[0].lvl,6);
  }finally {sandbox.G.Moves=original;}
 });
+
+test('Evolving any Pokémon can exchange one owned skill for one new species move at an equivalent upgrade level',()=>{
+ const oldMoves=sandbox.G.Moves;
+ sandbox.G.Moves={BY_ID:{
+  'ember':{id:'ember',type:'fire',maxLvl:7},
+  'fire-spin':{id:'fire-spin',type:'fire',maxLvl:6}
+ },poolFor:()=>['ember','fire-spin'],instance:(id,lvl)=>({id,kind:'projectile',lvl,cd:4,t:0})};
+ try{
+  const p=pl(4,16),old={id:'ember',type:'fire',kind:'projectile',lvl:5,cd:10,t:5,since:3};
+  p.moves=[old];p.slots=[[old]];p.bind={ember:1};
+  assert.equal(evo.evolve(p,rule(4,5),{convertNormal:false}),true);
+  assert.deepEqual(Array.from(evo.skillSwapOptions(p)),['fire-spin']);
+  const swapped=evo.swapSkill(p,'ember','fire-spin');
+  assert.equal(swapped.lvl,5);
+  assert.equal(p.moves.length,1);
+  assert.equal(p.moves[0].id,'fire-spin');
+  assert.equal(p.moves[0].lvl,5);
+  assert.equal(p.moves[0].t,2);
+  assert.equal(p.moves[0].since,3);
+  assert.equal(p.slots[0][0],p.moves[0]);
+  assert.equal(p.bind['fire-spin'],1);
+  assert.equal(evo.swapSkill(p,'fire-spin','ember'),false,'do not offer an unavailable or already learned species move');
+ }finally{sandbox.G.Moves=oldMoves;}
+});
+
+test('evolution offers exactly three random species moves, prioritizing evolved-exclusive moves',()=>{
+ const original=sandbox.G.Moves;
+ const defs=Object.fromEntries(['ember','tackle','quick-attack','flame-wheel','fire-spin','heat-wave','smokescreen','flare-blitz']
+  .map(id=>[id,{id,type:id.includes('fire')||id.includes('flame')?'fire':'normal',maxLvl:7}]));
+ const before=['ember','tackle','quick-attack'];
+ const after=[...before,'flame-wheel','fire-spin','heat-wave','smokescreen','flare-blitz'];
+ sandbox.G.Moves={BY_ID:defs,poolFor:mon=>mon?.dex===4?before:after,
+  instance:(id,lvl)=>({id,lvl,cd:4,t:0})};
+ try{
+  const p=pl(4,16),old={id:'ember',lvl:5,cd:10,t:5,type:'fire'};
+  p.moves=[old];p.slots=[[old]];p.bind={ember:1};
+  assert.equal(evo.evolve(p,rule(4,5),{convertNormal:false}),true);
+  const chosen=Array.from(evo.skillSwapChoices(p,()=>.7));
+  assert.equal(chosen.length,3);
+  assert.equal(new Set(chosen).size,3);
+  assert.ok(chosen.every(id=>!before.includes(id)),'prioritize moves unavailable to Charmander');
+  assert.deepEqual(Array.from(evo.skillSwapChoices(p,()=>0)),chosen,'offer does not reroll when viewing a different old move');
+  const unoffered=after.find(id=>!before.includes(id)&&!chosen.includes(id));
+  assert.equal(evo.swapSkill(p,'ember',unoffered),false,'cannot silently choose an unoffered fourth skill');
+  const got=evo.swapSkill(p,'ember',chosen[0]);
+  assert.equal(got.to,chosen[0]);assert.equal(got.lvl,5);
+  assert.equal(p.moves[0].lvl,5);assert.equal(p.slots[0][0],p.moves[0]);
+  assert.equal(p.pkmEvoSwapAvailable,false);
+  assert.equal(evo.swapSkill(p,chosen[0],chosen[1]),false,'only one swap per evolution');
+ }finally{sandbox.G.Moves=original;}
+});
+test('when only two moves are newly evolved, third offer comes from the natural shared pool',()=>{
+ const previous=sandbox.G.Moves;
+ sandbox.G.Moves={BY_ID:Object.fromEntries(['old','shared1','shared2','new1','new2'].map(id=>[id,{id,maxLvl:4,type:'normal'}])),
+  poolFor:mon=>mon?.dex===4?['old','shared1','shared2']:['old','shared1','shared2','new1','new2'],
+  instance:(id,lvl)=>({id,lvl,cd:3,t:0})};
+ try{
+  const p=pl(4,16),old={id:'old',lvl:2,cd:3,t:0};p.moves=[old];p.slots=[[old]];
+  evo.evolve(p,rule(4,5),{convertNormal:false});
+  const offers=Array.from(evo.skillSwapChoices(p,()=>.2));
+  assert.equal(offers.length,3);
+  assert.ok(offers.includes('new1')&&offers.includes('new2'));
+  assert.ok(offers.some(id=>id.startsWith('shared')));
+ }finally{sandbox.G.Moves=previous;}
+});
+test('competitive evolution is presented as live corner HUD, without pausing gameplay',()=>{
+ const previousMoves=sandbox.G.Moves,previousDoc=sandbox.document;
+ const state=sandbox.G.Game={state:'playing',st:{time:90},player:null};
+ sandbox.G.Royale={active:true};
+ sandbox.G.Moves={BY_ID:{
+  'ember':{id:'ember',type:'fire',name:'Ember',maxLvl:7},
+  'flame-wheel':{id:'flame-wheel',type:'fire',name:'Flame Wheel',maxLvl:7},
+  'fire-spin':{id:'fire-spin',type:'fire',name:'Fire Spin',maxLvl:7},
+  'heat-wave':{id:'heat-wave',type:'fire',name:'Heat Wave',maxLvl:7}},
+  poolFor:mon=>mon?.dex===4?['ember']:['ember','flame-wheel','fire-spin','heat-wave'],
+  instance:(id,lvl)=>({id,lvl,cd:4,t:0})};
+ function node(tag){
+  return {tagName:tag.toUpperCase(),children:[],attrs:{},className:'',textContent:'',
+   dataset:{},append(...items){this.children.push(...items);items.forEach(x=>{x.parent=this})},
+   appendChild(el){this.append(el);return el},
+   replaceChildren(){this.children=[]},
+   setAttribute(k,v){this.attrs[k]=v},
+   querySelector(selector){return selector==='button'?this.children.find(x=>x.tagName==='BUTTON'):null},
+   focus(){},remove(){this.removed=true;this.parent?.children?.splice(this.parent.children.indexOf(this),1)}};
+ }
+ const body=node('body');body.appendChild=function(el){this.append(el)};
+ sandbox.document={body,createElement:node};
+ try{
+  const p=pl(4,16);p.moves=[{id:'ember',lvl:4,cd:5,t:3}];p.slots=[[p.moves[0]]];
+  state.player=p;
+  evo.evolve(p,rule(4,5),{convertNormal:false});
+  let done=0;evo.showSkillSwap(p,()=>done++);
+  const modal=body.children.at(-1);
+  assert.match(modal.className,/pkmsvv-evo-live/);
+  assert.equal(modal.attrs['aria-modal'],undefined,'unpaused overlay must not be a blocking dialog');
+  const cards=modal.children[0].children.find(x=>x.className==='pkmsvv-evo-live-cards');
+  assert.equal(cards.dataset.stage,'current');
+  cards.children[0].onclick();
+  assert.equal(cards.dataset.stage,'replacement');
+  assert.equal(cards.children.length,3);
+  assert.equal(state.state,'playing','no pause or state transition');
+  cards.children[1].onclick();
+  assert.equal(done,1);
+  assert.equal(p.moves.length,1);
+  assert.equal(modal.removed,true);
+  assert.equal(state.state,'playing');
+ }finally{sandbox.G.Moves=previousMoves;sandbox.document=previousDoc;delete sandbox.G.Royale;delete sandbox.G.Game;}
+});
+
+test('an evolved Arena fighter retains every permanently awakened slot up to eight',()=>{
+ const before=sandbox.G.PKMSVVSkillTrack,oldDb=sandbox.G.DB;
+ try{
+  sandbox.G.PKMSVVSkillTrack={progress(){return {count:8}}};
+  sandbox.G.DB={save:{pkmsvvSkillMarks:{k50:true,k100:true,k200:true,u10:true,u20:true}},commit(){}};
+  const p=pl(4,20);p.moves=[{id:'ember',type:'fire',lvl:3}];p.maxMoves=3;
+  assert.equal(evo.evolve(p,rule(4,5),{convertNormal:false}),true);
+  assert.equal(p.maxMoves,8,'already unlocked eight Skill Awakening slots remain usable');
+  assert.equal(p.moves.length,1,'slots unlock capacity but do not mint free skills');
+  assert.equal(p.moves[0].lvl,3,'existing learned move rank stays intact');
+ }finally{sandbox.G.PKMSVVSkillTrack=before;sandbox.G.DB=oldDb;}
+});
+test('native Arena evolution never sets choice/paused state or stalls pending skill level-ups',()=>{
+ const original={Game:sandbox.G.Game,Champion:sandbox.G.PKMSVVChampionArena,
+  UI:sandbox.G.UI,Moves:sandbox.G.Moves,document:sandbox.document};
+ const plr=pl(4,20),known={id:'ember',lvl:3,type:'fire',cd:5,t:1};
+ plr.moves=[known];plr.slots=[[known]];plr.maxMoves=8;
+ sandbox.G.Game={state:'playing',player:plr,st:{time:96,pendingLevels:2}};
+ sandbox.G.PKMSVVChampionArena={active:true};
+ sandbox.G.UI={isOpen(){return false}};
+ sandbox.G.Moves={BY_ID:{ember:{id:'ember',maxLvl:7}},
+  poolFor(){return []},instance(id,lvl){return {id,lvl}}};
+ const body={children:[],appendChild(el){this.children.push(el);el.parent=this}};
+ function el(tag){
+  return {tagName:tag.toUpperCase(),children:[],className:'',disabled:false,
+   addEventListener(_name,fn){this.onclick=fn},
+   setAttribute(){},appendChild(item){this.children.push(item);item.parent=this},
+   append(...items){for(const item of items)this.appendChild(item)},
+   remove(){this.removed=true;const i=this.parent?.children.indexOf(this);if(i>=0)this.parent.children.splice(i,1)}};
+ }
+ sandbox.document={body,createElement:el,querySelector(){return null}};
+ try{
+  assert.equal(evo.tryOpen(plr,96,()=>{sandbox.G.Game.state='choice'}),false,
+   'legacy native hook must not enter blocking choice state in Arena');
+  assert.equal(sandbox.G.Game.state,'playing');
+  assert.equal(evo.tryLiveCompetitive(plr,96),true,
+   'live picker still opens independently of the native hook');
+  assert.equal(sandbox.G.Game.state,'playing');
+  assert.equal(body.children.length,1);
+  const modal=body.children[0],panel=modal.children[0];
+  assert.match(modal.className,/pkmsvv-evo-live/);
+  const selection=panel.children.find(x=>x.tagName==='BUTTON'&&!x.disabled);
+  assert.ok(selection);
+  selection.onclick();
+  assert.equal(plr.dex,5);
+  assert.equal(plr.level,20);
+  assert.equal(plr.moves[0],known,'evolution does not wipe the learned move');
+  assert.equal(plr.slots[0][0],known,'evolution retains move slots');
+  assert.equal(plr.maxMoves,8,'evolution never reduces maximum skills to three');
+  assert.equal(sandbox.G.Game.st.pendingLevels,2,'queued level-up rewards must not be erased');
+  assert.equal(sandbox.G.Game.state,'playing','battle time keeps moving during evolution');
+  assert.equal(evo.tryLiveCompetitive(plr,96),false,'evolution does not reopen endlessly');
+ }finally{
+  sandbox.G.Game=original.Game;sandbox.G.PKMSVVChampionArena=original.Champion;
+  sandbox.G.UI=original.UI;sandbox.G.Moves=original.Moves;sandbox.document=original.document;
+ }
+});

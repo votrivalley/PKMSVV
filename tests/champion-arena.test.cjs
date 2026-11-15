@@ -2,16 +2,16 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.resolve(__dirname,'..'),read=p=>fs.readFileSync(path.join(root,p),'utf8');
 function setup(){
- const elements=new Map();
+ const elements=new Map();let pickInterval=null;
  function element(tag){
   const e={tagName:String(tag).toUpperCase(),children:[],disabled:false,hidden:false,className:'',style:{},
-   textContent:'',onclick:null,
+   textContent:'',onclick:null,dataset:{},
    append(...items){for(const x of items){this.children.push(x);if(x.id)elements.set(x.id,x);}},
    replaceChildren(...items){this.children=[];this.append(...items);},
    after(){},
    setAttribute(){},
    addEventListener(){},
-   querySelector(){return null}};
+   querySelector(){return null},remove(){this.removed=true;elements.delete(this.id)},focus(){}};
   Object.defineProperty(e,'id',{get(){return e._id},set(v){e._id=v;elements.set(v,e)}});
   Object.defineProperty(e,'innerHTML',{get(){return e._html||''},set(html){
    e._html=html;for(const match of html.matchAll(/id="([^"]+)"/g)){
@@ -27,7 +27,7 @@ function setup(){
   pkmsvvChapter6Seen:true,pkmsvvBerryChapterDone:true,pkmsvvMultiplayerDone:{coop:true,royale:true,eggrush:true},
   tickets:{t1:2,t10:1},coins:20,arenas:{}};
  const G={DB:{save,commit(){this.saved=(this.saved||0)+1}},I18n:{lang:'vi'},
-  UI:{toast(){}},DEX_BY:new Proxy({}, {get(target,dex){return {dex:Number(dex),name:'Pokémon '+dex}}}),
+  UI:{toast(){}},PKMSVVBoxHub:{arenaReady(s){return s.qaReady||[]},valid(){return false}},DEX_BY:new Proxy({}, {get(target,dex){return {dex:Number(dex),name:'Pokémon '+dex}}}),
   Game:{get player(){return player},get state(){return playing},startRun(){playing='playing';},toUI(){playing='ui';}},
   Flow:{goMenu(){this.gone=(this.gone||0)+1}},
   PKMSVVStory:{
@@ -51,9 +51,40 @@ function setup(){
   Spawner:{update(){}},World:{setArena(a){this.arena=a}},
   Projectiles:{clear(){}},Pickups:{clear(){}},Hazards:{clear(){}},
   FX:{burst(){}},Coop:{active:false}};
- vm.runInNewContext(read('src/pkmsvv-champion-arena.js'),{G,document,Math});
- return {G,save,lib:G.PKMSVVChampionArena,document,player,get:id=>elements.get(id)};
+ vm.runInNewContext(read('src/pkmsvv-champion-arena.js'),{G,document,Math,
+  setInterval(fn){pickInterval=fn;return 1},clearInterval(){pickInterval=null}});
+ return {G,save,lib:G.PKMSVVChampionArena,document,player,get:id=>elements.get(id),tickPick(){pickInterval?.()}};
 }
+test('Champion entry picks only one of PokéBox Ready Team six, including same-species Shiny',()=>{
+ const h=setup(),{lib,save,get}=h;
+ save.qaReady=[
+  {id:'char-ordinary',dex:25,shiny:false},
+  {id:'char-shiny',dex:25,shiny:true},
+  {id:'venusaur',dex:6,shiny:false}
+ ];
+ let started=0;
+ assert.equal(lib.entryPick(()=>started++),true);
+ const shell=get('pkmsvv-champion-entry-pick');
+ const box=shell.children[0],list=box.children[3],actions=box.children[4];
+ assert.match(box.children[0].textContent,/Đội hình 6 Pokémon sẵn sàng/);
+ assert.equal(list.children.length,3);
+ assert.deepEqual(list.children.map(x=>x.dataset.readyId),save.qaReady.map(x=>x.id));
+ list.children[1].onclick();
+ actions.children[0].onclick();
+ assert.equal(save.partner,25);
+ assert.equal(save.partnerShiny,true,'Shiny version of same species must be selected');
+ assert.equal(started,1);
+ assert.equal(get('pkmsvv-champion-entry-pick'),undefined);
+ assert.equal(save.qaReady.length,3,'Arena does not reorder or consume Ready Team');
+ const src=read('src/pkmsvv-champion-arena.js');
+ assert.match(src,/entryPick\(\(\)=>startSky\(\)\)/,'Sky challenge also uses the six slots');
+});
+test('Champion disallows the full Box when six Ready slots are empty',()=>{
+ const h=setup();h.save.owned={25:true,6:true,149:true};
+ h.save.qaReady=[];
+ assert.equal(h.lib.entryPick(()=>{}),false,'cannot start from non-ready owned species');
+ assert.equal(h.get('pkmsvv-champion-entry-pick'),undefined);
+});
 function enterDuel(lib){
  const started=lib.nextDuel();
  if(started&&lib.stage==='countdown'){
@@ -165,7 +196,7 @@ test('Real mobs spawn in Champion preparation but stop during one-versus-one due
  const h=setup(),{lib,G}=h,spawns=[];
  G.Spawner.update=function(_dt,_p,t){spawns.push(t);};
  // Instrument installed wrapper in original game source instead of overriding mock in test.
- assert.match(read('src/pkmsvv-champion-arena.js'),/if\(stage==='prep'\)\{const copy=args\.slice\(\)/);
+ assert.match(read('src/pkmsvv-champion-arena.js'),/if\(stage==='prep'\)\s*\{\s*const copy=args\.slice\(\)/);
  assert.match(read('src/pkmsvv-champion-arena.js'),/G\.EnemyMgr\?\.clear\?\.\(\)/);
  lib.start();assert.equal(lib.stage,'prep');
  lib.update(90);assert.equal(lib.stage,'prep');

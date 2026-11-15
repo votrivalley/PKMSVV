@@ -86,3 +86,26 @@
   grid-template-columns:repeat(2,minmax(0,1fr));
  }
 }
+
+/* QA: legible yellow Support heading and visible skill descriptions on every device. */
+#pkmsvv-support-catalog .pkmsvv-support-modal-head h2,
+#pkmsvv-support-catalog #pkmsvv-support-heading{
+ color:#ffe28b!important;-webkit-text-fill-color:#ffe28b!important;
+ font-weight:900!important;text-shadow:0 2px 2px #092e40!important;
+}
+#pkmsvv-support-catalog #pkmsvv-support-detail{
+ height:auto!important;max-height:none!important;overflow:visible!important;
+}
+#pkmsvv-support-catalog #pkmsvv-support-detail .pkmsvv-support-skill-title{
+ display:block!important;color:#ffc953!important;-webkit-text-fill-color:#ffc953!important;
+ margin:10px 0 3px!important;font-weight:900!important;font-size:clamp(15px,1.6vw,20px);
+}
+#pkmsvv-support-catalog #pkmsvv-support-detail .pkmsvv-support-skill-description{
+ display:block!important;color:#183d4e!important;-webkit-text-fill-color:#183d4e!important;
+ font-weight:700!important;line-height:1.5!important;margin:0 8px 9px!important;
+}
+@media(max-width:680px){
+ #pkmsvv-support-catalog #pkmsvv-support-detail .pkmsvv-support-stage{
+  max-width:100%;height:auto!important;
+ }
+}

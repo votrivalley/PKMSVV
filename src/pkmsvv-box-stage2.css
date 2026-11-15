@@ -1,0 +1,15 @@
+/* Stage 2 QA — bounded, touch-friendly modal over PokéBox Stage 1 */
+#pkmbx-rank-overlay{position:fixed;inset:0;z-index:20070;display:flex;align-items:center;justify-content:center;overflow:auto;padding:12px;background:rgba(2,7,20,.94)}
+#pkmbx-rank-overlay .pkmbx-rank-panel{max-height:95vh;overflow:auto;width:min(720px,100%);padding:16px;background:#11243c;border:2px solid #d0a354;border-radius:14px;box-shadow:0 14px 55px #000;color:#f3f7ff}
+.pkmbx-rank-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pkmbx-rank-head h2{font-size:21px;color:#ffdb8b;margin:0}
+.pkmbx-rank-card{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;padding:10px;background:#203b59;border-radius:9px;margin:12px 0}
+.pkmbx-rank-panel h3{color:#ffde8d;margin:14px 0 6px;font-size:16px}
+.pkmbx-rank-panel p{line-height:1.5;font-size:13px;color:#d9e5f5}
+.pkmbx-materials{border:1px solid #55728f;background:#152f4a;padding:8px;border-radius:9px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;max-height:260px;overflow:auto}
+.pkmbx-materials label,.pkmbx-materials div{font-size:13px;line-height:1.3;padding:7px;display:flex;gap:9px;align-items:center;justify-content:space-between;color:#f1f5ff}
+.pkmbx-materials input{min-width:18px;min-height:18px}
+.pkmbx-shards{display:flex;gap:12px;align-items:center;margin:12px 0;font-size:13px}.pkmbx-shards input{max-width:90px;padding:8px;border:1px solid #537a9c;background:#152b43;color:white;border-radius:6px}
+.pkmbx-branches{display:flex;gap:9px;flex-wrap:wrap}
+.pkmbx-rank-note{border-top:1px solid #53657e;padding-top:10px;color:#f5d38b!important}
+@media(max-width:500px){.pkmbx-materials{grid-template-columns:1fr}.pkmbx-rank-head h2{font-size:17px}#pkmbx-rank-overlay .pkmbx-rank-panel{padding:10px}}

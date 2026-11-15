@@ -1,0 +1,815 @@
+/* PokéBox hub v1 — isolated QA. Uses same dark teal UI language as game.
+ * Compact grid + animated live detail; fixed 6-slot quick team, modal scrollers.
+ */
+#pkmsvv-pokebox-overlay .pkmbx-hub-panel{width:min(1280px,100%);max-height:96dvh;display:flex;flex-direction:column;overflow:hidden;padding:16px 18px;background:#10273a;border:2px solid #75bbc0}
+#pkmsvv-pokebox-overlay .pkmbx-hub-panel .pkmbx-head{flex-shrink:0}
+.pkmbx-hub-team-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:8px 0 5px}
+.pkmbx-hub-team-title h3{font-size:15px;letter-spacing:.3px;color:#ffdf89;margin:0}
+.pkmbx-hub-team-title b{font-size:13px;color:#f4f7ff}
+.pkmbx-team-six{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;flex-shrink:0}
+.pkmbx-team-slot{min-width:0;min-height:82px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;background:#193d50;border:1px solid #6fadb6;border-radius:9px;color:white;cursor:pointer;font:inherit;padding:4px}
+.pkmbx-team-slot.focused{border-color:#f2dc93;box-shadow:inset 0 0 0 2px #f2dc93}
+.pkmbx-team-slot canvas{width:42px;height:42px;image-rendering:pixelated}
+.pkmbx-team-slot span:not(.pkmbx-team-empty){font-size:11px;font-weight:650;max-width:100%;text-overflow:ellipsis;white-space:nowrap;overflow:hidden}
+.pkmbx-team-slot:disabled{opacity:.6;cursor:default}
+.pkmbx-team-empty{font-size:26px;color:#88d5c2}
+#pkmsvv-pokebox-overlay .pkmbx-hub-tools{margin:12px 0;gap:14px}
+.pkmbx-hub-tools input[type=search]{max-width:560px}
+.pkmbx-hub-main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(290px,1fr);gap:12px;min-height:0;flex:1}
+.pkmbx-hub-left{min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.pkmbx-hub-left>.pkmbx-grid{flex:1;min-height:120px;overflow-y:auto;align-content:start;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px;padding:3px 4px 7px;scrollbar-color:#79a4a9 transparent}
+#pkmsvv-pokebox-overlay .pkmbx-hub-slot{min-height:118px;padding:6px 4px;position:relative;background:#19394c;border:1px solid #59838f}
+#pkmsvv-pokebox-overlay .pkmbx-hub-slot.focused{border-color:#ffd56b;box-shadow:inset 0 0 0 2px #ffd56b}
+#pkmsvv-pokebox-overlay .pkmbx-hub-slot.selected{background:#31556b}
+#pkmsvv-pokebox-overlay .pkmbx-hub-slot canvas{width:64px;height:64px}
+.pkmbx-mini-icons{font-size:12px;color:#ffdf82;min-height:14px}
+.pkmbx-profile{min-width:0;overflow-y:auto;overflow-x:hidden;background:linear-gradient(180deg,#183d50,#122d41);border:1px solid #5b8298;border-radius:12px;padding:12px;scrollbar-color:#7b99a4 transparent}
+.pkmbx-hub-hero{display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:1px solid #63849a}
+.pkmbx-hub-hero>canvas{flex:0 0 auto;width:min(145px,45%);height:145px;image-rendering:pixelated}
+.pkmbx-hub-hero>div{min-width:0}
+.pkmbx-hub-hero strong{font-size:21px;word-break:break-word;color:#ffdf8a}
+.pkmbx-hub-hero p{font-size:12px;color:#dbebf6;line-height:1.5;margin:7px 0}
+.pkmbx-hub-info{margin:8px 0;padding:6px 11px;background:#11283a;border-radius:9px;border:1px solid #38596f}
+.pkmbx-hub-info p{font-size:13px;color:#e2f3fa;line-height:1.5;margin:6px 0;overflow-wrap:anywhere}
+.pkmbx-hub-buttons,.pkmbx-hub-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:9px 0}
+.pkmbx-hub-buttons>.btn{flex:1 1 auto;white-space:normal}
+.pkmbx-hub-tabs>.btn{flex:1 1 25%;min-width:85px;white-space:normal}
+.pkmbx-hub-tab-content{font-size:13px;color:#e0eaf5;line-height:1.5}
+.pkmbx-hub-tab-content p{margin:8px 0}
+.pkmbx-hub-tab-content h3{font-size:15px;color:#ffda8a;margin:9px 0}
+.pkmbx-hub-tab-content h4{font-size:14px;color:#e8d9a8;margin:12px 0 6px}
+.pkmbx-hub-inventory{display:flex;align-items:end;flex-wrap:wrap;gap:8px}
+.pkmbx-hub-inventory label{display:grid;flex:1;min-width:180px;gap:4px}
+.pkmbx-hub-inventory select{width:100%;background:#102e3d;border:1px solid #6eafbf;border-radius:7px;color:white;padding:9px}
+.pkmbx-hub-ability,.pkmbx-hub-tms{display:flex;flex-wrap:wrap;gap:7px;margin:6px 0}
+.pkmbx-hub-ability button,.pkmbx-hub-tms button{white-space:normal;min-height:34px}
+.pkmbx-page{margin:5px 0}
+#pkmsvv-pokebox-overlay .pkmbx-foot{margin-top:8px;padding-top:7px;flex-shrink:0}
+#pkmsvv-pokebox-overlay .pkmbx-warning{flex-shrink:0;margin:5px 0 0}
+#pkmbx-dex-overlay{position:fixed;inset:0;z-index:20060;background:rgba(2,8,20,.93);display:flex;align-items:center;justify-content:center;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
+#pkmbx-dex-overlay .pkmbx-dex-panel{width:min(1200px,100%);max-height:96dvh;overflow:hidden;display:flex;flex-direction:column;background:#102b3c;border:2px solid #78aab8}
+#pkmbx-dex-search{flex-shrink:0;padding:12px;background:#0a1c2d;border:1px solid #6e94a7;border-radius:8px;color:white;font:inherit;margin:8px 0 12px}
+.pkmbx-dex-main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(310px,1fr);gap:12px;flex:1;min-height:0}
+.pkmbx-dex-results{overflow:hidden;min-height:0;display:flex;flex-direction:column}
+.pkmbx-dex-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;align-content:start;overflow:auto;flex:1;min-height:130px;padding:3px}
+.pkmbx-dex-card{min-width:0;min-height:111px;background:#193c4a;color:#fff;border:1px solid #5d8b95;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:5px;cursor:pointer}
+.pkmbx-dex-card.focused{border:2px solid #ffdb80;background:#244d5c}
+.pkmbx-dex-card canvas{width:56px;height:56px;image-rendering:pixelated}
+.pkmbx-dex-card span{font-size:11px;color:#bad6e3}
+.pkmbx-dex-card b{max-width:100%;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pkmbx-dex-evo{border:1px solid #66859a;border-radius:10px;padding:11px;margin:12px 0}
+.pkmbx-dex-evo h4{font-size:14px;color:#ffdb87;margin:0 0 7px}
+.pkmbx-dex-evo button{display:block;width:100%;text-align:left;white-space:normal;line-height:1.45;margin:6px 0}
+.pkmbx-dex-evo p{font-size:12px;line-height:1.45;color:#cbdbeb}
+@media(max-width:870px){
+ #pkmsvv-pokebox-overlay .pkmbx-hub-panel{padding:10px}
+ .pkmbx-hub-main{grid-template-columns:minmax(0,1fr) minmax(230px,.95fr)}
+ .pkmbx-hub-left>.pkmbx-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ #pkmsvv-pokebox-overlay .pkmbx-hub-slot{min-height:105px}
+ .pkmbx-hub-hero>canvas{width:95px;height:95px}
+ .pkmbx-hub-hero strong{font-size:17px}
+ .pkmbx-dex-main{grid-template-columns:minmax(0,1fr) minmax(240px,.9fr)}
+ .pkmbx-dex-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:620px){
+ #pkmsvv-pokebox-overlay .pkmbx-hub-panel,#pkmbx-dex-overlay .pkmbx-dex-panel{max-height:calc(100dvh - 20px);overflow:auto}
+ .pkmbx-team-six{grid-template-columns:repeat(6,minmax(0,1fr));gap:3px}
+ .pkmbx-team-slot{min-height:65px;padding:3px}
+ .pkmbx-team-slot canvas{width:33px;height:33px}
+ .pkmbx-team-slot span:not(.pkmbx-team-empty){font-size:9px}
+ .pkmbx-hub-main,.pkmbx-dex-main{display:flex;flex-direction:column;overflow:visible}
+ .pkmbx-hub-left>.pkmbx-grid,.pkmbx-dex-grid{grid-template-columns:repeat(3,minmax(0,1fr));max-height:320px;overflow:auto}
+ .pkmbx-profile{max-height:none;overflow:visible}
+ .pkmbx-hub-hero>canvas{height:116px;width:116px}
+ #pkmsvv-pokebox-overlay .pkmbx-hub-slot{min-height:99px}
+ #pkmsvv-pokebox-overlay .pkmbx-hub-slot canvas{width:52px;height:52px}
+ .pkmbx-hub-tools input[type=search]{width:100%}
+}
+
+
+/* Pokédex parity: fixed first-row icon and compact filter controls. */
+.pkmbx-gen1-icon{display:inline-block;vertical-align:middle;flex-shrink:0;image-rendering:pixelated}
+#pkmsvv-pokebox-button .mi-ico{display:inline-flex;align-items:center;justify-content:center}
+#pkmsvv-pokebox-button .pkmbx-gen1-icon{max-width:100%;height:35px}
+.pkmbx-dex-heading{display:flex;align-items:center;gap:9px}
+.pkmbx-dex-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0}
+#pkmbx-dex-overlay .pkmbx-dex-toolbar #pkmbx-dex-search{flex:1 1 230px;min-width:145px;margin:0}
+.pkmbx-dex-filters[hidden]{display:none!important}
+.pkmbx-dex-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px;padding:11px;border:1px solid #6b9a9e;border-radius:11px;background:#162e41;margin:0 0 9px;overflow-y:auto;max-height:min(34vh,240px)}
+.pkmbx-dex-filters label{display:flex;flex-direction:column;gap:4px;color:#e7edf1;font-size:12px;font-weight:750}
+.pkmbx-dex-filters select{min-height:38px;width:100%;max-width:100%;color:#173543;background:#f1f8ee;border:1px solid #76a9b7;border-radius:6px;padding:6px}
+.pkmbx-dex-filters .btn{min-height:36px;align-self:end}
+.pkmbx-dex-count{margin:2px 0 7px!important;font-size:12px;color:#c6e5ee}
+.pkmbx-dex-empty{grid-column:1/-1;text-align:center;padding:18px;color:#e6f2fc}
+.pkmbx-hub-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.pkmbx-hub-stat{display:flex;align-items:center;gap:5px;justify-content:space-between;background:#0b293c;border-radius:6px;padding:7px 8px;font-size:12px}
+.pkmbx-hub-stat span{flex:1;min-width:0}
+.pkmbx-hub-stat strong{color:#fff2cb;white-space:nowrap}
+.pkmbx-stat-plus{color:#78f6b3;font-size:10px}
+.pkmbx-stat-minus{color:#ff9e99;font-size:10px}
+.pkmbx-hint{color:#bfe3db!important;background:#1d4050;padding:7px 9px;border-radius:7px;font-size:12px!important;line-height:1.5}
+@media(max-width:640px){
+ .pkmbx-dex-toolbar{gap:5px}
+ #pkmbx-dex-overlay .pkmbx-dex-toolbar #pkmbx-dex-search{flex:1 1 100%;min-width:0}
+ .pkmbx-dex-filters{grid-template-columns:repeat(2,minmax(0,1fr));max-height:45vh}
+ .pkmbx-hub-stats{grid-template-columns:1fr}
+}
+
+
+/* v1.5.93 QA — six READY Pokémon, separate from Favorites.
+ * Keep all six cells on one row at desktop and handset widths.
+ */
+#pkmsvv-pokebox-overlay .pkmbx-hub-panel{gap:0}
+#pkmsvv-pokebox-overlay .pkmbx-hub-team-title{margin:6px 0 5px}
+#pkmsvv-pokebox-overlay .pkmbx-hub-team-title h3{font-size:14px;font-weight:800;color:#ffdc84}
+#pkmsvv-pokebox-overlay .pkmbx-team-six{
+ display:grid;grid-template-columns:repeat(6,minmax(0,1fr));
+ gap:7px;flex:0 0 auto;min-width:0;
+}
+#pkmsvv-pokebox-overlay .pkmbx-team-slot{
+ display:flex;flex-direction:row;align-items:center;justify-content:flex-start;
+ gap:7px;min-width:0;height:70px;min-height:70px;max-height:70px;
+ padding:5px 8px;text-align:left;
+}
+#pkmsvv-pokebox-overlay .pkmbx-team-slot canvas{
+ flex:0 0 auto;width:49px;height:49px;image-rendering:pixelated;
+}
+#pkmsvv-pokebox-overlay .pkmbx-team-slot span:not(.pkmbx-team-empty){
+ min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+ font-size:12px;line-height:1.2;
+}
+#pkmsvv-pokebox-overlay .pkmbx-team-slot.active{background:#235766;border-color:#84d4c3}
+#pkmsvv-pokebox-overlay .pkmbx-team-slot .pkmbx-team-empty{
+ width:100%;text-align:center;font-size:26px;font-weight:400;
+}
+#pkmsvv-pokebox-overlay .pkmbx-hub-tools{margin:9px 0 10px;gap:10px}
+#pkmsvv-pokebox-overlay .pkmbx-hub-main{min-height:0}
+@media(max-width:870px){
+ #pkmsvv-pokebox-overlay .pkmbx-team-six{gap:4px}
+ #pkmsvv-pokebox-overlay .pkmbx-team-slot{
+  height:62px;min-height:62px;max-height:62px;
+  flex-direction:column;justify-content:center;gap:0;padding:3px 2px;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-team-slot canvas{width:35px;height:35px}
+ #pkmsvv-pokebox-overlay .pkmbx-team-slot span:not(.pkmbx-team-empty){
+  max-width:100%;font-size:9px;flex:0 0 auto;
+ }
+}
+@media(max-width:420px){
+ #pkmsvv-pokebox-overlay .pkmbx-team-six{gap:3px}
+ #pkmsvv-pokebox-overlay .pkmbx-team-slot{height:51px;min-height:51px;max-height:51px}
+ #pkmsvv-pokebox-overlay .pkmbx-team-slot canvas{width:37px;height:37px}
+ #pkmsvv-pokebox-overlay .pkmbx-team-slot span:not(.pkmbx-team-empty){display:none}
+ #pkmsvv-pokebox-overlay .pkmbx-hub-team-title h3{font-size:12px}
+}
+
+
+/* One in-game PC: Pokédex first, PokéBox second (not two main-menu entries). */
+#pkmsvv-pokebox-overlay .pkmbx-hub-panel[hidden],
+#pkmsvv-pokebox-overlay .pkmbx-dex-inside-pc[hidden]{display:none!important}
+#pkmsvv-pokebox-overlay #pkmbx-dex-overlay.pkmbx-dex-inside-pc{
+ position:relative;inset:auto;z-index:auto;isolation:initial;
+ display:flex;align-items:center;justify-content:center;
+ background:transparent;padding:0;width:min(1280px,100%);height:96dvh;
+ max-height:96dvh;min-width:0;overflow:hidden;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-overlay.pkmbx-dex-inside-pc[hidden]{display:none!important}
+#pkmsvv-pokebox-overlay #pkmbx-dex-overlay.pkmbx-dex-inside-pc>.pkmbx-dex-panel{
+ width:100%;height:100%;max-height:100%;box-sizing:border-box;
+ padding:16px 18px;
+}
+#pkmsvv-pokebox-overlay .pkmbx-pc-tabs{
+ display:flex;align-items:center;gap:7px;flex-shrink:0;
+ margin:3px 0 9px;padding:0 0 8px;border-bottom:1px solid #3b6276;
+}
+#pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab{
+ display:inline-flex;align-items:center;justify-content:center;gap:5px;
+ min-height:39px;padding:6px 13px;color:#d5e9ef;border:1px solid #628f9e;
+ background:#1c4053;border-radius:8px;font-size:14px;
+}
+#pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab.gold{
+ color:#193b4a;background:#ffe1a0;border-color:#e4bd60;
+}
+#pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab svg{
+ width:22px;height:22px;vertical-align:middle;
+}
+@media(max-width:620px){
+ #pkmsvv-pokebox-overlay #pkmbx-dex-overlay.pkmbx-dex-inside-pc{max-height:calc(100dvh - 20px);height:calc(100dvh - 20px);overflow:auto}
+ #pkmsvv-pokebox-overlay #pkmbx-dex-overlay.pkmbx-dex-inside-pc>.pkmbx-dex-panel{padding:10px;overflow:auto}
+ #pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab{font-size:12px;min-height:36px;padding:4px 9px}
+}
+
+
+/* PokéBox V2 — readable 5-star ranks and same-species counters, QA only.
+ * Uses PKMSVV teal / warm gold; no asset or player-save changes. */
+#pkmsvv-pokebox-overlay .pkmbx-hub-tools{align-items:center;flex-wrap:wrap}
+#pkmsvv-pokebox-overlay .pkmbx-box-sort{display:flex;gap:6px;align-items:center;white-space:nowrap;color:#eaf6fb;font-size:12px}
+#pkmsvv-pokebox-overlay #pkmbx-sort{background:#153c4e;color:#fff3d3;border:1px solid #7db8bd;border-radius:7px;padding:7px;max-width:160px;min-height:36px;font:inherit}
+#pkmsvv-pokebox-overlay .pkmbx-found-count{color:#c0dbe5;font-size:12px;margin-left:auto;white-space:nowrap}
+#pkmsvv-pokebox-overlay .pkmbx-hub-slot{min-height:128px;gap:2px}
+#pkmsvv-pokebox-overlay .pkmbx-hub-slot.rank-ready:not(.focused){border-color:#7ce7bb;box-shadow:inset 0 0 0 1px #7ce7bb}
+#pkmsvv-pokebox-overlay .pkmbx-slot-meta{display:flex;align-items:center;justify-content:center;gap:5px;min-height:18px;max-width:100%}
+#pkmsvv-pokebox-overlay .pkmbx-rank-stars{color:#ffda82;white-space:nowrap;letter-spacing:0;font-size:13px;font-weight:800}
+#pkmsvv-pokebox-overlay .pkmbx-rank-empty{color:#668293}
+#pkmsvv-pokebox-overlay .pkmbx-stack{display:inline-flex;align-items:center;justify-content:center;min-width:24px;padding:1px 4px;background:#0b2636;border:1px solid #8cc0bc;border-radius:6px;font-size:11px;font-weight:800;color:#fff0c5}
+#pkmsvv-pokebox-overlay .pkmbx-rank-overview{margin:11px 0;padding:10px 11px;background:linear-gradient(140deg,#163b4a,#0b293a);border:1px solid #82aaa8;border-radius:9px;color:#eaf6fb}
+#pkmsvv-pokebox-overlay .pkmbx-rank-heading{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:space-between;font-size:13px}
+#pkmsvv-pokebox-overlay .pkmbx-rank-heading b{color:#ffe2a0}
+#pkmsvv-pokebox-overlay .pkmbx-rank-heading strong{font-variant-numeric:tabular-nums;color:#fff0c8}
+#pkmsvv-pokebox-overlay .pkmbx-rank-heading .pkmbx-rank-stars{font-size:18px;letter-spacing:.5px}
+#pkmsvv-pokebox-overlay .pkmbx-rank-overview p{font-size:12px;line-height:1.55;margin:5px 0;overflow-wrap:anywhere;color:#e4f1f5}
+#pkmsvv-pokebox-overlay .pkmbx-rank-progress{height:9px;background:#092535;border:1px solid #587d8b;border-radius:4px;overflow:hidden;margin:8px 0 6px}
+#pkmsvv-pokebox-overlay .pkmbx-rank-progress span{display:block;height:100%;background:linear-gradient(90deg,#68b4bd,#e3ca80);transition:width .18s ease}
+#pkmsvv-pokebox-overlay .pkmbx-rank-status.is-ready{color:#a7ffd6;font-weight:800}
+#pkmsvv-pokebox-overlay .pkmbx-rank-next{padding:5px 7px;background:#244557;border-radius:6px}
+#pkmsvv-pokebox-overlay .pkmbx-rank-next b{color:#ffe0a0}
+#pkmsvv-pokebox-overlay .pkmbx-rank-shortcut{width:100%;min-height:34px;margin-top:7px}
+#pkmsvv-pokebox-overlay .pkmbx-box-empty{grid-column:1/-1;text-align:center;padding:18px 8px;color:#d3e9f3}
+@media(max-width:870px){
+ #pkmsvv-pokebox-overlay .pkmbx-hub-slot{min-height:118px}
+ #pkmsvv-pokebox-overlay .pkmbx-hub-tools input[type=search]{flex:1 1 160px;min-width:0}
+ #pkmsvv-pokebox-overlay .pkmbx-box-sort{flex:0 1 auto}
+}
+@media(max-width:640px){
+ #pkmsvv-pokebox-overlay .pkmbx-rank-heading .pkmbx-rank-stars{font-size:16px}
+ #pkmsvv-pokebox-overlay .pkmbx-rank-stars{font-size:11px}
+ #pkmsvv-pokebox-overlay .pkmbx-hub-slot{min-height:114px}
+ #pkmsvv-pokebox-overlay #pkmbx-sort{max-width:138px}
+ #pkmsvv-pokebox-overlay .pkmbx-found-count{margin-left:0}
+}
+
+#pkmsvv-pokebox-overlay #pkmbx-ready{accent-color:#81d5c8}
+#pkmsvv-pokebox-overlay .pkmbx-rank-materials{font-variant-numeric:tabular-nums}
+
+/* Pokémon Hub QA — restore three tabs, keep original upgrade economy. */
+#pkmsvv-pokebox-overlay #pkmbx-upgrade-overlay[hidden]{display:none!important}
+#pkmsvv-pokebox-overlay #pkmbx-upgrade-overlay.pkmbx-upgrades-inside-pokemon{
+ position:relative;inset:auto;z-index:auto;display:flex;justify-content:center;
+ width:min(1280px,100%);height:min(96dvh,900px);min-height:0;overflow:auto;
+}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-panel{
+ box-sizing:border-box;display:flex;flex-direction:column;
+ width:100%;min-width:0;min-height:0;padding:16px 18px;
+ background:#10273a;border:2px solid #75bbc0;overflow:auto;
+ color:#ebf6fb;border-radius:13px;
+}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-heading{padding:15px 15px 11px;background:#17384b;border-radius:10px;border:1px solid #5b91a0}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-heading h3{color:#ffe1a0;margin:0 0 5px;font-size:23px}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-heading p{margin:0;color:#dce8ec;font-size:13px;line-height:1.55}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:14px 0}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-option{display:flex;flex-direction:column;gap:9px;background:linear-gradient(150deg,#1e4b59,#112c40);border:1px solid #84b6b8;border-radius:12px;padding:19px}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-option h4{color:#ffe7a8;font-size:20px;margin:0}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-option p{font-size:14px;color:#d8eaf0;margin:0;line-height:1.55}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-option .btn{margin-top:auto;min-height:46px;font-size:15px}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-symbol{font-size:34px;color:#ffda89}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-footnote{color:#d0e2eb;font-size:12px;background:#183849;border:1px solid #507c89;padding:12px;border-radius:8px}
+/* Keep the original game palette outside, restore the clean high-contrast
+   light Pokémon detail panel and prominent sprite inside Pokédex. */
+#pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab{flex:0 1 auto;min-width:135px;font-weight:800}
+#pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab.gold{background:#f4f9f7;color:#19384b;border-color:#efc475;box-shadow:inset 0 0 0 1px #eac16b}
+#pkmsvv-pokebox-overlay .pkmbx-hub-panel>.pkmbx-head h2,#pkmsvv-pokebox-overlay .pkmbx-dex-panel>.pkmbx-head h2,#pkmsvv-pokebox-overlay .pkmbx-upgrade-panel>.pkmbx-head h2{color:#ffe39f}
+#pkmsvv-pokebox-overlay .pkmbx-dex-panel{background:#102b3c}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details.pkmbx-profile{
+ background:linear-gradient(165deg,#f1faf8,#d7ecea);
+ border:3px solid #95bfbb;box-shadow:inset 0 0 0 2px #f7ffff;
+ color:#173747;min-height:360px;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-hub-hero{
+ display:flex;flex-direction:column;align-items:center;gap:8px;
+ border-bottom:1px solid #a6cac7;margin-bottom:9px;padding:7px 0 12px;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-hub-hero canvas{
+ width:185px;height:185px;max-width:100%;flex:0 0 auto;
+ image-rendering:pixelated;background:linear-gradient(145deg,#293e60,#172d42);
+ border:2px solid #e64a93;border-radius:7px;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-hub-hero strong{
+ color:#173746;font-size:27px;letter-spacing:-.3px
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-hub-hero p{color:#355e66;font-size:13px;margin:4px 0}
+#pkmsvv-pokebox-overlay .pkmbx-dex-badges{display:flex;flex-wrap:wrap;justify-content:center;gap:7px}
+#pkmsvv-pokebox-overlay .pkmbx-dex-badge{display:inline-block;background:#f58fbb;color:#193247;padding:4px 10px;border-radius:6px;font-weight:750}
+#pkmsvv-pokebox-overlay .pkmbx-dex-variants{display:flex;gap:8px;margin:9px 0}
+#pkmsvv-pokebox-overlay .pkmbx-dex-variants button{flex:1;min-height:37px;border-radius:7px;background:#cbd9d7;color:#274350;border:1px solid #9caead;font:inherit;cursor:pointer}
+#pkmsvv-pokebox-overlay .pkmbx-dex-variants button.active{background:#ffe9a1;border-color:#cfaa45}
+#pkmsvv-pokebox-overlay .pkmbx-dex-summary{border-top:1px solid #abcfcc;border-bottom:1px solid #abcfcc;margin:10px 0;padding:10px 0;color:#244553;line-height:1.65;font-size:13px}
+#pkmsvv-pokebox-overlay .pkmbx-dex-summary b{color:#143544}
+#pkmsvv-pokebox-overlay .pkmbx-dex-evo{background:#e5f2f0;border-color:#b4d5d1}
+#pkmsvv-pokebox-overlay .pkmbx-dex-evo h4{color:#164555}
+#pkmsvv-pokebox-overlay .pkmbx-dex-evo p{color:#3c616c}
+#pkmsvv-pokebox-overlay .pkmbx-dex-evo .btn{color:#173747;background:#f6faf7;border:1px solid #a4c8c3}
+@media(max-width:870px){
+ #pkmsvv-pokebox-overlay .pkmbx-upgrade-panel{padding:10px}
+ #pkmsvv-pokebox-overlay .pkmbx-upgrade-options{grid-template-columns:1fr}
+ #pkmsvv-pokebox-overlay .pkmbx-upgrade-option{padding:12px}
+ #pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab{min-width:0;flex:1;padding:5px 7px}
+ #pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-hub-hero canvas{width:145px;height:145px}
+}
+@media(max-width:510px){
+ #pkmsvv-pokebox-overlay .pkmbx-pc-tabs{gap:4px}
+ #pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab{font-size:11px;padding:3px 4px;min-height:36px}
+ #pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab svg{width:18px;height:18px}
+}
+
+/* Desktop Pokédex: reference-style large artwork LEFT within the light details,
+   with the species list on the outside. Preserve collapsible mobile navigation. */
+@media(min-width:871px){
+ #pkmsvv-pokebox-overlay .pkmbx-dex-main{
+  grid-template-columns:minmax(240px,.82fr) minmax(430px,1.5fr)
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-dex-grid{
+  grid-template-columns:repeat(4,minmax(0,1fr))
+ }
+ #pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-hub-hero{
+  flex-direction:row;align-items:center;justify-content:flex-start;
+  gap:16px;padding:12px 4px
+ }
+ #pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-hub-hero canvas{
+  flex:0 0 188px;width:188px;height:188px
+ }
+ #pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-hub-hero>div{
+  text-align:left;min-width:0
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-dex-badges{justify-content:flex-start}
+}
+/* V3: Pokédex collection takes the majority of the width; detailed information
+   is intentionally narrower than the grid, with readable trait chips. */
+#pkmsvv-pokebox-overlay .pkmbx-box-variants{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}
+#pkmsvv-pokebox-overlay .pkmbx-box-variants button{min-width:0;min-height:36px}
+#pkmsvv-pokebox-overlay .pkmbx-dex-summary .pkmbx-dex-possibilities{
+ margin:0 0 11px;padding:7px 0;border-bottom:1px solid #b7d1cd
+}
+#pkmsvv-pokebox-overlay .pkmbx-dex-summary .pkmbx-dex-possibilities>b{
+ display:block;font-size:13px;color:#133c4b;margin-bottom:6px
+}
+#pkmsvv-pokebox-overlay .pkmbx-dex-possible-list{display:flex;flex-wrap:wrap;gap:4px}
+#pkmsvv-pokebox-overlay .pkmbx-dex-possible-chip{
+ display:inline-flex;align-items:center;padding:4px 7px;
+ color:#163748;background:#f4faf7;border:1px solid #91b9b4;border-radius:5px;
+ font-size:11px;line-height:1.3;overflow-wrap:anywhere
+}
+#pkmsvv-pokebox-overlay .pkmbx-dex-ownership-note{
+ margin:9px 0 0;color:#244d59;font-size:12px;font-weight:700;line-height:1.5
+}
+@media(min-width:871px){
+ #pkmsvv-pokebox-overlay .pkmbx-dex-main{
+  grid-template-columns:minmax(0,1.75fr) minmax(330px,1fr);gap:12px
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-dex-grid{
+  grid-template-columns:repeat(5,minmax(0,1fr))
+ }
+ #pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-hub-hero canvas{
+  flex:0 0 138px;width:138px;height:138px
+ }
+}
+@media(min-width:1300px){
+ #pkmsvv-pokebox-overlay .pkmbx-dex-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
+}
+@media(min-width:641px) and (max-width:870px){
+ #pkmsvv-pokebox-overlay .pkmbx-dex-main{grid-template-columns:minmax(0,1.25fr) minmax(280px,1fr)}
+}
+
+
+/* QA v4: the six ready Pokémon belong to the LEFT collection rail, not above
+ * the entire workspace. The detail pane now starts at the same top edge. */
+@media(min-width:871px){
+ #pkmsvv-pokebox-overlay .pkmbx-hub-panel{height:min(96dvh,900px)}
+ #pkmsvv-pokebox-overlay .pkmbx-hub-main{
+  display:grid;grid-template-columns:minmax(0,1.82fr) minmax(300px,1fr);
+  flex:1;min-height:0;align-items:stretch;gap:12px
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-hub-left{
+  display:flex;flex-direction:column;min-height:0;min-width:0;
+ }
+ #pkmsvv-pokebox-overlay #pkmbx-profile{
+  min-height:0;height:100%;align-self:stretch;box-sizing:border-box;
+  overflow-y:auto;overscroll-behavior:contain
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-hub-tools{margin:9px 0 10px}
+ #pkmsvv-pokebox-overlay .pkmbx-team-slot{
+  height:66px;min-height:66px;max-height:66px;
+  flex-direction:column;justify-content:center;gap:0;padding:3px 1px;
+  border:2px solid #e9b957;background:#1c4151;
+  box-shadow:inset 0 0 0 1px #66502a
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-team-slot canvas{width:38px;height:38px}
+ #pkmsvv-pokebox-overlay .pkmbx-team-slot span:not(.pkmbx-team-empty){
+  font-size:10px;line-height:1.1;flex:0 0 auto;text-align:center
+ }
+}
+#pkmsvv-pokebox-overlay .pkmbx-team-slot:not(:disabled){
+ border-color:#e7b857;box-shadow:inset 0 0 0 1px #fae0a0,0 0 8px #e5bc5b39
+}
+#pkmsvv-pokebox-overlay .pkmbx-team-slot.active{
+ border:2px solid #ffdd68;background:#325568;
+ box-shadow:inset 0 0 0 1px #ffe5a8,0 0 12px #ffca5999
+}
+#pkmsvv-pokebox-overlay .pkmbx-team-slot.focused{border-color:#fff4b2}
+#pkmsvv-pokebox-overlay .pkmbx-rank-status{min-height:0}
+#pkmsvv-pokebox-overlay .pkmbx-dex-summary h4{
+ color:#173847;font-size:15px;margin:4px 0 8px
+}
+#pkmsvv-pokebox-overlay .pkmbx-dex-ability-row{
+ display:grid;grid-template-columns:minmax(100px,.36fr) minmax(0,1fr);
+ gap:9px;padding:8px 9px;margin:6px 0;align-items:start;
+ border:1px solid #9ebfbd;border-radius:8px;background:#f2f9f6;
+ color:#234653;font-size:12px;line-height:1.5
+}
+#pkmsvv-pokebox-overlay .pkmbx-dex-ability-row strong{color:#154153}
+#pkmsvv-pokebox-overlay .pkmbx-dex-ability-row span{overflow-wrap:anywhere}
+@media(max-width:870px){
+ #pkmsvv-pokebox-overlay .pkmbx-hub-left{min-width:0}
+ #pkmsvv-pokebox-overlay .pkmbx-hub-main{display:flex;flex-direction:column}
+ #pkmsvv-pokebox-overlay .pkmbx-hub-left>.pkmbx-grid{min-height:210px;max-height:45dvh}
+ #pkmsvv-pokebox-overlay #pkmbx-profile{overflow-y:auto;max-height:48dvh}
+}
+@media(prefers-reduced-motion:reduce){
+ #pkmsvv-pokebox-overlay .pkmbx-team-slot{animation:none!important}
+}
+
+/* Team Six: separate white collection tiles with dark legible text and gold edge. */
+#pkmsvv-pokebox-overlay .pkmbx-team-six .pkmbx-team-slot{
+ background:#f7faf6!important;color:#193e4c!important;
+ border:2px solid #e4b545!important;
+ box-shadow:inset 0 0 0 1px #fff4bd,0 2px 0 #a17927,0 0 9px #ffda7070!important;
+ opacity:1!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-team-six .pkmbx-team-slot span:not(.pkmbx-team-empty){
+ color:#15384a!important;font-weight:850;text-shadow:none!important
+}
+#pkmsvv-pokebox-overlay .pkmbx-team-six .pkmbx-team-slot .pkmbx-team-empty{color:#22626b}
+#pkmsvv-pokebox-overlay .pkmbx-team-six .pkmbx-team-slot.active{
+ background:#f7faf6!important;border-color:#d99b24!important;
+ box-shadow:inset 0 0 0 2px #fff,0 0 0 2px #c89027,0 0 14px #ffdc7b!important
+}
+#pkmsvv-pokebox-overlay .pkmbx-team-six .pkmbx-team-slot.focused{
+ outline:3px solid #ffeb7b!important;outline-offset:1px
+}
+
+
+/* Keep 5 Rank stars on one line; individual count floats in the upper-right. */
+#pkmsvv-pokebox-overlay .pkmbx-hub-slot{position:relative}
+#pkmsvv-pokebox-overlay .pkmbx-hub-slot .pkmbx-stack-count{
+ position:absolute;top:3px;right:3px;z-index:2;
+ font-variant-numeric:tabular-nums;min-width:22px;line-height:1.4;
+ border-color:#e4b545;background:#163d50;color:#fff1c1;
+ pointer-events:none
+}
+
+
+/* Primary Pokémon actions first, above the portrait, on Web / PC / Android. */
+#pkmsvv-pokebox-overlay #pkmbx-profile>.pkmbx-hub-buttons{
+ position:sticky;top:0;z-index:4;margin:0 0 9px;padding:7px 0 8px;
+ background:#183d50;border-bottom:1px solid #63849a;
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
+}
+#pkmsvv-pokebox-overlay #pkmbx-profile>.pkmbx-hub-buttons>.btn{
+ min-width:0;min-height:38px;padding:6px 5px;overflow-wrap:anywhere;
+}
+@media(max-width:640px){
+ #pkmsvv-pokebox-overlay #pkmbx-profile>.pkmbx-hub-buttons{
+  grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;
+ }
+ #pkmsvv-pokebox-overlay #pkmbx-profile>.pkmbx-hub-buttons>.btn{
+  font-size:11px;min-height:34px;padding:4px 3px;
+ }
+}
+
+
+/* PokéBox v5 — real framed boxes, clear BOX N navigator, and palette-driven
+ * Pokémon cards. QA-only. No images generated or new asset dependencies. */
+#pkmsvv-pokebox-overlay .pkmbx-hub-panel{
+ width:min(1500px,calc(100vw - 20px));box-sizing:border-box;
+ background:linear-gradient(140deg,#0b2135,#10283a);
+}
+@media(min-width:871px){
+ #pkmsvv-pokebox-overlay .pkmbx-hub-main{
+  grid-template-columns:minmax(0,1.75fr) minmax(330px,1fr);gap:14px;
+ }
+}
+#pkmsvv-pokebox-overlay .pkmbx-hub-left{
+ background:linear-gradient(165deg,#0b2c3d,#092333);
+ border:1px solid #348299;border-radius:13px;padding:9px;
+}
+#pkmsvv-pokebox-overlay .pkmbx-box-carousel{
+ display:grid;grid-template-columns:50px minmax(0,1fr) 50px;
+ align-items:center;gap:8px;flex-shrink:0;
+ margin:7px 0 11px;padding:0 4px;
+}
+#pkmsvv-pokebox-overlay .pkmbx-box-carousel>.btn{
+ width:48px;height:48px;min-height:48px;border-radius:50%;
+ font-size:26px;line-height:1;font-weight:850;color:#eaffff;
+ background:linear-gradient(#176779,#0c3c55);border:2px solid #42bfd1;
+ box-shadow:0 0 12px #54c8db35;
+}
+#pkmsvv-pokebox-overlay .pkmbx-box-carousel>.btn:disabled{
+ opacity:.4;box-shadow:none;cursor:not-allowed;
+}
+#pkmsvv-pokebox-overlay .pkmbx-box-heading{
+ min-height:48px;display:flex;gap:14px;
+ align-items:center;justify-content:center;position:relative;
+ border:1px solid #4cbad3;border-radius:13px;
+ background:linear-gradient(180deg,#1e5169,#12364a);
+ color:#efffff;text-align:center;
+}
+#pkmsvv-pokebox-overlay .pkmbx-box-heading strong{
+ font-size:clamp(15px,1.7vw,22px);font-weight:900;letter-spacing:.45px;
+}
+#pkmsvv-pokebox-overlay .pkmbx-box-heading span{
+ position:absolute;right:12px;font-size:12px;color:#d6f4f7;
+}
+#pkmsvv-pokebox-overlay .pkmbx-box-frame{
+ flex:1;min-height:125px;padding:10px;overflow:hidden;
+ border:2px solid #285f71;border-radius:13px;
+ background:linear-gradient(135deg,#123e3d,#102d3d 50%,#0d3641);
+}
+#pkmsvv-pokebox-overlay .pkmbx-box-frame>.pkmbx-grid{
+ display:grid;grid-template-columns:repeat(6,minmax(0,1fr));
+ align-content:start;grid-auto-rows:minmax(110px,auto);
+ gap:8px;height:100%;min-height:120px;overflow-y:auto;
+ padding:4px;scrollbar-color:#67b6b8 transparent;
+}
+#pkmsvv-pokebox-overlay .pkmbx-empty-slot{
+ border:1px solid #34798a;border-radius:11px;
+ min-height:108px;background:#092c3b93;
+ box-shadow:inset 0 1px 8px #00172580;
+ pointer-events:none;
+}
+#pkmsvv-pokebox-overlay .pkmbx-box-frame .pkmbx-hub-slot{
+ border:1px solid #4297b4;border-radius:11px;
+ min-height:108px;padding:6px 4px;
+ background:linear-gradient(145deg,#1f4b60,#153448);
+ box-shadow:inset 0 1px 9px #0d2439aa;
+}
+#pkmsvv-pokebox-overlay .pkmbx-box-frame .pkmbx-hub-slot.focused{
+ border-color:#ffdc75;box-shadow:inset 0 0 0 1px #ffdc75,0 0 12px #ffcc7088;
+ background:linear-gradient(140deg,#295871,#173f53);
+}
+#pkmsvv-pokebox-overlay .pkmbx-box-frame .pkmbx-hub-slot.rank-ready:not(.focused){
+ border-color:#7dedbc;box-shadow:inset 0 0 0 1px #63cda5;
+}
+#pkmsvv-pokebox-overlay .pkmbx-box-frame .pkmbx-hub-slot canvas{image-rendering:pixelated}
+#pkmsvv-pokebox-overlay .pkmbx-box-frame .pkmbx-stack-count{
+ top:auto;bottom:5px;right:5px;
+ color:#ffeeb7;background:#0a1c2c;border-color:#d6b26b;
+ border-radius:9px;min-width:28px;padding:1px 6px;font-size:12px;
+}
+#pkmsvv-pokebox-overlay .pkmbx-profile{
+ --pkmbx-type:#99b6bf;--pkmbx-type-dark:#37586c;
+ border:2px solid var(--pkmbx-type);
+ background:linear-gradient(165deg,
+ color-mix(in srgb,var(--pkmbx-type-dark) 44%,#152132),
+ #142633 40%,#0e2433 95%);
+ box-shadow:inset 0 0 18px color-mix(in srgb,var(--pkmbx-type) 15%,transparent);
+ color:#f5f9ff;
+}
+#pkmsvv-pokebox-overlay .pkmbx-hub-hero{
+ display:flex;flex-direction:column;align-items:stretch;gap:6px;
+ padding:0 0 10px;margin:0 0 8px;border-bottom:1px solid var(--pkmbx-type);
+}
+#pkmsvv-pokebox-overlay .pkmbx-hero-title{
+ display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;
+ padding:10px 12px;border-radius:9px;
+ background:linear-gradient(95deg,
+ color-mix(in srgb,var(--pkmbx-type) 70%,#142431),
+ color-mix(in srgb,var(--pkmbx-type-dark) 75%,#132536));
+}
+#pkmsvv-pokebox-overlay .pkmbx-hero-title strong{
+ font-size:clamp(16px,1.7vw,22px);font-weight:900;color:#fff;
+ text-shadow:0 2px 3px #10232b99;
+}
+#pkmsvv-pokebox-overlay .pkmbx-hero-title span{font-size:11px;color:#ecf6f9}
+#pkmsvv-pokebox-overlay .pkmbx-hero-stage{
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ gap:7px;min-height:165px;padding:8px;
+ background:radial-gradient(circle at 50% 40%,
+ color-mix(in srgb,var(--pkmbx-type) 33%,transparent),transparent 72%);
+}
+#pkmsvv-pokebox-overlay .pkmbx-hero-stage>canvas{
+ width:clamp(104px,13vw,158px);height:clamp(104px,13vw,158px);
+ image-rendering:pixelated;
+ filter:drop-shadow(0 6px 4px #07151ea8);
+}
+#pkmsvv-pokebox-overlay .pkmbx-type-pills{
+ display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;
+}
+#pkmsvv-pokebox-overlay .pkmbx-type-pill{
+ display:inline-flex;align-items:center;justify-content:center;
+ border:1px solid var(--pkmbx-pill);border-radius:30px;
+ padding:4px 13px;font-weight:850;font-size:12px;color:white;
+ background:color-mix(in srgb,var(--pkmbx-pill) 62%,#0e2636);
+ text-shadow:0 1px 2px #0b1926aa;
+}
+#pkmsvv-pokebox-overlay .pkmbx-box-variants{display:flex;gap:6px;margin:8px 0}
+#pkmsvv-pokebox-overlay .pkmbx-box-variants>.btn{flex:1}
+#pkmsvv-pokebox-overlay .pkmbx-rank-overview{
+ border:1px solid color-mix(in srgb,var(--pkmbx-type) 75%,#e3d39d);
+ background:linear-gradient(140deg,#0a1e2d,
+ color-mix(in srgb,var(--pkmbx-type-dark) 38%,#142736));
+ margin:9px 0;padding:11px;
+}
+#pkmsvv-pokebox-overlay .pkmbx-rank-overview .pkmbx-rank-heading b,
+#pkmsvv-pokebox-overlay .pkmbx-rank-overview .pkmbx-rank-next b{color:#fff0c4}
+#pkmsvv-pokebox-overlay .pkmbx-rank-requirement{
+ color:#ffe0a0;font-weight:850;font-size:13px;
+}
+#pkmsvv-pokebox-overlay .pkmbx-rank-overview .pkmbx-rank-shortcut{
+ min-height:42px;border:2px solid #fff2bd;
+ background:linear-gradient(#ffe57d,#f9bd3e);
+ color:#28323f;font-weight:950;font-size:14px;
+}
+#pkmsvv-pokebox-overlay .pkmbx-rank-overview .pkmbx-rank-shortcut:disabled{
+ opacity:.65;color:#33414d;
+}
+#pkmsvv-pokebox-overlay .pkmbx-rank-auto-note{
+ color:#d5e5ee!important;font-size:11px!important;text-align:center;
+}
+#pkmsvv-pokebox-overlay .pkmbx-rank-overview .pkmbx-rank-progress span{
+ background:linear-gradient(90deg,var(--pkmbx-type),#ffdf9e);
+}
+#pkmsvv-pokebox-overlay .pkmbx-hub-stats{
+ display:flex;flex-direction:column;gap:8px;padding:10px;
+ margin:11px 0;border:1px solid #53728a;border-radius:10px;
+ background:#091d2b7d;
+}
+#pkmsvv-pokebox-overlay .pkmbx-hub-stats h3{
+ margin:1px 0 4px;font-size:15px;color:#fff0b9;
+}
+#pkmsvv-pokebox-overlay .pkmbx-stat-meter{
+ display:grid;grid-template-columns:minmax(92px,115px) minmax(40px,1fr) minmax(53px,auto);
+ gap:8px;align-items:center;font-size:12px;color:#f4f8fc;
+}
+#pkmsvv-pokebox-overlay .pkmbx-meter-label{
+ display:flex;align-items:center;gap:6px;white-space:nowrap;font-weight:700;
+}
+#pkmsvv-pokebox-overlay .pkmbx-meter-label i{
+ display:inline-flex;align-items:center;justify-content:center;
+ width:22px;font-size:17px;font-style:normal;
+}
+#pkmsvv-pokebox-overlay .pkmbx-meter-track{
+ display:block;height:10px;border-radius:20px;overflow:hidden;
+ background:#354355;box-shadow:inset 0 1px 4px #09111d9c;
+}
+#pkmsvv-pokebox-overlay .pkmbx-meter-fill{
+ display:block;height:100%;border-radius:20px;
+}
+#pkmsvv-pokebox-overlay .pkmbx-meter-hp{background:linear-gradient(90deg,#39b987,#81eabb)}
+#pkmsvv-pokebox-overlay .pkmbx-meter-damage{background:linear-gradient(90deg,#f16c72,#ffae7a)}
+#pkmsvv-pokebox-overlay .pkmbx-meter-speed{background:linear-gradient(90deg,#3999ef,#80dbff)}
+#pkmsvv-pokebox-overlay .pkmbx-meter-cooldown{background:linear-gradient(90deg,#8d8cf5,#c3acfa)}
+#pkmsvv-pokebox-overlay .pkmbx-stat-meter>strong{
+ font-variant-numeric:tabular-nums;font-size:11px;white-space:nowrap;
+ text-align:right;color:#fff2d5;
+}
+#pkmsvv-pokebox-overlay .pkmbx-stat-caption{
+ font-size:10px!important;color:#a9c7d2!important;line-height:1.45;margin:4px 0 0;
+}
+#pkmsvv-pokebox-overlay #pkmbx-profile>.pkmbx-hub-buttons{
+ background:color-mix(in srgb,var(--pkmbx-type-dark) 40%,#173b4c);
+ border-bottom-color:var(--pkmbx-type);
+}
+#pkmsvv-pokebox-overlay #pkmbx-profile>.pkmbx-hub-buttons .btn:focus-visible,
+#pkmsvv-pokebox-overlay .pkmbx-box-carousel .btn:focus-visible,
+#pkmsvv-pokebox-overlay .pkmbx-box-frame .pkmbx-hub-slot:focus-visible{
+ outline:3px solid #ffe27c;outline-offset:2px;
+}
+@media(max-width:1100px){
+ #pkmsvv-pokebox-overlay .pkmbx-box-frame>.pkmbx-grid{gap:5px;grid-auto-rows:minmax(88px,auto)}
+ #pkmsvv-pokebox-overlay .pkmbx-empty-slot{min-height:88px}
+ #pkmsvv-pokebox-overlay .pkmbx-stat-meter{
+  grid-template-columns:minmax(70px,88px) minmax(25px,1fr) minmax(45px,auto);gap:5px;
+ }
+}
+@media(max-width:870px){
+ #pkmsvv-pokebox-overlay .pkmbx-box-frame{min-height:230px;overflow:auto}
+ #pkmsvv-pokebox-overlay .pkmbx-box-frame>.pkmbx-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr));height:auto;max-height:42dvh;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-hub-main{display:flex;flex-direction:column}
+ #pkmsvv-pokebox-overlay .pkmbx-box-carousel{grid-template-columns:42px minmax(0,1fr) 42px}
+ #pkmsvv-pokebox-overlay .pkmbx-box-carousel>.btn{width:40px;height:40px;min-height:40px;font-size:21px}
+ #pkmsvv-pokebox-overlay #pkmbx-profile{max-height:none}
+}
+@media(max-width:550px){
+ #pkmsvv-pokebox-overlay .pkmbx-box-frame>.pkmbx-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-box-frame .pkmbx-hub-slot{min-height:92px}
+ #pkmsvv-pokebox-overlay .pkmbx-hero-stage{min-height:110px}
+ #pkmsvv-pokebox-overlay .pkmbx-hero-stage>canvas{height:112px;width:112px}
+ #pkmsvv-pokebox-overlay .pkmbx-box-heading strong{font-size:14px}
+ #pkmsvv-pokebox-overlay .pkmbx-box-heading span{font-size:10px;right:6px}
+}
+
+
+/* Rank eligibility is recalculated after every atomic upgrade. Empty stock
+ * MUST look gray rather than yellow, including the Rank tab and whole section. */
+#pkmsvv-pokebox-overlay .pkmbx-rank-overview.is-rank-disabled{
+ border-color:#6f7f8c!important;
+ background:linear-gradient(140deg,#273642,#1b2b39)!important;
+ box-shadow:none!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-rank-overview.is-rank-disabled .pkmbx-rank-heading,
+#pkmsvv-pokebox-overlay .pkmbx-rank-overview.is-rank-disabled .pkmbx-rank-requirement{
+ color:#bbc7cf!important;
+}
+#pkmsvv-pokebox-overlay :is(.pkmbx-rank-shortcut,.pkmbx-rank-tab,#pkmbx-rank-direct).rank-disabled,
+#pkmsvv-pokebox-overlay :is(.pkmbx-rank-shortcut,#pkmbx-rank-direct):disabled{
+ color:#d3dade!important;-webkit-text-fill-color:#d3dade!important;
+ background:linear-gradient(180deg,#6c7882,#4a5964)!important;
+ border:1px solid #89939a!important;
+ box-shadow:none!important;text-shadow:none!important;
+ opacity:.83!important;
+}
+#pkmsvv-pokebox-overlay :is(.pkmbx-rank-shortcut,#pkmbx-rank-direct):disabled{
+ cursor:not-allowed!important;pointer-events:none;
+}
+#pkmsvv-pokebox-overlay .pkmbx-rank-tab.rank-disabled{cursor:pointer;opacity:.8!important}
+
+
+/* Ability readability regression: the unified dark menu overrides a light
+   Pokédex summary. Give EVERY ability row an explicit readable foreground. */
+#pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-dex-ability-row{
+ background:#edf8f3!important;
+ color:#173d48!important;
+ border:1px solid #a8d3c9!important;
+ display:grid!important;
+ grid-template-columns:minmax(112px,.35fr) minmax(0,1fr)!important;
+ gap:10px!important;
+ font-size:13px!important;line-height:1.55!important;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-dex-ability-row strong{
+ color:#123846!important;-webkit-text-fill-color:#123846!important;
+ font-weight:900!important;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-dex-ability-row span{
+ color:#1b4450!important;-webkit-text-fill-color:#1b4450!important;
+ font-weight:600!important;overflow-wrap:anywhere;
+}
+#pkmsvv-pokebox-overlay .pkmbx-hub-info .pkmbx-hub-ability-explained{
+ background:#173e4d!important;border:1px solid #8cbeb9!important;
+ border-radius:9px;padding:10px;margin:8px 0;
+}
+#pkmsvv-pokebox-overlay .pkmbx-hub-info .pkmbx-hub-ability-explained b{
+ color:#ffe4a1!important;-webkit-text-fill-color:#ffe4a1!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-hub-info .pkmbx-ability-effect{
+ color:#edfaf7!important;-webkit-text-fill-color:#edfaf7!important;
+ font-size:13px!important;font-weight:650!important;
+ line-height:1.55!important;margin:7px 0 0!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-legacy-migration{
+ display:flex;flex-direction:column;gap:8px;margin:8px 0;
+ padding:12px;border:1px solid #e2c67c;border-radius:9px;
+ background:#244650;color:#f5faf8;font-size:12px;line-height:1.5;
+}
+#pkmsvv-pokebox-overlay .pkmbx-legacy-migration[hidden]{display:none!important}
+#pkmsvv-pokebox-overlay .pkmbx-legacy-migration strong{color:#ffe6a2}
+#pkmsvv-pokebox-overlay .pkmbx-legacy-migration button{
+ align-self:start;color:#153746!important;background:#ffdf8b!important;
+ border:2px solid #eac365!important;min-height:39px!important;
+}
+@media(max-width:520px){
+ #pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-dex-ability-row{
+  grid-template-columns:1fr!important;gap:4px!important;
+ }
+}
+
+
+/* QA perf/contrast 2026-11-08: shared type-colored portrait frames and
+   white Ability heading in the darker in-PC Pokédex presentation. */
+#pkmsvv-pokebox-overlay #pkmbx-profile .pkmbx-hero-stage>canvas{
+ border:3px solid var(--pkmbx-type,#e64a93);
+ border-radius:8px;box-sizing:border-box;
+ background:linear-gradient(145deg,#293e60,#172d42);
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-hub-hero canvas{
+ border:3px solid var(--pkmbx-type,#e64a93);
+ border-radius:8px;box-sizing:border-box;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-dex-summary h4{
+ color:#fff!important;-webkit-text-fill-color:#fff!important;
+ text-shadow:0 1px 2px #061e30;
+}
+
+/* Undeafeated Pokémon stay black silhouettes, including full-size details. */
+#pkmsvv-pokebox-overlay .pkmbx-dex-card.is-undefeated canvas,
+#pkmsvv-pokebox-overlay .pkmbx-dex-undefeated #pkmbx-dex-hero{
+ filter:brightness(0) drop-shadow(0 3px 3px #061521)!important;
+ opacity:.92!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-dex-card.is-undefeated b{
+ color:#b4c5c6!important;font-weight:850;
+}
+#pkmsvv-pokebox-overlay .pkmbx-dex-undefeated .pkmbx-hub-hero strong{
+ color:#183948!important;
+}
+
+/* Explore-only Pokédex discovery rule; readably visible above the filters. */
+#pkmsvv-pokebox-overlay #pkmbx-dex-rule{
+ margin:8px 12px 10px;padding:8px 12px;border-radius:8px;
+ background:#e9f6f1!important;border:1px solid #86c8b7!important;
+ color:#173a48!important;-webkit-text-fill-color:#173a48!important;
+ font-size:clamp(12px,1.1vw,14px);font-weight:750;line-height:1.55;
+ overflow-wrap:anywhere;
+}

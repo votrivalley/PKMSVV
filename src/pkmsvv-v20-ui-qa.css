@@ -1,0 +1,341 @@
+/* Pokémon Chuyển Sinh 2.0.1 — Android landscape/Web/PWA/Windows responsive
+ * Pokémon workspace. The old 2.0 rule combined 96dvh + parent's safe-area
+ * padding with overflow:hidden, clipping every actionable control on phones.
+ * Use ONE bounded outer viewport; put the scroll on the actual content pane.
+ */
+#pkmsvv-pokebox-overlay{
+ box-sizing:border-box!important;
+ inset:0!important;
+ width:100%!important;
+ max-width:100vw!important;
+ height:100dvh!important;
+ max-height:100dvh!important;
+ padding:max(6px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right))
+         max(6px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))!important;
+ overflow:hidden!important;
+ align-items:center!important;
+ justify-content:center!important;
+ --pkmsvv-pokemon-width:min(1400px,100%);
+}
+#pkmsvv-pokebox-overlay>.pkmbx-hub-panel,
+#pkmsvv-pokebox-overlay>#pkmbx-dex-overlay.pkmbx-dex-inside-pc,
+#pkmsvv-pokebox-overlay>#pkmbx-upgrade-overlay.pkmbx-upgrades-inside-pokemon{
+ box-sizing:border-box!important;
+ width:var(--pkmsvv-pokemon-width)!important;
+ max-width:100%!important;
+ min-width:0!important;
+ height:100%!important;
+ max-height:100%!important;
+ min-height:0!important;
+ margin:0 auto!important;
+ flex:0 1 auto!important;
+ overflow:hidden!important;
+}
+#pkmsvv-pokebox-overlay>#pkmbx-dex-overlay.pkmbx-dex-inside-pc>.pkmbx-dex-panel,
+#pkmsvv-pokebox-overlay>#pkmbx-upgrade-overlay.pkmbx-upgrades-inside-pokemon>.pkmbx-upgrade-panel{
+ box-sizing:border-box!important;
+ width:100%!important;height:100%!important;max-height:100%!important;
+ min-width:0!important;min-height:0!important;
+ display:flex!important;flex-direction:column!important;
+ overflow:hidden!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-hub-main,
+#pkmsvv-pokebox-overlay .pkmbx-dex-main{
+ min-width:0!important;min-height:0!important;
+}
+#pkmsvv-pokebox-overlay .pkmbx-dex-main{
+ flex:1;overflow:hidden;
+}
+#pkmsvv-pokebox-overlay .pkmbx-dex-results{
+ overflow:hidden;min-height:0;
+}
+#pkmsvv-pokebox-overlay .pkmbx-dex-grid{
+ min-height:0;overflow-y:auto;
+}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-panel .pkmbx-upgrade-options{
+ overflow-y:auto;min-height:0;align-content:start;
+}
+#pkmsvv-pokebox-overlay .pkmbx-upgrade-panel .pkmbx-upgrade-options .pkmbx-upgrade-option{
+ align-self:stretch;min-height:180px;
+}
+#pkmsvv-pokebox-overlay :is(.pkmbx-hub-panel,.pkmbx-dex-panel,.pkmbx-upgrade-panel,
+ .pkmbx-grid,.pkmbx-dex-grid,.pkmbx-profile,.pkmbx-hub-tools){
+ touch-action:pan-y;
+ -webkit-overflow-scrolling:touch;
+}
+#pkmsvv-pokebox-overlay button,#pkmsvv-pokebox-overlay input,
+#pkmsvv-pokebox-overlay select{
+ pointer-events:auto;
+}
+/* Mobile Android WebView and landscape phones: viewport *height* matters more
+ * than CSS width (DPR 2-3 phones often report a large landscape innerWidth).
+ * The entire selected tab can scroll, with smaller independent list scrollers.
+ */
+@media (max-height:720px) and (orientation:landscape), (max-width:870px){
+ #pkmsvv-pokebox-overlay{
+  padding:max(4px,env(safe-area-inset-top)) max(4px,env(safe-area-inset-right))
+          max(4px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left))!important;
+  align-items:stretch!important;
+ }
+ #pkmsvv-pokebox-overlay>.pkmbx-hub-panel,
+ #pkmsvv-pokebox-overlay>#pkmbx-dex-overlay.pkmbx-dex-inside-pc,
+ #pkmsvv-pokebox-overlay>#pkmbx-upgrade-overlay.pkmbx-upgrades-inside-pokemon{
+  height:100%!important;max-height:100%!important;overflow-y:auto!important;
+  overflow-x:hidden!important;overscroll-behavior:contain!important;
+ }
+ #pkmsvv-pokebox-overlay :is(.pkmbx-hub-panel,.pkmbx-dex-panel,.pkmbx-upgrade-panel){
+  padding:9px 10px!important;
+  overflow-y:auto!important;overflow-x:hidden!important;
+  height:100%!important;max-height:100%!important;
+  scroll-padding-top:8px!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-head{
+  flex:0 0 auto!important;min-height:35px!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-head h2{
+  font-size:clamp(16px,2.7vh,22px)!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-pc-tabs{
+  display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  flex:0 0 auto!important;gap:4px!important;margin:4px 0 7px!important;
+  padding:0 0 6px!important;overflow:visible!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab{
+  min-width:0!important;width:100%!important;
+  font-size:clamp(11px,2.5vh,15px)!important;
+  min-height:35px!important;padding:4px 5px!important;
+  white-space:normal!important;line-height:1.2!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab svg{
+  max-width:18px!important;max-height:18px!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-hub-main,
+ #pkmsvv-pokebox-overlay .pkmbx-dex-main{
+  display:flex!important;flex-direction:column!important;
+  flex:0 0 auto!important;overflow:visible!important;
+  height:auto!important;min-height:0!important;gap:9px!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-hub-left{
+  flex:0 0 auto!important;overflow:visible!important;
+  min-width:0!important;min-height:0!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-hub-team-title{
+  margin:5px 0!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-team-six{
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;
+  gap:4px!important;min-width:0!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-team-slot{
+  min-width:0!important;min-height:50px!important;height:50px!important;
+  max-height:50px!important;padding:2px!important;
+  flex-direction:column!important;justify-content:center!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-team-slot canvas{
+  width:35px!important;height:35px!important;max-width:100%!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-team-slot span:not(.pkmbx-team-empty){
+  font-size:9px!important;line-height:1!important;max-width:100%!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-hub-tools{
+  margin:6px 0!important;gap:6px!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-box-carousel{margin:5px 0!important;}
+ #pkmsvv-pokebox-overlay .pkmbx-box-frame{
+  flex:0 0 auto!important;
+  height:clamp(160px,40dvh,260px)!important;
+  min-height:160px!important;max-height:260px!important;
+  overflow:hidden!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-box-frame>.pkmbx-grid{
+  height:100%!important;min-height:0!important;
+  overflow-y:auto!important;overscroll-behavior:contain!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-profile,
+ #pkmsvv-pokebox-overlay #pkmbx-profile{
+  flex:0 0 auto!important;height:auto!important;min-height:170px!important;
+  max-height:none!important;overflow:visible!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-dex-results{
+  flex:0 0 auto!important;height:clamp(165px,43dvh,300px)!important;
+  max-height:300px!important;overflow:hidden!important;min-height:165px!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-dex-grid{
+  height:100%!important;min-height:0!important;
+  overflow-y:auto!important;overscroll-behavior:contain!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ }
+ #pkmsvv-pokebox-overlay #pkmbx-dex-details.pkmbx-profile{
+  min-height:185px!important;height:auto!important;max-height:none!important;
+  overflow:visible!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-upgrade-options{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  flex:0 0 auto!important;overflow:visible!important;
+  gap:8px!important;margin:8px 0!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-upgrade-option{
+  min-height:155px!important;padding:10px!important;min-width:0!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-upgrade-option h4{font-size:16px!important}
+ #pkmsvv-pokebox-overlay .pkmbx-upgrade-option .btn{
+  min-height:40px!important;white-space:normal!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-upgrade-heading{
+  flex:0 0 auto!important;padding:10px!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-upgrade-heading h3{
+  font-size:18px!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-upgrade-footnote{
+  flex:0 0 auto!important;padding:8px!important;
+ }
+}
+@media (max-width:500px) and (orientation:portrait){
+ #pkmsvv-pokebox-overlay .pkmbx-upgrade-options{
+  grid-template-columns:1fr!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-box-frame>.pkmbx-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ }
+}
+@media (max-height:550px) and (orientation:landscape){
+ #pkmsvv-pokebox-overlay .pkmbx-head{min-height:30px!important}
+ #pkmsvv-pokebox-overlay .pkmbx-head h2{font-size:16px!important}
+ #pkmsvv-pokebox-overlay .pkmbx-pc-tabs .pkmbx-pc-tab{
+  min-height:30px!important;font-size:11px!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-dex-rule{
+  font-size:11px!important;line-height:1.3!important;padding:6px!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-dex-toolbar{margin:4px 0!important;}
+}
+/* Android APK home menu: the header is one row, while mobile's old menu
+ * patch still reserved 105px above a SECOND topbar. Keep both menu panels
+ * individually scrollable below the actual bar, without moving game canvas.
+ */
+@media (max-height:720px) and (orientation:landscape){
+ #scr-menu.pkmsvv-v15-menu{
+  overflow:hidden!important;
+ }
+ #scr-menu.pkmsvv-v15-menu .menu-left,
+ #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav{
+  box-sizing:border-box!important;
+  padding-top:max(57px,calc(47px + env(safe-area-inset-top)))!important;
+  padding-bottom:max(8px,env(safe-area-inset-bottom))!important;
+  min-height:0!important;max-height:100dvh!important;
+  overflow-y:auto!important;overflow-x:hidden!important;
+  overscroll-behavior:contain!important;
+  -webkit-overflow-scrolling:touch;
+ }
+ #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list{
+  min-height:0!important;flex:0 0 auto!important;
+ }
+ #scr-menu.pkmsvv-v15-menu .menu-right.pkmsvv-v15-nav .menu-list>.menu-item{
+  min-height:42px!important;
+ }
+ #scr-menu.pkmsvv-v15-menu .pkmsvv-v15-partner{
+  min-height:0!important;max-height:none!important;
+ }
+ #scr-menu.pkmsvv-v15-menu .pkmsvv-v15-bottom{
+  flex:0 0 auto!important;min-height:0!important;
+ }
+ #scr-menu.pkmsvv-v15-menu .pkmsvv-v15-news-card#btn-news{
+  min-height:49px!important;
+ }
+}
+#scr-gacha .pkmsvv-v20-gacha-actions{
+ display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;
+}
+#scr-gacha button.pkmsvv-v20-gacha-card{
+ flex:1 1 135px;display:flex!important;flex-direction:column;
+ align-items:center;justify-content:center;gap:5px;
+ height:112px!important;min-height:112px!important;max-height:112px!important;
+ min-width:112px!important;max-width:none!important;
+ margin:0!important;padding:10px 9px!important;
+ white-space:normal!important;text-align:center!important;
+ font-size:clamp(12px,1.15vw,16px)!important;line-height:1.3!important;
+ box-sizing:border-box!important;
+}
+#scr-kecleon .pkmk-cards .pkmk-card{
+ min-height:110px;box-sizing:border-box;align-items:center;
+}
+#scr-kecleon .pkmk-product-tail{max-width:120px;min-width:85px}
+#scr-kecleon .pkmk-product-tail .btn{white-space:normal}
+#scr-kecleon .pkmk-sell,
+#scr-kecleon .pkmbx-prism-sell{
+ font-size:11px;min-height:31px!important;
+ background:#193d4e;color:#eff7f8;border:1px solid #9dc7c3;
+}
+@media(max-width:870px){
+ #pkmsvv-pokebox-overlay{--pkmsvv-pokemon-height:calc(100dvh - 20px)}
+ #scr-gacha button.pkmsvv-v20-gacha-card{
+  flex:1 1 115px;min-width:95px!important;height:104px!important;
+  min-height:104px!important;max-height:104px!important;
+ }
+ #scr-kecleon .pkmk-cards .pkmk-card{min-height:105px}
+}
+@media(max-width:620px){
+ #pkmsvv-pokebox-overlay .pkmbx-hub-panel,
+ #pkmsvv-pokebox-overlay #pkmbx-dex-overlay.pkmbx-dex-inside-pc,
+ #pkmsvv-pokebox-overlay #pkmbx-upgrade-overlay.pkmbx-upgrades-inside-pokemon{
+  overflow-y:auto!important;
+ }
+ #pkmsvv-pokebox-overlay .pkmbx-upgrade-panel .pkmbx-upgrade-options{
+  grid-template-columns:1fr;
+ }
+}
+
+/* Direct-child specificity wins over the original v2.0
+ * #overlay>#dex>.panel {overflow:hidden!important} rule. WebView did
+ * scroll with JavaScript but ignored the user's finger until this override.
+ */
+@media (max-height:720px) and (orientation:landscape), (max-width:870px){
+ #pkmsvv-pokebox-overlay>#pkmbx-dex-overlay.pkmbx-dex-inside-pc>.pkmbx-dex-panel,
+ #pkmsvv-pokebox-overlay>#pkmbx-upgrade-overlay.pkmbx-upgrades-inside-pokemon>.pkmbx-upgrade-panel{
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  overscroll-behavior:contain!important;
+  touch-action:pan-y!important;
+  -webkit-overflow-scrolling:touch;
+ }
+}
+
+/* Pokédex type pills use the SAME artwork/colors as the PokéBox
+ * portrait. National Dex number and rarity keep their own neutral badges. */
+#pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-dex-type-pills {
+ display:flex;justify-content:flex-start;flex-wrap:wrap;
+ gap:7px;margin:8px 0;min-width:0;
+}
+#pkmsvv-pokebox-overlay #pkmbx-dex-details .pkmbx-dex-type-pills .pkmbx-type-pill {
+ display:inline-flex!important;align-items:center;justify-content:center;
+ background:color-mix(in srgb,var(--pkmbx-pill) 62%,#0e2636)!important;
+ border:1px solid var(--pkmbx-pill)!important;
+ border-radius:30px!important;
+ color:#fff!important;font-weight:850!important;
+ text-shadow:0 1px 2px #0b1926aa!important;
+ padding:4px 13px!important;min-height:24px;
+}
+
+/* Recruitment gating is an actual rule, not a decorative prompt. */
+#scr-gacha .pkmsvv-recruitment-rule {
+ box-sizing:border-box!important;position:static!important;
+ inset:auto!important;float:none!important;transform:none!important;
+ display:block!important;width:100%!important;max-width:100%!important;
+ min-width:0!important;flex:0 0 100%;grid-column:1/-1;
+ margin:8px 0 10px!important;padding:7px 11px!important;
+ border:1px solid rgba(160,219,197,.55);border-radius:9px;
+ background:rgba(11,46,58,.88);color:#e6fff2;
+ font-size:clamp(11px,1.8vh,14px);line-height:1.35;
+ text-align:left;overflow-wrap:anywhere;
+}
+
+#pkmsvv-pokebox-overlay .pkmbx-only-ability {
+ color:#f4e7af;line-height:1.4;font-size:12px;
+ background:#173b48;border:1px solid #b89e6c;
+ border-radius:7px;padding:7px 9px;margin:7px 0;
+}
+#pkmsvv-pokebox-overlay button[data-hub-ability]:disabled {
+ opacity:.5;cursor:not-allowed;filter:grayscale(.35);
+}

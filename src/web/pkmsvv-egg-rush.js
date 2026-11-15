@@ -1,7 +1,7 @@
 /* PKMSVV v1.5 — Egg Rush, online 4-player host-authoritative match. */
 G.EggRush=(()=>{
- const MAX_TIME=720,MAX_SCORE=10,SPAWN_EVERY=60,RESPAWN_SECONDS=2,EGG_SPECIES=[172,447,173,360,438,175,174];
- const SUPPORT_HATCH=24,SUPPORT_MIN_HATCH=32/3,SHINY_CAST_RATIO=2/3,SHINY_SKILL_POWER=1.5;
+ const MAX_TIME=720,MAX_SCORE=10,SPAWN_EVERY=60,RESPAWN_SECONDS=2,EGG_SPECIES=[172,447,173,360,440,438,175,174];
+ const SUPPORT_HATCH=24,SUPPORT_MIN_HATCH=32/3,SHINY_CAST_RATIO=2/3,SHINY_SKILL_POWER=2;
  // Competitive eggs only reveal their Pokémon and score after the final egg.
  const eggValue=dex=>dex===151?20:dex===132?10:5;
  const eggShinyChance=dex=>(dex===151||dex===132)?.10:.03;
@@ -247,7 +247,7 @@ G.EggRush=(()=>{
     (pet.uid===G.Game.player?.uid?G.Game.player:(G.Coop.isHost?players.find(p=>p.uid===pet.uid):null));
    if(pet.hatch&&owner&&!owner.dead){
     const own=siblings.filter(q=>q.hatch);
-    if(own.indexOf(pet)<3){pet.cd=(pet.cd||0)-dt;if(pet.cd<=0){support(pet,owner);pet.cd=({172:10,173:12,360:19,438:15}[pet.dex]||8)*(pet.shiny?SHINY_CAST_RATIO:1);}}
+    if(own.indexOf(pet)<3){pet.cd=(pet.cd||0)-dt;if(pet.cd<=0){support(pet,owner);pet.cd=({172:10,447:13,173:10,360:13,440:12,438:15,174:12}[pet.dex]||8)*(pet.shiny?SHINY_CAST_RATIO:1)*(1-.45*(G.PKMSVVEggs?.affinityPercent?.(pet.dex)||0)/100);}}
    }
   }
   if(G.Coop.isHost&&supportMode){
@@ -372,15 +372,23 @@ G.EggRush=(()=>{
     if(count)G.FX?.ring?.(center.x,center.y,8,95,'#ffdb55',.5,3);
     break;
    }
-   case 447:if(enemy){
-    if(G.Coop?.isHost&&(G.Royale?.active||G.EggRush?.active)&&pet.uid)enemy.pkmsvvLastHitUid=pet.uid;
-    enemy.hurt(19*(pet.statScale||.65)/.65*(pet.shiny?SHINY_SKILL_POWER:1),'#c8e2ff');
-   }break;
-   case 173:eggRushBuff(pet,pl,'heal',.035);break;
-   case 360:eggRushBuff(pet,pl,'shield',.09);break;
+   case 447:case 360:{
+    const key=pet.dex===447?'pkmsvvSupportPhysical':'pkmsvvSupportSpecial';
+    const affinity=1+.6*(G.PKMSVVEggs?.affinityPercent?.(pet.dex)||0)/100;
+    G.PKMSVVEggs?.applyAttackBuffs?.(pl);
+    pl[key]={amount:Math.min(.6,.12*(pet.statScale||.65)*affinity*
+      (pet.shiny?SHINY_SKILL_POWER:1)),until:(G.Game?.st?.time||0)+8};
+    break;
+   }
+   case 173:for(const e of nearby)if(G.U.dist2(e.x,e.y,pet.x,pet.y)<190*190)
+    e.applySlow?.(Math.min(.8,.35*(pet.shiny?SHINY_SKILL_POWER:1)),3);break;
+   case 440:eggRushBuff(pet,pl,'heal',.035);break;
    case 438:eggRushBuff(pet,pl,'shield',.05);break;
    case 175:G.Pickups?.pullAll?.();break;
-   case 174:if(enemy)enemy.applySlow(pet.shiny?.45:.3,2.5);break;
+   case 174:for(const e of nearby)if(G.U.dist2(e.x,e.y,pet.x,pet.y)<190*190){
+    const duration=(e.boss?.45:1.6)*(pet.shiny?SHINY_SKILL_POWER:1);
+    if(e.applySleep)e.applySleep(duration);else e.applyStun?.(duration);
+   }break;
   }
  }
  // Compete for nests and score; skills/Orbs never hurt another trainer.

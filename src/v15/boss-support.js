@@ -2,9 +2,9 @@
  * Spawn as hittable enemies, no ownership, eggs or persistent saves.
  */
 G.PKMSVVBossSupport=(()=>{
- const POOL=[{dex:172,role:'attack',cd:5},{dex:447,role:'attack',cd:6},
-  {dex:173,role:'heal',cd:12},{dex:360,role:'shield',cd:15},
-  {dex:174,role:'slow',cd:10}];
+ const POOL=[{dex:172,role:'paralyze',cd:10},{dex:447,role:'physical',cd:13},
+  {dex:173,role:'slow',cd:10},{dex:360,role:'special',cd:13},
+  {dex:440,role:'heal',cd:12},{dex:174,role:'sleep',cd:12}];
  const linked=new Map();
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  function cast(g,b,pl){
@@ -24,11 +24,15 @@ G.PKMSVVBossSupport=(()=>{
    b.shield=Math.max(b.shield||0,amount);
    b.shieldT=5;
    G.FX?.ring?.(b.x,b.y,8,60,'#90d4ff',.5,2);
-  }else if(role==='slow'){
+  }else if(role==='slow'||role==='sleep'){
    if(Math.hypot(pl.x-g.x,pl.y-g.y)>180)return false;
-   pl.slowT=Math.max(pl.slowT||0,.6);
-   G.FX?.ring?.(pl.x,pl.y,6,40,'#e7aaff',.5,2);
-   G.FX?.dmgText?.(pl.x,pl.y-(pl.bodyH||38)-10,tr('CHẬM!','SLOWED!'),'#e7aaff');
+   if(role==='slow')pl.slowT=Math.max(pl.slowT||0,1.2);
+   else pl.pkmsvvSleepT=Math.max(pl.pkmsvvSleepT||0,.7);
+   G.FX?.ring?.(pl.x,pl.y,6,70,'#e7aaff',.5,2);
+   G.FX?.dmgText?.(pl.x,pl.y-(pl.bodyH||38)-10,role==='slow'?tr('CHẬM!','SLOWED!'):tr('BUỒN NGỦ!','DROWSY!'),'#e7aaff');
+  }else if(role==='physical'||role==='special'){
+   const key=role==='physical'?'pkmsvvGuardPhysical':'pkmsvvGuardSpecial';
+   b[key]={amount:.10,until:(G.Game?.st?.time||0)+6};
   }else{
    const dx=pl.x-g.x,dy=pl.y-g.y,dist=Math.hypot(dx,dy);
    if(dist>350)return false;

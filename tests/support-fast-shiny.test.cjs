@@ -15,7 +15,7 @@ test('Solo support capture stays 2s; hatch duration is reduced to 80%',()=>{
  assert.equal(G.PKMSVVEggs.HATCH_BASE,24);
  assert.ok(Math.abs(G.PKMSVVEggs.HATCH_MIN-32/3)<.0001);
  assert.equal(G.PKMSVVEggs.SHINY_CAST_RATIO,2/3);
- assert.equal(G.PKMSVVEggs.SHINY_SKILL_POWER,1.5);
+ assert.equal(G.PKMSVVEggs.SHINY_SKILL_POWER,2);
 });
 test('Solo Shiny Pichu casts at 2/3 cooldown, stuns 1.5x longer (not >4 targets)',()=>{
  function trial(shiny){
@@ -36,7 +36,7 @@ test('Solo Shiny Pichu casts at 2/3 cooldown, stuns 1.5x longer (not >4 targets)
  assert.equal(n.pet.cooldown,10);
  assert.ok(Math.abs(s.pet.cooldown-20/3)<1e-8);
  assert.equal(n.events[0],1.1);
- assert.ok(Math.abs(s.events[0]-1.65)<1e-8);
+ assert.ok(Math.abs(s.events[0]-2.2)<1e-8);
 });
 test('True Shiny support improves buffs and Ditto damage but preserves shields cap',()=>{
  const s=read('src/v15/eggs.js'),p=read('scripts/patch-v15-eggs.cjs');
@@ -49,7 +49,7 @@ test('Co-op/Survival support has 24s hatch, Shiny host roll and faster/stronger 
  assert.match(c,/SUPPORT_HATCH=24,SUPPORT_MIN_HATCH=32\/3/);
  assert.match(c,/supportShiny=supportMode&&Math\.random\(\)<eggShinyChance/);
  assert.match(c,/pet\.age>=SUPPORT_MIN_HATCH&&pet\.age\+\(pet\.boost\|\|0\)>=SUPPORT_HATCH/);
- assert.match(c,/SHINY_CAST_RATIO=2\/3,SHINY_SKILL_POWER=1\.5/);
+ assert.match(c,/SHINY_CAST_RATIO=2\/3,SHINY_SKILL_POWER=2/);
  assert.match(c,/if\(active\)return; \/\/ Egg Rush: sealed eggs NEVER hatch mid-match/);
  assert.match(read('src/pkmsvv-support-catalog.js'),/Shiny: Chỉ số vượt trội · Kỹ năng vượt trội/);
 });
