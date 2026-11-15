@@ -10,7 +10,7 @@
 })(typeof window!=='undefined'?window:null,function(){
  'use strict';
  const RANK_XP=[0,2,5,9,14,20,27,35,44,54];
- const TRAINING_KEYS=Object.freeze(['heal','buff','slow','shield']);
+ const TRAINING_KEYS=Object.freeze(['heal','buff','slow','shield','cousin']);
  const TRAINING_MAX=3;
  // One free training point per Bond level beyond Bond 1; no new currency.
  function trainingPoints(save){
@@ -20,7 +20,7 @@
  }
  function train(save,key,commit){
   if(!save||typeof save!=='object'||!TRAINING_KEYS.includes(key))return {ok:false,reason:'invalid'};
-  const p=data(save),gate={heal:1,buff:2,slow:3,shield:7}[key];
+  const p=data(save),gate={heal:1,buff:2,slow:3,shield:7,cousin:4}[key];
   if(p.bond<gate)return {ok:false,reason:'locked'};
   if(p.training[key]>=TRAINING_MAX)return {ok:false,reason:'max'};
   if(trainingPoints(save)<1)return {ok:false,reason:'points'};
@@ -44,6 +44,8 @@
   sleep:[['sleep','Hết pin... Pippi ngủ tí... zzz...']],
   boss:[['panic','Boss tới kìa! Tui lo hậu cần!']],
   bond:[['sparkle','Tình bạn lên cấp! Pippi xịn hơn rồi nè!']],
+  cousin:[['shock','EM HỌ ƠI! CỨU PIPPI VỚI!'],['wink','Ê Pikachu, mấy cha này bắt nạt bạn tui nè!']],
+  evolve:[['sparkle','Hóa Clefable hai giây… Đừng có đếm nhanh!']],
   tutorial:[['thinking','Hạ Boss phút 15 mở vùng mới; phút 30 mới hết trận nha!']]
  };
  const clamp=(n,min,max)=>Math.max(min,Math.min(max,Number.isFinite(+n)?+n:min));
@@ -96,7 +98,7 @@
  }
  function newRun(pl,now=0){return {player:pl,now,healAt:8,buffAt:12,slowAt:15,guardAt:0,
   sleepUntil:0,megaUntil:0,reviveAt:0,sleepTalked:false,revived:false,lastTalk:-100,marks:new Set(),lastPos:null,direction:0,
-  activeBuff:null,slowed:[],motion:null,emoteUntil:0};}
+  activeBuff:null,slowed:[],motion:null,emoteUntil:0,cousinUntil:0,cousinTargets:0,damageHook:null,evolveUntil:0,megaSpoken:false};}
  function heal(pl,lv,training=0){
   if(!pl||!Number.isFinite(pl.maxHp)||pl.maxHp<=0||pl.hp/pl.maxHp>.65)return false;
   const gain=pl.maxHp*(.12+lv*.011+clamp(training,0,TRAINING_MAX)*.02);
@@ -146,7 +148,7 @@
   }
  }
  // Revert buffs whenever player exits Explore or a new player is spawned.
- function finish(run){if(run)endEffects(run,Infinity);}
+ function finish(run){if(run){endEffects(run,Infinity);uninstallDamageHook(run);}}
  function tryRevive(G,run,pl,now){
   if(!eligible(G)||!run||run.player!==pl||run.revived||
      !pl||pl.dead||!(Number(pl.hp)<=0)||typeof pl.revive!=='function')return false;
@@ -158,6 +160,75 @@
   pl.invuln=Math.max(Number(pl.invuln)||0,3);
   run.sleepUntil=now+75;
   return true;
+ }
+ // Cousin Pikachu is rolled after each CONFIRMED HP-reducing hit in Explore.
+ // L1=3%, L2=4.5%, L3=6%, locked=0%; never roll each animation frame.
+ const COUSIN_CHANCES=Object.freeze([0,.03,.045,.06]);
+ const cousinChance=level=>COUSIN_CHANCES[clamp(Math.floor(level||0),0,3)];
+ function cousinLightning(G,pl,now){
+  const raw=G.EnemyMgr?.all?.();
+  const enemies=Array.isArray(raw)?raw:raw&&typeof raw[Symbol.iterator]==='function'?
+   Array.from(raw instanceof Map?raw.values():raw):[];
+  const nearby=enemies.filter(e=>e&&!e.dead&&!e.remote&&
+   typeof e.applyStun==='function'&&Number.isFinite(+e.x)&&Number.isFinite(+e.y)&&
+   (e.x-pl.x)**2+(e.y-pl.y)**2<=240*240&&
+   now>=(Number(e.pkmsvvPippiCousinImmuneUntil)||0));
+  nearby.sort((a,b)=>((a.x-pl.x)**2+(a.y-pl.y)**2)-
+                     ((b.x-pl.x)**2+(b.y-pl.y)**2));
+  const center=nearby[0]||null;
+  const hit=[];
+  if(center){
+   for(const e of nearby){
+    if((e.x-center.x)**2+(e.y-center.y)**2>95*95)continue;
+    e.applyStun((e.boss||e.judge||e.pkmsvvBossGuard)?0.35:1.1);
+    e.pkmsvvPippiCousinImmuneUntil=now+7;
+    hit.push(e);
+    G.FX?.burst?.(e.x,e.y-9,'#ffda50',5,60);
+    G.FX?.dmgText?.(e.x,e.y-24,'TÊ LIỆT!','#ffdf60');
+    if(hit.length===4)break;
+   }
+   G.FX?.ring?.(center.x,center.y,8,95,'#ffd34a',.55,3);
+  }
+  G.FX?.ring?.(pl.x+30,pl.y-12,5,40,'#ffe078',.36,2);
+  return {affected:hit.length,center:center?{x:center.x,y:center.y}:null};
+ }
+ function rollCousinOnHit(G,run,pl,beforeHp,afterHp,random=Math.random){
+  if(!run||!pl||pl!==run.player||!(beforeHp>afterHp)||!eligible(G)||
+     (Number(G.Game?.st?.time??G.Game?.time)||run.now)<run.sleepUntil)
+   return {triggered:false,reason:'not-real-hit'};
+  const now=Math.max(run.now,Number(G.Game?.st?.time??G.Game?.time)||run.now);
+  const level=data(G.DB?.save).training.cousin;
+  const chance=cousinChance(level);
+  if(!chance)return {triggered:false,reason:'not-learned',chance};
+  if(!(Number(random())<chance))return {triggered:false,reason:'roll',chance};
+  const lightning=cousinLightning(G,pl,now);
+  run.now=now;run.cousinUntil=now+1.9;
+  run.cousinTargets=lightning.affected;
+  return {triggered:true,chance,...lightning};
+ }
+ function installDamageHook(run,pl,callback){
+  if(!run||!pl||typeof pl.hurt!=='function')return false;
+  if(run.damageHook?.player===pl)return true;
+  const hadOwn=Object.prototype.hasOwnProperty.call(pl,'hurt'),original=pl.hurt;
+  const wrapper=function(...args){
+   const before=Number(this.hp);
+   const result=original.apply(this,args);
+   const after=Number(this.hp);
+   if(Number.isFinite(before)&&Number.isFinite(after)&&after<before){
+    try{callback(before,after,this);}catch(_){/* preserve native damage */}
+   }
+   return result;
+  };
+  pl.hurt=wrapper;
+  run.damageHook={player:pl,hadOwn,original,wrapper};
+  return true;
+ }
+ function uninstallDamageHook(run){
+  const h=run?.damageHook;
+  if(h&&h.player?.hurt===h.wrapper){
+   if(h.hadOwn)h.player.hurt=h.original;else delete h.player.hurt;
+  }
+  if(run)run.damageHook=null;
  }
  // Eight-direction autonomous follower in world units. Follow the player's
  // recorded movement trail instead of sticking to a viewport offset.
@@ -245,7 +316,7 @@
  // Pixel-art white speech-bubble emotes inspired by Ragnarok's emotion
  // vocabulary, but drawn independently: no extracted RO sticker assets.
  const EMOTES={
-  intro:'heart',heal:'heart',buff:'sparkle',slow:'angry',
+  intro:'heart',heal:'heart',buff:'sparkle',slow:'angry',cousin:'sparkle',evolve:'sparkle',
   shield:'alarm',revive:'heart',sleep:'sleep',boss:'alarm',
   bond:'sparkle',tutorial:'question'
  };
