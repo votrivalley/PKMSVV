@@ -465,25 +465,20 @@
    const desiredGap=Math.max(FOLLOW_DISTANCE,Math.min(120,48/visualScale));
    const state=advanceFollower(run,pl,run.now,desiredGap);if(!state)return;
    const camX=Number(G.Camera?.x),camY=Number(G.Camera?.y);
-   const cameraScale=Number(G.Camera?.scale)||1;
-   let x,y;
-   if(typeof G.Camera?.left==='function'&&typeof G.Camera?.top==='function'){
-    // Match the native game render transform: world -> camera -> canvas.
-    x=rect.left+(state.x-G.Camera.left())*cameraScale*zoomX;
-    y=rect.top+(state.y-G.Camera.top())*cameraScale*zoomY;
-   }else if(Number.isFinite(camX)&&Number.isFinite(camY)){
-    x=rect.left+rect.width*.5+(state.x-camX)*cameraScale*zoomX;
-    y=rect.top+rect.height*.5+(state.y-camY)*cameraScale*zoomY;
-   }else{
-    x=rect.left+rect.width*.5+(state.x-pl.x)*cameraScale*zoomX;
-    y=rect.top+rect.height*.5+(state.y-pl.y)*cameraScale*zoomY;
-   }
+   // Use the same camera-centre projection as the previously visible Pippi.
+   // G.Camera.left()/top() in some native builds already incorporate zoom:
+   // multiplying their output by another scale placed Pippi off-screen.
+   // Prefer native world-centre coordinates, with a player-relative fallback.
+   const centerX=Number.isFinite(camX)?camX:pl.x;
+   const centerY=Number.isFinite(camY)?camY:pl.y;
+   const x=rect.left+rect.width*.5+(state.x-centerX)*zoomX;
+   const y=rect.top+rect.height*.5+(state.y-centerY)*zoomY;
    // Pippi is a world actor, not a floating browser overlay: never leak it
    // outside the game canvas or across a fixed-position menu/pause dialog.
-   const padding=28;
+   const padding=12;
    if(!Number.isFinite(x)||!Number.isFinite(y)||
       x<rect.left+padding||x>rect.right-padding||
-      y<rect.top+padding||y>rect.bottom-7){
+      y<rect.top+padding||y>rect.bottom-6){
     concealVisuals();return;
    }
    follower.hidden=false;
@@ -767,7 +762,11 @@
    };
   }
   const api={installed:true,refund,migrate,data,rank,earn,train,trainingPoints,bondProgress,cousinChance,eligible:()=>eligible(G),
-   tryRevive:revive,tick,show:say,get run(){return run;}};
+   tryRevive:revive,tick,show:say,
+   get visual(){return {blocked:visualModalOpen(),followerHidden:follower?.hidden??true,
+    followerConnected:!!follower?.isConnected,position:run?.motion?{
+     x:run.motion.x,y:run.motion.y}:null};},
+   get run(){return run;}};
   G.PKMSVVPippi=api;
   // Pippi only needs four updates per second. The old self-recursing RAF
   // installed an extra callback on EVERY native 60Hz combat frame even while
