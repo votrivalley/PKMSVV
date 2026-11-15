@@ -673,17 +673,25 @@
   const api={installed:true,refund,migrate,data,rank,earn,train,trainingPoints,bondProgress,cousinChance,eligible:()=>eligible(G),
    tryRevive:revive,tick,show:say,get run(){return run;}};
   G.PKMSVVPippi=api;
-  // The RAF loop never mutates other modes; work only at a throttled 4Hz.
-  let last=0;const frame=stamp=>{
-   // Optional CI A/B diagnostic: retain install hooks and PC menu, but pause
-   // all periodic companion work. No player-facing setting or gameplay change.
-   if(w.__pkmsvvPippiTickDisabled!==true&&Number(stamp)-last>=250){
-    last=Number(stamp);tick();
-   }
-   w.requestAnimationFrame?.(frame);
-  };
-  if(typeof w.requestAnimationFrame==='function')w.requestAnimationFrame(frame);
-  else if(typeof w.setInterval==='function')w.setInterval(tick,350);
+  // Pippi only needs four updates per second. The old self-recursing RAF
+  // installed an extra callback on EVERY native 60Hz combat frame even while
+  // Pippi was idle. Use a single 250ms timer instead to keep the companion
+  // off the critical rendering path (including Grieta/Rift transitions).
+  // Keep RAF only for rare hosts with no timer implementation.
+  if(typeof w.setInterval==='function'){
+   w.setInterval(()=>{
+    if(w.__pkmsvvPippiTickDisabled!==true)tick();
+   },250);
+  }else if(typeof w.requestAnimationFrame==='function'){
+   let last=0;
+   const frame=stamp=>{
+    if(w.__pkmsvvPippiTickDisabled!==true&&Number(stamp)-last>=250){
+     last=Number(stamp);tick();
+    }
+    w.requestAnimationFrame?.(frame);
+   };
+   w.requestAnimationFrame(frame);
+  }
   return api;
  }
  return {rank,data,refund,earn,train,trainingPoints,bondProgress,cousinChance,cousinLightning,rollCousinOnHit,installDamageHook,uninstallDamageHook,eligible,newRun,advanceFollower,emoteSVG,heal,buff,slow,endEffects,finish,tryRevive,faceSVG,install};
