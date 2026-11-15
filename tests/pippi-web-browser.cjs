@@ -80,14 +80,21 @@ async function main(){
   const seed=async()=>js(`(()=>{
    // The preview opens at the welcome UI, before any profile is selected.
    // Build a disposable valid local profile, not an actual user save.
-   const raw={owned:{25:{at:1}},shiny:{},partner:25,partnerShiny:false,
-    pabil:{},pnat:{},pupg:{},bag:{},tms:{},coins:5000,
-    stats:{runs:1,bestTime:100,bestLevel:1,kills:0},tickets:{t1:3,t10:0},
+   // Preserve all native save defaults. Replacing the whole default object
+   // with a partial Gacha fixture breaks native MenuUI.open() and falsely
+   // reports a Pippi combat crash (e.g. undefined.toLocaleString).
+   const native=G.DB?.save;
+   if(!native||typeof native!=='object')
+    throw Error('Native DB save must be initialized before Pippi QA fixture');
+   const raw={...native,owned:{...native.owned,25:{at:1,from:'starter'}},
+    shiny:{...native.shiny},partner:25,starter:25,partnerShiny:false,
+    name:'Pippi Browser QA',coins:5000,
+    stats:{...native.stats,runs:1,bestTime:100,bestLevel:1,kills:0},
     pkmsvvStorySeen:true,pkmsvvNameChosen:true};
    const fixture=G.PKMSVVBox?.migrate?.(raw)?.save||raw;
    Object.defineProperty(G.DB,'save',{value:fixture,configurable:true,writable:true});
    G.DB.commit=()=>true;
-   return {partner:G.DB.save.partner,valid:!!G.DEX_BY?.[G.DB.save.partner]};
+   return {partner:G.DB.save.partner,valid:!!G.DEX_BY?.[G.DB.save.partner],nativeKeys:Object.keys(native),fixtureKeys:Object.keys(fixture)};
   })()`);
   assert.equal((await seed()).valid,true,'Browser fixture must have real in-game Pokémon');
   const pc=await js(`(()=>{
