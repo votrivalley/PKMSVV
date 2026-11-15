@@ -483,6 +483,44 @@
    G.Sprites?.preload?.([35],7000,false);
    return true;
   }
+  // Repair an older PC panel if the cached Wiki script made only three
+  // buttons. Reuse the original PC styles and its actual training callback.
+  // Runs only at the home UI; no MutationObserver in the combat scene.
+  function ensurePcCompanion(){
+   const grid=d.querySelector?.('#pkmsvv-wiki-overlay .pkmsvv-pc-grid');
+   if(!grid)return false;
+   for(const item of grid.children){
+    if(item.dataset?.pippiCompanionCard||
+       /Bạn đồng hành|Companions/i.test(item.getAttribute?.('aria-label')||item.textContent||''))return true;
+   }
+   const button=d.createElement('button');
+   button.type='button';button.className='pkmsvv-pc-card';
+   button.dataset.pippiCompanionCard='1';
+   button.setAttribute('aria-label','Bạn đồng hành — Chăm sóc Pippi');
+   const canvas=d.createElement('canvas');canvas.width=144;canvas.height=144;
+   canvas.setAttribute('aria-hidden','true');
+   button.append(canvas);
+   const title=d.createElement('strong');title.textContent='Bạn đồng hành';
+   const desc=d.createElement('small');desc.textContent='Bond · Hồi máu · Buff · Em họ Pikachu';
+   const action=d.createElement('span');action.className='pkmsvv-pc-action';
+   action.textContent='Chăm sóc Pippi';
+   button.append(title,desc,action);
+   button.onclick=()=>{
+    if(typeof G.PKMSVVWiki?.pippiCorner==='function')G.PKMSVVWiki.pippiCorner();
+    else{
+     const p=data(G.DB?.save);
+     G.UI?.toast?.('Pippi · Bond '+p.bond+'/10 — Vào lại PC khi menu cập nhật.',3500);
+    }
+   };
+   grid.append(button);
+   // Draw one static copy, not an endless animated sprite canvas in the PC.
+   try{
+    const art=G.UI?.spriteCanvas?.(35,144,144,{lively:false,scale:2,hero:true});
+    if(art?.nodeType)canvas.replaceWith(art);
+   }catch(_){}
+   grid.dataset.pippiQaRepair='1';
+   return true;
+  }
   const decodedPortraits=new Map();
   let portraitsPreloading=false;
   // Decode all 16 expressions while the home menu is idle, not mid-combat.
@@ -796,6 +834,7 @@
     stage('migration-enter');
     // Refund bookkeeping can touch persistent storage. Finish migrations
     // from the home UI, never synchronously in a live combat tick.
+    if(G.Game?.state==='ui')ensurePcCompanion();
     if(G.DB?.save&&G.Game?.state==='ui'&&!w.__pkmsvvPippiMigrationDisabled)migrate();
     if(w.__pkmsvvPippiAllowCombatPortrait===true&&G.Game?.state==='ui')prewarmPortraits();
     stage('migration-exit');
