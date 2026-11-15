@@ -5,6 +5,8 @@ on:
     paths:
       - '.github/workflows/package-pc-fast-v20.yml'
       - 'src/pkmsvv-pippi.*'
+      - 'src/pkmsvv-wiki.js'
+      - 'src/pkmsvv-pc-menu-clean-qa.css'
       - 'src/pkmsvv-pc-menu-clean-qa.*'
       - 'src/shared/local-shell.js'
       - 'src/pkmsvv-menu-icons.webp'
@@ -94,6 +96,7 @@ jobs:
             'resources/lan-site/game/index.html',
             'resources/lan-site/game/js/app.min.js',
             'resources/lan-site/game/js/ui/pkmsvv-pippi.js',
+            'resources/lan-site/game/js/ui/pkmsvv-wiki-qa.js',
             'resources/lan-site/game/js/ui/pkmsvv-pc-menu-clean-qa.js',
             'resources/lan-site/game/images/pkmsvv-menu-icons.webp',
             'resources/lan-site/game/images/pippi/Walk-Anim.png',
@@ -106,6 +109,10 @@ jobs:
           if(!$app.Contains('pkmsvv-mega')){throw 'Mega control is not bundled'}
           if(!$app.Contains('pkmk-tab-berry')){throw 'Kecleon Berry shop missing'}
           if(!$app.Contains('PKMSVVBerryRescue')){throw 'Four-player Berry Rescue runtime missing'}
+          $wiki=Get-Content (Join-Path $dir 'resources/lan-site/game/js/ui/pkmsvv-wiki-qa.js') -Raw
+          if(!$wiki.Contains('function pippiCorner')){throw 'PC Góc Pippi screen missing'}
+          $pippi=Get-Content (Join-Path $dir 'resources/lan-site/game/js/ui/pkmsvv-pippi.js') -Raw
+          if(!$pippi.Contains('trainingPoints')){throw 'PC Pippi Bond training missing'}
            if(!$app.Contains('PKMSVVArenaPvp')){throw 'Real Host/Guest Arena PvP runtime missing'}
           $berryIcons=Get-ChildItem (Join-Path $dir 'resources/lan-site/game/assets/berry') -Filter '*.png'
           if($berryIcons.Count -ne 10){throw 'Exactly 10 Berry pixel sprites must be packaged'}
@@ -128,7 +135,7 @@ jobs:
         shell: pwsh
         run: |
           $source='dist/lan-windows/win-unpacked'
-          $archive='dist/PKMSVV-Pippi-Coop-Follow-PC-QA.zip'
+          $archive='dist/PKMSVV-Goc-Pippi-PC-QA.zip'
           if(!(Test-Path $source)){throw 'PC portable directory missing'}
           Compress-Archive -Path (Join-Path $source '*') -DestinationPath $archive -CompressionLevel Optimal -Force
           if((Get-Item $archive).Length -lt 1MB){throw 'PC QA ZIP unexpectedly small'}
@@ -137,5 +144,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload 'pkmsvv-pippi-follow-coop-qa-20261115' 'dist/PKMSVV-Pippi-Coop-Follow-PC-QA.zip' --clobber
+          gh release upload 'pkmsvv-pippi-corner-qa-20261115' 'dist/PKMSVV-Goc-Pippi-PC-QA.zip' --clobber
           if($LASTEXITCODE -ne 0){throw 'Failed to attach PC ZIP to QA prerelease'}
