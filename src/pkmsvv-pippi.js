@@ -10,6 +10,30 @@
 })(typeof window!=='undefined'?window:null,function(){
  'use strict';
  const RANK_XP=[0,2,5,9,14,20,27,35,44,54];
+ const TRAINING_KEYS=Object.freeze(['heal','buff','slow','shield']);
+ const TRAINING_MAX=3;
+ // One free training point per Bond level beyond Bond 1; no new currency.
+ function trainingPoints(save){
+  const p=data(save);
+  const used=TRAINING_KEYS.reduce((total,key)=>total+(p.training?.[key]||0),0);
+  return Math.max(0,p.bond-1-used);
+ }
+ function train(save,key,commit){
+  if(!save||typeof save!=='object'||!TRAINING_KEYS.includes(key))return {ok:false,reason:'invalid'};
+  const p=data(save),gate={heal:1,buff:2,slow:3,shield:7}[key];
+  if(p.bond<gate)return {ok:false,reason:'locked'};
+  if(p.training[key]>=TRAINING_MAX)return {ok:false,reason:'max'};
+  if(trainingPoints(save)<1)return {ok:false,reason:'points'};
+  const before={...p.training};
+  p.training[key]+=1;
+  try{if(typeof commit==='function'&&commit()===false)throw Error('Save refused');}
+  catch(e){p.training=before;return {ok:false,reason:'save'};}
+  return {ok:true,level:p.training[key],points:trainingPoints(save)};
+ }
+ function bondProgress(save){
+  const p=data(save),from=RANK_XP[p.bond-1]||0;
+  return {bond:p.bond,xp:p.xp,from,to:p.bond<10?RANK_XP[p.bond]:null,points:trainingPoints(save)};
+ }
  const LINES={
   intro:[['smile','Pippi đây! Đi cùng tui cho đỡ cô đơn nha!'],['proud','Tân thủ cứ theo tui, đừng hoảng!']],
   heal:[['love','Bơm máu nè, đừng nằm vội!'],['wink','Còn sống là còn quậy nha!']],
@@ -32,6 +56,8 @@
   p.xp=clamp(Math.floor(+p.xp||0),0,100000);
   p.bond=rank(p.xp);
   if(!p.seen||Array.isArray(p.seen)||typeof p.seen!=='object')p.seen={};
+  if(!p.training||Array.isArray(p.training)||typeof p.training!=='object')p.training={};
+  for(const key of TRAINING_KEYS)p.training[key]=clamp(Math.floor(Number(p.training[key])||0),0,TRAINING_MAX);
   return p;
  }
  function refund(save){
@@ -71,20 +97,20 @@
  function newRun(pl,now=0){return {player:pl,now,healAt:8,buffAt:12,slowAt:15,guardAt:0,
   sleepUntil:0,megaUntil:0,reviveAt:0,sleepTalked:false,revived:false,lastTalk:-100,marks:new Set(),lastPos:null,direction:0,
   activeBuff:null,slowed:[],motion:null,emoteUntil:0};}
- function heal(pl,lv){
+ function heal(pl,lv,training=0){
   if(!pl||!Number.isFinite(pl.maxHp)||pl.maxHp<=0||pl.hp/pl.maxHp>.65)return false;
-  const gain=pl.maxHp*(.12+lv*.011);
+  const gain=pl.maxHp*(.12+lv*.011+clamp(training,0,TRAINING_MAX)*.02);
   pl.hp=Math.min(pl.maxHp,Math.max(0,pl.hp)+gain);
   return true;
  }
- function buff(pl,run,now,lv){
+ function buff(pl,run,now,lv,training=0){
   if(!pl||run.activeBuff||!Number.isFinite(+pl.atkMul)||pl.atkMul<=0)return false;
-  const factor=1.08+Math.min(.09,lv*.01);
+  const factor=1.08+Math.min(.09,lv*.01)+clamp(training,0,TRAINING_MAX)*.015;
   pl.atkMul*=factor;
   run.activeBuff={player:pl,factor,until:now+8};
   return true;
  }
- function slow(G,run,now,lv){
+ function slow(G,run,now,lv,training=0){
   const pl=run.player,raw=G.EnemyMgr?.all?.();
   const tag=Object.prototype.toString.call(raw);
   const arr=Array.isArray(raw)?raw:
@@ -98,9 +124,10 @@
    const dx=e.x-pl.x,dy=e.y-pl.y;
    if(dx*dx+dy*dy>190*190)continue;
    if(run.slowed.some(s=>s.enemy===e))continue;
-   const factor=e.pkmsvvExploreBoss?.72:.65; // Boss slow is weaker.
+   const tier=clamp(training,0,TRAINING_MAX);
+   const factor=e.pkmsvvExploreBoss?.72-tier*.01:.65-tier*.04; // Boss slow is weaker.
    e.spd*=factor;
-   run.slowed.push({enemy:e,factor,until:now+Math.min(4,2+lv*.17)});
+   run.slowed.push({enemy:e,factor,until:now+Math.min(5,2+lv*.17+tier*.35)});
    if(++affected>=6)break;
   }
   return affected>0;
@@ -273,7 +300,7 @@
    if(!d.body)return null;
    const el=d.createElement('aside');
    el.id='pkmsvv-pippi';el.setAttribute('aria-live','off');el.hidden=true;
-   el.innerHTML='<span class="pippi-portrait"></span><span class="pippi-message"><b>Pippi</b><span class="pippi-line"></span><small class="pippi-bond"></small></span>';
+   el.innerHTML='<span class="pippi-portrait"><span class="pippi-chat-emote" aria-hidden="true"></span></span><span class="pippi-message"><b>Pippi</b><span class="pippi-line"></span><small class="pippi-bond"></small></span>';
    d.body.appendChild(el);
    ui=el;return el;
   }
@@ -350,13 +377,18 @@
    const [face,message]=lines[Math.floor(Math.random()*lines.length)];
    const el=getUI();if(!el)return;
    const portrait=el.querySelector('.pippi-portrait');
+   const chatEmote=portrait.querySelector('.pippi-chat-emote');
+   if(chatEmote)chatEmote.innerHTML=emoteSVG(EMOTES[event]||'heart');
    const fallback=faceSVG(face,face==='mega');
    const filename=PORTRAIT_FILES[face]||'Normal';
    const img=d.createElement('img');
-   img.alt='Pippi';
+   img.alt='Pippi: '+filename;
    img.src='images/pippi/portrait/'+filename+'.png';
    img.onerror=()=>{if(portrait.contains(img))portrait.innerHTML=fallback;};
    portrait.replaceChildren(img);
+   if(chatEmote)portrait.append(chatEmote);
+   portrait.dataset.emotion=face;
+   el.dataset.event=event;
    portrait.classList.toggle('mega',face==='mega');
    el.querySelector('.pippi-line').textContent=message;
    el.querySelector('.pippi-bond').textContent='Bond '+data(G.DB?.save).bond+'/10';
@@ -405,7 +437,7 @@
     follow(pl);
     endEffects(run,now);
     if(ui&&!ui.hidden&&now>=Number(ui.dataset.until))ui.hidden=true;
-    const p=data(G.DB?.save),lv=p.bond;
+    const p=data(G.DB?.save),lv=p.bond,training=p.training;
     const isSleeping=now<run.sleepUntil;
     if(isSleeping){
      if(!run.sleepTalked&&now>=run.megaUntil&&run.revived){
@@ -424,13 +456,13 @@
      }
     }
     if(now>=run.healAt){run.healAt=now+Math.max(23,31-lv*.6);
-     if(heal(pl,lv))say('heal');}
+     if(heal(pl,lv,training.heal))say('heal');}
     if(lv>=2&&now>=run.buffAt){run.buffAt=now+40;
-     if(buff(pl,run,now,lv))say('buff');}
+     if(buff(pl,run,now,lv,training.buff))say('buff');}
     if(lv>=3&&now>=run.slowAt){run.slowAt=now+27;
-     if(slow(G,run,now,lv))say('slow');}
+     if(slow(G,run,now,lv,training.slow))say('slow');}
     if(lv>=7&&now>=run.guardAt&&pl.hp>0&&pl.hp/pl.maxHp<.22){
-     run.guardAt=now+90;pl.invuln=Math.max(Number(pl.invuln)||0,1.8);
+     run.guardAt=now+90;pl.invuln=Math.max(Number(pl.invuln)||0,1.8+training.shield*.35);
      say('shield',true);
     }
    }catch(err){w.console?.warn?.('[Pippi] frame guarded',err);}
@@ -462,7 +494,7 @@
     return purchase.call(this,save,id);
    };
   }
-  const api={installed:true,refund,migrate,data,rank,earn,eligible:()=>eligible(G),
+  const api={installed:true,refund,migrate,data,rank,earn,train,trainingPoints,bondProgress,eligible:()=>eligible(G),
    tryRevive:revive,tick,show:say,get run(){return run;}};
   G.PKMSVVPippi=api;
   // The RAF loop never mutates other modes; work only at a throttled 4Hz.
@@ -474,5 +506,5 @@
   else if(typeof w.setInterval==='function')w.setInterval(tick,350);
   return api;
  }
- return {rank,data,refund,earn,eligible,newRun,advanceFollower,emoteSVG,heal,buff,slow,endEffects,finish,tryRevive,faceSVG,install};
+ return {rank,data,refund,earn,train,trainingPoints,bondProgress,eligible,newRun,advanceFollower,emoteSVG,heal,buff,slow,endEffects,finish,tryRevive,faceSVG,install};
 });
