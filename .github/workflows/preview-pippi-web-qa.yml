@@ -65,20 +65,11 @@ jobs:
           PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
           PKMSVV_BROWSER_WITHOUT_PIPPI: '1'
         run: timeout 240s node tests/pokebox-stage2-browser.cjs
-      - name: Focused restart diagnostic — two short Explore sessions in one tab
+      - name: Chromium regression — PC companion, 150s first Explore and 45s restart
         env:
           PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
-          PKMSVV_PIPPI_FIRST_ROUNDS: '3'
-          PKMSVV_PIPPI_SECOND_ROUNDS: '3'
-        run: timeout 145s node tests/pippi-web-browser.cjs
-      - name: Proven Chromium integration QA — real PC companion and 65-second Explore
-        env:
-          PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
-        run: timeout 240s node tests/pokebox-stage2-browser.cjs
-      - name: Long-run Chromium native restart QA — 150s Explore then 45s Explore
-        env:
-          PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
-        run: timeout 330s node tests/pippi-web-browser.cjs
+          PKMSVV_EXTENDED_PIPPI_STRESS: '1'
+        run: timeout 420s node tests/pokebox-stage2-browser.cjs
       - name: Deploy QA branch to Cloudflare Pages without changing production
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}

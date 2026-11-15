@@ -1065,6 +1065,66 @@ async function main(){
    assert.ok(Number(minute.time)>=56,'Explore sim froze near 1 minute: '+JSON.stringify(minute));
    assert.equal(minute.probe.some(x=>x.name==='caught-game-error'),false,
     'Engine swallowed repeated frame exceptions: '+JSON.stringify(minute.probe));
+
+   // Pippi Web QA release gate: continue the SAME already-verified native
+   // browser profile rather than starting from an incomplete synthetic save.
+   // Keep the first match alive >150s, quit normally, then start a second
+   // 45s Explore match WITHOUT reloading the tab. Production is untouched.
+   if(process.env.PKMSVV_EXTENDED_PIPPI_STRESS==='1'){
+    assert.equal(await evaluate("!!G.PKMSVVPippi?.installed"),true,
+     'Pippi module must be installed for companion stress QA');
+    await evaluate("(()=>{const p=G.Game?.player;if(p){p.invuln=480;p.hp=p.maxHp;}return true})()");
+    const pressOne=async()=>{
+     await cmd('Input.dispatchKeyEvent',{type:'keyDown',key:'1',code:'Digit1',
+      windowsVirtualKeyCode:49,nativeVirtualKeyCode:49,text:'1'});
+     await sleep(120);
+     await cmd('Input.dispatchKeyEvent',{type:'keyUp',key:'1',code:'Digit1',
+      windowsVirtualKeyCode:49,nativeVirtualKeyCode:49});
+     await sleep(300);
+    };
+    const sample=()=>evaluate("(()=>({state:G.Game?.state,time:G.Game?.st?.time,level:G.Game?.player?.level,popup:G.UI?.isOpen?.('scr-levelup'),enemies:G.EnemyMgr?.count,pippi:!!G.PKMSVVPippi?.run,region:G.PKMSVVQuickRegion?.active,gameErrors:window.__pkmsvvRunProbe?.events?.filter(x=>x.name==='caught-game-error').slice(-2)||[]}))()");
+    const keepPlaying=async(label)=>{
+     let tick=await sample();
+     if(tick.state==='levelup'&&tick.popup){
+      await pressOne();tick=await sample();
+     }
+     console.log('PIPPI_RESTART_STRESS_'+label+'='+JSON.stringify(tick));
+     assert.equal(tick.state,'playing','Long-run native Explore stopped: '+label);
+     assert.equal(tick.pippi,true,'Pippi stopped following during '+label);
+     assert.equal(tick.gameErrors.length,0,'Caught engine exception: '+label);
+     assert.deepEqual(errors,[],'Unhandled Chromium exception: '+label);
+     return tick;
+    };
+    let long=null;
+    for(let i=0;i<18;i++){
+     await sleep(5000);
+     long=await keepPlaying('FIRST_'+(i+1)*5+'S');
+    }
+    assert.ok(Number(long.time)>=140,
+     'First Explore failed to reach 2+ minutes: '+JSON.stringify(long));
+    const quit=await evaluate("(()=>{G.Game.quit();G.MenuUI.open();return {state:G.Game?.state,region:G.PKMSVVQuickRegion?.active}})()");
+    console.log('PIPPI_NATIVE_QUIT='+JSON.stringify(quit));
+    await until(()=>evaluate("G.Game?.state!=='playing'&&G.PKMSVVPippi?.run===null"),12000);
+    assert.equal(await evaluate("!!G.PKMSVVQuickRegion?.active"),false,
+     'Explore Region leaked across native quit');
+    const next=await evaluate("(()=>{G.DB.save.partner=25;G.DB.save.pkmsvvStorySeen=true;G.DB.save.pkmsvvNameChosen=true;G.MenuUI.open();return {started:G.PKMSVVQuickRegion.choose(0),state:G.Game?.state}})()");
+    console.log('PIPPI_NATIVE_RESTART='+JSON.stringify(next));
+    assert.equal(next.started,true,'Second native Explore did not open');
+    await until(async()=>{
+     await evaluate("(()=>{const b=[...document.querySelectorAll('.pkmsvv-berry-overlay button')].find(x=>/Không dùng Berry|No Berry/.test(x.textContent||''));b?.click();return true})()");
+     return evaluate("G.Game?.state==='playing'");
+    },30000);
+    await evaluate("(()=>{const p=G.Game?.player;if(p){p.invuln=480;p.hp=p.maxHp;}return true})()");
+    await until(()=>evaluate("!!G.PKMSVVPippi?.run"),5000);
+    let second=null;
+    for(let i=0;i<9;i++){
+     await sleep(5000);
+     second=await keepPlaying('SECOND_'+(i+1)*5+'S');
+    }
+    assert.ok(Number(second.time)>=32,
+     'Second native Explore timer stalled: '+JSON.stringify(second));
+    console.log('PASS PIPPI_NATIVE_SAME_TAB_150S_PLUS_45S');
+   }
   }
 
   console.log('PASS Stage 4 real browser QA:',JSON.stringify({...state,rank5Hp:five,otherExceptions:errors.length}));
