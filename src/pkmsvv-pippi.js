@@ -535,16 +535,20 @@
    run.emoteUntil=now+(force?3.8:2.6);
    speechPending={event,force,now,origin:run};
    if(speechTimer!==null)return;
-   if(typeof w.setTimeout==='function'){
-    speechTimer=w.setTimeout(()=>{
-     speechTimer=null;
-     const job=speechPending;speechPending=null;
-     try{renderSpeech(job)}catch(err){w.console?.warn?.('[Pippi] speech guarded',err);}
-    },0);
-   }else{
+   const deliver=()=>{
+    speechTimer=null;
     const job=speechPending;speechPending=null;
-    renderSpeech(job);
-   }
+    try{renderSpeech(job)}catch(err){w.console?.warn?.('[Pippi] speech guarded',err);}
+   };
+   // Creating portrait PNGs and SVG emotes in the middle of the native
+   // combat RAF can contend with Rift scene initialization and level-up.
+   // Render only when the browser yields an idle slice; coalesced events and
+   // origin guards keep stale dialogue from appearing in the next match.
+   if(typeof w.requestIdleCallback==='function'){
+    speechTimer=w.requestIdleCallback(deliver,{timeout:900});
+   }else if(typeof w.setTimeout==='function'){
+    speechTimer=w.setTimeout(deliver,180);
+   }else deliver();
   }
   function migrate(){
    const save=G.DB?.save;
