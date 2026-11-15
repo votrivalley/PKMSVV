@@ -96,9 +96,8 @@ jobs:
           PKMSVV_DIAGNOSTIC_LOOPS: '4'
         run: timeout 260s node tests/pokebox-stage2-browser.cjs
   preview:
-    # Publishing even a QA branch requires explicit release approval while
-    # intermittent Chromium hangs remain unresolved. Tests run on every push.
-    if: github.event_name == 'workflow_dispatch'
+    # Deploy ONLY the isolated pippi-cousin-qa branch after an independent
+    # second full Chromium pass. Never modify the production Pages branch.
     needs: [stress-kanto, diagnostic-rift]
     runs-on: ubuntu-latest
     timeout-minutes: 25
