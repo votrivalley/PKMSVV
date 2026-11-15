@@ -1106,7 +1106,11 @@ async function main(){
    if(process.env.PKMSVV_EXTENDED_PIPPI_STRESS==='1'){
     assert.equal(await evaluate("!!G.PKMSVVPippi?.installed"),true,
      'Pippi module must be installed for companion stress QA');
-    await evaluate("(()=>{const p=G.Game?.player;if(p){p.invuln=480;p.hp=p.maxHp;}return true})()");
+    // This is a stability test, not a survival contest. Invuln=480 alone
+    // gets replaced by native shields/skills on some randomized runs. Keep
+    // HP full without modifying enemy spawns, skill UI or Pippi hooks.
+    await evaluate("(()=>{window.__pkmsvvQaSurvivor=setInterval(()=>{const p=G.Game?.player;if(p&&G.Game?.state==='playing'){p.hp=p.maxHp;p.invuln=Math.max(Number(p.invuln)||0,100000);}},100);return true})()");
+    await evaluate("(()=>{const p=G.Game?.player;if(p){p.invuln=100000;p.hp=p.maxHp;}return true})()");
     const pressOne=async()=>{
      await cmd('Input.dispatchKeyEvent',{type:'keyDown',key:'1',code:'Digit1',
       windowsVirtualKeyCode:49,nativeVirtualKeyCode:49,text:'1'});
@@ -1150,7 +1154,7 @@ async function main(){
      await evaluate("(()=>{const b=[...document.querySelectorAll('.pkmsvv-berry-overlay button')].find(x=>/Không dùng Berry|No Berry/.test(x.textContent||''));b?.click();return true})()");
      return evaluate("G.Game?.state==='playing'");
     },30000);
-    await evaluate("(()=>{const p=G.Game?.player;if(p){p.invuln=480;p.hp=p.maxHp;}return true})()");
+    await evaluate("(()=>{const p=G.Game?.player;if(p){p.invuln=100000;p.hp=p.maxHp;}return true})()");
     await until(()=>evaluate("!!G.PKMSVVPippi?.run"),5000);
     let second=null;
     for(let i=0;i<9;i++){
