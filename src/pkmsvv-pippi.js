@@ -473,7 +473,7 @@
     const m=run?.motion;
     if(eligible(G)&&!visualModalOpen()&&m&&
        (!cam?.sees||cam.sees(m.x,m.y,95))){
-     base.push({y:m.y,draw:nativeWorldDraw});
+     base.push({y:m.y,pkmsvvPippi:true,draw:nativeWorldDraw});
     }
     return base;
    }
