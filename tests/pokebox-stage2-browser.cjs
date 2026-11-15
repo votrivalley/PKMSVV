@@ -201,8 +201,8 @@ async function main(){
   assert.equal(approved20.hiddenNotForSale,true,'Hidden Capsule was not removed from shop');
   assert.equal(approved20.hiddenPrice,10000,'Hidden Capsule value should be doubled');
   assert.equal(approved20.hasSell,'function','half-price resale was not compiled');
-  assert.equal(approved20.drops?.mint,.008*2/3);
-  assert.equal(approved20.drops?.cap,.008*2/3);
+  assert.equal(approved20.drops?.mint,.008/3);
+  assert.equal(approved20.drops?.cap,.008/3);
   assert.equal(approved20.drops?.caph,undefined,'retired Hidden Capsule must never drop');
   assert.deepEqual(await evaluate('Array.from(G.Shop.ORDER)'),['mint','cap','caph'],
    'event Hidden Capsules must remain usable from existing Bag inventory');
@@ -211,9 +211,9 @@ async function main(){
   const five=await evaluate('G.PKMSVVBox2.formatRank(5).hp');
   assert.equal(await evaluate('G.PKMSVVBox3.PRICE'),6500);
   assert.equal(await evaluate('G.PKMSVVBox3.PITY'),0,'2.0 uses actual drop odds without hidden pity');
-  assert.equal(await evaluate('G.PKMSVVBox3.RATES.normal'),0.004);
-  assert.equal(await evaluate('G.PKMSVVBox3.RATES.elite'),0.008);
-  assert.equal(await evaluate('G.PKMSVVBox3.RATES.legend'),0.016);
+  assert.equal(await evaluate('G.PKMSVVBox3.RATES.normal'),0.002);
+  assert.equal(await evaluate('G.PKMSVVBox3.RATES.elite'),0.004);
+  assert.equal(await evaluate('G.PKMSVVBox3.RATES.legend'),0.008);
   assert.equal(await evaluate('G.PKMSVVBox4.HIT_PROC'),0.16);
   assert.equal(await evaluate('G.PKMSVVBox4.HYBRID_MAX'),6);
   assert.equal(five,30);
