@@ -57,7 +57,8 @@ async function main(){
    if(m.method==='Runtime.exceptionThrown')errors.push(m.params.exceptionDetails?.exception?.description||'Browser JS exception');
    if(m.method==='Runtime.consoleAPICalled'){
     const parts=(m.params?.args||[]).map(x=>String(x.value??x.description??''));
-    if(parts.some(x=>x.startsWith('QA_TRACE:')))console.log(parts.join(' | ').slice(0,1600));
+    if(parts.some(x=>x.startsWith('QA_TRACE:')||x.startsWith('QA_RIFT_STAGE_')||x.startsWith('QA_BOOT_')))
+     console.log(parts.join(' | ').slice(0,1600));
    }
    
    const task=waiting.get(m.id);
@@ -977,6 +978,12 @@ async function main(){
    const terrain=await evaluate("(()=>({biome:G.World?.biome,rift:G.Rift?.inArena,riftMethods:Object.keys(G.Rift||{}).filter(k=>typeof G.Rift[k]==='function'),playerDex:G.DB?.save?.partner,regionIndex:G.PKMSVVQuickRegion?.index}))()");
    console.log('QA_COMBAT_GRIETA_TERRAIN='+JSON.stringify(terrain));
    if(process.env.PKMSVV_TEST_RIFT==='1'){
+    if(process.env.PKMSVV_RIFT_SURVIVOR==='1'){
+     // Diagnostic only: remove death/rewards as a confounder. The sibling
+     // unshielded real-game job still gates the QA publication.
+     const rescue=await evaluate("(()=>{const keep=()=>{const p=G.Game?.player;if(p&&G.Game?.state==='playing'){p.hp=p.maxHp;p.invuln=Math.max(Number(p.invuln)||0,100000);}};keep();window.__pkmsvvRiftSurvivor=setInterval(keep,100);return {state:G.Game?.state,hp:G.Game?.player?.hp}})()");
+     console.log('QA_RIFT_SURVIVOR_ACTIVE='+JSON.stringify(rescue));
+    }
     const enter=await evaluate("(()=>{const body=String(G.Rift?.debugArena||'').slice(0,800);const result=G.Rift?.debugArena?.();return {result,inArena:!!G.Rift?.inArena,biome:G.World?.biome,state:G.Game?.state,fn:body}})()");
     console.log('QA_COMBAT_GRIETA_RIFT_ENTER='+JSON.stringify(enter));
     assert.equal(enter.inArena,true,
@@ -1007,7 +1014,7 @@ async function main(){
    }
 
    await sleep(10000);
-   const survived=await evaluate("(()=>({state:G.Game?.state,time:G.Game?.st?.time,hp:G.Game?.player?.hp,dead:G.Game?.player?.dead,kills:G.Game?.st?.kills,enemies:G.EnemyMgr?.count,probe:window.__pkmsvvRunProbe.events}))()");
+   const survived=await evaluate("(()=>({state:G.Game?.state,time:G.Game?.st?.time,hp:G.Game?.player?.hp,dead:G.Game?.player?.dead,rift:G.Rift?.inArena,kills:G.Game?.st?.kills,enemies:G.EnemyMgr?.count,probe:window.__pkmsvvRunProbe.events}))()");
    console.log('QA_COMBAT_EXPLORE_10S='+JSON.stringify(survived));
    assert.equal(survived.state,'playing','Explore ended without player action: '+JSON.stringify(survived));
    assert.ok(Number(survived.time)>=7,'Explore simulation stalled: '+JSON.stringify(survived));
