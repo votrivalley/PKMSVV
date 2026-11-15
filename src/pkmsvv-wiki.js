@@ -117,6 +117,10 @@ G.PKMSVVWiki=(()=>{
    b.innerHTML='<span class="mi-ico">💻</span><span class="pkmsvv-menu-copy"><span class="pkmsvv-menu-label">PC</span><small>Pokémon hỗ trợ · Mega · Berry</small></span>';
    b.dataset.pkmsvvWikiReady='1';
   }
+  if(window.__PKMSVV_PIPPI_QA){
+   const detail=b.querySelector('.pkmsvv-menu-copy small');
+   if(detail)detail.textContent='Hỗ trợ · Mega · Berry · Bạn đồng hành · QA';
+  }
   b.onclick=e=>{e.preventDefault();e.stopPropagation();open();};
  }
  function makeCard(grid,{title,desc,action,dex,onClick}){
@@ -282,12 +286,15 @@ G.PKMSVVWiki=(()=>{
   overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','PC');
   const box=document.createElement('section');box.className='pkmsvv-pc-panel';
   const head=document.createElement('header');head.className='pkmsvv-pc-header';
-  const title=document.createElement('h2');title.textContent='💻 PC · POKÉMON CHUYỂN SINH';
+  const title=document.createElement('h2');
+  title.textContent='💻 PC · POKÉMON CHUYỂN SINH'+(window.__PKMSVV_PIPPI_QA?' · PIPPI QA':'');
   const x=document.createElement('button');x.type='button';x.className='pkmsvv-pc-close';x.textContent=tr('✕ Đóng','✕ Close');x.setAttribute('data-back','');x.onclick=close;
   head.append(title,x);box.append(head);
   const hint=document.createElement('p');hint.className='pkmsvv-pc-hint';
   hint.textContent=tr('Chọn một mục để vào thẳng tính năng, không cần mở Wiki trung gian.','Select a feature directly.');box.append(hint);
-  const grid=document.createElement('div');grid.className='pkmsvv-pc-grid';box.append(grid);
+  const grid=document.createElement('div');grid.className='pkmsvv-pc-grid';
+  if(window.__PKMSVV_PIPPI_QA)grid.dataset.pippiQaRevision=window.__PKMSVV_PIPPI_QA;
+  box.append(grid);
   makeCard(grid,{title:tr('Pokémon hỗ trợ','Support Pokémon'),dex:175,
    desc:tr('Togepi · Xem, chọn và quản lý tối đa 2 Pokémon hỗ trợ.','Togepi · Manage up to two supports.'),
    action:tr('Mở hỗ trợ','Open Supports'),onClick:()=>G.PKMSVVSupportCatalog?.open?.()});
