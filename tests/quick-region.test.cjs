@@ -84,6 +84,27 @@ test('Choose Kanto starts original native play exactly once and keeps biome plus
  assert.equal(h.G.World.biome,777,'post-game free world can rotate again');
  assert.equal(JSON.stringify(h.save),before,'no region progress or Seal minted');
 });
+test('Native Grieta Rift owns its arena biome without leaking to normal Explore terrain',()=>{
+ const h=harness(),q=h.G.PKMSVVQuickRegion;
+ assert.equal(q.choose(1),true);
+ const selected=q.targetBiome(1);
+ assert.equal(h.G.World.biome,selected);
+ h.G.Rift={inArena:true};
+ h.G.World.setBiome(91,true);
+ assert.equal(h.G.World.biome,91,'Rift must not be forced into Johto terrain');
+ h.G.Rift.inArena=false;
+ h.G.World.setBiome(92,true);
+ assert.equal(h.G.World.biome,selected,'Explore clamps terrain again after Rift closes');
+ h.G.World.arena={type:'rift'};
+ h.G.World.setBiome(93,true);
+ assert.equal(h.G.World.biome,93,'native arena biome permitted during transition');
+ h.G.World.arena=null;
+ h.G.World.setBiome(94,true);
+ assert.equal(h.G.World.biome,selected);
+ h.G.Game.quit();
+ assert.equal(q.active,false);
+ assert.equal(h.G.World.biome,17,'restore player home biome on exit');
+});
 test('Unlocks use existing Crown Seal keys; all ten regions visible, Sky requires first nine',()=>{
  const h=harness(),x=h.G.PKMSVVQuickRegion;
  assert.equal(x.unlocked(0),true);assert.equal(x.unlocked(1),true);
