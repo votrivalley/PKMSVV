@@ -481,7 +481,7 @@
    const {event,force,now}=job;
    mark('emote-enter');
    const worldEmote=follower?.querySelector('.pippi-world-emote');
-   if(worldEmote){
+   if(worldEmote&&w.__pkmsvvPippiNoEmote!==true){
     if(worldEmote.dataset.emoteEvent!==event){
      worldEmote.innerHTML=emoteSVG(EMOTES[event]||'heart');
      worldEmote.dataset.emoteEvent=event;
@@ -497,17 +497,19 @@
    const portrait=el.querySelector('.pippi-portrait');if(!portrait)return;
    const chatEmote=portrait.querySelector('.pippi-chat-emote');
    mark('chat-emote-enter');
-   if(chatEmote&&chatEmote.dataset.emoteEvent!==event){
+   if(chatEmote&&w.__pkmsvvPippiNoEmote!==true&&chatEmote.dataset.emoteEvent!==event){
     chatEmote.innerHTML=emoteSVG(EMOTES[event]||'heart');
     chatEmote.dataset.emoteEvent=event;
    }
    mark('chat-emote-exit');
    const filename=PORTRAIT_FILES[face]||'Normal';
    mark('portrait-enter');
+   if(w.__pkmsvvPippiNoPortrait!==true){
    let img=portrait.querySelector('img');
    if(!img){
     img=d.createElement('img');
     img.className='pippi-portrait-picture';
+    img.decoding='async';
     portrait.prepend(img);
    }
    img.alt='Pippi: '+filename;
@@ -532,6 +534,7 @@
     img.src='images/pippi/portrait/'+filename+'.png';
    }
    mark('portrait-load-exit');
+   }
    portrait.dataset.emotion=face;
    el.dataset.event=event;
    portrait.classList.toggle('mega',face==='mega');
