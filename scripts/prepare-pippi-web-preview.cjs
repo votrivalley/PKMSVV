@@ -62,9 +62,11 @@ for(const prefix of ['game','ai/game']){
  }
  if(!html.includes('pkmsvv-pippi.css'))html=html.replace('</head>',
   '<link rel="stylesheet" href="css/pkmsvv-pippi.css">\n</head>');
- // This marker appears ONLY on the isolated QA branch. Displaying it in
- // the PC title distinguishes an old/prod page from a verified Pippi build.
- html=html.replace('</head>','<script>window.__PKMSVV_PIPPI_QA='+JSON.stringify(revision)+'</script>\n<meta name="robots" content="noindex,nofollow"><!-- '+marker+' -->\n</head>');
+ // CSP may prohibit inline scripts. Ship a same-origin deferred identity
+ // module BEFORE the PC module so the fourth tile and build identity agree.
+ const identity='js/ui/pkmsvv-pippi-qa-identity.js';
+ write(path.join(dest,identity), 'window.__PKMSVV_PIPPI_QA='+JSON.stringify(revision)+';\\n');
+ html=html.replace('</head>','<script defer src="'+identity+'?v='+revision+'"></script>\n<meta name="robots" content="noindex,nofollow"><!-- '+marker+' -->\n</head>');
  // A stable Pages URL must not leave old PC / Pippi assets in existing caches.
  for(const name of ['pkmsvv-wiki-qa.js','pkmsvv-pippi.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-quick-region.js']){
   html=html.replace('src="js/ui/'+name+'"','src="js/ui/'+name+'?v='+revision+'"');
@@ -100,6 +102,7 @@ const previousHeaders=fs.existsSync(headersPath)?fs.readFileSync(headersPath,'ut
 const urls=['/game/','/game/index.html','/ai/game/','/ai/game/index.html',
  '/game/js/ui/pkmsvv-wiki-qa.js','/ai/game/js/ui/pkmsvv-wiki-qa.js',
  '/game/js/ui/pkmsvv-pippi.js','/ai/game/js/ui/pkmsvv-pippi.js',
+ '/game/js/ui/pkmsvv-pippi-qa-identity.js','/ai/game/js/ui/pkmsvv-pippi-qa-identity.js',
  '/game/css/pkmsvv-pippi.css','/ai/game/css/pkmsvv-pippi.css',
  '/build-info.json'];
 const noStore=urls.map(u=>u+'\n  Cache-Control: no-store, max-age=0').join('\n');
