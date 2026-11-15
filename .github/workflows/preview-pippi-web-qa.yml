@@ -60,6 +60,11 @@ jobs:
             grep -Fq 'Bạn đồng hành' "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-wiki-qa.js"
             grep -Fq 'PKMSVV_PIPPI_COUSIN_PREVIEW_20261115' "dist/cloudflare-v20-release/$route/index.html"
           done
+      - name: Diagnostic A/B baseline — run Explore WITHOUT companion module
+        env:
+          PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
+          PKMSVV_BROWSER_WITHOUT_PIPPI: '1'
+        run: timeout 240s node tests/pokebox-stage2-browser.cjs
       - name: Proven Chromium integration QA — real PC companion and 65-second Explore
         env:
           PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
