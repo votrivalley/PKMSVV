@@ -36,8 +36,8 @@
  }
  const LINES={
   intro:[['smile','Pippi đây! Đi cùng tui cho đỡ cô đơn nha!'],['proud','Tân thủ cứ theo tui, đừng hoảng!']],
-  heal:[['love','Bơm máu nè, đừng nằm vội!'],['wink','Còn sống là còn quậy nha!']],
-  buff:[['proud','Pippi buff rồi, đánh cho đáng nha!'],['happy','Mạnh lên nào, cả nhà ơi!']],
+  heal:[['love','Máu đây! Đừng bắt tui gánh cả trận nha!'],['wink','Hồi máu rồi đó. Nợ tui một lời cảm ơn!']],
+  buff:[['proud','Đã buff! Đánh cho ra dáng nhân vật chính đi!'],['happy','Cố lên! Tui cổ vũ, chứ không đánh hộ đâu nha!']],
   slow:[['angry','Đứng im, đừng dí bạn tui!'],['wink','Chậm lại coi mấy cha!']],
   shield:[['panic','Ê máu đỏ rồi! Né sau lưng tui!']],
   revive:[['mega','KHÔNG! Bạn tui chưa được nằm!'],['mega','Moon Miracle! Tỉnh lại coiii!']],
@@ -146,6 +146,33 @@
    if(Number.isFinite(item.enemy?.spd)&&item.factor>0)item.enemy.spd/=item.factor;
    run.slowed.splice(i,1);
   }
+ }
+ // Match regular Pokémon Support: show a visible in-world action on the
+ // recipient AND on the helper, not merely a floating line of chat.
+ // Use the native FX budget so light-effects mode can throttle particles.
+ function showSupportFX(G,run,pl,event,value=0){
+  const fx=G?.FX;
+  if(!fx||!pl||!Number.isFinite(+pl.x)||!Number.isFinite(+pl.y))return false;
+  const palette={
+   heal:['#94ffdc','#54e7c0','HỒI MÁU'],
+   buff:['#fff2a7','#ffd56b','TĂNG CÔNG'],
+   slow:['#c4d5ff','#9da7ff','LÀM CHẬM'],
+   shield:['#a1f6ff','#67dff8','BẢO VỆ']
+  };
+  const colors=palette[event];
+  if(!colors)return false;
+  try{
+   fx.ring?.(pl.x,pl.y-10,7,64,colors[0],.60,3);
+   fx.burst?.(pl.x,pl.y-19,colors[1],10,65);
+   if(event==='heal'&&value>0)fx.dmgText?.(pl.x,pl.y-30,'+'+Math.round(value)+' HP',colors[0]);
+   else fx.dmgText?.(pl.x,pl.y-26,colors[2],colors[0]);
+   const helper=run?.motion;
+   if(helper&&Number.isFinite(helper.x)&&Number.isFinite(helper.y)){
+    fx.ring?.(helper.x,helper.y-6,4,25,colors[0],.34,2);
+    fx.burst?.(helper.x,helper.y-12,colors[1],5,36);
+   }
+  }catch(_){return false;}
+  return true;
  }
  // Revert buffs whenever player exits Explore or a new player is spawned.
  function finish(run){if(run){endEffects(run,Infinity);uninstallDamageHook(run);}}
@@ -309,7 +336,7 @@
   }
   const hx=state.headingX,hy=state.headingY;
   const side=idle?state.quirkSide*.46:.26;
-  const ahead=idle&&state.mood==='peek'?.1:0;
+  const ahead=(idle&&state.mood==='peek')?0.1:0;
   const tx=pl.x-hx*desired*(1-ahead)-hy*desired*side;
   const ty=pl.y-hy*desired*(1-ahead)+hx*desired*side;
   const vx=tx-state.x,vy=ty-state.y,distance=Math.hypot(vx,vy);
@@ -423,7 +450,10 @@
    if(!d.body)return null;
    const el=d.createElement('aside');
    el.id='pkmsvv-pippi';el.setAttribute('aria-live','off');el.hidden=true;
-   el.innerHTML='<span class="pippi-portrait"><span class="pippi-chat-emote" aria-hidden="true"></span></span><span class="pippi-message"><b>Pippi</b><span class="pippi-line"></span><small class="pippi-bond"></small></span>';
+   // Lightweight always-visible SVG expression. PNG decoding inside native
+   // combat caused Chromium stalls; retain the PNG assets in PC, but never
+   // show a blank portrait when battle PNGs are intentionally disabled.
+   el.innerHTML='<span class="pippi-portrait"><span class="pippi-portrait-art">'+faceSVG('smile')+'</span><span class="pippi-chat-emote" aria-hidden="true"></span></span><span class="pippi-message"><b>Pippi</b><span class="pippi-line"></span><small class="pippi-bond"></small></span>';
    d.body.appendChild(el);
    ui=el;return el;
   }
@@ -544,13 +574,16 @@
     const moving=!!state.moving;
     const file=asleep?'Sleep-Anim.png':moving?'Walk-Anim.png':'Idle-Anim.png';
     const width=asleep?24:moving?24:32,height=asleep?24:40,cols=asleep?2:moving?8:6;
-    const frame=Math.floor(run.now*(asleep?1.2:moving?6:3))%cols;
-    // PMD rows: S, SW, W, NW, N, NE, E, SE.
+    // CSS sprite-step animation is independent of the 4Hz AI logic tick.
+    // Recalculating frame from the 4Hz timer skipped half the walking frames.
     const row=(run.direction+6)%8;
     const part=follower.querySelector('.pippi-pmd-sprite');
     part.style.width=width+'px';part.style.height=height+'px';
-    part.style.backgroundImage="url('images/pippi/"+file+"')";
-    part.style.backgroundPosition=(-width*frame)+'px '+(-height*row)+'px';
+    if(part.dataset.sheet!==file){
+     part.dataset.sheet=file;
+     part.style.backgroundImage="url('images/pippi/"+file+"')";
+    }
+    part.style.backgroundPositionY=(-height*row)+'px';
    }
   }
   // Combat may fire a skill proc while the native canvas engine is inside
@@ -592,6 +625,11 @@
    const filename=PORTRAIT_FILES[face]||'Normal';
    mark('portrait-enter');
    portrait.dataset.expression=face;
+   const fallbackArt=portrait.querySelector('.pippi-portrait-art');
+   if(fallbackArt&&fallbackArt.dataset.face!==face){
+    fallbackArt.innerHTML=faceSVG(face,face==='mega');
+    fallbackArt.dataset.face=face;
+   }
    // Chromium/Android QA: even previously decoded PNG portraits may cause
    // a renderer stall as the canvas game and Rift scenes repaint. Keep the
    // dialogue text + small SVG emote during combat, but retain all original
@@ -745,13 +783,23 @@
      }
     }
     if(now>=run.healAt){run.healAt=now+Math.max(23,31-lv*.6);
-     if(heal(pl,lv,training.heal))say('heal');}
+     const oldHp=pl.hp;
+     if(heal(pl,lv,training.heal)){
+      showSupportFX(G,run,pl,'heal',pl.hp-oldHp);
+      say('heal');
+     }
+    }
     if(lv>=2&&now>=run.buffAt){run.buffAt=now+40;
-     if(buff(pl,run,now,lv,training.buff))say('buff');}
+     if(buff(pl,run,now,lv,training.buff)){
+      showSupportFX(G,run,pl,'buff');say('buff');
+     }}
     if(lv>=3&&now>=run.slowAt){run.slowAt=now+27;
-     if(slow(G,run,now,lv,training.slow))say('slow');}
+     if(slow(G,run,now,lv,training.slow)){
+      showSupportFX(G,run,pl,'slow');say('slow');
+     }}
     if(lv>=7&&now>=run.guardAt&&pl.hp>0&&pl.hp/pl.maxHp<.22){
      run.guardAt=now+90;pl.invuln=Math.max(Number(pl.invuln)||0,1.8+training.shield*.35);
+     showSupportFX(G,run,pl,'shield');
      say('shield',true);
     }
    }catch(err){w.console?.warn?.('[Pippi] frame guarded',err);}
@@ -812,5 +860,5 @@
   }
   return api;
  }
- return {rank,data,refund,earn,train,trainingPoints,bondProgress,cousinChance,cousinLightning,rollCousinOnHit,installDamageHook,uninstallDamageHook,eligible,newRun,advanceFollower,emoteSVG,heal,buff,slow,endEffects,finish,tryRevive,faceSVG,install};
+ return {rank,data,refund,earn,train,trainingPoints,bondProgress,cousinChance,cousinLightning,rollCousinOnHit,installDamageHook,uninstallDamageHook,eligible,newRun,advanceFollower,emoteSVG,heal,buff,slow,showSupportFX,endEffects,finish,tryRevive,faceSVG,install};
 });
