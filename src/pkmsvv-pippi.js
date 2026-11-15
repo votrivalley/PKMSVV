@@ -464,39 +464,57 @@
     part.style.backgroundPosition=(-width*frame)+'px '+(-height*row)+'px';
    }
   }
-  function say(event,force=false){
-   if(!run||w.__pkmsvvPippiSpeechDisabled===true)return;
-   const now=run.now;
-   if(!force&&now-run.lastTalk<8)return;
-   run.lastTalk=now;
-   run.emoteUntil=now+(force?3.8:2.6);
+  // Combat may fire a skill proc while the native canvas engine is inside
+  // its RAF. Never parse portrait SVG / replace image nodes synchronously in
+  // that same combat frame. Coalesce repeated speech into one deferred update,
+  // and reuse one portrait image instead of decoding a new <img> on each event.
+  let speechPending=null,speechTimer=null;
+  function renderSpeech(job){
+   if(!job||job.origin!==run||!eligible(G))return;
+   const {event,force,now}=job;
    const worldEmote=follower?.querySelector('.pippi-world-emote');
    if(worldEmote){
-    worldEmote.innerHTML=emoteSVG(EMOTES[event]||'heart');
+    if(worldEmote.dataset.emoteEvent!==event){
+     worldEmote.innerHTML=emoteSVG(EMOTES[event]||'heart');
+     worldEmote.dataset.emoteEvent=event;
+    }
     worldEmote.hidden=false;
    }
    const lines=LINES[event]||LINES.intro;
    const [face,message]=lines[Math.floor(Math.random()*lines.length)];
    const el=getUI();if(!el)return;
-   const portrait=el.querySelector('.pippi-portrait');
+   const portrait=el.querySelector('.pippi-portrait');if(!portrait)return;
    const chatEmote=portrait.querySelector('.pippi-chat-emote');
-   if(chatEmote)chatEmote.innerHTML=emoteSVG(EMOTES[event]||'heart');
-   const fallback=faceSVG(face,face==='mega');
+   if(chatEmote&&chatEmote.dataset.emoteEvent!==event){
+    chatEmote.innerHTML=emoteSVG(EMOTES[event]||'heart');
+    chatEmote.dataset.emoteEvent=event;
+   }
    const filename=PORTRAIT_FILES[face]||'Normal';
-   const img=d.createElement('img');
+   let img=portrait.querySelector('img');
+   if(!img){
+    img=d.createElement('img');
+    img.className='pippi-portrait-picture';
+    portrait.prepend(img);
+   }
    img.alt='Pippi: '+filename;
-   img.src='images/pippi/portrait/'+filename+'.png';
+   portrait.dataset.expression=face;
    img.onerror=()=>{
-    if(!img.dataset.retry&&filename!=='Normal'){
-     img.dataset.retry='1';img.src='images/pippi/portrait/Normal.png';return;
+    if(!img.dataset.retry&&img.dataset.faceFile!=='Normal'){
+     img.dataset.retry='1';
+     img.src='images/pippi/portrait/Normal.png';
+     return;
     }
     if(portrait.contains(img)){
-     portrait.innerHTML=fallback;
+     portrait.innerHTML=faceSVG(portrait.dataset.expression||'smile',
+      portrait.classList.contains('mega'));
      if(chatEmote)portrait.append(chatEmote);
     }
    };
-   portrait.replaceChildren(img);
-   if(chatEmote)portrait.append(chatEmote);
+   if(img.dataset.faceFile!==filename){
+    img.dataset.faceFile=filename;
+    delete img.dataset.retry;
+    img.src='images/pippi/portrait/'+filename+'.png';
+   }
    portrait.dataset.emotion=face;
    el.dataset.event=event;
    portrait.classList.toggle('mega',face==='mega');
@@ -504,6 +522,25 @@
    el.querySelector('.pippi-bond').textContent='Bond '+data(G.DB?.save).bond+'/10';
    el.hidden=false;
    el.dataset.until=String(now+(force?5:3.6));
+  }
+  function say(event,force=false){
+   if(!run||w.__pkmsvvPippiSpeechDisabled===true)return;
+   const now=run.now;
+   if(!force&&now-run.lastTalk<8)return;
+   run.lastTalk=now;
+   run.emoteUntil=now+(force?3.8:2.6);
+   speechPending={event,force,now,origin:run};
+   if(speechTimer!==null)return;
+   if(typeof w.setTimeout==='function'){
+    speechTimer=w.setTimeout(()=>{
+     speechTimer=null;
+     const job=speechPending;speechPending=null;
+     try{renderSpeech(job)}catch(err){w.console?.warn?.('[Pippi] speech guarded',err);}
+    },0);
+   }else{
+    const job=speechPending;speechPending=null;
+    renderSpeech(job);
+   }
   }
   function migrate(){
    const save=G.DB?.save;
