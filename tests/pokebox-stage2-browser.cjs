@@ -84,6 +84,11 @@ async function main(){
    return data.result.value;
   };
   await cmd('Runtime.enable');await cmd('Page.enable');
+  if(process.env.PKMSVV_BROWSER_WITHOUT_PIPPI==='1'){
+   await cmd('Network.enable');
+   await cmd('Network.setBlockedURLs',{urls:['*pkmsvv-pippi.js*']});
+   console.log('QA_A_B_WITHOUT_PIPPI: block companion script only for diagnosis');
+  }
   await cmd('Page.navigate',{url:'http://127.0.0.1:'+srv.address().port+'/ai/game/'});
   const query="(()=>({stage1:!!window.G?.PKMSVVBox,stage2:!!window.G?.PKMSVVBox2,stage3:!!window.G?.PKMSVVBox3,stage4:!!window.G?.PKMSVVBox4,hub:!!window.G?.PKMSVVBoxHub,hubUI:!!window.G?.PKMSVVBoxHubUI,menuClean:!!window.G?.PKMSVVMenuCleanQA,individualMons:!!window.G?.Mons?._pkmbxIndividualHub,rankCombat:!!window.G?.Player?.prototype?._pkmbxStage4Installed,hooked:!!window.G?.Gacha?._pkmbxStage2Wrapped,traits:!!window.G?.Mons?._pkmbxStage2Traits,rankUi:!!window.G?.PKMSVVBox?._pkmbxRankUiWrapped,enemyHook:!!window.G?.Enemy?.prototype?._pkmsvvReforgeHurtWrapped,shopHook:!!window.G?.KecleonUI?.render?.toString?.().includes('draw()'),title:document.title}))()";
   const state=await until(()=>evaluate(query).then(x=>x?.stage1&&x.stage2&&x.stage3&&x.stage4&&x.hub&&x.hubUI&&x.menuClean&&x.individualMons&&x.rankCombat&&x.hooked&&x.traits&&x.rankUi&&x.enemyHook&&x.shopHook?x:null),45000).catch(async err=>{
@@ -478,7 +483,8 @@ async function main(){
   console.log('PIPPI_COMPANION_NATIVE_PC='+JSON.stringify(companionBrowser));
   assert.equal(companionBrowser.visible,true,'fourth PC tile must be present');
   assert.equal(companionBrowser.overlay,true,'companion learning dialog must open on click');
-  assert.ok(companionBrowser.controls.includes('cousin'),'Pikachu cousin skill must be learnable');
+  if(process.env.PKMSVV_BROWSER_WITHOUT_PIPPI!=='1')
+   assert.ok(companionBrowser.controls.includes('cousin'),'Pikachu cousin skill must be learnable');
   await evaluate("G.PKMSVVWiki?.open?.()");
 
   const doneKnowledge=await evaluate("(()=>{const panel=document.querySelector('#pkmsvv-wiki-overlay .pkmsvv-pc-learn'),save=G.DB.save; if(!panel||!save||!G.PKMSVVSkillTrack)return {mounted:false};const old=save.pkmsvvSkillMarks;const skill=document.createElement('button');skill.textContent='Skill Awakening';const seasonal=document.createElement('button');seasonal.textContent='Sương Ký Ức · Sự kiện mùa';try{save.pkmsvvSkillMarks={k50:true,k100:true,k200:true,u10:true,u20:true};panel.append(skill,seasonal);G.PKMSVVMenuCleanQA.mountPC();return {mounted:true,skillHidden:!skill.isConnected,seasonHidden:!seasonal.isConnected,slots:G.PKMSVVSkillTrack.progress(save).count};}finally{if(old===undefined)delete save.pkmsvvSkillMarks;else save.pkmsvvSkillMarks=old;skill.remove();seasonal.remove()}})()");
