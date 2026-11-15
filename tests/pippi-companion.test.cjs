@@ -318,3 +318,25 @@ test('failed Pippi migration never retries save four times per second in combat'
  assert.equal(s.globalUpgrades.revive,1,'failed refund preserves original upgrade');
  assert.equal(s.pkmsvvPippi.refundReviveV1,undefined,'failed refund is not recorded as paid');
 });
+
+test('Pippi retains one session and native damage hook across level-up, then cleans on real quit',()=>{
+ const pl={x:10,y:20,hp:100,maxHp:100,atkMul:1,dead:false,hurt(d){this.hp-=d;}};
+ const native=pl.hurt;
+ const G={DB:{save:{coins:0,pkmsvvPippi:{xp:0}},commit(){return true}},
+  Game:{state:'playing',player:pl,st:{time:5}},PKMSVVQuickRegion:{active:true}};
+ const w={G,document:{body:null},requestAnimationFrame(){},console:{warn(){}}};
+ const api=P.install(w);
+ api.tick();
+ const run=api.run,hook=pl.hurt;
+ assert.ok(run,'Explore must initialize Pippi');
+ assert.notStrictEqual(hook,native,'Damage hook installed exactly once');
+ G.Game.state='levelup';api.tick();api.tick();
+ assert.strictEqual(api.run,run,'Native level-up is not a new Explore run');
+ assert.strictEqual(pl.hurt,hook,'Damage wrapper stays installed while choosing');
+ G.Game.state='playing';G.Game.st.time=5.3;api.tick();
+ assert.strictEqual(api.run,run,'Picking skill 1/2/3 must reuse same Pippi');
+ assert.strictEqual(pl.hurt,hook,'No nested or duplicate hurt wrappers');
+ G.Game.state='ui';G.PKMSVVQuickRegion.active=false;api.tick();
+ assert.equal(api.run,null,'Actual exit ends Pippi run');
+ assert.strictEqual(pl.hurt,native,'Native damage method restored on exit');
+});
