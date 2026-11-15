@@ -108,6 +108,10 @@ async function main(){
    await evaluate("window.__pkmsvvPippiSpeechDisabled=true");
    console.log('PIPPI_SPEECH_AB_DISABLED=true');
   }
+  if(process.env.PKMSVV_DISABLE_PIPPI_PORTRAIT==='1'){
+   await evaluate("window.__pkmsvvPippiPortraitDisabled=true");
+   console.log('PIPPI_PORTRAIT_AB_DISABLED=true');
+  }
   if(process.env.PKMSVV_DISABLE_PIPPI_RENDER==='1'){
    await evaluate("window.__pkmsvvPippiRenderDisabled=true");
    console.log('PIPPI_RENDER_AB_DISABLED=true');
