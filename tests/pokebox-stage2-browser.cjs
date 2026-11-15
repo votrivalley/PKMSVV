@@ -504,6 +504,10 @@ async function main(){
   const unifiedPc=await evaluate("(async()=>{document.querySelector('#pkmsvv-menu-wiki')?.click();await Promise.resolve();const p=document.querySelector('#pkmsvv-wiki-overlay');const grid=p?.querySelector('.pkmsvv-pc-grid');return {exists:!!p,cardCount:grid?.children.length,firstThree:[...grid?.children||[]].slice(0,3).map(x=>x.id),events:[...p?.querySelectorAll('.pkmsvv-pc-learn button')||[]].filter(b=>/Sương Ký Ức|Memory Mist|Season/.test(b.textContent)).length,hint:!!p?.querySelector('.pkmsvv-pc-hint'),support:!!p?.textContent.includes('Pokémon hỗ trợ'),mega:!!p?.textContent.includes('Mega'),berry:!!p?.textContent.includes('Berry')}})()");
   assert.equal(unifiedPc.exists,true);
   assert.equal(unifiedPc.cardCount,4,'PC must contain Support, Mega, Berry and Bạn đồng hành');
+  const qaIdentity=await evaluate("(()=>({build:window.__PKMSVV_PIPPI_QA||null,label:document.querySelector('#pkmsvv-wiki-overlay h2')?.textContent,revision:document.querySelector('#pkmsvv-wiki-overlay .pkmsvv-pc-grid')?.dataset.pippiQaRevision||null}))()");
+  console.log('PIPPI_QA_VISIBLE_BUILD='+JSON.stringify(qaIdentity));
+  assert.ok(qaIdentity.build&&qaIdentity.revision===qaIdentity.build,
+   'A stale PC UI/incorrect route must fail QA before a new preview is deployed');
   assert.ok(unifiedPc.firstThree.every(id=>!['pkmsvv-pc-box','pkmsvv-pc-dex','pkmsvv-pc-upgrades'].includes(id)),'do not duplicate Pokémon tabs in PC');
   assert.equal(unifiedPc.events,0,'remove seasonal event from PC knowledge');
   assert.equal(unifiedPc.hint,false,'no redundant navigation hint');
@@ -1040,6 +1044,15 @@ async function main(){
    assert.equal(survived.state,'playing','Explore ended without player action: '+JSON.stringify(survived));
    assert.ok(Number(survived.time)>=7,'Explore simulation stalled: '+JSON.stringify(survived));
    assert.deepEqual(errors,[],'Actual battle crashed in Chromium: '+JSON.stringify(errors.slice(-5)));
+   if(process.env.PKMSVV_BROWSER_WITHOUT_PIPPI!=='1'){
+    const followerQA=await evaluate("(()=>{const api=G.PKMSVVPippi,el=document.getElementById('pkmsvv-pippi-follower'),canvas=document.getElementById('game');const r=el?.getBoundingClientRect();const cr=canvas?.getBoundingClientRect();return {installed:!!api?.installed,active:!!api?.run,blocked:api?.visual?.blocked,hidden:el?.hidden??true,connected:!!el?.isConnected,x:r?.x,y:r?.y,canvasX:cr?.x,canvasY:cr?.y,canvasW:cr?.width,canvasH:cr?.height,state:G.Game?.state}})()");
+    console.log('PIPPI_NATIVE_FOLLOW_VISIBILITY='+JSON.stringify(followerQA));
+    assert.equal(followerQA.installed,true,'Pippi module not installed');
+    assert.equal(followerQA.active,true,'Pippi did not start in native Explore');
+    assert.equal(followerQA.blocked,false,'Pippi incorrectly sees an active menu during native battle');
+    assert.equal(followerQA.connected,true,'Pippi world sprite never mounted to game');
+    assert.equal(followerQA.hidden,false,'Pippi world sprite is invisible in native Explore');
+   }
    // A user reports Explore eventually stalling around the first minute.
    // After checking the unprotected first 10 seconds, prevent ordinary
    // monster damage so this measures ENGINE continuity, not combat skill.
