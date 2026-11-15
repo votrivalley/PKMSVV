@@ -411,6 +411,15 @@
  }
  function choose(index){
   if(!unlocked(index)||getChampion()?.active||G.Coop?.active||G.Game?.state==='playing')return false;
+  // Native quit() leaves the engine in "over" (results screen). Showing
+  // MenuUI alone does not reset this state: a second native startRun from
+  // "over" can leave the browser's main thread unresponsive. Go through the
+  // engine's normal UI transition BEFORE arming a new region/Berry picker.
+  if(G.Game?.state==='over'){
+   if(typeof G.Game.toUI!=='function')return false;
+   G.Game.toUI();
+   if(G.Game.state!=='ui')return false;
+  }
   if(!distinctMapBiomes()){
    console.error('[Explore maps] Duplicate or missing biome: all nine regions and Sky need separate terrain');
    G.UI?.toast?.(tr('Bản đồ vùng chưa đồng bộ; vui lòng cập nhật bản chơi thử.',
