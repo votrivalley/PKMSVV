@@ -230,12 +230,12 @@
   }
   if(run)run.damageHook=null;
  }
- // Eight-direction autonomous follower in world units. Follow the player's
- // recorded movement trail instead of sticking to a viewport offset.
- // Sampling actual player displacement inherently respects water/terrain
- // slowdowns and speed multipliers (including x1.5).
- const FOLLOW_DISTANCE=72;
- const SAFE_DISTANCE=56;
+ // Sống Sót-style support leash: keep a loose offset behind the lead, not
+ // a lockstep copy of every player footstep. All coordinates remain in world
+ // units. The dead zone means Pippi can idle while the player changes skills.
+ const FOLLOW_DISTANCE=78;
+ const SAFE_DISTANCE=54;
+ const MAX_SUPPORT_GAP=168;
  function followTarget(history,offset=FOLLOW_DISTANCE){
   if(!history?.length)return null;
   let remain=offset;
@@ -252,64 +252,77 @@
   }
   return {x:history[0].x,y:history[0].y};
  }
- // PMD follower moves in its OWN world coordinates, following a point 72
- // world pixels behind the player ALONG THE PLAYER'S TRAVELLED PATH. It never
- // targets pl.x/pl.y directly; that was the cause of the two sprites merging.
  function advanceFollower(run,pl,now,requestedGap=FOLLOW_DISTANCE){
   if(!run||!pl||!Number.isFinite(+pl.x)||!Number.isFinite(+pl.y))return null;
-  const followGap=clamp(requestedGap,FOLLOW_DISTANCE,260);
-  const minimumGap=Math.max(SAFE_DISTANCE,followGap*.82);
-  const init={x:pl.x-followGap,y:pl.y+18};
+  const desired=clamp(requestedGap,64,150);
+  const minimum=Math.max(SAFE_DISTANCE,desired*.67);
+  const init={x:pl.x-desired*.85,y:pl.y+desired*.38};
   const state=run.motion||(run.motion={
    x:init.x,y:init.y,px:pl.x,py:pl.y,last:now,
-   speed:0,moving:false,
-   history:[{...init},{x:pl.x,y:pl.y}],direction:0
+   speed:0,moving:false,direction:0,headingX:1,headingY:0,
+   history:[{...init},{x:pl.x,y:pl.y}],warped:false
   });
   const dt=clamp(now-state.last,0,.4);
   state.last=now;
   const dx=pl.x-state.px,dy=pl.y-state.py,travel=Math.hypot(dx,dy);
   const gap=Math.hypot(pl.x-state.x,pl.y-state.y);
-  // A portal/map warp is the ONLY normal reason to instantly relocate Pippi.
-  // Never teleport just because the player is running or swimming.
+  // Native Rift portals and chapter warps are the only instant reposition.
   if(travel>450||gap>650){
-   const ux=travel>0?dx/travel:1,uy=travel>0?dy/travel:0;
-   state.x=pl.x-ux*followGap;
-   state.y=pl.y-uy*followGap;
+   const hx=travel>1?dx/travel:state.headingX;
+   const hy=travel>1?dy/travel:state.headingY;
+   state.x=pl.x-hx*desired-hy*desired*.24;
+   state.y=pl.y-hy*desired+hx*desired*.24;
+   state.headingX=hx;state.headingY=hy;
    state.history=[{x:state.x,y:state.y},{x:pl.x,y:pl.y}];
-   state.speed=0;state.moving=false;
+   state.speed=0;state.moving=false;state.warped=true;
    state.px=pl.x;state.py=pl.y;
    return state;
   }
-  if(travel>1.5){
+  state.warped=false;
+  if(travel>2){
    state.history.push({x:pl.x,y:pl.y});
-   if(state.history.length>180)state.history.splice(0,state.history.length-180);
+   if(state.history.length>40)state.history.splice(0,state.history.length-40);
+   // Keep the recent heading, allowing turns without chasing every zigzag.
+   const hx=dx/travel,hy=dy/travel;
+   const blend=.72;
+   const nx=state.headingX*(1-blend)+hx*blend;
+   const ny=state.headingY*(1-blend)+hy*blend;
+   const norm=Math.hypot(nx,ny)||1;
+   state.headingX=nx/norm;state.headingY=ny/norm;
   }
-  // 4 Hz updates use actual movement distance, so player speed modifiers,
-  // x1.5, water and terrain naturally propagate to Pippi's travel speed.
   if(dt>.01&&travel>.4){
    const observed=Math.min(850,travel/dt);
    state.speed=state.speed>0?state.speed*.45+observed*.55:observed;
-  }
+  }else state.speed*=.76;
   state.px=pl.x;state.py=pl.y;
-  const target=followTarget(state.history,followGap);
-  const vx=target.x-state.x,vy=target.y-state.y;
-  const distance=Math.hypot(vx,vy);
-  const pace=state.speed*(gap>180?1.15:1); // rare bounded catch-up
-  const step=Math.min(distance,Math.max(0,pace*dt));
-  state.moving=distance>2&&step>.15;
+  // A little to the side and behind: leaves Mewtwo and its attacks visible.
+  const tx=pl.x-state.headingX*desired-state.headingY*desired*.26;
+  const ty=pl.y-state.headingY*desired+state.headingX*desired*.26;
+  const vx=tx-state.x,vy=ty-state.y,distance=Math.hypot(vx,vy);
+  const leash=Math.max(MAX_SUPPORT_GAP,desired*1.55);
+  const deadzone=Math.max(11,desired*.17);
+  let step=0;
+  // As in Sống Sót, the support rests inside its formation dead zone and
+  // accelerates if the player moves away. It does NOT teleport on normal runs.
+  if(dt>0&&(distance>deadzone||gap>leash)){
+   const catchUp=gap>leash?Math.max(185,state.speed*1.9):
+    gap>desired*1.4?Math.max(105,state.speed*1.35):
+    Math.max(50,state.speed*.93);
+   step=Math.min(distance,catchUp*dt);
+  }
+  state.moving=step>.5;
   if(state.moving){
-   const mx=vx/distance*step,my=vy/distance*step;
+   const mx=vx/(distance||1)*step,my=vy/(distance||1)*step;
    state.x+=mx;state.y+=my;
    state.direction=(Math.round(Math.atan2(my,mx)/(Math.PI/4))+8)%8;
   }
-  // Tight turns may cross the player's path. Never let Pippi enter the
-  // player's footprint: no merged or overlapping sprites while standing.
-  const apartX=state.x-pl.x,apartY=state.y-pl.y;
-  const apart=Math.hypot(apartX,apartY);
-  if(apart<minimumGap){
-   const ux=apart>1?apartX/apart:-1,uy=apart>1?apartY/apart:0;
-   state.x=pl.x+ux*minimumGap;
-   state.y=pl.y+uy*minimumGap;
+  // A sharp reversal cannot push the companion into the hero's footprint.
+  const sx=state.x-pl.x,sy=state.y-pl.y,apart=Math.hypot(sx,sy);
+  if(apart<minimum){
+   const ux=apart>1?sx/apart:-state.headingX;
+   const uy=apart>1?sy/apart:-state.headingY;
+   state.x=pl.x+ux*minimum;state.y=pl.y+uy*minimum;
+   state.moving=state.moving||travel>2;
   }
   return state;
  }
