@@ -413,7 +413,28 @@
    d.body.appendChild(el);
    ui=el;return el;
   }
+  function visualModalOpen(){
+   const phase=String(G.Game?.state||'');
+   if(phase!=='playing')return true;
+   const ids=['scr-pause','scr-levelup','scr-settings','scr-menu','scr-pc',
+    'scr-pokemon','scr-item','scr-items','scr-over','scr-evolution',
+    'pkmsvv-quick-region','pkmsvv-support-catalog','pkmsvv-berry-overlay'];
+   for(const id of ids){
+    try{if(G.UI?.isOpen?.(id))return true;}catch(_){}
+    const el=d.getElementById?.(id);
+    if(!el||el.hidden||el.classList?.contains('hidden'))continue;
+    if(typeof w.getComputedStyle==='function'&&w.getComputedStyle(el).display==='none')continue;
+    if(typeof el.getClientRects==='function'&&!el.getClientRects().length)continue;
+    return true;
+   }
+   return !!(G.PKMSVVBerry?.choosing||G.PKMSVVQuickRegion?.starting);
+  }
+  function concealVisuals(){
+   if(ui)ui.hidden=true;
+   if(follower)follower.hidden=true;
+  }
   function follow(pl){
+   if(visualModalOpen()){concealVisuals();return;}
    // CI-only A/B switch. Do not render companion DOM when explicitly disabled;
    // the native combat and Pippi skills still run, isolating UI layout pressure.
    if(w.__pkmsvvPippiRenderDisabled===true)return;
@@ -434,29 +455,41 @@
     probe.onerror=()=>follower?.classList.remove('has-pmd');
     probe.src='images/pippi/Walk-Anim.png';
    }
-   follower.hidden=false;
-   const canvas=d.getElementById('game'),rect=canvas?.getBoundingClientRect?.();
-   if(!rect||!rect.width||!rect.height)return;
+   const canvas=d.getElementById?.('game'),rect=canvas?.getBoundingClientRect?.();
+   if(!rect||!rect.width||!rect.height){concealVisuals();return;}
    const zoomX=rect.width/(Number(canvas.width)||rect.width);
    const zoomY=rect.height/(Number(canvas.height)||rect.height);
-   // Android WebView frequently has a high-DPI backing canvas; 72 world
-   // units could render as only 25 CSS pixels and visually overlap Celebi.
-   // Keep at least 62 CSS pixels behind the player at any display density.
-   const visualScale=Math.max(.24,Math.min(zoomX,zoomY));
-   const desiredGap=Math.max(FOLLOW_DISTANCE,62/visualScale);
+   // High-DPI WebViews should not shrink the support to an invisible dot,
+   // nor push it so far away that its heal/buff appears disconnected.
+   const visualScale=Math.max(.3,Math.min(zoomX,zoomY)*(Number(G.Camera?.scale)||1));
+   const desiredGap=Math.max(FOLLOW_DISTANCE,Math.min(120,48/visualScale));
    const state=advanceFollower(run,pl,run.now,desiredGap);if(!state)return;
    const camX=Number(G.Camera?.x),camY=Number(G.Camera?.y);
+   const cameraScale=Number(G.Camera?.scale)||1;
    let x,y;
-   if(Number.isFinite(camX)&&Number.isFinite(camY)){
-    x=rect.left+rect.width*.5+(state.x-camX)*zoomX;
-    y=rect.top+rect.height*.5+(state.y-camY)*zoomY;
+   if(typeof G.Camera?.left==='function'&&typeof G.Camera?.top==='function'){
+    // Match the native game render transform: world -> camera -> canvas.
+    x=rect.left+(state.x-G.Camera.left())*cameraScale*zoomX;
+    y=rect.top+(state.y-G.Camera.top())*cameraScale*zoomY;
+   }else if(Number.isFinite(camX)&&Number.isFinite(camY)){
+    x=rect.left+rect.width*.5+(state.x-camX)*cameraScale*zoomX;
+    y=rect.top+rect.height*.5+(state.y-camY)*cameraScale*zoomY;
    }else{
-    // Fallback for camera implementations with no exported centre.
-    x=rect.left+rect.width*.5+(state.x-pl.x)*zoomX;
-    y=rect.top+rect.height*.5+(state.y-pl.y)*zoomY;
+    x=rect.left+rect.width*.5+(state.x-pl.x)*cameraScale*zoomX;
+    y=rect.top+rect.height*.5+(state.y-pl.y)*cameraScale*zoomY;
    }
+   // Pippi is a world actor, not a floating browser overlay: never leak it
+   // outside the game canvas or across a fixed-position menu/pause dialog.
+   const padding=28;
+   if(!Number.isFinite(x)||!Number.isFinite(y)||
+      x<rect.left+padding||x>rect.right-padding||
+      y<rect.top+padding||y>rect.bottom-7){
+    concealVisuals();return;
+   }
+   follower.hidden=false;
+   follower.classList.toggle('warped',!!state.warped);
    follower.style.left=Math.round(x)+'px';
-   follower.style.top=Math.round(y)+'px';
+   follower.style.top=Math.round(y+4)+'px';
    run.direction=state.direction;
    follower.classList.toggle('moving',state.moving);
    const cousin=follower.querySelector('.pippi-cousin');
@@ -511,7 +544,9 @@
    const trace=w.__pkmsvvPippiStageTrace===true;
    const mark=name=>{if(trace)w.console?.log?.('QA_PIPPI_SPEECH:'+name);};
    mark('enter');
-   if(!job||job.origin!==run||!eligible(G)){mark('skip');return;}
+   if(!job||job.origin!==run||!eligible(G)||visualModalOpen()){
+    mark('skip');return;
+   }
    const {event,force,now}=job;
    mark('emote-enter');
    const worldEmote=follower?.querySelector('.pippi-world-emote');
@@ -637,7 +672,7 @@
     const phase=String(G.Game?.state||'');
     if(run&&run.player===pl&&G.PKMSVVQuickRegion?.active===true&&
        ['levelup','choice','held','pause','paused'].includes(phase)){
-     if(ui)ui.hidden=true;
+     concealVisuals();
      return;
     }
     stage('eligible-enter');
@@ -664,7 +699,7 @@
     stage('follow-exit');
     endEffects(run,now);
     stage('effects-exit');
-    if(ui&&!ui.hidden&&now>=Number(ui.dataset.until))ui.hidden=true;
+    if(ui&&!ui.hidden&&(visualModalOpen()||now>=Number(ui.dataset.until)))ui.hidden=true;
     stage('data-enter');
     const p=data(G.DB?.save),lv=p.bond,training=p.training;
     stage('data-exit');
