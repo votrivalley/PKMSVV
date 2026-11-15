@@ -418,6 +418,71 @@
   const G=w.G,d=w.document;
   if(G.PKMSVVPippi?.installed)return G.PKMSVVPippi;
   let run=null,ui=null,lastSave=null,follower=null;
+  // Native depth-sorted world drawing is shared with the real Sống Sót
+  // Pokémon supports. Never paint Pippi as a fixed browser overlay.
+  let nativeWorldReady=false;
+  let worldAnimator=null,worldAnimMode='',lastWorldFrame=0;
+  function nativeWorldDraw(ctx){
+   const m=run?.motion;
+   if(!m||visualModalOpen()||!eligible(G)||!ctx)return;
+   const wall=typeof w.performance?.now==='function'?w.performance.now():Date.now();
+   const elapsed=clamp((wall-(m.wallUpdated||wall))/250,0,1);
+   const x=(m.fromX??m.x)+(m.x-(m.fromX??m.x))*elapsed;
+   const y=(m.fromY??m.y)+(m.y-(m.fromY??m.y))*elapsed;
+   const d=wall-lastWorldFrame;
+   const dt=lastWorldFrame?clamp(d/1000,0,.075):.016;
+   lastWorldFrame=wall;
+   ctx.save();
+   ctx.fillStyle='rgba(33,26,29,.34)';
+   ctx.beginPath();ctx.ellipse(x,y+1,13,4,0,0,Math.PI*2);ctx.fill();
+   if(!worldAnimator&&typeof G.Sprites?.Animator==='function'){
+    try{
+     G.Sprites?.sheet?.(35,'Idle',false);
+     G.Sprites?.sheet?.(35,'Walk',false);
+     const base=Number(G.Sprites?.playerScale?.(35))||1;
+     worldAnimator=new G.Sprites.Animator(35,Math.max(.8,base)*1.12,false);
+     worldAnimator.loop('Idle');
+     worldAnimMode='Idle';
+    }catch(err){w.console?.warn?.('[Pippi] Native animator unavailable',err);}
+   }
+   if(worldAnimator){
+    const mode=m.moving?'Walk':'Idle';
+    if(worldAnimMode!==mode){worldAnimator.loop(mode,m.moving?1.1:1);worldAnimMode=mode;}
+    if(m.facing!==undefined&&G.Sprites?.dirFromAngle)
+     worldAnimator.dir=G.Sprites.dirFromAngle(m.facing);
+    worldAnimator.update(dt);
+    worldAnimator.draw(ctx,x,y,{alpha:1});
+   }
+   // The real support casts a tiny emote over its head; no DOM offset.
+   if(run?.emoteUntil>run?.now){
+    ctx.font='bold 17px sans-serif';ctx.textAlign='center';
+    ctx.fillStyle='#fff5b0';ctx.strokeStyle='#4c2b50';ctx.lineWidth=2;
+    ctx.strokeText('✦',x+15,y-45);ctx.fillText('✦',x+15,y-45);
+   }
+   ctx.restore();
+  }
+  function installNativeWorld(){
+   const eggs=G.PKMSVVEggs;
+   if(!eggs||typeof eggs.drawables!=='function'||typeof G.Sprites?.Animator!=='function')
+    return false;
+   if(eggs.drawables.__pkmsvvPippiWorld){nativeWorldReady=true;return true;}
+   const previous=eggs.drawables;
+   function withPippi(cam){
+    const items=previous.call(this,cam);
+    const base=Array.isArray(items)?items:[];
+    const m=run?.motion;
+    if(eligible(G)&&!visualModalOpen()&&m&&
+       (!cam?.sees||cam.sees(m.x,m.y,95))){
+     base.push({y:m.y,draw:nativeWorldDraw});
+    }
+    return base;
+   }
+   withPippi.__pkmsvvPippiWorld=true;
+   eggs.drawables=withPippi;
+   nativeWorldReady=true;
+   G.Sprites?.preload?.([35],7000,false);
+   return true;
+  }
   const decodedPortraits=new Map();
   let portraitsPreloading=false;
   // Decode all 16 expressions while the home menu is idle, not mid-combat.
@@ -488,6 +553,20 @@
   }
   function follow(pl){
    if(visualModalOpen()){concealVisuals();return;}
+   if(installNativeWorld()){
+    // Position is in world coordinates, identical to all other Pokémon.
+    // The normal game renderer now performs camera projection + Y sorting.
+    const before=run?.motion&&{x:run.motion.x,y:run.motion.y};
+    const m=advanceFollower(run,pl,run.now,FOLLOW_DISTANCE);
+    if(!m)return;
+    m.fromX=before?.x??m.x;
+    m.fromY=before?.y??m.y;
+    m.wallUpdated=typeof w.performance?.now==='function'?w.performance.now():Date.now();
+    const mx=m.x-m.fromX,my=m.y-m.fromY;
+    if(m.moving&&Math.hypot(mx,my)>1)m.facing=Math.atan2(my,mx);
+    if(follower)follower.hidden=true;
+    return;
+   }
    // CI-only A/B switch. Do not render companion DOM when explicitly disabled;
    // the native combat and Pippi skills still run, isolating UI layout pressure.
    if(w.__pkmsvvPippiRenderDisabled===true)return;
@@ -733,7 +812,7 @@
     }
     stage('eligible-enter');
     if(!eligible(G)){
-     if(run){finish(run);run=null;}
+     if(run){finish(run);run=null;worldAnimator=null;worldAnimMode='';lastWorldFrame=0;}
      if(ui)ui.hidden=true;
      if(follower)follower.hidden=true;
      return;
@@ -742,7 +821,8 @@
     const now=Math.max(0,Number(G.Game?.st?.time??G.Game?.time)||0);
     if(!run||run.player!==pl||now+1<run.now){
      stage('new-run-enter');
-     finish(run);run=newRun(pl,now);say('intro',true);say('tutorial');
+     finish(run);worldAnimator=null;worldAnimMode='';lastWorldFrame=0;
+     run=newRun(pl,now);say('intro',true);say('tutorial');
      stage('new-run-exit');
     }
     run.now=now;
@@ -834,7 +914,10 @@
   }
   const api={installed:true,refund,migrate,data,rank,earn,train,trainingPoints,bondProgress,cousinChance,eligible:()=>eligible(G),
    tryRevive:revive,tick,show:say,
-   get visual(){return {blocked:visualModalOpen(),blockedBy:visibleModal(),followerHidden:follower?.hidden??true,
+   get visual(){return {renderMode:nativeWorldReady?'native-world':'fallback',
+    nativeWorldReady,worldAnimatorReady:!!worldAnimator,
+    blocked:visualModalOpen(),blockedBy:visibleModal(),
+    followerHidden:nativeWorldReady?false:(follower?.hidden??true),
     followerConnected:!!follower?.isConnected,position:run?.motion?{
      x:run.motion.x,y:run.motion.y}:null};},
    get run(){return run;}};
