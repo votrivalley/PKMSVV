@@ -184,7 +184,7 @@ jobs:
           test -s decoded-android/assets/public/images/pippi/portrait/Happy.png
           test -s decoded-android/assets/public/images/pippi/portrait/Worried.png
           grep -q 'pkmsvv-pippi.js' decoded-android/assets/public/index.html
-          grep -q 'FOLLOW_DISTANCE=72' decoded-android/assets/public/js/ui/pkmsvv-pippi.js
+          grep -q 'FOLLOW_DISTANCE=78' decoded-android/assets/public/js/ui/pkmsvv-pippi.js
           grep -q 'COOP_SINGLE_PIXEL_ICON_R3' decoded-android/assets/public/css/pkmsvv-pc-menu-clean-qa.css
           grep -q 'if(art.hasChildNodes())art.replaceChildren()' decoded-android/assets/public/js/ui/pkmsvv-pc-menu-clean-qa.js
           grep -q 'pkmsvv-pippi.css' decoded-android/assets/public/index.html
