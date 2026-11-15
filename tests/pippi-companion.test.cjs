@@ -118,8 +118,10 @@ test('Pippi uses a support formation with an idle dead zone and a catch-up leash
   assert.ok(Math.hypot(p.x-player.x,p.y-player.y)<220,
    'support catch-up stays near the player during normal running');
  }
- for(let i=25;i<=45;i++)p=P.advanceFollower(run,player,i*.25);
- assert.equal(p.moving,false,'support becomes idle when the formation settles');
+ // Once the player stops, the support may make a brief playful sidestep
+ // around the fifth idle second. Give that one animation time to settle.
+ for(let i=25;i<=53;i++)p=P.advanceFollower(run,player,i*.25);
+ assert.equal(p.moving,false,'support becomes idle after the deliberate sidestep');
  assert.ok(Math.hypot(p.x-player.x,p.y-player.y)>=56,
   'idle support cannot overlap the lead Pokemon');
 });
