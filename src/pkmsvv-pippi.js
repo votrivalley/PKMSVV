@@ -413,22 +413,31 @@
    d.body.appendChild(el);
    ui=el;return el;
   }
-  function visualModalOpen(){
-   const phase=String(G.Game?.state||'');
-   if(phase!=='playing')return true;
-   const ids=['scr-pause','scr-levelup','scr-settings','scr-menu','scr-pc',
-    'scr-pokemon','scr-item','scr-items','scr-over','scr-evolution',
-    'pkmsvv-quick-region','pkmsvv-support-catalog','pkmsvv-berry-overlay'];
-   for(const id of ids){
-    try{if(G.UI?.isOpen?.(id))return true;}catch(_){}
-    const el=d.getElementById?.(id);
-    if(!el||el.hidden||el.classList?.contains('hidden'))continue;
-    if(typeof w.getComputedStyle==='function'&&w.getComputedStyle(el).display==='none')continue;
-    if(typeof el.getClientRects==='function'&&!el.getClientRects().length)continue;
-    return true;
+  // Only count genuinely VISIBLE dialogs. Native G.UI.isOpen('scr-menu')
+  // can remain truthy underneath an active Explore run; relying on it hid
+  // Pippi throughout combat even though no menu covered the screen.
+  function visibleModal(){
+   if(String(G.Game?.state||'')!=='playing')return 'native-nonplaying';
+   const selectors=['#scr-pause','#scr-levelup','#scr-settings','#scr-pc',
+    '#scr-pokemon','#scr-item','#scr-items','#scr-over','#scr-evolution',
+    '#pkmsvv-wiki-overlay','#pkmsvv-pokebox-overlay','#pkmsvv-fusion-guide',
+    '#pkmsvv-forget-skill','#pkmsvv-support-catalog',
+    '#pkmsvv-quick-region','.pkmsvv-berry-overlay',
+    '#pkmsvv-native-choice','#pkmsvv-mega-phase1','.pkmsvv-evo'];
+   for(const selector of selectors){
+    const el=d.querySelector?.(selector);
+    if(!el||el.hidden||el.getAttribute?.('aria-hidden')==='true'||
+      el.classList?.contains('hidden'))continue;
+    if(typeof w.getComputedStyle==='function'){
+     const style=w.getComputedStyle(el);
+     if(style.display==='none'||style.visibility==='hidden'||+style.opacity===0)continue;
+    }
+    if(typeof el.getClientRects==='function'&&el.getClientRects().length===0)continue;
+    return selector;
    }
-   return !!(G.PKMSVVBerry?.choosing||G.PKMSVVQuickRegion?.starting);
+   return null;
   }
+  function visualModalOpen(){return visibleModal()!==null;}
   function concealVisuals(){
    if(ui)ui.hidden=true;
    if(follower)follower.hidden=true;
@@ -763,7 +772,7 @@
   }
   const api={installed:true,refund,migrate,data,rank,earn,train,trainingPoints,bondProgress,cousinChance,eligible:()=>eligible(G),
    tryRevive:revive,tick,show:say,
-   get visual(){return {blocked:visualModalOpen(),followerHidden:follower?.hidden??true,
+   get visual(){return {blocked:visualModalOpen(),blockedBy:visibleModal(),followerHidden:follower?.hidden??true,
     followerConnected:!!follower?.isConnected,position:run?.motion?{
      x:run.motion.x,y:run.motion.y}:null};},
    get run(){return run;}};
