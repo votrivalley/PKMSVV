@@ -77,6 +77,19 @@ async function main(){
    scripts:[...document.scripts].filter(s=>/pkmsvv-wiki|pkmsvv-pippi/.test(s.src)).map(s=>s.src)}))()`);
   console.log('PIPPI_WEB_MODULES='+JSON.stringify(installed));
   assert.equal(installed.companion,'function','Companion PC handler absent from executing browser runtime');
+  const seed=async()=>js(`(()=>{
+   // The preview opens at the welcome UI, before any profile is selected.
+   // Build a disposable valid local profile, not an actual user save.
+   const raw={owned:{25:{at:1}},shiny:{},partner:25,partnerShiny:false,
+    pabil:{},pnat:{},pupg:{},bag:{},tms:{},coins:5000,
+    stats:{runs:1,bestTime:100,bestLevel:1,kills:0},tickets:{t1:3,t10:0},
+    pkmsvvStorySeen:true,pkmsvvNameChosen:true};
+   const fixture=G.PKMSVVBox?.migrate?.(raw)?.save||raw;
+   Object.defineProperty(G.DB,'save',{value:fixture,configurable:true,writable:true});
+   G.DB.commit=()=>true;
+   return {partner:G.DB.save.partner,valid:!!G.DEX_BY?.[G.DB.save.partner]};
+  })()`);
+  assert.equal((await seed()).valid,true,'Browser fixture must have real in-game Pokémon');
   const pc=await js(`(()=>{
    G.MenuUI.open();
    const launcher=document.querySelector('#pkmsvv-menu-wiki');
@@ -104,6 +117,7 @@ async function main(){
    if(session===2){
     await cmd('Page.reload',{ignoreCache:true});
     await until(()=>js('!!window.G?.PKMSVVWiki&&!!window.G?.PKMSVVPippi&&!!window.G?.PKMSVVQuickRegion'),35000);
+    assert.equal((await seed()).valid,true,'Reload fixture valid');
    }
    await js(`(()=>{
     G.PKMSVVWiki?.close?.();
