@@ -116,6 +116,14 @@ async function main(){
    await evaluate("window.__pkmsvvPippiRenderDisabled=true");
    console.log('PIPPI_RENDER_AB_DISABLED=true');
   }
+  if(process.env.PKMSVV_DISABLE_PIPPI_PORTRAIT==='1'){
+   await evaluate("window.__pkmsvvPippiNoPortrait=true");
+   console.log('PIPPI_PORTRAIT_AB_DISABLED=true');
+  }
+  if(process.env.PKMSVV_DISABLE_PIPPI_EMOTE==='1'){
+   await evaluate("window.__pkmsvvPippiNoEmote=true");
+   console.log('PIPPI_EMOTE_AB_DISABLED=true');
+  }
   // Read-only runtime audit for new defeated-only Dex and evolution QA.
   // Logs only public engine source/definition names; never any user save.
   const runtimeAudit=await evaluate(`(()=>({
