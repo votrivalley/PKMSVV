@@ -26,11 +26,11 @@
 }
 
 #pkmsvv-pippi-follower{
- position:fixed;z-index:140;pointer-events:none;
- width:42px;height:42px;transform:translate(-50%,-100%);
+ position:fixed;z-index:42;pointer-events:none;
+ width:48px;height:48px;transform:translate(-50%,-100%);
  transform-origin:center bottom;
  filter:drop-shadow(0 2px 1px #2b253780);
- animation:pippi-follow-bob 1.2s ease-in-out infinite;
+ animation:none;transition:left .2s linear,top .2s linear;
 }
 #pkmsvv-pippi-follower[hidden]{display:none!important}
 #pkmsvv-pippi-follower svg{
@@ -40,9 +40,14 @@
 #pkmsvv-pippi-follower[data-direction="4"] svg,
 #pkmsvv-pippi-follower[data-direction="5"] svg{transform:scaleX(-1)}
 #pkmsvv-pippi-follower.sleeping{animation:none;opacity:.65;filter:grayscale(.3) drop-shadow(0 2px 1px #2b253780)}
-@keyframes pippi-follow-bob{
- 0%,100%{margin-top:0}50%{margin-top:-4px}
+/* Feet stay grounded. The shadow never bobs or travels independently. */
+#pkmsvv-pippi-follower::after{
+ content:'';position:absolute;left:50%;bottom:-2px;
+ width:26px;height:7px;transform:translateX(-50%);
+ border-radius:50%;background:rgba(26,17,28,.32);
+ z-index:-1;pointer-events:none;
 }
+#pkmsvv-pippi-follower.warped{transition:none!important}
 @media(prefers-reduced-motion:reduce){
  #pkmsvv-pippi-follower{animation:none!important}
 }
@@ -53,7 +58,11 @@
 #pkmsvv-pippi-follower.has-pmd .pippi-pmd-sprite{
  display:block;position:absolute;left:50%;bottom:0;
  background-repeat:no-repeat;image-rendering:pixelated;
- transform:translateX(-50%) scale(1.15);transform-origin:center bottom;
+ transform:translateX(-50%) scale(1.68);transform-origin:center bottom;
+}
+/* The 24px PMD walking frame is scaled to the same grounded height as idle. */
+#pkmsvv-pippi-follower.has-pmd.moving .pippi-pmd-sprite{
+ transform:translateX(-50%) scale(2.22);
 }
 #pkmsvv-pippi .pippi-portrait img{
  display:block;width:100%;height:100%;image-rendering:pixelated;object-fit:contain;
@@ -67,7 +76,7 @@
  * will replace the visual skin after creator-use permissions are cleared. */
 #pkmsvv-pippi-follower.mega{
  filter:drop-shadow(0 0 5px #fff3a5) drop-shadow(0 0 10px #e7a5fa);
- transform:translate(-50%,-110%) scale(1.3);
+ transform:translate(-50%,-100%);
 }
 #pkmsvv-pippi-follower.mega::before,
 #pkmsvv-pippi-follower.mega::after{
@@ -87,7 +96,7 @@
  max-width:32vw!important;max-height:40vh!important;
  padding:6px 8px!important;gap:7px!important;
  align-items:flex-start!important;border-radius:11px!important;
- z-index:2300!important;
+ z-index:48!important;
 }
 #pkmsvv-pippi .pippi-portrait{
  flex:0 0 42px!important;width:42px!important;height:42px!important;
@@ -120,7 +129,7 @@
 }
 #pkmsvv-pippi-follower.has-pmd .pippi-world-emote svg{display:block!important}
 @keyframes pippi-emote-pop{from{transform:translateX(-20%) scale(.6)}to{transform:translateX(-20%) scale(1)}}
-#pkmsvv-pippi-follower:not(.moving):not(.sleeping){animation:none!important}
+#pkmsvv-pippi-follower{animation:none!important}
 @media(prefers-reduced-motion:reduce){#pkmsvv-pippi-follower .pippi-world-emote{animation:none!important}}
 
 /* PIPPI_CHAT_EXPRESSION_V1: portrait and original Ragnarok-style emote use
@@ -183,3 +192,9 @@
  #pkmsvv-pippi-follower .pippi-cousin,
  #pkmsvv-pippi-follower.evolving{animation:none!important}
 }
+
+/* World support must never be painted ABOVE interactive UI screens. */
+#pkmsvv-pippi-follower,
+#pkmsvv-pippi{pointer-events:none!important}
+#pkmsvv-pippi-follower[hidden],
+#pkmsvv-pippi[hidden]{display:none!important}
