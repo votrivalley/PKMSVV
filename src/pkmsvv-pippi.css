@@ -145,3 +145,41 @@
 #pkmsvv-pippi[data-event="bond"] .pippi-portrait{
  border-color:#ffe9a1!important;box-shadow:0 0 8px #ffd6889c;
 }
+
+/* COUSIN_PIKACHU_PROC_V1: cameo uses existing in-game Pikachu #025 sprite.
+ * 1.9s lightning cameo, never blocks touches, no Unicode phone emoji. */
+#pkmsvv-pippi-follower .pippi-cousin{
+ position:absolute;left:calc(50% + 40px);bottom:5px;
+ width:49px;height:49px;pointer-events:none;
+ transform:translateY(-10px);z-index:5;
+ filter:drop-shadow(0 0 5px #fff37b) drop-shadow(0 1px 2px #3e303d);
+ animation:pippi-cousin-pop .32s steps(4,end) both;
+}
+#pkmsvv-pippi-follower .pippi-cousin[hidden]{display:none!important}
+#pkmsvv-pippi-follower .pippi-cousin canvas{
+ display:block;width:100%;height:100%;image-rendering:pixelated!important;
+}
+#pkmsvv-pippi-follower .pippi-cousin::after{
+ content:'';position:absolute;left:35px;top:-10px;width:20px;height:33px;
+ background:#ffeb70;clip-path:polygon(55% 0,10% 48%,48% 50%,18% 100%,90% 38%,57% 38%,86% 0);
+ filter:drop-shadow(0 0 2px #fff);
+}
+#pkmsvv-pippi-follower.evolving .pippi-clefable-sprite,
+#pkmsvv-pippi-follower.mega .pippi-clefable-sprite{
+ display:grid;place-items:center;position:absolute;inset:-4px;
+ width:50px;height:50px;z-index:2;
+ filter:drop-shadow(0 0 5px #f8d9fc);
+}
+#pkmsvv-pippi-follower .pippi-clefable-sprite{display:none}
+#pkmsvv-pippi-follower :is(.pippi-clefable-sprite,.pippi-cousin) canvas{
+ image-rendering:pixelated;
+}
+#pkmsvv-pippi-follower.evolving{filter:drop-shadow(0 0 6px #fff2a6);animation:pippi-evolve-twinkle .5s ease-in-out infinite alternate}
+#pkmsvv-pippi-follower:is(.evolving,.mega)>.pippi-pmd-sprite{opacity:.12}
+#pkmsvv-pippi-follower:is(.evolving,.mega)>svg{opacity:.12}
+@keyframes pippi-cousin-pop{from{opacity:0;transform:translateY(9px) scale(.7)}to{opacity:1;transform:translateY(-10px) scale(1)}}
+@keyframes pippi-evolve-twinkle{from{filter:drop-shadow(0 0 3px #f9b0fe)}to{filter:drop-shadow(0 0 11px #fff0a2)}}
+@media(prefers-reduced-motion:reduce){
+ #pkmsvv-pippi-follower .pippi-cousin,
+ #pkmsvv-pippi-follower.evolving{animation:none!important}
+}
