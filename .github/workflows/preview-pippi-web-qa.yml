@@ -52,18 +52,19 @@ jobs:
   diagnostic-rift:
     # Run independently: a failing Kanto restart must not hide the Rift
     # signature. Both variants remain read-only and NEVER deploy Web QA.
-    name: "Grieta — no Pippi ${{ matrix.without }}, migration off ${{ matrix.migration }}, speech off ${{ matrix.speech }}, tick off ${{ matrix.tick }}"
+    name: "Grieta — noPippi ${{ matrix.without }} / portraitOff ${{ matrix.portrait }} / emoteOff ${{ matrix.emote }} / tickOff ${{ matrix.tick }}"
     runs-on: ubuntu-latest
     timeout-minutes: 12
     strategy:
       fail-fast: false
       matrix:
         include:
-          - {without: '0', survivor: '0', render: '0', tick: '0', migration: '0', speech: '0'}
-          - {without: '0', survivor: '0', render: '0', tick: '0', migration: '1', speech: '0'}
-          - {without: '0', survivor: '0', render: '0', tick: '0', migration: '0', speech: '1'}
-          - {without: '0', survivor: '0', render: '0', tick: '1', migration: '0', speech: '0'}
-          - {without: '1', survivor: '0', render: '0', tick: '0', migration: '0', speech: '0'}
+          - {without: '0', portrait: '0', emote: '0', tick: '0'}
+          - {without: '0', portrait: '1', emote: '0', tick: '0'}
+          - {without: '0', portrait: '0', emote: '1', tick: '0'}
+          - {without: '0', portrait: '1', emote: '1', tick: '0'}
+          - {without: '0', portrait: '0', emote: '0', tick: '1'}
+          - {without: '1', portrait: '0', emote: '0', tick: '0'}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -87,11 +88,9 @@ jobs:
           PKMSVV_TEST_REGION: '1'
           PKMSVV_TEST_RIFT: '1'
           PKMSVV_BROWSER_WITHOUT_PIPPI: ${{ matrix.without }}
-          PKMSVV_RIFT_SURVIVOR: ${{ matrix.survivor }}
-          PKMSVV_DISABLE_PIPPI_RENDER: ${{ matrix.render }}
+          PKMSVV_DISABLE_PIPPI_PORTRAIT: ${{ matrix.portrait }}
+          PKMSVV_DISABLE_PIPPI_EMOTE: ${{ matrix.emote }}
           PKMSVV_DISABLE_PIPPI_TICK: ${{ matrix.tick }}
-          PKMSVV_DISABLE_PIPPI_MIGRATION: ${{ matrix.migration }}
-          PKMSVV_DISABLE_PIPPI_SPEECH: ${{ matrix.speech }}
           PKMSVV_TRACE_RIFT: '1'
           PKMSVV_TRACE_STARTUP: '1'
           PKMSVV_DIAGNOSTIC_LOOPS: '4'
