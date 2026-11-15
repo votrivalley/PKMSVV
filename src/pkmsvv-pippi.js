@@ -619,7 +619,11 @@
   G.PKMSVVPippi=api;
   // The RAF loop never mutates other modes; work only at a throttled 4Hz.
   let last=0;const frame=stamp=>{
-   if(Number(stamp)-last>=250){last=Number(stamp);tick();}
+   // Optional CI A/B diagnostic: retain install hooks and PC menu, but pause
+   // all periodic companion work. No player-facing setting or gameplay change.
+   if(w.__pkmsvvPippiTickDisabled!==true&&Number(stamp)-last>=250){
+    last=Number(stamp);tick();
+   }
    w.requestAnimationFrame?.(frame);
   };
   if(typeof w.requestAnimationFrame==='function')w.requestAnimationFrame(frame);
