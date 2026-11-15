@@ -954,6 +954,13 @@ async function main(){
    console.log('QA_COMBAT_EXPLORE_LIVE='+JSON.stringify(liveStart));
    const terrain=await evaluate("(()=>({biome:G.World?.biome,rift:G.Rift?.inArena,riftMethods:Object.keys(G.Rift||{}).filter(k=>typeof G.Rift[k]==='function'),playerDex:G.DB?.save?.partner,regionIndex:G.PKMSVVQuickRegion?.index}))()");
    console.log('QA_COMBAT_GRIETA_TERRAIN='+JSON.stringify(terrain));
+   if(process.env.PKMSVV_TEST_RIFT==='1'){
+    const enter=await evaluate("(()=>{const body=String(G.Rift?.debugArena||'').slice(0,800);const result=G.Rift?.debugArena?.();return {result,inArena:!!G.Rift?.inArena,biome:G.World?.biome,state:G.Game?.state,fn:body}})()");
+    console.log('QA_COMBAT_GRIETA_RIFT_ENTER='+JSON.stringify(enter));
+    assert.equal(enter.inArena,true,
+     'Native Grieta/Rift must open and remain inArena; '+JSON.stringify(enter));
+   }
+
    await sleep(10000);
    const survived=await evaluate("(()=>({state:G.Game?.state,time:G.Game?.st?.time,hp:G.Game?.player?.hp,dead:G.Game?.player?.dead,kills:G.Game?.st?.kills,enemies:G.EnemyMgr?.count,probe:window.__pkmsvvRunProbe.events}))()");
    console.log('QA_COMBAT_EXPLORE_10S='+JSON.stringify(survived));
