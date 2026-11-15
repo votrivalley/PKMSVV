@@ -128,14 +128,55 @@ test('Pippi ground sprite is enlarged and all floating/over-UI effects are disab
  const fs=require('node:fs'),path=require('node:path');
  const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pippi.css'),'utf8');
  const js=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pippi.js'),'utf8');
- assert.match(css,/scale\(2\.22\)/,'walk PMD needs a game-scale sprite');
- assert.match(css,/scale\(1\.68\)/,'idle PMD matches walk sprite size');
+ assert.match(css,/scale\(1\.55\)/,'idle and walk must share one grounded scale');
+ assert.doesNotMatch(css,/scale\(2\.22\)|scale\(1\.68\)/,'never change size on state transition');
  assert.doesNotMatch(css,/@keyframes pippi-follow-bob/);
- assert.match(css,/transition:left \.2s linear,top \.2s linear/);
+ assert.match(css,/@keyframes pippi-walk-frames/);
+ assert.match(css,/steps\(8,end\)/,'walk anim runs all eight frames independently');
+ assert.match(css,/transition:left \.24s linear,top \.24s linear/);
  assert.match(css,/#pkmsvv-pippi-follower\[hidden\]/);
+ assert.match(js,/part\.style\.backgroundPositionY/,'only the eight-direction row is selected by AI');
  assert.match(js,/visualModalOpen\(\)/);
  assert.match(js,/concealVisuals\(\)/);
- assert.match(js,/G\.Camera\.left\(\)/);
+});
+
+test('Playful Pippi waits and sidesteps on her own while staying near the lead',()=>{
+ const player={x:300,y:300},run=P.newRun(player,0);
+ let p=P.advanceFollower(run,player,0);
+ for(let i=1;i<20;i++)p=P.advanceFollower(run,player,i*.25);
+ const before=p.quirkCount;
+ for(let i=20;i<=26;i++)p=P.advanceFollower(run,player,i*.25);
+ assert.ok(p.quirkCount>before,'idle companion periodically chooses her own side');
+ assert.ok(['prance','peek'].includes(p.mood));
+ assert.ok(Math.hypot(p.x-player.x,p.y-player.y)>=55.9,'independent AI must preserve clearance');
+ assert.ok(Math.hypot(p.x-player.x,p.y-player.y)<190,'Pippi may play but never abandon her support role');
+});
+
+test('Healing and attack support paint clear native FX on player and on Pippi',()=>{
+ const events=[],FX={
+  ring(...a){events.push(['ring',...a])},
+  burst(...a){events.push(['burst',...a])},
+  dmgText(...a){events.push(['text',...a])}
+ };
+ const pl={x:120,y:180};
+ const run={motion:{x:91,y:169}};
+ assert.equal(P.showSupportFX({FX},run,pl,'heal',35),true);
+ assert.ok(events.some(x=>x[0]==='text'&&String(x[3]).includes('+35 HP')));
+ assert.ok(events.filter(x=>x[0]==='ring').length>=2);
+ events.length=0;
+ assert.equal(P.showSupportFX({FX},run,pl,'buff'),true);
+ assert.ok(events.some(x=>x[0]==='text'&&String(x[3]).includes('TĂNG CÔNG')));
+ assert.equal(P.showSupportFX({},run,pl,'heal',35),false,'missing FX has no gameplay side effects');
+});
+
+test('Battle dialogue contains a safe nonblank Pippi face without PNG decoding',()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const js=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pippi.js'),'utf8');
+ const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pippi.css'),'utf8');
+ assert.match(js,/class="pippi-portrait-art"/);
+ assert.match(js,/fallbackArt\.innerHTML=faceSVG\(face,face==='mega'\)/);
+ assert.match(css,/#pkmsvv-pippi \.pippi-portrait-art/);
+ assert.equal((P.faceSVG('wink').match(/<svg/g)||[]).length,1);
 });
 
 test('Pippi inherits slow-water movement by observing player actual displacement',()=>{
