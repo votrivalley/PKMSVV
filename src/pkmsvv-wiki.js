@@ -38,7 +38,7 @@ G.PKMSVVWiki=(()=>{
   .pkmsvv-pc-close{border:2px solid #f0d485;background:#ffe084;color:#163847;font-weight:900;
    padding:8px 13px;border-radius:9px;cursor:pointer}
   .pkmsvv-pc-hint{margin:0 0 13px;color:#c0e5e1;font-size:13px}
-  .pkmsvv-pc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .pkmsvv-pc-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
   .pkmsvv-pc-card{border:2px solid #88c9c3;background:linear-gradient(180deg,#235b64,#174450);
    border-radius:13px;padding:10px 9px 13px;cursor:pointer;color:#faffff;
    display:flex;align-items:center;flex-direction:column;text-align:center;gap:6px;
