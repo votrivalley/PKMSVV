@@ -51,12 +51,26 @@ function fetchBytes(url,redirects=4){
   });req.on('error',reject);
  });
 }
+// Raw GitHub occasionally resets a connection while six QA runners fetch
+// the same immutable PMD sprites. Retry transport failures, NEVER a SHA
+// mismatch: verification still blocks publishing corrupted/unexpected art.
+async function fetchPinned(url){
+ let lastError;
+ for(let attempt=1;attempt<=5;attempt++){
+  try{return await fetchBytes(url);}catch(err){
+   lastError=err;
+   console.warn('Pippi pinned sprite download retry',attempt,err?.message||err);
+   if(attempt<5)await new Promise(resolve=>setTimeout(resolve,attempt*1200));
+  }
+ }
+ throw lastError;
+}
 async function main(){
  fs.mkdirSync(outDir,{recursive:true});
  for(const [name,sha] of Object.entries(ASSETS)){
   const dest=path.join(outDir,name);
   const have=fs.existsSync(dest)?fs.readFileSync(dest):null;
-  const bytes=have&&blobSha(have)===sha?have:await fetchBytes(
+  const bytes=have&&blobSha(have)===sha?have:await fetchPinned(
     'https://raw.githubusercontent.com/PMDCollab/SpriteCollab/'+PIN+'/sprite/0035/'+name);
   if(blobSha(bytes)!==sha)throw Error('PMD asset content mismatched immutable Git blob: '+name);
   if(bytes.toString('hex',0,8)!=='89504e470d0a1a0a')throw Error('Not a PNG: '+name);
@@ -68,7 +82,7 @@ async function main(){
  for(const [name,sha] of Object.entries(PORTRAITS)){
   const dest=path.join(portraitsDir,name);
   const have=fs.existsSync(dest)?fs.readFileSync(dest):null;
-  const bytes=have&&blobSha(have)===sha?have:await fetchBytes(
+  const bytes=have&&blobSha(have)===sha?have:await fetchPinned(
    'https://raw.githubusercontent.com/PMDCollab/SpriteCollab/'+PIN+'/portrait/0035/'+name);
   if(blobSha(bytes)!==sha)throw Error('PMD Clefairy portrait SHA mismatch: '+name);
   if(bytes.toString('hex',0,8)!=='89504e470d0a1a0a')throw Error('Not a portrait PNG: '+name);
