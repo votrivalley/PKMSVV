@@ -62,7 +62,9 @@ for(const prefix of ['game','ai/game']){
  }
  if(!html.includes('pkmsvv-pippi.css'))html=html.replace('</head>',
   '<link rel="stylesheet" href="css/pkmsvv-pippi.css">\n</head>');
- html=html.replace('</head>','<meta name="robots" content="noindex,nofollow"><!-- '+marker+' -->\n</head>');
+ // This marker appears ONLY on the isolated QA branch. Displaying it in
+ // the PC title distinguishes an old/prod page from a verified Pippi build.
+ html=html.replace('</head>','<script>window.__PKMSVV_PIPPI_QA='+JSON.stringify(revision)+'</script>\n<meta name="robots" content="noindex,nofollow"><!-- '+marker+' -->\n</head>');
  // A stable Pages URL must not leave old PC / Pippi assets in existing caches.
  for(const name of ['pkmsvv-wiki-qa.js','pkmsvv-pippi.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-quick-region.js']){
   html=html.replace('src="js/ui/'+name+'"','src="js/ui/'+name+'?v='+revision+'"');
@@ -90,6 +92,18 @@ Object.assign(meta,{releaseType:'qa-preview-only',pippiCousinQA:marker,
  previewBranch:'pippi-cousin-qa',version:'2.0.1-Pippi-QA',
  description:'Isolated browser-only test; production pkmsvv-web.pages.dev unchanged'});
 write(path.join(site,'build-info.json'),JSON.stringify(meta,null,2)+'\n');
+// QA-only cache policy: browsers must revalidate the HTML and the two UI
+// modules whose stale versions showed a 3-tile PC and no Pippi. This never
+// clears CacheStorage/localStorage or the player's JSON save.
+const headersPath=path.join(site,'_headers');
+const previousHeaders=fs.existsSync(headersPath)?fs.readFileSync(headersPath,'utf8'):'';
+const urls=['/game/','/game/index.html','/ai/game/','/ai/game/index.html',
+ '/game/js/ui/pkmsvv-wiki-qa.js','/ai/game/js/ui/pkmsvv-wiki-qa.js',
+ '/game/js/ui/pkmsvv-pippi.js','/ai/game/js/ui/pkmsvv-pippi.js',
+ '/game/css/pkmsvv-pippi.css','/ai/game/css/pkmsvv-pippi.css',
+ '/build-info.json'];
+const noStore=urls.map(u=>u+'\\n  Cache-Control: no-store, max-age=0').join('\\n');
+write(headersPath,previousHeaders.trimEnd()+'\\n\\n'+noStore+'\\n');
 // Unique SW key ensures QA does not reuse the public revision.
 const swPath=present(path.join(site,'sw.js'));
 const oldSW=fs.readFileSync(swPath,'utf8');
