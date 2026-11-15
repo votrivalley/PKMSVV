@@ -581,7 +581,9 @@
   }
   function tick(){
    try{
-    if(G.DB?.save&&!w.__pkmsvvPippiMigrationDisabled)migrate();
+    // Refund bookkeeping can touch persistent storage. Finish migrations
+    // from the home UI, never synchronously in a live combat tick.
+    if(G.DB?.save&&G.Game?.state==='ui'&&!w.__pkmsvvPippiMigrationDisabled)migrate();
     const pl=G.Game?.player;
     // Native level-up and other modal choices are temporary pauses of the
     // SAME Explore run. Resetting Pippi here used to remove the follower,
