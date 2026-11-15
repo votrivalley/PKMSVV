@@ -28,11 +28,12 @@ function harness(options={}){
   Coop:{active:false},
   DEX_BY:{12:{dex:12,name:'Butterfree',types:['bug'],gen:1}},
   Game:{state:'ui',st:{time:0},player:{x:30,y:40,maxHp:350,hp:350,dead:false},startRun(){
+   if(options.strictStart&&this.state!=='ui')throw Error('Native startRun requires UI state');
    if(options.deferred){
     deferredStart=()=>{this.state='playing';G.World.setBiome(0);};return;
    }
    this.state='playing';G.World.setBiome(0);
-  },toUI(){this.state='ui'},quit(){this.state='ui'}},
+  },toUI(){this.state='ui'},quit(){this.state=options.quitEndsOver?'over':'ui'}},
   Flow:{goMenu(){this.wasMenu=true}},
   MenuUI:{open(){this.wasOpen=true}},
   EnemyMgr:{add(enemy){alive.push(enemy);return enemy;},all(){return alive;},
@@ -50,6 +51,21 @@ function harness(options={}){
   completeStart(){deferredStart?.();},
   get started(){return started}};
 }
+test('Restart Explore safely returns from native game-over state before starting another match',()=>{
+ const h=harness({quitEndsOver:true,strictStart:true}),region=h.G.PKMSVVQuickRegion;
+ assert.equal(region.choose(0),true);
+ h.G.Game.quit();
+ assert.equal(h.G.Game.state,'over','native results screen remains active after quit');
+ assert.equal(region.active,false);
+ // MenuUI.open only renders the menu. It does not repair Game.state.
+ h.G.MenuUI.open();
+ assert.equal(h.G.Game.state,'over');
+ assert.equal(region.choose(0),true,'region chooser must recover native state');
+ assert.equal(h.G.Game.state,'playing');
+ assert.equal(region.active,true);
+ assert.equal(h.started,2,'a restart calls native Play exactly once');
+});
+
 test('Normal Chơi ngay is intercepted into a Region chooser and does not start until region is selected',()=>{
  const h=harness(),x=h.G.PKMSVVQuickRegion;
  const before=JSON.stringify(h.save);
