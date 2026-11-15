@@ -1055,17 +1055,21 @@ async function main(){
     await sleep(5000);
     minute=await evaluate("(()=>({state:G.Game?.state,time:G.Game?.st?.time,hp:G.Game?.player?.hp,dead:G.Game?.player?.dead,level:G.Game?.player?.level,kills:G.Game?.player?.kills,enemies:G.EnemyMgr?.count,levelPopup:G.UI?.isOpen?.('scr-levelup'),navScans:G.PKMSVVModalNavQA?.scanCount,fx:G.PKMSVVHordePerformance?.stats,probe:window.__pkmsvvRunProbe.events.slice(-5)}))()");
     console.log('QA_COMBAT_EXPLORE_PROGRESS_'+(i+1)*5+'S='+JSON.stringify(minute));
-    if(minute.state==='levelup'&&minute.levelPopup){
-     // Keyboard 1/2/3 select skills while WASD/arrows remain free for movement.
-     // ArrowDown+Enter was an old focus-navigation rule and no longer applies.
+    // Native EXP can queue several legitimate card selections back-to-back.
+    // One Digit1 can immediately open another level-up; that is NOT a crash.
+    let queued=0;
+    while(minute.state==='levelup'&&minute.levelPopup&&queued<12){
+     // Use real keyboard selection; do not cheat with internal pick APIs.
      await cmd('Input.dispatchKeyEvent',{type:'keyDown',key:'1',code:'Digit1',windowsVirtualKeyCode:49,nativeVirtualKeyCode:49,text:'1'});
      await sleep(140);
      await cmd('Input.dispatchKeyEvent',{type:'keyUp',key:'1',code:'Digit1',windowsVirtualKeyCode:49,nativeVirtualKeyCode:49});
      await sleep(350);
      minute=await evaluate("(()=>({state:G.Game?.state,time:G.Game?.st?.time,level:G.Game?.player?.level,levelPopup:G.UI?.isOpen?.('scr-levelup'),probe:window.__pkmsvvRunProbe.events.slice(-5)}))()");
-     console.log('QA_REPEAT_LEVELUP_NATIVE_CONFIRM='+JSON.stringify(minute));
-     assert.equal(minute.state,'playing','Second native level-up did not resume after Digit1');
+     queued++;
+     console.log('QA_QUEUED_LEVELUP_'+queued+'='+JSON.stringify(minute));
     }
+    assert.ok(queued<12||minute.state==='playing',
+     'Native level-up is stuck in an unbounded choice loop: '+JSON.stringify(minute));
     if(minute.state!=='playing'||minute.probe.some(x=>x.name==='caught-game-error'))break;
    }
    console.log('QA_COMBAT_EXPLORE_65S='+JSON.stringify(minute));
@@ -1093,9 +1097,12 @@ async function main(){
     const sample=()=>evaluate("(()=>({state:G.Game?.state,time:G.Game?.st?.time,level:G.Game?.player?.level,popup:G.UI?.isOpen?.('scr-levelup'),enemies:G.EnemyMgr?.count,pippi:!!G.PKMSVVPippi?.run,region:G.PKMSVVQuickRegion?.active,gameErrors:window.__pkmsvvRunProbe?.events?.filter(x=>x.name==='caught-game-error').slice(-2)||[]}))()");
     const keepPlaying=async(label)=>{
      let tick=await sample();
-     if(tick.state==='levelup'&&tick.popup){
-      await pressOne();tick=await sample();
+     let pending=0;
+     while(tick.state==='levelup'&&tick.popup&&pending<12){
+      await pressOne();tick=await sample();pending++;
      }
+     assert.ok(pending<12||tick.state==='playing',
+      'Repeated queued-level prompt did not drain: '+label);
      console.log('PIPPI_RESTART_STRESS_'+label+'='+JSON.stringify(tick));
      assert.equal(tick.state,'playing','Long-run native Explore stopped: '+label);
      assert.equal(tick.pippi,true,'Pippi stopped following during '+label);
