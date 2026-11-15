@@ -60,6 +60,13 @@ jobs:
             grep -Fq 'Bạn đồng hành' "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-wiki-qa.js"
             grep -Fq 'PKMSVV_PIPPI_COUSIN_PREVIEW_20261115' "dist/cloudflare-v20-release/$route/index.html"
           done
+      - name: Regression — Mewtwo enters desert / Grieta biome at 0:00
+        env:
+          PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
+          PKMSVV_TEST_PARTNER: '150'
+          PKMSVV_TEST_REGION: '1'
+          PKMSVV_DIAGNOSTIC_LOOPS: '4'
+        run: timeout 210s node tests/pokebox-stage2-browser.cjs
       - name: Chromium first-run stress — PC companion, 150s Explore + 45s same-tab restart
         env:
           PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
