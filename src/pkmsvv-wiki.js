@@ -135,6 +135,94 @@ G.PKMSVVWiki=(()=>{
   b.onclick=()=>{close();onClick();};
   return b;
  }
+ // New fourth PC tile uses the already-persistent Bond save.
+ function pippiCorner(){
+  close();installStyle();
+  const P=G.PKMSVVPippi,save=G.DB?.save;
+  const shade=document.createElement('div');shade.id='pkmsvv-wiki-overlay';
+  shade.className='pkmsvv-pc-overlay';shade.setAttribute('role','dialog');
+  shade.setAttribute('aria-modal','true');
+  shade.setAttribute('aria-label',tr('Góc Pippi','Pippi’s Corner'));
+  const box=document.createElement('section');box.className='pkmsvv-pc-panel pkmsvv-pippi-corner';
+  const head=document.createElement('header');head.className='pkmsvv-pc-header';
+  const title=document.createElement('h2');title.textContent=tr('Góc Pippi','Pippi’s Corner');
+  const back=document.createElement('button');back.type='button';
+  back.className='pkmsvv-pc-close';back.textContent=tr('← Quay lại PC','← Back to PC');
+  back.setAttribute('data-back','');back.onclick=open;head.append(title,back);box.append(head);
+  const body=document.createElement('div');body.className='pkmsvv-pippi-training';
+  box.append(body);shade.append(box);document.body.append(shade);
+  const specs=[
+   ['heal',1,tr('Hồi máu','Healing'),tr('Mỗi cấp tăng 2% HP hồi phục.','+2% max HP healed per level.')],
+   ['buff',2,tr('Cổ vũ','Cheer'),tr('Mỗi cấp tăng 1,5% sức tấn công khi buff.','+1.5% attack during buff per level.')],
+   ['slow',3,tr('Làm chậm','Slowdown'),tr('Mỗi cấp tăng mức và thời gian làm chậm địch.','Stronger and longer slow effects.')],
+   ['shield',7,tr('Khiên trăng','Moon Shield'),tr('Mỗi cấp tăng 0,35 giây bảo vệ nguy cấp.','+0.35 seconds emergency protection per level.')]
+  ];
+  function draw(focusKey){
+   body.replaceChildren();
+   if(!P?.bondProgress||!save){
+    const note=document.createElement('p');note.className='pkmsvv-pc-hint';
+    note.textContent=tr('Chưa tải dữ liệu Pippi. Vào game rồi mở lại PC nhé.',
+     'Pippi data is not ready. Enter the game and reopen PC.');
+    body.append(note);return;
+   }
+   const state=P.data(save),progress=P.bondProgress(save),training=state.training;
+   const hero=document.createElement('div');hero.className='pkmsvv-pippi-training-hero';
+   const image=document.createElement('img');image.src='images/pippi/portrait/Happy.png';
+   image.alt=tr('Pippi vui vẻ','Happy Pippi');image.width=64;image.height=64;
+   image.className='pkmsvv-pippi-training-face';
+   const summary=document.createElement('div');summary.className='pkmsvv-pippi-training-summary';
+   const level=document.createElement('strong');level.textContent='Pippi · Bond '+progress.bond+'/10';
+   const points=document.createElement('span');points.className='pkmsvv-pippi-training-points';
+   points.textContent=tr('Điểm huấn luyện: ','Training points: ')+progress.points;
+   const next=document.createElement('span');next.textContent=progress.to===null?
+    tr('Bond tối đa · đã mở Moon Miracle','Max Bond · Moon Miracle unlocked'):
+    tr('Tiến độ: ','Progress: ')+progress.xp+'/'+progress.to+' XP';
+   const bar=document.createElement('progress');
+   bar.max=progress.to===null?1:Math.max(1,progress.to-progress.from);
+   bar.value=progress.to===null?1:Math.min(bar.max,Math.max(0,progress.xp-progress.from));
+   bar.setAttribute('aria-label',tr('Tiến độ Bond','Bond progress'));
+   summary.append(level,points,next,bar);hero.append(image,summary);body.append(hero);
+   const hint=document.createElement('p');hint.className='pkmsvv-pc-hint';
+   hint.textContent=tr('Mỗi cấp Bond nhận 1 điểm. Chọn cách huấn luyện Pippi; điểm chưa dùng được giữ lại.',
+    'Each Bond level grants 1 point. Train Pippi’s abilities; unused points carry over.');
+   body.append(hint);
+   const grid=document.createElement('div');grid.className='pkmsvv-pippi-training-grid';
+   for(const [key,gate,name,description] of specs){
+    const lv=training[key]||0,unlocked=state.bond>=gate;
+    const item=document.createElement('section');item.className='pkmsvv-pippi-training-row';
+    const nameEl=document.createElement('strong');nameEl.textContent=name+' · '+lv+'/3';
+    const info=document.createElement('p');info.textContent=description;
+    const button=document.createElement('button');button.type='button';
+    button.className='pkmsvv-pippi-train-btn';button.dataset.pippiTrain=key;
+    button.disabled=!unlocked||lv>=3||progress.points<1||typeof G.DB?.commit!=='function';
+    button.textContent=!unlocked?tr('Mở ở Bond ','Unlock at Bond ')+gate:
+     lv>=3?tr('Đã MAX','MAX'):progress.points<1?tr('Chưa có điểm','No points'):
+     tr('Nâng cấp +1','Train +1');
+    const note=document.createElement('small');note.className='pkmsvv-pippi-train-status';
+    note.textContent=unlocked?tr('Dùng 1 điểm thân thiết','Spend 1 Bond point'):
+     tr('Chưa mở khóa','Not yet unlocked');
+    button.onclick=()=>{
+     if(button.disabled)return;
+     if(button.dataset.confirm!=='1'){
+      button.dataset.confirm='1';button.textContent=tr('Xác nhận nâng cấp','Confirm training');return;
+     }
+     const result=P.train(save,key,()=>G.DB.commit(true));
+     if(!result.ok){
+      button.dataset.confirm='';button.textContent=tr('Thử lại','Retry');
+      note.textContent=tr('Không lưu được hoặc không đủ điểm.','Save failed or insufficient points.');
+      return;
+     }
+     draw(key);
+    };
+    item.append(nameEl,info,note,button);grid.append(item);
+   }
+   body.append(grid);
+   if(focusKey)body.querySelector('[data-pippi-train="'+focusKey+'"]')?.focus({preventScroll:true});
+  }
+  draw();shade.addEventListener('click',e=>{if(e.target===shade)open();});
+  back.focus({preventScroll:true});if(G.Pad?.name)G.Pad?.focusFirst?.();
+  return true;
+ }
  function berryGuide(){
   close();installStyle();
   const shade=document.createElement('div');shade.id='pkmsvv-wiki-overlay';
@@ -193,6 +281,9 @@ G.PKMSVVWiki=(()=>{
   makeCard(grid,{title:'Berry',dex:420,
    desc:tr('Cherubi · Tra cứu công dụng 10 loại Berry.','Cherubi · Learn the effects of all ten Berries.'),
    action:tr('Xem cẩm nang','View guide'),onClick:berryGuide});
+   makeCard(grid,{title:tr('Góc Pippi','Pippi’s Corner'),dex:35,
+    desc:tr('Bond · Nâng cấp hồi máu, buff, khống chế và bảo vệ.','Bond · Healing, buff, control and defense.'),
+    action:tr('Chăm sóc Pippi','Train Pippi'),onClick:pippiCorner});
   const help=document.createElement('section');help.className='pkmsvv-pc-guide';
   const sub=document.createElement('h3');sub.textContent=tr('Kiến thức Pokémon','Pokémon knowledge');
   help.append(sub);
@@ -298,5 +389,5 @@ G.PKMSVVWiki=(()=>{
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('pkmsvv-wiki-overlay')){close();e.stopPropagation();}});
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
- return {open,close,berryGuide,installMenu};
+ return {open,close,berryGuide,pippiCorner,installMenu};
 })();
