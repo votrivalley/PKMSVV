@@ -91,7 +91,8 @@ async function main(){
   })()`);
   assert.equal((await seed()).valid,true,'Browser fixture must have real in-game Pokémon');
   const pc=await js(`(()=>{
-   G.MenuUI.open();
+   // Initial native UI already has the PC launcher. A disposable save need
+   // not re-render every account/profile statistic in the main menu.
    const launcher=document.querySelector('#pkmsvv-menu-wiki');
    if(!launcher)return {missingLauncher:true};
    launcher.click();
@@ -124,7 +125,6 @@ async function main(){
     G.DB.save.partner=25;
     G.DB.save.pkmsvvStorySeen=true;
     G.DB.save.pkmsvvNameChosen=true;
-    G.MenuUI.open();
     return G.PKMSVVQuickRegion.choose(0);
    })()`).then(x=>assert.equal(x,true,'Explore must launch'));
    await until(async()=>{
