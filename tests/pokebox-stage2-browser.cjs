@@ -929,13 +929,16 @@ async function main(){
     for(const hook of [['RunUI','showOver'],['Game','quit'],['Game','toUI'],['Coop','over']])probe(hook);
     window.addEventListener('error',e=>window.__pkmsvvRunProbe.events.push({name:'error',text:e.message,stack:e.error?.stack}),true);
     window.addEventListener('unhandledrejection',e=>window.__pkmsvvRunProbe.events.push({name:'rejection',text:String(e.reason)}),true);
-    G.DB.save.partner=25;G.DB.save.pkmsvvStorySeen=true;G.DB.save.pkmsvvNameChosen=true;
+    G.DB.save.partner=${Number(process.env.PKMSVV_TEST_PARTNER||25)};
+    G.DB.save.pkmsvvStorySeen=true;G.DB.save.pkmsvvNameChosen=true;
+    if(${Number(process.env.PKMSVV_TEST_REGION||0)}>0)
+     G.DB.save.pkmsvvExploreSeals=Object.assign({},G.DB.save.pkmsvvExploreSeals,{Kanto:true});
     G.MenuUI.open();
-    const started=G.PKMSVVQuickRegion.choose(0);
+    const started=G.PKMSVVQuickRegion.choose(${Number(process.env.PKMSVV_TEST_REGION||0)});
     return {started,state:G.Game?.state,choosing:G.PKMSVVBerry?.choosing,region:G.PKMSVVQuickRegion?.active};
    })()`);
    console.log('QA_COMBAT_EXPLORE_START='+JSON.stringify(kickoff));
-   assert.equal(kickoff.started,true,'Explore Kanto must launch from the actual Region UI');
+   assert.equal(kickoff.started,true,'Explore target biome must launch from the actual Region UI');
    // Berries may gate the native start; click the same skip button a real
    // player uses, or let the 10s countdown progress naturally.
    await until(async()=>{
@@ -949,6 +952,8 @@ async function main(){
    },30000);
    const liveStart=await evaluate("(()=>({state:G.Game?.state,time:G.Game?.st?.time,hp:G.Game?.player?.hp,region:G.PKMSVVQuickRegion?.active,errors:window.__pkmsvvRunProbe.events}))()");
    console.log('QA_COMBAT_EXPLORE_LIVE='+JSON.stringify(liveStart));
+   const terrain=await evaluate("(()=>({biome:G.World?.biome,rift:G.Rift?.inArena,riftMethods:Object.keys(G.Rift||{}).filter(k=>typeof G.Rift[k]==='function'),playerDex:G.DB?.save?.partner,regionIndex:G.PKMSVVQuickRegion?.index}))()");
+   console.log('QA_COMBAT_GRIETA_TERRAIN='+JSON.stringify(terrain));
    await sleep(10000);
    const survived=await evaluate("(()=>({state:G.Game?.state,time:G.Game?.st?.time,hp:G.Game?.player?.hp,dead:G.Game?.player?.dead,kills:G.Game?.st?.kills,enemies:G.EnemyMgr?.count,probe:window.__pkmsvvRunProbe.events}))()");
    console.log('QA_COMBAT_EXPLORE_10S='+JSON.stringify(survived));
