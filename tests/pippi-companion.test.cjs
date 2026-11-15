@@ -225,6 +225,7 @@ test('Pippi training enforces Bond unlocks, max rank and transactional save roll
  assert.deepEqual(P.data(save).training,before);
  assert.equal(P.train(save,'heal',()=>true).ok,true);
  assert.equal(P.train(save,'heal',()=>true).ok,true);
+ assert.equal(P.train(save,'heal',()=>true).ok,true);
  assert.equal(P.train(save,'heal',()=>true).reason,'max');
 });
 test('Pippi training improves Explore abilities without changing baseline skills',()=>{
@@ -235,10 +236,12 @@ test('Pippi training improves Explore abilities without changing baseline skills
  assert.equal(P.buff(pl,run,10,5,2),true);
  assert.ok(pl.atkMul>1.15);
  P.finish(run);assert.equal(pl.atkMul,1);
- const G={EnemyMgr:{all:()=>[{x:0,y:0,spd:100}]}};
+ const enemy={x:0,y:0,spd:100};
+ const G={EnemyMgr:{all:()=>[enemy]}};
  const player={x:0,y:0},run2=P.newRun(player);
  assert.equal(P.slow(G,run2,0,5,2),true);
- assert.ok(G.EnemyMgr.all()[0].spd<100);
+ assert.ok(enemy.spd<100);
+ P.finish(run2);assert.equal(enemy.spd,100);
 });
 test('PC uses native fourth Góc Pippi card and event-synchronized portrait source',()=>{
  const fs=require('node:fs'),path=require('node:path');
