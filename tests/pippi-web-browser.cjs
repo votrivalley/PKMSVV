@@ -114,22 +114,29 @@ async function main(){
   console.log('PIPPI_WEB_COMPANION='+JSON.stringify(companion));
   assert.equal(companion.visible,true,'PC companion training dialog must open');
   assert.ok(companion.training.includes('cousin'),'Learnable Pikachu cousin skill missing from PC');
+  // Keep one Chromium page alive across a real native quit + new Explore.
+  // Reloading the page masks the second-run leaks reported by Web players.
   for(let session=1;session<=2;session++){
    if(session===2){
-    await cmd('Page.reload',{ignoreCache:true});
-    // CDP can report the previous page's JS realm briefly after navigation.
-    // Wait for the new G binding and its native game bootstrap.
-    await pause(1200);
-    await until(()=>js("typeof G!=='undefined'&&!!G.PKMSVVWiki&&!!G.PKMSVVPippi&&!!G.PKMSVVQuickRegion&&!!G.DB&&!!G.Game"),35000);
-    assert.equal((await seed()).valid,true,'Reload fixture valid');
+    const exit=await js("(()=>{G.Game.quit();G.MenuUI.open();return {state:G.Game?.state,region:G.PKMSVVQuickRegion?.active}})()");
+    console.log('PIPPI_WEB_NATIVE_QUIT='+JSON.stringify(exit));
+    await until(()=>js("G.Game?.state!=='playing'&&G.PKMSVVPippi?.run===null"),10000);
+    assert.equal(await js("!!G.PKMSVVQuickRegion?.active"),false,
+     'First Explore still owns Region after native quit');
    }
-   await js(`(()=>{
+   const kickoff=await js(`(()=>{
     G.PKMSVVWiki?.close?.();
     G.DB.save.partner=25;
     G.DB.save.pkmsvvStorySeen=true;
     G.DB.save.pkmsvvNameChosen=true;
-    return G.PKMSVVQuickRegion.choose(0);
-   })()`).then(x=>assert.equal(x,true,'Explore must launch'));
+    // This is the verified native menu setup used by Stage-4 Chromium QA.
+    // A synthetic save has no account-entry action to re-render the menu.
+    G.MenuUI.open();
+    return {started:G.PKMSVVQuickRegion.choose(0),
+     state:G.Game?.state,berry:G.PKMSVVBerry?.choosing};
+   })()`);
+   console.log('PIPPI_WEB_KICKOFF_'+session+'='+JSON.stringify(kickoff));
+   assert.equal(kickoff.started,true,'Explore must launch in session '+session);
    await until(async()=>{
     await js(`(()=>{
       const btn=[...document.querySelectorAll('.pkmsvv-berry-overlay button')]
@@ -139,17 +146,43 @@ async function main(){
     })()`);
     return js("G.Game?.state==='playing'");
    },30000);
-   await js("(()=>{const p=G.Game.player;if(p){p.invuln=120;p.hp=p.maxHp;}return true})()");
-   const before=await js("(()=>({t:G.Game?.st?.time,enemy:G.EnemyMgr?.count,pc:!!G.PKMSVVWiki,pippi:!!G.PKMSVVPippi,run:!!G.PKMSVVPippi.run}))()");
-   await pause(session===1?70000:22000);
-   const after=await js("(()=>({t:G.Game?.st?.time,enemy:G.EnemyMgr?.count,state:G.Game?.state,pc:!!G.PKMSVVWiki,pippi:!!G.PKMSVVPippi,run:!!G.PKMSVVPippi.run,vis:!!document.querySelector('#pkmsvv-pippi-follower')}))()");
-   console.log('PIPPI_WEB_SESSION_'+session+'='+JSON.stringify({before,after,exceptions:exceptions.slice(-4),warnings:warnings.slice(-6)}));
-   assert.equal(after.state,'playing','Explore crashed in session '+session);
-   assert.ok(after.t-before.t>=(session===1?50:15),'Combat timer stopped or main thread overloaded in session '+session);
-   assert.equal(after.run,true,'Pippi companion loop did not initialize');
-   assert.equal(exceptions.length,0,'Unhandled browser exception: '+JSON.stringify(exceptions.slice(-4)));
-   assert.ok(warnings.filter(x=>/\[Pippi\] frame guarded|\[Game\]/.test(x)).length<3,
-    'Repeated guarded engine failures: '+JSON.stringify(warnings.slice(-6)));
+   await js("(()=>{const p=G.Game.player;if(p){p.invuln=360;p.hp=p.maxHp;}return true})()");
+   const before=await js("(()=>({t:G.Game?.st?.time,pc:!!G.PKMSVVWiki,pippi:!!G.PKMSVVPippi,run:!!G.PKMSVVPippi.run}))()");
+   const interval=5000,rounds=session===1?30:9;
+   let after=before;
+   for(let i=0;i<rounds;i++){
+    await pause(interval);
+    after=await js(`(()=>({
+      t:G.Game?.st?.time,state:G.Game?.state,
+      enemies:G.EnemyMgr?.count,run:!!G.PKMSVVPippi.run,
+      companion:!document.querySelector('#pkmsvv-pippi-follower')?.hidden,
+      popup:!!G.UI?.isOpen?.('scr-levelup'),
+      fps:G.PKMSVVHordePerformance?.stats?.fps,
+      heap:performance.memory?.usedJSHeapSize
+    }))()`);
+    if(after.state==='levelup'&&after.popup){
+     // Dismiss native skill choices with the real keyboard input. Do NOT
+     // auto-select via internal player methods or bypass gameplay logic.
+     await cmd('Input.dispatchKeyEvent',{type:'keyDown',key:'1',code:'Digit1',
+      windowsVirtualKeyCode:49,nativeVirtualKeyCode:49,text:'1'});
+     await cmd('Input.dispatchKeyEvent',{type:'keyUp',key:'1',code:'Digit1',
+      windowsVirtualKeyCode:49,nativeVirtualKeyCode:49});
+     await pause(350);
+     after=await js("(()=>({t:G.Game?.st?.time,state:G.Game?.state,run:!!G.PKMSVVPippi.run}))()");
+    }
+    if(i%6===5||i===rounds-1)
+     console.log('PIPPI_WEB_SESSION_'+session+'_CHECK_'+(i+1)+'='+JSON.stringify(after));
+    assert.equal(after.state,'playing','Explore stopped in session '+session+' at checkpoint '+(i+1));
+    assert.equal(after.run,true,'Pippi detached while Explore was playing');
+    assert.equal(exceptions.length,0,'Unhandled Chromium exception: '+JSON.stringify(exceptions.slice(-4)));
+    const guarded=warnings.filter(x=>/\[Pippi\] frame guarded|\[Game\]/.test(x));
+    assert.ok(guarded.length<3,'Repeated caught frame errors: '+JSON.stringify(guarded.slice(-4)));
+   }
+   console.log('PIPPI_WEB_SESSION_'+session+'='+JSON.stringify({before,after,
+    errors:exceptions.slice(-4),warnings:warnings.slice(-6)}));
+   assert.ok(Number(after.t)-Number(before.t)>=(session===1?110:32),
+    'Combat simulation slowed or froze in session '+session);
+   assert.equal(after.run,true,'Pippi companion failed to initialize in session '+session);
   }
   console.log('PASS PIPPI_WEB_PC_4_TILES_AND_TWO_EXPLORE_SESSIONS');
  }finally{
