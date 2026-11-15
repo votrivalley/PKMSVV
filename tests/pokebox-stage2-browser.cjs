@@ -986,6 +986,14 @@ async function main(){
     })()`);
     return await evaluate("G.Game?.state==='playing'");
    },30000);
+   // Stability smoke is not a survival contest: high-variance Rift spawns
+   // can kill Mewtwo before the scripted skill-choice assertion at 10s.
+   // Apply the same invulnerability the long-run test already uses, but at
+   // time zero, so an ordinary death cannot masquerade as a renderer fault.
+   if(process.env.PKMSVV_TEST_RIFT==='1'||process.env.PKMSVV_EXTENDED_PIPPI_STRESS==='1'){
+    await evaluate("(()=>{const keep=()=>{const p=G.Game?.player;if(p&&G.Game?.state==='playing'){p.hp=p.maxHp;p.dead=false;p.invuln=Math.max(Number(p.invuln)||0,100000);}};keep();window.__pkmsvvQaEarlySurvivor=setInterval(keep,120);return true})()");
+    console.log('QA_COMBAT_EARLY_SURVIVOR_PROTECTION=true');
+   }
    const liveStart=await evaluate("(()=>({state:G.Game?.state,time:G.Game?.st?.time,hp:G.Game?.player?.hp,region:G.PKMSVVQuickRegion?.active,errors:window.__pkmsvvRunProbe.events}))()");
    console.log('QA_COMBAT_EXPLORE_LIVE='+JSON.stringify(liveStart));
    const terrain=await evaluate("(()=>({biome:G.World?.biome,rift:G.Rift?.inArena,riftMethods:Object.keys(G.Rift||{}).filter(k=>typeof G.Rift[k]==='function'),playerDex:G.DB?.save?.partner,regionIndex:G.PKMSVVQuickRegion?.index}))()");
