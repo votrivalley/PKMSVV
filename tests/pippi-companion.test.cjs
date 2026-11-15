@@ -305,6 +305,19 @@ test('Pikachu genuine paralysis affects max 4 targets, bosses shorter, no stun l
  assert.equal(P.cousinLightning(G,pl,12).affected,0);
 });
 
+test('Browser Pippi uses one 250ms timer instead of a perpetual rendering RAF',()=>{
+ let scheduled=null,rafCalls=0,timerCalls=0;
+ const G={Game:{state:'ui'}};
+ const host={G,document:{body:null},requestAnimationFrame(){rafCalls++;},
+  setInterval(fn,ms){timerCalls++;scheduled={fn,ms};return 1;},console:{warn(){}}};
+ const api=P.install(host);
+ assert.equal(timerCalls,1,'install exactly one companion timer');
+ assert.equal(scheduled.ms,250,'4Hz update period');
+ assert.equal(rafCalls,0,'do not add a 60Hz RAF to native combat');
+ scheduled.fn();
+ assert.equal(api.run,null,'no companion run while outside Explore');
+});
+
 test('failed Pippi migration never retries save four times per second in combat',()=>{
  const s=save(54);const originalMoney=s.coins;
  let commits=0,callbacks=0;
