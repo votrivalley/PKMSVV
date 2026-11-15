@@ -1052,12 +1052,12 @@ async function main(){
     assert.equal(followerQA.blocked,false,'Pippi incorrectly sees an active menu during native battle');
     assert.equal(followerQA.connected,true,'Pippi world sprite never mounted to game');
     assert.equal(followerQA.hidden,false,'Pippi world sprite is invisible in native Explore');
-    const pauseVisual=await evaluate("(()=>{const api=G.PKMSVVPippi,el=document.getElementById('pkmsvv-pippi-follower'),pause=document.getElementById('scr-pause');if(!pause)return {missing:true};const hidden=pause.hidden,cls=pause.className,style=pause.getAttribute('style');try{pause.hidden=false;pause.classList.remove('hidden');pause.style.display='block';api.tick();return {whenOpen:el?.hidden===true,reason:api.visual.blockedBy};}finally{pause.hidden=hidden;pause.className=cls;if(style===null)pause.removeAttribute('style');else pause.setAttribute('style',style);api.tick();}})()");
+    const pauseVisual=await evaluate("(()=>{const api=G.PKMSVVPippi,el=document.getElementById('pkmsvv-pippi-follower'),before=G.Game.state;let pauseHidden=false,modalHidden=false,resumed=false,overlay;try{G.Game.state='pause';api.tick();pauseHidden=el?.hidden===true;G.Game.state=before;api.tick();overlay=document.createElement('div');overlay.id='pkmsvv-wiki-overlay';overlay.setAttribute('role','dialog');overlay.style.cssText='position:fixed;inset:0;z-index:20000;display:block;visibility:visible;opacity:1';document.body.append(overlay);api.tick();modalHidden=el?.hidden===true;overlay.remove();api.tick();resumed=el?.hidden===false;return {pauseHidden,modalHidden,resumed,blocked:api.visual.blocked,blockedBy:api.visual.blockedBy};}finally{G.Game.state=before;overlay?.remove();api.tick()}})()");
     console.log('PIPPI_NATIVE_PAUSE_VISIBILITY='+JSON.stringify(pauseVisual));
-    assert.equal(pauseVisual.whenOpen,true,'Pippi must disappear behind a truly visible pause overlay');
-    const returned=await evaluate("(()=>({hidden:document.getElementById('pkmsvv-pippi-follower')?.hidden,blocked:G.PKMSVVPippi?.visual?.blocked}))()");
-    assert.equal(returned.hidden,false,'Pippi should reappear once the pause overlay closes');
-    assert.equal(returned.blocked,false,'Pause modal state must clear on resume');
+    assert.equal(pauseVisual.pauseHidden,true,'Pippi must hide during the actual native pause state');
+    assert.equal(pauseVisual.modalHidden,true,'Pippi must hide behind a visible custom dialog');
+    assert.equal(pauseVisual.resumed,true,'Pippi must return after pause and overlays close');
+    assert.equal(pauseVisual.blocked,false,'Pippi modal state must clear on resume');
    }
    // A user reports Explore eventually stalling around the first minute.
    // After checking the unprotected first 10 seconds, prevent ordinary
