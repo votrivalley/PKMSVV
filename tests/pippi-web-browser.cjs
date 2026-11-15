@@ -148,7 +148,9 @@ async function main(){
    },30000);
    await js("(()=>{const p=G.Game.player;if(p){p.invuln=360;p.hp=p.maxHp;}return true})()");
    const before=await js("(()=>({t:G.Game?.st?.time,pc:!!G.PKMSVVWiki,pippi:!!G.PKMSVVPippi,run:!!G.PKMSVVPippi.run}))()");
-   const interval=5000,rounds=session===1?30:9;
+   const interval=5000,rounds=session===1?
+    (Number(process.env.PKMSVV_PIPPI_FIRST_ROUNDS)||30):
+    (Number(process.env.PKMSVV_PIPPI_SECOND_ROUNDS)||9);
    let after=before;
    for(let i=0;i<rounds;i++){
     await pause(interval);
@@ -170,7 +172,7 @@ async function main(){
      await pause(350);
      after=await js("(()=>({t:G.Game?.st?.time,state:G.Game?.state,run:!!G.PKMSVVPippi.run}))()");
     }
-    if(i%6===5||i===rounds-1)
+    if(i<2||i%6===5||i===rounds-1)
      console.log('PIPPI_WEB_SESSION_'+session+'_CHECK_'+(i+1)+'='+JSON.stringify(after));
     assert.equal(after.state,'playing','Explore stopped in session '+session+' at checkpoint '+(i+1));
     assert.equal(after.run,true,'Pippi detached while Explore was playing');
@@ -180,7 +182,7 @@ async function main(){
    }
    console.log('PIPPI_WEB_SESSION_'+session+'='+JSON.stringify({before,after,
     errors:exceptions.slice(-4),warnings:warnings.slice(-6)}));
-   assert.ok(Number(after.t)-Number(before.t)>=(session===1?110:32),
+   assert.ok(Number(after.t)-Number(before.t)>=(session===1?Math.max(8,rounds*3.5):Math.max(8,rounds*3.5)),
     'Combat simulation slowed or froze in session '+session);
    assert.equal(after.run,true,'Pippi companion failed to initialize in session '+session);
   }

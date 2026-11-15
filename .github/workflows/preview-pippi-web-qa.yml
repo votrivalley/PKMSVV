@@ -65,6 +65,12 @@ jobs:
           PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
           PKMSVV_BROWSER_WITHOUT_PIPPI: '1'
         run: timeout 240s node tests/pokebox-stage2-browser.cjs
+      - name: Focused restart diagnostic — two short Explore sessions in one tab
+        env:
+          PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
+          PKMSVV_PIPPI_FIRST_ROUNDS: '3'
+          PKMSVV_PIPPI_SECOND_ROUNDS: '3'
+        run: timeout 145s node tests/pippi-web-browser.cjs
       - name: Proven Chromium integration QA — real PC companion and 65-second Explore
         env:
           PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
