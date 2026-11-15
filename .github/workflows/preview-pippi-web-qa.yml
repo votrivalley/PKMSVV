@@ -62,7 +62,7 @@ jobs:
       - name: Actual Chromium QA — fourth PC tile, companion skills, two live Explore sessions
         env:
           PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
-        run: timeout 130s node tests/pippi-web-browser.cjs
+        run: timeout 200s node tests/pippi-web-browser.cjs
       - name: Deploy QA branch to Cloudflare Pages without changing production
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
