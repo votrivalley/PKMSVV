@@ -526,7 +526,13 @@
    const filename=PORTRAIT_FILES[face]||'Normal';
    mark('portrait-enter');
    portrait.dataset.expression=face;
-   if(w.__pkmsvvPippiNoPortrait!==true&&w.__pkmsvvPippiPortraitDisabled!==true){
+   // Chromium/Android QA: even previously decoded PNG portraits may cause
+   // a renderer stall as the canvas game and Rift scenes repaint. Keep the
+   // dialogue text + small SVG emote during combat, but retain all original
+   // 16 PNGs for the PC/gallery and a separately validated opt-in renderer.
+   // Do not sacrifice combat stability to decorative portrait animation.
+   if(w.__pkmsvvPippiAllowCombatPortrait===true&&
+      w.__pkmsvvPippiNoPortrait!==true&&w.__pkmsvvPippiPortraitDisabled!==true){
     const ready=decodedPortraits.get(filename)||decodedPortraits.get('Normal');
     const displayed=portrait.querySelector('img');
     mark('portrait-load-enter');
