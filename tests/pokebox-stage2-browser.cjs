@@ -1063,6 +1063,14 @@ async function main(){
     assert.equal(pauseVisual.hidden,true,'Native Pippi must hide behind visible PC/pause dialogs');
     assert.equal(pauseVisual.resumed,true,'Native Pippi must return once the dialog closes');
     assert.equal(pauseVisual.blocked,false,'Native Pippi modal state must clear');
+    if(process.env.PKMSVV_DISABLE_PIPPI_PORTRAIT!=='1'){
+     await evaluate("G.PKMSVVPippi.show('intro',true)");
+     await sleep(1400);
+     const faceQA=await evaluate("(()=>{const face=document.querySelector('#pkmsvv-pippi .pippi-portrait-art');return {exists:!!face,atlas:face?.dataset.atlas,image:face?.style.backgroundImage,face:face?.dataset.face}})()");
+     console.log('PIPPI_NATIVE_PORTRAIT_ATLAS='+JSON.stringify(faceQA));
+     assert.equal(faceQA.atlas,'1','Original Pippi portrait atlas must display during combat dialogue');
+     assert.match(faceQA.image||'',/atlas\.png/,'Portrait must use one verified PMD image, not the placeholder SVG');
+    }
 
    }
    // A user reports Explore eventually stalling around the first minute.
