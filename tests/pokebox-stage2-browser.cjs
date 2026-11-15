@@ -1044,7 +1044,9 @@ async function main(){
    assert.equal(survived.state,'playing','Explore ended without player action: '+JSON.stringify(survived));
    assert.ok(Number(survived.time)>=7,'Explore simulation stalled: '+JSON.stringify(survived));
    assert.deepEqual(errors,[],'Actual battle crashed in Chromium: '+JSON.stringify(errors.slice(-5)));
-   if(process.env.PKMSVV_BROWSER_WITHOUT_PIPPI!=='1'){
+   // The tick-disabled A/B control intentionally has no companion run.
+   // Only the actual Pippi-enabled builds must mount a visible follower.
+   if(process.env.PKMSVV_BROWSER_WITHOUT_PIPPI!=='1'&&process.env.PKMSVV_DISABLE_PIPPI_TICK!=='1'){
     const followerQA=await evaluate("(()=>{const api=G.PKMSVVPippi,el=document.getElementById('pkmsvv-pippi-follower'),canvas=document.getElementById('game');const r=el?.getBoundingClientRect();const cr=canvas?.getBoundingClientRect();return {installed:!!api?.installed,active:!!api?.run,blocked:api?.visual?.blocked,hidden:el?.hidden??true,connected:!!el?.isConnected,x:r?.x,y:r?.y,canvasX:cr?.x,canvasY:cr?.y,canvasW:cr?.width,canvasH:cr?.height,state:G.Game?.state}})()");
     console.log('PIPPI_NATIVE_FOLLOW_VISIBILITY='+JSON.stringify(followerQA));
     assert.equal(followerQA.installed,true,'Pippi module not installed');
