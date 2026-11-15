@@ -332,6 +332,24 @@ test('failed Pippi migration never retries save four times per second in combat'
  assert.equal(s.pkmsvvPippi.refundReviveV1,undefined,'failed refund is not recorded as paid');
 });
 
+test('Pippi predecodes its emotion portraits in home UI, never fetching them in combat',()=>{
+ const h=game(save(0));h.G.Game.state='ui';h.G.PKMSVVQuickRegion.active=false;
+ const urls=[];
+ class FakeImage{
+  set src(value){urls.push(value);}
+  decode(){return Promise.resolve();}
+ }
+ const w={G:h.G,Image:FakeImage,document:{body:null},
+  requestAnimationFrame(){},console:{warn(){}}};
+ const api=P.install(w);api.tick();
+ assert.ok(urls.length>=14,'preload every expression while at home');
+ assert.ok(urls.every(x=>x.startsWith('images/pippi/portrait/')));
+ const loaded=urls.length;
+ h.G.Game.state='playing';h.G.PKMSVVQuickRegion.active=true;
+ api.tick();api.tick();
+ assert.equal(urls.length,loaded,'no new portrait fetch during combat ticks');
+});
+
 test('Pippi defers save refund commits during real combat and applies on home UI',()=>{
  const h=game(save(0));let commits=0;
  h.player.hp=h.player.maxHp;
