@@ -144,5 +144,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload 'pkmsvv-pippi-corner-qa-20261115' 'dist/PKMSVV-Goc-Pippi-PC-QA.zip' --clobber
+          gh release upload 'pkmsvv-pippi-follow-coop-qa-20261115' 'dist/PKMSVV-Goc-Pippi-PC-QA.zip' --clobber
           if($LASTEXITCODE -ne 0){throw 'Failed to attach PC ZIP to QA prerelease'}
