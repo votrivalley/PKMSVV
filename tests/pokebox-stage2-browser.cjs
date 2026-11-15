@@ -1047,21 +1047,23 @@ async function main(){
    // The tick-disabled A/B control intentionally has no companion run.
    // Only the actual Pippi-enabled builds must mount a visible follower.
    if(process.env.PKMSVV_BROWSER_WITHOUT_PIPPI!=='1'&&process.env.PKMSVV_DISABLE_PIPPI_TICK!=='1'){
-    const followerQA=await evaluate("(()=>{const api=G.PKMSVVPippi,el=document.getElementById('pkmsvv-pippi-follower'),canvas=document.getElementById('game');const r=el?.getBoundingClientRect();const cr=canvas?.getBoundingClientRect();return {installed:!!api?.installed,active:!!api?.run,blocked:api?.visual?.blocked,hidden:el?.hidden??true,connected:!!el?.isConnected,x:r?.x,y:r?.y,canvasX:cr?.x,canvasY:cr?.y,canvasW:cr?.width,canvasH:cr?.height,state:G.Game?.state}})()");
-    console.log('PIPPI_NATIVE_FOLLOW_VISIBILITY='+JSON.stringify(followerQA));
-    assert.equal(followerQA.installed,true,'Pippi module not installed');
-    assert.equal(followerQA.active,true,'Pippi did not start in native Explore');
-    assert.equal(followerQA.blocked,false,'Pippi incorrectly sees an active menu during native battle');
-    assert.equal(followerQA.connected,true,'Pippi world sprite never mounted to game');
-    assert.equal(followerQA.hidden,false,'Pippi world sprite is invisible in native Explore');
-    // The compiled native Game.state is a getter in some builds; mutating
-    // that property does NOT emulate the real pause UI. Exercise a visible
-    // modal instead, without fabricating an engine state transition.
-    const pauseVisual=await evaluate("(()=>{const api=G.PKMSVVPippi,el=document.getElementById('pkmsvv-pippi-follower');let overlay;try{overlay=document.createElement('div');overlay.id='pkmsvv-wiki-overlay';overlay.setAttribute('role','dialog');overlay.style.cssText='position:fixed;inset:0;z-index:20000;display:block;visibility:visible;opacity:1';document.body.append(overlay);api.tick();const modalHidden=el?.hidden===true,reason=api.visual.blockedBy;overlay.remove();api.tick();return {modalHidden,reason,resumed:el?.hidden===false,blocked:api.visual.blocked};}finally{overlay?.remove();api.tick()}})()");
+    const followerQA=await evaluate("(()=>{const api=G.PKMSVVPippi,actor=G.PKMSVVEggs?.drawables?.(G.Camera)?.filter(x=>x.pkmsvvPippi)||[],dom=document.getElementById('pkmsvv-pippi-follower');return {installed:!!api?.installed,active:!!api?.run,renderMode:api?.visual?.renderMode,nativeWorldReady:api?.visual?.nativeWorldReady,worldAnimatorReady:api?.visual?.worldAnimatorReady,blocked:api?.visual?.blocked,actorCount:actor.length,worldY:actor[0]?.y,domMounted:!!dom?.isConnected,state:G.Game?.state}})()");
+    console.log('PIPPI_NATIVE_WORLD_VISIBILITY='+JSON.stringify(followerQA));
+    assert.equal(followerQA.installed,true,'Pippi companion not installed');
+    assert.equal(followerQA.active,true,'Pippi did not enter native Explore');
+    assert.equal(followerQA.renderMode,'native-world','Pippi must use real depth-sorted Pokémon drawables, not a DOM overlay');
+    assert.equal(followerQA.nativeWorldReady,true,'Native world draw hook missing');
+    assert.equal(followerQA.worldAnimatorReady,true,'Native Clefairy Animator was not initialized by the game renderer');
+    assert.equal(followerQA.actorCount,1,'Pippi must be present exactly once in native world Y sorting');
+    assert.equal(followerQA.domMounted,false,'Old floating browser overlay must not be rendered');
+    assert.equal(followerQA.blocked,false,'Pippi incorrectly sees an open menu during battle');
+    // Opening a real visible dialog removes the world entity from drawables.
+    const pauseVisual=await evaluate("(()=>{const api=G.PKMSVVPippi;let overlay;const check=()=>G.PKMSVVEggs?.drawables?.(G.Camera)?.some(x=>x.pkmsvvPippi);try{overlay=document.createElement('div');overlay.id='pkmsvv-wiki-overlay';overlay.setAttribute('role','dialog');overlay.style.cssText='position:fixed;inset:0;z-index:20000;display:block;visibility:visible;opacity:1';document.body.append(overlay);const hidden=check()===false;overlay.remove();return {hidden,resumed:check()===true,blocked:api.visual.blocked};}finally{overlay?.remove()}})()");
     console.log('PIPPI_NATIVE_MODAL_VISIBILITY='+JSON.stringify(pauseVisual));
-    assert.equal(pauseVisual.modalHidden,true,'Pippi must hide behind a visible game modal');
-    assert.equal(pauseVisual.resumed,true,'Pippi must return after the modal closes');
-    assert.equal(pauseVisual.blocked,false,'Pippi modal state must clear on resume');
+    assert.equal(pauseVisual.hidden,true,'Native Pippi must hide behind visible PC/pause dialogs');
+    assert.equal(pauseVisual.resumed,true,'Native Pippi must return once the dialog closes');
+    assert.equal(pauseVisual.blocked,false,'Native Pippi modal state must clear');
+
    }
    // A user reports Explore eventually stalling around the first minute.
    // After checking the unprotected first 10 seconds, prevent ordinary
