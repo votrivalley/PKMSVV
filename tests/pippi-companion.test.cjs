@@ -181,6 +181,55 @@ test('Battle dialogue contains a safe nonblank Pippi face without PNG decoding',
  assert.equal((P.faceSVG('wink').match(/<svg/g)||[]).length,1);
 });
 
+test('Pippi uses real Pokémon world renderer with one depth-sorted actor',()=>{
+ const {G,player}=game(save(0));
+ player.hp=100;G.Game.st.time=0;
+ let draws=0;
+ const world={drawables(){return [{y:-1,draw(){}}];}};
+ G.PKMSVVEggs=world;
+ G.Sprites={
+  Animator:class{
+   loop(){this.mode='Idle';}update(){}
+   draw(){draws++;}
+  },
+  dirFromAngle(){return 0;},
+  sheet(){},preload(){},playerScale(){return 1;}
+ };
+ G.Camera={sees(){return true;}};
+ const host={G,document:{body:null,querySelector(){return null;}},
+  setInterval(){return 1;},console:{warn(){}},performance:{now(){return 1000;}}};
+ const api=P.install(host);api.tick();
+ const scene=world.drawables(G.Camera);
+ assert.equal(api.visual.renderMode,'native-world');
+ assert.equal(scene.filter(x=>x.pkmsvvPippi).length,1);
+ const ctx={
+  save(){},restore(){},beginPath(){},ellipse(){},fill(){},
+  strokeText(){},fillText(){}
+ };
+ scene.find(x=>x.pkmsvvPippi).draw(ctx);
+ assert.equal(draws,1,'original Pokémon sprite Animator draws Pippi in world coordinates');
+ assert.equal(api.visual.worldAnimatorReady,true);
+ assert.equal(api.visual.followerConnected,false,'old fixed overlay is not used');
+ G.Game.state='ui';
+ assert.equal(world.drawables(G.Camera).some(x=>x.pkmsvvPippi),false,
+  'Pippi is absent from the game renderer outside Explore');
+});
+
+test('Pippi PC repair exists and one authentic portrait atlas replaces 16 battle PNG swaps',()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const root=path.join(__dirname,'..');
+ const core=fs.readFileSync(path.join(root,'src/pkmsvv-pippi.js'),'utf8');
+ const prepare=fs.readFileSync(path.join(root,'scripts/prepare-pippi-web-preview.cjs'),'utf8');
+ const atlas=fs.readFileSync(path.join(root,'scripts/build-pippi-portrait-atlas.cjs'),'utf8');
+ assert.match(core,/function ensurePcCompanion\(\)/);
+ assert.match(core,/grid\.dataset\.pippiQaRepair='1'/);
+ assert.match(core,/installNativeWorld\(\)/);
+ assert.match(core,/portraitAtlasIndex/);
+ assert.match(core,/fallbackArt\.style\.backgroundPosition/);
+ assert.match(prepare,/portrait\/atlas\.png/);
+ assert.match(atlas,/Object\.keys\(PORTRAITS\)/);
+});
+
 test('Pippi inherits slow-water movement by observing player actual displacement',()=>{
  const player={x:100,y:100},run=P.newRun(player,0);
  P.advanceFollower(run,player,0);
