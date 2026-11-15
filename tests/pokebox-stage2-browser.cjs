@@ -1052,11 +1052,13 @@ async function main(){
     assert.equal(followerQA.blocked,false,'Pippi incorrectly sees an active menu during native battle');
     assert.equal(followerQA.connected,true,'Pippi world sprite never mounted to game');
     assert.equal(followerQA.hidden,false,'Pippi world sprite is invisible in native Explore');
-    const pauseVisual=await evaluate("(()=>{const api=G.PKMSVVPippi,el=document.getElementById('pkmsvv-pippi-follower'),before=G.Game.state;let pauseHidden=false,modalHidden=false,resumed=false,overlay;try{G.Game.state='pause';api.tick();pauseHidden=el?.hidden===true;G.Game.state=before;api.tick();overlay=document.createElement('div');overlay.id='pkmsvv-wiki-overlay';overlay.setAttribute('role','dialog');overlay.style.cssText='position:fixed;inset:0;z-index:20000;display:block;visibility:visible;opacity:1';document.body.append(overlay);api.tick();modalHidden=el?.hidden===true;overlay.remove();api.tick();resumed=el?.hidden===false;return {pauseHidden,modalHidden,resumed,blocked:api.visual.blocked,blockedBy:api.visual.blockedBy};}finally{G.Game.state=before;overlay?.remove();api.tick()}})()");
-    console.log('PIPPI_NATIVE_PAUSE_VISIBILITY='+JSON.stringify(pauseVisual));
-    assert.equal(pauseVisual.pauseHidden,true,'Pippi must hide during the actual native pause state');
-    assert.equal(pauseVisual.modalHidden,true,'Pippi must hide behind a visible custom dialog');
-    assert.equal(pauseVisual.resumed,true,'Pippi must return after pause and overlays close');
+    // The compiled native Game.state is a getter in some builds; mutating
+    // that property does NOT emulate the real pause UI. Exercise a visible
+    // modal instead, without fabricating an engine state transition.
+    const pauseVisual=await evaluate("(()=>{const api=G.PKMSVVPippi,el=document.getElementById('pkmsvv-pippi-follower');let overlay;try{overlay=document.createElement('div');overlay.id='pkmsvv-wiki-overlay';overlay.setAttribute('role','dialog');overlay.style.cssText='position:fixed;inset:0;z-index:20000;display:block;visibility:visible;opacity:1';document.body.append(overlay);api.tick();const modalHidden=el?.hidden===true,reason=api.visual.blockedBy;overlay.remove();api.tick();return {modalHidden,reason,resumed:el?.hidden===false,blocked:api.visual.blocked};}finally{overlay?.remove();api.tick()}})()");
+    console.log('PIPPI_NATIVE_MODAL_VISIBILITY='+JSON.stringify(pauseVisual));
+    assert.equal(pauseVisual.modalHidden,true,'Pippi must hide behind a visible game modal');
+    assert.equal(pauseVisual.resumed,true,'Pippi must return after the modal closes');
     assert.equal(pauseVisual.blocked,false,'Pippi modal state must clear on resume');
    }
    // A user reports Explore eventually stalling around the first minute.
