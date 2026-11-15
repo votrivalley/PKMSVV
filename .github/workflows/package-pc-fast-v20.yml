@@ -140,6 +140,7 @@ jobs:
           Compress-Archive -Path (Join-Path $source '*') -DestinationPath $archive -CompressionLevel Optimal -Force
           if((Get-Item $archive).Length -lt 1MB){throw 'PC QA ZIP unexpectedly small'}
       - name: Upload PC QA directly alongside Android APK (public Web unchanged)
+        if: github.event_name == 'workflow_dispatch'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
