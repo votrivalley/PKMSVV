@@ -128,14 +128,14 @@ test('Pippi ground sprite is enlarged and all floating/over-UI effects are disab
  const fs=require('node:fs'),path=require('node:path');
  const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pippi.css'),'utf8');
  const js=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pippi.js'),'utf8');
- assert.match(css,/scale\\(2\\.22\\)/,'walk PMD needs a game-scale sprite');
- assert.match(css,/scale\\(1\\.68\\)/,'idle PMD matches walk sprite size');
+ assert.match(css,/scale\(2\.22\)/,'walk PMD needs a game-scale sprite');
+ assert.match(css,/scale\(1\.68\)/,'idle PMD matches walk sprite size');
  assert.doesNotMatch(css,/@keyframes pippi-follow-bob/);
- assert.match(css,/transition:left \\.2s linear,top \\.2s linear/);
- assert.match(css,/#pkmsvv-pippi-follower\\[hidden\\]/);
- assert.match(js,/visualModalOpen\\(\\)/);
- assert.match(js,/concealVisuals\\(\\)/);
- assert.match(js,/G\\.Camera\\.left\\(\\)/);
+ assert.match(css,/transition:left \.2s linear,top \.2s linear/);
+ assert.match(css,/#pkmsvv-pippi-follower\[hidden\]/);
+ assert.match(js,/visualModalOpen\(\)/);
+ assert.match(js,/concealVisuals\(\)/);
+ assert.match(js,/G\.Camera\.left\(\)/);
 });
 
 test('Pippi inherits slow-water movement by observing player actual displacement',()=>{
