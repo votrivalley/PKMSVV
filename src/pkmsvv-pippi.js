@@ -525,7 +525,8 @@
     }
    };
    mark('portrait-load-enter');
-   if(img.dataset.faceFile!==filename){
+   // CI-only isolation: retain speech/emotes, but skip async portrait PNG decode.
+   if(w.__pkmsvvPippiPortraitDisabled!==true&&img.dataset.faceFile!==filename){
     img.dataset.faceFile=filename;
     delete img.dataset.retry;
     img.src='images/pippi/portrait/'+filename+'.png';
