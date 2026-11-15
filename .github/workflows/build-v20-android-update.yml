@@ -156,6 +156,11 @@ jobs:
           grep -q 'PKMSVVHordePerformance' decoded-android/assets/public/js/ui/pkmsvv-horde-performance.js
           grep -q 'pkmsvv-horde-performance.js' decoded-android/assets/public/index.html
           grep -q 'pkmsvv-awakening-milestones' decoded-android/assets/public/js/ui/pkmsvv-wiki-qa.js
+          grep -q 'function pippiCorner' decoded-android/assets/public/js/ui/pkmsvv-wiki-qa.js
+          grep -q 'onClick:pippiCorner' decoded-android/assets/public/js/ui/pkmsvv-wiki-qa.js
+          grep -q 'PIPPI_CORNER_PC_V1' decoded-android/assets/public/css/pkmsvv-pc-menu-clean-qa.css
+          grep -q 'trainingPoints' decoded-android/assets/public/js/ui/pkmsvv-pippi.js
+          grep -q 'PIPPI_CHAT_EXPRESSION_V1' decoded-android/assets/public/css/pkmsvv-pippi.css
           grep -q 'Fusion là dung hợp hai kỹ năng đã luyện MAX' decoded-android/assets/public/js/app.min.js
           test -s decoded-android/assets/public/js/ui/pkmsvv-fusion-evolved.js
           test -s decoded-android/assets/public/css/pkmsvv-fusion-evolved.css
@@ -240,18 +245,18 @@ jobs:
         run: |
           set -euo pipefail
           original="dist/android-v20-update/Pokemon-Chuyen-Sinh-2.0.1-Android-Signed-Update-CANDIDATE.apk"
-          release_file="dist/android-v20-update/Pokemon-Chuyen-Sinh-2.0.1-Pippi-Follow-Coop-QA.apk"
+          release_file="dist/android-v20-update/Pokemon-Chuyen-Sinh-2.0.1-Pippi-Corner-Android-QA.apk"
           test -s "$original"
           cp "$original" "$release_file"
-          tag='pkmsvv-pippi-follow-coop-qa-20261115'
-          printf 'This is a noncommercial Android QA candidate.\n\n- Co-op: preserve only its authored 42px pixel icon; remove the leftover handshake.\n- Pippi: follow at 72px distance along the player trail; no overlapping idle sprite.\n- Includes the same PC/Web source changes on a separate QA branch. Public Web is intentionally UNCHANGED.\n- Save: back up JSON before installing; do not uninstall your existing app.\n- Android versionCode 2000115, same signed application identity.\n- Automatic tests pass, physical device QA still required.\n' > qa-release-notes.txt
+          tag='pkmsvv-pippi-corner-qa-20261115'
+          printf 'This is a noncommercial Android QA candidate.\n\n- Co-op: preserve only its authored 42px pixel icon; remove the leftover handshake.\n- Pippi: follow at 72px along the player trail. Portrait emotions mirror Ragnarok-style bubble events. PC adds 'Góc Pippi' with Bond 1–10, four trainable skills and free saved Bond points.\n- Includes the same PC/Web source changes on a separate QA branch. Public Web is intentionally UNCHANGED.\n- Save: back up JSON before installing; do not uninstall your existing app.\n- Android versionCode 2000116, same signed application identity.\n- Automatic tests pass, physical device QA still required.\n' > qa-release-notes.txt
           sha256sum "$release_file" > dist/android-v20-update/SHA256SUMS-PIPPI-QA.txt
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" "$release_file" dist/android-v20-update/SHA256SUMS-PIPPI-QA.txt --clobber
           else
             gh release create "$tag" "$release_file" dist/android-v20-update/SHA256SUMS-PIPPI-QA.txt \
               --target "$GITHUB_SHA" \
-              --title 'PKMSVV 2.0.1 Pippi Follow + Co-op Icon (Android QA)' \
+              --title 'PKMSVV 2.0.1 Góc Pippi + Portrait Emotions (Android QA)' \
               --notes-file qa-release-notes.txt --prerelease
           fi
           gh release view "$tag" --json url,assets --jq '{url:.url,assets:[.assets[].name]}'
