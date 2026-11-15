@@ -12,6 +12,7 @@ on:
       - 'src/kecleon/upstream/data/shop.js'
       - 'tests/pippi-companion.test.cjs'
       - 'tests/pippi-web-browser.cjs'
+      - 'tests/pokebox-stage2-browser.cjs'
       - 'src/pkmsvv-pc-menu-clean-qa.js'
   workflow_dispatch:
 permissions:
@@ -59,10 +60,10 @@ jobs:
             grep -Fq 'Bạn đồng hành' "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-wiki-qa.js"
             grep -Fq 'PKMSVV_PIPPI_COUSIN_PREVIEW_20261115' "dist/cloudflare-v20-release/$route/index.html"
           done
-      - name: Actual Chromium QA — fourth PC tile, companion skills, two live Explore sessions
+      - name: Proven Chromium integration QA — real PC companion and 65-second Explore
         env:
           PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
-        run: timeout 200s node tests/pippi-web-browser.cjs
+        run: timeout 240s node tests/pokebox-stage2-browser.cjs
       - name: Deploy QA branch to Cloudflare Pages without changing production
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
