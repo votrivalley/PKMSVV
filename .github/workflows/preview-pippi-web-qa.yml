@@ -52,16 +52,17 @@ jobs:
   diagnostic-rift:
     # Run independently: a failing Kanto restart must not hide the Rift
     # signature. Both variants remain read-only and NEVER deploy Web QA.
-    name: "Grieta Mewtwo — Pippi blocked ${{ matrix.without }}, survivor ${{ matrix.survivor }}"
+    name: "Grieta Mewtwo — no Pippi ${{ matrix.without }} / render off ${{ matrix.render }} / tick off ${{ matrix.tick }}"
     runs-on: ubuntu-latest
     timeout-minutes: 12
     strategy:
       fail-fast: false
       matrix:
         include:
-          - {without: '0', survivor: '0'}
-          - {without: '0', survivor: '1'}
-          - {without: '1', survivor: '0'}
+          - {without: '0', survivor: '0', render: '0', tick: '0'}
+          - {without: '0', survivor: '0', render: '1', tick: '0'}
+          - {without: '0', survivor: '0', render: '0', tick: '1'}
+          - {without: '1', survivor: '0', render: '0', tick: '0'}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -86,6 +87,8 @@ jobs:
           PKMSVV_TEST_RIFT: '1'
           PKMSVV_BROWSER_WITHOUT_PIPPI: ${{ matrix.without }}
           PKMSVV_RIFT_SURVIVOR: ${{ matrix.survivor }}
+          PKMSVV_DISABLE_PIPPI_RENDER: ${{ matrix.render }}
+          PKMSVV_DISABLE_PIPPI_TICK: ${{ matrix.tick }}
           PKMSVV_TRACE_RIFT: '1'
           PKMSVV_TRACE_STARTUP: '1'
           PKMSVV_DIAGNOSTIC_LOOPS: '4'
