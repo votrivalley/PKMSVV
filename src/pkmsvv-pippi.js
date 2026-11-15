@@ -579,11 +579,17 @@
         'Pippi refunded '+amount.toLocaleString('en-US')+' PokéCoins!'),4500);
    return amount;
   }
+  let qaTraceTicks=0;
   function tick(){
+   const trace=w.__pkmsvvPippiStageTrace===true&&qaTraceTicks++<16;
+   const stage=name=>{if(trace)w.console?.log?.('QA_PIPPI_STAGE:'+name+':'+String(G.Game?.state||''));};
+   stage('enter');
    try{
+    stage('migration-enter');
     // Refund bookkeeping can touch persistent storage. Finish migrations
     // from the home UI, never synchronously in a live combat tick.
     if(G.DB?.save&&G.Game?.state==='ui'&&!w.__pkmsvvPippiMigrationDisabled)migrate();
+    stage('migration-exit');
     const pl=G.Game?.player;
     // Native level-up and other modal choices are temporary pauses of the
     // SAME Explore run. Resetting Pippi here used to remove the follower,
@@ -595,25 +601,34 @@
      if(ui)ui.hidden=true;
      return;
     }
+    stage('eligible-enter');
     if(!eligible(G)){
      if(run){finish(run);run=null;}
      if(ui)ui.hidden=true;
      if(follower)follower.hidden=true;
      return;
     }
+    stage('eligible-exit');
     const now=Math.max(0,Number(G.Game?.st?.time??G.Game?.time)||0);
     if(!run||run.player!==pl||now+1<run.now){
+     stage('new-run-enter');
      finish(run);run=newRun(pl,now);say('intro',true);say('tutorial');
+     stage('new-run-exit');
     }
     run.now=now;
     installDamageHook(run,pl,(before,after,hitPlayer)=>{
      const outcome=rollCousinOnHit(G,run,hitPlayer,before,after);
      if(outcome.triggered)say('cousin',true);
     });
+    stage('follow-enter');
     follow(pl);
+    stage('follow-exit');
     endEffects(run,now);
+    stage('effects-exit');
     if(ui&&!ui.hidden&&now>=Number(ui.dataset.until))ui.hidden=true;
+    stage('data-enter');
     const p=data(G.DB?.save),lv=p.bond,training=p.training;
+    stage('data-exit');
     const isSleeping=now<run.sleepUntil;
     if(run.revived&&!run.megaSpoken&&now>=run.evolveUntil){
      run.megaSpoken=true;say('revive',true);
@@ -648,6 +663,7 @@
      say('shield',true);
     }
    }catch(err){w.console?.warn?.('[Pippi] frame guarded',err);}
+   finally{stage('exit');}
   }
   function revive(pl){
    if(!run||!eligible(G))return false;
