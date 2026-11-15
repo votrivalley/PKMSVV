@@ -10,7 +10,7 @@
 })(typeof globalThis==='object'?globalThis:this,function(){
  'use strict';
  const ITEM='reforge-prism',PRICE=6500,SHOP_RATE=0.12,PITY=0,MAX_DROPS_PER_RUN=999;
- const RATES=Object.freeze({normal:.004,elite:.008,legend:.016});
+ const RATES=Object.freeze({normal:.002,elite:.004,legend:.008});
  const own=(x,k)=>Object.prototype.hasOwnProperty.call(x,k);
  const deep=x=>JSON.parse(JSON.stringify(x));
  const nonneg=n=>Number.isSafeInteger(n)&&n>=0;
@@ -150,7 +150,7 @@
   if(!info)return {eligible:false,dropped:false};
   enemy._pkmsvvPrismCounted=true; // a defeat can only increment pity once
   const counter=pity(s)+1;
-  const drops=Number(random())<info.rate; // pure 0.4% / 0.8% / 1.6% rolls; no hidden pity boost
+  const drops=Number(random())<info.rate; // pure 0.2% / 0.4% / 0.8% rolls; no hidden pity boost
   const nextDrops=dropsThisRun+(drops?1:0);
   try{
    // Regular kills update in-memory pity without forcing a localStorage write
@@ -310,6 +310,21 @@
     else Promise.resolve().then(draw);
    });
   }
+   // Restore Reforge Prism after Kecleon replaces inventory DOM on selling
+   // another item. Without this, its hitbox remains but artwork vanishes until
+   // another click. Observe only the inventory list, never the whole document.
+   const list=typeof document!=='undefined'?document.getElementById('pkmk-list'):null;
+   if(list&&typeof MutationObserver!=='undefined'){
+    let queued=false;
+    const observer=new MutationObserver(records=>{
+     if(queued||!records.some(r=>r.addedNodes.length||r.removedNodes.length))return;
+     queued=true;
+     const schedule=typeof requestAnimationFrame==='function'?requestAnimationFrame:
+       callback=>Promise.resolve().then(callback);
+     schedule(()=>{queued=false;if(list.isConnected)draw();});
+    });
+    observer.observe(list,{childList:true,subtree:false});
+   }
   shopInstalled=true;return true;
  }
  function init(){
