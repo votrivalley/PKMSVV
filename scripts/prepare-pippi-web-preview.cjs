@@ -55,6 +55,8 @@ for(const prefix of ['game','ai/game']){
   fs.copyFileSync(present(path.join(root,'assets/pippi-pmd/portrait',name)),
     path.join(imageDir,'portrait',name));
  }
+ fs.copyFileSync(present(path.join(root,'assets/pippi-pmd/portrait/atlas.png')),
+   path.join(imageDir,'portrait/atlas.png'));
  let html=source(path.relative(root,path.join(dest,'index.html')));
  if(!html.includes('pkmsvv-box-stage3.js'))throw Error('Not the validated Web 2.0 snapshot: '+prefix);
  for(const name of ['pkmsvv-pippi.js']){
