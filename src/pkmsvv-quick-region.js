@@ -564,7 +564,12 @@
   }
  });
  wrap(G.World,'setBiome',function(prev,args){
-  if(!current||!Number.isFinite(current.biome)||changing)return prev.apply(this,args);
+  // Rift/Grieta arenas own their native biome and tile generation. Clamping
+  // their setBiome() to the Explore terrain can desynchronize the arena map.
+  const inRift=!!(G.Rift?.inArena||
+   G.World?.arena?.type==='rift'||G.World?.arena?.type==='grieta');
+  if(!current||!Number.isFinite(current.biome)||changing||inRift)
+   return prev.apply(this,args);
   const copy=args.slice();copy[0]=current.biome;
   return prev.apply(this,copy);
  });
