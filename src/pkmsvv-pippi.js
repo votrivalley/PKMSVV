@@ -384,7 +384,15 @@
    const img=d.createElement('img');
    img.alt='Pippi: '+filename;
    img.src='images/pippi/portrait/'+filename+'.png';
-   img.onerror=()=>{if(portrait.contains(img))portrait.innerHTML=fallback;};
+   img.onerror=()=>{
+    if(!img.dataset.retry&&filename!=='Normal'){
+     img.dataset.retry='1';img.src='images/pippi/portrait/Normal.png';return;
+    }
+    if(portrait.contains(img)){
+     portrait.innerHTML=fallback;
+     if(chatEmote)portrait.append(chatEmote);
+    }
+   };
    portrait.replaceChildren(img);
    if(chatEmote)portrait.append(chatEmote);
    portrait.dataset.emotion=face;
