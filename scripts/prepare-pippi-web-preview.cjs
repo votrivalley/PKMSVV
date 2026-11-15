@@ -65,7 +65,7 @@ for(const prefix of ['game','ai/game']){
  // CSP may prohibit inline scripts. Ship a same-origin deferred identity
  // module BEFORE the PC module so the fourth tile and build identity agree.
  const identity='js/ui/pkmsvv-pippi-qa-identity.js';
- write(path.join(dest,identity), 'window.__PKMSVV_PIPPI_QA='+JSON.stringify(revision)+';\\n');
+ write(path.join(dest,identity), 'window.__PKMSVV_PIPPI_QA='+JSON.stringify(revision)+';\n');
  html=html.replace('</head>','<script defer src="'+identity+'?v='+revision+'"></script>\n<meta name="robots" content="noindex,nofollow"><!-- '+marker+' -->\n</head>');
  // A stable Pages URL must not leave old PC / Pippi assets in existing caches.
  for(const name of ['pkmsvv-wiki-qa.js','pkmsvv-pippi.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-quick-region.js']){
