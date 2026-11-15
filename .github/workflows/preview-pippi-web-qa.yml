@@ -1,0 +1,84 @@
+name: Pippi Cousin Web QA Preview (never production)
+on:
+  push:
+    branches: [fix/pippi-follow-menu-qa-20261115]
+    paths:
+      - '.github/workflows/preview-pippi-web-qa.yml'
+      - 'scripts/prepare-pippi-web-preview.cjs'
+      - 'src/pkmsvv-pippi.js'
+      - 'src/pkmsvv-pippi.css'
+      - 'src/pkmsvv-wiki.js'
+      - 'src/pkmsvv-box-stage3.js'
+      - 'src/kecleon/upstream/data/shop.js'
+      - 'tests/pippi-companion.test.cjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: pkmsvv-pippi-cousin-web-qa
+  cancel-in-progress: true
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Verify companion and economy regressions before any preview
+        run: |
+          set -euo pipefail
+          node --test tests/pippi-companion.test.cjs tests/pokebox-stage3.test.cjs tests/pkmsvv-v20.test.cjs tests/v20-items-release.test.cjs
+      - name: Download the exactly pinned Chromium-tested Web 2.0 snapshot
+        uses: actions/download-artifact@v4
+        with:
+          name: PKMSVV-PokeBox-Stage4-Web-QA-ONLY
+          run-id: 42520192007
+          github-token: ${{ github.token }}
+          path: dist/pokebox-stage4-qa
+      - name: Promote snapshot locally (do not publish it)
+        run: node scripts/promote-web-v20.cjs
+      - name: Fetch 8-way and 16 portrait Clefairy PMD PNG assets
+        run: node scripts/fetch-pippi-pmd.cjs
+      - name: Add isolated companion features to BOTH game routes
+        run: node scripts/prepare-pippi-web-preview.cjs
+      - name: Verify staged Web is QA-only and has the Pippi cousin 3–6 percent chance
+        run: |
+          set -euo pipefail
+          jq -e '.releaseType=="qa-preview-only" and .pippiCousinQA=="PKMSVV_PIPPI_COUSIN_PREVIEW_20261115"' dist/cloudflare-v20-release/build-info.json
+          for route in game ai/game; do
+            test -s "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-pippi.js"
+            test -s "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-box-stage3.js"
+            test -s "dist/cloudflare-v20-release/$route/images/pippi/portrait/Happy.png"
+            grep -Fq 'COUSIN_CHANCES=Object.freeze([0,.03,.045,.06])' "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-pippi.js"
+            grep -Fq 'Bạn đồng hành' "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-wiki-qa.js"
+            grep -Fq 'PKMSVV_PIPPI_COUSIN_PREVIEW_20261115' "dist/cloudflare-v20-release/$route/index.html"
+          done
+      - name: Deploy QA branch to Cloudflare Pages without changing production
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          npx --yes wrangler@4 pages deploy dist/cloudflare-v20-release \
+            --project-name pkmsvv-web --branch pippi-cousin-qa
+      - name: Verify live QA URL, separate from production
+        run: |
+          set -euo pipefail
+          url='https://pippi-cousin-qa.pkmsvv-web.pages.dev/build-info.json'
+          for attempt in 1 2 3 4 5 6; do
+            if curl -fsSL --max-time 20 -H 'Cache-Control: no-cache' "$url?qa=${GITHUB_SHA}-${attempt}" -o /tmp/pippi-build-info.json &&
+               jq -e '.releaseType=="qa-preview-only" and .pippiCousinQA=="PKMSVV_PIPPI_COUSIN_PREVIEW_20261115"' /tmp/pippi-build-info.json; then
+              echo "Verified Web QA: https://pippi-cousin-qa.pkmsvv-web.pages.dev/ai/game/"
+              exit 0
+            fi
+            sleep 6
+          done
+          echo "::error::Preview deployment not verified; production untouched"
+          exit 1
