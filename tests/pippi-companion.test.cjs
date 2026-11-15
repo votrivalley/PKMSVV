@@ -332,6 +332,21 @@ test('failed Pippi migration never retries save four times per second in combat'
  assert.equal(s.pkmsvvPippi.refundReviveV1,undefined,'failed refund is not recorded as paid');
 });
 
+test('Pippi defers save refund commits during real combat and applies on home UI',()=>{
+ const h=game(save(0));let commits=0;
+ h.player.hp=h.player.maxHp;
+ h.G.DB.commit=()=>{commits++;return true;};
+ const w={G:h.G,document:{body:null},requestAnimationFrame(){},console:{warn(){}}};
+ const api=P.install(w),coins=h.G.DB.save.coins;
+ api.tick();
+ assert.equal(commits,0,'combat tick must not commit migration');
+ assert.equal(h.G.DB.save.coins,coins,'refund must wait until home menu');
+ h.G.Game.state='ui';h.G.PKMSVVQuickRegion.active=false;
+ api.tick();
+ assert.equal(commits,1,'only one safe migration commit on home UI');
+ assert.equal(h.G.DB.save.coins,coins+50000);
+});
+
 test('Pippi retains one session and native damage hook across level-up, then cleans on real quit',()=>{
  const pl={x:10,y:20,hp:100,maxHp:100,atkMul:1,dead:false,hurt(d){this.hp-=d;}};
  const native=pl.hurt;
