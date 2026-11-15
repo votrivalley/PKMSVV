@@ -64,7 +64,7 @@ for(const prefix of ['game','ai/game']){
   '<link rel="stylesheet" href="css/pkmsvv-pippi.css">\n</head>');
  html=html.replace('</head>','<meta name="robots" content="noindex,nofollow"><!-- '+marker+' -->\n</head>');
  // A stable Pages URL must not leave old PC / Pippi assets in existing caches.
- for(const name of ['pkmsvv-wiki-qa.js','pkmsvv-pippi.js','pkmsvv-pc-menu-clean-qa.js']){
+ for(const name of ['pkmsvv-wiki-qa.js','pkmsvv-pippi.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-quick-region.js']){
   html=html.replace('src="js/ui/'+name+'"','src="js/ui/'+name+'?v='+revision+'"');
  }
  for(const name of ['pkmsvv-pippi.css','pkmsvv-pc-menu-clean-qa.css']){
@@ -81,6 +81,8 @@ for(const prefix of ['game','ai/game']){
   throw Error('Renamed Companion PC hub absent in '+prefix);
  if(!source(path.relative(root,path.join(dest,'js/ui/pkmsvv-box-stage3.js'))).includes('normal:.002'))
   throw Error('Half-rate prism source missing in '+prefix);
+ if(!source(path.relative(root,path.join(dest,'js/ui/pkmsvv-quick-region.js'))).includes("const inRift=!!"))
+  throw Error('Native Grieta biome exception missing from active Region script: '+prefix);
  if(!bundle.includes('mint:.008/3'))throw Error('Half-rate Mint/Capsule compiled bundle missing');
 }
 const meta=JSON.parse(source('dist/cloudflare-v20-release/build-info.json'));
