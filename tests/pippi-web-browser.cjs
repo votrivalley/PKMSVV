@@ -117,7 +117,10 @@ async function main(){
   for(let session=1;session<=2;session++){
    if(session===2){
     await cmd('Page.reload',{ignoreCache:true});
-    await until(()=>js('!!window.G?.PKMSVVWiki&&!!window.G?.PKMSVVPippi&&!!window.G?.PKMSVVQuickRegion'),35000);
+    // CDP can report the previous page's JS realm briefly after navigation.
+    // Wait for the new G binding and its native game bootstrap.
+    await pause(1200);
+    await until(()=>js("typeof G!=='undefined'&&!!G.PKMSVVWiki&&!!G.PKMSVVPippi&&!!G.PKMSVVQuickRegion&&!!G.DB&&!!G.Game"),35000);
     assert.equal((await seed()).valid,true,'Reload fixture valid');
    }
    await js(`(()=>{
@@ -138,11 +141,11 @@ async function main(){
    },30000);
    await js("(()=>{const p=G.Game.player;if(p){p.invuln=120;p.hp=p.maxHp;}return true})()");
    const before=await js("(()=>({t:G.Game?.st?.time,enemy:G.EnemyMgr?.count,pc:!!G.PKMSVVWiki,pippi:!!G.PKMSVVPippi,run:!!G.PKMSVVPippi.run}))()");
-   await pause(8500);
+   await pause(session===1?70000:22000);
    const after=await js("(()=>({t:G.Game?.st?.time,enemy:G.EnemyMgr?.count,state:G.Game?.state,pc:!!G.PKMSVVWiki,pippi:!!G.PKMSVVPippi,run:!!G.PKMSVVPippi.run,vis:!!document.querySelector('#pkmsvv-pippi-follower')}))()");
    console.log('PIPPI_WEB_SESSION_'+session+'='+JSON.stringify({before,after,exceptions:exceptions.slice(-4),warnings:warnings.slice(-6)}));
    assert.equal(after.state,'playing','Explore crashed in session '+session);
-   assert.ok(after.t-before.t>=3,'Combat timer stopped or main thread overloaded in session '+session);
+   assert.ok(after.t-before.t>=(session===1?50:15),'Combat timer stopped or main thread overloaded in session '+session);
    assert.equal(after.run,true,'Pippi companion loop did not initialize');
    assert.equal(exceptions.length,0,'Unhandled browser exception: '+JSON.stringify(exceptions.slice(-4)));
    assert.ok(warnings.filter(x=>/\[Pippi\] frame guarded|\[Game\]/.test(x)).length<3,
