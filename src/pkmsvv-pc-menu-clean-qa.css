@@ -1,6 +1,6 @@
 /* QA-only unified PC and restored home details. */
 #pkmsvv-wiki-overlay .pkmsvv-pc-panel{max-height:96dvh;overflow-y:auto}
-#pkmsvv-wiki-overlay .pkmsvv-pc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+#pkmsvv-wiki-overlay .pkmsvv-pc-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 #pkmsvv-wiki-overlay .pkmsvv-pc-unified-card{
  display:flex;flex-direction:column;justify-content:center;align-items:center;
  gap:10px;min-width:0;min-height:150px;padding:12px;
@@ -346,3 +346,10 @@
  #pkmsvv-wiki-overlay .pkmsvv-pippi-training-row p{font-size:11px}
 }
 @media(max-width:430px){#pkmsvv-wiki-overlay .pkmsvv-pippi-training-grid{grid-template-columns:1fr}}
+
+/* PC_COMPANION_FOUR_TILES_V2: always reveal fourth companion tile on opening */
+@media (min-width:681px) and (max-width:940px){
+ #pkmsvv-wiki-overlay .pkmsvv-pc-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+#pkmsvv-wiki-overlay .pkmsvv-pc-grid>.pkmsvv-pc-card{min-width:0}
+#pkmsvv-wiki-overlay .pkmsvv-pc-grid>.pkmsvv-pc-card canvas{max-width:96px;max-height:96px}
