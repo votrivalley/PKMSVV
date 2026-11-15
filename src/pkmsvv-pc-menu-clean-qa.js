@@ -342,7 +342,11 @@
    }finally{observerBusy=false;}
   });
   // Watch the home menu only; never observe combat HUD/FX mutations globally.
-  observer.observe($('#scr-menu')||d.body,{childList:true,subtree:true});
+  // Never observe document.body: combat DOM updates otherwise trigger expensive
+  // PC synchronization on every effect and can overwhelm slower WebViews.
+  const home=$('#scr-menu');
+  if(home)observer.observe(home,{childList:true,subtree:true});
+  else console.warn('[PC menu] not mounted yet; MenuUI.open will synchronize');
   // Old Android/Web menu scripts can add icon children AFTER MenuUI.open().
   // Reconcile only menu structure mutations; never observe combat/HUD nodes.
   const nav=$('#scr-menu .menu-right .menu-list');
