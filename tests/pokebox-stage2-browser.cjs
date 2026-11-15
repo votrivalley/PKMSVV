@@ -469,11 +469,18 @@ async function main(){
   assert.match(menuState.newsColor,/rgb\(25[0-5],\s*2[0-5]\d,\s*1\d\d\)/,'News text must contrast with its background');
   const unifiedPc=await evaluate("(async()=>{document.querySelector('#pkmsvv-menu-wiki')?.click();await Promise.resolve();const p=document.querySelector('#pkmsvv-wiki-overlay');const grid=p?.querySelector('.pkmsvv-pc-grid');return {exists:!!p,cardCount:grid?.children.length,firstThree:[...grid?.children||[]].slice(0,3).map(x=>x.id),events:[...p?.querySelectorAll('.pkmsvv-pc-learn button')||[]].filter(b=>/Sương Ký Ức|Memory Mist|Season/.test(b.textContent)).length,hint:!!p?.querySelector('.pkmsvv-pc-hint'),support:!!p?.textContent.includes('Pokémon hỗ trợ'),mega:!!p?.textContent.includes('Mega'),berry:!!p?.textContent.includes('Berry')}})()");
   assert.equal(unifiedPc.exists,true);
-  assert.equal(unifiedPc.cardCount,3,'PC should contain only its three existing utilities');
+  assert.equal(unifiedPc.cardCount,4,'PC must contain Support, Mega, Berry and Bạn đồng hành');
   assert.ok(unifiedPc.firstThree.every(id=>!['pkmsvv-pc-box','pkmsvv-pc-dex','pkmsvv-pc-upgrades'].includes(id)),'do not duplicate Pokémon tabs in PC');
   assert.equal(unifiedPc.events,0,'remove seasonal event from PC knowledge');
   assert.equal(unifiedPc.hint,false,'no redundant navigation hint');
   assert.ok(unifiedPc.support&&unifiedPc.mega&&unifiedPc.berry);
+  const companionBrowser=await evaluate("(()=>{const tile=[...document.querySelectorAll('#pkmsvv-wiki-overlay .pkmsvv-pc-card')].find(x=>/Bạn đồng hành|Companions/.test(x.textContent||''));if(!tile)return {visible:false};const rect=tile.getBoundingClientRect();tile.click();const overlay=document.querySelector('.pkmsvv-pippi-corner');const controls=[...document.querySelectorAll('[data-pippi-train]')].map(x=>x.dataset.pippiTrain);return {visible:true,inViewport:rect.top>=0&&rect.top<innerHeight,overlay:!!overlay,controls};})()");
+  console.log('PIPPI_COMPANION_NATIVE_PC='+JSON.stringify(companionBrowser));
+  assert.equal(companionBrowser.visible,true,'fourth PC tile must be present');
+  assert.equal(companionBrowser.overlay,true,'companion learning dialog must open on click');
+  assert.ok(companionBrowser.controls.includes('cousin'),'Pikachu cousin skill must be learnable');
+  await evaluate("G.PKMSVVWiki?.close?.()");
+
   const doneKnowledge=await evaluate("(()=>{const panel=document.querySelector('#pkmsvv-wiki-overlay .pkmsvv-pc-learn'),save=G.DB.save; if(!panel||!save||!G.PKMSVVSkillTrack)return {mounted:false};const old=save.pkmsvvSkillMarks;const skill=document.createElement('button');skill.textContent='Skill Awakening';const seasonal=document.createElement('button');seasonal.textContent='Sương Ký Ức · Sự kiện mùa';try{save.pkmsvvSkillMarks={k50:true,k100:true,k200:true,u10:true,u20:true};panel.append(skill,seasonal);G.PKMSVVMenuCleanQA.mountPC();return {mounted:true,skillHidden:!skill.isConnected,seasonHidden:!seasonal.isConnected,slots:G.PKMSVVSkillTrack.progress(save).count};}finally{if(old===undefined)delete save.pkmsvvSkillMarks;else save.pkmsvvSkillMarks=old;skill.remove();seasonal.remove()}})()");
   assert.equal(doneKnowledge.mounted,true,'PC knowledge panel and Skill Track must be present');
   assert.equal(doneKnowledge.slots,8);
