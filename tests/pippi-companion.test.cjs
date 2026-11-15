@@ -304,3 +304,17 @@ test('Pikachu genuine paralysis affects max 4 targets, bosses shorter, no stun l
  assert.equal(P.cousinLightning(G,pl,11).affected,4);
  assert.equal(P.cousinLightning(G,pl,12).affected,0);
 });
+
+test('failed Pippi migration never retries save four times per second in combat',()=>{
+ const s=save(54);const originalMoney=s.coins;
+ let commits=0,callbacks=0;
+ const G={DB:{save:s,commit(){commits++;return false}},Game:{state:'ui'}};
+ const host={G,document:{},console:{warn(){}},requestAnimationFrame(){callbacks++;}};
+ const api=P.install(host);
+ assert.equal(callbacks,1,'Pippi must schedule one animation loop');
+ for(let i=0;i<60;i++)api.tick();
+ assert.equal(commits,1,'failed save should be retried after a backoff, not on every 250ms update');
+ assert.equal(s.coins,originalMoney,'failed refund cannot mint PokéCoins');
+ assert.equal(s.globalUpgrades.revive,1,'failed refund preserves original upgrade');
+ assert.equal(s.pkmsvvPippi.refundReviveV1,undefined,'failed refund is not recorded as paid');
+});
