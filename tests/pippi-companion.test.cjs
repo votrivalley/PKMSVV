@@ -192,3 +192,66 @@ test('High-DPI canvas gives Pippi a larger world gap but the same on-screen clea
    'DPR-scaled follow must stay at least 50 CSS pixels away');
  }
 });
+
+
+test('Góc Pippi Bond training awards only earned points and persists 4 trees',()=>{
+ const save={coins:321,pkmsvvPippi:{xp:54}};
+ const p=P.data(save);
+ assert.equal(p.bond,10);
+ assert.equal(P.trainingPoints(save),9);
+ assert.deepEqual(p.training,{heal:0,buff:0,slow:0,shield:0});
+ const result=P.train(save,'heal',()=>true);
+ assert.deepEqual(result,{ok:true,level:1,points:8});
+ assert.equal(save.coins,321,'No PokéCoins deducted for companion training');
+ assert.equal(P.train(save,'shield',()=>true).ok,true);
+ assert.equal(P.train(save,'buff',()=>true).ok,true);
+ assert.equal(P.train(save,'slow',()=>true).ok,true);
+ assert.equal(P.trainingPoints(save),5);
+ assert.equal(P.bondProgress(save).to,null,'Bond 10 has max progress');
+ assert.equal(P.bondProgress(save).bond,10);
+});
+test('Pippi training enforces Bond unlocks, max rank and transactional save rollback',()=>{
+ const save={coins:50,pkmsvvPippi:{xp:2}};
+ assert.equal(P.train(save,'buff',()=>true).ok,true,'Bond 2 unlocks Cheer');
+ assert.equal(P.train(save,'shield',()=>true).reason,'locked');
+ assert.equal(P.train(save,'heal',()=>true).reason,'points');
+ P.earn(save,52);
+ assert.equal(P.trainingPoints(save),8);
+ const before={...P.data(save).training};
+ assert.equal(P.train(save,'heal',()=>false).reason,'save');
+ assert.deepEqual(P.data(save).training,before);
+ assert.equal(P.train(save,'wrong',()=>true).reason,'invalid');
+ assert.equal(P.train(save,'heal',()=>{throw Error('offline');}).reason,'save');
+ assert.deepEqual(P.data(save).training,before);
+ assert.equal(P.train(save,'heal',()=>true).ok,true);
+ assert.equal(P.train(save,'heal',()=>true).ok,true);
+ assert.equal(P.train(save,'heal',()=>true).reason,'max');
+});
+test('Pippi training improves Explore abilities without changing baseline skills',()=>{
+ const base={hp:20,maxHp:100},improved={hp:20,maxHp:100};
+ assert.equal(P.heal(base,5),true);assert.equal(P.heal(improved,5,2),true);
+ assert.ok(improved.hp>base.hp);
+ const pl={atkMul:1},run=P.newRun(pl);
+ assert.equal(P.buff(pl,run,10,5,2),true);
+ assert.ok(pl.atkMul>1.15);
+ P.finish(run);assert.equal(pl.atkMul,1);
+ const G={EnemyMgr:{all:()=>[{x:0,y:0,spd:100}]}};
+ const player={x:0,y:0},run2=P.newRun(player);
+ assert.equal(P.slow(G,run2,0,5,2),true);
+ assert.ok(G.EnemyMgr.all()[0].spd<100);
+});
+test('PC uses native fourth Góc Pippi card and event-synchronized portrait source',()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const wiki=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-wiki.js'),'utf8');
+ const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pippi.css'),'utf8');
+ const core=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pippi.js'),'utf8');
+ assert.match(wiki,/function pippiCorner\(\)/);
+ assert.match(wiki,/dex:35/);
+ assert.match(wiki,/onClick:pippiCorner/);
+ assert.match(wiki,/data-pippi-train/);
+ assert.match(wiki,/P\.train\(save,key,\(\)=>G\.DB\.commit\(true\)\)/);
+ assert.match(core,/const filename=PORTRAIT_FILES\[face\]\|\|'Normal'/);
+ assert.match(core,/portrait\.dataset\.emotion=face/);
+ assert.match(core,/el\.dataset\.event=event/);
+ assert.match(css,/PIPPI_CHAT_EXPRESSION_V1/);
+});
