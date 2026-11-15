@@ -66,15 +66,33 @@ jobs:
           PKMSVV_BROWSER_WITHOUT_PIPPI: '1'
         run: timeout 240s node tests/pokebox-stage2-browser.cjs
       - name: A/B diagnostic — Pippi installed, companion periodic tick disabled
+        continue-on-error: true
         env:
           PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
           PKMSVV_DISABLE_PIPPI_TICK: '1'
-        run: timeout 240s node tests/pokebox-stage2-browser.cjs
+          PKMSVV_DIAGNOSTIC_LOOPS: '4'
+        run: timeout 140s node tests/pokebox-stage2-browser.cjs
       - name: A/B diagnostic — Pippi skills enabled, world follower DOM disabled
+        continue-on-error: true
         env:
           PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
           PKMSVV_DISABLE_PIPPI_RENDER: '1'
-        run: timeout 240s node tests/pokebox-stage2-browser.cjs
+          PKMSVV_DIAGNOSTIC_LOOPS: '4'
+        run: timeout 140s node tests/pokebox-stage2-browser.cjs
+      - name: A/B diagnostic — Pippi periodic tick without save migration
+        continue-on-error: true
+        env:
+          PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
+          PKMSVV_DISABLE_PIPPI_MIGRATION: '1'
+          PKMSVV_DIAGNOSTIC_LOOPS: '4'
+        run: timeout 140s node tests/pokebox-stage2-browser.cjs
+      - name: A/B diagnostic — Pippi periodic tick without dialogue
+        continue-on-error: true
+        env:
+          PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
+          PKMSVV_DISABLE_PIPPI_SPEECH: '1'
+          PKMSVV_DIAGNOSTIC_LOOPS: '4'
+        run: timeout 140s node tests/pokebox-stage2-browser.cjs
       - name: Chromium regression — PC companion, 150s first Explore and 45s restart
         env:
           PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release

@@ -465,7 +465,7 @@
    }
   }
   function say(event,force=false){
-   if(!run)return;
+   if(!run||w.__pkmsvvPippiSpeechDisabled===true)return;
    const now=run.now;
    if(!force&&now-run.lastTalk<8)return;
    run.lastTalk=now;
@@ -531,7 +531,7 @@
   }
   function tick(){
    try{
-    if(G.DB?.save)migrate();
+    if(G.DB?.save&&!w.__pkmsvvPippiMigrationDisabled)migrate();
     const pl=G.Game?.player;
     if(!eligible(G)){
      if(run){finish(run);run=null;}

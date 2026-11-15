@@ -99,6 +99,14 @@ async function main(){
    await evaluate("window.__pkmsvvPippiTickDisabled=true");
    console.log('PIPPI_TICK_AB_DISABLED=true');
   }
+  if(process.env.PKMSVV_DISABLE_PIPPI_MIGRATION==='1'){
+   await evaluate("window.__pkmsvvPippiMigrationDisabled=true");
+   console.log('PIPPI_MIGRATION_AB_DISABLED=true');
+  }
+  if(process.env.PKMSVV_DISABLE_PIPPI_SPEECH==='1'){
+   await evaluate("window.__pkmsvvPippiSpeechDisabled=true");
+   console.log('PIPPI_SPEECH_AB_DISABLED=true');
+  }
   if(process.env.PKMSVV_DISABLE_PIPPI_RENDER==='1'){
    await evaluate("window.__pkmsvvPippiRenderDisabled=true");
    console.log('PIPPI_RENDER_AB_DISABLED=true');
@@ -1051,7 +1059,8 @@ async function main(){
    assert.equal(picked.visible,false,'Digit1 did not close level-up: '+JSON.stringify(picked));
    assert.equal(picked.state,'playing','Explore must resume after level-up selection');
    let minute=null;
-   for(let i=0;i<11;i++){
+   const diagnosticRounds=Math.max(1,Math.min(11,Number(process.env.PKMSVV_DIAGNOSTIC_LOOPS)||11));
+   for(let i=0;i<diagnosticRounds;i++){
     await sleep(5000);
     minute=await evaluate("(()=>({state:G.Game?.state,time:G.Game?.st?.time,hp:G.Game?.player?.hp,dead:G.Game?.player?.dead,level:G.Game?.player?.level,kills:G.Game?.player?.kills,enemies:G.EnemyMgr?.count,levelPopup:G.UI?.isOpen?.('scr-levelup'),navScans:G.PKMSVVModalNavQA?.scanCount,fx:G.PKMSVVHordePerformance?.stats,probe:window.__pkmsvvRunProbe.events.slice(-5)}))()");
     console.log('QA_COMBAT_EXPLORE_PROGRESS_'+(i+1)*5+'S='+JSON.stringify(minute));
@@ -1074,7 +1083,7 @@ async function main(){
    }
    console.log('QA_COMBAT_EXPLORE_65S='+JSON.stringify(minute));
    assert.equal(minute.state,'playing','Explore died in 65s without real damage: '+JSON.stringify(minute));
-   assert.ok(Number(minute.time)>=56,'Explore sim froze near 1 minute: '+JSON.stringify(minute));
+   assert.ok(Number(minute.time)>=(diagnosticRounds===11?56:Math.max(12,diagnosticRounds*3)),'Explore sim froze during diagnostic: '+JSON.stringify(minute));
    assert.equal(minute.probe.some(x=>x.name==='caught-game-error'),false,
     'Engine swallowed repeated frame exceptions: '+JSON.stringify(minute.probe));
 
