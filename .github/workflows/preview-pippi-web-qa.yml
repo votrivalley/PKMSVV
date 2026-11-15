@@ -14,6 +14,8 @@ on:
       - 'tests/pippi-web-browser.cjs'
       - 'tests/pokebox-stage2-browser.cjs'
       - 'src/pkmsvv-pc-menu-clean-qa.js'
+      - 'src/pkmsvv-quick-region.js'
+      - 'tests/quick-region.test.cjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -22,7 +24,32 @@ concurrency:
   group: pkmsvv-pippi-cousin-web-qa
   cancel-in-progress: true
 jobs:
+  stress-kanto:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - name: Download verified base for isolated Kanto stress
+        uses: actions/download-artifact@v4
+        with:
+          name: PKMSVV-PokeBox-Stage4-Web-QA-ONLY
+          run-id: 42520192007
+          github-token: ${{ github.token }}
+          path: dist/pokebox-stage4-qa
+      - run: node scripts/promote-web-v20.cjs
+      - run: node scripts/fetch-pippi-pmd.cjs
+      - run: node scripts/prepare-pippi-web-preview.cjs
+      - name: Chromium Kanto long-run 150s and restart 45s in fresh runner
+        env:
+          PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
+          PKMSVV_EXTENDED_PIPPI_STRESS: '1'
+        run: timeout 420s node tests/pokebox-stage2-browser.cjs
   preview:
+    needs: stress-kanto
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -34,7 +61,7 @@ jobs:
       - name: Verify companion and economy regressions before any preview
         run: |
           set -euo pipefail
-          node --test tests/pippi-companion.test.cjs tests/pokebox-stage3.test.cjs tests/pkmsvv-v20.test.cjs tests/v20-items-release.test.cjs
+          node --test tests/pippi-companion.test.cjs tests/pokebox-stage3.test.cjs tests/pkmsvv-v20.test.cjs tests/v20-items-release.test.cjs tests/quick-region.test.cjs
       - name: Download the exactly pinned Chromium-tested Web 2.0 snapshot
         uses: actions/download-artifact@v4
         with:
@@ -68,11 +95,6 @@ jobs:
           PKMSVV_TEST_RIFT: '1'
           PKMSVV_DIAGNOSTIC_LOOPS: '4'
         run: timeout 210s node tests/pokebox-stage2-browser.cjs
-      - name: Chromium first-run stress — PC companion, 150s Explore + 45s same-tab restart
-        env:
-          PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
-          PKMSVV_EXTENDED_PIPPI_STRESS: '1'
-        run: timeout 420s node tests/pokebox-stage2-browser.cjs
       - name: Deploy QA branch to Cloudflare Pages without changing production
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
