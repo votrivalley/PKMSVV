@@ -927,6 +927,28 @@ async function main(){
      };
     };
     for(const hook of [['RunUI','showOver'],['Game','quit'],['Game','toUI'],['Coop','over']])probe(hook);
+    if(${process.env.PKMSVV_TRACE_STARTUP==='1'}){
+     for(const [obj,key] of [['Game','startRun'],['World','setBiome'],
+         ['Rift','reset'],['Rift','update'],['MenuUI','open']]){
+      const original=G[obj]?.[key];if(typeof original!=='function')continue;
+      let count=0;G[obj][key]=function(...args){
+       const detail=obj+'.'+key,show=count++<12;
+       if(show)console.log('QA_BOOT_ENTER:'+detail+':'+String(args[0]).slice(0,35));
+       try{return original.apply(this,args);}
+       finally{if(show)console.log('QA_BOOT_EXIT:'+detail);}
+      };
+     }
+     let frameCount=0;const oldRAF=window.requestAnimationFrame;
+     window.requestAnimationFrame=function(cb){
+      return oldRAF.call(window,function(stamp){
+       const trace=frameCount++<48;
+       if(trace)console.log('QA_BOOT_FRAME_ENTER:'+String(cb?.name||'anonymous'));
+       try{return cb(stamp);}
+       finally{if(trace)console.log('QA_BOOT_FRAME_EXIT:'+String(cb?.name||'anonymous'));}
+      });
+     };
+    }
+
     window.addEventListener('error',e=>window.__pkmsvvRunProbe.events.push({name:'error',text:e.message,stack:e.error?.stack}),true);
     window.addEventListener('unhandledrejection',e=>window.__pkmsvvRunProbe.events.push({name:'rejection',text:String(e.reason)}),true);
     G.DB.save.partner=${Number(process.env.PKMSVV_TEST_PARTNER||25)};
