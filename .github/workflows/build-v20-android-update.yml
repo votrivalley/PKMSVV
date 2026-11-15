@@ -160,6 +160,12 @@ jobs:
           grep -q 'onClick:pippiCorner' decoded-android/assets/public/js/ui/pkmsvv-wiki-qa.js
           grep -q 'PIPPI_CORNER_PC_V1' decoded-android/assets/public/css/pkmsvv-pc-menu-clean-qa.css
           grep -q 'trainingPoints' decoded-android/assets/public/js/ui/pkmsvv-pippi.js
+          grep -Fq 'COUSIN_CHANCES=Object.freeze([0,.03,.045,.06])' decoded-android/assets/public/js/ui/pkmsvv-pippi.js
+          grep -Fq 'rollCousinOnHit' decoded-android/assets/public/js/ui/pkmsvv-pippi.js
+          grep -Fq 'Bạn đồng hành' decoded-android/assets/public/js/ui/pkmsvv-wiki-qa.js
+          grep -Fq 'normal:.002,elite:.004,legend:.008' decoded-android/assets/public/js/ui/pkmsvv-box-stage3.js
+          grep -Fq 'mint:.008/3' decoded-android/assets/public/js/app.min.js
+          grep -Fq "observer.observe(list,{childList:true,subtree:false})" decoded-android/assets/public/js/ui/pkmsvv-box-stage3.js
           grep -q 'PIPPI_CHAT_EXPRESSION_V1' decoded-android/assets/public/css/pkmsvv-pippi.css
           grep -q 'Fusion là dung hợp hai kỹ năng đã luyện MAX' decoded-android/assets/public/js/app.min.js
           test -s decoded-android/assets/public/js/ui/pkmsvv-fusion-evolved.js
@@ -245,18 +251,18 @@ jobs:
         run: |
           set -euo pipefail
           original="dist/android-v20-update/Pokemon-Chuyen-Sinh-2.0.1-Android-Signed-Update-CANDIDATE.apk"
-          release_file="dist/android-v20-update/Pokemon-Chuyen-Sinh-2.0.1-Pippi-Corner-Android-QA.apk"
+          release_file="dist/android-v20-update/Pokemon-Chuyen-Sinh-2.0.1-Pippi-Cousin-Android-QA.apk"
           test -s "$original"
           cp "$original" "$release_file"
           tag='pkmsvv-pippi-follow-coop-qa-20261115'
-          printf 'This is a noncommercial Android QA candidate.\n\n- Co-op: preserve only its authored 42px pixel icon; remove the leftover handshake.\n- Pippi: follow at 72px along the player trail. Portrait emotions mirror Ragnarok-style bubble events. PC adds 'Góc Pippi' with Bond 1–10, four trainable skills and free saved Bond points.\n- Includes the same PC/Web source changes on a separate QA branch. Public Web is intentionally UNCHANGED.\n- Save: back up JSON before installing; do not uninstall your existing app.\n- Android versionCode 2000116, same signed application identity.\n- Automatic tests pass, physical device QA still required.\n' > qa-release-notes.txt
+          printf 'This is a noncommercial Android QA candidate.\n\n- Co-op: preserve only its authored 42px pixel icon; remove the leftover handshake.\n- Pippi: follow at 72px along the player trail. Portrait emotions mirror Ragnarok-style bubble events. PC adds 'Góc Pippi' with Bond 1–10, four trainable skills and free saved Bond points.\n- Includes the same PC/Web source changes on a separate QA branch. Public Web is intentionally UNCHANGED.\n- Save: back up JSON before installing; do not uninstall your existing app.\n- Android versionCode 2000117, same signed application identity.\n- Automatic tests pass, physical device QA still required.\n' > qa-release-notes.txt
           sha256sum "$release_file" > dist/android-v20-update/SHA256SUMS-PIPPI-QA.txt
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" "$release_file" dist/android-v20-update/SHA256SUMS-PIPPI-QA.txt --clobber
           else
             gh release create "$tag" "$release_file" dist/android-v20-update/SHA256SUMS-PIPPI-QA.txt \
               --target "$GITHUB_SHA" \
-              --title 'PKMSVV 2.0.1 Góc Pippi + Portrait Emotions (Android QA)' \
+              --title 'PKMSVV 2.0.1 Bạn đồng hành + Em họ Pikachu (Android QA)' \
               --notes-file qa-release-notes.txt --prerelease
           fi
           gh release view "$tag" --json url,assets --jq '{url:.url,assets:[.assets[].name]}'
