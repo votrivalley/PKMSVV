@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/preview-pippi-web-qa.yml'
       - 'scripts/prepare-pippi-web-preview.cjs'
+      - 'scripts/build-pippi-portrait-atlas.cjs'
       - 'src/pkmsvv-pippi.js'
       - 'src/pkmsvv-pippi.css'
       - 'src/pkmsvv-wiki.js'
@@ -41,7 +42,7 @@ jobs:
           github-token: ${{ github.token }}
           path: dist/pokebox-stage4-qa
       - run: node scripts/promote-web-v20.cjs
-      - run: node scripts/fetch-pippi-pmd.cjs
+      - run: node scripts/fetch-pippi-pmd.cjs && node scripts/build-pippi-portrait-atlas.cjs
       - run: node scripts/prepare-pippi-web-preview.cjs
       - name: Chromium Kanto long-run 150s and restart 45s in fresh runner
         env:
@@ -79,7 +80,7 @@ jobs:
           github-token: ${{ github.token }}
           path: dist/pokebox-stage4-qa
       - run: node scripts/promote-web-v20.cjs
-      - run: node scripts/fetch-pippi-pmd.cjs
+      - run: node scripts/fetch-pippi-pmd.cjs && node scripts/build-pippi-portrait-atlas.cjs
       - run: node scripts/prepare-pippi-web-preview.cjs
       - name: Grieta + Mewtwo native fight and Rift freeze trace (not deployed)
         env:
@@ -120,8 +121,8 @@ jobs:
           path: dist/pokebox-stage4-qa
       - name: Promote snapshot locally (do not publish it)
         run: node scripts/promote-web-v20.cjs
-      - name: Fetch 8-way and 16 portrait Clefairy PMD PNG assets
-        run: node scripts/fetch-pippi-pmd.cjs
+      - name: Fetch verified PMD sprites and build single 16-face portrait atlas
+        run: node scripts/fetch-pippi-pmd.cjs && node scripts/build-pippi-portrait-atlas.cjs
       - name: Add isolated companion features to BOTH game routes
         run: node scripts/prepare-pippi-web-preview.cjs
       - name: Verify staged Web is QA-only and has the Pippi cousin 3–6 percent chance
