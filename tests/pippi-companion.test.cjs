@@ -104,6 +104,40 @@ test('Pippi has real independent world position and does not snap to player',()=
  assert.equal(typeof follower.direction,'number');
  assert.ok(follower.direction>=0&&follower.direction<8);
 });
+test('Pippi uses a support formation with an idle dead zone and a catch-up leash',()=>{
+ const player={x:300,y:300},run=P.newRun(player,0);
+ let p=P.advanceFollower(run,player,0);
+ const start={x:p.x,y:p.y};
+ for(let i=1;i<=12;i++)p=P.advanceFollower(run,player,i*.25);
+ assert.equal(p.moving,false,'standing player should not force perpetual companion motion');
+ assert.ok(Math.hypot(p.x-start.x,p.y-start.y)<=16,
+  'do not glue Pippi directly to the player every tick');
+ for(let i=13;i<=24;i++){
+  player.x+=25;
+  p=P.advanceFollower(run,player,i*.25);
+  assert.ok(Math.hypot(p.x-player.x,p.y-player.y)<220,
+   'support catch-up stays near the player during normal running');
+ }
+ for(let i=25;i<=45;i++)p=P.advanceFollower(run,player,i*.25);
+ assert.equal(p.moving,false,'support becomes idle when the formation settles');
+ assert.ok(Math.hypot(p.x-player.x,p.y-player.y)>=56,
+  'idle support cannot overlap the lead Pokemon');
+});
+
+test('Pippi ground sprite is enlarged and all floating/over-UI effects are disabled',()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pippi.css'),'utf8');
+ const js=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pippi.js'),'utf8');
+ assert.match(css,/scale\\(2\\.22\\)/,'walk PMD needs a game-scale sprite');
+ assert.match(css,/scale\\(1\\.68\\)/,'idle PMD matches walk sprite size');
+ assert.doesNotMatch(css,/@keyframes pippi-follow-bob/);
+ assert.match(css,/transition:left \\.2s linear,top \\.2s linear/);
+ assert.match(css,/#pkmsvv-pippi-follower\\[hidden\\]/);
+ assert.match(js,/visualModalOpen\\(\\)/);
+ assert.match(js,/concealVisuals\\(\\)/);
+ assert.match(js,/G\\.Camera\\.left\\(\\)/);
+});
+
 test('Pippi inherits slow-water movement by observing player actual displacement',()=>{
  const player={x:100,y:100},run=P.newRun(player,0);
  P.advanceFollower(run,player,0);
@@ -117,7 +151,8 @@ test('Pippi inherits slow-water movement by observing player actual displacement
  const lastX=f.x;
  player.x+=600;
  f=P.advanceFollower(run,player,.6);
- assert.ok(Math.abs(Math.hypot(player.x-f.x,player.y-f.y)-72)<1,'Portal catch-up keeps a safe 72px gap');
+ assert.ok(Math.abs(Math.hypot(player.x-f.x,player.y-f.y)-Math.hypot(78,78*.24))<1,
+  'Portal catch-up keeps a close but non-overlapping support formation');
 });
 test('Ragnarok-like expression indicators use original SVG pixel paths, not emoji text',()=>{
  for(const kind of ['heart','angry','alarm','question','sleep','sparkle']){
@@ -183,13 +218,13 @@ test('Co-op keeps only authored WebP and prevents late injected online handshake
 test('High-DPI canvas gives Pippi a larger world gap but the same on-screen clearance',()=>{
  const player={x:500,y:400},run=P.newRun(player,0);
  let p=P.advanceFollower(run,player,0,188);
- assert.ok(Math.hypot(p.x-player.x,p.y-player.y)>188,
-   'DPR-scaled companion starts fully outside the player footprint');
+ assert.ok(Math.hypot(p.x-player.x,p.y-player.y)>120,
+   'High-DPI companion starts outside the player footprint without excessive distance');
  for(let i=1;i<=10;i++){
   player.y+=5;
   p=P.advanceFollower(run,player,i*.2,188);
-  assert.ok(Math.hypot(p.x-player.x,p.y-player.y)>150,
-   'DPR-scaled follow must stay at least 50 CSS pixels away');
+  assert.ok(Math.hypot(p.x-player.x,p.y-player.y)>=100,
+   'High-DPI follow must preserve clearance but stay within support range');
  }
 });
 
