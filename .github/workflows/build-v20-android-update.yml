@@ -248,7 +248,7 @@ jobs:
           release_file="dist/android-v20-update/Pokemon-Chuyen-Sinh-2.0.1-Pippi-Corner-Android-QA.apk"
           test -s "$original"
           cp "$original" "$release_file"
-          tag='pkmsvv-pippi-corner-qa-20261115'
+          tag='pkmsvv-pippi-follow-coop-qa-20261115'
           printf 'This is a noncommercial Android QA candidate.\n\n- Co-op: preserve only its authored 42px pixel icon; remove the leftover handshake.\n- Pippi: follow at 72px along the player trail. Portrait emotions mirror Ragnarok-style bubble events. PC adds 'Góc Pippi' with Bond 1–10, four trainable skills and free saved Bond points.\n- Includes the same PC/Web source changes on a separate QA branch. Public Web is intentionally UNCHANGED.\n- Save: back up JSON before installing; do not uninstall your existing app.\n- Android versionCode 2000116, same signed application identity.\n- Automatic tests pass, physical device QA still required.\n' > qa-release-notes.txt
           sha256sum "$release_file" > dist/android-v20-update/SHA256SUMS-PIPPI-QA.txt
           if gh release view "$tag" >/dev/null 2>&1; then
