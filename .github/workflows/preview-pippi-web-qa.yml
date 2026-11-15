@@ -47,6 +47,7 @@ jobs:
         env:
           PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
           PKMSVV_EXTENDED_PIPPI_STRESS: '1'
+          PKMSVV_TRACE_STARTUP: '1'
         run: timeout 420s node tests/pokebox-stage2-browser.cjs
   preview:
     needs: stress-kanto
@@ -93,6 +94,7 @@ jobs:
           PKMSVV_TEST_PARTNER: '150'
           PKMSVV_TEST_REGION: '1'
           PKMSVV_TEST_RIFT: '1'
+          PKMSVV_TRACE_STARTUP: '1'
           PKMSVV_DIAGNOSTIC_LOOPS: '4'
         run: timeout 210s node tests/pokebox-stage2-browser.cjs
       - name: Deploy QA branch to Cloudflare Pages without changing production
