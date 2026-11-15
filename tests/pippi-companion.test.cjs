@@ -340,6 +340,7 @@ test('Pippi predecodes its emotion portraits in home UI, never fetching them in 
   decode(){return Promise.resolve();}
  }
  const w={G:h.G,Image:FakeImage,document:{body:null},
+  __pkmsvvPippiAllowCombatPortrait:true,
   requestAnimationFrame(){},console:{warn(){}}};
  const api=P.install(w);api.tick();
  assert.ok(urls.length>=14,'preload every expression while at home');
