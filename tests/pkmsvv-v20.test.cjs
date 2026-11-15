@@ -67,14 +67,14 @@ test('Mint/Ability/TM sales consume exactly one copy and refund half',()=>{
 });
 test('2.0 item drops: normal drops only; event Hidden Capsules remain usable',()=>{
  const {G,s}=shop();
- assert.equal(G.Shop.DROP_RATE.mint,.008*2/3);
- assert.equal(G.Shop.DROP_RATE.cap,.008*2/3);
+ assert.equal(G.Shop.DROP_RATE.mint,.008/3);
+ assert.equal(G.Shop.DROP_RATE.cap,.008/3);
  assert.equal(G.Shop.DROP_RATE.caph,undefined,'retired Hidden Capsule must not drop');
  assert.equal(G.Shop.enemyMultiplier({rarity:1}),1);
  assert.equal(G.Shop.enemyMultiplier({elite:true}),2);
  assert.equal(G.Shop.enemyMultiplier({dex:150}),4);
  const normal={dex:25};assert.deepEqual(Array.from(G.Shop.dropFromEnemy(normal,()=>.01)),[]);
- assert.deepEqual(Array.from(G.Shop.dropFromEnemy({dex:25,elite:true},()=>.01)),['mint','cap']);
+ assert.deepEqual(Array.from(G.Shop.dropFromEnemy({dex:25,elite:true},()=>.004)),['mint','cap']);
  assert.deepEqual(Array.from(G.Shop.dropFromEnemy({dex:150},()=>.007)),['mint','cap']);
  assert.equal(s.bag.mint,2);assert.equal(s.bag.cap,2);assert.equal(s.bag.caph,undefined);
  const same={dex:25};G.Shop.dropFromEnemy(same,()=>0);
