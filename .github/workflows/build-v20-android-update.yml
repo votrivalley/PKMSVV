@@ -244,7 +244,7 @@ jobs:
           retention-days: 14
 
       - name: Publish direct-download Android QA prerelease (NO Web deployment)
-        if: github.ref_name == 'fix/pippi-follow-menu-qa-20261115'
+        if: github.event_name == 'workflow_dispatch' && github.ref_name == 'fix/pippi-follow-menu-qa-20261115'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
