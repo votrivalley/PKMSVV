@@ -88,7 +88,9 @@
  * disabled for native combat. No more empty white conversation square. */
 #pkmsvv-pippi .pippi-portrait-art{
  display:grid;place-items:center;position:absolute;inset:0;
- overflow:hidden;border-radius:6px;background:#f5a5cc;
+ overflow:hidden;border-radius:6px;background-color:#f5a5cc;
+ background-size:400% 400%;background-repeat:no-repeat;
+ image-rendering:pixelated;
 }
 #pkmsvv-pippi .pippi-portrait-art>svg{
  display:block;width:100%;height:100%;image-rendering:pixelated;
