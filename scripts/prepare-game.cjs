@@ -688,6 +688,8 @@ if (process.env.PKMSVV_SWITCH_BOOT === '1') {
  // PC and local staged Web reuse the same authored menu icon WebP and DOM cleanup.
  const menuName='pkmsvv-pc-menu-clean-qa.js';
  fs.copyFileSync(path.join(project,'src',menuName),path.join(pippiDir,menuName));
+ // PC and staged Web must load the same PC hub controller as Android QA.
+ fs.copyFileSync(path.join(project,'src','pkmsvv-wiki.js'),path.join(pippiDir,'pkmsvv-wiki-qa.js'));
  fs.mkdirSync(path.join(game,'images'),{recursive:true});
  fs.copyFileSync(path.join(project,'src','pkmsvv-menu-icons.webp'),path.join(game,'images','pkmsvv-menu-icons.webp'));
  fs.appendFileSync(path.join(game,'css','style.css'),'\n'+fs.readFileSync(path.join(project,'src','pkmsvv-pc-menu-clean-qa.css'),'utf8'));
@@ -706,6 +708,7 @@ if (process.env.PKMSVV_SWITCH_BOOT === '1') {
  if(!source.includes('</body>')||source.includes('js/ui/pkmsvv-pippi.js'))
   throw Error('Pippi: unexpected source bootstrap state');
  fs.writeFileSync(devFile,source.replace('</body>',
+  '<script defer src="js/ui/pkmsvv-wiki-qa.js"></script>\n'+
   '<script defer src="js/ui/pkmsvv-pc-menu-clean-qa.js"></script>\n'+
   '<script defer src="js/ui/pkmsvv-pippi.js"></script>\n</body>'));
 }
