@@ -234,7 +234,7 @@
  // a lockstep copy of every player footstep. All coordinates remain in world
  // units. The dead zone means Pippi can idle while the player changes skills.
  const FOLLOW_DISTANCE=78;
- const SAFE_DISTANCE=54;
+ const SAFE_DISTANCE=56;
  const MAX_SUPPORT_GAP=168;
  function followTarget(history,offset=FOLLOW_DISTANCE){
   if(!history?.length)return null;
