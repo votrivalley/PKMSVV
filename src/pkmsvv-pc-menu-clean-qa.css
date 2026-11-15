@@ -293,3 +293,56 @@
 #scr-menu .menu-right .menu-list .pkmsvv-icon-unified .pkmsvv-menu-copy::before{
  display:none!important;content:none!important;background:none!important;
 }
+
+/* PIPPI_CORNER_PC_V1 — fourth PC tile / controller-friendly Bond training. */
+#pkmsvv-wiki-overlay .pkmsvv-pippi-corner{max-width:min(810px,100%);}
+#pkmsvv-wiki-overlay .pkmsvv-pippi-training{display:flex;flex-direction:column;gap:11px;min-width:0}
+#pkmsvv-wiki-overlay .pkmsvv-pippi-training-hero{
+ display:flex;align-items:center;gap:12px;border:2px solid #f2b7d2;border-radius:12px;
+ padding:10px;background:linear-gradient(145deg,#593752,#2e4766);min-width:0;
+}
+#pkmsvv-wiki-overlay .pkmsvv-pippi-training-face{
+ width:72px;height:72px;flex:0 0 72px;object-fit:contain;image-rendering:pixelated;
+ border:2px solid #f4cadb;border-radius:10px;background:#f9edf3;
+}
+#pkmsvv-wiki-overlay .pkmsvv-pippi-training-summary{
+ display:flex;flex-direction:column;gap:3px;min-width:0;flex:1;
+ color:#fff0f5;font-size:13px
+}
+#pkmsvv-wiki-overlay .pkmsvv-pippi-training-summary>strong{
+ color:#ffe39b;font-size:clamp(17px,2.4vw,24px)
+}
+#pkmsvv-wiki-overlay .pkmsvv-pippi-training-points{color:#ffde8d;font-weight:800}
+#pkmsvv-wiki-overlay .pkmsvv-pippi-training-summary progress{
+ display:block;max-width:100%;width:100%;height:11px;accent-color:#ffa9cf;
+}
+#pkmsvv-wiki-overlay .pkmsvv-pippi-training-grid{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;
+}
+#pkmsvv-wiki-overlay .pkmsvv-pippi-training-row{
+ display:flex;flex-direction:column;align-items:flex-start;gap:6px;
+ min-width:0;background:#1d4455;border:1px solid #80c0b5;
+ padding:11px;border-radius:12px;color:#eefaf9;
+}
+#pkmsvv-wiki-overlay .pkmsvv-pippi-training-row strong{color:#ffdd97;font-size:15px}
+#pkmsvv-wiki-overlay .pkmsvv-pippi-training-row p{margin:0;font-size:12px;line-height:1.4;flex:1}
+#pkmsvv-wiki-overlay .pkmsvv-pippi-train-status{color:#cae8e1;font-size:11px}
+#pkmsvv-wiki-overlay .pkmsvv-pippi-train-btn{
+ min-height:38px;padding:7px 11px;border-radius:9px;
+ background:#ffe08c;border:2px solid #ffebbf;color:#23394d;
+ font-weight:850;font-size:13px;cursor:pointer;width:100%;
+}
+#pkmsvv-wiki-overlay .pkmsvv-pippi-train-btn:disabled{
+ cursor:not-allowed;opacity:.6;background:#97aaa9;border-color:#a3b8b3;
+}
+#pkmsvv-wiki-overlay .pkmsvv-pippi-train-btn:focus-visible{
+ outline:3px solid #ff91ca;outline-offset:3px
+}
+@media(max-width:640px), (max-height:480px){
+ #pkmsvv-wiki-overlay .pkmsvv-pippi-training-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ #pkmsvv-wiki-overlay .pkmsvv-pippi-training-row{padding:8px;gap:4px}
+ #pkmsvv-wiki-overlay .pkmsvv-pippi-training-face{width:55px;height:55px;flex-basis:55px}
+ #pkmsvv-wiki-overlay .pkmsvv-pippi-training-row strong{font-size:13px}
+ #pkmsvv-wiki-overlay .pkmsvv-pippi-training-row p{font-size:11px}
+}
+@media(max-width:430px){#pkmsvv-wiki-overlay .pkmsvv-pippi-training-grid{grid-template-columns:1fr}}
