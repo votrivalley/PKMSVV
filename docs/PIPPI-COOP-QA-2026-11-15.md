@@ -35,3 +35,17 @@ This is **QA only**, not proof of real-device visual correctness. Back up your s
 - PC build: legacy `tests/berry.test.cjs` currently has two failing countdown assumptions in the baseline; they are recorded as a **nonblocking QA warning**, not silently fixed or deleted. Pippi/Co-op regression remains blocking.
 - The scripted companion follows the player movement route and speed, but does not yet perform independent physics collision/pathfinding like a second player. Real-device water/obstacle QA is needed.
 - No live Web deployment occurred from this branch; do not merge into the Web release branch until approved.
+
+## Góc Pippi — PC tile & synchronized portraits
+- PC now contains a fourth interactive tile **Góc Pippi** (Pippi's Corner), illustrated with Clefairy #035 rather than an OS emoji.
+- The new screen shows Bond rank 1–10, XP progress to next rank, free remaining training points, and four upgrade trees.
+- **One training point per Bond level after Bond 1**, carried across previous saves; unused points are not lost.
+- Training trees (max 3 each) and unlock thresholds:
+  1. Hồi máu / Healing: available with points, +2% max HP per upgrade level.
+  2. Cổ vũ / Cheer: Bond 2, +1.5% attack while buff active per upgrade level.
+  3. Làm chậm / Slowdown: Bond 3, stronger/longer slow per level; bosses resist.
+  4. Khiên trăng / Moon Shield: Bond 7, +0.35s emergency protection per level.
+- Bond 10 Moon Miracle remains automatic and unchanged. No second currency and no PokéCoins cost.
+- A two-press confirmation prevents accidental training; buttons are keyboard/gamepad focusable. The save transaction rolls back if commit refuses.
+- In combat, every Pippi speech event picks its matching Clefairy PMD facial portrait; the same event adds a custom pixel-art Ragnarok-style bubble on the portrait. If one portrait is unavailable, it falls back to Normal then a matching original vector face.
+- All changes remain on the QA branch; public Cloudflare Web deploy is still blocked pending user approval.
