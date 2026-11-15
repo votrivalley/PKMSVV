@@ -49,8 +49,45 @@ jobs:
           PKMSVV_EXTENDED_PIPPI_STRESS: '1'
           PKMSVV_TRACE_STARTUP: '1'
         run: timeout 420s node tests/pokebox-stage2-browser.cjs
+  diagnostic-rift:
+    # Run independently: a failing Kanto restart must not hide the Rift
+    # signature. Both variants remain read-only and NEVER deploy Web QA.
+    name: "Grieta Mewtwo — Pippi blocked ${{ matrix.without }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        without: ['0', '1']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - name: Download verified base for isolated Grieta stress
+        uses: actions/download-artifact@v4
+        with:
+          name: PKMSVV-PokeBox-Stage4-Web-QA-ONLY
+          run-id: 42520192007
+          github-token: ${{ github.token }}
+          path: dist/pokebox-stage4-qa
+      - run: node scripts/promote-web-v20.cjs
+      - run: node scripts/fetch-pippi-pmd.cjs
+      - run: node scripts/prepare-pippi-web-preview.cjs
+      - name: Grieta + Mewtwo native fight and Rift freeze trace (not deployed)
+        env:
+          PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
+          PKMSVV_TEST_PARTNER: '150'
+          PKMSVV_TEST_REGION: '1'
+          PKMSVV_TEST_RIFT: '1'
+          PKMSVV_BROWSER_WITHOUT_PIPPI: ${{ matrix.without }}
+          PKMSVV_TRACE_RIFT: '1'
+          PKMSVV_TRACE_STARTUP: '1'
+          PKMSVV_DIAGNOSTIC_LOOPS: '4'
+        run: timeout 260s node tests/pokebox-stage2-browser.cjs
   preview:
-    needs: stress-kanto
+    needs: [stress-kanto, diagnostic-rift]
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
