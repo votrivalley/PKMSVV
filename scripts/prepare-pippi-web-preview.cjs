@@ -102,8 +102,8 @@ const urls=['/game/','/game/index.html','/ai/game/','/ai/game/index.html',
  '/game/js/ui/pkmsvv-pippi.js','/ai/game/js/ui/pkmsvv-pippi.js',
  '/game/css/pkmsvv-pippi.css','/ai/game/css/pkmsvv-pippi.css',
  '/build-info.json'];
-const noStore=urls.map(u=>u+'\\n  Cache-Control: no-store, max-age=0').join('\\n');
-write(headersPath,previousHeaders.trimEnd()+'\\n\\n'+noStore+'\\n');
+const noStore=urls.map(u=>u+'\n  Cache-Control: no-store, max-age=0').join('\n');
+write(headersPath,previousHeaders.trimEnd()+'\n\n'+noStore+'\n');
 // Unique SW key ensures QA does not reuse the public revision.
 const swPath=present(path.join(site,'sw.js'));
 const oldSW=fs.readFileSync(swPath,'utf8');
