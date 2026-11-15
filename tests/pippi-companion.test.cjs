@@ -199,7 +199,7 @@ test('Góc Pippi Bond training awards only earned points and persists 4 trees',(
  const p=P.data(save);
  assert.equal(p.bond,10);
  assert.equal(P.trainingPoints(save),9);
- assert.deepEqual(p.training,{heal:0,buff:0,slow:0,shield:0});
+ assert.deepEqual(p.training,{heal:0,buff:0,slow:0,shield:0,cousin:0});
  const result=P.train(save,'heal',()=>true);
  assert.deepEqual(result,{ok:true,level:1,points:8});
  assert.equal(save.coins,321,'No PokéCoins deducted for companion training');
@@ -257,4 +257,50 @@ test('PC uses native fourth Góc Pippi card and event-synchronized portrait sour
  assert.match(core,/portrait\.dataset\.emotion=face/);
  assert.match(core,/el\.dataset\.event=event/);
  assert.match(css,/PIPPI_CHAT_EXPRESSION_V1/);
+});
+
+
+test('Em họ Pikachu: 3%, 4.5%, 6% on real damage, never before learning',()=>{
+ assert.equal(P.cousinChance(0),0);assert.equal(P.cousinChance(1),.03);
+ assert.equal(P.cousinChance(2),.045);assert.equal(P.cousinChance(3),.06);
+ assert.equal(P.cousinChance(999),.06);
+ const s={coins:500,pkmsvvPippi:{xp:14}}; // Bond 5
+ for(let i=1;i<=3;i++)assert.equal(P.train(s,'cousin',()=>true).ok,true);
+ assert.equal(P.train(s,'cousin',()=>true).reason,'max');
+ assert.equal(P.trainingPoints(s),1);assert.equal(s.coins,500);
+});
+test('Pikachu stuns only on actual HP loss in Explore, not on dodges or Co-op',()=>{
+ const s={pkmsvvPippi:{xp:14,training:{cousin:1}}};
+ const enemy={x:124,y:100,dead:false,applyStun(t){this.stun=t;}};
+ const pl={x:100,y:100,hp:100,maxHp:100,dead:false};
+ const G={DB:{save:s},Game:{state:'playing',player:pl,st:{time:20}},
+  PKMSVVQuickRegion:{active:true},EnemyMgr:{all:()=>[enemy]}};
+ const run=P.newRun(pl,20);
+ assert.equal(P.rollCousinOnHit(G,run,pl,100,100,()=>0).triggered,false);
+ assert.equal(P.rollCousinOnHit(G,run,pl,100,90,()=>.03).triggered,false);
+ assert.equal(P.rollCousinOnHit(G,run,pl,100,90,()=>.0299).triggered,true);
+ assert.equal(enemy.stun,1.1);assert.ok(run.cousinUntil>20);
+ G.Coop={active:true};G.Game.st.time=22;
+ assert.equal(P.rollCousinOnHit(G,run,pl,90,80,()=>0).triggered,false);
+});
+test('Pikachu native hurt hook fires once per damaging hit and is restored',()=>{
+ const pl={hp:100,hurt(n){this.hp-=n;return 'native';}};
+ const old=pl.hurt,run=P.newRun(pl,1);let hits=0;
+ assert.equal(P.installDamageHook(run,pl,()=>{hits++;}),true);
+ assert.equal(P.installDamageHook(run,pl,()=>{hits+=50;}),true);
+ assert.equal(pl.hurt(0),'native');assert.equal(hits,0);
+ assert.equal(pl.hurt(12),'native');assert.equal(hits,1);
+ P.finish(run);assert.strictEqual(pl.hurt,old);
+ pl.hurt(12);assert.equal(hits,1);
+});
+test('Pikachu genuine paralysis affects max 4 targets, bosses shorter, no stun lock',()=>{
+ const pl={x:10,y:10};
+ const foes=Array.from({length:8},(_,i)=>({
+  x:30+i*3,y:30,boss:i===0,dead:false,applyStun(t){this.stun=t;}
+ }));
+ const G={EnemyMgr:{all:()=>foes},FX:{ring(){},burst(){},dmgText(){}}};
+ assert.equal(P.cousinLightning(G,pl,10).affected,4);
+ assert.equal(foes[0].stun,.35);assert.equal(foes[1].stun,1.1);
+ assert.equal(P.cousinLightning(G,pl,11).affected,4);
+ assert.equal(P.cousinLightning(G,pl,12).affected,0);
 });
