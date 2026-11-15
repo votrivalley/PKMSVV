@@ -154,7 +154,7 @@
      !pl||pl.dead||!(Number(pl.hp)<=0)||typeof pl.revive!=='function')return false;
   if(data(G.DB?.save).bond<10)return false;
   run.revived=true;
-  run.reviveAt=now;run.megaUntil=now+3.6;
+  run.reviveAt=now;run.evolveUntil=now+2;run.megaUntil=now+3.6;
   pl.extraRevives=0;
   pl.revive(.4);
   pl.invuln=Math.max(Number(pl.invuln)||0,3);
@@ -381,7 +381,18 @@
     follower=d.createElement('div');
     follower.id='pkmsvv-pippi-follower';
     follower.setAttribute('aria-label','Pippi — bạn đồng hành');
-    follower.innerHTML=faceSVG('smile',false)+'<span class="pippi-pmd-sprite"></span><span class="pippi-world-emote"></span>';
+    follower.innerHTML=faceSVG('smile',false)+'<span class="pippi-pmd-sprite"></span>'+
+     '<span class="pippi-clefable-sprite"></span><span class="pippi-world-emote"></span>'+
+     '<span class="pippi-cousin" hidden></span>';
+    try{
+     const clefable=G.UI?.spriteCanvas?.(36,48,48,{lively:true,scale:1.2,hero:true});
+     if(clefable?.nodeType)follower.querySelector('.pippi-clefable-sprite').append(clefable);
+    }catch(_){/* sprite may not yet be initialized; leave original PMD art */}
+    try{
+     const pikachu=G.UI?.spriteCanvas?.(25,48,48,{lively:true,scale:1.1,hero:true});
+     if(pikachu?.nodeType)follower.querySelector('.pippi-cousin').append(pikachu);
+    }catch(_){/* optional visual; game sprite data remains unchanged */}
+    G.Sprites?.preload?.([25,36],6000);
     d.body.appendChild(follower);
     const probe=d.createElement('img');
     probe.onload=()=>follower?.classList.add('has-pmd');
@@ -413,11 +424,15 @@
    follower.style.top=Math.round(y)+'px';
    run.direction=state.direction;
    follower.classList.toggle('moving',state.moving);
+   const cousin=follower.querySelector('.pippi-cousin');
+   if(cousin)cousin.hidden=run.now>=run.cousinUntil;
    const emote=follower.querySelector('.pippi-world-emote');
    if(emote)emote.hidden=run.now>=run.emoteUntil;
    follower.dataset.direction=String(run.direction);
-   const mega=run.now<run.megaUntil;
-   const asleep=!mega&&run.now<run.sleepUntil;
+   const evolving=run.revived&&run.now<run.evolveUntil;
+   const mega=run.revived&&run.now>=run.evolveUntil&&run.now<run.megaUntil;
+   const asleep=run.revived&&run.now>=run.megaUntil&&run.now<run.sleepUntil;
+   follower.classList.toggle('evolving',evolving);
    follower.classList.toggle('sleeping',asleep);
    follower.classList.toggle('mega',mega);
    if(follower.classList.contains('has-pmd')){
@@ -513,12 +528,22 @@
      finish(run);run=newRun(pl,now);say('intro',true);say('tutorial');
     }
     run.now=now;
+    installDamageHook(run,pl,(before,after,hitPlayer)=>{
+     const outcome=rollCousinOnHit(G,run,hitPlayer,before,after);
+     if(outcome.triggered)say('cousin',true);
+    });
     follow(pl);
     endEffects(run,now);
     if(ui&&!ui.hidden&&now>=Number(ui.dataset.until))ui.hidden=true;
     const p=data(G.DB?.save),lv=p.bond,training=p.training;
     const isSleeping=now<run.sleepUntil;
+    if(run.revived&&!run.megaSpoken&&now>=run.evolveUntil){
+     run.megaSpoken=true;say('revive',true);
+    }
     if(isSleeping){
+     if(!run.megaSpoken&&now>=run.evolveUntil&&now<run.megaUntil){
+      run.megaSpoken=true;say('revive',true);
+     }
      if(!run.sleepTalked&&now>=run.megaUntil&&run.revived){
       run.sleepTalked=true;say('sleep',true);
      }
@@ -550,7 +575,7 @@
    if(!run||!eligible(G))return false;
    const now=Math.max(0,Number(G.Game?.st?.time??G.Game?.time)||0);
    if(!tryRevive(G,run,pl,now))return false;
-   run.now=now;say('revive',true);
+   run.now=now;say('evolve',true);
    return true;
   }
   // Original 50k global revive is retired everywhere. The new revive fires
@@ -573,7 +598,7 @@
     return purchase.call(this,save,id);
    };
   }
-  const api={installed:true,refund,migrate,data,rank,earn,train,trainingPoints,bondProgress,eligible:()=>eligible(G),
+  const api={installed:true,refund,migrate,data,rank,earn,train,trainingPoints,bondProgress,cousinChance,eligible:()=>eligible(G),
    tryRevive:revive,tick,show:say,get run(){return run;}};
   G.PKMSVVPippi=api;
   // The RAF loop never mutates other modes; work only at a throttled 4Hz.
@@ -585,5 +610,5 @@
   else if(typeof w.setInterval==='function')w.setInterval(tick,350);
   return api;
  }
- return {rank,data,refund,earn,train,trainingPoints,bondProgress,eligible,newRun,advanceFollower,emoteSVG,heal,buff,slow,endEffects,finish,tryRevive,faceSVG,install};
+ return {rank,data,refund,earn,train,trainingPoints,bondProgress,cousinChance,cousinLightning,rollCousinOnHit,installDamageHook,uninstallDamageHook,eligible,newRun,advanceFollower,emoteSVG,heal,buff,slow,endEffects,finish,tryRevive,faceSVG,install};
 });
