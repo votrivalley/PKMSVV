@@ -57,7 +57,7 @@ async function main(){
    if(m.method==='Runtime.exceptionThrown')errors.push(m.params.exceptionDetails?.exception?.description||'Browser JS exception');
    if(m.method==='Runtime.consoleAPICalled'){
     const parts=(m.params?.args||[]).map(x=>String(x.value??x.description??''));
-    if(parts.some(x=>x.startsWith('QA_TRACE:')||x.startsWith('QA_RIFT_STAGE_')||x.startsWith('QA_BOOT_')||x.startsWith('QA_PIPPI_STAGE:')))
+    if(parts.some(x=>x.startsWith('QA_TRACE:')||x.startsWith('QA_RIFT_STAGE_')||x.startsWith('QA_BOOT_')||x.startsWith('QA_PIPPI_STAGE:')||x.startsWith('QA_PIPPI_SPEECH:')))
      console.log(parts.join(' | ').slice(0,1600));
    }
    
