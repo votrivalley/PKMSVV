@@ -523,6 +523,21 @@
   }
   const decodedPortraits=new Map();
   let portraitsPreloading=false;
+  const portraitAtlasOrder=['Normal','Happy','Joyous','Determined',
+   'Angry','Crying','Dizzy','Inspired',
+   'Pain','Sad','Shouting','Sigh',
+   'Stunned','Surprised','Teary-Eyed','Worried'];
+  const portraitAtlasIndex=new Map(portraitAtlasOrder.map((name,index)=>[name,index]));
+  let portraitAtlasReady=false,portraitAtlasRequested=false;
+  function loadPortraitAtlas(){
+   if(portraitAtlasRequested||typeof w.Image!=='function')return;
+   portraitAtlasRequested=true;
+   const atlas=new w.Image();
+   atlas.decoding='async';
+   atlas.onload=()=>{portraitAtlasReady=!!atlas.naturalWidth;};
+   atlas.onerror=()=>{portraitAtlasReady=false;};
+   atlas.src='images/pippi/portrait/atlas.png';
+  }
   // Decode all 16 expressions while the home menu is idle, not mid-combat.
   // Retain the decoded Image objects, and move them between the chat bubble
   // and cache without changing image.src in a live Rift/Explore RAF.
@@ -743,9 +758,22 @@
    mark('portrait-enter');
    portrait.dataset.expression=face;
    const fallbackArt=portrait.querySelector('.pippi-portrait-art');
-   if(fallbackArt&&fallbackArt.dataset.face!==face){
-    fallbackArt.innerHTML=faceSVG(face,face==='mega');
+   const canUseAtlas=portraitAtlasReady&&w.__pkmsvvPippiPortraitDisabled!==true&&
+    w.__pkmsvvPippiNoPortrait!==true;
+   if(fallbackArt&&
+      (fallbackArt.dataset.face!==face||
+       fallbackArt.dataset.atlas!==(canUseAtlas?'1':'0'))){
+    if(canUseAtlas){
+     const idx=portraitAtlasIndex.get(filename)??0;
+     fallbackArt.replaceChildren();
+     fallbackArt.style.backgroundImage="url('images/pippi/portrait/atlas.png')";
+     fallbackArt.style.backgroundPosition=((idx%4)*100/3)+'% '+(Math.floor(idx/4)*100/3)+'%';
+    }else{
+     fallbackArt.style.backgroundImage='none';
+     fallbackArt.innerHTML=faceSVG(face,face==='mega');
+    }
     fallbackArt.dataset.face=face;
+    fallbackArt.dataset.atlas=canUseAtlas?'1':'0';
    }
    // Chromium/Android QA: even previously decoded PNG portraits may cause
    // a renderer stall as the canvas game and Rift scenes repaint. Keep the
@@ -961,6 +989,8 @@
      x:run.motion.x,y:run.motion.y}:null};},
    get run(){return run;}};
   G.PKMSVVPippi=api;
+  // One 160x160 portrait texture loads once, before entering combat.
+  loadPortraitAtlas();
   // Pippi only needs four updates per second. The old self-recursing RAF
   // installed an extra callback on EVERY native 60Hz combat frame even while
   // Pippi was idle. Use a single 250ms timer instead to keep the companion
