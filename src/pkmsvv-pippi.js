@@ -364,6 +364,10 @@
   const G=w.G,d=w.document;
   if(G.PKMSVVPippi?.installed)return G.PKMSVVPippi;
   let run=null,ui=null,lastSave=null,follower=null;
+  // A failed save must NEVER be retried every 250ms in active combat.
+  // Older profiles/guest sessions can reject commit until storage is ready.
+  const failedMigrationRetryAt=new WeakMap();
+
   const language=()=>G.I18n?.lang==='en';
   const copy=(vi,en)=>language()?en:vi;
   function getUI(){
@@ -545,6 +549,8 @@
   function migrate(){
    const save=G.DB?.save;
    if(!save||typeof save!=='object'||save===lastSave&&data(save).refundReviveV1)return 0;
+   const nextRetry=failedMigrationRetryAt.get(save)||0;
+   if(Date.now()<nextRetry)return 0;
    lastSave=save;
    if(data(save).refundReviveV1)return 0;
    const snapshot=JSON.stringify({coins:save.coins,globalUpgrades:save.globalUpgrades,
@@ -559,7 +565,10 @@
      if(prior[key]===undefined)delete save[key];else save[key]=prior[key];
     }
     lastSave=null;
-    w.console?.warn?.('[Pippi] Refusing uncommitted refund',err);
+    // Defer retry for one minute (per save object) instead of committing
+    // 4 times/second. Original upgrades/coins are rolled back above.
+    failedMigrationRetryAt.set(save,Date.now()+60000);
+    w.console?.warn?.('[Pippi] Refusing uncommitted refund; retry deferred',err);
     return 0;
    }
    if(amount)G.UI?.toast?.(copy('Pippi trả lại '+amount.toLocaleString('vi-VN')+' PokéCoins hồi sinh cũ!',
