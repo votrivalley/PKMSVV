@@ -9,6 +9,13 @@ const site=path.join(root,'dist','cloudflare-v20-release');
 const {installModule}=require('./patch-v20-items-bundle.cjs');
 const {PORTRAITS}=require('./fetch-pippi-pmd.cjs');
 const marker='PKMSVV_PIPPI_COUSIN_PREVIEW_20261115';
+const crypto=require('node:crypto');
+const revision=/^[a-f0-9]{40}$/i.test(String(process.env.GITHUB_SHA||''))?
+ process.env.GITHUB_SHA.slice(0,12):crypto.createHash('sha256').update(
+  fs.readFileSync(path.join(root,'src/pkmsvv-pippi.js'))+
+  fs.readFileSync(path.join(root,'src/pkmsvv-wiki.js'))+
+  fs.readFileSync(path.join(root,'src/pkmsvv-pc-menu-clean-qa.css'))).digest('hex').slice(0,12);
+
 function present(p){if(!fs.existsSync(p)||!fs.statSync(p).size)throw Error('QA preview asset missing: '+p);return p;}
 function source(rel){return fs.readFileSync(present(path.join(root,rel)),'utf8');}
 function write(dest,text){fs.mkdirSync(path.dirname(dest),{recursive:true});fs.writeFileSync(dest,text,'utf8');}
@@ -56,6 +63,13 @@ for(const prefix of ['game','ai/game']){
  if(!html.includes('pkmsvv-pippi.css'))html=html.replace('</head>',
   '<link rel="stylesheet" href="css/pkmsvv-pippi.css">\n</head>');
  html=html.replace('</head>','<meta name="robots" content="noindex,nofollow"><!-- '+marker+' -->\n</head>');
+ // A stable Pages URL must not leave old PC / Pippi assets in existing caches.
+ for(const name of ['pkmsvv-wiki-qa.js','pkmsvv-pippi.js','pkmsvv-pc-menu-clean-qa.js']){
+  html=html.replace('src="js/ui/'+name+'"','src="js/ui/'+name+'?v='+revision+'"');
+ }
+ for(const name of ['pkmsvv-pippi.css','pkmsvv-pc-menu-clean-qa.css']){
+  html=html.replace('href="css/'+name+'"','href="css/'+name+'?v='+revision+'"');
+ }
  write(path.join(dest,'index.html'),html);
  if(!html.includes(marker)||!html.includes('pkmsvv-pippi.js'))throw Error('Preview injection incomplete');
  // Test the actual staged source, not just repo strings.
@@ -78,7 +92,7 @@ write(path.join(site,'build-info.json'),JSON.stringify(meta,null,2)+'\n');
 const swPath=present(path.join(site,'sw.js'));
 const oldSW=fs.readFileSync(swPath,'utf8');
 const revised=oldSW.replace('pkmsvv-cloudflare-v20-20261114-story-icons-auto-v37',
- 'pkmsvv-pippi-cousin-qa-20261115');
+ 'pkmsvv-pippi-cousin-qa-'+revision);
 if(revised===oldSW)throw Error('QA service worker cache marker missing');
 write(swPath,revised);
-console.log(marker,'stage complete at',site);
+console.log(marker,'revision',revision,'stage complete at',site);
