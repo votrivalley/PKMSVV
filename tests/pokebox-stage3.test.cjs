@@ -32,7 +32,7 @@ test('item metadata: rotating daily shop and rare Solo drops are separate',()=>{
  assert.equal(prism.SHOP_RATE,.12);
  assert.equal(prism.PITY,0,'2.0 uses actual drop odds, not guaranteed pity at 180');
  assert.equal(prism.MAX_DROPS_PER_RUN,999,'2.0 allows more than one rare drop per run');
- assert.deepEqual({...prism.RATES},{normal:.004,elite:.008,legend:.016});
+ assert.deepEqual({...prism.RATES},{normal:.002,elite:.004,legend:.008});
 });
 test('daily stock is deterministic and buying is limited to one per day',()=>{
  const {s}=setup();
@@ -135,14 +135,14 @@ test('no free or invalid respec: different branch required and Rank 3 gate',()=>
  assert.throws(()=>prism.resetBranch(x.id,'flying',s),/required/);
  assert.equal(x.rankBranch,'fire');
 });
-test('2.0 Prism uses 0.4% / elite 0.8% / legend 1.6%, irrespective of attacker species',()=>{
+test('2.0 Prism uses 0.2% / elite 0.4% / legend 0.8%, irrespective of attacker species',()=>{
  const {s}=setup();
- assert.equal(prism.enemyInfo(foe(6),s).rate,.004);
- assert.equal(prism.enemyInfo(foe(6,{boss:true}),s).rate,.016);
- assert.equal(prism.enemyInfo(foe(150),s).rate,.016,'legendary species gets ×4');
- assert.equal(prism.enemyInfo(foe(25,{types:['electric','fire']}),s).rate,.004);
- assert.equal(prism.enemyInfo(foe(25,{types:['electric','fire'],elite:true}),s).rate,.008);
- assert.equal(prism.enemyInfo(foe(7),s).rate,.004,'no species/type gating remains');
+ assert.equal(prism.enemyInfo(foe(6),s).rate,.002);
+ assert.equal(prism.enemyInfo(foe(6,{boss:true}),s).rate,.008);
+ assert.equal(prism.enemyInfo(foe(150),s).rate,.008,'legendary species gets ×4');
+ assert.equal(prism.enemyInfo(foe(25,{types:['electric','fire']}),s).rate,.002);
+ assert.equal(prism.enemyInfo(foe(25,{types:['electric','fire'],elite:true}),s).rate,.004);
+ assert.equal(prism.enemyInfo(foe(7),s).rate,.002,'no species/type gating remains');
  assert.equal(prism.enemyInfo(foe(25,{remote:true,types:['fire']}),s),null);
  assert.equal(prism.enemyInfo(foe(150,{arceus:true,boss:true,types:['fire']}),s),null);
  assert.equal(prism.enemyInfo(foe(6,{pkmsvvBossGuard:true,boss:false}),s),null);
@@ -233,4 +233,11 @@ test('stage3 only injected into isolated QA, not standard Web/PC/Android source'
  const prod=fs.readFileSync(path.join(root,'scripts/prepare-game.cjs'),'utf8');
  for(const src of [web,pc]){assert.match(src,/pkmsvv-box-stage3\.js/);assert.match(src,/pkmsvv-box-stage3\.css/);}
  assert.doesNotMatch(prod,/pkmsvv-box-stage3/);
+});
+
+test('Reforge Prism stays visible after selling Mint or Capsule in the Bag',()=>{
+ const source=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-stage3.js'),'utf8');
+ assert.match(source,/observer\.observe\(list,\{childList:true,subtree:false\}\)/);
+ assert.match(source,/if\(inBag&&!count\(s\)\)return/);
+ assert.match(source,/list\.querySelector\('#pkmbx-prism-store'\)/);
 });
