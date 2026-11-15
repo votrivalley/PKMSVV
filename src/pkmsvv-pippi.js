@@ -579,6 +579,16 @@
    try{
     if(G.DB?.save&&!w.__pkmsvvPippiMigrationDisabled)migrate();
     const pl=G.Game?.player;
+    // Native level-up and other modal choices are temporary pauses of the
+    // SAME Explore run. Resetting Pippi here used to remove the follower,
+    // revert buffs and re-create its DOM/dialogue right after pressing 1/2/3.
+    // Keep the run and installed hurt hook until the player genuinely exits.
+    const phase=String(G.Game?.state||'');
+    if(run&&run.player===pl&&G.PKMSVVQuickRegion?.active===true&&
+       ['levelup','choice','held','pause','paused'].includes(phase)){
+     if(ui)ui.hidden=true;
+     return;
+    }
     if(!eligible(G)){
      if(run){finish(run);run=null;}
      if(ui)ui.hidden=true;
