@@ -142,10 +142,10 @@ G.PKMSVVWiki=(()=>{
   const shade=document.createElement('div');shade.id='pkmsvv-wiki-overlay';
   shade.className='pkmsvv-pc-overlay';shade.setAttribute('role','dialog');
   shade.setAttribute('aria-modal','true');
-  shade.setAttribute('aria-label',tr('Góc Pippi','Pippi’s Corner'));
+  shade.setAttribute('aria-label',tr('Bạn đồng hành','Companions'));
   const box=document.createElement('section');box.className='pkmsvv-pc-panel pkmsvv-pippi-corner';
   const head=document.createElement('header');head.className='pkmsvv-pc-header';
-  const title=document.createElement('h2');title.textContent=tr('Góc Pippi','Pippi’s Corner');
+  const title=document.createElement('h2');title.textContent=tr('Bạn đồng hành','Companions');
   const back=document.createElement('button');back.type='button';
   back.className='pkmsvv-pc-close';back.textContent=tr('← Quay lại PC','← Back to PC');
   back.setAttribute('data-back','');back.onclick=open;head.append(title,back);box.append(head);
@@ -155,7 +155,10 @@ G.PKMSVVWiki=(()=>{
    ['heal',1,tr('Hồi máu','Healing'),tr('Mỗi cấp tăng 2% HP hồi phục.','+2% max HP healed per level.')],
    ['buff',2,tr('Cổ vũ','Cheer'),tr('Mỗi cấp tăng 1,5% sức tấn công khi buff.','+1.5% attack during buff per level.')],
    ['slow',3,tr('Làm chậm','Slowdown'),tr('Mỗi cấp tăng mức và thời gian làm chậm địch.','Stronger and longer slow effects.')],
-   ['shield',7,tr('Khiên trăng','Moon Shield'),tr('Mỗi cấp tăng 0,35 giây bảo vệ nguy cấp.','+0.35 seconds emergency protection per level.')]
+   ['shield',7,tr('Khiên trăng','Moon Shield'),tr('Mỗi cấp tăng 0,35 giây bảo vệ nguy cấp.','+0.35 seconds emergency protection per level.')],
+   ['cousin',4,tr('Em họ Pikachu','Cousin Pikachu'),
+    tr('Bị mất máu: Lv1 3% · Lv2 4,5% · Lv3 6% gọi Pikachu phóng sét tê liệt quái.',
+       'On real HP loss: Lv1 3% · Lv2 4.5% · Lv3 6% to summon Pikachu and stun enemies.')]
   ];
   function draw(focusKey){
    body.replaceChildren();
@@ -186,6 +189,9 @@ G.PKMSVVWiki=(()=>{
    hint.textContent=tr('Mỗi cấp Bond nhận 1 điểm. Chọn cách huấn luyện Pippi; điểm chưa dùng được giữ lại.',
     'Each Bond level grants 1 point. Train Pippi’s abilities; unused points carry over.');
    body.append(hint);
+   const passive=document.createElement('h3');passive.className='pkmsvv-pippi-train-section';
+   passive.textContent=tr('Kỹ năng nội tại · học và nâng cấp','Passive skills · learn and upgrade');
+   body.append(passive);
    const grid=document.createElement('div');grid.className='pkmsvv-pippi-training-grid';
    for(const [key,gate,name,description] of specs){
     const lv=training[key]||0,unlocked=state.bond>=gate;
@@ -217,6 +223,16 @@ G.PKMSVVWiki=(()=>{
     item.append(nameEl,info,note,button);grid.append(item);
    }
    body.append(grid);
+   const active=document.createElement('section');active.className='pkmsvv-pippi-active-skill';
+   const activeName=document.createElement('strong');
+   activeName.textContent=tr('Kỹ năng đặc biệt · Moon Miracle','Special skill · Moon Miracle');
+   const activeStatus=document.createElement('p');
+   activeStatus.textContent=state.bond>=10?
+    tr('Đã mở ở Bond 10: Clefairy → Clefable (2 giây) → thức tỉnh, hồi sinh và ngủ kiệt sức.',
+       'Bond 10 unlocked: Clefairy → Clefable (2s) → awakening, revival, then exhaustion.'):
+    tr('Mở tự động tại Bond 10. Không tiêu tốn điểm huấn luyện.',
+       'Automatically unlocks at Bond 10; requires no training points.');
+   active.append(activeName,activeStatus);body.append(active);
    if(focusKey)body.querySelector('[data-pippi-train="'+focusKey+'"]')?.focus({preventScroll:true});
   }
   draw();shade.addEventListener('click',e=>{if(e.target===shade)open();});
@@ -281,7 +297,7 @@ G.PKMSVVWiki=(()=>{
   makeCard(grid,{title:'Berry',dex:420,
    desc:tr('Cherubi · Tra cứu công dụng 10 loại Berry.','Cherubi · Learn the effects of all ten Berries.'),
    action:tr('Xem cẩm nang','View guide'),onClick:berryGuide});
-   makeCard(grid,{title:tr('Góc Pippi','Pippi’s Corner'),dex:35,
+   makeCard(grid,{title:tr('Bạn đồng hành','Companions'),dex:35,
     desc:tr('Bond · Nâng cấp hồi máu, buff, khống chế và bảo vệ.','Bond · Healing, buff, control and defense.'),
     action:tr('Chăm sóc Pippi','Train Pippi'),onClick:pippiCorner});
   const help=document.createElement('section');help.className='pkmsvv-pc-guide';
