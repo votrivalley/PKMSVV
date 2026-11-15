@@ -474,8 +474,12 @@
   // and reuse one portrait image instead of decoding a new <img> on each event.
   let speechPending=null,speechTimer=null;
   function renderSpeech(job){
-   if(!job||job.origin!==run||!eligible(G))return;
+   const trace=w.__pkmsvvPippiStageTrace===true;
+   const mark=name=>{if(trace)w.console?.log?.('QA_PIPPI_SPEECH:'+name);};
+   mark('enter');
+   if(!job||job.origin!==run||!eligible(G)){mark('skip');return;}
    const {event,force,now}=job;
+   mark('emote-enter');
    const worldEmote=follower?.querySelector('.pippi-world-emote');
    if(worldEmote){
     if(worldEmote.dataset.emoteEvent!==event){
@@ -484,16 +488,22 @@
     }
     worldEmote.hidden=false;
    }
+   mark('emote-exit');
    const lines=LINES[event]||LINES.intro;
    const [face,message]=lines[Math.floor(Math.random()*lines.length)];
+   mark('create-ui-enter');
    const el=getUI();if(!el)return;
+   mark('create-ui-exit');
    const portrait=el.querySelector('.pippi-portrait');if(!portrait)return;
    const chatEmote=portrait.querySelector('.pippi-chat-emote');
+   mark('chat-emote-enter');
    if(chatEmote&&chatEmote.dataset.emoteEvent!==event){
     chatEmote.innerHTML=emoteSVG(EMOTES[event]||'heart');
     chatEmote.dataset.emoteEvent=event;
    }
+   mark('chat-emote-exit');
    const filename=PORTRAIT_FILES[face]||'Normal';
+   mark('portrait-enter');
    let img=portrait.querySelector('img');
    if(!img){
     img=d.createElement('img');
@@ -514,11 +524,13 @@
      if(chatEmote)portrait.append(chatEmote);
     }
    };
+   mark('portrait-load-enter');
    if(img.dataset.faceFile!==filename){
     img.dataset.faceFile=filename;
     delete img.dataset.retry;
     img.src='images/pippi/portrait/'+filename+'.png';
    }
+   mark('portrait-load-exit');
    portrait.dataset.emotion=face;
    el.dataset.event=event;
    portrait.classList.toggle('mega',face==='mega');
@@ -526,6 +538,7 @@
    el.querySelector('.pippi-bond').textContent='Bond '+data(G.DB?.save).bond+'/10';
    el.hidden=false;
    el.dataset.until=String(now+(force?5:3.6));
+   mark('exit');
   }
   function say(event,force=false){
    if(!run||w.__pkmsvvPippiSpeechDisabled===true)return;
