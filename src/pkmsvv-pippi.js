@@ -364,6 +364,27 @@
   const G=w.G,d=w.document;
   if(G.PKMSVVPippi?.installed)return G.PKMSVVPippi;
   let run=null,ui=null,lastSave=null,follower=null;
+  const decodedPortraits=new Map();
+  let portraitsPreloading=false;
+  // Decode all 16 expressions while the home menu is idle, not mid-combat.
+  // Retain the decoded Image objects, and move them between the chat bubble
+  // and cache without changing image.src in a live Rift/Explore RAF.
+  function prewarmPortraits(){
+   if(portraitsPreloading||typeof w.Image!=='function'||G.Game?.state!=='ui')return;
+   portraitsPreloading=true;
+   for(const name of new Set(Object.values(PORTRAIT_FILES))){
+    const art=new w.Image();
+    art.decoding='async';
+    art.className='pippi-portrait-picture';
+    art.alt='Pippi: '+name;
+    art.src='images/pippi/portrait/'+name+'.png';
+    if(typeof art.decode==='function'){
+     art.decode().then(()=>decodedPortraits.set(name,art)).catch(()=>{});
+    }else{
+     art.onload=()=>decodedPortraits.set(name,art);
+    }
+   }
+  }
   // A failed save must NEVER be retried every 250ms in active combat.
   // Older profiles/guest sessions can reject commit until storage is ready.
   const failedMigrationRetryAt=new WeakMap();
@@ -504,36 +525,17 @@
    mark('chat-emote-exit');
    const filename=PORTRAIT_FILES[face]||'Normal';
    mark('portrait-enter');
-   if(w.__pkmsvvPippiNoPortrait!==true){
-   let img=portrait.querySelector('img');
-   if(!img){
-    img=d.createElement('img');
-    img.className='pippi-portrait-picture';
-    img.decoding='async';
-    portrait.prepend(img);
-   }
-   img.alt='Pippi: '+filename;
    portrait.dataset.expression=face;
-   img.onerror=()=>{
-    if(!img.dataset.retry&&img.dataset.faceFile!=='Normal'){
-     img.dataset.retry='1';
-     img.src='images/pippi/portrait/Normal.png';
-     return;
+   if(w.__pkmsvvPippiNoPortrait!==true&&w.__pkmsvvPippiPortraitDisabled!==true){
+    const ready=decodedPortraits.get(filename)||decodedPortraits.get('Normal');
+    const displayed=portrait.querySelector('img');
+    mark('portrait-load-enter');
+    if(ready&&displayed!==ready){
+     // Moving an already-decoded node cannot initiate another PNG fetch.
+     if(displayed)displayed.remove();
+     portrait.prepend(ready);
     }
-    if(portrait.contains(img)){
-     portrait.innerHTML=faceSVG(portrait.dataset.expression||'smile',
-      portrait.classList.contains('mega'));
-     if(chatEmote)portrait.append(chatEmote);
-    }
-   };
-   mark('portrait-load-enter');
-   // CI-only isolation: retain speech/emotes, but skip async portrait PNG decode.
-   if(w.__pkmsvvPippiPortraitDisabled!==true&&img.dataset.faceFile!==filename){
-    img.dataset.faceFile=filename;
-    delete img.dataset.retry;
-    img.src='images/pippi/portrait/'+filename+'.png';
-   }
-   mark('portrait-load-exit');
+    mark('portrait-load-exit');
    }
    portrait.dataset.emotion=face;
    el.dataset.event=event;
@@ -606,6 +608,7 @@
     // Refund bookkeeping can touch persistent storage. Finish migrations
     // from the home UI, never synchronously in a live combat tick.
     if(G.DB?.save&&G.Game?.state==='ui'&&!w.__pkmsvvPippiMigrationDisabled)migrate();
+    if(G.Game?.state==='ui')prewarmPortraits();
     stage('migration-exit');
     const pl=G.Game?.player;
     // Native level-up and other modal choices are temporary pauses of the
