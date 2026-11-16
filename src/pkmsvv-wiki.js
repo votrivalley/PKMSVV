@@ -178,19 +178,19 @@ G.PKMSVVWiki=(()=>{
    image.alt=tr('Pippi vui vẻ','Happy Pippi');image.width=64;image.height=64;
    image.className='pkmsvv-pippi-training-face';
    const summary=document.createElement('div');summary.className='pkmsvv-pippi-training-summary';
-   const level=document.createElement('strong');level.textContent='Pippi · Bond '+progress.bond+'/10';
+   const level=document.createElement('strong');level.textContent=tr('Pippi · Thân thiết ','Pippi · Bond ')+progress.bond+'/10';
    const points=document.createElement('span');points.className='pkmsvv-pippi-training-points';
    points.textContent=tr('Điểm huấn luyện: ','Training points: ')+progress.points;
    const next=document.createElement('span');next.textContent=progress.to===null?
-    tr('Bond tối đa · đã mở Moon Miracle','Max Bond · Moon Miracle unlocked'):
+    tr('Thân thiết tối đa · đã mở Moon Miracle','Max Bond · Moon Miracle unlocked'):
     tr('Tiến độ: ','Progress: ')+progress.xp+'/'+progress.to+' XP';
    const bar=document.createElement('progress');
    bar.max=progress.to===null?1:Math.max(1,progress.to-progress.from);
    bar.value=progress.to===null?1:Math.min(bar.max,Math.max(0,progress.xp-progress.from));
-   bar.setAttribute('aria-label',tr('Tiến độ Bond','Bond progress'));
+   bar.setAttribute('aria-label',tr('Tiến độ Thân thiết','Bond progress'));
    summary.append(level,points,next,bar);hero.append(image,summary);body.append(hero);
    const hint=document.createElement('p');hint.className='pkmsvv-pc-hint';
-   hint.textContent=tr('Mỗi cấp Bond nhận 1 điểm. Chọn cách huấn luyện Pippi; điểm chưa dùng được giữ lại.',
+   hint.textContent=tr('Mỗi cấp Thân thiết nhận 1 điểm. Sống sót, nhặt rương và để Pippi hỗ trợ để thân thiết hơn (mỗi việc thưởng tối đa 1 lần/trận).',
     'Each Bond level grants 1 point. Train Pippi’s abilities; unused points carry over.');
    body.append(hint);
    const passive=document.createElement('h3');passive.className='pkmsvv-pippi-train-section';
@@ -205,11 +205,11 @@ G.PKMSVVWiki=(()=>{
     const button=document.createElement('button');button.type='button';
     button.className='pkmsvv-pippi-train-btn';button.dataset.pippiTrain=key;
     button.disabled=!unlocked||lv>=3||progress.points<1||typeof G.DB?.commit!=='function';
-    button.textContent=!unlocked?tr('Mở ở Bond ','Unlock at Bond ')+gate:
+    button.textContent=!unlocked?tr('Mở ở Thân thiết ','Unlock at Bond ')+gate:
      lv>=3?tr('Đã MAX','MAX'):progress.points<1?tr('Chưa có điểm','No points'):
      tr('Nâng cấp +1','Train +1');
     const note=document.createElement('small');note.className='pkmsvv-pippi-train-status';
-    note.textContent=unlocked?tr('Dùng 1 điểm thân thiết','Spend 1 Bond point'):
+    note.textContent=unlocked?tr('Dùng 1 điểm huấn luyện','Spend 1 training point'):
      tr('Chưa mở khóa','Not yet unlocked');
     button.onclick=()=>{
      if(button.disabled)return;
@@ -232,11 +232,35 @@ G.PKMSVVWiki=(()=>{
    activeName.textContent=tr('Kỹ năng đặc biệt · Moon Miracle','Special skill · Moon Miracle');
    const activeStatus=document.createElement('p');
    activeStatus.textContent=state.bond>=10?
-    tr('Đã mở ở Bond 10: Clefairy → Clefable (2 giây) → thức tỉnh, hồi sinh và ngủ kiệt sức.',
+    tr('Đã mở ở Thân thiết 10: Clefairy → Clefable (2 giây) → thức tỉnh, hồi sinh và ngủ kiệt sức.',
        'Bond 10 unlocked: Clefairy → Clefable (2s) → awakening, revival, then exhaustion.'):
-    tr('Mở tự động tại Bond 10. Không tiêu tốn điểm huấn luyện.',
+    tr('Mở tự động tại Thân thiết 10. Không tiêu tốn điểm huấn luyện.',
        'Automatically unlocks at Bond 10; requires no training points.');
    active.append(activeName,activeStatus);body.append(active);
+   const candy=document.createElement('section');candy.className='pkmsvv-pippi-active-skill';
+   const candyCount=Number(save.bag?.pippiReset)||0;
+   const spent=Object.values(training).reduce((n,v)=>n+v,0);
+   const candyName=document.createElement('strong');
+   candyName.textContent=tr('Kẹo Tái Huấn Luyện','Training Reset Candy')+' ×'+candyCount;
+   const candyDesc=document.createElement('p');
+   candyDesc.textContent=tr('Hoàn lại tất cả điểm kỹ năng đã phân. Giữ nguyên cấp Thân thiết và kinh nghiệm. Mua ở Kecleon.',
+    'Refund all spent training points. Keep friendship level and XP. Buy it from Kecleon.');
+   const reset=document.createElement('button');reset.type='button';
+   reset.dataset.pippiReset='1';reset.className='pkmsvv-pippi-train-btn';
+   reset.disabled=!candyCount||!spent||typeof G.DB?.commit!=='function';
+   reset.textContent=tr('Dùng 1 kẹo · Đặt lại kỹ năng','Use 1 candy · Reset training');
+   reset.onclick=()=>{
+    if(reset.disabled)return;
+    if(reset.dataset.confirm!=='1'){
+     reset.dataset.confirm='1';reset.textContent=tr('Xác nhận dùng kẹo','Confirm candy use');return;
+    }
+    const result=P.resetTraining(save,()=>G.DB.commit(true));
+    if(!result.ok){reset.dataset.confirm='';reset.textContent=tr('Lưu lỗi · Thử lại','Save failed · Retry');return;}
+    G.UI?.toast?.(tr('Pippi đã nhận lại '+result.refundedPoints+' điểm huấn luyện!',
+       'Pippi recovered '+result.refundedPoints+' training points!'),2800);
+    draw();body.querySelector('[data-pippi-reset]')?.focus({preventScroll:true});
+   };
+   candy.append(candyName,candyDesc,reset);body.append(candy);
    if(focusKey)body.querySelector('[data-pippi-train="'+focusKey+'"]')?.focus({preventScroll:true});
   }
   draw();shade.addEventListener('click',e=>{if(e.target===shade)open();});
@@ -305,7 +329,7 @@ G.PKMSVVWiki=(()=>{
    desc:tr('Cherubi · Tra cứu công dụng 10 loại Berry.','Cherubi · Learn the effects of all ten Berries.'),
    action:tr('Xem cẩm nang','View guide'),onClick:berryGuide});
    makeCard(grid,{title:tr('Bạn đồng hành','Companions'),dex:35,
-    desc:tr('Bond · Nâng cấp hồi máu, buff, khống chế và bảo vệ.','Bond · Healing, buff, control and defense.'),
+    desc:tr('Thân thiết · Nâng cấp hồi máu, cổ vũ, khống chế và bảo vệ.','Bond · Healing, buff, control and defense.'),
     action:tr('Chăm sóc Pippi','Train Pippi'),onClick:pippiCorner});
   const help=document.createElement('section');help.className='pkmsvv-pc-guide';
   const sub=document.createElement('h3');sub.textContent=tr('Kiến thức Pokémon','Pokémon knowledge');

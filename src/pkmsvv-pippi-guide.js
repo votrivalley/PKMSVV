@@ -14,7 +14,7 @@
    ['Surprised','Ối! Vừa chọn Pokémon xong đã gặp tui hả? Hân hạnh nha! Tui là Pippi, một Clefairy siêu sao tự phong, nổi tiếng vì làm Red muốn đội quần trong truyện Pocket Monsters.','Oh! Picked your Pokémon and already met a celebrity? I’m Pippi, a self-declared Clefairy superstar. I made Red lose his mind back in the Pocket Monsters manga!'],
    ['Joyous','Công việc của tui: làm cố vấn, cà khịa, đôi lúc buff máu. Tui hơi hèn trước boss, nhưng mà đừng nói ai biết! Cái đó gọi là chiến thuật.','My job: advising, roasting, occasionally healing. I may run from giant bosses, but keep that secret! It is called strategy.'],
    ['Determined','Cậu em họ Pikachu là tay đánh thuê gia đình tui. Khi bạn ăn đòn, có lúc nó sẽ lao ra phóng điện. Nhưng bạn đánh chính, tui chịu trách nhiệm... đẹp đội hình!','My cousin Pikachu is our family backup. When you get hurt, he may jump in with lightning. You fight, I make the team look fabulous!'],
-   ['Happy','Vào PC → Bạn đồng hành để nâng Bond và học trò mới cho tui. Giờ bấm Tiếp theo đi. Tụi mình đi kiếm chuyện—à không, cứu thế giới!','Go to PC → Companion to raise Bond and train my moves. Now hit Next. Let’s go cause trouble—uh, save the world!']
+   ['Happy','Vào PC → Bạn đồng hành để tăng Thân thiết và huấn luyện kỹ năng cho tui. Giờ bấm Tiếp theo đi. Tụi mình đi kiếm chuyện—à không, cứu thế giới!','Go to PC → Companion to raise Bond and train my moves. Now hit Next. Let’s go cause trouble—uh, save the world!']
   ],
   chest:[
    ['Surprised','Ê, rương kìa! Nhặt vào thì game cho chọn vật phẩm. Đọc kỹ hiệu ứng trước khi chốt nha, đừng thấy đồ lấp lánh là bốc đại như tui!','A chest! It offers a choice of items. Read the effects before picking. Do not just grab the shiniest one like I would!'],
@@ -28,7 +28,7 @@
    ['Happy','Đây là Khám phá! Tui đi ngay cạnh bạn, không để bạn một mình đâu. Cứ di chuyển và hạ quái để lên cấp!','Welcome to Explore! I’ll stay by your side. Move around, defeat enemies and level up!'],
    ['Inspired','Khi lên cấp, chọn kỹ năng để mạnh dần. Các chiêu tự động sẽ tự tấn công; kỹ năng chủ động cần bạn kích hoạt.','At level-up, pick new moves. Automatic attacks fire on their own; active moves need your input.'],
    ['Determined','Với kỹ năng lướt F/X: nhấn nhanh để tự điều khiển. Giữ nút 2 giây để bật AUTO lao tới quái gần nhất; giữ lần nữa để tắt.','For the F/X dash: tap to steer it yourself. Hold for 2 seconds to enable AUTO toward the closest enemy; hold again to disable it.'],
-   ['Worried','Máu tụt là tui lo hồi phục; khi gặp nguy hiểm sẽ có khiên hoặc phép cứu mạng nếu Bond đã đủ. Nhìn hiệu ứng để biết tui vừa làm gì nha!','When your HP drops, I’ll heal you. With enough Bond, I can shield or rescue you. Watch the effects to see my spells!'],
+   ['Worried','Máu tụt là tui lo hồi phục; khi gặp nguy hiểm sẽ có khiên hoặc phép cứu mạng nếu Thân thiết đã đủ. Nhìn hiệu ứng để biết tui vừa làm gì nha!','When your HP drops, I’ll heal you. With enough Bond, I can shield or rescue you. Watch the effects to see my spells!'],
    ['Joyous','Phút 15 đánh boss để mở vùng tiếp theo; phút 30 mới kết thúc bản đồ. Giờ thì chiến đi, tui ở đây rồi!','Defeat the 15-minute boss to open the next region. The map ends after the 30-minute boss. Let’s go!']
   ]
  };

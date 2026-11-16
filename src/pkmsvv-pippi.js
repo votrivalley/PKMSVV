@@ -12,7 +12,7 @@
  const RANK_XP=[0,2,5,9,14,20,27,35,44,54];
  const TRAINING_KEYS=Object.freeze(['heal','buff','slow','shield','cousin']);
  const TRAINING_MAX=3;
- // One free training point per Bond level beyond Bond 1; no new currency.
+ // One free training point per Thân thiết level beyond level 1; no new currency.
  function trainingPoints(save){
   const p=data(save);
   const used=TRAINING_KEYS.reduce((total,key)=>total+(p.training?.[key]||0),0);
@@ -29,6 +29,35 @@
   try{if(typeof commit==='function'&&commit()===false)throw Error('Save refused');}
   catch(e){p.training=before;return {ok:false,reason:'save'};}
   return {ok:true,level:p.training[key],points:trainingPoints(save)};
+ }
+ // A single consumable reroutes Pippi's spent points without affecting friendship.
+ function resetTraining(save,commit){
+  if(!save||typeof save!=='object')return {ok:false,reason:'invalid'};
+  const p=data(save),spent=TRAINING_KEYS.reduce((n,k)=>n+p.training[k],0);
+  if(!spent)return {ok:false,reason:'nothing'};
+  const stock=Number(save.bag?.pippiReset)||0;
+  if(!Number.isSafeInteger(stock)||stock<1)return {ok:false,reason:'item'};
+  if(typeof commit!=='function')return {ok:false,reason:'save'};
+  const before={...p.training},amount=save.bag.pippiReset;
+  for(const key of TRAINING_KEYS)p.training[key]=0;
+  if(amount===1)delete save.bag.pippiReset;
+  else save.bag.pippiReset=amount-1;
+  try{if(commit()===false)throw Error('Save refused');}
+  catch(_){p.training=before;save.bag.pippiReset=amount;return {ok:false,reason:'save'};}
+  return {ok:true,refundedPoints:spent,points:trainingPoints(save),remaining:amount-1};
+ }
+ // Earn bonus friendship through first genuine chest, healing and aid in a run.
+ // One point per kind; three extra points total, never XP from every pickup.
+ function awardMoment(run,save,key,commit){
+  if(!run||!save||!['chest','heal','assist'].includes(key)||typeof commit!=='function')
+   return {ok:false,reason:'invalid'};
+  run.bondAwards=run.bondAwards||new Set();
+  if(run.bondAwards.has(key)||(run.bondBonus||0)>=3)return {ok:false,reason:'already'};
+  const p=data(save),previous={xp:p.xp,bond:p.bond},result=earn(save,1);
+  try{if(commit()===false)throw Error('Save refused');}
+  catch(_){p.xp=previous.xp;p.bond=previous.bond;return {ok:false,reason:'save'};}
+  run.bondAwards.add(key);run.bondBonus=(run.bondBonus||0)+1;
+  return {ok:true,...result};
  }
  function bondProgress(save){
   const p=data(save),from=RANK_XP[p.bond-1]||0;
@@ -58,7 +87,7 @@
   boss:[['panic','Boss kìa! Bạn đánh đi, tui lo... chiến thuật rút lui!'],
    ['wink','Con bự vậy mà không biết xin lịch hẹn trước hả?'],
    ['shock','Ê ê, nhìn mặt nó dữ quá. Tui núp sau bạn... để bảo vệ phía sau!']],
-  bond:[['sparkle','Bond tăng rồi! Cuối cùng bạn cũng biết trân trọng một siêu sao.'],
+  bond:[['sparkle','Thân thiết tăng rồi! Cuối cùng bạn cũng biết trân trọng một siêu sao.'],
    ['proud','Lên trình rồi! Ai nói Pippi chỉ giỏi gây họa bước ra đây!']],
   cousin:[['shock','EM HỌ PIKACHU! SÉT TỤI NÓ CHO CHỊ—À CHO ANH!'],
    ['wink','Tui gọi em họ tới giải quyết. Gia đình này có quan hệ rộng nha!'],
@@ -148,7 +177,7 @@
   sleepUntil:0,megaUntil:0,reviveAt:0,sleepTalked:false,revived:false,lastTalk:-100,marks:new Set(),lastPos:null,direction:0,
   activeBuff:null,slowed:[],lastSlowTargets:[],motion:null,castCue:null,emoteType:'sparkle',
   reactionAt:14,lastDangerAt:-100,lastQuirkCount:0,emoteUntil:0,cousinUntil:0,cousinTargets:0,damageHook:null,evolveUntil:0,megaSpoken:false,
-  lastLineByEvent:Object.create(null),pendingReaction:null,pickupCount:0};}
+  lastLineByEvent:Object.create(null),pendingReaction:null,pickupCount:0,bondAwards:new Set(),bondBonus:0};}
  function heal(pl,lv,training=0){
   if(!pl||!Number.isFinite(pl.maxHp)||pl.maxHp<=0||pl.hp/pl.maxHp>.65)return false;
   const gain=pl.maxHp*(.12+lv*.011+clamp(training,0,TRAINING_MAX)*.02);
@@ -628,6 +657,7 @@
    }
    // Coalesce rapid successive drops, but do not lose the discovery.
    run.pendingReaction=event;
+   if(event==='chest')earnMoment('chest');
    G.PKMSVVPippiGuide?.queue?.(event==='chest'?'chest':'pickup');
    return true;
   }
@@ -640,8 +670,9 @@
     if(typeof previous!=='function')continue;
     if(previous.__pkmsvvPippiPickup){found=true;continue;}
     function wrapped(...args){
+     const result=previous.apply(this,args);
      if(!insideNativePickup&&eligible(G))reactPickup(kind,args[0]);
-     return previous.apply(this,args);
+     return result;
     }
     wrapped.__pkmsvvPippiPickup=true;G.Game[name]=wrapped;found=true;
    }
@@ -654,13 +685,15 @@
      if(typeof onCollected!=='function')
       return previous.call(this,dt,players,onCollected,...rest);
      const notify=function(pickup,collector,...args){
+      insideNativePickup=true;
+      let result;
+      try{result=onCollected.call(this,pickup,collector,...args);}
+      finally{insideNativePickup=false;}
       if(eligible(G)&&pickup&&collector===G.Game?.player&&
          !['xp','xpBig'].includes(String(pickup.kind||''))){
        reactPickup(String(pickup.kind||'item'),pickup.value);
       }
-      insideNativePickup=true;
-      try{return onCollected.call(this,pickup,collector,...args);}
-      finally{insideNativePickup=false;}
+      return result;
      };
      return previous.call(this,dt,players,notify,...rest);
     }
@@ -708,7 +741,7 @@
    canvas.setAttribute('aria-hidden','true');
    button.append(canvas);
    const title=d.createElement('strong');title.textContent='Bạn đồng hành';
-   const desc=d.createElement('small');desc.textContent='Bond · Hồi máu · Buff · Em họ Pikachu';
+   const desc=d.createElement('small');desc.textContent='Thân thiết · Hồi máu · Cổ vũ · Em họ Pikachu';
    const action=d.createElement('span');action.className='pkmsvv-pc-action';
    action.textContent='Chăm sóc Pippi';
    button.append(title,desc,action);
@@ -716,7 +749,7 @@
     if(typeof G.PKMSVVWiki?.pippiCorner==='function')G.PKMSVVWiki.pippiCorner();
     else{
      const p=data(G.DB?.save);
-     G.UI?.toast?.('Pippi · Bond '+p.bond+'/10 — Vào lại PC khi menu cập nhật.',3500);
+     G.UI?.toast?.('Pippi · Thân thiết '+p.bond+'/10 — Vào lại PC khi menu cập nhật.',3500);
     }
    };
    grid.append(button);
@@ -778,7 +811,7 @@
    // Lightweight always-visible SVG expression. PNG decoding inside native
    // combat caused Chromium stalls; retain the PNG assets in PC, but never
    // show a blank portrait when battle PNGs are intentionally disabled.
-   el.innerHTML='<span class="pippi-portrait"><span class="pippi-portrait-art">'+faceSVG('smile')+'</span><span class="pippi-chat-emote" aria-hidden="true"></span></span><span class="pippi-message"><b>Pippi</b><span class="pippi-line"></span><small class="pippi-bond"></small></span>';
+   el.innerHTML='<span class="pippi-portrait"><span class="pippi-portrait-art">'+faceSVG('smile')+'</span><span class="pippi-chat-emote" aria-hidden="true"></span></span><span class="pippi-message"><b>Pippi</b><span class="pippi-line"></span><small class="pippi-bond" hidden></small></span>';
    d.body.appendChild(el);
    ui=el;return el;
   }
@@ -1008,7 +1041,9 @@
    el.dataset.event=event;
    portrait.classList.toggle('mega',face==='mega');
    el.querySelector('.pippi-line').textContent=message;
-   el.querySelector('.pippi-bond').textContent='Bond '+data(G.DB?.save).bond+'/10';
+   const bondLine=el.querySelector('.pippi-bond');
+   if(bondLine){bondLine.hidden=event!=='bond';
+    bondLine.textContent=event==='bond'?copy('Thân thiết ','Bond ')+data(G.DB?.save).bond+'/10':'';}
    el.hidden=false;
    el.dataset.until=String(now+(force?5:3.6));
    mark('exit');
@@ -1036,6 +1071,13 @@
    }else if(typeof w.setTimeout==='function'){
     speechTimer=w.setTimeout(deliver,180);
    }else deliver();
+  }
+  function earnMoment(key){
+   if(!run||!eligible(G)||G.DB?.guest||!G.DB?.save||
+      typeof G.DB.commit!=='function')return false;
+   const result=awardMoment(run,G.DB.save,key,()=>G.DB.commit(true));
+   if(result.ok&&result.leveled)say('bond',true);
+   return !!result.ok;
   }
   function migrate(){
    const save=G.DB?.save;
@@ -1165,16 +1207,16 @@
      const oldHp=pl.hp;
      if(heal(pl,lv,training.heal)){
       showSupportFX(G,run,pl,'heal',pl.hp-oldHp);
-      say('heal');
+      earnMoment('heal');say('heal');
      }
     }
     if(lv>=2&&now>=run.buffAt){run.buffAt=now+40;
      if(buff(pl,run,now,lv,training.buff)){
-      showSupportFX(G,run,pl,'buff');say('buff');
+      showSupportFX(G,run,pl,'buff');earnMoment('assist');say('buff');
      }}
     if(lv>=3&&now>=run.slowAt){run.slowAt=now+27;
      if(slow(G,run,now,lv,training.slow)){
-      showSupportFX(G,run,pl,'slow');say('slow');
+      showSupportFX(G,run,pl,'slow');earnMoment('assist');say('slow');
      }}
     if(lv>=7&&now>=run.guardAt&&pl.hp>0&&pl.hp/pl.maxHp<.22){
      run.guardAt=now+90;pl.invuln=Math.max(Number(pl.invuln)||0,1.8+training.shield*.35);
@@ -1214,7 +1256,7 @@
     return purchase.call(this,save,id);
    };
   }
-  const api={installed:true,refund,migrate,data,rank,earn,train,trainingPoints,bondProgress,cousinChance,eligible:()=>eligible(G),
+  const api={installed:true,refund,migrate,data,rank,earn,train,resetTraining,awardMoment,trainingPoints,bondProgress,cousinChance,eligible:()=>eligible(G),
    tryRevive:revive,tick,show:say,reactPickup,
    get visual(){return {renderMode:nativeWorldReady?'native-world':'fallback',
     nativeWorldReady,worldAnimatorReady:!!worldAnimator,
@@ -1247,5 +1289,5 @@
   }
   return api;
  }
- return {rank,data,refund,earn,train,trainingPoints,bondProgress,cousinChance,cousinLightning,rollCousinOnHit,installDamageHook,uninstallDamageHook,eligible,newRun,advanceFollower,emoteSVG,heal,buff,slow,showSupportFX,personalityReaction,endEffects,finish,tryRevive,faceSVG,install};
+ return {rank,data,refund,earn,train,resetTraining,awardMoment,trainingPoints,bondProgress,cousinChance,cousinLightning,rollCousinOnHit,installDamageHook,uninstallDamageHook,eligible,newRun,advanceFollower,emoteSVG,heal,buff,slow,showSupportFX,personalityReaction,endEffects,finish,tryRevive,faceSVG,install};
 });
