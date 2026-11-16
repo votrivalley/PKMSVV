@@ -1,6 +1,6 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
-const fs=require('node:fs'),vm=require('node:vm');
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const P=require('../src/pkmsvv-pippi.js');
 function save(xp=0){return {coins:711,globalUpgrades:{power:2,revive:1},
  globalSpent:{power:900,revive:50000},pkmsvvPippi:{xp}};}
