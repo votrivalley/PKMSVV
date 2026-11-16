@@ -35,26 +35,63 @@
   return {bond:p.bond,xp:p.xp,from,to:p.bond<10?RANK_XP[p.bond]:null,points:trainingPoints(save)};
  }
  const LINES={
-  intro:[['smile','Pippi đây! Đi cùng tui cho đỡ cô đơn nha!'],['proud','Tân thủ cứ theo tui, đừng hoảng!']],
-  heal:[['love','Máu đây! Đừng bắt tui gánh cả trận nha!'],['wink','Hồi máu rồi đó. Nợ tui một lời cảm ơn!']],
-  buff:[['proud','Đã buff! Đánh cho ra dáng nhân vật chính đi!'],['happy','Cố lên! Tui cổ vũ, chứ không đánh hộ đâu nha!']],
-  slow:[['angry','Đứng im, đừng dí bạn tui!'],['wink','Chậm lại coi mấy cha!']],
-  shield:[['panic','Ê máu đỏ rồi! Né sau lưng tui!']],
-  revive:[['mega','KHÔNG! Bạn tui chưa được nằm!'],['mega','Moon Miracle! Tỉnh lại coiii!']],
-  sleep:[['sleep','Hết pin... Pippi ngủ tí... zzz...']],
-  boss:[['panic','Boss tới kìa! Tui lo hậu cần!']],
-  bond:[['sparkle','Tình bạn lên cấp! Pippi xịn hơn rồi nè!']],
-  cousin:[['shock','EM HỌ ƠI! CỨU PIPPI VỚI!'],['wink','Ê Pikachu, mấy cha này bắt nạt bạn tui nè!']],
-  evolve:[['sparkle','Hóa Clefable hai giây… Đừng có đếm nhanh!']],
-  tutorial:[['thinking','Hạ Boss phút 15 mở vùng mới; phút 30 mới hết trận nha!']],
-  tease:[['wink','Đứng yên vậy? Để tui diễn vài bước cho đỡ chán!'],
-   ['proud','Thấy tui lanh chưa? Đi theo cho kịp đó!'],
-   ['happy','Đừng nhìn tui hoài, lo đánh quái đi!']],
-  danger:[['panic','Máu đỏ rồi kìa! Còn định làm anh hùng nữa hả?'],
-   ['teary','Ê, đừng có liều! Để tui cứu!']],
-  cheer:[['proud','Làm tốt đó! Nhưng đừng có chủ quan nha!'],
-   ['wink','Được rồi đó! Có tui support mà!']]
+  intro:[['smile','Ê, nghe danh Pippi chưa? Clefairy từng làm Red muốn độn thổ đó! Nay tui là đạo diễn cuộc đời bạn.'],
+   ['proud','Pippi đây! Vẻ đẹp, trí tuệ và sự khiêm tốn đều tập trung ở tui... Ờ, hơi xạo xíu.'],
+   ['wink','Tui từng đi quậy tưng bừng với Red. Giờ tới lượt bạn chịu trận—ý là được tui bảo kê!']],
+  heal:[['love','Máu đây! Người đẹp support tận răng, nhớ ghi công nha!'],
+   ['wink','Lại tụt máu à? Tui không phải bình nước di động nha trời!'],
+   ['happy','Tui vừa cứu cái sự nghiệp anh hùng của bạn đó. Không cần cảm ơn nhiều, cúi đầu là được.']],
+  buff:[['proud','Đã buff! Diễn cho ra dáng vai chính giùm cái!'],
+   ['wink','Tui gánh hậu trường, bạn lo đừng diễn như quần chúng!'],
+   ['happy','Đẹp! Tăng sức mạnh rồi đó, cấm xài ngu nha!']],
+  slow:[['angry','Đứng im! Chạy nhanh quá làm tui mất spotlight!'],
+   ['wink','Bộ tính dí bạn tui hả? Xếp hàng lấy số đi mấy cha!'],
+   ['proud','Tui cho tụi nó đi chậm để bạn còn cơ hội tỏa sáng đó.']],
+  shield:[['panic','Ê né! Tui chưa muốn viết điếu văn cho bạn đâu!'],
+   ['proud','Tấm khiên xịn nhất khu này, do Pippi tài trợ!'],
+   ['angry','Ai cho phép đụng vào nhân vật chính của... trợ lý Pippi hả?']],
+  revive:[['mega','CHƯA ĐƯỢC NGỦ! Tui còn chưa kịp khoe chiến công!'],
+   ['mega','Moon Miracle! Sống lại đi, tui không khiêng nổi đâu!'],
+   ['mega','Ủa định bỏ tui gánh cả map thật hả? Dậy mau!']],
+  sleep:[['sleep','Cứu người xong mệt xỉu. Ai có Poké Doll cho tui ôm ngủ cái...'],
+   ['sleep','Pippi off camera nha. Đừng ai quay góc xấu!']],
+  boss:[['panic','Boss kìa! Bạn đánh đi, tui lo... chiến thuật rút lui!'],
+   ['wink','Con bự vậy mà không biết xin lịch hẹn trước hả?'],
+   ['shock','Ê ê, nhìn mặt nó dữ quá. Tui núp sau bạn... để bảo vệ phía sau!']],
+  bond:[['sparkle','Bond tăng rồi! Cuối cùng bạn cũng biết trân trọng một siêu sao.'],
+   ['proud','Lên trình rồi! Ai nói Pippi chỉ giỏi gây họa bước ra đây!']],
+  cousin:[['shock','EM HỌ PIKACHU! SÉT TỤI NÓ CHO CHỊ—À CHO ANH!'],
+   ['wink','Tui gọi em họ tới giải quyết. Gia đình này có quan hệ rộng nha!'],
+   ['proud','Nhìn cho rõ: đó là dịch vụ điện lực của nhà Pippi!']],
+  evolve:[['sparkle','Tui đẹp lên thành Clefable hai giây, đừng ghen!'],
+   ['proud','Thần chú biến hình! Không ai được chụp lúc tui đang đổi đồ!']],
+  tutorial:[['thinking','Nhớ nha: boss phút 15 mở vùng, boss phút 30 mới hết trận. Tui nhắc lần cuối thôi!'],
+   ['wink','Đánh boss phút 15 để mở vùng mới. Đợi phút 30 mới được nghỉ—đừng có lười!']],
+  tease:[['wink','Đứng im chi vậy? Đợi quái xin chữ ký à?'],
+   ['proud','Mất mạng à? Tui đi catwalk thử, bạn cứ đứng ngắm.'],
+   ['happy','Đứng đây lâu quá tui tưởng bạn đang tải bản cập nhật!']],
+  danger:[['panic','Máu đỏ rồi trời ơi! Bạn định làm trò cười cho boss hả?'],
+   ['teary','Ê đừng chết! Tui chưa kịp thu tiền cứu hộ!'],
+   ['angry','Ai bảo lao vào giữa bầy? Nghĩ mình là Mewtwo à?!']],
+  cheer:[['proud','Được đấy! Nhưng spotlight chính vẫn là tui nha.'],
+   ['wink','Ồ, biết đánh cơ đấy. Tui hơi bất ngờ nha!'],
+   ['happy','Đánh vậy mới xứng làm người đi cùng Pippi chứ!']],
+  chest:[['shock','RƯƠNG! Đừng động, để chuyên gia kho báu Pippi kiểm kê trước!'],
+   ['wink','Ô hô, rương xịn! Nếu là đồ quý thì chia tui bảy, bạn ba nha?'],
+   ['proud','Thấy chưa, tui ngửi thấy mùi tiền từ xa. Cái mũi vàng này không đùa đâu!']],
+  item:[['proud','Nhặt gì đó? Đưa tui coi. Tui chỉ kiểm tra chất lượng thôi, không chôm đâu!'],
+   ['wink','Item mới kìa. Cất kỹ nha, đừng để rơi rồi đổ tại Pippi!'],
+   ['happy','Có đồ mới rồi! Đừng tiêu linh tinh, nghe cố vấn tài chính Pippi.']],
+  healItem:[['angry','Bình máu! Tui nghỉ một ca nha, có người thay việc rồi!'],
+   ['wink','Nhặt máu nhanh vậy? Biết sợ chết là tốt!']],
+  magnetItem:[['happy','Hút đồ à? Ui, máy hốt của cải! Cho tui mượn một tí!'],
+   ['proud','Nam châm này giống tui: có sức hút không thể cưỡng!']],
+  bombItem:[['shock','BOM! Trời ơi đừng quăng gần tóc tui!'],
+   ['wink','Nổ cho tụi nó sáng mắt! Tui đứng xa... quan sát chuyên môn!']],
+  orbItem:[['proud','Orb! Đồ phép thuật! Tui biết xài đó, nhưng cho bạn thử trước.'],
+   ['shock','Nhặt Orb rồi hả? Đừng bấm bừa rồi nổ cái bụp nha!']]
  };
+
  const clamp=(n,min,max)=>Math.max(min,Math.min(max,Number.isFinite(+n)?+n:min));
  const rank=xp=>{let lv=1;for(let i=1;i<RANK_XP.length;i++)if(xp>=RANK_XP[i])lv=i+1;return lv;};
  function data(save){
@@ -106,7 +143,8 @@
  function newRun(pl,now=0){return {player:pl,now,healAt:8,buffAt:12,slowAt:15,guardAt:0,
   sleepUntil:0,megaUntil:0,reviveAt:0,sleepTalked:false,revived:false,lastTalk:-100,marks:new Set(),lastPos:null,direction:0,
   activeBuff:null,slowed:[],lastSlowTargets:[],motion:null,castCue:null,emoteType:'sparkle',
-  reactionAt:14,lastDangerAt:-100,lastQuirkCount:0,emoteUntil:0,cousinUntil:0,cousinTargets:0,damageHook:null,evolveUntil:0,megaSpoken:false};}
+  reactionAt:14,lastDangerAt:-100,lastQuirkCount:0,emoteUntil:0,cousinUntil:0,cousinTargets:0,damageHook:null,evolveUntil:0,megaSpoken:false,
+  lastLineByEvent:Object.create(null),pendingReaction:null,pickupCount:0};}
  function heal(pl,lv,training=0){
   if(!pl||!Number.isFinite(pl.maxHp)||pl.maxHp<=0||pl.hp/pl.maxHp>.65)return false;
   const gain=pl.maxHp*(.12+lv*.011+clamp(training,0,TRAINING_MAX)*.02);
@@ -497,13 +535,13 @@
    lastWorldFrame=wall;
    ctx.save();
    ctx.fillStyle='rgba(33,26,29,.34)';
-   ctx.beginPath();ctx.ellipse(x,y+1,13,4,0,0,Math.PI*2);ctx.fill();
+   ctx.beginPath();ctx.ellipse(x,y+1,11.7,3.6,0,0,Math.PI*2);ctx.fill();
    if(!worldAnimator&&typeof G.Sprites?.Animator==='function'){
     try{
      G.Sprites?.sheet?.(35,'Idle',false);
      G.Sprites?.sheet?.(35,'Walk',false);
      const base=Number(G.Sprites?.playerScale?.(35))||1;
-     worldAnimator=new G.Sprites.Animator(35,Math.max(.8,base)*1.12,false);
+     worldAnimator=new G.Sprites.Animator(35,Math.max(.8,base)*1.008,false); // 10% smaller than 1.12
      worldAnimator.loop('Idle');
      worldAnimMode='Idle';
     }catch(err){w.console?.warn?.('[Pippi] Native animator unavailable',err);}
@@ -562,6 +600,44 @@
    ctx.strokeText?.(ch,x+15,y-45);ctx.fillText?.(ch,x+15,y-45);
   }
    ctx.restore();
+  }
+  // Native Game.item() is called by real item/chest reward pickup logic.
+  // Install one wrapper only. Give visual feedback on EVERY pickup, but limit
+  // portrait speech to the existing 8-second cooldown to protect Chromium.
+  function reactPickup(kind='item',value){
+   if(!run||!eligible(G))return false;
+   const id=String(value?.kind??value?.id??value??'').toLowerCase();
+   const event=kind==='orb'?'orbItem':
+    /heal|potion|hp/.test(id)?'healItem':
+    /magnet|vacuum|hút/.test(id)?'magnetItem':
+    /bomb|explos|nổ/.test(id)?'bombItem':
+    kind==='chest'?'chest':'item';
+   const now=Math.max(0,Number(G.Game?.st?.time??run.now)||0);
+   run.pickupCount=(run.pickupCount||0)+1;
+   run.emoteType=event==='bombItem'?'alarm':'sparkle';
+   run.emoteUntil=Math.max(run.emoteUntil||0,now+1.9);
+   if(run.motion&&G.FX&&run.pickupCount%2===1){
+    G.FX.burst?.(run.motion.x,run.motion.y-13,'#ffe5a2',3,28);
+   }
+   // Coalesce rapid successive drops, but do not lose the discovery.
+   run.pendingReaction=event;
+   return true;
+  }
+  function installPickupReactions(){
+   if(!G.Game)return false;
+   let found=false;
+   for(const [name,kind] of [['item','chest'],['orb','orb'],
+     ['pickup','item'],['collect','item']]){
+    const previous=G.Game[name];
+    if(typeof previous!=='function')continue;
+    if(previous.__pkmsvvPippiPickup){found=true;continue;}
+    function wrapped(...args){
+     if(eligible(G))reactPickup(kind,args[0]);
+     return previous.apply(this,args);
+    }
+    wrapped.__pkmsvvPippiPickup=true;G.Game[name]=wrapped;found=true;
+   }
+   return found;
   }
   function installNativeWorld(){
    const eggs=G.PKMSVVEggs;
@@ -845,7 +921,11 @@
    }
    mark('emote-exit');
    const lines=LINES[event]||LINES.intro;
-   const [face,message]=lines[Math.floor(Math.random()*lines.length)];
+   // Shuffle without replacement of the immediately previous variant.
+   const previous=run?.lastLineByEvent?.[event]??-1;
+   const position=lines.length===1?0:(previous+1+Math.floor(Math.random()*(lines.length-1)))%lines.length;
+   if(run)run.lastLineByEvent[event]=position;
+   const [face,message]=lines[position];
    mark('create-ui-enter');
    const el=getUI();if(!el)return;
    mark('create-ui-exit');
@@ -963,6 +1043,7 @@
    const stage=name=>{if(trace)w.console?.log?.('QA_PIPPI_STAGE:'+name+':'+String(G.Game?.state||''));};
    stage('enter');
    try{
+    installPickupReactions();
     stage('migration-enter');
     // Refund bookkeeping can touch persistent storage. Finish migrations
     // from the home UI, never synchronously in a live combat tick.
@@ -1020,7 +1101,11 @@
     stage('data-enter');
     const p=data(G.DB?.save),lv=p.bond,training=p.training;
     stage('data-exit');
-    if(now-run.lastTalk>=9){
+    if(run.pendingReaction&&now-run.lastTalk>=8&&!visualModalOpen()){
+     const event=run.pendingReaction;
+     run.pendingReaction=null;
+     say(event);
+    }else if(now-run.lastTalk>=9){
      const comment=personalityReaction(run,pl,now);
      if(comment)say(comment);
     }
@@ -1098,7 +1183,7 @@
    };
   }
   const api={installed:true,refund,migrate,data,rank,earn,train,trainingPoints,bondProgress,cousinChance,eligible:()=>eligible(G),
-   tryRevive:revive,tick,show:say,
+   tryRevive:revive,tick,show:say,reactPickup,
    get visual(){return {renderMode:nativeWorldReady?'native-world':'fallback',
     nativeWorldReady,worldAnimatorReady:!!worldAnimator,
     blocked:visualModalOpen(),blockedBy:visibleModal(),
