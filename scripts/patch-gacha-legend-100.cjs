@@ -1,7 +1,7 @@
 'use strict';
-/* Balance hotfix: 5-star (Legend grade) 1% base odds, 100-pull hard pity.
+/* Balance hotfix: 5-star (Legend grade) 0.5% base odds, 150-pull hard pity.
  * Preserve 10-pull guaranteed >=4-star, ×100 batching and old save.pity.
- * The removed 0.5 percentage points go to 1★ to keep the sum at 100%.
+ * The removed 1 percentage point from the pinned 1.5% base goes to 1★.
  */
 const fs=require('node:fs'),path=require('node:path');
 const file=path.join(__dirname,'..','vendor','pokesurvivor','js','systems','gacha.js');
@@ -11,7 +11,7 @@ function once(from,to){
  s=s.replace(from,to);
 }
 once('const RATES = [[1, 45], [2, 30], [3, 17], [4, 6.5], [5, 1.5]];',
-     'const RATES = [[1, 45.5], [2, 30], [3, 17], [4, 6.5], [5, 1]];');
-once('const PITY_5 = 70;', 'const PITY_5 = 100;');
+     'const RATES = [[1, 46], [2, 30], [3, 17], [4, 6.5], [5, 0.5]];');
+once('const PITY_5 = 70;', 'const PITY_5 = 150;');
 fs.writeFileSync(file,s,'utf8');
-console.log('PKMSVV Gacha: 5★ base 1%, guaranteed by 100th roll without 5★; 10-pull and saved pity intact.');
+console.log('PKMSVV Gacha: 5★ base 0.5%, guaranteed by 150th roll without 5★; 10-pull and saved pity intact.');
