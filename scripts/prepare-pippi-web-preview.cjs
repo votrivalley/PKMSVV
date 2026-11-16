@@ -34,11 +34,13 @@ for(const prefix of ['game','ai/game']){
  const spawner=bundle.indexOf('G.Spawner=');
  if(spawner<0||bundle.indexOf('G.Spawner=',spawner+10)>=0)
   throw Error('Spawner module not unique in pinned QA bundle');
- const region=bundle.slice(spawner,spawner+6000),from='const a=1/2048;',to='const a=1/4096;';
- if(region.split(from).length===2){
-  bundle=bundle.slice(0,spawner)+region.replace(from,to)+bundle.slice(spawner+region.length);
- }else if(region.split(to).length!==2){
-  throw Error('Native wild Shiny rate source drift '+prefix+': '+region.slice(0,180));
+ const region=bundle.slice(spawner,spawner+6000);
+ const wild=/^(G\.Spawner=\(\(\)=>\{const [a-zA-Z_$][\w$]*=)1\/(2048|4096);/;
+ const parsed=region.match(wild);
+ if(!parsed)throw Error('Native wild Shiny source drift '+prefix+': '+region.slice(0,180));
+ if(parsed[2]==='2048'){
+  const before=parsed[0],after=parsed[1]+'1/4096;';
+  bundle=bundle.slice(0,spawner)+region.replace(before,after)+bundle.slice(spawner+region.length);
  }
  // The pinned QA bundle still has 1% Legend, 0.9% Shiny, 100 pity.
  // Patch ONLY the validated G.Gacha lexical module; no changes to 100x
@@ -54,9 +56,18 @@ for(const prefix of ['game','ai/game']){
  }
  replaceGachaOnce('[[1,45.5],[2,30],[3,17],[4,6.5],[5,1]]',
   '[[1,46],[2,30],[3,17],[4,6.5],[5,.5]]');
- replaceGachaOnce('t=.9/100','t=.45/100');
+ const gachaStart=bundle.indexOf('G.Gacha=');
+ const gachaChunk=bundle.slice(gachaStart,gachaStart+11000);
+ const shinyGacha=gachaChunk.match(/([a-zA-Z_$][\w$]*)=\.9\/100/);
+ if(!shinyGacha||gachaChunk.match(/([a-zA-Z_$][\w$]*)=\.9\/100/g)?.length!==1)
+  throw Error('Base Gacha Shiny source drift '+prefix);
+ replaceGachaOnce(shinyGacha[0],shinyGacha[1]+'=.45/100');
  replaceGachaOnce('PITY_5:100','PITY_5:150');
- replaceGachaOnce('t.pity[i]>=100?5','t.pity[i]>=150?5');
+ const pityChunk=bundle.slice(bundle.indexOf('G.Gacha='),bundle.indexOf('G.Gacha=')+11000);
+ const pityExpr=pityChunk.match(/([a-zA-Z_$][\w$]*\.pity\[[a-zA-Z_$][\w$]*\]>=)100\?5/);
+ if(!pityExpr||pityChunk.match(/([a-zA-Z_$][\w$]*\.pity\[[a-zA-Z_$][\w$]*\]>=)100\?5/g)?.length!==1)
+  throw Error('Gacha hard-pity source drift '+prefix);
+ replaceGachaOnce(pityExpr[0],pityExpr[1]+'150?5');
  for(const [label,rel] of [
    ['GlobalPower','src/pkmsvv-global-power.js'],
    ['GlobalPowerUI','src/pkmsvv-global-power-ui.js'],
@@ -66,8 +77,12 @@ for(const prefix of ['game','ai/game']){
   src=src.replace(new RegExp('G\\.'+label+'\\s*=\\s*'),'G.'+label+'=');
   bundle=installModule(bundle,label,src);
  }
- if(!bundle.includes('PITY_5:150')||!bundle.includes('t.pity[i]>=150?5')||
-     !bundle.includes('t=.45/100')||!bundle.includes('G.Spawner=(()=>{const a=1/4096;')||
+ const gachaQA=bundle.slice(bundle.indexOf('G.Gacha='),bundle.indexOf('G.Gacha=')+11000);
+ const wildQA=bundle.slice(bundle.indexOf('G.Spawner='),bundle.indexOf('G.Spawner=')+180);
+ if(!gachaQA.includes('PITY_5:150')||!gachaQA.includes('[[1,46],[2,30],[3,17],[4,6.5],[5,.5]]')||
+     !/[a-zA-Z_$][\w$]*\.pity\[[a-zA-Z_$][\w$]*\]>=150\?5/.test(gachaQA)||
+     !/[a-zA-Z_$][\w$]*=\.45\/100/.test(gachaQA)||
+     !/G\.Spawner=\(\(\)=>\{const [a-zA-Z_$][\w$]*=1\/4096;/.test(wildQA)||
      !bundle.includes('const SHINY_CHANCE=.015'))
   throw Error('Legend/Shiny/Pity rarity patch absent: '+prefix);
  new vm.Script(bundle,{filename:'pippi-qa-'+prefix.replace('/','-')+'.js'});
