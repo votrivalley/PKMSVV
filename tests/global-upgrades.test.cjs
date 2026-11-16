@@ -44,7 +44,7 @@ test('triple-priced starting skills and base stats, with same strength effects',
 test('refund returns exactly spent coins, never changes individual Pokémon upgrades',()=>{
  const s={coins:3000,globalUpgrades:{},pupg:{25:{hp:3}}};
  const original=s.coins;
- for(const id of ['vital','power','rapid','healing'])assert.ok(P.purchase(s,id));
+ for(const id of ['vital','power','rapid'])assert.ok(P.purchase(s,id));
  const spent=P.refundable(s);
  assert.ok(spent>0);
  assert.equal(P.refundAll(s),spent);
@@ -53,6 +53,26 @@ test('refund returns exactly spent coins, never changes individual Pokémon upgr
  assert.deepEqual(obj(s.globalSpent),{});
  assert.equal(s.pupg[25].hp,3);
  assert.equal(P.refundAll(s),0);
+});
+test('global regeneration retired, original per-Pokémon healing still works and legacy coins refunded once',()=>{
+ assert.equal(P.BY.healing.retired,true);
+ assert.equal(P.LIST.filter(x=>!x.retired).some(x=>x.id==='healing'),false);
+ assert.equal(P.purchase({coins:100000,globalUpgrades:{}},'healing'),false);
+ assert.equal(P.combine({regen:2},{healing:7}).regen,2);
+ const live={coins:55,globalUpgrades:{healing:2,power:1},
+  globalSpent:{healing:840,power:300}};
+ assert.equal(P.refundRetiredHealing(live),840);
+ assert.equal(live.coins,895);
+ assert.deepEqual(obj(live.globalUpgrades),{power:1});
+ assert.deepEqual(obj(live.globalSpent),{power:300});
+ assert.equal(P.refundRetiredHealing(live),0);
+ assert.equal(live.coins,895);
+ const legacy={coins:9,globalUpgrades:{healing:2,rapid:1}};
+ const expected=P.originalCost('healing',0)+P.originalCost('healing',1);
+ assert.equal(P.refundRetiredHealing(legacy),expected);
+ assert.equal(legacy.coins,9+expected);
+ assert.deepEqual(obj(legacy.globalUpgrades),{rapid:1});
+ assert.equal(P.refundable(legacy),P.originalCost('rapid',0));
 });
 test('rank clamping and merge do not read unrelated saved fields',()=>{
  const old={power:3,vital:5};
