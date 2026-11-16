@@ -77,6 +77,28 @@ test('Explore dialogue freezes a writable native game state then resumes only af
  assert.equal(f.save.pkmsvvPippiGuide.explore,true);
  assert.equal(f.guide.isOpen,false);
 });
+test('First chest guidance queues behind item choice and needs two explicit Next clicks',()=>{
+ const f=fixture();let rewardOpen=true;
+ f.G.PKMSVVQuickRegion.active=true;f.G.Game.state='playing';
+ f.G.UI={isOpen(id){return id==='scr-item'&&rewardOpen;}};
+ assert.equal(f.guide.queue('chest'),true);
+ assert.equal(f.guide.flush(),false,'never cover real item selection');
+ assert.equal(f.guide.isOpen,false);
+ rewardOpen=false;
+ assert.equal(f.guide.flush(),true);
+ assert.equal(f.guide.current.kind,'chest');
+ assert.equal(f.guide.current.total,2);
+ assert.equal(f.G.Game.state,'pause');
+ f.guide.next();assert.equal(f.guide.isOpen,true);
+ assert.equal(f.save.pkmsvvPippiGuide.chest,undefined);
+ f.guide.next();assert.equal(f.guide.isOpen,false);
+ assert.equal(f.save.pkmsvvPippiGuide.chest,true);
+ assert.equal(f.G.Game.state,'playing');
+ assert.equal(f.guide.queue('chest'),false,'repeat drops must not repeat first chest guide');
+ assert.equal(f.guide.queue('pickup'),true);
+ assert.equal(f.guide.flush(),true);
+ assert.equal(f.guide.current.kind,'pickup');
+});
 test('Pippi guide excludes Co-op, Arena and nonplaying sessions and never consumes Escape to skip',()=>{
  const f=fixture();
  f.G.Game.state='ui';
