@@ -72,7 +72,9 @@ for(const prefix of ['game','ai/game']){
    ['GlobalPower','src/pkmsvv-global-power.js'],
    ['GlobalPowerUI','src/pkmsvv-global-power-ui.js'],
    ['PKMSVVEggs','src/v15/eggs.js'],
-   ['PKMSVV14','src/v14/milestones.js']
+   ['PKMSVV14','src/v14/milestones.js'],
+   ['Shop','src/kecleon/upstream/data/shop.js'],
+   ['KecleonUI','src/kecleon/pkmsvv-kecleon-ui.js']
  ]){
   let src=source(rel);
   src=src.replace(new RegExp('G\\.'+label+'\\s*=\\s*'),'G.'+label+'=');
@@ -85,6 +87,7 @@ for(const prefix of ['game','ai/game']){
      !/[a-zA-Z_$][\w$]*=\.45\/100/.test(gachaQA)||
      !/G\.Spawner=\(\(\)=>\{const [a-zA-Z_$][\w$]*=1\/4096;/.test(wildQA)||
      !bundle.includes('const SHINY_CHANCE=.015')||
+     !bundle.includes("const ORDER = ['mint', 'cap', 'caph', 'pippiReset']")||
      !bundle.includes('legendChance:.15'))
   throw Error('Legend/Shiny/Pity rarity patch absent: '+prefix);
  new vm.Script(bundle,{filename:'pippi-qa-'+prefix.replace('/','-')+'.js'});
@@ -148,7 +151,7 @@ for(const prefix of ['game','ai/game']){
 }
 const meta=JSON.parse(source('dist/cloudflare-v20-release/build-info.json'));
 Object.assign(meta,{releaseType:'qa-preview-only',pippiCousinQA:marker,
- previewBranch:'pippi-cousin-qa',version:'2.0.1-Pippi-QA',
+ previewBranch:'pippi-cousin-qa',version:'2.0.2-Pippi-QA',
  description:'Isolated browser-only test; production pkmsvv-web.pages.dev unchanged'});
 write(path.join(site,'build-info.json'),JSON.stringify(meta,null,2)+'\n');
 // QA-only cache policy: browsers must revalidate the HTML and the two UI

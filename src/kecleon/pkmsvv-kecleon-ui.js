@@ -29,12 +29,14 @@ G.KecleonUI=(()=>{
  const label=key=>({
    mint:L('Bạc hà','Nature Mint'),
    cap:L('Viên nang Đặc tính','Ability Capsule'),
-   caph:L('Viên nang Đặc tính Ẩn','Hidden Ability Capsule')
+   caph:L('Viên nang Đặc tính Ẩn','Hidden Ability Capsule'),
+   pippiReset:L('Kẹo Tái Huấn Luyện','Training Reset Candy')
  })[key]||key;
  const text=key=>({
    mint:L('Đổi Tính cách ngẫu nhiên.','Reroll a random Nature.'),
    cap:L('Đổi ngẫu nhiên. Có 5% cơ hội ra Đặc tính Ẩn.','Random reroll. 5% chance for a Hidden Ability.'),
-   caph:L('Viên sự kiện: 15% ra Đặc tính Ẩn, cao gấp 3 lần.','Event Capsule: 15% Hidden chance, 3× the normal rate.')
+   caph:L('Viên sự kiện: 15% ra Đặc tính Ẩn, cao gấp 3 lần.','Event Capsule: 15% Hidden chance, 3× the normal rate.'),
+   pippiReset:L('Hoàn lại toàn bộ điểm kỹ năng Pippi. Giữ nguyên Thân thiết và kinh nghiệm.','Recover all Pippi training points; keeps friendship level and XP.')
  })[key]||'';
  let selected=null,tab='shop',sceneActive=false;
  const Scene=()=>G.PKMSVVKecleonScene;
@@ -69,6 +71,11 @@ G.KecleonUI=(()=>{
   render();
  }
  function itemIcon(key,size=34){
+  if(key==='pippiReset')return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 16 16" role="img" aria-label="Kẹo Tái Huấn Luyện" style="image-rendering:pixelated" xmlns="http://www.w3.org/2000/svg">'+
+   '<path fill="#f7c0f4" d="M1 6h3V4h2v8H4v-2H1zm11-2h2v2h2v4h-2v2h-2z"/>'+
+   '<path fill="#804c9c" d="M4 3h8v1h2v8h-2v1H4v-1H2V4h2z"/>'+
+   '<path fill="#ffedf5" d="M5 4h6v1h2v6h-2v1H5v-1H3V5h2z"/>'+
+   '<path fill="#e677b4" d="M7 5h2v2h2v2H9v2H7V9H5V7h2z"/>'+'</svg>';
   if(!G.Icons||!G.Icons.html)return '🎒';
   return G.Icons.html(key,size);
  }
@@ -106,8 +113,8 @@ G.KecleonUI=(()=>{
   $('pkmk-list').innerHTML=tab==='shop'?shopHtml():tab==='berry'?(G.PKMSVVBerry?.kecleonHtml?.()||'Berry đang tải…'):bagHtml();
   if(tab!=='berry'){
    const help=document.createElement('p');help.className='pkmk-held-help';
-   help.textContent=L('🎒 Trang bị chiến đấu: nhặt từ rương/boss trong trận, chỉ mang 1 món và không mua ở shop. Mint, Capsule, TM là vật phẩm trong Túi đồ.',
-    '🎒 Held battle gear comes from run chests/bosses: one slot only, not sold here. Mints, Capsules and TMs belong to your Bag.');
+   help.textContent=L('🎒 Trang bị chiến đấu: nhặt từ rương/boss trong trận. Bạc hà, Viên nang, TM và Kẹo Tái Huấn Luyện nằm trong Túi đồ.',
+    '🎒 Held battle gear comes from run chests/bosses. Mints, Capsules, TMs and Training Reset Candy stay in your Bag.');
    $('pkmk-list').prepend(help);
   }
   $('pkmk-sign').textContent=L('Cửa hàng Kecleon','Kecleon Shop');
@@ -140,6 +147,19 @@ G.KecleonUI=(()=>{
   $('pkmk-list').querySelectorAll('[data-pkmk-use]').forEach(btn=>btn.onclick=()=>{
     apply(btn.dataset.pkmkUse);render();
   });
+  $('pkmk-list').querySelectorAll('[data-pkmk-pippi-reset]').forEach(btn=>btn.onclick=()=>{
+    if(btn.disabled)return;
+    if(btn.dataset.confirm!=='1'){
+      btn.dataset.confirm='1';btn.textContent=L('Xác nhận dùng kẹo','Confirm candy use');return;
+    }
+    btn.disabled=true;
+    const result=G.PKMSVVPippi?.resetTraining?.(G.DB.save,()=>G.DB.commit(true));
+    if(result?.ok){G.Audio?.sfx?.('buy');toast('Pippi đã nhận lại '+result.refundedPoints+' điểm huấn luyện!',
+      'Pippi recovered '+result.refundedPoints+' training points!');}
+    else toast('Không thể đặt lại kỹ năng. Kẹo vẫn được giữ.',
+      'Could not reset training. Candy was not consumed.');
+    render();
+  });
   $('pkmk-list').querySelectorAll('[data-pkmk-sell]').forEach(btn=>btn.onclick=()=>{
     if(btn.disabled)return;
     btn.disabled=true;
@@ -166,7 +186,7 @@ G.KecleonUI=(()=>{
   for(const key of G.Shop.ORDER){
     const it=G.Shop.ITEMS[key];
     if(it.unavailableInShop)continue; // legacy Hidden Capsule is fully retired.
-    s+=card(itemIcon(key==='cap'?'capsule':key==='caph'?'capsuleh':'mint'),
+    s+=card(itemIcon(key==='pippiReset'?'pippiReset':key==='cap'?'capsule':key==='caph'?'capsuleh':'mint'),
       esc(label(key)),esc(text(key)),
       buyBtn(key,it.price)+'<span class="pkmk-stock">×'+G.Shop.count(key)+'</span>');
   }
@@ -238,6 +258,15 @@ G.KecleonUI=(()=>{
     'Mints/Capsules reroll at random. Sell items for half their shop price.')+'</p>';
   s+='<div class="pkmk-cards">';
   for(const k of G.Shop.ORDER)if(G.Shop.count(k)){
+    if(k==='pippiReset'){
+      const trained=Object.values(G.PKMSVVPippi?.data?.(G.DB.save)?.training||{}).some(n=>n>0);
+      s+=card(itemIcon(k),esc(label(k)),esc(text(k)),
+       '<button type="button" class="btn small gold" data-pkmk-pippi-reset '+
+        (!trained?'disabled':'')+'>'+L('Dùng cho Pippi','Use on Pippi')+'</button>'+
+       sellBtn(k,G.Shop.ITEMS[k].price)+
+       '<span class="pkmk-stock">×'+G.Shop.count(k)+'</span>');
+      continue;
+    }
     const choices=k==='mint'?G.NATURES.filter(n=>n.id!==G.Mons.natureOf(selected).id):
        G.PKMSVVBoxHub?.abilityAlternatives?.(
         G.DEX_ABIL?.[selected]||[],G.Mons.abilityOf(selected).slot)||[];

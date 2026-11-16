@@ -17,11 +17,13 @@ G.Shop=(()=>{
     cap:  { name: 'Cápsula Habilidad', icon: 'capsule', price: 1500,
             desc: 'Random Ability reroll, with a 5% chance for Hidden when available.' },
     caph: { name: 'Cápsula Habilidad Oculta', icon: 'capsuleh', price: 10000, hidden: true, unavailableInShop: true,
-            desc: 'Event-only random Ability reroll: 15% chance for Hidden, 3× a regular Capsule.' }
+            desc: 'Event-only random Ability reroll: 15% chance for Hidden, 3× a regular Capsule.' },
+    pippiReset:{name:'Kẹo Tái Huấn Luyện',icon:'pippiReset',price:3000,
+            desc:'Refund Pippi skill training points without losing friendship level or XP.'}
   };
   // Hidden Capsules are rare/event-only: never on the regular Shop shelf,
   // but usable in Bag and PokéBox. Preserve existing JSON inventory.
-  const ORDER = ['mint', 'cap', 'caph'];
+  const ORDER = ['mint', 'cap', 'caph', 'pippiReset'];
   const DAILY = 8;
 
   const save = () => G.DB.save;
@@ -118,6 +120,7 @@ G.Shop=(()=>{
     if (!tm && (!ITEMS[key] || ITEMS[key].unavailableInShop)) return { ok: false };
     const price = tm ? tmPrice(tm) : ITEMS[key].price;
     if (s.coins < price) return { ok: false, error: 'No tienes Pokémonedas suficientes.' };
+    if(!tm&&(Number(s.bag?.[key])||0)>=999)return {ok:false,error:'Bag stack is full'};
     s.coins -= price;
     if (tm) { s.tms = s.tms || {}; s.tms[tm] = Math.min(999, (s.tms[tm] || 0) + 1); }
     else { s.bag = s.bag || {}; s.bag[key] = Math.min(999, (s.bag[key] || 0) + 1); }

@@ -29,7 +29,7 @@ function patchItemsBundle(bundle,sources){
   const source=sources?.[label]??fs.readFileSync(path.join(root,sourcePath),'utf8');
   next=installModule(next,label,source);
  }
- if(!next.includes("const ORDER = ['mint', 'cap', 'caph']"))
+ if(!next.includes("const ORDER = ['mint', 'cap', 'caph', 'pippiReset']"))
   throw Error('Event Hidden Capsule missing from Bag');
  if(!next.includes('G.PKMSVVBoxHub?.rollAbilitySlot'))
   throw Error('Weighted Hidden reroll missing from Bag');
