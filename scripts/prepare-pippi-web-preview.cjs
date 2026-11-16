@@ -35,8 +35,11 @@ for(const prefix of ['game','ai/game']){
  if(spawner<0||bundle.indexOf('G.Spawner=',spawner+10)>=0)
   throw Error('Spawner module not unique in pinned QA bundle');
  const region=bundle.slice(spawner,spawner+6000),from='const a=1/2048;',to='const a=1/4096;';
- if(region.split(from).length!==2)throw Error('Native wild Shiny rate changed: '+prefix);
- bundle=bundle.slice(0,spawner)+region.replace(from,to)+bundle.slice(spawner+region.length);
+ if(region.split(from).length===2){
+  bundle=bundle.slice(0,spawner)+region.replace(from,to)+bundle.slice(spawner+region.length);
+ }else if(region.split(to).length!==2){
+  throw Error('Native wild Shiny rate source drift '+prefix+': '+region.slice(0,180));
+ }
  // The pinned QA bundle still has 1% Legend, 0.9% Shiny, 100 pity.
  // Patch ONLY the validated G.Gacha lexical module; no changes to 100x
  // batching or the 10x guaranteed 4-star rule.
