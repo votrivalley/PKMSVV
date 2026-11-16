@@ -17,7 +17,7 @@ G.PKMSVVEggs=(()=>{
  const COLLECT_TIME=2, NEST_RADIUS=38, HATCH_BASE=24, HATCH_MIN=32/3;
  const REPLACEMENT_MIN=20, REPLACEMENT_MAX=60;
  const SHINY_CAST_RATIO=2/3,SHINY_SKILL_POWER=2;
- const SHINY_CHANCE=.03, MIN_STAT=.5, MAX_STAT=.8, HIT_COOLDOWN=1.25, EGG_HIT_PENALTY=3, EGG_HIT_LOCKOUT=5;
+ const SHINY_CHANCE=.015, MIN_STAT=.5, MAX_STAT=.8, HIT_COOLDOWN=1.25, EGG_HIT_PENALTY=3, EGG_HIT_LOCKOUT=5;
  const DITTO_FORM=7,DITTO_REST=3;
  const SUPPORT_VISUAL_SCALE=.6, NEST_VISUAL_SCALE=.8;
  const FX_COLOR={attack:'#ffd472',physical:'#ffcf6f',special:'#b79bff',heal:'#66ffad',shield:'#6edaff',magnet:'#ffe078',slow:'#e99aff',sleep:'#7ac9ff',paralyze:'#ffdb55'};
@@ -91,7 +91,7 @@ G.PKMSVVEggs=(()=>{
   return Number(dex)===132?.08*mul:Number(dex)===151?.04*mul:0;
  }
  function shinyChanceFor(dex){
-  const base=Number(dex)===132||Number(dex)===151?.10:SHINY_CHANCE;
+  const base=Number(dex)===132||Number(dex)===151?.05:SHINY_CHANCE;
   return base*(maxAffinity(dex)?2:1);
  }
  function setDittoForm(it,transformed){
