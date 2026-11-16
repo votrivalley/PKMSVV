@@ -383,7 +383,7 @@ test('3% Shiny support exists only within run at 100% of main Pokemon stats; nor
   return {save,pl,G,it:G.PKMSVVEggs.followers[0]};
  }
  const shiny=makeRoll(.029);
- assert.equal(shiny.G.PKMSVVEggs.SHINY_CHANCE,.03);
+ assert.equal(shiny.G.PKMSVVEggs.SHINY_CHANCE,.015);
  assert.equal(shiny.it.shiny,true);
  assert.equal(shiny.it.statScale,1);
  assert.equal(shiny.it.maxHp,320,'Shiny support receives 2× HP');
@@ -393,8 +393,8 @@ test('3% Shiny support exists only within run at 100% of main Pokemon stats; nor
  assert.equal(shiny.it.anim.shiny,true);
  assert.deepEqual(shiny.save.shiny,{},'Do not unlock permanent Shiny collection entries');
  assert.equal(shiny.save.pkmsvvSupportShiny?.[shiny.it.dex],true,'A hatched Shiny companion unlocks only its support variant');
- const regular=makeRoll(.03);
- assert.equal(regular.it.shiny,false,'Exactly .03 is outside the 3% range');
+ const regular=makeRoll(.015);
+ assert.equal(regular.it.shiny,false,'Exactly .015 is outside the 1.5% range');
  assert.equal(regular.save.pkmsvvSupportShiny?.[regular.it.dex],undefined);
  assert.equal(regular.it.statScale,.65);
  assert.equal(regular.it.maxHp,208,'Regular support also receives 2× HP');
@@ -450,7 +450,7 @@ test('full team blocks nests, teammate faint frees slot and new nest becomes pos
 
 test('support touch damage is bounded, shield is absorbed and HP bars exist',()=>{
  const s=read('src/v15/eggs.js');
- assert.match(s,/const SHINY_CHANCE=\.03/);
+ assert.match(s,/const SHINY_CHANCE=\.015/);
  assert.match(s,/HIT_COOLDOWN=1\.25/);
  assert.match(s,/function hitByEnemies\(dt\)/);
  assert.match(s,/function hurtSupport\(it,raw\)/);
@@ -645,7 +645,7 @@ test('Ditto 8%, Mew 4%, all other supports 88%, Shiny 3% independently',()=>{
  assert.equal(roll(.11999).dex,151);
  assert.notEqual(roll(.12).dex,132);
  assert.notEqual(roll(.999).dex,151);
- assert.equal(G.PKMSVVEggs.SHINY_CHANCE,.03);
+ assert.equal(G.PKMSVVEggs.SHINY_CHANCE,.015);
  assert.equal(G.PKMSVVEggs.SPECIES.length,10);
 });
 
@@ -680,7 +680,7 @@ test('Friendship goals and maximum bonuses are species-specific; no early double
  const G={DB:{save:{pkmsvvSupportBond:{}}}};
  vm.runInNewContext(read('src/v15/eggs.js'),{G,Math,Number,Object});
  const e=G.PKMSVVEggs;
- for(const [dex,goal,baseShiny] of [[172,100,.03],[132,50,.10],[151,25,.10]]){
+ for(const [dex,goal,baseShiny] of [[172,100,.015],[132,50,.05],[151,25,.05]]){
   assert.equal(e.affinityGoal(dex),goal);
   assert.equal(e.affinityFor(dex),0);
   assert.equal(e.affinityPercent(dex),0);
@@ -696,9 +696,9 @@ test('Friendship goals and maximum bonuses are species-specific; no early double
  }
  assert.equal(e.speciesChanceFor(132),.16);
  assert.equal(e.speciesChanceFor(151),.08);
- assert.equal(e.shinyChanceFor(132),.20);
- assert.equal(e.shinyChanceFor(151),.20);
- assert.equal(e.shinyChanceFor(172),.06);
+ assert.equal(e.shinyChanceFor(132),.10);
+ assert.equal(e.shinyChanceFor(151),.10);
+ assert.equal(e.shinyChanceFor(172),.03);
  assert.equal(e.affinityMultiplier(151),1.6);
 });
 
