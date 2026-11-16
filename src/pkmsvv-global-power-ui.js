@@ -7,7 +7,7 @@ G.GlobalPowerUI = (() => {
   function draw() {
     const save=G.DB.save;
     if(!save) return;
-    const refund=G.GlobalPower.refundRetiredHealing?.(save)||0;
+    const refund=G.GlobalPower.refundRetiredPowerups?.(save)||0;
     if(refund){G.DB.commit?.(true);G.UI?.refreshCoins?.();}
     const box=$('pkmg-list'), levels=G.GlobalPower.clean(save.globalUpgrades);
     if(!box) return;
