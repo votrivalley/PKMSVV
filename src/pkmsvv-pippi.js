@@ -46,7 +46,14 @@
   bond:[['sparkle','Tình bạn lên cấp! Pippi xịn hơn rồi nè!']],
   cousin:[['shock','EM HỌ ƠI! CỨU PIPPI VỚI!'],['wink','Ê Pikachu, mấy cha này bắt nạt bạn tui nè!']],
   evolve:[['sparkle','Hóa Clefable hai giây… Đừng có đếm nhanh!']],
-  tutorial:[['thinking','Hạ Boss phút 15 mở vùng mới; phút 30 mới hết trận nha!']]
+  tutorial:[['thinking','Hạ Boss phút 15 mở vùng mới; phút 30 mới hết trận nha!']],
+  tease:[['wink','Đứng yên vậy? Để tui diễn vài bước cho đỡ chán!'],
+   ['proud','Thấy tui lanh chưa? Đi theo cho kịp đó!'],
+   ['happy','Đừng nhìn tui hoài, lo đánh quái đi!']],
+  danger:[['panic','Máu đỏ rồi kìa! Còn định làm anh hùng nữa hả?'],
+   ['teary','Ê, đừng có liều! Để tui cứu!']],
+  cheer:[['proud','Làm tốt đó! Nhưng đừng có chủ quan nha!'],
+   ['wink','Được rồi đó! Có tui support mà!']]
  };
  const clamp=(n,min,max)=>Math.max(min,Math.min(max,Number.isFinite(+n)?+n:min));
  const rank=xp=>{let lv=1;for(let i=1;i<RANK_XP.length;i++)if(xp>=RANK_XP[i])lv=i+1;return lv;};
@@ -408,7 +415,7 @@
  const EMOTES={
   intro:'heart',heal:'heart',buff:'sparkle',slow:'angry',cousin:'sparkle',evolve:'sparkle',
   shield:'alarm',revive:'heart',sleep:'sleep',boss:'alarm',
-  bond:'sparkle',tutorial:'question'
+  bond:'sparkle',tutorial:'question',tease:'question',danger:'alarm',cheer:'sparkle'
  };
  function emoteSVG(type){
   const fill='#fff9ef',ink='#574453',pink='#f26893';
@@ -489,12 +496,51 @@
     worldAnimator.update(dt);
     worldAnimator.draw(ctx,x,y,{alpha:1});
    }
-   // The real support casts a tiny emote over its head; no DOM offset.
-   if(run?.emoteUntil>run?.now){
-    ctx.font='bold 17px sans-serif';ctx.textAlign='center';
-    ctx.fillStyle='#fff5b0';ctx.strokeStyle='#4c2b50';ctx.lineWidth=2;
-    ctx.strokeText('✦',x+15,y-45);ctx.fillText('✦',x+15,y-45);
+   // A 0.8-second in-world casting gesture, not a permanent particle loop.
+  // Lines/rings live in the SAME Y-sorted canvas as Pokémon and expire with
+  // game time. With simple FX quality there are still clear action cues.
+  const cue=run?.castCue,gameNow=Number(G.Game?.st?.time??run?.now)||0;
+  if(cue&&gameNow<=cue.until){
+   const fade=clamp((cue.until-gameNow)/.78,0,1);
+   const color=SUPPORT_PALETTE[cue.event]?.[0]||'#fff2bc';
+   ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.globalAlpha=Math.max(.08,fade*.82);
+   if(typeof ctx.arc==='function'&&typeof ctx.stroke==='function'){
+    ctx.beginPath();ctx.arc(x,y-10,10+14*(1-fade),0,Math.PI*2);ctx.stroke();
    }
+   const targets=(cue.targets?.length?cue.targets:
+    [{x:run?.player?.x,y:run?.player?.y}]).slice(0,4);
+   if(typeof ctx.moveTo==='function'&&typeof ctx.lineTo==='function'&&
+      typeof ctx.stroke==='function'){
+    for(const target of targets){
+     if(!Number.isFinite(+target?.x)||!Number.isFinite(+target?.y))continue;
+     const sx=x,sy=y-18,tx=target.x,ty=target.y-14;
+     const dx=tx-sx,dy=ty-sy;
+     if(Math.hypot(dx,dy)>300)continue;
+     ctx.beginPath();ctx.moveTo(sx,sy);
+     if(cue.event==='cousin'){
+      // Three chunky electric zigzags, intentionally deterministic.
+      for(let i=1;i<=3;i++){
+       const t=i/4,offset=(i%2?11:-10);
+       ctx.lineTo(sx+dx*t-dy/(Math.hypot(dx,dy)||1)*offset,
+                  sy+dy*t+dx/(Math.hypot(dx,dy)||1)*offset);
+      }
+      ctx.lineTo(tx,ty);
+     }else if(typeof ctx.quadraticCurveTo==='function'){
+      ctx.quadraticCurveTo((sx+tx)/2,(sy+ty)/2-30,tx,ty);
+     }else ctx.lineTo(tx,ty);
+     ctx.stroke();
+    }
+   }
+   ctx.globalAlpha=1;
+  }
+  // Reaction bubble is a tiny in-world icon, not a permanent floating face.
+  if(run?.emoteUntil>run?.now){
+   const glyph={heart:'♥',sparkle:'✦',alarm:'!',question:'?',angry:'!',sleep:'Z'};
+   const ch=glyph[run.emoteType]||'✦';
+   ctx.font='bold 16px sans-serif';ctx.textAlign='center';
+   ctx.fillStyle='#fff5b0';ctx.strokeStyle='#4c2b50';ctx.lineWidth=2;
+   ctx.strokeText?.(ch,x+15,y-45);ctx.fillText?.(ch,x+15,y-45);
+  }
    ctx.restore();
   }
   function installNativeWorld(){
@@ -842,6 +888,7 @@
    const now=run.now;
    if(!force&&now-run.lastTalk<8)return;
    run.lastTalk=now;
+   run.emoteType=EMOTES[event]||'sparkle';
    run.emoteUntil=now+(force?3.8:2.6);
    speechPending={event,force,now,origin:run};
    if(speechTimer!==null)return;
@@ -888,6 +935,26 @@
    if(amount)G.UI?.toast?.(copy('Pippi trả lại '+amount.toLocaleString('vi-VN')+' PokéCoins hồi sinh cũ!',
         'Pippi refunded '+amount.toLocaleString('en-US')+' PokéCoins!'),4500);
    return amount;
+  }
+  function personalityReaction(run,pl,now){
+   if(!run||!pl||now<run.sleepUntil||now<(run.reactionAt||0))return null;
+   const ratio=Number(pl.maxHp)>0?Number(pl.hp)/pl.maxHp:1;
+   if(ratio>0&&ratio<.30&&now-(run.lastDangerAt??-100)>=24){
+    run.lastDangerAt=now;run.reactionAt=now+24;
+    return 'danger';
+   }
+   const idleSteps=Number(run.motion?.quirkCount)||0;
+   if(idleSteps>(run.lastQuirkCount||0)){
+    run.lastQuirkCount=idleSteps;
+    run.reactionAt=now+23;
+    return 'tease';
+   }
+   // Rare one-liner when the player is doing well: no per-frame RNG.
+   if(now>=80&&now>=run.reactionAt+28){
+    run.reactionAt=now+47;
+    return 'cheer';
+   }
+   return null;
   }
   let qaTraceTicks=0;
   function tick(){
@@ -942,6 +1009,10 @@
     stage('data-enter');
     const p=data(G.DB?.save),lv=p.bond,training=p.training;
     stage('data-exit');
+    if(now-run.lastTalk>=9){
+     const comment=personalityReaction(run,pl,now);
+     if(comment)say(comment);
+    }
     const isSleeping=now<run.sleepUntil;
     if(run.revived&&!run.megaSpoken&&now>=run.evolveUntil){
      run.megaSpoken=true;say('revive',true);
@@ -1048,5 +1119,5 @@
   }
   return api;
  }
- return {rank,data,refund,earn,train,trainingPoints,bondProgress,cousinChance,cousinLightning,rollCousinOnHit,installDamageHook,uninstallDamageHook,eligible,newRun,advanceFollower,emoteSVG,heal,buff,slow,showSupportFX,endEffects,finish,tryRevive,faceSVG,install};
+ return {rank,data,refund,earn,train,trainingPoints,bondProgress,cousinChance,cousinLightning,rollCousinOnHit,installDamageHook,uninstallDamageHook,eligible,newRun,advanceFollower,emoteSVG,heal,buff,slow,showSupportFX,personalityReaction,endEffects,finish,tryRevive,faceSVG,install};
 });
