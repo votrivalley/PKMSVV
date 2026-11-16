@@ -350,8 +350,9 @@
  if(typeof window!=='undefined')window.addEventListener('blur',()=>{cancelHold();clearTouchHold();});
  function target(pl){
   const raw=G.EnemyMgr?.all?.()||[];
-  const enemies=raw instanceof Map||raw instanceof Set?raw.values():
-   Array.isArray(raw)?raw:typeof raw[Symbol.iterator]==='function'?raw:[];
+  const kind=Object.prototype.toString.call(raw);
+  const enemies=kind==='[object Map]'||kind==='[object Set]'?raw.values():
+   Array.isArray(raw)?raw:typeof raw?.[Symbol.iterator]==='function'?raw:[];
   let nearest=null,dist=Infinity;
   for(const e of enemies){
    if(!e||e.dead||e.remote||e.friendly||e.pkmsvvFriendly||e.isSupport||
