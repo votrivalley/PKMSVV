@@ -171,6 +171,70 @@ test('Healing and attack support paint clear native FX on player and on Pippi',(
  assert.equal(P.showSupportFX({},run,pl,'heal',35),false,'missing FX has no gameplay side effects');
 });
 
+test('Pippi slow visibly marks only real enemies affected (up to six)',()=>{
+ const foes=Array.from({length:8},(_,i)=>({
+  x:108+i*3,y:125,spd:100,dead:false
+ }));
+ const logs=[],fx={
+  ring(...a){logs.push(['ring',...a]);},
+  burst(...a){logs.push(['burst',...a]);},
+  dmgText(...a){logs.push(['text',...a]);}
+ };
+ const {G,player}=game(save(54));player.x=100;player.y=120;
+ G.Game.st.time=20;G.EnemyMgr.all=()=>foes;G.FX=fx;
+ const run=P.newRun(player,20);run.motion={x:80,y:100};
+ assert.equal(P.slow(G,run,20,5),true);
+ assert.equal(run.lastSlowTargets.length,6);
+ assert.equal(P.showSupportFX(G,run,player,'slow'),true);
+ const slowed=logs.filter(x=>x[0]==='text'&&x[3]==='CHẬM!');
+ assert.equal(slowed.length,6,'a slowdown label is drawn at each affected enemy');
+ assert.ok(slowed.every(x=>x[1]!==player.x||x[2]!==player.y-26),
+  'never incorrectly draw slowdown on the player');
+ assert.ok(run.castCue&&run.castCue.targets.length===6);
+ P.finish(run);assert.ok(foes.every(x=>x.spd===100),'status restore is unchanged');
+});
+
+test('Pippi shield, revive, buff and cousin each have distinct bounded support cues',()=>{
+ const logs=[],fx={
+  ring(...a){logs.push(['ring',...a]);},
+  burst(...a){logs.push(['burst',...a]);},
+  dmgText(...a){logs.push(['text',...a]);}
+ };
+ const {G,player}=game(save(54));G.FX=fx;
+ const run=P.newRun(player,12);run.motion={x:80,y:100};
+ for(const event of ['heal','buff','shield','revive','cousin']){
+  logs.length=0;
+  const old=player.atkMul;
+  assert.equal(P.showSupportFX(G,run,player,event,35),true);
+  assert.equal(run.castCue.event,event);
+  assert.ok(logs.filter(x=>x[0]==='ring').length>=2);
+  assert.ok(logs.filter(x=>x[0]==='burst').length>=2);
+  assert.ok(logs.length<=9,'effects are event-limited and do not spawn loops');
+  assert.equal(player.atkMul,old,'cosmetic effects must not affect combat stats');
+ }
+ const s={pkmsvvPippi:{xp:14,training:{cousin:3}}};
+ G.DB.save=s;G.Game.st.time=20;player.hp=100;player.maxHp=100;
+ const foe={x:125,y:125,dead:false,applyStun(v){this.stun=v;}};
+ G.EnemyMgr.all=()=>[foe];logs.length=0;
+ assert.equal(P.rollCousinOnHit(G,run,player,100,85,()=>0).triggered,true);
+ assert.equal(run.castCue.event,'cousin');
+ assert.deepEqual(run.castCue.targets,[{x:125,y:125}]);
+ assert.ok(logs.some(x=>x[0]==='text'&&x[3]==='TÊ LIỆT!'));
+ assert.ok(logs.some(x=>x[0]==='text'&&x[3]==='PIKA!'));
+});
+
+test('Pippi reacts to low HP and mischievous sidesteps with bounded dialogue',()=>{
+ const pl={x:120,y:110,hp:24,maxHp:100};
+ const run=P.newRun(pl,0);
+ assert.equal(P.personalityReaction(run,pl,15),'danger');
+ assert.equal(P.personalityReaction(run,pl,16),null,'no repeated warning every tick');
+ pl.hp=100;run.motion={quirkCount:2};
+ assert.equal(P.personalityReaction(run,pl,40),'tease');
+ assert.equal(P.personalityReaction(run,pl,41),null,'no sidestep commentary spam');
+ run.sleepUntil=110;
+ assert.equal(P.personalityReaction(run,pl,90),null,'sleeping Pippi never heckles');
+});
+
 test('Battle dialogue contains a safe nonblank Pippi face without PNG decoding',()=>{
  const fs=require('node:fs'),path=require('node:path');
  const js=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pippi.js'),'utf8');
