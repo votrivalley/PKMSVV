@@ -966,6 +966,16 @@
     // Refund bookkeeping can touch persistent storage. Finish migrations
     // from the home UI, never synchronously in a live combat tick.
     if(G.Game?.state==='ui')ensurePcCompanion();
+    if(G.DB?.save&&G.Game?.state==='ui'){
+     // One-time exact refund for retired account-wide regen, with no save
+     // writes in the battle tick. Personal regen and Pippi heal remain.
+     const returned=G.GlobalPower?.refundRetiredHealing?.(G.DB.save)||0;
+     if(returned>0){
+      G.DB?.commit?.(true);G.UI?.refreshCoins?.();
+      G.UI?.toast?.('Đã hoàn '+Math.round(returned).toLocaleString('vi-VN')+
+       ' PokéCoins từ nâng cấp Hồi phục cũ.',3500);
+     }
+    }
     if(G.DB?.save&&G.Game?.state==='ui'&&!w.__pkmsvvPippiMigrationDisabled)migrate();
     if(w.__pkmsvvPippiAllowCombatPortrait===true&&G.Game?.state==='ui')prewarmPortraits();
     stage('migration-exit');
