@@ -58,7 +58,7 @@
 #pkmsvv-pippi-follower.has-pmd .pippi-pmd-sprite{
  display:block;position:absolute;left:50%;bottom:-1px;
  background-repeat:no-repeat;image-rendering:pixelated;
- transform:translateX(-50%) scale(1.55);transform-origin:center bottom;
+ transform:translateX(-50%) scale(1.395);transform-origin:center bottom;
  animation:pippi-idle-frames 1.2s steps(6,end) infinite;
 }
 /* Both sheets have 40px high frames. EXACTLY one scale keeps the feet and
