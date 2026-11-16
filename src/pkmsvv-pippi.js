@@ -89,7 +89,11 @@
   bombItem:[['shock','BOM! Trời ơi đừng quăng gần tóc tui!'],
    ['wink','Nổ cho tụi nó sáng mắt! Tui đứng xa... quan sát chuyên môn!']],
   orbItem:[['proud','Orb! Đồ phép thuật! Tui biết xài đó, nhưng cho bạn thử trước.'],
-   ['shock','Nhặt Orb rồi hả? Đừng bấm bừa rồi nổ cái bụp nha!']]
+   ['shock','Nhặt Orb rồi hả? Đừng bấm bừa rồi nổ cái bụp nha!']],
+  coinItem:[['wink','Xu! Đưa thủ quỹ Pippi cất. Tui tính phí có chút xíu à!'],
+   ['proud','Nghe tiếng tiền leng keng mà tim tui muốn nhảy múa!']],
+  ticketItem:[['shock','Vé quay?! Tui nhìn thấy Legend đang vẫy tay... chắc nó vẫy đứa khác.'],
+   ['wink','Có vé! Đừng quay ra Rattata rồi quay qua nhìn tui nha!']]
  };
 
  const clamp=(n,min,max)=>Math.max(min,Math.min(max,Number.isFinite(+n)?+n:min));
@@ -523,6 +527,7 @@
   // Pokémon supports. Never paint Pippi as a fixed browser overlay.
   let nativeWorldReady=false;
   let worldAnimator=null,worldAnimMode='',lastWorldFrame=0;
+  let insideNativePickup=false;
   function nativeWorldDraw(ctx){
    const m=run?.motion;
    if(!m||visualModalOpen()||!eligible(G)||!ctx)return;
@@ -608,10 +613,12 @@
    if(!run||!eligible(G))return false;
    const id=String(value?.kind??value?.id??value??'').toLowerCase();
    const event=kind==='orb'?'orbItem':
-    /heal|potion|hp/.test(id)?'healItem':
-    /magnet|vacuum|hút/.test(id)?'magnetItem':
-    /bomb|explos|nổ/.test(id)?'bombItem':
-    kind==='chest'?'chest':'item';
+    /heal|potion|hp/.test(kind+' '+id)?'healItem':
+    /magnet|vacuum|hút/.test(kind+' '+id)?'magnetItem':
+    /bomb|explos|nổ/.test(kind+' '+id)?'bombItem':
+    kind==='chest'||kind==='item'?'chest':
+    /ticket/.test(kind)?'ticketItem':
+    kind==='coin'?'coinItem':'item';
    const now=Math.max(0,Number(G.Game?.st?.time??run.now)||0);
    run.pickupCount=(run.pickupCount||0)+1;
    run.emoteType=event==='bombItem'?'alarm':'sparkle';
@@ -632,10 +639,31 @@
     if(typeof previous!=='function')continue;
     if(previous.__pkmsvvPippiPickup){found=true;continue;}
     function wrapped(...args){
-     if(eligible(G))reactPickup(kind,args[0]);
+     if(!insideNativePickup&&eligible(G))reactPickup(kind,args[0]);
      return previous.apply(this,args);
     }
     wrapped.__pkmsvvPippiPickup=true;G.Game[name]=wrapped;found=true;
+   }
+   // Native Pickups.update(dt, players, onCollected) calls its callback
+   // ONLY after proximity collection. Wrap that callback, never scan 60Hz
+   // DOM/canvas nodes and never treat a drop on the ground as a pickup.
+   const pickups=G.Pickups,previous=pickups?.update;
+   if(typeof previous==='function'&&!previous.__pkmsvvPippiPickup){
+    function wrapped(dt,players,onCollected,...rest){
+     if(typeof onCollected!=='function')
+      return previous.call(this,dt,players,onCollected,...rest);
+     const notify=function(pickup,collector,...args){
+      if(eligible(G)&&pickup&&collector===G.Game?.player&&
+         !['xp','xpBig'].includes(String(pickup.kind||''))){
+       reactPickup(String(pickup.kind||'item'),pickup.value);
+      }
+      insideNativePickup=true;
+      try{return onCollected.call(this,pickup,collector,...args);}
+      finally{insideNativePickup=false;}
+     };
+     return previous.call(this,dt,players,notify,...rest);
+    }
+    wrapped.__pkmsvvPippiPickup=true;pickups.update=wrapped;found=true;
    }
    return found;
   }
