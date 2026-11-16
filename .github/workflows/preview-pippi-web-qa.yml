@@ -7,6 +7,10 @@ on:
       - 'scripts/prepare-pippi-web-preview.cjs'
       - 'scripts/build-pippi-portrait-atlas.cjs'
       - 'src/pkmsvv-pippi.js'
+      - 'src/pkmsvv-fossil-system.js'
+      - 'data/pkmsvv-fossil-catalog.json'
+      - 'tests/fossil-system.test.cjs'
+      - 'tests/fossil-restoration-data.test.cjs'
       - 'src/pkmsvv-pippi.css'
       - 'src/pkmsvv-pippi-guide.js'
       - 'src/pkmsvv-pippi-guide.css'
@@ -125,7 +129,7 @@ jobs:
       - name: Verify companion and economy regressions before any preview
         run: |
           set -euo pipefail
-          node --test tests/pippi-companion.test.cjs tests/pippi-guide.test.cjs tests/global-upgrades.test.cjs tests/v15-eggs.test.cjs tests/runtime-controls-qa.test.cjs tests/pokebox-stage3.test.cjs tests/pkmsvv-v20.test.cjs tests/v20-items-release.test.cjs tests/quick-region.test.cjs
+          node --test tests/fossil-system.test.cjs tests/fossil-restoration-data.test.cjs tests/pippi-companion.test.cjs tests/pippi-guide.test.cjs tests/global-upgrades.test.cjs tests/v15-eggs.test.cjs tests/runtime-controls-qa.test.cjs tests/pokebox-stage3.test.cjs tests/pkmsvv-v20.test.cjs tests/v20-items-release.test.cjs tests/quick-region.test.cjs
           # Only the Gacha balance tests in the legacy v1.4 suite remain valid on v1.5.93.
           node --test --test-name-pattern='Gacha balance|Gacha ×100|5★ rarity odds' tests/v14-gameplay.test.cjs
       - name: Download the exactly pinned Chromium-tested Web 2.0 snapshot
@@ -148,6 +152,7 @@ jobs:
           for route in game ai/game; do
             test -s "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-pippi.js"
             test -s "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-pippi-guide.js"
+            test -s "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-fossil-system.js"
             test -s "dist/cloudflare-v20-release/$route/css/pkmsvv-pippi-guide.css"
             test -s "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-box-stage3.js"
             test -s "dist/cloudflare-v20-release/$route/images/pippi/portrait/Happy.png"

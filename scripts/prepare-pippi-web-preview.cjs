@@ -94,7 +94,7 @@ for(const prefix of ['game','ai/game']){
  write(compiled,bundle);
  for(const filename of [
    'pkmsvv-box-stage3.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-wiki.js',
-   'pkmsvv-pippi.js','pkmsvv-pippi-guide.js'
+   'pkmsvv-pippi.js','pkmsvv-pippi-guide.js','pkmsvv-fossil-system.js'
  ]){
   const target=filename==='pkmsvv-wiki.js'?'pkmsvv-wiki-qa.js':filename;
   write(path.join(dest,'js/ui',target),source('src/'+filename));
@@ -118,7 +118,7 @@ for(const prefix of ['game','ai/game']){
  if(fs.statSync(path.join(imageDir,'skill-icons.png')).size>25000)throw Error('Pippi icons too large for mobile QA');
  let html=source(path.relative(root,path.join(dest,'index.html')));
  if(!html.includes('pkmsvv-box-stage3.js'))throw Error('Not the validated Web 2.0 snapshot: '+prefix);
- for(const name of ['pkmsvv-pippi.js','pkmsvv-pippi-guide.js']){
+ for(const name of ['pkmsvv-pippi.js','pkmsvv-pippi-guide.js','pkmsvv-fossil-system.js']){
   if(!html.includes(name))html=html.replace('</body>','<script defer src="js/ui/'+name+'"></script>\n</body>');
  }
  if(!html.includes('pkmsvv-pippi.css'))html=html.replace('</head>',
@@ -131,14 +131,14 @@ for(const prefix of ['game','ai/game']){
  write(path.join(dest,identity), 'window.__PKMSVV_PIPPI_QA='+JSON.stringify(revision)+';\n');
  html=html.replace('</head>','<script defer src="'+identity+'?v='+revision+'"></script>\n<meta name="robots" content="noindex,nofollow"><!-- '+marker+' -->\n</head>');
  // A stable Pages URL must not leave old PC / Pippi assets in existing caches.
- for(const name of ['pkmsvv-wiki-qa.js','pkmsvv-pippi.js','pkmsvv-pippi-guide.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-quick-region.js']){
+ for(const name of ['pkmsvv-wiki-qa.js','pkmsvv-pippi.js','pkmsvv-pippi-guide.js','pkmsvv-fossil-system.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-quick-region.js']){
   html=html.replace('src="js/ui/'+name+'"','src="js/ui/'+name+'?v='+revision+'"');
  }
  for(const name of ['pkmsvv-pippi.css','pkmsvv-pippi-guide.css','pkmsvv-pc-menu-clean-qa.css']){
   html=html.replace('href="css/'+name+'"','href="css/'+name+'?v='+revision+'"');
  }
  write(path.join(dest,'index.html'),html);
- if(!html.includes(marker)||!html.includes('pkmsvv-pippi.js'))throw Error('Preview injection incomplete');
+ if(!html.includes(marker)||!html.includes('pkmsvv-pippi.js')||!html.includes('pkmsvv-fossil-system.js'))throw Error('Preview fossil injection incomplete');
  // Test the actual staged source, not just repo strings.
  for(const token of ['COUSIN_CHANCES=Object.freeze([0,.05,.10,.20])','rollCousinOnHit']){
   if(!source(path.relative(root,path.join(dest,'js/ui/pkmsvv-pippi.js'))).includes(token))
@@ -146,6 +146,8 @@ for(const prefix of ['game','ai/game']){
  }
  if(!fs.existsSync(path.join(dest,'images/pippi/skill-icons.png')))
   throw Error('Pippi icon sprite missing from active game route: '+prefix);
+ if(!source(path.relative(root,path.join(dest,'js/ui/pkmsvv-fossil-system.js'))).includes('guaranteedKabuto'))
+  throw Error('Fossil native rock hook missing in '+prefix);
  if(!source(path.relative(root,path.join(dest,'js/ui/pkmsvv-wiki-qa.js'))).includes('Bạn đồng hành'))
   throw Error('Renamed Companion PC hub absent in '+prefix);
  if(!source(path.relative(root,path.join(dest,'js/ui/pkmsvv-box-stage3.js'))).includes('normal:.002'))
@@ -156,7 +158,7 @@ for(const prefix of ['game','ai/game']){
 }
 const meta=JSON.parse(source('dist/cloudflare-v20-release/build-info.json'));
 Object.assign(meta,{releaseType:'qa-preview-only',pippiCousinQA:marker,
- previewBranch:'pippi-cousin-qa',version:'2.0.3-Pippi-QA',
+ previewBranch:'pippi-cousin-qa',version:'2.0.4-Pippi-Fossil-QA',
  description:'Isolated browser-only test; production pkmsvv-web.pages.dev unchanged'});
 write(path.join(site,'build-info.json'),JSON.stringify(meta,null,2)+'\n');
 // QA-only cache policy: browsers must revalidate the HTML and the two UI
