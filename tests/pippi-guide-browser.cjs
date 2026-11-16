@@ -14,6 +14,17 @@ async function main(){
   try{
    await page.goto('http://127.0.0.1:'+server.port+'/ai/game/');
    await page.waitForFunction(()=>!!window.G?.PKMSVVPippiGuide&&!!G.DB?.save,{timeout:45000});
+   const balance=await page.evaluate(()=>({
+    legend:G.Gacha?.RATES?.find(x=>x[0]===5)?.[1],
+    pity:G.Gacha?.PITY_5,shiny:G.Gacha?.SHINY_RATE,
+    wild:G.Spawner?.SHINY_RATE??null,
+    supportShiny:G.PKMSVVEggs?.SHINY_CHANCE
+   }));
+   assert.equal(balance.legend,.5,'pinned Web Gacha must have 0.5% Legend');
+   assert.equal(balance.pity,150,'pinned Web Gacha hard pity must increase to 150');
+   assert.ok(Math.abs(balance.shiny-.0045)<1e-12,'pinned Web Gacha Shiny must be 0.45%');
+   assert.equal(balance.supportShiny,.015,'Shiny support eggs must be 1.5%');
+   console.log('PIPPI_RARITY_QA='+JSON.stringify(balance));
    const opened=await page.evaluate(()=>{
     const s=G.DB.save;
     s.partner=s.partner||25;s.starter=s.starter||25;
