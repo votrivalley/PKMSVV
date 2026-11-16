@@ -60,13 +60,13 @@ test('global regeneration retired, original per-Pokémon healing still works and
  assert.equal(P.purchase({coins:100000,globalUpgrades:{}},'healing'),false);
  assert.equal(P.combine({regen:2},{healing:7}).regen,2);
  const live={coins:55,globalUpgrades:{healing:2,power:1},
-  globalSpent:{healing:840,power:300}};
- assert.equal(P.refundRetiredHealing(live),840);
- assert.equal(live.coins,895);
+  globalSpent:{healing:720,power:300}};
+ assert.equal(P.refundRetiredHealing(live),720);
+ assert.equal(live.coins,775);
  assert.deepEqual(obj(live.globalUpgrades),{power:1});
  assert.deepEqual(obj(live.globalSpent),{power:300});
  assert.equal(P.refundRetiredHealing(live),0);
- assert.equal(live.coins,895);
+ assert.equal(live.coins,775);
  const legacy={coins:9,globalUpgrades:{healing:2,rapid:1}};
  const expected=P.originalCost('healing',0)+P.originalCost('healing',1);
  assert.equal(P.refundRetiredHealing(legacy),expected);
