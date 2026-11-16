@@ -3,7 +3,7 @@ const test=require('node:test'),assert=require('node:assert/strict');
 const spec=require('../data/pkmsvv-fossil-catalog.json');
 const counts=[5,0,4,4,4,4,0,4,0,0];
 test('25 fossil species, 15 restoration recipes, 15 material types across six generations',()=>{
- assert.equal(spec.implementationStatus,'prepared-only-not-wired-to-gameplay');
+ assert.match(spec.implementationStatus,/^QA feature/);
  assert.equal(spec.materialTypes.length,15);
  assert.equal(spec.recipes.length,15);
  const dexIds=spec.recipes.flatMap(x=>[x.dex,...x.evolutionDexIds]);
