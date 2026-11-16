@@ -29,6 +29,11 @@ for(const prefix of ['game','ai/game']){
  // storage intact: no login, localStorage or ID-key migration is performed.
  const compiled=present(path.join(dest,'js/app.min.js'));
  let bundle=fs.readFileSync(compiled,'utf8');
+ if(prefix==='game'){
+  const at=bundle.indexOf('G.Gacha=');
+  const part=at>=0?bundle.slice(at,at+5300):'MISSING G.Gacha';
+  console.log('PIPPI_GACHA_DIAGNOSTIC:'+part.slice(0,2600));
+ }
  for(const [label,rel] of [
    ['GlobalPower','src/pkmsvv-global-power.js'],
    ['GlobalPowerUI','src/pkmsvv-global-power-ui.js']
