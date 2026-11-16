@@ -1,0 +1,393 @@
+{
+  "schemaVersion": 1,
+  "implementationStatus": "prepared-only-not-wired-to-gameplay",
+  "reference": "https://bulbapedia.bulbagarden.net/wiki/Template:Fossil",
+  "rules": {
+    "mode": "explore",
+    "rockTrigger": "once-on-actual-destructible-rock-destruction",
+    "rockDropChanceByClass": {
+      "common": 0.04,
+      "hard": 0.03,
+      "fossilRich": 0.05
+    },
+    "rng": "one-fossil-material-per-successful-roll",
+    "allowedRegionNumbers": [
+      1,
+      3,
+      4,
+      5,
+      6,
+      8
+    ],
+    "ineligibleRegions": [
+      2,
+      7,
+      9,
+      10
+    ],
+    "onlyMaterialsFromCurrentRegion": true,
+    "revivalLocation": "PC/Phục nguyên hóa thạch",
+    "revivePayment": "UNDECIDED",
+    "newPlayerAcquisition": "fossil-restoration-only",
+    "existingOwnedPokemon": "preserve",
+    "captureAndGachaGate": "design-required-not-implemented",
+    "noNormalWildSpawns": "design-required-not-implemented"
+  },
+  "materialTypes": [
+    {
+      "generation": 1,
+      "id": "helix_fossil",
+      "nameEn": "Helix Fossil",
+      "nameVi": "Hóa thạch Xoắn ốc"
+    },
+    {
+      "generation": 1,
+      "id": "dome_fossil",
+      "nameEn": "Dome Fossil",
+      "nameVi": "Hóa thạch Mái vòm"
+    },
+    {
+      "generation": 1,
+      "id": "old_amber",
+      "nameEn": "Old Amber",
+      "nameVi": "Hổ phách cổ"
+    },
+    {
+      "generation": 3,
+      "id": "root_fossil",
+      "nameEn": "Root Fossil",
+      "nameVi": "Hóa thạch Rễ"
+    },
+    {
+      "generation": 3,
+      "id": "claw_fossil",
+      "nameEn": "Claw Fossil",
+      "nameVi": "Hóa thạch Móng vuốt"
+    },
+    {
+      "generation": 4,
+      "id": "skull_fossil",
+      "nameEn": "Skull Fossil",
+      "nameVi": "Hóa thạch Hộp sọ"
+    },
+    {
+      "generation": 4,
+      "id": "armor_fossil",
+      "nameEn": "Armor Fossil",
+      "nameVi": "Hóa thạch Giáp"
+    },
+    {
+      "generation": 5,
+      "id": "cover_fossil",
+      "nameEn": "Cover Fossil",
+      "nameVi": "Hóa thạch Mai"
+    },
+    {
+      "generation": 5,
+      "id": "plume_fossil",
+      "nameEn": "Plume Fossil",
+      "nameVi": "Hóa thạch Lông vũ"
+    },
+    {
+      "generation": 6,
+      "id": "jaw_fossil",
+      "nameEn": "Jaw Fossil",
+      "nameVi": "Hóa thạch Hàm"
+    },
+    {
+      "generation": 6,
+      "id": "sail_fossil",
+      "nameEn": "Sail Fossil",
+      "nameVi": "Hóa thạch Vây lưng"
+    },
+    {
+      "generation": 8,
+      "id": "fossilized_bird",
+      "nameEn": "Fossilized Bird",
+      "nameVi": "Hóa thạch Chim"
+    },
+    {
+      "generation": 8,
+      "id": "fossilized_fish",
+      "nameEn": "Fossilized Fish",
+      "nameVi": "Hóa thạch Cá"
+    },
+    {
+      "generation": 8,
+      "id": "fossilized_drake",
+      "nameEn": "Fossilized Drake",
+      "nameVi": "Hóa thạch Rồng"
+    },
+    {
+      "generation": 8,
+      "id": "fossilized_dino",
+      "nameEn": "Fossilized Dino",
+      "nameVi": "Hóa thạch Khủng long"
+    }
+  ],
+  "recipes": [
+    {
+      "generation": 1,
+      "dex": 138,
+      "name": "Omanyte",
+      "evolutionDexIds": [
+        139
+      ],
+      "materialIds": [
+        "helix_fossil"
+      ]
+    },
+    {
+      "generation": 1,
+      "dex": 140,
+      "name": "Kabuto",
+      "evolutionDexIds": [
+        141
+      ],
+      "materialIds": [
+        "dome_fossil"
+      ]
+    },
+    {
+      "generation": 1,
+      "dex": 142,
+      "name": "Aerodactyl",
+      "evolutionDexIds": [],
+      "materialIds": [
+        "old_amber"
+      ]
+    },
+    {
+      "generation": 3,
+      "dex": 345,
+      "name": "Lileep",
+      "evolutionDexIds": [
+        346
+      ],
+      "materialIds": [
+        "root_fossil"
+      ]
+    },
+    {
+      "generation": 3,
+      "dex": 347,
+      "name": "Anorith",
+      "evolutionDexIds": [
+        348
+      ],
+      "materialIds": [
+        "claw_fossil"
+      ]
+    },
+    {
+      "generation": 4,
+      "dex": 408,
+      "name": "Cranidos",
+      "evolutionDexIds": [
+        409
+      ],
+      "materialIds": [
+        "skull_fossil"
+      ]
+    },
+    {
+      "generation": 4,
+      "dex": 410,
+      "name": "Shieldon",
+      "evolutionDexIds": [
+        411
+      ],
+      "materialIds": [
+        "armor_fossil"
+      ]
+    },
+    {
+      "generation": 5,
+      "dex": 564,
+      "name": "Tirtouga",
+      "evolutionDexIds": [
+        565
+      ],
+      "materialIds": [
+        "cover_fossil"
+      ]
+    },
+    {
+      "generation": 5,
+      "dex": 566,
+      "name": "Archen",
+      "evolutionDexIds": [
+        567
+      ],
+      "materialIds": [
+        "plume_fossil"
+      ]
+    },
+    {
+      "generation": 6,
+      "dex": 696,
+      "name": "Tyrunt",
+      "evolutionDexIds": [
+        697
+      ],
+      "materialIds": [
+        "jaw_fossil"
+      ]
+    },
+    {
+      "generation": 6,
+      "dex": 698,
+      "name": "Amaura",
+      "evolutionDexIds": [
+        699
+      ],
+      "materialIds": [
+        "sail_fossil"
+      ]
+    },
+    {
+      "generation": 8,
+      "dex": 880,
+      "name": "Dracozolt",
+      "evolutionDexIds": [],
+      "materialIds": [
+        "fossilized_bird",
+        "fossilized_drake"
+      ]
+    },
+    {
+      "generation": 8,
+      "dex": 881,
+      "name": "Arctozolt",
+      "evolutionDexIds": [],
+      "materialIds": [
+        "fossilized_bird",
+        "fossilized_dino"
+      ]
+    },
+    {
+      "generation": 8,
+      "dex": 882,
+      "name": "Dracovish",
+      "evolutionDexIds": [],
+      "materialIds": [
+        "fossilized_fish",
+        "fossilized_drake"
+      ]
+    },
+    {
+      "generation": 8,
+      "dex": 883,
+      "name": "Arctovish",
+      "evolutionDexIds": [],
+      "materialIds": [
+        "fossilized_fish",
+        "fossilized_dino"
+      ]
+    }
+  ],
+  "regionPools": {
+    "1": {
+      "name": "Kanto",
+      "materialIds": [
+        "helix_fossil",
+        "dome_fossil",
+        "old_amber"
+      ],
+      "speciesDexIds": [
+        138,
+        139,
+        140,
+        141,
+        142
+      ]
+    },
+    "2": {
+      "name": "Johto",
+      "materialIds": [],
+      "speciesDexIds": []
+    },
+    "3": {
+      "name": "Hoenn",
+      "materialIds": [
+        "root_fossil",
+        "claw_fossil"
+      ],
+      "speciesDexIds": [
+        345,
+        346,
+        347,
+        348
+      ]
+    },
+    "4": {
+      "name": "Sinnoh",
+      "materialIds": [
+        "skull_fossil",
+        "armor_fossil"
+      ],
+      "speciesDexIds": [
+        408,
+        409,
+        410,
+        411
+      ]
+    },
+    "5": {
+      "name": "Unova",
+      "materialIds": [
+        "cover_fossil",
+        "plume_fossil"
+      ],
+      "speciesDexIds": [
+        564,
+        565,
+        566,
+        567
+      ]
+    },
+    "6": {
+      "name": "Kalos",
+      "materialIds": [
+        "jaw_fossil",
+        "sail_fossil"
+      ],
+      "speciesDexIds": [
+        696,
+        697,
+        698,
+        699
+      ]
+    },
+    "7": {
+      "name": "Alola",
+      "materialIds": [],
+      "speciesDexIds": []
+    },
+    "8": {
+      "name": "Galar",
+      "materialIds": [
+        "fossilized_bird",
+        "fossilized_fish",
+        "fossilized_drake",
+        "fossilized_dino"
+      ],
+      "speciesDexIds": [
+        880,
+        881,
+        882,
+        883
+      ]
+    },
+    "9": {
+      "name": "Paldea",
+      "materialIds": [],
+      "speciesDexIds": []
+    },
+    "10": {
+      "name": "Votri Valley / Sky",
+      "materialIds": [],
+      "speciesDexIds": []
+    }
+  }
+}
