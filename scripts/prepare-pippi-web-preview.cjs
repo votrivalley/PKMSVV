@@ -29,6 +29,13 @@ for(const prefix of ['game','ai/game']){
  // storage intact: no login, localStorage or ID-key migration is performed.
  const compiled=present(path.join(dest,'js/app.min.js'));
  let bundle=fs.readFileSync(compiled,'utf8');
+ if(prefix==='game'){
+  for(const moduleName of ['G.Spawner=','G.Pickups=']){
+   const at=bundle.indexOf(moduleName);
+   console.log('PIPPI_NATIVE_DIAGNOSTIC:'+moduleName+':'+
+    (at<0?'NOT_FOUND':bundle.slice(at,at+3800)));
+  }
+ }
  // The pinned QA bundle still has 1% Legend, 0.9% Shiny, 100 pity.
  // Patch ONLY the validated G.Gacha lexical module; no changes to 100x
  // batching or the 10x guaranteed 4-star rule.
