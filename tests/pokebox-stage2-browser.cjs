@@ -85,6 +85,11 @@ async function main(){
    return data.result.value;
   };
   await cmd('Runtime.enable');await cmd('Page.enable');
+  // Combat regression scenarios must not wait for a human to click the new
+  // first-run RPG tutorial. Separate guide tests exercise its Next flow.
+  await cmd('Page.addScriptToEvaluateOnNewDocument',{
+   source:'window.__pkmsvvPippiGuideQABypass=true;'
+  });
   if(process.env.PKMSVV_BROWSER_WITHOUT_PIPPI==='1'){
    await cmd('Network.enable');
    await cmd('Network.setBlockedURLs',{urls:['*pkmsvv-pippi.js*']});
