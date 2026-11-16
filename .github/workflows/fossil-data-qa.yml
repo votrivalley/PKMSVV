@@ -1,0 +1,25 @@
+name: Fossil Data QA (catalog only — no gameplay build)
+on:
+  push:
+    branches: [fix/pippi-follow-menu-qa-20261115]
+    paths:
+      - 'data/pkmsvv-fossil-catalog.json'
+      - 'docs/FOSSIL_EXCAVATION_DESIGN.md'
+      - 'tests/fossil-restoration-data.test.cjs'
+      - '.github/workflows/fossil-data-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fossil-catalog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate 25 species, 15 recipes, Gen-only loot and 3-5% rock rolls
+        run: node --test tests/fossil-restoration-data.test.cjs
