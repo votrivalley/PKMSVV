@@ -516,10 +516,10 @@ test('Untrained Pippi heals immediately; Cheer, Slow, Shield and revive unlock a
  const player={hp:20,maxHp:100};assert.equal(P.heal(player,1,0),true);
  assert.ok(player.hp>20);
  const source=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pippi.js'),'utf8');
- assert.match(source,/if\\(lv>=2&&now>=run\\.buffAt\\)/);
- assert.match(source,/if\\(lv>=3&&now>=run\\.slowAt\\)/);
- assert.match(source,/if\\(lv>=7&&now>=run\\.guardAt/);
- assert.match(source,/bondLine\\.hidden=event!=='bond'/);
+ assert.match(source,/if\(lv>=2&&now>=run\.buffAt\)/);
+ assert.match(source,/if\(lv>=3&&now>=run\.slowAt\)/);
+ assert.match(source,/if\(lv>=7&&now>=run\.guardAt/);
+ assert.match(source,/bondLine\.hidden=event!=='bond'/);
 });
 test('Kecleon sells Pippi Candy and both Bag and PC have guarded reset actions',()=>{
  const shopSource=fs.readFileSync(path.join(__dirname,'../src/kecleon/upstream/data/shop.js'),'utf8');
@@ -534,10 +534,10 @@ test('Kecleon sells Pippi Candy and both Bag and PC have guarded reset actions',
  assert.equal(G.Shop.buy('pippiReset').ok,true);
  assert.equal(G.DB.save.coins,500);assert.equal(G.Shop.count('pippiReset'),1);
  assert.match(ui,/data-pkmk-pippi-reset/);
- assert.match(wiki,/dataset\\.pippiReset/);
- assert.match(wiki,/P\\.resetTraining\\(save/);
- assert.match(preview,/\\['Shop','src\\/kecleon\\/upstream\\/data\\/shop\\.js'\\]/);
- assert.match(preview,/\\['KecleonUI','src\\/kecleon\\/pkmsvv-kecleon-ui\\.js'\\]/);
+ assert.match(wiki,/dataset\.pippiReset/);
+ assert.match(wiki,/P\.resetTraining\(save/);
+ assert.match(preview,/\['Shop','src\/kecleon\/upstream\/data\/shop\.js'\]/);
+ assert.match(preview,/\['KecleonUI','src\/kecleon\/pkmsvv-kecleon-ui\.js'\]/);
 });
 test('Pippi training improves Explore abilities without changing baseline skills',()=>{
  const base={hp:20,maxHp:100},improved={hp:20,maxHp:100};

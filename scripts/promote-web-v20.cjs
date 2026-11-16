@@ -140,7 +140,7 @@ for(const prefix of ['game','ai/game']){
   'Berry/Egg Rush OGG missing from '+prefix);
  assert(read(prefix+'/js/ui/pkmsvv-box-hub.js').includes('pickRandom'),
   'old direct-choice PokéBox still in '+prefix);
- assert(read(prefix+'/js/app.min.js').includes("const ORDER = ['mint', 'cap', 'caph']"),
+ assert(read(prefix+'/js/app.min.js').includes("const ORDER = ['mint', 'cap', 'caph', 'pippiReset']"),
   'event Hidden Capsule missing in compiled Bag '+prefix);
  assert(read(prefix+'/js/app.min.js').includes('Math.random()<.0016666666666666668'),
   'ordinary item drop adjustment missing from '+prefix);
