@@ -785,7 +785,7 @@ test('Sky Pillar is also completed only after its 30-minute Rayquaza falls',()=>
  assert.equal(q.active,false,'Sky region run is cleared after the final victory');
 });
 
-test('15-minute normal-mode boss is weighted 30% Legendary, 70% Epic independently of pool sizes',()=>{
+test('15-minute normal-mode boss is weighted 15% Legendary, 85% Epic independently of pool sizes',()=>{
  const src=fs.readFileSync(path.join(__dirname,'../src/v14/milestones.js'),'utf8');
  function trial(random){
   const spawned=[];
@@ -812,8 +812,8 @@ test('15-minute normal-mode boss is weighted 30% Legendary, 70% Epic independent
   assert.equal(spawned.length,1,'do not spawn additional legendary at minute 20');
   return spawned[0].dex;
  }
- assert.equal(trial(.2999),150,'legendary at 29.99% roll');
- assert.equal(trial(.30),130,'epic at 30.00% roll');
+ assert.equal(trial(.1499),150,'legendary at 14.99% roll');
+ assert.equal(trial(.15),130,'epic at 15.00% roll');
  assert.equal(trial(.99),130,'epic at 99% roll');
 });
 test('PvE outside has a 4% Rare chance and Rifts offer Rare/Epic, never random Legendary',()=>{
