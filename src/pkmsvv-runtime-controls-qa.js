@@ -321,7 +321,11 @@
  function dashKey(){
   const raw=G.PKMSVVPadOrb?.keyboardBindings?.()?.dash||
    G.Settings?.get?.('keys')?.dash||'keyf';
-  return String(raw).toLowerCase();
+  const name=String(raw).toLowerCase().trim();
+  // Older saves stored 'f' or 'x'; native KeyboardEvent.code is KeyF/KeyX.
+  if(/^[a-z]$/.test(name))return 'key'+name;
+  if(/^[0-9]$/.test(name))return 'digit'+name;
+  return name;
  }
  function cancelHold(){
   held=false;
@@ -345,7 +349,10 @@
  },true);
  if(typeof window!=='undefined')window.addEventListener('blur',()=>{cancelHold();clearTouchHold();});
  function target(pl){
-  const enemies=G.EnemyMgr?.all?.()||[];let nearest=null,dist=Infinity;
+  const raw=G.EnemyMgr?.all?.()||[];
+  const enemies=raw instanceof Map||raw instanceof Set?raw.values():
+   Array.isArray(raw)?raw:typeof raw[Symbol.iterator]==='function'?raw:[];
+  let nearest=null,dist=Infinity;
   for(const e of enemies){
    if(!e||e.dead||e.remote||e.friendly||e.pkmsvvFriendly||e.isSupport||
     !Number.isFinite(e.x)||!Number.isFinite(e.y))continue;
@@ -355,7 +362,8 @@
   return nearest;
  }
  function castTowardsNearest(){
-  if(!autoDash||!playing()||typeof G.Combat?.manualDash!=='function')return false;
+  if(!autoDash||!playing()||G.PKMSVVPippiGuide?.isOpen||
+     typeof G.Combat?.manualDash!=='function')return false;
   if([...document.querySelectorAll('.scr.dim:not(.hidden)')].some(x=>!x.hidden))return false;
   const pl=G.Game.player,e=target(pl);if(!e)return false;
   const dx=e.x-pl.x,dy=e.y-pl.y,distance=Math.hypot(dx,dy);
@@ -489,10 +497,14 @@
  if(typeof oldStart==='function'&&!oldStart._pkmsvvRuntimeControls){
   function wrapped(...args){
    const riftTransfer=speedOwnerSafe()&&(riftActive()||riftPassage);
+   const autoRiftTransfer=autoDash&&riftSpeedContext()&&(riftActive()||riftPassage);
    fast=false;speedOwner=null;lastSpeedRepairTs=0;
    autoDash=false;rankingOpen=false;cancelHold();clearTouchHold();nativeDashBox=null;padDashHeldSince=null;padDashToggled=false;refreshAutoSkillHighlight();choiceToken=null;choicePending=false;lastSpeedState=null;lastRiftState=false;riftPassage=false;
    G.Game?.debugSpeed?.(1);
    const result=oldStart.apply(this,args);
+   if(autoRiftTransfer&&G.Game?.player&&!arenaMatch()&&!G.Coop?.active){
+    autoDash=true;refreshLabels();refreshAutoSkillHighlight();
+   }
    if(riftTransfer&&G.Game?.player&&!G.Game.player.dead&&
       !arenaMatch()&&!G.Coop?.active&&!G.Royale?.active&&!G.EggRush?.active){
     // Some Rift implementations reuse startRun() to return to the map.
