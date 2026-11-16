@@ -17,6 +17,9 @@ async function main(){
   for(const testcase of ['skip-story-after-name','skip-quiz','complete-quiz']){
    const context=await browser.newContext({viewport:platform==='android'?{width:844,height:390}:{width:1080,height:780}});
    const page=await context.newPage(),errors=[];
+   // This validates the original quiz/starter contract; Pippi Next
+   // progression has its own dedicated test.
+   await page.addInitScript(()=>{window.__pkmsvvPippiGuideQABypass=true;});
    page.on('pageerror',e=>errors.push(e.message));
    try{
     await page.goto('http://127.0.0.1:'+server.port+(platform==='android'?'/':'/game/'));
