@@ -15,7 +15,7 @@
     "startingCoins": 750
   },
   "shiny": {
-    "wildDenominator": 2048,
-    "gachaPercent": 0.9
+    "wildDenominator": 4096,
+    "gachaPercent": 0.45
   }
 }
