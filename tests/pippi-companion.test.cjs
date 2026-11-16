@@ -68,7 +68,7 @@ test('Pippi slows enemies AND accelerates native player movement briefly, with f
  assert.ok(Math.abs(p.spd-77)<1e-10,'water slow remains in native speed calculation');
  p.inLiquid=false;
  P.endEffects(run,12);
- assert.equal(p.spd,110,'movement buff must survive until timed expiration');
+ assert.ok(Math.abs(p.spd-110)<1e-10,'movement buff must survive until timed expiration');
  P.endEffects(run,13);
  assert.equal(p.spd,100,'no remaining speed boost after expiration');
  assert.equal(p.pkmsvvPippiHasteMul,undefined);
