@@ -1,0 +1,84 @@
+/* Pippi native RPG dialogue — high-resolution container, pixel portrait.
+ * Does not obscure non-dialogue UI unless guide is actively open. */
+#pkmsvv-pippi-guide.pkmsvv-pippi-guide{
+ position:fixed;inset:0;z-index:12000;display:flex;align-items:flex-end;
+ justify-content:center;box-sizing:border-box;pointer-events:auto;
+ font-family:"Segoe UI",Tahoma,sans-serif;
+}
+#pkmsvv-pippi-guide .pkmsvv-pippi-guide-shade{
+ position:absolute;inset:0;background:rgba(4,11,23,.36);
+}
+#pkmsvv-pippi-guide .pkmsvv-pippi-guide-panel{
+ position:relative;display:flex;align-items:stretch;
+ width:min(980px,96vw);min-height:clamp(190px,26vh,270px);
+ margin:0 auto max(16px,env(safe-area-inset-bottom));
+ border:3px solid #b8f3ed;border-radius:12px;
+ background:linear-gradient(115deg,rgba(5,32,58,.97),rgba(18,37,75,.98));
+ box-shadow:0 0 0 3px #193f55,0 13px 42px rgba(0,0,0,.65);
+ color:#fff;box-sizing:border-box;isolation:isolate;
+}
+#pkmsvv-pippi-guide .pkmsvv-pippi-guide-portrait{
+ width:clamp(148px,25%,230px);min-width:138px;
+ display:flex;align-items:flex-end;justify-content:center;
+ overflow:visible;pointer-events:none;position:relative;
+}
+#pkmsvv-pippi-guide .pkmsvv-pippi-guide-face{
+ width:clamp(150px,23vw,230px);height:clamp(150px,23vw,230px);
+ background-color:#eda1c5;
+ background-image:url('../images/pippi/portrait/atlas.png');
+ background-repeat:no-repeat;background-size:400% 400%;
+ image-rendering:pixelated;filter:drop-shadow(0 5px 3px rgba(0,0,0,.65));
+ border-radius:10px 10px 0 0;
+ margin-bottom:2px;
+}
+#pkmsvv-pippi-guide .pkmsvv-pippi-guide-copy{
+ display:flex;flex:1;min-width:0;flex-direction:column;
+ padding:19px 22px 14px;position:relative;gap:6px;
+}
+#pkmsvv-pippi-guide .pkmsvv-pippi-guide-speaker{
+ display:inline-flex;align-self:flex-start;
+ font-size:clamp(16px,2vw,21px);font-weight:900;letter-spacing:.02em;
+ color:#ffe58e;text-shadow:0 2px 1px #102337;
+}
+#pkmsvv-pippi-guide .pkmsvv-pippi-guide-line{
+ margin:2px 0 0;flex:1;white-space:pre-wrap;
+ font-size:clamp(16px,1.85vw,21px);line-height:1.54;font-weight:550;
+ color:#fffdf7;text-shadow:0 1px 2px #132132;
+}
+#pkmsvv-pippi-guide footer{
+ display:flex;align-items:center;justify-content:space-between;
+ gap:16px;padding-top:8px;
+}
+#pkmsvv-pippi-guide .pkmsvv-pippi-guide-count{
+ color:#b8d8df;font-size:13px;font-weight:700;
+}
+#pkmsvv-pippi-guide .pkmsvv-pippi-guide-next{
+ min-width:138px;min-height:44px;padding:9px 18px;border-radius:9px;
+ background:#ffe47c;border:2px solid #b58a25;color:#112c3c;
+ font:900 16px/1.25 "Segoe UI",Tahoma,sans-serif;
+ box-shadow:0 3px 0 #906c16;cursor:pointer;touch-action:manipulation;
+}
+#pkmsvv-pippi-guide .pkmsvv-pippi-guide-next:focus-visible{
+ outline:3px solid #fff;outline-offset:3px;
+}
+@media(max-width:650px){
+ #pkmsvv-pippi-guide .pkmsvv-pippi-guide-panel{
+  width:calc(100vw - 12px);min-height:190px;
+  margin-bottom:max(7px,env(safe-area-inset-bottom));border-radius:9px;
+ }
+ #pkmsvv-pippi-guide .pkmsvv-pippi-guide-portrait{
+  width:27%;min-width:94px;align-items:flex-end;
+ }
+ #pkmsvv-pippi-guide .pkmsvv-pippi-guide-face{
+  width:clamp(102px,25vw,160px);height:clamp(102px,25vw,160px);
+ }
+ #pkmsvv-pippi-guide .pkmsvv-pippi-guide-copy{padding:11px 10px 10px;gap:4px}
+ #pkmsvv-pippi-guide .pkmsvv-pippi-guide-speaker{font-size:16px}
+ #pkmsvv-pippi-guide .pkmsvv-pippi-guide-line{font-size:14px;line-height:1.46}
+ #pkmsvv-pippi-guide .pkmsvv-pippi-guide-next{
+  min-width:102px;min-height:40px;padding:7px;font-size:13px;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ #pkmsvv-pippi-guide *{animation:none!important;transition:none!important}
+}
