@@ -283,6 +283,63 @@ G.PKMSVVWiki=(()=>{
   back.focus({preventScroll:true});if(G.Pad?.name)G.Pad?.focusFirst?.();
   return true;
  }
+ function fossilRestoration(){
+  close();installStyle();
+  const shade=document.createElement('div');shade.id='pkmsvv-wiki-overlay';
+  shade.className='pkmsvv-pc-overlay';shade.setAttribute('role','dialog');shade.setAttribute('aria-modal','true');
+  const box=document.createElement('section');box.className='pkmsvv-pc-panel pkmsvv-fossil-panel';
+  const head=document.createElement('header');head.className='pkmsvv-pc-header';
+  const title=document.createElement('h2');title.textContent=tr('🦴 Hồi sinh hóa thạch','🦴 Fossil Restoration');
+  const back=document.createElement('button');back.type='button';back.className='pkmsvv-pc-close';
+  back.textContent=tr('← Quay lại PC','← Back to PC');back.setAttribute('data-back','');back.onclick=open;
+  head.append(title,back);box.append(head);
+  const note=document.createElement('p');note.className='pkmsvv-pc-hint';
+  note.textContent=tr('Đập đá ở bản đồ Khám phá đúng thế hệ để tìm hóa thạch. Máy phục nguyên dùng đúng mảnh đã tìm được; chưa thu PokéCoins trong bản QA.',
+   'Break rocks while exploring the right generation. Restore Pokémon from the fossils you find; no coin fee in this QA.');
+  box.append(note);
+  const list=document.createElement('div');list.className='pkmsvv-fossil-list';box.append(list);
+  function draw(){
+   list.replaceChildren();
+   const F=G.PKMSVVFossils,bag=F?.inventory?.()||{},s=G.DB?.save;
+   if(!F?.recipes?.length){
+    const waiting=document.createElement('p');waiting.textContent=tr('Dữ liệu hóa thạch chưa tải. Vào game rồi thử lại.', 'Fossil data not loaded. Enter the game and try again.');
+    list.append(waiting);return;
+   }
+   const stock=document.createElement('p');stock.className='pkmsvv-pc-hint';
+   const pieces=F.materials.filter(m=>(Number(bag[m.id])||0)>0).map(m=>m.nameVi+' ×'+bag[m.id]);
+   stock.textContent=tr('Túi hóa thạch: ','Fossils: ')+(pieces.join(' · ')||tr('Trống trơn. Đá còn cứng hơn đầu bạn đó.','Empty! Try breaking some rocks.'));
+   list.append(stock);
+   for(const formula of F.recipes){
+    const own=!!s?.owned?.[formula.dex];
+    const can=!!G.DEX_BY?.[formula.dex]&&!!G.SPRITE_META?.[formula.dex]&&
+     !own&&formula.materialIds.every(id=>(Number(bag[id])||0)>=formula.materialIds.filter(x=>x===id).length);
+    const row=document.createElement('article');row.className='pkmsvv-fossil-row';
+    const canvas=document.createElement('canvas');canvas.width=72;canvas.height=72;
+    canvas.setAttribute('aria-label',formula.name);
+    try{G.UI?.sprite?.(canvas,formula.dex,{hero:true,scale:1.2});}catch(_){}
+    const detail=document.createElement('div');detail.className='pkmsvv-fossil-detail';
+    const name=document.createElement('strong');name.textContent=formula.name+' · Gen '+formula.generation;
+    const ingredients=document.createElement('small');
+    ingredients.textContent=formula.materialIds.map(id=>(F.materials.find(m=>m.id===id)?.nameVi||id)+' ('+(bag[id]||0)+')').join(' + ');
+    const status=document.createElement('small');status.textContent=own?tr('Đã sở hữu','Already owned'):
+     can?tr('Đủ vật liệu · Có thể hồi sinh','Ready to restore'):tr('Chưa đủ hóa thạch','Missing fossils');
+    detail.append(name,ingredients,status);
+    const button=document.createElement('button');button.type='button';button.className='pkmsvv-pc-close pkmsvv-fossil-revive';
+    button.dataset.fossilDex=String(formula.dex);button.disabled=!can;
+    button.textContent=own?tr('Đã có','Owned'):tr('Hồi sinh','Restore');
+    button.onclick=()=>{
+     if(button.disabled)return;
+     const result=F.restore(formula.dex);
+     if(!result.ok){G.UI?.toast?.(tr('Không thể phục nguyên. Hóa thạch vẫn được giữ.','Could not restore. Materials preserved.'),2600);return;}
+     draw();list.querySelector('[data-fossil-dex="'+formula.dex+'"]')?.focus({preventScroll:true});
+    };
+    row.append(canvas,detail,button);list.append(row);
+   }
+  }
+  draw();shade.append(box);document.body.append(shade);
+  back.focus({preventScroll:true});
+  return true;
+ }
  function berryGuide(){
   close();installStyle();
   const shade=document.createElement('div');shade.id='pkmsvv-wiki-overlay';
@@ -347,6 +404,9 @@ G.PKMSVVWiki=(()=>{
    makeCard(grid,{title:tr('Bạn đồng hành','Companions'),dex:35,
     desc:tr('Thân thiết · Nâng cấp hồi máu, cổ vũ, khống chế và bảo vệ.','Bond · Healing, buff, control and defense.'),
     action:tr('Chăm sóc Pippi','Train Pippi'),onClick:pippiCorner});
+  makeCard(grid,{title:tr('Hồi sinh hóa thạch','Fossil Restoration'),dex:140,
+   desc:tr('Khám phá · Đập đá kiếm hóa thạch và phục nguyên Pokémon cổ đại.','Break rocks to collect and restore ancient Pokémon.'),
+   action:tr('Vào phòng thí nghiệm','Enter the lab'),onClick:fossilRestoration});
   const help=document.createElement('section');help.className='pkmsvv-pc-guide';
   const sub=document.createElement('h3');sub.textContent=tr('Kiến thức Pokémon','Pokémon knowledge');
   help.append(sub);
@@ -452,5 +512,5 @@ G.PKMSVVWiki=(()=>{
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('pkmsvv-wiki-overlay')){close();e.stopPropagation();}});
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
- return {open,close,berryGuide,pippiCorner,installMenu};
+ return {open,close,berryGuide,pippiCorner,fossilRestoration,installMenu};
 })();

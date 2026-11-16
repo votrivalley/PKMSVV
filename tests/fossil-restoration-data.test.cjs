@@ -44,7 +44,7 @@ test('restoration recipe ingredients remain Galar two-part and all others one wh
  ]);
 });
 test('rock 3–5 percent chance applies once per destroyed rock, never per hit',()=>{
- assert.deepEqual(spec.rules.rockDropChanceByClass,{common:0.04,hard:0.03,fossilRich:0.05});
+ assert.deepEqual(spec.rules.rockDropChanceByClass,{ordinaryPokemon:.02,rockType:.04,fossilPokemon:.06});
  assert.equal(spec.rules.rockTrigger,'once-on-actual-destructible-rock-destruction');
  assert.equal(spec.rules.mode,'explore');
  assert.equal(spec.rules.newPlayerAcquisition,'fossil-restoration-only');

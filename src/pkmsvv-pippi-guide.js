@@ -12,9 +12,9 @@
  const STEPS={
   starter:[
    ['Surprised','Ối! Vừa chọn Pokémon xong đã gặp tui hả? Hân hạnh nha! Tui là Pippi, một Clefairy siêu sao tự phong, nổi tiếng vì làm Red muốn đội quần trong truyện Pocket Monsters.','Oh! Picked your Pokémon and already met a celebrity? I’m Pippi, a self-declared Clefairy superstar. I made Red lose his mind back in the Pocket Monsters manga!'],
-   ['Joyous','Công việc của tui: làm cố vấn, cà khịa, đôi lúc buff máu. Tui hơi hèn trước boss, nhưng mà đừng nói ai biết! Cái đó gọi là chiến thuật.','My job: advising, roasting, occasionally healing. I may run from giant bosses, but keep that secret! It is called strategy.'],
-   ['Determined','Cậu em họ Pikachu là tay đánh thuê gia đình tui. Khi bạn ăn đòn, có lúc nó sẽ lao ra phóng điện. Nhưng bạn đánh chính, tui chịu trách nhiệm... đẹp đội hình!','My cousin Pikachu is our family backup. When you get hurt, he may jump in with lightning. You fight, I make the team look fabulous!'],
-   ['Happy','Vào PC → Bạn đồng hành để tăng Thân thiết và huấn luyện kỹ năng cho tui. Giờ bấm Tiếp theo đi. Tụi mình đi kiếm chuyện—à không, cứu thế giới!','Go to PC → Companion to raise Bond and train my moves. Now hit Next. Let’s go cause trouble—uh, save the world!']
+   ['Joyous','Công việc của tui: dẫn đường cho nhân vật chính là TUI. Bạn làm chân chạy, đánh quái, đập đá. Tui nhận công, có gì khó hiểu?','My job: guiding the main character—ME. You run, fight and break rocks. I take the credit. Any questions?'],
+   ['Determined','Thấy boss to quá á? Tui chạy là để thám thính đường lui nha, đừng có bảo tui hèn! Em họ Pikachu có thể cứu bạn lúc ăn đòn; còn tui... cứu danh dự đội hình.','Big boss? If I run away, it is called scouting an escape route, NOT cowardice! Cousin Pikachu may save you when hurt; I save our reputation.'],
+   ['Happy','PC có chỗ nâng Thân thiết cho tui đấy. Đầu tư đi! Bạn nâng bản thân bao nhiêu cũng không đẹp trai bằng Pippi đâu, nhưng cố gắng vẫn được điểm cộng.','The PC has my friendship training. Invest in ME! You will never look as fabulous as Pippi, but effort earns you some points.']
   ],
   chest:[
    ['Surprised','Ê, rương kìa! Nhặt vào thì game cho chọn vật phẩm. Đọc kỹ hiệu ứng trước khi chốt nha, đừng thấy đồ lấp lánh là bốc đại như tui!','A chest! It offers a choice of items. Read the effects before picking. Do not just grab the shiniest one like I would!'],

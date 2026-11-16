@@ -49,13 +49,13 @@
   // Gacha eligibility (actual DEX entries plus sprites), with the canonical
   // National Dex number determining Gen regardless of incorrect .gen tags.
   const available=Array.isArray(dex)?dex.filter(p=>
-    p&&!!meta?.[p.dex]&&(index===9||nationalGen(p.dex)===index+1)&&!!by?.[p.dex])
+    p&&!G.PKMSVVFossils?.isFossilDex?.(p.dex)&&!!meta?.[p.dex]&&(index===9||nationalGen(p.dex)===index+1)&&!!by?.[p.dex])
    .map(p=>Number(p.dex)):[];
   // The old test harness does not always provide G.DEX. Never use this
   // fallback when a real Gacha list is present; otherwise it can silently
   // re-introduce Pokémon not offered in the selected Gen.
   const fallback=!Array.isArray(dex)?Object.keys(by||{}).map(Number).filter(n=>
-    !!by[n]&&(index===9||nationalGen(n)===index+1)):[];
+    !!by[n]&&!G.PKMSVVFossils?.isFossilDex?.(n)&&(index===9||nationalGen(n)===index+1)):[];
   const list=[...new Set(Array.isArray(dex)?available:fallback)];
   poolCache.set(index,list);poolSetCache.set(index,new Set(list));
   return list;

@@ -415,3 +415,27 @@
  #pkmsvv-wiki-overlay .pkmsvv-pippi-skill-details>strong{font-size:12px}
 }
 @media(prefers-reduced-motion:reduce){#pkmsvv-wiki-overlay .pkmsvv-pippi-training-row{transition:none}}
+
+/* FOSSIL_PC_V1 — compact five-card PC and data-only restoration lab. */
+#pkmsvv-wiki-overlay .pkmsvv-pc-grid{grid-template-columns:repeat(5,minmax(0,1fr));}
+#pkmsvv-wiki-overlay .pkmsvv-fossil-panel{max-width:850px}
+#pkmsvv-wiki-overlay .pkmsvv-fossil-list{display:flex;flex-direction:column;gap:9px;min-width:0}
+#pkmsvv-wiki-overlay .pkmsvv-fossil-row{display:flex;gap:11px;align-items:center;
+ border:1px solid #75a8a4;border-radius:11px;padding:9px;
+ background:linear-gradient(120deg,#18394d,#244957);color:#eff9f6}
+#pkmsvv-wiki-overlay .pkmsvv-fossil-row canvas{
+ width:72px;height:72px;flex:0 0 72px;image-rendering:pixelated;
+ background:#18303b;border-radius:8px}
+#pkmsvv-wiki-overlay .pkmsvv-fossil-detail{display:flex;flex:1;flex-direction:column;gap:4px;min-width:0}
+#pkmsvv-wiki-overlay .pkmsvv-fossil-detail strong{color:#ffe6a1;font-size:15px}
+#pkmsvv-wiki-overlay .pkmsvv-fossil-detail small{color:#cfebe9;font-size:12px;overflow-wrap:anywhere}
+#pkmsvv-wiki-overlay .pkmsvv-fossil-revive{flex:0 0 auto}
+#pkmsvv-wiki-overlay .pkmsvv-fossil-revive:disabled{opacity:.55;cursor:default}
+@media(max-width:940px){#pkmsvv-wiki-overlay .pkmsvv-pc-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:600px){#pkmsvv-wiki-overlay .pkmsvv-pc-grid{grid-template-columns:1fr}
+ #pkmsvv-wiki-overlay .pkmsvv-fossil-row canvas{width:46px;height:46px;flex-basis:46px}
+ #pkmsvv-wiki-overlay .pkmsvv-fossil-row{gap:7px;padding:7px}
+ #pkmsvv-wiki-overlay .pkmsvv-fossil-detail strong{font-size:12px}
+ #pkmsvv-wiki-overlay .pkmsvv-fossil-detail small{font-size:11px}
+ #pkmsvv-wiki-overlay .pkmsvv-fossil-revive{padding:6px;font-size:11px}
+}
