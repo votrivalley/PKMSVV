@@ -74,6 +74,24 @@ test('global regeneration retired, original per-Pokémon healing still works and
  assert.deepEqual(obj(legacy.globalUpgrades),{rapid:1});
  assert.equal(P.refundable(legacy),P.originalCost('rapid',0));
 });
+test('global Movement Speed is retired and both old upgrades refund exactly once',()=>{
+ assert.equal(P.BY.swift.retired,true);
+ assert.equal(P.LIST.filter(x=>!x.retired).some(x=>['swift','healing'].includes(x.id)),false);
+ assert.equal(P.purchase({coins:200000,globalUpgrades:{}},'swift'),false);
+ assert.equal(P.combine({spdMul:1.2,regen:3},{swift:6,healing:7}).spdMul,1.2);
+ const s={coins:17,globalUpgrades:{healing:1,swift:2,power:1},
+   globalSpent:{healing:300,swift:720,power:300}};
+ assert.equal(P.refundRetiredPowerups(s),1020);
+ assert.equal(s.coins,1037);
+ assert.deepEqual(obj(s.globalUpgrades),{power:1});
+ assert.deepEqual(obj(s.globalSpent),{power:300});
+ assert.equal(P.refundRetiredPowerups(s),0);
+ assert.equal(s.coins,1037);
+ const legacy={coins:10,globalUpgrades:{swift:2}};
+ const paid=P.originalCost('swift',0)+P.originalCost('swift',1);
+ assert.equal(P.refundRetiredPowerups(legacy),paid);
+ assert.equal(legacy.coins,10+paid);
+});
 test('rank clamping and merge do not read unrelated saved fields',()=>{
  const old={power:3,vital:5};
  const incoming={power:7,vital:3,opening:9000,INVALID:2};
