@@ -3,7 +3,7 @@
  * Only the host spawns trial bosses. */
 G.PKMSVV14=(()=>{
  const checkpoints=[
-  {at:900,label:['Thử thách Boss 15 phút!','15-minute Boss Challenge!'],hp:44000,dmg:64,bossRarity:4,legendChance:.30}
+  {at:900,label:['Thử thách Boss 15 phút!','15-minute Boss Challenge!'],hp:44000,dmg:64,bossRarity:4,legendChance:.15}
  ];
  let done=new Set();
  const L=pair=>G.I18n&&G.I18n.lang==='vi'?pair[0]:pair[1];
@@ -16,7 +16,7 @@ G.PKMSVV14=(()=>{
   const candidates=G.DEX.filter(p=>G.SPRITE_META[p.dex]);
   const legendary=candidates.filter(p=>p.leg||Number(p.rarity)===5);
   const epic=candidates.filter(p=>Number(p.rarity)===4&&!p.leg);
-  // Exact 30/70 weighted rarity roll, independent of the number of
+  // Exact 15/85 weighted rarity roll, independent of the number of
   // sprite-backed entries in each tier. No accidental 80% legend from
   // pool sizes; fall back only if a tier is entirely unavailable.
   const wantLegend=Math.random()<(c.legendChance??1);
