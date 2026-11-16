@@ -16,6 +16,14 @@
    ['Determined','Cậu em họ Pikachu là tay đánh thuê gia đình tui. Khi bạn ăn đòn, có lúc nó sẽ lao ra phóng điện. Nhưng bạn đánh chính, tui chịu trách nhiệm... đẹp đội hình!','My cousin Pikachu is our family backup. When you get hurt, he may jump in with lightning. You fight, I make the team look fabulous!'],
    ['Happy','Vào PC → Bạn đồng hành để nâng Bond và học trò mới cho tui. Giờ bấm Tiếp theo đi. Tụi mình đi kiếm chuyện—à không, cứu thế giới!','Go to PC → Companion to raise Bond and train my moves. Now hit Next. Let’s go cause trouble—uh, save the world!']
   ],
+  chest:[
+   ['Surprised','Ê, rương kìa! Nhặt vào thì game cho chọn vật phẩm. Đọc kỹ hiệu ứng trước khi chốt nha, đừng thấy đồ lấp lánh là bốc đại như tui!','A chest! It offers a choice of items. Read the effects before picking. Do not just grab the shiniest one like I would!'],
+   ['Determined','Có thể nhặt nhiều rương liên tiếp nhưng cứ chọn từng món một. Để tui canh, bạn lo lựa đồ cho đúng build!','You can collect multiple chests, but choose their rewards one at a time. I will keep watch while you build smart!']
+  ],
+  pickup:[
+   ['Happy','Đồ rơi dưới đất có nhiều loại: máu, nam châm, bom, vé, Orb và xu. Cái nào ngon thì nhặt—trừ khi boss đang dí sát mông!','Ground drops include healing, magnets, bombs, tickets, Orbs and coins. Grab them when safe—unless a boss is breathing down your neck!'],
+   ['Joyous','Tui sẽ báo khi bạn nhặt đồ quan trọng. Còn EXP nhặt suốt ngày thì thôi nha, tui là danh hài chứ không phải loa phường!','I will react to important pickups. I am not narrating every XP gem; I am a comedian, not your notification spammer!']
+  ],
   explore:[
    ['Happy','Đây là Khám phá! Tui đi ngay cạnh bạn, không để bạn một mình đâu. Cứ di chuyển và hạ quái để lên cấp!','Welcome to Explore! I’ll stay by your side. Move around, defeat enemies and level up!'],
    ['Inspired','Khi lên cấp, chọn kỹ năng để mạnh dần. Các chiêu tự động sẽ tự tấn công; kỹ năng chủ động cần bạn kích hoạt.','At level-up, pick new moves. Automatic attacks fire on their own; active moves need your input.'],
@@ -24,7 +32,7 @@
    ['Joyous','Phút 15 đánh boss để mở vùng tiếp theo; phút 30 mới kết thúc bản đồ. Giờ thì chiến đi, tui ở đây rồi!','Defeat the 15-minute boss to open the next region. The map ends after the 30-minute boss. Let’s go!']
   ]
  };
- let active=null,root=null,lastExplorePlayer=null,scheduled=null;
+ let active=null,root=null,lastExplorePlayer=null,scheduled=null,queued=null;
  const flags=save=>{
   if(!save)return {};
   if(!save.pkmsvvPippiGuide||typeof save.pkmsvvPippiGuide!=='object')
@@ -68,11 +76,12 @@
   if(!STEPS[kind]||!save||active||window.__pkmsvvPippiGuideQABypass===true)return false;
   if(flags(save)[kind])return false;
   if(kind==='starter'&&!save.partner&&!save.starter)return false;
-  if(kind==='explore'&&(!G.PKMSVVQuickRegion?.active||G.Game?.state!=='playing'||
-    G.Coop?.active||G.Royale?.active||G.EggRush?.active))return false;
+  if(['explore','chest','pickup'].includes(kind)&&
+    (!G.PKMSVVQuickRegion?.active||G.Game?.state!=='playing'||
+     G.Coop?.active||G.Royale?.active||G.EggRush?.active))return false;
   const player=G.Game?.player;
   let paused=false;
-  if(kind==='explore'){
+  if(kind==='explore'||kind==='chest'||kind==='pickup'){
    const descriptor=Object.getOwnPropertyDescriptor(G.Game,'state');
    // Normal/native game state is writable in the Web 2.0 build. If a host
    // exposes a getter only, leave it untouched instead of breaking combat.
@@ -130,6 +139,23 @@
   }
   wrapped._pippiGuide=true;game.startRun=wrapped;
  }
+ function queue(kind){
+  if(!['chest','pickup'].includes(kind)||window.__pkmsvvPippiGuideQABypass===true)
+   return false;
+  if(flags(G.DB?.save)[kind]||active||queued)return false;
+  queued=kind;
+  return true;
+ }
+ function flush(){
+  if(!queued||active||window.__pkmsvvPippiGuideQABypass===true)return false;
+  if(G.Game?.state!=='playing'||!G.PKMSVVQuickRegion?.active)return false;
+  // Item choices, chapter scenes and pause overlays always take precedence.
+  if(['scr-item','scr-levelup','scr-bond','scr-pause','scr-pkmsvv-story'].some(id=>
+    G.UI?.isOpen?.(id)))return false;
+  const kind=queued;
+  if(open(kind)){queued=null;return true;}
+  return false;
+ }
  // Never dismiss automatically, never allow outside/ESC clicks to skip pages.
  document.addEventListener('keydown',e=>{
   if(!active)return;
@@ -140,7 +166,7 @@
    e.preventDefault?.();e.stopPropagation?.();e.stopImmediatePropagation?.();
   }
  },true);
- G.PKMSVVPippiGuide={open,next,close,
+ G.PKMSVVPippiGuide={open,next,close,queue,flush,
   get isOpen(){return !!active;},
   get current(){return active?{kind:active.kind,index:active.index,total:STEPS[active.kind].length,paused:active.paused}:null;}};
 })();
