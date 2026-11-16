@@ -457,6 +457,26 @@
    "<g fill='#613c54'>"+eyes+"</g>"+mouth+
    (mega?"<path d='m27 0 5 6 5-6' fill='#fff7a8'/>":'')+"</svg>";
  }
+ function personalityReaction(run,pl,now){
+   if(!run||!pl||now<run.sleepUntil||now<(run.reactionAt||0))return null;
+   const ratio=Number(pl.maxHp)>0?Number(pl.hp)/pl.maxHp:1;
+   if(ratio>0&&ratio<.30&&now-(run.lastDangerAt??-100)>=24){
+    run.lastDangerAt=now;run.reactionAt=now+24;
+    return 'danger';
+   }
+   const idleSteps=Number(run.motion?.quirkCount)||0;
+   if(idleSteps>(run.lastQuirkCount||0)){
+    run.lastQuirkCount=idleSteps;
+    run.reactionAt=now+23;
+    return 'tease';
+   }
+   // Rare one-liner when the player is doing well: no per-frame RNG.
+   if(now>=80&&now>=run.reactionAt+28){
+    run.reactionAt=now+47;
+    return 'cheer';
+   }
+   return null;
+  }
  function install(w){
   const G=w.G,d=w.document;
   if(G.PKMSVVPippi?.installed)return G.PKMSVVPippi;
@@ -935,26 +955,6 @@
    if(amount)G.UI?.toast?.(copy('Pippi trả lại '+amount.toLocaleString('vi-VN')+' PokéCoins hồi sinh cũ!',
         'Pippi refunded '+amount.toLocaleString('en-US')+' PokéCoins!'),4500);
    return amount;
-  }
-  function personalityReaction(run,pl,now){
-   if(!run||!pl||now<run.sleepUntil||now<(run.reactionAt||0))return null;
-   const ratio=Number(pl.maxHp)>0?Number(pl.hp)/pl.maxHp:1;
-   if(ratio>0&&ratio<.30&&now-(run.lastDangerAt??-100)>=24){
-    run.lastDangerAt=now;run.reactionAt=now+24;
-    return 'danger';
-   }
-   const idleSteps=Number(run.motion?.quirkCount)||0;
-   if(idleSteps>(run.lastQuirkCount||0)){
-    run.lastQuirkCount=idleSteps;
-    run.reactionAt=now+23;
-    return 'tease';
-   }
-   // Rare one-liner when the player is doing well: no per-frame RNG.
-   if(now>=80&&now>=run.reactionAt+28){
-    run.reactionAt=now+47;
-    return 'cheer';
-   }
-   return null;
   }
   let qaTraceTicks=0;
   function tick(){
