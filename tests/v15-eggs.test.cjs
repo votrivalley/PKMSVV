@@ -382,7 +382,7 @@ test('3% Shiny support exists only within run at 100% of main Pokemon stats; nor
   assert.equal(G.PKMSVVEggs.followers.length,1);
   return {save,pl,G,it:G.PKMSVVEggs.followers[0]};
  }
- const shiny=makeRoll(.029);
+ const shiny=makeRoll(.0149);
  assert.equal(shiny.G.PKMSVVEggs.SHINY_CHANCE,.015);
  assert.equal(shiny.it.shiny,true);
  assert.equal(shiny.it.statScale,1);
