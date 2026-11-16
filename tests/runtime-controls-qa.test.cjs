@@ -123,6 +123,29 @@ test('Holding active-skill F for 2s toggles AUTO; quick tap does not',()=>{
  assert.equal(f.toasts.length,2,'both state transitions give feedback');
 });
 
+test('Holding a rebound X key toggles AUTO and aims into real Map-backed hostile enemies',()=>{
+ const f=fixture(),was=f.G.Input.axis;
+ f.vals.set('keys',{dash:'x'});
+ f.G.EnemyMgr.all=()=>new Map([[42,{x:0,y:120,dead:false,remote:false}]]);
+ const key=(type)=>f.handlers[type]({repeat:false,code:'KeyX',key:'x',
+  altKey:false,ctrlKey:false,metaKey:false});
+ key('keydown');f.runTimer(2000);key('keyup');
+ assert.equal(f.api.castTowardsNearest(),true);
+ assert.ok(f.casts.at(-1)[1]>.99,'AUTO Dash must use direction of closest enemy');
+ assert.equal(f.G.Input.axis,was,'manual movement must be restored');
+ key('keydown');f.runTimer(2000);key('keyup');
+ assert.equal(f.api.castTowardsNearest(),false);
+});
+
+test('Entering and leaving a Rift does not drop activated AUTO targeting',()=>{
+ const f=fixture();
+ f.G.Rift={inArena:true};f.api.toggleDash();
+ f.G.Game.startRun();
+ assert.equal(f.api.castTowardsNearest(),true,
+  'an already-enabled AUTO must survive internal Rift run startup');
+ f.G.Rift.inArena=false;f.api.toggleDash();
+ assert.equal(f.api.castTowardsNearest(),false);
+});
 test('holding the native mobile active-skill canvas button 2 seconds toggles AUTO without an extra dash',()=>{
  const f=fixture();let manual=0;
  const nativeCalls=[],events={},canvas={id:'game',width:780,height:437,
