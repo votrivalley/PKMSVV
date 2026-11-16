@@ -280,6 +280,39 @@ test('Pippi uses real Pokémon world renderer with one depth-sorted actor',()=>{
   'Pippi is absent from the game renderer outside Explore');
 });
 
+test('Original manga Pippi has nonrepeating lines and every real native item/orb event gives feedback',()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const source=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pippi.js'),'utf8');
+ for(const event of ['intro','chest','item','healItem','magnetItem','bombItem','orbItem',
+  'heal','buff','slow','shield','revive','cousin','danger','tease']){
+  assert.match(source,new RegExp('(?:^|\\n)\\s*'+event+':\\[','m'),'missing reaction '+event);
+ }
+ assert.match(source,/lastLineByEvent/,'successive reactions must not repeat a line');
+ assert.match(source,/run\.pendingReaction=event/,'batch pickups must coalesce portrait text');
+ assert.match(source,/\['item','chest'\]/,'actual chest/item pickup method must trigger Pippi');
+ assert.match(source,/\['orb','orb'\]/,'actual Orb pickup must trigger Pippi');
+ assert.match(source,/run\.pickupCount%2===1/,'small visual effect is capped in dense drops');
+});
+test('Pippi wraps Game.item and Game.orb exactly once with no change to original reward',()=>{
+ const {G,player}=game(save(0));player.hp=100;G.Game.st.time=0;
+ const seen=[];G.Game.item=id=>{seen.push(['item',id]);return 'item:'+id};
+ G.Game.orb=id=>{seen.push(['orb',id]);return 'orb:'+id};
+ const host={G,document:{body:null,querySelector(){return null;}},
+  setInterval(){return 1;},console:{warn(){}},performance:{now(){return 1000;}}};
+ const api=P.install(host);
+ api.tick();
+ assert.ok(api.run,'companion active in Explore');
+ const before=G.Game.item;
+ assert.equal(G.Game.item('heal'),'item:heal');
+ assert.equal(api.run.pendingReaction,'healItem');
+ assert.equal(G.Game.orb('luminous'),'orb:luminous');
+ assert.equal(api.run.pendingReaction,'orbItem');
+ assert.deepEqual(seen,[['item','heal'],['orb','luminous']]);
+ api.tick();assert.equal(G.Game.item,before,'event hooks are not stacked each tick');
+ G.Game.state='ui';api.tick();
+ assert.equal(G.Game.item('bomb'),'item:bomb');
+ assert.deepEqual(seen.at(-1),['item','bomb'],'menu never changes item reward');
+});
 test('Pippi PC repair exists and one authentic portrait atlas replaces 16 battle PNG swaps',()=>{
  const fs=require('node:fs'),path=require('node:path');
  const root=path.join(__dirname,'..');
