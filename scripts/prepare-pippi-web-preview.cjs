@@ -29,13 +29,14 @@ for(const prefix of ['game','ai/game']){
  // storage intact: no login, localStorage or ID-key migration is performed.
  const compiled=present(path.join(dest,'js/app.min.js'));
  let bundle=fs.readFileSync(compiled,'utf8');
- if(prefix==='game'){
-  for(const moduleName of ['G.Spawner=','G.Pickups=']){
-   const at=bundle.indexOf(moduleName);
-   console.log('PIPPI_NATIVE_DIAGNOSTIC:'+moduleName+':'+
-    (at<0?'NOT_FOUND':bundle.slice(at,at+3800)));
-  }
- }
+ // Pinned Web Spawner still uses the previous 1/2048 wild Shiny odds.
+ // Change only the unique Spawner-local rate; do not touch Orb/item drops.
+ const spawner=bundle.indexOf('G.Spawner=');
+ if(spawner<0||bundle.indexOf('G.Spawner=',spawner+10)>=0)
+  throw Error('Spawner module not unique in pinned QA bundle');
+ const region=bundle.slice(spawner,spawner+6000),from='const a=1/2048;',to='const a=1/4096;';
+ if(region.split(from).length!==2)throw Error('Native wild Shiny rate changed: '+prefix);
+ bundle=bundle.slice(0,spawner)+region.replace(from,to)+bundle.slice(spawner+region.length);
  // The pinned QA bundle still has 1% Legend, 0.9% Shiny, 100 pity.
  // Patch ONLY the validated G.Gacha lexical module; no changes to 100x
  // batching or the 10x guaranteed 4-star rule.
@@ -62,7 +63,8 @@ for(const prefix of ['game','ai/game']){
   bundle=installModule(bundle,label,src);
  }
  if(!bundle.includes('PITY_5:150')||!bundle.includes('t.pity[i]>=150?5')||
-     !bundle.includes('t=.45/100'))throw Error('Gacha rarity patch absent: '+prefix);
+     !bundle.includes('t=.45/100')||!bundle.includes('G.Spawner=(()=>{const a=1/4096;'))
+  throw Error('Legend/Shiny/Pity rarity patch absent: '+prefix);
  new vm.Script(bundle,{filename:'pippi-qa-'+prefix.replace('/','-')+'.js'});
  write(compiled,bundle);
  for(const filename of [
