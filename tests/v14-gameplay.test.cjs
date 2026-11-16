@@ -11,18 +11,18 @@ test('v1.4 release notes bilingual and native/cloud history preserved',()=>{
  assert.match(read('scripts/prepare-web.cjs'),/1\.5/);
  assert.equal(require('../package.json').version,'1.5.16');
 });
-test('Gacha balance uses precise 0.9% Shiny, 1.8% Charm and 1% Legend odds',()=>{
+test('Gacha balance uses 0.45% Shiny, 0.9% Charm and 0.5% Legend odds',()=>{
  const cfg=JSON.parse(read('config/gameplay.json'));
- assert.equal(cfg.shiny.gachaPercent,0.9);
- assert.equal(cfg.shiny.wildDenominator,2048,'Wild Shiny rate is unaffected');
+ assert.equal(cfg.shiny.gachaPercent,0.45);
+ assert.equal(cfg.shiny.wildDenominator,4096,'Wild Shiny odds are halved');
  const prepare=read('scripts/prepare-game.cjs');
  const v14=read('scripts/patch-v14-gameplay.cjs');
  const legend=read('scripts/patch-gacha-legend-100.cjs');
  assert.match(prepare,/gachaPercent/);
  assert.match(v14,/const shinyLine=shinySource\.match/);
  assert.match(v14,/SHINY_RATE\*\(hasCharm\(save,gen\)\?2:1\)/);
- assert.match(legend,/const PITY_5 = 100;/);
- assert.match(legend,/\[5, 1\]/);
+ assert.match(legend,/const PITY_5 = 150;/);
+ assert.match(legend,/\[5, 0\.5\]/);
  assert.ok(cfg.shiny.gachaPercent < 1,'Base Shiny must be rarer per roll than a 5-star');
 });
 
@@ -36,7 +36,7 @@ test('Gacha ×100 is 10 guaranteed ten-pulls; specific Gen completion doubles sh
  const G={DEX:dex,SPRITE_META:meta,U:{pick:a=>a[0]},Sprites:{hasShiny:()=>true}};
  vm.runInNewContext(read(file),{G,Math,Date});
  const s={tickets:{t1:100,t10:10},coins:0,owned:{},shiny:{},pity:{},stats:{}};
- assert.ok(Math.abs(G.Gacha.shinyRate(s,1)-0.009)<1e-12);
+ assert.ok(Math.abs(G.Gacha.shinyRate(s,1)-0.0045)<1e-12);
  assert.equal(G.Gacha.costOf(s,100,'t1').t1,100);
  assert.equal(G.Gacha.costOf(s,100,'t10').t10,10);
  const rolls=G.Gacha.pull(s,100,1,'t1');
@@ -49,14 +49,14 @@ test('Gacha ×100 is 10 guaranteed ten-pulls; specific Gen completion doubles sh
  assert.equal(ticket10Save.tickets.t10,0);
  for(const mon of dex.filter(x=>x.gen===1))s.owned[mon.dex]={at:1,from:'test'};
  assert.equal(G.Gacha.hasCharm(s,1),true);
- assert.ok(Math.abs(G.Gacha.shinyRate(s,1)-0.018)<1e-12);
+ assert.ok(Math.abs(G.Gacha.shinyRate(s,1)-0.009)<1e-12);
  assert.equal(G.Gacha.hasCharm(s,0),false);
- assert.ok(Math.abs(G.Gacha.shinyRate(s,0)-0.009)<1e-12,'ALL GEN has no Shiny Charm multiplier');
+ assert.ok(Math.abs(G.Gacha.shinyRate(s,0)-0.0045)<1e-12,'ALL GEN has no Shiny Charm multiplier');
 });
-test('5★ rarity odds are exactly 1%, with 100-pull hard pity and no loss of stored pity',t=>{
+test('5★ rarity odds are exactly 0.5%, with 150-pull hard pity and no loss of stored pity',t=>{
  const patch=read('scripts/patch-gacha-legend-100.cjs');
- assert.match(patch,/const PITY_5 = 100;/);
- assert.match(patch,/const RATES = \[\[1, 45\.5\], \[2, 30\], \[3, 17\], \[4, 6\.5\], \[5, 1\]\];/);
+ assert.match(patch,/const PITY_5 = 150;/);
+ assert.match(patch,/const RATES = \[\[1, 46\], \[2, 30\], \[3, 17\], \[4, 6\.5\], \[5, 0\.5\]\];/);
  assert.match(read('scripts/prepare-game.cjs'),/patch-gacha-legend-100\.cjs/);
  const file='vendor/pokesurvivor/js/systems/gacha.js';
  if(!fs.existsSync(path.join(root,file))){t.skip('Game source not prepared yet');return;}
@@ -70,20 +70,20 @@ test('5★ rarity odds are exactly 1%, with 100-pull hard pity and no loss of st
  vm.runInNewContext(read(file),{G,Math:deterministicMath,Date});
  const makeSave=()=>({tickets:{t1:250,t10:20},coins:0,owned:{},shiny:{},pity:{},stats:{}});
  assert.deepEqual(Array.from(G.Gacha.RATES,([r,p])=>[r,p]),
-  [[1,45.5],[2,30],[3,17],[4,6.5],[5,1]]);
+  [[1,46],[2,30],[3,17],[4,6.5],[5,0.5]]);
  assert.equal(G.Gacha.RATES.reduce((n,[,w])=>n+w,0),100);
- assert.equal(G.Gacha.PITY_5,100);
+ assert.equal(G.Gacha.PITY_5,150);
  const oldSave=makeSave();
  oldSave.pity[0]=70; // Old 70/70 pity must carry over as 70/100, never erased.
  let result=G.Gacha.pull(oldSave,1,0);
  assert.equal(result[0].rarity,1);
  assert.equal(oldSave.pity[0],71);
- oldSave.pity[0]=99;
+ oldSave.pity[0]=149;
  result=G.Gacha.pull(oldSave,1,0);
  assert.equal(result[0].rarity,5);
  assert.equal(oldSave.pity[0],0);
  const genSave=makeSave();
- genSave.pity[0]=57;genSave.pity[1]=99;
+ genSave.pity[0]=57;genSave.pity[1]=149;
  assert.equal(G.Gacha.pull(genSave,1,1)[0].rarity,5);
  assert.equal(genSave.pity[1],0);
  assert.equal(genSave.pity[0],57,'ALL GEN pity stays independent of Gen 1');
