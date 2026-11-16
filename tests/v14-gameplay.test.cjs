@@ -74,7 +74,7 @@ test('5★ rarity odds are exactly 0.5%, with 150-pull hard pity and no loss of 
  assert.equal(G.Gacha.RATES.reduce((n,[,w])=>n+w,0),100);
  assert.equal(G.Gacha.PITY_5,150);
  const oldSave=makeSave();
- oldSave.pity[0]=70; // Old 70/70 pity must carry over as 70/100, never erased.
+ oldSave.pity[0]=70; // Old 70/70 pity must carry over as 70/150, never erased.
  let result=G.Gacha.pull(oldSave,1,0);
  assert.equal(result[0].rarity,1);
  assert.equal(oldSave.pity[0],71);
@@ -90,8 +90,11 @@ test('5★ rarity odds are exactly 0.5%, with 150-pull hard pity and no loss of 
  const batchSave=makeSave();
  const oneHundred=G.Gacha.pull(batchSave,100,0,'t1');
  assert.equal(oneHundred.length,100);
- assert.equal(oneHundred[99].rarity,5,'100th pull guaranteed 5★ when 99 earlier rolls failed');
- assert.equal(oneHundred.filter(x=>x.rarity===5).length,1);
+ assert.equal(oneHundred.filter(x=>x.rarity===5).length,0,'pity must not force a 5★ before roll 150');
+ assert.equal(batchSave.pity[0],100);
+ let lastTen;
+ for(let k=0;k<5;k++)lastTen=G.Gacha.pull(batchSave,10,0,'t1');
+ assert.equal(lastTen[9].rarity,5,'150th roll guarantees 5★ after 149 misses');
  assert.equal(batchSave.pity[0],0);
  for(let k=0;k<10;k++)assert.ok(oneHundred.slice(k*10,k*10+10).some(x=>x.rarity>=4),
   '×10 four-star minimum remains intact (batch '+k+')');
