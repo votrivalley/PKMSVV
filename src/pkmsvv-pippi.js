@@ -98,7 +98,8 @@
  }
  function newRun(pl,now=0){return {player:pl,now,healAt:8,buffAt:12,slowAt:15,guardAt:0,
   sleepUntil:0,megaUntil:0,reviveAt:0,sleepTalked:false,revived:false,lastTalk:-100,marks:new Set(),lastPos:null,direction:0,
-  activeBuff:null,slowed:[],motion:null,emoteUntil:0,cousinUntil:0,cousinTargets:0,damageHook:null,evolveUntil:0,megaSpoken:false};}
+  activeBuff:null,slowed:[],lastSlowTargets:[],motion:null,castCue:null,emoteType:'sparkle',
+  reactionAt:14,lastDangerAt:-100,lastQuirkCount:0,emoteUntil:0,cousinUntil:0,cousinTargets:0,damageHook:null,evolveUntil:0,megaSpoken:false};}
  function heal(pl,lv,training=0){
   if(!pl||!Number.isFinite(pl.maxHp)||pl.maxHp<=0||pl.hp/pl.maxHp>.65)return false;
   const gain=pl.maxHp*(.12+lv*.011+clamp(training,0,TRAINING_MAX)*.02);
@@ -120,6 +121,7 @@
    raw&&typeof raw[Symbol.iterator]==='function'?Array.from(raw):[];
   if(!arr.length||!pl)return false;
   let affected=0;
+  run.lastSlowTargets=[];
   for(const e of arr){
    if(!e||e.dead||!Number.isFinite(+e.x)||!Number.isFinite(+e.y)||
       !Number.isFinite(+e.spd)||e.spd<=0)continue;
@@ -130,6 +132,7 @@
    const factor=e.pkmsvvExploreBoss?.72-tier*.01:.65-tier*.04; // Boss slow is weaker.
    e.spd*=factor;
    run.slowed.push({enemy:e,factor,until:now+Math.min(5,2+lv*.17+tier*.35)});
+   run.lastSlowTargets.push(e);
    if(++affected>=6)break;
   }
   return affected>0;
@@ -150,26 +153,57 @@
  // Match regular Pokémon Support: show a visible in-world action on the
  // recipient AND on the helper, not merely a floating line of chat.
  // Use the native FX budget so light-effects mode can throttle particles.
+ const SUPPORT_PALETTE=Object.freeze({
+  heal:['#ffaad7','#fff5fb','+HP'],
+  buff:['#ffd775','#fff3be','TĂNG CÔNG'],
+  slow:['#aa9aff','#c7d7ff','CHẬM!'],
+  shield:['#9beeff','#ffe3fc','BẢO VỆ'],
+  revive:['#ffe7fa','#ffc8f1','HỒI SINH'],
+  cousin:['#ffe26e','#ffffff','TÊ LIỆT!']
+ });
+ // One visual event per actual support cast, never a per-frame emitter.
+ // Reuse FX.ring/burst/dmgText which obey the game's low-effects budget.
  function showSupportFX(G,run,pl,event,value=0){
-  const fx=G?.FX;
-  if(!fx||!pl||!Number.isFinite(+pl.x)||!Number.isFinite(+pl.y))return false;
-  const palette={
-   heal:['#94ffdc','#54e7c0','HỒI MÁU'],
-   buff:['#fff2a7','#ffd56b','TĂNG CÔNG'],
-   slow:['#c4d5ff','#9da7ff','LÀM CHẬM'],
-   shield:['#a1f6ff','#67dff8','BẢO VỆ']
-  };
-  const colors=palette[event];
-  if(!colors)return false;
+  const fx=G?.FX,colors=SUPPORT_PALETTE[event];
+  if(!fx||!pl||!colors||!Number.isFinite(+pl.x)||!Number.isFinite(+pl.y))return false;
+  const [primary,highlight,label]=colors;
+  const helper=run?.motion,now=Number(G?.Game?.st?.time??run?.now)||0;
+  if(run)run.castCue={event,started:now,until:now+(event==='cousin'?1.0:.78),
+   targets:event==='slow'?(run.lastSlowTargets||[]).slice(0,6).map(e=>({x:e.x,y:e.y})):[]};
   try{
-   fx.ring?.(pl.x,pl.y-10,7,64,colors[0],.60,3);
-   fx.burst?.(pl.x,pl.y-19,colors[1],10,65);
-   if(event==='heal'&&value>0)fx.dmgText?.(pl.x,pl.y-30,'+'+Math.round(value)+' HP',colors[0]);
-   else fx.dmgText?.(pl.x,pl.y-26,colors[2],colors[0]);
-   const helper=run?.motion;
    if(helper&&Number.isFinite(helper.x)&&Number.isFinite(helper.y)){
-    fx.ring?.(helper.x,helper.y-6,4,25,colors[0],.34,2);
-    fx.burst?.(helper.x,helper.y-12,colors[1],5,36);
+    fx.ring?.(helper.x,helper.y-5,5,event==='cousin'?55:38,primary,.56,2);
+    fx.burst?.(helper.x,helper.y-12,highlight,event==='cousin'?10:5,40);
+   }
+   if(event==='slow'){
+    // Show which monsters were actually slowed, unlike the old effect that
+    // incorrectly printed CHẬM on the player. Max six targets per cast.
+    const targets=run?.lastSlowTargets||[];
+    for(const e of targets.slice(0,6)){
+     if(!e||!Number.isFinite(+e.x)||!Number.isFinite(+e.y))continue;
+     fx.ring?.(e.x,e.y-3,5,40,primary,.35,2);
+     fx.dmgText?.(e.x,e.y-27,label,primary);
+    }
+    return targets.length>0;
+   }
+   if(event==='heal'){
+    fx.ring?.(pl.x,pl.y-5,9,72,primary,.62,3);
+    fx.ring?.(pl.x,pl.y-5,4,40,highlight,.45,2);
+    fx.burst?.(pl.x,pl.y-16,primary,8,60);
+    if(value>0)fx.dmgText?.(pl.x,pl.y-32,'+'+Math.ceil(value)+' HP',highlight);
+   }else if(event==='buff'){
+    fx.ring?.(pl.x,pl.y-6,8,66,primary,.6,3);
+    fx.burst?.(pl.x,pl.y-18,highlight,7,55);
+    fx.dmgText?.(pl.x,pl.y-32,label,primary);
+   }else if(event==='shield'||event==='revive'){
+    fx.ring?.(pl.x,pl.y-9,9,82,primary,.68,3);
+    fx.ring?.(pl.x,pl.y-9,5,54,highlight,.56,3);
+    fx.burst?.(pl.x,pl.y-21,highlight,event==='revive'?12:7,70);
+    fx.dmgText?.(pl.x,pl.y-39,label,primary);
+   }else if(event==='cousin'){
+    fx.ring?.(pl.x,pl.y-8,9,88,primary,.55,3);
+    fx.burst?.(pl.x,pl.y-20,highlight,8,65);
+    fx.dmgText?.(pl.x,pl.y-40,'PIKA!',primary);
    }
   }catch(_){return false;}
   return true;
@@ -231,6 +265,8 @@
   const lightning=cousinLightning(G,pl,now);
   run.now=now;run.cousinUntil=now+1.9;
   run.cousinTargets=lightning.affected;
+  showSupportFX(G,run,pl,'cousin');
+  if(run.castCue&&lightning.center)run.castCue.targets=[lightning.center];
   return {triggered:true,chance,...lightning};
  }
  function installDamageHook(run,pl,callback){
@@ -956,7 +992,7 @@
    if(!run||!eligible(G))return false;
    const now=Math.max(0,Number(G.Game?.st?.time??G.Game?.time)||0);
    if(!tryRevive(G,run,pl,now))return false;
-   run.now=now;say('evolve',true);
+   run.now=now;showSupportFX(G,run,pl,'revive');say('evolve',true);
    return true;
   }
   // Original 50k global revive is retired everywhere. The new revive fires
