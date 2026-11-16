@@ -293,10 +293,10 @@
   const elapsed=actualRunSeconds(run),threshold=final?FINAL_BOSS_SECONDS:SEAL_SECONDS;
   const key=final?'finalBoss':'badgeBoss';
   if(run[key]||elapsed===null||elapsed<threshold)return false;
-  // 15:00: 30% Legendary and 70% Epic (rare region-specific species).
+  // 15:00: 15% Legendary and 85% Epic (half previous legendary odds).
   // 30:00: guaranteed Legendary mascot from this Gen, a real killable actor.
   const mascot=REGION_MASCOTS[run.index];
-  const epic=!final&&Math.random()>=.30?localEpic(run.index):null;
+  const epic=!final&&Math.random()>=.15?localEpic(run.index):null;
   const dex=final?mascot:(epic?.dex||mascot);
   const hero=G.Game?.player,mon=G.DEX_BY?.[dex];
   if(!hero||!mon||typeof G.Enemy!=='function'||typeof G.EnemyMgr?.add!=='function')return false;
