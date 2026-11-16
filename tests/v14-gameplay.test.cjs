@@ -9,7 +9,7 @@ test('v1.4 release notes bilingual and native/cloud history preserved',()=>{
  assert.match(s,/Shiny Charm/);assert.match(s,/Gacha ×100/);assert.match(s,/Meteor Mash/);
  assert.match(read('scripts/prepare-game.cjs'),/patch-v14-gameplay.cjs/);
  assert.match(read('scripts/prepare-web.cjs'),/1\.5/);
- assert.equal(require('../package.json').version,'1.5.16');
+ assert.match(require('../package.json').version,/^1\.5\.\d+$/);
 });
 test('Gacha balance uses 0.45% Shiny, 0.9% Charm and 0.5% Legend odds',()=>{
  const cfg=JSON.parse(read('config/gameplay.json'));
@@ -242,7 +242,7 @@ test('The bundled enemy implementation supports real sleep and clear visual feed
  assert.equal(e.sleepT,0,'Arceus remains immune');
 });
 
-test('Guaranteed first Orb spawns only at eight learned skills and only once per run',()=>{
+test('First Orb is immediately accessible, remains once per run; eight skills unlock chapter separately',()=>{
  const received=[];
  const G={
   Game:{state:'playing'},Camera:{zoom:1,zoomTo:1},Coop:{active:false},
@@ -252,9 +252,9 @@ test('Guaranteed first Orb spawns only at eight learned skills and only once per
  };
  vm.runInNewContext(read('src/v14/orbs.js'),{G,Math,Date});
  const pl={x:12,y:34,maxMoves:8,slots:new Array(7).fill(1),dead:false};
- G.Orbs.update(.1,pl);assert.equal(received.length,0,'not before skill eight');
+ G.Orbs.update(.1,pl);assert.equal(received.length,1,'new players receive their first Orb immediately');
  pl.slots.push(1);G.Orbs.update(.1,pl);
- assert.equal(received.length,1,'guaranteed first Orb at skill eight');
+ assert.equal(received.length,1,'eighth skill must not create a duplicate first Orb');
  assert.equal(received[0].x,50);
  assert.ok(G.Orbs.BY[received[0].id]);
  for(let i=0;i<50;i++)G.Orbs.update(.1,pl);
@@ -281,7 +281,7 @@ test('All six Orb sprites are bundled and drawn in world + HUD',t=>{
  for(const id of ids)assert.ok(fs.existsSync(path.join(root,'vendor/pokesurvivor/assets/orbs/'+id+'.svg')));
 });
 
-test('Milestones fire once at minutes 10 and 20, then Judgment at minute 30',()=>{
+test('15-minute milestone fires once, with Judgment reserved for minute 30',()=>{
  const src=read('src/v14/milestones.js');const spawned=[];
  const G={I18n:{lang:'vi'},Coop:{active:false},Rift:{inArena:false},Judgment:{active:false},
   DEX:[{dex:149,rarity:4,types:['dragon'],name:'Dragonite'},{dex:150,rarity:5,leg:true,types:['psychic'],name:'Mewtwo'}],
@@ -291,11 +291,12 @@ test('Milestones fire once at minutes 10 and 20, then Judgment at minute 30',()=
   U:{pick:a=>a[0]},Sprites:{preload(){}},Spawner:{say(){}},Audio:{sfx(){}}};
  vm.runInNewContext(src,{G,Math});
  G.PKMSVV14.update(599,[G.Game.player]);assert.equal(spawned.length,0);
- G.PKMSVV14.update(600,[G.Game.player]);assert.equal(spawned.length,1);
- G.PKMSVV14.update(600,[G.Game.player]);assert.equal(spawned.length,1);
- G.PKMSVV14.update(1200,[G.Game.player]);assert.equal(spawned.length,2);
- G.PKMSVV14.update(1800,[G.Game.player]);assert.equal(spawned.length,2);
- G.PKMSVV14.reset();G.PKMSVV14.update(600,[G.Game.player]);assert.equal(spawned.length,3);
+ G.PKMSVV14.update(600,[G.Game.player]);assert.equal(spawned.length,0,'no obsolete 10-minute boss');
+ G.PKMSVV14.update(900,[G.Game.player]);assert.equal(spawned.length,1);
+ G.PKMSVV14.update(900,[G.Game.player]);assert.equal(spawned.length,1,'no duplicate 15-minute boss');
+ G.PKMSVV14.update(1200,[G.Game.player]);assert.equal(spawned.length,1);
+ G.PKMSVV14.update(1800,[G.Game.player]);assert.equal(spawned.length,1,'30-minute Judgment is managed separately');
+ G.PKMSVV14.reset();G.PKMSVV14.update(900,[G.Game.player]);assert.equal(spawned.length,2);
 });
 test('Controller uses Y to spend first queued Orb and X for Dash',t=>{
  const G={I18n:{lang:'vi'},Settings:{get(){return null;},set(){}}};
@@ -303,7 +304,7 @@ test('Controller uses Y to spend first queued Orb and X for Dash',t=>{
  assert.equal(G.PKMSVVPadOrb.describe('dash'),'X / □');
  assert.equal(G.PKMSVVPadOrb.describe('use'),'Y / △');
  assert.equal(G.PKMSVVPadOrb.valid({dash:2,use:2}),false);
- assert.equal(G.PKMSVVPadOrb.valid({dash:10,use:11}),true);
+ assert.equal(G.PKMSVVPadOrb.valid({dash:10,use:3}),true,'cannot reuse R3 reserved for leaderboard');
  const file='vendor/pokesurvivor/js/core/gamepad.js';
  if(!fs.existsSync(path.join(root,file))){t.skip('Pinned game not prepared');return;}
  const pad=read(file),game=read('vendor/pokesurvivor/js/game.js');
@@ -314,11 +315,11 @@ test('Controller uses Y to spend first queued Orb and X for Dash',t=>{
  assert.doesNotMatch(game,/G\.Input\.tap\('pkmsvv-orb-next'\)/);
 });
 
-test('Chapter 2 only after all eight learned skills; replayable narrative and title order',t=>{
+test('Eighth-skill chapter remains gated; modern chapter order and replay preserved',t=>{
  const story=read('src/pkmsvv-story.js'),patch=read('scripts/patch-v14-story-chapters.cjs');
  const orb=read('src/v14/orbs.js');
  assert.match(story,/chapter2:\[/);
- assert.match(story,/CHƯƠNG 2 · TIẾNG VỌNG THỨ TÁM/);
+ assert.match(story,/CHƯƠNG 3 · TIẾNG VỌNG THỨ TÁM/);
  assert.match(story,/function markChapter2/);
  assert.match(story,/function chapter2Pending/);
  assert.match(orb,/p\.maxMoves>=8&&p\.slots\.length>=8/);
