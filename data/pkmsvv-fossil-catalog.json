@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "implementationStatus": "prepared-only-not-wired-to-gameplay",
+  "implementationStatus": "QA feature in progress — runtime work requires verified rock hooks",
   "reference": "https://bulbapedia.bulbagarden.net/wiki/Template:Fossil",
   "rules": {
     "mode": "explore",
     "rockTrigger": "once-on-actual-destructible-rock-destruction",
     "rockDropChanceByClass": {
-      "common": 0.04,
-      "hard": 0.03,
-      "fossilRich": 0.05
+      "ordinaryPokemon": 0.02,
+      "rockType": 0.04,
+      "fossilPokemon": 0.06
     },
     "rng": "one-fossil-material-per-successful-roll",
     "allowedRegionNumbers": [
@@ -31,7 +31,23 @@
     "newPlayerAcquisition": "fossil-restoration-only",
     "existingOwnedPokemon": "preserve",
     "captureAndGachaGate": "design-required-not-implemented",
-    "noNormalWildSpawns": "design-required-not-implemented"
+    "noNormalWildSpawns": "design-required-not-implemented",
+    "dropRatePriority": [
+      "fossilPokemon",
+      "rockType",
+      "ordinaryPokemon"
+    ],
+    "rollOn": "actual destroyed rock, never per damage tick",
+    "guaranteedFirstKabuto": {
+      "materialId": "dome_fossil",
+      "pokemonDex": 140,
+      "trigger": "first rock actually destroyed at or after 900 in-run seconds",
+      "oncePerProfile": true,
+      "allowedOnAnyExploreRegion": true,
+      "claimRule": "one guaranteed material instead of random roll; no duplicate reward on the same rock",
+      "revealRatesToPlayer": false,
+      "introBy": "Pippi guide after successful persisted award"
+    }
   },
   "materialTypes": [
     {

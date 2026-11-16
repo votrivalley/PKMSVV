@@ -24,6 +24,12 @@
    ['Happy','Đồ rơi dưới đất có nhiều loại: máu, nam châm, bom, vé, Orb và xu. Cái nào ngon thì nhặt—trừ khi boss đang dí sát mông!','Ground drops include healing, magnets, bombs, tickets, Orbs and coins. Grab them when safe—unless a boss is breathing down your neck!'],
    ['Joyous','Tui sẽ báo khi bạn nhặt đồ quan trọng. Còn EXP nhặt suốt ngày thì thôi nha, tui là danh hài chứ không phải loa phường!','I will react to important pickups. I am not narrating every XP gem; I am a comedian, not your notification spammer!']
   ],
+  fossils:[
+   ['Surprised','Ủa? Đập cục đá đầu tiên sau phút 15 mà cũng moi ra được Hóa thạch Mái vòm?! Hên thôi nha. Đừng tưởng mình là nhà khảo cổ số một. Ghế đó tui đặt trước rồi.','Wait, a Dome Fossil?! Your very first rock after minute fifteen? Lucky you. I already called dibs on the chief archaeologist title.'],
+   ['Joyous','Cái này có thể phục nguyên thành Kabuto. Mau đem về PC → Hồi sinh hóa thạch đi. Đừng đem nấu canh, thứ gì tròn tròn bạn cũng bỏ vô nồi hả?!','This Dome Fossil can restore Kabuto. Take it to PC → Fossil Restoration. And no, it does NOT belong in your soup.'],
+   ['Shouting','Nói nghe nè: Pokémon có duyên với đá đào giỏi hơn, còn hội hóa thạch thì đào khỏi chê. Hỏi xác suất hả? Tui là hướng dẫn viên, không phải bảng Excel biết đi!','Rock Pokémon dig better, and fossil Pokémon have an even sharper nose for relics. Want exact odds? I am your guide, not a walking spreadsheet!'],
+   ['Determined','Đi đúng vùng sẽ moi được hóa thạch đúng thời kỳ. Galar phải ghép hai mảnh. Còn cứ quay Gacha chờ hóa thạch rớt xuống? Chờ tới lúc tui bớt đẹp chắc nhanh hơn!','Dig in the right region for its fossils. Galar needs two fragments. Waiting for fossil Pokémon in Gacha? You would grow old before I become humble!']
+  ],
   explore:[
    ['Happy','Đây là Khám phá! Tui đi ngay cạnh bạn, không để bạn một mình đâu. Cứ di chuyển và hạ quái để lên cấp!','Welcome to Explore! I’ll stay by your side. Move around, defeat enemies and level up!'],
    ['Inspired','Khi lên cấp, chọn kỹ năng để mạnh dần. Các chiêu tự động sẽ tự tấn công; kỹ năng chủ động cần bạn kích hoạt.','At level-up, pick new moves. Automatic attacks fire on their own; active moves need your input.'],
@@ -76,12 +82,13 @@
   if(!STEPS[kind]||!save||active||window.__pkmsvvPippiGuideQABypass===true)return false;
   if(flags(save)[kind])return false;
   if(kind==='starter'&&!save.partner&&!save.starter)return false;
-  if(['explore','chest','pickup'].includes(kind)&&
+  if(kind==='fossils'&&save.pkmsvvFossils?.guaranteedKabuto!==true)return false;
+  if(['explore','chest','pickup','fossils'].includes(kind)&&
     (!G.PKMSVVQuickRegion?.active||G.Game?.state!=='playing'||
      G.Coop?.active||G.Royale?.active||G.EggRush?.active))return false;
   const player=G.Game?.player;
   let paused=false;
-  if(kind==='explore'||kind==='chest'||kind==='pickup'){
+  if(kind==='explore'||kind==='chest'||kind==='pickup'||kind==='fossils'){
    const descriptor=Object.getOwnPropertyDescriptor(G.Game,'state');
    // Normal/native game state is writable in the Web 2.0 build. If a host
    // exposes a getter only, leave it untouched instead of breaking combat.
@@ -140,9 +147,10 @@
   wrapped._pippiGuide=true;game.startRun=wrapped;
  }
  function queue(kind){
-  if(!['chest','pickup'].includes(kind)||window.__pkmsvvPippiGuideQABypass===true)
+  if(!['chest','pickup','fossils'].includes(kind)||window.__pkmsvvPippiGuideQABypass===true)
    return false;
-  if(flags(G.DB?.save)[kind]||active||queued)return false;
+  if(flags(G.DB?.save)[kind]||active)return false;
+  if(queued&&kind!=='fossils')return false; // first fossil takes priority
   queued=kind;
   return true;
  }

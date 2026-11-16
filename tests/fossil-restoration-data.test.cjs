@@ -50,3 +50,20 @@ test('rock 3–5 percent chance applies once per destroyed rock, never per hit',
  assert.equal(spec.rules.newPlayerAcquisition,'fossil-restoration-only');
  assert.equal(spec.rules.existingOwnedPokemon,'preserve');
 });
+
+test('role rates and Kabuto first-rock guarantee are ordered, save-once and secret in dialogue',()=>{
+ const rules=spec.rules;
+ assert.deepEqual(rules.rockDropChanceByClass,{ordinaryPokemon:.02,rockType:.04,fossilPokemon:.06});
+ assert.deepEqual(rules.dropRatePriority,['fossilPokemon','rockType','ordinaryPokemon']);
+ assert.equal(rules.guaranteedFirstKabuto.materialId,'dome_fossil');
+ assert.equal(rules.guaranteedFirstKabuto.pokemonDex,140);
+ assert.equal(rules.guaranteedFirstKabuto.oncePerProfile,true);
+ assert.equal(rules.guaranteedFirstKabuto.allowedOnAnyExploreRegion,true);
+ assert.equal(rules.guaranteedFirstKabuto.revealRatesToPlayer,false);
+ const guide=require('node:fs').readFileSync(require('node:path').join(__dirname,'../src/pkmsvv-pippi-guide.js'),'utf8');
+ assert.match(guide,/fossils:\[/);
+ assert.match(guide,/Hóa thạch Mái vòm/);
+ assert.match(guide,/PC → Hồi sinh hóa thạch/);
+ const tutorial=guide.split("  fossils:[")[1].split("  explore:[")[0];
+ assert.doesNotMatch(tutorial,/\b(?:2%|4%|6%|0\.02|0\.04|0\.06)\b/);
+});
