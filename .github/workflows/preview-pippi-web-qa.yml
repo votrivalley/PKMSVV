@@ -8,6 +8,14 @@ on:
       - 'scripts/build-pippi-portrait-atlas.cjs'
       - 'src/pkmsvv-pippi.js'
       - 'src/pkmsvv-pippi.css'
+      - 'src/pkmsvv-pippi-guide.js'
+      - 'src/pkmsvv-pippi-guide.css'
+      - 'src/pkmsvv-global-power.js'
+      - 'src/pkmsvv-global-power-ui.js'
+      - 'src/pkmsvv-runtime-controls-qa.js'
+      - 'tests/pippi-guide.test.cjs'
+      - 'tests/global-upgrades.test.cjs'
+      - 'tests/runtime-controls-qa.test.cjs'
       - 'src/pkmsvv-wiki.js'
       - 'src/pkmsvv-box-stage3.js'
       - 'src/kecleon/upstream/data/shop.js'
@@ -111,7 +119,7 @@ jobs:
       - name: Verify companion and economy regressions before any preview
         run: |
           set -euo pipefail
-          node --test tests/pippi-companion.test.cjs tests/pokebox-stage3.test.cjs tests/pkmsvv-v20.test.cjs tests/v20-items-release.test.cjs tests/quick-region.test.cjs
+          node --test tests/pippi-companion.test.cjs tests/pippi-guide.test.cjs tests/global-upgrades.test.cjs tests/runtime-controls-qa.test.cjs tests/pokebox-stage3.test.cjs tests/pkmsvv-v20.test.cjs tests/v20-items-release.test.cjs tests/quick-region.test.cjs
       - name: Download the exactly pinned Chromium-tested Web 2.0 snapshot
         uses: actions/download-artifact@v4
         with:
@@ -131,10 +139,14 @@ jobs:
           jq -e '.releaseType=="qa-preview-only" and .pippiCousinQA=="PKMSVV_PIPPI_COUSIN_PREVIEW_20261115"' dist/cloudflare-v20-release/build-info.json
           for route in game ai/game; do
             test -s "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-pippi.js"
+            test -s "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-pippi-guide.js"
+            test -s "dist/cloudflare-v20-release/$route/css/pkmsvv-pippi-guide.css"
             test -s "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-box-stage3.js"
             test -s "dist/cloudflare-v20-release/$route/images/pippi/portrait/Happy.png"
             grep -Fq 'COUSIN_CHANCES=Object.freeze([0,.03,.045,.06])' "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-pippi.js"
             grep -Fq 'Bạn đồng hành' "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-wiki-qa.js"
+            grep -Fq 'Tiếp theo' "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-pippi-guide.js"
+            grep -Fq 'refundRetiredHealing' "dist/cloudflare-v20-release/$route/js/app.min.js"
             grep -Fq 'PKMSVV_PIPPI_COUSIN_PREVIEW_20261115' "dist/cloudflare-v20-release/$route/index.html"
           done
       - name: A/B diagnostic — Grieta Mewtwo Rift WITHOUT Pippi
