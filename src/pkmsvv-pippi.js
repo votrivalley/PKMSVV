@@ -685,6 +685,7 @@
    const selectors=['#scr-pause','#scr-levelup','#scr-settings','#scr-pc',
     '#scr-pokemon','#scr-item','#scr-items','#scr-over','#scr-evolution',
     '#pkmsvv-wiki-overlay','#pkmsvv-pokebox-overlay','#pkmsvv-fusion-guide',
+    '#pkmsvv-pippi-guide',
     '#pkmsvv-forget-skill','#pkmsvv-support-catalog',
     '#pkmsvv-quick-region','.pkmsvv-berry-overlay',
     '#pkmsvv-native-choice','#pkmsvv-mega-phase1','.pkmsvv-evo'];
