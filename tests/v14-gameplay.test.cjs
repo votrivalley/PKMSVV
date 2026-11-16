@@ -290,6 +290,7 @@ test('15-minute milestone fires once, with Judgment reserved for minute 30',()=>
   EnemyMgr:{bossAlive:()=>false,add:x=>spawned.push(x)},
   U:{pick:a=>a[0]},Sprites:{preload(){}},Spawner:{say(){}},Audio:{sfx(){}}};
  vm.runInNewContext(src,{G,Math});
+ assert.equal(G.PKMSVV14.checkpoints[0].legendChance,.15,'15-minute boss base Legend chance must be halved');
  G.PKMSVV14.update(599,[G.Game.player]);assert.equal(spawned.length,0);
  G.PKMSVV14.update(600,[G.Game.player]);assert.equal(spawned.length,0,'no obsolete 10-minute boss');
  G.PKMSVV14.update(900,[G.Game.player]);assert.equal(spawned.length,1);
