@@ -7,6 +7,8 @@ G.GlobalPowerUI = (() => {
   function draw() {
     const save=G.DB.save;
     if(!save) return;
+    const refund=G.GlobalPower.refundRetiredHealing?.(save)||0;
+    if(refund){G.DB.commit?.(true);G.UI?.refreshCoins?.();}
     const box=$('pkmg-list'), levels=G.GlobalPower.clean(save.globalUpgrades);
     if(!box) return;
     const all=G.GlobalPower.LIST.filter(u=>!u.retired).reduce((sum,u)=>sum+G.GlobalPower.rank(levels,u.id),0);
@@ -50,13 +52,13 @@ G.GlobalPowerUI = (() => {
       right.append(level,btn);
       line.append(head,right);box.appendChild(line);
     }
-    const refund=G.GlobalPower.refundable(save),btn=$('pkmg-refund');
-    btn.disabled=!refund;
-    btn.textContent=txt('Hoàn trả toàn bộ (','Refund all (')+money(refund)+' ◉)';
+    const refundable=G.GlobalPower.refundable(save),btn=$('pkmg-refund');
+    btn.disabled=!refundable;
+    btn.textContent=txt('Hoàn trả toàn bộ (','Refund all (')+money(refundable)+' ◉)';
     btn.onclick=()=>{
       if(!confirm(txt(
-        'Hoàn trả tất cả nâng cấp toàn đội? Bạn sẽ nhận lại '+money(refund)+' PokéCoins. Nâng cấp riêng từng Pokémon không thay đổi.',
-        'Refund every team powerup for '+money(refund)+' PokéCoins? Individual Pokémon upgrades will not change.'
+        'Hoàn trả tất cả nâng cấp toàn đội? Bạn sẽ nhận lại '+money(refundable)+' PokéCoins. Nâng cấp riêng từng Pokémon không thay đổi.',
+        'Refund every team powerup for '+money(refundable)+' PokéCoins? Individual Pokémon upgrades will not change.'
       )))return;
       const got=G.GlobalPower.refundAll(G.DB.save);
       if(!got)return;
