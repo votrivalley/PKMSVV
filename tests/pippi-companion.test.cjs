@@ -130,7 +130,8 @@ test('Pippi ground sprite is enlarged and all floating/over-UI effects are disab
  const fs=require('node:fs'),path=require('node:path');
  const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pippi.css'),'utf8');
  const js=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pippi.js'),'utf8');
- assert.match(css,/scale\(1\.55\)/,'idle and walk must share one grounded scale');
+ assert.match(css,/scale\(1\.395\)/,'idle and walk share new 10%-smaller grounded scale');
+ assert.match(js,/Math\.max\(\.8,base\)\*1\.008/,'native world actor must shrink by 10%');
  assert.doesNotMatch(css,/scale\(2\.22\)|scale\(1\.68\)/,'never change size on state transition');
  assert.doesNotMatch(css,/@keyframes pippi-follow-bob/);
  assert.match(css,/@keyframes pippi-walk-frames/);
