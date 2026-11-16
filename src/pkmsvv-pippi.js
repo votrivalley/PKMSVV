@@ -670,9 +670,8 @@
     if(typeof previous!=='function')continue;
     if(previous.__pkmsvvPippiPickup){found=true;continue;}
     function wrapped(...args){
-     const result=previous.apply(this,args);
      if(!insideNativePickup&&eligible(G))reactPickup(kind,args[0]);
-     return result;
+     return previous.apply(this,args);
     }
     wrapped.__pkmsvvPippiPickup=true;G.Game[name]=wrapped;found=true;
    }
@@ -685,15 +684,13 @@
      if(typeof onCollected!=='function')
       return previous.call(this,dt,players,onCollected,...rest);
      const notify=function(pickup,collector,...args){
-      insideNativePickup=true;
-      let result;
-      try{result=onCollected.call(this,pickup,collector,...args);}
-      finally{insideNativePickup=false;}
       if(eligible(G)&&pickup&&collector===G.Game?.player&&
          !['xp','xpBig'].includes(String(pickup.kind||''))){
        reactPickup(String(pickup.kind||'item'),pickup.value);
       }
-      return result;
+      insideNativePickup=true;
+      try{return onCollected.call(this,pickup,collector,...args);}
+      finally{insideNativePickup=false;}
      };
      return previous.call(this,dt,players,notify,...rest);
     }

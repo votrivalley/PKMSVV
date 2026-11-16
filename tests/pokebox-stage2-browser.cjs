@@ -243,8 +243,8 @@ async function main(){
   assert.equal(approved20.drops?.mint,.008/3);
   assert.equal(approved20.drops?.cap,.008/3);
   assert.equal(approved20.drops?.caph,undefined,'retired Hidden Capsule must never drop');
-  assert.deepEqual(await evaluate('Array.from(G.Shop.ORDER)'),['mint','cap','caph'],
-   'event Hidden Capsules must remain usable from existing Bag inventory');
+  assert.deepEqual(await evaluate('Array.from(G.Shop.ORDER)'),['mint','cap','caph','pippiReset'],
+   'Hidden Capsules remain usable and Pippi Candy is added to the same inventory');
   assert.equal(approved20.htmlStyle,true,'uniform 2.0 UI stylesheet missing');
   assert.equal(approved20.v20Polish,'function','Recruitment equal-size card script missing');
   const five=await evaluate('G.PKMSVVBox2.formatRank(5).hp');

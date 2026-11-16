@@ -508,6 +508,7 @@ test('Exactly three first-per-run cooperation awards earn friendship, never unbo
  }
  assert.equal(P.data(s).xp,3);
  assert.equal(run.bondBonus,3);
+ assert.deepEqual([...run.bondAwards].sort(),['assist','chest','heal']);
  assert.equal(P.awardMoment(run,s,'chest',()=>true).reason,'already');
  const another=P.newRun({});
  assert.equal(P.awardMoment(another,s,'chest',()=>true).ok,true,'new run re-enables one chest bonus');
