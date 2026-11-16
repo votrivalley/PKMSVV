@@ -544,6 +544,9 @@
    finally{this.inLiquid=was;}
   }
   getSpeed._pkmsvvHoverWater=true;
+  // A later hover-water install must preserve an already-installed Pippi
+  // haste wrapper, otherwise Pippi can double-count the 10-25% movement buff.
+  getSpeed._pkmsvvPippiHaste=native._pkmsvvPippiHaste===true;
   Object.defineProperty(proto,'spd',{...descriptor,get:getSpeed});
   return true;
  }

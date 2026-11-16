@@ -83,6 +83,23 @@ test('Pippi slows enemies AND accelerates native player movement briefly, with f
  assert.equal(P.slow(G,r2,40,10,3),false,'no enemy reached, no bonus');
  assert.equal(p.spd,100);
 });
+test('Pippi native speed getter keeps hover-water idempotency and never double-stacks haste',()=>{
+ class Player{get spd(){return 100;}}
+ const G={Player};
+ const proto=Player.prototype;
+ const d=Object.getOwnPropertyDescriptor(proto,'spd');
+ const hover=function(){return d.get.call(this)*.8;};
+ hover._pkmsvvHoverWater=true;
+ Object.defineProperty(proto,'spd',{...d,get:hover});
+ assert.equal(P.installHasteGetter(G),true);
+ const first=Object.getOwnPropertyDescriptor(proto,'spd').get;
+ assert.equal(first._pkmsvvHoverWater,true);
+ assert.equal(first._pkmsvvPippiHaste,true);
+ for(let i=0;i<100;i++)P.installHasteGetter(G);
+ assert.equal(Object.getOwnPropertyDescriptor(proto,'spd').get,first);
+ const p=new Player();p.pkmsvvPippiHasteMul=1.25;
+ assert.equal(p.spd,100,'80% water speed * 125% haste, exactly once');
+});
 test('temporary attack buff and enemy slow restore exactly on expiry or exit',()=>{
  const {G,player}=game();const run=P.newRun(player);
  assert.equal(P.buff(player,run,10,5),true);

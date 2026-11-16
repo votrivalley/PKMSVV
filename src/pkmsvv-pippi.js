@@ -205,6 +205,9 @@
     value*multiplier:value;
   }
   getSpeed._pkmsvvPippiHaste=true;
+  // Preserve an existing hover-water wrapper's idempotency marker. Without
+  // this, its 250ms installer would rewrap the native getter forever.
+  getSpeed._pkmsvvHoverWater=native._pkmsvvHoverWater===true;
   Object.defineProperty(proto,'spd',{...descriptor,get:getSpeed});
   return true;
  }

@@ -44,6 +44,12 @@ function fixture(){
   runTimer(ms){for(const [id,t] of [...timers])if(t.ms===ms){timers.delete(id);t.fn();}},
   frame(ts){raf(ts)}};
 }
+test('hover-water speed getter preserves a previously installed Pippi haste marker',()=>{
+ const sourceCode=fs.readFileSync(path.resolve(__dirname,'../src/pkmsvv-runtime-controls-qa.js'),'utf8');
+ assert.match(sourceCode,/getSpeed\\._pkmsvvPippiHaste=native\\._pkmsvvPippiHaste===true/);
+ const pippiCode=fs.readFileSync(path.resolve(__dirname,'../src/pkmsvv-pippi.js'),'utf8');
+ assert.match(pippiCode,/getSpeed\\._pkmsvvHoverWater=native\\._pkmsvvHoverWater===true/);
+});
 test('Speed control uses real Game.debugSpeed 1×/1.5× and resets for a new run',()=>{
  const f=fixture();
  assert.equal(f.api.setSpeed(true),true);
