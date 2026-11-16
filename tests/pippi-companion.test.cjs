@@ -445,7 +445,7 @@ test('High-DPI canvas gives Pippi a larger world gap but the same on-screen clea
 });
 
 
-test('Góc Pippi Bond training awards only earned points and persists 4 trees',()=>{
+test('Pippi friendship training awards only earned points and persists skill trees',()=>{
  const save={coins:321,pkmsvvPippi:{xp:54}};
  const p=P.data(save);
  assert.equal(p.bond,10);
@@ -478,6 +478,66 @@ test('Pippi training enforces Bond unlocks, max rank and transactional save roll
  assert.equal(P.train(save,'heal',()=>true).ok,true);
  assert.equal(P.train(save,'heal',()=>true).ok,true);
  assert.equal(P.train(save,'heal',()=>true).reason,'max');
+});
+test('Training Reset Candy consumes exactly one Bag item; save failure restores the training tree',()=>{
+ const s={coins:4242,bag:{pippiReset:2,mint:1},pkmsvvPippi:{xp:54}};
+ for(const key of ['heal','buff','cousin'])assert.equal(P.train(s,key,()=>true).ok,true);
+ const old={...P.data(s).training};
+ assert.equal(P.resetTraining(s,()=>false).reason,'save');
+ assert.deepEqual(P.data(s).training,old);
+ assert.equal(s.bag.pippiReset,2);
+ assert.equal(P.resetTraining(s,()=>{throw Error('offline')}).reason,'save');
+ assert.deepEqual(P.data(s).training,old);
+ assert.deepEqual(P.resetTraining(s,()=>true),{ok:true,refundedPoints:3,points:9,remaining:1});
+ assert.equal(s.bag.pippiReset,1);assert.equal(s.bag.mint,1);
+ assert.equal(s.coins,4242);assert.equal(P.data(s).bond,10);
+ assert.equal(s.pkmsvvPippi.xp,54);
+ assert.equal(P.resetTraining(s,()=>true).reason,'nothing');
+ assert.equal(s.bag.pippiReset,1);
+ const absent={bag:{},pkmsvvPippi:{xp:54}};
+ P.train(absent,'heal',()=>true);
+ assert.equal(P.resetTraining(absent,()=>true).reason,'item');
+});
+test('Exactly three first-per-run cooperation awards earn friendship, never unbounded pickup XP',()=>{
+ const s={pkmsvvPippi:{xp:0}},run=P.newRun({});
+ assert.equal(P.awardMoment(run,s,'chest',()=>false).reason,'save');
+ assert.equal(P.data(s).xp,0);
+ for(const event of ['chest','heal','assist']){
+  assert.equal(P.awardMoment(run,s,event,()=>true).ok,true);
+  assert.equal(P.awardMoment(run,s,event,()=>true).reason,'already');
+ }
+ assert.equal(P.data(s).xp,3);
+ assert.equal(run.bondBonus,3);
+ assert.equal(P.awardMoment(run,s,'chest',()=>true).reason,'already');
+ const another=P.newRun({});
+ assert.equal(P.awardMoment(another,s,'chest',()=>true).ok,true,'new run re-enables one chest bonus');
+});
+test('Untrained Pippi heals immediately; Cheer, Slow, Shield and revive unlock at friendship milestones',()=>{
+ const player={hp:20,maxHp:100};assert.equal(P.heal(player,1,0),true);
+ assert.ok(player.hp>20);
+ const source=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pippi.js'),'utf8');
+ assert.match(source,/if\\(lv>=2&&now>=run\\.buffAt\\)/);
+ assert.match(source,/if\\(lv>=3&&now>=run\\.slowAt\\)/);
+ assert.match(source,/if\\(lv>=7&&now>=run\\.guardAt/);
+ assert.match(source,/bondLine\\.hidden=event!=='bond'/);
+});
+test('Kecleon sells Pippi Candy and both Bag and PC have guarded reset actions',()=>{
+ const shopSource=fs.readFileSync(path.join(__dirname,'../src/kecleon/upstream/data/shop.js'),'utf8');
+ const ui=fs.readFileSync(path.join(__dirname,'../src/kecleon/pkmsvv-kecleon-ui.js'),'utf8');
+ const wiki=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-wiki.js'),'utf8');
+ const preview=fs.readFileSync(path.join(__dirname,'../scripts/prepare-pippi-web-preview.cjs'),'utf8');
+ const G={DB:{save:{coins:3500,bag:{}},commit(){return true}},TM_MOVES:{},TM_PRICE:{}};
+ vm.runInNewContext(shopSource,{G});
+ assert.ok(G.Shop.ORDER.includes('pippiReset'));
+ assert.equal(G.Shop.ITEMS.pippiReset.price,3000);
+ assert.equal(G.Shop.DROP_RATE.pippiReset,undefined,'Candy is not an enemy drop');
+ assert.equal(G.Shop.buy('pippiReset').ok,true);
+ assert.equal(G.DB.save.coins,500);assert.equal(G.Shop.count('pippiReset'),1);
+ assert.match(ui,/data-pkmk-pippi-reset/);
+ assert.match(wiki,/dataset\\.pippiReset/);
+ assert.match(wiki,/P\\.resetTraining\\(save/);
+ assert.match(preview,/\\['Shop','src\\/kecleon\\/upstream\\/data\\/shop\\.js'\\]/);
+ assert.match(preview,/\\['KecleonUI','src\\/kecleon\\/pkmsvv-kecleon-ui\\.js'\\]/);
 });
 test('Pippi training improves Explore abilities without changing baseline skills',()=>{
  const base={hp:20,maxHp:100},improved={hp:20,maxHp:100};
