@@ -530,7 +530,7 @@ test('Kecleon sells Pippi Candy and both Bag and PC have guarded reset actions',
  const preview=fs.readFileSync(path.join(__dirname,'../scripts/prepare-pippi-web-preview.cjs'),'utf8');
  const G={DB:{save:{coins:3500,bag:{}},commit(){return true}},TM_MOVES:{},TM_PRICE:{}};
  vm.runInNewContext(shopSource,{G});
- assert.ok(G.Shop.ORDER.includes('pippiReset'));
+ assert.deepEqual(Array.from(G.Shop.ORDER),['mint','cap','caph','pippiReset']);
  assert.equal(G.Shop.ITEMS.pippiReset.price,3000);
  assert.equal(G.Shop.DROP_RATE.pippiReset,undefined,'Candy is not an enemy drop');
  assert.equal(G.Shop.buy('pippiReset').ok,true);
