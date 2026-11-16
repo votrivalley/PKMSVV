@@ -11,10 +11,10 @@
   'Inspired','Pain','Sad','Shouting','Sigh','Stunned','Surprised','Teary-Eyed','Worried'];
  const STEPS={
   starter:[
-   ['Happy','Hú! Vậy là bạn chọn được Pokémon rồi ha! Tui là Pippi, bạn đồng hành hơi nhiều chuyện của bạn!','Hey! You picked your Pokémon! I’m Pippi, your slightly-too-chatty companion!'],
-   ['Determined','Từ giờ tui sẽ theo sát vừa đủ, buff, làm chậm quái và hồi máu lúc cần. Nhưng đừng có bắt tui gánh hết nha!','I’ll stay close, boost you, slow enemies and heal when needed. Don’t expect me to do ALL the work!'],
-   ['Worried','Vào PC → Bạn đồng hành để xem Bond và nâng kỹ năng cho tui. Tụi mình càng thân thì tui càng hữu ích!','Visit PC → Companion to check Bond and train my skills. The closer we get, the stronger my support!'],
-   ['Joyous','Rồi! Đến lúc khám phá thôi. Nhấn Tiếp theo, tui dẫn bạn đi nhé!','Alright! Time to explore. Press Next and I’ll show you around!']
+   ['Surprised','Ối! Vừa chọn Pokémon xong đã gặp tui hả? Hân hạnh nha! Tui là Pippi, một Clefairy siêu sao tự phong, nổi tiếng vì làm Red muốn đội quần trong truyện Pocket Monsters.','Oh! Picked your Pokémon and already met a celebrity? I’m Pippi, a self-declared Clefairy superstar. I made Red lose his mind back in the Pocket Monsters manga!'],
+   ['Joyous','Công việc của tui: làm cố vấn, cà khịa, đôi lúc buff máu. Tui hơi hèn trước boss, nhưng mà đừng nói ai biết! Cái đó gọi là chiến thuật.','My job: advising, roasting, occasionally healing. I may run from giant bosses, but keep that secret! It is called strategy.'],
+   ['Determined','Cậu em họ Pikachu là tay đánh thuê gia đình tui. Khi bạn ăn đòn, có lúc nó sẽ lao ra phóng điện. Nhưng bạn đánh chính, tui chịu trách nhiệm... đẹp đội hình!','My cousin Pikachu is our family backup. When you get hurt, he may jump in with lightning. You fight, I make the team look fabulous!'],
+   ['Happy','Vào PC → Bạn đồng hành để nâng Bond và học trò mới cho tui. Giờ bấm Tiếp theo đi. Tụi mình đi kiếm chuyện—à không, cứu thế giới!','Go to PC → Companion to raise Bond and train my moves. Now hit Next. Let’s go cause trouble—uh, save the world!']
   ],
   explore:[
    ['Happy','Đây là Khám phá! Tui đi ngay cạnh bạn, không để bạn một mình đâu. Cứ di chuyển và hạ quái để lên cấp!','Welcome to Explore! I’ll stay by your side. Move around, defeat enemies and level up!'],
