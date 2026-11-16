@@ -29,11 +29,23 @@ for(const prefix of ['game','ai/game']){
  // storage intact: no login, localStorage or ID-key migration is performed.
  const compiled=present(path.join(dest,'js/app.min.js'));
  let bundle=fs.readFileSync(compiled,'utf8');
- if(prefix==='game'){
-  const at=bundle.indexOf('G.Gacha=');
-  const part=at>=0?bundle.slice(at,at+5300):'MISSING G.Gacha';
-  console.log('PIPPI_GACHA_DIAGNOSTIC:'+part.slice(0,2600));
+ // The pinned QA bundle still has 1% Legend, 0.9% Shiny, 100 pity.
+ // Patch ONLY the validated G.Gacha lexical module; no changes to 100x
+ // batching or the 10x guaranteed 4-star rule.
+ function replaceGachaOnce(from,to){
+  const anchor=bundle.indexOf('G.Gacha=');
+  if(anchor<0||bundle.indexOf('G.Gacha=',anchor+8)>=0)
+   throw Error('Expected exactly one Gacha module in pinned Web QA');
+  const region=bundle.slice(anchor,anchor+11000);
+  if(region.split(from).length!==2)throw Error('Gacha QA source drift: '+from);
+  const at=anchor+region.indexOf(from);
+  bundle=bundle.slice(0,at)+to+bundle.slice(at+from.length);
  }
+ replaceGachaOnce('[[1,45.5],[2,30],[3,17],[4,6.5],[5,1]]',
+  '[[1,46],[2,30],[3,17],[4,6.5],[5,.5]]');
+ replaceGachaOnce('t=.9/100','t=.45/100');
+ replaceGachaOnce('PITY_5:100','PITY_5:150');
+ replaceGachaOnce('t.pity[i]>=100?5','t.pity[i]>=150?5');
  for(const [label,rel] of [
    ['GlobalPower','src/pkmsvv-global-power.js'],
    ['GlobalPowerUI','src/pkmsvv-global-power-ui.js']
@@ -42,6 +54,8 @@ for(const prefix of ['game','ai/game']){
   src=src.replace(new RegExp('G\\.'+label+'\\s*=\\s*'),'G.'+label+'=');
   bundle=installModule(bundle,label,src);
  }
+ if(!bundle.includes('PITY_5:150')||!bundle.includes('t.pity[i]>=150?5')||
+     !bundle.includes('t=.45/100'))throw Error('Gacha rarity patch absent: '+prefix);
  new vm.Script(bundle,{filename:'pippi-qa-'+prefix.replace('/','-')+'.js'});
  write(compiled,bundle);
  for(const filename of [
