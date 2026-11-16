@@ -14,6 +14,7 @@ on:
       - 'src/pkmsvv-global-power-ui.js'
       - 'src/pkmsvv-runtime-controls-qa.js'
       - 'tests/pippi-guide.test.cjs'
+      - 'tests/pippi-guide-browser.cjs'
       - 'tests/global-upgrades.test.cjs'
       - 'tests/runtime-controls-qa.test.cjs'
       - 'src/pkmsvv-wiki.js'
@@ -149,6 +150,10 @@ jobs:
             grep -Fq 'refundRetiredHealing' "dist/cloudflare-v20-release/$route/js/app.min.js"
             grep -Fq 'PKMSVV_PIPPI_COUSIN_PREVIEW_20261115' "dist/cloudflare-v20-release/$route/index.html"
           done
+      - name: Browser — Pippi starter dialogue must remain until Next
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+        run: timeout 150s node tests/pippi-guide-browser.cjs
       - name: A/B diagnostic — Grieta Mewtwo Rift WITHOUT Pippi
         continue-on-error: true
         env:
