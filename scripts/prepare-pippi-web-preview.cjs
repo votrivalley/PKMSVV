@@ -56,14 +56,16 @@ for(const prefix of ['game','ai/game']){
  replaceGachaOnce('t.pity[i]>=100?5','t.pity[i]>=150?5');
  for(const [label,rel] of [
    ['GlobalPower','src/pkmsvv-global-power.js'],
-   ['GlobalPowerUI','src/pkmsvv-global-power-ui.js']
+   ['GlobalPowerUI','src/pkmsvv-global-power-ui.js'],
+   ['PKMSVVEggs','src/v15/eggs.js']
  ]){
   let src=source(rel);
   src=src.replace(new RegExp('G\\.'+label+'\\s*=\\s*'),'G.'+label+'=');
   bundle=installModule(bundle,label,src);
  }
  if(!bundle.includes('PITY_5:150')||!bundle.includes('t.pity[i]>=150?5')||
-     !bundle.includes('t=.45/100')||!bundle.includes('G.Spawner=(()=>{const a=1/4096;'))
+     !bundle.includes('t=.45/100')||!bundle.includes('G.Spawner=(()=>{const a=1/4096;')||
+     !bundle.includes('const SHINY_CHANCE=.015'))
   throw Error('Legend/Shiny/Pity rarity patch absent: '+prefix);
  new vm.Script(bundle,{filename:'pippi-qa-'+prefix.replace('/','-')+'.js'});
  write(compiled,bundle);
