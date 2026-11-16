@@ -113,6 +113,9 @@ for(const prefix of ['game','ai/game']){
  }
  fs.copyFileSync(present(path.join(root,'assets/pippi-pmd/portrait/atlas.png')),
    path.join(imageDir,'portrait/atlas.png'));
+ fs.copyFileSync(present(path.join(root,'assets/pippi-skill-icons.png')),
+   path.join(imageDir,'skill-icons.png'));
+ if(fs.statSync(path.join(imageDir,'skill-icons.png')).size>25000)throw Error('Pippi icons too large for mobile QA');
  let html=source(path.relative(root,path.join(dest,'index.html')));
  if(!html.includes('pkmsvv-box-stage3.js'))throw Error('Not the validated Web 2.0 snapshot: '+prefix);
  for(const name of ['pkmsvv-pippi.js','pkmsvv-pippi-guide.js']){
@@ -137,10 +140,12 @@ for(const prefix of ['game','ai/game']){
  write(path.join(dest,'index.html'),html);
  if(!html.includes(marker)||!html.includes('pkmsvv-pippi.js'))throw Error('Preview injection incomplete');
  // Test the actual staged source, not just repo strings.
- for(const token of ['COUSIN_CHANCES=Object.freeze([0,.03,.045,.06])','rollCousinOnHit']){
+ for(const token of ['COUSIN_CHANCES=Object.freeze([0,.05,.10,.20])','rollCousinOnHit']){
   if(!source(path.relative(root,path.join(dest,'js/ui/pkmsvv-pippi.js'))).includes(token))
    throw Error('Pikachu live skill missing in '+prefix+': '+token);
  }
+ if(!fs.existsSync(path.join(dest,'images/pippi/skill-icons.png')))
+  throw Error('Pippi icon sprite missing from active game route: '+prefix);
  if(!source(path.relative(root,path.join(dest,'js/ui/pkmsvv-wiki-qa.js'))).includes('Bạn đồng hành'))
   throw Error('Renamed Companion PC hub absent in '+prefix);
  if(!source(path.relative(root,path.join(dest,'js/ui/pkmsvv-box-stage3.js'))).includes('normal:.002'))
@@ -151,7 +156,7 @@ for(const prefix of ['game','ai/game']){
 }
 const meta=JSON.parse(source('dist/cloudflare-v20-release/build-info.json'));
 Object.assign(meta,{releaseType:'qa-preview-only',pippiCousinQA:marker,
- previewBranch:'pippi-cousin-qa',version:'2.0.2-Pippi-QA',
+ previewBranch:'pippi-cousin-qa',version:'2.0.3-Pippi-QA',
  description:'Isolated browser-only test; production pkmsvv-web.pages.dev unchanged'});
 write(path.join(site,'build-info.json'),JSON.stringify(meta,null,2)+'\n');
 // QA-only cache policy: browsers must revalidate the HTML and the two UI

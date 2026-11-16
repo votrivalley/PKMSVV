@@ -624,10 +624,10 @@ test('PC uses native fourth Góc Pippi card and event-synchronized portrait sour
 });
 
 
-test('Em họ Pikachu: 3%, 4.5%, 6% on real damage, never before learning',()=>{
- assert.equal(P.cousinChance(0),0);assert.equal(P.cousinChance(1),.03);
- assert.equal(P.cousinChance(2),.045);assert.equal(P.cousinChance(3),.06);
- assert.equal(P.cousinChance(999),.06);
+test('Em họ Pikachu: 5%, 10%, 20% per real HP-loss event, never before learning',()=>{
+ assert.equal(P.cousinChance(0),0);assert.equal(P.cousinChance(1),.05);
+ assert.equal(P.cousinChance(2),.10);assert.equal(P.cousinChance(3),.20);
+ assert.equal(P.cousinChance(999),.20);
  const s={coins:500,pkmsvvPippi:{xp:14}}; // Bond 5
  for(let i=1;i<=3;i++)assert.equal(P.train(s,'cousin',()=>true).ok,true);
  assert.equal(P.train(s,'cousin',()=>true).reason,'max');
@@ -641,11 +641,30 @@ test('Pikachu stuns only on actual HP loss in Explore, not on dodges or Co-op',(
   PKMSVVQuickRegion:{active:true},EnemyMgr:{all:()=>[enemy]}};
  const run=P.newRun(pl,20);
  assert.equal(P.rollCousinOnHit(G,run,pl,100,100,()=>0).triggered,false);
- assert.equal(P.rollCousinOnHit(G,run,pl,100,90,()=>.03).triggered,false);
- assert.equal(P.rollCousinOnHit(G,run,pl,100,90,()=>.0299).triggered,true);
+ assert.equal(P.rollCousinOnHit(G,run,pl,100,90,()=>.05).triggered,false);
+ assert.equal(P.rollCousinOnHit(G,run,pl,100,90,()=>.0499).triggered,true);
  assert.equal(enemy.stun,1.1);assert.ok(run.cousinUntil>20);
  G.Coop={active:true};G.Game.st.time=22;
  assert.equal(P.rollCousinOnHit(G,run,pl,90,80,()=>0).triggered,false);
+});
+test('Pippi 5 original pixel skill icons are staged in both game routes with level badges',()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const art=path.join(__dirname,'../assets/pippi-skill-icons.png');
+ const buf=fs.readFileSync(art);
+ assert.ok(buf.length>2500&&buf.length<25000,'small offline sprite sheet');
+ assert.equal(buf.subarray(0,8).toString('hex'),'89504e470d0a1a0a','PNG asset');
+ assert.equal(buf.readUInt32BE(16),240,'5 horizontal cells × 48px');
+ assert.equal(buf.readUInt32BE(20),48);
+ const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pc-menu-clean-qa.css'),'utf8');
+ const wiki=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-wiki.js'),'utf8');
+ const prep=fs.readFileSync(path.join(__dirname,'../scripts/prepare-pippi-web-preview.cjs'),'utf8');
+ assert.match(css,/PIPPI_SKILL_ICONS_V3/);
+ for(const key of ['heal','buff','slow','shield','cousin']){
+  assert.match(css,new RegExp('data-pippi-skill-icon="'+key+'"'));
+ }
+ assert.match(wiki,/art\.dataset\.pippiSkillIcon=key/);
+ assert.match(wiki,/tiers\.setAttribute\('aria-hidden','true'\)/);
+ assert.match(prep,/pippi-skill-icons\.png/);
 });
 test('Pikachu native hurt hook fires once per damaging hit and is restored',()=>{
  const pl={hp:100,hurt(n){this.hp-=n;return 'native';}};

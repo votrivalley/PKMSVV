@@ -161,8 +161,8 @@ G.PKMSVVWiki=(()=>{
    ['slow',3,tr('Làm chậm & Tăng tốc','Slow + Haste'),tr('Làm chậm tối đa 6 quái gần đó, đồng thời tăng tốc chạy 10%. Mỗi cấp huấn luyện tăng thêm 5% tốc độ, cùng hiệu lực làm chậm mạnh và lâu hơn.','Slow up to 6 enemies and boost movement speed by 10%; each training level adds 5% more speed plus stronger, longer slows.')],
    ['shield',7,tr('Khiên trăng','Moon Shield'),tr('Mỗi cấp tăng 0,35 giây bảo vệ nguy cấp.','+0.35 seconds emergency protection per level.')],
    ['cousin',4,tr('Em họ Pikachu','Cousin Pikachu'),
-    tr('Sau khi thực sự mất HP: Lv1 3% · Lv2 4,5% · Lv3 6% gọi Pikachu làm tê liệt tối đa 4 quái gần nhau. Chỉ hoạt động khi đã học kỹ năng.',
-       'On real HP loss: Lv1 3% · Lv2 4.5% · Lv3 6% to summon Pikachu and stun enemies.')]
+    tr('Khi thực sự mất HP: Lv1 5% · Lv2 10% · Lv3 20% gọi Pikachu phóng sét, làm tê liệt tối đa 4 quái. Không học thì không xuất hiện.',
+       'When HP is actually lost: Lv1 5% · Lv2 10% · Lv3 20% to summon Pikachu and paralyze up to 4 enemies.')]
   ];
   function draw(focusKey){
    body.replaceChildren();
@@ -200,7 +200,23 @@ G.PKMSVVWiki=(()=>{
    for(const [key,gate,name,description] of specs){
     const lv=training[key]||0,unlocked=state.bond>=gate;
     const item=document.createElement('section');item.className='pkmsvv-pippi-training-row';
-    const nameEl=document.createElement('strong');nameEl.textContent=name+' · '+lv+'/3';
+    item.dataset.pippiSkill=key;
+    item.dataset.pippiSkillState=!unlocked?'locked':lv>=3?'max':lv>0?'trained':'ready';
+    const heading=document.createElement('div');heading.className='pkmsvv-pippi-skill-heading';
+    const frame=document.createElement('span');frame.className='pkmsvv-pippi-skill-icon-frame';
+    const art=document.createElement('span');art.className='pkmsvv-pippi-skill-icon';
+    art.dataset.pippiSkillIcon=key;art.setAttribute('role','img');art.setAttribute('aria-label',name);
+    frame.append(art);
+    const details=document.createElement('span');details.className='pkmsvv-pippi-skill-details';
+    const nameEl=document.createElement('strong');nameEl.textContent=name;
+    const rank=document.createElement('span');rank.className='pkmsvv-pippi-skill-rank';
+    rank.textContent=lv>=3?'MAX':lv+'/3';
+    const tiers=document.createElement('span');tiers.className='pkmsvv-pippi-skill-tiers';
+    tiers.setAttribute('aria-hidden','true');
+    for(let n=0;n<3;n++){
+     const gem=document.createElement('span');gem.className=n<lv?'filled':'';tiers.append(gem);
+    }
+    details.append(nameEl,rank,tiers);heading.append(frame,details);
     const info=document.createElement('p');info.textContent=description;
     const button=document.createElement('button');button.type='button';
     button.className='pkmsvv-pippi-train-btn';button.dataset.pippiTrain=key;
@@ -224,7 +240,7 @@ G.PKMSVVWiki=(()=>{
      }
      draw(key);
     };
-    item.append(nameEl,info,note,button);grid.append(item);
+    item.append(heading,info,note,button);grid.append(item);
    }
    body.append(grid);
    const active=document.createElement('section');active.className='pkmsvv-pippi-active-skill';

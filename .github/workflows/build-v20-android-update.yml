@@ -160,7 +160,7 @@ jobs:
           grep -q 'onClick:pippiCorner' decoded-android/assets/public/js/ui/pkmsvv-wiki-qa.js
           grep -q 'PIPPI_CORNER_PC_V1' decoded-android/assets/public/css/pkmsvv-pc-menu-clean-qa.css
           grep -q 'trainingPoints' decoded-android/assets/public/js/ui/pkmsvv-pippi.js
-          grep -Fq 'COUSIN_CHANCES=Object.freeze([0,.03,.045,.06])' decoded-android/assets/public/js/ui/pkmsvv-pippi.js
+          grep -Fq 'COUSIN_CHANCES=Object.freeze([0,.05,.10,.20])' decoded-android/assets/public/js/ui/pkmsvv-pippi.js
           grep -Fq 'rollCousinOnHit' decoded-android/assets/public/js/ui/pkmsvv-pippi.js
           grep -Fq 'Bạn đồng hành' decoded-android/assets/public/js/ui/pkmsvv-wiki-qa.js
           grep -Fq 'normal:.002,elite:.004,legend:.008' decoded-android/assets/public/js/ui/pkmsvv-box-stage3.js
@@ -182,6 +182,7 @@ jobs:
           test -s decoded-android/assets/public/images/pippi/Idle-Anim.png
           test -s decoded-android/assets/public/images/pippi/Sleep-Anim.png
           test -s decoded-android/assets/public/images/pippi/portrait/Happy.png
+          test -s decoded-android/assets/public/images/pippi/skill-icons.png
           test -s decoded-android/assets/public/images/pippi/portrait/Worried.png
           grep -q 'pkmsvv-pippi.js' decoded-android/assets/public/index.html
           grep -q 'FOLLOW_DISTANCE=78' decoded-android/assets/public/js/ui/pkmsvv-pippi.js

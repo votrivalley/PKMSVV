@@ -354,8 +354,8 @@
   return true;
  }
  // Cousin Pikachu is rolled after each CONFIRMED HP-reducing hit in Explore.
- // L1=3%, L2=4.5%, L3=6%, locked=0%; never roll each animation frame.
- const COUSIN_CHANCES=Object.freeze([0,.03,.045,.06]);
+ // L1=5%, L2=10%, L3=20%, locked=0%; roll only on confirmed HP loss.
+ const COUSIN_CHANCES=Object.freeze([0,.05,.10,.20]);
  const cousinChance=level=>COUSIN_CHANCES[clamp(Math.floor(level||0),0,3)];
  function cousinLightning(G,pl,now){
   const raw=G.EnemyMgr?.all?.();

@@ -72,6 +72,9 @@ for(const filename of ['pkmsvv-box-stage1.css','pkmsvv-box-stage2.css','pkmsvv-b
   if(!fs.existsSync(input))throw Error('Missing verified Pippi art: '+filename);
   fs.mkdirSync(dest,{recursive:true});fs.copyFileSync(input,path.join(dest,filename));
  }
+ const skillIcons=path.join(root,'assets/pippi-skill-icons.png');
+ if(!fs.existsSync(skillIcons)||fs.statSync(skillIcons).size<2500)throw Error('Missing original Pippi skill sprite');
+ fs.copyFileSync(skillIcons,path.join(dest,'skill-icons.png'));
  const portraits=path.join(pmd,'portrait'),out=path.join(dest,'portrait');
  const {PORTRAITS}=require('./fetch-pippi-pmd.cjs');
  fs.mkdirSync(out,{recursive:true});
