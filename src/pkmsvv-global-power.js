@@ -9,7 +9,7 @@ G.GlobalPower = (() => {
     {id:'vital',    icon:'heart',  vi:'Sinh lực',          en:'Vitality',             viUnit:'+25 HP / cấp',enUnit:'+25 HP / rank',max:8,base:80,grow:1.33},
     {id:'guard',    icon:'shield', vi:'Giáp Toàn Đội',     en:'Team Defense',         viUnit:'-4% sát thương nhận / cấp', enUnit:'-4% incoming damage / rank',max:8,base:120,grow:1.39},
     {id:'healing',  icon:'sprout', vi:'Hồi phục',          en:'Regeneration',         viUnit:'Đã ngừng nâng cấp — hoàn tiền',enUnit:'Retired — full refund',max:7,base:100,grow:1.40,retired:true},
-    {id:'swift',    icon:'boot',   vi:'Nhanh nhẹn',        en:'Movement Speed',       viUnit:'+5% tốc chạy / cấp',enUnit:'+5% movement speed / rank',max:6,base:100,grow:1.36},
+    {id:'swift',    icon:'boot',   vi:'Nhanh nhẹn',        en:'Movement Speed',       viUnit:'Đã ngừng nâng cấp — hoàn tiền',enUnit:'Retired — full refund',max:6,base:100,grow:1.36,retired:true},
     {id:'reach',    icon:'magnet', vi:'Hút kinh nghiệm',   en:'Pickup Radius',       viUnit:'+15% bán kính nhặt / cấp',enUnit:'+15% pickup radius / rank',max:6,base:70,grow:1.34},
     {id:'area',     icon:'star',   vi:'Vùng Kỹ Năng',      en:'Skill Area',          viUnit:'+10% phạm vi / cấp (tối đa +50%)',enUnit:'+10% skill area / rank (max +50%)',max:5,base:180,grow:1.48},
     {id:'duration', icon:'clock',  vi:'Thời Lượng Kỹ Năng',en:'Skill Duration',      viUnit:'+10% thời gian hiệu lực / cấp (tối đa +50%)',enUnit:'+10% effect duration / rank (max +50%)',max:5,base:160,grow:1.48},
@@ -73,21 +73,30 @@ G.GlobalPower = (() => {
   function refundable(save) {
     return save?spent(save.globalUpgrades,save.globalSpent):0;
   }
-  // Retirement migration runs on the home UI, never in a combat RAF.
-  // Preserve actual paid amounts (including old 1x costs); no repeat credit.
-  function refundRetiredHealing(save){
+  // Two retired global perks: return exactly the old paid ledger (or 1x
+  // historical prices for saves predating the ledger). No duplication after
+  // removing the owned level and ledger in the same save transaction.
+  const RETIRED_GLOBAL=['healing','swift'];
+  function refundRetiredPowerups(save){
     if(!save||typeof save!=='object')return 0;
-    const levels=clean(save.globalUpgrades),level=rank(levels,'healing');
+    const levels=clean(save.globalUpgrades);
     const raw=save.globalSpent===undefined?legacyLedger(levels):save.globalSpent;
     const ledger=cleanLedger(raw,levels);
-    if(!level&&!Number(raw?.healing))return 0;
-    const refund=level?Math.max(0,Number(ledger.healing)||0):0;
-    delete levels.healing;delete ledger.healing;
+    let refund=0,dirty=false;
+    for(const key of RETIRED_GLOBAL){
+      const level=rank(levels,key);
+      if(level)refund+=Math.max(0,Number(ledger[key])||0);
+      if(level||Object.prototype.hasOwnProperty.call(raw||{},key))dirty=true;
+      delete levels[key];delete ledger[key];
+    }
+    if(!dirty)return 0;
     save.globalUpgrades=levels;save.globalSpent=ledger;
     if(refund)save.coins=Math.min(Number.MAX_SAFE_INTEGER,
       Math.max(0,Number(save.coins)||0)+refund);
     return refund;
   }
+  // Compatibility with older UI/PC caller versions.
+  const refundRetiredHealing=refundRetiredPowerups;
   function purchase(save,id) {
     if(!save || !BY[id] || BY[id].retired) return false;
     const levels=clean(save.globalUpgrades), n=rank(levels,id);
@@ -125,7 +134,7 @@ G.GlobalPower = (() => {
       ...per,
       hp:(per.hp||0)+25*L('vital'),
       atkMul:(per.atkMul||1)*(1+0.12*L('power')),
-      spdMul:(per.spdMul||1)*(1+0.05*L('swift')),
+      spdMul:(per.spdMul||1), // Player's individual speed upgrades remain unaffected.
       cdMul:(per.cdMul||1)*(1-0.05*L('rapid')),
       dmgReduce:Math.min(0.65,(per.dmgReduce||0)+0.04*L('guard')),
       regen:(per.regen||0), // Only individual Pokémon regen remains; global healing retired.
@@ -165,5 +174,5 @@ G.GlobalPower = (() => {
   function tryRevive(pl) {
     return !!G.PKMSVVPippi?.tryRevive?.(pl);
   }
-  return {LIST,BY,rank,clean,cost,originalCost,PRICE_MULTIPLIER,legacyLedger,cleanLedger,spent,refundable,purchase,refundRetiredHealing,refundAll,merge,combine,applyMove,tryRevive};
+  return {LIST,BY,rank,clean,cost,originalCost,PRICE_MULTIPLIER,legacyLedger,cleanLedger,spent,refundable,purchase,refundRetiredPowerups,refundRetiredHealing,refundAll,merge,combine,applyMove,tryRevive};
 })();
