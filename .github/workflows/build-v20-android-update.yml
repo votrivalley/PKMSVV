@@ -129,7 +129,9 @@ jobs:
           java -jar apktool_3.0.3.jar d -f -s "$apk" -o decoded-android
       - name: Fetch pinned noncommercial Clefairy PMD artwork with hash checks
         run: node scripts/fetch-pippi-pmd.cjs
-      - name: Produce offline Pippi portrait gallery (16 embedded verified PNGs)
+      - name: Install Pippi portrait atlas toolchain (pinned repository dependencies)
+        run: npm install --no-audit --no-fund
+      - name: Produce offline Pippi portrait gallery and atlas (16 verified PNGs)
         run: node scripts/build-pippi-portrait-gallery.cjs && node scripts/build-pippi-portrait-atlas.cjs
       - name: Apply tested 2.0 assets, preserve original Android app ID
         shell: bash

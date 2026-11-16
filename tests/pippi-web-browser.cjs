@@ -109,7 +109,8 @@ async function main(){
   })()`);
   console.log('PIPPI_WEB_PC='+JSON.stringify(pc));
   assert.equal(pc.missingLauncher,undefined,'PC launcher missing from menu');
-  assert.equal(pc.count,4,'PC must contain all four tiles');
+  assert.equal(pc.count,5,'PC must contain Support, Mega, Berry, Bạn đồng hành and Hồi sinh hóa thạch');
+  assert.ok(pc.labels.some(x=>/Hồi sinh hóa thạch|Fossil Restoration/.test(x)),'fifth fossil lab tile missing');
   assert.equal(pc.companionButton,true,'Fourth Bạn đồng hành tile must be visible');
   const companion=await js(`(()=>{
     const item=[...document.querySelectorAll('#pkmsvv-wiki-overlay .pkmsvv-pc-card')]
