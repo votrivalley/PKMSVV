@@ -628,6 +628,7 @@
    }
    // Coalesce rapid successive drops, but do not lose the discovery.
    run.pendingReaction=event;
+   G.PKMSVVPippiGuide?.queue?.(event==='chest'?'chest':'pickup');
    return true;
   }
   function installPickupReactions(){
@@ -1180,6 +1181,9 @@
      showSupportFX(G,run,pl,'shield');
      say('shield',true);
     }
+    // Only after real reward/level-up dialogs close: no automatic skip,
+    // no extra RAF/interval, no interruption of item selection.
+    G.PKMSVVPippiGuide?.flush?.();
    }catch(err){w.console?.warn?.('[Pippi] frame guarded',err);}
    finally{stage('exit');}
   }
