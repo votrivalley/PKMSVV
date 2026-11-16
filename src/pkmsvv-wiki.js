@@ -158,10 +158,10 @@ G.PKMSVVWiki=(()=>{
   const specs=[
    ['heal',1,tr('Hồi máu','Healing'),tr('Mỗi cấp tăng 2% HP hồi phục.','+2% max HP healed per level.')],
    ['buff',2,tr('Cổ vũ','Cheer'),tr('Mỗi cấp tăng 1,5% sức tấn công khi buff.','+1.5% attack during buff per level.')],
-   ['slow',3,tr('Làm chậm','Slowdown'),tr('Mỗi cấp tăng mức và thời gian làm chậm địch.','Stronger and longer slow effects.')],
+   ['slow',3,tr('Làm chậm & Tăng tốc','Slow + Haste'),tr('Làm chậm tối đa 6 quái gần đó, đồng thời tăng tốc chạy 10%. Mỗi cấp huấn luyện tăng thêm 5% tốc độ, cùng hiệu lực làm chậm mạnh và lâu hơn.','Slow up to 6 enemies and boost movement speed by 10%; each training level adds 5% more speed plus stronger, longer slows.')],
    ['shield',7,tr('Khiên trăng','Moon Shield'),tr('Mỗi cấp tăng 0,35 giây bảo vệ nguy cấp.','+0.35 seconds emergency protection per level.')],
    ['cousin',4,tr('Em họ Pikachu','Cousin Pikachu'),
-    tr('Bị mất máu: Lv1 3% · Lv2 4,5% · Lv3 6% gọi Pikachu phóng sét tê liệt quái.',
+    tr('Sau khi thực sự mất HP: Lv1 3% · Lv2 4,5% · Lv3 6% gọi Pikachu làm tê liệt tối đa 4 quái gần nhau. Chỉ hoạt động khi đã học kỹ năng.',
        'On real HP loss: Lv1 3% · Lv2 4.5% · Lv3 6% to summon Pikachu and stun enemies.')]
   ];
   function draw(focusKey){

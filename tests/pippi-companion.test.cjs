@@ -51,6 +51,38 @@ test('AI heal respects HP cap and danger threshold',()=>{
  p.hp=90;assert.equal(P.heal(p,10),false);assert.equal(p.hp,90);
  p.hp=60;assert.equal(P.heal(p,10),true);assert.ok(p.hp<=100);
 });
+test('Pippi slows enemies AND accelerates native player movement briefly, with full cleanup',()=>{
+ class Hero{
+  constructor(){this.x=100;this.y=120;this.base=100;this.inLiquid=false;}
+  get spd(){return this.base*(this.inLiquid?.7:1);}
+ }
+ const p=new Hero(),G={Player:Hero,EnemyMgr:{all:()=>[{x:110,y:120,spd:100,dead:false}]}};
+ assert.equal(P.installHasteGetter(G),true);
+ assert.equal(P.installHasteGetter(G),true,'native speed wrapper must never stack');
+ const run=P.newRun(p),enemy=G.EnemyMgr.all()[0];
+ G.EnemyMgr.all=()=>[enemy];
+ assert.equal(P.slow(G,run,10,3,0),true);
+ assert.equal(enemy.spd,65);
+ assert.ok(Math.abs(p.spd-110)<1e-10,'untrained: +10% native speed');
+ p.inLiquid=true;
+ assert.ok(Math.abs(p.spd-77)<1e-10,'water slow remains in native speed calculation');
+ p.inLiquid=false;
+ P.endEffects(run,12);
+ assert.equal(p.spd,110,'movement buff must survive until timed expiration');
+ P.endEffects(run,13);
+ assert.equal(p.spd,100,'no remaining speed boost after expiration');
+ assert.equal(p.pkmsvvPippiHasteMul,undefined);
+ assert.equal(enemy.spd,100,'enemy slow must also expire safely');
+ assert.equal(P.slow(G,run,25,10,3),true);
+ assert.ok(Math.abs(p.spd-125)<1e-10,'MAX: +25% player speed');
+ P.finish(run);
+ assert.equal(p.spd,100,'new match, Rift exit and quit must not leak haste');
+ assert.equal(enemy.spd,100);
+ const far={x:9999,y:9999,spd:90,dead:false};G.EnemyMgr.all=()=>[far];
+ const r2=P.newRun(p);
+ assert.equal(P.slow(G,r2,40,10,3),false,'no enemy reached, no bonus');
+ assert.equal(p.spd,100);
+});
 test('temporary attack buff and enemy slow restore exactly on expiry or exit',()=>{
  const {G,player}=game();const run=P.newRun(player);
  assert.equal(P.buff(player,run,10,5),true);
@@ -173,7 +205,7 @@ test('Healing and attack support paint clear native FX on player and on Pippi',(
  assert.equal(P.showSupportFX({},run,pl,'heal',35),false,'missing FX has no gameplay side effects');
 });
 
-test('Pippi slow visibly marks only real enemies affected (up to six)',()=>{
+test('Pippi slow visually marks affected enemies and the boosted player (up to six)',()=>{
  const foes=Array.from({length:8},(_,i)=>({
   x:108+i*3,y:125,spd:100,dead:false
  }));
@@ -190,6 +222,7 @@ test('Pippi slow visibly marks only real enemies affected (up to six)',()=>{
  assert.equal(P.showSupportFX(G,run,player,'slow'),true);
  const slowed=logs.filter(x=>x[0]==='text'&&x[3]==='CHẬM!');
  assert.equal(slowed.length,6,'a slowdown label is drawn at each affected enemy');
+ assert.ok(logs.some(x=>x[0]==='text'&&x[3]==='TĂNG TỐC'),'player speedup must be visible');
  assert.ok(slowed.every(x=>x[1]!==player.x||x[2]!==player.y-26),
   'never incorrectly draw slowdown on the player');
  assert.ok(run.castCue&&run.castCue.targets.length===6);

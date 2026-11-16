@@ -73,7 +73,7 @@
   buff:[['proud','Đã buff! Diễn cho ra dáng vai chính giùm cái!'],
    ['wink','Tui gánh hậu trường, bạn lo đừng diễn như quần chúng!'],
    ['happy','Đẹp! Tăng sức mạnh rồi đó, cấm xài ngu nha!']],
-  slow:[['angry','Đứng im! Chạy nhanh quá làm tui mất spotlight!'],
+  slow:[['angry','Tụi bây chậm lại! Còn bạn, chạy lẹ lên! Tui không gánh chân ngắn nha!'],
    ['wink','Bộ tính dí bạn tui hả? Xếp hàng lấy số đi mấy cha!'],
    ['proud','Tui cho tụi nó đi chậm để bạn còn cơ hội tỏa sáng đó.']],
   shield:[['panic','Ê né! Tui chưa muốn viết điếu văn cho bạn đâu!'],
@@ -175,7 +175,7 @@
  }
  function newRun(pl,now=0){return {player:pl,now,healAt:8,buffAt:12,slowAt:15,guardAt:0,
   sleepUntil:0,megaUntil:0,reviveAt:0,sleepTalked:false,revived:false,lastTalk:-100,marks:new Set(),lastPos:null,direction:0,
-  activeBuff:null,slowed:[],lastSlowTargets:[],motion:null,castCue:null,emoteType:'sparkle',
+  activeBuff:null,activeHaste:null,slowed:[],lastSlowTargets:[],motion:null,castCue:null,emoteType:'sparkle',
   reactionAt:14,lastDangerAt:-100,lastQuirkCount:0,emoteUntil:0,cousinUntil:0,cousinTargets:0,damageHook:null,evolveUntil:0,megaSpoken:false,
   lastLineByEvent:Object.create(null),pendingReaction:null,pickupCount:0,bondAwards:new Set(),bondBonus:0};}
  function heal(pl,lv,training=0){
@@ -189,6 +189,43 @@
   const factor=1.08+Math.min(.09,lv*.01)+clamp(training,0,TRAINING_MAX)*.015;
   pl.atkMul*=factor;
   run.activeBuff={player:pl,factor,until:now+8};
+  return true;
+ }
+ // Apply bonus ONLY to the existing native player-speed getter. This preserves
+ // terrain, Nature, weather and Rank and does not change battle simulation speed.
+ // Coexists with the optional flying-over-water getter, in either install order.
+ function installHasteGetter(G){
+  const proto=G?.Player?.prototype,descriptor=proto&&Object.getOwnPropertyDescriptor(proto,'spd');
+  if(!descriptor?.configurable||typeof descriptor.get!=='function')return false;
+  if(descriptor.get._pkmsvvPippiHaste===true)return true;
+  const native=descriptor.get;
+  function getSpeed(){
+   const value=native.call(this),multiplier=Number(this.pkmsvvPippiHasteMul);
+   return Number.isFinite(value)&&Number.isFinite(multiplier)&&multiplier>=1&&multiplier<=1.25?
+    value*multiplier:value;
+  }
+  getSpeed._pkmsvvPippiHaste=true;
+  Object.defineProperty(proto,'spd',{...descriptor,get:getSpeed});
+  return true;
+ }
+ function grantHaste(run,now,lv,training=0){
+  const pl=run?.player;
+  if(!pl)return false;
+  const tier=clamp(Math.floor(training),0,TRAINING_MAX);
+  const factor=1.10+tier*.05; // +10% at baseline, +15/20/25% trained
+  const until=now+Math.min(5,2+lv*.17+tier*.35);
+  if(run.activeHaste?.player===pl){
+   pl.pkmsvvPippiHasteMul=factor;
+   run.activeHaste.until=Math.max(until,run.activeHaste.until);
+   run.activeHaste.factor=factor;
+   return true;
+  }
+  // Save original user property precisely, although the namespaced field
+  // normally does not exist. No accumulating multiplicative speed buffs.
+  const hadOwn=Object.prototype.hasOwnProperty.call(pl,'pkmsvvPippiHasteMul');
+  const previous=pl.pkmsvvPippiHasteMul;
+  pl.pkmsvvPippiHasteMul=factor;
+  run.activeHaste={player:pl,hadOwn,previous,factor,until};
   return true;
  }
  function slow(G,run,now,lv,training=0){
@@ -213,9 +250,18 @@
    run.lastSlowTargets.push(e);
    if(++affected>=6)break;
   }
+  if(affected>0){installHasteGetter(G);grantHaste(run,now,lv,training);}
   return affected>0;
  }
  function endEffects(run,now){
+  if(run.activeHaste&&now>=run.activeHaste.until){
+   const {player,hadOwn,previous}=run.activeHaste;
+   if(player){
+    if(hadOwn)player.pkmsvvPippiHasteMul=previous;
+    else delete player.pkmsvvPippiHasteMul;
+   }
+   run.activeHaste=null;
+  }
   if(run.activeBuff&&now>=run.activeBuff.until){
    const {player,factor}=run.activeBuff;
    if(Number.isFinite(player.atkMul))player.atkMul/=factor;
@@ -257,6 +303,10 @@
     // Show which monsters were actually slowed, unlike the old effect that
     // incorrectly printed CHẬM on the player. Max six targets per cast.
     const targets=run?.lastSlowTargets||[];
+    if(run?.activeHaste?.until>now){
+     fx.ring?.(pl.x,pl.y-7,7,54,'#a1fff0',.48,2);
+     fx.dmgText?.(pl.x,pl.y-32,'TĂNG TỐC','#a1fff0');
+    }
     for(const e of targets.slice(0,6)){
      if(!e||!Number.isFinite(+e.x)||!Number.isFinite(+e.y))continue;
      fx.ring?.(e.x,e.y-3,5,40,primary,.35,2);
@@ -1111,6 +1161,7 @@
    const stage=name=>{if(trace)w.console?.log?.('QA_PIPPI_STAGE:'+name+':'+String(G.Game?.state||''));};
    stage('enter');
    try{
+    installHasteGetter(G);
     installPickupReactions();
     stage('migration-enter');
     // Refund bookkeeping can touch persistent storage. Finish migrations
@@ -1253,6 +1304,7 @@
     return purchase.call(this,save,id);
    };
   }
+  installHasteGetter(G);
   const api={installed:true,refund,migrate,data,rank,earn,train,resetTraining,awardMoment,trainingPoints,bondProgress,cousinChance,eligible:()=>eligible(G),
    tryRevive:revive,tick,show:say,reactPickup,
    get visual(){return {renderMode:nativeWorldReady?'native-world':'fallback',
@@ -1286,5 +1338,5 @@
   }
   return api;
  }
- return {rank,data,refund,earn,train,resetTraining,awardMoment,trainingPoints,bondProgress,cousinChance,cousinLightning,rollCousinOnHit,installDamageHook,uninstallDamageHook,eligible,newRun,advanceFollower,emoteSVG,heal,buff,slow,showSupportFX,personalityReaction,endEffects,finish,tryRevive,faceSVG,install};
+ return {rank,data,refund,earn,train,resetTraining,awardMoment,trainingPoints,bondProgress,cousinChance,cousinLightning,rollCousinOnHit,installDamageHook,uninstallDamageHook,eligible,newRun,advanceFollower,emoteSVG,heal,buff,slow,installHasteGetter,grantHaste,showSupportFX,personalityReaction,endEffects,finish,tryRevive,faceSVG,install};
 });
