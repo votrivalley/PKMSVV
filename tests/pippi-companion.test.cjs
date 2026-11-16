@@ -536,6 +536,7 @@ test('Kecleon sells Pippi Candy and both Bag and PC have guarded reset actions',
  assert.equal(G.Shop.buy('pippiReset').ok,true);
  assert.equal(G.DB.save.coins,500);assert.equal(G.Shop.count('pippiReset'),1);
  assert.match(ui,/data-pkmk-pippi-reset/);
+ assert.match(ui,/Kẹo Tái Huấn Luyện/);
  assert.match(wiki,/dataset\.pippiReset/);
  assert.match(wiki,/P\.resetTraining\(save/);
  assert.match(preview,/\['Shop','src\/kecleon\/upstream\/data\/shop\.js'\]/);
