@@ -14,7 +14,10 @@ const revision=/^[a-f0-9]{40}$/i.test(String(process.env.GITHUB_SHA||''))?
  process.env.GITHUB_SHA.slice(0,12):crypto.createHash('sha256').update(
   fs.readFileSync(path.join(root,'src/pkmsvv-pippi.js'))+
   fs.readFileSync(path.join(root,'src/pkmsvv-wiki.js'))+
-  fs.readFileSync(path.join(root,'src/pkmsvv-pc-menu-clean-qa.css'))).digest('hex').slice(0,12);
+  fs.readFileSync(path.join(root,'src/pkmsvv-pc-menu-clean-qa.css'))+
+  fs.readFileSync(path.join(root,'src/pkmsvv-pippi-guide.js'))+
+  fs.readFileSync(path.join(root,'src/pkmsvv-global-power.js'))+
+  fs.readFileSync(path.join(root,'src/pkmsvv-runtime-controls-qa.js'))).digest('hex').slice(0,12);
 
 function present(p){if(!fs.existsSync(p)||!fs.statSync(p).size)throw Error('QA preview asset missing: '+p);return p;}
 function source(rel){return fs.readFileSync(present(path.join(root,rel)),'utf8');}
@@ -38,12 +41,12 @@ for(const prefix of ['game','ai/game']){
  write(compiled,bundle);
  for(const filename of [
    'pkmsvv-box-stage3.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-wiki.js',
-   'pkmsvv-pippi.js'
+   'pkmsvv-pippi.js','pkmsvv-pippi-guide.js'
  ]){
   const target=filename==='pkmsvv-wiki.js'?'pkmsvv-wiki-qa.js':filename;
   write(path.join(dest,'js/ui',target),source('src/'+filename));
  }
- for(const filename of ['pkmsvv-v20-ui-qa.css','pkmsvv-pc-menu-clean-qa.css','pkmsvv-pippi.css']){
+ for(const filename of ['pkmsvv-v20-ui-qa.css','pkmsvv-pc-menu-clean-qa.css','pkmsvv-pippi.css','pkmsvv-pippi-guide.css']){
   write(path.join(dest,'css',filename),source('src/'+filename));
  }
  const imageDir=path.join(dest,'images/pippi');
@@ -59,21 +62,23 @@ for(const prefix of ['game','ai/game']){
    path.join(imageDir,'portrait/atlas.png'));
  let html=source(path.relative(root,path.join(dest,'index.html')));
  if(!html.includes('pkmsvv-box-stage3.js'))throw Error('Not the validated Web 2.0 snapshot: '+prefix);
- for(const name of ['pkmsvv-pippi.js']){
+ for(const name of ['pkmsvv-pippi.js','pkmsvv-pippi-guide.js']){
   if(!html.includes(name))html=html.replace('</body>','<script defer src="js/ui/'+name+'"></script>\n</body>');
  }
  if(!html.includes('pkmsvv-pippi.css'))html=html.replace('</head>',
   '<link rel="stylesheet" href="css/pkmsvv-pippi.css">\n</head>');
+ if(!html.includes('pkmsvv-pippi-guide.css'))html=html.replace('</head>',
+  '<link rel="stylesheet" href="css/pkmsvv-pippi-guide.css">\n</head>');
  // CSP may prohibit inline scripts. Ship a same-origin deferred identity
  // module BEFORE the PC module so the fourth tile and build identity agree.
  const identity='js/ui/pkmsvv-pippi-qa-identity.js';
  write(path.join(dest,identity), 'window.__PKMSVV_PIPPI_QA='+JSON.stringify(revision)+';\n');
  html=html.replace('</head>','<script defer src="'+identity+'?v='+revision+'"></script>\n<meta name="robots" content="noindex,nofollow"><!-- '+marker+' -->\n</head>');
  // A stable Pages URL must not leave old PC / Pippi assets in existing caches.
- for(const name of ['pkmsvv-wiki-qa.js','pkmsvv-pippi.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-quick-region.js']){
+ for(const name of ['pkmsvv-wiki-qa.js','pkmsvv-pippi.js','pkmsvv-pippi-guide.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-quick-region.js']){
   html=html.replace('src="js/ui/'+name+'"','src="js/ui/'+name+'?v='+revision+'"');
  }
- for(const name of ['pkmsvv-pippi.css','pkmsvv-pc-menu-clean-qa.css']){
+ for(const name of ['pkmsvv-pippi.css','pkmsvv-pippi-guide.css','pkmsvv-pc-menu-clean-qa.css']){
   html=html.replace('href="css/'+name+'"','href="css/'+name+'?v='+revision+'"');
  }
  write(path.join(dest,'index.html'),html);
@@ -104,8 +109,10 @@ const previousHeaders=fs.existsSync(headersPath)?fs.readFileSync(headersPath,'ut
 const urls=['/game/','/game/index.html','/ai/game/','/ai/game/index.html',
  '/game/js/ui/pkmsvv-wiki-qa.js','/ai/game/js/ui/pkmsvv-wiki-qa.js',
  '/game/js/ui/pkmsvv-pippi.js','/ai/game/js/ui/pkmsvv-pippi.js',
+ '/game/js/ui/pkmsvv-pippi-guide.js','/ai/game/js/ui/pkmsvv-pippi-guide.js',
  '/game/js/ui/pkmsvv-pippi-qa-identity.js','/ai/game/js/ui/pkmsvv-pippi-qa-identity.js',
  '/game/css/pkmsvv-pippi.css','/ai/game/css/pkmsvv-pippi.css',
+ '/game/css/pkmsvv-pippi-guide.css','/ai/game/css/pkmsvv-pippi-guide.css',
  '/build-info.json'];
 const noStore=urls.map(u=>u+'\n  Cache-Control: no-store, max-age=0').join('\n');
 write(headersPath,previousHeaders.trimEnd()+'\n\n'+noStore+'\n');
