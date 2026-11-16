@@ -38,7 +38,7 @@ test('Kecleon store purchases Mint and Capsule with PokéCoins into Bag',()=>{
  s.coins=0;
  assert.equal(G.Shop.buy('caph').ok,false);
  assert.equal(s.bag.caph||0,0);
- assert.deepEqual(Array.from(G.Shop.ORDER),['mint','cap','caph']);
+ assert.deepEqual(Array.from(G.Shop.ORDER),['mint','cap','caph','pippiReset']);
  assert.deepEqual(Object.keys(G.Shop.DROP_RATE).sort(),['cap','mint']);
  s.bag.caph=4; // legacy/event stock remains usable but not for sale
  assert.equal(G.Shop.take('caph'),true);
@@ -254,6 +254,6 @@ test('PokéBox permits confirmed random Nature, standard and event Hidden Capsul
  assert.match(ui,/Hub\.useMint\(it\.id\)/);
  assert.match(ui,/Hub\.useCapsule\(it\.id,selected\)/);
  const shop=read('src/kecleon/upstream/data/shop.js');
- assert.match(shop,/const ORDER = \['mint', 'cap', 'caph'\]/);
+ assert.match(shop,/const ORDER = \['mint', 'cap', 'caph', 'pippiReset'\]/);
  assert.doesNotMatch(shop,/caph:\.002/);
 });
