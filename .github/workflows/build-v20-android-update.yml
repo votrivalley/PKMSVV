@@ -83,7 +83,7 @@ jobs:
         with:
           node-version: '22'
       - name: Test complete 2.0 runtime and save compatibility
-        run: node --test tests/pippi-companion.test.cjs tests/global-upgrades.test.cjs && node --test tests/lan-ai-modes.test.cjs && npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs && node --test tests/bond-fusion-svv.test.cjs tests/horde-performance.test.cjs tests/ux-story-knowledge-qa.test.cjs tests/pokebox-hub.test.cjs tests/kecleon.test.cjs tests/v20-items-release.test.cjs
+        run: node --test tests/fossil-system.test.cjs tests/fossil-restoration-data.test.cjs tests/pippi-companion.test.cjs tests/global-upgrades.test.cjs && node --test tests/lan-ai-modes.test.cjs && npm run test:pokebox:stage4 && npm run test:quick-region && node --test tests/held-item-choice.test.cjs tests/modal-input-qa.test.cjs && node --test tests/bond-fusion-svv.test.cjs tests/horde-performance.test.cjs tests/ux-story-knowledge-qa.test.cjs tests/pokebox-hub.test.cjs tests/kecleon.test.cjs tests/v20-items-release.test.cjs
       - name: Require permanent signing, no debug fallback
         shell: bash
         env:
@@ -130,7 +130,7 @@ jobs:
       - name: Fetch pinned noncommercial Clefairy PMD artwork with hash checks
         run: node scripts/fetch-pippi-pmd.cjs
       - name: Produce offline Pippi portrait gallery (16 embedded verified PNGs)
-        run: node scripts/build-pippi-portrait-gallery.cjs
+        run: node scripts/build-pippi-portrait-gallery.cjs && node scripts/build-pippi-portrait-atlas.cjs
       - name: Apply tested 2.0 assets, preserve original Android app ID
         shell: bash
         run: |
@@ -177,6 +177,9 @@ jobs:
           test -s decoded-android/assets/public/css/pkmsvv-quick-region.css
           test -s decoded-android/assets/public/js/ui/pkmsvv-pc-menu-clean-qa.js
           test -s decoded-android/assets/public/js/ui/pkmsvv-pippi.js
+          test -s decoded-android/assets/public/js/ui/pkmsvv-fossil-system.js
+          test -s decoded-android/assets/public/js/ui/pkmsvv-pippi-guide.js
+          test -s decoded-android/assets/public/images/pippi/portrait/atlas.png
           test -s decoded-android/assets/public/css/pkmsvv-pippi.css
           test -s decoded-android/assets/public/images/pippi/Walk-Anim.png
           test -s decoded-android/assets/public/images/pippi/Idle-Anim.png
@@ -185,6 +188,8 @@ jobs:
           test -s decoded-android/assets/public/images/pippi/skill-icons.png
           test -s decoded-android/assets/public/images/pippi/portrait/Worried.png
           grep -q 'pkmsvv-pippi.js' decoded-android/assets/public/index.html
+          grep -q 'pkmsvv-fossil-system.js' decoded-android/assets/public/index.html
+          grep -q 'pkmsvv-pippi-guide.js' decoded-android/assets/public/index.html
           grep -q 'FOLLOW_DISTANCE=78' decoded-android/assets/public/js/ui/pkmsvv-pippi.js
           grep -q 'COOP_SINGLE_PIXEL_ICON_R3' decoded-android/assets/public/css/pkmsvv-pc-menu-clean-qa.css
           grep -q 'if(art.hasChildNodes())art.replaceChildren()' decoded-android/assets/public/js/ui/pkmsvv-pc-menu-clean-qa.js

@@ -685,6 +685,8 @@ if (process.env.PKMSVV_SWITCH_BOOT === '1') {
  const pippiDir=path.join(game,'js','ui');
  fs.mkdirSync(pippiDir,{recursive:true});
  fs.copyFileSync(path.join(project,'src',jsName),path.join(pippiDir,jsName));
+ for(const name of ['pkmsvv-fossil-system.js','pkmsvv-pippi-guide.js'])
+  fs.copyFileSync(path.join(project,'src',name),path.join(pippiDir,name));
  // PC and local staged Web reuse the same authored menu icon WebP and DOM cleanup.
  const menuName='pkmsvv-pc-menu-clean-qa.js';
  fs.copyFileSync(path.join(project,'src',menuName),path.join(pippiDir,menuName));
@@ -703,6 +705,7 @@ if (process.env.PKMSVV_SWITCH_BOOT === '1') {
   fs.cpSync(pmdSource,pmdOutput,{recursive:true});
  }
  fs.appendFileSync(path.join(game,'css','style.css'),'\n'+fs.readFileSync(path.join(project,'src',cssName),'utf8'));
+ fs.appendFileSync(path.join(game,'css','style.css'),'\n'+fs.readFileSync(path.join(project,'src/pkmsvv-pippi-guide.css'),'utf8'));
  const devFile=path.join(game,'dev.html');
  const source=fs.readFileSync(devFile,'utf8');
  if(!source.includes('</body>')||source.includes('js/ui/pkmsvv-pippi.js'))
@@ -710,7 +713,9 @@ if (process.env.PKMSVV_SWITCH_BOOT === '1') {
  fs.writeFileSync(devFile,source.replace('</body>',
   '<script defer src="js/ui/pkmsvv-wiki-qa.js"></script>\n'+
   '<script defer src="js/ui/pkmsvv-pc-menu-clean-qa.js"></script>\n'+
-  '<script defer src="js/ui/pkmsvv-pippi.js"></script>\n</body>'));
+  '<script defer src="js/ui/pkmsvv-pippi.js"></script>\n'+
+  '<script defer src="js/ui/pkmsvv-pippi-guide.js"></script>\n'+
+  '<script defer src="js/ui/pkmsvv-fossil-system.js"></script>\n</body>'));
 }
 // Windows and Android remain strictly offline-first: do NOT inject the external
 // browser Online mode switch. The existing native save identity remains unchanged.
