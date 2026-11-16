@@ -313,6 +313,32 @@ test('Pippi wraps Game.item and Game.orb exactly once with no change to original
  assert.equal(G.Game.item('bomb'),'item:bomb');
  assert.deepEqual(seen.at(-1),['item','bomb'],'menu never changes item reward');
 });
+test('Ground pickups trigger Pippi only when actually collected, not on spawn or XP',()=>{
+ const {G,player}=game(save(0));player.hp=100;G.Game.st.time=10;
+ G.Pickups={update(_dt,_players,got){for(const p of this.queue.splice(0)){
+   got(p,player);
+  }return 'updated';},queue:[]};
+ let awards=0;
+ G.Game.item=()=>{awards++;return true;};
+ const host={G,document:{body:null,querySelector(){return null;}},
+  setInterval(){return 1;},console:{warn(){}},performance:{now(){return 1000;}}};
+ const api=P.install(host);api.tick();
+ assert.ok(api.run);
+ const onCollected=(pickup)=>{if(pickup.kind==='item')G.Game.item(pickup.value);};
+ const pickups=[{kind:'xp',value:5},{kind:'heal',value:0},
+  {kind:'coin',value:10},{kind:'item',value:'rare-stone'},
+  {kind:'ticket',value:1},{kind:'orb',value:'luminous'}];
+ for(const p of pickups){
+  G.Pickups.queue.push(p);
+  assert.equal(G.Pickups.update(.016,[player],onCollected),'updated');
+ }
+ assert.equal(api.run.pickupCount,5,'one actual pickup gesture per non-XP reward');
+ assert.equal(api.run.pendingReaction,'orbItem');
+ assert.equal(awards,1,'nested Game.item must be executed exactly once');
+ const before=G.Pickups.update;api.tick();
+ assert.equal(G.Pickups.update,before,'native update wrapper must not stack per tick');
+});
+
 test('Pippi PC repair exists and one authentic portrait atlas replaces 16 battle PNG swaps',()=>{
  const fs=require('node:fs'),path=require('node:path');
  const root=path.join(__dirname,'..');
