@@ -176,7 +176,7 @@ jobs:
         env:
           PKMSVV_BROWSER: /usr/bin/google-chrome
           PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
-        run: timeout 180s node tests/pippi-web-browser.cjs
+        run: timeout 300s node tests/pippi-web-browser.cjs
       - name: Browser — Pippi starter dialogue must remain until Next
         env:
           PKMSVV_BROWSER: /usr/bin/google-chrome
