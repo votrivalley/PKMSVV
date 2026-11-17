@@ -285,7 +285,7 @@ test('Fossil AI uses bounded steering under hostile waves instead of A* / stuck 
 });
 test('Fossil AI returns to protect the machine when all specimens collected',()=>{
  const h=harness('fossil_lab');
- h.G.PKMSVVFossilExpedition={session:{collected:3,machine:{x:-250,y:0}}};
+ h.G.PKMSVVFossilExpedition={session:{phase:'defend',collected:3,machine:{x:-250,y:0}},botGoal:()=>({x:-250,y:0})};
  for(let i=0;i<130;i++)h.G.LanAI.update(.1,i*.1);
  assert.ok(h.pl.x<0,'fossil defenders patrol the machine rather than idling on the human');
  assert.ok(h.casts.length>0);
