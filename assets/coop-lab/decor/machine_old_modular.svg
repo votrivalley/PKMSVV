@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 300" width="260" height="300">
+<title>Máy phục nguyên nguyên mẫu — sprite độc lập có nền trong suốt</title>
+<defs>
+<linearGradient id="copper"><stop stop-color="#f6d28a"/><stop offset=".32" stop-color="#b98748"/><stop offset=".65" stop-color="#7b4d31"/><stop offset="1" stop-color="#deb06f"/></linearGradient>
+<linearGradient id="glass"><stop stop-color="#b3f9dc" stop-opacity=".85"/><stop offset=".25" stop-color="#389e93" stop-opacity=".75"/><stop offset=".75" stop-color="#1f7169" stop-opacity=".83"/><stop offset="1" stop-color="#8beed5" stop-opacity=".88"/></linearGradient>
+<radialGradient id="aqua"><stop stop-color="#d1ffe7"/><stop offset=".5" stop-color="#7aecbf" stop-opacity=".9"/><stop offset="1" stop-color="#59a398" stop-opacity="0"/></radialGradient>
+</defs>
+<ellipse cx="130" cy="283" rx="122" ry="14" fill="#092b34" opacity=".46"/>
+<!-- Copper/steel base -->
+<path d="M26 223H234V271Q130 306 26 271Z" fill="#375866" stroke="#263c45" stroke-width="10"/>
+<path d="M17 229L37 210H223L243 229V252L224 270H36L17 253Z" fill="url(#copper)" stroke="#312f35" stroke-width="8"/>
+<rect x="64" y="236" width="132" height="29" rx="6" fill="#244d52" stroke="#eac480" stroke-width="6"/>
+<rect x="91" y="242" width="78" height="16" fill="#6cdec2" stroke="#1f5151" stroke-width="4"/>
+<path d="M99 250h60" stroke="#d6ffe0" stroke-width="4"/>
+<!-- Side pipes -->
+<path d="M48 211L19 215L19 164L33 152L47 163M212 211L241 215L241 164L227 152L213 163" fill="none" stroke="#3e4b55" stroke-width="22"/>
+<path d="M48 208L19 212L19 166M212 208L241 212L241 166" fill="none" stroke="#b88652" stroke-width="9"/>
+<!-- Left and right energy columns -->
+<rect x="25" y="89" width="42" height="122" rx="13" fill="#a36d3a" stroke="#2b3c42" stroke-width="7"/>
+<rect x="31" y="99" width="30" height="103" rx="9" fill="#398c81" stroke="#d4c384" stroke-width="5"/>
+<path d="M45 111v74" stroke="#bdfce7" stroke-width="7" opacity=".85"/>
+<rect x="193" y="89" width="42" height="122" rx="13" fill="#a36d3a" stroke="#2b3c42" stroke-width="7"/>
+<rect x="199" y="99" width="30" height="103" rx="9" fill="#398c81" stroke="#d4c384" stroke-width="5"/>
+<path d="M213 111v74" stroke="#bdfce7" stroke-width="7" opacity=".85"/>
+<!-- Chamber glass -->
+<path d="M73 64Q130 44 187 64V213Q130 241 73 213Z" fill="url(#glass)" stroke="#253f48" stroke-width="9"/>
+<path d="M87 79V210" stroke="#b9ffe9" stroke-width="7" opacity=".65"/>
+<path d="M174 80V211" stroke="#c2f9dc" stroke-width="4" opacity=".35"/>
+<ellipse cx="130" cy="202" rx="58" ry="20" fill="url(#aqua)" opacity=".85"/>
+<ellipse cx="130" cy="212" rx="59" ry="18" fill="none" stroke="#99ffe1" stroke-width="5"/>
+<ellipse cx="130" cy="214" rx="38" ry="10" fill="none" stroke="#d8ffeb" stroke-width="4"/>
+<!-- Upper collar -->
+<ellipse cx="130" cy="63" rx="76" ry="32" fill="url(#copper)" stroke="#3b3136" stroke-width="9"/>
+<ellipse cx="130" cy="57" rx="59" ry="19" fill="#87663c" stroke="#ffdc91" stroke-width="7"/>
+<ellipse cx="130" cy="57" rx="25" ry="10" fill="#33565b" stroke="#2c333e" stroke-width="5"/>
+<path d="M126 53h9v8h-9Z" fill="#eaffd0"/>
+<!-- Console details -->
+<path d="M27 253H50M210 253H233" stroke="#eac789" stroke-width="8"/>
+<rect x="50" y="269" width="25" height="8" fill="#80e9bd"/>
+<rect x="186" y="269" width="25" height="8" fill="#80e9bd"/>
+<path d="M100 280H159" stroke="#efcb77" stroke-width="7"/>
+</svg>
