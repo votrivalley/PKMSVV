@@ -69,7 +69,7 @@ const {startServer}=require('../lan-server/server.cjs');
      const raw=[...btn.childNodes].find(n=>n.nodeType===3&&n.nodeValue.trim());
      let rawTextX=null;
      if(raw){
-      const r=document.createRange(),index=raw.nodeValue.search(/\\S/);
+      const r=document.createRange(),index=raw.nodeValue.search(/\S/);
       r.setStart(raw,index);r.setEnd(raw,raw.nodeValue.length);
       rawTextX=r.getBoundingClientRect().x;
      }
