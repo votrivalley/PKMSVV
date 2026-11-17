@@ -18,6 +18,7 @@ on:
       - 'scripts/prepare-pippi-web-preview.cjs'
       - 'tests/coop-lab-art-assets.test.cjs'
       - 'tests/coop-lab-core.test.cjs'
+      - 'tests/pippi-web-browser.cjs'
       - 'tests/fossil-system.test.cjs'
   workflow_dispatch:
 permissions:
@@ -84,6 +85,12 @@ jobs:
             test -s "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-coop-fossil-mission-qa.js"
             grep -Fq "renderFurnitureLayers(room)" "$js"
           done
+      - name: Chromium — verify actual Lab dialog, modular furniture and fifth Co-op mode without faking payouts
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+          PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
+          PKMSVV_PIPPI_UI_ONLY: '1'
+        run: timeout 100s node tests/pippi-web-browser.cjs
       - name: Publish ONLY isolated research-ui-qa Cloudflare preview
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
