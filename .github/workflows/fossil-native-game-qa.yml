@@ -12,6 +12,13 @@ on:
       - 'src/lan/solo-ai-bus.js'
       - 'src/lan/lan-ai.js'
       - 'assets/coop-lab/fossil-excavation-rock.svg'
+      - 'assets/coop-lab/fossil-excavation-atlas.svg'
+      - 'assets/coop-lab/rotom-restorer-atlas.svg'
+      - 'assets/coop-lab/rotom-orb.svg'
+      - 'src/pkmsvv-pippi-guide.js'
+      - 'src/pkmsvv-quick-region.js'
+      - 'tests/pippi-guide.test.cjs'
+      - 'data/pkmsvv-coop-lab-catalog.json'
       - 'tests/lan-ai-modes.test.cjs'
       - 'tests/fossil-expedition-soak-browser.cjs'
       - 'lan-server/server.cjs'
@@ -60,7 +67,7 @@ jobs:
       - name: Install build dependencies
         run: npm install --no-audit --no-fund
       - name: Check 2–4 room rules and 6–8 minute outcome core
-        run: node --test tests/fossil-expedition-core.test.cjs tests/fossil-expedition-routing.test.cjs tests/coop-lab-core.test.cjs tests/lan-ai-modes.test.cjs
+        run: node --test tests/fossil-expedition-core.test.cjs tests/fossil-expedition-routing.test.cjs tests/coop-lab-core.test.cjs tests/lan-ai-modes.test.cjs tests/pippi-guide.test.cjs
       - name: Fetch hash-checked Clefairy PMD assets required by LAN packaging
         run: node scripts/fetch-pippi-pmd.cjs && node scripts/build-pippi-portrait-atlas.cjs
       - name: Compile genuine offline LAN/AI native game with QA-only fossil hooks
@@ -73,6 +80,9 @@ jobs:
           grep -Fq 'PKMSVVFossilExpedition' dist/lan/game/js/app.min.js
           grep -Fq 'fossil_lab' dist/lan/game/js/app.min.js
           test -s dist/lan/game/images/coop-lab/fossil-excavation-rock.svg
+          test -s dist/lan/game/images/coop-lab/fossil-excavation-atlas.svg
+          test -s dist/lan/game/images/coop-lab/rotom-restorer-atlas.svg
+          test -s dist/lan/game/images/coop-lab/rotom-orb.svg
           test -s dist/lan/game/images/coop-lab/decor/machine_old_modular.svg
       - name: 'Chromium: create real Fossil Expedition + AI room, start game, strike world rock'
         env:
@@ -89,7 +99,7 @@ jobs:
           node - <<'NODE'
           const fs=require('node:fs');
           const info={
-            version:'2.4.0-Unified-Beta-Fossil-AI-Sprite-QA',
+            version:'2.5.0-Unified-Beta-Rotom-Rescue-QA',
             releaseType:'experimental-gameplay-qa-only',
             previewBranch:'beta',
             qaCommit:process.env.GITHUB_SHA,
