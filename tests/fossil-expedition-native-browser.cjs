@@ -62,10 +62,20 @@ const {startServer}=require('../lan-server/server.cjs');
      const visibleArt=icon?.querySelector('img,svg,canvas');
      const artRect=visibleArt?.getBoundingClientRect();
      const style=getComputedStyle(btn),iconStyle=icon&&getComputedStyle(icon);
-     const left=br.x+parseFloat(style.paddingLeft)+parseFloat(style.gridTemplateColumns.split(' ')[0])+parseFloat(style.columnGap);
+     const left=br.x+parseFloat(style.borderLeftWidth)+parseFloat(style.paddingLeft)+
+      parseFloat(style.gridTemplateColumns.split(' ')[0])+parseFloat(style.columnGap);
+     // Measure the actual first visible text glyph, even when native menu.js
+     // uses a bare text node instead of the later copy-wrapper.
+     const raw=[...btn.childNodes].find(n=>n.nodeType===3&&n.nodeValue.trim());
+     let rawTextX=null;
+     if(raw){
+      const r=document.createRange(),index=raw.nodeValue.search(/\\S/);
+      r.setStart(raw,index);r.setEnd(raw,raw.nodeValue.length);
+      rawTextX=r.getBoundingClientRect().x;
+     }
      return {text:btn.textContent.trim().slice(0,25),iconX:ir?.x,iconW:ir?.width,iconH:ir?.height,
       iconFont:iconStyle?.fontSize,artW:artRect?.width,artH:artRect?.height,
-      textX:lr?.x??left,expectedTextX:left,
+      textX:lr?.x??rawTextX??left,expectedTextX:left,
       grid:style.gridTemplateColumns,hidden:br.width===0};
     });
    });
