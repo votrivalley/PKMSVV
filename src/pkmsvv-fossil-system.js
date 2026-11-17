@@ -165,7 +165,26 @@ function installSpawns(){
  safeBag._pkmsvvFossils=true;e.bagAt=safeBag;
  return true;
 }
-function install(){installRock();installSpawns();installGacha();return true;}
+function installAchievement(){
+ const achievements=G.AchDefs;
+ if(!Array.isArray(achievements?.LIST)||!achievements.BY)return false;
+ const id='pkmsvv-great-archaeologist';
+ if(achievements.BY[id])return true;
+ const entry={
+  id,cat:'otros',tier:3,
+  get name(){return tr('Nhà khảo cổ vĩ đại','Great Archaeologist');},
+  get desc(){return tr('Hồi sinh đủ 15 loài Pokémon hóa thạch tại Phòng nghiên cứu.',
+   'Restore all 15 fossil Pokémon species in the Research Lab.');},
+  value:save=>DATA.recipes.filter(r=>save?.pkmsvvFossils?.restored?.[r.dex]===true).length,
+  goal:DATA.recipes.length,
+  // No unsolicited coin reward: the collectible title is the reward.
+  reward:{coins:0},
+  get title(){return tr('Nhà khảo cổ','Archaeologist');}
+ };
+ achievements.BY[id]=entry;achievements.LIST.push(entry);
+ return true;
+}
+function install(){installRock();installSpawns();installGacha();installAchievement();return true;}
 const api={installed:true,isFossilDex:d=>FOSSIL_DEX.has(Number(d)),
  materials:DATA.materialTypes,recipes:DATA.recipes,regionPools:DATA.regionPools,
  probability,canDig,rockBroken,inventory,guaranteed,restore,install,installRock,installGacha,installSpawns};
