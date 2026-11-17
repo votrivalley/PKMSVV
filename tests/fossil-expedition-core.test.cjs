@@ -124,3 +124,30 @@ test('disconnecting any real player or dropping below two party members fails sa
  assert.equal(result.reason,'party-too-small');
  assert.equal(s.result.cleared,false);
 });
+
+test('Berry-matched Fossil difficulty speeds enemies up each 2 minutes, capped at 40% without stacking',()=>{
+ assert.equal(m.speedFactor(0),1);
+ assert.equal(m.speedFactor(119.999),1);
+ assert.ok(Math.abs(m.speedFactor(120)-(1+2/15))<1e-12);
+ assert.ok(Math.abs(m.speedFactor(240)-(1+4/15))<1e-12);
+ assert.ok(Math.abs(m.speedFactor(360)-1.4)<1e-12);
+ assert.ok(Math.abs(m.speedFactor(480)-1.4)<1e-12);
+ assert.equal(m.speedFactor(-1),1);
+ assert.equal(m.speedFactor(NaN),1);
+ assert.equal(m.SPEED_STEP_SECONDS,120);
+ assert.equal(m.MAX_SPEED_STAGES,3);
+});
+test('Egg-like fossil rock HP loses exactly one-third after each valid dig',()=>{
+ const s=room();
+ const p=s.sites[0],ratios=[];
+ for(let hit=0;hit<3;hit++){
+  ratios.push(m.rockHpRatio(p.hits));
+  assert.equal(m.dig(s,{uid:'host',siteId:p.id,actor:p,
+   seconds:s.clock,source:'native-strike'}).ok,true);
+ }
+ ratios.push(m.rockHpRatio(p.hits));
+ for(let i=0;i<4;i++)assert.ok(Math.abs(ratios[i]-(3-i)/3)<1e-12);
+ assert.deepEqual(s.sites.map(x=>x.hits),[3,0,0]);
+ assert.equal(m.rockHpRatio(999),0);
+ assert.equal(m.rockHpRatio(-1),1);
+});
