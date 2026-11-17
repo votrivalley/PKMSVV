@@ -132,8 +132,10 @@ async function main(){
   assert.equal(pc.floatingBadgeIcons,0,'floating labels must be text, not oversized sprite icons');
   assert.equal(pc.buildButton,true,'Build mode button must be visible');
   assert.equal(pc.oldCardsHidden,true,'old PC card interface must NOT be shown on entry');
-  assert.equal(pc.roomArtMode,'modular','Research Lab must use empty room plus independent furniture');
-  assert.ok(pc.furniture.includes('machine_old'),'the fossil machine must be a detached furniture asset');
+  assert.equal(pc.roomArtMode,'classic','Research Lab must restore its detailed original hand-painted artwork');
+  assert.ok(pc.furniture.includes('machine_old'),'furniture registry remains available for later extraction');
+  const classicArt=await js(`getComputedStyle(document.querySelector('#pkmsvv-wiki-overlay .pkmsvv-research-room')).backgroundImage`);
+  assert.match(classicArt,/room_art_qa_v2\\.webp/,'original detailed room art must actually be visible');
   const tourOnEnter=await js(`(()=>{
    const intro=G.PKMSVVPippiGuide?.current;
    const wasOpen=G.PKMSVVPippiGuide?.isOpen;
