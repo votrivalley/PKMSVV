@@ -6,6 +6,12 @@
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.resolve(__dirname,'..');
 const site=path.join(root,'dist','cloudflare-v20-release');
+const {execFileSync}=require('node:child_process');
+// Exact transparent cutouts from the original source are QA artist materials.
+// No cutout is treated as purchasable décor until occluded background is done.
+const sourceLayers=path.join(site,'research-source-cutouts-qa');
+execFileSync(process.execPath,[path.join(root,'scripts/extract-research-layers.cjs'),sourceLayers],
+ {stdio:'inherit'});
 const {installModule}=require('./patch-v20-items-bundle.cjs');
 const {PORTRAITS}=require('./fetch-pippi-pmd.cjs');
 const marker='PKMSVV_PIPPI_COUSIN_PREVIEW_20261115';
@@ -121,6 +127,10 @@ for(const prefix of ['game','ai/game']){
   const input=present(path.join(root,'assets/coop-lab',asset)),output=path.join(labOut,asset);
   fs.mkdirSync(path.dirname(output),{recursive:true});fs.copyFileSync(input,output);
  }
+ const cutoutOut=path.join(labOut,'source-cutouts-qa');
+ fs.mkdirSync(cutoutOut,{recursive:true});
+ for(const name of fs.readdirSync(sourceLayers))
+  fs.copyFileSync(path.join(sourceLayers,name),path.join(cutoutOut,name));
  // Bundle the QA-safe storefront wallet from the tested CJS transaction
  // core. The mission-only settle() function is intentionally NOT exposed to
  // the browser, preventing the shop UI from fabricating mission rewards.
