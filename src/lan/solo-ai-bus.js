@@ -26,7 +26,7 @@ G.LanBus=(()=>{
    if(room)throw Error('Đã ở trong phòng.');
    // Keep Berry difficulty IDs intact from mode selection through the Host's
    // start packet. Turning them into 'coop' silently disables all three trees.
-   const mode=['coop','royale','eggrush','berry','berryeasy','arena'].includes(data.mode)?data.mode:'coop';
+   const mode=['coop','royale','eggrush','berry','berryeasy','fossil_lab','arena'].includes(data.mode)?data.mode:'coop';
    room={id:'local-ai-'+randomId(),mode,open:true,
     members:[{uid:identity,name:playerName,dex:dexOf(data.dex),shiny:!!data.shiny,power:data.power||null}]};
    update();return snapshot();
