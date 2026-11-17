@@ -43,3 +43,11 @@
 - **Đá hóa thạch có thanh độ bền dạng đập trứng**: 100% → 66,7% → 33,3% → 0%, cập nhật ngay sau mỗi trong ba lần đào hợp lệ (của người chơi hoặc AI). Hình đá vẫn đổi 3 trạng thái nguyên vẹn / nứt vỡ / cạn kiệt. Đồng bộ theo `site.hits` qua snapshot Co-op, không tự trừ từ UI.
 - Code: `src/pkmsvv-fossil-expedition-core.cjs`, `src/pkmsvv-fossil-expedition-native.js`, `scripts/patch-fossil-expedition-native.cjs`. Kiểm thử: `tests/fossil-expedition-core.test.cjs`, `tests/fossil-expedition-native-browser.cjs`, `tests/fossil-expedition-soak-browser.cjs` (155 giây qua mốc 2:00).
 - Chỉ công bố tại **một Beta cố định** `https://beta.pkmsvv-web.pages.dev/game/` nếu GitHub Actions đạt. Web chính không thay đổi; phần thưởng vẫn khóa cho tới khi chứng nhận toàn trận 8 phút.
+
+### Kết quả Beta 2.5.1
+
+- GitHub Actions https://github.com/votrivalley/PKMSVV/actions/runs/44161092010 **Success**, deployed và verify chính xác commit `6d912ceb56c259befdbd36a683f7f2ab4ceff697` trên `https://beta.pkmsvv-web.pages.dev/game/`.
+- Core QA có thêm các test mức speed 0/120/240/360/480 giây, thanh độ bền 3 hit 100/66.7/33.3/0; pass.
+- Real Chromium smoke ở localhost và chính URL Cloudflare pass: người chơi tạo phòng `fossil_lab`, AI di chuyển, đào mỏ, 80% máy-target chỉ sau khi máy khởi động. Snapshot giả cho bài thử target được hoàn nguyên ngay, không thay trận.
+- Soak **155 giây wall-clock, ~149.86 giây game time** PASS: 3 AI hoạt động, 31 quái đang sống đều được tăng tốc sau mốc 2:00, không đơ `maxStalls=0`, `pageErrors=0`, `consoleErrors=0` trong bài soak. Đây không phải là full 8-minute game QA; hoàn thành nhiệm vụ, thưởng và LAN 2 người thật vẫn cần kiểm chứng.
+- Test công khai còn ghi một cảnh báo tải script không đúng MIME `text/html` ở console (không gây fail trong smoke); cần rà riêng nếu gây ảnh hưởng chức năng khác.
