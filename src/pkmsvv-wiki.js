@@ -392,15 +392,21 @@ G.PKMSVVWiki=(()=>{
    const pieces=F.materials.filter(m=>(Number(bag[m.id])||0)>0).map(m=>m.nameVi+' ×'+bag[m.id]);
    stock.textContent=tr('Túi hóa thạch: ','Fossils: ')+(pieces.join(' · ')||tr('Trống trơn. Đá còn cứng hơn đầu bạn đó.','Empty! Try breaking some rocks.'));
    list.append(stock);
-   const completed=F.recipes.filter(r=>s?.pkmsvvFossils?.restored?.[r.dex]===true).length;
+   const progress=F.collectionProgress?.(s)||{revived:0,recipes:F.recipes.length,collected:0,total:25,complete:false};
    const medal=document.createElement('p');medal.className='pkmsvv-fossil-medal';
-   medal.dataset.fossilAchievement=String(completed);
-   medal.textContent=completed===F.recipes.length?
-    tr('🏅 Nhà khảo cổ vĩ đại — Đã phục nguyên toàn bộ '+completed+' Pokémon hóa thạch!',
-       '🏅 Great Archaeologist — All '+completed+' fossil Pokémon restored!'):
-    tr('🏅 Nhà khảo cổ vĩ đại · Tiến độ '+completed+'/'+F.recipes.length+' Pokémon đã hồi sinh',
-       '🏅 Great Archaeologist · '+completed+'/'+F.recipes.length+' fossils restored');
-   list.append(medal);
+   medal.dataset.fossilAchievement=String(progress.collected);
+   medal.dataset.fossilRevived=String(progress.revived);
+   medal.textContent=progress.complete?
+    tr('🏅 Nhà khảo cổ vĩ đại — Hoàn tất 25/25 loài và 15/15 công thức!',
+       '🏅 Great Archaeologist — All 25 species and 15 revival recipes complete!'):
+    tr('🏅 Nhà khảo cổ vĩ đại · '+progress.collected+'/'+progress.total+
+      ' Pokémon · '+progress.revived+'/'+progress.recipes+' công thức phục nguyên',
+       '🏅 Great Archaeologist · '+progress.collected+'/'+progress.total+
+      ' Pokémon · '+progress.revived+'/'+progress.recipes+' revival recipes');
+   const explain=document.createElement('small');explain.className='pkmsvv-fossil-collection-hint';
+   explain.textContent=tr('Có 15 công thức đá hóa thạch. Để đủ 25 Pokémon, hãy tiến hóa thêm 10 loài sau khi hồi sinh.',
+    'There are 15 fossil recipes. Evolve 10 revived species to complete the 25-Pokémon collection.');
+   list.append(medal,explain);
    for(const formula of F.recipes){
     const restored=s?.pkmsvvFossils?.restored?.[formula.dex]===true;
     const own=!!s?.owned?.[formula.dex];
@@ -439,6 +445,16 @@ G.PKMSVVWiki=(()=>{
      can?tr('Đủ vật liệu · Có thể hồi sinh','Materials ready · Can restore'):
      tr('Cần tìm đủ hóa thạch','Find required fossils');
     detail.append(name,ingredients,status);
+    // The 10 evolved species are collectible separately, not independent
+    // fossil fragments. Never reveal a species name before base restoration.
+    if(restored&&Array.isArray(formula.evolutionDexIds)&&formula.evolutionDexIds.length){
+     const evolution=document.createElement('small');evolution.className='pkmsvv-fossil-evolution';
+     evolution.textContent=formula.evolutionDexIds.map(dex=>
+      s?.owned?.[dex]?
+       tr('✓ Đã sưu tầm tiến hóa #','✓ Evolution collected #')+dex:
+       tr('◇ Chưa sưu tầm tiến hóa #','◇ Evolution missing #')+dex).join(' · ');
+     detail.append(evolution);
+    }
     const button=document.createElement('button');button.type='button';button.className='pkmsvv-pc-close pkmsvv-fossil-revive';
     button.dataset.fossilDex=String(formula.dex);button.disabled=!can;
     button.textContent=restored?tr('Đã hồi sinh','Restored'):own?tr('Đã sở hữu','Owned'):
