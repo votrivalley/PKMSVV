@@ -194,5 +194,8 @@ G.PKMSVVFossilExpedition=(()=>{
  }
  function end(){active=false;finished=true;current=null;uiButton?.remove();uiButton=null;}
  return {nativeReady:ready,begin,tick,perform,onEvent,drawables,beginFrame,drawMissing,hud,reward,end,
-  get active(){return active},get session(){return current},get lastFinish(){return lastFinish}};
+  get active(){return active},get session(){return current},get lastFinish(){return lastFinish},
+  get spriteReady(){return spriteMachine.complete&&spriteMachine.naturalWidth>0&&
+    spriteRock.complete&&spriteRock.naturalWidth>0}};
+
 })();
