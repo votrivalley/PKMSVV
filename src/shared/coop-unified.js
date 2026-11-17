@@ -3,11 +3,12 @@
 (()=>{
  window.PKMSVV_UNIFIED_COOP_ENABLED=true;
  const L=(vi,en)=>window.G?.I18n?.lang==='en'?en:vi;
- const englishModes={coop:['Survival','2–4 players','Fight monsters together, revive teammates and survive as long as possible.'],royale:['Survival Royale','2–10 players','Fight inside a shrinking safe zone; the last survivor wins.'],eggrush:['Egg Rush','4 players','Collect 10 eggs. The player with most points wins.'],berry:['Berry Rescue','4 players · 8 minutes','Protect Cherubi and three Berry trees. Choose Gentle or Intense difficulty.'],arena:['Solo · Invite Player','2 human players','Real 1v1 Host/Join battle with synchronized damage.'],champion:['Champion · Human Duel','2 human players','Challenge real players via Host/Join. Fight AI in the Arena Champion bracket.']};
+ const englishModes={coop:['Survival','2–4 players','Fight monsters together, revive teammates and survive as long as possible.'],royale:['Survival Royale','2–10 players','Fight inside a shrinking safe zone; the last survivor wins.'],eggrush:['Egg Rush','4 players','Collect 10 eggs. The player with most points wins.'],berry:['Berry Rescue','4 players · 8 minutes','Protect Cherubi and three Berry trees. Choose Gentle or Intense difficulty.'],fossil_lab:['Fossil Expedition','2–4 players · 6–8 minutes','Excavate three fossil sites, defend the research machine and extract together. One player plus AI companions is allowed.'],arena:['Solo · Invite Player','2 human players','Real 1v1 Host/Join battle with synchronized damage.'],champion:['Champion · Human Duel','2 human players','Challenge real players via Host/Join. Fight AI in the Arena Champion bracket.']};
  const modes=[['coop','Sống Sót','2–4 người',25,'Pikachu','Cùng đồng đội đánh quái, cứu nhau khi gặp nguy hiểm và cố gắng sống sót lâu nhất có thể!'],
   ['royale','Sống Còn','2–10 người',6,'Charizard','Chiến đấu với quái vật trong vòng an toàn ngày càng thu nhỏ. Người sống sót cuối cùng sẽ chiến thắng!'],
   ['eggrush','Tranh Trứng','4 người',175,'Togepi','Tranh nhau thu thập 10 quả trứng! Cuối trận trứng mới nở để tính điểm. Ai nhiều điểm nhất sẽ thắng!'],
-   ['berry','Giải Cứu Berry','4 người · 8 phút',420,'Cherubi','Cherubi cần bạn bảo vệ 3 cây Berry · chọn Nhẹ Nhàng hoặc Nườm Nượp bên dưới.']];
+   ['berry','Giải Cứu Berry','4 người · 8 phút',420,'Cherubi','Cherubi cần bạn bảo vệ 3 cây Berry · chọn Nhẹ Nhàng hoặc Nườm Nượp bên dưới.'],
+   ['fossil_lab','Khai quật hóa thạch','2–4 người · 6–8 phút',140,'Kabuto','Đào 3 điểm hóa thạch, phòng thủ máy nghiên cứu và rút lui. Một người vẫn đi cùng đồng đội máy.']];
  const arenaModes=[['arena','Solo · Mời người chơi','2 người thật',448,'Lucario','Solo 1v1 qua Host/Join, đếm 3–2–1 và đồng bộ sát thương.'],
   ['champion','Champion · Đấu người chơi','2 người thật',6,'Charizard','Đấu Champion PvP qua Host/Join. Champion AI và hành trình 16 người ở Arena → Champion → Đấu với AI.']];
  const arenaMode=id=>id==='arena'||id==='champion';
@@ -173,7 +174,12 @@
  async function action(role){
   if(busy)return;
   if(arenaMode(mode)&&role==='ai'){info(L('Arena PvP chỉ nhận người chơi thật. Hãy chọn Đấu với AI trong Arena.','Arena PvP requires real players. Choose Fight AI in Arena instead.'));return;}
-  // Capture mode before any async network/AI setup: no silent downgrade to Co-op.
+  // Never fall back from Fossil Expedition to generic Survival: the room
+  // must carry fossil_lab end-to-end, or mission rewards are disallowed.
+  if(mode==='fossil_lab'&&G.PKMSVVFossilExpedition?.nativeReady!==true){
+   info(L('Khai quật hóa thạch đang kết nối bộ điều khiển nhiệm vụ. Chưa thể bắt đầu trận.', 'Fossil Expedition engine is not ready; match cannot start.'));
+   return;
+  }
   const requestedMode=mode;
   if(role!=='ai'&&(lan()||window.PKMSVV_STANDALONE_AI_AVAILABLE)&&!window.PKMSVV_WIFI&&!new URLSearchParams(location.search).get('pkmsvvCode')){
    const target=window.PKMSVV_ANDROID_LOCAL_LAN?'/index.html':
@@ -222,7 +228,7 @@
      throw Error('Phòng chọn '+requestedMode+' nhưng nhận '+(G.Social.room?.mode||'không rõ')+'. Hãy rời phòng và tạo lại.');
     }
     if(role==='ai'&&G.Social.room?.isHost){
-     const opponents=requestedMode==='coop'?1:3;
+     const opponents=['coop','fossil_lab'].includes(requestedMode)?1:3;
      const missing=Math.max(0,opponents+1-G.Social.room.members.length);
      for(let i=0;i<missing;i++)await G.LanBus.request('addBot',{});
     }
