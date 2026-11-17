@@ -5,7 +5,7 @@ G.LanAI=(()=>{
  const sq=(a,b)=>(a.x-b.x)**2+(a.y-b.y)**2;
  function activeBots(){
   const room=G.Social?.room;
-  if(!room?.isHost||!['coop','royale','eggrush','berry','berryeasy'].includes(room.mode)||!G.Coop?.isHost)return[];
+  if(!room?.isHost||!['coop','royale','eggrush','berry','berryeasy','fossil_lab'].includes(room.mode)||!G.Coop?.isHost)return[];
   return room.members.filter(m=>m.bot===true&&/^ai-[a-f0-9]{16}$/.test(m.uid));
  }
  function owns(pl){return !!pl?.lanBot&&G.Coop.isHost;}
@@ -131,11 +131,11 @@ G.LanAI=(()=>{
    pl.setAbility(G.Mons.abilityOf(bot.dex).id);
    // A good co-op companion may match the real player's baseline, but not
    // every AI gets a 102% challenger bonus, and competitive stats stay equal.
-   if(['coop','berry','berryeasy'].includes(mode)&&tier==='elite')raiseToHuman(pl,baseline,1);
+   if(['coop','berry','berryeasy','fossil_lab'].includes(mode)&&tier==='elite')raiseToHuman(pl,baseline,1);
   });
  }
  function coopDifficulty(){
-  if(!['coop','berry','berryeasy'].includes(G.Social?.room?.mode))return 1;
+  if(!['coop','berry','berryeasy','fossil_lab'].includes(G.Social?.room?.mode))return 1;
   const bots=activeBots().length;
   return bots?1+Math.min(.28,.12+.04*Math.min(4,bots)):1;
  }
@@ -257,7 +257,7 @@ G.LanAI=(()=>{
    if(other===pl||other.dead)continue;
    const d=Math.sqrt(sq(p,other));if(d<180)score+=(1-d/180)*100;
   }
-  if(['coop','berry','berryeasy'].includes(G.Social.room?.mode))for(const other of G.Coop.players()){
+  if(['coop','berry','berryeasy','fossil_lab'].includes(G.Social.room?.mode))for(const other of G.Coop.players()){
    if(other===pl||other.dead)continue;
    const d=Math.sqrt(sq(p,other));if(d<85)score+=(1-d/85)*65;
   }
@@ -321,7 +321,7 @@ G.LanAI=(()=>{
    const pl=G.Coop.mate(bot.uid)?.pl,s=states.get(bot.uid);if(!pl||!s)continue;
    if(pl.dead){
     s.axis=[0,0];pl.walking=false;
-    if(['coop','berry','berryeasy'].includes(mode)){
+    if(['coop','berry','berryeasy','fossil_lab'].includes(mode)){
      const berry=mode==='berry'||mode==='berryeasy';
      const help=berry||G.Coop.players().some(p=>p!==pl&&!p.dead&&sq(p,pl)<56**2);
      pl.reviveT=help?(pl.reviveT||0)+dt:Math.max(0,(pl.reviveT||0)-dt*.5);
@@ -358,30 +358,48 @@ G.LanAI=(()=>{
     let goal=['royale','coop'].includes(mode)?s.roam:host;
     if(!goal)goal={x:pl.x,y:pl.y};
     let objective=mode==='berry'||mode==='berryeasy'?null:G.EggRush?.objective?.(pl);
-    if(['coop','berry','berryeasy'].includes(mode)&&objective&&sq(objective,host)>520**2)objective=null;
+    if(['coop','berry','berryeasy','fossil_lab'].includes(mode)&&objective&&sq(objective,host)>520**2)objective=null;
     const nests=objective?[objective]:mode==='eggrush'?(G.EggRush?.nests||[]).filter(n=>!n.taken):[];
     if(nests.length)goal=nests.reduce((a,b)=>sq(pl,a)<sq(pl,b)?a:b);
-    if(['coop','berry','berryeasy'].includes(mode)){
+    if(['coop','berry','berryeasy','fossil_lab'].includes(mode)){
      const fallen=G.Coop.players().filter(p=>p!==pl&&p.dead&&sq(pl,p)<420**2);
      if(fallen.length)goal=fallen.reduce((a,b)=>sq(pl,a)<sq(pl,b)?a:b);
     }
     // Stay at the range of learned attacks rather than walking into monsters.
     const target=enemies.reduce((a,e)=>!a||sq(pl,e)<sq(pl,a)?e:a,null);
     if(target&&sq(pl,target)<420**2&&(mode==='royale'&&(!objective||pl.hp/pl.maxHp<.55||sq(pl,target)<150**2)||
-     ['coop','berry','berryeasy'].includes(mode)&&goal===s.roam&&sq(pl,host)<430**2&&sq(target,host)<520**2&&!host.dead||goal===host&&!host.dead)){
+     ['coop','berry','berryeasy','fossil_lab'].includes(mode)&&goal===s.roam&&sq(pl,host)<430**2&&sq(target,host)<520**2&&!host.dead||goal===host&&!host.dead)){
      const ranged=pl.moves.some(m=>['projectile','beam','homing','chain','turret','meteor','boomerang'].includes(m.kind));
      const d=Math.sqrt(sq(pl,target))||1,range=pl.hp/pl.maxHp<.4?230:ranged?165:85;
      goal={x:target.x+(pl.x-target.x)/d*range,y:target.y+(pl.y-target.y)/d*range};
     }
-    if(['coop','berry','berryeasy'].includes(mode)&&!nests.length&&goal===s.roam&&sq(pl,goal)<50**2)goal={x:pl.x,y:pl.y};
+    if(['coop','berry','berryeasy','fossil_lab'].includes(mode)&&!nests.length&&goal===s.roam&&sq(pl,goal)<50**2)goal={x:pl.x,y:pl.y};
+    // Fossil Expedition: stay useful as an ally. Follow the human excavator
+    // while collecting, then patrol the actual research machine during defense.
+    // Use bounded local steering (not full-horde A*) to prevent long-run freezes.
+    const fossil=mode==='fossil_lab'?G.PKMSVVFossilExpedition?.session:null;
+    if(fossil&&fossil.collected===3){
+     const machine=fossil.machine;
+     const nearbyThreat=enemies.filter(e=>sq(e,machine)<430*430)
+      .reduce((best,e)=>!best||sq(pl,e)<sq(pl,best)?e:best,null);
+     if(nearbyThreat){
+      const d=Math.sqrt(sq(pl,nearbyThreat))||1;
+      const ranged=pl.moves.some(m=>['projectile','beam','homing','chain','turret','meteor','boomerang'].includes(m.kind));
+      goal={x:nearbyThreat.x+(pl.x-nearbyThreat.x)/d*(ranged?145:65),
+       y:nearbyThreat.y+(pl.y-nearbyThreat.y)/d*(ranged?145:65)};
+     }else if(sq(pl,machine)>115*115)goal=machine;
+     else goal={x:pl.x,y:pl.y};
+    }
     // Berry Rescue overrides ordinary wandering, distant rescues and monster chase.
-    // The grove coordinates are authoritative and all bots patrol/defend close to it.
-    if(mode==='berry'||mode==='berryeasy'){
+    // Fossil Expedition needs the SAME bounded local steering when many waves
+    // arrive; full A* per bot every .12 sec can stall the browser thread.
+    if(mode==='berry'||mode==='berryeasy'||mode==='fossil_lab'){
      // Defenders only need nearby threats. Keep every hostile actor active,
      // while avoiding 8 x full-horde distance scans per bot per decision.
      const nearby=enemies.filter(e=>sq(pl,e)<470*470);
      const nearbyShots=shots.filter(e=>sq(pl,e)<360*360);
-     const defense=G.PKMSVVBerryRescue?.defendGoal?.(pl,nearby,activeBots().findIndex(x=>x.uid===bot.uid));
+     const defense=(mode==='berry'||mode==='berryeasy')?
+      G.PKMSVVBerryRescue?.defendGoal?.(pl,nearby,activeBots().findIndex(x=>x.uid===bot.uid)):null;
      if(defense)goal=defense;
      if(G.Arena?.active)goal=G.Arena.clampGoal(goal,pl);
      s.axis=chooseBerryAxis(pl,goal,nearby,nearbyShots,hazards);
@@ -391,7 +409,7 @@ G.LanAI=(()=>{
     }
     s.think=s.personality.think*(.9+Math.random()*.2);
     const dash=G.PKMSVVDash?.preview(pl);
-    if(mode!=='berry'&&mode!=='berryeasy'&&dash?.ready&&Math.random()<s.personality.dash&&Math.hypot(...s.axis)>.5&&
+    if(mode!=='berry'&&mode!=='berryeasy'&&mode!=='fossil_lab'&&dash?.ready&&Math.random()<s.personality.dash&&Math.hypot(...s.axis)>.5&&
       danger(pl,pl,enemies,shots,hazards)>65){
      const length=(dash.move.radius||120)*(G.PKMSVVDash.profile(dash.move).range||1);
      const end={x:pl.x+s.axis[0]*length,y:pl.y+s.axis[1]*length};
