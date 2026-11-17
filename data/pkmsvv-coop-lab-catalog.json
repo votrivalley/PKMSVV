@@ -339,8 +339,8 @@
     ]
   },
   "roomArt": {
-    "mode": "modular",
-    "background": "images/coop-lab/room_empty_modular.svg",
+    "mode": "original-scene-with-detachable-overlay-qa",
+    "background": "images/coop-lab/room_art_qa_v2.webp",
     "referenceScene": "images/coop-lab/room_art_qa_v2.webp",
     "width": 960,
     "height": 672,
@@ -388,11 +388,17 @@
         "h": 42
       },
       "trophy": {
-        "x": 181,
-        "y": 148,
-        "w": 44,
-        "h": 65
+        "x": 250,
+        "y": 124,
+        "w": 29,
+        "h": 47
       }
-    }
+    },
+    "modularDraftBackground": "images/coop-lab/room_empty_modular.svg",
+    "sourceImageSize": {
+      "width": 960,
+      "height": 672
+    },
+    "layeringStatus": "original-baked-scene-preserved; generated cutouts and occluded-background reconstruction pending QA; only overlays reliably independent"
   }
 }
