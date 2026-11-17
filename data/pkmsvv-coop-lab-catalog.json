@@ -1,12 +1,19 @@
 {
   "schemaVersion": 1,
   "stateKey": "pkmsvvCoopLab",
-  "featureStatus": "data-and-transaction-core-only-not-a-playable-mission",
+  "featureStatus": "shared-coop-economy-QA-and-unverified-mission-not-playable",
   "currency": {
     "id": "coopCoins",
     "nameVi": "Xu Đồng Đội",
     "nameEn": "Co-op Coins",
-    "exchangeToPokeCoins": false
+    "exchangeToPokeCoins": true,
+    "scope": "all-coop-modes-shared-wallet",
+    "weekTimezone": "Asia/Ho_Chi_Minh",
+    "exchange": {
+      "costCoopCoins": 100,
+      "earnPokeCoins": 250,
+      "weeklyPokeCoinCap": 2000
+    }
   },
   "rooms": 1,
   "slots": [
@@ -187,7 +194,7 @@
   ],
   "rewards": {
     "mission": "fossil_lab",
-    "minDurationSeconds": 240,
+    "minDurationSeconds": 360,
     "expectedDurationMinutes": [
       6,
       8
@@ -200,7 +207,13 @@
       "min": 1,
       "max": 4
     },
-    "soloAIRewardsEqual": true
+    "soloAIRewardsEqual": true,
+    "sharedAcrossCoopModes": true,
+    "futureMissions": [
+      "rescue_pokemon",
+      "escort_supplies",
+      "treasure_hunt"
+    ]
   },
   "trophy": {
     "itemId": "gold_pippi_statue",
@@ -222,6 +235,78 @@
     },
     "equippedDecorBySlot": {
       "center": "machine_old"
-    }
+    },
+    "lastExchangeWeek": "",
+    "weeklyPokeCoins": 0,
+    "supplies": {},
+    "cosmetics": {}
+  },
+  "shop": {
+    "nameVi": "Kho Hậu Cần Co-op",
+    "ownerVi": "Giám đốc Phòng thí nghiệm Hoàng gia Pippi",
+    "sections": [
+      {
+        "id": "expedition",
+        "nameVi": "Vật phẩm hỗ trợ khai quật",
+        "items": [
+          {
+            "id": "fossil_scanner",
+            "nameVi": "Máy dò hóa thạch",
+            "price": 80,
+            "type": "consumable",
+            "activeInGame": false,
+            "descriptionVi": "Dùng một trận, đánh dấu đá có thể phá. Không tăng tỷ lệ rơi."
+          },
+          {
+            "id": "challenge_voucher",
+            "nameVi": "Vé thử thách",
+            "price": 120,
+            "type": "consumable",
+            "activeInGame": false,
+            "descriptionVi": "Nhận thêm Xu Đồng Đội khi hoàn thành thử thách khó. Chưa áp dụng cho trận thật."
+          }
+        ]
+      },
+      {
+        "id": "appearance",
+        "nameVi": "Ngoại hình bạn đồng hành",
+        "items": [
+          {
+            "id": "pippi_professor",
+            "nameVi": "Pippi giáo sư",
+            "price": 250,
+            "type": "cosmetic",
+            "activeInGame": false
+          },
+          {
+            "id": "pippi_explorer",
+            "nameVi": "Pippi nhà thám hiểm",
+            "price": 280,
+            "type": "cosmetic",
+            "activeInGame": false
+          },
+          {
+            "id": "pippi_crown",
+            "nameVi": "Vương miện Pippi",
+            "price": 500,
+            "type": "cosmetic",
+            "activeInGame": false
+          },
+          {
+            "id": "pippi_sunglasses",
+            "nameVi": "Kính râm Pippi",
+            "price": 220,
+            "type": "cosmetic",
+            "activeInGame": false
+          }
+        ]
+      },
+      {
+        "id": "laboratory",
+        "nameVi": "Trang trí và nâng cấp phòng",
+        "catalogRef": "items",
+        "noteVi": "Chỉ mua và trang bị khi có sprite tách lớp; bản phòng hiện tại là tranh nguyên khối."
+      }
+    ]
   }
 }
