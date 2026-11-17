@@ -274,6 +274,7 @@ async function main(){
     const installed=api?.install?.();
     const card=host?.querySelector('[data-coop-mission="fossil_lab"]');
     const title=card?.querySelector('.pkmsvv-mode-title')?.textContent||'';
+    const capacity=card?.querySelector('.pkmsvv-mode-cap')?.textContent||'';
     const before=JSON.stringify(G.DB?.save);
     const cards=[...(host?.querySelectorAll('button.pkmsvv-mode-card')||[])];
     const legacyModes=cards.filter(x=>x.dataset.mode).map(x=>x.dataset.mode);
@@ -282,7 +283,7 @@ async function main(){
     const overlay=document.getElementById('pkmsvv-coop-fossil-info');
     const txt=overlay?.textContent||'';
     overlay?.querySelector('button')?.click();
-    return {installed,title,visible,modes:legacyModes,
+    return {installed,title,capacity,visible,modes:legacyModes,
       count:cards.length,infoOpen:!!overlay,
       explainedLocked:/Chưa thể bắt đầu|Not playable/.test(txt),
       noSaveMutation:before===JSON.stringify(G.DB?.save),
@@ -292,6 +293,8 @@ async function main(){
   assert.equal(fossilMission.installed,true,'Native Co-op selector must accept Fossil Expedition');
   assert.equal(fossilMission.visible,true,'Fossil Expedition must be VISIBLE inside #pkmsvv-coop-modes');
   assert.equal(fossilMission.count,5,'Co-op menu should show its original four cards plus Fossil Expedition');
+  assert.match(fossilMission.capacity,/2–4/,'Fossil Co-op is 2–4 participants, including host+AI');
+  assert.doesNotMatch(fossilMission.capacity,/1–4/,'never advertise solo one-person rooms');
   assert.deepEqual(fossilMission.modes,['coop','royale','eggrush','berry'],'original native modes must not change');
   assert.match(fossilMission.title,/Khai quật hóa thạch|Fossil Expedition/);
   assert.equal(fossilMission.infoOpen,true,'Mission card should show objectives and status');
