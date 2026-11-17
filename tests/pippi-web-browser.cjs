@@ -163,6 +163,7 @@ async function main(){
    return {opened,backText:text,returned:!!document.querySelector('#pkmsvv-wiki-overlay [data-pkmsvv-research-hub]')};
   })()`);
   console.log('RESEARCH_LAB_MEGA_RETURN='+JSON.stringify(megaFlow));
+  assert.equal(megaFlow.opened,true,'Mega station MUST open; do not silently skip return test');
   if(megaFlow.opened){
    assert.match(megaFlow.backText,/Phòng nghiên cứu|Research Lab/);
    assert.equal(megaFlow.returned,true,'Mega close must return to Research Lab when opened from room');
@@ -177,6 +178,7 @@ async function main(){
    return {opened,backText:text,returned:!!document.querySelector('#pkmsvv-wiki-overlay [data-pkmsvv-research-hub]')};
   })()`);
   console.log('RESEARCH_LAB_SUPPORT_RETURN='+JSON.stringify(supportFlow));
+  assert.equal(supportFlow.opened,true,'Support station MUST open; do not silently skip return test');
   if(supportFlow.opened){
    assert.match(supportFlow.backText,/Phòng nghiên cứu|Research Lab/);
    assert.equal(supportFlow.returned,true,'Support close must return to Research Lab when opened from room');
@@ -200,6 +202,40 @@ async function main(){
   assert.equal(buildMode.allDisabled,true,'unfinished furniture cannot be bought or equipped');
   assert.equal(buildMode.unchanged,true,'preview building must not touch game save');
   assert.equal(buildMode.returned,true,'Build back button returns directly to room');
+  const store=await js(`(()=>{
+    G.PKMSVVWiki.coopShop();
+    const text=document.querySelector('#pkmsvv-wiki-overlay .pkmsvv-coop-shop-panel')?.textContent||'';
+    const exchange=document.querySelector('#pkmsvv-wiki-overlay [data-coop-exchange]');
+    const items=[...document.querySelectorAll('#pkmsvv-wiki-overlay [data-coop-shop-item]')];
+    const wallet=G.PKMSVVCoopEconomy?.normal?.(G.DB.save);
+    const noFakeSettlement=G.PKMSVVCoopEconomy?.settle===undefined;
+    const lockedItems=items.length>0&&items.every(b=>b.disabled);
+    document.querySelector('#pkmsvv-wiki-overlay [data-back]')?.click();
+    return {opened:!!text,exchangeDisabled:!!exchange?.disabled,lockedItems,
+      walletCoins:wallet?.coopCoins,noFakeSettlement,returned:!!document.querySelector('#pkmsvv-wiki-overlay [data-pkmsvv-research-hub]')};
+  })()`);
+  console.log('PIPPI_WEB_COOP_SHOP='+JSON.stringify(store));
+  assert.equal(store.opened,true,'Co-op store panel missing');
+  assert.equal(store.noFakeSettlement,true,'Client must never expose reward settlement to fake completed missions');
+  assert.equal(store.lockedItems,true,'Unused tools and missing costumes must remain non-purchasable');
+  assert.equal(store.returned,true,'Shop back must return to research room');
+  const fossils=await js(`(()=>{
+    G.PKMSVVWiki.fossilRestoration();
+    const rows=[...document.querySelectorAll('#pkmsvv-wiki-overlay .pkmsvv-fossil-row')];
+    const unknown=rows.filter(row=>row.dataset.fossilState==='unknown');
+    const stones=unknown.filter(row=>row.querySelector('.pkmsvv-fossil-stone.undiscovered'));
+    const pokemonLeaks=unknown.filter(row=>row.querySelector('canvas'));
+    const progress=document.querySelector('#pkmsvv-wiki-overlay [data-fossil-achievement]')?.textContent;
+    document.querySelector('#pkmsvv-wiki-overlay [data-back]')?.click();
+    return {rows:rows.length,unknown:unknown.length,blackStones:stones.length,
+      pokemonLeaks:pokemonLeaks.length,progress,returned:!!document.querySelector('#pkmsvv-wiki-overlay [data-pkmsvv-research-hub]')};
+  })()`);
+  console.log('PIPPI_WEB_FOSSIL_STONES='+JSON.stringify(fossils));
+  assert.equal(fossils.rows,15,'all 15 fossil recipes must render');
+  assert.ok(fossils.blackStones>0,'undiscovered fossil art must be black');
+  assert.equal(fossils.pokemonLeaks,0,'never expose species art before restoring the fossil');
+  assert.match(fossils.progress,/Nhà khảo cổ vĩ đại|Great Archaeologist/);
+  assert.equal(fossils.returned,true);
   const companion=await js(`(()=>{
     document.querySelector('#pkmsvv-wiki-overlay [data-research-hotspot="companion"]')?.click();
     return {visible:!!document.querySelector('.pkmsvv-pippi-corner'),
