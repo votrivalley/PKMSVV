@@ -35,3 +35,11 @@
 - Chromium trên code build và URL Cloudflare PASS: Co-op tạo phòng, ít nhất 1 bot, AI di chuyển thực tế ~439 px trong 11 giây, mine một đá, cả hai atlas load và `spriteReady=true`.
 - Soak 115 giây PASS: đồng hồ game tiến ~111,23 giây, maxStalls=0, AI chuyển động, errors=0, consoleErrors=0.
 - **Giới hạn:** chưa chạy kiểm thử end-to-end 8 phút thật; các phép thử unit có mô phỏng đồng hồ từng giây nhưng không thay thế chơi trọn trận. Đồng bộ 2+ người thật và thưởng thật vẫn chưa được chứng nhận. Beta giữ phần thưởng tắt. Không triển khai production.
+
+## Bản cập nhật gameplay 2.5.1 — áp lực quái và thanh máu đá
+
+- Tương tự **Giải Cứu Berry**, quái trong `fossil_lab` tăng tốc theo thời gian nhưng **không tăng HP, sát thương, EXP, số đạn hay hitbox**: 0–1:59 ×1.00, 2–3:59 ×1.1333, 4–5:59 ×1.2667, 6–8:00 ×1.40. Không stack mỗi khung hình; chỉ xét ở 5Hz và khi sang mốc 2 phút. Bỏ qua getter `spd` chỉ đọc để tránh crash engine.
+- **Sau khi Rotom nhập máy**, quái được native `Enemy.update` điều hướng tới target actor của máy với tỉ lệ xác định 80% (theo `enemy.id % 5`); 20% tiếp tục săn người chơi. Trước lúc máy hoạt động, tất cả quái giữ target chiến đấu bình thường. Mọi quyền thay HP máy thuộc về Host và core tick qua sự hiện diện thật của quái trong bán kính đe dọa.
+- **Đá hóa thạch có thanh độ bền dạng đập trứng**: 100% → 66,7% → 33,3% → 0%, cập nhật ngay sau mỗi trong ba lần đào hợp lệ (của người chơi hoặc AI). Hình đá vẫn đổi 3 trạng thái nguyên vẹn / nứt vỡ / cạn kiệt. Đồng bộ theo `site.hits` qua snapshot Co-op, không tự trừ từ UI.
+- Code: `src/pkmsvv-fossil-expedition-core.cjs`, `src/pkmsvv-fossil-expedition-native.js`, `scripts/patch-fossil-expedition-native.cjs`. Kiểm thử: `tests/fossil-expedition-core.test.cjs`, `tests/fossil-expedition-native-browser.cjs`, `tests/fossil-expedition-soak-browser.cjs` (155 giây qua mốc 2:00).
+- Chỉ công bố tại **một Beta cố định** `https://beta.pkmsvv-web.pages.dev/game/` nếu GitHub Actions đạt. Web chính không thay đổi; phần thưởng vẫn khóa cho tới khi chứng nhận toàn trận 8 phút.
