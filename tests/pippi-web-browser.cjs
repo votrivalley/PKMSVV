@@ -110,6 +110,9 @@ async function main(){
     pippiTalk:!!document.querySelector('#pkmsvv-wiki-overlay [data-research-pippi-talk]'),
     roomVersion:document.querySelector('#pkmsvv-wiki-overlay [data-pkmsvv-research-hub]')?.dataset.pkmsvvResearchHub,
     hotspots:[...document.querySelectorAll('#pkmsvv-wiki-overlay [data-research-hotspot]')].map(b=>b.dataset.researchHotspot),
+    sceneProps:[...document.querySelectorAll('#pkmsvv-wiki-overlay [data-research-object]')].map(p=>p.dataset.researchObject),
+    companionEgg:!!document.querySelector('#pkmsvv-wiki-overlay [data-research-hotspot="companion"] [data-research-object="companion"] svg'),
+    floatingBadgeIcons:document.querySelectorAll('#pkmsvv-wiki-overlay .pkmsvv-research-hotspot-tag .pkmsvv-research-glyph').length,
     buildButton:!!document.querySelector('#pkmsvv-wiki-overlay [data-research-build]'),
     oldCardsHidden:document.querySelector('#pkmsvv-wiki-overlay .pkmsvv-pc-grid')?.hidden===true};
   })()`);
@@ -122,6 +125,9 @@ async function main(){
   assert.equal(pc.pippiTalk,true,'Pippi research director dialogue must be available');
   assert.equal(pc.roomVersion,'2','research room must be the default full interactive scene');
   assert.deepEqual(pc.hotspots,['support','mega','berry','companion','fossil'],'five clickable research machines');
+  assert.deepEqual(pc.sceneProps,['support','mega','berry','companion'],'four distinct furnishings must be in the actual room image layer');
+  assert.equal(pc.companionEgg,true,'large egg in lower room must be the tappable companion station');
+  assert.equal(pc.floatingBadgeIcons,0,'floating labels must be text, not oversized sprite icons');
   assert.equal(pc.buildButton,true,'Build mode button must be visible');
   assert.equal(pc.oldCardsHidden,true,'old PC card interface must NOT be shown on entry');
   const nativeMenuFix=await js(`(()=>{
