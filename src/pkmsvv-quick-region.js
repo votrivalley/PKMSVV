@@ -517,7 +517,9 @@
  }
  function open(){
   if(G.Coop?.active||getChampion()?.active)return false;
-  render();overlay.hidden=false;return true;
+  render();overlay.hidden=false;
+  G.PKMSVVPippiGuide?.openMode?.('explore');
+  return true;
  }
  function close(){if(overlay)overlay.hidden=true;}
  function beginRun(index,formerBiome=null){
