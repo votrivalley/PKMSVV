@@ -21,8 +21,8 @@
   panel.style.cssText='width:min(580px,100%);max-height:85vh;overflow:auto;background:#17424e;border:2px solid #dcb877;border-radius:14px;padding:20px;color:#ffebbb;box-shadow:0 13px 38px #0009;line-height:1.6';
   const title=document.createElement('h2');title.textContent=tr('🦴 Khai quật hóa thạch','🦴 Fossil Expedition');title.style.margin='0 0 9px';
   const intro=document.createElement('p');
-  intro.textContent=tr('Nhiệm vụ Co-op mới dự kiến kéo dài 6–8 phút: tìm mẫu hóa thạch, bảo vệ máy nghiên cứu rồi rút lui. Một người chơi cùng đồng đội do máy điều khiển vẫn sẽ nhận thưởng.',
-   'Planned 6–8 minute Co-op mission: find fossils, defend the lab and extract. Solo with computer-controlled companions will also earn rewards.');
+  intro.textContent=tr('Nhiệm vụ Co-op mới dự kiến kéo dài 6–8 phút: tìm mẫu hóa thạch, bảo vệ máy nghiên cứu rồi rút lui. Chơi một mình thì thêm ít nhất một đồng đội máy để đủ 2 thành viên; vẫn nhận thưởng như đội người thật.',
+   'Planned 6–8 minute Co-op mission: find fossils, defend the lab and extract. Solo humans can add at least one computer-controlled teammate to reach the required two members and earn full rewards.');
   const reward=document.createElement('p');
   reward.textContent=tr('Lần đầu hoàn thành: mở khóa máy phục nguyên vĩnh viễn và nhận Kabuto miễn phí. Những lần sau kiếm Xu Đồng Đội dùng chung trong Co-op.',
    'First completion: permanently unlock the revival machine and receive a free Kabuto. Replay to earn shared Co-op Coins.');
@@ -52,7 +52,7 @@
   const title=document.createElement('strong');title.className='pkmsvv-mode-title';
   title.textContent=tr('Khai quật hóa thạch','Fossil Expedition');
   const cap=document.createElement('small');cap.className='pkmsvv-mode-cap';
-  cap.textContent=tr('1–4 người · 6–8 phút','1–4 players · 6–8 min');
+  cap.textContent=tr('2–4 người · 6–8 phút','2–4 players · 6–8 min');
   const short=document.createElement('small');short.className='pkmsvv-coop-pokemon';
   short.textContent=tr('Phòng thí nghiệm thất lạc','Lost Laboratory');
   const desc=document.createElement('small');desc.className='pkmsvv-mode-description';
