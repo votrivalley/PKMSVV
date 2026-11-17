@@ -163,7 +163,7 @@ for(const prefix of ['game','ai/game']){
 }
 const meta=JSON.parse(source('dist/cloudflare-v20-release/build-info.json'));
 Object.assign(meta,{releaseType:'qa-preview-only',pippiCousinQA:marker,
- previewBranch:'pippi-cousin-qa',version:'2.0.4-Pippi-Fossil-QA',
+ previewBranch:'pippi-cousin-qa',version:'2.0.5-Research-Lab-Pikachu-QA',
  description:'Isolated browser-only test; production pkmsvv-web.pages.dev unchanged'});
 write(path.join(site,'build-info.json'),JSON.stringify(meta,null,2)+'\n');
 // QA-only cache policy: browsers must revalidate the HTML and the two UI
