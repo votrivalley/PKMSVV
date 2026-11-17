@@ -8,6 +8,19 @@
 const MIN_PARTY=2,MAX_PARTY=4,MIN_TIME=480,MAX_TIME=480;
 const ROTOM_DEADLINE=240,DEFEND_END=480,ROCK_HITS=3;
 const DIG_RADIUS=85,RESCUE_RADIUS=96,MERGE_RADIUS=110,MAX_MACHINE_HP=360;
+// Match Berry Rescue: +13⅓% enemy movement speed every two minutes,
+// capped at three stages (+40%) for an eight-minute objective.
+const SPEED_STEP_SECONDS=120,SPEED_GAIN_PER_STEP=.20*2/3,MAX_SPEED_STAGES=3;
+function speedFactor(seconds){
+ if(!Number.isFinite(seconds))return 1;
+ return 1+SPEED_GAIN_PER_STEP*Math.max(0,Math.min(MAX_SPEED_STAGES,
+  Math.floor(Math.max(0,seconds)/SPEED_STEP_SECONDS)));
+}
+// Each excavation is a real three-hit object with a visible HP bar.
+function rockHpRatio(hits){
+ const n=Number(hits);
+ return 1-Math.max(0,Math.min(ROCK_HITS,Number.isFinite(n)?n:0))/ROCK_HITS;
+}
 const SITE_OFFSETS=[[-670,-310],[660,-380],[80,770]];
 const ROTOM_OFFSET=[-440,750],BOSS_DEX=623;
 const finite=x=>typeof x==='number'&&Number.isFinite(x);
@@ -132,4 +145,5 @@ function receipt(s,seq){
 }
 module.exports={MIN_PARTY,MAX_PARTY,MIN_TIME,MAX_TIME,ROTOM_DEADLINE,DEFEND_END,
  ROCK_HITS,DIG_RADIUS,RESCUE_RADIUS,MERGE_RADIUS,MAX_MACHINE_HP,
+ SPEED_STEP_SECONDS,SPEED_GAIN_PER_STEP,MAX_SPEED_STAGES,speedFactor,rockHpRatio,
  SITE_OFFSETS,ROTOM_OFFSET,BOSS_DEX,roster,begin,dig,rescue,tick,fail,receipt};
