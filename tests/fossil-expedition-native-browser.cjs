@@ -4,13 +4,14 @@ const assert=require('node:assert/strict'),path=require('node:path');
 const {chromium}=require('playwright');
 const {startServer}=require('../lan-server/server.cjs');
 (async()=>{
+ const remote=process.env.PKMSVV_NATIVE_BROWSER_URL||'';
  const root=path.resolve(__dirname,'../dist/lan');
- const server=await startServer({root,host:'127.0.0.1',port:0});
+ const server=remote?null:await startServer({root,host:'127.0.0.1',port:0});
  const browser=await chromium.launch({headless:true,...(process.env.PKMSVV_BROWSER?{executablePath:process.env.PKMSVV_BROWSER}:{})});
  const page=await browser.newPage({viewport:{width:1280,height:800}});
  const errors=[];page.on('pageerror',e=>errors.push(String(e)));
  try{
-  await page.goto('http://127.0.0.1:'+server.port+'/game/');
+  await page.goto(remote||'http://127.0.0.1:'+server.port+'/game/',{waitUntil:'domcontentloaded',timeout:45000});
   await page.waitForFunction(()=>G.DB?.save&&G.PKMSVVFossilExpedition?.nativeReady===true,{timeout:35000});
   const browserOnly=await page.evaluate(()=>({
    standalone:window.PKMSVV_STANDALONE_AI===true,
@@ -54,5 +55,5 @@ const {startServer}=require('../lan-server/server.cjs');
    'mining must not grant unvalidated Co-op Coins');
   assert.deepEqual(errors,[],'real browser engine exceptions');
   console.log('PASS EXPEDITION_NATIVE_QA real Co-op room, 2–4 party, AI companion, 3 world rocks, real in-world mining, native loop');
- }finally{await browser.close();await server.close();}
+ }finally{await browser.close();if(server)await server.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
