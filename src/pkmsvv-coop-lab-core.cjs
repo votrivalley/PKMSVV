@@ -47,7 +47,7 @@ function change(save,mutator,commit,sideEffect){
 function isMachineUnlocked(save){return normal(save).machineUnlocked;}
 function buy(save,itemId,commit){
  const item=byItem.get(itemId);
- if(!item||item.price===null||item.starter||!Number.isSafeInteger(item.price)||item.price<0)
+ if(!item||item.artReady!==true||item.price===null||item.starter||!Number.isSafeInteger(item.price)||item.price<0)
   return {ok:false,reason:'unavailable'};
  return change(save,(s)=>{
   if(!s.machineUnlocked)return {ok:false,reason:'locked'};
@@ -59,7 +59,7 @@ function buy(save,itemId,commit){
 }
 function equip(save,slotId,itemId,commit){
  const slot=bySlot.get(slotId),item=itemId===null?null:byItem.get(itemId);
- if(!slot||(itemId!==null&&(!item||!item.slots.includes(slotId))))
+ if(!slot||(itemId!==null&&(!item||item.artReady!==true||!item.slots.includes(slotId))))
   return {ok:false,reason:'slot'};
  return change(save,(s)=>{
   if(!s.machineUnlocked)return {ok:false,reason:'locked'};
@@ -91,15 +91,9 @@ function settle(save,receipt,commit,random=Math.random){
   if(s.coopCoins>max-reward)return {ok:false,reason:'overflow'};
   s.coopCoins+=reward;s.machineUnlocked=true;s.totalCompletions++;
   s.lastSettledSeq=receipt.seq;
-  let rare=false;
-  if(!first&&receipt.optionalObjectives===cfg.maxOptionalObjectives&&
-     s.ownedDecor.gold_pippi_statue!==true){
-   const roll=Number(random());
-   if(roll>=0&&roll<config.trophy.chancePerEligibleReplay){
-    rare=true;s.ownedDecor.gold_pippi_statue=true;
-   }
-  }
-  return {ok:true,firstClear:first,reward,rare,totalCoins:s.coopCoins,machineUnlocked:true};
+  // Gold Pippi is now a 9,999 Coin prestige purchase in a separate trophy
+  // slot, never an undisclosed RNG drop from mission results.
+  return {ok:true,firstClear:first,reward,rare:false,totalCoins:s.coopCoins,machineUnlocked:true};
  },commit,(s,_,result)=>{
   if(!result.firstClear)return;
   // First VALIDATED fossil-lab clear: permanent machine access AND free
