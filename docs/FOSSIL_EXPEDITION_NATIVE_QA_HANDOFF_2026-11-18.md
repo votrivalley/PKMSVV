@@ -38,3 +38,12 @@
 - **Workflow #44143839021 PASSED**: build `PKMSVV_FOSSIL_NATIVE_QA=1`, Chromium tạo phòng riêng `fossil_lab` cho 2–4 người (host+AI), bắt đầu trận, hiện 3 điểm khai quật, đào đá bằng thao tác gốc, không crash trong smoke. Artifact `PKMSVV-Fossil-Native-Gameplay-QA` ~79 MB tải từ GitHub Actions; chưa tự triển khai lên Cloudflare QA.
 - Chưa test soak cả 6–8 phút / guest join 2 client / settlement Kabuto/Xu Đồng Đội. Phần thưởng vẫn bị vô hiệu hóa trong native QA cho tới khi có bằng chứng kết thúc và chống duplicate. Web QA 2.3.0 vẫn là **preview UI** và không phải bản Native gameplay vừa build.
 - Run: https://github.com/votrivalley/PKMSVV/actions/runs/44143839021
+
+## Gameplay Web QA có thể vào trận — xác nhận 18/11/2026
+
+- **Đã phát hành riêng** tại: https://fossil-gameplay-qa.pkmsvv-web.pages.dev/game/ (branch Cloudflare `fossil-gameplay-qa`), không thay `pkmsvv-web` hay `research-ui-qa`. Run xác minh cuối `44147576836`, commit `a46942f141610cd684e6df8d1aa7d7543e811da9`, workflow **Success**.
+- Cơ chế hoạt động trên static Web: **Co-op 2–4 thành viên, riêng bản thử này 1 người thật và 1–3 đồng đội máy**, không chạy LAN server/WebSocket. Muốn nhiều người thật cần Host LAN và thử nghiệm network riêng.
+- Đã kiểm thử bằng Chromium **trực tiếp trên URL Cloudflare công khai**, không chỉ localhost: tạo phòng `fossil_lab`, thêm AI, khởi động trận, 3 điểm đá xuất hiện, thao tác khai quật và game tiếp tục chạy không page error. Bản QA được dấu bằng `build-info.json` + exact commit.
+- **Chưa hoàn tất chứng nhận** trọn 6–8 phút, multiplayer 2 máy, kết thúc trận, phát thưởng. Trạng thái Kabuto miễn phí và Xu Đồng Đội vẫn bị khóa trong adapter native, không thể coi là gameplay thành phẩm.
+- QA URL cho Phòng nghiên cứu cũ `research-ui-qa.pkmsvv-web.pages.dev` chỉ là Web UI preview đã biên dịch trước, không có gameplay Co-op mới. Hướng dài hạn: hợp nhất source QA sau khi chứng nhận, không dán file JS lên `app.min.js` cũ vô hạn.
+- Run: https://github.com/votrivalley/PKMSVV/actions/runs/44147576836
