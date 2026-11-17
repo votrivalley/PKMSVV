@@ -29,3 +29,12 @@
 - QA UI: https://research-ui-qa.pkmsvv-web.pages.dev/ai/game/
 - Core QA: https://github.com/votrivalley/PKMSVV/actions/runs/44139181562
 - Blocked native workflow: https://github.com/votrivalley/PKMSVV/actions/runs/44139932765
+
+## Cập nhật khôi phục upstream và build native — 18/11/2026
+
+- Nguyên nhân lỗi workflow #44139932765: `https://github.com/JPTER78/pokesurvivor.git` trả 404 / `fatal: could not read Username`, không tải được mã gốc.
+- Đã xác minh commit `11fe868c640b62ac37beacc222e056bc4d9ec892` tồn tại trên **hai mirror public** `ovolee37/pokesurvivor-ayn-thor` và `Tpg590/Pokemon`. Cả hai giữ cùng tree SHA `0a36feb1d9639efd7383bf30d1bfb08830dd8c6e` của đúng snapshot 20/10; không dùng HEAD mới của fork.
+- Workflow `.github/workflows/fossil-native-game-qa.yml` được cập nhật để fetch immutable SHA từ mirror và chặn build nếu SHA/tree không khớp. Thêm tải PMDCollab sprites Pippi bằng script có kiểm tra hash.
+- **Workflow #44143839021 PASSED**: build `PKMSVV_FOSSIL_NATIVE_QA=1`, Chromium tạo phòng riêng `fossil_lab` cho 2–4 người (host+AI), bắt đầu trận, hiện 3 điểm khai quật, đào đá bằng thao tác gốc, không crash trong smoke. Artifact `PKMSVV-Fossil-Native-Gameplay-QA` ~79 MB tải từ GitHub Actions; chưa tự triển khai lên Cloudflare QA.
+- Chưa test soak cả 6–8 phút / guest join 2 client / settlement Kabuto/Xu Đồng Đội. Phần thưởng vẫn bị vô hiệu hóa trong native QA cho tới khi có bằng chứng kết thúc và chống duplicate. Web QA 2.3.0 vẫn là **preview UI** và không phải bản Native gameplay vừa build.
+- Run: https://github.com/votrivalley/PKMSVV/actions/runs/44143839021
