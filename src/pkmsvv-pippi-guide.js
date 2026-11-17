@@ -45,6 +45,26 @@
   ]
  };
  let active=null,root=null,lastExplorePlayer=null,scheduled=null,queued=null;
+ // A large portrait dialogue is modal. Only solo Explore may pause its own
+ // gameplay clock; quick Pippi reactions never go through this overlay.
+ const SOLO_KINDS=new Set(['explore','chest','pickup','fossils']);
+ function pauseExploreSafely(){
+  const game=G.Game;
+  if(!game||game.state!=='playing')return false;
+  // An inherited writable game-state field is valid too; getter-only hosts
+  // must NEVER show a blocking modal while enemies are still moving.
+  let owner=game,desc;
+  while(owner&&!desc){desc=Object.getOwnPropertyDescriptor(owner,'state');owner=Object.getPrototypeOf(owner);}
+  if(desc&&desc.writable!==true&&typeof desc.set!=='function')return false;
+  try{game.state='pause';}catch(_){return false;}
+  return game.state==='pause';
+ }
+ function canOpenSolo(){
+  return !!G.PKMSVVQuickRegion?.active&&G.Game?.state==='playing'&&
+   !G.Coop?.active&&!G.Royale?.active&&!G.EggRush?.active&&
+   !G.PKMSVVArenaSolo?.active&&!G.PKMSVVChampionArena?.active&&
+   !G.PKMSVVArenaPvp?.active;
+ }
  const flags=save=>{
   if(!save)return {};
   if(!save.pkmsvvPippiGuide||typeof save.pkmsvvPippiGuide!=='object')
@@ -68,7 +88,14 @@
   const job=active;active=null;
   if(root){root.remove();root=null;}
   // If this game build allows state changes, restore ONLY our own pause.
-  if(job.paused&&G.Game?.player===job.player&&G.Game.state==='pause')G.Game.state='playing';
+  if(job.paused&&G.Game?.player===job.player&&
+    G.PKMSVVQuickRegion?.active===true&&G.Game.state==='pause')
+   G.Game.state='playing';
+  // Do not unpause an unrelated death screen, skill choice or remote match.
+  // A queued Lab tour can only open if the Lab itself is still visible.
+  if(queued==='laboratory'&&document.getElementById?.('pkmsvv-wiki-overlay')){
+   queued=null;open('laboratory');
+  }
   const save=G.DB?.save;
   if(save){
    flags(save)[job.kind]=true;
@@ -89,20 +116,11 @@
   if(flags(save)[kind])return false;
   if(kind==='starter'&&!save.partner&&!save.starter)return false;
   if(kind==='fossils'&&save.pkmsvvFossils?.guaranteedKabuto!==true)return false;
-  if(['explore','chest','pickup','fossils'].includes(kind)&&
-    (!G.PKMSVVQuickRegion?.active||G.Game?.state!=='playing'||
-     G.Coop?.active||G.Royale?.active||G.EggRush?.active))return false;
+  if(SOLO_KINDS.has(kind)&&!canOpenSolo())return false;
   const player=G.Game?.player;
-  let paused=false;
-  if(kind==='explore'||kind==='chest'||kind==='pickup'||kind==='fossils'){
-   const descriptor=Object.getOwnPropertyDescriptor(G.Game,'state');
-   // Normal/native game state is writable in the Web 2.0 build. If a host
-   // exposes a getter only, leave it untouched instead of breaking combat.
-   if(descriptor?.writable===true){
-    G.Game.state='pause';
-    paused=G.Game.state==='pause';
-   }
-  }
+  const paused=SOLO_KINDS.has(kind)?pauseExploreSafely():false;
+  // No modal while enemies attack: defer rather than exposing the player.
+  if(SOLO_KINDS.has(kind)&&!paused)return false;
   active={kind,index:0,paused,player};
   const div=document.createElement('div');
   div.id='pkmsvv-pippi-guide';div.className='pkmsvv-pippi-guide';
@@ -153,16 +171,25 @@
   wrapped._pippiGuide=true;game.startRun=wrapped;
  }
  function queue(kind){
-  if(!['chest','pickup','fossils'].includes(kind)||window.__pkmsvvPippiGuideQABypass===true)
-   return false;
-  if(flags(G.DB?.save)[kind]||active)return false;
-  if(queued&&kind!=='fossils')return false; // first fossil takes priority
+  if(!['chest','pickup','fossils','laboratory'].includes(kind)||
+     window.__pkmsvvPippiGuideQABypass===true)return false;
+  if(flags(G.DB?.save)[kind])return false;
+  if(kind==='laboratory'&&(!document.getElementById?.('pkmsvv-wiki-overlay')||
+     !G.PKMSVVWiki))return false;
+  if(!active&&!queued)return open(kind);
+  if(queued&&kind!=='fossils'&&kind!=='laboratory')return false;
   queued=kind;
   return true;
  }
  function flush(){
   if(!queued||active||window.__pkmsvvPippiGuideQABypass===true)return false;
-  if(G.Game?.state!=='playing'||!G.PKMSVVQuickRegion?.active)return false;
+  if(queued==='laboratory'){
+   if(!document.getElementById?.('pkmsvv-wiki-overlay')){queued=null;return false;}
+   const kind=queued;
+   if(open(kind)){queued=null;return true;}
+   return false;
+  }
+  if(!canOpenSolo())return false;
   // Item choices, chapter scenes and pause overlays always take precedence.
   if(['scr-item','scr-levelup','scr-bond','scr-pause','scr-pkmsvv-story'].some(id=>
     G.UI?.isOpen?.(id)))return false;
@@ -178,7 +205,11 @@
   }
   if(e.key==='Escape'||e.code==='Escape'){
    e.preventDefault?.();e.stopPropagation?.();e.stopImmediatePropagation?.();
+   return;
   }
+  // Modal is deliberately input-blocking while paused. Prevent movement,
+  // attacks, skill hotkeys and the native pause menu underneath the portrait.
+  e.preventDefault?.();e.stopPropagation?.();e.stopImmediatePropagation?.();
  },true);
  G.PKMSVVPippiGuide={open,next,close,queue,flush,
   get isOpen(){return !!active;},
