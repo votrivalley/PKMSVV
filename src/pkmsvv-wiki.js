@@ -600,6 +600,27 @@ G.PKMSVVWiki=(()=>{
   overlay.append(panel);document.body.append(overlay);
   back.focus({preventScroll:true});return true;
  }
+ // Research Lab modular furnishing renderer: no painted-in purchases.
+ // Each owned object is its own alpha asset, positioned by the shared catalog.
+ // A screenshot of the original furnished room is reference art only.
+ function renderFurnitureLayers(stage){
+  if(!stage)return;
+  stage.querySelectorAll('.pkmsvv-lab-furniture').forEach(x=>x.remove());
+  const E=G.PKMSVVCoopEconomy,conf=E?.config,save=G.DB?.save;
+  if(!conf?.roomArt?.slots)return;
+  const owned=E.normal(save);
+  for(const [slot,coords] of Object.entries(conf.roomArt.slots)){
+   const itemId=owned.equippedDecorBySlot?.[slot];
+   const item=conf.items.find(it=>it.id===itemId);
+   if(!item?.artReady||!item.spritePath||!item.slots.includes(slot))continue;
+   const image=document.createElement('img');image.className='pkmsvv-lab-furniture';
+   image.src=item.spritePath;image.alt='';image.loading='eager';
+   image.dataset.furniture=item.id;image.dataset.furnitureSlot=slot;
+   image.style.left=coords.x/320*100+'%';image.style.top=coords.y/224*100+'%';
+   image.style.width=coords.w/320*100+'%';image.style.height=coords.h/224*100+'%';
+   image.setAttribute('aria-hidden','true');image.draggable=false;stage.prepend(image);
+  }
+ }
  function construction(){
   close();installStyle();
   const overlay=document.createElement('div');overlay.id='pkmsvv-wiki-overlay';
@@ -612,8 +633,9 @@ G.PKMSVVWiki=(()=>{
   const back=document.createElement('button');back.type='button';back.className='pkmsvv-pc-close';
   back.textContent=tr('← Phòng nghiên cứu','← Research Lab');back.onclick=open;
   back.dataset.back='1';head.append(title,back);box.append(head);
-  const save=G.DB?.save?.pkmsvvCoopLab;
-  const unlocked=save?.machineUnlocked===true;
+  const E=G.PKMSVVCoopEconomy;
+  const unlocked=E?.isMachineUnlocked?.(G.DB?.save)===true;
+  const current=()=>E?.normal?.(G.DB?.save)||G.DB?.save?.pkmsvvCoopLab||{};
   const note=document.createElement('p');note.className='pkmsvv-pc-hint';
   note.textContent=unlocked?
    tr('Chọn một trong tám vị trí cố định. Các món chưa có sprite độc lập vẫn chỉ được xem, không trừ xu hoặc ghi save.',
@@ -623,6 +645,8 @@ G.PKMSVVWiki=(()=>{
   box.append(note);
   const area=document.createElement('div');area.className='pkmsvv-build-layout';
   const stage=document.createElement('div');stage.className='pkmsvv-build-stage';
+  stage.dataset.researchArtMode='modular';
+  renderFurnitureLayers(stage);
   const info=document.createElement('section');info.className='pkmsvv-build-info';
   const h=document.createElement('h3'),desc=document.createElement('p'),
    items=document.createElement('div');items.className='pkmsvv-build-items';
@@ -635,7 +659,7 @@ G.PKMSVVWiki=(()=>{
    ['shelf_right',220,74,96,59,'Kệ bên phải','Right shelf'],
    ['garden',6,146,87,66,'Góc cây cảnh','Garden'],
    ['desk',235,132,79,34,'Bàn nghiên cứu','Research desk'],
-   ['trophy',236,166,72,45,'Bệ danh dự','Trophy pedestal']
+   ['trophy',181,148,44,65,'Bệ danh dự','Trophy pedestal']
   ];
   const names={
    machine_old:['Máy phục nguyên nguyên mẫu','Original restoration machine',0],
@@ -648,7 +672,7 @@ G.PKMSVVWiki=(()=>{
    prehistoric_fern:['Chậu dương xỉ tiền sử','Ancient fern',360],
    research_terminal:['Máy tính khảo cổ','Research terminal',540],
    glowing_sample_tube:['Ống mẫu phát sáng','Glowing specimen tube',700],
-   gold_pippi_statue:['Tượng Vàng Giáo sư Pippi','Golden Professor Pippi',null]
+   gold_pippi_statue:['Tượng Vàng Giáo sư Pippi','Golden Professor Pippi',9999]
   };
   const available={
    wall_left:['archaeology_certificate','prehistoric_poster'],
@@ -664,22 +688,41 @@ G.PKMSVVWiki=(()=>{
    const record=slots.find(x=>x[0]===slot);if(!record)return;
    stage.querySelectorAll('.pkmsvv-build-spot').forEach(b=>b.classList.toggle('selected',b.dataset.buildSlot===slot));
    h.textContent=tr(record[5]==='Revival machine'?'Máy phục nguyên':record[4],record[5]);
+   const save=current();
    desc.textContent=tr('Đang trang bị: ','Equipped: ')+
-    (names[save?.equippedDecorBySlot?.[slot]]?.[G.I18n?.lang==='en'?1:0]||
-    tr('Chưa có vật phẩm','Empty'));
+    (names[save.equippedDecorBySlot?.[slot]]?.[G.I18n?.lang==='en'?1:0]||
+    tr('Chưa có vật phẩm','Empty'))+
+    ' · '+tr('Xu Đồng Đội: ','Co-op Coins: ')+(save.coopCoins||0);
    items.replaceChildren();
    for(const id of available[slot]){
-    const n=names[id],owned=!!save?.ownedDecor?.[id]||id==='machine_old';
+    const n=names[id],item=E?.config?.items?.find(x=>x.id===id);
+    const owned=!!save?.ownedDecor?.[id]||id==='machine_old';
+    const equipped=save.equippedDecorBySlot?.[slot]===id;
+    const ready=item?.artReady===true&&!!item.spritePath;
     const row=document.createElement('div');row.className='pkmsvv-build-item';
-    const label=document.createElement('span');
-    label.textContent=tr(n[0],n[1]);
+    const label=document.createElement('span');label.textContent=tr(n[0],n[1]);
     const state=document.createElement('small');
-    state.textContent=owned?tr('Đã có · Chờ art hoàn thiện','Owned · Artwork pending'):
-     n[2]===null?tr('Rương Co-op siêu hiếm','Ultra-rare Co-op chest'):
-     tr('Chưa mua · '+n[2]+' Xu Đồng Đội','Not owned · '+n[2]+' Co-op Coins');
+    state.textContent=!ready?tr('Đang hoàn thiện sprite riêng · Chưa bán','Separate artwork pending · Not for sale'):
+     equipped?tr('Đang trưng bày','Equipped'):
+     owned?tr('Đã sở hữu · Có thể trang bị','Owned · Ready to equip'):
+     tr('Giá '+n[2]+' Xu Đồng Đội','Price '+n[2]+' Co-op Coins');
     const btn=document.createElement('button');btn.type='button';
-    btn.className='pkmsvv-pc-close';btn.disabled=true;btn.dataset.buildEquip=id;
-    btn.textContent=unlocked?tr('Chưa thể thay','Not ready'):tr('🔒 Chưa mở','🔒 Locked');
+    btn.className='pkmsvv-pc-close';btn.dataset.buildEquip=id;
+    btn.disabled=!ready||!unlocked||equipped||G.DB?.guest||typeof G.DB?.commit!=='function'||
+     (!owned&&(Number(save.coopCoins)||0)<Number(item?.price));
+    btn.textContent=!ready?tr('Chưa có sprite','No sprite'):
+     !unlocked?tr('🔒 Cần Co-op','🔒 Co-op required'):equipped?tr('Đang đặt','Equipped'):
+     owned?tr('Trưng bày','Equip'):tr('Mua · '+n[2]+' xu','Buy · '+n[2]+' coins');
+    btn.onclick=()=>{
+     if(btn.disabled)return;
+     const commit=()=>G.DB.commit(true);
+     const result=owned?E.equip(G.DB.save,slot,id,commit):
+      E.buy(G.DB.save,id,commit);
+     if(!result.ok){G.UI?.toast?.(tr('Chưa giao dịch được, kiểm tra save và số xu.','Transaction unavailable; check your save and wallet.'),2400);return;}
+     renderFurnitureLayers(stage);
+     inspect(slot);
+     G.UI?.refreshCoins?.();
+    };
     row.append(label,state,btn);items.append(row);
    }
   }
@@ -693,8 +736,8 @@ G.PKMSVVWiki=(()=>{
   }
   area.append(stage,info);box.append(area);
   const footer=document.createElement('p');footer.className='pkmsvv-pc-hint';
-  footer.textContent=tr('Đây là bản dựng UI: chưa có đủ sprite có thể tháo lắp, chưa mở bán và không trừ xu.',
-    'UI preview: detachable décor sprites are unfinished; no purchases or coin deductions.');
+  footer.textContent=tr('Nền và nội thất đã tách lớp. Món có sprite riêng chỉ được mua bằng Xu Đồng Đội sau khi hoàn thành nhiệm vụ Co-op đầu tiên; không tự sở hữu các món xem trước.',
+    'Room and furniture are independent layers. Only finished sprites can be purchased after first Co-op clear; preview items never charge coins.');
   box.append(footer);overlay.append(box);document.body.append(overlay);
   inspect('center');back.focus({preventScroll:true});return true;
  }
@@ -716,6 +759,8 @@ G.PKMSVVWiki=(()=>{
   const hero=document.createElement('section');hero.className='pkmsvv-research-hero pkmsvv-research-interactive';
   hero.dataset.pkmsvvResearchHub='2';
   const room=document.createElement('div');room.className='pkmsvv-research-room';
+  room.dataset.researchArtMode='modular';
+  renderFurnitureLayers(room);
   room.setAttribute('role','group');
   room.setAttribute('aria-label',tr('Bản đồ tương tác Phòng nghiên cứu','Interactive Research Lab'));
   const invoke=(kind)=>{
