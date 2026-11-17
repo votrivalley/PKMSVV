@@ -32,12 +32,27 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Fetch exact locked upstream game source
+      - name: Fetch exact original upstream commit via verified public mirror
+        shell: bash
         run: |
-          git init vendor/pokesurvivor
-          git -C vendor/pokesurvivor remote add origin https://github.com/JPTER78/pokesurvivor.git
-          git -C vendor/pokesurvivor fetch --depth 1 origin 11fe868c640b62ac37beacc222e056bc4d9ec892
-          git -C vendor/pokesurvivor checkout --detach FETCH_HEAD
+          set -euo pipefail
+          PIN=11fe868c640b62ac37beacc222e056bc4d9ec892
+          TREE=0a36feb1d9639efd7383bf30d1bfb08830dd8c6e
+          mkdir -p vendor/pokesurvivor
+          git -C vendor/pokesurvivor init
+          # JPTER78/pokesurvivor currently returns 404. Both mirrors retain
+          # exactly the same immutable commit and tree, not a later fork HEAD.
+          for mirror in             https://github.com/ovolee37/pokesurvivor-ayn-thor.git             https://github.com/Tpg590/Pokemon.git; do
+            if git -C vendor/pokesurvivor -c credential.interactive=never fetch --depth=1 "$mirror" "$PIN"; then
+              break
+            fi
+          done
+          test "$(git -C vendor/pokesurvivor rev-parse FETCH_HEAD)" = "$PIN"
+          git -C vendor/pokesurvivor checkout --detach "$PIN"
+          test "$(git -C vendor/pokesurvivor rev-parse HEAD^{tree})" = "$TREE"
+          test -s vendor/pokesurvivor/dev.html
+          test -s vendor/pokesurvivor/LICENSE-NONCOMMERCIAL.md
+          echo "PINNED_UPSTREAM_RESTORED=$PIN TREE=$TREE"
       - name: Install build dependencies
         run: npm install --no-audit --no-fund
       - name: Check 2–4 room rules and 6–8 minute outcome core
