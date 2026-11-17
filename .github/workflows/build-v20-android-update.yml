@@ -162,7 +162,7 @@ jobs:
           grep -q 'onClick:pippiCorner' decoded-android/assets/public/js/ui/pkmsvv-wiki-qa.js
           grep -q 'PIPPI_CORNER_PC_V1' decoded-android/assets/public/css/pkmsvv-pc-menu-clean-qa.css
           grep -q 'trainingPoints' decoded-android/assets/public/js/ui/pkmsvv-pippi.js
-          grep -Fq 'COUSIN_CHANCES=Object.freeze([0,.05,.10,.20])' decoded-android/assets/public/js/ui/pkmsvv-pippi.js
+          grep -Fq 'COUSIN_CHANCES=Object.freeze([0,.04,.06,.08])' decoded-android/assets/public/js/ui/pkmsvv-pippi.js
           grep -Fq 'rollCousinOnHit' decoded-android/assets/public/js/ui/pkmsvv-pippi.js
           grep -Fq 'Bạn đồng hành' decoded-android/assets/public/js/ui/pkmsvv-wiki-qa.js
           grep -Fq 'normal:.002,elite:.004,legend:.008' decoded-android/assets/public/js/ui/pkmsvv-box-stage3.js

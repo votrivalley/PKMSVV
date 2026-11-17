@@ -624,10 +624,10 @@ test('PC uses native fourth Góc Pippi card and event-synchronized portrait sour
 });
 
 
-test('Em họ Pikachu: 5%, 10%, 20% per real HP-loss event, never before learning',()=>{
- assert.equal(P.cousinChance(0),0);assert.equal(P.cousinChance(1),.05);
- assert.equal(P.cousinChance(2),.10);assert.equal(P.cousinChance(3),.20);
- assert.equal(P.cousinChance(999),.20);
+test('Em họ Pikachu: 4%, 6%, 8% per real HP loss, never before training',()=>{
+ assert.equal(P.cousinChance(0),0);assert.equal(P.cousinChance(1),.04);
+ assert.equal(P.cousinChance(2),.06);assert.equal(P.cousinChance(3),.08);
+ assert.equal(P.cousinChance(999),.08);
  const s={coins:500,pkmsvvPippi:{xp:14}}; // Bond 5
  for(let i=1;i<=3;i++)assert.equal(P.train(s,'cousin',()=>true).ok,true);
  assert.equal(P.train(s,'cousin',()=>true).reason,'max');
@@ -641,8 +641,8 @@ test('Pikachu stuns only on actual HP loss in Explore, not on dodges or Co-op',(
   PKMSVVQuickRegion:{active:true},EnemyMgr:{all:()=>[enemy]}};
  const run=P.newRun(pl,20);
  assert.equal(P.rollCousinOnHit(G,run,pl,100,100,()=>0).triggered,false);
- assert.equal(P.rollCousinOnHit(G,run,pl,100,90,()=>.05).triggered,false);
- assert.equal(P.rollCousinOnHit(G,run,pl,100,90,()=>.0499).triggered,true);
+ assert.equal(P.rollCousinOnHit(G,run,pl,100,90,()=>.04).triggered,false);
+ assert.equal(P.rollCousinOnHit(G,run,pl,100,90,()=>.0399).triggered,true);
  assert.equal(enemy.stun,1.1);assert.ok(run.cousinUntil>20);
  G.Coop={active:true};G.Game.st.time=22;
  assert.equal(P.rollCousinOnHit(G,run,pl,90,80,()=>0).triggered,false);
@@ -769,4 +769,30 @@ test('Pippi retains one session and native damage hook across level-up, then cle
  G.Game.state='ui';G.PKMSVVQuickRegion.active=false;api.tick();
  assert.equal(api.run,null,'Actual exit ends Pippi run');
  assert.strictEqual(pl.hurt,native,'Native damage method restored on exit');
+});
+
+test('Cousin Pikachu targets 4, 8 and 16 nearest distinct enemies with white lightning',()=>{
+ const pl={x:100,y:100,hp:100,maxHp:100,dead:false};
+ for(const [level,limit] of [[1,4],[2,8],[3,16]]){
+  const enemies=Array.from({length:20},(_,i)=>({x:110+i*8,y:100+i*3,dead:false,stun:0,
+   applyStun(v){this.stun=v;}}));
+  const fx=[];const G={EnemyMgr:{all:()=>enemies},FX:{ring(...v){fx.push(['ring',...v])},
+   burst(...v){fx.push(['burst',...v])},dmgText(...v){fx.push(['text',...v])}}};
+  const r=P.cousinLightning(G,pl,10,level);
+  assert.equal(r.affected,limit);
+  assert.equal(r.limit,limit);
+  assert.equal(r.targets.length,limit);
+  assert.equal(enemies.filter(e=>e.stun>0).length,limit);
+  assert.equal(enemies.filter(e=>e.pkmsvvPippiCousinImmuneUntil===17).length,limit);
+  assert.equal(fx.filter(e=>e[0]==='burst').length,Math.min(limit,6),'no particle explosion for 16 hits');
+  assert.ok(fx.find(e=>e[0]==='ring'&&e[5]==='#ffffff'));
+ }
+});
+test('Sky Pikachu native cameo uses species 25, one native canvas draw and no recurring effects',()=>{
+ const source=require('node:fs').readFileSync(require('node:path').join(__dirname,'../src/pkmsvv-pippi.js'),'utf8');
+ assert.match(source,/new G\.Sprites\.Animator\(25,/);
+ assert.match(source,/const leap=t<\.27\?115/);
+ assert.match(source,/cue\.event==='cousin'\?target\.y-130/);
+ assert.match(source,/\.slice\(0,cue\.event==='cousin'\?16:4\)/);
+ assert.doesNotMatch(source,/setInterval\(.*cousin/i);
 });

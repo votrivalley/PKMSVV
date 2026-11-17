@@ -145,7 +145,7 @@ jobs:
         run: node scripts/fetch-pippi-pmd.cjs && node scripts/build-pippi-portrait-atlas.cjs
       - name: Add isolated companion features to BOTH game routes
         run: node scripts/prepare-pippi-web-preview.cjs
-      - name: Verify staged Web is QA-only and has the Pippi cousin 3–6 percent chance
+      - name: Verify staged Web is QA-only and has 4/6/8 percent cousin with 4/8/16 targets
         run: |
           set -euo pipefail
           jq -e '.releaseType=="qa-preview-only" and .pippiCousinQA=="PKMSVV_PIPPI_COUSIN_PREVIEW_20261115"' dist/cloudflare-v20-release/build-info.json
@@ -160,7 +160,7 @@ jobs:
             for file in room_base.png room_art_qa_v2.webp decor/machine_old.png decor/kabuto_skeleton.png decor/research_terminal.png; do
               test -s "dist/cloudflare-v20-release/$route/images/coop-lab/$file"
             done
-            grep -Fq 'COUSIN_CHANCES=Object.freeze([0,.05,.10,.20])' "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-pippi.js"
+            grep -Fq 'COUSIN_CHANCES=Object.freeze([0,.04,.06,.08])' "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-pippi.js"
             grep -Fq 'Bạn đồng hành' "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-wiki-qa.js"
             grep -Fq 'Tiếp theo' "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-pippi-guide.js"
             grep -Fq 'refundRetiredHealing' "dist/cloudflare-v20-release/$route/js/app.min.js"

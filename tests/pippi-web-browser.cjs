@@ -105,13 +105,17 @@ async function main(){
    launcher.click();
    const area=document.querySelector('#pkmsvv-wiki-overlay .pkmsvv-pc-grid');
    return {count:area?.children.length||0,labels:[...(area?.children||[])].map(e=>e.textContent?.trim().slice(0,80)),
-    companionButton:!![...(area?.children||[])].find(e=>/Bạn đồng hành|Companions/.test(e.textContent||''))};
+    companionButton:!![...(area?.children||[])].find(e=>/Bạn đồng hành|Companions/.test(e.textContent||'')),
+    labVisible:!!document.querySelector('#pkmsvv-wiki-overlay [data-pkmsvv-research-hub]'),
+    pippiTalk:!!document.querySelector('#pkmsvv-wiki-overlay [data-research-pippi-talk]')};
   })()`);
   console.log('PIPPI_WEB_PC='+JSON.stringify(pc));
   assert.equal(pc.missingLauncher,undefined,'PC launcher missing from menu');
-  assert.equal(pc.count,5,'PC must contain Support, Mega, Berry, Bạn đồng hành and Hồi sinh hóa thạch');
+  assert.equal(pc.count,5,'Research Lab retains five previous PC sections');
   assert.ok(pc.labels.some(x=>/Hồi sinh hóa thạch|Fossil Restoration/.test(x)),'fifth fossil lab tile missing');
   assert.equal(pc.companionButton,true,'Fourth Bạn đồng hành tile must be visible');
+  assert.equal(pc.labVisible,true,'research room art visible directly in the hub');
+  assert.equal(pc.pippiTalk,true,'Pippi research director dialogue must be available');
   const companion=await js(`(()=>{
     const item=[...document.querySelectorAll('#pkmsvv-wiki-overlay .pkmsvv-pc-card')]
      .find(e=>/Bạn đồng hành|Companions/.test(e.textContent||''));

@@ -161,8 +161,8 @@ G.PKMSVVWiki=(()=>{
    ['slow',3,tr('Làm chậm & Tăng tốc','Slow + Haste'),tr('Làm chậm tối đa 6 quái gần đó, đồng thời tăng tốc chạy 10%. Mỗi cấp huấn luyện tăng thêm 5% tốc độ, cùng hiệu lực làm chậm mạnh và lâu hơn.','Slow up to 6 enemies and boost movement speed by 10%; each training level adds 5% more speed plus stronger, longer slows.')],
    ['shield',7,tr('Khiên trăng','Moon Shield'),tr('Mỗi cấp tăng 0,35 giây bảo vệ nguy cấp.','+0.35 seconds emergency protection per level.')],
    ['cousin',4,tr('Em họ Pikachu','Cousin Pikachu'),
-    tr('Khi thực sự mất HP: Lv1 5% · Lv2 10% · Lv3 20% gọi Pikachu phóng sét, làm tê liệt tối đa 4 quái. Không học thì không xuất hiện.',
-       'When HP is actually lost: Lv1 5% · Lv2 10% · Lv3 20% to summon Pikachu and paralyze up to 4 enemies.')]
+    tr('Khi mất HP thật: Lv1 4% / 4 quái · Lv2 6% / 8 quái · Lv3 8% / 16 quái. Pikachu từ trời đáp xuống, giáng sét trắng gây tê liệt rồi bay đi. Chưa học thì không triệu hồi.',
+       'On actual HP loss: Lv1 4% / 4 foes · Lv2 6% / 8 foes · Lv3 8% / 16 foes. Pikachu drops from the sky, calls down white stun lightning, then disappears.')]
   ];
   function draw(focusKey){
    body.replaceChildren();
