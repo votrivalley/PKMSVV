@@ -12,7 +12,8 @@ test('fixed 8-slot lab catalog, detached art and 9999-coin golden Pippi trophy',
  assert.equal(item.gold_pippi_statue.dropChance,0);
  assert.equal(item.gold_pippi_statue.artReady,true);
  assert.equal(item.machine_old.visualLayer,'separate-svg');
- assert.equal(lab.config.roomArt.background,'images/coop-lab/room_empty_modular.svg');
+ assert.equal(lab.config.roomArt.background,'images/coop-lab/room_art_qa_v2.webp');
+ assert.equal(lab.config.roomArt.modularDraftBackground,'images/coop-lab/room_empty_modular.svg');
  assert.equal(Object.keys(lab.config.roomArt.slots).length,8);
  assert.equal(lab.config.currency.exchangeToPokeCoins,true);
  assert.equal(lab.config.currency.scope,'all-coop-modes-shared-wallet');
