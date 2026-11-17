@@ -636,14 +636,14 @@ G.PKMSVVWiki=(()=>{
   const current=()=>E?.normal?.(G.DB?.save)||G.DB?.save?.pkmsvvCoopLab||{};
   const note=document.createElement('p');note.className='pkmsvv-pc-hint';
   note.textContent=unlocked?
-   tr('Chọn một trong tám vị trí cố định. Các món chưa có sprite độc lập vẫn chỉ được xem, không trừ xu hoặc ghi save.',
-      'Select one of eight fixed slots. Unfinished sprites are preview-only; no coins or saves are changed.'):
-   tr('🔒 Xây dựng cần hoàn thành nhiệm vụ Co-op hóa thạch lần đầu. Bạn vẫn có thể xem tám vị trí, giá và vật phẩm dự kiến.',
-      '🔒 Build unlocks after the first Fossil Co-op mission. You can preview eight slots, items and planned prices.');
+   tr('Đã giữ lại bối cảnh nghiên cứu cũ. Chọn từng vị trí để xem đồ trang trí; các món chưa bóc tách khỏi tranh vẫn chỉ là bản xem trước.',
+      'The original detailed room is restored. Select a furnishing slot; unseparated objects remain previews.'):
+   tr('🔒 Xây dựng cần nhiệm vụ Co-op hóa thạch lần đầu. Đây là bối cảnh cũ đẹp đã khôi phục, không phải nền trống phác thảo; hiện chỉ xem được các vị trí.',
+      '🔒 Building requires the first fossil Co-op mission. The detailed original room is back, with placement previews only.');
   box.append(note);
   const area=document.createElement('div');area.className='pkmsvv-build-layout';
   const stage=document.createElement('div');stage.className='pkmsvv-build-stage';
-  stage.dataset.researchArtMode='modular';
+  stage.dataset.researchArtMode='classic';
   renderFurnitureLayers(stage);
   const info=document.createElement('section');info.className='pkmsvv-build-info';
   const h=document.createElement('h3'),desc=document.createElement('p'),
@@ -657,7 +657,7 @@ G.PKMSVVWiki=(()=>{
    ['shelf_right',220,74,96,59,'Kệ bên phải','Right shelf'],
    ['garden',6,146,87,66,'Góc cây cảnh','Garden'],
    ['desk',235,132,79,34,'Bàn nghiên cứu','Research desk'],
-   ['trophy',181,148,44,65,'Bệ danh dự','Trophy pedestal']
+   ['trophy',250,124,29,47,'Bệ danh dự','Trophy pedestal']
   ];
   const names={
    machine_old:['Máy phục nguyên nguyên mẫu','Original restoration machine',0],
@@ -734,8 +734,8 @@ G.PKMSVVWiki=(()=>{
   }
   area.append(stage,info);box.append(area);
   const footer=document.createElement('p');footer.className='pkmsvv-pc-hint';
-  footer.textContent=tr('Nền và nội thất đã tách lớp. Món có sprite riêng chỉ được mua bằng Xu Đồng Đội sau khi hoàn thành nhiệm vụ Co-op đầu tiên; không tự sở hữu các món xem trước.',
-    'Room and furniture are independent layers. Only finished sprites can be purchased after first Co-op clear; preview items never charge coins.');
+  footer.textContent=tr('Ảnh gốc là tranh ghép một lớp: hiện giữ nguyên để bảo toàn chất lượng. Việc tách từng món và phục dựng phần tường/sàn bị che sẽ cần kiểm định mỹ thuật riêng; không tự trừ xu cho đồ chưa hoàn chỉnh.',
+    'The original room is one flattened image, preserved for visual quality. Extracted furnishings and obscured background still require art validation; unfinished items cannot charge coins.');
   box.append(footer);overlay.append(box);document.body.append(overlay);
   inspect('center');back.focus({preventScroll:true});return true;
  }
