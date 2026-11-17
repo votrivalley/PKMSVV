@@ -51,7 +51,7 @@ jobs:
           test -s dist/lan/game/index.html
           grep -Fq 'PKMSVVFossilExpedition' dist/lan/game/js/app.min.js
           grep -Fq 'fossil_lab' dist/lan/game/js/app.min.js
-      - name: Chromium: create real Fossil Expedition + AI room, start game, strike world rock
+      - name: 'Chromium: create real Fossil Expedition + AI room, start game, strike world rock'
         env:
           PKMSVV_BROWSER: /usr/bin/google-chrome
         run: timeout 120s node tests/fossil-expedition-native-browser.cjs
