@@ -342,6 +342,37 @@ G.PKMSVVWiki=(()=>{
   }
   artArea.append(artTitle,artHint,stage,detail);box.append(artArea);
   const list=document.createElement('div');list.className='pkmsvv-fossil-list';box.append(list);
+  // Fossils are tangible rocks until restored; never expose undiscovered
+  // Pokémon silhouettes or species names as the primary list artwork.
+  const motifs={
+   helix_fossil:'M23 34c0-12 21-16 30-4 9 15-8 26-20 18-10-6-3-16 6-11 13 5 9 17-2 16-13',
+   dome_fossil:'M14 43Q32 9 51 43M21 42V50M29 34V51M38 34V51M46 42V50',
+   old_amber:'M32 12L51 26L48 52L31 59L14 43L18 24ZM27 28L37 41M38 26L27 45',
+   root_fossil:'M30 15V34L17 48M30 34L44 47M30 32L47 23M17 48L12 55M44 47L51 54',
+   claw_fossil:'M16 47L24 19L29 46L37 14L40 47L51 22L49 52',
+   skull_fossil:'M19 43V26Q32 11 45 26V43L39 48V53H25V48Z M25 32h4m8 0h4m-9 8v6',
+   armor_fossil:'M32 14L49 23L51 42L40 53L23 52L14 36L19 23ZM32 22V51M21 32H44',
+   cover_fossil:'M16 43Q24 15 35 19Q51 22 52 44L39 54L22 51ZM27 35L43 42M35 22L31 48',
+   plume_fossil:'M17 51Q48 9 49 16Q49 48 17 51ZM20 50L45 20M27 38L42 37M34 27L48 27',
+   jaw_fossil:'M15 23L27 17L44 23L52 35L47 50L34 56L20 47ZM19 39L25 44L31 41L37 48L43 41L49 43',
+   sail_fossil:'M17 53L25 17L32 37L39 15L45 40L52 25L55 54ZM21 48H52',
+   fossilized_bird:'M14 31L29 27L38 17L42 31L53 38L40 46L23 42ZM30 34L45 42',
+   fossilized_fish:'M13 36L29 23L44 28L49 35L57 25V49L48 41L29 48ZM24 33H28',
+   fossilized_drake:'M19 49L24 23L37 16L45 28L54 32L41 41L38 54ZM30 31L39 38',
+   fossilized_dino:'M13 46L21 28L34 23L43 30L51 27L54 50L38 53L28 44ZM31 33L40 38'
+  };
+  function fossilStone(id,found){
+   const holder=document.createElement('span');holder.className='pkmsvv-fossil-stone'+(found?'':' undiscovered');
+   holder.dataset.fossilMaterial=id;holder.setAttribute('aria-hidden','true');
+   // Only known, fixed material IDs can contribute SVG paths.
+   const safePath=motifs[id]||motifs.dome_fossil;
+   holder.innerHTML='<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'+
+    '<path d="M13 18L24 10L42 10L54 22L58 41L47 55L27 57L11 47L7 32Z" fill="#a98d69" stroke="#514435" stroke-width="4"/>'+
+    '<path d="M15 21L24 14L42 14L52 23" fill="none" stroke="#e5cb96" stroke-width="3"/>'+
+    '<path d="'+safePath+'" fill="none" stroke="#493629" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>'+
+    '</svg>';
+   return holder;
+  }
   function draw(){
    list.replaceChildren();
    const F=G.PKMSVVFossils,bag=F?.inventory?.()||{},s=G.DB?.save;
@@ -361,32 +392,64 @@ G.PKMSVVWiki=(()=>{
    const pieces=F.materials.filter(m=>(Number(bag[m.id])||0)>0).map(m=>m.nameVi+' ×'+bag[m.id]);
    stock.textContent=tr('Túi hóa thạch: ','Fossils: ')+(pieces.join(' · ')||tr('Trống trơn. Đá còn cứng hơn đầu bạn đó.','Empty! Try breaking some rocks.'));
    list.append(stock);
+   const completed=F.recipes.filter(r=>s?.pkmsvvFossils?.restored?.[r.dex]===true).length;
+   const medal=document.createElement('p');medal.className='pkmsvv-fossil-medal';
+   medal.dataset.fossilAchievement=String(completed);
+   medal.textContent=completed===F.recipes.length?
+    tr('🏅 Nhà khảo cổ vĩ đại — Đã phục nguyên toàn bộ '+completed+' Pokémon hóa thạch!',
+       '🏅 Great Archaeologist — All '+completed+' fossil Pokémon restored!'):
+    tr('🏅 Nhà khảo cổ vĩ đại · Tiến độ '+completed+'/'+F.recipes.length+' Pokémon đã hồi sinh',
+       '🏅 Great Archaeologist · '+completed+'/'+F.recipes.length+' fossils restored');
+   list.append(medal);
    for(const formula of F.recipes){
+    const restored=s?.pkmsvvFossils?.restored?.[formula.dex]===true;
     const own=!!s?.owned?.[formula.dex];
+    const found=formula.materialIds.some(id=>!!s?.pkmsvvFossils?.discovered?.[id]||(Number(bag[id])||0)>0)||restored;
     const can=unlocked&&!!G.DEX_BY?.[formula.dex]&&!!G.SPRITE_META?.[formula.dex]&&
      !own&&formula.materialIds.every(id=>(Number(bag[id])||0)>=formula.materialIds.filter(x=>x===id).length);
     const row=document.createElement('article');row.className='pkmsvv-fossil-row';
-    const canvas=document.createElement('canvas');canvas.width=72;canvas.height=72;
-    canvas.setAttribute('aria-label',formula.name);
-    try{G.UI?.sprite?.(canvas,formula.dex,{hero:true,scale:1.2});}catch(_){}
+    row.dataset.fossilState=restored?'restored':found?'found':'unknown';
+    const art=document.createElement('div');art.className='pkmsvv-fossil-art';
+    if(restored){
+     const canvas=document.createElement('canvas');canvas.width=72;canvas.height=72;
+     canvas.setAttribute('aria-label',formula.name);
+     try{G.UI?.sprite?.(canvas,formula.dex,{hero:true,scale:1.2});}catch(_){}
+     art.append(canvas);
+    }else{
+     const rocks=document.createElement('div');rocks.className='pkmsvv-fossil-rocks';
+     for(const materialId of formula.materialIds){
+      const seen=!!s?.pkmsvvFossils?.discovered?.[materialId]||(Number(bag[materialId])||0)>0;
+      rocks.append(fossilStone(materialId,seen));
+     }
+     art.append(rocks);
+    }
     const detail=document.createElement('div');detail.className='pkmsvv-fossil-detail';
-    const name=document.createElement('strong');name.textContent=formula.name+' · Gen '+formula.generation;
+    const name=document.createElement('strong');
+    name.textContent=restored?formula.name+' · Gen '+formula.generation:
+     found?formula.materialIds.map(id=>F.materials.find(m=>m.id===id)?.nameVi||id).join(' + ')+' · Gen '+formula.generation:
+     tr('??? · Hóa thạch chưa phát hiện','??? · Undiscovered fossil')+' · Gen '+formula.generation;
     const ingredients=document.createElement('small');
-    ingredients.textContent=formula.materialIds.map(id=>(F.materials.find(m=>m.id===id)?.nameVi||id)+' ('+(bag[id]||0)+')').join(' + ');
-    const status=document.createElement('small');status.textContent=own?tr('Đã sở hữu','Already owned'):
-     !unlocked?tr('Máy khóa · Chưa hoàn thành Co-op lần đầu','Locked · Complete your first Co-op mission'):
-     can?tr('Đủ vật liệu · Có thể hồi sinh','Ready to restore'):tr('Chưa đủ hóa thạch','Missing fossils');
+    ingredients.textContent=found||restored?
+     formula.materialIds.map(id=>(F.materials.find(m=>m.id===id)?.nameVi||id)+' ×'+(bag[id]||0)).join(' + '):
+     tr('Chưa tìm thấy hóa thạch này trong Khám phá.','This fossil has not been found in Explore.');
+    const status=document.createElement('small');
+    status.textContent=restored?tr('Đã hồi sinh · Hiện Pokémon','Restored · Pokémon revealed'):
+     own?tr('Đã sở hữu Pokémon (chưa phục nguyên tại máy)','Already owns Pokémon (not restored at machine)'):
+     !unlocked?tr('Máy khóa · Hoàn thành Co-op lần đầu','Machine locked · Complete first Co-op mission'):
+     can?tr('Đủ vật liệu · Có thể hồi sinh','Materials ready · Can restore'):
+     tr('Cần tìm đủ hóa thạch','Find required fossils');
     detail.append(name,ingredients,status);
     const button=document.createElement('button');button.type='button';button.className='pkmsvv-pc-close pkmsvv-fossil-revive';
     button.dataset.fossilDex=String(formula.dex);button.disabled=!can;
-    button.textContent=own?tr('Đã có','Owned'):!unlocked?tr('🔒 Chưa mở','🔒 Locked'):tr('Hồi sinh','Restore');
+    button.textContent=restored?tr('Đã hồi sinh','Restored'):own?tr('Đã sở hữu','Owned'):
+     !unlocked?tr('🔒 Chưa mở','🔒 Locked'):tr('Hồi sinh','Restore');
     button.onclick=()=>{
      if(button.disabled)return;
      const result=F.restore(formula.dex);
      if(!result.ok){G.UI?.toast?.(tr('Không thể phục nguyên. Hóa thạch vẫn được giữ.','Could not restore. Materials preserved.'),2600);return;}
      draw();list.querySelector('[data-fossil-dex="'+formula.dex+'"]')?.focus({preventScroll:true});
     };
-    row.append(canvas,detail,button);list.append(row);
+    row.append(art,detail,button);list.append(row);
    }
   }
   draw();shade.append(box);document.body.append(shade);
