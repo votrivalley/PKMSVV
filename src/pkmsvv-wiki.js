@@ -876,16 +876,9 @@ G.PKMSVVWiki=(()=>{
   const store=document.createElement('button');store.type='button';store.className='pkmsvv-pc-close';
   store.dataset.researchStore='1';store.textContent=tr('🛒 Kho Hậu Cần','🛒 Supply Depot');
   store.onclick=coopShop;
-  const reference=document.createElement('button');reference.type='button';
-  reference.className='pkmsvv-pc-close';reference.dataset.researchReference='1';
-  reference.textContent=tr('🛠 Xem bố cục nâng cấp','🛠 Upgrade layout');
-  reference.onclick=()=>{
-   const layout=room.classList.toggle('pkmsvv-research-layout-preview');
-   room.dataset.researchArtMode=layout?'layout-preview':'classic';
-   reference.textContent=layout?tr('🖼 Phòng nghiên cứu gốc','🖼 Original research room'):
-    tr('🛠 Xem bố cục nâng cấp','🛠 Upgrade layout');
-  };
-  toolbar.append(store,build,knowledge,reference);
+  // No crude empty-room toggle: preserve the approved original artwork.
+  // Unfinished layout geometry remains an internal asset, not a user-facing room.
+  toolbar.append(store,build,knowledge);
   const fast=document.createElement('nav');fast.className='pkmsvv-research-quick-actions';
   fast.setAttribute('aria-label',tr('Chọn khu nghiên cứu','Research stations'));
   for(const z of zones){
