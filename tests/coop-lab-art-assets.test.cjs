@@ -77,7 +77,9 @@ test('new interactive lab station UI uses five real hotspots and keeps building 
  assert.match(wiki,/spot\.dataset\.buildSlot=id/);
  assert.match(wiki,/grid\.hidden=true/);
  assert.match(wiki,/help\.hidden=true/);
- assert.match(wiki,/btn\.disabled=true;btn\.dataset\.buildEquip=id/);
+ assert.match(wiki,/btn\.dataset\.buildEquip=id/);
+ assert.match(wiki,/E\.buy\(G\.DB\.save,id,commit\)/);
+ assert.match(wiki,/E\.equip\(G\.DB\.save,slot,id,commit\)/);
  assert.match(menu,/const order=\[play,pokemon,pc,coop,arena\]/);
  assert.match(css,/pkmsvv-research-hotspot-tag/);
  assert.match(css,/pkmsvv-research-lab-icon\.png/);
@@ -100,4 +102,24 @@ test('new interactive lab station UI uses five real hotspots and keeps building 
  assert.match(css,/\.pkmsvv-research-quick \.pkmsvv-research-glyph\{\s*display:none!important/);
  assert.match(wiki,/fromResearchLab:true/);
  assert.match(wiki,/__pkmsvvResearchEntryCapture/);
+});
+
+test('modular lab separates its background and all purchased art; original concept stays reference',()=>{
+ const base=fs.readFileSync(path.join(root,'assets/coop-lab/room_empty_modular.svg'),'utf8');
+ const chamber=fs.readFileSync(path.join(root,'assets/coop-lab/decor/machine_old_modular.svg'),'utf8');
+ const statue=fs.readFileSync(path.join(root,'assets/coop-lab/decor/gold_pippi_statue.svg'),'utf8');
+ const css=fs.readFileSync(path.join(root,'src/pkmsvv-pc-menu-clean-qa.css'),'utf8');
+ const wiki=fs.readFileSync(path.join(root,'src/pkmsvv-wiki.js'),'utf8');
+ const staging=fs.readFileSync(path.join(root,'scripts/prepare-pippi-web-preview.cjs'),'utf8');
+ for(const asset of [base,chamber,statue])assert.match(asset,/<svg[^>]*viewBox/);
+ assert.match(base,/Room architecture only/);
+ assert.match(statue,/Tượng Vàng Giáo sư Pippi/);
+ assert.match(css,/room_empty_modular\.svg/);
+ assert.match(css,/MODULAR_ROOM_20261117/);
+ assert.match(wiki,/renderFurnitureLayers\(room\)/);
+ assert.match(wiki,/renderFurnitureLayers\(stage\)/);
+ assert.match(wiki,/pixel\.dataset\.researchPixel=z\.id/);
+ assert.match(wiki,/pkmsvv-research-pixel-art/);
+ assert.match(staging,/gold_pippi_statue\.svg/);
+ assert.match(staging,/room_empty_modular\.svg/);
 });
