@@ -11,6 +11,10 @@ on:
       - 'src/pkmsvv-coop-lab-core.cjs'
       - 'src/pkmsvv-fossil-expedition-core.cjs'
       - 'tests/fossil-expedition-core.test.cjs'
+      - 'tests/fossil-expedition-routing.test.cjs'
+      - 'src/shared/coop-unified.js'
+      - 'src/lan/solo-ai-bus.js'
+      - 'lan-server/server.cjs'
       - 'data/pkmsvv-coop-lab-catalog.json'
       - 'data/pkmsvv-coop-lab-art-direction.json'
       - 'docs/COOP_FOSSIL_LAB_ART_DIRECTION_V1.md'
@@ -37,4 +41,4 @@ jobs:
         with:
           node-version: '22'
       - name: Validate fossils, 8-slot lab, Co-op coins, rare trophy and save rollback
-        run: node --test tests/fossil-restoration-data.test.cjs tests/fossil-system.test.cjs tests/coop-lab-core.test.cjs tests/fossil-expedition-core.test.cjs tests/coop-lab-art-direction.test.cjs tests/coop-lab-art-assets.test.cjs
+        run: node --test tests/fossil-restoration-data.test.cjs tests/fossil-system.test.cjs tests/coop-lab-core.test.cjs tests/fossil-expedition-core.test.cjs tests/fossil-expedition-routing.test.cjs tests/coop-lab-art-direction.test.cjs tests/coop-lab-art-assets.test.cjs
