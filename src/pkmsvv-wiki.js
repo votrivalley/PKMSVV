@@ -854,7 +854,11 @@ G.PKMSVVWiki=(()=>{
    if(stationArt[z.id]){
     const prop=document.createElement('span');prop.className='pkmsvv-research-scene-object';
     prop.dataset.researchObject=z.id;prop.setAttribute('aria-hidden','true');
-    prop.innerHTML=stationArt[z.id];b.append(prop);
+    prop.innerHTML=stationArt[z.id];
+    // The original pixel-art sprite sheet is sharper than the temporary
+    // SVG doodles; this element is visually used in the modular room.
+    const pixel=document.createElement('span');pixel.className='pkmsvv-research-pixel-art';
+    pixel.dataset.researchPixel=z.id;prop.append(pixel);b.append(prop);
    }
    const tag=document.createElement('span');tag.className='pkmsvv-research-hotspot-tag';
    const label=document.createElement('span');label.className='pkmsvv-research-tag-copy';
@@ -874,7 +878,16 @@ G.PKMSVVWiki=(()=>{
   const store=document.createElement('button');store.type='button';store.className='pkmsvv-pc-close';
   store.dataset.researchStore='1';store.textContent=tr('🛒 Kho Hậu Cần','🛒 Supply Depot');
   store.onclick=coopShop;
-  toolbar.append(store,build,knowledge);
+  const reference=document.createElement('button');reference.type='button';
+  reference.className='pkmsvv-pc-close';reference.dataset.researchReference='1';
+  reference.textContent=tr('🖼 Xem phối cảnh cũ','🖼 Original concept');
+  reference.onclick=()=>{
+   const old=room.classList.toggle('pkmsvv-research-reference');
+   room.dataset.researchArtMode=old?'reference':'modular';
+   reference.textContent=old?tr('🛠 Phòng tách lớp','🛠 Modular room'):
+    tr('🖼 Xem phối cảnh cũ','🖼 Original concept');
+  };
+  toolbar.append(store,build,knowledge,reference);
   const fast=document.createElement('nav');fast.className='pkmsvv-research-quick-actions';
   fast.setAttribute('aria-label',tr('Chọn khu nghiên cứu','Research stations'));
   for(const z of zones){
