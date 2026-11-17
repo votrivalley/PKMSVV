@@ -115,6 +115,20 @@ for(const prefix of ['game','ai/game']){
   const input=present(path.join(root,'assets/coop-lab',asset)),output=path.join(labOut,asset);
   fs.mkdirSync(path.dirname(output),{recursive:true});fs.copyFileSync(input,output);
  }
+ // Bundle the QA-safe storefront wallet from the tested CJS transaction
+ // core. The mission-only settle() function is intentionally NOT exposed to
+ // the browser, preventing the shop UI from fabricating mission rewards.
+ const economyConfig=JSON.parse(source('data/pkmsvv-coop-lab-catalog.json'));
+ let economySource=source('src/pkmsvv-coop-lab-core.cjs');
+ const commonImport="const config=require('../data/pkmsvv-coop-lab-catalog.json');";
+ const commonExports='module.exports={config,normal,isMachineUnlocked,buy,equip,settle,exchange,weekKey,buySupply};';
+ if(!economySource.includes(commonImport)||!economySource.includes(commonExports))
+  throw Error('Co-op economy browser adapter source drift');
+ economySource=economySource.replace(commonImport,'const config='+JSON.stringify(economyConfig)+';')
+  .replace(commonExports,'return {config,normal,isMachineUnlocked,exchange,weekKey};');
+ const browserEconomy='G.PKMSVVCoopEconomy=(()=>{\n'+economySource+'\n})();\n';
+ new vm.Script(browserEconomy,{filename:'pkmsvv-coop-economy-qa.js'});
+ write(path.join(dest,'js/ui/pkmsvv-coop-economy-qa.js'),browserEconomy);
  const imageDir=path.join(dest,'images/pippi');
  fs.mkdirSync(path.join(imageDir,'portrait'),{recursive:true});
  for(const name of ['Walk-Anim.png','Idle-Anim.png','Sleep-Anim.png']){
@@ -131,7 +145,7 @@ for(const prefix of ['game','ai/game']){
  if(fs.statSync(path.join(imageDir,'skill-icons.png')).size>25000)throw Error('Pippi icons too large for mobile QA');
  let html=source(path.relative(root,path.join(dest,'index.html')));
  if(!html.includes('pkmsvv-box-stage3.js'))throw Error('Not the validated Web 2.0 snapshot: '+prefix);
- for(const name of ['pkmsvv-pippi.js','pkmsvv-pippi-guide.js','pkmsvv-fossil-system.js']){
+ for(const name of ['pkmsvv-pippi.js','pkmsvv-pippi-guide.js','pkmsvv-fossil-system.js','pkmsvv-coop-economy-qa.js']){
   if(!html.includes(name))html=html.replace('</body>','<script defer src="js/ui/'+name+'"></script>\n</body>');
  }
  if(!html.includes('pkmsvv-pippi.css'))html=html.replace('</head>',
@@ -144,7 +158,7 @@ for(const prefix of ['game','ai/game']){
  write(path.join(dest,identity), 'window.__PKMSVV_PIPPI_QA='+JSON.stringify(revision)+';\n');
  html=html.replace('</head>','<script defer src="'+identity+'?v='+revision+'"></script>\n<meta name="robots" content="noindex,nofollow"><!-- '+marker+' -->\n</head>');
  // A stable Pages URL must not leave old PC / Pippi assets in existing caches.
- for(const name of ['pkmsvv-wiki-qa.js','pkmsvv-pippi.js','pkmsvv-pippi-guide.js','pkmsvv-fossil-system.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-quick-region.js']){
+ for(const name of ['pkmsvv-wiki-qa.js','pkmsvv-pippi.js','pkmsvv-pippi-guide.js','pkmsvv-fossil-system.js','pkmsvv-coop-economy-qa.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-quick-region.js']){
   html=html.replace('src="js/ui/'+name+'"','src="js/ui/'+name+'?v='+revision+'"');
  }
  for(const name of ['pkmsvv-pippi.css','pkmsvv-pippi-guide.css','pkmsvv-pc-menu-clean-qa.css']){
