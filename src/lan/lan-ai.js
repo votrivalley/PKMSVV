@@ -357,7 +357,7 @@ G.LanAI=(()=>{
     // then replaces that destination before movement is computed.
     let goal=['royale','coop'].includes(mode)?s.roam:host;
     if(!goal)goal={x:pl.x,y:pl.y};
-    let objective=mode==='berry'||mode==='berryeasy'?null:G.EggRush?.objective?.(pl);
+    let objective=['berry','berryeasy','fossil_lab'].includes(mode)?null:G.EggRush?.objective?.(pl);
     if(['coop','berry','berryeasy','fossil_lab'].includes(mode)&&objective&&sq(objective,host)>520**2)objective=null;
     const nests=objective?[objective]:mode==='eggrush'?(G.EggRush?.nests||[]).filter(n=>!n.taken):[];
     if(nests.length)goal=nests.reduce((a,b)=>sq(pl,a)<sq(pl,b)?a:b);
@@ -374,21 +374,37 @@ G.LanAI=(()=>{
      goal={x:target.x+(pl.x-target.x)/d*range,y:target.y+(pl.y-target.y)/d*range};
     }
     if(['coop','berry','berryeasy','fossil_lab'].includes(mode)&&!nests.length&&goal===s.roam&&sq(pl,goal)<50**2)goal={x:pl.x,y:pl.y};
-    // Fossil Expedition: stay useful as an ally. Follow the human excavator
-    // while collecting, then patrol the actual research machine during defense.
-    // Use bounded local steering (not full-horde A*) to prevent long-run freezes.
-    const fossil=mode==='fossil_lab'?G.PKMSVVFossilExpedition?.session:null;
-    if(fossil&&fossil.collected===3){
-     const machine=fossil.machine;
-     const nearbyThreat=enemies.filter(e=>sq(e,machine)<430*430)
-      .reduce((best,e)=>!best||sq(pl,e)<sq(pl,best)?e:best,null);
-     if(nearbyThreat){
-      const d=Math.sqrt(sq(pl,nearbyThreat))||1;
+    // Fossil Co-op AI: excavate separate distant sites, help Rotom versus
+    // the real Golurk boss, escort the companion and protect the repaired lab.
+    // All choices are made on the existing host-owned native Player actors.
+    const fossilApi=mode==='fossil_lab'?G.PKMSVVFossilExpedition:null;
+    const fossil=fossilApi?.session,slot=G.Social?.room?.members
+      ?.filter(m=>m.bot)?.findIndex(m=>m.uid===bot.uid)||0;
+    if(fossil){
+     const assigned=fossilApi.botGoal?.(pl,Math.max(0,slot));
+     if(assigned)goal=assigned;
+     const defending=fossil.phase==='defend',rescuing=fossil.phase==='rescue';
+     const attackTarget=defending?enemies.filter(e=>sq(e,fossil.machine)<380*380)
+      .reduce((best,e)=>!best||sq(pl,e)<sq(pl,best)?e:best,null):
+      rescuing?enemies.find(e=>e.pkmsvvFossilRotomBoss&&!e.dead):null;
+     if(attackTarget){
+      const d=Math.sqrt(sq(pl,attackTarget))||1;
       const ranged=pl.moves.some(m=>['projectile','beam','homing','chain','turret','meteor','boomerang'].includes(m.kind));
-      goal={x:nearbyThreat.x+(pl.x-nearbyThreat.x)/d*(ranged?145:65),
-       y:nearbyThreat.y+(pl.y-nearbyThreat.y)/d*(ranged?145:65)};
-     }else if(sq(pl,machine)>115*115)goal=machine;
-     else goal={x:pl.x,y:pl.y};
+      goal={x:attackTarget.x+(pl.x-attackTarget.x)/d*(ranged?125:63),
+       y:attackTarget.y+(pl.y-attackTarget.y)/d*(ranged?125:63)};
+     }
+     // If free movement has stalled against a river or rock for >2 seconds,
+     // sidestep locally for a short time; never invoke expensive full-world A*
+     // 3 times per second for every bot under heavy waves.
+     s.fossilLastPos||={x:pl.x,y:pl.y};
+     if(Math.hypot(pl.x-s.fossilLastPos.x,pl.y-s.fossilLastPos.y)<6)
+      s.fossilStuck=(s.fossilStuck||0)+s.personality.think;
+     else{s.fossilStuck=0;s.fossilLastPos={x:pl.x,y:pl.y};}
+     if(s.fossilStuck>2.2&&goal){
+      const a=Math.atan2(goal.y-pl.y,goal.x-pl.x)+(slot%2?Math.PI/2:-Math.PI/2);
+      goal={x:pl.x+Math.cos(a)*160,y:pl.y+Math.sin(a)*160};
+      if(s.fossilStuck>3.5)s.fossilStuck=0;
+     }
     }
     // Berry Rescue overrides ordinary wandering, distant rescues and monster chase.
     // Fossil Expedition needs the SAME bounded local steering when many waves
@@ -420,6 +436,7 @@ G.LanAI=(()=>{
    }
    pl.lanBotAxis=s.axis;
    pl.update(dt);
+   if(mode==='fossil_lab')G.PKMSVVFossilExpedition?.botInteract?.(pl);
    G.Combat.tick(dt,pl,time);
   }
  }
