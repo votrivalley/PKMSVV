@@ -26,6 +26,41 @@ const {startServer}=require('../lan-server/server.cjs');
    G.DB.save.partner=25;G.DB.save.partnerShiny=false;G.DB.save.pkmsvvStorySeen=true;
    G.DB.save.pkmsvvNameChosen=true;G.DB.commit?.();G.MenuUI.open();
   });
+  // Real desktop and portrait mobile UI regression: every launcher icon is
+  // visually the same size, on a single vertical axis, with fixed label X.
+  for(const [viewport,width,height] of [['desktop',1280,800],['mobile',390,844]]){
+   await page.setViewportSize({width,height});
+   const aligned=await page.evaluate(()=>{
+    const buttons=[...document.querySelectorAll(
+     '#scr-menu .menu-right .menu-list>.menu-item, #scr-menu .menu-right .menu-list>.pkmsvv-icon-unified'
+    )].filter(b=>b.getBoundingClientRect().width>0&&b.getBoundingClientRect().height>0);
+    return buttons.map(btn=>{
+     const icon=btn.querySelector(':scope > .mi-ico');
+     const label=btn.querySelector(':scope > .pkmsvv-menu-copy');
+     const ir=icon?.getBoundingClientRect(),br=btn.getBoundingClientRect(),
+      lr=label?.getBoundingClientRect();
+     const visibleArt=icon?.querySelector('img,svg,canvas');
+     const artRect=visibleArt?.getBoundingClientRect();
+     const style=getComputedStyle(btn),iconStyle=icon&&getComputedStyle(icon);
+     const left=br.x+parseFloat(style.paddingLeft)+parseFloat(style.gridTemplateColumns.split(' ')[0])+parseFloat(style.columnGap);
+     return {text:btn.textContent.trim().slice(0,25),iconX:ir?.x,iconW:ir?.width,iconH:ir?.height,
+      iconFont:iconStyle?.fontSize,artW:artRect?.width,artH:artRect?.height,
+      textX:lr?.x??left,expectedTextX:left,
+      grid:style.gridTemplateColumns,hidden:br.width===0};
+    });
+   });
+   console.log('PKMSVV_MENU_ICON_ALIGN_'+viewport+'='+JSON.stringify(aligned));
+   assert.ok(aligned.length>=9,'at least nine visible native home menu actions');
+   for(const x of aligned){
+    assert.ok(Math.abs(x.iconW-36)<.75&&Math.abs(x.iconH-36)<.75,'icon must have 36px fixed frame: '+JSON.stringify(x));
+    if(x.artW!==undefined)assert.ok(x.artW<=26.5&&x.artH<=26.5,'inner icon max 26px: '+JSON.stringify(x));
+    assert.ok(Math.abs(x.textX-x.expectedTextX)<1.5,'label must begin at shared grid column: '+JSON.stringify(x));
+   }
+   const iconOrigins=aligned.map(x=>x.iconX),textOrigins=aligned.map(x=>x.textX);
+   assert.ok(Math.max(...iconOrigins)-Math.min(...iconOrigins)<1.5,'icons must align in one vertical column: '+JSON.stringify(aligned));
+   assert.ok(Math.max(...textOrigins)-Math.min(...textOrigins)<1.5,'titles must align in one text column: '+JSON.stringify(aligned));
+  }
+  await page.setViewportSize({width:1280,height:800});
   await page.click('#scr-menu [data-go="multiplayer"]');
   await page.locator('#pkmsvv-coop-modes [data-mode="fossil_lab"]').waitFor();
   assert.match(await page.locator('#pkmsvv-coop-modes [data-mode="fossil_lab"]').innerText(),/2–4/);
