@@ -1,5 +1,5 @@
 /* PKMSVV Co-op Fossil Lab — honest, visible native selector preview.
- * A native 6–8 minute mission does NOT exist yet: no fake survival run,
+ * A native 8 minute mission does NOT exist yet: no fake survival run,
  * no fake reward, no spoofed Co-op room or fossil machine unlock.
  * This module only adds the clear fifth entry to the REAL LAN/AI Co-op
  * selection at #pkmsvv-coop-modes, not to the obsolete quick-match hub.
@@ -21,14 +21,14 @@
   panel.style.cssText='width:min(580px,100%);max-height:85vh;overflow:auto;background:#17424e;border:2px solid #dcb877;border-radius:14px;padding:20px;color:#ffebbb;box-shadow:0 13px 38px #0009;line-height:1.6';
   const title=document.createElement('h2');title.textContent=tr('🦴 Khai quật hóa thạch','🦴 Fossil Expedition');title.style.margin='0 0 9px';
   const intro=document.createElement('p');
-  intro.textContent=tr('Nhiệm vụ Co-op mới dự kiến kéo dài 6–8 phút: tìm mẫu hóa thạch, bảo vệ máy nghiên cứu rồi rút lui. Chơi một mình thì thêm ít nhất một đồng đội máy để đủ 2 thành viên; vẫn nhận thưởng như đội người thật.',
-   'Planned 6–8 minute Co-op mission: find fossils, defend the lab and extract. Solo humans can add at least one computer-controlled teammate to reach the required two members and earn full rewards.');
+  intro.textContent=tr('Nhiệm vụ Co-op mới dự kiến kéo dài 8 phút: đào 9 mảnh ở 3 điểm xa nhau, cứu Rotom khỏi Golurk trước 4:00, dẫn Rotom về máy rồi phòng thủ tới 8:00. Chơi một mình thì thêm ít nhất một đồng đội máy để đủ 2 thành viên; vẫn nhận thưởng như đội người thật.',
+   'Planned 8 minute Co-op mission: collect nine fragments, rescue Rotom from Golurk before 4:00, escort it back and defend the machine to 8:00. Solo humans can add at least one computer-controlled teammate to reach the required two members and earn full rewards.');
   const reward=document.createElement('p');
   reward.textContent=tr('Lần đầu hoàn thành: mở khóa máy phục nguyên vĩnh viễn và nhận Kabuto miễn phí. Những lần sau kiếm Xu Đồng Đội dùng chung trong Co-op.',
    'First completion: permanently unlock the revival machine and receive a free Kabuto. Replay to earn shared Co-op Coins.');
   const state=document.createElement('p');state.style.color='#ffd586';
-  state.textContent=tr('🔒 Chưa thể bắt đầu: nhiệm vụ 6–8 phút chưa được tích hợp vào gameplay. Đây là mục giới thiệu, không phải trận chơi và không phát thưởng.',
-   '🔒 Not playable yet: the 6–8 minute mission has not been integrated into gameplay. This is a preview, not a playable match, and no rewards can be earned.');
+  state.textContent=tr('🔒 Chưa thể bắt đầu: nhiệm vụ 8 phút chưa được tích hợp vào gameplay. Đây là mục giới thiệu, không phải trận chơi và không phát thưởng.',
+   '🔒 Not playable yet: the 8 minute mission has not been integrated into gameplay. This is a preview, not a playable match, and no rewards can be earned.');
   const close=document.createElement('button');close.type='button';close.className='btn gold';
   close.textContent=tr('← Quay lại Co-op','← Return to Co-op');close.onclick=closeDetail;
   panel.append(title,intro,reward,state,close);shade.append(panel);document.body.append(shade);
@@ -52,12 +52,12 @@
   const title=document.createElement('strong');title.className='pkmsvv-mode-title';
   title.textContent=tr('Khai quật hóa thạch','Fossil Expedition');
   const cap=document.createElement('small');cap.className='pkmsvv-mode-cap';
-  cap.textContent=tr('2–4 người · 6–8 phút','2–4 players · 6–8 min');
+  cap.textContent=tr('2–4 người · 8 phút','2–4 players · 8 min');
   const short=document.createElement('small');short.className='pkmsvv-coop-pokemon';
   short.textContent=tr('Phòng thí nghiệm thất lạc','Lost Laboratory');
   const desc=document.createElement('small');desc.className='pkmsvv-mode-description';
-  desc.textContent=tr('Tìm hóa thạch, bảo vệ máy và hoàn thành thử thách. Có thể chơi cùng đồng đội máy khi mở.',
-    'Collect fossils, defend the machine and complete objectives. Computer companions supported when released.');
+  desc.textContent=tr('Đào 9 mảnh, cứu Rotom trước 4:00, hộ tống và phòng thủ máy tới 8:00. Có thể chơi cùng đồng đội máy khi mở.',
+    'Collect nine fragments, rescue Rotom before 4:00, escort it, then defend to 8:00. Computer companions supported when released.');
   const state=document.createElement('small');state.className='pkmsvv-mode-action';
   state.style.cssText='color:#8a4419;background:#ffe49c;border-radius:6px;padding:4px 7px;margin-top:7px;font-weight:800';
   state.textContent=tr('🔒 Xem trước · Chưa chơi được','🔒 Preview · Not playable');
