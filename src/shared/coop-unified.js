@@ -75,7 +75,7 @@
    b.innerHTML='<span class="pkmsvv-mode-art"><canvas width="144" height="144" aria-hidden="true"></canvas></span>'+
     '<span class="pkmsvv-mode-copy"><strong>'+L(title,englishModes[id]?.[0]||title)+'</strong><small class="pkmsvv-mode-cap">'+L(capacity,englishModes[id]?.[1]||capacity)+'</small>'+
     '<small class="pkmsvv-coop-pokemon" translate="no">'+name+'</small><small class="pkmsvv-mode-description">'+L(description,englishModes[id]?.[2]||description)+'</small></span>';
-   b.onclick=()=>{mode=id;repaint();};view.querySelector('#pkmsvv-coop-modes').append(b);
+   b.onclick=()=>{mode=id;repaint();G.PKMSVVPippiGuide?.openMode?.(id);};view.querySelector('#pkmsvv-coop-modes').append(b);
    G.UI?.sprite?.(b.querySelector('canvas'),dex,{lively:true,scale:2,hero:true});
   }
   view.querySelector('#pkmsvv-coop-close').onclick=close;
@@ -176,7 +176,8 @@
   if(arenaMode(mode)&&role==='ai'){info(L('Arena PvP chỉ nhận người chơi thật. Hãy chọn Đấu với AI trong Arena.','Arena PvP requires real players. Choose Fight AI in Arena instead.'));return;}
   // Never fall back from Fossil Expedition to generic Survival: the room
   // must carry fossil_lab end-to-end, or mission rewards are disallowed.
-  if(mode==='fossil_lab'&&G.PKMSVVFossilExpedition?.nativeReady!==true){
+  if(G.PKMSVVPippiGuide?.openMode?.(mode))return;
+   if(mode==='fossil_lab'&&G.PKMSVVFossilExpedition?.nativeReady!==true){
    info(L('Khai quật hóa thạch đang kết nối bộ điều khiển nhiệm vụ. Chưa thể bắt đầu trận.', 'Fossil Expedition engine is not ready; match cannot start.'));
    return;
   }
