@@ -70,6 +70,30 @@ const {startServer}=require('../lan-server/server.cjs');
   for(let i=0;i<3;i++)for(let j=i+1;j<3;j++)
    assert.ok(Math.hypot(positions.sites[i].x-positions.sites[j].x,positions.sites[i].y-positions.sites[j].y)>650);
   assert.deepEqual([positions.rescueDeadline,positions.victory,positions.boss],[240,480,623]);
+  // The repaired Restorer must behave like a Berry tree: native enemy AI
+  // targets one stable machine actor, but only during Rotom-fused defense.
+  const machineTargetQA=await page.evaluate(()=>{
+   const api=G.PKMSVVFossilExpedition,s=api.session;
+   const pre=api.targetFor({id:1,x:100,y:100,dead:false})===null;
+   const originalPhase=s.phase,originalOnline=s.machine.online;
+   s.phase='defend';s.machine.online=true;
+   const directed=api.targetFor({id:1,x:100,y:100,dead:false});
+   const pressure=api.targetFor({id:5,x:100,y:100,dead:false});
+   const remote=api.targetFor({id:1,x:100,y:100,dead:false,remote:true});
+   s.phase=originalPhase;s.machine.online=originalOnline;
+   const post=api.targetFor({id:1,x:100,y:100,dead:false})===null;
+   return {pre,post,directed:directed?._pkmsvvFossilMachine===true,
+    x:directed?.x,y:directed?.y,machineX:s.machine.x,machineY:s.machine.y,
+    pressure:pressure===null,remote:remote===null};
+  });
+  assert.equal(machineTargetQA.pre,true,'before Rotom fusion, enemies must still attack the trainers');
+  assert.equal(machineTargetQA.post,true,'QA must leave live mission state unchanged');
+  assert.equal(machineTargetQA.directed,true,'native enemy AI must prioritize an actual Restorer target actor');
+  assert.equal(machineTargetQA.pressure,true,'one in five Pokémon must continue pressuring trainers');
+  assert.equal(machineTargetQA.remote,true,'guest-side remote snapshots must not retarget native enemies');
+  assert.deepEqual([machineTargetQA.x,machineTargetQA.y],
+    [machineTargetQA.machineX,machineTargetQA.machineY]);
+  console.log('FOSSIL_MACHINE_TARGET_QA='+JSON.stringify(machineTargetQA));
   const mined=await page.evaluate(()=>{
    const s=G.PKMSVVFossilExpedition.session,stone=s.sites[0];
    G.Game.player.x=stone.x;G.Game.player.y=stone.y;
