@@ -63,7 +63,7 @@ test('role rates and Kabuto first-rock guarantee are ordered, save-once and secr
  const guide=require('node:fs').readFileSync(require('node:path').join(__dirname,'../src/pkmsvv-pippi-guide.js'),'utf8');
  assert.match(guide,/fossils:\[/);
  assert.match(guide,/Hóa thạch Mái vòm/);
- assert.match(guide,/PC → Hồi sinh hóa thạch/);
+ assert.match(guide,/Phòng nghiên cứu/);
  const tutorial=guide.split("  fossils:[")[1].split("  explore:[")[0];
  assert.doesNotMatch(tutorial,/\b(?:2%|4%|6%|0\.02|0\.04|0\.06)\b/);
 });
