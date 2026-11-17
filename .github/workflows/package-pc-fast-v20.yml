@@ -100,6 +100,7 @@ jobs:
             'resources/lan-site/game/js/ui/pkmsvv-wiki-qa.js',
             'resources/lan-site/game/js/ui/pkmsvv-pc-menu-clean-qa.js',
             'resources/lan-site/game/images/pkmsvv-menu-icons.webp',
+            'resources/lan-site/game/images/pkmsvv-research-lab-icon.png',
             'resources/lan-site/game/images/coop-lab/room_base.png',
             'resources/lan-site/game/images/coop-lab/room_art_qa_v2.webp',
             'resources/lan-site/game/images/coop-lab/decor/machine_old.png',

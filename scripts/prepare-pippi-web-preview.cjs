@@ -102,6 +102,8 @@ for(const prefix of ['game','ai/game']){
  for(const filename of ['pkmsvv-v20-ui-qa.css','pkmsvv-pc-menu-clean-qa.css','pkmsvv-pippi.css','pkmsvv-pippi-guide.css']){
   write(path.join(dest,'css',filename),source('src/'+filename));
  }
+ fs.copyFileSync(present(path.join(root,'assets/research-lab-menu-icon.png')),
+   path.join(dest,'images/pkmsvv-research-lab-icon.png'));
  const labOut=path.join(dest,'images/coop-lab');
  for(const asset of ['room_base.png','room_art_qa_v2.webp','decor/machine_old.png','decor/kabuto_skeleton.png','decor/research_terminal.png']){
   const input=present(path.join(root,'assets/coop-lab',asset)),output=path.join(labOut,asset);
@@ -163,7 +165,7 @@ for(const prefix of ['game','ai/game']){
 }
 const meta=JSON.parse(source('dist/cloudflare-v20-release/build-info.json'));
 Object.assign(meta,{releaseType:'qa-preview-only',pippiCousinQA:marker,
- previewBranch:'pippi-cousin-qa',version:'2.0.5-Research-Lab-Pikachu-QA',
+ previewBranch:'pippi-cousin-qa',version:'2.0.6-Interactive-Research-Room-QA',
  description:'Isolated browser-only test; production pkmsvv-web.pages.dev unchanged'});
 write(path.join(site,'build-info.json'),JSON.stringify(meta,null,2)+'\n');
 // QA-only cache policy: browsers must revalidate the HTML and the two UI

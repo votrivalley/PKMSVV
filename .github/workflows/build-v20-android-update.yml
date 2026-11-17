@@ -202,6 +202,7 @@ jobs:
           grep -q 'G.PKMSVVPippi' decoded-android/assets/public/js/app.min.js
           test -s decoded-android/assets/public/css/pkmsvv-pc-menu-clean-qa.css
           test -s decoded-android/assets/public/images/pkmsvv-menu-icons.webp
+          test -s decoded-android/assets/public/images/pkmsvv-research-lab-icon.png
           test -s decoded-android/assets/public/js/ui/pkmsvv-modal-navigation-qa.js
           test -s decoded-android/assets/public/css/pkmsvv-modal-navigation-qa.css
           test -s decoded-android/assets/public/js/ui/pkmsvv-runtime-controls-qa.js

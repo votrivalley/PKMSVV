@@ -107,7 +107,11 @@ async function main(){
    return {count:area?.children.length||0,labels:[...(area?.children||[])].map(e=>e.textContent?.trim().slice(0,80)),
     companionButton:!![...(area?.children||[])].find(e=>/Bạn đồng hành|Companions/.test(e.textContent||'')),
     labVisible:!!document.querySelector('#pkmsvv-wiki-overlay [data-pkmsvv-research-hub]'),
-    pippiTalk:!!document.querySelector('#pkmsvv-wiki-overlay [data-research-pippi-talk]')};
+    pippiTalk:!!document.querySelector('#pkmsvv-wiki-overlay [data-research-pippi-talk]'),
+    roomVersion:document.querySelector('#pkmsvv-wiki-overlay [data-pkmsvv-research-hub]')?.dataset.pkmsvvResearchHub,
+    hotspots:[...document.querySelectorAll('#pkmsvv-wiki-overlay [data-research-hotspot]')].map(b=>b.dataset.researchHotspot),
+    buildButton:!!document.querySelector('#pkmsvv-wiki-overlay [data-research-build]'),
+    oldCardsHidden:document.querySelector('#pkmsvv-wiki-overlay .pkmsvv-pc-grid')?.hidden===true};
   })()`);
   console.log('PIPPI_WEB_PC='+JSON.stringify(pc));
   assert.equal(pc.missingLauncher,undefined,'PC launcher missing from menu');
@@ -116,10 +120,12 @@ async function main(){
   assert.equal(pc.companionButton,true,'Fourth Bạn đồng hành tile must be visible');
   assert.equal(pc.labVisible,true,'research room art visible directly in the hub');
   assert.equal(pc.pippiTalk,true,'Pippi research director dialogue must be available');
+  assert.equal(pc.roomVersion,'2','research room must be the default full interactive scene');
+  assert.deepEqual(pc.hotspots,['support','mega','berry','companion','fossil'],'five clickable research machines');
+  assert.equal(pc.buildButton,true,'Build mode button must be visible');
+  assert.equal(pc.oldCardsHidden,true,'old PC card interface must NOT be shown on entry');
   const companion=await js(`(()=>{
-    const item=[...document.querySelectorAll('#pkmsvv-wiki-overlay .pkmsvv-pc-card')]
-     .find(e=>/Bạn đồng hành|Companions/.test(e.textContent||''));
-    item?.click();
+    document.querySelector('#pkmsvv-wiki-overlay [data-research-hotspot="companion"]')?.click();
     return {visible:!!document.querySelector('.pkmsvv-pippi-corner'),
      training:[...document.querySelectorAll('[data-pippi-train]')].map(x=>x.dataset.pippiTrain)};
   })()`);

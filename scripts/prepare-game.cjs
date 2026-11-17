@@ -694,6 +694,7 @@ if (process.env.PKMSVV_SWITCH_BOOT === '1') {
  fs.copyFileSync(path.join(project,'src','pkmsvv-wiki.js'),path.join(pippiDir,'pkmsvv-wiki-qa.js'));
  fs.mkdirSync(path.join(game,'images'),{recursive:true});
  fs.copyFileSync(path.join(project,'src','pkmsvv-menu-icons.webp'),path.join(game,'images','pkmsvv-menu-icons.webp'));
+ fs.copyFileSync(path.join(project,'assets','research-lab-menu-icon.png'),path.join(game,'images','pkmsvv-research-lab-icon.png'));
  fs.appendFileSync(path.join(game,'css','style.css'),'\n'+fs.readFileSync(path.join(project,'src','pkmsvv-pc-menu-clean-qa.css'),'utf8'));
 
  // PC and staged Web should use the exact same OFFLINE PMD animation and

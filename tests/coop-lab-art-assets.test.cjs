@@ -62,3 +62,25 @@ test('art QA V2 uses detailed 960x672 206KB WebP instead of enlarging three toy-
  assert.doesNotMatch(css,/\.pkmsvv-lab-art-machine\{/);
  assert.match(css,/image-rendering:auto/);
 });
+
+
+test('new interactive lab station UI uses five real hotspots and keeps building separate',()=>{
+ const wiki=fs.readFileSync(path.join(root,'src/pkmsvv-wiki.js'),'utf8');
+ const css=fs.readFileSync(path.join(root,'src/pkmsvv-pc-menu-clean-qa.css'),'utf8');
+ const menu=fs.readFileSync(path.join(root,'src/pkmsvv-pc-menu-clean-qa.js'),'utf8');
+ assert.match(wiki,/hero\.dataset\.pkmsvvResearchHub='2'/);
+ for(const id of ['support','mega','berry','companion','fossil'])
+  assert.match(wiki,new RegExp("id:'"+id+"'"));
+ assert.match(wiki,/b\.dataset\.researchHotspot=z\.id/);
+ assert.match(wiki,/build\.dataset\.researchBuild='1'/);
+ assert.match(wiki,/function construction\(\)/);
+ assert.match(wiki,/spot\.dataset\.buildSlot=id/);
+ assert.match(wiki,/grid\.hidden=true/);
+ assert.match(wiki,/help\.hidden=true/);
+ assert.match(wiki,/btn\.disabled=true;btn\.dataset\.buildEquip=id/);
+ assert.match(menu,/const order=\[play,pokemon,pc,coop,arena\]/);
+ assert.match(css,/pkmsvv-research-hotspot-tag/);
+ assert.match(css,/pkmsvv-research-lab-icon\.png/);
+ const icon=fs.readFileSync(path.join(root,'assets/research-lab-menu-icon.png'));
+ assert.deepEqual(dimensions(icon),[42,42]);
+});
