@@ -1,4 +1,4 @@
-/* Isolated QA: main Pokémon hub owns PokéBox/Pokédex/Upgrades, PC keeps utilities.
+/* Isolated QA: main Pokémon hub owns PokéBox/Pokédex/Upgrades, Research Lab keeps former PC utilities.
  * Display-only routing; never changes save, modes, Pokémon IDs or rewards. */
 (()=>{
  'use strict';
@@ -118,7 +118,7 @@
    stats.textContent=lines.join(' · ');
   }
  }
- // Reorder only the four requested HOME launchers; preserve existing nodes,
+ // Reorder exactly the five HOME launchers; preserve original Pokémon action,
  // registered click handlers, and the position of all unrelated menu items.
  function reorderMainMenu(menu){
   const list=menu?.querySelector('.menu-right .menu-list');
@@ -135,16 +135,15 @@
   };
   const play=entry('[data-go="play"]',['khám phá','explore','chơi ngay','play','play now']);
   const pokemon=entry('[data-go="dex"]',['pokémon','pokemon']);
-  const pc=entry('#pkmsvv-menu-wiki',['pc']);
+  const pc=entry('#pkmsvv-menu-wiki',['phòng nghiên cứu','research lab','pc']);
   const coop=entry('[data-go="multiplayer"],[data-go="coop"],[data-go="co-op"],[data-go="coOp"]',['co-op','coop']);
   const arena=entry('#pkmsvv-champion-entry,[data-go="arena"]',['arena']);
-  const order=[pokemon,pc,coop,arena].filter((el,i,all)=>el&&all.indexOf(el)===i);
+  const order=[play,pokemon,pc,coop,arena].filter((el,i,all)=>el&&all.indexOf(el)===i);
   if(!order.length)return false;
-  let target=play?.parentElement===list?play.nextElementSibling:list.firstElementChild;
-  // Move actual buttons, not clones, so their handlers and state remain intact.
-  for(const item of order){
-   if(item===target){target=target.nextElementSibling;continue;}
-   list.insertBefore(item,target);
+  // Move exact native button nodes, in reverse, preserving click actions and controller focus.
+  for(let i=order.length-1;i>=0;i--){
+   const item=order[i];
+   if(item!==list.firstElementChild)list.insertBefore(item,list.firstElementChild);
   }
   return true;
  }
@@ -210,14 +209,14 @@
  function normalizeLauncherGrid(button,art,type){
   // One coherent row: [original 42px sprite] [title + subtitle].
   // Android's legacy menu injects text nodes and nested copies during refresh.
-  const title={pc:'PC',coop:'Co-op',arena:'Arena'}[type];
+  const title={pc:L('Phòng nghiên cứu','Research Lab'),coop:'Co-op',arena:'Arena'}[type];
   let copy=[...button.children].find(el=>el.classList.contains('pkmsvv-menu-copy'));
   if(!copy){copy=d.createElement('span');copy.className='pkmsvv-menu-copy';}
   let label=copy.querySelector('.pkmsvv-menu-label');
   if(!label){label=d.createElement('span');label.className='pkmsvv-menu-label';copy.prepend(label);}
   if(label.textContent!==title)label.textContent=title;
   const subtitles={
-   pc:L('Pokémon hỗ trợ · Mega · Berry','Support Pokémon · Mega · Berry'),
+   pc:L('Hóa thạch · Mega · Hỗ trợ · Pippi','Fossils · Mega · Supports · Pippi'),
    coop:L('Co-op LAN · cùng Wi-Fi','Co-op LAN · same Wi-Fi'),
    arena:L('Hoàn thành Chương 6 để mở Arena','Complete Chapter 6 to unlock Arena')
   };
@@ -295,7 +294,7 @@
    }
    const pc=menu.querySelector('#pkmsvv-menu-wiki');
    const pcSub=pc?.querySelector('.pkmsvv-menu-copy small, small');
-   if(pcSub)pcSub.textContent=L('Pokémon hỗ trợ · Mega · Berry','Support Pokémon · Mega · Berries');
+   if(pcSub)pcSub.textContent=L('Hóa thạch · Mega · Hỗ trợ · Pippi','Fossils · Mega · Supports · Pippi');
    // Nâng cấp remains a tab within Pokémon; never remove the real upgrade screen.
    menu.querySelector('[data-go="upgrades"]')?.remove();
   }
