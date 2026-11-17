@@ -2,9 +2,11 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const lab=require('../src/pkmsvv-coop-lab-core.cjs');
 const item=Object.fromEntries(lab.config.items.map(v=>[v.id,v]));
-const receipt=(seq,optionalObjectives=2,other={})=>({mission:'fossil_lab',verified:true,cleared:true,seq,partySize:1,durationSeconds:480,optionalObjectives,...other});
+const receipt=(seq,optionalObjectives=2,other={})=>({mission:'fossil_lab',verified:true,cleared:true,seq,partySize:2,durationSeconds:480,optionalObjectives,...other});
 test('fixed 8-slot lab catalog, detached art and 9999-coin golden Pippi trophy',()=>{
  assert.equal(lab.config.slots.length,8);
+ assert.deepEqual(lab.config.rewards.partySize,{min:2,max:4});
+ assert.equal(lab.config.rewards.playerCount.soloHumanWithBotsAllowed,true);
  assert.equal(new Set(lab.config.slots.map(x=>x.id)).size,8);
  assert.equal(lab.config.items.length,11);
  assert.equal(lab.config.items.filter(x=>x.price>0).length,10);
@@ -81,6 +83,7 @@ test('failed save preserves currencies, trophy and unlock; receipts cannot be sp
  assert.equal(save.pkmsvvCoopLab,undefined);
  assert.equal(lab.settle(save,receipt(1,2,{durationSeconds:30}),()=>true).reason,'receipt');
  assert.equal(lab.settle(save,receipt(1,2,{verified:false}),()=>true).reason,'receipt');
+ assert.equal(lab.settle(save,receipt(1,2,{partySize:1}),()=>true).reason,'receipt');
  assert.equal(lab.settle(save,receipt(1,2,{partySize:5}),()=>true).reason,'receipt');
  assert.equal(lab.settle(save,receipt(1,2,{optionalObjectives:3}),()=>true).reason,'receipt');
  assert.equal(save.pkmsvvFossils.inventory.dome_fossil,1);
