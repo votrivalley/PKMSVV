@@ -138,3 +138,38 @@ test('The guide portrait uses one original 16-face atlas and both game URLs stag
  assert.match(source,/pkmsvvPippiGuide/);
  assert.doesNotMatch(source,/setInterval\(/,'dialogue must never auto-progress');
 });
+
+test('Pippi explains each gameplay mode once BEFORE match starts, in Gen Z Vietnamese, never pausing native combat',()=>{
+ const f=fixture();
+ assert.equal(f.G.Game.state,'ui');
+ assert.equal(f.guide.openMode('fossil_lab'),true);
+ assert.equal(f.guide.current.kind,'mode_fossil_lab');
+ assert.equal(f.guide.current.paused,false);
+ assert.equal(f.G.Game.state,'ui');
+ assert.match(f.elements.line.textContent,/9 mảnh|bãi đá|khai quật/i);
+ const pages=f.guide.current.total;
+ assert.equal(pages,3);
+ for(let i=0;i<pages;i++)f.guide.next();
+ assert.equal(f.save.pkmsvvPippiGuide.mode_fossil_lab,true);
+ assert.equal(f.guide.openMode('fossil_lab'),false,'one-time introduction must not spam each lobby entry');
+ assert.equal(f.guide.openMode('coop'),true);
+ assert.match(f.elements.line.textContent,/bestie|Sống Sót/i);
+ for(let i=0;i<f.guide.current.total;i++)f.guide.next();
+ assert.equal(f.guide.openMode('royale'),true);
+ for(let i=0;i<f.guide.current.total;i++)f.guide.next();
+ assert.equal(f.guide.openMode('eggrush'),true);
+ for(let i=0;i<f.guide.current.total;i++)f.guide.next();
+ assert.equal(f.guide.openMode('berryeasy'),true);
+ assert.equal(f.guide.current.kind,'mode_berry','both Berry difficulties share one intro');
+ for(let i=0;i<f.guide.current.total;i++)f.guide.next();
+ assert.equal(f.guide.openMode('berry'),false);
+ assert.equal(f.guide.openMode('arena'),true);
+ for(let i=0;i<f.guide.current.total;i++)f.guide.next();
+ assert.equal(f.guide.openMode('champion'),true);
+ for(let i=0;i<f.guide.current.total;i++)f.guide.next();
+ assert.equal(f.guide.openMode('explore'),true);
+ for(let i=0;i<f.guide.current.total;i++)f.guide.next();
+ f.G.Game.state='playing';
+ assert.equal(f.guide.openMode('coop'),false,'never open blocking mode intro during active combat');
+ assert.equal(f.writes.length,8,'save one completion mark per unique mode');
+});
