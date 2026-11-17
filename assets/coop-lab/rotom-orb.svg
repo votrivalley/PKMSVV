@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" shape-rendering="crispEdges">
+<title>Rotom floating rescue companion fallback sprite</title>
+<path d="M25 19V8H15V4h10v4h9v11m13 3V10h9V5H45v11l-7 7" stroke="#e57c49" stroke-width="6" fill="none"/>
+<path d="M14 35h-7v-9H2v16h7v8h6m35-16h6V26h6v16h-6v8h-6" stroke="#f7b45f" stroke-width="6" fill="none"/>
+<path d="M20 14h23v6h8v29h-8v7H20v-7h-8V22h8Z" fill="#e87343" stroke="#b75347" stroke-width="3"/>
+<path d="M19 24h24v20H19Z" fill="#f59a59"/>
+<path d="M23 30h7v7h-7zm13 0h7v7h-7Z" fill="#1c333b"/>
+<path d="M25 30h3v3h-3zm13 0h3v3h-3Z" fill="#fff2cf"/>
+<path d="M27 41h13v3H27Z" fill="#fff7e4"/>
+<path d="M20 49h7v5h-7zm18 0h7v5h-7Z" fill="#f3b372"/>
+</svg>
