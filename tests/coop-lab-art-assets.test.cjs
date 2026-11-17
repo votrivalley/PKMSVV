@@ -87,6 +87,17 @@ test('new interactive lab station UI uses five real hotspots and keeps building 
  assert.deepEqual(dimensions(station),[240,48]);
  assert.ok(station.length<5000,'Five station icons should be cheap for Android');
  assert.match(wiki,/glyph\.dataset\.researchGlyph=z\.id/);
+ // Labels stay text-only: pixel furnishings are scene children, not glyphs
+ // embedded in a large floating UI badge.
+ assert.match(wiki,/prop\.dataset\.researchObject=z\.id/);
+ assert.match(wiki,/prop\.innerHTML=stationArt\[z\.id\]/);
+ assert.match(wiki,/label\.textContent=tr\(z\.vi,z\.en\);tag\.append\(label\);b\.append\(tag\)/);
+ assert.match(wiki,/companion:\`<svg/,'Companion must have a distinct visible egg prop');
+ assert.match(wiki,/Lower-right workbench: the visible egg belongs to Bạn đồng hành/);
+ assert.match(wiki,/stationArt\[z\.id\]/);
+ assert.match(css,/RESEARCH_SCENE_PROPS_V4/);
+ assert.match(css,/\.pkmsvv-research-scene-object/);
+ assert.match(css,/\.pkmsvv-research-quick \.pkmsvv-research-glyph\{\s*display:none!important/);
  assert.match(wiki,/fromResearchLab:true/);
  assert.match(wiki,/__pkmsvvResearchEntryCapture/);
 });
