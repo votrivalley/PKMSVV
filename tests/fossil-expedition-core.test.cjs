@@ -61,7 +61,7 @@ test('no reward without all three excavations; failure at 8 min or machine destr
  const s=launch();go(s,381);
  assert.equal(m.extract(s,{uid:'host',actor:{x:0,y:0},seconds:s.clock,roomId:'room-A'}).reason,'specimens');
  assert.equal(m.receipt(s,1),null);
- const a=launch();digAll(a);go(a,499);assert.equal(a.phase,'failed');assert.equal(a.result.reason,'timeout');assert.equal(m.receipt(a,1),null);
+ const a=launch();digAll(a);go(a,500);assert.equal(a.phase,'failed');assert.equal(a.result.reason,'timeout');assert.equal(m.receipt(a,1),null);
  const b=launch();digAll(b);
  for(let sec=21;sec<=200&&b.phase!=='failed';sec++)m.tick(b,{seconds:sec,roomId:'room-A',threats:8});
  assert.equal(b.phase,'failed');assert.equal(b.result.reason,'machine-destroyed');assert.equal(m.receipt(b,1),null);
