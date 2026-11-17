@@ -30,6 +30,17 @@ const {startServer}=require('../lan-server/server.cjs');
   await page.locator('#pkmsvv-coop-modes [data-mode="fossil_lab"]').waitFor();
   assert.match(await page.locator('#pkmsvv-coop-modes [data-mode="fossil_lab"]').innerText(),/2–4/);
   await page.click('#pkmsvv-coop-modes [data-mode="fossil_lab"]');
+  // Pippi must explain rules on first entry BEFORE starting matchmaking.
+  const pippiMode=await page.evaluate(()=>{
+   const guide=G.PKMSVVPippiGuide;
+   const first=guide?.current?.kind||'';
+   let pages=0;
+   while(guide?.current?.kind==='mode_fossil_lab'&&pages<8){guide.next();pages++;}
+   return {first,pages,completed:G.DB.save.pkmsvvPippiGuide?.mode_fossil_lab===true};
+  });
+  assert.ok(pippiMode.first==='mode_fossil_lab'||pippiMode.completed,
+   'Pippi must introduce Fossil Expedition before first matchmaking');
+  assert.equal(pippiMode.completed,true);
   await page.click('#pkmsvv-coop-actions [data-role="ai"]');
   await page.waitForFunction(()=>G.Social?.room?.mode==='fossil_lab'&&G.Social.room.members.length>=2,{timeout:20000});
   const party=await page.evaluate(()=>G.Social.room.members.map(m=>({uid:m.uid,bot:!!m.bot})));
@@ -45,6 +56,20 @@ const {startServer}=require('../lan-server/server.cjs');
   }));
   assert.deepEqual({mode:state.mode,host:state.host,sites:state.sites,hp:state.hp,team:state.team},
     {mode:'fossil_lab',host:true,sites:3,hp:360,team:party.length});
+  const positions=await page.evaluate(()=>{
+   const s=G.PKMSVVFossilExpedition.session;
+   return {
+    distances:s.sites.map(p=>Math.hypot(p.x-s.machine.x,p.y-s.machine.y)),
+    sites:s.sites.map(p=>({x:p.x,y:p.y,hits:p.hits})),
+    rescueDeadline:G.PKMSVVFossilExpeditionCore.ROTOM_DEADLINE,
+    victory:G.PKMSVVFossilExpeditionCore.DEFEND_END,
+    boss:G.PKMSVVFossilExpeditionCore.BOSS_DEX
+   };
+  });
+  assert.ok(positions.distances.every(d=>d>380),'all three sites must be far from machine');
+  for(let i=0;i<3;i++)for(let j=i+1;j<3;j++)
+   assert.ok(Math.hypot(positions.sites[i].x-positions.sites[j].x,positions.sites[i].y-positions.sites[j].y)>650);
+  assert.deepEqual([positions.rescueDeadline,positions.victory,positions.boss],[240,480,623]);
   const mined=await page.evaluate(()=>{
    const s=G.PKMSVVFossilExpedition.session,stone=s.sites[0];
    G.Game.player.x=stone.x;G.Game.player.y=stone.y;
