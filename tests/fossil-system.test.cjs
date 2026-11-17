@@ -78,6 +78,7 @@ test('regular rock chance checks at most one per break with correct Gen pool',()
 test('restoration atomically consumes one fossil and grants Pokédex and owned Kabuto',()=>{
  const a=rig({gen:1,at:900});
  a.G.World.damageProp(a.rock(),3);
+ a.save.pkmsvvCoopLab={machineUnlocked:true};
  const result=a.api.restore(140);
  assert.equal(result.ok,true);
  assert.equal(a.save.owned[140].from,'fossil-revival');
@@ -86,9 +87,20 @@ test('restoration atomically consumes one fossil and grants Pokédex and owned K
  assert.equal(a.api.restore(140).reason,'owned');
 });
 test('restoration is blocked with missing material or unavailable sprite and leaves save unchanged',()=>{
- const a=rig();const old=JSON.stringify(a.save);
+ const a=rig();a.save.pkmsvvCoopLab={machineUnlocked:true};const old=JSON.stringify(a.save);
  assert.equal(a.api.restore(140).reason,'missing');
  assert.equal(JSON.stringify(a.save),old);
+});
+test('Kabuto fossil can be collected but machine is locked until genuine Co-op first clear',()=>{
+ const a=rig({gen:1,at:900});
+ a.G.World.damageProp(a.rock(),3);
+ const before=JSON.stringify(a.save);
+ assert.equal(a.api.inventory().dome_fossil,1,'guaranteed material belongs to the player');
+ assert.equal(a.api.restore(140).reason,'lab-locked');
+ assert.equal(JSON.stringify(a.save),before,'locked attempt never consumes material or coins');
+ a.save.pkmsvvCoopLab={machineUnlocked:false};
+ assert.equal(a.api.restore(140).reason,'lab-locked');
+ assert.equal(a.api.inventory().dome_fossil,1);
 });
 test('cataloged 25 fossils are excluded from ordinary recruitment and spawn pools',()=>{
  const a=rig();

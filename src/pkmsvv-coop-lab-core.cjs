@@ -82,9 +82,11 @@ function settle(save,receipt,commit,random=Math.random){
   s.lastSettledSeq=receipt.seq;
   let rare=false;
   if(!first&&receipt.optionalObjectives===cfg.maxOptionalObjectives&&
-     s.ownedDecor.gold_pippi_statue!==true&&
-     Number(random())<config.trophy.chancePerEligibleReplay){
-   rare=true;s.ownedDecor.gold_pippi_statue=true;
+     s.ownedDecor.gold_pippi_statue!==true){
+   const roll=Number(random());
+   if(roll>=0&&roll<config.trophy.chancePerEligibleReplay){
+    rare=true;s.ownedDecor.gold_pippi_statue=true;
+   }
   }
   return {ok:true,firstClear:first,reward,rare,totalCoins:s.coopCoins,machineUnlocked:true};
  },commit);

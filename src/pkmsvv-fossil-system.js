@@ -77,6 +77,9 @@ function restore(dex){
  if(!recipe||!s||db?.guest||!G.DEX_BY?.[recipe.dex]||!G.SPRITE_META?.[recipe.dex])
   return {ok:false,reason:'unavailable'};
  if(s.owned?.[recipe.dex])return {ok:false,reason:'owned'};
+ // Finding the Dome Fossil does NOT unlock the machine. First Co-op lab
+ // clear must be persisted by the verified mission resolver.
+ if(s.pkmsvvCoopLab?.machineUnlocked!==true)return {ok:false,reason:'lab-locked'};
  const previous=stored(s),bag=previous.inventory||{};
  const need=Object.create(null);
  for(const id of recipe.materialIds)need[id]=(need[id]||0)+1;

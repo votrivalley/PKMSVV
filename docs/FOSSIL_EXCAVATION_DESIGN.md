@@ -1,6 +1,6 @@
 # Pokémon Chuyển Sinh — thiết kế Khai quật & Phục nguyên hóa thạch
 
-> **Trạng thái:** Chuẩn bị dữ liệu, **chưa kích hoạt gameplay** trên nhánh Pippi QA. Không triển khai lên Web chính, không sửa save hiện có.
+> **Trạng thái:** Đã có đào và sưu tầm hóa thạch trên Web QA. **Máy phục nguyên hiện KHÓA cho tới khi hoàn thành nhiệm vụ Co-op lần đầu**; nhiệm vụ chưa có bản chơi được. Không triển khai lên Web chính. Thiết kế mới nhất: [COOP_FOSSIL_LAB_DECOR_SPEC_V1.md](COOP_FOSSIL_LAB_DECOR_SPEC_V1.md).
 
 ## Căn cứ danh sách
 

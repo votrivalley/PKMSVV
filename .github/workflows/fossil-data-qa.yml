@@ -1,4 +1,4 @@
-name: Fossil Data QA (catalog only — no gameplay build)
+name: Fossil Lab Data & Economy Core QA (no mission deploy)
 on:
   push:
     branches: [fix/pippi-follow-menu-qa-20261115]
@@ -8,6 +8,11 @@ on:
       - 'tests/fossil-restoration-data.test.cjs'
       - 'tests/fossil-system.test.cjs'
       - 'src/pkmsvv-fossil-system.js'
+      - 'src/pkmsvv-coop-lab-core.cjs'
+      - 'data/pkmsvv-coop-lab-catalog.json'
+      - 'tests/coop-lab-core.test.cjs'
+      - 'docs/COOP_FOSSIL_LAB_DECOR_SPEC_V1.md'
+      - 'src/pkmsvv-wiki.js'
       - '.github/workflows/fossil-data-qa.yml'
   workflow_dispatch:
 
@@ -23,5 +28,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Validate 25 species, 15 recipes, Gen-only loot and 3-5% rock rolls
-        run: node --test tests/fossil-restoration-data.test.cjs tests/fossil-system.test.cjs
+      - name: Validate fossils, 8-slot lab, Co-op coins, rare trophy and save rollback
+        run: node --test tests/fossil-restoration-data.test.cjs tests/fossil-system.test.cjs tests/coop-lab-core.test.cjs

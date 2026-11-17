@@ -294,13 +294,21 @@ G.PKMSVVWiki=(()=>{
   back.textContent=tr('← Quay lại PC','← Back to PC');back.setAttribute('data-back','');back.onclick=open;
   head.append(title,back);box.append(head);
   const note=document.createElement('p');note.className='pkmsvv-pc-hint';
-  note.textContent=tr('Đập đá ở bản đồ Khám phá đúng thế hệ để tìm hóa thạch. Máy phục nguyên dùng đúng mảnh đã tìm được; chưa thu PokéCoins trong bản QA.',
-   'Break rocks while exploring the right generation. Restore Pokémon from the fossils you find; no coin fee in this QA.');
+  note.textContent=tr('Đập đá đúng thế hệ để tìm hóa thạch. Lần đầu phải hoàn thành nhiệm vụ Co-op Phòng thí nghiệm thất lạc để mở máy vĩnh viễn. Vật liệu vẫn được giữ khi máy khóa.',
+   'Find fossils in the right region. First complete the Lost Laboratory Co-op mission to unlock the restoration machine forever. Collected materials are safe.');
   box.append(note);
   const list=document.createElement('div');list.className='pkmsvv-fossil-list';box.append(list);
   function draw(){
    list.replaceChildren();
    const F=G.PKMSVVFossils,bag=F?.inventory?.()||{},s=G.DB?.save;
+   const unlocked=s?.pkmsvvCoopLab?.machineUnlocked===true;
+   if(!unlocked){
+    const locked=document.createElement('p');locked.className='pkmsvv-pc-hint';
+    locked.dataset.fossilLabLocked='1';
+    locked.textContent=tr('🔒 Máy phục nguyên chưa mở! Pippi đang tìm đội khảo cổ. Nhiệm vụ Co-op hóa thạch sẽ xuất hiện ở bản cập nhật nhiệm vụ; bạn cứ giữ hóa thạch đã nhặt.',
+      '🔒 Restoration machine locked! The Fossil Co-op mission is not playable in this QA yet. Keep your collected fossils.');
+    list.append(locked);
+   }
    if(!F?.recipes?.length){
     const waiting=document.createElement('p');waiting.textContent=tr('Dữ liệu hóa thạch chưa tải. Vào game rồi thử lại.', 'Fossil data not loaded. Enter the game and try again.');
     list.append(waiting);return;
@@ -311,7 +319,7 @@ G.PKMSVVWiki=(()=>{
    list.append(stock);
    for(const formula of F.recipes){
     const own=!!s?.owned?.[formula.dex];
-    const can=!!G.DEX_BY?.[formula.dex]&&!!G.SPRITE_META?.[formula.dex]&&
+    const can=unlocked&&!!G.DEX_BY?.[formula.dex]&&!!G.SPRITE_META?.[formula.dex]&&
      !own&&formula.materialIds.every(id=>(Number(bag[id])||0)>=formula.materialIds.filter(x=>x===id).length);
     const row=document.createElement('article');row.className='pkmsvv-fossil-row';
     const canvas=document.createElement('canvas');canvas.width=72;canvas.height=72;
@@ -322,11 +330,12 @@ G.PKMSVVWiki=(()=>{
     const ingredients=document.createElement('small');
     ingredients.textContent=formula.materialIds.map(id=>(F.materials.find(m=>m.id===id)?.nameVi||id)+' ('+(bag[id]||0)+')').join(' + ');
     const status=document.createElement('small');status.textContent=own?tr('Đã sở hữu','Already owned'):
+     !unlocked?tr('Máy khóa · Chưa hoàn thành Co-op lần đầu','Locked · Complete your first Co-op mission'):
      can?tr('Đủ vật liệu · Có thể hồi sinh','Ready to restore'):tr('Chưa đủ hóa thạch','Missing fossils');
     detail.append(name,ingredients,status);
     const button=document.createElement('button');button.type='button';button.className='pkmsvv-pc-close pkmsvv-fossil-revive';
     button.dataset.fossilDex=String(formula.dex);button.disabled=!can;
-    button.textContent=own?tr('Đã có','Owned'):tr('Hồi sinh','Restore');
+    button.textContent=own?tr('Đã có','Owned'):!unlocked?tr('🔒 Chưa mở','🔒 Locked'):tr('Hồi sinh','Restore');
     button.onclick=()=>{
      if(button.disabled)return;
      const result=F.restore(formula.dex);
@@ -405,7 +414,7 @@ G.PKMSVVWiki=(()=>{
     desc:tr('Thân thiết · Nâng cấp hồi máu, cổ vũ, khống chế và bảo vệ.','Bond · Healing, buff, control and defense.'),
     action:tr('Chăm sóc Pippi','Train Pippi'),onClick:pippiCorner});
   makeCard(grid,{title:tr('Hồi sinh hóa thạch','Fossil Restoration'),dex:140,
-   desc:tr('Khám phá · Đập đá kiếm hóa thạch và phục nguyên Pokémon cổ đại.','Break rocks to collect and restore ancient Pokémon.'),
+   desc:tr('Sưu tầm hóa thạch · Mở máy sau nhiệm vụ Co-op lần đầu.','Collect fossils · Unlock the machine on your first Co-op lab clear.'),
    action:tr('Vào phòng thí nghiệm','Enter the lab'),onClick:fossilRestoration});
   const help=document.createElement('section');help.className='pkmsvv-pc-guide';
   const sub=document.createElement('h3');sub.textContent=tr('Kiến thức Pokémon','Pokémon knowledge');
