@@ -292,16 +292,24 @@ async function main(){
       fps:G.PKMSVVHordePerformance?.stats?.fps,
       heap:performance.memory?.usedJSHeapSize
     }))()`);
-    if(after.state==='levelup'&&after.popup){
-     // Dismiss native skill choices with the real keyboard input. Do NOT
-     // auto-select via internal player methods or bypass gameplay logic.
+    // Native EXP can queue multiple legitimate level-up choices within
+    // one 5-second sample. Drain each with the REAL keyboard handler.
+    // Do not falsely label back-to-back level-ups as a crash, but continue
+    // to fail on a stuck popup, missing Pippi or an actual engine error.
+    let selectedSkills=0;
+    while(after.state==='levelup'&&after.popup&&selectedSkills<12){
      await cmd('Input.dispatchKeyEvent',{type:'keyDown',key:'1',code:'Digit1',
       windowsVirtualKeyCode:49,nativeVirtualKeyCode:49,text:'1'});
+     await pause(140);
      await cmd('Input.dispatchKeyEvent',{type:'keyUp',key:'1',code:'Digit1',
       windowsVirtualKeyCode:49,nativeVirtualKeyCode:49});
      await pause(350);
-     after=await js("(()=>({t:G.Game?.st?.time,state:G.Game?.state,run:!!G.PKMSVVPippi.run}))()");
+     selectedSkills++;
+     after=await js("(()=>({t:G.Game?.st?.time,state:G.Game?.state,run:!!G.PKMSVVPippi.run,popup:!!G.UI?.isOpen?.('scr-levelup')}))()");
     }
+    if(selectedSkills)console.log('PIPPI_WEB_QUEUED_LEVELUPS_'+session+'_'+(i+1)+'='+JSON.stringify({selectedSkills,after}));
+    assert.ok(selectedSkills<12||after.state==='playing',
+     'Native level-up stuck after 12 legitimate selections: '+JSON.stringify(after));
     if(i<2||i%6===5||i===rounds-1)
      console.log('PIPPI_WEB_SESSION_'+session+'_CHECK_'+(i+1)+'='+JSON.stringify(after));
     assert.equal(after.state,'playing','Explore stopped in session '+session+' at checkpoint '+(i+1));
