@@ -26,6 +26,26 @@ const {startServer}=require('../lan-server/server.cjs');
    G.DB.save.partner=25;G.DB.save.partnerShiny=false;G.DB.save.pkmsvvStorySeen=true;
    G.DB.save.pkmsvvNameChosen=true;G.DB.commit?.();G.MenuUI.open();
   });
+  // Diagnose loaded CSS to catch stale assets or CSS unexpectedly
+  // truncated by build instead of assuming a selector mistake.
+  const cssDebug=await page.evaluate(async()=>{
+   const el=document.getElementById('scr-menu');
+   const sources=[...document.querySelectorAll('link[rel="stylesheet"]')].map(x=>x.href);
+   const loaded=await Promise.all(sources.filter(x=>x.includes('/css/')).map(async url=>{
+    try{const response=await fetch(url,{cache:'no-store'});
+     const css=await response.text();
+     return {url:url.split('/').slice(-2).join('/'),status:response.status,
+      marker:css.includes('PKMSVV_HOME_MENU_FIXED_ICON_COLUMN_V1'),
+      matchCount:(css.match(/--pkmsvv-nav-icon-track/g)||[]).length,
+      bytes:css.length};
+    }catch(e){return {url,error:String(e)};}
+   }));
+   const row=el?.querySelector('.menu-right .menu-list>.menu-item');
+   return {menuClass:el?.className,navClass:el?.querySelector('.menu-right')?.className,
+    rowClass:row?.className,bodyClass:document.body.className,
+    links:loaded,stylesheets:document.styleSheets.length};
+  });
+  console.log('PKMSVV_MENU_CSS_PROBE='+JSON.stringify(cssDebug));
   // Real desktop and portrait mobile UI regression: every launcher icon is
   // visually the same size, on a single vertical axis, with fixed label X.
   for(const [viewport,width,height] of [['desktop',1280,800],['mobile',390,844]]){
