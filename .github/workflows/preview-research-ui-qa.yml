@@ -1,0 +1,100 @@
+name: Research Lab UI Fast Preview QA (never production)
+on:
+  push:
+    branches: [fix/pippi-follow-menu-qa-20261115]
+    paths:
+      - '.github/workflows/preview-research-ui-qa.yml'
+      - 'src/pkmsvv-wiki.js'
+      - 'src/pkmsvv-pc-menu-clean-qa.css'
+      - 'src/pkmsvv-mega-entry.js'
+      - 'src/pkmsvv-support-catalog.js'
+      - 'src/pkmsvv-fossil-system.js'
+      - 'src/pkmsvv-coop-lab-core.cjs'
+      - 'data/pkmsvv-fossil-catalog.json'
+      - 'data/pkmsvv-coop-lab-catalog.json'
+      - 'scripts/prepare-pippi-web-preview.cjs'
+      - 'tests/coop-lab-art-assets.test.cjs'
+      - 'tests/coop-lab-core.test.cjs'
+      - 'tests/fossil-system.test.cjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: pkmsvv-research-ui-qa
+  cancel-in-progress: true
+jobs:
+  ui-preview-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install QA tooling
+        run: npm install --no-audit --no-fund
+      - name: Validate research artwork, fossil state, currency rollback and achievement
+        run: |
+          set -euo pipefail
+          node --test tests/coop-lab-art-assets.test.cjs tests/coop-lab-core.test.cjs tests/fossil-system.test.cjs tests/fossil-restoration-data.test.cjs
+      - name: Download immutable baseline game snapshot
+        uses: actions/download-artifact@v4
+        with:
+          name: PKMSVV-PokeBox-Stage4-Web-QA-ONLY
+          run-id: 42520192007
+          github-token: ${{ github.token }}
+          path: dist/pokebox-stage4-qa
+      - name: Stage exact game and QA changes in isolated artifact
+        run: |
+          set -euo pipefail
+          node scripts/promote-web-v20.cjs
+          node scripts/fetch-pippi-pmd.cjs
+          node scripts/build-pippi-portrait-atlas.cjs
+          node scripts/prepare-pippi-web-preview.cjs
+      - name: Verify latest room UI exists in BOTH game routes and no production build is touched
+        run: |
+          set -euo pipefail
+          jq -e '.releaseType=="qa-preview-only" and .version=="2.1.0-Research-Coop-Preview-QA"' dist/cloudflare-v20-release/build-info.json
+          for route in game ai/game; do
+            js="dist/cloudflare-v20-release/$route/js/ui/pkmsvv-wiki-qa.js"
+            css="dist/cloudflare-v20-release/$route/css/pkmsvv-pc-menu-clean-qa.css"
+            app="dist/cloudflare-v20-release/$route/js/app.min.js"
+            econ="dist/cloudflare-v20-release/$route/js/ui/pkmsvv-coop-economy-qa.js"
+            test -s "$js"
+            test -s "$css"
+            test -s "$app"
+            test -s "$econ"
+            grep -Fq 'pkmsvv-fossil-rocks' "$js"
+            grep -Fq 'pkmsvv-fossil-medal' "$js"
+            grep -Fq 'coopShop' "$js"
+            grep -Fq 'RESEARCH_FOSSIL_SPACING_V5' "$css"
+            grep -Fq "fromResearchLab=options?.fromResearchLab===true" "$app"
+            grep -Fq "tr('← Phòng nghiên cứu','← Research Lab')" "$app"
+            grep -Fq "t('← Phòng nghiên cứu','← Research Lab')" "$app"
+            grep -Fq "G.PKMSVVCoopEconomy" "$econ"
+          done
+      - name: Publish ONLY isolated research-ui-qa Cloudflare preview
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          npx --yes wrangler@4 pages deploy dist/cloudflare-v20-release --project-name pkmsvv-web --branch research-ui-qa
+      - name: Verify live QA build info is exactly THIS commit
+        run: |
+          set -euo pipefail
+          url='https://research-ui-qa.pkmsvv-web.pages.dev/build-info.json'
+          for attempt in 1 2 3 4 5 6; do
+            if curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "$url?rev=${GITHUB_SHA}-${attempt}" -o /tmp/research-build-info.json &&
+               jq -e --arg commit "${GITHUB_SHA:0:12}" '.releaseType=="qa-preview-only" and .version=="2.1.0-Research-Coop-Preview-QA" and .previewBranch=="pippi-cousin-qa"' /tmp/research-build-info.json; then
+              echo "RESEARCH_QA_DEPLOY_VERIFIED=https://research-ui-qa.pkmsvv-web.pages.dev/ai/game/"
+              echo "SOURCE_COMMIT=$GITHUB_SHA"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::Research UI QA deployment not verified; production was never targeted"
+          exit 1
