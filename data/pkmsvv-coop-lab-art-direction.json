@@ -1,0 +1,388 @@
+{
+  "schemaVersion": 1,
+  "status": "art-direction-approved-blueprint-only-no-final-sprites",
+  "referenceCatalog": "data/pkmsvv-coop-lab-catalog.json",
+  "referenceUIColors": [
+    "#1B4354",
+    "#235E69",
+    "#8ADBC8",
+    "#FFE08C"
+  ],
+  "room": {
+    "camera": "top-down 3/4 RPG fixed, no vanishing-point perspective",
+    "designSize": {
+      "width": 320,
+      "height": 224
+    },
+    "tileSize": 16,
+    "lightSource": "top-left",
+    "shadowDirection": "bottom-right",
+    "roomLayout": {
+      "rearWallBottomY": 73,
+      "frontFloorStartY": 74
+    },
+    "renderMethod": "nearest-neighbor only; integer scale preferred; no CSS blur/bilinear smoothing",
+    "layers": [
+      "base_wall",
+      "base_floor",
+      "wall_art",
+      "floor_furniture",
+      "machine",
+      "trophy",
+      "selection_overlay"
+    ],
+    "movement": "static room diorama, no free drag/rotate, interactive hotspots only"
+  },
+  "palette": {
+    "outline": "#0E1D29",
+    "darkShadow": "#112D3C",
+    "deepTeal": "#1B4354",
+    "machineryTeal": "#235E69",
+    "mutedTeal": "#2D5F63",
+    "mintRim": "#8ADBC8",
+    "glass": "#A9DCD7",
+    "amberLight": "#FFE08C",
+    "fossilBone": "#E8D9AF",
+    "agedBrass": "#B78B53",
+    "warmWood": "#805B45",
+    "woodHighlight": "#AE8668",
+    "pippiRose": "#D889AE",
+    "pippiLight": "#F3B5CE",
+    "fernGreen": "#6B9D68",
+    "paperLight": "#F2F7E7"
+  },
+  "shading": {
+    "outerOutline": 1,
+    "bodyTones": 3,
+    "optionalMaterialHighlight": 1,
+    "dropShadow": "painted at 1x, 1–2 opaque pixels; light from top-left",
+    "antiAliasing": false
+  },
+  "rooms": [
+    {
+      "id": "lost_fossil_lab",
+      "nameVi": "Phòng Thí Nghiệm Thất Lạc",
+      "backgroundAsset": "assets/coop-lab/room_base.png",
+      "designSize": {
+        "width": 320,
+        "height": 224
+      }
+    }
+  ],
+  "slots": [
+    {
+      "id": "wall_left",
+      "rect": {
+        "x": 34,
+        "y": 23,
+        "w": 79,
+        "h": 41
+      },
+      "anchor": {
+        "x": 56,
+        "y": 49
+      },
+      "layer": 2,
+      "note": "Khung tranh/bằng chứng nhận trên tường phía trái"
+    },
+    {
+      "id": "wall_right",
+      "rect": {
+        "x": 208,
+        "y": 23,
+        "w": 79,
+        "h": 41
+      },
+      "anchor": {
+        "x": 247,
+        "y": 49
+      },
+      "layer": 2,
+      "note": "Khung treo tường phía phải"
+    },
+    {
+      "id": "center",
+      "rect": {
+        "x": 111,
+        "y": 78,
+        "w": 98,
+        "h": 98
+      },
+      "anchor": {
+        "x": 160,
+        "y": 172
+      },
+      "layer": 5,
+      "note": "Máy phục nguyên là hero object; tránh che bảng HUD"
+    },
+    {
+      "id": "shelf_left",
+      "rect": {
+        "x": 18,
+        "y": 106,
+        "w": 85,
+        "h": 63
+      },
+      "anchor": {
+        "x": 60,
+        "y": 163
+      },
+      "layer": 4,
+      "note": "Kệ mẫu bên trái, tương đương kệ bên phải"
+    },
+    {
+      "id": "shelf_right",
+      "rect": {
+        "x": 218,
+        "y": 106,
+        "w": 85,
+        "h": 63
+      },
+      "anchor": {
+        "x": 261,
+        "y": 163
+      },
+      "layer": 4,
+      "note": "Kệ mẫu bên phải, trưng bày cùng hệ kích cỡ"
+    },
+    {
+      "id": "garden",
+      "rect": {
+        "x": 14,
+        "y": 178,
+        "w": 73,
+        "h": 40
+      },
+      "anchor": {
+        "x": 51,
+        "y": 216
+      },
+      "layer": 4,
+      "note": "Cây/hồ tinh thể nền ở góc trước trái"
+    },
+    {
+      "id": "desk",
+      "rect": {
+        "x": 239,
+        "y": 176,
+        "w": 76,
+        "h": 42
+      },
+      "anchor": {
+        "x": 277,
+        "y": 216
+      },
+      "layer": 4,
+      "note": "Đồ để bàn góc trước phải"
+    },
+    {
+      "id": "trophy",
+      "rect": {
+        "x": 173,
+        "y": 181,
+        "w": 59,
+        "h": 37
+      },
+      "anchor": {
+        "x": 203,
+        "y": 218
+      },
+      "layer": 6,
+      "note": "Bệ spotlight đồ siêu hiếm, không che máy chính"
+    }
+  ],
+  "items": [
+    {
+      "id": "machine_old",
+      "slotIds": [
+        "center"
+      ],
+      "spritePath": "assets/coop-lab/decor/machine_old.png",
+      "thumbnailPath": "assets/coop-lab/thumbs/machine_old.png",
+      "size": {
+        "width": 80,
+        "height": 80
+      },
+      "silhouette": "Bình kính vòm ngọc nhạt, thân máy teal, đế hợp kim cũ, khóa cơ khí và một khe đặt hóa thạch",
+      "artNotes": "Máy hỏng: đèn tắt/niêm phong; máy mở: hai điểm amber sáng. Giữ cùng silhouette ở cả hai trạng thái",
+      "prohibited": "Không dùng plasma quá sáng; không vẽ nhiều nút nhỏ khó nhận",
+      "state": "locked/unlocked overlay"
+    },
+    {
+      "id": "machine_future",
+      "slotIds": [
+        "center"
+      ],
+      "spritePath": "assets/coop-lab/decor/machine_future.png",
+      "thumbnailPath": "assets/coop-lab/thumbs/machine_future.png",
+      "size": {
+        "width": 88,
+        "height": 88
+      },
+      "silhouette": "Buồng kính đa giác bo cạnh, hai vòng đồng dẫn năng lượng, ống dẫn đá cổ, đèn amber ấm",
+      "artNotes": "Mạnh về hình khối nhưng không cao quá che bảng tường; sáng hơn bản cũ vừa đủ",
+      "prohibited": "Không dùng khung sci-fi trắng hoặc tia laser neon",
+      "state": "static"
+    },
+    {
+      "id": "kabuto_skeleton",
+      "slotIds": [
+        "shelf_left",
+        "shelf_right"
+      ],
+      "spritePath": "assets/coop-lab/decor/kabuto_skeleton.png",
+      "thumbnailPath": "assets/coop-lab/thumbs/kabuto_skeleton.png",
+      "size": {
+        "width": 48,
+        "height": 48
+      },
+      "silhouette": "Mảnh vỏ và chi tiết chân Kabuto ghép trên giá đỡ gỗ sẫm và brass",
+      "artNotes": "Silhouette giống mẫu hóa thạch, nhìn rõ lớp vỏ bằng xương ngà",
+      "prohibited": "Không vẽ nguyên một Kabuto sống",
+      "state": "static"
+    },
+    {
+      "id": "amber_aerodactyl",
+      "slotIds": [
+        "shelf_left",
+        "shelf_right"
+      ],
+      "spritePath": "assets/coop-lab/decor/amber_aerodactyl.png",
+      "thumbnailPath": "assets/coop-lab/thumbs/amber_aerodactyl.png",
+      "size": {
+        "width": 48,
+        "height": 48
+      },
+      "silhouette": "Khối hổ phách vàng sậm chứa bóng Aerodactyl tối giản, kẹp kim loại ở hai bên",
+      "artNotes": "Một highlight góc trên trái, tối đa ba vệt sáng trên kính",
+      "prohibited": "Không vẽ Aerodactyl chi tiết quá nhỏ bên trong",
+      "state": "static"
+    },
+    {
+      "id": "omanyte_model",
+      "slotIds": [
+        "shelf_left",
+        "shelf_right"
+      ],
+      "spritePath": "assets/coop-lab/decor/omanyte_model.png",
+      "thumbnailPath": "assets/coop-lab/thumbs/omanyte_model.png",
+      "size": {
+        "width": 40,
+        "height": 40
+      },
+      "silhouette": "Mô hình xoắn vỏ Omanyte màu xương sáng trên bệ trưng bày gỗ",
+      "artNotes": "Đường xoắn vỏ 2–3 tầng rõ ràng, không lẫn đồ chơi nhựa",
+      "prohibited": "Không dùng viền hồng quá nhiều",
+      "state": "static"
+    },
+    {
+      "id": "archaeology_certificate",
+      "slotIds": [
+        "wall_left",
+        "wall_right"
+      ],
+      "spritePath": "assets/coop-lab/decor/archaeology_certificate.png",
+      "thumbnailPath": "assets/coop-lab/thumbs/archaeology_certificate.png",
+      "size": {
+        "width": 56,
+        "height": 36
+      },
+      "silhouette": "Khung gỗ ngang, giấy kem, huy hiệu nhỏ hình hóa thạch, niêm phong brass",
+      "artNotes": "Dễ nhận là chứng nhận khi xem ở 1x; chữ chỉ là các nét giả pixel",
+      "prohibited": "Không đưa chữ nhỏ thật vào sprite",
+      "state": "static"
+    },
+    {
+      "id": "prehistoric_poster",
+      "slotIds": [
+        "wall_left",
+        "wall_right"
+      ],
+      "spritePath": "assets/coop-lab/decor/prehistoric_poster.png",
+      "thumbnailPath": "assets/coop-lab/thumbs/prehistoric_poster.png",
+      "size": {
+        "width": 64,
+        "height": 40
+      },
+      "silhouette": "Poster bản đồ các kỷ địa chất dạng 3 mảng và biểu tượng dấu chân",
+      "artNotes": "Màu giấy vàng kem, viền gỗ teak, teal làm đường nét minh họa",
+      "prohibited": "Không dùng bản đồ Trái Đất chi tiết hoặc ảnh raster",
+      "state": "static"
+    },
+    {
+      "id": "prehistoric_fern",
+      "slotIds": [
+        "garden"
+      ],
+      "spritePath": "assets/coop-lab/decor/prehistoric_fern.png",
+      "thumbnailPath": "assets/coop-lab/thumbs/prehistoric_fern.png",
+      "size": {
+        "width": 40,
+        "height": 50
+      },
+      "silhouette": "Chậu gốm nâu, 3–5 tàu dương xỉ cổ lá lớn, ngọn nghiêng sáng phía trái",
+      "artNotes": "Màu lá xanh olive kết hợp dark teal, gốc chậu có shadow 1–2px",
+      "prohibited": "Không thêm quá nhiều lá gây răng cưa ở 1x",
+      "state": "static"
+    },
+    {
+      "id": "research_terminal",
+      "slotIds": [
+        "desk"
+      ],
+      "spritePath": "assets/coop-lab/decor/research_terminal.png",
+      "thumbnailPath": "assets/coop-lab/thumbs/research_terminal.png",
+      "size": {
+        "width": 56,
+        "height": 40
+      },
+      "silhouette": "Máy tính khảo cổ màn hình CRT nhỏ, bàn phím hai tông teal và brass",
+      "artNotes": "Màn hình hiển thị quét hóa thạch bằng ba khối pixel",
+      "prohibited": "Không dùng giao diện máy tính hiện đại dạng HD",
+      "state": "static"
+    },
+    {
+      "id": "glowing_sample_tube",
+      "slotIds": [
+        "desk"
+      ],
+      "spritePath": "assets/coop-lab/decor/glowing_sample_tube.png",
+      "thumbnailPath": "assets/coop-lab/thumbs/glowing_sample_tube.png",
+      "size": {
+        "width": 40,
+        "height": 48
+      },
+      "silhouette": "Ống thủy tinh đứng trên chân kim loại, mẫu cổ màu vàng nhạt phát sáng rất nhẹ",
+      "artNotes": "Tạo 1 highlight amber và phản chiếu ngọc nhạt, không bloom toàn cảnh",
+      "prohibited": "Không biến thành neon rave",
+      "state": "static"
+    },
+    {
+      "id": "gold_pippi_statue",
+      "slotIds": [
+        "trophy"
+      ],
+      "spritePath": "assets/coop-lab/decor/gold_pippi_statue.png",
+      "thumbnailPath": "assets/coop-lab/thumbs/gold_pippi_statue.png",
+      "size": {
+        "width": 52,
+        "height": 56
+      },
+      "silhouette": "Tượng Pippi vàng đứng trên bục brass chạm hoa văn hóa thạch, một tay chống nạnh, mặt tự mãn",
+      "artNotes": "Nhận diện mạnh ở 1x, điểm sáng 1–2px; không buff stat, không phá màu phòng",
+      "prohibited": "Không nhồi hiệu ứng lấp lánh liên tục hoặc tạo tượng vàng bóng 3D",
+      "state": "static (optional subtle 2-frame sparkle)"
+    }
+  ],
+  "artworkChecklist": [
+    "All 11 decor sprites and background are ORIGINAL PNG with alpha, not screenshots or hotlinked web art",
+    "All silhouettes legible at natural 1x resolution on 320x224 base room",
+    "No soft antialias, blur, gradients baked into sprites or inconsistent outlines",
+    "Light highlights above-left, shadow bottom-right on every asset",
+    "Visual style and color matching audited next to live Pokémon Chuyển Sinh native sprites",
+    "Object layer does not cover machine controls, PC Back button or trophy hotspot",
+    "360px mobile and desktop 2x captures reviewed side-by-side",
+    "Rare trophy stat-neutral, not on shop purchase paths",
+    "No artwork asset listed here is considered implemented until a PNG exists and is previewed in-game"
+  ]
+}

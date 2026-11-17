@@ -1,5 +1,7 @@
 # Pokémon Chuyển Sinh — Fossil Co-op & Phòng thí nghiệm trang trí (spec v1)
 
+**Quy chuẩn vẽ phòng & nội thất:** [COOP_FOSSIL_LAB_ART_DIRECTION_V1.md](COOP_FOSSIL_LAB_ART_DIRECTION_V1.md) — palette, phối cảnh, 8 tọa độ và mô tả 11 sprite. 
+
 **Đã chốt với người thiết kế ngày 17/11/2026.** Trạng thái: **spec + catalog + transaction core, CHƯA có nhiệm vụ Co-op chạy thật, CHƯA có sprite nội thất đã QA**. Không đưa lên Web production. Nối engine nhiệm vụ qua adapter sau.
 
 ## 1. Vòng lặp chơi
