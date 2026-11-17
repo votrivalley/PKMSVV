@@ -686,3 +686,69 @@
   font-size:13px;
  }
 }
+
+
+/* RESEARCH_FLOW_V3: icon is a square PNG <img>, never one cell in 3-wide WebP. */
+#scr-menu #pkmsvv-menu-wiki > .mi-ico.pkmsvv-menu-icon-pc,
+#scr-menu .menu-right .menu-list #pkmsvv-menu-wiki > .mi-ico.pkmsvv-new-menu-icon.pkmsvv-menu-icon-pc{
+ display:grid!important;place-items:center!important;
+ width:42px!important;height:42px!important;min-width:42px!important;
+ min-height:42px!important;max-width:42px!important;max-height:42px!important;
+ flex:0 0 42px!important;aspect-ratio:1/1!important;
+ background:none!important;overflow:hidden!important;
+ padding:0!important;margin:0!important;line-height:0!important;
+}
+#scr-menu #pkmsvv-menu-wiki .pkmsvv-research-menu-image{
+ display:block!important;width:42px!important;height:42px!important;
+ max-width:42px!important;max-height:42px!important;
+ object-fit:contain!important;object-position:center!important;
+ aspect-ratio:1/1!important;image-rendering:pixelated!important;
+ transform:none!important;filter:none!important;flex-shrink:0!important;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-hotspot-tag{
+ display:inline-flex!important;flex-direction:column!important;
+ align-items:center!important;justify-content:center!important;
+ gap:1px!important;padding:3px 5px!important;
+ max-width:min(100%,114px)!important;
+ border-color:#ffde8a!important;background:rgba(17,41,50,.94)!important;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-tag-copy{
+ display:block;text-align:center;font-size:inherit;line-height:1.18;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-glyph{
+ display:block;width:32px;height:32px;min-width:32px;min-height:32px;
+ flex:0 0 32px;background-image:url('../images/pkmsvv-research-station-icons.png');
+ background-repeat:no-repeat;background-size:160px 32px;
+ background-position:0 0;image-rendering:pixelated;
+ filter:drop-shadow(0 1px 2px #051820b5);
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-glyph[data-research-glyph="support"]{background-position:0 0}
+#pkmsvv-wiki-overlay .pkmsvv-research-glyph[data-research-glyph="mega"]{background-position:-32px 0}
+#pkmsvv-wiki-overlay .pkmsvv-research-glyph[data-research-glyph="berry"]{background-position:-64px 0}
+#pkmsvv-wiki-overlay .pkmsvv-research-glyph[data-research-glyph="companion"]{background-position:-96px 0}
+#pkmsvv-wiki-overlay .pkmsvv-research-glyph[data-research-glyph="fossil"]{background-position:-128px 0}
+#pkmsvv-wiki-overlay .pkmsvv-research-quick{
+ display:flex;flex-direction:column;gap:2px;align-items:center;
+ justify-content:center;min-height:48px;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-quick .pkmsvv-research-glyph{
+ width:26px;height:26px;min-width:26px;min-height:26px;
+ flex-basis:26px;background-size:130px 26px;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-quick .pkmsvv-research-glyph[data-research-glyph="support"]{background-position:0 0}
+#pkmsvv-wiki-overlay .pkmsvv-research-quick .pkmsvv-research-glyph[data-research-glyph="mega"]{background-position:-26px 0}
+#pkmsvv-wiki-overlay .pkmsvv-research-quick .pkmsvv-research-glyph[data-research-glyph="berry"]{background-position:-52px 0}
+#pkmsvv-wiki-overlay .pkmsvv-research-quick .pkmsvv-research-glyph[data-research-glyph="companion"]{background-position:-78px 0}
+#pkmsvv-wiki-overlay .pkmsvv-research-quick .pkmsvv-research-glyph[data-research-glyph="fossil"]{background-position:-104px 0}
+@media(max-width:540px){
+ #pkmsvv-wiki-overlay .pkmsvv-research-hotspot-tag{gap:0!important;padding:2px!important}
+ #pkmsvv-wiki-overlay .pkmsvv-research-hotspot .pkmsvv-research-glyph{
+  width:22px;height:22px;min-width:22px;min-height:22px;
+  flex-basis:22px;background-size:110px 22px;
+ }
+ #pkmsvv-wiki-overlay .pkmsvv-research-hotspot .pkmsvv-research-glyph[data-research-glyph="support"]{background-position:0 0}
+ #pkmsvv-wiki-overlay .pkmsvv-research-hotspot .pkmsvv-research-glyph[data-research-glyph="mega"]{background-position:-22px 0}
+ #pkmsvv-wiki-overlay .pkmsvv-research-hotspot .pkmsvv-research-glyph[data-research-glyph="berry"]{background-position:-44px 0}
+ #pkmsvv-wiki-overlay .pkmsvv-research-hotspot .pkmsvv-research-glyph[data-research-glyph="companion"]{background-position:-66px 0}
+ #pkmsvv-wiki-overlay .pkmsvv-research-hotspot .pkmsvv-research-glyph[data-research-glyph="fossil"]{background-position:-88px 0}
+}

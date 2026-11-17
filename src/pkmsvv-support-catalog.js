@@ -21,10 +21,14 @@ G.PKMSVVSupportCatalog=(()=>{
  const rarity=dex=>Number(dex)===151?['Siêu hiếm','Super Rare']:Number(dex)===132?['Hiếm','Rare']:['Thường','Common'];
  const seen=dex=>G.PKMSVVEggs?.affinityFor?.(dex)>0;
  const shinySeen=dex=>!!G.DB?.save?.pkmsvvSupportShiny?.[dex]&&seen(dex);
- let selected=null,showShiny=false;
+ let selected=null,showShiny=false,fromResearchLab=false;
  const scroller=()=>$('pkmsvv-support-catalog')?.querySelector('.pkmsvv-support-modal');
- function close(){const box=$('pkmsvv-support-catalog');if(box)box.hidden=true;
-  document.body?.classList?.remove('pkmsvv-support-open');}
+ function close(){
+  const backToLab=fromResearchLab;fromResearchLab=false;
+  const box=$('pkmsvv-support-catalog');if(box)box.hidden=true;
+  document.body?.classList?.remove('pkmsvv-support-open');
+  if(backToLab)G.PKMSVVWiki?.open?.();
+ }
  function ensure(){
   const back=$('pkmsvv-upgrade-back');
   if(back&&!$('pkmsvv-support-entry')){
@@ -161,11 +165,12 @@ G.PKMSVVSupportCatalog=(()=>{
   }
   if(keep&&panel&&Number.isFinite(before))panel.scrollTop=before;
  }
- function open(){
+ function open(options){
   ensure();const wrap=$('pkmsvv-support-catalog');if(!wrap)return;
+  fromResearchLab=options?.fromResearchLab===true;
   const entry=$('pkmsvv-support-entry');if(entry)entry.textContent=t('✦ Pokémon hỗ trợ','✦ Support Pokémon');
   const closer=wrap.querySelector('.pkmsvv-support-modal-head button');
-  if(closer)closer.textContent=t('Đóng','Close');
+  if(closer)closer.textContent=fromResearchLab?t('← Phòng nghiên cứu','← Research Lab'):t('Đóng','Close');
   $('pkmsvv-support-heading').textContent=t('✦ Pokémon hỗ trợ','✦ Support Pokémon');
   $('pkmsvv-support-description').textContent=t(
    'Khám phá Pokémon hỗ trợ bằng cách ấp trứng. Pokémon chưa khám phá sẽ ẩn màu; khi tìm được Shiny mới mở lựa chọn Thường / Shiny.',

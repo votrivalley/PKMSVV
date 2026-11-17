@@ -2,7 +2,7 @@
 /* Phase 2 Mega encyclopedia — read-only, never grants stones, quests or species. */
 G.PKMSVVMegaEntry=(()=>{
  const $=id=>document.getElementById(id),tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
- const PAGE=12;let page=0,filter='all',selected=null,variant='normal';
+ const PAGE=12;let page=0,filter='all',selected=null,variant='normal',fromResearchLab=false;
  const catalog=()=>Array.isArray(G.PKMSVV_MEGA_CATALOG)?G.PKMSVV_MEGA_CATALOG:[];
  const save=()=>G.DB?.save||{};
  function isUnlocked(f){
@@ -49,11 +49,13 @@ G.PKMSVVMegaEntry=(()=>{
  }
  function scroller(){return $('pkmsvv-mega-phase1')?.querySelector?.('.pkmsvv-mega-phase1-dialog');}
  function close(){
+  const backToLab=fromResearchLab;fromResearchLab=false;
   const box=$('pkmsvv-mega-phase1');if(box)box.hidden=true;
   // Keep the page beneath the Mega modal from stealing mobile swipe input.
   document.body?.classList?.remove('pkmsvv-mega-modal-open');
   document.documentElement?.classList?.remove('pkmsvv-mega-modal-open');
-  focusWithoutScroll($('pkmsvv-mega-entry'));
+  if(backToLab)G.PKMSVVWiki?.open?.();
+  else focusWithoutScroll($('pkmsvv-mega-entry'));
  }
  function ensure(){
   const back=$('pkmsvv-upgrade-back');if(!back?.parentElement)return false;
@@ -273,11 +275,13 @@ G.PKMSVVMegaEntry=(()=>{
    'Only Mega forms with real sprites in this build appear. Unreleased forms are hidden, never deleted from saves.');
   if(panel&&Number.isFinite(scrollTop))panel.scrollTop=scrollTop;
  }
- function open(){
+ function open(options){
   if(!ensure())return false;
+  fromResearchLab=options?.fromResearchLab===true;
   const box=build();
   $('pkmsvv-mega-phase1-title').textContent=tr('Tiến hóa Mega','Mega Evolution');
-  box.querySelector('[data-mega-close]').textContent=tr('Đóng','Close');
+  box.querySelector('[data-mega-close]').textContent=fromResearchLab?
+   tr('← Phòng nghiên cứu','← Research Lab'):tr('Đóng','Close');
   render();box.hidden=false;
   // Mobile browsers sometimes retain focus on the underlying Mega-entry
   // button and scroll the background screen into view while the modal moves.
@@ -298,7 +302,7 @@ G.PKMSVVMegaEntry=(()=>{
  document.addEventListener('keydown',event=>{
   const box=$('pkmsvv-mega-phase1');
   if(box&&!box.hidden&&event.key==='Escape'){
-   close();event.preventDefault();event.stopPropagation();
+   close();event.preventDefault();event.stopImmediatePropagation();
   }
  });
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ensure,{once:true});

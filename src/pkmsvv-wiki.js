@@ -551,21 +551,21 @@ G.PKMSVVWiki=(()=>{
   room.setAttribute('aria-label',tr('Bản đồ tương tác Phòng nghiên cứu','Interactive Research Lab'));
   const invoke=(kind)=>{
    switch(kind){
-    case 'support':close();G.PKMSVVSupportCatalog?.open?.();return;
-    case 'mega':close();G.PKMSVVMegaEntry?.open?.();return;
+    case 'support':close();G.PKMSVVSupportCatalog?.open?.({fromResearchLab:true});return;
+    case 'mega':close();G.PKMSVVMegaEntry?.open?.({fromResearchLab:true});return;
     case 'berry':berryGuide();return;
     case 'companion':pippiCorner();return;
     case 'fossil':fossilRestoration();return;
    }
   };
   const zones=[
-   {id:'support',x:18,y:75,w:100,h:62,vi:'Pokémon hỗ trợ',en:'Supports',
+   {id:'support',x:21,y:75,w:94,h:58,vi:'Pokémon hỗ trợ',en:'Supports',
     tip:'Ủa, muốn có trợ lý Pokémon? Tui là trưởng phòng nhưng không nhận thêm việc đâu nha!'},
-   {id:'mega',x:220,y:74,w:96,h:59,vi:'Mega',en:'Mega',
+   {id:'mega',x:224,y:75,w:89,h:54,vi:'Mega',en:'Mega',
     tip:'Mega thì mạnh đó. Nhưng nhớ nha: biến hình không chữa được tật bấm loạn nút!'},
-   {id:'berry',x:6,y:146,w:87,h:66,vi:'Berry',en:'Berries',
+   {id:'berry',x:8,y:145,w:90,h:61,vi:'Berry',en:'Berries',
     tip:'Berry thì ăn được. Còn mẫu cây tiền sử kia? Đừng có hái nấu canh!'},
-   {id:'companion',x:235,y:132,w:79,h:34,vi:'Bạn đồng hành',en:'Companions',
+   {id:'companion',x:235,y:133,w:78,h:42,vi:'Bạn đồng hành',en:'Companions',
     tip:'Bấm vào đây mà chăm sóc giám đốc Pippi. Tui muốn tăng lương bằng kẹo!'},
    {id:'fossil',x:115,y:62,w:91,h:82,vi:'Phục nguyên',en:'Restore fossils',
     tip:'Máy phục nguyên chưa tự chạy bằng niềm tin đâu nha. Hoàn thành Co-op lần đầu trước!'}
@@ -580,7 +580,10 @@ G.PKMSVVWiki=(()=>{
    b.style.width=z.w/320*100+'%';b.style.height=z.h/224*100+'%';
    b.setAttribute('aria-label',tr('Mở '+z.vi,'Open '+z.en));
    const tag=document.createElement('span');tag.className='pkmsvv-research-hotspot-tag';
-   tag.textContent=tr(z.vi,z.en);b.append(tag);
+   const glyph=document.createElement('span');glyph.className='pkmsvv-research-glyph';
+   glyph.dataset.researchGlyph=z.id;glyph.setAttribute('aria-hidden','true');
+   const label=document.createElement('span');label.className='pkmsvv-research-tag-copy';
+   label.textContent=tr(z.vi,z.en);tag.append(glyph,label);b.append(tag);
    b.addEventListener('mouseenter',()=>{if(G.I18n?.lang!=='en')speech.textContent=z.tip;});
    b.addEventListener('focus',()=>{speech.textContent=tr(z.tip,'Select '+z.en+' to open this research station.');});
    b.onclick=()=>invoke(z.id);
@@ -598,7 +601,10 @@ G.PKMSVVWiki=(()=>{
   for(const z of zones){
    const btn=document.createElement('button');btn.type='button';
    btn.className='pkmsvv-research-quick';btn.dataset.researchQuick=z.id;
-   btn.textContent=tr(z.vi,z.en);btn.onclick=()=>invoke(z.id);fast.append(btn);
+   const glyph=document.createElement('span');glyph.className='pkmsvv-research-glyph';
+   glyph.dataset.researchGlyph=z.id;glyph.setAttribute('aria-hidden','true');
+   btn.append(glyph,document.createTextNode(tr(z.vi,z.en)));
+   btn.onclick=()=>invoke(z.id);fast.append(btn);
   }
   const companion=document.createElement('div');companion.className='pkmsvv-research-pippi';
   const face=document.createElement('div');face.className='pkmsvv-research-pippi-head';
@@ -762,6 +768,17 @@ G.PKMSVVWiki=(()=>{
  }
  function install(){
   installStyle();installMenu();
+  // A cached legacy PC handler can overwrite the button's onclick during
+  // MenuUI.open. Intercept in WINDOW CAPTURE before legacy document/target
+  // handlers. Do not replace Pokémon's native fast button or modify save.
+  if(!window.__pkmsvvResearchEntryCapture){
+   window.__pkmsvvResearchEntryCapture=true;
+   window.addEventListener('click',e=>{
+    const launch=e.target?.closest?.('#pkmsvv-menu-wiki');
+    if(!launch||!document.querySelector('#scr-menu')?.contains(launch))return;
+    e.preventDefault();e.stopImmediatePropagation();open();
+   },true);
+  }
   const old=G.MenuUI?.open;
   if(typeof old==='function'&&!G.MenuUI.__pkmsvvWiki){
    G.MenuUI.__pkmsvvWiki=true;

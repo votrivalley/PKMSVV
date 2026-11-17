@@ -275,9 +275,18 @@
    let art=button.querySelector(':scope > .mi-ico');
    if(!art){art=d.createElement('span');art.className='mi-ico';button.prepend(art);}
    removeOldMenuGlyphs(button,art);
-   // The sprite lives in the CSS background. Any inner node here is a
-   // re-injected legacy handshake/online icon and must not be rendered.
-   if(art.hasChildNodes())art.replaceChildren();
+   // Co-op/Arena use their native 3-cell WebP; Research Lab has an independent
+   // square PNG. Render as an <img> so sprite-sheet background-position rules
+   // can never squash it or display three stacked bands on some WebViews.
+   if(type==='pc'){
+    const existing=art.querySelector(':scope > img.pkmsvv-research-menu-image');
+    if(!existing||art.childNodes.length!==1){
+     const image=d.createElement('img');image.className='pkmsvv-research-menu-image';
+     image.src='images/pkmsvv-research-lab-icon.png';
+     image.width=42;image.height=42;image.alt='';image.decoding='async';
+     art.replaceChildren(image);
+    }
+   }else if(art.hasChildNodes())art.replaceChildren();
    if(!art.classList.contains('pkmsvv-menu-icon-'+type))
     art.className='mi-ico pkmsvv-new-menu-icon pkmsvv-menu-icon-'+type;
    art.setAttribute('aria-hidden','true');
