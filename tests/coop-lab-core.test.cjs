@@ -3,13 +3,17 @@ const test=require('node:test'),assert=require('node:assert/strict');
 const lab=require('../src/pkmsvv-coop-lab-core.cjs');
 const item=Object.fromEntries(lab.config.items.map(v=>[v.id,v]));
 const receipt=(seq,optionalObjectives=2,other={})=>({mission:'fossil_lab',verified:true,cleared:true,seq,partySize:1,durationSeconds:480,optionalObjectives,...other});
-test('fixed 8-slot lab catalog, ten purchasable pieces, one mythical trophy',()=>{
+test('fixed 8-slot lab catalog, detached art and 9999-coin golden Pippi trophy',()=>{
  assert.equal(lab.config.slots.length,8);
  assert.equal(new Set(lab.config.slots.map(x=>x.id)).size,8);
  assert.equal(lab.config.items.length,11);
- assert.equal(lab.config.items.filter(x=>x.price>0).length,9);
- assert.equal(item.gold_pippi_statue.price,null);
- assert.equal(item.gold_pippi_statue.dropChance,.001);
+ assert.equal(lab.config.items.filter(x=>x.price>0).length,10);
+ assert.equal(item.gold_pippi_statue.price,9999);
+ assert.equal(item.gold_pippi_statue.dropChance,0);
+ assert.equal(item.gold_pippi_statue.artReady,true);
+ assert.equal(item.machine_old.visualLayer,'separate-svg');
+ assert.equal(lab.config.roomArt.background,'images/coop-lab/room_empty_modular.svg');
+ assert.equal(Object.keys(lab.config.roomArt.slots).length,8);
  assert.equal(lab.config.currency.exchangeToPokeCoins,true);
  assert.equal(lab.config.currency.scope,'all-coop-modes-shared-wallet');
  assert.equal(lab.config.shop.sections.length,3);
@@ -54,16 +58,26 @@ test('purchase and equip are atomic, compatible with same specimen in either she
  assert.equal(lab.equip(save,'center',null,()=>true).reason,'machine-required');
  assert.equal(lab.equip(save,'shelf_left',null,()=>true).ok,true);
 });
-test('gold Pippi statue cannot be purchased or equipped without drop',()=>{
+test('golden Pippi trophy costs exactly 9999 shared coins and is a real separate layer',()=>{
  const save={};lab.settle(save,receipt(1),()=>true);
- assert.equal(lab.buy(save,'gold_pippi_statue',()=>true).reason,'unavailable');
  assert.equal(lab.equip(save,'trophy','gold_pippi_statue',()=>true).reason,'not-owned');
- assert.equal(lab.settle(save,receipt(2,1),()=>true,()=>0).rare,false);
- assert.equal(lab.settle(save,receipt(3,2),()=>true,()=>.001).rare,false,'boundary excluded');
- assert.equal(lab.settle(save,receipt(4,2),()=>true,()=>.00099).rare,true);
- assert.equal(save.pkmsvvCoopLab.ownedDecor.gold_pippi_statue,true);
+ assert.equal(lab.settle(save,receipt(2,2),()=>true,()=>0).rare,false);
+ assert.equal(save.pkmsvvCoopLab.ownedDecor.gold_pippi_statue,undefined,
+  'no random trophy drop in Co-op mission');
+ save.pkmsvvCoopLab.coopCoins=9998;
+ assert.equal(lab.buy(save,'gold_pippi_statue',()=>true).reason,'coins');
+ save.pkmsvvCoopLab.coopCoins=9999;
+ assert.equal(lab.buy(save,'gold_pippi_statue',()=>false).reason,'save');
+ assert.equal(save.pkmsvvCoopLab.coopCoins,9999,'failed commit preserves coins');
+ assert.equal(lab.buy(save,'gold_pippi_statue',()=>true).ok,true);
+ assert.equal(save.pkmsvvCoopLab.coopCoins,0);
  assert.equal(lab.equip(save,'trophy','gold_pippi_statue',()=>true).ok,true);
- assert.equal(lab.settle(save,receipt(5,2),()=>true,()=>0).rare,false,'only one trophy');
+ assert.equal(lab.buy(save,'gold_pippi_statue',()=>true).reason,'owned');
+});
+test('unfinished art cannot be bought, preventing invisible decorations',()=>{
+ const save={};lab.settle(save,receipt(1),()=>true);save.pkmsvvCoopLab.coopCoins=5000;
+ assert.equal(lab.buy(save,'machine_future',()=>true).reason,'unavailable');
+ assert.equal(save.pkmsvvCoopLab.coopCoins,5000);
 });
 test('failed save preserves currencies, trophy and unlock; receipts cannot be spoofed as finished',()=>{
  const save={pkmsvvFossils:{inventory:{dome_fossil:1}}};
