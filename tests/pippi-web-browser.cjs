@@ -264,6 +264,35 @@ async function main(){
   console.log('PIPPI_WEB_COMPANION='+JSON.stringify(companion));
   assert.equal(companion.visible,true,'PC companion training dialog must open');
   assert.ok(companion.training.includes('cousin'),'Learnable Pikachu cousin skill missing from PC');
+  const fossilMission=await js(`(()=>{
+    const api=G.PKMSVVFossilMissionQA;
+    const installed=api?.install?.()===true||
+     !!document.getElementById('pkmsvv-quick-fossil-lab');
+    const card=document.getElementById('pkmsvv-quick-fossil-lab');
+    const title=card?.querySelector('.pkmsvv-mode-title')?.textContent||'';
+    const mode=card?.dataset.coopMission;
+    const before=JSON.stringify(G.DB?.save);
+    card?.click();
+    const overlay=document.getElementById('pkmsvv-coop-fossil-info');
+    const text=overlay?.textContent||'';
+    overlay?.querySelector('button')?.click();
+    return {installed,title,mode,modal:!!overlay,
+      explainedLocked:/Chưa thể bắt đầu|Not playable/.test(text),
+      noSaveMutation:before===JSON.stringify(G.DB?.save),
+      playable:api?.playable};
+   })()`);
+  console.log('PIPPI_WEB_FOSSIL_COOP_MISSION='+JSON.stringify(fossilMission));
+  assert.equal(fossilMission.installed,true,'Co-op Fossil Expedition must be a visible fifth mode tile');
+  assert.match(fossilMission.title,/Khai quật hóa thạch|Fossil Expedition/);
+  assert.equal(fossilMission.mode,'fossil_lab');
+  assert.equal(fossilMission.modal,true,'Fossil Expedition must explain objectives');
+  assert.equal(fossilMission.explainedLocked,true,'Do not pretend unreleased Co-op mission is playable');
+  assert.equal(fossilMission.noSaveMutation,true,'Co-op mission preview must not award coins or edit a save');
+  assert.equal(fossilMission.playable,false);
+  if(process.env.PKMSVV_PIPPI_UI_ONLY==='1'){
+   console.log('PASS PIPPI_RESEARCH_UI_2_2_COOP_FOSSIL_MODULAR_PREVIEW');
+   return;
+  }
   // Keep one Chromium page alive across a real native quit + new Explore.
   // Reloading the page masks the second-run leaks reported by Web players.
   for(let session=1;session<=2;session++){
