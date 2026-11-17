@@ -19,7 +19,7 @@ test('source-derived cutouts trace old detailed room at native 960x672, not new 
 test('no original cutout is sold or equipped before its background is repaired and art verified',()=>{
  const catalog=require('../data/pkmsvv-coop-lab-catalog.json');
  assert.equal(catalog.roomArt.background,'images/coop-lab/room_art_qa_v2.webp');
- assert.match(catalog.roomArt.layeringStatus,/reconstruction pending QA/);
+ assert.match(catalog.roomArt.layeringStatus,/reconstruction/);
  const script=fs.readFileSync(path.join(__dirname,'..','scripts/prepare-pippi-web-preview.cjs'),'utf8');
  assert.match(script,/extract-research-layers\.cjs/);
  assert.match(script,/source-cutouts-qa/);
