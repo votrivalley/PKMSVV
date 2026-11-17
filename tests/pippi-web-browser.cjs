@@ -135,7 +135,7 @@ async function main(){
   assert.equal(pc.roomArtMode,'classic','Research Lab must restore its detailed original hand-painted artwork');
   assert.ok(pc.furniture.includes('machine_old'),'furniture registry remains available for later extraction');
   const classicArt=await js(`getComputedStyle(document.querySelector('#pkmsvv-wiki-overlay .pkmsvv-research-room')).backgroundImage`);
-  assert.match(classicArt,/room_art_qa_v2\\.webp/,'original detailed room art must actually be visible');
+  assert.ok(classicArt.includes('room_art_qa_v2.webp'),'original detailed room art must actually be visible');
   const tourOnEnter=await js(`(()=>{
    const intro=G.PKMSVVPippiGuide?.current;
    const wasOpen=G.PKMSVVPippiGuide?.isOpen;
