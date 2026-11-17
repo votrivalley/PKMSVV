@@ -182,8 +182,8 @@ function installAchievement(){
  const entry={
   id,cat:'otros',tier:3,
   get name(){return tr('Nhà khảo cổ vĩ đại','Great Archaeologist');},
-  get desc(){return tr('Phục nguyên đủ 15 công thức và sưu tầm 25 Pokémon hóa thạch, gồm 10 dạng tiến hóa.',
-   'Revive 15 fossil recipes and collect all 25 fossil species, including 10 evolutions.');},
+  get desc(){return tr('Hồi sinh 15 Pokémon gốc từ hóa thạch, sau đó tiến hóa thêm 10 loài để sưu tầm đủ 25 Pokémon.',
+   'Revive 15 original Pokémon from fossils, then evolve 10 of them to complete a 25-Pokémon collection.');},
   value:save=>collectionProgress(save).collected,
   goal:TOTAL_FOSSIL_SPECIES,
   // No unsolicited coin reward: the collectible title is the reward.
