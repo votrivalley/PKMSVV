@@ -290,3 +290,26 @@ test('Fossil AI returns to protect the machine when all specimens collected',()=
  assert.ok(h.pl.x<0,'fossil defenders patrol the machine rather than idling on the human');
  assert.ok(h.casts.length>0);
 });
+
+test('Fossil AI follows assigned distant dig goal, helps mine, then guards Rotom rescue and the fused machine',()=>{
+ const h=harness('fossil_lab'),actions=[];
+ const session={collected:0,phase:'excavate',sites:[{x:-550,y:0,done:false}],
+  machine:{x:180,y:-80},rotom:{x:-250,y:-120}};
+ const goals={excavate:{x:-550,y:0},rescue:session.rotom,escort:session.machine,defend:session.machine};
+ h.G.PKMSVVFossilExpedition={
+  session,botGoal:()=>goals[session.phase],
+  botInteract(pl){actions.push({x:pl.x,y:pl.y,phase:session.phase});return true;}
+ };
+ const startX=h.pl.x;
+ for(let i=0;i<40;i++)h.G.LanAI.update(.1,i*.1);
+ assert.ok(h.pl.x<startX-40,'AI must seek the far dig site, not idle at Host position');
+ assert.ok(actions.length>=38,'Host-owned AI must call actual native fossil interaction');
+ session.phase='rescue';
+ const pre=h.pl.x;
+ for(let i=0;i<75;i++)h.G.LanAI.update(.1,4+i*.1);
+ assert.ok(h.pl.x>pre+35,'AI must travel toward Golurk/Rotom rescue target');
+ session.phase='defend';
+ const before=h.pl.x;
+ for(let i=0;i<75;i++)h.G.LanAI.update(.1,12+i*.1);
+ assert.ok(h.pl.x>before+30,'AI must return to protect the restored machine');
+});
