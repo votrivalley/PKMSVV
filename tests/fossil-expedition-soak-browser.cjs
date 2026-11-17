@@ -28,6 +28,14 @@ const assert=require('node:assert/strict'),path=require('node:path');
   });
   await page.locator('#lobby-start').click();
   await page.waitForFunction(()=>G.Game?.state==='playing'&&G.PKMSVVFossilExpedition?.active,null,{timeout:25000});
+  // The 10-second Berry choice deliberately freezes the native clock.
+  // Confirm it first so the soak measures 115 seconds of ACTUAL gameplay.
+  await page.evaluate(()=>{
+   const skip=[...document.querySelectorAll('.pkmsvv-berry-overlay button')]
+    .find(x=>/Không dùng Berry|No Berry/.test(x.textContent));
+   skip?.click();
+  });
+  await page.waitForFunction(()=>!G.PKMSVVBerry?.choosing,null,{timeout:17000});
   await page.waitForFunction(()=>G.LanAI?.activeBots?.().length===3,null,{timeout:7000});
   // Protect disposable QA actors without bypassing skill-level or simulation.
   await page.evaluate(()=>{
