@@ -55,7 +55,7 @@ test('art QA V2 uses detailed 960x672 206KB WebP instead of enlarging three toy-
  assert.ok(scene.length>100000&&scene.length<250000,'QA artwork mobile budget');
  const wiki=fs.readFileSync(path.join(root,'src/pkmsvv-wiki.js'),'utf8');
  const css=fs.readFileSync(path.join(root,'src/pkmsvv-pc-menu-clean-qa.css'),'utf8');
- assert.match(wiki,/data\.pkmsvvLabArtPreview='2'/);
+ assert.match(wiki,/\.dataset\.pkmsvvLabArtPreview='2'/);
  assert.equal((wiki.match(/btn\.dataset\.labSlot=id/g)||[]).length,1);
  assert.doesNotMatch(wiki,/pkmsvv-lab-art-sprite/,'legacy toy overlays should not cover new concept');
  assert.match(css,/room_art_qa_v2\.webp/);
