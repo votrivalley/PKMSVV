@@ -234,9 +234,9 @@
   ],
   "rewards": {
     "mission": "fossil_lab",
-    "minDurationSeconds": 360,
+    "minDurationSeconds": 480,
     "expectedDurationMinutes": [
-      6,
+      8,
       8
     ],
     "firstClear": 200,
@@ -259,6 +259,24 @@
       "max": 4,
       "soloHumanWithBotsAllowed": true,
       "botCountsAsTeamMember": true
+    },
+    "missionFlow": {
+      "collectFragments": 9,
+      "sites": 3,
+      "actionsPerSite": 3,
+      "minDistanceFromMachine": 400,
+      "minDistanceBetweenSites": 650,
+      "rotomRescueDeadlineSeconds": 240,
+      "escortToMachine": true,
+      "bossDex": 623,
+      "bossTemporaryQAChoice": true,
+      "restorerRotomFusion": true,
+      "winAtSeconds": 480,
+      "failIfRotomNotRescued": true,
+      "failIfMachineDestroyed": true,
+      "humanCountMin": 1,
+      "partySizeMin": 2,
+      "partySizeMax": 4
     }
   },
   "trophy": {
