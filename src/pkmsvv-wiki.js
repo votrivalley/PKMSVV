@@ -696,11 +696,11 @@ G.PKMSVVWiki=(()=>{
     const n=names[id],item=E?.config?.items?.find(x=>x.id===id);
     const owned=!!save?.ownedDecor?.[id]||id==='machine_old';
     const equipped=save.equippedDecorBySlot?.[slot]===id;
-    const ready=item?.artReady===true&&!!item.spritePath;
+    const ready=item?.artReady===true&&item.sceneSwapReady===true&&!!item.spritePath;
     const row=document.createElement('div');row.className='pkmsvv-build-item';
     const label=document.createElement('span');label.textContent=tr(n[0],n[1]);
     const state=document.createElement('small');
-    state.textContent=!ready?tr('Đang hoàn thiện sprite riêng · Chưa bán','Separate artwork pending · Not for sale'):
+    state.textContent=!ready?tr('Đang bóc tách khỏi tranh gốc · Chưa bán','Extracting from the original artwork · Not for sale yet'):
      equipped?tr('Đang trưng bày','Equipped'):
      owned?tr('Đã sở hữu · Có thể trang bị','Owned · Ready to equip'):
      tr('Giá '+n[2]+' Xu Đồng Đội','Price '+n[2]+' Co-op Coins');
