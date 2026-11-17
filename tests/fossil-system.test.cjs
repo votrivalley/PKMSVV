@@ -135,3 +135,17 @@ test('Great Archaeologist only unlocks when all 15 fossil Pokémon are restored'
  assert.equal(a.save.pkmsvvFossils.greatArchaeologist,true);
  assert.equal(a.say.some(x=>x.includes('Nhà khảo cổ vĩ đại')),true);
 });
+
+test('Great Archaeologist appears in native Achievements registry without double registration',()=>{
+ const a=rig();
+ a.G.AchDefs={LIST:[],BY:{}};
+ a.api.install();a.api.install();
+ const def=a.G.AchDefs.BY['pkmsvv-great-archaeologist'];
+ assert.ok(def);
+ assert.equal(def.goal,15);
+ assert.equal(a.G.AchDefs.LIST.length,1);
+ assert.equal(def.value(a.save),0);
+ a.save.pkmsvvFossils={restored:Object.fromEntries(catalog.recipes.map(x=>[x.dex,true]))};
+ assert.equal(def.value(a.save),15);
+ assert.equal(def.name,'Nhà khảo cổ vĩ đại');
+});
