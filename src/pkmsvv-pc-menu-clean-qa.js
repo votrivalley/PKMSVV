@@ -27,7 +27,8 @@
  }
  function tidyPcKnowledge(overlay){
   if(!overlay)return;
-  overlay.querySelector('.pkmsvv-pc-hint')?.remove();
+  // The Research Lab's hint explains the mission lock; it is not legacy PC filler.
+  if(!overlay.querySelector('[data-pkmsvv-research-hub]'))overlay.querySelector('.pkmsvv-pc-hint')?.remove();
   const allDone=knowledgeDone();
   // Hide the ENTIRE accordion row at 8/8, never leave an empty heading.
   if(allDone)overlay.querySelectorAll('[data-pkmsvv-knowledge="awakening"]')

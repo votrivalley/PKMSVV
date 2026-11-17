@@ -760,6 +760,9 @@ G.PKMSVVWiki=(()=>{
   }
   box.append(help);
   overlay.append(box);document.body.append(overlay);
+  // Keep the native knowledge cleanup when old PC handlers are bypassed by
+  // the capture-phase Research Lab launcher; never erase the Lab lock hint.
+  G.PKMSVVMenuCleanQA?.mountPC?.();
   overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
   // Avoid browser scrollIntoView repositioning the entire PC/Android panel.
   x.focus({preventScroll:true});
