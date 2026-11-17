@@ -40,10 +40,12 @@ test('fixed 16-color palette follows existing teal-mint-amber and original pixel
  assert.match(art.room.renderMethod,/nearest-neighbor/);
  assert.equal(art.room.movement,'static room diorama, no free drag/rotate, interactive hotspots only');
 });
-test('mythic Pippi statue only trophy slot and art direction does not claim assets exist',()=>{
+test('gold Pippi statue is a separate-slot 9999 Coin upgrade while old art blueprint remains archival',()=>{
  const statue=art.items.find(x=>x.id==='gold_pippi_statue');
  assert.deepEqual(statue.slotIds,['trophy']);
- assert.equal(catalog.items.find(x=>x.id===statue.id).price,null);
+ assert.equal(catalog.items.find(x=>x.id===statue.id).price,9999);
+ assert.equal(catalog.items.find(x=>x.id===statue.id).artReady,true);
+ assert.ok(fs.existsSync(path.join(root,'assets/coop-lab/decor/gold_pippi_statue.svg')));
  assert.match(art.status,/no-final-sprites/);
  const docs=fs.readFileSync(path.join(root,'docs/COOP_FOSSIL_LAB_ART_DIRECTION_V1.md'),'utf8');
  assert.match(docs,/chưa có sprite trang trí chính thức/);
