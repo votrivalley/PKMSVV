@@ -124,6 +124,25 @@ async function main(){
   assert.deepEqual(pc.hotspots,['support','mega','berry','companion','fossil'],'five clickable research machines');
   assert.equal(pc.buildButton,true,'Build mode button must be visible');
   assert.equal(pc.oldCardsHidden,true,'old PC card interface must NOT be shown on entry');
+  const buildMode=await js(`(()=>{
+   const previous=JSON.stringify(G.DB.save);
+   document.querySelector('#pkmsvv-wiki-overlay [data-research-build]')?.click();
+   const panel=document.querySelector('#pkmsvv-wiki-overlay .pkmsvv-build-panel');
+   const spots=[...document.querySelectorAll('#pkmsvv-wiki-overlay [data-build-slot]')].map(b=>b.dataset.buildSlot);
+   document.querySelector('#pkmsvv-wiki-overlay [data-build-slot="trophy"]')?.click();
+   const item=[...document.querySelectorAll('#pkmsvv-wiki-overlay [data-build-equip]')];
+   const allDisabled=item.every(b=>b.disabled);
+   const unchanged=previous===JSON.stringify(G.DB.save);
+   document.querySelector('#pkmsvv-wiki-overlay [data-back]')?.click();
+   return {visible:!!panel,spots,allDisabled,unchanged,
+    returned:!!document.querySelector('#pkmsvv-wiki-overlay [data-pkmsvv-research-hub]')};
+  })()`);
+  console.log('PIPPI_WEB_LAB_BUILD='+JSON.stringify(buildMode));
+  assert.equal(buildMode.visible,true,'Build mode opens separately from room');
+  assert.equal(buildMode.spots.length,8,'all eight fixed decoration slots exist');
+  assert.equal(buildMode.allDisabled,true,'unfinished furniture cannot be bought or equipped');
+  assert.equal(buildMode.unchanged,true,'preview building must not touch game save');
+  assert.equal(buildMode.returned,true,'Build back button returns directly to room');
   const companion=await js(`(()=>{
     document.querySelector('#pkmsvv-wiki-overlay [data-research-hotspot="companion"]')?.click();
     return {visible:!!document.querySelector('.pkmsvv-pippi-corner'),
