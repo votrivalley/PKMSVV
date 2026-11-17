@@ -49,7 +49,32 @@ const {startServer}=require('../lan-server/server.cjs');
    return G.PKMSVVFossilExpedition.perform();
   });
   assert.equal(mined.ok,true,'in-world mining requires player proximity and Host ownership');
-  await page.waitForTimeout(1100);
+  await page.waitForFunction(()=>G.PKMSVVFossilExpedition.spriteReady===true,null,{timeout:12000});
+  const aiBefore=await page.evaluate(()=>({
+   count:G.LanAI.activeBots().length,
+   bots:G.Coop.puppets().filter(p=>p.lanBot).map(p=>({x:p.x,y:p.y,moves:p.moves.length,dead:p.dead}))
+  }));
+  assert.ok(aiBefore.count>=1,'Fossil expedition MUST activate real AI controller (not just spawn idle allies)');
+  assert.ok(aiBefore.bots.some(b=>b.moves>0),'allied AI must learn and cast native moves');
+  await page.evaluate(()=>{
+   const p=G.Game.player;
+   p.invuln=10000;p.hp=p.maxHp;
+   // Keep host in a clear location away from the fossil so the bot should
+   // follow instead of standing still.
+   p.x=350;p.y=0;
+  });
+  await page.waitForTimeout(3500);
+  const aiAfter=await page.evaluate(()=>({
+   bots:G.Coop.puppets().filter(p=>p.lanBot).map(p=>({x:p.x,y:p.y,dead:p.dead})),
+   state:G.Game.state,
+   clock:G.Game.st?.time,
+   art:G.PKMSVVFossilExpedition.spriteReady
+  }));
+  const distance=Math.hypot(aiAfter.bots[0].x-aiBefore.bots[0].x,
+    aiAfter.bots[0].y-aiBefore.bots[0].y);
+  assert.ok(distance>5,'Fossil AI must MOVE; idle AI regression: '+JSON.stringify({aiBefore,aiAfter,distance}));
+  assert.equal(aiAfter.art,true,'Research machine and fossil rock textures must load');
+  console.log('FOSSIL_AI_SPRITE_SMOKE='+JSON.stringify({aiBefore,aiAfter,distance}));
   assert.equal(await page.evaluate(()=>G.Game.state),'playing','native Game loop must not crash after excavation');
   assert.equal(await page.evaluate(()=>G.DB.save.pkmsvvCoopLab?.coopCoins||0),state.coins,
    'mining must not grant unvalidated Co-op Coins');
