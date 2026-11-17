@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/fossil-native-game-qa.yml'
       - 'scripts/prepare-web.cjs'
+      - 'src/pkmsvv-pc-menu-clean-qa.css'
       - 'scripts/patch-fossil-expedition-native.cjs'
       - 'src/pkmsvv-fossil-expedition-core.cjs'
       - 'src/pkmsvv-fossil-expedition-native.js'
@@ -99,7 +100,7 @@ jobs:
           node - <<'NODE'
           const fs=require('node:fs');
           const info={
-            version:'2.5.1-Unified-Beta-Fossil-Machine-Defense-QA',
+            version:'2.5.2-Unified-Beta-Menu-Icon-Alignment-QA',
             releaseType:'experimental-gameplay-qa-only',
             previewBranch:'beta',
             qaCommit:process.env.GITHUB_SHA,
