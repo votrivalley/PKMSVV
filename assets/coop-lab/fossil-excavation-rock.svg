@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 60 60" shape-rendering="crispEdges">
+<title>Đá hóa thạch ngoài bản đồ - phong cách pixel nghiên cứu</title>
+<path d="M8 47h44v7H8Z" fill="#172d34" opacity=".7"/>
+<path d="M4 23h6v-8h9v-6h21v4h9v7h5v10h3v13h-5v6h-9v5H13v-6H8v-7H4Z" fill="#394f52" stroke="#26383b" stroke-width="2"/>
+<path d="M8 20h5v-7h7v-4h16v3h10v6h5v13h-4v11H15v-5H8Z" fill="#887963"/>
+<path d="M13 19h7v-5h16v3h8v6h4v7H16v-6h-3Z" fill="#cfb990"/>
+<path d="M12 33h7v6h22v-6h8v8h-7v5H17v-5h-5Z" fill="#635d53"/>
+<path d="M18 20h4v-4h11v3h9v4h5v6h-4v-4h-7v-3H22v5h-4Z" fill="#f1d7a0"/>
+<path d="M11 28h4v6h-4Zm36-1h4v9h-4Z" fill="#a39072"/>
+<path d="M21 31h20v12H21Z" fill="#c4a97e"/>
+<path d="M24 34h14v6H24Z" fill="#ddd0ab"/>
+<path d="M27 34h8v2h3v3h-3v2h-8v-2h-2v-3h2Z" fill="#594c40"/>
+<path d="M29 35h6v2h-6Zm0 4h5v1h-5Z" fill="#f3e6c7"/>
+<path d="M15 41h4v4h-4Zm28 0h4v3h-4Z" fill="#444d4e"/>
+<path d="M8 34h5v6H8ZM46 30h5v5h-5Z" fill="#68787a"/>
+<path d="M33 15h9v3h-9Z" fill="#d9bd91"/>
+</svg>
