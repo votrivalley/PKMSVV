@@ -65,12 +65,26 @@ const {startServer}=require('../lan-server/server.cjs');
    // follow instead of standing still.
    p.x=350;p.y=0;
   });
-  await page.waitForTimeout(3500);
+  // A native Co-op Berry picker can block the first seconds. Confirm the
+  // real pre-match choice rather than mistaking that deliberate hold for a
+  // gameplay freeze (also exercises the user-facing skip button).
+  await page.evaluate(()=>{
+   const skip=[...document.querySelectorAll('.pkmsvv-berry-overlay button')]
+    .find(x=>/Không dùng Berry|No Berry/.test(x.textContent));
+   skip?.click();
+  });
+  await page.waitForTimeout(11000);
   const aiAfter=await page.evaluate(()=>({
    bots:G.Coop.puppets().filter(p=>p.lanBot).map(p=>({x:p.x,y:p.y,dead:p.dead})),
    state:G.Game.state,
    clock:G.Game.st?.time,
-   art:G.PKMSVVFossilExpedition.spriteReady
+   art:G.PKMSVVFossilExpedition.spriteReady,
+   berryChoosing:!!G.PKMSVVBerry?.choosing,
+   cinematic:!!G.Judgment?.cinematic,
+   visibility:document.visibilityState,
+   popup:!!G.UI?.isOpen?.('scr-levelup'),
+   timeNative:G.Game.st?.time,
+   frames:G.Game?.state==='playing' ? 'expected' : 'paused'
   }));
   const distance=Math.hypot(aiAfter.bots[0].x-aiBefore.bots[0].x,
     aiAfter.bots[0].y-aiBefore.bots[0].y);
