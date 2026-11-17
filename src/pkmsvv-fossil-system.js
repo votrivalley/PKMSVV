@@ -8,6 +8,14 @@ if(typeof G==='undefined')return;
 if(G.PKMSVVFossils?.installed)return;
 const DATA={"materialTypes":[{"generation":1,"id":"helix_fossil","nameEn":"Helix Fossil","nameVi":"Hóa thạch Xoắn ốc"},{"generation":1,"id":"dome_fossil","nameEn":"Dome Fossil","nameVi":"Hóa thạch Mái vòm"},{"generation":1,"id":"old_amber","nameEn":"Old Amber","nameVi":"Hổ phách cổ"},{"generation":3,"id":"root_fossil","nameEn":"Root Fossil","nameVi":"Hóa thạch Rễ"},{"generation":3,"id":"claw_fossil","nameEn":"Claw Fossil","nameVi":"Hóa thạch Móng vuốt"},{"generation":4,"id":"skull_fossil","nameEn":"Skull Fossil","nameVi":"Hóa thạch Hộp sọ"},{"generation":4,"id":"armor_fossil","nameEn":"Armor Fossil","nameVi":"Hóa thạch Giáp"},{"generation":5,"id":"cover_fossil","nameEn":"Cover Fossil","nameVi":"Hóa thạch Mai"},{"generation":5,"id":"plume_fossil","nameEn":"Plume Fossil","nameVi":"Hóa thạch Lông vũ"},{"generation":6,"id":"jaw_fossil","nameEn":"Jaw Fossil","nameVi":"Hóa thạch Hàm"},{"generation":6,"id":"sail_fossil","nameEn":"Sail Fossil","nameVi":"Hóa thạch Vây lưng"},{"generation":8,"id":"fossilized_bird","nameEn":"Fossilized Bird","nameVi":"Hóa thạch Chim"},{"generation":8,"id":"fossilized_fish","nameEn":"Fossilized Fish","nameVi":"Hóa thạch Cá"},{"generation":8,"id":"fossilized_drake","nameEn":"Fossilized Drake","nameVi":"Hóa thạch Rồng"},{"generation":8,"id":"fossilized_dino","nameEn":"Fossilized Dino","nameVi":"Hóa thạch Khủng long"}],"recipes":[{"generation":1,"dex":138,"name":"Omanyte","evolutionDexIds":[139],"materialIds":["helix_fossil"]},{"generation":1,"dex":140,"name":"Kabuto","evolutionDexIds":[141],"materialIds":["dome_fossil"]},{"generation":1,"dex":142,"name":"Aerodactyl","evolutionDexIds":[],"materialIds":["old_amber"]},{"generation":3,"dex":345,"name":"Lileep","evolutionDexIds":[346],"materialIds":["root_fossil"]},{"generation":3,"dex":347,"name":"Anorith","evolutionDexIds":[348],"materialIds":["claw_fossil"]},{"generation":4,"dex":408,"name":"Cranidos","evolutionDexIds":[409],"materialIds":["skull_fossil"]},{"generation":4,"dex":410,"name":"Shieldon","evolutionDexIds":[411],"materialIds":["armor_fossil"]},{"generation":5,"dex":564,"name":"Tirtouga","evolutionDexIds":[565],"materialIds":["cover_fossil"]},{"generation":5,"dex":566,"name":"Archen","evolutionDexIds":[567],"materialIds":["plume_fossil"]},{"generation":6,"dex":696,"name":"Tyrunt","evolutionDexIds":[697],"materialIds":["jaw_fossil"]},{"generation":6,"dex":698,"name":"Amaura","evolutionDexIds":[699],"materialIds":["sail_fossil"]},{"generation":8,"dex":880,"name":"Dracozolt","evolutionDexIds":[],"materialIds":["fossilized_bird","fossilized_drake"]},{"generation":8,"dex":881,"name":"Arctozolt","evolutionDexIds":[],"materialIds":["fossilized_bird","fossilized_dino"]},{"generation":8,"dex":882,"name":"Dracovish","evolutionDexIds":[],"materialIds":["fossilized_fish","fossilized_drake"]},{"generation":8,"dex":883,"name":"Arctovish","evolutionDexIds":[],"materialIds":["fossilized_fish","fossilized_dino"]}],"regionPools":{"1":{"name":"Kanto","materialIds":["helix_fossil","dome_fossil","old_amber"],"speciesDexIds":[138,139,140,141,142]},"2":{"name":"Johto","materialIds":[],"speciesDexIds":[]},"3":{"name":"Hoenn","materialIds":["root_fossil","claw_fossil"],"speciesDexIds":[345,346,347,348]},"4":{"name":"Sinnoh","materialIds":["skull_fossil","armor_fossil"],"speciesDexIds":[408,409,410,411]},"5":{"name":"Unova","materialIds":["cover_fossil","plume_fossil"],"speciesDexIds":[564,565,566,567]},"6":{"name":"Kalos","materialIds":["jaw_fossil","sail_fossil"],"speciesDexIds":[696,697,698,699]},"7":{"name":"Alola","materialIds":[],"speciesDexIds":[]},"8":{"name":"Galar","materialIds":["fossilized_bird","fossilized_fish","fossilized_drake","fossilized_dino"],"speciesDexIds":[880,881,882,883]},"9":{"name":"Paldea","materialIds":[],"speciesDexIds":[]},"10":{"name":"Votri Valley / Sky","materialIds":[],"speciesDexIds":[]}}};
 const FOSSIL_DEX=new Set(DATA.recipes.flatMap(r=>[r.dex,...r.evolutionDexIds]));
+const TOTAL_FOSSIL_SPECIES=FOSSIL_DEX.size; // 25 species, 15 revival recipes
+function collectionProgress(s,restoredOverride){
+ const restored=restoredOverride||s?.pkmsvvFossils?.restored||{},owned=s?.owned||{};
+ const collected=[...FOSSIL_DEX].filter(dex=>!!owned[dex]||restored[dex]===true).length;
+ const revived=DATA.recipes.filter(r=>restored[r.dex]===true).length;
+ return {collected,total:TOTAL_FOSSIL_SPECIES,revived,recipes:DATA.recipes.length,
+  complete:collected===TOTAL_FOSSIL_SPECIES&&revived===DATA.recipes.length};
+}
 const MATERIALS=new Map(DATA.materialTypes.map(x=>[x.id,x]));
 const RECIPES=new Map(DATA.recipes.map(x=>[x.dex,x]));
 const TYPES={ordinary:.02,rock:.04,fossil:.06};
@@ -95,8 +103,9 @@ function restore(dex){
   next.inventory[id]-=count;next.discovered[id]=true;
  }
  next.restored[recipe.dex]=true;
+ const futureSave={...s,owned:{...(s.owned||{}),[recipe.dex]:true}};
  const firstGreat=!previous.greatArchaeologist&&
-  DATA.recipes.every(r=>next.restored[r.dex]===true);
+  collectionProgress(futureSave,next.restored).complete;
  if(firstGreat)next.greatArchaeologist=true;
  const hadF=Object.prototype.hasOwnProperty.call(s,'pkmsvvFossils'),oldF=s.pkmsvvFossils;
  const hadO=Object.prototype.hasOwnProperty.call(s,'owned'),oldO=s.owned;
@@ -108,8 +117,8 @@ function restore(dex){
  try{
   if(db.commit(true)===false)throw Error('Save refused');
   G.UI?.toast?.(firstGreat?
-   tr('🏅 Nhà khảo cổ vĩ đại! Đã hồi sinh đủ 15 Pokémon hóa thạch!',
-      '🏅 Great Archaeologist! All 15 fossil Pokémon restored!'):
+   tr('🏅 Nhà khảo cổ vĩ đại! Đã sưu tầm đủ 25 Pokémon hóa thạch!',
+      '🏅 Great Archaeologist! All 25 fossil Pokémon collected!'):
    tr('✨ Hồi sinh thành công '+recipe.name+'!',recipe.name+' restored!'),3500);
   G.PKMSVVPippi?.show?.('fossil',true);
   return {ok:true,dex:recipe.dex,greatArchaeologist:firstGreat};
@@ -173,10 +182,10 @@ function installAchievement(){
  const entry={
   id,cat:'otros',tier:3,
   get name(){return tr('Nhà khảo cổ vĩ đại','Great Archaeologist');},
-  get desc(){return tr('Hồi sinh đủ 15 loài Pokémon hóa thạch tại Phòng nghiên cứu.',
-   'Restore all 15 fossil Pokémon species in the Research Lab.');},
-  value:save=>DATA.recipes.filter(r=>save?.pkmsvvFossils?.restored?.[r.dex]===true).length,
-  goal:DATA.recipes.length,
+  get desc(){return tr('Phục nguyên đủ 15 công thức và sưu tầm 25 Pokémon hóa thạch, gồm 10 dạng tiến hóa.',
+   'Revive 15 fossil recipes and collect all 25 fossil species, including 10 evolutions.');},
+  value:save=>collectionProgress(save).collected,
+  goal:TOTAL_FOSSIL_SPECIES,
   // No unsolicited coin reward: the collectible title is the reward.
   reward:{coins:0},
   get title(){return tr('Nhà khảo cổ','Archaeologist');}
@@ -187,7 +196,7 @@ function installAchievement(){
 function install(){installRock();installSpawns();installGacha();installAchievement();return true;}
 const api={installed:true,isFossilDex:d=>FOSSIL_DEX.has(Number(d)),
  materials:DATA.materialTypes,recipes:DATA.recipes,regionPools:DATA.regionPools,
- probability,canDig,rockBroken,inventory,guaranteed,restore,install,installRock,installGacha,installSpawns};
+ probability,canDig,rockBroken,inventory,guaranteed,restore,collectionProgress,install,installRock,installGacha,installSpawns};
 G.PKMSVVFossils=api;
 install();
 // No frame-loop allocation. Re-attach only if native game loads asynchronously.
