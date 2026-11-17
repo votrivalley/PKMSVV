@@ -1,27 +1,6 @@
 name: Research Lab UI Fast Preview QA (never production)
+# Legacy per-feature QA is manual-only; all future public testing uses the single stable Beta.
 on:
-  push:
-    branches: [fix/pippi-follow-menu-qa-20261115]
-    paths:
-      - '.github/workflows/preview-research-ui-qa.yml'
-      - 'src/pkmsvv-wiki.js'
-      - 'src/pkmsvv-pippi-guide.js'
-      - 'src/pkmsvv-coop-fossil-mission-qa.js'
-      - 'assets/coop-lab/**'
-      - 'src/pkmsvv-pc-menu-clean-qa.css'
-      - 'src/pkmsvv-mega-entry.js'
-      - 'src/pkmsvv-support-catalog.js'
-      - 'src/pkmsvv-fossil-system.js'
-      - 'src/pkmsvv-coop-lab-core.cjs'
-      - 'data/pkmsvv-fossil-catalog.json'
-      - 'data/pkmsvv-coop-lab-catalog.json'
-      - 'scripts/prepare-pippi-web-preview.cjs'
-      - 'tests/coop-lab-art-assets.test.cjs'
-      - 'tests/coop-lab-core.test.cjs'
-      - 'tests/pippi-web-browser.cjs'
-      - 'tests/research-source-extraction.test.cjs'
-      - 'scripts/extract-research-layers.cjs'
-      - 'tests/fossil-system.test.cjs'
   workflow_dispatch:
 permissions:
   contents: read
