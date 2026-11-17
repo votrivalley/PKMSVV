@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 672" width="960" height="672">
+<title>Phòng nghiên cứu Pippi — nền rỗng, đồ nội thất được vẽ trên lớp riêng</title>
+<defs>
+ <linearGradient id="wall" x2="0" y2="1"><stop stop-color="#143c47"/><stop offset="1" stop-color="#27656c"/></linearGradient>
+ <linearGradient id="floor" x2="0" y2="1"><stop stop-color="#447e71"/><stop offset="1" stop-color="#1c514c"/></linearGradient>
+ <linearGradient id="brass" x2="0" y2="1"><stop stop-color="#f8d991"/><stop offset=".45" stop-color="#b88c4b"/><stop offset="1" stop-color="#77512f"/></linearGradient>
+ <radialGradient id="glow"><stop stop-color="#b2f8c7" stop-opacity=".28"/><stop offset="1" stop-color="#b2f8c7" stop-opacity="0"/></radialGradient>
+ <pattern id="wallTile" width="96" height="48" patternUnits="userSpaceOnUse">
+  <path d="M0 0H96V48H0Z" fill="#1e4d58" stroke="#123743" stroke-width="5"/>
+  <path d="M48 0V24M0 24H96M24 24V48M72 24V48" stroke="#39737a" stroke-width="3"/>
+  <path d="M8 8h24m26 13h25m-60 16h23" stroke="#77aaa4" stroke-opacity=".18" stroke-width="3"/>
+ </pattern>
+ <pattern id="floorTile" width="48" height="48" patternUnits="userSpaceOnUse">
+  <rect width="48" height="48" fill="#2a665e" stroke="#15443e" stroke-width="3"/>
+  <path d="M4 4H44V10H4M4 20H14M24 39H43" fill="#67a088" opacity=".22"/>
+  <path d="M6 43h11m25-35h3" stroke="#aed5a0" opacity=".22" stroke-width="2"/>
+ </pattern>
+ <pattern id="speckle" width="21" height="23" patternUnits="userSpaceOnUse">
+  <path d="M4 5h3v3H4Zm13 12h2v2h-2Z" fill="#9dbd9a" opacity=".15"/>
+ </pattern>
+</defs>
+<!-- Room architecture only. ALL furniture lives in separate selectable layers. -->
+<rect width="960" height="672" fill="#102b36"/>
+<rect x="12" y="12" width="936" height="648" rx="9" fill="url(#wall)" stroke="#d8b16c" stroke-width="8"/>
+<rect x="24" y="28" width="912" height="322" fill="url(#wallTile)"/>
+<rect x="24" y="342" width="912" height="302" fill="url(#floorTile)"/>
+<rect x="24" y="342" width="912" height="302" fill="url(#speckle)"/>
+<path d="M18 342H942" stroke="#d4a963" stroke-width="11"/>
+<path d="M19 350H941" stroke="#174d4b" stroke-width="8"/>
+<!-- Wall corner stonework -->
+<path d="M37 27v601M923 27v601" stroke="#102f39" stroke-width="25"/>
+<path d="M45 24v603M915 24v603" stroke="#568c88" stroke-width="6"/>
+<rect x="26" y="35" width="26" height="8" fill="#d1ae72" opacity=".75"/><rect x="26" y="98" width="26" height="8" fill="#d1ae72" opacity=".75"/><rect x="26" y="161" width="26" height="8" fill="#d1ae72" opacity=".75"/><rect x="26" y="224" width="26" height="8" fill="#d1ae72" opacity=".75"/><rect x="26" y="287" width="26" height="8" fill="#d1ae72" opacity=".75"/><rect x="26" y="350" width="26" height="8" fill="#d1ae72" opacity=".75"/><rect x="26" y="413" width="26" height="8" fill="#d1ae72" opacity=".75"/><rect x="26" y="476" width="26" height="8" fill="#d1ae72" opacity=".75"/><rect x="26" y="539" width="26" height="8" fill="#d1ae72" opacity=".75"/><rect x="26" y="602" width="26" height="8" fill="#d1ae72" opacity=".75"/><rect x="900" y="35" width="26" height="8" fill="#d1ae72" opacity=".75"/><rect x="900" y="98" width="26" height="8" fill="#d1ae72" opacity=".75"/><rect x="900" y="161" width="26" height="8" fill="#d1ae72" opacity=".75"/><rect x="900" y="224" width="26" height="8" fill="#d1ae72" opacity=".75"/><rect x="900" y="287" width="26" height="8" fill="#d1ae72" opacity=".75"/><rect x="900" y="350" width="26" height="8" fill="#d1ae72" opacity=".75"/><rect x="900" y="413" width="26" height="8" fill="#d1ae72" opacity=".75"/><rect x="900" y="476" width="26" height="8" fill="#d1ae72" opacity=".75"/><rect x="900" y="539" width="26" height="8" fill="#d1ae72" opacity=".75"/><rect x="900" y="602" width="26" height="8" fill="#d1ae72" opacity=".75"/>
+<!-- Brass trim, built-in window glass: part of architecture, not furniture -->
+<path d="M42 41H918" stroke="url(#brass)" stroke-width="17"/>
+<path d="M48 60H912" stroke="#122b36" stroke-width="6"/>
+<g transform="translate(130,95)">
+ <rect width="253" height="67" rx="5" fill="#73542f" stroke="#1e2830" stroke-width="8"/>
+ <rect x="8" y="8" width="237" height="51" fill="#94d8ce" stroke="#e4ba67" stroke-width="7"/>
+ <rect x="15" y="17" width="224" height="34" fill="#145762"/>
+ <path d="M20 22h207" stroke="#8be1d3" opacity=".7" stroke-width="6"/>
+ <path d="M25 46h207" stroke="#2e938a" opacity=".75" stroke-width="4"/>
+ </g><g transform="translate(575,95)">
+ <rect width="253" height="67" rx="5" fill="#73542f" stroke="#1e2830" stroke-width="8"/>
+ <rect x="8" y="8" width="237" height="51" fill="#94d8ce" stroke="#e4ba67" stroke-width="7"/>
+ <rect x="15" y="17" width="224" height="34" fill="#145762"/>
+ <path d="M20 22h207" stroke="#8be1d3" opacity=".7" stroke-width="6"/>
+ <path d="M25 46h207" stroke="#2e938a" opacity=".75" stroke-width="4"/>
+ </g><!-- Wall ornament niches are empty and can receive purchased plaques -->
+<g transform="translate(198,219)">
+ <path d="M-88 27V-20Q-88-47-64-47H64Q88-47 88-20V27Z" fill="#143640" stroke="url(#brass)" stroke-width="9"/>
+ <rect x="-74" y="-30" width="148" height="45" rx="3" fill="#2d6361" stroke="#947648" stroke-width="4"/>
+ <path d="M-67 2H67" stroke="#81b8a6" stroke-opacity=".35" stroke-width="5"/>
+ </g><g transform="translate(762,219)">
+ <path d="M-88 27V-20Q-88-47-64-47H64Q88-47 88-20V27Z" fill="#143640" stroke="url(#brass)" stroke-width="9"/>
+ <rect x="-74" y="-30" width="148" height="45" rx="3" fill="#2d6361" stroke="#947648" stroke-width="4"/>
+ <path d="M-67 2H67" stroke="#81b8a6" stroke-opacity=".35" stroke-width="5"/>
+ </g>
+<!-- Two architectural lamps -->
+<g transform="translate(83,185)">
+ <ellipse cy="34" rx="44" ry="66" fill="#ffe5a3" opacity=".13"/>
+ <path d="M-15-5h30l-5 49h-20Z" fill="#f1d081" stroke="#765936" stroke-width="7"/>
+ <path d="M-12 4h24v27h-24Z" fill="#d8f6c1" opacity=".85"/>
+ <path d="M-19-15h38M-16 44h32" stroke="#f7d28b" stroke-width="8"/>
+ </g><g transform="translate(877,185)">
+ <ellipse cy="34" rx="44" ry="66" fill="#ffe5a3" opacity=".13"/>
+ <path d="M-15-5h30l-5 49h-20Z" fill="#f1d081" stroke="#765936" stroke-width="7"/>
+ <path d="M-12 4h24v27h-24Z" fill="#d8f6c1" opacity=".85"/>
+ <path d="M-19-15h38M-16 44h32" stroke="#f7d28b" stroke-width="8"/>
+ </g>
+<!-- Sparse floor inlay; no fixed machines, desks, plants, statues or shelves -->
+<ellipse cx="484" cy="500" rx="190" ry="170" fill="url(#glow)"/>
+<circle cx="484" cy="502" r="86" fill="none" stroke="#d1b36d" stroke-width="7" opacity=".68"/>
+<circle cx="484" cy="502" r="39" fill="none" stroke="#d1b36d" stroke-width="5" opacity=".56"/>
+<path d="M397 502H570M484 412V590" stroke="#c0a161" stroke-width="6" opacity=".52"/>
+<!-- Entrance threshold -->
+<path d="M399 660V621H558V660" fill="#783b49" stroke="#ddb676" stroke-width="10"/>
+<path d="M415 662V637H541V662" fill="#a44e5a" stroke="#e5a868" stroke-width="4"/>
+<rect x="18" y="613" width="364" height="30" fill="#164c49" stroke="#4d7f77" stroke-width="5"/>
+<rect x="578" y="613" width="364" height="30" fill="#164c49" stroke="#4d7f77" stroke-width="5"/>
+<path d="M18 645H383M578 645H944" stroke="url(#brass)" stroke-width="11"/>
+</svg>
