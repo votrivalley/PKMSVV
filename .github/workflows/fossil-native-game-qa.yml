@@ -57,6 +57,8 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Check 2–4 room rules and 6–8 minute outcome core
         run: node --test tests/fossil-expedition-core.test.cjs tests/fossil-expedition-routing.test.cjs tests/coop-lab-core.test.cjs
+      - name: Fetch hash-checked Clefairy PMD assets required by LAN packaging
+        run: node scripts/fetch-pippi-pmd.cjs && node scripts/build-pippi-portrait-atlas.cjs
       - name: Compile genuine offline LAN/AI native game with QA-only fossil hooks
         run: npm run prepare:lan
       - name: Verify compiled engine has dedicated native fifth mode (not fake HTML preview)
