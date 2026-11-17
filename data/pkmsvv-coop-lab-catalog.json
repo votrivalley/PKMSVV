@@ -79,7 +79,8 @@
       "rarity": "starter",
       "artReady": true,
       "spritePath": "images/coop-lab/decor/machine_old_modular.svg",
-      "visualLayer": "separate-svg"
+      "visualLayer": "separate-svg",
+      "sceneSwapReady": true
     },
     {
       "id": "machine_future",
@@ -92,7 +93,8 @@
       "rarity": "rare",
       "artReady": false,
       "spritePath": null,
-      "visualLayer": "preview-only"
+      "visualLayer": "preview-only",
+      "sceneSwapReady": false
     },
     {
       "id": "kabuto_skeleton",
@@ -106,7 +108,8 @@
       "rarity": "common",
       "artReady": true,
       "spritePath": "images/coop-lab/decor/kabuto_skeleton.png",
-      "visualLayer": "separate-alpha"
+      "visualLayer": "separate-alpha",
+      "sceneSwapReady": false
     },
     {
       "id": "amber_aerodactyl",
@@ -120,7 +123,8 @@
       "rarity": "rare",
       "artReady": false,
       "spritePath": null,
-      "visualLayer": "preview-only"
+      "visualLayer": "preview-only",
+      "sceneSwapReady": false
     },
     {
       "id": "omanyte_model",
@@ -134,7 +138,8 @@
       "rarity": "common",
       "artReady": false,
       "spritePath": null,
-      "visualLayer": "preview-only"
+      "visualLayer": "preview-only",
+      "sceneSwapReady": false
     },
     {
       "id": "archaeology_certificate",
@@ -148,7 +153,8 @@
       "rarity": "common",
       "artReady": false,
       "spritePath": null,
-      "visualLayer": "preview-only"
+      "visualLayer": "preview-only",
+      "sceneSwapReady": false
     },
     {
       "id": "prehistoric_poster",
@@ -162,7 +168,8 @@
       "rarity": "common",
       "artReady": false,
       "spritePath": null,
-      "visualLayer": "preview-only"
+      "visualLayer": "preview-only",
+      "sceneSwapReady": false
     },
     {
       "id": "prehistoric_fern",
@@ -175,7 +182,8 @@
       "rarity": "common",
       "artReady": false,
       "spritePath": null,
-      "visualLayer": "preview-only"
+      "visualLayer": "preview-only",
+      "sceneSwapReady": false
     },
     {
       "id": "research_terminal",
@@ -188,7 +196,8 @@
       "rarity": "common",
       "artReady": true,
       "spritePath": "images/coop-lab/decor/research_terminal.png",
-      "visualLayer": "separate-alpha"
+      "visualLayer": "separate-alpha",
+      "sceneSwapReady": false
     },
     {
       "id": "glowing_sample_tube",
@@ -201,7 +210,8 @@
       "rarity": "rare",
       "artReady": false,
       "spritePath": null,
-      "visualLayer": "preview-only"
+      "visualLayer": "preview-only",
+      "sceneSwapReady": false
     },
     {
       "id": "gold_pippi_statue",
@@ -218,7 +228,8 @@
       "descriptionVi": "Tượng vàng độc lập để đặt ở bệ danh dự. Chỉ trang trí, không cộng chỉ số; giá 9.999 Xu Đồng Đội.",
       "artReady": true,
       "spritePath": "images/coop-lab/decor/gold_pippi_statue.svg",
-      "visualLayer": "separate-svg"
+      "visualLayer": "separate-svg",
+      "sceneSwapReady": true
     }
   ],
   "rewards": {
@@ -399,6 +410,6 @@
       "width": 960,
       "height": 672
     },
-    "layeringStatus": "original-baked-scene-preserved; generated cutouts and occluded-background reconstruction pending QA; only overlays reliably independent"
+    "layeringStatus": "original-room-restored; only separate golden statue ready for purchase; other source cutouts require occluded-background reconstruction"
   }
 }
