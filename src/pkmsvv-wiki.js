@@ -397,15 +397,13 @@ G.PKMSVVWiki=(()=>{
    medal.dataset.fossilAchievement=String(progress.collected);
    medal.dataset.fossilRevived=String(progress.revived);
    medal.textContent=progress.complete?
-    tr('🏅 Nhà khảo cổ vĩ đại — Hoàn tất 25/25 loài và 15/15 công thức!',
-       '🏅 Great Archaeologist — All 25 species and 15 revival recipes complete!'):
-    tr('🏅 Nhà khảo cổ vĩ đại · '+progress.collected+'/'+progress.total+
-      ' Pokémon · '+progress.revived+'/'+progress.recipes+' công thức phục nguyên',
-       '🏅 Great Archaeologist · '+progress.collected+'/'+progress.total+
-      ' Pokémon · '+progress.revived+'/'+progress.recipes+' revival recipes');
+    tr('🏅 Nhà khảo cổ vĩ đại — Đã sưu tầm đủ 25 Pokémon hóa thạch!',
+       '🏅 Great Archaeologist — All 25 fossil Pokémon collected!'):
+    tr('🏅 Nhà khảo cổ vĩ đại · Đã sưu tầm '+progress.collected+'/'+progress.total+' Pokémon',
+       '🏅 Great Archaeologist · Collected '+progress.collected+'/'+progress.total+' Pokémon');
    const explain=document.createElement('small');explain.className='pkmsvv-fossil-collection-hint';
-   explain.textContent=tr('Có 15 công thức đá hóa thạch. Để đủ 25 Pokémon, hãy tiến hóa thêm 10 loài sau khi hồi sinh.',
-    'There are 15 fossil recipes. Evolve 10 revived species to complete the 25-Pokémon collection.');
+   explain.textContent=tr('Có 15 loài hồi sinh trực tiếp từ hóa thạch và 10 dạng tiến hóa. Đã phục nguyên '+progress.revived+'/'+progress.recipes+' loài gốc.',
+    '15 Pokémon revive directly from fossils; 10 are evolutions. Revived '+progress.revived+'/'+progress.recipes+' base species.');
    list.append(medal,explain);
    for(const formula of F.recipes){
     const restored=s?.pkmsvvFossils?.restored?.[formula.dex]===true;
@@ -759,7 +757,7 @@ G.PKMSVVWiki=(()=>{
   const hero=document.createElement('section');hero.className='pkmsvv-research-hero pkmsvv-research-interactive';
   hero.dataset.pkmsvvResearchHub='2';
   const room=document.createElement('div');room.className='pkmsvv-research-room';
-  room.dataset.researchArtMode='modular';
+  room.dataset.researchArtMode='classic';
   renderFurnitureLayers(room);
   room.setAttribute('role','group');
   room.setAttribute('aria-label',tr('Bản đồ tương tác Phòng nghiên cứu','Interactive Research Lab'));
@@ -880,12 +878,12 @@ G.PKMSVVWiki=(()=>{
   store.onclick=coopShop;
   const reference=document.createElement('button');reference.type='button';
   reference.className='pkmsvv-pc-close';reference.dataset.researchReference='1';
-  reference.textContent=tr('🖼 Xem phối cảnh cũ','🖼 Original concept');
+  reference.textContent=tr('🛠 Xem bố cục nâng cấp','🛠 Upgrade layout');
   reference.onclick=()=>{
-   const old=room.classList.toggle('pkmsvv-research-reference');
-   room.dataset.researchArtMode=old?'reference':'modular';
-   reference.textContent=old?tr('🛠 Phòng tách lớp','🛠 Modular room'):
-    tr('🖼 Xem phối cảnh cũ','🖼 Original concept');
+   const layout=room.classList.toggle('pkmsvv-research-layout-preview');
+   room.dataset.researchArtMode=layout?'layout-preview':'classic';
+   reference.textContent=layout?tr('🖼 Phòng nghiên cứu gốc','🖼 Original research room'):
+    tr('🛠 Xem bố cục nâng cấp','🛠 Upgrade layout');
   };
   toolbar.append(store,build,knowledge,reference);
   const fast=document.createElement('nav');fast.className='pkmsvv-research-quick-actions';
