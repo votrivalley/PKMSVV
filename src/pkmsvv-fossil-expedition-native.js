@@ -13,7 +13,8 @@ G.PKMSVVFossilExpedition=(()=>{
  const rotomFallback=image('images/coop-lab/rotom-orb.svg');
  let current=null,active=false,finished=false,bossEnemy=null,rotomAnimator=null,
   uiButton=null,lastAction=-100,lastBossHint=-100,sendClock=0,scanClock=0,
-  waveClock=0,waveIndex=0,duelClock=0,cachedThreats=0,rendered=new Set(),lastFinish=null;
+  waveClock=0,waveIndex=0,duelClock=0,cachedThreats=0,rendered=new Set(),lastFinish=null,
+  machineTarget=null,speedStage=-1,speedClock=0;
  const botTimes=new Map();
  const room=()=>G.Social?.room;
  const allBots=()=>G.Coop?.puppets?.().filter(p=>p.lanBot&&!p.dead)||[];
@@ -21,6 +22,31 @@ G.PKMSVVFossilExpedition=(()=>{
  const at=(p,q,r)=>!!p&&!!q&&Math.hypot(p.x-q.x,p.y-q.y)<=r;
  const phaseName=()=>current?.phase||'';
  const fragments=()=>current?.sites.reduce((n,s)=>n+s.hits,0)||0;
+ // Berry-inspired targeting: one stable target actor; no per-frame allocation.
+ // Four out of every five enemies prioritize attacking the powered restorer.
+ function targetFor(enemy){
+  if(!active||!G.Coop?.isHost||!current?.machine.online||
+     current.phase!=='defend'||!enemy||enemy.dead||enemy.remote)return null;
+  const id=Number(enemy.id);
+  return Number.isSafeInteger(id)&&Math.abs(id)%5!==0?machineTarget:null;
+ }
+ // Update native enemy speed only on new stages or newly spawned enemies.
+ // Guard read-only custom variants: an exception here would freeze Co-op.
+ function rebalanceEnemy(e,stage){
+  if(!e||e.dead||e.remote||e._pkmsvvFossilSpeedStage===stage)return;
+  const factor=C.speedFactor(current?.elapsed??0);
+  const own=Object.getOwnPropertyDescriptor(e,'spd');
+  const proto=!own&&Object.getOwnPropertyDescriptor(Object.getPrototypeOf(e),'spd');
+  const field=own||proto;
+  if(field&&!field.writable&&typeof field.set!=='function')return;
+  const speed=Number(e.spd),old=e._pkmsvvFossilSpeedFactor||1;
+  if(!Number.isFinite(speed))return;
+  try{
+   e.spd=speed/old*factor;
+   e._pkmsvvFossilSpeedFactor=factor;
+   e._pkmsvvFossilSpeedStage=stage;
+  }catch(_){/* Never let read-only variants stop the game loop. */}
+ }
  function talk(vi,en){
   if(G.Coop?.isHost)G.Spawner?.say?.(tr(vi,en),3);
  }
@@ -36,7 +62,7 @@ G.PKMSVVFossilExpedition=(()=>{
   return p;
  }
  function begin({mode}={}){
-  end();finished=false;lastFinish=null;lastAction=-100;lastBossHint=-100;scanClock=sendClock=waveClock=duelClock=0;waveIndex=0;botTimes.clear();
+  end();finished=false;lastFinish=null;lastAction=-100;lastBossHint=-100;scanClock=sendClock=waveClock=duelClock=speedClock=0;speedStage=-1;waveIndex=0;botTimes.clear();
   if((mode||room()?.mode)!==KEY)return false;
   const r=room();
   if(!ready||r?.mode!==KEY||!Array.isArray(r.members)||r.members.length<2||r.members.length>4){
@@ -51,6 +77,8 @@ G.PKMSVVFossilExpedition=(()=>{
   if(!session.ok)session=C.begin({members:r.members,roomId:r.id,hostUid:r.host,origin});
   if(!session.ok)return false;
   current=session;active=true;
+  machineTarget={x:current.machine.x,y:current.machine.y,r:44,level:1,dead:false,
+   _vx:0,_vy:0,_pkmsvvFossilMachine:true};
   if(G.Sprites?.Animator)try{
    rotomAnimator=new G.Sprites.Animator(479,1.15);
    G.Sprites.preload?.([479,623],8000,false);
@@ -204,6 +232,15 @@ G.PKMSVVFossilExpedition=(()=>{
   if(rotomAnimator)try{rotomAnimator.update?.(dt);}catch(_){}
   if(!G.Coop?.isHost)return;
   if(current.phase==='escort')moveRotom(dt);
+  // Berry Rescue cadence at 5Hz: +13⅓% every 2 min, capped +40%.
+  // Existing enemies keep their HP, damage, XP and original hitboxes.
+  const stage=Math.max(0,Math.min(C.MAX_SPEED_STAGES,
+   Math.floor(current.elapsed/C.SPEED_STEP_SECONDS)));
+  speedClock+=Math.max(0,Number(dt)||0);
+  if(speedClock>=.2||speedStage!==stage){
+   speedClock=0;speedStage=stage;
+   for(const e of G.EnemyMgr?.all?.()||[])rebalanceEnemy(e,stage);
+  }
   if(current.phase==='rescue'&&bossEnemy&&!bossDown()){
    duelClock+=Math.max(0,dt);
    if(duelClock>=1.6){
@@ -290,10 +327,20 @@ G.PKMSVVFossilExpedition=(()=>{
     ctx.fillStyle=row===2?'#53483c':row===1?'#977860':'#b59c79';
     ctx.fillRect(-36,-32,72,45);
    }
+   // Egg-like HP bar; 3 real excavation hits = 100%, 67%, 33%, 0%.
+   // No synthetic damage: bar derives directly from host-authoritative hits.
+   const hp=C.rockHpRatio(obj.hits);
+   const bx=-38,by=-72,bw=76;
+   ctx.fillStyle='#152b34e8';ctx.fillRect(bx-2,by-2,bw+4,12);
+   ctx.fillStyle='#51545c';ctx.fillRect(bx,by,bw,8);
+   ctx.fillStyle=hp>.65?'#a4e4bc':hp>.3?'#f4cf81':'#e77c77';
+   ctx.fillRect(bx+2,by+2,(bw-4)*hp,4);
+   ctx.fillStyle='#253740';ctx.fillRect(bx+bw/3,by+1,2,6);
+   ctx.fillRect(bx+bw*2/3,by+1,2,6);
    ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.lineWidth=3;
    ctx.strokeStyle='#172b35';ctx.fillStyle='#ffe4a7';
    const text=obj.hits>=3?'✓':String(obj.hits)+'/3';
-   ctx.strokeText(text,0,-57);ctx.fillText(text,0,-57);
+   ctx.strokeText(text,0,-87);ctx.fillText(text,0,-87);
   }else if(obj.type==='rotom'&&!current.rotom.merged){
    if(current.phase==='rescue'&&bossEnemy&&!bossDown()&&Math.floor(current.elapsed*4)%4<2){
     const dx=bossEnemy.x-obj.x,dy=bossEnemy.y-obj.y;
@@ -356,7 +403,7 @@ G.PKMSVVFossilExpedition=(()=>{
   const msg=phase==='excavate'?tr('Đào 3 mỏ xa nhau · mỗi mỏ 3 lần','Mine 3 distant sites · 3 strikes each'):
    phase==='rescue'?tr('CỨU ROTOM trước 4:00! Còn ','RESCUE ROTOM by 4:00! ')+Math.floor(remaining/60)+':'+String(remaining%60).padStart(2,'0'):
    phase==='escort'?tr('Đưa Rotom về máy bỏ hoang','Escort Rotom to the derelict machine'):
-   tr('Giữ máy đến phút 8:00!','Defend the machine until 8:00!');
+   tr('Giữ máy tới 8:00 · Quái nhanh dần mỗi 2 phút','Hold until 8:00 · Enemies accelerate every 2 min');
   ctx.fillText(msg,left+8,top+66);
   ctx.fillStyle='#fff0bd';
   if(obj&&pl){
@@ -376,9 +423,9 @@ G.PKMSVVFossilExpedition=(()=>{
  }
  function end(){
   active=false;finished=true;current=null;bossEnemy=null;rotomAnimator=null;
-  uiButton?.remove();uiButton=null;rendered.clear();botTimes.clear();
+  uiButton?.remove();uiButton=null;rendered.clear();botTimes.clear();machineTarget=null;speedStage=-1;
  }
- return {nativeReady:ready,begin,tick,perform,botGoal,botInteract,onEvent,
+ return {nativeReady:ready,begin,tick,perform,botGoal,botInteract,targetFor,onEvent,
   drawables,beginFrame,drawMissing,hud,reward,end,
   get active(){return active},get session(){return current},get lastFinish(){return lastFinish},
   get spriteReady(){return excavations.complete&&excavations.naturalWidth>0&&
