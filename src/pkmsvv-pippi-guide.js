@@ -174,10 +174,15 @@
   if(!['chest','pickup','fossils','laboratory'].includes(kind)||
      window.__pkmsvvPippiGuideQABypass===true)return false;
   if(flags(G.DB?.save)[kind])return false;
-  if(kind==='laboratory'&&(!document.getElementById?.('pkmsvv-wiki-overlay')||
-     !G.PKMSVVWiki))return false;
-  if(!active&&!queued)return open(kind);
-  if(queued&&kind!=='fossils'&&kind!=='laboratory')return false;
+  if(kind==='laboratory'){
+   if(!document.getElementById?.('pkmsvv-wiki-overlay')||!G.PKMSVVWiki)return false;
+   if(!active&&!queued)return open('laboratory');
+   queued='laboratory';return true;
+  }
+  // Pickups/chests must queue behind native item choice. They MUST NOT
+  // open synchronously while the player is choosing a real reward.
+  if(active)return false;
+  if(queued&&kind!=='fossils')return false;
   queued=kind;
   return true;
  }
