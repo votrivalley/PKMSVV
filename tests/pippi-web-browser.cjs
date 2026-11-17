@@ -114,7 +114,9 @@ async function main(){
     companionEgg:!!document.querySelector('#pkmsvv-wiki-overlay [data-research-hotspot="companion"] [data-research-object="companion"] svg'),
     floatingBadgeIcons:document.querySelectorAll('#pkmsvv-wiki-overlay .pkmsvv-research-hotspot-tag .pkmsvv-research-glyph').length,
     buildButton:!!document.querySelector('#pkmsvv-wiki-overlay [data-research-build]'),
-    oldCardsHidden:document.querySelector('#pkmsvv-wiki-overlay .pkmsvv-pc-grid')?.hidden===true};
+    oldCardsHidden:document.querySelector('#pkmsvv-wiki-overlay .pkmsvv-pc-grid')?.hidden===true,
+    roomArtMode:document.querySelector('#pkmsvv-wiki-overlay .pkmsvv-research-room')?.dataset.researchArtMode,
+    furniture:[...document.querySelectorAll('#pkmsvv-wiki-overlay .pkmsvv-lab-furniture')].map(x=>x.dataset.furniture)};
   })()`);
   console.log('PIPPI_WEB_PC='+JSON.stringify(pc));
   assert.equal(pc.missingLauncher,undefined,'PC launcher missing from menu');
@@ -130,6 +132,24 @@ async function main(){
   assert.equal(pc.floatingBadgeIcons,0,'floating labels must be text, not oversized sprite icons');
   assert.equal(pc.buildButton,true,'Build mode button must be visible');
   assert.equal(pc.oldCardsHidden,true,'old PC card interface must NOT be shown on entry');
+  assert.equal(pc.roomArtMode,'modular','Research Lab must use empty room plus independent furniture');
+  assert.ok(pc.furniture.includes('machine_old'),'the fossil machine must be a detached furniture asset');
+  const tourOnEnter=await js(`(()=>{
+   const intro=G.PKMSVVPippiGuide?.current;
+   const wasOpen=G.PKMSVVPippiGuide?.isOpen;
+   if(intro?.kind==='laboratory'){
+    for(let i=0;i<intro.total;i++)G.PKMSVVPippiGuide.next();
+   }
+   return {kind:intro?.kind,pages:intro?.total,wasOpen,
+    completed:G.DB.save.pkmsvvPippiGuide?.laboratory===true,
+    closed:!G.PKMSVVPippiGuide?.isOpen};
+  })()`);
+  console.log('PIPPI_LAB_TOUR_ON_ENTRY='+JSON.stringify(tourOnEnter));
+  assert.equal(tourOnEnter.wasOpen,true,'first Research Lab entry should show Pippi immediately');
+  assert.equal(tourOnEnter.kind,'laboratory');
+  assert.equal(tourOnEnter.pages,4);
+  assert.equal(tourOnEnter.completed,true);
+  assert.equal(tourOnEnter.closed,true);
   const nativeMenuFix=await js(`(()=>{
    const button=document.querySelector('#pkmsvv-menu-wiki');
    const old=button.onclick;let oldHandlerFired=false;
