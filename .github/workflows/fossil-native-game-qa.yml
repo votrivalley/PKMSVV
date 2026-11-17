@@ -1,4 +1,4 @@
-name: Fossil Expedition Native Game QA (never production)
+name: PKMSVV Unified Beta - Fossil Co-op Gameplay (never production)
 on:
   push:
     branches: [fix/pippi-follow-menu-qa-20261115]
@@ -10,6 +10,10 @@ on:
       - 'src/pkmsvv-fossil-expedition-native.js'
       - 'src/shared/coop-unified.js'
       - 'src/lan/solo-ai-bus.js'
+      - 'src/lan/lan-ai.js'
+      - 'assets/coop-lab/fossil-excavation-rock.svg'
+      - 'tests/lan-ai-modes.test.cjs'
+      - 'tests/fossil-expedition-soak-browser.cjs'
       - 'lan-server/server.cjs'
       - 'tests/fossil-expedition-native-browser.cjs'
       - 'tests/fossil-expedition-core.test.cjs'
@@ -18,7 +22,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: fossil-native-game-qa
+  group: pkmsvv-unified-beta
   cancel-in-progress: true
 jobs:
   actual-gameplay:
@@ -56,7 +60,7 @@ jobs:
       - name: Install build dependencies
         run: npm install --no-audit --no-fund
       - name: Check 2–4 room rules and 6–8 minute outcome core
-        run: node --test tests/fossil-expedition-core.test.cjs tests/fossil-expedition-routing.test.cjs tests/coop-lab-core.test.cjs
+        run: node --test tests/fossil-expedition-core.test.cjs tests/fossil-expedition-routing.test.cjs tests/coop-lab-core.test.cjs tests/lan-ai-modes.test.cjs
       - name: Fetch hash-checked Clefairy PMD assets required by LAN packaging
         run: node scripts/fetch-pippi-pmd.cjs && node scripts/build-pippi-portrait-atlas.cjs
       - name: Compile genuine offline LAN/AI native game with QA-only fossil hooks
@@ -68,10 +72,16 @@ jobs:
           test -s dist/lan/game/index.html
           grep -Fq 'PKMSVVFossilExpedition' dist/lan/game/js/app.min.js
           grep -Fq 'fossil_lab' dist/lan/game/js/app.min.js
+          test -s dist/lan/game/images/coop-lab/fossil-excavation-rock.svg
+          test -s dist/lan/game/images/coop-lab/decor/machine_old_modular.svg
       - name: 'Chromium: create real Fossil Expedition + AI room, start game, strike world rock'
         env:
           PKMSVV_BROWSER: /usr/bin/google-chrome
         run: timeout 120s node tests/fossil-expedition-native-browser.cjs
+      - name: 'Chromium: 115 seconds Fossil Expedition engine/AI no-freeze stress'
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+        run: timeout 175s node tests/fossil-expedition-soak-browser.cjs
       - name: Stamp isolated playable solo AI QA version (never production)
         shell: bash
         run: |
@@ -79,15 +89,15 @@ jobs:
           node - <<'NODE'
           const fs=require('node:fs');
           const info={
-            version:'2.3.1-Fossil-Native-Solo-AI-QA',
+            version:'2.4.0-Unified-Beta-Fossil-AI-Sprite-QA',
             releaseType:'experimental-gameplay-qa-only',
-            previewBranch:'fossil-gameplay-qa',
+            previewBranch:'beta',
             qaCommit:process.env.GITHUB_SHA,
             sourcePin:'11fe868c640b62ac37beacc222e056bc4d9ec892',
             mode:'fossil_lab',
             minPartySize:2,maxPartySize:4,
             available:'offline solo human with 1-3 AI teammates',
-            limitation:'No public WAN rooms, no verified Co-op Coin or Kabuto rewards; 6-8-minute complete-run QA pending.',
+            limitation:'Offline with 1-3 AI teammates. No remote human matchmaking or rewards. Co-op 6-8-minute full-clear QA pending.',
             production:false
           };
           fs.writeFileSync('dist/lan/build-info.json',JSON.stringify(info,null,2)+'\n');
@@ -108,7 +118,7 @@ jobs:
           path: dist/lan/
           retention-days: 7
           if-no-files-found: error
-      - name: Deploy ONLY isolated fossil-gameplay-qa Pages preview
+      - name: Deploy ONLY single unified Beta Pages preview
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
@@ -116,17 +126,17 @@ jobs:
           set -euo pipefail
           test -n "$CLOUDFLARE_API_TOKEN"
           test -n "$CLOUDFLARE_ACCOUNT_ID"
-          npx --yes wrangler@4 pages deploy dist/lan --project-name pkmsvv-web --branch fossil-gameplay-qa
+          npx --yes wrangler@4 pages deploy dist/lan --project-name pkmsvv-web --branch beta
       - name: Verify deployed gameplay QA is THIS native source commit
         run: |
           set -euo pipefail
-          url='https://fossil-gameplay-qa.pkmsvv-web.pages.dev/build-info.json'
+          url='https://beta.pkmsvv-web.pages.dev/build-info.json'
           for attempt in 1 2 3 4 5 6; do
             if curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "$url?rev=${GITHUB_SHA}-${attempt}" -o /tmp/fossil-qa-meta.json &&
                node -e "const j=require('/tmp/fossil-qa-meta.json');if(j.qaCommit!==process.env.GITHUB_SHA||j.production!==false||j.releaseType!=='experimental-gameplay-qa-only'||j.mode!=='fossil_lab')process.exit(1)" &&
-               curl -fsSL --max-time 15 -o /tmp/fossil-qa-game.html 'https://fossil-gameplay-qa.pkmsvv-web.pages.dev/game/' &&
+               curl -fsSL --max-time 15 -o /tmp/fossil-qa-game.html 'https://beta.pkmsvv-web.pages.dev/game/' &&
                grep -Fq 'app.min.js' /tmp/fossil-qa-game.html; then
-               echo "FOSSIL_GAMEPLAY_QA_DEPLOY_VERIFIED=https://fossil-gameplay-qa.pkmsvv-web.pages.dev/game/"
+               echo "PKMSVV_BETA_DEPLOY_VERIFIED=https://beta.pkmsvv-web.pages.dev/game/"
                echo "SOURCE_COMMIT=$GITHUB_SHA"
                exit 0
             fi
@@ -134,8 +144,8 @@ jobs:
           done
           echo "::error::Gameplay QA preview not verified; production remains untouched"
           exit 1
-      - name: 'Chromium: play REAL Cloudflare QA from its public URL with offline AI'
+      - name: 'Chromium: play REAL unified Beta Cloudflare from public URL with offline AI'
         env:
           PKMSVV_BROWSER: /usr/bin/google-chrome
-          PKMSVV_NATIVE_BROWSER_URL: https://fossil-gameplay-qa.pkmsvv-web.pages.dev/game/
+          PKMSVV_NATIVE_BROWSER_URL: https://beta.pkmsvv-web.pages.dev/game/
         run: timeout 140s node tests/fossil-expedition-native-browser.cjs
