@@ -494,6 +494,96 @@ G.PKMSVVWiki=(()=>{
  }
  // "Xây dựng" is a separate interaction mode. The room composition is still
  // a concept image, not a set of detachable sprites. Never fake owned decor.
+ // Shop is a display/read-only storefront until its Co-op mission adapters
+ // and separate decoration/costume sprites are verified. The weekly exchange
+ // is a real atomic wallet transaction and uses the SAME Co-op coin balance.
+ function coopShop(){
+  close();installStyle();
+  const E=G.PKMSVVCoopEconomy;
+  const overlay=document.createElement('div');overlay.id='pkmsvv-wiki-overlay';
+  overlay.className='pkmsvv-pc-overlay';overlay.setAttribute('role','dialog');
+  overlay.setAttribute('aria-modal','true');
+  const panel=document.createElement('section');panel.className='pkmsvv-pc-panel pkmsvv-coop-shop-panel';
+  const head=document.createElement('header');head.className='pkmsvv-pc-header';
+  const title=document.createElement('h2');title.textContent=tr('🛒 Kho Hậu Cần Co-op','🛒 Co-op Supply Depot');
+  const back=document.createElement('button');back.type='button';back.className='pkmsvv-pc-close';
+  back.setAttribute('data-back','');back.textContent=tr('← Phòng nghiên cứu','← Research Lab');
+  back.onclick=open;head.append(title,back);panel.append(head);
+  const talk=document.createElement('p');talk.className='pkmsvv-coop-shop-talk';
+  talk.textContent=tr('Tui là Giám đốc Phòng thí nghiệm Hoàng gia Pippi! Cửa hàng là của tui, còn lao động là của bạn. Nghe công bằng ghê ha!',
+   'Welcome to Director Pippi’s Royal Laboratory! I own the shop. You do the hard work. Fair deal!');
+  panel.append(talk);
+  const state=document.createElement('div');state.className='pkmsvv-coop-shop-wallet';panel.append(state);
+  const exchangePanel=document.createElement('section');exchangePanel.className='pkmsvv-coop-shop-exchange';panel.append(exchangePanel);
+  const note=document.createElement('p');note.className='pkmsvv-pc-hint';
+  note.textContent=tr('Xu Đồng Đội sẽ dùng chung cho mọi nhiệm vụ Co-op. Nhiệm vụ mới chưa phát hành; các món dưới đây là hàng xem trước, chưa thể mua hoặc sử dụng. Mua trang trí cần sprite tách lớp.',
+   'Co-op Coins are shared by all Co-op missions. Missions are not playable yet. Items below are previews, not purchasable. Décor requires independent sprites.');
+  panel.append(note);
+  const groups=document.createElement('div');groups.className='pkmsvv-coop-shop-groups';panel.append(groups);
+  const cfg=E?.config;
+  function renderWallet(){
+   state.replaceChildren();exchangePanel.replaceChildren();
+   const player=G.DB?.save;
+   const balance=E?.normal?.(player);
+   const left=document.createElement('strong');
+   left.textContent=tr('Xu Đồng Đội: ','Co-op Coins: ')+(balance?.coopCoins??0);
+   const right=document.createElement('strong');
+   right.textContent='PokéCoins: '+(Number.isSafeInteger(player?.coins)?player.coins:0);
+   state.append(left,right);
+   if(!cfg?.currency?.exchange)return;
+   const e=cfg.currency.exchange;
+   const heading=document.createElement('strong');
+   heading.textContent=tr('Quy đổi có giới hạn tuần','Weekly limited exchange');
+   const text=document.createElement('small');
+   const nowWeek=E.weekKey(Date.now());
+   const used=balance.lastExchangeWeek===nowWeek?balance.weeklyPokeCoins:0;
+   text.textContent=e.costCoopCoins+' '+tr('Xu Đồng Đội','Co-op Coins')+
+    ' → '+e.earnPokeCoins+' PokéCoins · '+used+'/'+e.weeklyPokeCoinCap+
+    tr(' PokéCoins tuần này',' PokéCoins this week');
+   const action=document.createElement('button');action.type='button';
+   action.className='pkmsvv-pc-close';action.dataset.coopExchange='1';
+   action.textContent=tr('Đổi xu','Exchange coins');
+   action.disabled=!E||!!G.DB?.guest||typeof G.DB?.commit!=='function'||
+    balance.coopCoins<e.costCoopCoins||used+e.earnPokeCoins>e.weeklyPokeCoinCap;
+   action.onclick=()=>{
+    if(action.disabled)return;
+    const result=E.exchange(G.DB.save,()=>G.DB.commit(true));
+    if(result.ok){
+     G.UI?.toast?.(tr('Đã đổi +'+result.awarded+' PokéCoins!','Exchanged +'+result.awarded+' PokéCoins!'),2200);
+     talk.textContent=tr('Ô kìa, khách chịu chi! Nhớ để dành xu cho quầy Pippi nữa nghen!',
+      'Such a big spender! Save a few coins for Pippi’s shop, okay?');
+     renderWallet();
+    }else{
+     talk.textContent=tr('Đổi xu chưa được. Kiểm tra số dư, giới hạn tuần và dữ liệu lưu nhé.',
+      'Exchange unavailable. Check balance, weekly cap and save.');
+    }
+   };
+   exchangePanel.append(heading,text,action);
+  }
+  renderWallet();
+  for(const group of cfg?.shop?.sections||[]){
+   const block=document.createElement('section');block.className='pkmsvv-coop-shop-section';
+   const h=document.createElement('h3');h.textContent=tr(group.nameVi,group.id);block.append(h);
+   const items=group.catalogRef==='items'?cfg.items.filter(x=>x.price!==0):(group.items||[]);
+   for(const item of items){
+    const row=document.createElement('div');row.className='pkmsvv-coop-shop-item';
+    const details=document.createElement('div');
+    const name=document.createElement('strong');name.textContent=item.nameVi;
+    const desc=document.createElement('small');
+    desc.textContent=item.descriptionVi||tr('Nội dung đang hoàn thiện.','More content coming soon.');
+    details.append(name,desc);
+    const action=document.createElement('button');action.type='button';
+    action.className='pkmsvv-pc-close';action.disabled=true;
+    action.dataset.coopShopItem=item.id;
+    action.textContent=item.price===null?tr('Phần thưởng hiếm','Rare reward'):
+     item.price+' '+tr('xu · Chưa mở','coins · Unavailable');
+    row.append(details,action);block.append(row);
+   }
+   groups.append(block);
+  }
+  overlay.append(panel);document.body.append(overlay);
+  back.focus({preventScroll:true});return true;
+ }
  function construction(){
   close();installStyle();
   const overlay=document.createElement('div');overlay.id='pkmsvv-wiki-overlay';
@@ -720,7 +810,10 @@ G.PKMSVVWiki=(()=>{
   build.onclick=construction;
   const knowledge=document.createElement('button');knowledge.type='button';knowledge.className='pkmsvv-pc-close';
   knowledge.dataset.researchKnowledge='1';knowledge.textContent=tr('📖 Kiến thức','📖 Knowledge');
-  toolbar.append(build,knowledge);
+  const store=document.createElement('button');store.type='button';store.className='pkmsvv-pc-close';
+  store.dataset.researchStore='1';store.textContent=tr('🛒 Kho Hậu Cần','🛒 Supply Depot');
+  store.onclick=coopShop;
+  toolbar.append(store,build,knowledge);
   const fast=document.createElement('nav');fast.className='pkmsvv-research-quick-actions';
   fast.setAttribute('aria-label',tr('Chọn khu nghiên cứu','Research stations'));
   for(const z of zones){
@@ -915,5 +1008,5 @@ G.PKMSVVWiki=(()=>{
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('pkmsvv-wiki-overlay')){close();e.stopPropagation();}});
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
- return {open,close,berryGuide,pippiCorner,fossilRestoration,construction,installMenu};
+ return {open,close,berryGuide,pippiCorner,fossilRestoration,construction,coopShop,installMenu};
 })();
