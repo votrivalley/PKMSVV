@@ -1,42 +1,6 @@
 name: Pippi Cousin Web QA Preview (never production)
+# Legacy per-feature QA is manual-only; all future public testing uses the single stable Beta.
 on:
-  push:
-    branches: [fix/pippi-follow-menu-qa-20261115]
-    paths:
-      - '.github/workflows/preview-pippi-web-qa.yml'
-      - 'scripts/prepare-pippi-web-preview.cjs'
-      - 'scripts/build-pippi-portrait-atlas.cjs'
-      - 'src/pkmsvv-pippi.js'
-      - 'src/pkmsvv-fossil-system.js'
-      - 'data/pkmsvv-fossil-catalog.json'
-      - 'tests/fossil-system.test.cjs'
-      - 'tests/fossil-restoration-data.test.cjs'
-      - 'src/pkmsvv-pippi.css'
-      - 'src/pkmsvv-pippi-guide.js'
-      - 'src/pkmsvv-pippi-guide.css'
-      - 'src/pkmsvv-global-power.js'
-      - 'src/v15/eggs.js'
-      - 'config/gameplay.json'
-      - 'scripts/patch-gacha-legend-100.cjs'
-      - 'tests/v14-gameplay.test.cjs'
-      - 'tests/v15-eggs.test.cjs'
-      - 'src/pkmsvv-global-power-ui.js'
-      - 'src/pkmsvv-runtime-controls-qa.js'
-      - 'tests/pippi-guide.test.cjs'
-      - 'tests/pippi-guide-browser.cjs'
-      - 'tests/global-upgrades.test.cjs'
-      - 'tests/runtime-controls-qa.test.cjs'
-      - 'src/pkmsvv-wiki.js'
-      - 'src/pkmsvv-pc-menu-clean-qa.css'
-      - 'tests/coop-lab-art-assets.test.cjs'
-      - 'src/pkmsvv-box-stage3.js'
-      - 'src/kecleon/upstream/data/shop.js'
-      - 'tests/pippi-companion.test.cjs'
-      - 'tests/pippi-web-browser.cjs'
-      - 'tests/pokebox-stage2-browser.cjs'
-      - 'src/pkmsvv-pc-menu-clean-qa.js'
-      - 'src/pkmsvv-quick-region.js'
-      - 'tests/quick-region.test.cjs'
   workflow_dispatch:
 permissions:
   contents: read
