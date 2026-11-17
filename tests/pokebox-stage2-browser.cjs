@@ -515,7 +515,7 @@ async function main(){
    'A stale PC UI/incorrect route must fail QA before a new preview is deployed');
   assert.ok(unifiedPc.firstThree.every(id=>!['pkmsvv-pc-box','pkmsvv-pc-dex','pkmsvv-pc-upgrades'].includes(id)),'do not duplicate Pokémon tabs in PC');
   assert.equal(unifiedPc.events,0,'remove seasonal event from PC knowledge');
-  assert.equal(unifiedPc.hint,false,'no redundant navigation hint');
+  assert.equal(unifiedPc.hint,true,'Research Lab explains lab-specific actions and restoration lock');
   assert.ok(unifiedPc.support&&unifiedPc.mega&&unifiedPc.berry);
   const companionBrowser=await evaluate("(()=>{const tile=[...document.querySelectorAll('#pkmsvv-wiki-overlay .pkmsvv-pc-card')].find(x=>/Bạn đồng hành|Companions/.test(x.textContent||''));if(!tile)return {visible:false};const rect=tile.getBoundingClientRect();tile.click();const overlay=document.querySelector('.pkmsvv-pippi-corner');const controls=[...document.querySelectorAll('[data-pippi-train]')].map(x=>x.dataset.pippiTrain);return {visible:true,inViewport:rect.top>=0&&rect.top<innerHeight,overlay:!!overlay,controls};})()");
   console.log('PIPPI_COMPANION_NATIVE_PC='+JSON.stringify(companionBrowser));
