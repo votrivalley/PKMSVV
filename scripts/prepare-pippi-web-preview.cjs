@@ -104,6 +104,8 @@ for(const prefix of ['game','ai/game']){
  }
  fs.copyFileSync(present(path.join(root,'assets/research-lab-menu-icon.png')),
    path.join(dest,'images/pkmsvv-research-lab-icon.png'));
+ fs.copyFileSync(present(path.join(root,'assets/research-station-icons.png')),
+   path.join(dest,'images/pkmsvv-research-station-icons.png'));
  const labOut=path.join(dest,'images/coop-lab');
  for(const asset of ['room_base.png','room_art_qa_v2.webp','decor/machine_old.png','decor/kabuto_skeleton.png','decor/research_terminal.png']){
   const input=present(path.join(root,'assets/coop-lab',asset)),output=path.join(labOut,asset);
@@ -165,7 +167,7 @@ for(const prefix of ['game','ai/game']){
 }
 const meta=JSON.parse(source('dist/cloudflare-v20-release/build-info.json'));
 Object.assign(meta,{releaseType:'qa-preview-only',pippiCousinQA:marker,
- previewBranch:'pippi-cousin-qa',version:'2.0.6-Interactive-Research-Room-QA',
+ previewBranch:'pippi-cousin-qa',version:'2.0.7-Lab-Flow-Icons-QA',
  description:'Isolated browser-only test; production pkmsvv-web.pages.dev unchanged'});
 write(path.join(site,'build-info.json'),JSON.stringify(meta,null,2)+'\n');
 // QA-only cache policy: browsers must revalidate the HTML and the two UI

@@ -103,6 +103,7 @@ fs.copyFileSync(eggMusic,path.join(web,'assets/music-custom/eggrush.ogg'));
 fs.mkdirSync(path.join(web,'images'),{recursive:true});
 fs.copyFileSync(path.join(root,'src/pkmsvv-menu-icons.webp'),path.join(web,'images/pkmsvv-menu-icons.webp'));
 fs.copyFileSync(path.join(root,'assets/research-lab-menu-icon.png'),path.join(web,'images/pkmsvv-research-lab-icon.png'));
+fs.copyFileSync(path.join(root,'assets/research-station-icons.png'),path.join(web,'images/pkmsvv-research-station-icons.png'));
 // Keep the same illustrated story and compact layout in Android WebView.
 const storyCssName='pkmsvv-story-ui-fix.css';
 fs.copyFileSync(path.join(root,'src/pkmsvv-story.css'),path.join(web,'css',storyCssName));

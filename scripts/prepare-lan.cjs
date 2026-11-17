@@ -19,6 +19,7 @@ for(const file of ['lan-connect.html','lan-connect.js'])
  }
  addFile(path.join(root,'src/pkmsvv-menu-icons.webp'),'pkmsvv-menu-icons.webp');
  addFile(path.join(root,'assets/research-lab-menu-icon.png'),'pkmsvv-research-lab-icon.png');
+ addFile(path.join(root,'assets/research-station-icons.png'),'pkmsvv-research-station-icons.png');
  addFile(path.join(root,'assets/pippi-skill-icons.png'),'pippi/skill-icons.png');
  const pippi=path.join(root,'assets/pippi-pmd');
  if(!fs.existsSync(path.join(pippi,'Walk-Anim.png')))throw Error('Pippi native sprites not fetched');

@@ -83,4 +83,10 @@ test('new interactive lab station UI uses five real hotspots and keeps building 
  assert.match(css,/pkmsvv-research-lab-icon\.png/);
  const icon=fs.readFileSync(path.join(root,'assets/research-lab-menu-icon.png'));
  assert.deepEqual(dimensions(icon),[42,42]);
+ const station=fs.readFileSync(path.join(root,'assets/research-station-icons.png'));
+ assert.deepEqual(dimensions(station),[240,48]);
+ assert.ok(station.length<5000,'Five station icons should be cheap for Android');
+ assert.match(wiki,/glyph\.dataset\.researchGlyph=z\.id/);
+ assert.match(wiki,/fromResearchLab:true/);
+ assert.match(wiki,/__pkmsvvResearchEntryCapture/);
 });

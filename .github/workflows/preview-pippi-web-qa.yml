@@ -158,6 +158,7 @@ jobs:
             test -s "dist/cloudflare-v20-release/$route/images/pippi/portrait/Happy.png"
             test -s "dist/cloudflare-v20-release/$route/images/pippi/skill-icons.png"
             test -s "dist/cloudflare-v20-release/$route/images/pkmsvv-research-lab-icon.png"
+            test -s "dist/cloudflare-v20-release/$route/images/pkmsvv-research-station-icons.png"
             for file in room_base.png room_art_qa_v2.webp decor/machine_old.png decor/kabuto_skeleton.png decor/research_terminal.png; do
               test -s "dist/cloudflare-v20-release/$route/images/coop-lab/$file"
             done
