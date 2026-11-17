@@ -19,8 +19,11 @@ test('Fossil Expedition is a distinct 2–4 Co-op mode everywhere, not a disguis
 test('Unfinished mission cannot mint coins; core mandates 3 excavations plus real 6–8 minute clock',()=>{
  const engine=require('../src/pkmsvv-fossil-expedition-core.cjs');
  assert.equal(engine.MIN_PARTY,2);assert.equal(engine.MAX_PARTY,4);
- assert.equal(engine.MIN_TIME,360);assert.equal(engine.MAX_TIME,480);
+ assert.equal(engine.ROTOM_DEADLINE,240);
+ assert.equal(engine.DEFEND_END,480);
+ assert.equal(engine.MIN_TIME,480);assert.equal(engine.MAX_TIME,480);
  assert.equal(engine.ROCK_HITS,3);assert.equal(engine.SITE_OFFSETS.length,3);
+ assert.equal(engine.BOSS_DEX,623,'Golurk is the temporary ancient automaton boss');
  const s=engine.begin({members:[{uid:'host'},{uid:'bot',bot:true}],roomId:'qa',
   hostUid:'host',origin:{x:0,y:0}});
  assert.equal(s.ok,true);assert.equal(engine.receipt(s,1),null);
