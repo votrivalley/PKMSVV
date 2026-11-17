@@ -57,6 +57,18 @@
   if(action)action.textContent=tr('Xem nhiệm vụ · Chưa mở','Preview mission · Locked');
   card.dataset.coopMission='fossil_lab';card.setAttribute('aria-label',tr('Xem trước nhiệm vụ Khai quật hóa thạch, chưa mở','Preview Fossil Expedition, not yet playable'));
   card.onclick=e=>{e.preventDefault();e.stopImmediatePropagation();detail();};
+  // The existing game modes remain untouched. Place the new mission
+  // beside Berry Rescue when available; do not advertise an online lobby.
+  const berry=[...host.children].find(x=>/Giải Cứu Berry|Berry Rescue/i.test(
+   x.querySelector?.('.pkmsvv-mode-title')?.textContent||''));
+  let missionHeading=host.querySelector('.pkmsvv-coop-mission-group');
+  if(!missionHeading){
+   missionHeading=document.createElement('h3');
+   missionHeading.className='pkmsvv-coop-mission-group';
+   missionHeading.textContent=tr('Nhiệm vụ hợp tác','Co-operative missions');
+   missionHeading.style.cssText='grid-column:1/-1;margin:10px 0 2px;color:#ffe2a0;font-size:17px;text-align:left';
+   if(berry)host.insertBefore(missionHeading,berry);else host.append(missionHeading);
+  }
   host.append(card);
   return true;
  }
