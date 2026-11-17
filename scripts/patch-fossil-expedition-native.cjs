@@ -23,6 +23,17 @@ patch('js/net/coop.js',
  "      case 'br': G.PKMSVVBerryRescue?.onEvent?.(ev); break;",
  "      case 'fx': G.PKMSVVFossilExpedition?.onEvent?.(ev); break;\n"+
  "      case 'br': G.PKMSVVBerryRescue?.onEvent?.(ev); break;");
+
+/* Berry already redirects enemies toward its living trees. Fossil defense
+ * adds the same native Enemy.update() target after Rotom activates the machine.
+ * 80% prefer the machine, 20% still pressure the trainers. No polling loops. */
+patch('js/entities/enemy.js',
+ 'e.update(dt,G.PKMSVVBerryRescue?.targetFor?.(e)||G.PKMSVVEggs?.enemyTarget?.(e,lead,dt)||lead);',
+ 'e.update(dt,G.PKMSVVFossilExpedition?.targetFor?.(e)||G.PKMSVVBerryRescue?.targetFor?.(e)||G.PKMSVVEggs?.enemyTarget?.(e,lead,dt)||lead);');
+patch('js/entities/enemy.js',
+ 'const near = G.PKMSVVBerryRescue?.targetFor?.(e) || nearestPlayer(players, e.x, e.y) || pl;',
+ 'const near = G.PKMSVVFossilExpedition?.targetFor?.(e) || G.PKMSVVBerryRescue?.targetFor?.(e) || nearestPlayer(players, e.x, e.y) || pl;');
+
 patch('js/game.js',
  "G.PKMSVVBerryRescue.begin({mode:G.Social?.room?.mode});",
  "G.PKMSVVBerryRescue.begin({mode:G.Social?.room?.mode});"+
