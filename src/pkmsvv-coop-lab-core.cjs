@@ -19,18 +19,29 @@ function normal(save){
   totalCompletions:Number.isSafeInteger(source.totalCompletions)&&source.totalCompletions>=0?source.totalCompletions:0,
   lastSettledSeq:Number.isSafeInteger(source.lastSettledSeq)&&source.lastSettledSeq>=0?source.lastSettledSeq:0,
   ownedDecor:{machine_old:true,...(source.ownedDecor||{})},
-  equippedDecorBySlot:{center:'machine_old',...(source.equippedDecorBySlot||{})}
+  equippedDecorBySlot:{center:'machine_old',...(source.equippedDecorBySlot||{})},
+  supplies:{...(source.supplies||{})},
+  cosmetics:{...(source.cosmetics||{})},
+  lastExchangeWeek:typeof source.lastExchangeWeek==='string'?source.lastExchangeWeek:'',
+  weeklyPokeCoins:Number.isSafeInteger(source.weeklyPokeCoins)&&source.weeklyPokeCoins>=0?source.weeklyPokeCoins:0
  };
 }
-function change(save,mutator,commit){
+/* One rollback boundary protects wallet AND all Pokémon/save side effects. */
+function change(save,mutator,commit,sideEffect){
  if(!save||typeof save!=='object'||typeof commit!=='function')return {ok:false,reason:'save'};
- const previous=save.pkmsvvCoopLab,had=Object.prototype.hasOwnProperty.call(save,'pkmsvvCoopLab');
- const before=normal(save),draft={...before,ownedDecor:{...before.ownedDecor},equippedDecorBySlot:{...before.equippedDecorBySlot}};
+ const keys=['pkmsvvCoopLab','coins','owned','pkmsvvFossils','pkmsvvDefeatedDex'];
+ const prior=keys.map(key=>({key,had:Object.prototype.hasOwnProperty.call(save,key),value:save[key]}));
+ const rollback=()=>{for(const old of prior){if(old.had)save[old.key]=old.value;else delete save[old.key];}};
+ const before=normal(save);
+ const draft={...before,ownedDecor:{...before.ownedDecor},equippedDecorBySlot:{...before.equippedDecorBySlot},
+  supplies:{...before.supplies},cosmetics:{...before.cosmetics}};
  const result=mutator(draft,before);
  if(!result?.ok)return result||{ok:false,reason:'invalid'};
- save.pkmsvvCoopLab=draft;
- try{if(commit()===false)throw Error('Save declined');}
- catch(_){if(had)save.pkmsvvCoopLab=previous;else delete save.pkmsvvCoopLab;return {ok:false,reason:'save'};}
+ try{
+  save.pkmsvvCoopLab=draft;
+  if(typeof sideEffect==='function')sideEffect(save,draft,result);
+  if(commit()===false)throw Error('Save declined');
+ }catch(_){rollback();return {ok:false,reason:'save'};}
  return result;
 }
 function isMachineUnlocked(save){return normal(save).machineUnlocked;}
@@ -89,6 +100,57 @@ function settle(save,receipt,commit,random=Math.random){
    }
   }
   return {ok:true,firstClear:first,reward,rare,totalCoins:s.coopCoins,machineUnlocked:true};
+ },commit,(s,_,result)=>{
+  if(!result.firstClear)return;
+  // First VALIDATED fossil-lab clear: permanent machine access AND free
+  // Kabuto revival in the same save transaction. Never consume Dome Fossils.
+  const previous=s.pkmsvvFossils&&typeof s.pkmsvvFossils==='object'?s.pkmsvvFossils:{};
+  s.pkmsvvFossils={...previous,schemaVersion:1,
+   inventory:{...(previous.inventory||{})},
+   discovered:{...(previous.discovered||{}),dome_fossil:true},
+   restored:{...(previous.restored||{}),140:true}};
+  s.owned={...(s.owned||{}),140:s.owned?.[140]||{at:Date.now(),from:'coop-first-clear'}};
+  s.pkmsvvDefeatedDex={...(s.pkmsvvDefeatedDex||{}),140:true};
+ });
+}
+const SUPPLIES=new Map(config.shop.sections.flatMap(section=>section.items||[]).filter(x=>x.type==='consumable').map(x=>[x.id,x]));
+/* Keep inventory transactions ready for native missions. A not-yet-playable
+ * item is NOT sold by the QA UI, so no player pays for inert promises. */
+function buySupply(save,itemId,commit){
+ const item=SUPPLIES.get(itemId);
+ if(!item||item.activeInGame!==true)return {ok:false,reason:'not-live'};
+ return change(save,s=>{
+  if(s.coopCoins<item.price)return {ok:false,reason:'coins'};
+  const n=s.supplies[itemId]||0;
+  if(!Number.isSafeInteger(n)||n<0||n>=999)return {ok:false,reason:'limit'};
+  s.supplies[itemId]=n+1;s.coopCoins-=item.price;
+  return {ok:true,itemId,remaining:s.coopCoins,count:n+1};
  },commit);
 }
-module.exports={config,normal,isMachineUnlocked,buy,equip,settle};
+/* Weekly wallet exchange. This is offline; clock tampering cannot be made
+ * cheat-proof without a trusted server, so reject backwards week rolls. */
+function weekKey(now){
+ const d=new Date(now);
+ if(!Number.isFinite(d.getTime()))return null;
+ const local=new Date(d.getTime()+7*60*60*1000);
+ const weekday=(local.getUTCDay()+6)%7;
+ local.setUTCDate(local.getUTCDate()-weekday);
+ return local.toISOString().slice(0,10);
+}
+function exchange(save,commit,now=Date.now()){
+ const cfg=config.currency.exchange,key=weekKey(now);
+ if(!cfg||!key)return {ok:false,reason:'date'};
+ if(!Number.isSafeInteger(save?.coins)||save.coins<0)return {ok:false,reason:'coins-save'};
+ return change(save,(s)=>{
+  if(s.lastExchangeWeek&&key<s.lastExchangeWeek)return {ok:false,reason:'clock'};
+  if(s.lastExchangeWeek!==key){s.lastExchangeWeek=key;s.weeklyPokeCoins=0;}
+  if(s.weeklyPokeCoins+cfg.earnPokeCoins>cfg.weeklyPokeCoinCap)
+   return {ok:false,reason:'weekly-limit'};
+  if(s.coopCoins<cfg.costCoopCoins)return {ok:false,reason:'coins'};
+  if(save.coins>max-cfg.earnPokeCoins)return {ok:false,reason:'overflow'};
+  s.coopCoins-=cfg.costCoopCoins;s.weeklyPokeCoins+=cfg.earnPokeCoins;
+  return {ok:true,remaining:s.coopCoins,awarded:cfg.earnPokeCoins,
+   weeklyUsed:s.weeklyPokeCoins,week:key};
+ },commit,(player,_,result)=>{player.coins+=result.awarded;});
+}
+module.exports={config,normal,isMachineUnlocked,buy,equip,settle,exchange,weekKey,buySupply};
