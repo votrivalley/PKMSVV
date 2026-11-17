@@ -291,7 +291,7 @@
   slow:['#aa9aff','#c7d7ff','CHẬM!'],
   shield:['#9beeff','#ffe3fc','BẢO VỆ'],
   revive:['#ffe7fa','#ffc8f1','HỒI SINH'],
-  cousin:['#ffe26e','#ffffff','TÊ LIỆT!']
+  cousin:['#ffffff','#d7f5ff','TÊ LIỆT!']
  });
  // One visual event per actual support cast, never a per-frame emitter.
  // Reuse FX.ring/burst/dmgText which obey the game's low-effects budget.
@@ -300,7 +300,7 @@
   if(!fx||!pl||!colors||!Number.isFinite(+pl.x)||!Number.isFinite(+pl.y))return false;
   const [primary,highlight,label]=colors;
   const helper=run?.motion,now=Number(G?.Game?.st?.time??run?.now)||0;
-  if(run)run.castCue={event,started:now,until:now+(event==='cousin'?1.0:.78),
+  if(run)run.castCue={event,started:now,until:now+(event==='cousin'?1.5:.78),
    targets:event==='slow'?(run.lastSlowTargets||[]).slice(0,6).map(e=>({x:e.x,y:e.y})):[]};
   try{
    if(helper&&Number.isFinite(helper.x)&&Number.isFinite(helper.y)){
@@ -359,35 +359,35 @@
   return true;
  }
  // Cousin Pikachu is rolled after each CONFIRMED HP-reducing hit in Explore.
- // L1=5%, L2=10%, L3=20%, locked=0%; roll only on confirmed HP loss.
- const COUSIN_CHANCES=Object.freeze([0,.05,.10,.20]);
+ // L1=4%/4, L2=6%/8, L3=8%/16; confirmed HP loss only.
+ const COUSIN_CHANCES=Object.freeze([0,.04,.06,.08]);
+ const COUSIN_TARGET_LIMITS=Object.freeze([0,4,8,16]);
+ const cousinTargetLimit=lv=>COUSIN_TARGET_LIMITS[clamp(Math.floor(lv||0),0,3)];
  const cousinChance=level=>COUSIN_CHANCES[clamp(Math.floor(level||0),0,3)];
- function cousinLightning(G,pl,now){
+ function cousinLightning(G,pl,now,level=1){
   const raw=G.EnemyMgr?.all?.();
   const enemies=Array.isArray(raw)?raw:raw&&typeof raw[Symbol.iterator]==='function'?
    Array.from(raw instanceof Map?raw.values():raw):[];
-  const nearby=enemies.filter(e=>e&&!e.dead&&!e.remote&&
+  const near=enemies.filter(e=>e&&!e.dead&&!e.remote&&
    typeof e.applyStun==='function'&&Number.isFinite(+e.x)&&Number.isFinite(+e.y)&&
-   (e.x-pl.x)**2+(e.y-pl.y)**2<=240*240&&
+   (e.x-pl.x)**2+(e.y-pl.y)**2<=280*280&&
    now>=(Number(e.pkmsvvPippiCousinImmuneUntil)||0));
-  nearby.sort((a,b)=>((a.x-pl.x)**2+(a.y-pl.y)**2)-
+  near.sort((a,b)=>((a.x-pl.x)**2+(a.y-pl.y)**2)-
                      ((b.x-pl.x)**2+(b.y-pl.y)**2));
-  const center=nearby[0]||null;
-  const hit=[];
-  if(center){
-   for(const e of nearby){
-    if((e.x-center.x)**2+(e.y-center.y)**2>95*95)continue;
-    e.applyStun((e.boss||e.judge||e.pkmsvvBossGuard)?0.35:1.1);
-    e.pkmsvvPippiCousinImmuneUntil=now+7;
-    hit.push(e);
-    G.FX?.burst?.(e.x,e.y-9,'#ffda50',5,60);
-    G.FX?.dmgText?.(e.x,e.y-24,'TÊ LIỆT!','#ffdf60');
-    if(hit.length===4)break;
-   }
-   G.FX?.ring?.(center.x,center.y,8,95,'#ffd34a',.55,3);
+  const limit=cousinTargetLimit(level),hit=[];
+  for(const e of near){
+   e.applyStun((e.boss||e.judge||e.pkmsvvBossGuard)?0.35:1.1);
+   e.pkmsvvPippiCousinImmuneUntil=now+7;
+   hit.push(e);
+   // Limit particle count even when the stun hits 16 foes.
+   if(hit.length<=6)G.FX?.burst?.(e.x,e.y-9,'#ffffff',4,45);
+   if(hit.length<=8)G.FX?.dmgText?.(e.x,e.y-24,'TÊ LIỆT!','#ffffff');
+   if(hit.length>=limit)break;
   }
-  G.FX?.ring?.(pl.x+30,pl.y-12,5,40,'#ffe078',.36,2);
-  return {affected:hit.length,center:center?{x:center.x,y:center.y}:null};
+  const center=hit[0]||null;
+  if(center)G.FX?.ring?.(center.x,center.y,8,95,'#ffffff',.45,2);
+  return {affected:hit.length,limit,center:center?{x:center.x,y:center.y}:null,
+   targets:hit.map(e=>({x:e.x,y:e.y}))};
  }
  function rollCousinOnHit(G,run,pl,beforeHp,afterHp,random=Math.random){
   if(!run||!pl||pl!==run.player||!(beforeHp>afterHp)||!eligible(G)||
@@ -398,11 +398,11 @@
   const chance=cousinChance(level);
   if(!chance)return {triggered:false,reason:'not-learned',chance};
   if(!(Number(random())<chance))return {triggered:false,reason:'roll',chance};
-  const lightning=cousinLightning(G,pl,now);
-  run.now=now;run.cousinUntil=now+1.9;
+  const lightning=cousinLightning(G,pl,now,level);
+  run.now=now;run.cousinUntil=now+1.5;
   run.cousinTargets=lightning.affected;
   showSupportFX(G,run,pl,'cousin');
-  if(run.castCue&&lightning.center)run.castCue.targets=[lightning.center];
+  if(run.castCue)run.castCue.targets=lightning.targets.length?lightning.targets:[{x:pl.x+26,y:pl.y-8}];
   return {triggered:true,chance,...lightning};
  }
  function installDamageHook(run,pl,callback){
@@ -613,7 +613,7 @@
   // Native depth-sorted world drawing is shared with the real Sống Sót
   // Pokémon supports. Never paint Pippi as a fixed browser overlay.
   let nativeWorldReady=false;
-  let worldAnimator=null,worldAnimMode='',lastWorldFrame=0;
+  let worldAnimator=null,worldAnimMode='',lastWorldFrame=0,cousinAnimator=null;
   let insideNativePickup=false;
   function nativeWorldDraw(ctx){
    const m=run?.motion;
@@ -651,24 +651,52 @@
   // game time. With simple FX quality there are still clear action cues.
   const cue=run?.castCue,gameNow=Number(G.Game?.st?.time??run?.now)||0;
   if(cue&&gameNow<=cue.until){
-   const fade=clamp((cue.until-gameNow)/.78,0,1);
+   const fade=clamp((cue.until-gameNow)/(cue.event==='cousin'?1.5:.78),0,1);
+   if(cue.event==='cousin'){
+    // Native Pikachu (#25) descends FROM ABOVE, strikes, then flies away.
+    // Only 1.5s per proc; no DOM actor, RAF, or lingering battle effect.
+    const target=cue.targets?.[0]||{x:run.player?.x,y:run.player?.y};
+    const t=clamp((gameNow-cue.started)/1.5,0,1);
+    const leap=t<.27?115*(1-t/.27):t>.76?115*((t-.76)/.24):0;
+    const px=Number(target.x),py=Number(target.y)-18-leap;
+    if(Number.isFinite(px)&&Number.isFinite(py)){
+     if(!cousinAnimator&&typeof G.Sprites?.Animator==='function'){
+      try{
+       G.Sprites?.sheet?.(25,'Idle',false);
+       cousinAnimator=new G.Sprites.Animator(25,Math.max(.9,Number(G.Sprites?.playerScale?.(25))||1),false);
+       cousinAnimator.loop('Idle');
+      }catch(_){/* white lightning still plays if native sprite is unavailable */}
+     }
+     if(cousinAnimator){
+      cousinAnimator.update(dt);
+      cousinAnimator.draw(ctx,px,py,{alpha:t>.82?clamp((1-t)/.18,0,1):1});
+     }else{
+      ctx.fillStyle='#ffe56b';ctx.globalAlpha=fade;
+      ctx.fillRect?.(px-7,py-14,14,14);ctx.globalAlpha=1;
+     }
+    }
+   }
    const color=SUPPORT_PALETTE[cue.event]?.[0]||'#fff2bc';
-   ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.globalAlpha=Math.max(.08,fade*.82);
+   ctx.strokeStyle=cue.event==='cousin'?'#ffffff':color;
+   ctx.lineWidth=cue.event==='cousin'?3:2.5;
+   ctx.globalAlpha=Math.max(.08,fade*.82);
    if(typeof ctx.arc==='function'&&typeof ctx.stroke==='function'){
     ctx.beginPath();ctx.arc(x,y-10,10+14*(1-fade),0,Math.PI*2);ctx.stroke();
    }
    const targets=(cue.targets?.length?cue.targets:
-    [{x:run?.player?.x,y:run?.player?.y}]).slice(0,4);
+    [{x:run?.player?.x,y:run?.player?.y}]).slice(0,cue.event==='cousin'?16:4);
    if(typeof ctx.moveTo==='function'&&typeof ctx.lineTo==='function'&&
       typeof ctx.stroke==='function'){
     for(const target of targets){
      if(!Number.isFinite(+target?.x)||!Number.isFinite(+target?.y))continue;
-     const sx=x,sy=y-18,tx=target.x,ty=target.y-14;
+     const sx=cue.event==='cousin'?target.x:x;
+     const sy=cue.event==='cousin'?target.y-130:y-18;
+     const tx=target.x,ty=target.y-14;
      const dx=tx-sx,dy=ty-sy;
      if(Math.hypot(dx,dy)>300)continue;
      ctx.beginPath();ctx.moveTo(sx,sy);
      if(cue.event==='cousin'){
-      // Three chunky electric zigzags, intentionally deterministic.
+      // White sky-strike zigzags, deterministic and bounded to tier limit.
       for(let i=1;i<=3;i++){
        const t=i/4,offset=(i%2?11:-10);
        ctx.lineTo(sx+dx*t-dy/(Math.hypot(dx,dy)||1)*offset,
