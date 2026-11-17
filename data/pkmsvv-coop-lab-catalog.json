@@ -78,8 +78,8 @@
       "starter": true,
       "rarity": "starter",
       "artReady": true,
-      "spritePath": "images/coop-lab/decor/machine_old.png",
-      "visualLayer": "separate-alpha"
+      "spritePath": "images/coop-lab/decor/machine_old_modular.svg",
+      "visualLayer": "separate-svg"
     },
     {
       "id": "machine_future",
@@ -218,7 +218,7 @@
       "descriptionVi": "Tượng vàng độc lập để đặt ở bệ danh dự. Chỉ trang trí, không cộng chỉ số; giá 9.999 Xu Đồng Đội.",
       "artReady": true,
       "spritePath": "images/coop-lab/decor/gold_pippi_statue.svg",
-      "visualLayer": "separate-alpha"
+      "visualLayer": "separate-svg"
     }
   ],
   "rewards": {
@@ -337,5 +337,62 @@
         "noteVi": "Nội thất có sprite riêng được phép mua bằng Xu Đồng Đội sau khi mở máy; các món chưa có art chỉ xem trước."
       }
     ]
+  },
+  "roomArt": {
+    "mode": "modular",
+    "background": "images/coop-lab/room_empty_modular.svg",
+    "referenceScene": "images/coop-lab/room_art_qa_v2.webp",
+    "width": 960,
+    "height": 672,
+    "slots": {
+      "center": {
+        "x": 105,
+        "y": 47,
+        "w": 110,
+        "h": 112
+      },
+      "shelf_left": {
+        "x": 19,
+        "y": 80,
+        "w": 95,
+        "h": 57
+      },
+      "shelf_right": {
+        "x": 218,
+        "y": 78,
+        "w": 93,
+        "h": 55
+      },
+      "wall_left": {
+        "x": 40,
+        "y": 36,
+        "w": 63,
+        "h": 33
+      },
+      "wall_right": {
+        "x": 213,
+        "y": 36,
+        "w": 66,
+        "h": 33
+      },
+      "garden": {
+        "x": 5,
+        "y": 148,
+        "w": 92,
+        "h": 63
+      },
+      "desk": {
+        "x": 222,
+        "y": 138,
+        "w": 67,
+        "h": 42
+      },
+      "trophy": {
+        "x": 181,
+        "y": 148,
+        "w": 44,
+        "h": 65
+      }
+    }
   }
 }
