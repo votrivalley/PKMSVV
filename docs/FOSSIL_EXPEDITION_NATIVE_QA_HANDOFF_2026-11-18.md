@@ -47,3 +47,15 @@
 - **Chưa hoàn tất chứng nhận** trọn 6–8 phút, multiplayer 2 máy, kết thúc trận, phát thưởng. Trạng thái Kabuto miễn phí và Xu Đồng Đội vẫn bị khóa trong adapter native, không thể coi là gameplay thành phẩm.
 - QA URL cho Phòng nghiên cứu cũ `research-ui-qa.pkmsvv-web.pages.dev` chỉ là Web UI preview đã biên dịch trước, không có gameplay Co-op mới. Hướng dài hạn: hợp nhất source QA sau khi chứng nhận, không dán file JS lên `app.min.js` cũ vô hạn.
 - Run: https://github.com/votrivalley/PKMSVV/actions/runs/44147576836
+
+## 18/11 — Beta hợp nhất cố định và sửa AI/sprite (QA 2.4.0)
+
+- Chỉ dùng hai link để test/phát hành: **Web chính** `https://pkmsvv-web.pages.dev/` (không đụng trong QA) và **Beta** `https://beta.pkmsvv-web.pages.dev/game/`. Các workflow `preview-research-ui-qa.yml` và `preview-pippi-web-qa.yml` đã chuyển thành `workflow_dispatch` thủ công, không còn auto deploy các URL lẻ.
+- **Lỗi AI đứng yên đã tìm được nguyên nhân mã nguồn:** `G.LanAI.activeBots()` trong `src/lan/lan-ai.js` quên đưa `fossil_lab` vào danh sách mode. Sau khi sửa, Host khởi tạo AI, đồng đội theo người đào, hỗ trợ phòng thủ máy bằng thuật toán lái cục bộ có chi phí giới hạn; khi đào xong chuyển ưu tiên về máy.
+- **Sprite**: thay Canvas placeholder hình chữ nhật bằng `assets/coop-lab/fossil-excavation-rock.svg` (đá pixel-art) và `assets/coop-lab/decor/machine_old_modular.svg` (máy nghiên cứu riêng), cả hai được tải trong game và có fallback offline khi asset lỗi.
+- **Hiểu đúng clock = 0 lúc mới vào trận:** game có màn chọn Berry đầu trận kéo dài tối đa 10 giây và bản patch `patch-berry.cjs` cố ý tạm dừng time/spawn. Bài QA ban đầu đo ngay trong màn chọn Berry nên sai. Test mới xác nhận/đóng Berry trước khi đo hoạt động gameplay.
+- **Chromium trên bản engine + trực tiếp URL Beta đều PASS**: phòng `fossil_lab` 2–4 thành viên, host + AI, AI di chuyển (sample 150px / 11 giây), 3 vị trí đào, ảnh máy và đá load thành công, thao tác khai quật và vòng lặp engine không crash.
+- **Soak 115 giây PASS**, game clock tiến tới 111,2 giây, 3/3 AI hoạt động, 33 quái cuối checkpoint, không có stalls, lỗi JavaScript hoặc console error trong kiểm thử nội bộ, sprite sẵn sàng; đủ bắt lỗi người dùng thấy trên dưới 1 phút, nhưng chưa chứng minh hoàn thành toàn bộ 6–8 phút.
+- GitHub Actions run **44153769236** `Success`, Cloudflare verify exact SHA `e62d5bc27a3933a589cb696b727f746f8b72b142`; deployed build `2.4.0-Unified-Beta-Fossil-AI-Sprite-QA`.
+- **Chưa bật thưởng, chưa thử nhiều người thật trên LAN, chưa QA 6–8 phút trọn trận hoặc so sánh save, chưa merge production.** Trước khi bật Kabuto miễn phí và Xu Đồng Đội phải hoàn thiện settlement idempotent theo room/match ID, thử guest interaction/đồng bộ và hồi sinh.
+- Run: https://github.com/votrivalley/PKMSVV/actions/runs/44153769236
