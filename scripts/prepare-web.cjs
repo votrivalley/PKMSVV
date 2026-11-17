@@ -70,6 +70,9 @@ execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-retro-web.cjs'
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-v15-egg-rush-web.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-arena-v1529.cjs')], { cwd: root, stdio: 'inherit' });
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-berry-coop.cjs')], { cwd: root, stdio: 'inherit' });
+// Experimental native Fossil Expedition stays out of all normal production builds.
+if(process.env.PKMSVV_FOSSIL_NATIVE_QA==='1')
+ execFileSync(process.execPath,[path.join(root,'scripts','patch-fossil-expedition-native.cjs')],{cwd:root,stdio:'inherit'});
 execFileSync(process.execPath, [path.join(root, 'scripts', 'patch-web-entry-ui.cjs')], { cwd: root, stdio: 'inherit' });
 // Do not register missing /game/sw.js: both routes share /sw.js.
 replaceOnce(path.join(game,'js','main.js'),"navigator.serviceWorker.register('sw.js')","navigator.serviceWorker.register('/sw.js',{scope:'/'})");
