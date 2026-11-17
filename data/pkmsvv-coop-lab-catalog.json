@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "stateKey": "pkmsvvCoopLab",
-  "featureStatus": "QA-modular-room-and-25-fossil-collection; new coop mission awaiting native runtime validation",
+  "featureStatus": "QA-active-development: 2-4 member fossil expedition gameplay engine and validation being integrated",
   "currency": {
     "id": "coopCoins",
     "nameVi": "Xu Đồng Đội",
@@ -244,7 +244,7 @@
     "optionalObjectiveReward": 20,
     "maxOptionalObjectives": 2,
     "partySize": {
-      "min": 1,
+      "min": 2,
       "max": 4
     },
     "soloAIRewardsEqual": true,
@@ -253,7 +253,13 @@
       "rescue_pokemon",
       "escort_supplies",
       "treasure_hunt"
-    ]
+    ],
+    "playerCount": {
+      "min": 2,
+      "max": 4,
+      "soloHumanWithBotsAllowed": true,
+      "botCountsAsTeamMember": true
+    }
   },
   "trophy": {
     "itemId": "gold_pippi_statue",
