@@ -133,7 +133,7 @@ G.PKMSVVWiki=(()=>{
   const go=document.createElement('span');go.className='pkmsvv-pc-action';go.textContent=action;b.append(go);
   grid.append(b);
   try{
-   if(G.UI?.sprite)G.UI.sprite(canvas,dex,{lively:true,scale:2,hero:true});
+   if(!grid.hidden&&G.UI?.sprite)G.UI.sprite(canvas,dex,{lively:true,scale:2,hero:true});
    else if(G.UI?.spriteCanvas){const art=G.UI.spriteCanvas(dex,144,144,{lively:true,scale:2,hero:true});canvas.replaceWith(art);}
   }catch(_e){/* UI sprite not initialized yet; card remains usable */ }
   b.onclick=()=>{close();onClick();};
@@ -429,6 +429,106 @@ G.PKMSVVWiki=(()=>{
   // D-pad gets a highlighted button, but touch/mouse must not auto-scroll.
   if(G.Pad?.name)G.Pad?.focusFirst?.();return true;
  }
+ // "Xây dựng" is a separate interaction mode. The room composition is still
+ // a concept image, not a set of detachable sprites. Never fake owned decor.
+ function construction(){
+  close();installStyle();
+  const overlay=document.createElement('div');overlay.id='pkmsvv-wiki-overlay';
+  overlay.className='pkmsvv-pc-overlay';overlay.setAttribute('role','dialog');
+  overlay.setAttribute('aria-modal','true');
+  overlay.setAttribute('aria-label',tr('Xây dựng Phòng nghiên cứu','Build Research Lab'));
+  const box=document.createElement('section');box.className='pkmsvv-pc-panel pkmsvv-build-panel';
+  const head=document.createElement('header');head.className='pkmsvv-pc-header';
+  const title=document.createElement('h2');title.textContent=tr('🛠 XÂY DỰNG','🛠 BUILD MODE');
+  const back=document.createElement('button');back.type='button';back.className='pkmsvv-pc-close';
+  back.textContent=tr('← Phòng nghiên cứu','← Research Lab');back.onclick=open;
+  back.dataset.back='1';head.append(title,back);box.append(head);
+  const save=G.DB?.save?.pkmsvvCoopLab;
+  const unlocked=save?.machineUnlocked===true;
+  const note=document.createElement('p');note.className='pkmsvv-pc-hint';
+  note.textContent=unlocked?
+   tr('Chọn một trong tám vị trí cố định. Các món chưa có sprite độc lập vẫn chỉ được xem, không trừ xu hoặc ghi save.',
+      'Select one of eight fixed slots. Unfinished sprites are preview-only; no coins or saves are changed.'):
+   tr('🔒 Xây dựng cần hoàn thành nhiệm vụ Co-op hóa thạch lần đầu. Bạn vẫn có thể xem tám vị trí, giá và vật phẩm dự kiến.',
+      '🔒 Build unlocks after the first Fossil Co-op mission. You can preview eight slots, items and planned prices.');
+  box.append(note);
+  const area=document.createElement('div');area.className='pkmsvv-build-layout';
+  const stage=document.createElement('div');stage.className='pkmsvv-build-stage';
+  const info=document.createElement('section');info.className='pkmsvv-build-info';
+  const h=document.createElement('h3'),desc=document.createElement('p'),
+   items=document.createElement('div');items.className='pkmsvv-build-items';
+  info.append(h,desc,items);
+  const slots=[
+   ['wall_left',43,31,63,32,'Tường trái','Left wall'],
+   ['wall_right',213,31,63,32,'Tường phải','Right wall'],
+   ['center',111,62,91,82,'Máy phục nguyên','Revival machine'],
+   ['shelf_left',18,75,100,62,'Kệ bên trái','Left shelf'],
+   ['shelf_right',220,74,96,59,'Kệ bên phải','Right shelf'],
+   ['garden',6,146,87,66,'Góc cây cảnh','Garden'],
+   ['desk',235,132,79,34,'Bàn nghiên cứu','Research desk'],
+   ['trophy',236,166,72,45,'Bệ danh dự','Trophy pedestal']
+  ];
+  const names={
+   machine_old:['Máy phục nguyên nguyên mẫu','Original restoration machine',0],
+   machine_future:['Máy phục nguyên tối tân','Advanced restoration machine',1300],
+   kabuto_skeleton:['Bộ xương Kabuto','Kabuto skeleton',320],
+   amber_aerodactyl:['Hổ phách Aerodactyl','Aerodactyl amber',750],
+   omanyte_model:['Mô hình Omanyte','Omanyte model',280],
+   archaeology_certificate:['Chứng nhận khảo cổ','Archaeology certificate',200],
+   prehistoric_poster:['Bản đồ sinh vật cổ','Prehistoric poster',420],
+   prehistoric_fern:['Chậu dương xỉ tiền sử','Ancient fern',360],
+   research_terminal:['Máy tính khảo cổ','Research terminal',540],
+   glowing_sample_tube:['Ống mẫu phát sáng','Glowing specimen tube',700],
+   gold_pippi_statue:['Tượng Vàng Giáo sư Pippi','Golden Professor Pippi',null]
+  };
+  const available={
+   wall_left:['archaeology_certificate','prehistoric_poster'],
+   wall_right:['archaeology_certificate','prehistoric_poster'],
+   center:['machine_old','machine_future'],
+   shelf_left:['kabuto_skeleton','amber_aerodactyl','omanyte_model'],
+   shelf_right:['kabuto_skeleton','amber_aerodactyl','omanyte_model'],
+   garden:['prehistoric_fern'],
+   desk:['research_terminal','glowing_sample_tube'],
+   trophy:['gold_pippi_statue']
+  };
+  function inspect(slot){
+   const record=slots.find(x=>x[0]===slot);if(!record)return;
+   stage.querySelectorAll('.pkmsvv-build-spot').forEach(b=>b.classList.toggle('selected',b.dataset.buildSlot===slot));
+   h.textContent=tr(record[5]==='Revival machine'?'Máy phục nguyên':record[4],record[5]);
+   desc.textContent=tr('Đang trang bị: ','Equipped: ')+
+    (names[save?.equippedDecorBySlot?.[slot]]?.[G.I18n?.lang==='en'?1:0]||
+    tr('Chưa có vật phẩm','Empty'));
+   items.replaceChildren();
+   for(const id of available[slot]){
+    const n=names[id],owned=!!save?.ownedDecor?.[id]||id==='machine_old';
+    const row=document.createElement('div');row.className='pkmsvv-build-item';
+    const label=document.createElement('span');
+    label.textContent=tr(n[0],n[1]);
+    const state=document.createElement('small');
+    state.textContent=owned?tr('Đã có · Chờ art hoàn thiện','Owned · Artwork pending'):
+     n[2]===null?tr('Rương Co-op siêu hiếm','Ultra-rare Co-op chest'):
+     tr('Chưa mua · '+n[2]+' Xu Đồng Đội','Not owned · '+n[2]+' Co-op Coins');
+    const btn=document.createElement('button');btn.type='button';
+    btn.className='pkmsvv-pc-close';btn.disabled=true;btn.dataset.buildEquip=id;
+    btn.textContent=unlocked?tr('Chưa thể thay','Not ready'):tr('🔒 Chưa mở','🔒 Locked');
+    row.append(label,state,btn);items.append(row);
+   }
+  }
+  for(const [id,x,y,w,ht,vi,en] of slots){
+   const spot=document.createElement('button');spot.type='button';
+   spot.className='pkmsvv-build-spot';spot.dataset.buildSlot=id;
+   spot.style.left=x/320*100+'%';spot.style.top=y/224*100+'%';
+   spot.style.width=w/320*100+'%';spot.style.height=ht/224*100+'%';
+   spot.setAttribute('aria-label',tr('Chọn vị trí '+vi,'Select '+en));
+   spot.onclick=()=>inspect(id);stage.append(spot);
+  }
+  area.append(stage,info);box.append(area);
+  const footer=document.createElement('p');footer.className='pkmsvv-pc-hint';
+  footer.textContent=tr('Đây là bản dựng UI: chưa có đủ sprite có thể tháo lắp, chưa mở bán và không trừ xu.',
+    'UI preview: detachable décor sprites are unfinished; no purchases or coin deductions.');
+  box.append(footer);overlay.append(box);document.body.append(overlay);
+  inspect('center');back.focus({preventScroll:true});return true;
+ }
  function open(){
   close();installStyle();
   const overlay=document.createElement('div');overlay.id='pkmsvv-wiki-overlay';
@@ -442,66 +542,112 @@ G.PKMSVVWiki=(()=>{
   head.append(title,x);box.append(head);
   const hint=document.createElement('p');hint.className='pkmsvv-pc-hint';
   hint.textContent=tr('Căn cứ của Pippi · Hỗ trợ, Mega, Berry, Bạn đồng hành và Phục nguyên hóa thạch.','Pippi’s base · Supports, Mega, Berries, Companions and Fossil restoration.');box.append(hint);
-  // Research Room: shows the authored concept immediately, without pretending that
-  // the illustrated items are already owned. The former PC actions stay intact.
-  const hero=document.createElement('section');hero.className='pkmsvv-research-hero';
-  hero.dataset.pkmsvvResearchHub='1';
-  const scene=document.createElement('button');scene.type='button';scene.className='pkmsvv-research-scene';
-  scene.setAttribute('aria-label',tr('Xem phòng thí nghiệm và máy phục nguyên','Explore room and restoration machine'));
-  const sceneCaption=document.createElement('span');
-  sceneCaption.textContent=tr('Xem phòng & máy phục nguyên','Explore room & machine');
-  scene.append(sceneCaption);scene.onclick=fossilRestoration;
-  const companion=document.createElement('section');companion.className='pkmsvv-research-pippi';
+  // Research Lab is now a DIRECT visual hub. Every click target is a real
+  // native button on top of the room illustration, not the old PC card UI.
+  const hero=document.createElement('section');hero.className='pkmsvv-research-hero pkmsvv-research-interactive';
+  hero.dataset.pkmsvvResearchHub='2';
+  const room=document.createElement('div');room.className='pkmsvv-research-room';
+  room.setAttribute('role','group');
+  room.setAttribute('aria-label',tr('Bản đồ tương tác Phòng nghiên cứu','Interactive Research Lab'));
+  const invoke=(kind)=>{
+   switch(kind){
+    case 'support':close();G.PKMSVVSupportCatalog?.open?.();return;
+    case 'mega':close();G.PKMSVVMegaEntry?.open?.();return;
+    case 'berry':berryGuide();return;
+    case 'companion':pippiCorner();return;
+    case 'fossil':fossilRestoration();return;
+   }
+  };
+  const zones=[
+   {id:'support',x:18,y:75,w:100,h:62,vi:'Pokémon hỗ trợ',en:'Supports',
+    tip:'Ủa, muốn có trợ lý Pokémon? Tui là trưởng phòng nhưng không nhận thêm việc đâu nha!'},
+   {id:'mega',x:220,y:74,w:96,h:59,vi:'Mega',en:'Mega',
+    tip:'Mega thì mạnh đó. Nhưng nhớ nha: biến hình không chữa được tật bấm loạn nút!'},
+   {id:'berry',x:6,y:146,w:87,h:66,vi:'Berry',en:'Berries',
+    tip:'Berry thì ăn được. Còn mẫu cây tiền sử kia? Đừng có hái nấu canh!'},
+   {id:'companion',x:235,y:132,w:79,h:34,vi:'Bạn đồng hành',en:'Companions',
+    tip:'Bấm vào đây mà chăm sóc giám đốc Pippi. Tui muốn tăng lương bằng kẹo!'},
+   {id:'fossil',x:115,y:62,w:91,h:82,vi:'Phục nguyên',en:'Restore fossils',
+    tip:'Máy phục nguyên chưa tự chạy bằng niềm tin đâu nha. Hoàn thành Co-op lần đầu trước!'}
+  ];
+  const speech=document.createElement('p');speech.className='pkmsvv-research-pippi-line';
+  speech.setAttribute('aria-live','polite');
+  const hotspotButtons=[];
+  for(const z of zones){
+   const b=document.createElement('button');b.type='button';
+   b.className='pkmsvv-research-hotspot';b.dataset.researchHotspot=z.id;
+   b.style.left=z.x/320*100+'%';b.style.top=z.y/224*100+'%';
+   b.style.width=z.w/320*100+'%';b.style.height=z.h/224*100+'%';
+   b.setAttribute('aria-label',tr('Mở '+z.vi,'Open '+z.en));
+   const tag=document.createElement('span');tag.className='pkmsvv-research-hotspot-tag';
+   tag.textContent=tr(z.vi,z.en);b.append(tag);
+   b.addEventListener('mouseenter',()=>{if(G.I18n?.lang!=='en')speech.textContent=z.tip;});
+   b.addEventListener('focus',()=>{speech.textContent=tr(z.tip,'Select '+z.en+' to open this research station.');});
+   b.onclick=()=>invoke(z.id);
+   room.append(b);hotspotButtons.push(b);
+  }
+  const toolbar=document.createElement('div');toolbar.className='pkmsvv-research-toolbar';
+  const build=document.createElement('button');build.type='button';build.className='pkmsvv-pc-close';
+  build.dataset.researchBuild='1';build.textContent=tr('🛠 Xây dựng','🛠 Build / Decorate');
+  build.onclick=construction;
+  const knowledge=document.createElement('button');knowledge.type='button';knowledge.className='pkmsvv-pc-close';
+  knowledge.dataset.researchKnowledge='1';knowledge.textContent=tr('📖 Kiến thức','📖 Knowledge');
+  toolbar.append(build,knowledge);
+  const fast=document.createElement('nav');fast.className='pkmsvv-research-quick-actions';
+  fast.setAttribute('aria-label',tr('Chọn khu nghiên cứu','Research stations'));
+  for(const z of zones){
+   const btn=document.createElement('button');btn.type='button';
+   btn.className='pkmsvv-research-quick';btn.dataset.researchQuick=z.id;
+   btn.textContent=tr(z.vi,z.en);btn.onclick=()=>invoke(z.id);fast.append(btn);
+  }
+  const companion=document.createElement('div');companion.className='pkmsvv-research-pippi';
   const face=document.createElement('div');face.className='pkmsvv-research-pippi-head';
   const portrait=document.createElement('img');portrait.src='images/pippi/portrait/Happy.png';
-  portrait.alt=tr('Pippi — giám đốc phòng nghiên cứu','Pippi — research director');
-  portrait.width=68;portrait.height=68;portrait.loading='lazy';
+  portrait.alt=tr('Pippi — Giám đốc Phòng nghiên cứu','Pippi — Research Director');
+  portrait.width=52;portrait.height=52;portrait.loading='lazy';
   const lead=document.createElement('div');
   const name=document.createElement('strong');name.textContent=tr('Giáo sư Pippi','Professor Pippi');
   const position=document.createElement('small');
-  position.textContent=tr('Giám đốc tự phong · Không nhận khiếu nại','Self-appointed director · No complaints');
+  position.textContent=tr('Tự phong giám đốc · Bạn làm thực tập sinh','Self-appointed director · You are the intern');
   lead.append(name,position);face.append(portrait,lead);
-  const message=document.createElement('p');message.className='pkmsvv-research-pippi-line';
-  message.setAttribute('aria-live','polite');
   const save=G.DB?.save,unlocked=save?.pkmsvvCoopLab?.machineUnlocked===true;
   const hasFossil=!!(save?.pkmsvvFossils?.guaranteedKabuto||
    Object.values(save?.pkmsvvFossils?.inventory||{}).some(v=>(Number(v)||0)>0));
-  const talks=unlocked?[
-   tr('Được rồi, máy chạy! Công lao lớn nhất thuộc về giáo sư Pippi… bạn cũng có phụ khuân vài món.','The machine works! All credit to Professor Pippi… well, you carried a few things.'),
-   tr('Xu Đồng Đội thì giữ cho kỹ. Tượng vàng của tui không bán đâu, chỉ khoe được mới sang!','Guard those Co-op Coins. My golden statue is not for sale—real prestige must be earned!')
+  const lines=unlocked?[
+   tr('Máy chạy rồi! Công lao thuộc về Pippi. Còn bạn… được lên ảnh tập thể.','The machine works! Full credit to Pippi. You may appear in the group photo.'),
+   tr('Đừng tiêu sạch Xu Đồng Đội nha. Bệ vàng kia đang chờ một hiện vật cực kỳ xứng đáng với nhan sắc tui.','Save your Co-op Coins. That trophy pedestal deserves someone as gorgeous as me.')
   ]:hasFossil?[
-   tr('Có hóa thạch rồi mà đòi Kabuto sống dậy liền? Thực tập sinh ơi, máy đang KHÓA! Thắng nhiệm vụ Co-op đầu tiên đã.','A fossil does NOT mean instant Kabuto. Intern, the machine is LOCKED! Finish your first Co-op quest.'),
-   tr('Tui tìm ra hóa thạch, bạn làm chân cuốc. Đừng nhét vào máy đang hỏng rồi bắt tui bảo hành!','I discovered the fossil, you held the pickaxe. Do not break the machine and ask for a refund!')
+   tr('Đào được hóa thạch rồi, nhưng máy vẫn khóa! Nhiệm vụ Co-op đầu tiên đâu? Đừng nhìn tui, tui đâu có biết sửa điện!','Fossil found, machine still locked! Finish the first Co-op mission; I do not fix wiring!'),
+   tr('Một cục đá cổ mà bạn mừng như trúng số. Rồi ai phải làm báo cáo? Đương nhiên là… bạn!','One old rock and you are celebrating? Guess who writes the report. You!')
   ]:[
-   tr('Chào mừng tới cơ sở nghiên cứu của tui! Bạn là trợ lý, làm việc vất vả; tui là thiên tài, hưởng ánh đèn.','Welcome to my lab! You do the hard work; I am the genius in the spotlight.'),
-   tr('Hóa thạch nằm trong đá ngoài Khám phá đó. Còn chuyện kiếm ai đập đá? Tui đang nhìn bạn đây!','Fossils are hidden in Explore rocks. Guess who gets to smash them? I am looking at you!')
+   tr('Chào mừng tới Phòng nghiên cứu Pippi! Tui là giám đốc, bạn là nhân viên khuân vác không lương. Hợp lý ghê!','Welcome to my lab! I am the director, and you are the unpaid assistant. Perfect!'),
+   tr('Nhìn máy ở giữa chưa? Cái đó dành cho hóa thạch. Đừng bỏ đồ ăn vô, lần trước suýt nổ cả phòng!','See the central machine? Fossils only. Last time someone tried to cook in it…')
   ];
-  talks.push(
-   tr('Hỗ trợ, Mega, Berry và Thân thiết ở đây. PokéBox, Pokédex và Nâng cấp vẫn ở nút Pokémon ngoài menu, cho bạn thao tác lẹ.','Supports, Mega, Berries and Bond are here. Pokémon still has fast PokéBox, Dex and Upgrades.'),
-   tr('Tranh phòng đẹp là concept nha. Muốn trưng đồ thật thì phải chơi Co-op kiếm Xu Đồng Đội. Không có chuyện tui tặng miễn phí!','The room art is a concept. Earn Co-op Coins for real furniture later. This director gives no freebies!'),
-   tr('Tui không tự luyến. Tui chỉ có tố chất lãnh đạo và một cái tượng vàng cực kỳ xứng đáng thôi!','I am not vain. I just happen to deserve an extremely expensive golden statue.'),
-   tr('Nút nào cũng có chức năng. Bấm thử đi, ngó tui hoài phí nhan sắc lắm.','Every button does something. Try one instead of staring at my fabulous face!')
+  lines.push(
+   tr('Hỗ trợ, Mega, Berry, Đồng hành và Phục nguyên: mỗi góc một việc. Bấm thẳng vào máy đi, tui không phát bản đồ giấy!','Supports, Mega, Berries, Companions and Fossils: tap each station directly.'),
+   tr('Muốn đổi nội thất hả? Bấm Xây dựng. Bấm sai chỗ tui tính phí tư vấn đó!','To replace furniture, use Build. Clicking the wrong thing incurs consultation fees!'),
+   tr('PokéBox và Pokédex vẫn ở nút Pokémon ngoài menu. Phòng tui không phải kho chứa tất cả đâu nha!','PokéBox and Pokédex stay in the separate Pokémon menu. My lab is not a warehouse!'),
+   tr('Thấy cái bệ danh dự kia không? Để dành tượng vàng Pippi. Đề nghị không ai tranh chỗ!','See that trophy pedestal? Reserved for golden Pippi. No competitors!')
   );
-  let index=0;message.textContent=talks[0];
+  let speechIndex=0;speech.textContent=lines[0];
   const actions=document.createElement('div');actions.className='pkmsvv-research-pippi-actions';
   const talk=document.createElement('button');talk.type='button';talk.className='pkmsvv-pc-close';
   talk.dataset.researchPippiTalk='1';talk.textContent=tr('Pippi cà khịa','Pippi roasts');
-  talk.onclick=()=>{index=(index+1)%talks.length;message.textContent=talks[index];};
+  talk.onclick=()=>{speechIndex=(speechIndex+1)%lines.length;speech.textContent=lines[speechIndex];};
   const tour=document.createElement('button');tour.type='button';tour.className='pkmsvv-pc-close';
   tour.dataset.researchPippiTour='1';tour.textContent=tr('Pippi dẫn tour','Guided tour');
-  tour.onclick=()=>{
-   if(!G.PKMSVVPippiGuide?.open?.('laboratory'))message.textContent=
-    tr('Tui đã dẫn tour rồi đó! Muốn nghe tiếp thì bấm cà khịa.','Tour already given! Try the roast button.');
-  };
+  tour.onclick=()=>{if(!G.PKMSVVPippiGuide?.open?.('laboratory'))
+   speech.textContent=tr('Tui dẫn tour rồi! Còn muốn nghe tui cà khịa thì nhấn nút bên cạnh.','Tour completed! Use the roast button for more.');};
   actions.append(talk,tour);
   const status=document.createElement('small');status.className='pkmsvv-research-machine-state';
   status.dataset.machineUnlocked=String(unlocked);
-  status.textContent=unlocked?tr('Máy phục nguyên: ĐÃ MỞ','Restoration machine: UNLOCKED'):
-   tr('Máy phục nguyên: KHÓA — chờ Co-op hóa thạch lần đầu','Restoration machine: LOCKED — first Fossil Co-op clear required');
-  companion.append(face,message,actions,status);hero.append(scene,companion);box.append(hero);
+  status.textContent=unlocked?tr('Máy phục nguyên: ĐÃ MỞ','Restoration: UNLOCKED'):
+   tr('Máy phục nguyên: KHÓA · cần Co-op hóa thạch lần đầu','Restoration: LOCKED · first Fossil Co-op required');
+  companion.append(face,speech,actions,status);
+  hero.append(room,fast,toolbar,companion);box.append(hero);
   const grid=document.createElement('div');grid.className='pkmsvv-pc-grid';
   if(window.__PKMSVV_PIPPI_QA)grid.dataset.pippiQaRevision=window.__PKMSVV_PIPPI_QA;
-  box.append(grid);
+  grid.hidden=true;grid.setAttribute('aria-hidden','true');box.append(grid);
   makeCard(grid,{title:tr('Pokémon hỗ trợ','Support Pokémon'),dex:175,
    desc:tr('Togepi · Xem, chọn và quản lý tối đa 2 Pokémon hỗ trợ.','Togepi · Manage up to two supports.'),
    action:tr('Mở hỗ trợ','Open Supports'),onClick:()=>G.PKMSVVSupportCatalog?.open?.()});
@@ -517,7 +663,9 @@ G.PKMSVVWiki=(()=>{
   makeCard(grid,{title:tr('Hồi sinh hóa thạch','Fossil Restoration'),dex:140,
    desc:tr('Sưu tầm hóa thạch · Mở máy sau nhiệm vụ Co-op lần đầu.','Collect fossils · Unlock the machine on your first Co-op lab clear.'),
    action:tr('Xem máy phục nguyên','View restoration machine'),onClick:fossilRestoration});
-  const help=document.createElement('section');help.className='pkmsvv-pc-guide';
+  const help=document.createElement('section');help.className='pkmsvv-pc-guide';help.hidden=true;
+  knowledge.setAttribute('aria-expanded','false');
+  knowledge.onclick=()=>{help.hidden=!help.hidden;knowledge.setAttribute('aria-expanded',String(!help.hidden));};
   const sub=document.createElement('h3');sub.textContent=tr('Kiến thức Pokémon','Pokémon knowledge');
   help.append(sub);
   const articles=[
@@ -622,5 +770,5 @@ G.PKMSVVWiki=(()=>{
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('pkmsvv-wiki-overlay')){close();e.stopPropagation();}});
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
- return {open,close,berryGuide,pippiCorner,fossilRestoration,installMenu};
+ return {open,close,berryGuide,pippiCorner,fossilRestoration,construction,installMenu};
 })();
