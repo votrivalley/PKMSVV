@@ -44,6 +44,44 @@
    ['Joyous','Phút 15 đánh boss để mở vùng tiếp theo; phút 30 mới kết thúc bản đồ. Giờ thì chiến đi, tui ở đây rồi!','Defeat the 15-minute boss to open the next region. The map ends after the 30-minute boss. Let’s go!']
   ]
  };
+ // Short, original, playful one-time intros appear BEFORE launching a mode,
+ // when menus are safe. Never open during real-time Co-op combat.
+ const MODE_STEPS={
+  coop:[
+   ['Joyous','Sống Sót à? Okay bestie, vào team rồi đừng có cosplay cục đá nha! Đồng đội ngã thì cứu, không ai muốn gánh nguyên hội.','Survival? Okay bestie, the team is not decorative. Revive your friends and stay alive!'],
+   ['Determined','2–4 người, có AI nếu chơi một mình. Cùng sống, cùng đánh, đừng để Pippi phải đi cứu danh dự cho cả đội!','2–4 teammates. Solo players can recruit AI. Stick together and revive anyone downed!']
+  ],
+  royale:[
+   ['Shouting','Sống Còn! Vòng bo dí như deadline thứ Hai á. Nhớ chạy vào vùng an toàn, đừng đứng chụp ảnh outfit.','Battle Royale! The shrinking ring hits harder than a Monday deadline. Keep moving!'],
+   ['Angry','Ở đây ai sống cuối là thắng. Đồng đội cũ hả? Xin lỗi, nay là đối thủ nhé!','Last survivor wins. Yesterday’s teammates are today’s rivals!']
+  ],
+  eggrush:[
+   ['Surprised','Tranh Trứng? Đi nhặt 10 quả trứng đi, đừng hỏi sao tui nhìn trứng là muốn ăn sáng.','Egg Rush? Collect ten eggs, and stop asking why I am suddenly hungry.'],
+   ['Joyous','Mew được 20 điểm, Ditto 10, trứng thường 5, Shiny nhân đôi. Chạy lẹ nhưng nhớ né sát thương!','Mew is 20 points, Ditto 10, common eggs 5 and Shiny doubles them. Move fast!']
+  ],
+  berry:[
+   ['Happy','Giải Cứu Berry! Ba cây Berry này không phải cây cảnh để làm content. Cherubi đang cần vệ sĩ có tâm á!','Berry Rescue! Those three trees are not decorative. Cherubi needs serious bodyguards!'],
+   ['Determined','Đánh quái, giữ cả ba cây và chọn độ khó cho hợp sức mình. Đừng để tui phải khóc vì trái cây nha!','Defend all three Berry trees from enemies. Pick your difficulty wisely!']
+  ],
+  fossil_lab:[
+   ['Surprised','Ủa alo, đi khai quật hả? Ba bãi đá nằm XA nhau, mỗi bãi đập 3 lần. Đào đủ 9 mảnh mới qua màn nha, không phải chụp hình sống ảo!','Fossil expedition! Three distant sites, three strikes each. Collect all nine fragments!'],
+   ['Worried','Plot twist: Rotom bị Golurk dí! Trước 4:00 phải cứu em nó. Trễ một nhịp là toang nguyên nhiệm vụ, hiểu hông?','Plot twist: Golurk is after Rotom! Rescue it before 4:00, or the run fails!'],
+   ['Shouting','Đưa Rotom về máy cũ cho nhập vào, rồi giữ máy sống tới 8:00. Máy nổ là tui nghỉ việc… ơ mà tui có làm việc đâu!','Escort Rotom to the ruined restorer, then defend it until 8:00. No machine, no win!']
+  ],
+  arena:[
+   ['Angry','Arena Solo 1v1, không có ai gánh hộ đâu bestie. Nhớ chọn Pokémon trước khi vào trận, chuẩn bị flex kỹ năng đi!','Arena Solo is 1v1. Pick your Pokémon, then show those skills!'],
+   ['Joyous','Ở đây phải tự đánh, tự né, không có nút pause thần thánh giữa trận. Chúc may mắn!','No magical pause mid-match. Keep dodging!']
+  ],
+  champion:[
+   ['Inspired','Champion! Đi qua vòng 16, tứ kết, bán kết rồi chung kết. Hít vibe nhà vô địch trước đi nào!','Champion! Fight through Round of 16, quarters, semis, and the final!'],
+   ['Determined','Chung kết boss mạnh lắm, có Mega nữa. Tui đứng cổ vũ, nhưng thua thì đừng tag tên tui nhé!','The finals feature powerful Pokémon and Mega forms. I am cheering, but please do not tag me if you lose!']
+  ],
+  explore:[
+   ['Happy','Khám phá lần đầu hả? Nâng kỹ năng khi lên cấp và bám map nhé. Pippi đi cùng nên bạn không phải solo với deadline!','First Explore run? Pick skills as you level and follow the region map. Pippi has your back!'],
+   ['Determined','Phút 15 có boss mở vùng; phút 30 mới thật sự kết thúc. Nhớ lựa Berry trước khi lao vào quái nha!','The 15-minute boss opens the next region; the 30-minute boss ends the map. Choose Berries before fighting!']
+  ]
+ };
+ for(const [mode,lines] of Object.entries(MODE_STEPS))STEPS['mode_'+mode]=lines;
  let active=null,root=null,lastExplorePlayer=null,scheduled=null,queued=null;
  // A large portrait dialogue is modal. Only solo Explore may pause its own
  // gameplay clock; quick Pippi reactions never go through this overlay.
@@ -216,7 +254,14 @@
   // attacks, skill hotkeys and the native pause menu underneath the portrait.
   e.preventDefault?.();e.stopPropagation?.();e.stopImmediatePropagation?.();
  },true);
- G.PKMSVVPippiGuide={open,next,close,queue,flush,
+ function openMode(mode){
+  const normalized=mode==='berryeasy'?'berry':mode;
+  if(!MODE_STEPS[normalized])return false;
+  // This is a PRE-MATCH dialogue only: never block monsters in a live run.
+  if(!['ui','over'].includes(G.Game?.state))return false;
+  return open('mode_'+normalized);
+ }
+ G.PKMSVVPippiGuide={open,next,close,queue,flush,openMode,
   get isOpen(){return !!active;},
   get current(){return active?{kind:active.kind,index:active.index,total:STEPS[active.kind].length,paused:active.paused}:null;}};
 })();
