@@ -1,4 +1,4 @@
-/* Pokémon Chuyển Sinh: PC hub for Support Pokémon, Mega and Berry.
+/* Pokémon Chuyển Sinh: Research Lab hub for the former PC utilities.
  * No network dependencies: use the already bundled in-game Pokémon sprite system.
  */
 G.PKMSVVWiki=(()=>{
@@ -114,12 +114,12 @@ G.PKMSVVWiki=(()=>{
   // Do not rebuild the same button on every MenuUI.open: Android and PC may
   // scroll-jump when focused descendants are replaced during navigation.
   if(!b.dataset.pkmsvvWikiReady){
-   b.innerHTML='<span class="mi-ico">💻</span><span class="pkmsvv-menu-copy"><span class="pkmsvv-menu-label">PC</span><small>Pokémon hỗ trợ · Mega · Berry</small></span>';
+   b.innerHTML='<span class="mi-ico">🔬</span><span class="pkmsvv-menu-copy"><span class="pkmsvv-menu-label">Phòng nghiên cứu</span><small>Hóa thạch · Mega · Hỗ trợ · Pippi</small></span>';
    b.dataset.pkmsvvWikiReady='1';
   }
   if(window.__PKMSVV_PIPPI_QA){
    const detail=b.querySelector('.pkmsvv-menu-copy small');
-   if(detail)detail.textContent='Hỗ trợ · Mega · Berry · Bạn đồng hành · QA';
+   if(detail)detail.textContent=tr('Hóa thạch · Mega · Hỗ trợ · Pippi','Fossils · Mega · Supports · Pippi');
   }
   b.onclick=e=>{e.preventDefault();e.stopPropagation();open();};
  }
@@ -151,7 +151,7 @@ G.PKMSVVWiki=(()=>{
   const head=document.createElement('header');head.className='pkmsvv-pc-header';
   const title=document.createElement('h2');title.textContent=tr('Bạn đồng hành','Companions');
   const back=document.createElement('button');back.type='button';
-  back.className='pkmsvv-pc-close';back.textContent=tr('← Quay lại PC','← Back to PC');
+  back.className='pkmsvv-pc-close';back.textContent=tr('← Phòng nghiên cứu','← Research Lab');
   back.setAttribute('data-back','');back.onclick=open;head.append(title,back);box.append(head);
   const body=document.createElement('div');body.className='pkmsvv-pippi-training';
   box.append(body);shade.append(box);document.body.append(shade);
@@ -291,7 +291,7 @@ G.PKMSVVWiki=(()=>{
   const head=document.createElement('header');head.className='pkmsvv-pc-header';
   const title=document.createElement('h2');title.textContent=tr('🦴 Hồi sinh hóa thạch','🦴 Fossil Restoration');
   const back=document.createElement('button');back.type='button';back.className='pkmsvv-pc-close';
-  back.textContent=tr('← Quay lại PC','← Back to PC');back.setAttribute('data-back','');back.onclick=open;
+  back.textContent=tr('← Phòng nghiên cứu','← Research Lab');back.setAttribute('data-back','');back.onclick=open;
   head.append(title,back);box.append(head);
   const note=document.createElement('p');note.className='pkmsvv-pc-hint';
   note.textContent=tr('Đập đá đúng thế hệ để tìm hóa thạch. Lần đầu phải hoàn thành nhiệm vụ Co-op Phòng thí nghiệm thất lạc để mở máy vĩnh viễn. Vật liệu vẫn được giữ khi máy khóa.',
@@ -402,7 +402,7 @@ G.PKMSVVWiki=(()=>{
   const head=document.createElement('header');head.className='pkmsvv-pc-header';
   const h=document.createElement('h2');h.textContent=tr('🍓 CẨM NANG BERRY','🍓 BERRY GUIDE');
   const back=document.createElement('button');back.type='button';back.className='pkmsvv-pc-close';
-  back.textContent=tr('← Quay lại PC','← Back to PC');back.setAttribute('data-back','');back.onclick=open;
+  back.textContent=tr('← Phòng nghiên cứu','← Research Lab');back.setAttribute('data-back','');back.onclick=open;
   head.append(h,back);box.append(head);
   const intro=document.createElement('p');intro.className='pkmsvv-pc-hint';
   intro.textContent=tr('Berry dùng một lần, tối đa 2 quả mỗi trận; chọn trong 4 giây trước trận. Chương 6 cần sử dụng 5 loại khác nhau.',
@@ -433,15 +433,72 @@ G.PKMSVVWiki=(()=>{
   close();installStyle();
   const overlay=document.createElement('div');overlay.id='pkmsvv-wiki-overlay';
   overlay.className='pkmsvv-pc-overlay';overlay.setAttribute('role','dialog');
-  overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','PC');
+  overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label',tr('Phòng nghiên cứu','Research Lab'));
   const box=document.createElement('section');box.className='pkmsvv-pc-panel';
   const head=document.createElement('header');head.className='pkmsvv-pc-header';
   const title=document.createElement('h2');
-  title.textContent='💻 PC · POKÉMON CHUYỂN SINH'+(window.__PKMSVV_PIPPI_QA?' · PIPPI QA':'');
+  title.textContent=tr('🔬 PHÒNG NGHIÊN CỨU','🔬 RESEARCH LAB');
   const x=document.createElement('button');x.type='button';x.className='pkmsvv-pc-close';x.textContent=tr('✕ Đóng','✕ Close');x.setAttribute('data-back','');x.onclick=close;
   head.append(title,x);box.append(head);
   const hint=document.createElement('p');hint.className='pkmsvv-pc-hint';
-  hint.textContent=tr('Chọn một mục để vào thẳng tính năng, không cần mở Wiki trung gian.','Select a feature directly.');box.append(hint);
+  hint.textContent=tr('Căn cứ của Pippi · Hỗ trợ, Mega, Berry, Bạn đồng hành và Phục nguyên hóa thạch.','Pippi’s base · Supports, Mega, Berries, Companions and Fossil restoration.');box.append(hint);
+  // Research Room: shows the authored concept immediately, without pretending that
+  // the illustrated items are already owned. The former PC actions stay intact.
+  const hero=document.createElement('section');hero.className='pkmsvv-research-hero';
+  hero.dataset.pkmsvvResearchHub='1';
+  const scene=document.createElement('button');scene.type='button';scene.className='pkmsvv-research-scene';
+  scene.setAttribute('aria-label',tr('Xem phòng thí nghiệm và máy phục nguyên','Explore room and restoration machine'));
+  const sceneCaption=document.createElement('span');
+  sceneCaption.textContent=tr('Xem phòng & máy phục nguyên','Explore room & machine');
+  scene.append(sceneCaption);scene.onclick=fossilRestoration;
+  const companion=document.createElement('section');companion.className='pkmsvv-research-pippi';
+  const face=document.createElement('div');face.className='pkmsvv-research-pippi-head';
+  const portrait=document.createElement('img');portrait.src='images/pippi/portrait/Happy.png';
+  portrait.alt=tr('Pippi — giám đốc phòng nghiên cứu','Pippi — research director');
+  portrait.width=68;portrait.height=68;portrait.loading='lazy';
+  const lead=document.createElement('div');
+  const name=document.createElement('strong');name.textContent=tr('Giáo sư Pippi','Professor Pippi');
+  const position=document.createElement('small');
+  position.textContent=tr('Giám đốc tự phong · Không nhận khiếu nại','Self-appointed director · No complaints');
+  lead.append(name,position);face.append(portrait,lead);
+  const message=document.createElement('p');message.className='pkmsvv-research-pippi-line';
+  message.setAttribute('aria-live','polite');
+  const save=G.DB?.save,unlocked=save?.pkmsvvCoopLab?.machineUnlocked===true;
+  const hasFossil=!!(save?.pkmsvvFossils?.guaranteedKabuto||
+   Object.values(save?.pkmsvvFossils?.inventory||{}).some(v=>(Number(v)||0)>0));
+  const talks=unlocked?[
+   tr('Được rồi, máy chạy! Công lao lớn nhất thuộc về giáo sư Pippi… bạn cũng có phụ khuân vài món.','The machine works! All credit to Professor Pippi… well, you carried a few things.'),
+   tr('Xu Đồng Đội thì giữ cho kỹ. Tượng vàng của tui không bán đâu, chỉ khoe được mới sang!','Guard those Co-op Coins. My golden statue is not for sale—real prestige must be earned!')
+  ]:hasFossil?[
+   tr('Có hóa thạch rồi mà đòi Kabuto sống dậy liền? Thực tập sinh ơi, máy đang KHÓA! Thắng nhiệm vụ Co-op đầu tiên đã.','A fossil does NOT mean instant Kabuto. Intern, the machine is LOCKED! Finish your first Co-op quest.'),
+   tr('Tui tìm ra hóa thạch, bạn làm chân cuốc. Đừng nhét vào máy đang hỏng rồi bắt tui bảo hành!','I discovered the fossil, you held the pickaxe. Do not break the machine and ask for a refund!')
+  ]:[
+   tr('Chào mừng tới cơ sở nghiên cứu của tui! Bạn là trợ lý, làm việc vất vả; tui là thiên tài, hưởng ánh đèn.','Welcome to my lab! You do the hard work; I am the genius in the spotlight.'),
+   tr('Hóa thạch nằm trong đá ngoài Khám phá đó. Còn chuyện kiếm ai đập đá? Tui đang nhìn bạn đây!','Fossils are hidden in Explore rocks. Guess who gets to smash them? I am looking at you!')
+  ];
+  talks.push(
+   tr('Hỗ trợ, Mega, Berry và Thân thiết ở đây. PokéBox, Pokédex và Nâng cấp vẫn ở nút Pokémon ngoài menu, cho bạn thao tác lẹ.','Supports, Mega, Berries and Bond are here. Pokémon still has fast PokéBox, Dex and Upgrades.'),
+   tr('Tranh phòng đẹp là concept nha. Muốn trưng đồ thật thì phải chơi Co-op kiếm Xu Đồng Đội. Không có chuyện tui tặng miễn phí!','The room art is a concept. Earn Co-op Coins for real furniture later. This director gives no freebies!'),
+   tr('Tui không tự luyến. Tui chỉ có tố chất lãnh đạo và một cái tượng vàng cực kỳ xứng đáng thôi!','I am not vain. I just happen to deserve an extremely expensive golden statue.'),
+   tr('Nút nào cũng có chức năng. Bấm thử đi, ngó tui hoài phí nhan sắc lắm.','Every button does something. Try one instead of staring at my fabulous face!')
+  );
+  let index=0;message.textContent=talks[0];
+  const actions=document.createElement('div');actions.className='pkmsvv-research-pippi-actions';
+  const talk=document.createElement('button');talk.type='button';talk.className='pkmsvv-pc-close';
+  talk.dataset.researchPippiTalk='1';talk.textContent=tr('Pippi cà khịa','Pippi roasts');
+  talk.onclick=()=>{index=(index+1)%talks.length;message.textContent=talks[index];};
+  const tour=document.createElement('button');tour.type='button';tour.className='pkmsvv-pc-close';
+  tour.dataset.researchPippiTour='1';tour.textContent=tr('Pippi dẫn tour','Guided tour');
+  tour.onclick=()=>{
+   if(!G.PKMSVVPippiGuide?.open?.('laboratory'))message.textContent=
+    tr('Tui đã dẫn tour rồi đó! Muốn nghe tiếp thì bấm cà khịa.','Tour already given! Try the roast button.');
+  };
+  actions.append(talk,tour);
+  const status=document.createElement('small');status.className='pkmsvv-research-machine-state';
+  status.dataset.machineUnlocked=String(unlocked);
+  status.textContent=unlocked?tr('Máy phục nguyên: ĐÃ MỞ','Restoration machine: UNLOCKED'):
+   tr('Máy phục nguyên: KHÓA — chờ Co-op hóa thạch lần đầu','Restoration machine: LOCKED — first Fossil Co-op clear required');
+  companion.append(face,message,actions,status);hero.append(scene,companion);box.append(hero);
   const grid=document.createElement('div');grid.className='pkmsvv-pc-grid';
   if(window.__PKMSVV_PIPPI_QA)grid.dataset.pippiQaRevision=window.__PKMSVV_PIPPI_QA;
   box.append(grid);
@@ -459,7 +516,7 @@ G.PKMSVVWiki=(()=>{
     action:tr('Chăm sóc Pippi','Train Pippi'),onClick:pippiCorner});
   makeCard(grid,{title:tr('Hồi sinh hóa thạch','Fossil Restoration'),dex:140,
    desc:tr('Sưu tầm hóa thạch · Mở máy sau nhiệm vụ Co-op lần đầu.','Collect fossils · Unlock the machine on your first Co-op lab clear.'),
-   action:tr('Vào phòng thí nghiệm','Enter the lab'),onClick:fossilRestoration});
+   action:tr('Xem máy phục nguyên','View restoration machine'),onClick:fossilRestoration});
   const help=document.createElement('section');help.className='pkmsvv-pc-guide';
   const sub=document.createElement('h3');sub.textContent=tr('Kiến thức Pokémon','Pokémon knowledge');
   help.append(sub);
