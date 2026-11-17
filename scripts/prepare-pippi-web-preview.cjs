@@ -111,7 +111,12 @@ for(const prefix of ['game','ai/game']){
  fs.copyFileSync(present(path.join(root,'assets/research-station-icons.png')),
    path.join(dest,'images/pkmsvv-research-station-icons.png'));
  const labOut=path.join(dest,'images/coop-lab');
- for(const asset of ['room_base.png','room_art_qa_v2.webp','decor/machine_old.png','decor/kabuto_skeleton.png','decor/research_terminal.png']){
+ for(const asset of [
+  'room_base.png','room_art_qa_v2.webp','room_empty_modular.svg',
+  'decor/machine_old.png','decor/machine_old_modular.svg',
+  'decor/kabuto_skeleton.png','decor/research_terminal.png',
+  'decor/gold_pippi_statue.svg'
+ ]){
   const input=present(path.join(root,'assets/coop-lab',asset)),output=path.join(labOut,asset);
   fs.mkdirSync(path.dirname(output),{recursive:true});fs.copyFileSync(input,output);
  }
@@ -125,7 +130,7 @@ for(const prefix of ['game','ai/game']){
  if(!economySource.includes(commonImport)||!economySource.includes(commonExports))
   throw Error('Co-op economy browser adapter source drift');
  economySource=economySource.replace(commonImport,'const config='+JSON.stringify(economyConfig)+';')
-  .replace(commonExports,'return {config,normal,isMachineUnlocked,exchange,weekKey};');
+  .replace(commonExports,'return {config,normal,isMachineUnlocked,buy,equip,exchange,weekKey};');
  const browserEconomy='G.PKMSVVCoopEconomy=(()=>{\n'+economySource+'\n})();\n';
  new vm.Script(browserEconomy,{filename:'pkmsvv-coop-economy-qa.js'});
  write(path.join(dest,'js/ui/pkmsvv-coop-economy-qa.js'),browserEconomy);
@@ -189,7 +194,7 @@ for(const prefix of ['game','ai/game']){
 }
 const meta=JSON.parse(source('dist/cloudflare-v20-release/build-info.json'));
 Object.assign(meta,{releaseType:'qa-preview-only',pippiCousinQA:marker,
- previewBranch:'pippi-cousin-qa',version:'2.1.0-Research-Coop-Preview-QA',
+ previewBranch:'pippi-cousin-qa',version:'2.2.0-Modular-Fossils-Pippi-QA',
  description:'Isolated browser-only test; production pkmsvv-web.pages.dev unchanged'});
 write(path.join(site,'build-info.json'),JSON.stringify(meta,null,2)+'\n');
 // QA-only cache policy: browsers must revalidate the HTML and the two UI
@@ -204,7 +209,9 @@ const urls=['/game/','/game/index.html','/ai/game/','/ai/game/index.html',
  '/game/js/ui/pkmsvv-pippi-qa-identity.js','/ai/game/js/ui/pkmsvv-pippi-qa-identity.js',
  '/game/css/pkmsvv-pippi.css','/ai/game/css/pkmsvv-pippi.css',
  '/game/css/pkmsvv-pippi-guide.css','/ai/game/css/pkmsvv-pippi-guide.css',
- '/build-info.json'];
+ '/game/images/coop-lab/room_empty_modular.svg','/ai/game/images/coop-lab/room_empty_modular.svg',
+  '/game/images/coop-lab/decor/gold_pippi_statue.svg','/ai/game/images/coop-lab/decor/gold_pippi_statue.svg',
+  '/build-info.json'];
 const noStore=urls.map(u=>u+'\n  Cache-Control: no-store, max-age=0').join('\n');
 write(headersPath,previousHeaders.trimEnd()+'\n\n'+noStore+'\n');
 // Unique SW key ensures QA does not reuse the public revision.
