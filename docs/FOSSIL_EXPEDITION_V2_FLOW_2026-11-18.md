@@ -26,3 +26,12 @@
 - Production giữ nguyên: https://pkmsvv-web.pages.dev/
 - Chỉ một Beta cố định: https://beta.pkmsvv-web.pages.dev/game/
 - Ngăn mọi triển khai Beta nếu CI unit + Chromium smoke + 115-giây soak + remote Cloudflare smoke không PASS.
+
+## Kết quả Web Beta QA 2.5.0
+
+- Workflow: https://github.com/votrivalley/PKMSVV/actions/runs/44158188184 — **Success**.
+- Đã deploy và xác minh trực tiếp: https://beta.pkmsvv-web.pages.dev/game/ ; source commit `5fd82251e1bb42be22c0c15020b4b4b289b544cd`.
+- Node unit tests 52/52 PASS; bao gồm lần đầu Pippi nói về từng mode, 9 mảnh, Rotom deadline 4 phút, hộ tống, bảo vệ máy và auto thắng phút 8.
+- Chromium trên code build và URL Cloudflare PASS: Co-op tạo phòng, ít nhất 1 bot, AI di chuyển thực tế ~439 px trong 11 giây, mine một đá, cả hai atlas load và `spriteReady=true`.
+- Soak 115 giây PASS: đồng hồ game tiến ~111,23 giây, maxStalls=0, AI chuyển động, errors=0, consoleErrors=0.
+- **Giới hạn:** chưa chạy kiểm thử end-to-end 8 phút thật; các phép thử unit có mô phỏng đồng hồ từng giây nhưng không thay thế chơi trọn trận. Đồng bộ 2+ người thật và thưởng thật vẫn chưa được chứng nhận. Beta giữ phần thưởng tắt. Không triển khai production.
