@@ -188,7 +188,7 @@ jobs:
           test -s decoded-android/assets/public/images/pippi/Sleep-Anim.png
           test -s decoded-android/assets/public/images/pippi/portrait/Happy.png
           test -s decoded-android/assets/public/images/pippi/skill-icons.png
-          for file in room_base.png decor/machine_old.png decor/kabuto_skeleton.png decor/research_terminal.png; do
+          for file in room_base.png room_art_qa_v2.webp decor/machine_old.png decor/kabuto_skeleton.png decor/research_terminal.png; do
             test -s "decoded-android/assets/public/images/coop-lab/$file"
           done
           test -s decoded-android/assets/public/images/pippi/portrait/Worried.png

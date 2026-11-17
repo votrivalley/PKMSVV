@@ -42,3 +42,23 @@ test('only the three approved sample items are in prototype; eight fixed slots r
   assert.ok(direction.items.find(x=>x.id===name)&&fs.existsSync(path.join(root,'assets/coop-lab/decor/'+name+'.png')));
  assert.equal(direction.items.length,11,'catalog slots are future work; do not pretend all items are drawn');
 });
+
+test('art QA V2 uses detailed 960x672 206KB WebP instead of enlarging three toy-scale sprites',()=>{
+ const crypto=require('node:crypto');
+ const scene=fs.readFileSync(path.join(root,'assets/coop-lab/room_art_qa_v2.webp'));
+ assert.equal(scene.subarray(0,4).toString('ascii'),'RIFF');
+ assert.equal(scene.subarray(8,12).toString('ascii'),'WEBP');
+ assert.equal(scene.subarray(12,16).toString('ascii'),'VP8 ');
+ assert.equal(scene.readUInt16LE(26)&0x3fff,960);
+ assert.equal(scene.readUInt16LE(28)&0x3fff,672);
+ assert.equal(crypto.createHash('sha256').update(scene).digest('hex'),'2b3e5295ae0a291dfc21fa6741eebf72d69ba05c1614f128545b1e750a1b6b44');
+ assert.ok(scene.length>100000&&scene.length<250000,'QA artwork mobile budget');
+ const wiki=fs.readFileSync(path.join(root,'src/pkmsvv-wiki.js'),'utf8');
+ const css=fs.readFileSync(path.join(root,'src/pkmsvv-pc-menu-clean-qa.css'),'utf8');
+ assert.match(wiki,/data\.pkmsvvLabArtPreview='2'/);
+ assert.equal((wiki.match(/btn\.dataset\.labSlot=id/g)||[]).length,1);
+ assert.doesNotMatch(wiki,/pkmsvv-lab-art-sprite/,'legacy toy overlays should not cover new concept');
+ assert.match(css,/room_art_qa_v2\.webp/);
+ assert.doesNotMatch(css,/\.pkmsvv-lab-art-machine\{/);
+ assert.match(css,/image-rendering:auto/);
+});

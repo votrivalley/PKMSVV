@@ -88,7 +88,7 @@ for(const filename of ['pkmsvv-box-stage1.css','pkmsvv-box-stage2.css','pkmsvv-b
  fs.copyFileSync(atlas,path.join(out,'atlas.png'));
 }
 const labOut=path.join(web,'images/coop-lab');
-for(const asset of ['room_base.png','decor/machine_old.png','decor/kabuto_skeleton.png','decor/research_terminal.png']){
+for(const asset of ['room_base.png','room_art_qa_v2.webp','decor/machine_old.png','decor/kabuto_skeleton.png','decor/research_terminal.png']){
  const src=path.join(root,'assets/coop-lab',asset),target=path.join(labOut,asset);
  if(!fs.existsSync(src))throw Error('Missing local Fossil Lab art: '+asset);
  fs.mkdirSync(path.dirname(target),{recursive:true});fs.copyFileSync(src,target);

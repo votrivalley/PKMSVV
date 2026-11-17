@@ -103,7 +103,7 @@ for(const prefix of ['game','ai/game']){
   write(path.join(dest,'css',filename),source('src/'+filename));
  }
  const labOut=path.join(dest,'images/coop-lab');
- for(const asset of ['room_base.png','decor/machine_old.png','decor/kabuto_skeleton.png','decor/research_terminal.png']){
+ for(const asset of ['room_base.png','room_art_qa_v2.webp','decor/machine_old.png','decor/kabuto_skeleton.png','decor/research_terminal.png']){
   const input=present(path.join(root,'assets/coop-lab',asset)),output=path.join(labOut,asset);
   fs.mkdirSync(path.dirname(output),{recursive:true});fs.copyFileSync(input,output);
  }
