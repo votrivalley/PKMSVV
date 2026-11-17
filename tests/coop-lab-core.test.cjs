@@ -24,8 +24,8 @@ test('fixed 8-slot lab catalog, detached art and 9999-coin golden Pippi trophy',
 test('unclaimed Kabuto fossil never unlocks restoration machine or store',()=>{
  const save={pkmsvvFossils:{guaranteedKabuto:true,inventory:{dome_fossil:1}}};
  assert.equal(lab.isMachineUnlocked(save),false);
- assert.equal(lab.buy(save,'kabuto_skeleton',()=>true).reason,'locked');
- assert.equal(lab.equip(save,'shelf_left','kabuto_skeleton',()=>true).reason,'locked');
+ assert.equal(lab.buy(save,'gold_pippi_statue',()=>true).reason,'locked');
+ assert.equal(lab.equip(save,'trophy','gold_pippi_statue',()=>true).reason,'locked');
  assert.equal(save.pkmsvvCoopLab,undefined);
 });
 test('first validated Co-op clear unlocks machine and gives equal solo-AI rewards',()=>{
@@ -42,20 +42,15 @@ test('first validated Co-op clear unlocks machine and gives equal solo-AI reward
  assert.equal(lab.settle(save,receipt(4),()=>true).reason,'sequence');
  assert.equal(save.pkmsvvCoopLab.coopCoins,220);
 });
-test('purchase and equip are atomic, compatible with same specimen in either shelf',()=>{
+test('all furnishing pieces baked into the original painting remain non-purchasable',()=>{
  const save={};lab.settle(save,receipt(1,2),()=>true);
- assert.equal(save.pkmsvvCoopLab.coopCoins,240);
- assert.equal(lab.buy(save,'kabuto_skeleton',()=>true).reason,'coins');
  lab.settle(save,receipt(2,2),()=>true);
  assert.equal(save.pkmsvvCoopLab.coopCoins,400);
- assert.equal(lab.buy(save,'kabuto_skeleton',()=>false).reason,'save');
- assert.equal(save.pkmsvvCoopLab.coopCoins,400);
- assert.equal(lab.buy(save,'kabuto_skeleton',()=>true).ok,true);
- assert.equal(save.pkmsvvCoopLab.coopCoins,80);
- assert.equal(lab.buy(save,'kabuto_skeleton',()=>true).reason,'owned');
- assert.equal(lab.equip(save,'wall_left','kabuto_skeleton',()=>true).reason,'slot');
- assert.equal(lab.equip(save,'shelf_left','kabuto_skeleton',()=>true).ok,true);
- assert.equal(lab.equip(save,'shelf_right','kabuto_skeleton',()=>true).ok,true);
+ assert.equal(lab.buy(save,'kabuto_skeleton',()=>true).reason,'unavailable');
+ assert.equal(lab.buy(save,'research_terminal',()=>true).reason,'unavailable');
+ assert.equal(lab.equip(save,'shelf_left','kabuto_skeleton',()=>true).reason,'slot');
+ assert.equal(lab.equip(save,'desk','research_terminal',()=>true).reason,'slot');
+ assert.equal(save.pkmsvvCoopLab.coopCoins,400,'original-scene furniture must never charge coins');
  assert.equal(lab.equip(save,'center',null,()=>true).reason,'machine-required');
  assert.equal(lab.equip(save,'shelf_left',null,()=>true).ok,true);
 });
