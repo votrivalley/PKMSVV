@@ -1,0 +1,64 @@
+name: Fossil Expedition Native Game QA (never production)
+on:
+  push:
+    branches: [fix/pippi-follow-menu-qa-20261115]
+    paths:
+      - '.github/workflows/fossil-native-game-qa.yml'
+      - 'scripts/prepare-web.cjs'
+      - 'scripts/patch-fossil-expedition-native.cjs'
+      - 'src/pkmsvv-fossil-expedition-core.cjs'
+      - 'src/pkmsvv-fossil-expedition-native.js'
+      - 'src/shared/coop-unified.js'
+      - 'src/lan/solo-ai-bus.js'
+      - 'lan-server/server.cjs'
+      - 'tests/fossil-expedition-native-browser.cjs'
+      - 'tests/fossil-expedition-core.test.cjs'
+      - 'tests/fossil-expedition-routing.test.cjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: fossil-native-game-qa
+  cancel-in-progress: true
+jobs:
+  actual-gameplay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      PKMSVV_FOSSIL_NATIVE_QA: '1'
+      PKMSVV_STANDALONE_AI: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch exact locked upstream game source
+        run: |
+          git init vendor/pokesurvivor
+          git -C vendor/pokesurvivor remote add origin https://github.com/JPTER78/pokesurvivor.git
+          git -C vendor/pokesurvivor fetch --depth 1 origin 11fe868c640b62ac37beacc222e056bc4d9ec892
+          git -C vendor/pokesurvivor checkout --detach FETCH_HEAD
+      - name: Install build dependencies
+        run: npm install --no-audit --no-fund
+      - name: Check 2–4 room rules and 6–8 minute outcome core
+        run: node --test tests/fossil-expedition-core.test.cjs tests/fossil-expedition-routing.test.cjs tests/coop-lab-core.test.cjs
+      - name: Compile genuine offline LAN/AI native game with QA-only fossil hooks
+        run: npm run prepare:lan
+      - name: Verify compiled engine has dedicated native fifth mode (not fake HTML preview)
+        run: |
+          set -euo pipefail
+          test -s dist/lan/game/js/app.min.js
+          test -s dist/lan/game/index.html
+          grep -Fq 'PKMSVVFossilExpedition' dist/lan/game/js/app.min.js
+          grep -Fq 'fossil_lab' dist/lan/game/js/app.min.js
+      - name: Chromium: create real Fossil Expedition + AI room, start game, strike world rock
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+        run: timeout 120s node tests/fossil-expedition-native-browser.cjs
+      - name: Package QA-only executable HTML5 game (never production)
+        uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-Fossil-Native-Gameplay-QA
+          path: dist/lan/
+          retention-days: 7
+          if-no-files-found: error
