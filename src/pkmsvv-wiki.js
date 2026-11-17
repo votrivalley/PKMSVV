@@ -563,13 +563,69 @@ G.PKMSVVWiki=(()=>{
     tip:'Ủa, muốn có trợ lý Pokémon? Tui là trưởng phòng nhưng không nhận thêm việc đâu nha!'},
    {id:'mega',x:224,y:75,w:89,h:54,vi:'Mega',en:'Mega',
     tip:'Mega thì mạnh đó. Nhưng nhớ nha: biến hình không chữa được tật bấm loạn nút!'},
-   {id:'berry',x:8,y:145,w:90,h:61,vi:'Berry',en:'Berries',
+   {id:'berry',x:10,y:150,w:92,h:65,vi:'Berry',en:'Berries',
     tip:'Berry thì ăn được. Còn mẫu cây tiền sử kia? Đừng có hái nấu canh!'},
-   {id:'companion',x:235,y:133,w:78,h:42,vi:'Bạn đồng hành',en:'Companions',
-    tip:'Bấm vào đây mà chăm sóc giám đốc Pippi. Tui muốn tăng lương bằng kẹo!'},
+   // Lower-right workbench: the visible egg belongs to Bạn đồng hành,
+   // not to a floating toolbar icon or the unrelated support station.
+   {id:'companion',x:213,y:151,w:96,h:64,vi:'Bạn đồng hành',en:'Companions',
+    tip:'Đụng vào quả trứng này là tới phòng chăm sóc đồng hành. Đừng bắt tui ấp hộ nha!'},
    {id:'fossil',x:115,y:62,w:91,h:82,vi:'Phục nguyên',en:'Restore fossils',
     tip:'Máy phục nguyên chưa tự chạy bằng niềm tin đâu nha. Hoàn thành Co-op lần đầu trước!'}
   ];
+  // Four pixel-art furnishings belong INSIDE the illustrated room, each on
+  // its own clickable station. The central fossil machine already exists in
+  // the background artwork, so its hit area remains visually unobstructed.
+  // SVG stays inline: PC/Android/Web QA need no new network image requests.
+  const stationArt={
+   support:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" aria-hidden="true">
+    <ellipse cx="40" cy="72" rx="27" ry="5" fill="#0e1d29" opacity=".48"/>
+    <path d="M18 25H62V63H18Z" fill="#122c39" stroke="#0b1827" stroke-width="4"/>
+    <path d="M23 29H57V52H23Z" fill="#6ac1b5" stroke="#c8f0db" stroke-width="3"/>
+    <rect x="28" y="34" width="10" height="12" rx="4" fill="#fff2bd"/>
+    <rect x="41" y="35" width="12" height="11" rx="4" fill="#ffb3c6"/>
+    <rect x="35" y="37" width="3" height="3" fill="#5b7280"/>
+    <rect x="45" y="37" width="3" height="3" fill="#5b7280"/>
+    <path d="M37 18H43V10H49V18H57V24H49V31H43V24H37Z" fill="#b5f394" stroke="#133a38" stroke-width="2"/>
+    <path d="M26 57H54V64H26Z" fill="#b58a58" stroke="#0e1d29" stroke-width="3"/>
+    <rect x="33" y="60" width="14" height="4" fill="#f8da91"/>
+   </svg>`,
+   mega:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" aria-hidden="true">
+    <ellipse cx="40" cy="73" rx="25" ry="5" fill="#0e1d29" opacity=".45"/>
+    <path d="M20 61H60V70H20Z" fill="#805b45" stroke="#172731" stroke-width="4"/>
+    <path d="M28 53H52V61H28Z" fill="#caa46c" stroke="#172731" stroke-width="3"/>
+    <path d="M40 9L58 27L53 48L40 58L27 48L22 27Z" fill="#cc7eed" stroke="#251b47" stroke-width="4"/>
+    <path d="M40 13L40 54L27 45L26 28Z" fill="#b1a4f5"/>
+    <path d="M43 15L54 28L49 45L43 53Z" fill="#7137b2"/>
+    <path d="M40 19L49 29L42 37L32 30Z" fill="#f5c9ff"/>
+    <path d="M14 25H21V20H25V25H32V29H25V35H21V29H14Z" fill="#f9e39a"/>
+    <path d="M59 15H64V20H70V24H64V30H59V24H54V20H59Z" fill="#f9e39a"/>
+   </svg>`,
+   berry:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" aria-hidden="true">
+    <ellipse cx="40" cy="74" rx="27" ry="5" fill="#101d29" opacity=".4"/>
+    <path d="M26 56H54L49 70H31Z" fill="#b5764f" stroke="#2b2b32" stroke-width="4"/>
+    <rect x="35" y="39" width="9" height="19" fill="#587e4e"/>
+    <path d="M40 39C17 37 13 25 21 18C33 17 41 25 40 39Z" fill="#80bd63" stroke="#214f43" stroke-width="3"/>
+    <path d="M42 34C44 16 58 12 65 18C66 29 54 35 42 34Z" fill="#94d36b" stroke="#214f43" stroke-width="3"/>
+    <path d="M33 45C17 44 12 52 15 59C24 63 34 55 33 45Z" fill="#68a55b" stroke="#214f43" stroke-width="3"/>
+    <path d="M44 46C57 41 66 44 67 54C60 61 50 57 44 46Z" fill="#68a55b" stroke="#214f43" stroke-width="3"/>
+    <rect x="27" y="36" width="15" height="15" rx="5" fill="#d75592" stroke="#512c5a" stroke-width="3"/>
+    <rect x="44" y="37" width="15" height="15" rx="5" fill="#8063cc" stroke="#423069" stroke-width="3"/>
+    <rect x="34" y="49" width="15" height="13" rx="5" fill="#ef7d4f" stroke="#683d45" stroke-width="3"/>
+    <rect x="30" y="39" width="4" height="4" fill="#ffe7c4"/>
+    <rect x="48" y="40" width="4" height="4" fill="#ddd2ff"/>
+    <rect x="38" y="51" width="4" height="4" fill="#fff0b6"/>
+   </svg>`,
+   companion:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" aria-hidden="true">
+    <ellipse cx="40" cy="74" rx="29" ry="5" fill="#111f2d" opacity=".4"/>
+    <path d="M15 57L23 68H57L65 57L55 50H25Z" fill="#ae8858" stroke="#28323a" stroke-width="4"/>
+    <path d="M25 54C25 32 29 15 40 13C54 13 59 32 57 54C53 63 30 65 25 54Z" fill="#fff0d4" stroke="#493e62" stroke-width="4"/>
+    <path d="M30 31L37 28L42 36L36 42L29 39Z" fill="#d989b8"/>
+    <path d="M45 23L52 27L54 35L46 36L42 29Z" fill="#d989b8"/>
+    <path d="M34 49L42 44L49 51L45 56H37Z" fill="#f5c6dc"/>
+    <path d="M24 58H55" stroke="#ffd995" stroke-width="4"/>
+    <path d="M61 12L64 18L70 20L64 24L61 30L58 24L52 20L58 18Z" fill="#ffe9a1" stroke="#ad7957" stroke-width="2"/>
+   </svg>`
+  };
   const speech=document.createElement('p');speech.className='pkmsvv-research-pippi-line';
   speech.setAttribute('aria-live','polite');
   const hotspotButtons=[];
@@ -579,11 +635,17 @@ G.PKMSVVWiki=(()=>{
    b.style.left=z.x/320*100+'%';b.style.top=z.y/224*100+'%';
    b.style.width=z.w/320*100+'%';b.style.height=z.h/224*100+'%';
    b.setAttribute('aria-label',tr('Mở '+z.vi,'Open '+z.en));
+   // The artwork is scenery, not an icon attached to a UI chip.
+   // The whole furnishing (including its small caption) remains tappable.
+   if(stationArt[z.id]){
+    const prop=document.createElement('span');prop.className='pkmsvv-research-scene-object';
+    prop.dataset.researchObject=z.id;prop.setAttribute('aria-hidden','true');
+    prop.innerHTML=stationArt[z.id];b.append(prop);
+   }
    const tag=document.createElement('span');tag.className='pkmsvv-research-hotspot-tag';
-   const glyph=document.createElement('span');glyph.className='pkmsvv-research-glyph';
-   glyph.dataset.researchGlyph=z.id;glyph.setAttribute('aria-hidden','true');
    const label=document.createElement('span');label.className='pkmsvv-research-tag-copy';
-   label.textContent=tr(z.vi,z.en);tag.append(glyph,label);b.append(tag);
+   label.textContent=tr(z.vi,z.en);tag.append(label);b.append(tag);
+   b.title=tr('Nhấn vào '+z.vi,'Open '+z.en);
    b.addEventListener('mouseenter',()=>{if(G.I18n?.lang!=='en')speech.textContent=z.tip;});
    b.addEventListener('focus',()=>{speech.textContent=tr(z.tip,'Select '+z.en+' to open this research station.');});
    b.onclick=()=>invoke(z.id);
