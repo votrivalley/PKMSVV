@@ -124,6 +124,57 @@ async function main(){
   assert.deepEqual(pc.hotspots,['support','mega','berry','companion','fossil'],'five clickable research machines');
   assert.equal(pc.buildButton,true,'Build mode button must be visible');
   assert.equal(pc.oldCardsHidden,true,'old PC card interface must NOT be shown on entry');
+  const nativeMenuFix=await js(`(()=>{
+   const button=document.querySelector('#pkmsvv-menu-wiki');
+   const old=button.onclick;let oldHandlerFired=false;
+   G.PKMSVVWiki.close();
+   try{
+    button.onclick=()=>{oldHandlerFired=true;};
+    button.click();
+    const title=document.querySelector('#pkmsvv-wiki-overlay h2')?.textContent;
+    const lab=document.querySelector('#pkmsvv-wiki-overlay [data-pkmsvv-research-hub]')?.dataset.pkmsvvResearchHub;
+    const img=button.querySelector('.pkmsvv-research-menu-image');
+    return {oldHandlerFired,title,lab,square:img?.naturalWidth===42&&img?.naturalHeight===42,
+      image:!!img,iconStyle:img?getComputedStyle(img).objectFit:null,
+      windowCapture:!!window.__pkmsvvResearchEntryCapture};
+   }finally{button.onclick=old;}
+  })()`);
+  console.log('RESEARCH_LAB_STALE_HANDLER_PROTECTION='+JSON.stringify(nativeMenuFix));
+  assert.equal(nativeMenuFix.oldHandlerFired,false,'legacy PC onclick must never hijack Research Lab');
+  assert.equal(nativeMenuFix.lab,'2','menu launcher must open the actual illustrated room');
+  assert.match(nativeMenuFix.title,/PHÒNG NGHIÊN CỨU|RESEARCH LAB/);
+  assert.equal(nativeMenuFix.image,true,'menu icon must be a real square image');
+  assert.equal(nativeMenuFix.square,true,'research icon must preserve its native 42x42 size');
+  assert.equal(nativeMenuFix.iconStyle,'contain','research icon must not stretch or squash');
+  assert.equal(nativeMenuFix.windowCapture,true);
+  const megaFlow=await js(`(()=>{
+   G.PKMSVVWiki.open();
+   document.querySelector('#pkmsvv-wiki-overlay [data-research-hotspot="mega"]')?.click();
+   const box=document.querySelector('#pkmsvv-mega-phase1');
+   const opened=!!box&&!box.hidden,button=box?.querySelector('[data-mega-close]');
+   const text=button?.textContent||'';
+   if(opened)button.click();
+   return {opened,backText:text,returned:!!document.querySelector('#pkmsvv-wiki-overlay [data-pkmsvv-research-hub]')};
+  })()`);
+  console.log('RESEARCH_LAB_MEGA_RETURN='+JSON.stringify(megaFlow));
+  if(megaFlow.opened){
+   assert.match(megaFlow.backText,/Phòng nghiên cứu|Research Lab/);
+   assert.equal(megaFlow.returned,true,'Mega close must return to Research Lab when opened from room');
+  }
+  const supportFlow=await js(`(()=>{
+   G.PKMSVVWiki.open();
+   document.querySelector('#pkmsvv-wiki-overlay [data-research-hotspot="support"]')?.click();
+   const box=document.querySelector('#pkmsvv-support-catalog');
+   const opened=!!box&&!box.hidden,button=box?.querySelector('.pkmsvv-support-modal-head button');
+   const text=button?.textContent||'';
+   if(opened)button.click();
+   return {opened,backText:text,returned:!!document.querySelector('#pkmsvv-wiki-overlay [data-pkmsvv-research-hub]')};
+  })()`);
+  console.log('RESEARCH_LAB_SUPPORT_RETURN='+JSON.stringify(supportFlow));
+  if(supportFlow.opened){
+   assert.match(supportFlow.backText,/Phòng nghiên cứu|Research Lab/);
+   assert.equal(supportFlow.returned,true,'Support close must return to Research Lab when opened from room');
+  }
   const buildMode=await js(`(()=>{
    const previous=JSON.stringify(G.DB.save);
    document.querySelector('#pkmsvv-wiki-overlay [data-research-build]')?.click();
