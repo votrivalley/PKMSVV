@@ -984,8 +984,13 @@ G.PKMSVVWiki=(()=>{
   overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
   // Avoid browser scrollIntoView repositioning the entire PC/Android panel.
   x.focus({preventScroll:true});
+  // Run the introduction AT ROOM ENTRY, never after leaving the room.
+  // Guide.queue opens immediately if no other dialogue is active, or stores
+  // the Lab tour behind the current starter dialogue without overlaying it.
+  if(G.DB?.save&&!G.DB.save.pkmsvvPippiGuide?.laboratory)
+   G.PKMSVVPippiGuide?.queue?.('laboratory');
   // Only a connected controller may auto-select a focusable menu item.
-  if(G.Pad?.name)G.Pad?.focusFirst?.();return true;
+  if(G.Pad?.name&&!G.PKMSVVPippiGuide?.isOpen)G.Pad?.focusFirst?.();return true;
  }
  function install(){
   installStyle();installMenu();
