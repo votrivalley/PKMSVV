@@ -267,47 +267,39 @@ async function main(){
   assert.equal(companion.visible,true,'PC companion training dialog must open');
   assert.ok(companion.training.includes('cousin'),'Learnable Pikachu cousin skill missing from PC');
   const fossilMission=await js(`(()=>{
+    G.MenuUI.open();
+    document.querySelector('#scr-menu [data-go="multiplayer"]')?.click();
     const api=G.PKMSVVFossilMissionQA;
-    const installed=api?.install?.()===true||
-     !!document.getElementById('pkmsvv-quick-fossil-lab');
-    const card=document.getElementById('pkmsvv-quick-fossil-lab');
+    const host=document.querySelector('#pkmsvv-coop-modes');
+    const installed=api?.install?.();
+    const card=host?.querySelector('[data-coop-mission="fossil_lab"]');
     const title=card?.querySelector('.pkmsvv-mode-title')?.textContent||'';
-    const mode=card?.dataset.coopMission;
     const before=JSON.stringify(G.DB?.save);
+    const cards=[...(host?.querySelectorAll('button.pkmsvv-mode-card')||[])];
+    const legacyModes=cards.filter(x=>x.dataset.mode).map(x=>x.dataset.mode);
+    const visible=!!card?.offsetWidth&&!!card?.offsetHeight;
     card?.click();
     const overlay=document.getElementById('pkmsvv-coop-fossil-info');
-    const text=overlay?.textContent||'';
+    const txt=overlay?.textContent||'';
     overlay?.querySelector('button')?.click();
-    return {installed,title,mode,modal:!!overlay,
-      explainedLocked:/Chưa thể bắt đầu|Not playable/.test(text),
+    return {installed,title,visible,modes:legacyModes,
+      count:cards.length,infoOpen:!!overlay,
+      explainedLocked:/Chưa thể bắt đầu|Not playable/.test(txt),
       noSaveMutation:before===JSON.stringify(G.DB?.save),
-      playable:api?.playable};
+      playable:api?.playable,closed:!document.getElementById('pkmsvv-coop-fossil-info')};
    })()`);
   console.log('PIPPI_WEB_FOSSIL_COOP_MISSION='+JSON.stringify(fossilMission));
-  assert.equal(fossilMission.installed,true,'Co-op Fossil Expedition must be a visible fifth mode tile');
+  assert.equal(fossilMission.installed,true,'Native Co-op selector must accept Fossil Expedition');
+  assert.equal(fossilMission.visible,true,'Fossil Expedition must be VISIBLE inside #pkmsvv-coop-modes');
+  assert.equal(fossilMission.count,5,'Co-op menu should show its original four cards plus Fossil Expedition');
+  assert.deepEqual(fossilMission.modes,['coop','royale','eggrush','berry'],'original native modes must not change');
   assert.match(fossilMission.title,/Khai quật hóa thạch|Fossil Expedition/);
-  assert.equal(fossilMission.mode,'fossil_lab');
-  assert.equal(fossilMission.modal,true,'Fossil Expedition must explain objectives');
-  assert.equal(fossilMission.explainedLocked,true,'Do not pretend unreleased Co-op mission is playable');
-  assert.equal(fossilMission.noSaveMutation,true,'Co-op mission preview must not award coins or edit a save');
+  assert.equal(fossilMission.infoOpen,true,'Mission card should show objectives and status');
+  assert.equal(fossilMission.explainedLocked,true,'unfinished mode must never masquerade as playable');
+  assert.equal(fossilMission.noSaveMutation,true,'preview cannot edit save or mint rewards');
+  assert.equal(fossilMission.closed,true);
   assert.equal(fossilMission.playable,false);
   if(process.env.PKMSVV_PIPPI_UI_ONLY==='1'){
-   const coProbe=await js(`(()=>{
-    document.querySelectorAll('#pkmsvv-wiki-overlay').forEach(x=>x.remove());
-    G.MenuUI.open();
-    const screen=[...document.querySelectorAll('section.scr,.scr,[role="dialog"]')].filter(e=>!e.classList.contains('hidden')).map(e=>({id:e.id,txt:e.textContent.trim().slice(0,400)}));
-    const candidates=[...document.querySelectorAll('button')].filter(e=>/Co-op|Sống Sót|Sống sót|Đồng Đội|Chơi với AI|Hợp tác/i.test(e.textContent||'')).slice(0,30).map(e=>({id:e.id,cls:e.className,txt:e.textContent.trim().slice(0,85),outer:e.outerHTML.slice(0,420)}));
-    const nav=document.querySelector('#scr-menu [data-go="multiplayer"]');
-    nav?.click();
-    const chooser=document.querySelector('#pkmsvv-coop-modes');
-    const realCards=[...(chooser?.querySelectorAll('button')||[])].map(e=>({
-      id:e.id,mode:e.dataset.mode,text:e.textContent.slice(0,100),
-      visible:!!(e.offsetWidth&&e.offsetHeight),html:e.outerHTML.slice(0,370)}));
-    const live=[...document.querySelectorAll('section.scr,.scr,[role="dialog"]')].filter(e=>!e.classList.contains('hidden')&&!!(e.offsetWidth||e.offsetHeight)).map(e=>({id:e.id,txt:e.textContent.trim().slice(0,150)}));
-    return {state:G.Game?.state,screen,candidates,menuKeys:Object.keys(G.MenuUI||{}),chooserPresent:!!chooser,
-      cards:realCards,live,uiKeys:Object.keys(G).filter(k=>/Lan|Multiplayer|Lobby|Coop|Mode/.test(k)).slice(0,35)};
-   })()`);
-   console.log('PIPPI_COOP_REAL_MENU_PROBE='+JSON.stringify(coProbe));
    console.log('PASS PIPPI_RESEARCH_UI_2_2_COOP_FOSSIL_MODULAR_PREVIEW');
    return;
   }
