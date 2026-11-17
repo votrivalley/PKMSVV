@@ -1030,3 +1030,59 @@
  #pkmsvv-wiki-overlay .pkmsvv-research-pixel-art[data-research-pixel="fossil"]{background-position:-128px 0}
  #pkmsvv-wiki-overlay .pkmsvv-research-hotspot-tag{padding:2px 4px!important;margin-bottom:2px!important}
 }
+
+/* RESEARCH_CLASSIC_RESTORED_V6 — keep the original detailed 960×672 pixel-art
+   as the default!  The earlier empty SVG was a geometry prototype and is
+   never an adequate substitute for the hand-painted original.
+   Upgrades need source-derived alpha layers and an inpainted original backdrop;
+   until those pass art QA, don't show the crude 'empty-room' to the player. */
+#pkmsvv-wiki-overlay .pkmsvv-research-room,
+#pkmsvv-wiki-overlay .pkmsvv-build-stage{
+ background:#174850 url('../images/coop-lab/room_art_qa_v2.webp')
+   center/100% 100% no-repeat!important;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-room:not(.pkmsvv-research-layout-preview) .pkmsvv-lab-furniture,
+#pkmsvv-wiki-overlay .pkmsvv-build-stage .pkmsvv-lab-furniture{
+ display:none!important;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-room:not(.pkmsvv-research-layout-preview) .pkmsvv-lab-furniture[data-furniture="gold_pippi_statue"],
+#pkmsvv-wiki-overlay .pkmsvv-build-stage .pkmsvv-lab-furniture[data-furniture="gold_pippi_statue"]{
+ display:block!important; z-index:3!important;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-room.pkmsvv-research-layout-preview{
+ background-image:url('../images/coop-lab/room_empty_modular.svg')!important;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-scene-object{
+ width:min(38px,35%)!important; height:38px!important;
+ max-height:calc(100% - 19px)!important;min-width:0!important;
+ padding:0!important; aspect-ratio:1/1!important;
+ background:transparent!important;
+ border:0!important; box-shadow:none!important;
+ filter:drop-shadow(0 2px 1px #091a28bb);
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-pixel-art{
+ width:36px!important;height:36px!important;flex-basis:36px!important;
+ background-size:180px 36px!important;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-pixel-art[data-research-pixel="support"]{background-position:0 0!important}
+#pkmsvv-wiki-overlay .pkmsvv-research-pixel-art[data-research-pixel="mega"]{background-position:-36px 0!important}
+#pkmsvv-wiki-overlay .pkmsvv-research-pixel-art[data-research-pixel="berry"]{background-position:-72px 0!important}
+#pkmsvv-wiki-overlay .pkmsvv-research-pixel-art[data-research-pixel="companion"]{background-position:-108px 0!important}
+#pkmsvv-wiki-overlay .pkmsvv-research-pixel-art[data-research-pixel="fossil"]{background-position:-144px 0!important}
+#pkmsvv-wiki-overlay .pkmsvv-research-hotspot-tag{
+ padding:3px 7px!important;min-height:18px!important;
+ background:rgba(13,40,51,.84)!important;box-shadow:0 2px 2px #051a24aa!important;
+}
+@media(max-width:590px){
+ #pkmsvv-wiki-overlay .pkmsvv-research-scene-object{
+  width:27px!important;height:27px!important;
+ }
+ #pkmsvv-wiki-overlay .pkmsvv-research-pixel-art{
+  width:25px!important;height:25px!important;flex-basis:25px!important;
+  background-size:125px 25px!important;
+ }
+ #pkmsvv-wiki-overlay .pkmsvv-research-pixel-art[data-research-pixel="mega"]{background-position:-25px 0!important}
+ #pkmsvv-wiki-overlay .pkmsvv-research-pixel-art[data-research-pixel="berry"]{background-position:-50px 0!important}
+ #pkmsvv-wiki-overlay .pkmsvv-research-pixel-art[data-research-pixel="companion"]{background-position:-75px 0!important}
+ #pkmsvv-wiki-overlay .pkmsvv-research-pixel-art[data-research-pixel="fossil"]{background-position:-100px 0!important}
+}
