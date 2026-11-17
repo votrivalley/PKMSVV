@@ -52,10 +52,12 @@ jobs:
           node scripts/fetch-pippi-pmd.cjs
           node scripts/build-pippi-portrait-atlas.cjs
           node scripts/prepare-pippi-web-preview.cjs
+          jq --arg commit "$GITHUB_SHA" '.previewBranch="research-ui-qa" | .qaCommit=$commit' dist/cloudflare-v20-release/build-info.json > /tmp/research-build-info-stage.json
+          mv /tmp/research-build-info-stage.json dist/cloudflare-v20-release/build-info.json
       - name: Verify latest room UI exists in BOTH game routes and no production build is touched
         run: |
           set -euo pipefail
-          jq -e '.releaseType=="qa-preview-only" and .version=="2.1.0-Research-Coop-Preview-QA"' dist/cloudflare-v20-release/build-info.json
+          jq -e --arg commit "$GITHUB_SHA" '.releaseType=="qa-preview-only" and .version=="2.1.0-Research-Coop-Preview-QA" and .previewBranch=="research-ui-qa" and .qaCommit==$commit' dist/cloudflare-v20-release/build-info.json
           for route in game ai/game; do
             js="dist/cloudflare-v20-release/$route/js/ui/pkmsvv-wiki-qa.js"
             css="dist/cloudflare-v20-release/$route/css/pkmsvv-pc-menu-clean-qa.css"
@@ -89,7 +91,7 @@ jobs:
           url='https://research-ui-qa.pkmsvv-web.pages.dev/build-info.json'
           for attempt in 1 2 3 4 5 6; do
             if curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "$url?rev=${GITHUB_SHA}-${attempt}" -o /tmp/research-build-info.json &&
-               jq -e --arg commit "${GITHUB_SHA:0:12}" '.releaseType=="qa-preview-only" and .version=="2.1.0-Research-Coop-Preview-QA" and .previewBranch=="pippi-cousin-qa"' /tmp/research-build-info.json; then
+               jq -e --arg commit "$GITHUB_SHA" '.releaseType=="qa-preview-only" and .version=="2.1.0-Research-Coop-Preview-QA" and .previewBranch=="research-ui-qa" and .qaCommit==$commit' /tmp/research-build-info.json; then
               echo "RESEARCH_QA_DEPLOY_VERIFIED=https://research-ui-qa.pkmsvv-web.pages.dev/ai/game/"
               echo "SOURCE_COMMIT=$GITHUB_SHA"
               exit 0
