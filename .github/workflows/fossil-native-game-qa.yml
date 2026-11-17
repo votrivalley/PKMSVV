@@ -88,10 +88,10 @@ jobs:
         env:
           PKMSVV_BROWSER: /usr/bin/google-chrome
         run: timeout 120s node tests/fossil-expedition-native-browser.cjs
-      - name: 'Chromium: 115 seconds Fossil Expedition engine/AI no-freeze stress'
+      - name: 'Chromium: 155 seconds Fossil Expedition + faster enemies no-freeze stress'
         env:
           PKMSVV_BROWSER: /usr/bin/google-chrome
-        run: timeout 175s node tests/fossil-expedition-soak-browser.cjs
+        run: timeout 235s node tests/fossil-expedition-soak-browser.cjs
       - name: Stamp isolated playable solo AI QA version (never production)
         shell: bash
         run: |
@@ -99,7 +99,7 @@ jobs:
           node - <<'NODE'
           const fs=require('node:fs');
           const info={
-            version:'2.5.0-Unified-Beta-Rotom-Rescue-QA',
+            version:'2.5.1-Unified-Beta-Fossil-Machine-Defense-QA',
             releaseType:'experimental-gameplay-qa-only',
             previewBranch:'beta',
             qaCommit:process.env.GITHUB_SHA,
