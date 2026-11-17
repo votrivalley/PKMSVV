@@ -134,3 +134,8 @@ jobs:
           done
           echo "::error::Gameplay QA preview not verified; production remains untouched"
           exit 1
+      - name: 'Chromium: play REAL Cloudflare QA from its public URL with offline AI'
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+          PKMSVV_NATIVE_BROWSER_URL: https://fossil-gameplay-qa.pkmsvv-web.pages.dev/game/
+        run: timeout 140s node tests/fossil-expedition-native-browser.cjs
