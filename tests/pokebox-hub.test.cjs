@@ -268,7 +268,7 @@ test('clean PokéBox UI keeps six visible slots and relocates migration to Save 
  assert.match(css,/height:70px/);
 });
 
-test('Original PC remains, and Pokémon entry has Box, Dex and preserved upgrade actions',()=>{
+test('Pokémon retains fast Box/Dex/Upgrades; Research Lab replaces only the former PC',()=>{
  const src=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub-ui.js'),'utf8');
  const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-box-hub.css'),'utf8');
  const clean=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pc-menu-clean-qa.js'),'utf8');
@@ -285,9 +285,9 @@ test('Original PC remains, and Pokémon entry has Box, Dex and preserved upgrade
  assert.match(clean,/pkmsvv-save-banner/);
  assert.match(clean,/restorePartner/);
  assert.match(clean,/reorderMainMenu\(menu\)/,'home menu must reorder launchers');
- assert.match(clean,/const order=\[pokemon,pc,coop,arena\]/);
+ assert.match(clean,/const order=\[play,pokemon,pc,coop,arena\]/);
  assert.match(clean,/PokéBox · Pokédex · Nâng cấp/,'Pokémon submenu summary must be correct');
- assert.match(clean,/Pokémon hỗ trợ · Mega · Berry/,'PC submenu keeps its utility summary');
+ assert.match(clean,/Hóa thạch · Mega · Hỗ trợ · Pippi/,'Research Lab retains former PC utilities');
  assert.match(clean,/banner\.setAttribute\('translate','no'\)/,'backup warning must opt out of auto translation');
  assert.match(clean,/Nhớ sao lưu thường xuyên để tránh mất dữ liệu/);
  assert.match(src,/openDex\(\)/);
@@ -569,7 +569,7 @@ test('Android 2.0.1 home icons preserve all three authored WebP sprites and one 
  const original=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pc-menu-clean-qa.css'),'utf8');
  const packaging=fs.readFileSync(path.join(__dirname,'../scripts/patch-v20-android-production.cjs'),'utf8');
  assert.match(js,/function normalizeLauncherGrid\(button,art,type\)/);
- assert.match(js,/const title=\{pc:'PC',coop:'Co-op',arena:'Arena'\}/);
+ assert.match(js,/const title=\{pc:L\('Phòng nghiên cứu','Research Lab'\),coop:'Co-op',arena:'Arena'\}/);
  assert.match(js,/normalizeLauncherGrid\(button,art,type\)/);
  assert.match(js,/node\.nodeType===3/);
  assert.match(js,/node\.remove\(\)/);
