@@ -19,6 +19,8 @@ on:
       - 'tests/coop-lab-art-assets.test.cjs'
       - 'tests/coop-lab-core.test.cjs'
       - 'tests/pippi-web-browser.cjs'
+      - 'tests/research-source-extraction.test.cjs'
+      - 'scripts/extract-research-layers.cjs'
       - 'tests/fossil-system.test.cjs'
   workflow_dispatch:
 permissions:
@@ -41,7 +43,7 @@ jobs:
       - name: Validate research artwork, fossil state, currency rollback and achievement
         run: |
           set -euo pipefail
-          node --test tests/coop-lab-art-assets.test.cjs tests/coop-lab-core.test.cjs tests/fossil-system.test.cjs tests/fossil-restoration-data.test.cjs tests/pippi-guide.test.cjs
+          node --test tests/coop-lab-art-assets.test.cjs tests/coop-lab-core.test.cjs tests/fossil-system.test.cjs tests/fossil-restoration-data.test.cjs tests/pippi-guide.test.cjs tests/research-source-extraction.test.cjs
       - name: Download immutable baseline game snapshot
         uses: actions/download-artifact@v4
         with:
@@ -61,7 +63,7 @@ jobs:
       - name: Verify latest room UI exists in BOTH game routes and no production build is touched
         run: |
           set -euo pipefail
-          jq -e --arg commit "$GITHUB_SHA" '.releaseType=="qa-preview-only" and .version=="2.2.0-Modular-Fossils-Pippi-QA" and .previewBranch=="research-ui-qa" and .qaCommit==$commit' dist/cloudflare-v20-release/build-info.json
+          jq -e --arg commit "$GITHUB_SHA" '.releaseType=="qa-preview-only" and .version=="2.2.1-Original-Lab-Restored-QA" and .previewBranch=="research-ui-qa" and .qaCommit==$commit' dist/cloudflare-v20-release/build-info.json
           for route in game ai/game; do
             js="dist/cloudflare-v20-release/$route/js/ui/pkmsvv-wiki-qa.js"
             css="dist/cloudflare-v20-release/$route/css/pkmsvv-pc-menu-clean-qa.css"
@@ -84,6 +86,11 @@ jobs:
             test -s "dist/cloudflare-v20-release/$route/images/coop-lab/decor/machine_old_modular.svg"
             test -s "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-coop-fossil-mission-qa.js"
             grep -Fq "renderFurnitureLayers(room)" "$js"
+            test -s "dist/cloudflare-v20-release/$route/images/coop-lab/source-cutouts-qa/manifest.json"
+            test -s "dist/cloudflare-v20-release/$route/images/coop-lab/source-cutouts-qa/mega_desk.png"
+            test -s "dist/cloudflare-v20-release/$route/images/coop-lab/source-cutouts-qa/restoration_chamber.png"
+            grep -Fq 'RESEARCH_CLASSIC_RESTORED_V6' "$css"
+            grep -Fq 'room_art_qa_v2.webp' "$css"
           done
       - name: Chromium — verify actual Lab dialog, modular furniture and fifth Co-op mode without faking payouts
         env:
@@ -106,7 +113,7 @@ jobs:
           url='https://research-ui-qa.pkmsvv-web.pages.dev/build-info.json'
           for attempt in 1 2 3 4 5 6; do
             if curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "$url?rev=${GITHUB_SHA}-${attempt}" -o /tmp/research-build-info.json &&
-               jq -e --arg commit "$GITHUB_SHA" '.releaseType=="qa-preview-only" and .version=="2.2.0-Modular-Fossils-Pippi-QA" and .previewBranch=="research-ui-qa" and .qaCommit==$commit' /tmp/research-build-info.json; then
+               jq -e --arg commit "$GITHUB_SHA" '.releaseType=="qa-preview-only" and .version=="2.2.1-Original-Lab-Restored-QA" and .previewBranch=="research-ui-qa" and .qaCommit==$commit' /tmp/research-build-info.json; then
               echo "RESEARCH_QA_DEPLOY_VERIFIED=https://research-ui-qa.pkmsvv-web.pages.dev/ai/game/"
               echo "SOURCE_COMMIT=$GITHUB_SHA"
               exit 0
