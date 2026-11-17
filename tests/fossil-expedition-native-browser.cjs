@@ -9,7 +9,9 @@ const {startServer}=require('../lan-server/server.cjs');
  const server=remote?null:await startServer({root,host:'127.0.0.1',port:0});
  const browser=await chromium.launch({headless:true,...(process.env.PKMSVV_BROWSER?{executablePath:process.env.PKMSVV_BROWSER}:{})});
  const page=await browser.newPage({viewport:{width:1280,height:800}});
- const errors=[];page.on('pageerror',e=>errors.push(String(e)));
+ const errors=[],consoleErrors=[];
+ page.on('pageerror',e=>errors.push(String(e)));
+ page.on('console',m=>{if(m.type()==='error')consoleErrors.push(m.text());});
  try{
   await page.goto(remote||'http://127.0.0.1:'+server.port+'/game/',{waitUntil:'domcontentloaded',timeout:45000});
   await page.waitForFunction(()=>G.DB?.save&&G.PKMSVVFossilExpedition?.nativeReady===true,{timeout:35000});
@@ -72,6 +74,10 @@ const {startServer}=require('../lan-server/server.cjs');
   }));
   const distance=Math.hypot(aiAfter.bots[0].x-aiBefore.bots[0].x,
     aiAfter.bots[0].y-aiBefore.bots[0].y);
+  console.log('FOSSIL_AI_DIAGNOSTIC='+JSON.stringify({
+    aiBefore,aiAfter,distance,errors:errors.slice(0,6),consoleErrors:consoleErrors.slice(0,10)
+  }));
+  assert.ok(aiAfter.clock>.15,'native Game clock never advanced: '+JSON.stringify({aiAfter,consoleErrors:consoleErrors.slice(0,8),errors:errors.slice(0,4)}));
   assert.ok(distance>5,'Fossil AI must MOVE; idle AI regression: '+JSON.stringify({aiBefore,aiAfter,distance}));
   assert.equal(aiAfter.art,true,'Research machine and fossil rock textures must load');
   console.log('FOSSIL_AI_SPRITE_SMOKE='+JSON.stringify({aiBefore,aiAfter,distance}));
