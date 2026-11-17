@@ -47,7 +47,7 @@ function change(save,mutator,commit,sideEffect){
 function isMachineUnlocked(save){return normal(save).machineUnlocked;}
 function buy(save,itemId,commit){
  const item=byItem.get(itemId);
- if(!item||item.artReady!==true||item.price===null||item.starter||!Number.isSafeInteger(item.price)||item.price<0)
+ if(!item||item.artReady!==true||item.sceneSwapReady!==true||item.price===null||item.starter||!Number.isSafeInteger(item.price)||item.price<0)
   return {ok:false,reason:'unavailable'};
  return change(save,(s)=>{
   if(!s.machineUnlocked)return {ok:false,reason:'locked'};
@@ -59,7 +59,7 @@ function buy(save,itemId,commit){
 }
 function equip(save,slotId,itemId,commit){
  const slot=bySlot.get(slotId),item=itemId===null?null:byItem.get(itemId);
- if(!slot||(itemId!==null&&(!item||item.artReady!==true||!item.slots.includes(slotId))))
+ if(!slot||(itemId!==null&&(!item||item.artReady!==true||item.sceneSwapReady!==true||!item.slots.includes(slotId))))
   return {ok:false,reason:'slot'};
  return change(save,(s)=>{
   if(!s.machineUnlocked)return {ok:false,reason:'locked'};
