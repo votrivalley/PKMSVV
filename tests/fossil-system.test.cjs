@@ -109,3 +109,29 @@ test('cataloged 25 fossils are excluded from ordinary recruitment and spawn pool
  assert.equal(all.size,25);
  for(const d of all)assert.equal(a.api.isFossilDex(d),true);
 });
+
+test('collected fossil stays discovered even after it is spent on restoration',()=>{
+ const a=rig({gen:1,at:900});
+ a.G.World.damageProp(a.rock(),3);
+ assert.equal(a.save.pkmsvvFossils.discovered.dome_fossil,true);
+ a.save.pkmsvvCoopLab={machineUnlocked:true};
+ const result=a.api.restore(140);
+ assert.equal(result.ok,true);
+ assert.equal(a.save.pkmsvvFossils.inventory.dome_fossil,0);
+ assert.equal(a.save.pkmsvvFossils.discovered.dome_fossil,true);
+ assert.equal(a.save.pkmsvvFossils.restored[140],true);
+});
+test('Great Archaeologist only unlocks when all 15 fossil Pokémon are restored',()=>{
+ const a=rig();
+ a.save.pkmsvvCoopLab={machineUnlocked:true};
+ a.save.pkmsvvFossils={schemaVersion:1,
+  inventory:{old_amber:1},restored:Object.fromEntries(
+   catalog.recipes.filter(x=>x.dex!==142).map(x=>[x.dex,true])),
+  discovered:{old_amber:true}};
+ assert.equal(a.save.pkmsvvFossils.greatArchaeologist,undefined);
+ const last=a.api.restore(142);
+ assert.equal(last.ok,true);
+ assert.equal(last.greatArchaeologist,true);
+ assert.equal(a.save.pkmsvvFossils.greatArchaeologist,true);
+ assert.equal(a.say.some(x=>x.includes('Nhà khảo cổ vĩ đại')),true);
+});
