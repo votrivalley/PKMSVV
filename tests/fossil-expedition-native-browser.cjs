@@ -12,6 +12,13 @@ const {startServer}=require('../lan-server/server.cjs');
  try{
   await page.goto('http://127.0.0.1:'+server.port+'/game/');
   await page.waitForFunction(()=>G.DB?.save&&G.PKMSVVFossilExpedition?.nativeReady===true,{timeout:35000});
+  const browserOnly=await page.evaluate(()=>({
+   standalone:window.PKMSVV_STANDALONE_AI===true,
+   offlineBus:G.LanBus?.offlineAI===true,
+   gameJsPresent:!!G.PKMSVVFossilExpedition,
+  }));
+  assert.deepEqual(browserOnly,{standalone:true,offlineBus:true,gameJsPresent:true},
+   'Cloudflare static preview must use browser-only AI without LAN server/WebSocket');
   await page.evaluate(()=>{
    G.DB.save.partner=25;G.DB.save.partnerShiny=false;G.DB.save.pkmsvvStorySeen=true;
    G.DB.save.pkmsvvNameChosen=true;G.DB.commit?.();G.MenuUI.open();
