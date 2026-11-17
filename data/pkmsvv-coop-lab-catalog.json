@@ -1,0 +1,227 @@
+{
+  "schemaVersion": 1,
+  "stateKey": "pkmsvvCoopLab",
+  "featureStatus": "data-and-transaction-core-only-not-a-playable-mission",
+  "currency": {
+    "id": "coopCoins",
+    "nameVi": "Xu Đồng Đội",
+    "nameEn": "Co-op Coins",
+    "exchangeToPokeCoins": false
+  },
+  "rooms": 1,
+  "slots": [
+    {
+      "id": "center",
+      "nameVi": "Bệ trung tâm",
+      "nameEn": "Center Platform",
+      "accepts": "machine"
+    },
+    {
+      "id": "shelf_left",
+      "nameVi": "Kệ trưng bày trái",
+      "nameEn": "Left Display Shelf",
+      "accepts": "specimen"
+    },
+    {
+      "id": "shelf_right",
+      "nameVi": "Kệ trưng bày phải",
+      "nameEn": "Right Display Shelf",
+      "accepts": "specimen"
+    },
+    {
+      "id": "wall_left",
+      "nameVi": "Tường bên trái",
+      "nameEn": "Left Wall",
+      "accepts": "wall"
+    },
+    {
+      "id": "wall_right",
+      "nameVi": "Tường bên phải",
+      "nameEn": "Right Wall",
+      "accepts": "wall"
+    },
+    {
+      "id": "garden",
+      "nameVi": "Góc cây cảnh",
+      "nameEn": "Garden Corner",
+      "accepts": "plant"
+    },
+    {
+      "id": "desk",
+      "nameVi": "Bàn nghiên cứu",
+      "nameEn": "Research Desk",
+      "accepts": "desk"
+    },
+    {
+      "id": "trophy",
+      "nameVi": "Bệ danh dự",
+      "nameEn": "Trophy Pedestal",
+      "accepts": "trophy"
+    }
+  ],
+  "items": [
+    {
+      "id": "machine_old",
+      "nameVi": "Máy phục nguyên nguyên mẫu",
+      "category": "machine",
+      "slots": [
+        "center"
+      ],
+      "price": 0,
+      "starter": true,
+      "rarity": "starter"
+    },
+    {
+      "id": "machine_future",
+      "nameVi": "Máy phục nguyên tối tân",
+      "category": "machine",
+      "slots": [
+        "center"
+      ],
+      "price": 1300,
+      "rarity": "rare"
+    },
+    {
+      "id": "kabuto_skeleton",
+      "nameVi": "Bộ xương Kabuto",
+      "category": "specimen",
+      "slots": [
+        "shelf_left",
+        "shelf_right"
+      ],
+      "price": 320,
+      "rarity": "common"
+    },
+    {
+      "id": "amber_aerodactyl",
+      "nameVi": "Hổ phách Aerodactyl",
+      "category": "specimen",
+      "slots": [
+        "shelf_left",
+        "shelf_right"
+      ],
+      "price": 750,
+      "rarity": "rare"
+    },
+    {
+      "id": "omanyte_model",
+      "nameVi": "Mô hình Omanyte",
+      "category": "specimen",
+      "slots": [
+        "shelf_left",
+        "shelf_right"
+      ],
+      "price": 280,
+      "rarity": "common"
+    },
+    {
+      "id": "archaeology_certificate",
+      "nameVi": "Chứng nhận khảo cổ",
+      "category": "wall",
+      "slots": [
+        "wall_left",
+        "wall_right"
+      ],
+      "price": 200,
+      "rarity": "common"
+    },
+    {
+      "id": "prehistoric_poster",
+      "nameVi": "Bản đồ sinh vật cổ",
+      "category": "wall",
+      "slots": [
+        "wall_left",
+        "wall_right"
+      ],
+      "price": 420,
+      "rarity": "common"
+    },
+    {
+      "id": "prehistoric_fern",
+      "nameVi": "Chậu dương xỉ tiền sử",
+      "category": "plant",
+      "slots": [
+        "garden"
+      ],
+      "price": 360,
+      "rarity": "common"
+    },
+    {
+      "id": "research_terminal",
+      "nameVi": "Máy tính khảo cổ",
+      "category": "desk",
+      "slots": [
+        "desk"
+      ],
+      "price": 540,
+      "rarity": "common"
+    },
+    {
+      "id": "glowing_sample_tube",
+      "nameVi": "Ống mẫu phát sáng",
+      "category": "desk",
+      "slots": [
+        "desk"
+      ],
+      "price": 700,
+      "rarity": "rare"
+    },
+    {
+      "id": "gold_pippi_statue",
+      "nameVi": "Tượng Vàng Giáo sư Pippi",
+      "nameEn": "Royal Professor Pippi Gold Statue",
+      "category": "trophy",
+      "slots": [
+        "trophy"
+      ],
+      "price": null,
+      "rarity": "mythic",
+      "source": "mission-final-chest-only",
+      "dropChance": 0.001,
+      "dropConditions": {
+        "replay": true,
+        "optionalObjectivesMin": 2
+      },
+      "descriptionVi": "Chỉ để khoe, không tăng chỉ số; không thể mua hoặc trao đổi."
+    }
+  ],
+  "rewards": {
+    "mission": "fossil_lab",
+    "minDurationSeconds": 240,
+    "expectedDurationMinutes": [
+      6,
+      8
+    ],
+    "firstClear": 200,
+    "replay": 120,
+    "optionalObjectiveReward": 20,
+    "maxOptionalObjectives": 2,
+    "partySize": {
+      "min": 1,
+      "max": 4
+    },
+    "soloAIRewardsEqual": true
+  },
+  "trophy": {
+    "itemId": "gold_pippi_statue",
+    "chancePerEligibleReplay": 0.001,
+    "noPity": true,
+    "onePerProfile": true,
+    "eligibleOnlyOnReplayWithBothObjectives": true,
+    "tradeable": false,
+    "gameplayStatBonus": false
+  },
+  "saveShape": {
+    "schemaVersion": 1,
+    "machineUnlocked": false,
+    "coopCoins": 0,
+    "totalCompletions": 0,
+    "lastSettledSeq": 0,
+    "ownedDecor": {
+      "machine_old": true
+    },
+    "equippedDecorBySlot": {
+      "center": "machine_old"
+    }
+  }
+}
