@@ -12,6 +12,11 @@ G.PKMSVVFossilExpedition=(()=>{
  let current=null,active=false,cachedThreats=0,scanClock=0,sendClock=0,
   rendered=new Set(),lastAction=-100,lastFinish=null,uiButton=null,finished=false;
  const ready=!!C&&typeof C.begin==='function'&&typeof C.receipt==='function';
+ // Reuse actual standalone research machine artwork and a crisp fossil rock,
+ // instead of the provisional boxes drawn directly into the canvas.
+ const spriteMachine=new Image(),spriteRock=new Image();
+ spriteMachine.src='images/coop-lab/decor/machine_old_modular.svg';
+ spriteRock.src='images/coop-lab/fossil-excavation-rock.svg';
  const mine=()=>active&&current?.sites.find(x=>!x.done);
  const room=()=>G.Social?.room;
  function begin({mode}={}){
@@ -117,6 +122,25 @@ G.PKMSVVFossilExpedition=(()=>{
  function drawOne(ctx,obj){
   const isMachine=obj.type==='machine',done=obj.done;
   ctx.save();ctx.translate(obj.x,obj.y);ctx.imageSmoothingEnabled=false;
+  const img=isMachine?spriteMachine:spriteRock;
+  if(img.complete&&img.naturalWidth>0){
+   if(isMachine){
+    ctx.drawImage(img,-50,-112,100,135);
+    const ratio=Math.max(0,Math.min(1,obj.hp/C.MAX_MACHINE_HP));
+    ctx.fillStyle='#192d34';ctx.fillRect(-32,26,64,8);
+    ctx.fillStyle=ratio>.3?'#80e3ae':'#ed8474';ctx.fillRect(-30,28,60*ratio,4);
+   }else{
+    ctx.save();if(obj.id===2)ctx.scale(-1,1);
+    ctx.drawImage(img,-40,-53,80,76);ctx.restore();
+    if(done){ctx.fillStyle='#0d3739a9';ctx.fillRect(-25,-29,50,31);}
+    ctx.textAlign='center';ctx.font='bold 13px "Segoe UI",sans-serif';
+    ctx.lineWidth=3;ctx.strokeStyle='#253440';ctx.fillStyle='#ffebb8';
+    const progress=done?'✓':String(obj.hits)+'/3';
+    ctx.strokeText(progress,0,-48);ctx.fillText(progress,0,-48);
+   }
+   ctx.restore();return;
+  }
+  // Local missing-asset fallback only; successful QA must load both sprites.
   ctx.fillStyle='#122e38';ctx.fillRect(-33,-7,66,25);
   if(isMachine){
    ctx.fillStyle='#b88b46';ctx.fillRect(-27,-20,54,20);
