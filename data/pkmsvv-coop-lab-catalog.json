@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "stateKey": "pkmsvvCoopLab",
-  "featureStatus": "shared-coop-economy-QA-and-unverified-mission-not-playable",
+  "featureStatus": "QA-modular-room-and-25-fossil-collection; new coop mission awaiting native runtime validation",
   "currency": {
     "id": "coopCoins",
     "nameVi": "Xu Đồng Đội",
@@ -76,7 +76,10 @@
       ],
       "price": 0,
       "starter": true,
-      "rarity": "starter"
+      "rarity": "starter",
+      "artReady": true,
+      "spritePath": "images/coop-lab/decor/machine_old.png",
+      "visualLayer": "separate-alpha"
     },
     {
       "id": "machine_future",
@@ -86,7 +89,10 @@
         "center"
       ],
       "price": 1300,
-      "rarity": "rare"
+      "rarity": "rare",
+      "artReady": false,
+      "spritePath": null,
+      "visualLayer": "preview-only"
     },
     {
       "id": "kabuto_skeleton",
@@ -97,7 +103,10 @@
         "shelf_right"
       ],
       "price": 320,
-      "rarity": "common"
+      "rarity": "common",
+      "artReady": true,
+      "spritePath": "images/coop-lab/decor/kabuto_skeleton.png",
+      "visualLayer": "separate-alpha"
     },
     {
       "id": "amber_aerodactyl",
@@ -108,7 +117,10 @@
         "shelf_right"
       ],
       "price": 750,
-      "rarity": "rare"
+      "rarity": "rare",
+      "artReady": false,
+      "spritePath": null,
+      "visualLayer": "preview-only"
     },
     {
       "id": "omanyte_model",
@@ -119,7 +131,10 @@
         "shelf_right"
       ],
       "price": 280,
-      "rarity": "common"
+      "rarity": "common",
+      "artReady": false,
+      "spritePath": null,
+      "visualLayer": "preview-only"
     },
     {
       "id": "archaeology_certificate",
@@ -130,7 +145,10 @@
         "wall_right"
       ],
       "price": 200,
-      "rarity": "common"
+      "rarity": "common",
+      "artReady": false,
+      "spritePath": null,
+      "visualLayer": "preview-only"
     },
     {
       "id": "prehistoric_poster",
@@ -141,7 +159,10 @@
         "wall_right"
       ],
       "price": 420,
-      "rarity": "common"
+      "rarity": "common",
+      "artReady": false,
+      "spritePath": null,
+      "visualLayer": "preview-only"
     },
     {
       "id": "prehistoric_fern",
@@ -151,7 +172,10 @@
         "garden"
       ],
       "price": 360,
-      "rarity": "common"
+      "rarity": "common",
+      "artReady": false,
+      "spritePath": null,
+      "visualLayer": "preview-only"
     },
     {
       "id": "research_terminal",
@@ -161,7 +185,10 @@
         "desk"
       ],
       "price": 540,
-      "rarity": "common"
+      "rarity": "common",
+      "artReady": true,
+      "spritePath": "images/coop-lab/decor/research_terminal.png",
+      "visualLayer": "separate-alpha"
     },
     {
       "id": "glowing_sample_tube",
@@ -171,7 +198,10 @@
         "desk"
       ],
       "price": 700,
-      "rarity": "rare"
+      "rarity": "rare",
+      "artReady": false,
+      "spritePath": null,
+      "visualLayer": "preview-only"
     },
     {
       "id": "gold_pippi_statue",
@@ -181,15 +211,14 @@
       "slots": [
         "trophy"
       ],
-      "price": null,
-      "rarity": "mythic",
-      "source": "mission-final-chest-only",
-      "dropChance": 0.001,
-      "dropConditions": {
-        "replay": true,
-        "optionalObjectivesMin": 2
-      },
-      "descriptionVi": "Chỉ để khoe, không tăng chỉ số; không thể mua hoặc trao đổi."
+      "price": 9999,
+      "rarity": "prestige",
+      "source": "coop-supply-depot",
+      "dropChance": 0,
+      "descriptionVi": "Tượng vàng độc lập để đặt ở bệ danh dự. Chỉ trang trí, không cộng chỉ số; giá 9.999 Xu Đồng Đội.",
+      "artReady": true,
+      "spritePath": "images/coop-lab/decor/gold_pippi_statue.svg",
+      "visualLayer": "separate-alpha"
     }
   ],
   "rewards": {
@@ -217,15 +246,15 @@
   },
   "trophy": {
     "itemId": "gold_pippi_statue",
-    "chancePerEligibleReplay": 0.001,
-    "noPity": true,
+    "purchasePrice": 9999,
     "onePerProfile": true,
-    "eligibleOnlyOnReplayWithBothObjectives": true,
     "tradeable": false,
-    "gameplayStatBonus": false
+    "gameplayStatBonus": false,
+    "slot": "trophy",
+    "noRandomDrop": true
   },
   "saveShape": {
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "machineUnlocked": false,
     "coopCoins": 0,
     "totalCompletions": 0,
@@ -305,7 +334,7 @@
         "id": "laboratory",
         "nameVi": "Trang trí và nâng cấp phòng",
         "catalogRef": "items",
-        "noteVi": "Chỉ mua và trang bị khi có sprite tách lớp; bản phòng hiện tại là tranh nguyên khối."
+        "noteVi": "Nội thất có sprite riêng được phép mua bằng Xu Đồng Đội sau khi mở máy; các món chưa có art chỉ xem trước."
       }
     ]
   }
