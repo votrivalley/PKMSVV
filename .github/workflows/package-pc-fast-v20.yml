@@ -11,6 +11,7 @@ on:
       - 'src/shared/local-shell.js'
       - 'src/pkmsvv-menu-icons.webp'
       - 'scripts/prepare-game.cjs'
+      - 'scripts/prepare-lan.cjs'
       - 'tests/pippi-companion.test.cjs'
       - 'src/pkmsvv-forget-skill.js'
       - 'src/pkmsvv-modal-navigation-qa.js'
@@ -99,6 +100,10 @@ jobs:
             'resources/lan-site/game/js/ui/pkmsvv-wiki-qa.js',
             'resources/lan-site/game/js/ui/pkmsvv-pc-menu-clean-qa.js',
             'resources/lan-site/game/images/pkmsvv-menu-icons.webp',
+            'resources/lan-site/game/images/coop-lab/room_base.png',
+            'resources/lan-site/game/images/coop-lab/decor/machine_old.png',
+            'resources/lan-site/game/images/coop-lab/decor/kabuto_skeleton.png',
+            'resources/lan-site/game/images/coop-lab/decor/research_terminal.png',
             'resources/lan-site/game/images/pippi/Walk-Anim.png',
             'resources/lan-site/game/images/pippi/portrait/Happy.png',
             'resources/lan-site/game/assets/icons/icon-192.png'
