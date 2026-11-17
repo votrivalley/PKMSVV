@@ -74,7 +74,11 @@ for(const prefix of ['game','ai/game']){
    ['PKMSVVEggs','src/v15/eggs.js'],
    ['PKMSVV14','src/v14/milestones.js'],
    ['Shop','src/kecleon/upstream/data/shop.js'],
-   ['KecleonUI','src/kecleon/pkmsvv-kecleon-ui.js']
+   ['KecleonUI','src/kecleon/pkmsvv-kecleon-ui.js'],
+   // The pinned Web snapshot predates context-aware Research Lab returns.
+   // Replace existing compiled modules rather than merely updating unused files.
+   ['PKMSVVMegaEntry','src/pkmsvv-mega-entry.js'],
+   ['PKMSVVSupportCatalog','src/pkmsvv-support-catalog.js']
  ]){
   let src=source(rel);
   src=src.replace(new RegExp('G\\.'+label+'\\s*=\\s*'),'G.'+label+'=');
@@ -164,6 +168,10 @@ for(const prefix of ['game','ai/game']){
  if(!source(path.relative(root,path.join(dest,'js/ui/pkmsvv-quick-region.js'))).includes("const inRift=!!"))
   throw Error('Native Grieta biome exception missing from active Region script: '+prefix);
  if(!bundle.includes('mint:.008/3'))throw Error('Half-rate Mint/Capsule compiled bundle missing');
+ if(!bundle.includes('fromResearchLab=options?.fromResearchLab===true')||
+    !bundle.includes("tr('← Phòng nghiên cứu','← Research Lab')")||
+    !bundle.includes("t('← Phòng nghiên cứu','← Research Lab')"))
+  throw Error('Mega/Support contextual Research Lab return patch absent: '+prefix);
 }
 const meta=JSON.parse(source('dist/cloudflare-v20-release/build-info.json'));
 Object.assign(meta,{releaseType:'qa-preview-only',pippiCousinQA:marker,
