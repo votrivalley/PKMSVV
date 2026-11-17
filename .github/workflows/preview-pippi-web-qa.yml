@@ -27,6 +27,8 @@ on:
       - 'tests/global-upgrades.test.cjs'
       - 'tests/runtime-controls-qa.test.cjs'
       - 'src/pkmsvv-wiki.js'
+      - 'src/pkmsvv-pc-menu-clean-qa.css'
+      - 'tests/coop-lab-art-assets.test.cjs'
       - 'src/pkmsvv-box-stage3.js'
       - 'src/kecleon/upstream/data/shop.js'
       - 'tests/pippi-companion.test.cjs'
@@ -168,6 +170,13 @@ jobs:
             grep -Fq 'refundRetiredHealing' "dist/cloudflare-v20-release/$route/js/app.min.js"
             grep -Fq 'PKMSVV_PIPPI_COUSIN_PREVIEW_20261115' "dist/cloudflare-v20-release/$route/index.html"
           done
+      - name: Validate research room scene props, egg hotspot and no save/shop mutation
+        run: node --test tests/coop-lab-art-assets.test.cjs
+      - name: Browser — physical research room props, Mega/Support returns and companion egg
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+          PKMSVV_BROWSER_ROOT: dist/cloudflare-v20-release
+        run: timeout 180s node tests/pippi-web-browser.cjs
       - name: Browser — Pippi starter dialogue must remain until Next
         env:
           PKMSVV_BROWSER: /usr/bin/google-chrome
