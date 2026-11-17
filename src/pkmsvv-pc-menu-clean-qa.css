@@ -1087,19 +1087,19 @@
  #pkmsvv-wiki-overlay .pkmsvv-research-pixel-art[data-research-pixel="fossil"]{background-position:-100px 0!important}
 }
 
-/* PKMSVV_HOME_MENU_FIXED_ICON_COLUMN_V1 — shared PC / Android / Web-Beta launcher.
+/* PKMSVV_HOME_MENU_FIXED_ICON_COLUMN_V2 — shared PC / Android / Web-Beta launcher.
  * The original 42px research/Co-op/Arena sprites were larger than the
  * ordinary menu icons. Fixed-width grid cells must NOT center each row
  * based on its title length; all labels use exactly the same x-origin.
- * This is CSS-only; handlers, focus order and save remain unchanged.
+ * This is CSS-only; handlers, focus order and save remain unchanged.\n * Duplicate #scr-menu raises specificity above legacy v20 !important UI rules\n * that are injected AFTER this stylesheet; this is not a second icon.
  */
-#scr-menu .menu-right .menu-list{
+#scr-menu#scr-menu .menu-right .menu-list{
  --pkmsvv-nav-icon-track:40px;
  --pkmsvv-nav-art-size:26px;
  --pkmsvv-nav-icon-frame:36px;
 }
-#scr-menu .menu-right .menu-list>.menu-item,
-#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified{
+#scr-menu#scr-menu .menu-right .menu-list>.menu-item,
+#scr-menu#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified{
  display:grid!important;
  grid-template-columns:var(--pkmsvv-nav-icon-track) minmax(0,1fr)!important;
  grid-template-rows:auto!important;
@@ -1110,11 +1110,11 @@
  padding-left:12px!important;padding-right:12px!important;
  text-align:left!important;min-width:0!important;width:100%!important;
 }
-#scr-menu .menu-right .menu-list>.menu-item.play{
+#scr-menu#scr-menu .menu-right .menu-list>.menu-item.play{
  justify-content:stretch!important;padding-left:12px!important;padding-right:12px!important;
 }
-#scr-menu .menu-right .menu-list>.menu-item>.mi-ico,
-#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.mi-ico.pkmsvv-new-menu-icon{
+#scr-menu#scr-menu .menu-right .menu-list>.menu-item>.mi-ico,
+#scr-menu#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.mi-ico.pkmsvv-new-menu-icon{
  display:grid!important;place-items:center!important;
  grid-column:1!important;grid-row:1 / span 2!important;
  align-self:center!important;justify-self:center!important;
@@ -1131,9 +1131,9 @@
  overflow:hidden!important;
  float:none!important;position:relative!important;transform:none!important;
 }
-#scr-menu .menu-right .menu-list>.menu-item>.mi-ico :is(img,svg,canvas),
-#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.mi-ico.pkmsvv-new-menu-icon :is(img,svg,canvas),
-#scr-menu #pkmsvv-menu-wiki .pkmsvv-research-menu-image{
+#scr-menu#scr-menu .menu-right .menu-list>.menu-item>.mi-ico :is(img,svg,canvas),
+#scr-menu#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.mi-ico.pkmsvv-new-menu-icon :is(img,svg,canvas),
+#scr-menu#scr-menu #pkmsvv-menu-wiki .pkmsvv-research-menu-image{
  display:block!important;
  width:var(--pkmsvv-nav-art-size)!important;
  height:var(--pkmsvv-nav-art-size)!important;
@@ -1144,41 +1144,41 @@
  margin:auto!important;transform:none!important;
  image-rendering:pixelated!important;
 }
-#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.mi-ico.pkmsvv-new-menu-icon{
+#scr-menu#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.mi-ico.pkmsvv-new-menu-icon{
  /* Original sprite sheet has three cells, each displayed at 26px. */
  background-image:url('../images/pkmsvv-menu-icons.webp')!important;
  background-repeat:no-repeat!important;
  background-size:78px 26px!important;
 }
-#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.mi-ico.pkmsvv-menu-icon-coop{
+#scr-menu#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.mi-ico.pkmsvv-menu-icon-coop{
  background-position:-21px 5px!important;
 }
-#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.mi-ico.pkmsvv-menu-icon-arena{
+#scr-menu#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.mi-ico.pkmsvv-menu-icon-arena{
  background-position:-47px 5px!important;
 }
-#scr-menu .menu-right .menu-list>#pkmsvv-menu-wiki>.mi-ico.pkmsvv-menu-icon-pc{
+#scr-menu#scr-menu .menu-right .menu-list>#pkmsvv-menu-wiki>.mi-ico.pkmsvv-menu-icon-pc{
  background:none!important;
 }
-#scr-menu .menu-right .menu-list>.menu-item>.pkmsvv-menu-copy,
-#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.pkmsvv-menu-copy{
+#scr-menu#scr-menu .menu-right .menu-list>.menu-item>.pkmsvv-menu-copy,
+#scr-menu#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.pkmsvv-menu-copy{
  grid-column:2!important;grid-row:1 / span 2!important;
  width:100%!important;min-width:0!important;max-width:100%!important;
  justify-self:stretch!important;align-self:center!important;
  text-align:left!important;margin:0!important;padding:0!important;
 }
-#scr-menu .menu-right .menu-list>.menu-item>small{
+#scr-menu#scr-menu .menu-right .menu-list>.menu-item>small{
  grid-column:2!important;grid-row:2!important;
  margin:0!important;min-width:0!important;text-align:left!important;
 }
-#scr-menu .menu-right .menu-list>.menu-item>.pkmsvv-menu-copy .pkmsvv-menu-label,
-#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.pkmsvv-menu-copy .pkmsvv-menu-label{
+#scr-menu#scr-menu .menu-right .menu-list>.menu-item>.pkmsvv-menu-copy .pkmsvv-menu-label,
+#scr-menu#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.pkmsvv-menu-copy .pkmsvv-menu-label{
  display:block!important;max-width:100%!important;text-align:left!important;
 }
 /* Portrait-size mobile screens keep the same column geometry. Do not shrink
  * just one class of icon or the labels visibly drift between rows. */
 @media(max-width:900px){
- #scr-menu .menu-right .menu-list>.menu-item,
- #scr-menu .menu-right .menu-list>.pkmsvv-icon-unified{
+ #scr-menu#scr-menu .menu-right .menu-list>.menu-item,
+ #scr-menu#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified{
   grid-template-columns:40px minmax(0,1fr)!important;
   column-gap:12px!important;
  }
