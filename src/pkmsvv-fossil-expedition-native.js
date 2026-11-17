@@ -13,7 +13,7 @@ G.PKMSVVFossilExpedition=(()=>{
  const rotomFallback=image('images/coop-lab/rotom-orb.svg');
  let current=null,active=false,finished=false,bossEnemy=null,rotomAnimator=null,
   uiButton=null,lastAction=-100,lastBossHint=-100,sendClock=0,scanClock=0,
-  waveClock=0,waveIndex=0,cachedThreats=0,rendered=new Set(),lastFinish=null;
+  waveClock=0,waveIndex=0,duelClock=0,cachedThreats=0,rendered=new Set(),lastFinish=null;
  const botTimes=new Map();
  const room=()=>G.Social?.room;
  const allBots=()=>G.Coop?.puppets?.().filter(p=>p.lanBot&&!p.dead)||[];
@@ -36,7 +36,7 @@ G.PKMSVVFossilExpedition=(()=>{
   return p;
  }
  function begin({mode}={}){
-  end();finished=false;lastFinish=null;lastAction=-100;lastBossHint=-100;scanClock=sendClock=waveClock=0;waveIndex=0;botTimes.clear();
+  end();finished=false;lastFinish=null;lastAction=-100;lastBossHint=-100;scanClock=sendClock=waveClock=duelClock=0;waveIndex=0;botTimes.clear();
   if((mode||room()?.mode)!==KEY)return false;
   const r=room();
   if(!ready||r?.mode!==KEY||!Array.isArray(r.members)||r.members.length<2||r.members.length>4){
@@ -204,6 +204,15 @@ G.PKMSVVFossilExpedition=(()=>{
   if(rotomAnimator)try{rotomAnimator.update?.(dt);}catch(_){}
   if(!G.Coop?.isHost)return;
   if(current.phase==='escort')moveRotom(dt);
+  if(current.phase==='rescue'&&bossEnemy&&!bossDown()){
+   duelClock+=Math.max(0,dt);
+   if(duelClock>=1.6){
+    duelClock=0;
+    // Rotom lands weak Ghost-type sparks, while Golurk's Ground typing
+    // prevents simple Electric spam. Rotom cannot solo-finish the boss.
+    if(bossEnemy.hp>110)bossEnemy.hurt?.(Math.min(9,bossEnemy.hp-110),'#d4aeec',0,0,0);
+   }
+  }
   scanClock+=Math.max(0,Number(dt)||0);
   if(scanClock>=.2){
    scanClock=0;cachedThreats=0;
@@ -286,6 +295,12 @@ G.PKMSVVFossilExpedition=(()=>{
    const text=obj.hits>=3?'✓':String(obj.hits)+'/3';
    ctx.strokeText(text,0,-57);ctx.fillText(text,0,-57);
   }else if(obj.type==='rotom'&&!current.rotom.merged){
+   if(current.phase==='rescue'&&bossEnemy&&!bossDown()&&Math.floor(current.elapsed*4)%4<2){
+    const dx=bossEnemy.x-obj.x,dy=bossEnemy.y-obj.y;
+    ctx.strokeStyle='#ddbaed';ctx.lineWidth=3;ctx.beginPath();
+    ctx.moveTo(7,-25);ctx.lineTo(dx*.3,-38);
+    ctx.lineTo(dx*.6+8,dy*.65-20);ctx.lineTo(dx,dy-15);ctx.stroke();
+   }
    if(rotomAnimator)try{
     rotomAnimator.draw(ctx,0,-18);ctx.restore();return;
    }catch(_){}
