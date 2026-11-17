@@ -134,7 +134,7 @@ async function main(){
     const title=document.querySelector('#pkmsvv-wiki-overlay h2')?.textContent;
     const lab=document.querySelector('#pkmsvv-wiki-overlay [data-pkmsvv-research-hub]')?.dataset.pkmsvvResearchHub;
     const img=button.querySelector('.pkmsvv-research-menu-image');
-    return {oldHandlerFired,title,lab,square:img?.naturalWidth===42&&img?.naturalHeight===42,
+    return {oldHandlerFired,title,lab,square:img?.width===42&&img?.height===42,
       image:!!img,iconStyle:img?getComputedStyle(img).objectFit:null,
       windowCapture:!!window.__pkmsvvResearchEntryCapture};
    }finally{button.onclick=old;}
