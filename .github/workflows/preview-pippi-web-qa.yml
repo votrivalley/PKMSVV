@@ -157,6 +157,9 @@ jobs:
             test -s "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-box-stage3.js"
             test -s "dist/cloudflare-v20-release/$route/images/pippi/portrait/Happy.png"
             test -s "dist/cloudflare-v20-release/$route/images/pippi/skill-icons.png"
+            for file in room_base.png decor/machine_old.png decor/kabuto_skeleton.png decor/research_terminal.png; do
+              test -s "dist/cloudflare-v20-release/$route/images/coop-lab/$file"
+            done
             grep -Fq 'COUSIN_CHANCES=Object.freeze([0,.05,.10,.20])' "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-pippi.js"
             grep -Fq 'Bạn đồng hành' "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-wiki-qa.js"
             grep -Fq 'Tiếp theo' "dist/cloudflare-v20-release/$route/js/ui/pkmsvv-pippi-guide.js"

@@ -297,6 +297,50 @@ G.PKMSVVWiki=(()=>{
   note.textContent=tr('Đập đá đúng thế hệ để tìm hóa thạch. Lần đầu phải hoàn thành nhiệm vụ Co-op Phòng thí nghiệm thất lạc để mở máy vĩnh viễn. Vật liệu vẫn được giữ khi máy khóa.',
    'Find fossils in the right region. First complete the Lost Laboratory Co-op mission to unlock the restoration machine forever. Collected materials are safe.');
   box.append(note);
+  // Read-only art preview: 8 fixed hotspots, just 3 test PNGs.
+  // Ownership, shopping and mission progression stay disabled here.
+  const artArea=document.createElement('section');artArea.className='pkmsvv-lab-art-review';
+  artArea.dataset.pkmsvvLabArtPreview='1';
+  const artTitle=document.createElement('h3');
+  artTitle.textContent=tr('Xem thử phòng nghiên cứu · 3 sprite mẫu','Fossil Lab art preview · 3 sample sprites');
+  const artHint=document.createElement('p');artHint.className='pkmsvv-pc-hint';
+  artHint.textContent=tr('Chọn một trong tám vị trí để xem. Đây chỉ là mẫu mỹ thuật, chưa phải đồ đã mua. Máy phục nguyên vẫn khóa tới khi vượt Co-op lần đầu.',
+    'Select one of eight fixed placements. Art preview only, not purchased items. The machine stays locked until your first Co-op clear.');
+  const stage=document.createElement('div');stage.className='pkmsvv-lab-art-stage';
+  stage.setAttribute('role','group');stage.setAttribute('aria-label',tr('Sơ đồ phòng thí nghiệm','Laboratory floor plan'));
+  for(const [id,key] of [['machine','machine_old'],['kabuto','kabuto_skeleton'],['terminal','research_terminal']]){
+   const img=document.createElement('img');img.className='pkmsvv-lab-art-sprite pkmsvv-lab-art-'+id;
+   img.src='images/coop-lab/decor/'+key+'.png';img.alt='';
+   img.loading='lazy';img.decoding='async';img.setAttribute('aria-hidden','true');stage.append(img);
+  }
+  const detail=document.createElement('p');detail.className='pkmsvv-pc-hint pkmsvv-lab-art-detail';
+  detail.textContent=tr('Bệ trung tâm: máy phục nguyên nguyên mẫu 80×80 pixel, chưa kích hoạt.',
+   'Center platform: original 80×80 fossil machine, not yet activated.');
+  const spots=[
+   ['wall_left',34,23,79,41,'Tường bên trái','Left wall',''],
+   ['wall_right',208,23,79,41,'Tường bên phải','Right wall',''],
+   ['center',111,78,98,98,'Máy phục nguyên','Restoration machine','machine_old'],
+   ['shelf_left',18,106,85,63,'Kệ trưng bày trái','Left specimen shelf','kabuto_skeleton'],
+   ['shelf_right',218,106,85,63,'Kệ trưng bày phải','Right specimen shelf',''],
+   ['garden',14,178,73,40,'Góc cây cảnh','Garden corner',''],
+   ['desk',239,176,76,42,'Bàn nghiên cứu','Research desk','research_terminal'],
+   ['trophy',173,181,59,37,'Bệ tượng vàng Pippi','Gold Pippi trophy pedestal','']
+  ];
+  for(const [id,x,y,w,h,vi,en,key] of spots){
+   const btn=document.createElement('button');btn.type='button';
+   btn.className='pkmsvv-lab-art-hotspot';btn.dataset.labSlot=id;
+   btn.style.left=x/320*100+'%';btn.style.top=y/224*100+'%';
+   btn.style.width=w/320*100+'%';btn.style.height=h/224*100+'%';
+   btn.setAttribute('aria-label',tr('Xem vị trí: '+vi,'View spot: '+en));
+   btn.onclick=()=>{
+    stage.querySelectorAll('.pkmsvv-lab-art-hotspot').forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
+    detail.textContent=tr(vi,en)+' · '+(key?
+     tr('Đang trưng bày sprite mẫu. Chưa phải đồ đã mua.','Showing a prototype sprite, not a purchased item.'):
+     tr('Vị trí còn trống. Chưa có sprite chính thức.','Empty placement. No final decor asset yet.'));
+   };stage.append(btn);
+  }
+  artArea.append(artTitle,artHint,stage,detail);box.append(artArea);
   const list=document.createElement('div');list.className='pkmsvv-fossil-list';box.append(list);
   function draw(){
    list.replaceChildren();

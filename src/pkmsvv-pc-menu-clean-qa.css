@@ -416,6 +416,45 @@
 }
 @media(prefers-reduced-motion:reduce){#pkmsvv-wiki-overlay .pkmsvv-pippi-training-row{transition:none}}
 
+
+/* FOSSIL_LAB_ART_PREVIEW_V1: 320x224 native pixel-art, no gameplay/shop mutation. */
+#pkmsvv-wiki-overlay .pkmsvv-lab-art-review{
+ margin:10px auto 14px;max-width:660px;padding:12px;
+ background:linear-gradient(180deg,#1b4354,#112d3c);
+ border:1px solid #b78b53;border-radius:12px;
+}
+#pkmsvv-wiki-overlay .pkmsvv-lab-art-review h3{margin:0 0 6px;color:#ffe08c;font-size:15px}
+#pkmsvv-wiki-overlay .pkmsvv-lab-art-stage{
+ position:relative;overflow:hidden;isolation:isolate;width:min(100%,640px);
+ aspect-ratio:320/224;margin:9px auto 6px;border:2px solid #b78b53;
+ background:#1b4354 url('../images/coop-lab/room_base.png') center/100% 100% no-repeat;
+ image-rendering:pixelated;
+}
+#pkmsvv-wiki-overlay .pkmsvv-lab-art-sprite{
+ position:absolute;display:block;image-rendering:pixelated;pointer-events:none;
+ object-fit:fill;user-select:none;
+}
+#pkmsvv-wiki-overlay .pkmsvv-lab-art-machine{left:37.5%;top:41.071%;width:25%;height:35.714%}
+#pkmsvv-wiki-overlay .pkmsvv-lab-art-kabuto{left:11.25%;top:51.339%;width:15%;height:21.428%}
+#pkmsvv-wiki-overlay .pkmsvv-lab-art-terminal{left:77.8125%;top:78.571%;width:17.5%;height:17.857%}
+#pkmsvv-wiki-overlay .pkmsvv-lab-art-hotspot{
+ position:absolute;display:block;min-width:0;min-height:0;margin:0;padding:0;
+ border:1px dashed transparent;border-radius:3px;background:transparent;
+ cursor:pointer;touch-action:manipulation;
+}
+#pkmsvv-wiki-overlay .pkmsvv-lab-art-hotspot:hover,
+#pkmsvv-wiki-overlay .pkmsvv-lab-art-hotspot.selected,
+#pkmsvv-wiki-overlay .pkmsvv-lab-art-hotspot:focus-visible{
+ border-color:#ffe08c;background:rgba(255,224,140,.12);outline:0;
+}
+#pkmsvv-wiki-overlay .pkmsvv-lab-art-detail{
+ min-height:32px;margin:5px 0 0;font-size:12px;text-align:center;color:#e8d9af
+}
+@media(max-width:600px){
+ #pkmsvv-wiki-overlay .pkmsvv-lab-art-review{padding:7px}
+ #pkmsvv-wiki-overlay .pkmsvv-lab-art-review h3{font-size:13px}
+}
+
 /* FOSSIL_PC_V1 — compact five-card PC and data-only restoration lab. */
 #pkmsvv-wiki-overlay .pkmsvv-pc-grid{grid-template-columns:repeat(5,minmax(0,1fr));}
 #pkmsvv-wiki-overlay .pkmsvv-fossil-panel{max-width:850px}

@@ -704,6 +704,9 @@ if (process.env.PKMSVV_SWITCH_BOOT === '1') {
   fs.mkdirSync(path.dirname(pmdOutput),{recursive:true});
   fs.cpSync(pmdSource,pmdOutput,{recursive:true});
  }
+ const labFrom=path.join(project,'assets/coop-lab'),labTo=path.join(game,'images/coop-lab');
+ if(!fs.existsSync(path.join(labFrom,'room_base.png')))throw Error('Fossil Lab pixel background missing');
+ fs.cpSync(labFrom,labTo,{recursive:true});
  fs.appendFileSync(path.join(game,'css','style.css'),'\n'+fs.readFileSync(path.join(project,'src',cssName),'utf8'));
  fs.appendFileSync(path.join(game,'css','style.css'),'\n'+fs.readFileSync(path.join(project,'src/pkmsvv-pippi-guide.css'),'utf8'));
  const devFile=path.join(game,'dev.html');

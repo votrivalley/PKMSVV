@@ -102,6 +102,11 @@ for(const prefix of ['game','ai/game']){
  for(const filename of ['pkmsvv-v20-ui-qa.css','pkmsvv-pc-menu-clean-qa.css','pkmsvv-pippi.css','pkmsvv-pippi-guide.css']){
   write(path.join(dest,'css',filename),source('src/'+filename));
  }
+ const labOut=path.join(dest,'images/coop-lab');
+ for(const asset of ['room_base.png','decor/machine_old.png','decor/kabuto_skeleton.png','decor/research_terminal.png']){
+  const input=present(path.join(root,'assets/coop-lab',asset)),output=path.join(labOut,asset);
+  fs.mkdirSync(path.dirname(output),{recursive:true});fs.copyFileSync(input,output);
+ }
  const imageDir=path.join(dest,'images/pippi');
  fs.mkdirSync(path.join(imageDir,'portrait'),{recursive:true});
  for(const name of ['Walk-Anim.png','Idle-Anim.png','Sleep-Anim.png']){
