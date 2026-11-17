@@ -259,3 +259,34 @@ test('Berry and Berry Easy never use an uninitialized roam waypoint (real 3-seco
   assert.ok(Number.isFinite(h.pl.x)&&Number.isFinite(h.pl.y),mode+' Bot position must remain finite');
  }
 });
+
+test('Fossil Lab bots are actual moving, fighting Co-op partners (regression: missing activeBots mode)',()=>{
+ const h=harness('fossil_lab');
+ assert.equal(h.G.LanAI.activeBots().length,1,'fossil_lab must enable AI actors');
+ assert.ok(h.pl.lanBot,'AI must be initialized in native game engine');
+ const start={x:h.pl.x,y:h.pl.y};
+ for(let i=0;i<180;i++)h.G.LanAI.update(.1,i*.1);
+ assert.ok(Math.hypot(h.pl.x-start.x,h.pl.y-start.y)>25,
+  'bot must move toward player during excavation instead of standing still');
+ assert.ok(h.casts.length>0,'bot continues to fight with real Combat.tick');
+ assert.ok(Number.isFinite(h.pl.x)&&Number.isFinite(h.pl.y));
+});
+test('Fossil AI uses bounded steering under hostile waves instead of A* / stuck levelups',()=>{
+ const enemies=Array.from({length:80},(_,i)=>({x:150+(i%8)*15,y:(i%10-5)*20,dead:false,r:8}));
+ const h=harness('fossil_lab',{enemies});
+ let pathCalls=0;
+ h.G.World.isFree=(x,y,r)=>{pathCalls++;return true;};
+ assert.doesNotThrow(()=>{
+  for(let i=0;i<300;i++)h.G.LanAI.update(.016,i*.016);
+ },'300 native frames must not freeze or throw with 80 enemies on screen');
+ assert.equal(h.G.LanAI.activeBots().length,1);
+ assert.ok(h.casts.length>=290,'real combat loop continues');
+ assert.ok(pathCalls<5000,'bounded steering must avoid exponential A* scans');
+});
+test('Fossil AI returns to protect the machine when all specimens collected',()=>{
+ const h=harness('fossil_lab');
+ h.G.PKMSVVFossilExpedition={session:{collected:3,machine:{x:-250,y:0}}};
+ for(let i=0;i<130;i++)h.G.LanAI.update(.1,i*.1);
+ assert.ok(h.pl.x<0,'fossil defenders patrol the machine rather than idling on the human');
+ assert.ok(h.casts.length>0);
+});
