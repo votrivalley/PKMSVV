@@ -33,7 +33,7 @@ function probability(pl=G.Game?.player){
  return types.includes('rock')?TYPES.rock:TYPES.ordinary;
 }
 function stored(s){return s?.pkmsvvFossils&&typeof s.pkmsvvFossils==='object'&&!Array.isArray(s.pkmsvvFossils)?
- s.pkmsvvFossils:{schemaVersion:1,inventory:{},restored:{},guaranteedKabuto:false};}
+ s.pkmsvvFossils:{schemaVersion:1,inventory:{},discovered:{},restored:{},greatArchaeologist:false,guaranteedKabuto:false};}
 function inventory(s=getSave()){return {...(stored(s).inventory||{})};}
 function guaranteed(s=getSave()){return stored(s).guaranteedKabuto===true;}
 function updateSave(s,next){
@@ -58,9 +58,11 @@ function rockBroken(p,random=Math.random){
  const material=first?'dome_fossil':pool[Math.min(pool.length-1,Math.floor(Math.max(0,Math.min(.999999999,Number(random())||0))*pool.length))];
  if(!MATERIALS.has(material))return {ok:false,reason:'bad-material'};
  const before=stored(s);
- const after={schemaVersion:1,inventory:{...(before.inventory||{})},restored:{...(before.restored||{})},
+ const after={...before,schemaVersion:1,inventory:{...(before.inventory||{})},
+  discovered:{...(before.discovered||{})},restored:{...(before.restored||{})},
   guaranteedKabuto:before.guaranteedKabuto===true||first};
  after.inventory[material]=(Number(after.inventory[material])||0)+1;
+ after.discovered[material]=true;
  if(!updateSave(s,after))return {ok:false,reason:'save'};
  try{
   G.FX?.ring?.(p.x,p.y-10,8,35,'#ffde92',.4,2);
@@ -86,10 +88,16 @@ function restore(dex){
  if(Object.entries(need).some(([id,count])=>(Number(bag[id])||0)<count))
   return {ok:false,reason:'missing'};
  if(typeof db.commit!=='function')return {ok:false,reason:'save'};
- const next={schemaVersion:1,inventory:{...bag},restored:{...(previous.restored||{})},
+ const next={...previous,schemaVersion:1,inventory:{...bag},
+  discovered:{...(previous.discovered||{})},restored:{...(previous.restored||{})},
   guaranteedKabuto:previous.guaranteedKabuto===true};
- for(const [id,count] of Object.entries(need))next.inventory[id]-=count;
+ for(const [id,count] of Object.entries(need)){
+  next.inventory[id]-=count;next.discovered[id]=true;
+ }
  next.restored[recipe.dex]=true;
+ const firstGreat=!previous.greatArchaeologist&&
+  DATA.recipes.every(r=>next.restored[r.dex]===true);
+ if(firstGreat)next.greatArchaeologist=true;
  const hadF=Object.prototype.hasOwnProperty.call(s,'pkmsvvFossils'),oldF=s.pkmsvvFossils;
  const hadO=Object.prototype.hasOwnProperty.call(s,'owned'),oldO=s.owned;
  const hadD=Object.prototype.hasOwnProperty.call(s,'pkmsvvDefeatedDex'),oldD=s.pkmsvvDefeatedDex;
@@ -99,9 +107,12 @@ function restore(dex){
  s.pkmsvvDefeatedDex={...ledger,[recipe.dex]:true};
  try{
   if(db.commit(true)===false)throw Error('Save refused');
-  G.UI?.toast?.(tr('✨ Hồi sinh thành công '+recipe.name+'!',recipe.name+' restored!'),3000);
+  G.UI?.toast?.(firstGreat?
+   tr('🏅 Nhà khảo cổ vĩ đại! Đã hồi sinh đủ 15 Pokémon hóa thạch!',
+      '🏅 Great Archaeologist! All 15 fossil Pokémon restored!'):
+   tr('✨ Hồi sinh thành công '+recipe.name+'!',recipe.name+' restored!'),3500);
   G.PKMSVVPippi?.show?.('fossil',true);
-  return {ok:true,dex:recipe.dex};
+  return {ok:true,dex:recipe.dex,greatArchaeologist:firstGreat};
  }catch(e){
   if(hadF)s.pkmsvvFossils=oldF;else delete s.pkmsvvFossils;
   if(hadO)s.owned=oldO;else delete s.owned;
