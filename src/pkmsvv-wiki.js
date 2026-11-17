@@ -434,7 +434,7 @@ G.PKMSVVWiki=(()=>{
   const overlay=document.createElement('div');overlay.id='pkmsvv-wiki-overlay';
   overlay.className='pkmsvv-pc-overlay';overlay.setAttribute('role','dialog');
   overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label',tr('Phòng nghiên cứu','Research Lab'));
-  const box=document.createElement('section');box.className='pkmsvv-pc-panel';
+  const box=document.createElement('section');box.className='pkmsvv-pc-panel pkmsvv-research-panel';
   const head=document.createElement('header');head.className='pkmsvv-pc-header';
   const title=document.createElement('h2');
   title.textContent=tr('🔬 PHÒNG NGHIÊN CỨU','🔬 RESEARCH LAB');

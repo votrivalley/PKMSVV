@@ -471,3 +471,71 @@
  #pkmsvv-wiki-overlay .pkmsvv-fossil-detail small{font-size:11px}
  #pkmsvv-wiki-overlay .pkmsvv-fossil-revive{padding:6px;font-size:11px}
 }
+
+
+/* RESEARCH_LAB_V1 — large illustrated hub, no duplicated Pokémon shortcut. */
+#scr-menu #pkmsvv-menu-wiki .pkmsvv-menu-label{
+ font-size:clamp(12px,1.2vw,16px)!important;line-height:1.2!important;
+ white-space:normal!important;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-panel{
+ width:min(960px,100%);max-width:960px;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-hero{
+ display:grid;grid-template-columns:minmax(0,1.5fr) minmax(220px,1fr);
+ gap:12px;margin:4px 0 14px;padding:10px;border:1px solid #b78b53;
+ border-radius:12px;background:linear-gradient(130deg,#123a4a,#1b4354);
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-scene{
+ display:flex;align-items:flex-end;justify-content:center;
+ aspect-ratio:960/672;width:100%;min-height:0;padding:0 0 8px;
+ border:2px solid #e8bd6f;border-radius:9px;
+ background:#1b4354 url('../images/coop-lab/room_art_qa_v2.webp') center/cover no-repeat;
+ color:#fff5db;cursor:pointer;image-rendering:auto;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-scene span{
+ display:block;max-width:94%;padding:6px 12px;background:#102e3fdb;
+ border:1px solid #ffe08c;border-radius:20px;font-size:12px;
+ font-weight:750;text-shadow:0 1px 2px #000a;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-scene:focus-visible{outline:3px solid #ffe08c}
+#pkmsvv-wiki-overlay .pkmsvv-research-pippi{
+ display:flex;flex-direction:column;justify-content:center;gap:8px;min-width:0;
+ padding:8px 9px;border:1px solid #ca92b3;border-radius:9px;
+ background:linear-gradient(145deg,#573851,#233e57);
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-pippi-head{
+ display:flex;align-items:center;gap:9px;min-width:0;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-pippi-head img{
+ width:68px;height:68px;flex:0 0 68px;object-fit:cover;
+ border:2px solid #ffe5a4;border-radius:8px;image-rendering:pixelated;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-pippi-head strong{
+ color:#ffe08c;font-size:clamp(14px,1.5vw,20px);display:block;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-pippi-head small{
+ display:block;color:#ead1de;font-size:11px;line-height:1.4;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-pippi-line{
+ margin:0;min-height:64px;color:#fff3fb;font-size:clamp(12px,1.3vw,15px);
+ line-height:1.5;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-pippi-actions{display:flex;flex-wrap:wrap;gap:6px}
+#pkmsvv-wiki-overlay .pkmsvv-research-pippi-actions button{
+ flex:1;min-width:min(118px,100%);font-size:11px;padding:8px;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-machine-state{
+ display:block;color:#ffe8aa;line-height:1.4;font-weight:700;font-size:11px;
+}
+@media(max-width:680px){
+ #pkmsvv-wiki-overlay .pkmsvv-research-hero{
+  display:flex;flex-direction:column;padding:7px;
+ }
+ #pkmsvv-wiki-overlay .pkmsvv-research-scene{max-height:200px;background-size:100% 100%}
+ #pkmsvv-wiki-overlay .pkmsvv-research-pippi{gap:5px;padding:7px}
+ #pkmsvv-wiki-overlay .pkmsvv-research-pippi-head img{
+  width:44px;height:44px;flex-basis:44px;
+ }
+ #pkmsvv-wiki-overlay .pkmsvv-research-pippi-line{min-height:0}
+}

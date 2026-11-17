@@ -14,7 +14,7 @@
    ['Surprised','Ối! Vừa chọn Pokémon xong đã gặp tui hả? Hân hạnh nha! Tui là Pippi, một Clefairy siêu sao tự phong, nổi tiếng vì làm Red muốn đội quần trong truyện Pocket Monsters.','Oh! Picked your Pokémon and already met a celebrity? I’m Pippi, a self-declared Clefairy superstar. I made Red lose his mind back in the Pocket Monsters manga!'],
    ['Joyous','Công việc của tui: dẫn đường cho nhân vật chính là TUI. Bạn làm chân chạy, đánh quái, đập đá. Tui nhận công, có gì khó hiểu?','My job: guiding the main character—ME. You run, fight and break rocks. I take the credit. Any questions?'],
    ['Determined','Thấy boss to quá á? Tui chạy là để thám thính đường lui nha, đừng có bảo tui hèn! Em họ Pikachu có thể cứu bạn lúc ăn đòn; còn tui... cứu danh dự đội hình.','Big boss? If I run away, it is called scouting an escape route, NOT cowardice! Cousin Pikachu may save you when hurt; I save our reputation.'],
-   ['Happy','PC có chỗ nâng Thân thiết cho tui đấy. Đầu tư đi! Bạn nâng bản thân bao nhiêu cũng không đẹp trai bằng Pippi đâu, nhưng cố gắng vẫn được điểm cộng.','The PC has my friendship training. Invest in ME! You will never look as fabulous as Pippi, but effort earns you some points.']
+   ['Happy','Phòng nghiên cứu có chỗ nâng Thân thiết cho tui đó. PokéBox với Pokédex thì ở nút Pokémon riêng nha, đừng có bê cả kho vào văn phòng tui!','Train my Bond in the Research Lab. PokéBox and Dex are still under Pokémon, so keep your collection out of my office!']
   ],
   chest:[
    ['Surprised','Ê, rương kìa! Nhặt vào thì game cho chọn vật phẩm. Đọc kỹ hiệu ứng trước khi chốt nha, đừng thấy đồ lấp lánh là bốc đại như tui!','A chest! It offers a choice of items. Read the effects before picking. Do not just grab the shiniest one like I would!'],
@@ -24,9 +24,15 @@
    ['Happy','Đồ rơi dưới đất có nhiều loại: máu, nam châm, bom, vé, Orb và xu. Cái nào ngon thì nhặt—trừ khi boss đang dí sát mông!','Ground drops include healing, magnets, bombs, tickets, Orbs and coins. Grab them when safe—unless a boss is breathing down your neck!'],
    ['Joyous','Tui sẽ báo khi bạn nhặt đồ quan trọng. Còn EXP nhặt suốt ngày thì thôi nha, tui là danh hài chứ không phải loa phường!','I will react to important pickups. I am not narrating every XP gem; I am a comedian, not your notification spammer!']
   ],
+  laboratory:[
+   ['Inspired','Chào mừng đến Phòng nghiên cứu Hoàng gia Pippi! Tui là giáo sư trưởng, bạn là thực tập sinh không lương. Bằng cấp hả? Không hỏi!','Welcome to Pippi Royal Research Lab! I am the professor; you are the unpaid intern. Do not ask for my diploma!'],
+   ['Determined','Pokémon vẫn là nút riêng cho PokéBox, Pokédex và Nâng cấp. Phòng này dành cho Hỗ trợ, Mega, Berry, Bạn đồng hành và hóa thạch. Đừng có lạc như Psyduck!','Pokémon stays separate for fast Box, Dex and Upgrades. This lab holds Supports, Mega, Berries, Companions and fossils. Try not to get lost!'],
+   ['Angry','Đào được Hóa thạch Mái vòm không có nghĩa Kabuto tự chui ra. Máy đang khóa! Thắng nhiệm vụ Co-op Phòng Thí Nghiệm Thất Lạc lần đầu rồi mới được phục nguyên.','Finding a Dome Fossil does not instantly revive Kabuto. The machine is locked until your first Lost Laboratory Co-op clear!'],
+   ['Joyous','Sau đó chơi Co-op tiếp kiếm Xu Đồng Đội, mua đồ trang trí. Nghe đồn có tượng vàng siêu hiếm của tui… ai khoe trước tui trừ điểm duyên dáng!','Then replay Co-op for Coins and décor. My ultra-rare golden statue is waiting… flex before me and I deduct style points!']
+  ],
   fossils:[
    ['Surprised','Ủa? Đập cục đá đầu tiên sau phút 15 mà cũng moi ra được Hóa thạch Mái vòm?! Hên thôi nha. Đừng tưởng mình là nhà khảo cổ số một. Ghế đó tui đặt trước rồi.','Wait, a Dome Fossil?! Your very first rock after minute fifteen? Lucky you. I already called dibs on the chief archaeologist title.'],
-   ['Joyous','Cái này có thể phục nguyên thành Kabuto. Mau đem về PC → Hồi sinh hóa thạch đi. Đừng đem nấu canh, thứ gì tròn tròn bạn cũng bỏ vô nồi hả?!','This Dome Fossil can restore Kabuto. Take it to PC → Fossil Restoration. And no, it does NOT belong in your soup.'],
+   ['Joyous','Hóa thạch Kabuto đây! Mang về Phòng nghiên cứu. Máy còn KHÓA, phải thắng Co-op hóa thạch lần đầu mới sửa được. Đừng nhét vô máy rồi đổ tại tui!','A Kabuto fossil! Take it to the Research Lab. The machine stays LOCKED until your first Fossil Co-op clear!'],
    ['Shouting','Nói nghe nè: Pokémon có duyên với đá đào giỏi hơn, còn hội hóa thạch thì đào khỏi chê. Hỏi xác suất hả? Tui là hướng dẫn viên, không phải bảng Excel biết đi!','Rock Pokémon dig better, and fossil Pokémon have an even sharper nose for relics. Want exact odds? I am your guide, not a walking spreadsheet!'],
    ['Determined','Đi đúng vùng sẽ moi được hóa thạch đúng thời kỳ. Galar phải ghép hai mảnh. Còn cứ quay Gacha chờ hóa thạch rớt xuống? Chờ tới lúc tui bớt đẹp chắc nhanh hơn!','Dig in the right region for its fossils. Galar needs two fragments. Waiting for fossil Pokémon in Gacha? You would grow old before I become humble!']
   ],

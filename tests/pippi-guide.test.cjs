@@ -58,6 +58,16 @@ test('Pippi tutorial only advances on Next and stores completion, not an auto ti
  assert.equal(f.writes.length,1);
  assert.equal(f.guide.open('starter'),false,'completed intro never opens again');
 });
+test('Pippi Research Lab tour has four deliberate pages and never autoplays',()=>{
+ const f=fixture();
+ assert.equal(f.guide.open('laboratory'),true);
+ assert.equal(f.guide.current.kind,'laboratory');
+ assert.equal(f.guide.current.total,4);
+ assert.match(f.elements.line.textContent,/Phòng nghiên cứu/);
+ for(let n=0;n<4;n++)f.guide.next();
+ assert.equal(f.save.pkmsvvPippiGuide.laboratory,true);
+ assert.equal(f.guide.open('laboratory'),false);
+});
 test('Explore dialogue freezes a writable native game state then resumes only after final Next',()=>{
  const f=fixture();
  f.G.PKMSVVQuickRegion.active=true;
