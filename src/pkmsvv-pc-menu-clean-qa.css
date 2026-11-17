@@ -539,3 +539,150 @@
  }
  #pkmsvv-wiki-overlay .pkmsvv-research-pippi-line{min-height:0}
 }
+
+
+/* RESEARCH_LAB_ROOM_V2 — full-room interactive visual hub, no PC cards. */
+#scr-menu .menu-right .menu-list .mi-ico.pkmsvv-menu-icon-pc,
+#scr-menu .menu-item>.mi-ico.pkmsvv-menu-icon-pc{
+ background-image:url('../images/pkmsvv-research-lab-icon.png')!important;
+ background-repeat:no-repeat!important;background-position:center!important;
+ background-size:42px 42px!important;image-rendering:pixelated!important;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-panel{
+ width:min(980px,100%);max-width:980px;overflow-x:hidden;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-panel .pkmsvv-pc-grid,
+#pkmsvv-wiki-overlay .pkmsvv-research-panel .pkmsvv-pc-grid[hidden],
+#pkmsvv-wiki-overlay .pkmsvv-research-panel .pkmsvv-pc-guide[hidden]{
+ display:none!important;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-interactive{
+ display:flex!important;flex-direction:column!important;gap:10px!important;
+ margin:0!important;padding:9px!important;align-items:stretch;
+ background:linear-gradient(140deg,#153e4b,#102d40);
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-room,
+#pkmsvv-wiki-overlay .pkmsvv-build-stage{
+ width:min(100%,900px);position:relative;aspect-ratio:960/672;
+ background:#143c4a url('../images/coop-lab/room_art_qa_v2.webp') center/100% 100% no-repeat;
+ border:2px solid #bd9761;border-radius:10px;overflow:hidden;
+ margin:0 auto;image-rendering:auto;isolation:isolate;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-hotspot,
+#pkmsvv-wiki-overlay .pkmsvv-build-spot{
+ position:absolute;display:flex;align-items:flex-end;justify-content:center;
+ border:2px dashed transparent;border-radius:7px;
+ background:rgba(0,0,0,0);color:#fff5dd;
+ min-width:0;min-height:0;padding:0 2px 4px;
+ cursor:pointer;transition:background-color .12s,border-color .12s;
+ touch-action:manipulation;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-hotspot:hover,
+#pkmsvv-wiki-overlay .pkmsvv-research-hotspot:focus-visible,
+#pkmsvv-wiki-overlay .pkmsvv-build-spot:hover,
+#pkmsvv-wiki-overlay .pkmsvv-build-spot:focus-visible,
+#pkmsvv-wiki-overlay .pkmsvv-build-spot.selected{
+ border-color:#ffe5a0;background:rgba(21,61,74,.23);
+ outline:0;z-index:2;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-hotspot-tag{
+ display:inline-flex;max-width:100%;min-height:20px;
+ padding:4px 7px;background:rgba(15,40,55,.90);
+ border:1px solid #ffd986;border-radius:16px;
+ font-size:clamp(9px,1.1vw,12px);line-height:1.15;font-weight:850;
+ color:#fff0bd;text-shadow:0 1px #06212e;
+ text-align:center;align-items:center;justify-content:center;pointer-events:none;
+ white-space:normal;overflow-wrap:anywhere;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-toolbar{
+ display:flex;flex-wrap:wrap;gap:9px;justify-content:center;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-toolbar button{
+ flex:1 1 165px;max-width:240px;min-height:40px;font-size:13px;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-quick-actions{
+ display:none;gap:6px;grid-template-columns:repeat(5,minmax(0,1fr));
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-quick{
+ padding:7px 3px;border:1px solid #b8ceae;
+ border-radius:7px;color:#ffebbd;font-weight:750;font-size:11px;
+ background:#1b4856;min-width:0;cursor:pointer;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-quick:focus-visible,
+#pkmsvv-wiki-overlay .pkmsvv-research-quick:hover{outline:2px solid #ffe090}
+#pkmsvv-wiki-overlay .pkmsvv-research-interactive .pkmsvv-research-pippi{
+ display:grid!important;grid-template-columns:auto minmax(0,1fr) auto;
+ gap:12px;padding:9px 12px;align-items:center;
+ background:linear-gradient(95deg,#51364f,#214454);
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-interactive .pkmsvv-research-pippi-head img{
+ width:52px;height:52px;flex-basis:52px;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-interactive .pkmsvv-research-pippi-line{
+ min-height:0;font-size:clamp(11px,1.2vw,14px);
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-interactive .pkmsvv-research-pippi-actions{
+ grid-column:3;grid-row:1/3;flex-direction:column;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-interactive .pkmsvv-research-machine-state{
+ grid-column:1/3;grid-row:2;margin:0;color:#ffe49c;
+}
+#pkmsvv-wiki-overlay .pkmsvv-build-panel{
+ width:min(1040px,100%);max-width:1040px;
+}
+#pkmsvv-wiki-overlay .pkmsvv-build-layout{
+ display:grid;grid-template-columns:minmax(0,1.5fr) minmax(240px,.8fr);
+ gap:12px;align-items:start;
+}
+#pkmsvv-wiki-overlay .pkmsvv-build-stage{width:100%}
+#pkmsvv-wiki-overlay .pkmsvv-build-info{
+ min-width:0;border:1px solid #86baaf;border-radius:10px;
+ padding:12px;background:#153b4b;
+}
+#pkmsvv-wiki-overlay .pkmsvv-build-info h3{color:#ffe1a0;margin:0 0 8px}
+#pkmsvv-wiki-overlay .pkmsvv-build-info p{
+ margin:0 0 9px;color:#d3eae6;font-size:13px;
+}
+#pkmsvv-wiki-overlay .pkmsvv-build-items{
+ display:flex;flex-direction:column;gap:8px;
+}
+#pkmsvv-wiki-overlay .pkmsvv-build-item{
+ padding:8px;border:1px solid #4d8486;border-radius:8px;
+ display:grid;grid-template-columns:1fr auto;gap:4px 8px;
+ background:#204b55;color:#fff0c7;
+}
+#pkmsvv-wiki-overlay .pkmsvv-build-item span{font-weight:750;font-size:13px}
+#pkmsvv-wiki-overlay .pkmsvv-build-item small{
+ font-size:11px;color:#c9e7dd;grid-column:1;
+}
+#pkmsvv-wiki-overlay .pkmsvv-build-item button{font-size:11px;grid-column:2;grid-row:1/3}
+#pkmsvv-wiki-overlay .pkmsvv-build-item button:disabled{
+ opacity:.65;cursor:not-allowed;
+}
+@media(max-width:760px){
+ #pkmsvv-wiki-overlay .pkmsvv-build-layout{grid-template-columns:1fr}
+ #pkmsvv-wiki-overlay .pkmsvv-research-quick-actions{display:grid}
+ #pkmsvv-wiki-overlay .pkmsvv-research-interactive .pkmsvv-research-pippi{
+  grid-template-columns:auto 1fr;gap:7px;padding:7px;
+ }
+ #pkmsvv-wiki-overlay .pkmsvv-research-interactive .pkmsvv-research-pippi-head img{
+  width:42px;height:42px;flex-basis:42px;
+ }
+ #pkmsvv-wiki-overlay .pkmsvv-research-interactive .pkmsvv-research-pippi-actions{
+  grid-column:1/3;grid-row:auto;flex-direction:row;
+ }
+ #pkmsvv-wiki-overlay .pkmsvv-research-interactive .pkmsvv-research-machine-state{
+  grid-column:1/3;grid-row:auto;
+ }
+ #pkmsvv-wiki-overlay .pkmsvv-research-hotspot-tag{font-size:9px;padding:3px}
+}
+@media(max-width:440px){
+ #pkmsvv-wiki-overlay .pkmsvv-research-interactive{padding:5px!important}
+ #pkmsvv-wiki-overlay .pkmsvv-research-quick{font-size:10px}
+ #pkmsvv-wiki-overlay .pkmsvv-research-hotspot-tag{
+  font-size:8px;padding:2px 3px;min-height:14px;
+ }
+ #pkmsvv-wiki-overlay .pkmsvv-research-interactive .pkmsvv-research-pippi-head strong{
+  font-size:13px;
+ }
+}
