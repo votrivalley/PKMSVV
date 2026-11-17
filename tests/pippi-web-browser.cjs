@@ -292,6 +292,14 @@ async function main(){
   assert.equal(fossilMission.noSaveMutation,true,'Co-op mission preview must not award coins or edit a save');
   assert.equal(fossilMission.playable,false);
   if(process.env.PKMSVV_PIPPI_UI_ONLY==='1'){
+   const coProbe=await js(`(()=>{
+    document.querySelectorAll('#pkmsvv-wiki-overlay').forEach(x=>x.remove());
+    G.MenuUI.open();
+    const screen=[...document.querySelectorAll('section.scr,.scr,[role="dialog"]')].filter(e=>!e.classList.contains('hidden')).map(e=>({id:e.id,txt:e.textContent.trim().slice(0,400)}));
+    const candidates=[...document.querySelectorAll('button')].filter(e=>/Co-op|Sống Sót|Sống sót|Đồng Đội|Chơi với AI|Hợp tác/i.test(e.textContent||'')).slice(0,30).map(e=>({id:e.id,cls:e.className,txt:e.textContent.trim().slice(0,85),outer:e.outerHTML.slice(0,420)}));
+    return {state:G.Game?.state,screen,candidates,menuKeys:Object.keys(G.MenuUI||{})};
+   })()`);
+   console.log('PIPPI_COOP_REAL_MENU_PROBE='+JSON.stringify(coProbe));
    console.log('PASS PIPPI_RESEARCH_UI_2_2_COOP_FOSSIL_MODULAR_PREVIEW');
    return;
   }
