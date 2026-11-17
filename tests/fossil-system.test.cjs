@@ -121,7 +121,7 @@ test('collected fossil stays discovered even after it is spent on restoration',(
  assert.equal(a.save.pkmsvvFossils.discovered.dome_fossil,true);
  assert.equal(a.save.pkmsvvFossils.restored[140],true);
 });
-test('Great Archaeologist only unlocks when all 15 fossil Pokémon are restored',()=>{
+test('Great Archaeologist requires 15 fossil recipes PLUS all 10 evolved species = 25',()=>{
  const a=rig();
  a.save.pkmsvvCoopLab={machineUnlocked:true};
  a.save.pkmsvvFossils={schemaVersion:1,
@@ -131,9 +131,15 @@ test('Great Archaeologist only unlocks when all 15 fossil Pokémon are restored'
  assert.equal(a.save.pkmsvvFossils.greatArchaeologist,undefined);
  const last=a.api.restore(142);
  assert.equal(last.ok,true);
- assert.equal(last.greatArchaeologist,true);
- assert.equal(a.save.pkmsvvFossils.greatArchaeologist,true);
- assert.equal(a.say.some(x=>x.includes('Nhà khảo cổ vĩ đại')),true);
+ assert.equal(last.greatArchaeologist,false,
+  'all base restorations alone are not all 25 species');
+ const expected=catalog.recipes.flatMap(r=>r.evolutionDexIds);
+ assert.equal(expected.length,10);
+ a.save.owned={...a.save.owned,...Object.fromEntries(expected.map(x=>[x,{from:'evolution'}]))};
+ const progress=a.api.collectionProgress(a.save);
+ assert.deepEqual({collected:progress.collected,total:progress.total,revived:progress.revived},
+  {collected:25,total:25,revived:15});
+ assert.equal(progress.complete,true);
 });
 
 test('Great Archaeologist appears in native Achievements registry without double registration',()=>{
@@ -142,10 +148,12 @@ test('Great Archaeologist appears in native Achievements registry without double
  a.api.install();a.api.install();
  const def=a.G.AchDefs.BY['pkmsvv-great-archaeologist'];
  assert.ok(def);
- assert.equal(def.goal,15);
+ assert.equal(def.goal,25);
  assert.equal(a.G.AchDefs.LIST.length,1);
  assert.equal(def.value(a.save),0);
  a.save.pkmsvvFossils={restored:Object.fromEntries(catalog.recipes.map(x=>[x.dex,true]))};
  assert.equal(def.value(a.save),15);
+ a.save.owned=Object.fromEntries(catalog.recipes.flatMap(r=>r.evolutionDexIds).map(x=>[x,{at:1}]));
+ assert.equal(def.value(a.save),25);
  assert.equal(def.name,'Nhà khảo cổ vĩ đại');
 });
