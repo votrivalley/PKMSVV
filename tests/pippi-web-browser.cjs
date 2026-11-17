@@ -248,6 +248,7 @@ async function main(){
   // Reloading the page masks the second-run leaks reported by Web players.
   for(let session=1;session<=2;session++){
    if(session===2){
+    await js("(()=>{if(window.__pkmsvvQaSurvivor){clearInterval(window.__pkmsvvQaSurvivor);window.__pkmsvvQaSurvivor=null;}return true})()");
     const exit=await js("(()=>{G.Game.quit();G.MenuUI.open();return {state:G.Game?.state,region:G.PKMSVVQuickRegion?.active}})()");
     console.log('PIPPI_WEB_NATIVE_QUIT='+JSON.stringify(exit));
     await until(()=>js("G.Game?.state!=='playing'&&G.PKMSVVPippi?.run===null"),10000);
@@ -276,7 +277,11 @@ async function main(){
     })()`);
     return js("G.Game?.state==='playing'");
    },30000);
-   await js("(()=>{const p=G.Game.player;if(p){p.invuln=360;p.hp=p.maxHp;}return true})()");
+   // This tests companion lifecycle/crashes, not whether a stationary
+   // disposable Pikachu can survive the crowd. Native damage/respawn can
+   // overwrite a one-shot invuln=360 during a long randomized session.
+   // Keep HP safe without bypassing Pippi combat, skill selection or spawns.
+   await js("(()=>{if(window.__pkmsvvQaSurvivor)clearInterval(window.__pkmsvvQaSurvivor);window.__pkmsvvQaSurvivor=setInterval(()=>{const p=G.Game?.player;if(p&&G.Game?.state==='playing'&&!p.dead){p.hp=p.maxHp;p.invuln=Math.max(Number(p.invuln)||0,100000);}},100);const p=G.Game.player;if(p){p.invuln=100000;p.hp=p.maxHp;}return true})()");
    const before=await js("(()=>({t:G.Game?.st?.time,pc:!!G.PKMSVVWiki,pippi:!!G.PKMSVVPippi,run:!!G.PKMSVVPippi.run}))()");
    const interval=5000,rounds=session===1?
     (Number(process.env.PKMSVV_PIPPI_FIRST_ROUNDS)||30):
@@ -287,6 +292,8 @@ async function main(){
     after=await js(`(()=>({
       t:G.Game?.st?.time,state:G.Game?.state,
       enemies:G.EnemyMgr?.count,run:!!G.PKMSVVPippi.run,
+      hp:G.Game?.player?.hp,dead:!!G.Game?.player?.dead,
+      region:!!G.PKMSVVQuickRegion?.active,
       companion:!document.querySelector('#pkmsvv-pippi-follower')?.hidden,
       popup:!!G.UI?.isOpen?.('scr-levelup'),
       fps:G.PKMSVVHordePerformance?.stats?.fps,
