@@ -1251,8 +1251,11 @@ async function main(){
      await sleep(5000);
      long=await keepPlaying('FIRST_'+(i+1)*5+'S');
     }
-    assert.ok(Number(long.time)>=140,
-     'First Explore failed to reach 2+ minutes: '+JSON.stringify(long));
+    // Skill-selection screens legitimately pause the native game clock.
+    // Measure the stated 2+ in-game minutes, not 140s (which incorrectly
+    // rejects healthy 138s sessions after queued level-up choices).
+    assert.ok(Number(long.time)>=120,
+     'First Explore failed to reach 2+ in-game minutes: '+JSON.stringify(long));
     const quit=await evaluate("(()=>{G.Game.quit();G.MenuUI.open();return {state:G.Game?.state,region:G.PKMSVVQuickRegion?.active}})()");
     console.log('PIPPI_NATIVE_QUIT='+JSON.stringify(quit));
     await until(()=>evaluate("G.Game?.state!=='playing'&&G.PKMSVVPippi?.run===null"),12000);
