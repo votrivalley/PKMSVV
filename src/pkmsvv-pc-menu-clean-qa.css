@@ -1200,3 +1200,39 @@
  width:32px!important;height:32px!important;
  max-width:32px!important;max-height:32px!important;
 }
+
+/* ICON_SCALE_254: requested RELATIVE increases over Beta 2.5.3 art sizes:
+ * Research 32 * 1.10 = 35.2; Co-op & Arena 34 * 1.40 = 47.6.
+ * The icon BOX is still 36px and labels remain on a fixed x-axis.
+ * Overflow is visual only; the clickable row size does not change. */
+#scr-menu#scr-menu #pkmsvv-menu-wiki .mi-ico.pkmsvv-menu-icon-pc{
+ overflow:visible!important;
+}
+#scr-menu#scr-menu #pkmsvv-menu-wiki .pkmsvv-research-menu-image{
+ width:35.2px!important;height:35.2px!important;
+ max-width:35.2px!important;max-height:35.2px!important;
+}
+#scr-menu#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.mi-ico.pkmsvv-menu-icon-coop,
+#scr-menu#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.mi-ico.pkmsvv-menu-icon-arena{
+ overflow:visible!important;
+ background-image:none!important;
+ isolation:isolate!important;
+}
+#scr-menu#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.mi-ico.pkmsvv-menu-icon-coop::after,
+#scr-menu#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.mi-ico.pkmsvv-menu-icon-arena::after{
+ content:""!important;display:block!important;
+ position:absolute!important;pointer-events:none!important;
+ width:47.6px!important;height:47.6px!important;
+ top:50%!important;left:50%!important;
+ transform:translate(-50%,-50%)!important;
+ background-image:url('../images/pkmsvv-menu-icons.webp')!important;
+ background-repeat:no-repeat!important;
+ background-size:142.8px 47.6px!important;
+ image-rendering:pixelated!important;
+}
+#scr-menu#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.mi-ico.pkmsvv-menu-icon-coop::after{
+ background-position:-47.6px 0!important;
+}
+#scr-menu#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.mi-ico.pkmsvv-menu-icon-arena::after{
+ background-position:-95.2px 0!important;
+}
