@@ -14,12 +14,23 @@ const {startServer}=require('../lan-server/server.cjs');
   await page.addInitScript(()=>{window.__pkmsvvPippiGuideQABypass=true;});
   await page.goto('http://127.0.0.1:'+server.port+'/game/',{waitUntil:'domcontentloaded',timeout:45000});
   await page.waitForFunction(()=>!!window.G?.PKMSVVBoxHubUI&&!!G.DB?.save&&!!G.MenuUI?.open,{timeout:40000});
-  const before=await page.evaluate(()=>{
+  // Exclude volatile daily missions / timestamps which the native game updates
+  // independently of PokéBox. Still fail on any collection/economy mutation.
+  const snapshotSave=()=>page.evaluate(()=>{
+   const s=G.DB.save,keys=[
+    'coins','owned','shiny','partner','partnerShiny','pkmsvvBoxSchema',
+    'pkmsvvBox','pkmsvvTeam6','pkmsvvSelectedInstanceId',
+    'pkmsvvRankFragments','pkmsvvRankClaimedCopies','pkmsvvReforgePrisms',
+    'pupg','globalUpgrades','tms','bag','pkmsvvFossils'
+   ];
+   return Object.fromEntries(keys.map(key=>[key,JSON.stringify(s?.[key]??null)]));
+  });
+  await page.evaluate(()=>{
    G.DB.save.partner=25;G.DB.save.partnerShiny=false;
    G.DB.save.pkmsvvStorySeen=true;G.DB.save.pkmsvvNameChosen=true;
    G.MenuUI.open();
-   return JSON.stringify(G.DB.save);
   });
+  const before=await snapshotSave();
   const modules=await page.evaluate(()=>({
    box:!!G.PKMSVVBox,stage2:!!G.PKMSVVBox2,stage3:!!G.PKMSVVBox3,
    stage4:!!G.PKMSVVBox4,hub:!!G.PKMSVVBoxHub,ui:!!G.PKMSVVBoxHubUI,
@@ -40,8 +51,8 @@ const {startServer}=require('../lan-server/server.cjs');
   assert.equal(await page.evaluate(()=>G.PKMSVVBoxHubUI.currentTab()),'dex');
   await page.evaluate(()=>document.querySelector('[data-pc-tab="upgrade"]').click());
   assert.equal(await page.evaluate(()=>G.PKMSVVBoxHubUI.currentTab()),'upgrade');
-  const after=await page.evaluate(()=>JSON.stringify(G.DB.save));
-  assert.equal(after,before,'Opening/switching Pokémon tabs unexpectedly modified save');
+  const after=await snapshotSave();
+  assert.deepEqual(after,before,'Opening/switching Pokémon tabs unexpectedly modified collection or economy save');
   assert.deepEqual(exceptions,[],'Unexpected JS errors in native PokéBox UI');
   console.log('BETA_POKEMON_HUB_BROWSER_PASS='+JSON.stringify(result));
  }finally{
