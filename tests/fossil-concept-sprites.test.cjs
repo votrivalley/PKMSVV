@@ -2,26 +2,25 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const test=require('node:test'),sharp=require('sharp');
 const root=path.resolve(__dirname,'..');
-const {main}=require('../scripts/build-fossil-concept-sprites.cjs');
-test('packaging uses exactly the approved painting rather than a new concept',()=>{
- const source=fs.readFileSync(path.join(root,'scripts/build-fossil-concept-sprites.cjs'),'utf8');
- assert.match(source,/room_art_qa_v2\.webp/);
- assert.match(source,/restoration_chamber/);
- assert.match(source,/maskFor\(chamber\)/);
- assert.match(source,/newConcept:false/);
+const {main,EXPECTED}=require('../scripts/build-fossil-concept-sprites.cjs');
+test('source pixels are the uploaded approved image, not recreated concept SVG',async()=>{
+ const manifest=await main();
+ assert.equal(manifest.sha256,EXPECTED);
+ assert.equal(manifest.fallbackSVG,false);
+ assert.deepEqual([manifest.mossFossilWall,manifest.boneDigSite,manifest.amberDeposit],[[2,0],[3,0],[0,1]]);
+ const src=fs.readFileSync(path.join(root,'assets/coop-lab/approved-fossil-source-atlas.png'));
+ const dist=fs.readFileSync(path.join(root,'dist/fossil-concept-sprites/approved-fossil-source-atlas.png'));
+ assert.deepEqual(src,dist);
+ const meta=await sharp(dist).metadata();
+ assert.deepEqual([meta.width,meta.height,meta.hasAlpha],[384,192,true]);
 });
-test('game can load all four crisp atlas sprites with source integrity',async()=>{
- await main();
- const dir=path.join(root,'dist/fossil-concept-sprites');
- const machine=await sharp(path.join(dir,'rotom-restorer-concept-atlas.png')).metadata();
- const sites=await sharp(path.join(dir,'fossil-excavation-concept-atlas.png')).metadata();
- assert.deepEqual([machine.width,machine.height],[256,128]);
- assert.equal(machine.hasAlpha,true);
- assert.deepEqual([sites.width,sites.height],[288,288]);
- const m=JSON.parse(fs.readFileSync(path.join(dir,'source-manifest.json'),'utf8'));
- assert.equal(m.newConcept,false);assert.equal(m.sites.names.length,3);
- const game=fs.readFileSync(path.join(root,'src/pkmsvv-fossil-expedition-native.js'),'utf8');
- assert.match(game,/obj\.online\?128:0,0,128,128/);
- assert.match(game,/col\*96,row\*96,96,96/);
- assert.doesNotMatch(game,/image\('images\/coop-lab\/rotom-restorer-atlas\.svg'\)/);
+test('machine foot ordering, overlap transparency, compact SOS and concept sprite lookups',()=>{
+ const code=fs.readFileSync(path.join(root,'src/pkmsvv-fossil-expedition-native.js'),'utf8');
+ assert.match(code,/drawImage\(machines,obj\.online\?96:0,0,ART_CELL,ART_CELL,-45,-83,90,90\)/);
+ assert.match(code,/overlap=ally\(\)\.some/);
+ assert.match(code,/obj\.type==='machine'\?obj\.y\+7:obj\.y/);
+ assert.match(code,/digSprite=\[\[192,0\],\[288,0\],\[0,96\]\]/);
+ assert.match(code,/background-position:-96px -96px/);
+ assert.match(code,/drawImage\(rotomFallback,192,96,48,48/);
+ assert.doesNotMatch(code,/fossil-excavation-concept-atlas\.png/);
 });

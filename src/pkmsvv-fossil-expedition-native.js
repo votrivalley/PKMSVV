@@ -8,9 +8,11 @@ G.PKMSVVFossilExpedition=(()=>{
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  const ready=!!C&&typeof C.rescue==='function'&&C.ROTOM_DEADLINE===240;
  const image=(url)=>{const img=new Image();img.src=url;return img;};
- const excavations=image('images/coop-lab/fossil-excavation-concept-atlas.png');
- const machines=image('images/coop-lab/rotom-restorer-concept-atlas.png');
- const rotomFallback=image('images/coop-lab/rotom-orb.svg');
+ // All seven live sprites are cut from the user's approved art reference.
+ const concept=image('images/coop-lab/approved-fossil-source-atlas.png');
+ const excavations=concept,machines=concept,rotomFallback=concept;
+ const ART_CELL=96;
+ const digSprite=[[192,0],[288,0],[0,96]];
  let current=null,active=false,finished=false,bossEnemy=null,rotomAnimator=null,
   uiButton=null,lastAction=-100,lastBossHint=-100,sendClock=0,scanClock=0,
   waveClock=0,waveIndex=0,duelClock=0,cachedThreats=0,rendered=new Set(),lastFinish=null,
@@ -61,12 +63,13 @@ function showRotomSOS(){
  if(!distressNode){
   distressNode=document.createElement('div');distressNode.id='pkmsvv-rotom-distress';
   distressNode.setAttribute('role','status');distressNode.setAttribute('aria-live','polite');
-  distressNode.style.cssText='position:fixed;top:clamp(88px,13vh,142px);left:50%;transform:translateX(-50%);z-index:820;width:min(85vw,460px);max-width:calc(100vw - 22px);display:flex;align-items:center;gap:12px;padding:10px 14px;background:#152e43f2;border:3px solid #fca36e;border-radius:12px;box-shadow:0 5px 0 #613d39,0 9px 28px #0009;pointer-events:none;color:#fff4da;font:700 14px/1.35 sans-serif;box-sizing:border-box';
-  const portrait=document.createElement('img');portrait.src='images/coop-lab/rotom-orb.svg';portrait.alt='';
-  portrait.style.cssText='width:54px;height:54px;flex:none;image-rendering:pixelated;filter:drop-shadow(0 0 7px #ff944e)';
+  // Small upper-right SOS notification: gameplay controls and timer unobstructed.
+  distressNode.style.cssText='position:fixed;top:clamp(60px,10vh,108px);right:clamp(9px,3vw,30px);left:auto;transform:none;z-index:820;width:min(78vw,350px);max-width:calc(100vw - 18px);display:flex;align-items:center;gap:9px;padding:8px 10px;background:#152e43f2;border:2px solid #fca36e;border-radius:10px;box-shadow:0 3px 0 #613d39,0 6px 16px #0008;pointer-events:none;color:#fff4da;font:700 12px/1.3 sans-serif;box-sizing:border-box';
+  const portrait=document.createElement('span');portrait.setAttribute('aria-hidden','true');
+  portrait.style.cssText='width:48px;height:48px;flex:none;display:block;background-image:url("images/coop-lab/approved-fossil-source-atlas.png");background-repeat:no-repeat;background-size:384px 192px;background-position:-96px -96px;image-rendering:pixelated';
   const body=document.createElement('div');body.style.cssText='flex:1;min-width:0';
   const label=document.createElement('div');label.textContent='⚡ Rotom · SOS';
-  label.style.cssText='color:#ffaf79;font-weight:900;font-size:15px;margin-bottom:3px';
+  label.style.cssText='color:#ffaf79;font-weight:900;font-size:14px;margin-bottom:2px';
   const message=document.createElement('div');message.className='pkmsvv-rotom-message';
   body.append(label,message);distressNode.append(portrait,body);
   document.body.append(distressNode);
@@ -346,20 +349,27 @@ function updateRotomSOS(){
   ctx.save();ctx.translate(obj.x,obj.y);ctx.imageSmoothingEnabled=false;
   if(obj.type==='machine'){
    if(machines.complete&&machines.naturalWidth>0){
-    ctx.drawImage(machines,obj.online?128:0,0,128,128,-64,-120,128,128);
+    // 90px in-world, bottom-foot anchored; the oversized 128px machine used to cover trainers.
+    const overlap=ally().some(p=>Math.abs(p.x-obj.x)<54&&p.y>=obj.y-58&&p.y<=obj.y+25);
+    if(overlap)ctx.globalAlpha=.58;
+    ctx.drawImage(machines,obj.online?96:0,0,ART_CELL,ART_CELL,-45,-83,90,90);
+    ctx.globalAlpha=1;
    }else{
     ctx.fillStyle='#594e49';ctx.fillRect(-45,-80,90,82);
     ctx.fillStyle=obj.online?'#80e9ef':'#554740';ctx.fillRect(-30,-62,60,38);
    }
    const ratio=Math.max(0,Math.min(1,obj.hp/C.MAX_MACHINE_HP));
-   ctx.fillStyle='#1e2630';ctx.fillRect(-44,14,88,10);
-   ctx.fillStyle=ratio>.3?'#7fe0a9':'#ef7768';ctx.fillRect(-42,17,84*ratio,5);
+   ctx.fillStyle='#1e2630';ctx.fillRect(-35,9,70,8);
+   ctx.fillStyle=ratio>.3?'#7fe0a9':'#ef7768';ctx.fillRect(-33,11,66*ratio,4);
   }else if(obj.type==='site'){
-   const col=Math.max(0,Math.min(2,obj.id-1)),row=obj.hits>=3?2:obj.hits>=2?1:0;
-   if(excavations.complete&&excavations.naturalWidth>0)
-    ctx.drawImage(excavations,col*96,row*96,96,96,-48,-56,96,96);
-   else{
-    ctx.fillStyle=row===2?'#53483c':row===1?'#977860':'#b59c79';
+   const col=Math.max(0,Math.min(2,obj.id-1)),[sx,sy]=digSprite[col];
+   if(excavations.complete&&excavations.naturalWidth>0){
+    // Use the three EXACT image concepts; only dim them when excavated.
+    ctx.globalAlpha=obj.hits>=3?.20:obj.hits>=2?.67:obj.hits>=1?.86:1;
+    ctx.drawImage(excavations,sx,sy,ART_CELL,ART_CELL,-46,-57,92,92);
+    ctx.globalAlpha=1;
+   }else{
+    ctx.fillStyle=obj.hits>=3?'#53483c':obj.hits>=2?'#977860':'#b59c79';
     ctx.fillRect(-36,-32,72,45);
    }
    // Egg-like HP bar; 3 real excavation hits = 100%, 67%, 33%, 0%.
@@ -383,11 +393,9 @@ function updateRotomSOS(){
     ctx.moveTo(7,-25);ctx.lineTo(dx*.3,-38);
     ctx.lineTo(dx*.6+8,dy*.65-20);ctx.lineTo(dx,dy-15);ctx.stroke();
    }
-   if(rotomAnimator)try{
-    rotomAnimator.draw(ctx,0,-18);ctx.restore();return;
-   }catch(_){}
+   // Render Rotom's original SOS beacon from approved image, not PMD placeholder.
    if(rotomFallback.complete&&rotomFallback.naturalWidth>0)
-    ctx.drawImage(rotomFallback,-28,-55,56,56);
+    ctx.drawImage(rotomFallback,192,96,48,48,-23,-54,46,46);
    else{
     ctx.fillStyle='#fa7840';ctx.beginPath();ctx.arc(0,-22,14,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#b5f7ed';ctx.fillRect(-6,-26,4,5);ctx.fillRect(3,-26,4,5);
@@ -402,7 +410,8 @@ function updateRotomSOS(){
     ...(!current.rotom.merged&&current.collected===3?[{...current.rotom,type:'rotom'}]:[])];
  }
  function drawables(){
-  return visibleObjects().map(obj=>({y:obj.y,draw(ctx){
+  // Sort machine at foot point so players standing in front appear in front.
+  return visibleObjects().map(obj=>({y:obj.type==='machine'?obj.y+7:obj.y,draw(ctx){
    const id=obj.type==='site'?'s'+obj.id:obj.type;
    rendered.add(id);drawOne(ctx,obj);
   }}));

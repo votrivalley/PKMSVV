@@ -191,6 +191,12 @@ const {startServer}=require('../lan-server/server.cjs');
   });
   assert.equal(mined.ok,true,'in-world mining requires player proximity and Host ownership');
   await page.waitForFunction(()=>G.PKMSVVFossilExpedition.spriteReady===true,null,{timeout:12000});
+  const approvedAtlas=await page.evaluate(async()=>{
+   const img=new Image();img.src='images/coop-lab/approved-fossil-source-atlas.png';await img.decode();
+   return {width:img.naturalWidth,height:img.naturalHeight};
+  });
+  assert.deepEqual([approvedAtlas.width,approvedAtlas.height],[384,192],
+   'Game must load approved concept sprites, not old SVG/painted machine');
   const aiBefore=await page.evaluate(()=>({
    count:G.LanAI.activeBots().length,
    bots:G.Coop.puppets().filter(p=>p.lanBot).map(p=>({x:p.x,y:p.y,moves:p.moves.length,dead:p.dead}))

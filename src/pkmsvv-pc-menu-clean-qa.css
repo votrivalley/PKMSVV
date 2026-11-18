@@ -1237,13 +1237,10 @@
  background-position:-95.2px 0!important;
 }
 
-/* MENU_ICON_STROKE_255 — darker one-pixel silhouette around the three NEW sprites only.
- * Preserve the approved 35.2px / 47.6px artwork sizes and the common icon/label columns. */
+/* MENU_PIXEL_STROKE_CLEAN_257 — no stacked drop-shadow/blur; silhouette comes from actual sprite. */
 #scr-menu#scr-menu #pkmsvv-menu-wiki .pkmsvv-research-menu-image,
 #scr-menu#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.mi-ico.pkmsvv-menu-icon-coop::after,
 #scr-menu#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.mi-ico.pkmsvv-menu-icon-arena::after{
- filter:drop-shadow(1px 0 0 #102e40)
-        drop-shadow(-1px 0 0 #102e40)
-        drop-shadow(0 1px 0 #102e40)
-        drop-shadow(0 -1px 0 #102e40)!important;
+ filter:none!important;
+ image-rendering:pixelated!important;
 }

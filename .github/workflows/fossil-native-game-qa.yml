@@ -7,6 +7,7 @@ on:
       - 'scripts/prepare-web.cjs'
       - 'src/pkmsvv-pc-menu-clean-qa.css'
       - 'scripts/build-fossil-concept-sprites.cjs'
+      - 'assets/coop-lab/approved-fossil-source-atlas.png'
       - 'assets/coop-lab/room_art_qa_v2.webp'
       - 'assets/coop-lab/fossil-excavation-atlas.svg'
       - 'src/pkmsvv-fossil-expedition-native.js'
@@ -111,10 +112,9 @@ jobs:
           test -s dist/lan/game/index.html
           grep -Fq 'PKMSVVFossilExpedition' dist/lan/game/js/app.min.js
           grep -Fq 'fossil_lab' dist/lan/game/js/app.min.js
-          test -s dist/lan/game/images/coop-lab/rotom-restorer-concept-atlas.png
-          test -s dist/lan/game/images/coop-lab/fossil-excavation-concept-atlas.png
-          grep -Fq 'rotom-restorer-concept-atlas.png' src/pkmsvv-fossil-expedition-native.js
-          grep -Fq 'fossil-excavation-concept-atlas.png' src/pkmsvv-fossil-expedition-native.js
+          test -s dist/lan/game/images/coop-lab/approved-fossil-source-atlas.png
+          grep -Fq 'approved-fossil-source-atlas.png' src/pkmsvv-fossil-expedition-native.js
+          sha256sum 'dist/lan/game/images/coop-lab/approved-fossil-source-atlas.png' | grep -Fq '3f26919b9ef09aafd1ca5a75eacfed5e5552bbe660c9218be34f3615a483019d'
           test -s dist/lan/game/images/coop-lab/fossil-excavation-rock.svg
           test -s dist/lan/game/images/coop-lab/fossil-excavation-atlas.svg
           test -s dist/lan/game/images/coop-lab/rotom-restorer-atlas.svg

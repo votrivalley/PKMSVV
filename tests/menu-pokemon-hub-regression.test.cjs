@@ -9,12 +9,13 @@ const read=rel=>fs.readFileSync(path.join(root,rel),'utf8');
 
 test('menu icon outline is limited to three pixel-art sprites, without moving the column',()=>{
  const css=read('src/pkmsvv-pc-menu-clean-qa.css');
- const part=css.split('/* MENU_ICON_STROKE_255')[1];
- assert.ok(part,'the three-icon outline must exist');
+ const part=css.split('/* MENU_PIXEL_STROKE_CLEAN_257')[1];
+ assert.ok(part,'the clean sprite silhouette must exist');
  assert.match(part,/pkmsvv-research-menu-image/);
  assert.match(part,/pkmsvv-menu-icon-coop::after/);
  assert.match(part,/pkmsvv-menu-icon-arena::after/);
- assert.match(part,/drop-shadow\(1px 0 0/);
+ assert.match(part,/filter:none!important/);
+ assert.doesNotMatch(part,/drop-shadow/);
  assert.match(css,/width:35\.2px!important;height:35\.2px!important/);
  assert.match(css,/width:47\.6px!important;height:47\.6px!important/);
  assert.match(css,/grid-template-columns:var\(--pkmsvv-nav-icon-track\)/);
