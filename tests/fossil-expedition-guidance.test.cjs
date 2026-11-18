@@ -8,7 +8,7 @@ function fixture(){
   tag,children:[],style:{},id:'',className:'',textContent:'',isConnected:false,
   setAttribute(){},append(...children){for(const c of children){c.isConnected=true;this.children.push(c);}},
   remove(){this.isConnected=false;const i=root.indexOf(this);if(i>=0)root.splice(i,1);},
-  querySelector(query){const cls=query.replace(/^\\./,'');return this.children.find(c=>c.className===cls)||
+  querySelector(query){const cls=query.startsWith('.')?query.slice(1):query;return this.children.find(c=>c.className===cls)||
    this.children.flatMap(c=>c.children||[]).find(c=>c.className===cls)||null;}
  });
  const document={
