@@ -1237,7 +1237,7 @@
  background-position:-95.2px 0!important;
 }
 
-/* MENU_PIXEL_STROKE_CLEAN_257 — no stacked drop-shadow/blur; silhouette comes from actual sprite. */
+/* MENU_PIXEL_STROKE_CLEAN_257 — remove layered filter artifacts; native sprite silhouette only. */
 #scr-menu#scr-menu #pkmsvv-menu-wiki .pkmsvv-research-menu-image,
 #scr-menu#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.mi-ico.pkmsvv-menu-icon-coop::after,
 #scr-menu#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.mi-ico.pkmsvv-menu-icon-arena::after{
