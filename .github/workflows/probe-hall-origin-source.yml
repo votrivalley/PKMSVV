@@ -66,3 +66,39 @@ jobs:
                       test=get(test_url)
                       print('RAW PATH LENGTH',test_url,len(test))
           PY
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install inspection-only browser dependencies
+        run: npm install --no-audit --no-fund
+      - name: Probe live canvas APIs without playing or saving
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const {chromium}=require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true,executablePath:'/usr/bin/google-chrome',args:['--disable-dev-shm-usage']});
+            const page=await browser.newPage({viewport:{width:1280,height:800}});
+            page.on('pageerror',e=>console.log('PAGEERROR',String(e).slice(0,500)));
+            try{
+              await page.goto('https://pokesurvivor.com/en/',{waitUntil:'domcontentloaded',timeout:45000});
+              await page.waitForTimeout(5000);
+              const state=await page.evaluate(()=>{
+                const g=window.G;
+                return {
+                  title:document.title,
+                  globalG:typeof g,
+                  keys:g?Object.keys(g).slice(0,130):[],
+                  judgmentKeys:g?.Judgment?Object.keys(g.Judgment):[],
+                  worldKeys:g?.World?Object.keys(g.World):[],
+                  tileKeys:g?.Tiles?Object.keys(g.Tiles):[],
+                  gameState:g?.Game?.state,
+                  scripts:[...document.scripts].map(x=>x.src).filter(Boolean).slice(0,20)
+                };
+              });
+              console.log('OFFICIAL_GAME_API',JSON.stringify(state));
+            }finally{await browser.close();}
+          })().catch(e=>{console.error('BROWSER_INSPECT_FAILED',e);process.exit(1)});
+          NODE
