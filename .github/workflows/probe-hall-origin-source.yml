@@ -54,4 +54,15 @@ jobs:
                       print('FRAGMENT',repr(content[max(0,pos-130):pos+200].replace('\n',' ')))
               assets=set(re.findall(r'["\']([^"\']*?(?:origin|origen|judgment|hall)[^"\']*?\.(?:png|webp|svg|jpg))["\']',content,re.I))
               print('MATCHED IMAGE SOURCES:',sorted(assets)[:40])
+              if url.endswith('/js/app.min.js'):
+                  import base64
+                  spots=[m.start() for m in re.finditer(r"(?:\\x5b|\\[)['\"']clouds['\"']",content)]
+                  print('CLOUDS CODE SITES', spots[-15:])
+                  for pos in spots[-5:]:
+                      print('CLOUDS CODE CHUNK',repr(content[max(0,pos-1150):pos+1650]))
+                  for tag in ('G.Judgment','G[\\x27Judgment\\x27]','G[\\x22Judgment\\x22]','clouds','_a04fd82'):
+                      print('RAW TOKEN',tag,'count',content.count(tag))
+                  for test_url in ('https://pokesurvivor.com/js/app.min.js.map','https://pokesurvivor.com/dev.html','https://pokesurvivor.com/js/systems/origin-hall.js'):
+                      test=get(test_url)
+                      print('RAW PATH LENGTH',test_url,len(test))
           PY
