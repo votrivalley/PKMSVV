@@ -86,7 +86,7 @@ jobs:
               await page.goto('https://pokesurvivor.com/en/',{waitUntil:'domcontentloaded',timeout:45000});
               await page.waitForTimeout(5000);
               const state=await page.evaluate(()=>{
-                const g=window.G;
+                const g=(typeof G!=='undefined'&&G)?G:window.G;
                 return {
                   title:document.title,
                   globalG:typeof g,
