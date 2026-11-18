@@ -38,3 +38,15 @@ test('both Cloudflare routes pin the complete ordered PokéBox set and bypass st
  assert.match(build,/urls\.push\(route\+'\/js\/ui\/'\+name\)/);
  assert.match(build,/\['\/game','\/ai\/game'\]/);
 });
+
+test('LAN Beta itself injects the real three-tab PokéBox UI and preserves production',()=>{
+ const prep=read('scripts/prepare-lan.cjs');
+ assert.match(prep,/PKMSVV_UNIFIED_BETA_POKEMON_255/);
+ assert.match(prep,/process\.env\.PKMSVV_FOSSIL_NATIVE_QA==='1'/);
+ for(const mod of ['pkmsvv-box-stage1.js','pkmsvv-box-stage2.js',
+  'pkmsvv-box-stage3.js','pkmsvv-box-stage4.js','pkmsvv-box-hub.js',
+  'pkmsvv-box-hub-ui.js','pkmsvv-dex-defeats-qa.js'])
+  assert.ok(prep.includes(mod),'native Beta not packaging '+mod);
+ assert.match(prep,/const folder=path\.join\(to,route\)/);
+ assert.match(prep,/html=html\.replace\('<\/body>',injectScript\.join/);
+});

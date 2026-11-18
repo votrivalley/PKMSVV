@@ -6,6 +6,12 @@ on:
       - '.github/workflows/fossil-native-game-qa.yml'
       - 'scripts/prepare-web.cjs'
       - 'src/pkmsvv-pc-menu-clean-qa.css'
+      - 'src/pkmsvv-pc-menu-clean-qa.js'
+      - 'src/pkmsvv-box-hub-ui.js'
+      - 'src/pkmsvv-box-hub.css'
+      - 'scripts/prepare-lan.cjs'
+      - 'tests/menu-pokemon-hub-regression.test.cjs'
+      - 'tests/lan-pokemon-hub-browser.cjs'
       - 'scripts/patch-fossil-expedition-native.cjs'
       - 'src/pkmsvv-fossil-expedition-core.cjs'
       - 'src/pkmsvv-fossil-expedition-native.js'
@@ -69,11 +75,30 @@ jobs:
       - name: Install build dependencies
         run: npm install --no-audit --no-fund
       - name: Check 2–4 room rules and 6–8 minute outcome core
-        run: node --test tests/fossil-expedition-core.test.cjs tests/fossil-expedition-guidance.test.cjs tests/fossil-expedition-routing.test.cjs tests/coop-lab-core.test.cjs tests/lan-ai-modes.test.cjs tests/pippi-guide.test.cjs
+        run: node --test tests/menu-pokemon-hub-regression.test.cjs tests/fossil-expedition-core.test.cjs tests/fossil-expedition-guidance.test.cjs tests/fossil-expedition-routing.test.cjs tests/coop-lab-core.test.cjs tests/lan-ai-modes.test.cjs tests/pippi-guide.test.cjs
       - name: Fetch hash-checked Clefairy PMD assets required by LAN packaging
         run: node scripts/fetch-pippi-pmd.cjs && node scripts/build-pippi-portrait-atlas.cjs
       - name: Compile genuine offline LAN/AI native game with QA-only fossil hooks
         run: npm run prepare:lan
+      - name: Verify ACTUAL native Beta ships new PokéBox / Pokédex / Nâng cấp
+        shell: bash
+        run: |
+          set -euo pipefail
+          html=dist/lan/game/index.html
+          grep -Fq 'pkmsvv-box-hub-ui.js?v=' "$html"
+          grep -Fq 'pkmsvv-box-stage4.js?v=' "$html"
+          grep -Fq 'pkmsvv-box-hub.css?v=' "$html"
+          grep -Fq 'pkmsvv-v20-ui-qa.css?v=' "$html"
+          grep -Fq 'PKMSVV_UNIFIED_BETA_POKEMON_255' scripts/prepare-lan.cjs
+          for name in pkmsvv-box-stage1.js pkmsvv-box-stage2.js pkmsvv-box-stage2-ui.js pkmsvv-box-stage3.js pkmsvv-box-stage4.js pkmsvv-box-hub.js pkmsvv-box-hub-ui.js; do
+            test -s "dist/lan/game/js/ui/$name"
+          done
+          test -s dist/lan/_headers
+          grep -Fq 'Cache-Control: no-store' dist/lan/_headers
+      - name: Browser — click Pokémon and switch all three NEW tabs without modifying save
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+        run: timeout 110s node tests/lan-pokemon-hub-browser.cjs
       - name: Verify compiled engine has dedicated native fifth mode (not fake HTML preview)
         run: |
           set -euo pipefail
@@ -101,7 +126,7 @@ jobs:
           node - <<'NODE'
           const fs=require('node:fs');
           const info={
-            version:'2.5.3-Unified-Beta-Fossil-Art-Compass-Rotom-SOS-QA',
+            version:'2.5.5-Unified-Beta-PokeBox-Hub-Fossil-Icon-Stroke-QA',
             releaseType:'experimental-gameplay-qa-only',
             previewBranch:'beta',
             qaCommit:process.env.GITHUB_SHA,
