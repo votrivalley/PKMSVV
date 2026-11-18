@@ -349,24 +349,27 @@ function updateRotomSOS(){
   ctx.save();ctx.translate(obj.x,obj.y);ctx.imageSmoothingEnabled=false;
   if(obj.type==='machine'){
    if(machines.complete&&machines.naturalWidth>0){
-    // 90px in-world, bottom-foot anchored; the oversized 128px machine used to cover trainers.
+    // Full 1:1 96px cell, bottom-foot anchored at y+7. Never rescale
+    // pixel art to fractional 90px; source PNG already has correct pixels.
     const overlap=ally().some(p=>Math.abs(p.x-obj.x)<54&&p.y>=obj.y-58&&p.y<=obj.y+25);
     if(overlap)ctx.globalAlpha=.58;
-    ctx.drawImage(machines,obj.online?96:0,0,ART_CELL,ART_CELL,-45,-83,90,90);
+    ctx.drawImage(machines,obj.online?96:0,0,ART_CELL,ART_CELL,-48,-89,ART_CELL,ART_CELL);
     ctx.globalAlpha=1;
    }else{
     ctx.fillStyle='#594e49';ctx.fillRect(-45,-80,90,82);
     ctx.fillStyle=obj.online?'#80e9ef':'#554740';ctx.fillRect(-30,-62,60,38);
    }
    const ratio=Math.max(0,Math.min(1,obj.hp/C.MAX_MACHINE_HP));
-   ctx.fillStyle='#1e2630';ctx.fillRect(-35,9,70,8);
-   ctx.fillStyle=ratio>.3?'#7fe0a9':'#ef7768';ctx.fillRect(-33,11,66*ratio,4);
+   // Machine art occupies y=-75..+5. Leave an 8px clear gap before HP.
+   ctx.fillStyle='#1e2630';ctx.fillRect(-35,14,70,8);
+   ctx.fillStyle=ratio>.3?'#7fe0a9':'#ef7768';ctx.fillRect(-33,16,66*ratio,4);
   }else if(obj.type==='site'){
    const col=Math.max(0,Math.min(2,obj.id-1)),[sx,sy]=digSprite[col];
    if(excavations.complete&&excavations.naturalWidth>0){
     // Use the three EXACT image concepts; only dim them when excavated.
     ctx.globalAlpha=obj.hits>=3?.20:obj.hits>=2?.67:obj.hits>=1?.86:1;
-    ctx.drawImage(excavations,sx,sy,ART_CELL,ART_CELL,-46,-57,92,92);
+    // 96:96 pixel-perfect; retain same base foot at y+35.
+    ctx.drawImage(excavations,sx,sy,ART_CELL,ART_CELL,-48,-61,ART_CELL,ART_CELL);
     ctx.globalAlpha=1;
    }else{
     ctx.fillStyle=obj.hits>=3?'#53483c':obj.hits>=2?'#977860':'#b59c79';
@@ -395,7 +398,8 @@ function updateRotomSOS(){
    }
    // Render Rotom's original SOS beacon from approved image, not PMD placeholder.
    if(rotomFallback.complete&&rotomFallback.naturalWidth>0)
-    ctx.drawImage(rotomFallback,192,96,48,48,-23,-54,46,46);
+    // Native 48px rescue beacon; no 46px resampling artifacts.
+    ctx.drawImage(rotomFallback,192,96,48,48,-24,-56,48,48);
    else{
     ctx.fillStyle='#fa7840';ctx.beginPath();ctx.arc(0,-22,14,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#b5f7ed';ctx.fillRect(-6,-26,4,5);ctx.fillRect(3,-26,4,5);

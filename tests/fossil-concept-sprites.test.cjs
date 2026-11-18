@@ -16,7 +16,12 @@ test('source pixels are the uploaded approved image, not recreated concept SVG',
 });
 test('machine foot ordering, overlap transparency, compact SOS and concept sprite lookups',()=>{
  const code=fs.readFileSync(path.join(root,'src/pkmsvv-fossil-expedition-native.js'),'utf8');
- assert.match(code,/drawImage\(machines,obj\.online\?96:0,0,ART_CELL,ART_CELL,-45,-83,90,90\)/);
+ assert.match(code,/drawImage\(machines,obj\.online\?96:0,0,ART_CELL,ART_CELL,-48,-89,ART_CELL,ART_CELL\)/);
+ assert.match(code,/drawImage\(excavations,sx,sy,ART_CELL,ART_CELL,-48,-61,ART_CELL,ART_CELL\)/);
+ assert.match(code,/fillRect\(-35,14,70,8\)/);
+ assert.match(code,/drawImage\(rotomFallback,192,96,48,48,-24,-56,48,48\)/);
+ assert.doesNotMatch(code,/drawImage\(machines,[^\n]*90,90\)/);
+ assert.doesNotMatch(code,/drawImage\(excavations,[^\n]*92,92\)/);
  assert.match(code,/overlap=ally\(\)\.some/);
  assert.match(code,/obj\.type==='machine'\?obj\.y\+7:obj\.y/);
  assert.match(code,/digSprite=\[\[192,0\],\[288,0\],\[0,96\]\]/);

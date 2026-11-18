@@ -197,6 +197,30 @@ const {startServer}=require('../lan-server/server.cjs');
   });
   assert.deepEqual([approvedAtlas.width,approvedAtlas.height],[384,192],
    'Game must load approved concept sprites, not old SVG/painted machine');
+  // Exercise the actual 2D Canvas drawables with native object coordinates.
+  // A screenshot alone did not catch 96px atlas cells stretched to 90/92px.
+  const actualSpriteRects=await page.evaluate(()=>{
+   const api=G.PKMSVVFossilExpedition;
+   const canvas=document.createElement('canvas');canvas.width=128;canvas.height=128;
+   const ctx=canvas.getContext('2d'),records=[];
+   ctx.drawImage=function(...args){
+    if(args[0]?.src?.includes('approved-fossil-source-atlas.png'))
+     records.push({sx:args[1],sy:args[2],sw:args[3],sh:args[4],
+      dx:args[5],dy:args[6],dw:args[7],dh:args[8]});
+   };
+   for(const item of api.drawables())item.draw(ctx);
+   return records;
+  });
+  const expectedRects=[
+   {sx:0,sy:0,sw:96,sh:96,dx:-48,dy:-89,dw:96,dh:96},
+   {sx:192,sy:0,sw:96,sh:96,dx:-48,dy:-61,dw:96,dh:96},
+   {sx:288,sy:0,sw:96,sh:96,dx:-48,dy:-61,dw:96,dh:96},
+   {sx:0,sy:96,sw:96,sh:96,dx:-48,dy:-61,dw:96,dh:96}
+  ];
+  const sortRects=xs=>xs.sort((a,b)=>a.sy-b.sy||a.sx-b.sx);
+  assert.deepEqual(sortRects(actualSpriteRects),sortRects(expectedRects),
+   'Canvas must render machine and all three excavation sites at 1:1 native 96px');
+  console.log('FOSSIL_PIXEL_PERFECT_RECTS='+JSON.stringify(actualSpriteRects));
   const aiBefore=await page.evaluate(()=>({
    count:G.LanAI.activeBots().length,
    bots:G.Coop.puppets().filter(p=>p.lanBot).map(p=>({x:p.x,y:p.y,moves:p.moves.length,dead:p.dead}))
