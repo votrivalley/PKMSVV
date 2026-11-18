@@ -14,7 +14,7 @@ G.PKMSVVFossilExpedition=(()=>{
  let current=null,active=false,finished=false,bossEnemy=null,rotomAnimator=null,
   uiButton=null,lastAction=-100,lastBossHint=-100,sendClock=0,scanClock=0,
   waveClock=0,waveIndex=0,duelClock=0,cachedThreats=0,rendered=new Set(),lastFinish=null,
-  machineTarget=null,speedStage=-1,speedClock=0;
+  machineTarget=null,speedStage=-1,speedClock=0,distressNode=null,distressUntil=0,distressShown=false;
  const botTimes=new Map();
  const room=()=>G.Social?.room;
  const allBots=()=>G.Coop?.puppets?.().filter(p=>p.lanBot&&!p.dead)||[];
@@ -50,6 +50,37 @@ G.PKMSVVFossilExpedition=(()=>{
  function talk(vi,en){
   if(G.Coop?.isHost)G.Spawner?.say?.(tr(vi,en),3);
  }
+
+// Rotom's own SOS portrait/dialogue: a real phase transition, not a Pippi toast.
+// Keep it separate from other story text and never stop the moving Co-op clock.
+function showRotomSOS(){
+ if(!active||!current||current.phase!=='rescue'||distressShown)return;
+ distressShown=true;distressUntil=current.elapsed+7;
+ if(typeof document==='undefined')return;
+ distressNode=document.getElementById('pkmsvv-rotom-distress');
+ if(!distressNode){
+  distressNode=document.createElement('div');distressNode.id='pkmsvv-rotom-distress';
+  distressNode.setAttribute('role','status');distressNode.setAttribute('aria-live','polite');
+  distressNode.style.cssText='position:fixed;top:clamp(88px,13vh,142px);left:50%;transform:translateX(-50%);z-index:820;width:min(85vw,460px);max-width:calc(100vw - 22px);display:flex;align-items:center;gap:12px;padding:10px 14px;background:#152e43f2;border:3px solid #fca36e;border-radius:12px;box-shadow:0 5px 0 #613d39,0 9px 28px #0009;pointer-events:none;color:#fff4da;font:700 14px/1.35 sans-serif;box-sizing:border-box';
+  const portrait=document.createElement('img');portrait.src='images/coop-lab/rotom-orb.svg';portrait.alt='';
+  portrait.style.cssText='width:54px;height:54px;flex:none;image-rendering:pixelated;filter:drop-shadow(0 0 7px #ff944e)';
+  const body=document.createElement('div');body.style.cssText='flex:1;min-width:0';
+  const label=document.createElement('div');label.textContent='⚡ Rotom · SOS';
+  label.style.cssText='color:#ffaf79;font-weight:900;font-size:15px;margin-bottom:3px';
+  const message=document.createElement('div');message.className='pkmsvv-rotom-message';
+  body.append(label,message);distressNode.append(portrait,body);
+  document.body.append(distressNode);
+ }
+ const message=distressNode.querySelector('.pkmsvv-rotom-message');
+ if(message)message.textContent=tr(
+  'Cứu tôi với! Golurk đang tấn công! Đến đây trước 4:00 nhé!',
+  'Help! Golurk is attacking me! Get here before 4:00!');
+ distressNode.style.display='flex';
+}
+function updateRotomSOS(){
+ if(!distressNode||!current)return;
+ distressNode.style.display=current.phase==='rescue'&&current.elapsed<distressUntil?'flex':'none';
+}
  function safePoint(p){
   if(!G.World?.isFree)return p;
   if(G.World.isFree(p.x,p.y,32)&&!G.World.isLiquid?.(p.x,p.y))return p;
@@ -62,7 +93,7 @@ G.PKMSVVFossilExpedition=(()=>{
   return p;
  }
  function begin({mode}={}){
-  end();finished=false;lastFinish=null;lastAction=-100;lastBossHint=-100;scanClock=sendClock=waveClock=duelClock=speedClock=0;speedStage=-1;waveIndex=0;botTimes.clear();
+  end();finished=false;lastFinish=null;lastAction=-100;lastBossHint=-100;scanClock=sendClock=waveClock=duelClock=speedClock=0;speedStage=-1;waveIndex=0;distressUntil=0;distressShown=false;botTimes.clear();
   if((mode||room()?.mode)!==KEY)return false;
   const r=room();
   if(!ready||r?.mode!==KEY||!Array.isArray(r.members)||r.members.length<2||r.members.length>4){
@@ -135,6 +166,7 @@ G.PKMSVVFossilExpedition=(()=>{
    const site=current.sites.find(s=>!s.done&&at(actor,s,C.DIG_RADIUS));
    if(site)result=C.dig(current,{uid,siteId:site.id,actor,
     seconds:now,source:'native-strike'});
+   if(result.ok&&current.phase==='rescue')showRotomSOS();
    if(result.ok&&result.done){
     talk('Pippi: Lụm được '+fragments()+'/9 mảnh! Đá này không có nút tua nhanh nha.',
      'Pippi: '+fragments()+'/9 pieces! No speedrun button for these rocks.');
@@ -228,7 +260,7 @@ G.PKMSVVFossilExpedition=(()=>{
  }
  function tick(dt,time,players,finish){
   if(!active||!current||finished)return;
-  actionButton();
+  actionButton();updateRotomSOS();
   if(rotomAnimator)try{rotomAnimator.update?.(dt);}catch(_){}
   if(!G.Coop?.isHost)return;
   if(current.phase==='escort')moveRotom(dt);
@@ -293,6 +325,7 @@ G.PKMSVVFossilExpedition=(()=>{
  function onEvent(ev){
   if(!active||G.Coop?.isHost||ev?.[0]!=='fx'||!current||ev.length<13)return;
   const phase=['excavate','rescue','escort','defend','cleared','failed'][Math.max(0,Math.min(5,Number(ev[1])||0))];
+  const previous=current.phase;
   current.phase=phase;
   current.machine.hp=Math.max(0,Math.min(C.MAX_MACHINE_HP,Number(ev[2])||0));
   current.elapsed=Math.max(current.elapsed,Math.min(C.DEFEND_END,Number(ev[3])||0));
@@ -306,6 +339,8 @@ G.PKMSVVFossilExpedition=(()=>{
   current.rotom.freed=ev[10]===1;current.rotom.merged=ev[11]===1;
   current.machine.online=current.rotom.merged;
   current.boss.defeated=ev[12]===1;
+  if(phase==='rescue'&&previous!=='rescue')showRotomSOS();
+  updateRotomSOS();
  }
  function drawOne(ctx,obj){
   ctx.save();ctx.translate(obj.x,obj.y);ctx.imageSmoothingEnabled=false;
@@ -386,6 +421,47 @@ G.PKMSVVFossilExpedition=(()=>{
   if(current.phase==='rescue')return current.rotom;
   return current.machine;
  }
+
+ // World-space bearings projected onto a safe screen edge, not buried in the
+ // lower-left text panel. Every uncompleted excavation gets its own arrow.
+ function guidanceTargets(){
+  if(!active||!current)return [];
+  if(current.phase==='excavate')
+   return current.sites.filter(site=>!site.done).map(site=>({
+    point:site,label:String(site.id),color:['#99deb7','#eed298','#ffbc70'][site.id-1]}));
+  if(current.phase==='rescue')return [{point:current.rotom,label:'SOS',color:'#ff8856'}];
+  if(current.phase==='escort')return [{point:current.machine,label:'⚡',color:'#86e8e3'}];
+  if(current.phase==='defend')return [{point:current.machine,label:'⌂',color:'#8de5bc'}];
+  return [];
+ }
+ function drawCompass(ctx,w,h,player){
+  if(!player||w<220||h<240)return;
+  const midX=w/2,midY=h/2,minX=54,maxX=w-54,minY=104,maxY=h-108;
+  for(const t of guidanceTargets()){
+   const dx=t.point.x-player.x,dy=t.point.y-player.y,dist=Math.hypot(dx,dy);
+   if(!Number.isFinite(dist)||dist<120)continue;
+   const ux=dx/dist,uy=dy/dist;
+   const tx=Math.abs(ux)<.00001?Infinity:(ux>0?(maxX-midX)/ux:(minX-midX)/ux);
+   const ty=Math.abs(uy)<.00001?Infinity:(uy>0?(maxY-midY)/uy:(minY-midY)/uy);
+   const along=Math.max(0,Math.min(tx,ty));
+   const x=midX+ux*along,y=midY+uy*along;
+   if(!Number.isFinite(x)||!Number.isFinite(y))continue;
+   ctx.save();ctx.translate(x,y);
+   ctx.fillStyle='#102b39ec';ctx.strokeStyle=t.color;ctx.lineWidth=3;
+   ctx.beginPath();ctx.arc(0,0,25,0,Math.PI*2);ctx.fill();ctx.stroke();
+   ctx.rotate(Math.atan2(dy,dx));
+   ctx.fillStyle=t.color;ctx.beginPath();ctx.moveTo(19,0);
+   ctx.lineTo(-6,-12);ctx.lineTo(-2,0);ctx.lineTo(-6,12);ctx.closePath();ctx.fill();
+   ctx.rotate(-Math.atan2(dy,dx));
+   ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold 10px sans-serif';
+   ctx.fillStyle='#fff5df';ctx.fillText(t.label,0,0);
+   ctx.font='bold 10px sans-serif';
+   ctx.strokeStyle='#092637';ctx.lineWidth=3;
+   const range=Math.round(dist)+'px';
+   ctx.strokeText(range,0,35);ctx.fillText(range,0,35);
+   ctx.restore();
+  }
+ }
  function hud(ctx,w,h){
   if(!active||!current)return;
   const phase=current.phase,s=current,pl=G.Game?.player;
@@ -414,6 +490,7 @@ G.PKMSVVFossilExpedition=(()=>{
   }
   ctx.fillStyle='#bad3dc';ctx.fillText(tr('E / nút ⛏ để đào hoặc cứu Rotom','Press E / ⛏ to mine or rescue Rotom'),left+8,top+108);
   ctx.restore();
+  drawCompass(ctx,w,h,pl);
  }
  function reward(result){
   if(!result?.success)return false;
@@ -423,7 +500,8 @@ G.PKMSVVFossilExpedition=(()=>{
  }
  function end(){
   active=false;finished=true;current=null;bossEnemy=null;rotomAnimator=null;
-  uiButton?.remove();uiButton=null;rendered.clear();botTimes.clear();machineTarget=null;speedStage=-1;
+  uiButton?.remove();uiButton=null;distressNode?.remove();distressNode=null;distressShown=false;
+  rendered.clear();botTimes.clear();machineTarget=null;speedStage=-1;
  }
  return {nativeReady:ready,begin,tick,perform,botGoal,botInteract,targetFor,onEvent,
   drawables,beginFrame,drawMissing,hud,reward,end,
