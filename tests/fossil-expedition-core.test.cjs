@@ -46,11 +46,15 @@ test('2–4 people with at least one human, including solo human + AI; reject in
  assert.equal(m.begin({members:[{uid:'host'},{uid:'friend'}],roomId:'R1',hostUid:'host',origin:{x:0,y:0}}).ok,true);
  assert.equal(m.begin({members:[{uid:'host'},...Array.from({length:3},(_,i)=>({uid:'ai'+i,bot:true}))],roomId:'R1',hostUid:'host',origin:{x:0,y:0}}).ok,true);
 });
-test('three sites must be far apart, >400 px from machine, exactly nine real strikes',()=>{
+test('three sites require a genuine multi-screen expedition, exactly nine real strikes',()=>{
  const s=room();
- for(const site of s.sites)assert.ok(Math.hypot(site.x,site.y)>=400);
+ for(const site of s.sites)assert.ok(Math.hypot(site.x,site.y)>=1500,
+  'no excavation can spawn in the immediate Restorer screen');
  for(let i=0;i<3;i++)for(let j=i+1;j<3;j++)
-  assert.ok(Math.hypot(s.sites[i].x-s.sites[j].x,s.sites[i].y-s.sites[j].y)>=650);
+  assert.ok(Math.hypot(s.sites[i].x-s.sites[j].x,s.sites[i].y-s.sites[j].y)>=2500,
+   'site pair too close: dig sites must not overlap a single screen');
+ assert.equal(m.begin({members:botTeam,roomId:'R1',hostUid:'host',origin:{x:0,y:0},
+  sites:[{x:420,y:0},{x:770,y:0},{x:0,y:950}]}).reason,'sites-not-spread-out');
  const p=s.sites[0];
  assert.equal(m.dig(s,{uid:'host',siteId:p.id,actor:p,seconds:s.clock,source:'fake'}).reason,'unverified-source');
  assert.equal(m.dig(s,{uid:'host',siteId:p.id,actor:{x:0,y:0},seconds:s.clock,source:'native-strike'}).reason,'range');
