@@ -1183,3 +1183,20 @@
   column-gap:12px!important;
  }
 }
+
+/* FOSSIL_BETA_253_ICON_OPTICAL_SCALE — same 36px cell and 12px label gap,
+ * but the three authored sprite assets contain much more transparent
+ * padding than ordinary icons. Enlarge the ART only, not the grid column. */
+#scr-menu#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.mi-ico.pkmsvv-new-menu-icon{
+ background-size:102px 34px!important;
+}
+#scr-menu#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.mi-ico.pkmsvv-menu-icon-coop{
+ background-position:-33px 1px!important;
+}
+#scr-menu#scr-menu .menu-right .menu-list>.pkmsvv-icon-unified>.mi-ico.pkmsvv-menu-icon-arena{
+ background-position:-67px 1px!important;
+}
+#scr-menu#scr-menu #pkmsvv-menu-wiki .pkmsvv-research-menu-image{
+ width:32px!important;height:32px!important;
+ max-width:32px!important;max-height:32px!important;
+}
