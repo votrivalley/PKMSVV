@@ -1,0 +1,57 @@
+name: PKMSVV QA - inspect current official Hall of Origin source (no deploy)
+on:
+  push:
+    branches: [fix/pippi-follow-menu-qa-20261115]
+    paths: ['.github/workflows/probe-hall-origin-source.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Inspect public original source without creating any build
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import urllib.request, re
+          from urllib.parse import urljoin
+          base='https://pokesurvivor.com/en/'
+          h={'User-Agent':'Mozilla/5.0 (compatible; PKMSVV-QA-SourceAudit/1.0)'}
+          def get(url):
+              try:
+                  req=urllib.request.Request(url,headers=h)
+                  with urllib.request.urlopen(req, timeout=12) as r:
+                      data=r.read(6_000_000)
+                      print('FETCH',r.status,url,'bytes',len(data),'type',r.headers.get('content-type'))
+                      return data.decode('utf-8','replace')
+              except Exception as e:
+                  print('FETCH-FAILED',url,repr(e))
+                  return ''
+          html=get(base)
+          if not html:
+              raise SystemExit('Official site unavailable: do not fabricate a map asset.')
+          scripts=re.findall(r'<script[^>]+src=["\']([^"\']+)["\']',html,re.I)
+          print('SCRIPT URLS',scripts[:40])
+          candidates=[]
+          for s in scripts:
+              if '.js' in s and ('app.' in s or 'game' in s or 'boot' in s):
+                  candidates.append(urljoin(base,s))
+          candidates+=['https://pokesurvivor.com/js/app.min.js','https://pokesurvivor.com/js/world/world.js','https://pokesurvivor.com/js/systems/judgment.js']
+          checked=set()
+          for url in candidates[:8]:
+              if url in checked:continue
+              checked.add(url)
+              content=get(url)
+              if not content:continue
+              for word in ('Sala del Origen','Hall of Origin','sala_origen','hallOrigin','hallOfOrigin','originHall','hall-of-origin','judgment','nubes','clouds'):
+                  found=[m.start() for m in re.finditer(re.escape(word),content,re.I)]
+                  if not found:continue
+                  print('TERM',word,'matches',len(found),'in',url)
+                  for pos in found[:8]:
+                      print('FRAGMENT',repr(content[max(0,pos-130):pos+200].replace('\n',' ')))
+              assets=set(re.findall(r'["\']([^"\']*?(?:origin|origen|judgment|hall)[^"\']*?\.(?:png|webp|svg|jpg))["\']',content,re.I))
+              print('MATCHED IMAGE SOURCES:',sorted(assets)[:40])
+          PY
