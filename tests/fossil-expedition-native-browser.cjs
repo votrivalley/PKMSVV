@@ -62,6 +62,9 @@ const {startServer}=require('../lan-server/server.cjs');
      const visibleArt=icon?.querySelector('img,svg,canvas');
      const artRect=visibleArt?.getBoundingClientRect();
      const style=getComputedStyle(btn),iconStyle=icon&&getComputedStyle(icon);
+     const showcase=btn.id==='pkmsvv-menu-wiki'||
+      /pkmsvv-menu-icon-(coop|arena)/.test(icon?.className||'');
+     const featureSprite=/pkmsvv-menu-icon-(coop|arena)/.test(icon?.className||'');
      const left=br.x+parseFloat(style.borderLeftWidth)+parseFloat(style.paddingLeft)+
       parseFloat(style.gridTemplateColumns.split(' ')[0])+parseFloat(style.columnGap);
      // Measure the actual first visible text glyph, even when native menu.js
@@ -75,6 +78,7 @@ const {startServer}=require('../lan-server/server.cjs');
      }
      return {text:btn.textContent.trim().slice(0,25),iconX:ir?.x,iconW:ir?.width,iconH:ir?.height,
       iconFont:iconStyle?.fontSize,artW:artRect?.width,artH:artRect?.height,
+      showcase,featureSprite,bgH:parseFloat(iconStyle?.backgroundSize?.split(' ')[1]||0),
       textX:lr?.x??rawTextX??left,expectedTextX:left,
       grid:style.gridTemplateColumns,hidden:br.width===0};
     });
@@ -83,7 +87,10 @@ const {startServer}=require('../lan-server/server.cjs');
    assert.ok(aligned.length>=9,'at least nine visible native home menu actions');
    for(const x of aligned){
     assert.ok(Math.abs(x.iconW-36)<.75&&Math.abs(x.iconH-36)<.75,'icon must have 36px fixed frame: '+JSON.stringify(x));
-    if(x.artW!==undefined)assert.ok(x.artW<=26.5&&x.artH<=26.5,'inner icon max 26px: '+JSON.stringify(x));
+    if(x.artW!==undefined)
+     assert.ok(x.showcase?(x.artW>=30&&x.artH>=30):(x.artW<=26.5&&x.artH<=26.5),
+      'optically balance original PC art without enlarging normal icons: '+JSON.stringify(x));
+    if(x.featureSprite)assert.ok(x.bgH>=33,'Co-op/Arena should use optically enlarged 34px artwork: '+JSON.stringify(x));
     assert.ok(Math.abs(x.textX-x.expectedTextX)<1.5,'label must begin at shared grid column: '+JSON.stringify(x));
    }
    const iconOrigins=aligned.map(x=>x.iconX),textOrigins=aligned.map(x=>x.textX);
@@ -131,10 +138,18 @@ const {startServer}=require('../lan-server/server.cjs');
     boss:G.PKMSVVFossilExpeditionCore.BOSS_DEX
    };
   });
-  assert.ok(positions.distances.every(d=>d>380),'all three sites must be far from machine');
+  assert.ok(positions.distances.every(d=>d>=1500),'all three sites must be well beyond the first screen');
   for(let i=0;i<3;i++)for(let j=i+1;j<3;j++)
-   assert.ok(Math.hypot(positions.sites[i].x-positions.sites[j].x,positions.sites[i].y-positions.sites[j].y)>650);
+   assert.ok(Math.hypot(positions.sites[i].x-positions.sites[j].x,positions.sites[i].y-positions.sites[j].y)>2500);
   assert.deepEqual([positions.rescueDeadline,positions.victory,positions.boss],[240,480,623]);
+  const guidance=await page.evaluate(()=>{
+   const s=G.PKMSVVFossilExpedition.session;
+   return {initialPhase:s.phase,origin:s.machine,siteCount:s.sites.length,
+    hudCode:typeof G.PKMSVVFossilExpedition.hud==='function'};
+  });
+  assert.equal(guidance.siteCount,3);
+  assert.equal(guidance.initialPhase,'excavate');
+  assert.equal(guidance.hudCode,true);
   // The repaired Restorer must behave like a Berry tree: native enemy AI
   // targets one stable machine actor, but only during Rotom-fused defense.
   const machineTargetQA=await page.evaluate(()=>{
