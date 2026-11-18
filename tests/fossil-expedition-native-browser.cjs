@@ -62,6 +62,7 @@ const {startServer}=require('../lan-server/server.cjs');
      const visibleArt=icon?.querySelector('img,svg,canvas');
      const artRect=visibleArt?.getBoundingClientRect();
      const style=getComputedStyle(btn),iconStyle=icon&&getComputedStyle(icon);
+     const pseudoStyle=icon&&getComputedStyle(icon,'::after');
      const showcase=btn.id==='pkmsvv-menu-wiki'||
       /pkmsvv-menu-icon-(coop|arena)/.test(icon?.className||'');
      const featureSprite=/pkmsvv-menu-icon-(coop|arena)/.test(icon?.className||'');
@@ -79,6 +80,8 @@ const {startServer}=require('../lan-server/server.cjs');
      return {text:btn.textContent.trim().slice(0,25),iconX:ir?.x,iconW:ir?.width,iconH:ir?.height,
       iconFont:iconStyle?.fontSize,artW:artRect?.width,artH:artRect?.height,
       showcase,featureSprite,bgH:parseFloat(iconStyle?.backgroundSize?.split(' ')[1]||0),
+      pseudoW:parseFloat(pseudoStyle?.width||0),pseudoH:parseFloat(pseudoStyle?.height||0),
+      pseudoBG:pseudoStyle?.backgroundImage||'none',
       textX:lr?.x??rawTextX??left,expectedTextX:left,
       grid:style.gridTemplateColumns,hidden:br.width===0};
     });
@@ -90,7 +93,14 @@ const {startServer}=require('../lan-server/server.cjs');
     if(x.artW!==undefined)
      assert.ok(x.showcase?(x.artW>=30&&x.artH>=30):(x.artW<=26.5&&x.artH<=26.5),
       'optically balance original PC art without enlarging normal icons: '+JSON.stringify(x));
-    if(x.featureSprite)assert.ok(x.bgH>=33,'Co-op/Arena should use optically enlarged 34px artwork: '+JSON.stringify(x));
+    if(x.featureSprite){
+     assert.ok(Math.abs(x.pseudoW-47.6)<0.2&&Math.abs(x.pseudoH-47.6)<0.2,
+      'Co-op/Arena artwork must be exactly 40% larger: '+JSON.stringify(x));
+     assert.ok(x.pseudoBG.includes('pkmsvv-menu-icons.webp'),
+      'Co-op/Arena still use the original asset, not an emoji: '+JSON.stringify(x));
+    }
+    if(x.text.startsWith('Phòng nghiên cứu')||x.text.startsWith('Research Lab'))
+     assert.ok(Math.abs(x.artW-35.2)<0.3,'Research icon must be exactly 10% larger: '+JSON.stringify(x));
     assert.ok(Math.abs(x.textX-x.expectedTextX)<1.5,'label must begin at shared grid column: '+JSON.stringify(x));
    }
    const iconOrigins=aligned.map(x=>x.iconX),textOrigins=aligned.map(x=>x.textX);
