@@ -28,6 +28,15 @@ for(const file of ['lan-connect.html','lan-connect.js'])
  const lab=path.join(root,'assets/coop-lab');
  if(!fs.existsSync(path.join(lab,'room_base.png')))throw Error('Fossil Lab native room missing');
  fs.cpSync(lab,path.join(images,'coop-lab'),{recursive:true});
+ // FOSSIL_CONCEPT_ASSETS_V256: ship approved concept cutouts to real LAN Beta.
+ if(process.env.PKMSVV_FOSSIL_NATIVE_QA==='1'){
+  execFileSync(process.execPath,[path.join(root,'scripts/build-fossil-concept-sprites.cjs')],
+   {cwd:root,stdio:'inherit'});
+  const art=path.join(root,'dist/fossil-concept-sprites');
+  for(const name of ['rotom-restorer-concept-atlas.png','fossil-excavation-concept-atlas.png'])
+   addFile(path.join(art,name),'coop-lab/'+name);
+ }
+
  for(const rel of ['pkmsvv-menu-icons.webp','pippi/Walk-Anim.png','pippi/portrait/Happy.png',
   'coop-lab/room_base.png','coop-lab/decor/machine_old.png',
   'coop-lab/decor/kabuto_skeleton.png','coop-lab/decor/research_terminal.png']){

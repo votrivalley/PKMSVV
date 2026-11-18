@@ -8,8 +8,8 @@ G.PKMSVVFossilExpedition=(()=>{
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  const ready=!!C&&typeof C.rescue==='function'&&C.ROTOM_DEADLINE===240;
  const image=(url)=>{const img=new Image();img.src=url;return img;};
- const excavations=image('images/coop-lab/fossil-excavation-atlas.svg');
- const machines=image('images/coop-lab/rotom-restorer-atlas.svg');
+ const excavations=image('images/coop-lab/fossil-excavation-concept-atlas.png');
+ const machines=image('images/coop-lab/rotom-restorer-concept-atlas.png');
  const rotomFallback=image('images/coop-lab/rotom-orb.svg');
  let current=null,active=false,finished=false,bossEnemy=null,rotomAnimator=null,
   uiButton=null,lastAction=-100,lastBossHint=-100,sendClock=0,scanClock=0,
@@ -346,7 +346,7 @@ function updateRotomSOS(){
   ctx.save();ctx.translate(obj.x,obj.y);ctx.imageSmoothingEnabled=false;
   if(obj.type==='machine'){
    if(machines.complete&&machines.naturalWidth>0){
-    ctx.drawImage(machines,obj.online?160:0,0,160,160,-66,-126,132,132);
+    ctx.drawImage(machines,obj.online?128:0,0,128,128,-64,-120,128,128);
    }else{
     ctx.fillStyle='#594e49';ctx.fillRect(-45,-80,90,82);
     ctx.fillStyle=obj.online?'#80e9ef':'#554740';ctx.fillRect(-30,-62,60,38);
@@ -357,7 +357,7 @@ function updateRotomSOS(){
   }else if(obj.type==='site'){
    const col=Math.max(0,Math.min(2,obj.id-1)),row=obj.hits>=3?2:obj.hits>=2?1:0;
    if(excavations.complete&&excavations.naturalWidth>0)
-    ctx.drawImage(excavations,col*128,row*128,128,128,-49,-58,98,98);
+    ctx.drawImage(excavations,col*96,row*96,96,96,-48,-56,96,96);
    else{
     ctx.fillStyle=row===2?'#53483c':row===1?'#977860':'#b59c79';
     ctx.fillRect(-36,-32,72,45);
