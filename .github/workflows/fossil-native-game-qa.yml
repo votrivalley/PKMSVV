@@ -25,6 +25,7 @@ on:
       - 'lan-server/server.cjs'
       - 'tests/fossil-expedition-native-browser.cjs'
       - 'tests/fossil-expedition-core.test.cjs'
+      - 'tests/fossil-expedition-guidance.test.cjs'
       - 'tests/fossil-expedition-routing.test.cjs'
   workflow_dispatch:
 permissions:
@@ -68,7 +69,7 @@ jobs:
       - name: Install build dependencies
         run: npm install --no-audit --no-fund
       - name: Check 2–4 room rules and 6–8 minute outcome core
-        run: node --test tests/fossil-expedition-core.test.cjs tests/fossil-expedition-routing.test.cjs tests/coop-lab-core.test.cjs tests/lan-ai-modes.test.cjs tests/pippi-guide.test.cjs
+        run: node --test tests/fossil-expedition-core.test.cjs tests/fossil-expedition-guidance.test.cjs tests/fossil-expedition-routing.test.cjs tests/coop-lab-core.test.cjs tests/lan-ai-modes.test.cjs tests/pippi-guide.test.cjs
       - name: Fetch hash-checked Clefairy PMD assets required by LAN packaging
         run: node scripts/fetch-pippi-pmd.cjs && node scripts/build-pippi-portrait-atlas.cjs
       - name: Compile genuine offline LAN/AI native game with QA-only fossil hooks
@@ -100,7 +101,7 @@ jobs:
           node - <<'NODE'
           const fs=require('node:fs');
           const info={
-            version:'2.5.2-Unified-Beta-Menu-Icon-Alignment-QA',
+            version:'2.5.3-Unified-Beta-Fossil-Art-Compass-Rotom-SOS-QA',
             releaseType:'experimental-gameplay-qa-only',
             previewBranch:'beta',
             qaCommit:process.env.GITHUB_SHA,
