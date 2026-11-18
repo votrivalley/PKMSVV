@@ -21,6 +21,8 @@ const revision=/^[a-f0-9]{40}$/i.test(String(process.env.GITHUB_SHA||''))?
   fs.readFileSync(path.join(root,'src/pkmsvv-pippi.js'))+
   fs.readFileSync(path.join(root,'src/pkmsvv-wiki.js'))+
   fs.readFileSync(path.join(root,'src/pkmsvv-pc-menu-clean-qa.css'))+
+  fs.readFileSync(path.join(root,'src/pkmsvv-box-hub-ui.js'))+
+  fs.readFileSync(path.join(root,'src/pkmsvv-box-hub.css'))+
   fs.readFileSync(path.join(root,'src/pkmsvv-pippi-guide.js'))+
   fs.readFileSync(path.join(root,'src/pkmsvv-global-power.js'))+
   fs.readFileSync(path.join(root,'src/pkmsvv-runtime-controls-qa.js'))).digest('hex').slice(0,12);
@@ -103,14 +105,15 @@ for(const prefix of ['game','ai/game']){
  new vm.Script(bundle,{filename:'pippi-qa-'+prefix.replace('/','-')+'.js'});
  write(compiled,bundle);
  for(const filename of [
-   'pkmsvv-box-stage3.js','pkmsvv-pc-menu-clean-qa.js','pkmsvv-wiki.js',
+   'pkmsvv-box-stage3.js','pkmsvv-box-hub.js','pkmsvv-box-hub-ui.js',
+   'pkmsvv-pc-menu-clean-qa.js','pkmsvv-wiki.js',
    'pkmsvv-pippi.js','pkmsvv-pippi-guide.js','pkmsvv-fossil-system.js',
    'pkmsvv-coop-fossil-mission-qa.js'
  ]){
   const target=filename==='pkmsvv-wiki.js'?'pkmsvv-wiki-qa.js':filename;
   write(path.join(dest,'js/ui',target),source('src/'+filename));
  }
- for(const filename of ['pkmsvv-v20-ui-qa.css','pkmsvv-pc-menu-clean-qa.css','pkmsvv-pippi.css','pkmsvv-pippi-guide.css']){
+ for(const filename of ['pkmsvv-v20-ui-qa.css','pkmsvv-box-hub.css','pkmsvv-pc-menu-clean-qa.css','pkmsvv-pippi.css','pkmsvv-pippi-guide.css']){
   write(path.join(dest,'css',filename),source('src/'+filename));
  }
  fs.copyFileSync(present(path.join(root,'assets/research-lab-menu-icon.png')),
@@ -180,6 +183,36 @@ for(const prefix of ['game','ai/game']){
  for(const name of ['pkmsvv-pippi.css','pkmsvv-pippi-guide.css','pkmsvv-pc-menu-clean-qa.css']){
   html=html.replace('href="css/'+name+'"','href="css/'+name+'?v='+revision+'"');
  }
+ // POKEMON_HUB_REVISION_255 — do not let an old browser/service-worker cache
+ // silently restore the pre-PokéBox native Pokémon screen on either route.
+ // All seven modules must load in prerequisite order, and both panel styles
+ // must be fetched from this same revision; otherwise this QA build FAILS.
+ const pokemonModules=[
+  'pkmsvv-box-stage1.js','pkmsvv-box-stage2.js','pkmsvv-box-stage2-ui.js',
+  'pkmsvv-box-stage3.js','pkmsvv-box-stage4.js','pkmsvv-box-hub.js','pkmsvv-box-hub-ui.js'
+ ];
+ let previousModuleOffset=-1;
+ for(const name of pokemonModules){
+  const tag='src="js/ui/'+name+'"',at=html.indexOf(tag);
+  if(at<0||at<=previousModuleOffset)throw Error('PokéBox dependency missing/out of order: '+prefix+'/'+name);
+  previousModuleOffset=at;
+  html=html.replace(tag,'src="js/ui/'+name+'?v='+revision+'"');
+  if(!source(path.relative(root,path.join(dest,'js/ui',name))).trim())
+   throw Error('PokéBox script empty: '+prefix+'/'+name);
+ }
+ for(const name of ['pkmsvv-box-hub.css','pkmsvv-v20-ui-qa.css']){
+  const tag='href="css/'+name+'"';
+  if(!html.includes(tag))throw Error('PokéBox CSS missing: '+prefix+'/'+name);
+  html=html.replace(tag,'href="css/'+name+'?v='+revision+'"');
+ }
+ const pokemonHub=source(path.relative(root,path.join(dest,'js/ui/pkmsvv-box-hub-ui.js')));
+ for(const token of ['pkmbx-hub-team-title','pkmbx-pc-tabs','pkmbx-upgrade-options',
+  'G.PKMSVVBoxHubUI','function openBox(']){
+  if(!pokemonHub.includes(token))throw Error('PokéBox 3-tab UI rollback: '+prefix+'/'+token);
+ }
+ const menuGuard=source(path.relative(root,path.join(dest,'js/ui/pkmsvv-pc-menu-clean-qa.js')));
+ if(!menuGuard.includes('PKMSVV_POKEMON_HUB_GUARD_255'))
+  throw Error('Native Pokémon picker fallback guard missing: '+prefix);
  write(path.join(dest,'index.html'),html);
  if(!html.includes(marker)||!html.includes('pkmsvv-pippi.js')||!html.includes('pkmsvv-fossil-system.js'))throw Error('Preview fossil injection incomplete');
  // Test the actual staged source, not just repo strings.
@@ -223,7 +256,16 @@ const urls=['/game/','/game/index.html','/ai/game/','/ai/game/index.html',
  '/game/images/coop-lab/room_empty_modular.svg','/ai/game/images/coop-lab/room_empty_modular.svg',
   '/game/images/coop-lab/decor/gold_pippi_statue.svg','/ai/game/images/coop-lab/decor/gold_pippi_statue.svg',
   '/build-info.json'];
-const noStore=urls.map(u=>u+'\n  Cache-Control: no-store, max-age=0').join('\n');
+// The Box tab, Dex and Upgrade tabs must never come from a prior QA build.
+for(const route of ['/game','/ai/game']){
+ for(const name of ['pkmsvv-box-stage1.js','pkmsvv-box-stage2.js',
+  'pkmsvv-box-stage2-ui.js','pkmsvv-box-stage3.js','pkmsvv-box-stage4.js',
+  'pkmsvv-box-hub.js','pkmsvv-box-hub-ui.js','pkmsvv-pc-menu-clean-qa.js'])
+  urls.push(route+'/js/ui/'+name);
+ for(const name of ['pkmsvv-box-hub.css','pkmsvv-v20-ui-qa.css','pkmsvv-pc-menu-clean-qa.css'])
+  urls.push(route+'/css/'+name);
+}
+const noStore=[...new Set(urls)].map(u=>u+'\n  Cache-Control: no-store, max-age=0').join('\n');
 write(headersPath,previousHeaders.trimEnd()+'\n\n'+noStore+'\n');
 // Unique SW key ensures QA does not reuse the public revision.
 const swPath=present(path.join(site,'sw.js'));

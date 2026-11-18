@@ -22,7 +22,7 @@ jobs:
       - name: Validate research artwork, fossil state, currency rollback and achievement
         run: |
           set -euo pipefail
-          node --test tests/coop-lab-art-assets.test.cjs tests/coop-lab-core.test.cjs tests/fossil-system.test.cjs tests/fossil-restoration-data.test.cjs tests/pippi-guide.test.cjs tests/research-source-extraction.test.cjs
+          node --test tests/menu-pokemon-hub-regression.test.cjs tests/coop-lab-art-assets.test.cjs tests/coop-lab-core.test.cjs tests/fossil-system.test.cjs tests/fossil-restoration-data.test.cjs tests/pippi-guide.test.cjs tests/research-source-extraction.test.cjs
       - name: Download immutable baseline game snapshot
         uses: actions/download-artifact@v4
         with:

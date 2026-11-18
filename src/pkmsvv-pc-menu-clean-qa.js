@@ -335,6 +335,17 @@
   G.MenuUI._pkmsvvPcUnified=true;
   const old=G.MenuUI.open;
   if(typeof old==='function')G.MenuUI.open=function(...args){const result=old.apply(this,args);syncHome();return result;};
+  // PKMSVV_POKEMON_HUB_GUARD_255 — keep the old native [data-go=dex] click
+  // from reopening the legacy Pokémon chooser if the PokéBox module is stale.
+  // The installed PokéBox handler normally runs first and consumes this click.
+  d.addEventListener('click',event=>{
+   const launcher=event.target?.closest?.('#scr-menu [data-go="dex"]');
+   if(!launcher)return;
+   event.preventDefault();event.stopImmediatePropagation();
+   const hub=G.PKMSVVBoxHubUI;
+   if(typeof hub?.openBox==='function')hub.openBox();
+   else G.UI?.toast?.(L('PokéBox chưa tải xong. Hãy tải lại bản Beta.','PokéBox did not load. Refresh the Beta.'),3800);
+  },true);
   d.addEventListener('click',e=>{if(e.target?.closest?.('#pkmsvv-menu-wiki')){
    Promise.resolve().then(mountPC);requestAnimationFrame(mountPC);
   }},true);
