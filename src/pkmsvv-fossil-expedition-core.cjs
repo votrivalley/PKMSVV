@@ -21,8 +21,10 @@ function rockHpRatio(hits){
  const n=Number(hits);
  return 1-Math.max(0,Math.min(ROCK_HITS,Number.isFinite(n)?n:0))/ROCK_HITS;
 }
-const SITE_OFFSETS=[[-670,-310],[660,-380],[80,770]];
-const ROTOM_OFFSET=[-440,750],BOSS_DEX=623;
+// Each dig site is beyond the nearby viewport and far from the other sites.
+// Keep a real expedition, but give all three sites explicit navigation cues.
+const SITE_OFFSETS=[[-1340,-790],[1420,-840],[150,1600]];
+const ROTOM_OFFSET=[-940,1450],BOSS_DEX=623;
 const finite=x=>typeof x==='number'&&Number.isFinite(x);
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const point=v=>!!v&&finite(v.x)&&finite(v.y);
@@ -43,8 +45,8 @@ function begin({members,roomId,hostUid,origin,startSeconds=0,sites,rotomPoint}={
  const pts=Array.isArray(sites)&&sites.length===3&&sites.every(point)?
   sites:SITE_OFFSETS.map(([x,y])=>({x:origin.x+x,y:origin.y+y}));
  const rp=point(rotomPoint)?rotomPoint:{x:origin.x+ROTOM_OFFSET[0],y:origin.y+ROTOM_OFFSET[1]};
- if(pts.some(p=>distance(p,origin)<400)||pts.some((p,i)=>pts.some((q,j)=>i!==j&&distance(p,q)<650))||
-    distance(rp,origin)<420||pts.some(p=>distance(p,rp)<160))
+ if(pts.some(p=>distance(p,origin)<900)||pts.some((p,i)=>pts.some((q,j)=>i!==j&&distance(p,q)<1500))||
+    distance(rp,origin)<850||pts.some(p=>distance(p,rp)<500))
   return {ok:false,reason:'sites-not-spread-out'};
  return {ok:true,mission:'fossil_lab',roomId,hostUid,team,clock:startSeconds,elapsed:0,
   phase:'excavate',result:null,events:[],collected:0,
