@@ -10,7 +10,9 @@ G.PKMSVVFossilExpedition=(()=>{
  const image=(url)=>{const img=new Image();img.src=url;return img;};
  // All seven live sprites are cut from the user's approved art reference.
  const concept=image('images/coop-lab/approved-fossil-source-atlas.png');
- const excavations=concept,machines=concept,rotomFallback=concept;
+ const excavations=concept,machines=concept;
+ // Approved V3 source PNG: three complete sprites, not the clipped V1/V2 cells.
+ const v3=image('images/coop-lab/approved-fossil-v3-atlas.png'),rotomFallback=v3;
  const ART_CELL=96;
  const digSprite=[[192,0],[288,0],[0,96]];
  let current=null,active=false,finished=false,bossEnemy=null,rotomAnimator=null,
@@ -66,7 +68,8 @@ function showRotomSOS(){
   // Small upper-right SOS notification: gameplay controls and timer unobstructed.
   distressNode.style.cssText='position:fixed;top:clamp(60px,10vh,108px);right:clamp(9px,3vw,30px);left:auto;transform:none;z-index:820;width:min(78vw,350px);max-width:calc(100vw - 18px);display:flex;align-items:center;gap:9px;padding:8px 10px;background:#152e43f2;border:2px solid #fca36e;border-radius:10px;box-shadow:0 3px 0 #613d39,0 6px 16px #0008;pointer-events:none;color:#fff4da;font:700 12px/1.3 sans-serif;box-sizing:border-box';
   const portrait=document.createElement('span');portrait.setAttribute('aria-hidden','true');
-  portrait.style.cssText='width:48px;height:48px;flex:none;display:block;background-image:url("images/coop-lab/approved-fossil-source-atlas.png");background-repeat:no-repeat;background-size:384px 192px;background-position:-96px -96px;image-rendering:pixelated';
+  // V3 SOS crop 144×144 with safe transparent padding, displayed at half size.
+  portrait.style.cssText='width:72px;height:72px;flex:none;display:block;background-image:url("images/coop-lab/approved-fossil-v3-atlas.png");background-repeat:no-repeat;background-size:232px 72px;background-position:-88px 0;image-rendering:pixelated';
   const body=document.createElement('div');body.style.cssText='flex:1;min-width:0';
   const label=document.createElement('div');label.textContent='⚡ Rotom · SOS';
   label.style.cssText='color:#ffaf79;font-weight:900;font-size:14px;margin-bottom:2px';
@@ -365,11 +368,16 @@ function updateRotomSOS(){
    ctx.fillStyle=ratio>.3?'#7fe0a9':'#ef7768';ctx.fillRect(-33,16,66*ratio,4);
   }else if(obj.type==='site'){
    const col=Math.max(0,Math.min(2,obj.id-1)),[sx,sy]=digSprite[col];
-   if(excavations.complete&&excavations.naturalWidth>0){
-    // Use the three EXACT image concepts; only dim them when excavated.
+   if((col===2?v3:excavations).complete&&(col===2?v3:excavations).naturalWidth>0){
     ctx.globalAlpha=obj.hits>=3?.20:obj.hits>=2?.67:obj.hits>=1?.86:1;
-    // 96:96 pixel-perfect; retain same base foot at y+35.
-    ctx.drawImage(excavations,sx,sy,ART_CELL,ART_CELL,-48,-61,ART_CELL,ART_CELL);
+    if(col===2){
+     // Approved V3 amber: original 176×144 crop at exact 1/2 size (88×72).
+     // Unlike V1, no lost crystal edges and no interpolation or fractional zoom.
+     ctx.drawImage(v3,0,0,176,144,-44,-51,88,72);
+    }else{
+     // Keep the already approved moss / bone site sprites unchanged.
+     ctx.drawImage(excavations,sx,sy,ART_CELL,ART_CELL,-48,-61,ART_CELL,ART_CELL);
+    }
     ctx.globalAlpha=1;
    }else{
     ctx.fillStyle=obj.hits>=3?'#53483c':obj.hits>=2?'#977860':'#b59c79';
@@ -396,11 +404,19 @@ function updateRotomSOS(){
     ctx.moveTo(7,-25);ctx.lineTo(dx*.3,-38);
     ctx.lineTo(dx*.6+8,dy*.65-20);ctx.lineTo(dx,dy-15);ctx.stroke();
    }
-   // Render Rotom's original SOS beacon from approved image, not PMD placeholder.
-   if(rotomFallback.complete&&rotomFallback.naturalWidth>0)
-    // Native 48px rescue beacon; no 46px resampling artifacts.
-    ctx.drawImage(rotomFallback,192,96,48,48,-24,-56,48,48);
-   else{
+   if(current.phase==='escort'&&current.rotom.freed){
+    // Freed Rotom is the actual Pokémon #479 (preloaded normal Animator).
+    // SOS portrait / beacon belong exclusively to the rescue stage.
+    if(rotomAnimator&&typeof rotomAnimator.draw==='function'){
+     try{rotomAnimator.draw(ctx,0,-18);ctx.restore();return;}catch(_){}
+    }
+    // Loading-only fallback, never a reuse of the distress sprite.
+    ctx.fillStyle='#fa7840';ctx.beginPath();ctx.arc(0,-22,14,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#b5f7ed';ctx.fillRect(-6,-26,4,5);ctx.fillRect(3,-26,4,5);
+   }else if(rotomFallback.complete&&rotomFallback.naturalWidth>0){
+    // Approved V3 rescue marker: 144px complete source at 72px on map.
+    ctx.drawImage(rotomFallback,320,0,144,144,-36,-66,72,72);
+   }else{
     ctx.fillStyle='#fa7840';ctx.beginPath();ctx.arc(0,-22,14,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#b5f7ed';ctx.fillRect(-6,-26,4,5);ctx.fillRect(3,-26,4,5);
    }
@@ -520,5 +536,5 @@ function updateRotomSOS(){
   drawables,beginFrame,drawMissing,hud,reward,end,
   get active(){return active},get session(){return current},get lastFinish(){return lastFinish},
   get spriteReady(){return excavations.complete&&excavations.naturalWidth>0&&
-   machines.complete&&machines.naturalWidth>0}};
+   machines.complete&&machines.naturalWidth>0&&v3.complete&&v3.naturalWidth===464}};
 })();

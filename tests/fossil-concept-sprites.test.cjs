@@ -19,13 +19,29 @@ test('machine foot ordering, overlap transparency, compact SOS and concept sprit
  assert.match(code,/drawImage\(machines,obj\.online\?96:0,0,ART_CELL,ART_CELL,-48,-89,ART_CELL,ART_CELL\)/);
  assert.match(code,/drawImage\(excavations,sx,sy,ART_CELL,ART_CELL,-48,-61,ART_CELL,ART_CELL\)/);
  assert.match(code,/fillRect\(-35,14,70,8\)/);
- assert.match(code,/drawImage\(rotomFallback,192,96,48,48,-24,-56,48,48\)/);
+ assert.match(code,/drawImage\(v3,0,0,176,144,-44,-51,88,72\)/);
+ assert.match(code,/drawImage\(rotomFallback,320,0,144,144,-36,-66,72,72\)/);
+ assert.match(code,/rotomAnimator\.draw\(ctx,0,-18\)/);
+ assert.match(code,/current\.phase==='escort'&&current\.rotom\.freed/);
  assert.doesNotMatch(code,/drawImage\(machines,[^\n]*90,90\)/);
  assert.doesNotMatch(code,/drawImage\(excavations,[^\n]*92,92\)/);
  assert.match(code,/overlap=ally\(\)\.some/);
  assert.match(code,/obj\.type==='machine'\?obj\.y\+7:obj\.y/);
  assert.match(code,/digSprite=\[\[192,0\],\[288,0\],\[0,96\]\]/);
- assert.match(code,/background-position:-96px -96px/);
- assert.match(code,/drawImage\(rotomFallback,192,96,48,48/);
+ assert.match(code,/background-position:-88px 0/);
+ assert.match(code,/approved-fossil-v3-atlas\.png/);
  assert.doesNotMatch(code,/fossil-excavation-concept-atlas\.png/);
+});
+
+test('approved V3 crop sheet is authentic, fully padded, and the only SOS/beacon source',async()=>{
+ const manifest=await main();
+ assert.equal(manifest.approvedV3.normalRotomFollowDex,479);
+ const original=fs.readFileSync(path.join(root,'assets/coop-lab/approved-fossil-v3-atlas.png'));
+ const exported=fs.readFileSync(path.join(root,'dist/fossil-concept-sprites/approved-fossil-v3-atlas.png'));
+ assert.deepEqual(exported,original);
+ const meta=await sharp(exported).metadata();
+ assert.deepEqual([meta.width,meta.height,meta.hasAlpha],[464,144,true]);
+ const js=fs.readFileSync(path.join(root,'src/pkmsvv-fossil-expedition-native.js'),'utf8');
+ assert.match(js,/current\.phase==='escort'&&current\.rotom\.freed/);
+ assert.match(js,/rotomAnimator\.draw\(ctx,0,-18\)/);
 });

@@ -197,6 +197,12 @@ const {startServer}=require('../lan-server/server.cjs');
   });
   assert.deepEqual([approvedAtlas.width,approvedAtlas.height],[384,192],
    'Game must load approved concept sprites, not old SVG/painted machine');
+  const v3Atlas=await page.evaluate(async()=>{
+   const img=new Image();img.src='images/coop-lab/approved-fossil-v3-atlas.png';await img.decode();
+   return {width:img.naturalWidth,height:img.naturalHeight};
+  });
+  assert.deepEqual(v3Atlas,{width:464,height:144},
+   'The APPROVED V3 PNG must load in native gameplay');
   // Exercise the actual 2D Canvas drawables with native object coordinates.
   // A screenshot alone did not catch 96px atlas cells stretched to 90/92px.
   const actualSpriteRects=await page.evaluate(()=>{
@@ -204,23 +210,24 @@ const {startServer}=require('../lan-server/server.cjs');
    const canvas=document.createElement('canvas');canvas.width=128;canvas.height=128;
    const ctx=canvas.getContext('2d'),records=[];
    ctx.drawImage=function(...args){
-    if(args[0]?.src?.includes('approved-fossil-source-atlas.png'))
-     records.push({sx:args[1],sy:args[2],sw:args[3],sh:args[4],
+    if(/approved-fossil-(source|v3)-atlas\.png/.test(args[0]?.src||''))
+     records.push({asset:args[0].src.includes('-v3-')?'V3':'original',
+      sx:args[1],sy:args[2],sw:args[3],sh:args[4],
       dx:args[5],dy:args[6],dw:args[7],dh:args[8]});
    };
    for(const item of api.drawables())item.draw(ctx);
    return records;
   });
   const expectedRects=[
-   {sx:0,sy:0,sw:96,sh:96,dx:-48,dy:-89,dw:96,dh:96},
-   {sx:192,sy:0,sw:96,sh:96,dx:-48,dy:-61,dw:96,dh:96},
-   {sx:288,sy:0,sw:96,sh:96,dx:-48,dy:-61,dw:96,dh:96},
-   {sx:0,sy:96,sw:96,sh:96,dx:-48,dy:-61,dw:96,dh:96}
+   {asset:'original',sx:0,sy:0,sw:96,sh:96,dx:-48,dy:-89,dw:96,dh:96},
+   {asset:'original',sx:192,sy:0,sw:96,sh:96,dx:-48,dy:-61,dw:96,dh:96},
+   {asset:'original',sx:288,sy:0,sw:96,sh:96,dx:-48,dy:-61,dw:96,dh:96},
+   {asset:'V3',sx:0,sy:0,sw:176,sh:144,dx:-44,dy:-51,dw:88,dh:72}
   ];
-  const sortRects=xs=>xs.sort((a,b)=>a.sy-b.sy||a.sx-b.sx);
+  const sortRects=xs=>xs.sort((a,b)=>a.asset.localeCompare(b.asset)||a.sy-b.sy||a.sx-b.sx);
   assert.deepEqual(sortRects(actualSpriteRects),sortRects(expectedRects),
-   'Canvas must render machine and all three excavation sites at 1:1 native 96px');
-  console.log('FOSSIL_PIXEL_PERFECT_RECTS='+JSON.stringify(actualSpriteRects));
+   'Canvas must draw approved V3 amber and the three other objects at exact 2:1 or 1:1');
+  console.log('FOSSIL_APPROVED_V3_RECTS='+JSON.stringify(actualSpriteRects));
   const aiBefore=await page.evaluate(()=>({
    count:G.LanAI.activeBots().length,
    bots:G.Coop.puppets().filter(p=>p.lanBot).map(p=>({x:p.x,y:p.y,moves:p.moves.length,dead:p.dead}))
