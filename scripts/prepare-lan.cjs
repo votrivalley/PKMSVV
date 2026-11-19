@@ -94,7 +94,8 @@ for(const file of ['lan-connect.html','lan-connect.js'])
    }
    // QA-only runtime switch: the public Beta tests every REAL HP loss by
    // summoning Pikachu. No save mutation; live platforms retain normal rates.
-   const cousinQA='<script>window.PKMSVV_PIPPI_COUSIN_QA_100=true;</script>';
+   const cousinQA='<script>window.PKMSVV_PIPPI_COUSIN_QA_100=true;'+
+    'window.PKMSVV_MEGA_FULL_CATALOG_QA=true;</script>';
    html=html.replace('</head>',injectStyle.join('\n')+'\n'+cousinQA+'\n</head>');
    html=html.replace('</body>',injectScript.join('\n')+'\n</body>');
    // Previous Beta regression: the old QA chooser source exists in GitHub,
@@ -103,6 +104,8 @@ for(const file of ['lan-connect.html','lan-connect.js'])
    // executable chooser.
    const covers=copyRegionCovers(folder);
    if(covers!==10)throw Error('Beta Explore requires all ten Region covers; got '+covers);
+   if(!html.includes('window.PKMSVV_MEGA_FULL_CATALOG_QA=true;'))
+    throw Error('Beta missing full 96-entry Mega catalog QA switch: '+route);
    for(const token of ['pkmsvv-box-hub-ui.js?v=','pkmsvv-box-hub.css?v=',
     'pkmsvv-v20-ui-qa.css?v=','pkmsvv-box-stage4.js?v=',
     'pkmsvv-quick-region.js?v=','pkmsvv-quick-region.css?v='])

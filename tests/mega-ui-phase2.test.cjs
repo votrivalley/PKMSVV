@@ -300,3 +300,44 @@ test('Desktop Mega focus never scrolls and mobile CSS isolates one scroll area',
  assert.match(css,/scroll-behavior:auto;overflow-anchor:none/);
  assert.match(read('scripts/patch-ui-phase2-mega.cjs'),/pkmsvv-mega-phase2\.css/);
 });
+
+test('isolated Beta shows all 96 Mega forms, without faking missing battle sprites',()=>{
+ const h=fake(),ui=h.g.PKMSVVMegaEntry;
+ const spriteIds=new Set([10006,10530,10448]);
+ for(const item of h.g.PKMSVV_MEGA_CATALOG)if(!spriteIds.has(item.spriteId))
+  delete h.g.SPRITE_META[item.spriteId];
+ h.g.PKMSVV_MEGA_FULL_CATALOG_QA=true;
+ const original=JSON.stringify(h.g.DB.save);
+ assert.equal(ui.open(),true);
+ assert.equal(ui.fullCatalogQA(),true);
+ assert.equal(ui.available().length,96,'All audited Mega forms appear in Beta');
+ assert.equal(h.get('pkmsvv-mega-grid').children.length,12,'12 cards per page');
+ assert.equal(h.get('pkmsvv-mega-page').textContent,'Trang 1/8');
+ assert.equal(h.get('pkmsvv-mega-count').textContent,
+  'Đã mở: 0/96 · Sprite sẵn: 3/96');
+ assert.equal(h.get('pkmsvv-mega-grid').children[0].children[0].textContent,'✧',
+  'Venusaur Mega without verified art shows a neutral placeholder');
+ assert.ok(h.draws.every(x=>spriteIds.has(x.dex)),
+  'Missing Mega art must NEVER render a regular Pokémon as a fake Mega');
+ assert.equal(JSON.stringify(h.g.DB.save),original,'no save changes when inspecting all');
+ const save=h.g.DB.save;
+ save.pkmsvvChapter3Seen=true;
+ save.owned=Object.fromEntries(h.g.PKMSVV_MEGA_CATALOG.map(x=>[x.dex,{at:1}]));
+ save.megaStones=Object.fromEntries(h.g.PKMSVV_MEGA_CATALOG.filter(x=>x.stoneKey)
+  .map(x=>[x.stoneKey,1]));
+ save.megaForms=Object.fromEntries(h.g.PKMSVV_MEGA_CATALOG.map(x=>[x.key,true]));
+ save.megaStoryCleared=Object.fromEntries(h.g.PKMSVV_MEGA_CATALOG.map(x=>[x.key,true]));
+ ui.render();
+ assert.equal(h.get('pkmsvv-mega-count').textContent,
+  'Đã mở: 96/96 · Sprite sẵn: 3/96');
+ assert.ok(h.get('pkmsvv-mega-grid').children[0].children.at(-1).textContent.includes('Chờ sprite'));
+ assert.equal(ui.hasSprite(h.g.PKMSVV_MEGA_CATALOG[0]),false);
+ h.g.PKMSVV_MEGA_FULL_CATALOG_QA=false;
+ assert.equal(ui.available().length,3,'non-Beta strict sprite filter remains untouched');
+});
+test('Mega full-list QA switch only ships in isolated Beta, not production',()=>{
+ const prepare=read('scripts/prepare-lan.cjs');
+ assert.match(prepare,/if\(process\.env\.PKMSVV_FOSSIL_NATIVE_QA==='1'\)/);
+ assert.match(prepare,/window\.PKMSVV_MEGA_FULL_CATALOG_QA=true/);
+ assert.doesNotMatch(read('scripts/prepare-game.cjs'),/PKMSVV_MEGA_FULL_CATALOG_QA=true/);
+});

@@ -108,6 +108,18 @@ const {startServer}=require('../lan-server/server.cjs');
    assert.ok(Math.max(...textOrigins)-Math.min(...textOrigins)<1.5,'titles must align in one text column: '+JSON.stringify(aligned));
   }
   await page.setViewportSize({width:1280,height:800});
+  const megaCatalog=await page.evaluate(()=>{
+   const api=G.PKMSVVMegaEntry,forms=G.PKMSVV_MEGA_CATALOG||[];
+   return {fullFlag:window.PKMSVV_MEGA_FULL_CATALOG_QA===true,
+    all:forms.length,visible:api?.available?.().length,
+    actualSpriteCount:api?.available?.().filter(x=>api.hasSprite(x)).length};
+  });
+  assert.equal(megaCatalog.fullFlag,true,'Beta flag must be enabled');
+  assert.deepEqual([megaCatalog.all,megaCatalog.visible],[96,96],
+   'Beta must display all 96 Mega entries instead of only 3 sprite-equipped forms');
+  assert.ok(megaCatalog.actualSpriteCount>=3&&megaCatalog.actualSpriteCount<96,
+   'Missing sprite art stays missing rather than being invented');
+  console.log('BETA_MEGA_ROSTER_96_RESTORED: '+JSON.stringify(megaCatalog));
   // Regression: clicking the real Explore menu MUST open a Gen chooser, not
   // immediately launch the generic mixed-gen native match.
   await page.click('#scr-menu [data-go="play"]');

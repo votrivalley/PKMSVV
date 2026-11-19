@@ -31,6 +31,8 @@ on:
       - 'src/shared/coop-unified.js'
       - 'src/shared/coop-unified.css'
       - 'src/pkmsvv-mega-gacha.js'
+      - 'src/pkmsvv-mega-entry.js'
+      - 'tests/mega-ui-phase2.test.cjs'
       - 'tests/pippi-companion.test.cjs'
       - 'src/lan/solo-ai-bus.js'
       - 'src/lan/lan-ai.js'
@@ -102,6 +104,8 @@ jobs:
         run: node scripts/fetch-pippi-pmd.cjs && node scripts/build-pippi-portrait-atlas.cjs
       - name: Compile genuine offline LAN/AI native game with QA-only fossil hooks
         run: npm run prepare:lan
+      - name: Verify Mega catalog renders 96 QA forms without unlocking missing sprites
+        run: node --test tests/mega-ui-phase2.test.cjs
       - name: Verify ACTUAL native Beta ships new PokéBox / Pokédex / Nâng cấp
         shell: bash
         run: |
@@ -120,6 +124,8 @@ jobs:
           grep -Fq 'pkmsvv-v20-ui-qa.css?v=' "$html"
           grep -Fq 'PKMSVV_UNIFIED_BETA_POKEMON_255' scripts/prepare-lan.cjs
           grep -Fq 'window.PKMSVV_PIPPI_COUSIN_QA_100=true' dist/lan/game/index.html
+          grep -Fq 'window.PKMSVV_MEGA_FULL_CATALOG_QA=true' dist/lan/game/index.html
+          grep -Fq 'function fullCatalogQA' src/pkmsvv-mega-entry.js || grep -Fq 'const fullCatalogQA' src/pkmsvv-mega-entry.js
           for name in pkmsvv-box-stage1.js pkmsvv-box-stage2.js pkmsvv-box-stage2-ui.js pkmsvv-box-stage3.js pkmsvv-box-stage4.js pkmsvv-box-hub.js pkmsvv-box-hub-ui.js; do
             test -s "dist/lan/game/js/ui/$name"
           done
