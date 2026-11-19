@@ -70,7 +70,7 @@ G.PKMSVVHeldItems=(()=>{
     if(chosen||epoch!==myEpoch)return;
     chosen=true;
     if(skipNew)skip(next); // Keeping the old item discards this newly found one.
-    scr?.classList?.remove('pkmsvv-held-open');
+    scr?.classList?.remove?.('pkmsvv-held-open');
     G.UI?.hide?.('scr-item');
     cb(id);
    }
