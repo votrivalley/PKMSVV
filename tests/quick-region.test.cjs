@@ -896,3 +896,36 @@ test('Kanto entry eases only regular wilds in first 12m, never bosses or other g
  const coop={dex:12,maxHp:1000,hp:1000,dmg:20};
  assert.equal(q.balanceKantoEnemy(coop,60),false,'no changes outside Explore');
 });
+
+test('Sky Pillar uses real in-game marble/gold/cloud chunk renderer only in Explore 10',()=>{
+ const vm=require('node:vm');
+ const skySource=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-sky-tower-world-qa.js'),'utf8');
+ const ops=[];
+ const document={createElement(type){assert.equal(type,'canvas');return{
+  width:0,height:0,getContext(){
+   return {fillStyle:null,imageSmoothingEnabled:true,fillRect(x,y,w,h){ops.push({color:this.fillStyle,x,y,w,h});}};
+  }};}};
+ const native={native:true},biomes=Array.from({length:18},(_,i)=>({name:'Native '+i}));
+ const tiles={T:16,BIOMES:biomes,paintChunk(){return native;},propSprite(){return native;}};
+ const G={Tiles:tiles,World:{biome:10,biomeName(){return 'Santuario Dragón';}},
+  PKMSVVQuickRegion:{selectedRegion:9,targetBiome(i){return i===9?10:0;}},
+  Coop:{active:false},Rift:{inArena:false}};
+ vm.runInNewContext(skySource,{G,document});
+ assert.equal(G.PKMSVVSkyTowerMapQA.installed,true);
+ const result=G.Tiles.paintChunk(0,0,16,()=> 'floor',()=>0.5,10,1);
+ assert.equal(result.width,256);assert.equal(result.height,256);
+ assert.ok(ops.some(o=>o.color==='#e6c56d'),'sky has actual gold floor pixels');
+ assert.ok(ops.some(o=>o.color==='#e8f3f9'||o.color==='#f8fcfd'),
+  'sky has actual marble floor pixels');
+ const floorCount=ops.length;ops.length=0;
+ G.Tiles.paintChunk(0,0,16,()=> 'liquid',()=>0.5,10,1);
+ assert.ok(ops.some(o=>o.color==='#e9f8ff'),'sky clouds are painted into native liquid terrain');
+ assert.equal(G.World.biomeName(),'Tháp Thiên Không');
+ G.PKMSVVQuickRegion.selectedRegion=0;
+ assert.equal(G.Tiles.paintChunk(0,0,16,()=> 'floor',()=>0.5,10,1),native);
+ assert.equal(G.World.biomeName(),'Santuario Dragón');
+ G.PKMSVVQuickRegion.selectedRegion=9;G.Rift.inArena=true;
+ assert.equal(G.Tiles.paintChunk(0,0,16,()=> 'floor',()=>0.5,10,1),native,
+  'Rift gameplay and its biome art remain original');
+ assert.ok(floorCount>300);
+});

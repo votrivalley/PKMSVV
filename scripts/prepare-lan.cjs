@@ -56,7 +56,9 @@ for(const file of ['lan-connect.html','lan-connect.js'])
    'pkmsvv-quick-region.js',
    // Restore gameplay QA controls omitted by this newer native Beta packaging:
    // 8/MAX auto-level-up, active skill AUTO, speed, controller shortcuts.
-   'pkmsvv-runtime-controls-qa.js'
+   'pkmsvv-runtime-controls-qa.js',
+   // A real in-world Sky Pillar tileset, NOT just the region-menu WebP card.
+   'pkmsvv-sky-tower-world-qa.js'
   ];
   const stylesheets=[
    'pkmsvv-box-stage1.css','pkmsvv-box-stage2.css','pkmsvv-box-stage3.css',
@@ -124,7 +126,8 @@ for(const file of ['lan-connect.html','lan-connect.js'])
     'pkmsvv-v20-ui-qa.css?v=','pkmsvv-box-stage4.js?v=',
     'pkmsvv-quick-region.js?v=','pkmsvv-quick-region.css?v=',
     'pkmsvv-runtime-controls-qa.js?v=','pkmsvv-runtime-controls-qa.css?v=',
-    'pkmsvv-held-item-layout-qa.css?v='])
+    'pkmsvv-held-item-layout-qa.css?v=',
+    'pkmsvv-sky-tower-world-qa.js?v='])
     if(!html.includes(token))throw Error('Unified Beta Pokémon bundle incomplete: '+route+'/'+token);
    fs.writeFileSync(entry,html,'utf8');installed++;
   }

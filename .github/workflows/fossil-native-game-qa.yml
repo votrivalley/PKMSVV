@@ -34,6 +34,7 @@ on:
       - 'src/pkmsvv-mega-entry.js'
       - 'src/pkmsvv-runtime-controls-qa.js'
       - 'src/pkmsvv-runtime-controls-qa.css'
+      - 'src/pkmsvv-sky-tower-world-qa.js'
       - 'src/pkmsvv-held-item-ui.js'
       - 'src/pkmsvv-held-item-layout-qa.css'
       - 'tests/runtime-controls-qa.test.cjs'
@@ -138,6 +139,8 @@ jobs:
           test -s dist/lan/game/js/ui/pkmsvv-runtime-controls-qa.js
           test -s dist/lan/game/css/pkmsvv-runtime-controls-qa.css
           test -s dist/lan/game/css/pkmsvv-held-item-layout-qa.css
+          grep -Fq 'pkmsvv-sky-tower-world-qa.js?v=' "$html"
+          test -s dist/lan/game/js/ui/pkmsvv-sky-tower-world-qa.js
           for cover in 01-kanto.webp 02-johto.webp 03-hoenn.webp 04-sinnoh.webp 05-unova.webp 06-kalos.webp 07-alola.webp 08-galar.webp 09-paldea.webp 10-sky-tower.webp; do
             test -s "dist/lan/game/images/regions/$cover"
           done

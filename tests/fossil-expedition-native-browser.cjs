@@ -192,6 +192,35 @@ const {startServer}=require('../lan-server/server.cjs');
   });
   assert.equal(await page.locator('#pkmsvv-quick-region:not([hidden])').count(),0);
   console.log('BETA_EXPLORE_GEN_CHOOSER_RESTORED: 10 cards and 9 badges unlock Sky, no automatic combat');
+  // The 10th thumbnail always existed, but actual Sky fights previously used
+  // the original dark Dragon Sanctuary. Test genuine 16px world pixels.
+  const skyTerrainQA=await page.evaluate(()=>{
+   const api=G.PKMSVVSkyTowerMapQA,q=G.PKMSVVQuickRegion;
+   if(!api||!api.installed)return {loaded:false};
+   if(!q.beginRun(9))return {loaded:true,started:false};
+   try{
+    const bi=q.targetBiome(9);
+    const c=G.Tiles.paintChunk(0,0,16,()=> 'floor',()=>.4,bi,3);
+    const data=c.getContext('2d').getImageData(0,0,c.width,c.height).data;
+    let bright=0,gold=0,blue=0;
+    for(let i=0;i<data.length;i+=4){
+     const [r,g,b]=[data[i],data[i+1],data[i+2]];
+     if(r>215&&g>210&&b>180)bright++;
+     if(r>180&&g>125&&b<155)gold++;
+     if(b>r+12&&b>g)blue++;
+    }
+    return {loaded:true,started:true,biome:bi,width:c.width,height:c.height,
+     bright,gold,blue,biomeName:G.World.biomeName()};
+   }finally{q.endRun();}
+  });
+  assert.equal(skyTerrainQA.loaded,true,'Beta must load executable Sky map, not only cover image');
+  assert.equal(skyTerrainQA.started,true,'Sky QA session must arm with nine badges');
+  assert.deepEqual([skyTerrainQA.width,skyTerrainQA.height],[256,256]);
+  assert.ok(skyTerrainQA.bright>5000&&skyTerrainQA.gold>300,
+   'Sky must have WHITE MARBLE / GOLD pixels, not the old purple Dragon biome: '+
+   JSON.stringify(skyTerrainQA));
+  assert.equal(skyTerrainQA.biomeName,'Tháp Thiên Không');
+  console.log('BETA_SKY_TOWER_ACTUAL_WORLD='+JSON.stringify(skyTerrainQA));
   await page.click('#scr-menu [data-go="multiplayer"]');
   await page.locator('#pkmsvv-coop-modes [data-mode="fossil_lab"]').waitFor();
   assert.match(await page.locator('#pkmsvv-coop-modes [data-mode="fossil_lab"]').innerText(),/2–4/);
