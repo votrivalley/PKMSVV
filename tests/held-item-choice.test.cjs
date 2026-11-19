@@ -42,7 +42,7 @@ test('Exactly two item cards are selectable by mouse or gamepad and save is unch
  assert.equal(columns.children.length,2);
  assert.equal(columns.children[0].tagName,'button');
  assert.equal(columns.children[1].tagName,'button');
- assert.match(h.box.children[0].textContent,/1 trang bị/);
+ assert.match(h.box.children[0].textContent,/một trang bị/);
  columns.children[1].onclick();columns.children[0].onclick();
  assert.deepEqual(selected,['quickclaw']);
  assert.deepEqual(Array.from(h.api.skipped()),[]);
