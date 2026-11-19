@@ -51,3 +51,21 @@ test('LAN Beta itself injects the real three-tab PokéBox UI and preserves produ
  assert.match(prep,/const folder=path\.join\(to,route\)/);
  assert.match(prep,/html=html\.replace\('<\/body>',injectScript\.join/);
 });
+
+test('Unified Beta restores maxed-skills AUTO controls and compact item comparison with regression-specific CSS',()=>{
+ const prep=read('scripts/prepare-lan.cjs');
+ for(const file of ['pkmsvv-runtime-controls-qa.js','pkmsvv-runtime-controls-qa.css',
+  'pkmsvv-held-item-layout-qa.css']){
+  assert.ok(prep.includes("'"+file+"'"),'Missing isolated Beta runtime asset: '+file);
+ }
+ const item=read('src/pkmsvv-held-item-ui.js');
+ assert.match(item,/pkmsvv-held-open/);
+ assert.match(item,/Bạn đang có một trang bị/);
+ const css=read('src/pkmsvv-held-item-layout-qa.css');
+ assert.match(css,/#scr-item\.pkmsvv-held-open \.pkmsvv-held-columns > button\.pkmsvv-held-comparison\.pkmsvv-held-action/);
+ assert.match(css,/display:grid!important/);
+ assert.match(css,/grid-template-areas:"badge badge" "art title" "art desc" "art stat"/);
+ const auto=read('src/pkmsvv-runtime-controls-qa.js');
+ assert.match(auto,/pkmsvvAutoPickMaxSkill/);
+ assert.match(auto,/installAutoPick\(\)/);
+});

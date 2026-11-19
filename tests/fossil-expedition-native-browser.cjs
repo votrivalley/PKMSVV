@@ -108,6 +108,44 @@ const {startServer}=require('../lan-server/server.cjs');
    assert.ok(Math.max(...textOrigins)-Math.min(...textOrigins)<1.5,'titles must align in one text column: '+JSON.stringify(aligned));
   }
   await page.setViewportSize({width:1280,height:800});
+  // Regression: the newer unified Beta MUST actually load the preexisting
+  // max-8-skill AUTO selection module and its CSS (not just retain source).
+  await page.waitForFunction(()=>!!G.PKMSVVRuntimeControlsQA?.installAutoPick,{timeout:12000});
+  const autoSkillQA=await page.evaluate(()=>{
+   const a=G.PKMSVVRuntimeControlsQA,was=a.enabled();
+   const result={loaded:!!a,wrapped:G.RunUI?.showLevelUp?._pkmsvvMaxAutoPick===true,
+    settingType:typeof a.setEnabled,available:typeof a.full};
+   a.setEnabled(true);result.persisted=a.enabled()===true;
+   a.setEnabled(was);return result;
+  });
+  assert.deepEqual(autoSkillQA,{loaded:true,wrapped:true,settingType:'function',
+   available:'function',persisted:true},
+   'Max-skill AUTO was missing from actual Beta despite existing in older QA builds');
+  // Validate the real item modal CSS from the actual compiled game rather than
+  // mere selectors in the source tree; do not change a player save here.
+  const heldLayout=await page.evaluate(()=>{
+   const ui=G.RunUI,items=G.Items?.BY||{};
+   if(!items.leftovers||!items.assaultvest)return {error:'Native item catalogue unavailable'};
+   ui.showItemChoice('leftovers','assaultvest',()=>{});
+   const box=document.getElementById('item-cards');
+   const cards=[...document.querySelectorAll('#scr-item .pkmsvv-held-columns > button')];
+   const gr=box.getBoundingClientRect();
+   const bounds=cards.map(card=>{const r=card.getBoundingClientRect(),css=getComputedStyle(card);
+    return {x:r.x,width:r.width,height:r.height,display:css.display,
+     cols:css.gridTemplateColumns,label:getComputedStyle(card.querySelector('.pkmsvv-held-label')).whiteSpace,
+     nameWidth:card.querySelector('strong').getBoundingClientRect().width};
+   });
+   G.UI.hide('scr-item');document.getElementById('scr-item')?.classList?.remove('pkmsvv-held-open');
+   return {count:cards.length,boxWidth:gr.width,bounds,
+    autoCss:[...document.querySelectorAll('link[rel=stylesheet]')]
+     .some(l=>l.href.includes('pkmsvv-runtime-controls-qa.css'))};
+  });
+  assert.equal(heldLayout.count,2,'Two held item choices');
+  assert.ok(heldLayout.autoCss,'Max skill AUTO CSS must load in Beta');
+  assert.ok(heldLayout.boxWidth>=490&&heldLayout.boxWidth<=725,'Item modal must be centred and compact');
+  assert.ok(heldLayout.bounds.every(c=>c.display==='grid'&&c.width>=180&&c.nameWidth>130&&c.label==='nowrap'),
+   'No flex-squeezed vertical labels or narrow title cards: '+JSON.stringify(heldLayout));
+  console.log('BETA_MAX_SKILL_AUTO_AND_HELD_ITEM_LAYOUT='+JSON.stringify({autoSkillQA,heldLayout}));
   const megaCatalog=await page.evaluate(()=>{
    const api=G.PKMSVVMegaEntry,forms=G.PKMSVV_MEGA_CATALOG||[];
    return {fullFlag:window.PKMSVV_MEGA_FULL_CATALOG_QA===true,

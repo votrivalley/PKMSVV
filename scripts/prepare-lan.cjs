@@ -53,11 +53,18 @@ for(const file of ['lan-connect.html','lan-connect.js'])
    'pkmsvv-box-stage1.js','pkmsvv-box-stage2.js','pkmsvv-box-stage2-ui.js',
    'pkmsvv-box-stage3.js','pkmsvv-box-stage4.js','pkmsvv-box-hub.js',
    'pkmsvv-box-hub-ui.js','pkmsvv-dex-defeats-qa.js','pkmsvv-recruitment-qa.js',
-   'pkmsvv-quick-region.js'
+   'pkmsvv-quick-region.js',
+   // Restore gameplay QA controls omitted by this newer native Beta packaging:
+   // 8/MAX auto-level-up, active skill AUTO, speed, controller shortcuts.
+   'pkmsvv-runtime-controls-qa.js'
   ];
   const stylesheets=[
    'pkmsvv-box-stage1.css','pkmsvv-box-stage2.css','pkmsvv-box-stage3.css',
-   'pkmsvv-box-hub.css','pkmsvv-v20-ui-qa.css','pkmsvv-quick-region.css'
+   'pkmsvv-box-hub.css','pkmsvv-v20-ui-qa.css','pkmsvv-quick-region.css',
+   'pkmsvv-runtime-controls-qa.css',
+   // Restore the full-width held-item comparison styles from the older QA
+   // build, with a targeted override after native item modal styles.
+   'pkmsvv-held-item-layout-qa.css'
   ];
   const revision=/^[a-f0-9]{40}$/i.test(String(process.env.GITHUB_SHA||''))?
    process.env.GITHUB_SHA.slice(0,12):crypto.createHash('sha256').update(
@@ -115,7 +122,9 @@ for(const file of ['lan-connect.html','lan-connect.js'])
     throw Error('Beta missing CSP-safe Mega and Pikachu QA runtime switches: '+route);
    for(const token of ['pkmsvv-box-hub-ui.js?v=','pkmsvv-box-hub.css?v=',
     'pkmsvv-v20-ui-qa.css?v=','pkmsvv-box-stage4.js?v=',
-    'pkmsvv-quick-region.js?v=','pkmsvv-quick-region.css?v='])
+    'pkmsvv-quick-region.js?v=','pkmsvv-quick-region.css?v=',
+    'pkmsvv-runtime-controls-qa.js?v=','pkmsvv-runtime-controls-qa.css?v=',
+    'pkmsvv-held-item-layout-qa.css?v='])
     if(!html.includes(token))throw Error('Unified Beta Pokémon bundle incomplete: '+route+'/'+token);
    fs.writeFileSync(entry,html,'utf8');installed++;
   }

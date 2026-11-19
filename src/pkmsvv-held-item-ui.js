@@ -41,8 +41,8 @@ G.PKMSVVHeldItems=(()=>{
    box.replaceChildren();
    box.classList.add('pkmsvv-held-choices');
    const title=document.createElement('p');title.className='pkmsvv-held-lead';
-   title.textContent=tr('Bạn chỉ được mang 1 trang bị trong trận — chọn một lần để tiếp tục.',
-    'You can hold only one item during a run — choose once to continue.');
+   title.textContent=tr('Bạn đang có một trang bị. Giữ món cũ hoặc đổi sang món mới để tiếp tục.',
+    'You already have an item. Keep it or equip the new one to continue.');
    box.append(title);
    const columns=document.createElement('div');columns.className='pkmsvv-held-columns';
    const panels=[];
@@ -62,11 +62,15 @@ G.PKMSVVHeldItems=(()=>{
     columns.append(panel);panels.push(panel);
    }
    box.append(columns);
+   // Restrict only this dialog, never the rest of native modal layouts.
+   const scr=document.getElementById('scr-item');
+   scr?.classList?.add('pkmsvv-held-open');
    let chosen=false;
    function choose(id,skipNew){
     if(chosen||epoch!==myEpoch)return;
     chosen=true;
     if(skipNew)skip(next); // Keeping the old item discards this newly found one.
+    scr?.classList?.remove('pkmsvv-held-open');
     G.UI?.hide?.('scr-item');
     cb(id);
    }
