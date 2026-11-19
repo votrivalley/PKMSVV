@@ -100,8 +100,15 @@ jobs:
           test -s vendor/pokesurvivor/dev.html
           test -s vendor/pokesurvivor/LICENSE-NONCOMMERCIAL.md
           echo "PINNED_UPSTREAM_RESTORED=$PIN TREE=$TREE"
-      - name: Install build dependencies
-        run: npm install --no-audit --no-fund
+      - name: Install build dependencies with known-published transitive ABI version
+        shell: bash
+        run: |
+          set -euo pipefail
+          # npm's unpinned transitive registry metadata currently advertises
+          # node-abi@4.42.0 whose tarball returns 404. Limit this override to
+          # the ephemeral Beta GitHub runner; no package or save changes.
+          npm pkg set 'overrides.node-abi=4.40.0'
+          npm install --no-audit --no-fund
       - name: Check 2–4 room rules and 6–8 minute outcome core
         run: node --test tests/fossil-concept-sprites.test.cjs tests/menu-pokemon-hub-regression.test.cjs tests/fossil-expedition-core.test.cjs tests/fossil-expedition-guidance.test.cjs tests/fossil-expedition-routing.test.cjs tests/quick-region.test.cjs tests/coop-lab-core.test.cjs tests/lan-ai-modes.test.cjs tests/pippi-guide.test.cjs
       - name: Verify MAX skill AUTO and held item choice logic from original QA
