@@ -31,7 +31,7 @@
    ['Joyous','Muốn xem nội thất thì bấm Xây dựng; còn Xu Đồng Đội và vật phẩm thì vào Kho Hậu Cần. Từng chỗ tui chỉ riêng, khỏi học thuộc!','Then replay Co-op for Coins and décor. My ultra-rare golden statue is waiting… flex before me and I deduct style points!']
   ],
   fossils:[
-   ['Surprised','Ủa, đào ra hóa thạch rồi! Nhớ các loại đá trong Khám phá có thể giấu đồ cổ, chịu khó để ý nha.','Wait, a Dome Fossil?! Your very first rock after minute fifteen? Lucky you. I already called dibs on the chief archaeologist title.'],
+   ['Surprised','Ủa, Hóa thạch Mái vòm đây mà! Cất về Phòng nghiên cứu nhé. Cái này phục nguyên được Kabuto đó, đừng làm mất!','Wait, a Dome Fossil?! Your very first rock after minute fifteen? Lucky you. I already called dibs on the chief archaeologist title.'],
    ['Joyous','Cầm hóa thạch về Phòng nghiên cứu nhé. Máy chưa mở thì cứ cất đó, thắng Co-op hóa thạch lần đầu rồi dùng.','A Kabuto fossil! Take it to the Research Lab. The machine stays LOCKED until your first Fossil Co-op clear!'],
    ['Shouting','Pokémon hệ Đá có lợi thế khi đào, Pokémon hóa thạch còn giỏi hơn. Có cái cuốc xịn thì dùng đúng người nha!','Rock Pokémon dig better, and fossil Pokémon have an even sharper nose for relics. Want exact odds? I am your guide, not a walking spreadsheet!'],
    ['Determined','Muốn hóa thạch loại nào thì đào ở đúng vùng. Galar còn cần ghép hai mảnh. Đừng ngồi chờ Gacha rơi hóa thạch nha!','Dig in the right region for its fossils. Galar needs two fragments. Waiting for fossil Pokémon in Gacha? You would grow old before I become humble!']

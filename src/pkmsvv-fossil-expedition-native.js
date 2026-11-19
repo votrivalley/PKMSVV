@@ -105,7 +105,7 @@ function updateRotomSOS(){
   }
   return sides>=4;
  }
- function safePoint(p,forRescue=false){
+ function safePoint(p,forRescue=false,accept=()=>true){
   if(!G.World?.isFree)return p;
   if(!forRescue){
    if(passable(p.x,p.y,32))return p;
@@ -117,15 +117,17 @@ function updateRotomSOS(){
    return p;
   }
   for(const clearance of [76,60,44]){
-   if(rescueAccessible(p,clearance))return p;
+   if(accept(p)&&rescueAccessible(p,clearance))return p;
    for(let radius=48;radius<=768;radius+=32)
     for(let k=0;k<24;k++){
      const a=k*Math.PI/12,t={x:p.x+Math.cos(a)*radius,y:p.y+Math.sin(a)*radius};
-     if(rescueAccessible(t,clearance))return t;
+     if(accept(t)&&rescueAccessible(t,clearance))return t;
     }
   }
-  // A rare ultra-dense biome still gets the increased 144px rescue circle.
-  return safePoint(p,false);
+  // In extremely dense terrain, use the nearest reachable point that keeps
+  // enough spacing from the other mission objectives.
+  const fallback=safePoint(p,false);
+  return accept(fallback)?fallback:p;
  }
  function begin({mode}={}){
   end();finished=false;lastFinish=null;lastAction=-100;lastBossHint=-100;scanClock=sendClock=waveClock=duelClock=speedClock=0;speedStage=-1;waveIndex=0;distressUntil=0;distressShown=false;botTimes.clear();
@@ -136,11 +138,19 @@ function updateRotomSOS(){
    return false;
   }
   const origin=safePoint({x:0,y:0}),sites=C.SITE_OFFSETS.map(([x,y])=>safePoint({x:origin.x+x,y:origin.y+y}));
-  const rotomPoint=safePoint({x:origin.x+C.ROTOM_OFFSET[0],y:origin.y+C.ROTOM_OFFSET[1]},true);
-  // The pure core refuses any map locations that are too close together.
-  // Fallback to guaranteed distant offsets rather than silently grouping rocks.
+  const desiredRotom={x:origin.x+C.ROTOM_OFFSET[0],y:origin.y+C.ROTOM_OFFSET[1]};
+  const spaced=points=>point=>Math.hypot(point.x-origin.x,point.y-origin.y)>=900&&
+   points.every(site=>Math.hypot(point.x-site.x,point.y-site.y)>=550);
+  const rotomPoint=safePoint(desiredRotom,true,spaced(sites));
+  // The pure core still validates mission geometry; do NOT silently throw
+  // away safe Rotom placement by reverting to an untested raw spawn.
   let session=C.begin({members:r.members,roomId:r.id,hostUid:r.host,origin,sites,rotomPoint});
-  if(!session.ok)session=C.begin({members:r.members,roomId:r.id,hostUid:r.host,origin});
+  if(!session.ok){
+   const fixedSites=C.SITE_OFFSETS.map(([x,y])=>({x:origin.x+x,y:origin.y+y}));
+   const rescueSpot=safePoint(desiredRotom,true,spaced(fixedSites));
+   session=C.begin({members:r.members,roomId:r.id,hostUid:r.host,
+    origin,sites:fixedSites,rotomPoint:rescueSpot});
+  }
   if(!session.ok)return false;
   current=session;active=true;
   machineTarget={x:current.machine.x,y:current.machine.y,r:54,level:1,dead:false,
