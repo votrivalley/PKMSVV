@@ -174,3 +174,31 @@ test('Pippi explains each gameplay mode once BEFORE match starts, in Gen Z Vietn
  assert.equal(f.guide.openMode('coop'),false,'never open blocking mode intro during active combat');
  assert.equal(f.writes.length,8,'save one completion mark per unique mode');
 });
+
+test('Pippi feature tutorials are one-time and never block live gameplay',()=>{
+ const f=fixture();const kinds=['box','dex','upgrade','rank','support','mega','berry','companion','fossil','construction','depot','knowledge','recruitment'];
+ assert.equal(f.guide.openFeature('missing'),false);
+ for(const k of kinds){
+  assert.equal(f.guide.openFeature(k),true,'Missing new feature guide: '+k);
+  assert.equal(f.guide.current.kind,'feature_'+k);
+  assert.equal(f.save.pkmsvvPippiGuide['feature_'+k],undefined);
+  while(f.guide.isOpen)f.guide.next();
+  assert.equal(f.save.pkmsvvPippiGuide['feature_'+k],true);
+  assert.equal(f.guide.openFeature(k),false,'Do not spam repeat '+k);
+ }
+ f.G.Game.state='playing';
+ assert.equal(f.guide.openFeature('box'),false);
+});
+test('manual Lab tour replay is allowed and its flag remains completed',()=>{
+ const f=fixture();
+ assert.equal(f.guide.open('laboratory'),true);
+ while(f.guide.isOpen)f.guide.next();
+ assert.equal(f.guide.open('laboratory'),false);
+ assert.equal(f.guide.open('laboratory',{replay:true}),true);
+ while(f.guide.isOpen)f.guide.next();
+ assert.equal(f.save.pkmsvvPippiGuide.laboratory,true);
+});
+test('Pippi tutorial z-index is higher than Research Lab overlay',()=>{
+ const css=fs.readFileSync(path.join(root,'src/pkmsvv-pippi-guide.css'),'utf8');
+ assert.match(css,/z-index:30000/);
+});
