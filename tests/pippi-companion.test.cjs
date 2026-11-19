@@ -796,3 +796,28 @@ test('Sky Pikachu native cameo uses species 25, one native canvas draw and no re
  assert.match(source,/\.slice\(0,cue\.event==='cousin'\?16:4\)/);
  assert.doesNotMatch(source,/setInterval\(.*cousin/i);
 });
+
+test('Beta-only Pikachu QA is 100% on real HP loss without spending skill points',()=>{
+ const G={DB:{save:{pkmsvvPippi:{xp:0,training:{cousin:0}}}},
+  PKMSVV_PIPPI_COUSIN_QA_100:true,
+  Game:{state:'playing',st:{time:25},player:null},
+  PKMSVVQuickRegion:{active:true},Coop:{active:false},Royale:{active:false},
+  EggRush:{active:false},Social:{room:{mode:'explore'}},
+  EnemyMgr:{all:()=>[{x:110,y:120,dead:false,applyStun(v){this.stun=v;}}]}};
+ const pl={x:100,y:120,hp:90,maxHp:100};G.Game.player=pl;
+ const run=P.newRun(pl,25);
+ assert.equal(P.cousinChance(0),0,'production normal rate remains unchanged');
+ assert.equal(P.rollCousinOnHit(G,run,pl,100,100,()=>.9999).triggered,false);
+ let result=P.rollCousinOnHit(G,run,pl,100,90,()=>.9999);
+ assert.equal(result.triggered,true);assert.equal(result.chance,1);
+ G.Coop.active=true;
+ assert.equal(P.rollCousinOnHit(G,run,pl,90,80,()=>0).triggered,false,'no PvP/Co-op override');
+ G.Coop.active=false;G.PKMSVV_PIPPI_COUSIN_QA_100=false;
+ assert.equal(P.rollCousinOnHit(G,run,pl,90,80,()=>0).reason,'not-learned');
+});
+test('QA 100% runtime flag is injected only in isolated Beta packaging',()=>{
+ const source=fs.readFileSync(require('node:path').join(__dirname,'../scripts/prepare-lan.cjs'),'utf8');
+ assert.match(source,/if\(process\.env\.PKMSVV_FOSSIL_NATIVE_QA==='1'\)/);
+ assert.match(source,/window\.PKMSVV_PIPPI_COUSIN_QA_100=true/);
+ assert.match(source,/html=html\.replace\('<\/head>',injectStyle/);
+});

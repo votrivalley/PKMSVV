@@ -176,7 +176,11 @@ G.PKMSVVMegaGacha=(()=>{
    if(busy)return;
    const isMega=mode==='mega';screen.classList.toggle('pkmsvv-mega-gacha-mode',isMega);
    panel.hidden=!isMega;regular.classList.toggle('on',!isMega);mega.classList.toggle('on',isMega);
-   if(isMega)refresh();
+   if(isMega){
+    refresh();
+    // On choosing the Mega Stone machine, teach the cost/odds BEFORE a pull.
+    G.PKMSVVPippiGuide?.openFeature?.('mega_spin');
+   }
   }
   function refresh(){
    const save=G.DB?.save||{};
@@ -262,6 +266,9 @@ G.PKMSVVMegaGacha=(()=>{
   }
   $('pkmsvv-mega-gacha-pull').onclick=()=>{
    if(busy)return;
+   // Safety net if this screen was opened programmatically without its tab.
+   // Never charge Arena Points on the first tutorial click.
+   if(G.PKMSVVPippiGuide?.openFeature?.('mega_spin'))return;
    busy=true;
    const r=pull();
    if(!r){

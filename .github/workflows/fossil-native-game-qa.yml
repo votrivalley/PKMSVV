@@ -24,6 +24,9 @@ on:
       - 'src/pkmsvv-fossil-expedition-core.cjs'
       - 'src/pkmsvv-fossil-expedition-native.js'
       - 'src/shared/coop-unified.js'
+      - 'src/shared/coop-unified.css'
+      - 'src/pkmsvv-mega-gacha.js'
+      - 'tests/pippi-companion.test.cjs'
       - 'src/lan/solo-ai-bus.js'
       - 'src/lan/lan-ai.js'
       - 'assets/coop-lab/fossil-excavation-rock.svg'
@@ -88,6 +91,8 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Check 2–4 room rules and 6–8 minute outcome core
         run: node --test tests/fossil-concept-sprites.test.cjs tests/menu-pokemon-hub-regression.test.cjs tests/fossil-expedition-core.test.cjs tests/fossil-expedition-guidance.test.cjs tests/fossil-expedition-routing.test.cjs tests/coop-lab-core.test.cjs tests/lan-ai-modes.test.cjs tests/pippi-guide.test.cjs
+      - name: Verify Pippi QA cousin trigger does not affect normal balance
+        run: node --test tests/pippi-companion.test.cjs
       - name: Fetch hash-checked Clefairy PMD assets required by LAN packaging
         run: node scripts/fetch-pippi-pmd.cjs && node scripts/build-pippi-portrait-atlas.cjs
       - name: Compile genuine offline LAN/AI native game with QA-only fossil hooks
@@ -102,6 +107,7 @@ jobs:
           grep -Fq 'pkmsvv-box-hub.css?v=' "$html"
           grep -Fq 'pkmsvv-v20-ui-qa.css?v=' "$html"
           grep -Fq 'PKMSVV_UNIFIED_BETA_POKEMON_255' scripts/prepare-lan.cjs
+          grep -Fq 'window.PKMSVV_PIPPI_COUSIN_QA_100=true' dist/lan/game/index.html
           for name in pkmsvv-box-stage1.js pkmsvv-box-stage2.js pkmsvv-box-stage2-ui.js pkmsvv-box-stage3.js pkmsvv-box-stage4.js pkmsvv-box-hub.js pkmsvv-box-hub-ui.js; do
             test -s "dist/lan/game/js/ui/$name"
           done

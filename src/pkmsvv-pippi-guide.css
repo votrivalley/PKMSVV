@@ -1,7 +1,7 @@
 /* Pippi native RPG dialogue — high-resolution container, pixel portrait.
  * Does not obscure non-dialogue UI unless guide is actively open. */
 #pkmsvv-pippi-guide.pkmsvv-pippi-guide{
- position:fixed;inset:0;z-index:30000;display:flex;align-items:flex-end;
+ position:fixed;inset:0;z-index:2147483400;display:flex;align-items:flex-end;
  justify-content:center;box-sizing:border-box;pointer-events:auto;
  font-family:"Segoe UI",Tahoma,sans-serif;
 }

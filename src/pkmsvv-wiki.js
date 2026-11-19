@@ -217,7 +217,11 @@ G.PKMSVVWiki=(()=>{
      const gem=document.createElement('span');gem.className=n<lv?'filled':'';tiers.append(gem);
     }
     details.append(nameEl,rank,tiers);heading.append(frame,details);
-    const info=document.createElement('p');info.textContent=description;
+    const info=document.createElement('p');info.textContent=key==='cousin'&&
+     window.PKMSVV_PIPPI_COUSIN_QA_100===true?
+     tr('🧪 BETA TEST: Pikachu gọi em họ 100% mỗi lần mất HP thật trong Khám phá (kể cả chưa học skill). Không áp dụng trong Co-op/Arena. Sau test sẽ trở lại tỉ lệ thông thường.',
+      '🧪 BETA TEST: Pikachu triggers on every real HP loss in Explore (even without learning the skill). Not in Co-op/Arena. Normal rates return after QA.'):
+     description;
     const button=document.createElement('button');button.type='button';
     button.className='pkmsvv-pippi-train-btn';button.dataset.pippiTrain=key;
     button.disabled=!unlocked||lv>=3||progress.points<1||typeof G.DB?.commit!=='function';

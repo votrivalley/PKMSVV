@@ -90,7 +90,10 @@ for(const file of ['lan-connect.html','lan-connect.js'])
     fs.copyFileSync(original,destination);
     injectScript.push('<script defer src="js/ui/'+name+'?v='+revision+'"></script>');
    }
-   html=html.replace('</head>',injectStyle.join('\n')+'\n</head>');
+   // QA-only runtime switch: the public Beta tests every REAL HP loss by
+   // summoning Pikachu. No save mutation; live platforms retain normal rates.
+   const cousinQA='<script>window.PKMSVV_PIPPI_COUSIN_QA_100=true;</script>';
+   html=html.replace('</head>',injectStyle.join('\n')+'\n'+cousinQA+'\n</head>');
    html=html.replace('</body>',injectScript.join('\n')+'\n</body>');
    for(const token of ['pkmsvv-box-hub-ui.js?v=','pkmsvv-box-hub.css?v=',
     'pkmsvv-v20-ui-qa.css?v=','pkmsvv-box-stage4.js?v='])

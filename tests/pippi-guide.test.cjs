@@ -176,7 +176,7 @@ test('Pippi explains each gameplay mode once BEFORE match starts, in Gen Z Vietn
 });
 
 test('Pippi feature tutorials are one-time and never block live gameplay',()=>{
- const f=fixture();const kinds=['box','dex','upgrade','rank','support','mega','berry','companion','fossil','construction','depot','knowledge','recruitment'];
+ const f=fixture();const kinds=['box','dex','upgrade','rank','support','mega','mega_spin','berry','companion','fossil','construction','depot','knowledge','recruitment'];
  assert.equal(f.guide.openFeature('missing'),false);
  for(const k of kinds){
   assert.equal(f.guide.openFeature(k),true,'Missing new feature guide: '+k);
@@ -200,7 +200,10 @@ test('manual Lab tour replay is allowed and its flag remains completed',()=>{
 });
 test('Pippi tutorial z-index is higher than Research Lab overlay',()=>{
  const css=fs.readFileSync(path.join(root,'src/pkmsvv-pippi-guide.css'),'utf8');
- assert.match(css,/z-index:30000/);
+ assert.match(css,/z-index:2147483400/);
+ const coopCss=fs.readFileSync(path.join(root,'src/shared/coop-unified.css'),'utf8');
+ assert.match(coopCss,/z-index:2147483000/);
+ assert.ok(2147483400>2147483000,'Pippi must appear ABOVE Co-op mode selector');
 });
 
 test('Pippi guide is wired to the actual Pokémon and Lab feature entry points',()=>{
@@ -213,4 +216,27 @@ test('Pippi guide is wired to the actual Pokémon and Lab feature entry points',
  assert.match(hub,/openFeature\?\.\('rank'\)/);
  assert.match(recruit,/openFeature\?\.\('recruitment'\)/);
  assert.match(wiki,/open\?\.\('laboratory',\{replay:true\}\)/);
+});
+
+test('Co-op mode card opens Pippi immediately ABOVE the Co-op overlay without close',()=>{
+ const src=fs.readFileSync(path.join(root,'src/shared/coop-unified.js'),'utf8');
+ const ui=fs.readFileSync(path.join(root,'src/shared/coop-unified.css'),'utf8');
+ const css=fs.readFileSync(path.join(root,'src/pkmsvv-pippi-guide.css'),'utf8');
+ assert.match(src,/b\.onclick=\(\)=>\{mode=id;repaint\(\);G\.PKMSVVPippiGuide\?\.openMode\?\.\(id\);\}/,
+  'mode click directly invokes guide, not deferred to Close/Host/Join');
+ assert.match(ui,/z-index:2147483000/);
+ assert.match(css,/z-index:2147483400/);
+ const g=fixture();assert.equal(g.guide.openMode('fossil_lab'),true);
+ assert.equal(g.guide.current.kind,'mode_fossil_lab');
+ assert.equal(g.guide.isOpen,true);
+});
+test('Mega Stone machine teaches rates and cost before any spin',()=>{
+ const mega=fs.readFileSync(path.join(root,'src/pkmsvv-mega-gacha.js'),'utf8');
+ const f=fixture();
+ assert.match(mega,/if\(isMega\)\{[\s\S]*?openFeature\?\.\('mega_spin'\)/);
+ assert.match(mega,/if\(G\.PKMSVVPippiGuide\?\.openFeature\?\.\('mega_spin'\)\)return;/);
+ assert.equal(f.guide.openFeature('mega_spin'),true);
+ assert.match(f.elements.line.textContent,/100 Điểm Arena/);
+ while(f.guide.isOpen)f.guide.next();
+ assert.equal(f.guide.openFeature('mega_spin'),false);
 });

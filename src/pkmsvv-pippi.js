@@ -394,8 +394,14 @@
      (Number(G.Game?.st?.time??G.Game?.time)||run.now)<run.sleepUntil)
    return {triggered:false,reason:'not-real-hit'};
   const now=Math.max(run.now,Number(G.Game?.st?.time??G.Game?.time)||run.now);
-  const level=data(G.DB?.save).training.cousin;
-  const chance=cousinChance(level);
+  const learnedLevel=data(G.DB?.save).training.cousin;
+  // Explicit 100% QA flag is injected ONLY into the isolated Beta's HTML
+  // during PKMSVV_FOSSIL_NATIVE_QA packaging, never into PC/Android/production.
+  // QA can preview Pikachu even without spending a permanent training point.
+  const cousinQA=G?.PKMSVV_PIPPI_COUSIN_QA_100===true||
+   (typeof window!=='undefined'&&window.PKMSVV_PIPPI_COUSIN_QA_100===true);
+  const level=cousinQA?Math.max(1,learnedLevel):learnedLevel;
+  const chance=cousinQA?1:cousinChance(level);
   if(!chance)return {triggered:false,reason:'not-learned',chance};
   if(!(Number(random())<chance))return {triggered:false,reason:'roll',chance};
   const lightning=cousinLightning(G,pl,now,level);

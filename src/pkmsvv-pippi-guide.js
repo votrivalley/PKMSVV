@@ -108,6 +108,11 @@
    ['Inspired','Đây là khu Mega. Chọn Pokémon để xem dạng Mega và điều kiện mở khóa. Chưa đủ điều kiện thì cứ xem trước nha.','Select Pokémon to inspect Mega forms and unlock conditions.'],
    ['Determined','Mở được Mega rồi thì dùng nút Mega trong trận. Canh hồi chiêu để dùng lúc gặp đám quái khó, đừng vừa sáng nút đã bấm!','Once unlocked, use the Mega control in battle and plan around its cooldown.']
   ],
+  mega_spin:[
+   ['Surprised','Ồ, chuẩn bị quay Mega Stone hả? Mỗi lượt tốn 100 Điểm Arena. Xem số điểm trước đi, không là máy chỉ biết nhìn bạn thôi!','About to roll a Mega Stone? Each spin costs 100 Arena Points. Check your balance first!'],
+   ['Determined','Mega thường chiếm 98,5%, Mega huyền thoại chỉ 1,5%; có bảo hiểm ở lượt thứ 30. Quay may rủi nha, không phải cứ muốn là trúng!','Normal Mega Stones have a 98.5% rate; legendary stones 1.5%, with pity on the 30th pull.'],
+   ['Joyous','Trúng đá trùng thì nhận lại điểm: Mega thường 50, huyền thoại 200. Nhớ nhé, có đá vẫn cần Pokémon và điều kiện mở Mega. Giờ mới bấm Quay nha!','Duplicates refund 50 points for normal and 200 for legendary stones. A stone alone does not unlock a battle-ready Mega.']
+  ],
   berry:[
    ['Happy','Mỗi Berry có công dụng riêng: hồi máu, tăng sức mạnh hoặc cứu nguy. Bấm xem hiệu ứng trước, đâu phải quả nào cũng giống nhau!','Berries have different effects. Read each description before choosing.'],
    ['Determined','Bạn mang tối đa hai Berry mỗi trận và chọn trước khi vào đánh. Berry chỉ dùng một lần, chọn cho đáng nha.','Choose up to two single-use Berries in pre-match preparation.']
