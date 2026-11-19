@@ -18,6 +18,11 @@ on:
       - 'src/pkmsvv-box-hub-ui.js'
       - 'src/pkmsvv-box-hub.css'
       - 'scripts/prepare-lan.cjs'
+      - 'scripts/copy-region-covers.cjs'
+      - 'src/pkmsvv-quick-region.js'
+      - 'src/pkmsvv-quick-region.css'
+      - 'assets/region-covers/**'
+      - 'tests/quick-region.test.cjs'
       - 'tests/menu-pokemon-hub-regression.test.cjs'
       - 'tests/lan-pokemon-hub-browser.cjs'
       - 'scripts/patch-fossil-expedition-native.cjs'
@@ -90,7 +95,7 @@ jobs:
       - name: Install build dependencies
         run: npm install --no-audit --no-fund
       - name: Check 2–4 room rules and 6–8 minute outcome core
-        run: node --test tests/fossil-concept-sprites.test.cjs tests/menu-pokemon-hub-regression.test.cjs tests/fossil-expedition-core.test.cjs tests/fossil-expedition-guidance.test.cjs tests/fossil-expedition-routing.test.cjs tests/coop-lab-core.test.cjs tests/lan-ai-modes.test.cjs tests/pippi-guide.test.cjs
+        run: node --test tests/fossil-concept-sprites.test.cjs tests/menu-pokemon-hub-regression.test.cjs tests/fossil-expedition-core.test.cjs tests/fossil-expedition-guidance.test.cjs tests/fossil-expedition-routing.test.cjs tests/quick-region.test.cjs tests/coop-lab-core.test.cjs tests/lan-ai-modes.test.cjs tests/pippi-guide.test.cjs
       - name: Verify Pippi QA cousin trigger does not affect normal balance
         run: node --test tests/pippi-companion.test.cjs
       - name: Fetch hash-checked Clefairy PMD assets required by LAN packaging
@@ -104,6 +109,13 @@ jobs:
           html=dist/lan/game/index.html
           grep -Fq 'pkmsvv-box-hub-ui.js?v=' "$html"
           grep -Fq 'pkmsvv-box-stage4.js?v=' "$html"
+          grep -Fq 'pkmsvv-quick-region.js?v=' "$html"
+          grep -Fq 'pkmsvv-quick-region.css?v=' "$html"
+          test -s dist/lan/game/js/ui/pkmsvv-quick-region.js
+          test -s dist/lan/game/css/pkmsvv-quick-region.css
+          for cover in 01-kanto.webp 02-johto.webp 03-hoenn.webp 04-sinnoh.webp 05-unova.webp 06-kalos.webp 07-alola.webp 08-galar.webp 09-paldea.webp 10-sky-tower.webp; do
+            test -s "dist/lan/game/images/regions/$cover"
+          done
           grep -Fq 'pkmsvv-box-hub.css?v=' "$html"
           grep -Fq 'pkmsvv-v20-ui-qa.css?v=' "$html"
           grep -Fq 'PKMSVV_UNIFIED_BETA_POKEMON_255' scripts/prepare-lan.cjs

@@ -108,6 +108,33 @@ const {startServer}=require('../lan-server/server.cjs');
    assert.ok(Math.max(...textOrigins)-Math.min(...textOrigins)<1.5,'titles must align in one text column: '+JSON.stringify(aligned));
   }
   await page.setViewportSize({width:1280,height:800});
+  // Regression: clicking the real Explore menu MUST open a Gen chooser, not
+  // immediately launch the generic mixed-gen native match.
+  await page.click('#scr-menu [data-go="play"]');
+  await page.waitForSelector('#pkmsvv-quick-region:not([hidden])',{timeout:12000});
+  const actualExplore=await page.evaluate(()=>{
+   const s=G.DB.save,ui=G.PKMSVVQuickRegion;
+   const names=['Kanto','Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar','Paldea'];
+   s.pkmsvvExploreSeals={...s.pkmsvvExploreSeals,...Object.fromEntries(names.map(n=>[n,true]))};
+   // Rebuild the live modal from this QA save WITHOUT mutating disk.
+   ui.open();
+   return {open:!document.querySelector('#pkmsvv-quick-region')?.hidden,
+    count:document.querySelectorAll('#pkmsvv-quick-region-grid .pkmsvv-quick-region-card').length,
+    sky:ui.entries()[9].name,skyOpen:ui.entries()[9].unlocked,
+    chosen:ui.selectedRegion,gameState:G.Game?.state,
+    covers:[...document.querySelectorAll('link[rel=stylesheet]')]
+     .some(link=>link.href.includes('pkmsvv-quick-region.css'))};
+  });
+  assert.deepEqual(actualExplore,{open:true,count:10,sky:'Tháp Thiên Không',
+   skyOpen:true,chosen:-1,gameState:'ui',covers:true},
+   'Native Explore must show 10 Gen maps and unlock Sky on the QA 9-badge save');
+  await page.evaluate(()=>{
+   const guide=G.PKMSVVPippiGuide;
+   let n=0;while(guide?.current?.kind==='mode_explore'&&n++<8)guide.next();
+   G.PKMSVVQuickRegion.close();
+  });
+  assert.equal(await page.locator('#pkmsvv-quick-region:not([hidden])').count(),0);
+  console.log('BETA_EXPLORE_GEN_CHOOSER_RESTORED: 10 cards and 9 badges unlock Sky, no automatic combat');
   await page.click('#scr-menu [data-go="multiplayer"]');
   await page.locator('#pkmsvv-coop-modes [data-mode="fossil_lab"]').waitFor();
   assert.match(await page.locator('#pkmsvv-coop-modes [data-mode="fossil_lab"]').innerText(),/2–4/);

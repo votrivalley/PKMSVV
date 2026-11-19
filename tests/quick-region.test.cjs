@@ -155,6 +155,13 @@ test('QA packages include chooser but production prepare script does not',()=>{
   assert.match(s,/pkmsvv-quick-region\.css/);
  }
  assert.doesNotMatch(fs.readFileSync(path.join(root,'scripts/prepare-game.cjs'),'utf8'),/pkmsvv-quick-region/);
+ const beta=fs.readFileSync(path.join(root,'scripts/prepare-lan.cjs'),'utf8');
+ assert.match(beta,/'pkmsvv-quick-region\.js'/,
+  'The actual Beta packaging MUST include Gen-chooser JavaScript');
+ assert.match(beta,/'pkmsvv-quick-region\.css'/,
+  'The actual Beta packaging MUST include Gen-chooser CSS');
+ assert.match(beta,/copyRegionCovers\(folder\)/,
+  'All ten region-cover files belong to the playable Beta, not just separate QA builds');
 });
 
 

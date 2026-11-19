@@ -1,6 +1,7 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),{execFileSync}=require('node:child_process');
 const root=path.resolve(__dirname,'..');
+const {copyRegionCovers}=require('./copy-region-covers.cjs');
 const env={...process.env,PKMSVV_WEB_PREVIEW:'1',PKMSVV_LAN_BUILD:'1'};
 execFileSync(process.execPath,[path.join(root,'scripts','prepare-web.cjs')],{cwd:root,env,stdio:'inherit'});
 const from=path.join(root,'dist','web'),to=path.join(root,'dist','lan');
@@ -51,11 +52,12 @@ for(const file of ['lan-connect.html','lan-connect.js'])
   const javascripts=[
    'pkmsvv-box-stage1.js','pkmsvv-box-stage2.js','pkmsvv-box-stage2-ui.js',
    'pkmsvv-box-stage3.js','pkmsvv-box-stage4.js','pkmsvv-box-hub.js',
-   'pkmsvv-box-hub-ui.js','pkmsvv-dex-defeats-qa.js','pkmsvv-recruitment-qa.js'
+   'pkmsvv-box-hub-ui.js','pkmsvv-dex-defeats-qa.js','pkmsvv-recruitment-qa.js',
+   'pkmsvv-quick-region.js'
   ];
   const stylesheets=[
    'pkmsvv-box-stage1.css','pkmsvv-box-stage2.css','pkmsvv-box-stage3.css',
-   'pkmsvv-box-hub.css','pkmsvv-v20-ui-qa.css'
+   'pkmsvv-box-hub.css','pkmsvv-v20-ui-qa.css','pkmsvv-quick-region.css'
   ];
   const revision=/^[a-f0-9]{40}$/i.test(String(process.env.GITHUB_SHA||''))?
    process.env.GITHUB_SHA.slice(0,12):crypto.createHash('sha256').update(
@@ -95,11 +97,20 @@ for(const file of ['lan-connect.html','lan-connect.js'])
    const cousinQA='<script>window.PKMSVV_PIPPI_COUSIN_QA_100=true;</script>';
    html=html.replace('</head>',injectStyle.join('\n')+'\n'+cousinQA+'\n</head>');
    html=html.replace('</body>',injectScript.join('\n')+'\n</body>');
+   // Previous Beta regression: the old QA chooser source exists in GitHub,
+   // but wasn't copied into the actual compiled LAN Beta. Restore all ten
+   // ORIGINAL Gen covers here; importing a badge save never repairs a missing
+   // executable chooser.
+   const covers=copyRegionCovers(folder);
+   if(covers!==10)throw Error('Beta Explore requires all ten Region covers; got '+covers);
    for(const token of ['pkmsvv-box-hub-ui.js?v=','pkmsvv-box-hub.css?v=',
-    'pkmsvv-v20-ui-qa.css?v=','pkmsvv-box-stage4.js?v='])
+    'pkmsvv-v20-ui-qa.css?v=','pkmsvv-box-stage4.js?v=',
+    'pkmsvv-quick-region.js?v=','pkmsvv-quick-region.css?v='])
     if(!html.includes(token))throw Error('Unified Beta Pokémon bundle incomplete: '+route+'/'+token);
    fs.writeFileSync(entry,html,'utf8');installed++;
   }
+  // No forced save migration, no reset or overwriting users' local region
+  // progress: this patch restores only the missing in-game choice interface.
   // The same public Beta URL must reload its NEW tabs after an earlier native
   // HTML/icon release. Never clear CacheStorage/localStorage or player saves.
   const headers=path.join(to,'_headers');
