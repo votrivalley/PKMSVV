@@ -75,6 +75,21 @@ test('real Golurk must spawn and be defeated; Rotom cannot be rescued from afar'
  assert.equal(trySave(s.rotom).ok,true);
  assert.equal(s.rotom.freed,true);
 });
+test('rescue radius allows near-tree interaction but still requires a defeated Golurk',()=>{
+ assert.equal(m.RESCUE_RADIUS,144);
+ const s=room();
+ for(const site of s.sites)for(let k=0;k<3;k++){
+  const result=m.dig(s,{uid:'host',siteId:site.id,actor:site,seconds:s.clock,source:'native-strike'});
+  assert.equal(result.ok,true);s.clock+=1;s.elapsed+=1;
+ }
+ s.phase='rescue';s.boss.spawned=true;s.boss.defeated=true;
+ const actor={x:s.rotom.x+132,y:s.rotom.y};
+ const far={x:s.rotom.x+152,y:s.rotom.y};
+ const opts={uid:'host',seconds:s.clock,roomId:s.roomId};
+ assert.equal(m.rescue(s,{...opts,actor:far,bossDefeated:true}).reason,'range');
+ assert.equal(m.rescue(s,{...opts,actor,bossDefeated:false}).reason,'boss-alive');
+ assert.equal(m.rescue(s,{...opts,actor,bossDefeated:true}).ok,true);
+});
 test('rescue deadline 4:00 is fail if Rotom still in boss fight, even with nine fragments',()=>{
  const s=room();fragments(s);t(s,260,{bossDefeated:false});
  assert.equal(s.phase,'failed');assert.equal(s.result.reason,'rotom-lost');

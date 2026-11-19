@@ -203,6 +203,12 @@ const {startServer}=require('../lan-server/server.cjs');
   });
   assert.deepEqual(v3Atlas,{width:464,height:144},
    'The APPROVED V3 PNG must load in native gameplay');
+  const completeMachine=await page.evaluate(async()=>{
+   const img=new Image();img.src='images/coop-lab/approved-fossil-machine-full-v4.png';await img.decode();
+   return {width:img.naturalWidth,height:img.naturalHeight};
+  });
+  assert.deepEqual(completeMachine,{width:256,height:128},
+   'Restorer full original art must load, not old clipped machine sprite');
   // Exercise the actual 2D Canvas drawables with native object coordinates.
   // A screenshot alone did not catch 96px atlas cells stretched to 90/92px.
   const actualSpriteRects=await page.evaluate(()=>{
@@ -210,8 +216,9 @@ const {startServer}=require('../lan-server/server.cjs');
    const canvas=document.createElement('canvas');canvas.width=128;canvas.height=128;
    const ctx=canvas.getContext('2d'),records=[];
    ctx.drawImage=function(...args){
-    if(/approved-fossil-(source|v3)-atlas\.png/.test(args[0]?.src||''))
-     records.push({asset:args[0].src.includes('-v3-')?'V3':'original',
+    if(/approved-fossil-(source-atlas|v3-atlas|machine-full-v4)\.png/.test(args[0]?.src||''))
+     records.push({asset:args[0].src.includes('machine-full-v4')?'machineV4':
+      args[0].src.includes('-v3-')?'V3':'original',
       sx:args[1],sy:args[2],sw:args[3],sh:args[4],
       dx:args[5],dy:args[6],dw:args[7],dh:args[8]});
    };
@@ -219,7 +226,7 @@ const {startServer}=require('../lan-server/server.cjs');
    return records;
   });
   const expectedRects=[
-   {asset:'original',sx:0,sy:0,sw:96,sh:96,dx:-48,dy:-89,dw:96,dh:96},
+   {asset:'machineV4',sx:0,sy:0,sw:128,sh:128,dx:-64,dy:-116,dw:128,dh:128},
    {asset:'original',sx:192,sy:0,sw:96,sh:96,dx:-48,dy:-61,dw:96,dh:96},
    {asset:'original',sx:288,sy:0,sw:96,sh:96,dx:-48,dy:-61,dw:96,dh:96},
    {asset:'V3',sx:0,sy:0,sw:176,sh:144,dx:-44,dy:-51,dw:88,dh:72}
@@ -228,6 +235,26 @@ const {startServer}=require('../lan-server/server.cjs');
   assert.deepEqual(sortRects(actualSpriteRects),sortRects(expectedRects),
    'Canvas must draw approved V3 amber and the three other objects at exact 2:1 or 1:1');
   console.log('FOSSIL_APPROVED_V3_RECTS='+JSON.stringify(actualSpriteRects));
+  const mergedPaint=await page.evaluate(()=>{
+   const api=G.PKMSVVFossilExpedition,s=api.session;
+   const before={phase:s.phase,merged:s.rotom.merged,online:s.machine.online,collected:s.collected};
+   try{
+    s.phase='defend';s.rotom.merged=true;s.machine.online=true;s.collected=3;
+    const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d'),rects=[];
+    ctx.drawImage=function(...args){
+     if(args[0]?.src?.includes('approved-fossil-machine-full-v4.png'))
+      rects.push([args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8]]);
+    };
+    const draw=api.drawables();draw.forEach(x=>x.draw(ctx));
+    return {rects,drawables:draw.length};
+   }finally{
+    s.phase=before.phase;s.rotom.merged=before.merged;
+    s.machine.online=before.online;s.collected=before.collected;
+   }
+  });
+  assert.deepEqual(mergedPaint.rects,[[128,0,128,128,-64,-116,128,128]],
+   'Merged Rotom must show complete ON frame exactly once');
+  assert.equal(mergedPaint.drawables,4,'NO separate Rotom/marker sprite during defend');
   const aiBefore=await page.evaluate(()=>({
    count:G.LanAI.activeBots().length,
    bots:G.Coop.puppets().filter(p=>p.lanBot).map(p=>({x:p.x,y:p.y,moves:p.moves.length,dead:p.dead}))

@@ -2,7 +2,7 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const core=require('../src/pkmsvv-fossil-expedition-core.cjs');
-function fixture(){
+function fixture(overrides={}){
  const root=[];
  const node=(tag)=>({
   tag,children:[],style:{},id:'',className:'',textContent:'',isConnected:false,
@@ -22,7 +22,7 @@ function fixture(){
  const G={
   I18n:{lang:'vi'},Social:{uid:'host',room},
   Game:{state:'playing',player},Coop:{isHost:true,puppets(){return [];},broadcast(){}},
-  World:{isFree(){return true;},isLiquid(){return false;}},
+  World:overrides.World||{isFree(){return true;},isLiquid(){return false;}},
   Spawner:{say(){}},PKMSVVFossilExpeditionCore:core,
   EnemyMgr:{all(){return [];}}
  };
@@ -59,4 +59,24 @@ test('ninth valid mining hit opens Rotom portrait SOS and replaces arrows',()=>{
  assert.ok(f.canvasText.includes('SOS'),'guidance should now point to Rotom rather than old sites');
  f.api.end();
  assert.equal(f.document.getElementById('pkmsvv-rotom-distress'),null,'clear SOS after leaving the mode');
+});
+
+test('Rotom starts outside tree collision and has more than one rescue approach',()=>{
+ const tree={x:core.ROTOM_OFFSET[0],y:core.ROTOM_OFFSET[1]};
+ const World={
+  isFree(x,y,r){return Math.hypot(x-tree.x,y-tree.y)>Number(r)+95;},
+  isLiquid(){return false;}
+ };
+ const f=fixture({World});
+ assert.equal(f.api.begin({mode:'fossil_lab'}),true);
+ const p=f.api.session.rotom;
+ assert.equal(World.isFree(p.x,p.y,76),true,'rotom must not be placed in a tree');
+ let approaches=0;
+ for(let k=0;k<8;k++){
+  const angle=k*Math.PI/4;
+  if(World.isFree(p.x+Math.cos(angle)*55,p.y+Math.sin(angle)*55,20)&&
+     World.isFree(p.x+Math.cos(angle)*108,p.y+Math.sin(angle)*108,22))approaches++;
+ }
+ assert.ok(approaches>=4,'rotom must be approachable from several directions');
+ f.api.end();
 });
