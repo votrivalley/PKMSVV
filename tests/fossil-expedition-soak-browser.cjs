@@ -42,6 +42,16 @@ const assert=require('node:assert/strict'),path=require('node:path');
    window.__fossilSoakKeeper=setInterval(()=>{
     const p=G.Game?.player;
     if(p&&!p.dead){p.hp=p.maxHp;p.invuln=Math.max(p.invuln||0,2000);}
+    // This soak test measures AI movement, gameplay clock, particles and
+    // freezing over 155s, NOT player skill in an eight-minute defense.
+    // A live machine may legitimately lose all 360 HP in under 155s from
+    // accumulated nearby enemies and end the room (activeBots then becomes 0).
+    // Protect only this disposable QA machine as we already protect QA actors.
+    // Pure core tests separately verify machine damage and failure.
+    const mission=G.PKMSVVFossilExpedition?.session;
+    if(mission?.phase==='defend'&&mission.machine?.online){
+     mission.machine.hp=mission.machine.maxHp;
+    }
     for(const bot of G.Coop?.puppets?.()||[]){
      if(bot?.lanBot){
       if(bot.dead)bot.revive?.(1);
@@ -64,6 +74,7 @@ const assert=require('node:assert/strict'),path=require('node:path');
     bots:G.LanAI.activeBots().length,
     positions:G.Coop.puppets().filter(p=>p.lanBot).map(p=>({x:Math.round(p.x),y:Math.round(p.y),dead:p.dead})),
     fossil:G.PKMSVVFossilExpedition?.active,
+    machineHp:G.PKMSVVFossilExpedition?.session?.machine?.hp,
     sprite:G.PKMSVVFossilExpedition?.spriteReady,
     phase:G.PKMSVVFossilExpedition?.session?.phase
    }));
