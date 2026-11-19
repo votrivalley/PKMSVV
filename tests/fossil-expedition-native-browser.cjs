@@ -160,6 +160,11 @@ const {startServer}=require('../lan-server/server.cjs');
   assert.ok(megaCatalog.actualSpriteCount>=3&&megaCatalog.actualSpriteCount<96,
    'Missing sprite art stays missing rather than being invented');
   console.log('BETA_MEGA_ROSTER_96_RESTORED: '+JSON.stringify(megaCatalog));
+  // The item-choice probe above temporarily hid the real native home screen.
+  // Restore the menu before testing a user click, otherwise the test itself
+  // introduces an artificial hidden-menu timeout unrelated to real gameplay.
+  await page.evaluate(()=>G.MenuUI.open());
+  await page.locator('#scr-menu [data-go="play"]').waitFor({state:'visible',timeout:12000});
   // Regression: clicking the real Explore menu MUST open a Gen chooser, not
   // immediately launch the generic mixed-gen native match.
   await page.click('#scr-menu [data-go="play"]');
