@@ -9,6 +9,7 @@ on:
       - 'scripts/build-fossil-concept-sprites.cjs'
       - 'assets/coop-lab/approved-fossil-source-atlas.png'
       - 'assets/coop-lab/approved-fossil-v3-atlas.png'
+      - 'assets/coop-lab/approved-fossil-machine-full-v4.png'
       - 'assets/coop-lab/room_art_qa_v2.webp'
       - 'assets/coop-lab/fossil-excavation-atlas.svg'
       - 'src/pkmsvv-fossil-expedition-native.js'
@@ -119,6 +120,8 @@ jobs:
           grep -Fq 'fossil_lab' dist/lan/game/js/app.min.js
           test -s dist/lan/game/images/coop-lab/approved-fossil-source-atlas.png
           test -s dist/lan/game/images/coop-lab/approved-fossil-v3-atlas.png
+          test -s dist/lan/game/images/coop-lab/approved-fossil-machine-full-v4.png
+          sha256sum dist/lan/game/images/coop-lab/approved-fossil-machine-full-v4.png | grep -Fq 'c776587550e8d3774833208cc813046a21fdb68dccceb5254e2f70884464da6c'
           sha256sum dist/lan/game/images/coop-lab/approved-fossil-v3-atlas.png | grep -Fq '50cd2aa757d1e15b19d5015f74f4290a2e106ae95c95bdef93a81a2002569286'
           grep -Fq 'approved-fossil-source-atlas.png' src/pkmsvv-fossil-expedition-native.js
           sha256sum 'dist/lan/game/images/coop-lab/approved-fossil-source-atlas.png' | grep -Fq '3f26919b9ef09aafd1ca5a75eacfed5e5552bbe660c9218be34f3615a483019d'

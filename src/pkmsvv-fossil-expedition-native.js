@@ -10,7 +10,9 @@ G.PKMSVVFossilExpedition=(()=>{
  const image=(url)=>{const img=new Image();img.src=url;return img;};
  // All seven live sprites are cut from the user's approved art reference.
  const concept=image('images/coop-lab/approved-fossil-source-atlas.png');
- const excavations=concept,machines=concept;
+ const excavations=concept;
+ // Complete machine OFF/ON from the original approved concept (not the clipped 96px atlas).
+ const machines=image('images/coop-lab/approved-fossil-machine-full-v4.png');
  // Approved V3 source PNG: three complete sprites, not the clipped V1/V2 cells.
  const v3=image('images/coop-lab/approved-fossil-v3-atlas.png'),rotomFallback=v3;
  const ART_CELL=96;
@@ -87,16 +89,43 @@ function updateRotomSOS(){
  if(!distressNode||!current)return;
  distressNode.style.display=current.phase==='rescue'&&current.elapsed<distressUntil?'flex':'none';
 }
- function safePoint(p){
+ function passable(x,y,r){
+  try{return (!G.World?.isFree||G.World.isFree(x,y,r))&&!G.World?.isLiquid?.(x,y);}
+  catch(_){return false;}
+ }
+ // Rotom needs enough space for an approach, not merely one free tile directly
+ // inside a tree trunk. All expensive checks run ONCE at mission creation.
+ function rescueAccessible(p,clearance){
+  if(!passable(p.x,p.y,clearance))return false;
+  let sides=0;
+  for(let k=0;k<8;k++){
+   const angle=k*Math.PI/4;
+   if(passable(p.x+Math.cos(angle)*55,p.y+Math.sin(angle)*55,20)&&
+      passable(p.x+Math.cos(angle)*108,p.y+Math.sin(angle)*108,22))sides++;
+  }
+  return sides>=4;
+ }
+ function safePoint(p,forRescue=false){
   if(!G.World?.isFree)return p;
-  if(G.World.isFree(p.x,p.y,32)&&!G.World.isLiquid?.(p.x,p.y))return p;
-  for(let radius=32;radius<=220;radius+=24)
-   for(let step=0;step<16;step++){
-    const a=step*Math.PI/8;
-    const t={x:p.x+Math.cos(a)*radius,y:p.y+Math.sin(a)*radius};
-    if(G.World.isFree(t.x,t.y,32)&&!G.World.isLiquid?.(t.x,t.y))return t;
-   }
-  return p;
+  if(!forRescue){
+   if(passable(p.x,p.y,32))return p;
+   for(let radius=32;radius<=220;radius+=24)
+    for(let k=0;k<16;k++){
+     const a=k*Math.PI/8,t={x:p.x+Math.cos(a)*radius,y:p.y+Math.sin(a)*radius};
+     if(passable(t.x,t.y,32))return t;
+    }
+   return p;
+  }
+  for(const clearance of [76,60,44]){
+   if(rescueAccessible(p,clearance))return p;
+   for(let radius=48;radius<=768;radius+=32)
+    for(let k=0;k<24;k++){
+     const a=k*Math.PI/12,t={x:p.x+Math.cos(a)*radius,y:p.y+Math.sin(a)*radius};
+     if(rescueAccessible(t,clearance))return t;
+    }
+  }
+  // A rare ultra-dense biome still gets the increased 144px rescue circle.
+  return safePoint(p,false);
  }
  function begin({mode}={}){
   end();finished=false;lastFinish=null;lastAction=-100;lastBossHint=-100;scanClock=sendClock=waveClock=duelClock=speedClock=0;speedStage=-1;waveIndex=0;distressUntil=0;distressShown=false;botTimes.clear();
@@ -107,14 +136,14 @@ function updateRotomSOS(){
    return false;
   }
   const origin=safePoint({x:0,y:0}),sites=C.SITE_OFFSETS.map(([x,y])=>safePoint({x:origin.x+x,y:origin.y+y}));
-  const rotomPoint=safePoint({x:origin.x+C.ROTOM_OFFSET[0],y:origin.y+C.ROTOM_OFFSET[1]});
+  const rotomPoint=safePoint({x:origin.x+C.ROTOM_OFFSET[0],y:origin.y+C.ROTOM_OFFSET[1]},true);
   // The pure core refuses any map locations that are too close together.
   // Fallback to guaranteed distant offsets rather than silently grouping rocks.
   let session=C.begin({members:r.members,roomId:r.id,hostUid:r.host,origin,sites,rotomPoint});
   if(!session.ok)session=C.begin({members:r.members,roomId:r.id,hostUid:r.host,origin});
   if(!session.ok)return false;
   current=session;active=true;
-  machineTarget={x:current.machine.x,y:current.machine.y,r:44,level:1,dead:false,
+  machineTarget={x:current.machine.x,y:current.machine.y,r:54,level:1,dead:false,
    _vx:0,_vy:0,_pkmsvvFossilMachine:true};
   if(G.Sprites?.Animator)try{
    rotomAnimator=new G.Sprites.Animator(479,1.15);
@@ -303,6 +332,7 @@ function updateRotomSOS(){
    rotomPosition:{x:current.rotom.x,y:current.rotom.y},bossDefeated:bossDown()});
   if(current.boss.spawned)spawnBoss();
   if(current.phase==='defend'&&oldPhase!=='defend'){
+   distressNode?.remove();distressNode=null;distressUntil=0;
    talk('Pippi: Máy sáng rồi! Giờ giữ quái tránh xa máy tới phút 8 nha. Đừng để công đào nãy giờ đổ sông!',
     'Pippi: Rotom fused with the restorer! Keep it safe until 8:00!');
   }
@@ -346,17 +376,18 @@ function updateRotomSOS(){
   current.machine.online=current.rotom.merged;
   current.boss.defeated=ev[12]===1;
   if(phase==='rescue'&&previous!=='rescue')showRotomSOS();
+  if(current.rotom.merged){distressNode?.remove();distressNode=null;distressUntil=0;}
   updateRotomSOS();
  }
  function drawOne(ctx,obj){
   ctx.save();ctx.translate(obj.x,obj.y);ctx.imageSmoothingEnabled=false;
   if(obj.type==='machine'){
    if(machines.complete&&machines.naturalWidth>0){
-    // Full 1:1 96px cell, bottom-foot anchored at y+7. Never rescale
-    // pixel art to fractional 90px; source PNG already has correct pixels.
-    const overlap=ally().some(p=>Math.abs(p.x-obj.x)<54&&p.y>=obj.y-58&&p.y<=obj.y+25);
+    // Full 128px ON/OFF frames. Pixel-art footing at +3, with complete Rotom
+    // face and lightning ABOVE the machine: no 96px cell-cropping anymore.
+    const overlap=ally().some(p=>Math.abs(p.x-obj.x)<70&&p.y>=obj.y-80&&p.y<=obj.y+25);
     if(overlap)ctx.globalAlpha=.58;
-    ctx.drawImage(machines,obj.online?96:0,0,ART_CELL,ART_CELL,-48,-89,ART_CELL,ART_CELL);
+    ctx.drawImage(machines,obj.online?128:0,0,128,128,-64,-116,128,128);
     ctx.globalAlpha=1;
    }else{
     ctx.fillStyle='#594e49';ctx.fillRect(-45,-80,90,82);
@@ -536,5 +567,6 @@ function updateRotomSOS(){
   drawables,beginFrame,drawMissing,hud,reward,end,
   get active(){return active},get session(){return current},get lastFinish(){return lastFinish},
   get spriteReady(){return excavations.complete&&excavations.naturalWidth>0&&
-   machines.complete&&machines.naturalWidth>0&&v3.complete&&v3.naturalWidth===464}};
+   machines.complete&&machines.naturalWidth===256&&machines.naturalHeight===128&&
+   v3.complete&&v3.naturalWidth===464}};
 })();

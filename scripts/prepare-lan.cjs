@@ -33,7 +33,7 @@ for(const file of ['lan-connect.html','lan-connect.js'])
   execFileSync(process.execPath,[path.join(root,'scripts/build-fossil-concept-sprites.cjs')],
    {cwd:root,stdio:'inherit'});
   const art=path.join(root,'dist/fossil-concept-sprites');
-  for(const name of ['approved-fossil-source-atlas.png','approved-fossil-v3-atlas.png'])
+  for(const name of ['approved-fossil-source-atlas.png','approved-fossil-v3-atlas.png','approved-fossil-machine-full-v4.png'])
    addFile(path.join(art,name),'coop-lab/'+name);
  }
 
