@@ -120,7 +120,7 @@ function updateRotomSOS(){
    rotomAnimator=new G.Sprites.Animator(479,1.15);
    G.Sprites.preload?.([479,623],8000,false);
   }catch(_){rotomAnimator=null;}
-  talk('Pippi: Ba mỏ đá nằm xa nhau đó! 9 mảnh, không phải đào cho vui. Đi thôi, khảo cổ Gen Z!',
+  talk('Pippi: Có ba mỏ đá nằm xa nhau. Mỗi chỗ đào ba lần để đủ 9 mảnh nha. Đừng bỏ sót rồi bắt tui đi tìm!',
    'Pippi: Three distant sites, nine fragments. This is an expedition, not decorative gravel!');
   return true;
  }
@@ -137,7 +137,7 @@ function updateRotomSOS(){
     b.x,b.y,{hp:1,spd:1,dmg:1},true));
    bossEnemy.pkmsvvFossilRotomBoss=true;
    G.EnemyMgr.rebuildGrid?.();
-   talk('Pippi: Ê cứu Rotom trước 4:00! Golurk đang dí điện thoại biết bay kia kìa!',
+   talk('Pippi: Rotom đang bị Golurk chặn! Đánh bại Golurk rồi cứu Rotom trước phút 4, nhanh lên!',
     'Pippi: Save Rotom before 4:00! Golurk is camping the rescue site!');
   }catch(e){
    console.error('[Fossil] Golurk spawn failed',e);
@@ -174,7 +174,7 @@ function updateRotomSOS(){
     seconds:now,source:'native-strike'});
    if(result.ok&&current.phase==='rescue')showRotomSOS();
    if(result.ok&&result.done){
-    talk('Pippi: Lụm được '+fragments()+'/9 mảnh! Đá này không có nút tua nhanh nha.',
+    talk('Pippi: Nhặt được '+fragments()+'/9 mảnh rồi! Còn thiếu thì tìm mỏ tiếp theo đi, tui chỉ đường.',
      'Pippi: '+fragments()+'/9 pieces! No speedrun button for these rocks.');
    }
   }else if(current.phase==='rescue'&&at(actor,current.rotom,C.RESCUE_RADIUS)){
@@ -183,11 +183,11 @@ function updateRotomSOS(){
     bossDefeated:current.boss.defeated});
    if(result.reason==='boss-alive'&&now-lastBossHint>5){
     lastBossHint=now;
-    talk('Pippi: Golurk còn đứng đó kìa! Đánh boss rồi mới cứu Rotom được, trời ơi!',
+    talk('Pippi: Golurk còn ở đó! Hạ nó trước rồi mới giải cứu Rotom được nha.',
      'Pippi: Golurk is still standing! Beat the boss before freeing Rotom!');
    }
    if(result.ok){
-    talk('Pippi: Rotom được cứu rồi! Hộ tống em về máy cũ, đừng bỏ rơi giữa đường nha!',
+    talk('Pippi: Cứu được Rotom rồi! Dẫn em ấy về máy phục nguyên cũ nhé, đi chậm thôi để em theo kịp.',
      'Pippi: Rotom rescued! Escort it back to the old machine!');
    }
   }
@@ -303,7 +303,7 @@ function updateRotomSOS(){
    rotomPosition:{x:current.rotom.x,y:current.rotom.y},bossDefeated:bossDown()});
   if(current.boss.spawned)spawnBoss();
   if(current.phase==='defend'&&oldPhase!=='defend'){
-   talk('Pippi: Rotom nhập máy rồi! Máy đã sáng, giờ bảo vệ tới đúng 8:00. Thua là tui khóc giả đó!',
+   talk('Pippi: Máy sáng rồi! Giờ giữ quái tránh xa máy tới phút 8 nha. Đừng để công đào nãy giờ đổ sông!',
     'Pippi: Rotom fused with the restorer! Keep it safe until 8:00!');
   }
   if(current.phase==='defend'){
