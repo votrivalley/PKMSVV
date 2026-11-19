@@ -111,10 +111,12 @@ const {startServer}=require('../lan-server/server.cjs');
   const megaCatalog=await page.evaluate(()=>{
    const api=G.PKMSVVMegaEntry,forms=G.PKMSVV_MEGA_CATALOG||[];
    return {fullFlag:window.PKMSVV_MEGA_FULL_CATALOG_QA===true,
+    cousinFlag:window.PKMSVV_PIPPI_COUSIN_QA_100===true,
     all:forms.length,visible:api?.available?.().length,
     actualSpriteCount:api?.available?.().filter(x=>api.hasSprite(x)).length};
   });
-  assert.equal(megaCatalog.fullFlag,true,'Beta flag must be enabled');
+  assert.equal(megaCatalog.fullFlag,true,'CSP-safe Beta Mega flag must be ENABLED');
+  assert.equal(megaCatalog.cousinFlag,true,'CSP-safe Pippi Pikachu 100% Beta flag must be ENABLED');
   assert.deepEqual([megaCatalog.all,megaCatalog.visible],[96,96],
    'Beta must display all 96 Mega entries instead of only 3 sprite-equipped forms');
   assert.ok(megaCatalog.actualSpriteCount>=3&&megaCatalog.actualSpriteCount<96,

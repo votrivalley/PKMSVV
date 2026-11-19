@@ -92,11 +92,16 @@ for(const file of ['lan-connect.html','lan-connect.js'])
     fs.copyFileSync(original,destination);
     injectScript.push('<script defer src="js/ui/'+name+'?v='+revision+'"></script>');
    }
-   // QA-only runtime switch: the public Beta tests every REAL HP loss by
-   // summoning Pikachu. No save mutation; live platforms retain normal rates.
-   const cousinQA='<script>window.PKMSVV_PIPPI_COUSIN_QA_100=true;'+
-    'window.PKMSVV_MEGA_FULL_CATALOG_QA=true;</script>';
-   html=html.replace('</head>',injectStyle.join('\n')+'\n'+cousinQA+'\n</head>');
+   // Inline <script> content is BLOCKED by the native CSP even if the
+   // HTML contains its text. A same-origin external file executes reliably.
+   // Switches are NEVER copied into PC/Android/production builds or saves.
+   const runtimeFlags='window.PKMSVV_PIPPI_COUSIN_QA_100=true;\n'+
+    'window.PKMSVV_MEGA_FULL_CATALOG_QA=true;\n';
+   const qaConfig='pkmsvv-qa-runtime-config.js';
+   fs.mkdirSync(path.join(folder,'js/ui'),{recursive:true});
+   fs.writeFileSync(path.join(folder,'js/ui',qaConfig),runtimeFlags);
+   html=html.replace('</head>',injectStyle.join('\n')+'\n'+
+    '<script src="js/ui/'+qaConfig+'?v='+revision+'"></script>\n</head>');
    html=html.replace('</body>',injectScript.join('\n')+'\n</body>');
    // Previous Beta regression: the old QA chooser source exists in GitHub,
    // but wasn't copied into the actual compiled LAN Beta. Restore all ten
@@ -104,8 +109,10 @@ for(const file of ['lan-connect.html','lan-connect.js'])
    // executable chooser.
    const covers=copyRegionCovers(folder);
    if(covers!==10)throw Error('Beta Explore requires all ten Region covers; got '+covers);
-   if(!html.includes('window.PKMSVV_MEGA_FULL_CATALOG_QA=true;'))
-    throw Error('Beta missing full 96-entry Mega catalog QA switch: '+route);
+   if(!html.includes('pkmsvv-qa-runtime-config.js?v=')||
+      !fs.readFileSync(path.join(folder,'js/ui',qaConfig),'utf8')
+       .includes('window.PKMSVV_MEGA_FULL_CATALOG_QA=true;'))
+    throw Error('Beta missing CSP-safe Mega and Pikachu QA runtime switches: '+route);
    for(const token of ['pkmsvv-box-hub-ui.js?v=','pkmsvv-box-hub.css?v=',
     'pkmsvv-v20-ui-qa.css?v=','pkmsvv-box-stage4.js?v=',
     'pkmsvv-quick-region.js?v=','pkmsvv-quick-region.css?v='])
@@ -120,7 +127,8 @@ for(const file of ['lan-connect.html','lan-connect.js'])
   let output=fs.existsSync(headers)?fs.readFileSync(headers,'utf8').trimEnd()+'\n\\n':'';
   for(const route of ['/game','/ai/game']){
    if(!fs.existsSync(path.join(to,route.slice(1),'index.html')))continue;
-   for(const name of ['','index.html',...javascripts.map(x=>'js/ui/'+x),
+   for(const name of ['','index.html','js/ui/pkmsvv-qa-runtime-config.js',
+    ...javascripts.map(x=>'js/ui/'+x),
     ...stylesheets.map(x=>'css/'+x)]){
     const url=route+'/'+name;
     output+=url+'\n  Cache-Control: no-store, max-age=0\n';

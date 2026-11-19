@@ -819,5 +819,7 @@ test('QA 100% runtime flag is injected only in isolated Beta packaging',()=>{
  const source=fs.readFileSync(require('node:path').join(__dirname,'../scripts/prepare-lan.cjs'),'utf8');
  assert.match(source,/if\(process\.env\.PKMSVV_FOSSIL_NATIVE_QA==='1'\)/);
  assert.match(source,/window\.PKMSVV_PIPPI_COUSIN_QA_100=true/);
+ assert.match(source,/pkmsvv-qa-runtime-config\.js/);
+ assert.match(source,/fs\.writeFileSync\(path\.join\(folder,'js\/ui',qaConfig\),runtimeFlags\)/);
  assert.match(source,/html=html\.replace\('<\/head>',injectStyle/);
 });

@@ -339,5 +339,7 @@ test('Mega full-list QA switch only ships in isolated Beta, not production',()=>
  const prepare=read('scripts/prepare-lan.cjs');
  assert.match(prepare,/if\(process\.env\.PKMSVV_FOSSIL_NATIVE_QA==='1'\)/);
  assert.match(prepare,/window\.PKMSVV_MEGA_FULL_CATALOG_QA=true/);
+ assert.match(prepare,/pkmsvv-qa-runtime-config\.js/);
+ assert.match(prepare,/fs\.writeFileSync\(path\.join\(folder,'js\/ui',qaConfig\),runtimeFlags\)/);
  assert.doesNotMatch(read('scripts/prepare-game.cjs'),/PKMSVV_MEGA_FULL_CATALOG_QA=true/);
 });

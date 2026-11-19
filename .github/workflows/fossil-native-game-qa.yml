@@ -123,8 +123,10 @@ jobs:
           grep -Fq 'pkmsvv-box-hub.css?v=' "$html"
           grep -Fq 'pkmsvv-v20-ui-qa.css?v=' "$html"
           grep -Fq 'PKMSVV_UNIFIED_BETA_POKEMON_255' scripts/prepare-lan.cjs
-          grep -Fq 'window.PKMSVV_PIPPI_COUSIN_QA_100=true' dist/lan/game/index.html
-          grep -Fq 'window.PKMSVV_MEGA_FULL_CATALOG_QA=true' dist/lan/game/index.html
+          grep -Fq 'pkmsvv-qa-runtime-config.js?v=' dist/lan/game/index.html
+          test -s dist/lan/game/js/ui/pkmsvv-qa-runtime-config.js
+          grep -Fq 'window.PKMSVV_PIPPI_COUSIN_QA_100=true' dist/lan/game/js/ui/pkmsvv-qa-runtime-config.js
+          grep -Fq 'window.PKMSVV_MEGA_FULL_CATALOG_QA=true' dist/lan/game/js/ui/pkmsvv-qa-runtime-config.js
           grep -Fq 'function fullCatalogQA' src/pkmsvv-mega-entry.js || grep -Fq 'const fullCatalogQA' src/pkmsvv-mega-entry.js
           for name in pkmsvv-box-stage1.js pkmsvv-box-stage2.js pkmsvv-box-stage2-ui.js pkmsvv-box-stage3.js pkmsvv-box-stage4.js pkmsvv-box-hub.js pkmsvv-box-hub-ui.js; do
             test -s "dist/lan/game/js/ui/$name"
