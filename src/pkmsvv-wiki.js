@@ -280,8 +280,8 @@ G.PKMSVVWiki=(()=>{
    if(focusKey)body.querySelector('[data-pippi-train="'+focusKey+'"]')?.focus({preventScroll:true});
   }
   draw();shade.addEventListener('click',e=>{if(e.target===shade)open();});
-  G.PKMSVVPippiGuide?.openFeature?.('companion');
   back.focus({preventScroll:true});if(G.Pad?.name)G.Pad?.focusFirst?.();
+  G.PKMSVVPippiGuide?.openFeature?.('companion');
   return true;
  }
  function fossilRestoration(){
@@ -468,8 +468,8 @@ G.PKMSVVWiki=(()=>{
    }
   }
   draw();shade.append(box);document.body.append(shade);
-  G.PKMSVVPippiGuide?.openFeature?.('fossil');
   back.focus({preventScroll:true});
+  G.PKMSVVPippiGuide?.openFeature?.('fossil');
   return true;
  }
  function berryGuide(){
@@ -504,10 +504,10 @@ G.PKMSVVWiki=(()=>{
   box.append(note);shade.append(box);document.body.append(shade);
   shade.addEventListener('click',e=>{if(e.target===shade)open();});
   // Focus must never drag the scrollable guide back to the first item.
-  G.PKMSVVPippiGuide?.openFeature?.('berry');
   back.focus({preventScroll:true});
   // D-pad gets a highlighted button, but touch/mouse must not auto-scroll.
-  if(G.Pad?.name)G.Pad?.focusFirst?.();return true;
+  if(G.Pad?.name)G.Pad?.focusFirst?.();
+  G.PKMSVVPippiGuide?.openFeature?.('berry');return true;
  }
  // "Xây dựng" is a separate interaction mode. The room composition is still
  // a concept image, not a set of detachable sprites. Never fake owned decor.
@@ -599,8 +599,8 @@ G.PKMSVVWiki=(()=>{
    groups.append(block);
   }
   overlay.append(panel);document.body.append(overlay);
-  G.PKMSVVPippiGuide?.openFeature?.('depot');
-  back.focus({preventScroll:true});return true;
+  back.focus({preventScroll:true});
+  G.PKMSVVPippiGuide?.openFeature?.('depot');return true;
  }
  // Research Lab modular furnishing renderer: no painted-in purchases.
  // Each owned object is its own alpha asset, positioned by the shared catalog.
@@ -741,8 +741,8 @@ G.PKMSVVWiki=(()=>{
   footer.textContent=tr('Ảnh gốc là tranh ghép một lớp: hiện giữ nguyên để bảo toàn chất lượng. Việc tách từng món và phục dựng phần tường/sàn bị che sẽ cần kiểm định mỹ thuật riêng; không tự trừ xu cho đồ chưa hoàn chỉnh.',
     'The original room is one flattened image, preserved for visual quality. Extracted furnishings and obscured background still require art validation; unfinished items cannot charge coins.');
   box.append(footer);overlay.append(box);document.body.append(overlay);
-  inspect('center');G.PKMSVVPippiGuide?.openFeature?.('construction');
-  back.focus({preventScroll:true});return true;
+  inspect('center');back.focus({preventScroll:true});
+  G.PKMSVVPippiGuide?.openFeature?.('construction');return true;
  }
  function open(){
   close();installStyle();
