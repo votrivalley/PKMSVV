@@ -83,6 +83,13 @@
   document.addEventListener('click',e=>{
    if(e.target?.closest?.('[data-go="gacha"],#scr-gacha,#pkmsvv-mega-gacha')){
     Promise.resolve().then(sync);
+    if(e.target?.closest?.('#scr-menu [data-go="gacha"]')){
+     // Do not show guidance until the actual native Chiêu mộ screen is visible.
+     setTimeout(()=>{
+      if(G.UI?.isOpen?.('scr-gacha')===true)
+       G.PKMSVVPippiGuide?.openFeature?.('recruitment');
+     },120);
+    }
    }
   },true);
  }

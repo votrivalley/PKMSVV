@@ -202,3 +202,15 @@ test('Pippi tutorial z-index is higher than Research Lab overlay',()=>{
  const css=fs.readFileSync(path.join(root,'src/pkmsvv-pippi-guide.css'),'utf8');
  assert.match(css,/z-index:30000/);
 });
+
+test('Pippi guide is wired to the actual Pokémon and Lab feature entry points',()=>{
+ const wiki=fs.readFileSync(path.join(root,'src/pkmsvv-wiki.js'),'utf8');
+ const hub=fs.readFileSync(path.join(root,'src/pkmsvv-box-hub-ui.js'),'utf8');
+ const recruit=fs.readFileSync(path.join(root,'src/pkmsvv-recruitment-qa.js'),'utf8');
+ for(const key of ['support','mega','berry','companion','fossil','construction','depot','knowledge'])
+  assert.ok(wiki.includes("openFeature?.('"+key+"')"),'missing Research Lab hook '+key);
+ assert.match(hub,/openFeature\?\.\(target\)/);
+ assert.match(hub,/openFeature\?\.\('rank'\)/);
+ assert.match(recruit,/openFeature\?\.\('recruitment'\)/);
+ assert.match(wiki,/open\?\.\('laboratory',\{replay:true\}\)/);
+});

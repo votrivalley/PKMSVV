@@ -280,6 +280,7 @@ G.PKMSVVWiki=(()=>{
    if(focusKey)body.querySelector('[data-pippi-train="'+focusKey+'"]')?.focus({preventScroll:true});
   }
   draw();shade.addEventListener('click',e=>{if(e.target===shade)open();});
+  G.PKMSVVPippiGuide?.openFeature?.('companion');
   back.focus({preventScroll:true});if(G.Pad?.name)G.Pad?.focusFirst?.();
   return true;
  }
@@ -467,6 +468,7 @@ G.PKMSVVWiki=(()=>{
    }
   }
   draw();shade.append(box);document.body.append(shade);
+  G.PKMSVVPippiGuide?.openFeature?.('fossil');
   back.focus({preventScroll:true});
   return true;
  }
@@ -502,6 +504,7 @@ G.PKMSVVWiki=(()=>{
   box.append(note);shade.append(box);document.body.append(shade);
   shade.addEventListener('click',e=>{if(e.target===shade)open();});
   // Focus must never drag the scrollable guide back to the first item.
+  G.PKMSVVPippiGuide?.openFeature?.('berry');
   back.focus({preventScroll:true});
   // D-pad gets a highlighted button, but touch/mouse must not auto-scroll.
   if(G.Pad?.name)G.Pad?.focusFirst?.();return true;
@@ -524,14 +527,14 @@ G.PKMSVVWiki=(()=>{
   back.setAttribute('data-back','');back.textContent=tr('← Phòng nghiên cứu','← Research Lab');
   back.onclick=open;head.append(title,back);panel.append(head);
   const talk=document.createElement('p');talk.className='pkmsvv-coop-shop-talk';
-  talk.textContent=tr('Tui là Giám đốc Phòng thí nghiệm Hoàng gia Pippi! Cửa hàng là của tui, còn lao động là của bạn. Nghe công bằng ghê ha!',
+  talk.textContent=tr('Đây là Kho Hậu Cần. Xem số Xu Đồng Đội và trạng thái từng món trước khi bấm nha.',
    'Welcome to Director Pippi’s Royal Laboratory! I own the shop. You do the hard work. Fair deal!');
   panel.append(talk);
   const state=document.createElement('div');state.className='pkmsvv-coop-shop-wallet';panel.append(state);
   const exchangePanel=document.createElement('section');exchangePanel.className='pkmsvv-coop-shop-exchange';panel.append(exchangePanel);
   const note=document.createElement('p');note.className='pkmsvv-pc-hint';
-  note.textContent=tr('Xu Đồng Đội sẽ dùng chung cho mọi nhiệm vụ Co-op. Nhiệm vụ mới chưa phát hành; các món dưới đây là hàng xem trước, chưa thể mua hoặc sử dụng. Mua trang trí cần sprite tách lớp.',
-   'Co-op Coins are shared by all Co-op missions. Missions are not playable yet. Items below are previews, not purchasable. Décor requires independent sprites.');
+  note.textContent=tr('Xu Đồng Đội dùng chung cho các nhiệm vụ Co-op. Một số món trang trí vẫn là bản xem trước, chưa mua được; chỉ giao dịch có nút hoạt động mới dùng được.',
+   'Co-op Coins are shared across missions. Some décor is preview-only; only enabled exchanges are available.');
   panel.append(note);
   const groups=document.createElement('div');groups.className='pkmsvv-coop-shop-groups';panel.append(groups);
   const cfg=E?.config;
@@ -596,6 +599,7 @@ G.PKMSVVWiki=(()=>{
    groups.append(block);
   }
   overlay.append(panel);document.body.append(overlay);
+  G.PKMSVVPippiGuide?.openFeature?.('depot');
   back.focus({preventScroll:true});return true;
  }
  // Research Lab modular furnishing renderer: no painted-in purchases.
@@ -737,7 +741,8 @@ G.PKMSVVWiki=(()=>{
   footer.textContent=tr('Ảnh gốc là tranh ghép một lớp: hiện giữ nguyên để bảo toàn chất lượng. Việc tách từng món và phục dựng phần tường/sàn bị che sẽ cần kiểm định mỹ thuật riêng; không tự trừ xu cho đồ chưa hoàn chỉnh.',
     'The original room is one flattened image, preserved for visual quality. Extracted furnishings and obscured background still require art validation; unfinished items cannot charge coins.');
   box.append(footer);overlay.append(box);document.body.append(overlay);
-  inspect('center');back.focus({preventScroll:true});return true;
+  inspect('center');G.PKMSVVPippiGuide?.openFeature?.('construction');
+  back.focus({preventScroll:true});return true;
  }
  function open(){
   close();installStyle();
@@ -763,8 +768,10 @@ G.PKMSVVWiki=(()=>{
   room.setAttribute('aria-label',tr('Bản đồ tương tác Phòng nghiên cứu','Interactive Research Lab'));
   const invoke=(kind)=>{
    switch(kind){
-    case 'support':close();G.PKMSVVSupportCatalog?.open?.({fromResearchLab:true});return;
-    case 'mega':close();G.PKMSVVMegaEntry?.open?.({fromResearchLab:true});return;
+    case 'support':close();G.PKMSVVSupportCatalog?.open?.({fromResearchLab:true});
+     G.PKMSVVPippiGuide?.openFeature?.('support');return;
+    case 'mega':close();G.PKMSVVMegaEntry?.open?.({fromResearchLab:true});
+     G.PKMSVVPippiGuide?.openFeature?.('mega');return;
     case 'berry':berryGuide();return;
     case 'companion':pippiCorner();return;
     case 'fossil':fossilRestoration();return;
@@ -909,13 +916,13 @@ G.PKMSVVWiki=(()=>{
    tr('Đào được hóa thạch rồi, nhưng máy vẫn khóa! Nhiệm vụ Co-op đầu tiên đâu? Đừng nhìn tui, tui đâu có biết sửa điện!','Fossil found, machine still locked! Finish the first Co-op mission; I do not fix wiring!'),
    tr('Một cục đá cổ mà bạn mừng như trúng số. Rồi ai phải làm báo cáo? Đương nhiên là… bạn!','One old rock and you are celebrating? Guess who writes the report. You!')
   ]:[
-   tr('Chào mừng tới Phòng nghiên cứu Pippi! Tui là giám đốc, bạn là nhân viên khuân vác không lương. Hợp lý ghê!','Welcome to my lab! I am the director, and you are the unpaid assistant. Perfect!'),
-   tr('Nhìn máy ở giữa chưa? Cái đó dành cho hóa thạch. Đừng bỏ đồ ăn vô, lần trước suýt nổ cả phòng!','See the central machine? Fossils only. Last time someone tried to cook in it…')
+   tr('Chào mừng tới Phòng nghiên cứu! Tui phụ trách hướng dẫn, bạn phụ trách bấm nút. Ai làm hư máy tự sửa nha!','Welcome to my lab! I am the director, and you are the unpaid assistant. Perfect!'),
+   tr('Máy giữa phòng phục nguyên hóa thạch. Nếu nó đang khóa thì qua Co-op làm nhiệm vụ, bấm mãi cũng không mở đâu.','See the central machine? Fossils only. Last time someone tried to cook in it…')
   ];
   lines.push(
-   tr('Hỗ trợ, Mega, Berry, Đồng hành và Phục nguyên: mỗi góc một việc. Bấm thẳng vào máy đi, tui không phát bản đồ giấy!','Supports, Mega, Berries, Companions and Fossils: tap each station directly.'),
-   tr('Muốn đổi nội thất hả? Bấm Xây dựng. Bấm sai chỗ tui tính phí tư vấn đó!','To replace furniture, use Build. Clicking the wrong thing incurs consultation fees!'),
-   tr('PokéBox và Pokédex vẫn ở nút Pokémon ngoài menu. Phòng tui không phải kho chứa tất cả đâu nha!','PokéBox and Pokédex stay in the separate Pokémon menu. My lab is not a warehouse!'),
+   tr('Hỗ trợ, Mega, Berry, Bạn đồng hành và Phục nguyên nằm ở từng máy. Chạm máy nào là mở đúng mục đó.','Supports, Mega, Berries, Companions and Fossils: tap each station directly.'),
+   tr('Muốn xem hoặc đổi nội thất thì bấm Xây dựng. Món nào chưa mở sẽ có ghi rõ nha.','To replace furniture, use Build. Clicking the wrong thing incurs consultation fees!'),
+   tr('PokéBox và Pokédex vẫn ở nút Pokémon ngoài menu. Lỡ đi lạc thì quay ra đó nhé.','PokéBox and Pokédex stay in the separate Pokémon menu. My lab is not a warehouse!'),
    tr('Thấy cái bệ danh dự kia không? Để dành tượng vàng Pippi. Đề nghị không ai tranh chỗ!','See that trophy pedestal? Reserved for golden Pippi. No competitors!')
   );
   let speechIndex=0;speech.textContent=lines[0];
@@ -925,7 +932,7 @@ G.PKMSVVWiki=(()=>{
   talk.onclick=()=>{speechIndex=(speechIndex+1)%lines.length;speech.textContent=lines[speechIndex];};
   const tour=document.createElement('button');tour.type='button';tour.className='pkmsvv-pc-close';
   tour.dataset.researchPippiTour='1';tour.textContent=tr('Pippi dẫn tour','Guided tour');
-  tour.onclick=()=>{if(!G.PKMSVVPippiGuide?.open?.('laboratory'))
+  tour.onclick=()=>{if(!G.PKMSVVPippiGuide?.open?.('laboratory',{replay:true}))
    speech.textContent=tr('Tui dẫn tour rồi! Còn muốn nghe tui cà khịa thì nhấn nút bên cạnh.','Tour completed! Use the roast button for more.');};
   actions.append(talk,tour);
   const status=document.createElement('small');status.className='pkmsvv-research-machine-state';
@@ -954,7 +961,8 @@ G.PKMSVVWiki=(()=>{
    action:tr('Xem máy phục nguyên','View restoration machine'),onClick:fossilRestoration});
   const help=document.createElement('section');help.className='pkmsvv-pc-guide';help.hidden=true;
   knowledge.setAttribute('aria-expanded','false');
-  knowledge.onclick=()=>{help.hidden=!help.hidden;knowledge.setAttribute('aria-expanded',String(!help.hidden));};
+  knowledge.onclick=()=>{help.hidden=!help.hidden;knowledge.setAttribute('aria-expanded',String(!help.hidden));
+   if(!help.hidden)G.PKMSVVPippiGuide?.openFeature?.('knowledge');};
   const sub=document.createElement('h3');sub.textContent=tr('Kiến thức Pokémon','Pokémon knowledge');
   help.append(sub);
   const articles=[

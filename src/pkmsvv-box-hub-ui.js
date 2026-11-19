@@ -403,7 +403,8 @@
   profile.querySelector('#pkmbx-star').onclick=()=>saveAction(()=>ready?Hub.toggleFavorite(normalForm?.id||it.id):legacyFavorite(normalForm||it));
   profile.querySelector('#pkmbx-team').onclick=()=>saveAction(()=>Hub.toggleTeam(it.id));
   for(const b of profile.querySelectorAll('[data-box-tab]'))
-   b.onclick=()=>{view=b.dataset.boxTab;renderBox();};
+   b.onclick=()=>{view=b.dataset.boxTab;renderBox();
+    if(view==='rank')G.PKMSVVPippiGuide?.openFeature?.('rank');};
   if(view==='rank')renderRank(profile.querySelector('#pkmbx-tab-content'),it,ready);
   else{
    profile.querySelector('#pkmbx-tab-content').innerHTML='<div class="pkmbx-hub-info">'+
@@ -767,6 +768,7 @@
   if(target==='dex')renderDex();
   else if(target==='upgrade')renderUpgrades();
   else renderBox();
+  G.PKMSVVPippiGuide?.openFeature?.(target);
  }
  // Controller shoulder navigation works in the SAME overlay, preserving the
  // focused Pokémon, filters, search and team. No save mutation, no recreation.
