@@ -6,7 +6,8 @@ on:
       - feature/3ds-region-badge-boss-alpha04-20261121
     paths:
       - .github/workflows/3ds-region04-azahar-qa.yml
-      - tools/3ds-native/port_slice04_badge_timeline.py
+      - tools/3ds-native/**
+      - .github/workflows/build-3ds-region04.yml
 permissions:
   contents: read
   actions: read
@@ -16,6 +17,23 @@ jobs:
     timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
+      - name: Fail closed if QA binary predates gameplay or build-harness changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Build #44816402051 produced this binary from commit e7120d3.
+          # The QA workflow can change independently, but code/patch/build
+          # changes MUST receive a new binary, updated run ID and hashes.
+          binary_source_sha=e7120d3f40ebf85a124307676fdb8c37693231c0
+          git fetch --no-tags --depth=8 origin "$binary_source_sha"
+          if ! git diff --quiet "$binary_source_sha" HEAD -- \
+               tools/3ds-native/ .github/workflows/build-3ds-region04.yml; then
+            echo "::error::QA binary is stale relative to gameplay patches/build recipe. Rebuild first, then update binary source SHA, artifact run-id, and binary SHA256."
+            git diff --name-only "$binary_source_sha" HEAD -- \
+              tools/3ds-native/ .github/workflows/build-3ds-region04.yml
+            exit 1
+          fi
+          echo "PKMSVV_REGION04_BINARY_SOURCE_MATCH_PASS: source=$binary_source_sha checkout=$(git rev-parse HEAD)"
       - name: Download exact Kanto Badge Alpha04 binary from green build 44816402051
         uses: actions/download-artifact@v4
         with:
@@ -127,6 +145,9 @@ jobs:
           grep -q 'PKMSVV_REGION04_GATE_BEFORE_PASS' qa-binary/autotest-gate.log
           grep -q 'PKMSVV_REGION04_GATE_AFTER_PASS' qa-binary/autotest-gate.log
           grep -q 'PKMSVV_REGION04_FINAL_DEFEAT_PASS' qa-binary/autotest-gate.log
+          # This synthetic 0-dt 1801s test intentionally bypasses ordinary
+          # 12s gameplay diagnostics, which can print RUN_STATE/LIVE_FAIL.
+          # Only the explicit gate transition markers are applicable here.
           ! grep -E 'PKMSVV_REGION04_(GATE_BEFORE|GATE_AFTER|FINAL_DEFEAT)_FAIL' qa-binary/autotest-gate.log
           case "$code" in 0|124|137) ;; *) exit 1;; esac
           echo PKMSVV_REGION04_KILL_GATED_BOSSES_PASS
