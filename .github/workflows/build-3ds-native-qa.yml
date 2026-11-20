@@ -68,6 +68,8 @@ jobs:
             '
           test -s native-3ds/pkmsvv-3ds-qa.3dsx
           test -s native-3ds/pkmsvv-3ds-qa.elf
+          # Docker builds as root; restore ownership for the runner's makerom/bannertool.
+          sudo chown -R "$(id -u):$(id -g)" native-3ds
       - name: Package CIA using runner glibc 2.38+ (not older devkit container)
         shell: bash
         run: |
