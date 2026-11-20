@@ -38,8 +38,8 @@ for y in range(128):
     d.line((0,y,255,y),fill=(17,26,b))
 d.rounded_rectangle((6,6,249,121),radius=12,outline=CYAN,width=2)
 d.text((15,24),'PKMSVV',font=font(31),fill=GOLD)
-d.text((15,62),'3DS NATIVE QA',font=font(20),fill=CYAN)
-d.text((15,94),'ENGINE TEST - NOT FULL GAME',font=font(12),fill=(232,240,255))
+d.text((15,62),'KANTO GEN 1',font=font(20),fill=CYAN)
+d.text((15,94),'CHUONG 1 - ALPHA 01',font=font(12),fill=(232,240,255))
 banner.save(OUT/'banner.png')
 
 samples=[]

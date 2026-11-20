@@ -1,0 +1,131 @@
+name: PKMSVV 3DS Kanto Gen1 - Native Gameplay Slice 01
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/3ds-kanto-native-slice01
+    paths:
+      - .github/workflows/build-3ds-kanto01.yml
+      - tools/3ds-native/**
+permissions:
+  contents: read
+concurrency:
+  group: pkmsvv-native-kanto01
+  cancel-in-progress: true
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout only the isolated PKMSVV build harness
+        uses: actions/checkout@v4
+      - name: Fetch pinned open source 3DS engine v1.0.0
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch v1.0.0 https://github.com/juanluismm521/pokesurvivor3ds.git native-3ds
+          test "$(git -C native-3ds rev-parse HEAD)" = "7468ec9ba88c374a9b51230c6c8ae481e3bb0ce2"
+          test -s native-3ds/LICENSE
+          test -s native-3ds/LICENSE-NONCOMMERCIAL.md
+          test -s native-3ds/CREDITS.md
+      - name: Download and verify official matching v1.0.0 homebrew CIA assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 4 --retry-delay 4 --output "$RUNNER_TEMP/source-v1.0.0.cia" \
+            https://github.com/juanluismm521/pokesurvivor3ds/releases/download/v1.0.0/pokesurvivor-3ds.cia
+          echo "b1f24b348660e0f32a7395157b89046051eead87215535d428f9045bc4b75199  $RUNNER_TEMP/source-v1.0.0.cia" | sha256sum -c -
+          python3 tools/3ds-native/extract_romfs.py "$RUNNER_TEMP/source-v1.0.0.cia" native-3ds/romfs \
+            --sha256 b1f24b348660e0f32a7395157b89046051eead87215535d428f9045bc4b75199
+          test -s native-3ds/romfs/spr/report.json
+          test -s native-3ds/romfs/credits_en.txt
+      - name: Isolate Title ID, save directory, services and offline QA banner
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/3ds-native/isolate_qa.py native-3ds
+          python3 tools/3ds-native/port_slice01_kanto.py native-3ds
+          grep -Fq 'cfg.kanto_only' native-3ds/src/platform/3ds/app.cpp
+          grep -Fq 'g.cfg.kanto_only' native-3ds/src/core/enemies.cpp
+          cp tools/3ds-native/qa_banner.py native-3ds/tools/cia/gen_banner.py
+          grep -Fq 'UniqueId                : 0xF5B14' native-3ds/tools/cia/app.rsf
+          grep -Fq 'sdmc:/3ds/pkmsvv-kanto01' native-3ds/src/platform/3ds/main.cpp
+          ! grep -Fq 'https://pokesurvivor3ds.duckdns.org' native-3ds/src/platform/3ds/datos3ds.cpp
+          ! grep -Fq 'https://pokesurvivor3ds.duckdns.org' native-3ds/src/platform/3ds/cloud3ds.cpp
+      - name: Compile genuine 3DSX with official devkitARM container
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker pull devkitpro/devkitarm:latest
+          docker run --rm \
+            --env PS_BUILD_N=1 \
+            --volume "$PWD/native-3ds:/work" --workdir /work \
+            devkitpro/devkitarm:latest /bin/bash -lc '
+              set -euo pipefail
+              export DEBIAN_FRONTEND=noninteractive
+              apt-get update -qq
+              apt-get install -y -qq --no-install-recommends python3 python3-pil python3-fonttools fonts-dejavu-core curl unzip ca-certificates
+              python3 tools/cia/gen_banner.py build/cia
+              source tools/env.sh
+              python3 tools/gen_font.py
+              make -j2
+            '
+          test -s native-3ds/pkmsvv-kanto01.3dsx
+          test -s native-3ds/pkmsvv-kanto01.elf
+          # Docker builds as root; restore ownership for the runner's makerom/bannertool.
+          sudo chown -R "$(id -u):$(id -g)" native-3ds
+      - name: Package CIA using runner glibc 2.38+ (not older devkit container)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd native-3ds
+          mkdir -p tools/cache/cia
+          cd tools/cache/cia
+          curl --fail --location --retry 3 -o makerom.zip \
+            https://github.com/3DSGuy/Project_CTR/releases/download/makerom-v0.19.0/makerom-v0.19.0-ubuntu_x86_64.zip
+          unzip -oq makerom.zip
+          chmod +x makerom
+          curl --fail --location --retry 3 -o bannertool.zip \
+            https://github.com/diasurgical/bannertool/releases/download/1.2.0/bannertool.zip
+          unzip -oq bannertool.zip -d bt
+          chmod +x bt/linux-x86_64/bannertool
+          cd ../../..
+          test -s build/cia/banner.png
+          test -s build/cia/banner.wav
+          tools/cache/cia/bt/linux-x86_64/bannertool makebanner \
+            -i build/cia/banner.png -a build/cia/banner.wav -o build/cia/banner.bnr
+          tools/cache/cia/bt/linux-x86_64/bannertool makesmdh \
+            -s "PKMSVV Kanto 0.1" -l "Native Kanto Gen 1 prototype - incomplete" \
+            -p "Votri Valley" -i assets-src/icon-48.png -o build/cia/icon.icn
+          tools/cache/cia/makerom -f cia -o pkmsvv-kanto01.cia \
+            -target t -exefslogo -elf pkmsvv-kanto01.elf -rsf tools/cia/app.rsf \
+            -icon build/cia/icon.icn -banner build/cia/banner.bnr -major 0 -micro 1
+          test "$(stat -c %s pkmsvv-kanto01.cia)" -gt 10000000
+          sha256sum pkmsvv-kanto01.3dsx pkmsvv-kanto01.cia
+      - name: Check CIA does not overwrite original PokéSurvivor Title ID
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib,struct
+          p=pathlib.Path('native-3ds/pkmsvv-kanto01.cia').read_bytes()
+          idx=p.index(b'NCCH')
+          base=idx-0x100
+          assert base>0
+          # NCCH product code is signed metadata, confirm the fork identity.
+          assert b'CTR-H-PK01' in p[base:base+0x200], 'Fork ProductCode missing'
+          assert b'CTR-H-PSV3' not in p[base:base+0x200], 'Original ProductCode unexpectedly retained'
+          print('PKMSVV_3DS_KANTO01_CIA_IDENTITY_PASS')
+          PY
+      - name: Upload isolated native engine QA artifacts (never a public release)
+        uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-3DS-KANTO-GEN1-ALPHA01
+          path: |
+            native-3ds/pkmsvv-kanto01.3dsx
+            native-3ds/pkmsvv-kanto01.cia
+            native-3ds/LICENSE
+            native-3ds/LICENSE-NONCOMMERCIAL.md
+            native-3ds/CREDITS.md
+          retention-days: 7
+          if-no-files-found: error
