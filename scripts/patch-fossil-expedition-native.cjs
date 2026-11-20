@@ -40,7 +40,7 @@ patch('js/entities/enemy.js',
 // Begin Fossil only after native World.reset/setBiome and Coop.begin.
 patch('js/game.js',
  "    G.Camera.x = pl.x; G.Camera.y = pl.y; G.Camera.shake = 0;",
- "    G.PKMSVVFossilExpedition?.begin?.({mode:G.Social?.room?.mode});\\n"+
+ "    G.PKMSVVFossilExpedition?.begin?.({mode:G.Social?.room?.mode});\n"+
  "    G.Camera.x = pl.x; G.Camera.y = pl.y; G.Camera.shake = 0;");
 patch('js/game.js',
  "      if(G.PKMSVVBerryRescue?.active)G.PKMSVVBerryRescue.tick(dt,time,all,result=>{",
