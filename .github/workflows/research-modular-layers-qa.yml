@@ -20,6 +20,8 @@ jobs:
         run: node --test tests/research-source-extraction.test.cjs
       - name: Render exact original cutouts and draft empty background
         run: node scripts/extract-research-layers.cjs dist/research-modular-sprite-preview
+      - name: Add offline click-to-hide art comparison preview
+        run: cp docs/research-lab-layer-preview.html dist/research-modular-sprite-preview/index.html
       - name: Verify all nine sprites independent
         run: |
           node - <<'NODE'
@@ -27,7 +29,7 @@ jobs:
           const m=JSON.parse(fs.readFileSync(path.join(d,'manifest.json'),'utf8'));
           if(m.layers.length!==9||!m.readyForLayerPreview||m.readyForFurnitureSwap)
             throw Error('Research Lab art approval state is wrong');
-          for(const n of [...m.layers.map(x=>x.file),'clean-backdrop.png']){
+          for(const n of [...m.layers.map(x=>x.file),'clean-backdrop.png','room-reference.webp','index.html']){
             const f=path.join(d,n);
             if(!fs.existsSync(f)||fs.statSync(f).size<500)throw Error('Missing '+n);
           }

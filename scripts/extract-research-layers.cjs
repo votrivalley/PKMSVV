@@ -117,6 +117,8 @@ async function main(){
  const backdrop='clean-backdrop.png';
  fs.writeFileSync(path.join(out,backdrop),await sharp(clean,{raw:{
   width:canvas.width,height:canvas.height,channels}}).png().toBuffer());
+ fs.writeFileSync(path.join(out,'room-reference.webp'),src);
+ manifest.originalRoom='room-reference.webp';
  manifest.cleanBackdrop=backdrop;
  manifest.readyForLayerPreview=true;
  manifest.readyForFurnitureSwap=false;

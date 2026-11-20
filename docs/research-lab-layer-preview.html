@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Phòng nghiên cứu — QA tách sprite gốc</title>
+<style>
+:root{font:15px/1.45 system-ui, sans-serif;color:#e5f6f4;background:#102a35}
+body{margin:0;padding:18px;max-width:1260px;margin-inline:auto}
+h1{font-size:22px;margin:0 0 6px}p{margin:0 0 16px;color:#b8d1d5}
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+label,button{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;background:#275767;border:1px solid #5d929c;border-radius:8px;color:#fff;cursor:pointer}
+label:has(input:checked){border-color:#e8c176}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:18px}
+.panel{min-width:0}h2{font-size:16px;margin:0 0 7px}
+.scene{width:100%;position:relative;aspect-ratio:960 / 672;border:3px solid #ae925a;background:#214652;overflow:hidden}
+.scene img{position:absolute;user-select:none;pointer-events:none}
+#restored{background:url('clean-backdrop.png') center/100% 100% no-repeat}
+#reference{background:url('room-reference.webp') center/100% 100% no-repeat}
+.part{object-fit:fill}.hidden{display:none!important}
+footer{margin-top:16px;color:#ffdfa0;font-size:13px}
+</style>
+</head>
+<body>
+<h1>Phòng nghiên cứu — xem 9 sprite tách từ tranh gốc</h1>
+<p>Bật/tắt từng máy. Bên trái là các lớp độc lập; bên phải là ảnh gốc để đối chiếu. Nền sau vật thể mới được phục dựng gần đúng và chưa duyệt mỹ thuật.</p>
+<div class="controls" id="controls">
+<button id="showAll">Hiện tất cả</button><button id="hideAll">Ẩn tất cả</button>
+</div>
+<div class="panels">
+<section class="panel"><h2>Nền đã tách + từng sprite PNG</h2><div class="scene" id="restored"></div></section>
+<section class="panel"><h2>Ảnh WebP ban đầu (tham chiếu)</h2><div class="scene" id="reference"></div></section>
+</div>
+<footer>Đây là bản xem trước độc lập, không áp dụng nâng cấp, không tiêu Xu Đồng Đội và không thay đổi save.</footer>
+<script>
+'use strict';
+const data=[
+ ['restoration_chamber','Máy phục nguyên',329,135,304,305],
+ ['support_shelf','Máy Hỗ trợ',43,189,286,216],
+ ['mega_desk','Máy Mega',628,177,303,218],
+ ['berry_garden','Góc Berry',18,373,261,247],
+ ['companion_pedestal','Bệ Bạn đồng hành',681,470,226,150],
+ ['fossil_display','Khay hóa thạch',165,380,182,107],
+ ['right_terminal','Máy tính phụ',724,387,192,111],
+ ['plaque_left','Khung treo trái',116,72,216,136],
+ ['plaque_right','Khung treo phải',617,70,215,139]
+];
+const c=document.getElementById('controls'),room=document.getElementById('restored'),images=[];
+for(const [id,label,x,y,w,h] of data){
+ const img=new Image();img.src=id+'.png';img.className='part';
+ img.style.left=(x/960*100)+'%';img.style.top=(y/672*100)+'%';
+ img.style.width=(w/960*100)+'%';img.style.height=(h/672*100)+'%';
+ img.dataset.part=id;room.append(img);images.push(img);
+ const wrap=document.createElement('label'),check=document.createElement('input');
+ check.type='checkbox';check.checked=true;check.addEventListener('change',()=>img.classList.toggle('hidden',!check.checked));
+ wrap.append(check,document.createTextNode(label));c.append(wrap);
+}
+document.getElementById('showAll').onclick=()=>c.querySelectorAll('input').forEach(x=>{x.checked=true;x.dispatchEvent(new Event('change'));});
+document.getElementById('hideAll').onclick=()=>c.querySelectorAll('input').forEach(x=>{x.checked=false;x.dispatchEvent(new Event('change'));});
+</script>
+</body></html>

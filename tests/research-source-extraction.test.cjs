@@ -47,3 +47,12 @@ test('clean draft backdrop cannot be mistaken for purchasable final art',()=>{
  assert.match(script,/manifest\.readyForFurnitureSwap=false/);
  assert.match(script,/painter review required before swapping furniture/);
 });
+
+test('the QA preview is local, uses nine separate PNGs and never creates currency actions',()=>{
+ const page=fs.readFileSync(path.join(__dirname,'../docs/research-lab-layer-preview.html'),'utf8');
+ assert.match(page,/clean-backdrop\.png/);
+ assert.match(page,/room-reference\.webp/);
+ assert.match(page,/img\.src=id\+'\.png'/);
+ assert.match(page,/Ẩn tất cả/);
+ assert.doesNotMatch(page,/pkmsvvCoopLab|localStorage|fetch\(/);
+});
