@@ -143,7 +143,7 @@ function updateRotomSOS(){
   }catch(_){return false;}
  }
  function restoreMachineCollider(){
-  if(worldCollider?.world?.isFree===worldCollider.wrapper)
+  if(worldCollider&&worldCollider.world?.isFree===worldCollider.wrapper)
    worldCollider.world.isFree=worldCollider.original;
   worldCollider=null;
  }
