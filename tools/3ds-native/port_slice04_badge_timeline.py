@@ -191,4 +191,37 @@ patch("src/platform/3ds/app.cpp",
       "  if (cfg.kanto_only && !autotest)")
 # No UI-only masquerading: milestone is in native gameplay core.
 
+
+# The Alpha02 probe assumed fixed Dragonite. Revise to match randomized 15m
+# Epic and 15%-chance Mewtwo while preserving the live Gen1 assertion.
+patch("src/platform/3ds/main.cpp",
+      "      const bool bosses = g->nbosses == 2 &&\n"
+      "        g->bosses[0].dex == 149 && g->bosses[0].at == 900 &&\n"
+      "        g->bosses[1].dex == 150 && g->bosses[1].at == 1800;",
+      "      const Mon* badge_mon = mon_by_dex(g->bosses[0].dex);\n"
+      "      const bool boss0_ok = badge_mon && badge_mon->gen == 1 && badge_mon->reg == 0 &&\n"
+      "        (g->bosses[0].dex == 150 || (badge_mon->rarity == 4 && !badge_mon->leg));\n"
+      "      const bool bosses = g->nbosses == 2 && boss0_ok &&\n"
+      "        g->bosses[0].at == 900 &&\n"
+      "        g->bosses[1].dex == 150 && g->bosses[1].at == 1800;")
+
+patch("src/platform/3ds/main.cpp",
+      '      std::fprintf(at.log, "PKMSVV_KANTO_LIVE_%s living=%d foreign=%d\\n",',
+      '      std::fprintf(at.log, "PKMSVV_REGION04_RUN_STATE_%s badge=%d victory=%d badge_id=%d final_id=%d\\n",\n'
+      '                   (!g->pkmsvv_badge_claimed && !g->pkmsvv_region_victory) ? "PASS" : "FAIL",\n'
+      '                   int(g->pkmsvv_badge_claimed), int(g->pkmsvv_region_victory),\n'
+      '                   int(g->pkmsvv_badge_boss_id), int(g->pkmsvv_final_boss_id));\n'
+      '      std::fprintf(at.log, "PKMSVV_KANTO_LIVE_%s living=%d foreign=%d\\n",')
+
+# The Kanto test run only uses actual Web Kanto biome 0; do NOT invent a map
+# texture that doesn't exist in PKMSVV Web and call it the original game.
+patch("src/core/version.h", 'kGameTitle = "PKMSVV Region 0.3"',
+      'kGameTitle = "PKMSVV Region 0.4"')
+patch("Makefile", "APP_TITLE\t:=\tPKMSVV Region 0.3",
+      "APP_TITLE\t:=\tPKMSVV Region 0.4")
+patch("src/platform/3ds/app.cpp",
+      "POKÉMON CHUYỂN SINH 3DS · REGION ALPHA 03",
+      "POKÉMON CHUYỂN SINH 3DS · REGION ALPHA 04")
+
+
 print("PKMSVV_NATIVE_REGION04_BADGE_TIMELINE_PASS: 15% legendary, 85% Kanto Epic, kill-gated 30m, isolated dual-copy badge")
