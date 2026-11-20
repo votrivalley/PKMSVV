@@ -16,20 +16,20 @@ jobs:
     timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
-      - name: Download exact Region Alpha03 binary from green build 44809870462
+      - name: Download exact Region Alpha03 binary from green build 44811021046
         uses: actions/download-artifact@v4
         with:
           name: PKMSVV-3DS-REGION-STORY-ALPHA03
           repository: votrivalley/PKMSVV
-          run-id: 44809870462
+          run-id: 44811021046
           github-token: ${{ github.token }}
           path: qa-binary
       - name: Confirm exact Kanto CIA and new isolated product identity
         shell: bash
         run: |
           set -euo pipefail
-          echo '181ade9976dc7b6cda578a644496c82b171f705a0364010a37ff578eb0cbc061  qa-binary/pkmsvv-kanto01.cia' | sha256sum -c -
-          echo '0ca7c0f6b7d9f2925b6cabafad3db2e75463af9b1891c63eab674adfa6957dbc  qa-binary/pkmsvv-kanto01.3dsx' | sha256sum -c -
+          echo 'f6799be3ae8cbfa745b168254c11711bb7181fa35d36d5c14a5b2fa5618f7eb4  qa-binary/pkmsvv-kanto01.cia' | sha256sum -c -
+          echo 'ce06ed5004ff00366afeeeaea3194d44e6f308124708cbbb30ad465a90448768  qa-binary/pkmsvv-kanto01.3dsx' | sha256sum -c -
           python3 - <<'PY'
           from pathlib import Path
           c=Path('qa-binary/pkmsvv-kanto01.cia').read_bytes()
