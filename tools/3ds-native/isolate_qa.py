@@ -23,7 +23,7 @@ patch('Makefile','APP_AUTHOR\t:=\tjuanluismm520','APP_AUTHOR\t:=\tVotri Valley')
 patch('Makefile','APP_DESCRIPTION\t:=\tBullet-heaven con Pokémon (proyecto de fans)',
       'APP_DESCRIPTION\t:=\tC++ engine test - NOT full PKMSVV')
 patch('src/core/version.h','kGameTitle = "PokéSurvivor 3DS"','kGameTitle = "PKMSVV 3DS QA"')
-patch('src/platform/3ds/main.cpp','sdmc:/3ds/pokesurvivor-3ds','sdmc:/3ds/pkmsvv-3ds-qa')
+patch('src/platform/3ds/main.cpp','sdmc:/3ds/pokesurvivor-3ds','sdmc:/3ds/pkmsvv-3ds-qa',2)
 # No shared account/sync and no self-updating from the upstream service.
 patch('src/platform/3ds/datos3ds.cpp','https://pokesurvivor3ds.duckdns.org/datos/',
       'https://127.0.0.1/pkmsvv-qa-offline/')
