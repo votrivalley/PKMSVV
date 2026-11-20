@@ -70,7 +70,7 @@ patch("src/platform/3ds/app.cpp",
 patch("src/platform/3ds/app.cpp",
       'header("Elige tu compañero");', 'header("Chọn Pokémon khởi đầu");')
 patch("src/platform/3ds/app.cpp",
-      '"A: elegir · B: volver"', '"A: chọn · B: quay lại"',1)
+      '"A: elegir · B: volver"', '"A: chọn · B: quay lại"',3)
 patch("src/platform/3ds/app.cpp",
       '"¡%s se une a ti!"', '"%s gia nhập đội!"')
 
