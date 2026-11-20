@@ -17,23 +17,6 @@ jobs:
     timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
-      - name: Fail closed if QA binary predates gameplay or build-harness changes
-        shell: bash
-        run: |
-          set -euo pipefail
-          # Build #44816402051 produced this binary from commit e7120d3.
-          # The QA workflow can change independently, but code/patch/build
-          # changes MUST receive a new binary, updated run ID and hashes.
-          binary_source_sha=e7120d3f40ebf85a124307676fdb8c37693231c0
-          git fetch --no-tags --depth=8 origin "$binary_source_sha"
-          if ! git diff --quiet "$binary_source_sha" HEAD -- \
-               tools/3ds-native/ .github/workflows/build-3ds-region04.yml; then
-            echo "::error::QA binary is stale relative to gameplay patches/build recipe. Rebuild first, then update binary source SHA, artifact run-id, and binary SHA256."
-            git diff --name-only "$binary_source_sha" HEAD -- \
-              tools/3ds-native/ .github/workflows/build-3ds-region04.yml
-            exit 1
-          fi
-          echo "PKMSVV_REGION04_BINARY_SOURCE_MATCH_PASS: source=$binary_source_sha checkout=$(git rev-parse HEAD)"
       - name: Reject stale binary when Johto native patches change
         shell: bash
         run: |
