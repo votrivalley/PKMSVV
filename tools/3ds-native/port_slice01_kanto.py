@@ -117,23 +117,23 @@ patch("tools/make_cia.sh", '-s "PKMSVV 3DS QA"', '-s "PKMSVV Kanto 0.1"')
 # Native gameplay instrumentation allows emulator QA to inspect real randomly
 # selected Gen1 wave and boss definitions, beyond code-grep or compile PASS.
 patch("src/platform/3ds/main.cpp",
-      '  if (at.log) {\\n    std::fprintf(at.log, "cargas de sprites durante la partida:',
-      '  if (at.log) {\\n'
-      '    if (g->cfg.kanto_only) {\\n'
-      '      int total = 0, outsiders = 0;\\n'
-      '      for (int tier = 0; tier < g->ncast; ++tier) {\\n'
-      '        for (int i = 0; i < g->cast[tier].n; ++i) {\\n'
-      '          const Mon* m = mon_by_dex(g->cast[tier].list[i].dex);\\n'
-      '          ++total; if (!m || m->gen != 1 || m->reg != 0) ++outsiders;\\n'
-      '        }\\n'
-      '      }\\n'
-      '      for (int i = 0; i < g->nbosses; ++i) {\\n'
-      '        const Mon* m = mon_by_dex(g->bosses[i].dex);\\n'
-      '        ++total; if (!m || m->gen != 1 || m->reg != 0) ++outsiders;\\n'
-      '      }\\n'
-      '      std::fprintf(at.log, "PKMSVV_KANTO_CAST_%s total=%d outsiders=%d\\\\n",\\n'
-      '                   total > 0 && !outsiders ? "PASS" : "FAIL", total, outsiders);\\n'
-      '    }\\n'
+      '  if (at.log) {\n    std::fprintf(at.log, "cargas de sprites durante la partida:',
+      '  if (at.log) {\n'
+      '    if (g->cfg.kanto_only) {\n'
+      '      int total = 0, outsiders = 0;\n'
+      '      for (int tier = 0; tier < g->ncast; ++tier) {\n'
+      '        for (int i = 0; i < g->cast[tier].n; ++i) {\n'
+      '          const Mon* m = mon_by_dex(g->cast[tier].list[i].dex);\n'
+      '          ++total; if (!m || m->gen != 1 || m->reg != 0) ++outsiders;\n'
+      '        }\n'
+      '      }\n'
+      '      for (int i = 0; i < g->nbosses; ++i) {\n'
+      '        const Mon* m = mon_by_dex(g->bosses[i].dex);\n'
+      '        ++total; if (!m || m->gen != 1 || m->reg != 0) ++outsiders;\n'
+      '      }\n'
+      '      std::fprintf(at.log, "PKMSVV_KANTO_CAST_%s total=%d outsiders=%d\\n",\n'
+      '                   total > 0 && !outsiders ? "PASS" : "FAIL", total, outsiders);\n'
+      '    }\n'
       '    std::fprintf(at.log, "cargas de sprites durante la partida:')
 
 print("PKMSVV_NATIVE_KANTO_SLICE01_APPLIED: SOLO_MODE_NORMAL KANTO_GEN1_ONLY + MENU_VI + RANDOM_BOSS_KANTO")
