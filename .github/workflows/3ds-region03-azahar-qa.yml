@@ -1,0 +1,142 @@
+name: PKMSVV 3DS Alpha03 - Region UI and Kanto Gameplay QA
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/3ds-region-flow-story-alpha03-20261121
+    paths:
+      - .github/workflows/3ds-region03-azahar-qa.yml
+      - tools/3ds-native/port_slice03_region_story.py
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect-and-boot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download exact Region Alpha03 binary from green build 44809870462
+        uses: actions/download-artifact@v4
+        with:
+          name: PKMSVV-3DS-REGION-STORY-ALPHA03
+          repository: votrivalley/PKMSVV
+          run-id: 44809870462
+          github-token: ${{ github.token }}
+          path: qa-binary
+      - name: Confirm exact Kanto CIA and new isolated product identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '181ade9976dc7b6cda578a644496c82b171f705a0364010a37ff578eb0cbc061  qa-binary/pkmsvv-kanto01.cia' | sha256sum -c -
+          echo '0ca7c0f6b7d9f2925b6cabafad3db2e75463af9b1891c63eab674adfa6957dbc  qa-binary/pkmsvv-kanto01.3dsx' | sha256sum -c -
+          python3 - <<'PY'
+          from pathlib import Path
+          c=Path('qa-binary/pkmsvv-kanto01.cia').read_bytes()
+          h=Path('qa-binary/pkmsvv-kanto01.3dsx').read_bytes()
+          i=c.index(b'NCCH')-0x100
+          tid=int.from_bytes(c[i+0x108:i+0x110],'little')
+          assert tid==0x000400000F5B1400,hex(tid)
+          assert b'CTR-H-PK01' in c[i:i+0x200], 'Not the Kanto alpha CIA'
+          assert h[:4]==b'3DSX'
+          print('PKMSVV_KANTO01_CIA_IDENTIFIED title_id=%016X' % tid)
+          PY
+      - name: Install isolated Azahar emulator QA prerequisites
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends             xvfb imagemagick python3-pil libgl1-mesa-dri libfuse2t64             libxcb-cursor0 libxkbcommon-x11-0 libegl1 libopengl0             libpulse0 libasound2t64 libxcb-xinerama0 libxcb-icccm4             libxcb-image0 libxcb-keysyms1 libxcb-render-util0             ca-certificates curl
+          curl --fail --location --retry 3 --retry-delay 3             https://github.com/azahar-emu/azahar/releases/download/2126.2/azahar.AppImage             --output qa-binary/azahar.AppImage
+          chmod +x qa-binary/azahar.AppImage
+          cd qa-binary
+          ./azahar.AppImage --appimage-extract >/dev/null
+          test -x squashfs-root/AppRun
+      - name: Azahar smoke run of engine via 3DSX (does not prove CIA installation)
+        shell: bash
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          QT_QPA_PLATFORM: xcb
+          SDL_AUDIODRIVER: dummy
+        run: |
+          set -euo pipefail
+          export DISPLAY=:99
+          export HOME="$RUNNER_TEMP/azahar-qa-home"
+          mkdir -p "$HOME/.local/share/azahar-emu/sdmc/3ds/pkmsvv-kanto01"
+          printf '12 25 1 0\n' > "$HOME/.local/share/azahar-emu/sdmc/3ds/pkmsvv-kanto01/autotest.txt"
+          Xvfb :99 -screen 0 1280x800x24 > qa-binary/xvfb.log 2>&1 &
+          sleep 3
+          set +e
+          timeout --signal=TERM --kill-after=5 60             qa-binary/squashfs-root/AppRun "$PWD/qa-binary/pkmsvv-kanto01.3dsx"             > qa-binary/azahar.stdout 2>&1
+          code=$?
+          set -e
+          echo "AZAHAR_PROCESS_EXIT=$code"
+          log="$HOME/.local/share/azahar-emu/sdmc/3ds/pkmsvv-kanto01/autotest.log"
+          if [ -f "$log" ]; then
+            cp "$log" qa-binary/autotest.log
+            tail -n 35 "$log"
+          else
+            tail -n 80 qa-binary/azahar.stdout || true
+            echo 'NO AUTOTEST LOG - emulator boot not confirmed'
+            exit 1
+          fi
+          grep -q 'PKMSVV Region 0.3' "$log"
+          grep -q 'PKMSVV_KANTO_BOSS_CFG_PASS' "$log"
+          grep -q 'PKMSVV_KANTO_LIVE_PASS' "$log"
+          ! grep -q 'PKMSVV_KANTO_LIVE_FAIL' "$log"
+          grep -q 'PKMSVV_KANTO_CAST_PASS' "$log"
+          ! grep -q 'PKMSVV_KANTO_CAST_FAIL' "$log"
+          # Azahar is a GUI and may stay open after its 3DS guest ends;
+          # timeout(124)/kill-after(137) are expected *host window* statuses.
+          # Trust the complete in-game FIN record, not the GUI exit code.
+          grep -q '^FIN · 12 s' "$log"
+          case "$code" in
+            0|124|137) ;;
+            *) echo "Unexpected Azahar launcher exit: $code"; exit 1;;
+          esac
+          echo 'PKMSVV_REGION03_LIVE_QA_PASS: 12s Kanto prototype and live Gen1 guard'
+      - name: Render actual 10-Region chooser in Azahar and capture UI
+        shell: bash
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          QT_QPA_PLATFORM: xcb
+          SDL_AUDIODRIVER: dummy
+        run: |
+          set -euo pipefail
+          export DISPLAY=:98
+          export HOME="$RUNNER_TEMP/region03-ui-home"
+          d="$HOME/.local/share/azahar-emu/sdmc/3ds/pkmsvv-kanto01"
+          mkdir -p "$d"
+          printf 'region\n' > "$d/autotest.txt"
+          Xvfb :98 -screen 0 1280x800x24 > qa-binary/xvfb-region.log 2>&1 &
+          sleep 3
+          timeout --signal=TERM --kill-after=4 32 \
+            qa-binary/squashfs-root/AppRun "$PWD/qa-binary/pkmsvv-kanto01.3dsx" \
+            > qa-binary/azahar-region.stdout 2>&1 &
+          pid=$!
+          sleep 16
+          import -display :98 -window root qa-binary/region-selector.png
+          python3 - <<'PY'
+          from PIL import Image,ImageStat
+          im=Image.open('qa-binary/region-selector.png').convert('RGB')
+          stat=ImageStat.Stat(im)
+          assert im.width>=800 and im.height>=600, im.size
+          assert max(stat.stddev)>12, f'Blank Azahar UI screenshot: {stat.stddev}'
+          print('REGION03_UI_SCREENSHOT_CAPTURE_PASS', im.size)
+          PY
+          wait "$pid" || true
+          test -s qa-binary/region-selector.png
+      - name: Upload recheck evidence regardless of runtime outcome
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-3DS-REGION03-AZAHAR-EVIDENCE
+          path: |
+            qa-binary/binary-validation.txt
+            qa-binary/autotest.log
+            qa-binary/azahar.stdout
+            qa-binary/xvfb.log
+            qa-binary/region-selector.png
+            qa-binary/xvfb-region.log
+            qa-binary/azahar-region.stdout
+          retention-days: 7
+          if-no-files-found: warn
