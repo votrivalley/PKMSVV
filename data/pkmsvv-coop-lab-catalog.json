@@ -434,6 +434,100 @@
       "width": 960,
       "height": 672
     },
-    "layeringStatus": "original-room-restored; only separate golden statue ready for purchase; other source cutouts require occluded-background reconstruction"
+    "layeringStatus": "original-room-restored; only separate golden statue ready for purchase; other source cutouts require occluded-background reconstruction",
+    "sourceLayers": [
+      {
+        "id": "restoration_chamber",
+        "slot": "center",
+        "station": "fossil",
+        "x": 329,
+        "y": 135,
+        "w": 304,
+        "h": 305,
+        "file": "restoration_chamber.png"
+      },
+      {
+        "id": "support_shelf",
+        "slot": "shelf_left",
+        "station": "support",
+        "x": 43,
+        "y": 189,
+        "w": 286,
+        "h": 216,
+        "file": "support_shelf.png"
+      },
+      {
+        "id": "mega_desk",
+        "slot": "shelf_right",
+        "station": "mega",
+        "x": 628,
+        "y": 177,
+        "w": 303,
+        "h": 218,
+        "file": "mega_desk.png"
+      },
+      {
+        "id": "berry_garden",
+        "slot": "garden",
+        "station": "berry",
+        "x": 18,
+        "y": 373,
+        "w": 261,
+        "h": 247,
+        "file": "berry_garden.png"
+      },
+      {
+        "id": "companion_pedestal",
+        "slot": "trophy",
+        "station": "companion",
+        "x": 681,
+        "y": 470,
+        "w": 226,
+        "h": 150,
+        "file": "companion_pedestal.png"
+      },
+      {
+        "id": "fossil_display",
+        "slot": "display",
+        "station": "fossil",
+        "x": 165,
+        "y": 380,
+        "w": 182,
+        "h": 107,
+        "file": "fossil_display.png"
+      },
+      {
+        "id": "right_terminal",
+        "slot": "desk",
+        "station": "companion",
+        "x": 724,
+        "y": 387,
+        "w": 192,
+        "h": 111,
+        "file": "right_terminal.png"
+      },
+      {
+        "id": "plaque_left",
+        "slot": "wall_left",
+        "station": "decor",
+        "x": 116,
+        "y": 72,
+        "w": 216,
+        "h": 136,
+        "file": "plaque_left.png"
+      },
+      {
+        "id": "plaque_right",
+        "slot": "wall_right",
+        "station": "decor",
+        "x": 617,
+        "y": 70,
+        "w": 215,
+        "h": 139,
+        "file": "plaque_right.png"
+      }
+    ],
+    "modularPreviewBackground": "images/coop-lab/source-cutouts-qa/clean-backdrop.png",
+    "modularPreviewStatus": "QA only, artist approval pending; not purchasable or ready for swaps"
   }
 }

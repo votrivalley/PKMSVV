@@ -29,6 +29,14 @@ for(const file of ['lan-connect.html','lan-connect.js'])
  const lab=path.join(root,'assets/coop-lab');
  if(!fs.existsSync(path.join(lab,'room_base.png')))throw Error('Fossil Lab native room missing');
  fs.cpSync(lab,path.join(images,'coop-lab'),{recursive:true});
+ if(process.env.PKMSVV_FOSSIL_NATIVE_QA==='1'){
+  const layers=path.join(images,'coop-lab','source-cutouts-qa');
+  execFileSync(process.execPath,[path.join(root,'scripts/extract-research-layers.cjs'),layers],
+   {cwd:root,stdio:'inherit'});
+  for(const name of ['manifest.json','clean-backdrop.png','restoration_chamber.png',
+   'support_shelf.png','mega_desk.png','berry_garden.png','companion_pedestal.png'])
+   if(!fs.existsSync(path.join(layers,name)))throw Error('Research QA missing '+name);
+ }
  // FOSSIL_CONCEPT_ASSETS_V256: ship approved concept cutouts to real LAN Beta.
  if(process.env.PKMSVV_FOSSIL_NATIVE_QA==='1'){
   execFileSync(process.execPath,[path.join(root,'scripts/build-fossil-concept-sprites.cjs')],

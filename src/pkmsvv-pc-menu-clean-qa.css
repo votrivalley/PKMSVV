@@ -1244,3 +1244,22 @@
  filter:none!important;
  image-rendering:pixelated!important;
 }
+
+
+/* RESEARCH_ORIGINAL_SOURCE_LAYERS_QA_20261120: 9 original-art cutouts
+ * and 1 reconstructed background, only on explicit QA query flag. */
+#pkmsvv-wiki-overlay .pkmsvv-research-room[data-research-art-mode="modular"],
+#pkmsvv-wiki-overlay .pkmsvv-build-stage[data-research-art-mode="modular"] {
+ background:#174850 url('../images/coop-lab/source-cutouts-qa/clean-backdrop.png')
+  center/100% 100% no-repeat!important;
+}
+#pkmsvv-wiki-overlay .pkmsvv-lab-source-layer {
+ position:absolute!important;display:block!important;max-width:none!important;
+ object-fit:fill!important;pointer-events:none!important;user-select:none!important;
+ border:0!important;padding:0!important;margin:0!important;
+ filter:none!important;z-index:1!important;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-room[data-research-art-mode="modular"] .pkmsvv-lab-furniture,
+#pkmsvv-wiki-overlay .pkmsvv-build-stage[data-research-art-mode="modular"] .pkmsvv-lab-furniture {
+ display:block!important;
+}

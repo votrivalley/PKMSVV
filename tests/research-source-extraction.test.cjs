@@ -24,3 +24,26 @@ test('no original cutout is sold or equipped before its background is repaired a
  assert.match(script,/extract-research-layers\.cjs/);
  assert.match(script,/source-cutouts-qa/);
 });
+
+test('lab QA layer registry maps nine independent original sprites to five stations',()=>{
+ const c=require('../data/pkmsvv-coop-lab-catalog.json');
+ assert.deepEqual(new Set(c.roomArt.sourceLayers.map(p=>p.id)),new Set(pieces.map(p=>p.id)));
+ for(const item of c.roomArt.sourceLayers){
+  assert.deepEqual([item.x,item.y,item.w,item.h],pieces.find(p=>p.id===item.id).rect);
+  assert.equal(item.file,item.id+'.png');
+ }
+ for(const station of ['support','mega','berry','companion','fossil'])
+  assert.ok(c.roomArt.sourceLayers.some(p=>p.station===station),station);
+ assert.equal(c.items.filter(x=>x.sceneSwapReady).length,2);
+ const wiki=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-wiki.js'),'utf8');
+ const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pc-menu-clean-qa.css'),'utf8');
+ assert.match(wiki,/pkmsvvLabLayers=1/);
+ assert.match(wiki,/img\.dataset\.labLayer=part\.id/);
+ assert.match(css,/RESEARCH_ORIGINAL_SOURCE_LAYERS_QA_20261120/);
+});
+test('clean draft backdrop cannot be mistaken for purchasable final art',()=>{
+ const script=fs.readFileSync(path.join(__dirname,'../scripts/extract-research-layers.cjs'),'utf8');
+ assert.match(script,/clean-backdrop\.png/);
+ assert.match(script,/manifest\.readyForFurnitureSwap=false/);
+ assert.match(script,/painter review required before swapping furniture/);
+});

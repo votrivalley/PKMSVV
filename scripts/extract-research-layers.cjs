@@ -77,6 +77,51 @@ async function main(){
   manifest.layers.push({id:p.id,label:p.name,rectangle:p.rect,file,alphaMask:p.polygon,
    readyForFurnitureSwap:false,bytes:buff.length});
  }
+
+ // Reconstruct the occluded background for the *QA-only* scene.
+ // This is not a final painter-approved restoration: invisible pixels
+ // behind flattened furniture do not exist in the source WebP.
+ const count=canvas.width*canvas.height,removed=new Uint8Array(count);
+ for(const part of pieces){
+  const [left,top,w,h]=part.rect;
+  const {data:mask,info:mi}=await sharp(maskFor(part)).ensureAlpha().raw()
+   .toBuffer({resolveWithObject:true});
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++)
+   if(mask[(y*w+x)*mi.channels+mi.channels-1]>127)
+    removed[(top+y)*canvas.width+left+x]=1;
+ }
+ const {data:raw,info:ri}=await sharp(src).removeAlpha().raw()
+  .toBuffer({resolveWithObject:true});
+ const nearest=new Int32Array(count).fill(-1),queue=new Int32Array(count);
+ let head=0,tail=0;
+ for(let i=0;i<count;i++)if(!removed[i]){nearest[i]=i;queue[tail++]=i;}
+ while(head<tail){
+  const i=queue[head++],x=i%canvas.width,y=(i-x)/canvas.width;
+  const add=n=>{if(nearest[n]===-1){nearest[n]=nearest[i];queue[tail++]=n;}};
+  if(x>0)add(i-1);
+  if(x+1<canvas.width)add(i+1);
+  if(y>0)add(i-canvas.width);
+  if(y+1<canvas.height)add(i+canvas.width);
+ }
+ const clean=Buffer.from(raw),channels=ri.channels;
+ for(let i=0;i<count;i++)if(removed[i]){
+  const a=nearest[i]*channels,b=i*channels;
+  for(let c=0;c<channels;c++)clean[b+c]=raw[a+c];
+ }
+ const smooth=await sharp(clean,{raw:{width:canvas.width,height:canvas.height,channels}})
+  .blur(8).raw().toBuffer();
+ for(let i=0;i<count;i++)if(removed[i]){
+  const offset=i*channels;
+  for(let c=0;c<channels;c++)clean[offset+c]=smooth[offset+c];
+ }
+ const backdrop='clean-backdrop.png';
+ fs.writeFileSync(path.join(out,backdrop),await sharp(clean,{raw:{
+  width:canvas.width,height:canvas.height,channels}}).png().toBuffer());
+ manifest.cleanBackdrop=backdrop;
+ manifest.readyForLayerPreview=true;
+ manifest.readyForFurnitureSwap=false;
+ manifest.backgroundRepair='Approximate original-scene inpaint: painter review required before swapping furniture';
+
  fs.writeFileSync(path.join(out,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');
  console.log('Original research layers extracted: '+manifest.layers.length+
   ' source-preserving transparent PNGs to '+out+' (not yet equip-ready)');

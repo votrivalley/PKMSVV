@@ -609,16 +609,41 @@ G.PKMSVVWiki=(()=>{
  // Research Lab modular furnishing renderer: no painted-in purchases.
  // Each owned object is its own alpha asset, positioned by the shared catalog.
  // A screenshot of the original furnished room is reference art only.
+ function modularLabPreview(){
+  if(typeof window==='undefined'||!window.location)return false;
+  const host=String(window.location.hostname||'');
+  if(!['localhost','127.0.0.1','beta.pkmsvv-web.pages.dev','research-ui-qa.pkmsvv-web.pages.dev'].includes(host))return false;
+  return /(?:^|[?&])pkmsvvLabLayers=1(?:&|$)/.test(String(window.location.search||''));
+ }
  function renderFurnitureLayers(stage){
   if(!stage)return;
-  stage.querySelectorAll('.pkmsvv-lab-furniture').forEach(x=>x.remove());
+  stage.querySelectorAll('.pkmsvv-lab-furniture,.pkmsvv-lab-source-layer').forEach(x=>x.remove());
+  const modular=modularLabPreview();
+  stage.dataset.researchArtMode=modular?'modular':'classic';
   const E=G.PKMSVVCoopEconomy,conf=E?.config,save=G.DB?.save;
   if(!conf?.roomArt?.slots)return;
+  if(modular)for(const part of conf.roomArt.sourceLayers||[]){
+   const img=document.createElement('img');
+   img.className='pkmsvv-lab-source-layer';
+   img.src='images/coop-lab/source-cutouts-qa/'+part.file;
+   img.alt='';img.draggable=false;img.loading='eager';
+   img.dataset.labLayer=part.id;
+   img.dataset.labStation=part.station;
+   img.dataset.labSlot=part.slot;
+   img.style.left=part.x/960*100+'%';
+   img.style.top=part.y/672*100+'%';
+   img.style.width=part.w/960*100+'%';
+   img.style.height=part.h/672*100+'%';
+   img.setAttribute('aria-hidden','true');
+   stage.prepend(img);
+  }
   const owned=E.normal(save);
   for(const [slot,coords] of Object.entries(conf.roomArt.slots)){
    const itemId=owned.equippedDecorBySlot?.[slot];
    const item=conf.items.find(it=>it.id===itemId);
    if(!item?.artReady||!item.spritePath||!item.slots.includes(slot))continue;
+   // The original center machine has its own alpha-cutout in preview mode.
+   if(modular&&item.id==='machine_old')continue;
    const image=document.createElement('img');image.className='pkmsvv-lab-furniture';
    image.src=item.spritePath;image.alt='';image.loading='eager';
    image.dataset.furniture=item.id;image.dataset.furnitureSlot=slot;

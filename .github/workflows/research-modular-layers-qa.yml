@@ -1,0 +1,41 @@
+name: Research Laboratory Source Sprites QA - never production
+on:
+  push:
+    branches: [feature/research-modular-sprites-qa-20261120]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install art tooling
+        run: npm install --no-audit --no-fund
+      - name: Validate lab scene and sprite registry
+        run: node --test tests/research-source-extraction.test.cjs
+      - name: Render exact original cutouts and draft empty background
+        run: node scripts/extract-research-layers.cjs dist/research-modular-sprite-preview
+      - name: Verify all nine sprites independent
+        run: |
+          node - <<'NODE'
+          const fs=require('fs'),path=require('path'),d='dist/research-modular-sprite-preview';
+          const m=JSON.parse(fs.readFileSync(path.join(d,'manifest.json'),'utf8'));
+          if(m.layers.length!==9||!m.readyForLayerPreview||m.readyForFurnitureSwap)
+            throw Error('Research Lab art approval state is wrong');
+          for(const n of [...m.layers.map(x=>x.file),'clean-backdrop.png']){
+            const f=path.join(d,n);
+            if(!fs.existsSync(f)||fs.statSync(f).size<500)throw Error('Missing '+n);
+          }
+          console.log('Nine independent original lab sprites validated');
+          NODE
+      - name: Upload art QA artifacts only
+        uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-Research-Lab-Split-Sprites-QA
+          path: dist/research-modular-sprite-preview/
+          retention-days: 7
