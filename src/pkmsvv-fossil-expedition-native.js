@@ -20,7 +20,8 @@ G.PKMSVVFossilExpedition=(()=>{
  let current=null,active=false,finished=false,bossEnemy=null,rotomAnimator=null,
   uiButton=null,lastAction=-100,lastBossHint=-100,sendClock=0,scanClock=0,
   waveClock=0,waveIndex=0,duelClock=0,cachedThreats=0,rendered=new Set(),lastFinish=null,
-  machineTarget=null,speedStage=-1,speedClock=0,distressNode=null,distressUntil=0,distressShown=false;
+  machineTarget=null,speedStage=-1,speedClock=0,distressNode=null,distressUntil=0,distressShown=false,
+  worldCollider=null,escortRoute=[],escortRepathAt=0;
  const botTimes=new Map();
  const room=()=>G.Social?.room;
  const allBots=()=>G.Coop?.puppets?.().filter(p=>p.lanBot&&!p.dead)||[];
@@ -89,45 +90,62 @@ function updateRotomSOS(){
  if(!distressNode||!current)return;
  distressNode.style.display=current.phase==='rescue'&&current.elapsed<distressUntil?'flex':'none';
 }
- function passable(x,y,r){
-  try{return (!G.World?.isFree||G.World.isFree(x,y,r))&&!G.World?.isLiquid?.(x,y);}
+ function passable(x,y,r=18){
+  try{return typeof G.World?.isFree==='function'&&
+    G.World.isFree(x,y,r)!==false&&!G.World?.isLiquid?.(x,y);}
   catch(_){return false;}
  }
- // Rotom needs enough space for an approach, not merely one free tile directly
- // inside a tree trunk. All expensive checks run ONCE at mission creation.
- function rescueAccessible(p,clearance){
-  if(!passable(p.x,p.y,clearance))return false;
-  let sides=0;
-  for(let k=0;k<8;k++){
-   const angle=k*Math.PI/4;
-   if(passable(p.x+Math.cos(angle)*55,p.y+Math.sin(angle)*55,20)&&
-      passable(p.x+Math.cos(angle)*108,p.y+Math.sin(angle)*108,22))sides++;
+ // All objective artwork needs room, not just one empty centre tile.
+ function footprintFree(p,kind){
+  const bounds=kind==='machine'?[-86,86,-138,34,43]:
+   kind==='rotom'?[-78,78,-104,36,39]:[-68,68,-106,34,34];
+  const [left,right,top,bottom,step]=bounds;
+  for(let y=top;y<=bottom;y+=step)
+   for(let x=left;x<=right;x+=step)
+    if(!passable(p.x+x,p.y+y,17))return false;
+  let approaches=0;
+  for(let i=0;i<8;i++){
+   const angle=i*Math.PI/4,dx=Math.cos(angle),dy=Math.sin(angle);
+   if(passable(p.x+dx*105,p.y+dy*105,20)&&
+      passable(p.x+dx*152,p.y+dy*152,20))approaches++;
   }
-  return sides>=4;
+  return approaches>=5;
  }
- function safePoint(p,forRescue=false,accept=()=>true){
-  if(!G.World?.isFree)return p;
-  if(!forRescue){
-   if(passable(p.x,p.y,32))return p;
-   for(let radius=32;radius<=220;radius+=24)
-    for(let k=0;k<16;k++){
-     const a=k*Math.PI/8,t={x:p.x+Math.cos(a)*radius,y:p.y+Math.sin(a)*radius};
-     if(passable(t.x,t.y,32))return t;
-    }
-   return p;
-  }
-  for(const clearance of [76,60,44]){
-   if(accept(p)&&rescueAccessible(p,clearance))return p;
-   for(let radius=48;radius<=768;radius+=32)
-    for(let k=0;k<24;k++){
-     const a=k*Math.PI/12,t={x:p.x+Math.cos(a)*radius,y:p.y+Math.sin(a)*radius};
-     if(accept(t)&&rescueAccessible(t,clearance))return t;
-    }
-  }
-  // In extremely dense terrain, use the nearest reachable point that keeps
-  // enough spacing from the other mission objectives.
-  const fallback=safePoint(p,false);
-  return accept(fallback)?fallback:p;
+ function safePoint(p,kind='site',accept=()=>true,minRadius=0){
+  if(typeof G.World?.isFree!=='function')return null;
+  const valid=v=>accept(v)&&footprintFree(v,kind);
+  if(minRadius===0&&valid(p))return p;
+  for(let radius=Math.max(48,minRadius);radius<=1200;radius+=44)
+   for(let i=0;i<32;i++){
+    const angle=i*Math.PI/16;
+    const v={x:p.x+Math.cos(angle)*radius,y:p.y+Math.sin(angle)*radius};
+    if(valid(v))return v;
+   }
+  return null; // Never fall back onto untested trees/rocks.
+ }
+ // World.isFree is also the native player/enemy movement collision gate.
+ function installMachineCollider(){
+  const world=G.World;
+  if(typeof world?.isFree!=='function')return false;
+  const original=world.isFree;
+  const wrapper=function(x,y,r=0){
+   if(active&&current&&Number.isFinite(x)&&Number.isFinite(y)){
+    const m=current.machine,extra=Math.max(0,Number(r)||0);
+    if(x>m.x-53-extra&&x<m.x+53+extra&&
+       y>m.y-99-extra&&y<m.y+10+extra)return false;
+   }
+   return original.apply(this,arguments);
+  };
+  try{
+   world.isFree=wrapper;
+   if(world.isFree!==wrapper)return false;
+   worldCollider={world,original,wrapper};return true;
+  }catch(_){return false;}
+ }
+ function restoreMachineCollider(){
+  if(worldCollider?.world?.isFree===worldCollider.wrapper)
+   worldCollider.world.isFree=worldCollider.original;
+  worldCollider=null;
  }
  function begin({mode}={}){
   end();finished=false;lastFinish=null;lastAction=-100;lastBossHint=-100;scanClock=sendClock=waveClock=duelClock=speedClock=0;speedStage=-1;waveIndex=0;distressUntil=0;distressShown=false;botTimes.clear();
@@ -137,22 +155,40 @@ function updateRotomSOS(){
    G.UI?.toast?.(tr('Co-op hóa thạch cần 2–4 thành viên.','Fossil Co-op requires 2–4 party members.'),3000);
    return false;
   }
-  const origin=safePoint({x:0,y:0}),sites=C.SITE_OFFSETS.map(([x,y])=>safePoint({x:origin.x+x,y:origin.y+y}));
-  const desiredRotom={x:origin.x+C.ROTOM_OFFSET[0],y:origin.y+C.ROTOM_OFFSET[1]};
-  const spaced=points=>point=>Math.hypot(point.x-origin.x,point.y-origin.y)>=900&&
-   points.every(site=>Math.hypot(point.x-site.x,point.y-site.y)>=550);
-  const rotomPoint=safePoint(desiredRotom,true,spaced(sites));
-  // The pure core still validates mission geometry; do NOT silently throw
-  // away safe Rotom placement by reverting to an untested raw spawn.
-  let session=C.begin({members:r.members,roomId:r.id,hostUid:r.host,origin,sites,rotomPoint});
-  if(!session.ok){
-   const fixedSites=C.SITE_OFFSETS.map(([x,y])=>({x:origin.x+x,y:origin.y+y}));
-   const rescueSpot=safePoint(desiredRotom,true,spaced(fixedSites));
-   session=C.begin({members:r.members,roomId:r.id,hostUid:r.host,
-    origin,sites:fixedSites,rotomPoint:rescueSpot});
+  // Deterministic host/guest world coordinates, away from spawn (0,0).
+  const origin=safePoint({x:0,y:0},'machine',p=>Math.hypot(p.x,p.y)>=290,310);
+  if(!origin){
+   G.UI?.toast?.(tr('Không tìm được chỗ trống cho máy phục hồi. Hãy thử lại.',
+    'No clear restorer location found. Please retry.'),3500);return false;
   }
+  const sites=[];
+  for(const [x,y] of C.SITE_OFFSETS){
+   const p=safePoint({x:origin.x+x,y:origin.y+y},'site',
+    t=>Math.hypot(t.x-origin.x,t.y-origin.y)>=1500&&
+      sites.every(q=>Math.hypot(t.x-q.x,t.y-q.y)>=2550));
+   if(!p){
+    G.UI?.toast?.(tr('Không đủ chỗ trống để bố trí ba điểm khai thác.',
+     'No safe locations for all three excavation sites.'),3500);return false;
+   }
+   sites.push(p);
+  }
+  const desiredRotom={x:origin.x+C.ROTOM_OFFSET[0],y:origin.y+C.ROTOM_OFFSET[1]};
+  const rotomPoint=safePoint(desiredRotom,'rotom',p=>
+   Math.hypot(p.x-origin.x,p.y-origin.y)>=900&&
+   sites.every(site=>Math.hypot(p.x-site.x,p.y-site.y)>=600));
+  if(!rotomPoint){
+   G.UI?.toast?.(tr('Không tìm được vị trí cứu Rotom không vướng vật cản.',
+    'No obstacle-free Rotom rescue location.'),3500);return false;
+  }
+  const session=C.begin({members:r.members,roomId:r.id,hostUid:r.host,
+   origin,sites,rotomPoint});
   if(!session.ok)return false;
   current=session;active=true;
+  if(!installMachineCollider()){
+   G.UI?.toast?.(tr('Không thể bật va chạm cho máy phục hồi.',
+    'Could not activate restorer collision.'),3500);
+   end();return false;
+  }
   machineTarget={x:current.machine.x,y:current.machine.y,r:54,level:1,dead:false,
    _vx:0,_vy:0,_pkmsvvFossilMachine:true};
   if(G.Sprites?.Animator)try{
@@ -569,13 +605,17 @@ function updateRotomSOS(){
   return false;
  }
  function end(){
-  active=false;finished=true;current=null;bossEnemy=null;rotomAnimator=null;
+  active=false;restoreMachineCollider();finished=true;current=null;bossEnemy=null;rotomAnimator=null;
+  escortRoute=[];escortRepathAt=0;
   uiButton?.remove();uiButton=null;distressNode?.remove();distressNode=null;distressShown=false;
   rendered.clear();botTimes.clear();machineTarget=null;speedStage=-1;
  }
  return {nativeReady:ready,begin,tick,perform,botGoal,botInteract,targetFor,onEvent,
   drawables,beginFrame,drawMissing,hud,reward,end,
   get active(){return active},get session(){return current},get lastFinish(){return lastFinish},
+  get machineCollisionActive(){return !!worldCollider&&G.World?.isFree===worldCollider.wrapper;},
+  get objectivePositionsSafe(){return !!current&&[...current.sites.map(p=>[p,'site']),
+   [current.rotom,'rotom']].every(([p,k])=>footprintFree(p,k));},
   get spriteReady(){return excavations.complete&&excavations.naturalWidth>0&&
    machines.complete&&machines.naturalWidth===256&&machines.naturalHeight===128&&
    v3.complete&&v3.naturalWidth===464}};
