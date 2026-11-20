@@ -268,15 +268,25 @@ const {startServer}=require('../lan-server/server.cjs');
   // Actual stage geometry: Rotom and all mining sites must clear scenery.
   const worldGeometry=await page.evaluate(()=>{
    const expedition=G.PKMSVVFossilExpedition,s=expedition.session;
+   const pl=G.Game.player,before={x:pl.x,y:pl.y};
+   pl.x=s.machine.x;pl.y=s.machine.y-45;
+   const collision=G.World.collide(pl),radius=Number(pl.r)||12;
+   const playerPushed=collision&&
+    (pl.x<=s.machine.x-53-radius||pl.x>=s.machine.x+53+radius||
+     pl.y<=s.machine.y-99-radius||pl.y>=s.machine.y+10+radius);
+   pl.x=before.x;pl.y=before.y;
    return {safe:expedition.objectivePositionsSafe,diagnostics:expedition.objectivePositionDiagnostics,
+    playerPushed,
     machineSolid:!G.World.isFree(s.machine.x,s.machine.y-45,12),
     collisionActive:expedition.machineCollisionActive,
     machineAwayFromSpawn:Math.hypot(s.machine.x,s.machine.y)>=290};
   });
   console.log('FOSSIL_OBJECTIVE_WORLD_DIAGNOSTIC='+JSON.stringify(worldGeometry));
   assert.deepEqual({safe:worldGeometry.safe,machineSolid:worldGeometry.machineSolid,
-   collisionActive:worldGeometry.collisionActive,machineAwayFromSpawn:worldGeometry.machineAwayFromSpawn},{
-   safe:true,machineSolid:true,collisionActive:true,machineAwayFromSpawn:true
+   collisionActive:worldGeometry.collisionActive,machineAwayFromSpawn:worldGeometry.machineAwayFromSpawn,
+   playerPushed:worldGeometry.playerPushed},{
+   safe:true,machineSolid:true,collisionActive:true,machineAwayFromSpawn:true,
+   playerPushed:true
   },'Restorer and mining/Rotom positions need native collision and clearance');
   const guidance=await page.evaluate(()=>{
    const s=G.PKMSVVFossilExpedition.session;
