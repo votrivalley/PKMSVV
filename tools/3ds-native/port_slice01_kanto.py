@@ -97,4 +97,43 @@ patch("src/platform/3ds/app.cpp",
       '     "Arceus llega a los 20 minutos y aquí SÍ se le puede derrotar: tumba a sus 8 legendarios y bajará la guardia. Difícil: ¡medalla si ganas!"},',
       '{"Gốc (QA)", "Giữ cơ chế PokéSurvivor",\n'
       '     "Dùng kiểm thử engine gốc. Chế độ này chưa phải bản đồ hoặc cốt truyện Pokémon Chuyển Sinh."},')
+
+# A distinct title and SD save folder prevent the first real gameplay port
+# from sharing state with the earlier unmodified engine QA installation.
+patch("Makefile", "pkmsvv-3ds-qa", "pkmsvv-kanto01")
+patch("Makefile", "APP_TITLE\\t:=\\tPKMSVV 3DS QA",
+      "APP_TITLE\\t:=\\tPKMSVV Kanto 0.1")
+patch("src/core/version.h", 'kGameTitle = "PKMSVV 3DS QA"',
+      'kGameTitle = "PKMSVV Kanto 0.1"')
+patch("src/platform/3ds/main.cpp",
+      "sdmc:/3ds/pkmsvv-3ds-qa", "sdmc:/3ds/pkmsvv-kanto01",2)
+patch("tools/cia/app.rsf", "ProductCode             : CTR-H-PCS3",
+      "ProductCode             : CTR-H-PK01")
+patch("tools/cia/app.rsf", "UniqueId                : 0xF5B13",
+      "UniqueId                : 0xF5B14")
+patch("tools/make_cia.sh", "pkmsvv-3ds-qa", "pkmsvv-kanto01",4)
+patch("tools/make_cia.sh", '-s "PKMSVV 3DS QA"', '-s "PKMSVV Kanto 0.1"')
+
+# Native gameplay instrumentation allows emulator QA to inspect real randomly
+# selected Gen1 wave and boss definitions, beyond code-grep or compile PASS.
+patch("src/platform/3ds/main.cpp",
+      '  if (at.log) {\\n    std::fprintf(at.log, "cargas de sprites durante la partida:',
+      '  if (at.log) {\\n'
+      '    if (g->cfg.kanto_only) {\\n'
+      '      int total = 0, outsiders = 0;\\n'
+      '      for (int tier = 0; tier < g->ncast; ++tier) {\\n'
+      '        for (int i = 0; i < g->cast[tier].n; ++i) {\\n'
+      '          const Mon* m = mon_by_dex(g->cast[tier].list[i].dex);\\n'
+      '          ++total; if (!m || m->gen != 1 || m->reg != 0) ++outsiders;\\n'
+      '        }\\n'
+      '      }\\n'
+      '      for (int i = 0; i < g->nbosses; ++i) {\\n'
+      '        const Mon* m = mon_by_dex(g->bosses[i].dex);\\n'
+      '        ++total; if (!m || m->gen != 1 || m->reg != 0) ++outsiders;\\n'
+      '      }\\n'
+      '      std::fprintf(at.log, "PKMSVV_KANTO_CAST_%s total=%d outsiders=%d\\\\n",\\n'
+      '                   total > 0 && !outsiders ? "PASS" : "FAIL", total, outsiders);\\n'
+      '    }\\n'
+      '    std::fprintf(at.log, "cargas de sprites durante la partida:')
+
 print("PKMSVV_NATIVE_KANTO_SLICE01_APPLIED: SOLO_MODE_NORMAL KANTO_GEN1_ONLY + MENU_VI + RANDOM_BOSS_KANTO")
