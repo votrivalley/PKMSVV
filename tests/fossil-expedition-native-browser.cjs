@@ -268,12 +268,14 @@ const {startServer}=require('../lan-server/server.cjs');
   // Actual stage geometry: Rotom and all mining sites must clear scenery.
   const worldGeometry=await page.evaluate(()=>{
    const expedition=G.PKMSVVFossilExpedition,s=expedition.session;
-   return {safe:expedition.objectivePositionsSafe,
+   return {safe:expedition.objectivePositionsSafe,diagnostics:expedition.objectivePositionDiagnostics,
     machineSolid:!G.World.isFree(s.machine.x,s.machine.y-45,12),
     collisionActive:expedition.machineCollisionActive,
     machineAwayFromSpawn:Math.hypot(s.machine.x,s.machine.y)>=290};
   });
-  assert.deepEqual(worldGeometry,{
+  console.log('FOSSIL_OBJECTIVE_WORLD_DIAGNOSTIC='+JSON.stringify(worldGeometry));
+  assert.deepEqual({safe:worldGeometry.safe,machineSolid:worldGeometry.machineSolid,
+   collisionActive:worldGeometry.collisionActive,machineAwayFromSpawn:worldGeometry.machineAwayFromSpawn},{
    safe:true,machineSolid:true,collisionActive:true,machineAwayFromSpawn:true
   },'Restorer and mining/Rotom positions need native collision and clearance');
   const guidance=await page.evaluate(()=>{
