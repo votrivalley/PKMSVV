@@ -1,0 +1,24 @@
+name: Fossil Rotom Geometry + Pippi Rates - Isolated QA
+on:
+  push:
+    branches:
+      - fix/fossil-rotom-collision-pikachu-20261121
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check syntax
+        run: |
+          node --check src/pkmsvv-fossil-expedition-native.js
+          node --check src/pkmsvv-pippi.js
+          node --check tests/fossil-objective-path.test.cjs
+      - name: Isolated mission navigation, hitboxes and Pikachu odds
+        run: node --test tests/fossil-objective-path.test.cjs tests/fossil-expedition-core.test.cjs tests/pippi-companion.test.cjs
