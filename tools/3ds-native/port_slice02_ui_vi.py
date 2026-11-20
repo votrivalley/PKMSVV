@@ -108,4 +108,7 @@ patch("src/core/game.cpp",
       '"— %s —"',
       '"Khu vực: %s"')
 
+patch("src/core/version.h", 'kGameTitle = "PKMSVV Kanto 0.1"', 'kGameTitle = "PKMSVV Kanto 0.2"')
+patch("Makefile", "APP_TITLE\t:=\tPKMSVV Kanto 0.1", "APP_TITLE\t:=\tPKMSVV Kanto 0.2")
+
 print("PKMSVV_KANTO02_VI_FIRST_SCREENS_APPLIED")
