@@ -11,7 +11,7 @@ function scene(blockers=[]){
  const nativeFree=function(x,y,r=0){
   return blockers.every(b=>x+r<b.x0||x-r>b.x1||y+r<b.y0||y-r>b.y1);
  };
- const World={isFree:nativeFree,isLiquid(){return false;}};
+ const World={isFree:nativeFree,isLiquid(){return false;},collide(){return false;}};
  const room={mode:'fossil_lab',id:'qa-room',host:'host',members:[
   {uid:'host',bot:false},{uid:'ai1',bot:true}]};
  const player={x:0,y:0,dead:false,hp:100,maxHp:100};
@@ -56,14 +56,19 @@ test('excavation, Rotom and restorer footprints avoid native rocks and trees',()
  a.exp.end();
 });
 test('physical restorer rejects movement until mission ends',()=>{
- const a=scene();const original=a.World.isFree;
+ const a=scene();const original=a.World.isFree,originalCollide=a.World.collide;
  assert.equal(a.exp.begin({mode:'fossil_lab'}),true);
  const m=a.exp.session.machine;
  assert.equal(a.exp.machineCollisionActive,true);
  assert.equal(a.World.isFree(m.x,m.y-45,12),false);
  assert.equal(a.World.isFree(m.x+110,m.y-45,12),true);
+ const player={x:m.x,y:m.y-45,r:13};
+ assert.equal(a.World.collide(player),true,'native World.collide must block player motion');
+ assert.ok(player.x<m.x-53-player.r||player.x>m.x+53+player.r||
+  player.y<m.y-99-player.r||player.y>m.y+10+player.r);
  a.exp.end();
  assert.equal(a.World.isFree,original);
+ assert.equal(a.World.collide,originalCollide);
  assert.equal(a.World.isFree(m.x,m.y-45,12),true);
 });
 test('Rotom escorts around a blocked rock wall without teleporting or clipping',()=>{
