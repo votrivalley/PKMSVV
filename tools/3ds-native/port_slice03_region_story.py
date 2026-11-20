@@ -267,6 +267,13 @@ patch("src/platform/3ds/main.cpp",
       '  if (at.menu) { app.start_menu_demo(); at.on = false; }\n'
       '  if (at.pk_region_demo) { app.start_pkm_region_demo(); at.on = false; }')
 
+patch("src/platform/3ds/app.cpp",
+      'r_->text("PKMSVV · KANTO", 8, 4, 0.48f, C_GOLD);',
+      'r_->text("PKMSVV · 3DS", 8, 4, 0.48f, C_GOLD);')
+patch("src/platform/3ds/app.cpp",
+      'POKÉMON CHUYỂN SINH 3DS · KANTO ALPHA 02',
+      'POKÉMON CHUYỂN SINH 3DS · REGION ALPHA 03')
+
 # Update app name in the separate 3DS install metadata, not upstream 3DSX.
 patch("src/core/version.h",
       'kGameTitle = "PKMSVV Kanto 0.2"',
