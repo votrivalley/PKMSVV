@@ -16,20 +16,20 @@ jobs:
     timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
-      - name: Download exact Kanto Badge Alpha04 binary from green build 44815401947
+      - name: Download exact Kanto Badge Alpha04 binary from green build 44816402051
         uses: actions/download-artifact@v4
         with:
           name: PKMSVV-3DS-KANTO-BADGE-ALPHA04
           repository: votrivalley/PKMSVV
-          run-id: 44815401947
+          run-id: 44816402051
           github-token: ${{ github.token }}
           path: qa-binary
       - name: Confirm exact Kanto CIA and new isolated product identity
         shell: bash
         run: |
           set -euo pipefail
-          echo '72dcfddafb083b4e653f2a61f3b5ba1e4119af56b8d1010fb09d9853b23c7fc0  qa-binary/pkmsvv-kanto01.cia' | sha256sum -c -
-          echo '5f192dc88aa418235fff6fd376db9f2cf0e421e67bb3e083187ab14c95307f64  qa-binary/pkmsvv-kanto01.3dsx' | sha256sum -c -
+          echo '8f9b46309e65ac51a61032754992c1bb740151ccb7dfcdca9258768bf30dce66  qa-binary/pkmsvv-kanto01.cia' | sha256sum -c -
+          echo '95f34e86e31f4567c8caf67fa54f13029580be1dd8e8a159b35f72194541558a  qa-binary/pkmsvv-kanto01.3dsx' | sha256sum -c -
           python3 - <<'PY'
           from pathlib import Path
           c=Path('qa-binary/pkmsvv-kanto01.cia').read_bytes()
