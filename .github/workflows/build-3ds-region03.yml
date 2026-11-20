@@ -49,6 +49,9 @@ jobs:
           python3 tools/3ds-native/port_slice02_ui_vi.py native-3ds
           python3 tools/3ds-native/port_slice02_live_qa.py native-3ds
           python3 tools/3ds-native/port_slice03_region_story.py native-3ds
+          python3 tools/3ds-native/port_slice03_kanto_backdrop.py native-3ds
+          grep -Fq 'PKM_KANTO_WALKERS' native-3ds/src/platform/3ds/app.cpp
+          grep -Fq 'scene != SC_PKM_REGION' native-3ds/src/platform/3ds/app.cpp
           grep -Fq 'go(SC_PKM_REGION)' native-3ds/src/platform/3ds/app.cpp
           grep -Fq 'go(SC_PKM_STORY)' native-3ds/src/platform/3ds/app.cpp
           grep -Fq 'pkmsvv_native_region_playable(pick)' native-3ds/src/platform/3ds/app.cpp
