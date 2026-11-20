@@ -126,8 +126,10 @@ function updateRotomSOS(){
  // World.isFree is also the native player/enemy movement collision gate.
  function installMachineCollider(){
   const world=G.World;
-  if(typeof world?.isFree!=='function')return false;
-  const original=world.isFree;
+  // Player.move() uses World.collide(actor), NOT World.isFree().
+  // Both gates must block the machine for real native movement.
+  if(typeof world?.isFree!=='function'||typeof world?.collide!=='function')return false;
+  const original=world.isFree,originalCollide=world.collide;
   const wrapper=function(x,y,r=0){
    if(active&&current&&Number.isFinite(x)&&Number.isFinite(y)){
     const m=current.machine,extra=Math.max(0,Number(r)||0);
@@ -136,15 +138,50 @@ function updateRotomSOS(){
    }
    return original.apply(this,arguments);
   };
+  const collideWrapper=function(actor){
+   const nativeHit=originalCollide.apply(this,arguments);
+   if(!active||!current||!actor||!Number.isFinite(actor.x)||
+      !Number.isFinite(actor.y))return nativeHit;
+   const m=current.machine,left=m.x-53,right=m.x+53,
+    top=m.y-99,bottom=m.y+10;
+   const radius=Math.max(1,Number(actor.r)||12);
+   const closestX=Math.max(left,Math.min(right,actor.x));
+   const closestY=Math.max(top,Math.min(bottom,actor.y));
+   const dx=actor.x-closestX,dy=actor.y-closestY,d2=dx*dx+dy*dy;
+   if(d2>=radius*radius)return nativeHit;
+   if(d2>1e-6){
+    const distance=Math.sqrt(d2),push=(radius-distance)/distance;
+    actor.x+=dx*push;actor.y+=dy*push;
+   }else{
+    // Circle centre inside the machine rectangle: expel via closest edge.
+    const sides=[actor.x-left,right-actor.x,actor.y-top,bottom-actor.y];
+    const min=Math.min(...sides);
+    if(min===sides[0])actor.x=left-radius;
+    else if(min===sides[1])actor.x=right+radius;
+    else if(min===sides[2])actor.y=top-radius;
+    else actor.y=bottom+radius;
+   }
+   return true;
+  };
   try{
    world.isFree=wrapper;
-   if(world.isFree!==wrapper)return false;
-   worldCollider={world,original,wrapper};return true;
-  }catch(_){return false;}
+   world.collide=collideWrapper;
+   if(world.isFree!==wrapper||world.collide!==collideWrapper){
+    world.isFree=original;world.collide=originalCollide;return false;
+   }
+   worldCollider={world,original,wrapper,originalCollide,collideWrapper};return true;
+  }catch(_){
+   try{world.isFree=original;world.collide=originalCollide;}catch(__){}
+   return false;
+  }
  }
  function restoreMachineCollider(){
-  if(worldCollider&&worldCollider.world?.isFree===worldCollider.wrapper)
-   worldCollider.world.isFree=worldCollider.original;
+  if(worldCollider){
+   if(worldCollider.world?.isFree===worldCollider.wrapper)
+    worldCollider.world.isFree=worldCollider.original;
+   if(worldCollider.world?.collide===worldCollider.collideWrapper)
+    worldCollider.world.collide=worldCollider.originalCollide;
+  }
   worldCollider=null;
  }
  function begin({mode}={}){
