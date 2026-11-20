@@ -20,11 +20,17 @@
 - No Web JSON/Android Save Guardian compatibility is implied.
 
 ## Acceptance checklist
-- [ ] DevkitARM builds both .cia and .3dsx.
-- [ ] CIA retains private QA Title ID `000400000F5B1400` and product code `CTR-H-PK01`.
-- [ ] Azahar 12-second native Hoenn run: Gen3 cast, living Gen3 enemies, 30-minute boss config Jirachi (#385).
-- [ ] Azahar synthetic native boss gate: 15m tracked boss -> Badge -> Jirachi -> victory.
-- [ ] Region menu loads saved Johto Badge from backup and allows Hoenn selection.
+- [x] DevkitARM builds both .cia and .3dsx.
+- [x] CIA retains private QA Title ID `000400000F5B1400` and product code `CTR-H-PK01`.
+- [x] Azahar 12-second native Hoenn run: Gen3 cast, living Gen3 enemies, 30-minute boss config Jirachi (#385).
+- [x] Azahar synthetic native boss gate: 15m tracked boss -> Badge -> Jirachi -> victory.
+- [x] Azahar captures nonblank Region menu while Johto Badge backup is present. The screenshot automation does not yet assert exact unlock text or touch selection.
+- [ ] Interactive Hoenn selection and SD Badge persistence on real New 3DS hardware.
 - [ ] Real New 3DS 30-minute endurance, FBI CIA install and SD write/restart **not yet tested**.
 
 PR remains Draft. Do not merge/deploy as public stable release.
+
+## Verified CI evidence
+- Compile + CIA + 3DSX: [Actions #44831720515](https://github.com/votrivalley/PKMSVV/actions/runs/44831720515) SUCCESS, artifact `PKMSVV-3DS-KANTO-JOHTO-HOENN-ALPHA06`.
+- Azahar: [Actions #44832065192](https://github.com/votrivalley/PKMSVV/actions/runs/44832065192) SUCCESS. Native 12s Hoenn: 43/43 cast Gen3, 12 living enemies, 0 outsiders, 60 FPS. Boss config Wailord #321 @900 and Jirachi #385 @1800 (one seeded random sample). Synthetic actual engine kill-gate test PASS. Menu screenshot captured but its badge text was not machine-asserted.
+- Hardware endurance, CIA FBI install, button-touch selection, and actual SD writes remain pending.
