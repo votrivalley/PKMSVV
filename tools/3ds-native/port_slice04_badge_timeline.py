@@ -244,6 +244,10 @@ patch("src/core/version.h", 'kGameTitle = "PKMSVV Region 0.3"',
 patch("Makefile", "APP_TITLE\t:=\tPKMSVV Region 0.3",
       "APP_TITLE\t:=\tPKMSVV Region 0.4")
 patch("src/platform/3ds/app.cpp",
+      "Alpha 03 · Khám phá không phải Arena",
+      "Alpha 04 · Huy hiệu Kanto QA")
+
+patch("src/platform/3ds/app.cpp",
       "POKÉMON CHUYỂN SINH 3DS · REGION ALPHA 03",
       "POKÉMON CHUYỂN SINH 3DS · REGION ALPHA 04")
 
