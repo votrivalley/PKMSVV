@@ -73,7 +73,7 @@ jobs:
           grep -Fq 'if (g.cfg.kanto_only)' native-3ds/src/core/enemy.cpp
           grep -Fq 'g.nbosses = 2' native-3ds/src/core/enemies.cpp
           grep -Fq 'if (!cfg.kanto_only)' native-3ds/src/core/game.cpp
-          grep -Fq 'PKMSVV_KANTO_LIVE_' native-3ds/src/platform/3ds/main.cpp
+          grep -Fq 'PKMSVV_REGION05_LIVE_' native-3ds/src/platform/3ds/main.cpp
           grep -Fq 'cfg.kanto_only' native-3ds/src/platform/3ds/app.cpp
           grep -Fq 'g.cfg.kanto_only' native-3ds/src/core/enemies.cpp
           cp tools/3ds-native/qa_banner.py native-3ds/tools/cia/gen_banner.py
