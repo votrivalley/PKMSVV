@@ -51,6 +51,8 @@ jobs:
           python3 tools/3ds-native/port_slice03_region_story.py native-3ds
           python3 tools/3ds-native/port_slice03_kanto_backdrop.py native-3ds
           python3 tools/3ds-native/port_slice04_badge_timeline.py native-3ds
+          python3 tools/3ds-native/port_slice04_gate_test.py native-3ds
+          grep -Fq 'PKMSVV_REGION04_GATE_AFTER_' native-3ds/src/platform/3ds/main.cpp
           grep -Fq 'PKMSVV_REGION_V1' native-3ds/src/platform/3ds/app.cpp
           grep -Fq 'pkmsvv_final_boss_id' native-3ds/src/core/enemy.cpp
           grep -Fq 'pkmsvv_badge_claimed && !g.boss_alive()' native-3ds/src/core/spawner.cpp
