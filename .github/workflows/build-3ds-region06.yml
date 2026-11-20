@@ -62,7 +62,7 @@ jobs:
           grep -Fq 'pkmsvv_region_gen' native-3ds/src/core/enemy.cpp
           grep -Fq 'pkmsvv_load_johto_badge' native-3ds/src/platform/3ds/app.cpp
           grep -Fq 'g.cfg.pkmsvv_region_gen' native-3ds/src/core/enemies.cpp
-          grep -Fq 'final->dex == (at.pk_johto_qa ? 249 : 150)' native-3ds/src/platform/3ds/main.cpp
+          grep -Fq 'final->dex == (at.pk_hoenn_qa ? 385' native-3ds/src/platform/3ds/main.cpp
           grep -Fq 'PKMSVV_REGION04_GATE_AFTER_' native-3ds/src/platform/3ds/main.cpp
           grep -Fq 'PKMSVV_REGION_V1' native-3ds/src/platform/3ds/app.cpp
           grep -Fq 'pkmsvv_final_boss_id' native-3ds/src/core/enemy.cpp
@@ -78,7 +78,7 @@ jobs:
           grep -Fq 'if (g.cfg.kanto_only)' native-3ds/src/core/enemy.cpp
           grep -Fq 'g.nbosses = 2' native-3ds/src/core/enemies.cpp
           grep -Fq 'if (!cfg.kanto_only)' native-3ds/src/core/game.cpp
-          grep -Fq 'PKMSVV_REGION05_LIVE_' native-3ds/src/platform/3ds/main.cpp
+          grep -Fq 'PKMSVV_REGION06_LIVE_' native-3ds/src/platform/3ds/main.cpp
           grep -Fq 'cfg.kanto_only' native-3ds/src/platform/3ds/app.cpp
           grep -Fq 'g.cfg.kanto_only' native-3ds/src/core/enemies.cpp
           cp tools/3ds-native/qa_banner.py native-3ds/tools/cia/gen_banner.py
