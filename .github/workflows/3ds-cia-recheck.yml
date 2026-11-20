@@ -70,9 +70,15 @@ jobs:
             exit 1
           fi
           grep -q 'PKMSVV 3DS QA' "$log"
-          grep -q 'FIN' "$log"
-          test "$code" = 0
-          echo 'AZAHAR_3DSX_AUTOTEST_BOOT_PASS (CIA installation not simulated)'
+          # Azahar is a GUI and may stay open after its 3DS guest ends;
+          # timeout(124)/kill-after(137) are expected *host window* statuses.
+          # Trust the complete in-game FIN record, not the GUI exit code.
+          grep -q '^FIN · 12 s' "$log"
+          case "$code" in
+            0|124|137) ;;
+            *) echo "Unexpected Azahar launcher exit: $code"; exit 1;;
+          esac
+          echo 'AZAHAR_3DSX_AUTOTEST_BOOT_PASS: 12s gameplay completed (CIA installation not simulated)'
       - name: Upload recheck evidence regardless of runtime outcome
         if: always()
         uses: actions/upload-artifact@v4
