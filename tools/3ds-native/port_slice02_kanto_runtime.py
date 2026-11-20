@@ -86,7 +86,7 @@ patch("src/core/enemies.cpp",
 # Judgment victory, no false Chapter 2 unlock).
 patch("src/core/game.cpp",
       "  if (state != ST_PLAYING && state != ST_CHOICE) return;\n  music = int8_t(",
-      "  if (cfg.kanto_only && time >= 1800 && spawner.boss_idx >= 2 && !boss_alive()) {\n"
+      "  if (cfg.kanto_only && time >= 1800 && spawner.boss_idx >= 2 && pl().bosses >= 2 && !boss_alive()) {\n"
       "    say(\"Đã đánh bại Mewtwo! Kết thúc bản thử Kanto.\", 4.0f);\n"
       "    extern void game_end_run(Game& g, bool dead);\n"
       "    game_end_run(*this, false);\n"
