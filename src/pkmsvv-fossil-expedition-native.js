@@ -710,11 +710,17 @@ function updateRotomSOS(){
   get active(){return active},get session(){return current},get lastFinish(){return lastFinish},
   get machineCollisionActive(){return !!worldCollider&&G.World?.isFree===worldCollider.wrapper;},
   get objectivePositionDiagnostics(){
-   return current?[...current.sites.map((point,i)=>({type:'site'+(i+1),point,
-    safe:footprintFree(point,'site')})),{type:'rotom',point:current.rotom,
-    safe:footprintFree(current.rotom,'rotom')},
-    {type:'machine',point:current.machine,
-     originalCenterFree:!!worldCollider?.original?.call(worldCollider.world,current.machine.x,current.machine.y,20)}]:[];
+   if(!current)return [];
+   const native=p=>worldCollider?.original?.call(worldCollider.world,p.x,p.y,20);
+   return [...current.sites.map((point,i)=>({type:'site'+(i+1),point,
+    safe:footprintFree(point,'site'),nativeCenterFree:native(point)})),
+    {type:'rotom',point:current.rotom,safe:footprintFree(current.rotom,'rotom'),
+     nativeCenterFree:native(current.rotom)},
+    {type:'machine',point:current.machine,nativeCenterFree:native(current.machine)},
+    {type:'world',biome:G.World?.biome,
+     nativePlayerFree:native(G.Game?.player||{x:0,y:0}),
+     nativeOriginFree:native({x:0,y:0}),
+     nativeFarFree:native({x:4000,y:4000})}];
   },
   get objectivePositionsSafe(){return !!current&&[...current.sites.map(p=>[p,'site']),
    [current.rotom,'rotom']].every(([p,k])=>footprintFree(p,k));},
