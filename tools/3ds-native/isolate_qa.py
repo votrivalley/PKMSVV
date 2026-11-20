@@ -41,7 +41,7 @@ patch('tools/cia/app.rsf','UniqueId                : 0xF5A3D',
       'UniqueId                : 0xF5B13')
 patch('tools/cia/gen_banner.py',"title = 'PokéSurvivor 3DS'","title = 'PKMSVV 3DS QA'")
 patch('tools/cia/gen_banner.py',"'port de juanluismm520'","'Engine QA: Votri Valley'")
-patch('tools/make_cia.sh','pokesurvivor-3ds','pkmsvv-3ds-qa',5)
+patch('tools/make_cia.sh','pokesurvivor-3ds','pkmsvv-3ds-qa',4)
 patch('tools/make_cia.sh','-s "PokéSurvivor 3DS"','-s "PKMSVV 3DS QA"')
 patch('tools/make_cia.sh','-p "juanluismm520"','-p "Votri Valley"')
 print('PKMSVV_3DS_QA_ISOLATION_PASS titleID=000400000F5B1300 save=sdmc:/3ds/pkmsvv-3ds-qa cloud=disabled')
