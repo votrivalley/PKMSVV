@@ -1,7 +1,7 @@
 name: PKMSVV Unified Beta - Fossil Co-op Gameplay (never production)
 on:
   push:
-    branches: [fix/pippi-follow-menu-qa-20261115]
+    branches: [fix/pippi-follow-menu-qa-20261115, fix/fossil-rotom-collision-pikachu-20261121]
     paths:
       - '.github/workflows/fossil-native-game-qa.yml'
       - 'scripts/prepare-web.cjs'
@@ -111,7 +111,7 @@ jobs:
           npm pkg set 'overrides.node-abi=4.40.0'
           npm install --no-audit --no-fund
       - name: Check 2–4 room rules and 6–8 minute outcome core
-        run: node --test tests/fossil-concept-sprites.test.cjs tests/menu-pokemon-hub-regression.test.cjs tests/fossil-expedition-core.test.cjs tests/fossil-expedition-guidance.test.cjs tests/fossil-expedition-routing.test.cjs tests/quick-region.test.cjs tests/coop-lab-core.test.cjs tests/lan-ai-modes.test.cjs tests/pippi-guide.test.cjs
+        run: node --test tests/fossil-objective-path.test.cjs tests/fossil-concept-sprites.test.cjs tests/menu-pokemon-hub-regression.test.cjs tests/fossil-expedition-core.test.cjs tests/fossil-expedition-guidance.test.cjs tests/fossil-expedition-routing.test.cjs tests/quick-region.test.cjs tests/coop-lab-core.test.cjs tests/lan-ai-modes.test.cjs tests/pippi-guide.test.cjs
       - name: Verify MAX skill AUTO and held item choice logic from original QA
         run: node --test tests/runtime-controls-qa.test.cjs tests/held-item-choice.test.cjs
       - name: Verify Pippi QA cousin trigger does not affect normal balance
@@ -155,7 +155,7 @@ jobs:
           grep -Fq 'PKMSVV_UNIFIED_BETA_POKEMON_255' scripts/prepare-lan.cjs
           grep -Fq 'pkmsvv-qa-runtime-config.js?v=' dist/lan/game/index.html
           test -s dist/lan/game/js/ui/pkmsvv-qa-runtime-config.js
-          grep -Fq 'window.PKMSVV_PIPPI_COUSIN_QA_100=true' dist/lan/game/js/ui/pkmsvv-qa-runtime-config.js
+          grep -Fq 'window.PKMSVV_PIPPI_COUSIN_QA_100=false' dist/lan/game/js/ui/pkmsvv-qa-runtime-config.js
           grep -Fq 'window.PKMSVV_MEGA_FULL_CATALOG_QA=true' dist/lan/game/js/ui/pkmsvv-qa-runtime-config.js
           grep -Fq 'function fullCatalogQA' src/pkmsvv-mega-entry.js || grep -Fq 'const fullCatalogQA' src/pkmsvv-mega-entry.js
           for name in pkmsvv-box-stage1.js pkmsvv-box-stage2.js pkmsvv-box-stage2-ui.js pkmsvv-box-stage3.js pkmsvv-box-stage4.js pkmsvv-box-hub.js pkmsvv-box-hub-ui.js; do

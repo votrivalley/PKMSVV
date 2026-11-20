@@ -154,7 +154,7 @@ const {startServer}=require('../lan-server/server.cjs');
     actualSpriteCount:api?.available?.().filter(x=>api.hasSprite(x)).length};
   });
   assert.equal(megaCatalog.fullFlag,true,'CSP-safe Beta Mega flag must be ENABLED');
-  assert.equal(megaCatalog.cousinFlag,true,'CSP-safe Pippi Pikachu 100% Beta flag must be ENABLED');
+  assert.equal(megaCatalog.cousinFlag,false,'Temporary Pippi Pikachu 100% Beta override must be DISABLED');
   assert.deepEqual([megaCatalog.all,megaCatalog.visible],[96,96],
    'Beta must display all 96 Mega entries instead of only 3 sprite-equipped forms');
   assert.ok(megaCatalog.actualSpriteCount>=3&&megaCatalog.actualSpriteCount<96,
@@ -265,6 +265,29 @@ const {startServer}=require('../lan-server/server.cjs');
   for(let i=0;i<3;i++)for(let j=i+1;j<3;j++)
    assert.ok(Math.hypot(positions.sites[i].x-positions.sites[j].x,positions.sites[i].y-positions.sites[j].y)>2500);
   assert.deepEqual([positions.rescueDeadline,positions.victory,positions.boss],[240,480,623]);
+  // Actual stage geometry: Rotom and all mining sites must clear scenery.
+  const worldGeometry=await page.evaluate(()=>{
+   const expedition=G.PKMSVVFossilExpedition,s=expedition.session;
+   const pl=G.Game.player,before={x:pl.x,y:pl.y};
+   pl.x=s.machine.x;pl.y=s.machine.y-45;
+   const collision=G.World.collide(pl),radius=Number(pl.r)||12;
+   const playerPushed=collision&&
+    (pl.x<=s.machine.x-53-radius||pl.x>=s.machine.x+53+radius||
+     pl.y<=s.machine.y-99-radius||pl.y>=s.machine.y+10+radius);
+   pl.x=before.x;pl.y=before.y;
+   return {safe:expedition.objectivePositionsSafe,diagnostics:expedition.objectivePositionDiagnostics,
+    playerPushed,
+    machineSolid:!G.World.isFree(s.machine.x,s.machine.y-45,12),
+    collisionActive:expedition.machineCollisionActive,
+    machineAwayFromSpawn:Math.hypot(s.machine.x,s.machine.y)>=290};
+  });
+  console.log('FOSSIL_OBJECTIVE_WORLD_DIAGNOSTIC='+JSON.stringify(worldGeometry));
+  assert.deepEqual({safe:worldGeometry.safe,machineSolid:worldGeometry.machineSolid,
+   collisionActive:worldGeometry.collisionActive,machineAwayFromSpawn:worldGeometry.machineAwayFromSpawn,
+   playerPushed:worldGeometry.playerPushed},{
+   safe:true,machineSolid:true,collisionActive:true,machineAwayFromSpawn:true,
+   playerPushed:true
+  },'Restorer and mining/Rotom positions need native collision and clearance');
   const guidance=await page.evaluate(()=>{
    const s=G.PKMSVVFossilExpedition.session;
    return {initialPhase:s.phase,origin:s.machine,siteCount:s.sites.length,

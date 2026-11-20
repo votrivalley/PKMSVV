@@ -22,7 +22,7 @@ function fixture(overrides={}){
  const G={
   I18n:{lang:'vi'},Social:{uid:'host',room},
   Game:{state:'playing',player},Coop:{isHost:true,puppets(){return [];},broadcast(){}},
-  World:overrides.World||{isFree(){return true;},isLiquid(){return false;}},
+  World:overrides.World||{isFree(){return true;},isLiquid(){return false;},collide(){return false;}},
   Spawner:{say(){}},PKMSVVFossilExpeditionCore:core,
   EnemyMgr:{all(){return [];}}
  };
@@ -65,7 +65,7 @@ test('Rotom starts outside tree collision and has more than one rescue approach'
  const tree={x:core.ROTOM_OFFSET[0],y:core.ROTOM_OFFSET[1]};
  const World={
   isFree(x,y,r){return Math.hypot(x-tree.x,y-tree.y)>Number(r)+95;},
-  isLiquid(){return false;}
+  isLiquid(){return false;},collide(){return false;}
  };
  const f=fixture({World});
  assert.equal(f.api.begin({mode:'fossil_lab'}),true);

@@ -624,10 +624,10 @@ test('PC uses native fourth Góc Pippi card and event-synchronized portrait sour
 });
 
 
-test('Em họ Pikachu: 4%, 6%, 8% per real HP loss, never before training',()=>{
- assert.equal(P.cousinChance(0),0);assert.equal(P.cousinChance(1),.04);
- assert.equal(P.cousinChance(2),.06);assert.equal(P.cousinChance(3),.08);
- assert.equal(P.cousinChance(999),.08);
+test('Em họ Pikachu: 5%, 10%, 15% per real HP loss, never before training',()=>{
+ assert.equal(P.cousinChance(0),0);assert.equal(P.cousinChance(1),.05);
+ assert.equal(P.cousinChance(2),.10);assert.equal(P.cousinChance(3),.15);
+ assert.equal(P.cousinChance(999),.15);
  const s={coins:500,pkmsvvPippi:{xp:14}}; // Bond 5
  for(let i=1;i<=3;i++)assert.equal(P.train(s,'cousin',()=>true).ok,true);
  assert.equal(P.train(s,'cousin',()=>true).reason,'max');
@@ -641,8 +641,8 @@ test('Pikachu stuns only on actual HP loss in Explore, not on dodges or Co-op',(
   PKMSVVQuickRegion:{active:true},EnemyMgr:{all:()=>[enemy]}};
  const run=P.newRun(pl,20);
  assert.equal(P.rollCousinOnHit(G,run,pl,100,100,()=>0).triggered,false);
- assert.equal(P.rollCousinOnHit(G,run,pl,100,90,()=>.04).triggered,false);
- assert.equal(P.rollCousinOnHit(G,run,pl,100,90,()=>.0399).triggered,true);
+ assert.equal(P.rollCousinOnHit(G,run,pl,100,90,()=>.05).triggered,false);
+ assert.equal(P.rollCousinOnHit(G,run,pl,100,90,()=>.0499).triggered,true);
  assert.equal(enemy.stun,1.1);assert.ok(run.cousinUntil>20);
  G.Coop={active:true};G.Game.st.time=22;
  assert.equal(P.rollCousinOnHit(G,run,pl,90,80,()=>0).triggered,false);
@@ -815,10 +815,10 @@ test('Beta-only Pikachu QA is 100% on real HP loss without spending skill points
  G.Coop.active=false;G.PKMSVV_PIPPI_COUSIN_QA_100=false;
  assert.equal(P.rollCousinOnHit(G,run,pl,90,80,()=>0).reason,'not-learned');
 });
-test('QA 100% runtime flag is injected only in isolated Beta packaging',()=>{
+test('Beta packaging disables temporary 100% Pikachu QA override',()=>{
  const source=fs.readFileSync(require('node:path').join(__dirname,'../scripts/prepare-lan.cjs'),'utf8');
  assert.match(source,/if\(process\.env\.PKMSVV_FOSSIL_NATIVE_QA==='1'\)/);
- assert.match(source,/window\.PKMSVV_PIPPI_COUSIN_QA_100=true/);
+ assert.match(source,/window\.PKMSVV_PIPPI_COUSIN_QA_100=false/);
  assert.match(source,/pkmsvv-qa-runtime-config\.js/);
  assert.match(source,/fs\.writeFileSync\(path\.join\(folder,'js\/ui',qaConfig\),runtimeFlags\)/);
  assert.match(source,/html=html\.replace\('<\/head>',injectStyle/);
