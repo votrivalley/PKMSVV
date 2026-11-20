@@ -49,7 +49,7 @@ jobs:
           grep -Fq 'sdmc:/3ds/pkmsvv-3ds-qa' native-3ds/src/platform/3ds/main.cpp
           ! grep -Fq 'https://pokesurvivor3ds.duckdns.org' native-3ds/src/platform/3ds/datos3ds.cpp
           ! grep -Fq 'https://pokesurvivor3ds.duckdns.org' native-3ds/src/platform/3ds/cloud3ds.cpp
-      - name: Build real 3DSX and CIA using the official devkitARM container
+      - name: Compile genuine 3DSX with official devkitARM container
         shell: bash
         run: |
           set -euo pipefail
@@ -65,12 +65,37 @@ jobs:
               python3 tools/cia/gen_banner.py build/cia
               source tools/env.sh
               make -j2
-              bash tools/make_cia.sh
             '
           test -s native-3ds/pkmsvv-3ds-qa.3dsx
-          test -s native-3ds/pkmsvv-3ds-qa.cia
-          test "$(stat -c %s native-3ds/pkmsvv-3ds-qa.cia)" -gt 10000000
-          sha256sum native-3ds/pkmsvv-3ds-qa.3dsx native-3ds/pkmsvv-3ds-qa.cia
+          test -s native-3ds/pkmsvv-3ds-qa.elf
+      - name: Package CIA using runner glibc 2.38+ (not older devkit container)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd native-3ds
+          mkdir -p tools/cache/cia
+          cd tools/cache/cia
+          curl --fail --location --retry 3 -o makerom.zip \
+            https://github.com/3DSGuy/Project_CTR/releases/download/makerom-v0.19.0/makerom-v0.19.0-ubuntu_x86_64.zip
+          unzip -oq makerom.zip
+          chmod +x makerom
+          curl --fail --location --retry 3 -o bannertool.zip \
+            https://github.com/diasurgical/bannertool/releases/download/1.2.0/bannertool.zip
+          unzip -oq bannertool.zip -d bt
+          chmod +x bt/linux-x86_64/bannertool
+          cd ../../..
+          test -s build/cia/banner.png
+          test -s build/cia/banner.wav
+          tools/cache/cia/bt/linux-x86_64/bannertool makebanner \
+            -i build/cia/banner.png -a build/cia/banner.wav -o build/cia/banner.bnr
+          tools/cache/cia/bt/linux-x86_64/bannertool makesmdh \
+            -s "PKMSVV 3DS QA" -l "Native C++ engine test - not full PKMSVV" \
+            -p "Votri Valley" -i assets-src/icon-48.png -o build/cia/icon.icn
+          tools/cache/cia/makerom -f cia -o pkmsvv-3ds-qa.cia \
+            -target t -exefslogo -elf pkmsvv-3ds-qa.elf -rsf tools/cia/app.rsf \
+            -icon build/cia/icon.icn -banner build/cia/banner.bnr -major 0 -micro 1
+          test "$(stat -c %s pkmsvv-3ds-qa.cia)" -gt 10000000
+          sha256sum pkmsvv-3ds-qa.3dsx pkmsvv-3ds-qa.cia
       - name: Check CIA does not overwrite original PokéSurvivor Title ID
         shell: bash
         run: |
