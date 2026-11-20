@@ -112,7 +112,7 @@ for(const file of ['lan-connect.html','lan-connect.js'])
    // Inline <script> content is BLOCKED by the native CSP even if the
    // HTML contains its text. A same-origin external file executes reliably.
    // Switches are NEVER copied into PC/Android/production builds or saves.
-   const runtimeFlags='window.PKMSVV_PIPPI_COUSIN_QA_100=true;\n'+
+   const runtimeFlags='window.PKMSVV_PIPPI_COUSIN_QA_100=false;\n'+
     'window.PKMSVV_MEGA_FULL_CATALOG_QA=true;\n';
    const qaConfig='pkmsvv-qa-runtime-config.js';
    fs.mkdirSync(path.join(folder,'js/ui'),{recursive:true});
@@ -129,7 +129,7 @@ for(const file of ['lan-connect.html','lan-connect.js'])
    if(!html.includes('pkmsvv-qa-runtime-config.js?v=')||
       !fs.readFileSync(path.join(folder,'js/ui',qaConfig),'utf8')
        .includes('window.PKMSVV_MEGA_FULL_CATALOG_QA=true;'))
-    throw Error('Beta missing CSP-safe Mega and Pikachu QA runtime switches: '+route);
+    throw Error('Beta missing CSP-safe Mega runtime switch: '+route);
    for(const token of ['pkmsvv-box-hub-ui.js?v=','pkmsvv-box-hub.css?v=',
     'pkmsvv-v20-ui-qa.css?v=','pkmsvv-box-stage4.js?v=',
     'pkmsvv-quick-region.js?v=','pkmsvv-quick-region.css?v=',
