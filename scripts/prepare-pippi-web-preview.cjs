@@ -216,7 +216,7 @@ for(const prefix of ['game','ai/game']){
  write(path.join(dest,'index.html'),html);
  if(!html.includes(marker)||!html.includes('pkmsvv-pippi.js')||!html.includes('pkmsvv-fossil-system.js'))throw Error('Preview fossil injection incomplete');
  // Test the actual staged source, not just repo strings.
- for(const token of ['COUSIN_CHANCES=Object.freeze([0,.04,.06,.08])','rollCousinOnHit']){
+ for(const token of ['COUSIN_CHANCES=Object.freeze([0,.05,.10,.15])','rollCousinOnHit']){
   if(!source(path.relative(root,path.join(dest,'js/ui/pkmsvv-pippi.js'))).includes(token))
    throw Error('Pikachu live skill missing in '+prefix+': '+token);
  }
