@@ -119,7 +119,13 @@ jobs:
       - name: Fetch hash-checked Clefairy PMD assets required by LAN packaging
         run: node scripts/fetch-pippi-pmd.cjs && node scripts/build-pippi-portrait-atlas.cjs
       - name: Compile genuine offline LAN/AI native game with QA-only fossil hooks
+        env:
+          # Import all 36 audited PMD Mega forms (rather than the 3-form dev subset).
+          # Isolated Beta only: production Web, Android and PC builds are unchanged.
+          PKMSVV_MEGA_SPRITE_PACK: '1'
         run: npm run prepare:lan
+      - name: Verify all 36 real Mega sprites plus 32 Shiny sprite sets are packaged
+        run: node tests/mega-platform-parity.test.cjs pc
       - name: Verify Mega catalog renders 96 QA forms without unlocking missing sprites
         run: node --test tests/mega-ui-phase2.test.cjs
       - name: Verify ACTUAL native Beta ships new PokéBox / Pokédex / Nâng cấp
