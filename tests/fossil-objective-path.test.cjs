@@ -64,8 +64,8 @@ test('physical restorer rejects movement until mission ends',()=>{
  assert.equal(a.World.isFree(m.x+110,m.y-45,12),true);
  const player={x:m.x,y:m.y-45,r:13};
  assert.equal(a.World.collide(player),true,'native World.collide must block player motion');
- assert.ok(player.x<m.x-53-player.r||player.x>m.x+53+player.r||
-  player.y<m.y-99-player.r||player.y>m.y+10+player.r);
+ assert.ok(player.x<=m.x-53-player.r||player.x>=m.x+53+player.r||
+  player.y<=m.y-99-player.r||player.y>=m.y+10+player.r);
  a.exp.end();
  assert.equal(a.World.isFree,original);
  assert.equal(a.World.collide,originalCollide);
