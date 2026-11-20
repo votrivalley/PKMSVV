@@ -69,7 +69,7 @@ jobs:
           grep -Fq 'go(SC_PKM_STORY)' native-3ds/src/platform/3ds/app.cpp
           grep -Fq 'pkmsvv_native_region_playable(pick)' native-3ds/src/platform/3ds/app.cpp
           grep -Fq 'kPKMSVVRegionCount = 10' native-3ds/src/platform/3ds/app.cpp
-          grep -Fq 'region_selected_ == 0 || autotest' native-3ds/src/platform/3ds/app.cpp
+          grep -Fq 'region_selected_ == 0 || region_selected_ == 1 || autotest' native-3ds/src/platform/3ds/app.cpp
           grep -Fq 'if (g.cfg.kanto_only)' native-3ds/src/core/enemy.cpp
           grep -Fq 'g.nbosses = 2' native-3ds/src/core/enemies.cpp
           grep -Fq 'if (!cfg.kanto_only)' native-3ds/src/core/game.cpp
