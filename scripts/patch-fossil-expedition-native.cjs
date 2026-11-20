@@ -34,10 +34,14 @@ patch('js/entities/enemy.js',
  'const near = G.PKMSVVBerryRescue?.targetFor?.(e) || nearestPlayer(players, e.x, e.y) || pl;',
  'const near = G.PKMSVVFossilExpedition?.targetFor?.(e) || G.PKMSVVBerryRescue?.targetFor?.(e) || nearestPlayer(players, e.x, e.y) || pl;');
 
+// Crucial: the existing Berry/Royale startup hook runs at the TOP of
+// Game.startRun(), BEFORE G.World.reset(coop.seed). Fossil placement there
+// was invalidated by the new seeded terrain immediately afterward.
+// Begin Fossil only after native World.reset/setBiome and Coop.begin.
 patch('js/game.js',
- "G.PKMSVVBerryRescue.begin({mode:G.Social?.room?.mode});",
- "G.PKMSVVBerryRescue.begin({mode:G.Social?.room?.mode});"+
- "G.PKMSVVFossilExpedition?.begin?.({mode:G.Social?.room?.mode});");
+ "    G.Camera.x = pl.x; G.Camera.y = pl.y; G.Camera.shake = 0;",
+ "    G.PKMSVVFossilExpedition?.begin?.({mode:G.Social?.room?.mode});\\n"+
+ "    G.Camera.x = pl.x; G.Camera.y = pl.y; G.Camera.shake = 0;");
 patch('js/game.js',
  "      if(G.PKMSVVBerryRescue?.active)G.PKMSVVBerryRescue.tick(dt,time,all,result=>{",
  "      if(G.PKMSVVFossilExpedition?.active)G.PKMSVVFossilExpedition.tick(dt,time,all,result=>{\n"+
