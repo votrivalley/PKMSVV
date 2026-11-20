@@ -101,8 +101,8 @@ patch("src/platform/3ds/app.cpp",
 # A distinct title and SD save folder prevent the first real gameplay port
 # from sharing state with the earlier unmodified engine QA installation.
 patch("Makefile", "pkmsvv-3ds-qa", "pkmsvv-kanto01")
-patch("Makefile", "APP_TITLE\\t:=\\tPKMSVV 3DS QA",
-      "APP_TITLE\\t:=\\tPKMSVV Kanto 0.1")
+patch("Makefile", "APP_TITLE\t:=\tPKMSVV 3DS QA",
+      "APP_TITLE\t:=\tPKMSVV Kanto 0.1")
 patch("src/core/version.h", 'kGameTitle = "PKMSVV 3DS QA"',
       'kGameTitle = "PKMSVV Kanto 0.1"')
 patch("src/platform/3ds/main.cpp",
