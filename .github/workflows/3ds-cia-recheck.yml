@@ -1,0 +1,87 @@
+name: PKMSVV 3DS CIA Recheck - Exact Binary and Azahar Smoke
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/3ds-native-cpp
+    paths:
+      - .github/workflows/3ds-cia-recheck.yml
+      - tools/3ds-native/validate_cia.py
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect-and-boot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download exact 3DS build artifact from green run 44798450474
+        uses: actions/download-artifact@v4
+        with:
+          name: PKMSVV-3DS-ENGINE-QA-NOT-FULL-GAME
+          repository: votrivalley/PKMSVV
+          run-id: 44798450474
+          github-token: ${{ github.token }}
+          path: qa-binary
+      - name: Recheck CIA NCCH Title ID ExeFS RomFS and 3DSX signature
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/3ds-native/validate_cia.py qa-binary | tee qa-binary/binary-validation.txt
+          echo 'a128ab1482249a0a70a2de515dd6f32ccb2e6f0a502b15256dccb171553414e6  qa-binary/pkmsvv-3ds-qa.cia' | sha256sum -c -
+          echo '8313555b9cc1eb19dd188e9cd14364369890727239b7b1423cb01b9a5af74a8f  qa-binary/pkmsvv-3ds-qa.3dsx' | sha256sum -c -
+      - name: Install isolated Azahar emulator QA prerequisites
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends             xvfb imagemagick libgl1-mesa-dri libfuse2t64             libxcb-cursor0 libxkbcommon-x11-0 libegl1 libopengl0             libpulse0 libasound2t64 libxcb-xinerama0 libxcb-icccm4             libxcb-image0 libxcb-keysyms1 libxcb-render-util0             ca-certificates curl
+          curl --fail --location --retry 3 --retry-delay 3             https://github.com/azahar-emu/azahar/releases/download/2126.2/azahar.AppImage             --output qa-binary/azahar.AppImage
+          chmod +x qa-binary/azahar.AppImage
+          cd qa-binary
+          ./azahar.AppImage --appimage-extract >/dev/null
+          test -x squashfs-root/AppRun
+      - name: Azahar smoke run of engine via 3DSX (does not prove CIA installation)
+        shell: bash
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          QT_QPA_PLATFORM: xcb
+          SDL_AUDIODRIVER: dummy
+        run: |
+          set -euo pipefail
+          export DISPLAY=:99
+          export HOME="$RUNNER_TEMP/azahar-qa-home"
+          mkdir -p "$HOME/.local/share/azahar-emu/sdmc/3ds/pkmsvv-3ds-qa"
+          printf '12 25 1 0\n' > "$HOME/.local/share/azahar-emu/sdmc/3ds/pkmsvv-3ds-qa/autotest.txt"
+          Xvfb :99 -screen 0 1280x800x24 > qa-binary/xvfb.log 2>&1 &
+          sleep 3
+          set +e
+          timeout --signal=TERM --kill-after=5 60             qa-binary/squashfs-root/AppRun "$PWD/qa-binary/pkmsvv-3ds-qa.3dsx"             > qa-binary/azahar.stdout 2>&1
+          code=$?
+          set -e
+          echo "AZAHAR_PROCESS_EXIT=$code"
+          log="$HOME/.local/share/azahar-emu/sdmc/3ds/pkmsvv-3ds-qa/autotest.log"
+          if [ -f "$log" ]; then
+            cp "$log" qa-binary/autotest.log
+            tail -n 35 "$log"
+          else
+            tail -n 80 qa-binary/azahar.stdout || true
+            echo 'NO AUTOTEST LOG - emulator boot not confirmed'
+            exit 1
+          fi
+          grep -q 'PKMSVV 3DS QA' "$log"
+          grep -q 'FIN' "$log"
+          test "$code" = 0
+          echo 'AZAHAR_3DSX_AUTOTEST_BOOT_PASS (CIA installation not simulated)'
+      - name: Upload recheck evidence regardless of runtime outcome
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-3DS-CIA-RECHECK-EVIDENCE
+          path: |
+            qa-binary/binary-validation.txt
+            qa-binary/autotest.log
+            qa-binary/azahar.stdout
+            qa-binary/xvfb.log
+          retention-days: 7
+          if-no-files-found: warn
