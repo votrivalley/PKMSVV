@@ -121,7 +121,7 @@ for(const file of ['lan-connect.html','lan-connect.js'])
    // A unique late-loading script guarantees 5/10/15 balance in this Beta.
    const cousinBalance='pkmsvv-pikachu-balance-051015-v2.js';
    fs.writeFileSync(path.join(folder,'js/ui',cousinBalance),
-    'window.PKMSVV_PIPPI_COUSIN_QA_100=false;\\n');
+    'window.PKMSVV_PIPPI_COUSIN_QA_100=false;\n');
    html=html.replace('</head>',injectStyle.join('\n')+'\n'+
     '<script src="js/ui/'+qaConfig+'?v='+revision+'"></script>\n</head>');
    html=html.replace('</body>',injectScript.join('\n')+'\n'+
