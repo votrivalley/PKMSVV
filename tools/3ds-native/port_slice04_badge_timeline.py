@@ -40,6 +40,19 @@ patch("src/core/enemies.cpp",
       "      first_dex = epic_pool[int(g.rng.next() * nepic) % nepic]->dex;\n"
       "    const int dexes[2] = {first_dex, 150};\n")
 
+# PKMSVV Web fixed HP/DMG 15m and 30m (Kanto index 0). The original
+# engine's dynamic boss scaling is wrong for these two Region bosses.
+patch("src/core/enemies.cpp",
+      "Scale3 enemies_boss_scale(const Game& g, float t, const EnemyDef& b) {\n"
+      "  return {float(diff_boss_hp(g.cfg.diff, b.idx, t, g.team_size()) * port_hp_k(t) / b.hp), float(diff_boss_dmg(g.cfg.diff, t) / b.dmg), 1};",
+      "Scale3 enemies_boss_scale(const Game& g, float t, const EnemyDef& b) {\n"
+      "  if (g.cfg.kanto_only && (b.at == 900 || b.at == 1800)) {\n"
+      "    const float hp = b.at == 1800 ? 62000.0f : 28000.0f;\n"
+      "    const float dmg = b.at == 1800 ? 43.0f : 24.0f;\n"
+      "    return {hp / std::max(1.0f, b.hp), dmg / std::max(1.0f, b.dmg), 1};\n"
+      "  }\n"
+      "  return {float(diff_boss_hp(g.cfg.diff, b.idx, t, g.team_size()) * port_hp_k(t) / b.hp), float(diff_boss_dmg(g.cfg.diff, t) / b.dmg), 1};")
+
 # Track actual spawned and killed named bosses, not unrelated boss counters.
 patch("src/core/game.h",
       "  RunConfig cfg;\n  Rng rng, vrng;",
@@ -204,6 +217,17 @@ patch("src/platform/3ds/main.cpp",
       "      const bool bosses = g->nbosses == 2 && boss0_ok &&\n"
       "        g->bosses[0].at == 900 &&\n"
       "        g->bosses[1].dex == 150 && g->bosses[1].at == 1800;")
+
+patch("src/platform/3ds/main.cpp",
+      '      std::fprintf(at.log, "PKMSVV_KANTO_LIVE_%s living=%d foreign=%d\\n",',
+      '      if (g->time >= 1800 && !g->pkmsvv_badge_claimed) {\n'
+      '        const bool gated = g->spawner.boss_idx == 1 &&\n'
+      '          g->pkmsvv_badge_boss_id > 0 && g->pkmsvv_final_boss_id < 0;\n'
+      '        std::fprintf(at.log, "PKMSVV_REGION04_FINAL_GATE_%s boss_slot=%d badge_id=%d final_id=%d\\n",\n'
+      '                     gated ? "PASS" : "FAIL", g->spawner.boss_idx,\n'
+      '                     int(g->pkmsvv_badge_boss_id), int(g->pkmsvv_final_boss_id));\n'
+      '      }\n'
+      '      std::fprintf(at.log, "PKMSVV_KANTO_LIVE_%s living=%d foreign=%d\\n",')
 
 patch("src/platform/3ds/main.cpp",
       '      std::fprintf(at.log, "PKMSVV_KANTO_LIVE_%s living=%d foreign=%d\\n",',
