@@ -16,20 +16,20 @@ jobs:
     timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
-      - name: Download exact Kanto Badge Alpha04 binary from green build 44814334771
+      - name: Download exact Kanto Badge Alpha04 binary from green build 44815401947
         uses: actions/download-artifact@v4
         with:
           name: PKMSVV-3DS-KANTO-BADGE-ALPHA04
           repository: votrivalley/PKMSVV
-          run-id: 44814334771
+          run-id: 44815401947
           github-token: ${{ github.token }}
           path: qa-binary
       - name: Confirm exact Kanto CIA and new isolated product identity
         shell: bash
         run: |
           set -euo pipefail
-          echo 'e70ff7305efcc99336ddc7b4bb7724be99226e97492caebaadf559fc6ef57f23  qa-binary/pkmsvv-kanto01.cia' | sha256sum -c -
-          echo '8476795b6c4d9cf34e714fea6e0292c9a9d93ef6b66214bcd4e673ad1469f938  qa-binary/pkmsvv-kanto01.3dsx' | sha256sum -c -
+          echo '72dcfddafb083b4e653f2a61f3b5ba1e4119af56b8d1010fb09d9853b23c7fc0  qa-binary/pkmsvv-kanto01.cia' | sha256sum -c -
+          echo '5f192dc88aa418235fff6fd376db9f2cf0e421e67bb3e083187ab14c95307f64  qa-binary/pkmsvv-kanto01.3dsx' | sha256sum -c -
           python3 - <<'PY'
           from pathlib import Path
           c=Path('qa-binary/pkmsvv-kanto01.cia').read_bytes()
@@ -95,7 +95,7 @@ jobs:
             *) echo "Unexpected Azahar launcher exit: $code"; exit 1;;
           esac
           echo 'PKMSVV_REGION04_LIVE_QA_PASS: 12s Kanto gameplay + boss ratio pool + Gen1 guards'
-      - name: Check minute-30 Mewtwo stays locked without defeating minute-15 boss
+      - name: Deterministic native 15-to-30-minute boss gate and victory test
         shell: bash
         env:
           LIBGL_ALWAYS_SOFTWARE: '1'
@@ -107,26 +107,29 @@ jobs:
           export HOME="$RUNNER_TEMP/region04-gate-home"
           d="$HOME/.local/share/azahar-emu/sdmc/3ds/pkmsvv-kanto01"
           mkdir -p "$d"
-          # Warp beyond 30 minutes without a Region Badge and run 4 seconds.
-          printf '4 25 1 1801\n' > "$d/autotest.txt"
+          # No timewarp rendering: same C++ spawn/kill code, dt=0, explicit QA mode.
+          printf 'regiongate\n' > "$d/autotest.txt"
           Xvfb :97 -screen 0 1280x800x24 > qa-binary/xvfb-gate.log 2>&1 &
           sleep 3
           set +e
-          timeout --signal=TERM --kill-after=5 55 \
+          timeout --signal=TERM --kill-after=5 30 \
             qa-binary/squashfs-root/AppRun "$PWD/qa-binary/pkmsvv-kanto01.3dsx" \
             > qa-binary/azahar-gate.stdout 2>&1
           code=$?
           set -e
           echo "AZAHAR_GATE_GUI_EXIT=$code"
-          test -s "$d/autotest.log"
+          if [[ ! -s "$d/autotest.log" ]]; then
+            tail -n 80 qa-binary/azahar-gate.stdout
+            exit 1
+          fi
           cp "$d/autotest.log" qa-binary/autotest-gate.log
-          tail -n 30 qa-binary/autotest-gate.log
-          grep -q 'PKMSVV_REGION04_FINAL_GATE_PASS' qa-binary/autotest-gate.log
-          ! grep -q 'PKMSVV_REGION04_FINAL_GATE_FAIL' qa-binary/autotest-gate.log
-          grep -q 'PKMSVV_KANTO_BOSS_CFG_PASS' qa-binary/autotest-gate.log
-          grep -q '^FIN · 4 s' qa-binary/autotest-gate.log
+          tail -n 25 qa-binary/autotest-gate.log
+          grep -q 'PKMSVV_REGION04_GATE_BEFORE_PASS' qa-binary/autotest-gate.log
+          grep -q 'PKMSVV_REGION04_GATE_AFTER_PASS' qa-binary/autotest-gate.log
+          grep -q 'PKMSVV_REGION04_FINAL_DEFEAT_PASS' qa-binary/autotest-gate.log
+          ! grep -E 'PKMSVV_REGION04_(GATE_BEFORE|GATE_AFTER|FINAL_DEFEAT)_FAIL' qa-binary/autotest-gate.log
           case "$code" in 0|124|137) ;; *) exit 1;; esac
-          echo PKMSVV_REGION04_FINAL_GATE_AUTOTEST_PASS
+          echo PKMSVV_REGION04_KILL_GATED_BOSSES_PASS
       - name: Render actual 10-Region chooser in Azahar and capture UI
         shell: bash
         env:
