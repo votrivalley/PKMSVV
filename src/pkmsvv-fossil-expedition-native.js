@@ -672,6 +672,13 @@ function updateRotomSOS(){
   drawables,beginFrame,drawMissing,hud,reward,end,
   get active(){return active},get session(){return current},get lastFinish(){return lastFinish},
   get machineCollisionActive(){return !!worldCollider&&G.World?.isFree===worldCollider.wrapper;},
+  get objectivePositionDiagnostics(){
+   return current?[...current.sites.map((point,i)=>({type:'site'+(i+1),point,
+    safe:footprintFree(point,'site')})),{type:'rotom',point:current.rotom,
+    safe:footprintFree(current.rotom,'rotom')},
+    {type:'machine',point:current.machine,
+     originalCenterFree:!!worldCollider?.original?.call(worldCollider.world,current.machine.x,current.machine.y,20)}]:[];
+  },
   get objectivePositionsSafe(){return !!current&&[...current.sites.map(p=>[p,'site']),
    [current.rotom,'rotom']].every(([p,k])=>footprintFree(p,k));},
   get spriteReady(){return excavations.complete&&excavations.naturalWidth>0&&
