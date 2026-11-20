@@ -308,22 +308,80 @@ function updateRotomSOS(){
   uiButton.textContent=action?.type==='dig'?tr('⛏ Đào hóa thạch · E','⛏ Mine fossil · E'):
    tr('⚡ Cứu Rotom · E','⚡ Rescue Rotom · E');
  }
- function moveRotom(dt){
-  if(current?.phase!=='escort'||!G.Coop?.isHost)return;
-  const r=current.rotom,players=ally();
-  if(!players.length)return;
-  const leader=players.find(p=>p===G.Game?.player)||players[0];
-  const dx=leader.x-r.x,dy=leader.y-r.y,d=Math.hypot(dx,dy);
-  if(d<50)return;
-  const step=Math.min(d-45,165*Math.max(0,dt));
-  const a=Math.atan2(dy,dx);
-  const offsets=[0,.4,-.4,.8,-.8,1.4,-1.4,Math.PI];
-  for(const offset of offsets){
-   const nx=r.x+Math.cos(a+offset)*step,ny=r.y+Math.sin(a+offset)*step;
-   if(!G.World?.isFree||G.World.isFree(nx,ny,14)){
-    r.x=nx;r.y=ny;return;
+ // Check the full segment to stop Rotom slipping through thin trunks.
+ function lineFree(from,to){
+  const dx=to.x-from.x,dy=to.y-from.y;
+  const length=Math.hypot(dx,dy),samples=Math.max(1,Math.ceil(length/16));
+  for(let i=1;i<=samples;i++)
+   if(!passable(from.x+dx*i/samples,from.y+dy*i/samples,19))return false;
+  return true;
+ }
+ // Bounded 8-direction A*: only planned when Rotom hits a genuine blocker.
+ // It runs at most once per 0.7s, with <=1250 small map nodes, never teleports.
+ function escortDetour(from,leader){
+  const unit=40,bound=15,dx=leader.x-from.x,dy=leader.y-from.y;
+  const length=Math.hypot(dx,dy)||1,reach=Math.min(440,length);
+  const goal={x:from.x+dx/length*reach,y:from.y+dy/length*reach};
+  const key=(x,y)=>x+','+y;
+  const dist=(x,y)=>Math.hypot(from.x+x*unit-goal.x,from.y+y*unit-goal.y);
+  const open=[{x:0,y:0,g:0,f:dist(0,0)}];
+  const cost=new Map([['0,0',0]]),parent=new Map(),closed=new Set(),clear=new Map();
+  const walk=(x,y)=>{
+   const k=key(x,y);
+   if(!clear.has(k))clear.set(k,passable(from.x+x*unit,from.y+y*unit,20));
+   return clear.get(k);
+  };
+  let best=null,closest=Infinity;
+  for(let scans=0;open.length&&scans<1250;scans++){
+   open.sort((a,b)=>b.f-a.f);
+   const cur=open.pop(),ck=key(cur.x,cur.y);
+   if(closed.has(ck))continue;
+   closed.add(ck);
+   const remain=dist(cur.x,cur.y);
+   if(remain<closest){closest=remain;best=cur;}
+   if(remain<=unit*.6)break;
+   for(const [ax,ay] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){
+    const nx=cur.x+ax,ny=cur.y+ay,nk=key(nx,ny);
+    if(Math.abs(nx)>bound||Math.abs(ny)>bound||closed.has(nk)||!walk(nx,ny))continue;
+    if(ax&&ay&&(!walk(cur.x+ax,cur.y)||!walk(cur.x,cur.y+ay)))continue;
+    const g=cur.g+(ax&&ay?Math.SQRT2:1)*unit;
+    if(g>=(cost.get(nk)??Infinity))continue;
+    cost.set(nk,g);parent.set(nk,ck);
+    open.push({x:nx,y:ny,g,f:g+dist(nx,ny)});
    }
   }
+  if(!best||(!best.x&&!best.y))return [];
+  const route=[],visited=new Set();let k=key(best.x,best.y);
+  while(k!=='0,0'&&!visited.has(k)&&route.length<500){
+   visited.add(k);
+   const [x,y]=k.split(',').map(Number);
+   route.push({x:from.x+x*unit,y:from.y+y*unit});
+   k=parent.get(k);if(!k)return [];
+  }
+  return route.reverse();
+ }
+ function moveRotom(dt){
+  if(current?.phase!=='escort'||!G.Coop?.isHost)return;
+  const r=current.rotom,players=ally();if(!players.length)return;
+  const leader=players.find(p=>p===G.Game?.player)||players[0];
+  const dx=leader.x-r.x,dy=leader.y-r.y,d=Math.hypot(dx,dy);
+  if(d<50){escortRoute=[];return;}
+  const step=Math.min(d-45,165*Math.max(0,dt));if(step<=0)return;
+  while(escortRoute.length&&at(r,escortRoute[0],24))escortRoute.shift();
+  const clock=Number(current.elapsed)||0;
+  if(escortRoute.length&&lineFree(r,leader)&&d<210)escortRoute=[];
+  let goal=escortRoute[0]||leader;
+  let angle=Math.atan2(goal.y-r.y,goal.x-r.x);
+  let next={x:r.x+Math.cos(angle)*step,y:r.y+Math.sin(angle)*step};
+  if(!lineFree(r,next)){
+   if(clock>=escortRepathAt||!escortRoute.length){
+    escortRoute=escortDetour(r,leader);escortRepathAt=clock+.7;
+   }
+   goal=escortRoute[0];if(!goal)return;
+   angle=Math.atan2(goal.y-r.y,goal.x-r.x);
+   next={x:r.x+Math.cos(angle)*step,y:r.y+Math.sin(angle)*step};
+  }
+  if(lineFree(r,next)){r.x=next.x;r.y=next.y;}
  }
  function spawnWave(){
   if(!current?.machine.online||!G.Coop?.isHost)return;
