@@ -18,6 +18,11 @@ on:
       - scripts/patch-3ds-stage7-dash-meteor.cjs
       - scripts/qa-3ds-stage7-levelups.cjs
       - tests/3ds-stage7-dash-meteor.test.cjs
+      - src/pkmsvv-3ds-stage8-beam-nova-charge.js
+      - src/pkmsvv-3ds-charge-stage8.js
+      - scripts/patch-3ds-stage8-beam-nova-charge.cjs
+      - scripts/qa-3ds-stage8-levelups.cjs
+      - tests/3ds-stage8-beam-nova-charge.test.cjs
       - src/pkmsvv-3ds-combat-stage5.js
       - tests/3ds-stage5-combat.test.cjs
       - scripts/patch-3ds-stage5-families.cjs
@@ -68,13 +73,18 @@ jobs:
           node --check scripts/patch-3ds-stage7-dash-meteor.cjs
           node --check scripts/qa-3ds-stage7-levelups.cjs
           node --check tests/3ds-stage7-dash-meteor.test.cjs
+          node --check src/pkmsvv-3ds-stage8-beam-nova-charge.js
+          node --check src/pkmsvv-3ds-charge-stage8.js
+          node --check scripts/patch-3ds-stage8-beam-nova-charge.cjs
+          node --check scripts/qa-3ds-stage8-levelups.cjs
+          node --check tests/3ds-stage8-beam-nova-charge.test.cjs
           node --check scripts/patch-3ds-stage5-families.cjs
           node --check scripts/qa-3ds-stage5-levelups.cjs
           node --check tests/3ds-stage5-combat.test.cjs
           node --check scripts/patch-3ds-support-families.cjs
           node --check tests/3ds-stage4-support.test.cjs
           node --check tests/3ds-stage3-punch-cross-storm.test.cjs
-          node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs tests/3ds-stage3-punch-cross-storm.test.cjs tests/3ds-stage4-support.test.cjs tests/3ds-stage5-combat.test.cjs tests/3ds-stage6-projectiles.test.cjs tests/3ds-stage7-dash-meteor.test.cjs
+          node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs tests/3ds-stage3-punch-cross-storm.test.cjs tests/3ds-stage4-support.test.cjs tests/3ds-stage5-combat.test.cjs tests/3ds-stage6-projectiles.test.cjs tests/3ds-stage7-dash-meteor.test.cjs tests/3ds-stage8-beam-nova-charge.test.cjs
       - name: Fetch pinned public Web source mirror for isolated QA (NOT official release source)
         shell: bash
         run: |
@@ -100,6 +110,8 @@ jobs:
           node scripts/qa-3ds-stage6-levelups.cjs
           node scripts/patch-3ds-stage7-dash-meteor.cjs
           node scripts/qa-3ds-stage7-levelups.cjs
+          node scripts/patch-3ds-stage8-beam-nova-charge.cjs
+          node scripts/qa-3ds-stage8-levelups.cjs
           node vendor/pokesurvivor/tools/build.js --sin-seo --expose
       - name: Validate compiled mirror JS and preserve original PKMSVV project files
         shell: bash
@@ -136,10 +148,14 @@ jobs:
           grep -Fq 'megahorn' vendor/pokesurvivor/js/app.min.js
           grep -Fq 'doom-desire' vendor/pokesurvivor/js/app.min.js
           grep -Fq 'sacred-fire' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'blue-flare' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'lava-plume' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'dynamax-cannon' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'PKMSVV3DSStage8Charge' vendor/pokesurvivor/js/app.min.js
           grep -Fq 'PKMSVV3DSStage3FX' vendor/pokesurvivor/js/app.min.js
           grep -Fq 'PKMSVV3DSCombatFX' vendor/pokesurvivor/js/app.min.js
           node --check vendor/pokesurvivor/js/app.min.js
-          node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs tests/3ds-stage3-punch-cross-storm.test.cjs tests/3ds-stage4-support.test.cjs tests/3ds-stage5-combat.test.cjs tests/3ds-stage6-projectiles.test.cjs tests/3ds-stage7-dash-meteor.test.cjs
+          node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs tests/3ds-stage3-punch-cross-storm.test.cjs tests/3ds-stage4-support.test.cjs tests/3ds-stage5-combat.test.cjs tests/3ds-stage6-projectiles.test.cjs tests/3ds-stage7-dash-meteor.test.cjs tests/3ds-stage8-beam-nova-charge.test.cjs
           echo PKMSVV_3DS_EFFECTS_ISOLATED_MIRROR_ENGINE_COMPILE_PASS
           mkdir -p dist/3ds-effects-mirror-demo
           rsync -a --exclude='.git' --exclude=tools --exclude=dev.html --exclude='*.map' vendor/pokesurvivor/ dist/3ds-effects-mirror-demo/
