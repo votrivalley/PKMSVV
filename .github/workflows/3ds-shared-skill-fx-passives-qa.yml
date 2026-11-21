@@ -29,6 +29,8 @@ jobs:
           node --check src/pkmsvv-3ds-skill-port.js
           node --check scripts/patch-3ds-skill-effects-passives.cjs
           node --check tests/3ds-fx-passives-shared.test.cjs
+      - name: Run shared Web regression suite
+        run: npm run test:web
       - name: Fetch public PokéSurvivor Web reference JS (no proprietary or 3DS CIA assets)
         run: |
           git clone --depth 1 --filter=blob:none --sparse https://github.com/botgm/PokeSurvivor.git vendor/pokesurvivor
@@ -49,5 +51,4 @@ jobs:
           node --check vendor/pokesurvivor/js/systems/levelup.js
           node --check vendor/pokesurvivor/js/entities/player.js
           echo PKMSVV_SHARED_3DS_FX_PASSIVES_SOURCE_SMOKE_PASS
-      - name: Run shared Web regression suite
-        run: npm run test:web
+
