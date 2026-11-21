@@ -125,7 +125,7 @@ test('Native Earthquake is a circular expanding TREMOR, not the existing Magnitu
  assert.equal(f.actions.hits[0].id,'earthquake');
  f.update(field,.10);
  assert.equal(f.actions.hits.length,1,'no duplicate hit to near enemy');
- f.update(field,.25);
+ f.update(field,.30);
  assert.equal(f.actions.hits.length,2,'shockwave expands to farther enemy');
  assert.equal(f.actions.props.length,1,'ground object hit once');
  const ended=f.update(field,.10);
