@@ -47,7 +47,7 @@ test('4 original-style 3DS moves including Surf join learnable type pool without
  assert.equal(f.G.Moves.ALL.length,5);
  assert.deepEqual(f.G.Moves.ALL.slice(1).map(x=>x.id),['rapid-spin','earthquake','whirlpool','surf']);
  assert.equal(f.G.Moves.BY_ID['rapid-spin'].kind,'spin');
- assert.equal(f.G.Moves.BY_ID.earthquake.kind,'quake');
+ assert.equal(f.G.Moves.BY_ID.earthquake.kind,'tremor');
  assert.equal(f.G.Moves.BY_ID.whirlpool.kind,'vortex');
  assert.equal(f.G.Moves.BY_ID.surf.kind,'wave');
  assert.equal(f.G.Moves.BY_ID.surf.name,'Surf');
@@ -111,18 +111,42 @@ test('Rapid Spin is 3 real timed area hits, with pixel slash visual and property
  assert.equal(f.actions.props.length,3);
  assert.equal(f.actions.fx.filter(x=>x.method==='slash').length,3);
 });
-test('Earthquake advances in five 34px steps, respecting walls and doing real blast damage',()=>{
- const f=fixture(),field=f.cast('earthquake');
+test('Native Earthquake is a circular expanding TREMOR, not the existing Magnitude forward QUAKE',()=>{
+ const f=fixture(),near={id:1,x:20,y:0,dead:false},far={id:2,x:145,y:0,dead:false};
+ const prop={id:13,gone:false};
+ f.mons.push(near,far);f.G.World.propsInCircle=(x,y,r)=>r>=100?[prop]:[];
+ const field=f.cast('earthquake');
+ assert.equal(field.kind,'pkmsvv3ds-tremor');
+ assert.equal(field.r,175);
+ assert.equal(field.life,0.55);
  assert.equal(f.actions.kicks,1);
- for(let i=0;i<5;i++){const end=f.update(field,0.07);assert.equal(end,i===4);}
- assert.deepEqual(f.actions.blasts.map(x=>x.x),[34,68,102,136,170]);
- assert.equal(f.actions.fx.filter(x=>x.method==='ring').length,5);
- const g=fixture(),wall=g.cast('earthquake');
- g.G.World.isWall=(x)=>x>=68;
- assert.equal(g.update(wall,0.07),false);
- assert.equal(g.update(wall,0.07),true);
- assert.equal(g.actions.blasts.length,1,'solid walls block earthquake beyond first wave');
+ f.update(field,.10);
+ assert.equal(f.actions.hits.length,1,'near enemy touched on small initial ring');
+ assert.equal(f.actions.hits[0].id,'earthquake');
+ f.update(field,.10);
+ assert.equal(f.actions.hits.length,1,'no duplicate hit to near enemy');
+ f.update(field,.25);
+ assert.equal(f.actions.hits.length,2,'shockwave expands to farther enemy');
+ assert.equal(f.actions.props.length,1,'ground object hit once');
+ const ended=f.update(field,.10);
+ assert.equal(ended,true,'expanding tremor completes');
+ assert.equal(f.actions.hits.length,2,'no duplicate hits after expansion');
+ const ctx={globalAlpha:1,strokeStyle:'',fillStyle:'',lineWidth:0,
+   beginPath(){},ellipse(){},stroke(){},fill(){}};
+ f.G.PKMSVV3DSCombatFX.draw(ctx,field,0.2);
 });
+test('Existing Magnitude quake can keep its original linear family without registration conflict',()=>{
+ const G={Moves:{
+  ALL:[{id:'magnitude',kind:'quake',type:'ground'}],
+  BY_ID:{magnitude:{id:'magnitude',kind:'quake',type:'ground'}},
+  POOL:{normal:[],ground:['magnitude']},
+  poolFor(mon){return this.POOL[mon.types[0]]||[]}
+ },Coop:{active:false}};
+ vm.runInNewContext(movesCode,{G,Math});
+ assert.equal(G.Moves.BY_ID.magnitude.kind,'quake');
+ assert.equal(G.Moves.BY_ID.earthquake.kind,'tremor');
+});
+
 test('Whirlpool pulls regular enemies, reduces pull on boss, ticks damage and renders vortex',()=>{
  const f=fixture();
  const target={id:1,x:100,y:0,dead:false},reg={id:2,x:140,y:0,dead:false};
