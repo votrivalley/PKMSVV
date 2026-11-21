@@ -29,8 +29,24 @@ jobs:
           node --check src/pkmsvv-3ds-skill-port.js
           node --check scripts/patch-3ds-skill-effects-passives.cjs
           node --check tests/3ds-fx-passives-shared.test.cjs
-      - name: Test new cross-platform passive effects and gamepad pages
+      - name: Fetch public PokéSurvivor Web reference JS (no proprietary or 3DS CIA assets)
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/botgm/PokeSurvivor.git vendor/pokesurvivor
+          git -C vendor/pokesurvivor sparse-checkout set js dev.html
+          test -s vendor/pokesurvivor/js/systems/levelup.js
+          test -s vendor/pokesurvivor/js/systems/combat.js
+          test -s vendor/pokesurvivor/js/entities/player.js
+      - name: Test new cross-platform passive effects and existing gamepad pages
         run: |
           node --test tests/3ds-fx-passives-shared.test.cjs tests/web-levelup-controller.test.cjs tests/skill-balance.test.cjs
+      - name: Real source patch smoke (uncompiled JS, before Web/Android/PC bundling)
+        run: |
+          node scripts/patch-3ds-skill-effects-passives.cjs
+          grep -Fq 'G.PKMSVV3DSSkillPort' vendor/pokesurvivor/js/systems/combat.js
+          grep -Fq 'minimumPassiveCards' vendor/pokesurvivor/js/systems/levelup.js
+          node --check vendor/pokesurvivor/js/systems/combat.js
+          node --check vendor/pokesurvivor/js/systems/levelup.js
+          node --check vendor/pokesurvivor/js/entities/player.js
+          echo PKMSVV_SHARED_3DS_FX_PASSIVES_SOURCE_SMOKE_PASS
       - name: Run shared Web regression suite
         run: npm run test:web
