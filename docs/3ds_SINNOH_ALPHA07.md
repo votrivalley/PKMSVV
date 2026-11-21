@@ -21,11 +21,21 @@
 
 ## Acceptance checklist
 
-- [ ] Full devkitARM native CIA + 3DSX compile and identity check.
-- [ ] Azahar 12-second Sinnoh gameplay: all 4th-gen encounters, 0 outsiders, Cresselia at 1800 seconds.
-- [ ] Azahar deterministic first boss kill / Badge / Cresselia final kill victory.
-- [ ] Azahar render of 10-region menu with Hoenn backup Badge fixture (do not claim pixel text verified unless specifically asserted).
-- [ ] Verify ×1.5 inherited native controls and no Co-op speed modification.
+- [x] Full devkitARM native CIA + 3DSX compile and identity check.
+- [x] Azahar 12-second Sinnoh gameplay: all 4th-gen encounters, 0 outsiders, Cresselia at 1800 seconds.
+- [x] Azahar deterministic first boss kill / Badge / Cresselia final kill victory.
+- [x] Azahar nonblank 10-region menu capture with a corrupted Hoenn primary and valid backup Badge fixture. [ ] Text/access through real button/touch selection still unverified.
+- [x] Azahar ×1.5 Kanto solo real-time regression. [ ] Touch placement/Co-op hardware regression remains pending.
 - [ ] Real New 3DS 30-minute gameplay, FBI install, actual touchscreen press and SD read/write persistence — pending.
 
 PR remains Draft. No merge or public release.
+
+## Verified builds / emulator logs (2026-11-21)
+
+- Native build: [GitHub Actions #44872569903](https://github.com/votrivalley/PKMSVV/actions/runs/44872569903), **SUCCESS**; artifact `PKMSVV-3DS-4-REGIONS-SINNOH-ALPHA07` (CIA + 3DSX), isolated Title ID `000400000F5B1400` checked.
+- Emulator: [Azahar QA #44873119782](https://github.com/votrivalley/PKMSVV/actions/runs/44873119782), **SUCCESS**.
+- Sinnoh actual native 12s gameplay: `PKMSVV_REGION07_CAST_PASS total=44 outsiders=0`, `PKMSVV_REGION07_LIVE_PASS living=11 foreign=0`, mean 60 FPS in this short emulator smoke; first boss sampled Mamoswine #473 at t=900, final configured Cresselia #488 t=1800.
+- Inherited speed: `PKMSVV_SPEED_REALTIME_PASS game=18.00 wall=12.16 ratio=1.481` in Kanto solo, not an endurance measurement.
+- Gate: `PKMSVV_REGION04_GATE_BEFORE_PASS`, `GATE_AFTER_PASS`, `FINAL_DEFEAT_PASS victory=1`; `PKMSVV_REGION07_KILL_GATED_CRESSELIA_PASS`. Synthetic 1801s gate run logs `REGION07_LIVE_FAIL living=0` because it intentionally skips normal live enemies; the separate normal 12s live run passed.
+- UI screenshot: `REGION07_SINNOH_UNLOCK_UI_CAPTURE_PASS (1280,800)` checks screenshot dimensions/variation only, not the exact unlock text or actual touch interaction.
+- Hardware 30-minute performance, SD write/read across reboots, and touch access to Sinnoh are still pending.
