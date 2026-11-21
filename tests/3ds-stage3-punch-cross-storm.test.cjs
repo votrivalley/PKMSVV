@@ -156,6 +156,16 @@ test('Fire Blast is a delayed target-centered cross; exact hit geometry and once
  assert.equal(f.update(field,.1),true);
  assert.equal(f.attacks.hits.length,n,'no double-hit');
 });
+test('Cross does not aim at a broken crate when no enemy is present',()=>{
+ const f=fixture();
+ f.p.target={x:60,y:0,gone:false,destructible:true};
+ assert.equal(f.cast('fire-blast').result,false);
+ const mob={x:90,y:0,dead:false};
+ f.enemies.push(mob);
+ const spawned=f.cast('fire-blast');
+ assert.equal(spawned.result,true);
+ assert.equal(spawned.fields[0].x,90);
+});
 test('Storm creates staggered lightning fields on visible monsters, then genuine AoE blast',()=>{
  const f=fixture(),enemy={x:70,y:50,dead:false};
  f.enemies.push(enemy);
