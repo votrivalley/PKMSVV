@@ -150,7 +150,7 @@ test('Acrobatics delays impact 0.32s and receives 1.5x power when no item equipp
  assert.equal(f.update(leap.fields[0],.2),false);
  assert.equal(f.log.blasts.length,0);
  assert.equal(f.update(leap.fields[0],.15),true);
- assert.equal(f.log.blasts.length,1);assert.equal(f.log.blasts[0].dmg,39.9);
+ assert.equal(f.log.blasts.length,1);assert.ok(Math.abs(f.log.blasts[0].dmg-39.9)<1e-9);
  assert.equal(f.p.x,70);
  const g=fixture();g.p.item='choiceband';g.enemies.push({x:70,y:0,r:10,dead:false});
  assert.equal(g.cast('acrobatics').fields[0].dmg,26.6);
@@ -177,7 +177,7 @@ test('Explosion does genuine area damage, attacks props and costs 25% remaining 
  const count=f.log.hits.length;
  assert.equal(f.update(boom.fields[0],.05),true);
  assert.equal(f.log.hits.length,count,'no double-trigger on same field');
- f.p.hp=1.2;const second=f.cast('explosion').fields[0];f.update(second,.02);
+ f.p.hp=1.2;const second=f.cast('explosion').fields.at(-1);f.update(second,.02);
  assert.equal(f.p.hp,1);
 });
 test('Explosion ghost produces FX but never costs real HP or damages targets',()=>{
