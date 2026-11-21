@@ -28,7 +28,7 @@ G.PKMSVV3DSCombatFX = (() => {
     // Hard cap only our fields: no interference with original mines/turrets.
     if(fields.filter(isPortField).length>=24)return false;
     const color=typeColor(m), x=Number(p.x)||0, y=Number(p.y)||0;
-    const radius=clamp(m.radius,16,150), n=Math.round(clamp(m.count||3,1,10));
+    const radius=clamp(m.radius,16,m.kind==='tremor'?260:150), n=Math.round(clamp(m.count||3,1,10));
     const base={
       kind,owner:p,ghost:!!ghost,m,vis:vfx(m),col:color,
       x,y,sx:x,sy:y,t:0,life:1,r:radius,
