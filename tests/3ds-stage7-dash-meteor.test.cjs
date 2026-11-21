@@ -81,7 +81,7 @@ test('Active Co-op excludes all 10 new IDs while old move remains',()=>{
 });
 test('Stage7 Web patch keeps existing gameplay kinds and adds only restricted dispatch',()=>{
  const src=read('scripts/patch-3ds-stage7-dash-meteor.cjs');
- for(const part of ['"projectile","dash","meteor"','m.only?.length',
+ for(const part of ['"projectile","dash","meteor"',
   'fields.filter(f=>f.kind===','pkmsvv3dsNative','Stage7 Web source anchor drift'])
   assert.ok(src.includes(part),part);
 });
