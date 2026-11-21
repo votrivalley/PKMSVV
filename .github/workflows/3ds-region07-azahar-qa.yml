@@ -172,13 +172,13 @@ jobs:
           grep -q 'PKMSVV_REGION04_GATE_AFTER_PASS' qa-binary/autotest-gate.log
           grep -q 'PKMSVV_REGION04_FINAL_DEFEAT_PASS' qa-binary/autotest-gate.log
           grep -q 'PKMSVV_REGION07_BOSS_CFG_PASS' qa-binary/autotest-gate.log
-          grep -Eq 'PKMSVV_REGION07_BOSS_CFG_PASS.*second=385@1800' qa-binary/autotest-gate.log
+          grep -Eq 'PKMSVV_REGION07_BOSS_CFG_PASS.*second=488@1800' qa-binary/autotest-gate.log
           # This synthetic 0-dt 1801s test intentionally bypasses ordinary
           # 12s gameplay diagnostics, which can print RUN_STATE/LIVE_FAIL.
           # Only the explicit gate transition markers are applicable here.
           ! grep -E 'PKMSVV_REGION04_(GATE_BEFORE|GATE_AFTER|FINAL_DEFEAT)_FAIL' qa-binary/autotest-gate.log
           case "$code" in 0|124|137) ;; *) exit 1;; esac
-          echo PKMSVV_REGION07_KILL_GATED_JIRACHI_PASS
+          echo PKMSVV_REGION07_KILL_GATED_CRESSELIA_PASS
       - name: Render actual 10-Region chooser in Azahar and capture UI
         shell: bash
         env:
