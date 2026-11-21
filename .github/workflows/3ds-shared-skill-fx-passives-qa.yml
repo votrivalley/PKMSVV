@@ -6,6 +6,10 @@ on:
     paths:
       - .github/workflows/3ds-shared-skill-fx-passives-qa.yml
       - src/pkmsvv-3ds-skill-port.js
+      - src/pkmsvv-3ds-move-families.js
+      - src/pkmsvv-3ds-combat-families.js
+      - scripts/patch-3ds-move-families.cjs
+      - tests/3ds-move-families-shared.test.cjs
       - scripts/patch-3ds-skill-effects-passives.cjs
       - scripts/prepare-game.cjs
       - tests/3ds-fx-passives-shared.test.cjs
@@ -27,6 +31,10 @@ jobs:
       - name: Check JavaScript source and patcher syntax
         run: |
           node --check src/pkmsvv-3ds-skill-port.js
+          node --check src/pkmsvv-3ds-move-families.js
+          node --check src/pkmsvv-3ds-combat-families.js
+          node --check scripts/patch-3ds-move-families.cjs
+          node --check tests/3ds-move-families-shared.test.cjs
           node --check scripts/patch-3ds-skill-effects-passives.cjs
           node --check tests/3ds-fx-passives-shared.test.cjs
       - name: Run shared Web regression suite
@@ -41,7 +49,7 @@ jobs:
           test -s vendor/pokesurvivor/js/entities/player.js
       - name: Test new cross-platform passive effects and existing gamepad pages
         run: |
-          node --test tests/3ds-fx-passives-shared.test.cjs tests/web-levelup-controller.test.cjs
+          node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs tests/web-levelup-controller.test.cjs
       - name: Real source patch smoke (uncompiled JS, before Web/Android/PC bundling)
         run: |
           node scripts/patch-3ds-skill-effects-passives.cjs
@@ -51,4 +59,13 @@ jobs:
           node --check vendor/pokesurvivor/js/systems/levelup.js
           node --check vendor/pokesurvivor/js/entities/player.js
           echo PKMSVV_SHARED_3DS_FX_PASSIVES_SOURCE_SMOKE_PASS
+          node scripts/patch-3ds-move-families.cjs
+          grep -Fq "case 'quake':" vendor/pokesurvivor/js/systems/combat.js
+          grep -Fq "case 'vortex':" vendor/pokesurvivor/js/systems/combat.js
+          grep -Fq "case 'spin':" vendor/pokesurvivor/js/systems/combat.js
+          grep -Fq 'pkmsvv-3ds-move-families.js' vendor/pokesurvivor/dev.html
+          node --check vendor/pokesurvivor/js/systems/combat.js
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-move-families.js
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-combat-families.js
+          echo PKMSVV_3DS_NATIVE_ATTACK_FAMILIES_SOURCE_SMOKE_PASS
 
