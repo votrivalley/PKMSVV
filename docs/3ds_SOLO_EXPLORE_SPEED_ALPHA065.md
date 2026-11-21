@@ -23,3 +23,11 @@
 - [ ] No stability regression in 30-minute run or saved Kanto Badge
 
 **This is a Draft QA build, not a stable release.** Back up `sdmc:/3ds/pkmsvv-kanto01/` before testing.
+
+## Green build / emulator evidence (2026-11-21)
+- Native CIA + 3DSX: [GitHub Actions #44850738473](https://github.com/votrivalley/PKMSVV/actions/runs/44850738473), artifact `PKMSVV-3DS-EXPLORE-X1P5-ALPHA065`, both packaged successfully with the isolated Title ID.
+- Azahar: [Actions #44850933822](https://github.com/votrivalley/PKMSVV/actions/runs/44850933822) **PASS**.
+- **Measured real speed**: `PKMSVV_SPEED_REALTIME_PASS game=18.00 wall=12.16 ratio=1.481`; near target ×1.5. Emulator reported mean 59.8 FPS over short run (not hardware proof).
+- Kanto speed test roster: 44/44 candidates, 0 outsiders, Mewtwo #150 configured for 30min.
+- Hoenn synthetic tracked-boss gate after speed patch: `PKMSVV_REGION04_FINAL_DEFEAT_PASS victory=1`, Jirachi #385 configured for 30min, no out-of-Gen roster entries.
+- Region menu captured, but **touch tap x1/x1.5 was not actively automated**. Real New 3DS touch controls, sustained FPS and SD save hardware validation remain pending.
