@@ -44,11 +44,10 @@ patch("src/core/game.h",
  '  int8_t slot_n[8] = {};\n'
  '  int nslots = 0;')
 patch("src/core/game.h",
- 'struct RunConfig {\n  int dex = 1;',
- 'struct RunConfig {\n'
+ '  bool kanto_only = false;',
  '  int32_t pkmsvv_total_kills = 0;   // snapshot of native Save stats\n'
  '  uint16_t pkmsvv_upgrade_total = 0; // count of native upgrade ranks\n'
- '  int dex = 1;')
+ '  bool kanto_only = false;')
 patch("src/core/player.cpp",
  '  for (int s = 0; s < 4; ++s) for (int j = 0; j < 4; ++j) p.slots[s][j] = -1;',
  '  for (int s = 0; s < 8; ++s) for (int j = 0; j < 4; ++j) p.slots[s][j] = -1;')
