@@ -40,8 +40,12 @@ G.PKMSVV3DSStage3FX = (() => {
      fields.push(f);return true;
    }
    if(m.kind==='cross'){
-     const tg=(p.target&&!p.target.dead)?p.target:null;
-     if(!tg)return false; // Native Cross requires a nearby target.
+     // Player.target may be a breakable tree/rock. Native 3DS Cross
+     // targets an actual enemy; never spend this cast on a random prop.
+     const enemyList=(G.EnemyMgr?.all?.()||[]).filter(e=>e&&!e.dead&&!e.arceus);
+     const marked=enemyList.includes(p.target)?p.target:null;
+     const tg=marked||enemyList.find(e=>Math.hypot(e.x-p.x,e.y-p.y)<=420)||null;
+     if(!tg)return false;
      const f=base(p,m,ghost);f.x=tg.x;f.y=tg.y;
      f.w=limit(m.width,12,95);f.delay=0.3;f.life=0.7;f.struck=false;
      fields.push(f);return true;
