@@ -58,6 +58,37 @@ test('4 original-style 3DS moves including Surf join learnable type pool without
  assert.equal(f.G.PKMSVV3DSMoveFamilies.install(),0,'not duplicated');
  assert.equal(f.G.Moves.ALL.length,5);
 });
+test('103-move PKMSVV keeps original Rapid Spin and Whirlpool without duplicates or Co-op regressions',()=>{
+ const rapid={id:'rapid-spin',kind:'spin',type:'normal',cd:1.0,fromOriginal:true};
+ const whirl={id:'whirlpool',kind:'vortex',type:'water',cd:3.0,fromOriginal:true};
+ const G={
+   Moves:{
+    ALL:[rapid,whirl],BY_ID:{'rapid-spin':rapid,whirlpool:whirl},
+    POOL:{normal:['rapid-spin'],water:['whirlpool'],ground:[]},
+    poolFor(mon){
+      const ids=new Set(this.POOL.normal);
+      for(const t of mon.types)for(const id of this.POOL[t]||[])ids.add(id);
+      return [...ids];
+    }
+   },
+   Coop:{active:false}
+ };
+ vm.runInNewContext(movesCode,{G,Math});
+ assert.equal(G.Moves.ALL.length,4,'two original IDs + two genuinely missing Earthquake/Surf');
+ assert.equal(G.Moves.BY_ID['rapid-spin'],rapid);
+ assert.equal(G.Moves.BY_ID.whirlpool,whirl);
+ assert.equal(G.Moves.BY_ID['rapid-spin'].cd,1.0);
+ assert.equal(G.Moves.BY_ID.whirlpool.cd,3.0);
+ assert.deepEqual([...G.PKMSVV3DSMoveFamilies.registered].sort(),['earthquake','surf']);
+ assert.equal(G.PKMSVV3DSMoveFamilies.isNativeMove('rapid-spin'),false);
+ assert.equal(G.PKMSVV3DSMoveFamilies.isNativeMove('whirlpool'),false);
+ assert.equal(G.PKMSVV3DSMoveFamilies.isNativeMove('surf'),true);
+ G.Coop.active=true;
+ const pool=G.Moves.poolFor({types:['water','ground']});
+ assert.ok(pool.includes('rapid-spin'),'never remove old Rapid Spin from Co-op');
+ assert.ok(pool.includes('whirlpool'),'never remove old Whirlpool from Co-op');
+ assert.ok(!pool.includes('earthquake')&&!pool.includes('surf'),'new mechanics still QA-gated in network mode');
+});
 test('networked Co-op hides new field moves but keeps all preexisting skills',()=>{
  const f=fixture();
  f.G.Coop.active=true;
@@ -178,7 +209,7 @@ test('Whirlpool cap is two per owner and all native field effects are capped',()
 });
 test('actual common gameplay build installs the three source-level combat patches before minification',()=>{
  assert.match(prepCode,/patch-3ds-move-families\.cjs/);
- for(const token of ["case 'spin':","case 'quake':","case 'vortex':","G.PKMSVV3DSCombatFX.update","G.PKMSVV3DSCombatFX.draw","js/systems/combat.js"])assert.ok(patchCode.includes(token),token);
+ for(const token of ["G.PKMSVV3DSMoveFamilies.isNativeMove(m.id)","G.PKMSVV3DSCombatFX.spawn","G.PKMSVV3DSCombatFX.update","G.PKMSVV3DSCombatFX.draw","js/systems/combat.js"])assert.ok(patchCode.includes(token),token);
  assert.match(patchCode,/js\/systems\/pkmsvv-3ds-move-families\.js/);
  assert.match(patchCode,/js\/systems\/pkmsvv-3ds-combat-families\.js/);
  assert.doesNotMatch(patchCode,/save\.json|save\.bak|firebase|signing|android-app-id/i);
