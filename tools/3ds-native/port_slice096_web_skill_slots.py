@@ -116,7 +116,7 @@ patch("src/core/player.cpp",
 patch("src/platform/3ds/app.cpp",
  '  g_->start_run(cfg, autotest && !auto_real ? nullptr : s_);',
  '  if (cfg.kanto_only && !autotest) {\n'
- '    cfg.pkmsvv_total_kills=std::max(0,s_->stats.total_kills);\n'
+ '    cfg.pkmsvv_total_kills=std::max(int32_t(0),s_->stats.total_kills);\n'
  '    unsigned ranks=0;\n'
  '    for (int d=1;d<=kMaxDex;++d)\n'
  '      for (int k=0;k<UP_COUNT;++k) ranks+=s_->pupg[d][k];\n'
