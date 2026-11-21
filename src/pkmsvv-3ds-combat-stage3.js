@@ -83,7 +83,7 @@ G.PKMSVV3DSStage3FX = (() => {
          hooks.hit?.(p,e,d,f.col,e.x-p.x,e.y-p.y,last?70:10,m);
          if(!e.arceus&&num(m.drain,0)>0)healing+=num(m.drain,0);
          if(last&&!e.dead&&num(m.stun,0)>0){
-           const seconds=num(m.stun,0)*(e.boss||e.judge?.35:1);
+           const seconds=num(m.stun,0)*((e.boss||e.judge)?0.35:1);
            if(typeof e.applyStun==='function')e.applyStun(seconds);
            else if(typeof e.applySlow==='function')e.applySlow(1,seconds);
          }
