@@ -9,6 +9,10 @@ on:
       - src/pkmsvv-3ds-move-families.js
       - src/pkmsvv-3ds-stage3-moves.js
       - src/pkmsvv-3ds-stage4-moves.js
+      - src/pkmsvv-3ds-stage5-moves.js
+      - src/pkmsvv-3ds-combat-stage5.js
+      - tests/3ds-stage5-combat.test.cjs
+      - scripts/patch-3ds-stage5-families.cjs
       - src/pkmsvv-3ds-support-stage4.js
       - tests/3ds-stage4-support.test.cjs
       - scripts/patch-3ds-support-families.cjs
@@ -44,6 +48,10 @@ jobs:
           node --check src/pkmsvv-3ds-combat-stage3.js
           node --check src/pkmsvv-3ds-stage4-moves.js
           node --check src/pkmsvv-3ds-support-stage4.js
+          node --check src/pkmsvv-3ds-stage5-moves.js
+          node --check src/pkmsvv-3ds-combat-stage5.js
+          node --check scripts/patch-3ds-stage5-families.cjs
+          node --check tests/3ds-stage5-combat.test.cjs
           node --check scripts/patch-3ds-support-families.cjs
           node --check tests/3ds-stage4-support.test.cjs
           node --check tests/3ds-stage3-punch-cross-storm.test.cjs
@@ -63,7 +71,7 @@ jobs:
           test -s vendor/pokesurvivor/js/entities/player.js
       - name: Test new cross-platform passive effects and existing gamepad pages
         run: |
-          node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs tests/3ds-stage3-punch-cross-storm.test.cjs tests/3ds-stage4-support.test.cjs tests/web-levelup-controller.test.cjs
+          node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs tests/3ds-stage3-punch-cross-storm.test.cjs tests/3ds-stage4-support.test.cjs tests/3ds-stage5-combat.test.cjs tests/web-levelup-controller.test.cjs
       - name: Real source patch smoke (uncompiled JS, before Web/Android/PC bundling)
         run: |
           node scripts/patch-3ds-skill-effects-passives.cjs
@@ -75,6 +83,7 @@ jobs:
           echo PKMSVV_SHARED_3DS_FX_PASSIVES_SOURCE_SMOKE_PASS
           node scripts/patch-3ds-move-families.cjs
           node scripts/patch-3ds-support-families.cjs
+          node scripts/patch-3ds-stage5-families.cjs
           grep -Fq 'G.PKMSVV3DSMoveFamilies.isNativeMove(m.id)' vendor/pokesurvivor/js/systems/combat.js
           grep -Fq 'G.PKMSVV3DSCombatFX.spawn(fields, pl, m, ghost)' vendor/pokesurvivor/js/systems/combat.js
           grep -Fq "id:'surf'" vendor/pokesurvivor/js/systems/pkmsvv-3ds-move-families.js
@@ -83,6 +92,13 @@ jobs:
           grep -Fq 'pkmsvv-3ds-combat-stage3.js' vendor/pokesurvivor/dev.html
           grep -Fq 'pkmsvv-3ds-stage4-moves.js' vendor/pokesurvivor/dev.html
           grep -Fq 'pkmsvv-3ds-support-stage4.js' vendor/pokesurvivor/dev.html
+          grep -Fq 'pkmsvv-3ds-stage5-moves.js' vendor/pokesurvivor/dev.html
+          grep -Fq 'pkmsvv-3ds-combat-stage5.js' vendor/pokesurvivor/dev.html
+          grep -Fq 'PKMSVV3DSStage5Combat.needsTarget(m)' vendor/pokesurvivor/js/systems/combat.js
+          grep -Fq "'range', 'knock'" vendor/pokesurvivor/js/data/moves.js
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-stage5-moves.js
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-combat-stage5.js
+          node --check vendor/pokesurvivor/js/data/moves.js
           grep -Fq 'G.PKMSVV3DSStage4Support.decoyFor(this,pl)' vendor/pokesurvivor/js/entities/enemy.js
           grep -Fq 'incomingDamage(this,amount,pure,category)' vendor/pokesurvivor/js/entities/player.js
           grep -Fq 'm.minCd' vendor/pokesurvivor/js/systems/combat.js
