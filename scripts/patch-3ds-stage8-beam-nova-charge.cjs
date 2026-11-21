@@ -20,8 +20,8 @@ patch('dev.html',anchor,anchor+
 // Previous Stage7 routes existing native projectile/dash/meteor via built-in engine.
 // Beam and Nova are native built-in kinds too; only Charge needs field runtime.
 patch('js/systems/combat.js',
- '["projectile","dash","meteor"].includes(m.kind)',
- '["projectile","dash","meteor","beam","nova"].includes(m.kind)');
+ '&& ["projectile","dash","meteor"].includes(m.kind) &&',
+ '&& ["projectile","dash","meteor","beam","nova"].includes(m.kind) &&');
 patch('js/systems/combat.js',
  '!["projectile","dash","meteor"].includes(m.kind)',
  '!["projectile","dash","meteor","beam","nova"].includes(m.kind)');
