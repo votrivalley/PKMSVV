@@ -1,5 +1,5 @@
 /* PKMSVV — 3DS move families → shared Web/Android/PC engine, QA stage 2.
- * 3 real gameplay move definitions; original 103 moves stay unchanged.
+ * 4 real gameplay move definitions; original 103 moves and Bubble→Surf stay unchanged.
  * Mechanics adapt PokéSurvivor3DS native combat.cpp spin/quake/vortex.
  * Names retained in English per PKMSVV skill glossary.
  * Noncommercial fan work; upstream JPTER78 + 3DS port juanluismm521.
@@ -41,6 +41,20 @@ G.PKMSVV3DSMoveFamilies = (() => {
         {t:'+35% sát thương',m:{dmg:1.35}},
         {t:'+25% thời gian tồn tại',m:{dur:1.25}},
         {t:'-20% hồi chiêu và hút mạnh hơn',m:{cd:0.80,pull:145}}
+      ]
+    },
+    {
+      // Original Web uses the display name Surf only when Bubble evolves.
+      // This is a separate 3DS-style *learnable* wave; do not alter the
+      // existing Bubble evolution or any saved skill IDs.
+      id:'surf', name:'Surf', type:'water', kind:'wave',
+      desc:'Sóng nước khổng lồ quét từ sau ra trước, gây damage một lần và cuốn quái đi.',
+      cd:3.20, dmg:24, radius:210, width:124, speed:280, knock:160,
+      ups:[
+        {t:'+20% bề ngang con sóng',m:{width:1.20}},
+        {t:'+35% sát thương',m:{dmg:1.35}},
+        {t:'+20% khoảng cách sóng',m:{radius:1.20}},
+        {t:'-20% hồi chiêu và +15% tốc độ sóng',m:{cd:0.80,speed:1.15}}
       ]
     }
   ];
