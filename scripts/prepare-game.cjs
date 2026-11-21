@@ -664,6 +664,8 @@ for(const patchName of ['patch-held-item-ui.cjs','patch-bond-fusion.cjs','patch-
 // PKMSVV 3DS-to-Web skill/passive port: shared uncompiled source for Web, Android and PC.
 // Keep this isolated QA branch out of production until compiled/mobile QA passes.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-3ds-skill-effects-passives.cjs')],{cwd:project,stdio:'inherit'});
+// Stage 2: native-style 3DS attack families with actual hit/pull/area logic.
+execFileSync(process.execPath,[path.join(project,'scripts','patch-3ds-move-families.cjs')],{cwd:project,stdio:'inherit'});
 // Final UI pass: compact Pokédex sort, Support native scrolling and accent-safe title.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-dex-support-mobile-ui.cjs')],{cwd:project,stdio:'inherit'});
 // Only Switch/Brewser: tolerate absent DOMContentLoaded and a stalled pixel-font Promise.
