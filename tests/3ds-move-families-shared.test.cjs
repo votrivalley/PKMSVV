@@ -1,0 +1,134 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict');
+const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+const root=path.resolve(__dirname,'..');
+const movesCode=fs.readFileSync(path.join(root,'src/pkmsvv-3ds-move-families.js'),'utf8');
+const fxCode=fs.readFileSync(path.join(root,'src/pkmsvv-3ds-combat-families.js'),'utf8');
+const patchCode=fs.readFileSync(path.join(root,'scripts/patch-3ds-move-families.cjs'),'utf8');
+const prepCode=fs.readFileSync(path.join(root,'scripts/prepare-game.cjs'),'utf8');
+function fixture(){
+ const actions={hits:[],blasts:[],props:[],fx:[],draws:[],kicks:0};
+ const mons=[];
+ const fxs={};
+ for(const method of ['ring','burst','sp','slash'])fxs[method]=(...args)=>actions.fx.push({method,args});
+ const G={
+  U:{TYPE_COLOR:{normal:'#fff',ground:'#aa8',water:'#55f'}},
+  LIFT:12,
+  FX:fxs,
+  VFX:{forMove:m=>({pal:m.type,proj:'wind'}),draw(...args){actions.draws.push(args)}},
+  Camera:{sees:()=>true,kick(){actions.kicks++;}},
+  World:{isWall:()=>false,propsInCircle:()=>[],damageProp:p=>actions.props.push(p)},
+  EnemyMgr:{queryCircle:(x,y,r)=>mons.filter(e=>!e.dead&&Math.hypot(e.x-x,e.y-y)<=r)},
+  Coop:{active:false},
+  Moves:{
+   ALL:[{id:'tackle',kind:'melee',type:'normal'}],
+   BY_ID:{tackle:{id:'tackle',kind:'melee',type:'normal'}},
+   POOL:{normal:['tackle'],ground:[],water:[]},
+   poolFor(mon){const ids=new Set(this.POOL.normal);for(const t of mon.types)for(const id of this.POOL[t]||[])ids.add(id);return [...ids];},
+   instance(id){const m=this.BY_ID[id];return {...m,def:m,lvl:1,t:0};}
+  }
+ };
+ const context={G,Math,Date,performance:{now:()=>1000}};
+ vm.runInNewContext(movesCode,context);
+ vm.runInNewContext(fxCode,context);
+ const hit=(p,e,dmg,col,dx,dy,knock,m)=>actions.hits.push({p,e,dmg,col,dx,dy,knock,id:m.id});
+ const blast=(f,r)=>actions.blasts.push({x:f.x,y:f.y,r,ghost:f.ghost,owner:f.owner});
+ const hooks={hit,blast};
+ const fieldStore=[];
+ const player={x:0,y:0,aim:0,atk:2,r:16,bodyH:32};
+ function cast(id,ghost=false) {
+  const m=G.Moves.instance(id); assert.ok(G.PKMSVV3DSCombatFX.spawn(fieldStore,player,m,ghost));return fieldStore.at(-1);
+ }
+ function update(f,dt){f.t+=dt;return G.PKMSVV3DSCombatFX.update(f,dt,hooks);}
+ return {G,actions,mons,player,fieldStore,cast,update,hooks};
+}
+test('3 original-style 3DS moves actually join learnable type pool without replacing 103-source moves',()=>{
+ const f=fixture();
+ assert.equal(f.G.Moves.ALL.length,4);
+ assert.deepEqual(f.G.Moves.ALL.slice(1).map(x=>x.id),['rapid-spin','earthquake','whirlpool']);
+ assert.equal(f.G.Moves.BY_ID['rapid-spin'].kind,'spin');
+ assert.equal(f.G.Moves.BY_ID.earthquake.kind,'quake');
+ assert.equal(f.G.Moves.BY_ID.whirlpool.kind,'vortex');
+ assert.ok(f.G.Moves.poolFor({types:['water']}).includes('whirlpool'));
+ assert.ok(f.G.Moves.poolFor({types:['ground']}).includes('earthquake'));
+ assert.ok(f.G.Moves.poolFor({types:['flying']}).includes('rapid-spin'));
+ assert.equal(f.G.PKMSVV3DSMoveFamilies.install(),0,'not duplicated');
+ assert.equal(f.G.Moves.ALL.length,4);
+});
+test('networked Co-op hides new field moves but keeps all preexisting skills',()=>{
+ const f=fixture();
+ f.G.Coop.active=true;
+ const pool=f.G.Moves.poolFor({types:['ground','water']});
+ assert.equal(pool.length,1);
+ assert.equal(pool[0],'tackle');
+ f.G.Coop.active=false;
+ assert.equal(f.G.Moves.poolFor({types:['ground','water']}).length,4);
+});
+test('Rapid Spin is 3 real timed area hits, with pixel slash visual and property damage',()=>{
+ const f=fixture(),enemy={id:2,x:30,y:0,dead:false};
+ f.mons.push(enemy);
+ f.G.World.propsInCircle=()=>[{id:'rock'}];
+ const field=f.cast('rapid-spin');
+ assert.equal(field.left,3);
+ for(let i=0;i<3;i++){const done=f.update(field,0.13);assert.equal(done,i===2);}
+ assert.equal(f.actions.hits.length,3);
+ assert.equal(f.actions.hits[0].dmg,24);
+ assert.equal(f.actions.hits[0].knock,40);
+ assert.equal(f.actions.props.length,3);
+ assert.equal(f.actions.fx.filter(x=>x.method==='slash').length,3);
+});
+test('Earthquake advances in five 34px steps, respecting walls and doing real blast damage',()=>{
+ const f=fixture(),field=f.cast('earthquake');
+ assert.equal(f.actions.kicks,1);
+ for(let i=0;i<5;i++){const end=f.update(field,0.07);assert.equal(end,i===4);}
+ assert.deepEqual(f.actions.blasts.map(x=>x.x),[34,68,102,136,170]);
+ assert.equal(f.actions.fx.filter(x=>x.method==='ring').length,5);
+ const g=fixture(),wall=g.cast('earthquake');
+ g.G.World.isWall=(x)=>x>=68;
+ assert.equal(g.update(wall,0.07),false);
+ assert.equal(g.update(wall,0.07),true);
+ assert.equal(g.actions.blasts.length,1,'solid walls block earthquake beyond first wave');
+});
+test('Whirlpool pulls regular enemies, reduces pull on boss, ticks damage and renders vortex',()=>{
+ const f=fixture();
+ const target={id:1,x:100,y:0,dead:false},reg={id:2,x:140,y:0,dead:false};
+ const boss={id:3,x:135,y:0,dead:false,boss:true};
+ f.mons.push(target,reg,boss);f.player.target=target;
+ const field=f.cast('whirlpool');
+ assert.equal(field.x,100);
+ f.update(field,.10); f.update(field,.10);
+ assert.ok(reg.x<140,'regular enemy pulled inward');
+ assert.ok(boss.x>reg.x-5,'boss pulls less than normal mob');
+ assert.ok(f.actions.blasts.length>=1);
+ const ctx={globalAlpha:1,strokeStyle:'',lineWidth:0,beginPath(){},ellipse(){},stroke(){},fill(){}};
+ f.G.PKMSVV3DSCombatFX.draw(ctx,field,1.2);
+ assert.ok(f.actions.draws.length>0,'native-looking animated wind sprite draws on existing Web FX atlas');
+});
+test('Co-op ghost casts are visual-only and cannot hit/pull enemies',()=>{
+ const f=fixture(),enemy={id:5,x:25,y:0,dead:false};f.mons.push(enemy);
+ const field=f.cast('rapid-spin',true);
+ for(let i=0;i<3;i++)f.update(field,0.13);
+ assert.equal(f.actions.hits.length,0);
+ const quake=f.cast('earthquake',true);
+ for(let i=0;i<5;i++)f.update(quake,0.07);
+ assert.equal(f.actions.blasts.length,0);
+ const f2=fixture(),en={id:3,x:155,y:0,dead:false};
+ f2.mons.push(en);const whirl=f2.cast('whirlpool',true);
+ f2.update(whirl,0.1);
+ assert.equal(en.x,155);
+ assert.equal(f2.actions.blasts.length,0);
+});
+test('Whirlpool cap is two per owner and all native field effects are capped',()=>{
+ const f=fixture();
+ for(let i=0;i<3;i++)f.cast('whirlpool');
+ assert.equal(f.fieldStore.filter(x=>x.kind==='pkmsvv3ds-vortex').length,2);
+ for(let i=0;i<10;i++)f.cast('rapid-spin');
+ assert.equal(f.fieldStore.filter(x=>x.kind==='pkmsvv3ds-spin').length,6);
+});
+test('actual common gameplay build installs the three source-level combat patches before minification',()=>{
+ assert.match(prepCode,/patch-3ds-move-families\.cjs/);
+ for(const token of ["case 'spin':","case 'quake':","case 'vortex':","G.PKMSVV3DSCombatFX.update","G.PKMSVV3DSCombatFX.draw","js/systems/combat.js"])assert.ok(patchCode.includes(token),token);
+ assert.match(patchCode,/js\/systems\/pkmsvv-3ds-move-families\.js/);
+ assert.match(patchCode,/js\/systems\/pkmsvv-3ds-combat-families\.js/);
+ assert.doesNotMatch(patchCode,/save\.json|save\.bak|firebase|signing|android-app-id/i);
+});
