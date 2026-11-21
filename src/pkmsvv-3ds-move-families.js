@@ -59,13 +59,19 @@ G.PKMSVV3DSMoveFamilies = (() => {
     }
   ];
   const registered = [];
+  const alreadyInGame = [];
   function install() {
     let additions=0;
     if (!moves || !moves.BY_ID || !moves.POOL || !Array.isArray(moves.ALL))
       throw Error('PKMSVV 3DS move families: Web moves catalogue missing');
     for (const def of defs) {
       if (moves.BY_ID[def.id]) {
-        if (!moves.BY_ID[def.id].pkmsvv3dsNative) throw Error('3DS move ID collision: '+def.id);
+        // PKMSVV's real 103-move catalog ALREADY has Rapid Spin and
+        // Whirlpool. Do not re-register, mutate their damage/balance or
+        // change any saved move ID. A conflicting kind is a hard stop.
+        if (moves.BY_ID[def.id].kind !== def.kind)
+          throw Error('3DS move kind conflicts with existing PKMSVV move: '+def.id);
+        if(!alreadyInGame.includes(def.id))alreadyInGame.push(def.id);
         continue;
       }
       def.maxLvl=def.ups.length+1;
@@ -79,7 +85,9 @@ G.PKMSVV3DSMoveFamilies = (() => {
     }
     if (!moves.poolFor._pkmsvv3dsSoloOnly) {
       const original=moves.poolFor;
-      const extra=new Set(defs.map(d=>d.id));
+      // Only hide IDs actually *added* on this source revision. Existing
+      // Rapid Spin / Whirlpool must remain playable in all online modes.
+      const extra=new Set(registered);
       function poolFor(mon) {
         const list=original.call(moves,mon);
         // Until Co-op/BR/Egg Rush authority and replay QA, do not roll these
@@ -92,5 +100,5 @@ G.PKMSVV3DSMoveFamilies = (() => {
     return additions;
   }
   install();
-  return { defs, registered, install, isNativeMove:id=>defs.some(d=>d.id===id) };
+  return { defs, registered, alreadyInGame, install, isNativeMove:id=>registered.includes(id) };
 })();
