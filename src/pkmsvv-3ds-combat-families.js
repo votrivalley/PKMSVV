@@ -6,7 +6,7 @@
 G.PKMSVV3DSCombatFX = (() => {
   'use strict';
   const PREFIX = 'pkmsvv3ds-';
-  const kinds = new Set(['spin','quake','vortex','wave']);
+  const kinds = new Set(['spin','quake','vortex','wave','tremor']);
   const TAU = Math.PI * 2;
   const clamp = (v,a,b) => Math.max(a, Math.min(b, Number(v)||0));
   const typeColor = m => G.U?.TYPE_COLOR?.[m.type] || '#9edaff';
@@ -38,6 +38,13 @@ G.PKMSVV3DSCombatFX = (() => {
     };
     if(m.kind==='spin'){
       base.life=n*0.13+0.25;
+    }else if(m.kind==='tremor'){
+      // Earthquake 3DS FK_TREMOR: large radial shockwave expanding over
+      // 0.55 seconds; unlike existing K_QUAKE Magnitude's forward line.
+      base.life=clamp(m.dur||0.55,0.25,1.0);
+      base.hitEnemies=new Set();
+      base.hitProps=new Set();
+      if(!ghost)G.Camera?.kick?.(0.28);
     }else if(m.kind==='quake'){
       base.life=n*0.07+0.25;
       if(!ghost)G.Camera?.kick?.(0.10);
@@ -117,6 +124,28 @@ G.PKMSVV3DSCombatFX = (() => {
       }
       return f.left<=0;
     }
+    if(kind==='tremor'){
+      const radius=f.r*Math.min(1,Math.max(0,f.t/f.life));
+      if(visible(f.x,f.y,f.r) && Math.random()<0.90){
+        const angle=Math.random()*TAU;
+        fx?.sp?.('rock',m.type,f.x+Math.cos(angle)*radius,
+          f.y+Math.sin(angle)*radius*0.6-4,
+          {vy:-50,life:0.28,scale:0.8});
+      }
+      if(!f.ghost){
+        for(const e of query(f.x,f.y,radius)){
+          if(!e||e.dead||f.hitEnemies.has(e))continue;
+          f.hitEnemies.add(e);
+          hooks.hit?.(p,e,f.dmg,f.col,e.x-f.x,e.y-f.y,Number(m.knock)||0,m);
+        }
+        for(const prop of (G.World?.propsInCircle?.(f.x,f.y,radius)||[]).slice(0,64)){
+          if(!prop||prop.gone||f.hitProps.has(prop))continue;
+          f.hitProps.add(prop);
+          G.World?.damageProp?.(prop,f.dmg,f.col);
+        }
+      }
+      return f.t>=f.life;
+    }
     if(kind==='wave'){
       // 3DS FK_WAVE: fast wide forward sweeper, one hit per target and
       // physical drag. Substeps avoid skipping thin targets on slow phones.
@@ -191,7 +220,15 @@ G.PKMSVV3DSCombatFX = (() => {
     if(!isPortField(f)||!ctx)return;
     const kind=f.kind.slice(PREFIX.length);
     const fade=clamp(Math.min(f.t*6,(f.life-f.t)*3),0,1);
-    if(kind==='wave'){
+    if(kind==='tremor'){
+      const radius=f.r*Math.min(1,Math.max(0,f.t/f.life));
+      ctx.globalAlpha=0.22;
+      ctx.fillStyle=f.col;
+      ctx.beginPath();ctx.ellipse(f.x,f.y,radius,radius*0.65,0,0,TAU);ctx.fill();
+      ctx.globalAlpha=0.82;
+      ctx.strokeStyle=f.col;ctx.lineWidth=3;
+      ctx.beginPath();ctx.ellipse(f.x,f.y,radius,radius*0.65,0,0,TAU);ctx.stroke();
+    }else if(kind==='wave'){
       // Broad, directional pixel-water wall with a bright foamy crest.
       const x=f.x,y=f.y,w=f.w/2;
       const lx=-f.sa*w,ly=f.ca*w;
