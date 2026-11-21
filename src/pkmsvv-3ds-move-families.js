@@ -46,6 +46,7 @@ G.PKMSVV3DSMoveFamilies = (() => {
   ];
   const registered = [];
   function install() {
+    let additions=0;
     if (!moves || !moves.BY_ID || !moves.POOL || !Array.isArray(moves.ALL))
       throw Error('PKMSVV 3DS move families: Web moves catalogue missing');
     for (const def of defs) {
@@ -60,6 +61,7 @@ G.PKMSVV3DSMoveFamilies = (() => {
       const pool=moves.POOL[def.type] || (moves.POOL[def.type]=[]);
       if (!pool.includes(def.id)) pool.push(def.id);
       registered.push(def.id);
+      additions++;
     }
     if (!moves.poolFor._pkmsvv3dsSoloOnly) {
       const original=moves.poolFor;
@@ -73,7 +75,7 @@ G.PKMSVV3DSMoveFamilies = (() => {
       poolFor._pkmsvv3dsSoloOnly=true;
       moves.poolFor=poolFor;
     }
-    return registered.length;
+    return additions;
   }
   install();
   return { defs, registered, install, isNativeMove:id=>defs.some(d=>d.id===id) };
