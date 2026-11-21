@@ -1,4 +1,4 @@
-name: PKMSVV 3DS Effects - Mirror Compiled Web Preview QA
+name: PKMSVV 3DS Effects - Isolated Mirror Engine Build QA
 on:
   push:
     branches:
@@ -44,32 +44,38 @@ jobs:
           test -s vendor/pokesurvivor/LICENSE-NONCOMMERCIAL.md
       - name: Install build deps without publishing packages
         run: npm install --no-audit --no-fund
-      - name: Build shared gameplay engine from public-mirror source into QA-only Web preview
-        env:
-          PKMSVV_WEB_PREVIEW: '1'
-        run: npm run prepare:web
-      - name: Validate compiled game includes live 3DS combat and keeps save identity
+      - name: Compile actual 3DS effects in mirror JS engine (isolated, not PKMSVV full game)
         shell: bash
         run: |
           set -euo pipefail
-          test -s dist/web/index.html
-          test -s dist/web/game/index.html
-          test -s dist/web/game/js/app.min.js
-          test -d dist/web/game/assets
+          node scripts/patch-3ds-skill-effects-passives.cjs
+          node scripts/patch-3ds-move-families.cjs
+          node vendor/pokesurvivor/tools/build.js --sin-seo --expose
+      - name: Validate compiled mirror JS and preserve original PKMSVV project files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s vendor/pokesurvivor/index.html
+          test -s vendor/pokesurvivor/js/app.min.js
+          test -d vendor/pokesurvivor/assets
           test -s vendor/pokesurvivor/js/systems/pkmsvv-3ds-move-families.js
           test -s vendor/pokesurvivor/js/systems/pkmsvv-3ds-combat-families.js
-          grep -Fq 'whirlpool' dist/web/game/js/app.min.js
-          grep -Fq 'earthquake' dist/web/game/js/app.min.js
-          grep -Fq 'rapid-spin' dist/web/game/js/app.min.js
-          grep -Fq 'PKMSVV3DSCombatFX' dist/web/game/js/app.min.js
-          node --check dist/web/game/js/app.min.js
+          grep -Fq 'whirlpool' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'earthquake' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'rapid-spin' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'PKMSVV3DSCombatFX' vendor/pokesurvivor/js/app.min.js
+          node --check vendor/pokesurvivor/js/app.min.js
           node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs
-          echo PKMSVV_3DS_EFFECTS_REAL_WEB_BUILD_QA_PASS
+          echo PKMSVV_3DS_EFFECTS_ISOLATED_MIRROR_ENGINE_COMPILE_PASS
+          mkdir -p dist/3ds-effects-mirror-demo
+          rsync -a --exclude='.git' --exclude=tools --exclude=dev.html --exclude='*.map' vendor/pokesurvivor/ dist/3ds-effects-mirror-demo/
+          printf '%s\n' 'QA ONLY: public-mirror Web engine with 3DS effect additions.' 'NOT the complete PKMSVV Web/Android/PC build; DO NOT install over the main game or replace a save.' 'The full PKMSVV release is blocked on access to the exact pinned original upstream commit.' > dist/3ds-effects-mirror-demo/QA_ONLY.txt
+          test -s dist/3ds-effects-mirror-demo/index.html
       - name: Upload preview build (NEVER deploy or sign)
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: PKMSVV-3DS-SKILL-EFFECTS-MIRROR-WEB-PREVIEW-QA
-          path: dist/web/
+          name: PKMSVV-3DS-SKILL-EFFECTS-MIRROR-TECH-DEMO-QA
+          path: dist/3ds-effects-mirror-demo/
           retention-days: 5
           if-no-files-found: error
