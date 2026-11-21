@@ -174,7 +174,7 @@ patch("src/platform/3ds/app.cpp",
  'POKÉMON CHUYỂN SINH 3DS · REGION ALPHA 06',
  'POKÉMON CHUYỂN SINH 3DS · REGION ALPHA 07')
 patch("src/core/version.h",'kGameTitle = "PKMSVV Region 0.6"','kGameTitle = "PKMSVV Region 0.7"')
-patch("Makefile",'APP_TITLE\t:=\tPKMSVV Region 0.6','APP_TITLE\t:=\tPKMSVV Region 0.7"')
+patch("Makefile",'APP_TITLE\t:=\tPKMSVV Region 0.6','APP_TITLE\t:=\tPKMSVV Region 0.7')
 
 # Runtime diagnostics and native 15m -> 30m tracked boss victory QA.
 patch("src/platform/3ds/main.cpp",
