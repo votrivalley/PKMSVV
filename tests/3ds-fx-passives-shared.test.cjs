@@ -69,7 +69,7 @@ test('dodge is bounded to 15%; crit effects throttled under eight concurrent aut
  f.setClock(1170);f.port.onCrit(p,e);
  assert.equal(f.called.filter(x=>x[0]==='spark').length,first+1);
 });
-test('shared build integration keeps original combat effects and controller's three-card pages',()=>{
+test("shared build integration keeps original combat effects and controller's three-card pages",()=>{
  assert.match(prepCode,/patch-3ds-skill-effects-passives\.cjs/);
  assert.match(patchCode,/js\/systems\/levelup\.js/);
  assert.match(patchCode,/js\/entities\/player\.js/);
