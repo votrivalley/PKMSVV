@@ -38,8 +38,8 @@ for y in range(128):
     d.line((0,y,255,y),fill=(17,26,b))
 d.rounded_rectangle((6,6,249,121),radius=12,outline=CYAN,width=2)
 d.text((15,24),'PKMSVV',font=font(31),fill=GOLD)
-d.text((15,62),'5 REGIONS',font=font(20),fill=CYAN)
-d.text((15,94),'ALPHA 08 - UNOVA',font=font(12),fill=(232,240,255))
+d.text((15,62),'6 REGIONS',font=font(20),fill=CYAN)
+d.text((15,94),'ALPHA 09 - KALOS',font=font(12),fill=(232,240,255))
 banner.save(OUT/'banner.png')
 
 samples=[]
