@@ -32,7 +32,8 @@ jobs:
       - name: Fetch public PokéSurvivor Web reference JS (no proprietary or 3DS CIA assets)
         run: |
           git clone --depth 1 --filter=blob:none --sparse https://github.com/botgm/PokeSurvivor.git vendor/pokesurvivor
-          git -C vendor/pokesurvivor sparse-checkout set js dev.html
+          git -C vendor/pokesurvivor sparse-checkout set js
+          git -C vendor/pokesurvivor show HEAD:dev.html > vendor/pokesurvivor/dev.html
           test -s vendor/pokesurvivor/js/systems/levelup.js
           test -s vendor/pokesurvivor/js/systems/combat.js
           test -s vendor/pokesurvivor/js/entities/player.js
