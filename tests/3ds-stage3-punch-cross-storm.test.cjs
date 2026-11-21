@@ -99,7 +99,8 @@ test('exclusive moves cannot be manually cast by unrelated Pokemon',()=>{
  f.p.mon.dex=807;
  assert.equal(f.cast('plasma-fists').result,true);
  f.p.mon.dex=493;
- assert.equal(f.cast('judgment').result,true);
+ f.enemies.push({x:90,y:0,dead:false});
+ assert.equal(f.cast('judgment').result,true,'Storm needs at least one visible monster');
 });
 test('Fire Punch: three timed arc hits with 1.4x final strike, physical knockback and slash FX',()=>{
  const f=fixture(),e={x:30,y:0,dead:false};
