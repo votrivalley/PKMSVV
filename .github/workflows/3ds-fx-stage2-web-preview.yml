@@ -63,6 +63,7 @@ jobs:
           grep -Fq 'whirlpool' vendor/pokesurvivor/js/app.min.js
           grep -Fq 'earthquake' vendor/pokesurvivor/js/app.min.js
           grep -Fq 'rapid-spin' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'surf' vendor/pokesurvivor/js/app.min.js
           grep -Fq 'PKMSVV3DSCombatFX' vendor/pokesurvivor/js/app.min.js
           node --check vendor/pokesurvivor/js/app.min.js
           node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs
