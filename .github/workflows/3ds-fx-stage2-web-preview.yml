@@ -1,4 +1,4 @@
-name: PKMSVV 3DS Effects - Real Compiled Web Preview QA
+name: PKMSVV 3DS Effects - Mirror Compiled Web Preview QA
 on:
   push:
     branches:
@@ -32,19 +32,19 @@ jobs:
           node --check src/pkmsvv-3ds-move-families.js
           node --check src/pkmsvv-3ds-combat-families.js
           node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs
-      - name: Fetch exact pinned original PokéSurvivor game (not a 3DS CIA)
+      - name: Fetch pinned public Web source mirror for isolated QA (NOT official release source)
         shell: bash
         run: |
           set -euo pipefail
           git init vendor/pokesurvivor
-          git -C vendor/pokesurvivor remote add origin https://github.com/JPTER78/pokesurvivor.git
-          git -C vendor/pokesurvivor fetch --depth 1 origin 11fe868c640b62ac37beacc222e056bc4d9ec892
+          git -C vendor/pokesurvivor remote add origin https://github.com/botgm/PokeSurvivor.git
+          git -C vendor/pokesurvivor fetch --depth 1 origin 3959a3f19c1c9842e860595317d792ae09572846
           git -C vendor/pokesurvivor checkout --detach FETCH_HEAD
           test -s vendor/pokesurvivor/dev.html
           test -s vendor/pokesurvivor/LICENSE-NONCOMMERCIAL.md
       - name: Install build deps without publishing packages
         run: npm install --no-audit --no-fund
-      - name: Build true shared gameplay engine into offline-only Web preview
+      - name: Build shared gameplay engine from public-mirror source into QA-only Web preview
         env:
           PKMSVV_WEB_PREVIEW: '1'
         run: npm run prepare:web
@@ -69,7 +69,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: PKMSVV-3DS-SKILL-EFFECTS-WEB-PREVIEW-QA
+          name: PKMSVV-3DS-SKILL-EFFECTS-MIRROR-WEB-PREVIEW-QA
           path: dist/web/
           retention-days: 5
           if-no-files-found: error
