@@ -42,3 +42,9 @@ The *actual* PKMSVV game preparation is pinned to JPTER78/pokesurvivor commit `1
 - Continue converting the other 19 native move families when validated, not just fake effect sprites.
 
 **No deployment / merge / signed APK is authorized by this QA.**
+
+## Isolated browser-engine compilation result (not the PKMSVV release)
+
+[Mirror-engine Actions #44894671170](https://github.com/votrivalley/PKMSVV/actions/runs/44894671170) **SUCCESS** on the independently pinned public-mirror snapshot `3959a3f19c1c9842e860595317d792ae09572846`. It applies both source-level stage-1 and stage-2 patches, then invokes upstream `tools/build.js --sin-seo --expose` to create real `index.html` and minified `js/app.min.js`. The compiled JavaScript passes syntax checks and contains Rapid Spin, Earthquake, Whirlpool and the native combat FX module.
+
+GitHub artifact [PKMSVV-3DS-SKILL-EFFECTS-MIRROR-TECH-DEMO-QA](https://github.com/votrivalley/PKMSVV/actions/runs/44894671170/artifacts/14703293149) (67,111,215 bytes; expires 2026-11-26) is **only an isolated browser-engine demo, not a full PKMSVV save-compatible game**. Do not put it over the main website, Android package or PC build. This isolated compile does not remove the upstream-source release blocker listed above.
