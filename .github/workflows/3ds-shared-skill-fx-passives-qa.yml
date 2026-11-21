@@ -1,0 +1,36 @@
+name: PKMSVV Web Android PC - 3DS Skill FX + Passives QA
+on:
+  push:
+    branches:
+      - feature/web-3ds-skill-effects-passives-qa-20261121
+    paths:
+      - .github/workflows/3ds-shared-skill-fx-passives-qa.yml
+      - src/pkmsvv-3ds-skill-port.js
+      - scripts/patch-3ds-skill-effects-passives.cjs
+      - scripts/prepare-game.cjs
+      - tests/3ds-fx-passives-shared.test.cjs
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pkmsvv-3ds-shared-skill-effects-qa
+  cancel-in-progress: true
+jobs:
+  skill-effects-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript source and patcher syntax
+        run: |
+          node --check src/pkmsvv-3ds-skill-port.js
+          node --check scripts/patch-3ds-skill-effects-passives.cjs
+          node --check tests/3ds-fx-passives-shared.test.cjs
+      - name: Test new cross-platform passive effects and gamepad pages
+        run: |
+          node --test tests/3ds-fx-passives-shared.test.cjs tests/web-levelup-controller.test.cjs tests/skill-balance.test.cjs
+      - name: Run shared Web regression suite
+        run: npm run test:web
