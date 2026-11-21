@@ -668,6 +668,8 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-3ds-skill-effe
 execFileSync(process.execPath,[path.join(project,'scripts','patch-3ds-move-families.cjs')],{cwd:project,stdio:'inherit'});
 // Stage 4: native 3DS support with damage-category shields, Rest and real decoy aggro.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-3ds-support-families.cjs')],{cwd:project,stdio:'inherit'});
+// Stage 5: native 3DS Scissor/Blitz/Leap/Explosion/Weather complete mechanics.
+execFileSync(process.execPath,[path.join(project,'scripts','patch-3ds-stage5-families.cjs')],{cwd:project,stdio:'inherit'});
 // Final UI pass: compact Pokédex sort, Support native scrolling and accent-safe title.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-dex-support-mobile-ui.cjs')],{cwd:project,stdio:'inherit'});
 // Only Switch/Brewser: tolerate absent DOMContentLoaded and a stalled pixel-font Promise.
