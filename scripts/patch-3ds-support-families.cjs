@@ -45,6 +45,18 @@ patch('js/entities/player.js',
  '    if(protectedHit.blocked)return;\n'+
  '    amount=protectedHit.amount;\n'+
  '    if (!pure && G.PKMSVV3DSSkillPort?.rollDodge(this)) {');
+// Native status families use Charge animations and buff sounds, not the
+// fallback Attack animation. Match the newer 3DS/PMD visual vocabulary.
+patch('js/entities/player.js',
+ "cone: 'Shoot' }[m.kind] || 'Attack';",
+ "cone: 'Shoot', punch: 'Attack', cross: 'Shoot', storm: 'Charge',"+
+ " guard: 'Charge', screen: 'Charge', rest: 'Charge', decoy: 'Charge',"+
+ " wave: 'Shoot', tremor: 'Attack' }[m.kind] || 'Attack';");
+patch('js/entities/player.js',
+ "cone: 'projectile' };",
+ "cone: 'projectile', punch: 'melee', cross: 'nova', storm: 'beam',"+
+ " guard: 'buff', screen: 'buff', rest: 'buff', decoy: 'buff',"+
+ " wave: 'projectile', tremor: 'nova' };");
 // Status timers are per-run, do not live in the serialized JSON.
 patch('js/entities/player.js',
  '    if (this.dead) return;\n    if (this.invuln > 0) this.invuln -= dt;',
