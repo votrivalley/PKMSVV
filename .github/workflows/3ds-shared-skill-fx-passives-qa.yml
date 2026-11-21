@@ -15,6 +15,10 @@ on:
       - scripts/patch-3ds-stage6-projectiles.cjs
       - scripts/qa-3ds-stage6-levelups.cjs
       - tests/3ds-stage6-projectiles.test.cjs
+      - src/pkmsvv-3ds-stage7-dash-meteor.js
+      - scripts/patch-3ds-stage7-dash-meteor.cjs
+      - scripts/qa-3ds-stage7-levelups.cjs
+      - tests/3ds-stage7-dash-meteor.test.cjs
       - src/pkmsvv-3ds-combat-stage5.js
       - tests/3ds-stage5-combat.test.cjs
       - scripts/patch-3ds-stage5-families.cjs
@@ -61,6 +65,10 @@ jobs:
           node --check scripts/patch-3ds-stage6-projectiles.cjs
           node --check scripts/qa-3ds-stage6-levelups.cjs
           node --check tests/3ds-stage6-projectiles.test.cjs
+          node --check src/pkmsvv-3ds-stage7-dash-meteor.js
+          node --check scripts/patch-3ds-stage7-dash-meteor.cjs
+          node --check scripts/qa-3ds-stage7-levelups.cjs
+          node --check tests/3ds-stage7-dash-meteor.test.cjs
           node --check scripts/patch-3ds-stage5-families.cjs
           node --check scripts/qa-3ds-stage5-levelups.cjs
           node --check tests/3ds-stage5-combat.test.cjs
@@ -83,7 +91,7 @@ jobs:
           test -s vendor/pokesurvivor/js/entities/player.js
       - name: Test new cross-platform passive effects and existing gamepad pages
         run: |
-          node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs tests/3ds-stage3-punch-cross-storm.test.cjs tests/3ds-stage4-support.test.cjs tests/3ds-stage5-combat.test.cjs tests/3ds-stage6-projectiles.test.cjs tests/web-levelup-controller.test.cjs
+          node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs tests/3ds-stage3-punch-cross-storm.test.cjs tests/3ds-stage4-support.test.cjs tests/3ds-stage5-combat.test.cjs tests/3ds-stage6-projectiles.test.cjs tests/3ds-stage7-dash-meteor.test.cjs tests/web-levelup-controller.test.cjs
       - name: Real source patch smoke (uncompiled JS, before Web/Android/PC bundling)
         run: |
           node scripts/patch-3ds-skill-effects-passives.cjs
@@ -99,6 +107,8 @@ jobs:
           node scripts/qa-3ds-stage5-levelups.cjs
           node scripts/patch-3ds-stage6-projectiles.cjs
           node scripts/qa-3ds-stage6-levelups.cjs
+          node scripts/patch-3ds-stage7-dash-meteor.cjs
+          node scripts/qa-3ds-stage7-levelups.cjs
           grep -Fq 'G.PKMSVV3DSMoveFamilies.isNativeMove(m.id)' vendor/pokesurvivor/js/systems/combat.js
           grep -Fq 'G.PKMSVV3DSCombatFX.spawn(fields, pl, m, ghost)' vendor/pokesurvivor/js/systems/combat.js
           grep -Fq "id:'surf'" vendor/pokesurvivor/js/systems/pkmsvv-3ds-move-families.js
@@ -111,6 +121,9 @@ jobs:
           grep -Fq 'pkmsvv-3ds-combat-stage5.js' vendor/pokesurvivor/dev.html
           grep -Fq 'pkmsvv-3ds-stage6-projectiles.js' vendor/pokesurvivor/dev.html
           grep -Fq 'pkmsvv-3ds-projectile-stage6-fx.js' vendor/pokesurvivor/dev.html
+          grep -Fq 'pkmsvv-3ds-stage7-dash-meteor.js' vendor/pokesurvivor/dev.html
+          grep -Fq 'PKMSVV_3DS_STAGE7_WEB_DASH_METEOR_SOURCE_PATCH_PASS' scripts/patch-3ds-stage7-dash-meteor.cjs
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-stage7-dash-meteor.js
           node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-stage6-projectiles.js
           node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-projectile-stage6-fx.js
           grep -Fq 'PKMSVV3DSStage5Combat.needsTarget(m)' vendor/pokesurvivor/js/systems/combat.js
