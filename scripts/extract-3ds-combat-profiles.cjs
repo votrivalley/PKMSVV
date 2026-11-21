@@ -7,7 +7,7 @@ const STAT=['cd','dmg','speed','count','spread','pierce','life','size','radius',
 const {readNative}=require('./audit-3ds-native-moves.cjs');
 const {kinds,moves}=readNative(src);
 const lookup=new Map(moves.map(m=>[m.id,m]));
-const requested=['fire-punch','ice-punch','thunder-punch','drain-punch','plasma-fists','fire-blast','seed-flare','thunder','judgment'];
+const requested=['fire-punch','ice-punch','thunder-punch','drain-punch','plasma-fists','fire-blast','seed-flare','thunder','judgment','protect','reflect','light-screen','rest','double-team'];
 const start=src.indexOf('MoveDef kMoves[] = {'),end=src.indexOf('\n};',start);
 const lines=src.slice(start+20,end).split('\n');
 const found=[];
@@ -33,7 +33,7 @@ const ladderLines=src.slice(ladderStart+'Ladder kLadder[K_COUNT][4] = {'.length,
  .split('\n').filter(x=>x.trim());
 if(ladderLines.length!==kinds.length)throw Error('Ladder kinds mismatch: '+ladderLines.length+'/'+kinds.length);
 console.log('PKMSVV_3DS_NATIVE_LADDERS');
-for(const kind of ['punch','cross','storm']) {
+for(const kind of ['punch','cross','storm','guard','screen','rest','decoy']) {
  const i=kinds.indexOf(kind);if(i<0)throw Error('Missing kind '+kind);
  console.log(kind+': '+ladderLines[i].slice(0,1800));
 }
