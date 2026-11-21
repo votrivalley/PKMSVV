@@ -1,0 +1,98 @@
+name: PKMSVV Web Android PC - 3DS Skill FX + Passives QA
+on:
+  push:
+    branches:
+      - feature/web-3ds-skill-effects-passives-qa-20261121
+    paths:
+      - .github/workflows/3ds-shared-skill-fx-passives-qa.yml
+      - src/pkmsvv-3ds-skill-port.js
+      - src/pkmsvv-3ds-move-families.js
+      - src/pkmsvv-3ds-stage3-moves.js
+      - src/pkmsvv-3ds-stage4-moves.js
+      - src/pkmsvv-3ds-support-stage4.js
+      - tests/3ds-stage4-support.test.cjs
+      - scripts/patch-3ds-support-families.cjs
+      - src/pkmsvv-3ds-combat-stage3.js
+      - tests/3ds-stage3-punch-cross-storm.test.cjs
+      - src/pkmsvv-3ds-combat-families.js
+      - scripts/patch-3ds-move-families.cjs
+      - tests/3ds-move-families-shared.test.cjs
+      - scripts/patch-3ds-skill-effects-passives.cjs
+      - scripts/prepare-game.cjs
+      - tests/3ds-fx-passives-shared.test.cjs
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pkmsvv-3ds-shared-skill-effects-qa
+  cancel-in-progress: true
+jobs:
+  skill-effects-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript source and patcher syntax
+        run: |
+          node --check src/pkmsvv-3ds-skill-port.js
+          node --check src/pkmsvv-3ds-move-families.js
+          node --check src/pkmsvv-3ds-combat-families.js
+          node --check src/pkmsvv-3ds-stage3-moves.js
+          node --check src/pkmsvv-3ds-combat-stage3.js
+          node --check src/pkmsvv-3ds-stage4-moves.js
+          node --check src/pkmsvv-3ds-support-stage4.js
+          node --check scripts/patch-3ds-support-families.cjs
+          node --check tests/3ds-stage4-support.test.cjs
+          node --check tests/3ds-stage3-punch-cross-storm.test.cjs
+          node --check scripts/patch-3ds-move-families.cjs
+          node --check tests/3ds-move-families-shared.test.cjs
+          node --check scripts/patch-3ds-skill-effects-passives.cjs
+          node --check tests/3ds-fx-passives-shared.test.cjs
+      - name: Run shared Web regression suite
+        run: npm run test:web
+      - name: Fetch public PokéSurvivor Web reference JS (no proprietary or 3DS CIA assets)
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/botgm/PokeSurvivor.git vendor/pokesurvivor
+          git -C vendor/pokesurvivor sparse-checkout set js
+          git -C vendor/pokesurvivor show HEAD:dev.html > vendor/pokesurvivor/dev.html
+          test -s vendor/pokesurvivor/js/systems/levelup.js
+          test -s vendor/pokesurvivor/js/systems/combat.js
+          test -s vendor/pokesurvivor/js/entities/player.js
+      - name: Test new cross-platform passive effects and existing gamepad pages
+        run: |
+          node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs tests/3ds-stage3-punch-cross-storm.test.cjs tests/3ds-stage4-support.test.cjs tests/web-levelup-controller.test.cjs
+      - name: Real source patch smoke (uncompiled JS, before Web/Android/PC bundling)
+        run: |
+          node scripts/patch-3ds-skill-effects-passives.cjs
+          grep -Fq 'G.PKMSVV3DSSkillPort' vendor/pokesurvivor/js/systems/combat.js
+          grep -Fq 'minimumPassiveCards' vendor/pokesurvivor/js/systems/levelup.js
+          node --check vendor/pokesurvivor/js/systems/combat.js
+          node --check vendor/pokesurvivor/js/systems/levelup.js
+          node --check vendor/pokesurvivor/js/entities/player.js
+          echo PKMSVV_SHARED_3DS_FX_PASSIVES_SOURCE_SMOKE_PASS
+          node scripts/patch-3ds-move-families.cjs
+          node scripts/patch-3ds-support-families.cjs
+          grep -Fq 'G.PKMSVV3DSMoveFamilies.isNativeMove(m.id)' vendor/pokesurvivor/js/systems/combat.js
+          grep -Fq 'G.PKMSVV3DSCombatFX.spawn(fields, pl, m, ghost)' vendor/pokesurvivor/js/systems/combat.js
+          grep -Fq "id:'surf'" vendor/pokesurvivor/js/systems/pkmsvv-3ds-move-families.js
+          grep -Fq 'pkmsvv-3ds-move-families.js' vendor/pokesurvivor/dev.html
+          grep -Fq 'pkmsvv-3ds-stage3-moves.js' vendor/pokesurvivor/dev.html
+          grep -Fq 'pkmsvv-3ds-combat-stage3.js' vendor/pokesurvivor/dev.html
+          grep -Fq 'pkmsvv-3ds-stage4-moves.js' vendor/pokesurvivor/dev.html
+          grep -Fq 'pkmsvv-3ds-support-stage4.js' vendor/pokesurvivor/dev.html
+          grep -Fq 'G.PKMSVV3DSStage4Support.decoyFor(this,pl)' vendor/pokesurvivor/js/entities/enemy.js
+          grep -Fq 'incomingDamage(this,amount,pure,category)' vendor/pokesurvivor/js/entities/player.js
+          grep -Fq 'm.minCd' vendor/pokesurvivor/js/systems/combat.js
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-stage4-moves.js
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-support-stage4.js
+          node --check vendor/pokesurvivor/js/entities/enemy.js
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-stage3-moves.js
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-combat-stage3.js
+          node --check vendor/pokesurvivor/js/systems/combat.js
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-move-families.js
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-combat-families.js
+          echo PKMSVV_3DS_NATIVE_ATTACK_FAMILIES_SOURCE_SMOKE_PASS
+
