@@ -26,6 +26,17 @@ for(const id of requested){
  if(!tail)throw Error('Missing native exclusive list: '+id+' tail='+line.slice(-100));
  found.push({id,name:p[2],desc:p[3],type:TYPES[Number(p[4])],kind:kinds[Number(p[5])],buff:Number(p[6]),cat:Number(p[7]),...stats,only:tail.slice(1).map(Number).filter(Boolean)});
 }
+const ladderStart=src.indexOf('Ladder kLadder[K_COUNT][4] = {');
+const ladderEnd=src.indexOf('\n};',ladderStart);
+if(ladderStart<0||ladderEnd<0)throw Error('Generated 3DS ladders missing');
+const ladderLines=src.slice(ladderStart+'Ladder kLadder[K_COUNT][4] = {'.length,ladderEnd)
+ .split('\n').filter(x=>x.trim());
+if(ladderLines.length!==kinds.length)throw Error('Ladder kinds mismatch: '+ladderLines.length+'/'+kinds.length);
+console.log('PKMSVV_3DS_NATIVE_LADDERS');
+for(const kind of ['punch','cross','storm']) {
+ const i=kinds.indexOf(kind);if(i<0)throw Error('Missing kind '+kind);
+ console.log(kind+': '+ladderLines[i].slice(0,1800));
+}
 const o='dist/3ds-skill-audit/next-combat-profiles.json';
 fs.mkdirSync('dist/3ds-skill-audit',{recursive:true});fs.writeFileSync(o,JSON.stringify(found,null,2));
 console.log('PKMSVV_3DS_SOURCE_PROFILES_PASS');
