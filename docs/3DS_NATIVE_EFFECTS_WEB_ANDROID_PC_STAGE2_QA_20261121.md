@@ -2,15 +2,21 @@
 
 Source branch: `feature/web-3ds-skill-effects-passives-qa-20261121`, PR #42 **Draft**. No merge, Cloudflare deployment, APK signing, PC release or permanent save migration.
 
-## 3 game mechanics converted from the native 3DS engine
+## Corrected source inventory — 176 native 3DS vs 103 PKMSVV
 
-| New move | Native family | Gameplay in shared JavaScript engine | Performance / safety |
-| --- | --- | --- | --- |
-| Rapid Spin (Normal) | `K_SPIN` | Up to three timed spin hits at base level (more through upgrades), AoE `hit()` damage to enemies and damage to destructible props, rotating slash sprites | 0.13s cadence; field cap 6 per owner |
-| Earthquake (Ground) | `K_QUAKE` | Five shockwave positions stepping 34px ahead; each deals actual `blast()` damage and pixel ring/rock FX; terminates at solid tiles | 0.07s step; at most 3 waves/frame; never crosses wall |
-| Whirlpool (Water) | `K_VORTEX` | Area placed at target; pulls normal enemies toward center, boss/judge at 25% force, damages at 0.4s interval, Canvas vortex rings/animated wind | 2 active zones max per owner; 80 nearby-enemy cap; max 24 extra fields; camera-cull VFX |
+The full 3DS generated registry (13 November update) has **176 moves / 37 kinds**; PKMSVV `docs/SKILL_BALANCE.md` has **103 moves / 23 kinds**. All 103 PKMSVV IDs are already present in 3DS with identical attack kind; **73 additional 3DS IDs** are absent. The authoritative read-only audit is `docs/3DS_176_MOVES_73_MISSING_AUDIT_20261121.md` ([GitHub Actions #44896296990](https://github.com/votrivalley/PKMSVV/actions/runs/44896296990)).
 
-The original 103 Web skills remain unchanged and original `G.PKMSVVBalance` validates/tunes them before the three new entries are registered. The new definitions are added *after* that balance pass. Each gets four upgrades and appears in the appropriate type's learnable pool. New move fields are a separate Web/Android/PC source module, inserted by the common `scripts/prepare-game.cjs` build route.
+**Release-safe register behavior on the real 103-skill game:**
+
+| Move | Present in original PKMSVV 103? | What this Draft does |
+| --- | --- | --- |
+| Rapid Spin | YES; `spin` | Preserve original skill, stats, behavior, save ID and multiplayer pool; never register a duplicate |
+| Whirlpool | YES; `vortex` | Preserve original skill, stats, behavior, save ID and multiplayer pool; never register a duplicate |
+| Magnitude | YES; `quake` | Preserve existing forward shockwave family; do not overwrite |
+| **Earthquake** | NO | Register new `tremor` skill: radial 0.55-second expanding earthquake wave, one hit per enemy / prop, knockback, pixel ground ripples |
+| **Surf** | NO as independent ID | Register new `wave` skill: wide water wall moving forward, each target damaged once, weak boss push and water foam FX; old Bubble→Surf evolution retained |
+
+The shared patcher now routes **only the newly registered move IDs** to the native-style effect module. New IDs are excluded from multiplayer pools pending authority/replay testing. The battle engine and `G.PKMSVVBalance` retain all 103 original skill behavior and stats. In a 103-skill source checkout the Draft adds **exactly two IDs** (`earthquake`, `surf`), not four.
 
 ## Source structure
 
@@ -38,8 +44,8 @@ The *actual* PKMSVV game preparation is pinned to JPTER78/pokesurvivor commit `1
 - Restore access to exact pinned upstream or establish an owner-approved, tested source migration.
 - Full rebuilt client from `prepare-game.cjs` and `prepare:web` against that source, Windows and Android packaging with original signing identity, no save key changes.
 - Chromium and native Android/Windows runtime gameplay, performance at 8 AUTO skills, 1.5× solo, long-duration FPS/stability, device input and safe save/reload.
-- Test offline solo skill rarity/progression; then separately QA networking and enable three move families in multiplayer only if deterministic.
-- Continue converting the other 19 native move families when validated, not just fake effect sprites.
+- Test offline solo skill rarity/progression; then separately QA networking and enable only newly added move IDs in multiplayer after deterministic synchronization.
+- Prioritize and adapt the **71 additional skill IDs still absent** (73 new source IDs minus the two currently in Draft), with 14 missing effect families and status behavior requiring new runtime support.
 
 **No deployment / merge / signed APK is authorized by this QA.**
 
@@ -60,3 +66,9 @@ GitHub artifact [PKMSVV-3DS-SKILL-EFFECTS-MIRROR-TECH-DEMO-QA](https://github.co
 - No APK, EXE or hosted Web release was issued.
 
 [GitHub Actions QA #44895685511](https://github.com/votrivalley/PKMSVV/actions/runs/44895685511) **SUCCESS**: `npm run test:web` **379 pass / 0 fail / 5 conditional skipped**; targeted passive/combat/controller tests **20/20 pass** (3 Surf-specific new tests); actual public Web JS source patches and syntax checks passed, including `case 'wave':`.
+
+## Corrected Stage 2.2 verification — 2026-11-21
+
+[Actions #44896468385](https://github.com/votrivalley/PKMSVV/actions/runs/44896468385) SUCCESS: **379/384 Web tests PASS, 5 SKIP, 22/22 dedicated tests PASS**. Confirms no duplicate Rapid Spin/Whirlpool, safe Co-op pool, native Earthquake expanding TREMOR vs existing Magnitude QUAKE, Surf and legacy Bubble compatibility, source patch.
+
+[Mirror compiled engine #44896468430](https://github.com/votrivalley/PKMSVV/actions/runs/44896468430) SUCCESS, artifact [tech demo](https://github.com/votrivalley/PKMSVV/actions/runs/44896468430/artifacts/14704636030). This is **not** a full PKMSVV release; the pinned primary Web source remains inaccessible.
