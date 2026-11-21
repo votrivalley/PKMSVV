@@ -8,6 +8,7 @@ on:
       - src/pkmsvv-3ds-move-families.js
       - src/pkmsvv-3ds-combat-families.js
       - src/pkmsvv-3ds-skill-port.js
+      - tests/3ds-move-families-shared.test.cjs
       - scripts/patch-3ds-move-families.cjs
       - scripts/patch-3ds-skill-effects-passives.cjs
       - scripts/prepare-game.cjs
