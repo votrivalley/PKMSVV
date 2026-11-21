@@ -10,7 +10,10 @@ const lookup=new Map(moves.map(m=>[m.id,m]));
 const requested=['fire-punch','ice-punch','thunder-punch','drain-punch','plasma-fists','fire-blast','seed-flare','thunder','judgment','protect','reflect','light-screen','rest','double-team','x-scissor','stone-axe','extreme-speed','acrobatics','shadow-force','explosion','sunny-day','rain-dance','sandstorm',
   // Stage6: all nine native projectile IDs, extracted before actual gameplay port.
   'dragon-pulse','sludge-bomb','scald','hurricane','water-pulse',
-  'stone-edge','pyro-ball','snipe-shot','spirit-shackle'];
+  'stone-edge','pyro-ball','snipe-shot','spirit-shackle',
+  // Stage7 source-verified Dash and Meteor candidate IDs.
+  'megahorn','dragon-ascent','volt-tackle','meteor-assault','sunsteel-strike',
+  'sacred-fire','diamond-storm','doom-desire','glacial-lance','thousand-arrows'];
 const start=src.indexOf('MoveDef kMoves[] = {'),end=src.indexOf('\n};',start);
 const lines=src.slice(start+20,end).split('\n');
 const found=[];
@@ -36,7 +39,7 @@ const ladderLines=src.slice(ladderStart+'Ladder kLadder[K_COUNT][4] = {'.length,
  .split('\n').filter(x=>x.trim());
 if(ladderLines.length!==kinds.length)throw Error('Ladder kinds mismatch: '+ladderLines.length+'/'+kinds.length);
 console.log('PKMSVV_3DS_NATIVE_LADDERS');
-for(const kind of ['projectile','punch','cross','storm','guard','screen','rest','decoy','scissor','blitz','leap','boom','weather']) {
+for(const kind of ['projectile','dash','meteor','punch','cross','storm','guard','screen','rest','decoy','scissor','blitz','leap','boom','weather']) {
  const i=kinds.indexOf(kind);if(i<0)throw Error('Missing kind '+kind);
  console.log(kind+': '+ladderLines[i].slice(0,1800));
 }
