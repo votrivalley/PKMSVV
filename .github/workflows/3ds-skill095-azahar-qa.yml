@@ -21,27 +21,27 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          source_sha=d09e01de0da36b600c58dfdf3b044af2ea45cdca
+          source_sha=fc9f2b4d2d5467305a1935535ce703c6b41534b1
           git fetch --no-tags --depth=12 origin "$source_sha"
           if ! git diff --quiet "$source_sha" HEAD -- tools/3ds-native/ .github/workflows/build-3ds-skill095.yml; then
             echo "::error::Alpha09.5 skill binary is stale. Rebuild CIA/3DSX and refresh run ID + hashes."
             exit 1
           fi
           echo PKMSVV_SKILL095_BINARY_SOURCE_MATCH_PASS
-      - name: Download exact six-region skill parity CIA and 3DSX from build 44880972109
+      - name: Download exact six-region skill parity CIA and 3DSX from build 44881511699
         uses: actions/download-artifact@v4
         with:
           name: PKMSVV-3DS-SKILL-PARITY-ALPHA095
           repository: votrivalley/PKMSVV
-          run-id: 44880972109
+          run-id: 44881511699
           github-token: ${{ github.token }}
           path: qa-binary
       - name: Confirm Alpha09.5 CIA identity and SHA256 integrity
         shell: bash
         run: |
           set -euo pipefail
-          echo '2003723a1a36aebba42aa9f7efc8185e95db78327ef87a18dfb407aeccd72c28  qa-binary/pkmsvv-kanto01.cia' | sha256sum -c -
-          echo 'a124e632d4969e84c571418c2f6b5674d13a438ed3c9580116bb189f5795a4b4  qa-binary/pkmsvv-kanto01.3dsx' | sha256sum -c -
+          echo '9c1a97d46d0034bdb75c522023fa936f01aa88babd55c7e55b6e06327ee19b31  qa-binary/pkmsvv-kanto01.cia' | sha256sum -c -
+          echo '49f07589df4a9374ffca055aac9768f289796e70618059a6a5cd9f1187ba2ea2  qa-binary/pkmsvv-kanto01.3dsx' | sha256sum -c -
           python3 - <<'PY'
           from pathlib import Path
           c=Path('qa-binary/pkmsvv-kanto01.cia').read_bytes()
@@ -78,7 +78,7 @@ jobs:
           Xvfb :99 -screen 0 1280x800x24 > qa-binary/xvfb.log 2>&1 &
           sleep 3
           set +e
-          timeout --signal=TERM --kill-after=5 120             qa-binary/squashfs-root/AppRun "$PWD/qa-binary/pkmsvv-kanto01.3dsx"             > qa-binary/azahar.stdout 2>&1
+          timeout --signal=TERM --kill-after=5 180             qa-binary/squashfs-root/AppRun "$PWD/qa-binary/pkmsvv-kanto01.3dsx"             > qa-binary/azahar.stdout 2>&1
           code=$?
           set -e
           echo "AZAHAR_PROCESS_EXIT=$code"
@@ -102,7 +102,7 @@ jobs:
           # Azahar is a GUI and may stay open after its 3DS guest ends;
           # timeout(124)/kill-after(137) are expected *host window* statuses.
           # Trust the complete in-game FIN record, not the GUI exit code.
-          grep -q '^FIN · 25 s' "$log"
+          grep -q '^FIN · 45 s' "$log"
           grep -q '^PKMSVV_SKILL095_SETUP_PASS' "$log"
           grep -q '^PKMSVV_SKILL095_RUNTIME_PASS' "$log"
           ! grep -q '^PKMSVV_SKILL095_RUNTIME_FAIL' "$log"
