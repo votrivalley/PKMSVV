@@ -10,13 +10,16 @@ function patch(file,from,to){
  if(n!==1)throw Error('3DS skill family source anchor drift: '+file+' '+n+' for '+from.slice(0,90));
  fs.writeFileSync(target,text.replace(from,to),'utf8');
 }
-for(const name of ['pkmsvv-3ds-move-families','pkmsvv-3ds-combat-families'])
+for(const name of ['pkmsvv-3ds-move-families','pkmsvv-3ds-combat-families',
+                   'pkmsvv-3ds-stage3-moves','pkmsvv-3ds-combat-stage3'])
  fs.copyFileSync(path.join(root,'src',name+'.js'),
    path.join(game,'js','systems',name+'.js'));
 const anchor='<script defer src="js/systems/pkmsvv-3ds-skill-port.js"></script>';
 patch('dev.html',anchor,anchor+
  '\n<script defer src="js/systems/pkmsvv-3ds-move-families.js"></script>'+
- '\n<script defer src="js/systems/pkmsvv-3ds-combat-families.js"></script>');
+ '\n<script defer src="js/systems/pkmsvv-3ds-combat-families.js"></script>'+ 
+ '\n<script defer src="js/systems/pkmsvv-3ds-stage3-moves.js"></script>'+ 
+ '\n<script defer src="js/systems/pkmsvv-3ds-combat-stage3.js"></script>');
 
 // Do not inject duplicate spin/vortex switch cases: the real PKMSVV 103
 // already has those families. Route only newly installed move IDs to native FX.
@@ -49,4 +52,4 @@ patch('js/systems/combat.js',
  "      }\n"+
  "      if (f.kind === 'patch') {");
 
-console.log('PKMSVV_3DS_NATIVE_SPIN_QUAKE_VORTEX_SURF_COMBAT_PORT_PASS');
+console.log('PKMSVV_3DS_NATIVE_STAGE3_PUNCH_CROSS_STORM_SURF_COMBAT_PORT_PASS');
