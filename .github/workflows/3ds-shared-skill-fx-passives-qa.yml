@@ -60,10 +60,8 @@ jobs:
           node --check vendor/pokesurvivor/js/entities/player.js
           echo PKMSVV_SHARED_3DS_FX_PASSIVES_SOURCE_SMOKE_PASS
           node scripts/patch-3ds-move-families.cjs
-          grep -Fq "case 'quake':" vendor/pokesurvivor/js/systems/combat.js
-          grep -Fq "case 'vortex':" vendor/pokesurvivor/js/systems/combat.js
-          grep -Fq "case 'spin':" vendor/pokesurvivor/js/systems/combat.js
-          grep -Fq "case 'wave':" vendor/pokesurvivor/js/systems/combat.js
+          grep -Fq 'G.PKMSVV3DSMoveFamilies.isNativeMove(m.id)' vendor/pokesurvivor/js/systems/combat.js
+          grep -Fq 'G.PKMSVV3DSCombatFX.spawn(fields, pl, m, ghost)' vendor/pokesurvivor/js/systems/combat.js
           grep -Fq "id:'surf'" vendor/pokesurvivor/js/systems/pkmsvv-3ds-move-families.js
           grep -Fq 'pkmsvv-3ds-move-families.js' vendor/pokesurvivor/dev.html
           node --check vendor/pokesurvivor/js/systems/combat.js
