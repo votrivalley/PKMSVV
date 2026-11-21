@@ -6,7 +6,7 @@
 G.PKMSVV3DSCombatFX = (() => {
   'use strict';
   const PREFIX = 'pkmsvv3ds-';
-  const kinds = new Set(['spin','quake','vortex']);
+  const kinds = new Set(['spin','quake','vortex','wave']);
   const TAU = Math.PI * 2;
   const clamp = (v,a,b) => Math.max(a, Math.min(b, Number(v)||0));
   const typeColor = m => G.U?.TYPE_COLOR?.[m.type] || '#9edaff';
@@ -20,7 +20,7 @@ G.PKMSVV3DSCombatFX = (() => {
     if (!Array.isArray(fields) || !p || !m || !kinds.has(m.kind)) return false;
     const kind=fieldName(m), same=fields.filter(f=>f.kind===kind&&f.owner===p);
     // Avoid stacking more than two whirlpools or six transient shockwaves.
-    const limit=m.kind==='vortex'?2:6;
+    const limit=m.kind==='vortex'?2:m.kind==='wave'?3:6;
     if(same.length>=limit){
       const oldest=fields.findIndex(f=>f.kind===kind&&f.owner===p);
       if(oldest>=0)fields.splice(oldest,1);
@@ -41,7 +41,7 @@ G.PKMSVV3DSCombatFX = (() => {
     }else if(m.kind==='quake'){
       base.life=n*0.07+0.25;
       if(!ghost)G.Camera?.kick?.(0.10);
-    }else{
+    }else if(m.kind==='vortex'){
       const tg=p.target && !p.target.dead &&
         Math.hypot(p.target.x-x,p.target.y-y)<=clamp(m.range||300,20,450)
         ? p.target:null;
@@ -52,6 +52,19 @@ G.PKMSVV3DSCombatFX = (() => {
       base.tick=0.15;
       base.pull=clamp(m.pull||140,0,220);
       G.FX?.ring?.(base.x,base.y,base.r,6,color,0.4,3);
+    }else{
+      // Surf on 3DS: the wave starts 50px behind the actor and moves ahead
+      // across radius+50px, wide enough to carry enemies in its front edge.
+      base.x=x-base.ca*50;
+      base.y=y-base.sa*50;
+      base.sx=base.x;base.sy=base.y;
+      base.d=0;
+      base.len=clamp(m.radius||210,60,330)+50;
+      base.w=clamp(m.width||124,40,230);
+      base.speed=clamp(m.speed||280,60,420);
+      base.life=base.len/base.speed+0.2;
+      base.hitEnemies=new Set();
+      base.hitProps=new Set();
     }
     fields.push(base);
     return true;
@@ -104,6 +117,47 @@ G.PKMSVV3DSCombatFX = (() => {
       }
       return f.left<=0;
     }
+    if(kind==='wave'){
+      // 3DS FK_WAVE: fast wide forward sweeper, one hit per target and
+      // physical drag. Substeps avoid skipping thin targets on slow phones.
+      const travel=Math.min(Math.max(0,f.len-f.d),f.speed*delta);
+      const steps=Math.min(8,Math.max(1,Math.ceil(travel/16)));
+      for(let i=0;i<steps;i++){
+        const step=travel/steps;
+        f.d+=step;
+        const cx=f.sx+f.ca*f.d,cy=f.sy+f.sa*f.d;
+        f.x=cx;f.y=cy;
+        if(visible(cx,cy,f.w/2+40) && Math.random()<delta*16/steps){
+          const offset=(Math.random()-0.5)*f.w;
+          fx?.sp?.('drop','water',cx-f.sa*offset,cy+f.ca*offset-6,
+            {vx:f.ca*55,vy:f.sa*55-30,life:0.32,scale:1});
+        }
+        if(f.ghost)continue;
+        for(const e of query(cx,cy,f.w/2+30)){
+          if(!e||e.dead)continue;
+          const along=(e.x-f.sx)*f.ca+(e.y-f.sy)*f.sa;
+          const side=-(e.x-f.sx)*f.sa+(e.y-f.sy)*f.ca;
+          if(Math.abs(side)>f.w/2 || along<f.d-34 || along>f.d+14)continue;
+          if(!f.hitEnemies.has(e)){
+            f.hitEnemies.add(e);
+            hooks.hit?.(p,e,f.dmg,f.col,f.ca,f.sa,0,m);
+          }
+          if(e.dead||e.arceus)continue;
+          // Pushing a boss/judge is 15% of forward speed versus 75% for
+          // normal enemies. Skip moves that would cross a wall.
+          const factor=(e.boss||e.judge)?0.15:0.75;
+          const push=step*factor*Math.min(1.5,(Number(m.knock)||160)/160);
+          const nx=e.x+f.ca*push,ny=e.y+f.sa*push;
+          if(!G.World?.isWall?.(nx,ny)){e.x=nx;e.y=ny;}
+        }
+        for(const prop of (G.World?.propsInCircle?.(cx,cy,f.w/2)||[]).slice(0,64)){
+          if(!prop||prop.gone||f.hitProps.has(prop))continue;
+          f.hitProps.add(prop);
+          G.World?.damageProp?.(prop,f.dmg,f.col);
+        }
+      }
+      return f.d>=f.len-0.001;
+    }
     if(kind==='vortex'){
       if(!f.ghost){
         for(const e of query(f.x,f.y,f.r*1.4)){
@@ -137,7 +191,33 @@ G.PKMSVV3DSCombatFX = (() => {
     if(!isPortField(f)||!ctx)return;
     const kind=f.kind.slice(PREFIX.length);
     const fade=clamp(Math.min(f.t*6,(f.life-f.t)*3),0,1);
-    if(kind==='vortex'){
+    if(kind==='wave'){
+      // Broad, directional pixel-water wall with a bright foamy crest.
+      const x=f.x,y=f.y,w=f.w/2;
+      const lx=-f.sa*w,ly=f.ca*w;
+      const bx=f.ca*24,by=f.sa*24;
+      ctx.globalAlpha=0.36;
+      ctx.fillStyle='#56baff';
+      ctx.beginPath();
+      ctx.moveTo(x+lx,y+ly);
+      ctx.lineTo(x-lx,y-ly);
+      ctx.lineTo(x-lx-bx,y-ly-by);
+      ctx.lineTo(x+lx-bx,y+ly-by);
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalAlpha=0.87;
+      ctx.strokeStyle='#e8fbff';ctx.lineWidth=3.5;
+      ctx.beginPath();
+      ctx.moveTo(x+lx,y+ly);
+      ctx.quadraticCurveTo(x+f.ca*7,y+f.sa*7,x-lx,y-ly);
+      ctx.stroke();
+      ctx.globalAlpha=0.55;
+      ctx.strokeStyle='#8ce3ff';ctx.lineWidth=2;
+      ctx.beginPath();
+      ctx.moveTo(x+lx-bx*0.6,y+ly-by*0.6);
+      ctx.lineTo(x-lx-bx*0.6,y-ly-by*0.6);
+      ctx.stroke();
+    }else if(kind==='vortex'){
       ctx.globalAlpha=fade*0.32;
       ctx.strokeStyle=f.col;ctx.lineWidth=2;
       for(let i=0;i<3;i++){
