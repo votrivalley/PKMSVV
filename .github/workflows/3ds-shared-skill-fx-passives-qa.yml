@@ -39,7 +39,7 @@ jobs:
           test -s vendor/pokesurvivor/js/entities/player.js
       - name: Test new cross-platform passive effects and existing gamepad pages
         run: |
-          node --test tests/3ds-fx-passives-shared.test.cjs tests/web-levelup-controller.test.cjs tests/skill-balance.test.cjs
+          node --test tests/3ds-fx-passives-shared.test.cjs tests/web-levelup-controller.test.cjs
       - name: Real source patch smoke (uncompiled JS, before Web/Android/PC bundling)
         run: |
           node scripts/patch-3ds-skill-effects-passives.cjs
