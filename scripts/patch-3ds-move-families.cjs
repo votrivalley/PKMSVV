@@ -18,13 +18,14 @@ patch('dev.html',anchor,anchor+
  '\n<script defer src="js/systems/pkmsvv-3ds-move-families.js"></script>'+
  '\n<script defer src="js/systems/pkmsvv-3ds-combat-families.js"></script>');
 
+// Do not inject duplicate spin/vortex switch cases: the real PKMSVV 103
+// already has those families. Route only newly installed move IDs to native FX.
 patch('js/systems/combat.js',
- "      case 'cone':       cone(pl, m); break;",
- "      case 'cone':       cone(pl, m); break;\n"+
- "      case 'spin':\n"+
- "      case 'quake':\n"+
- "      case 'vortex':\n"+
- "      case 'wave':      G.PKMSVV3DSCombatFX.spawn(fields,pl,m,ghost); break;");
+ '  function run(pl, m) {',
+ '  function run(pl, m) {\n'+
+ '    if (G.PKMSVV3DSMoveFamilies.isNativeMove(m.id)) {\n'+
+ '      G.PKMSVV3DSCombatFX.spawn(fields, pl, m, ghost); return;\n'+
+ '    }');
 
 patch('js/systems/combat.js',
  '      f.t += dt;\n      if (f.gone || !f.owner ||',
