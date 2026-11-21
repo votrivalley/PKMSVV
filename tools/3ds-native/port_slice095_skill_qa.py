@@ -60,10 +60,10 @@ patch('    app.update(in, float(std::fmin(frame_ms, 100.0) / 1000.0));',
 patch('    std::fclose(at.log);\n  }\n  saver3ds::shutdown();',
       '    if (at.pk_skill_qa) {\n'
       '      const Player& p = g->me();\n'
-      '      float dash_cooldown = -1.0f;
-      for (int k = 0; k < p.nmoves; ++k) if (p.moves[k].kind() == K_DASH)
-        dash_cooldown = p.moves[k].t;
-      const bool ok = at.pk_skill_setup_ok && at.pk_skill_manual_sent &&\n'
+      '      float dash_cooldown = -1.0f;\n'
+      '      for (int k = 0; k < p.nmoves; ++k) if (p.moves[k].kind() == K_DASH)\n'
+      '        dash_cooldown = p.moves[k].t;\n'
+      '      const bool ok = at.pk_skill_setup_ok && at.pk_skill_manual_sent &&\n'
       '        at.pk_skill_auto_on && p.pkmsvv_passive_casts >= 2 &&\n'
       '        p.pkmsvv_dash_manual_casts >= 1 && p.pkmsvv_dash_auto_casts >= 1;\n'
       '      std::fprintf(at.log, "PKMSVV_SKILL095_RUNTIME_%s moves=%d passive_casts=%d manual_dash=%d auto_dash=%d dash_cd=%.2f\\n",\n'
@@ -74,4 +74,4 @@ patch('    std::fclose(at.log);\n  }\n  saver3ds::shutdown();',
       '  }\n'
       '  saver3ds::shutdown();')
 p.write_text(s,encoding="utf-8")
-print("PKMSVV_SKILL095_QA_PATCH_PASS: real 25s two passive moves, manual dash, AUTO dash")
+print("PKMSVV_SKILL095_QA_PATCH_PASS: real 45s two passive moves, manual dash, AUTO dash")
