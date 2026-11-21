@@ -123,7 +123,7 @@ patch('          (at.pk_fusion8_qa ? (p.nslots==6 && at.pk_fusion8_setup_ok) : p
            p.nslots==8) &&''')
 patch('          full?"PASS":"FAIL",p.nslots,p.nmoves,p.max_moves,p.pkmsvv_passive_casts);\n'
       '        if (at.pk_fusion8_qa) std::fprintf(at.log,',
-'''          full?"PASS":"FAIL",p.nslots,p.nmoves,p.max_moves,p.pkmsvv_passive_casts);
+r'''          full?"PASS":"FAIL",p.nslots,p.nmoves,p.max_moves,p.pkmsvv_passive_casts);
         if (at.pk_touch8_qa) std::fprintf(at.log,
           "PKMSVV_TOUCH098_RUNTIME_%s touch=%d save=%d moves=%d slots=%d casts=%d\n",
           full?"PASS":"FAIL",int(at.pk_touch_done),int(at.pk_saveqa_ok),
