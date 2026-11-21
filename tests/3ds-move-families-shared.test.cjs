@@ -42,18 +42,21 @@ function fixture(){
  function update(f,dt){f.t+=dt;return G.PKMSVV3DSCombatFX.update(f,dt,hooks);}
  return {G,actions,mons,player,fieldStore,cast,update,hooks};
 }
-test('3 original-style 3DS moves actually join learnable type pool without replacing 103-source moves',()=>{
+test('4 original-style 3DS moves including Surf join learnable type pool without replacing existing skills',()=>{
  const f=fixture();
- assert.equal(f.G.Moves.ALL.length,4);
- assert.deepEqual(f.G.Moves.ALL.slice(1).map(x=>x.id),['rapid-spin','earthquake','whirlpool']);
+ assert.equal(f.G.Moves.ALL.length,5);
+ assert.deepEqual(f.G.Moves.ALL.slice(1).map(x=>x.id),['rapid-spin','earthquake','whirlpool','surf']);
  assert.equal(f.G.Moves.BY_ID['rapid-spin'].kind,'spin');
  assert.equal(f.G.Moves.BY_ID.earthquake.kind,'quake');
  assert.equal(f.G.Moves.BY_ID.whirlpool.kind,'vortex');
+ assert.equal(f.G.Moves.BY_ID.surf.kind,'wave');
+ assert.equal(f.G.Moves.BY_ID.surf.name,'Surf');
  assert.ok(f.G.Moves.poolFor({types:['water']}).includes('whirlpool'));
+ assert.ok(f.G.Moves.poolFor({types:['water']}).includes('surf'), 'Surf independently learnable, not only Bubble evolution');
  assert.ok(f.G.Moves.poolFor({types:['ground']}).includes('earthquake'));
  assert.ok(f.G.Moves.poolFor({types:['flying']}).includes('rapid-spin'));
  assert.equal(f.G.PKMSVV3DSMoveFamilies.install(),0,'not duplicated');
- assert.equal(f.G.Moves.ALL.length,4);
+ assert.equal(f.G.Moves.ALL.length,5);
 });
 test('networked Co-op hides new field moves but keeps all preexisting skills',()=>{
  const f=fixture();
@@ -62,7 +65,7 @@ test('networked Co-op hides new field moves but keeps all preexisting skills',()
  assert.equal(pool.length,1);
  assert.equal(pool[0],'tackle');
  f.G.Coop.active=false;
- assert.equal(f.G.Moves.poolFor({types:['ground','water']}).length,4);
+ assert.equal(f.G.Moves.poolFor({types:['ground','water']}).length,5);
 });
 test('Rapid Spin is 3 real timed area hits, with pixel slash visual and property damage',()=>{
  const f=fixture(),enemy={id:2,x:30,y:0,dead:false};
@@ -117,6 +120,54 @@ test('Co-op ghost casts are visual-only and cannot hit/pull enemies',()=>{
  f2.update(whirl,0.1);
  assert.equal(en.x,155);
  assert.equal(f2.actions.blasts.length,0);
+});
+test('Surf is a wide 3DS water wave: sweeps forward, hits each enemy exactly once and carries mobs',()=>{
+ const f=fixture();
+ const ordinary={id:11,x:0,y:-36,dead:false};
+ const boss={id:12,x:0,y:36,boss:true,dead:false};
+ const prop={id:20,dead:false,gone:false};
+ f.mons.push(ordinary,boss);
+ f.G.World.propsInCircle=()=>[prop];
+ const wave=f.cast('surf');
+ assert.equal(wave.kind,'pkmsvv3ds-wave');
+ assert.equal(wave.w,124);
+ assert.equal(wave.len,260);
+ assert.equal(wave.x,-50,'starts behind the Pokémon, like native K_WAVE');
+ let ended=false;
+ for(let i=0;i<15&&!ended;i++)ended=f.update(wave,.10);
+ assert.equal(ended,true,'wave finishes after advancing past the player');
+ assert.ok(wave.x>0,'wave passes the player and moves ahead');
+ assert.equal(f.actions.hits.filter(x=>x.id==='surf').length,2,'one hit for each enemy across many physics frames');
+ assert.ok(ordinary.x>boss.x,'boss pushed 15% instead of normal 75% forward-wave factor');
+ assert.equal(f.actions.props.length,1,'destructible property hit exactly once');
+ assert.equal(f.actions.hits[0].dmg,48,'native damage uses player attack');
+});
+test('Surf ghost attack is only visual; enemy and prop state stay untouched',()=>{
+ const f=fixture(),enemy={id:99,x:0,y:0,dead:false};
+ f.mons.push(enemy);
+ f.G.World.propsInCircle=()=>[{id:1}];
+ const wave=f.cast('surf',true);
+ for(let i=0;i<10;i++)f.update(wave,.10);
+ assert.equal(f.actions.hits.length,0);
+ assert.equal(f.actions.props.length,0);
+ assert.equal(enemy.x,0);
+ const ops=[];
+ const ctx={globalAlpha:1,strokeStyle:'',lineWidth:0,fillStyle:'',
+   beginPath(){ops.push('begin');},moveTo(){ops.push('move');},
+   lineTo(){ops.push('line');},quadraticCurveTo(){ops.push('curve');},
+   closePath(){ops.push('close');},fill(){ops.push('fill');},
+   stroke(){ops.push('stroke');}};
+ f.G.PKMSVV3DSCombatFX.draw(ctx,wave,1);
+ assert.ok(ops.includes('fill')&&ops.includes('curve'),'canvas draws wide water wall and foam crest');
+});
+test('Surf waves respect runtime limits and preserve legacy Bubble evolution',()=>{
+ const f=fixture();
+ for(let i=0;i<4;i++)f.cast('surf');
+ assert.equal(f.fieldStore.filter(x=>x.kind==='pkmsvv3ds-wave').length,3);
+ const moveSource=fs.readFileSync(path.join(root,'src/pkmsvv-3ds-move-families.js'),'utf8');
+ assert.ok(moveSource.includes("id:'surf', name:'Surf', type:'water', kind:'wave'"));
+ assert.ok(!patchCode.includes("js/data/moves.js"),'legacy Bubble→Surf evolution data must not change');
+ assert.equal(f.G.Moves.BY_ID.tackle.kind,'melee');
 });
 test('Whirlpool cap is two per owner and all native field effects are capped',()=>{
  const f=fixture();
