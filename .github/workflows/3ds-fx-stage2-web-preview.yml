@@ -8,6 +8,10 @@ on:
       - src/pkmsvv-3ds-move-families.js
       - src/pkmsvv-3ds-stage3-moves.js
       - src/pkmsvv-3ds-stage4-moves.js
+      - src/pkmsvv-3ds-stage5-moves.js
+      - src/pkmsvv-3ds-combat-stage5.js
+      - tests/3ds-stage5-combat.test.cjs
+      - scripts/patch-3ds-stage5-families.cjs
       - src/pkmsvv-3ds-support-stage4.js
       - tests/3ds-stage4-support.test.cjs
       - scripts/patch-3ds-support-families.cjs
@@ -43,10 +47,14 @@ jobs:
           node --check src/pkmsvv-3ds-combat-stage3.js
           node --check src/pkmsvv-3ds-stage4-moves.js
           node --check src/pkmsvv-3ds-support-stage4.js
+          node --check src/pkmsvv-3ds-stage5-moves.js
+          node --check src/pkmsvv-3ds-combat-stage5.js
+          node --check scripts/patch-3ds-stage5-families.cjs
+          node --check tests/3ds-stage5-combat.test.cjs
           node --check scripts/patch-3ds-support-families.cjs
           node --check tests/3ds-stage4-support.test.cjs
           node --check tests/3ds-stage3-punch-cross-storm.test.cjs
-          node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs tests/3ds-stage3-punch-cross-storm.test.cjs tests/3ds-stage4-support.test.cjs
+          node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs tests/3ds-stage3-punch-cross-storm.test.cjs tests/3ds-stage4-support.test.cjs tests/3ds-stage5-combat.test.cjs
       - name: Fetch pinned public Web source mirror for isolated QA (NOT official release source)
         shell: bash
         run: |
@@ -66,6 +74,7 @@ jobs:
           node scripts/patch-3ds-skill-effects-passives.cjs
           node scripts/patch-3ds-move-families.cjs
           node scripts/patch-3ds-support-families.cjs
+          node scripts/patch-3ds-stage5-families.cjs
           node vendor/pokesurvivor/tools/build.js --sin-seo --expose
       - name: Validate compiled mirror JS and preserve original PKMSVV project files
         shell: bash
@@ -88,10 +97,16 @@ jobs:
           grep -Fq 'light-screen' vendor/pokesurvivor/js/app.min.js
           grep -Fq 'double-team' vendor/pokesurvivor/js/app.min.js
           grep -Fq 'PKMSVV3DSStage4Support' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'PKMSVV3DSStage5Combat' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'x-scissor' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'extreme-speed' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'shadow-force' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'explosion' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'rain-dance' vendor/pokesurvivor/js/app.min.js
           grep -Fq 'PKMSVV3DSStage3FX' vendor/pokesurvivor/js/app.min.js
           grep -Fq 'PKMSVV3DSCombatFX' vendor/pokesurvivor/js/app.min.js
           node --check vendor/pokesurvivor/js/app.min.js
-          node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs tests/3ds-stage3-punch-cross-storm.test.cjs tests/3ds-stage4-support.test.cjs
+          node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs tests/3ds-stage3-punch-cross-storm.test.cjs tests/3ds-stage4-support.test.cjs tests/3ds-stage5-combat.test.cjs
           echo PKMSVV_3DS_EFFECTS_ISOLATED_MIRROR_ENGINE_COMPILE_PASS
           mkdir -p dist/3ds-effects-mirror-demo
           rsync -a --exclude='.git' --exclude=tools --exclude=dev.html --exclude='*.map' vendor/pokesurvivor/ dist/3ds-effects-mirror-demo/
