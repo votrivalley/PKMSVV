@@ -666,6 +666,8 @@ for(const patchName of ['patch-held-item-ui.cjs','patch-bond-fusion.cjs','patch-
 execFileSync(process.execPath,[path.join(project,'scripts','patch-3ds-skill-effects-passives.cjs')],{cwd:project,stdio:'inherit'});
 // Stage 2: native-style 3DS attack families with actual hit/pull/area logic.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-3ds-move-families.cjs')],{cwd:project,stdio:'inherit'});
+// Stage 4: native 3DS support with damage-category shields, Rest and real decoy aggro.
+execFileSync(process.execPath,[path.join(project,'scripts','patch-3ds-support-families.cjs')],{cwd:project,stdio:'inherit'});
 // Final UI pass: compact Pokédex sort, Support native scrolling and accent-safe title.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-dex-support-mobile-ui.cjs')],{cwd:project,stdio:'inherit'});
 // Only Switch/Brewser: tolerate absent DOMContentLoaded and a stalled pixel-font Promise.
