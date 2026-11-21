@@ -1,0 +1,80 @@
+/* PKMSVV — 3DS move families → shared Web/Android/PC engine, QA stage 2.
+ * 3 real gameplay move definitions; original 103 moves stay unchanged.
+ * Mechanics adapt PokéSurvivor3DS native combat.cpp spin/quake/vortex.
+ * Names retained in English per PKMSVV skill glossary.
+ * Noncommercial fan work; upstream JPTER78 + 3DS port juanluismm521.
+ */
+G.PKMSVV3DSMoveFamilies = (() => {
+  'use strict';
+  const moves = G.Moves;
+  // Each move has a four-step, five-level upgrade ladder, exactly like
+  // original Web Moves.instance/levelUp/nextUpText expectations.
+  const defs = [
+    {
+      id:'rapid-spin', name:'Rapid Spin', type:'normal', kind:'spin',
+      desc:'Xoay liên tiếp, gây sát thương quanh mình theo từng nhịp.',
+      cd:1.90, dmg:12, radius:66, count:3, knock:40,
+      ups:[
+        {t:'+1 nhịp xoay',m:{count:1}},
+        {t:'+35% sát thương',m:{dmg:1.35}},
+        {t:'+20% bán kính',m:{radius:1.20}},
+        {t:'-20% hồi chiêu và +1 nhịp',m:{cd:0.80,count:1}}
+      ]
+    },
+    {
+      id:'earthquake', name:'Earthquake', type:'ground', kind:'quake',
+      desc:'Gây các đợt chấn động nối tiếp theo hướng nhắm, đẩy lùi quái.',
+      cd:3.05, dmg:18, radius:50, count:5, knock:35,
+      ups:[
+        {t:'+1 đợt chấn động',m:{count:1}},
+        {t:'+35% sát thương',m:{dmg:1.35}},
+        {t:'+20% phạm vi chấn động',m:{radius:1.20}},
+        {t:'-20% hồi chiêu và +1 đợt',m:{cd:0.80,count:1}}
+      ]
+    },
+    {
+      id:'whirlpool', name:'Whirlpool', type:'water', kind:'vortex',
+      desc:'Tạo lốc nước hút kẻ địch vào tâm và gây sát thương mỗi 0,4 giây.',
+      cd:3.60, dmg:11, radius:72, dur:2.6, range:300, pull:125,
+      ups:[
+        {t:'+20% phạm vi',m:{radius:1.20}},
+        {t:'+35% sát thương',m:{dmg:1.35}},
+        {t:'+25% thời gian tồn tại',m:{dur:1.25}},
+        {t:'-20% hồi chiêu và hút mạnh hơn',m:{cd:0.80,pull:145}}
+      ]
+    }
+  ];
+  const registered = [];
+  function install() {
+    if (!moves || !moves.BY_ID || !moves.POOL || !Array.isArray(moves.ALL))
+      throw Error('PKMSVV 3DS move families: Web moves catalogue missing');
+    for (const def of defs) {
+      if (moves.BY_ID[def.id]) {
+        if (!moves.BY_ID[def.id].pkmsvv3dsNative) throw Error('3DS move ID collision: '+def.id);
+        continue;
+      }
+      def.maxLvl=def.ups.length+1;
+      def.pkmsvv3dsNative=true;
+      moves.ALL.push(def);
+      moves.BY_ID[def.id]=def;
+      const pool=moves.POOL[def.type] || (moves.POOL[def.type]=[]);
+      if (!pool.includes(def.id)) pool.push(def.id);
+      registered.push(def.id);
+    }
+    if (!moves.poolFor._pkmsvv3dsSoloOnly) {
+      const original=moves.poolFor;
+      const extra=new Set(defs.map(d=>d.id));
+      function poolFor(mon) {
+        const list=original.call(moves,mon);
+        // Until Co-op/BR/Egg Rush authority and replay QA, do not roll these
+        // native-inspired fields in networked rooms. No existing move lost.
+        return G.Coop?.active ? list.filter(id=>!extra.has(id)) : list;
+      }
+      poolFor._pkmsvv3dsSoloOnly=true;
+      moves.poolFor=poolFor;
+    }
+    return registered.length;
+  }
+  install();
+  return { defs, registered, install, isNativeMove:id=>defs.some(d=>d.id===id) };
+})();
