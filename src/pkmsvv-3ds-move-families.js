@@ -22,14 +22,16 @@ G.PKMSVV3DSMoveFamilies = (() => {
       ]
     },
     {
-      id:'earthquake', name:'Earthquake', type:'ground', kind:'quake',
-      desc:'Gây các đợt chấn động nối tiếp theo hướng nhắm, đẩy lùi quái.',
-      cd:3.05, dmg:18, radius:50, count:5, knock:35,
+      // Latest native 3DS generated catalog: Earthquake uses K_TREMOR,
+      // NOT K_QUAKE (Magnitude already owns the original quake family).
+      id:'earthquake', name:'Earthquake', type:'ground', kind:'tremor',
+      desc:'Tâm chấn lan thành vòng tròn từ Pokémon, trúng mỗi mục tiêu một lần.',
+      cd:3.05, dmg:18, radius:175, dur:0.55, knock:65,
       ups:[
-        {t:'+1 đợt chấn động',m:{count:1}},
+        {t:'+20% phạm vi địa chấn',m:{radius:1.20}},
         {t:'+35% sát thương',m:{dmg:1.35}},
-        {t:'+20% phạm vi chấn động',m:{radius:1.20}},
-        {t:'-20% hồi chiêu và +1 đợt',m:{cd:0.80,count:1}}
+        {t:'+25% lực đẩy',m:{knock:1.25}},
+        {t:'-20% hồi chiêu và +15% phạm vi',m:{cd:0.80,radius:1.15}}
       ]
     },
     {
