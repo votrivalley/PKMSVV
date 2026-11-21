@@ -88,7 +88,7 @@ G.PKMSVV3DSCombatFX = (() => {
       f.next-=delta;
       let steps=0;
       while(f.next<=0 && f.left>0 && steps++<3){
-        f.next+=0.07;
+        f.next=Math.max(f.next+0.07,0.005); // at most one wave when dt matches the 70ms interval
         f.step++;f.left--;
         const x=f.sx+f.ca*f.step*34, y=f.sy+f.sa*f.step*34;
         if(G.World?.isWall?.(x,y))return true;
