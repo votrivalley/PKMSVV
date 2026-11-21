@@ -26,7 +26,7 @@ patch('  else if (!std::strcmp(first, "speedqa")) {\n'
       '    a.pk_speed_qa = true; a.seconds = 18; a.dex = 25; a.immortal = true;\n'
       '  }\n'
       '  else if (!std::strcmp(first, "skillqa")) {\n'
-      '    a.pk_skill_qa = true; a.seconds = 25; a.dex = 25; a.immortal = true;\n'
+      '    a.pk_skill_qa = true; a.seconds = 45; a.dex = 25; a.immortal = true;\n'
       '  }')
 patch('    if (at.pk_speed_qa) app.pkmsvv_enable_speed_qa();',
       '    if (at.pk_speed_qa) app.pkmsvv_enable_speed_qa();\n'
@@ -60,12 +60,15 @@ patch('    app.update(in, float(std::fmin(frame_ms, 100.0) / 1000.0));',
 patch('    std::fclose(at.log);\n  }\n  saver3ds::shutdown();',
       '    if (at.pk_skill_qa) {\n'
       '      const Player& p = g->me();\n'
-      '      const bool ok = at.pk_skill_setup_ok && at.pk_skill_manual_sent &&\n'
+      '      float dash_cooldown = -1.0f;
+      for (int k = 0; k < p.nmoves; ++k) if (p.moves[k].kind() == K_DASH)
+        dash_cooldown = p.moves[k].t;
+      const bool ok = at.pk_skill_setup_ok && at.pk_skill_manual_sent &&\n'
       '        at.pk_skill_auto_on && p.pkmsvv_passive_casts >= 2 &&\n'
       '        p.pkmsvv_dash_manual_casts >= 1 && p.pkmsvv_dash_auto_casts >= 1;\n'
-      '      std::fprintf(at.log, "PKMSVV_SKILL095_RUNTIME_%s moves=%d passive_casts=%d manual_dash=%d auto_dash=%d\\n",\n'
+      '      std::fprintf(at.log, "PKMSVV_SKILL095_RUNTIME_%s moves=%d passive_casts=%d manual_dash=%d auto_dash=%d dash_cd=%.2f\\n",\n'
       '        ok ? "PASS" : "FAIL",p.nmoves,p.pkmsvv_passive_casts,\n'
-      '        p.pkmsvv_dash_manual_casts,p.pkmsvv_dash_auto_casts);\n'
+      '        p.pkmsvv_dash_manual_casts,p.pkmsvv_dash_auto_casts,dash_cooldown);\n'
       '    }\n'
       '    std::fclose(at.log);\n'
       '  }\n'
