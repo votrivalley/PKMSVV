@@ -23,7 +23,8 @@ patch('js/systems/combat.js',
  "      case 'cone':       cone(pl, m); break;\n"+
  "      case 'spin':\n"+
  "      case 'quake':\n"+
- "      case 'vortex':    G.PKMSVV3DSCombatFX.spawn(fields,pl,m,ghost); break;");
+ "      case 'vortex':\n"+
+ "      case 'wave':      G.PKMSVV3DSCombatFX.spawn(fields,pl,m,ghost); break;");
 
 patch('js/systems/combat.js',
  '      f.t += dt;\n      if (f.gone || !f.owner ||',
@@ -47,4 +48,4 @@ patch('js/systems/combat.js',
  "      }\n"+
  "      if (f.kind === 'patch') {");
 
-console.log('PKMSVV_3DS_NATIVE_SPIN_QUAKE_VORTEX_COMBAT_PORT_PASS');
+console.log('PKMSVV_3DS_NATIVE_SPIN_QUAKE_VORTEX_SURF_COMBAT_PORT_PASS');
