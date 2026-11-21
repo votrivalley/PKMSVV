@@ -89,18 +89,37 @@ G.PKMSVV3DSMoveFamilies = (() => {
       const original=moves.poolFor;
       // Only hide IDs actually *added* on this source revision. Existing
       // Rapid Spin / Whirlpool must remain playable in all online modes.
-      const extra=new Set(registered);
+      // Live reference, not a snapshot: future Stage 3 additions must be
+      // isolated from Co-op just like Surf and Earthquake.
+      const extra=registered;
       function poolFor(mon) {
         const list=original.call(moves,mon);
-        // Until Co-op/BR/Egg Rush authority and replay QA, do not roll these
-        // native-inspired fields in networked rooms. No existing move lost.
-        return G.Coop?.active ? list.filter(id=>!extra.has(id)) : list;
+        // Native legendary-exclusive skills must never be offered to a
+        // different species, including Normal-type Judgment on all Pokémon.
+        const dex=Number(mon?.dex);
+        return list.filter(id=>{
+          const def=moves.BY_ID[id];
+          if (def?.pkmsvv3dsNative && def.only?.length && !def.only.includes(dex))
+            return false;
+          return !(G.Coop?.active && extra.includes(id));
+        });
       }
       poolFor._pkmsvv3dsSoloOnly=true;
       moves.poolFor=poolFor;
     }
     return additions;
   }
+  function addDefs(next) {
+    if (!Array.isArray(next) || next.some(d=>!d || typeof d.id!=='string' ||
+      !d.type || !d.kind || !Array.isArray(d.ups) || d.ups.length!==4))
+      throw Error('PKMSVV 3DS Stage3: move definitions need complete four-step ladder');
+    for(const d of next){
+      if(defs.some(existing=>existing.id===d.id))
+        throw Error('PKMSVV 3DS duplicate staged ID: '+d.id);
+      defs.push(d);
+    }
+    return install();
+  }
   install();
-  return { defs, registered, alreadyInGame, install, isNativeMove:id=>registered.includes(id) };
+  return { defs, registered, alreadyInGame, install, addDefs, isNativeMove:id=>registered.includes(id) };
 })();
