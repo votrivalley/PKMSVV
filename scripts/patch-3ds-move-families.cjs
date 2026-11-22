@@ -43,13 +43,24 @@ patch('js/systems/combat.js',
  '      }\n'+
  '      if (f.gone || !f.owner ||');
 
-patch('js/systems/combat.js',
- "      ctx.save();\n      if (f.kind === 'patch') {",
+// The exact 103-skill pinned source draws the pre-existing vortex first;
+// older QA mirrors draw patch fields first. Preserve both native branches.
+{
+ const rel='js/systems/combat.js';
+ const full=path.join(game,rel);
+ const src=fs.readFileSync(full,'utf8').replace(/\r\n/g,'\n');
+ const originalReal="      ctx.save();\n      if (f.kind === 'vortex') {";
+ const originalMirror="      ctx.save();\n      if (f.kind === 'patch') {";
+ const original=src.includes(originalReal)?originalReal:
+   src.includes(originalMirror)?originalMirror:null;
+ if(!original)throw Error('3DS Stage2 ground draw original/mirror variant drift');
+ patch(rel,original,
  "      ctx.save();\n"+
  "      if(G.PKMSVV3DSCombatFX.isPortField(f)){\n"+
  "        G.PKMSVV3DSCombatFX.draw(ctx,f,now);\n"+
  "        ctx.restore();continue;\n"+
  "      }\n"+
- "      if (f.kind === 'patch') {");
+ original.split('\n').slice(1).join('\n'));
+}
 
 console.log('PKMSVV_3DS_NATIVE_STAGE3_PUNCH_CROSS_STORM_SURF_COMBAT_PORT_PASS');
