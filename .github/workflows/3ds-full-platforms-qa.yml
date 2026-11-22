@@ -1,0 +1,146 @@
+name: PKMSVV Full 176 Skills — Windows + Android QA
+on:
+  push:
+    branches:
+      - feature/web-3ds-skill-effects-passives-qa-20261121
+    paths:
+      - '.github/workflows/3ds-full-platforms-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pkmsvv-176-platforms-qa
+  cancel-in-progress: true
+jobs:
+  windows:
+    name: Windows portable 176 skills / isolated save / QA ONLY
+    runs-on: windows-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Recover byte-identical pinned official source (fail closed)
+        run: node scripts/checkout-pinned-upstream.cjs
+      - name: Install electron-builder and source dependencies
+        run: npm install --no-audit --no-fund
+      - name: Prepare complete original PKMSVV game with Stages1–5
+        run: npm run prepare:game
+      - name: Patch native 3DS Stages6–10, assert exact 103+73 skill registry
+        shell: bash
+        run: |
+          set -euo pipefail
+          for stage in stage6-projectiles stage7-dash-meteor stage8-beam-nova-charge stage9-homing-cone-melee stage10-final-moves; do
+            node "scripts/patch-3ds-${stage}.cjs"
+          done
+          node scripts/qa-3ds-full-original-levelups.cjs
+          node vendor/pokesurvivor/tools/build.js --sin-seo --expose
+          node --check vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'PKMSVV3DSStage10Combat' vendor/pokesurvivor/js/app.min.js
+          echo PKMSVV_WINDOWS_QA_NATIVE_176_SKILLS_VERIFIED
+      - name: Verify isolated original saves and auto-cast
+        shell: bash
+        run: |
+          node --test tests/save-guardian-regression.test.cjs
+          npm run test:autocast
+      - name: Generate icons and separate QA executable's userData completely
+        shell: bash
+        run: |
+          npm run prepare:icons
+          node scripts/isolate-3ds-qa-packages.cjs windows
+          node --check desktop/main.cjs
+          grep -Fq 'PKMSVV-176-Skill-QA' desktop/main.cjs
+      - name: Build UNSIGNED standalone QA portable EXE, never publish
+        run: npm run build:win
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Validate QA portable executable exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          ls -lh dist/*.exe
+          test -n "$(find dist -maxdepth 1 -iname '*176*QA*.exe' -print -quit)"
+      - name: Upload Windows QA EXE, not production
+        uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-Full-176-Skill-Windows-QA-Isolated-Save
+          path: dist/*176*QA*.exe
+          if-no-files-found: error
+          retention-days: 5
+
+  android:
+    name: Android universal debug 176 skills / distinct QA app ID
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install pinned Android SDK components for debug APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}"
+          sdkmanager --install "platforms;android-36" "build-tools;36.0.0"
+      - name: Recover exact official source SHA and tree
+        run: node scripts/checkout-pinned-upstream.cjs
+      - name: Install Capacitor and game dependencies
+        run: npm install --no-audit --no-fund
+      - name: Prepare full PKMSVV and native move effects
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run prepare:game
+          for stage in stage6-projectiles stage7-dash-meteor stage8-beam-nova-charge stage9-homing-cone-melee stage10-final-moves; do
+            node "scripts/patch-3ds-${stage}.cjs"
+          done
+          node scripts/qa-3ds-full-original-levelups.cjs
+          node vendor/pokesurvivor/tools/build.js --sin-seo --expose
+          node --check vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'PKMSVV3DSStage10Combat' vendor/pokesurvivor/js/app.min.js
+          echo PKMSVV_ANDROID_QA_NATIVE_176_SKILLS_VERIFIED
+      - name: Validate saved progress, generate icons and bundle Android offline WebView
+        shell: bash
+        run: |
+          node --test tests/save-guardian-regression.test.cjs
+          npm run prepare:icons
+          npm run prepare:android
+          test -s mobile/www/js/app.min.js
+          grep -Fq 'PKMSVV3DSStage10Combat' mobile/www/js/app.min.js
+      - name: Generate Capacitor native project without using production package ID
+        shell: bash
+        run: |
+          npx cap add android
+          npx cap sync android
+          node scripts/configure-android.cjs
+          node scripts/apply-android-icons.cjs
+          node scripts/isolate-3ds-qa-packages.cjs android
+          grep -E 'applicationId.*\.qa' android/app/build.gradle
+      - name: Compile debug QA APK only, no Play upload, no release signing
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon :app:assembleDebug
+      - name: Verify independent Android app ID and APK archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cp android/app/build/outputs/apk/debug/app-debug.apk "dist/PKMSVV-Full-176-Skill-Android-QA-debug.apk"
+          unzip -t "dist/PKMSVV-Full-176-Skill-Android-QA-debug.apk" | tail -1
+          "${ANDROID_HOME}/build-tools/36.0.0/aapt" dump badging "dist/PKMSVV-Full-176-Skill-Android-QA-debug.apk" |
+            grep -E '^package: name=.*\.qa' | head -1
+          ls -lh dist/*176*QA*.apk
+      - name: Upload Android QA APK, not production
+        uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-Full-176-Skill-Android-QA-Separate-App
+          path: dist/*176*QA*.apk
+          if-no-files-found: error
+          retention-days: 5
