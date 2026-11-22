@@ -66,22 +66,44 @@ patch('js/entities/enemy.js',
  '      if (this.slowT > 0) { this.slowT -= dt; if (this.slowT <= 0) this.slow = 0; }',
  '      if(this.pkmsvv3dsShredT>0)this.pkmsvv3dsShredT=Math.max(0,this.pkmsvv3dsShredT-dt);\n'+
  '      if (this.slowT > 0) { this.slowT -= dt; if (this.slowT <= 0) this.slow = 0; }');
-patch('js/systems/combat.js',
- '    const k = typeK(m.type, e);\n',
- '    const k = typeK(m.type, e)*(e.pkmsvv3dsShredT>0?1.25:1);\n');
-patch('js/systems/combat.js',
- '    if (m.slow) e.applySlow(m.slow);\n',
- '    if (m.slow) e.applySlow(m.slow);\n'+
- '    if(m.pkmsvv3dsNative && m.shred>0 && !e.dead)e.pkmsvv3dsShredT=m.shred;\n');
+// Real PKMSVV already has Stats.taken + Kecleon ability modifiers.
+{
+ const rel='js/systems/combat.js';
+ const src=fs.readFileSync(path.join(game,rel),'utf8').replace(/\r\n/g,'\n');
+ const real='    const k = typeK(m.type, e) * G.Stats.taken(e.mon, m.cat) * abilityK(pl,m,e);';
+ const mirror='    const k = typeK(m.type, e);';
+ const found=src.includes(real)?real:src.includes(mirror)?mirror:null;
+ if(!found)throw Error('Stage9 direct-hit type/ability source drift');
+ patch(rel,found,found.slice(0,-1)+'*(e.pkmsvv3dsShredT>0?1.25:1);');
+}
+// Native Crush/Crun(ch) applies shred after *successful real hit* while
+// keeping existing Serene Grace/Sheer Force status behavior untouched.
+{
+ const rel='js/systems/combat.js';
+ const src=fs.readFileSync(path.join(game,rel),'utf8').replace(/\r\n/g,'\n');
+ const real='    if(m.slow&&statusK(pl))e.applySlow(m.slow*statusK(pl));';
+ const mirror='    if (m.slow) e.applySlow(m.slow);';
+ const found=src.includes(real)?real:src.includes(mirror)?mirror:null;
+ if(!found)throw Error('Stage9 Crunch native ability-status anchor drift');
+ patch(rel,found,found+'\n'+
+   '    if(m.pkmsvv3dsNative && m.shred>0 && !e.dead)e.pkmsvv3dsShredT=m.shred;');
+}
 // Flower Trick: +50% attack-local crit chance; cannot affect legacy bullets.
 patch('js/systems/combat.js',
  '        const crit = p.pkmsvv3dsId ? G.PKMSVV3DSStage6ProjectileFX.rollCrit(pl,p) : isCrit(pl);',
  '        const crit = (p.pkmsvv3dsId ? G.PKMSVV3DSStage6ProjectileFX.rollCrit(pl,p) : isCrit(pl)) ||\n'+
  '          (p.pkmsvv3dsNative && p.critUp>0 && Math.random()<p.critUp);');
-patch('js/systems/combat.js',
- '          (crit ? G.PKMSVV3DSSkillPort.critMultiplier(pl) : 1) * G.PKMSVV3DSSkillPort.bossMultiplier(pl, e);',
- '          (crit ? G.PKMSVV3DSSkillPort.critMultiplier(pl) : 1) *\n'+
- '          G.PKMSVV3DSSkillPort.bossMultiplier(pl, e) * (e.pkmsvv3dsShredT>0?1.25:1);');
+// Retain real 103-skill abilityK + category/mcat + Arceus source K; append
+// only Crunch shred to projectile victim damage, never to props.
+{
+ const rel='js/systems/combat.js';
+ const src=fs.readFileSync(path.join(game,rel),'utf8').replace(/\r\n/g,'\n');
+ const real='          abilityK(pl,p.src,e) * G.PKMSVV3DSSkillPort.bossMultiplier(pl,e);';
+ const mirror='          (crit ? G.PKMSVV3DSSkillPort.critMultiplier(pl) : 1) * G.PKMSVV3DSSkillPort.bossMultiplier(pl, e);';
+ const found=src.includes(real)?real:src.includes(mirror)?mirror:null;
+ if(!found)throw Error('Stage9 projectile original ability/Crit source drift');
+ patch(rel,found,found.slice(0,-1)+' * (e.pkmsvv3dsShredT>0?1.25:1);');
+}
 // Moonblast on projectile impact: a single radial splash at 60% of PRIMARY
 // final hit damage, no recursion, no duplicate damage on the primary target.
 patch('js/systems/combat.js',
