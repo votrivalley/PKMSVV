@@ -87,7 +87,7 @@ patch('js/systems/combat.js',
  const rel='js/systems/combat.js';
  const txt=fs.readFileSync(path.join(game,rel),'utf8').replace(/\r\n/g,'\n');
  const real='          abilityK(pl,p.src,e) * G.PKMSVV3DSSkillPort.bossMultiplier(pl,e) * (e.pkmsvv3dsShredT>0?1.25:1);';
- const mirror='          G.PKMSVV3DSSkillPort.bossMultiplier(pl, e) * (e.pkmsvv3dsShredT>0?1.25:1);';
+ const mirror='          (crit ? G.PKMSVV3DSSkillPort.critMultiplier(pl) : 1) * G.PKMSVV3DSSkillPort.bossMultiplier(pl, e) * (e.pkmsvv3dsShredT>0?1.25:1);';
  const found=txt.includes(real)?real:txt.includes(mirror)?mirror:null;
  if(!found)throw Error('Stage10 projectile original/mirror dmg coefficient drift');
  patch(rel,found,found.slice(0,-1)+' * G.PKMSVV3DSStage10Combat.specialMultiplier(pl,p);');
