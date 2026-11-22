@@ -64,12 +64,38 @@ jobs:
             "sourceRun": 45048832143,
             "sourceSha": "e3ced1e10f718fe728630a7ee47b36aad204d8ab",
             "gitPinnedUpstream": "11fe868c640b62ac37beacc222e056bc4d9ec892",
-            "multiplayerNativeSkills": "disabled-until-qa"
+            "multiplayerNativeSkills": "disabled-until-qa",
+            "previewBranch": "beta"
           }
           EOF
           printf '%s\n' '/index.html' '/qa-build-info.json' '/QA_ONLY.txt' '/sw.js' '  Cache-Control: no-store' > "$site/_headers"
           echo "PASS: exact 176-skill Web game, QA metadata ready"
           du -sh "$site"
+      - name: Keep the existing Beta game URLs working with this full-game build
+        shell: bash
+        run: |
+          set -euo pipefail
+          site=dist/pkmsvv-176-skills-web-demo
+          # This tested original game has its entrypoint at /, unlike existing Beta
+          # which has long used /game/. Supply equivalent HTML entries, keeping
+          # resource paths anchored at the preview root (no duplicate 78 MB assets).
+          node <<'NODE'
+          const fs=require('node:fs');
+          const path=require('node:path');
+          const root='dist/pkmsvv-176-skills-web-demo';
+          const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+          if(!/<head(?:\\s[^>]*)?>/i.test(html)) throw new Error('Missing head tag in QA web HTML');
+          const nested=html.replace(/<head(?:\\s[^>]*)?>/i,m=>m+'\\n<base href="/">\\n');
+          for(const route of ['game','ai/game']){
+            const dir=path.join(root,route);
+            fs.mkdirSync(dir,{recursive:true});
+            fs.writeFileSync(path.join(dir,'index.html'),nested);
+          }
+          NODE
+          test -s "$site/game/index.html"
+          test -s "$site/ai/game/index.html"
+          grep -Fq '<base href="/">' "$site/game/index.html"
+          echo "PASS: the historic Beta /game/ and /ai/game/ links resolve to the 176-skill QA game"
       - name: Deploy to Cloudflare QA preview branch ONLY (never production)
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
@@ -81,8 +107,8 @@ jobs:
             { echo "::error::Missing Cloudflare secrets; no deployment performed"; exit 1; }
           # Explicit non-production branch. Do not ever pass pkmsvv-web here.
           project="pkmsvv-web"
-          qa_branch="pkmsvv-176-skills-qa"
-          test "$qa_branch" != "pkmsvv-web"
+          qa_branch="beta"
+          test "$qa_branch" = "beta" && test "$qa_branch" != "pkmsvv-web"
           npx --yes wrangler@4 pages deploy dist/pkmsvv-176-skills-web-demo \
             --project-name "$project" --branch "$qa_branch" 2>&1 | tee /tmp/pkmsvv-176-qa-upload.log
           echo "Expected QA branch alias: https://$qa_branch.$project.pages.dev/"
@@ -90,12 +116,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          site="https://pkmsvv-176-skills-qa.pkmsvv-web.pages.dev"
+          site="https://beta.pkmsvv-web.pages.dev"
           ok=0
           for i in 1 2 3 4 5 6 7 8 9 10; do
             if curl -fsSL --max-time 25 -H 'Cache-Control: no-cache' \
               "$site/qa-build-info.json?v=$GITHUB_SHA-$i" -o /tmp/pkmsvv-176-live.json &&
-              jq -e '.releaseType=="qa-web-preview" and .notProduction==true and .skills==176 and .sourceRun==45048832143' /tmp/pkmsvv-176-live.json; then
+              jq -e '.releaseType=="qa-web-preview" and .notProduction==true and .skills==176 and .sourceRun==45048832143 and .previewBranch=="beta"' /tmp/pkmsvv-176-live.json; then
               ok=1
               break
             fi
@@ -104,4 +130,4 @@ jobs:
           test "$ok" = 1 || { echo "::error::QA Pages branch alias missing or wrong version"; exit 1; }
           curl -fsSL --max-time 30 "$site/index.html?qa=176" | grep -Eq 'app\.min\.js'
           curl -fsSL --max-time 45 "$site/js/app.min.js" | grep -Fq 'PKMSVV3DSStage10Combat'
-          echo "PKMSVV_176_SKILLS_PUBLIC_WEB_PREVIEW_VERIFIED url=$site/ sourceRun=45048832143"
+          echo "PKMSVV_176_SKILLS_EXISTING_BETA_VERIFIED url=$site/game/ sourceRun=45048832143"
