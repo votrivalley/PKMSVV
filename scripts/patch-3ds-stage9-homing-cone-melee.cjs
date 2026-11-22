@@ -33,10 +33,9 @@ patch('js/systems/combat.js',
  "const TARGETED = ['melee', 'beam', 'projectile', 'homing', 'boomerang', 'chain', 'meteor', 'dash', 'cone'];");
 // Native-only extras. Do not expose these attributes on existing 103 legacy IDs.
 patch('js/systems/combat.js',
- 'return { burn: m.burn || 0, poison: m.poison || 0, slow: m.slow || 0, knock: m.knock || 0, mtype: m.type };',
- 'return { burn: m.burn || 0, poison: m.poison || 0, slow: m.slow || 0, knock: m.knock || 0, mtype: m.type,'+
- ' pkmsvv3dsNative: !!m.pkmsvv3dsNative, critUp: m.pkmsvv3dsNative ? (m.critUp || 0) : 0,'+
- ' splash: m.pkmsvv3dsNative ? (m.splash || 0) : 0 };');
+ '      G.PKMSVV3DSStage6ProjectileFX.payload(m));',
+ '      G.PKMSVV3DSStage6ProjectileFX.payload(m),\n'+
+ '      m.pkmsvv3dsNative ? { pkmsvv3dsNative:true, critUp:m.critUp||0, splash:m.splash||0 } : {});');
 // Native Silver Wind: 15% chance on CAST, +8% ATK/+8% SPD for 6 s, three stacks.
 patch('js/systems/combat.js',
  '    pl.cast(m);\n',
@@ -60,11 +59,13 @@ patch('js/systems/combat.js',
  '    if(m.pkmsvv3dsNative && m.shred>0 && !e.dead)e.pkmsvv3dsShredT=m.shred;\n');
 // Flower Trick: +50% attack-local crit chance; cannot affect legacy bullets.
 patch('js/systems/combat.js',
- '        const crit = isCrit(pl);\n        const k = ',
- '        const crit = isCrit(pl) || (p.pkmsvv3dsNative && p.critUp>0 && Math.random()<p.critUp);\n        const k = ');
+ '        const crit = p.pkmsvv3dsId ? G.PKMSVV3DSStage6ProjectileFX.rollCrit(pl,p) : isCrit(pl);',
+ '        const crit = (p.pkmsvv3dsId ? G.PKMSVV3DSStage6ProjectileFX.rollCrit(pl,p) : isCrit(pl)) ||\n'+
+ '          (p.pkmsvv3dsNative && p.critUp>0 && Math.random()<p.critUp);');
 patch('js/systems/combat.js',
- '        const k = (p.mtype ? typeK(p.mtype, e) : 1) * (crit ? CRIT_MUL : 1);',
- '        const k = (p.mtype ? typeK(p.mtype, e) : 1) * (crit ? CRIT_MUL : 1) * (e.pkmsvv3dsShredT>0?1.25:1);');
+ '          (crit ? G.PKMSVV3DSSkillPort.critMultiplier(pl) : 1) * G.PKMSVV3DSSkillPort.bossMultiplier(pl, e);',
+ '          (crit ? G.PKMSVV3DSSkillPort.critMultiplier(pl) : 1) *\n'+
+ '          G.PKMSVV3DSSkillPort.bossMultiplier(pl, e) * (e.pkmsvv3dsShredT>0?1.25:1);');
 // Moonblast on projectile impact: a single radial splash at 60% of PRIMARY
 // final hit damage, no recursion, no duplicate damage on the primary target.
 patch('js/systems/combat.js',
