@@ -23,13 +23,15 @@ patch('js/data/moves.js',
  "const MULT = ['dmg', 'cd', 'speed', 'radius', 'dur', 'amount', 'arc', 'width', 'spread', 'life', 'size', 'rate', 'range', 'knock'];");
 // Ensure native physical Scissor, Blitz, Leap and Boom don't waste cooldown
 // when no nearby target is present. Weather is autonomous, so no such gate.
+// Insert native targeting without replacing the existing CDR/balance expression,
+// which differs between official PKMSVV and the public QA mirror.
 patch('js/systems/combat.js',
- '    m.t = Math.max(0.05, m.cd * pl.cdMul);\n    if(m.kind===',
+ "    if(m.kind==='rest' && !G.PKMSVV3DSStage4Support.needsRest(pl))",
  '    if(G.PKMSVV3DSStage5Combat.needsTarget(m) &&\n'+
  '      !(pl.target && G.U.dist(pl.x,pl.y,pl.target.x,pl.target.y)<=G.PKMSVV3DSStage5Combat.reach(m))) {\n'+
  '      m.t=0.05;return;\n'+
  '    }\n'+
- '    m.t = Math.max(0.05, m.cd * pl.cdMul);\n    if(m.kind===');
+ "    if(m.kind==='rest' && !G.PKMSVV3DSStage4Support.needsRest(pl))");
 // Player PMD 8-direction animations and sounds for new five families.
 patch('js/entities/player.js',
  "wave: 'Shoot', tremor: 'Attack' }[m.kind] || 'Attack';",
