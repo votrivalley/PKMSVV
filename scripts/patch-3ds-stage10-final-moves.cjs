@@ -28,10 +28,16 @@ patch('js/systems/combat.js',
 patch('js/systems/combat.js',
  '!'+engineKinds+'.includes(m.kind)',
  '!'+finalKinds+'.includes(m.kind)');
-patch('js/systems/combat.js',
- "      case 'homing':     fireProjectiles(pl, m); break;",
- "      case 'homing':     fireProjectiles(pl, m); break;\n"+
- "      case 'bounce':     fireProjectiles(pl, m); break;");
+// True pinned 103-skill source already has native Bounce and Homing
+// routing, including wall-safe rebound. The 64-skill mirror needs one case.
+{
+ const rel='js/systems/combat.js';
+ const txt=fs.readFileSync(path.join(game,rel),'utf8').replace(/\r\n/g,'\n');
+ if(!/case 'bounce':\s+fireProjectiles\(pl, m\);/.test(txt))
+  patch(rel,"      case 'homing':     fireProjectiles(pl, m); break;",
+    "      case 'homing':     fireProjectiles(pl, m); break;\n"+
+    "      case 'bounce':     fireProjectiles(pl, m); break;");
+}
 // 3DS native target policy (only added IDs). Avoid wasting cooldown when
 // a timed stun, forward quake, spin or shove has no reachable enemy.
 patch('js/systems/combat.js',
@@ -44,37 +50,69 @@ patch('js/systems/combat.js',
  '    if(G.PKMSVV3DSStage5Combat.needsTarget(m) &&');
 // Protect native LevelUp: Stun duration multiplies; Bounce adds hops, not
 // assigns absolute stat values. Preserve the already-supported Stage8 charge.
-patch('js/data/moves.js',
- "'rate', 'range', 'knock', 'charge'];",
- "'rate', 'range', 'knock', 'charge', 'stun'];");
-patch('js/data/moves.js',
- "const ADD = ['count', 'pierce', 'stacks'];",
- "const ADD = ['count', 'pierce', 'stacks', 'bounce'];");
+// In the pinned engine, Stun is already multiplicative and Bounce is
+// already additive. Keep the original move upgrade engine intact.
+{
+ const rel='js/data/moves.js';
+ const txt=fs.readFileSync(path.join(game,rel),'utf8').replace(/\r\n/g,'\n');
+ const mirror="'rate', 'range', 'knock', 'charge'];";
+ const real="'pull', 'knock', 'stun', 'charge', 'range'];";
+ if(txt.includes(mirror)){
+  patch(rel,mirror,"'rate', 'range', 'knock', 'charge', 'stun'];");
+  patch(rel,"const ADD = ['count', 'pierce', 'stacks'];",
+   "const ADD = ['count', 'pierce', 'stacks', 'bounce'];");
+ }else if(!txt.includes(real)||!txt.includes(
+   "const ADD = ['count', 'pierce', 'stacks', 'bounce'];"))
+   throw Error('Stage10 original/mirror stun + bounce levelup drift');
+}
 // Attach exact source-linked metadata only to new native projectiles,
 // never rewrite an existing 103-ID skill or its old payload.
 patch('js/systems/combat.js',
  'm.pkmsvv3dsNative ? { pkmsvv3dsNative:true, critUp:m.critUp||0, splash:m.splash||0 } : {});',
  'm.pkmsvv3dsNative ? { pkmsvv3dsNative:true, critUp:m.critUp||0,\n'+
  '        splash:m.splash||0, bounce:m.bounce||0, pkmsvv3dsCategory:m.cat||null } : {});');
-patch('js/systems/combat.js',
- '    const k = typeK(m.type, e)*(e.pkmsvv3dsShredT>0?1.25:1);',
- '    const k = typeK(m.type, e)*(e.pkmsvv3dsShredT>0?1.25:1)*\n'+
- '      G.PKMSVV3DSStage10Combat.specialMultiplier(pl,m);');
-patch('js/systems/combat.js',
- '          G.PKMSVV3DSSkillPort.bossMultiplier(pl, e) * (e.pkmsvv3dsShredT>0?1.25:1);',
- '          G.PKMSVV3DSSkillPort.bossMultiplier(pl, e) * (e.pkmsvv3dsShredT>0?1.25:1) *\n'+
- '          G.PKMSVV3DSStage10Combat.specialMultiplier(pl,p);');
+// Preserve original Stats.taken, Judgment and Kecleon ability damage.
+{
+ const rel='js/systems/combat.js';
+ const txt=fs.readFileSync(path.join(game,rel),'utf8').replace(/\r\n/g,'\n');
+ const real='    const k = typeK(m.type, e) * G.Stats.taken(e.mon, m.cat) * abilityK(pl,m,e)*(e.pkmsvv3dsShredT>0?1.25:1);';
+ const mirror='    const k = typeK(m.type, e)*(e.pkmsvv3dsShredT>0?1.25:1);';
+ const found=txt.includes(real)?real:txt.includes(mirror)?mirror:null;
+ if(!found)throw Error('Stage10 direct-hit original/mirror dmg coefficient drift');
+ patch(rel,found,found.slice(0,-1)+' * G.PKMSVV3DSStage10Combat.specialMultiplier(pl,m);');
+}
+// The original pinned engine has a category-aware projectile path, ability
+// multiplier and critK. Only add the temporary Geomancy special-only factor.
+{
+ const rel='js/systems/combat.js';
+ const txt=fs.readFileSync(path.join(game,rel),'utf8').replace(/\r\n/g,'\n');
+ const real='          abilityK(pl,p.src,e) * G.PKMSVV3DSSkillPort.bossMultiplier(pl,e) * (e.pkmsvv3dsShredT>0?1.25:1);';
+ const mirror='          G.PKMSVV3DSSkillPort.bossMultiplier(pl, e) * (e.pkmsvv3dsShredT>0?1.25:1);';
+ const found=txt.includes(real)?real:txt.includes(mirror)?mirror:null;
+ if(!found)throw Error('Stage10 projectile original/mirror dmg coefficient drift');
+ patch(rel,found,found.slice(0,-1)+' * G.PKMSVV3DSStage10Combat.specialMultiplier(pl,p);');
+}
 // Native bounce chooses a nearby *unhit* enemy within 220px on each impact.
 // Redirect after original impact (and its poison/crit) is resolved; do not
 // bypass ghost rules or double-apply the originating hit.
-patch('js/systems/combat.js',
- '        if (!p.orb) {\n          if (p.pierce > 0) { p.pierce--; }',
- '        if (!p.orb) {\n          if(G.PKMSVV3DSStage10Combat.rebound(p,e))break;\n'+
- '          if (p.pierce > 0) { p.pierce--; }');
-patch('js/systems/combat.js',
- '          if (p.pierce > 0) { p.pierce--; continue; }\n          G.FX.burst(p.x, p.y - G.LIFT, p.color, 5, 80);',
- '          if(G.PKMSVV3DSStage10Combat.rebound(p,e))break;\n'+
- '          if (p.pierce > 0) { p.pierce--; continue; }\n          G.FX.burst(p.x, p.y - G.LIFT, p.color, 5, 80);');
+// Pinned original already executes rebound(p,e) before pierce, including
+// 220px no-repeat target selection. Never duplicate bouncing on this engine.
+{
+ const rel='js/systems/combat.js';
+ const txt=fs.readFileSync(path.join(game,rel),'utf8').replace(/\r\n/g,'\n');
+ if(txt.includes('        if (!p.orb && rebound(p, e)) break;')){
+   // Nothing to patch: real engine owns the true bounce.
+ }else{
+   patch(rel,
+    '        if (!p.orb) {\n          if (p.pierce > 0) { p.pierce--; }',
+    '        if (!p.orb) {\n          if(G.PKMSVV3DSStage10Combat.rebound(p,e))break;\n'+
+    '          if (p.pierce > 0) { p.pierce--; }');
+   patch(rel,
+    '          if (p.pierce > 0) { p.pierce--; continue; }\n          G.FX.burst(p.x, p.y - G.LIFT, p.color, 5, 80);',
+    '          if(G.PKMSVV3DSStage10Combat.rebound(p,e))break;\n'+
+    '          if (p.pierce > 0) { p.pierce--; continue; }\n          G.FX.burst(p.x, p.y - G.LIFT, p.color, 5, 80);');
+ }
+}
 // Use player simulation time, not wall time. Geomancy must expire naturally
 // during pause/time-scale changes and never modify physical hit categories.
 patch('js/entities/player.js',
