@@ -59,17 +59,40 @@ patch('js/systems/levelup.js',
   patch(rel,before,after);
 }
 
-// Source already supports crits; extend only the actual successful hit paths.
-// Boss bonus applies only if e.boss, never to ordinary enemies or world props.
-patch('js/systems/combat.js',
-  '    dmg *= k * (crit ? CRIT_MUL : 1);\n    e.hurt(dmg, col, dx, dy, knock,',
-  '    dmg *= k * (crit ? G.PKMSVV3DSSkillPort.critMultiplier(pl) : 1) * G.PKMSVV3DSSkillPort.bossMultiplier(pl, e);\n' +
-  '    if (crit) G.PKMSVV3DSSkillPort.onCrit(pl, e);\n    e.hurt(dmg, col, dx, dy, knock,');
-patch('js/systems/combat.js',
-  '        const k = (p.mtype ? typeK(p.mtype, e) : 1) * (crit ? CRIT_MUL : 1);\n        e.hurt(p.dmg * k,',
-  '        const k = (p.mtype ? typeK(p.mtype, e) : 1) *\n' +
-  '          (crit ? G.PKMSVV3DSSkillPort.critMultiplier(pl) : 1) * G.PKMSVV3DSSkillPort.bossMultiplier(pl, e);\n' +
-  '        if (crit) G.PKMSVV3DSSkillPort.onCrit(pl, e);\n        e.hurt(p.dmg * k,');
+// Real PKMSVV retains native ability CritK/abilityK and Arceus Judgment.
+// The 64-skill QA mirror still uses the upstream CRIT_MUL directly. Keep
+// both source-specific branches fail-closed and never drop old multipliers.
+{
+  const file='js/systems/combat.js';
+  const current=fs.readFileSync(path.join(game,file),'utf8').replace(/\r\n/g,'\n');
+  const originalReal="    dmg *= k * (crit ? critK(pl) : 1) * (e.arceus?G.Judgment.dmgK():1);\n    e.hurt(dmg,";
+  const originalMirror="    dmg *= k * (crit ? CRIT_MUL : 1);\n    e.hurt(dmg,";
+  if(current.includes(originalReal)){
+    patch(file,originalReal,
+      "    dmg *= k * (crit ? critK(pl) * (G.PKMSVV3DSSkillPort.critMultiplier(pl)/CRIT_MUL) : 1) *\n"+
+      "      (e.arceus?G.Judgment.dmgK():1) * G.PKMSVV3DSSkillPort.bossMultiplier(pl,e);\n"+
+      "    if(crit)G.PKMSVV3DSSkillPort.onCrit(pl,e);\n    e.hurt(dmg,");
+  }else if(current.includes(originalMirror)){
+    patch(file,originalMirror,
+      "    dmg *= k * (crit ? G.PKMSVV3DSSkillPort.critMultiplier(pl) : 1) * G.PKMSVV3DSSkillPort.bossMultiplier(pl, e);\n"+
+      "    if (crit) G.PKMSVV3DSSkillPort.onCrit(pl, e);\n    e.hurt(dmg,");
+  }else throw Error('3DS Stage1 real/mirror direct-hit multiplier source drift');
+  const next=fs.readFileSync(path.join(game,file),'utf8').replace(/\r\n/g,'\n');
+  const pReal="        const k = (p.mtype ? typeK(p.mtype, e) : 1) * G.Stats.taken(e.mon, p.mcat) * (crit ? critK(pl) : 1) * abilityK(pl,p.src,e);\n        e.hurt(p.dmg * k,";
+  const pMirror="        const k = (p.mtype ? typeK(p.mtype, e) : 1) * (crit ? CRIT_MUL : 1);\n        e.hurt(p.dmg * k,";
+  if(next.includes(pReal)){
+    patch(file,pReal,
+      "        const k = (p.mtype ? typeK(p.mtype, e) : 1) * G.Stats.taken(e.mon,p.mcat) *\n"+
+      "          (crit ? critK(pl) * (G.PKMSVV3DSSkillPort.critMultiplier(pl)/CRIT_MUL) : 1) *\n"+
+      "          abilityK(pl,p.src,e) * G.PKMSVV3DSSkillPort.bossMultiplier(pl,e);\n"+
+      "        if(crit)G.PKMSVV3DSSkillPort.onCrit(pl,e);\n        e.hurt(p.dmg * k,");
+  }else if(next.includes(pMirror)){
+    patch(file,pMirror,
+      "        const k = (p.mtype ? typeK(p.mtype, e) : 1) *\n"+
+      "          (crit ? G.PKMSVV3DSSkillPort.critMultiplier(pl) : 1) * G.PKMSVV3DSSkillPort.bossMultiplier(pl, e);\n"+
+      "        if (crit) G.PKMSVV3DSSkillPort.onCrit(pl, e);\n        e.hurt(p.dmg * k,");
+  }else throw Error('3DS Stage1 real/mirror projectile multiplier source drift');
+}
 
 // Preserve immunity, true-damage events, Focus Sash and the existing
 // damage-triggered companion reaction; only incoming ordinary hits can dodge.
