@@ -49,7 +49,7 @@ test('Native source extra mechanics are preserved for Moonblast/Flower Trick/Sil
 });
 test('All five source ladders and full-circle melee are retained',()=>{
  const {G,M}=registry();const L=G.PKMSVV3DSStage9Moves.ladders;
- assert.equal(L.homing[0].m.size,1.3);assert.equal(L.homing[3].m.count,1);
+ assert.equal(L.homing[0].m.spread,1.3);assert.equal(L.homing[3].m.count,1);
  assert.equal(L.cone[2].m.life,1.3);assert.equal(L.cone[3].m.pierce,1);
  assert.equal(L.chain[0].m.count,2);assert.equal(L.boomerang[2].m.radius,1.3);
  for(const id of ['crunch','behemoth-blade']){
