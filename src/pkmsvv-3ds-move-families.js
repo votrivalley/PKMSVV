@@ -67,6 +67,9 @@ G.PKMSVV3DSMoveFamilies = (() => {
     if (!moves || !moves.BY_ID || !moves.POOL || !Array.isArray(moves.ALL))
       throw Error('PKMSVV 3DS move families: Web moves catalogue missing');
     for (const def of defs) {
+      // addDefs() reruns install over all prior source definitions: previously
+      // registered 3DS moves are NOT legacy PKMSVV baseline IDs.
+      if(registered.includes(def.id))continue;
       if (moves.BY_ID[def.id]) {
         // PKMSVV's real 103-move catalog ALREADY has Rapid Spin and
         // Whirlpool. Do not re-register, mutate their damage/balance or
