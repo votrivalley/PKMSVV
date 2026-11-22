@@ -37,6 +37,16 @@ The prepared original PKMSVV source had four failing tests **before** Stage6–1
 - **Android QA:** Capacitor project generates an Android debug APK. After `configure-android.cjs`, `scripts/isolate-3ds-qa-packages.cjs android` changes **Gradle applicationId** by appending `.qa`, and verifies the output APK package ID. It installs side-by-side with the real game and cannot overwrite the real package's private data.
 - No Cloudflare Pages publish, no Play Store upload, no signed release, no automatic import of saves.
 
+### Verified native platform build results — SUCCESS
+
+**Both jobs in [platforms Actions #45049136193](https://github.com/votrivalley/PKMSVV/actions/runs/45049136193) completed SUCCESS.** The native 103+73 registry was checked in each job before building. These are actual *compiled* platform QA packages, not merely a Web mirror.
+
+- **Windows x64 portable QA:** [artifact #14765171403](https://github.com/votrivalley/PKMSVV/actions/runs/45049136193/artifacts/14765171403), GitHub artifact ZIP ~150.9 MB, expires **2026-11-27 17:27 UTC**. Contains `PKMSVV-176-Skill-QA-1.5.93-Windows-x64.exe` (~145 MiB) built with electron-builder. Build log says code signing skipped. It uses `appId=com.ronvotri.pkmsvv.qa` and isolated userData folder `PKMSVV-176-Skill-QA`.
+- **Android universal debug QA:** [artifact #14764673294](https://github.com/votrivalley/PKMSVV/actions/runs/45049136193/artifacts/14764673294), GitHub artifact ZIP ~71.8 MB, expires **2026-11-27 17:25 UTC**. Contains `PKMSVV-Full-176-Skill-Android-QA-debug.apk`; Gradle `:app:assembleDebug` says BUILD SUCCESSFUL and `aapt dump badging` confirms package `com.ronvotri.pkmsvv.qa`, versionName `1.5.93`, compileSdk 36.
+- **Full Web source QA:** [artifact #14764517157](https://github.com/votrivalley/PKMSVV/actions/runs/45048832143/artifacts/14764517157), ~78.6 MB; the original 176-skill client was compiled on the exact pinned source.
+
+**Release guard remains:** these are *unsigned debug/test artifacts* with no real-device hands-on QA. Browser/devtools runtime crash testing, crowd effects, Pippi/Mega/Co-op authority, and four pre-existing baseline failing tests need resolution. No website deployed, no production Windows or Android package overwritten, no save migrations and PR #42 remains Draft.
+
 Only regard a platform build as successful after checking that its job reports **conclusion=success**, its artifact exists, and the isolation validation passed. Device testing, controller, performance, co-op network authority and gameplay still need manual QA prior to release.
 
 ## Release safety
