@@ -22,12 +22,22 @@ patch('js/systems/combat.js',
  '  function tick(dt, pl, now) {\n    if (pl.dead || G.PKMSVV3DSStage4Support.isResting(pl)) return;');
 // Near full HP: Rest retries in a second; does not burn a long cooldown or
 // animation. Native Protect's minCd=5s bypasses ordinary cooldown reduction.
-patch('js/systems/combat.js',
- '    m.t = Math.max(0.05, m.cd * pl.cdMul);\n    pl.cast(m);',
- "    if(m.kind==='rest' && !G.PKMSVV3DSStage4Support.needsRest(pl)){m.t=1;return;}\n"+
- "    m.t = Math.max(0.05, m.cd * pl.cdMul);\n"+
- "    if(m.kind==='guard')m.t=Math.max(m.t,Number(m.minCd)||0);\n"+
- '    pl.cast(m);');
+// Do not replace the real PKMSVV balance engine cooldown (and its CDR);
+// the QA mirror uses the unmodified upstream raw cooldown.
+{
+ const rel='js/systems/combat.js';
+ const src=fs.readFileSync(path.join(game,rel),'utf8').replace(/\r\n/g,'\n');
+ const real='    m.t = G.PKMSVVBalance.effectiveCooldown(pl, m);\n    pl.cast(m);';
+ const mirror='    m.t = Math.max(0.05, m.cd * pl.cdMul);\n    pl.cast(m);';
+ const found=src.includes(real)?real:src.includes(mirror)?mirror:null;
+ if(!found)throw Error('Stage4 native cooldown real/mirror source drift');
+ const keep=found.split('\n')[0];
+ patch(rel,found,
+   "    if(m.kind==='rest' && !G.PKMSVV3DSStage4Support.needsRest(pl)){m.t=1;return;}\n"+
+   keep+"\n"+
+   "    if(m.kind==='guard')m.t=Math.max(m.t,Number(m.minCd)||0);\n"+
+   "    pl.cast(m);");
+}
 // The source Web used no attack category for incoming damage. Explicit
 // enemy projectiles are special; direct body-contact remains physical.
 patch('js/systems/combat.js',
