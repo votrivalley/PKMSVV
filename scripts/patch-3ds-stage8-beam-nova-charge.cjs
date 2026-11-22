@@ -40,7 +40,16 @@ patch('js/systems/combat.js',
  '    }\n'+
  '    if(G.PKMSVV3DSStage5Combat.needsTarget(m) &&');
 // Charge ladder rank four reduces charge time by ×0.7 (not to 0.7 seconds).
-patch('js/data/moves.js',"'rate', 'range', 'knock'];","'rate', 'range', 'knock', 'charge'];");
+// The pinned 103-move engine already contains native charge multipliers,
+// while the public mirror needs one new key. Never duplicate or remove it.
+{
+ const src=fs.readFileSync(path.join(game,'js/data/moves.js'),'utf8').replace(/\r\n/g,'\n');
+ const mirror="'rate', 'range', 'knock'];";
+ const real="'pull', 'knock', 'stun', 'charge', 'range'];";
+ if(src.includes(mirror))patch('js/data/moves.js',mirror,
+    "'rate', 'range', 'knock', 'charge'];");
+ else if(!src.includes(real))throw Error('Stage8 real/mirror charge upgrade source drift');
+}
 // Original Stage6 status bridge explicitly recognized native Projectile;
 // allow native Nova lava drops through EXACT same swept collision and
 // expiry hooks, without changing any existing non-native bullets.
