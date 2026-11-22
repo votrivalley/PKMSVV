@@ -29,13 +29,14 @@ jobs:
           node-version: '22'
       - name: Verify upstream recovery script
         run: node --check scripts/checkout-pinned-upstream.cjs
+      - name: Baseline Web safety tests on tracked repo before staging upstream sources
+        run: npm run test:web
       - name: Recover EXACT pinned upstream SHA and tree; reject alternate versions
         run: node scripts/checkout-pinned-upstream.cjs
       - name: Install build dependencies
         run: npm install --no-audit --no-fund
-      - name: Baseline Web, save, Co-op and native-move unit regressions
+      - name: Native-move stage unit regressions (source-independent)
         run: |
-          npm run test:web
           node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs tests/3ds-stage3-punch-cross-storm.test.cjs tests/3ds-stage4-support.test.cjs tests/3ds-stage5-combat.test.cjs tests/3ds-stage6-projectiles.test.cjs tests/3ds-stage7-dash-meteor.test.cjs tests/3ds-stage8-beam-nova-charge.test.cjs tests/3ds-stage9-homing-cone-melee.test.cjs tests/3ds-stage10-final.test.cjs
       - name: Compile full PKMSVV game first, not the public Web mirror
         run: |
@@ -64,10 +65,13 @@ jobs:
           node --check vendor/pokesurvivor/js/app.min.js
           grep -Fq 'PKMSVV3DSStage10Combat' vendor/pokesurvivor/js/app.min.js
           echo PKMSVV_FULL_PINNED_176_MOVE_RECOMPILE_PASS
-      - name: Verify full-game runtime and no save mutation
+      - name: Verify offline-game runtime, controller and no save mutation
         run: |
-          npm run test:web
-          node --test tests/save-guardian-regression.test.cjs tests/web-cloud-coop-safe.test.cjs
+          npm run test:autocast
+          npm run test:v15
+          npm run test:controller
+          npm run test:balance
+          node --test tests/save-guardian-regression.test.cjs
           test -s vendor/pokesurvivor/LICENSE-NONCOMMERCIAL.md
           test -s vendor/pokesurvivor/NOTICE-PKMSVV.txt
           echo PKMSVV_FULL_73_SKILLS_SAVE_GUARDIAN_SOURCE_QA_PASS
