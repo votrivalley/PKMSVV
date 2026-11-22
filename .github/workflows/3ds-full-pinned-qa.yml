@@ -11,6 +11,7 @@ on:
       - 'src/pkmsvv-3ds-*.js'
       - 'tests/3ds-*.test.cjs'
       - 'scripts/qa-3ds-*.cjs'
+      - 'scripts/patch-3ds-skill-effects-passives.cjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -44,20 +45,17 @@ jobs:
           test -s vendor/pokesurvivor/js/app.min.js
           grep -Fq 'pkmsvv-pippi' vendor/pokesurvivor/dev.html
           echo PKMSVV_FULL_PINNED_BASE_PREPARE_PASS
-      - name: Add all 73 source-backed native 3DS skills to full-game source
+      - name: Add remaining Stage6–10 skills after prepare-game already installed Stages1–5
         shell: bash
         run: |
           set -euo pipefail
-          node scripts/patch-3ds-skill-effects-passives.cjs
-          node scripts/patch-3ds-move-families.cjs
-          node scripts/patch-3ds-support-families.cjs
-          node scripts/patch-3ds-stage5-families.cjs
+          # prepare-game.cjs already installs Stage1,2,3,4,5; never double-patch.
           node scripts/patch-3ds-stage6-projectiles.cjs
           node scripts/patch-3ds-stage7-dash-meteor.cjs
           node scripts/patch-3ds-stage8-beam-nova-charge.cjs
           node scripts/patch-3ds-stage9-homing-cone-melee.cjs
           node scripts/patch-3ds-stage10-final-moves.cjs
-          node scripts/qa-3ds-stage10-levelups.cjs
+          node scripts/qa-3ds-full-original-levelups.cjs
           echo PKMSVV_FULL_PINNED_73_SKILL_PATCH_PASS
       - name: Recompile complete PKMSVV executable JS entry using original build system
         run: |
