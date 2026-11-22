@@ -7,7 +7,7 @@ G.PKMSVV3DSStage9Moves=(()=>{
  'use strict';
  const ladders={
   homing:[
-   {t:'+1 đạn đuổi và +30% kích thước',m:{count:1,size:1.3}},
+   {t:'+1 đạn đuổi và +30% độ tản',m:{count:1,spread:1.3}},
    {t:'+45% sát thương',m:{dmg:1.45}},
    {t:'-25% hồi chiêu',m:{cd:.75}},
    {t:'+1 đạn và +40% sát thương',m:{count:1,dmg:1.4}}
