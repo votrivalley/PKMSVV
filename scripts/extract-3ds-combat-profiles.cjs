@@ -17,7 +17,13 @@ const requested=['fire-punch','ice-punch','thunder-punch','drain-punch','plasma-
   // Stage 8: native Beam / Nova / Charge source profiles and original rank ladders.
   'blue-flare','aeroblast','moongeist-beam',
   'lava-plume','psystrike','origin-pulse','sparkling-aria',
-  'roar-of-time','photon-geyser','dynamax-cannon'];
+  'roar-of-time','photon-geyser','dynamax-cannon',
+  // Stage 9 native source audit for the final 19 missing 3DS IDs.
+  'moonblast','attack-order','flower-trick',
+  'blizzard','silver-wind','crunch','behemoth-blade',
+  'relic-song','clanging-scales','mortal-spin','darkest-lariat',
+  'waterfall','dark-void','glaciate','secret-sword','psyshock',
+  'geomancy','malignant-chain','precipice-blades'];
 const start=src.indexOf('MoveDef kMoves[] = {'),end=src.indexOf('\n};',start);
 const lines=src.slice(start+20,end).split('\n');
 const found=[];
@@ -43,7 +49,8 @@ const ladderLines=src.slice(ladderStart+'Ladder kLadder[K_COUNT][4] = {'.length,
  .split('\n').filter(x=>x.trim());
 if(ladderLines.length!==kinds.length)throw Error('Ladder kinds mismatch: '+ladderLines.length+'/'+kinds.length);
 console.log('PKMSVV_3DS_NATIVE_LADDERS');
-for(const kind of ['projectile','dash','meteor','beam','nova','charge','punch','cross','storm','guard','screen','rest','decoy','scissor','blitz','leap','boom','weather']) {
+for(const kind of ['projectile','dash','meteor','beam','nova','charge','punch','cross','storm','guard','screen','rest','decoy','scissor','blitz','leap','boom','weather',
+ 'homing','cone','melee','shove','spin','stun','tremor','boomerang','bounce','buff','chain','quake']) {
  const i=kinds.indexOf(kind);if(i<0)throw Error('Missing kind '+kind);
  console.log(kind+': '+ladderLines[i].slice(0,1800));
 }
