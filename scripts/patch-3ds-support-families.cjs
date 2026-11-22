@@ -40,14 +40,33 @@ patch('js/systems/combat.js',
 }
 // The source Web used no attack category for incoming damage. Explicit
 // enemy projectiles are special; direct body-contact remains physical.
-patch('js/systems/combat.js',
- '          pl.hurt(p.dmg, p.mtype);',
- "          pl.hurt(p.dmg, p.mtype, false, 'special');");
+// Original 103-skill PKMSVV already transmits projectile category (p.cat)
+// and body-contact category (e.cat). Never overwrite those native values.
+{
+ const rel='js/systems/combat.js';
+ const txt=fs.readFileSync(path.join(game,rel),'utf8').replace(/\r\n/g,'\n');
+ if(txt.includes('          pl.hurt(p.dmg, p.mtype, false, p.cat);')){
+   // The category is already correct: no mutation required.
+ }else if(txt.includes('          pl.hurt(p.dmg, p.mtype);')){
+   patch(rel,'          pl.hurt(p.dmg, p.mtype);',
+     "          pl.hurt(p.dmg, p.mtype, false, 'special');");
+ }else throw Error('Stage4 projectile hit category source drift');
+}
 // Preserve all old hurt mechanics, but allow guard/screens BEFORE the existing
 // passive dodge hook. Only status damage scales; true Judgment bypasses.
-patch('js/entities/player.js',
- '  hurt(amount, type = null, pure = false) {',
- "  hurt(amount, type = null, pure = false, category = 'physical') {");
+// Real pinned player.hurt() already accepts cat and applies it in its own
+// resistance/ability path. Name an alias, but do not delete native cat.
+{
+ const rel='js/entities/player.js';
+ const txt=fs.readFileSync(path.join(game,rel),'utf8').replace(/\r\n/g,'\n');
+ const real='  hurt(amount, type = null, pure = false, cat = null) {';
+ const mirror='  hurt(amount, type = null, pure = false) {';
+ if(txt.includes(real))patch(rel,real,real+
+    "\n    const category=cat||'physical';");
+ else if(txt.includes(mirror))patch(rel,mirror,
+    "  hurt(amount, type = null, pure = false, category = 'physical') {");
+ else throw Error('Stage4 incoming category real/mirror signature drift');
+}
 patch('js/entities/player.js',
  '    if (this.invuln > 0 || this.dead) return;\n    if (!pure && G.PKMSVV3DSSkillPort?.rollDodge(this)) {',
  '    if (this.invuln > 0 || this.dead) return;\n'+
