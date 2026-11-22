@@ -85,7 +85,7 @@ G.PKMSVV3DSStage10Combat=(()=>{
    hooks.hit?.(p,e,f.dmg,f.col,e.x-x,e.y-y,
     f.kind===PREFIX+'shove'?(Number(m.knock)||300):0,m);
    if(f.kind===PREFIX+'stun'&&!e.dead){
-    const sec=limit(m.stun||1,.05,6)*((e.boss||e.judge)?.35:1);
+    const sec=limit(m.stun||1,.05,6)*((e.boss||e.judge) ? .35 : 1);
     e._pkmsvv3dsStunT=Math.max(e._pkmsvv3dsStunT||0,sec);
    }
   }
