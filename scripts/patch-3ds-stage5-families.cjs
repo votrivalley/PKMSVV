@@ -18,9 +18,19 @@ patch('dev.html',anchor,anchor+
 // The old 103-skill engine multiplies only its old numeric upgrade keys.
 // New native Leap upgrades RANGE (not absolute 1.3 px), while Earthquake
 // stage2 upgrades KNOCK (not absolute 1.25). No mutation to original moves.
-patch('js/data/moves.js',
- "const MULT = ['dmg', 'cd', 'speed', 'radius', 'dur', 'amount', 'arc', 'width', 'spread', 'life', 'size', 'rate'];",
- "const MULT = ['dmg', 'cd', 'speed', 'radius', 'dur', 'amount', 'arc', 'width', 'spread', 'life', 'size', 'rate', 'range', 'knock'];");
+// Full original already supports knock/pull/stun/charge and native bounce.
+// Add only missing range multiplier, never drop any existing modifier.
+{
+ const rel='js/data/moves.js';
+ const s=fs.readFileSync(path.join(game,rel),'utf8').replace(/\r\n/g,'\n');
+ const real="                'pull', 'knock', 'stun', 'charge'];";
+ const mirror="const MULT = ['dmg', 'cd', 'speed', 'radius', 'dur', 'amount', 'arc', 'width', 'spread', 'life', 'size', 'rate'];";
+ if(s.includes(real))patch(rel,real,
+   "                'pull', 'knock', 'stun', 'charge', 'range'];");
+ else if(s.includes(mirror))patch(rel,mirror,
+   "const MULT = ['dmg', 'cd', 'speed', 'radius', 'dur', 'amount', 'arc', 'width', 'spread', 'life', 'size', 'rate', 'range', 'knock'];");
+ else throw Error('Stage5 real/mirror native upgrade multiplier source drift');
+}
 // Ensure native physical Scissor, Blitz, Leap and Boom don't waste cooldown
 // when no nearby target is present. Weather is autonomous, so no such gate.
 // Insert native targeting without replacing the existing CDR/balance expression,
