@@ -84,8 +84,8 @@ jobs:
           const path=require('node:path');
           const root='dist/pkmsvv-176-skills-web-demo';
           const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
-          if(!/<head(?:\\s[^>]*)?>/i.test(html)) throw new Error('Missing head tag in QA web HTML');
-          const nested=html.replace(/<head(?:\\s[^>]*)?>/i,m=>m+'\\n<base href="/">\\n');
+          if(!/<head(?:\s[^>]*)?>/i.test(html)) throw new Error('Missing head tag in QA web HTML');
+          const nested=html.replace(/<head(?:\s[^>]*)?>/i,m=>m+'\n<base href="/">\n');
           for(const route of ['game','ai/game']){
             const dir=path.join(root,route);
             fs.mkdirSync(dir,{recursive:true});
