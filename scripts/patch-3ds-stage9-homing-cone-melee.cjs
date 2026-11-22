@@ -24,13 +24,29 @@ patch('js/systems/combat.js',
 patch('js/systems/combat.js',
  '!["projectile","dash","meteor","beam","nova"].includes(m.kind)',
  '!["projectile","dash","meteor","beam","nova","homing","cone","melee","boomerang","chain"].includes(m.kind)');
-patch('js/systems/combat.js',
- "      case 'projectile': fireProjectiles(pl, m); break;",
- "      case 'projectile': fireProjectiles(pl, m); break;\n"+
- "      case 'homing':     fireProjectiles(pl, m); break;");
-patch('js/systems/combat.js',
- "const TARGETED = ['melee', 'beam', 'projectile', 'boomerang', 'chain', 'meteor', 'dash', 'cone'];",
- "const TARGETED = ['melee', 'beam', 'projectile', 'homing', 'boomerang', 'chain', 'meteor', 'dash', 'cone'];");
+// The exact pinned 103-skill engine already routes Homing to its native
+// projectile family; the isolated QA mirror does not. Never add duplicate
+// switch cases on real PKMSVV.
+{
+ const rel='js/systems/combat.js';
+ const src=fs.readFileSync(path.join(game,rel),'utf8').replace(/\r\n/g,'\n');
+ if(!/case 'homing':\s+fireProjectiles\(pl, m\);/.test(src))
+  patch(rel,
+   "      case 'projectile': fireProjectiles(pl, m); break;",
+   "      case 'projectile': fireProjectiles(pl, m); break;\n"+
+   "      case 'homing':     fireProjectiles(pl, m); break;");
+}
+// Source already lists homing/bounce/stun/quake targeting and free-aim.
+// Extend only the older mirror TARGETED list.
+{
+ const rel='js/systems/combat.js';
+ const src=fs.readFileSync(path.join(game,rel),'utf8').replace(/\r\n/g,'\n');
+ const mirror="const TARGETED = ['melee', 'beam', 'projectile', 'boomerang', 'chain', 'meteor', 'dash', 'cone'];";
+ if(src.includes(mirror))
+  patch(rel,mirror,"const TARGETED = ['melee', 'beam', 'projectile', 'homing', 'boomerang', 'chain', 'meteor', 'dash', 'cone'];");
+ else if(!src.includes("const TARGETED = ['melee', 'beam', 'projectile', 'boomerang', 'chain', 'meteor', 'dash', 'cone',\n                    'homing', 'bounce', 'charge', 'spin', 'quake', 'vortex', 'shove', 'stun'];"))
+  throw Error('Stage9 native TARGETED real/mirror variant drift');
+}
 // Native-only extras. Do not expose these attributes on existing 103 legacy IDs.
 patch('js/systems/combat.js',
  '      G.PKMSVV3DSStage6ProjectileFX.payload(m));',
