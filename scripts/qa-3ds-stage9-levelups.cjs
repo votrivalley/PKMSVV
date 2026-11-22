@@ -18,7 +18,7 @@ for(const [id,v]of original)assert.equal(G.Moves.BY_ID[id],v,id+' was replaced')
 const inst=(id,lvl,key)=>G.Moves.instance(id,lvl)[key];
 const near=(n,v)=>assert.ok(Math.abs(n-v)<1e-7,'found '+n+' expected '+v);
 near(inst('moonblast',5,'count'),3);
-near(inst('moonblast',5,'size'),13);
+near(inst('moonblast',5,'spread'),.12*1.3);
 near(inst('moonblast',5,'dmg'),7.61*1.45*1.4);
 near(inst('flower-trick',5,'critUp'),.5);
 near(inst('blizzard',5,'count'),15);
