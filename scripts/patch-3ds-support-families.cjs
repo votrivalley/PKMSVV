@@ -19,7 +19,7 @@ patch('dev.html',anchor,anchor+
 // asleep. Does not globally pause the game (enemy, environment, UI proceed).
 patch('js/systems/combat.js',
  '  function tick(dt, pl, now) {\n    if (pl.dead) return;',
- '  function tick(dt, pl, now) {\n    if (pl.dead || G.PKMSVV3DSStage4Support.isResting(pl)) return;');
+ '  function tick(dt, pl, now) {\n    if (pl.dead || G.PKMSVV3DSStage4Support?.isResting?.(pl)) return;');
 // Near full HP: Rest retries in a second; does not burn a long cooldown or
 // animation. Native Protect's minCd=5s bypasses ordinary cooldown reduction.
 // Do not replace the real PKMSVV balance engine cooldown (and its CDR);
