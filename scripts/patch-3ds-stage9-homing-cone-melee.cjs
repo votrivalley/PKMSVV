@@ -38,12 +38,12 @@ patch('js/systems/combat.js',
  '      m.pkmsvv3dsNative ? { pkmsvv3dsNative:true, critUp:m.critUp||0, splash:m.splash||0 } : {});');
 // Native Silver Wind: 15% chance on CAST, +8% ATK/+8% SPD for 6 s, three stacks.
 patch('js/systems/combat.js',
- '    pl.cast(m);\n    // Vínculos:',
+ '    pl.cast(m);\n    // Vínculo:',
  '    pl.cast(m);\n'+
  '    if(m.pkmsvv3dsNative && m.id==="silver-wind" && !ghost && Math.random()<(m.boost||0)){\n'+
  '      pl.addBuff("atk",.08,6,3);pl.addBuff("spd",.08,6,3);\n'+
  '      G.FX.dmgText?.(pl.x,pl.y-(pl.bodyH||20)-8,"ATK + SPD",G.U.TYPE_COLOR.bug,false);\n'+
- '    }\n    // Vínculos:');
+ '    }\n    // Vínculo:');
 // Crunch native shred: the target takes 25% extra from direct attacks for 4s.
 // Use dt-based enemy status, not wall-clock time (pause and x1.5 safe).
 patch('js/entities/enemy.js',
