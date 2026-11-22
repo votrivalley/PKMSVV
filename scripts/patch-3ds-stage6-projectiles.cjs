@@ -21,17 +21,35 @@ patch('js/systems/combat.js',
  '    if(G.PKMSVV3DSMoveFamilies.isNativeMove(m.id) && m.kind==="projectile" &&\n'+
  '      m.only?.length && !m.only.includes(Number(pl.mon?.dex)))return;\n'+
  '    if (G.PKMSVV3DSMoveFamilies.isNativeMove(m.id) && m.kind!=="projectile") {');
-patch('js/systems/combat.js',
- 'return { burn: m.burn || 0, poison: m.poison || 0, slow: m.slow || 0, knock: m.knock || 0, mtype: m.type };',
- 'return Object.assign({ burn: m.burn || 0, poison: m.poison || 0, slow: m.slow || 0, knock: m.knock || 0, mtype: m.type },\n'+
- '      G.PKMSVV3DSStage6ProjectileFX.payload(m));');
+// Original 103-skill source already supplies mcat/src/bounce/drain.
+// The QA mirror lacks those, so never replace or drop the originals.
+{
+ const rel='js/systems/combat.js';
+ const txt=fs.readFileSync(path.join(game,rel),'utf8').replace(/\r\n/g,'\n');
+ const real='return { burn: m.burn || 0, poison: m.poison || 0, slow: m.slow || 0, knock: m.knock || 0, mtype: m.type, mcat: m.cat, src: m,\n             bounce: m.bounce | 0, drain: m.drain || 0 };';
+ const mirror='return { burn: m.burn || 0, poison: m.poison || 0, slow: m.slow || 0, knock: m.knock || 0, mtype: m.type };';
+ const chosen=txt.includes(real)?real:txt.includes(mirror)?mirror:null;
+ if(!chosen)throw Error('Stage6 projectile payload source variant drift');
+ patch(rel,chosen,'return Object.assign('+chosen.slice('return '.length,-1)+',\n'+
+  '      G.PKMSVV3DSStage6ProjectileFX.payload(m));');
+}
 patch('js/systems/combat.js',
  '        const crit = isCrit(pl);\n        const k = (p.mtype ?',
  '        const crit = p.pkmsvv3dsId ? G.PKMSVV3DSStage6ProjectileFX.rollCrit(pl,p) : isCrit(pl);\n        const k = (p.mtype ?');
-patch('js/systems/combat.js',
- '        if (p.slow) e.applySlow(p.slow);\n\n        if (!p.orb)',
- '        if (p.slow) e.applySlow(p.slow);\n'+
- '        G.PKMSVV3DSStage6ProjectileFX.onHit(p,e);\n\n        if (!p.orb)');
+// Real PKMSVV applies Ability-status conversions before drain and native
+// rebound. Keep those mechanics untouched; append only 3DS extras.
+{
+ const rel='js/systems/combat.js';
+ const txt=fs.readFileSync(path.join(game,rel),'utf8').replace(/\r\n/g,'\n');
+ const real='        if (p.drain) pl.heal(p.drain);';
+ const mirror='        if (p.slow) e.applySlow(p.slow);\n\n        if (!p.orb)';
+ if(txt.includes(real))patch(rel,real,
+   '        G.PKMSVV3DSStage6ProjectileFX.onHit(p,e);\n'+real);
+ else if(txt.includes(mirror))patch(rel,mirror,
+   '        if (p.slow) e.applySlow(p.slow);\n'+
+   '        G.PKMSVV3DSStage6ProjectileFX.onHit(p,e);\n\n        if (!p.orb)');
+ else throw Error('Stage6 original/mirror projectile on-hit source drift');
+}
 patch('js/systems/combat.js',
  "        if (block === 'wall' || (block && !block.destructible)) {\n          G.FX.burst(p.x, p.y - G.LIFT, p.color, 5, 80);\n          projectiles.splice(i, 1);",
  "        if (block === 'wall' || (block && !block.destructible)) {\n          G.FX.burst(p.x, p.y - G.LIFT, p.color, 5, 80);\n          G.PKMSVV3DSStage6ProjectileFX.onEnd(p);\n          projectiles.splice(i, 1);");
