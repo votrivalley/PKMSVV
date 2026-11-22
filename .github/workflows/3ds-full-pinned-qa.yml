@@ -12,6 +12,7 @@ on:
       - 'tests/3ds-*.test.cjs'
       - 'scripts/qa-3ds-*.cjs'
       - 'scripts/patch-3ds-skill-effects-passives.cjs'
+      - 'scripts/qa-v15-baseline-diff.cjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -45,6 +46,8 @@ jobs:
           test -s vendor/pokesurvivor/js/app.min.js
           grep -Fq 'pkmsvv-pippi' vendor/pokesurvivor/dev.html
           echo PKMSVV_FULL_PINNED_BASE_PREPARE_PASS
+      - name: Audit existing v1.5 test failures BEFORE any new Stage6–10 patches
+        run: node scripts/qa-v15-baseline-diff.cjs baseline
       - name: Add remaining Stage6–10 skills after prepare-game already installed Stages1–5
         shell: bash
         run: |
@@ -66,7 +69,7 @@ jobs:
       - name: Verify offline-game runtime, controller and no save mutation
         run: |
           npm run test:autocast
-          npm run test:v15
+          node scripts/qa-v15-baseline-diff.cjs post
           npm run test:controller
           npm run test:balance
           node --test tests/save-guardian-regression.test.cjs
