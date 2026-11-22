@@ -43,13 +43,13 @@ patch('js/systems/levelup.js',
 // evolution-title implementation byte-for-byte and fail on unexpected drift.
 {
   const rel='js/systems/levelup.js';
-  const original=fs.readFileSync(path.join(game,rel),'utf8').replace(/\\r\\n/g,'\\n');
-  const lines=original.split('\\n');
+  const original=fs.readFileSync(path.join(game,rel),'utf8').replace(/\r\n/g,'\n');
+  const lines=original.split('\n');
   const candidates=lines.filter(line=>line.includes(
     "icon: s.icon, color: evoFor ? '#ffd23f' : '#8fa3c4', tag: evoFor ? "));
   if(candidates.length!==1 ||
      !candidates[0].includes(" : 'Mejora',") ||
-     !/Evoluciona '.+evoFor\\.name/.test(candidates[0]))
+     !/Evoluciona '.+evoFor\.name/.test(candidates[0]))
     throw Error('3DS Stage1 passive card source variant drift: '+candidates.length);
   const before=candidates[0];
   const after=before
