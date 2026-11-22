@@ -37,9 +37,27 @@ patch('js/systems/levelup.js',
   '      let r = Math.random() * total, idx = 0;\n' +
   '      for (let i = 0; i < weighted.length; i++) { r -= weighted[i].w; if (r <= 0) { idx = i; break; } }\n' +
   '      const c = pool.splice(pool.indexOf(weighted[idx]), 1)[0];');
-patch('js/systems/levelup.js',
-  "        icon: s.icon, color: evoFor ? '#ffd23f' : '#8fa3c4', tag: evoFor ? 'Evoluciona ' + evoFor.name : 'Mejora',",
-  "        icon: s.icon, color: evoFor ? '#ffd23f' : s.pkmsvv3ds ? '#9ae6ff' : '#8fa3c4', tag: evoFor ? 'Evoluciona ' + evoFor.name : s.pkmsvv3ds ? 'PASSIVE' : 'Mejora',");
+// Official exact pinned PKMSVV source translates evolution names with
+// G.T(evoFor.name, 'move'); the public QA mirror used plain evoFor.name.
+ // Patch only invariant card styling/label portions. Preserve either
+// evolution-title implementation byte-for-byte and fail on unexpected drift.
+{
+  const rel='js/systems/levelup.js';
+  const original=fs.readFileSync(path.join(game,rel),'utf8').replace(/\\r\\n/g,'\\n');
+  const lines=original.split('\\n');
+  const candidates=lines.filter(line=>line.includes(
+    "icon: s.icon, color: evoFor ? '#ffd23f' : '#8fa3c4', tag: evoFor ? "));
+  if(candidates.length!==1 ||
+     !candidates[0].includes(" : 'Mejora',") ||
+     !/Evoluciona '.+evoFor\\.name/.test(candidates[0]))
+    throw Error('3DS Stage1 passive card source variant drift: '+candidates.length);
+  const before=candidates[0];
+  const after=before
+   .replace("color: evoFor ? '#ffd23f' : '#8fa3c4'",
+      "color: evoFor ? '#ffd23f' : s.pkmsvv3ds ? '#9ae6ff' : '#8fa3c4'")
+   .replace(" : 'Mejora',"," : s.pkmsvv3ds ? 'PASSIVE' : 'Mejora',");
+  patch(rel,before,after);
+}
 
 // Source already supports crits; extend only the actual successful hit paths.
 // Boss bonus applies only if e.boss, never to ordinary enemies or world props.
