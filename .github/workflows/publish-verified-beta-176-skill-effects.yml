@@ -19,14 +19,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/45226624374" --jq '{head_sha,status,conclusion}' > /tmp/qa-run.json
-          jq -e '.status=="completed" and .conclusion=="success" and .head_sha=="3fcf4f920b7c0800f80c079c15b7722956798e92"' /tmp/qa-run.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/45246547313" --jq '{head_sha,status,conclusion}' > /tmp/qa-run.json
+          jq -e '.status=="completed" and .conclusion=="success" and .head_sha=="0744b0a7c2ad6434338413bf19ff702180e7ba55"' /tmp/qa-run.json
       - name: Retrieve exact QA-passed integrated native Beta
         uses: actions/download-artifact@v4
         with:
           repository: ${{ github.repository }}
           github-token: ${{ github.token }}
-          run-id: 45226624374
+          run-id: 45246547313
           name: PKMSVV-Beta-255-176-Skills-Integrated-QA-NEVER-LIVE
           path: dist/new
       - name: Retrieve exact pre-skill 2.5.5 Beta for strict visual diff and rollback
@@ -41,13 +41,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          jq -e '.version=="2.5.5-176-Native-Skills-Integrated-QA" and .skills==176 and .production==false and .qaCommit=="3fcf4f920b7c0800f80c079c15b7722956798e92"' dist/new/build-info.json
+          jq -e '.version=="2.5.5-176-Native-Skills-Integrated-QA" and .skills==176 and .production==false and .qaCommit=="0744b0a7c2ad6434338413bf19ff702180e7ba55"' dist/new/build-info.json
           jq -e '.version=="2.5.5-Unified-Beta-PokeBox-Hub-Fossil-Icon-Stroke-QA" and .qaCommit=="89398aa454283be0a9835b4828355a2cc8fe7531"' dist/old/build-info.json
           for f in game/js/ui/pkmsvv-pippi.js game/js/ui/pkmsvv-pippi-guide.js game/js/ui/pkmsvv-box-hub-ui.js game/js/ui/pkmsvv-quick-region.js game/js/ui/pkmsvv-sky-tower-world-qa.js game/js/ui/pkmsvv-qa-runtime-config.js game/images/regions/10-sky-tower.webp game/images/pippi/Walk-Anim.png game/css/pkmsvv-box-hub.css; do
             test -s "dist/old/$f" && test -s "dist/new/$f" || { echo "::error::Missing protected Beta asset: $f"; exit 1; }
             cmp -s "dist/old/$f" "dist/new/$f" || { echo "::error::Skill changes modified protected Beta asset: $f"; exit 1; }
             echo "IDENTICAL_PROTECTED_BETA=$f"
           done
+          # The old Beta served a blank /ai/game/ page for BOTH Host and Join.
+          # Require the real nested shell and correct shared asset base.
+          test -s dist/new/ai/game/index.html
+          grep -Fq '<base href="/game/">' dist/new/ai/game/index.html
+          grep -Fq 'pkmsvv-coop' dist/new/ai/game/index.html
           grep -Fq 'PKMSVV3DSStage10Combat' dist/new/game/js/app.min.js
           grep -Fq 'PKMSVV3DSMoveFamilies' dist/new/game/js/app.min.js
           grep -Fq 'fossil_lab' dist/new/game/js/app.min.js
@@ -81,7 +86,7 @@ jobs:
               echo "CDN_PROPAGATION: build-info unreachable, retry=$n"
               sleep 5; continue
             fi
-            if ! jq -e '.skills==176 and .version=="2.5.5-176-Native-Skills-Integrated-QA" and .qaCommit=="3fcf4f920b7c0800f80c079c15b7722956798e92"' /tmp/live-meta >/dev/null; then
+            if ! jq -e '.skills==176 and .version=="2.5.5-176-Native-Skills-Integrated-QA" and .qaCommit=="0744b0a7c2ad6434338413bf19ff702180e7ba55"' /tmp/live-meta >/dev/null; then
               echo "CDN_PROPAGATION: waiting for complete 176 build metadata, retry=$n"
               sleep 5; continue
             fi
@@ -107,12 +112,38 @@ jobs:
               echo "CDN_PROPAGATION: Pippi asset not verified, retry=$n"
               sleep 5; continue
             fi
+            # Prove newly shipped Host/Join route is not only HTTP 200 but
+            # byte-identical to the fully browser-tested HTML entry.
+            if ! curl -fsSL --max-time 30 "$base/ai/game/index.html?rev=$cache" -o /tmp/live-ai-game ||
+               ! cmp -s /tmp/live-ai-game dist/new/ai/game/index.html; then
+              echo "CDN_PROPAGATION: Co-op Host/Join route not updated yet, retry=$n"
+              sleep 5; continue
+            fi
             echo "BETA_2_5_5_176_SKILL_EFFECTS_LIVE_VERIFIED=https://beta.pkmsvv-web.pages.dev/game/"
             echo "BETA_ENGINE_SHA256=$expected"
             exit 0
           done
           echo "::error::Beta alias never served a fully consistent verified 176-skill build; rollback required"
           exit 1
+      - name: PUBLIC Cloudflare Beta browser QA — real two-player WebRTC Host/Join, not a blank page
+        shell: bash
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+          PKMSVV_WIFI_REMOTE_URL: https://beta.pkmsvv-web.pages.dev
+        run: |
+          set -euo pipefail
+          npm pkg set 'overrides.node-abi=4.40.0'
+          npm install --no-audit --no-fund
+          timeout 150s node tests/beta-wifi-host-join-browser.cjs
+      - name: PUBLIC Cloudflare Beta browser QA — Mewtwo Explore through original 1m08 crash
+        shell: bash
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+          PKMSVV_INCIDENT_REMOTE_URL: https://beta.pkmsvv-web.pages.dev
+          PKMSVV_INCIDENT_CASE: fixed-176
+        run: |
+          set -euo pipefail
+          timeout 185s node tests/beta-176-explore-coop-repro-browser.cjs
       - name: Emergency rollback of unchanged original Beta if promotion or verification fails
         if: ${{ failure() }}
         shell: bash
