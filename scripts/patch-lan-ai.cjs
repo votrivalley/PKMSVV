@@ -15,8 +15,8 @@ function once(file,from,to){
   // On opt-in 3DS/176-skill QA, report why native LAN movement anchors drift.
   // Fail closed: never silently suppress the AI movement patch.
   const context=process.env.PKMSVV_BETA_176_SKILLS_QA==='1'
-   ? '\\nRELEVANT LINES:\\n'+code.split('\\n').map((line,i)=>`${i+1}: ${line}`)
-      .filter(line=>/Input\\.axis|\\[ax, ay\\]|frozen|lanBotAxis/.test(line)).slice(0,16).join('\\n')
+   ? '\nRELEVANT LINES:\n'+code.split('\n').map((line,i)=>`${i+1}: ${line}`)
+      .filter(line=>/Input\.axis|\[ax, ay\]|frozen|lanBotAxis/.test(line)).slice(0,16).join('\n')
    : '';
   throw Error('LAN AI anchor drift: '+file+' '+from.slice(0,60)+context);
  }
