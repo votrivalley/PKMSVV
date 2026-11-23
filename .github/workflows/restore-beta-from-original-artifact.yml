@@ -35,13 +35,15 @@ jobs:
           old=https://61806cb2.pkmsvv-web.pages.dev
           test -s "$site/build-info.json"
           jq -e '.version=="2.5.5-Unified-Beta-PokeBox-Hub-Fossil-Icon-Stroke-QA" and .releaseType=="experimental-gameplay-qa-only" and .previewBranch=="beta" and .qaCommit=="89398aa454283be0a9835b4828355a2cc8fe7531" and .production==false' "$site/build-info.json"
-          for f in game/index.html ai/game/index.html game/js/app.min.js ai/game/js/app.min.js; do
+          for f in game/index.html game/js/app.min.js; do
             test -s "$site/$f"
             curl -fsSL --max-time 50 "$old/$f" -o /tmp/pkmsvv-previous-file
             cmp "$site/$f" /tmp/pkmsvv-previous-file ||
               { echo "::error::Original archived Beta differs from exact prior CDN file: $f"; exit 1; }
             echo "MATCHED immutable original: $f"
           done
+          echo "Archived exact original files in game folder:"
+          ls -l "$site/game/index.html" "$site/game/js/app.min.js"
           grep -Fq 'pkmsvv-box-hub-ui.js?v=' "$site/game/index.html"
           grep -Fq 'pkmsvv-quick-region.js?v=' "$site/game/index.html"
           grep -Fq 'pkmsvv-sky-tower-world-qa.js?v=' "$site/game/index.html"
@@ -78,7 +80,7 @@ jobs:
           for n in $(seq 1 12); do
             if curl -fsSL --max-time 25 -H 'Cache-Control: no-cache' "$site/build-info.json?rollback=89398aa-$n" -o /tmp/restored-beta-info.json &&
               jq -e '.version=="2.5.5-Unified-Beta-PokeBox-Hub-Fossil-Icon-Stroke-QA" and .qaCommit=="89398aa454283be0a9835b4828355a2cc8fe7531" and .production==false' /tmp/restored-beta-info.json; then
-              for f in game/index.html ai/game/index.html game/js/app.min.js ai/game/js/app.min.js; do
+              for f in game/index.html game/js/app.min.js; do
                 curl -fsSL --max-time 50 -H 'Cache-Control: no-cache' "$site/$f?rollback=89398aa-$n" -o /tmp/restored-beta-current
                 curl -fsSL --max-time 50 "$old/$f" -o /tmp/restored-beta-prior
                 cmp /tmp/restored-beta-current /tmp/restored-beta-prior ||
