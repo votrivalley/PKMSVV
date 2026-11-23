@@ -23,6 +23,16 @@ const {startServer}=require('../lan-server/server.cjs');
   await prepare(host);
   await prepare(guest);
   await host.goto(base+'/ai/game/?pkmsvvWifi=1&pkmsvvRole=host&pkmsvvMode=coop',{waitUntil:'domcontentloaded',timeout:45000});
+  await host.waitForTimeout(1400);
+  console.log('COOP_WEBRTC_HOST_BOOT_PROBE='+JSON.stringify(await host.evaluate(()=>({
+   href:location.href,ready:document.readyState,wifi:window.PKMSVV_WIFI,
+   standalone:window.PKMSVV_STANDALONE_AI,mode:window.PKMSVV_LOCAL_UI_MODE,
+   hasGame:!!window.G,hasBus:!!window.G?.LanBus,hasSocial:!!window.G?.Social,
+   room:window.G?.Social?.room||null,
+   activeGuide:window.G?.PKMSVVPippiGuide?.current?.kind||null,
+   status:document.body?.innerText?.slice(-700)
+  }))));
+  console.log('COOP_WEBRTC_PAGE_ERRORS='+JSON.stringify(errs));
   await host.waitForFunction(()=>window.PKMSVV_WIFI===true&&G.Social?.room?.mode==='coop'&&G.Social.room?.isHost,{timeout:35000});
   const hostStatus=await host.evaluate(()=>({ready:!!G.LanBus?.invitation,wifi:window.PKMSVV_WIFI,
    mode:G.Social.room?.mode,members:G.Social.room?.members?.length,
