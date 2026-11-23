@@ -670,6 +670,21 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-3ds-move-famil
 execFileSync(process.execPath,[path.join(project,'scripts','patch-3ds-support-families.cjs')],{cwd:project,stdio:'inherit'});
 // Stage 5: native 3DS Scissor/Blitz/Leap/Explosion/Weather complete mechanics.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-3ds-stage5-families.cjs')],{cwd:project,stdio:'inherit'});
+// Opt-in integrated Beta QA: keep ALL 2.5.5 gameplay/UI source, then append the
+// remaining native 3DS skill families BEFORE the original game is compiled.
+// The legacy full-176 standalone QA builds still install stages6–10 separately.
+// This flag is ONLY set in the native Beta QA workflow, never on live Beta.
+if (process.env.PKMSVV_BETA_176_SKILLS_QA === '1') {
+  for(const stage of [
+    'patch-3ds-stage6-projectiles.cjs',
+    'patch-3ds-stage7-dash-meteor.cjs',
+    'patch-3ds-stage8-beam-nova-charge.cjs',
+    'patch-3ds-stage9-homing-cone-melee.cjs',
+    'patch-3ds-stage10-final-moves.cjs'
+  ])
+    execFileSync(process.execPath,[path.join(project,'scripts',stage)],{cwd:project,stdio:'inherit'});
+  console.log('PKMSVV_BETA_NATIVE_73_EFFECTS_APPLIED_TO_CURRENT_2_5_5_ENGINE');
+}
 // Final UI pass: compact Pokédex sort, Support native scrolling and accent-safe title.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-dex-support-mobile-ui.cjs')],{cwd:project,stdio:'inherit'});
 // Only Switch/Brewser: tolerate absent DOMContentLoaded and a stalled pixel-font Promise.
