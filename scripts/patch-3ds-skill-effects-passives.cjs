@@ -102,4 +102,24 @@ patch('js/entities/player.js',
   '    if (!pure && G.PKMSVV3DSSkillPort?.rollDodge(this)) {\n' +
   '      this.invuln = 0.12; G.PKMSVV3DSSkillPort.onDodge(this); return;\n' +
   '    }');
+// Critical Beta 176 regression (Mewtwo at ~1:08): the original PKMSVV
+// cooldown policy contains exactly 23 built-in families. Stage4 Light Screen
+// registers a native kind='screen'; after its first cooldown G.Combat.tick
+// used profiles[m.kind].floor and crashed every frame, force-ending Explore.
+// Preserve all 103 original policies; new native 3DS move kinds get an
+// explicit guarded policy with their authored cd/minCd, never a fake legacy
+// kind. Unknown non-native kinds still throw an actionable error.
+patch('js/data/pkmsvv-skill-balance.js',
+ '    return Math.max(profiles[m.kind].floor, m.cd * Math.max(0.01, Number(pl.cdMul) || 1));',
+ '    const policy=profiles[m.kind];\n'+
+ '    if(!policy && m.pkmsvv3dsNative){\n'+
+ '      const cd=Number(m.cd);\n'+
+ '      if(!Number.isFinite(cd)||cd<=0)throw Error("Invalid native 3DS cooldown: "+m.id);\n'+
+ '      const haste=Math.max(0.01,Number(pl.cdMul)||1);\n'+
+ '      const floor=Math.min(0.5,cd);\n'+
+ '      return Math.max(floor,cd*haste);\n'+
+ '    }\n'+
+ '    if(!policy)throw Error("Unknown non-native move cooldown kind: "+m.kind);\n'+
+ '    return Math.max(policy.floor,m.cd*Math.max(0.01,Number(pl.cdMul)||1));');
+console.log('PKMSVV_3DS_NATIVE_COOLDOWN_FAMILY_FALLBACK_FIX_PASS original 103 unchanged');
 console.log('PKMSVV_3DS_WEB_PC_ANDROID_SKILL_PASSIVES_PATCH_PASS shared FX only, no sprites/save changes');
