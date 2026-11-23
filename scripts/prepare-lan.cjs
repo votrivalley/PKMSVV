@@ -164,6 +164,29 @@ for(const file of ['lan-connect.html','lan-connect.js'])
   if(!installed)throw Error('Unified Beta PokéBox not installed in any route');
   console.log('PKMSVV_UNIFIED_BETA_POKEMON_255',installed,'route(s), revision',revision);
  }
+ // Web Beta has a genuine manual WebRTC Host/Join mode at /ai/game/ when
+ // ?pkmsvvWifi=1; previously this path was never packaged and Cloudflare
+ // returned an empty page. Use the SAME native 2.5.5 game HTML and assets,
+ // with a base href to avoid duplicating 90 MB or changing any player save.
+ // This route only exists on standalone-AI Beta; native PC LAN needs /game/.
+ if(process.env.PKMSVV_STANDALONE_AI==='1'){
+  const gameEntry=path.join(to,'game','index.html');
+  const wifiEntry=path.join(to,'ai','game','index.html');
+  const html=fs.readFileSync(gameEntry,'utf8');
+  if(!/<head(?:\s[^>]*)?>/i.test(html)||!html.includes('app.min.js')||
+    !html.includes('pkmsvv-coop'))throw Error('Wi-Fi Host/Join route: native Beta game entry missing');
+  const routed=html.replace(/<head(?:\s[^>]*)?>/i,m=>m+'\n<base href="/game/">');
+  fs.mkdirSync(path.dirname(wifiEntry),{recursive:true});
+  fs.writeFileSync(wifiEntry,routed,'utf8');
+  if(!routed.includes('<base href="/game/">')||
+    !routed.includes('pkmsvv-box-hub-ui.js?v='))
+   throw Error('Wi-Fi Host/Join did not retain the native Beta shell');
+  fs.appendFileSync(path.join(to,'_headers'),
+   '\n/ai/game\n  Cache-Control: no-store, max-age=0\n'+
+   '/ai/game/\n  Cache-Control: no-store, max-age=0\n'+
+   '/ai/game/index.html\n  Cache-Control: no-store, max-age=0\n');
+  console.log('PKMSVV_BETA_WEBRTC_HOST_JOIN_ROUTE_READY=/ai/game/ -> /game/assets');
+ }
  const sw=path.join(to,'sw.js');if(fs.existsSync(sw))fs.rmSync(sw);
 if(!fs.existsSync(path.join(to,'game','js','app.min.js')))throw Error('Missing LAN compiled game');
 console.log('PKMSVV LAN build ready in dist/lan');
