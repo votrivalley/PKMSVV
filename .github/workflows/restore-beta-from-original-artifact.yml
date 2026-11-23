@@ -1,0 +1,93 @@
+name: Restore exact PKMSVV Beta 2.5.5 from its ORIGINAL immutable artifact
+on:
+  push:
+    branches:
+      - feature/web-3ds-skill-effects-passives-qa-20261121
+    paths:
+      - '.github/workflows/restore-beta-from-original-artifact.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: pkmsvv-restore-existing-beta-only
+  cancel-in-progress: false
+jobs:
+  restore:
+    name: Restore 2.5.5 native game, old menus, Pippi, Arena, Co-op and maps
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve immutable ORIGINAL Beta deployment source, never the 176-skill artifact
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+          run-id: 44787502842
+          name: PKMSVV-Fossil-Native-Gameplay-QA
+          path: dist/restore-beta-original
+      - name: Strictly verify exact previous Beta artifact against immutable Cloudflare deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          site=dist/restore-beta-original
+          old=https://61806cb2.pkmsvv-web.pages.dev
+          test -s "$site/build-info.json"
+          jq -e '.version=="2.5.5-Unified-Beta-PokeBox-Hub-Fossil-Icon-Stroke-QA" and .releaseType=="experimental-gameplay-qa-only" and .previewBranch=="beta" and .qaCommit=="89398aa454283be0a9835b4828355a2cc8fe7531" and .production==false' "$site/build-info.json"
+          for f in game/index.html ai/game/index.html game/js/app.min.js ai/game/js/app.min.js; do
+            test -s "$site/$f"
+            curl -fsSL --max-time 50 "$old/$f" -o /tmp/pkmsvv-previous-file
+            cmp "$site/$f" /tmp/pkmsvv-previous-file ||
+              { echo "::error::Original archived Beta differs from exact prior CDN file: $f"; exit 1; }
+            echo "MATCHED immutable original: $f"
+          done
+          grep -Fq 'pkmsvv-box-hub-ui.js?v=' "$site/game/index.html"
+          grep -Fq 'pkmsvv-quick-region.js?v=' "$site/game/index.html"
+          grep -Fq 'pkmsvv-sky-tower-world-qa.js?v=' "$site/game/index.html"
+          grep -Fq 'pkmsvv-pippi' "$site/game/index.html"
+          grep -Fq 'fossil_lab' "$site/game/js/app.min.js"
+          test -s "$site/game/js/ui/pkmsvv-qa-runtime-config.js"
+          test -s "$site/game/js/ui/pkmsvv-pippi.js"
+          test -s "$site/game/js/ui/pkmsvv-quick-region.js"
+          test -s "$site/game/js/ui/pkmsvv-box-hub-ui.js"
+          test -s "$site/game/js/ui/pkmsvv-sky-tower-world-qa.js"
+          if find "$site" -type f -size +25M | grep -q .; then
+            echo "::error::Cloudflare 25 MiB asset size exceeded"; exit 1
+          fi
+          echo "PASS: original 2.5.5 Beta exact content MATCHES previous CDN 61806cb2"
+      - name: Restore ONLY the historic Cloudflare Beta branch — never production
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN" && test -n "$CLOUDFLARE_ACCOUNT_ID"
+          project=pkmsvv-web
+          branch=beta
+          test "$branch" = beta && test "$branch" != pkmsvv-web
+          npx --yes wrangler@4 pages deploy dist/restore-beta-original --project-name "$project" --branch "$branch"
+          echo "BETA_255_RESTORE_UPLOAD_DONE"
+      - name: Verify live Beta really matches prior Pippi + full UI 2.5.5 version
+        shell: bash
+        run: |
+          set -euo pipefail
+          site='https://beta.pkmsvv-web.pages.dev'
+          old='https://61806cb2.pkmsvv-web.pages.dev'
+          for n in $(seq 1 12); do
+            if curl -fsSL --max-time 25 -H 'Cache-Control: no-cache' "$site/build-info.json?rollback=89398aa-$n" -o /tmp/restored-beta-info.json &&
+              jq -e '.version=="2.5.5-Unified-Beta-PokeBox-Hub-Fossil-Icon-Stroke-QA" and .qaCommit=="89398aa454283be0a9835b4828355a2cc8fe7531" and .production==false' /tmp/restored-beta-info.json; then
+              for f in game/index.html ai/game/index.html game/js/app.min.js ai/game/js/app.min.js; do
+                curl -fsSL --max-time 50 -H 'Cache-Control: no-cache' "$site/$f?rollback=89398aa-$n" -o /tmp/restored-beta-current
+                curl -fsSL --max-time 50 "$old/$f" -o /tmp/restored-beta-prior
+                cmp /tmp/restored-beta-current /tmp/restored-beta-prior ||
+                  { echo "::error::Beta file not restored exactly: $f"; exit 1; }
+              done
+              echo "ORIGINAL_PKMSVV_BETA_255_FULLY_RESTORED=https://beta.pkmsvv-web.pages.dev/game/"
+              exit 0
+            fi
+            sleep 4
+          done
+          echo "::error::Original Beta 2.5.5 was not served from canonical preview alias"
+          exit 1
