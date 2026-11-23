@@ -22,7 +22,11 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
   const joinResponse=await page.request.get(base+'/ai/game/?pkmsvvWifi=1&pkmsvvRole=join&pkmsvvMode=coop');
   const routing={mode,hasAi,hostStatus:hostResponse.status(),joinStatus:joinResponse.status()};
   console.log('PKMSVV_INCIDENT_COOP_ROUTING='+JSON.stringify(routing));
-  if(!hasAi)assert.equal(hostResponse.status(),404,'Missing /ai/game/ route incorrectly returns success');
+  if(mode==='fixed-176'){
+   assert.equal(hasAi,true,'Co-op Host/Join entry must be physically packaged');
+   assert.equal(hostResponse.status(),200,'Host must serve native UI, not blank or 404');
+   assert.equal(joinResponse.status(),200,'Join must serve native UI, not blank or 404');
+  }else if(!hasAi)assert.equal(hostResponse.status(),404,'Missing /ai/game/ route incorrectly returns success');
   await page.addInitScript(()=>{window.__pkmsvvPippiGuideQABypass=true;});
   await page.goto(base+'/game/',{waitUntil:'domcontentloaded',timeout:45000});
   await page.waitForFunction(()=>!!window.G?.DB?.save&&!!G.PKMSVVQuickRegion?.choose&&!!G.Game?.startRun,null,{timeout:40000});
