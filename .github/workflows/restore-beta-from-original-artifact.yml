@@ -1,4 +1,5 @@
 name: Restore exact PKMSVV Beta 2.5.5 from its ORIGINAL immutable artifact
+# Incident 2026-11-24: 176 skill beta gameplay crash at 1:08 and black Coop host room; immediate QA rollback.
 on:
   push:
     branches:
