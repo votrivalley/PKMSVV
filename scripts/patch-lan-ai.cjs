@@ -11,7 +11,15 @@ const game=path.resolve(__dirname,'../vendor/pokesurvivor');
 }
 function once(file,from,to){
  const p=path.join(game,file),code=fs.readFileSync(p,'utf8').replace(/\r\n/g,'\n');
- if(code.split(from).length!==2)throw Error('LAN AI anchor drift: '+file+' '+from.slice(0,60));
+ if(code.split(from).length!==2){
+  // On opt-in 3DS/176-skill QA, report why native LAN movement anchors drift.
+  // Fail closed: never silently suppress the AI movement patch.
+  const context=process.env.PKMSVV_BETA_176_SKILLS_QA==='1'
+   ? '\\nRELEVANT LINES:\\n'+code.split('\\n').map((line,i)=>`${i+1}: ${line}`)
+      .filter(line=>/Input\\.axis|\\[ax, ay\\]|frozen|lanBotAxis/.test(line)).slice(0,16).join('\\n')
+   : '';
+  throw Error('LAN AI anchor drift: '+file+' '+from.slice(0,60)+context);
+ }
  fs.writeFileSync(p,code.replace(from,to),'utf8');
 }
 // Co-op with stronger allied bots needs more hostile pressure; rival modes
