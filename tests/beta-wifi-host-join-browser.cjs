@@ -5,12 +5,13 @@ const {chromium}=require('playwright'),path=require('node:path');
 const assert=require('node:assert/strict');
 const {startServer}=require('../lan-server/server.cjs');
 (async()=>{
- const server=await startServer({root:path.resolve(__dirname,'../dist/lan'),host:'127.0.0.1',port:0});
+ const remote=String(process.env.PKMSVV_WIFI_REMOTE_URL||'').replace(/\/$/,'');
+ const server=remote?null:await startServer({root:path.resolve(__dirname,'../dist/lan'),host:'127.0.0.1',port:0});
  const browser=await chromium.launch({headless:true,...(process.env.PKMSVV_BROWSER?{executablePath:process.env.PKMSVV_BROWSER}:{})});
  const host=await browser.newPage({viewport:{width:1100,height:740}}),guest=await browser.newPage({viewport:{width:1100,height:740}});
  const errs=[];
  for(const [role,p] of [['host',host],['join',guest]])p.on('pageerror',e=>errs.push(role+': '+String(e)));
- const base='http://127.0.0.1:'+server.port;
+ const base=remote||('http://127.0.0.1:'+server.port);
  async function prepare(p){
   await p.goto(base+'/game/',{waitUntil:'domcontentloaded',timeout:45000});
   await p.waitForFunction(()=>!!window.G?.DB?.save,{timeout:35000});
@@ -60,5 +61,5 @@ const {startServer}=require('../lan-server/server.cjs');
   assert.equal(room.mode,'coop');
   assert.deepEqual(errs,[],'No uncaught host/join runtime errors');
   console.log('COOP_WEBRTC_TWO_REAL_PAGES_JOIN_PASS='+JSON.stringify({room,errors:errs}));
- }finally{await browser.close();await server.close();}
+ }finally{await browser.close();await server?.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
