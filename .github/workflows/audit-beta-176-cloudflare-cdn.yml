@@ -1,0 +1,40 @@
+name: Audit immutable native Beta 176 build vs Cloudflare CDN cache (read only)
+on:
+  push:
+    branches: [feature/web-3ds-skill-effects-passives-qa-20261121]
+    paths: ['.github/workflows/audit-beta-176-cloudflare-cdn.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+          run-id: 45226624374
+          name: PKMSVV-Beta-255-176-Skills-Integrated-QA-NEVER-LIVE
+          path: dist/new
+      - name: Compare immutable Cloudflare deploy 715c92bd with exact approved 176 skill binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha256sum dist/new/game/js/app.min.js
+          expected=$(sha256sum dist/new/game/js/app.min.js | cut -d' ' -f1)
+          for prefix in https://715c92bd.pkmsvv-web.pages.dev https://beta.pkmsvv-web.pages.dev https://291f9eec.pkmsvv-web.pages.dev; do
+            echo "PROBE_ORIGIN=$prefix"
+            curl -fsSL --max-time 30 -H 'Cache-Control: no-cache' "$prefix/build-info.json?audit=$GITHUB_SHA" -o /tmp/probe-meta || true
+            if [ -s /tmp/probe-meta ]; then jq -c '{version,skills,qaCommit,production}' /tmp/probe-meta || true; fi
+            for suffix in '' '?audit=skill-176-a' '?audit=skill-176-b'; do
+              code=$(curl -sSL --max-time 50 -w '%{http_code}' -o /tmp/probe-app "$prefix/game/js/app.min.js$suffix")
+              if [ "$code" = 200 ]; then
+                found=$(sha256sum /tmp/probe-app | cut -d' ' -f1)
+                echo "RESULT=$code sha=$found expected=$expected match=$([ "$expected" = "$found" ] && echo yes || echo no) url=$prefix/game/js/app.min.js$suffix"
+              else echo "HTTP=$code url=$prefix/game/js/app.min.js$suffix"; fi
+            done
+          done
+          echo 'DIAGNOSTIC_ONLY: DID NOT DEPLOY'
