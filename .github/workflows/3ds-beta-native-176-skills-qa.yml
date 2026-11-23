@@ -4,6 +4,8 @@ on:
     branches: [feature/web-3ds-skill-effects-passives-qa-20261121]
     paths:
       - '.github/workflows/3ds-beta-native-176-skills-qa.yml'
+      - 'scripts/patch-lan-ai.cjs'
+      - 'scripts/prepare-game.cjs'
   workflow_dispatch:
 permissions:
   contents: read
