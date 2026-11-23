@@ -8,8 +8,9 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 (async()=>{
  const root=path.resolve(process.env.PKMSVV_INCIDENT_DIST||path.join(__dirname,'../dist/lan'));
  const mode=process.env.PKMSVV_INCIDENT_CASE||'skill-integration';
- const server=await startServer({root,host:'127.0.0.1',port:0});
- const base='http://127.0.0.1:'+server.port;
+ const remote=String(process.env.PKMSVV_INCIDENT_REMOTE_URL||'').replace(/\/$/,'');
+ const server=remote?null:await startServer({root,host:'127.0.0.1',port:0});
+ const base=remote||('http://127.0.0.1:'+server.port);
  const browser=await chromium.launch({headless:true,...(process.env.PKMSVV_BROWSER?{executablePath:process.env.PKMSVV_BROWSER}:{})});
  const page=await browser.newPage({viewport:{width:1280,height:800}});
  const errors=[],consoleErrors=[];
@@ -17,7 +18,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
  page.on('console',m=>{if(m.type()==='error')consoleErrors.push(m.text());});
  try{
   const aiPath=path.join(root,'ai/game/index.html');
-  const hasAi=fs.existsSync(aiPath);
+  const hasAi=remote?true:fs.existsSync(aiPath);
   const hostResponse=await page.request.get(base+'/ai/game/?pkmsvvWifi=1&pkmsvvRole=host&pkmsvvMode=coop');
   const joinResponse=await page.request.get(base+'/ai/game/?pkmsvvWifi=1&pkmsvvRole=join&pkmsvvMode=coop');
   const routing={mode,hasAi,hostStatus:hostResponse.status(),joinStatus:joinResponse.status()};
@@ -75,6 +76,6 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
   console.log('PKMSVV_EXPLORE_100S_PASS='+JSON.stringify({mode,gameTime:checkpoints.at(-1).clock,errors,consoleErrors:consoleErrors.length,coopRouting:routing}));
  }finally{
   await page.evaluate(()=>{clearInterval(window.__pkmsvvIncidentKeeper);G.Game?.quit?.()}).catch(()=>{});
-  await browser.close();await server.close();
+  await browser.close();await server?.close();
  }
 })().catch(e=>{console.error(e);process.exitCode=1;});
