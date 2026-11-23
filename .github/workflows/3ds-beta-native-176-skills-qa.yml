@@ -7,6 +7,7 @@ on:
       - 'scripts/patch-lan-ai.cjs'
       - 'scripts/prepare-game.cjs'
       - 'scripts/prepare-lan.cjs'
+      - 'src/shared/coop-unified.js'
       - 'scripts/patch-3ds-skill-effects-passives.cjs'
       - 'tests/beta-wifi-host-join-browser.cjs'
       - 'tests/beta-176-native-cooldowns-browser.cjs'
@@ -95,16 +96,16 @@ jobs:
         env:
           PKMSVV_BROWSER: /usr/bin/google-chrome
         run: timeout 80s node tests/beta-176-native-cooldowns-browser.cjs
-      - name: Real browser Co-op Host / Join from formerly blank /ai/game route over WebRTC
-        env:
-          PKMSVV_BROWSER: /usr/bin/google-chrome
-        run: timeout 130s node tests/beta-wifi-host-join-browser.cjs
       - name: Reproduce Mewtwo Explore full 100s (original crash 1:08)
         env:
           PKMSVV_BROWSER: /usr/bin/google-chrome
           PKMSVV_INCIDENT_CASE: fixed-176
           PKMSVV_INCIDENT_DIST: dist/lan
         run: timeout 175s node tests/beta-176-explore-coop-repro-browser.cjs
+      - name: Real browser Co-op Host / Join from formerly blank /ai/game route over WebRTC
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+        run: timeout 130s node tests/beta-wifi-host-join-browser.cjs
       - name: Verify all 36 real Mega sprites plus 32 Shiny sprite sets are packaged
         run: node tests/mega-platform-parity.test.cjs pc
       - name: Verify Mega catalog renders 96 QA forms without unlocking missing sprites
