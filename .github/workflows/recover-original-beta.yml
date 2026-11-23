@@ -1,0 +1,46 @@
+name: Recover existing PKMSVV Beta — inspect previous known-good Pages deployments
+on:
+  push:
+    branches:
+      - feature/web-3ds-skill-effects-passives-qa-20261121
+    paths:
+      - '.github/workflows/recover-original-beta.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    name: Inspect PREVIOUS Beta deployment (read-only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: List Cloudflare previous preview deploys and identify original Beta
+        shell: bash
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CF_API_TOKEN" && test -n "$CF_ACCOUNT_ID"
+          endpoint="https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT_ID/pages/projects/pkmsvv-web/deployments?env=preview&per_page=100"
+          curl -fsSL -H "Authorization: Bearer $CF_API_TOKEN" "$endpoint" -o /tmp/deps.json
+          jq -e '.success==true and (.result|type)=="array"' /tmp/deps.json >/dev/null
+          echo 'PREVIOUS BETA DEPLOYMENTS newest first:'
+          jq -r '.result[] | select(.deployment_trigger.metadata.branch=="beta") | [.id, .created_on, .url, .deployment_trigger.metadata.commit_message, .latest_stage.status] | @tsv' /tmp/deps.json | head -20
+          echo 'ALL OTHER RECENT DEPLOYS:'
+          jq -r '.result[0:15][] | [.id, .created_on, .deployment_trigger.metadata.branch, .url] | @tsv' /tmp/deps.json
+          echo 'PROBE BETA DEPLOYED VERSIONS:'
+          jq -r '.result[] | select(.deployment_trigger.metadata.branch=="beta") | [.id, .url] | @tsv' /tmp/deps.json | head -12 |
+            while IFS="$(printf '\t')" read -r id url; do
+              echo "DEPLOY=$id URL=$url"
+              if curl -fsSL --max-time 15 "$url/build-info.json" -o /tmp/probe-info.json; then
+                jq -c '{version,releaseType,qaCommit,previewBranch,skills,pippiCousinQA}' /tmp/probe-info.json || :
+              else
+                echo 'No build-info.json'
+              fi
+              for route in /game/index.html /ai/game/index.html; do
+                code="$(curl -sL -o /dev/null -w '%{http_code}' --max-time 10 "$url$route")"
+                echo "$route HTTP:$code"
+              done
+            done
+          echo 'DIAGNOSTIC_ONLY: no deployment changes'
