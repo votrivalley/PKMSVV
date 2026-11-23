@@ -61,9 +61,17 @@ once('js/net/coop.js','    const st = api.team();',
     const st = api.team();`);
 once('js/net/coop.js',"    if (!active || pl !== local) return;\n    if (host) {emit(['c', me,",
  "    if (!active || (pl !== local && !(host && pl.lanBot))) return;\n    if (host) {emit(['c', pl.uid,");
+// Native 3DS Rest adds a second freeze condition BEFORE LAN AI is installed.
+// Preserve both original Rest movement blocking and LAN AI bot steering.
+if(process.env.PKMSVV_BETA_176_SKILLS_QA==='1'){
+ once('js/entities/player.js',
+  '    const [ax, ay] = (this.frozen || G.PKMSVV3DSStage4Support.isResting(this)) ? [0, 0] : G.Input.axis();',
+  '    const [ax, ay] = (this.frozen || G.PKMSVV3DSStage4Support.isResting(this)) ? [0, 0] : (this.lanBotAxis || G.Input.axis());');
+}else{
 once('js/entities/player.js',
  '    const [ax, ay] = this.frozen ? [0, 0] : G.Input.axis();',
  '    const [ax, ay] = this.frozen ? [0, 0] : (this.lanBotAxis || G.Input.axis());');
+}
 once('js/entities/player.js','  netUpdate(dt) {\n',
  '  netUpdate(dt) {\n    if(this.lanBot)return; // authoritative host actor: never overwrite learned moves/HP with a puppet snapshot\n');
 once('js/entities/projectile.js','if (!G.Camera.sees(p.x, p.y, 260))',
