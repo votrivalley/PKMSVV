@@ -69,28 +69,49 @@ jobs:
           test -n "$CLOUDFLARE_API_TOKEN" && test -n "$CLOUDFLARE_ACCOUNT_ID"
           touch .beta-upload-started
           npx --yes wrangler@4 pages deploy dist/new --project-name pkmsvv-web --branch beta
-      - name: Check public existing Beta URL serves exact NEW game engine and old Pippi files
+      - name: Verify exact engine binary, Pippi and menu after Cloudflare Beta alias propagation
         shell: bash
         run: |
           set -euo pipefail
           base=https://beta.pkmsvv-web.pages.dev
-          for n in $(seq 1 12); do
-            if curl -fsSL --max-time 20 -H 'Cache-Control: no-cache' "$base/build-info.json?rev=$GITHUB_SHA-$n" -o /tmp/live-meta &&
-              jq -e '.skills==176 and .version=="2.5.5-176-Native-Skills-Integrated-QA" and .qaCommit=="3fcf4f920b7c0800f80c079c15b7722956798e92"' /tmp/live-meta; then
-              curl -fsSL --max-time 30 "$base/game/index.html" -o /tmp/live-index
-              grep -Fq 'pkmsvv-box-hub-ui.js?v=' /tmp/live-index
-              grep -Fq 'pkmsvv-quick-region.js?v=' /tmp/live-index
-              grep -Fq 'pkmsvv-pippi' /tmp/live-index
-              curl -fsSL --max-time 50 "$base/game/js/app.min.js" -o /tmp/live-app
-              cmp /tmp/live-app dist/new/game/js/app.min.js
-              curl -fsSL --max-time 30 "$base/game/js/ui/pkmsvv-pippi.js" -o /tmp/live-pippi
-              cmp /tmp/live-pippi dist/old/game/js/ui/pkmsvv-pippi.js
-              echo 'BETA_2_5_5_176_SKILL_EFFECTS_LIVE_VERIFIED=https://beta.pkmsvv-web.pages.dev/game/'
-              exit 0
+          expected=$(sha256sum dist/new/game/js/app.min.js | cut -d' ' -f1)
+          for n in $(seq 1 24); do
+            cache="$GITHUB_SHA-$n"
+            if ! curl -fsSL --max-time 25 -H 'Cache-Control: no-cache' "$base/build-info.json?rev=$cache" -o /tmp/live-meta; then
+              echo "CDN_PROPAGATION: build-info unreachable, retry=$n"
+              sleep 5; continue
             fi
-            sleep 5
+            if ! jq -e '.skills==176 and .version=="2.5.5-176-Native-Skills-Integrated-QA" and .qaCommit=="3fcf4f920b7c0800f80c079c15b7722956798e92"' /tmp/live-meta >/dev/null; then
+              echo "CDN_PROPAGATION: waiting for complete 176 build metadata, retry=$n"
+              sleep 5; continue
+            fi
+            if ! curl -fsSL --max-time 55 -H 'Cache-Control: no-cache' "$base/game/js/app.min.js?rev=$cache" -o /tmp/live-app; then
+              echo "CDN_PROPAGATION: engine unavailable, retry=$n"
+              sleep 5; continue
+            fi
+            found=$(sha256sum /tmp/live-app | cut -d' ' -f1)
+            if [ "$found" != "$expected" ]; then
+              echo "CDN_PROPAGATION: metadata updated but engine asset still stale, retry=$n"
+              echo "expected=$expected found=$found"
+              sleep 5; continue
+            fi
+            if ! curl -fsSL --max-time 30 "$base/game/index.html?rev=$cache" -o /tmp/live-index ||
+               ! grep -Fq 'pkmsvv-box-hub-ui.js?v=' /tmp/live-index ||
+               ! grep -Fq 'pkmsvv-quick-region.js?v=' /tmp/live-index ||
+               ! grep -Fq 'pkmsvv-pippi' /tmp/live-index; then
+              echo "CDN_PROPAGATION: original Beta UI still stale, retry=$n"
+              sleep 5; continue
+            fi
+            if ! curl -fsSL --max-time 30 "$base/game/js/ui/pkmsvv-pippi.js?rev=$cache" -o /tmp/live-pippi ||
+               ! cmp -s /tmp/live-pippi dist/old/game/js/ui/pkmsvv-pippi.js; then
+              echo "CDN_PROPAGATION: Pippi asset not verified, retry=$n"
+              sleep 5; continue
+            fi
+            echo "BETA_2_5_5_176_SKILL_EFFECTS_LIVE_VERIFIED=https://beta.pkmsvv-web.pages.dev/game/"
+            echo "BETA_ENGINE_SHA256=$expected"
+            exit 0
           done
-          echo '::error::Live Beta did not verify 176-native-skill build'
+          echo "::error::Beta alias never served a fully consistent verified 176-skill build; rollback required"
           exit 1
       - name: Emergency rollback of unchanged original Beta if promotion or verification fails
         if: ${{ failure() }}
