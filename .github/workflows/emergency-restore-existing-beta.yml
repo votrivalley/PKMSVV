@@ -1,0 +1,65 @@
+name: Emergency restore PKMSVV existing Beta 2.5.5 (not production)
+on:
+  push:
+    branches:
+      - feature/web-3ds-skill-effects-passives-qa-20261121
+    paths:
+      - '.github/workflows/emergency-restore-existing-beta.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  restore:
+    name: Reapply pinned pre-176 Beta deployment (no game rebuild)
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+      CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+    steps:
+      - name: Validate exact historical Beta and immutable content
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CF_API_TOKEN" && test -n "$CF_ACCOUNT_ID"
+          good="https://61806cb2.pkmsvv-web.pages.dev"
+          curl -fsSL --max-time 30 "$good/build-info.json" -o /tmp/good-beta-info.json
+          jq -e '.version=="2.5.5-Unified-Beta-PokeBox-Hub-Fossil-Icon-Stroke-QA" and .releaseType=="experimental-gameplay-qa-only" and .previewBranch=="beta" and .qaCommit=="89398aa454283be0a9835b4828355a2cc8fe7531"' /tmp/good-beta-info.json
+          curl -fsSL --max-time 40 "$good/game/index.html" -o /tmp/good-beta-game.html
+          curl -fsSL --max-time 40 "$good/ai/game/index.html" -o /tmp/good-beta-ai-game.html
+          sha256sum /tmp/good-beta-game.html /tmp/good-beta-ai-game.html
+          id="61806cb2-4c22-4fa1-84c2-11f26c8ec039"
+          endpoint="https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT_ID/pages/projects/pkmsvv-web/deployments/$id"
+          curl -sSL -H "Authorization: Bearer $CF_API_TOKEN" "$endpoint" -o /tmp/old-beta-deployment.json
+          jq -e --arg id "$id" '.success==true and .result.id==$id and .result.deployment_trigger.metadata.branch=="beta" and .result.deployment_trigger.metadata.commit_hash=="89398aa454283be0a9835b4828355a2cc8fe7531" and .result.environment=="preview" and .result.latest_stage.status=="success"' /tmp/old-beta-deployment.json
+          echo 'PASS: pinned original Beta 2.5.5 is intact; never target production'
+      - name: Retry ONLY the last successful Beta 2.5.5 deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          old_id="61806cb2-4c22-4fa1-84c2-11f26c8ec039"
+          url="https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT_ID/pages/projects/pkmsvv-web/deployments/$old_id/retry"
+          status="$(curl -sSL -o /tmp/restore-beta-response.json -w '%{http_code}' -X POST -H "Authorization: Bearer $CF_API_TOKEN" "$url")"
+          echo "CLOUDFLARE_RETRY_STATUS=$status"
+          jq -c '{success,errors,result:{id:.result.id,environment:.result.environment,url:.result.url,branch:.result.deployment_trigger.metadata.branch,stage:.result.latest_stage}}' /tmp/restore-beta-response.json
+          jq -e '.success==true and .result.deployment_trigger.metadata.branch=="beta" and .result.environment=="preview"' /tmp/restore-beta-response.json
+      - name: Verify canonical Beta is RESTORED, including complete game routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          site="https://beta.pkmsvv-web.pages.dev"
+          for n in $(seq 1 15); do
+            if curl -fsSL --max-time 20 -H 'Cache-Control: no-cache' "$site/build-info.json?restore=$GITHUB_SHA-$n" -o /tmp/live-beta-info.json &&
+              jq -e '.version=="2.5.5-Unified-Beta-PokeBox-Hub-Fossil-Icon-Stroke-QA" and .previewBranch=="beta" and .qaCommit=="89398aa454283be0a9835b4828355a2cc8fe7531"' /tmp/live-beta-info.json; then
+              curl -fsSL --max-time 40 "$site/game/index.html?restore=$GITHUB_SHA" -o /tmp/live-beta-game.html
+              curl -fsSL --max-time 40 "$site/ai/game/index.html?restore=$GITHUB_SHA" -o /tmp/live-beta-ai-game.html
+              sha256sum /tmp/live-beta-game.html /tmp/live-beta-ai-game.html
+              cmp -s /tmp/good-beta-game.html /tmp/live-beta-game.html
+              cmp -s /tmp/good-beta-ai-game.html /tmp/live-beta-ai-game.html
+              echo "EXISTING_PKMSVV_BETA_2_5_5_RESTORED_AND_VERIFIED=https://beta.pkmsvv-web.pages.dev/game/"
+              exit 0
+            fi
+            sleep 4
+          done
+          echo "::error::Retry did not update canonical beta alias; do not claim restore"
+          exit 1
