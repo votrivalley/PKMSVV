@@ -6,6 +6,11 @@ on:
       - '.github/workflows/3ds-beta-native-176-skills-qa.yml'
       - 'scripts/patch-lan-ai.cjs'
       - 'scripts/prepare-game.cjs'
+      - 'scripts/prepare-lan.cjs'
+      - 'scripts/patch-3ds-skill-effects-passives.cjs'
+      - 'tests/beta-wifi-host-join-browser.cjs'
+      - 'tests/beta-176-native-cooldowns-browser.cjs'
+      - 'tests/beta-176-explore-coop-repro-browser.cjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -86,6 +91,20 @@ jobs:
         run: |
           node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs tests/3ds-stage3-punch-cross-storm.test.cjs tests/3ds-stage4-support.test.cjs tests/3ds-stage5-combat.test.cjs tests/3ds-stage6-projectiles.test.cjs tests/3ds-stage7-dash-meteor.test.cjs tests/3ds-stage8-beam-nova-charge.test.cjs tests/3ds-stage9-homing-cone-melee.test.cjs tests/3ds-stage10-final.test.cjs
           node --test tests/save-guardian-regression.test.cjs
+      - name: Verify complete 176-move cooldown policy including Light Screen / Rest / Protect
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+        run: timeout 80s node tests/beta-176-native-cooldowns-browser.cjs
+      - name: Real browser Co-op Host / Join from formerly blank /ai/game route over WebRTC
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+        run: timeout 130s node tests/beta-wifi-host-join-browser.cjs
+      - name: Reproduce Mewtwo Explore full 100s (original crash 1:08)
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+          PKMSVV_INCIDENT_CASE: fixed-176
+          PKMSVV_INCIDENT_DIST: dist/lan
+        run: timeout 175s node tests/beta-176-explore-coop-repro-browser.cjs
       - name: Verify all 36 real Mega sprites plus 32 Shiny sprite sets are packaged
         run: node tests/mega-platform-parity.test.cjs pc
       - name: Verify Mega catalog renders 96 QA forms without unlocking missing sprites
