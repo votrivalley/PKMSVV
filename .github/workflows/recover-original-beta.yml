@@ -22,8 +22,10 @@ jobs:
         run: |
           set -euo pipefail
           test -n "$CF_API_TOKEN" && test -n "$CF_ACCOUNT_ID"
-          endpoint="https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT_ID/pages/projects/pkmsvv-web/deployments?env=preview&per_page=100"
-          curl -fsSL -H "Authorization: Bearer $CF_API_TOKEN" "$endpoint" -o /tmp/deps.json
+          endpoint="https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT_ID/pages/projects/pkmsvv-web/deployments?env=preview&per_page=20"
+          curl -sSL -H "Authorization: Bearer $CF_API_TOKEN" "$endpoint" -o /tmp/deps.json
+          jq -c 'if .success!=true then {errors:.errors} else {success:.success,count:(.result|length),result_info} end' /tmp/deps.json
+          jq -e '.success==true' /tmp/deps.json >/dev/null
           jq -e '.success==true and (.result|type)=="array"' /tmp/deps.json >/dev/null
           echo 'PREVIOUS BETA DEPLOYMENTS newest first:'
           jq -r '.result[] | select(.deployment_trigger.metadata.branch=="beta") | [.id, .created_on, .url, .deployment_trigger.metadata.commit_message, .latest_stage.status] | @tsv' /tmp/deps.json | head -20
