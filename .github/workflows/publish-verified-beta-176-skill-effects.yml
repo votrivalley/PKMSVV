@@ -19,14 +19,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/45246547313" --jq '{head_sha,status,conclusion}' > /tmp/qa-run.json
-          jq -e '.status=="completed" and .conclusion=="success" and .head_sha=="0744b0a7c2ad6434338413bf19ff702180e7ba55"' /tmp/qa-run.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/45350857253" --jq '{head_sha,status,conclusion}' > /tmp/qa-run.json
+          jq -e '.status=="completed" and .conclusion=="success" and .head_sha=="e422e0796e498b62d823e5ca9f7904aa0a7f621a"' /tmp/qa-run.json
       - name: Retrieve exact QA-passed integrated native Beta
         uses: actions/download-artifact@v4
         with:
           repository: ${{ github.repository }}
           github-token: ${{ github.token }}
-          run-id: 45246547313
+          run-id: 45350857253
           name: PKMSVV-Beta-255-176-Skills-Integrated-QA-NEVER-LIVE
           path: dist/new
       - name: Retrieve exact pre-skill 2.5.5 Beta for strict visual diff and rollback
@@ -41,9 +41,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          jq -e '.version=="2.5.5-176-Native-Skills-Integrated-QA" and .skills==176 and .production==false and .qaCommit=="0744b0a7c2ad6434338413bf19ff702180e7ba55"' dist/new/build-info.json
+          jq -e '.version=="2.5.5-176-Native-Skills-Integrated-QA" and .skills==176 and .production==false and .qaCommit=="e422e0796e498b62d823e5ca9f7904aa0a7f621a"' dist/new/build-info.json
           jq -e '.version=="2.5.5-Unified-Beta-PokeBox-Hub-Fossil-Icon-Stroke-QA" and .qaCommit=="89398aa454283be0a9835b4828355a2cc8fe7531"' dist/old/build-info.json
-          for f in game/js/ui/pkmsvv-pippi.js game/js/ui/pkmsvv-pippi-guide.js game/js/ui/pkmsvv-box-hub-ui.js game/js/ui/pkmsvv-quick-region.js game/js/ui/pkmsvv-sky-tower-world-qa.js game/js/ui/pkmsvv-qa-runtime-config.js game/images/regions/10-sky-tower.webp game/images/pippi/Walk-Anim.png game/css/pkmsvv-box-hub.css; do
+          for f in game/js/ui/pkmsvv-box-hub-ui.js game/js/ui/pkmsvv-quick-region.js game/js/ui/pkmsvv-sky-tower-world-qa.js game/js/ui/pkmsvv-qa-runtime-config.js game/images/regions/10-sky-tower.webp game/images/pippi/Walk-Anim.png game/css/pkmsvv-box-hub.css; do
             test -s "dist/old/$f" && test -s "dist/new/$f" || { echo "::error::Missing protected Beta asset: $f"; exit 1; }
             cmp -s "dist/old/$f" "dist/new/$f" || { echo "::error::Skill changes modified protected Beta asset: $f"; exit 1; }
             echo "IDENTICAL_PROTECTED_BETA=$f"
@@ -53,6 +53,7 @@ jobs:
           test -s dist/new/ai/game/index.html
           grep -Fq '<base href="/game/">' dist/new/ai/game/index.html
           grep -Fq 'pkmsvv-coop' dist/new/ai/game/index.html
+          node scripts/qa-pippi-southern-dialogue-only.cjs dist/old dist/new
           grep -Fq 'PKMSVV3DSStage10Combat' dist/new/game/js/app.min.js
           grep -Fq 'PKMSVV3DSMoveFamilies' dist/new/game/js/app.min.js
           grep -Fq 'fossil_lab' dist/new/game/js/app.min.js
@@ -86,7 +87,7 @@ jobs:
               echo "CDN_PROPAGATION: build-info unreachable, retry=$n"
               sleep 5; continue
             fi
-            if ! jq -e '.skills==176 and .version=="2.5.5-176-Native-Skills-Integrated-QA" and .qaCommit=="0744b0a7c2ad6434338413bf19ff702180e7ba55"' /tmp/live-meta >/dev/null; then
+            if ! jq -e '.skills==176 and .version=="2.5.5-176-Native-Skills-Integrated-QA" and .qaCommit=="e422e0796e498b62d823e5ca9f7904aa0a7f621a"' /tmp/live-meta >/dev/null; then
               echo "CDN_PROPAGATION: waiting for complete 176 build metadata, retry=$n"
               sleep 5; continue
             fi
@@ -108,7 +109,9 @@ jobs:
               sleep 5; continue
             fi
             if ! curl -fsSL --max-time 30 "$base/game/js/ui/pkmsvv-pippi.js?rev=$cache" -o /tmp/live-pippi ||
-               ! cmp -s /tmp/live-pippi dist/old/game/js/ui/pkmsvv-pippi.js; then
+               ! cmp -s /tmp/live-pippi dist/new/game/js/ui/pkmsvv-pippi.js ||
+               ! curl -fsSL --max-time 30 "$base/game/js/ui/pkmsvv-pippi-guide.js?rev=$cache" -o /tmp/live-pippi-guide ||
+               ! cmp -s /tmp/live-pippi-guide dist/new/game/js/ui/pkmsvv-pippi-guide.js; then
               echo "CDN_PROPAGATION: Pippi asset not verified, retry=$n"
               sleep 5; continue
             fi
@@ -135,6 +138,16 @@ jobs:
           npm pkg set 'overrides.node-abi=4.40.0'
           npm install --no-audit --no-fund
           timeout 150s node tests/beta-wifi-host-join-browser.cjs
+      - name: PUBLIC Cloudflare Beta browser QA — real Fossil Expedition two humans, Pippi Southern guide and mission start
+        shell: bash
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+          PKMSVV_WIFI_REMOTE_URL: https://beta.pkmsvv-web.pages.dev
+          PKMSVV_WIFI_TEST_MODE: fossil_lab
+          PKMSVV_WIFI_START_MISSION: '1'
+        run: |
+          set -euo pipefail
+          timeout 170s node tests/beta-wifi-host-join-browser.cjs
       - name: PUBLIC Cloudflare Beta browser QA — Mewtwo Explore through original 1m08 crash
         shell: bash
         env:
