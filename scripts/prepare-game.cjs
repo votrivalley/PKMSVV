@@ -683,6 +683,7 @@ if (process.env.PKMSVV_BETA_176_SKILLS_QA === '1') {
     'patch-3ds-stage10-final-moves.cjs'
   ])
     execFileSync(process.execPath,[path.join(project,'scripts',stage)],{cwd:project,stdio:'inherit'});
+  execFileSync(process.execPath,[path.join(project,'scripts','patch-native-passive-pressure.cjs')],{cwd:project,stdio:'inherit'});
   console.log('PKMSVV_BETA_NATIVE_73_EFFECTS_APPLIED_TO_CURRENT_2_5_5_ENGINE');
 }
 // Final UI pass: compact Pokédex sort, Support native scrolling and accent-safe title.
