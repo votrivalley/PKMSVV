@@ -72,8 +72,9 @@ G.PKMSVV3DSSkillPort = (() => {
       apply:p=>{p.coins=(Number(p.coins)||0)+60;} }
   ];
   api.register = () => cards ? defs.reduce((n, d) => n + Number(add(d)), 0) : 0;
-  api.offerCount = p => (p && (p.level >= 25 || (p.moves && p.moves.length >= 8))) ? 4 : 3;
-  api.minimumPassiveCards = p => api.offerCount(p) === 4 ? 2 : 0;
+  api.offerCount = () => 3;
+  // Keep the original milestone's passive availability, but never add a fourth card.
+  api.minimumPassiveCards = p => (p && (p.level >= 25 || (p.moves && p.moves.length >= 8))) ? 2 : 0;
   api.rollDodge = (p, roll = Math.random) =>
     !!p && (Number(p.pkmsvv3dsDodge) || 0) > 0 && roll() < cap(p.pkmsvv3dsDodge,0.15);
   api.onDodge = p => {
