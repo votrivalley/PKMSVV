@@ -14,7 +14,7 @@ G.PKMSVV3DSStage4Support=(()=>{
   });
  }
  function isResting(p){return !!p&&!p.dead&&data(p).rest>0;}
- function needsRest(p){return !!p&&!p.dead&&p.hp<p.maxHp*.98;}
+ function needsRest(p){return !!p&&!p.dead&&p.hp<p.maxHp*.40;}
  function tickPlayer(p,dt){
   if(!p||p.dead)return;
   const s=data(p),d=clamp(dt,0,.25);
