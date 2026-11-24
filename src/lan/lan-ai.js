@@ -149,7 +149,10 @@ G.LanAI=(()=>{
   const ratio=pl.hp/pl.maxHp,id=card.key.split(':')[1];
   if(card.type==='stat')return ({heal:ratio<.45?150:ratio<.75?65:-30,
    hp:ratio<.6?100:35,def:ratio<.6?60:30,rgn:ratio<.8?55:25,
-   cd:45,atk:43,spd:32,xp:20,mag:12})[id]??10;
+   cd:45,atk:43,spd:32,xp:20,mag:12,
+   crit:pl.moves.length>=3?58:35,critd:(pl.critChance||0)>=.16?61:28,
+   hunt:ratio>.55?54:30,dodge:ratio<.6?78:49,
+   luck:8,coin:6})[id]??10;
   const move=G.Moves.BY_ID[id];if(!move)return 0;
   const fit=G.Stats.fit(pl.mon,move.cat),stab=pl.mon.types.includes(move.type)?12:0;
   const damage=pl.moves.filter(m=>m.kind!=='buff');
@@ -304,7 +307,8 @@ G.LanAI=(()=>{
    if(!segment(pl,pl,p))continue;
    if(!unsafe&&[.25,.5,.75,1].some(t=>liquidCost(pl,pl.x+(p.x-pl.x)*t,pl.y+(p.y-pl.y)*t)>0))continue;
    const progress=Math.sqrt(sq(p,waypoint))*.65;
-   const risk=danger(pl,p,enemies,shots,hazards)*(pl.hp/pl.maxHp<.4?1.5:1);
+   const rival=G.Social?.room?.mode==='royale'||G.Social?.room?.mode==='eggrush';
+   const risk=danger(pl,p,enemies,shots,hazards)*(pl.hp/pl.maxHp<.4?1.5:1)*(rival?1.25:1);
    const slow=unsafe?0:liquidCost(pl,p.x,p.y)*12;
    const cost=progress+risk+slow+(distance<24&&i>=0?12:0);
    if(cost<value){value=cost;best=axis;}
@@ -370,7 +374,7 @@ G.LanAI=(()=>{
     if(target&&sq(pl,target)<420**2&&(mode==='royale'&&(!objective||pl.hp/pl.maxHp<.55||sq(pl,target)<150**2)||
      ['coop','berry','berryeasy','fossil_lab'].includes(mode)&&goal===s.roam&&sq(pl,host)<430**2&&sq(target,host)<520**2&&!host.dead||goal===host&&!host.dead)){
      const ranged=pl.moves.some(m=>['projectile','beam','homing','chain','turret','meteor','boomerang'].includes(m.kind));
-     const d=Math.sqrt(sq(pl,target))||1,range=pl.hp/pl.maxHp<.4?230:ranged?165:85;
+     const d=Math.sqrt(sq(pl,target))||1,range=pl.hp/pl.maxHp<.4?(mode==='royale'?250:230):ranged?(mode==='royale'?190:165):85;
      goal={x:target.x+(pl.x-target.x)/d*range,y:target.y+(pl.y-target.y)/d*range};
     }
     if(['coop','berry','berryeasy','fossil_lab'].includes(mode)&&!nests.length&&goal===s.roam&&sq(pl,goal)<50**2)goal={x:pl.x,y:pl.y};
