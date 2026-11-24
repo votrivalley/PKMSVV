@@ -53,7 +53,8 @@ function install(){
       e.pkmsvvPressureBoss=true;
     }
     if (rollShiny(b.dex)) e.makeShiny();`);
- s=one(s,'  return { reset, update, ahead, burst,','  return { pressureAt,bossPressure,reset, update, ahead, burst,');
+ // Preserve the original export prefix consumed by patch-arena-v1529.cjs later in prepare-web.
+ s=one(s,'  return { reset, update, ahead, burst, tickBanner, banner, say, rate, SHINY_RATE, CAP,','  return { reset, update, ahead, burst, tickBanner, banner, say, rate, SHINY_RATE, CAP,pressureAt,bossPressure,');
  // Authoritative normal-run bosses only. Host applies reduction once.
  e=one(e,'      this.stunT = Math.max(this.stunT || 0, dur);',
   '      this.stunT = Math.max(this.stunT || 0, dur * (this.pkmsvvPressureBoss ? .5 : 1));');
