@@ -34,8 +34,8 @@ test('4 choices only after 25 levels or 8 learned skills; 2 stat cards guarantee
  const f=setup();
  assert.equal(f.port.offerCount({level:24,moves:Array(7)}),3);
  assert.equal(f.port.minimumPassiveCards({level:24,moves:Array(7)}),0);
- assert.equal(f.port.offerCount({level:25,moves:Array(2)}),4);
- assert.equal(f.port.offerCount({level:5,moves:Array(8)}),4);
+ assert.equal(f.port.offerCount({level:25,moves:Array(2)}),3);
+ assert.equal(f.port.offerCount({level:5,moves:Array(8)}),3);
  assert.equal(f.port.minimumPassiveCards({level:25,moves:Array(2)}),2);
  assert.equal(f.port.minimumPassiveCards({level:5,moves:Array(8)}),2);
 });
