@@ -12,6 +12,7 @@ const {startServer}=require('../lan-server/server.cjs');
  const errs=[];
  for(const [role,p] of [['host',host],['join',guest]])p.on('pageerror',e=>errs.push(role+': '+String(e)));
  const base=remote||('http://127.0.0.1:'+server.port);
+ const mode=process.env.PKMSVV_WIFI_TEST_MODE==='fossil_lab'?'fossil_lab':'coop';
  async function prepare(p){
   await p.goto(base+'/game/',{waitUntil:'domcontentloaded',timeout:45000});
   await p.waitForFunction(()=>!!window.G?.DB?.save,{timeout:35000});
@@ -23,7 +24,7 @@ const {startServer}=require('../lan-server/server.cjs');
  try{
   await prepare(host);
   await prepare(guest);
-  await host.goto(base+'/ai/game/?pkmsvvWifi=1&pkmsvvRole=host&pkmsvvMode=coop',{waitUntil:'domcontentloaded',timeout:45000});
+  await host.goto(base+'/ai/game/?pkmsvvWifi=1&pkmsvvRole=host&pkmsvvMode='+mode,{waitUntil:'domcontentloaded',timeout:45000});
   await host.waitForTimeout(1400);
   console.log('COOP_WEBRTC_HOST_BOOT_PROBE='+JSON.stringify(await host.evaluate(()=>({
    href:location.href,ready:document.readyState,wifi:window.PKMSVV_WIFI,
@@ -34,14 +35,15 @@ const {startServer}=require('../lan-server/server.cjs');
    status:document.body?.innerText?.slice(-700)
   }))));
   console.log('COOP_WEBRTC_PAGE_ERRORS='+JSON.stringify(errs));
-  await host.waitForFunction(()=>window.PKMSVV_WIFI===true&&G.Social?.room?.mode==='coop'&&G.Social.room?.isHost,{timeout:35000});
+  await host.evaluate(m=>window.__expectedWifiRoomMode=m,mode);
+  await host.waitForFunction(()=>window.PKMSVV_WIFI===true&&G.Social?.room?.mode===window.__expectedWifiRoomMode&&G.Social.room?.isHost,{timeout:35000});
   const hostStatus=await host.evaluate(()=>({ready:!!G.LanBus?.invitation,wifi:window.PKMSVV_WIFI,
    mode:G.Social.room?.mode,members:G.Social.room?.members?.length,
    documentHasGame:!!document.querySelector('#scr-menu'),base:document.querySelector('base')?.href}));
   assert.deepEqual({wifi:hostStatus.wifi,mode:hostStatus.mode,documentHasGame:hostStatus.documentHasGame},
-   {wifi:true,mode:'coop',documentHasGame:true});
+   {wifi:true,mode,documentHasGame:true});
   console.log('COOP_WEBRTC_REAL_HOST_PASS='+JSON.stringify(hostStatus));
-  await guest.goto(base+'/ai/game/?pkmsvvWifi=1&pkmsvvRole=join&pkmsvvMode=coop',{waitUntil:'domcontentloaded',timeout:45000});
+  await guest.goto(base+'/ai/game/?pkmsvvWifi=1&pkmsvvRole=join&pkmsvvMode='+mode,{waitUntil:'domcontentloaded',timeout:45000});
   await guest.waitForFunction(()=>window.PKMSVV_WIFI===true&&!!G.LanBus?.answer&&!!window.PKMSVVWifiUI?.join,{timeout:35000});
   await guest.waitForFunction(()=>!!document.querySelector('.pkmsvv-wifi-panel')||!!document.querySelector('#pkmsvv-unified-coop'),{timeout:18000});
   assert.equal(await guest.evaluate(()=>!!document.querySelector('#scr-menu')),true,'Co-op Join must never load an empty page');
@@ -58,8 +60,10 @@ const {startServer}=require('../lan-server/server.cjs');
   await host.waitForFunction(()=>G.Social?.room?.members?.length>=2,{timeout:12000});
   const room=await host.evaluate(()=>({id:G.Social.room.id,mode:G.Social.room.mode,members:G.Social.room.members.map(m=>m.uid)}));
   assert.equal(room.members.length,2);
-  assert.equal(room.mode,'coop');
+  assert.equal(room.mode,mode,'Wi-Fi room mode must never silently fall back to Survival');
+  const guestRoom=await guest.evaluate(()=>G.Social.room?.mode);
+  assert.equal(guestRoom,mode,'Guest must receive exactly the Host-selected game mode');
   assert.deepEqual(errs,[],'No uncaught host/join runtime errors');
-  console.log('COOP_WEBRTC_TWO_REAL_PAGES_JOIN_PASS='+JSON.stringify({room,errors:errs}));
+  console.log('COOP_WEBRTC_TWO_REAL_PAGES_JOIN_PASS='+JSON.stringify({room,guestRoom,errors:errs}));
  }finally{await browser.close();await server?.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
