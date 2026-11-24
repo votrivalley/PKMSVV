@@ -139,6 +139,11 @@ test('Rest heals 60% maximum HP and immobilizes attacks for two seconds; does no
  for(let i=0;i<8;i++)f.support.tickPlayer(f.p,.25);
  assert.equal(f.support.isResting(f.p),false);
  assert.ok(f.stats.fx.some(z=>z.k==='dmgText'&&z.args.includes('Z')));
+ f.p.hp=40;
+ assert.equal(f.support.needsRest(f.p),false);
+ assert.equal(f.cast('rest').result,false);
+ f.p.hp=39;
+ assert.equal(f.support.needsRest(f.p),true);
  f.p.hp=99;
  assert.equal(f.support.needsRest(f.p),false);
  assert.equal(f.cast('rest').result,false);
