@@ -14,6 +14,14 @@ on:
       - 'scripts/patch-3ds-skill-effects-passives.cjs'
       - 'tests/beta-wifi-host-join-browser.cjs'
       - 'tests/beta-176-native-cooldowns-browser.cjs'
+      - 'tests/beta-forget-three-cards-browser.cjs'
+      - 'scripts/patch-skill-forget.cjs'
+      - 'src/pkmsvv-forget-skill.js'
+      - 'src/pkmsvv-modal-navigation-qa.js'
+      - 'src/pkmsvv-3ds-skill-port.js'
+      - 'src/pkmsvv-pippi.js'
+      - 'src/pkmsvv-pippi-guide.js'
+      - 'src/lan/wifi-bus.js'
       - 'tests/beta-176-explore-coop-repro-browser.cjs'
   workflow_dispatch:
 permissions:
@@ -99,6 +107,12 @@ jobs:
         env:
           PKMSVV_BROWSER: /usr/bin/google-chrome
         run: timeout 80s node tests/beta-176-native-cooldowns-browser.cjs
+      - name: Solo skill forget pauses world, three choices and keyboard/gamepad regression
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+        run: |
+          node --test tests/web-forget-controller.test.cjs tests/web-levelup-controller.test.cjs
+          timeout 100s node tests/beta-forget-three-cards-browser.cjs
       - name: Reproduce Mewtwo Explore full 100s (original crash 1:08)
         env:
           PKMSVV_BROWSER: /usr/bin/google-chrome
