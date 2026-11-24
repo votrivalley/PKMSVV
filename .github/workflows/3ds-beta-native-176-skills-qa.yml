@@ -8,6 +8,9 @@ on:
       - 'scripts/prepare-game.cjs'
       - 'scripts/prepare-lan.cjs'
       - 'src/shared/coop-unified.js'
+      - 'src/lan/wifi-bus.js'
+      - 'src/pkmsvv-pippi.js'
+      - 'src/pkmsvv-pippi-guide.js'
       - 'scripts/patch-3ds-skill-effects-passives.cjs'
       - 'tests/beta-wifi-host-join-browser.cjs'
       - 'tests/beta-176-native-cooldowns-browser.cjs'
@@ -106,6 +109,12 @@ jobs:
         env:
           PKMSVV_BROWSER: /usr/bin/google-chrome
         run: timeout 130s node tests/beta-wifi-host-join-browser.cjs
+      - name: Browser regression Fossil Expedition Host/Join — preserve fossil_lab, Pippi guide, launch real two-human session
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+          PKMSVV_WIFI_TEST_MODE: fossil_lab
+          PKMSVV_WIFI_START_MISSION: '1'
+        run: timeout 160s node tests/beta-wifi-host-join-browser.cjs
       - name: Verify all 36 real Mega sprites plus 32 Shiny sprite sets are packaged
         run: node tests/mega-platform-parity.test.cjs pc
       - name: Verify Mega catalog renders 96 QA forms without unlocking missing sprites
