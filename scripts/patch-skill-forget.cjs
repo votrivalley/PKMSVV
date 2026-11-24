@@ -96,4 +96,18 @@ fs.appendFileSync(path.join(game,'css','style.css'),`
 #scr-menu #pkmsvv-menu-wiki{display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px}
 @media(max-width:550px){.pkmsvv-wiki-panel{padding:12px}.pkmsvv-wiki-panel>header{flex-wrap:wrap}}
 `,'utf8');
+// The level-up callback resumes 'playing' immediately after selecting Forget.
+// Freeze the solo simulation (including the world clock), not the UI/pad poll.
+// Keep competitive rounds running; no global pause is introduced for Co-op.
+{
+ const file=path.join(game,'js/game.js');
+ let code=fs.readFileSync(file,'utf8').replace(/\r\n/g,'\n');
+ const from="    if (state === 'playing') update(dt);";
+ if(code.split(from).length!==2)throw Error('Forget solo pause frame anchor changed');
+ code=code.replace(from,"    if (state === 'playing' && !G.PKMSVVForgetSkill?.blocksSolo?.()) update(dt);");
+ const keys='  function handleKeys() {';
+ if(code.split(keys).length!==2)throw Error('Forget input frame anchor changed');
+ code=code.replace(keys,keys+"\n    if (G.PKMSVVForgetSkill?.current?.()) return; // overlay owns 1/2/3 and paging; no hidden gameplay hotkeys");
+ fs.writeFileSync(file,code,'utf8');
+}
 console.log('Per Pokémon one-time skill forgetting installed in ordinary level-up cards.');
