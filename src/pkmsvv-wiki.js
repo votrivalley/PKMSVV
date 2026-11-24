@@ -609,7 +609,61 @@ G.PKMSVVWiki=(()=>{
  // Research Lab modular furnishing renderer: no painted-in purchases.
  // Each owned object is its own alpha asset, positioned by the shared catalog.
  // A screenshot of the original furnished room is reference art only.
+ // Approved V3 artwork is an explicit read-only QA option, not a release.
+ function approvedLabV3Preview(){
+  return typeof window!=='undefined'&&
+   ['localhost','127.0.0.1','beta.pkmsvv-web.pages.dev','research-ui-qa.pkmsvv-web.pages.dev'].includes(window.location.hostname)&&
+   new URLSearchParams(window.location.search).get('pkmsvvLabV3')==='1';
+ }
+ async function renderApprovedLabV3(stage,revision){
+  const base='images/coop-lab/research-v3/';
+  try{
+   const response=await fetch(base+'manifest.json',{cache:'no-store'});
+   if(!response.ok)return;
+   const m=await response.json();
+   if(m.version!==3||m.canvas?.width!==1500||m.canvas?.height!==1049||
+    m.background!=='backdrop.png'||m.readyForFurnitureSwap!==false||
+    !Array.isArray(m.layers)||m.layers.length!==6||!Array.isArray(m.labels)||m.labels.length!==5)return;
+   const ids=['crest','support','fossil','mega','berry','companion'];
+   const slots={crest:'decor',support:'shelf_left',fossil:'center',mega:'shelf_right',berry:'garden',companion:'trophy'};
+   const rect=p=>['x','y','w','h'].every(k=>Number.isInteger(p[k]))&&p.x>=0&&p.y>=0&&p.w>0&&p.h>0&&p.x+p.w<=1500&&p.y+p.h<=1049;
+   if(!ids.every(id=>m.layers.filter(p=>p.id===id&&p.file===id+'.png'&&p.slot===slots[id]&&rect(p)).length===1)||
+     !ids.slice(1).every(id=>m.labels.filter(p=>p.id===id&&rect(p)).length===1))return;
+   const load=(file)=>new Promise((resolve,reject)=>{
+    const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=base+file;
+   });
+   const [background,...images]=await Promise.all([load(m.background),...m.layers.map(p=>load(p.file))]);
+   if(background.naturalWidth!==1500||background.naturalHeight!==1049||
+      images.some((img,i)=>img.naturalWidth!==m.layers[i].w||img.naturalHeight!==m.layers[i].h))return;
+   if(stage.dataset.labRenderRevision!==revision||!stage.isConnected)return;
+   stage.querySelectorAll('.pkmsvv-lab-furniture,.pkmsvv-lab-source-layer,.pkmsvv-lab-station-prop,.pkmsvv-lab-v3-layer').forEach(x=>x.remove());
+   const place=(el,p)=>{el.style.left=p.x/1500*100+'%';el.style.top=p.y/1049*100+'%';el.style.width=p.w/1500*100+'%';el.style.height=p.h/1049*100+'%';};
+   for(let i=0;i<m.layers.length;i++){
+    const p=m.layers[i],img=images[i];img.className='pkmsvv-lab-v3-layer';img.dataset.labLayer=p.id;img.dataset.labSlot=p.slot;
+    img.alt='';img.draggable=false;img.setAttribute('aria-hidden','true');
+    Object.assign(img.style,{position:'absolute',objectFit:'fill',pointerEvents:'none',zIndex:'1',maxWidth:'none',margin:'0',padding:'0',border:'0'});
+    place(img,p);stage.prepend(img);
+   }
+   stage.style.setProperty('background-image','url("'+base+m.background+'")','important');
+   stage.style.setProperty('background-size','100% 100%','important');
+   stage.style.setProperty('aspect-ratio','1500 / 1049','important');
+   for(const label of m.labels){
+    const part=m.layers.find(p=>p.id===label.id),button=stage.querySelector('[data-research-hotspot="'+label.id+'"]');
+    if(button){
+     const x=Math.min(part.x,label.x),y=Math.min(part.y,label.y);
+     const w=Math.max(part.x+part.w,label.x+label.w)-x,h=Math.max(part.y+part.h,label.y+label.h)-y;
+     place(button,{x,y,w,h});button.style.zIndex='4';
+     button.querySelectorAll('.pkmsvv-research-scene-object').forEach(n=>n.style.setProperty('display','none','important'));
+     const tag=button.querySelector('.pkmsvv-research-hotspot-tag');
+     if(tag){Object.assign(tag.style,{position:'absolute',left:(label.x-x)/w*100+'%',top:(label.y-y)/h*100+'%',width:label.w/w*100+'%',height:label.h/h*100+'%',margin:'0',padding:'0',boxSizing:'border-box'});}
+    }
+    const spot=stage.querySelector('[data-build-slot="'+part.slot+'"]');if(spot)place(spot,part);
+   }
+   stage.dataset.researchArtMode='approved-v3';
+  }catch(_){/* Missing or invalid art pack: retain the original room. */}
+ }
  function modularLabPreview(){
+  if(approvedLabV3Preview())return false;
   if(typeof window==='undefined'||!window.location)return false;
   const host=String(window.location.hostname||'');
   if(!['localhost','127.0.0.1','beta.pkmsvv-web.pages.dev','research-ui-qa.pkmsvv-web.pages.dev'].includes(host))return false;
@@ -621,7 +675,7 @@ G.PKMSVVWiki=(()=>{
  }
  function renderFurnitureLayers(stage){
   if(!stage)return;
-  stage.querySelectorAll('.pkmsvv-lab-furniture,.pkmsvv-lab-source-layer,.pkmsvv-lab-station-prop').forEach(x=>x.remove());
+  stage.querySelectorAll('.pkmsvv-lab-furniture,.pkmsvv-lab-source-layer,.pkmsvv-lab-station-prop,.pkmsvv-lab-v3-layer').forEach(x=>x.remove());
   const modular=modularLabPreview();
   const revision=String((Number(stage.dataset.labRenderRevision)||0)+1);
   stage.dataset.labRenderRevision=revision;
@@ -686,6 +740,7 @@ G.PKMSVVWiki=(()=>{
    image.style.width=coords.w/320*100+'%';image.style.height=coords.h/224*100+'%';
    image.setAttribute('aria-hidden','true');image.draggable=false;stage.prepend(image);
   }
+  if(approvedLabV3Preview())renderApprovedLabV3(stage,revision);
  }
  function construction(){
   close();installStyle();
@@ -774,9 +829,9 @@ G.PKMSVVWiki=(()=>{
      tr('Giá '+n[2]+' Xu Đồng Đội','Price '+n[2]+' Co-op Coins');
     const btn=document.createElement('button');btn.type='button';
     btn.className='pkmsvv-pc-close';btn.dataset.buildEquip=id;
-    btn.disabled=!ready||!unlocked||equipped||G.DB?.guest||typeof G.DB?.commit!=='function'||
+    btn.disabled=approvedLabV3Preview()||!ready||!unlocked||equipped||G.DB?.guest||typeof G.DB?.commit!=='function'||
      (!owned&&(Number(save.coopCoins)||0)<Number(item?.price));
-    btn.textContent=!ready?tr('Chưa có sprite','No sprite'):
+    btn.textContent=approvedLabV3Preview()?tr('Chỉ xem thử V3','V3 preview only'):!ready?tr('Chưa có sprite','No sprite'):
      !unlocked?tr('🔒 Cần Co-op','🔒 Co-op required'):equipped?tr('Đang đặt','Equipped'):
      owned?tr('Trưng bày','Equip'):tr('Mua · '+n[2]+' xu','Buy · '+n[2]+' coins');
     btn.onclick=()=>{
