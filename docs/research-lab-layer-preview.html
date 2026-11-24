@@ -21,10 +21,10 @@ footer{margin-top:16px;color:#ffdfa0;font-size:13px}
 </style>
 </head>
 <body>
-<h1>Phòng nghiên cứu — xem 9 sprite tách từ tranh gốc</h1>
+<h1>Phòng nghiên cứu — 9 lớp máy + 5 vật phẩm nhận diện</h1>
 <p>Bật/tắt từng máy. Bên trái là các lớp độc lập; bên phải là ảnh gốc để đối chiếu. Nền sau vật thể mới được phục dựng gần đúng và chưa duyệt mỹ thuật.</p>
 <div class="controls" id="controls">
-<button id="showAll">Hiện tất cả</button><button id="hideAll">Ẩn tất cả</button>
+<button id="showAll">Hiện tất cả</button><button id="hideAll">Ẩn tất cả</button><button id="hideProps">Chỉ ẩn vật phẩm nhận diện</button>
 </div>
 <div class="panels">
 <section class="panel"><h2>Nền đã tách + từng sprite PNG</h2><div class="scene" id="restored"></div></section>
@@ -42,19 +42,25 @@ const data=[
  ['fossil_display','Khay hóa thạch',165,380,182,107],
  ['right_terminal','Máy tính phụ',724,387,192,111],
  ['plaque_left','Khung treo trái',116,72,216,136],
- ['plaque_right','Khung treo phải',617,70,215,139]
+ ['plaque_right','Khung treo phải',617,70,215,139],
+ ['prop-support','Trứng hỗ trợ',113,235,115,111],
+ ['prop-mega','Mega Stone',730,207,103,105],
+ ['prop-berry','Berry',111,465,117,113],
+ ['prop-companion','Pippi',747,416,100,108],
+ ['prop-fossil','Hóa thạch trong buồng',431,228,98,91]
 ];
 const c=document.getElementById('controls'),room=document.getElementById('restored'),images=[];
 for(const [id,label,x,y,w,h] of data){
  const img=new Image();img.src=id+'.png';img.className='part';
  img.style.left=(x/960*100)+'%';img.style.top=(y/672*100)+'%';
  img.style.width=(w/960*100)+'%';img.style.height=(h/672*100)+'%';
- img.dataset.part=id;room.append(img);images.push(img);
+ img.dataset.part=id;if(id.startsWith('prop-')){img.style.objectFit='contain';img.style.imageRendering='pixelated';}room.append(img);images.push(img);
  const wrap=document.createElement('label'),check=document.createElement('input');
- check.type='checkbox';check.checked=true;check.addEventListener('change',()=>img.classList.toggle('hidden',!check.checked));
+ check.type='checkbox';check.dataset.part=id;check.checked=true;check.addEventListener('change',()=>img.classList.toggle('hidden',!check.checked));
  wrap.append(check,document.createTextNode(label));c.append(wrap);
 }
 document.getElementById('showAll').onclick=()=>c.querySelectorAll('input').forEach(x=>{x.checked=true;x.dispatchEvent(new Event('change'));});
 document.getElementById('hideAll').onclick=()=>c.querySelectorAll('input').forEach(x=>{x.checked=false;x.dispatchEvent(new Event('change'));});
+document.getElementById('hideProps').onclick=()=>c.querySelectorAll('input[data-part^="prop-"]').forEach(x=>{x.checked=false;x.dispatchEvent(new Event('change'));});
 </script>
 </body></html>

@@ -1273,11 +1273,11 @@
  position:absolute!important;display:block!important;object-fit:contain!important;
  object-position:center bottom!important;max-width:none!important;min-width:0!important;
  pointer-events:none!important;user-select:none!important;image-rendering:pixelated!important;
- z-index:1!important;filter:drop-shadow(0 3px 2px #122b2c88);
+ z-index:1!important;filter:none!important;
  border:0!important;padding:0!important;margin:0!important;
 }
 #pkmsvv-wiki-overlay .pkmsvv-lab-station-prop[data-lab-prop="fossil"]{
- filter:drop-shadow(0 0 5px #acf4d5aa);opacity:.94;
+ filter:none!important;opacity:.94;
 }
 #pkmsvv-wiki-overlay .pkmsvv-research-hotspot,
 #pkmsvv-wiki-overlay .pkmsvv-build-spot{z-index:4!important;}

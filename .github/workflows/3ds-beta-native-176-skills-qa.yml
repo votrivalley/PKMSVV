@@ -12,6 +12,7 @@ on:
       - 'src/pkmsvv-wiki.js'
       - 'src/pkmsvv-pc-menu-clean-qa.css'
       - 'tests/research-source-extraction.test.cjs'
+      - 'tests/beta-research-layers-browser.cjs'
       - 'src/shared/coop-unified.js'
       - 'src/lan/wifi-bus.js'
       - 'scripts/patch-native-passive-pressure.cjs'
@@ -115,6 +116,18 @@ jobs:
           node --test tests/save-guardian-regression.test.cjs
       - name: Verify research room layer registry and semantic prop placement
         run: node --test tests/research-source-extraction.test.cjs
+      - name: Real browser research room layers, props, build mode and fallback
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+        run: timeout 100s node tests/beta-research-layers-browser.cjs
+      - name: Upload research room screenshots (QA only)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-Research-Room-Browser-QA
+          path: dist/research-browser-qa/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Verify approved passive pressure scaling, boss crowd-control resistance and bot behavior
         run: node --test tests/native-passive-pressure.test.cjs tests/lan-ai-modes.test.cjs tests/3ds-stage4-support.test.cjs
       - name: Verify complete 176-move cooldown policy including Light Screen / Rest / Protect

@@ -68,30 +68,40 @@ async function main(){
   canvas,kind:'original-source-alpha-cutouts',
   readyForFurnitureSwap:false,requires:'manual restoration of occluded background, alpha-edge art QA',
   layers:[]};
- for(const p of pieces){
-  const [left,top,width,height]=p.rect;
-  const mask=maskFor(p),file=p.id+'.png';
-  const buff=await sharp(src).extract({left,top,width,height}).ensureAlpha()
-   .composite([{input:mask,blend:'dest-in'}]).png({compressionLevel:9}).toBuffer();
-  fs.writeFileSync(path.join(out,file),buff);
-  manifest.layers.push({id:p.id,label:p.name,rectangle:p.rect,file,alphaMask:p.polygon,
-   readyForFurnitureSwap:false,bytes:buff.length});
- }
-
- // Reconstruct the occluded background for the *QA-only* scene.
- // This is not a final painter-approved restoration: invisible pixels
- // behind flattened furniture do not exist in the source WebP.
- const count=canvas.width*canvas.height,removed=new Uint8Array(count);
- for(const part of pieces){
+ // Assign each original pixel to exactly one foreground layer. Frontmost
+ // masks win; no duplicate edge pixels remain on neighboring sprites.
+ const count=canvas.width*canvas.height;
+ const owner=new Int16Array(count).fill(-1),removed=new Uint8Array(count);
+ const {data:raw,info:ri}=await sharp(src).removeAlpha().raw()
+  .toBuffer({resolveWithObject:true});
+ if(ri.channels!==3)throw Error('Unexpected room RGB channels');
+ for(const [index,part] of pieces.entries()){
   const [left,top,w,h]=part.rect;
   const {data:mask,info:mi}=await sharp(maskFor(part)).ensureAlpha().raw()
    .toBuffer({resolveWithObject:true});
   for(let y=0;y<h;y++)for(let x=0;x<w;x++)
-   if(mask[(y*w+x)*mi.channels+mi.channels-1]>127)
-    removed[(top+y)*canvas.width+left+x]=1;
+   if(mask[(y*w+x)*mi.channels+mi.channels-1]>127){
+    const at=(top+y)*canvas.width+left+x;
+    owner[at]=index;removed[at]=1;
+   }
  }
- const {data:raw,info:ri}=await sharp(src).removeAlpha().raw()
-  .toBuffer({resolveWithObject:true});
+ for(const [index,p] of pieces.entries()){
+  const [left,top,width,height]=p.rect,file=p.id+'.png';
+  const rgba=Buffer.alloc(width*height*4);
+  let pixels=0;
+  for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+   const at=(top+y)*canvas.width+left+x;
+   if(owner[at]!==index)continue;
+   const dst=(y*width+x)*4;
+   rgba[dst]=raw[at*3];rgba[dst+1]=raw[at*3+1];rgba[dst+2]=raw[at*3+2];rgba[dst+3]=255;pixels++;
+  }
+  if(!pixels)throw Error('Empty furniture layer '+p.id);
+  const buff=await sharp(rgba,{raw:{width,height,channels:4}}).png({compressionLevel:9}).toBuffer();
+  fs.writeFileSync(path.join(out,file),buff);
+  manifest.layers.push({id:p.id,label:p.name,rectangle:p.rect,file,alphaMask:p.polygon,
+   readyForFurnitureSwap:false,pixels,bytes:buff.length});
+ }
+ // Reconstruct ONLY obscured pixels of the background, still draft art.
  const nearest=new Int32Array(count).fill(-1),queue=new Int32Array(count);
  let head=0,tail=0;
  for(let i=0;i<count;i++)if(!removed[i]){nearest[i]=i;queue[tail++]=i;}
@@ -138,6 +148,23 @@ async function main(){
  const backdrop='clean-backdrop.png';
  fs.writeFileSync(path.join(out,backdrop),await sharp(clean,{raw:{
   width:canvas.width,height:canvas.height,channels}}).png().toBuffer());
+ // Decode and recomposite actual emitted PNG bytes, verifying no overlaps
+ // and no visual changes in the complete original composition.
+ const rebuilt=Buffer.from(clean),covered=new Uint8Array(count);
+ for(const part of manifest.layers){
+  const [left,top,w,h]=part.rectangle;
+  const layer=await sharp(path.join(out,part.file)).ensureAlpha().raw().toBuffer();
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+   const at=(top+y)*canvas.width+left+x,k=(y*w+x)*4;
+   if(!layer[k+3])continue;
+   if(layer[k+3]!==255||covered[at])throw Error('Overlapping or nonbinary layer '+part.id);
+   covered[at]=1;
+   for(let c=0;c<3;c++)rebuilt[at*3+c]=layer[k+c];
+  }
+ }
+ if(!rebuilt.equals(raw))throw Error('Original room reconstruction is not pixel exact');
+ manifest.pixelExactReassembly=true;
+ manifest.overlappingLayerPixels=0;
  fs.writeFileSync(path.join(out,'room-reference.webp'),src);
  manifest.originalRoom='room-reference.webp';
  manifest.cleanBackdrop=backdrop;
