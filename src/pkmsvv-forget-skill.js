@@ -31,7 +31,9 @@ G.PKMSVVForgetSkill=(()=>{
   if(absolute>=p.buttons.length||p.buttons[absolute].hidden)return false;
   p.buttons[absolute].click();return true;
  }
- const competitive=()=>!!((G.Coop?.active&&(G.Royale?.active||G.EggRush?.active))||G.PKMSVVArenaSolo?.active||G.PKMSVVChampionArena?.active);
+ const competitive=()=>!!((G.Coop?.active&&(G.Royale?.active||G.EggRush?.active))||G.PKMSVVArenaSolo?.active||G.PKMSVVChampionArena?.active||G.PKMSVVArenaPvp?.active);
+ // Local Explore stops the entire simulation while this picker is open.
+ function blocksSolo(){return !!current()&&!G.Coop?.active&&!competitive();}
  function remove(p,m){
   if(!p||!m||!p.moves?.includes(m))return false;
   p.moves.splice(p.moves.indexOf(m),1);
@@ -62,7 +64,7 @@ G.PKMSVVForgetSkill=(()=>{
   const title=document.createElement('h2');title.textContent='🧠 QUÊN KỸ NĂNG';
   const hint=document.createElement('p');hint.textContent='Chọn 1 trong 8 kỹ năng để quên. Chỉ xuất hiện một lần sau khi đủ 8 kỹ năng.';
   const grid=document.createElement('div');grid.className='pkmsvv-forget-grid';
-  hint.textContent+=' Tay cầm: giữ R + X/Y/B để chọn, A sang trang.';
+  hint.textContent+=competitive()?' Phím 1/2/3 để chọn, 4 sang trang. Tay cầm: giữ R + X/Y/B để chọn, A sang trang.':' Phím 1/2/3 để chọn, 4 sang trang. Tay cầm: X/Y/B để chọn, A sang trang.';
   const pageLabel=document.createElement('p');
   pageLabel.className='pkmsvv-forget-page';
   panel.append(title,hint,grid,pageLabel);
@@ -105,5 +107,5 @@ G.PKMSVVForgetSkill=(()=>{
    return out;
   };
  }
- return {full,options,remove,open,current,nextPage,selectSlot,closePicker};
+ return {full,options,remove,open,current,nextPage,selectSlot,closePicker,blocksSolo};
 })();
