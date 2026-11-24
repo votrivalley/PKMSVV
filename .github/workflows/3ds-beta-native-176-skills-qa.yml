@@ -9,6 +9,11 @@ on:
       - 'scripts/prepare-lan.cjs'
       - 'src/shared/coop-unified.js'
       - 'src/lan/wifi-bus.js'
+      - 'scripts/patch-native-passive-pressure.cjs'
+      - 'tests/native-passive-pressure.test.cjs'
+      - 'src/pkmsvv-3ds-support-stage4.js'
+      - 'src/pkmsvv-3ds-stage4-moves.js'
+      - 'src/lan/lan-ai.js'
       - 'src/pkmsvv-pippi.js'
       - 'src/pkmsvv-pippi-guide.js'
       - 'scripts/patch-3ds-skill-effects-passives.cjs'
@@ -103,6 +108,8 @@ jobs:
         run: |
           node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs tests/3ds-stage3-punch-cross-storm.test.cjs tests/3ds-stage4-support.test.cjs tests/3ds-stage5-combat.test.cjs tests/3ds-stage6-projectiles.test.cjs tests/3ds-stage7-dash-meteor.test.cjs tests/3ds-stage8-beam-nova-charge.test.cjs tests/3ds-stage9-homing-cone-melee.test.cjs tests/3ds-stage10-final.test.cjs
           node --test tests/save-guardian-regression.test.cjs
+      - name: Verify approved passive pressure scaling, boss crowd-control resistance and bot behavior
+        run: node --test tests/native-passive-pressure.test.cjs tests/lan-ai-modes.test.cjs tests/3ds-stage4-support.test.cjs
       - name: Verify complete 176-move cooldown policy including Light Screen / Rest / Protect
         env:
           PKMSVV_BROWSER: /usr/bin/google-chrome
