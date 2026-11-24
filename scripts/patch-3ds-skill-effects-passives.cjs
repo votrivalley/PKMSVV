@@ -24,7 +24,7 @@ patch('dev.html',
 // Existing 1/2/3 keys and R+X/Y/B + A paging stay in control of RunUI.
 patch('js/systems/levelup.js',
   '  function offer(pl, n = 3) {\n    const pool = candidates(pl);',
-  '  function offer(pl, n = 3) {\n    n = Math.max(n, G.PKMSVV3DSSkillPort?.offerCount(pl) || n);\n    const pool = candidates(pl);');
+  '  function offer(pl, n = 3) {\n    n = Math.min(3, Math.max(1, Number(n) || 3));\n    const pool = candidates(pl);');
 patch('js/systems/levelup.js',
   '    const used = new Set();\n    // Si hay una evolución lista',
   '    const used = new Set();\n    const minPassive = G.PKMSVV3DSSkillPort?.minimumPassiveCards(pl) || 0;\n    // Si hay una evolución lista');
