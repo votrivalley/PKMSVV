@@ -72,7 +72,11 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
     throw Error('Explorer runtime crash while Mewtwo alive');
    }
   }
-  assert.equal(checkpoints.at(-1).state,'playing');
+  // A native level-up popup may open exactly at the 100-second sampling
+  // boundary; it pauses gameplay intentionally and is NOT a runtime crash.
+  // Still fail on real 'over', 'ui', errors or recovery toast above.
+  assert.ok(['playing','levelup'].includes(checkpoints.at(-1).state),
+   'Explore must remain alive at 100s, possibly awaiting native level-up');
   console.log('PKMSVV_EXPLORE_100S_PASS='+JSON.stringify({mode,gameTime:checkpoints.at(-1).clock,errors,consoleErrors:consoleErrors.length,coopRouting:routing}));
  }finally{
   await page.evaluate(()=>{clearInterval(window.__pkmsvvIncidentKeeper);G.Game?.quit?.()}).catch(()=>{});
