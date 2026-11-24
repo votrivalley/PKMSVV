@@ -613,13 +613,20 @@ G.PKMSVVWiki=(()=>{
   if(typeof window==='undefined'||!window.location)return false;
   const host=String(window.location.hostname||'');
   if(!['localhost','127.0.0.1','beta.pkmsvv-web.pages.dev','research-ui-qa.pkmsvv-web.pages.dev'].includes(host))return false;
-  return /(?:^|[?&])pkmsvvLabLayers=1(?:&|$)/.test(String(window.location.search||''));
+  // Existing QA hosts opt into the original-art layer scene by default.
+  // Explicit 0 returns to the unchanged classic backdrop for comparison.
+  const query=String(window.location.search||'');
+  if(/(?:^|[?&])pkmsvvLabLayers=1(?:&|$)/.test(query))return true;
+  return !/(?:^|[?&])pkmsvvLabLayers=0(?:&|$)/.test(query);
  }
  function renderFurnitureLayers(stage){
   if(!stage)return;
-  stage.querySelectorAll('.pkmsvv-lab-furniture,.pkmsvv-lab-source-layer').forEach(x=>x.remove());
+  stage.querySelectorAll('.pkmsvv-lab-furniture,.pkmsvv-lab-source-layer,.pkmsvv-lab-station-prop').forEach(x=>x.remove());
   const modular=modularLabPreview();
-  stage.dataset.researchArtMode=modular?'modular':'classic';
+  const revision=String((Number(stage.dataset.labRenderRevision)||0)+1);
+  stage.dataset.labRenderRevision=revision;
+  stage.dataset.researchArtMode='classic';
+  const layerLoads=[];
   const E=G.PKMSVVCoopEconomy,conf=E?.config,save=G.DB?.save;
   if(!conf?.roomArt?.slots)return;
   if(modular)for(const part of conf.roomArt.sourceLayers||[]){
@@ -635,7 +642,35 @@ G.PKMSVVWiki=(()=>{
    img.style.width=part.w/960*100+'%';
    img.style.height=part.h/672*100+'%';
    img.setAttribute('aria-hidden','true');
+   layerLoads.push(new Promise(resolve=>{
+    img.addEventListener('load',()=>resolve(true),{once:true});
+    img.addEventListener('error',()=>resolve(false),{once:true});
+    if(img.complete)resolve(img.naturalWidth>0);
+   }));
    stage.prepend(img);
+  }
+  if(modular&&layerLoads.length){
+   const bg=new Image();
+   layerLoads.push(new Promise(resolve=>{
+    bg.onload=()=>resolve(true);bg.onerror=()=>resolve(false);
+    bg.src='images/coop-lab/source-cutouts-qa/clean-backdrop.png';
+   }));
+   Promise.all(layerLoads).then(ok=>{
+    if(stage.dataset.labRenderRevision===revision&&ok.every(Boolean))
+     stage.dataset.researchArtMode='modular';
+   });
+  }
+  // Real scenery props, independent from machine skins and clickable labels.
+  // A missing QA asset simply leaves the original room and label usable.
+  if(modular)for(const prop of conf.roomArt.stationProps||[]){
+   const img=document.createElement('img');
+   img.className='pkmsvv-lab-station-prop';img.dataset.labProp=prop.id;
+   img.src='images/coop-lab/source-cutouts-qa/'+prop.file;
+   img.alt='';img.draggable=false;img.setAttribute('aria-hidden','true');
+   img.style.left=prop.x/960*100+'%';img.style.top=prop.y/672*100+'%';
+   img.style.width=prop.w/960*100+'%';img.style.height=prop.h/672*100+'%';
+   img.addEventListener('error',()=>img.remove(),{once:true});
+   stage.append(img);
   }
   const owned=E.normal(save);
   for(const [slot,coords] of Object.entries(conf.roomArt.slots)){
@@ -813,10 +848,9 @@ G.PKMSVVWiki=(()=>{
     tip:'Mega thì mạnh đó. Nhưng nhớ nha: biến hình không chữa được tật bấm loạn nút!'},
    {id:'berry',x:10,y:150,w:92,h:65,vi:'Berry',en:'Berries',
     tip:'Berry thì ăn được. Còn mẫu cây tiền sử kia? Đừng có hái nấu canh!'},
-   // Lower-right workbench: the visible egg belongs to Bạn đồng hành,
-   // not to a floating toolbar icon or the unrelated support station.
+   // The Pippi sprite identifies the companion pedestal; the egg belongs to Support.
    {id:'companion',x:213,y:151,w:96,h:64,vi:'Bạn đồng hành',en:'Companions',
-    tip:'Đụng vào quả trứng này là tới phòng chăm sóc đồng hành. Đừng bắt tui ấp hộ nha!'},
+    tip:'Mèn ơi, chỗ này là để chăm sóc bạn đồng hành. Tui có giành cái bệ đâu nghen!'},
    {id:'fossil',x:115,y:62,w:91,h:82,vi:'Phục nguyên',en:'Restore fossils',
     tip:'Máy phục nguyên chưa tự chạy bằng niềm tin đâu nha. Hoàn thành Co-op lần đầu trước!'}
   ];
@@ -885,7 +919,7 @@ G.PKMSVVWiki=(()=>{
    b.setAttribute('aria-label',tr('Mở '+z.vi,'Open '+z.en));
    // The artwork is scenery, not an icon attached to a UI chip.
    // The whole furnishing (including its small caption) remains tappable.
-   if(stationArt[z.id]){
+   if(!modularLabPreview()&&stationArt[z.id]){
     const prop=document.createElement('span');prop.className='pkmsvv-research-scene-object';
     prop.dataset.researchObject=z.id;prop.setAttribute('aria-hidden','true');
     prop.innerHTML=stationArt[z.id];

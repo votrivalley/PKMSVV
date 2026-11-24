@@ -528,6 +528,48 @@
       }
     ],
     "modularPreviewBackground": "images/coop-lab/source-cutouts-qa/clean-backdrop.png",
-    "modularPreviewStatus": "QA only, artist approval pending; not purchasable or ready for swaps"
+    "modularPreviewStatus": "QA only, separate source furniture and semantic props; artist approval pending for hidden background and future purchased skins",
+    "stationProps": [
+      {
+        "id": "support",
+        "file": "prop-support.png",
+        "x": 113,
+        "y": 235,
+        "w": 115,
+        "h": 111
+      },
+      {
+        "id": "mega",
+        "file": "prop-mega.png",
+        "x": 730,
+        "y": 207,
+        "w": 103,
+        "h": 105
+      },
+      {
+        "id": "berry",
+        "file": "prop-berry.png",
+        "x": 111,
+        "y": 465,
+        "w": 117,
+        "h": 113
+      },
+      {
+        "id": "companion",
+        "file": "prop-companion.png",
+        "x": 747,
+        "y": 416,
+        "w": 100,
+        "h": 108
+      },
+      {
+        "id": "fossil",
+        "file": "prop-fossil.png",
+        "x": 431,
+        "y": 228,
+        "w": 98,
+        "h": 91
+      }
+    ]
   }
 }

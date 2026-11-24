@@ -7,6 +7,11 @@ on:
       - 'scripts/patch-lan-ai.cjs'
       - 'scripts/prepare-game.cjs'
       - 'scripts/prepare-lan.cjs'
+      - 'scripts/extract-research-layers.cjs'
+      - 'data/pkmsvv-coop-lab-catalog.json'
+      - 'src/pkmsvv-wiki.js'
+      - 'src/pkmsvv-pc-menu-clean-qa.css'
+      - 'tests/research-source-extraction.test.cjs'
       - 'src/shared/coop-unified.js'
       - 'src/lan/wifi-bus.js'
       - 'scripts/patch-native-passive-pressure.cjs'
@@ -108,6 +113,8 @@ jobs:
         run: |
           node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs tests/3ds-stage3-punch-cross-storm.test.cjs tests/3ds-stage4-support.test.cjs tests/3ds-stage5-combat.test.cjs tests/3ds-stage6-projectiles.test.cjs tests/3ds-stage7-dash-meteor.test.cjs tests/3ds-stage8-beam-nova-charge.test.cjs tests/3ds-stage9-homing-cone-melee.test.cjs tests/3ds-stage10-final.test.cjs
           node --test tests/save-guardian-regression.test.cjs
+      - name: Verify research room layer registry and semantic prop placement
+        run: node --test tests/research-source-extraction.test.cjs
       - name: Verify approved passive pressure scaling, boss crowd-control resistance and bot behavior
         run: node --test tests/native-passive-pressure.test.cjs tests/lan-ai-modes.test.cjs tests/3ds-stage4-support.test.cjs
       - name: Verify complete 176-move cooldown policy including Light Screen / Rest / Protect

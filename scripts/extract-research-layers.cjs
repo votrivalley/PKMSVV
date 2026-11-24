@@ -114,6 +114,27 @@ async function main(){
   const offset=i*channels;
   for(let c=0;c<channels;c++)clean[offset+c]=smooth[offset+c];
  }
+ // Five independently replaceable semantic props from the original game atlas.
+ // Trim transparent gutters before placement; preserve the original pixels.
+ const atlas=path.join(root,'assets/research-station-icons.png');
+ const am=await sharp(atlas).metadata();
+ if(am.width%5!==0||am.width/5!==am.height)throw Error('Unexpected five-cell station atlas');
+ manifest.stationProps=[];
+ for(const [index,id] of ['support','mega','berry','companion','fossil'].entries()){
+  const cell=await sharp(atlas).extract({left:index*am.height,top:0,width:am.height,height:am.height})
+   .ensureAlpha().raw().toBuffer({resolveWithObject:true});
+  let x0=am.height,y0=am.height,x1=-1,y1=-1;
+  for(let y=0;y<am.height;y++)for(let x=0;x<am.height;x++)
+   if(cell.data[(y*am.height+x)*4+3]>0){
+    x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);
+   }
+  if(x1<x0)throw Error('Empty research prop '+id);
+  const file='prop-'+id+'.png';
+  const buf=await sharp(cell.data,{raw:cell.info}).extract({left:x0,top:y0,width:x1-x0+1,height:y1-y0+1})
+   .png().toBuffer();
+  fs.writeFileSync(path.join(out,file),buf);
+  manifest.stationProps.push({id,file,width:x1-x0+1,height:y1-y0+1});
+ }
  const backdrop='clean-backdrop.png';
  fs.writeFileSync(path.join(out,backdrop),await sharp(clean,{raw:{
   width:canvas.width,height:canvas.height,channels}}).png().toBuffer());
