@@ -65,6 +65,7 @@ for(const file of ['lan-connect.html','lan-connect.js'])
    // Restore gameplay QA controls omitted by this newer native Beta packaging:
    // 8/MAX auto-level-up, active skill AUTO, speed, controller shortcuts.
    'pkmsvv-runtime-controls-qa.js',
+   'pkmsvv-modal-navigation-qa.js',
    // A real in-world Sky Pillar tileset, NOT just the region-menu WebP card.
    'pkmsvv-sky-tower-world-qa.js'
   ];
@@ -72,6 +73,7 @@ for(const file of ['lan-connect.html','lan-connect.js'])
    'pkmsvv-box-stage1.css','pkmsvv-box-stage2.css','pkmsvv-box-stage3.css',
    'pkmsvv-box-hub.css','pkmsvv-v20-ui-qa.css','pkmsvv-quick-region.css',
    'pkmsvv-runtime-controls-qa.css',
+   'pkmsvv-modal-navigation-qa.css',
    // Restore the full-width held-item comparison styles from the older QA
    // build, with a targeted override after native item modal styles.
    'pkmsvv-held-item-layout-qa.css'
