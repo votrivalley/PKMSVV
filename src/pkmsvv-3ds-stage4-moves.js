@@ -41,7 +41,7 @@ G.PKMSVV3DSStage4Moves=(()=>{
    desc:'Giảm 35% sát thương đặc biệt trong 8 giây.',
    cd:10,amount:.35,dur:8,shield:1},
   {id:'rest',name:'Rest',type:'psychic',kind:'rest',
-   desc:'Hồi 60% HP tối đa và ngủ 2 giây: không di chuyển hay tấn công.',
+   desc:'Tự kích hoạt khi HP dưới 40%: hồi 60% HP tối đa, ngủ 2 giây (không di chuyển hay tấn công).',
    cd:18,amount:.6,dur:2},
   {id:'double-team',name:'Double Team',type:'normal',kind:'decoy',
    desc:'Để lại một phân thân hút quái thường trong bán kính 260, tồn tại 4 giây.',
