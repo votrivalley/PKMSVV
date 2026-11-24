@@ -43,6 +43,30 @@ const {startServer}=require('../lan-server/server.cjs');
   assert.deepEqual({wifi:hostStatus.wifi,mode:hostStatus.mode,documentHasGame:hostStatus.documentHasGame},
    {wifi:true,mode,documentHasGame:true});
   console.log('COOP_WEBRTC_REAL_HOST_PASS='+JSON.stringify(hostStatus));
+  if(mode==='fossil_lab'){
+   // Pippi is allowed to teach players first, but the native Fossil room
+   // MUST already exist and keep the requested mode across this modal.
+   const tutorial=await host.evaluate(()=>{
+    const guide=G.PKMSVVPippiGuide,lines=[];
+    if(guide?.current?.kind==='mode_fossil_lab'){
+     let n=0;while(guide.current?.kind==='mode_fossil_lab'&&n++<5){
+      lines.push(document.querySelector('.pkmsvv-pippi-guide-line')?.textContent||'');
+      guide.next();
+     }
+    }
+    return {kind:guide?.current?.kind||null,lines,
+     nativeReady:G.PKMSVVFossilExpedition?.nativeReady};
+   });
+   assert.equal(tutorial.nativeReady,true,'Fossil expedition must be ready inside real Wi-Fi Co-op');
+   assert.equal(tutorial.lines.length,3,'Pippi must explain all three actual fossil phases');
+   assert.match(tutorial.lines.join(' '),/9 mảnh/);
+   assert.match(tutorial.lines.join(' '),/Golurk/);
+   assert.match(tutorial.lines.join(' '),/phút 4/);
+   assert.match(tutorial.lines.join(' '),/phút 8/);
+   assert.match(tutorial.lines.join(' '),/Mèn đét ơi|Mèn ơi|U là trời/);
+   console.log('COOP_FOSSIL_PIPPI_SOUTHERN_GUIDE_PASS='+JSON.stringify(tutorial));
+  }
+
   await guest.goto(base+'/ai/game/?pkmsvvWifi=1&pkmsvvRole=join&pkmsvvMode='+mode,{waitUntil:'domcontentloaded',timeout:45000});
   await guest.waitForFunction(()=>window.PKMSVV_WIFI===true&&!!G.LanBus?.answer&&!!window.PKMSVVWifiUI?.join,{timeout:35000});
   await guest.waitForFunction(()=>!!document.querySelector('.pkmsvv-wifi-panel')||!!document.querySelector('#pkmsvv-unified-coop'),{timeout:18000});
@@ -65,5 +89,22 @@ const {startServer}=require('../lan-server/server.cjs');
   assert.equal(guestRoom,mode,'Guest must receive exactly the Host-selected game mode');
   assert.deepEqual(errs,[],'No uncaught host/join runtime errors');
   console.log('COOP_WEBRTC_TWO_REAL_PAGES_JOIN_PASS='+JSON.stringify({room,guestRoom,errors:errs}));
+  if(mode==='fossil_lab'&&process.env.PKMSVV_WIFI_START_MISSION==='1'){
+   await guest.evaluate(()=>{G.PKMSVVPippiGuide?.close?.();G.LobbyUI?.open?.();});
+   await host.evaluate(()=>G.PKMSVVPippiGuide?.close?.());
+   await host.locator('#lobby-start').click({timeout:18000});
+   await host.waitForFunction(()=>G.Game?.state==='playing'&&G.PKMSVVFossilExpedition?.active===true,null,{timeout:30000});
+   await guest.waitForFunction(()=>G.Game?.state==='playing',null,{timeout:30000});
+   const state=await host.evaluate(()=>({
+    mode:G.Social.room?.mode,playerCount:G.Social.room?.members?.length,
+    sites:G.PKMSVVFossilExpedition.session?.sites?.length,
+    phase:G.PKMSVVFossilExpedition.session?.phase
+   }));
+   assert.equal(state.mode,'fossil_lab');
+   assert.equal(state.playerCount,2);
+   assert.equal(state.sites,3);
+   console.log('COOP_FOSSIL_TWO_HUMAN_WIRELESS_REAL_GAME_PASS='+JSON.stringify(state));
+  }
+
  }finally{await browser.close();await server?.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
