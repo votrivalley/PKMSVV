@@ -35,6 +35,7 @@ for(const file of ['lan-connect.html','lan-connect.js'])
  if(!fs.existsSync(path.join(lab,'room_base.png')))throw Error('Fossil Lab native room missing');
  fs.cpSync(lab,path.join(images,'coop-lab'),{recursive:true});
  if(process.env.PKMSVV_FOSSIL_NATIVE_QA==='1'){
+  if(fs.existsSync(v3))execFileSync(process.execPath,[path.join(root,'scripts/build-research-v3-skins.cjs'),path.join(images,'coop-lab','research-v3','skins')],{cwd:root,stdio:'inherit'});
   const layers=path.join(images,'coop-lab','source-cutouts-qa');
   execFileSync(process.execPath,[path.join(root,'scripts/extract-research-layers.cjs'),layers],
    {cwd:root,stdio:'inherit'});
@@ -123,6 +124,7 @@ for(const file of ['lan-connect.html','lan-connect.js'])
    const runtimeFlags='window.PKMSVV_PIPPI_COUSIN_QA_100=false;\n'+
     'window.PKMSVV_MEGA_FULL_CATALOG_QA=true;\n'+
     'window.PKMSVV_RESEARCH_V3_QA='+String(fs.existsSync(path.join(v3,'manifest.json')))+';\n'+
+    'window.PKMSVV_RESEARCH_SKIN_QA=true;\n'+
     'window.PKMSVV_RESEARCH_ART_QA='+JSON.stringify(require('../data/pkmsvv-coop-lab-catalog.json').roomArt)+';\n';
    const qaConfig='pkmsvv-qa-runtime-config.js';
    fs.mkdirSync(path.join(folder,'js/ui'),{recursive:true});

@@ -6,6 +6,7 @@ on:
       - '.github/workflows/research-modular-layers-qa.yml'
       - 'scripts/extract-research-layers.cjs'
       - 'scripts/export-research-v3-review.cjs'
+      - 'scripts/build-research-v3-skins.cjs'
       - 'scripts/import-research-v3.cjs'
       - 'assets/coop-lab/research-v3/**'
       - 'docs/research-lab-layer-preview.html'
@@ -61,6 +62,8 @@ jobs:
 
       - name: Verify exact V3 assets and export independent furniture omission previews
         run: node scripts/export-research-v3-review.cjs dist/research-v3-art-review
+      - name: Generate and verify prototype station skin PNGs
+        run: node scripts/build-research-v3-skins.cjs dist/research-v3-art-review/skins
       - name: Upload V3 art review (no furniture purchase or equip)
         uses: actions/upload-artifact@v4
         with:

@@ -53,6 +53,25 @@ const {startServer}=require('../lan-server/server.cjs');
   assert.equal(await page.locator('[data-build-equip]:not(:disabled)').count(),0);
   assert.equal(await page.evaluate(()=>JSON.stringify(G.DB.save.pkmsvvCoopLab??null)),v3Save);
   await page.locator('.pkmsvv-build-stage').screenshot({path:path.join(out,'research-v3-construction.png')});
+  assert.equal(await page.locator('[data-build-slot]').count(),5);
+  const skinSelections=[];
+  for(const [slot,station] of [['center','fossil'],['shelf_left','support'],['shelf_right','mega'],['garden','berry'],['trophy','companion']]){
+   await page.locator('[data-build-slot="'+slot+'"]').click();
+   await page.locator('[data-build-preview="copper"]').click();
+   await page.waitForFunction(id=>document.querySelector('.pkmsvv-build-stage [data-lab-layer="'+id+'"]')?.dataset.labSkin==='copper',station);
+   skinSelections.push(station);
+   const actual=await page.locator('.pkmsvv-build-stage [data-lab-skin="copper"]').evaluateAll(es=>es.map(x=>x.dataset.labLayer).sort());
+   assert.deepEqual(actual,[...skinSelections].sort());
+   assert.equal(await page.evaluate(()=>JSON.stringify(G.DB.save.pkmsvvCoopLab??null)),v3Save);
+  }
+  await page.locator('.pkmsvv-build-stage').screenshot({path:path.join(out,'research-v3-copper-preview.png')});
+  await page.locator('[data-build-preview-reset]').click();
+  await page.waitForFunction(()=>document.querySelectorAll('.pkmsvv-build-stage [data-lab-skin="default"]').length===6);
+  assert.equal(await page.evaluate(()=>JSON.stringify(G.DB.save.pkmsvvCoopLab??null)),v3Save);
+  await page.locator('.pkmsvv-build-panel [data-back]').click();await verifyV3('.pkmsvv-research-room');
+  assert.equal(await page.locator('.pkmsvv-research-room [data-lab-skin="copper"]').count(),0);
+  await page.locator('[data-research-build]').click();await verifyV3('.pkmsvv-build-stage');
+  assert.equal(await page.locator('.pkmsvv-build-stage [data-lab-skin="copper"]').count(),0);
   const landscape=[];
   for(const [width,height] of [[844,390],[667,375],[640,360]]){
    await page.setViewportSize({width,height});await open();await verifyV3('.pkmsvv-research-room');
