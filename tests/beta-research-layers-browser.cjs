@@ -62,7 +62,10 @@ const {startServer}=require('../lan-server/server.cjs');
   const skinSelections=[];
   for(const [slot,station] of [['center','fossil'],['shelf_left','support'],['shelf_right','mega'],['garden','berry'],['trophy','companion']]){
    await page.locator('[data-build-slot="'+slot+'"]').click();
+   const titles={fossil:['Máy phục nguyên','Restoration machine'],support:['Pokémon hỗ trợ','Supports'],mega:['Mega'],berry:['Berry','Berries'],companion:['Bạn đồng hành','Companions']};
+   assert.ok(titles[station].includes((await page.locator('.pkmsvv-build-info h3').textContent()).trim()),'Invalid station title '+station);
    assert.equal(await page.locator('[data-skin-item="'+station+'_copper"] [data-skin-state="unowned"]').count(),1);
+   assert.ok(!/Locked bán/i.test(await page.locator('.pkmsvv-build-info').innerText()),'Mixed locale in shop');
    assert.equal(await page.locator('[data-skin-transaction]:not(:disabled)').count(),0);
    await page.locator('[data-build-preview="copper"]').click();
    await page.waitForFunction(id=>document.querySelector('.pkmsvv-build-stage [data-lab-layer="'+id+'"]')?.dataset.labSkin==='copper',station);
@@ -123,8 +126,75 @@ const {startServer}=require('../lan-server/server.cjs');
   assert.equal(await page.locator('.pkmsvv-research-room').getAttribute('data-research-art-mode'),'classic');
   assert.equal(await page.locator('.pkmsvv-lab-source-layer').count(),0);
   await page.locator('.pkmsvv-research-room').screenshot({path:path.join(out,'research-original-fallback.png')});
+  // Paid flow is an intercepted test-only catalog in a fresh browser context.
+  // No real price or sale flag in the packaged game is changed. Commit is a
+  // mock that captures the exact saved state; no persistent profile is written.
+  const paidPage=await browser.newPage({viewport:{width:1280,height:920}});
+  const paidErrors=[];paidPage.on('pageerror',e=>paidErrors.push(String(e)));
+  const realRegistry=require('../data/pkmsvv-coop-lab-catalog.json').stationSkins;
+  assert.equal(realRegistry.purchaseEnabled,false);
+  const fixture={...realRegistry,purchaseEnabled:true,variants:realRegistry.variants.map(x=>({...x,artApproved:true,price:100}))};
+  const paidFlow={fixturePrice:100,initialCoins:350,mockCommit:true};
+  try{
+   await paidPage.addInitScript(()=>{window.__pkmsvvPippiGuideQABypass=true;});
+   await paidPage.route('**/pkmsvv-research-skin-economy-qa.js*',async route=>{
+    const response=await route.fetch(),body=await response.text();
+    const needle=JSON.stringify(realRegistry);assert.ok(body.includes(needle),'Missing closed registry');
+    await route.fulfill({response,body:body.replace(needle,JSON.stringify(fixture))});
+   });
+   const setup=async(saved)=>{
+    await paidPage.goto(url,{waitUntil:'domcontentloaded',timeout:45000});
+    await paidPage.waitForFunction(()=>!!window.G?.DB?.save&&!!G.MenuUI?.open&&!!window.PKMSVVStationSkinEconomy?.registry?.purchaseEnabled);
+    await paidPage.evaluate(state=>{
+     G.DB.save.partner=25;G.DB.save.pkmsvvStorySeen=true;G.DB.save.pkmsvvNameChosen=true;
+     G.DB.save.pkmsvvCoopLab=state;
+     // DB.commit is replaced only on this test page, and guest is overridden
+     // solely to exercise the same UI actions as a local non-guest profile.
+     Object.defineProperty(G.DB,'guest',{value:false,writable:true,configurable:true});
+     window.__skinTestCommitCount=0;window.__skinTestFail=false;
+     G.DB.commit=()=>{if(window.__skinTestFail)return false;window.__skinTestCommitCount++;
+      window.__skinTestSaved=JSON.stringify(G.DB.save.pkmsvvCoopLab);return true;};
+     G.MenuUI.open();document.querySelector('#pkmsvv-menu-wiki').click();
+    },saved);
+    await paidPage.waitForFunction(()=>document.querySelector('.pkmsvv-research-room')?.dataset.researchArtMode==='approved-v3');
+   };
+   const openBuild=async()=>{
+    await paidPage.locator('[data-research-build]').click();
+    await paidPage.waitForFunction(()=>document.querySelector('.pkmsvv-build-stage')?.dataset.researchArtMode==='approved-v3');
+   };
+   const select=slot=>paidPage.locator('[data-build-slot="'+slot+'"]').click();
+   const action=id=>paidPage.locator('[data-skin-transaction="'+id+'"]');
+   const state=async(id,value)=>paidPage.waitForFunction(([id,value])=>document.querySelector('[data-skin-item="'+id+'"] [data-skin-state]')?.dataset.skinState===value,[id,value]);
+   const wallet=async(n)=>paidPage.waitForFunction(n=>document.querySelector('[data-skin-wallet]')?.dataset.skinWallet===String(n),n);
+   const sprite=async(station,skin,selector='.pkmsvv-build-stage')=>paidPage.waitForFunction(([station,skin,selector])=>document.querySelector(selector+' [data-lab-layer="'+station+'"]')?.dataset.labSkin===skin,[station,skin,selector]);
+   await setup({machineUnlocked:true,coopCoins:350,ownedDecor:{machine_old:true,gold_pippi_statue:true},equippedDecorBySlot:{center:'machine_old',trophy:'gold_pippi_statue'}});
+   await openBuild();await select('shelf_right');await state('mega_copper','unowned');await wallet(350);
+   await action('mega_copper').click();await state('mega_copper','owned');await wallet(250);
+   await action('mega_copper').click();await state('mega_copper','equipped');await sprite('mega','copper');await wallet(250);
+   assert.equal(await action('mega_copper').isDisabled(),true);
+   await sprite('support','default');
+   await paidPage.locator('.pkmsvv-build-panel').screenshot({path:path.join(out,'research-v3-skin-purchased-fixture.png')});
+   await paidPage.locator('.pkmsvv-build-panel [data-back]').click();await sprite('mega','copper','.pkmsvv-research-room');
+   const persisted=await paidPage.evaluate(()=>JSON.parse(window.__skinTestSaved));
+   assert.equal(persisted.coopCoins,250);assert.equal(persisted.equippedDecorBySlot.trophy,'gold_pippi_statue');
+   assert.equal(await paidPage.evaluate(()=>window.__skinTestCommitCount),2);
+   await setup(persisted);await sprite('mega','copper','.pkmsvv-research-room');await openBuild();await select('shelf_right');
+   await state('mega_copper','equipped');await action('default').click();await state('mega_copper','owned');await sprite('mega','default');await wallet(250);
+   await action('mega_copper').click();await state('mega_copper','equipped');await sprite('mega','copper');await wallet(250);
+   await select('garden');await paidPage.evaluate(()=>{window.__skinTestFail=true;});
+   await action('berry_copper').click();
+   await paidPage.waitForFunction(()=>document.querySelector('[data-skin-transaction="berry_copper"]')?.disabled===false);
+   await state('berry_copper','unowned');await wallet(250);
+   assert.equal(await paidPage.evaluate(()=>G.DB.save.pkmsvvCoopLab.stationSkins.owned.berry_copper===true),false);
+   await paidPage.evaluate(()=>{window.__skinTestFail=false;});
+   await action('berry_copper').click();await state('berry_copper','owned');await wallet(150);
+   await action('berry_copper').click();await state('berry_copper','equipped');await sprite('berry','copper');await sprite('mega','copper');
+   assert.equal(await paidPage.evaluate(()=>window.__skinTestCommitCount),4);
+   assert.deepEqual(paidErrors,[]);
+   paidFlow.status='PASS';paidFlow.finalCoins=150;paidFlow.reloadFromMockSnapshot=true;paidFlow.rollback=true;paidFlow.independentEquip=true;
+  }finally{await paidPage.close();}
   assert.deepEqual(errors,[]);
-  fs.writeFileSync(path.join(out,'report.json'),JSON.stringify({status:'PASS',v3,labels,landscape,room,errors},null,2));
+  fs.writeFileSync(path.join(out,'report.json'),JSON.stringify({status:'PASS',v3,labels,landscape,room,errors,paidFlow},null,2));
   console.log('PKMSVV_RESEARCH_LAYERS_BROWSER_PASS',JSON.stringify(room));
  }catch(e){
   const state=await page.evaluate(()=>({economy:!!window.G?.PKMSVVCoopEconomy,artRegistry:!!window.PKMSVV_RESEARCH_ART_QA,mode:document.querySelector('.pkmsvv-research-room,.pkmsvv-build-stage')?.dataset.researchArtMode,images:[...document.querySelectorAll('.pkmsvv-lab-source-layer,.pkmsvv-lab-station-prop')].map(i=>({src:i.src,complete:i.complete,width:i.naturalWidth}))})).catch(()=>null);

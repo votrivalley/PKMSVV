@@ -838,7 +838,7 @@ G.PKMSVVWiki=(()=>{
   function inspect(slot){
    const record=slots.find(x=>x[0]===slot);if(!record)return;
    stage.querySelectorAll('.pkmsvv-build-spot').forEach(b=>b.classList.toggle('selected',b.dataset.buildSlot===slot));
-   h.textContent=tr(record[5]==='Revival machine'?'Máy phục nguyên':record[4],record[5]);
+   h.textContent=tr(record[5],record[6]);
    const save=current();
    desc.textContent=tr('Đang trang bị: ','Equipped: ')+
     (names[save.equippedDecorBySlot?.[slot]]?.[G.I18n?.lang==='en'?1:0]||
@@ -859,7 +859,7 @@ G.PKMSVVWiki=(()=>{
      const row=document.createElement('div');row.className='pkmsvv-build-item';row.dataset.skinItem=id;
      const label=document.createElement('span');label.textContent=displayName(id);
      const state=document.createElement('small');state.dataset.skinState=equipped===id?'equipped':item.owned?'owned':'unowned';
-     state.textContent=equipped===id?tr('Đang trang bị','Equipped'):item.owned?tr('Đã sở hữu','Owned'):item.available?tr('Chưa sở hữu','Not owned'):tr('Chưa sở hữu · Chưa mở bán','Not owned · Not for sale');
+     state.textContent=equipped===id?tr('Đang trang bị','Equipped'):item.owned?tr('Đã sở hữu','Owned'):item.available?tr('Chưa sở hữu','Not owned'):tr('Chưa sở hữu · Chưa bán','Not owned · Not for sale');
      if(item.available&&!item.owned)state.textContent+=' · '+item.price+' '+tr('xu','coins');
      const b=document.createElement('button');b.type='button';b.className='pkmsvv-pc-close';b.dataset.buildPreview=variant;
      b.disabled=variant===selected;b.textContent=variant===selected?tr('Đang xem','Previewed'):tr('Xem thử','Preview');
@@ -867,7 +867,7 @@ G.PKMSVVWiki=(()=>{
      const action=document.createElement('button');action.type='button';action.className='pkmsvv-pc-close';action.dataset.skinTransaction=id;
      const gate=economy?.registry?.purchaseEnabled===true&&view?.unlocked===true&&!G.DB?.guest&&typeof G.DB?.commit==='function';
      action.disabled=!gate||!item.available||equipped===id||(!item.owned&&view.coins<item.price);
-     action.textContent=equipped===id?tr('Đang đặt','Equipped'):!item.available?tr('Chưa mở bán','Not for sale'):!gate?tr('Chưa mở','Locked'):item.owned?tr('Trang bị','Equip'):tr('Mua · '+item.price+' xu','Buy · '+item.price+' coins');
+     action.textContent=equipped===id?tr('Đang đặt','Equipped'):!item.available?tr('Chưa bán','Not for sale'):!gate?tr('Yêu cầu Co-op','Locked'):item.owned?tr('Trang bị','Equip'):tr('Mua · '+item.price+' xu','Buy · '+item.price+' coins');
      action.onclick=async()=>{
       if(action.disabled)return;
       action.disabled=true;
@@ -880,7 +880,7 @@ G.PKMSVVWiki=(()=>{
        const valid=file&&await new Promise(resolve=>{const img=new Image();img.onload=()=>resolve(img.naturalWidth===expected[0]&&img.naturalHeight===expected[1]);img.onerror=()=>resolve(false);img.src='images/coop-lab/research-v3/'+file;});
        if(!valid){if(stage.isConnected)inspect(slot);return;}
       }
-      if(!stage.isConnected||player!==G.DB?.save||G.DB?.guest||typeof G.DB?.commit!=='function')return;
+      if(!stage.isConnected||!action.isConnected||player!==G.DB?.save||G.DB?.guest||typeof G.DB?.commit!=='function')return;
       const commit=()=>G.DB.commit(true);
       const result=item.owned?economy.equipSkin(player,station,id,commit):economy.buySkin(player,id,commit);
       if(result.ok){delete stage.dataset['skin'+station];renderFurnitureLayers(stage);G.UI?.refreshCoins?.();}
@@ -938,7 +938,7 @@ G.PKMSVVWiki=(()=>{
   const footer=document.createElement('p');footer.className='pkmsvv-pc-hint';
   footer.textContent=tr('Ảnh gốc là tranh ghép một lớp: hiện giữ nguyên để bảo toàn chất lượng. Việc tách từng món và phục dựng phần tường/sàn bị che sẽ cần kiểm định mỹ thuật riêng; không tự trừ xu cho đồ chưa hoàn chỉnh.',
     'The original room is one flattened image, preserved for visual quality. Extracted furnishings and obscured background still require art validation; unfinished items cannot charge coins.');
-  if(skinQA)footer.textContent=tr('Skin chỉ đổi ngoại hình, không đổi chức năng của máy. Danh mục hiện chưa mở bán.','Skins change appearance only. The current catalog is not for sale.');
+  if(skinQA)footer.textContent=tr('Skin chỉ đổi ngoại hình, không đổi chức năng của máy. Danh mục hiện chưa bán.','Skins change appearance only. The current catalog is not for sale.');
   box.append(footer);overlay.append(box);document.body.append(overlay);
   inspect('center');back.focus({preventScroll:true});
   G.PKMSVVPippiGuide?.openFeature?.('construction');return true;
