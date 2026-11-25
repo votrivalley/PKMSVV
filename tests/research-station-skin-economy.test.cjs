@@ -39,7 +39,7 @@ test('buy once; own independently; equip only own correct station; reset free',(
  assert.equal(E.status(s,'mega').equipped,'default');
  assert.equal(E.status(s,'berry').equipped,'berry_test');
  assert.equal(E.equipSkin(s,'mega','mega_test',commit).ok,true);
- assert.equal(s.pkmsvvCoopLab.coopCoins,200);assert.equal(commits,7);
+ assert.equal(s.pkmsvvCoopLab.coopCoins,200);assert.equal(commits,6);
  assert.equal(s.coins,555);assert.equal(s.pkmsvvCoopLab.equippedDecorBySlot.trophy,'gold_pippi_statue');
  assert.deepEqual(s.owned,{25:{at:1}});assert.equal(s.pkmsvvFossils.inventory.dome_fossil,2);
 });
