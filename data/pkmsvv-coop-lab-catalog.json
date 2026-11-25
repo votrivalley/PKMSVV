@@ -571,5 +571,69 @@
         "h": 91
       }
     ]
+  },
+  "stationSkins": {
+    "schemaVersion": 1,
+    "purchaseEnabled": false,
+    "defaultId": "default",
+    "stations": [
+      "support",
+      "mega",
+      "berry",
+      "companion",
+      "fossil"
+    ],
+    "variants": [
+      {
+        "id": "support_copper",
+        "station": "support",
+        "variant": "copper",
+        "nameVi": "Đồng đỏ — mẫu thử",
+        "nameEn": "Copper — prototype",
+        "price": null,
+        "artApproved": false,
+        "spritePath": "images/coop-lab/research-v3/skins/support-copper.png"
+      },
+      {
+        "id": "mega_copper",
+        "station": "mega",
+        "variant": "copper",
+        "nameVi": "Đồng đỏ — mẫu thử",
+        "nameEn": "Copper — prototype",
+        "price": null,
+        "artApproved": false,
+        "spritePath": "images/coop-lab/research-v3/skins/mega-copper.png"
+      },
+      {
+        "id": "berry_copper",
+        "station": "berry",
+        "variant": "copper",
+        "nameVi": "Đồng đỏ — mẫu thử",
+        "nameEn": "Copper — prototype",
+        "price": null,
+        "artApproved": false,
+        "spritePath": "images/coop-lab/research-v3/skins/berry-copper.png"
+      },
+      {
+        "id": "companion_copper",
+        "station": "companion",
+        "variant": "copper",
+        "nameVi": "Đồng đỏ — mẫu thử",
+        "nameEn": "Copper — prototype",
+        "price": null,
+        "artApproved": false,
+        "spritePath": "images/coop-lab/research-v3/skins/companion-copper.png"
+      },
+      {
+        "id": "fossil_copper",
+        "station": "fossil",
+        "variant": "copper",
+        "nameVi": "Đồng đỏ — mẫu thử",
+        "nameEn": "Copper — prototype",
+        "price": null,
+        "artApproved": false,
+        "spritePath": "images/coop-lab/research-v3/skins/fossil-copper.png"
+      }
+    ]
   }
 }

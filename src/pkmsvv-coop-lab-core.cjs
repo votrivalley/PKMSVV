@@ -20,6 +20,7 @@ function normal(save){
   lastSettledSeq:Number.isSafeInteger(source.lastSettledSeq)&&source.lastSettledSeq>=0?source.lastSettledSeq:0,
   ownedDecor:{machine_old:true,...(source.ownedDecor||{})},
   equippedDecorBySlot:{center:'machine_old',...(source.equippedDecorBySlot||{})},
+  ...(Object.hasOwn(source,'stationSkins')?{stationSkins:skinState(source.stationSkins)}:{}),
   supplies:{...(source.supplies||{})},
   cosmetics:{...(source.cosmetics||{})},
   lastExchangeWeek:typeof source.lastExchangeWeek==='string'?source.lastExchangeWeek:'',
@@ -147,4 +148,65 @@ function exchange(save,commit,now=Date.now()){
    weeklyUsed:s.weeklyPokeCoins,week:key};
  },commit,(player,_,result)=>{player.coins+=result.awarded;});
 }
-module.exports={config,normal,isMachineUnlocked,buy,equip,settle,exchange,weekKey,buySupply};
+
+/* Station skins are separate from legacy furniture. Old profiles retain their
+ * shape until the first successful skin transaction. No silent migration.
+ * The production catalog is closed; the injectable registry is for tests. */
+function skinMap(value){
+ return value&&typeof value==='object'&&!Array.isArray(value)?{...value}:{};
+}
+function skinState(value){
+ return {owned:skinMap(value?.owned),equipped:skinMap(value?.equipped)};
+}
+function createStationSkinEconomy(registry){
+ const stations=new Set(['support','mega','berry','companion','fossil']);
+ const entries=new Map((registry?.variants||[]).map(x=>[x.id,x]));
+ const ready=item=>!!item&&registry?.purchaseEnabled===true&&item.artApproved===true&&
+  stations.has(item.station)&&typeof item.spritePath==='string'&&item.spritePath.length>0&&
+  Number.isSafeInteger(item.price)&&item.price>0;
+ function status(save,station){
+  if(!stations.has(station))return null;
+  const s=normal(save),state=skinState(s.stationSkins);
+  const item=entries.get(state.equipped[station]);
+  const equipped=ready(item)&&item.station===station&&state.owned[item.id]===true?item.id:'default';
+  return {station,equipped,unlocked:s.machineUnlocked,coins:s.coopCoins,
+   variants:[{id:'default',owned:true,available:true,price:0},...[...entries.values()].filter(x=>x.station===station)
+    .map(x=>({id:x.id,owned:state.owned[x.id]===true,available:ready(x),price:x.price}))]};
+ }
+ function buySkin(save,id,commit){
+  const item=entries.get(id);
+  if(!ready(item))return {ok:false,reason:'unavailable'};
+  return change(save,s=>{
+   if(!s.machineUnlocked)return {ok:false,reason:'locked'};
+   const next=skinState(s.stationSkins);
+   if(next.owned[id]===true)return {ok:false,reason:'owned'};
+   if(s.coopCoins<item.price)return {ok:false,reason:'coins'};
+   s.coopCoins-=item.price;next.owned[id]=true;s.stationSkins=next;
+   return {ok:true,itemId:id,remaining:s.coopCoins};
+  },commit);
+ }
+ function equipSkin(save,station,id,commit){
+  if(!stations.has(station))return {ok:false,reason:'station'};
+  const item=entries.get(id);
+  if(id!=='default'&&(!ready(item)||item.station!==station))return {ok:false,reason:'unavailable'};
+  if(registry?.purchaseEnabled!==true)return {ok:false,reason:'unavailable'};
+  return change(save,s=>{
+   if(!s.machineUnlocked)return {ok:false,reason:'locked'};
+   const next=skinState(s.stationSkins);
+   if(id!=='default'&&next.owned[id]!==true)return {ok:false,reason:'not-owned'};
+   if(id==='default'){
+    if(!Object.hasOwn(next.equipped,station))return {ok:false,reason:'equipped'};
+    delete next.equipped[station];
+   }else{
+    if(next.equipped[station]===id)return {ok:false,reason:'equipped'};
+    next.equipped[station]=id;
+   }
+   s.stationSkins=next;
+   return {ok:true,station,itemId:id};
+  },commit);
+ }
+ return {status,buySkin,equipSkin};
+}
+const stationSkinEconomy=createStationSkinEconomy(config.stationSkins);
+
+module.exports={config,normal,isMachineUnlocked,buy,equip,settle,exchange,weekKey,buySupply,stationSkinEconomy,createStationSkinEconomy};
