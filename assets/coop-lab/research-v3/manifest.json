@@ -7,7 +7,8 @@
   "sourceSha256": "3be4195c98dd96d3ea1696313bf42f124366d1158ce94fe450b60ae04ec1937f",
   "background": "backdrop.png",
   "readyForFurnitureSwap": false,
-  "backgroundRepair": "Draft cloned tile texture under removed furniture; final art QA required",
+  "backgroundRepair": "V3.1: restored continuous floor tile rows, wall belt and central brass outline; visual approval still required",
+  "backgroundRevision": "3.1-qa",
   "layers": [
     {
       "id": "crest",
@@ -113,6 +114,6 @@
       "h": 52
     }
   ],
-  "pixelExactReassemblyAfterLabelRepair": true,
+  "pixelExactReassemblyAfterLabelRepair": false,
   "overlappingLayerPixels": 0
 }

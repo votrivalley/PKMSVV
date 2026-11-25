@@ -1,5 +1,5 @@
 'use strict';
-// Verify the exact approved V3 files before copying into the repository.
+// Verify the exact V3.1 QA pack (six unchanged V3 sprites and repaired backdrop) before copying into the repository.
 // Usage: node scripts/import-research-v3.cjs <extracted ZIP directory>
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const sharp=require('sharp');
@@ -8,10 +8,10 @@ const expected={
  'crest.png':['c35696d54cd30bc383d55f044374a86795311f32fb9c8c176ad1a59fb99e94b4',175,115],
  'companion.png':['a3a90ba5e5856ad9ef17f787fea09979a4aebec48f7b08569257d15447e54dbd',452,305],
  'mega.png':['9ee78d08c4a553b767353423707db3659f0cfab13615bfb47bc23d80f7974d36',453,328],
- 'manifest.json':['317c55e373dc68df862e23ad007e1a110f9a2835e74b7ec398de213da687e1c3'],
+ 'manifest.json':['d2acb0743ef469efd75691825a0787fab491e3512f4351476e08d368d391f724'],
  'fossil.png':['8f0dcff9691f4b4b0b9302f3d3a5f57217ee8e27c879fbd15249a07ab8f3afc4',457,415],
  'support.png':['dcd3441fc32abd34f7c15500ccd7324dffeca5318de12c4c18266ab7e17c485a',451,303],
- 'backdrop.png':['a0a4b2d2dab82cadaceeed163449996201fc6cf73d9b648c96ea735459c7df7f',1500,1049]
+ 'backdrop.png':['b4ecaa52975ca1351b9812ced36a335bbeaa0a8eb71622c46433b8c31248528b',1500,1049]
 };
 async function verify(dir){
  const files={};
