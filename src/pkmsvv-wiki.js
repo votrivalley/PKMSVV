@@ -609,11 +609,13 @@ G.PKMSVVWiki=(()=>{
  // Research Lab modular furnishing renderer: no painted-in purchases.
  // Each owned object is its own alpha asset, positioned by the shared catalog.
  // A screenshot of the original furnished room is reference art only.
- // Approved V3 artwork is an explicit read-only QA option, not a release.
+ // Approved V3 artwork defaults on only in the packaged isolated QA build, not a release.
  function approvedLabV3Preview(){
-  return typeof window!=='undefined'&&
-   ['localhost','127.0.0.1','beta.pkmsvv-web.pages.dev','research-ui-qa.pkmsvv-web.pages.dev'].includes(window.location.hostname)&&
-   new URLSearchParams(window.location.search).get('pkmsvvLabV3')==='1';
+  if(typeof window==='undefined'||!['localhost','127.0.0.1','beta.pkmsvv-web.pages.dev','research-ui-qa.pkmsvv-web.pages.dev'].includes(window.location.hostname))return false;
+  const q=new URLSearchParams(window.location.search);
+  if(q.get('pkmsvvLabV3')==='1')return true;
+  if(q.get('pkmsvvLabV3')==='0'||q.has('pkmsvvLabLayers'))return false;
+  return window.PKMSVV_RESEARCH_V3_QA===true;
  }
  async function renderApprovedLabV3(stage,revision){
   const base='images/coop-lab/research-v3/';
@@ -660,7 +662,7 @@ G.PKMSVVWiki=(()=>{
     const spot=stage.querySelector('[data-build-slot="'+part.slot+'"]');if(spot)place(spot,part);
    }
    stage.dataset.researchArtMode='approved-v3';
-  }catch(_){/* Missing or invalid art pack: retain the original room. */}
+  }catch(error){console.warn('[Research V3 QA] Asset load failed; retaining original room',String(error));}
  }
  function modularLabPreview(){
   if(approvedLabV3Preview())return false;

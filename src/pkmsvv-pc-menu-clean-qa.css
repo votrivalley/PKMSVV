@@ -1281,3 +1281,9 @@
 }
 #pkmsvv-wiki-overlay .pkmsvv-research-hotspot,
 #pkmsvv-wiki-overlay .pkmsvv-build-spot{z-index:4!important;}
+
+/* RESEARCH_V3_QA: labels are live UI, never baked into the approved station art. */
+#pkmsvv-wiki-overlay .pkmsvv-research-room[data-research-art-mode="approved-v3"] .pkmsvv-research-hotspot-tag{
+ min-height:0!important;max-width:none!important;padding:0!important;margin:0!important;
+ font-size:clamp(9px,1.3vw,14px)!important;line-height:1.1!important;
+}

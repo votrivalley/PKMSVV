@@ -121,7 +121,7 @@ jobs:
       - name: Real browser research room layers, props, build mode and fallback
         env:
           PKMSVV_BROWSER: /usr/bin/google-chrome
-        run: timeout 100s node tests/beta-research-layers-browser.cjs
+        run: timeout 180s node tests/beta-research-layers-browser.cjs
       - name: Upload research room screenshots (QA only)
         if: always()
         uses: actions/upload-artifact@v4

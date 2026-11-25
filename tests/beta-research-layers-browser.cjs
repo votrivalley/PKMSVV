@@ -33,7 +33,31 @@ const {startServer}=require('../lan-server/server.cjs');
  };
  try{
   await page.addInitScript(()=>{window.__pkmsvvPippiGuideQABypass=true;});
+  // Real approved V3 art is the default in this isolated QA build.
   await page.goto(url,{waitUntil:'domcontentloaded',timeout:45000});await wait();await open();
+  const verifyV3=async(selector)=>{
+   await page.waitForFunction(s=>{const e=document.querySelector(s);return e?.dataset.researchArtMode==='approved-v3'&&e.querySelectorAll('.pkmsvv-lab-v3-layer').length===6&&[...e.querySelectorAll('.pkmsvv-lab-v3-layer')].every(i=>i.complete&&i.naturalWidth>0);},selector,{timeout:20000});
+   const v=await page.locator(selector).evaluate(e=>({layers:[...e.querySelectorAll('.pkmsvv-lab-v3-layer')].map(i=>i.dataset.labLayer).sort(),oldProps:e.querySelectorAll('.pkmsvv-lab-station-prop').length,background:getComputedStyle(e).backgroundImage,ratio:e.clientWidth/e.clientHeight}));
+   assert.deepEqual(v.layers,['berry','companion','crest','fossil','mega','support']);
+   assert.equal(v.oldProps,0);assert.match(v.background,/research-v3\/backdrop\.png/);assert.ok(Math.abs(v.ratio-1500/1049)<.04);
+   return v;
+  };
+  const v3=await verifyV3('.pkmsvv-research-room');
+  const labels=await page.locator('.pkmsvv-research-room [data-research-hotspot]').evaluateAll(es=>es.map(b=>({id:b.dataset.researchHotspot,label:b.querySelector('.pkmsvv-research-hotspot-tag')?.textContent,oldIcon:[...b.querySelectorAll('.pkmsvv-research-scene-object')].some(x=>getComputedStyle(x).display!=='none')})));
+  assert.equal(labels.length,5);assert.ok(labels.every(x=>x.label&&!x.oldIcon));
+  await page.locator('.pkmsvv-research-room').screenshot({path:path.join(out,'research-v3-desktop.png')});
+  const v3Save=await page.evaluate(()=>JSON.stringify(G.DB.save.pkmsvvCoopLab??null));
+  await page.evaluate(()=>document.querySelector('[data-research-build]').click());
+  await verifyV3('.pkmsvv-build-stage');
+  assert.ok(await page.locator('.pkmsvv-build-stage').count());
+  assert.equal(await page.locator('[data-build-equip]:not(:disabled)').count(),0);
+  assert.equal(await page.evaluate(()=>JSON.stringify(G.DB.save.pkmsvvCoopLab??null)),v3Save);
+  await page.locator('.pkmsvv-build-stage').screenshot({path:path.join(out,'research-v3-construction.png')});
+  await page.setViewportSize({width:844,height:390});await open();await verifyV3('.pkmsvv-research-room');
+  await page.locator('.pkmsvv-research-room').screenshot({path:path.join(out,'research-v3-mobile.png')});
+  await page.setViewportSize({width:1280,height:920});
+  // Keep the earlier nine-layer prototype available for explicit comparison.
+  await page.goto(url+'?pkmsvvLabLayers=1',{waitUntil:'domcontentloaded',timeout:45000});await wait();await open();
   const room=await verify('.pkmsvv-research-room');
   assert.equal(await page.locator('.pkmsvv-research-hotspot').count(),5);
   const save=()=>page.evaluate(()=>JSON.stringify(G.DB.save.pkmsvvCoopLab??null));
@@ -51,7 +75,7 @@ const {startServer}=require('../lan-server/server.cjs');
   assert.equal(await page.locator('.pkmsvv-lab-source-layer').count(),0);
   await page.locator('.pkmsvv-research-room').screenshot({path:path.join(out,'research-original-fallback.png')});
   assert.deepEqual(errors,[]);
-  fs.writeFileSync(path.join(out,'report.json'),JSON.stringify({status:'PASS',room,errors},null,2));
+  fs.writeFileSync(path.join(out,'report.json'),JSON.stringify({status:'PASS',v3,labels,room,errors},null,2));
   console.log('PKMSVV_RESEARCH_LAYERS_BROWSER_PASS',JSON.stringify(room));
  }catch(e){
   const state=await page.evaluate(()=>({economy:!!window.G?.PKMSVVCoopEconomy,artRegistry:!!window.PKMSVV_RESEARCH_ART_QA,mode:document.querySelector('.pkmsvv-research-room,.pkmsvv-build-stage')?.dataset.researchArtMode,images:[...document.querySelectorAll('.pkmsvv-lab-source-layer,.pkmsvv-lab-station-prop')].map(i=>({src:i.src,complete:i.complete,width:i.naturalWidth}))})).catch(()=>null);

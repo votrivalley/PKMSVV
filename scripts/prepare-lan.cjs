@@ -122,6 +122,7 @@ for(const file of ['lan-connect.html','lan-connect.js'])
    // Switches are NEVER copied into PC/Android/production builds or saves.
    const runtimeFlags='window.PKMSVV_PIPPI_COUSIN_QA_100=false;\n'+
     'window.PKMSVV_MEGA_FULL_CATALOG_QA=true;\n'+
+    'window.PKMSVV_RESEARCH_V3_QA='+String(fs.existsSync(path.join(v3,'manifest.json')))+';\n'+
     'window.PKMSVV_RESEARCH_ART_QA='+JSON.stringify(require('../data/pkmsvv-coop-lab-catalog.json').roomArt)+';\n';
    const qaConfig='pkmsvv-qa-runtime-config.js';
    fs.mkdirSync(path.join(folder,'js/ui'),{recursive:true});
