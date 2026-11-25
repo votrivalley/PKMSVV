@@ -681,9 +681,12 @@ G.PKMSVVWiki=(()=>{
   stage.dataset.labRenderRevision=revision;
   stage.dataset.researchArtMode='classic';
   const layerLoads=[];
+  // Artwork must never require a wallet adapter or unlocked save.
+  if(approvedLabV3Preview())renderApprovedLabV3(stage,revision);
   const E=G.PKMSVVCoopEconomy,conf=E?.config,save=G.DB?.save;
-  if(!conf?.roomArt?.slots)return;
-  if(modular)for(const part of conf.roomArt.sourceLayers||[]){
+  const art=window.PKMSVV_RESEARCH_ART_QA||conf?.roomArt;
+  if(!art?.slots)return;
+  if(modular)for(const part of art.sourceLayers||[]){
    const img=document.createElement('img');
    img.className='pkmsvv-lab-source-layer';
    img.src='images/coop-lab/source-cutouts-qa/'+part.file;
@@ -716,7 +719,7 @@ G.PKMSVVWiki=(()=>{
   }
   // Real scenery props, independent from machine skins and clickable labels.
   // A missing QA asset simply leaves the original room and label usable.
-  if(modular)for(const prop of conf.roomArt.stationProps||[]){
+  if(modular)for(const prop of art.stationProps||[]){
    const img=document.createElement('img');
    img.className='pkmsvv-lab-station-prop';img.dataset.labProp=prop.id;
    img.src='images/coop-lab/source-cutouts-qa/'+prop.file;
@@ -726,6 +729,7 @@ G.PKMSVVWiki=(()=>{
    img.addEventListener('error',()=>img.remove(),{once:true});
    stage.append(img);
   }
+  if(!E?.normal||!conf?.items)return;
   const owned=E.normal(save);
   for(const [slot,coords] of Object.entries(conf.roomArt.slots)){
    const itemId=owned.equippedDecorBySlot?.[slot];
@@ -740,7 +744,6 @@ G.PKMSVVWiki=(()=>{
    image.style.width=coords.w/320*100+'%';image.style.height=coords.h/224*100+'%';
    image.setAttribute('aria-hidden','true');image.draggable=false;stage.prepend(image);
   }
-  if(approvedLabV3Preview())renderApprovedLabV3(stage,revision);
  }
  function construction(){
   close();installStyle();

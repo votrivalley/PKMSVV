@@ -8,7 +8,8 @@ const {startServer}=require('../lan-server/server.cjs');
  const server=await startServer({root,host:'127.0.0.1',port:0});
  const browser=await chromium.launch({headless:true,...(process.env.PKMSVV_BROWSER?{executablePath:process.env.PKMSVV_BROWSER}:{})});
  const page=await browser.newPage({viewport:{width:1280,height:920}});
- const errors=[];page.on('pageerror',e=>errors.push(String(e)));
+ const errors=[],failedAssets=[];page.on('pageerror',e=>errors.push(String(e)));
+ page.on('response',r=>{if(r.status()>=400&&r.url().includes('/coop-lab/'))failedAssets.push({url:r.url(),status:r.status()});});
  const url='http://127.0.0.1:'+server.port+'/game/';
  const wait=async()=>page.waitForFunction(()=>!!window.G?.DB?.save&&!!G.MenuUI?.open);
  const open=async()=>page.evaluate(()=>{
@@ -52,5 +53,10 @@ const {startServer}=require('../lan-server/server.cjs');
   assert.deepEqual(errors,[]);
   fs.writeFileSync(path.join(out,'report.json'),JSON.stringify({status:'PASS',room,errors},null,2));
   console.log('PKMSVV_RESEARCH_LAYERS_BROWSER_PASS',JSON.stringify(room));
+ }catch(e){
+  const state=await page.evaluate(()=>({economy:!!window.G?.PKMSVVCoopEconomy,artRegistry:!!window.PKMSVV_RESEARCH_ART_QA,mode:document.querySelector('.pkmsvv-research-room,.pkmsvv-build-stage')?.dataset.researchArtMode,images:[...document.querySelectorAll('.pkmsvv-lab-source-layer,.pkmsvv-lab-station-prop')].map(i=>({src:i.src,complete:i.complete,width:i.naturalWidth}))})).catch(()=>null);
+  fs.writeFileSync(path.join(out,'failure.json'),JSON.stringify({error:String(e),state,errors,failedAssets},null,2));
+  await page.screenshot({path:path.join(out,'failure.png')}).catch(()=>{});
+  throw e;
  }finally{await browser.close();await server.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

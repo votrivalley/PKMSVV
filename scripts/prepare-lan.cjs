@@ -27,6 +27,11 @@ for(const file of ['lan-connect.html','lan-connect.js'])
  fs.mkdirSync(images,{recursive:true});
  fs.cpSync(pippi,path.join(images,'pippi'),{recursive:true});
  const lab=path.join(root,'assets/coop-lab');
+ const v3=path.join(lab,'research-v3');
+ if(fs.existsSync(v3)){
+  // Reject partial or altered approved artwork before copying to the game.
+  execFileSync(process.execPath,['-e',"require('./scripts/import-research-v3.cjs').verify(process.argv[1]).catch(e=>{console.error(e);process.exitCode=1})",v3],{cwd:root,stdio:'inherit'});
+ }
  if(!fs.existsSync(path.join(lab,'room_base.png')))throw Error('Fossil Lab native room missing');
  fs.cpSync(lab,path.join(images,'coop-lab'),{recursive:true});
  if(process.env.PKMSVV_FOSSIL_NATIVE_QA==='1'){
@@ -116,7 +121,8 @@ for(const file of ['lan-connect.html','lan-connect.js'])
    // HTML contains its text. A same-origin external file executes reliably.
    // Switches are NEVER copied into PC/Android/production builds or saves.
    const runtimeFlags='window.PKMSVV_PIPPI_COUSIN_QA_100=false;\n'+
-    'window.PKMSVV_MEGA_FULL_CATALOG_QA=true;\n';
+    'window.PKMSVV_MEGA_FULL_CATALOG_QA=true;\n'+
+    'window.PKMSVV_RESEARCH_ART_QA='+JSON.stringify(require('../data/pkmsvv-coop-lab-catalog.json').roomArt)+';\n';
    const qaConfig='pkmsvv-qa-runtime-config.js';
    fs.mkdirSync(path.join(folder,'js/ui'),{recursive:true});
    fs.writeFileSync(path.join(folder,'js/ui',qaConfig),runtimeFlags);

@@ -13,6 +13,8 @@ on:
       - 'src/pkmsvv-pc-menu-clean-qa.css'
       - 'tests/research-source-extraction.test.cjs'
       - 'tests/beta-research-layers-browser.cjs'
+      - 'scripts/import-research-v3.cjs'
+      - 'assets/coop-lab/research-v3/**'
       - 'src/shared/coop-unified.js'
       - 'src/lan/wifi-bus.js'
       - 'scripts/patch-native-passive-pressure.cjs'
