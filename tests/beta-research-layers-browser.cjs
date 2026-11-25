@@ -53,8 +53,30 @@ const {startServer}=require('../lan-server/server.cjs');
   assert.equal(await page.locator('[data-build-equip]:not(:disabled)').count(),0);
   assert.equal(await page.evaluate(()=>JSON.stringify(G.DB.save.pkmsvvCoopLab??null)),v3Save);
   await page.locator('.pkmsvv-build-stage').screenshot({path:path.join(out,'research-v3-construction.png')});
-  await page.setViewportSize({width:844,height:390});await open();await verifyV3('.pkmsvv-research-room');
-  await page.locator('.pkmsvv-research-room').screenshot({path:path.join(out,'research-v3-mobile.png')});
+  const landscape=[];
+  for(const [width,height] of [[844,390],[667,375],[640,360]]){
+   await page.setViewportSize({width,height});await open();await verifyV3('.pkmsvv-research-room');
+   const geometry=await page.locator('.pkmsvv-research-room').evaluate(e=>{
+    const r=e.getBoundingClientRect(),panel=e.closest('.pkmsvv-research-panel'),p=panel.getBoundingClientRect(),header=panel.querySelector('.pkmsvv-pc-header').getBoundingClientRect();
+    const bound=b=>({left:b.left,top:b.top,right:b.right,bottom:b.bottom,width:b.width,height:b.height});
+    const hotspots=[...e.querySelectorAll('[data-research-hotspot]')].map(b=>{
+     const t=b.getBoundingClientRect(),label=b.querySelector('.pkmsvv-research-hotspot-tag').getBoundingClientRect();
+     const at=document.elementFromPoint(t.left+t.width/2,t.top+t.height/2);
+     return {id:b.dataset.researchHotspot,rect:bound(t),label:bound(label),hit:at?.closest('[data-research-hotspot]')===b};
+    });
+    return {room:bound(r),panel:bound(p),header:bound(header),scrollTop:panel.scrollTop,hotspots};
+   });
+   assert.equal(geometry.scrollTop,0,'Research must open at the top');
+   assert.ok(geometry.room.top>=geometry.header.bottom-1,'Header covers room');
+   assert.ok(geometry.room.left>=0&&geometry.room.right<=width+1&&geometry.room.bottom<=Math.min(height,geometry.panel.bottom)+1,'Room outside first viewport '+JSON.stringify(geometry));
+   assert.equal(geometry.hotspots.length,5);
+   for(const h of geometry.hotspots){
+    assert.ok(h.hit&&h.rect.width>=44&&h.rect.height>=44,'Station not tappable '+JSON.stringify(h));
+    assert.ok(h.label.top>=geometry.room.top&&h.label.bottom<=geometry.room.bottom+1&&h.label.left>=geometry.room.left-1&&h.label.right<=geometry.room.right+1,'Station label clipped '+JSON.stringify(h));
+   }
+   landscape.push({width,height,...geometry});
+   await page.screenshot({path:path.join(out,width===844?'research-v3-mobile.png':'research-v3-mobile-'+width+'.png')});
+  }
   await page.setViewportSize({width:1280,height:920});
   // Keep the earlier nine-layer prototype available for explicit comparison.
   await page.goto(url+'?pkmsvvLabLayers=1',{waitUntil:'domcontentloaded',timeout:45000});await wait();await open();
@@ -75,7 +97,7 @@ const {startServer}=require('../lan-server/server.cjs');
   assert.equal(await page.locator('.pkmsvv-lab-source-layer').count(),0);
   await page.locator('.pkmsvv-research-room').screenshot({path:path.join(out,'research-original-fallback.png')});
   assert.deepEqual(errors,[]);
-  fs.writeFileSync(path.join(out,'report.json'),JSON.stringify({status:'PASS',v3,labels,room,errors},null,2));
+  fs.writeFileSync(path.join(out,'report.json'),JSON.stringify({status:'PASS',v3,labels,landscape,room,errors},null,2));
   console.log('PKMSVV_RESEARCH_LAYERS_BROWSER_PASS',JSON.stringify(room));
  }catch(e){
   const state=await page.evaluate(()=>({economy:!!window.G?.PKMSVVCoopEconomy,artRegistry:!!window.PKMSVV_RESEARCH_ART_QA,mode:document.querySelector('.pkmsvv-research-room,.pkmsvv-build-stage')?.dataset.researchArtMode,images:[...document.querySelectorAll('.pkmsvv-lab-source-layer,.pkmsvv-lab-station-prop')].map(i=>({src:i.src,complete:i.complete,width:i.naturalWidth}))})).catch(()=>null);

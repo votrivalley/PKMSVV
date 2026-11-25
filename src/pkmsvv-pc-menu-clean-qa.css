@@ -1287,3 +1287,38 @@
  min-height:0!important;max-width:none!important;padding:0!important;margin:0!important;
  font-size:clamp(9px,1.3vw,14px)!important;line-height:1.1!important;
 }
+
+/* V3 landscape QA: keep the entire room inside the first mobile viewport.
+ * Controls and Pippi remain below the room in the existing scrollable panel.
+ * Do not change classic/modular comparison scenes or other game menus. */
+@media (orientation:landscape) and (max-height:500px){
+ #pkmsvv-wiki-overlay .pkmsvv-research-panel:has(.pkmsvv-research-room[data-research-art-mode="approved-v3"]){
+  max-height:calc(100dvh - 12px)!important;padding:8px!important;
+ }
+ #pkmsvv-wiki-overlay .pkmsvv-research-panel:has(.pkmsvv-research-room[data-research-art-mode="approved-v3"]) > .pkmsvv-pc-header{
+  position:relative!important;top:auto!important;margin:0 0 6px!important;padding:3px 8px!important;
+ }
+ #pkmsvv-wiki-overlay .pkmsvv-research-panel:has(.pkmsvv-research-room[data-research-art-mode="approved-v3"]) > .pkmsvv-pc-header h2{
+  font-size:clamp(15px,4dvh,20px)!important;
+ }
+ #pkmsvv-wiki-overlay .pkmsvv-research-panel:has(.pkmsvv-research-room[data-research-art-mode="approved-v3"]) > .pkmsvv-pc-header .pkmsvv-pc-close{
+  padding:5px 10px!important;font-size:13px!important;
+ }
+ #pkmsvv-wiki-overlay .pkmsvv-research-panel:has(.pkmsvv-research-room[data-research-art-mode="approved-v3"]) > .pkmsvv-pc-hint{
+  display:none!important;
+ }
+ #pkmsvv-wiki-overlay .pkmsvv-research-interactive:has(.pkmsvv-research-room[data-research-art-mode="approved-v3"]){
+  padding:5px!important;gap:6px!important;
+ }
+ #pkmsvv-wiki-overlay .pkmsvv-research-room[data-research-art-mode="approved-v3"]{
+  box-sizing:border-box!important;
+  width:min(100%,870px,max(140px,calc(143dvh - 150px)))!important;
+  flex:none!important;margin:0 auto!important;
+ }
+ #pkmsvv-wiki-overlay .pkmsvv-research-room[data-research-art-mode="approved-v3"] .pkmsvv-research-hotspot-tag{
+  left:50%!important;transform:translateX(-50%)!important;
+  width:max-content!important;max-width:100%!important;height:auto!important;
+  min-height:13px!important;padding:1px 3px!important;font-size:9px!important;
+  white-space:nowrap!important;
+ }
+}
