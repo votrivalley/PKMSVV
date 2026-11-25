@@ -5,6 +5,9 @@ on:
     paths:
       - '.github/workflows/research-modular-layers-qa.yml'
       - 'scripts/extract-research-layers.cjs'
+      - 'scripts/export-research-v3-review.cjs'
+      - 'scripts/import-research-v3.cjs'
+      - 'assets/coop-lab/research-v3/**'
       - 'docs/research-lab-layer-preview.html'
       - 'tests/research-source-extraction.test.cjs'
       - 'assets/research-station-icons.png'
@@ -55,3 +58,12 @@ jobs:
           name: PKMSVV-Research-Lab-Split-Sprites-QA
           path: dist/research-modular-sprite-preview/
           retention-days: 7
+
+      - name: Verify exact V3 assets and export independent furniture omission previews
+        run: node scripts/export-research-v3-review.cjs dist/research-v3-art-review
+      - name: Upload V3 art review (no furniture purchase or equip)
+        uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-Research-V3-Art-Review
+          path: dist/research-v3-art-review/
+          retention-days: 14
