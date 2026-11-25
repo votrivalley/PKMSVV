@@ -127,6 +127,17 @@ for(const file of ['lan-connect.html','lan-connect.js'])
     'window.PKMSVV_RESEARCH_SKIN_QA=true;\n'+
     'window.PKMSVV_RESEARCH_ART_QA='+JSON.stringify(require('../data/pkmsvv-coop-lab-catalog.json').roomArt)+';\n';
    const qaConfig='pkmsvv-qa-runtime-config.js';
+   const labCatalog=require('../data/pkmsvv-coop-lab-catalog.json');
+   const labCore=fs.readFileSync(path.join(root,'src/pkmsvv-coop-lab-core.cjs'),'utf8');
+   const configAnchor="require('../data/pkmsvv-coop-lab-catalog.json')";
+   if(!labCore.includes(configAnchor))throw Error('Station skin economy config anchor missing');
+   const browserCore=labCore.replace(configAnchor,JSON.stringify(labCatalog));
+   const skinModule='pkmsvv-research-skin-economy-qa.js';
+   const skinBundle='(function(){const module={exports:{}};\n'+browserCore+
+    '\nconst E=module.exports;window.PKMSVVStationSkinEconomy=Object.freeze({...E.stationSkinEconomy,registry:E.config.stationSkins});})();\n';
+   fs.mkdirSync(path.join(folder,'js/ui'),{recursive:true});
+   fs.writeFileSync(path.join(folder,'js/ui',skinModule),skinBundle);
+   injectScript.push('<script defer src="js/ui/'+skinModule+'?v='+revision+'"></script>');
    fs.mkdirSync(path.join(folder,'js/ui'),{recursive:true});
    fs.writeFileSync(path.join(folder,'js/ui',qaConfig),runtimeFlags);
    // An earlier Beta may cache the former 100% QA switch.

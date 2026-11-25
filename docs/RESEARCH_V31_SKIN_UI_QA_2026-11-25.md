@@ -1,0 +1,3 @@
+# V3.1 skin catalog browser integration — QA
+
+The same tested economy core is bundled only for the isolated LAN QA runtime. The five station rows show ownership, active equipment, preview, and gated purchase/equip actions. A preview does not alter saved equipment; discard restores the saved choice. The renderer resolves approved owned skins from the station registry and falls back to the pinned default on missing or invalid-size assets. The current copper variants are prototypes, all prices null, all transactions locked. No player save migration, price approval or production deployment. Real paid UI flow remains to be verified when approved assets and prices exist.

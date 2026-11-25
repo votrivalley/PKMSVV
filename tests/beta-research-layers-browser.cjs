@@ -54,9 +54,16 @@ const {startServer}=require('../lan-server/server.cjs');
   assert.equal(await page.evaluate(()=>JSON.stringify(G.DB.save.pkmsvvCoopLab??null)),v3Save);
   await page.locator('.pkmsvv-build-stage').screenshot({path:path.join(out,'research-v3-construction.png')});
   assert.equal(await page.locator('[data-build-slot]').count(),5);
+  const bridge=await page.evaluate(()=>({ready:!!window.PKMSVVStationSkinEconomy?.status,enabled:window.PKMSVVStationSkinEconomy?.registry?.purchaseEnabled,variants:window.PKMSVVStationSkinEconomy?.registry?.variants?.length}));
+  assert.deepEqual(bridge,{ready:true,enabled:false,variants:5});
+  assert.equal(await page.locator('[data-skin-state="equipped"]').count(),1);
+  assert.equal(await page.locator('[data-skin-state="unowned"]').count(),1);
+  assert.equal(await page.locator('[data-skin-transaction]:not(:disabled)').count(),0);
   const skinSelections=[];
   for(const [slot,station] of [['center','fossil'],['shelf_left','support'],['shelf_right','mega'],['garden','berry'],['trophy','companion']]){
    await page.locator('[data-build-slot="'+slot+'"]').click();
+   assert.equal(await page.locator('[data-skin-item="'+station+'_copper"] [data-skin-state="unowned"]').count(),1);
+   assert.equal(await page.locator('[data-skin-transaction]:not(:disabled)').count(),0);
    await page.locator('[data-build-preview="copper"]').click();
    await page.waitForFunction(id=>document.querySelector('.pkmsvv-build-stage [data-lab-layer="'+id+'"]')?.dataset.labSkin==='copper',station);
    skinSelections.push(station);
@@ -65,6 +72,7 @@ const {startServer}=require('../lan-server/server.cjs');
    assert.equal(await page.evaluate(()=>JSON.stringify(G.DB.save.pkmsvvCoopLab??null)),v3Save);
   }
   await page.locator('.pkmsvv-build-stage').screenshot({path:path.join(out,'research-v3-copper-preview.png')});
+  await page.locator('.pkmsvv-build-panel').screenshot({path:path.join(out,'research-v3-skin-shop.png')});
   await page.locator('[data-build-preview-reset]').click();
   await page.waitForFunction(()=>document.querySelectorAll('.pkmsvv-build-stage [data-lab-skin="default"]').length===6);
   assert.equal(await page.evaluate(()=>JSON.stringify(G.DB.save.pkmsvvCoopLab??null)),v3Save);

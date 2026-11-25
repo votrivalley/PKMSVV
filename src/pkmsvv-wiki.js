@@ -617,6 +617,13 @@ G.PKMSVVWiki=(()=>{
   if(q.get('pkmsvvLabV3')==='0'||q.has('pkmsvvLabLayers'))return false;
   return window.PKMSVV_RESEARCH_V3_QA===true;
  }
+ // Only relative files from the approved station catalog can replace a sprite.
+ function skinRegistry(){return window.PKMSVVStationSkinEconomy;}
+ function skinEntry(station,id){return skinRegistry()?.registry?.variants?.find(x=>x.station===station&&x.id===id);}
+ function skinFile(station,id){
+  const p=skinEntry(station,id)?.spritePath;
+  return typeof p==='string'&&/^images\/coop-lab\/research-v3\/skins\/[a-z0-9_-]+\.png$/.test(p)?p.slice('images/coop-lab/research-v3/'.length):null;
+ }
  async function renderApprovedLabV3(stage,revision){
   const base='images/coop-lab/research-v3/';
   try{
@@ -635,15 +642,23 @@ G.PKMSVVWiki=(()=>{
     const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=base+file;
    });
    const preview=stage.classList.contains('pkmsvv-build-stage')&&window.PKMSVV_RESEARCH_SKIN_QA===true;
-   const previewFiles=m.layers.map(p=>preview&&p.id!=='crest'&&stage.dataset['skin'+p.id]==='copper'?'skins/'+p.id+'-copper.png':p.file);
-   const [background,...images]=await Promise.all([load(m.background),...m.layers.map((p,i)=>load(previewFiles[i]).catch(()=>load(p.file)))]);
+   const choices=m.layers.map(p=>{
+    const equipped=skinRegistry()?.status(G.DB?.save,p.id)?.equipped||'default';
+    const selected=preview?stage.dataset['skin'+p.id]:undefined;
+    const id=selected===undefined?equipped:selected==='copper'?p.id+'_copper':selected;
+    return {id,file:skinFile(p.id,id)||p.file};
+   });
+   const [background,...images]=await Promise.all([load(m.background),...m.layers.map(async(p,i)=>{
+    try{const img=await load(choices[i].file);if(img.naturalWidth!==p.w||img.naturalHeight!==p.h)throw Error('Invalid skin dimensions');return img;}
+    catch(_){choices[i]={id:'default',file:p.file};return load(p.file);}
+   })]);
    if(background.naturalWidth!==1500||background.naturalHeight!==1049||
       images.some((img,i)=>img.naturalWidth!==m.layers[i].w||img.naturalHeight!==m.layers[i].h))return;
    if(stage.dataset.labRenderRevision!==revision||!stage.isConnected)return;
    stage.querySelectorAll('.pkmsvv-lab-furniture,.pkmsvv-lab-source-layer,.pkmsvv-lab-station-prop,.pkmsvv-lab-v3-layer').forEach(x=>x.remove());
    const place=(el,p)=>{el.style.left=p.x/1500*100+'%';el.style.top=p.y/1049*100+'%';el.style.width=p.w/1500*100+'%';el.style.height=p.h/1049*100+'%';};
    for(let i=0;i<m.layers.length;i++){
-    const p=m.layers[i],img=images[i];img.className='pkmsvv-lab-v3-layer';img.dataset.labLayer=p.id;img.dataset.labSlot=p.slot;img.dataset.labSkin=img.src.endsWith('-copper.png')?'copper':'default';
+    const p=m.layers[i],img=images[i];img.className='pkmsvv-lab-v3-layer';img.dataset.labLayer=p.id;img.dataset.labSlot=p.slot;img.dataset.labSkin=choices[i].file===p.file?'default':choices[i].id===p.id+'_copper'?'copper':choices[i].id;
     img.alt='';img.draggable=false;img.setAttribute('aria-hidden','true');
     Object.assign(img.style,{position:'absolute',objectFit:'fill',pointerEvents:'none',zIndex:'1',maxWidth:'none',margin:'0',padding:'0',border:'0'});
     place(img,p);stage.prepend(img);
@@ -795,7 +810,7 @@ G.PKMSVVWiki=(()=>{
    slots=slots.filter(s=>Object.hasOwn(v3Station,s[0]));
    const namesBySlot={center:['Máy phục nguyên','Restoration machine'],shelf_left:['Pokémon hỗ trợ','Supports'],shelf_right:['Mega','Mega'],garden:['Berry','Berries'],trophy:['Bạn đồng hành','Companions']};
    slots=slots.map(s=>[...s.slice(0,5),...namesBySlot[s[0]]]);
-   note.textContent=tr('Thử skin từng máy ngay trong phòng. Bản QA này chỉ xem thử, không trừ Xu Đồng Đội và không lưu thay đổi.','Preview each station skin in the room. This QA preview never charges coins or saves changes.');
+   note.textContent=tr('Chọn máy để xem skin, sở hữu và trang bị. Xem thử miễn phí; skin chưa duyệt không thể mua.','Select a station to view skins, ownership and equipment. Preview is free; unapproved skins cannot be purchased.');
   }
   const names={
    machine_old:['Máy phục nguyên nguyên mẫu','Original restoration machine',0],
@@ -832,19 +847,50 @@ G.PKMSVVWiki=(()=>{
    items.replaceChildren();
    if(skinQA){
     const station=v3Station[slot];if(!station)return;
-    const selected=stage.dataset['skin'+station]||'default';
-    desc.textContent=tr('Đang xem thử: ','Preview: ')+(selected==='copper'?tr('Đồng đỏ (QA)','Copper (QA)'):tr('Mặc định','Default'))+' · '+tr('Xu Đồng Đội: ','Co-op Coins: ')+(save.coopCoins||0);
-    for(const variant of ['default','copper']){
-     const row=document.createElement('div');row.className='pkmsvv-build-item';
-     const label=document.createElement('span');label.textContent=variant==='default'?tr('Mặc định','Default'):tr('Đồng đỏ — mẫu thử','Copper — prototype');
-     const state=document.createElement('small');state.textContent=variant===selected?tr('Đang xem','Previewed'):tr('Chỉ xem thử · 0 xu','Preview only · 0 coins');
+    const economy=skinRegistry(),view=economy?.status(G.DB?.save,station);
+    const equipped=view?.equipped||'default';
+    const selected=stage.dataset['skin'+station]??(equipped===station+'_copper'?'copper':equipped);
+    const displayName=id=>id==='default'?tr('Mặc định','Default'):tr(skinEntry(station,id)?.nameVi||'Skin',skinEntry(station,id)?.nameEn||'Skin');
+    desc.textContent=tr('Đang trang bị: ','Equipped: ')+displayName(equipped)+' · '+tr('Xu Đồng Đội: ','Co-op Coins: ')+(view?.coins??save.coopCoins??0);
+    desc.dataset.skinWallet=String(view?.coins??save.coopCoins??0);
+    const variants=view?.variants||[{id:'default',owned:true,available:true,price:0}];
+    for(const item of variants){
+     const id=item.id,variant=id===station+'_copper'?'copper':id;
+     const row=document.createElement('div');row.className='pkmsvv-build-item';row.dataset.skinItem=id;
+     const label=document.createElement('span');label.textContent=displayName(id);
+     const state=document.createElement('small');state.dataset.skinState=equipped===id?'equipped':item.owned?'owned':'unowned';
+     state.textContent=equipped===id?tr('Đang trang bị','Equipped'):item.owned?tr('Đã sở hữu','Owned'):item.available?tr('Chưa sở hữu','Not owned'):tr('Chưa sở hữu · Chưa mở bán','Not owned · Not for sale');
+     if(item.available&&!item.owned)state.textContent+=' · '+item.price+' '+tr('xu','coins');
      const b=document.createElement('button');b.type='button';b.className='pkmsvv-pc-close';b.dataset.buildPreview=variant;
-     b.disabled=variant===selected;b.textContent=tr('Xem thử','Preview');
+     b.disabled=variant===selected;b.textContent=variant===selected?tr('Đang xem','Previewed'):tr('Xem thử','Preview');
      b.onclick=()=>{stage.dataset['skin'+station]=variant;renderFurnitureLayers(stage);inspect(slot);};
-     row.append(label,state,b);items.append(row);
+     const action=document.createElement('button');action.type='button';action.className='pkmsvv-pc-close';action.dataset.skinTransaction=id;
+     const gate=economy?.registry?.purchaseEnabled===true&&view?.unlocked===true&&!G.DB?.guest&&typeof G.DB?.commit==='function';
+     action.disabled=!gate||!item.available||equipped===id||(!item.owned&&view.coins<item.price);
+     action.textContent=equipped===id?tr('Đang đặt','Equipped'):!item.available?tr('Chưa mở bán','Not for sale'):!gate?tr('Chưa mở','Locked'):item.owned?tr('Trang bị','Equip'):tr('Mua · '+item.price+' xu','Buy · '+item.price+' coins');
+     action.onclick=async()=>{
+      if(action.disabled)return;
+      action.disabled=true;
+      // Refuse to charge for a missing or wrong-size sprite, even after future catalog approval.
+      const player=G.DB?.save;
+      if(id!=='default'){
+       const file=skinFile(station,id);
+       const source=stage.querySelector('[data-lab-layer="'+station+'"]');
+       const expected=[source?.naturalWidth,source?.naturalHeight];
+       const valid=file&&await new Promise(resolve=>{const img=new Image();img.onload=()=>resolve(img.naturalWidth===expected[0]&&img.naturalHeight===expected[1]);img.onerror=()=>resolve(false);img.src='images/coop-lab/research-v3/'+file;});
+       if(!valid){if(stage.isConnected)inspect(slot);return;}
+      }
+      if(!stage.isConnected||player!==G.DB?.save||G.DB?.guest||typeof G.DB?.commit!=='function')return;
+      const commit=()=>G.DB.commit(true);
+      const result=item.owned?economy.equipSkin(player,station,id,commit):economy.buySkin(player,id,commit);
+      if(result.ok){delete stage.dataset['skin'+station];renderFurnitureLayers(stage);G.UI?.refreshCoins?.();}
+      else G.UI?.toast?.(tr('Chưa giao dịch được.','Transaction unavailable.'),2200);
+      inspect(slot);
+     };
+     row.append(label,state,b,action);items.append(row);
     }
     const reset=document.createElement('button');reset.type='button';reset.className='pkmsvv-pc-close';reset.dataset.buildPreviewReset='1';
-    reset.textContent=tr('Khôi phục tất cả mặc định','Reset all defaults');
+    reset.textContent=tr('Hủy xem thử tất cả','Discard all previews');
     reset.onclick=()=>{for(const id of Object.values(v3Station))delete stage.dataset['skin'+id];renderFurnitureLayers(stage);inspect(slot);};
     items.append(reset);return;
    }
@@ -892,7 +938,7 @@ G.PKMSVVWiki=(()=>{
   const footer=document.createElement('p');footer.className='pkmsvv-pc-hint';
   footer.textContent=tr('Ảnh gốc là tranh ghép một lớp: hiện giữ nguyên để bảo toàn chất lượng. Việc tách từng món và phục dựng phần tường/sàn bị che sẽ cần kiểm định mỹ thuật riêng; không tự trừ xu cho đồ chưa hoàn chỉnh.',
     'The original room is one flattened image, preserved for visual quality. Extracted furnishings and obscured background still require art validation; unfinished items cannot charge coins.');
-  if(skinQA)footer.textContent=tr('Skin thử nghiệm dùng PNG riêng, không thay đổi tính năng của máy. Chưa mở mua hoặc trang bị vĩnh viễn.','Prototype skins use separate PNGs without changing station functions. Permanent purchases and equips remain disabled.');
+  if(skinQA)footer.textContent=tr('Skin chỉ đổi ngoại hình, không đổi chức năng của máy. Danh mục hiện chưa mở bán.','Skins change appearance only. The current catalog is not for sale.');
   box.append(footer);overlay.append(box);document.body.append(overlay);
   inspect('center');back.focus({preventScroll:true});
   G.PKMSVVPippiGuide?.openFeature?.('construction');return true;

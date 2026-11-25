@@ -1322,3 +1322,16 @@
   white-space:nowrap!important;
  }
 }
+
+/* V3.1 skin catalog — preview and transaction are distinct actions. */
+#pkmsvv-wiki-overlay .pkmsvv-build-item[data-skin-item]{
+ grid-template-columns:minmax(0,1fr) auto!important;
+ align-items:center;gap:6px 8px;
+}
+#pkmsvv-wiki-overlay .pkmsvv-build-item[data-skin-item] [data-build-preview]{
+ grid-column:2;grid-row:1;min-width:80px;
+}
+#pkmsvv-wiki-overlay .pkmsvv-build-item[data-skin-item] [data-skin-transaction]{
+ grid-column:2;grid-row:2;min-width:80px;
+}
+#pkmsvv-wiki-overlay [data-skin-state="equipped"]{color:#a9f0c4!important}
