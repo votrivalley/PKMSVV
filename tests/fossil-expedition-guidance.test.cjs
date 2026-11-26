@@ -33,7 +33,7 @@ function fixture(overrides={}){
  const ctx={save(){},restore(){},translate(){},rotate(){},beginPath(){},arc(){},fill(){},
   stroke(){},moveTo(){},lineTo(){},closePath(){},fillRect(){},
   fillText(text){canvasText.push(String(text));},strokeText(){}};
- return {api:G.PKMSVVFossilExpedition,player,document,root,ctx,canvasText};
+ return {G,room,api:G.PKMSVVFossilExpedition,player,document,root,ctx,canvasText};
 }
 test('every unmined excavation has a world-edge direction arrow',()=>{
  const f=fixture();assert.equal(f.api.begin({mode:'fossil_lab'}),true);
@@ -79,4 +79,32 @@ test('Rotom starts outside tree collision and has more than one rescue approach'
  }
  assert.ok(approaches>=4,'rotom must be approachable from several directions');
  f.api.end();
+});
+
+test('host validates remote human mining with its own actor, independent cooldown and duplicate rejection',()=>{
+ const f=fixture();f.room.members[1]={uid:'friend',bot:false};f.room.matchSerial=3;
+ assert.equal(f.api.begin({mode:'fossil_lab'}),true);
+ const s=f.api.session,site=s.sites[0],remote={uid:'friend',x:site.x,y:site.y,dead:false};
+ assert.equal(f.api.remoteAction('friend',{...remote,x:site.x+1000},['fa','R1',3,1]).ok,false);
+ assert.equal(f.api.remoteAction('friend',remote,['fa','R1',2,2]).ok,false);
+ assert.equal(f.api.remoteAction('friend',remote,['fa','R1',3,2]).ok,true);
+ assert.equal(f.api.remoteAction('friend',remote,['fa','R1',3,2]).reason,'duplicate');
+ assert.equal(f.api.remoteAction('friend',remote,['fa','R1',3,3]).reason,'cooldown');
+ f.player.x=site.x;f.player.y=site.y;
+ assert.equal(f.api.perform().ok,true,'host has independent cooldown');
+ s.clock+=1;s.elapsed+=1;
+ assert.equal(f.api.remoteAction('friend',remote,['fa','R1',3,4]).ok,true);
+ assert.equal(site.hits,3);assert.equal(s.events.find(e=>e.type==='specimens').uid,'friend');
+});
+test('guest sees native action button and sends only a request, without locally modifying objective',()=>{
+ const f=fixture();f.room.members[1]={uid:'friend',bot:false};f.room.matchSerial=5;
+ f.G.Social.uid='friend';f.player.uid='friend';f.G.Coop.isHost=false;
+ f.G.Game.st={time:1};const sent=[];f.G.Coop.toHost=e=>sent.push(Array.from(e));
+ assert.equal(f.api.begin({mode:'fossil_lab'}),true);
+ const site=f.api.session.sites[0];f.player.x=site.x;f.player.y=site.y;
+ f.api.hud(f.ctx,1280,800);
+ assert.equal(f.document.getElementById('pkmsvv-fossil-expedition-action').style.display,'block');
+ assert.equal(f.api.perform().pending,true);
+ assert.deepEqual(sent,[['fa','R1',5,1]]);assert.equal(site.hits,0);
+ assert.equal(f.api.perform().reason,'cooldown');
 });

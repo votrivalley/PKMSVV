@@ -24,6 +24,12 @@ patch('js/net/coop.js',
  "      case 'fx': G.PKMSVVFossilExpedition?.onEvent?.(ev); break;\n"+
  "      case 'br': G.PKMSVVBerryRescue?.onEvent?.(ev); break;");
 
+// Guest requests use existing peer events; use Host's actor, not guest supplied coordinates.
+patch('js/net/coop.js',
+ "        case 'pb':",
+ "        case 'fa': G.PKMSVVFossilExpedition?.remoteAction?.(from,m.pl,ev); break;\n"+
+ "        case 'pb':");
+
 /* Berry already redirects enemies toward its living trees. Fossil defense
  * adds the same native Enemy.update() target after Rotom activates the machine.
  * 80% prefer the machine, 20% still pressure the trainers. No polling loops. */

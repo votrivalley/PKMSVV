@@ -94,7 +94,7 @@ const {startServer}=require('../lan-server/server.cjs');
    await host.evaluate(()=>G.PKMSVVPippiGuide?.close?.());
    await host.locator('#lobby-start').click({timeout:18000});
    await host.waitForFunction(()=>G.Game?.state==='playing'&&G.PKMSVVFossilExpedition?.active===true,null,{timeout:30000});
-   await guest.waitForFunction(()=>G.Game?.state==='playing',null,{timeout:30000});
+   await guest.waitForFunction(()=>G.Game?.state==='playing'&&G.PKMSVVFossilExpedition?.active===true,null,{timeout:30000});
    const state=await host.evaluate(()=>({
     mode:G.Social.room?.mode,playerCount:G.Social.room?.members?.length,
     sites:G.PKMSVVFossilExpedition.session?.sites?.length,
@@ -104,6 +104,25 @@ const {startServer}=require('../lan-server/server.cjs');
    assert.equal(state.playerCount,2);
    assert.equal(state.sites,3);
    console.log('COOP_FOSSIL_TWO_HUMAN_WIRELESS_REAL_GAME_PASS='+JSON.stringify(state));
+   const geometry=p=>p.evaluate(()=>{const s=G.PKMSVVFossilExpedition.session;return [s.machine,...s.sites].map(o=>[o.x,o.y]);});
+   assert.deepEqual(await geometry(guest),await geometry(host),'same world objective coordinates');
+   const actor=await guest.evaluate(()=>{
+    const p=G.Game.player,s=G.PKMSVVFossilExpedition.session.sites[0];
+    p.x=s.x;p.y=s.y+85;
+    return {uid:p.uid,x:p.x,y:p.y};
+   });
+   await host.waitForFunction(a=>{const m=G.Coop.mate(a.uid);return m&&Math.hypot(m.pl.x-a.x,m.pl.y-a.y)<18;},actor,{timeout:12000});
+   await guest.locator('#pkmsvv-fossil-expedition-action').waitFor({state:'visible',timeout:8000});
+   for(let i=1;i<=3;i++){
+    if(i===1)await guest.keyboard.press('e');else await guest.locator('#pkmsvv-fossil-expedition-action').click();
+    await host.waitForFunction(n=>G.PKMSVVFossilExpedition.session.sites[0].hits===n,i,{timeout:5000});
+    await guest.waitForFunction(n=>G.PKMSVVFossilExpedition.session.sites[0].hits===n,i,{timeout:5000});
+    await guest.waitForTimeout(850);
+   }
+   assert.equal(await host.evaluate(a=>G.PKMSVVFossilExpedition.session.events.some(e=>e.type==='specimens'&&e.uid===a),actor.uid),true);
+   assert.equal(await host.evaluate(()=>G.PKMSVVFossilExpedition.rewardEligible),false,'human party payout remains disabled');
+   assert.deepEqual(errs,[]);
+   console.log('COOP_FOSSIL_GUEST_REAL_MINING_PASS='+JSON.stringify({hits:3,guest:actor.uid,hostSnapshot:true,guestSnapshot:true,realInput:true,controlledPosition:true}));
   }
 
  }finally{await browser.close();await server?.close();}

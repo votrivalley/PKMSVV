@@ -22,10 +22,12 @@ G.PKMSVVFossilExpedition=(()=>{
   waveClock=0,waveIndex=0,duelClock=0,cachedThreats=0,rendered=new Set(),lastFinish=null,
   machineTarget=null,speedStage=-1,speedClock=0,distressNode=null,distressUntil=0,distressShown=false,
   worldCollider=null,escortRoute=[],escortRepathAt=0,rewardGate=null,lastReward=null;
- const botTimes=new Map();
+ const botTimes=new Map(),humanTimes=new Map(),remoteSeq=new Map();
+ let outgoingSeq=0,lastRequest=-100,escortUid=null;
+ const matchSerial=()=>Number.isSafeInteger(room()?.matchSerial)?room().matchSerial:0;
  const room=()=>G.Social?.room;
  const allBots=()=>G.Coop?.puppets?.().filter(p=>p.lanBot&&!p.dead)||[];
- const ally=()=>[G.Game?.player,...allBots()].filter(p=>p&&!p.dead&&Number.isFinite(p.x)&&Number.isFinite(p.y));
+ const ally=()=>[G.Game?.player,...(G.Coop?.puppets?.()||[])].filter(p=>p&&!p.dead&&Number.isFinite(p.x)&&Number.isFinite(p.y));
  const at=(p,q,r)=>!!p&&!!q&&Math.hypot(p.x-q.x,p.y-q.y)<=r;
  const phaseName=()=>current?.phase||'';
  const fragments=()=>current?.sites.reduce((n,s)=>n+s.hits,0)||0;
@@ -185,7 +187,7 @@ function updateRotomSOS(){
   worldCollider=null;
  }
  function begin({mode}={}){
-  end();finished=false;lastFinish=null;lastReward=null;lastAction=-100;lastBossHint=-100;scanClock=sendClock=waveClock=duelClock=speedClock=0;speedStage=-1;waveIndex=0;distressUntil=0;distressShown=false;botTimes.clear();
+  end();finished=false;lastFinish=null;lastReward=null;lastAction=-100;lastBossHint=-100;scanClock=sendClock=waveClock=duelClock=speedClock=0;speedStage=-1;waveIndex=0;distressUntil=0;distressShown=false;botTimes.clear();humanTimes.clear();remoteSeq.clear();outgoingSeq=0;lastRequest=-100;escortUid=null;
   if((mode||room()?.mode)!==KEY)return false;
   const r=room();
   if(!ready||r?.mode!==KEY||!Array.isArray(r.members)||r.members.length<2||r.members.length>4){
@@ -281,7 +283,7 @@ function updateRotomSOS(){
   if(!active||!G.Coop?.isHost||!actor||actor.dead||G.Game?.state!=='playing')
    return {ok:false,reason:'inactive'};
   const now=current.clock;
-  const last=fromBot?(botTimes.get(uid)||-100):lastAction;
+  const last=fromBot?(botTimes.get(uid)??-100):(humanTimes.get(uid)??-100);
   if(now-last<(fromBot?0.9:0.55))return {ok:false,reason:'cooldown'};
   let result={ok:false,reason:'range'};
   if(current.phase==='excavate'){
@@ -303,25 +305,43 @@ function updateRotomSOS(){
      'Pippi: Golurk is still standing! Beat the boss before freeing Rotom!');
    }
    if(result.ok){
+    escortUid=uid;
     talk('Pippi: Cứu được Rotom rồi! Dẫn em ấy về máy phục nguyên cũ nhé, đi chậm thôi để em theo kịp.',
      'Pippi: Rotom rescued! Escort it back to the old machine!');
    }
   }
   if(result.ok){
-   if(fromBot)botTimes.set(uid,now);else lastAction=now;
+   if(fromBot)botTimes.set(uid,now);else {humanTimes.set(uid,now);lastAction=now;}
   }
   return result;
  }
  function perform(){
   const actor=G.Game?.player;
-  return interact(actor,G.Social?.uid,false);
+  if(G.Coop?.isHost)return interact(actor,G.Social?.uid,false);
+  if(!nearestInteraction(actor)||G.Game?.state!=='playing'||!G.Coop?.toHost)return {ok:false,reason:'inactive'};
+  const now=Number(G.Game?.st?.time)||0;
+  if(now-lastRequest<.55)return {ok:false,reason:'cooldown'};
+  lastRequest=now;
+  G.Coop.toHost(['fa',current.roomId,matchSerial(),++outgoingSeq]);
+  return {ok:true,pending:true};
+ }
+ function remoteAction(uid,actor,ev){
+  if(!active||!current||!G.Coop?.isHost||!Array.isArray(ev)||ev.length!==4||
+     ev[0]!=='fa'||ev[1]!==current.roomId||ev[2]!==matchSerial()||
+     !Number.isSafeInteger(ev[3])||ev[3]<1||uid===G.Social?.uid||
+     !current.team.some(m=>m.uid===uid&&!m.bot)||
+     !room()?.members?.some(m=>m.uid===uid&&!m.bot&&!m.disconnected)||
+     !actor||actor.uid!==uid||actor.lanBot||actor.dead)return {ok:false,reason:'remote'};
+  if(ev[3]<=(remoteSeq.get(uid)||0))return {ok:false,reason:'duplicate'};
+  remoteSeq.set(uid,ev[3]);
+  return interact(actor,uid,false);
  }
  function botInteract(pl){
   if(!pl?.lanBot||!active||!G.Coop?.isHost)return false;
   return interact(pl,pl.uid,true).ok===true;
  }
  function nearestInteraction(p=G.Game?.player){
-  if(!active||!p||p.dead||!G.Coop?.isHost)return null;
+  if(!active||!p||p.dead)return null;
   if(current.phase==='excavate'){
    const site=current.sites.find(s=>!s.done&&at(p,s,C.DIG_RADIUS));
    return site?{type:'dig',site}:null;
@@ -404,7 +424,7 @@ function updateRotomSOS(){
  function moveRotom(dt){
   if(current?.phase!=='escort'||!G.Coop?.isHost)return;
   const r=current.rotom,players=ally();if(!players.length)return;
-  const leader=players.find(p=>p===G.Game?.player)||players[0];
+  const leader=players.find(p=>p.uid===escortUid&&!p.lanBot)||players.find(p=>p===G.Game?.player)||players[0];
   const dx=leader.x-r.x,dy=leader.y-r.y,d=Math.hypot(dx,dy);
   if(d<50){escortRoute=[];return;}
   const step=Math.min(d-45,165*Math.max(0,dt));if(step<=0)return;
@@ -681,6 +701,7 @@ function updateRotomSOS(){
  }
  function hud(ctx,w,h){
   if(!active||!current)return;
+  if(!G.Coop?.isHost&&typeof document!=='undefined')actionButton();
   const phase=current.phase,s=current,pl=G.Game?.player;
   const left=14,top=Math.max(115,h-145),obj=objective();
   ctx.save();ctx.textBaseline='top';
@@ -718,9 +739,9 @@ function updateRotomSOS(){
   active=false;restoreMachineCollider();finished=true;current=null;bossEnemy=null;rotomAnimator=null;
   escortRoute=[];escortRepathAt=0;
   uiButton?.remove();uiButton=null;distressNode?.remove();distressNode=null;distressShown=false;
-  rendered.clear();botTimes.clear();machineTarget=null;speedStage=-1;
+  rendered.clear();botTimes.clear();humanTimes.clear();remoteSeq.clear();escortUid=null;machineTarget=null;speedStage=-1;
  }
- return {nativeReady:ready,begin,tick,perform,botGoal,botInteract,targetFor,onEvent,
+ return {nativeReady:ready,begin,tick,perform,remoteAction,botGoal,botInteract,targetFor,onEvent,
   drawables,beginFrame,drawMissing,hud,reward,end,
   get active(){return active},get session(){return current},get lastFinish(){return lastFinish},get rewardEligible(){return !!rewardGate?.eligible},get lastReward(){return lastReward?{...lastReward}:null},
   get machineCollisionActive(){return !!worldCollider&&G.World?.isFree===worldCollider.wrapper;},
