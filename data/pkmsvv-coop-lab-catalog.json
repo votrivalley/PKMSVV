@@ -704,7 +704,6 @@
     "priceModel": {
       "base": 80,
       "step": 40,
-      "opening": 320,
       "rerollBase": 160,
       "rerollStep": 80
     },
@@ -728,8 +727,7 @@
       ],
       "companion": [
         "fortune",
-        "reroll",
-        "opening"
+        "reroll"
       ]
     }
   }

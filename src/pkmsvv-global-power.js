@@ -129,7 +129,7 @@ G.GlobalPower = (() => {
     return out;
   }
   function cleanResearch(levels){
-    const out=clean(levels);for(const u of LIST)if(u.retired)delete out[u.id];return out;
+    const out=clean(levels);for(const u of LIST)if(u.retired||u.id==='opening')delete out[u.id];return out;
   }
   // Research stores absolute targets, not extra ranks. Legacy purchases remain
   // effective but never stack twice and are not part of the Co-op payment ledger.

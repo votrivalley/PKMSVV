@@ -125,8 +125,8 @@ test('research machine ranks spend only Co-op Coins and use the actual GlobalPow
  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../src/pkmsvv-global-power.js'),'utf8'),ctx);
  const P=ctx.G.GlobalPower,M=lab.createMachineUpgradeEconomy(P);
  const all=Object.values(lab.config.stationUpgrades.stations).flat();
- assert.equal(all.length,12);assert.equal(new Set(all).size,12);
- assert.deepEqual([...all].sort(),Array.from(P.LIST.filter(x=>!x.retired),x=>x.id).sort());
+ assert.equal(all.length,11);assert.equal(new Set(all).size,11);
+ assert.deepEqual([...all].sort(),Array.from(P.LIST.filter(x=>!x.retired&&x.id!=='opening'),x=>x.id).sort());
  const s=save(1000);s.globalUpgrades={power:2};s.globalSpent={power:690};
  const before=snapshot(s);
  assert.equal(M.status(s,'mega').upgraded,false);
@@ -141,9 +141,16 @@ test('research machine ranks spend only Co-op Coins and use the actual GlobalPow
  assert.equal(s.pkmsvvResearchRanks.power,3);assert.equal(M.status(s,'mega').upgraded,true);assert.equal(M.status(s,'berry').upgraded,false);
  assert.ok(Math.abs(P.combine({},P.effectiveLevels(s)).atkMul-1.36)<1e-9);
  const reload=JSON.parse(snapshot(s));assert.equal(M.status(reload,'mega').upgraded,true);
- assert.equal(M.upgrade(reload,'companion','opening',ok).ok,true);
- assert.equal(P.combine({},P.effectiveLevels(reload)).startMoves,2);
- assert.equal(M.upgrade(reload,'companion','opening',ok).reason,'max');
+ const beforeRemoved=snapshot(reload);
+ assert.equal(M.upgrade(reload,'companion','opening',ok).reason,'stat');
+ assert.equal(snapshot(reload),beforeRemoved);
+ assert.deepEqual(M.status(reload,'companion').stats.map(x=>x.id),['fortune','reroll']);
+ assert.equal(P.combine({},P.effectiveLevels(reload)).startMoves,1);
+ assert.equal(P.combine({startMoves:2},P.effectiveLevels(reload)).startMoves,2);
+ assert.equal(P.combine({},P.effectiveLevels({pkmsvvResearchRanks:{opening:1}})).startMoves,1);
+ assert.equal(P.combine({},P.effectiveLevels({globalUpgrades:{opening:1}})).startMoves,2); // preserve prior legacy purchase
+ assert.equal(M.upgrade(reload,'companion','reroll',ok).ok,true);
+ assert.equal(P.combine({},P.effectiveLevels(reload)).rerolls,1);
  assert.equal(M.upgrade(reload,'companion','revive',ok).reason,'stat');
  assert.equal(P.refundable(reload),690);
 });

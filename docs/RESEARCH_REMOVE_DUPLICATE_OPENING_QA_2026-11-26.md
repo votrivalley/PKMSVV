@@ -1,0 +1,3 @@
+# Remove duplicate starting skill research — 2026-11-26
+
+Individual Pokémon Repertorio already provides a second initial attack; the start-run patch caps starting moves at two. User requested removal from machine research. Companion now exposes fortune and reroll only, total 11 active research stats. Opening cannot be bought through machine research and is excluded from research ranks. Existing individual upgrades remain unchanged. Existing historical PokéCoin global opening purchases retain their effect; legacy code is not retired globally in this patch. The legacy QA menu redirect remains, and public is unchanged. No migration or grant. CI pending.

@@ -213,10 +213,10 @@ function createStationSkinEconomy(registry){
  * or allowing the old refund ledger to refund Co-op coins as PokéCoins. */
 function createMachineUpgradeEconomy(power,registry=config.stationUpgrades){
  const groups=registry?.stations||{},prices=registry?.priceModel||{};
- const active=(id)=>power?.BY?.[id]&&!power.BY[id].retired;
+ const active=(id)=>id!=='opening'&&power?.BY?.[id]&&!power.BY[id].retired;
  const purchased=save=>power?.cleanResearch?.(save?.pkmsvvResearchRanks)||{};
  const effective=save=>power?.effectiveLevels?.(save)||{};
- const price=(id,level)=>id==='opening'?prices.opening:id==='reroll'?prices.rerollBase+level*prices.rerollStep:prices.base+level*prices.step;
+ const price=(id,level)=>id==='reroll'?prices.rerollBase+level*prices.rerollStep:prices.base+level*prices.step;
  function status(save,station){
   if(!Object.hasOwn(groups,station)||!power?.effectiveLevels)return null;
   const s=normal(save),ranks=purchased(save),levels=effective(save);
