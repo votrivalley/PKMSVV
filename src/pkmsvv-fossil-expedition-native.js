@@ -1,5 +1,5 @@
 /* PKMSVV Fossil Expedition v2 — actual host-owned LAN/AI objective adapter.
- * QA only until full 8-minute/multi-human/reward QA passes. No save writes.
+ * QA-only; local host + AI reward gate, remote-human settlement disabled.
  * Ground-truth simulation stays on host; each bot acts via G.LanAI.
  */
 G.PKMSVVFossilExpedition=(()=>{
@@ -21,7 +21,7 @@ G.PKMSVVFossilExpedition=(()=>{
   uiButton=null,lastAction=-100,lastBossHint=-100,sendClock=0,scanClock=0,
   waveClock=0,waveIndex=0,duelClock=0,cachedThreats=0,rendered=new Set(),lastFinish=null,
   machineTarget=null,speedStage=-1,speedClock=0,distressNode=null,distressUntil=0,distressShown=false,
-  worldCollider=null,escortRoute=[],escortRepathAt=0;
+  worldCollider=null,escortRoute=[],escortRepathAt=0,rewardGate=null,lastReward=null;
  const botTimes=new Map();
  const room=()=>G.Social?.room;
  const allBots=()=>G.Coop?.puppets?.().filter(p=>p.lanBot&&!p.dead)||[];
@@ -185,7 +185,7 @@ function updateRotomSOS(){
   worldCollider=null;
  }
  function begin({mode}={}){
-  end();finished=false;lastFinish=null;lastAction=-100;lastBossHint=-100;scanClock=sendClock=waveClock=duelClock=speedClock=0;speedStage=-1;waveIndex=0;distressUntil=0;distressShown=false;botTimes.clear();
+  end();finished=false;lastFinish=null;lastReward=null;lastAction=-100;lastBossHint=-100;scanClock=sendClock=waveClock=duelClock=speedClock=0;speedStage=-1;waveIndex=0;distressUntil=0;distressShown=false;botTimes.clear();
   if((mode||room()?.mode)!==KEY)return false;
   const r=room();
   if(!ready||r?.mode!==KEY||!Array.isArray(r.members)||r.members.length<2||r.members.length>4){
@@ -225,6 +225,10 @@ function updateRotomSOS(){
    G.UI?.toast?.(tr('Không thể bật va chạm cho máy phục hồi.',
     'Could not activate restorer collision.'),3500);
    end();return false;
+  }
+  if(window.PKMSVV_FOSSIL_REWARDS_QA===true&&typeof window.PKMSVVCreateFossilRewardGate==='function'){
+   rewardGate=window.PKMSVVCreateFossilRewardGate(C);
+   rewardGate.begin(current,G.DB?.save,{uid:G.Social?.uid,host:G.Coop?.isHost===true,members:r.members,roomId:r.id,guest:!!G.DB?.guest});
   }
   machineTarget={x:current.machine.x,y:current.machine.y,r:54,level:1,dead:false,
    _vx:0,_vy:0,_pkmsvvFossilMachine:true};
@@ -493,8 +497,20 @@ function updateRotomSOS(){
   if(result.finished){
    finished=true;active=false;uiButton?.remove();
    lastFinish=result.result||{cleared:false,reason:result.reason};
-   const receipt=result.result?.cleared?C.receipt(current,1):null;
-   finish?.({success:!!result.result?.cleared,reason:result.reason,receipt,
+   // Only this private host-owned completion path may settle.
+   if(result.result?.cleared&&rewardGate?.eligible){
+    try{
+     lastReward=rewardGate.finish(current,G.DB?.save,{uid:G.Social?.uid,host:G.Coop?.isHost===true,
+      members:room()?.members,roomId:room()?.id,guest:!!G.DB?.guest},()=>G.DB.commit(true));
+    }catch(_){lastReward={ok:false,reason:'save'};}
+    if(lastReward.ok){
+     G.UI?.refreshCoins?.();
+     G.UI?.toast?.(lastReward.firstClear?
+      tr('+'+lastReward.reward+' Xu Đồng Đội · Mở khóa máy phục nguyên và Kabuto!','+'+lastReward.reward+' Co-op Coins · Restorer and Kabuto unlocked!'):
+      tr('+'+lastReward.reward+' Xu Đồng Đội','+'+lastReward.reward+' Co-op Coins'),4500);
+    }else G.UI?.toast?.(tr('Chưa lưu được thưởng Co-op. Không cộng xu.','Co-op reward could not be saved. No coins credited.'),3500);
+   }
+   finish?.({success:!!result.result?.cleared,reason:result.reason,
     time:current.elapsed,partySize:current.team.length,fragments:fragments(),
     machineHp:current.machine.hp,rotom:current.rotom.merged});
   }
@@ -694,12 +710,11 @@ function updateRotomSOS(){
   drawCompass(ctx,w,h,pl);
  }
  function reward(result){
-  if(!result?.success)return false;
-  G.UI?.toast?.(tr('Thắng thử nghiệm! Thưởng Kabuto/Xu Đồng Đội chưa kích hoạt.',
-    'Mission QA cleared! Kabuto and Co-op Coins are not enabled yet.'),3500);
+  // Never settle an externally supplied summary, even for host.
   return false;
  }
  function end(){
+  rewardGate?.end();rewardGate=null;
   active=false;restoreMachineCollider();finished=true;current=null;bossEnemy=null;rotomAnimator=null;
   escortRoute=[];escortRepathAt=0;
   uiButton?.remove();uiButton=null;distressNode?.remove();distressNode=null;distressShown=false;
@@ -707,7 +722,7 @@ function updateRotomSOS(){
  }
  return {nativeReady:ready,begin,tick,perform,botGoal,botInteract,targetFor,onEvent,
   drawables,beginFrame,drawMissing,hud,reward,end,
-  get active(){return active},get session(){return current},get lastFinish(){return lastFinish},
+  get active(){return active},get session(){return current},get lastFinish(){return lastFinish},get rewardEligible(){return !!rewardGate?.eligible},get lastReward(){return lastReward?{...lastReward}:null},
   get machineCollisionActive(){return !!worldCollider&&G.World?.isFree===worldCollider.wrapper;},
   get objectivePositionDiagnostics(){
    if(!current)return [];

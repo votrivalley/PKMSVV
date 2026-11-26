@@ -76,4 +76,4 @@ fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,bundle);
 patch('dev.html','<script defer src="js/ui/pkmsvv-fossil-system.js"></script>',
  '<script defer src="js/ui/pkmsvv-fossil-system.js"></script>\n'+
  '<script defer src="js/ui/pkmsvv-fossil-expedition-native.js"></script>');
-console.log('Fossil Expedition native QA adapter added (2–4, three site mining, defense, 6–8m; rewards deliberately disabled).');
+console.log('Fossil Expedition native QA adapter added (2–4, three site mining, defense, 6–8m; local reward gate requires separate QA runtime flag).');

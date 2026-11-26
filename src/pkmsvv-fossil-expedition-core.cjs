@@ -138,9 +138,18 @@ function tick(s,{seconds,threats=0,roomId,liveMembers,rotomPosition,bossDefeated
   collected:s.collected,rotomHp:s.rotom.hp,machineHp:s.machine.hp};
 }
 function receipt(s,seq){
- if(!s?.result?.cleared||!s.rotom?.merged||!s.machine?.online||
-    !Number.isSafeInteger(seq)||seq<1||
-    !Array.isArray(s.team)||s.team.length<MIN_PARTY||s.team.length>MAX_PARTY)return null;
+ if(!s?.ok||s.phase!=='cleared'||s.mission!=='fossil_lab'||!s.result?.cleared||
+    !s.rotom?.freed||!s.rotom?.merged||!s.machine?.online||!finite(s.machine.hp)||s.machine.hp<=0||
+    !s.boss?.spawned||!s.boss?.defeated||s.collected!==3||
+    !Array.isArray(s.sites)||s.sites.length!==3||!s.sites.every(p=>p.done&&p.hits===ROCK_HITS)||
+    !finite(s.elapsed)||s.elapsed<DEFEND_END||s.result.elapsed!==s.elapsed||
+    !Number.isSafeInteger(seq)||seq<1||!roster(s.team))return null;
+ const events=Array.isArray(s.events)?s.events:[];
+ const specimens=events.filter(e=>e.type==='specimens');
+ const rescue=events.findIndex(e=>e.type==='rotom-rescued'),merge=events.findIndex(e=>e.type==='rotom-merged'),clear=events.findIndex(e=>e.type==='cleared');
+ if(specimens.length!==3||new Set(specimens.map(e=>e.siteId)).size!==3||
+    rescue<0||merge<=rescue||clear<=merge||events[rescue].at>=ROTOM_DEADLINE||events[clear].at<DEFEND_END||
+    s.result.optionalObjectives!==Number(s.machine.hp>=MAX_MACHINE_HP*.6)+Number(s.rotom.hp>=50))return null;
  return Object.freeze({mission:'fossil_lab',verified:true,cleared:true,seq,
   durationSeconds:Math.round(s.elapsed*1000)/1000,partySize:s.team.length,
   optionalObjectives:s.result.optionalObjectives});

@@ -239,6 +239,39 @@ function createMachineUpgradeEconomy(power,registry=config.stationUpgrades){
  return {status,upgrade};
 }
 
+
+/* Bind one local host + AI mission to one save/sequence. Network summary
+ * packets are never payment authorization. No remote-human payout yet. */
+function createFossilRewardGate(core){
+ let bound=null;
+ const soloParty=(session,uid,members)=>{
+  if(!session||session.hostUid!==uid||!Array.isArray(session.team)||
+    session.team.filter(x=>!x.bot).length!==1||!session.team.some(x=>x.uid===uid&&!x.bot)||
+    !Array.isArray(members)||members.length!==session.team.length)return false;
+  return session.team.every(x=>members.filter(m=>m?.uid===x.uid&&!m.disconnected&&!!m.bot===x.bot).length===1);
+ };
+ function begin(session,save,{uid,host,members,guest,roomId}={}){
+  bound=null;
+  if(!host||guest||!save||!core?.receipt||!soloParty(session,uid,members)||
+   roomId!==session.roomId||session.phase!=='excavate'||session.elapsed!==0||session.result||!session.ok)return false;
+  const seq=normal(save).lastSettledSeq+1;
+  if(!Number.isSafeInteger(seq))return false;
+  bound={session,save,uid,seq,done:false};return true;
+ }
+ function finish(session,save,{uid,host,members,guest,roomId}={},commit){
+  const b=bound;
+  if(!b||b.session!==session||b.save!==save||b.uid!==uid||b.done)return {ok:false,reason:'session'};
+  if(!host||guest||roomId!==session.roomId||!soloParty(session,uid,members))return {ok:false,reason:'party'};
+  const receipt=core.receipt(session,b.seq);
+  if(!receipt)return {ok:false,reason:'objectives'};
+  if(normal(save).lastSettledSeq!==b.seq-1)return {ok:false,reason:'sequence'};
+  const result=settle(save,receipt,commit);
+  if(result.ok)b.done=true;
+  return result;
+ }
+ return {begin,finish,end:()=>{bound=null;},get eligible(){return !!bound&&!bound.done;}};
+}
+
 const stationSkinEconomy=createStationSkinEconomy(config.stationSkins);
 
-module.exports={config,normal,isMachineUnlocked,buy,equip,settle,exchange,weekKey,buySupply,stationSkinEconomy,createStationSkinEconomy,createMachineUpgradeEconomy};
+module.exports={config,normal,isMachineUnlocked,buy,equip,settle,exchange,weekKey,buySupply,stationSkinEconomy,createStationSkinEconomy,createMachineUpgradeEconomy,createFossilRewardGate};

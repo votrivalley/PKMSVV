@@ -10,6 +10,11 @@ on:
       - 'scripts/extract-research-layers.cjs'
       - 'data/pkmsvv-coop-lab-catalog.json'
       - 'src/pkmsvv-coop-lab-core.cjs'
+      - 'src/pkmsvv-fossil-expedition-core.cjs'
+      - 'src/pkmsvv-fossil-expedition-native.js'
+      - 'scripts/patch-fossil-expedition-native.cjs'
+      - 'tests/fossil-expedition-core.test.cjs'
+      - 'tests/fossil-expedition-native-browser.cjs'
       - 'tests/research-station-skin-economy.test.cjs'
       - 'src/pkmsvv-skill-track.js'
       - 'scripts/patch-global-upgrades.cjs'
@@ -258,7 +263,7 @@ jobs:
             mode:'fossil_lab',
             minPartySize:2,maxPartySize:4,
             available:'offline solo human with 1-3 AI teammates',
-            limitation:'Offline with 1-3 AI teammates. No remote human matchmaking or rewards. Co-op 6-8-minute full-clear QA pending.',
+            limitation:'Local host + AI reward gate under QA. Native full 8-minute clear and human-party rewards still need verification.',
             production:false
           };
           fs.writeFileSync('dist/lan/build-info.json',JSON.stringify(info,null,2)+'\n');

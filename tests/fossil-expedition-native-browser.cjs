@@ -251,6 +251,14 @@ const {startServer}=require('../lan-server/server.cjs');
   }));
   assert.deepEqual({mode:state.mode,host:state.host,sites:state.sites,hp:state.hp,team:state.team},
     {mode:'fossil_lab',host:true,sites:3,hp:360,team:party.length});
+  const rewardCheck=await page.evaluate(()=>{
+   const api=G.PKMSVVFossilExpedition;
+   const eligible=api.rewardEligible,coins=G.DB.save.pkmsvvCoopLab?.coopCoins||0;
+   const forged=api.reward({success:true,receipt:{verified:true,cleared:true,seq:1,durationSeconds:480}});
+   return {eligible,forged,coins,after:G.DB.save.pkmsvvCoopLab?.coopCoins||0};
+  });
+  assert.equal(rewardCheck.eligible,true,'Local native AI party must be eligible');
+  assert.equal(rewardCheck.forged,false);assert.equal(rewardCheck.coins,rewardCheck.after);
   const positions=await page.evaluate(()=>{
    const s=G.PKMSVVFossilExpedition.session;
    return {
