@@ -11,6 +11,7 @@ on:
       - 'data/pkmsvv-coop-lab-catalog.json'
       - 'src/pkmsvv-coop-lab-core.cjs'
       - 'tests/research-station-skin-economy.test.cjs'
+      - 'tests/fixtures/research-royal-pricing.cjs'
       - 'src/pkmsvv-wiki.js'
       - 'src/pkmsvv-pc-menu-clean-qa.css'
       - 'tests/research-source-extraction.test.cjs'

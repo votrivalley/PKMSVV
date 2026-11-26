@@ -242,13 +242,15 @@ const {startServer}=require('../lan-server/server.cjs');
   // network response for the catalog is replaced; DB.commit and Guardian are real.
   const diskPage=await browser.newPage({viewport:{width:1280,height:920}});
   const diskErrors=[];diskPage.on('pageerror',e=>diskErrors.push(String(e)));
-  const diskFlow={fixturePrice:100,initialCoins:350,realCommit:true,isolatedBrowser:true,skin:'mega_royal'};
+  const {prices,total,pricedRoyalFixture}=require('./fixtures/research-royal-pricing.cjs');
+  const royalFixture=pricedRoyalFixture(realRegistry);
+  const diskFlow={fixturePrices:prices,initialCoins:total,realCommit:true,isolatedBrowser:true,skin:'mega_royal'};
   try{
    await diskPage.addInitScript(()=>{window.__pkmsvvPippiGuideQABypass=true;});
    await diskPage.route('**/pkmsvv-research-skin-economy-qa.js*',async route=>{
     const response=await route.fetch(),body=await response.text(),needle=JSON.stringify(realRegistry);
     assert.ok(body.includes(needle),'Missing closed registry');
-    await route.fulfill({response,body:body.replace(needle,JSON.stringify(fixture))});
+    await route.fulfill({response,body:body.replace(needle,JSON.stringify(royalFixture))});
    });
    const ready=()=>diskPage.waitForFunction(()=>!!window.G?.DB?.save&&!!G.MenuUI?.open&&
     !!window.PKMSVVSaveGuardian?.snapshot&&!!window.PKMSVVStationSkinEconomy?.registry?.purchaseEnabled);
@@ -270,32 +272,34 @@ const {startServer}=require('../lan-server/server.cjs');
    });
    await diskPage.goto(url,{waitUntil:'domcontentloaded',timeout:45000});await ready();
    // Seed only a synthetic profile in this ephemeral context, using real local commit.
-   const seeded=await diskPage.evaluate(async()=>{
+   const seeded=await diskPage.evaluate(async(total)=>{
     if(G.DB.guest||!localStorage.getItem('ps.save.pkmsvv_offline'))throw Error('Expected isolated offline profile');
     const s=G.DB.save;s.partner=25;s.pkmsvvStorySeen=true;s.pkmsvvNameChosen=true;
-    s.pkmsvvCoopLab={machineUnlocked:true,coopCoins:350,ownedDecor:{machine_old:true,gold_pippi_statue:true},
+    s.pkmsvvCoopLab={machineUnlocked:true,coopCoins:total,ownedDecor:{machine_old:true,gold_pippi_statue:true},
      equippedDecorBySlot:{center:'machine_old',trophy:'gold_pippi_statue'}};
     const r=await G.DB.commit(true);if(r===false)throw Error('Synthetic seed commit failed');
     window.PKMSVVSaveGuardian.snapshot('skin-fixture-seed');
     return JSON.parse(localStorage.getItem('ps.save.pkmsvv_offline')).pkmsvvCoopLab.coopCoins;
-   });
-   assert.equal(seeded,350);await show();await build();
+   },total);
+   assert.equal(seeded,total);await show();await build();
+   assert.equal(await action('mega_copper').isDisabled(),true);
+   assert.match(await action('mega_royal').textContent(),/480/);
    await action('mega_royal').click();
    await diskPage.waitForFunction(()=>document.querySelector('[data-skin-item="mega_royal"] [data-skin-state]')?.dataset.skinState==='owned');
    await action('mega_royal').click();
    await diskPage.waitForFunction(()=>document.querySelector('.pkmsvv-build-stage [data-lab-layer="mega"]')?.dataset.labSkin==='mega_royal');
    let snapshots=await stored();
-   assert.equal(snapshots.primary.coopCoins,250);assert.equal(snapshots.primary.stationSkins.owned.mega_royal,true);
+   assert.equal(snapshots.primary.coopCoins,total-prices.mega_royal);assert.equal(snapshots.primary.stationSkins.owned.mega_royal,true);
    assert.equal(snapshots.primary.stationSkins.equipped.mega,'mega_royal');
    assert.equal(snapshots.latest.stationSkins.equipped.mega,'mega_royal');
-   assert.equal(snapshots.latest.coopCoins,250);
+   assert.equal(snapshots.latest.coopCoins,total-prices.mega_royal);
    assert.ok(snapshots.previous,'Previous generation must exist');
    await diskPage.reload({waitUntil:'domcontentloaded'});await ready();
    await diskPage.waitForFunction(()=>G.DB.save.pkmsvvCoopLab?.stationSkins?.equipped?.mega==='mega_royal');
    await show();await diskPage.waitForFunction(()=>document.querySelector('.pkmsvv-research-room [data-lab-layer="mega"]')?.dataset.labSkin==='mega_royal');
    await build();await action('default').click();
    await diskPage.waitForFunction(()=>document.querySelector('.pkmsvv-build-stage [data-lab-layer="mega"]')?.dataset.labSkin==='default');
-   snapshots=await stored();assert.equal(snapshots.primary.coopCoins,250);assert.equal(snapshots.primary.stationSkins.owned.mega_royal,true);
+   snapshots=await stored();assert.equal(snapshots.primary.coopCoins,total-prices.mega_royal);assert.equal(snapshots.primary.stationSkins.owned.mega_royal,true);
    assert.equal(snapshots.primary.stationSkins.equipped.mega,undefined);
    assert.equal(snapshots.latest.stationSkins.owned.mega_royal,true);
    assert.equal(snapshots.latest.stationSkins.equipped.mega,undefined);
@@ -303,8 +307,43 @@ const {startServer}=require('../lan-server/server.cjs');
    await diskPage.reload({waitUntil:'domcontentloaded'});await ready();
    await diskPage.waitForFunction(()=>G.DB.save.pkmsvvCoopLab?.stationSkins?.owned?.mega_royal===true);
    await show();await diskPage.waitForFunction(()=>document.querySelector('.pkmsvv-research-room [data-lab-layer="mega"]')?.dataset.labSkin==='default');
+   // Real paid-flow for the proposed full collection. All five stations
+   // use independently priced QA-only entries, and no real player profile.
+   await build();await action('mega_royal').click();
+   await diskPage.waitForFunction(()=>document.querySelector('.pkmsvv-build-stage [data-lab-layer="mega"]')?.dataset.labSkin==='mega_royal');
+   let remaining=total-prices.mega_royal;
+   for(const [slot,station] of [['center','fossil'],['shelf_left','support'],['garden','berry'],['trophy','companion']]){
+    const id=station+'_royal';
+    await diskPage.locator('[data-build-slot="'+slot+'"]').click();
+    assert.match(await action(id).textContent(),new RegExp(String(prices[id])));
+    assert.equal(await action(station+'_copper').isDisabled(),true);
+    await action(id).click();
+    await diskPage.waitForFunction(id=>document.querySelector('[data-skin-item="'+id+'"] [data-skin-state]')?.dataset.skinState==='owned',id);
+    remaining-=prices[id];snapshots=await stored();assert.equal(snapshots.primary.coopCoins,remaining);
+    await action(id).click();
+    await diskPage.waitForFunction(([station,id])=>document.querySelector('.pkmsvv-build-stage [data-lab-layer="'+station+'"]')?.dataset.labSkin===id,[station,id]);
+   }
+   assert.equal(remaining,0);snapshots=await stored();
+   assert.equal(snapshots.primary.coopCoins,0);assert.equal(snapshots.latest.coopCoins,0);
+   for(const id of Object.keys(prices)){
+    const station=id.replace(/_royal$/,'');
+    assert.equal(snapshots.primary.stationSkins.owned[id],true);
+    assert.equal(snapshots.primary.stationSkins.equipped[station],id);
+    assert.equal(snapshots.latest.stationSkins.equipped[station],id);
+   }
+   assert.equal(snapshots.primary.equippedDecorBySlot.trophy,'gold_pippi_statue');
+   await diskPage.reload({waitUntil:'domcontentloaded'});await ready();await show();
+   await diskPage.waitForFunction(()=>document.querySelectorAll('.pkmsvv-research-room [data-lab-skin$="_royal"]').length===5);
+   assert.equal(await diskPage.locator('.pkmsvv-research-room [data-lab-underlay="companion_royal"]').count(),1);
+   await diskPage.locator('.pkmsvv-research-room').screenshot({path:path.join(out,'research-v3-royal-full-owned.png')});
+   await build();await action('default').click();
+   await diskPage.waitForFunction(()=>document.querySelector('.pkmsvv-build-stage [data-lab-layer="mega"]')?.dataset.labSkin==='default');
+   assert.equal(await action('mega_royal').isEnabled(),true,'Re-equip must work at zero coins');
+   await action('mega_royal').click();
+   await diskPage.waitForFunction(()=>document.querySelector('.pkmsvv-build-stage [data-lab-layer="mega"]')?.dataset.labSkin==='mega_royal');
+   assert.equal((await stored()).primary.coopCoins,0);
    assert.deepEqual(diskErrors,[]);
-   diskFlow.status='PASS';diskFlow.finalCoins=250;diskFlow.reload=true;diskFlow.guardianLatest=true;diskFlow.previousExists=true;
+   diskFlow.status='PASS';diskFlow.finalCoins=0;diskFlow.reload=true;diskFlow.guardianLatest=true;diskFlow.previousExists=true;diskFlow.fullRoyalCollection=true;diskFlow.zeroCoinEquip=true;
   }finally{await diskPage.close();}
   assert.deepEqual(errors,[]);
   fs.writeFileSync(path.join(out,'report.json'),JSON.stringify({status:'PASS',v3,labels,landscape,room,errors,paidFlow,diskFlow,royalPreview:{stations:royalSelections,independent:true,saleLocked:true}},null,2));

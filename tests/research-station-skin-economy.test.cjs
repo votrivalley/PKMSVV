@@ -68,3 +68,47 @@ test('an equipped unknown or retired skin falls back without erasing ownership',
  assert.equal(retired.status(s,'mega').equipped,'default');
  assert.equal(s.pkmsvvCoopLab.stationSkins.owned.mega_test,true);
 });
+
+test('Royal proposal: exact price, 1-coin-short denial, no Copper sale, and full collection at zero',()=>{
+ const {prices,total,pricedRoyalFixture}=require('./fixtures/research-royal-pricing.cjs');
+ assert.equal(total,2160);
+ const registry=pricedRoyalFixture(lab.config.stationSkins);
+ const E=lab.createStationSkinEconomy(registry);
+ const s=save(total);
+ assert.equal(lab.config.stationSkins.purchaseEnabled,false);
+ for(const [id,price] of Object.entries(prices)){
+  const station=id.replace(/_royal$/,'');
+  const poor=save(price-1),before=snapshot(poor);
+  assert.equal(E.buySkin(poor,id,ok).reason,'coins');assert.equal(snapshot(poor),before);
+  const exact=save(price);
+  assert.equal(E.buySkin(exact,id,ok).remaining,0);
+  assert.equal(E.equipSkin(exact,station,id,ok).ok,true);
+  assert.equal(E.equipSkin(exact,station,'default',ok).ok,true);
+  assert.equal(E.status(exact,station).variants.find(x=>x.id===id).owned,true);
+  assert.equal(E.buySkin(exact,id,ok).reason,'owned');
+  assert.equal(E.buySkin(s,station+'_copper',ok).reason,'unavailable');
+  assert.equal(E.buySkin(s,id,ok).ok,true);
+  assert.equal(E.equipSkin(s,station,id,ok).ok,true);
+ }
+ assert.equal(s.pkmsvvCoopLab.coopCoins,0);
+ assert.equal(Object.keys(s.pkmsvvCoopLab.stationSkins.owned).length,5);
+ assert.equal(s.pkmsvvCoopLab.equippedDecorBySlot.trophy,'gold_pippi_statue');
+ assert.equal(s.coins,555);
+ const restored=JSON.parse(snapshot(s));
+ for(const id of Object.keys(prices)){
+  const station=id.replace(/_royal$/,'');
+  assert.equal(E.status(restored,station).equipped,id);
+  assert.equal(E.equipSkin(restored,station,'default',ok).ok,true);
+  assert.equal(E.equipSkin(restored,station,id,ok).ok,true);
+ }
+ assert.equal(restored.pkmsvvCoopLab.coopCoins,0);
+});
+test('Royal proposal farming estimate uses configured fossil rewards, not an invented live payout',()=>{
+ const {total}=require('./fixtures/research-royal-pricing.cjs');
+ const cfg=lab.config.rewards;
+ assert.equal(cfg.firstClear,200);assert.equal(cfg.replay,120);
+ assert.equal(cfg.optionalObjectiveReward,20);assert.equal(cfg.maxOptionalObjectives,2);
+ const clears=(bonus)=>1+Math.ceil(Math.max(0,total-(cfg.firstClear+bonus))/(cfg.replay+bonus));
+ assert.equal(clears(0),18);assert.equal(clears(40),13);
+ assert.equal(cfg.expectedDurationMinutes[0],8);
+});
