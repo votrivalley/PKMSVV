@@ -633,6 +633,61 @@
         "price": null,
         "artApproved": false,
         "spritePath": "images/coop-lab/research-v3/skins/fossil-copper.png"
+      },
+      {
+        "id": "support_royal",
+        "station": "support",
+        "variant": "royal",
+        "nameVi": "Hoàng gia — mẫu thử",
+        "nameEn": "Royal — preview",
+        "price": null,
+        "artApproved": false,
+        "spritePath": "images/coop-lab/research-v3/skins/support-royal.png",
+        "sha256": "12910345adde0324a917695e1d4357700b797156c61dedbceb11cd174cf2eb2a"
+      },
+      {
+        "id": "mega_royal",
+        "station": "mega",
+        "variant": "royal",
+        "nameVi": "Hoàng gia — mẫu thử",
+        "nameEn": "Royal — preview",
+        "price": null,
+        "artApproved": false,
+        "spritePath": "images/coop-lab/research-v3/skins/mega-royal.png",
+        "sha256": "37b165c754561079d21f525caa74cac1649863f06e90374e3d4d53a8d2296f88"
+      },
+      {
+        "id": "berry_royal",
+        "station": "berry",
+        "variant": "royal",
+        "nameVi": "Hoàng gia — mẫu thử",
+        "nameEn": "Royal — preview",
+        "price": null,
+        "artApproved": false,
+        "spritePath": "images/coop-lab/research-v3/skins/berry-royal.png",
+        "sha256": "5c76195ff96955edf719a394420b3694b73ef7a9463e3c235880f03ac7fbd309"
+      },
+      {
+        "id": "companion_royal",
+        "station": "companion",
+        "variant": "royal",
+        "nameVi": "Hoàng gia — mẫu thử",
+        "nameEn": "Royal — preview",
+        "price": null,
+        "artApproved": false,
+        "spritePath": "images/coop-lab/research-v3/skins/companion-royal.png",
+        "sha256": "4a2d3dbaa175ec07d913e3ec928795d124e91529a3241d62746a6d6107baa44b"
+      },
+      {
+        "id": "fossil_royal",
+        "station": "fossil",
+        "variant": "royal",
+        "nameVi": "Hoàng gia — mẫu thử",
+        "nameEn": "Royal — preview",
+        "price": null,
+        "artApproved": false,
+        "spritePath": "images/coop-lab/research-v3/skins/fossil-royal.png",
+        "sha256": "c3166fc439fd9d1e9794c7d886478730554b9648e2ca571a6fc717d3b6c6149b"
       }
     ]
   }

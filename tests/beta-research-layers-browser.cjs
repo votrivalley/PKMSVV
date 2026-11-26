@@ -55,9 +55,9 @@ const {startServer}=require('../lan-server/server.cjs');
   await page.locator('.pkmsvv-build-stage').screenshot({path:path.join(out,'research-v3-construction.png')});
   assert.equal(await page.locator('[data-build-slot]').count(),5);
   const bridge=await page.evaluate(()=>({ready:!!window.PKMSVVStationSkinEconomy?.status,enabled:window.PKMSVVStationSkinEconomy?.registry?.purchaseEnabled,variants:window.PKMSVVStationSkinEconomy?.registry?.variants?.length}));
-  assert.deepEqual(bridge,{ready:true,enabled:false,variants:5});
+  assert.deepEqual(bridge,{ready:true,enabled:false,variants:10});
   assert.equal(await page.locator('[data-skin-state="equipped"]').count(),1);
-  assert.equal(await page.locator('[data-skin-state="unowned"]').count(),1);
+  assert.equal(await page.locator('[data-skin-state="unowned"]').count(),2);
   assert.equal(await page.locator('[data-skin-transaction]:not(:disabled)').count(),0);
   const skinSelections=[];
   for(const [slot,station] of [['center','fossil'],['shelf_left','support'],['shelf_right','mega'],['garden','berry'],['trophy','companion']]){
@@ -76,6 +76,30 @@ const {startServer}=require('../lan-server/server.cjs');
   }
   await page.locator('.pkmsvv-build-stage').screenshot({path:path.join(out,'research-v3-copper-preview.png')});
   await page.locator('.pkmsvv-build-panel').screenshot({path:path.join(out,'research-v3-skin-shop.png')});
+  // All five authored skins must coexist with copper and defaults. This is
+  // a preview only; original V3.1 background remains pinned.
+  const royalSelections=[];
+  for(const [slot,station] of [['center','fossil'],['shelf_left','support'],['shelf_right','mega'],['garden','berry'],['trophy','companion']]){
+   await page.locator('[data-build-slot="'+slot+'"]').click();
+   const id=station+'_royal';
+   assert.equal(await page.locator('[data-skin-item="'+id+'"] [data-skin-state="unowned"]').count(),1);
+   assert.equal(await page.locator('[data-skin-transaction="'+id+'"]').isDisabled(),true);
+   await page.locator('[data-build-preview="'+id+'"]').click();
+   await page.waitForFunction(([station,id])=>document.querySelector('.pkmsvv-build-stage [data-lab-layer="'+station+'"]')?.dataset.labSkin===id,[station,id]);
+   royalSelections.push(station);
+   const actual=await page.locator('.pkmsvv-build-stage [data-lab-layer]').evaluateAll(es=>es.map(e=>({station:e.dataset.labLayer,skin:e.dataset.labSkin})));
+   for(const e of actual)assert.equal(e.skin,e.station==='crest'?'default':royalSelections.includes(e.station)?e.station+'_royal':'copper');
+   assert.equal(await page.evaluate(()=>JSON.stringify(G.DB.save.pkmsvvCoopLab??null)),v3Save);
+  }
+  await page.locator('.pkmsvv-build-stage').screenshot({path:path.join(out,'research-v3-royal-all.png')});
+  await page.locator('.pkmsvv-build-panel').screenshot({path:path.join(out,'research-v3-royal-shop.png')});
+  await page.locator('[data-build-preview-reset]').click();
+  await page.waitForFunction(()=>document.querySelectorAll('.pkmsvv-build-stage [data-lab-skin="default"]').length===6);
+  await page.locator('[data-build-slot="shelf_right"]').click();
+  await page.locator('[data-build-preview="mega_royal"]').click();
+  await page.waitForFunction(()=>document.querySelector('.pkmsvv-build-stage [data-lab-layer="mega"]')?.dataset.labSkin==='mega_royal');
+  assert.equal(await page.locator('.pkmsvv-build-stage [data-lab-skin="default"]').count(),5);
+  await page.locator('.pkmsvv-build-stage').screenshot({path:path.join(out,'research-v3-royal-mega-only.png')});
   await page.locator('[data-build-preview-reset]').click();
   await page.waitForFunction(()=>document.querySelectorAll('.pkmsvv-build-stage [data-lab-skin="default"]').length===6);
   assert.equal(await page.evaluate(()=>JSON.stringify(G.DB.save.pkmsvvCoopLab??null)),v3Save);
@@ -271,7 +295,7 @@ const {startServer}=require('../lan-server/server.cjs');
    diskFlow.status='PASS';diskFlow.finalCoins=250;diskFlow.reload=true;diskFlow.guardianLatest=true;diskFlow.previousExists=true;
   }finally{await diskPage.close();}
   assert.deepEqual(errors,[]);
-  fs.writeFileSync(path.join(out,'report.json'),JSON.stringify({status:'PASS',v3,labels,landscape,room,errors,paidFlow,diskFlow},null,2));
+  fs.writeFileSync(path.join(out,'report.json'),JSON.stringify({status:'PASS',v3,labels,landscape,room,errors,paidFlow,diskFlow,royalPreview:{stations:royalSelections,independent:true,saleLocked:true}},null,2));
   console.log('PKMSVV_RESEARCH_LAYERS_BROWSER_PASS',JSON.stringify(room));
  }catch(e){
   const state=await page.evaluate(()=>({economy:!!window.G?.PKMSVVCoopEconomy,artRegistry:!!window.PKMSVV_RESEARCH_ART_QA,mode:document.querySelector('.pkmsvv-research-room,.pkmsvv-build-stage')?.dataset.researchArtMode,images:[...document.querySelectorAll('.pkmsvv-lab-source-layer,.pkmsvv-lab-station-prop')].map(i=>({src:i.src,complete:i.complete,width:i.naturalWidth}))})).catch(()=>null);

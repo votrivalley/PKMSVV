@@ -21,6 +21,7 @@ async function validate(dir,registry=catalog){
   let visible=0,transparent=0;
   for(let i=3;i<pixels.length;i+=4){if(pixels[i]>0)visible++;else transparent++;}
   assert.ok(visible>l.w*l.h*.1&&transparent>l.w*l.h*.005,'Blank or flattened skin '+item.id);
+  if(item.sha256!==undefined){assert.match(item.sha256,/^[a-f0-9]{64}$/,'Invalid skin fingerprint');assert.equal(sha(data),item.sha256,'Approved skin bytes changed');}
   if(item.artApproved===true){
    assert.ok(Number.isSafeInteger(item.price)&&item.price>0,'Approved item requires approved positive price');
    assert.match(item.sha256||'',/^[a-f0-9]{64}$/,'Approved item requires exact asset fingerprint');
