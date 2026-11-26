@@ -1,4 +1,4 @@
-name: Publish verified Research Machines to existing Beta only
+name: Publish verified Active Skills and Fossil Rewards to existing Beta only
 on:
   push:
     branches: [feature/web-3ds-skill-effects-passives-qa-20261121]
@@ -20,28 +20,50 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/45759667540" --jq '{head_sha,status,conclusion}' | jq -e '.head_sha=="151998bef3c49b62da18acd49302b0dd926ee99d" and .status=="completed" and .conclusion=="success"'
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/45772302034" --jq '{head_sha,status,conclusion}' | jq -e '.head_sha=="dd8eb75c55af308a6925f25b5772f24e2bbfdb18" and .status=="completed" and .conclusion=="success"'
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/45774373646" --jq '{head_sha,status,conclusion}' | jq -e '.head_sha=="da47bfd940dc4c636be0092842466e679224d269" and .status=="completed" and .conclusion=="success"'
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/45774985667" --jq '{head_sha,status,conclusion}' | jq -e '.head_sha=="bf9f0d5f7b4adfab50b32770c5597c1eb5905147" and .status=="completed" and .conclusion=="success"'
       - uses: actions/download-artifact@v4
         with:
           repository: ${{ github.repository }}
           github-token: ${{ github.token }}
-          run-id: 45759667540
+          run-id: 45772302034
           name: PKMSVV-Beta-255-176-Skills-Integrated-QA-NEVER-LIVE
           path: dist/new
       - uses: actions/download-artifact@v4
         with:
           repository: ${{ github.repository }}
           github-token: ${{ github.token }}
-          run-id: 45759667540
+          run-id: 45772302034
           name: PKMSVV-Research-Room-Browser-QA
           path: dist/report
-      - name: Validate machine research, pinned original sprites, and playable routes
+      - uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+          run-id: 45774373646
+          name: Fossil-native-reward-research-browser-QA
+          path: dist/fossil-report
+      - uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+          run-id: 45774985667
+          name: Native-active-touch-browser-QA
+          path: dist/touch-report
+      - name: Validate machine research, active controls, native reward and playable routes
         run: |
           set -euo pipefail
-          jq -e '.qaCommit=="151998bef3c49b62da18acd49302b0dd926ee99d" and .production==false and .previewBranch=="beta" and .skills==176' dist/new/build-info.json
+          jq -e '.qaCommit=="dd8eb75c55af308a6925f25b5772f24e2bbfdb18" and .production==false and .previewBranch=="beta" and .skills==176' dist/new/build-info.json
           report=$(find dist/report -name report.json -print -quit)
           test -n "$report"
           jq -e '.status=="PASS" and .machineFlow.status=="PASS" and .machineFlow.realCommit and .machineFlow.unmodifiedCatalog and .machineFlow.powerRank==2 and .machineFlow.finalCoins==40 and .machineFlow.reloaded and .machineFlow.independentSprite and .machineFlow.oldMenuRedirect' "$report"
+          fossil=$(find dist/fossil-report -name report.json -print -quit)
+          touch=$(find dist/touch-report -name report.json -print -quit)
+          test -n "$fossil" && test -n "$touch"
+          jq -e '.status=="PASS" and .duration>=480 and .earned==240 and .remaining==160 and .rank==1 and .atk==1.12' "$fossil"
+          jq -e '.status=="PASS" and .touchTap and .touchHoldOn and .repeatsAfterRelease and .touchHoldOff and .actualShadowForceMovement and .species==487' "$touch"
+          grep -Fq 'window.PKMSVV_FOSSIL_REWARDS_QA=true' dist/new/game/js/ui/pkmsvv-qa-runtime-config.js
           grep -Fq 'window.PKMSVV_RESEARCH_MACHINE_QA=true' dist/new/game/js/ui/pkmsvv-qa-runtime-config.js
           grep -Fq 'PKMSVVResearchMachines' dist/new/game/js/ui/pkmsvv-research-skin-economy-qa.js
           grep -Fq 'effectiveLevels' dist/new/game/js/app.min.js
@@ -52,6 +74,7 @@ jobs:
             cmp "dist/new/game/images/coop-lab/research-v3/$station.png" "dist/new/game/images/coop-lab/research-v3/skins/$station-advanced.png"
           done
           test -s dist/new/game/images/coop-lab/research-v3/skins/companion-basic-floor.png
+          test -s dist/new/game/images/coop-lab/research-v3/skins/support-basic-wall.png
           if find dist/new -type f -size +25M | grep -q .; then exit 1; fi
       - name: Find byte-verified rollback artifact for CURRENT Beta (fail closed)
         env:
@@ -63,8 +86,10 @@ jobs:
           old=$(jq -er '.qaCommit | select(test("^[a-f0-9]{40}$"))' /tmp/beta-before.json)
           jq -e '.production==false and .previewBranch=="beta"' /tmp/beta-before.json
           echo "CURRENT_BETA=$old"
-          if [ "$old" = 151998bef3c49b62da18acd49302b0dd926ee99d ]; then
+          if [ "$old" = dd8eb75c55af308a6925f25b5772f24e2bbfdb18 ]; then
             cp -a dist/new dist/old
+          elif [ "$old" = 151998bef3c49b62da18acd49302b0dd926ee99d ]; then
+            gh run download 45759667540 --repo "$GITHUB_REPOSITORY" --name PKMSVV-Beta-255-176-Skills-Integrated-QA-NEVER-LIVE --dir dist/old
           elif [ "$old" = 89398aa454283be0a9835b4828355a2cc8fe7531 ]; then
             gh run download 44787502842 --repo "$GITHUB_REPOSITORY" --name PKMSVV-Fossil-Native-Gameplay-QA --dir dist/old
           else
