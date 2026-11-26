@@ -21,10 +21,25 @@ const {startServer}=require('../lan-server/server.cjs');
    G.DB.commit?.();
   });
  }
+ async function openFossilRole(p,role){
+  await p.evaluate(()=>G.MenuUI.open());
+  await p.locator('#scr-menu [data-go="multiplayer"]').click();
+  await p.locator('#pkmsvv-coop-modes [data-mode="fossil_lab"]').click();
+  const guide=await p.evaluate(()=>{
+   const g=G.PKMSVVPippiGuide,lines=[];
+   let n=0;while(g?.current?.kind==='mode_fossil_lab'&&n++<8){
+    lines.push(document.querySelector('.pkmsvv-pippi-guide-line')?.textContent||'');g.next();
+   }
+   return lines;
+  });
+  await p.locator('#pkmsvv-coop-actions [data-role="'+role+'"]').click();
+  return guide;
+ }
  try{
   await prepare(host);
   await prepare(guest);
-  await host.goto(base+'/ai/game/?pkmsvvWifi=1&pkmsvvRole=host&pkmsvvMode='+mode,{waitUntil:'domcontentloaded',timeout:45000});
+  const hostGuide=mode==='fossil_lab'?await openFossilRole(host,'host'):null;
+  if(mode!=='fossil_lab')await host.goto(base+'/ai/game/?pkmsvvWifi=1&pkmsvvRole=host&pkmsvvMode='+mode,{waitUntil:'domcontentloaded',timeout:45000});
   await host.waitForTimeout(1400);
   console.log('COOP_WEBRTC_HOST_BOOT_PROBE='+JSON.stringify(await host.evaluate(()=>({
    href:location.href,ready:document.readyState,wifi:window.PKMSVV_WIFI,
@@ -58,6 +73,7 @@ const {startServer}=require('../lan-server/server.cjs');
      nativeReady:G.PKMSVVFossilExpedition?.nativeReady};
    });
    assert.equal(tutorial.nativeReady,true,'Fossil expedition must be ready inside real Wi-Fi Co-op');
+   if(hostGuide?.length)tutorial.lines=hostGuide;
    assert.equal(tutorial.lines.length,3,'Pippi must explain all three actual fossil phases');
    assert.match(tutorial.lines.join(' '),/9 mảnh/);
    assert.match(tutorial.lines.join(' '),/Golurk/);
@@ -67,20 +83,41 @@ const {startServer}=require('../lan-server/server.cjs');
    console.log('COOP_FOSSIL_PIPPI_SOUTHERN_GUIDE_PASS='+JSON.stringify(tutorial));
   }
 
-  await guest.goto(base+'/ai/game/?pkmsvvWifi=1&pkmsvvRole=join&pkmsvvMode='+mode,{waitUntil:'domcontentloaded',timeout:45000});
+  if(mode==='fossil_lab')await openFossilRole(guest,'join');
+  else await guest.goto(base+'/ai/game/?pkmsvvWifi=1&pkmsvvRole=join&pkmsvvMode='+mode,{waitUntil:'domcontentloaded',timeout:45000});
   await guest.waitForFunction(()=>window.PKMSVV_WIFI===true&&!!G.LanBus?.answer&&!!window.PKMSVVWifiUI?.join,{timeout:35000});
   await guest.waitForFunction(()=>!!document.querySelector('.pkmsvv-wifi-panel')||!!document.querySelector('#pkmsvv-unified-coop'),{timeout:18000});
   assert.equal(await guest.evaluate(()=>!!document.querySelector('#scr-menu')),true,'Co-op Join must never load an empty page');
   console.log('COOP_WEBRTC_REAL_JOIN_PAGE_PASS');
   // This is not simulated remote gameplay. Exchange real WebRTC SDP between two
   // Chromium pages, following exactly the user's Host / Join manual code path.
-  const invitation=await host.evaluate(()=>G.LanBus.invitation());
-  assert.match(invitation,/^PKMWIFI1\./);
-  const answer=await guest.evaluate(v=>G.LanBus.answer(v),invitation);
-  assert.match(answer,/^PKMWIFI1\./);
-  await host.evaluate(v=>G.LanBus.accept(v),answer);
-  const result=await guest.evaluate(async()=>G.Social.joinRoom(G.LanBus.pendingRoom));
-  assert.ok(result?.ok,'Join must return real LAN room success: '+JSON.stringify(result));
+  if(mode==='fossil_lab'){
+   await host.evaluate(()=>G.PKMSVVPippiGuide?.close?.());
+   await guest.evaluate(()=>G.PKMSVVPippiGuide?.close?.());
+   await host.locator('#pkmsvv-lan-copy-invite').click();
+   await host.getByRole('button',{name:/1\. Tạo lời mời|1\. Create an invitation/}).click();
+   const out=p=>p.locator('.pkmsvv-wifi-output textarea');
+   await host.waitForFunction(()=>document.querySelector('.pkmsvv-wifi-output textarea')?.value.startsWith('PKMWIFI1.'),null,{timeout:25000});
+   const invitation=await out(host).inputValue();
+   await guest.locator('.pkmsvv-wifi-panel textarea:not([readonly])').fill(invitation);
+   await guest.getByRole('button',{name:/2\. Tạo phản hồi|2\. Create reply/}).click();
+   await guest.waitForFunction(()=>document.querySelector('.pkmsvv-wifi-output textarea')?.value.startsWith('PKMWIFI1.'),null,{timeout:25000});
+   await host.locator('.pkmsvv-wifi-panel textarea:not([readonly])').fill(await out(guest).inputValue());
+   await host.getByRole('button',{name:/3\. Nhận phản hồi|3\. Accept reply/}).click();
+   await host.waitForFunction(()=>/Đã nhận phản hồi|Reply accepted/.test(document.querySelector('.pkmsvv-wifi-panel [role=status]')?.textContent||''),null,{timeout:25000});
+   await guest.getByRole('button',{name:/3\. Vào phòng|3\. Join Room/}).click();
+   await guest.waitForFunction(()=>G.Social.room?.mode==='fossil_lab'&&G.UI.isOpen('scr-lobby'),null,{timeout:25000});
+   await host.locator('.pkmsvv-wifi-panel > button').first().click();
+   console.log('COOP_FOSSIL_MENU_AND_PAIRING_UI_PASS');
+  }else{
+   const invitation=await host.evaluate(()=>G.LanBus.invitation());
+   assert.match(invitation,/^PKMWIFI1\./);
+   const answer=await guest.evaluate(v=>G.LanBus.answer(v),invitation);
+   assert.match(answer,/^PKMWIFI1\./);
+   await host.evaluate(v=>G.LanBus.accept(v),answer);
+   const result=await guest.evaluate(async()=>G.Social.joinRoom(G.LanBus.pendingRoom));
+   assert.ok(result?.ok,'Join must return real LAN room success: '+JSON.stringify(result));
+  }
   await host.waitForFunction(()=>G.Social?.room?.members?.length>=2,{timeout:12000});
   const room=await host.evaluate(()=>({id:G.Social.room.id,mode:G.Social.room.mode,members:G.Social.room.members.map(m=>m.uid)}));
   assert.equal(room.members.length,2);
@@ -108,7 +145,7 @@ const {startServer}=require('../lan-server/server.cjs');
    assert.deepEqual(await geometry(guest),await geometry(host),'same world objective coordinates');
    const actor=await guest.evaluate(()=>{
     const p=G.Game.player,s=G.PKMSVVFossilExpedition.session.sites[0];
-    p.x=s.x;p.y=s.y+85;
+    p.x=s.x;p.y=s.y+65;
     return {uid:p.uid,x:p.x,y:p.y};
    });
    await host.waitForFunction(a=>{const m=G.Coop.mate(a.uid);return m&&Math.hypot(m.pl.x-a.x,m.pl.y-a.y)<18;},actor,{timeout:12000});
