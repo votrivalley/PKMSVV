@@ -50,7 +50,8 @@ G.PKMSVVDash = (() => {
     }
     return true;
   }
-  function isActive(m){return m?.kind==='dash'||m?.kind==='blitz';}
+  function isActive(m){return ['dash','blitz','leap'].includes(m?.kind);}
+  function canTarget(pl,m){return m?.kind==='dash'||!!G.PKMSVV3DSStage5Combat?.hasMovementTarget?.(pl,m);}
   function preview(pl,eligible=()=>true) {
     if (!pl || !Array.isArray(pl.moves)) return null;
     const moves = pl.moves.filter(isActive);
@@ -79,5 +80,5 @@ G.PKMSVVDash = (() => {
     locks.set(pl,now()+LOCK_MS);
     return true;
   }
-  return {isActive,preview,consume,direction,begin,advance,profile,canUse,readyIn,LOCK_MS,PROFILES};
+  return {isActive,canTarget,preview,consume,direction,begin,advance,profile,canUse,readyIn,LOCK_MS,PROFILES};
 })();

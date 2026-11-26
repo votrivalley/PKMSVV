@@ -13,6 +13,8 @@ on:
       - 'src/pkmsvv-3ds-combat-stage5.js'
       - 'tests/runtime-controls-qa.test.cjs'
       - 'tests/dash-ui.test.cjs'
+      - 'tests/autocast.test.cjs'
+      - 'tests/3ds-stage5-combat.test.cjs'
       - 'scripts/prepare-lan.cjs'
       - 'scripts/extract-research-layers.cjs'
       - 'data/pkmsvv-coop-lab-catalog.json'

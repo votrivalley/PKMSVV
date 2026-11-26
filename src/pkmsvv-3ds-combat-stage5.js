@@ -43,7 +43,17 @@ G.PKMSVV3DSStage5Combat=(()=>{
     default:return 520;
    }
  }
- function hasBlitzTarget(p,m){return !!p&&!!m&&enemies(p.x,p.y,reach(m)).some(e=>e&&!e.dead&&!e.arceus);}
+ const movementEnemy=e=>!!e&&!e.dead&&!e.arceus&&!e.remote&&!e.friendly&&!e.pkmsvvFriendly&&!e.isSupport&&Number.isFinite(e.x)&&Number.isFinite(e.y);
+ function movementTarget(p,m){
+  if(!p||p.dead||!m||!['blitz','leap'].includes(m.kind))return null;
+  if(m.only?.length&&!m.only.includes(Number(p.mon?.dex)))return null;
+  const range=reach(m);
+  const arr=enemies(p.x,p.y,range).filter(e=>movementEnemy(e)&&Math.hypot(e.x-p.x,e.y-p.y)<=range);
+  arr.sort((a,b)=>(a.x-p.x)**2+(a.y-p.y)**2-((b.x-p.x)**2+(b.y-p.y)**2));
+  return arr[0]||null;
+ }
+ function hasMovementTarget(p,m){return !!movementTarget(p,m);}
+ function hasBlitzTarget(p,m){return m?.kind==='blitz'&&hasMovementTarget(p,m);}
  function needsTarget(m){return !!m&&['scissor','blitz','leap','boom'].includes(m.kind);}
  function spawn(fields,p,m,ghost=false){
   if(!m||!K.has(m.kind))return old.spawn(fields,p,m,ghost);
@@ -69,7 +79,7 @@ G.PKMSVV3DSStage5Combat=(()=>{
    f.count=cap(Math.round(m.count||1),1,8);
    f.done=new Set();f.steps=0;
   }else if(m.kind==='leap'){
-   const tg=nearest(p,reach(m));
+   const tg=movementTarget(p,m);
    if(!tg)return false;
    f.x=tg.x;f.y=tg.y;f.at=.32;f.life=.6;f.struck=false;
    if(m.noItem>0 && (p.item==null||p.item===''))f.dmg*=m.noItem;
@@ -109,7 +119,7 @@ G.PKMSVV3DSStage5Combat=(()=>{
    if(f.ghost)return true; // Native ghost field does not teleport or damage.
    let tg=null,closest=Infinity;
    for(const e of enemies(p.x,p.y,reach(m))){
-     if(!e||e.dead||e.arceus||f.done.has(e))continue;
+     if(!movementEnemy(e)||f.done.has(e))continue;
      const d=(e.x-p.x)**2+(e.y-p.y)**2;
      if(d<closest){closest=d;tg=e;}
    }
@@ -188,5 +198,5 @@ G.PKMSVV3DSStage5Combat=(()=>{
   isPortField:f=>isStage5Field(f)||!!old.isPortField?.(f),
   spawn,update,draw
  };
- return {isStage5Field,needsTarget,hasBlitzTarget,reach,spawn,update,draw};
+ return {isStage5Field,needsTarget,hasBlitzTarget,hasMovementTarget,reach,spawn,update,draw};
 })();

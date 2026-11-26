@@ -84,8 +84,14 @@ once('js/systems/combat.js','  function resolve(dt, pl, now) {',
  '  function resolve(dt, localPlayer, now) {\n    const pl=localPlayer;');
 once('js/systems/combat.js','      const p = projectiles[i];',
  '      const p = projectiles[i];\n      const pl=p.friendly&&p.owner?.lanBot?p.owner:localPlayer;');
-once('js/systems/combat.js','G.PKMSVVDash.direction(pl,G.Input.axis())',
- 'G.PKMSVVDash.direction(pl,pl.lanBotAxis||G.Input.axis())');
+// Directional dash now receives the explicit auto angle and distinguishes
+// local input from the bot's own axis in the shared patch. Verify rather
+// than applying the obsolete replacement a second time.
+{
+ const c=fs.readFileSync(path.join(game,'js/systems/combat.js'),'utf8');
+ if(!c.includes('G.PKMSVVDash.direction(pl,pl.lanBot?pl.lanBotAxis:G.Input.axis())'))
+  throw Error('LAN AI explicit dash direction anchor drift');
+}
 once('js/systems/combat.js',
  `        if (G.U.dist2(p.x, p.y, pl.x, pl.y) < (p.r + pl.r) * (p.r + pl.r)) {
           pl.hurt(p.dmg, p.mtype, false, p.cat);`,

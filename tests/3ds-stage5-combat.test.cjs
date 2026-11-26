@@ -220,3 +220,16 @@ test('Stage5 source patch adds native targeting rules and range/knock multiplica
  assert.ok(preparation.includes('patch-3ds-stage5-families.cjs'));
  assert.doesNotMatch(read('src/pkmsvv-3ds-combat-stage5.js'),/localStorage|SaveGuardian|save\.json|signingKey/);
 });
+
+test('Leap activation requires a valid nearby hostile and preserves species restriction',()=>{
+ const f=fixture(),api=f.G.PKMSVV3DSStage5Combat,acro=f.G.Moves.instance('acrobatics'),shadow=f.G.Moves.instance('shadow-force');
+ assert.equal(api.hasMovementTarget(f.p,acro),false);
+ const near={x:50,y:0,r:10,dead:false},far={x:110,y:0,r:10,dead:false};
+ f.enemies.push({x:20,y:0,friendly:true},{x:10,y:0,remote:true},{x:5,y:0,arceus:true},near,far);
+ f.p.target=far;
+ assert.equal(api.hasMovementTarget(f.p,acro),true);assert.equal(api.hasMovementTarget(f.p,shadow),false);
+ const a=f.cast('acrobatics');assert.equal(a.fields[0].x,near.x,'nearest hostile, not stale marked target');
+ f.p.mon.dex=487;assert.equal(api.hasMovementTarget(f.p,shadow),true);
+ const s=f.cast('shadow-force');assert.equal(s.ok,true);assert.equal(s.fields[0].x,near.x);
+ f.update(s.fields[0],.33);assert.equal(f.p.x,near.x);assert.equal(f.log.blasts.length,1);
+});

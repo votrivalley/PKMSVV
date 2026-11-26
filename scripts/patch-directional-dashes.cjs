@@ -17,7 +17,7 @@ for(const [id,oldLine,newLine] of [
 ])patch('js/data/moves.js',oldLine,newLine);
 patch('js/systems/combat.js',
  "    G.PKMSVVDash.consume(pl,pick);\n    const m=pick.move;\n    m.t = G.PKMSVVBalance.effectiveCooldown(pl,m);\n    pl.cast(m);\n    if (G.Coop.active) G.Coop.cast(pl,m);\n    m.castAt = performance.now();\n    run(pl,m);\n    return true;",
- "    if(pick.move.kind==='blitz'&&!G.PKMSVV3DSStage5Combat?.hasBlitzTarget?.(pl,pick.move))return false;\n"+
+ "    if(!G.PKMSVVDash.canTarget(pl,pick.move))return false;\n"+
  "    if (!G.PKMSVVDash.consume(pl,pick)) return false;\n"+
  "    const m=pick.move, previousAim=pl.aim;\n"+
  "    // Input / left stick / touch joystick, else last walking direction;\n"+

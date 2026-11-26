@@ -22,10 +22,15 @@ const {startServer}=require('../lan-server/server.cjs');
     if(!Number.isFinite(t)||t<=0)throw Error('Non-finite cooldown '+def.id+': '+t);
     results.push({id:m.id,kind:m.kind,cd:t,native:!!m.pkmsvv3dsNative});
    }
-   return {total:all.length,native:native.length,screen:results.filter(x=>x.kind==='screen'),kinds:[...new Set(native.map(x=>x.kind))],minimum:Math.min(...results.map(x=>x.cd))};
+   const movement=all.filter(d=>G.PKMSVVDash.isActive(d)).map(d=>d.id).sort();
+   return {movement,total:all.length,native:native.length,screen:results.filter(x=>x.kind==='screen'),kinds:[...new Set(native.map(x=>x.kind))],minimum:Math.min(...results.map(x=>x.cd))};
   });
   assert.equal(state.total,176,'Native Beta must preserve 103 moves + 73 added moves');
   assert.equal(state.native,73,'Do not overwrite existing 103 moves');
+  const expected=['quick-attack','aerial-ace','flame-charge','u-turn','extreme-speed','megahorn','volt-tackle','dragon-ascent','meteor-assault','sunsteel-strike','acrobatics','shadow-force'];
+  for(const id of expected)assert.ok(state.movement.includes(id),'Missing active movement '+id);
+  assert.ok(!state.movement.includes('surf')&&!state.movement.includes('waterfall'));
+  console.log('BETA_ACTIVE_MOVEMENT_CATALOG='+JSON.stringify(state.movement));
   assert.ok(state.screen.length>0,'Native Light Screen missing: this was the reported Explore crash');
   assert.deepEqual(errors,[],'No unhandled game boot JS errors');
   console.log('BETA_176_ALL_NATIVE_COOLDOWNS_PASS='+JSON.stringify(state));
