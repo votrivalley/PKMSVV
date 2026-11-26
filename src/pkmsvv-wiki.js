@@ -654,9 +654,22 @@ G.PKMSVVWiki=(()=>{
    })]);
    if(background.naturalWidth!==1500||background.naturalHeight!==1049||
       images.some((img,i)=>img.naturalWidth!==m.layers[i].w||img.naturalHeight!==m.layers[i].h))return;
+   // Only a successfully loaded Royal companion sprite can hide its old
+   // chest; missing or invalid art preserves the default room.
+   const companionIndex=m.layers.findIndex(p=>p.id==='companion');
+   let underlay=null;
+   if(choices[companionIndex]?.id==='companion_royal'&&choices[companionIndex]?.file==='skins/companion-royal.png'){
+    try{const img=await load('skins/companion-royal-floor.png');if(img.naturalWidth===146&&img.naturalHeight===102)underlay=img;}catch(_){}
+   }
    if(stage.dataset.labRenderRevision!==revision||!stage.isConnected)return;
-   stage.querySelectorAll('.pkmsvv-lab-furniture,.pkmsvv-lab-source-layer,.pkmsvv-lab-station-prop,.pkmsvv-lab-v3-layer').forEach(x=>x.remove());
+   stage.querySelectorAll('.pkmsvv-lab-furniture,.pkmsvv-lab-source-layer,.pkmsvv-lab-station-prop,.pkmsvv-lab-v3-layer,.pkmsvv-lab-v3-underlay').forEach(x=>x.remove());
    const place=(el,p)=>{el.style.left=p.x/1500*100+'%';el.style.top=p.y/1049*100+'%';el.style.width=p.w/1500*100+'%';el.style.height=p.h/1049*100+'%';};
+   if(underlay){
+    underlay.className='pkmsvv-lab-v3-underlay';underlay.dataset.labUnderlay='companion_royal';
+    underlay.alt='';underlay.draggable=false;underlay.setAttribute('aria-hidden','true');
+    Object.assign(underlay.style,{position:'absolute',objectFit:'fill',pointerEvents:'none',zIndex:'0',maxWidth:'none',margin:'0',padding:'0',border:'0'});
+    place(underlay,{x:925,y:670,w:146,h:102});stage.prepend(underlay);
+   }
    for(let i=0;i<m.layers.length;i++){
     const p=m.layers[i],img=images[i];img.className='pkmsvv-lab-v3-layer';img.dataset.labLayer=p.id;img.dataset.labSlot=p.slot;img.dataset.labSkin=choices[i].file===p.file?'default':choices[i].id===p.id+'_copper'?'copper':choices[i].id;
     img.alt='';img.draggable=false;img.setAttribute('aria-hidden','true');
@@ -694,7 +707,7 @@ G.PKMSVVWiki=(()=>{
  }
  function renderFurnitureLayers(stage){
   if(!stage)return;
-  stage.querySelectorAll('.pkmsvv-lab-furniture,.pkmsvv-lab-source-layer,.pkmsvv-lab-station-prop,.pkmsvv-lab-v3-layer').forEach(x=>x.remove());
+  stage.querySelectorAll('.pkmsvv-lab-furniture,.pkmsvv-lab-source-layer,.pkmsvv-lab-station-prop,.pkmsvv-lab-v3-layer,.pkmsvv-lab-v3-underlay').forEach(x=>x.remove());
   const modular=modularLabPreview();
   const revision=String((Number(stage.dataset.labRenderRevision)||0)+1);
   stage.dataset.labRenderRevision=revision;
