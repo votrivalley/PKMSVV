@@ -272,6 +272,61 @@ function createFossilRewardGate(core){
  return {begin,finish,end:()=>{bound=null;},get eligible(){return !!bound&&!bound.done;}};
 }
 
+
+/* Berry coins: same wallet/sequence as fossil, but never unlock restoration
+ * or grant Kabuto. Only the private native host tick can settle a run.
+ * Bind once on its first frame; invalidate on roster, room, save or clock drift. */
+function createBerryRewardGate(){
+ const cfg=config.berryCoinRewards;
+ let bound=null,started=false;
+ function party(ctx){
+  if(!ctx?.host||ctx.guest||!['berry','berryeasy'].includes(ctx.mode)||
+    typeof ctx.uid!=='string'||!ctx.uid||typeof ctx.roomId!=='string'||!ctx.roomId||
+    !Array.isArray(ctx.members)||ctx.members.length!==cfg.partySize)return null;
+  const seen=new Set(),members=[];
+  for(const m of ctx.members){
+   if(typeof m?.uid!=='string'||!m.uid||seen.has(m.uid)||m.disconnected)return null;
+   seen.add(m.uid);members.push([m.uid,m.bot===true]);
+  }
+  if(members.filter(m=>!m[1]).length!==1||!members.some(m=>m[0]===ctx.uid&&!m[1]))return null;
+  return JSON.stringify(members.sort((a,b)=>a[0].localeCompare(b[0])));
+ }
+ function begin(session,save,ctx,t){
+  if(started)return false;started=true;
+  const roster=party(ctx);
+  if(!cfg||!session||!save||!roster||!Number.isFinite(t)||t<0||t>2.2)return false;
+  const seq=normal(save).lastSettledSeq+1;if(!Number.isSafeInteger(seq))return false;
+  bound={session,save,uid:ctx.uid,roomId:ctx.roomId,mode:ctx.mode,roster,seq,time:0,done:false};
+  return true;
+ }
+ function observe(session,save,ctx,t){
+  const b=bound;if(!b||b.done)return false;
+  if(b.session!==session||b.save!==save||b.uid!==ctx.uid||b.roomId!==ctx.roomId||b.mode!==ctx.mode||
+     b.roster!==party(ctx)||!Number.isFinite(t)||t<b.time||t-b.time>2.2){bound=null;return false;}
+  b.time=t;return true;
+ }
+ function finish(session,save,ctx,{success,time,trees,bossStage}={},commit){
+  const b=bound;
+  if(!b||b.done)return {ok:false,reason:'session'};
+  if(!observe(session,save,ctx,time))return {ok:false,reason:'session'};
+  if(success!==true||time<cfg.minDurationSeconds||time>cfg.maxDurationSeconds||bossStage!==2||
+    !Array.isArray(trees)||trees.length!==3||!trees.every(h=>Number.isInteger(h)&&h>=0&&h<=100))
+   return {ok:false,reason:'objectives'};
+  const survivors=trees.filter(h=>h>0).length;
+  if(!survivors)return {ok:false,reason:'objectives'};
+  const price=b.mode==='berryeasy'?cfg.easy:cfg.normal,reward=price.base+price.perTree*survivors;
+  const result=change(save,s=>{
+   if(s.lastSettledSeq!==b.seq-1)return {ok:false,reason:'sequence'};
+   if(s.coopCoins>max-reward||s.totalCompletions>=max)return {ok:false,reason:'overflow'};
+   s.coopCoins+=reward;s.lastSettledSeq=b.seq;s.totalCompletions++;
+   return {ok:true,reward,survivors,mode:b.mode,totalCoins:s.coopCoins};
+  },commit);
+  if(result.ok)b.done=true;
+  return result;
+ }
+ return {begin,observe,finish,end:()=>{bound=null;},get eligible(){return !!bound&&!bound.done;}};
+}
+
 const stationSkinEconomy=createStationSkinEconomy(config.stationSkins);
 
-module.exports={config,normal,isMachineUnlocked,buy,equip,settle,exchange,weekKey,buySupply,stationSkinEconomy,createStationSkinEconomy,createMachineUpgradeEconomy,createFossilRewardGate};
+module.exports={config,normal,isMachineUnlocked,buy,equip,settle,exchange,weekKey,buySupply,stationSkinEconomy,createStationSkinEconomy,createMachineUpgradeEconomy,createFossilRewardGate,createBerryRewardGate};

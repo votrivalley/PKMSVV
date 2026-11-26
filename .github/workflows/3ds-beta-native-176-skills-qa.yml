@@ -19,6 +19,8 @@ on:
       - 'scripts/extract-research-layers.cjs'
       - 'data/pkmsvv-coop-lab-catalog.json'
       - 'src/pkmsvv-coop-lab-core.cjs'
+      - 'src/pkmsvv-berry-rescue.js'
+      - 'tests/berry-rescue.test.cjs'
       - 'src/pkmsvv-fossil-expedition-core.cjs'
       - 'src/pkmsvv-fossil-expedition-native.js'
       - 'scripts/patch-fossil-expedition-native.cjs'
@@ -113,7 +115,7 @@ jobs:
           npm pkg set 'overrides.node-abi=4.40.0'
           npm install --no-audit --no-fund
       - name: Check 2–4 room rules and 6–8 minute outcome core
-        run: node --test tests/fossil-objective-path.test.cjs tests/fossil-concept-sprites.test.cjs tests/menu-pokemon-hub-regression.test.cjs tests/fossil-expedition-core.test.cjs tests/fossil-expedition-guidance.test.cjs tests/fossil-expedition-routing.test.cjs tests/quick-region.test.cjs tests/coop-lab-core.test.cjs tests/research-station-skin-economy.test.cjs tests/lan-ai-modes.test.cjs tests/pippi-guide.test.cjs
+        run: node --test tests/fossil-objective-path.test.cjs tests/fossil-concept-sprites.test.cjs tests/menu-pokemon-hub-regression.test.cjs tests/fossil-expedition-core.test.cjs tests/fossil-expedition-guidance.test.cjs tests/fossil-expedition-routing.test.cjs tests/quick-region.test.cjs tests/coop-lab-core.test.cjs tests/berry-rescue.test.cjs tests/research-station-skin-economy.test.cjs tests/lan-ai-modes.test.cjs tests/pippi-guide.test.cjs
       - name: Verify MAX skill AUTO and held item choice logic from original QA
         run: node --test tests/runtime-controls-qa.test.cjs tests/held-item-choice.test.cjs
       - name: Verify Pippi QA cousin trigger does not affect normal balance

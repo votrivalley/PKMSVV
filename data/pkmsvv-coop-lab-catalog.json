@@ -730,5 +730,19 @@
         "reroll"
       ]
     }
+  },
+  "berryCoinRewards": {
+    "qaOnly": true,
+    "minDurationSeconds": 480,
+    "maxDurationSeconds": 512,
+    "partySize": 4,
+    "normal": {
+      "base": 60,
+      "perTree": 20
+    },
+    "easy": {
+      "base": 40,
+      "perTree": 10
+    }
   }
 }

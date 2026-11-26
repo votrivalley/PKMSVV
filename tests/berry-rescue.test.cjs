@@ -312,3 +312,50 @@ test('Berry objective pressure uses bounded 5Hz hostile scans through minute fiv
  assert.ok(calls<1800,'do not scan 130 enemies on all 18,750 frames: '+calls);
  assert.ok(calls>1200,'threat scan remains live and accurate: '+calls);
 });
+
+test('Berry coins gate: normal/easy tree payouts, no duplicate, no remote-human reward, rollback',()=>{
+ const lab=require('../src/pkmsvv-coop-lab-core.cjs');
+ const host={host:true,guest:false,uid:'p',roomId:'R',mode:'berry',members:[{uid:'p'},{uid:'a',bot:true},{uid:'b',bot:true},{uid:'c',bot:true}]};
+ const run=(save,ctx=host)=>{
+  const gate=lab.createBerryRewardGate(),session={};
+  assert.equal(gate.begin(session,save,ctx,0),true);
+  for(let t=1;t<=480;t++)assert.equal(gate.observe(session,save,ctx,t),true);
+  return {gate,session,finish:(trees,commit=()=>true)=>gate.finish(session,save,ctx,{success:true,time:480,trees,bossStage:2},commit)};
+ };
+ const save={coins:9};
+ const a=run(save);const before=JSON.stringify(save);
+ assert.equal(a.finish([100,100,100],()=>false).reason,'save');assert.equal(JSON.stringify(save),before);
+ assert.equal(a.finish([100,100,100]).reward,120);
+ assert.equal(a.finish([100,100,100]).reason,'session');
+ assert.equal(save.pkmsvvCoopLab.machineUnlocked,false);assert.equal(save.owned,undefined);assert.equal(save.coins,9);
+ assert.equal(run(save).finish([0,25,0]).reward,80);
+ assert.equal(run(save,{...host,mode:'berryeasy'}).finish([1,10,0]).reward,60);
+ assert.equal(run(save).finish([0,0,0]).reason,'objectives');
+ assert.equal(save.pkmsvvCoopLab.coopCoins,260);
+ assert.equal(save.pkmsvvCoopLab.lastSettledSeq,3);
+ const first=lab.settle(save,{mission:'fossil_lab',verified:true,cleared:true,seq:4,durationSeconds:480,optionalObjectives:2,partySize:4},()=>true);
+ assert.equal(first.reward,240);assert.equal(first.firstClear,true);assert.equal(save.owned[140].from,'coop-first-clear');
+ assert.equal(save.pkmsvvCoopLab.coopCoins,500);
+ const denied=lab.createBerryRewardGate();
+ assert.equal(denied.begin({},save,{...host,members:[{uid:'p'},{uid:'human'},{uid:'b',bot:true},{uid:'c',bot:true}]},0),false);
+ const clock=lab.createBerryRewardGate(),s={};
+ assert.equal(clock.begin(s,save,host,0),true);assert.equal(clock.observe(s,save,host,480),false);
+ assert.equal(clock.finish(s,save,host,{success:true,time:480,trees:[100,100,100],bossStage:2},()=>true).reason,'session');
+});
+test('actual Berry tick settles coins only at native finish, not through summary reward()',()=>{
+ const lab=require('../src/pkmsvv-coop-lab-core.cjs'),h=harness(),G=h.G;
+ G.DB={save:{coins:9},guest:false,commit:()=>true};
+ G.Social={uid:'p',room:{id:'R',mode:'berry',members:[{uid:'p'},{uid:'a',bot:true},{uid:'b',bot:true},{uid:'c',bot:true}]}};
+ vm.runInNewContext(read('src/pkmsvv-berry-rescue.js'),{G,Math,Image:undefined,Number,window:{PKMSVV_BERRY_COINS_QA:true,PKMSVVCreateBerryRewardGate:lab.createBerryRewardGate}});
+ const b=G.PKMSVVBerryRescue;
+ b.begin('berry');b.tick(0,0,[],()=>{});
+ assert.equal(b.coinEligible,true);
+ b.reward({success:true,trees:[100,100,100],time:480});
+ assert.equal(G.DB.save.pkmsvvCoopLab,undefined,'external summary must not credit coins');
+ for(let t=1;t<=480;t++)b.tick(.01,t,[],()=>{});
+ G.EnemyMgr.enemies.find(e=>e._pkmsvvBerryBoss===2).dead=true;
+ let result;b.tick(.25,480.25,[],x=>result=x);
+ assert.equal(result.success,true);assert.equal(b.lastCoinReward.reward,120);
+ assert.equal(G.DB.save.pkmsvvCoopLab.coopCoins,120);
+ b.tick(.25,480.5,[],()=>{});assert.equal(G.DB.save.pkmsvvCoopLab.coopCoins,120);
+});
