@@ -12,40 +12,27 @@ async function main(){
  const target=path.resolve(process.argv[2]||'dist/research-v3-skins');
  const files=await verify(source),m=JSON.parse(files['manifest.json']);
  fs.mkdirSync(target,{recursive:true});
- const report=[];
- for(const l of m.layers.filter(l=>l.id!=='crest')){
-  const {data,info}=await sharp(files[l.file]).ensureAlpha().raw().toBuffer({resolveWithObject:true});
-  assert.equal(info.channels,4);
-  const pixels=Buffer.from(data);let changed=0;
-  for(let i=0;i<pixels.length;i+=4){
-   const r=data[i],g=data[i+1],b=data[i+2];if(!data[i+3])continue;
-   // Soft material tint; maintain local shading, highlights and alpha.
-   const w=ramp(r-b,12,80)*ramp(r-g,0,25)*ramp(g-b,0,24)*ramp(r,45,120)*(1-ramp(r-g,75,145));
-   pixels[i]=clamp(Math.round(r+12*w),0,255);
-   pixels[i+1]=clamp(Math.round(g-28*w),0,255);
-   pixels[i+2]=clamp(Math.round(b+9*w),0,255);
-   if(pixels[i]!==r||pixels[i+1]!==g||pixels[i+2]!==b)changed++;
-  }
-  const name=l.id+'-copper.png',out=path.join(target,name);
-  await sharp(pixels,{raw:{width:l.w,height:l.h,channels:4}}).png().toFile(out);
-  const decoded=await sharp(out).ensureAlpha().raw().toBuffer();
-  for(let i=3;i<data.length;i+=4)assert.equal(decoded[i],data[i],'Alpha changed '+l.id);
-  assert.ok(changed>500,'Invisible prototype '+l.id);
-  report.push({id:l.id,file:name,width:l.w,height:l.h,changed,alphaPreserved:true});
- }
- // Authored skins, when approved or previewed, are distinct PNG files in
- // assets/coop-lab/research-v3/skins. Never overwrite the generated prototypes.
  const catalog=require('../data/pkmsvv-coop-lab-catalog.json').stationSkins;
- for(const item of catalog.variants.filter(x=>x.variant!=='copper')){
+ const report=[];
+ for(const item of catalog.defaults){
   const name=path.basename(item.spritePath);
-  assert.match(name,/^[a-z0-9_-]+\.png$/);
-  assert.ok(!report.some(x=>x.file===name),'Authored skin conflicts with prototype');
-  fs.copyFileSync(path.join(source,'skins',name),path.join(target,name));
+  // Prior authored artwork is now the free Basic tier. Source filename is
+  // historical; the game package uses the new Basic filename.
+  fs.copyFileSync(path.join(source,'skins',item.station+'-royal.png'),path.join(target,name));
+  report.push({id:item.id,file:name,tier:'basic'});
+ }
+ for(const item of catalog.variants){
+  assert.equal(item.variant,'advanced');
+  const l=m.layers.find(x=>x.id===item.station);
+  assert.ok(l&&files[l.file],'Missing pinned specialized art');
+  const name=path.basename(item.spritePath);
+  fs.writeFileSync(path.join(target,name),files[l.file]);
+  report.push({id:item.id,file:name,tier:'advanced'});
  }
  // The old decorative chest is baked into the pinned backdrop outside
- // the companion sprite. Create a local, reversible underlay for Royal
+ // the companion sprite. Create a local, reversible underlay for Basic
  // companion only. Exact crop from the existing teal floor, feathered 8 px.
- const patch={x:925,y:670,w:146,h:102,sourceX:181,sourceY:666,file:'companion-royal-floor.png'};
+ const patch={x:925,y:670,w:146,h:102,sourceX:181,sourceY:666,file:'companion-basic-floor.png'};
  const {data:floor,info:floorInfo}=await sharp(files['backdrop.png']).ensureAlpha().raw().toBuffer({resolveWithObject:true});
  assert.equal(floorInfo.width,1500);assert.equal(floorInfo.height,1049);assert.equal(floorInfo.channels,4);
  const pixels=Buffer.alloc(patch.w*patch.h*4);
@@ -59,7 +46,7 @@ async function main(){
  assert.deepEqual(decodedPatch,pixels,'Unexpected underlay encoding change');
  assert.equal(decodedPatch[3],0);assert.equal(decodedPatch[(51*patch.w+73)*4+3],255);
  const validation=await validate(target);
- fs.writeFileSync(path.join(target,'preview-report.json'),JSON.stringify({status:'PASS',purchaseEnabled:validation.purchaseEnabled,variants:report,validation,royalCompanionUnderlay:patch},null,2));
- console.log('V3 five independent prototype skin PNGs PASS');
+ fs.writeFileSync(path.join(target,'preview-report.json'),JSON.stringify({status:'PASS',purchaseEnabled:validation.purchaseEnabled,variants:report,validation,basicCompanionUnderlay:patch},null,2));
+ console.log('V3 Basic and Specialized independent station PNGs PASS');
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});

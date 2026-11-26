@@ -69,15 +69,15 @@ test('an equipped unknown or retired skin falls back without erasing ownership',
  assert.equal(s.pkmsvvCoopLab.stationSkins.owned.mega_test,true);
 });
 
-test('Royal proposal: exact price, 1-coin-short denial, no Copper sale, and full collection at zero',()=>{
- const {prices,total,pricedRoyalFixture}=require('./fixtures/research-royal-pricing.cjs');
+test('Specialized proposal: exact price, 1-coin-short denial, no Copper sale, and full collection at zero',()=>{
+ const {prices,total,pricedSpecializedFixture}=require('./fixtures/research-royal-pricing.cjs');
  assert.equal(total,2160);
- const registry=pricedRoyalFixture(lab.config.stationSkins);
+ const registry=pricedSpecializedFixture(lab.config.stationSkins);
  const E=lab.createStationSkinEconomy(registry);
  const s=save(total);
  assert.equal(lab.config.stationSkins.purchaseEnabled,false);
  for(const [id,price] of Object.entries(prices)){
-  const station=id.replace(/_royal$/,'');
+  const station=id.replace(/_advanced$/,'');
   const poor=save(price-1),before=snapshot(poor);
   assert.equal(E.buySkin(poor,id,ok).reason,'coins');assert.equal(snapshot(poor),before);
   const exact=save(price);
@@ -96,14 +96,14 @@ test('Royal proposal: exact price, 1-coin-short denial, no Copper sale, and full
  assert.equal(s.coins,555);
  const restored=JSON.parse(snapshot(s));
  for(const id of Object.keys(prices)){
-  const station=id.replace(/_royal$/,'');
+  const station=id.replace(/_advanced$/,'');
   assert.equal(E.status(restored,station).equipped,id);
   assert.equal(E.equipSkin(restored,station,'default',ok).ok,true);
   assert.equal(E.equipSkin(restored,station,id,ok).ok,true);
  }
  assert.equal(restored.pkmsvvCoopLab.coopCoins,0);
 });
-test('Royal proposal farming estimate uses configured fossil rewards, not an invented live payout',()=>{
+test('Specialized proposal farming estimate uses configured fossil rewards, not an invented live payout',()=>{
  const {total}=require('./fixtures/research-royal-pricing.cjs');
  const cfg=lab.config.rewards;
  assert.equal(cfg.firstClear,200);assert.equal(cfg.replay,120);
@@ -111,4 +111,11 @@ test('Royal proposal farming estimate uses configured fossil rewards, not an inv
  const clears=(bonus)=>1+Math.ceil(Math.max(0,total-(cfg.firstClear+bonus))/(cfg.replay+bonus));
  assert.equal(clears(0),18);assert.equal(clears(40),13);
  assert.equal(cfg.expectedDurationMinutes[0],8);
+});
+
+test('Basic default is free and no previous QA ownership is granted',()=>{
+ const registry=lab.config.stationSkins;assert.equal(registry.defaults.length,5);assert.equal(registry.variants.length,5);
+ const s=save(0),before=snapshot(s);
+ for(const station of registry.stations){const v=lab.stationSkinEconomy.status(s,station);assert.equal(v.equipped,'default');assert.deepEqual(v.variants.map(x=>[x.id,x.owned,x.price]),[['default',true,0],[station+'_advanced',false,null]]);}
+ assert.equal(snapshot(s),before);
 });

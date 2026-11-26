@@ -9,7 +9,12 @@ const sha=b=>crypto.createHash('sha256').update(b).digest('hex');
 async function validate(dir,registry=catalog){
  const seen=new Set(),files=new Set(),report=[];
  const stations=new Map(manifest.layers.filter(l=>l.id!=='crest').map(l=>[l.id,l]));
- for(const item of registry.variants){
+ const defaults=registry.defaults||[];
+ if(defaults.length){
+  assert.equal(defaults.length,stations.size,'Every station needs one free Basic sprite');
+  assert.equal(new Set(defaults.map(x=>x.station)).size,stations.size);
+ }
+ for(const item of [...defaults,...registry.variants]){
   const l=stations.get(item.station);
   assert.ok(l,'Unknown skin station '+item.id);
   assert.match(item.id,/^[a-z0-9_]+$/);assert.ok(!seen.has(item.id),'Duplicate skin ID');seen.add(item.id);

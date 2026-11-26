@@ -621,7 +621,8 @@ G.PKMSVVWiki=(()=>{
  function skinRegistry(){return window.PKMSVVStationSkinEconomy;}
  function skinEntry(station,id){return skinRegistry()?.registry?.variants?.find(x=>x.station===station&&x.id===id);}
  function skinFile(station,id){
-  const p=skinEntry(station,id)?.spritePath;
+  const entry=id==='default'?skinRegistry()?.registry?.defaults?.find(x=>x.station===station):skinEntry(station,id);
+  const p=entry?.spritePath;
   return typeof p==='string'&&/^images\/coop-lab\/research-v3\/skins\/[a-z0-9_-]+\.png$/.test(p)?p.slice('images/coop-lab/research-v3/'.length):null;
  }
  async function renderApprovedLabV3(stage,revision){
@@ -645,7 +646,7 @@ G.PKMSVVWiki=(()=>{
    const choices=m.layers.map(p=>{
     const equipped=skinRegistry()?.status(G.DB?.save,p.id)?.equipped||'default';
     const selected=preview?stage.dataset['skin'+p.id]:undefined;
-    const id=selected===undefined?equipped:selected==='copper'?p.id+'_copper':selected;
+    const id=selected===undefined?equipped:selected;
     return {id,file:skinFile(p.id,id)||p.file};
    });
    const [background,...images]=await Promise.all([load(m.background),...m.layers.map(async(p,i)=>{
@@ -658,20 +659,20 @@ G.PKMSVVWiki=(()=>{
    // chest; missing or invalid art preserves the default room.
    const companionIndex=m.layers.findIndex(p=>p.id==='companion');
    let underlay=null;
-   if(choices[companionIndex]?.id==='companion_royal'&&choices[companionIndex]?.file==='skins/companion-royal.png'){
-    try{const img=await load('skins/companion-royal-floor.png');if(img.naturalWidth===146&&img.naturalHeight===102)underlay=img;}catch(_){}
+   if(choices[companionIndex]?.id==='default'&&choices[companionIndex]?.file==='skins/companion-basic.png'){
+    try{const img=await load('skins/companion-basic-floor.png');if(img.naturalWidth===146&&img.naturalHeight===102)underlay=img;}catch(_){}
    }
    if(stage.dataset.labRenderRevision!==revision||!stage.isConnected)return;
    stage.querySelectorAll('.pkmsvv-lab-furniture,.pkmsvv-lab-source-layer,.pkmsvv-lab-station-prop,.pkmsvv-lab-v3-layer,.pkmsvv-lab-v3-underlay').forEach(x=>x.remove());
    const place=(el,p)=>{el.style.left=p.x/1500*100+'%';el.style.top=p.y/1049*100+'%';el.style.width=p.w/1500*100+'%';el.style.height=p.h/1049*100+'%';};
    if(underlay){
-    underlay.className='pkmsvv-lab-v3-underlay';underlay.dataset.labUnderlay='companion_royal';
+    underlay.className='pkmsvv-lab-v3-underlay';underlay.dataset.labUnderlay='companion_basic';
     underlay.alt='';underlay.draggable=false;underlay.setAttribute('aria-hidden','true');
     Object.assign(underlay.style,{position:'absolute',objectFit:'fill',pointerEvents:'none',zIndex:'0',maxWidth:'none',margin:'0',padding:'0',border:'0'});
     place(underlay,{x:925,y:670,w:146,h:102});stage.prepend(underlay);
    }
    for(let i=0;i<m.layers.length;i++){
-    const p=m.layers[i],img=images[i];img.className='pkmsvv-lab-v3-layer';img.dataset.labLayer=p.id;img.dataset.labSlot=p.slot;img.dataset.labSkin=choices[i].file===p.file?'default':choices[i].id===p.id+'_copper'?'copper':choices[i].id;
+    const p=m.layers[i],img=images[i];img.className='pkmsvv-lab-v3-layer';img.dataset.labLayer=p.id;img.dataset.labSlot=p.slot;img.dataset.labSkin=choices[i].id;
     img.alt='';img.draggable=false;img.setAttribute('aria-hidden','true');
     Object.assign(img.style,{position:'absolute',objectFit:'fill',pointerEvents:'none',zIndex:'1',maxWidth:'none',margin:'0',padding:'0',border:'0'});
     place(img,p);stage.prepend(img);
@@ -862,15 +863,15 @@ G.PKMSVVWiki=(()=>{
     const station=v3Station[slot];if(!station)return;
     const economy=skinRegistry(),view=economy?.status(G.DB?.save,station);
     const equipped=view?.equipped||'default';
-    const selected=stage.dataset['skin'+station]??(equipped===station+'_copper'?'copper':equipped);
-    const displayName=id=>id==='default'?tr('Mặc định','Default'):tr(skinEntry(station,id)?.nameVi||'Skin',skinEntry(station,id)?.nameEn||'Skin');
+    const selected=stage.dataset['skin'+station]??equipped;
+    const displayName=id=>id==='default'?tr('Cơ bản','Basic'):tr(skinEntry(station,id)?.nameVi||'Skin',skinEntry(station,id)?.nameEn||'Skin');
     desc.textContent=tr('Đang trang bị: ','Equipped: ')+displayName(equipped)+' · '+tr('Xu Đồng Đội: ','Co-op Coins: ')+(view?.coins??save.coopCoins??0);
     desc.dataset.skinWallet=String(view?.coins??save.coopCoins??0);
     const variants=view?.variants||[{id:'default',owned:true,available:true,price:0}];
     for(const item of variants){
-     const id=item.id,variant=id===station+'_copper'?'copper':id;
+     const id=item.id,variant=id;
      const row=document.createElement('div');row.className='pkmsvv-build-item';row.dataset.skinItem=id;
-     const label=document.createElement('span');label.textContent=displayName(id);
+     const label=document.createElement('span');label.textContent=displayName(id)+(id==='default'?' · '+tr('Miễn phí','Free'):'');
      const state=document.createElement('small');state.dataset.skinState=equipped===id?'equipped':item.owned?'owned':'unowned';
      state.textContent=equipped===id?tr('Đang trang bị','Equipped'):item.owned?tr('Đã sở hữu','Owned'):item.available?tr('Chưa sở hữu','Not owned'):tr('Chưa sở hữu · Chưa bán','Not owned · Not for sale');
      if(item.available&&!item.owned)state.textContent+=' · '+item.price+' '+tr('xu','coins');
