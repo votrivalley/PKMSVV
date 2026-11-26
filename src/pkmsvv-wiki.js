@@ -626,20 +626,37 @@ G.PKMSVVWiki=(()=>{
   const p=entry?.spritePath;
   return typeof p==='string'&&/^images\/coop-lab\/research-v3\/skins\/[a-z0-9_-]+\.png$/.test(p)?p.slice('images/coop-lab/research-v3/'.length):null;
  }
+ function pendingLabV3(stage){
+  // Never paint the fully furnished legacy reference, even for one frame.
+  stage.dataset.researchArtMode='loading-v3';
+  stage.setAttribute('aria-busy','true');
+  stage.style.setProperty('background-image','none','important');
+  stage.style.setProperty('background-color','#102e38','important');
+  stage.style.setProperty('aspect-ratio','1500 / 1049','important');
+  let status=stage.querySelector('.pkmsvv-lab-v3-loading');
+  if(!status){
+   status=document.createElement('div');status.className='pkmsvv-lab-v3-loading';
+   status.setAttribute('role','status');
+   Object.assign(status.style,{position:'absolute',inset:'0',display:'flex',alignItems:'center',justifyContent:'center',zIndex:'12',background:'#102e38',color:'#ffe3a0',textAlign:'center',padding:'12px',boxSizing:'border-box'});
+   stage.append(status);
+  }
+  status.textContent=tr('Đang tải phòng nghiên cứu…','Loading Research Lab…');
+  status.onclick=null;
+ }
  async function renderApprovedLabV3(stage,revision){
   const base='images/coop-lab/research-v3/';
   try{
    const response=await fetch(base+'manifest.json',{cache:'no-store'});
-   if(!response.ok)return;
+   if(!response.ok)throw Error('Research manifest unavailable');
    const m=await response.json();
    if(m.version!==3||m.canvas?.width!==1500||m.canvas?.height!==1049||
     m.background!=='backdrop.png'||m.readyForFurnitureSwap!==false||
-    !Array.isArray(m.layers)||m.layers.length!==6||!Array.isArray(m.labels)||m.labels.length!==5)return;
+    !Array.isArray(m.layers)||m.layers.length!==6||!Array.isArray(m.labels)||m.labels.length!==5)throw Error('Invalid research manifest');
    const ids=['crest','support','fossil','mega','berry','companion'];
    const slots={crest:'decor',support:'shelf_left',fossil:'center',mega:'shelf_right',berry:'garden',companion:'trophy'};
    const rect=p=>['x','y','w','h'].every(k=>Number.isInteger(p[k]))&&p.x>=0&&p.y>=0&&p.w>0&&p.h>0&&p.x+p.w<=1500&&p.y+p.h<=1049;
    if(!ids.every(id=>m.layers.filter(p=>p.id===id&&p.file===id+'.png'&&p.slot===slots[id]&&rect(p)).length===1)||
-     !ids.slice(1).every(id=>m.labels.filter(p=>p.id===id&&rect(p)).length===1))return;
+     !ids.slice(1).every(id=>m.labels.filter(p=>p.id===id&&rect(p)).length===1))throw Error('Invalid research layers');
    const load=(file)=>new Promise((resolve,reject)=>{
     const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=base+file;
    });
@@ -649,14 +666,16 @@ G.PKMSVVWiki=(()=>{
     const equipped=machine?.upgraded?p.id+'_advanced':skinRegistry()?.status(G.DB?.save,p.id)?.equipped||'default';
     const selected=preview?stage.dataset['skin'+p.id]:undefined;
     const id=selected===undefined?equipped:selected;
-    return {id,file:skinFile(p.id,id)||p.file};
+    const file=p.id==='crest'?p.file:skinFile(p.id,id);
+    if(!file)throw Error('Research skin registry not ready: '+p.id);
+    return {id,file};
    });
    const [background,...images]=await Promise.all([load(m.background),...m.layers.map(async(p,i)=>{
     try{const img=await load(choices[i].file);if(img.naturalWidth!==p.w||img.naturalHeight!==p.h)throw Error('Invalid skin dimensions');return img;}
-    catch(_){choices[i]={id:'default',file:p.file};return load(p.file);}
+    catch(_){throw Error('Unable to load selected '+p.id+' skin');}
    })]);
    if(background.naturalWidth!==1500||background.naturalHeight!==1049||
-      images.some((img,i)=>img.naturalWidth!==m.layers[i].w||img.naturalHeight!==m.layers[i].h))return;
+      images.some((img,i)=>img.naturalWidth!==m.layers[i].w||img.naturalHeight!==m.layers[i].h))throw Error('Invalid research sprite dimensions');
    // Only a successfully loaded Royal companion sprite can hide its old
    // chest; missing or invalid art preserves the default room.
    const companionIndex=m.layers.findIndex(p=>p.id==='companion');
@@ -704,8 +723,17 @@ G.PKMSVVWiki=(()=>{
     }
     const spot=stage.querySelector('[data-build-slot="'+part.slot+'"]');if(spot)place(spot,part);
    }
+   stage.querySelector('.pkmsvv-lab-v3-loading')?.remove();
+   stage.removeAttribute('aria-busy');
    stage.dataset.researchArtMode='approved-v3';
-  }catch(error){console.warn('[Research V3 QA] Asset load failed; retaining original room',String(error));}
+  }catch(error){
+   if(stage.dataset.labRenderRevision!==revision||!stage.isConnected)return;
+   // Fail closed: a broken asset must not pretend that all stations are upgraded.
+   stage.dataset.researchArtMode='error-v3';stage.removeAttribute('aria-busy');
+   const status=stage.querySelector('.pkmsvv-lab-v3-loading');
+   if(status){status.replaceChildren();const retry=document.createElement('button');retry.type='button';retry.textContent=tr('Không tải được phòng. Thử lại','Could not load room. Retry');retry.onclick=()=>renderFurnitureLayers(stage);status.append(retry);}
+   console.warn('[Research V3 QA] Asset load failed',String(error));
+  }
  }
  function modularLabPreview(){
   if(approvedLabV3Preview())return false;
@@ -727,7 +755,11 @@ G.PKMSVVWiki=(()=>{
   stage.dataset.researchArtMode='classic';
   const layerLoads=[];
   // Artwork must never require a wallet adapter or unlocked save.
-  if(approvedLabV3Preview())renderApprovedLabV3(stage,revision);
+  if(approvedLabV3Preview()){
+   pendingLabV3(stage);
+   void renderApprovedLabV3(stage,revision);
+   return;
+  }
   const E=G.PKMSVVCoopEconomy,conf=E?.config,save=G.DB?.save;
   const art=window.PKMSVV_RESEARCH_ART_QA||conf?.roomArt;
   if(!art?.slots)return;

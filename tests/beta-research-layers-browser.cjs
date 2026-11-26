@@ -34,7 +34,21 @@ const {startServer}=require('../lan-server/server.cjs');
  try{
   await page.addInitScript(()=>{window.__pkmsvvPippiGuideQABypass=true;});
   // Real approved V3 art is the default in this isolated QA build.
-  await page.goto(url,{waitUntil:'domcontentloaded',timeout:45000});await wait();await open();
+  await page.goto(url,{waitUntil:'domcontentloaded',timeout:45000});await wait();
+  // Deterministically hold the manifest while the room is first displayed.
+  // Inspect computed background before any asynchronous art can arrive.
+  let releaseManifest;const held=new Promise(resolve=>{releaseManifest=resolve;});
+  let manifestRequested=false;
+  const slowManifest=async route=>{manifestRequested=true;await held;await route.continue();};
+  await page.route('**/research-v3/manifest.json',slowManifest);
+  await open();
+  try{
+   await page.waitForFunction(()=>document.querySelector('.pkmsvv-research-room')?.dataset.researchArtMode==='loading-v3');
+   const first=await page.locator('.pkmsvv-research-room').evaluate(e=>({mode:e.dataset.researchArtMode,bg:getComputedStyle(e).backgroundImage,busy:e.getAttribute('aria-busy'),upgraded:e.querySelectorAll('[data-lab-skin$="_advanced"]').length,loading:!!e.querySelector('.pkmsvv-lab-v3-loading')}));
+   assert.deepEqual(first,{mode:'loading-v3',bg:'none',busy:'true',upgraded:0,loading:true},'never flash fully upgraded artwork during initial load');
+   await page.locator('.pkmsvv-research-room').screenshot({path:path.join(out,'research-initial-loading.png')});
+  }finally{releaseManifest();await page.unroute('**/research-v3/manifest.json',slowManifest);}
+  console.log('RESEARCH_NO_UPGRADED_FLASH_PASS');
   const verifyV3=async(selector)=>{
    await page.waitForFunction(s=>{const e=document.querySelector(s);return e?.dataset.researchArtMode==='approved-v3'&&e.querySelectorAll('.pkmsvv-lab-v3-layer').length===6&&[...e.querySelectorAll('.pkmsvv-lab-v3-layer')].every(i=>i.complete&&i.naturalWidth>0);},selector,{timeout:20000});
    const v=await page.locator(selector).evaluate(e=>({layers:[...e.querySelectorAll('.pkmsvv-lab-v3-layer')].map(i=>i.dataset.labLayer).sort(),oldProps:e.querySelectorAll('.pkmsvv-lab-station-prop').length,background:getComputedStyle(e).backgroundImage,ratio:e.clientWidth/e.clientHeight}));
@@ -43,6 +57,8 @@ const {startServer}=require('../lan-server/server.cjs');
    return v;
   };
   const v3=await verifyV3('.pkmsvv-research-room');
+  assert.equal(await page.locator('.pkmsvv-research-room [data-lab-skin$="_advanced"]').count(),0);
+  assert.equal(await page.locator('.pkmsvv-research-room .pkmsvv-lab-v3-loading').count(),0);
   const labels=await page.locator('.pkmsvv-research-room [data-research-hotspot]').evaluateAll(es=>es.map(b=>({id:b.dataset.researchHotspot,label:b.querySelector('.pkmsvv-research-hotspot-tag')?.textContent,oldIcon:[...b.querySelectorAll('.pkmsvv-research-scene-object')].some(x=>getComputedStyle(x).display!=='none')})));
   assert.equal(labels.length,5);assert.ok(labels.every(x=>x.label&&!x.oldIcon));
   await page.locator('.pkmsvv-research-room').screenshot({path:path.join(out,'research-v3-desktop.png')});

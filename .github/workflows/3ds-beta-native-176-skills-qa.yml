@@ -165,6 +165,12 @@ jobs:
         env:
           PKMSVV_BROWSER: /usr/bin/google-chrome
         run: timeout 80s node tests/beta-176-native-cooldowns-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: PKMSVV-Big-Update-Catalog-Inventory
+          path: dist/big-update-inventory/
+          if-no-files-found: warn
       - name: Real Chromium keyboard and controller AUTO with native dash, blitz and leap
         env:
           PKMSVV_BROWSER: /usr/bin/google-chrome
