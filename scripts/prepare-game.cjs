@@ -262,7 +262,7 @@ patch('js/systems/combat.js',
   "    if (m.kind === 'orbit') { orbit(pl, m, dt, now); return; }");
 patch("js/systems/combat.js",
   "  return { tick, resolve, ghostCast, ghostOrbit, updateFields, drawGroundFields, drawAirFields, clearFields,",
-  "  function manualDash(pl, targetAngle) {\n    if (!pl || pl.dead || G.Game.state !== 'playing') return false;\n    const pick = G.PKMSVVDash.preview(pl);\n    if (!pick || !pick.ready) return false;\n    G.PKMSVVDash.consume(pl,pick);\n    const m=pick.move;\n    m.t = G.PKMSVVBalance.effectiveCooldown(pl,m);\n    pl.cast(m);\n    if (G.Coop.active) G.Coop.cast(pl,m);\n    m.castAt = performance.now();\n    run(pl,m);\n    return true;\n  }\n  return { tick, manualDash, resolve, ghostCast, ghostOrbit, updateFields, drawGroundFields, drawAirFields, clearFields,");
+  "  function manualDash(pl, targetAngle) {\n    if (!pl || pl.dead || G.Game.state !== 'playing') return false;\n    const pick = G.PKMSVVDash.preview(pl,m=>m.kind!=='blitz'||G.PKMSVV3DSStage5Combat?.hasBlitzTarget?.(pl,m));\n    if (!pick || !pick.ready) return false;\n    G.PKMSVVDash.consume(pl,pick);\n    const m=pick.move;\n    m.t = G.PKMSVVBalance.effectiveCooldown(pl,m);\n    pl.cast(m);\n    if (G.Coop.active) G.Coop.cast(pl,m);\n    m.castAt = performance.now();\n    run(pl,m);\n    return true;\n  }\n  return { tick, manualDash, resolve, ghostCast, ghostOrbit, updateFields, drawGroundFields, drawAirFields, clearFields,");
 const dashQueueSrc=fs.readFileSync(path.join(project,'src','pkmsvv-dash-queue.js'),'utf8');
 fs.writeFileSync(path.join(game,'js','systems','pkmsvv-dash-queue.js'),dashQueueSrc,'utf8');
 patch("dev.html",

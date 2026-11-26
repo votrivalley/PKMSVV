@@ -51,7 +51,7 @@ G.PKMSVVDash = (() => {
     return true;
   }
   function isActive(m){return m?.kind==='dash'||m?.kind==='blitz';}
-  function preview(pl) {
+  function preview(pl,eligible=()=>true) {
     if (!pl || !Array.isArray(pl.moves)) return null;
     const moves = pl.moves.filter(isActive);
     const total = moves.length;
@@ -60,7 +60,7 @@ G.PKMSVVDash = (() => {
     for (let step = 0; step < total; step++) {
       const index = (start + step) % total;
       const move = moves[index];
-      if (!(move.t > 0)) {
+      if (!(move.t > 0)&&eligible(move)) {
         const rest=readyIn(pl);
         return {move,index,total,ready:rest<=0,remaining:rest};
       }

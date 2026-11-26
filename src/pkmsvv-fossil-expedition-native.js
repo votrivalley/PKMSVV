@@ -226,7 +226,7 @@ function updateRotomSOS(){
     'Could not activate restorer collision.'),3500);
    end();return false;
   }
-  if(window.PKMSVV_FOSSIL_REWARDS_QA===true&&typeof window.PKMSVVCreateFossilRewardGate==='function'){
+  if(typeof window!=='undefined'&&window.PKMSVV_FOSSIL_REWARDS_QA===true&&typeof window.PKMSVVCreateFossilRewardGate==='function'){
    rewardGate=window.PKMSVVCreateFossilRewardGate(C);
    rewardGate.begin(current,G.DB?.save,{uid:G.Social?.uid,host:G.Coop?.isHost===true,members:r.members,roomId:r.id,guest:!!G.DB?.guest});
   }

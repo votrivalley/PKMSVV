@@ -108,3 +108,9 @@ test('native dash and Extreme Speed share the manual queue without altering othe
  assert.equal(q.preview(pl).total,2);assert.equal(q.preview(pl).move.id,'quick-attack');
  assert.equal(q.isActive(pl.moves[1]),true);assert.equal(q.isActive(pl.moves[2]),false);
 });
+
+test('unreachable Blitz does not block a ready Quick Attack in the active queue',()=>{
+ const q=make(),pl={moves:[{id:'extreme-speed',kind:'blitz',t:0},{id:'quick-attack',kind:'dash',t:0}]};
+ const p=q.preview(pl,m=>m.kind!=='blitz');assert.equal(p.move.id,'quick-attack');assert.equal(p.ready,true);
+ assert.equal(q.preview({moves:[pl.moves[0]]},()=>false).ready,false);
+});
