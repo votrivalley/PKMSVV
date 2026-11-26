@@ -43,6 +43,7 @@ G.PKMSVV3DSStage5Combat=(()=>{
     default:return 520;
    }
  }
+ function hasBlitzTarget(p,m){return !!p&&!!m&&enemies(p.x,p.y,reach(m)).some(e=>e&&!e.dead&&!e.arceus);}
  function needsTarget(m){return !!m&&['scissor','blitz','leap','boom'].includes(m.kind);}
  function spawn(fields,p,m,ghost=false){
   if(!m||!K.has(m.kind))return old.spawn(fields,p,m,ghost);
@@ -187,5 +188,5 @@ G.PKMSVV3DSStage5Combat=(()=>{
   isPortField:f=>isStage5Field(f)||!!old.isPortField?.(f),
   spawn,update,draw
  };
- return {isStage5Field,needsTarget,reach,spawn,update,draw};
+ return {isStage5Field,needsTarget,hasBlitzTarget,reach,spawn,update,draw};
 })();

@@ -78,7 +78,7 @@ test('650ms global cooldown prevents dash chaining even when second skill has co
 });
 test('compiled game movement & damage honor directional dash patch',()=>{
  const script=fs.readFileSync(path.join(__dirname,'..','scripts/patch-directional-dashes.cjs'),'utf8');
- assert.match(script,/G\.PKMSVVDash\.direction\(pl,G\.Input\.axis\(\)\)/);
+ assert.match(script,/Number\.isFinite\(targetAngle\)\?targetAngle:G\.PKMSVVDash\.direction/);
  assert.match(script,/G\.PKMSVVDash\.begin\(pl,m,pl\.aim,len\)/);
  assert.match(script,/G\.PKMSVVDash\.advance\(this,dt\)/);
  assert.match(script,/G\.Coop\.cast\(pl,m\)/);
@@ -91,8 +91,8 @@ test('the skill HUD and level-up cards distinguish active dashes from automatic 
  assert.match(hud,/G\.PKMSVVDash\.preview\(pl\)/);
  assert.match(hud,/const moveName=G\.T\(m\.name, 'move'\)/);
  assert.match(hud,/manual\.index\+1/);
- assert.match(levelup,/d\.kind === 'dash' \? G\.T\('Habilidad activa'\)/);
- assert.match(runui,/m\.kind === 'dash' \? 'Habilidad activa'/);
+ assert.match(levelup,/G\.PKMSVVDash\.isActive\(d\) \? G\.T\('Habilidad activa'\)/);
+ assert.match(runui,/G\.PKMSVVDash\.isActive\(m\) \? 'Habilidad activa'/);
  const combat=read('js/systems/combat.js');
  assert.match(combat,/G\.PKMSVVDash\.preview\(pl\)/);
  assert.match(combat,/G\.PKMSVVDash\.consume\(pl,pick\)/);
@@ -101,4 +101,10 @@ test('dash control captions have both English and Vietnamese UI translations',()
  const src=read('js/data/pkmsvv-ux-languages.js');
  assert.match(src,/Active skill/);assert.match(src,/Kỹ năng chủ động/);
  assert.match(src,/Automatic skill/);assert.match(src,/Kỹ năng tự động/);
+});
+
+test('native dash and Extreme Speed share the manual queue without altering other moves',()=>{
+ const q=make(),pl={moves:[{id:'quick-attack',kind:'dash',t:0},{id:'extreme-speed',kind:'blitz',t:0},{id:'acrobatics',kind:'leap',t:0}]};
+ assert.equal(q.preview(pl).total,2);assert.equal(q.preview(pl).move.id,'quick-attack');
+ assert.equal(q.isActive(pl.moves[1]),true);assert.equal(q.isActive(pl.moves[2]),false);
 });

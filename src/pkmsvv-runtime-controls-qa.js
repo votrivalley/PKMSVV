@@ -192,7 +192,7 @@
   refreshLabels();
  }
  function toggleDash(){
-  if(!playing())return false;
+  if(!playing()||(!autoDash&&G.PKMSVVDash?.isActive&&!G.Game.player.moves?.some(G.PKMSVVDash.isActive)))return false;
   autoDash=!autoDash;
   toast(autoDash?'Đã BẬT tự động dùng kỹ năng (giữ F 2 giây để tắt).':
    'Đã TẮT tự động dùng kỹ năng.',
@@ -342,7 +342,8 @@
   }
   if(code!==dashKey())return;
   cancelHold();held=true;
-  heldTimer=setTimeout(()=>{heldTimer=null;if(held){held=false;toggleDash();}},2000);
+  const owner=G.Game.player;
+  heldTimer=setTimeout(()=>{heldTimer=null;if(held){held=false;if(G.Game.player===owner&&playing()&&!isEditing()&&!G.PKMSVVPippiGuide?.isOpen)toggleDash();}},2000);
  },true);
  document.addEventListener('keyup',e=>{
   if(String(e.code||'').toLowerCase()===dashKey())cancelHold();
@@ -383,7 +384,7 @@
     input.axis=()=>aim;
     scopedAxis=input.axis!==priorAxis;
    }
-   return !!G.Combat.manualDash(pl);
+   return !!G.Combat.manualDash(pl,Math.atan2(dy,dx));
   }finally{
    if(scopedAxis)input.axis=priorAxis;
    pl.lanBotAxis=priorBotAxis;
@@ -574,6 +575,7 @@
    }
   }
   pollPadShortcuts();
+  if(!playing()&&held)cancelHold();
   if(autoDash&&ts-lastCast>=180){lastCast=ts;castTowardsNearest();}
   if(typeof requestAnimationFrame==='function')requestAnimationFrame(frame);
  }

@@ -12,11 +12,12 @@ function fixture(){
   UI:{toast(v){toasts.push(v)}},
   EnemyMgr:{all(){return [{x:50,y:0,dead:false},{x:800,y:800,dead:false}]}},
   Input:{axis(){return [-1,0]}},
-  Combat:{manualDash(p){
+  Combat:{manualDash(p,angle){
    // Mirror actual native Combat.manualDash dispatch:
    // G.PKMSVVDash.direction(pl,G.Input.axis()) — never lanBotAxis.
    const axis=G.Input.axis();
    casts.push(Array.isArray(axis)?[...axis]:axis);
+   if(Number.isFinite(angle))assert.ok(Math.abs(angle-Math.atan2(axis[1],axis[0]))<1e-9);
    return true;
   }}
  };
@@ -522,4 +523,14 @@ test('Level-up controller uses virtual card selection without unsafe DOM focus w
  assert.match(source,/data-pkmsvv-nav-index/);
  assert.match(css,/data-pkmsvv-nav-index/);
  assert.doesNotMatch(source,/card\.tabIndex=0/,'never modify level-up card tabindex in observer');
+});
+
+test('active AUTO refuses activation without movement skills and cancels a hold on pause',()=>{
+ const f=fixture();f.G.PKMSVVDash={isActive:m=>['dash','blitz'].includes(m.kind)};
+ assert.equal(f.api.toggleDash(),false);
+ f.pl.moves.push({id:'extreme-speed',kind:'blitz'});
+ f.handlers.keydown({code:'KeyF',repeat:false});f.G.Game.state='choice';f.frame(200);f.G.Game.state='playing';f.runTimer(2000);
+ assert.equal(f.api.castTowardsNearest(),false);
+ f.handlers.keydown({code:'KeyF',repeat:false});f.runTimer(2000);
+ assert.equal(f.api.castTowardsNearest(),true);
 });

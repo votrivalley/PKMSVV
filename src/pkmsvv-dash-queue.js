@@ -50,9 +50,10 @@ G.PKMSVVDash = (() => {
     }
     return true;
   }
+  function isActive(m){return m?.kind==='dash'||m?.kind==='blitz';}
   function preview(pl) {
     if (!pl || !Array.isArray(pl.moves)) return null;
-    const moves = pl.moves.filter(m => m.kind === 'dash');
+    const moves = pl.moves.filter(isActive);
     const total = moves.length;
     if (!total) return null;
     const start = (cursor.get(pl) || 0) % total;
@@ -78,5 +79,5 @@ G.PKMSVVDash = (() => {
     locks.set(pl,now()+LOCK_MS);
     return true;
   }
-  return {preview,consume,direction,begin,advance,profile,canUse,readyIn,LOCK_MS,PROFILES};
+  return {isActive,preview,consume,direction,begin,advance,profile,canUse,readyIn,LOCK_MS,PROFILES};
 })();
