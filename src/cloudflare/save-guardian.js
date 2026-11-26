@@ -68,6 +68,7 @@
   if(!retained(older.pkmsvvBerry?.used,newer.pkmsvvBerry?.used))return true;
   // Purchased cosmetics are permanent; equipped choices and currency are not.
   if(!retained(older.pkmsvvCoopLab?.stationSkins?.owned,newer.pkmsvvCoopLab?.stationSkins?.owned))return true;
+  for(const id of keys(older.pkmsvvResearchRanks))if((Number(newer.pkmsvvResearchRanks?.[id])||0)<(Number(older.pkmsvvResearchRanks[id])||0))return true;
   if(!retained(older.arenaGacha?.championPaid,newer.arenaGacha?.championPaid))return true;
   if(!retained(older.arenaGacha?.trophyPaid,newer.arenaGacha?.trophyPaid))return true;
   if((Number(newer.arenaGacha?.pulls)||0)<(Number(older.arenaGacha?.pulls)||0))return true;
@@ -137,6 +138,7 @@
    const before=getAt(a,path),after=getAt(b,path),asNumber=path[0]==='coins'||path[0]==='tickets'||path[0]==='arenaGacha'||(path[0]==='pkmsvvCoopLab'&&path[1]==='coopCoins');
    return {name,before:asNumber?qty(before):total(before),after:asNumber?qty(after):total(after)};
   }).filter(x=>x.before!==x.after).map(x=>({...x,delta:x.after-x.before}));
+  for(const id of new Set([...keys(a.pkmsvvResearchRanks),...keys(b.pkmsvvResearchRanks)]))note('Nghiên cứu '+id,qty(a.pkmsvvResearchRanks?.[id]),qty(b.pkmsvvResearchRanks?.[id]));
   const risk=permanent.some(x=>x.change==='loss');
   const warnings=[];
   if(risk)warnings.push('Permanent progress or chapter flags may be lost');

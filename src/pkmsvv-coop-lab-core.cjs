@@ -30,7 +30,7 @@ function normal(save){
 /* One rollback boundary protects wallet AND all Pokémon/save side effects. */
 function change(save,mutator,commit,sideEffect){
  if(!save||typeof save!=='object'||typeof commit!=='function')return {ok:false,reason:'save'};
- const keys=['pkmsvvCoopLab','coins','owned','pkmsvvFossils','pkmsvvDefeatedDex'];
+ const keys=['pkmsvvCoopLab','coins','owned','pkmsvvFossils','pkmsvvDefeatedDex','pkmsvvResearchRanks'];
  const prior=keys.map(key=>({key,had:Object.prototype.hasOwnProperty.call(save,key),value:save[key]}));
  const rollback=()=>{for(const old of prior){if(old.had)save[old.key]=old.value;else delete save[old.key];}};
  const before=normal(save);
@@ -207,6 +207,38 @@ function createStationSkinEconomy(registry){
  }
  return {status,buySkin,equipSkin};
 }
+
+/* Actual permanent stats use the same GlobalPower definitions as existing gameplay.
+ * Separate absolute target ranks preserve legacy PokéCoin levels without stacking
+ * or allowing the old refund ledger to refund Co-op coins as PokéCoins. */
+function createMachineUpgradeEconomy(power,registry=config.stationUpgrades){
+ const groups=registry?.stations||{},prices=registry?.priceModel||{};
+ const active=(id)=>power?.BY?.[id]&&!power.BY[id].retired;
+ const purchased=save=>power?.cleanResearch?.(save?.pkmsvvResearchRanks)||{};
+ const effective=save=>power?.effectiveLevels?.(save)||{};
+ const price=(id,level)=>id==='opening'?prices.opening:id==='reroll'?prices.rerollBase+level*prices.rerollStep:prices.base+level*prices.step;
+ function status(save,station){
+  if(!Object.hasOwn(groups,station)||!power?.effectiveLevels)return null;
+  const s=normal(save),ranks=purchased(save),levels=effective(save);
+  return {station,coins:s.coopCoins,unlocked:s.machineUnlocked,upgraded:groups[station].some(id=>(ranks[id]||0)>0),
+   stats:groups[station].filter(active).map(id=>{const u=power.BY[id],level=power.rank(levels,id);return {id,level,max:u.max,price:level<u.max?price(id,level):0,vi:u.vi,en:u.en,viUnit:u.viUnit,enUnit:u.enUnit};})};
+ }
+ function upgrade(save,station,id,commit){
+  const view=status(save,station),row=view?.stats.find(x=>x.id===id);
+  if(!row)return {ok:false,reason:'stat'};
+  if(!view.unlocked)return {ok:false,reason:'locked'};
+  if(row.level>=row.max)return {ok:false,reason:'max'};
+  if(!Number.isSafeInteger(row.price)||row.price<=0)return {ok:false,reason:'price'};
+  return change(save,s=>{
+   if(!s.machineUnlocked)return {ok:false,reason:'locked'};
+   if(s.coopCoins<row.price)return {ok:false,reason:'coins'};
+   s.coopCoins-=row.price;
+   return {ok:true,id,station,rank:row.level+1,price:row.price,remaining:s.coopCoins};
+  },commit,(player,_,result)=>{player.pkmsvvResearchRanks={...purchased(player),[id]:result.rank};});
+ }
+ return {status,upgrade};
+}
+
 const stationSkinEconomy=createStationSkinEconomy(config.stationSkins);
 
-module.exports={config,normal,isMachineUnlocked,buy,equip,settle,exchange,weekKey,buySupply,stationSkinEconomy,createStationSkinEconomy};
+module.exports={config,normal,isMachineUnlocked,buy,equip,settle,exchange,weekKey,buySupply,stationSkinEconomy,createStationSkinEconomy,createMachineUpgradeEconomy};

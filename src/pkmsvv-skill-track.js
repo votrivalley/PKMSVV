@@ -16,7 +16,7 @@ G.PKMSVVSkillTrack=(()=>{
    if(!row||typeof row!=='object')continue;
    for(const [id,v] of Object.entries(row))if(!G.Upgrades||G.Upgrades.BY[id])sum+=num(v);
   }
-  for(const [id,v] of Object.entries(s.globalUpgrades||{}))if(!G.GlobalPower||G.GlobalPower.BY[id])sum+=num(v);
+  for(const [id,v] of Object.entries(G.GlobalPower?.effectiveLevels?.(s)||s.globalUpgrades||{}))if(!G.GlobalPower||G.GlobalPower.BY[id])sum+=num(v);
   return Math.min(999999,sum);
  }
  function progress(s,runKills=0){

@@ -619,6 +619,7 @@ G.PKMSVVWiki=(()=>{
  }
  // Only relative files from the approved station catalog can replace a sprite.
  function skinRegistry(){return window.PKMSVVStationSkinEconomy;}
+ function machineRegistry(){return window.PKMSVV_RESEARCH_MACHINE_QA===true&&skinRegistry()?.registry?.purchaseEnabled!==true?window.PKMSVVResearchMachines:null;}
  function skinEntry(station,id){return skinRegistry()?.registry?.variants?.find(x=>x.station===station&&x.id===id);}
  function skinFile(station,id){
   const entry=id==='default'?skinRegistry()?.registry?.defaults?.find(x=>x.station===station):skinEntry(station,id);
@@ -644,7 +645,8 @@ G.PKMSVVWiki=(()=>{
    });
    const preview=stage.classList.contains('pkmsvv-build-stage')&&window.PKMSVV_RESEARCH_SKIN_QA===true;
    const choices=m.layers.map(p=>{
-    const equipped=skinRegistry()?.status(G.DB?.save,p.id)?.equipped||'default';
+    const machine=machineRegistry()?.status(G.DB?.save,p.id);
+    const equipped=machine?.upgraded?p.id+'_advanced':skinRegistry()?.status(G.DB?.save,p.id)?.equipped||'default';
     const selected=preview?stage.dataset['skin'+p.id]:undefined;
     const id=selected===undefined?equipped:selected;
     return {id,file:skinFile(p.id,id)||p.file};
@@ -862,12 +864,13 @@ G.PKMSVVWiki=(()=>{
    if(skinQA){
     const station=v3Station[slot];if(!station)return;
     const economy=skinRegistry(),view=economy?.status(G.DB?.save,station);
-    const equipped=view?.equipped||'default';
+    const machine=machineRegistry(),mview=machine?.status(G.DB?.save,station);
+    const equipped=mview?.upgraded?station+'_advanced':view?.equipped||'default';
     const selected=stage.dataset['skin'+station]??equipped;
     const displayName=id=>id==='default'?tr('Cơ bản','Basic'):tr(skinEntry(station,id)?.nameVi||'Skin',skinEntry(station,id)?.nameEn||'Skin');
     desc.textContent=tr('Đang trang bị: ','Equipped: ')+displayName(equipped)+' · '+tr('Xu Đồng Đội: ','Co-op Coins: ')+(view?.coins??save.coopCoins??0);
     desc.dataset.skinWallet=String(view?.coins??save.coopCoins??0);
-    const variants=view?.variants||[{id:'default',owned:true,available:true,price:0}];
+    const variants=(view?.variants||[{id:'default',owned:true,available:true,price:0}]).map(v=>mview?.upgraded&&v.id===station+'_advanced'?{...v,owned:true}:v);
     for(const item of variants){
      const id=item.id,variant=id;
      const row=document.createElement('div');row.className='pkmsvv-build-item';row.dataset.skinItem=id;
@@ -902,6 +905,32 @@ G.PKMSVVWiki=(()=>{
       inspect(slot);
      };
      row.append(label,state,b,action);items.append(row);
+    }
+    if(mview){
+     const heading=document.createElement('strong');heading.textContent=tr('Nghiên cứu chỉ số toàn đội','Permanent team research');items.append(heading);
+     const tip=document.createElement('small');tip.textContent=tr('Nâng chỉ số lần đầu sẽ tự đổi máy sang Chuyên dụng. Hiệu lực vĩnh viễn từ trận kế tiếp.','First successful rank upgrades this machine. Permanent effect from the next run.');items.append(tip);
+     for(const stat of mview.stats){
+      const row=document.createElement('div');row.className='pkmsvv-build-item';row.dataset.researchStat=stat.id;
+      const label=document.createElement('span');label.textContent=tr(stat.vi,stat.en)+' · Lv '+stat.level+'/'+stat.max;
+      const effect=document.createElement('small');effect.textContent=tr(stat.viUnit,stat.enUnit);
+      const b=document.createElement('button');b.type='button';b.className='pkmsvv-pc-close';b.dataset.researchUpgrade=stat.id;
+      b.disabled=!mview.unlocked||stat.level>=stat.max||mview.coins<stat.price||G.DB?.guest||typeof G.DB?.commit!=='function';
+      b.textContent=stat.level>=stat.max?'MAX':tr('Nâng · '+stat.price+' xu','Upgrade · '+stat.price+' coins');
+      b.onclick=async()=>{
+       if(b.disabled)return;b.disabled=true;
+       const player=G.DB?.save,file=skinFile(station,station+'_advanced');
+       const source=stage.querySelector('[data-lab-layer="'+station+'"]');
+       const expected=[source?.naturalWidth,source?.naturalHeight];
+       const valid=file&&await new Promise(resolve=>{const img=new Image();img.onload=()=>resolve(img.naturalWidth===expected[0]&&img.naturalHeight===expected[1]);img.onerror=()=>resolve(false);img.src='images/coop-lab/research-v3/'+file;});
+       if(!stage.isConnected||!b.isConnected||player!==G.DB?.save)return;
+       if(!valid){inspect(slot);return;}
+       const result=machine.upgrade(player,station,stat.id,()=>G.DB.commit(true));
+       if(result.ok){delete stage.dataset['skin'+station];renderFurnitureLayers(stage);G.UI?.refreshCoins?.();}
+       else G.UI?.toast?.(tr('Chưa nâng được.','Upgrade unavailable.'),2200);
+       inspect(slot);
+      };
+      row.append(label,effect,b);items.append(row);
+     }
     }
     const reset=document.createElement('button');reset.type='button';reset.className='pkmsvv-pc-close';reset.dataset.buildPreviewReset='1';
     reset.textContent=tr('Hủy xem thử tất cả','Discard all previews');
@@ -952,7 +981,7 @@ G.PKMSVVWiki=(()=>{
   const footer=document.createElement('p');footer.className='pkmsvv-pc-hint';
   footer.textContent=tr('Ảnh gốc là tranh ghép một lớp: hiện giữ nguyên để bảo toàn chất lượng. Việc tách từng món và phục dựng phần tường/sàn bị che sẽ cần kiểm định mỹ thuật riêng; không tự trừ xu cho đồ chưa hoàn chỉnh.',
     'The original room is one flattened image, preserved for visual quality. Extracted furnishings and obscured background still require art validation; unfinished items cannot charge coins.');
-  if(skinQA)footer.textContent=tr('Skin chỉ đổi ngoại hình, không đổi chức năng của máy. Danh mục hiện chưa bán.','Skins change appearance only. The current catalog is not for sale.');
+  if(skinQA)footer.textContent=machineRegistry()?tr('Nghiên cứu dùng Xu Đồng Đội. Lần nâng đầu tiên tự đổi máy sang Chuyên dụng.','Research uses Co-op Coins. First rank upgrades machine appearance.'):tr('Skin chỉ đổi ngoại hình, không đổi chức năng của máy. Danh mục hiện chưa bán.','Skins change appearance only. The current catalog is not for sale.');
   box.append(footer);overlay.append(box);document.body.append(overlay);
   inspect('center');back.focus({preventScroll:true});
   G.PKMSVVPippiGuide?.openFeature?.('construction');return true;

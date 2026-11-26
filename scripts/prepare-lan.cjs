@@ -125,6 +125,7 @@ for(const file of ['lan-connect.html','lan-connect.js'])
     'window.PKMSVV_MEGA_FULL_CATALOG_QA=true;\n'+
     'window.PKMSVV_RESEARCH_V3_QA='+String(fs.existsSync(path.join(v3,'manifest.json')))+';\n'+
     'window.PKMSVV_RESEARCH_SKIN_QA=true;\n'+
+    'window.PKMSVV_RESEARCH_MACHINE_QA=true;\n'+
     'window.PKMSVV_RESEARCH_ART_QA='+JSON.stringify(require('../data/pkmsvv-coop-lab-catalog.json').roomArt)+';\n';
    const qaConfig='pkmsvv-qa-runtime-config.js';
    const labCatalog=require('../data/pkmsvv-coop-lab-catalog.json');
@@ -134,7 +135,7 @@ for(const file of ['lan-connect.html','lan-connect.js'])
    const browserCore=labCore.replace(configAnchor,JSON.stringify(labCatalog));
    const skinModule='pkmsvv-research-skin-economy-qa.js';
    const skinBundle='(function(){const module={exports:{}};\n'+browserCore+
-    '\nconst E=module.exports;window.PKMSVVStationSkinEconomy=Object.freeze({...E.stationSkinEconomy,registry:E.config.stationSkins});})();\n';
+    '\nconst E=module.exports;window.PKMSVVStationSkinEconomy=Object.freeze({...E.stationSkinEconomy,registry:E.config.stationSkins});if(window.PKMSVV_RESEARCH_MACHINE_QA===true&&window.G?.GlobalPower)window.PKMSVVResearchMachines=Object.freeze(E.createMachineUpgradeEconomy(G.GlobalPower));})();\n';
    fs.mkdirSync(path.join(folder,'js/ui'),{recursive:true});
    fs.writeFileSync(path.join(folder,'js/ui',skinModule),skinBundle);
    injectScript.push('<script defer src="js/ui/'+skinModule+'?v='+revision+'"></script>');

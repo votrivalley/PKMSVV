@@ -697,5 +697,40 @@
         "sha256": "c3166fc439fd9d1e9794c7d886478730554b9648e2ca571a6fc717d3b6c6149b"
       }
     ]
+  },
+  "stationUpgrades": {
+    "schemaVersion": 1,
+    "qaOnly": true,
+    "priceModel": {
+      "base": 80,
+      "step": 40,
+      "opening": 320,
+      "rerollBase": 160,
+      "rerollStep": 80
+    },
+    "stations": {
+      "mega": [
+        "power",
+        "crit",
+        "rapid"
+      ],
+      "fossil": [
+        "vital",
+        "guard"
+      ],
+      "support": [
+        "learning",
+        "reach"
+      ],
+      "berry": [
+        "area",
+        "duration"
+      ],
+      "companion": [
+        "fortune",
+        "reroll",
+        "opening"
+      ]
+    }
   }
 }
