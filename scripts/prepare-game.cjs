@@ -703,6 +703,15 @@ if (process.env.PKMSVV_SWITCH_BOOT === '1') {
     "  if (document.readyState === 'loading') { addEventListener('DOMContentLoaded',bootOnce); setTimeout(bootOnce,500); } else bootOnce();");
 }
 
+// Port of PokéSurvivor3DS power_after_hit: use existing direct and projectile
+// damage bookkeeping sites; ghost attacks and inactive powers do nothing.
+patch('js/systems/combat.js',
+ '    pl.dmgDealt += dmg;\n    m.dealt =',
+ '    if(!ghost)G.PKMSVVSpecialPowerQA?.afterHit?.(pl,e,dmg);\n    pl.dmgDealt += dmg;\n    m.dealt =');
+patch('js/systems/combat.js',
+ '        pl.dmgDealt += p.dmg * k;\n        if (p.src)',
+ '        G.PKMSVVSpecialPowerQA?.afterHit?.(pl,e,p.dmg*k);\n        pl.dmgDealt += p.dmg * k;\n        if (p.src)');
+
 // Pippi companion is packaged into the offline executable after all gameplay
 // patches. No remote sprites or assets are fetched at runtime.
 {

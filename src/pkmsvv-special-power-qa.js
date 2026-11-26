@@ -1,13 +1,17 @@
 'use strict';
-/* Special Power Stage 1. QA only. One selection per owned species.
- * Legacy Mega ownership, gacha, Pippi and Co-op remain untouched.
- * Dynamax trial: native HP and attack factors, no invented G-Max sprite,
- * collision/prop destruction, or unverified new net packets.
+/* Special Power Stage 2. QA only. One selection per owned species.
+ * Required Notice: Copyright 2026 JPTER78 (https://github.com/JPTER78/pokesurvivor)
+ * Noncommercial license: https://polyformproject.org/licenses/noncommercial/1.0.0
+ * Dynamax mechanics ported from PokéSurvivor3DS by juanluismm521,
+ * 188afd16929e9c67dc0aa45d42a8e328d1888657 src/core/power.cpp.
+ * SVV retains proportional HP, unchanged collision radius, Chapter 7 loadout
+ * and shared charge; use native Web enemy/prop APIs, not 3DS GPU code.
+ * G-Max sprites, Z/Tera and multiplayer power packets are not implemented.
  */
 G.PKMSVVSpecialPowerQA=(()=>{
  const catalog=Object.freeze([
   Object.freeze({id:'mega',name:'Mega Evolution',device:'Mega Stone',duration:30,plannedDuration:40,cooldown:200,ready:true,summary:'Hệ Mega hiện tại · giữ nguyên đá và mở khóa'}),
-  Object.freeze({id:'dynamax',name:'Dynamax',device:'Dynamax Band',duration:12,cooldown:80,ready:true,summary:'QA Solo · HP x2, sát thương +40%'}),
+  Object.freeze({id:'dynamax',name:'Dynamax',device:'Dynamax Band',duration:12,cooldown:80,ready:true,summary:'QA Solo · HP x2, công +40%, giẫm quái và sát thương lan'}),
   Object.freeze({id:'zmove',name:'Z-Power',device:'Z-Ring',duration:15,cooldown:60,ready:false,summary:'Đang phát triển · tuyệt chiêu kết thúc'}),
   Object.freeze({id:'terastal',name:'Terastal',device:'Tera Orb',duration:30,cooldown:75,ready:false,summary:'Đang phát triển · chuyển hệ và tăng STAB'})
  ]);
@@ -45,7 +49,7 @@ G.PKMSVVSpecialPowerQA=(()=>{
   if(!p||!soloExplore(p))return null;
   let r=runs.get(p);
   if(!r&&G.Game?.state==='playing'){
-   r={id:save()?.pkmsvvChapter7Seen===true?selected(save(),Number(p.dex)):'mega',remaining:0,cooldown:0,bonusHp:0,atkApplied:false,aura:0};
+   r={id:save()?.pkmsvvChapter7Seen===true?selected(save(),Number(p.dex)):'mega',remaining:0,cooldown:0,bonusHp:0,atkApplied:false,aura:0,visual:null,crushClock:0,crushed:new WeakMap(),splashing:false};
    runs.set(p,r);
   }
   return r||null;
@@ -63,7 +67,13 @@ G.PKMSVVSpecialPowerQA=(()=>{
   r.bonusHp=p.maxHp;
   p.maxHp+=r.bonusHp;p.hp=p.maxHp*fraction;
   p.atkMul*=1.4;r.atkApplied=true;
-  r.remaining=12;r.aura=0;p._pkmsvvSpecialPowerActive='dynamax';p._megaEnergy=0;
+  // Original 3DS power_start: grow visual sprite x1.8, not the collider.
+  if(p.anim&&Number.isFinite(p.anim.scale)&&p.anim.scale>0){
+   r.visual={anim:p.anim,scale:p.anim.scale,bodyH:p.bodyH};
+   p.anim.scale*=1.8;
+   if(G.Sprites?.bodyHeight)p.bodyH=G.Sprites.bodyHeight(p.anim.dex??p.dex,p.anim.scale);
+  }
+  r.remaining=12;r.aura=0;r.crushClock=0;r.crushed=new WeakMap();p._pkmsvvSpecialPowerActive='dynamax';p._megaEnergy=0;
   G.FX?.ring?.(p.x,p.y,15,110,'#e883f8',.8,7);
   G.UI?.toast?.(tr('DYNAMAX · 12 giây · HP x2, công +40%','DYNAMAX · 12s · double HP, +40% attack'));
   return true;
@@ -75,7 +85,46 @@ G.PKMSVVSpecialPowerQA=(()=>{
   // Remove only the owned bonus, not unrelated permanent or passive changes.
   p.maxHp=Math.max(1,p.maxHp-r.bonusHp);p.hp=p.dead?0:p.maxHp*fraction;
   p.atkMul/=1.4;r.atkApplied=false;r.bonusHp=0;r.remaining=0;r.cooldown=80;
-  delete p._pkmsvvSpecialPowerActive;return true;
+  if(r.visual&&p.anim===r.visual.anim){p.anim.scale=r.visual.scale;p.bodyH=r.visual.bodyH;}
+  r.visual=null;delete p._pkmsvvSpecialPowerActive;return true;
+ }
+ // Port of power_dmg, power_update (Dyna), power_after_hit from upstream.
+ const COL='#ff3a5a';
+ const validEnemy=e=>!!(e&&!e.dead&&!e.remote&&!e.friendly&&!e.pkmsvvFriendly&&!e.isSupport&&!e.arceus&&!e.judge&&typeof e.hurt==='function');
+ const nearby=(x,y,r)=>Array.from(G.EnemyMgr?.queryCircle?.(x,y,r)||[]);
+ const powerDmg=(p,k)=>60*(Number(p.atk)||0)*k*(1+(Number(p.level)||0)*.04);
+ function deal(p,e,dmg,dx,dy,knock){
+  if(!validEnemy(e)||!Number.isFinite(dmg)||dmg<=0)return false;
+  e.hurt(dmg,COL,dx,dy,knock,null);
+  if(Number.isFinite(p.dmgDealt))p.dmgDealt+=dmg;
+  return true;
+ }
+ function crush(p,r){
+  const radius=(p.r||18)*2.2;
+  const t=r.crushClock;
+  for(const e of nearby(p.x,p.y,radius)){
+   if(!validEnemy(e)||e.boss||e.legend||e.legendary||e.eterna||e.ecore||e.pkmsvvFossilRotomBoss)continue;
+   if(t-(r.crushed.get(e)??-Infinity)<.5)continue;
+   r.crushed.set(e,t);
+   deal(p,e,powerDmg(p,.8),e.x-p.x,e.y-p.y,300);
+  }
+  for(const prop of Array.from(G.World?.propsInCircle?.(p.x,p.y,radius)||[]).slice(0,32)){
+   if(prop?.destructible&&!prop.gone&&prop.hp>0&&!prop.pkmsvvMission&&!prop.special)
+    G.World.damageProp?.(prop,9999,COL);
+  }
+ }
+ function afterHit(p,e,dmg){
+  const r=state(p);
+  if(!r?.atkApplied||r.splashing||!soloExplore(p)||p.dead||G.Game?.state!=='playing'||!e||!Number.isFinite(dmg)||dmg<=0)return 0;
+  // Upstream snapshots the first six entries, including original target.
+  // Native hit / projectile hook already excludes ghost attacks.
+  r.splashing=true;let n=0;
+  try{
+   for(const other of nearby(e.x,e.y,70).slice(0,6)){
+    if(other!==e&&deal(p,other,dmg*.4,other.x-e.x,other.y-e.y,0))n++;
+   }
+  }finally{r.splashing=false;}
+  return n;
  }
  function tick(p,dt){
   const r=p&&runs.get(p)||state(p);
@@ -84,7 +133,8 @@ G.PKMSVVSpecialPowerQA=(()=>{
   if(G.Game?.state!=='playing')return;
   const d=Number.isFinite(dt)?Math.max(0,dt):0;
   if(r.atkApplied){
-   r.remaining=Math.max(0,r.remaining-d);r.aura+=d;
+   r.remaining=Math.max(0,r.remaining-d);r.aura+=d;r.crushClock+=d;
+   if(r.remaining>0)crush(p,r);
    if(r.aura>=.5){r.aura=0;G.FX?.ring?.(p.x,p.y,8,Math.max(38,(p.r||18)*3),'#f191ef',.4,4);}
    if(r.remaining<=0)stop(p);
   }else r.cooldown=Math.max(0,r.cooldown-d);
@@ -145,5 +195,5 @@ G.PKMSVVSpecialPowerQA=(()=>{
   G.Game[name]=function(...args){stop(player());return prev.apply(this,args);};
  }
  if(typeof document!=='undefined'){mount();setInterval(sync,250);}
- return {catalog,selected,equip,state,allowsMega,canActivate,activate,tick,stop,open,close};
+ return {catalog,selected,equip,state,allowsMega,canActivate,activate,tick,stop,afterHit,open,close};
 })();

@@ -36,3 +36,23 @@ test('Chapter 7 gate and Mega remain compatible, save data not mutated by run st
  G.Game.state='playing';assert.equal(api.allowsMega(p),true);assert.equal(api.activate(p),false);
  assert.equal(s.pkmsvvPowerLoadout,undefined);
 });
+
+test('source-derived Dynamax size, crush cadence, prop destruction and splash exclusions',async()=>{
+ const {G,p,api}=fixture(),hits=[];
+ Object.assign(p,{x:0,y:0,r:18,bodyH:36,anim:{dex:25,scale:1},atk:2,level:10,dmgDealt:0});
+ G.Sprites={bodyHeight:(dex,scale)=>36*scale};
+ const enemy=(id,extra={})=>({id,x:15,y:0,hurt(d,col,dx,dy,knock){hits.push({id,d,knock});},...extra});
+ const mob=enemy(1),boss=enemy(2,{boss:true}),legend=enemy(3,{legend:true}),friend=enemy(4,{friendly:true}),remote=enemy(5,{remote:true}),arceus=enemy(6,{arceus:true});
+ G.EnemyMgr={queryCircle:()=>[mob,boss,legend,friend,remote,arceus]};
+ const prop={destructible:true,hp:15},protectedProp={destructible:true,hp:15,pkmsvvMission:true},props=[];
+ G.World={propsInCircle:()=>[prop,protectedProp],damageProp:(p,d)=>{props.push(d);p.hp=0;}};
+ await api.equip('dynamax');G.Game.state='playing';
+ assert.equal(api.activate(p),true);assert.equal(p.anim.scale,1.8);assert.equal(p.r,18);assert.ok(Math.abs(p.bodyH-64.8)<1e-9);
+ api.tick(p,.1);assert.equal(hits.length,1);assert.equal(hits[0].id,1);assert.ok(Math.abs(hits[0].d-134.4)<1e-8);assert.equal(hits[0].knock,300);
+ assert.deepEqual(props,[9999]);assert.equal(protectedProp.hp,15);
+ api.tick(p,.2);assert.equal(hits.length,1);
+ api.tick(p,.4);assert.equal(hits.length,2);
+ hits.length=0;
+ assert.equal(api.afterHit(p,mob,100),2);assert.deepEqual(hits.map(x=>[x.id,x.d]),[[2,40],[3,40]]);
+ api.stop(p);assert.equal(p.anim.scale,1);assert.equal(p.bodyH,36);assert.equal(api.afterHit(p,mob,100),0);
+});
