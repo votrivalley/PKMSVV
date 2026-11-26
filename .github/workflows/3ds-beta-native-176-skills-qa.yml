@@ -53,6 +53,7 @@ on:
       - 'scripts/patch-3ds-skill-effects-passives.cjs'
       - 'tests/beta-wifi-host-join-browser.cjs'
       - 'tests/beta-176-native-cooldowns-browser.cjs'
+      - 'tests/beta-active-movement-browser.cjs'
       - 'tests/beta-forget-three-cards-browser.cjs'
       - 'scripts/patch-skill-forget.cjs'
       - 'src/pkmsvv-forget-skill.js'
@@ -162,6 +163,10 @@ jobs:
         env:
           PKMSVV_BROWSER: /usr/bin/google-chrome
         run: timeout 80s node tests/beta-176-native-cooldowns-browser.cjs
+      - name: Real Chromium keyboard and controller AUTO with native dash, blitz and leap
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+        run: timeout 100s node tests/beta-active-movement-browser.cjs
       - name: Solo skill forget pauses world, three choices and keyboard/gamepad regression
         env:
           PKMSVV_BROWSER: /usr/bin/google-chrome
