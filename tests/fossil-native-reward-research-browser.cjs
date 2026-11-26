@@ -7,7 +7,8 @@
    ordinary deaths. Actual EXP/skill menus are selected through native UI. */
 const {chromium}=require('playwright');
 const {startServer}=require('../lan-server/server.cjs');
-const assert=require('node:assert/strict'),path=require('node:path');
+const assert=require('node:assert/strict'),path=require('node:path'),fs=require('node:fs');
+const out=path.resolve(__dirname,'../dist/fossil-reward-browser-qa');fs.mkdirSync(out,{recursive:true});
 (async()=>{
  const root=path.resolve(__dirname,'../dist/lan');
  const server=await startServer({root,host:'127.0.0.1',port:0});
@@ -16,11 +17,11 @@ const assert=require('node:assert/strict'),path=require('node:path');
  page.setDefaultTimeout(12000);
  const errors=[],consoleErrors=[];
  page.on('pageerror',e=>errors.push(String(e)));
- page.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource|favicon|404/.test(m.text()))consoleErrors.push(m.text());});
+ page.on('console',m=>{if(m.text().startsWith('FOSSIL_QA_CHOICE '))console.log(m.text());if(m.type()==='error'&&!/Failed to load resource|favicon|404/.test(m.text()))consoleErrors.push(m.text());});
  try{
+  await page.addInitScript(()=>{window.__pkmsvvPippiGuideQABypass=true;});
   await page.goto('http://127.0.0.1:'+server.port+'/game/',{waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>G.DB?.save&&G.PKMSVVFossilExpedition?.nativeReady===true,null,{timeout:45000});
-  await page.addInitScript(()=>{window.__pkmsvvPippiGuideQABypass=true;});
   await page.evaluate(async()=>{
    Object.assign(G.DB.save,{partner:25,pkmsvvStorySeen:true,pkmsvvNameChosen:true});
    if(G.DB.guest)throw Error('Expected disposable offline profile');
@@ -46,7 +47,26 @@ const assert=require('node:assert/strict'),path=require('node:path');
   assert.equal(await page.evaluate(()=>G.PKMSVVFossilExpedition.rewardEligible),true);
   // Protect disposable QA actors without bypassing skill-level or simulation.
   await page.evaluate(()=>{
+   window.__qaChoices=[];
+   const visible=e=>!!e&&e.isConnected&&!e.disabled&&e.getClientRects().length>0&&getComputedStyle(e).visibility!=='hidden'&&getComputedStyle(e).display!=='none'&&!e.closest('.hidden,[hidden]');
+   const clickChoice=(kind,button)=>{
+    if(!visible(button))return false;
+    window.__qaChoices.push({kind,time:G.Game?.st?.time,text:(button.textContent||'').trim().slice(0,100)});
+    console.log('FOSSIL_QA_CHOICE '+JSON.stringify(window.__qaChoices.at(-1)));
+    button.click();return true;
+   };
    window.__fossilSoakKeeper=setInterval(()=>{
+    // Use real visible buttons and their original callbacks. Never set
+    // Game.state or advance the mission clock to dismiss a modal.
+    if(clickChoice('pippi',document.querySelector('#pkmsvv-pippi-guide .pkmsvv-pippi-guide-next')))return;
+    if(clickChoice('item-keep',document.querySelector('#scr-item .pkmsvv-held-action.is-old')))return;
+    if(clickChoice('evolution-keep',document.querySelector('.pkmsvv-evo .pkmsvv-evo-skip')))return;
+    if(clickChoice('forget-close',document.querySelector('#pkmsvv-forget-skill .pkmsvv-forget-close')))return;
+    if(G.UI?.isOpen?.('scr-bond')){
+     const root=document.querySelector('#scr-bond');
+     const cancel=[...root.querySelectorAll('button')].find(b=>visible(b)&&/^(bỏ qua|không ghép|để sau|hủy|skip|cancel|not now|no fusion|omitir|cancelar)(\s|$)/i.test(b.textContent.trim()));
+     if(clickChoice('bond-skip',cancel))return;
+    }
     const p=G.Game?.player;
     if(p&&!p.dead){p.hp=p.maxHp;p.invuln=Math.max(p.invuln||0,2000);}
     // This soak test measures AI movement, gameplay clock, particles and
@@ -108,21 +128,23 @@ const assert=require('node:assert/strict'),path=require('node:path');
     machineHp:G.PKMSVVFossilExpedition?.session?.machine?.hp,
     sprite:G.PKMSVVFossilExpedition?.spriteReady,
     phase:G.PKMSVVFossilExpedition?.session?.phase,
-    finish:G.PKMSVVFossilExpedition?.lastFinish,reward:G.PKMSVVFossilExpedition?.lastReward
+    finish:G.PKMSVVFossilExpedition?.lastFinish,reward:G.PKMSVVFossilExpedition?.lastReward,
+    choices:window.__qaChoices?.slice(-4),
+    modals:[...document.querySelectorAll('.scr:not(.hidden),#pkmsvv-pippi-guide,#pkmsvv-forget-skill')].filter(e=>e.getClientRects().length&&!e.hidden).map(e=>({id:e.id,cls:e.className,text:(e.innerText||'').slice(0,240),buttons:[...e.querySelectorAll('button')].filter(b=>b.getClientRects().length&&!b.disabled).map(b=>b.textContent.trim()).slice(0,8)}))
    }));
    stages.push({s:i+1,...state});
    if(state.finish){final=state;break;}
    if(state.time<=previous+.15)stalls++;else stalls=0;
    maxStalls=Math.max(maxStalls,stalls);
    previous=state.time;
-   if(i===0||i===9||i===15||i===23||i===30)
+   if(i%10===0||state.state==='choice'||state.state==='levelup')
     console.log('FOSSIL_SOAK_CHECKPOINT='+JSON.stringify(stages.at(-1)));
    assert.equal(state.bots,3,'all 3 native Co-op AI must remain active');
    if(state.time>=125&&state.enemies>5)
     assert.ok(state.boostedEnemies>0,
      'after 2:00 the real native enemies must receive Berry-style speed boost');
    assert.equal(state.sprite,true,'artwork should remain loaded under long-run stress');
-   assert.equal(state.fossil,true,'fossil mission must remain running during 155s validation');
+   assert.equal(state.fossil,true,'fossil mission must remain running until its actual result');
    assert.ok(stalls<3,'real game clock stuck for 15 seconds: '+JSON.stringify(stages.slice(-4)));
    assert.equal(errors.length,0,'uncaught browser error: '+JSON.stringify(errors.slice(-3)));
    const serious=consoleErrors.filter(x=>/\[Game\]|TypeError|RangeError|maximum call stack|AI update|frame guarded/i.test(x));
@@ -162,14 +184,22 @@ const assert=require('node:assert/strict'),path=require('node:path');
   const after=await page.evaluate(()=>({coins:G.DB.save.pkmsvvCoopLab.coopCoins,rank:G.DB.save.pkmsvvResearchRanks.power,atk:G.GlobalPower.combine({},G.GlobalPower.effectiveLevels(G.DB.save)).atkMul,latest:JSON.parse(localStorage.getItem('pkmsvv.safe.v1.pkmsvv_offline.latest'))}));
   assert.equal(after.latest.pkmsvvCoopLab.coopCoins,earned-80);assert.equal(after.latest.pkmsvvResearchRanks.power,1);
   assert.ok(Math.abs(after.atk-1.12)<1e-9);assert.deepEqual(errors,[]);
-  console.log('FOSSIL_NATIVE_REWARD_RESEARCH_PASS='+JSON.stringify({duration:final.finish.elapsed,earned,remaining:after.coins,rank:after.rank,atk:after.atk,fixture:'protected health, controlled host position and boss damage; native clock, objectives, wallet and UI'}));
+  const result={status:'PASS',duration:final.finish.elapsed,earned,remaining:after.coins,rank:after.rank,atk:after.atk,fixture:'protected health, controlled host position and boss damage; native clock, objectives, wallet and UI'};
+  fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(result,null,2));
+  await page.locator('.pkmsvv-build-panel').screenshot({path:path.join(out,'earned-mega-upgrade.png')});
+  console.log('FOSSIL_NATIVE_REWARD_RESEARCH_PASS='+JSON.stringify(result));
   const traveled=stages.some((x,i)=>i>0&&x.positions.some((p,j)=>{
    const prev=stages[i-1].positions[j];
    return prev&&Math.hypot(p.x-prev.x,p.y-prev.y)>10;
   }));
   assert.equal(traveled,true,'AI should move during a continuous battle');
-  console.log('PASS FOSSIL_SOAK_155S='+JSON.stringify({gameSeconds:previous,stages:stages.length,
+  console.log('PASS FOSSIL_FULL_SOAK='+JSON.stringify({gameSeconds:previous,stages:stages.length,
    maxStalls,aiMoved:traveled,errors:errors.length,consoleErrors:consoleErrors.length}));
+ }catch(error){
+  const diagnostic=await page.evaluate(()=>({state:G.Game?.state,time:G.Game?.st?.time,choices:window.__qaChoices,visible:[...document.querySelectorAll('.scr:not(.hidden),#pkmsvv-pippi-guide,#pkmsvv-forget-skill')].filter(e=>e.getClientRects().length&&!e.hidden).map(e=>({id:e.id,cls:e.className,text:(e.innerText||'').slice(0,600)})),finish:G.PKMSVVFossilExpedition?.lastFinish,reward:G.PKMSVVFossilExpedition?.lastReward})).catch(()=>null);
+  fs.writeFileSync(path.join(out,'failure.json'),JSON.stringify({error:String(error),diagnostic,errors,consoleErrors:consoleErrors.slice(-20)},null,2));
+  await page.screenshot({path:path.join(out,'failure.png')}).catch(()=>{});
+  throw error;
  }finally{
   try{await page.evaluate(()=>{clearInterval(window.__fossilSoakKeeper);G.Game?.quit?.()});}catch(_){}
   await browser.close();await server.close();
