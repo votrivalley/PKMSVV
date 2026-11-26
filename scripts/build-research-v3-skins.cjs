@@ -45,8 +45,19 @@ async function main(){
  const decodedPatch=await sharp(path.join(target,patch.file)).ensureAlpha().raw().toBuffer();
  assert.deepEqual(decodedPatch,pixels,'Unexpected underlay encoding change');
  assert.equal(decodedPatch[3],0);assert.equal(decodedPatch[(51*patch.w+73)*4+3],255);
+ // Remove the remaining shelf-foot highlights above the floor trim only
+ // when the Basic support station is shown. Keep the original wall intact.
+ const supportPatch={x:64,y:350,w:465,h:12,sourceX:64,sourceY:337,file:'support-basic-wall.png'};
+ const supportPixels=Buffer.alloc(supportPatch.w*supportPatch.h*4);
+ for(let y=0;y<supportPatch.h;y++)for(let x=0;x<supportPatch.w;x++){
+  const dest=(y*supportPatch.w+x)*4,source=((supportPatch.sourceY+y)*1500+supportPatch.sourceX+x)*4;
+  floor.copy(supportPixels,dest,source,source+3);
+  supportPixels[dest+3]=Math.round(255*Math.max(0,Math.min(1,x/3,(464-x)/3,y/3,11-y)));
+ }
+ await sharp(supportPixels,{raw:{width:465,height:12,channels:4}}).png().toFile(path.join(target,supportPatch.file));
+ assert.deepEqual(await sharp(path.join(target,supportPatch.file)).ensureAlpha().raw().toBuffer(),supportPixels);
  const validation=await validate(target);
- fs.writeFileSync(path.join(target,'preview-report.json'),JSON.stringify({status:'PASS',purchaseEnabled:validation.purchaseEnabled,variants:report,validation,basicCompanionUnderlay:patch},null,2));
+ fs.writeFileSync(path.join(target,'preview-report.json'),JSON.stringify({status:'PASS',purchaseEnabled:validation.purchaseEnabled,variants:report,validation,basicCompanionUnderlay:patch,basicSupportUnderlay:supportPatch},null,2));
  console.log('V3 Basic and Specialized independent station PNGs PASS');
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});

@@ -660,9 +660,13 @@ G.PKMSVVWiki=(()=>{
    // Only a successfully loaded Royal companion sprite can hide its old
    // chest; missing or invalid art preserves the default room.
    const companionIndex=m.layers.findIndex(p=>p.id==='companion');
-   let underlay=null;
+   let underlay=null,supportUnderlay=null;
    if(choices[companionIndex]?.id==='default'&&choices[companionIndex]?.file==='skins/companion-basic.png'){
     try{const img=await load('skins/companion-basic-floor.png');if(img.naturalWidth===146&&img.naturalHeight===102)underlay=img;}catch(_){}
+   }
+   const supportIndex=m.layers.findIndex(p=>p.id==='support');
+   if(choices[supportIndex]?.id==='default'&&choices[supportIndex]?.file==='skins/support-basic.png'){
+    try{const img=await load('skins/support-basic-wall.png');if(img.naturalWidth===465&&img.naturalHeight===12)supportUnderlay=img;}catch(_){}
    }
    if(stage.dataset.labRenderRevision!==revision||!stage.isConnected)return;
    stage.querySelectorAll('.pkmsvv-lab-furniture,.pkmsvv-lab-source-layer,.pkmsvv-lab-station-prop,.pkmsvv-lab-v3-layer,.pkmsvv-lab-v3-underlay').forEach(x=>x.remove());
@@ -672,6 +676,12 @@ G.PKMSVVWiki=(()=>{
     underlay.alt='';underlay.draggable=false;underlay.setAttribute('aria-hidden','true');
     Object.assign(underlay.style,{position:'absolute',objectFit:'fill',pointerEvents:'none',zIndex:'0',maxWidth:'none',margin:'0',padding:'0',border:'0'});
     place(underlay,{x:925,y:670,w:146,h:102});stage.prepend(underlay);
+   }
+   if(supportUnderlay){
+    supportUnderlay.className='pkmsvv-lab-v3-underlay';supportUnderlay.dataset.labUnderlay='support_basic';
+    supportUnderlay.alt='';supportUnderlay.draggable=false;supportUnderlay.setAttribute('aria-hidden','true');
+    Object.assign(supportUnderlay.style,{position:'absolute',objectFit:'fill',pointerEvents:'none',zIndex:'0',maxWidth:'none',margin:'0',padding:'0',border:'0'});
+    place(supportUnderlay,{x:64,y:350,w:465,h:12});stage.prepend(supportUnderlay);
    }
    for(let i=0;i<m.layers.length;i++){
     const p=m.layers[i],img=images[i];img.className='pkmsvv-lab-v3-layer';img.dataset.labLayer=p.id;img.dataset.labSlot=p.slot;img.dataset.labSkin=choices[i].id;

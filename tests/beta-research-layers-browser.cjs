@@ -63,6 +63,7 @@ const {startServer}=require('../lan-server/server.cjs');
    const sprites=await page.locator(selector+' [data-lab-layer]:not([data-lab-layer="crest"])').evaluateAll(es=>es.map(e=>[e.dataset.labLayer,e.src]));
    assert.equal(sprites.length,5);for(const [id,src] of sprites)assert.ok(src.endsWith('/skins/'+id+'-basic.png'),src);
    assert.equal(await page.locator(selector+' [data-lab-underlay="companion_basic"]').count(),1);
+   assert.equal(await page.locator(selector+' [data-lab-underlay="support_basic"]').count(),1);
   };
   await assertBasic('.pkmsvv-build-stage');
   assert.equal(await page.locator('[data-skin-state="equipped"]').count(),1);
@@ -83,7 +84,8 @@ const {startServer}=require('../lan-server/server.cjs');
     assert.equal(e.skin,advancedSelections.includes(e.station)?e.station+'_advanced':'default');
     if(advancedSelections.includes(e.station))assert.ok(e.src.endsWith('/skins/'+e.station+'-advanced.png'));
    }
-   assert.equal(await page.locator('.pkmsvv-build-stage [data-lab-underlay]').count(),advancedSelections.includes('companion')?0:1);
+   assert.equal(await page.locator('.pkmsvv-build-stage [data-lab-underlay="companion_basic"]').count(),advancedSelections.includes('companion')?0:1);
+   assert.equal(await page.locator('.pkmsvv-build-stage [data-lab-underlay="support_basic"]').count(),advancedSelections.includes('support')?0:1);
    assert.equal(await page.evaluate(()=>JSON.stringify(G.DB.save.pkmsvvCoopLab??null)),v3Save);
   }
   await page.locator('.pkmsvv-build-stage').screenshot({path:path.join(out,'research-v3-specialized-all.png')});
@@ -107,7 +109,8 @@ const {startServer}=require('../lan-server/server.cjs');
   await page.locator('[data-build-slot="trophy"]').click();
   await page.locator('[data-build-preview="companion_advanced"]').click();
   await page.waitForFunction(()=>document.querySelector('.pkmsvv-build-stage [data-lab-layer="companion"]')?.dataset.labSkin==='companion_advanced');
-  assert.equal(await page.locator('.pkmsvv-build-stage [data-lab-underlay]').count(),0);
+  assert.equal(await page.locator('.pkmsvv-build-stage [data-lab-underlay="companion_basic"]').count(),0);
+  assert.equal(await page.locator('.pkmsvv-build-stage [data-lab-underlay="support_basic"]').count(),1);
   await page.locator('[data-build-preview="default"]').click();
   await page.waitForFunction(()=>document.querySelectorAll('.pkmsvv-build-stage [data-lab-skin="default"]').length===6);
   await assertBasic('.pkmsvv-build-stage');
