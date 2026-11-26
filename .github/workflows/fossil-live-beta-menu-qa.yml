@@ -1,0 +1,31 @@
+name: Live Beta Fossil Host Join menu QA
+on:
+  push:
+    branches: [feature/web-3ds-skill-effects-passives-qa-20261121]
+    paths: ['.github/workflows/fossil-live-beta-menu-qa.yml']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify deployed Beta identity
+        run: |
+          curl -fsSL 'https://beta.pkmsvv-web.pages.dev/build-info.json?qa=hostjoin' | jq -e '.qaCommit=="dd8eb75c55af308a6925f25b5772f24e2bbfdb18" and .production==false'
+      - name: Install browser dependencies
+        run: |
+          npm pkg set 'overrides.node-abi=4.40.0'
+          npm install --no-audit --no-fund
+      - name: Actual live Beta two-profile Fossil menu Host Join and game launch
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+          PKMSVV_WIFI_REMOTE_URL: https://beta.pkmsvv-web.pages.dev
+          PKMSVV_WIFI_TEST_MODE: fossil_lab
+          PKMSVV_WIFI_START_MISSION: '1'
+          PKMSVV_WIFI_MENU_ONLY: '1'
+        run: timeout 300s node tests/beta-wifi-host-join-browser.cjs

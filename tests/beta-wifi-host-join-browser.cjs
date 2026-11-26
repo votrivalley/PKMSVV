@@ -141,6 +141,7 @@ const {startServer}=require('../lan-server/server.cjs');
    assert.equal(state.playerCount,2);
    assert.equal(state.sites,3);
    console.log('COOP_FOSSIL_TWO_HUMAN_WIRELESS_REAL_GAME_PASS='+JSON.stringify(state));
+   if(process.env.PKMSVV_WIFI_MENU_ONLY==='1'){assert.deepEqual(errs,[]);console.log('FOSSIL_BETA_MENU_HOST_JOIN_ONLY_PASS');return;}
    const geometry=p=>p.evaluate(()=>{const s=G.PKMSVVFossilExpedition.session;return [s.machine,...s.sites].map(o=>[o.x,o.y]);});
    assert.deepEqual(await geometry(guest),await geometry(host),'same world objective coordinates');
    const actor=await guest.evaluate(()=>{

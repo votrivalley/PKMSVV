@@ -108,7 +108,7 @@ test('Berry AI defendGoal stays at live trees and never chases beyond the grove'
  assert.ok(Math.hypot(outside.x,outside.y)<h.game.DEFENSE_RADIUS);
  const bots=read('src/lan/lan-ai.js');
  assert.match(bots,/PKMSVVBerryRescue\?\.defendGoal/);
- assert.match(bots,/mode!=='berry'&&mode!=='berryeasy'&&dash/);
+ assert.match(bots,/mode!=='berry'&&mode!=='berryeasy'&&mode!=='fossil_lab'&&dash/);
 });
 test('Berry tree sprites draw without large ellipses and use thin borderless HP strips',()=>{
  const src=read('src/pkmsvv-berry-rescue.js');
