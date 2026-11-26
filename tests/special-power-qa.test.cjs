@@ -12,7 +12,7 @@ test('old save defaults to Mega; select per species without altering stones or A
  assert.equal(api.selected(s,25),'mega');
  assert.equal(await api.equip('dynamax',25),true);
  assert.equal(api.selected(s,25),'dynamax');assert.equal(api.selected(s,6),'mega');
- assert.equal(await api.equip('terastal',25),false);assert.equal(await api.equip('zmove',25),false);
+ assert.equal(await api.equip('terastal',25),false);assert.equal(await api.equip('zmove',25),true);assert.equal(api.selected(s,25),'zmove');assert.equal(await api.equip('dynamax',25),true);
  assert.equal(await api.equip('dynamax',999),false);
  assert.equal(JSON.stringify(s.megaStones),before);assert.equal(s.arenaPoints,240);
  G.DB.commit=()=>false;assert.equal(await api.equip('mega',25),false);assert.equal(api.selected(s,25),'dynamax');
@@ -55,4 +55,29 @@ test('source-derived Dynamax size, crush cadence, prop destruction and splash ex
  hits.length=0;
  assert.equal(api.afterHit(p,mob,100),2);assert.deepEqual(hits.map(x=>[x.id,x.d]),[[2,40],[3,40]]);
  api.stop(p);assert.equal(p.anim.scale,1);assert.equal(p.bodyH,36);assert.equal(api.afterHit(p,mob,100),0);
+});
+
+test('source-based Z-Power uses native wave/projectile, typed damage, natural expiry only',async()=>{
+ const {G,p,api}=fixture(),hits=[],shots=[],rings=[];
+ Object.assign(p,{x:0,y:0,aim:0,atk:2,level:10,mon:{types:['electric']},dmgDealt:0});
+ const mob={x:30,y:0,types:['water'],hurt:(d,c,x,y,k)=>hits.push({d,k})};
+ const far={x:300,y:0,types:['water'],hurt:(d,c,x,y,k)=>hits.push({d,k})};
+ const friend={x:10,y:0,friendly:true,hurt:()=>{throw Error('friendly hit');}};
+ G.EnemyMgr={queryCircle:(x,y,r)=>r<300?[mob,friend]:[mob,far,friend]};
+ G.Types={mult:()=>2,label:()=> 'super'};
+ G.FX={ring:(x,y,a,r)=>rings.push(r)};
+ G.Projectiles={spawn:o=>{shots.push(o);return o;},all:()=>shots,remove:o=>shots.splice(shots.indexOf(o),1)};
+ await api.equip('zmove');G.Game.state='playing';
+ assert.equal(api.allowsMega(p),false);assert.equal(api.activate(p),true);
+ assert.equal(p.maxHp,100);assert.equal(p.atkMul,2);assert.equal(hits.length,1);assert.ok(Math.abs(hits[0].d-336)<1e-8);
+ api.tick(p,.2);assert.equal(shots.length,0);
+ api.tick(p,.11);assert.equal(shots.length,1);assert.equal(shots[0].owner,p);assert.equal(shots[0].mtype,'electric');assert.equal(shots[0].pierce,999);assert.equal(shots[0].life,2.4);assert.equal(shots[0].vx,260);
+ G.Game.state='choice';api.tick(p,2);assert.equal(shots.length,1);
+ G.Game.state='playing';api.tick(p,1.2);assert.equal(shots.length,2);
+ api.tick(p,14);assert.equal(p._pkmsvvSpecialPowerActive,undefined);assert.equal(api.state(p).cooldown,60);
+ assert.deepEqual(rings,[220,420]);assert.equal(hits.length,3);assert.ok(Math.abs(hits[1].d-1075.2)<1e-8);
+ assert.equal(api.stop(p),false);p._megaEnergy=100;api.tick(p,60);
+ assert.equal(api.activate(p),true);api.tick(p,.4);p.dead=true;api.tick(p,.1);
+ assert.equal(hits.length,4,'no terminal wave on death');assert.equal(shots.length,0);
+ assert.equal(Object.keys(api.Z_NAMES).length,18);
 });

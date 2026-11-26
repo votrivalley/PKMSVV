@@ -1,18 +1,18 @@
 'use strict';
-/* Special Power Stage 2. QA only. One selection per owned species.
+/* Special Power Stage 3. QA only. One selection per owned species.
  * Required Notice: Copyright 2026 JPTER78 (https://github.com/JPTER78/pokesurvivor)
  * Noncommercial license: https://polyformproject.org/licenses/noncommercial/1.0.0
- * Dynamax mechanics ported from PokéSurvivor3DS by juanluismm521,
+ * Dynamax and Z-Power mechanics ported from PokéSurvivor3DS by juanluismm521,
  * 188afd16929e9c67dc0aa45d42a8e328d1888657 src/core/power.cpp.
  * SVV retains proportional HP, unchanged collision radius, Chapter 7 loadout
  * and shared charge; use native Web enemy/prop APIs, not 3DS GPU code.
- * G-Max sprites, Z/Tera and multiplayer power packets are not implemented.
+ * G-Max sprites, Tera and multiplayer power packets are not implemented.
  */
 G.PKMSVVSpecialPowerQA=(()=>{
  const catalog=Object.freeze([
   Object.freeze({id:'mega',name:'Mega Evolution',device:'Mega Stone',duration:30,plannedDuration:40,cooldown:200,ready:true,summary:'Hệ Mega hiện tại · giữ nguyên đá và mở khóa'}),
   Object.freeze({id:'dynamax',name:'Dynamax',device:'Dynamax Band',duration:12,cooldown:80,ready:true,summary:'QA Solo · HP x2, công +40%, giẫm quái và sát thương lan'}),
-  Object.freeze({id:'zmove',name:'Z-Power',device:'Z-Ring',duration:15,cooldown:60,ready:false,summary:'Đang phát triển · tuyệt chiêu kết thúc'}),
+  Object.freeze({id:'zmove',name:'Z-Power',device:'Z-Ring',duration:15,cooldown:60,ready:true,summary:'QA Solo · sóng mở đầu, chữ Z xuyên quái, tuyệt chiêu kết thúc'}),
   Object.freeze({id:'terastal',name:'Terastal',device:'Tera Orb',duration:30,cooldown:75,ready:false,summary:'Đang phát triển · chuyển hệ và tăng STAB'})
  ]);
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
@@ -23,7 +23,7 @@ G.PKMSVVSpecialPowerQA=(()=>{
  const runs=new WeakMap();
  function selected(s,dex){
   const v=s?.pkmsvvPowerLoadout?.[String(dex)];
-  return v==='dynamax'?'dynamax':'mega';
+  return ['dynamax','zmove'].includes(v)?v:'mega';
  }
  function owns(s,dex){return !!(s&&dexOK(dex)&&(Number(s.partner)===dex||s.owned?.[dex]||s.shiny?.[dex]));}
  let saving=false;
@@ -49,21 +49,29 @@ G.PKMSVVSpecialPowerQA=(()=>{
   if(!p||!soloExplore(p))return null;
   let r=runs.get(p);
   if(!r&&G.Game?.state==='playing'){
-   r={id:save()?.pkmsvvChapter7Seen===true?selected(save(),Number(p.dex)):'mega',remaining:0,cooldown:0,bonusHp:0,atkApplied:false,aura:0,visual:null,crushClock:0,crushed:new WeakMap(),splashing:false};
+   r={id:save()?.pkmsvvChapter7Seen===true?selected(save(),Number(p.dex)):'mega',remaining:0,cooldown:0,bonusHp:0,atkApplied:false,aura:0,visual:null,crushClock:0,crushed:new WeakMap(),splashing:false,zClock:0,zShots:0};
    runs.set(p,r);
   }
   return r||null;
  }
- function allowsMega(p){return state(p)?.id!=='dynamax';}
+ function allowsMega(p){const r=state(p);return !r||r.id==='mega';}
  function canActivate(p=player()){
   const r=state(p);
-  return !!(r&&r.id==='dynamax'&&!p.dead&&G.Game?.state==='playing'&&!p._megaActive&&!p._pkmsvvSpecialPowerActive&&
+  return !!(r&&['dynamax','zmove'].includes(r.id)&&!p.dead&&G.Game?.state==='playing'&&!p._megaActive&&!p._pkmsvvSpecialPowerActive&&
    r.remaining<=0&&r.cooldown<=0&&Number(G.PKMSVVMegaPhase3?.energy?.(p))>=100&&
    Number.isFinite(p.maxHp)&&p.maxHp>0&&Number.isFinite(p.hp)&&p.hp>0&&Number.isFinite(p.atkMul)&&p.atkMul>0);
  }
  function activate(p=player()){
   if(!canActivate(p))return false;
   const r=state(p),fraction=Math.max(0,Math.min(1,p.hp/p.maxHp));
+  if(r.id==='zmove'){
+   const type=primaryType(p);
+   r.remaining=15;r.zClock=.3;r.zShots=0;r.zType=type;
+   p._pkmsvvSpecialPowerActive='zmove';p._megaEnergy=0;
+   zWave(p,220,1,type);
+   G.UI?.toast?.('Z-POWER · '+Z_NAMES[type]+'!');
+   return true;
+  }
   r.bonusHp=p.maxHp;
   p.maxHp+=r.bonusHp;p.hp=p.maxHp*fraction;
   p.atkMul*=1.4;r.atkApplied=true;
@@ -78,9 +86,24 @@ G.PKMSVVSpecialPowerQA=(()=>{
   G.UI?.toast?.(tr('DYNAMAX · 12 giây · HP x2, công +40%','DYNAMAX · 12s · double HP, +40% attack'));
   return true;
  }
- function stop(p=player()){
+ function stop(p=player(),completed=false){
   const r=p&&runs.get(p);
-  if(!r||!r.atkApplied)return false;
+  if(!r)return false;
+  if(p._pkmsvvSpecialPowerActive==='zmove'){
+   r.remaining=0;r.cooldown=60;
+   delete p._pkmsvvSpecialPowerActive;
+   // On natural expiry only. Death, quit, evolution and scene changes must
+   // never trigger the finishing strike or leave projectiles in the next map.
+   if(completed&&!p.dead&&soloExplore(p)&&G.Game?.state==='playing'){
+    zWave(p,420,3.2,r.zType);
+    G.UI?.toast?.(Z_NAMES[r.zType]+'!');
+   }else{
+    for(const shot of [...(G.Projectiles?.all?.()||[])])
+     if(shot.pkmsvvZRoll&&shot.owner===p)G.Projectiles.remove?.(shot);
+   }
+   return true;
+  }
+  if(!r.atkApplied)return false;
   const fraction=Math.max(0,Math.min(1,p.hp/Math.max(1,p.maxHp)));
   // Remove only the owned bonus, not unrelated permanent or passive changes.
   p.maxHp=Math.max(1,p.maxHp-r.bonusHp);p.hp=p.dead?0:p.maxHp*fraction;
@@ -98,6 +121,29 @@ G.PKMSVVSpecialPowerQA=(()=>{
   e.hurt(dmg,COL,dx,dy,knock,null);
   if(Number.isFinite(p.dmgDealt))p.dmgDealt+=dmg;
   return true;
+ }
+ // Upstream kZMoveName: English official generic move names by type.
+ const Z_NAMES=Object.freeze({normal:'Breakneck Blitz',fire:'Inferno Overdrive',water:'Hydro Vortex',grass:'Bloom Doom',electric:'Gigavolt Havoc',ice:'Subzero Slammer',fighting:'All-Out Pummeling',poison:'Acid Downpour',ground:'Tectonic Rage',flying:'Supersonic Skystrike',psychic:'Shattered Psyche',bug:'Savage Spin-Out',rock:'Continental Crush',ghost:'Never-Ending Nightmare',dragon:'Devastating Drake',dark:'Black Hole Eclipse',steel:'Corkscrew Crash',fairy:'Twinkle Tackle'});
+ const primaryType=p=>Object.hasOwn(Z_NAMES,p.mon?.types?.[0])?p.mon.types[0]:'normal';
+ const Z_COL='#ffd23f';
+ function zWave(p,radius,k,type){
+  G.FX?.ring?.(p.x,p.y,8,radius,Z_COL,.5,6);
+  G.FX?.burst?.(p.x,p.y-(p.bodyH||0)*.5,Z_COL,30,260);
+  G.Camera?.kick?.(.8);
+  for(const e of nearby(p.x,p.y,radius)){
+   if(!validEnemy(e))continue;
+   const mult=G.Types?.mult?.(type,e.types)||0;
+   const dmg=powerDmg(p,k)*(G.Types?.mult?mult:1);
+   if(!Number.isFinite(dmg)||dmg<=0)continue;
+   e.hurt(dmg,Z_COL,e.x-p.x,e.y-p.y,200,G.Types?.label?.(mult));
+   if(Number.isFinite(p.dmgDealt))p.dmgDealt+=dmg;
+  }
+ }
+ function zRoll(p,r){
+  const targets=nearby(p.x,p.y,520).filter(validEnemy).sort((a,b)=>(a.x-p.x)**2+(a.y-p.y)**2-((b.x-p.x)**2+(b.y-p.y)**2));
+  const t=targets[0],a=t?Math.atan2(t.y-p.y,t.x-p.x):Number(p.aim)||0,type=r.zType;
+  const shot=G.Projectiles?.spawn?.({x:p.x,y:p.y,vx:Math.cos(a)*260,vy:Math.sin(a)*260,dmg:powerDmg(p,.6),r:18,life:2.4,pierce:999,color:G.U?.TYPE_COLOR?.[type]||Z_COL,mtype:type,mcat:null,owner:p,hits:new Set(),friendly:true,pkmsvvZRoll:true});
+  if(shot)r.zShots++;
  }
  function crush(p,r){
   const radius=(p.r||18)*2.2;
@@ -132,7 +178,15 @@ G.PKMSVVSpecialPowerQA=(()=>{
   if(p.dead||!soloExplore(p)||['ui','over'].includes(G.Game?.state)){stop(p);return;}
   if(G.Game?.state!=='playing')return;
   const d=Number.isFinite(dt)?Math.max(0,dt):0;
-  if(r.atkApplied){
+  if(p._pkmsvvSpecialPowerActive==='zmove'){
+   const live=Math.min(r.remaining,d);
+   r.remaining=Math.max(0,r.remaining-d);
+   r.zClock-=live;
+   // Original first delay .3s, then 1.2s. Bound catch-up to prevent bursts
+   // after tab suspension. Game pause never advances the clock.
+   if(r.zClock<=0&&r.remaining>0){zRoll(p,r);r.zClock=1.2;}
+   if(r.remaining<=0)stop(p,true);
+  }else if(r.atkApplied){
    r.remaining=Math.max(0,r.remaining-d);r.aura+=d;r.crushClock+=d;
    if(r.remaining>0)crush(p,r);
    if(r.aura>=.5){r.aura=0;G.FX?.ring?.(p.x,p.y,8,Math.max(38,(p.r||18)*3),'#f191ef',.4,4);}
@@ -143,12 +197,12 @@ G.PKMSVVSpecialPowerQA=(()=>{
  function sync(){
   if(!button)return;
   const p=player(),r=state(p);
-  const show=!!(r?.id==='dynamax'&&p&&!p.dead&&G.Game?.state==='playing');
+  const show=!!(r&&['dynamax','zmove'].includes(r.id)&&p&&!p.dead&&G.Game?.state==='playing');
   button.style.display=show?'flex':'none';if(!show)return;
   const charge=Math.floor(G.PKMSVVMegaPhase3?.energy?.(p)||0);
   button.disabled=!canActivate(p);
-  button.querySelector('span').textContent=r.remaining>0?Math.ceil(r.remaining)+'s':r.cooldown>0?Math.ceil(r.cooldown)+'s':charge<100?charge+'%':'DMAX';
-  button.title=tr('Dynamax thử nghiệm · dùng nút Mega (5 / L1)','Dynamax trial · same Mega input (5 / L1)');
+  button.querySelector('span').textContent=r.remaining>0?Math.ceil(r.remaining)+'s':r.cooldown>0?Math.ceil(r.cooldown)+'s':charge<100?charge+'%':r.id==='zmove'?'Z-POWER':'DMAX';
+  button.title=byId(r.id).name+' · '+tr('Nút sức mạnh (5 / L1)','Power input (5 / L1)');
  }
  function mount(){
   if(button||!document.body)return;
@@ -165,7 +219,7 @@ G.PKMSVVSpecialPowerQA=(()=>{
   const header=document.createElement('header');header.className='pkmsvv-pc-header';
   const title=document.createElement('h2');title.textContent=tr('SỨC MẠNH ĐẶC BIỆT','SPECIAL POWERS');
   const back=document.createElement('button');back.type='button';back.className='pkmsvv-pc-close';back.textContent=tr('← Phòng nghiên cứu','← Research Lab');back.onclick=()=>{close();G.PKMSVVWiki?.open?.();};header.append(title,back);panel.append(header);
-  const hint=document.createElement('p');hint.textContent=(G.DEX_BY?.[dex]?.name||('Pokémon #'+dex))+' · '+tr('Mỗi Pokémon chọn một sức mạnh trước trận. Dynamax hiện chỉ thử nghiệm Khám phá Solo, cần Chương 7.','One power per Pokémon before a run. Dynamax is a Chapter 7 Solo Explore trial.');panel.append(hint);
+  const hint=document.createElement('p');hint.textContent=(G.DEX_BY?.[dex]?.name||('Pokémon #'+dex))+' · '+tr('Mỗi Pokémon chọn một sức mạnh trước trận. Dynamax và Z-Power hiện chỉ thử nghiệm Khám phá Solo, cần Chương 7.','One power per Pokémon before a run. Dynamax and Z-Power are Chapter 7 Solo Explore trials.');panel.append(hint);
   const grid=document.createElement('div');grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;';
   for(const def of catalog){
    const card=document.createElement('div');card.style.cssText='border:1px solid #c4a970;border-radius:12px;padding:12px;background:#183643;display:grid;gap:7px;';
@@ -186,7 +240,7 @@ G.PKMSVVSpecialPowerQA=(()=>{
   if(this===player()){
    const r=state(this);
    tick(this,dt);
-   if(r?.id==='dynamax'&&(G.Input?.tap?.('digit5')||G.Input?.tap?.('numpad5')||G.Input?.tap?.('pkmsvv-mega')))activate(this);
+   if(r&&['dynamax','zmove'].includes(r.id)&&(G.Input?.tap?.('digit5')||G.Input?.tap?.('numpad5')||G.Input?.tap?.('pkmsvv-mega')))activate(this);
   }
   return oldUpdate.call(this,dt);
  };
@@ -195,5 +249,5 @@ G.PKMSVVSpecialPowerQA=(()=>{
   G.Game[name]=function(...args){stop(player());return prev.apply(this,args);};
  }
  if(typeof document!=='undefined'){mount();setInterval(sync,250);}
- return {catalog,selected,equip,state,allowsMega,canActivate,activate,tick,stop,afterHit,open,close};
+ return {catalog,selected,equip,state,allowsMega,canActivate,activate,tick,stop,afterHit,open,close,Z_NAMES};
 })();

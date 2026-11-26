@@ -712,6 +712,11 @@ patch('js/systems/combat.js',
  '        pl.dmgDealt += p.dmg * k;\n        if (p.src)',
  '        G.PKMSVVSpecialPowerQA?.afterHit?.(pl,e,p.dmg*k);\n        pl.dmgDealt += p.dmg * k;\n        if (p.src)');
 
+// 3DS SH_ZROLL visual adapter: keep native projectile movement and collision.
+// Only draw a separate Z glyph for this tagged QA projectile.
+patch('js/entities/projectile.js',
+ '      const v = p.vis || G.VFX.forType(\'normal\');',
+ '      if(p.pkmsvvZRoll){ctx.save();ctx.translate(p.x,p.y-L);ctx.rotate(p.t*5);ctx.globalAlpha=Math.min(1,(p.life-p.t)*4);ctx.font="900 32px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.lineWidth=4;ctx.strokeStyle="#ffe6a1";ctx.strokeText("Z",0,0);ctx.fillStyle=p.color;ctx.fillText("Z",0,0);ctx.restore();continue;}\n      const v = p.vis || G.VFX.forType(\'normal\');');
 // Pippi companion is packaged into the offline executable after all gameplay
 // patches. No remote sprites or assets are fetched at runtime.
 {
