@@ -152,8 +152,17 @@ const {startServer}=require('../lan-server/server.cjs');
      // solely to exercise the same UI actions as a local non-guest profile.
      Object.defineProperty(G.DB,'guest',{value:false,writable:true,configurable:true});
      window.__skinTestCommitCount=0;window.__skinTestFail=false;
-     G.DB.commit=()=>{if(window.__skinTestFail)return false;window.__skinTestCommitCount++;
-      window.__skinTestSaved=JSON.stringify(G.DB.save.pkmsvvCoopLab);return true;};
+     window.__skinTestSaved=JSON.stringify(state);
+     // Other menu/guide code may call DB.commit without changing skin or wallet.
+     // Count distinct successful economic transitions, not unrelated autosaves.
+     const fingerprint=s=>JSON.stringify([s?.coopCoins??0,s?.stationSkins?.owned||{},s?.stationSkins?.equipped||{}]);
+     let last=fingerprint(state);
+     G.DB.commit=()=>{
+      if(window.__skinTestFail)return false;
+      const s=G.DB.save.pkmsvvCoopLab,next=fingerprint(s);
+      if(next!==last){window.__skinTestCommitCount++;last=next;}
+      window.__skinTestSaved=JSON.stringify(s);return true;
+     };
      G.MenuUI.open();document.querySelector('#pkmsvv-menu-wiki').click();
     },saved);
     await paidPage.waitForFunction(()=>document.querySelector('.pkmsvv-research-room')?.dataset.researchArtMode==='approved-v3');
@@ -193,8 +202,76 @@ const {startServer}=require('../lan-server/server.cjs');
    assert.deepEqual(paidErrors,[]);
    paidFlow.status='PASS';paidFlow.finalCoins=150;paidFlow.reloadFromMockSnapshot=true;paidFlow.rollback=true;paidFlow.independentEquip=true;
   }finally{await paidPage.close();}
+  // Real offline persistence, in a separate fresh Chromium context. Only the
+  // network response for the catalog is replaced; DB.commit and Guardian are real.
+  const diskPage=await browser.newPage({viewport:{width:1280,height:920}});
+  const diskErrors=[];diskPage.on('pageerror',e=>diskErrors.push(String(e)));
+  const diskFlow={fixturePrice:100,initialCoins:350,realCommit:true,isolatedBrowser:true};
+  try{
+   await diskPage.addInitScript(()=>{window.__pkmsvvPippiGuideQABypass=true;});
+   await diskPage.route('**/pkmsvv-research-skin-economy-qa.js*',async route=>{
+    const response=await route.fetch(),body=await response.text(),needle=JSON.stringify(realRegistry);
+    assert.ok(body.includes(needle),'Missing closed registry');
+    await route.fulfill({response,body:body.replace(needle,JSON.stringify(fixture))});
+   });
+   const ready=()=>diskPage.waitForFunction(()=>!!window.G?.DB?.save&&!!G.MenuUI?.open&&
+    !!window.PKMSVVSaveGuardian?.snapshot&&!!window.PKMSVVStationSkinEconomy?.registry?.purchaseEnabled);
+   const show=async()=>{
+    await diskPage.evaluate(()=>{G.MenuUI.open();document.querySelector('#pkmsvv-menu-wiki').click();});
+    await diskPage.waitForFunction(()=>document.querySelector('.pkmsvv-research-room')?.dataset.researchArtMode==='approved-v3');
+   };
+   const build=async()=>{
+    await diskPage.locator('[data-research-build]').click();
+    await diskPage.waitForFunction(()=>document.querySelector('.pkmsvv-build-stage')?.dataset.researchArtMode==='approved-v3');
+    await diskPage.locator('[data-build-slot="shelf_right"]').click();
+   };
+   const action=id=>diskPage.locator('[data-skin-transaction="'+id+'"]');
+   const stored=()=>diskPage.evaluate(()=>{
+    const key='ps.save.pkmsvv_offline',head='pkmsvv.safe.v1.pkmsvv_offline.';
+    return {primary:JSON.parse(localStorage.getItem(key)||'null')?.pkmsvvCoopLab,
+     latest:JSON.parse(localStorage.getItem(head+'latest')||'null')?.pkmsvvCoopLab,
+     previous:JSON.parse(localStorage.getItem(head+'previous')||'null')?.pkmsvvCoopLab};
+   });
+   await diskPage.goto(url,{waitUntil:'domcontentloaded',timeout:45000});await ready();
+   // Seed only a synthetic profile in this ephemeral context, using real local commit.
+   const seeded=await diskPage.evaluate(async()=>{
+    if(G.DB.guest||!localStorage.getItem('ps.save.pkmsvv_offline'))throw Error('Expected isolated offline profile');
+    const s=G.DB.save;s.partner=25;s.pkmsvvStorySeen=true;s.pkmsvvNameChosen=true;
+    s.pkmsvvCoopLab={machineUnlocked:true,coopCoins:350,ownedDecor:{machine_old:true,gold_pippi_statue:true},
+     equippedDecorBySlot:{center:'machine_old',trophy:'gold_pippi_statue'}};
+    const r=await G.DB.commit(true);if(r===false)throw Error('Synthetic seed commit failed');
+    window.PKMSVVSaveGuardian.snapshot('skin-fixture-seed');
+    return JSON.parse(localStorage.getItem('ps.save.pkmsvv_offline')).pkmsvvCoopLab.coopCoins;
+   });
+   assert.equal(seeded,350);await show();await build();
+   await action('mega_copper').click();
+   await diskPage.waitForFunction(()=>document.querySelector('[data-skin-item="mega_copper"] [data-skin-state]')?.dataset.skinState==='owned');
+   await action('mega_copper').click();
+   await diskPage.waitForFunction(()=>document.querySelector('.pkmsvv-build-stage [data-lab-layer="mega"]')?.dataset.labSkin==='copper');
+   let snapshots=await stored();
+   assert.equal(snapshots.primary.coopCoins,250);assert.equal(snapshots.primary.stationSkins.owned.mega_copper,true);
+   assert.equal(snapshots.primary.stationSkins.equipped.mega,'mega_copper');
+   assert.equal(snapshots.latest.stationSkins.equipped.mega,'mega_copper');
+   assert.equal(snapshots.latest.coopCoins,250);
+   assert.ok(snapshots.previous,'Previous generation must exist');
+   await diskPage.reload({waitUntil:'domcontentloaded'});await ready();
+   await diskPage.waitForFunction(()=>G.DB.save.pkmsvvCoopLab?.stationSkins?.equipped?.mega==='mega_copper');
+   await show();await diskPage.waitForFunction(()=>document.querySelector('.pkmsvv-research-room [data-lab-layer="mega"]')?.dataset.labSkin==='copper');
+   await build();await action('default').click();
+   await diskPage.waitForFunction(()=>document.querySelector('.pkmsvv-build-stage [data-lab-layer="mega"]')?.dataset.labSkin==='default');
+   snapshots=await stored();assert.equal(snapshots.primary.coopCoins,250);assert.equal(snapshots.primary.stationSkins.owned.mega_copper,true);
+   assert.equal(snapshots.primary.stationSkins.equipped.mega,undefined);
+   assert.equal(snapshots.latest.stationSkins.owned.mega_copper,true);
+   assert.equal(snapshots.latest.stationSkins.equipped.mega,undefined);
+   assert.equal(snapshots.primary.equippedDecorBySlot.trophy,'gold_pippi_statue');
+   await diskPage.reload({waitUntil:'domcontentloaded'});await ready();
+   await diskPage.waitForFunction(()=>G.DB.save.pkmsvvCoopLab?.stationSkins?.owned?.mega_copper===true);
+   await show();await diskPage.waitForFunction(()=>document.querySelector('.pkmsvv-research-room [data-lab-layer="mega"]')?.dataset.labSkin==='default');
+   assert.deepEqual(diskErrors,[]);
+   diskFlow.status='PASS';diskFlow.finalCoins=250;diskFlow.reload=true;diskFlow.guardianLatest=true;diskFlow.previousExists=true;
+  }finally{await diskPage.close();}
   assert.deepEqual(errors,[]);
-  fs.writeFileSync(path.join(out,'report.json'),JSON.stringify({status:'PASS',v3,labels,landscape,room,errors,paidFlow},null,2));
+  fs.writeFileSync(path.join(out,'report.json'),JSON.stringify({status:'PASS',v3,labels,landscape,room,errors,paidFlow,diskFlow},null,2));
   console.log('PKMSVV_RESEARCH_LAYERS_BROWSER_PASS',JSON.stringify(room));
  }catch(e){
   const state=await page.evaluate(()=>({economy:!!window.G?.PKMSVVCoopEconomy,artRegistry:!!window.PKMSVV_RESEARCH_ART_QA,mode:document.querySelector('.pkmsvv-research-room,.pkmsvv-build-stage')?.dataset.researchArtMode,images:[...document.querySelectorAll('.pkmsvv-lab-source-layer,.pkmsvv-lab-station-prop')].map(i=>({src:i.src,complete:i.complete,width:i.naturalWidth}))})).catch(()=>null);

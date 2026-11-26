@@ -66,6 +66,8 @@
    if(!retained(older.arenas?.pkmChampion?.[path],
                 newer.arenas?.pkmChampion?.[path]))return true;
   if(!retained(older.pkmsvvBerry?.used,newer.pkmsvvBerry?.used))return true;
+  // Purchased cosmetics are permanent; equipped choices and currency are not.
+  if(!retained(older.pkmsvvCoopLab?.stationSkins?.owned,newer.pkmsvvCoopLab?.stationSkins?.owned))return true;
   if(!retained(older.arenaGacha?.championPaid,newer.arenaGacha?.championPaid))return true;
   if(!retained(older.arenaGacha?.trophyPaid,newer.arenaGacha?.trophyPaid))return true;
   if((Number(newer.arenaGacha?.pulls)||0)<(Number(older.arenaGacha?.pulls)||0))return true;
@@ -94,7 +96,8 @@
  const balancePaths=[
   ['PokéCoins',['coins']],['Vé x1',['tickets','t1']],
   ['Vé x10',['tickets','t10']],['Điểm Arena',['arenaGacha','points']],
-  ['Berry trong túi',['pkmsvvBerry','bag']],['Đá Mega',['megaStones']]
+  ['Berry trong túi',['pkmsvvBerry','bag']],['Đá Mega',['megaStones']],
+  ['Xu Đồng Đội',['pkmsvvCoopLab','coopCoins']]
  ];
  function compare(aText,bText){
   const a=parse(aText),b=parse(bText);
@@ -108,6 +111,7 @@
    ['Pokémon',['owned']],['Shiny',['shiny']],['Mega đã mở',['megaForms']],
    ['Vật phẩm đã tìm',['itemsFound']],['TM đã học',['ptm']],
    ['Berry đã sử dụng',['pkmsvvBerry','used']],
+   ['Skin máy nghiên cứu',['pkmsvvCoopLab','stationSkins','owned']],
    ['Ấn Chứng',['arenas','pkmChampion','seals']],
    ['Cúp vô địch',['arenas','pkmChampion','trophies']]
   ];
@@ -130,7 +134,7 @@
    ['Số Berry cứu thành công',['pkmsvvBerry','rescueWins']],['Lượt Gacha',['arenaGacha','pulls']]])
    note(name,qty(getAt(a,path)),qty(getAt(b,path)));
   const balances=balancePaths.map(([name,path])=>{
-   const before=getAt(a,path),after=getAt(b,path),asNumber=path[0]==='coins'||path[0]==='tickets'||path[0]==='arenaGacha';
+   const before=getAt(a,path),after=getAt(b,path),asNumber=path[0]==='coins'||path[0]==='tickets'||path[0]==='arenaGacha'||(path[0]==='pkmsvvCoopLab'&&path[1]==='coopCoins');
    return {name,before:asNumber?qty(before):total(before),after:asNumber?qty(after):total(after)};
   }).filter(x=>x.before!==x.after).map(x=>({...x,delta:x.after-x.before}));
   const risk=permanent.some(x=>x.change==='loss');

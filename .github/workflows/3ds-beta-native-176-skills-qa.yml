@@ -15,6 +15,8 @@ on:
       - 'src/pkmsvv-pc-menu-clean-qa.css'
       - 'tests/research-source-extraction.test.cjs'
       - 'tests/beta-research-layers-browser.cjs'
+      - 'src/cloudflare/save-guardian.js'
+      - 'tests/save-guardian-regression.test.cjs'
       - 'scripts/import-research-v3.cjs'
       - 'assets/coop-lab/research-v3/**'
       - 'src/shared/coop-unified.js'
@@ -123,7 +125,7 @@ jobs:
       - name: Real browser research room layers, props, build mode and fallback
         env:
           PKMSVV_BROWSER: /usr/bin/google-chrome
-        run: timeout 180s node tests/beta-research-layers-browser.cjs
+        run: timeout 240s node tests/beta-research-layers-browser.cjs
       - name: Upload research room screenshots (QA only)
         if: always()
         uses: actions/upload-artifact@v4
