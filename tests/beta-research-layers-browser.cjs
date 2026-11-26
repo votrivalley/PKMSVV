@@ -47,7 +47,7 @@ const {startServer}=require('../lan-server/server.cjs');
    const first=await page.locator('.pkmsvv-research-room').evaluate(e=>({mode:e.dataset.researchArtMode,bg:getComputedStyle(e).backgroundImage,busy:e.getAttribute('aria-busy'),upgraded:e.querySelectorAll('[data-lab-skin$="_advanced"]').length,loading:!!e.querySelector('.pkmsvv-lab-v3-loading')}));
    assert.deepEqual(first,{mode:'loading-v3',bg:'none',busy:'true',upgraded:0,loading:true},'never flash fully upgraded artwork during initial load');
    await page.locator('.pkmsvv-research-room').screenshot({path:path.join(out,'research-initial-loading.png')});
-  }finally{releaseManifest();await page.unroute('**/research-v3/manifest.json',slowManifest);}
+  }finally{releaseManifest();await page.unrouteAll({behavior:'wait'});}
   console.log('RESEARCH_NO_UPGRADED_FLASH_PASS');
   const verifyV3=async(selector)=>{
    await page.waitForFunction(s=>{const e=document.querySelector(s);return e?.dataset.researchArtMode==='approved-v3'&&e.querySelectorAll('.pkmsvv-lab-v3-layer').length===6&&[...e.querySelectorAll('.pkmsvv-lab-v3-layer')].every(i=>i.complete&&i.naturalWidth>0);},selector,{timeout:20000});

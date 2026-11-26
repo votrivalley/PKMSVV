@@ -74,7 +74,7 @@ for(const file of ['lan-connect.html','lan-connect.js'])
    'pkmsvv-runtime-controls-qa.js',
    'pkmsvv-modal-navigation-qa.js',
    // A real in-world Sky Pillar tileset, NOT just the region-menu WebP card.
-   'pkmsvv-sky-tower-world-qa.js'
+   'pkmsvv-sky-tower-world-qa.js','pkmsvv-special-power-qa.js'
   ];
   const stylesheets=[
    'pkmsvv-box-stage1.css','pkmsvv-box-stage2.css','pkmsvv-box-stage3.css',

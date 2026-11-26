@@ -1054,7 +1054,7 @@ G.PKMSVVWiki=(()=>{
    switch(kind){
     case 'support':close();G.PKMSVVSupportCatalog?.open?.({fromResearchLab:true});
      G.PKMSVVPippiGuide?.openFeature?.('support');return;
-    case 'mega':close();G.PKMSVVMegaEntry?.open?.({fromResearchLab:true});
+    case 'mega':close();if(G.PKMSVVSpecialPowerQA?.open)G.PKMSVVSpecialPowerQA.open();else G.PKMSVVMegaEntry?.open?.({fromResearchLab:true});
      G.PKMSVVPippiGuide?.openFeature?.('mega');return;
     case 'berry':berryGuide();return;
     case 'companion':pippiCorner();return;
