@@ -4,6 +4,7 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const sharp=require('sharp');
 const {verify}=require('./import-research-v3.cjs');
+const {validate}=require('./validate-research-station-skins.cjs');
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 const ramp=(v,a,b)=>clamp((v-a)/(b-a),0,1);
 async function main(){
@@ -32,7 +33,17 @@ async function main(){
   assert.ok(changed>500,'Invisible prototype '+l.id);
   report.push({id:l.id,file:name,width:l.w,height:l.h,changed,alphaPreserved:true});
  }
- fs.writeFileSync(path.join(target,'preview-report.json'),JSON.stringify({status:'PASS',purchaseEnabled:false,variants:report},null,2));
+ // Authored skins, when approved or previewed, are distinct PNG files in
+ // assets/coop-lab/research-v3/skins. Never overwrite the generated prototypes.
+ const catalog=require('../data/pkmsvv-coop-lab-catalog.json').stationSkins;
+ for(const item of catalog.variants.filter(x=>x.variant!=='copper')){
+  const name=path.basename(item.spritePath);
+  assert.match(name,/^[a-z0-9_-]+\.png$/);
+  assert.ok(!report.some(x=>x.file===name),'Authored skin conflicts with prototype');
+  fs.copyFileSync(path.join(source,'skins',name),path.join(target,name));
+ }
+ const validation=await validate(target);
+ fs.writeFileSync(path.join(target,'preview-report.json'),JSON.stringify({status:'PASS',purchaseEnabled:validation.purchaseEnabled,variants:report,validation},null,2));
  console.log('V3 five independent prototype skin PNGs PASS');
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});
