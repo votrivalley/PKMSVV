@@ -338,8 +338,62 @@ const {startServer}=require('../lan-server/server.cjs');
    assert.deepEqual(diskErrors,[]);
    diskFlow.status='PASS';diskFlow.finalCoins=0;diskFlow.reload=true;diskFlow.guardianLatest=true;diskFlow.previousExists=true;diskFlow.fullSpecializedCollection=true;diskFlow.zeroCoinEquip=true;
   }finally{await diskPage.close();}
+  // Real machine research, WITHOUT intercepting or opening the cosmetic catalog.
+  const researchPage=await browser.newPage({viewport:{width:1280,height:920}});
+  const researchErrors=[];researchPage.on('pageerror',e=>researchErrors.push(String(e)));
+  const machineFlow={initialCoins:240,realCommit:true,unmodifiedCatalog:true};
+  try{
+   await researchPage.addInitScript(()=>{window.__pkmsvvPippiGuideQABypass=true;});
+   const ready=()=>researchPage.waitForFunction(()=>!!window.G?.DB?.save&&!!G.MenuUI?.open&&!!window.PKMSVVResearchMachines&&!!G.GlobalPower?.effectiveLevels);
+   const show=async()=>{
+    await researchPage.evaluate(()=>{G.MenuUI.open();document.querySelector('#pkmsvv-menu-wiki').click();});
+    await researchPage.waitForFunction(()=>document.querySelector('.pkmsvv-research-room')?.dataset.researchArtMode==='approved-v3');
+   };
+   const build=async()=>{
+    await researchPage.locator('[data-research-build]').click();
+    await researchPage.waitForFunction(()=>document.querySelector('.pkmsvv-build-stage')?.dataset.researchArtMode==='approved-v3');
+    await researchPage.locator('[data-build-slot="shelf_right"]').click();
+   };
+   const rank=async(n,coins)=>researchPage.waitForFunction(([n,coins])=>
+    G.DB.save.pkmsvvResearchRanks?.power===n&&G.DB.save.pkmsvvCoopLab?.coopCoins===coins,[n,coins]);
+   const basic=selector=>researchPage.waitForFunction(s=>document.querySelectorAll(s+' [data-lab-skin="default"]').length===6,selector);
+   const advanced=selector=>researchPage.waitForFunction(s=>document.querySelector(s+' [data-lab-layer="mega"]')?.dataset.labSkin==='mega_advanced',selector);
+   await researchPage.goto(url,{waitUntil:'domcontentloaded',timeout:45000});await ready();
+   await researchPage.evaluate(async()=>{
+    const s=G.DB.save;if(G.DB.guest)throw Error('Expected offline QA profile');
+    s.partner=25;s.pkmsvvStorySeen=true;s.pkmsvvNameChosen=true;
+    s.pkmsvvCoopLab={machineUnlocked:true,coopCoins:240};
+    s.pkmsvvResearchRanks={};s.globalUpgrades={};s.globalSpent={};
+    if(await G.DB.commit(true)===false)throw Error('Seed failed');
+   });
+   const originalPokeCoins=await researchPage.evaluate(()=>G.DB.save.coins);
+   await show();await basic('.pkmsvv-research-room');await build();
+   const powerButton=researchPage.locator('[data-research-upgrade="power"]');
+   assert.match(await powerButton.textContent(),/80/);
+   assert.equal(await researchPage.locator('[data-research-upgrade]').count(),3);
+   await powerButton.click();await rank(1,160);await advanced('.pkmsvv-build-stage');
+   assert.equal(await researchPage.locator('.pkmsvv-build-stage [data-lab-skin="default"]').count(),5);
+   assert.match(await powerButton.textContent(),/120/);
+   await powerButton.click();await rank(2,40);await advanced('.pkmsvv-build-stage');
+   assert.equal(await powerButton.isDisabled(),true);
+   const saved=await researchPage.evaluate(()=>{
+    const key='ps.save.pkmsvv_offline',head='pkmsvv.safe.v1.pkmsvv_offline.';
+    return {primary:JSON.parse(localStorage.getItem(key)),latest:JSON.parse(localStorage.getItem(head+'latest')),atk:G.GlobalPower.combine({},G.GlobalPower.effectiveLevels(G.DB.save)).atkMul};
+   });
+   assert.equal(saved.primary.pkmsvvResearchRanks.power,2);assert.equal(saved.latest.pkmsvvResearchRanks.power,2);
+   assert.equal(saved.primary.coins,originalPokeCoins);assert.equal(saved.primary.globalUpgrades.power,undefined);
+   assert.ok(Math.abs(saved.atk-1.24)<1e-9);
+   await researchPage.locator('.pkmsvv-build-panel').screenshot({path:path.join(out,'research-v3-machine-stat-upgrade.png')});
+   await researchPage.reload({waitUntil:'domcontentloaded'});await ready();await rank(2,40);
+   await show();await advanced('.pkmsvv-research-room');
+   assert.equal(await researchPage.locator('.pkmsvv-research-room [data-lab-skin="default"]').count(),5);
+   await researchPage.evaluate(()=>G.GlobalPowerUI.open());
+   await researchPage.waitForFunction(()=>!!document.querySelector('.pkmsvv-build-stage'));
+   assert.deepEqual(researchErrors,[]);
+   Object.assign(machineFlow,{status:'PASS',finalCoins:40,powerRank:2,atkMultiplier:1.24,independentSprite:true,reloaded:true,oldMenuRedirect:true});
+  }finally{await researchPage.close();}
   assert.deepEqual(errors,[]);
-  fs.writeFileSync(path.join(out,'report.json'),JSON.stringify({status:'PASS',v3,labels,landscape,room,errors,paidFlow,diskFlow,specializedPreview:{stations:advancedSelections,independent:true,saleLocked:true}},null,2));
+  fs.writeFileSync(path.join(out,'report.json'),JSON.stringify({status:'PASS',v3,labels,landscape,room,errors,paidFlow,diskFlow,machineFlow,specializedPreview:{stations:advancedSelections,independent:true,saleLocked:true}},null,2));
   console.log('PKMSVV_RESEARCH_LAYERS_BROWSER_PASS',JSON.stringify(room));
  }catch(e){
   const state=await page.evaluate(()=>({economy:!!window.G?.PKMSVVCoopEconomy,artRegistry:!!window.PKMSVV_RESEARCH_ART_QA,mode:document.querySelector('.pkmsvv-research-room,.pkmsvv-build-stage')?.dataset.researchArtMode,images:[...document.querySelectorAll('.pkmsvv-lab-source-layer,.pkmsvv-lab-station-prop')].map(i=>({src:i.src,complete:i.complete,width:i.naturalWidth}))})).catch(()=>null);

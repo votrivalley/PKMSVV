@@ -826,7 +826,7 @@ G.PKMSVVWiki=(()=>{
    slots=slots.filter(s=>Object.hasOwn(v3Station,s[0]));
    const namesBySlot={center:['Máy phục nguyên','Restoration machine'],shelf_left:['Pokémon hỗ trợ','Supports'],shelf_right:['Mega','Mega'],garden:['Berry','Berries'],trophy:['Bạn đồng hành','Companions']};
    slots=slots.map(s=>[...s.slice(0,5),...namesBySlot[s[0]]]);
-   note.textContent=tr('Chọn máy để xem skin, sở hữu và trang bị. Xem thử miễn phí; skin chưa duyệt không thể mua.','Select a station to view skins, ownership and equipment. Preview is free; unapproved skins cannot be purchased.');
+   note.textContent=machineRegistry()?tr('Chọn máy để nâng cấp chỉ số toàn đội bằng Xu Đồng Đội. Xem thử ngoại hình miễn phí.','Select a machine to research permanent team stats with Co-op Coins. Preview is free.'):tr('Chọn máy để xem skin, sở hữu và trang bị. Xem thử miễn phí; skin chưa duyệt không thể mua.','Select a station to view skins, ownership and equipment. Preview is free; unapproved skins cannot be purchased.');
   }
   const names={
    machine_old:['Máy phục nguyên nguyên mẫu','Original restoration machine',0],

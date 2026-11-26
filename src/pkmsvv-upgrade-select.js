@@ -8,8 +8,10 @@ G.PKMSVVUpgradeChooser=(()=>{
   $('pkmsvv-upgrade-intro').textContent=t('Hai nhóm nâng cấp khác nhau sử dụng cùng PokéCoins.','Two upgrade tracks using the same PokéCoins.');
   $('pkmsvv-upgrade-single-title').textContent=t('Nâng lẻ Pokémon','Individual Pokémon');
   $('pkmsvv-upgrade-single-desc').textContent=t('CHỈ áp dụng cho một Pokémon được chọn. Pokémon khác không nhận chỉ số này.','Applies ONLY to your selected Pokémon. Other Pokémon get no bonus.');
-  $('pkmsvv-upgrade-all-title').textContent=t('Nâng toàn đội','Team upgrades');
-  $('pkmsvv-upgrade-all-desc').textContent=t('Tăng sức mạnh vĩnh viễn cho TẤT CẢ Pokémon.','Permanent bonuses for ALL Pokémon.');
+  const research=typeof window!=='undefined'&&window.PKMSVV_RESEARCH_MACHINE_QA===true&&window.PKMSVVResearchMachines;
+  if(research)$('pkmsvv-upgrade-intro').textContent=t('Nâng riêng bằng PokéCoins; nghiên cứu toàn đội bằng Xu Đồng Đội.','Individual upgrades use PokéCoins; team research uses Co-op Coins.');
+  $('pkmsvv-upgrade-all-title').textContent=research?t('Phòng nghiên cứu','Research Lab'):t('Nâng toàn đội','Team upgrades');
+  $('pkmsvv-upgrade-all-desc').textContent=research?t('Nâng cấp máy và chỉ số toàn đội bằng Xu Đồng Đội.','Upgrade machines and team stats with Co-op Coins.'):t('Tăng sức mạnh vĩnh viễn cho TẤT CẢ Pokémon.','Permanent bonuses for ALL Pokémon.');
   $('pkmsvv-upgrade-hint').textContent=t('Nâng cấp được lưu độc lập. Quên Kỹ Năng: khi đủ 8 kỹ năng, bảng chọn xuất hiện đúng 1 lần/trận để chọn 1 trong 8 chiêu để quên.','Upgrade tracks are independent. Forget Skill: with 8 learned moves, pick 1 of 8 to forget; appears once per match.');
   // Guides in order: Mystery Orb first, then permanent skill awakening.
   let panel=$('pkmsvv-skill-guide');

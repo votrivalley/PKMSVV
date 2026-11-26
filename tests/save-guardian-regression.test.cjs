@@ -94,3 +94,14 @@ test('Guardian protects bought station skins but allows spending coins and chang
  ctx.storage.set(K,JSON.stringify(lost));assert.equal(g.snapshot(),false);
  assert.deepEqual(ctx.read(LATEST),next);
 });
+
+test('Guardian treats lower machine research ranks as permanent progression loss',()=>{
+ const original=save();original.pkmsvvResearchRanks={power:2};original.pkmsvvCoopLab={coopCoins:40};
+ const ctx=run(original),g=ctx.guardian,next=structuredClone(original);
+ next.pkmsvvResearchRanks.power=3;next.pkmsvvCoopLab.coopCoins=0;
+ assert.equal(g.regress(JSON.stringify(original),JSON.stringify(next)),false);
+ assert.equal(g.compare(JSON.stringify(original),JSON.stringify(next)).risk,false);
+ const lost=structuredClone(original);lost.pkmsvvResearchRanks.power=1;
+ assert.equal(g.regress(JSON.stringify(original),JSON.stringify(lost)),true);
+ assert.equal(g.compare(JSON.stringify(original),JSON.stringify(lost)).risk,true);
+});
