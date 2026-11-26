@@ -1,0 +1,46 @@
+name: Native mobile touch and Shadow Force QA
+on:
+  push:
+    branches: [feature/web-3ds-skill-effects-passives-qa-20261121]
+    paths: ['.github/workflows/active-movement-touch-qa.yml','tests/beta-active-touch-browser.cjs']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify exact passed integrated artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/45772302034" --jq '{head_sha,status,conclusion}' | jq -e '.head_sha=="dd8eb75c55af308a6925f25b5772f24e2bbfdb18" and .status=="completed" and .conclusion=="success"'
+      - name: Install browser QA dependencies
+        run: |
+          npm pkg set 'overrides.node-abi=4.40.0'
+          npm install --no-audit --no-fund
+      - uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+          run-id: 45772302034
+          name: PKMSVV-Beta-255-176-Skills-Integrated-QA-NEVER-LIVE
+          path: dist/lan
+      - name: Verify artifact identity
+        run: jq -e '.qaCommit=="dd8eb75c55af308a6925f25b5772f24e2bbfdb18" and .production==false' dist/lan/build-info.json
+      - name: Real Chromium mobile touch tap, hold AUTO, and Giratina Shadow Force
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+        run: timeout 130s node tests/beta-active-touch-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Native-active-touch-browser-QA
+          path: dist/active-touch-browser-qa/
+          if-no-files-found: warn
+          retention-days: 7
