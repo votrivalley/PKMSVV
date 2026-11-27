@@ -707,10 +707,10 @@ if (process.env.PKMSVV_SWITCH_BOOT === '1') {
 // damage bookkeeping sites; ghost attacks and inactive powers do nothing.
 patch('js/systems/combat.js',
  '    pl.dmgDealt += dmg;\n    m.dealt =',
- '    if(!ghost)G.PKMSVVSpecialPowerQA?.afterHit?.(pl,e,dmg);\n    pl.dmgDealt += dmg;\n    m.dealt =');
+ '    if(!ghost){G.PKMSVVSpecialPowerQA?.afterHit?.(pl,e,dmg);G.PKMSVVFusionPilot?.afterHit?.(pl,e,m,dmg);}\n    pl.dmgDealt += dmg;\n    m.dealt =');
 patch('js/systems/combat.js',
  '        pl.dmgDealt += p.dmg * k;\n        if (p.src)',
- '        G.PKMSVVSpecialPowerQA?.afterHit?.(pl,e,p.dmg*k);\n        pl.dmgDealt += p.dmg * k;\n        if (p.src)');
+ '        G.PKMSVVSpecialPowerQA?.afterHit?.(pl,e,p.dmg*k);\n        G.PKMSVVFusionPilot?.afterHit?.(pl,e,p.src,p.dmg*k,p.owner??pl);\n        pl.dmgDealt += p.dmg * k;\n        if (p.src)');
 
 // Stage 4 Terastal: apply before native hurt and damage bookkeeping, retaining
 // type effectiveness, crit, ability, boss and ghost handling.

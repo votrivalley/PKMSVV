@@ -1253,8 +1253,8 @@ G.PKMSVVWiki=(()=>{
     tr('Bắt đầu với 3 ô kỹ năng. Mở thêm 5 ô vĩnh viễn bằng cách hạ tổng 50, 100, 200 quái và đạt tổng 10, 20 cấp Nâng cấp. Tiến độ cộng dồn qua nhiều trận và áp dụng cho MỌI Pokémon. Khi lên cấp trong trận, bạn chọn chiêu để học/nâng cấp; mở ô không tự tặng chiêu.',
        'Start with 3 move slots. Permanently unlock 5 more by defeating 50, 100 and 200 enemies in total and earning 10 and 20 combined Upgrade ranks. Progress carries across runs for ALL Pokémon. Choose moves on level-up; unlocking a slot does not grant a free move.')],
    [tr('✨ Fusion — Dung hợp kỹ năng','✨ Fusion — Skill Fusion'),
-    tr('Cả hai chiêu gốc phải đạt MAX. Hãy chọn công thức Fusion để dung hợp chúng thành một kỹ năng MỚI đạt MAX. Hai chiêu gốc được thay bằng một chiêu mới, giải phóng một ô kỹ năng. Mỗi trận chỉ Fusion một lần; Bond từ Khe Nứt là cơ chế riêng.',
-       'Choose a Fusion recipe, train both source moves to MAX and merge them into an entirely NEW MAX-level move. This replaces two moves with one and frees a slot. One Fusion per run; Rift Bonds are separate.')],
+    tr('Cả hai chiêu gốc phải đạt MAX. Fusion nay là cộng hưởng: giữ nguyên hai chiêu và chọn một phản ứng mỗi trận Khám phá Solo. Dấu tồn tại 5 giây; phản ứng hồi 3 giây. Bond từ Khe Nứt là cơ chế riêng.',
+       'Train both source moves to MAX and choose one resonance per Solo Explore run. Both moves remain. Marks last 5 seconds; reactions have a 3-second cooldown. Rift Bonds are separate.')],
    [tr('Mystery Orb','Mystery Orb'),null]
   ];
   // The permanent Skill Awakening achievement is 8/8 shared move SLOTS.
@@ -1286,16 +1286,8 @@ G.PKMSVVWiki=(()=>{
      const recipes=document.createElement('div');recipes.className='pkmsvv-fusion-recipes';
      for(const formula of G.PKMSVVFusionPilot?.RECIPES||[]){
       const row=document.createElement('div');row.className='pkmsvv-fusion-recipe';
-      for(const id of formula.ids){
-       const pair=document.createElement('span');pair.className='pkmsvv-fusion-move';
-       const icon=document.createElement('span');icon.innerHTML=G.Icons?.html?.('move:'+id,20)||'✦';
-       const label=document.createElement('span');label.textContent=G.T?.(G.Moves?.BY_ID?.[id]?.name||id,'move')||id;
-       pair.append(icon,label);row.append(pair);
-      }
-      const fusionIcon=document.createElement('img');
-      fusionIcon.className='pkmsvv-fusion-icon';fusionIcon.src='assets/fusion-icons/'+formula.id+'.webp';
-      fusionIcon.alt='';fusionIcon.width=52;fusionIcon.height=52;fusionIcon.loading='lazy';
-      row.prepend(fusionIcon);
+      row.style.gridTemplateColumns='minmax(0,1fr)';
+      const pair=document.createElement('span');pair.textContent=tr(formula.viPair,formula.enPair);row.append(pair);
       const result=document.createElement('strong');result.className='pkmsvv-fusion-result';
       result.textContent='▶ '+tr(formula.vi,formula.en)+' · MAX + MAX';row.append(result);
       const effect=document.createElement('p');effect.className='pkmsvv-fusion-benefit';
