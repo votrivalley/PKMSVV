@@ -1,19 +1,19 @@
 'use strict';
-/* Special Power Stage 4. QA only. One selection per owned species.
+/* Special Power Stage 5. QA only. One selection per owned species.
  * Required Notice: Copyright 2026 JPTER78 (https://github.com/JPTER78/pokesurvivor)
  * Noncommercial license: https://polyformproject.org/licenses/noncommercial/1.0.0
  * Dynamax, Z-Power and Terastal mechanics ported from PokéSurvivor3DS by juanluismm521,
  * 188afd16929e9c67dc0aa45d42a8e328d1888657 src/core/power.cpp.
  * SVV retains proportional HP, unchanged collision radius, Chapter 7 loadout
  * and shared charge; use native Web enemy/prop APIs, not 3DS GPU code.
- * G-Max sprites, selectable Tera crystals and multiplayer power packets are not implemented.
+ * G-Max sprites, defensive Tera conversion and multiplayer power packets are not implemented.
  */
 G.PKMSVVSpecialPowerQA=(()=>{
  const catalog=Object.freeze([
   Object.freeze({id:'mega',name:'Mega Evolution',device:'Mega Stone',duration:30,plannedDuration:40,cooldown:200,ready:true,summary:'Hệ Mega hiện tại · giữ nguyên đá và mở khóa'}),
   Object.freeze({id:'dynamax',name:'Dynamax',device:'Dynamax Band',duration:12,cooldown:80,ready:true,summary:'QA Solo · HP x2, công +40%, giẫm quái và sát thương lan'}),
-  Object.freeze({id:'zmove',name:'Z-Power',device:'Z-Ring',duration:15,cooldown:60,ready:true,summary:'QA Solo · sóng mở đầu, chữ Z xuyên quái, tuyệt chiêu kết thúc'}),
-  Object.freeze({id:'terastal',name:'Terastal',device:'Tera Orb',duration:30,cooldown:75,ready:true,summary:'QA Solo · kỹ năng cùng hệ x1,8 trong 30 giây'})
+  Object.freeze({id:'zmove',name:'Z-Power',device:'Z-Crystal',duration:15,cooldown:60,ready:true,summary:'QA Solo · sóng mở đầu, chữ Z xuyên quái, tuyệt chiêu kết thúc'}),
+  Object.freeze({id:'terastal',name:'Terastal',device:'Tera Crystal',duration:30,cooldown:75,ready:true,summary:'QA Solo · kỹ năng theo hệ Tera đã chọn x1,8'})
  ]);
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  const byId=id=>catalog.find(x=>x.id===id);
@@ -21,25 +21,59 @@ G.PKMSVVSpecialPowerQA=(()=>{
  const player=()=>G.Game?.player;
  const dexOK=d=>Number.isInteger(d)&&d>=1&&d<=1025;
  const runs=new WeakMap();
+ const COST=100;
+ const object=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{};
+ const itemOwned=(s,key)=>Object.hasOwn(object(s?.pkmsvvPowerItems),key)&&s.pkmsvvPowerItems[key]===true;
+ const itemKey=(id,type)=>id==='dynamax'?'dynamax':id+':'+type;
+ const typesFor=dex=>Array.from(new Set((G.DEX_BY?.[dex]?.types||[]).filter(t=>Object.hasOwn(Z_NAMES,t))));
+ const availableTypes=(s,id,dex)=>(id==='zmove'?typesFor(dex):id==='terastal'?Object.keys(Z_NAMES):[]).filter(t=>itemOwned(s,itemKey(id,t)));
+ function chosenType(s,id,dex){
+  const list=availableTypes(s,id,dex),stored=s?.pkmsvvPowerTypes?.[dex]?.[id];
+  return list.includes(stored)?stored:typesFor(dex).find(t=>list.includes(t))||list[0]||null;
+ }
+ function unlocked(s,id,dex){
+  if(id==='mega')return true; // Legacy stone, art and story checks remain authoritative.
+  return id==='dynamax'?itemOwned(s,'dynamax'):!!chosenType(s,id,dex);
+ }
  function selected(s,dex){
   const v=s?.pkmsvvPowerLoadout?.[String(dex)];
-  return ['dynamax','zmove','terastal'].includes(v)?v:'mega';
+  return ['dynamax','zmove','terastal'].includes(v)&&unlocked(s,v,dex)?v:'mega';
  }
  function owns(s,dex){return !!(s&&dexOK(dex)&&(Number(s.partner)===dex||s.owned?.[dex]||s.shiny?.[dex]));}
+ const balance=s=>{const v=Number(s?.arenaGacha?.points);return Number.isFinite(v)?Math.max(0,Math.floor(v)):0;};
+ const pool=(s,id)=>id==='dynamax'?(itemOwned(s,'dynamax')?[]:['dynamax']):
+  ['zmove','terastal'].includes(id)?Object.keys(Z_NAMES).map(t=>itemKey(id,t)).filter(k=>!itemOwned(s,k)):[];
  let saving=false;
- async function equip(id,dex=Number(save()?.partner)){
+ const busy=()=>saving;
+ function canBuy(id,s=save()){return !!(s&&s.pkmsvvChapter7Seen===true&&!G.DB?.guest&&G.Game?.state==='ui'&&!saving&&balance(s)>=COST&&pool(s,id).length);}
+ function restore(s,key,old,next){if(s[key]!==next)return;if(old===undefined)delete s[key];else s[key]=old;}
+ async function buy(id,random=Math.random){
+  const s=save();if(!canBuy(id,s))return null;
+  const choices=pool(s,id),roll=id==='dynamax'?0:Number(random());
+  if(!Number.isFinite(roll)||roll<0||roll>=1)return null;
+  const key=choices[Math.floor(roll*choices.length)],oldItems=s.pkmsvvPowerItems,oldLedger=s.arenaGacha;
+  const nextItems={...object(oldItems),[key]:true},nextLedger={...object(oldLedger),points:balance(s)-COST};
+  saving=true;s.pkmsvvPowerItems=nextItems;s.arenaGacha=nextLedger;
+  try{
+   if(typeof G.DB?.commit!=='function'||await G.DB.commit(true)===false)throw Error('save');
+   return {key,id,type:key.split(':')[1]||null,balance:nextLedger.points};
+  }catch(_){restore(s,'pkmsvvPowerItems',oldItems,nextItems);restore(s,'arenaGacha',oldLedger,nextLedger);return null;}
+  finally{saving=false;}
+ }
+ async function equip(id,dex=Number(save()?.partner),type){
   const s=save(),def=byId(id);
-  if(saving||G.Game?.state!=='ui'||!def?.ready||!owns(s,dex)||G.DB?.guest||s.pkmsvvChapter7Seen!==true)return false;
-  const old=s.pkmsvvPowerLoadout;
-  const next={...(old&&typeof old==='object'&&!Array.isArray(old)?old:{}),[dex]:id};
-  saving=true;s.pkmsvvPowerLoadout=next;
+  if(saving||G.Game?.state!=='ui'||!def?.ready||!owns(s,dex)||G.DB?.guest||s.pkmsvvChapter7Seen!==true||!unlocked(s,id,dex))return false;
+  const typed=id==='zmove'||id==='terastal';
+  if(typed){type=type??chosenType(s,id,dex);if(!availableTypes(s,id,dex).includes(type))return false;}
+  const old=s.pkmsvvPowerLoadout,oldTypes=s.pkmsvvPowerTypes;
+  const next={...object(old),[dex]:id};
+  const nextTypes=typed?{...object(oldTypes),[dex]:{...object(oldTypes?.[dex]),[id]:type}}:oldTypes;
+  saving=true;s.pkmsvvPowerLoadout=next;if(typed)s.pkmsvvPowerTypes=nextTypes;
   try{
    if(typeof G.DB?.commit!=='function'||await G.DB.commit(true)===false)throw Error('save');
    return true;
-  }catch(_){
-   if(s.pkmsvvPowerLoadout===next){if(old===undefined)delete s.pkmsvvPowerLoadout;else s.pkmsvvPowerLoadout=old;}
-   return false;
-  }finally{saving=false;}
+  }catch(_){restore(s,'pkmsvvPowerLoadout',old,next);if(typed)restore(s,'pkmsvvPowerTypes',oldTypes,nextTypes);return false;}
+  finally{saving=false;}
  }
  function soloExplore(p){
   return !!(p&&p===player()&&G.PKMSVVQuickRegion?.active===true&&!G.Coop?.active&&
@@ -50,6 +84,7 @@ G.PKMSVVSpecialPowerQA=(()=>{
   let r=runs.get(p);
   if(!r&&G.Game?.state==='playing'){
    r={id:save()?.pkmsvvChapter7Seen===true?selected(save(),Number(p.dex)):'mega',remaining:0,cooldown:0,bonusHp:0,atkApplied:false,aura:0,visual:null,crushClock:0,crushed:new WeakMap(),splashing:false,zClock:0,zShots:0};
+   r.powerType=chosenType(save(),r.id,Number(p.dex));
    runs.set(p,r);
   }
   return r||null;
@@ -65,7 +100,7 @@ G.PKMSVVSpecialPowerQA=(()=>{
   if(!canActivate(p))return false;
   const r=state(p),fraction=Math.max(0,Math.min(1,p.hp/p.maxHp));
   if(r.id==='zmove'){
-   const type=primaryType(p);
+   const type=r.powerType||primaryType(p);
    r.remaining=15;r.zClock=.3;r.zShots=0;r.zType=type;
    p._pkmsvvSpecialPowerActive='zmove';p._megaEnergy=0;
    zWave(p,220,1,type);
@@ -73,7 +108,7 @@ G.PKMSVVSpecialPowerQA=(()=>{
    return true;
   }
   if(r.id==='terastal'){
-   r.remaining=30;r.aura=0;r.teraTypes=(p.mon?.types||[]).filter(t=>Object.hasOwn(Z_NAMES,t));
+   r.remaining=30;r.aura=0;r.teraTypes=r.powerType?[r.powerType]:[];
    p._pkmsvvSpecialPowerActive='terastal';p._megaEnergy=0;
    G.FX?.ring?.(p.x,p.y,8,100,'#7fe8ff',.6,6);
    G.UI?.toast?.(tr('TERASTAL · kỹ năng cùng hệ +80%','TERASTAL · matching moves +80%'));
@@ -169,7 +204,7 @@ G.PKMSVVSpecialPowerQA=(()=>{
     G.World.damageProp?.(prop,9999,COL);
   }
  }
- // Native 3DS power_move_mul: matching either natural type, not a global attack buff.
+ // Native 3DS power_move_mul adapted to equipped crystal type.
  function damageMultiplier(p,type,owner=p){
   const r=p&&runs.get(p);
   return owner===p&&r?.id==='terastal'&&r.remaining>0&&p._pkmsvvSpecialPowerActive==='terastal'&&!p.dead&&soloExplore(p)&&G.Game?.state==='playing'&&r.teraTypes?.includes(type)?1.8:1;
@@ -233,8 +268,8 @@ G.PKMSVVSpecialPowerQA=(()=>{
  function close(){document.getElementById('pkmsvv-special-power-overlay')?.remove();}
  function open(options={}){
   close();const s=save(),dex=Number(options.dex??s?.partner),current=selected(s,dex),fromBox=options.fromBox===true;
-  const overlay=document.createElement('div');overlay.id='pkmsvv-special-power-overlay';overlay.className='pkmsvv-pc-overlay';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');
-  const panel=document.createElement('section');panel.className='pkmsvv-pc-panel';panel.style.maxWidth='760px';
+  const overlay=document.createElement('div');overlay.id='pkmsvv-special-power-overlay';overlay.className='pkmsvv-pc-overlay';overlay.style.zIndex='300001';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');
+  const panel=document.createElement('section');panel.className='pkmsvv-pc-panel';panel.style.maxWidth='760px';panel.style.maxHeight='85dvh';panel.style.overflowY='auto';
   const header=document.createElement('header');header.className='pkmsvv-pc-header';
   const title=document.createElement('h2');title.textContent=tr('SỨC MẠNH ĐẶC BIỆT','SPECIAL POWERS');
   const back=document.createElement('button');back.type='button';back.className='pkmsvv-pc-close';back.textContent=fromBox?tr('← PokéBox','← PokéBox'):tr('← Phòng nghiên cứu','← Research Lab');back.onclick=()=>{close();if(!fromBox)G.PKMSVVWiki?.open?.();};header.append(title,back);panel.append(header);
@@ -245,10 +280,22 @@ G.PKMSVVSpecialPowerQA=(()=>{
    const name=document.createElement('strong');name.textContent=def.name+' · '+def.device;
    const desc=document.createElement('span');desc.textContent=def.duration+'s / '+def.cooldown+'s · '+def.summary;
    const b=document.createElement('button');b.className='btn';b.type='button';b.dataset.powerEquip=def.id;
-   b.textContent=!def.ready?tr('Đang phát triển','In development'):current===def.id?tr('Đang chọn','Selected'):tr('Chọn sức mạnh','Select power');
-   b.disabled=!def.ready||current===def.id||s?.pkmsvvChapter7Seen!==true;
-   b.onclick=async()=>{b.disabled=true;if(await equip(def.id,dex)){options.onChange?.();open(options);}else{b.disabled=false;G.UI?.toast?.(tr('Không lưu được lựa chọn.','Unable to save selection.'));}};
-   card.append(name,desc,b);
+   const allowed=unlocked(s,def.id,dex),typed=def.id==='zmove'||def.id==='terastal',equippedType=chosenType(s,def.id,dex);
+   let picker=null;
+   card.append(name,desc);
+   if(typed&&allowed){
+    picker=document.createElement('select');picker.className='btn';picker.setAttribute('aria-label',def.name+' Type');
+    for(const type of availableTypes(s,def.id,dex)){const opt=document.createElement('option');opt.value=type;opt.textContent=type.toUpperCase()+(def.id==='zmove'?' · '+Z_NAMES[type]:'');picker.append(opt);}
+    picker.value=equippedType;card.append(picker);
+   }
+   function updateButton(){
+    const active=current===def.id&&(!picker||picker.value===equippedType);
+    b.textContent=!def.ready?tr('Đang phát triển','In development'):!allowed?tr('🔒 Cần vật phẩm Arena','🔒 Arena item required'):active?tr('Đang chọn','Selected'):tr('Trang bị','Equip');
+    b.disabled=!def.ready||!allowed||active||s?.pkmsvvChapter7Seen!==true||!!G.DB?.guest||busy();
+   }
+   if(picker)picker.onchange=updateButton;updateButton();
+   b.onclick=async()=>{b.disabled=true;if(await equip(def.id,dex,picker?.value)){options.onChange?.();open(options);}else{updateButton();G.UI?.toast?.(tr('Không lưu được lựa chọn.','Unable to save selection.'));}};
+   card.append(b);
    if(def.id==='mega'&&!fromBox){const old=document.createElement('button');old.type='button';old.className='btn';old.textContent=tr('Mega Stone · Danh mục cũ','Mega Stones · Existing catalog');old.onclick=()=>{close();G.PKMSVVMegaEntry?.open?.({fromResearchLab:true});};card.append(old);}
    grid.append(card);
   }
@@ -268,5 +315,5 @@ G.PKMSVVSpecialPowerQA=(()=>{
   G.Game[name]=function(...args){stop(player());return prev.apply(this,args);};
  }
  if(typeof document!=='undefined'){mount();setInterval(sync,250);}
- return {catalog,selected,equip,state,allowsMega,canActivate,activate,tick,stop,afterHit,damageMultiplier,open,close,Z_NAMES};
+ return {catalog,COST,balance,pool,busy,canBuy,buy,itemOwned,availableTypes,chosenType,unlocked,selected,equip,state,allowsMega,canActivate,activate,tick,stop,afterHit,damageMultiplier,open,close,Z_NAMES};
 })();

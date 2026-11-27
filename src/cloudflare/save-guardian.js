@@ -60,7 +60,7 @@
   // A swapped collection entry with the same count is still lost progress.
   for(const path of ['owned','shiny','itemsFound','evoMoves','ach','legends'])
    if(!keys(older[path]).every(k=>Object.hasOwn(newer[path]||{},k)))return true;
-  for(const path of ['megaStones','megaForms','megaStoryCleared'])
+  for(const path of ['megaStones','megaForms','megaStoryCleared','pkmsvvPowerItems'])
    if(!retained(older[path],newer[path]))return true;
   for(const path of ['seals','trophies'])
    if(!retained(older.arenas?.pkmChampion?.[path],

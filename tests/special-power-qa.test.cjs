@@ -2,9 +2,9 @@
 const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const src=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-special-power-qa.js'),'utf8');
 function fixture(){
- const s={partner:25,owned:{25:1,6:1},megaStones:{charizarditex:1},arenaPoints:240,pkmsvvChapter7Seen:true};
+ const s={partner:25,owned:{25:1,6:1},megaStones:{charizarditex:1},arenaPoints:240,arenaGacha:{points:240,pity:9,pulls:3},pkmsvvPowerItems:{dynamax:true,'zmove:electric':true,'terastal:fire':true,'terastal:flying':true},pkmsvvChapter7Seen:true};
  const p={dex:25,hp:75,maxHp:100,atkMul:2,_megaEnergy:100,dead:false};
- const G={DB:{save:s,commit:()=>true},Game:{player:p,state:'ui'},Coop:{active:false},PKMSVVQuickRegion:{active:true},PKMSVVMegaPhase3:{energy:p=>p._megaEnergy}};
+ const G={DEX_BY:{25:{types:['electric']},6:{types:['fire','flying']}},DB:{save:s,commit:()=>true},Game:{player:p,state:'ui'},Coop:{active:false},PKMSVVQuickRegion:{active:true},PKMSVVMegaPhase3:{energy:p=>p._megaEnergy}};
  vm.runInNewContext(src,{G,console});return {G,p,s,api:G.PKMSVVSpecialPowerQA};
 }
 test('old save defaults to Mega; select per species without altering stones or Arena points',async()=>{
@@ -83,13 +83,25 @@ test('source-based Z-Power uses native wave/projectile, typed damage, natural ex
 });
 
 
-test('Terastal matches both natural types, no global attack buff, pause, cooldown and cleanup',async()=>{
+test('Terastal matches only chosen crystal type, no global attack buff, pause, cooldown and cleanup',async()=>{
  const {G,p,api}=fixture();p.mon={types:['fire','flying']};
- assert.equal(await api.equip('terastal'),true);G.Game.state='playing';
+ assert.equal(await api.equip('terastal',25,'fire'),true);G.Game.state='playing';
  assert.equal(api.activate(p),true);assert.equal(api.allowsMega(p),false);assert.equal(p.atkMul,2);assert.equal(p.maxHp,100);assert.equal(p._megaEnergy,0);
- assert.equal(api.damageMultiplier(p,'fire'),1.8);assert.equal(api.damageMultiplier(p,'flying'),1.8);assert.equal(api.damageMultiplier(p,'water'),1);assert.equal(api.damageMultiplier(p,'fire',{}),1);
+ assert.equal(api.damageMultiplier(p,'fire'),1.8);assert.equal(api.damageMultiplier(p,'flying'),1);assert.equal(api.damageMultiplier(p,'water'),1);assert.equal(api.damageMultiplier(p,'fire',{}),1);
  G.Game.state='choice';api.tick(p,30);assert.equal(api.state(p).remaining,30);assert.equal(api.damageMultiplier(p,'fire'),1);
  G.Game.state='playing';api.tick(p,30);assert.equal(api.damageMultiplier(p,'fire'),1);assert.equal(api.state(p).cooldown,75);
  p._megaEnergy=100;assert.equal(api.activate(p),false);api.tick(p,75);assert.equal(api.activate(p),true);
  p.dead=true;api.tick(p,.1);assert.equal(api.damageMultiplier(p,'fire'),1);assert.equal(p._pkmsvvSpecialPowerActive,undefined);
 });
+
+ test('shared Arena wallet: paid permanent unlocks, no duplicates, no Mega pity mutation, save rollback',async()=>{
+ const {G,s,api}=fixture();delete s.pkmsvvPowerItems;s.pkmsvvPowerLoadout={25:'dynamax'};const before=JSON.stringify(s.megaStones);
+ assert.equal(api.selected(s,25),'mega');assert.equal(await api.equip('dynamax'),false);assert.equal(await api.buy('unknown'),null);
+ assert.equal((await api.buy('dynamax')).key,'dynamax');assert.equal(s.arenaGacha.points,140);assert.equal(await api.buy('dynamax'),null);
+ assert.equal(await api.equip('dynamax'),true);assert.equal(api.selected(s,25),'dynamax');
+ const z=await api.buy('zmove',()=>0);assert.equal(z.type,'normal');assert.equal(s.arenaGacha.points,40);assert.equal(api.pool(s,'zmove').includes('zmove:normal'),false);assert.equal(await api.equip('zmove',25),false);
+ assert.equal(await api.buy('terastal'),null);assert.equal(s.arenaGacha.pity,9);assert.equal(s.arenaGacha.pulls,3);assert.equal(JSON.stringify(s.megaStones),before);
+ s.arenaGacha.points=200;G.DB.commit=()=>false;const original=JSON.stringify(s);assert.equal(await api.buy('terastal',()=>0),null);assert.equal(JSON.stringify(s),original);
+ G.DB.commit=()=>true;assert.equal((await api.buy('terastal',()=>0)).type,'normal');assert.equal(await api.equip('terastal',6,'normal'),true);assert.equal(api.chosenType(s,'terastal',6),'normal');assert.equal(api.selected(s,25),'dynamax');
+ G.Game.state='playing';assert.equal(await api.buy('zmove'),null);
+ });
