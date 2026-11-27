@@ -324,6 +324,7 @@ G.PKMSVVEvo = (() => {
       G.DB.save.coins -= r.coins;
       G.DB.commit();
     }
+    G.PKMSVVSpecialPowerQA?.stop?.(pl);
     const fraction = pl.maxHp > 0 ? pl.hp / pl.maxHp : 1;
     pl.mon = after; pl.dex = after.dex;
     pl.baseAtk = after.atk; pl.baseSpd = after.spd;

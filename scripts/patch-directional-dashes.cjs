@@ -17,11 +17,12 @@ for(const [id,oldLine,newLine] of [
 ])patch('js/data/moves.js',oldLine,newLine);
 patch('js/systems/combat.js',
  "    G.PKMSVVDash.consume(pl,pick);\n    const m=pick.move;\n    m.t = G.PKMSVVBalance.effectiveCooldown(pl,m);\n    pl.cast(m);\n    if (G.Coop.active) G.Coop.cast(pl,m);\n    m.castAt = performance.now();\n    run(pl,m);\n    return true;",
+ "    if(!G.PKMSVVDash.canTarget(pl,pick.move))return false;\n"+
  "    if (!G.PKMSVVDash.consume(pl,pick)) return false;\n"+
  "    const m=pick.move, previousAim=pl.aim;\n"+
  "    // Input / left stick / touch joystick, else last walking direction;\n"+
  "    // never the enemy's auto-targeted angle.\n"+
- "    pl.aim=G.PKMSVVDash.direction(pl,G.Input.axis());\n"+
+ "    pl.aim=Number.isFinite(targetAngle)?targetAngle:G.PKMSVVDash.direction(pl,pl.lanBot?pl.lanBotAxis:G.Input.axis());\n"+
  "    try {\n"+
  "      m.t=G.PKMSVVBalance.effectiveCooldown(pl,m);\n"+
  "      pl.cast(m);\n"+

@@ -62,3 +62,14 @@ test('Web Windows and Android promotions embed modified skill-forget module',()=
  for(const file of ['scripts/promote-web-v20.cjs','scripts/build-pokebox-stage1-pc-qa.cjs','scripts/patch-pokebox-stage4-apk-qa.cjs'])
   assert.match(read(file),/pkmsvv-forget-skill\.js/,file);
 });
+
+test('Solo forgetting blocks world updates until choosing or closing; competitive and co-op do not globally pause',()=>{
+ const f=harness();assert.equal(f.lib.blocksSolo(),false);
+ f.lib.open(f.actor);assert.equal(f.lib.blocksSolo(),true);
+ f.G.Coop={active:true};assert.equal(f.lib.blocksSolo(),false);
+ f.G.Coop.active=false;f.G.PKMSVVArenaSolo={active:true};assert.equal(f.lib.blocksSolo(),false);
+ f.G.PKMSVVArenaSolo.active=false;assert.equal(f.lib.blocksSolo(),true);
+ assert.equal(f.lib.closePicker(),true);assert.equal(f.lib.blocksSolo(),false);
+ assert.match(read('scripts/patch-skill-forget.cjs'),/blocksSolo/);
+ assert.match(read('scripts/prepare-lan.cjs'),/pkmsvv-modal-navigation-qa\.js/);
+});

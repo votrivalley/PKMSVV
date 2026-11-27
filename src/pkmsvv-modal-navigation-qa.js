@@ -212,7 +212,7 @@
  }
  function onKey(e){
   if(e.altKey||e.ctrlKey||e.metaKey)return;
-  const root=active();if(!root)return;
+  const root=G.PKMSVVForgetSkill?.current?.()?.shade||active();if(!root)return;
   const key=String(e.key||'').toLowerCase(),code=e.code||'';
   // Keep movement keys free while skill choices are open.
   if((root.id==='scr-levelup'||root.id==='pkmsvv-forget-skill')&&
@@ -328,7 +328,7 @@
     lastDirection=null;
     return true;
   }
-  const level=active(true);
+  const level=G.PKMSVVForgetSkill?.current?.()?.shade||active(true);
   if(level?.id==='pkmsvv-forget-skill'){
    // The same live combat shortcut as level-up: R+X/Y/B, A next page.
    // Neither D-pad nor analog directions navigate or select this overlay.
@@ -336,7 +336,7 @@
    const edges=buttons.map((on,i)=>on&&!previousLevelButtons[i]);
    previousLevelButtons=buttons;
    if(edges[3])G.PKMSVVForgetSkill?.nextPage?.();
-   if(shoulderR){
+   if(shoulderR||G.PKMSVVForgetSkill?.blocksSolo?.()){
     const index=edges.findIndex((on,i)=>i<3&&on);
     if(index>=0)G.PKMSVVForgetSkill?.selectSlot?.(index);
    }
@@ -429,7 +429,7 @@
   installFocusGuard();
   const original=pad.poll;
   const wrapped=function(...args){
-   const root=active(true);
+   const root=G.PKMSVVForgetSkill?.current?.()?.shade||active(true);
    if(root){
     if(root.classList?.contains('pkmsvv-evo-live')||
        (root.id==='pkmsvv-forget-skill'&&root.classList?.contains('pkmsvv-forget-competitive'))){

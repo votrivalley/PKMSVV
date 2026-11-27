@@ -1,0 +1,172 @@
+name: Publish verified native Beta 2.5.5 + 73 skills to EXISTING beta only
+on:
+  push:
+    branches: [feature/web-3ds-skill-effects-passives-qa-20261121]
+    paths: ['.github/workflows/publish-verified-beta-176-skill-effects.yml']
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: pkmsvv-native-176-beta-publish
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Confirm immutable 176-skill native Beta build passed real Chromium stress
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/45350857253" --jq '{head_sha,status,conclusion}' > /tmp/qa-run.json
+          jq -e '.status=="completed" and .conclusion=="success" and .head_sha=="e422e0796e498b62d823e5ca9f7904aa0a7f621a"' /tmp/qa-run.json
+      - name: Retrieve exact QA-passed integrated native Beta
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+          run-id: 45350857253
+          name: PKMSVV-Beta-255-176-Skills-Integrated-QA-NEVER-LIVE
+          path: dist/new
+      - name: Retrieve exact pre-skill 2.5.5 Beta for strict visual diff and rollback
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+          run-id: 44787502842
+          name: PKMSVV-Fossil-Native-Gameplay-QA
+          path: dist/old
+      - name: Refuse UI, regions, Pippi, menus and save regression before publishing
+        shell: bash
+        run: |
+          set -euo pipefail
+          jq -e '.version=="2.5.5-176-Native-Skills-Integrated-QA" and .skills==176 and .production==false and .qaCommit=="e422e0796e498b62d823e5ca9f7904aa0a7f621a"' dist/new/build-info.json
+          jq -e '.version=="2.5.5-Unified-Beta-PokeBox-Hub-Fossil-Icon-Stroke-QA" and .qaCommit=="89398aa454283be0a9835b4828355a2cc8fe7531"' dist/old/build-info.json
+          for f in game/js/ui/pkmsvv-box-hub-ui.js game/js/ui/pkmsvv-quick-region.js game/js/ui/pkmsvv-sky-tower-world-qa.js game/js/ui/pkmsvv-qa-runtime-config.js game/images/regions/10-sky-tower.webp game/images/pippi/Walk-Anim.png game/css/pkmsvv-box-hub.css; do
+            test -s "dist/old/$f" && test -s "dist/new/$f" || { echo "::error::Missing protected Beta asset: $f"; exit 1; }
+            cmp -s "dist/old/$f" "dist/new/$f" || { echo "::error::Skill changes modified protected Beta asset: $f"; exit 1; }
+            echo "IDENTICAL_PROTECTED_BETA=$f"
+          done
+          # The old Beta served a blank /ai/game/ page for BOTH Host and Join.
+          # Require the real nested shell and correct shared asset base.
+          test -s dist/new/ai/game/index.html
+          grep -Fq '<base href="/game/">' dist/new/ai/game/index.html
+          grep -Fq 'pkmsvv-coop' dist/new/ai/game/index.html
+          node scripts/qa-pippi-southern-dialogue-only.cjs dist/old dist/new
+          grep -Fq 'PKMSVV3DSStage10Combat' dist/new/game/js/app.min.js
+          grep -Fq 'PKMSVV3DSMoveFamilies' dist/new/game/js/app.min.js
+          grep -Fq 'fossil_lab' dist/new/game/js/app.min.js
+          for t in 'pkmsvv-box-hub-ui.js?v=' 'pkmsvv-quick-region.js?v=' 'pkmsvv-sky-tower-world-qa.js?v=' 'pkmsvv-pippi'; do
+            grep -Fq "$t" dist/new/game/index.html || exit 1
+          done
+          for n in 01 02 03 04 05 06 07 08 09 10; do
+            find dist/new/game/images/regions -maxdepth 1 -name "$n-*.webp" -print -quit | grep -q . || exit 1
+          done
+          if find dist/new -type f -size +25M | grep -q .; then exit 1; fi
+          echo 'PASS: original Beta UI/map/Pippi unchanged; integrated 176 skills verified'
+      - name: Publish solely to existing Cloudflare Beta (never main production)
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN" && test -n "$CLOUDFLARE_ACCOUNT_ID"
+          touch .beta-upload-started
+          npx --yes wrangler@4 pages deploy dist/new --project-name pkmsvv-web --branch beta
+      - name: Verify exact engine binary, Pippi and menu after Cloudflare Beta alias propagation
+        shell: bash
+        run: |
+          set -euo pipefail
+          base=https://beta.pkmsvv-web.pages.dev
+          expected=$(sha256sum dist/new/game/js/app.min.js | cut -d' ' -f1)
+          for n in $(seq 1 24); do
+            cache="$GITHUB_SHA-$n"
+            if ! curl -fsSL --max-time 25 -H 'Cache-Control: no-cache' "$base/build-info.json?rev=$cache" -o /tmp/live-meta; then
+              echo "CDN_PROPAGATION: build-info unreachable, retry=$n"
+              sleep 5; continue
+            fi
+            if ! jq -e '.skills==176 and .version=="2.5.5-176-Native-Skills-Integrated-QA" and .qaCommit=="e422e0796e498b62d823e5ca9f7904aa0a7f621a"' /tmp/live-meta >/dev/null; then
+              echo "CDN_PROPAGATION: waiting for complete 176 build metadata, retry=$n"
+              sleep 5; continue
+            fi
+            if ! curl -fsSL --max-time 55 -H 'Cache-Control: no-cache' "$base/game/js/app.min.js?rev=$cache" -o /tmp/live-app; then
+              echo "CDN_PROPAGATION: engine unavailable, retry=$n"
+              sleep 5; continue
+            fi
+            found=$(sha256sum /tmp/live-app | cut -d' ' -f1)
+            if [ "$found" != "$expected" ]; then
+              echo "CDN_PROPAGATION: metadata updated but engine asset still stale, retry=$n"
+              echo "expected=$expected found=$found"
+              sleep 5; continue
+            fi
+            if ! curl -fsSL --max-time 30 "$base/game/index.html?rev=$cache" -o /tmp/live-index ||
+               ! grep -Fq 'pkmsvv-box-hub-ui.js?v=' /tmp/live-index ||
+               ! grep -Fq 'pkmsvv-quick-region.js?v=' /tmp/live-index ||
+               ! grep -Fq 'pkmsvv-pippi' /tmp/live-index; then
+              echo "CDN_PROPAGATION: original Beta UI still stale, retry=$n"
+              sleep 5; continue
+            fi
+            if ! curl -fsSL --max-time 30 "$base/game/js/ui/pkmsvv-pippi.js?rev=$cache" -o /tmp/live-pippi ||
+               ! cmp -s /tmp/live-pippi dist/new/game/js/ui/pkmsvv-pippi.js ||
+               ! curl -fsSL --max-time 30 "$base/game/js/ui/pkmsvv-pippi-guide.js?rev=$cache" -o /tmp/live-pippi-guide ||
+               ! cmp -s /tmp/live-pippi-guide dist/new/game/js/ui/pkmsvv-pippi-guide.js; then
+              echo "CDN_PROPAGATION: Pippi asset not verified, retry=$n"
+              sleep 5; continue
+            fi
+            # Prove newly shipped Host/Join route is not only HTTP 200 but
+            # byte-identical to the fully browser-tested HTML entry.
+            if ! curl -fsSL --max-time 30 "$base/ai/game/index.html?rev=$cache" -o /tmp/live-ai-game ||
+               ! cmp -s /tmp/live-ai-game dist/new/ai/game/index.html; then
+              echo "CDN_PROPAGATION: Co-op Host/Join route not updated yet, retry=$n"
+              sleep 5; continue
+            fi
+            echo "BETA_2_5_5_176_SKILL_EFFECTS_LIVE_VERIFIED=https://beta.pkmsvv-web.pages.dev/game/"
+            echo "BETA_ENGINE_SHA256=$expected"
+            exit 0
+          done
+          echo "::error::Beta alias never served a fully consistent verified 176-skill build; rollback required"
+          exit 1
+      - name: PUBLIC Cloudflare Beta browser QA — real two-player WebRTC Host/Join, not a blank page
+        shell: bash
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+          PKMSVV_WIFI_REMOTE_URL: https://beta.pkmsvv-web.pages.dev
+        run: |
+          set -euo pipefail
+          npm pkg set 'overrides.node-abi=4.40.0'
+          npm install --no-audit --no-fund
+          timeout 150s node tests/beta-wifi-host-join-browser.cjs
+      - name: PUBLIC Cloudflare Beta browser QA — real Fossil Expedition two humans, Pippi Southern guide and mission start
+        shell: bash
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+          PKMSVV_WIFI_REMOTE_URL: https://beta.pkmsvv-web.pages.dev
+          PKMSVV_WIFI_TEST_MODE: fossil_lab
+          PKMSVV_WIFI_START_MISSION: '1'
+        run: |
+          set -euo pipefail
+          timeout 170s node tests/beta-wifi-host-join-browser.cjs
+      - name: PUBLIC Cloudflare Beta browser QA — Mewtwo Explore through original 1m08 crash
+        shell: bash
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+          PKMSVV_INCIDENT_REMOTE_URL: https://beta.pkmsvv-web.pages.dev
+          PKMSVV_INCIDENT_CASE: fixed-176
+        run: |
+          set -euo pipefail
+          timeout 185s node tests/beta-176-explore-coop-repro-browser.cjs
+      - name: Emergency rollback of unchanged original Beta if promotion or verification fails
+        if: ${{ failure() }}
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          if [ -e .beta-upload-started ] && [ -s dist/old/build-info.json ]; then
+            npx --yes wrangler@4 pages deploy dist/old --project-name pkmsvv-web --branch beta
+            echo 'ORIGINAL_BETA_ROLLBACK_EXECUTED'
+          else
+            echo 'No publish was attempted; current Beta untouched'
+          fi

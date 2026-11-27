@@ -1,0 +1,101 @@
+name: PKMSVV Full Original Source + 73 Native Moves QA
+on:
+  push:
+    branches:
+      - feature/web-3ds-skill-effects-passives-qa-20261121
+    paths:
+      - '.github/workflows/3ds-full-pinned-qa.yml'
+      - 'scripts/checkout-pinned-upstream.cjs'
+      - 'scripts/prepare-game.cjs'
+      - 'scripts/patch-3ds-*.cjs'
+      - 'src/pkmsvv-3ds-*.js'
+      - 'tests/3ds-*.test.cjs'
+      - 'scripts/qa-3ds-*.cjs'
+      - 'scripts/patch-3ds-skill-effects-passives.cjs'
+      - 'scripts/qa-v15-baseline-diff.cjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pkmsvv-full-pinned-skill-qa
+  cancel-in-progress: true
+jobs:
+  full-original-skill-qa:
+    name: Full PKMSVV pinned source and 73 skill integration (no deploy)
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify upstream recovery script
+        run: node --check scripts/checkout-pinned-upstream.cjs
+      - name: Baseline Web safety tests on tracked repo before staging upstream sources
+        run: npm run test:web
+      - name: Recover EXACT pinned upstream SHA and tree; reject alternate versions
+        run: node scripts/checkout-pinned-upstream.cjs
+      - name: Install build dependencies
+        run: npm install --no-audit --no-fund
+      - name: Native-move stage unit regressions (source-independent)
+        run: |
+          node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs tests/3ds-stage3-punch-cross-storm.test.cjs tests/3ds-stage4-support.test.cjs tests/3ds-stage5-combat.test.cjs tests/3ds-stage6-projectiles.test.cjs tests/3ds-stage7-dash-meteor.test.cjs tests/3ds-stage8-beam-nova-charge.test.cjs tests/3ds-stage9-homing-cone-melee.test.cjs tests/3ds-stage10-final.test.cjs
+      - name: Compile full PKMSVV game first, not the public Web mirror
+        run: |
+          npm run prepare:game
+          test -s vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'pkmsvv-pippi' vendor/pokesurvivor/dev.html
+          echo PKMSVV_FULL_PINNED_BASE_PREPARE_PASS
+      - name: Audit existing v1.5, controller, balance failures BEFORE new skill patches
+        run: |
+          node scripts/qa-v15-baseline-diff.cjs baseline v15
+          node scripts/qa-v15-baseline-diff.cjs baseline controller
+          node scripts/qa-v15-baseline-diff.cjs baseline balance
+      - name: Add remaining Stage6–10 skills after prepare-game already installed Stages1–5
+        shell: bash
+        run: |
+          set -euo pipefail
+          # prepare-game.cjs already installs Stage1,2,3,4,5; never double-patch.
+          node scripts/patch-3ds-stage6-projectiles.cjs
+          node scripts/patch-3ds-stage7-dash-meteor.cjs
+          node scripts/patch-3ds-stage8-beam-nova-charge.cjs
+          node scripts/patch-3ds-stage9-homing-cone-melee.cjs
+          node scripts/patch-3ds-stage10-final-moves.cjs
+          node scripts/qa-3ds-full-original-levelups.cjs
+          echo PKMSVV_FULL_PINNED_73_SKILL_PATCH_PASS
+      - name: Recompile complete PKMSVV executable JS entry using original build system
+        run: |
+          node vendor/pokesurvivor/tools/build.js --sin-seo --expose
+          node --check vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'PKMSVV3DSStage10Combat' vendor/pokesurvivor/js/app.min.js
+          echo PKMSVV_FULL_PINNED_176_MOVE_RECOMPILE_PASS
+      - name: Verify offline-game runtime, controller and no save mutation
+        run: |
+          npm run test:autocast
+          node scripts/qa-v15-baseline-diff.cjs post v15
+          node scripts/qa-v15-baseline-diff.cjs post controller
+          node scripts/qa-v15-baseline-diff.cjs post balance
+          node --test tests/save-guardian-regression.test.cjs
+          test -s vendor/pokesurvivor/LICENSE-NONCOMMERCIAL.md
+          test -s vendor/pokesurvivor/NOTICE-PKMSVV.txt
+          echo PKMSVV_FULL_73_SKILLS_SAVE_GUARDIAN_SOURCE_QA_PASS
+      - name: Package QA-only full game source build, NOT a release
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist/pkmsvv-full-73-skill-qa
+          rsync -a --exclude='.git' --exclude='tools' --exclude='dev.html' \
+            --exclude='*.map' vendor/pokesurvivor/ dist/pkmsvv-full-73-skill-qa/
+          printf '%s\n' \
+            'QA ONLY — ORIGINAL PINNED PKMSVV SOURCE + 73 NATIVE 3DS MOVES.' \
+            'NOT signed Android, not Windows installer, not Cloudflare deploy.' \
+            'No multiplayer authority or device gameplay QA yet; DO NOT replace a live save.' \
+            > dist/pkmsvv-full-73-skill-qa/QA_ONLY.txt
+          test -s dist/pkmsvv-full-73-skill-qa/index.html
+      - name: Upload full-game QA artifact without production deployment
+        uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-Full-Pinned-73-Skills-QA-ONLY
+          path: dist/pkmsvv-full-73-skill-qa/
+          if-no-files-found: error
+          retention-days: 5

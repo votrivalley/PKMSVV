@@ -1,0 +1,3 @@
+# Fossil two-human interaction QA
+
+Priority real Host/Join, not Berry expansion. Existing WebRTC pairing and launch regression did not exercise Guest mining. Guest sends fa request through Coop.toHost; Host validates room, match serial, monotonic sequence, membership, replicated actor, range, cooldown and phase. Independent human cooldowns; Guest HUD exposes button; Rotom follows human rescuer, fallback Host, preserving AI rescue behavior. Two-client browser regression checks identical objective coordinates and three real Guest mining inputs synchronized. Controlled player position fixture. Human full clear and reward remain unverified and disabled. No deployment; CI pending.

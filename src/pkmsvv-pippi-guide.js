@@ -11,13 +11,13 @@
   'Inspired','Pain','Sad','Shouting','Sigh','Stunned','Surprised','Teary-Eyed','Worried'];
  const STEPS={
   starter:[
-   ['Surprised','À, chọn Pokémon xong rồi hả? Tui là Pippi, một Clefairy hơi nhiều chuyện nhưng được việc. Từ giờ tui theo bạn, khỏi lo đi lạc nha.','Oh! Picked your Pokémon and already met a celebrity? I’m Pippi, a self-declared Clefairy superstar. I made Red lose his mind back in the Pocket Monsters manga!'],
+   ['Surprised','Mèn ơi, chọn Pokémon xong rồi hả ní? Tui là Pippi, Clefairy hơi nhiều chuyện mà được việc dữ lắm nghen. Từ nay tui theo ní, khỏi sợ đi lạc!','Oh! Picked your Pokémon and already met a celebrity? I’m Pippi, a self-declared Clefairy superstar. I made Red lose his mind back in the Pocket Monsters manga!'],
    ['Joyous','Tui hỗ trợ hồi máu, buff và chỉ đường khi cần. Còn né đòn với đánh quái thì bạn lo. Chia việc vậy cũng công bằng… với tui!','My job: guiding the main character—ME. You run, fight and break rocks. I take the credit. Any questions?'],
-   ['Determined','Thấy boss thì cứ bình tĩnh, xem đòn rồi mới lao vào. Khi mở đủ kỹ năng, tui còn gọi được em họ Pikachu ra phụ nữa.','Big boss? If I run away, it is called scouting an escape route, NOT cowardice! Cousin Pikachu may save you when hurt; I save our reputation.'],
+   ['Determined','Gặp boss thì bình tĩnh nghen, coi nó ra đòn rồi hẵng nhào vô. Mở đủ kỹ năng là tui gọi được em họ Pikachu ra phụ nữa đó!','Big boss? If I run away, it is called scouting an escape route, NOT cowardice! Cousin Pikachu may save you when hurt; I save our reputation.'],
    ['Happy','Ngoài menu, nút Pokémon có PokéBox, Pokédex và Nâng cấp. Phòng nghiên cứu có góc Bạn đồng hành để tăng Thân thiết cho tui.','Train my Bond in the Research Lab. PokéBox and Dex are still under Pokémon, so keep your collection out of my office!']
   ],
   chest:[
-   ['Surprised','Rương kìa! Xem từng phần thưởng trước khi chọn, ưu tiên món hợp kỹ năng đang dùng. Đẹp chưa chắc đã mạnh đâu.','A chest! It offers a choice of items. Read the effects before picking. Do not just grab the shiniest one like I would!'],
+   ['Surprised','Mèn ơi, rương kìa! Coi từng món trước khi chọn nghen, lấy cái hợp kỹ năng đang xài. Đẹp chưa chắc mạnh, trừ tui ra!','A chest! It offers a choice of items. Read the effects before picking. Do not just grab the shiniest one like I would!'],
    ['Determined','Nếu có nhiều rương, cứ chọn xong từng món. Bạn lựa cho đúng đội hình, tui canh quái cho.','You can collect multiple chests, but choose their rewards one at a time. I will keep watch while you build smart!']
   ],
   pickup:[
@@ -25,7 +25,7 @@
    ['Joyous','Nhặt món quan trọng tui sẽ báo. Còn từng viên EXP thì thôi, nói liên tục chắc quái cũng nhức đầu.','I will react to important pickups. I am not narrating every XP gem; I am a comedian, not your notification spammer!']
   ],
   laboratory:[
-   ['Inspired','Đây là Phòng nghiên cứu! Tui tự phong làm quản lý, còn bạn được quyền bấm máy. Ai làm hư thì tự sửa nha.','Welcome to Pippi Royal Research Lab! I am the professor; you are the unpaid intern. Do not ask for my diploma!'],
+   ['Inspired','Tới Phòng nghiên cứu rồi nè! Tui tự phong làm quản lý, ní được quyền bấm máy. Làm hư thì tự sửa nghen, đừng có méc tui!','Welcome to Pippi Royal Research Lab! I am the professor; you are the unpaid intern. Do not ask for my diploma!'],
    ['Determined','Chạm trực tiếp vào từng máy để mở Hỗ trợ, Mega, Berry, Bạn đồng hành hoặc Phục nguyên hóa thạch. Dễ tìm hơn là mò menu đấy.','Pokémon stays separate for fast Box, Dex and Upgrades. This lab holds Supports, Mega, Berries, Companions and fossils. Try not to get lost!'],
    ['Angry','Máy phục nguyên còn khóa. Muốn mở vĩnh viễn, phải thắng Co-op Phòng thí nghiệm thất lạc lần đầu. Hóa thạch nhặt được vẫn giữ nguyên nha.','Finding a Dome Fossil does not instantly revive Kabuto. The machine is locked until your first Lost Laboratory Co-op clear!'],
    ['Joyous','Muốn xem nội thất thì bấm Xây dựng; còn Xu Đồng Đội và vật phẩm thì vào Kho Hậu Cần. Từng chỗ tui chỉ riêng, khỏi học thuộc!','Then replay Co-op for Coins and décor. My ultra-rare golden statue is waiting… flex before me and I deduct style points!']
@@ -40,7 +40,7 @@
    ['Happy','Đây là Khám phá. Cứ di chuyển, đánh quái và nhặt EXP để lên cấp. Tui theo bên cạnh hỗ trợ bạn.','Welcome to Explore! I’ll stay by your side. Move around, defeat enemies and level up!'],
    ['Inspired','Lên cấp thì chọn kỹ năng. Chiêu tự động tự đánh, còn chiêu chủ động phải bấm nút. Chọn hợp nhau thì sống dai hơn!','At level-up, pick new moves. Automatic attacks fire on their own; active moves need your input.'],
    ['Determined','Với chiêu lướt F/X, bấm nhanh để tự dùng. Giữ 2 giây bật AUTO tìm quái gần nhất; giữ thêm 2 giây để tắt.','For the F/X dash: tap to steer it yourself. Hold for 2 seconds to enable AUTO toward the closest enemy; hold again to disable it.'],
-   ['Worried','Máu yếu thì lùi khỏi đám đông. Khi mở đủ kỹ năng, tui có thể hồi máu hoặc che chắn; nhưng đứng lì chịu đòn thì tui cũng chịu!','When your HP drops, I’ll heal you. With enough Bond, I can shield or rescue you. Watch the effects to see my spells!'],
+   ['Worried','Máu yếu thì lui khỏi bầy quái coi! Mở đủ kỹ năng là tui hồi máu, che chắn được. Chớ ní đứng lì ăn đòn thì tui cũng bó tay à!','When your HP drops, I’ll heal you. With enough Bond, I can shield or rescue you. Watch the effects to see my spells!'],
    ['Joyous','Boss phút 15 mở đường sang vùng tiếp theo, boss phút 30 mới kết màn. Giờ thử đi đánh quái đi, đứng ngắm tui hoài à?','Defeat the 15-minute boss to open the next region. The map ends after the 30-minute boss. Let’s go!']
   ]
  };
@@ -48,7 +48,7 @@
  // when menus are safe. Never open during real-time Co-op combat.
  const MODE_STEPS={
   coop:[
-   ['Joyous','Sống Sót Co-op nha! Đi cùng đồng đội, đừng ai chạy mất hút. Có người bị hạ thì lại gần cứu, để cả đội còn đánh tiếp.','Survival? Okay bestie, the team is not decorative. Revive your friends and stay alive!'],
+   ['Joyous','Sống Sót Co-op nè! Đi chung với đồng đội nghen, đừng có chạy mất tiêu. Ai bị hạ thì chạy lại cứu, chớ bỏ bạn nằm đó coi sao được!','Survival? Okay bestie, the team is not decorative. Revive your friends and stay alive!'],
    ['Determined','Đội có 2–4 thành viên; chơi một mình có thể tìm party do máy điều khiển. Giữ khoảng cách vừa đủ để cứu nhau nhé.','2–4 teammates. Solo players can recruit AI. Stick together and revive anyone downed!']
   ],
   royale:[
@@ -64,9 +64,9 @@
    ['Determined','Chọn độ khó vừa sức, giữ cả ba cây sống sót. Cứu được cả ba còn được thưởng Berry nữa đó!','Defend all three Berry trees from enemies. Pick your difficulty wisely!']
   ],
   fossil_lab:[
-   ['Surprised','Co-op hóa thạch có ba mỏ đá ở xa nhau. Mỗi mỏ đào ba lần, đủ 9 mảnh mới sang bước tiếp. Đừng đào một chỗ rồi tưởng xong nha!','Fossil expedition! Three distant sites, three strikes each. Collect all nine fragments!'],
-   ['Worried','Sau khi đào, Golurk sẽ chặn Rotom. Hạ Golurk rồi cứu Rotom trước phút 4, trễ là thất bại đấy!','Plot twist: Golurk is after Rotom! Rescue it before 4:00, or the run fails!'],
-   ['Shouting','Dẫn Rotom về máy cũ để khởi động, rồi bảo vệ máy tới phút 8. Quái ưu tiên tấn công máy; đứng xa là máy ăn đòn ngay!','Escort Rotom to the ruined restorer, then defend it until 8:00. No machine, no win!']
+   ['Surprised','Mèn đét ơi, ba mỏ đá nằm xa nhau dữ thần! Mỗi mỏ đào ba lần, đủ 9 mảnh mới qua bước kế nghen. Đừng đào một chỗ rồi tưởng xong à!','Fossil expedition! Three distant sites, three strikes each. Collect all nine fragments!'],
+   ['Worried','U là trời, Golurk chặn Rotom kìa! Hạ Golurk rồi cứu Rotom trước phút 4 nghen, trễ là thua đó ní!','Plot twist: Golurk is after Rotom! Rescue it before 4:00, or the run fails!'],
+   ['Shouting','Dắt Rotom về khởi động cái máy cũ, rồi giữ máy tới phút 8 nghen. Tụi quái khoái đập máy lắm, đừng có chạy xa rồi để máy ăn đòn!','Escort Rotom to the ruined restorer, then defend it until 8:00. No machine, no win!']
   ],
   arena:[
    ['Angry','Arena Solo là đấu 1v1. Chọn Pokémon trước trận và chuẩn bị kỹ năng hợp lý, không có ai cứu hộ đâu.','Arena Solo is 1v1. Pick your Pokémon, then show those skills!'],
@@ -109,7 +109,7 @@
    ['Determined','Mở được Mega rồi thì dùng nút Mega trong trận. Canh hồi chiêu để dùng lúc gặp đám quái khó, đừng vừa sáng nút đã bấm!','Once unlocked, use the Mega control in battle and plan around its cooldown.']
   ],
   mega_spin:[
-   ['Surprised','Ồ, chuẩn bị quay Mega Stone hả? Mỗi lượt tốn 100 Điểm Arena. Xem số điểm trước đi, không là máy chỉ biết nhìn bạn thôi!','About to roll a Mega Stone? Each spin costs 100 Arena Points. Check your balance first!'],
+   ['Surprised','Mèn ơi, tính quay Mega Stone hả? Một lượt hết 100 Điểm Arena đó. Coi còn bao nhiêu điểm đi, hổng đủ thì đứng nhìn máy thôi nghen!','About to roll a Mega Stone? Each spin costs 100 Arena Points. Check your balance first!'],
    ['Determined','Mega thường chiếm 98,5%, Mega huyền thoại chỉ 1,5%; có bảo hiểm ở lượt thứ 30. Quay may rủi nha, không phải cứ muốn là trúng!','Normal Mega Stones have a 98.5% rate; legendary stones 1.5%, with pity on the 30th pull.'],
    ['Joyous','Trúng đá trùng thì nhận lại điểm: Mega thường 50, huyền thoại 200. Nhớ nhé, có đá vẫn cần Pokémon và điều kiện mở Mega. Giờ mới bấm Quay nha!','Duplicates refund 50 points for normal and 200 for legendary stones. A stone alone does not unlock a battle-ready Mega.']
   ],

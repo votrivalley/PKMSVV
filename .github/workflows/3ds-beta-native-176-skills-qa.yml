@@ -1,0 +1,327 @@
+name: PKMSVV Beta 2.5.5 + 73 Native Skills Integrated QA (never deploy)
+on:
+  push:
+    branches: [feature/web-3ds-skill-effects-passives-qa-20261121]
+    paths:
+      - '.github/workflows/3ds-beta-native-176-skills-qa.yml'
+      - 'scripts/patch-lan-ai.cjs'
+      - 'scripts/prepare-game.cjs'
+      - 'scripts/patch-directional-dashes.cjs'
+      - 'src/pkmsvv-dash-queue.js'
+      - 'src/pkmsvv-runtime-controls-qa.js'
+      - 'scripts/patch-v14-gamepad-orbs.cjs'
+      - 'src/pkmsvv-3ds-combat-stage5.js'
+      - 'tests/runtime-controls-qa.test.cjs'
+      - 'tests/dash-ui.test.cjs'
+      - 'tests/autocast.test.cjs'
+      - 'tests/3ds-stage5-combat.test.cjs'
+      - 'scripts/prepare-lan.cjs'
+      - 'src/pkmsvv-special-power-qa.js'
+      - 'tests/special-power-qa.test.cjs'
+      - 'src/pkmsvv-bond-fusion.js'
+      - 'src/pkmsvv-fusion-evolved.js'
+      - 'tests/bond-fusion-svv.test.cjs'
+      - 'scripts/extract-research-layers.cjs'
+      - 'data/pkmsvv-coop-lab-catalog.json'
+      - 'src/pkmsvv-coop-lab-core.cjs'
+      - 'src/pkmsvv-berry-rescue.js'
+      - 'tests/berry-rescue.test.cjs'
+      - 'src/pkmsvv-fossil-expedition-core.cjs'
+      - 'src/pkmsvv-fossil-expedition-native.js'
+      - 'scripts/patch-fossil-expedition-native.cjs'
+      - 'tests/fossil-expedition-core.test.cjs'
+      - 'tests/fossil-expedition-native-browser.cjs'
+      - 'tests/research-station-skin-economy.test.cjs'
+      - 'src/pkmsvv-skill-track.js'
+      - 'scripts/patch-global-upgrades.cjs'
+      - 'src/pkmsvv-global-power-ui.js'
+      - 'src/pkmsvv-global-power.js'
+      - 'tests/fixtures/research-royal-pricing.cjs'
+      - 'src/pkmsvv-wiki.js'
+      - 'src/pkmsvv-pc-menu-clean-qa.css'
+      - 'tests/research-source-extraction.test.cjs'
+      - 'tests/beta-research-layers-browser.cjs'
+      - 'src/cloudflare/save-guardian.js'
+      - 'tests/save-guardian-regression.test.cjs'
+      - 'scripts/import-research-v3.cjs'
+      - 'scripts/build-research-v3-skins.cjs'
+      - 'scripts/validate-research-station-skins.cjs'
+      - 'tests/research-station-skin-art.test.cjs'
+      - 'assets/coop-lab/research-v3/**'
+      - 'src/shared/coop-unified.js'
+      - 'src/lan/wifi-bus.js'
+      - 'scripts/patch-native-passive-pressure.cjs'
+      - 'tests/native-passive-pressure.test.cjs'
+      - 'src/pkmsvv-3ds-support-stage4.js'
+      - 'src/pkmsvv-3ds-stage4-moves.js'
+      - 'src/lan/lan-ai.js'
+      - 'src/pkmsvv-pippi.js'
+      - 'src/pkmsvv-pippi-guide.js'
+      - 'scripts/patch-3ds-skill-effects-passives.cjs'
+      - 'tests/beta-wifi-host-join-browser.cjs'
+      - 'tests/beta-176-native-cooldowns-browser.cjs'
+      - 'tests/beta-fusion-native-browser.cjs'
+      - 'tests/beta-active-movement-browser.cjs'
+      - 'tests/beta-forget-three-cards-browser.cjs'
+      - 'scripts/patch-skill-forget.cjs'
+      - 'src/pkmsvv-forget-skill.js'
+      - 'src/pkmsvv-modal-navigation-qa.js'
+      - 'src/pkmsvv-3ds-skill-port.js'
+      - 'src/pkmsvv-pippi.js'
+      - 'src/pkmsvv-pippi-guide.js'
+      - 'src/lan/wifi-bus.js'
+      - 'tests/beta-176-explore-coop-repro-browser.cjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pkmsvv-beta-176-skills-native-qa-isolated
+  cancel-in-progress: true
+jobs:
+  actual-gameplay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      PKMSVV_FOSSIL_NATIVE_QA: '1'
+      PKMSVV_STANDALONE_AI: '1'
+      PKMSVV_BETA_176_SKILLS_QA: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch exact original upstream commit via verified public mirror
+        shell: bash
+        run: |
+          set -euo pipefail
+          PIN=11fe868c640b62ac37beacc222e056bc4d9ec892
+          TREE=0a36feb1d9639efd7383bf30d1bfb08830dd8c6e
+          mkdir -p vendor/pokesurvivor
+          git -C vendor/pokesurvivor init
+          # JPTER78/pokesurvivor currently returns 404. Both mirrors retain
+          # exactly the same immutable commit and tree, not a later fork HEAD.
+          for mirror in             https://github.com/ovolee37/pokesurvivor-ayn-thor.git             https://github.com/Tpg590/Pokemon.git; do
+            if git -C vendor/pokesurvivor -c credential.interactive=never fetch --depth=1 "$mirror" "$PIN"; then
+              break
+            fi
+          done
+          test "$(git -C vendor/pokesurvivor rev-parse FETCH_HEAD)" = "$PIN"
+          git -C vendor/pokesurvivor checkout --detach "$PIN"
+          test "$(git -C vendor/pokesurvivor rev-parse HEAD^{tree})" = "$TREE"
+          test -s vendor/pokesurvivor/dev.html
+          test -s vendor/pokesurvivor/LICENSE-NONCOMMERCIAL.md
+          echo "PINNED_UPSTREAM_RESTORED=$PIN TREE=$TREE"
+      - name: Install build dependencies with known-published transitive ABI version
+        shell: bash
+        run: |
+          set -euo pipefail
+          # npm's unpinned transitive registry metadata currently advertises
+          # node-abi@4.42.0 whose tarball returns 404. Limit this override to
+          # the ephemeral Beta GitHub runner; no package or save changes.
+          npm pkg set 'overrides.node-abi=4.40.0'
+          npm install --no-audit --no-fund
+      - name: Check 2–4 room rules and 6–8 minute outcome core
+        run: node --test tests/fossil-objective-path.test.cjs tests/fossil-concept-sprites.test.cjs tests/menu-pokemon-hub-regression.test.cjs tests/fossil-expedition-core.test.cjs tests/fossil-expedition-guidance.test.cjs tests/fossil-expedition-routing.test.cjs tests/quick-region.test.cjs tests/coop-lab-core.test.cjs tests/berry-rescue.test.cjs tests/research-station-skin-economy.test.cjs tests/lan-ai-modes.test.cjs tests/pippi-guide.test.cjs
+      - name: Verify special power selection, legacy save and Dynamax lifecycle
+        run: node --test tests/special-power-qa.test.cjs tests/bond-fusion-svv.test.cjs
+      - name: Verify MAX skill AUTO and held item choice logic from original QA
+        run: node --test tests/runtime-controls-qa.test.cjs tests/held-item-choice.test.cjs
+      - name: Verify Pippi QA cousin trigger does not affect normal balance
+        run: node --test tests/pippi-companion.test.cjs
+      - name: Fetch hash-checked Clefairy PMD assets required by LAN packaging
+        run: node scripts/fetch-pippi-pmd.cjs && node scripts/build-pippi-portrait-atlas.cjs
+      - name: Compile genuine offline LAN/AI native game with QA-only fossil hooks
+        env:
+          # Import all 36 audited PMD Mega forms (rather than the 3-form dev subset).
+          # Isolated Beta only: production Web, Android and PC builds are unchanged.
+          PKMSVV_MEGA_SPRITE_PACK: '1'
+        run: npm run prepare:lan
+      - name: Verify 176 native skills are added to compiled Beta source WITHOUT replacing menus
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/qa-3ds-full-original-levelups.cjs
+          grep -Fq 'PKMSVV3DSStage10Combat' dist/lan/game/js/app.min.js
+          grep -Fq 'PKMSVV3DSStage10Combat' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'pkmsvv-pippi' dist/lan/game/index.html
+          grep -Fq 'pkmsvv-box-hub-ui.js?v=' dist/lan/game/index.html
+          grep -Fq 'pkmsvv-quick-region.js?v=' dist/lan/game/index.html
+          grep -Fq 'pkmsvv-sky-tower-world-qa.js?v=' dist/lan/game/index.html
+          grep -Fq 'fossil_lab' dist/lan/game/js/app.min.js
+          echo "PASS 176 SKILLS INSIDE REAL BETA 2.5.5 + ORIGINAL MENUS/REGIONS/PIPPI/COOP/FOSSIL"
+      - name: Native 3DS family + level-up regressions (no save changes)
+        run: |
+          node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs tests/3ds-stage3-punch-cross-storm.test.cjs tests/3ds-stage4-support.test.cjs tests/3ds-stage5-combat.test.cjs tests/3ds-stage6-projectiles.test.cjs tests/3ds-stage7-dash-meteor.test.cjs tests/3ds-stage8-beam-nova-charge.test.cjs tests/3ds-stage9-homing-cone-melee.test.cjs tests/3ds-stage10-final.test.cjs
+          node --test tests/save-guardian-regression.test.cjs
+      - name: Verify research room layer registry and semantic prop placement
+        run: node --test tests/research-source-extraction.test.cjs
+      - name: Real browser research room layers, props, build mode and fallback
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+        run: timeout 240s node tests/beta-research-layers-browser.cjs
+      - name: Upload research room screenshots (QA only)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-Research-Room-Browser-QA
+          path: dist/research-browser-qa/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Verify approved passive pressure scaling, boss crowd-control resistance and bot behavior
+        run: node --test tests/native-passive-pressure.test.cjs tests/lan-ai-modes.test.cjs tests/3ds-stage4-support.test.cjs
+      - name: Verify complete 176-move cooldown policy including Light Screen / Rest / Protect
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+        run: timeout 80s node tests/beta-176-native-cooldowns-browser.cjs
+      - name: Real native Surf and Electric resonance, HP damage and retained skills
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+        run: timeout 100s node tests/beta-fusion-native-browser.cjs
+      - name: Upload native Fusion gameplay evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fusion-native-gameplay-qa
+          path: dist/fusion-native-qa/
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: PKMSVV-Big-Update-Catalog-Inventory
+          path: dist/big-update-inventory/
+          if-no-files-found: warn
+      - name: Real Chromium keyboard and controller AUTO with native dash, blitz and leap
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+        run: timeout 100s node tests/beta-active-movement-browser.cjs
+      - name: Solo skill forget pauses world, three choices and keyboard/gamepad regression
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+        run: |
+          node --test tests/web-forget-controller.test.cjs tests/web-levelup-controller.test.cjs
+          timeout 100s node tests/beta-forget-three-cards-browser.cjs
+      - name: Reproduce Mewtwo Explore full 100s (original crash 1:08)
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+          PKMSVV_INCIDENT_CASE: fixed-176
+          PKMSVV_INCIDENT_DIST: dist/lan
+        run: timeout 175s node tests/beta-176-explore-coop-repro-browser.cjs
+      - name: Real browser Co-op Host / Join from formerly blank /ai/game route over WebRTC
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+        run: timeout 130s node tests/beta-wifi-host-join-browser.cjs
+      - name: Browser regression Fossil Expedition Host/Join — preserve fossil_lab, Pippi guide, launch real two-human session
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+          PKMSVV_WIFI_TEST_MODE: fossil_lab
+          PKMSVV_WIFI_START_MISSION: '1'
+        run: timeout 240s node tests/beta-wifi-host-join-browser.cjs
+      - name: Verify all 36 real Mega sprites plus 32 Shiny sprite sets are packaged
+        run: node tests/mega-platform-parity.test.cjs pc
+      - name: Verify Mega catalog renders 96 QA forms without unlocking missing sprites
+        run: node --test tests/mega-ui-phase2.test.cjs
+      - name: Verify ACTUAL native Beta ships new PokéBox / Pokédex / Nâng cấp
+        shell: bash
+        run: |
+          set -euo pipefail
+          html=dist/lan/game/index.html
+          grep -Fq 'pkmsvv-box-hub-ui.js?v=' "$html"
+          grep -Fq 'pkmsvv-box-stage4.js?v=' "$html"
+          grep -Fq 'pkmsvv-quick-region.js?v=' "$html"
+          grep -Fq 'pkmsvv-quick-region.css?v=' "$html"
+          test -s dist/lan/game/js/ui/pkmsvv-quick-region.js
+          test -s dist/lan/game/css/pkmsvv-quick-region.css
+          grep -Fq 'pkmsvv-runtime-controls-qa.js?v=' "$html"
+          grep -Fq 'pkmsvv-runtime-controls-qa.css?v=' "$html"
+          grep -Fq 'pkmsvv-held-item-layout-qa.css?v=' "$html"
+          test -s dist/lan/game/js/ui/pkmsvv-runtime-controls-qa.js
+          test -s dist/lan/game/css/pkmsvv-runtime-controls-qa.css
+          test -s dist/lan/game/css/pkmsvv-held-item-layout-qa.css
+          grep -Fq 'pkmsvv-sky-tower-world-qa.js?v=' "$html"
+          test -s dist/lan/game/js/ui/pkmsvv-sky-tower-world-qa.js
+          for cover in 01-kanto.webp 02-johto.webp 03-hoenn.webp 04-sinnoh.webp 05-unova.webp 06-kalos.webp 07-alola.webp 08-galar.webp 09-paldea.webp 10-sky-tower.webp; do
+            test -s "dist/lan/game/images/regions/$cover"
+          done
+          grep -Fq 'pkmsvv-box-hub.css?v=' "$html"
+          grep -Fq 'pkmsvv-v20-ui-qa.css?v=' "$html"
+          grep -Fq 'PKMSVV_UNIFIED_BETA_POKEMON_255' scripts/prepare-lan.cjs
+          grep -Fq 'pkmsvv-qa-runtime-config.js?v=' dist/lan/game/index.html
+          test -s dist/lan/game/js/ui/pkmsvv-qa-runtime-config.js
+          grep -Fq 'window.PKMSVV_PIPPI_COUSIN_QA_100=false' dist/lan/game/js/ui/pkmsvv-qa-runtime-config.js
+          grep -Fq 'window.PKMSVV_MEGA_FULL_CATALOG_QA=true' dist/lan/game/js/ui/pkmsvv-qa-runtime-config.js
+          grep -Fq 'function fullCatalogQA' src/pkmsvv-mega-entry.js || grep -Fq 'const fullCatalogQA' src/pkmsvv-mega-entry.js
+          for name in pkmsvv-box-stage1.js pkmsvv-box-stage2.js pkmsvv-box-stage2-ui.js pkmsvv-box-stage3.js pkmsvv-box-stage4.js pkmsvv-box-hub.js pkmsvv-box-hub-ui.js; do
+            test -s "dist/lan/game/js/ui/$name"
+          done
+          test -s dist/lan/_headers
+          grep -Fq 'Cache-Control: no-store' dist/lan/_headers
+      - name: Browser — click Pokémon and switch all three NEW tabs without modifying save
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+        run: timeout 110s node tests/lan-pokemon-hub-browser.cjs
+      - name: Verify compiled engine has dedicated native fifth mode (not fake HTML preview)
+        run: |
+          set -euo pipefail
+          test -s dist/lan/game/js/app.min.js
+          test -s dist/lan/game/index.html
+          grep -Fq 'PKMSVVFossilExpedition' dist/lan/game/js/app.min.js
+          grep -Fq 'fossil_lab' dist/lan/game/js/app.min.js
+          test -s dist/lan/game/images/coop-lab/approved-fossil-source-atlas.png
+          test -s dist/lan/game/images/coop-lab/approved-fossil-v3-atlas.png
+          test -s dist/lan/game/images/coop-lab/approved-fossil-machine-full-v4.png
+          sha256sum dist/lan/game/images/coop-lab/approved-fossil-machine-full-v4.png | grep -Fq 'c776587550e8d3774833208cc813046a21fdb68dccceb5254e2f70884464da6c'
+          sha256sum dist/lan/game/images/coop-lab/approved-fossil-v3-atlas.png | grep -Fq '50cd2aa757d1e15b19d5015f74f4290a2e106ae95c95bdef93a81a2002569286'
+          grep -Fq 'approved-fossil-source-atlas.png' src/pkmsvv-fossil-expedition-native.js
+          sha256sum 'dist/lan/game/images/coop-lab/approved-fossil-source-atlas.png' | grep -Fq '3f26919b9ef09aafd1ca5a75eacfed5e5552bbe660c9218be34f3615a483019d'
+          test -s dist/lan/game/images/coop-lab/fossil-excavation-rock.svg
+          test -s dist/lan/game/images/coop-lab/fossil-excavation-atlas.svg
+          test -s dist/lan/game/images/coop-lab/rotom-restorer-atlas.svg
+          test -s dist/lan/game/images/coop-lab/rotom-orb.svg
+          test -s dist/lan/game/images/coop-lab/decor/machine_old_modular.svg
+      - name: 'Chromium: create real Fossil Expedition + AI room, start game, strike world rock'
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+        run: timeout 120s node tests/fossil-expedition-native-browser.cjs
+      - name: 'Chromium: 155 seconds Fossil Expedition + faster enemies no-freeze stress'
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+        run: timeout 235s node tests/fossil-expedition-soak-browser.cjs
+      - name: Stamp isolated playable solo AI QA version (never production)
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs=require('node:fs');
+          const info={
+            version:'2.5.5-176-Native-Skills-Integrated-QA',
+            skills:176,
+            originalBetaCommit:'89398aa454283be0a9835b4828355a2cc8fe7531',
+            portNote:'Only skill engine port on native Beta; never deploy without browser review',
+            releaseType:'experimental-gameplay-qa-only',
+            previewBranch:'beta',
+            qaCommit:process.env.GITHUB_SHA,
+            sourcePin:'11fe868c640b62ac37beacc222e056bc4d9ec892',
+            mode:'fossil_lab',
+            minPartySize:2,maxPartySize:4,
+            available:'offline solo human with 1-3 AI teammates',
+            limitation:'Local host + AI reward gate under QA. Native full 8-minute clear and human-party rewards still need verification.',
+            production:false
+          };
+          fs.writeFileSync('dist/lan/build-info.json',JSON.stringify(info,null,2)+'\n');
+          fs.writeFileSync('dist/lan/game/build-info.json',JSON.stringify(info,null,2)+'\n');
+          NODE
+          test -s dist/lan/game/js/app.min.js
+          grep -Fq 'fossil_lab' dist/lan/game/js/app.min.js
+          node -e "const v=require('./dist/lan/build-info.json');if(v.qaCommit!==process.env.GITHUB_SHA||v.production!==false)process.exit(1)"
+          if find dist/lan -type f -size +25M | grep -q .; then
+            echo "::error::Cloudflare Pages refuses individual files over its free upload limit"
+            find dist/lan -type f -size +25M
+            exit 1
+          fi
+      - name: Package integrated 2.5.5 + 176 skill QA HTML5 (NO deploy)
+        uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-Beta-255-176-Skills-Integrated-QA-NEVER-LIVE
+          path: dist/lan/
+          retention-days: 7
+          if-no-files-found: error

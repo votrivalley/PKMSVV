@@ -78,7 +78,7 @@ test('650ms global cooldown prevents dash chaining even when second skill has co
 });
 test('compiled game movement & damage honor directional dash patch',()=>{
  const script=fs.readFileSync(path.join(__dirname,'..','scripts/patch-directional-dashes.cjs'),'utf8');
- assert.match(script,/G\.PKMSVVDash\.direction\(pl,G\.Input\.axis\(\)\)/);
+ assert.match(script,/Number\.isFinite\(targetAngle\)\?targetAngle:G\.PKMSVVDash\.direction/);
  assert.match(script,/G\.PKMSVVDash\.begin\(pl,m,pl\.aim,len\)/);
  assert.match(script,/G\.PKMSVVDash\.advance\(this,dt\)/);
  assert.match(script,/G\.Coop\.cast\(pl,m\)/);
@@ -88,17 +88,32 @@ test('compiled game movement & damage honor directional dash patch',()=>{
 test('the skill HUD and level-up cards distinguish active dashes from automatic attacks',()=>{
  const hud=read('js/ui/hud.js'),levelup=read('js/systems/levelup.js'),runui=read('js/ui/run-ui.js');
  assert.match(hud,/G\.T\('Activa'\)/);
- assert.match(hud,/G\.PKMSVVDash\.preview\(pl\)/);
+ assert.match(hud,/G\.PKMSVVDash\.preview\(pl,m=>G\.PKMSVVDash\.canTarget\(pl,m\)\)/);
  assert.match(hud,/const moveName=G\.T\(m\.name, 'move'\)/);
  assert.match(hud,/manual\.index\+1/);
- assert.match(levelup,/d\.kind === 'dash' \? G\.T\('Habilidad activa'\)/);
- assert.match(runui,/m\.kind === 'dash' \? 'Habilidad activa'/);
+ assert.match(levelup,/G\.PKMSVVDash\.isActive\(d\) \? G\.T\('Habilidad activa'\)/);
+ assert.match(runui,/G\.PKMSVVDash\.isActive\(m\) \? 'Habilidad activa'/);
  const combat=read('js/systems/combat.js');
- assert.match(combat,/G\.PKMSVVDash\.preview\(pl\)/);
+ assert.match(combat,/G\.PKMSVVDash\.preview\(pl,m=>G\.PKMSVVDash\.canTarget\(pl,m\)\)/);
  assert.match(combat,/G\.PKMSVVDash\.consume\(pl,pick\)/);
 });
 test('dash control captions have both English and Vietnamese UI translations',()=>{
  const src=read('js/data/pkmsvv-ux-languages.js');
  assert.match(src,/Active skill/);assert.match(src,/Kỹ năng chủ động/);
  assert.match(src,/Automatic skill/);assert.match(src,/Kỹ năng tự động/);
+});
+
+test('all dash, blitz and leap movement skills share the queue; other kinds remain automatic',()=>{
+ const q=make(),pl={moves:[{id:'quick-attack',kind:'dash',t:0},{id:'extreme-speed',kind:'blitz',t:0},{id:'acrobatics',kind:'leap',t:0},{id:'shadow-force',kind:'leap',t:0},{id:'surf',kind:'wave',t:0}]};
+ assert.equal(q.preview(pl).total,4);assert.equal(q.preview(pl).move.id,'quick-attack');
+ assert.equal(q.isActive(pl.moves[1]),true);assert.equal(q.isActive(pl.moves[2]),true);
+ assert.equal(q.isActive(pl.moves[3]),true);assert.equal(q.isActive(pl.moves[4]),false);
+ assert.equal(q.canTarget(pl,pl.moves[0]),true);assert.equal(q.canTarget(pl,pl.moves[2]),false);
+ const pick=q.preview(pl,m=>q.canTarget(pl,m));assert.equal(pick.move.id,'quick-attack');
+});
+
+test('unreachable Blitz does not block a ready Quick Attack in the active queue',()=>{
+ const q=make(),pl={moves:[{id:'extreme-speed',kind:'blitz',t:0},{id:'quick-attack',kind:'dash',t:0}]};
+ const p=q.preview(pl,m=>m.kind!=='blitz');assert.equal(p.move.id,'quick-attack');assert.equal(p.ready,true);
+ assert.equal(q.preview({moves:[pl.moves[0]]},()=>false).ready,false);
 });

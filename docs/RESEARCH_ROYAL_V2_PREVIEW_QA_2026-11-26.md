@@ -1,0 +1,3 @@
+# Royal V2 authored sprite preview — 2026-11-26
+
+Five independent alpha PNGs imported byte-for-byte from the local V2 QA package. All Git blob IDs matched the local hashes. The five variants are registered as preview-only, price null, artApproved false. Original V3.1 backdrop, six base layers, manifest and save schema unchanged. The local backdrop-candidate has not been imported because the remaining seams require visual review; QA screenshots intentionally show the exact pinned backdrop, not the candidate. Browser regression exercises all five Royal selections alongside copper, a single Mega skin with all other defaults, reset and wallet/ownership unchanged. Real purchases remain disabled. No production deployment. CI pending.

@@ -1,0 +1,3 @@
+# V3.1 station skin economy — QA
+
+Five station skin slots are independent of legacy decor. Existing default art is always free. No official sale price or approved paid sprite has been set; the catalog is closed (`purchaseEnabled: false`). The test-only fixture uses 100 coins, never the player wallet. New ownership/equip fields are written only by successful transactions, preserved by existing economy operations, and do not migrate old saves when inspecting. Failed commits restore the previous save. The existing copper preview continues without spending. This change adds the transaction core and unit tests, not permanent purchase controls or equipped rendering. No production release.

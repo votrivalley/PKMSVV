@@ -24,6 +24,12 @@ patch('js/net/coop.js',
  "      case 'fx': G.PKMSVVFossilExpedition?.onEvent?.(ev); break;\n"+
  "      case 'br': G.PKMSVVBerryRescue?.onEvent?.(ev); break;");
 
+// Guest requests use existing peer events; use Host's actor, not guest supplied coordinates.
+patch('js/net/coop.js',
+ "        case 'pb':",
+ "        case 'fa': G.PKMSVVFossilExpedition?.remoteAction?.(from,m.pl,ev); break;\n"+
+ "        case 'pb':");
+
 /* Berry already redirects enemies toward its living trees. Fossil defense
  * adds the same native Enemy.update() target after Rotom activates the machine.
  * 80% prefer the machine, 20% still pressure the trainers. No polling loops. */
@@ -76,4 +82,4 @@ fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,bundle);
 patch('dev.html','<script defer src="js/ui/pkmsvv-fossil-system.js"></script>',
  '<script defer src="js/ui/pkmsvv-fossil-system.js"></script>\n'+
  '<script defer src="js/ui/pkmsvv-fossil-expedition-native.js"></script>');
-console.log('Fossil Expedition native QA adapter added (2–4, three site mining, defense, 6–8m; rewards deliberately disabled).');
+console.log('Fossil Expedition native QA adapter added (2–4, three site mining, defense, 6–8m; local reward gate requires separate QA runtime flag).');

@@ -1263,3 +1263,75 @@
 #pkmsvv-wiki-overlay .pkmsvv-build-stage[data-research-art-mode="modular"] .pkmsvv-lab-furniture {
  display:block!important;
 }
+
+
+/* RESEARCH_STATION_PROPS_QA_20261124 — scaled world-space props, not tiny button icons. */
+#pkmsvv-wiki-overlay :is(.pkmsvv-research-room,.pkmsvv-build-stage)[data-research-art-mode="classic"] .pkmsvv-lab-source-layer{
+ display:none!important;
+}
+#pkmsvv-wiki-overlay .pkmsvv-lab-station-prop{
+ position:absolute!important;display:block!important;object-fit:contain!important;
+ object-position:center bottom!important;max-width:none!important;min-width:0!important;
+ pointer-events:none!important;user-select:none!important;image-rendering:pixelated!important;
+ z-index:1!important;filter:none!important;
+ border:0!important;padding:0!important;margin:0!important;
+}
+#pkmsvv-wiki-overlay .pkmsvv-lab-station-prop[data-lab-prop="fossil"]{
+ filter:none!important;opacity:.94;
+}
+#pkmsvv-wiki-overlay .pkmsvv-research-hotspot,
+#pkmsvv-wiki-overlay .pkmsvv-build-spot{z-index:4!important;}
+
+/* RESEARCH_V3_QA: labels are live UI, never baked into the approved station art. */
+#pkmsvv-wiki-overlay .pkmsvv-research-room[data-research-art-mode="approved-v3"] .pkmsvv-research-hotspot-tag{
+ min-height:0!important;max-width:none!important;padding:0!important;margin:0!important;
+ font-size:clamp(9px,1.3vw,14px)!important;line-height:1.1!important;
+}
+
+/* V3 landscape QA: keep the entire room inside the first mobile viewport.
+ * Controls and Pippi remain below the room in the existing scrollable panel.
+ * Do not change classic/modular comparison scenes or other game menus. */
+@media (orientation:landscape) and (max-height:500px){
+ #pkmsvv-wiki-overlay .pkmsvv-research-panel:has(.pkmsvv-research-room[data-research-art-mode="approved-v3"]){
+  max-height:calc(100dvh - 12px)!important;padding:8px!important;
+ }
+ #pkmsvv-wiki-overlay .pkmsvv-research-panel:has(.pkmsvv-research-room[data-research-art-mode="approved-v3"]) > .pkmsvv-pc-header{
+  position:relative!important;top:auto!important;margin:0 0 6px!important;padding:3px 8px!important;
+ }
+ #pkmsvv-wiki-overlay .pkmsvv-research-panel:has(.pkmsvv-research-room[data-research-art-mode="approved-v3"]) > .pkmsvv-pc-header h2{
+  font-size:clamp(15px,4dvh,20px)!important;
+ }
+ #pkmsvv-wiki-overlay .pkmsvv-research-panel:has(.pkmsvv-research-room[data-research-art-mode="approved-v3"]) > .pkmsvv-pc-header .pkmsvv-pc-close{
+  padding:5px 10px!important;font-size:13px!important;
+ }
+ #pkmsvv-wiki-overlay .pkmsvv-research-panel:has(.pkmsvv-research-room[data-research-art-mode="approved-v3"]) > .pkmsvv-pc-hint{
+  display:none!important;
+ }
+ #pkmsvv-wiki-overlay .pkmsvv-research-interactive:has(.pkmsvv-research-room[data-research-art-mode="approved-v3"]){
+  padding:5px!important;gap:6px!important;
+ }
+ #pkmsvv-wiki-overlay .pkmsvv-research-room[data-research-art-mode="approved-v3"]{
+  box-sizing:border-box!important;
+  width:min(100%,870px,max(140px,calc(143dvh - 150px)))!important;
+  flex:none!important;margin:0 auto!important;
+ }
+ #pkmsvv-wiki-overlay .pkmsvv-research-room[data-research-art-mode="approved-v3"] .pkmsvv-research-hotspot-tag{
+  left:50%!important;transform:translateX(-50%)!important;
+  width:max-content!important;max-width:100%!important;height:auto!important;
+  min-height:13px!important;padding:1px 3px!important;font-size:9px!important;
+  white-space:nowrap!important;
+ }
+}
+
+/* V3.1 skin catalog — preview and transaction are distinct actions. */
+#pkmsvv-wiki-overlay .pkmsvv-build-item[data-skin-item]{
+ grid-template-columns:minmax(0,1fr) auto!important;
+ align-items:center;gap:6px 8px;
+}
+#pkmsvv-wiki-overlay .pkmsvv-build-item[data-skin-item] [data-build-preview]{
+ grid-column:2;grid-row:1;min-width:80px;
+}
+#pkmsvv-wiki-overlay .pkmsvv-build-item[data-skin-item] [data-skin-transaction]{
+ grid-column:2;grid-row:2;min-width:80px;
+}
+#pkmsvv-wiki-overlay [data-skin-state="equipped"]{color:#a9f0c4!important}

@@ -1,0 +1,3 @@
+# Fusion native QA — browser runner fix
+
+Run 45939156156 failed before loading the game because Playwright's bundled Chromium executable was absent. Adjacent browser checks use `/usr/bin/google-chrome`. New Fusion QA now uses the same system Chrome explicitly, supports a local fallback, closes the HTTP server even on launch failure, and records a JSON failure snapshot and screenshot when possible. No changes to gameplay, damage, or assertions. Source safety 45939159812 PASS; logic tests and native inventory in the failed integrated run passed before browser launch. Actual Surf + Thunder Shock reaction still unverified pending rerun. No deploy.

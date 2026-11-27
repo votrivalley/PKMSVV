@@ -7,6 +7,7 @@ G.GlobalPowerUI = (() => {
   function draw() {
     const save=G.DB.save;
     if(!save) return;
+    if(window.PKMSVV_RESEARCH_MACHINE_QA===true&&window.PKMSVVResearchMachines&&G.PKMSVVWiki?.construction){G.PKMSVVWiki.construction();return;}
     const refund=G.GlobalPower.refundRetiredPowerups?.(save)||0;
     if(refund){G.DB.commit?.(true);G.UI?.refreshCoins?.();}
     const box=$('pkmg-list'), levels=G.GlobalPower.clean(save.globalUpgrades);
@@ -65,6 +66,6 @@ G.GlobalPowerUI = (() => {
       G.DB.commit(true);G.Audio.sfx('buy');G.UI.refreshCoins();draw();
     };
   }
-  function open(){G.UI.show('scr-global-powerups',true);draw();}
+  function open(){if(window.PKMSVV_RESEARCH_MACHINE_QA===true&&window.PKMSVVResearchMachines&&G.PKMSVVWiki?.construction){G.PKMSVVWiki.construction();return;}G.UI.show('scr-global-powerups',true);draw();}
   return {open,draw};
 })();

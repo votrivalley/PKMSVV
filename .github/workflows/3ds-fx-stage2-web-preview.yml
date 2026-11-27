@@ -1,0 +1,204 @@
+name: PKMSVV 3DS Effects - Isolated Mirror Engine Build QA
+on:
+  push:
+    branches:
+      - feature/web-3ds-skill-effects-passives-qa-20261121
+    paths:
+      - .github/workflows/3ds-fx-stage2-web-preview.yml
+      - src/pkmsvv-3ds-move-families.js
+      - src/pkmsvv-3ds-stage3-moves.js
+      - src/pkmsvv-3ds-stage4-moves.js
+      - src/pkmsvv-3ds-stage5-moves.js
+      - src/pkmsvv-3ds-stage6-projectiles.js
+      - src/pkmsvv-3ds-projectile-stage6-fx.js
+      - scripts/patch-3ds-stage6-projectiles.cjs
+      - scripts/qa-3ds-stage6-levelups.cjs
+      - tests/3ds-stage6-projectiles.test.cjs
+      - src/pkmsvv-3ds-stage7-dash-meteor.js
+      - scripts/patch-3ds-stage7-dash-meteor.cjs
+      - scripts/qa-3ds-stage7-levelups.cjs
+      - tests/3ds-stage7-dash-meteor.test.cjs
+      - src/pkmsvv-3ds-stage8-beam-nova-charge.js
+      - src/pkmsvv-3ds-charge-stage8.js
+      - scripts/patch-3ds-stage8-beam-nova-charge.cjs
+      - scripts/qa-3ds-stage8-levelups.cjs
+      - tests/3ds-stage8-beam-nova-charge.test.cjs
+      - src/pkmsvv-3ds-stage9-homing-cone-melee.js
+      - scripts/patch-3ds-stage9-homing-cone-melee.cjs
+      - scripts/qa-3ds-stage9-levelups.cjs
+      - tests/3ds-stage9-homing-cone-melee.test.cjs
+      - src/pkmsvv-3ds-stage10-final-moves.js
+      - src/pkmsvv-3ds-combat-stage10.js
+      - scripts/patch-3ds-stage10-final-moves.cjs
+      - scripts/qa-3ds-stage10-levelups.cjs
+      - tests/3ds-stage10-final.test.cjs
+      - src/pkmsvv-3ds-combat-stage5.js
+      - tests/3ds-stage5-combat.test.cjs
+      - scripts/patch-3ds-stage5-families.cjs
+      - scripts/qa-3ds-stage5-levelups.cjs
+      - src/pkmsvv-3ds-support-stage4.js
+      - tests/3ds-stage4-support.test.cjs
+      - scripts/patch-3ds-support-families.cjs
+      - src/pkmsvv-3ds-combat-stage3.js
+      - tests/3ds-stage3-punch-cross-storm.test.cjs
+      - src/pkmsvv-3ds-combat-families.js
+      - src/pkmsvv-3ds-skill-port.js
+      - tests/3ds-move-families-shared.test.cjs
+      - scripts/patch-3ds-move-families.cjs
+      - scripts/patch-3ds-skill-effects-passives.cjs
+      - scripts/prepare-game.cjs
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pkmsvv-3ds-fx-stage2-compiled-web-qa
+  cancel-in-progress: true
+jobs:
+  real-web-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: QA smoke before modifying any source
+        run: |
+          node --check src/pkmsvv-3ds-skill-port.js
+          node --check src/pkmsvv-3ds-move-families.js
+          node --check src/pkmsvv-3ds-combat-families.js
+          node --check src/pkmsvv-3ds-stage3-moves.js
+          node --check src/pkmsvv-3ds-combat-stage3.js
+          node --check src/pkmsvv-3ds-stage4-moves.js
+          node --check src/pkmsvv-3ds-support-stage4.js
+          node --check src/pkmsvv-3ds-stage5-moves.js
+          node --check src/pkmsvv-3ds-combat-stage5.js
+          node --check src/pkmsvv-3ds-stage6-projectiles.js
+          node --check src/pkmsvv-3ds-projectile-stage6-fx.js
+          node --check scripts/patch-3ds-stage6-projectiles.cjs
+          node --check scripts/qa-3ds-stage6-levelups.cjs
+          node --check tests/3ds-stage6-projectiles.test.cjs
+          node --check src/pkmsvv-3ds-stage7-dash-meteor.js
+          node --check scripts/patch-3ds-stage7-dash-meteor.cjs
+          node --check scripts/qa-3ds-stage7-levelups.cjs
+          node --check tests/3ds-stage7-dash-meteor.test.cjs
+          node --check src/pkmsvv-3ds-stage8-beam-nova-charge.js
+          node --check src/pkmsvv-3ds-charge-stage8.js
+          node --check scripts/patch-3ds-stage8-beam-nova-charge.cjs
+          node --check scripts/qa-3ds-stage8-levelups.cjs
+          node --check tests/3ds-stage8-beam-nova-charge.test.cjs
+          node --check src/pkmsvv-3ds-stage9-homing-cone-melee.js
+          node --check scripts/patch-3ds-stage9-homing-cone-melee.cjs
+          node --check scripts/qa-3ds-stage9-levelups.cjs
+          node --check tests/3ds-stage9-homing-cone-melee.test.cjs
+          node --check src/pkmsvv-3ds-stage10-final-moves.js
+          node --check src/pkmsvv-3ds-combat-stage10.js
+          node --check scripts/patch-3ds-stage10-final-moves.cjs
+          node --check scripts/qa-3ds-stage10-levelups.cjs
+          node --check tests/3ds-stage10-final.test.cjs
+          node --check scripts/patch-3ds-stage5-families.cjs
+          node --check scripts/qa-3ds-stage5-levelups.cjs
+          node --check tests/3ds-stage5-combat.test.cjs
+          node --check scripts/patch-3ds-support-families.cjs
+          node --check tests/3ds-stage4-support.test.cjs
+          node --check tests/3ds-stage3-punch-cross-storm.test.cjs
+          node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs tests/3ds-stage3-punch-cross-storm.test.cjs tests/3ds-stage4-support.test.cjs tests/3ds-stage5-combat.test.cjs tests/3ds-stage6-projectiles.test.cjs tests/3ds-stage7-dash-meteor.test.cjs tests/3ds-stage8-beam-nova-charge.test.cjs tests/3ds-stage9-homing-cone-melee.test.cjs tests/3ds-stage10-final.test.cjs
+      - name: Fetch pinned public Web source mirror for isolated QA (NOT official release source)
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init vendor/pokesurvivor
+          git -C vendor/pokesurvivor remote add origin https://github.com/botgm/PokeSurvivor.git
+          git -C vendor/pokesurvivor fetch --depth 1 origin 3959a3f19c1c9842e860595317d792ae09572846
+          git -C vendor/pokesurvivor checkout --detach FETCH_HEAD
+          test -s vendor/pokesurvivor/dev.html
+          test -s vendor/pokesurvivor/LICENSE-NONCOMMERCIAL.md
+      - name: Install build deps without publishing packages
+        run: npm install --no-audit --no-fund
+      - name: Compile actual 3DS effects in mirror JS engine (isolated, not PKMSVV full game)
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/patch-3ds-skill-effects-passives.cjs
+          node scripts/patch-3ds-move-families.cjs
+          node scripts/patch-3ds-support-families.cjs
+          node scripts/patch-3ds-stage5-families.cjs
+          node scripts/qa-3ds-stage5-levelups.cjs
+          node scripts/patch-3ds-stage6-projectiles.cjs
+          node scripts/qa-3ds-stage6-levelups.cjs
+          node scripts/patch-3ds-stage7-dash-meteor.cjs
+          node scripts/qa-3ds-stage7-levelups.cjs
+          node scripts/patch-3ds-stage8-beam-nova-charge.cjs
+          node scripts/qa-3ds-stage8-levelups.cjs
+          node scripts/patch-3ds-stage9-homing-cone-melee.cjs
+          node scripts/qa-3ds-stage9-levelups.cjs
+          node scripts/patch-3ds-stage10-final-moves.cjs
+          node scripts/qa-3ds-stage10-levelups.cjs
+          node vendor/pokesurvivor/tools/build.js --sin-seo --expose
+      - name: Validate compiled mirror JS and preserve original PKMSVV project files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s vendor/pokesurvivor/index.html
+          test -s vendor/pokesurvivor/js/app.min.js
+          test -d vendor/pokesurvivor/assets
+          test -s vendor/pokesurvivor/js/systems/pkmsvv-3ds-move-families.js
+          test -s vendor/pokesurvivor/js/systems/pkmsvv-3ds-combat-families.js
+          grep -Fq 'whirlpool' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'earthquake' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'rapid-spin' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'surf' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'fire-punch' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'fire-blast' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'judgment' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'protect' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'reflect' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'light-screen' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'double-team' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'PKMSVV3DSStage4Support' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'PKMSVV3DSStage5Combat' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'x-scissor' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'extreme-speed' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'shadow-force' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'explosion' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'rain-dance' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'dragon-pulse' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'sludge-bomb' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'snipe-shot' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'PKMSVV3DSStage6ProjectileFX' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'PKMSVV3DSStage7Moves' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'megahorn' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'doom-desire' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'sacred-fire' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'blue-flare' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'lava-plume' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'dynamax-cannon' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'PKMSVV3DSStage8Charge' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'moonblast' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'flower-trick' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'silver-wind' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'behemoth-blade' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'malignant-chain' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'relic-song' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'dark-void' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'psyshock' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'geomancy' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'precipice-blades' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'PKMSVV3DSStage10Combat' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'PKMSVV3DSStage3FX' vendor/pokesurvivor/js/app.min.js
+          grep -Fq 'PKMSVV3DSCombatFX' vendor/pokesurvivor/js/app.min.js
+          node --check vendor/pokesurvivor/js/app.min.js
+          node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs tests/3ds-stage3-punch-cross-storm.test.cjs tests/3ds-stage4-support.test.cjs tests/3ds-stage5-combat.test.cjs tests/3ds-stage6-projectiles.test.cjs tests/3ds-stage7-dash-meteor.test.cjs tests/3ds-stage8-beam-nova-charge.test.cjs tests/3ds-stage9-homing-cone-melee.test.cjs tests/3ds-stage10-final.test.cjs
+          echo PKMSVV_3DS_EFFECTS_ISOLATED_MIRROR_ENGINE_COMPILE_PASS
+          mkdir -p dist/3ds-effects-mirror-demo
+          rsync -a --exclude='.git' --exclude=tools --exclude=dev.html --exclude='*.map' vendor/pokesurvivor/ dist/3ds-effects-mirror-demo/
+          printf '%s\n' 'QA ONLY: public-mirror Web engine with 3DS effect additions.' 'NOT the complete PKMSVV Web/Android/PC build; DO NOT install over the main game or replace a save.' 'The full PKMSVV release is blocked on access to the exact pinned original upstream commit.' > dist/3ds-effects-mirror-demo/QA_ONLY.txt
+          test -s dist/3ds-effects-mirror-demo/index.html
+      - name: Upload preview build (NEVER deploy or sign)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-3DS-SKILL-EFFECTS-MIRROR-TECH-DEMO-QA
+          path: dist/3ds-effects-mirror-demo/
+          retention-days: 5
+          if-no-files-found: error

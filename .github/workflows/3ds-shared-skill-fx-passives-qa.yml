@@ -1,0 +1,191 @@
+name: PKMSVV Web Android PC - 3DS Skill FX + Passives QA
+on:
+  push:
+    branches:
+      - feature/web-3ds-skill-effects-passives-qa-20261121
+    paths:
+      - .github/workflows/3ds-shared-skill-fx-passives-qa.yml
+      - src/pkmsvv-3ds-skill-port.js
+      - src/pkmsvv-3ds-move-families.js
+      - src/pkmsvv-3ds-stage3-moves.js
+      - src/pkmsvv-3ds-stage4-moves.js
+      - src/pkmsvv-3ds-stage5-moves.js
+      - src/pkmsvv-3ds-stage6-projectiles.js
+      - src/pkmsvv-3ds-projectile-stage6-fx.js
+      - scripts/patch-3ds-stage6-projectiles.cjs
+      - scripts/qa-3ds-stage6-levelups.cjs
+      - tests/3ds-stage6-projectiles.test.cjs
+      - src/pkmsvv-3ds-stage7-dash-meteor.js
+      - scripts/patch-3ds-stage7-dash-meteor.cjs
+      - scripts/qa-3ds-stage7-levelups.cjs
+      - tests/3ds-stage7-dash-meteor.test.cjs
+      - src/pkmsvv-3ds-stage8-beam-nova-charge.js
+      - src/pkmsvv-3ds-charge-stage8.js
+      - scripts/patch-3ds-stage8-beam-nova-charge.cjs
+      - scripts/qa-3ds-stage8-levelups.cjs
+      - tests/3ds-stage8-beam-nova-charge.test.cjs
+      - src/pkmsvv-3ds-stage9-homing-cone-melee.js
+      - scripts/patch-3ds-stage9-homing-cone-melee.cjs
+      - scripts/qa-3ds-stage9-levelups.cjs
+      - tests/3ds-stage9-homing-cone-melee.test.cjs
+      - src/pkmsvv-3ds-stage10-final-moves.js
+      - src/pkmsvv-3ds-combat-stage10.js
+      - scripts/patch-3ds-stage10-final-moves.cjs
+      - scripts/qa-3ds-stage10-levelups.cjs
+      - tests/3ds-stage10-final.test.cjs
+      - src/pkmsvv-3ds-combat-stage5.js
+      - tests/3ds-stage5-combat.test.cjs
+      - scripts/patch-3ds-stage5-families.cjs
+      - scripts/qa-3ds-stage5-levelups.cjs
+      - src/pkmsvv-3ds-support-stage4.js
+      - tests/3ds-stage4-support.test.cjs
+      - scripts/patch-3ds-support-families.cjs
+      - src/pkmsvv-3ds-combat-stage3.js
+      - tests/3ds-stage3-punch-cross-storm.test.cjs
+      - src/pkmsvv-3ds-combat-families.js
+      - scripts/patch-3ds-move-families.cjs
+      - tests/3ds-move-families-shared.test.cjs
+      - scripts/patch-3ds-skill-effects-passives.cjs
+      - scripts/prepare-game.cjs
+      - tests/3ds-fx-passives-shared.test.cjs
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pkmsvv-3ds-shared-skill-effects-qa
+  cancel-in-progress: true
+jobs:
+  skill-effects-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript source and patcher syntax
+        run: |
+          node --check src/pkmsvv-3ds-skill-port.js
+          node --check src/pkmsvv-3ds-move-families.js
+          node --check src/pkmsvv-3ds-combat-families.js
+          node --check src/pkmsvv-3ds-stage3-moves.js
+          node --check src/pkmsvv-3ds-combat-stage3.js
+          node --check src/pkmsvv-3ds-stage4-moves.js
+          node --check src/pkmsvv-3ds-support-stage4.js
+          node --check src/pkmsvv-3ds-stage5-moves.js
+          node --check src/pkmsvv-3ds-combat-stage5.js
+          node --check src/pkmsvv-3ds-stage6-projectiles.js
+          node --check src/pkmsvv-3ds-projectile-stage6-fx.js
+          node --check scripts/patch-3ds-stage6-projectiles.cjs
+          node --check scripts/qa-3ds-stage6-levelups.cjs
+          node --check tests/3ds-stage6-projectiles.test.cjs
+          node --check src/pkmsvv-3ds-stage7-dash-meteor.js
+          node --check scripts/patch-3ds-stage7-dash-meteor.cjs
+          node --check scripts/qa-3ds-stage7-levelups.cjs
+          node --check tests/3ds-stage7-dash-meteor.test.cjs
+          node --check src/pkmsvv-3ds-stage8-beam-nova-charge.js
+          node --check src/pkmsvv-3ds-charge-stage8.js
+          node --check scripts/patch-3ds-stage8-beam-nova-charge.cjs
+          node --check scripts/qa-3ds-stage8-levelups.cjs
+          node --check tests/3ds-stage8-beam-nova-charge.test.cjs
+          node --check src/pkmsvv-3ds-stage9-homing-cone-melee.js
+          node --check scripts/patch-3ds-stage9-homing-cone-melee.cjs
+          node --check scripts/qa-3ds-stage9-levelups.cjs
+          node --check tests/3ds-stage9-homing-cone-melee.test.cjs
+          node --check src/pkmsvv-3ds-stage10-final-moves.js
+          node --check src/pkmsvv-3ds-combat-stage10.js
+          node --check scripts/patch-3ds-stage10-final-moves.cjs
+          node --check scripts/qa-3ds-stage10-levelups.cjs
+          node --check tests/3ds-stage10-final.test.cjs
+          node --check scripts/patch-3ds-stage5-families.cjs
+          node --check scripts/qa-3ds-stage5-levelups.cjs
+          node --check tests/3ds-stage5-combat.test.cjs
+          node --check scripts/patch-3ds-support-families.cjs
+          node --check tests/3ds-stage4-support.test.cjs
+          node --check tests/3ds-stage3-punch-cross-storm.test.cjs
+          node --check scripts/patch-3ds-move-families.cjs
+          node --check tests/3ds-move-families-shared.test.cjs
+          node --check scripts/patch-3ds-skill-effects-passives.cjs
+          node --check tests/3ds-fx-passives-shared.test.cjs
+      - name: Run shared Web regression suite
+        run: npm run test:web
+      - name: Fetch public PokéSurvivor Web reference JS (no proprietary or 3DS CIA assets)
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/botgm/PokeSurvivor.git vendor/pokesurvivor
+          git -C vendor/pokesurvivor sparse-checkout set js
+          git -C vendor/pokesurvivor show HEAD:dev.html > vendor/pokesurvivor/dev.html
+          test -s vendor/pokesurvivor/js/systems/levelup.js
+          test -s vendor/pokesurvivor/js/systems/combat.js
+          test -s vendor/pokesurvivor/js/entities/player.js
+      - name: Test new cross-platform passive effects and existing gamepad pages
+        run: |
+          node --test tests/3ds-fx-passives-shared.test.cjs tests/3ds-move-families-shared.test.cjs tests/3ds-stage3-punch-cross-storm.test.cjs tests/3ds-stage4-support.test.cjs tests/3ds-stage5-combat.test.cjs tests/3ds-stage6-projectiles.test.cjs tests/3ds-stage7-dash-meteor.test.cjs tests/3ds-stage8-beam-nova-charge.test.cjs tests/3ds-stage9-homing-cone-melee.test.cjs tests/3ds-stage10-final.test.cjs tests/web-levelup-controller.test.cjs
+      - name: Real source patch smoke (uncompiled JS, before Web/Android/PC bundling)
+        run: |
+          node scripts/patch-3ds-skill-effects-passives.cjs
+          grep -Fq 'G.PKMSVV3DSSkillPort' vendor/pokesurvivor/js/systems/combat.js
+          grep -Fq 'minimumPassiveCards' vendor/pokesurvivor/js/systems/levelup.js
+          node --check vendor/pokesurvivor/js/systems/combat.js
+          node --check vendor/pokesurvivor/js/systems/levelup.js
+          node --check vendor/pokesurvivor/js/entities/player.js
+          echo PKMSVV_SHARED_3DS_FX_PASSIVES_SOURCE_SMOKE_PASS
+          node scripts/patch-3ds-move-families.cjs
+          node scripts/patch-3ds-support-families.cjs
+          node scripts/patch-3ds-stage5-families.cjs
+          node scripts/qa-3ds-stage5-levelups.cjs
+          node scripts/patch-3ds-stage6-projectiles.cjs
+          node scripts/qa-3ds-stage6-levelups.cjs
+          node scripts/patch-3ds-stage7-dash-meteor.cjs
+          node scripts/qa-3ds-stage7-levelups.cjs
+          node scripts/patch-3ds-stage8-beam-nova-charge.cjs
+          node scripts/qa-3ds-stage8-levelups.cjs
+          node scripts/patch-3ds-stage9-homing-cone-melee.cjs
+          node scripts/qa-3ds-stage9-levelups.cjs
+          node scripts/patch-3ds-stage10-final-moves.cjs
+          node scripts/qa-3ds-stage10-levelups.cjs
+          grep -Fq 'G.PKMSVV3DSMoveFamilies.isNativeMove(m.id)' vendor/pokesurvivor/js/systems/combat.js
+          grep -Fq 'G.PKMSVV3DSCombatFX.spawn(fields, pl, m, ghost)' vendor/pokesurvivor/js/systems/combat.js
+          grep -Fq "id:'surf'" vendor/pokesurvivor/js/systems/pkmsvv-3ds-move-families.js
+          grep -Fq 'pkmsvv-3ds-move-families.js' vendor/pokesurvivor/dev.html
+          grep -Fq 'pkmsvv-3ds-stage3-moves.js' vendor/pokesurvivor/dev.html
+          grep -Fq 'pkmsvv-3ds-combat-stage3.js' vendor/pokesurvivor/dev.html
+          grep -Fq 'pkmsvv-3ds-stage4-moves.js' vendor/pokesurvivor/dev.html
+          grep -Fq 'pkmsvv-3ds-support-stage4.js' vendor/pokesurvivor/dev.html
+          grep -Fq 'pkmsvv-3ds-stage5-moves.js' vendor/pokesurvivor/dev.html
+          grep -Fq 'pkmsvv-3ds-combat-stage5.js' vendor/pokesurvivor/dev.html
+          grep -Fq 'pkmsvv-3ds-stage6-projectiles.js' vendor/pokesurvivor/dev.html
+          grep -Fq 'pkmsvv-3ds-projectile-stage6-fx.js' vendor/pokesurvivor/dev.html
+          grep -Fq 'pkmsvv-3ds-stage7-dash-meteor.js' vendor/pokesurvivor/dev.html
+          grep -Fq 'pkmsvv-3ds-stage8-beam-nova-charge.js' vendor/pokesurvivor/dev.html
+          grep -Fq 'pkmsvv-3ds-charge-stage8.js' vendor/pokesurvivor/dev.html
+          grep -Fq 'pkmsvv-3ds-stage9-homing-cone-melee.js' vendor/pokesurvivor/dev.html
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-stage9-homing-cone-melee.js
+          test -s vendor/pokesurvivor/js/systems/pkmsvv-3ds-stage10-final-moves.js
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-combat-stage10.js
+          grep -Fq 'pkmsvv-3ds-combat-stage10.js' vendor/pokesurvivor/dev.html
+          grep -Fq 'pkmsvv3dsShredT' vendor/pokesurvivor/js/systems/combat.js
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-stage8-beam-nova-charge.js
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-charge-stage8.js
+          grep -Fq 'beam:(owner,m)=>beam(owner,m)' vendor/pokesurvivor/js/systems/combat.js
+          grep -Fq 'PKMSVV_3DS_STAGE7_WEB_DASH_METEOR_SOURCE_PATCH_PASS' scripts/patch-3ds-stage7-dash-meteor.cjs
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-stage7-dash-meteor.js
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-stage6-projectiles.js
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-projectile-stage6-fx.js
+          grep -Fq 'PKMSVV3DSStage5Combat.needsTarget(m)' vendor/pokesurvivor/js/systems/combat.js
+          grep -Fq "'range', 'knock'" vendor/pokesurvivor/js/data/moves.js
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-stage5-moves.js
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-combat-stage5.js
+          node --check vendor/pokesurvivor/js/data/moves.js
+          grep -Fq 'G.PKMSVV3DSStage4Support.decoyFor(this,pl)' vendor/pokesurvivor/js/entities/enemy.js
+          grep -Fq 'incomingDamage(this,amount,pure,category)' vendor/pokesurvivor/js/entities/player.js
+          grep -Fq 'm.minCd' vendor/pokesurvivor/js/systems/combat.js
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-stage4-moves.js
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-support-stage4.js
+          node --check vendor/pokesurvivor/js/entities/enemy.js
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-stage3-moves.js
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-combat-stage3.js
+          node --check vendor/pokesurvivor/js/systems/combat.js
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-move-families.js
+          node --check vendor/pokesurvivor/js/systems/pkmsvv-3ds-combat-families.js
+          echo PKMSVV_3DS_NATIVE_ATTACK_FAMILIES_SOURCE_SMOKE_PASS
+

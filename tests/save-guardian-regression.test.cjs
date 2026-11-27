@@ -71,3 +71,37 @@ test('Guardian can recover a damaged primary save from latest validated local ba
  assert.deepEqual(ctx.read(K),original);
  assert.deepEqual(ctx.read(LATEST),original);
 });
+
+test('Guardian protects bought station skins but allows spending coins and changing equipment',()=>{
+ const original=save();
+ original.pkmsvvCoopLab={coopCoins:350,stationSkins:{owned:{mega_copper:true},equipped:{mega:'mega_copper'}}};
+ const ctx=run(original),g=ctx.guardian;
+ const next=structuredClone(original);next.pkmsvvCoopLab.coopCoins=250;
+ next.pkmsvvCoopLab.stationSkins.owned.berry_copper=true;
+ delete next.pkmsvvCoopLab.stationSkins.equipped.mega;
+ next.pkmsvvCoopLab.stationSkins.equipped.berry='berry_copper';
+ assert.equal(g.regress(JSON.stringify(original),JSON.stringify(next)),false);
+ ctx.storage.set(K,JSON.stringify(next));assert.equal(g.snapshot(),true);
+ assert.deepEqual(ctx.read(LATEST),next);
+ assert.deepEqual(ctx.read(PREVIOUS),original);
+ const diff=g.compare(JSON.stringify(original),JSON.stringify(next));
+ assert.equal(diff.risk,false);
+ assert.equal(diff.balances.find(x=>x.name==='Xu Đồng Đội').delta,-100);
+ assert.ok(diff.permanent.some(x=>x.name==='Skin máy nghiên cứu'&&x.change==='gain'));
+ const lost=structuredClone(next);delete lost.pkmsvvCoopLab.stationSkins.owned.mega_copper;
+ assert.equal(g.regress(JSON.stringify(next),JSON.stringify(lost)),true);
+ assert.equal(g.compare(JSON.stringify(next),JSON.stringify(lost)).risk,true);
+ ctx.storage.set(K,JSON.stringify(lost));assert.equal(g.snapshot(),false);
+ assert.deepEqual(ctx.read(LATEST),next);
+});
+
+test('Guardian treats lower machine research ranks as permanent progression loss',()=>{
+ const original=save();original.pkmsvvResearchRanks={power:2};original.pkmsvvCoopLab={coopCoins:40};
+ const ctx=run(original),g=ctx.guardian,next=structuredClone(original);
+ next.pkmsvvResearchRanks.power=3;next.pkmsvvCoopLab.coopCoins=0;
+ assert.equal(g.regress(JSON.stringify(original),JSON.stringify(next)),false);
+ assert.equal(g.compare(JSON.stringify(original),JSON.stringify(next)).risk,false);
+ const lost=structuredClone(original);lost.pkmsvvResearchRanks.power=1;
+ assert.equal(g.regress(JSON.stringify(original),JSON.stringify(lost)),true);
+ assert.equal(g.compare(JSON.stringify(original),JSON.stringify(lost)).risk,true);
+});

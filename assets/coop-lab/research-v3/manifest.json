@@ -1,0 +1,119 @@
+{
+  "version": 3,
+  "canvas": {
+    "width": 1500,
+    "height": 1049
+  },
+  "sourceSha256": "3be4195c98dd96d3ea1696313bf42f124366d1158ce94fe450b60ae04ec1937f",
+  "background": "backdrop.png",
+  "readyForFurnitureSwap": false,
+  "backgroundRepair": "V3.1: restored continuous floor tile rows, wall belt and central brass outline; visual approval still required",
+  "backgroundRevision": "3.1-qa",
+  "layers": [
+    {
+      "id": "crest",
+      "label": "Huy hiệu Poké Ball",
+      "slot": "decor",
+      "file": "crest.png",
+      "x": 664,
+      "y": 89,
+      "w": 175,
+      "h": 115,
+      "pixels": 15814
+    },
+    {
+      "id": "support",
+      "label": "Pokémon hỗ trợ",
+      "slot": "shelf_left",
+      "file": "support.png",
+      "x": 64,
+      "y": 287,
+      "w": 451,
+      "h": 303,
+      "pixels": 128483
+    },
+    {
+      "id": "fossil",
+      "label": "Phục nguyên",
+      "slot": "center",
+      "file": "fossil.png",
+      "x": 522,
+      "y": 214,
+      "w": 457,
+      "h": 415,
+      "pixels": 163843
+    },
+    {
+      "id": "mega",
+      "label": "Mega",
+      "slot": "shelf_right",
+      "file": "mega.png",
+      "x": 992,
+      "y": 283,
+      "w": 453,
+      "h": 328,
+      "pixels": 134116
+    },
+    {
+      "id": "berry",
+      "label": "Berry",
+      "slot": "garden",
+      "file": "berry.png",
+      "x": 41,
+      "y": 601,
+      "w": 476,
+      "h": 330,
+      "pixels": 141816
+    },
+    {
+      "id": "companion",
+      "label": "Bạn đồng hành",
+      "slot": "trophy",
+      "file": "companion.png",
+      "x": 1011,
+      "y": 609,
+      "w": 452,
+      "h": 305,
+      "pixels": 121680
+    }
+  ],
+  "labels": [
+    {
+      "id": "support",
+      "x": 195,
+      "y": 543,
+      "w": 207,
+      "h": 47
+    },
+    {
+      "id": "fossil",
+      "x": 656,
+      "y": 617,
+      "w": 189,
+      "h": 50
+    },
+    {
+      "id": "mega",
+      "x": 1105,
+      "y": 539,
+      "w": 148,
+      "h": 54
+    },
+    {
+      "id": "berry",
+      "x": 192,
+      "y": 910,
+      "w": 161,
+      "h": 52
+    },
+    {
+      "id": "companion",
+      "x": 1097,
+      "y": 910,
+      "w": 219,
+      "h": 52
+    }
+  ],
+  "pixelExactReassemblyAfterLabelRepair": false,
+  "overlappingLayerPixels": 0
+}

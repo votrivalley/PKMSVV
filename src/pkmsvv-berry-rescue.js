@@ -10,6 +10,8 @@ G.PKMSVVBerryRescue=(()=>{
  const NAMES=['Oran','Sitrus','Lum'];
  let active=false,easy=false,time=0,trees=[],bossStage=0,won=false,claimed=false,sendClock=0,endClock=0;
  let sprites=[],treeAtlas=null,treeTargets=[];
+ let coinGate=null,coinSession=null,coinStarted=false,lastCoinReward=null;
+ const coinContext=()=>({host:G.Coop?.isHost===true,guest:!!G.DB?.guest,uid:G.Social?.uid,roomId:G.Social?.room?.id,mode:G.Social?.room?.mode,members:G.Social?.room?.members});
  let threatClock=0,threatStage=-1,threatReady=false,cachedFinalBossAlive=false;
  const cachedThreats=[0,0,0],cachedBossNear=[false,false,false];
  // Track which trees the native entity pass actually rendered this frame.
@@ -22,6 +24,8 @@ G.PKMSVVBerryRescue=(()=>{
  function begin(cfg){
   const requested=typeof cfg==='string'?cfg:(cfg?.mode||G.Social?.room?.mode);
   active=['berry','berryeasy'].includes(requested);easy=requested==='berryeasy';time=0;bossStage=0;won=false;claimed=false;
+  coinGate?.end();coinGate=null;coinSession={};coinStarted=false;lastCoinReward=null;
+  if(active&&typeof window!=='undefined'&&window.PKMSVV_BERRY_COINS_QA===true&&typeof window.PKMSVVCreateBerryRewardGate==='function')coinGate=window.PKMSVVCreateBerryRewardGate();
   if(typeof document!=='undefined')document.body?.classList?.toggle?.('pkmsvv-berry-defense',active);
   if(active){
    G.World?.flattenForBerry?.(); // Clear cached wall chunks.
@@ -187,7 +191,9 @@ G.PKMSVVBerryRescue=(()=>{
    const close=document.createElement('button');close.type='button';
    close.className='pkmsvv-berry-team-close';close.setAttribute('data-back','');close.textContent=tr('Đóng','Close');
    close.addEventListener('click',()=>layer.remove());
-   panel.append(title,info,list,yours,close);layer.append(panel);document.body.append(layer);
+   panel.append(title,info,list,yours);
+   if(lastCoinReward?.ok){const coins=document.createElement('p');coins.className='pkmsvv-berry-team-own';coins.textContent=tr('Xu Đồng Đội: +','Co-op Coins: +')+lastCoinReward.reward;panel.append(coins);}
+   panel.append(close);layer.append(panel);document.body.append(layer);
   };
   // Co-op's native finish screen is mounted immediately after the host
   // reward callback; defer our panel until it is safely visible on top.
@@ -217,7 +223,8 @@ G.PKMSVVBerryRescue=(()=>{
  }
  function tick(dt,t,players,finish){
   if(!active)return;time=Math.max(0,t);
-  if(!G.Coop?.isHost)return;
+  if(!G.Coop?.isHost){coinGate?.end();return;}
+  if(coinGate){const ctx=coinContext();if(!coinStarted){coinStarted=true;coinGate.begin(coinSession,G.DB?.save,ctx,t);}coinGate.observe(coinSession,G.DB?.save,ctx,t);}
   while(bossStage<BOSS_TIMES.length&&time>=BOSS_TIMES[bossStage]){
    bossStage++;bosses();
   }
@@ -256,11 +263,19 @@ G.PKMSVVBerryRescue=(()=>{
    sendClock=0;G.Coop?.broadcast?.(['br',...state(),bossStage,Math.round(time),1]);
   }
   const survivors=trees.filter(t=>t.hp>0).length;
-  if(!survivors){active=false;if(typeof document!=='undefined')document.body?.classList?.remove?.('pkmsvv-berry-defense');G.Spawner?.say?.(tr('PHÒNG THỦ THẤT BẠI!','DEFENSE FAILED!'),4);finish?.({success:false,trees:[0,0,0],easy,time:Math.floor(time)});return;}
+  if(!survivors){coinGate?.end();active=false;if(typeof document!=='undefined')document.body?.classList?.remove?.('pkmsvv-berry-defense');G.Spawner?.say?.(tr('PHÒNG THỦ THẤT BẠI!','DEFENSE FAILED!'),4);finish?.({success:false,trees:[0,0,0],easy,time:Math.floor(time)});return;}
   if(time>=DURATION){
    const lastBossAlive=cachedFinalBossAlive;
    if(!lastBossAlive||time>=DURATION+30){
-    won=true;active=false;if(typeof document!=='undefined')document.body?.classList?.remove?.('pkmsvv-berry-defense');finish?.({success:true,trees:state(),easy,time:Math.floor(time)});
+    won=true;active=false;
+    if(coinGate?.eligible){
+     try{lastCoinReward=coinGate.finish(coinSession,G.DB?.save,coinContext(),{success:true,time,trees:state(),bossStage},()=>G.DB.commit(true));}
+     catch(_){lastCoinReward={ok:false,reason:'save'};}
+     if(lastCoinReward.ok){G.UI?.refreshCoins?.();G.UI?.toast?.(tr('+'+lastCoinReward.reward+' Xu Đồng Đội','+'+lastCoinReward.reward+' Co-op Coins'),4500);}
+     else G.UI?.toast?.(tr('Chưa lưu được Xu Đồng Đội.','Co-op Coins could not be saved.'),3500);
+    }
+    if(typeof document!=='undefined')document.body?.classList?.remove?.('pkmsvv-berry-defense');
+    finish?.({success:true,trees:state(),easy,time:Math.floor(time)});
    }
   }
  }
@@ -392,6 +407,7 @@ G.PKMSVVBerryRescue=(()=>{
  return {DURATION,BOSS_TIMES,REWARD_CHANCE,NORMAL_REWARDS,EASY_REWARDS,XP_MULT,DEFENSE_RADIUS,chanceForHp,difficultyFor,targetFor,defendGoal,keepOutsideTrunks,begin,beginFrame,drawMissing,tick,onEvent,reward,draw,drawables,hud,state,
   get easy(){return easy},
   get active(){return active},get trees(){return trees},get bossStage(){return bossStage},
+  get lastCoinReward(){return lastCoinReward?{...lastCoinReward}:null},get coinEligible(){return !!coinGate?.eligible},
   get lastAwards(){return lastAwards.map(r=>({...r,berries:r.berries.slice()}))}};
 })();
 // Berry Rescue must use the exact Egg Rush BGM (custom-music/eggrush.ogg).

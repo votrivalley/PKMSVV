@@ -176,7 +176,13 @@
   if(arenaMode(mode)&&role==='ai'){info(L('Arena PvP chỉ nhận người chơi thật. Hãy chọn Đấu với AI trong Arena.','Arena PvP requires real players. Choose Fight AI in Arena instead.'));return;}
   // Never fall back from Fossil Expedition to generic Survival: the room
   // must carry fossil_lab end-to-end, or mission rewards are disallowed.
-  if(G.PKMSVVPippiGuide?.openMode?.(mode))return;
+  // This redirected URL is an already-confirmed Host/Join action.
+  // First-time Pippi dialogue may open, but must not swallow that action.
+  // For ordinary mode clicks, preserve the original guide-first behavior.
+  const params=new URLSearchParams(location.search);
+  const resumeWifiRoute=params.get('pkmsvvWifi')==='1' &&
+   ['host','join'].includes(params.get('pkmsvvRole'));
+  if(G.PKMSVVPippiGuide?.openMode?.(mode) && !resumeWifiRoute)return;
    if(mode==='fossil_lab'&&G.PKMSVVFossilExpedition?.nativeReady!==true){
    info(L('Khai quật hóa thạch đang kết nối bộ điều khiển nhiệm vụ. Chưa thể bắt đầu trận.', 'Fossil Expedition engine is not ready; match cannot start.'));
    return;

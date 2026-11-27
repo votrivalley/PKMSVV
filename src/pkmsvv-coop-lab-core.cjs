@@ -20,6 +20,7 @@ function normal(save){
   lastSettledSeq:Number.isSafeInteger(source.lastSettledSeq)&&source.lastSettledSeq>=0?source.lastSettledSeq:0,
   ownedDecor:{machine_old:true,...(source.ownedDecor||{})},
   equippedDecorBySlot:{center:'machine_old',...(source.equippedDecorBySlot||{})},
+  ...(Object.hasOwn(source,'stationSkins')?{stationSkins:skinState(source.stationSkins)}:{}),
   supplies:{...(source.supplies||{})},
   cosmetics:{...(source.cosmetics||{})},
   lastExchangeWeek:typeof source.lastExchangeWeek==='string'?source.lastExchangeWeek:'',
@@ -29,7 +30,7 @@ function normal(save){
 /* One rollback boundary protects wallet AND all Pokémon/save side effects. */
 function change(save,mutator,commit,sideEffect){
  if(!save||typeof save!=='object'||typeof commit!=='function')return {ok:false,reason:'save'};
- const keys=['pkmsvvCoopLab','coins','owned','pkmsvvFossils','pkmsvvDefeatedDex'];
+ const keys=['pkmsvvCoopLab','coins','owned','pkmsvvFossils','pkmsvvDefeatedDex','pkmsvvResearchRanks'];
  const prior=keys.map(key=>({key,had:Object.prototype.hasOwnProperty.call(save,key),value:save[key]}));
  const rollback=()=>{for(const old of prior){if(old.had)save[old.key]=old.value;else delete save[old.key];}};
  const before=normal(save);
@@ -147,4 +148,185 @@ function exchange(save,commit,now=Date.now()){
    weeklyUsed:s.weeklyPokeCoins,week:key};
  },commit,(player,_,result)=>{player.coins+=result.awarded;});
 }
-module.exports={config,normal,isMachineUnlocked,buy,equip,settle,exchange,weekKey,buySupply};
+
+/* Station skins are separate from legacy furniture. Old profiles retain their
+ * shape until the first successful skin transaction. No silent migration.
+ * The production catalog is closed; the injectable registry is for tests. */
+function skinMap(value){
+ return value&&typeof value==='object'&&!Array.isArray(value)?{...value}:{};
+}
+function skinState(value){
+ return {owned:skinMap(value?.owned),equipped:skinMap(value?.equipped)};
+}
+function createStationSkinEconomy(registry){
+ const stations=new Set(['support','mega','berry','companion','fossil']);
+ const entries=new Map((registry?.variants||[]).map(x=>[x.id,x]));
+ const ready=item=>!!item&&registry?.purchaseEnabled===true&&item.artApproved===true&&
+  stations.has(item.station)&&typeof item.spritePath==='string'&&item.spritePath.length>0&&
+  Number.isSafeInteger(item.price)&&item.price>0;
+ function status(save,station){
+  if(!stations.has(station))return null;
+  const s=normal(save),state=skinState(s.stationSkins);
+  const item=entries.get(state.equipped[station]);
+  const equipped=ready(item)&&item.station===station&&state.owned[item.id]===true?item.id:'default';
+  return {station,equipped,unlocked:s.machineUnlocked,coins:s.coopCoins,
+   variants:[{id:'default',owned:true,available:true,price:0},...[...entries.values()].filter(x=>x.station===station)
+    .map(x=>({id:x.id,owned:state.owned[x.id]===true,available:ready(x),price:x.price}))]};
+ }
+ function buySkin(save,id,commit){
+  const item=entries.get(id);
+  if(!ready(item))return {ok:false,reason:'unavailable'};
+  return change(save,s=>{
+   if(!s.machineUnlocked)return {ok:false,reason:'locked'};
+   const next=skinState(s.stationSkins);
+   if(next.owned[id]===true)return {ok:false,reason:'owned'};
+   if(s.coopCoins<item.price)return {ok:false,reason:'coins'};
+   s.coopCoins-=item.price;next.owned[id]=true;s.stationSkins=next;
+   return {ok:true,itemId:id,remaining:s.coopCoins};
+  },commit);
+ }
+ function equipSkin(save,station,id,commit){
+  if(!stations.has(station))return {ok:false,reason:'station'};
+  const item=entries.get(id);
+  if(id!=='default'&&(!ready(item)||item.station!==station))return {ok:false,reason:'unavailable'};
+  if(registry?.purchaseEnabled!==true)return {ok:false,reason:'unavailable'};
+  return change(save,s=>{
+   if(!s.machineUnlocked)return {ok:false,reason:'locked'};
+   const next=skinState(s.stationSkins);
+   if(id!=='default'&&next.owned[id]!==true)return {ok:false,reason:'not-owned'};
+   if(id==='default'){
+    if(!Object.hasOwn(next.equipped,station))return {ok:false,reason:'equipped'};
+    delete next.equipped[station];
+   }else{
+    if(next.equipped[station]===id)return {ok:false,reason:'equipped'};
+    next.equipped[station]=id;
+   }
+   s.stationSkins=next;
+   return {ok:true,station,itemId:id};
+  },commit);
+ }
+ return {status,buySkin,equipSkin};
+}
+
+/* Actual permanent stats use the same GlobalPower definitions as existing gameplay.
+ * Separate absolute target ranks preserve legacy PokéCoin levels without stacking
+ * or allowing the old refund ledger to refund Co-op coins as PokéCoins. */
+function createMachineUpgradeEconomy(power,registry=config.stationUpgrades){
+ const groups=registry?.stations||{},prices=registry?.priceModel||{};
+ const active=(id)=>id!=='opening'&&power?.BY?.[id]&&!power.BY[id].retired;
+ const purchased=save=>power?.cleanResearch?.(save?.pkmsvvResearchRanks)||{};
+ const effective=save=>power?.effectiveLevels?.(save)||{};
+ const price=(id,level)=>id==='reroll'?prices.rerollBase+level*prices.rerollStep:prices.base+level*prices.step;
+ function status(save,station){
+  if(!Object.hasOwn(groups,station)||!power?.effectiveLevels)return null;
+  const s=normal(save),ranks=purchased(save),levels=effective(save);
+  return {station,coins:s.coopCoins,unlocked:s.machineUnlocked,upgraded:groups[station].some(id=>(ranks[id]||0)>0),
+   stats:groups[station].filter(active).map(id=>{const u=power.BY[id],level=power.rank(levels,id);return {id,level,max:u.max,price:level<u.max?price(id,level):0,vi:u.vi,en:u.en,viUnit:u.viUnit,enUnit:u.enUnit};})};
+ }
+ function upgrade(save,station,id,commit){
+  const view=status(save,station),row=view?.stats.find(x=>x.id===id);
+  if(!row)return {ok:false,reason:'stat'};
+  if(!view.unlocked)return {ok:false,reason:'locked'};
+  if(row.level>=row.max)return {ok:false,reason:'max'};
+  if(!Number.isSafeInteger(row.price)||row.price<=0)return {ok:false,reason:'price'};
+  return change(save,s=>{
+   if(!s.machineUnlocked)return {ok:false,reason:'locked'};
+   if(s.coopCoins<row.price)return {ok:false,reason:'coins'};
+   s.coopCoins-=row.price;
+   return {ok:true,id,station,rank:row.level+1,price:row.price,remaining:s.coopCoins};
+  },commit,(player,_,result)=>{player.pkmsvvResearchRanks={...purchased(player),[id]:result.rank};});
+ }
+ return {status,upgrade};
+}
+
+
+/* Bind one local host + AI mission to one save/sequence. Network summary
+ * packets are never payment authorization. No remote-human payout yet. */
+function createFossilRewardGate(core){
+ let bound=null;
+ const soloParty=(session,uid,members)=>{
+  if(!session||session.hostUid!==uid||!Array.isArray(session.team)||
+    session.team.filter(x=>!x.bot).length!==1||!session.team.some(x=>x.uid===uid&&!x.bot)||
+    !Array.isArray(members)||members.length!==session.team.length)return false;
+  return session.team.every(x=>members.filter(m=>m?.uid===x.uid&&!m.disconnected&&!!m.bot===x.bot).length===1);
+ };
+ function begin(session,save,{uid,host,members,guest,roomId}={}){
+  bound=null;
+  if(!host||guest||!save||!core?.receipt||!soloParty(session,uid,members)||
+   roomId!==session.roomId||session.phase!=='excavate'||session.elapsed!==0||session.result||!session.ok)return false;
+  const seq=normal(save).lastSettledSeq+1;
+  if(!Number.isSafeInteger(seq))return false;
+  bound={session,save,uid,seq,done:false};return true;
+ }
+ function finish(session,save,{uid,host,members,guest,roomId}={},commit){
+  const b=bound;
+  if(!b||b.session!==session||b.save!==save||b.uid!==uid||b.done)return {ok:false,reason:'session'};
+  if(!host||guest||roomId!==session.roomId||!soloParty(session,uid,members))return {ok:false,reason:'party'};
+  const receipt=core.receipt(session,b.seq);
+  if(!receipt)return {ok:false,reason:'objectives'};
+  if(normal(save).lastSettledSeq!==b.seq-1)return {ok:false,reason:'sequence'};
+  const result=settle(save,receipt,commit);
+  if(result.ok)b.done=true;
+  return result;
+ }
+ return {begin,finish,end:()=>{bound=null;},get eligible(){return !!bound&&!bound.done;}};
+}
+
+
+/* Berry coins: same wallet/sequence as fossil, but never unlock restoration
+ * or grant Kabuto. Only the private native host tick can settle a run.
+ * Bind once on its first frame; invalidate on roster, room, save or clock drift. */
+function createBerryRewardGate(){
+ const cfg=config.berryCoinRewards;
+ let bound=null,started=false;
+ function party(ctx){
+  if(!ctx?.host||ctx.guest||!['berry','berryeasy'].includes(ctx.mode)||
+    typeof ctx.uid!=='string'||!ctx.uid||typeof ctx.roomId!=='string'||!ctx.roomId||
+    !Array.isArray(ctx.members)||ctx.members.length!==cfg.partySize)return null;
+  const seen=new Set(),members=[];
+  for(const m of ctx.members){
+   if(typeof m?.uid!=='string'||!m.uid||seen.has(m.uid)||m.disconnected)return null;
+   seen.add(m.uid);members.push([m.uid,m.bot===true]);
+  }
+  if(members.filter(m=>!m[1]).length!==1||!members.some(m=>m[0]===ctx.uid&&!m[1]))return null;
+  return JSON.stringify(members.sort((a,b)=>a[0].localeCompare(b[0])));
+ }
+ function begin(session,save,ctx,t){
+  if(started)return false;started=true;
+  const roster=party(ctx);
+  if(!cfg||!session||!save||!roster||!Number.isFinite(t)||t<0||t>2.2)return false;
+  const seq=normal(save).lastSettledSeq+1;if(!Number.isSafeInteger(seq))return false;
+  bound={session,save,uid:ctx.uid,roomId:ctx.roomId,mode:ctx.mode,roster,seq,time:0,done:false};
+  return true;
+ }
+ function observe(session,save,ctx,t){
+  const b=bound;if(!b||b.done)return false;
+  if(b.session!==session||b.save!==save||b.uid!==ctx.uid||b.roomId!==ctx.roomId||b.mode!==ctx.mode||
+     b.roster!==party(ctx)||!Number.isFinite(t)||t<b.time||t-b.time>2.2){bound=null;return false;}
+  b.time=t;return true;
+ }
+ function finish(session,save,ctx,{success,time,trees,bossStage}={},commit){
+  const b=bound;
+  if(!b||b.done)return {ok:false,reason:'session'};
+  if(!observe(session,save,ctx,time))return {ok:false,reason:'session'};
+  if(success!==true||time<cfg.minDurationSeconds||time>cfg.maxDurationSeconds||bossStage!==2||
+    !Array.isArray(trees)||trees.length!==3||!trees.every(h=>Number.isInteger(h)&&h>=0&&h<=100))
+   return {ok:false,reason:'objectives'};
+  const survivors=trees.filter(h=>h>0).length;
+  if(!survivors)return {ok:false,reason:'objectives'};
+  const price=b.mode==='berryeasy'?cfg.easy:cfg.normal,reward=price.base+price.perTree*survivors;
+  const result=change(save,s=>{
+   if(s.lastSettledSeq!==b.seq-1)return {ok:false,reason:'sequence'};
+   if(s.coopCoins>max-reward||s.totalCompletions>=max)return {ok:false,reason:'overflow'};
+   s.coopCoins+=reward;s.lastSettledSeq=b.seq;s.totalCompletions++;
+   return {ok:true,reward,survivors,mode:b.mode,totalCoins:s.coopCoins};
+  },commit);
+  if(result.ok)b.done=true;
+  return result;
+ }
+ return {begin,observe,finish,end:()=>{bound=null;},get eligible(){return !!bound&&!bound.done;}};
+}
+
+const stationSkinEconomy=createStationSkinEconomy(config.stationSkins);
+
+module.exports={config,normal,isMachineUnlocked,buy,equip,settle,exchange,weekKey,buySupply,stationSkinEconomy,createStationSkinEconomy,createMachineUpgradeEconomy,createFossilRewardGate,createBerryRewardGate};

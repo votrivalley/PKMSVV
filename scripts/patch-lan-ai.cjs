@@ -11,7 +11,15 @@ const game=path.resolve(__dirname,'../vendor/pokesurvivor');
 }
 function once(file,from,to){
  const p=path.join(game,file),code=fs.readFileSync(p,'utf8').replace(/\r\n/g,'\n');
- if(code.split(from).length!==2)throw Error('LAN AI anchor drift: '+file+' '+from.slice(0,60));
+ if(code.split(from).length!==2){
+  // On opt-in 3DS/176-skill QA, report why native LAN movement anchors drift.
+  // Fail closed: never silently suppress the AI movement patch.
+  const context=process.env.PKMSVV_BETA_176_SKILLS_QA==='1'
+   ? '\nRELEVANT LINES:\n'+code.split('\n').map((line,i)=>`${i+1}: ${line}`)
+      .filter(line=>/Input\.axis|\[ax, ay\]|frozen|lanBotAxis/.test(line)).slice(0,16).join('\n')
+   : '';
+  throw Error('LAN AI anchor drift: '+file+' '+from.slice(0,60)+context);
+ }
  fs.writeFileSync(p,code.replace(from,to),'utf8');
 }
 // Co-op with stronger allied bots needs more hostile pressure; rival modes
@@ -53,9 +61,17 @@ once('js/net/coop.js','    const st = api.team();',
     const st = api.team();`);
 once('js/net/coop.js',"    if (!active || pl !== local) return;\n    if (host) {emit(['c', me,",
  "    if (!active || (pl !== local && !(host && pl.lanBot))) return;\n    if (host) {emit(['c', pl.uid,");
+// Native 3DS Rest adds a second freeze condition BEFORE LAN AI is installed.
+// Preserve both original Rest movement blocking and LAN AI bot steering.
+if(process.env.PKMSVV_BETA_176_SKILLS_QA==='1'){
+ once('js/entities/player.js',
+  '    const [ax, ay] = (this.frozen || G.PKMSVV3DSStage4Support.isResting(this)) ? [0, 0] : G.Input.axis();',
+  '    const [ax, ay] = (this.frozen || G.PKMSVV3DSStage4Support.isResting(this)) ? [0, 0] : (this.lanBotAxis || G.Input.axis());');
+}else{
 once('js/entities/player.js',
  '    const [ax, ay] = this.frozen ? [0, 0] : G.Input.axis();',
  '    const [ax, ay] = this.frozen ? [0, 0] : (this.lanBotAxis || G.Input.axis());');
+}
 once('js/entities/player.js','  netUpdate(dt) {\n',
  '  netUpdate(dt) {\n    if(this.lanBot)return; // authoritative host actor: never overwrite learned moves/HP with a puppet snapshot\n');
 once('js/entities/projectile.js','if (!G.Camera.sees(p.x, p.y, 260))',
@@ -68,8 +84,14 @@ once('js/systems/combat.js','  function resolve(dt, pl, now) {',
  '  function resolve(dt, localPlayer, now) {\n    const pl=localPlayer;');
 once('js/systems/combat.js','      const p = projectiles[i];',
  '      const p = projectiles[i];\n      const pl=p.friendly&&p.owner?.lanBot?p.owner:localPlayer;');
-once('js/systems/combat.js','G.PKMSVVDash.direction(pl,G.Input.axis())',
- 'G.PKMSVVDash.direction(pl,pl.lanBotAxis||G.Input.axis())');
+// Directional dash now receives the explicit auto angle and distinguishes
+// local input from the bot's own axis in the shared patch. Verify rather
+// than applying the obsolete replacement a second time.
+{
+ const c=fs.readFileSync(path.join(game,'js/systems/combat.js'),'utf8');
+ if(!c.includes('G.PKMSVVDash.direction(pl,pl.lanBot?pl.lanBotAxis:G.Input.axis())'))
+  throw Error('LAN AI explicit dash direction anchor drift');
+}
 once('js/systems/combat.js',
  `        if (G.U.dist2(p.x, p.y, pl.x, pl.y) < (p.r + pl.r) * (p.r + pl.r)) {
           pl.hurt(p.dmg, p.mtype, false, p.cat);`,

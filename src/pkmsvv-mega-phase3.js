@@ -94,7 +94,7 @@ G.PKMSVVMegaPhase3=(()=>{
   (!p.shiny||G.Sprites.hasShiny?.(f.spriteId)===true)):null;
  function canActivate(p,ai=false){
   const f=formFor(p);
-  return !!(p&&f&&!p.dead&&G.Game?.state==='playing'&&!p._megaActive&&
+  return !!(p&&f&&!p.dead&&G.PKMSVVSpecialPowerQA?.allowsMega?.(p)!==false&&G.Game?.state==='playing'&&!p._megaActive&&
    !(p._megaCooldownRemaining>0)&&energy(p)>=ENERGY_MAX&&
    (ai?G.Coop?.isHost&&p.lanBot:isUnlocked(f)));
  }
@@ -123,7 +123,7 @@ G.PKMSVVMegaPhase3=(()=>{
   return p._megaEnergy;
  }
  function addEnergy(p,points){
-  if(!p||p.dead||p._megaActive||G.Game?.state!=='playing')return 0;
+  if(!p||p.dead||p._megaActive||p._pkmsvvSpecialPowerActive||G.Game?.state!=='playing')return 0;
   if(!Number.isFinite(points)||points<=0)return energy(p);
   p._megaEnergy=Math.min(ENERGY_MAX,energy(p)+points);
   return p._megaEnergy;
@@ -228,7 +228,7 @@ G.PKMSVVMegaPhase3=(()=>{
   // avoid stacking two Mega circles at the same screen coordinates.
   const lucarioOwnsButton=!!(p&&p.dex===G.MegaLucario?.BASE&&
     (G.MegaLucario?.eligible?.()||p._megaBackup));
-  const visible=!!(p&&candidate&&!p.dead&&G.Game?.state==='playing'&&
+  const visible=!!(p&&candidate&&!p.dead&&G.PKMSVVSpecialPowerQA?.allowsMega?.(p)!==false&&G.Game?.state==='playing'&&
     !lucarioOwnsButton);
   // A Shiny player may have a real normal Mega sheet but no genuine Shiny
   // variation. Keep the HUD visible and say why activation is disabled.

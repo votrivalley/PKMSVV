@@ -1,0 +1,132 @@
+'use strict';
+/* Stage9 source patch AFTER Stage8, before Web mirror build.
+ * Native 3DS Homing/Cone/Melee/Boomerang/Chain: reuse original swept projectile,
+ * wall/props, melee hit, type/weather and status logic. No production mutation.
+ */
+const fs=require('node:fs'),path=require('node:path');
+const root=path.resolve(__dirname,'..'),game=path.join(root,'vendor','pokesurvivor');
+function patch(rel,from,to){
+ const p=path.join(game,rel),s=fs.readFileSync(p,'utf8').replace(/\r\n/g,'\n');
+ const n=s.split(from).length-1;
+ if(n!==1)throw Error('Stage9 Web source anchor drift: '+rel+' matches='+n+' '+from.slice(0,100));
+ fs.writeFileSync(p,s.replace(from,to),'utf8');
+}
+fs.copyFileSync(path.join(root,'src','pkmsvv-3ds-stage9-homing-cone-melee.js'),
+ path.join(game,'js','systems','pkmsvv-3ds-stage9-homing-cone-melee.js'));
+const anchor='<script defer src="js/systems/pkmsvv-3ds-charge-stage8.js"></script>';
+patch('dev.html',anchor,anchor+
+ '\n<script defer src="js/systems/pkmsvv-3ds-stage9-homing-cone-melee.js"></script>');
+// Stage8 already routes five original Web engine families. Reuse those same
+// execution pipelines for all Stage9 source kinds; only Homing needs a switch alias.
+patch('js/systems/combat.js',
+ '&& ["projectile","dash","meteor","beam","nova"].includes(m.kind) &&',
+ '&& ["projectile","dash","meteor","beam","nova","homing","cone","melee","boomerang","chain"].includes(m.kind) &&');
+patch('js/systems/combat.js',
+ '!["projectile","dash","meteor","beam","nova"].includes(m.kind)',
+ '!["projectile","dash","meteor","beam","nova","homing","cone","melee","boomerang","chain"].includes(m.kind)');
+// The exact pinned 103-skill engine already routes Homing to its native
+// projectile family; the isolated QA mirror does not. Never add duplicate
+// switch cases on real PKMSVV.
+{
+ const rel='js/systems/combat.js';
+ const src=fs.readFileSync(path.join(game,rel),'utf8').replace(/\r\n/g,'\n');
+ if(!/case 'homing':\s+fireProjectiles\(pl, m\);/.test(src))
+  patch(rel,
+   "      case 'projectile': fireProjectiles(pl, m); break;",
+   "      case 'projectile': fireProjectiles(pl, m); break;\n"+
+   "      case 'homing':     fireProjectiles(pl, m); break;");
+}
+// Source already lists homing/bounce/stun/quake targeting and free-aim.
+// Extend only the older mirror TARGETED list.
+{
+ const rel='js/systems/combat.js';
+ const src=fs.readFileSync(path.join(game,rel),'utf8').replace(/\r\n/g,'\n');
+ const mirror="const TARGETED = ['melee', 'beam', 'projectile', 'boomerang', 'chain', 'meteor', 'dash', 'cone'];";
+ if(src.includes(mirror))
+  patch(rel,mirror,"const TARGETED = ['melee', 'beam', 'projectile', 'homing', 'boomerang', 'chain', 'meteor', 'dash', 'cone'];");
+ else if(!src.includes("const TARGETED = ['melee', 'beam', 'projectile', 'boomerang', 'chain', 'meteor', 'dash', 'cone',\n                    'homing', 'bounce', 'charge', 'spin', 'quake', 'vortex', 'shove', 'stun'];"))
+  throw Error('Stage9 native TARGETED real/mirror variant drift');
+}
+// Native-only extras. Do not expose these attributes on existing 103 legacy IDs.
+patch('js/systems/combat.js',
+ '      G.PKMSVV3DSStage6ProjectileFX.payload(m));',
+ '      G.PKMSVV3DSStage6ProjectileFX.payload(m),\n'+
+ '      m.pkmsvv3dsNative ? { pkmsvv3dsNative:true, critUp:m.critUp||0, splash:m.splash||0 } : {});');
+// Native Silver Wind: 15% chance on CAST, +8% ATK/+8% SPD for 6 s, three stacks.
+// Native real game broadcasts cast to LAN immediately after pl.cast,
+// while the public mirror has no broadcast. Preserve the multiplayer call.
+{
+ const rel='js/systems/combat.js';
+ const txt=fs.readFileSync(path.join(game,rel),'utf8').replace(/\r\n/g,'\n');
+ const real='    pl.cast(m);\n    if (G.Coop.active) G.Coop.cast(pl, m);\n    // Vínculo:';
+ const mirror='    pl.cast(m);\n    // Vínculo:';
+ const found=txt.includes(real)?real:txt.includes(mirror)?mirror:null;
+ if(!found)throw Error('Stage9 Silver Wind native cast/Co-op source drift');
+ const silver=
+ '    if(m.pkmsvv3dsNative && m.id==="silver-wind" && !ghost && Math.random()<(m.boost||0)){\n'+
+ '      pl.addBuff("atk",.08,6,3);pl.addBuff("spd",.08,6,3);\n'+
+ '      G.FX.dmgText?.(pl.x,pl.y-(pl.bodyH||20)-8,"ATK + SPD",G.U.TYPE_COLOR.bug,false);\n'+
+ '    }\n';
+ patch(rel,found,found.replace('    pl.cast(m);\n',
+   '    pl.cast(m);\n'+silver));
+}
+// Crunch native shred: the target takes 25% extra from direct attacks for 4s.
+// Use dt-based enemy status, not wall-clock time (pause and x1.5 safe).
+patch('js/entities/enemy.js',
+ '      if (this.slowT > 0) { this.slowT -= dt; if (this.slowT <= 0) this.slow = 0; }',
+ '      if(this.pkmsvv3dsShredT>0)this.pkmsvv3dsShredT=Math.max(0,this.pkmsvv3dsShredT-dt);\n'+
+ '      if (this.slowT > 0) { this.slowT -= dt; if (this.slowT <= 0) this.slow = 0; }');
+// Real PKMSVV already has Stats.taken + Kecleon ability modifiers.
+{
+ const rel='js/systems/combat.js';
+ const src=fs.readFileSync(path.join(game,rel),'utf8').replace(/\r\n/g,'\n');
+ const real='    const k = typeK(m.type, e) * G.Stats.taken(e.mon, m.cat) * abilityK(pl,m,e);';
+ const mirror='    const k = typeK(m.type, e);';
+ const found=src.includes(real)?real:src.includes(mirror)?mirror:null;
+ if(!found)throw Error('Stage9 direct-hit type/ability source drift');
+ patch(rel,found,found.slice(0,-1)+'*(e.pkmsvv3dsShredT>0?1.25:1);');
+}
+// Native Crush/Crun(ch) applies shred after *successful real hit* while
+// keeping existing Serene Grace/Sheer Force status behavior untouched.
+{
+ const rel='js/systems/combat.js';
+ const src=fs.readFileSync(path.join(game,rel),'utf8').replace(/\r\n/g,'\n');
+ const real='    if(m.slow&&statusK(pl))e.applySlow(m.slow*statusK(pl));';
+ const mirror='    if (m.slow) e.applySlow(m.slow);';
+ const found=src.includes(real)?real:src.includes(mirror)?mirror:null;
+ if(!found)throw Error('Stage9 Crunch native ability-status anchor drift');
+ patch(rel,found,found+'\n'+
+   '    if(m.pkmsvv3dsNative && m.shred>0 && !e.dead)e.pkmsvv3dsShredT=m.shred;');
+}
+// Flower Trick: +50% attack-local crit chance; cannot affect legacy bullets.
+patch('js/systems/combat.js',
+ '        const crit = p.pkmsvv3dsId ? G.PKMSVV3DSStage6ProjectileFX.rollCrit(pl,p) : isCrit(pl);',
+ '        const crit = (p.pkmsvv3dsId ? G.PKMSVV3DSStage6ProjectileFX.rollCrit(pl,p) : isCrit(pl)) ||\n'+
+ '          (p.pkmsvv3dsNative && p.critUp>0 && Math.random()<p.critUp);');
+// Retain real 103-skill abilityK + category/mcat + Arceus source K; append
+// only Crunch shred to projectile victim damage, never to props.
+{
+ const rel='js/systems/combat.js';
+ const src=fs.readFileSync(path.join(game,rel),'utf8').replace(/\r\n/g,'\n');
+ const real='          abilityK(pl,p.src,e) * G.PKMSVV3DSSkillPort.bossMultiplier(pl,e);';
+ const mirror='          (crit ? G.PKMSVV3DSSkillPort.critMultiplier(pl) : 1) * G.PKMSVV3DSSkillPort.bossMultiplier(pl, e);';
+ const found=src.includes(real)?real:src.includes(mirror)?mirror:null;
+ if(!found)throw Error('Stage9 projectile original ability/Crit source drift');
+ patch(rel,found,found.slice(0,-1)+' * (e.pkmsvv3dsShredT>0?1.25:1);');
+}
+// Moonblast on projectile impact: a single radial splash at 60% of PRIMARY
+// final hit damage, no recursion, no duplicate damage on the primary target.
+patch('js/systems/combat.js',
+ '        pl.onDealt(p.dmg * k);\n',
+ '        pl.onDealt(p.dmg * k);\n'+
+ '        if(p.pkmsvv3dsNative && p.splash>0){\n'+
+ '          const sx=e.x,sy=e.y,sr=p.splash;\n'+
+ '          G.FX.ring?.(sx,sy,4,sr,p.color,.25,3);\n'+
+ '          for(const other of G.EnemyMgr.queryCircle(sx,sy,sr)){\n'+
+ '            if(other.id===e.id||other.dead)continue;\n'+
+ '            const splashDamage=p.dmg*k*.6;\n'+
+ '            other.hurt(splashDamage,p.color,other.x-sx,other.y-sy,0);\n'+
+ '            pl.dmgDealt+=splashDamage;pl.onDealt(splashDamage);\n'+
+ '          }\n'+
+ '        }\n');
+console.log('PKMSVV_3DS_STAGE9_HOMING_CONE_MELEE_SOURCE_PATCH_PASS');

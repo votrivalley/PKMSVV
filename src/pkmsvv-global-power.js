@@ -128,6 +128,14 @@ G.GlobalPower = (() => {
     }
     return out;
   }
+  function cleanResearch(levels){
+    const out=clean(levels);for(const u of LIST)if(u.retired||u.id==='opening')delete out[u.id];return out;
+  }
+  // Research stores absolute targets, not extra ranks. Legacy purchases remain
+  // effective but never stack twice and are not part of the Co-op payment ledger.
+  function effectiveLevels(save){
+    return merge(save?.globalUpgrades,cleanResearch(save?.pkmsvvResearchRanks));
+  }
   function combine(per={},levels={}) {
     const L=id=>rank(levels,id);
     return {
@@ -174,5 +182,5 @@ G.GlobalPower = (() => {
   function tryRevive(pl) {
     return !!G.PKMSVVPippi?.tryRevive?.(pl);
   }
-  return {LIST,BY,rank,clean,cost,originalCost,PRICE_MULTIPLIER,legacyLedger,cleanLedger,spent,refundable,purchase,refundRetiredPowerups,refundRetiredHealing,refundAll,merge,combine,applyMove,tryRevive};
+  return {LIST,BY,rank,clean,cost,originalCost,PRICE_MULTIPLIER,legacyLedger,cleanLedger,spent,refundable,purchase,refundRetiredPowerups,refundRetiredHealing,refundAll,merge,cleanResearch,effectiveLevels,combine,applyMove,tryRevive};
 })();

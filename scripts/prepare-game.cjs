@@ -258,11 +258,11 @@ patch('js/ui/hud.js',
 // Xbox X / PC F / mobile dedicated button. Other 99 skills stay fully automatic.
 patch('js/systems/combat.js',
   "    if (m.kind === 'orbit') { orbit(pl, m, dt, now); return; }",
-  "    if (m.kind === 'dash') { m.t = Math.max(0, (m.t || 0) - dt); return; }\n" +
+  "    if (G.PKMSVVDash.isActive(m)) { m.t = Math.max(0, (m.t || 0) - dt); return; }\n" +
   "    if (m.kind === 'orbit') { orbit(pl, m, dt, now); return; }");
 patch("js/systems/combat.js",
   "  return { tick, resolve, ghostCast, ghostOrbit, updateFields, drawGroundFields, drawAirFields, clearFields,",
-  "  function manualDash(pl) {\n    if (!pl || pl.dead || G.Game.state !== 'playing') return false;\n    const pick = G.PKMSVVDash.preview(pl);\n    if (!pick || !pick.ready) return false;\n    G.PKMSVVDash.consume(pl,pick);\n    const m=pick.move;\n    m.t = G.PKMSVVBalance.effectiveCooldown(pl,m);\n    pl.cast(m);\n    if (G.Coop.active) G.Coop.cast(pl,m);\n    m.castAt = performance.now();\n    run(pl,m);\n    return true;\n  }\n  return { tick, manualDash, resolve, ghostCast, ghostOrbit, updateFields, drawGroundFields, drawAirFields, clearFields,");
+  "  function manualDash(pl, targetAngle) {\n    if (!pl || pl.dead || G.Game.state !== 'playing') return false;\n    const pick = G.PKMSVVDash.preview(pl,m=>G.PKMSVVDash.canTarget(pl,m));\n    if (!pick || !pick.ready) return false;\n    G.PKMSVVDash.consume(pl,pick);\n    const m=pick.move;\n    m.t = G.PKMSVVBalance.effectiveCooldown(pl,m);\n    pl.cast(m);\n    if (G.Coop.active) G.Coop.cast(pl,m);\n    m.castAt = performance.now();\n    run(pl,m);\n    return true;\n  }\n  return { tick, manualDash, resolve, ghostCast, ghostOrbit, updateFields, drawGroundFields, drawAirFields, clearFields,");
 const dashQueueSrc=fs.readFileSync(path.join(project,'src','pkmsvv-dash-queue.js'),'utf8');
 fs.writeFileSync(path.join(game,'js','systems','pkmsvv-dash-queue.js'),dashQueueSrc,'utf8');
 patch("dev.html",
@@ -283,19 +283,19 @@ patch('js/core/gamepad.js',
   "      if (hit(BT.X)) G.Input.virtual('keyf');");
 patch("js/ui/hud.js",
   "    // ---------- vínculo guardado (aún no hay dos movimientos sueltos) ----------",
-  "    // PKMSVV manual skill: preview uses the SAME queue as the F/X activation.\n    const manual = G.PKMSVVDash.preview(pl);\n    if (manual) {\n      const x = w - 90 - sa.right, y = h - 174 - sa.bottom, size = 64;\n      const m = manual.move, ready = manual.ready;\n      roundRect(ctx, x, y, size, size, 14);\n      ctx.fillStyle = ready ? '#1b6590' : 'rgba(13,29,54,.87)'; ctx.fill();\n      ctx.lineWidth = 2; ctx.strokeStyle = ready ? '#53e1ff' : '#59718f'; ctx.stroke();\n      G.Icons.draw(ctx, 'move:' + m.id, x + 14, y + 7, 36);\n      ctx.textAlign = 'center'; ctx.fillStyle = '#fff';\n      ctx.font = F(700, 10);\n      const moveName=G.T(m.name, 'move');\n      ctx.fillText(moveName.length > 12 ? moveName.slice(0, 11) + '…' : moveName,x + size / 2,y - 7);\n      ctx.font = F(800, 10);\n      ctx.fillText(ready ? 'F / X' : manual.remaining.toFixed(1)+'s',x+size/2,y+57);\n      if (manual.total > 1) {\n        ctx.font=F(700, 10);ctx.fillStyle='#a8eefe';\n        ctx.fillText((manual.index+1)+'/'+manual.total,x+size/2,y+size+13);\n      }\n      if(touch) G.Touch.addButton(x,y,size,size,()=>G.Combat.manualDash(pl),4);\n    }\n    // ---------- vínculo guardado (aún no hay dos movimientos sueltos) ----------");
+  "    // PKMSVV manual skill: preview uses the SAME queue as the F/X activation.\n    const manual = G.PKMSVVDash.preview(pl,m=>G.PKMSVVDash.canTarget(pl,m));\n    if (manual) {\n      const x = w - 90 - sa.right, y = h - 174 - sa.bottom, size = 64;\n      const m = manual.move, ready = manual.ready;\n      roundRect(ctx, x, y, size, size, 14);\n      ctx.fillStyle = ready ? '#1b6590' : 'rgba(13,29,54,.87)'; ctx.fill();\n      ctx.lineWidth = 2; ctx.strokeStyle = ready ? '#53e1ff' : '#59718f'; ctx.stroke();\n      G.Icons.draw(ctx, 'move:' + m.id, x + 14, y + 7, 36);\n      ctx.textAlign = 'center'; ctx.fillStyle = '#fff';\n      ctx.font = F(700, 10);\n      const moveName=G.T(m.name, 'move');\n      ctx.fillText(moveName.length > 12 ? moveName.slice(0, 11) + '…' : moveName,x + size / 2,y - 7);\n      ctx.font = F(800, 10);\n      ctx.fillText(ready ? 'F / X' : manual.remaining>0?manual.remaining.toFixed(1)+'s':G.T('Sin objetivo'),x+size/2,y+57);\n      if (manual.total > 1) {\n        ctx.font=F(700, 10);ctx.fillStyle='#a8eefe';\n        ctx.fillText((manual.index+1)+'/'+manual.total,x+size/2,y+size+13);\n      }\n      if(touch) G.Touch.addButton(x,y,size,size,()=>G.Combat.manualDash(pl),4);\n    }\n    // ---------- vínculo guardado (aún no hay dos movimientos sueltos) ----------");
 patch("js/ui/hud.js",
   "      if (m.kind === 'buff') ctx.fillText(m.lvl >= m.def.maxLvl ? 'MAX' : 'BUFF', x + 3, y + 10);",
-  "      if (m.kind === 'dash') { ctx.font = F(800, 7); ctx.fillText(G.T('Activa'), x + 3, y + 10); }\n      else if (m.kind === 'buff') ctx.fillText(m.lvl >= m.def.maxLvl ? 'MAX' : 'BUFF', x + 3, y + 10);");
+  "      if (G.PKMSVVDash.isActive(m)) { ctx.font = F(800, 7); ctx.fillText(G.T('Activa'), x + 3, y + 10); }\n      else if (m.kind === 'buff') ctx.fillText(m.lvl >= m.def.maxLvl ? 'MAX' : 'BUFF', x + 3, y + 10);");
 patch("js/ui/hud.js",
   "ctx.strokeStyle = fused ? BOND : m && m.evolved ? '#ffd23f' : on ? col : 'rgba(140,170,210,.22)';",
-  "ctx.strokeStyle = m && m.kind === 'dash' ? '#53e1ff' : fused ? BOND : m && m.evolved ? '#ffd23f' : on ? col : 'rgba(140,170,210,.22)';");
+  "ctx.strokeStyle = m && G.PKMSVVDash.isActive(m) ? '#53e1ff' : fused ? BOND : m && m.evolved ? '#ffd23f' : on ? col : 'rgba(140,170,210,.22)';");
 patch("js/systems/levelup.js",
   "tag: G.U.TYPE_NAME[d.type] + (d.cat ? ' · ' + G.Stats.NAME[d.cat] : ''),",
-  "tag: G.U.TYPE_NAME[d.type] + ' · ' + (d.kind === 'dash' ? G.T('Habilidad activa') + ' (F/X)' : d.kind === 'buff' ? G.T('Potenciador automático') : G.T('Habilidad automática')) + (d.cat ? ' · ' + G.Stats.NAME[d.cat] : ''),");
+  "tag: G.U.TYPE_NAME[d.type] + ' · ' + (G.PKMSVVDash.isActive(d) ? G.T('Habilidad activa') + ' (F/X)' : d.kind === 'buff' ? G.T('Potenciador automático') : G.T('Habilidad automática')) + (d.cat ? ' · ' + G.Stats.NAME[d.cat] : ''),");
 patch("js/ui/run-ui.js",
   "const cat = m.cat ? `<span class=\"tag-chip\" style=\"background:${col}\">${G.Stats.NAME[m.cat]}</span>` : '<span class=\"sub\">Mejora</span>';",
-  "const cat = `<span class=\"tag-chip\" style=\"background:${m.kind === 'dash' ? '#168bc0' : col}\">${G.T(m.kind === 'dash' ? 'Habilidad activa' : m.kind === 'buff' ? 'Potenciador automático' : 'Habilidad automática')}</span>`;");
+  "const cat = `<span class=\"tag-chip\" style=\"background:${G.PKMSVVDash.isActive(m) ? '#168bc0' : col}\">${G.T(G.PKMSVVDash.isActive(m) ? 'Habilidad activa' : m.kind === 'buff' ? 'Potenciador automático' : 'Habilidad automática')}</span>`;");
 patch('js/ui/settings-ui.js',
   "        + toggle('gamepad', 'Usar mando', 'Moverte, cambiar de ataque y manejar los menús con el mando.')",
   "        + toggle('gamepad', 'Usar mando', 'Moverte, activar habilidades especiales y manejar los menús con el mando.')");
@@ -661,6 +661,31 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-skill-forget.c
 // C: item comparison/skip, D: curated 2-move Fusion solo PvE, E: UTC visual season.
 for(const patchName of ['patch-held-item-ui.cjs','patch-bond-fusion.cjs','patch-season-event.cjs'])
  execFileSync(process.execPath,[path.join(project,'scripts',patchName)],{cwd:project,stdio:'inherit'});
+// PKMSVV 3DS-to-Web skill/passive port: shared uncompiled source for Web, Android and PC.
+// Keep this isolated QA branch out of production until compiled/mobile QA passes.
+execFileSync(process.execPath,[path.join(project,'scripts','patch-3ds-skill-effects-passives.cjs')],{cwd:project,stdio:'inherit'});
+// Stage 2: native-style 3DS attack families with actual hit/pull/area logic.
+execFileSync(process.execPath,[path.join(project,'scripts','patch-3ds-move-families.cjs')],{cwd:project,stdio:'inherit'});
+// Stage 4: native 3DS support with damage-category shields, Rest and real decoy aggro.
+execFileSync(process.execPath,[path.join(project,'scripts','patch-3ds-support-families.cjs')],{cwd:project,stdio:'inherit'});
+// Stage 5: native 3DS Scissor/Blitz/Leap/Explosion/Weather complete mechanics.
+execFileSync(process.execPath,[path.join(project,'scripts','patch-3ds-stage5-families.cjs')],{cwd:project,stdio:'inherit'});
+// Opt-in integrated Beta QA: keep ALL 2.5.5 gameplay/UI source, then append the
+// remaining native 3DS skill families BEFORE the original game is compiled.
+// The legacy full-176 standalone QA builds still install stages6–10 separately.
+// This flag is ONLY set in the native Beta QA workflow, never on live Beta.
+if (process.env.PKMSVV_BETA_176_SKILLS_QA === '1') {
+  for(const stage of [
+    'patch-3ds-stage6-projectiles.cjs',
+    'patch-3ds-stage7-dash-meteor.cjs',
+    'patch-3ds-stage8-beam-nova-charge.cjs',
+    'patch-3ds-stage9-homing-cone-melee.cjs',
+    'patch-3ds-stage10-final-moves.cjs'
+  ])
+    execFileSync(process.execPath,[path.join(project,'scripts',stage)],{cwd:project,stdio:'inherit'});
+  execFileSync(process.execPath,[path.join(project,'scripts','patch-native-passive-pressure.cjs')],{cwd:project,stdio:'inherit'});
+  console.log('PKMSVV_BETA_NATIVE_73_EFFECTS_APPLIED_TO_CURRENT_2_5_5_ENGINE');
+}
 // Final UI pass: compact Pokédex sort, Support native scrolling and accent-safe title.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-dex-support-mobile-ui.cjs')],{cwd:project,stdio:'inherit'});
 // Only Switch/Brewser: tolerate absent DOMContentLoaded and a stalled pixel-font Promise.
@@ -678,6 +703,29 @@ if (process.env.PKMSVV_SWITCH_BOOT === '1') {
     "  if (document.readyState === 'loading') { addEventListener('DOMContentLoaded',bootOnce); setTimeout(bootOnce,500); } else bootOnce();");
 }
 
+// Port of PokéSurvivor3DS power_after_hit: use existing direct and projectile
+// damage bookkeeping sites; ghost attacks and inactive powers do nothing.
+patch('js/systems/combat.js',
+ '    pl.dmgDealt += dmg;\n    m.dealt =',
+ '    if(!ghost){G.PKMSVVSpecialPowerQA?.afterHit?.(pl,e,dmg);G.PKMSVVFusionPilot?.afterHit?.(pl,e,m,dmg);}\n    pl.dmgDealt += dmg;\n    m.dealt =');
+patch('js/systems/combat.js',
+ '        pl.dmgDealt += p.dmg * k;\n        if (p.src)',
+ '        G.PKMSVVSpecialPowerQA?.afterHit?.(pl,e,p.dmg*k);\n        G.PKMSVVFusionPilot?.afterHit?.(pl,e,p.src,p.dmg*k,p.owner??pl);\n        pl.dmgDealt += p.dmg * k;\n        if (p.src)');
+
+// Stage 4 Terastal: apply before native hurt and damage bookkeeping, retaining
+// type effectiveness, crit, ability, boss and ghost handling.
+patch('js/systems/combat.js',
+ '    e.hurt(dmg,',
+ '    if(!ghost)dmg *= (G.PKMSVVSpecialPowerQA?.damageMultiplier?.(pl,m.type)??1);\n    e.hurt(dmg,');
+patch('js/systems/combat.js',
+ '        const k = (p.mtype ? typeK(p.mtype, e) : 1) *',
+ '        const k = (p.mtype ? typeK(p.mtype, e) : 1) * (G.PKMSVVSpecialPowerQA?.damageMultiplier?.(pl,p.mtype,p.owner??pl)??1) *');
+
+// 3DS SH_ZROLL visual adapter: keep native projectile movement and collision.
+// Only draw a separate Z glyph for this tagged QA projectile.
+patch('js/entities/projectile.js',
+ '      const v = p.vis || G.VFX.forType(\'normal\');',
+ '      if(p.pkmsvvZRoll){ctx.save();ctx.translate(p.x,p.y-L);ctx.rotate(p.t*5);ctx.globalAlpha=Math.min(1,(p.life-p.t)*4);ctx.font="900 32px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.lineWidth=4;ctx.strokeStyle="#ffe6a1";ctx.strokeText("Z",0,0);ctx.fillStyle=p.color;ctx.fillText("Z",0,0);ctx.restore();continue;}\n      const v = p.vis || G.VFX.forType(\'normal\');');
 // Pippi companion is packaged into the offline executable after all gameplay
 // patches. No remote sprites or assets are fetched at runtime.
 {

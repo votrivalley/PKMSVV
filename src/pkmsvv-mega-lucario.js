@@ -16,7 +16,7 @@ G.MegaLucario=(()=>{
  const owned=()=>!!(saved()&&saved().megaStones&&saved().megaStones.lucarionite);
  function eligible(){
   const p=player();
-  return !!(p&&p.dex===BASE&&!p.dead&&G.Game.state==='playing'&&
+  return !!(p&&p.dex===BASE&&!p.dead&&G.PKMSVVSpecialPowerQA?.allowsMega?.(p)!==false&&G.Game.state==='playing'&&
    !(G.Coop&&G.Coop.active)&&saved()?.pkmsvvChapter7Seen===true&&!p._megaUsed&&!p._megaActive&&(preview||owned())&&
    (!p.shiny||G.Sprites.hasShiny?.(SPRITE)===true));
  }

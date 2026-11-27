@@ -35,7 +35,7 @@ G.PKMSVVMegaGacha=(()=>{
  // Non-legendary Mega stones are common, legendary stones use separate 1.5%
  // base chance with a more attainable 30-roll pity due to expensive Arena Points.
  function pull(save=G.DB?.save,random=Math.random){
-  if(!canPull(save))return null;
+  if(G.PKMSVVSpecialPowerQA?.busy?.()||!canPull(save))return null;
   const ordinary=pool(save,false),rare=pool(save,true);
   const a=ledger(save);
   const guaranteed=a.pity>=LEGEND_PITY-1;
@@ -147,7 +147,7 @@ G.PKMSVVMegaGacha=(()=>{
   const regular=document.createElement('button'),mega=document.createElement('button');
   for(const el of [regular,mega]){el.type='button';el.className='btn pkmsvv-mega-gacha-tab';}
   regular.id='pkmsvv-gacha-tab-pokemon';regular.textContent='◉ Pokémon';
-  mega.id='pkmsvv-gacha-tab-mega';mega.textContent=tr('✧ Tiến hóa Mega','✧ Mega Evolution');
+  mega.id='pkmsvv-gacha-tab-mega';mega.textContent=tr('✧ Sức mạnh Đặc biệt','✧ Special Powers');
   tabs.append(regular,mega);container.insertBefore(tabs,gens);
   const panel=document.createElement('div');panel.id='pkmsvv-mega-gacha-panel';
   panel.className='pkmsvv-mega-gacha-panel';panel.hidden=true;
@@ -164,6 +164,29 @@ G.PKMSVVMegaGacha=(()=>{
    '<div id="pkmsvv-mega-gacha-result" role="status" aria-live="polite"></div>'+
    '<p id="pkmsvv-mega-gacha-note" class="note"></p></div>';
   container.insertBefore(panel,gens);
+  const extra=document.createElement('section');extra.id='pkmsvv-power-gacha-extra';extra.style.cssText='grid-column:1/-1;display:grid;gap:8px;padding:10px;';
+  panel.append(extra);
+  let powerResult='';
+  function refreshExtra(){
+   const api=G.PKMSVVSpecialPowerQA;extra.replaceChildren();if(!api){extra.hidden=true;return;}extra.hidden=false;
+   const title=document.createElement('h3');title.textContent=tr('Vật phẩm Sức mạnh Đặc biệt','Special Power Items');extra.append(title);
+   for(const [id,label,total] of [['dynamax','Dynamax Band',1],['zmove','Z-Crystal',18],['terastal','Tera Crystal',18]]){
+    const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap;';
+    const desc=document.createElement('span');const remaining=api.pool(G.DB?.save,id).length;
+    desc.textContent=label+' · '+(total-remaining)+'/'+total;
+    const btn=document.createElement('button');btn.type='button';btn.className='btn small gold';btn.dataset.powerBuy=id;
+    btn.textContent=remaining===0?tr('Đã sở hữu đủ','Complete'): (id==='dynamax'?tr('Mua','Buy'):tr('Quay không trùng','Draw new'))+' · '+api.COST+' Arena';
+    btn.disabled=busy||!api.canBuy(id);btn.onclick=async()=>{
+     if(busy||!api.canBuy(id))return;
+     busy=true;refreshExtra();$('pkmsvv-mega-gacha-pull').disabled=true;
+     try{const result=await api.buy(id);powerResult=result?label+(result.type?' · '+result.type.toUpperCase():'')+' ✓':tr('Không mua được. Điểm không bị trừ.','Purchase failed. Points not charged.');}
+     finally{busy=false;refresh();}
+    };
+    row.append(desc,btn);extra.append(row);
+   }
+   const note=document.createElement('p');note.textContent=tr('Mỗi lượt Z/Tera nhận một hệ chưa sở hữu. Vật phẩm dùng chung, không tiêu hao.','Each Z/Tera draw grants an unowned type. Items are shared and reusable.');extra.append(note);
+   const result=document.createElement('p');result.setAttribute('role','status');result.textContent=powerResult;extra.append(result);
+  }
   const sample=formCatalog().filter(f=>f.stoneKey);
   const preview=$('pkmsvv-mega-gacha-preview');
   for(const f of [sample[0],sample[Math.floor(sample.length/3)],sample[Math.floor(sample.length*2/3)]]){
@@ -196,7 +219,8 @@ G.PKMSVVMegaGacha=(()=>{
        'Normal Mega 98.5% · Legendary Mega 1.5% · Guaranteed by pull 30.');
    const btn=$('pkmsvv-mega-gacha-pull');
    btn.textContent=tr('🎰 Quay Mega · 100 Điểm Arena','🎰 Mega Spin · 100 Arena Points');
-   btn.disabled=busy||!canPull(save);
+   btn.disabled=busy||!canPull(save)||!!G.PKMSVVSpecialPowerQA?.busy?.();
+   refreshExtra();
    $('pkmsvv-mega-gacha-note').textContent=!save.pkmsvvChapter7Seen?
     tr('🔒 Đánh bại Champion đầu tiên ở Chương 8 để mở máy quay Mega.',
        '🔒 Defeat your first Champion in Chapter 8 to unlock Mega Gacha.'):

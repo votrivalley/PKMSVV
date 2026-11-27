@@ -27,14 +27,21 @@ for(const file of ['lan-connect.html','lan-connect.js'])
  fs.mkdirSync(images,{recursive:true});
  fs.cpSync(pippi,path.join(images,'pippi'),{recursive:true});
  const lab=path.join(root,'assets/coop-lab');
+ const v3=path.join(lab,'research-v3');
+ if(fs.existsSync(v3)){
+  // Reject partial or altered approved artwork before copying to the game.
+  execFileSync(process.execPath,['-e',"require('./scripts/import-research-v3.cjs').verify(process.argv[1]).catch(e=>{console.error(e);process.exitCode=1})",v3],{cwd:root,stdio:'inherit'});
+ }
  if(!fs.existsSync(path.join(lab,'room_base.png')))throw Error('Fossil Lab native room missing');
  fs.cpSync(lab,path.join(images,'coop-lab'),{recursive:true});
  if(process.env.PKMSVV_FOSSIL_NATIVE_QA==='1'){
+  if(fs.existsSync(v3))execFileSync(process.execPath,[path.join(root,'scripts/build-research-v3-skins.cjs'),path.join(images,'coop-lab','research-v3','skins')],{cwd:root,stdio:'inherit'});
   const layers=path.join(images,'coop-lab','source-cutouts-qa');
   execFileSync(process.execPath,[path.join(root,'scripts/extract-research-layers.cjs'),layers],
    {cwd:root,stdio:'inherit'});
   for(const name of ['manifest.json','clean-backdrop.png','restoration_chamber.png',
-   'support_shelf.png','mega_desk.png','berry_garden.png','companion_pedestal.png'])
+   'support_shelf.png','mega_desk.png','berry_garden.png','companion_pedestal.png',
+    'prop-support.png','prop-mega.png','prop-berry.png','prop-companion.png','prop-fossil.png'])
    if(!fs.existsSync(path.join(layers,name)))throw Error('Research QA missing '+name);
  }
  // FOSSIL_CONCEPT_ASSETS_V256: ship approved concept cutouts to real LAN Beta.
@@ -65,13 +72,15 @@ for(const file of ['lan-connect.html','lan-connect.js'])
    // Restore gameplay QA controls omitted by this newer native Beta packaging:
    // 8/MAX auto-level-up, active skill AUTO, speed, controller shortcuts.
    'pkmsvv-runtime-controls-qa.js',
+   'pkmsvv-modal-navigation-qa.js',
    // A real in-world Sky Pillar tileset, NOT just the region-menu WebP card.
-   'pkmsvv-sky-tower-world-qa.js'
+   'pkmsvv-sky-tower-world-qa.js','pkmsvv-special-power-qa.js'
   ];
   const stylesheets=[
    'pkmsvv-box-stage1.css','pkmsvv-box-stage2.css','pkmsvv-box-stage3.css',
    'pkmsvv-box-hub.css','pkmsvv-v20-ui-qa.css','pkmsvv-quick-region.css',
    'pkmsvv-runtime-controls-qa.css',
+   'pkmsvv-modal-navigation-qa.css',
    // Restore the full-width held-item comparison styles from the older QA
    // build, with a targeted override after native item modal styles.
    'pkmsvv-held-item-layout-qa.css'
@@ -113,8 +122,25 @@ for(const file of ['lan-connect.html','lan-connect.js'])
    // HTML contains its text. A same-origin external file executes reliably.
    // Switches are NEVER copied into PC/Android/production builds or saves.
    const runtimeFlags='window.PKMSVV_PIPPI_COUSIN_QA_100=false;\n'+
-    'window.PKMSVV_MEGA_FULL_CATALOG_QA=true;\n';
+    'window.PKMSVV_MEGA_FULL_CATALOG_QA=true;\n'+
+    'window.PKMSVV_RESEARCH_V3_QA='+String(fs.existsSync(path.join(v3,'manifest.json')))+';\n'+
+    'window.PKMSVV_RESEARCH_SKIN_QA=true;\n'+
+    'window.PKMSVV_RESEARCH_MACHINE_QA=true;\n'+
+    'window.PKMSVV_FOSSIL_REWARDS_QA=true;\n'+
+    'window.PKMSVV_BERRY_COINS_QA=true;\n'+
+    'window.PKMSVV_RESEARCH_ART_QA='+JSON.stringify(require('../data/pkmsvv-coop-lab-catalog.json').roomArt)+';\n';
    const qaConfig='pkmsvv-qa-runtime-config.js';
+   const labCatalog=require('../data/pkmsvv-coop-lab-catalog.json');
+   const labCore=fs.readFileSync(path.join(root,'src/pkmsvv-coop-lab-core.cjs'),'utf8');
+   const configAnchor="require('../data/pkmsvv-coop-lab-catalog.json')";
+   if(!labCore.includes(configAnchor))throw Error('Station skin economy config anchor missing');
+   const browserCore=labCore.replace(configAnchor,JSON.stringify(labCatalog));
+   const skinModule='pkmsvv-research-skin-economy-qa.js';
+   const skinBundle='(function(){const module={exports:{}};\n'+browserCore+
+    '\nconst E=module.exports;window.PKMSVVStationSkinEconomy=Object.freeze({...E.stationSkinEconomy,registry:E.config.stationSkins});if(window.PKMSVV_RESEARCH_MACHINE_QA===true&&window.G?.GlobalPower)window.PKMSVVResearchMachines=Object.freeze(E.createMachineUpgradeEconomy(G.GlobalPower));if(window.PKMSVV_FOSSIL_REWARDS_QA===true)window.PKMSVVCreateFossilRewardGate=E.createFossilRewardGate;if(window.PKMSVV_BERRY_COINS_QA===true)window.PKMSVVCreateBerryRewardGate=E.createBerryRewardGate;})();\n';
+   fs.mkdirSync(path.join(folder,'js/ui'),{recursive:true});
+   fs.writeFileSync(path.join(folder,'js/ui',skinModule),skinBundle);
+   injectScript.push('<script defer src="js/ui/'+skinModule+'?v='+revision+'"></script>');
    fs.mkdirSync(path.join(folder,'js/ui'),{recursive:true});
    fs.writeFileSync(path.join(folder,'js/ui',qaConfig),runtimeFlags);
    // An earlier Beta may cache the former 100% QA switch.
@@ -163,6 +189,29 @@ for(const file of ['lan-connect.html','lan-connect.js'])
   fs.writeFileSync(headers,output,'utf8');
   if(!installed)throw Error('Unified Beta PokéBox not installed in any route');
   console.log('PKMSVV_UNIFIED_BETA_POKEMON_255',installed,'route(s), revision',revision);
+ }
+ // Web Beta has a genuine manual WebRTC Host/Join mode at /ai/game/ when
+ // ?pkmsvvWifi=1; previously this path was never packaged and Cloudflare
+ // returned an empty page. Use the SAME native 2.5.5 game HTML and assets,
+ // with a base href to avoid duplicating 90 MB or changing any player save.
+ // This route only exists on standalone-AI Beta; native PC LAN needs /game/.
+ if(process.env.PKMSVV_STANDALONE_AI==='1'){
+  const gameEntry=path.join(to,'game','index.html');
+  const wifiEntry=path.join(to,'ai','game','index.html');
+  const html=fs.readFileSync(gameEntry,'utf8');
+  if(!/<head(?:\s[^>]*)?>/i.test(html)||!html.includes('app.min.js')||
+    !html.includes('pkmsvv-coop'))throw Error('Wi-Fi Host/Join route: native Beta game entry missing');
+  const routed=html.replace(/<head(?:\s[^>]*)?>/i,m=>m+'\n<base href="/game/">');
+  fs.mkdirSync(path.dirname(wifiEntry),{recursive:true});
+  fs.writeFileSync(wifiEntry,routed,'utf8');
+  if(!routed.includes('<base href="/game/">')||
+    !routed.includes('pkmsvv-box-hub-ui.js?v='))
+   throw Error('Wi-Fi Host/Join did not retain the native Beta shell');
+  fs.appendFileSync(path.join(to,'_headers'),
+   '\n/ai/game\n  Cache-Control: no-store, max-age=0\n'+
+   '/ai/game/\n  Cache-Control: no-store, max-age=0\n'+
+   '/ai/game/index.html\n  Cache-Control: no-store, max-age=0\n');
+  console.log('PKMSVV_BETA_WEBRTC_HOST_JOIN_ROUTE_READY=/ai/game/ -> /game/assets');
  }
  const sw=path.join(to,'sw.js');if(fs.existsSync(sw))fs.rmSync(sw);
 if(!fs.existsSync(path.join(to,'game','js','app.min.js')))throw Error('Missing LAN compiled game');

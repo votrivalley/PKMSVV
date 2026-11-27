@@ -609,20 +609,161 @@ G.PKMSVVWiki=(()=>{
  // Research Lab modular furnishing renderer: no painted-in purchases.
  // Each owned object is its own alpha asset, positioned by the shared catalog.
  // A screenshot of the original furnished room is reference art only.
+ // Approved V3 artwork defaults on only in the packaged isolated QA build, not a release.
+ function approvedLabV3Preview(){
+  if(typeof window==='undefined'||!['localhost','127.0.0.1','beta.pkmsvv-web.pages.dev','research-ui-qa.pkmsvv-web.pages.dev'].includes(window.location.hostname))return false;
+  const q=new URLSearchParams(window.location.search);
+  if(q.get('pkmsvvLabV3')==='1')return true;
+  if(q.get('pkmsvvLabV3')==='0'||q.has('pkmsvvLabLayers'))return false;
+  return window.PKMSVV_RESEARCH_V3_QA===true;
+ }
+ // Only relative files from the approved station catalog can replace a sprite.
+ function skinRegistry(){return window.PKMSVVStationSkinEconomy;}
+ function machineRegistry(){return window.PKMSVV_RESEARCH_MACHINE_QA===true&&skinRegistry()?.registry?.purchaseEnabled!==true?window.PKMSVVResearchMachines:null;}
+ function skinEntry(station,id){return skinRegistry()?.registry?.variants?.find(x=>x.station===station&&x.id===id);}
+ function skinFile(station,id){
+  const entry=id==='default'?skinRegistry()?.registry?.defaults?.find(x=>x.station===station):skinEntry(station,id);
+  const p=entry?.spritePath;
+  return typeof p==='string'&&/^images\/coop-lab\/research-v3\/skins\/[a-z0-9_-]+\.png$/.test(p)?p.slice('images/coop-lab/research-v3/'.length):null;
+ }
+ function pendingLabV3(stage){
+  // Never paint the fully furnished legacy reference, even for one frame.
+  stage.dataset.researchArtMode='loading-v3';
+  stage.setAttribute('aria-busy','true');
+  stage.style.setProperty('background-image','none','important');
+  stage.style.setProperty('background-color','#102e38','important');
+  stage.style.setProperty('aspect-ratio','1500 / 1049','important');
+  let status=stage.querySelector('.pkmsvv-lab-v3-loading');
+  if(!status){
+   status=document.createElement('div');status.className='pkmsvv-lab-v3-loading';
+   status.setAttribute('role','status');
+   Object.assign(status.style,{position:'absolute',inset:'0',display:'flex',alignItems:'center',justifyContent:'center',zIndex:'12',background:'#102e38',color:'#ffe3a0',textAlign:'center',padding:'12px',boxSizing:'border-box'});
+   stage.append(status);
+  }
+  status.textContent=tr('Đang tải phòng nghiên cứu…','Loading Research Lab…');
+  status.onclick=null;
+ }
+ async function renderApprovedLabV3(stage,revision){
+  const base='images/coop-lab/research-v3/';
+  try{
+   const response=await fetch(base+'manifest.json',{cache:'no-store'});
+   if(!response.ok)throw Error('Research manifest unavailable');
+   const m=await response.json();
+   if(m.version!==3||m.canvas?.width!==1500||m.canvas?.height!==1049||
+    m.background!=='backdrop.png'||m.readyForFurnitureSwap!==false||
+    !Array.isArray(m.layers)||m.layers.length!==6||!Array.isArray(m.labels)||m.labels.length!==5)throw Error('Invalid research manifest');
+   const ids=['crest','support','fossil','mega','berry','companion'];
+   const slots={crest:'decor',support:'shelf_left',fossil:'center',mega:'shelf_right',berry:'garden',companion:'trophy'};
+   const rect=p=>['x','y','w','h'].every(k=>Number.isInteger(p[k]))&&p.x>=0&&p.y>=0&&p.w>0&&p.h>0&&p.x+p.w<=1500&&p.y+p.h<=1049;
+   if(!ids.every(id=>m.layers.filter(p=>p.id===id&&p.file===id+'.png'&&p.slot===slots[id]&&rect(p)).length===1)||
+     !ids.slice(1).every(id=>m.labels.filter(p=>p.id===id&&rect(p)).length===1))throw Error('Invalid research layers');
+   const load=(file)=>new Promise((resolve,reject)=>{
+    const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=base+file;
+   });
+   const preview=stage.classList.contains('pkmsvv-build-stage')&&window.PKMSVV_RESEARCH_SKIN_QA===true;
+   const choices=m.layers.map(p=>{
+    const machine=machineRegistry()?.status(G.DB?.save,p.id);
+    const equipped=machine?.upgraded?p.id+'_advanced':skinRegistry()?.status(G.DB?.save,p.id)?.equipped||'default';
+    const selected=preview?stage.dataset['skin'+p.id]:undefined;
+    const id=selected===undefined?equipped:selected;
+    const file=p.id==='crest'?p.file:skinFile(p.id,id);
+    if(!file)throw Error('Research skin registry not ready: '+p.id);
+    return {id,file};
+   });
+   const [background,...images]=await Promise.all([load(m.background),...m.layers.map(async(p,i)=>{
+    try{const img=await load(choices[i].file);if(img.naturalWidth!==p.w||img.naturalHeight!==p.h)throw Error('Invalid skin dimensions');return img;}
+    catch(_){throw Error('Unable to load selected '+p.id+' skin');}
+   })]);
+   if(background.naturalWidth!==1500||background.naturalHeight!==1049||
+      images.some((img,i)=>img.naturalWidth!==m.layers[i].w||img.naturalHeight!==m.layers[i].h))throw Error('Invalid research sprite dimensions');
+   // Only a successfully loaded Royal companion sprite can hide its old
+   // chest; missing or invalid art preserves the default room.
+   const companionIndex=m.layers.findIndex(p=>p.id==='companion');
+   let underlay=null,supportUnderlay=null;
+   if(choices[companionIndex]?.id==='default'&&choices[companionIndex]?.file==='skins/companion-basic.png'){
+    try{const img=await load('skins/companion-basic-floor.png');if(img.naturalWidth===146&&img.naturalHeight===102)underlay=img;}catch(_){}
+   }
+   const supportIndex=m.layers.findIndex(p=>p.id==='support');
+   if(choices[supportIndex]?.id==='default'&&choices[supportIndex]?.file==='skins/support-basic.png'){
+    try{const img=await load('skins/support-basic-wall.png');if(img.naturalWidth===465&&img.naturalHeight===12)supportUnderlay=img;}catch(_){}
+   }
+   if(stage.dataset.labRenderRevision!==revision||!stage.isConnected)return;
+   stage.querySelectorAll('.pkmsvv-lab-furniture,.pkmsvv-lab-source-layer,.pkmsvv-lab-station-prop,.pkmsvv-lab-v3-layer,.pkmsvv-lab-v3-underlay').forEach(x=>x.remove());
+   const place=(el,p)=>{el.style.left=p.x/1500*100+'%';el.style.top=p.y/1049*100+'%';el.style.width=p.w/1500*100+'%';el.style.height=p.h/1049*100+'%';};
+   if(underlay){
+    underlay.className='pkmsvv-lab-v3-underlay';underlay.dataset.labUnderlay='companion_basic';
+    underlay.alt='';underlay.draggable=false;underlay.setAttribute('aria-hidden','true');
+    Object.assign(underlay.style,{position:'absolute',objectFit:'fill',pointerEvents:'none',zIndex:'0',maxWidth:'none',margin:'0',padding:'0',border:'0'});
+    place(underlay,{x:925,y:670,w:146,h:102});stage.prepend(underlay);
+   }
+   if(supportUnderlay){
+    supportUnderlay.className='pkmsvv-lab-v3-underlay';supportUnderlay.dataset.labUnderlay='support_basic';
+    supportUnderlay.alt='';supportUnderlay.draggable=false;supportUnderlay.setAttribute('aria-hidden','true');
+    Object.assign(supportUnderlay.style,{position:'absolute',objectFit:'fill',pointerEvents:'none',zIndex:'0',maxWidth:'none',margin:'0',padding:'0',border:'0'});
+    place(supportUnderlay,{x:64,y:350,w:465,h:12});stage.prepend(supportUnderlay);
+   }
+   for(let i=0;i<m.layers.length;i++){
+    const p=m.layers[i],img=images[i];img.className='pkmsvv-lab-v3-layer';img.dataset.labLayer=p.id;img.dataset.labSlot=p.slot;img.dataset.labSkin=choices[i].id;
+    img.alt='';img.draggable=false;img.setAttribute('aria-hidden','true');
+    Object.assign(img.style,{position:'absolute',objectFit:'fill',pointerEvents:'none',zIndex:'1',maxWidth:'none',margin:'0',padding:'0',border:'0'});
+    place(img,p);stage.prepend(img);
+   }
+   stage.style.setProperty('background-image','url("'+base+m.background+'")','important');
+   stage.style.setProperty('background-size','100% 100%','important');
+   stage.style.setProperty('aspect-ratio','1500 / 1049','important');
+   for(const label of m.labels){
+    const part=m.layers.find(p=>p.id===label.id),button=stage.querySelector('[data-research-hotspot="'+label.id+'"]');
+    if(button){
+     const x=Math.min(part.x,label.x),y=Math.min(part.y,label.y);
+     const w=Math.max(part.x+part.w,label.x+label.w)-x,h=Math.max(part.y+part.h,label.y+label.h)-y;
+     place(button,{x,y,w,h});button.style.zIndex='4';
+     button.querySelectorAll('.pkmsvv-research-scene-object').forEach(n=>n.style.setProperty('display','none','important'));
+     const tag=button.querySelector('.pkmsvv-research-hotspot-tag');
+     if(tag){Object.assign(tag.style,{position:'absolute',left:(label.x-x)/w*100+'%',top:(label.y-y)/h*100+'%',width:label.w/w*100+'%',height:label.h/h*100+'%',margin:'0',padding:'0',boxSizing:'border-box'});}
+    }
+    const spot=stage.querySelector('[data-build-slot="'+part.slot+'"]');if(spot)place(spot,part);
+   }
+   stage.querySelector('.pkmsvv-lab-v3-loading')?.remove();
+   stage.removeAttribute('aria-busy');
+   stage.dataset.researchArtMode='approved-v3';
+  }catch(error){
+   if(stage.dataset.labRenderRevision!==revision||!stage.isConnected)return;
+   // Fail closed: a broken asset must not pretend that all stations are upgraded.
+   stage.dataset.researchArtMode='error-v3';stage.removeAttribute('aria-busy');
+   const status=stage.querySelector('.pkmsvv-lab-v3-loading');
+   if(status){status.replaceChildren();const retry=document.createElement('button');retry.type='button';retry.textContent=tr('Không tải được phòng. Thử lại','Could not load room. Retry');retry.onclick=()=>renderFurnitureLayers(stage);status.append(retry);}
+   console.warn('[Research V3 QA] Asset load failed',String(error));
+  }
+ }
  function modularLabPreview(){
+  if(approvedLabV3Preview())return false;
   if(typeof window==='undefined'||!window.location)return false;
   const host=String(window.location.hostname||'');
   if(!['localhost','127.0.0.1','beta.pkmsvv-web.pages.dev','research-ui-qa.pkmsvv-web.pages.dev'].includes(host))return false;
-  return /(?:^|[?&])pkmsvvLabLayers=1(?:&|$)/.test(String(window.location.search||''));
+  // Existing QA hosts opt into the original-art layer scene by default.
+  // Explicit 0 returns to the unchanged classic backdrop for comparison.
+  const query=String(window.location.search||'');
+  if(/(?:^|[?&])pkmsvvLabLayers=1(?:&|$)/.test(query))return true;
+  return !/(?:^|[?&])pkmsvvLabLayers=0(?:&|$)/.test(query);
  }
  function renderFurnitureLayers(stage){
   if(!stage)return;
-  stage.querySelectorAll('.pkmsvv-lab-furniture,.pkmsvv-lab-source-layer').forEach(x=>x.remove());
+  stage.querySelectorAll('.pkmsvv-lab-furniture,.pkmsvv-lab-source-layer,.pkmsvv-lab-station-prop,.pkmsvv-lab-v3-layer,.pkmsvv-lab-v3-underlay').forEach(x=>x.remove());
   const modular=modularLabPreview();
-  stage.dataset.researchArtMode=modular?'modular':'classic';
+  const revision=String((Number(stage.dataset.labRenderRevision)||0)+1);
+  stage.dataset.labRenderRevision=revision;
+  stage.dataset.researchArtMode='classic';
+  const layerLoads=[];
+  // Artwork must never require a wallet adapter or unlocked save.
+  if(approvedLabV3Preview()){
+   pendingLabV3(stage);
+   void renderApprovedLabV3(stage,revision);
+   return;
+  }
   const E=G.PKMSVVCoopEconomy,conf=E?.config,save=G.DB?.save;
-  if(!conf?.roomArt?.slots)return;
-  if(modular)for(const part of conf.roomArt.sourceLayers||[]){
+  const art=window.PKMSVV_RESEARCH_ART_QA||conf?.roomArt;
+  if(!art?.slots)return;
+  if(modular)for(const part of art.sourceLayers||[]){
    const img=document.createElement('img');
    img.className='pkmsvv-lab-source-layer';
    img.src='images/coop-lab/source-cutouts-qa/'+part.file;
@@ -635,8 +776,37 @@ G.PKMSVVWiki=(()=>{
    img.style.width=part.w/960*100+'%';
    img.style.height=part.h/672*100+'%';
    img.setAttribute('aria-hidden','true');
+   layerLoads.push(new Promise(resolve=>{
+    img.addEventListener('load',()=>resolve(true),{once:true});
+    img.addEventListener('error',()=>resolve(false),{once:true});
+    if(img.complete)resolve(img.naturalWidth>0);
+   }));
    stage.prepend(img);
   }
+  if(modular&&layerLoads.length){
+   const bg=new Image();
+   layerLoads.push(new Promise(resolve=>{
+    bg.onload=()=>resolve(true);bg.onerror=()=>resolve(false);
+    bg.src='images/coop-lab/source-cutouts-qa/clean-backdrop.png';
+   }));
+   Promise.all(layerLoads).then(ok=>{
+    if(stage.dataset.labRenderRevision===revision&&ok.every(Boolean))
+     stage.dataset.researchArtMode='modular';
+   });
+  }
+  // Real scenery props, independent from machine skins and clickable labels.
+  // A missing QA asset simply leaves the original room and label usable.
+  if(modular)for(const prop of art.stationProps||[]){
+   const img=document.createElement('img');
+   img.className='pkmsvv-lab-station-prop';img.dataset.labProp=prop.id;
+   img.src='images/coop-lab/source-cutouts-qa/'+prop.file;
+   img.alt='';img.draggable=false;img.setAttribute('aria-hidden','true');
+   img.style.left=prop.x/960*100+'%';img.style.top=prop.y/672*100+'%';
+   img.style.width=prop.w/960*100+'%';img.style.height=prop.h/672*100+'%';
+   img.addEventListener('error',()=>img.remove(),{once:true});
+   stage.append(img);
+  }
+  if(!E?.normal||!conf?.items)return;
   const owned=E.normal(save);
   for(const [slot,coords] of Object.entries(conf.roomArt.slots)){
    const itemId=owned.equippedDecorBySlot?.[slot];
@@ -666,6 +836,7 @@ G.PKMSVVWiki=(()=>{
   back.dataset.back='1';head.append(title,back);box.append(head);
   const E=G.PKMSVVCoopEconomy;
   const unlocked=E?.isMachineUnlocked?.(G.DB?.save)===true;
+  const skinQA=approvedLabV3Preview()&&window.PKMSVV_RESEARCH_SKIN_QA===true;
   const current=()=>E?.normal?.(G.DB?.save)||G.DB?.save?.pkmsvvCoopLab||{};
   const note=document.createElement('p');note.className='pkmsvv-pc-hint';
   note.textContent=unlocked?
@@ -682,7 +853,7 @@ G.PKMSVVWiki=(()=>{
   const h=document.createElement('h3'),desc=document.createElement('p'),
    items=document.createElement('div');items.className='pkmsvv-build-items';
   info.append(h,desc,items);
-  const slots=[
+  let slots=[
    ['wall_left',43,31,63,32,'Tường trái','Left wall'],
    ['wall_right',213,31,63,32,'Tường phải','Right wall'],
    ['center',111,62,91,82,'Máy phục nguyên','Revival machine'],
@@ -692,6 +863,13 @@ G.PKMSVVWiki=(()=>{
    ['desk',235,132,79,34,'Bàn nghiên cứu','Research desk'],
    ['trophy',250,124,29,47,'Bệ danh dự','Trophy pedestal']
   ];
+  const v3Station={center:'fossil',shelf_left:'support',shelf_right:'mega',garden:'berry',trophy:'companion'};
+  if(skinQA){
+   slots=slots.filter(s=>Object.hasOwn(v3Station,s[0]));
+   const namesBySlot={center:['Máy phục nguyên','Restoration machine'],shelf_left:['Pokémon hỗ trợ','Supports'],shelf_right:['Mega','Mega'],garden:['Berry','Berries'],trophy:['Bạn đồng hành','Companions']};
+   slots=slots.map(s=>[...s.slice(0,5),...namesBySlot[s[0]]]);
+   note.textContent=machineRegistry()?tr('Chọn máy để nâng cấp chỉ số toàn đội bằng Xu Đồng Đội. Xem thử ngoại hình miễn phí.','Select a machine to research permanent team stats with Co-op Coins. Preview is free.'):tr('Chọn máy để xem skin, sở hữu và trang bị. Xem thử miễn phí; skin chưa duyệt không thể mua.','Select a station to view skins, ownership and equipment. Preview is free; unapproved skins cannot be purchased.');
+  }
   const names={
    machine_old:['Máy phục nguyên nguyên mẫu','Original restoration machine',0],
    machine_future:['Máy phục nguyên tối tân','Advanced restoration machine',1300],
@@ -718,13 +896,89 @@ G.PKMSVVWiki=(()=>{
   function inspect(slot){
    const record=slots.find(x=>x[0]===slot);if(!record)return;
    stage.querySelectorAll('.pkmsvv-build-spot').forEach(b=>b.classList.toggle('selected',b.dataset.buildSlot===slot));
-   h.textContent=tr(record[5]==='Revival machine'?'Máy phục nguyên':record[4],record[5]);
+   h.textContent=tr(record[5],record[6]);
    const save=current();
    desc.textContent=tr('Đang trang bị: ','Equipped: ')+
     (names[save.equippedDecorBySlot?.[slot]]?.[G.I18n?.lang==='en'?1:0]||
     tr('Chưa có vật phẩm','Empty'))+
     ' · '+tr('Xu Đồng Đội: ','Co-op Coins: ')+(save.coopCoins||0);
    items.replaceChildren();
+   if(skinQA){
+    const station=v3Station[slot];if(!station)return;
+    const economy=skinRegistry(),view=economy?.status(G.DB?.save,station);
+    const machine=machineRegistry(),mview=machine?.status(G.DB?.save,station);
+    const equipped=mview?.upgraded?station+'_advanced':view?.equipped||'default';
+    const selected=stage.dataset['skin'+station]??equipped;
+    const displayName=id=>id==='default'?tr('Cơ bản','Basic'):tr(skinEntry(station,id)?.nameVi||'Skin',skinEntry(station,id)?.nameEn||'Skin');
+    desc.textContent=tr('Đang trang bị: ','Equipped: ')+displayName(equipped)+' · '+tr('Xu Đồng Đội: ','Co-op Coins: ')+(view?.coins??save.coopCoins??0);
+    desc.dataset.skinWallet=String(view?.coins??save.coopCoins??0);
+    const variants=(view?.variants||[{id:'default',owned:true,available:true,price:0}]).map(v=>mview?.upgraded&&v.id===station+'_advanced'?{...v,owned:true}:v);
+    for(const item of variants){
+     const id=item.id,variant=id;
+     const row=document.createElement('div');row.className='pkmsvv-build-item';row.dataset.skinItem=id;
+     const label=document.createElement('span');label.textContent=displayName(id)+(id==='default'?' · '+tr('Miễn phí','Free'):'');
+     const state=document.createElement('small');state.dataset.skinState=equipped===id?'equipped':item.owned?'owned':'unowned';
+     state.textContent=equipped===id?tr('Đang trang bị','Equipped'):item.owned?tr('Đã sở hữu','Owned'):item.available?tr('Chưa sở hữu','Not owned'):tr('Chưa sở hữu · Chưa bán','Not owned · Not for sale');
+     if(item.available&&!item.owned)state.textContent+=' · '+item.price+' '+tr('xu','coins');
+     const b=document.createElement('button');b.type='button';b.className='pkmsvv-pc-close';b.dataset.buildPreview=variant;
+     b.disabled=variant===selected;b.textContent=variant===selected?tr('Đang xem','Previewed'):tr('Xem thử','Preview');
+     b.onclick=()=>{stage.dataset['skin'+station]=variant;renderFurnitureLayers(stage);inspect(slot);};
+     const action=document.createElement('button');action.type='button';action.className='pkmsvv-pc-close';action.dataset.skinTransaction=id;
+     const gate=economy?.registry?.purchaseEnabled===true&&view?.unlocked===true&&!G.DB?.guest&&typeof G.DB?.commit==='function';
+     action.disabled=!gate||!item.available||equipped===id||(!item.owned&&view.coins<item.price);
+     action.textContent=equipped===id?tr('Đang đặt','Equipped'):!item.available?tr('Chưa bán','Not for sale'):!gate?tr('Yêu cầu Co-op','Locked'):item.owned?tr('Trang bị','Equip'):tr('Mua · '+item.price+' xu','Buy · '+item.price+' coins');
+     action.onclick=async()=>{
+      if(action.disabled)return;
+      action.disabled=true;
+      // Refuse to charge for a missing or wrong-size sprite, even after future catalog approval.
+      const player=G.DB?.save;
+      if(id!=='default'){
+       const file=skinFile(station,id);
+       const source=stage.querySelector('[data-lab-layer="'+station+'"]');
+       const expected=[source?.naturalWidth,source?.naturalHeight];
+       const valid=file&&await new Promise(resolve=>{const img=new Image();img.onload=()=>resolve(img.naturalWidth===expected[0]&&img.naturalHeight===expected[1]);img.onerror=()=>resolve(false);img.src='images/coop-lab/research-v3/'+file;});
+       if(!valid){if(stage.isConnected)inspect(slot);return;}
+      }
+      if(!stage.isConnected||!action.isConnected||player!==G.DB?.save||G.DB?.guest||typeof G.DB?.commit!=='function')return;
+      const commit=()=>G.DB.commit(true);
+      const result=item.owned?economy.equipSkin(player,station,id,commit):economy.buySkin(player,id,commit);
+      if(result.ok){delete stage.dataset['skin'+station];renderFurnitureLayers(stage);G.UI?.refreshCoins?.();}
+      else G.UI?.toast?.(tr('Chưa giao dịch được.','Transaction unavailable.'),2200);
+      inspect(slot);
+     };
+     row.append(label,state,b,action);items.append(row);
+    }
+    if(mview){
+     const heading=document.createElement('strong');heading.textContent=tr('Nghiên cứu chỉ số toàn đội','Permanent team research');items.append(heading);
+     const tip=document.createElement('small');tip.textContent=tr('Nâng chỉ số lần đầu sẽ tự đổi máy sang Chuyên dụng. Hiệu lực vĩnh viễn từ trận kế tiếp.','First successful rank upgrades this machine. Permanent effect from the next run.');items.append(tip);
+     for(const stat of mview.stats){
+      const row=document.createElement('div');row.className='pkmsvv-build-item';row.dataset.researchStat=stat.id;
+      const label=document.createElement('span');label.textContent=tr(stat.vi,stat.en)+' · Lv '+stat.level+'/'+stat.max;
+      const effect=document.createElement('small');effect.textContent=tr(stat.viUnit,stat.enUnit);
+      const b=document.createElement('button');b.type='button';b.className='pkmsvv-pc-close';b.dataset.researchUpgrade=stat.id;
+      b.disabled=!mview.unlocked||stat.level>=stat.max||mview.coins<stat.price||G.DB?.guest||typeof G.DB?.commit!=='function';
+      b.textContent=stat.level>=stat.max?'MAX':tr('Nâng · '+stat.price+' xu','Upgrade · '+stat.price+' coins');
+      b.onclick=async()=>{
+       if(b.disabled)return;b.disabled=true;
+       const player=G.DB?.save,file=skinFile(station,station+'_advanced');
+       const source=stage.querySelector('[data-lab-layer="'+station+'"]');
+       const expected=[source?.naturalWidth,source?.naturalHeight];
+       const valid=file&&await new Promise(resolve=>{const img=new Image();img.onload=()=>resolve(img.naturalWidth===expected[0]&&img.naturalHeight===expected[1]);img.onerror=()=>resolve(false);img.src='images/coop-lab/research-v3/'+file;});
+       if(!stage.isConnected||!b.isConnected||player!==G.DB?.save)return;
+       if(!valid){inspect(slot);return;}
+       const result=machine.upgrade(player,station,stat.id,()=>G.DB.commit(true));
+       if(result.ok){delete stage.dataset['skin'+station];renderFurnitureLayers(stage);G.UI?.refreshCoins?.();}
+       else G.UI?.toast?.(tr('Chưa nâng được.','Upgrade unavailable.'),2200);
+       inspect(slot);
+      };
+      row.append(label,effect,b);items.append(row);
+     }
+    }
+    const reset=document.createElement('button');reset.type='button';reset.className='pkmsvv-pc-close';reset.dataset.buildPreviewReset='1';
+    reset.textContent=tr('Hủy xem thử tất cả','Discard all previews');
+    reset.onclick=()=>{for(const id of Object.values(v3Station))delete stage.dataset['skin'+id];renderFurnitureLayers(stage);inspect(slot);};
+    items.append(reset);return;
+   }
    for(const id of available[slot]){
     const n=names[id],item=E?.config?.items?.find(x=>x.id===id);
     const owned=!!save?.ownedDecor?.[id]||id==='machine_old';
@@ -739,9 +993,9 @@ G.PKMSVVWiki=(()=>{
      tr('Giá '+n[2]+' Xu Đồng Đội','Price '+n[2]+' Co-op Coins');
     const btn=document.createElement('button');btn.type='button';
     btn.className='pkmsvv-pc-close';btn.dataset.buildEquip=id;
-    btn.disabled=!ready||!unlocked||equipped||G.DB?.guest||typeof G.DB?.commit!=='function'||
+    btn.disabled=approvedLabV3Preview()||!ready||!unlocked||equipped||G.DB?.guest||typeof G.DB?.commit!=='function'||
      (!owned&&(Number(save.coopCoins)||0)<Number(item?.price));
-    btn.textContent=!ready?tr('Chưa có sprite','No sprite'):
+    btn.textContent=approvedLabV3Preview()?tr('Chỉ xem thử V3','V3 preview only'):!ready?tr('Chưa có sprite','No sprite'):
      !unlocked?tr('🔒 Cần Co-op','🔒 Co-op required'):equipped?tr('Đang đặt','Equipped'):
      owned?tr('Trưng bày','Equip'):tr('Mua · '+n[2]+' xu','Buy · '+n[2]+' coins');
     btn.onclick=()=>{
@@ -769,6 +1023,7 @@ G.PKMSVVWiki=(()=>{
   const footer=document.createElement('p');footer.className='pkmsvv-pc-hint';
   footer.textContent=tr('Ảnh gốc là tranh ghép một lớp: hiện giữ nguyên để bảo toàn chất lượng. Việc tách từng món và phục dựng phần tường/sàn bị che sẽ cần kiểm định mỹ thuật riêng; không tự trừ xu cho đồ chưa hoàn chỉnh.',
     'The original room is one flattened image, preserved for visual quality. Extracted furnishings and obscured background still require art validation; unfinished items cannot charge coins.');
+  if(skinQA)footer.textContent=machineRegistry()?tr('Nghiên cứu dùng Xu Đồng Đội. Lần nâng đầu tiên tự đổi máy sang Chuyên dụng.','Research uses Co-op Coins. First rank upgrades machine appearance.'):tr('Skin chỉ đổi ngoại hình, không đổi chức năng của máy. Danh mục hiện chưa bán.','Skins change appearance only. The current catalog is not for sale.');
   box.append(footer);overlay.append(box);document.body.append(overlay);
   inspect('center');back.focus({preventScroll:true});
   G.PKMSVVPippiGuide?.openFeature?.('construction');return true;
@@ -799,7 +1054,7 @@ G.PKMSVVWiki=(()=>{
    switch(kind){
     case 'support':close();G.PKMSVVSupportCatalog?.open?.({fromResearchLab:true});
      G.PKMSVVPippiGuide?.openFeature?.('support');return;
-    case 'mega':close();G.PKMSVVMegaEntry?.open?.({fromResearchLab:true});
+    case 'mega':close();if(G.PKMSVVSpecialPowerQA?.open)G.PKMSVVSpecialPowerQA.open();else G.PKMSVVMegaEntry?.open?.({fromResearchLab:true});
      G.PKMSVVPippiGuide?.openFeature?.('mega');return;
     case 'berry':berryGuide();return;
     case 'companion':pippiCorner();return;
@@ -813,10 +1068,9 @@ G.PKMSVVWiki=(()=>{
     tip:'Mega thì mạnh đó. Nhưng nhớ nha: biến hình không chữa được tật bấm loạn nút!'},
    {id:'berry',x:10,y:150,w:92,h:65,vi:'Berry',en:'Berries',
     tip:'Berry thì ăn được. Còn mẫu cây tiền sử kia? Đừng có hái nấu canh!'},
-   // Lower-right workbench: the visible egg belongs to Bạn đồng hành,
-   // not to a floating toolbar icon or the unrelated support station.
+   // The Pippi sprite identifies the companion pedestal; the egg belongs to Support.
    {id:'companion',x:213,y:151,w:96,h:64,vi:'Bạn đồng hành',en:'Companions',
-    tip:'Đụng vào quả trứng này là tới phòng chăm sóc đồng hành. Đừng bắt tui ấp hộ nha!'},
+    tip:'Mèn ơi, chỗ này là để chăm sóc bạn đồng hành. Tui có giành cái bệ đâu nghen!'},
    {id:'fossil',x:115,y:62,w:91,h:82,vi:'Phục nguyên',en:'Restore fossils',
     tip:'Máy phục nguyên chưa tự chạy bằng niềm tin đâu nha. Hoàn thành Co-op lần đầu trước!'}
   ];
@@ -885,7 +1139,7 @@ G.PKMSVVWiki=(()=>{
    b.setAttribute('aria-label',tr('Mở '+z.vi,'Open '+z.en));
    // The artwork is scenery, not an icon attached to a UI chip.
    // The whole furnishing (including its small caption) remains tappable.
-   if(stationArt[z.id]){
+   if(!modularLabPreview()&&stationArt[z.id]){
     const prop=document.createElement('span');prop.className='pkmsvv-research-scene-object';
     prop.dataset.researchObject=z.id;prop.setAttribute('aria-hidden','true');
     prop.innerHTML=stationArt[z.id];
@@ -999,8 +1253,8 @@ G.PKMSVVWiki=(()=>{
     tr('Bắt đầu với 3 ô kỹ năng. Mở thêm 5 ô vĩnh viễn bằng cách hạ tổng 50, 100, 200 quái và đạt tổng 10, 20 cấp Nâng cấp. Tiến độ cộng dồn qua nhiều trận và áp dụng cho MỌI Pokémon. Khi lên cấp trong trận, bạn chọn chiêu để học/nâng cấp; mở ô không tự tặng chiêu.',
        'Start with 3 move slots. Permanently unlock 5 more by defeating 50, 100 and 200 enemies in total and earning 10 and 20 combined Upgrade ranks. Progress carries across runs for ALL Pokémon. Choose moves on level-up; unlocking a slot does not grant a free move.')],
    [tr('✨ Fusion — Dung hợp kỹ năng','✨ Fusion — Skill Fusion'),
-    tr('Cả hai chiêu gốc phải đạt MAX. Hãy chọn công thức Fusion để dung hợp chúng thành một kỹ năng MỚI đạt MAX. Hai chiêu gốc được thay bằng một chiêu mới, giải phóng một ô kỹ năng. Mỗi trận chỉ Fusion một lần; Bond từ Khe Nứt là cơ chế riêng.',
-       'Choose a Fusion recipe, train both source moves to MAX and merge them into an entirely NEW MAX-level move. This replaces two moves with one and frees a slot. One Fusion per run; Rift Bonds are separate.')],
+    tr('Cả hai chiêu gốc phải đạt MAX. Fusion nay là cộng hưởng: giữ nguyên hai chiêu và chọn một phản ứng mỗi trận Khám phá Solo. Dấu tồn tại 5 giây; phản ứng hồi 3 giây. Bond từ Khe Nứt là cơ chế riêng.',
+       'Train both source moves to MAX and choose one resonance per Solo Explore run. Both moves remain. Marks last 5 seconds; reactions have a 3-second cooldown. Rift Bonds are separate.')],
    [tr('Mystery Orb','Mystery Orb'),null]
   ];
   // The permanent Skill Awakening achievement is 8/8 shared move SLOTS.
@@ -1032,16 +1286,8 @@ G.PKMSVVWiki=(()=>{
      const recipes=document.createElement('div');recipes.className='pkmsvv-fusion-recipes';
      for(const formula of G.PKMSVVFusionPilot?.RECIPES||[]){
       const row=document.createElement('div');row.className='pkmsvv-fusion-recipe';
-      for(const id of formula.ids){
-       const pair=document.createElement('span');pair.className='pkmsvv-fusion-move';
-       const icon=document.createElement('span');icon.innerHTML=G.Icons?.html?.('move:'+id,20)||'✦';
-       const label=document.createElement('span');label.textContent=G.T?.(G.Moves?.BY_ID?.[id]?.name||id,'move')||id;
-       pair.append(icon,label);row.append(pair);
-      }
-      const fusionIcon=document.createElement('img');
-      fusionIcon.className='pkmsvv-fusion-icon';fusionIcon.src='assets/fusion-icons/'+formula.id+'.webp';
-      fusionIcon.alt='';fusionIcon.width=52;fusionIcon.height=52;fusionIcon.loading='lazy';
-      row.prepend(fusionIcon);
+      row.style.gridTemplateColumns='minmax(0,1fr)';
+      const pair=document.createElement('span');pair.textContent=tr(formula.viPair,formula.enPair);row.append(pair);
       const result=document.createElement('strong');result.className='pkmsvv-fusion-result';
       result.textContent='▶ '+tr(formula.vi,formula.en)+' · MAX + MAX';row.append(result);
       const effect=document.createElement('p');effect.className='pkmsvv-fusion-benefit';

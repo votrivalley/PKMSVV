@@ -1,0 +1,45 @@
+name: INCIDENT QA - Mewtwo Explore 1m08 crash and Coop host/join black screen (baseline vs 176)
+on:
+  push:
+    branches: [feature/web-3ds-skill-effects-passives-qa-20261121]
+    paths: ['.github/workflows/beta-176-explore-coop-incident-qa.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  regression:
+    name: Real browser Explore 100s / Co-op route (${{ matrix.kind }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - kind: baseline-2.5.5
+            run_id: 44787502842
+            artifact: PKMSVV-Fossil-Native-Gameplay-QA
+          - kind: integrated-176
+            run_id: 45226624374
+            artifact: PKMSVV-Beta-255-176-Skills-Integrated-QA-NEVER-LIVE
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install exact browser test dependencies
+        run: |
+          npm pkg set 'overrides.node-abi=4.40.0'
+          npm install --no-audit --no-fund
+      - uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+          run-id: ${{ matrix.run_id }}
+          name: ${{ matrix.artifact }}
+          path: dist/incident-artifact
+      - name: Probe real host/join route and run uninterrupted Kanto Mewtwo 100 second browser battle
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+          PKMSVV_INCIDENT_CASE: ${{ matrix.kind }}
+          PKMSVV_INCIDENT_DIST: dist/incident-artifact
+        run: timeout 185s node tests/beta-176-explore-coop-repro-browser.cjs

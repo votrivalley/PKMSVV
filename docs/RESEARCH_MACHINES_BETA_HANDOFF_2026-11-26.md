@@ -1,0 +1,7 @@
+# Research Machines Beta handoff — 2026-11-26
+
+Approved scope: test release only, existing beta alias. Exact QA source 151998bef3c49b62da18acd49302b0dd926ee99d, workflow 45759667540 (all three related workflows success). New publish workflow checks real synthetic-profile machine research report and ten PNGs before deploying, requires a byte-matching rollback artifact for the current Beta, verifies live CDN bytes, and never targets production. No real save modifications.
+
+Next feature preparation: actual Co-op reward loop. Current build-info explicitly still notes no rewards/full-clear QA pending; the research test seeds 240 Co-op Coins in a fresh synthetic browser profile. Do not claim mission payouts have been tested. Before expanding permanent upgrades, inspect native mission result path and current Co-op economy bridge; wire verified 8-minute victory receipt, 200 first-clear / 120 replay and optional bonuses according to configured rules, loss/duplicate/reconnect handling, save failure rollback and Guardian; then prove real mission completion funds machine upgrade without synthetic money. Preserve current reward config until user approves changes; no added feature or production deploy in this handoff.
+
+Potential balance: permanent bonuses currently use the old GlobalPower formulas and maxima, prices are provisional (80 + 40 per rank, reroll 160 + 80 per rank). Confirm whether competitive modes should apply these bonuses before expanding.

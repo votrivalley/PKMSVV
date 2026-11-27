@@ -50,16 +50,18 @@ G.PKMSVVDash = (() => {
     }
     return true;
   }
-  function preview(pl) {
+  function isActive(m){return ['dash','blitz','leap'].includes(m?.kind);}
+  function canTarget(pl,m){return m?.kind==='dash'||!!G.PKMSVV3DSStage5Combat?.hasMovementTarget?.(pl,m);}
+  function preview(pl,eligible=()=>true) {
     if (!pl || !Array.isArray(pl.moves)) return null;
-    const moves = pl.moves.filter(m => m.kind === 'dash');
+    const moves = pl.moves.filter(isActive);
     const total = moves.length;
     if (!total) return null;
     const start = (cursor.get(pl) || 0) % total;
     for (let step = 0; step < total; step++) {
       const index = (start + step) % total;
       const move = moves[index];
-      if (!(move.t > 0)) {
+      if (!(move.t > 0)&&eligible(move)) {
         const rest=readyIn(pl);
         return {move,index,total,ready:rest<=0,remaining:rest};
       }
@@ -78,5 +80,5 @@ G.PKMSVVDash = (() => {
     locks.set(pl,now()+LOCK_MS);
     return true;
   }
-  return {preview,consume,direction,begin,advance,profile,canUse,readyIn,LOCK_MS,PROFILES};
+  return {isActive,canTarget,preview,consume,direction,begin,advance,profile,canUse,readyIn,LOCK_MS,PROFILES};
 })();

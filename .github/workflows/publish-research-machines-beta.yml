@@ -1,0 +1,160 @@
+name: Publish verified Active Skills and Fossil Rewards to existing Beta only
+on:
+  push:
+    branches: [feature/web-3ds-skill-effects-passives-qa-20261121]
+    paths: ['.github/workflows/publish-research-machines-beta.yml']
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: pkmsvv-native-176-beta-publish
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify immutable successful build and isolated research test
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/45772302034" --jq '{head_sha,status,conclusion}' | jq -e '.head_sha=="dd8eb75c55af308a6925f25b5772f24e2bbfdb18" and .status=="completed" and .conclusion=="success"'
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/45774373646" --jq '{head_sha,status,conclusion}' | jq -e '.head_sha=="da47bfd940dc4c636be0092842466e679224d269" and .status=="completed" and .conclusion=="success"'
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/45774985667" --jq '{head_sha,status,conclusion}' | jq -e '.head_sha=="bf9f0d5f7b4adfab50b32770c5597c1eb5905147" and .status=="completed" and .conclusion=="success"'
+      - uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+          run-id: 45772302034
+          name: PKMSVV-Beta-255-176-Skills-Integrated-QA-NEVER-LIVE
+          path: dist/new
+      - uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+          run-id: 45772302034
+          name: PKMSVV-Research-Room-Browser-QA
+          path: dist/report
+      - uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+          run-id: 45774373646
+          name: Fossil-native-reward-research-browser-QA
+          path: dist/fossil-report
+      - uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+          run-id: 45774985667
+          name: Native-active-touch-browser-QA
+          path: dist/touch-report
+      - name: Validate machine research, active controls, native reward and playable routes
+        run: |
+          set -euo pipefail
+          jq -e '.qaCommit=="dd8eb75c55af308a6925f25b5772f24e2bbfdb18" and .production==false and .previewBranch=="beta" and .skills==176' dist/new/build-info.json
+          report=$(find dist/report -name report.json -print -quit)
+          test -n "$report"
+          jq -e '.status=="PASS" and .machineFlow.status=="PASS" and .machineFlow.realCommit and .machineFlow.unmodifiedCatalog and .machineFlow.powerRank==2 and .machineFlow.finalCoins==40 and .machineFlow.reloaded and .machineFlow.independentSprite and .machineFlow.oldMenuRedirect' "$report"
+          fossil=$(find dist/fossil-report -name report.json -print -quit)
+          touch=$(find dist/touch-report -name report.json -print -quit)
+          test -n "$fossil" && test -n "$touch"
+          jq -e '.status=="PASS" and .duration>=480 and .earned==240 and .remaining==160 and .rank==1 and .atk==1.12' "$fossil"
+          jq -e '.status=="PASS" and .touchTap and .touchHoldOn and .repeatsAfterRelease and .touchHoldOff and .actualShadowForceMovement and .species==487' "$touch"
+          grep -Fq 'window.PKMSVV_FOSSIL_REWARDS_QA=true' dist/new/game/js/ui/pkmsvv-qa-runtime-config.js
+          grep -Fq 'window.PKMSVV_RESEARCH_MACHINE_QA=true' dist/new/game/js/ui/pkmsvv-qa-runtime-config.js
+          grep -Fq 'PKMSVVResearchMachines' dist/new/game/js/ui/pkmsvv-research-skin-economy-qa.js
+          grep -Fq 'effectiveLevels' dist/new/game/js/app.min.js
+          grep -Fq '<base href="/game/">' dist/new/ai/game/index.html
+          grep -Fq 'pkmsvv-coop' dist/new/ai/game/index.html
+          for station in support mega berry companion fossil; do
+            test -s "dist/new/game/images/coop-lab/research-v3/skins/$station-basic.png"
+            cmp "dist/new/game/images/coop-lab/research-v3/$station.png" "dist/new/game/images/coop-lab/research-v3/skins/$station-advanced.png"
+          done
+          test -s dist/new/game/images/coop-lab/research-v3/skins/companion-basic-floor.png
+          test -s dist/new/game/images/coop-lab/research-v3/skins/support-basic-wall.png
+          if find dist/new -type f -size +25M | grep -q .; then exit 1; fi
+      - name: Find byte-verified rollback artifact for CURRENT Beta (fail closed)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          base=https://beta.pkmsvv-web.pages.dev
+          curl -fsSL --max-time 30 -H 'Cache-Control: no-cache' "$base/build-info.json?before=$GITHUB_SHA" -o /tmp/beta-before.json
+          old=$(jq -er '.qaCommit | select(test("^[a-f0-9]{40}$"))' /tmp/beta-before.json)
+          jq -e '.production==false and .previewBranch=="beta"' /tmp/beta-before.json
+          echo "CURRENT_BETA=$old"
+          if [ "$old" = dd8eb75c55af308a6925f25b5772f24e2bbfdb18 ]; then
+            cp -a dist/new dist/old
+          elif [ "$old" = 151998bef3c49b62da18acd49302b0dd926ee99d ]; then
+            gh run download 45759667540 --repo "$GITHUB_REPOSITORY" --name PKMSVV-Beta-255-176-Skills-Integrated-QA-NEVER-LIVE --dir dist/old
+          elif [ "$old" = 89398aa454283be0a9835b4828355a2cc8fe7531 ]; then
+            gh run download 44787502842 --repo "$GITHUB_REPOSITORY" --name PKMSVV-Fossil-Native-Gameplay-QA --dir dist/old
+          else
+            found=no
+            for run in $(gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$old&status=success&per_page=100" --jq '.workflow_runs[].id'); do
+              name=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run/artifacts?per_page=100" --jq '.artifacts[]|select(.expired==false and .name=="PKMSVV-Beta-255-176-Skills-Integrated-QA-NEVER-LIVE")|.name' | head -n1)
+              if [ -n "$name" ]; then
+                gh run download "$run" --repo "$GITHUB_REPOSITORY" --name "$name" --dir dist/old
+                found=yes; break
+              fi
+            done
+            test "$found" = yes
+          fi
+          jq -e --arg old "$old" '.qaCommit==$old and .production==false and .previewBranch=="beta"' dist/old/build-info.json
+          for f in game/index.html game/js/app.min.js; do
+            curl -fsSL --max-time 60 -H 'Cache-Control: no-cache' "$base/$f?before=$GITHUB_SHA" -o /tmp/beta-before-file
+            cmp /tmp/beta-before-file "dist/old/$f"
+          done
+          echo "ROLLBACK_VERIFIED=$old"
+      - name: Deploy exact artifact ONLY to existing Beta branch
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN" && test -n "$CLOUDFLARE_ACCOUNT_ID"
+          touch .beta-upload-started
+          npx --yes wrangler@4 pages deploy dist/new --project-name pkmsvv-web --branch beta
+      - name: Verify live Beta metadata and exact bytes including all ten station sprites
+        run: |
+          set -euo pipefail
+          base=https://beta.pkmsvv-web.pages.dev
+          for n in $(seq 1 24); do
+            cache="$GITHUB_SHA-$n"
+            if ! curl -fsSL --max-time 25 -H 'Cache-Control: no-cache' "$base/build-info.json?rev=$cache" -o /tmp/live-meta ||
+               ! cmp -s /tmp/live-meta dist/new/build-info.json; then
+              sleep 5; continue
+            fi
+            ok=yes
+            for f in game/index.html ai/game/index.html game/js/app.min.js game/js/ui/pkmsvv-qa-runtime-config.js game/js/ui/pkmsvv-research-skin-economy-qa.js game/images/coop-lab/research-v3/backdrop.png game/images/coop-lab/research-v3/skins/*; do
+              # Expand the local directory, not a remote wildcard.
+              if [[ "$f" == *'*' ]]; then
+                for local in dist/new/game/images/coop-lab/research-v3/skins/*.png; do
+                  relative=$local
+                  relative=$(printf '%s' "$relative" | sed 's|^dist/new/||')
+                  if ! curl -fsSL --max-time 30 "$base/$relative?rev=$cache" -o /tmp/live-file || ! cmp -s /tmp/live-file "$local"; then ok=no; break; fi
+                done
+              elif ! curl -fsSL --max-time 60 "$base/$f?rev=$cache" -o /tmp/live-file || ! cmp -s /tmp/live-file "dist/new/$f"; then ok=no; break
+              fi
+            done
+            if [ "$ok" = yes ]; then echo "RESEARCH_BETA_BYTES_VERIFIED=$base/game/"; exit 0; fi
+            sleep 5
+          done
+          echo '::error::Beta alias not verified; rollback required'
+          exit 1
+      - name: Roll back only Beta on failed publish or verification
+        if: ${{ failure() }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          if [ -e .beta-upload-started ] && [ -s dist/old/build-info.json ]; then
+            npx --yes wrangler@4 pages deploy dist/old --project-name pkmsvv-web --branch beta
+            echo 'BETA_ROLLBACK_SUBMITTED'
+          else
+            echo 'No upload attempted; Beta untouched'
+          fi

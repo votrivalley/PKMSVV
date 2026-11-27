@@ -1,0 +1,46 @@
+name: PKMSVV - Full 3DS Skill Catalog Diff QA
+on:
+  push:
+    branches: [feature/web-3ds-skill-effects-passives-qa-20261121]
+    paths:
+      - scripts/audit-3ds-native-moves.cjs
+      - scripts/extract-3ds-combat-profiles.cjs
+      - docs/SKILL_BALANCE.md
+      - .github/workflows/3ds-native-move-catalog-audit.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compare-3ds-and-pkmsvv:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check syntax and confirm PKMSVV baseline 103 skill IDs
+        run: |
+          node --check scripts/audit-3ds-native-moves.cjs
+          node --check scripts/extract-3ds-combat-profiles.cjs
+          node -e "require('./scripts/audit-3ds-native-moves.cjs').readCurrent(require('fs').readFileSync('docs/SKILL_BALANCE.md','utf8'));"
+      - name: Fetch 3DS generated move catalog from exact v1.0.0 tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch v1.0.0 --filter=blob:none --sparse https://github.com/juanluismm521/pokesurvivor3ds.git vendor/3ds-source
+          git -C vendor/3ds-source sparse-checkout set src/gen
+          test -s vendor/3ds-source/src/gen/gamedata.cpp
+      - name: Compare every native skill ID/family with PKMSVV original 103
+        run: |
+          node scripts/audit-3ds-native-moves.cjs vendor/3ds-source/src/gen/gamedata.cpp
+          node scripts/extract-3ds-combat-profiles.cjs vendor/3ds-source/src/gen/gamedata.cpp
+          test -s dist/3ds-skill-audit/AUDIT.md
+          test -s dist/3ds-skill-audit/audit.json
+          cat dist/3ds-skill-audit/AUDIT.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PKMSVV-3DS-FULL-SKILL-CATALOG-COMPARISON
+          path: dist/3ds-skill-audit/
+          retention-days: 14
+          if-no-files-found: error

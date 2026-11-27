@@ -56,3 +56,19 @@ test('the QA preview is local, uses nine separate PNGs and never creates currenc
  assert.match(page,/Ẩn tất cả/);
  assert.doesNotMatch(page,/pkmsvvCoopLab|localStorage|fetch\(/);
 });
+
+
+test('five separately positioned, large semantic scenery props use trimmed native icon files',()=>{
+ const c=require('../data/pkmsvv-coop-lab-catalog.json');
+ assert.deepEqual(c.roomArt.stationProps.map(p=>p.id),['support','mega','berry','companion','fossil']);
+ for(const p of c.roomArt.stationProps){
+  assert.equal(p.file,'prop-'+p.id+'.png');
+  assert.ok(p.w>=90&&p.h>=90&&p.x>=0&&p.y>=0&&p.x+p.w<=960&&p.y+p.h<=672);
+ }
+ const wiki=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-wiki.js'),'utf8');
+ assert.match(wiki,/img\.dataset\.labProp=prop\.id/);
+ assert.match(wiki,/pkmsvvLabLayers=0/);
+ assert.match(wiki,/ok\.every\(Boolean\)/);
+ const css=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-pc-menu-clean-qa.css'),'utf8');
+ assert.match(css,/RESEARCH_STATION_PROPS_QA_20261124/);
+});

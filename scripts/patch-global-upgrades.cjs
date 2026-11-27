@@ -58,7 +58,8 @@ patch('js/core/db.js',
  "      pupg: {},               // dex -> { id -> nivel }: mejoras de cada Pokémon",
  "      pupg: {},               // dex -> { id -> nivel }: mejoras de cada Pokémon\n"+
  "      globalUpgrades: {},     // PKMSVV: account-wide upgrades for every Pokémon\n" +
- "      globalSpent: {},        // PKMSVV: real cost ledger for correct refunds across price updates");
+ "      globalSpent: {},        // PKMSVV: real cost ledger for correct refunds across price updates\n"+
+ "      pkmsvvResearchRanks: {}, // independent Co-op permanent research targets");
 patch('js/core/db.js',
  "    for (const k in base) if (s[k] == null) s[k] = base[k];",
  "    // v0.8.2: old powerups were purchased at 1x cost. Preserve their true refund values.\n" +
@@ -72,7 +73,8 @@ patch('js/core/db.js',
  "      s.coins += 1250; s.globalUpgrades.opening = 1;\n" +
  "    }\n" +
  "    s.globalUpgrades = G.GlobalPower.clean(s.globalUpgrades);\n" +
- "    s.globalSpent = G.GlobalPower.cleanLedger(s.globalSpent, s.globalUpgrades);");
+ "    s.globalSpent = G.GlobalPower.cleanLedger(s.globalSpent, s.globalUpgrades);\n"+
+ "    s.pkmsvvResearchRanks = G.GlobalPower.cleanResearch(s.pkmsvvResearchRanks);");
 patch('js/core/db.js',
  "    r.pupg = r.pupg || {};",
  "    r.globalUpgrades = G.GlobalPower.merge(r.globalUpgrades,older.globalUpgrades);\n" +
@@ -81,11 +83,12 @@ patch('js/core/db.js',
  "    r.globalSpent = G.GlobalPower.cleanLedger(\n" +
  "      Object.fromEntries(G.GlobalPower.LIST.map(u => [u.id, Math.max(+((r.globalSpent || {})[u.id]) || 0, +(oldLedger[u.id]) || 0)])),\n" +
  "      r.globalUpgrades);\n" +
+ "    r.pkmsvvResearchRanks = G.GlobalPower.cleanResearch(G.GlobalPower.merge(r.pkmsvvResearchRanks,older.pkmsvvResearchRanks));\n"+
  "    r.pupg = r.pupg || {};");
 
 patch('js/game.js',
  "    const perks = G.Upgrades.perks(G.DB.upgradesOf(mon.dex));",
- "    const perks = G.GlobalPower.combine(G.Upgrades.perks(G.DB.upgradesOf(mon.dex)),save.globalUpgrades);");
+ "    const perks = G.GlobalPower.combine(G.Upgrades.perks(G.DB.upgradesOf(mon.dex)),G.GlobalPower.effectiveLevels(save));");
 
 patch('js/game.js',
  `    // Mejora "Repertorio": un segundo movimiento de ataque al azar.

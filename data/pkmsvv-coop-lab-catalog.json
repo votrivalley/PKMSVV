@@ -528,6 +528,221 @@
       }
     ],
     "modularPreviewBackground": "images/coop-lab/source-cutouts-qa/clean-backdrop.png",
-    "modularPreviewStatus": "QA only, artist approval pending; not purchasable or ready for swaps"
+    "modularPreviewStatus": "QA only, separate source furniture and semantic props; artist approval pending for hidden background and future purchased skins",
+    "stationProps": [
+      {
+        "id": "support",
+        "file": "prop-support.png",
+        "x": 113,
+        "y": 235,
+        "w": 115,
+        "h": 111
+      },
+      {
+        "id": "mega",
+        "file": "prop-mega.png",
+        "x": 730,
+        "y": 207,
+        "w": 103,
+        "h": 105
+      },
+      {
+        "id": "berry",
+        "file": "prop-berry.png",
+        "x": 111,
+        "y": 465,
+        "w": 117,
+        "h": 113
+      },
+      {
+        "id": "companion",
+        "file": "prop-companion.png",
+        "x": 747,
+        "y": 416,
+        "w": 100,
+        "h": 108
+      },
+      {
+        "id": "fossil",
+        "file": "prop-fossil.png",
+        "x": 431,
+        "y": 228,
+        "w": 98,
+        "h": 91
+      }
+    ]
+  },
+  "stationSkins": {
+    "schemaVersion": 1,
+    "purchaseEnabled": false,
+    "defaultId": "default",
+    "stations": [
+      "support",
+      "mega",
+      "berry",
+      "companion",
+      "fossil"
+    ],
+    "variants": [
+      {
+        "id": "support_advanced",
+        "station": "support",
+        "variant": "advanced",
+        "nameVi": "Chuyên dụng",
+        "nameEn": "Specialized",
+        "price": null,
+        "artApproved": false,
+        "spritePath": "images/coop-lab/research-v3/skins/support-advanced.png",
+        "sha256": "dcd3441fc32abd34f7c15500ccd7324dffeca5318de12c4c18266ab7e17c485a"
+      },
+      {
+        "id": "mega_advanced",
+        "station": "mega",
+        "variant": "advanced",
+        "nameVi": "Chuyên dụng",
+        "nameEn": "Specialized",
+        "price": null,
+        "artApproved": false,
+        "spritePath": "images/coop-lab/research-v3/skins/mega-advanced.png",
+        "sha256": "9ee78d08c4a553b767353423707db3659f0cfab13615bfb47bc23d80f7974d36"
+      },
+      {
+        "id": "berry_advanced",
+        "station": "berry",
+        "variant": "advanced",
+        "nameVi": "Chuyên dụng",
+        "nameEn": "Specialized",
+        "price": null,
+        "artApproved": false,
+        "spritePath": "images/coop-lab/research-v3/skins/berry-advanced.png",
+        "sha256": "5b12bffbe90ec108217771feace21084c1323b9f14afe77c86c3c74009e24117"
+      },
+      {
+        "id": "companion_advanced",
+        "station": "companion",
+        "variant": "advanced",
+        "nameVi": "Chuyên dụng",
+        "nameEn": "Specialized",
+        "price": null,
+        "artApproved": false,
+        "spritePath": "images/coop-lab/research-v3/skins/companion-advanced.png",
+        "sha256": "a3a90ba5e5856ad9ef17f787fea09979a4aebec48f7b08569257d15447e54dbd"
+      },
+      {
+        "id": "fossil_advanced",
+        "station": "fossil",
+        "variant": "advanced",
+        "nameVi": "Chuyên dụng",
+        "nameEn": "Specialized",
+        "price": null,
+        "artApproved": false,
+        "spritePath": "images/coop-lab/research-v3/skins/fossil-advanced.png",
+        "sha256": "8f0dcff9691f4b4b0b9302f3d3a5f57217ee8e27c879fbd15249a07ab8f3afc4"
+      }
+    ],
+    "defaults": [
+      {
+        "id": "support_basic",
+        "station": "support",
+        "variant": "basic",
+        "nameVi": "Cơ bản",
+        "nameEn": "Basic",
+        "price": null,
+        "artApproved": false,
+        "spritePath": "images/coop-lab/research-v3/skins/support-basic.png",
+        "sha256": "12910345adde0324a917695e1d4357700b797156c61dedbceb11cd174cf2eb2a"
+      },
+      {
+        "id": "mega_basic",
+        "station": "mega",
+        "variant": "basic",
+        "nameVi": "Cơ bản",
+        "nameEn": "Basic",
+        "price": null,
+        "artApproved": false,
+        "spritePath": "images/coop-lab/research-v3/skins/mega-basic.png",
+        "sha256": "37b165c754561079d21f525caa74cac1649863f06e90374e3d4d53a8d2296f88"
+      },
+      {
+        "id": "berry_basic",
+        "station": "berry",
+        "variant": "basic",
+        "nameVi": "Cơ bản",
+        "nameEn": "Basic",
+        "price": null,
+        "artApproved": false,
+        "spritePath": "images/coop-lab/research-v3/skins/berry-basic.png",
+        "sha256": "5c76195ff96955edf719a394420b3694b73ef7a9463e3c235880f03ac7fbd309"
+      },
+      {
+        "id": "companion_basic",
+        "station": "companion",
+        "variant": "basic",
+        "nameVi": "Cơ bản",
+        "nameEn": "Basic",
+        "price": null,
+        "artApproved": false,
+        "spritePath": "images/coop-lab/research-v3/skins/companion-basic.png",
+        "sha256": "4a2d3dbaa175ec07d913e3ec928795d124e91529a3241d62746a6d6107baa44b"
+      },
+      {
+        "id": "fossil_basic",
+        "station": "fossil",
+        "variant": "basic",
+        "nameVi": "Cơ bản",
+        "nameEn": "Basic",
+        "price": null,
+        "artApproved": false,
+        "spritePath": "images/coop-lab/research-v3/skins/fossil-basic.png",
+        "sha256": "c3166fc439fd9d1e9794c7d886478730554b9648e2ca571a6fc717d3b6c6149b"
+      }
+    ]
+  },
+  "stationUpgrades": {
+    "schemaVersion": 1,
+    "qaOnly": true,
+    "priceModel": {
+      "base": 80,
+      "step": 40,
+      "rerollBase": 160,
+      "rerollStep": 80
+    },
+    "stations": {
+      "mega": [
+        "power",
+        "crit",
+        "rapid"
+      ],
+      "fossil": [
+        "vital",
+        "guard"
+      ],
+      "support": [
+        "learning",
+        "reach"
+      ],
+      "berry": [
+        "area",
+        "duration"
+      ],
+      "companion": [
+        "fortune",
+        "reroll"
+      ]
+    }
+  },
+  "berryCoinRewards": {
+    "qaOnly": true,
+    "minDurationSeconds": 480,
+    "maxDurationSeconds": 512,
+    "partySize": 4,
+    "normal": {
+      "base": 60,
+      "perTree": 20
+    },
+    "easy": {
+      "base": 40,
+      "perTree": 10
+    }
   }
 }

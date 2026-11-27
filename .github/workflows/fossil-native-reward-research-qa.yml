@@ -1,0 +1,46 @@
+name: Fossil native 8-minute clear and research wallet QA
+on:
+  push:
+    branches: [feature/web-3ds-skill-effects-passives-qa-20261121]
+    paths: ['.github/workflows/fossil-native-reward-research-qa.yml','tests/fossil-native-reward-research-browser.cjs']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify exact passed integrated artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/45772302034" --jq '{head_sha,status,conclusion}' | jq -e '.head_sha=="dd8eb75c55af308a6925f25b5772f24e2bbfdb18" and .status=="completed" and .conclusion=="success"'
+      - name: Install browser QA dependencies
+        run: |
+          npm pkg set 'overrides.node-abi=4.40.0'
+          npm install --no-audit --no-fund
+      - uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+          run-id: 45772302034
+          name: PKMSVV-Beta-255-176-Skills-Integrated-QA-NEVER-LIVE
+          path: dist/lan
+      - name: Verify artifact identity
+        run: jq -e '.qaCommit=="dd8eb75c55af308a6925f25b5772f24e2bbfdb18" and .production==false' dist/lan/build-info.json
+      - name: Full native mission, reward and paid research (controlled QA fixtures)
+        env:
+          PKMSVV_BROWSER: /usr/bin/google-chrome
+        run: timeout 850s node tests/fossil-native-reward-research-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Fossil-native-reward-research-browser-QA
+          path: dist/fossil-reward-browser-qa/
+          if-no-files-found: warn
+          retention-days: 7
