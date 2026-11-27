@@ -23,7 +23,7 @@ const {startServer}=require('../lan-server/server.cjs');
     results.push({id:m.id,kind:m.kind,cd:t,native:!!m.pkmsvv3dsNative});
    }
    const fusion=G.PKMSVVFusionPilot;if(!fusion?.RECIPES||fusion.RECIPES.length!==5)throw Error('Fusion resonance module missing from compiled Beta');
-   const resonanceCatalog=fusion.RECIPES.map(r=>{const a=all.filter(m=>r.a(m)&&Number(m.dmg)>0),b=all.filter(m=>r.b(m)&&Number(m.dmg)>0);return {id:r.id,a:a.map(x=>x.id),b:b.map(x=>x.id),nativeA:a.filter(x=>x.pkmsvv3dsNative).map(x=>x.id),nativeB:b.filter(x=>x.pkmsvv3dsNative).map(x=>x.id)};});
+   const resonanceCatalog=fusion.RECIPES.map(r=>{const a=all.filter(m=>r.a(m)&&fusion.damages(m)&&Number(m.dmg)>0),b=all.filter(m=>r.b(m)&&fusion.damages(m)&&Number(m.dmg)>0);return {id:r.id,a:a.map(x=>x.id),b:b.map(x=>x.id),nativeA:a.filter(x=>x.pkmsvv3dsNative).map(x=>x.id),nativeB:b.filter(x=>x.pkmsvv3dsNative).map(x=>x.id)};});
    const movement=all.filter(d=>G.PKMSVVDash.isActive(d)).map(d=>d.id).sort();
    const dex=Object.values(G.DEX_BY||{}).filter(d=>d&&Number.isInteger(Number(d.dex)));
    const byDex=new Map(dex.map(d=>[Number(d.dex),d]));

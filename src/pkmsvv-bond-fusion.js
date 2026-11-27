@@ -5,7 +5,11 @@ G.PKMSVVFusionPilot=(()=>{
  const WIND=new Set(['gust','air-cutter','air-slash','hurricane','twister','razor-wind','silver-wind']);
  const physical=m=>(m?.cat??m?.def?.cat)==='physical';
  const type=m=>m?.type??m?.def?.type;
- const damages=m=>{const d=m?.dmg??m?.def?.dmg;return d===undefined||Number(d)>0;};
+ // Some legacy support definitions carry a default positive dmg value
+ // even though they never enter the native direct/projectile hit pipeline.
+ const NON_HIT_KINDS=new Set(['guard','screen','rest','decoy','heal','buff','weather','shield','substitute']);
+ const NON_HIT_IDS=new Set(['substitute','protect','reflect','light-screen','safeguard','rest','double-team','rain-dance','sunny-day','sandstorm','hail','tailwind']);
+ const damages=m=>{const d=m?.dmg??m?.def?.dmg;return !NON_HIT_IDS.has(m?.id)&&!NON_HIT_KINDS.has(m?.kind??m?.def?.kind)&&(m?.cat??m?.def?.cat)!=='status'&&(d===undefined||Number(d)>0);};
  const RECIPES=Object.freeze([
   {id:'fire-wind',vi:'Bão Lửa',en:'Flame Gale',viPair:'Fire + kỹ năng gió',enPair:'Fire + wind move',viEffect:'Đòn gió trúng dấu lửa tạo vụ nổ lửa và làm chậm quanh mục tiêu.',enEffect:'Wind hits a fire mark to create a fiery burst and slow nearby foes.',a:m=>type(m)==='fire',b:m=>WIND.has(m?.id),color:'#ff8849',radius:120,scale:.45},
   {id:'water-electric',vi:'Lôi Vũ',en:'Thunderstorm',viPair:'Water + Electric',enPair:'Water + Electric',viEffect:'Điện đánh trúng dấu nước sẽ lan sát thương tới tối đa 4 quái khác.',enEffect:'Electric hits a water mark to chain damage to up to four other foes.',a:m=>type(m)==='water',b:m=>type(m)==='electric',color:'#ffe163',radius:180,scale:.55},
@@ -59,5 +63,5 @@ G.PKMSVVFusionPilot=(()=>{
  function sync(){if(!action)return;const p=G.Game?.player;action.hidden=!pilotEligible(p);action.textContent=states.has(p)?'FUSION ✓':options(p)?tr('CỘNG HƯỞNG SẴN SÀNG','RESONANCE READY'):'FUSION';}
  function mount(){if(action||typeof document==='undefined')return;const row=document.getElementById('scr-pause')?.querySelector('.pause-box .row');if(!row)return;action=document.createElement('button');action.id='pkmsvv-pause-fusion';action.className='btn';action.type='button';action.onclick=()=>showGuide();row.append(action);sync();if(typeof setInterval==='function')setInterval(sync,250);}
  installSkillHints();if(typeof document!=='undefined'){if(document.body)mount();else document.addEventListener('DOMContentLoaded',mount,{once:true});}
- return {RECIPES,maxPerRun,COOLDOWN,MARK_LIFE,readyMove,pilotEligible,competitive,options,pairFor:options,progress,activate,afterHit,reset,levelFusionCard,installSkillHints,showGuide,openFusion:showGuide,openFromPause:showGuide,mount,sync};
+ return {RECIPES,maxPerRun,COOLDOWN,MARK_LIFE,readyMove,damages,pilotEligible,competitive,options,pairFor:options,progress,activate,afterHit,reset,levelFusionCard,installSkillHints,showGuide,openFusion:showGuide,openFromPause:showGuide,mount,sync};
 })();

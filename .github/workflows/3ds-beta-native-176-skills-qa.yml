@@ -60,6 +60,7 @@ on:
       - 'scripts/patch-3ds-skill-effects-passives.cjs'
       - 'tests/beta-wifi-host-join-browser.cjs'
       - 'tests/beta-176-native-cooldowns-browser.cjs'
+      - 'tests/beta-fusion-native-browser.cjs'
       - 'tests/beta-active-movement-browser.cjs'
       - 'tests/beta-forget-three-cards-browser.cjs'
       - 'scripts/patch-skill-forget.cjs'
@@ -172,6 +173,15 @@ jobs:
         env:
           PKMSVV_BROWSER: /usr/bin/google-chrome
         run: timeout 80s node tests/beta-176-native-cooldowns-browser.cjs
+      - name: Real native Surf and Electric resonance, HP damage and retained skills
+        run: timeout 90s node tests/beta-fusion-native-browser.cjs
+      - name: Upload native Fusion gameplay evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fusion-native-gameplay-qa
+          path: dist/fusion-native-qa/
+          if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
         if: always()
         with:
