@@ -517,7 +517,7 @@ test('Ability names, translated effect summaries and explicit contrast are used 
  for(const id of ['blaze','solar-power','compound-eyes','overgrow','chlorophyll'])
   assert.match(txt,new RegExp('^'+id+'\\|','m'));
 });
-test('Wiki describes ten Fusion effects, has corresponding WebP icons and replaces the compiled legacy module',()=>{
+test('Wiki describes five resonance groups without custom Fusion icons and replaces the compiled legacy module',()=>{
  const pilot=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-bond-fusion.js'),'utf8');
  const wiki=fs.readFileSync(path.join(__dirname,'../src/pkmsvv-wiki.js'),'utf8');
  const compiled=fs.readFileSync(path.join(__dirname,'../scripts/patch-qa-compiled-modules.cjs'),'utf8');
@@ -528,11 +528,14 @@ test('Wiki describes ten Fusion effects, has corresponding WebP icons and replac
   const build=fs.readFileSync(path.join(__dirname,'..',p),'utf8');
   assert.match(build,/pkmsvv-wiki-qa\.js/,'isolated '+p+' must ship the corrected Wiki source');
  }
- assert.match(wiki,/formula\.id\+'\.webp'/);
+ assert.doesNotMatch(wiki,/formula\.id\+'\.webp'|assets\/fusion-icons/);
+ assert.match(wiki,/formula\.viPair/);
+ assert.match(wiki,/giữ nguyên hai chiêu/);
+ assert.match(compiled,/PKMSVVFusionPilot/);
  assert.match(wiki,/formula\.viEffect/);
  assert.match(wiki,/pkmsvv-fusion-benefit/);
  assert.match(wiki,/pkmsvv-fusion-recipe-grid|pkmsvv-fusion-recipes/);
- for(const id of ['ember-quick','water-tackle','grass-spin','spark-quick','mind-tackle','fire-gust','bubble-ice','leaf-rock','shadow-mind','thunder-claw']){
+ for(const id of ['fire-wind','water-electric','ice-physical','poison-grass','ghost-psychic']){
   assert.match(pilot,new RegExp("id:'"+id+"'[^\\n]+viEffect:"));
  }
 });

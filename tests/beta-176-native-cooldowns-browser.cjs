@@ -22,6 +22,8 @@ const {startServer}=require('../lan-server/server.cjs');
     if(!Number.isFinite(t)||t<=0)throw Error('Non-finite cooldown '+def.id+': '+t);
     results.push({id:m.id,kind:m.kind,cd:t,native:!!m.pkmsvv3dsNative});
    }
+   const fusion=G.PKMSVVFusionPilot;if(!fusion?.RECIPES||fusion.RECIPES.length!==5)throw Error('Fusion resonance module missing from compiled Beta');
+   const resonanceCatalog=fusion.RECIPES.map(r=>{const a=all.filter(m=>r.a(m)&&Number(m.dmg)>0),b=all.filter(m=>r.b(m)&&Number(m.dmg)>0);return {id:r.id,a:a.map(x=>x.id),b:b.map(x=>x.id),nativeA:a.filter(x=>x.pkmsvv3dsNative).map(x=>x.id),nativeB:b.filter(x=>x.pkmsvv3dsNative).map(x=>x.id)};});
    const movement=all.filter(d=>G.PKMSVVDash.isActive(d)).map(d=>d.id).sort();
    const dex=Object.values(G.DEX_BY||{}).filter(d=>d&&Number.isInteger(Number(d.dex)));
    const byDex=new Map(dex.map(d=>[Number(d.dex),d]));
@@ -32,11 +34,13 @@ const {startServer}=require('../lan-server/server.cjs');
    const shiny=species.filter(i=>G.Sprites?.hasShiny?.(i)===true);
    const mega=(G.PKMSVV_MEGA_CATALOG||[]).map(f=>({dex:f.dex,name:f.name,spriteId:f.spriteId,artReady:!!f.artReady,actualIdle:!!sprites[f.spriteId]?.a?.Idle}));
    const catalog={speciesCount:species.length,missingSpecies:missing,baseIdleWalk:art.length,shinyCount:shiny.length,mega,moveIds:all.map(d=>d.id).sort(),nativeMoveIds:native.map(d=>d.id).sort(),tmIds:Object.keys(G.TM_MOVES||{}).sort(),note:'Presence only; not proof of eight directions, animation completeness or permission.'};
-   return {catalog,movement,total:all.length,native:native.length,screen:results.filter(x=>x.kind==='screen'),kinds:[...new Set(native.map(x=>x.kind))],minimum:Math.min(...results.map(x=>x.cd))};
+   return {catalog,resonanceCatalog,movement,total:all.length,native:native.length,screen:results.filter(x=>x.kind==='screen'),kinds:[...new Set(native.map(x=>x.kind))],minimum:Math.min(...results.map(x=>x.cd))};
   });
   const fs=require('node:fs');fs.mkdirSync('dist/big-update-inventory',{recursive:true});
   fs.writeFileSync('dist/big-update-inventory/catalog.json',JSON.stringify(state.catalog,null,2));
   console.log('PKMSVV_BIG_UPDATE_INVENTORY='+JSON.stringify({species:state.catalog.speciesCount,missing:state.catalog.missingSpecies,baseIdleWalk:state.catalog.baseIdleWalk,shiny:state.catalog.shinyCount,mega:state.catalog.mega.length,actualMegaIdle:state.catalog.mega.filter(x=>x.actualIdle&&x.artReady).length,tm:state.catalog.tmIds.length}));
+  for(const r of state.resonanceCatalog){assert.ok(r.a.some(a=>r.b.some(b=>a!==b)),'No distinct compatible moves for '+r.id);}
+  console.log('BETA_RESONANCE_CATALOG='+JSON.stringify(state.resonanceCatalog));
   assert.equal(state.total,176,'Native Beta must preserve 103 moves + 73 added moves');
   assert.equal(state.native,73,'Do not overwrite existing 103 moves');
   const expected=['quick-attack','aerial-ace','flame-charge','u-turn','extreme-speed','megahorn','volt-tackle','dragon-ascent','meteor-assault','sunsteel-strike','acrobatics','shadow-force'];
