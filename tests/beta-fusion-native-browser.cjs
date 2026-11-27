@@ -6,10 +6,15 @@ const assert=require('node:assert/strict'),path=require('node:path'),fs=require(
 const {chromium}=require('playwright'),{startServer}=require('../lan-server/server.cjs');
 (async()=>{
  const server=await startServer({root:path.resolve(__dirname,'../dist/lan'),host:'127.0.0.1',port:0});
- const browser=await chromium.launch({headless:true,...(process.env.PKMSVV_BROWSER?{executablePath:process.env.PKMSVV_BROWSER}:{})});
- const page=await browser.newPage({viewport:{width:1280,height:800}}),errors=[];
- page.on('pageerror',e=>errors.push(String(e)));
+ let browser,page;
+ const errors=[],consoleErrors=[];
+ fs.mkdirSync('dist/fusion-native-qa',{recursive:true});
  try{
+  const executablePath=process.env.PKMSVV_BROWSER||(fs.existsSync('/usr/bin/google-chrome')?'/usr/bin/google-chrome':undefined);
+  browser=await chromium.launch({headless:true,...(executablePath?{executablePath}:{})});
+  page=await browser.newPage({viewport:{width:1280,height:800}});
+  page.on('pageerror',e=>errors.push(String(e)));
+  page.on('console',m=>{if(m.type()==='error')consoleErrors.push(m.text());});
   await page.addInitScript(()=>{window.__pkmsvvPippiGuideQABypass=true;});
   await page.goto('http://127.0.0.1:'+server.port+'/game/',{waitUntil:'domcontentloaded',timeout:45000});
   await page.waitForFunction(()=>!!G.DB?.save&&!!G.PKMSVVQuickRegion?.choose&&!!G.PKMSVVFusionPilot?.afterHit,null,{timeout:40000});
@@ -67,5 +72,14 @@ const {chromium}=require('playwright'),{startServer}=require('../lan-server/serv
   assert.deepEqual(errors,[]);
   fs.mkdirSync('dist/fusion-native-qa',{recursive:true});fs.writeFileSync('dist/fusion-native-qa/report.json',JSON.stringify({seeded,...report},null,2));
   console.log('BETA_FUSION_NATIVE_SURF_ELECTRIC_PASS='+JSON.stringify({seeded,proc,hits:report.hits.length}));
- }finally{await page.evaluate(()=>clearInterval(window.__fusionKeep)).catch(()=>{});await browser.close();await server.close();}
+ }catch(error){
+  const snapshot=page?await page.evaluate(()=>{const q=window.__fusionQA,p=window.G?.Game?.player;return {state:window.G?.Game?.state,clock:window.G?.Game?.st?.time,active:window.G?.PKMSVVQuickRegion?.active,moves:p?.moves?.map(m=>({id:m.id,lvl:m.lvl,t:m.t})),position:p?{x:p.x,y:p.y}:null,hits:q?.hits?.slice(-100),procs:q?.procs?.slice(-100),primary:q?.e?{hp:q.e.hp,x:q.e.x,y:q.e.y,dead:q.e.dead}:null,secondary:q?.other?{hp:q.other.hp,x:q.other.x,y:q.other.y,dead:q.other.dead}:null};}).catch(()=>null):null;
+  fs.writeFileSync('dist/fusion-native-qa/failure.json',JSON.stringify({error:String(error),errors,consoleErrors,snapshot},null,2));
+  if(page)await page.screenshot({path:'dist/fusion-native-qa/failure.png',timeout:5000}).catch(()=>{});
+  console.error('BETA_FUSION_NATIVE_FAILURE='+JSON.stringify({error:String(error),snapshot,errors,consoleErrors}));
+  throw error;
+ }finally{
+  try{if(page)await page.evaluate(()=>clearInterval(window.__fusionKeep)).catch(()=>{});if(browser)await browser.close();}
+  finally{await server.close();}
+ }
 })().catch(e=>{console.error(e);process.exitCode=1;});
