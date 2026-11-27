@@ -421,6 +421,15 @@
      '<button type="button" class="btn small" data-pkmbx-action="tm">TM</button></div>'+
     (feedback?.id===it.id?'<div class="pkmbx-action-feedback" role="status">✓ '+clean(feedback.message)+'</div>':'')+
     '</div>';
+   // QA power loadout belongs to the focused species, not the active partner.
+   const powers=G.PKMSVVSpecialPowerQA;
+   if(powers?.open&&currentSave()?.pkmsvvChapter7Seen===true){
+    const powerButton=doc.createElement('button');powerButton.type='button';powerButton.className='btn small';
+    const refreshPower=()=>{const id=powers.selected(currentSave(),it.dex);powerButton.textContent=L('✧ Sức mạnh: ','✧ Power: ')+(powers.catalog.find(x=>x.id===id)?.name||'—');};
+    refreshPower();powerButton.disabled=!!G.DB?.guest;
+    powerButton.onclick=()=>powers.open({dex:it.dex,fromBox:true,onChange:refreshPower});
+    profile.querySelector('.pkmbx-hub-info')?.append(powerButton);
+   }
    for(const btn of profile.querySelectorAll('[data-pkmbx-action]'))
     btn.onclick=()=>openItemConfirmation(profile,it,ready,btn.dataset.pkmbxAction);
   }

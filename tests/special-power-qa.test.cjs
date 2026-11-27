@@ -12,7 +12,7 @@ test('old save defaults to Mega; select per species without altering stones or A
  assert.equal(api.selected(s,25),'mega');
  assert.equal(await api.equip('dynamax',25),true);
  assert.equal(api.selected(s,25),'dynamax');assert.equal(api.selected(s,6),'mega');
- assert.equal(await api.equip('terastal',25),false);assert.equal(await api.equip('zmove',25),true);assert.equal(api.selected(s,25),'zmove');assert.equal(await api.equip('dynamax',25),true);
+ assert.equal(await api.equip('terastal',25),true);assert.equal(api.selected(s,25),'terastal');assert.equal(await api.equip('zmove',25),true);assert.equal(api.selected(s,25),'zmove');assert.equal(await api.equip('dynamax',25),true);
  assert.equal(await api.equip('dynamax',999),false);
  assert.equal(JSON.stringify(s.megaStones),before);assert.equal(s.arenaPoints,240);
  G.DB.commit=()=>false;assert.equal(await api.equip('mega',25),false);assert.equal(api.selected(s,25),'dynamax');
@@ -80,4 +80,16 @@ test('source-based Z-Power uses native wave/projectile, typed damage, natural ex
  assert.equal(api.activate(p),true);api.tick(p,.4);p.dead=true;api.tick(p,.1);
  assert.equal(hits.length,4,'no terminal wave on death');assert.equal(shots.length,0);
  assert.equal(Object.keys(api.Z_NAMES).length,18);
+});
+
+
+test('Terastal matches both natural types, no global attack buff, pause, cooldown and cleanup',async()=>{
+ const {G,p,api}=fixture();p.mon={types:['fire','flying']};
+ assert.equal(await api.equip('terastal'),true);G.Game.state='playing';
+ assert.equal(api.activate(p),true);assert.equal(api.allowsMega(p),false);assert.equal(p.atkMul,2);assert.equal(p.maxHp,100);assert.equal(p._megaEnergy,0);
+ assert.equal(api.damageMultiplier(p,'fire'),1.8);assert.equal(api.damageMultiplier(p,'flying'),1.8);assert.equal(api.damageMultiplier(p,'water'),1);assert.equal(api.damageMultiplier(p,'fire',{}),1);
+ G.Game.state='choice';api.tick(p,30);assert.equal(api.state(p).remaining,30);assert.equal(api.damageMultiplier(p,'fire'),1);
+ G.Game.state='playing';api.tick(p,30);assert.equal(api.damageMultiplier(p,'fire'),1);assert.equal(api.state(p).cooldown,75);
+ p._megaEnergy=100;assert.equal(api.activate(p),false);api.tick(p,75);assert.equal(api.activate(p),true);
+ p.dead=true;api.tick(p,.1);assert.equal(api.damageMultiplier(p,'fire'),1);assert.equal(p._pkmsvvSpecialPowerActive,undefined);
 });

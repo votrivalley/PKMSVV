@@ -712,6 +712,15 @@ patch('js/systems/combat.js',
  '        pl.dmgDealt += p.dmg * k;\n        if (p.src)',
  '        G.PKMSVVSpecialPowerQA?.afterHit?.(pl,e,p.dmg*k);\n        pl.dmgDealt += p.dmg * k;\n        if (p.src)');
 
+// Stage 4 Terastal: apply before native hurt and damage bookkeeping, retaining
+// type effectiveness, crit, ability, boss and ghost handling.
+patch('js/systems/combat.js',
+ '    e.hurt(dmg,',
+ '    if(!ghost)dmg *= (G.PKMSVVSpecialPowerQA?.damageMultiplier?.(pl,m.type)??1);\n    e.hurt(dmg,');
+patch('js/systems/combat.js',
+ '        const k = (p.mtype ? typeK(p.mtype, e) : 1) *',
+ '        const k = (p.mtype ? typeK(p.mtype, e) : 1) * (G.PKMSVVSpecialPowerQA?.damageMultiplier?.(pl,p.mtype,p.owner??pl)??1) *');
+
 // 3DS SH_ZROLL visual adapter: keep native projectile movement and collision.
 // Only draw a separate Z glyph for this tagged QA projectile.
 patch('js/entities/projectile.js',

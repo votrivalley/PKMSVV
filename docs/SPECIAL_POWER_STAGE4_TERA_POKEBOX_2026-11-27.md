@@ -1,0 +1,3 @@
+# Special Power Stage 4 — Terastal and focused PokéBox entry
+
+Native 3DS power_move_mul: 30 seconds, cooldown 75 seconds, x1.8 for either natural type. Adapted to the existing direct-hit and projectile damage pipeline. No defensive type conversion, Tera-type selection, crown asset, equipment or Arena spending in this stage; these are subsequent work. Existing QA free selection and legacy Mega remain intact. A focused PokéBox Details button passes the species explicitly and refreshes its label on save. Normal and Shiny share a species loadout. Existing Lab entry remains for compatibility. No deployment or multiplayer change. Unit and integrated CI pending.

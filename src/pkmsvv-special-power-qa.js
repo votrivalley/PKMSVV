@@ -1,19 +1,19 @@
 'use strict';
-/* Special Power Stage 3. QA only. One selection per owned species.
+/* Special Power Stage 4. QA only. One selection per owned species.
  * Required Notice: Copyright 2026 JPTER78 (https://github.com/JPTER78/pokesurvivor)
  * Noncommercial license: https://polyformproject.org/licenses/noncommercial/1.0.0
- * Dynamax and Z-Power mechanics ported from PokéSurvivor3DS by juanluismm521,
+ * Dynamax, Z-Power and Terastal mechanics ported from PokéSurvivor3DS by juanluismm521,
  * 188afd16929e9c67dc0aa45d42a8e328d1888657 src/core/power.cpp.
  * SVV retains proportional HP, unchanged collision radius, Chapter 7 loadout
  * and shared charge; use native Web enemy/prop APIs, not 3DS GPU code.
- * G-Max sprites, Tera and multiplayer power packets are not implemented.
+ * G-Max sprites, selectable Tera crystals and multiplayer power packets are not implemented.
  */
 G.PKMSVVSpecialPowerQA=(()=>{
  const catalog=Object.freeze([
   Object.freeze({id:'mega',name:'Mega Evolution',device:'Mega Stone',duration:30,plannedDuration:40,cooldown:200,ready:true,summary:'Hệ Mega hiện tại · giữ nguyên đá và mở khóa'}),
   Object.freeze({id:'dynamax',name:'Dynamax',device:'Dynamax Band',duration:12,cooldown:80,ready:true,summary:'QA Solo · HP x2, công +40%, giẫm quái và sát thương lan'}),
   Object.freeze({id:'zmove',name:'Z-Power',device:'Z-Ring',duration:15,cooldown:60,ready:true,summary:'QA Solo · sóng mở đầu, chữ Z xuyên quái, tuyệt chiêu kết thúc'}),
-  Object.freeze({id:'terastal',name:'Terastal',device:'Tera Orb',duration:30,cooldown:75,ready:false,summary:'Đang phát triển · chuyển hệ và tăng STAB'})
+  Object.freeze({id:'terastal',name:'Terastal',device:'Tera Orb',duration:30,cooldown:75,ready:true,summary:'QA Solo · kỹ năng cùng hệ x1,8 trong 30 giây'})
  ]);
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  const byId=id=>catalog.find(x=>x.id===id);
@@ -23,7 +23,7 @@ G.PKMSVVSpecialPowerQA=(()=>{
  const runs=new WeakMap();
  function selected(s,dex){
   const v=s?.pkmsvvPowerLoadout?.[String(dex)];
-  return ['dynamax','zmove'].includes(v)?v:'mega';
+  return ['dynamax','zmove','terastal'].includes(v)?v:'mega';
  }
  function owns(s,dex){return !!(s&&dexOK(dex)&&(Number(s.partner)===dex||s.owned?.[dex]||s.shiny?.[dex]));}
  let saving=false;
@@ -57,7 +57,7 @@ G.PKMSVVSpecialPowerQA=(()=>{
  function allowsMega(p){const r=state(p);return !r||r.id==='mega';}
  function canActivate(p=player()){
   const r=state(p);
-  return !!(r&&['dynamax','zmove'].includes(r.id)&&!p.dead&&G.Game?.state==='playing'&&!p._megaActive&&!p._pkmsvvSpecialPowerActive&&
+  return !!(r&&['dynamax','zmove','terastal'].includes(r.id)&&!p.dead&&G.Game?.state==='playing'&&!p._megaActive&&!p._pkmsvvSpecialPowerActive&&
    r.remaining<=0&&r.cooldown<=0&&Number(G.PKMSVVMegaPhase3?.energy?.(p))>=100&&
    Number.isFinite(p.maxHp)&&p.maxHp>0&&Number.isFinite(p.hp)&&p.hp>0&&Number.isFinite(p.atkMul)&&p.atkMul>0);
  }
@@ -70,6 +70,13 @@ G.PKMSVVSpecialPowerQA=(()=>{
    p._pkmsvvSpecialPowerActive='zmove';p._megaEnergy=0;
    zWave(p,220,1,type);
    G.UI?.toast?.('Z-POWER · '+Z_NAMES[type]+'!');
+   return true;
+  }
+  if(r.id==='terastal'){
+   r.remaining=30;r.aura=0;r.teraTypes=(p.mon?.types||[]).filter(t=>Object.hasOwn(Z_NAMES,t));
+   p._pkmsvvSpecialPowerActive='terastal';p._megaEnergy=0;
+   G.FX?.ring?.(p.x,p.y,8,100,'#7fe8ff',.6,6);
+   G.UI?.toast?.(tr('TERASTAL · kỹ năng cùng hệ +80%','TERASTAL · matching moves +80%'));
    return true;
   }
   r.bonusHp=p.maxHp;
@@ -102,6 +109,9 @@ G.PKMSVVSpecialPowerQA=(()=>{
      if(shot.pkmsvvZRoll&&shot.owner===p)G.Projectiles.remove?.(shot);
    }
    return true;
+  }
+  if(p._pkmsvvSpecialPowerActive==='terastal'){
+   r.remaining=0;r.cooldown=75;r.teraTypes=[];delete p._pkmsvvSpecialPowerActive;return true;
   }
   if(!r.atkApplied)return false;
   const fraction=Math.max(0,Math.min(1,p.hp/Math.max(1,p.maxHp)));
@@ -159,6 +169,11 @@ G.PKMSVVSpecialPowerQA=(()=>{
     G.World.damageProp?.(prop,9999,COL);
   }
  }
+ // Native 3DS power_move_mul: matching either natural type, not a global attack buff.
+ function damageMultiplier(p,type,owner=p){
+  const r=p&&runs.get(p);
+  return owner===p&&r?.id==='terastal'&&r.remaining>0&&p._pkmsvvSpecialPowerActive==='terastal'&&!p.dead&&soloExplore(p)&&G.Game?.state==='playing'&&r.teraTypes?.includes(type)?1.8:1;
+ }
  function afterHit(p,e,dmg){
   const r=state(p);
   if(!r?.atkApplied||r.splashing||!soloExplore(p)||p.dead||G.Game?.state!=='playing'||!e||!Number.isFinite(dmg)||dmg<=0)return 0;
@@ -186,6 +201,10 @@ G.PKMSVVSpecialPowerQA=(()=>{
    // after tab suspension. Game pause never advances the clock.
    if(r.zClock<=0&&r.remaining>0){zRoll(p,r);r.zClock=1.2;}
    if(r.remaining<=0)stop(p,true);
+  }else if(p._pkmsvvSpecialPowerActive==='terastal'){
+   r.remaining=Math.max(0,r.remaining-d);r.aura+=d;
+   if(r.aura>=.5){r.aura=0;G.FX?.ring?.(p.x,p.y,8,Math.max(35,(p.r||18)*2),'#7fe8ff',.4,4);}
+   if(r.remaining<=0)stop(p);
   }else if(r.atkApplied){
    r.remaining=Math.max(0,r.remaining-d);r.aura+=d;r.crushClock+=d;
    if(r.remaining>0)crush(p,r);
@@ -197,11 +216,11 @@ G.PKMSVVSpecialPowerQA=(()=>{
  function sync(){
   if(!button)return;
   const p=player(),r=state(p);
-  const show=!!(r&&['dynamax','zmove'].includes(r.id)&&p&&!p.dead&&G.Game?.state==='playing');
+  const show=!!(r&&['dynamax','zmove','terastal'].includes(r.id)&&p&&!p.dead&&G.Game?.state==='playing');
   button.style.display=show?'flex':'none';if(!show)return;
   const charge=Math.floor(G.PKMSVVMegaPhase3?.energy?.(p)||0);
   button.disabled=!canActivate(p);
-  button.querySelector('span').textContent=r.remaining>0?Math.ceil(r.remaining)+'s':r.cooldown>0?Math.ceil(r.cooldown)+'s':charge<100?charge+'%':r.id==='zmove'?'Z-POWER':'DMAX';
+  button.querySelector('span').textContent=r.remaining>0?Math.ceil(r.remaining)+'s':r.cooldown>0?Math.ceil(r.cooldown)+'s':charge<100?charge+'%':r.id==='zmove'?'Z-POWER':r.id==='terastal'?'TERA':'DMAX';
   button.title=byId(r.id).name+' · '+tr('Nút sức mạnh (5 / L1)','Power input (5 / L1)');
  }
  function mount(){
@@ -212,14 +231,14 @@ G.PKMSVVSpecialPowerQA=(()=>{
   button.onclick=e=>{e.preventDefault();e.stopPropagation();activate();sync();};document.body.append(button);
  }
  function close(){document.getElementById('pkmsvv-special-power-overlay')?.remove();}
- function open(){
-  close();const s=save(),dex=Number(s?.partner),current=selected(s,dex);
+ function open(options={}){
+  close();const s=save(),dex=Number(options.dex??s?.partner),current=selected(s,dex),fromBox=options.fromBox===true;
   const overlay=document.createElement('div');overlay.id='pkmsvv-special-power-overlay';overlay.className='pkmsvv-pc-overlay';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');
   const panel=document.createElement('section');panel.className='pkmsvv-pc-panel';panel.style.maxWidth='760px';
   const header=document.createElement('header');header.className='pkmsvv-pc-header';
   const title=document.createElement('h2');title.textContent=tr('SỨC MẠNH ĐẶC BIỆT','SPECIAL POWERS');
-  const back=document.createElement('button');back.type='button';back.className='pkmsvv-pc-close';back.textContent=tr('← Phòng nghiên cứu','← Research Lab');back.onclick=()=>{close();G.PKMSVVWiki?.open?.();};header.append(title,back);panel.append(header);
-  const hint=document.createElement('p');hint.textContent=(G.DEX_BY?.[dex]?.name||('Pokémon #'+dex))+' · '+tr('Mỗi Pokémon chọn một sức mạnh trước trận. Dynamax và Z-Power hiện chỉ thử nghiệm Khám phá Solo, cần Chương 7.','One power per Pokémon before a run. Dynamax and Z-Power are Chapter 7 Solo Explore trials.');panel.append(hint);
+  const back=document.createElement('button');back.type='button';back.className='pkmsvv-pc-close';back.textContent=fromBox?tr('← PokéBox','← PokéBox'):tr('← Phòng nghiên cứu','← Research Lab');back.onclick=()=>{close();if(!fromBox)G.PKMSVVWiki?.open?.();};header.append(title,back);panel.append(header);
+  const hint=document.createElement('p');hint.textContent=(G.DEX_BY?.[dex]?.name||('Pokémon #'+dex))+' · '+tr('Mỗi Pokémon chọn một sức mạnh trước trận. Dynamax, Z-Power và Terastal chỉ thử nghiệm Khám phá Solo, cần Chương 7.','One power per Pokémon before a run. Dynamax, Z-Power and Terastal are Chapter 7 Solo Explore trials.');panel.append(hint);
   const grid=document.createElement('div');grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;';
   for(const def of catalog){
    const card=document.createElement('div');card.style.cssText='border:1px solid #c4a970;border-radius:12px;padding:12px;background:#183643;display:grid;gap:7px;';
@@ -228,9 +247,9 @@ G.PKMSVVSpecialPowerQA=(()=>{
    const b=document.createElement('button');b.className='btn';b.type='button';b.dataset.powerEquip=def.id;
    b.textContent=!def.ready?tr('Đang phát triển','In development'):current===def.id?tr('Đang chọn','Selected'):tr('Chọn sức mạnh','Select power');
    b.disabled=!def.ready||current===def.id||s?.pkmsvvChapter7Seen!==true;
-   b.onclick=async()=>{b.disabled=true;if(await equip(def.id,dex)){open();}else{b.disabled=false;G.UI?.toast?.(tr('Không lưu được lựa chọn.','Unable to save selection.'));}};
+   b.onclick=async()=>{b.disabled=true;if(await equip(def.id,dex)){options.onChange?.();open(options);}else{b.disabled=false;G.UI?.toast?.(tr('Không lưu được lựa chọn.','Unable to save selection.'));}};
    card.append(name,desc,b);
-   if(def.id==='mega'){const old=document.createElement('button');old.type='button';old.className='btn';old.textContent=tr('Mega Stone · Danh mục cũ','Mega Stones · Existing catalog');old.onclick=()=>{close();G.PKMSVVMegaEntry?.open?.({fromResearchLab:true});};card.append(old);}
+   if(def.id==='mega'&&!fromBox){const old=document.createElement('button');old.type='button';old.className='btn';old.textContent=tr('Mega Stone · Danh mục cũ','Mega Stones · Existing catalog');old.onclick=()=>{close();G.PKMSVVMegaEntry?.open?.({fromResearchLab:true});};card.append(old);}
    grid.append(card);
   }
   panel.append(grid);overlay.append(panel);document.body.append(overlay);back.focus?.({preventScroll:true});return true;
@@ -240,7 +259,7 @@ G.PKMSVVSpecialPowerQA=(()=>{
   if(this===player()){
    const r=state(this);
    tick(this,dt);
-   if(r&&['dynamax','zmove'].includes(r.id)&&(G.Input?.tap?.('digit5')||G.Input?.tap?.('numpad5')||G.Input?.tap?.('pkmsvv-mega')))activate(this);
+   if(r&&['dynamax','zmove','terastal'].includes(r.id)&&(G.Input?.tap?.('digit5')||G.Input?.tap?.('numpad5')||G.Input?.tap?.('pkmsvv-mega')))activate(this);
   }
   return oldUpdate.call(this,dt);
  };
@@ -249,5 +268,5 @@ G.PKMSVVSpecialPowerQA=(()=>{
   G.Game[name]=function(...args){stop(player());return prev.apply(this,args);};
  }
  if(typeof document!=='undefined'){mount();setInterval(sync,250);}
- return {catalog,selected,equip,state,allowsMega,canActivate,activate,tick,stop,afterHit,open,close,Z_NAMES};
+ return {catalog,selected,equip,state,allowsMega,canActivate,activate,tick,stop,afterHit,damageMultiplier,open,close,Z_NAMES};
 })();

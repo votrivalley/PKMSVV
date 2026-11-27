@@ -20,7 +20,7 @@ the runtime makes no request to Showdown. The artwork is third-party Pokémon
 art and remains subject to the respective artists' / rights holders' terms.
 This notice does not represent additional permission, license, or endorsement.
 
-**Special Powers port (QA):** Dynamax and Z-Power gameplay adapted from PokéSurvivor3DS by
+**Special Powers port (QA):** Dynamax, Z-Power and Terastal gameplay adapted from PokéSurvivor3DS by
 juanluismm521, `https://github.com/juanluismm521/pokesurvivor3ds/blob/188afd16929e9c67dc0aa45d42a8e328d1888657/src/core/power.cpp`
 (PolyForm Noncommercial 1.0.0; original JPTER78 Required Notice above). The Web
 adapter uses existing combat and sprite APIs. No 3DS graphics/audio assets imported.
