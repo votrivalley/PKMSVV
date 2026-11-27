@@ -1,0 +1,4 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),{forms,parse,resolve,pngSize}=require('../scripts/audit-gmax-source.cjs');
+test('exact form name; never use normal, Mega, Cutscene or Altcolor',()=>{const x={'0006':{subgroups:{'0001':{name:'Mega X'},'0003':{name:'Gigantamax'},'0004':{name:'Altcolor'},'0005':{name:'Cutscene'}}}};assert.equal(forms(x,'0006')[0][0],'0003');assert.deepEqual(forms(x,'0025'),[]);});
+test('XML copies resolved, loops and bad PNG rejected',()=>{const a=parse('<Anim><Name>Idle</Name><FrameWidth>32</FrameWidth><FrameHeight>32</FrameHeight><Durations><Duration>4</Duration></Durations></Anim><Anim><Name>Charge</Name><CopyOf>Idle</CopyOf></Anim>');assert.equal(resolve(a,'Charge').w,32);assert.equal(resolve({A:{copy:'A'}},'A'),null);assert.equal(pngSize(Buffer.from('no')),null);});

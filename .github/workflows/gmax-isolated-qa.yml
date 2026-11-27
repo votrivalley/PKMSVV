@@ -1,0 +1,33 @@
+name: Gigantamax isolated source and mechanics audit
+on:
+  push:
+    branches: [feature/gmax-power-qa-20261127]
+    paths:
+      - 'scripts/audit-gmax-source.cjs'
+      - 'tests/gmax-source-audit.test.cjs'
+      - 'tests/special-power-qa.test.cjs'
+      - 'src/pkmsvv-special-power-qa.js'
+      - '.github/workflows/gmax-isolated-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify G-Max runtime, save guard and exact-form source audit
+        run: node --test tests/special-power-qa.test.cjs tests/gmax-source-audit.test.cjs
+      - name: Audit real pinned upstream Normal and Shiny sprite files
+        run: node scripts/audit-gmax-source.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gmax-source-audit
+          path: dist/gmax-source-audit/
+          if-no-files-found: warn
+          retention-days: 7

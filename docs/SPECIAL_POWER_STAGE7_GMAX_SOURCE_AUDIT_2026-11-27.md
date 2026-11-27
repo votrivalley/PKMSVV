@@ -1,0 +1,3 @@
+# G-Max source audit (isolated)
+
+Pinned PMDCollab/SpriteCollab 8e7588b720b3433198e8a25c7bd9c06732056702. Directory listings showed candidate sprite files but did not establish exact form names. Large tracker cannot be read through the connector, so CI resolves exact Gigantamax names and Normal/Shiny variants, downloads real sheets, checks PNG dimensions and XML timing/eight direction rows, retains credits and exports QA artifact. No game asset registration. CC BY-NC 4.0 and individual credits; does not grant Pokémon IP rights. No commercial use. Synthetic runtime tests run in the same workflow; actual art review and live gameplay remain separate. No deploy.
