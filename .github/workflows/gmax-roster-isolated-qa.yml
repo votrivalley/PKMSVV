@@ -1,0 +1,32 @@
+name: G-Max roster isolated source audit
+on:
+  push:
+    branches: [feature/gmax-roster-audit-20261127]
+    paths:
+      - 'scripts/audit-gmax-roster.cjs'
+      - 'tests/gmax-roster-audit.test.cjs'
+      - '.github/workflows/gmax-roster-isolated-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    if: github.ref == 'refs/heads/feature/gmax-roster-audit-20261127'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Test roster source checks and original special-power regressions
+        run: node --test tests/gmax-roster-audit.test.cjs tests/gmax-source-audit.test.cjs tests/special-power-qa.test.cjs
+      - name: Audit pinned source roster and retain metadata evidence
+        run: node scripts/audit-gmax-roster.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: GMAX-ROSTER-QA-NEVER-LIVE
+          path: dist/gmax-roster-audit/report.json
+          if-no-files-found: warn
+          retention-days: 14
