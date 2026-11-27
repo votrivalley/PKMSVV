@@ -1,17 +1,18 @@
 'use strict';
-/* Special Power Stage 5. QA only. One selection per owned species.
+/* Special Power Stage 6 — isolated G-Max prototype. QA only. One selection per owned species.
  * Required Notice: Copyright 2026 JPTER78 (https://github.com/JPTER78/pokesurvivor)
  * Noncommercial license: https://polyformproject.org/licenses/noncommercial/1.0.0
  * Dynamax, Z-Power and Terastal mechanics ported from PokéSurvivor3DS by juanluismm521,
  * 188afd16929e9c67dc0aa45d42a8e328d1888657 src/core/power.cpp.
  * SVV retains proportional HP, unchanged collision radius, Chapter 7 loadout
  * and shared charge; use native Web enemy/prop APIs, not 3DS GPU code.
- * G-Max sprites, defensive Tera conversion and multiplayer power packets are not implemented.
+ * G-Max is an original extension, not in the 3DS source. No audited G-Max sprites are shipped.
  */
 G.PKMSVVSpecialPowerQA=(()=>{
  const catalog=Object.freeze([
   Object.freeze({id:'mega',name:'Mega Evolution',device:'Mega Stone',duration:30,plannedDuration:40,cooldown:200,ready:true,summary:'Hệ Mega hiện tại · giữ nguyên đá và mở khóa'}),
   Object.freeze({id:'dynamax',name:'Dynamax',device:'Dynamax Band',duration:12,cooldown:80,ready:true,summary:'QA Solo · HP x2, công +40%, giẫm quái và sát thương lan'}),
+  Object.freeze({id:'gigantamax',name:'Gigantamax',device:'Max Soup',duration:12,cooldown:80,ready:true,summary:'QA Solo · dạng G-Max riêng và tuyệt kỹ theo Pokémon'}),
   Object.freeze({id:'zmove',name:'Z-Power',device:'Z-Crystal',duration:15,cooldown:60,ready:true,summary:'QA Solo · sóng mở đầu, chữ Z xuyên quái, tuyệt chiêu kết thúc'}),
   Object.freeze({id:'terastal',name:'Terastal',device:'Tera Crystal',duration:30,cooldown:75,ready:true,summary:'QA Solo · kỹ năng theo hệ Tera đã chọn x1,8'})
  ]);
@@ -22,6 +23,18 @@ G.PKMSVVSpecialPowerQA=(()=>{
  const dexOK=d=>Number.isInteger(d)&&d>=1&&d<=1025;
  const runs=new WeakMap();
  const COST=100;
+ const GMAX=Object.freeze({6:Object.freeze({type:'fire',name:'G-Max Wildfire'}),25:Object.freeze({type:'electric',name:'G-Max Volt Crash'})});
+ function gmaxArt(dex,shiny=false){
+  if(!Object.hasOwn(GMAX,dex))return null;
+  const a=G.PKMSVV_GMAX_ART?.[dex],id=Number(a?.spriteId);
+  if(a?.verified!==true||a.dex!==dex||!Number.isInteger(id)||id<=1025||
+    (G.PKMSVV_MEGA_CATALOG||[]).some(f=>f.spriteId===id))return null;
+  const anim=G.SPRITE_META?.[id]?.a;
+  if(!anim||!['Idle','Walk','Attack','Hurt'].every(k=>!!anim[k])||
+    (shiny&&G.Sprites?.hasShiny?.(id)!==true)||typeof G.Sprites?.Animator!=='function')return null;
+  return {id,def:GMAX[dex]};
+ }
+ const isGmaxReady=dex=>!!gmaxArt(dex);
  const object=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{};
  const itemOwned=(s,key)=>Object.hasOwn(object(s?.pkmsvvPowerItems),key)&&s.pkmsvvPowerItems[key]===true;
  const itemKey=(id,type)=>id==='dynamax'?'dynamax':id+':'+type;
@@ -33,15 +46,16 @@ G.PKMSVVSpecialPowerQA=(()=>{
  }
  function unlocked(s,id,dex){
   if(id==='mega')return true; // Legacy stone, art and story checks remain authoritative.
+  if(id==='gigantamax')return itemOwned(s,'dynamax')&&itemOwned(s,'gigantamax:'+dex)&&isGmaxReady(dex);
   return id==='dynamax'?itemOwned(s,'dynamax'):!!chosenType(s,id,dex);
  }
  function selected(s,dex){
   const v=s?.pkmsvvPowerLoadout?.[String(dex)];
-  return ['dynamax','zmove','terastal'].includes(v)&&unlocked(s,v,dex)?v:'mega';
+  return ['dynamax','gigantamax','zmove','terastal'].includes(v)&&unlocked(s,v,dex)?v:'mega';
  }
  function owns(s,dex){return !!(s&&dexOK(dex)&&(Number(s.partner)===dex||s.owned?.[dex]||s.shiny?.[dex]));}
  const balance=s=>{const v=Number(s?.arenaGacha?.points);return Number.isFinite(v)?Math.max(0,Math.floor(v)):0;};
- const pool=(s,id)=>id==='dynamax'?(itemOwned(s,'dynamax')?[]:['dynamax']):
+ const pool=(s,id)=>id==='gigantamax'?(itemOwned(s,'dynamax')?Object.keys(GMAX).map(Number).filter(isGmaxReady).map(d=>'gigantamax:'+d).filter(k=>!itemOwned(s,k)):[]):id==='dynamax'?(itemOwned(s,'dynamax')?[]:['dynamax']):
   ['zmove','terastal'].includes(id)?Object.keys(Z_NAMES).map(t=>itemKey(id,t)).filter(k=>!itemOwned(s,k)):[];
  let saving=false;
  const busy=()=>saving;
@@ -85,6 +99,8 @@ G.PKMSVVSpecialPowerQA=(()=>{
   if(!r&&G.Game?.state==='playing'){
    r={id:save()?.pkmsvvChapter7Seen===true?selected(save(),Number(p.dex)):'mega',remaining:0,cooldown:0,bonusHp:0,atkApplied:false,aura:0,visual:null,crushClock:0,crushed:new WeakMap(),splashing:false,zClock:0,zShots:0};
    r.powerType=chosenType(save(),r.id,Number(p.dex));
+   if(r.id==='gigantamax'&&!gmaxArt(Number(p.dex),!!p.shiny))r.id='dynamax';
+   r.baseDex=Number(p.dex);
    runs.set(p,r);
   }
   return r||null;
@@ -92,8 +108,8 @@ G.PKMSVVSpecialPowerQA=(()=>{
  function allowsMega(p){const r=state(p);return !r||r.id==='mega';}
  function canActivate(p=player()){
   const r=state(p);
-  return !!(r&&['dynamax','zmove','terastal'].includes(r.id)&&!p.dead&&G.Game?.state==='playing'&&!p._megaActive&&!p._pkmsvvSpecialPowerActive&&
-   r.remaining<=0&&r.cooldown<=0&&Number(G.PKMSVVMegaPhase3?.energy?.(p))>=100&&
+  return !!(r&&['dynamax','gigantamax','zmove','terastal'].includes(r.id)&&!p.dead&&G.Game?.state==='playing'&&!p._megaActive&&!p._pkmsvvSpecialPowerActive&&
+   r.remaining<=0&&r.cooldown<=0&&(r.id!=='gigantamax'||(r.baseDex===Number(p.dex)&&!!gmaxArt(r.baseDex,!!p.shiny)&&p.anim&&Number.isFinite(p.anim.scale)&&p.anim.scale>0))&&Number(G.PKMSVVMegaPhase3?.energy?.(p))>=100&&
    Number.isFinite(p.maxHp)&&p.maxHp>0&&Number.isFinite(p.hp)&&p.hp>0&&Number.isFinite(p.atkMul)&&p.atkMul>0);
  }
  function activate(p=player()){
@@ -114,18 +130,23 @@ G.PKMSVVSpecialPowerQA=(()=>{
    G.UI?.toast?.(tr('TERASTAL · kỹ năng cùng hệ +80%','TERASTAL · matching moves +80%'));
    return true;
   }
+  const form=r.id==='gigantamax'?gmaxArt(r.baseDex,!!p.shiny):null;
+  let nextAnim=null;
+  if(form){try{nextAnim=new G.Sprites.Animator(form.id,p.anim.scale,!!p.shiny);nextAnim.dir=p.anim.dir||0;}catch(_){return false;}}
+  if(r.id==='gigantamax'&&!nextAnim)return false;
   r.bonusHp=p.maxHp;
   p.maxHp+=r.bonusHp;p.hp=p.maxHp*fraction;
   p.atkMul*=1.4;r.atkApplied=true;
   // Original 3DS power_start: grow visual sprite x1.8, not the collider.
   if(p.anim&&Number.isFinite(p.anim.scale)&&p.anim.scale>0){
    r.visual={anim:p.anim,scale:p.anim.scale,bodyH:p.bodyH};
+   if(nextAnim){r.visual.gmaxAnim=nextAnim;p.anim=nextAnim;}
    p.anim.scale*=1.8;
    if(G.Sprites?.bodyHeight)p.bodyH=G.Sprites.bodyHeight(p.anim.dex??p.dex,p.anim.scale);
   }
-  r.remaining=12;r.aura=0;r.crushClock=0;r.crushed=new WeakMap();p._pkmsvvSpecialPowerActive='dynamax';p._megaEnergy=0;
+  r.remaining=12;r.aura=0;r.crushClock=0;r.crushed=new WeakMap();r.gmaxNext=0;r.wildfire=null;p._pkmsvvSpecialPowerActive=r.id;p._megaEnergy=0;
   G.FX?.ring?.(p.x,p.y,15,110,'#e883f8',.8,7);
-  G.UI?.toast?.(tr('DYNAMAX · 12 giây · HP x2, công +40%','DYNAMAX · 12s · double HP, +40% attack'));
+  G.UI?.toast?.(form?'GIGANTAMAX · '+form.def.name:tr('DYNAMAX · 12 giây · HP x2, công +40%','DYNAMAX · 12s · double HP, +40% attack'));
   return true;
  }
  function stop(p=player(),completed=false){
@@ -153,7 +174,9 @@ G.PKMSVVSpecialPowerQA=(()=>{
   // Remove only the owned bonus, not unrelated permanent or passive changes.
   p.maxHp=Math.max(1,p.maxHp-r.bonusHp);p.hp=p.dead?0:p.maxHp*fraction;
   p.atkMul/=1.4;r.atkApplied=false;r.bonusHp=0;r.remaining=0;r.cooldown=80;
+  if(r.visual?.gmaxAnim&&p.anim===r.visual.gmaxAnim){const dir=p.anim.dir;p.anim=r.visual.anim;p.anim.dir=dir;}
   if(r.visual&&p.anim===r.visual.anim){p.anim.scale=r.visual.scale;p.bodyH=r.visual.bodyH;}
+  r.wildfire=null;
   r.visual=null;delete p._pkmsvvSpecialPowerActive;return true;
  }
  // Port of power_dmg, power_update (Dyna), power_after_hit from upstream.
@@ -209,9 +232,9 @@ G.PKMSVVSpecialPowerQA=(()=>{
   const r=p&&runs.get(p);
   return owner===p&&r?.id==='terastal'&&r.remaining>0&&p._pkmsvvSpecialPowerActive==='terastal'&&!p.dead&&soloExplore(p)&&G.Game?.state==='playing'&&r.teraTypes?.includes(type)?1.8:1;
  }
- function afterHit(p,e,dmg){
+ function afterHit(p,e,dmg,type,owner=p){
   const r=state(p);
-  if(!r?.atkApplied||r.splashing||!soloExplore(p)||p.dead||G.Game?.state!=='playing'||!e||!Number.isFinite(dmg)||dmg<=0)return 0;
+  if(owner!==p||!r?.atkApplied||r.splashing||!soloExplore(p)||p.dead||G.Game?.state!=='playing'||!e||!Number.isFinite(dmg)||dmg<=0)return 0;
   // Upstream snapshots the first six entries, including original target.
   // Native hit / projectile hook already excludes ghost attacks.
   r.splashing=true;let n=0;
@@ -220,12 +243,17 @@ G.PKMSVVSpecialPowerQA=(()=>{
     if(other!==e&&deal(p,other,dmg*.4,other.x-e.x,other.y-e.y,0))n++;
    }
   }finally{r.splashing=false;}
+  if(r.id==='gigantamax'&&type===GMAX[r.baseDex]?.type&&r.crushClock>=r.gmaxNext&&validEnemy(e)){
+   r.gmaxNext=r.crushClock+4;
+   if(r.baseDex===6){r.wildfire={x:e.x,y:e.y,damage:dmg*.35,left:3,next:r.crushClock};G.FX?.ring?.(e.x,e.y,8,125,'#ff7137',.65,5);}
+   if(r.baseDex===25){G.FX?.ring?.(e.x,e.y,8,135,'#ffe86a',.55,5);for(const o of nearby(e.x,e.y,135).filter(validEnemy).slice(0,5)){const boss=o.boss||o.legend||o.legendary;if(deal(p,o,dmg*.45*(boss?0.5:1),0,0,0)){if(!o.dead)o.applyStun?.(boss?0.12:0.4);n++;}}}
+  }
   return n;
  }
  function tick(p,dt){
   const r=p&&runs.get(p)||state(p);
   if(!r)return;
-  if(p.dead||!soloExplore(p)||['ui','over'].includes(G.Game?.state)){stop(p);return;}
+  if(p.dead||!soloExplore(p)||(r.id==='gigantamax'&&r.baseDex!==Number(p.dex))||['ui','over'].includes(G.Game?.state)){stop(p);return;}
   if(G.Game?.state!=='playing')return;
   const d=Number.isFinite(dt)?Math.max(0,dt):0;
   if(p._pkmsvvSpecialPowerActive==='zmove'){
@@ -242,7 +270,7 @@ G.PKMSVVSpecialPowerQA=(()=>{
    if(r.remaining<=0)stop(p);
   }else if(r.atkApplied){
    r.remaining=Math.max(0,r.remaining-d);r.aura+=d;r.crushClock+=d;
-   if(r.remaining>0)crush(p,r);
+   if(r.remaining>0){crush(p,r);const z=r.wildfire;if(z&&z.left>0&&r.crushClock>=z.next){z.left--;z.next=r.crushClock+1;G.FX?.ring?.(z.x,z.y,8,125,'#ff7137',.5,4);for(const e of nearby(z.x,z.y,125).filter(validEnemy).slice(0,5))deal(p,e,z.damage*((e.boss||e.legend||e.legendary)?0.5:1),0,0,0);if(z.left<=0)r.wildfire=null;}}
    if(r.aura>=.5){r.aura=0;G.FX?.ring?.(p.x,p.y,8,Math.max(38,(p.r||18)*3),'#f191ef',.4,4);}
    if(r.remaining<=0)stop(p);
   }else r.cooldown=Math.max(0,r.cooldown-d);
@@ -251,11 +279,11 @@ G.PKMSVVSpecialPowerQA=(()=>{
  function sync(){
   if(!button)return;
   const p=player(),r=state(p);
-  const show=!!(r&&['dynamax','zmove','terastal'].includes(r.id)&&p&&!p.dead&&G.Game?.state==='playing');
+  const show=!!(r&&['dynamax','gigantamax','zmove','terastal'].includes(r.id)&&p&&!p.dead&&G.Game?.state==='playing');
   button.style.display=show?'flex':'none';if(!show)return;
   const charge=Math.floor(G.PKMSVVMegaPhase3?.energy?.(p)||0);
   button.disabled=!canActivate(p);
-  button.querySelector('span').textContent=r.remaining>0?Math.ceil(r.remaining)+'s':r.cooldown>0?Math.ceil(r.cooldown)+'s':charge<100?charge+'%':r.id==='zmove'?'Z-POWER':r.id==='terastal'?'TERA':'DMAX';
+  button.querySelector('span').textContent=r.remaining>0?Math.ceil(r.remaining)+'s':r.cooldown>0?Math.ceil(r.cooldown)+'s':charge<100?charge+'%':r.id==='zmove'?'Z-POWER':r.id==='terastal'?'TERA':r.id==='gigantamax'?'GMAX':'DMAX';
   button.title=byId(r.id).name+' · '+tr('Nút sức mạnh (5 / L1)','Power input (5 / L1)');
  }
  function mount(){
@@ -290,7 +318,7 @@ G.PKMSVVSpecialPowerQA=(()=>{
    }
    function updateButton(){
     const active=current===def.id&&(!picker||picker.value===equippedType);
-    b.textContent=!def.ready?tr('Đang phát triển','In development'):!allowed?tr('🔒 Cần vật phẩm Arena','🔒 Arena item required'):active?tr('Đang chọn','Selected'):tr('Trang bị','Equip');
+    b.textContent=def.id==='gigantamax'&&!isGmaxReady(dex)?tr('🔒 Chưa có sprite G-Max','🔒 G-Max sprite unavailable'):!def.ready?tr('Đang phát triển','In development'):!allowed?tr('🔒 Cần vật phẩm Arena','🔒 Arena item required'):active?tr('Đang chọn','Selected'):tr('Trang bị','Equip');
     b.disabled=!def.ready||!allowed||active||s?.pkmsvvChapter7Seen!==true||!!G.DB?.guest||busy();
    }
    if(picker)picker.onchange=updateButton;updateButton();
@@ -306,7 +334,7 @@ G.PKMSVVSpecialPowerQA=(()=>{
   if(this===player()){
    const r=state(this);
    tick(this,dt);
-   if(r&&['dynamax','zmove','terastal'].includes(r.id)&&(G.Input?.tap?.('digit5')||G.Input?.tap?.('numpad5')||G.Input?.tap?.('pkmsvv-mega')))activate(this);
+   if(r&&['dynamax','gigantamax','zmove','terastal'].includes(r.id)&&(G.Input?.tap?.('digit5')||G.Input?.tap?.('numpad5')||G.Input?.tap?.('pkmsvv-mega')))activate(this);
   }
   return oldUpdate.call(this,dt);
  };
@@ -315,5 +343,5 @@ G.PKMSVVSpecialPowerQA=(()=>{
   G.Game[name]=function(...args){stop(player());return prev.apply(this,args);};
  }
  if(typeof document!=='undefined'){mount();setInterval(sync,250);}
- return {catalog,COST,balance,pool,busy,canBuy,buy,itemOwned,availableTypes,chosenType,unlocked,selected,equip,state,allowsMega,canActivate,activate,tick,stop,afterHit,damageMultiplier,open,close,Z_NAMES};
+ return {catalog,GMAX,gmaxArt,isGmaxReady,COST,balance,pool,busy,canBuy,buy,itemOwned,availableTypes,chosenType,unlocked,selected,equip,state,allowsMega,canActivate,activate,tick,stop,afterHit,damageMultiplier,open,close,Z_NAMES};
 })();
