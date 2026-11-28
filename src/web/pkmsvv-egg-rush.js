@@ -579,7 +579,8 @@ G.EggRush=(()=>{
    if(localReward){
     const reward=document.createElement('p');reward.className='pkmsvv-egg-rank-reward';
     reward.textContent=tr('Phần thưởng: ','Rewards: ')+'+'+localReward.awarded+' '+tr('trứng thu phục','recruitment eggs')+' · +'+localReward.friendship+' '+tr('thân thiết Support','Support friendship');
-    if(localReward.blocked)reward.textContent+=' · '+tr('Máy ấp đầy hoặc không còn Baby phù hợp.','Incubator full or no eligible Baby Pokémon.');
+    if(localReward.pending)reward.textContent+=' · '+localReward.pending+' '+tr('trứng chờ nhận tại Phòng nghiên cứu','prize eggs waiting in the Research Lab');
+    if(localReward.blocked)reward.textContent+=' · '+tr('Dữ liệu máy ấp cần kiểm tra.','Incubator data needs checking.');
     root.append(reward);
    }
    root.classList.add('pkmsvv-egg-scoring-done');

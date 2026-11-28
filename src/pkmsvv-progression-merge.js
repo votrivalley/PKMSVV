@@ -36,24 +36,47 @@
   }
   return out;
  }
+ const caps=[6,8,10,12,15],slots=[1,1,2,2,3];
+ const level=i=>i?.level??1;
+ const goal=e=>e?.goal??500;
+ const babyGoal=d=>[239,240,238,438,439,433,458].includes(Number(d))?750:[175,447,446,236,440,848].includes(Number(d))?1000:500;
+ const babies=[172,173,174,175,236,238,239,240,298,360,406,433,438,439,440,446,447,458,848];
  function validate(i){
   if(i===undefined)return;
-  if(!obj(i)||!Number.isSafeInteger(i.serial)||i.serial<0||!obj(i.eggs)||!obj(i.hatched)||Object.keys(i.eggs).length>6)conflict();
+  if(!obj(i)||!Number.isSafeInteger(i.serial)||i.serial<0||!obj(i.eggs)||!obj(i.hatched)||!Number.isInteger(level(i))||level(i)<1||level(i)>5||Object.keys(i.eggs).length>caps[level(i)-1])conflict();
   const id=k=>/^egg-[1-9][0-9]*$/.test(k)&&Number.isSafeInteger(+k.slice(4))&&+k.slice(4)<=i.serial;
   for(const [k,e] of Object.entries(i.eggs)){
-   if(!id(k)||!obj(e)||!dex(e.dex)||!Number.isInteger(e.kills)||e.kills<0||e.kills>500||own(i.hatched,k)||
+   if(!id(k)||!obj(e)||!dex(e.dex)||!Number.isInteger(e.kills)||e.kills<0||e.kills>goal(e)||own(i.hatched,k)||(e.goal!==undefined&&e.goal!==babyGoal(e.dex))||
       (e.shiny!==undefined&&typeof e.shiny!=='boolean'))conflict();
   }
   for(const [k,d] of Object.entries(i.hatched))if(!id(k)||!dex(d))conflict();
-  if(i.active!==null&&!own(i.eggs,i.active))conflict();
+  if(i.extra!==undefined&&!Array.isArray(i.extra))conflict();
+  const active=[...(i.active===null?[]:[i.active]),...(i.extra||[])];
+  if(active.length>slots[level(i)-1]||new Set(active).size!==active.length||active.some(k=>typeof k!=='string'||!own(i.eggs,k))||(i.active===null&&active.length))conflict();
+  if(i.prizes!==undefined&&!obj(i.prizes))conflict();
+  const claimed=new Set();
+  for(const [key,p] of Object.entries(i.prizes||{})){
+   if(!/^[A-Za-z0-9_-]{1,128}\.[1-9][0-9]*$/.test(key)||!obj(p)||![1,2].includes(p.count)||!Array.isArray(p.claimed)||p.claimed.length>p.count)conflict();
+   for(const k of p.claimed){
+    if(!id(k)||claimed.has(k)||(!own(i.eggs,k)&&!own(i.hatched,k))||
+       (own(i.eggs,k)&&(i.eggs[k].from!=='egg-rush-baby'||i.eggs[k].prize!==key))||
+       (own(i.hatched,k)&&!babies.includes(Number(i.hatched[k]))))conflict();
+    claimed.add(k);
+   }
+  }
+  for(const [k,e] of Object.entries(i.eggs))if(e.prize!==undefined&&!claimed.has(k))conflict();
  }
  function retains(next,old,merged){
-  if(old===undefined)return true;if(next===undefined||next.serial<old.serial)return false;
+  if(old===undefined)return true;if(next===undefined||next.serial<old.serial||level(next)<level(old))return false;
+  for(const [k,p] of Object.entries(old.prizes||{})){
+   const n=next.prizes?.[k];
+   if(!n||n.count!==p.count||p.claimed.some((id,j)=>n.claimed[j]!==id))return false;
+  }
   for(const [id,d] of Object.entries(old.hatched))if(Number(next.hatched[id])!==Number(d))return false;
   for(const [id,e] of Object.entries(old.eggs)){
    const n=next.eggs[id];
    if(n){
-    if(Number(n.dex)!==Number(e.dex)||n.from!==e.from||n.region!==e.region||!!n.shiny!==!!e.shiny||n.kills<e.kills)return false;
+    if(Number(n.dex)!==Number(e.dex)||n.from!==e.from||n.region!==e.region||!!n.shiny!==!!e.shiny||goal(n)!==goal(e)||n.prize!==e.prize||n.kills<e.kills)return false;
    }else if(Number(next.hatched[id])!==Number(e.dex)||!merged.owned?.[e.dex]||(e.shiny===true&&!merged.shiny?.[e.dex]))return false;
   }
   return true;

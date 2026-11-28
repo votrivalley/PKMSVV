@@ -39,12 +39,17 @@
  const incubatorLoss=(a,b)=>{
   const old=a.pkmsvvIncubator,next=b.pkmsvvIncubator;
   if(!record(old))return false;
-  if(!record(next)||Number(next.serial||0)<Number(old.serial||0))return true;
+  if(!record(next)||Number(next.serial||0)<Number(old.serial||0)||Number(next.level??1)<Number(old.level??1))return true;
+  for(const key of keys(old.prizes)){
+   const p=old.prizes[key],n=next.prizes?.[key];
+   if(!record(n)||n.count!==p.count||!Array.isArray(n.claimed)||!Array.isArray(p.claimed)||p.claimed.some((id,j)=>n.claimed[j]!==id))return true;
+   for(const id of n.claimed)if(!next.eggs?.[id]&&!next.hatched?.[id])return true;
+  }
   for(const id of keys(old.hatched))if(Number(next.hatched?.[id])!==Number(old.hatched[id]))return true;
   for(const id of keys(old.eggs)){
    const prev=old.eggs[id],current=next.eggs?.[id];
    if(current){if(Number(current.dex)!==Number(prev.dex)||Number(current.kills||0)<Number(prev.kills||0)||
-    current.from!==prev.from||!!current.shiny!==!!prev.shiny)return true;}
+    current.from!==prev.from||current.region!==prev.region||!!current.shiny!==!!prev.shiny||(current.goal??500)!==(prev.goal??500)||current.prize!==prev.prize)return true;}
    else if(Number(next.hatched?.[id])!==Number(prev.dex)||!b.owned?.[prev.dex]||(prev.shiny===true&&!b.shiny?.[prev.dex]))return true;
   }
   return false;

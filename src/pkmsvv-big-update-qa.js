@@ -16,6 +16,30 @@
   126:240,467:126,183:298,184:183,202:360,315:406,407:315,358:433,185:438,122:439,
   113:440,242:113,143:446,448:447,226:458,849:848});
  const SHINY_RATE=.0045;
+ // Preserve all pre-existing egg thresholds. Only newly issued Baby eggs
+ // carry an explicit target. All selected slots advance in parallel.
+ const INCUBATOR_LEVELS=Object.freeze([
+  {level:1,capacity:6,slots:1,cost:0},{level:2,capacity:8,slots:1,cost:120},
+  {level:3,capacity:10,slots:2,cost:240},{level:4,capacity:12,slots:2,cost:360},
+  {level:5,capacity:15,slots:3,cost:480}
+ ].map(Object.freeze));
+ const BABY_TIERS=Object.freeze([
+  {name:['Thường','Common'],color:'#a7c39a',weight:55,goal:500,dex:[172,173,174,298,360,406]},
+  {name:['Hiếm','Rare'],color:'#86bfff',weight:30,goal:750,dex:[239,240,238,438,439,433,458]},
+  {name:['Cực hiếm','Super rare'],color:'#d6a6ff',weight:15,goal:1000,dex:[175,447,446,236,440,848]}
+ ].map(t=>Object.freeze({...t,dex:Object.freeze(t.dex),name:Object.freeze(t.name)})));
+ const tierFor=dex=>BABY_TIERS.find(t=>t.dex.includes(Number(dex)));
+ const goalFor=e=>e?.goal??GOAL;
+ const levelOf=i=>i?.level??1;
+ const capacity=i=>INCUBATOR_LEVELS[levelOf(i)-1]?.capacity;
+ const slots=i=>INCUBATOR_LEVELS[levelOf(i)-1]?.slots;
+ const activeIds=i=>[...(i.active===null?[]:[i.active]),...(i.extra||[])];
+ const prizeKey=(room,serial)=>room+'.'+serial;
+ const prizeCount=i=>Object.values(i.prizes||{}).reduce((n,p)=>n+p.count-p.claimed.length,0);
+ function setActive(i,ids){
+  i.active=ids[0]??null;
+  if(ids.length>1)i.extra=ids.slice(1);else delete i.extra;
+ }
  const isEggOnly=dex=>eggSet.has(Number(dex));
  const eggEvolutionParent=dex=>EGG_PARENT[Number(dex)]||null;
  const runs=new WeakMap(),riftBosses=new WeakMap(),coopRuns=new WeakMap();
@@ -53,13 +77,32 @@
   const raw=s?.pkmsvvIncubator;
   if(raw===undefined)return {serial:0,active:null,eggs:{},hatched:{}};
   if(!isObj(raw)||!Number.isSafeInteger(raw.serial)||raw.serial<0||!isObj(raw.eggs)||!isObj(raw.hatched)||
-   Object.keys(raw.eggs).length>CAP)throw Error('Invalid incubator save; keep original');
+   !Number.isInteger(levelOf(raw))||levelOf(raw)<1||levelOf(raw)>5||
+   Object.keys(raw.eggs).length>capacity(raw))throw Error('Invalid incubator save; keep original');
+  const validId=id=>/^egg-[1-9][0-9]*$/.test(id)&&Number.isSafeInteger(Number(id.slice(4)))&&Number(id.slice(4))<=raw.serial;
   for(const [id,e] of Object.entries(raw.eggs)){
-   if(!/^egg-[1-9][0-9]*$/.test(id)||!dexId(e?.dex)||!Number.isInteger(e.kills)||e.kills<0||e.kills>GOAL||own(raw.hatched,id)||
+   if(!validId(id)||!dexId(e?.dex)||!Number.isInteger(e.kills)||e.kills<0||e.kills>goalFor(e)||own(raw.hatched,id)||
+      (e.goal!==undefined&&e.goal!==(tierFor(e.dex)?.goal??GOAL))||
       (e.shiny!==undefined&&typeof e.shiny!=='boolean')||(['baby-egg','rift-baby','mission-baby','egg-rush-baby'].includes(e.from)&&!isEggOnly(e.dex))||
       (e.from==='berry-boss'&&Number(e.dex)!==446))throw Error('Invalid egg record');
   }
-  if(raw.active!==null&&!own(raw.eggs,raw.active))throw Error('Invalid active egg');
+  for(const [id,dex] of Object.entries(raw.hatched))if(!validId(id)||!dexId(dex))throw Error('Invalid hatch receipt');
+  if(raw.extra!==undefined&&!Array.isArray(raw.extra))throw Error('Invalid slots');
+  const active=activeIds(raw);
+  if(active.length>slots(raw)||new Set(active).size!==active.length||active.some(id=>typeof id!=='string'||!own(raw.eggs,id))||
+     (raw.active===null&&active.length))throw Error('Invalid active egg');
+  if(raw.prizes!==undefined&&!isObj(raw.prizes))throw Error('Invalid prize journal');
+  const claimed=new Set();
+  for(const [key,p] of Object.entries(raw.prizes||{})){
+   if(!/^[A-Za-z0-9_-]{1,128}\.[1-9][0-9]*$/.test(key)||!isObj(p)||![1,2].includes(p.count)||!Array.isArray(p.claimed)||p.claimed.length>p.count)throw Error('Invalid rank prize');
+   for(const id of p.claimed){
+    if(!validId(id)||claimed.has(id)||(!own(raw.eggs,id)&&!own(raw.hatched,id))||
+       (own(raw.eggs,id)&&(raw.eggs[id].from!=='egg-rush-baby'||raw.eggs[id].prize!==key))||
+       (own(raw.hatched,id)&&!isEggOnly(raw.hatched[id])))throw Error('Invalid prize redemption');
+    claimed.add(id);
+   }
+  }
+  for(const [id,e] of Object.entries(raw.eggs))if(e.prize!==undefined&&!claimed.has(id))throw Error('Unlinked rank prize');
   return raw;
  }
  function competitive(){return !!(G.Coop?.active||G.Royale?.active||G.EggRush?.active||G.Arena?.active||
@@ -106,8 +149,8 @@
      cfg.host!==room.host||typeof uid!=='string'||uid!==G.Net?.uid||uid!==G.Social?.uid||
      host!==(uid===room.host)||!roster||roster!==cfgParty||
      !room.members.some(m=>m.uid===uid&&!m.bot)||!room.members.some(m=>m.uid===cfg.host&&!m.bot)||!dex||!s.owned?.[dex])return false;
-  let egg=null;
-  try{if((receipts(s)[room.id]?.serial||0)>=room.matchSerial)return false;egg=incubator(s).active;}catch(_){return false;}
+  let egg=[];
+  try{if((receipts(s)[room.id]?.serial||0)>=room.matchSerial)return false;egg=activeIds(incubator(s));}catch(_){return false;}
   coopRuns.set(p,{profile:s,dex,egg,mode,room:room.id,serial:room.matchSerial,seed:cfg.seed,uid,host:cfg.host,
    isHost:host,roster,started:wall(),t:0,kills:0,bosses:0,frames:0,riftType:null,terminal:false,settled:false,invalid:false});
   return true;
@@ -204,16 +247,16 @@
    }
    draft.stats=draft.stats||{};draft.stats.pkmsvvEggsHatched=Math.min(99999,n(draft.stats.pkmsvvEggsHatched)+row.eggs);
   }
-  let blocked=false;
+  let blocked=false,pending=0;
   try{
-   const next=copy(incubator(draft));
-   for(let j=0;j<want;j++){
-    const pool=EGG_ONLY.filter(d=>babyEligible(draft,d,next)),unowned=pool.filter(d=>!draft.owned?.[d]),choices=unowned.length?unowned:pool;
-    if(!choices.length||Object.keys(next.eggs).length>=CAP){blocked=true;break;}
-    const id=createEgg(next,choices[Math.floor(Math.random()*choices.length)],9,'egg-rush-baby');
-    if(!id){blocked=true;break;}reward.push(id);
+   if(want){
+    const next=copy(incubator(draft)),key=prizeKey(r.room,r.serial);
+    next.prizes=next.prizes||{};
+    if(own(next.prizes,key))return null;
+    next.prizes[key]={count:want,claimed:[]};
+    reward.push(...redeemPrize(draft,next,key));
+    pending=want-reward.length;draft.pkmsvvIncubator=next;
    }
-   if(reward.length)draft.pkmsvvIncubator=next;
   }catch(err){blocked=true;reward.length=0;console.warn('[Egg Rush reward] incubator preserved',err);}
   const next={...journal,[r.room]:{serial:r.serial,at:Date.now()}};
   draft.pkmsvvCoopProgress=Object.fromEntries(Object.entries(next).sort((a,b)=>b[1].at-a[1].at||a[0].localeCompare(b[0])).slice(0,MAX_COOP_ROOMS));
@@ -221,7 +264,7 @@
   // Native endRun commits the full result together, including high-water
   // receipt, bond and eggs. Its run retry writes the SAME state on failure.
   Object.assign(s,draft);
-  const receipt={rank:row.rank,friendship:row.eggs,want,awarded:reward.length,blocked};
+  const receipt={rank:row.rank,friendship:row.eggs,want,awarded:reward.length,pending,blocked};
   G.EggRush?.setLocalReward?.(receipt);
   return receipt;
  }
@@ -239,14 +282,12 @@
   let progress=0,riftReward=null;
   try{
    const next=copy(incubator(s));
-   if(r.egg&&next.active===r.egg&&next.eggs[r.egg]){
-    const e=next.eggs[r.egg],before=e.kills;e.kills=Math.min(GOAL,before+r.kills);progress=e.kills-before;
-   }
-   if(r.riftType!==null&&Object.keys(next.eggs).length<CAP){
+   progress=advanceEggs(next,r.egg,r.kills);
+   if(r.riftType!==null&&Object.keys(next.eggs).length<capacity(next)){
     const pool=eligibleDex(s,9,next),matching=pool.filter(id=>G.DEX_BY?.[id]?.types?.includes(r.riftType));
     const candidates=matching.length?matching:pool;
     if(candidates.length){
-     const dex=candidates[Math.floor(Math.random()*candidates.length)];
+     const dex=pickReward(s,candidates,.40);
      riftReward=createEgg(next,dex,9,isEggOnly(dex)?'rift-baby':'rift');
     }
    }
@@ -262,7 +303,7 @@
   const region=G.PKMSVVQuickRegion,idx=region?.selectedRegion,dex=dexId(p?.dex);
   if(!s||s!==save()||G.DB?.guest||!p||p.remote||p.lanBot||coop||competitive()||
      region?.active!==true||!Number.isInteger(idx)||idx<0||idx>9||!dex||!s.owned?.[dex])return false;
-  let egg=null;try{egg=incubator(s).active;}catch(_){}
+  let egg=[];try{egg=activeIds(incubator(s));}catch(_){}
   runs.set(p,{profile:s,dex,region:idx,egg,badge:false,riftType:null,settled:false});return true;
  }
  function markBadge(p,boss,region){
@@ -304,13 +345,67 @@
     policy!==false&&G.PKMSVVDexDefeats?.unlocked?.(s,d)===true;
   }).sort((a,b)=>a-b);
  }
+ function pickBaby(s,pool,random=Math.random){
+  const groups=BABY_TIERS.map(t=>({...t,pool:pool.filter(d=>t.dex.includes(d))})).filter(t=>t.pool.length);
+  if(!groups.length)return null;
+  let roll=random()*groups.reduce((sum,t)=>sum+t.weight,0),group=groups.at(-1);
+  for(const t of groups){if(roll<t.weight){group=t;break;}roll-=t.weight;}
+  const missing=group.pool.filter(d=>!s.owned?.[d]),choices=missing.length?missing:group.pool;
+  return choices[Math.min(choices.length-1,Math.floor(random()*choices.length))];
+ }
+ function pickReward(s,pool,chance,random=Math.random){
+  const baby=pool.filter(isEggOnly),ordinary=pool.filter(d=>!isEggOnly(d));
+  if(baby.length&&(!ordinary.length||random()<chance))return pickBaby(s,baby,random);
+  return ordinary.length?ordinary[Math.min(ordinary.length-1,Math.floor(random()*ordinary.length))]:null;
+ }
+ function advanceEggs(i,selected,kills){
+  let progress=0;
+  for(const id of selected||[]){
+   const e=i.eggs[id];if(!e||!activeIds(i).includes(id))continue;
+   const before=e.kills;e.kills=Math.min(goalFor(e),before+kills);progress+=e.kills-before;
+  }
+  return progress;
+ }
  function createEgg(i,dex,region,source){
-  if(Object.keys(i.eggs).length>=CAP||!Number.isSafeInteger(i.serial+1))return null;
+  if(Object.keys(i.eggs).length>=capacity(i)||!Number.isSafeInteger(i.serial+1))return null;
   const id='egg-'+(++i.serial);
   const e={dex,kills:0,region,from:source};
+  if(isEggOnly(dex))e.goal=tierFor(dex)?.goal??GOAL;
   // Shiny is rolled ONCE when a special egg is earned, never on hatch/retry.
   if(isEggOnly(dex))e.shiny=!!G.Sprites?.hasShiny?.(dex)&&Math.random()<SHINY_RATE;
   i.eggs[id]=e;return id;
+ }
+ function redeemPrize(s,i,key){
+  const p=i.prizes?.[key],reward=[];
+  if(!p)return reward;
+  while(p.claimed.length<p.count&&Object.keys(i.eggs).length<capacity(i)){
+   const pool=EGG_ONLY.filter(d=>babyEligible(s,d,i));if(!pool.length)break;
+   const dex=pickBaby(s,pool),id=createEgg(i,dex,9,'egg-rush-baby');
+   if(!id)break;
+   i.eggs[id].prize=key;p.claimed.push(id);reward.push(id);
+  }
+  return reward;
+ }
+ function claimPrizes(s=save()){
+  return atomic(s,d=>{
+   const i=copy(incubator(d)),reward=[];
+   for(const key of Object.keys(i.prizes||{})){
+    reward.push(...redeemPrize(d,i,key));
+    if(Object.keys(i.eggs).length>=capacity(i))break;
+   }
+   if(!reward.length)throw Error(L('Chưa có chỗ trống hoặc chưa có Baby phù hợp.','No free slot or eligible Baby Pokémon.'));
+   d.pkmsvvIncubator=i;return {awarded:reward.length,pending:prizeCount(i)};
+  });
+ }
+ function upgradeIncubator(expected,s=save()){
+  return atomic(s,d=>{
+   const i=copy(incubator(d)),current=levelOf(i),next=INCUBATOR_LEVELS[current],wallet=d.pkmsvvCoopLab;
+   if(expected!==current||!next)throw Error(L('Cấp máy đã thay đổi hoặc đạt tối đa.','Incubator level changed or is maxed.'));
+   if(!isObj(wallet)||wallet.machineUnlocked!==true||!Number.isSafeInteger(wallet.coopCoins)||wallet.coopCoins<next.cost)
+    throw Error(L('Cần mở Xây dựng và đủ Xu Đồng Đội.','Unlock construction and earn enough Co-op Coins.'));
+   d.pkmsvvCoopLab={...wallet,coopCoins:wallet.coopCoins-next.cost};
+   i.level=next.level;d.pkmsvvIncubator=i;return {level:next.level,capacity:next.capacity,slots:next.slots,remaining:d.pkmsvvCoopLab.coopCoins};
+  });
  }
  function markEggEvolution(s,from,to,p){
   const target=dexId(to),source=dexId(from),r=p&&runs.get(p);
@@ -366,24 +461,21 @@
    s.pkmsvvMastery={...(s.pkmsvvMastery||{}),[r.dex]:Math.min(MAX_POINTS,summary(s,r.dex).points+points)};
   try{
    const next=copy(incubator(s));
-   if(r.egg&&next.active===r.egg&&next.eggs[r.egg]){
-    const e=next.eggs[r.egg],before=e.kills;
-    e.kills=Math.min(GOAL,before+kills);progress=e.kills-before;
-   }
-   if(r.badge&&time>=900&&Object.keys(next.eggs).length<CAP){
+   progress=advanceEggs(next,r.egg,kills);
+   if(r.badge&&time>=900&&Object.keys(next.eggs).length<capacity(next)){
     const pool=eligibleDex(s,r.region,next);
     if(pool.length){
-     const dex=pool[Math.floor(Math.random()*pool.length)];
+     const dex=pickReward(s,pool,.25);
      reward=createEgg(next,dex,r.region,isEggOnly(dex)?'baby-egg':'region-boss');
     }
    }
    // One additional egg per real Rift victory per run, not per summary
    // packet. Preserve the original region-boss egg as first priority.
-   if(r.riftType!==null&&Object.keys(next.eggs).length<CAP){
+   if(r.riftType!==null&&Object.keys(next.eggs).length<capacity(next)){
     const pool=eligibleDex(s,r.region,next),matching=pool.filter(id=>G.DEX_BY?.[id]?.types?.includes(r.riftType));
     const candidates=matching.length?matching:pool;
     if(candidates.length){
-     const dex=candidates[Math.floor(Math.random()*candidates.length)];
+     const dex=pickReward(s,candidates,.40);
      riftReward=createEgg(next,dex,r.region,isEggOnly(dex)?'rift-baby':'rift');
     }
    }
@@ -414,8 +506,8 @@
    if(weekly)try{
     const next=copy(incubator(s));
     const pool=EGG_ONLY.filter(d=>babyEligible(s,d,next));
-    if(pool.length&&Object.keys(next.eggs).length<CAP){
-     egg=createEgg(next,pool[Math.floor(Math.random()*pool.length)],9,'mission-baby');
+    if(pool.length&&Object.keys(next.eggs).length<capacity(next)){
+     egg=createEgg(next,pickBaby(s,pool),9,'mission-baby');
      if(egg)s.pkmsvvIncubator=next;
     }
    }catch(err){console.warn('[Mission incubator] unchanged',err);}
@@ -424,13 +516,26 @@
   },s)||null;
  }
  function activateEgg(id,s=save()){
-  return atomic(s,d=>{const i=copy(incubator(d));if(id!==null&&!own(i.eggs,id))throw Error('Unknown egg');
-   if(id!==null&&i.eggs[id].kills>=GOAL)throw Error('Egg ready');i.active=id;d.pkmsvvIncubator=i;return id;});
+  return atomic(s,d=>{
+   const i=copy(incubator(d));if(id!==null&&!own(i.eggs,id))throw Error('Unknown egg');
+   if(id!==null&&i.eggs[id].kills>=goalFor(i.eggs[id]))throw Error('Egg ready');
+   let selected=activeIds(i);
+   if(id===null)selected=[];
+   else if(selected.includes(id))selected=selected.filter(x=>x!==id);
+   else if(slots(i)===1)selected=[id];
+   else{
+    // A ready egg does not occupy a running slot. Keep its progress intact.
+    selected=selected.filter(x=>i.eggs[x].kills<goalFor(i.eggs[x]));
+    if(selected.length>=slots(i))throw Error(L('Hãy tạm dừng một trứng đang ấp.','Pause an active egg first.'));
+    selected.push(id);
+   }
+   setActive(i,selected);d.pkmsvvIncubator=i;return id;
+  });
  }
  function hatch(id,s=save()){
   return atomic(s,d=>{
    const i=copy(incubator(d)),e=i.eggs[id];
-   if(!e||e.kills!==GOAL)throw Error(L('Trứng chưa sẵn sàng.','Egg is not ready.'));
+   if(!e||e.kills!==goalFor(e))throw Error(L('Trứng chưa sẵn sàng.','Egg is not ready.'));
    const dex=Number(e.dex),special=isEggOnly(dex)&&(['baby-egg','rift-baby','berry-boss','mission-baby','egg-rush-baby'].includes(e.from));
    const shiny=e.shiny===true;
    // Preserve pre-update queued region eggs even if their species is now gated.
@@ -447,7 +552,7 @@
    }else if(d.owned[dex]&&(!shiny||d.shiny?.[dex]))throw Error(L('Pokémon đã có. Hãy sao lưu và chuyển PokéBox để giữ bản sao từ trứng.','Already owned; back up and migrate PokéBox to retain a hatch duplicate.'));
    d.owned[dex]=d.owned[dex]||{at:Date.now(),from:'incubator'};
    if(shiny){d.shiny=d.shiny||{};d.shiny[dex]=d.shiny[dex]||{at:Date.now(),from:'incubator'};}
-   delete i.eggs[id];i.hatched[id]=dex;if(i.active===id)i.active=null;d.pkmsvvIncubator=i;
+   delete i.eggs[id];i.hatched[id]=dex;setActive(i,activeIds(i).filter(x=>x!==id));d.pkmsvvIncubator=i;
    return {id,dex,shiny};
   });
  }
@@ -482,27 +587,52 @@
   if(!fromLab)return;
   const panel=document.createElement('section');panel.dataset.recruitEggPanel='1';panel.style.cssText='padding:14px;margin:10px 0;border:1px solid #a89661;border-radius:9px;background:#213949;color:#fff2cf;overflow-wrap:anywhere';
   const heading=document.createElement('strong');heading.textContent=L('Trứng thu phục · Máy ấp','Recruitment eggs · Incubator');panel.append(heading);
-  const info=document.createElement('p');info.textContent=L('Hạ boss vùng 15 phút, thắng Rift trong Khám phá hoặc Sống Sót Co-op, hay nhận thưởng nhiệm vụ tuần để tìm trứng thu phục. Tranh Trứng thưởng hạng nhất 2 trứng, hạng nhì 1 trứng. Quà cần chỗ trống và Baby Pokémon phù hợp. Trứng Munchlax cũng có thể nhận khi hạ Munchlax và thắng Giải cứu Berry Thường đủ điều kiện. Chọn một trứng, hạ 500 quái trong Khám phá hoặc Sống Sót Co-op để ấp. Khác trứng hỗ trợ trong trận.','Defeat a region badge boss, win a Rift in Explore or Survival Co-op, or claim weekly missions for recruitment eggs. Egg Rush gives 2 eggs for first and 1 for second. Bonus requires free slots and eligible Baby Pokémon. A qualifying Normal Berry Rescue win with Munchlax defeated can also award its egg. Select one and defeat 500 enemies in Explore or Survival Co-op to hatch. Separate from run support eggs.');panel.append(info);
+  const info=document.createElement('p');info.textContent=L('Boss vùng, Rift, nhiệm vụ tuần, Giải cứu Berry và Tranh Trứng cho trứng thu phục. Hạ quái trong Khám phá hoặc Sống Sót Co-op để ấp; các ô đang ấp cùng tiến độ. Nâng máy tại Xây dựng.','Earn recruitment eggs from region bosses, Rift, weekly missions, Berry Rescue and Egg Rush. Defeat enemies in Explore or Survival Co-op; selected slots progress in parallel. Upgrade in Build Mode.');panel.append(info);
   const say=msg=>G.UI?.toast?.(msg,3000);
   try{
-   const i=incubator(save()),entries=Object.entries(i.eggs);
+   const i=incubator(save()),entries=Object.entries(i.eggs),selected=activeIds(i),pending=prizeCount(i);
+   const status=document.createElement('p');status.dataset.incubatorStatus='1';status.textContent=L('Cấp ','Level ')+levelOf(i)+' · '+L('Kho ','Storage ')+entries.length+'/'+capacity(i)+' · '+L('Đang ấp ','Incubating ')+selected.filter(id=>i.eggs[id].kills<goalFor(i.eggs[id])).length+'/'+slots(i);panel.append(status);
+   if(pending){
+    const reward=document.createElement('button');reward.type='button';reward.className='btn small';reward.dataset.recruitPrizes='1';
+    reward.textContent=L('Nhận trứng thưởng đang chờ: ','Claim pending prize eggs: ')+pending;
+    reward.disabled=!!G.DB?.guest||!menuOnly()||entries.length>=capacity(i);
+    reward.onclick=()=>{if(!reward.isConnected)return;try{const r=claimPrizes();say(L('Đã nhận ','Received ')+r.awarded+' '+L('trứng','eggs'));renderIncubator(frame,true);}catch(err){say(String(err.message||err));}};
+    panel.append(reward);
+   }
    if(!entries.length){const p=document.createElement('small');p.textContent=L('Chưa có trứng thu phục.','No recruitment eggs yet.');panel.append(p);}
    for(const [id,e] of entries){
     const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px solid #647c8b;padding:8px 0';
     const info=document.createElement('div');info.style.cssText='flex:1 1 150px;min-width:0';
-    const label=document.createElement('strong');label.textContent=L('Trứng bí ẩn','Mystery egg')+' · '+e.kills+'/'+GOAL;
-    const state=document.createElement('small');state.style.cssText='display:block;color:#f8e8ac';state.textContent=e.kills===GOAL?L('Sẵn sàng nở','Ready to hatch'):i.active===id?L('Đang ấp','Incubating'):L('Chờ ấp','Waiting');
-    const bar=document.createElement('progress');bar.max=GOAL;bar.value=e.kills;bar.style.cssText='width:100%;accent-color:#e9bf54';bar.setAttribute('aria-label',L('Tiến độ ấp trứng','Egg progress'));
+    const goal=goalFor(e),ready=e.kills===goal,tier=e.goal!==undefined?tierFor(e.dex):null,active=selected.includes(id);
+    const art=document.createElement('img');art.src='assets/eggs/'+(ready?'egg_crack.svg':'egg_follow.svg');art.alt='';art.width=32;art.height=36;art.style.cssText='image-rendering:pixelated;object-fit:contain;padding:4px;border-radius:6px;border:1px solid '+(tier?.color||'#a89661');row.append(art);
+    const label=document.createElement('strong');label.textContent=(tier?L('Trứng Baby ','Baby egg ')+L(...tier.name):L('Trứng bí ẩn','Mystery egg'))+' · '+e.kills+'/'+goal;
+    if(tier)label.style.color=tier.color;
+    const state=document.createElement('small');state.style.cssText='display:block;color:#f8e8ac';state.textContent=ready?L('Sẵn sàng nở','Ready to hatch'):active?L('Đang ấp','Incubating'):L('Chờ ấp','Waiting');
+    const bar=document.createElement('progress');bar.max=goal;bar.value=e.kills;bar.style.cssText='width:100%;accent-color:#e9bf54';bar.setAttribute('aria-label',L('Tiến độ ấp trứng','Egg progress'));
     info.append(label,state,bar);row.append(info);
     const btn=document.createElement('button');btn.className='btn small';btn.type='button';btn.dataset.recruitEgg=id;
-    btn.textContent=e.kills===GOAL?L('Nở trứng','Hatch'):i.active===id?L('Đang ấp','Incubating'):L('Chọn ấp','Incubate');
-    btn.disabled=!!G.DB?.guest||!menuOnly()||(i.active===id&&e.kills<GOAL);
-    btn.onclick=()=>{try{if(e.kills===GOAL){const r=hatch(id);say(L('Đã nhận ','Received ')+(r.shiny?'✨ Shiny ':'')+(G.DEX_BY?.[r.dex]?.name||r.dex));}else activateEgg(id);renderIncubator(frame,true);}catch(err){say(String(err.message||err));}};
+    btn.textContent=ready?L('Nở trứng','Hatch'):active?L('Tạm dừng','Pause'):L('Chọn ấp','Incubate');
+    btn.disabled=!!G.DB?.guest||!menuOnly();
+    btn.onclick=()=>{if(!btn.isConnected)return;try{if(ready){const r=hatch(id);say(L('Đã nhận ','Received ')+(r.shiny?'✨ Shiny ':'')+(G.DEX_BY?.[r.dex]?.name||r.dex));}else activateEgg(id);renderIncubator(frame,true);}catch(err){say(String(err.message||err));}};
     row.append(btn);panel.append(row);
    }
-   const count=document.createElement('small');count.textContent=entries.length+'/'+CAP+' · '+L('Đã nở: ','Hatched: ')+Object.keys(i.hatched).length;panel.append(count);
+   const count=document.createElement('small');count.textContent=entries.length+'/'+capacity(i)+' · '+L('Đã nở: ','Hatched: ')+Object.keys(i.hatched).length;panel.append(count);
   }catch(err){const note=document.createElement('small');note.textContent=L('Dữ liệu máy ấp không hợp lệ; không ghi đè save.','Invalid incubator data; save preserved.');panel.append(note);}
   frame.append(panel);
  }
- G.PKMSVVBigUpdateQA=Object.freeze({LEVELS,GOAL,CAP,EGG_ONLY,SHINY_RATE,isEggOnly,eggEvolutionParent,eggDiscovered,eggGachaPolicy,eggHint,markEggEvolution,commitBerryEgg,registerRift,markRiftWin,summary,incubator,begin,beginCoop,observeCoopHost,coopFrameTag,observeCoopFrame,finalizeCoopHost,acceptCoopTerminal,claimMission,markBadge,settle,activateEgg,hatch,applyMasteryPortrait,renderMastery,renderIncubator});
+ function renderIncubatorUpgrade(frame,refresh){
+  if(!frame)return;
+  try{
+   const s=save(),i=incubator(s),current=levelOf(i),next=INCUBATOR_LEVELS[current],wallet=s.pkmsvvCoopLab;
+   const row=document.createElement('div');row.className='pkmsvv-build-item';row.dataset.incubatorUpgrade='1';
+   const label=document.createElement('strong');label.textContent=L('Máy ấp trứng · Cấp ','Incubator · Level ')+current+'/5';
+   const desc=document.createElement('small');desc.textContent=capacity(i)+' '+L('chỗ chứa','storage')+' · '+slots(i)+' '+L('ô ấp','active slots')+(next?' → '+next.capacity+' / '+next.slots:'');
+   const btn=document.createElement('button');btn.type='button';btn.className='pkmsvv-pc-close';btn.dataset.incubatorLevel=String(current);
+   btn.disabled=!next||!menuOnly()||!!G.DB?.guest||wallet?.machineUnlocked!==true||!Number.isSafeInteger(wallet.coopCoins)||wallet.coopCoins<next.cost;
+   btn.textContent=next?L('Nâng · ','Upgrade · ')+next.cost+' '+L('Xu Đồng Đội','Co-op Coins'):'MAX';
+   btn.onclick=()=>{if(!btn.isConnected||btn.disabled||s!==save())return;btn.disabled=true;try{upgradeIncubator(current,s);G.UI?.refreshCoins?.();G.UI?.toast?.(L('Đã nâng máy ấp!','Incubator upgraded!'),2200);}catch(err){G.UI?.toast?.(String(err.message||err),3000);}refresh?.();};
+   row.append(label,desc,btn);frame.append(row);
+  }catch(err){console.warn('[Incubator upgrade] preserved',err);}
+ }
+ G.PKMSVVBigUpdateQA=Object.freeze({LEVELS,GOAL,CAP,EGG_ONLY,SHINY_RATE,INCUBATOR_LEVELS,BABY_TIERS,goalFor,capacity,slots,activeIds,prizeCount,pickBaby,pickReward,claimPrizes,upgradeIncubator,renderIncubatorUpgrade,isEggOnly,eggEvolutionParent,eggDiscovered,eggGachaPolicy,eggHint,markEggEvolution,commitBerryEgg,registerRift,markRiftWin,summary,incubator,begin,beginCoop,observeCoopHost,coopFrameTag,observeCoopFrame,finalizeCoopHost,acceptCoopTerminal,claimMission,markBadge,settle,activateEgg,hatch,applyMasteryPortrait,renderMastery,renderIncubator});
 })(typeof globalThis==='object'?globalThis:this);

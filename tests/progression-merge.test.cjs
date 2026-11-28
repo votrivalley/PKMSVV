@@ -42,3 +42,14 @@ test('Co-op high water receipts survive stale save merge without summing or repl
  const r=apply({},a,b);assert.deepEqual(r.pkmsvvCoopProgress,{'room-A':{serial:3,at:100},'room-B':{serial:1,at:300}});
  assert.throws(()=>apply({}, {pkmsvvCoopProgress:{bad:{serial:-1,at:10}}}, {}),/PROGRESSION_CONFLICT/);
 });
+
+test('upgraded incubators, long goals and pending rank credits survive merge without additive prizes',()=>{
+ const a=inc(20);a.level=3;a.serial=2;a.extra=['egg-2'];a.eggs['egg-2']={...egg(750),goal:1000};a.prizes={'room-A.1':{count:2,claimed:[]}};
+ const b=JSON.parse(JSON.stringify(a));b.prizes['room-A.1'].claimed=['egg-3'];b.serial=3;
+ b.eggs['egg-3']={...egg(0,447),goal:1000,from:'egg-rush-baby',prize:'room-A.1'};
+ assert.deepEqual(apply({}, {pkmsvvIncubator:a},{pkmsvvIncubator:b}).pkmsvvIncubator,b);
+ const bad=JSON.parse(JSON.stringify(b));bad.prizes['room-A.1'].claimed=['egg-1'];
+ assert.throws(()=>apply({}, {pkmsvvIncubator:bad},{}),/PROGRESSION_CONFLICT/);
+ const conflict=JSON.parse(JSON.stringify(b));conflict.prizes={'room-B.1':{count:2,claimed:[]}};delete conflict.eggs['egg-3'].prize;conflict.eggs['egg-3'].from='baby-egg';
+ assert.throws(()=>apply({}, {pkmsvvIncubator:b},{pkmsvvIncubator:conflict}),/PROGRESSION_CONFLICT/);
+});

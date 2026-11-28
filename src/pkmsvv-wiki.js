@@ -977,7 +977,9 @@ G.PKMSVVWiki=(()=>{
     const reset=document.createElement('button');reset.type='button';reset.className='pkmsvv-pc-close';reset.dataset.buildPreviewReset='1';
     reset.textContent=tr('Hủy xem thử tất cả','Discard all previews');
     reset.onclick=()=>{for(const id of Object.values(v3Station))delete stage.dataset['skin'+id];renderFurnitureLayers(stage);inspect(slot);};
-    items.append(reset);return;
+    items.append(reset);
+    if(slot==='shelf_left')G.PKMSVVBigUpdateQA?.renderIncubatorUpgrade?.(items,()=>inspect(slot));
+    return;
    }
    for(const id of available[slot]){
     const n=names[id],item=E?.config?.items?.find(x=>x.id===id);
@@ -1010,6 +1012,7 @@ G.PKMSVVWiki=(()=>{
     };
     row.append(label,state,btn);items.append(row);
    }
+   if(slot==='shelf_left')G.PKMSVVBigUpdateQA?.renderIncubatorUpgrade?.(items,()=>inspect(slot));
   }
   for(const [id,x,y,w,ht,vi,en] of slots){
    const spot=document.createElement('button');spot.type='button';

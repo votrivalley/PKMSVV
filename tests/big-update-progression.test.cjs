@@ -50,7 +50,7 @@ test('19 baby species hatch from a region boss without inventing a defeat, and s
  assert.equal(api.begin(s,p,null),true);assert.equal(api.markBadge(p,{dead:true,hp:0,pkmsvvExploreBoss:true},1),true);
  const receipt=api.settle(s,p,901,false);assert.equal(receipt.reward,'egg-2');
  assert.equal(s.pkmsvvIncubator.eggs['egg-2'].dex,175);assert.equal(s.pkmsvvIncubator.eggs['egg-2'].from,'baby-egg');
- s.pkmsvvIncubator.eggs['egg-2'].kills=500;G.Game.state='ui';
+ s.pkmsvvIncubator.eggs['egg-2'].kills=api.goalFor(s.pkmsvvIncubator.eggs['egg-2']);G.Game.state='ui';
  assert.equal(api.hatch('egg-2').dex,175);assert.equal(api.eggDiscovered(s,175),true);
  assert.equal(api.eggGachaPolicy(s,175),false);assert.equal(s.pkmsvvDefeatedDex[175],undefined);
  assert.equal(api.eggGachaPolicy(s,25),null,'Pikachu remains on its normal story route');
@@ -97,7 +97,7 @@ test('Rift rewards require the recorded native dead boss and are settled once pe
  const receipt=api.settle(s,p,901,false);
  assert.equal(receipt.riftReward,'egg-2');assert.equal(s.pkmsvvIncubator.eggs['egg-2'].from,'rift-baby');
  assert.equal(s.pkmsvvIncubator.eggs['egg-2'].dex,175);assert.equal(api.settle(s,p,901,false),null);
- s.pkmsvvIncubator.eggs['egg-2'].kills=500;G.Game.state='ui';assert.equal(api.hatch('egg-2').dex,175);
+ s.pkmsvvIncubator.eggs['egg-2'].kills=api.goalFor(s.pkmsvvIncubator.eggs['egg-2']);G.Game.state='ui';assert.equal(api.hatch('egg-2').dex,175);
 });
 test('Rift loss, missing boss and guest or remote actors do not grant an egg',()=>{
  for(const failure of ['loss','missing','guest','remote','coop']){
@@ -185,7 +185,7 @@ test('weekly mission gives one pre-rolled baby egg only with real claim, rollbac
  const live=s.missions.weekly[0],res=api.claimMission(s,live,true,()=>{live.claimed=true;s.coins+=20;});
  assert.equal(res.egg,'egg-2');assert.equal(s.pkmsvvIncubator.eggs['egg-2'].from,'mission-baby');assert.equal(s.coins,120);
  assert.equal(api.claimMission(s,live,true,()=>{}),null);
- s.pkmsvvIncubator.eggs['egg-2'].kills=500;assert.equal(api.hatch('egg-2').dex,175);
+ s.pkmsvvIncubator.eggs['egg-2'].kills=api.goalFor(s.pkmsvvIncubator.eggs['egg-2']);assert.equal(api.hatch('egg-2').dex,175);
 });
 
 test('native packet without bot flags uses locked authoritative lobby roster, not a mismatched client claim',()=>{
@@ -244,7 +244,45 @@ test('full incubator retains valid friendship and receipts without overwriting q
  for(let id=2;id<=6;id++)s.pkmsvvIncubator.eggs['egg-'+id]={dex:172,kills:0,region:9,from:'baby-egg'};
  s.pkmsvvIncubator.serial=6;const before=JSON.stringify(s.pkmsvvIncubator);
  assert.ok(api.finalizeCoopHost(p,data).pkmsvvProgressRun);
- const r=api.settle(s,p,720,true);assert.equal(r.awarded,0);assert.equal(r.want,2);assert.equal(r.blocked,true);
- assert.equal(JSON.stringify(s.pkmsvvIncubator),before);assert.equal(s.pkmsvvSupportBond[151],1);
+ const r=api.settle(s,p,720,true);assert.equal(r.awarded,0);assert.equal(r.want,2);assert.equal(r.pending,2);assert.equal(r.blocked,false);
+ assert.equal(JSON.stringify(s.pkmsvvIncubator.eggs),JSON.stringify(JSON.parse(before).eggs));assert.equal(s.pkmsvvSupportBond[151],1);
+ assert.equal(api.prizeCount(s.pkmsvvIncubator),2);
+ G.Coop.active=false;G.EggRush.active=false;G.Game.state='ui';
+ s.pkmsvvIncubator.eggs['egg-1'].kills=500;api.hatch('egg-1');
+ const old=JSON.stringify(s);G.DB.commit=()=>false;assert.throws(()=>api.claimPrizes());assert.equal(JSON.stringify(s),old);
+ G.DB.commit=()=>true;assert.equal(api.claimPrizes().awarded,1);assert.equal(api.prizeCount(s.pkmsvvIncubator),1);
+ assert.throws(()=>api.claimPrizes());
  assert.equal(api.settle(s,p,720,true),null);
+});
+
+test('incubator upgrades spend the existing Co-op wallet once, rollback failed writes, and keep old eggs at 500',()=>{
+ const {G,s,api}=setup();G.Game.state='ui';s.pkmsvvCoopLab={machineUnlocked:true,coopCoins:1200,cosmetics:{a:true}};
+ const original=JSON.stringify(s);G.DB.commit=()=>false;assert.throws(()=>api.upgradeIncubator(1));assert.equal(JSON.stringify(s),original);
+ G.DB.commit=()=>true;
+ for(const [lv,cap,slots,cost] of [[1,8,1,120],[2,10,2,240],[3,12,2,360],[4,15,3,480]]){
+  const before=s.pkmsvvCoopLab.coopCoins,result=api.upgradeIncubator(lv);
+  assert.equal(result.capacity,cap);assert.equal(result.slots,slots);assert.equal(s.pkmsvvCoopLab.coopCoins,before-cost);
+  assert.throws(()=>api.upgradeIncubator(lv));
+ }
+ assert.equal(s.pkmsvvCoopLab.coopCoins,0);assert.equal(api.goalFor(s.pkmsvvIncubator.eggs['egg-1']),500);
+ assert.equal(s.pkmsvvCoopLab.cosmetics.a,true);
+});
+test('three selected eggs progress concurrently, unselected waits; hatch and pause preserve slots',()=>{
+ const {G,s,p,api}=setup();G.Game.state='ui';const i=s.pkmsvvIncubator;i.level=5;i.serial=4;
+ i.eggs['egg-2']={dex:175,kills:900,goal:1000,region:9,from:'mission-baby'};
+ i.eggs['egg-3']={dex:240,kills:600,goal:750,region:9,from:'mission-baby'};
+ i.eggs['egg-4']={dex:172,kills:0,goal:500,region:9,from:'mission-baby'};
+ api.activateEgg('egg-2');api.activateEgg('egg-3');assert.throws(()=>api.activateEgg('egg-4'));
+ G.Game.state='playing';api.begin(s,p,null);p.kills=101;assert.equal(api.settle(s,p,61,false).progress,203);
+ assert.deepEqual(Object.values(s.pkmsvvIncubator.eggs).map(x=>x.kills),[500,1000,701,0]);
+ G.Game.state='ui';api.activateEgg('egg-3');assert.deepEqual(Array.from(api.activeIds(s.pkmsvvIncubator)),['egg-1','egg-2']);
+ api.hatch('egg-1');assert.deepEqual(Array.from(api.activeIds(s.pkmsvvIncubator)),['egg-2']);
+ api.activateEgg('egg-4');assert.deepEqual(Array.from(api.activeIds(s.pkmsvvIncubator)),['egg-4']);
+});
+test('tier weights and source odds do not invent unavailable species or replace old goal',()=>{
+ const {s,api}=setup(),pool=[172,240,175];
+ assert.equal(api.pickBaby(s,pool,()=>.549),172);assert.equal(api.pickBaby(s,pool,()=>.55),240);
+ assert.equal(api.pickBaby(s,pool,()=>.85),175);assert.equal(api.pickBaby(s,[175],()=>.1),175);
+ assert.equal(api.pickReward(s,[19,175],.25,()=>.249),175);assert.equal(api.pickReward(s,[19,175],.25,()=>.25),19);
+ assert.equal(api.pickReward(s,[19,175],.4,()=>.399),175);assert.equal(api.pickReward(s,[19,175],.4,()=>.4),19);
 });
