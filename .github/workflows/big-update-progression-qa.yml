@@ -147,6 +147,9 @@ jobs:
       - name: Native offline Arena rival projectile footwork and stun
         if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
         run: timeout 90s node tests/combat-tactics-arena-browser.cjs
+      - name: Native Arena five-build stationary and tactical combat matrix
+        if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
+        run: timeout 420s node tests/combat-tactics-arena-balance-browser.cjs
       - name: Native Galar 15m and Eternamax 30m real two-phase combat
         if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
         run: timeout 100s node tests/eternamax-browser.cjs

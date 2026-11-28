@@ -193,14 +193,31 @@
  function arenaPlan(e,p,dt){
   const build=e.pkmsvvArenaBuild,ai=e.ai;
   if(!build||!arenaDuel(e,p)||!ai||ai.cast||e.jump||e.stunT>0||e.sleepT>0)return;
-  let left=(arenaPlans.get(e)||0)-Math.max(0,Number(dt)||0);
-  if(left>0){arenaPlans.set(e,left);return;}
-  arenaPlans.set(e,2.8);
+  let plan=arenaPlans.get(e);
+  if(!plan){plan={left:0,next:'far'};arenaPlans.set(e,plan);}
+  plan.left-=Math.max(0,Number(dt)||0);
+  if(plan.left>0)return;
   if(build.style==='keep-range'){
-   ai.farLike=.75;ai.mode='far';ai.modeT=Math.max(ai.modeT||0,3);
+   // Counter melee with spacing, not a permanent speed-matched retreat.
+   // Give every melee build recurring approach/attack windows. Timers count
+   // only idle movement, and the native cast lifecycle is still respected.
+   ai.farLike=.60;ai.mode=plan.next;
+   plan.left=ai.mode==='far'?3.6:2.4;plan.next=ai.mode==='far'?'close':'far';
+   ai.modeT=plan.left+.2;
   }else if(build.style==='press'){
-   ai.farLike=.2;ai.mode='close';ai.modeT=Math.max(ai.modeT||0,3);
-  }
+   ai.farLike=.2;ai.mode='close';plan.left=2.8;ai.modeT=3;
+  }else plan.left=2.8;
+ }
+ function arenaSpacing(e,p,spd,vx,vy){
+  if(!arenaDuel(e,p)||e.pkmsvvArenaBuild?.style!=='keep-range'||e.ai?.mode!=='far'||
+     e.ai.cast||e.jump||e.stunT>0||e.sleepT>0||
+     ![spd,vx,vy].every(Number.isFinite)||spd<=0)return null;
+  const dx=e.x-p.x,dy=e.y-p.y;
+  // Only limit retreat away from the fighter. Never speed up an opponent,
+  // alter native chase/strafe, teleport, or cancel windup.
+  if(vx*dx+vy*dy<=0)return null;
+  const speed=Math.hypot(vx,vy),cap=spd*.70;
+  return speed>cap?[vx*cap/speed,vy*cap/speed]:null;
  }
  function arenaRecovery(e,cd){
   if(!e.pkmsvvArenaBuild||!arenaDuel(e,G.Game?.player)||!Number.isFinite(cd))return cd;
@@ -742,5 +759,5 @@
   }
   ctx.restore();return x;
  }
- G.PKMSVVCombatTacticsQA=Object.freeze({alliedMode,assignRescuers,directPath,margin,needsEvade,evade,rangedGoal,berryGoal,rangedFootwork,arenaDuel,arenaProfile,arenaStats,arenaPreserveFighter,arenaPlan,arenaRecovery,arenaEquip,arenaKit,arenaSkillClock,arenaAimPoint,arenaSkillStart,arenaSkillInterrupt,arenaHazardActive,arenaSkillCast,arenaPowerOptions,arenaPowerEquip,arenaPowerInfo,arenaPowerTick,arenaPowerStop,arenaPowerMultiplier,supportSteer,updateArenaTeam,arenaSupportHit,supportInfo,teamBoost,arenaFootwork,status,drawStatus});
+ G.PKMSVVCombatTacticsQA=Object.freeze({alliedMode,assignRescuers,directPath,margin,needsEvade,evade,rangedGoal,berryGoal,rangedFootwork,arenaDuel,arenaProfile,arenaStats,arenaPreserveFighter,arenaPlan,arenaSpacing,arenaRecovery,arenaEquip,arenaKit,arenaSkillClock,arenaAimPoint,arenaSkillStart,arenaSkillInterrupt,arenaHazardActive,arenaSkillCast,arenaPowerOptions,arenaPowerEquip,arenaPowerInfo,arenaPowerTick,arenaPowerStop,arenaPowerMultiplier,supportSteer,updateArenaTeam,arenaSupportHit,supportInfo,teamBoost,arenaFootwork,status,drawStatus});
 })();

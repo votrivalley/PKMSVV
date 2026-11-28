@@ -195,3 +195,18 @@ test('Arena Z strike can be dodged or interrupted; G-Max only chooses audited fo
  k.api.arenaSkillCast(k.e,k.player,sig.wind+sig.after+.01);assert.equal(k.api.arenaPowerInfo(k.e).signature,true);
  k.api.arenaSkillStart(k.e,k.player,100);assert.ok(!k.e.ai.cast?.powerAction);
 });
+
+test('melee counterplay alternates bounded retreat with approach windows without overriding casts or PvP',()=>{
+ const {G,api}=setup(),player=p('p',0),e={x:100,y:0,hp:100,maxHp:100,pkmsvvArenaSolo:true,pkmsvvArenaBuild:{style:'keep-range'},ai:{cast:null,mode:'close',modeT:1}};
+ G.Coop.active=false;G.PKMSVVArenaSolo={active:true,stage:'fight'};G.Game.player=player;
+ api.arenaPlan(e,player,.016);assert.equal(e.ai.mode,'far');
+ assert.deepEqual(Array.from(api.arenaSpacing(e,player,100,100,0)),[70,0]);
+ assert.equal(api.arenaSpacing(e,player,100,-100,0),null);
+ assert.equal(api.arenaSpacing(e,player,100,0,100),null);
+ api.arenaPlan(e,player,3.7);assert.equal(e.ai.mode,'close');
+ assert.equal(api.arenaSpacing(e,player,100,100,0),null);
+ api.arenaPlan(e,player,2.5);assert.equal(e.ai.mode,'far');
+ e.ai.cast={id:'beam'};assert.equal(api.arenaSpacing(e,player,100,100,0),null);
+ api.arenaPlan(e,player,20);assert.equal(e.ai.mode,'far');
+ e.ai.cast=null;G.Coop.active=true;assert.equal(api.arenaSpacing(e,player,100,100,0),null);
+});

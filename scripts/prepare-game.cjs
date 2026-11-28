@@ -855,7 +855,7 @@ if(process.env.PKMSVV_BIG_UPDATE_QA==='1'){
  // Only non-casting movement may sidestep a real incoming player projectile.
  patch('js/entities/enemy.js',
   '        [vx, vy, animBase] = this.bossMove(dt, pl, dist, dx, dy, spd);',
-  '        [vx, vy, animBase] = this.bossMove(dt, pl, dist, dx, dy, spd);\n        const arenaFootwork=G.PKMSVVCombatTacticsQA?.arenaFootwork(this,pl,spd,vx,vy,dt);\n        if(arenaFootwork){vx=arenaFootwork[0];vy=arenaFootwork[1];animBase="Walk";}');
+  '        [vx, vy, animBase] = this.bossMove(dt, pl, dist, dx, dy, spd);\n        const spacing=G.PKMSVVCombatTacticsQA?.arenaSpacing(this,pl,spd,vx,vy);\n        if(spacing){vx=spacing[0];vy=spacing[1];}\n        const arenaFootwork=G.PKMSVVCombatTacticsQA?.arenaFootwork(this,pl,spd,vx,vy,dt);\n        if(arenaFootwork){vx=arenaFootwork[0];vy=arenaFootwork[1];animBase="Walk";}');
  // Native attack selection and recovery, scoped to tagged offline Arena rivals.
  patch('js/entities/enemy.js',
   '      if (ai.cast) return this.bossCast(dt, pl);',
