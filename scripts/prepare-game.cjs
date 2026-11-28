@@ -889,7 +889,7 @@ if(process.env.PKMSVV_BIG_UPDATE_QA==='1'){
  patch('js/net/coop.js','    const ja = G.Judgment.netState();',
   '    const progressTag=G.PKMSVVBigUpdateQA?.coopFrameTag(local);\n    if(progressTag)f.pkmsvvProgressRun=progressTag;\n    const ja = G.Judgment.netState();');
  patch('js/net/coop.js','    for (const ev of msg.ev || []) applyHostEvent(ev);',
-  '    G.PKMSVVBigUpdateQA?.observeCoopFrame(local,msg,hostUid);\n    for (const ev of msg.ev || []) { applyHostEvent(ev); if(!active)return; }');
+  '    G.PKMSVVBigUpdateQA?.observeCoopFrame(local,msg,hostUid);\n    for (const ev of msg.ev || []) applyHostEvent(ev);\n    if(!active)return;');
  patch('js/net/coop.js',"      case 'ov': { const cb = api.over; const d = ev[1]; end(); cb(d); break; }",
   "      case 'ov': { const cb = api.over; const d = ev[1]; G.PKMSVVBigUpdateQA?.acceptCoopTerminal(local,d,hostUid); end(); cb(d); break; }");
  patch('js/net/coop.js',"    emit(['ov', data]);",
