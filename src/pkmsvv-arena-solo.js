@@ -70,8 +70,8 @@ G.PKMSVVArenaSolo=(()=>{
   $('pkmsvv-arena-solo-invite').hidden=false;
   $('pkmsvv-arena-solo-confirm').hidden=true;
   $('pkmsvv-arena-solo-info').textContent=tr(
-   'Chọn Random AI (90–120% chỉ số của bạn) hoặc Mời người chơi qua Wi-Fi. AI: chuẩn bị 10–15 phút, cảnh báo 30 giây, chọn Pokémon 10 giây.',
-   'Choose Random AI (90–120% of your stats) or Invite a real player via Wi-Fi. AI: 10–15-minute preparation, 30-second warning and 10-second Pokémon pick.');
+   G.PKMSVVCombatTacticsQA?.arenaStats?'Random AI cân theo chỉ số và bộ kỹ năng sau farm. Chuẩn bị 10–15 phút, cảnh báo 30 giây, chọn Pokémon 10 giây.':'Chọn Random AI (90–120% chỉ số của bạn) hoặc Mời người chơi qua Wi-Fi. AI: chuẩn bị 10–15 phút, cảnh báo 30 giây, chọn Pokémon 10 giây.',
+   G.PKMSVVCombatTacticsQA?.arenaStats?'Random AI matches your trained stats and moves after farming. Prepare 10–15 min; 30s warning, 10s pick.':'Choose Random AI (90–120% of your stats) or Invite a real player via Wi-Fi. AI: 10–15-minute preparation, 30-second warning and 10-second Pokémon pick.');
   $('pkmsvv-arena-solo-picks').replaceChildren();
   $('pkmsvv-arena-solo-vs').textContent=tr('Đối thủ AI sẽ được bốc ngẫu nhiên.','AI opponent is chosen at random.');
   return true;
@@ -179,7 +179,7 @@ G.PKMSVVArenaSolo=(()=>{
   }
  }
  function normalize(p){
-  const dex=selected,mon=G.DEX_BY?.[dex];
+  const dex=selected,mon=G.DEX_BY?.[dex],oldMon=p.mon,oldDex=p.dex;
   if(mon&&(p.dex!==dex||p.shiny!==selectedShiny)){
    p.dex=dex;p.mon=mon;p.shiny=selectedShiny;
    const scale=G.Sprites?.playerScale?.(dex)||1;
@@ -188,7 +188,9 @@ G.PKMSVVArenaSolo=(()=>{
    G.Sprites?.preload?.([dex],3500,!!p.shiny);
   }
   p.pkmsvvArenaReadyInstanceId=selectedInstanceId; // Exact PokéBox slot; do not mutate lineup
-  // Account upgrades do not determine PvP baseline; prepared move choices remain.
+  // The isolated offline Arena QA retains real build stats; human PvP never uses this path.
+  if(G.PKMSVVCombatTacticsQA?.arenaPreserveFighter){G.PKMSVVCombatTacticsQA.arenaPreserveFighter(p,oldMon,oldDex);return;}
+  // Legacy baseline when isolated Arena QA is not loaded.
   p.mon={...p.mon,hp:320,pa:130,sa:130,atk:130,df:110,sd:110,spd:112};
   p.maxHp=320;p.hp=320;p.baseAtk=1.3;p.baseSpd=112;
   p.atkMul=1;p.spdMul=1;p.invuln=2;
@@ -222,7 +224,8 @@ G.PKMSVVArenaSolo=(()=>{
   stage='fight';elapsed=0;frame().hidden=true;fightCue=.65;countView(tr('⚔ BẮT ĐẦU!','⚔ FIGHT!'));
   const dex=enemyDex===selected?chooseEnemy():enemyDex;
   const level=Math.min(255,Math.max(1,Math.floor(Number(p.level)||1)+10));
-  const def={dex,name:G.DEX_BY?.[dex]?.name||'AI',level,...balanceAi(p),
+  const adaptive=G.PKMSVVCombatTacticsQA?.arenaStats?.(p,{hp:aiFactor,dmg:aiFactor,spd:aiFactor},{mode:'solo'});
+  const def={dex,name:G.DEX_BY?.[dex]?.name||'AI',level,...(adaptive||balanceAi(p)),
    xp:0,behavior:'champion'};
   target=G.EnemyMgr.add(new G.Enemy(def,p.x+170,p.y-45,{hp:1,spd:1,dmg:1},true));
   // Native boss constructor may apply its own run scaling. The chosen Solo
@@ -243,6 +246,7 @@ G.PKMSVVArenaSolo=(()=>{
    }
   }
   target.pkmsvvArenaSolo=true;target.level=level;target.pkmsvvArenaLevel=level;
+  if(adaptive)target.pkmsvvArenaBuild=adaptive.profile;
   target.skillCd=Math.max(.45,1.4/Math.max(.9,aiFactor));
   if(target.ai&&Number.isFinite(target.ai.cd))
    target.ai.cd=Math.min(target.ai.cd,1.25);

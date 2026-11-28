@@ -30,6 +30,8 @@ on:
       - 'src/pkmsvv-eternamax-qa.js'
       - 'src/pkmsvv-combat-balance-qa.js'
       - 'src/pkmsvv-combat-tactics-qa.js'
+      - 'src/pkmsvv-arena-solo.js'
+      - 'src/pkmsvv-champion-arena.js'
       - 'src/pkmsvv-bond-fusion.js'
       - 'tests/horde-performance.test.cjs'
       - 'tests/bond-fusion-svv.test.cjs'

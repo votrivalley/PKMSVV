@@ -70,3 +70,31 @@ test('Arena movement is limited to offline Solo and Champion fights, never PvP, 
  G.Projectiles.all=()=>[{...shot,friendly:false},{...shot,vx:-210},{...shot,orb:true},{...shot,t:1.4},{...shot,hits:new Set([9])}];
  assert.equal(call(),null,'do not dodge non-threatening or already-consumed shots');
 });
+
+test('adaptive arena profile weighs learned real moves, actual attack and cooldown, not empty unlocked slots',()=>{
+ const {G,api}=setup();
+ G.PKMSVVBalance={effectiveCooldown:(p,m)=>Math.max(.25,m.cd*p.cdMul)};
+ const weak={maxHp:320,baseAtk:1.3,atkMul:1,baseSpd:112,spdMul:1,cdMul:1,maxMoves:8,moves:[{id:'one',kind:'melee',dmg:20,cd:2,lvl:1}]};
+ const strong={...weak,atkMul:3,cdMul:.5,moves:Array.from({length:8},(_,i)=>({id:'max'+i,kind:'beam',dmg:50,cd:2,lvl:5}))};
+ const ratios={hp:1,dmg:1,spd:1},a=api.arenaStats(weak,ratios),b=api.arenaStats(strong,ratios);
+ assert.equal(a.profile.attacks,1);assert.equal(b.profile.attacks,8);assert.equal(a.profile.style,'keep-range');assert.equal(b.profile.style,'press');
+ assert.ok(b.hp>a.hp*2&&b.dmg>a.dmg);assert.ok(b.profile.tempo<a.profile.tempo);
+ assert.equal(b.shotDmg,b.dmg);assert.ok(b.hp<=strong.maxHp*32);
+ assert.equal(api.arenaStats({...weak,maxMoves:3},ratios).hp,a.hp);
+ const tank=api.arenaStats({...weak,dmgReduce:.65,regen:8},ratios);assert.ok(tank.dmg>a.dmg);assert.ok(tank.dmg<=weak.maxHp*.20);
+ assert.ok(api.arenaStats(strong,ratios,{mode:'champion',round:3}).hp>=b.hp);
+ assert.equal(strong.atkMul,3);assert.equal(strong.moves.length,8);
+});
+test('offline arena tactical plan preserves native cast windup and PvP; recovery is bounded',()=>{
+ const {G,api}=setup(),player=p('player',0),enemy={id:2,x:120,y:0,hp:320,maxHp:320,pkmsvvArenaSolo:true,pkmsvvArenaBuild:{style:'keep-range',tempo:.7},ai:{mode:'close',modeT:1,cast:null}};
+ G.PKMSVVArenaSolo={active:true,stage:'fight'};G.Game.player=player;G.Coop.active=false;
+ api.arenaPlan(enemy,player,.016);assert.equal(enemy.ai.mode,'far');assert.equal(api.arenaRecovery(enemy,2),1.4);assert.equal(api.arenaRecovery(enemy,.3),.85);
+ enemy.ai.cast={id:'slam'};enemy.ai.mode='close';api.arenaPlan(enemy,player,4);assert.equal(enemy.ai.mode,'close');
+ G.Coop.active=true;assert.equal(api.arenaRecovery(enemy,2),2);
+});
+test('switching Ready species carries legitimate farm bonuses, same species retains actual stats',()=>{
+ const {api}=setup(),old={hp:100,atk:1,spd:100},p1={dex:6,mon:{hp:120,atk:1.5,spd:110},maxHp:160,baseAtk:1.2,baseSpd:120,atkMul:3,cdMul:.5};
+ api.arenaPreserveFighter(p1,old,25);
+ assert.equal(p1.maxHp,180);assert.equal(p1.hp,180);assert.ok(Math.abs(p1.baseAtk-1.8)<1e-9);assert.equal(p1.baseSpd,132);assert.equal(p1.atkMul,3);assert.equal(p1.cdMul,.5);
+ api.arenaPreserveFighter(p1,p1.mon,6);assert.equal(p1.maxHp,180);
+});

@@ -7,7 +7,8 @@
  const number=(n,f=0)=>Number.isFinite(n)?n:f;
  const POLICY=Object.freeze({
   elite:Object.freeze({hard:.9,recover:1.4,slow:.55,slowTime:2,wave:.45,vortex:.6}),
-  boss:Object.freeze({hard:.65,recover:2,slow:.4,slowTime:1.5,wave:.06,vortex:.1})
+  boss:Object.freeze({hard:.65,recover:2,slow:.4,slowTime:1.5,wave:.06,vortex:.1}),
+  arena:Object.freeze({hard:1.1,recover:1,slow:.60,slowTime:2})
  });
  const hardStates=new WeakMap();
  function enabled(){
@@ -20,6 +21,7 @@
   if(!enabled()||!e||e.dead||e.remote||e.friendly||e.pkmsvvFriendly||e.isSupport||e.arceus||e.judge)return null;
   return e.boss||e.legend||e.pkmsvvExploreBoss?'boss':e.pkmsvvPressureElite?'elite':null;
  }
+ function controlTier(e){return G.PKMSVVCombatTacticsQA?.arenaDuel?.(e,G.Game?.player)?'arena':tier(e);}
  function powerRate(taken){const n=Math.max(0,Math.floor(number(taken)));return n<10?.10:n<20?.06:.03;}
  function powerFactor(taken){
   const n=clamp(Math.floor(number(taken)),0,40);
@@ -43,12 +45,12 @@
  // Count down with authoritative simulation time, not real time or UI pause.
  wrap('update',function(old,args){
   const s=hardStates.get(this),dt=number(args[0]);
-  if(s&&tier(this)&&dt>0)s.left=Math.max(0,s.left-dt);
+  if(s&&controlTier(this)&&dt>0)s.left=Math.max(0,s.left-dt);
   return old.apply(this,args);
  });
  for(const [name,key] of [['applyStun','stunT'],['applySleep','sleepT']]){
   wrap(name,function(old,args){
-   const t=tier(this);if(!t)return old.apply(this,args);
+   const t=controlTier(this);if(!t)return old.apply(this,args);
    const duration=number(args[0]);if(duration<=0)return;
    // One shared stun/sleep window. Do not refresh it during recovery.
    if((hardStates.get(this)?.left||0)>0||number(this.stunT)>0||number(this.sleepT)>0)return;
@@ -59,7 +61,7 @@
   });
  }
  wrap('applySlow',function(old,args){
-  const t=tier(this);if(!t)return old.apply(this,args);
+  const t=controlTier(this);if(!t)return old.apply(this,args);
   const policy=POLICY[t],factor=clamp(number(args[0]),0,policy.slow),dur=clamp(number(args[1],1.2),0,policy.slowTime);
   if(!factor||!dur)return;
   const result=old.call(this,factor,dur,...args.slice(2));

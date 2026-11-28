@@ -120,6 +120,93 @@
   }
   return null;
  }
+ // Read the actual offline duel build once at spawn, not account level or
+ // theoretical unlocked capacity. Nominal pressure is a bounded tuning proxy,
+ // not measured DPS: collision, type matchup, aim and uptime still matter.
+ const clamp=(n,lo,hi)=>Math.min(hi,Math.max(lo,n));
+ const positive=(n,fallback)=>Number.isFinite(n)&&n>0?n:fallback;
+ const CLOSE=new Set(['melee','spin','orbit','aura','dash','blitz','leap','boom','scissor']);
+ const RANGED=new Set(['projectile','beam','homing','chain','turret','meteor','boomerang','bounce','wave','cone','charge','quake','vortex','shove','stun','nova']);
+ function arenaProfile(p){
+  const hp=positive(p?.maxHp,320),atk=positive(p?.baseAtk,1.3)*positive(p?.atkMul,1),
+   spd=positive(p?.baseSpd,112)*positive(p?.spdMul,1);
+  let pressure=0,close=0,ranged=0,control=0,support=0,attacks=0;
+  const moves=[],seen=new Set();
+  for(const m of Array.isArray(p?.moves)?p.moves:[]){
+   if(!m||seen.has(m))continue;seen.add(m);
+   if(moves.length>=16)break;
+   let cd=positive(m.cd,2)*positive(p.cdMul,1);
+   try{cd=positive(G.PKMSVVBalance?.effectiveCooldown?.(p,m),cd);}catch(_){}
+   cd=clamp(cd,.12,60);
+   let fit=atk;
+   try{fit=positive(p.atkFor?.(m),atk);}catch(_){}
+   const dmg=clamp(Number.isFinite(m.dmg)?m.dmg:0,0,1000000);
+   // Multiple projectiles/fields are not guaranteed to hit a single rival.
+   // Count is deliberately capped; do not multiply by the whole spread.
+   const weight=CLOSE.has(m.kind)?.46:RANGED.has(m.kind)?.55:.35;
+   const count=clamp(positive(m.count,1),1,3);
+   const contribution=Math.min(100000,dmg*fit/cd*weight*(1+(count-1)*.22));
+   moves.push({id:String(m.id||''),kind:m.kind,lvl:positive(m.lvl,1),cd,damage:dmg,pressure:contribution});
+   if(dmg>0){
+    attacks++;pressure+=contribution;
+    if(CLOSE.has(m.kind))close+=contribution;
+    else if(RANGED.has(m.kind))ranged+=contribution;
+   }else support++;
+   if(m.stun>0||m.slow>0||m.sleep>0||m.kind==='stun'||m.kind==='vortex')control++;
+  }
+  const reduction=clamp(Number.isFinite(p?.reduction)?p.reduction:Number(p?.dmgReduce)||0,0,.8);
+  let taken=1;
+  try{taken=(positive(G.Stats?.taken?.(p.mon,'physical'),1)+positive(G.Stats?.taken?.(p.mon,'special'),1))/2;}catch(_){}
+  const melee=!!p?.activeGroup?.()?.some?.(m=>m.kind==='melee');
+  const mitigation=clamp(taken*(1-reduction)*(melee?.75:1),.12,2);
+  const regen=clamp(Number(p?.regen)||Number(p?.regenFlat)||0,0,hp);
+  const style=close>Math.max(1,pressure)*.55?'keep-range':ranged>Math.max(1,pressure)*.64?'press':'mixed';
+  return {hp,atk,spd,pressure,attacks,support,control,mitigation,regen,style,moves};
+ }
+ function arenaStats(p,ratios,opts={}){
+  const profile=arenaProfile(p),r=clamp(Math.floor(Number(opts.round)||0),0,4),champ=opts.mode==='champion';
+  const ratio=k=>clamp(positive(ratios?.[k],1),.9,1.25);
+  const seconds=champ?[14,16,18,21,18][r]:14;
+  // Health targets ~14–21 seconds of weighted attack potential, with an
+  // explicit upper limit; no per-hit rescaling or resistance to type counters.
+  const hp=Math.round(Math.max(profile.hp*ratio('hp'),Math.min(profile.hp*(champ?42:32),profile.pressure*seconds*ratio('hp'))));
+  const hitFraction=champ?[.052,.06,.067,.073,.067][r]:.06;
+  const rawBase=Math.max(11*profile.atk/1.3,profile.hp*hitFraction/profile.mitigation+Math.min(profile.hp*.04,profile.regen*1.2));
+  // Existing final Mega doubles damage, so phase 1 has a stricter cap.
+  const ceiling=profile.hp*(champ&&r===3?.13:.20);
+  const dmg=Math.round(Math.max(1,Math.min(ceiling,rawBase*ratio('dmg')))*100)/100;
+  const spd=Math.round(clamp(profile.spd*ratio('spd'),35,420));
+  const tempo=clamp(1-profile.attacks*.022-profile.support*.012-Math.min(.10,profile.pressure/Math.max(1,profile.hp)*.22)-(champ?r*.025:0),.68,1);
+  return {hp,dmg,spd,shotDmg:dmg,shotCd:Math.max(.9,2.5*tempo),profile:{...profile,tempo,mode:opts.mode||'solo',round:r,hp,dmg,spd}};
+ }
+ // Solo may select a different Ready species after farming. Carry genuine
+ // run bonuses relative to the old base species, not the old species stats.
+ function arenaPreserveFighter(p,oldMon,oldDex){
+  if(oldDex!==p.dex&&oldMon&&p.mon){
+   p.maxHp=Math.max(1,positive(p.mon.hp,positive(p.maxHp,320))+Math.max(0,positive(p.maxHp,320)-positive(oldMon.hp,positive(p.maxHp,320))));
+   p.baseAtk=positive(p.mon.atk,positive(p.baseAtk,1.3))*positive(p.baseAtk,1.3)/positive(oldMon.atk,positive(p.baseAtk,1.3));
+   p.baseSpd=positive(p.mon.spd,positive(p.baseSpd,112))*positive(p.baseSpd,112)/positive(oldMon.spd,positive(p.baseSpd,112));
+  }
+  p.hp=p.maxHp;p.invuln=2;
+ }
+ const arenaPlans=new WeakMap();
+ function arenaPlan(e,p,dt){
+  const build=e.pkmsvvArenaBuild,ai=e.ai;
+  if(!build||!arenaDuel(e,p)||!ai||ai.cast||e.jump||e.stunT>0||e.sleepT>0)return;
+  let left=(arenaPlans.get(e)||0)-Math.max(0,Number(dt)||0);
+  if(left>0){arenaPlans.set(e,left);return;}
+  arenaPlans.set(e,2.8);
+  if(build.style==='keep-range'){
+   ai.farLike=.75;ai.mode='far';ai.modeT=Math.max(ai.modeT||0,3);
+  }else if(build.style==='press'){
+   ai.farLike=.2;ai.mode='close';ai.modeT=Math.max(ai.modeT||0,3);
+  }
+ }
+ function arenaRecovery(e,cd){
+  if(!e.pkmsvvArenaBuild||!arenaDuel(e,G.Game?.player)||!Number.isFinite(cd))return cd;
+  // Preserve readable attack windups; no instantaneous casts or extra hits.
+  return Math.max(.85,cd*e.pkmsvvArenaBuild.tempo);
+ }
  // Arena enemies use the native boss controller. Only override its idle
  // locomotion when an existing, approaching player projectile threatens it.
  // No cast cancellation, extra speed, teleport, damage or stat adjustment.
@@ -210,5 +297,5 @@
   }
   ctx.restore();return x;
  }
- G.PKMSVVCombatTacticsQA=Object.freeze({alliedMode,assignRescuers,directPath,margin,needsEvade,evade,rangedGoal,berryGoal,rangedFootwork,arenaFootwork,status,drawStatus});
+ G.PKMSVVCombatTacticsQA=Object.freeze({alliedMode,assignRescuers,directPath,margin,needsEvade,evade,rangedGoal,berryGoal,rangedFootwork,arenaDuel,arenaProfile,arenaStats,arenaPreserveFighter,arenaPlan,arenaRecovery,arenaFootwork,status,drawStatus});
 })();

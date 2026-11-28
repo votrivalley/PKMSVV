@@ -856,6 +856,13 @@ if(process.env.PKMSVV_BIG_UPDATE_QA==='1'){
  patch('js/entities/enemy.js',
   '        [vx, vy, animBase] = this.bossMove(dt, pl, dist, dx, dy, spd);',
   '        [vx, vy, animBase] = this.bossMove(dt, pl, dist, dx, dy, spd);\n        const arenaFootwork=G.PKMSVVCombatTacticsQA?.arenaFootwork(this,pl,spd,vx,vy,dt);\n        if(arenaFootwork){vx=arenaFootwork[0];vy=arenaFootwork[1];animBase="Walk";}');
+ // Native attack selection and recovery, scoped to tagged offline Arena rivals.
+ patch('js/entities/enemy.js',
+  '      if (ai.cast) return this.bossCast(dt, pl);',
+  '      if (ai.cast) return this.bossCast(dt, pl);\n      G.PKMSVVCombatTacticsQA?.arenaPlan(this,pl,dt);');
+ patch('js/entities/enemy.js',
+  '      if (ai.fury && Math.random() < 0.35) ai.cd = 0.3;',
+  '      if (ai.fury && Math.random() < 0.35) ai.cd = 0.3;\n      ai.cd=G.PKMSVVCombatTacticsQA?.arenaRecovery(this,ai.cd)??ai.cd;');
  // Add actual movement/Rest/FPS status before the existing active buff row.
  // Retain its native anchor and downstream Co-op HUD layout logic.
  patch('js/ui/hud.js','    let bx = px;\n    ctx.textAlign = \'left\';',

@@ -135,3 +135,17 @@ test('healer support periodically heals only its living AI Champion, never reviv
  lib.updateOpponentSupports(12);
  assert.equal(actor.dead,true,'no heals or allies after Champion dies');
 });
+
+test('isolated Champion samples the actual trained fighter at the start of each new round',()=>{
+ const {G,lib,player}=setup();
+ vm.runInNewContext(fs.readFileSync(path.resolve(__dirname,'../src/pkmsvv-combat-tactics-qa.js'),'utf8'),{G});
+ assert.equal(lib.start(),true);
+ Object.assign(player,{maxHp:500,hp:500,baseAtk:1.7,atkMul:2,cdMul:.8,moves:[{id:'melee',kind:'melee',dmg:25,cd:2,lvl:1}]});
+ lib.nextDuel();lib.update(3.01);
+ let first=G.EnemyMgr.last;assert.equal(first.pkmsvvArenaBuild.attacks,1);assert.equal(player.maxHp,500);
+ first.dead=true;lib.update(.1);
+ player.moves=Array.from({length:8},(_,i)=>({id:'skill'+i,kind:'beam',lvl:5,dmg:45,cd:2}));player.atkMul=3;
+ lib.nextDuel();lib.update(3.01);
+ const second=G.EnemyMgr.last;assert.equal(second.pkmsvvArenaBuild.attacks,8);assert.ok(second.maxHp>first.maxHp*2);assert.equal(second.pkmsvvArenaBuild.round,1);
+ assert.ok(second.pkmsvvArenaBuild.dmg>0);
+});

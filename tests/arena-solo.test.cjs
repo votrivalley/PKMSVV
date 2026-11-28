@@ -150,3 +150,15 @@ test('Random AI mirrors 90–120% player HP, attack and speed and is actually sp
  const src=read('src/pkmsvv-arena-solo.js');
  assert.match(src,/pkmsvv-arena-solo-invite/);assert.match(src,/PKMSVVCoop.open\('arena'\)/);
 });
+
+test('isolated Solo adaptive duel keeps trained build and gives the real enemy matching shot damage',()=>{
+ const {G,lib,player}=setup();
+ vm.runInNewContext(read('src/pkmsvv-combat-tactics-qa.js'),{G});
+ lib.start(()=>0);
+ Object.assign(player,{maxHp:500,hp:450,baseAtk:1.7,atkMul:3,baseSpd:145,spdMul:1.2,cdMul:.5,moves:Array.from({length:8},(_,i)=>({id:'skill'+i,kind:'beam',lvl:5,dmg:45,cd:2}))});
+ lib.update(570);lib.update(20);lib.update(10);lib.update(3);
+ const e=G.EnemyMgr.last;
+ assert.equal(player.maxHp,500);assert.equal(player.atkMul,3);assert.equal(player.cdMul,.5);
+ assert.equal(e.pkmsvvArenaBuild.attacks,8);assert.ok(e.maxHp>player.maxHp*2);assert.equal(e.pkmsvvArenaBuild.style,'press');
+ assert.ok(e.dmg>11);assert.equal(e.pkmsvvArenaBuild.dmg,e.dmg);
+});

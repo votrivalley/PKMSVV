@@ -527,7 +527,7 @@ G.PKMSVVChampionArena=(()=>{
   const userBaseline={hp:Math.max(320,Number(pl.maxHp)||320),
    dmg:Math.max(12.4,12.4*Math.max(1,Number(pl.atkMul)||1)*Math.max(1,Number(pl.baseAtk)||1)/1.3),
    spd:Math.max(112,Number(pl.baseSpd)||112)};
-  if(mode!=='league'){
+  if(mode!=='league'&&!G.PKMSVVCombatTacticsQA?.arenaStats){
    pl.mon={...pl.mon,hp:320,pa:130,sa:130,atk:130,df:110,sd:110,spd:112};
    pl.maxHp=320;pl.hp=320;pl.baseAtk=1.3;pl.baseSpd=112;
    pl.atkMul=1;pl.spdMul=1;
@@ -546,6 +546,8 @@ G.PKMSVVChampionArena=(()=>{
    dmg:Math.round(playerStats.dmg*ratios.dmg*100)/100,
    xp:0,behavior:'champion',
    shotCd:Math.max(.7,1.85/ratios.dmg)};
+  const adaptive=G.PKMSVVCombatTacticsQA?.arenaStats?.(pl,ratios,{mode:'champion',round});
+  if(adaptive)Object.assign(raw,adaptive);
   // The full build is retained in postgame; do not additionally scale by
   // Region, AI tier or native boss difficulty outside the agreed range.
   const champion=new G.Enemy(raw,pl.x+Math.min(300,190+round*15),pl.y-35,
@@ -576,6 +578,7 @@ G.PKMSVVChampionArena=(()=>{
   }
   if(target)applyMapEffect(pl,target);
   target.pkmsvvChampion=true;
+  if(adaptive)target.pkmsvvArenaBuild=adaptive.profile;
   // Story and post-story Champion finals both transform at the half-HP boundary.
   target._pkmsvvChampionMegaEligible=round===3;
   target._pkmsvvMegaSprite=opp?.pkmsvvMegaSprite||null;
