@@ -48,9 +48,26 @@ const CASES=[['slowbromega',false],['sharpedomega',false],['scraftymega',false],
     assert.equal(active.anim,form.id);assert.equal(active.dex,form.dex);assert.equal(active.shiny,shiny);assert.ok(Math.abs(active.cd-original.cd*.7)<1e-8);assert.ok(active.atk>0&&active.atk<10,'scaled attack must remain finite and bounded');
     await page.waitForFunction(()=>{const q=window.__megaRecoveryTarget,p=G.Game.player;return p._megaActive&&q.e.hp<q.hp&&p.dmgDealt>q.dmg;},null,{timeout:12000});
     await page.screenshot({path:path.join(OUT,key+'-active.png')});
-    const ended=await page.evaluate(()=>{const p=G.Game.player,q=window.__megaRecoveryTarget,delta=q.hp-q.e.hp,api=G.PKMSVVMegaPhase3;api.stop(p);return {delta,dex:p.dex,anim:p.anim.dex,atk:p.baseAtk,spd:p.baseSpd,cd:p.cdMul,cooldown:p._megaCooldownRemaining,active:!!p._megaActive};});
-    assert.ok(ended.delta>0);assert.equal(ended.anim,form.dex);assert.equal(ended.active,false);assert.equal(ended.atk,original.atk);assert.equal(ended.spd,original.spd);assert.ok(Math.abs(ended.cd-original.cd)<1e-8);assert.equal(ended.cooldown,200);assert.deepEqual(errors,[]);
-    reports.push({key,shiny,original,active,ended});fs.writeFileSync(path.join(OUT,'report.json'),JSON.stringify(reports,null,2));
+    const natural=key==='slowbromega';
+    let lifecycle=null;
+    if(natural){
+     // Keep original combat HP evidence; isolate the remaining timer from
+     // unrelated enemy spawns/level-ups. No fake timer or debug speed.
+     const before=await page.evaluate(()=>{const p=G.Game.player;G.EnemyMgr.clear();G.Projectiles.clear();G.Combat.clearFields();G.Hazards.clear();p.moves=[];p.slots=[];window.__megaTimerKeep=setInterval(()=>{G.EnemyMgr.clear();G.Projectiles.clear();G.Pickups?.clear?.();},100);G.Game.togglePause();return {remaining:p._megaRemaining,state:G.Game.state,time:G.Game.st?.time};});
+     assert.equal(before.state,'paused');
+     await page.waitForTimeout(1250);
+     const frozen=await page.evaluate(()=>({remaining:G.Game.player._megaRemaining,active:G.Game.player._megaActive,state:G.Game.state}));
+     assert.equal(frozen.state,'paused');assert.equal(frozen.active,true);assert.equal(frozen.remaining,before.remaining);
+     await page.evaluate(()=>G.Game.togglePause());
+     await page.waitForFunction(rem=>G.Game.state==='playing'&&G.Game.player._megaRemaining<rem,before.remaining,{timeout:5000});
+     const started=Date.now();
+     await page.waitForFunction(()=>G.Game.player._megaActive===false&&G.Game.player._megaCooldownRemaining>0,null,{timeout:55000});
+     lifecycle={pausedRemaining:before.remaining,resumed:true,wallMs:Date.now()-started,naturalExpiry:true};
+     await page.evaluate(()=>clearInterval(window.__megaTimerKeep));
+    }
+    const ended=await page.evaluate(natural=>{const p=G.Game.player,q=window.__megaRecoveryTarget,delta=q.hp-q.e.hp,api=G.PKMSVVMegaPhase3;if(!natural)api.stop(p);return {delta,dex:p.dex,anim:p.anim.dex,atk:p.baseAtk,spd:p.baseSpd,cd:p.cdMul,cooldown:p._megaCooldownRemaining,active:!!p._megaActive};},natural);
+    assert.ok(ended.delta>0);assert.equal(ended.anim,form.dex);assert.equal(ended.active,false);assert.equal(ended.atk,original.atk);assert.equal(ended.spd,original.spd);assert.ok(Math.abs(ended.cd-original.cd)<1e-8);if(natural)assert.ok(ended.cooldown>=198&&ended.cooldown<=200,'natural expiry starts 200s cooldown');else assert.equal(ended.cooldown,200);assert.deepEqual(errors,[]);
+    reports.push({key,shiny,original,active,ended,lifecycle});fs.writeFileSync(path.join(OUT,'report.json'),JSON.stringify(reports,null,2));
     console.log('MEGA_RECOVERY_NATIVE_COMBAT='+JSON.stringify(reports.at(-1)));
    }catch(e){const snapshot=await page.evaluate(()=>({state:window.G?.Game?.state,player:window.G?.Game?.player?{dex:G.Game.player.dex,shiny:G.Game.player.shiny,energy:G.Game.player._megaEnergy,mega:G.Game.player._megaActive,anim:G.Game.player.anim?.dex}:null})).catch(()=>null);fs.writeFileSync(path.join(OUT,key+'-failure.json'),JSON.stringify({error:String(e),errors,snapshot},null,2));await page.screenshot({path:path.join(OUT,key+'-failure.png'),timeout:5000}).catch(()=>{});throw e;}
    finally{await page.close();}

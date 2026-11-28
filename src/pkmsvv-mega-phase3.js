@@ -51,10 +51,11 @@ G.PKMSVVMegaPhase3=(()=>{
  }
  // Recovered art is only combat-testable on explicitly built private Solo QA.
  const RECOVERY_KEYS=new Set(['slowbromega','sharpedomega','scraftymega','hawluchamega']);
- function recoveryBattle(f,p=G.Game?.player){
+ const RECOVERY_PAUSED_STATES=new Set(['paused','levelup','choice','held']);
+ function recoveryBattle(f,p=G.Game?.player,allowPaused=false){
   if(!f||f.artReady===true||!RECOVERY_KEYS.has(f.key)||G.PKMSVV_MEGA_RECOVERY_BATTLE_QA!==true||
    !p||p!==G.Game?.player||p.dex!==f.dex||p.dead||p.remote||p.lanBot||
-   G.Game?.state!=='playing'||G.PKMSVVQuickRegion?.active!==true||G.Coop?.active||
+   (G.Game?.state!=='playing'&&!(allowPaused&&RECOVERY_PAUSED_STATES.has(G.Game?.state)))||G.PKMSVVQuickRegion?.active!==true||G.Coop?.active||
    G.Royale?.active||G.EggRush?.active||G.PKMSVVArenaSolo?.active||G.PKMSVVChampionArena?.active||G.PKMSVVArenaPvp?.active)return false;
   const a=G.PKMSVV_MEGA_RECOVERY_PREVIEW?.[f.key],m=G.SPRITE_META?.[f.spriteId];
   return !!(a?.source==='spritecollab'&&a.spriteId===f.spriteId&&a.distinctCore===true&&
@@ -189,10 +190,12 @@ G.PKMSVVMegaPhase3=(()=>{
  }
  async function tryActivate(){
   if(busy||!eligible())return false;
-  const p=player(),f=formFor(p);busy=true;
+  const p=player(),f=formFor(p),shiny=!!p.shiny;busy=true;
   try{
-   await G.Sprites.preload([f.spriteId],3500,!!p.shiny);
-   const frame=G.Sprites.sheet?.(f.spriteId,'Idle',!!p.shiny);
+   await G.Sprites.preload([f.spriteId],3500,shiny);
+   // Reject stale asynchronous activation after leaving/restarting a run or changing form.
+   if(player()!==p||!!p.shiny!==shiny||formFor(p)?.spriteId!==f.spriteId||!canActivate(p))return false;
+   const frame=G.Sprites.sheet?.(f.spriteId,'Idle',shiny);
    if(frame&&!frame.ready)return false;
    return activate(p);
   }finally{busy=false;sync();}
@@ -200,11 +203,15 @@ G.PKMSVVMegaPhase3=(()=>{
  function tick(p,dt){
   if(!p)return;
   const elapsed=Number.isFinite(dt)?Math.max(0,dt):0;
+  if(p._megaActive&&p._megaPhase3Backup?.recoveryKey){
+   const f=getForm(p._megaPhase3Backup.recoveryKey);
+   if(!recoveryBattle(f,p,true)){stop(p);return;}
+   if(RECOVERY_PAUSED_STATES.has(G.Game?.state))return;
+  }
   if(p.dead||G.Game?.state!=='playing'){if(p._megaActive)stop(p);return;}
   if(p._megaActive){
    // Mega Lucario BETA owns its own timer; Phase 3 must not tick it twice.
    if(!p._megaPhase3Backup)return;
-   if(p._megaPhase3Backup.recoveryKey&&!recoveryBattle(getForm(p._megaPhase3Backup.recoveryKey),p)){stop(p);return;}
    p._megaRemaining=Math.max(0,p._megaRemaining-elapsed);
    p._pkmsvvMegaAuraClock=(p._pkmsvvMegaAuraClock||0)+elapsed;
    if(p._pkmsvvMegaAuraClock>=.33){

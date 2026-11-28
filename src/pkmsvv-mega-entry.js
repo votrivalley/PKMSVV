@@ -8,6 +8,7 @@ G.PKMSVVMegaEntry=(()=>{
  // This does not claim missing sprite art, enable battle transformations,
  // unlock stones, or change the conservative PC/Android/production roster.
  const recoveryPreview=f=>!!(f&&f.artReady!==true&&G.PKMSVV_MEGA_RECOVERY_PREVIEW?.[f.key]?.spriteId===f.spriteId);
+ const recoveryPilot=f=>recoveryPreview(f)&&G.PKMSVV_MEGA_RECOVERY_BATTLE_QA===true&&G.PKMSVV_MEGA_RECOVERY_PREVIEW[f.key].distinctCore===true;
  const fullCatalogQA=()=>!!G.PKMSVV_MEGA_RECOVERY_PREVIEW||G.PKMSVV_MEGA_FULL_CATALOG_QA===true||
   (typeof window!=='undefined'&&window.PKMSVV_MEGA_FULL_CATALOG_QA===true);
  const save=()=>G.DB?.save||{};
@@ -136,7 +137,7 @@ G.PKMSVVMegaEntry=(()=>{
   if(recoveryPreview(f)&&hasSprite(f)){
    area.className='pkmsvv-mega-phase1-locked';
    const title=el('h3');title.textContent=displayName(f);
-   const note=el('p');note.textContent=tr('QA xem trước sprite thật · Chưa mở chiến đấu','QA real sprite preview · Battle locked');
+   const note=el('p');note.textContent=recoveryPilot(f)?tr('QA Solo · Cần đúng Mega Stone và cốt truyện · Chưa phát hành','Solo QA · Matching stone and story required · Unreleased'):tr('QA xem trước sprite thật · Chưa mở chiến đấu','QA real sprite preview · Battle locked');
    const meta=G.PKMSVV_MEGA_RECOVERY_PREVIEW[f.key];
    const warning=el('small');warning.textContent=meta.distinctCore?tr('Idle / Walk / Attack riêng; các animation phụ có dùng chung hình nguồn.','Distinct Idle / Walk / Attack; auxiliary animations reuse source frames.'):tr('Chưa có Attack riêng.','Distinct Attack unavailable.');
    area.append(title,note);
@@ -285,7 +286,7 @@ G.PKMSVVMegaEntry=(()=>{
     cv.className='pkmsvv-mega-cell-art';card.append(cv);
    }else{const icon=el('span');icon.textContent='✦';card.append(icon);}
    const label=el('strong');label.textContent=yes||preview?displayName(f):'???';
-   const state=el('small');state.textContent=preview?tr('QA · Chỉ xem','QA · Preview only'):!yes?
+   const state=el('small');state.textContent=preview?(recoveryPilot(f)?tr('QA · Thử Solo','QA · Solo pilot'):tr('QA · Chỉ xem','QA · Preview only')):!yes?
     (fullCatalogQA()&&!v.ready?tr('Chưa mở · Chờ sprite','Locked · Art pending'):tr('Chưa mở','Locked')):
     !v.ready?tr('Đã mở · Chờ sprite','Unlocked · Sprite pending'):tr('Đã mở','Unlocked');
    card.append(label,state);

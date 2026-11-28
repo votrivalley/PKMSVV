@@ -20,5 +20,8 @@ test('private recovery combat requires explicit flag, correct form, real sheets,
  G.Coop.active=true;assert.equal(api.canActivate(p),false);G.Coop.active=false;G.PKMSVVArenaSolo={active:true};assert.equal(api.canActivate(p),false);G.PKMSVVArenaSolo.active=false;
  p.shiny=true;G.Sprites.hasShiny=()=>false;assert.equal(api.canActivate(p),false);G.Sprites.hasShiny=()=>true;
  assert.equal(api.activate(p),true);assert.equal(p.anim.dex,10080);assert.ok(Math.abs(p.mon.sa-1.3)<1e-9);assert.equal(p.cdMul,.7);
+ const remaining=p._megaRemaining;G.Game.state='paused';api.tick(p,10);assert.equal(p._megaActive,true);assert.equal(p._megaRemaining,remaining);assert.equal(api.canActivate(p),false);
+ G.Game.state='levelup';api.tick(p,10);assert.equal(p._megaRemaining,remaining);
+ G.Game.state='playing';api.tick(p,1);assert.equal(p._megaRemaining,remaining-1);
  G.Coop.active=true;api.tick(p,.1);assert.equal(p._megaActive,false);assert.equal(p.anim.dex,80);assert.equal(p.cdMul,1);
 });
