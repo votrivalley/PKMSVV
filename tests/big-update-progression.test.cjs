@@ -187,3 +187,10 @@ test('weekly mission gives one pre-rolled baby egg only with real claim, rollbac
  assert.equal(api.claimMission(s,live,true,()=>{}),null);
  s.pkmsvvIncubator.eggs['egg-2'].kills=500;assert.equal(api.hatch('egg-2').dex,175);
 });
+
+test('native packet without bot flags uses locked authoritative lobby roster, not a mismatched client claim',()=>{
+ const {G,s,p,api,cfg,uid}=coopFixture();
+ G.Social.room.members.push({uid:'ai-test',bot:true,dex:7});
+ cfg.members=G.Social.room.members.map(({uid,dex})=>({uid,dex}));
+ assert.equal(api.beginCoop(s,p,cfg,uid,true),true);
+});

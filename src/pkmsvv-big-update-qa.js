@@ -76,7 +76,7 @@
   }
   return JSON.stringify(rows.sort((a,b)=>a[0].localeCompare(b[0])));
  }
- function roomId(v){return typeof v==='string'&&/^[A-Za-z0-9_-]{1,128}$/.test(v);}
+ function roomId(v){return typeof v==='string'&&/^[A-Za-z0-9_-]{1,128}$/.test(v)&&!['__proto__','constructor','prototype'].includes(v);}
  function receipts(s){
   const value=s.pkmsvvCoopProgress;
   if(value===undefined)return {};
@@ -93,12 +93,18 @@
  }
  function beginCoop(s,p,cfg,uid,host){
   if(!s||s!==save()||G.DB?.guest||!p||p.remote||p.lanBot||coopRuns.has(p))return false;
-  const room=G.Social?.room,dex=dexId(p.dex),roster=party(cfg?.members);
+  const room=G.Social?.room,dex=dexId(p.dex),roster=party(room?.members);
+  // The native start packet intentionally contains only UID/name/dex/Shiny;
+  // the locked lobby roster is the canonical bot/human classification.
+  const cfgParty=Array.isArray(cfg?.members)?party(cfg.members.map(m=>{
+   const member=room?.members?.find(x=>x.uid===m?.uid);
+   return member?{uid:m.uid,bot:member.bot===true,disconnected:member.disconnected}:null;
+  })):null;
   if(cfg?.mode!=='coop'||room?.mode!=='coop'||room.open!==false||!roomId(room.id)||
      !Number.isSafeInteger(room.matchSerial)||room.matchSerial<1||!Number.isSafeInteger(cfg.seed)||cfg.seed<0||
      cfg.host!==room.host||typeof uid!=='string'||uid!==G.Net?.uid||uid!==G.Social?.uid||
-     host!==(uid===room.host)||!roster||roster!==party(room.members)||
-     !cfg.members.some(m=>m.uid===uid&&!m.bot)||!cfg.members.some(m=>m.uid===cfg.host&&!m.bot)||!dex||!s.owned?.[dex])return false;
+     host!==(uid===room.host)||!roster||roster!==cfgParty||
+     !room.members.some(m=>m.uid===uid&&!m.bot)||!room.members.some(m=>m.uid===cfg.host&&!m.bot)||!dex||!s.owned?.[dex])return false;
   let egg=null;
   try{if((receipts(s)[room.id]?.serial||0)>=room.matchSerial)return false;egg=incubator(s).active;}catch(_){return false;}
   coopRuns.set(p,{profile:s,dex,egg,room:room.id,serial:room.matchSerial,seed:cfg.seed,uid,host:cfg.host,

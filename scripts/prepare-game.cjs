@@ -851,6 +851,36 @@ if(process.env.PKMSVV_BIG_UPDATE_QA==='1'){
   '<script defer src="js/core/pkmsvv-progression-merge.js"></script>\n<script defer src="js/core/db.js"></script>');
  patch('js/core/db.js','    r.created = Math.min(a.created || Date.now(), b.created || Date.now());',
   '    G.PKMSVVProgressionMerge.apply(r,newer,older);\n    r.created = Math.min(a.created || Date.now(), b.created || Date.now());');
+ // In the native lobby, wait for the LAN/Wi-Fi lock acknowledgement before
+ // broadcasting a new normal-Co-op start. Keep other game modes unchanged.
+ patch('js/ui/social-ui.js','    function start() {\n      const room = G.Social.room;',
+  '    let pkmsvvStartPending=false;\n    async function start() {\n      const room = G.Social.room;');
+ patch('js/ui/social-ui.js','      G.Social.setOpen(false);\n      G.Net.broadcast(cfg);\n      G.Flow.startCoop(cfg);',
+  [
+   '      if(G.LanBus&&G.PKMSVVBigUpdateQA&&room.mode==="coop"){',
+   '        if(pkmsvvStartPending||room.open!==true)return;',
+   '        pkmsvvStartPending=true;',
+   '        try{',
+   '          await G.Social.setOpen(false);',
+   '          const startAt=Date.now();',
+   '          while(G.Social.room?.id===room.id&&G.Social.room.open!==false&&Date.now()-startAt<3000)',
+   '            await new Promise(resolve=>setTimeout(resolve,50));',
+   '          const locked=G.Social.room;',
+   '          const ids=members=>members.map(m=>m.uid).sort().join("|");',
+   '          if(locked?.id!==room.id||locked.open!==false||locked.host!==room.host||',
+   '             !Number.isSafeInteger(locked.matchSerial)||locked.matchSerial<1||ids(locked.members)!==ids(cfg.members))',
+   '            throw Error("Room lock or roster changed");',
+   '          G.Net.broadcast(cfg);G.Flow.startCoop(cfg);',
+   '        }catch(err){',
+   '          if(G.Social.room?.id===room.id&&G.Social.room?.isHost)await G.Social.setOpen(true);',
+   '          G.UI?.toast?.(G.I18n?.lang==="vi"?"Chưa khóa được phòng. Hãy thử lại.":"Room could not be locked. Retry.",3500);',
+   '        }finally{pkmsvvStartPending=false;}',
+   '        return;',
+   '      }',
+   '      G.Social.setOpen(false);',
+   '      G.Net.broadcast(cfg);',
+   '      G.Flow.startCoop(cfg);'
+  ].join('\n'));
  // Scope normal Co-op progression to the native locked room and real Host.
  patch('js/net/coop.js','    members = cfg.members;',
   '    members = cfg.members;\n    G.PKMSVVBigUpdateQA?.beginCoop(G.DB.save,pl,cfg,me,host);');

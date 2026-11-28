@@ -65,7 +65,7 @@
    if(row===undefined)continue;
    if(!obj(row)||Object.keys(row).length>128)conflict();
    for(const [k,v] of Object.entries(row)){
-    if(!/^[A-Za-z0-9_-]{1,128}$/.test(k)||!obj(v)||!Number.isSafeInteger(v.serial)||v.serial<1||!Number.isSafeInteger(v.at)||v.at<0)conflict();
+    if(!/^[A-Za-z0-9_-]{1,128}$/.test(k)||['__proto__','constructor','prototype'].includes(k)||!obj(v)||!Number.isSafeInteger(v.serial)||v.serial<1||!Number.isSafeInteger(v.at)||v.at<0)conflict();
     if(!own(out,k)||v.serial>out[k].serial||(v.serial===out[k].serial&&v.at>out[k].at))Object.defineProperty(out,k,{value:copy(v),enumerable:true,writable:true,configurable:true});
    }
   }
