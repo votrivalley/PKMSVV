@@ -89,6 +89,51 @@ const OUT=path.resolve('dist/big-update-progression-qa');fs.mkdirSync(OUT,{recur
   assert.equal(await eggs.count(),0,'reopen defaults to support, not stale incubator');
   assert.equal(await catalog.locator('.pkmsvv-support-layout').isVisible(),true);
   assert.deepEqual(errors,[]);
+  const berryPage=await browser.newPage({viewport:{width:1280,height:800}});
+  berryPage.on('pageerror',e=>errors.push(String(e)));
+  await berryPage.addInitScript(()=>{window.__pkmsvvPippiGuideQABypass=true;});
+  await berryPage.goto(url,{waitUntil:'domcontentloaded',timeout:45000});
+  await berryPage.waitForFunction(()=>!!G.DB?.save&&!!G.PKMSVVBerryRescue?.BOSS_SPECS,null,{timeout:40000});
+  await berryPage.evaluate(async()=>{
+   Object.assign(G.DB.save,{partner:25,pkmsvvStorySeen:true,pkmsvvNameChosen:true});
+   G.MenuUI.open();await G.Social.createRoom('berry','private');
+   for(const dex of [1,7,25])await G.LanBus.request('addBot',{dex});
+   G.LobbyUI.open();
+  });
+  await berryPage.locator('#lobby-start').click();
+  await berryPage.waitForFunction(()=>G.Game?.state==='playing'&&G.PKMSVVBerryRescue.active,null,{timeout:25000});
+  await berryPage.evaluate(()=>{[...document.querySelectorAll('.pkmsvv-berry-overlay button')].find(x=>/Không dùng Berry|No Berry/.test(x.textContent))?.click();});
+  // Accelerated objective boundary fixture: not a full eight-minute soak.
+  // Native LAN host, native constructor, real sprite/hitbox and Enemy.hurt.
+  const berry=await berryPage.evaluate(()=>{
+   const api=G.PKMSVVBerryRescue;
+   for(const dex of [446,143])if(!G.DEX_BY[dex]||!G.SPRITE_META[dex]?.a?.Idle||!G.SPRITE_META[dex]?.a?.Walk)throw Error('Missing Berry boss sprite '+dex);
+   G.EnemyMgr.clear();
+   api.tick(.01,240,[],()=>{});
+   const m=G.EnemyMgr.all().find(x=>x._pkmsvvBerryBoss===1);
+   if(!m||m.dex!==446)throw Error('Wrong first Berry boss');
+   const initial=m.hp;m.hurt(200,'#ffffff',0,0,0);
+   const damaged=m.hp<initial;
+   api.tick(.01,480,[],()=>{});
+   const n=G.EnemyMgr.all().find(x=>x._pkmsvvBerryBoss===2);
+   if(!n||n.dex!==143)throw Error('Wrong final Berry boss');
+   const remote=G.EnemyMgr.addRemote({id:987654,dex:143,x:240,y:0,boss:true,shiny:false,hp:n.maxHp,dmg:n.dmg,beh:'chase'});
+   return {munchlax:{dex:m.dex,hp:m.maxHp,base:m._pkmsvvBerryBaseHp,mult:m._pkmsvvBerryHpMultiplier,spd:m.spd,baseSpd:m._pkmsvvBerryBaseSpeed,damage:damaged},snorlax:{dex:n.dex,hp:n.maxHp,base:n._pkmsvvBerryBaseHp,mult:n._pkmsvvBerryHpMultiplier,scale:n.scale,r:n.r,bodyH:n.bodyH,remoteScale:remote.scale,remoteR:remote.r,remoteHp:remote.maxHp}};
+  });
+  assert.ok(berry.munchlax.mult>=2&&berry.munchlax.mult<=4);
+  assert.equal(berry.munchlax.hp,berry.munchlax.base*berry.munchlax.mult);
+  assert.ok(berry.munchlax.damage);
+  assert.ok(berry.snorlax.mult>=5&&berry.snorlax.mult<=8);
+  assert.equal(berry.snorlax.hp,berry.snorlax.base*berry.snorlax.mult);
+  assert.equal(berry.snorlax.scale,3);
+  assert.equal(berry.snorlax.remoteScale,3);
+  assert.equal(berry.snorlax.remoteR,berry.snorlax.r);
+  assert.equal(berry.snorlax.remoteHp,berry.snorlax.hp);
+  await berryPage.screenshot({path:path.join(OUT,'berry-native-bosses.png')});
+  await berryPage.close();
+  console.log('BERRY_BOSSES_NATIVE_PASS='+JSON.stringify(berry));
+  fs.writeFileSync(path.join(OUT,'berry-bosses.json'),JSON.stringify(berry,null,2));
+  assert.deepEqual(errors,[]);
   fs.writeFileSync(path.join(OUT,'report.json'),JSON.stringify({progress,after,inventory:{defined:inventory.defined,playable:inventory.playable,moveCount:inventory.moveIds.length}},null,2));
   console.log('BIG_UPDATE_NATIVE_PASS='+JSON.stringify({progress,after,defined:inventory.defined,playable:inventory.playable,moves:inventory.moveIds.length}));
  }catch(e){fs.writeFileSync(path.join(OUT,'failure.json'),JSON.stringify({error:String(e),errors},null,2));if(page)await page.screenshot({path:path.join(OUT,'failure.png'),timeout:5000}).catch(()=>{});throw e;}

@@ -84,7 +84,7 @@ patch('js/game.js',
 // No packet schema change and no enlarged Snorlax outside Berry mode.
 patch('js/entities/enemy.js',
  'this.scale = boss ? bossScale(def.dex) : 1;',
- 'this.scale = boss ? (G.PKMSVVBerryRescue?.bossVisualScale?.(def.dex) || bossScale(def.dex)) : 1;\\n'+
+ 'this.scale = boss ? (G.PKMSVVBerryRescue?.bossVisualScale?.(def.dex) || bossScale(def.dex)) : 1;\n'+
  '      if(boss&&G.PKMSVVBerryRescue?.active&&def.dex===143)this.name="Giant Snorlax";');
 // Berry mode runs a separate Host-authoritative objective, not death-all check.
 // All enemy variants (including ranged and boss AI) aim at live trees.
