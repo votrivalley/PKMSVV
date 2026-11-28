@@ -71,7 +71,7 @@ patch('js/game.js',
 // Request Cloud upload after this, with explicit failure/pending UI.
 patch('js/game.js',
  "    G.DB.commit('run');\n    if (G.Social.me) G.Social.publishProfile();",
- "    G.DB.commit('run');\n    if(G.DB.mode==='cloud' && !G.DB.guest){\n      G.DB.saveNow().then(r=>{\n        if(!r.ok || r.why==='wait')G.UI.toast(r.why==='wait'?\n          'Đã lưu trên máy. Cloud sẽ tự đồng bộ khi hết thời gian chờ.':\n          'Đã lưu trên máy, chưa đồng bộ Cloud. Hãy kiểm tra mạng và trạng thái Lưu trước khi đổi máy.',5500);\n        else G.UI.toast('Lượt chơi đã được lưu trên Cloud.',3000);\n      }).catch(e=>G.UI.toast('Đã lưu trên máy. Lỗi Cloud: thử lại bằng nút Lưu.',5000));\n    }\n    if (G.Social.me) G.Social.publishProfile();");
+ "    const runSaved=G.DB.commit('run');\n    if(runSaved!==false && G.DB.mode==='cloud' && !G.DB.guest){\n      G.DB.saveNow().then(r=>{\n        if(!r.ok || r.why==='wait')G.UI.toast(r.why==='wait'?\n          'Đã lưu trên máy. Cloud sẽ tự đồng bộ khi hết thời gian chờ.':\n          'Đã lưu trên máy, chưa đồng bộ Cloud. Hãy kiểm tra mạng và trạng thái Lưu trước khi đổi máy.',5500);\n        else G.UI.toast('Lượt chơi đã được lưu trên Cloud.',3000);\n      }).catch(e=>G.UI.toast('Đã lưu trên máy. Lỗi Cloud: thử lại bằng nút Lưu.',5000));\n    }\n    if (G.Social.me) G.Social.publishProfile();");
 // If an account is deleted, no old session listener should survive.
 patch('js/core/db.js',
  "      remove(K_CLOUD + uid);\n      await auth.currentUser.delete();",

@@ -773,6 +773,58 @@ patch('js/entities/projectile.js',
   '<script defer src="js/ui/pkmsvv-pippi-guide.js"></script>\n'+
   '<script defer src="js/ui/pkmsvv-fossil-system.js"></script>\n</body>'));
 }
+// P0: guard synchronous persistence on the active profile, including a stale
+// local tab. No account/key/schema migration. Cloud still uses its own session
+// and merge protocol; local cache failure must be reported rather than hidden.
+patch('js/core/db.js','  let storageOk = true;',
+ '  let storageOk = true;\n  let pkmsvvLocalRaw;');
+patch('js/core/db.js','    save = fold(loadLocal(k, name));',
+ '    try { pkmsvvLocalRaw = localStorage.getItem(K_SAVE + k); } catch (_) { pkmsvvLocalRaw = undefined; }\n    save = fold(loadLocal(k, name));');
+patch('js/core/db.js','    write(K_SAVE + k, save);\n    return { ok: true, isNew: true };',
+ '    if (!commit(true)) return { ok:false, error:"Cannot persist new profile" };\n    return { ok: true, isNew: true };');
+patch('js/core/db.js',
+ [
+ '  function commit(urgent = false) {',
+ '    if (guest || !key || !save) return false;',
+ '    save.updated = Date.now();',
+ '    fold(save);',
+ "    if (mode === 'local') return write(K_SAVE + key, save);",
+ '    write(K_CLOUD + uid, save);',
+ '    pending = true;',
+ "    setSync('pending');                // se sube al pulsar Guardar",
+ '    return true;',
+ '  }'
+ ].join('\n'),
+ [
+ '  function commit(urgent = false) {',
+ '    if (guest || !key || !save) return false;',
+ '    const warn = () => {',
+ '      if (urgent === "run") G.UI?.toast?.(G.I18n?.lang==="vi"?"Chưa lưu được kết quả trận. Đừng thoát game; hãy xuất bản sao save hoặc thử lưu lại.":"Run not saved. Keep the game open; export a backup or retry saving.",6500);',
+ '      return false;',
+ '    };',
+ '    const oldUpdated = save.updated, oldLed = save.led;',
+ '    const hadUpdated=Object.hasOwn(save,"updated"), hadLed=Object.hasOwn(save,"led");',
+ '    try {',
+ '      if (mode === "local" && (pkmsvvLocalRaw === undefined || localStorage.getItem(K_SAVE + key) !== pkmsvvLocalRaw)) {',
+ '        G.UI?.toast?.(G.I18n?.lang==="vi"?"Save đã thay đổi ở cửa sổ khác. Xuất bản sao trước khi tải lại, không ghi đè save mới.":"Save changed in another window. Export a backup before reloading; newer save not overwritten.",6500);',
+ '        return false;',
+ '      }',
+ '      save.updated = Date.now(); fold(save);',
+ '      if (mode === "local") {',
+ '        const raw=JSON.stringify(save);',
+ '        if (!write(K_SAVE + key, save)) throw Error("local write failed");',
+ '        pkmsvvLocalRaw=raw; return true;',
+ '      }',
+ '      if (!write(K_CLOUD + uid, save)) throw Error("cloud cache write failed");',
+ '      pending = true; setSync("pending"); return true;',
+ '    } catch (_) {',
+ '      if(hadUpdated)save.updated=oldUpdated;else delete save.updated;',
+ '      if(hadLed)save.led=oldLed;else delete save.led;',
+ '      return warn();',
+ '    }',
+ '  }'
+ ].join('\n'));
+
 // Big Update QA: call progression at the actual native player construction and
 // result boundary; the late-loaded module is only present in the isolated QA.
 if(process.env.PKMSVV_BIG_UPDATE_QA==='1'){

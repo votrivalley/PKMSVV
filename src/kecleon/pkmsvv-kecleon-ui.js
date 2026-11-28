@@ -132,10 +132,15 @@ G.KecleonUI=(()=>{
   $('pkmk-list').querySelectorAll('[data-pkmk-buy]').forEach(btn=>btn.onclick=()=>{
     // Synchronous purchase + a disabled button prevent double taps from
     // spending twice before a mobile WebView rerender finishes.
-    if(btn.disabled)return;
+    if(btn.disabled||!btn.isConnected)return;
     btn.disabled=true;
     const what=btn.dataset.pkmkBuy, result=G.Shop.buy(what);
-    if(!result.ok){toast('Không đủ xu hoặc vật phẩm đã hết hàng.','Insufficient coins or item no longer for sale.');render();return;}
+    if(!result.ok){
+      if(result.reason==='save')toast('Không lưu được giao dịch. Xu và vật phẩm vẫn giữ nguyên.','Could not save purchase. Coins and items were preserved.');
+      else if(result.reason==='full')toast('Túi đã đủ 999 món này. Không trừ xu.','Stack is full (999). No coins charged.');
+      else toast('Không đủ xu hoặc vật phẩm đã hết hàng.','Insufficient coins or item no longer for sale.');
+      G.UI.refreshCoins();render();return;
+    }
     G.UI.refreshCoins();G.Audio.sfx('buy');
     if(sceneActive&&Scene()){
       const icon=what.startsWith('tm:')?'tm':(what==='cap'?'capsule':what==='caph'?'capsuleh':'mint');
@@ -145,7 +150,8 @@ G.KecleonUI=(()=>{
     toast('Đã mua! Vật phẩm được chuyển vào Túi đồ.','Purchased! Your item is in the Bag.');
   });
   $('pkmk-list').querySelectorAll('[data-pkmk-use]').forEach(btn=>btn.onclick=()=>{
-    apply(btn.dataset.pkmkUse);render();
+    if(btn.disabled||!btn.isConnected)return;
+    btn.disabled=true;apply(btn.dataset.pkmkUse);render();
   });
   $('pkmk-list').querySelectorAll('[data-pkmk-pippi-reset]').forEach(btn=>btn.onclick=()=>{
     if(btn.disabled)return;
@@ -170,13 +176,16 @@ G.KecleonUI=(()=>{
     else toast('Không bán được vật phẩm.','Could not sell the item.');
   });
   $('pkmk-list').querySelectorAll('[data-pkmk-tm]').forEach(btn=>btn.onclick=()=>{
-    if(!G.Mons.teach(selected,btn.dataset.pkmkTm))return;
-    G.DB.commit(true);G.Audio.sfx('buy');
+    if(btn.disabled||!btn.isConnected)return;btn.disabled=true;
+    const result=G.Shop.transaction('bag-teach',()=>G.Mons.teach(selected,btn.dataset.pkmkTm));
+    if(!result){toast('Không học được TM. Vật phẩm vẫn được giữ.','Could not teach TM. The item was preserved.');render();return;}
+    G.Audio.sfx('buy');
     toast('Đã học TM vĩnh viễn!','TM move learned permanently!');render();
   });
  }
  function buyBtn(key,cost){
-  return '<button class="btn small gold" data-pkmk-buy="'+esc(key)+'" '+(G.DB.save.coins<cost?'disabled':'')+'>'+price(cost)+'</button>';
+  const full=(key.startsWith('tm:')?G.Shop.tmCount(key.slice(3)):G.Shop.count(key))>=999;
+  return '<button class="btn small gold" data-pkmk-buy="'+esc(key)+'" '+(full||G.DB.guest||G.DB.save.coins<cost?'disabled':'')+'>'+price(cost)+'</button>';
  }
  function shopHtml(){
   let s='<p class="pkmk-lead">'+L(
@@ -215,9 +224,11 @@ G.KecleonUI=(()=>{
    const choices=G.NATURES.filter(n=>n.id!==G.Mons.natureOf(dex).id);
    if(!choices.length)return false;
    const chosen=choices[Math.floor(Math.random()*choices.length)];
-   if(!G.Shop.take(kind))return false;
-   G.Mons.setNature(dex,chosen.id);
-   G.DB.commit(true);G.Audio?.sfx?.('buy');
+   if(!G.Shop.transaction('bag-nature',()=>{
+    if(!G.Shop.take(kind))return false;G.Mons.setNature(dex,chosen.id);
+    return G.Mons.natureOf(dex).id===chosen.id;
+   })){toast('Không lưu được Tính cách. Bạc hà vẫn được giữ.','Could not save Nature. Mint preserved.');return false;}
+   G.Audio?.sfx?.('buy');
    toast('Tính cách ngẫu nhiên: '+natName(chosen),'Random Nature: '+natName(chosen));
    return true;
   }
@@ -229,9 +240,11 @@ G.KecleonUI=(()=>{
       'No alternative Ability was rolled; item was not spent.');
     return false;
    }
-   if(!G.Shop.take(kind))return false;
-   G.Mons.setAbility(dex,slot);
-   G.DB.commit(true);G.Audio?.sfx?.('buy');
+   if(!G.Shop.transaction('bag-ability',()=>{
+    if(!G.Shop.take(kind))return false;G.Mons.setAbility(dex,slot);
+    return G.Mons.abilityOf(dex).slot===slot;
+   })){toast('Không lưu được Đặc tính. Viên nang vẫn được giữ.','Could not save Ability. Capsule preserved.');return false;}
+   G.Audio?.sfx?.('buy');
    toast('Đặc tính mới: '+abilName(G.Mons.abilityOf(dex).id),
     'New Ability: '+abilName(G.Mons.abilityOf(dex).id));
    return true;

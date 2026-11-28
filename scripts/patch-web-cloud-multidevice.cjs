@@ -46,7 +46,7 @@ patch('js/core/db.js',
 // "Already saved" although there is new progress in memory.
 patch('js/ui/ui.js',
  "      const r = await G.DB.saveNow();",
- "      if(G.DB.mode==='cloud' && !G.DB.guest)G.DB.commit(true);\n      const r = await G.DB.saveNow();");
+ "      if(G.DB.mode==='cloud' && !G.DB.guest && G.DB.commit(true)===false){toast(G.I18n?.lang==='vi'?'Không ghi được bản sao trên máy. Hãy xuất save và thử lại.':'Could not write the local save. Export a backup and retry.',6500);return;}\n      const r = await G.DB.saveNow();");
 // Show why a new device has no progress, without changing game state.
 patch('js/game.js',
  "  afterLogin() {\n    G.Audio.music('village');",

@@ -27,6 +27,30 @@ G.Shop=(()=>{
   const DAILY = 8;
 
   const save = () => G.DB.save;
+  let transacting=false;
+  // Native DB.commit is synchronous, including its local cloud-cache write.
+  // Preserve the whole JSON (including currency ledger/updated timestamp),
+  // not just the item count, if the write is rejected or throws.
+  function transaction(kind,change,s=save()){
+    if(transacting||!s||s!==save()||G.DB.guest||typeof G.DB.commit!=='function')return null;
+    let before,guard,token,ok=false;
+    transacting=true;
+    try{
+      guard=globalThis.window?.PKMSVVSaveGuardian;
+      if(guard?.beginTransaction){token=guard.beginTransaction(kind);if(!token)return null;}
+      before=JSON.parse(JSON.stringify(s));
+      const receipt=change(s);
+      if(!receipt||receipt.ok===false)throw Error('No valid transaction');
+      if(G.DB.commit(true)===false)throw Error('Save commit failed');
+      ok=true;return receipt;
+    }catch(_){
+      if(before){for(const key of Object.keys(s))delete s[key];Object.assign(s,before);}
+      return null;
+    }finally{
+      transacting=false;
+      if(token)try{guard.endTransaction(token,ok);}catch(_){}
+    }
+  }
 
   // ---------------- Mochila ----------------
 
@@ -96,36 +120,34 @@ G.Shop=(()=>{
       if(Number(random())<base*multiplier&&Number(s.bag?.[key]||0)<999)found.push(key);
     }
     if(!found.length)return [];
-    const previous=JSON.stringify(s.bag||{});
-    s.bag=s.bag||{};
-    for(const key of found)s.bag[key]=(s.bag[key]||0)+1;
-    try{
-      if(G.DB.commit(true)===false)throw Error('Cannot save dropped items');
+    const result=transaction('enemy-item-drop',draft=>{
+      draft.bag=draft.bag||{};
+      for(const key of found)draft.bag[key]=(draft.bag[key]||0)+1;
       return found;
-    }catch(_){
-      s.bag=JSON.parse(previous);
-      enemy._pkmsvvShopDropCounted=false;
-      return [];
-    }
+    });
+    if(!result)enemy._pkmsvvShopDropCounted=false;
+    return result||[];
   }
 
   // ---------------- comprar ----------------
 
   /** Compra un objeto ('mint'...) o una MT ('tm:flamethrower'). → { ok, error? } */
   function buy(key) {
-    const s = save();
-    if (!s) return { ok: false };
-    const tm = key.startsWith('tm:') ? key.slice(3) : null;
-    if (tm && !dailyTms().includes(tm)) return { ok: false, error: 'Esa MT ya no está a la venta.' };
-    if (!tm && (!ITEMS[key] || ITEMS[key].unavailableInShop)) return { ok: false };
-    const price = tm ? tmPrice(tm) : ITEMS[key].price;
-    if (s.coins < price) return { ok: false, error: 'No tienes Pokémonedas suficientes.' };
-    if(!tm&&(Number(s.bag?.[key])||0)>=999)return {ok:false,error:'Bag stack is full'};
-    s.coins -= price;
-    if (tm) { s.tms = s.tms || {}; s.tms[tm] = Math.min(999, (s.tms[tm] || 0) + 1); }
-    else { s.bag = s.bag || {}; s.bag[key] = Math.min(999, (s.bag[key] || 0) + 1); }
-    G.DB.commit();
-    return { ok: true };
+    const s=save();
+    if(!s||G.DB.guest||typeof key!=='string')return {ok:false,reason:'profile'};
+    const tm=key.startsWith('tm:')?key.slice(3):null;
+    if(tm&&!dailyTms().includes(tm))return {ok:false,reason:'unavailable'};
+    if(!tm&&(!Object.hasOwn(ITEMS,key)||ITEMS[key].unavailableInShop))return {ok:false,reason:'unavailable'};
+    const price=tm?tmPrice(tm):ITEMS[key].price,field=tm?'tms':'bag',id=tm||key;
+    const stock=s[field],qty=stock?.[id]??0;
+    if(!Number.isSafeInteger(price)||price<=0||!Number.isSafeInteger(s.coins)||s.coins<price)return {ok:false,reason:'coins'};
+    if(stock!==undefined&&(!stock||typeof stock!=='object'||Array.isArray(stock)))return {ok:false,reason:'inventory'};
+    if(!Number.isSafeInteger(qty)||qty<0||qty>=999)return {ok:false,reason:'full'};
+    return transaction('shop-buy',draft=>{
+      draft.coins-=price;
+      draft[field]=draft[field]||{};draft[field][id]=qty+1;
+      return {ok:true,key,coins:draft.coins,count:qty+1};
+    })||{ok:false,reason:'save'};
   }
 
   // Selling is an atomic Bag operation, including TM copies. The Hidden
@@ -139,17 +161,12 @@ G.Shop=(()=>{
     const refund=Math.floor((tm?tmPrice(tm):ITEMS[key].price)/2);
     if(!Number.isSafeInteger(s.coins)||s.coins<0||!Number.isSafeInteger(s.coins+refund))
       return {ok:false};
-    const previous={coins:s.coins,count:store[id]};
-    store[id]--;
-    if(!store[id])delete store[id];
-    s.coins+=refund;
-    try{
-      if(G.DB.commit(true)===false)throw Error('Save commit failed');
-      return {ok:true,key,refund,coins:s.coins};
-    }catch(_){
-      s.coins=previous.coins;store[id]=previous.count;
-      return {ok:false};
-    }
+    return transaction('shop-sell',draft=>{
+      const items=tm?draft.tms:draft.bag;
+      items[id]--;if(!items[id])delete items[id];
+      draft.coins+=refund;
+      return {ok:true,key,refund,coins:draft.coins};
+    })||{ok:false,reason:'save'};
   }
-  return { ITEMS, ORDER, DROP_RATE, enemyMultiplier, dropFromEnemy, count, take, tmCount, takeTm, dailyTms, tmPrice, buy, sell, today };
+  return { ITEMS, ORDER, DROP_RATE, enemyMultiplier, dropFromEnemy, count, take, tmCount, takeTm, dailyTms, tmPrice, buy, sell, today, transaction };
 })();

@@ -18,6 +18,28 @@ G.PKMSVVMegaGacha=(()=>{
   return a;
  }
  const balance=s=>Math.max(0,Math.floor(Number(s?.arenaGacha?.points)||0));
+ let transacting=false;
+ // Same synchronous persistence contract as the Shop, but keep the Mega
+ // module usable in isolated native builds without a Kecleon UI.
+ function transact(s,kind,change){
+  if(transacting||!s||s!==G.DB?.save||G.DB?.guest||typeof G.DB?.commit!=='function')return null;
+  let before,guard,token,ok=false;
+  transacting=true;
+  try{
+   guard=globalThis.window?.PKMSVVSaveGuardian;
+   if(guard?.beginTransaction){token=guard.beginTransaction(kind);if(!token)return null;}
+   before=JSON.parse(JSON.stringify(s));
+   const result=change(s);if(!result)throw Error('No transaction');
+   if(G.DB.commit(true)===false)throw Error('Save commit failed');
+   ok=true;return result;
+  }catch(_){
+   if(before){for(const key of Object.keys(s))delete s[key];Object.assign(s,before);}
+   return null;
+  }finally{
+   transacting=false;
+   if(token)try{guard.endTransaction(token,ok);}catch(_){}
+  }
+ }
  const stoneOwned=(save,key)=>{const v=save?.megaStones?.[key];
   return v===true||v===1||!!(v&&typeof v==='object'&&v.unlocked===true);};
  const formCatalog=()=>Array.isArray(G.PKMSVV_MEGA_CATALOG)?G.PKMSVV_MEGA_CATALOG:[];
@@ -29,7 +51,7 @@ G.PKMSVVMegaGacha=(()=>{
   });
  }
  function canPull(save=G.DB?.save){
-  return !!(save?.pkmsvvChapter7Seen&&balance(save)>=COST&&
+  return !!(save?.pkmsvvChapter7Seen&&!G.DB?.guest&&!transacting&&Number.isSafeInteger(balance(save))&&balance(save)>=COST&&
    (pool(save,false).length||pool(save,true).length));
  }
  // Non-legendary Mega stones are common, legendary stones use separate 1.5%
@@ -37,25 +59,27 @@ G.PKMSVVMegaGacha=(()=>{
  function pull(save=G.DB?.save,random=Math.random){
   if(G.PKMSVVSpecialPowerQA?.busy?.()||!canPull(save))return null;
   const ordinary=pool(save,false),rare=pool(save,true);
-  const a=ledger(save);
-  const guaranteed=a.pity>=LEGEND_PITY-1;
-  let special=rare.length>0&&(guaranteed||!ordinary.length||random()<LEGEND_RATE);
-  const choice=special?rare:ordinary;
-  if(!choice.length)return null;
-  const index=Math.min(choice.length-1,Math.floor(Math.max(0,random())*choice.length));
-  const picked=choice[index];if(!picked)return null;
-  a.points-=COST;a.pulls++;
-  a.pity=special?0:Math.min(LEGEND_PITY-1,a.pity+1);
-  const duplicate=stoneOwned(save,picked.stoneKey);
-  const refund=duplicate?(special?200:50):0;
-  save.megaStones=save.megaStones||{};
-  if(!duplicate)save.megaStones[picked.stoneKey]=1;
-  a.points+=refund;
-  // Duplicates refund Arena Points only. Never unlock Pokémon or bypass story.
-  G.DB.commit(true);
-  if(save===G.DB?.save)G.PKMSVVStory?.onMegaUnlocked?.();
-  return {key:picked.key,stoneKey:picked.stoneKey,name:picked.name,
-   stone:picked.stone,legendary:special,duplicate,refund,pity:a.pity,balance:a.points};
+  const result=transact(save,'mega-spin',draft=>{
+   const a=ledger(draft),guaranteed=a.pity>=LEGEND_PITY-1;
+   const rand=()=>{const value=Number(random());if(!Number.isFinite(value)||value<0||value>=1)throw Error('Invalid roll');return value;};
+   const special=rare.length>0&&(guaranteed||!ordinary.length||rand()<LEGEND_RATE);
+   const choice=special?rare:ordinary;
+   if(!choice.length||!Number.isSafeInteger(a.pulls+1))return null;
+   const picked=choice[Math.floor(rand()*choice.length)];if(!picked)return null;
+   const duplicate=stoneOwned(draft,picked.stoneKey),refund=duplicate?(special?200:50):0;
+   if(!Number.isSafeInteger(a.points-COST+refund))return null;
+   a.points-=COST;a.pulls++;a.pity=special?0:Math.min(LEGEND_PITY-1,a.pity+1);
+   if(draft.megaStones!==undefined&&(!draft.megaStones||typeof draft.megaStones!=='object'||Array.isArray(draft.megaStones)))return null;
+   draft.megaStones=draft.megaStones||{};
+   if(!duplicate)draft.megaStones[picked.stoneKey]=1;
+   a.points+=refund;
+   return {key:picked.key,stoneKey:picked.stoneKey,name:picked.name,stone:picked.stone,
+    legendary:special,duplicate,refund,pity:a.pity,balance:a.points};
+  });
+  // UI/story notification must never make a successful persisted spin look
+  // unsuccessful and tempt the player to spend another 100 points.
+  if(result)try{G.PKMSVVStory?.onMegaUnlocked?.();}catch(err){console.warn('[Mega story notification]',err);}
+  return result;
  }
  function grantTournament(save,region,rank,firstTitle){
   if(!save||!region)return 0;
@@ -76,22 +100,18 @@ G.PKMSVVMegaGacha=(()=>{
  // Backfill points for genuine regional achievements from before this currency
  // existed. An idempotent marker prevents any new points on reload/reimport.
  function syncLegacyArena(save=G.DB?.save){
-  if(!save)return 0;
-  const a=ledger(save),book=save.arenas?.pkmChampion;
-  if(!book)return 0;
-  let amount=0;
-  for(const [region,won] of Object.entries(book.trophies||{})){
-   if(won===true&&!a.trophyPaid[region]){
-    a.trophyPaid[region]=true;a.points+=40;amount+=40;
-   }
-  }
-  for(const [region,won] of Object.entries(book.seals||{})){
-   if(won===true&&!a.championPaid[region]){
-    a.championPaid[region]=true;a.points+=100;amount+=100;
-   }
-  }
-  if(amount)G.DB.commit(true);
-  return amount;
+  const book=save?.arenas?.pkmChampion;
+  if(!book||G.DB?.guest||transacting||G.PKMSVVSpecialPowerQA?.busy?.())return 0;
+  const cups=Object.entries(book.trophies||{}).filter(([region,won])=>won===true&&!save.arenaGacha?.trophyPaid?.[region]);
+  const seals=Object.entries(book.seals||{}).filter(([region,won])=>won===true&&!save.arenaGacha?.championPaid?.[region]);
+  if(!cups.length&&!seals.length)return 0;
+  return transact(save,'arena-backfill',draft=>{
+   const a=ledger(draft),amount=cups.length*40+seals.length*100;
+   if(!Number.isSafeInteger(a.points+amount))return null;
+   for(const [region] of cups)a.trophyPaid[region]=true;
+   for(const [region] of seals)a.championPaid[region]=true;
+   a.points+=amount;return amount;
+  })||0;
  }
 
 
@@ -297,7 +317,7 @@ G.PKMSVVMegaGacha=(()=>{
    const r=pull();
    if(!r){
     busy=false;G.Audio?.sfx?.('error');
-    G.UI?.toast?.(tr('Chưa đủ điều kiện hoặc Điểm Arena.','Requirements or Arena Points missing.'));
+    G.UI?.toast?.(tr('Không quay được. Điểm Arena không bị trừ.','Spin failed. Arena Points were not charged.'));
     refresh();return;
    }
    refresh();
