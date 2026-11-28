@@ -867,9 +867,11 @@ if(process.env.PKMSVV_BIG_UPDATE_QA==='1'){
  patch('js/entities/enemy.js',
   '    bossCast(dt, pl) {\n      const ai = this.ai, c = ai.cast;',
   '    bossCast(dt, pl) {\n      const custom=G.PKMSVVCombatTacticsQA?.arenaSkillCast(this,pl,dt);if(custom)return custom;\n      const ai = this.ai, c = ai.cast;');
+ // Earlier integration stages patch the update signature/body prefix.
+ // Anchor to the unique native status-decay line before stun/sleep handling.
  patch('js/entities/enemy.js',
-  '    update(dt, pl) {\n      // Fuera de pantalla',
-  '    update(dt, pl) {\n      G.PKMSVVCombatTacticsQA?.arenaSkillInterrupt(this,pl);\n      // Fuera de pantalla');
+  '      if (this.rd > 0) this.rd *= Math.exp(-dt / RD_TAU);',
+  '      G.PKMSVVCombatTacticsQA?.arenaSkillInterrupt(this,pl);\n      if (this.rd > 0) this.rd *= Math.exp(-dt / RD_TAU);');
  // Only Arena-tagged telegraphs can be cancelled by death/CC/transition.
  // Do not reset player invulnerability for these single-hit new attacks.
  patch('js/systems/hazards.js',
