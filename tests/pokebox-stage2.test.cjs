@@ -358,3 +358,18 @@ test('protected additional ordinary favorite can count once, but neither the ori
  assert.equal(stage2.get(s,normalCopy.id),null);
  assert.equal(stage2.rankMaterials(s,'b1-6-n').credits.length,0);
 });
+
+test('successful native Gacha draft includes the milestone; failed persistence rolls back tickets, clones and the egg together',()=>{
+ const h=setup(),s=h.s;G.Game={state:'ui'};G.PKMSVVBigUpdateQA=undefined;
+ G.DEX_BY[175]={dex:175,rarity:1};G.SPRITE_META={175:{a:{Idle:{},Walk:{}}}};
+ const vm=require('node:vm');vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../src/pkmsvv-big-update-qa.js'),'utf8'),{G,console});
+ s.stats.pulls=600;s.pkmsvvIncubator={serial:0,active:null,eggs:{},hatched:{},gacha:{pulls:99,claimed:[]}};
+ G.Gacha={pull(d,n){if(d.tickets.t1<n)return null;d.tickets.t1-=n;d.stats.pulls+=n;return Array.from({length:n},()=>roll(6));}};
+ stage2.wrappedPull(G.Gacha,G.DB);const before=JSON.stringify(s);h.fail=true;
+ assert.throws(()=>G.Gacha.pull(s,1,1,'t1'),/Persistence failed/);assert.equal(JSON.stringify(s),before);assert.equal(h.writes,0);
+ h.fail=false;assert.equal(G.Gacha.pull(s,1,1,'t1').length,1);
+ assert.equal(h.writes,1);assert.equal(s.tickets.t1,104);assert.equal(s.pkmsvvIncubator.gacha.pulls,100);
+ assert.equal(s.pkmsvvIncubator.eggs['egg-1'].from,'gacha-baby');assert.equal(JSON.parse(h.persisted).pkmsvvIncubator.gacha.claimed[0],'egg-1');
+ assert.equal(s.pkmsvvBox.length,4);assert.equal(G.Gacha.pull(s,1000,1,'t1'),null);
+ G.DB.guest=true;assert.equal(G.Gacha.pull(s,1,1,'t1'),null);assert.equal(s.pkmsvvIncubator.gacha.pulls,100);
+});

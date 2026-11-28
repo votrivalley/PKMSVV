@@ -64,7 +64,19 @@
     claimed.add(k);
    }
   }
-  for(const [k,e] of Object.entries(i.eggs))if(e.prize!==undefined&&!claimed.has(k))conflict();
+  if(i.gacha!==undefined){
+   const p=i.gacha;if(!obj(p)||!Number.isSafeInteger(p.pulls)||p.pulls<0||!Array.isArray(p.claimed)||p.claimed.length>Math.floor(p.pulls/100))conflict();
+   for(const [j,k] of p.claimed.entries()){
+    if(!id(k)||claimed.has(k)||(!own(i.eggs,k)&&!own(i.hatched,k))||
+       (own(i.eggs,k)&&(i.eggs[k].from!=='gacha-baby'||i.eggs[k].gachaMilestone!==(j+1)*100||i.eggs[k].prize!==undefined))||
+       (own(i.hatched,k)&&!babies.includes(Number(i.hatched[k]))))conflict();
+    claimed.add(k);
+   }
+  }
+  for(const [k,e] of Object.entries(i.eggs)){
+   if(e.prize!==undefined&&(!claimed.has(k)||e.from!=='egg-rush-baby'))conflict();
+   if((e.from==='gacha-baby'||e.gachaMilestone!==undefined)&&(!i.gacha?.claimed.includes(k)||e.from!=='gacha-baby'||!babies.includes(Number(e.dex))))conflict();
+  }
  }
  function retains(next,old,merged){
   if(old===undefined)return true;if(next===undefined||next.serial<old.serial||level(next)<level(old))return false;
@@ -72,11 +84,12 @@
    const n=next.prizes?.[k];
    if(!n||n.count!==p.count||p.claimed.some((id,j)=>n.claimed[j]!==id))return false;
   }
+  if(old.gacha&&(!next.gacha||next.gacha.pulls<old.gacha.pulls||old.gacha.claimed.some((id,j)=>next.gacha.claimed[j]!==id)))return false;
   for(const [id,d] of Object.entries(old.hatched))if(Number(next.hatched[id])!==Number(d))return false;
   for(const [id,e] of Object.entries(old.eggs)){
    const n=next.eggs[id];
    if(n){
-    if(Number(n.dex)!==Number(e.dex)||n.from!==e.from||n.region!==e.region||!!n.shiny!==!!e.shiny||goal(n)!==goal(e)||n.prize!==e.prize||n.kills<e.kills)return false;
+    if(Number(n.dex)!==Number(e.dex)||n.from!==e.from||n.region!==e.region||!!n.shiny!==!!e.shiny||goal(n)!==goal(e)||n.prize!==e.prize||n.gachaMilestone!==e.gachaMilestone||n.kills<e.kills)return false;
    }else if(Number(next.hatched[id])!==Number(e.dex)||!merged.owned?.[e.dex]||(e.shiny===true&&!merged.shiny?.[e.dex]))return false;
   }
   return true;

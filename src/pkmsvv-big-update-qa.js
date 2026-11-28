@@ -35,7 +35,9 @@
  const slots=i=>INCUBATOR_LEVELS[levelOf(i)-1]?.slots;
  const activeIds=i=>[...(i.active===null?[]:[i.active]),...(i.extra||[])];
  const prizeKey=(room,serial)=>room+'.'+serial;
- const prizeCount=i=>Object.values(i.prizes||{}).reduce((n,p)=>n+p.count-p.claimed.length,0);
+ const GACHA_EGG_STEP=100;
+ const gachaPending=i=>i.gacha?Math.floor(i.gacha.pulls/GACHA_EGG_STEP)-i.gacha.claimed.length:0;
+ const prizeCount=i=>Object.values(i.prizes||{}).reduce((n,p)=>n+p.count-p.claimed.length,0)+gachaPending(i);
  function setActive(i,ids){
   i.active=ids[0]??null;
   if(ids.length>1)i.extra=ids.slice(1);else delete i.extra;
@@ -64,7 +66,7 @@
  function eggHint(dex){
   if(isEggOnly(dex))return Number(dex)===446?
    L('Chỉ nhận qua ấp trứng thu phục. Có thể tìm trứng Munchlax khi thắng Giải cứu Berry Thường và hạ Munchlax.','Hatch recruitment eggs only. Defeat Munchlax and win Normal Berry Rescue for its egg.'):
-   L('Chỉ nhận qua ấp trứng thu phục: boss vùng, Rift, nhiệm vụ tuần hoặc Tranh Trứng. Không có trong Chiêu mộ.','Hatch recruitment eggs from region bosses, Rift, weekly missions or Egg Rush. Not available in Recruitment.');
+   L('Chỉ nhận qua ấp trứng thu phục: boss vùng, Rift, nhiệm vụ tuần, Tranh Trứng hoặc thưởng mốc Chiêu mộ. Không quay trực tiếp.','Hatch recruitment eggs from region bosses, Rift, weekly missions, Egg Rush or Recruitment milestones. Cannot be pulled directly.');
   const parent=eggEvolutionParent(dex);
   return parent?L('Mở Chiêu mộ khi tự tiến hóa từ ','Unlock Recruitment by evolving from ')+(G.DEX_BY?.[parent]?.name||('#'+parent))+'.':null;
  }
@@ -83,7 +85,7 @@
   for(const [id,e] of Object.entries(raw.eggs)){
    if(!validId(id)||!dexId(e?.dex)||!Number.isInteger(e.kills)||e.kills<0||e.kills>goalFor(e)||own(raw.hatched,id)||
       (e.goal!==undefined&&e.goal!==(tierFor(e.dex)?.goal??GOAL))||
-      (e.shiny!==undefined&&typeof e.shiny!=='boolean')||(['baby-egg','rift-baby','mission-baby','egg-rush-baby'].includes(e.from)&&!isEggOnly(e.dex))||
+      (e.shiny!==undefined&&typeof e.shiny!=='boolean')||(['baby-egg','rift-baby','mission-baby','egg-rush-baby','gacha-baby'].includes(e.from)&&!isEggOnly(e.dex))||
       (e.from==='berry-boss'&&Number(e.dex)!==446))throw Error('Invalid egg record');
   }
   for(const [id,dex] of Object.entries(raw.hatched))if(!validId(id)||!dexId(dex))throw Error('Invalid hatch receipt');
@@ -102,7 +104,20 @@
     claimed.add(id);
    }
   }
-  for(const [id,e] of Object.entries(raw.eggs))if(e.prize!==undefined&&!claimed.has(id))throw Error('Unlinked rank prize');
+  if(raw.gacha!==undefined){
+   const p=raw.gacha;
+   if(!isObj(p)||!Number.isSafeInteger(p.pulls)||p.pulls<0||!Array.isArray(p.claimed)||p.claimed.length>Math.floor(p.pulls/GACHA_EGG_STEP))throw Error('Invalid recruitment milestones');
+   for(const [j,id] of p.claimed.entries()){
+    if(!validId(id)||claimed.has(id)||(!own(raw.eggs,id)&&!own(raw.hatched,id))||
+       (own(raw.eggs,id)&&(raw.eggs[id].from!=='gacha-baby'||raw.eggs[id].gachaMilestone!==(j+1)*GACHA_EGG_STEP||raw.eggs[id].prize!==undefined))||
+       (own(raw.hatched,id)&&!isEggOnly(raw.hatched[id])))throw Error('Invalid recruitment egg receipt');
+    claimed.add(id);
+   }
+  }
+  for(const [id,e] of Object.entries(raw.eggs)){
+   if(e.prize!==undefined&&(!claimed.has(id)||e.from!=='egg-rush-baby'))throw Error('Unlinked rank prize');
+   if((e.from==='gacha-baby'||e.gachaMilestone!==undefined)&&(!raw.gacha?.claimed.includes(id)||e.from!=='gacha-baby'))throw Error('Unlinked recruitment milestone');
+  }
   return raw;
  }
  function competitive(){return !!(G.Coop?.active||G.Royale?.active||G.EggRush?.active||G.Arena?.active||
@@ -386,6 +401,56 @@
   }
   return reward;
  }
+ function redeemGacha(s,i){
+  const reward=[],p=i.gacha;if(!p)return reward;
+  while(gachaPending(i)>0&&Object.keys(i.eggs).length<capacity(i)){
+   const pool=EGG_ONLY.filter(d=>babyEligible(s,d,i));if(!pool.length)break;
+   const dex=pickBaby(s,pool),id=createEgg(i,dex,9,'gacha-baby');if(!id)break;
+   i.eggs[id].gachaMilestone=(p.claimed.length+1)*GACHA_EGG_STEP;p.claimed.push(id);reward.push(id);
+  }
+  return reward;
+ }
+ // Called only from the real PokéBox Gacha draft after native pull and
+ // clone generation, BEFORE the shared persistence transaction.
+ // Old lifetime stats are not retroactive: count only successful new pulls.
+ function recordGachaEggs(before,draft,count){
+  if(before!==save()||draft===before||G.DB?.guest||G.Game?.state!=='ui'||G.Coop?.active||
+     ![1,10,100].includes(count))throw Error('Invalid recruitment reward transaction');
+  const oldPulls=before.stats?.pulls??0,newPulls=draft.stats?.pulls;
+  if(!Number.isSafeInteger(oldPulls)||oldPulls<0||!Number.isSafeInteger(newPulls)||newPulls-oldPulls!==count)
+   throw Error('Invalid native recruitment pull count');
+  const i=copy(incubator(draft));i.gacha=i.gacha||{pulls:0,claimed:[]};
+  if(!Number.isSafeInteger(i.gacha.pulls+count))throw Error('Recruitment counter overflow');
+  const milestones=Math.floor((i.gacha.pulls+count)/GACHA_EGG_STEP)-Math.floor(i.gacha.pulls/GACHA_EGG_STEP);
+  i.gacha.pulls+=count;
+  const reward=milestones?redeemGacha(draft,i):[];
+  draft.pkmsvvIncubator=i;
+  incubator(draft);return {earned:milestones,awarded:reward.length,pending:gachaPending(i)};
+ }
+ function gachaStatus(s=save()){
+  const i=incubator(s),total=i.gacha?.pulls||0;
+  return {total,progress:total%GACHA_EGG_STEP,goal:GACHA_EGG_STEP,pending:gachaPending(i),earned:Math.floor(total/GACHA_EGG_STEP)};
+ }
+ function renderGachaProgress(){
+  if(typeof document==='undefined')return;
+  const anchor=document.getElementById('gacha-pity');if(!anchor)return;
+  let panel=document.getElementById('pkmsvv-gacha-egg-progress');
+  if(!panel){
+   panel=document.createElement('div');panel.id='pkmsvv-gacha-egg-progress';panel.setAttribute('translate','no');panel.className='notranslate';
+   panel.style.cssText='margin:6px 0;padding:8px 10px;border:1px solid #8e8052;border-radius:8px;background:#213949;color:#fff2cf;font-size:clamp(11px,1.5vw,14px);text-align:left';
+   anchor.insertAdjacentElement('afterend',panel);
+  }
+  try{
+   const v=gachaStatus(),label=L('🥚 Thưởng trứng Baby · ','🥚 Baby egg reward · ')+v.progress+'/'+v.goal+
+    (v.pending?' · '+L('Chờ nhận: ','Pending: ')+v.pending:'');
+   let name=panel.querySelector('strong'),bar=panel.querySelector('progress'),hint=panel.querySelector('small');
+   if(!name){name=document.createElement('strong');bar=document.createElement('progress');hint=document.createElement('small');bar.style.cssText='display:block;width:100%;height:8px;margin:5px 0;accent-color:#e9bf54';panel.append(name,bar,hint);}
+   if(name.textContent!==label)name.textContent=label;
+   bar.max=v.goal;bar.value=v.progress;bar.setAttribute('aria-label',label);
+   const note=L('Mỗi 100 lượt Chiêu mộ thành công ở mọi thế hệ. Nhận tại máy ấp; không đổi tỷ lệ Pokémon.','Every 100 successful pulls across all generations. Collect at the incubator; Pokémon odds unchanged.');
+   if(hint.textContent!==note)hint.textContent=note;
+  }catch(_){panel.textContent=L('Dữ liệu thưởng trứng cần kiểm tra.','Egg reward data needs checking.');}
+ }
  function claimPrizes(s=save()){
   return atomic(s,d=>{
    const i=copy(incubator(d)),reward=[];
@@ -393,6 +458,7 @@
     reward.push(...redeemPrize(d,i,key));
     if(Object.keys(i.eggs).length>=capacity(i))break;
    }
+   reward.push(...redeemGacha(d,i));
    if(!reward.length)throw Error(L('Chưa có chỗ trống hoặc chưa có Baby phù hợp.','No free slot or eligible Baby Pokémon.'));
    d.pkmsvvIncubator=i;return {awarded:reward.length,pending:prizeCount(i)};
   });
@@ -536,7 +602,7 @@
   return atomic(s,d=>{
    const i=copy(incubator(d)),e=i.eggs[id];
    if(!e||e.kills!==goalFor(e))throw Error(L('Trứng chưa sẵn sàng.','Egg is not ready.'));
-   const dex=Number(e.dex),special=isEggOnly(dex)&&(['baby-egg','rift-baby','berry-boss','mission-baby','egg-rush-baby'].includes(e.from));
+   const dex=Number(e.dex),special=isEggOnly(dex)&&(['baby-egg','rift-baby','berry-boss','mission-baby','egg-rush-baby','gacha-baby'].includes(e.from));
    const shiny=e.shiny===true;
    // Preserve pre-update queued region eggs even if their species is now gated.
    // New special egg records may legitimately reveal an unseen baby.
@@ -587,7 +653,7 @@
   if(!fromLab)return;
   const panel=document.createElement('section');panel.dataset.recruitEggPanel='1';panel.style.cssText='padding:14px;margin:10px 0;border:1px solid #a89661;border-radius:9px;background:#213949;color:#fff2cf;overflow-wrap:anywhere';
   const heading=document.createElement('strong');heading.textContent=L('Trứng thu phục · Máy ấp','Recruitment eggs · Incubator');panel.append(heading);
-  const info=document.createElement('p');info.textContent=L('Boss vùng, Rift, nhiệm vụ tuần, Giải cứu Berry và Tranh Trứng cho trứng thu phục. Hạ quái trong Khám phá hoặc Sống Sót Co-op để ấp; các ô đang ấp cùng tiến độ. Nâng máy tại Xây dựng.','Earn recruitment eggs from region bosses, Rift, weekly missions, Berry Rescue and Egg Rush. Defeat enemies in Explore or Survival Co-op; selected slots progress in parallel. Upgrade in Build Mode.');panel.append(info);
+  const info=document.createElement('p');info.textContent=L('Boss vùng, Rift, nhiệm vụ tuần, Giải cứu Berry, Tranh Trứng và mỗi 100 lượt Chiêu mộ cho trứng thu phục. Hạ quái trong Khám phá hoặc Sống Sót Co-op để ấp; các ô đang ấp cùng tiến độ. Nâng máy tại Xây dựng.','Earn recruitment eggs from region bosses, Rift, weekly missions, Berry Rescue, Egg Rush and every 100 successful Recruitment pulls. Defeat enemies in Explore or Survival Co-op; selected slots progress in parallel. Upgrade in Build Mode.');panel.append(info);
   const say=msg=>G.UI?.toast?.(msg,3000);
   try{
    const i=incubator(save()),entries=Object.entries(i.eggs),selected=activeIds(i),pending=prizeCount(i);
@@ -634,5 +700,5 @@
    row.append(label,desc,btn);frame.append(row);
   }catch(err){console.warn('[Incubator upgrade] preserved',err);}
  }
- G.PKMSVVBigUpdateQA=Object.freeze({LEVELS,GOAL,CAP,EGG_ONLY,SHINY_RATE,INCUBATOR_LEVELS,BABY_TIERS,goalFor,capacity,slots,activeIds,prizeCount,pickBaby,pickReward,claimPrizes,upgradeIncubator,renderIncubatorUpgrade,isEggOnly,eggEvolutionParent,eggDiscovered,eggGachaPolicy,eggHint,markEggEvolution,commitBerryEgg,registerRift,markRiftWin,summary,incubator,begin,beginCoop,observeCoopHost,coopFrameTag,observeCoopFrame,finalizeCoopHost,acceptCoopTerminal,claimMission,markBadge,settle,activateEgg,hatch,applyMasteryPortrait,renderMastery,renderIncubator});
+ G.PKMSVVBigUpdateQA=Object.freeze({LEVELS,GOAL,CAP,EGG_ONLY,SHINY_RATE,INCUBATOR_LEVELS,BABY_TIERS,goalFor,capacity,slots,activeIds,prizeCount,pickBaby,pickReward,gachaStatus,recordGachaEggs,renderGachaProgress,claimPrizes,upgradeIncubator,renderIncubatorUpgrade,isEggOnly,eggEvolutionParent,eggDiscovered,eggGachaPolicy,eggHint,markEggEvolution,commitBerryEgg,registerRift,markRiftWin,summary,incubator,begin,beginCoop,observeCoopHost,coopFrameTag,observeCoopFrame,finalizeCoopHost,acceptCoopTerminal,claimMission,markBadge,settle,activateEgg,hatch,applyMasteryPortrait,renderMastery,renderIncubator});
 })(typeof globalThis==='object'?globalThis:this);

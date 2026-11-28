@@ -211,6 +211,8 @@
   if(gacha._pkmbxStage2Wrapped)return true;
   const original=gacha.pull;
   gacha.pull=function(s,n,gen,use){
+   const progression=typeof G==='undefined'?null:G.PKMSVVBigUpdateQA;
+   if(progression&&db?.guest&&db?.save===s)return null;
    if(db?.save!==s||db?.guest)return original.apply(this,arguments);
    const migrated=valid(s);
    if(!migrated&&s?.pkmsvvBoxSchema!==undefined)
@@ -221,11 +223,19 @@
    if(!result)return result; // Failed purchase: no migration and no tickets lost.
    if(!Array.isArray(result)||result.length!==n)throw Error('Gacha result mismatch; no tickets spent');
    applyRolls(draft,result);
+   const eggReward=progression?.recordGachaEggs?.(s,draft,result.length);
    // Back up BEFORE the only persistence mutation; inability to back up
    // aborts this new purchase without changing the original save.
    if(!migrated)safeguardLegacyGacha(s);
    // Atomic receipt: tickets, pity, owned/shiny, and new individual clones.
    commitDraft(s,draft);
+   // Presentation cannot turn a committed purchase into a false failure.
+   try{
+    progression?.renderGachaProgress?.();
+    if(eggReward?.earned)G.UI?.toast?.(G.I18n?.lang==='en'?
+     'Baby egg reward: '+eggReward.earned+' · Pending: '+eggReward.pending:
+     'Thưởng trứng Baby: '+eggReward.earned+' · Chờ nhận: '+eggReward.pending,3500);
+   }catch(err){console.warn('[Recruitment egg UI]',err);}
    return result;
   };
   gacha._pkmbxStage2Wrapped=true;

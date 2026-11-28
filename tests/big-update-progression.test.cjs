@@ -287,3 +287,22 @@ test('tier weights and source odds do not invent unavailable species or replace 
  assert.equal(api.pickReward(s,[19,175],.25,()=>.249),175);assert.equal(api.pickReward(s,[19,175],.25,()=>.25),19);
  assert.equal(api.pickReward(s,[19,175],.4,()=>.399),175);assert.equal(api.pickReward(s,[19,175],.4,()=>.4),19);
 });
+
+test('Recruitment milestone counts only new successful rolls, keeps overflow and never changes native prizes',()=>{
+ const {G,s,api}=setup();G.Game.state='ui';s.stats.pulls=999;
+ G.DEX_BY[175]={rarity:1};G.SPRITE_META[175]={a:{Idle:{},Walk:{}}};
+ G.DEX_BY[447]={rarity:1};G.SPRITE_META[447]={a:{Idle:{},Walk:{}}};
+ const record=count=>{const d=JSON.parse(JSON.stringify(s));d.stats.pulls+=count;const r=api.recordGachaEggs(s,d,count);Object.assign(s,d);return r;};
+ assert.equal(api.gachaStatus().total,0);assert.equal(record(10).earned,0);
+ for(let j=0;j<9;j++)record(10);
+ assert.equal(api.gachaStatus().total,100);assert.equal(api.gachaStatus().earned,1);assert.equal(api.gachaStatus().pending,0);
+ const i=s.pkmsvvIncubator,first=i.eggs['egg-2'];assert.equal(first.from,'gacha-baby');assert.equal(first.goal,1000);assert.equal(first.gachaMilestone,100);
+ for(let id=3;id<=6;id++)i.eggs['egg-'+id]={dex:172,kills:0,region:9,from:'baby-egg'};i.serial=6;
+ const reward=record(100);assert.equal(reward.earned,1);assert.equal(reward.pending,1);assert.equal(reward.awarded,0);
+ assert.equal(api.prizeCount(s.pkmsvvIncubator),1);
+ const d=JSON.parse(JSON.stringify(s));assert.throws(()=>api.recordGachaEggs(s,d,100),/pull count/);
+ s.pkmsvvIncubator.eggs['egg-1'].kills=500;api.hatch('egg-1');
+ const before=JSON.stringify(s);G.DB.commit=()=>false;assert.throws(()=>api.claimPrizes());assert.equal(JSON.stringify(s),before);
+ G.DB.commit=()=>true;assert.equal(api.claimPrizes().awarded,1);assert.equal(api.gachaStatus().pending,0);
+ assert.equal(s.pkmsvvIncubator.eggs['egg-7'].gachaMilestone,200);assert.throws(()=>api.claimPrizes());
+});

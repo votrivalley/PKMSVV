@@ -25,7 +25,10 @@ const OUT=path.resolve('dist/big-update-progression-qa');fs.mkdirSync(OUT,{recur
    G.MenuUI.open();if(!G.PKMSVVQuickRegion.choose(0))throw Error('Cannot enter Explore');
    window.__progressKeep=setInterval(()=>{[...document.querySelectorAll('.pkmsvv-berry-overlay button')].find(x=>/Không dùng Berry|No Berry/.test(x.textContent))?.click();
     const p=G.Game?.player;if(p&&!p.dead)p.invuln=Math.max(p.invuln||0,2000);
-    if(G.Game?.state==='levelup'&&G.UI?.isOpen?.('scr-levelup'))G.RunUI.pick(0);},100);
+    if(G.Game?.state==='levelup'&&G.UI?.isOpen?.('scr-levelup'))G.RunUI.pick(0);
+    if(G.UI?.isOpen?.('scr-bond'))G.RunUI.pickBond(0);
+    if(G.UI?.isOpen?.('scr-item'))document.querySelector('#item-cards .pkmsvv-held-action.is-old')?.click();
+   },100);
   });
   await page.waitForFunction(()=>G.Game?.state==='playing',null,{timeout:23000});
   await page.evaluate(()=>{
@@ -48,7 +51,14 @@ const OUT=path.resolve('dist/big-update-progression-qa');fs.mkdirSync(OUT,{recur
    return result;
   });
   await page.waitForFunction(()=>G.Rift.arena?.phase==='won',null,{timeout:12000});
-  await page.waitForFunction(()=>!G.Rift.inArena&&G.Game.state==='playing',null,{timeout:20000});
+  await page.waitForFunction(()=>!G.Rift.inArena,null,{timeout:25000});
+  // Rift exit legitimately offers a Bond fusion and can pause in 'choice'.
+  // Resolve the native cards through the existing input path, not by
+  // forging Game.state or bypassing the reward hook.
+  await page.waitForFunction(()=>G.Game.state==='playing',null,{timeout:20000}).catch(async err=>{
+   const detail=await page.evaluate(()=>({state:G.Game.state,rift:G.Rift.inArena,bond:G.UI.isOpen('scr-bond'),level:G.UI.isOpen('scr-levelup'),item:G.UI.isOpen('scr-item')}));
+   throw Error('Rift exit input blocked: '+JSON.stringify(detail)+' '+err.message);
+  });
   await page.evaluate(()=>{clearInterval(window.__progressKeep);G.Game.quit();});
   await page.waitForFunction(()=>G.DB.save.pkmsvvMastery?.[25]>0&&G.DB.save.pkmsvvIncubator?.eggs?.['egg-1']?.kills===500,null,{timeout:12000});
   const progress=await page.evaluate(()=>({mastery:G.DB.save.pkmsvvMastery[25],egg:G.DB.save.pkmsvvIncubator.eggs['egg-1'].kills,state:G.Game.state,rift:Object.values(G.DB.save.pkmsvvIncubator.eggs).find(e=>['rift','rift-baby'].includes(e.from))}));

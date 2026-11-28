@@ -50,6 +50,7 @@
     if(hint.textContent!==translation)hint.textContent=translation;
     relocateRequirement(gacha,hint);
    }
+   G.PKMSVVBigUpdateQA?.renderGachaProgress?.();
    for(const root of roots()){
     const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
     const nodes=[];

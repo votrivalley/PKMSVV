@@ -60,3 +60,14 @@ test('paid incubator upgrade cannot merge with an older higher wallet on a newer
  assert.throws(()=>apply({},a,b),/PROGRESSION_CONFLICT/);
  assert.equal(apply({},b,a).pkmsvvIncubator.level,2);
 });
+
+test('Recruitment milestone counters and exact redeemed IDs survive stale merge and reject alternate claims',()=>{
+ const a=inc(10);a.gacha={pulls:199,claimed:[]};
+ const b=JSON.parse(JSON.stringify(a));b.gacha={pulls:200,claimed:['egg-2']};b.serial=2;
+ b.eggs['egg-2']={...egg(0,447),goal:1000,from:'gacha-baby',gachaMilestone:100};
+ assert.deepEqual(apply({}, {pkmsvvIncubator:a},{pkmsvvIncubator:b}).pkmsvvIncubator,b);
+ const bad=JSON.parse(JSON.stringify(b));bad.eggs['egg-2'].gachaMilestone=200;
+ assert.throws(()=>apply({}, {pkmsvvIncubator:bad},{}),/PROGRESSION_CONFLICT/);
+ const different=JSON.parse(JSON.stringify(b));different.eggs['egg-2'].dex=175;
+ assert.throws(()=>apply({}, {pkmsvvIncubator:b},{pkmsvvIncubator:different}),/PROGRESSION_CONFLICT/);
+});

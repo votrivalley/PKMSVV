@@ -50,11 +50,21 @@
     else if(!dex||!b.owned?.[dex])return true;
    }
   }
+  if(old.gacha||next.gacha){
+   const p=old.gacha||{pulls:0,claimed:[]},n=next.gacha;
+   if(!record(n)||!Number.isSafeInteger(n.pulls)||n.pulls<p.pulls||!Array.isArray(n.claimed)||!Array.isArray(p.claimed)||
+      n.claimed.length>Math.floor(n.pulls/100)||new Set(n.claimed).size!==n.claimed.length||p.claimed.some((id,j)=>n.claimed[j]!==id))return true;
+   for(const [j,id] of n.claimed.entries()){
+    const e=next.eggs?.[id],dex=next.hatched?.[id];
+    if(e){if(e.from!=='gacha-baby'||e.gachaMilestone!==(j+1)*100||e.prize!==undefined)return true;}
+    else if(!dex||!b.owned?.[dex])return true;
+   }
+  }
   for(const id of keys(old.hatched))if(Number(next.hatched?.[id])!==Number(old.hatched[id]))return true;
   for(const id of keys(old.eggs)){
    const prev=old.eggs[id],current=next.eggs?.[id];
    if(current){if(Number(current.dex)!==Number(prev.dex)||Number(current.kills||0)<Number(prev.kills||0)||
-    current.from!==prev.from||current.region!==prev.region||!!current.shiny!==!!prev.shiny||(current.goal??500)!==(prev.goal??500)||current.prize!==prev.prize)return true;}
+    current.from!==prev.from||current.region!==prev.region||!!current.shiny!==!!prev.shiny||(current.goal??500)!==(prev.goal??500)||current.prize!==prev.prize||current.gachaMilestone!==prev.gachaMilestone)return true;}
    else if(Number(next.hatched?.[id])!==Number(prev.dex)||!b.owned?.[prev.dex]||(prev.shiny===true&&!b.shiny?.[prev.dex]))return true;
   }
   return false;

@@ -129,3 +129,12 @@ test('Guardian permits prize redemption, but rejects lost entitlement, shortened
   const bad=structuredClone(next);mutate(bad);assert.equal(g.regress(JSON.stringify(next),JSON.stringify(bad)),true);
  }
 });
+
+test('Guardian preserves earned recruitment egg counter and prevents removal of claim history',()=>{
+ const original=save();original.pkmsvvIncubator={serial:1,active:null,eggs:{'egg-1':{dex:175,kills:0,goal:1000,region:9,from:'gacha-baby',gachaMilestone:100}},hatched:{},gacha:{pulls:200,claimed:['egg-1']}};
+ const g=run(original).guardian,next=structuredClone(original);
+ next.pkmsvvIncubator.gacha.pulls=201;assert.equal(g.regress(JSON.stringify(original),JSON.stringify(next)),false);
+ for(const change of [i=>delete i.gacha,i=>{i.gacha.pulls=199},i=>{i.gacha.claimed=[]},i=>{i.eggs['egg-1'].gachaMilestone=200}]){
+  const bad=structuredClone(original);change(bad.pkmsvvIncubator);assert.equal(g.regress(JSON.stringify(original),JSON.stringify(bad)),true);
+ }
+});
