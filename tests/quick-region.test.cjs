@@ -46,7 +46,7 @@ function harness(options={}){
   PKMSVVChampionArena:{active:false,
    regionizeBag(bag,index){return bag.map(def=>({...def,dex:index===0?12:150+index}))}}
  };
- vm.runInNewContext(source,{G,document,console,Math});
+ vm.runInNewContext(source,{G,document,console,Math,...(options.deferVictory?{setTimeout:fn=>options.deferVictory.push(fn)}:{})});
  return {G,document,save,play,nodes,calls,records,alive,
   completeStart(){deferredStart?.();},
   get started(){return started}};
@@ -941,4 +941,14 @@ test('Rift legendary keeps its actual Dex across constructor and manager, region
  G.Game.st.time=900;q.updateRegionBoss();assert.equal(q.regionalBoss,null);
  G.Rift.inArena=false;G.Rift.arena=null;q.updateRegionBoss();assert.ok(q.regionalBoss);
  const outside=new G.Enemy({dex:384,hp:3000},0,0,{hp:1},true);assert.notEqual(outside.dex,384);
+});
+
+test('final victory retries after a same-frame native choice instead of getting stranded',()=>{
+ const pending=[],h=harness({quitEndsOver:true,deferVictory:pending}),q=h.G.PKMSVVQuickRegion;
+ h.G.DEX_BY[150]={dex:150,name:'Mewtwo',rarity:5};h.save.arenas.pkmChampion.seals={};
+ assert.equal(q.choose(0),true);h.G.Game.st.time=900;q.updateRegionBoss();q.regionalBoss.dead=true;q.regionalBoss.hp=0;q.updateRegionBoss();
+ h.G.Game.st.time=1800;q.updateRegionBoss();q.finalBoss.dead=true;q.finalBoss.hp=0;q.updateRegionBoss();
+ assert.equal(pending.length,1);h.G.Game.state='choice';pending.shift()();assert.equal(q.active,true);
+ h.G.Game.state='playing';q.updateRegionBoss();assert.equal(pending.length,1);pending.shift()();
+ assert.equal(h.G.Game.state,'over');assert.equal(q.active,false);
 });

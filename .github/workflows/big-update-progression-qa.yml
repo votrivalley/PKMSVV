@@ -95,25 +95,33 @@ jobs:
           npm install --no-audit --no-fund
       - name: Unit progression and existing save protection
         run: node --test tests/big-update-progression.test.cjs tests/save-guardian-regression.test.cjs tests/web-save-guardian-v2.test.cjs tests/special-power-qa.test.cjs tests/berry-rescue.test.cjs tests/dex-defeats-qa.test.cjs tests/p0-transactions.test.cjs tests/progression-merge.test.cjs tests/egg-rush-hidden-score.test.cjs tests/egg-rush-shiny.test.cjs tests/support-expansion.test.cjs tests/pokebox-stage2.test.cjs tests/eternamax.test.cjs
-      - name: Rift regional identity regression
-        run: node --test --test-name-pattern="Rift legendary keeps" tests/quick-region.test.cjs
+      - name: Rift identity and final victory regressions
+        run: node --test --test-name-pattern="Rift legendary keeps|final victory retries" tests/quick-region.test.cjs
       - name: Fetch required existing Clefairy assets
         run: node scripts/fetch-pippi-pmd.cjs && node scripts/build-pippi-portrait-atlas.cjs
       - name: Compile real offline game
+        id: compile
         run: npm run prepare:lan
       - name: Native support inventory and Jirachi timed buffs
+        if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
         run: timeout 90s node tests/support-expansion-browser.cjs
       - name: Native Shop and Mega purchase failure, stale tab and reload
+        if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
         run: timeout 100s node tests/p0-transactions-browser.cjs
       - name: Native Recruitment 100 pulls, atomic failure and prize overflow
+        if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
         run: timeout 100s node tests/recruitment-egg-browser.cjs
       - name: Native Galar 15m and Eternamax 30m real two-phase combat
+        if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
         run: timeout 100s node tests/eternamax-browser.cjs
       - name: Native Explore kill, result settlement, research lab hatch, compiled roster
+        if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
         run: timeout 220s node tests/big-update-progression-browser.cjs
       - name: Native Egg Rush four-slot rank prizes, result reveal and reload
+        if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
         run: timeout 210s node tests/egg-rush-rank-prize-browser.cjs
       - name: Real two-client Wi-Fi survival progression and weekly mission
+        if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
         run: timeout 220s node tests/big-update-progression-coop-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()

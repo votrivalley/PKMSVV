@@ -362,9 +362,12 @@
    (G.PKMSVVEternamaxQA?.armed?.(run.finalBoss)&&!G.PKMSVVEternamaxQA.completed(run.finalBoss)))return false;
   run.victoryScheduled=true;
   const done=()=>{
-   if(current!==run||G.Game?.state!=='playing')return;
+   if(current!==run)return;
+   // A native item/level-up choice may appear in the same frame as death.
+   // Do not permanently consume the scheduled victory while paused.
+   if(G.Game?.state!=='playing'){run.victoryScheduled=false;return;}
    try{G.Game?.quit?.();}
-   catch(error){console.warn('[Explore] Victory transition failed',error);return;}
+   catch(error){run.victoryScheduled=false;console.warn('[Explore] Victory transition failed',error);return;}
    G.UI?.toast?.(tr('🏆 HOÀN THÀNH VÙNG '+NAMES[run.index]+'!',
     '🏆 '+NAMES[run.index]+' REGION COMPLETED!'),5200);
   };

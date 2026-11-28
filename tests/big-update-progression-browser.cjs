@@ -29,8 +29,7 @@ const OUT=path.resolve('dist/big-update-progression-qa');fs.mkdirSync(OUT,{recur
     if(G.UI?.isOpen?.('scr-bond'))G.RunUI.pickBond(0);
     if(G.UI?.isOpen?.('scr-item'))(document.querySelector('#item-cards .pkmsvv-held-action.is-old')||document.querySelector('#item-cards .card'))?.click();
     if(document.querySelector('#pkmsvv-forget-skill'))G.PKMSVVForgetSkill?.selectSlot?.(0);
-    const evo=document.querySelector('.pkmsvv-evo:not([hidden]) [data-evo-choice]');
-    if(evo&&!evo.disabled)evo.click();
+    document.querySelector('.pkmsvv-evo:not([hidden]) .pkmsvv-evo-skip')?.click();
    },100);
   });
   await page.waitForFunction(()=>G.Game?.state==='playing',null,{timeout:23000});

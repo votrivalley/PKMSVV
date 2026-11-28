@@ -21,14 +21,23 @@ const {chromium}=require('playwright'),{startServer}=require('../lan-server/serv
    window.__keep=setInterval(()=>{[...document.querySelectorAll('.pkmsvv-berry-overlay button')].find(x=>/Không dùng Berry|No Berry/.test(x.textContent))?.click();
     if(G.Game.player)G.Game.player.invuln=2000;if(G.UI.isOpen('scr-levelup'))G.RunUI.pick(0);
     if(G.UI.isOpen('scr-item'))(document.querySelector('#item-cards .pkmsvv-held-action.is-old')||document.querySelector('#item-cards .card'))?.click();
-    if(G.UI.isOpen('scr-bond'))G.RunUI.pickBond(0);},100);
+    if(G.UI.isOpen('scr-bond'))G.RunUI.pickBond(0);
+    if(G.PKMSVVForgetSkill?.current?.())G.PKMSVVForgetSkill.selectSlot(0);
+    document.querySelector('.pkmsvv-evo:not([hidden]) .pkmsvv-evo-skip')?.click();
+   },100);
   });
   await page.waitForFunction(()=>G.Game.state==='playing'&&G.PKMSVVQuickRegion.selectedRegion===7,null,{timeout:28000});
   await page.evaluate(()=>{G.Game.debugTime(902);G.PKMSVVQuickRegion.updateRegionBoss();});
   await page.waitForFunction(()=>!!G.PKMSVVQuickRegion.regionalBoss,null,{timeout:5000});
-  await page.evaluate(()=>{const b=G.PKMSVVQuickRegion.regionalBoss;b.hurt(b.hp+b.shield+10);});
-  await page.waitForFunction(()=>G.DB.save.pkmsvvExploreSeals.Galar===true,null,{timeout:10000});
-  await page.waitForFunction(()=>G.Game.state==='playing');await page.evaluate(()=>{G.Game.debugTime(1803);G.PKMSVVQuickRegion.updateRegionBoss();});
+  // Native death/manager/badge flow, with only the QA clock advanced
+  // synchronously. Do not allow the skipped 15 minutes of spawner/XP
+  // progression to accumulate a huge unrelated item/level-up queue.
+  await page.evaluate(()=>{
+   const b=G.PKMSVVQuickRegion.regionalBoss;b.hurt(b.hp+b.shield+10);
+   G.EnemyMgr.update(.016,G.Game.player);
+   if(!G.DB.save.pkmsvvExploreSeals.Galar)throw Error('15-minute badge not committed');
+   G.Game.debugTime(1803);G.PKMSVVQuickRegion.updateRegionBoss();
+  });
   await page.waitForFunction(()=>!!G.PKMSVVQuickRegion.finalBoss,null,{timeout:8000});
   const phase1=await page.evaluate(()=>{
    const b=G.PKMSVVQuickRegion.finalBoss;window.__boss=b;const p=G.Game.player;p.x=b.x+210;p.y=b.y;
@@ -42,7 +51,9 @@ const {chromium}=require('playwright'),{startServer}=require('../lan-server/serv
   });
   assert.equal(phase2.id,phase1.id);assert.equal(phase2.sprite,90890);assert.equal(phase2.hp,88000);assert.equal(phase2.dead,false);assert.equal(phase2.bosses,phase1.bosses);assert.equal(phase2.phase,2);
   const out=path.resolve('dist/big-update-progression-qa');fs.mkdirSync(out,{recursive:true});
-  await page.waitForFunction(()=>G.PKMSVVEternamaxQA.status(window.__boss)?.lock===0,null,{timeout:12000});
+  await page.waitForFunction(()=>G.PKMSVVEternamaxQA.status(window.__boss)?.lock===0,null,{timeout:12000}).catch(async err=>{
+   throw Error('Eternamax transition blocked: '+JSON.stringify(await page.evaluate(()=>({state:G.Game.state,t:G.Game.st.time,status:G.PKMSVVEternamaxQA.status(window.__boss),screens:[...document.querySelectorAll('.scr:not(.hidden)')].filter(x=>x.getClientRects().length).map(x=>[x.id,x.className,x.textContent.slice(0,180)])})))+' '+err.message);
+  });
   const attack=await page.evaluate(()=>{
    const b=window.__boss,p=G.Game.player;b.bossInit();b.bossStart('beam',p);
    return G.Hazards.all.filter(h=>h.pkmsvvEternamaxOwner===b.id&&h.kind==='beam').map(h=>({w:h.w,delay:h.delay,dmg:h.dmg,type:h.type}));
