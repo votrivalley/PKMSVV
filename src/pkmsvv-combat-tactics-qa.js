@@ -120,6 +120,75 @@
   }
   return null;
  }
+ // Arena enemies use the native boss controller. Only override its idle
+ // locomotion when an existing, approaching player projectile threatens it.
+ // No cast cancellation, extra speed, teleport, damage or stat adjustment.
+ const arenaFootworkState=new WeakMap();
+ function arenaDuel(e,p){
+  if(!alive(e)||!alive(p)||e.remote||e.friendly||G.Coop?.active||G.Game?.state!=='playing')return false;
+  const solo=G.PKMSVVArenaSolo,champ=G.PKMSVVChampionArena;
+  return !!((e.pkmsvvArenaSolo&&solo?.active&&solo.stage==='fight')||
+   (e.pkmsvvChampion&&!e._pkmsvvSkyBoss&&champ?.active&&champ.stage==='fight'));
+ }
+ function projectileClearance(e,shot,vx,vy,horizon){
+  const x=shot.x-e.x,y=shot.y-(typeof e.cy==='function'?e.cy():e.y),dx=shot.vx-vx,dy=shot.vy-vy;
+  const den=dx*dx+dy*dy,t=den>0?Math.max(0,Math.min(horizon,-(x*dx+y*dy)/den)):0;
+  return {margin:Math.hypot(x+dx*t,y+dy*t)-(Math.max(0,e.r||10)+Math.max(0,shot.r||5)+5),t};
+ }
+ function arenaFootwork(e,p,spd,vx,vy,dt){
+  if(!arenaDuel(e,p))return null;
+  if(![spd,vx,vy,dt].every(Number.isFinite)||dt<=0)return null;
+  let s=arenaFootworkState.get(e);
+  if(!s){s={hold:0,wait:0,axis:null};arenaFootworkState.set(e,s);}
+  s.wait=Math.max(0,s.wait-dt);s.hold=Math.max(0,s.hold-dt);
+  if(e.ai?.cast||e.stunT>0||e.sleepT>0||e.jump||e._pkmsvvMegaTransition>0){
+   s.hold=0;s.axis=null;return null;
+  }
+  const speed=Math.min(spd,Math.hypot(vx,vy));
+  if(speed<=0||typeof G.World?.isFree!=='function')return null;
+  const safe=(ax,ay,seconds)=>{
+   const travel=speed*seconds,n=Math.max(1,Math.ceil(travel/10));
+   for(let i=1;i<=n;i++)if(!G.World.isFree(e.x+ax*travel*i/n,e.y+ay*travel*i/n,(e.r||10)+2,false))return false;
+   return true;
+  };
+  if(s.hold>0&&s.axis){
+   if(safe(...s.axis,Math.min(.12,s.hold)))return s.axis.map(a=>a*speed);
+   s.hold=0;s.axis=null;
+  }
+  if(s.wait>0)return null;
+  s.wait=.18;
+  const threats=[];
+  for(const shot of G.Projectiles?.all?.()||[]){
+   if(!shot?.friendly||shot.orb||shot.boom||shot.homing>0||shot.visualOnly||shot.dmg<=0||
+      shot.hits?.has?.(e.id)||![shot.x,shot.y,shot.vx,shot.vy,shot.life,shot.t].every(Number.isFinite))continue;
+   const horizon=Math.min(.42,shot.life-shot.t);
+   if(horizon<=.08||sq(e,shot)>380**2||Math.hypot(shot.vx,shot.vy)<30)continue;
+   const initial=projectileClearance(e,shot,vx,vy,horizon);
+   // Already passed, moving away, or far enough even on the native path.
+   if(initial.t<.06||initial.margin>7)continue;
+   threats.push({shot,horizon,initial});
+  }
+  threats.sort((a,b)=>a.initial.t-b.initial.t);
+  const nearby=threats.slice(0,12);
+  if(!nearby.length)return null;
+  const baseline=Math.min(...nearby.map(t=>t.initial.margin));
+  const dir=Math.atan2(vy,vx),distance=Math.sqrt(sq(e,p));
+  let best=null,bestScore=-Infinity;
+  for(const off of [Math.PI/2,-Math.PI/2,Math.PI/4,-Math.PI/4,3*Math.PI/4,-3*Math.PI/4,Math.PI]){
+   const a=dir+off,ax=Math.cos(a),ay=Math.sin(a);
+   if(!safe(ax,ay,.38))continue;
+   const end={x:e.x+ax*speed*.38,y:e.y+ay*speed*.38};
+   // Avoid turning a duel into endless kiting.
+   if(Math.sqrt(sq(end,p))>Math.max(330,distance+12))continue;
+   const clearance=Math.min(...nearby.map(t=>projectileClearance(e,t.shot,ax*speed,ay*speed,t.horizon).margin));
+   if(clearance<baseline+8)continue;
+   const score=Math.min(50,clearance)-Math.max(0,Math.sqrt(sq(end,p))-distance)*.16-Math.abs(off)*2;
+   if(score>bestScore){bestScore=score;best=[ax,ay];}
+  }
+  if(!best)return null;
+  s.axis=best;s.hold=.36;s.wait=1.05;
+  return best.map(a=>a*speed);
+ }
  function status(pl){
   if(!pl||pl.dead||!['playing','held'].includes(G.Game?.state))return [];
   const rows=[],rest=Number(pl.__pkmsvv3dsSupport?.rest)||0;
@@ -141,5 +210,5 @@
   }
   ctx.restore();return x;
  }
- G.PKMSVVCombatTacticsQA=Object.freeze({alliedMode,assignRescuers,directPath,margin,needsEvade,evade,rangedGoal,berryGoal,rangedFootwork,status,drawStatus});
+ G.PKMSVVCombatTacticsQA=Object.freeze({alliedMode,assignRescuers,directPath,margin,needsEvade,evade,rangedGoal,berryGoal,rangedFootwork,arenaFootwork,status,drawStatus});
 })();

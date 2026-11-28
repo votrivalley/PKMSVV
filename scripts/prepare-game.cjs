@@ -851,6 +851,11 @@ if(process.env.PKMSVV_BIG_UPDATE_QA==='1'){
  patch('js/entities/enemy.js',
   '        this.shotCd -= dt;\n        if (this.shotCd <= 0 && dist < range) {',
   '        const footwork=G.PKMSVVCombatTacticsQA?.rangedFootwork(this,pl,spd,range,dist);\n        if(footwork){vx=footwork[0];vy=footwork[1];animBase="Walk";}\n        this.shotCd -= dt;\n        if (this.shotCd <= 0 && dist < range) {');
+ // Arena Solo and Champion retain the native boss cast and damage pipeline.
+ // Only non-casting movement may sidestep a real incoming player projectile.
+ patch('js/entities/enemy.js',
+  '        [vx, vy, animBase] = this.bossMove(dt, pl, dist, dx, dy, spd);',
+  '        [vx, vy, animBase] = this.bossMove(dt, pl, dist, dx, dy, spd);\n        const arenaFootwork=G.PKMSVVCombatTacticsQA?.arenaFootwork(this,pl,spd,vx,vy,dt);\n        if(arenaFootwork){vx=arenaFootwork[0];vy=arenaFootwork[1];animBase="Walk";}');
  // Add actual movement/Rest/FPS status before the existing active buff row.
  // Retain its native anchor and downstream Co-op HUD layout logic.
  patch('js/ui/hud.js','    let bx = px;\n    ctx.textAlign = \'left\';',

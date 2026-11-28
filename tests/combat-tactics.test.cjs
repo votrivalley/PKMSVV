@@ -38,3 +38,35 @@ test('status reads actual Rest and slow separately from measured FPS, not generi
  bot.__pkmsvv3dsSupport.rest=0;bot.slowT=0;G.PKMSVVHordePerformance.fps=60;assert.equal(api.status(bot).length,0);
  G.Game.state='ui';bot.frozen=true;assert.equal(api.status(bot).length,0);
 });
+
+test('Arena AI can sidestep an approaching real friendly shot at native speed, without changing stats or cast state',()=>{
+ const {G,api}=setup(),enemy={id:8,x:0,y:0,r:12,hp:320,maxHp:320,spd:100,dmg:12,pkmsvvArenaSolo:true,ai:{cd:1.5,cast:null}},player=p('player',-140);
+ G.PKMSVVArenaSolo={active:true,stage:'fight'};G.Coop.active=false;
+ const shot={x:-85,y:0,vx:210,vy:0,r:5,life:1.4,t:0,dmg:10,friendly:true};
+ G.Projectiles={all:()=>[shot]};
+ const v=api.arenaFootwork(enemy,player,100,-100,0,.016);
+ assert.ok(v&&Math.abs(v[1])>40,'real approaching shot produces lateral steering');
+ assert.ok(Math.hypot(...v)<=100+1e-9);
+ assert.equal(enemy.hp,320);assert.equal(enemy.dmg,12);assert.equal(enemy.ai.cd,1.5);
+ assert.equal(enemy.x,0);assert.equal(enemy.y,0);
+ const slow=api.arenaFootwork(enemy,player,50,-50,0,.016);
+ assert.ok(slow&&Math.hypot(...slow)<=50+1e-9,'no bypass of actual slow-adjusted speed');
+ enemy.ai.cast={id:'beam'};
+ assert.equal(api.arenaFootwork(enemy,player,100,-100,0,.016),null,'never cancel a telegraphed cast');
+ enemy.ai.cast=null;
+ assert.equal(api.arenaFootwork(enemy,player,100,-100,0,.016),null,'cooldown prevents immediate repeated dodge');
+});
+test('Arena movement is limited to offline Solo and Champion fights, never PvP, prep, Sky, immobilization or blocked tiles',()=>{
+ const {G,api}=setup(),e={id:9,x:0,y:0,r:12,hp:320,maxHp:320,pkmsvvChampion:true,ai:{cast:null}},player=p('player',-140);
+ G.PKMSVVChampionArena={active:true,stage:'fight'};G.Coop.active=false;
+ const shot={x:-85,y:0,vx:210,vy:0,r:5,life:1.4,t:0,dmg:10,friendly:true};
+ G.Projectiles={all:()=>[shot]};
+ const call=(extra={})=>api.arenaFootwork({...e,...extra},player,100,-100,0,.016);
+ assert.ok(call());
+ G.Coop.active=true;assert.equal(call(),null);G.Coop.active=false;
+ G.PKMSVVChampionArena.stage='prep';assert.equal(call(),null);G.PKMSVVChampionArena.stage='fight';
+ for(const extra of [{_pkmsvvSkyBoss:true},{_pkmsvvMegaTransition:1},{stunT:1},{sleepT:1},{remote:true},{dead:true},{pkmsvvChampion:false}])assert.equal(call(extra),null);
+ G.World.isFree=()=>false;assert.equal(call(),null);G.World.isFree=()=>true;
+ G.Projectiles.all=()=>[{...shot,friendly:false},{...shot,vx:-210},{...shot,orb:true},{...shot,t:1.4},{...shot,hits:new Set([9])}];
+ assert.equal(call(),null,'do not dodge non-threatening or already-consumed shots');
+});
