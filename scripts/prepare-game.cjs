@@ -846,6 +846,7 @@ patch('js/core/db.js',
 // Big Update QA: call progression at the actual native player construction and
 // result boundary; the late-loaded module is only present in the isolated QA.
 if(process.env.PKMSVV_BIG_UPDATE_QA==='1'){
+ execFileSync(process.execPath,[path.join(project,'scripts','build-eternamax-qa.cjs')],{cwd:project,stdio:'inherit'});
  fs.copyFileSync(path.join(project,'src','pkmsvv-progression-merge.js'),path.join(game,'js','core','pkmsvv-progression-merge.js'));
  patch('dev.html','<script defer src="js/core/db.js"></script>',
   '<script defer src="js/core/pkmsvv-progression-merge.js"></script>\n<script defer src="js/core/db.js"></script>');

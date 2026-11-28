@@ -27,7 +27,10 @@ const OUT=path.resolve('dist/big-update-progression-qa');fs.mkdirSync(OUT,{recur
     const p=G.Game?.player;if(p&&!p.dead)p.invuln=Math.max(p.invuln||0,2000);
     if(G.Game?.state==='levelup'&&G.UI?.isOpen?.('scr-levelup'))G.RunUI.pick(0);
     if(G.UI?.isOpen?.('scr-bond'))G.RunUI.pickBond(0);
-    if(G.UI?.isOpen?.('scr-item'))document.querySelector('#item-cards .pkmsvv-held-action.is-old')?.click();
+    if(G.UI?.isOpen?.('scr-item'))(document.querySelector('#item-cards .pkmsvv-held-action.is-old')||document.querySelector('#item-cards .card'))?.click();
+    if(document.querySelector('#pkmsvv-forget-skill'))G.PKMSVVForgetSkill?.selectSlot?.(0);
+    const evo=document.querySelector('.pkmsvv-evo:not([hidden]) [data-evo-choice]');
+    if(evo&&!evo.disabled)evo.click();
    },100);
   });
   await page.waitForFunction(()=>G.Game?.state==='playing',null,{timeout:23000});
@@ -51,7 +54,10 @@ const OUT=path.resolve('dist/big-update-progression-qa');fs.mkdirSync(OUT,{recur
    return result;
   });
   await page.waitForFunction(()=>G.Rift.arena?.phase==='won',null,{timeout:12000});
-  await page.waitForFunction(()=>!G.Rift.inArena,null,{timeout:25000});
+  await page.waitForFunction(()=>!G.Rift.inArena,null,{timeout:25000}).catch(async err=>{
+   const detail=await page.evaluate(()=>({state:G.Game.state,time:G.Game.st.time,rift:G.Rift.arena&&{phase:G.Rift.arena.phase,endT:G.Rift.arena.endT},screens:[...document.querySelectorAll('[id^="scr-"]:not(.hidden)')].map(x=>x.id),overlays:[...document.querySelectorAll('#pkmsvv-forget-skill,.pkmsvv-evo,.pkmsvv-berry-overlay')].map(x=>({id:x.id,cls:x.className,text:x.textContent.slice(0,180)}))}));
+   throw Error('Rift victory exit blocked: '+JSON.stringify(detail)+' errors='+JSON.stringify(errors)+' '+err.message);
+  });
   // Rift exit legitimately offers a Bond fusion and can pause in 'choice'.
   // Resolve the native cards through the existing input path, not by
   // forging Game.state or bypassing the reward hook.

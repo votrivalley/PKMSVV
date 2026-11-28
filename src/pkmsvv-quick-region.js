@@ -314,6 +314,7 @@
    const created=G.EnemyMgr.add(enemy);
    if(created===false||created===null)throw Error('Region Boss add failed');
    run[key]=enemy;
+   if(final&&run.index===7&&dex===890)G.PKMSVVEternamaxQA?.arm?.(enemy);
    G.Sprites?.preload?.([dex],4000);
    G.Spawner?.say?.(tr(final?'👑 HUYỀN THOẠI CUỐI CÙNG!':'👑 THỬ THÁCH 15 PHÚT!',
     final?'👑 FINAL LEGENDARY!':'👑 15-MINUTE BOSS!'),4);
@@ -357,7 +358,8 @@
  }
  function finishRegionMatch(run=current){
   if(!run||run.victoryScheduled||!run.finalBoss||
-   !run.finalBoss.dead||Number(run.finalBoss.hp)>0)return false;
+   !run.finalBoss.dead||Number(run.finalBoss.hp)>0||
+   (G.PKMSVVEternamaxQA?.armed?.(run.finalBoss)&&!G.PKMSVVEternamaxQA.completed(run.finalBoss)))return false;
   run.victoryScheduled=true;
   const done=()=>{
    if(current!==run||G.Game?.state!=='playing')return;

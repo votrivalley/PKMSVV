@@ -27,6 +27,9 @@ on:
       - 'src/pkmsvv-berry-rescue.js'
       - 'src/pkmsvv-dex-defeats-qa.js'
       - 'src/pkmsvv-quick-region.js'
+      - 'src/pkmsvv-eternamax-qa.js'
+      - 'scripts/build-eternamax-qa.cjs'
+      - 'tests/eternamax*.cjs'
       - 'src/pkmsvv-box-hub-ui.js'
       - 'src/pkmsvv-box-stage2.js'
       - 'src/pkmsvv-recruitment-qa.js'
@@ -91,7 +94,7 @@ jobs:
           npm pkg set 'overrides.node-abi=4.40.0'
           npm install --no-audit --no-fund
       - name: Unit progression and existing save protection
-        run: node --test tests/big-update-progression.test.cjs tests/save-guardian-regression.test.cjs tests/web-save-guardian-v2.test.cjs tests/special-power-qa.test.cjs tests/berry-rescue.test.cjs tests/dex-defeats-qa.test.cjs tests/p0-transactions.test.cjs tests/progression-merge.test.cjs tests/egg-rush-hidden-score.test.cjs tests/egg-rush-shiny.test.cjs tests/support-expansion.test.cjs tests/pokebox-stage2.test.cjs
+        run: node --test tests/big-update-progression.test.cjs tests/save-guardian-regression.test.cjs tests/web-save-guardian-v2.test.cjs tests/special-power-qa.test.cjs tests/berry-rescue.test.cjs tests/dex-defeats-qa.test.cjs tests/p0-transactions.test.cjs tests/progression-merge.test.cjs tests/egg-rush-hidden-score.test.cjs tests/egg-rush-shiny.test.cjs tests/support-expansion.test.cjs tests/pokebox-stage2.test.cjs tests/eternamax.test.cjs
       - name: Rift regional identity regression
         run: node --test --test-name-pattern="Rift legendary keeps" tests/quick-region.test.cjs
       - name: Fetch required existing Clefairy assets
@@ -104,6 +107,8 @@ jobs:
         run: timeout 100s node tests/p0-transactions-browser.cjs
       - name: Native Recruitment 100 pulls, atomic failure and prize overflow
         run: timeout 100s node tests/recruitment-egg-browser.cjs
+      - name: Native Galar 15m and Eternamax 30m real two-phase combat
+        run: timeout 100s node tests/eternamax-browser.cjs
       - name: Native Explore kill, result settlement, research lab hatch, compiled roster
         run: timeout 220s node tests/big-update-progression-browser.cjs
       - name: Native Egg Rush four-slot rank prizes, result reveal and reload
