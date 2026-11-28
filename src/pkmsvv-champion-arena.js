@@ -578,7 +578,7 @@ G.PKMSVVChampionArena=(()=>{
   }
   if(target)applyMapEffect(pl,target);
   target.pkmsvvChampion=true;
-  if(adaptive)target.pkmsvvArenaBuild=adaptive.profile;
+  if(adaptive){target.pkmsvvArenaBuild=adaptive.profile;G.PKMSVVCombatTacticsQA?.arenaEquip?.(target,pl);}
   // Story and post-story Champion finals both transform at the half-HP boundary.
   target._pkmsvvChampionMegaEligible=round===3;
   target._pkmsvvMegaSprite=opp?.pkmsvvMegaSprite||null;

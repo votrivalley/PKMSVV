@@ -246,7 +246,7 @@ G.PKMSVVArenaSolo=(()=>{
    }
   }
   target.pkmsvvArenaSolo=true;target.level=level;target.pkmsvvArenaLevel=level;
-  if(adaptive)target.pkmsvvArenaBuild=adaptive.profile;
+  if(adaptive){target.pkmsvvArenaBuild=adaptive.profile;G.PKMSVVCombatTacticsQA?.arenaEquip?.(target,p);}
   target.skillCd=Math.max(.45,1.4/Math.max(.9,aiFactor));
   if(target.ai&&Number.isFinite(target.ai.cd))
    target.ai.cd=Math.min(target.ai.cd,1.25);

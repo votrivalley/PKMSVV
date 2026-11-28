@@ -859,7 +859,25 @@ if(process.env.PKMSVV_BIG_UPDATE_QA==='1'){
  // Native attack selection and recovery, scoped to tagged offline Arena rivals.
  patch('js/entities/enemy.js',
   '      if (ai.cast) return this.bossCast(dt, pl);',
-  '      if (ai.cast) return this.bossCast(dt, pl);\n      G.PKMSVVCombatTacticsQA?.arenaPlan(this,pl,dt);');
+  '      G.PKMSVVCombatTacticsQA?.arenaSkillClock(this,pl,dt);\n      if (ai.cast) return this.bossCast(dt, pl);\n      G.PKMSVVCombatTacticsQA?.arenaPlan(this,pl,dt);');
+ // Arena-only enemy skill kits: choose once, then use native cast lifecycle.
+ patch('js/entities/enemy.js',
+  '      if (ai.cd <= 0) {\n        let id = null;',
+  '      if (ai.cd <= 0) {\n        if(G.PKMSVVCombatTacticsQA?.arenaSkillStart(this,pl,dist)){if(ai.cast)return [0,0,"Idle"];return [vx,vy,"Walk"];}\n        let id = null;');
+ patch('js/entities/enemy.js',
+  '    bossCast(dt, pl) {\n      const ai = this.ai, c = ai.cast;',
+  '    bossCast(dt, pl) {\n      const custom=G.PKMSVVCombatTacticsQA?.arenaSkillCast(this,pl,dt);if(custom)return custom;\n      const ai = this.ai, c = ai.cast;');
+ patch('js/entities/enemy.js',
+  '    update(dt, pl) {\n      // Fuera de pantalla',
+  '    update(dt, pl) {\n      G.PKMSVVCombatTacticsQA?.arenaSkillInterrupt(this,pl);\n      // Fuera de pantalla');
+ // Only Arena-tagged telegraphs can be cancelled by death/CC/transition.
+ // Do not reset player invulnerability for these single-hit new attacks.
+ patch('js/systems/hazards.js',
+  '      const h = list[i];\n      h.t += dt;',
+  '      const h = list[i];\n      if(h.pkmsvvArenaOwner&&!h.hit&&!G.PKMSVVCombatTacticsQA?.arenaHazardActive(h,pl)){list.splice(i,1);continue;}\n      h.t += dt;');
+ patch('js/systems/hazards.js',
+  '          pl.invuln = 0;\n          pl.hurt(',
+  '          if(!h.pkmsvvArenaOwner)pl.invuln = 0;\n          pl.hurt(');
  patch('js/entities/enemy.js',
   '      if (ai.fury && Math.random() < 0.35) ai.cd = 0.3;',
   '      if (ai.fury && Math.random() < 0.35) ai.cd = 0.3;\n      ai.cd=G.PKMSVVCombatTacticsQA?.arenaRecovery(this,ai.cd)??ai.cd;');

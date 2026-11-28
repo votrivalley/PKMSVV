@@ -207,6 +207,168 @@
   // Preserve readable attack windups; no instantaneous casts or extra hits.
   return Math.max(.85,cd*e.pkmsvvArenaBuild.tempo);
  }
+ // Stage 5: real catalogue instances, adapted to the hostile combat
+ // pipeline. Unsupported kinds (persistent fields, dash, Fusion, etc.) are
+ // excluded rather than pretending the player-only implementation is safe.
+ const ARENA_KIND=Object.freeze({projectile:'shot',cone:'shot',nova:'nova',beam:'beam',charge:'beam',melee:'melee',spin:'melee',aura:'melee',meteor:'zone',quake:'zone',buff:'buff'});
+ const arenaKits=new WeakMap();
+ const arenaHash=(dex,id)=>{let n=(Number(dex)||1)*997;for(const c of String(id))n=(Math.imul(n,31)+c.charCodeAt(0))>>>0;return n/4294967296;};
+ function arenaFamily(m){
+  const k=ARENA_KIND[m?.kind];
+  if(k==='buff')return ['def','regen','atk','patk','satk'].includes(m.stat)?k:null;
+  return k&&m.dmg>0?k:null;
+ }
+ function arenaReach(m,family){
+  if(family==='melee')return clamp(positive(m.radius,60)+18,64,135);
+  if(family==='beam')return clamp(positive(m.radius,250),150,410);
+  if(family==='zone')return clamp(positive(m.range,280),180,390);
+  if(family==='buff')return 430;
+  return clamp(positive(m.speed,200)*positive(m.life,1.4),135,420);
+ }
+ function arenaEquip(e,p){
+  if(!e?.pkmsvvArenaBuild||!G.Moves?.poolFor||!G.Moves?.instance||!e.mon?.types)return [];
+  const b=e.pkmsvvArenaBuild,round=b.mode==='champion'?b.round:0,types=e.mon.types;
+  const count=clamp((b.attacks||0)+(b.support||0)+(round>=2?1:0),3,8);
+  const lvls=b.moves||[],avg=lvls.length?lvls.reduce((s,m)=>s+positive(m.lvl,1),0)/lvls.length:1;
+  const level=clamp(Math.round(avg)+(round>=2?1:0),1,8);
+  const pool=[...new Set(G.Moves.poolFor(e.mon))].map(id=>{
+   const def=G.Moves.BY_ID?.[id];if(!def||!arenaFamily(def)||!types.includes(def.type)&&def.type!=='normal')return null;
+   const m=G.Moves.instance(id,Math.min(level,positive(def.maxLvl,1))),family=arenaFamily(m);
+   return {m,family,own:types.includes(m.type),rank:arenaHash(e.dex,id),reach:arenaReach(m,family),ready:0,last:-100};
+  }).filter(Boolean);
+  const selected=[],families=new Set(),take=(list)=>{
+   const next=list.filter(v=>!selected.includes(v)).sort((a,b)=>(Number(b.own)-Number(a.own))*3+
+    (Number(!families.has(b.family))-Number(!families.has(a.family)))*1.8+b.rank-a.rank)[0];
+   if(next){selected.push(next);families.add(next.family);}return next;
+  };
+  // Start with a STAB attack; seek one near/far alternative and a tactical
+  // utility move rather than filling the kit with eight identical projectiles.
+  const attacks=pool.filter(v=>v.family!=='buff');
+  take(attacks);
+  if(count>1)take(attacks.filter(v=>v.family!=='melee'));
+  if(count>2)take(attacks.filter(v=>v.family==='melee'));
+  if(count>=4&&attacks.length>=2)take(pool.filter(v=>v.family==='buff'));
+  while(selected.length<count&&take(attacks)){}
+  if(!selected.some(v=>v.family!=='buff'))return [];
+  const median=attacks.length?attacks.map(v=>v.m.dmg).sort((a,b)=>a-b)[Math.floor(attacks.length/2)]:1;
+  for(let i=0;i<selected.length;i++){
+   const v=selected[i],m=v.m,base=positive(m.cd,2);
+   let cd=base*positive(p?.cdMul,1);
+   try{cd=positive(G.PKMSVVBalance?.effectiveCooldown?.(p,m),cd);}catch(_){}
+   // This is sequential trainer AI, not eight simultaneous boss attacks.
+   v.cd=v.family==='buff'?clamp(cd+5,8,18):clamp(cd*1.6+1.6,2.2,9);
+   v.power=v.family==='buff'?0:clamp(m.dmg/Math.max(1,median),.60,1.45);
+   v.ready=i*.18;
+  }
+  arenaKits.set(e,{entries:selected,clock:0,last:null,buffUntil:0,buffStat:null,buffAmount:0,utilityUses:0,casts:0,history:[]});
+  e.pkmsvvArenaMoves=selected.map(v=>({id:v.m.id,name:v.m.name,type:v.m.type,kind:v.m.kind,level:v.m.lvl,cd:v.cd,family:v.family,reach:v.reach}));
+  return e.pkmsvvArenaMoves;
+ }
+ function arenaKit(e){
+  const s=arenaKits.get(e);if(!s)return null;
+  return {moves:e.pkmsvvArenaMoves.map(v=>({...v})),casts:s.casts,history:s.history.slice(),utilityUses:s.utilityUses};
+ }
+ function arenaSkillClock(e,p,dt){
+  const s=arenaKits.get(e);if(!s||!arenaDuel(e,p))return;
+  const t=clamp(Number(dt)||0,0,.25);s.clock+=t;
+  for(const v of s.entries)v.ready=Math.max(0,v.ready-t);
+ }
+ function arenaSkillPick(e,p,dist){
+  const s=arenaKits.get(e);if(!s||!arenaDuel(e,p)||e.ai?.cast||e.stunT>0||e.sleepT>0||e._pkmsvvMegaTransition>0)return null;
+  const hp=clamp(e.hp/Math.max(1,e.maxHp),0,1),style=e.pkmsvvArenaBuild.style;
+  let best=null,score=-Infinity;
+  for(const v of s.entries){
+   if(v.ready>0||dist>v.reach)continue;
+   const m=v.m;let value=0;
+   if(v.family==='buff'){
+    if(s.utilityUses>=2||s.buffUntil>s.clock)continue;
+    if(m.stat==='regen'){if(hp>.55)continue;value=3.2;}
+    else if(m.stat==='def'){if(hp>.75||e.shield>0)continue;value=2.7;}
+    else {if(hp<.25||dist>260)continue;value=.85;}
+   }else{
+    let mult=1;try{mult=G.Types?.mult?.(m.type,p.mon?.types||[])??1;}catch(_){}
+    // Type preference is modest; no immunity bypass and no perfect counterpick.
+    value=1+Math.min(1.2,Math.max(-1.5,(mult-1)*.48))+v.power*.34+
+     (v.own?.35:0)+(v.family==='melee'&&dist<95?.8:0)+(style==='keep-range'&&v.family!=='melee'?.30:0);
+    if(v.family==='nova'&&dist>v.reach*.8)value-=.65;
+   }
+   value+=Math.min(1.2,(s.clock-v.last)*.07)-(s.last===v.m.id?1.2:0)+v.rank*.12;
+   if(value>score){score=value;best=v;}
+  }
+  return best;
+ }
+ function arenaSkillStart(e,p,dist){
+  const s=arenaKits.get(e);
+  // False = original boss (no kit). True = this trainer owns selection, even
+  // while waiting for range/cooldown, so no extra hidden generic attacks.
+  if(!s||!arenaDuel(e,p))return false;
+  const v=arenaSkillPick(e,p,dist);if(!v)return true;
+  const m=v.m,f=v.family,col=G.U?.TYPE_COLOR?.[m.type]||'#ffb7cf',ang=Math.atan2(p.y-e.y,p.x-e.x);
+  const wind=f==='buff'?.72:f==='beam'?clamp(positive(m.charge,.85),.8,1.25):f==='zone'?.95:f==='melee'?.68:.62;
+  const token={id:'pkmsvv-arena:'+m.id,arenaSkill:true,v,wind,t:0,after:.3,ang,col,fired:false,cancelled:false};
+  e.ai.cast=token;v.ready=v.cd;v.last=s.clock;s.last=m.id;s.casts++;s.history.push(m.id);if(s.history.length>24)s.history.shift();
+  let damage=positive(e.dmg,1)*v.power;
+  if(s.buffUntil>s.clock&&(s.buffStat==='atk'||s.buffStat===(m.cat==='physical'?'patk':'satk')))damage*=1+s.buffAmount;
+  // Keep the trained base damage cap meaningful even on high-power moves.
+  damage=Math.min(damage,positive(e.dmg,1)*1.5);
+  token.damage=damage;
+  const add=h=>G.Hazards?.add?.({...h,dmg:damage,type:m.type,cat:m.cat,color:col,delay:wind,pkmsvvArenaOwner:e,pkmsvvArenaCast:token,pkmsvvArenaMove:m.id});
+  if(f==='beam')add({kind:'beam',x:e.x,y:e.y,angle:ang,len:v.reach,w:clamp(positive(m.width,26),20,55)});
+  if(f==='melee')add({kind:'zone',x:e.x,y:e.y,r:clamp(positive(m.radius,60),36,115)});
+  if(f==='zone')add({kind:'zone',x:p.x,y:p.y,r:clamp(positive(m.radius,48),32,85)});
+  e.anim?.play?.('Charge',{speed:1.2});
+  G.FX?.ring?.(e.x,e.y,e.r||12,(e.r||12)*2.2,col,wind,2);
+  G.FX?.dmgText?.(e.x,e.y-(e.bodyH||35)-8,String(m.name||m.id),col,true);
+  return true;
+ }
+ function arenaSkillInterrupt(e,p){
+  const c=e?.ai?.cast;if(!c?.arenaSkill)return;
+  if(!arenaDuel(e,p)||e.stunT>0||e.sleepT>0||e._pkmsvvMegaTransition>0){
+   c.cancelled=true;e.ai.cast=null;e.ai.cd=Math.max(.85,e.ai.cd||0);
+  }
+ }
+ function arenaHazardActive(h,p){
+  const e=h?.pkmsvvArenaOwner,c=h?.pkmsvvArenaCast;
+  return !e||(!c?.cancelled&&arenaDuel(e,p)&&!e._pkmsvvMegaTransition&&!(e.stunT>0)&&!(e.sleepT>0)&&e.ai?.cast===c);
+ }
+ function arenaSkillCast(e,p,dt){
+  const c=e?.ai?.cast,s=arenaKits.get(e);
+  if(!c?.arenaSkill||!s)return null;
+  if(!arenaDuel(e,p)||c.cancelled){e.ai.cast=null;return [0,0,'Idle'];}
+  c.t+=Math.max(0,Number(dt)||0);
+  if(c.t>=c.wind&&!c.fired){
+   c.fired=true;const {m,family:f}=c.v;
+   if(f==='shot'||f==='nova'){
+    const n=f==='nova'?clamp(Math.round(positive(m.count,8)),6,12):clamp(Math.round(positive(m.count,1)),1,5);
+    const spread=f==='nova'?2*Math.PI*(n-1)/n:clamp(positive(m.spread,positive(m.arc,.5)),.16,1.15);
+    const speed=clamp(positive(m.speed,200)*.82,150,310),life=clamp(positive(m.life,1.4),.4,2.4);
+    for(let i=0;i<n;i++){
+     const a=c.ang+(n===1?0:(i/(n-1)-.5)*spread);
+     G.Projectiles?.spawn?.({x:e.x,y:e.y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:clamp(positive(m.size,7),5,12),life,dmg:c.damage,
+      friendly:false,mtype:m.type,cat:m.cat,color:c.col,vis:G.VFX?.forType?.(m.type),pkmsvvArenaMove:m.id});
+    }
+    e.anim?.play?.('Shoot',{speed:1.3});
+   }else if(f==='buff'){
+    s.utilityUses++;const maxHp=positive(e.maxHp,1);
+    if(m.stat==='regen'){
+     const heal=Math.min(maxHp*.04,Math.max(0,maxHp-e.hp));e.hp+=heal;
+     G.FX?.ring?.(e.x,e.y,12,48,'#70e9a3',.45,3);
+    }else if(m.stat==='def'){
+     // Native shield is visible and absorbable, never invulnerability.
+     e.shield=Math.min(maxHp*.035,Math.max(0,positive(e.rd,0)*.30));e.shieldT=4;
+     G.FX?.ring?.(e.x,e.y,12,48,'#91dcff',.45,3);
+    }else{
+     s.buffStat=m.stat;s.buffAmount=clamp(positive(m.amount,.10),.08,.22);s.buffUntil=s.clock+Math.min(6,positive(m.dur,5));
+     G.FX?.ring?.(e.x,e.y,12,48,'#ffc668',.45,3);
+    }
+   }else e.anim?.play?.('Attack',{speed:1.2});
+  }
+  if(c.t>=c.wind+c.after){
+   // Use the real native recovery hook (including Champion round modifiers).
+   return e.bossEnd();
+  }
+  return [0,0,'Idle'];
+ }
  // Arena enemies use the native boss controller. Only override its idle
  // locomotion when an existing, approaching player projectile threatens it.
  // No cast cancellation, extra speed, teleport, damage or stat adjustment.
@@ -297,5 +459,5 @@
   }
   ctx.restore();return x;
  }
- G.PKMSVVCombatTacticsQA=Object.freeze({alliedMode,assignRescuers,directPath,margin,needsEvade,evade,rangedGoal,berryGoal,rangedFootwork,arenaDuel,arenaProfile,arenaStats,arenaPreserveFighter,arenaPlan,arenaRecovery,arenaFootwork,status,drawStatus});
+ G.PKMSVVCombatTacticsQA=Object.freeze({alliedMode,assignRescuers,directPath,margin,needsEvade,evade,rangedGoal,berryGoal,rangedFootwork,arenaDuel,arenaProfile,arenaStats,arenaPreserveFighter,arenaPlan,arenaRecovery,arenaEquip,arenaKit,arenaSkillClock,arenaSkillStart,arenaSkillInterrupt,arenaHazardActive,arenaSkillCast,arenaFootwork,status,drawStatus});
 })();

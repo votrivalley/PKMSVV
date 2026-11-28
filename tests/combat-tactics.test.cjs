@@ -98,3 +98,38 @@ test('switching Ready species carries legitimate farm bonuses, same species reta
  assert.equal(p1.maxHp,180);assert.equal(p1.hp,180);assert.ok(Math.abs(p1.baseAtk-1.8)<1e-9);assert.equal(p1.baseSpd,132);assert.equal(p1.atkMul,3);assert.equal(p1.cdMul,.5);
  api.arenaPreserveFighter(p1,p1.mon,6);assert.equal(p1.maxHp,180);
 });
+
+test('Arena assembles independent type-pool skills and never copies player-only or unsupported moves',()=>{
+ const {G,api}=setup();
+ const defs=[
+  {id:'spark',type:'electric',kind:'projectile',dmg:10,cd:1,speed:220,life:1,maxLvl:5},
+  {id:'ray',type:'electric',kind:'beam',dmg:20,cd:2,radius:240,maxLvl:5},
+  {id:'tackle',type:'normal',kind:'melee',dmg:10,cd:1,radius:48,maxLvl:5},
+  {id:'ring',type:'electric',kind:'nova',dmg:9,cd:1,count:8,maxLvl:5},
+  {id:'storm',type:'electric',kind:'meteor',dmg:15,cd:2,maxLvl:5},
+  {id:'harden',type:'normal',kind:'buff',stat:'def',cd:3,maxLvl:5},
+  {id:'bad',type:'fire',kind:'beam',dmg:99,cd:1,maxLvl:5},
+  {id:'unsupported',type:'electric',kind:'vortex',dmg:99,cd:1,maxLvl:5}];
+ G.Moves={BY_ID:Object.fromEntries(defs.map(d=>[d.id,d])),poolFor:()=>defs.map(d=>d.id),instance:(id,lvl)=>({...defs.find(d=>d.id===id),lvl})};
+ const player=p('p',100,0,{mon:{types:['water']},cdMul:.8,moves:[{id:'not-allowed'}]});
+ const rival={id:2,dex:25,x:0,y:0,hp:500,maxHp:500,dmg:20,mon:{types:['electric']},pkmsvvArenaSolo:true,pkmsvvArenaBuild:{attacks:8,support:0,style:'press',mode:'solo',round:0,moves:[{lvl:5}]},ai:{cd:0,cast:null},bossEnd(){this.ai.cast=null;return [0,0,'Idle'];}};
+ G.PKMSVVArenaSolo={active:true,stage:'fight'};G.Coop.active=false;G.Game.player=player;
+ G.U={TYPE_COLOR:{electric:'#ff0'}};G.Types={mult:()=>1};const hz=[],shots=[];
+ G.Hazards={add:o=>hz.push(o)};G.Projectiles={spawn:o=>shots.push(o)};
+ const kit=api.arenaEquip(rival,player);
+ assert.equal(kit.length,6);assert.equal(new Set(kit.map(m=>m.id)).size,6);
+ assert.ok(kit.every(m=>['normal','electric'].includes(m.type)&&m.level===5));assert.ok(!kit.some(m=>m.id==='unsupported'||m.id==='not-allowed'));
+ assert.ok(kit.some(m=>m.family==='melee')&&kit.some(m=>m.family==='buff')&&kit.some(m=>m.family==='beam'));
+ for(let n=0;n<5;n++)api.arenaSkillClock(rival,player,.25);
+ assert.equal(api.arenaSkillStart(rival,player,100),true);
+ const cast=rival.ai.cast;assert.ok(cast?.arenaSkill);assert.ok(cast.wind>=.62);assert.ok(cast.damage<=30);
+ if(hz.length){assert.equal(hz[0].pkmsvvArenaMove,cast.v.m.id);assert.ok(api.arenaHazardActive(hz[0],player));}
+ assert.equal(shots.length,0,'no shot before windup');
+ rival.stunT=.5;api.arenaSkillInterrupt(rival,player);assert.equal(rival.ai.cast,null);assert.equal(cast.cancelled,true);
+ if(hz.length)assert.equal(api.arenaHazardActive(hz[0],player),false);
+ rival.stunT=0;for(let n=0;n<12;n++)api.arenaSkillClock(rival,player,.25);
+ api.arenaSkillStart(rival,player,100);const next=rival.ai.cast;assert.ok(next?.arenaSkill);
+ api.arenaSkillCast(rival,player,next.wind+.31);assert.equal(rival.ai.cast,null);
+ assert.equal(api.arenaKit(rival).casts,2);
+ G.Coop.active=true;assert.equal(api.arenaSkillStart(rival,player,100),false);
+});

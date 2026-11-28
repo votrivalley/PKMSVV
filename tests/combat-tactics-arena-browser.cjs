@@ -45,7 +45,7 @@ const {chromium}=require('playwright'),{startServer}=require('../lan-server/serv
    e.x=spot.x;e.y=spot.y;p.x=spot.x-140;p.y=spot.y;
    e.bossInit();e.ai.mode='close';e.ai.modeT=5;e.ai.cd=2;e.ai.cast=null;
    // Independently exercise the Stage3 dodge fixture, not the adaptive tactical mode.
-   const build=e.pkmsvvArenaBuild;e.pkmsvvArenaBuild={...build,style:'mixed'};
+   const build=e.pkmsvvArenaBuild,kit=G.PKMSVVCombatTacticsQA.arenaKit(e);e.pkmsvvArenaBuild={...build,style:'mixed'};
    e.kx=e.ky=0;e.stunT=e.sleepT=0;e.slow=0;
    const before={x:e.x,y:e.y,hp:e.hp,maxHp:e.maxHp,spd:e.spd,dmg:e.dmg,cd:e.ai.cd};
    G.Projectiles.spawn({x:e.x-85,y:e.y,vx:210,vy:0,r:5,life:1.4,dmg:10,friendly:true,owner:p});
@@ -55,7 +55,24 @@ const {chromium}=require('playwright'),{startServer}=require('../lan-server/serv
    const afterStun={x:e.x,y:e.y};
    e.stunT=0;e.ai.cast=null;G.Hazards.clear();e.bossStart('beam',p);
    const hazards=G.Hazards.all.filter(h=>h.kind==='beam').map(h=>h.dmg);
-   return {before,after,locked,afterStun,stage:solo.stage,trained,actual:{hp:p.maxHp,atkMul:p.atkMul,cdMul:p.cdMul,skills:p.moves.length},build,stun,shotDmg:e.shotDmg(),hazards};
+   // Exercise actual trainer AI selection in Enemy.update, not a fabricated cast.
+   G.Hazards.clear();G.Projectiles.clear();e.ai.cast=null;e.ai.cd=0;e.stunT=0;e.sleepT=0;e.x=spot.x;e.y=spot.y;p.x=e.x+65;p.y=e.y;
+   const api=G.PKMSVVCombatTacticsQA;
+   for(let n=0;n<8;n++)api.arenaSkillClock(e,p,.25);
+   e.update(1/60,p);
+   const cast=e.ai.cast;
+   if(!cast?.arenaSkill)throw Error('Native trainer skill not selected '+JSON.stringify(kit));
+   const moveId=cast.v.m.id,wind=cast.wind,kind=cast.v.family,markers=G.Hazards.all.filter(h=>h.pkmsvvArenaMove===moveId);
+   const initialShots=G.Projectiles.all().filter(q=>q.pkmsvvArenaMove===moveId).length;
+   // Real windup and real hostile projectile/telegraph. For telegraphs, stay
+   // inside the marked area to prove native Player.hurt receives damage.
+   if(markers.length){const h=markers[0];p.x=h.kind==='zone'?h.x:h.x+Math.cos(h.angle)*50;p.y=h.kind==='zone'?h.y:h.y+Math.sin(h.angle)*50;}
+   p.invuln=0;const hpBefore=p.hp;
+   for(let n=0;n<Math.ceil((wind+.33)/.05);n++){e.update(.05,p);G.Hazards.update(.05);}
+   const hpAfter=p.hp,shots=G.Projectiles.all().filter(q=>q.pkmsvvArenaMove===moveId).map(q=>({friendly:q.friendly,type:q.mtype,dmg:q.dmg}));
+   const nativeSkill={moveId,wind,kind,markers:markers.map(h=>({kind:h.kind,type:h.type,dmg:h.dmg})),initialShots,hpBefore,hpAfter,shots,history:api.arenaKit(e).history,castEnded:!e.ai.cast};
+   const allowed=G.Moves.poolFor(e.mon);
+   return {before,after,locked,afterStun,stage:solo.stage,trained,actual:{hp:p.maxHp,atkMul:p.atkMul,cdMul:p.cdMul,skills:p.moves.length},build,stun,shotDmg:e.shotDmg(),hazards,kit,nativeSkill,allowed,types:e.mon.types};
   });
   assert.equal(report.stage,'fight');assert.ok(Math.abs(report.after.y-report.before.y)>.2,'native Enemy.update takes a lateral step');
   for(const key of ['hp','maxHp','spd','dmg'])assert.equal(report.after[key],report.before[key]);
@@ -64,6 +81,13 @@ const {chromium}=require('playwright'),{startServer}=require('../lan-server/serv
   assert.ok(report.stun>0&&report.stun<=1.1);assert.deepEqual(report.trained,report.actual);
   assert.equal(report.build.attacks,8);assert.ok(report.before.maxHp>report.actual.hp*2);
   assert.equal(report.shotDmg,report.before.dmg);assert.ok(report.hazards.length>0&&report.hazards.every(d=>Math.abs(d-report.shotDmg*1.2)<1e-7));
+  assert.ok(report.kit.moves.length>=3&&report.kit.moves.length<=8);
+  assert.ok(report.kit.moves.every(m=>report.allowed.includes(m.id)&&(report.types.includes(m.type)||m.type==='normal')));
+  assert.equal(report.nativeSkill.initialShots,0);assert.ok(report.nativeSkill.wind>=.62);
+  assert.ok(report.nativeSkill.history.includes(report.nativeSkill.moveId));assert.ok(report.nativeSkill.castEnded);
+  if(report.nativeSkill.markers.length){assert.ok(report.nativeSkill.hpAfter<report.nativeSkill.hpBefore);}
+  else if(report.nativeSkill.kind==='shot'||report.nativeSkill.kind==='nova'){assert.ok(report.nativeSkill.shots.length>0&&report.nativeSkill.shots.every(q=>!q.friendly));}
+  else assert.equal(report.nativeSkill.kind,'buff');
   assert.deepEqual(errors,[]);
   const out=path.resolve('dist/big-update-progression-qa');fs.mkdirSync(out,{recursive:true});
   fs.writeFileSync(path.join(out,'arena-footwork.json'),JSON.stringify(report,null,2));
