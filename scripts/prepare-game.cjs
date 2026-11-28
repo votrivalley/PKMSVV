@@ -847,6 +847,16 @@ patch('js/core/db.js',
 // result boundary; the late-loaded module is only present in the isolated QA.
 if(process.env.PKMSVV_BIG_UPDATE_QA==='1'){
  execFileSync(process.execPath,[path.join(project,'scripts','build-eternamax-qa.cjs')],{cwd:project,stdio:'inherit'});
+ // Blank TM is an opt-in QA item; normal release builds retain their catalogue.
+ patch('js/data/shop.js',"  const ORDER = ['mint', 'cap', 'caph', 'pippiReset'];",
+  "  ITEMS.blankTm={name:'TM Trống',icon:'book',price:500,desc:'Erase one learned TM without refund.'};\n  const ORDER = ['mint', 'cap', 'caph', 'pippiReset','blankTm'];");
+ patch('js/systems/mons.js','    s.ptm[dex] = taught(dex).concat([id]);',
+  '    s.ptm[dex] = taught(dex).concat([id]);\n    G.PKMSVVProgressionMerge?.recordTM(s,{dex:Number(dex),move:id,instance:null,legacy:true,action:"teach"});');
+ fs.copyFileSync(path.join(project,'src','pkmsvv-wisdom-qa.js'),path.join(game,'js','systems','pkmsvv-wisdom-qa.js'));
+ patch('dev.html','<script defer src="js/systems/levelup.js"></script>',
+  '<script defer src="js/systems/pkmsvv-wisdom-qa.js"></script>\n<script defer src="js/systems/levelup.js"></script>');
+ patch('js/systems/levelup.js','    return out;\n  }\n\n  /** Devuelve 3 cartas distintas, elegidas por peso. */',
+  '    const wisdom=G.PKMSVVWisdomQA?.card(pl);if(wisdom)out.push(wisdom);\n    return out;\n  }\n\n  /** Devuelve 3 cartas distintas, elegidas por peso. */');
  fs.copyFileSync(path.join(project,'src','pkmsvv-progression-merge.js'),path.join(game,'js','core','pkmsvv-progression-merge.js'));
  patch('dev.html','<script defer src="js/core/db.js"></script>',
   '<script defer src="js/core/pkmsvv-progression-merge.js"></script>\n<script defer src="js/core/db.js"></script>');

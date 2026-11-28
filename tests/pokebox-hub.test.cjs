@@ -588,3 +588,16 @@ test('Android 2.0.1 home icons preserve all three authored WebP sprites and one 
  assert.match(packaging,/pkmsvv-v20-ui-qa\.css/);
  assert.match(packaging,/pkmsvv-menu-icons\.webp/);
 });
+
+test('Blank TM erases only selected individual, consumes one item, clears matching settings, and rolls back failed save',()=>{
+ const h=setup(),s=h.s,copy=add(s),other=add(s);
+ G.Game={state:'ui'};G.PKMSVVProgressionMerge=require('../src/pkmsvv-progression-merge.js');
+ G.Shop={transaction(kind,fn,live){const before=structuredClone(live);try{const r=fn(live);if(!G.DB.commit(true))throw Error('save');return r;}catch(_){for(const k of Object.keys(live))delete live[k];Object.assign(live,before);return null;}}};
+ hub.teach(copy.id,'shadow-ball',s);hub.teach(other.id,'shadow-ball',s);
+ s.bag.blankTm=1;s.pban={6:['shadow-ball','flamethrower']};s.pstart={6:'shadow-ball'};s.pbind={6:['shadow-ball','flamethrower',null,null]};
+ const before=JSON.stringify(s);h.fail=true;assert.throws(()=>hub.eraseTM(copy.id,'shadow-ball',s));assert.equal(JSON.stringify(s),before);
+ h.fail=false;assert.equal(hub.eraseTM(copy.id,'shadow-ball',s).left,0);
+ assert.deepEqual(hub.learned(s,hub.item(s,copy.id)),[]);assert.deepEqual(hub.learned(s,hub.item(s,other.id)),['shadow-ball']);
+ assert.deepEqual(s.ptm[6],['flamethrower']);assert.deepEqual(s.pban[6],['flamethrower']);assert.equal(s.pstart[6],undefined);assert.equal(s.pbind[6][0],null);
+ assert.throws(()=>hub.eraseTM(copy.id,'shadow-ball',s));G.PKMSVVProgressionMerge=undefined;
+});

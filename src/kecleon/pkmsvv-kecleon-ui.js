@@ -30,13 +30,15 @@ G.KecleonUI=(()=>{
    mint:L('Bạc hà','Nature Mint'),
    cap:L('Viên nang Đặc tính','Ability Capsule'),
    caph:L('Viên nang Đặc tính Ẩn','Hidden Ability Capsule'),
-   pippiReset:L('Kẹo Tái Huấn Luyện','Training Reset Candy')
+   pippiReset:L('Kẹo Tái Huấn Luyện','Training Reset Candy'),
+   blankTm:L('TM Trống','Blank TM')
  })[key]||key;
  const text=key=>({
    mint:L('Đổi Tính cách ngẫu nhiên.','Reroll a random Nature.'),
    cap:L('Đổi ngẫu nhiên. Có 5% cơ hội ra Đặc tính Ẩn.','Random reroll. 5% chance for a Hidden Ability.'),
    caph:L('Viên sự kiện: 15% ra Đặc tính Ẩn, cao gấp 3 lần.','Event Capsule: 15% Hidden chance, 3× the normal rate.'),
-   pippiReset:L('Hoàn lại toàn bộ điểm kỹ năng Pippi. Giữ nguyên Thân thiết và kinh nghiệm.','Recover all Pippi training points; keeps friendship level and XP.')
+   pippiReset:L('Hoàn lại toàn bộ điểm kỹ năng Pippi. Giữ nguyên Thân thiết và kinh nghiệm.','Recover all Pippi training points; keeps friendship level and XP.'),
+   blankTm:L('Xóa một chiêu đã học bằng TM, không hoàn lại TM cũ.','Erase one learned TM without refund.')
  })[key]||'';
  let selected=null,tab='shop',sceneActive=false;
  const Scene=()=>G.PKMSVVKecleonScene;
@@ -71,6 +73,7 @@ G.KecleonUI=(()=>{
   render();
  }
  function itemIcon(key,size=34){
+  if(key==='blankTm')return G.Icons?.html?.('book',size)||'TM';
   if(key==='pippiReset')return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 16 16" role="img" aria-label="Kẹo Tái Huấn Luyện" style="image-rendering:pixelated" xmlns="http://www.w3.org/2000/svg">'+
    '<path fill="#f7c0f4" d="M1 6h3V4h2v8H4v-2H1zm11-2h2v2h2v4h-2v2h-2z"/>'+
    '<path fill="#804c9c" d="M4 3h8v1h2v8h-2v1H4v-1H2V4h2z"/>'+
@@ -175,9 +178,29 @@ G.KecleonUI=(()=>{
      'Sold for +'+money(receipt.refund)+' PokéCoins.');
     else toast('Không bán được vật phẩm.','Could not sell the item.');
   });
+  const blankBox=$('pkmk-list').querySelector('[data-pkmk-blank-box]');
+  if(blankBox)blankBox.onclick=()=>{if(!blankBox.isConnected)return;G.UI.hide('scr-kecleon');G.PKMSVVBoxHubUI?.openBox?.();};
+  const erase=$('pkmk-list').querySelector('[data-pkmk-blank-erase]');
+  if(erase){
+   const profile=G.DB.save,dex=selected;
+   erase.onclick=()=>{
+    if(erase.disabled||!erase.isConnected||profile!==G.DB.save||selected!==dex||G.Game?.state!=='ui'||G.Coop?.active)return;
+    const move=$('pkmk-list').querySelector('[data-pkmk-blank-move]')?.value;
+    if(!move||!G.Moves.BY_ID[move])return;
+    if(!confirm(L('Xóa TM '+title(move)+'? Không hoàn lại TM cũ.','Erase '+title(move)+'? No refund.')))return;
+    erase.disabled=true;
+    const receipt=G.Shop.transaction('blank-tm',s=>G.PKMSVVProgressionMerge.eraseTM(s,{dex,move}),profile);
+    toast(receipt?'Đã xóa TM!':'Không lưu được. TM Trống vẫn được giữ.',receipt?'TM erased!':'Save failed. Blank TM preserved.');render();
+   };
+  }
   $('pkmk-list').querySelectorAll('[data-pkmk-tm]').forEach(btn=>btn.onclick=()=>{
     if(btn.disabled||!btn.isConnected)return;btn.disabled=true;
-    const result=G.Shop.transaction('bag-teach',()=>G.Mons.teach(selected,btn.dataset.pkmkTm));
+    let result;
+    const hub=G.PKMSVVBoxHub,s=G.DB.save;
+    if(G.PKMSVVProgressionMerge?.recordTM&&hub?.valid(s)){
+     const x=hub.activeForDex(selected,s)||hub.item(s,'b1-'+selected+'-n')||hub.item(s,'b1-'+selected+'-s')||s.pkmsvvBox.find(x=>x.dex===selected);
+     try{if(x)result=hub.teach(x.id,btn.dataset.pkmkTm,s);}catch(_){}
+    }else result=G.Shop.transaction('bag-teach',()=>G.Mons.teach(selected,btn.dataset.pkmkTm));
     if(!result){toast('Không học được TM. Vật phẩm vẫn được giữ.','Could not teach TM. The item was preserved.');render();return;}
     G.Audio.sfx('buy');
     toast('Đã học TM vĩnh viễn!','TM move learned permanently!');render();
@@ -195,13 +218,13 @@ G.KecleonUI=(()=>{
   for(const key of G.Shop.ORDER){
     const it=G.Shop.ITEMS[key];
     if(it.unavailableInShop)continue; // legacy Hidden Capsule is fully retired.
-    s+=card(itemIcon(key==='pippiReset'?'pippiReset':key==='cap'?'capsule':key==='caph'?'capsuleh':'mint'),
+    s+=card(itemIcon(key==='blankTm'?'blankTm':key==='pippiReset'?'pippiReset':key==='cap'?'capsule':key==='caph'?'capsuleh':'mint'),
       esc(label(key)),esc(text(key)),
       buyBtn(key,it.price)+'<span class="pkmk-stock">×'+G.Shop.count(key)+'</span>');
   }
   s+='</div><h3 class="pkmk-group-title">'+L('TM hôm nay','Today’s TMs')+'</h3>';
-  s+='<p class="sub">'+L('Mỗi ngày có 8 TM luân phiên. Chiêu đã học sẽ được giữ vĩnh viễn.',
-     'Eight TMs rotate daily. Learned moves are permanently unlocked.')+'</p><div class="pkmk-cards">';
+  s+='<p class="sub">'+L('Mỗi ngày có 8 TM luân phiên. Chiêu đã học được giữ cho đến khi dùng TM Trống.',
+     'Eight TMs rotate daily. Learned moves remain until erased with a Blank TM.')+'</p><div class="pkmk-cards">';
   for(const id of G.Shop.dailyTms()){
     const m=G.Moves.BY_ID[id];if(!m)continue;
     const ok=G.Mons.canLearn(selected,id),cost=G.Shop.tmPrice(id);
@@ -271,6 +294,15 @@ G.KecleonUI=(()=>{
     'Mints/Capsules reroll at random. Sell items for half their shop price.')+'</p>';
   s+='<div class="pkmk-cards">';
   for(const k of G.Shop.ORDER)if(G.Shop.count(k)){
+    if(k==='blankTm'){
+      const migrated=G.DB.save.pkmsvvBoxSchema!==undefined;
+      const moves=(G.DB.save.ptm?.[selected]||[]).filter(id=>G.Moves.BY_ID[id]);
+      const actions=migrated?'<button class="btn small" data-pkmk-blank-box>'+L('Dùng tại PokéBox','Use in PokéBox')+'</button>':
+       (moves.length?'<select data-pkmk-blank-move aria-label="TM">'+moves.map(id=>'<option value="'+esc(id)+'">'+esc(title(id))+'</option>').join('')+'</select>':'')+
+       '<button class="btn small" data-pkmk-blank-erase '+(!moves.length||G.DB.guest?'disabled':'')+'>'+L('Xóa TM đã chọn','Erase selected TM')+'</button>';
+      s+=card(itemIcon(k),esc(label(k)),esc(text(k)),actions+sellBtn(k,G.Shop.ITEMS[k].price)+'<span class="pkmk-stock">×'+G.Shop.count(k)+'</span>');
+      continue;
+    }
     if(k==='pippiReset'){
       const trained=Object.values(G.PKMSVVPippi?.data?.(G.DB.save)?.training||{}).some(n=>n>0);
       s+=card(itemIcon(k),esc(label(k)),esc(text(k)),

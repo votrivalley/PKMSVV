@@ -32,10 +32,39 @@
  const retained=(oldMap,newMap,valid=earned)=>keys(oldMap).every(k=>
    !valid(oldMap[k])||valid(record(newMap)?newMap[k]:undefined));
  const taught=s=>record(s?.ptm)?s.ptm:{};
- const learnedRetained=(a,b)=>keys(taught(a)).every(dex=>{
-  const older=taught(a)[dex],newer=taught(b)[dex];
-  return !Array.isArray(older)||older.every(id=>Array.isArray(newer)&&newer.includes(id));
- });
+ const tmEdits=s=>s.pkmsvvTMEdits??[];
+ function editDelta(a,b){
+  const old=tmEdits(a),next=tmEdits(b),ids=new Set(),fields=['dex','move','instance','legacy','action','id'];
+  if(!Array.isArray(old)||!Array.isArray(next)||next.length>4096||old.length>next.length)return null;
+  for(const e of next){
+   if(!record(e)||!Number.isInteger(e.dex)||e.dex<1||e.dex>1025||typeof e.move!=='string'||!/^[-_a-zA-Z0-9]{1,80}$/.test(e.move)||
+      !['teach','erase'].includes(e.action)||typeof e.legacy!=='boolean'||
+      !(e.instance===null&&e.legacy||typeof e.instance==='string'&&/^[-_a-zA-Z0-9]{1,128}$/.test(e.instance))||
+      (e.legacy&&e.instance!==null&&e.instance!=='b1-'+e.dex+'-n'&&e.instance!=='b1-'+e.dex+'-s')||
+      typeof e.id!=='string'||!/^[-_a-zA-Z0-9]{1,100}$/.test(e.id)||ids.has(e.id))return null;
+   ids.add(e.id);
+  }
+  if(old.some((e,i)=>!record(e)||!fields.every(k=>e[k]===next[i][k])))return null;
+  return next.slice(old.length);
+ }
+ function learnedRetained(a,b){
+  const delta=editDelta(a,b);if(!delta)return false;
+  const justified=(dex,move,instance=null)=>{
+   const e=delta.filter(x=>x.dex===Number(dex)&&x.move===move&&(instance===null?x.legacy:x.instance===instance)).at(-1);
+   return e?.action==='erase';
+  };
+  if(!keys(taught(a)).every(dex=>{
+   const older=taught(a)[dex],newer=taught(b)[dex];
+   return !Array.isArray(older)||older.every(id=>Array.isArray(newer)&&newer.includes(id)||justified(dex,id));
+  }))return false;
+  // Existing original copies cannot silently lose learned TMs; legitimate
+  // Rank consumption of a duplicate is a separate operation.
+  for(const x of Array.isArray(a.pkmsvvBox)?a.pkmsvvBox:[]){
+   const next=Array.isArray(b.pkmsvvBox)?b.pkmsvvBox.find(v=>v.id===x.id):null;
+   if(next&&Array.isArray(x.taughtMoves)&&!x.taughtMoves.every(id=>Array.isArray(next.taughtMoves)&&next.taughtMoves.includes(id)||justified(x.dex,id,x.id)))return false;
+  }
+  return true;
+ }
  const incubatorLoss=(a,b)=>{
   const old=a.pkmsvvIncubator,next=b.pkmsvvIncubator;
   if(!record(old))return false;
@@ -87,7 +116,7 @@
   const a=score(oldText),b=score(next);
   if(!a||!b)return true;
   for(const key of ['owned','shiny','runs','best','mega','megaForms','berryUsed',
-   'berryWins','items','learnedTms','championSeals'])
+   'berryWins','items','championSeals'])
    if(b[key]<a[key])return true;
   const older=JSON.parse(oldText),newer=JSON.parse(next);
   // A swapped collection entry with the same count is still lost progress.

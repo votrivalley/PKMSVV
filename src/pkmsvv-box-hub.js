@@ -245,8 +245,23 @@
    const old=learned(draft,x);
    draft.tms[moveId]--;if(!draft.tms[moveId])delete draft.tms[moveId];
    x.taughtMoves=old.concat([moveId]);
+   const tm=G.PKMSVVProgressionMerge;
+   if(tm?.recordTM){
+    const legacy=x.id==='b1-'+x.dex+'-n'||(x.id==='b1-'+x.dex+'-s'&&!draft.pkmsvvBox.some(v=>v.dex===x.dex&&!v.shiny));
+    if(legacy){draft.ptm=draft.ptm||{};draft.ptm[x.dex]=[...new Set([...(draft.ptm[x.dex]||[]),moveId])];}
+    tm.recordTM(draft,{dex:x.dex,move:moveId,instance:x.id,legacy,action:'teach'});
+   }
    return {id,moveId,left:draft.tms[moveId]||0};
   });
+ }
+ function eraseTM(id,moveId,s=save()){
+  if(s!==save()||G.DB?.guest||G.Game?.state!=='ui'||G.Coop?.active||!G.PKMSVVProgressionMerge?.eraseTM)throw Error('Blank TM requires an active menu profile');
+  const x=speciesBase(s,item(s,id));
+  if(!x||!G.Moves?.BY_ID?.[moveId]||!learned(s,x).includes(moveId))throw Error('Only a learned TM can be erased');
+  const legacy=x.id==='b1-'+x.dex+'-n'||(x.id==='b1-'+x.dex+'-s'&&!s.pkmsvvBox.some(v=>v.dex===x.dex&&!v.shiny));
+  const receipt=G.Shop?.transaction?.('blank-tm',draft=>G.PKMSVVProgressionMerge.eraseTM(draft,{dex:x.dex,move:moveId,instance:x.id,legacy}),s);
+  if(!receipt)throw Error('Blank TM could not be saved; item preserved');
+  return receipt;
  }
  function installMons(mons){
   if(!mons||mons._pkmbxIndividualHub)return false;
@@ -309,5 +324,5 @@
  }
  return {TEAM_MAX,valid,item,active,activeForDex,team,legacyTeam,arenaReady,isMember,toggleFavorite,toggleTeam,
   reorderTeam,speciesBase,nature,ability,learned,useMint,useCapsule,
-  rollAbilitySlot,abilityAlternatives,HIDDEN_RATE,canTeach,teach,installMons,rankOverview,safeSelect};
+  rollAbilitySlot,abilityAlternatives,HIDDEN_RATE,canTeach,teach,eraseTM,installMons,rankOverview,safeSelect};
 });

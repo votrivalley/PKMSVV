@@ -107,6 +107,85 @@
   }
   return Object.fromEntries(Object.entries(out).sort((a,b)=>b[1].at-a[1].at||a[0].localeCompare(b[0])).slice(0,128));
  }
+ // Append-only, per-edit receipts distinguish intentional TM erasure from
+ // stale snapshots. Not a security signature or a replacement for backups.
+ const EDIT_MAX=4096;
+ function tmJournal(s){
+  const list=s?.pkmsvvTMEdits??[];
+  if(!Array.isArray(list)||list.length>EDIT_MAX)conflict();
+  const ids=new Set();
+  for(const e of list){
+   if(!obj(e)||!Number.isInteger(e.dex)||!dex(e.dex)||typeof e.move!=='string'||!/^[-_a-zA-Z0-9]{1,80}$/.test(e.move)||
+      !['teach','erase'].includes(e.action)||typeof e.legacy!=='boolean'||
+      !(e.instance===null&&e.legacy||typeof e.instance==='string'&&/^[-_a-zA-Z0-9]{1,128}$/.test(e.instance))||
+      (e.legacy&&e.instance!==null&&e.instance!=='b1-'+e.dex+'-n'&&e.instance!=='b1-'+e.dex+'-s')||
+      typeof e.id!=='string'||!/^[-_a-zA-Z0-9]{1,100}$/.test(e.id)||ids.has(e.id))conflict();
+   ids.add(e.id);
+  }
+  return list;
+ }
+ const sameEdit=(a,b)=>!!a&&!!b&&['dex','move','action','legacy','instance','id'].every(k=>a[k]===b[k]);
+ const prefix=(a,b)=>a.length<=b.length&&a.every((e,i)=>sameEdit(e,b[i]));
+ function recordTM(s,e){
+  const history=tmJournal(s);
+  if(history.length>=EDIT_MAX)throw Error('TM edit journal full; export save before continuing');
+  s.pkmsvvTMEdits=[...history,{...e,id:Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)+'-'+history.length}];
+  tmJournal(s);
+ }
+ function clearMoveSettings(s,dex,move){
+  if(Array.isArray(s.pban?.[dex]))s.pban[dex]=s.pban[dex].filter(x=>x!==move);
+  if(s.pstart?.[dex]===move)delete s.pstart[dex];
+  if(Array.isArray(s.pbind?.[dex]))s.pbind[dex]=s.pbind[dex].map(x=>x===move?null:x);
+ }
+ function eraseTM(s,{dex:species,move,instance=null,legacy=true}){
+  if(!Number.isInteger(species)||!dex(species)||!s.owned?.[species]||typeof move!=='string'||
+     !Number.isSafeInteger(s.bag?.blankTm)||s.bag.blankTm<1||s.bag.blankTm>999)throw Error('Blank TM unavailable');
+  let target=null;
+  if(instance!==null){
+   target=s.pkmsvvBox?.find(x=>x.id===instance&&x.dex===species);
+   if(!target)throw Error('Pokémon no longer available');
+   const expected=instance==='b1-'+species+'-n'||(instance==='b1-'+species+'-s'&&!s.pkmsvvBox.some(x=>x.dex===species&&!x.shiny));
+   if(legacy!==expected)throw Error('TM target changed');
+  }else if(s.pkmsvvBoxSchema!==undefined||!legacy)throw Error('Select an individual in PokéBox');
+  const old=target?(Array.isArray(target.taughtMoves)?target.taughtMoves:instance.startsWith('b1-')?s.ptm?.[species]||[]:[]):s.ptm?.[species]||[];
+  if(!Array.isArray(old)||!old.includes(move))throw Error('Only a learned TM can be erased');
+  if(target)target.taughtMoves=old.filter(x=>x!==move);
+  if(legacy&&Array.isArray(s.ptm?.[species]))s.ptm[species]=s.ptm[species].filter(x=>x!==move);
+  clearMoveSettings(s,species,move);
+  if(--s.bag.blankTm===0)delete s.bag.blankTm;
+  recordTM(s,{dex:species,move,instance,legacy,action:'erase'});
+  return {ok:true,moveId:move,left:s.bag.blankTm||0};
+ }
+ function lastEdits(list,key){
+  const out=new Map();for(const e of list){const k=key(e);if(k!==null)out.set(k,e);}return out;
+ }
+ function mergeTMs(merged,newer,older){
+  const a=tmJournal(newer),b=tmJournal(older);
+  // Native inventory and Box choose the newest snapshot; refuse divergent
+  // histories or an apparently newer save missing paid erasures.
+  if(!prefix(b,a))conflict();
+  if(!a.length)return;
+  for(const e of lastEdits(a,x=>x.legacy?x.dex+':'+x.move:null).values()){
+   const current=Array.isArray(newer.ptm?.[e.dex])&&newer.ptm[e.dex].includes(e.move);
+   if(e.action==='erase'){
+    if(current)conflict();
+    if(Array.isArray(merged.ptm?.[e.dex]))merged.ptm[e.dex]=merged.ptm[e.dex].filter(x=>x!==e.move);
+    if(!newer.pstart?.[e.dex]&&merged.pstart?.[e.dex]===e.move)delete merged.pstart[e.dex];
+   }else if(!current)conflict();
+  }
+  // Only enforce surviving individual records. Rank can consume duplicates;
+  // a consumed record is never recreated from a TM receipt.
+  for(const e of lastEdits(a,x=>x.instance?x.instance+':'+x.move:null).values()){
+   const p=newer.pkmsvvBox?.find(x=>x.id===e.instance);
+   if(!p)continue;
+   if(p.dex!==e.dex)conflict();
+   const moves=Array.isArray(p.taughtMoves)?p.taughtMoves:p.id.startsWith('b1-')?newer.ptm?.[p.dex]||[]:[];
+   if(moves.includes(e.move)!==(e.action==='teach'))conflict();
+  }
+  for(const e of lastEdits(a,x=>x.dex+':'+x.move).values())if(e.action==='erase'&&
+   !newer.pstart?.[e.dex]&&merged.pstart?.[e.dex]===e.move)delete merged.pstart[e.dex];
+  merged.pkmsvvTMEdits=copy(a);
+ }
  function apply(merged,newer,older){
   const a=newer?.pkmsvvIncubator,b=older?.pkmsvvIncubator;
   validate(a);validate(b);
@@ -122,12 +201,13 @@
   // Validate everything before modifying the draft passed by native DB.
   const m=mastery(newer?.pkmsvvMastery,older?.pkmsvvMastery),e=evolutions(newer?.pkmsvvEggEvolutions,older?.pkmsvvEggEvolutions);
   const c=coopReceipts(newer?.pkmsvvCoopProgress,older?.pkmsvvCoopProgress);
+  mergeTMs(merged,newer,older);
   if(c!==undefined)merged.pkmsvvCoopProgress=c;
   if(m!==undefined)merged.pkmsvvMastery=m;
   if(e!==undefined)merged.pkmsvvEggEvolutions=e;
   if(eggs!==undefined)merged.pkmsvvIncubator=copy(eggs);
   return merged;
  }
- const api={apply};if(typeof module!=='undefined'&&module.exports)module.exports=api;
+ const api={apply,recordTM,eraseTM,tmJournal};if(typeof module!=='undefined'&&module.exports)module.exports=api;
  if(typeof G!=='undefined')G.PKMSVVProgressionMerge=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

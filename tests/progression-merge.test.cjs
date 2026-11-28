@@ -71,3 +71,17 @@ test('Recruitment milestone counters and exact redeemed IDs survive stale merge 
  const different=JSON.parse(JSON.stringify(b));different.eggs['egg-2'].dex=175;
  assert.throws(()=>apply({}, {pkmsvvIncubator:b},{pkmsvvIncubator:different}),/PROGRESSION_CONFLICT/);
 });
+
+test('Blank TM receipt prevents legacy union resurrection and rejects divergent or rolled-back edit history',()=>{
+ const a={ptm:{25:['surf','ice-beam']},pstart:{25:'surf'},bag:{blankTm:1},owned:{25:true}};
+ const b=JSON.parse(JSON.stringify(a));
+ const {eraseTM,recordTM}=require('../src/pkmsvv-progression-merge.js');
+ eraseTM(b,{dex:25,move:'surf'});
+ const merged=apply({ptm:{25:['surf','ice-beam']},pstart:{25:'surf'}},b,a);
+ assert.deepEqual(merged.ptm[25],['ice-beam']);assert.equal(merged.pstart[25],undefined);
+ assert.throws(()=>apply({},a,b),/PROGRESSION_CONFLICT/);
+ const other=JSON.parse(JSON.stringify(a));eraseTM(other,{dex:25,move:'ice-beam'});
+ assert.throws(()=>apply({},b,other),/PROGRESSION_CONFLICT/);
+ const re=JSON.parse(JSON.stringify(b));re.ptm[25].push('surf');recordTM(re,{dex:25,move:'surf',instance:null,legacy:true,action:'teach'});
+ assert.ok(apply({ptm:{25:['surf','ice-beam']}},re,b).ptm[25].includes('surf'));
+});

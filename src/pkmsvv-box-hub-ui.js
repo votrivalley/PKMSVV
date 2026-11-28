@@ -423,7 +423,8 @@
     '<div class="pkmbx-inline-actions">'+
      '<button type="button" class="btn small" data-pkmbx-action="mint">'+L('✧ Đổi tính cách','✧ Reroll Nature')+'</button>'+
      '<button type="button" class="btn small" data-pkmbx-action="ability">'+L('⚙ Đổi đặc tính','⚙ Reroll Ability')+'</button>'+
-     '<button type="button" class="btn small" data-pkmbx-action="tm">TM</button></div>'+
+     '<button type="button" class="btn small" data-pkmbx-action="tm">TM</button>'+
+     (G.Shop?.ITEMS?.blankTm?'<button type="button" class="btn small" data-pkmbx-action="erase">'+L('Xóa TM','Erase TM')+'</button>':'')+'</div>'+
     (feedback?.id===it.id?'<div class="pkmbx-action-feedback" role="status">✓ '+clean(feedback.message)+'</div>':'')+
     '</div>';
    // QA power loadout belongs to the focused species, not the active partner.
@@ -454,7 +455,7 @@
   const abilities=G.DEX_ABIL?.[it.dex]||[];
   const alternatives=Hub.abilityAlternatives(abilities,ability?.slot||0);
   const hiddenOnly=alternatives.length===1&&alternatives[0]===2;
-  const choices=action==='ability'?['cap','caph']:action==='mint'?['mint']:validMoves;
+  const eraseMoves=Hub.learned(s,base).filter(id=>G.Moves?.BY_ID?.[id]);
   const name=clean(monName(it.dex));
   const body=action==='ability'?
    '<p>'+L('Chọn loại Viên nang cho ','Choose a Capsule for ')+name+
@@ -471,6 +472,10 @@
      !alternatives.length?'<p class="pkmbx-confirm-warning">'+
      L('Pokémon này chỉ có một Đặc tính.',
        'This Pokémon has only one Ability.')+'</p>':''):
+   action==='erase'?
+    '<p>'+L('Dùng 1 TM Trống để xóa chiêu đã học của ','Spend 1 Blank TM to erase a learned move from ')+name+'. '+L('Không hoàn lại TM cũ; bỏ cấm chiêu và thiết lập khởi đầu tương ứng.','No original TM refund; matching veto and start settings are cleared.')+'</p>'+
+    '<p>'+L('TM Trống: ','Blank TMs: ')+(bag.blankTm||0)+'</p>'+
+    (eraseMoves.length?'<select class="pkmbx-confirm-tm" aria-label="TM">'+eraseMoves.map(id=>'<option value="'+clean(id)+'">'+clean(G.T(G.Moves.BY_ID[id].name,'move'))+'</option>').join('')+'</select>':'<p>'+L('Chưa học TM nào.','No learned TM.')+'</p>'):
    action==='mint'?
     '<p>'+L('Dùng 1 Bạc hà để đổi ngẫu nhiên Tính cách cho ','Use 1 Mint to reroll the Nature of ')+
      name+'?</p><strong>'+L('Bạc hà hiện có: ','Mints: ')+(bag.mint||0)+'</strong>':
@@ -484,7 +489,7 @@
   modal.innerHTML='<section class="pkmbx-action-dialog" role="dialog" aria-modal="true" aria-label="'+
    clean(action==='ability'?L('Đổi đặc tính','Reroll Ability'):action==='mint'?L('Đổi tính cách','Reroll Nature'):'TM')+'">'+
    '<h3>'+clean(action==='ability'?L('Đổi đặc tính?','Reroll Ability?'):
-    action==='mint'?L('Đổi tính cách?','Reroll Nature?'):L('Dạy TM?','Teach TM?'))+'</h3>'+
+    action==='mint'?L('Đổi tính cách?','Reroll Nature?'):action==='erase'?L('Xóa TM?','Erase TM?'):L('Dạy TM?','Teach TM?'))+'</h3>'+
    body+'<div class="pkmbx-confirm-buttons">'+
    '<button type="button" class="btn small" data-confirm-cancel>'+L('Hủy','Cancel')+'</button>'+
    '<button type="button" class="btn small gold" data-confirm-apply>'+L('Xác nhận','Confirm')+'</button></div></section>';
@@ -494,7 +499,7 @@
   function refresh(){
    const which=radios.find(x=>x.checked)?.value||'cap';
    const allowed=action==='ability'?!!bag[which]&&alternatives.length>0:
-    action==='mint'?!!bag.mint:(validMoves.length>0);
+    action==='mint'?!!bag.mint:action==='erase'?!!bag.blankTm&&eraseMoves.length>0:(validMoves.length>0);
    apply.disabled=!allowed;
   }
   radios.forEach(x=>x.onchange=refresh);refresh();
@@ -510,7 +515,7 @@
    }
   });
   apply.onclick=()=>{
-   if(apply.disabled)return;
+   if(apply.disabled||!apply.isConnected||s!==currentSave())return;
    apply.disabled=true; // no accidental double spend on touch/controller
    const selected=radios.find(x=>x.checked)?.value||'cap';
    const move=modal.querySelector('.pkmbx-confirm-tm')?.value;
@@ -518,6 +523,7 @@
    const ok=saveAction(()=>{
     if(action==='ability')receipt=Hub.useCapsule(it.id,selected);
     else if(action==='mint')receipt=Hub.useMint(it.id);
+    else if(action==='erase')receipt=Hub.eraseTM(it.id,move);
     else receipt=Hub.teach(it.id,move);
     if(action==='ability'&&receipt.changed===false){
      G.UI?.toast?.(receipt.reason==='hidden-missed'?
@@ -530,7 +536,7 @@
     feedback={id:it.id,message:action==='ability'?
      L('Đặc tính mới: ','New Ability: ')+abilityName(receipt.abilityId):
      action==='mint'?L('Tính cách mới: ','New Nature: ')+natureName(receipt.natureId):
-     L('Đã học TM: ','TM learned: ')+String(G.T?G.T(G.Moves.BY_ID[move].name,'move'):move)};
+     (action==='erase'?L('Đã xóa TM: ','TM erased: '):L('Đã học TM: ','TM learned: '))+String(G.T?G.T(G.Moves.BY_ID[move].name,'move'):move)};
    });
    if(!ok){apply.disabled=false;refresh();}
   };

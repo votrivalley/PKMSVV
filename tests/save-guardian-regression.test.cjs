@@ -138,3 +138,14 @@ test('Guardian preserves earned recruitment egg counter and prevents removal of 
   const bad=structuredClone(original);change(bad.pkmsvvIncubator);assert.equal(g.regress(JSON.stringify(original),JSON.stringify(bad)),true);
  }
 });
+
+test('Guardian permits only newly receipted Blank TM removal, rejects unrelated lost moves and old journal reuse',()=>{
+ const a=save();a.bag.blankTm=1;a.ptm[25]=['quickattack','surf'];
+ const {eraseTM,recordTM}=require('../src/pkmsvv-progression-merge.js');
+ const b=structuredClone(a);eraseTM(b,{dex:25,move:'surf'});
+ const g=run(a).guardian;assert.equal(g.regress(JSON.stringify(a),JSON.stringify(b)),false);
+ const bad=structuredClone(b);bad.ptm[25]=[];assert.equal(g.regress(JSON.stringify(a),JSON.stringify(bad)),true);
+ assert.equal(g.regress(JSON.stringify(b),JSON.stringify(a)),true);
+ const c=structuredClone(b);c.ptm[25].push('surf');recordTM(c,{dex:25,move:'surf',instance:null,legacy:true,action:'teach'});
+ const lost=structuredClone(c);lost.ptm[25]=['quickattack'];assert.equal(g.regress(JSON.stringify(c),JSON.stringify(lost)),true);
+});
