@@ -98,6 +98,14 @@ G.KecleonUI=(()=>{
     '<small>'+esc(p.name)+' · '+L('Tính cách','Nature')+': '+esc(natName(n))+' ('+natureDesc(n)+')'+
     ' · '+L('Đặc tính','Ability')+': '+esc(abilName(a.id))+'</small></div>';
  }
+ function bagTarget(s=G.DB.save){
+  const hub=G.PKMSVVBoxHub;
+  if(!G.PKMSVVProgressionMerge?.recordTM||!hub?.valid(s))return null;
+  return hub.activeForDex(selected,s)||hub.item(s,'b1-'+selected+'-n')||hub.item(s,'b1-'+selected+'-s')||s.pkmsvvBox.find(x=>x.dex===selected)||null;
+ }
+ function canBagTeach(move){
+  const s=G.DB.save,x=bagTarget(s);return !G.DB.guest&&(x?G.PKMSVVBoxHub.canTeach(s,x,move):G.Mons.canLearn(selected,move));
+ }
  function render(){
   if(!valid())return;
   $('pkmk-heading').textContent=L('Cửa hàng Kecleon','Kecleon Shop');
@@ -182,12 +190,14 @@ G.KecleonUI=(()=>{
   if(blankBox)blankBox.onclick=()=>{if(!blankBox.isConnected)return;G.UI.hide('scr-kecleon');G.PKMSVVBoxHubUI?.openBox?.();};
   const erase=$('pkmk-list').querySelector('[data-pkmk-blank-erase]');
   if(erase){
-   const profile=G.DB.save,dex=selected;
+   const profile=G.DB.save,dex=selected,picker=$('pkmk-list').querySelector('[data-pkmk-blank-move]'),cancel=$('pkmk-list').querySelector('[data-pkmk-blank-cancel]');
+   function reset(){delete erase.dataset.confirm;erase.textContent=L('Xóa TM đã chọn','Erase selected TM');if(cancel)cancel.hidden=true;}
+   if(picker)picker.onchange=reset;if(cancel)cancel.onclick=()=>{reset();erase.focus();};
    erase.onclick=()=>{
     if(erase.disabled||!erase.isConnected||profile!==G.DB.save||selected!==dex||G.Game?.state!=='ui'||G.Coop?.active)return;
-    const move=$('pkmk-list').querySelector('[data-pkmk-blank-move]')?.value;
+    const move=picker?.value;
     if(!move||!G.Moves.BY_ID[move])return;
-    if(!confirm(L('Xóa TM '+title(move)+'? Không hoàn lại TM cũ.','Erase '+title(move)+'? No refund.')))return;
+    if(erase.dataset.confirm!==move){erase.dataset.confirm=move;erase.textContent=L('Xác nhận xóa ','Confirm erase ')+title(move);if(cancel)cancel.hidden=false;return;}
     erase.disabled=true;
     const receipt=G.Shop.transaction('blank-tm',s=>G.PKMSVVProgressionMerge.eraseTM(s,{dex,move}),profile);
     toast(receipt?'Đã xóa TM!':'Không lưu được. TM Trống vẫn được giữ.',receipt?'TM erased!':'Save failed. Blank TM preserved.');render();
@@ -198,12 +208,12 @@ G.KecleonUI=(()=>{
     let result;
     const hub=G.PKMSVVBoxHub,s=G.DB.save;
     if(G.PKMSVVProgressionMerge?.recordTM&&hub?.valid(s)){
-     const x=hub.activeForDex(selected,s)||hub.item(s,'b1-'+selected+'-n')||hub.item(s,'b1-'+selected+'-s')||s.pkmsvvBox.find(x=>x.dex===selected);
+     const x=bagTarget(s);
      try{if(x)result=hub.teach(x.id,btn.dataset.pkmkTm,s);}catch(_){}
     }else result=G.Shop.transaction('bag-teach',()=>G.Mons.teach(selected,btn.dataset.pkmkTm));
     if(!result){toast('Không học được TM. Vật phẩm vẫn được giữ.','Could not teach TM. The item was preserved.');render();return;}
     G.Audio.sfx('buy');
-    toast('Đã học TM vĩnh viễn!','TM move learned permanently!');render();
+    toast('Đã học TM!','TM move learned!');render();
   });
  }
  function buyBtn(key,cost){
@@ -299,7 +309,8 @@ G.KecleonUI=(()=>{
       const moves=(G.DB.save.ptm?.[selected]||[]).filter(id=>G.Moves.BY_ID[id]);
       const actions=migrated?'<button class="btn small" data-pkmk-blank-box>'+L('Dùng tại PokéBox','Use in PokéBox')+'</button>':
        (moves.length?'<select data-pkmk-blank-move aria-label="TM">'+moves.map(id=>'<option value="'+esc(id)+'">'+esc(title(id))+'</option>').join('')+'</select>':'')+
-       '<button class="btn small" data-pkmk-blank-erase '+(!moves.length||G.DB.guest?'disabled':'')+'>'+L('Xóa TM đã chọn','Erase selected TM')+'</button>';
+       '<button class="btn small" data-pkmk-blank-erase '+(!moves.length||G.DB.guest?'disabled':'')+'>'+L('Xóa TM đã chọn','Erase selected TM')+'</button>'+
+       '<button class="btn small ghost" data-pkmk-blank-cancel hidden>'+L('Hủy','Cancel')+'</button>';
       s+=card(itemIcon(k),esc(label(k)),esc(text(k)),actions+sellBtn(k,G.Shop.ITEMS[k].price)+'<span class="pkmk-stock">×'+G.Shop.count(k)+'</span>');
       continue;
     }
@@ -326,7 +337,7 @@ G.KecleonUI=(()=>{
   for(const id of tms)s+=card(itemIcon('move:'+id),esc(title(id)),
     L('Số lượng trong túi: ','In Bag: ')+G.Shop.tmCount(id),
    '<button class="btn small gold" data-pkmk-tm="'+esc(id)+'" '+
-    (!G.Mons.canLearn(selected,id)?'disabled':'')+'>'+L('Dạy chiêu','Teach')+'</button>'+sellBtn('tm:'+id,G.Shop.tmPrice(id)));
+    (!canBagTeach(id)?'disabled':'')+'>'+L('Dạy chiêu','Teach')+'</button>'+sellBtn('tm:'+id,G.Shop.tmPrice(id)));
   if(tms.length)s+='</div>';
   const berry=G.PKMSVVBerry,owned=berry?.TYPES?.filter(t=>berry.count(t.id)>0)||[];
   if(owned.length){

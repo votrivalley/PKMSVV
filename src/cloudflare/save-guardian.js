@@ -177,7 +177,7 @@
  function compare(aText,bText){
   const a=parse(aText),b=parse(bText);
   if(!a||!b)return {compatible:false,reason:'Invalid or incompatible save',permanent:[],balances:[],warnings:['Save is damaged or incomplete']};
-  const permanent=[];
+  const permanent=[],intentionalTM=[];
   const note=(name,oldV,newV)=>{
    if(oldV===newV)return;
    permanent.push({name,before:oldV,after:newV,change:newV>oldV?'gain':'loss'});
@@ -195,7 +195,12 @@
    const list=path[0]==='ptm'?v=>keys(v).flatMap(k=>Array.isArray(v[k])?v[k].map(id=>k+':'+id):[]):
     v=>keys(v).filter(k=>earned(v[k])||path[0]==='owned'||path[0]==='shiny'||path[0]==='itemsFound');
    const older=new Set(list(before)),newer=new Set(list(after));
-   const lost=[...older].filter(k=>!newer.has(k)),gained=[...newer].filter(k=>!older.has(k));
+   let lost=[...older].filter(k=>!newer.has(k));const gained=[...newer].filter(k=>!older.has(k));
+   if(path[0]==='ptm'){
+    const delta=editDelta(a,b)||[];
+    const allowed=lost.filter(k=>delta.filter(e=>e.legacy&&e.dex+':'+e.move===k).at(-1)?.action==='erase');
+    intentionalTM.push(...allowed);lost=lost.filter(k=>!allowed.includes(k));
+   }
    if(lost.length||gained.length)permanent.push({name,before:older.size,after:newer.size,change:lost.length?'loss':'gain',lost:lost.slice(0,12),gained:gained.slice(0,12)});
   }
   const chapterFlags=[...new Set([...keys(a),...keys(b)].filter(k=>
@@ -219,6 +224,7 @@
   if(!retained(a.pkmsvvEggEvolutions,b.pkmsvvEggEvolutions))permanent.push({name:'Tiến hóa mở Chiêu mộ',before:1,after:0,change:'loss'});
   const risk=permanent.some(x=>x.change==='loss');
   const warnings=[];
+  if(intentionalTM.length)warnings.push('Intentional Blank TM erase: '+intentionalTM.join(', '));
   if(risk)warnings.push('Permanent progress or chapter flags may be lost');
   if(balances.some(x=>x.delta<0))warnings.push('Spendable balance is lower; this can be a valid purchase');
   if(balances.some(x=>x.delta>0))warnings.push('Higher inventory is not proof this save is newer');

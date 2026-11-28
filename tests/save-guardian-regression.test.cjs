@@ -144,6 +144,7 @@ test('Guardian permits only newly receipted Blank TM removal, rejects unrelated 
  const {eraseTM,recordTM}=require('../src/pkmsvv-progression-merge.js');
  const b=structuredClone(a);eraseTM(b,{dex:25,move:'surf'});
  const g=run(a).guardian;assert.equal(g.regress(JSON.stringify(a),JSON.stringify(b)),false);
+ const diff=g.compare(JSON.stringify(a),JSON.stringify(b));assert.equal(diff.risk,false);assert.ok(diff.warnings.some(x=>x.includes('Intentional Blank TM erase')));
  const bad=structuredClone(b);bad.ptm[25]=[];assert.equal(g.regress(JSON.stringify(a),JSON.stringify(bad)),true);
  assert.equal(g.regress(JSON.stringify(b),JSON.stringify(a)),true);
  const c=structuredClone(b);c.ptm[25].push('surf');recordTM(c,{dex:25,move:'surf',instance:null,legacy:true,action:'teach'});

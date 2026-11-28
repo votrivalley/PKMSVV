@@ -239,6 +239,7 @@
   return true;
  }
  function teach(id,moveId,s=save()){
+  if(G.PKMSVVProgressionMerge?.recordTM&&(s!==save()||G.DB?.guest||G.Game?.state!=='ui'||G.Coop?.active))throw Error('TM requires an active menu profile');
   return atomic(s,draft=>{
    const x=speciesBase(draft,item(draft,id));
    if(!canTeach(draft,x,moveId))throw Error('TM is unavailable or already learned');

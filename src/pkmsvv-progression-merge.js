@@ -129,8 +129,8 @@
  function recordTM(s,e){
   const history=tmJournal(s);
   if(history.length>=EDIT_MAX)throw Error('TM edit journal full; export save before continuing');
-  s.pkmsvvTMEdits=[...history,{...e,id:Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)+'-'+history.length}];
-  tmJournal(s);
+  const next=[...history,{...e,id:Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)+'-'+history.length}];
+  tmJournal({pkmsvvTMEdits:next});s.pkmsvvTMEdits=next;
  }
  function clearMoveSettings(s,dex,move){
   if(Array.isArray(s.pban?.[dex]))s.pban[dex]=s.pban[dex].filter(x=>x!==move);
@@ -147,6 +147,7 @@
    const expected=instance==='b1-'+species+'-n'||(instance==='b1-'+species+'-s'&&!s.pkmsvvBox.some(x=>x.dex===species&&!x.shiny));
    if(legacy!==expected)throw Error('TM target changed');
   }else if(s.pkmsvvBoxSchema!==undefined||!legacy)throw Error('Select an individual in PokéBox');
+  if(tmJournal(s).length>=EDIT_MAX)throw Error('TM edit journal full; export save before continuing');
   const old=target?(Array.isArray(target.taughtMoves)?target.taughtMoves:instance.startsWith('b1-')?s.ptm?.[species]||[]:[]):s.ptm?.[species]||[];
   if(!Array.isArray(old)||!old.includes(move))throw Error('Only a learned TM can be erased');
   if(target)target.taughtMoves=old.filter(x=>x!==move);
