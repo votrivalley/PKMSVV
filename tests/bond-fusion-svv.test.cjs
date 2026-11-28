@@ -27,3 +27,13 @@ test('real categories: special Fighting is not physical; non-damaging moves and 
 test('boss damage capped, foreign/friendly enemies excluded, original skills unchanged',()=>{const h=fixture(),a=h.move('surf','water'),b=h.move('thunderbolt','electric');h.set(a,b);h.api.activate(h.p,'water-electric');const e=h.enemy(),boss=h.enemy(10),ally=h.enemy(20);boss.boss=true;ally.friendly=true;h.enemies.push(e,boss,ally);h.api.afterHit(h.p,e,a,100);assert.equal(h.api.afterHit(h.p,e,b,100),1);assert.equal(boss.hp,1000-27.5);assert.equal(ally.hp,1000);assert.equal(h.p.moves.length,2);});
 
 test('positive placeholder damage on weather, shields and status moves cannot unlock a reaction',()=>{const h=fixture(),electric=h.move('thunderbolt','electric');for(const m of [{...h.move('rain-dance','water'),dmg:10,kind:'weather'},{...h.move('fake-water','water'),dmg:10,cat:'status'},{...h.move('fake-shield','water'),dmg:10,kind:'guard'}]){h.set(m,electric);assert.equal(h.api.options(h.p),null);}h.set(h.move('surf','water'),electric);assert.ok(h.api.options(h.p));});
+
+test('Fusion 2.0 adapts only allied ring alpha, without reducing real reaction damage or radius',()=>{
+ const h=fixture(),a=h.move('surf','water'),b=h.move('thunderbolt','electric');
+ h.set(a,b);h.api.activate(h.p,'water-electric');const e=h.enemy(),other=h.enemy(20);h.enemies.push(e,other);
+ let ring;h.G.FX.ring=(...args)=>ring=args;h.G.PKMSVVHordePerformance={allyAlpha:()=>.34};
+ h.api.afterHit(h.p,e,a,100);assert.equal(h.api.afterHit(h.p,e,b,100),1);
+ assert.equal(other.hp,945);assert.equal(ring[3],180);assert.equal(ring[4],'rgba(255,225,99,0.34)');
+ h.G.Game.st.time=5;h.G.PKMSVVHordePerformance.allyAlpha=()=>1;
+ h.api.afterHit(h.p,e,a,100);h.api.afterHit(h.p,e,b,100);assert.equal(other.hp,890);assert.equal(ring[4],'#ffe163');
+});

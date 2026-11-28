@@ -31,7 +31,14 @@ G.PKMSVVFusionPilot=(()=>{
  function installSkillHints(){const old=G.LevelUp?.offer;if(typeof old!=='function'||old._pkmsvvResonance)return false;const wrapped=function(p,...args){const cards=old.call(this,p,...args),card=levelFusionCard(p);if(card&&Array.isArray(cards)&&cards.length)cards[cards.length-1]=card;return cards;};wrapped._pkmsvvResonance=true;G.LevelUp.offer=wrapped;return true;}
  function hostile(e){return !!(e&&!e.remote&&!e.friendly&&!e.pkmsvvFriendly&&!e.isSupport&&!e.arceus&&!e.judge&&typeof e.hurt==='function'&&Number.isFinite(e.x)&&Number.isFinite(e.y));}
  function nearby(e,r){const raw=G.EnemyMgr?.queryCircle?.(e.x,e.y,r)??G.EnemyMgr?.all?.()??[];const list=Array.isArray(raw)?raw:typeof raw.values==='function'?Array.from(raw.values()):[];return list.filter(x=>hostile(x)&&!x.dead&&(x.x-e.x)**2+(x.y-e.y)**2<=r*r).sort((a,b)=>(a.x-e.x)**2+(a.y-e.y)**2-((b.x-e.x)**2+(b.y-e.y)**2));}
- function emit(p,e,s,dmg){const r=s.r;let n=0;const list=nearby(e,r.radius).filter(x=>r.id!=='water-electric'||x!==e).slice(0,r.id==='water-electric'?4:MAX_TARGETS);for(const x of list){const boss=x.boss||x.legend||x.legendary;const amount=dmg*r.scale*(boss?.5:1);if(!(amount>0&&Number.isFinite(amount)))continue;x.hurt(amount,r.color,0,0,0);if(Number.isFinite(p.dmgDealt))p.dmgDealt+=amount;if(!x.dead&&r.id==='fire-wind')x.applySlow?.(.2,boss?.35:1);if(!x.dead&&r.id==='ice-physical')x.applyStun?.(boss?.12:.4);if(!x.dead&&r.id==='poison-grass')x.applySlow?.(.15,boss?.35:1);n++;}G.FX?.ring?.(e.x,e.y,8,r.radius,r.color,.45,4);G.FX?.burst?.(e.x,e.y,r.color,8,100);return n;}
+ // Only our allied reaction ring may be softened; warning rings and
+ // damage geometry stay untouched. All current recipe colors are #RRGGBB.
+ function ringColor(color){
+  const alpha=G.PKMSVVHordePerformance?.allyAlpha?.(1)??1;
+  if(!Number.isFinite(alpha)||alpha>=1||!/^#[0-9a-f]{6}$/i.test(color))return color;
+  return 'rgba('+parseInt(color.slice(1,3),16)+','+parseInt(color.slice(3,5),16)+','+parseInt(color.slice(5,7),16)+','+Math.max(0,alpha)+')';
+ }
+ function emit(p,e,s,dmg){const r=s.r;let n=0;const list=nearby(e,r.radius).filter(x=>r.id!=='water-electric'||x!==e).slice(0,r.id==='water-electric'?4:MAX_TARGETS);for(const x of list){const boss=x.boss||x.legend||x.legendary;const amount=dmg*r.scale*(boss?.5:1);if(!(amount>0&&Number.isFinite(amount)))continue;x.hurt(amount,r.color,0,0,0);if(Number.isFinite(p.dmgDealt))p.dmgDealt+=amount;if(!x.dead&&r.id==='fire-wind')x.applySlow?.(.2,boss?.35:1);if(!x.dead&&r.id==='ice-physical')x.applyStun?.(boss?.12:.4);if(!x.dead&&r.id==='poison-grass')x.applySlow?.(.15,boss?.35:1);n++;}G.FX?.ring?.(e.x,e.y,8,r.radius,ringColor(r.color),.45,4);G.FX?.burst?.(e.x,e.y,r.color,8,100);return n;}
  // Native post-hit hook: only actual learned source moves, no power/orb/ghost proc recursion.
  function afterHit(p,e,m,dmg,owner=p){
   if(!pilotEligible(p)||owner!==p||G.Game?.state!=='playing'||!hostile(e)||!Number.isFinite(dmg)||dmg<=0||!m?.id)return 0;

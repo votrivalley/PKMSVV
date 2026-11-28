@@ -152,7 +152,7 @@ test('Beautiful and Smooth are persistent opt-ins; fixed quality ignores FPS cha
 });
 test('Runtime exposes translated quality selector and softens only Fusion visual rings',()=>{
  const perf=fs.readFileSync(path.join(root,'src/pkmsvv-horde-performance.js'),'utf8');
- const fusion=fs.readFileSync(path.join(root,'src/pkmsvv-fusion-evolved.js'),'utf8');
+ const fusion=fs.readFileSync(path.join(root,'src/pkmsvv-bond-fusion.js'),'utf8');
  const css=fs.readFileSync(path.join(root,'src/pkmsvv-runtime-controls-qa.css'),'utf8');
  for(const term of ['pkmsvv-fx-quality','Tự động (theo FPS)','Mượt','Đẹp','attributeFilter',
   'document.hidden','function recordFPS','function allyAlpha']){
