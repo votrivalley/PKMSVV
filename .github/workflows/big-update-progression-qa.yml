@@ -29,6 +29,10 @@ on:
       - 'src/pkmsvv-quick-region.js'
       - 'src/pkmsvv-eternamax-qa.js'
       - 'src/pkmsvv-combat-balance-qa.js'
+      - 'src/pkmsvv-combat-tactics-qa.js'
+      - 'src/lan/lan-ai.js'
+      - 'tests/combat-tactics*.cjs'
+      - 'tests/lan-ai-modes.test.cjs'
       - 'src/pkmsvv-3ds-combat-families.js'
       - 'tests/combat-balance*.cjs'
       - 'tests/beta-fusion-native-browser.cjs'
@@ -103,7 +107,7 @@ jobs:
           npm pkg set 'overrides.node-abi=4.40.0'
           npm install --no-audit --no-fund
       - name: Unit progression and existing save protection
-        run: node --test tests/big-update-progression.test.cjs tests/save-guardian-regression.test.cjs tests/web-save-guardian-v2.test.cjs tests/special-power-qa.test.cjs tests/berry-rescue.test.cjs tests/dex-defeats-qa.test.cjs tests/p0-transactions.test.cjs tests/progression-merge.test.cjs tests/egg-rush-hidden-score.test.cjs tests/egg-rush-shiny.test.cjs tests/support-expansion.test.cjs tests/pokebox-stage2.test.cjs tests/eternamax.test.cjs tests/pokebox-hub.test.cjs tests/wisdom.test.cjs tests/combat-balance.test.cjs
+        run: node --test tests/big-update-progression.test.cjs tests/save-guardian-regression.test.cjs tests/web-save-guardian-v2.test.cjs tests/special-power-qa.test.cjs tests/berry-rescue.test.cjs tests/dex-defeats-qa.test.cjs tests/p0-transactions.test.cjs tests/progression-merge.test.cjs tests/egg-rush-hidden-score.test.cjs tests/egg-rush-shiny.test.cjs tests/support-expansion.test.cjs tests/pokebox-stage2.test.cjs tests/eternamax.test.cjs tests/pokebox-hub.test.cjs tests/wisdom.test.cjs tests/combat-balance.test.cjs tests/combat-tactics.test.cjs tests/lan-ai-modes.test.cjs tests/horde-performance.test.cjs
       - name: Rift identity and final victory regressions
         run: node --test --test-name-pattern="Rift legendary keeps|final victory retries" tests/quick-region.test.cjs
       - name: Fetch required existing Clefairy assets
@@ -129,6 +133,9 @@ jobs:
       - name: Native Surf and Electric resonance after balance
         if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
         run: timeout 90s node tests/beta-fusion-native-browser.cjs
+      - name: Native bot evasion, real rescue, status display and eight-move horde sample
+        if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
+        run: timeout 120s node tests/combat-tactics-browser.cjs
       - name: Native Galar 15m and Eternamax 30m real two-phase combat
         if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
         run: timeout 100s node tests/eternamax-browser.cjs

@@ -847,6 +847,14 @@ patch('js/core/db.js',
 // result boundary; the late-loaded module is only present in the isolated QA.
 if(process.env.PKMSVV_BIG_UPDATE_QA==='1'){
  execFileSync(process.execPath,[path.join(project,'scripts','build-eternamax-qa.cjs')],{cwd:project,stdio:'inherit'});
+ // Ranged elites keep native shot timing and aim, adding only legal footwork.
+ patch('js/entities/enemy.js',
+  '        this.shotCd -= dt;\n        if (this.shotCd <= 0 && dist < range) {',
+  '        const footwork=G.PKMSVVCombatTacticsQA?.rangedFootwork(this,pl,spd,range,dist);\n        if(footwork){vx=footwork[0];vy=footwork[1];animBase="Walk";}\n        this.shotCd -= dt;\n        if (this.shotCd <= 0 && dist < range) {');
+ // Add actual movement/Rest/FPS status before the existing active buff row.
+ // Retain its native anchor and downstream Co-op HUD layout logic.
+ patch('js/ui/hud.js','    let bx = px;\n    ctx.textAlign = \'left\';',
+  '    let bx = px;\n    bx=G.PKMSVVCombatTacticsQA?.drawStatus(ctx,bx,py+34,w,pl)??bx;\n    ctx.textAlign = \'left\';');
  // Legacy vortex shares the same host-authoritative displacement policy
  // as the native 3DS fields. Leave excluded modes and original damage alone.
  patch('js/systems/combat.js',

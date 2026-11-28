@@ -294,7 +294,9 @@ G.LanAI=(()=>{
   if(unsafe)goal=dryPoint(pl,pl)||goal;
   else if(goal===G.Coop.local&&liquidCost(pl,goal.x,goal.y))goal=dryPoint(pl,goal)||pl;
   if(!s.goal||sq(goal,s.goal)>G.World.TS**2*4||s.replan<=0){
-   s.route=route(pl,goal);s.goal={x:goal.x,y:goal.y};s.replan=.65;
+   // QA: cheap unobstructed, dry paths need no graph search.
+   const direct=G.PKMSVVCombatTacticsQA?.directPath?.(pl,goal,segment,liquidCost);
+   s.route=direct?[]:route(pl,goal);s.goal={x:goal.x,y:goal.y};s.replan=.65;
   }
   while(s.route.length&&sq(pl,s.route[0])<12**2)s.route.shift();
   const waypoint=s.route[0]||goal,angle=Math.atan2(waypoint.y-pl.y,waypoint.x-pl.x);
@@ -320,8 +322,10 @@ G.LanAI=(()=>{
   const mode=G.Social.room?.mode,host=G.Coop.local;
   const enemies=G.EnemyMgr.all().filter(e=>e&&!e.dead);
   const shots=G.Projectiles.all().filter(p=>!p.friendly);
-  const hazards=G.Hazards.all||[];
-  for(const bot of activeBots()){
+  const hazards=G.Hazards.all||[],bots=activeBots();
+  const tactics=G.PKMSVVCombatTacticsQA,tactical=tactics?.alliedMode?.(mode);
+  const rescues=tactical&&mode==='coop'?tactics.assignRescuers(G.Coop.players(),bots.map(b=>G.Coop.mate(b.uid)?.pl),states):null;
+  for(const bot of bots){
    const pl=G.Coop.mate(bot.uid)?.pl,s=states.get(bot.uid);if(!pl||!s)continue;
    if(pl.dead){
     s.axis=[0,0];pl.walking=false;
@@ -334,6 +338,8 @@ G.LanAI=(()=>{
     continue;
    }
    s.replan-=dt;s.think-=dt;
+   const rescue=rescues?.get(pl)||null;
+   if(rescues&&s.rescue!==rescue){s.rescue=rescue;s.think=0;s.replan=0;}
    // Slower strategic reactions must NEVER mean drifting through a wall,
    // water or the next A* waypoint; steering safety runs every frame.
    const lookahead=Math.max(12,(pl.spd||90)*Math.max(dt,.12)*1.5);
@@ -341,7 +347,7 @@ G.LanAI=(()=>{
    const blockedTurn=s.route.length&&sq(pl,s.route[0])<Math.max(22,(pl.spd||90)*dt*2)**2;
    if(s.think>0&&(blockedTurn||!segment(pl,pl,ahead)||
      (liquidCost(pl,pl.x,pl.y)===0&&liquidCost(pl,ahead.x,ahead.y)>0)||
-     hazards.some(h=>!h.hit&&G.Hazards.inside(h,pl.x,pl.y,pl.r+14))))s.think=0;
+     (tactical?tactics.needsEvade(pl,s.axis,hazards)&&!s.evading:hazards.some(h=>!h.hit&&G.Hazards.inside(h,pl.x,pl.y,pl.r+14)))))s.think=0;
    if(s.think<=0){
     s.wander-=.12;
     if(mode==='royale'&&(!s.roam||s.wander<=0)){
@@ -365,17 +371,19 @@ G.LanAI=(()=>{
     if(['coop','berry','berryeasy','fossil_lab'].includes(mode)&&objective&&sq(objective,host)>520**2)objective=null;
     const nests=objective?[objective]:mode==='eggrush'?(G.EggRush?.nests||[]).filter(n=>!n.taken):[];
     if(nests.length)goal=nests.reduce((a,b)=>sq(pl,a)<sq(pl,b)?a:b);
-    if(['coop','berry','berryeasy','fossil_lab'].includes(mode)){
+    if(rescues){if(rescue)goal=rescue;}
+    else if(['coop','berry','berryeasy','fossil_lab'].includes(mode)){
      const fallen=G.Coop.players().filter(p=>p!==pl&&p.dead&&sq(pl,p)<420**2);
      if(fallen.length)goal=fallen.reduce((a,b)=>sq(pl,a)<sq(pl,b)?a:b);
     }
     // Stay at the range of learned attacks rather than walking into monsters.
     const target=enemies.reduce((a,e)=>!a||sq(pl,e)<sq(pl,a)?e:a,null);
-    if(target&&sq(pl,target)<420**2&&(mode==='royale'&&(!objective||pl.hp/pl.maxHp<.55||sq(pl,target)<150**2)||
+    if(!rescue&&target&&sq(pl,target)<420**2&&(mode==='royale'&&(!objective||pl.hp/pl.maxHp<.55||sq(pl,target)<150**2)||
      ['coop','berry','berryeasy','fossil_lab'].includes(mode)&&goal===s.roam&&sq(pl,host)<430**2&&sq(target,host)<520**2&&!host.dead||goal===host&&!host.dead)){
      const ranged=pl.moves.some(m=>['projectile','beam','homing','chain','turret','meteor','boomerang'].includes(m.kind));
      const d=Math.sqrt(sq(pl,target))||1,range=pl.hp/pl.maxHp<.4?(mode==='royale'?250:230):ranged?(mode==='royale'?190:165):85;
      goal={x:target.x+(pl.x-target.x)/d*range,y:target.y+(pl.y-target.y)/d*range};
+     if(tactical&&mode==='coop')goal=tactics.rangedGoal(pl,target,range,goal);
     }
     if(['coop','berry','berryeasy','fossil_lab'].includes(mode)&&!nests.length&&goal===s.roam&&sq(pl,goal)<50**2)goal={x:pl.x,y:pl.y};
     // Fossil Co-op AI: excavate separate distant sites, help Rotom versus
@@ -413,23 +421,36 @@ G.LanAI=(()=>{
     // Berry Rescue overrides ordinary wandering, distant rescues and monster chase.
     // Fossil Expedition needs the SAME bounded local steering when many waves
     // arrive; full A* per bot every .12 sec can stall the browser thread.
-    if(mode==='berry'||mode==='berryeasy'||mode==='fossil_lab'){
+    // Emergency steering never needs A*, and uses the real impact deadline.
+    // Native Player.update/collision and native Hazards still own the outcome.
+    const evade=tactical?tactics.evade(pl,s.axis,goal,hazards,segment,liquidCost):null;
+    s.evading=!!evade;
+    s.role=evade?'evade':rescue?'rescue':mode==='berry'||mode==='berryeasy'?'defend':mode==='fossil_lab'?'objective':'combat';
+    if(evade)s.axis=evade;
+    else if(rescue&&sq(pl,rescue)<42**2&&!hazards.some(h=>!h.hit&&G.Hazards.inside(h,pl.x,pl.y,pl.r+8))){
+     // Native reviveTick needs a living teammate within 56px continuously.
+     // Don't orbit away from the downed teammate just to chase monsters.
+     s.axis=[0,0];
+    }else if(mode==='berry'||mode==='berryeasy'||mode==='fossil_lab'){
      // Defenders only need nearby threats. Keep every hostile actor active,
      // while avoiding 8 x full-horde distance scans per bot per decision.
      const nearby=enemies.filter(e=>sq(pl,e)<470*470);
      const nearbyShots=shots.filter(e=>sq(pl,e)<360*360);
      const defense=(mode==='berry'||mode==='berryeasy')?
-      G.PKMSVVBerryRescue?.defendGoal?.(pl,nearby,activeBots().findIndex(x=>x.uid===bot.uid)):null;
+      (tactical?tactics.berryGoal(pl,nearby,bots.findIndex(x=>x.uid===bot.uid)):null)||
+      G.PKMSVVBerryRescue?.defendGoal?.(pl,nearby,bots.findIndex(x=>x.uid===bot.uid)):null;
      if(defense)goal=defense;
      if(G.Arena?.active)goal=G.Arena.clampGoal(goal,pl);
      s.axis=chooseBerryAxis(pl,goal,nearby,nearbyShots,hazards);
     }else{
      if(G.Arena?.active)goal=G.Arena.clampGoal(goal,pl);
-     s.axis=chooseAxis(pl,s,goal,enemies,shots,hazards);
+     const localEnemies=tactical?enemies.filter(e=>sq(pl,e)<490**2):enemies;
+     const localShots=tactical?shots.filter(e=>sq(pl,e)<440**2):shots;
+     s.axis=chooseAxis(pl,s,goal,localEnemies,localShots,hazards);
     }
-    s.think=s.personality.think*(.9+Math.random()*.2);
+    s.think=evade ? .10:s.personality.think*(.9+Math.random()*.2);
     const dash=G.PKMSVVDash?.preview(pl);
-    if(mode!=='berry'&&mode!=='berryeasy'&&mode!=='fossil_lab'&&dash?.ready&&Math.random()<s.personality.dash&&Math.hypot(...s.axis)>.5&&
+    if(!rescue&&!evade&&mode!=='berry'&&mode!=='berryeasy'&&mode!=='fossil_lab'&&dash?.ready&&Math.random()<s.personality.dash&&Math.hypot(...s.axis)>.5&&
       danger(pl,pl,enemies,shots,hazards)>65){
      const length=(dash.move.radius||120)*(G.PKMSVVDash.profile(dash.move).range||1);
      const end={x:pl.x+s.axis[0]*length,y:pl.y+s.axis[1]*length};
@@ -445,5 +466,5 @@ G.LanAI=(()=>{
   }
  }
  function near(x,y,r=520){return G.Coop.isHost&&G.Coop.puppets().some(p=>p.lanBot&&!p.dead&&(p.x-x)**2+(p.y-y)**2<r*r);}
- return {activeBots,owns,begin,normalizeMatch,frame,levelUp,update,scoreCard,pickCard,tiersFor,route,chooseAxis,near,strength,humanBaseline,raiseToHuman,coopDifficulty,stop(){states.clear();}};
+ return {activeBots,owns,begin,normalizeMatch,frame,levelUp,update,scoreCard,pickCard,tiersFor,route,chooseAxis,near,strength,humanBaseline,raiseToHuman,coopDifficulty,tacticalState(uid){const s=states.get(uid);return s?{role:s.role||null,rescue:s.rescue?.uid||null,evading:!!s.evading,axis:s.axis.slice()}:null;},stop(){states.clear();}};
 })();
