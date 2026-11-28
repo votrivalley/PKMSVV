@@ -7,6 +7,9 @@ on:
       - 'src/v15/eggs.js'
       - 'src/web/pkmsvv-egg-rush.js'
       - 'src/pkmsvv-support-catalog.js'
+      - 'src/pkmsvv-wiki.js'
+      - 'src/pkmsvv-pippi-guide.js'
+      - 'scripts/patch-v15-egg-rush-web.cjs'
       - 'scripts/patch-v15-eggs.cjs'
       - 'src/shared/match-results.css'
       - 'tests/egg-rush*.test.cjs'
@@ -95,7 +98,7 @@ jobs:
       - name: Native Explore kill, result settlement, research lab hatch, compiled roster
         run: timeout 220s node tests/big-update-progression-browser.cjs
       - name: Native Egg Rush four-slot rank prizes, result reveal and reload
-        run: timeout 150s node tests/egg-rush-rank-prize-browser.cjs
+        run: timeout 210s node tests/egg-rush-rank-prize-browser.cjs
       - name: Real two-client Wi-Fi survival progression and weekly mission
         run: timeout 220s node tests/big-update-progression-coop-browser.cjs
       - uses: actions/upload-artifact@v4

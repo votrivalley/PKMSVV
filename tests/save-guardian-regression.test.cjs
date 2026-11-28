@@ -117,3 +117,15 @@ test('Guardian keeps egg evolution unlocks and the original rolled egg variant',
  const next=structuredClone(original);next.pkmsvvEggEvolutions[468]=true;
  assert.equal(g.regress(JSON.stringify(original),JSON.stringify(next)),false);
 });
+
+test('Guardian permits prize redemption, but rejects lost entitlement, shortened goal or paid level',()=>{
+ const original=save();original.pkmsvvIncubator={level:3,serial:1,active:null,eggs:{'egg-1':{dex:175,kills:600,goal:1000,region:9,from:'mission-baby'}},hatched:{},prizes:{'room-A.1':{count:2,claimed:[]}}};
+ const g=run(original).guardian,next=structuredClone(original);
+ next.pkmsvvIncubator.serial=2;
+ next.pkmsvvIncubator.eggs['egg-2']={dex:447,kills:0,goal:1000,region:9,from:'egg-rush-baby',prize:'room-A.1'};
+ next.pkmsvvIncubator.prizes['room-A.1'].claimed.push('egg-2');
+ assert.equal(g.regress(JSON.stringify(original),JSON.stringify(next)),false);
+ for(const mutate of [s=>{delete s.pkmsvvIncubator.prizes},s=>{s.pkmsvvIncubator.level=2},s=>{s.pkmsvvIncubator.eggs['egg-1'].goal=500},s=>{s.pkmsvvIncubator.prizes['room-A.1'].claimed=['egg-1']}]){
+  const bad=structuredClone(next);mutate(bad);assert.equal(g.regress(JSON.stringify(next),JSON.stringify(bad)),true);
+ }
+});

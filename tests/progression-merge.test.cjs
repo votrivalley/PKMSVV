@@ -53,3 +53,10 @@ test('upgraded incubators, long goals and pending rank credits survive merge wit
  const conflict=JSON.parse(JSON.stringify(b));conflict.prizes={'room-B.1':{count:2,claimed:[]}};delete conflict.eggs['egg-3'].prize;conflict.eggs['egg-3'].from='baby-egg';
  assert.throws(()=>apply({}, {pkmsvvIncubator:b},{pkmsvvIncubator:conflict}),/PROGRESSION_CONFLICT/);
 });
+
+test('paid incubator upgrade cannot merge with an older higher wallet on a newer timestamp',()=>{
+ const a={pkmsvvIncubator:inc(10),pkmsvvCoopLab:{coopCoins:120}};
+ const b=JSON.parse(JSON.stringify(a));b.pkmsvvIncubator.level=2;b.pkmsvvCoopLab.coopCoins=0;
+ assert.throws(()=>apply({},a,b),/PROGRESSION_CONFLICT/);
+ assert.equal(apply({},b,a).pkmsvvIncubator.level,2);
+});

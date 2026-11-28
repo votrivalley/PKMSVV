@@ -21,7 +21,7 @@ const OUT=path.resolve('dist/big-update-progression-qa');fs.mkdirSync(OUT,{recur
     s.owned={...s.owned,25:{at:1}};delete s.owned[19];
     s.pkmsvvMastery={};s.pkmsvvCoopProgress={};
     s.pkmsvvDefeatedDex={...s.pkmsvvDefeatedDex,19:true};
-    s.pkmsvvIncubator={serial:1,active:'egg-1',eggs:{'egg-1':{dex:19,kills:499,region:0,from:'region-boss'}},hatched:{}};
+    s.pkmsvvIncubator={level:3,serial:2,active:'egg-1',extra:['egg-2'],eggs:{'egg-1':{dex:19,kills:499,region:0,from:'region-boss'},'egg-2':{dex:175,kills:999,goal:1000,region:9,from:'mission-baby'}},hatched:{}};
     if(G.DB.commit(true)!==true)throw Error('fixture save');G.MenuUI.open();
     window.__coopKeeper=setInterval(()=>{
      [...document.querySelectorAll('.pkmsvv-berry-overlay button')].find(x=>/Không dùng Berry|No Berry/.test(x.textContent))?.click();
@@ -49,8 +49,8 @@ const OUT=path.resolve('dist/big-update-progression-qa');fs.mkdirSync(OUT,{recur
   await host.screenshot({path:path.join(OUT,'coop-host-playing.png')});await guest.screenshot({path:path.join(OUT,'coop-client-playing.png')});
   await host.evaluate(()=>G.Game.quit());
   await Promise.all(pages.map(p=>p.waitForFunction(()=>G.DB.save.pkmsvvMastery?.[25]>0&&G.DB.save.pkmsvvIncubator?.eggs?.['egg-1']?.kills===500,null,{timeout:18000})));
-  const result=await Promise.all(pages.map(p=>p.evaluate(id=>({mastery:G.DB.save.pkmsvvMastery[25],egg:G.DB.save.pkmsvvIncubator.eggs['egg-1'].kills,receipt:G.DB.save.pkmsvvCoopProgress[id],state:G.Game.state}),id)));
-  assert.equal(result[0].mastery,result[1].mastery);for(const r of result){assert.equal(r.egg,500);assert.equal(r.receipt.serial,1);}
+  const result=await Promise.all(pages.map(p=>p.evaluate(id=>({mastery:G.DB.save.pkmsvvMastery[25],egg:G.DB.save.pkmsvvIncubator.eggs['egg-1'].kills,rare:G.DB.save.pkmsvvIncubator.eggs['egg-2'].kills,receipt:G.DB.save.pkmsvvCoopProgress[id],state:G.Game.state}),id)));
+  assert.equal(result[0].mastery,result[1].mastery);for(const r of result){assert.equal(r.egg,500);assert.equal(r.rare,1000);assert.equal(r.receipt.serial,1);}
   await Promise.all(pages.map(p=>p.evaluate(()=>clearInterval(window.__coopKeeper))));
   // Real mission UI transaction using a completed test mission, not claiming
   // live account rewards. Verify weekly claim + stored egg + no repeat.
@@ -63,8 +63,8 @@ const OUT=path.resolve('dist/big-update-progression-qa');fs.mkdirSync(OUT,{recur
   assert.deepEqual(mission,{ok:true,claimed:true,source:'mission-baby',again:false});
   for(const p of pages)await p.reload({waitUntil:'domcontentloaded'});
   for(const p of pages)await p.waitForFunction(()=>!!G.DB?.save,null,{timeout:40000});
-  const reloaded=await Promise.all(pages.map(p=>p.evaluate(id=>({mastery:G.DB.save.pkmsvvMastery[25],egg:G.DB.save.pkmsvvIncubator.eggs['egg-1'].kills,serial:G.DB.save.pkmsvvCoopProgress[id].serial}),id)));
-  for(let i=0;i<2;i++)assert.deepEqual(reloaded[i],{mastery:result[i].mastery,egg:500,serial:1});
+  const reloaded=await Promise.all(pages.map(p=>p.evaluate(id=>({mastery:G.DB.save.pkmsvvMastery[25],egg:G.DB.save.pkmsvvIncubator.eggs['egg-1'].kills,rare:G.DB.save.pkmsvvIncubator.eggs['egg-2'].kills,serial:G.DB.save.pkmsvvCoopProgress[id].serial}),id)));
+  for(let i=0;i<2;i++)assert.deepEqual(reloaded[i],{mastery:result[i].mastery,egg:500,rare:1000,serial:1});
   assert.deepEqual(errors,[]);
   const report={before,result,mission,reloaded,transport:'two independent origins, direct WebRTC, 2 humans + 2 bots'};
   fs.writeFileSync(path.join(OUT,'coop-progression.json'),JSON.stringify(report,null,2));console.log('COOP_PROGRESSION_NATIVE_PASS='+JSON.stringify(report));

@@ -46,6 +46,12 @@ patch('js/game.js',
 patch('js/game.js',
  "    G.Royale.begin(coop);",
  "    G.Royale.begin(coop);\n    G.EggRush.begin(coop);");
+// Result rendering retains outcome until the player actually leaves the
+// summary. Clear stale competitive mode flags on the real UI transition,
+// before opening the lab or starting a new solo run.
+patch('js/game.js',
+ "toUI() { state = 'ui'; if (cv) cv.style.cursor = ''; Backdrop.restore(); },",
+ "toUI() { state = 'ui'; if (cv) cv.style.cursor = ''; Backdrop.restore(); G.EggRush?.begin(null); G.Royale?.begin(null); },");
 patch('js/game.js',
  "if(d&&d.royale)G.Royale.finish(d.royale);",
  "if(d&&d.royale)G.Royale.finish(d.royale);\n      if(d&&d.eggrush)G.EggRush.finish(d.eggrush);");

@@ -103,6 +103,9 @@
    else if(retains(b,a,merged))eggs=b;
    else conflict();
   }
+  // A stale device must not receive a paid level from the other save while
+  // retaining its pre-purchase Co-op wallet. No additive wallet merge exists.
+  if(eggs===b&&level(b)>level(a)&&newer?.pkmsvvCoopLab?.coopCoins!==older?.pkmsvvCoopLab?.coopCoins)conflict();
   // Validate everything before modifying the draft passed by native DB.
   const m=mastery(newer?.pkmsvvMastery,older?.pkmsvvMastery),e=evolutions(newer?.pkmsvvEggEvolutions,older?.pkmsvvEggEvolutions);
   const c=coopReceipts(newer?.pkmsvvCoopProgress,older?.pkmsvvCoopProgress);

@@ -43,7 +43,12 @@
   for(const key of keys(old.prizes)){
    const p=old.prizes[key],n=next.prizes?.[key];
    if(!record(n)||n.count!==p.count||!Array.isArray(n.claimed)||!Array.isArray(p.claimed)||p.claimed.some((id,j)=>n.claimed[j]!==id))return true;
-   for(const id of n.claimed)if(!next.eggs?.[id]&&!next.hatched?.[id])return true;
+   if(n.claimed.length>n.count||new Set(n.claimed).size!==n.claimed.length)return true;
+   for(const id of n.claimed){
+    const e=next.eggs?.[id],dex=next.hatched?.[id];
+    if(e){if(e.from!=='egg-rush-baby'||e.prize!==key)return true;}
+    else if(!dex||!b.owned?.[dex])return true;
+   }
   }
   for(const id of keys(old.hatched))if(Number(next.hatched?.[id])!==Number(old.hatched[id]))return true;
   for(const id of keys(old.eggs)){

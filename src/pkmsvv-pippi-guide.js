@@ -105,8 +105,8 @@
    ['Determined','Xem khả năng từng con, rồi đưa vào ô hỗ trợ. Chọn cho hợp đội hình đang dùng, đừng gom toàn người đẹp như tui!','Inspect each support and assign it to a slot that complements your team.']
   ],
   incubator:[
-   ['Happy','Mèn đét ơi, có trứng rồi nè! Chọn một quả bỏ vô máy ấp, rồi chịu khó đánh quái trong Khám phá nghen.','You found an egg! Select one for the incubator, then defeat enemies in solo Explore.'],
-   ['Joyous','Đủ 500 quái thì quay lại nhận bạn mới vô bộ sưu tập. Trứng này khác trứng hỗ trợ trong trận đó, đừng có đem luộc nghen!','Defeat 500 enemies, then return to hatch a permanent Pokémon. These eggs are separate from support eggs.']
+   ['Happy','Mèn đét ơi, có trứng rồi nè! Chọn trứng bỏ vô máy ấp, rồi đánh quái trong Khám phá hoặc Sống Sót Co-op nghen. Nâng máy bên Xây dựng là ấp được nhiều quả một lượt đó!','Select eggs to incubate and defeat enemies in Explore or Survival Co-op. Upgrade the machine in Build Mode for more simultaneous slots.'],
+   ['Joyous','Đủ số quái ghi trên từng quả thì quay lại nhận bạn mới nha. Quà Tranh Trứng hết chỗ chứa thì để dành, nhận sau được. Khác trứng hỗ trợ trong trận đó, đừng có đem luộc nghen!','Return when each egg reaches its own kill target. Egg Rush prizes can wait if storage is full. These eggs are separate from support eggs.']
   ],
   mega:[
    ['Inspired','Đây là khu Mega. Chọn Pokémon để xem dạng Mega và điều kiện mở khóa. Chưa đủ điều kiện thì cứ xem trước nha.','Select Pokémon to inspect Mega forms and unlock conditions.'],

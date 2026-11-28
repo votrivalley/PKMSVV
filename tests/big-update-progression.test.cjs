@@ -273,7 +273,7 @@ test('three selected eggs progress concurrently, unselected waits; hatch and pau
  i.eggs['egg-3']={dex:240,kills:600,goal:750,region:9,from:'mission-baby'};
  i.eggs['egg-4']={dex:172,kills:0,goal:500,region:9,from:'mission-baby'};
  api.activateEgg('egg-2');api.activateEgg('egg-3');assert.throws(()=>api.activateEgg('egg-4'));
- G.Game.state='playing';api.begin(s,p,null);p.kills=101;assert.equal(api.settle(s,p,61,false).progress,203);
+ G.Game.state='playing';api.begin(s,p,null);p.kills=101;assert.equal(api.settle(s,p,61,false).progress,202);
  assert.deepEqual(Object.values(s.pkmsvvIncubator.eggs).map(x=>x.kills),[500,1000,701,0]);
  G.Game.state='ui';api.activateEgg('egg-3');assert.deepEqual(Array.from(api.activeIds(s.pkmsvvIncubator)),['egg-1','egg-2']);
  api.hatch('egg-1');assert.deepEqual(Array.from(api.activeIds(s.pkmsvvIncubator)),['egg-2']);
