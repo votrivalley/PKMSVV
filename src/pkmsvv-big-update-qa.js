@@ -117,22 +117,36 @@
    return {id,dex,shiny:false};
   });
  }
- function renderMastery(host,dex,portrait){
+ function applyMasteryPortrait(portrait,dex){
+  if(!portrait||!save()?.owned?.[dex])return;
+  const m=summary(save(),dex);
+  portrait.dataset.masteryTier=String(m.tier);
+  if(m.gold){portrait.style.borderColor='#e9bf54';}
+  if(m.aura)portrait.style.filter='drop-shadow(0 6px 4px #07151ea8) drop-shadow(0 0 8px #e9bf54)';
+ }
+ function renderMastery(host,dex){
   if(!host||!save()?.owned?.[dex])return;
-  const m=summary(save(),dex),el=document.createElement('section');el.className='pkmsvv-mastery-qa';
-  el.style.cssText='margin:9px 0;padding:9px;border:1px solid #a89661;border-radius:8px;background:#1e3445;color:#f8e8ac';
-  const h=document.createElement('strong');h.textContent=L('Tinh thông','Mastery')+' · '+m.title;
+  const m=summary(save(),dex),el=document.createElement('section');el.className='pkmsvv-mastery-qa';el.dataset.masteryTier=String(m.tier);
+  el.style.cssText='margin:9px 0;padding:12px;border:1px solid #a89661;border-radius:9px;background:#1e3445;color:#f8e8ac;overflow-wrap:anywhere';
+  const h=document.createElement('h3');h.textContent=L('Tinh thông','Mastery')+' · '+m.title;h.style.cssText='margin:0 0 6px;color:#ffe28b';
   const p=document.createElement('p');p.textContent=m.next===null?m.points+' · MAX':m.points+' / '+m.next;
-  const bar=document.createElement('progress');bar.max=m.next??Math.max(1,m.points);bar.value=m.points;bar.style.width='100%';
-  const note=document.createElement('small');note.textContent=L('Chỉ danh hiệu, khung vàng và hào quang chân dung. Không cộng chỉ số.','Titles, gold frame and portrait glow only. No stat bonus.');
-  el.append(h,p,bar,note);host.append(el);
-  if(portrait&&m.gold){portrait.style.border='2px solid #e9bf54';portrait.style.borderRadius='12px';if(m.aura)portrait.style.filter='drop-shadow(0 0 8px #e9bf54)';}
+  const bar=document.createElement('progress');bar.max=m.next??Math.max(1,m.points);bar.value=m.points;bar.style.cssText='width:100%;accent-color:#e9bf54';bar.setAttribute('aria-label',L('Điểm tinh thông','Mastery points'));
+  const note=document.createElement('p');note.textContent=L('Tích lũy khi chơi Khám phá solo. Thường và Shiny dùng chung tiến độ. Không cộng chỉ số.','Earned in solo Explore. Normal and Shiny share progress. No stat bonus.');
+  const rewards=document.createElement('div');rewards.style.cssText='display:grid;gap:5px;margin-top:12px';
+  const heading=document.createElement('strong');heading.textContent=L('Mốc tinh thông','Mastery milestones');rewards.append(heading);
+  for(let tier=1;tier<LEVELS.length;tier++){
+   const row=document.createElement('div');row.dataset.masteryReward=String(tier);row.dataset.unlocked=String(m.tier>=tier);
+   row.style.cssText='display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px;border-top:1px solid #647c8b;color:'+(m.tier>=tier?'#ffe28b':'#d9e4ed');
+   const label=document.createElement('span');label.textContent=(m.tier>=tier?'✓ ':'○ ')+L(...TITLES[tier])+(tier===4?' · '+L('Khung vàng','Gold frame'):tier===5?' · '+L('Hào quang chân dung','Portrait glow'):'');
+   const value=document.createElement('strong');value.textContent=String(LEVELS[tier]);row.append(label,value);rewards.append(row);
+  }
+  el.append(h,p,bar,note,rewards);host.append(el);
  }
  function renderIncubator(frame,fromLab){
   if(!frame)return;
   frame.querySelector('[data-recruit-egg-panel]')?.remove();
   if(!fromLab)return;
-  const panel=document.createElement('section');panel.dataset.recruitEggPanel='1';panel.style.cssText='padding:10px;margin:10px 0;border:1px solid #a89661;border-radius:9px;background:#213949;color:#fff2cf';
+  const panel=document.createElement('section');panel.dataset.recruitEggPanel='1';panel.style.cssText='padding:14px;margin:10px 0;border:1px solid #a89661;border-radius:9px;background:#213949;color:#fff2cf;overflow-wrap:anywhere';
   const heading=document.createElement('strong');heading.textContent=L('Trứng thu phục · Máy ấp','Recruitment eggs · Incubator');panel.append(heading);
   const info=document.createElement('p');info.textContent=L('Hạ boss vùng 15 phút để nhận trứng Pokémon đã khám phá nhưng chưa sở hữu. Chọn một trứng, hạ 500 quái trong Khám phá rồi nhận Pokémon vĩnh viễn. Khác trứng hỗ trợ trong trận.','Defeat a region badge boss for a discovered but unowned Pokémon egg. Select one, defeat 500 enemies in Explore, then hatch a permanent Pokémon. Separate from run support eggs.');panel.append(info);
   const say=msg=>G.UI?.toast?.(msg,3000);
@@ -141,7 +155,11 @@
    if(!entries.length){const p=document.createElement('small');p.textContent=L('Chưa có trứng thu phục.','No recruitment eggs yet.');panel.append(p);}
    for(const [id,e] of entries){
     const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px solid #647c8b;padding:8px 0';
-    const label=document.createElement('span');label.textContent=L('Trứng bí ẩn','Mystery egg')+' · '+e.kills+'/'+GOAL+(i.active===id?' ✓':'');row.append(label);
+    const info=document.createElement('div');info.style.cssText='flex:1 1 150px;min-width:0';
+    const label=document.createElement('strong');label.textContent=L('Trứng bí ẩn','Mystery egg')+' · '+e.kills+'/'+GOAL;
+    const state=document.createElement('small');state.style.cssText='display:block;color:#f8e8ac';state.textContent=e.kills===GOAL?L('Sẵn sàng nở','Ready to hatch'):i.active===id?L('Đang ấp','Incubating'):L('Chờ ấp','Waiting');
+    const bar=document.createElement('progress');bar.max=GOAL;bar.value=e.kills;bar.style.cssText='width:100%;accent-color:#e9bf54';bar.setAttribute('aria-label',L('Tiến độ ấp trứng','Egg progress'));
+    info.append(label,state,bar);row.append(info);
     const btn=document.createElement('button');btn.className='btn small';btn.type='button';btn.dataset.recruitEgg=id;
     btn.textContent=e.kills===GOAL?L('Nở trứng','Hatch'):i.active===id?L('Đang ấp','Incubating'):L('Chọn ấp','Incubate');
     btn.disabled=!!G.DB?.guest||!menuOnly()||(i.active===id&&e.kills<GOAL);
@@ -150,7 +168,7 @@
    }
    const count=document.createElement('small');count.textContent=entries.length+'/'+CAP+' · '+L('Đã nở: ','Hatched: ')+Object.keys(i.hatched).length;panel.append(count);
   }catch(err){const note=document.createElement('small');note.textContent=L('Dữ liệu máy ấp không hợp lệ; không ghi đè save.','Invalid incubator data; save preserved.');panel.append(note);}
-  const intro=frame.querySelector('#pkmsvv-support-description');if(intro)intro.after(panel);else frame.append(panel);
+  frame.append(panel);
  }
- G.PKMSVVBigUpdateQA=Object.freeze({LEVELS,GOAL,CAP,summary,incubator,begin,markBadge,settle,activateEgg,hatch,renderMastery,renderIncubator});
+ G.PKMSVVBigUpdateQA=Object.freeze({LEVELS,GOAL,CAP,summary,incubator,begin,markBadge,settle,activateEgg,hatch,applyMasteryPortrait,renderMastery,renderIncubator});
 })(typeof globalThis==='object'?globalThis:this);

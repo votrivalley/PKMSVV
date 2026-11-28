@@ -21,7 +21,7 @@ G.PKMSVVSupportCatalog=(()=>{
  const rarity=dex=>Number(dex)===151?['Siêu hiếm','Super Rare']:Number(dex)===132?['Hiếm','Rare']:['Thường','Common'];
  const seen=dex=>G.PKMSVVEggs?.affinityFor?.(dex)>0;
  const shinySeen=dex=>!!G.DB?.save?.pkmsvvSupportShiny?.[dex]&&seen(dex);
- let selected=null,showShiny=false,fromResearchLab=false;
+ let selected=null,showShiny=false,fromResearchLab=false,stationTab='support';
  const scroller=()=>$('pkmsvv-support-catalog')?.querySelector('.pkmsvv-support-modal');
  function close(){
   const backToLab=fromResearchLab;fromResearchLab=false;
@@ -53,7 +53,12 @@ G.PKMSVVSupportCatalog=(()=>{
   const split=document.createElement('div');split.className='pkmsvv-support-layout';
   const grid=document.createElement('div');grid.id='pkmsvv-support-entries';
   const detail=document.createElement('div');detail.id='pkmsvv-support-detail';
-  split.append(grid,detail);frame.append(head,intro,split);wrap.append(frame);
+  const tabs=document.createElement('div');tabs.id='pkmsvv-support-station-tabs';tabs.setAttribute('role','group');tabs.style.cssText='display:none;gap:8px;flex-wrap:wrap;margin:8px 0';
+  for(const kind of ['support','incubator']){
+   const b=document.createElement('button');b.type='button';b.className='btn small';b.dataset.supportStationTab=kind;
+   b.style.cssText='flex:1 1 135px;white-space:normal;min-height:40px';b.onclick=()=>selectStation(kind,true);tabs.append(b);
+  }
+  split.append(grid,detail);frame.append(head,tabs,intro,split);wrap.append(frame);
   wrap.addEventListener('click',e=>{if(e.target===wrap)close();});
   document.body.append(wrap);
  }
@@ -165,6 +170,31 @@ G.PKMSVVSupportCatalog=(()=>{
   }
   if(keep&&panel&&Number.isFinite(before))panel.scrollTop=before;
  }
+ function selectStation(kind,guide=false){
+  const wrap=$('pkmsvv-support-catalog'),tabs=$('pkmsvv-support-station-tabs');
+  if(!wrap||!tabs)return;
+  const hasIncubator=fromResearchLab&&!!G.PKMSVVBigUpdateQA;
+  stationTab=hasIncubator&&kind==='incubator'?'incubator':'support';
+  const eggView=stationTab==='incubator';
+  tabs.style.display=hasIncubator?'flex':'none';
+  tabs.setAttribute('aria-label',t('Chức năng máy hỗ trợ','Support station functions'));
+  for(const button of tabs.querySelectorAll('[data-support-station-tab]')){
+   const on=button.dataset.supportStationTab===stationTab;
+   button.textContent=button.dataset.supportStationTab==='incubator'?t('Trứng thu phục','Recruitment eggs'):t('Pokémon hỗ trợ','Support Pokémon');
+   button.classList.toggle('gold',on);button.setAttribute('aria-pressed',String(on));
+  }
+  const intro=$('pkmsvv-support-description'),layout=wrap.querySelector('.pkmsvv-support-layout');
+  // Explicit display override prevents existing mobile flex/grid rules from showing the wrong panel.
+  intro.hidden=eggView;intro.style.display=eggView?'none':'';
+  layout.hidden=eggView;layout.style.display=eggView?'none':'';
+  $('pkmsvv-support-heading').textContent=eggView?t('Máy ấp trứng thu phục','Recruitment egg incubator'):t('✦ Pokémon hỗ trợ','✦ Support Pokémon');
+  G.PKMSVVBigUpdateQA?.renderIncubator(scroller(),eggView);
+  if(!eggView){renderGrid();renderDetails();}
+  const panel=scroller();if(panel)panel.scrollTop=0;
+  if(guide&&eggView&&!G.DB?.guest){
+   try{if(Object.keys(G.PKMSVVBigUpdateQA.incubator(G.DB?.save).eggs).length)G.PKMSVVPippiGuide?.openFeature?.('incubator');}catch(_){}
+  }
+ }
  function open(options){
   ensure();const wrap=$('pkmsvv-support-catalog');if(!wrap)return;
   fromResearchLab=options?.fromResearchLab===true;
@@ -177,10 +207,9 @@ G.PKMSVVSupportCatalog=(()=>{
    'Discover companions by hatching eggs. Undiscovered Pokémon stay silhouetted; Normal / Shiny is available only after discovering a Shiny.');
   const list=G.PKMSVVEggs?.SPECIES||[];
   if(!list.some(x=>x.dex===selected))selected=list[0]?.dex||null;
-  G.PKMSVVBigUpdateQA?.renderIncubator(wrap.querySelector('.pkmsvv-support-modal'),fromResearchLab);
-  showShiny=false;renderGrid();renderDetails();wrap.hidden=false;
+  showShiny=false;wrap.hidden=false;
   document.body?.classList?.add('pkmsvv-support-open');
-  const panel=scroller();if(panel)panel.scrollTop=0;
+  selectStation('support');
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ensure,{once:true});
  else ensure();

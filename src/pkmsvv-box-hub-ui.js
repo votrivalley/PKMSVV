@@ -380,12 +380,14 @@
      (sharedFav?L('★ Bỏ yêu thích','★ Unfavorite'):L('☆ Yêu thích','☆ Favorite'))+'</button>'+
     '<button class="btn small" id="pkmbx-team" '+(G.DB?.guest?'disabled':'')+'>'+
      (member?L('− Rời đội','− Leave Team'):L('+ Vào đội hình','+ Add to Team'))+'</button></div>'+
-    '<div class="pkmbx-hub-tabs">'+
-    '<button class="btn small'+(view==='info'?' gold':'')+'" data-box-tab="info">'+L('Thông tin','Details')+'</button>'+
-    '<button class="btn small pkmbx-rank-tab'+(progress.canRank?(view==='rank'?' gold':''):' rank-disabled')+'" data-box-tab="rank" aria-label="'+
-     (progress.canRank?L('Có thể nâng Rank','Rank available'):L('Chưa đủ nguyên liệu nâng Rank','Not enough Rank duplicates'))+'">⭐ Rank</button></div>'+
+    '<div class="pkmbx-hub-tabs" role="group" aria-label="'+L('Chi tiết Pokémon','Pokémon details')+'">'+
+    '<button type="button" class="btn small'+(view==='info'?' gold':'')+'" data-box-tab="info" aria-pressed="'+(view==='info')+'">'+L('Thông tin','Details')+'</button>'+
+    '<button type="button" class="btn small pkmbx-rank-tab'+(view==='rank'?' gold':'')+(progress.canRank?'':' rank-disabled')+'" data-box-tab="rank" aria-pressed="'+(view==='rank')+'" aria-label="'+
+     (progress.canRank?L('Có thể nâng Rank','Rank available'):L('Chưa đủ nguyên liệu nâng Rank','Not enough Rank duplicates'))+'">⭐ Rank</button>'+
+    (G.PKMSVVBigUpdateQA?'<button type="button" class="btn small'+(view==='mastery'?' gold':'')+'" data-box-tab="mastery" aria-pressed="'+(view==='mastery')+'">✦ '+L('Tinh thông','Mastery')+'</button>':'')+'</div>'+
     '<div class="pkmbx-hub-tab-content" id="pkmbx-tab-content"></div>';
   draw(profile.querySelector('#pkmbx-hero'),it.dex,it.shiny,true);
+  G.PKMSVVBigUpdateQA?.applyMasteryPortrait(profile.querySelector('#pkmbx-hero'),it.dex);
   for(const b of profile.querySelectorAll('[data-box-variant]'))b.onclick=()=>{
    const variant=b.dataset.boxVariant==='shiny'?shinyForm:normalForm;
    if(variant&&variant.id!==focused)chooseFocus(variant.id);
@@ -404,8 +406,11 @@
   profile.querySelector('#pkmbx-team').onclick=()=>saveAction(()=>Hub.toggleTeam(it.id));
   for(const b of profile.querySelectorAll('[data-box-tab]'))
    b.onclick=()=>{view=b.dataset.boxTab;renderBox();
+    profile.querySelector('[data-box-tab="'+view+'"]')?.focus({preventScroll:true});
     if(view==='rank')G.PKMSVVPippiGuide?.openFeature?.('rank');};
   if(view==='rank')renderRank(profile.querySelector('#pkmbx-tab-content'),it,ready);
+  else if(view==='mastery'&&G.PKMSVVBigUpdateQA)
+   G.PKMSVVBigUpdateQA.renderMastery(profile.querySelector('#pkmbx-tab-content'),it.dex);
   else{
    profile.querySelector('#pkmbx-tab-content').innerHTML='<div class="pkmbx-hub-info">'+
     '<p><b>'+L('Tính cách','Nature')+':</b> '+clean(natureName(nature?.id||it.natureId))+'</p>'+
@@ -421,7 +426,6 @@
      '<button type="button" class="btn small" data-pkmbx-action="tm">TM</button></div>'+
     (feedback?.id===it.id?'<div class="pkmbx-action-feedback" role="status">✓ '+clean(feedback.message)+'</div>':'')+
     '</div>';
-   G.PKMSVVBigUpdateQA?.renderMastery(profile.querySelector('.pkmbx-hub-info'),it.dex,profile.querySelector('#pkmbx-hero'));
    // QA power loadout belongs to the focused species, not the active partner.
    const powers=G.PKMSVVSpecialPowerQA;
    if(powers?.open&&currentSave()?.pkmsvvChapter7Seen===true){
@@ -802,7 +806,7 @@
  function openPC(target='dex',nextView='info'){
   if(!currentSave())return;
   closeBox();
-  view=['rank','info'].includes(nextView)?nextView:'info';
+  view=(['rank','info'].includes(nextView)||nextView==='mastery'&&G.PKMSVVBigUpdateQA)?nextView:'info';
   page=0;query='';onlyFavorites=false;onlyShiny=false;onlyRankReady=false;boxSort='dex';
   const s=currentSave();
   focused=Hub.active(s)?.id||

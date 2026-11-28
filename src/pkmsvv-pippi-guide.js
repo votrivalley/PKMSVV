@@ -104,6 +104,10 @@
    ['Happy','Ở đây chọn tối đa hai Pokémon hỗ trợ để hồi máu, buff hoặc khống chế quái. Tui không tính vào hai ô đó đâu nha.','Choose up to two Support Pokémon for healing, buffs and control. Pippi is separate.'],
    ['Determined','Xem khả năng từng con, rồi đưa vào ô hỗ trợ. Chọn cho hợp đội hình đang dùng, đừng gom toàn người đẹp như tui!','Inspect each support and assign it to a slot that complements your team.']
   ],
+  incubator:[
+   ['Happy','Mèn đét ơi, có trứng rồi nè! Chọn một quả bỏ vô máy ấp, rồi chịu khó đánh quái trong Khám phá nghen.','You found an egg! Select one for the incubator, then defeat enemies in solo Explore.'],
+   ['Joyous','Đủ 500 quái thì quay lại nhận bạn mới vô bộ sưu tập. Trứng này khác trứng hỗ trợ trong trận đó, đừng có đem luộc nghen!','Defeat 500 enemies, then return to hatch a permanent Pokémon. These eggs are separate from support eggs.']
+  ],
   mega:[
    ['Inspired','Đây là khu Mega. Chọn Pokémon để xem dạng Mega và điều kiện mở khóa. Chưa đủ điều kiện thì cứ xem trước nha.','Select Pokémon to inspect Mega forms and unlock conditions.'],
    ['Determined','Mở được Mega rồi thì dùng nút Mega trong trận. Canh hồi chiêu để dùng lúc gặp đám quái khó, đừng vừa sáng nút đã bấm!','Once unlocked, use the Mega control in battle and plan around its cooldown.']
