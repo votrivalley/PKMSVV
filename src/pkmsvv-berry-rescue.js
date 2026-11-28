@@ -4,6 +4,14 @@
 G.PKMSVVBerryRescue=(()=>{
  'use strict';
  const DURATION=480,BOSS_TIMES=[240,480],REWARD_CHANCE=.3;
+ // HP multipliers use the old Berry boss's scaled HP/floor, not player base HP.
+ // Draw the multiplier once on the host; the existing enemy snapshot carries HP to guests.
+ const BOSS_SPECS=Object.freeze([
+  Object.freeze({dex:446,name:'Munchlax',hpMin:2,hpMax:4,speed:3,hpFloor:3800}),
+  Object.freeze({dex:143,name:'Giant Snorlax',hpMin:5,hpMax:8,speed:1,hpFloor:7900})
+ ]);
+ function bossVisualScale(dex){return active&&Number(dex)===143?3:null;}
+ function rollBossHp(spec){return spec.hpMin+Math.min(spec.hpMax-spec.hpMin,Math.floor(Math.random()*(spec.hpMax-spec.hpMin+1)));}
  const NORMAL_REWARDS=[.35,.33,.32,.31,.30],EASY_REWARDS=[.18,.16,.15,.14,.13];
  // Cluster the three objective trees as a tactical triangle.
  const POS=[[-92,82],[92,82],[0,-72]];
@@ -52,16 +60,27 @@ G.PKMSVVBerryRescue=(()=>{
  }
  function bosses(){
   if(!active||!G.Coop?.isHost)return;
-  const def=G.Enemies?.BOSSES?.[bossStage-1];
-  if(!def||!G.Enemy||!G.EnemyMgr)return;
+  const template=G.Enemies?.BOSSES?.[bossStage-1],spec=BOSS_SPECS[bossStage-1];
+  if(!template||!spec||!G.Enemy||!G.EnemyMgr)return;
+  // Keep the old stage's damage, XP and scaling. Force the real species and
+  // direct pursuit so Munchlax cannot stop to use a random ranged boss AI.
+  const def={...template,dex:spec.dex,name:spec.name,behavior:'chase',spd:(Number(template.spd)||60)*spec.speed};
   const boss=new G.Enemy(def,bossStage===1?-200:200,-270,
    G.Enemies.bossScale?.(time)||{hp:1,dmg:1,spd:1},true);
-  boss.hp=boss.maxHp=Math.max(boss.maxHp||1,bossStage===1?3800:7900);
+  const baseline=Math.max(boss.maxHp||1,spec.hpFloor),mult=rollBossHp(spec);
+  boss.hp=boss.maxHp=Math.round(baseline*mult);
   boss._pkmsvvBerryBoss=bossStage;
+  boss._pkmsvvBerryHpMultiplier=mult;
+  boss._pkmsvvBerryBaseHp=baseline;
+  boss._pkmsvvBerryBaseSpeed=(Number(template.spd)||60);
+  if(bossStage===2)boss.name=spec.name;
+  // Apply Easy HP/damage and the existing stage speed factor BEFORE broadcasting
+  // the spawn, so clients see the same maximum HP as the host.
+  rebalanceEnemy(boss,Math.floor(time/120));
   G.EnemyMgr.add(boss);
   G.Spawner?.say?.(bossStage===1?
-   tr('🍓 BOSS ĐỢT 1! Bảo vệ ba cây Berry!','🍓 WAVE 1 BOSS! Protect the three trees!'):
-   tr('🍓 BOSS CUỐI! Giữ vườn Berry tới phút 8!','🍓 FINAL BOSS! Save the Berry grove!'),4);
+   tr('🍓 MUNCHLAX HÁU ĂN! Tốc độ ×3 · Máu ×'+mult,'🍓 HUNGRY MUNCHLAX! Speed ×3 · HP ×'+mult):
+   tr('🍓 GIANT SNORLAX! Máu ×'+mult+' · Bảo vệ cây Berry!','🍓 GIANT SNORLAX! HP ×'+mult+' · Protect the trees!'),4);
  }
  function onEvent(ev){
   if(!active||G.Coop?.isHost||ev?.[0]!=='br')return;
@@ -404,7 +423,7 @@ G.PKMSVVBerryRescue=(()=>{
   });
   ctx.restore();
  }
- return {DURATION,BOSS_TIMES,REWARD_CHANCE,NORMAL_REWARDS,EASY_REWARDS,XP_MULT,DEFENSE_RADIUS,chanceForHp,difficultyFor,targetFor,defendGoal,keepOutsideTrunks,begin,beginFrame,drawMissing,tick,onEvent,reward,draw,drawables,hud,state,
+ return {DURATION,BOSS_TIMES,BOSS_SPECS,bossVisualScale,REWARD_CHANCE,NORMAL_REWARDS,EASY_REWARDS,XP_MULT,DEFENSE_RADIUS,chanceForHp,difficultyFor,targetFor,defendGoal,keepOutsideTrunks,begin,beginFrame,drawMissing,tick,onEvent,reward,draw,drawables,hud,state,
   get easy(){return easy},
   get active(){return active},get trees(){return trees},get bossStage(){return bossStage},
   get lastCoinReward(){return lastCoinReward?{...lastCoinReward}:null},get coinEligible(){return !!coinGate?.eligible},

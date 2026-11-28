@@ -6,8 +6,8 @@ function harness(){
  let last=null,events=[],grants=[];
  const G={
   I18n:{lang:'vi'},
-  Enemies:{BOSSES:[{dex:25,name:'Pikachu',hp:1000},{dex:6,name:'Charizard',hp:1800}],bossScale(){return {hp:1,dmg:1,spd:1}}},
-  Enemy:class {constructor(def,x,y,sc,boss){Object.assign(this,{def,x,y,sc,boss,hp:1000,maxHp:1000});}},
+  Enemies:{BOSSES:[{dex:25,name:'Pikachu',hp:1000,spd:60,dmg:10,xp:220},{dex:6,name:'Charizard',hp:1800,spd:50,dmg:20,xp:420}],bossScale(){return {hp:1,dmg:1,spd:1}}},
+  Enemy:class {constructor(def,x,y,sc,boss){Object.assign(this,{def,dex:def.dex,x,y,sc,boss,hp:def.hp*sc.hp,maxHp:def.hp*sc.hp,spd:def.spd*sc.spd,dmg:def.dmg*sc.dmg,xp:def.xp});}},
   EnemyMgr:{all(){return this.enemies||[]},add(e){(this.enemies||=[]).push(e)}},
   Coop:{isHost:true,active:true,broadcast(e){events.push(e)}},
   BIOME_MUSIC:['forest','cave','volcano'],Audio:{music(name){this.last=name;}},
@@ -55,6 +55,41 @@ test('Three defended Berry trees, four-player Co-op mode and exactly 8 minutes',
  h.G.EnemyMgr.enemies[1].dead=true;
  h.step(.5,480.5);assert.equal(h.game.active,false);
  assert.equal(h.result().success,true);assert.equal(h.result().trees.length,3);
+});
+test('Munchlax and Giant Snorlax replace both native Berry waves, random HP once per spawn',()=>{
+ const original=Math.random;
+ try{
+  for(const [random,multi1,multi2] of [[0,2,5],[.5,3,7],[.999999,4,8]]){
+   Math.random=()=>random;
+   const h=harness();h.game.begin('berry');
+   h.step(.1,239.9);assert.equal(h.G.EnemyMgr.all().length,0);
+   h.step(.1,240);const m=h.G.EnemyMgr.all()[0];
+   assert.equal(m.dex,446);assert.equal(m.def.behavior,'chase');assert.equal(m.def.spd,180);
+   assert.equal(m.maxHp,3800*multi1);assert.equal(m.hp,m.maxHp);
+   assert.equal(m._pkmsvvBerryHpMultiplier,multi1);
+   assert.ok(Math.abs(m.spd-60*3*h.game.difficultyFor(2,false))<1e-9);
+   assert.equal(m.xp,220);
+   assert.ok(h.game.targetFor(m));
+   h.step(.1,479.9);assert.equal(h.G.EnemyMgr.all().length,1);
+   h.step(.1,480);const n=h.G.EnemyMgr.all()[1];
+   assert.equal(n.dex,143);assert.equal(n.name,'Giant Snorlax');assert.equal(n.def.spd,50);
+   assert.equal(n.maxHp,7900*multi2);assert.equal(n.hp,n.maxHp);
+   assert.equal(n._pkmsvvBerryHpMultiplier,multi2);assert.equal(n.xp,420);
+   assert.equal(h.game.bossVisualScale(143),3);assert.equal(h.game.bossVisualScale(446),null);
+   h.step(.25,481);assert.equal(n.maxHp,7900*multi2,'no reroll or repeated scaling');
+   assert.equal(h.game.active,true);
+   h.step(.25,510);assert.equal(h.result().success,true,'original 30-second defense grace remains');
+   assert.equal(h.game.bossVisualScale(143),null);
+  }
+  Math.random=()=>0;
+  const easy=harness();easy.game.begin('berryeasy');easy.step(.1,240);
+  const m=easy.G.EnemyMgr.all()[0];assert.equal(m.maxHp,7600*.7);
+  assert.ok(Math.abs(m.spd-60*3*easy.game.difficultyFor(2,true))<1e-9);
+  easy.step(.25,240.25);assert.equal(m.maxHp,7600*.7);
+  const guest=harness();guest.G.Coop.isHost=false;guest.game.begin('berry');
+  guest.step(.25,480);assert.equal(guest.G.EnemyMgr.all().length,0,'host alone spawns and rolls boss HP');
+ }finally{Math.random=original;}
+ assert.match(read('scripts/patch-berry-coop.cjs'),/bossVisualScale/);
 });
 test('Berry soundtrack matches Egg Rush forest and releases audio override after completion',()=>{
  const h=harness();h.game.begin({mode:'berry'});
