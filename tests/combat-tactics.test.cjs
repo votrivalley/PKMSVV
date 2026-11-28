@@ -139,3 +139,59 @@ test('Arena assembles independent type-pool skills and never copies player-only 
  assert.equal(api.arenaKit(rival).casts,2);
  G.Coop.active=true;assert.equal(api.arenaSkillStart(rival,player,100),false);
 });
+
+function powerFixture(kind,dex=6){
+ const {G,api}=setup(),player=p('p',100,0,{mon:{types:['water']},cdMul:1});
+ const def={id:'ember',name:'Ember',type:'fire',kind:'projectile',dmg:10,cd:1,speed:220,life:1,maxLvl:5};
+ G.Moves={BY_ID:{ember:def},poolFor:()=>['ember'],instance:(id,lvl)=>({...def,lvl})};
+ G.Coop.active=false;G.PKMSVVArenaSolo={active:true,stage:'fight'};G.Game.player=player;
+ const e={id:6,dex,x:0,y:0,r:12,hp:600,maxHp:1000,dmg:20,scale:1,bodyH:35,anim:{scale:1,dir:0},mon:{types:['fire']},pkmsvvArenaSolo:true,pkmsvvArenaBuild:{attacks:3,support:0,mode:'solo',round:0,moves:[{lvl:3}]},ai:{cd:0,cast:null},bossEnd(){this.ai.cast=null;return [0,0,'Idle'];}};
+ const hz=[];G.Hazards={add:h=>hz.push(h)};G.U={TYPE_COLOR:{fire:'#f66'}};G.Types={mult:()=>1};G.Sprites={bodyHeight:(_d,s)=>35*s,Animator:class{constructor(id,scale){this.id=id;this.scale=scale;}}};
+ G.SPRITE_META={10006:{a:{Idle:{},Walk:{},Attack:{}}},20006:{a:{Idle:{},Walk:{},Attack:{},Hurt:{}}}};
+ G.PKMSVV_MEGA_CATALOG=[{dex:6,spriteId:10006,stats:{},artReady:true}];
+ G.PKMSVVSpecialPowerQA={gmaxArt:()=>kind==='gigantamax'?{id:20006,def:{name:'G-Max Wildfire'}}:null,GMAX:{6:{name:'G-Max Wildfire'}},Z_NAMES:{fire:'Inferno Overdrive'}};
+ // Equip a real kit first with power disabled, then select only a legal power.
+ api.arenaEquip(e,player);G.DB={save:{pkmsvvChapter7Seen:true}};
+ api.arenaPowerEquip(e,player,kind);
+ return {G,api,e,player,hz};
+}
+function chargePower(api,e,player){for(let n=0;n<60;n++)api.arenaPowerTick(e,player,.25);}
+test('Arena power waits for earned combat time, uses only one power, and restores proportional HP/visuals without save writes',()=>{
+ const {api,e,player}=powerFixture('dynamax'),old=e.anim;
+ assert.equal(api.arenaPowerInfo(e).id,'dynamax');
+ api.arenaSkillStart(e,player,100);assert.equal(e.ai.cast.powerAction,undefined,'no instant power');
+ e.ai.cast=null;chargePower(api,e,player);
+ api.arenaSkillStart(e,player,100);const c=e.ai.cast;assert.equal(c.powerAction,'activate');assert.equal(e.maxHp,1000);
+ api.arenaSkillCast(e,player,c.wind+c.after+.01);
+ assert.equal(e.maxHp,2000);assert.equal(e.hp,1200);assert.equal(e.r,12);assert.equal(e.anim.scale,1.8);assert.equal(api.arenaPowerMultiplier(e,'fire'),1.4);
+ e.hp=800;for(let n=0;n<48;n++)api.arenaPowerTick(e,player,.25);
+ assert.equal(e.maxHp,1000);assert.equal(e.hp,400);assert.equal(e.anim,old);assert.equal(e.anim.scale,1);assert.equal(api.arenaPowerInfo(e).active,false);
+ assert.equal(api.arenaPowerInfo(e).used,true);api.arenaSkillStart(e,player,100);assert.ok(!e.ai.cast?.powerAction,'no second use');
+});
+test('Arena Mega requires real art and restores sprite, Tera boosts only matching moves; final reserves scripted Mega',()=>{
+ for(const kind of ['mega','terastal']){
+  const {G,api,e,player}=powerFixture(kind),old=e.anim;
+  chargePower(api,e,player);api.arenaSkillStart(e,player,100);let c=e.ai.cast;assert.equal(c.powerAction,'activate');
+  api.arenaSkillCast(e,player,c.wind+c.after+.01);assert.equal(api.arenaPowerInfo(e).active,true);
+  assert.equal(api.arenaPowerMultiplier(e,'fire'),kind==='mega'?1.3:1.8);
+  assert.equal(api.arenaPowerMultiplier(e,'water'),kind==='mega'?1.3:1);
+  if(kind==='mega')assert.equal(e.anim.id,10006);
+  G.Coop.active=true;api.arenaPowerTick(e,player,.1);assert.equal(api.arenaPowerInfo(e).active,false);assert.equal(e.anim,old);
+ }
+ const {api,e}=powerFixture('dynamax');e.pkmsvvArenaBuild={mode:'champion',round:3};assert.equal(api.arenaPowerOptions(e).join(','),'scripted-mega');
+ e._pkmsvvSkyBoss=true;assert.equal(api.arenaPowerOptions(e).length,0);
+});
+test('Arena Z strike can be dodged or interrupted; G-Max only chooses audited form and one signature',()=>{
+ const {G,api,e,player,hz}=powerFixture('zmove');
+ assert.ok(!api.arenaPowerOptions(e).includes('gigantamax'));
+ chargePower(api,e,player);api.arenaSkillStart(e,player,100);
+ const c=e.ai.cast;assert.equal(c.powerAction,'strike');assert.equal(hz.length,1);assert.ok(hz[0].delay>=1.1);assert.ok(api.arenaHazardActive(hz[0],player));
+ e.stunT=1;api.arenaSkillInterrupt(e,player);assert.equal(c.cancelled,true);assert.equal(api.arenaHazardActive(hz[0],player),false);
+ assert.equal(api.arenaPowerInfo(e).used,true);assert.equal(api.arenaPowerInfo(e).interrupted,true);
+ const k=powerFixture('gigantamax');chargePower(k.api,k.e,k.player);k.api.arenaSkillStart(k.e,k.player,100);
+ let start=k.e.ai.cast;k.api.arenaSkillCast(k.e,k.player,start.wind+start.after+.01);assert.equal(k.e.anim.id,20006);
+ for(let n=0;n<8;n++)k.api.arenaPowerTick(k.e,k.player,.25);
+ k.api.arenaSkillStart(k.e,k.player,100);let sig=k.e.ai.cast;assert.equal(sig.powerAction,'strike');assert.equal(k.hz.length,1);
+ k.api.arenaSkillCast(k.e,k.player,sig.wind+sig.after+.01);assert.equal(k.api.arenaPowerInfo(k.e).signature,true);
+ k.api.arenaSkillStart(k.e,k.player,100);assert.ok(!k.e.ai.cast?.powerAction);
+});

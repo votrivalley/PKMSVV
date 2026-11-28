@@ -72,7 +72,27 @@ const {chromium}=require('playwright'),{startServer}=require('../lan-server/serv
    const hpAfter=p.hp,shots=G.Projectiles.all().filter(q=>q.pkmsvvArenaMove===moveId).map(q=>({friendly:q.friendly,type:q.mtype,dmg:q.dmg}));
    const nativeSkill={moveId,wind,kind,markers:markers.map(h=>({kind:h.kind,type:h.type,dmg:h.dmg})),initialShots,hpBefore,hpAfter,shots,history:api.arenaKit(e).history,castEnded:!e.ai.cast};
    const allowed=G.Moves.poolFor(e.mon);
-   return {before,after,locked,afterStun,stage:solo.stage,trained,actual:{hp:p.maxHp,atkMul:p.atkMul,cdMul:p.cdMul,skills:p.moves.length},build,stun,shotDmg:e.shotDmg(),hazards,kit,nativeSkill,allowed,types:e.mon.types};
+   // Native AI chooses one power via the real Enemy.update -> bossMove path.
+   // Accelerate combat charge only; test actual cast windup and native hazard.
+   const equipped=api.arenaPowerInfo(e);
+   if(!equipped)throw Error('Arena power not equipped');
+   G.Hazards.clear();G.Projectiles.clear();e.ai.cast=null;e.ai.cd=0;e.stunT=0;e.sleepT=0;
+   e.hp=e.maxHp*.60;e.x=spot.x;e.y=spot.y;p.x=e.x+90;p.y=e.y;p.invuln=0;
+   const original={hp:e.hp,maxHp:e.maxHp,r:e.r,scale:e.anim.scale};
+   for(let n=0;n<60;n++)api.arenaPowerTick(e,p,.25);
+   e.update(1/60,p);
+   const powerCast=e.ai.cast;
+   if(!powerCast?.powerAction)throw Error('Native power cast missing '+JSON.stringify(api.arenaPowerInfo(e)));
+   const windPower=powerCast.wind,marked=G.Hazards.all.find(h=>h.pkmsvvArenaCast===powerCast);
+   if(marked){p.x=marked.x;p.y=marked.y;}
+   const pBefore=p.hp;
+   for(let n=0;n<Math.ceil((windPower+.43)/.05);n++){e.update(.05,p);G.Hazards.update(.05);}
+   const powered={state:api.arenaPowerInfo(e),maxHp:e.maxHp,hp:e.hp,r:e.r,scale:e.anim.scale,mult:api.arenaPowerMultiplier(e,equipped.type),playerHp:p.hp};
+   // Expire the temporary form using the same timer (including stun).
+   for(let n=0;n<124;n++)api.arenaPowerTick(e,p,.25);
+   const expired={state:api.arenaPowerInfo(e),maxHp:e.maxHp,hp:e.hp,r:e.r,scale:e.anim.scale};
+   const nativePower={equipped,original,action:powerCast.powerAction,wind:windPower,marked:!!marked,pBefore,powered,expired};
+   return {before,after,locked,afterStun,stage:solo.stage,trained,actual:{hp:p.maxHp,atkMul:p.atkMul,cdMul:p.cdMul,skills:p.moves.length},build,stun,shotDmg:e.shotDmg(),hazards,kit,nativeSkill,allowed,types:e.mon.types,nativePower};
   });
   assert.equal(report.stage,'fight');assert.ok(Math.abs(report.after.y-report.before.y)>.2,'native Enemy.update takes a lateral step');
   for(const key of ['hp','maxHp','spd','dmg'])assert.equal(report.after[key],report.before[key]);
@@ -88,6 +108,13 @@ const {chromium}=require('playwright'),{startServer}=require('../lan-server/serv
   if(report.nativeSkill.markers.length){assert.ok(report.nativeSkill.hpAfter<report.nativeSkill.hpBefore);}
   else if(report.nativeSkill.kind==='shot'||report.nativeSkill.kind==='nova'){assert.ok(report.nativeSkill.shots.length>0&&report.nativeSkill.shots.every(q=>!q.friendly));}
   else assert.equal(report.nativeSkill.kind,'buff');
+  const pw=report.nativePower;
+  assert.ok(pw.wind>=.85&&pw.powered.state.used);assert.equal(pw.powered.r,pw.original.r);
+  if(pw.equipped.id==='zmove'){assert.equal(pw.action,'strike');assert.ok(pw.marked&&pw.powered.playerHp<pw.pBefore);}
+  else {assert.equal(pw.action,'activate');assert.ok(pw.powered.state.active&&pw.powered.mult>1);}
+  if(['dynamax','gigantamax'].includes(pw.equipped.id)){assert.equal(pw.powered.maxHp,pw.original.maxHp*2);assert.ok(Math.abs(pw.powered.hp/pw.powered.maxHp-.60)<1e-6);}
+  assert.equal(pw.expired.state.active,false);assert.equal(pw.expired.maxHp,pw.original.maxHp);assert.equal(pw.expired.r,pw.original.r);assert.equal(pw.expired.scale,pw.original.scale);
+  console.log('NATIVE_ARENA_POWER_PASS='+JSON.stringify(pw));
   // A second native match exercises real Champion support actors, rather
   // than mocking Player.hurt or calling an isolated control function.
   await page.evaluate(()=>{

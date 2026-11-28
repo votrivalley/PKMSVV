@@ -871,7 +871,7 @@ if(process.env.PKMSVV_BIG_UPDATE_QA==='1'){
  // Anchor to the unique native status-decay line before stun/sleep handling.
  patch('js/entities/enemy.js',
   '      if (this.rd > 0) this.rd *= Math.exp(-dt / RD_TAU);',
-  '      G.PKMSVVCombatTacticsQA?.arenaSkillInterrupt(this,pl);\n      if (this.rd > 0) this.rd *= Math.exp(-dt / RD_TAU);');
+  '      G.PKMSVVCombatTacticsQA?.arenaSkillInterrupt(this,pl);\n      G.PKMSVVCombatTacticsQA?.arenaPowerTick(this,pl,dt);\n      if (this.rd > 0) this.rd *= Math.exp(-dt / RD_TAU);');
  // Only Arena-tagged telegraphs can be cancelled by death/CC/transition.
  // Do not reset player invulnerability for these single-hit new attacks.
  patch('js/systems/hazards.js',

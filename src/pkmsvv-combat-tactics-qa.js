@@ -263,6 +263,7 @@
   }
   arenaKits.set(e,{entries:selected,clock:0,last:null,buffUntil:0,buffStat:null,buffAmount:0,utilityUses:0,casts:0,history:[],observe:finite(p)?{x:p.x,y:p.y,t:0,vx:0,vy:0}:null});
   e.pkmsvvArenaMoves=selected.map(v=>({id:v.m.id,name:arenaMoveLabel(v.m),type:v.m.type,kind:v.m.kind,level:v.m.lvl,cd:v.cd,family:v.family,reach:v.reach}));
+  arenaPowerEquip(e,p);
   return e.pkmsvvArenaMoves;
  }
  function arenaKit(e){
@@ -317,6 +318,7 @@
     if(v.family==='nova'&&dist>v.reach*.8)value-=.65;
     const team=championTeams.get(e);
     if(teamBoost(e,m.cat)>0)value+=.7;
+    if(arenaPowerMultiplier(e,m.type)>1.4)value+=.8;
     if(team&&team.controlUntil>team.clock&&['shot','beam','zone'].includes(v.family))value+=.55;
    }
    value+=Math.min(1.2,(s.clock-v.last)*.07)-(s.last===v.m.id?1.2:0)+v.rank*.12;
@@ -329,6 +331,7 @@
   // False = original boss (no kit). True = this trainer owns selection, even
   // while waiting for range/cooldown, so no extra hidden generic attacks.
   if(!s||!arenaDuel(e,p))return false;
+  if(arenaPowerTry(e,p,dist))return true;
   const v=arenaSkillPick(e,p,dist);if(!v)return true;
   const m=v.m,f=v.family,col=G.U?.TYPE_COLOR?.[m.type]||'#ffb7cf';
   const aim=arenaAimPoint(e,p,f==='zone'?.27:.20),ang=Math.atan2(aim.y-e.y,aim.x-e.x);
@@ -338,7 +341,8 @@
   let damage=positive(e.dmg,1)*v.power;
   if(s.buffUntil>s.clock&&(s.buffStat==='atk'||s.buffStat===(m.cat==='physical'?'patk':'satk')))damage*=1+s.buffAmount;
   // Keep the trained base damage cap meaningful even on high-power moves.
-  damage=Math.min(damage*(1+teamBoost(e,m.cat)),positive(e.dmg,1)*1.5);
+  const power=arenaPowerMultiplier(e,m.type);
+  damage=Math.min(damage*(1+teamBoost(e,m.cat))*power,positive(e.dmg,1)*(power>1?1.95:1.5));
   token.damage=damage;
   const add=h=>G.Hazards?.add?.({...h,dmg:damage,type:m.type,cat:m.cat,color:col,delay:wind,pkmsvvArenaOwner:e,pkmsvvArenaCast:token,pkmsvvArenaMove:m.id});
   if(f==='beam')add({kind:'beam',x:e.x,y:e.y,angle:ang,len:v.reach,w:clamp(positive(m.width,26),20,55)});
@@ -352,7 +356,8 @@
  function arenaSkillInterrupt(e,p){
   const c=e?.ai?.cast;if(!c?.arenaSkill)return;
   if(!arenaDuel(e,p)||e.stunT>0||e.sleepT>0||e._pkmsvvMegaTransition>0){
-   c.cancelled=true;e.ai.cast=null;e.ai.cd=Math.max(.85,e.ai.cd||0);
+   c.cancelled=true;if(c.powerAction&&arenaPowers.has(e))arenaPowers.get(e).interrupted=true;
+   e.ai.cast=null;e.ai.cd=Math.max(.85,e.ai.cd||0);
   }
  }
  function arenaHazardActive(h,p){
@@ -364,6 +369,7 @@
   const c=e?.ai?.cast,s=arenaKits.get(e);
   if(!c?.arenaSkill||!s)return null;
   if(!arenaDuel(e,p)||c.cancelled){e.ai.cast=null;return [0,0,'Idle'];}
+  if(c.powerAction)return arenaPowerCast(e,p,dt,c);
   c.t+=Math.max(0,Number(dt)||0);
   if(c.t>=c.wind&&!c.fired){
    c.fired=true;const {m,family:f}=c.v;
@@ -397,6 +403,152 @@
    return e.bossEnd();
   }
   return [0,0,'Idle'];
+ }
+ // Stage 7: one independently equipped, once-per-duel rival power.
+ // The final Champion's existing scripted Mega and Sky Rayquaza are reserved.
+ // Enemy powers NEVER invoke Player activation, wallet, save, or shop logic.
+ const arenaPowers=new WeakMap();
+ const POWER_RULES=Object.freeze({
+  mega:Object.freeze({label:'Mega Evolution',duration:30,color:'#c282ff'}),
+  dynamax:Object.freeze({label:'Dynamax',duration:12,color:'#ef749f'}),
+  gigantamax:Object.freeze({label:'Gigantamax',duration:12,color:'#ef749f'}),
+  terastal:Object.freeze({label:'Terastal',duration:30,color:'#7fe8ff'}),
+  zmove:Object.freeze({label:'Z-Power',duration:0,color:'#ffe08a'})
+ });
+ function arenaPowerOptions(e){
+  if(!e?.pkmsvvArenaBuild||e._pkmsvvSkyBoss||G.DB?.save?.pkmsvvChapter7Seen!==true)return [];
+  const b=e.pkmsvvArenaBuild;if(b.mode==='champion'&&b.round===3)return ['scripted-mega'];
+  const options=['dynamax','zmove','terastal'];
+  const forms=(G.PKMSVV_MEGA_CATALOG||[]).filter(f=>f.dex===e.dex&&f.artReady&&
+   f.stats&&['Idle','Walk','Attack'].every(k=>G.SPRITE_META?.[f.spriteId]?.a?.[k])&&
+   (!e.shiny||G.Sprites?.hasShiny?.(f.spriteId)===true));
+  if(forms.length&&G.Sprites?.Animator)options.push('mega');
+  if(G.PKMSVVSpecialPowerQA?.gmaxArt?.(e.dex,!!e.shiny))options.push('gigantamax');
+  return options;
+ }
+ function arenaPowerEquip(e,p,preferred){
+  if(arenaPowers.has(e))return arenaPowerInfo(e);
+  const choices=arenaPowerOptions(e);if(!choices.length)return null;
+  const b=e.pkmsvvArenaBuild,seed=arenaHash(e.dex,'power:'+b.mode+':'+b.round);
+  // Stable per species/round; an optional requested value still must be a
+  // legal option (used in isolated tests, never read from player loadout).
+  const id=choices.includes(preferred)?preferred:choices[Math.min(choices.length-1,Math.floor(seed*choices.length))];
+  const own=(e.mon?.types||e.types||['normal']).filter(Boolean);
+  const typed=(e.pkmsvvArenaMoves||[]).filter(m=>own.includes(m.type)&&m.family!=='buff');
+  const type=typed[0]?.type||own[0]||'normal';
+  const s={id,type,used:false,active:false,remaining:0,clock:0,bonusHp:0,visual:null,signature:false,ring:0,interrupted:false};
+  arenaPowers.set(e,s);return arenaPowerInfo(e);
+ }
+ function arenaPowerInfo(e){
+  const s=arenaPowers.get(e);return s?{id:s.id,type:s.type,used:s.used,active:s.active,remaining:s.remaining,clock:s.clock,signature:s.signature,interrupted:s.interrupted}:null;
+ }
+ function arenaPowerStop(e){
+  const s=arenaPowers.get(e);if(!s?.active)return false;
+  if(s.bonusHp){
+   const fraction=clamp((Number(e.hp)||0)/Math.max(1,e.maxHp),0,1);
+   e.maxHp=Math.max(1,e.maxHp-s.bonusHp);e.hp=e.dead?0:e.maxHp*fraction;s.bonusHp=0;
+  }
+  if(s.visual){
+   const old=s.visual;
+   if(e.anim===old.replacement||e.anim===old.anim){
+    const dir=e.anim?.dir;e.anim=old.anim;
+    if(e.anim){e.anim.scale=old.animScale;if(dir!==undefined)e.anim.dir=dir;}
+    e.scale=old.scale;e.bodyH=old.bodyH;
+   }
+  }
+  s.visual=null;s.active=false;s.remaining=0;
+  return true;
+ }
+ function arenaPowerTick(e,p,dt){
+  const s=arenaPowers.get(e);if(!s)return;
+  if(!arenaDuel(e,p)){arenaPowerStop(e);return;}
+  const d=clamp(Number(dt)||0,0,.25);s.clock+=d;
+  if(!s.active)return;
+  s.remaining=Math.max(0,s.remaining-d);
+  if(s.remaining<=1e-6){arenaPowerStop(e);return;}
+  s.ring-=d;
+  if(s.ring<=0){
+   s.ring=1.2;G.FX?.ring?.(e.x,e.y,e.r||12,(e.r||12)*2.6,POWER_RULES[s.id].color,.45,3);
+  }
+ }
+ function arenaPowerMultiplier(e,type){
+  const s=arenaPowers.get(e);if(!s?.active)return 1;
+  if(s.id==='mega')return 1.3;
+  if(s.id==='dynamax'||s.id==='gigantamax')return 1.4;
+  return s.id==='terastal'&&s.type===type?1.8:1;
+ }
+ function arenaPowerVisual(e,s){
+  if(!e.anim||!Number.isFinite(e.anim.scale)||e.anim.scale<=0)return false;
+  const scale=e.anim.scale,old={anim:e.anim,animScale:scale,scale:e.scale,bodyH:e.bodyH,replacement:null};
+  let form=null;
+  if(s.id==='mega'){
+   form=(G.PKMSVV_MEGA_CATALOG||[]).find(f=>f.dex===e.dex&&f.artReady&&f.stats&&
+    ['Idle','Walk','Attack'].every(k=>G.SPRITE_META?.[f.spriteId]?.a?.[k])&&(!e.shiny||G.Sprites?.hasShiny?.(f.spriteId)===true));
+   if(!form)return false;
+  }else if(s.id==='gigantamax'){
+   const art=G.PKMSVVSpecialPowerQA?.gmaxArt?.(e.dex,!!e.shiny);if(!art)return false;
+   form={spriteId:art.id};
+  }
+  const grown=(s.id==='dynamax'||s.id==='gigantamax')?scale*1.8:scale;
+  if(form){
+   try{old.replacement=new G.Sprites.Animator(form.spriteId,grown,!!e.shiny);old.replacement.dir=e.anim.dir;e.anim=old.replacement;}
+   catch(_){return false;}
+  }else e.anim.scale=grown;
+  e.scale=grown;
+  e.bodyH=G.Sprites?.bodyHeight?.(form?.spriteId||e.dex,grown)??old.bodyH;
+  s.visual=old;return true;
+ }
+ function arenaPowerActivate(e,p){
+  const s=arenaPowers.get(e);if(!s||s.active||!arenaDuel(e,p))return false;
+  if(['mega','dynamax','gigantamax'].includes(s.id)&&!arenaPowerVisual(e,s))return false;
+  if(s.id==='dynamax'||s.id==='gigantamax'){
+   const fraction=clamp(e.hp/Math.max(1,e.maxHp),0,1);s.bonusHp=e.maxHp;e.maxHp+=s.bonusHp;e.hp=e.maxHp*fraction;
+  }
+  s.active=true;s.remaining=POWER_RULES[s.id].duration;s.ring=0;
+  G.FX?.ring?.(e.x,e.y,12,Math.max(70,(e.r||12)*4),POWER_RULES[s.id].color,.65,5);
+  G.UI?.toast?.(e.name+' · '+POWER_RULES[s.id].label+(s.id==='terastal'?' · '+s.type:''),1800);
+  return true;
+ }
+ function arenaPowerTry(e,p,dist){
+  const s=arenaPowers.get(e),kit=arenaKits.get(e);
+  if(!s||!kit||s.id==='scripted-mega'||!arenaDuel(e,p)||e.ai?.cast||e.stunT>0||e.sleepT>0||e._pkmsvvMegaTransition>0)return false;
+  let action='activate',wind=.85,label=POWER_RULES[s.id]?.label;
+  if(!s.used){
+   // Charge is earned through elapsed combat/real casts; tactical range and
+   // remaining HP must make activation worthwhile. No instant opening nuke.
+   if(s.clock<9||(kit.casts<3&&s.clock<15)||dist>300||e.hp/e.maxHp>.86)return false;
+   if(s.id==='zmove'){
+    if(dist>240)return false;
+    action='strike';wind=1.15;label=G.PKMSVVSpecialPowerQA?.Z_NAMES?.[s.type]||'Z-Power';
+   }
+   s.used=true;
+  }else if(s.id==='gigantamax'&&s.active&&!s.signature&&s.remaining<=10&&s.remaining>=1.6&&dist<=235){
+   action='strike';wind=1.05;
+   label=G.PKMSVVSpecialPowerQA?.GMAX?.[e.dex]?.name||'G-Max';
+   s.signature=true;
+  }else return false;
+  const col=POWER_RULES[s.id].color,aim=arenaAimPoint(e,p,.20),ang=Math.atan2(aim.y-e.y,aim.x-e.x);
+  const c={id:'pkmsvv-arena-power:'+s.id,arenaSkill:true,powerAction:action,wind,t:0,after:.4,ang,col,fired:false,cancelled:false};
+  e.ai.cast=c;
+  if(action==='strike'){
+   // One native, dodgeable zone instead of importing a player-only global
+   // attack. Never clear player invulnerability, never create a second hit.
+   const dmg=Math.min(positive(e.dmg,1)*1.75,positive(p.maxHp,320)*.23);
+   G.Hazards?.add?.({kind:'zone',x:aim.x,y:aim.y,r:76,delay:wind,dmg,type:s.type,cat:e.cat,color:col,
+    pkmsvvArenaOwner:e,pkmsvvArenaCast:c,pkmsvvArenaMove:c.id});
+  }
+  e.anim?.play?.('Charge',{speed:1.15});G.FX?.ring?.(e.x,e.y,e.r||12,(e.r||12)*3,col,wind,3);
+  G.FX?.dmgText?.(e.x,e.y-(e.bodyH||35)-8,label||'Power',col,true);
+  return true;
+ }
+ function arenaPowerCast(e,p,dt,c){
+  c.t+=Math.max(0,Number(dt)||0);
+  if(c.t>=c.wind&&!c.fired){
+   c.fired=true;
+   if(c.powerAction==='activate')arenaPowerActivate(e,p);
+   else e.anim?.play?.('Attack',{speed:1.2});
+  }
+  return c.t>=c.wind+c.after?e.bossEnd():[0,0,'Idle'];
  }
  // Champion team tactics. The actors remain ordinary, targetable enemies.
  // WeakMaps are per battle actor; no new save state or additional rewards.
@@ -590,5 +742,5 @@
   }
   ctx.restore();return x;
  }
- G.PKMSVVCombatTacticsQA=Object.freeze({alliedMode,assignRescuers,directPath,margin,needsEvade,evade,rangedGoal,berryGoal,rangedFootwork,arenaDuel,arenaProfile,arenaStats,arenaPreserveFighter,arenaPlan,arenaRecovery,arenaEquip,arenaKit,arenaSkillClock,arenaAimPoint,arenaSkillStart,arenaSkillInterrupt,arenaHazardActive,arenaSkillCast,supportSteer,updateArenaTeam,arenaSupportHit,supportInfo,teamBoost,arenaFootwork,status,drawStatus});
+ G.PKMSVVCombatTacticsQA=Object.freeze({alliedMode,assignRescuers,directPath,margin,needsEvade,evade,rangedGoal,berryGoal,rangedFootwork,arenaDuel,arenaProfile,arenaStats,arenaPreserveFighter,arenaPlan,arenaRecovery,arenaEquip,arenaKit,arenaSkillClock,arenaAimPoint,arenaSkillStart,arenaSkillInterrupt,arenaHazardActive,arenaSkillCast,arenaPowerOptions,arenaPowerEquip,arenaPowerInfo,arenaPowerTick,arenaPowerStop,arenaPowerMultiplier,supportSteer,updateArenaTeam,arenaSupportHit,supportInfo,teamBoost,arenaFootwork,status,drawStatus});
 })();
