@@ -174,7 +174,7 @@ G.PKMSVVSpecialPowerQA=(()=>{
   // Remove only the owned bonus, not unrelated permanent or passive changes.
   p.maxHp=Math.max(1,p.maxHp-r.bonusHp);p.hp=p.dead?0:p.maxHp*fraction;
   p.atkMul/=1.4;r.atkApplied=false;r.bonusHp=0;r.remaining=0;r.cooldown=80;
-  if(r.visual?.gmaxAnim&&p.anim===r.visual.gmaxAnim){const dir=p.anim.dir;p.anim=r.visual.anim;p.anim.dir=dir;}
+  if(r.visual?.gmaxAnim&&p.anim===r.visual.gmaxAnim){const dir=p.anim.dir;if(Number(p.dex)===r.baseDex){p.anim=r.visual.anim;p.anim.dir=dir;}else{const scale=G.Sprites?.playerScale?.(p.dex)??r.visual.scale;p.anim=new G.Sprites.Animator(p.dex,scale,!!p.shiny);p.anim.dir=dir;p.bodyH=G.Sprites?.bodyHeight?.(p.dex,scale)??r.visual.bodyH;}}
   if(r.visual&&p.anim===r.visual.anim){p.anim.scale=r.visual.scale;p.bodyH=r.visual.bodyH;}
   r.wildfire=null;
   r.visual=null;delete p._pkmsvvSpecialPowerActive;return true;
