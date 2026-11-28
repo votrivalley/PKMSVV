@@ -64,7 +64,7 @@ jobs:
           npm pkg set 'overrides.node-abi=4.40.0'
           npm install --no-audit --no-fund
       - name: Verify recovery gates and original catalog IDs
-        run: node --test tests/mega-recovery-preview.test.cjs tests/mega-3ds-source-audit.test.cjs tests/mega-phase3.test.cjs
+        run: node --test tests/mega-recovery-preview.test.cjs tests/mega-3ds-source-audit.test.cjs
       - name: Build and render actual recovery preview independently of game compilation
         run: |
           node scripts/build-mega-recovery-preview.cjs
@@ -73,6 +73,8 @@ jobs:
         run: node scripts/fetch-pippi-pmd.cjs && node scripts/build-pippi-portrait-atlas.cjs
       - name: Build real offline game with separate preview registry
         run: npm run prepare:lan
+      - name: Verify Phase 3 including compiled script order and original save gates
+        run: node --test tests/mega-phase3.test.cjs
       - name: Verify actual compiled sprite requests and no battle unlock
         run: timeout 100s node tests/mega-recovery-preview-browser.cjs
       - name: Private Solo QA all eight Normal and Shiny cases, pause and expiry

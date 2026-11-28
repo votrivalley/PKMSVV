@@ -9,3 +9,7 @@ Estoy desarrollando Pokémon Chuyển Sinh (PKMSVV), un fangame gratuito y sin f
 Muchas gracias.
 
 Record exact form, variant, creator, permission scope, date and evidence. Pokémon IP rights remain separate.
+
+## Outreach status — 2026-11-28
+
+Permission request sent to the PokéSurvivor contact email (Spanish), asking for explicit authorization and introductions to third-party creators, for free noncommercial closed-group use only. No project files attached. Pending response; this is not a grant. Do not enable unapproved Reloaded asset packaging. Keep code QA and original CC BY-NC previews independent.
