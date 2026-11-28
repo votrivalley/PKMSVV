@@ -62,6 +62,7 @@ function install(out,registry){
   code+='G.SPRITE_META['+f.spriteId+']='+JSON.stringify(f.meta)+';\n';
  }
  code+='G.PKMSVV_MEGA_RECOVERY_PREVIEW='+JSON.stringify(Object.fromEntries(Object.entries(registry).map(([k,{meta,...r}])=>[k,r])))+';\n';
+ if(process.env.PKMSVV_MEGA_RECOVERY_BATTLE_QA==='1')code+='G.PKMSVV_MEGA_RECOVERY_BATTLE_QA=true;\n';
  fs.appendFileSync(metaFile,code);
 }
 function html(registry){

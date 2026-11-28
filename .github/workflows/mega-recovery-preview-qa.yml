@@ -7,6 +7,8 @@ on:
       - 'tests/mega-recovery-preview.test.cjs'
       - 'tests/mega-recovery-preview-browser.cjs'
       - 'tests/mega-recovery-standalone-browser.cjs'
+      - 'tests/mega-recovery-combat-browser.cjs'
+      - 'src/pkmsvv-mega-phase3.js'
       - '.github/workflows/mega-recovery-preview-qa.yml'
       - 'src/pkmsvv-mega-entry.js'
   workflow_dispatch:
@@ -15,13 +17,14 @@ permissions:
 jobs:
   preview:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     env:
       PKMSVV_FOSSIL_NATIVE_QA: '1'
       PKMSVV_STANDALONE_AI: '1'
       PKMSVV_BETA_176_SKILLS_QA: '1'
       PKMSVV_MEGA_SPRITE_PACK: '1'
       PKMSVV_MEGA_RECOVERY_PREVIEW_QA: '1'
+      PKMSVV_MEGA_RECOVERY_BATTLE_QA: '1'
       PKMSVV_BROWSER: /usr/bin/google-chrome
     steps:
       - uses: actions/checkout@v4
@@ -70,6 +73,8 @@ jobs:
         run: npm run prepare:lan
       - name: Verify actual compiled sprite requests and no battle unlock
         run: timeout 100s node tests/mega-recovery-preview-browser.cjs
+      - name: Private Solo QA four recovered Mega forms via keyboard and native attacks
+        run: timeout 240s node tests/mega-recovery-combat-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -77,5 +82,6 @@ jobs:
           path: |
             dist/mega-recovery-preview/
             dist/mega-recovery-game-qa/
+            dist/mega-recovery-combat-qa/
           if-no-files-found: warn
           retention-days: 7

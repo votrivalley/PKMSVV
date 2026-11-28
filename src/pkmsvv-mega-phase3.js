@@ -49,7 +49,20 @@ G.PKMSVVMegaPhase3=(()=>{
    form:!!(f&&(!f.sharedStone||s?.megaForms?.[f.key]===true))
   };
  }
+ // Recovered art is only combat-testable on explicitly built private Solo QA.
+ const RECOVERY_KEYS=new Set(['slowbromega','sharpedomega','scraftymega','hawluchamega']);
+ function recoveryBattle(f,p=G.Game?.player){
+  if(!f||f.artReady===true||!RECOVERY_KEYS.has(f.key)||G.PKMSVV_MEGA_RECOVERY_BATTLE_QA!==true||
+   !p||p!==G.Game?.player||p.dex!==f.dex||p.dead||p.remote||p.lanBot||
+   G.Game?.state!=='playing'||G.PKMSVVQuickRegion?.active!==true||G.Coop?.active||
+   G.Royale?.active||G.EggRush?.active||G.PKMSVVArenaSolo?.active||G.PKMSVVChampionArena?.active||G.PKMSVVArenaPvp?.active)return false;
+  const a=G.PKMSVV_MEGA_RECOVERY_PREVIEW?.[f.key],m=G.SPRITE_META?.[f.spriteId];
+  return !!(a?.source==='spritecollab'&&a.spriteId===f.spriteId&&a.distinctCore===true&&
+    ['Idle','Walk','Attack','Shoot','Charge','Hurt','Faint'].every(k=>m?.a?.[k]?.r===8)&&
+    (!p.shiny||(m.sh===true&&['Idle','Walk','Attack','Shoot','Charge','Hurt','Faint'].every(k=>m.sa?.[k]?.r===8)&&G.Sprites?.hasShiny?.(f.spriteId)===true)));
+ }
  function isBattleReady(f){
+  if(recoveryBattle(f))return isUnlocked(f);
   // Mega Lucario is already bundled on all three platforms, but was
   // accidentally excluded from Co-op because it is not in CHAMPIONS.
   return !!(f&&(f.storyLocked||f.key==='lucariomega'||CHAMPIONS.some(c=>c.key===f.key))&&f.artReady&&
@@ -84,13 +97,18 @@ G.PKMSVVMegaPhase3=(()=>{
   scizormega:{atk:130,def:100,spa:55,spd:80,spe:65},
   swampertmega:{atk:110,def:90,spa:85,spd:90,spe:60},
   garchompmega:{atk:130,def:95,spa:80,spd:85,spe:102},
-  dragonitemega:{atk:134,def:95,spa:100,spd:100,spe:80}
+  dragonitemega:{atk:134,def:95,spa:100,spd:100,spe:80},
+  // Original species base stats: use ratios, never divide by scaled mon.pa/sa.
+  slowbromega:{atk:75,def:110,spa:100,spd:80,spe:30},
+  sharpedomega:{atk:120,def:40,spa:95,spd:40,spe:95},
+  scraftymega:{atk:90,def:115,spa:45,spd:115,spe:58},
+  hawluchamega:{atk:92,def:75,spa:74,spd:63,spe:118}
  });
  const player=()=>G.Game?.player;
  const HOVER_MEGA=new Set(['charizardmegax','charizardmegay','dragonitemega','scizormega','pidgeotmega','salamencemega','latiasmega','latiosmega','rayquazamega']);
  const AURA={charizardmegax:'#43baff',charizardmegay:'#ffb356',scizormega:'#f77f98',swampertmega:'#6fe1ee',garchompmega:'#af87ff',dragonitemega:'#ffe69b'};
  const formFor=p=>p?(G.PKMSVV_MEGA_CATALOG||[]).find(f=>
-  f.dex===p.dex&&f.stats&&f.artReady&&G.SPRITE_META?.[f.spriteId]?.a?.Idle&&
+  f.dex===p.dex&&f.stats&&(f.artReady||recoveryBattle(f,p))&&G.SPRITE_META?.[f.spriteId]?.a?.Idle&&
   (!p.shiny||G.Sprites.hasShiny?.(f.spriteId)===true)):null;
  function canActivate(p,ai=false){
   const f=formFor(p);
@@ -144,7 +162,7 @@ G.PKMSVVMegaPhase3=(()=>{
   if(p._megaPhase3Cd){p.cdMul/=CD_FACTOR;p._megaPhase3Cd=false;}
   p._megaActive=false;p._megaRemaining=0;p._megaPhase3Backup=null;
   p._megaCooldownRemaining=REUSE_COOLDOWN; // Starts AFTER the 30-second transformation.
-  appearance(p,p.dex);p._megaFormSprite=0;netMega(p,0);sync();return true;
+  appearance(p,p.dex);p._megaFormSprite=0;if(!old.recoveryKey)netMega(p,0);sync();return true;
  }
  function activate(p){
   const ai=!!p?.lanBot&&G.Coop?.isHost,f=formFor(p);
@@ -152,7 +170,7 @@ G.PKMSVVMegaPhase3=(()=>{
   const mon=p.mon,stats=f.stats;
   const old=BASE[f.key]||{atk:mon.pa,def:mon.df,spa:mon.sa,spd:mon.sd,spe:mon.spd};
   if(!stats||!old.atk||!old.spa||!old.def||!old.spd||!old.spe)return false;
-  p._megaPhase3Backup={mon,atk:p.baseAtk,spd:p.baseSpd,ignoreWater:p._pkmsvvMegaIgnoresWater};
+  p._megaPhase3Backup={mon,atk:p.baseAtk,spd:p.baseSpd,ignoreWater:p._pkmsvvMegaIgnoresWater,recoveryKey:recoveryBattle(f,p)?f.key:null};
   p._pkmsvvMegaIgnoresWater=!!(f.ignoreWaterSlow||HOVER_MEGA.has(f.key));
   const pa=mon.pa*stats.atk/old.atk,sa=mon.sa*stats.spa/old.spa;
   p.mon={...mon,pa,sa,atk:Math.max(pa,sa),df:mon.df*stats.def/old.def,
@@ -163,7 +181,7 @@ G.PKMSVVMegaPhase3=(()=>{
   for(const move of p.moves||[])if(Number.isFinite(move.t)&&move.t>0)move.t*=CD_FACTOR;
   p._megaRemaining=DURATION;p._megaActive=true;p._pkmsvvMegaAuraClock=0;p._pkmsvvMegaAuraColor=AURA[f.key]||'#d4a0ff';
   p._megaEnergy=0;p._megaKillsSeen=Number(p.kills)||0;p._megaBossesSeen=Number(p.bosses)||0;
-  appearance(p,f.spriteId);p._megaFormSprite=f.spriteId;netMega(p,f.spriteId);
+  appearance(p,f.spriteId);p._megaFormSprite=f.spriteId;if(!p._megaPhase3Backup.recoveryKey)netMega(p,f.spriteId);
   G.FX?.ring?.(p.x,p.y,15,100,'#b49aff',.9,8);
   G.Audio?.sfx?.('shinyGet');
   G.UI?.toast?.('MEGA '+(G.DEX_BY?.[p.dex]?.name||'POKÉMON').toUpperCase()+'! 30 giây · Hồi chiêu -30%'+(f.qa4dir?' · QA sprite 4 hướng':''));
@@ -186,6 +204,7 @@ G.PKMSVVMegaPhase3=(()=>{
   if(p._megaActive){
    // Mega Lucario BETA owns its own timer; Phase 3 must not tick it twice.
    if(!p._megaPhase3Backup)return;
+   if(p._megaPhase3Backup.recoveryKey&&!recoveryBattle(getForm(p._megaPhase3Backup.recoveryKey),p)){stop(p);return;}
    p._megaRemaining=Math.max(0,p._megaRemaining-elapsed);
    p._pkmsvvMegaAuraClock=(p._pkmsvvMegaAuraClock||0)+elapsed;
    if(p._pkmsvvMegaAuraClock>=.33){
@@ -298,5 +317,5 @@ G.PKMSVVMegaPhase3=(()=>{
  setInterval(sync,250);
  return {CHAMPIONS,STONE_CHANCE,DURATION,REUSE_COOLDOWN,CD_FACTOR,ENERGY_MAX,
   HIT_ENERGY,KILL_ENERGY,BOSS_ENERGY,rewardStone,isUnlocked,isBattleReady,
-  stoneOwned,privateQaPreview,progress,formFor,energy,addEnergy,onEnemyHurt,eligible,canActivate,activate,tryActivate,stop,tick,sync,remoteMega};
+  stoneOwned,privateQaPreview,recoveryBattle,progress,formFor,energy,addEnergy,onEnemyHurt,eligible,canActivate,activate,tryActivate,stop,tick,sync,remoteMega};
 })();
