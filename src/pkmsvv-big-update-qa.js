@@ -316,14 +316,14 @@
   const r=p&&(runs.get(p)||coopRuns.get(p)),co=!!(r&&coopRuns.get(p)===r);
   if(!r||r.settled||r.profile!==save()||(co?(!r.isHost||!G.Coop?.isHost||!roomMatches(r)):competitive())||G.DB?.guest||p!==G.Game?.player||
      arena!==G.Rift?.arena||arena?.phase!=='fight'||!boss||boss.dead||boss.remote||
-     boss.id!==arena.bossId||boss.legend!==true||riftBosses.has(arena))return false;
+     boss.id!==arena.bossId||!dexId(arena.dex)||Number(boss.dex)!==Number(arena.dex)||boss.legend!==true||riftBosses.has(arena))return false;
   riftBosses.set(arena,{run:r,boss});return true;
  }
  function markRiftWin(p,arena){
   const r=p&&(runs.get(p)||coopRuns.get(p)),proof=arena&&riftBosses.get(arena),co=!!(r&&coopRuns.get(p)===r);
   if(!r||r.settled||r.profile!==save()||r.riftType!==null||(co?(!r.isHost||!G.Coop?.isHost||!roomMatches(r)):competitive())||G.DB?.guest||
      p!==G.Game?.player||arena!==G.Rift?.arena||arena?.phase!=='won'||proof?.run!==r||
-     !proof.boss.dead||!Number.isFinite(proof.boss.hp)||proof.boss.hp>0||typeof arena.type!=='string')return false;
+     !proof.boss.dead||Number(proof.boss.dex)!==Number(arena.dex)||!Number.isFinite(proof.boss.hp)||proof.boss.hp>0||typeof arena.type!=='string')return false;
   r.riftType=arena.type;return true;
  }
  function spriteReady(dex){

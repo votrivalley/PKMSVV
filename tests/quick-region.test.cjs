@@ -929,3 +929,16 @@ test('Sky Pillar uses real in-game marble/gold/cloud chunk renderer only in Expl
   'Rift gameplay and its biome art remain original');
  assert.ok(floorCount>300);
 });
+
+test('Rift legendary keeps its actual Dex across constructor and manager, regional timed boss waits until exit',()=>{
+ const h=harness(),G=h.G,q=G.PKMSVVQuickRegion;
+ G.DEX_BY={12:{dex:12,name:'Butterfree',gen:1,types:['bug']},150:{dex:150,name:'Mewtwo',gen:1,leg:true,rarity:5,types:['psychic']},384:{dex:384,name:'Rayquaza',gen:3,leg:true,rarity:5,types:['dragon']}};
+ G.DEX=Object.values(G.DEX_BY);G.SPRITE_META={12:{a:{Idle:true,Walk:true}},150:{a:{Idle:true,Walk:true}},384:{a:{Idle:true,Walk:true}}};
+ assert.equal(q.choose(0),true);G.Rift={inArena:true,arena:{dex:384,phase:'fight',bossId:0}};
+ const boss=new G.Enemy({dex:384,hp:3000,spd:90,dmg:50,behavior:'ranged'},0,0,{hp:1},true);
+ assert.equal(boss.dex,384);boss.id=99;boss.legend=true;G.EnemyMgr.add(boss);G.Rift.arena.bossId=boss.id;
+ assert.equal(boss.dex,384);assert.equal(q.enforceLiveEnemy(boss,0),false);assert.equal(boss.hp,3000);
+ G.Game.st.time=900;q.updateRegionBoss();assert.equal(q.regionalBoss,null);
+ G.Rift.inArena=false;G.Rift.arena=null;q.updateRegionBoss();assert.ok(q.regionalBoss);
+ const outside=new G.Enemy({dex:384,hp:3000},0,0,{hp:1},true);assert.notEqual(outside.dex,384);
+});

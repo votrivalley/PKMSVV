@@ -20,7 +20,7 @@ const OUT=path.resolve('dist/big-update-progression-qa');fs.mkdirSync(OUT,{recur
   fs.writeFileSync(path.join(OUT,'compiled-inventory.json'),JSON.stringify(inventory,null,2));
   await page.evaluate(()=>{
    const s=G.DB.save;Object.assign(s,{partner:25,partnerShiny:false,pkmsvvStorySeen:true,pkmsvvNameChosen:true,pkmsvvChapter7Seen:true});
-   s.owned={...s.owned,25:{at:1}};delete s.owned[19];s.pkmsvvDefeatedDex={...s.pkmsvvDefeatedDex,19:true};s.pkmsvvMastery={};
+   s.owned={...s.owned,25:{at:1}};delete s.owned[19];delete s.owned[16];s.pkmsvvDefeatedDex={...s.pkmsvvDefeatedDex,19:true,16:true};s.pkmsvvMastery={};
    s.pkmsvvIncubator={serial:1,active:'egg-1',eggs:{'egg-1':{dex:19,kills:499,region:0,from:'region-boss'}},hatched:{}};
    G.MenuUI.open();if(!G.PKMSVVQuickRegion.choose(0))throw Error('Cannot enter Explore');
    window.__progressKeep=setInterval(()=>{[...document.querySelectorAll('.pkmsvv-berry-overlay button')].find(x=>/Không dùng Berry|No Berry/.test(x.textContent))?.click();
@@ -37,10 +37,23 @@ const OUT=path.resolve('dist/big-update-progression-qa');fs.mkdirSync(OUT,{recur
    G.EnemyMgr.rebuildGrid();p.target=e;window.__progressTarget={e,kills:p.kills};
   });
   await page.waitForFunction(()=>window.__progressTarget.e.dead&&G.Game.player.kills>window.__progressTarget.kills,null,{timeout:12000});
-  await page.waitForFunction(()=>Number(G.Game.st?.time)>=61,null,{timeout:100000});
+  await page.waitForFunction(()=>Number(G.Game.st?.time)>=61&&G.Game.state==='playing',null,{timeout:100000});
+  // Enter a REAL native Dragon Rift in Kanto: every dragon legendary is
+  // outside Kanto, so the region sanitizer must not replace the actor.
+  const rift=await page.evaluate(()=>{
+   G.Rift.debugArena('dragon');const a=G.Rift.arena,b=G.EnemyMgr.get(a.bossId);
+   if(!b||b.dex!==a.dex||!b.legend||b.dex<=151)throw Error('Native Rift identity changed '+JSON.stringify({arena:a?.dex,boss:b?.dex}));
+   const result={dex:b.dex,arena:a.dex,hp:b.maxHp,type:a.type};
+   b.hurt(b.hp+10,'#fff',0,0,0);if(!b.dead||b.hp>0)throw Error('Native Rift boss not defeated');
+   return result;
+  });
+  await page.waitForFunction(()=>G.Rift.arena?.phase==='won',null,{timeout:12000});
+  await page.waitForFunction(()=>!G.Rift.inArena&&G.Game.state==='playing',null,{timeout:20000});
   await page.evaluate(()=>{clearInterval(window.__progressKeep);G.Game.quit();});
   await page.waitForFunction(()=>G.DB.save.pkmsvvMastery?.[25]>0&&G.DB.save.pkmsvvIncubator?.eggs?.['egg-1']?.kills===500,null,{timeout:12000});
-  const progress=await page.evaluate(()=>({mastery:G.DB.save.pkmsvvMastery[25],egg:G.DB.save.pkmsvvIncubator.eggs['egg-1'].kills,state:G.Game.state}));
+  const progress=await page.evaluate(()=>({mastery:G.DB.save.pkmsvvMastery[25],egg:G.DB.save.pkmsvvIncubator.eggs['egg-1'].kills,state:G.Game.state,rift:Object.values(G.DB.save.pkmsvvIncubator.eggs).find(e=>['rift','rift-baby'].includes(e.from))}));
+  assert.ok(progress.rift,'native Rift kill must grant an egg in the result');
+  assert.equal(rift.dex,rift.arena);console.log('NATIVE_RIFT_EGG_PASS='+JSON.stringify({rift,reward:progress.rift}));
   // The real PokéBox must keep Mastery separate from Rank and Details.
   await page.evaluate(()=>{G.MenuUI.open();G.PKMSVVBoxHubUI.openBox();});
   const profile=page.locator('#pkmbx-profile');
@@ -69,7 +82,7 @@ const OUT=path.resolve('dist/big-update-progression-qa');fs.mkdirSync(OUT,{recur
   await station.click();
   assert.equal(await catalog.locator('.pkmsvv-support-layout').isVisible(),false);
   assert.equal(await eggs.isVisible(),true);
-  assert.equal(await eggs.locator('progress').getAttribute('value'),'500');
+  assert.equal(await eggs.locator('progress').first().getAttribute('value'),'500');
   await page.screenshot({path:path.join(OUT,'incubator-ready-desktop.png')});
   await catalog.locator('[data-support-station-tab="support"]').click();
   assert.equal(await eggs.count(),0);

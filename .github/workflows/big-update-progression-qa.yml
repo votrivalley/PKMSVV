@@ -30,6 +30,7 @@ on:
       - 'src/pkmsvv-box-hub-ui.js'
       - 'src/cloudflare/save-guardian.js'
       - 'tests/dex-defeats-qa.test.cjs'
+      - 'tests/quick-region.test.cjs'
       - 'tests/save-guardian-regression.test.cjs'
       - 'scripts/patch-berry-coop.cjs'
       - 'tests/berry-rescue.test.cjs'
@@ -87,6 +88,8 @@ jobs:
           npm install --no-audit --no-fund
       - name: Unit progression and existing save protection
         run: node --test tests/big-update-progression.test.cjs tests/save-guardian-regression.test.cjs tests/web-save-guardian-v2.test.cjs tests/special-power-qa.test.cjs tests/berry-rescue.test.cjs tests/dex-defeats-qa.test.cjs tests/p0-transactions.test.cjs tests/progression-merge.test.cjs tests/egg-rush-hidden-score.test.cjs tests/egg-rush-shiny.test.cjs tests/support-expansion.test.cjs
+      - name: Rift regional identity regression
+        run: node --test --test-name-pattern="Rift legendary keeps" tests/quick-region.test.cjs
       - name: Fetch required existing Clefairy assets
         run: node scripts/fetch-pippi-pmd.cjs && node scripts/build-pippi-portrait-atlas.cjs
       - name: Compile real offline game

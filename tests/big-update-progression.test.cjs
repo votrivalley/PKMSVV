@@ -88,7 +88,7 @@ test('Rift rewards require the recorded native dead boss and are settled once pe
  const {G,s,p,api}=setup();G.DEX_BY[175]={rarity:1,types:['fairy']};G.SPRITE_META[175]={a:{Idle:{},Walk:{}}};
  G.PKMSVVQuickRegion.selectedRegion=1;G.PKMSVVQuickRegion.speciesFor=()=>[175];
  assert.equal(api.begin(s,p,null),true);
- const arena={phase:'fight',type:'fairy',bossId:2},boss={id:2,legend:true,dead:false,hp:100};G.Rift={arena};
+ const arena={phase:'fight',type:'fairy',bossId:2,dex:151},boss={id:2,dex:151,legend:true,dead:false,hp:100};G.Rift={arena};
  assert.equal(api.registerRift(p,arena,boss),true);
  assert.equal(api.registerRift(p,arena,boss),false);
  arena.phase='won';assert.equal(api.markRiftWin(p,arena),false);
@@ -100,10 +100,11 @@ test('Rift rewards require the recorded native dead boss and are settled once pe
  s.pkmsvvIncubator.eggs['egg-2'].kills=api.goalFor(s.pkmsvvIncubator.eggs['egg-2']);G.Game.state='ui';assert.equal(api.hatch('egg-2').dex,175);
 });
 test('Rift loss, missing boss and guest or remote actors do not grant an egg',()=>{
- for(const failure of ['loss','missing','guest','remote','coop']){
+ for(const failure of ['loss','missing','guest','remote','coop','wrong-species']){
   const {G,s,p,api}=setup();api.begin(s,p,null);
-  const arena={phase:'fight',type:'normal',bossId:1},boss={id:1,legend:true,dead:true,hp:0};G.Rift={arena};
+  const arena={phase:'fight',type:'normal',bossId:1,dex:151},boss={id:1,dex:151,legend:true,dead:true,hp:0};G.Rift={arena};
   if(failure==='remote')boss.remote=true;
+  if(failure==='wrong-species')boss.dex=25;
   if(failure!=='missing'){boss.dead=false;boss.hp=10;api.registerRift(p,arena,boss);boss.dead=true;boss.hp=0;}
   arena.phase=failure==='loss'?'lost':'won';
   if(failure==='guest')G.DB.guest=true;if(failure==='coop')G.Coop.active=true;

@@ -278,7 +278,7 @@
  function canFightRegionBoss(run=current){
   if(preRunPending&&G.Game?.state==='playing')preRunPending=false;
   return !!run&&G.Game?.state==='playing'&&!preRunPending&&
-   !G.Coop?.active&&!getChampion()?.active&&
+   !G.Coop?.active&&!getChampion()?.active&&!G.Rift?.inArena&&!G.Judgment?.active&&
    !G.Game?.player?.dead&&!(Number(G.Game?.player?.hp)<=0);
  }
 
@@ -598,6 +598,9 @@
   if(def.pkmsvvExploreBoss||isBossGuardian(def))return def;
   const dex=Number(def.dex);
   if(!Number.isInteger(dex))return def;
+  // Native Rift selects a legendary independently of the regional wildlife.
+  // Its constructor runs BEFORE e.legend and arena.bossId are assigned.
+  if(forceBoss&&G.Rift?.inArena&&G.Rift.arena?.phase==='fight'&&dex===Number(G.Rift.arena.dex))return def;
   return progressiveDefinition(def,index,encounterSeconds(),constructed++,forceBoss);
  }
  // Preserve native instanceof/class behavior through a constructor Proxy.
@@ -667,6 +670,8 @@
    enemy.pkmsvvBossGuard||enemy.pkmsvvGuardianOf!==undefined||isBossGuardian(enemy.def))return false;
   const old=Number(enemy.dex??enemy.def?.dex);
   if(!Number.isInteger(old))return false;
+  const arena=G.Rift?.inArena&&G.Rift.arena;
+  if(arena&&enemy.legend===true&&old===Number(arena.dex)&&(!arena.bossId||arena.bossId===enemy.id))return false;
   const previous=checkedIdentity.get(enemy);
   if(previous&&previous.index===index&&previous.dex===old)return false;
   const replacement=regionEnemyDefinition({dex:old,boss:bossLike(enemy)},index);
