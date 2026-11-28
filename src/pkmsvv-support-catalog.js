@@ -16,9 +16,16 @@ G.PKMSVVSupportCatalog=(()=>{
   magnet:['Thu hút','Magnet','Thu hút vật phẩm trong tầm.','Attracts nearby pickups.'],
   slow:['Làm chậm','Slow','Cleffa làm chậm nhiều kẻ địch xung quanh.','Cleffa slows several nearby enemies.'],
   ditto:['Biến hình','Transform','Biến thành Pokémon chính và sao chép kỹ năng, sau đó trở lại Ditto để hồi sức.','Copies your lead Pokémon and its moves, then returns to Ditto to recover.'],
-  mew:['Sức mạnh tâm linh','Psychic Burst','Liên tục sử dụng đòn đánh diện rộng ngẫu nhiên.','Continuously casts random area attacks.']
+  mew:['Sức mạnh tâm linh','Psychic Burst','Liên tục sử dụng đòn đánh diện rộng ngẫu nhiên.','Continuously casts random area attacks.'],
+  speed:['Tiếp sức','Speed boost','Tăng tốc độ di chuyển trong 4 giây. Hồi chiêu cơ bản 14 giây.','Boost movement speed for 4s. Base cooldown 14s.'],
+  cleanse:['Chuông thanh tẩy','Purifying chime','Xóa hiệu ứng làm chậm bất lợi, không hủy Giấc Ngủ tự dùng.','Clears hostile slow; does not cancel voluntary Rest.'],
+  poison:['Phấn độc','Poison powder','Gây độc lên tối đa 6 quái gần Pokémon chính.','Poisons up to six nearby enemies.'],
+  burn:['Hơi nóng','Warm glow','Gây bỏng lên tối đa 6 quái gần Pokémon chính.','Burns up to six nearby enemies.'],
+  repel:['Hộ vệ','Bodyguard','Đẩy lùi tối đa 6 quái thường đang áp sát, không đẩy boss.','Repels up to six nearby ordinary enemies, not bosses.'],
+  guard:['Bảo vệ','Guard','Giảm sát thương nhận trong 5 giây. Hồi chiêu cơ bản 20 giây.','Damage reduction for 5s. Base cooldown 20s.'],
+  wish:['Điều ước','Wish','Ngẫu nhiên tăng công vật lý, công đặc biệt, tốc độ hoặc phòng thủ. Thời gian buff bằng hồi chiêu Mew cùng cấp thân thiết và Shiny; không cộng dồn.','Random physical attack, special attack, speed or guard buff. Duration equals Mew cadence at equal friendship/Shiny; no stacking.']
  };
- const rarity=dex=>Number(dex)===151?['Siêu hiếm','Super Rare']:Number(dex)===132?['Hiếm','Rare']:['Thường','Common'];
+ const rarity=dex=>[151,385].includes(Number(dex))?['Siêu hiếm','Super Rare']:Number(dex)===132?['Hiếm','Rare']:['Thường','Common'];
  const seen=dex=>G.PKMSVVEggs?.affinityFor?.(dex)>0;
  const shinySeen=dex=>!!G.DB?.save?.pkmsvvSupportShiny?.[dex]&&seen(dex);
  let selected=null,showShiny=false,fromResearchLab=false,stationTab='support';
@@ -71,7 +78,7 @@ G.PKMSVVSupportCatalog=(()=>{
   if(!shinyUnlocked)showShiny=false;
   const title=document.createElement('h3');
   title.textContent=owned?(G.DEX_BY?.[m.dex]?.name||'Pokémon'):'???';
-  const rar=document.createElement('span');rar.className='pkmsvv-support-rarity '+(m.dex===151?'super':m.dex===132?'rare':'common');
+  const rar=document.createElement('span');rar.className='pkmsvv-support-rarity '+([151,385].includes(m.dex)?'super':m.dex===132?'rare':'common');
   rar.textContent=t(...rarity(m.dex));
   // Use canonical species ID even with an outdated/partial cached role object.
   // Show the actual skill BEFORE the art so short/mobile detail panes do not

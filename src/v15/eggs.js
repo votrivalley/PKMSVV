@@ -11,9 +11,20 @@ G.PKMSVVEggs=(()=>{
   {dex:175,role:'magnet',period:12,power:18}, // Togepi
   {dex:174,role:'sleep',period:12,power:1.6}, // Igglybuff: nearby sleep
   {dex:132,role:'ditto',period:1,power:1}, // Ditto 8%
-  {dex:151,role:'mew',period:1,power:1} // Mew 4%
+  {dex:151,role:'mew',period:1,power:1}, // Mew 4%
+  {dex:298,role:'speed',period:14,power:.15},
+  {dex:433,role:'cleanse',period:18,power:1},
+  {dex:406,role:'poison',period:12,power:1},
+  {dex:240,role:'burn',period:12,power:1},
+  {dex:236,role:'repel',period:13,power:140},
+  {dex:446,role:'guard',period:20,power:.15},
+  {dex:385,role:'wish',period:1,power:1} // Jirachi 4%
  ];
  const byDex=Object.fromEntries(SPECIES.map(x=>[x.dex,x]));
+ const ADDED=Object.freeze([298,433,406,240,236,446,385]);
+ const supportReady=dex=>!ADDED.includes(Number(dex))||!!(G.DEX_BY?.[dex]&&G.SPRITE_META?.[dex]?.a?.Idle&&G.SPRITE_META?.[dex]?.a?.Walk);
+ const ordinarySpecies=()=>SPECIES.filter(x=>![132,151,385].includes(x.dex)&&supportReady(x.dex)).map(x=>x.dex);
+ const isSuper=dex=>[151,385].includes(Number(dex));
  const COLLECT_TIME=2, NEST_RADIUS=38, HATCH_BASE=24, HATCH_MIN=32/3;
  const REPLACEMENT_MIN=20, REPLACEMENT_MAX=60;
  const SHINY_CAST_RATIO=2/3,SHINY_SKILL_POWER=2;
@@ -47,20 +58,79 @@ G.PKMSVVEggs=(()=>{
    if(!(Number.isFinite(amount)&&amount>0))return amount;
    const channel=attackChannel(move),buff=channel&&this[channel];
    const now=Number(G.Game?.st?.time??0);
-   if(!buff||!Number.isFinite(now)||now>=Number(buff.until))return amount;
-   return amount*(1+Math.max(0,Math.min(.6,Number(buff.amount)||0)));
+   const existing=buff&&Number.isFinite(now)&&now<Number(buff.until)?Math.max(0,Math.min(.6,Number(buff.amount)||0)):0;
+   const wish=channel==='pkmsvvSupportPhysical'?timedValue(this,'physical',now):channel==='pkmsvvSupportSpecial'?timedValue(this,'special',now):0;
+   return amount*(1+Math.max(existing,wish));
   };
   wrapped._pkmsvvSupportChannels=true;pl.atkFor=wrapped;return true;
+ }
+ const WISH_CHANNELS=Object.freeze(['physical','special','speed','guard']);
+ const BUFF_MAX={physical:.30,special:.30,speed:.30,guard:.25};
+ const clock=()=>Number(G.Game?.st?.time||0);
+ function timedValue(pl,channel,now=clock()){
+  const active=pl?.pkmsvvSupportTimed?.[channel],wish=pl?.pkmsvvWish;
+  const value=b=>b&&Number.isFinite(now)&&now<b.until?Math.max(0,Math.min(BUFF_MAX[channel]||0,Number(b.amount)||0)):0;
+  return Math.max(value(active),wish?.channel===channel?value(wish):0);
+ }
+ function speedFactor(pl){return 1+timedValue(pl,'speed');}
+ function guardBonus(pl){return timedValue(pl,'guard');}
+ function applyTimed(pl,dex,channel,amount,until,now=clock()){
+  if(!pl||pl.dead||!Object.hasOwn(BUFF_MAX,channel)||!Number.isFinite(amount)||amount<=0||amount>BUFF_MAX[channel]||
+     !Number.isFinite(until)||until<=now||until>now+10)return false;
+  if(Number(dex)===385)pl.pkmsvvWish={channel,amount,until};
+  else{
+   if((dex===298&&channel!=='speed')||(dex===446&&channel!=='guard')||![298,446].includes(dex))return false;
+   pl.pkmsvvSupportTimed=pl.pkmsvvSupportTimed||{};
+   const old=pl.pkmsvvSupportTimed[channel];if(old?.until>now&&old.amount>amount)return false;
+   pl.pkmsvvSupportTimed[channel]={amount,until};
+  }
+  if(channel==='physical'||channel==='special')applyAttackBuffs(pl);
+  return true;
+ }
+ function extraCast(it,pl,send,now=clock(),random=Math.random){
+  const dex=Number(it.dex),factor=Math.max(.5,Math.min(1,Number(it.statScale)||.65))*affinityMultiplier(dex)*(it.shiny?SHINY_SKILL_POWER:1);
+  if([298,446,385].includes(dex)){
+   let channel,amount,duration;
+   if(dex===385){
+    const roll=random();if(!Number.isFinite(roll)||roll<0||roll>=1)return false;
+    channel=WISH_CHANNELS[Math.floor(roll*WISH_CHANNELS.length)];
+    amount=Math.min(BUFF_MAX[channel],.18*factor);duration=castCooldown(it);
+   }else{channel=dex===298?'speed':'guard';amount=Math.min(BUFF_MAX[channel],.15*factor);duration=dex===298?4:5;}
+   const until=now+duration;if(!applyTimed(pl,dex,channel,amount,until,now))return false;
+   send?.(channel,amount,until);
+   const label={physical:tr('CÔNG VẬT LÝ','PHYSICAL UP'),special:tr('CÔNG ĐẶC BIỆT','SPECIAL UP'),speed:tr('TỐC ĐỘ','SPEED UP'),guard:tr('PHÒNG THỦ','GUARD UP')}[channel];
+   const color={physical:'#ffd472',special:'#c4a4ff',speed:'#92e9ff',guard:'#ffe68a'}[channel];
+   G.FX?.ring?.(pl.x,pl.y,7,52,color,.5,2);G.FX?.dmgText?.(pl.x,pl.y-36,label,color);
+   it.effectFlash=.45;return true;
+  }
+  if(dex===433){
+   if(!(pl.slowT>0))return false;pl.slowT=0;send?.('cleanse',0,now);
+   G.FX?.ring?.(pl.x,pl.y,6,55,'#f6e7ff',.55,2);it.effectFlash=.45;return true;
+  }
+  if(![406,240,236].includes(dex))return false;
+  const range=dex===236?115:130;
+  const foes=(G.EnemyMgr?.all?.()||[]).filter(e=>!e.dead&&!e.remote&&G.U.dist2(e.x,e.y,pl.x,pl.y)<range*range)
+    .sort((a,b)=>G.U.dist2(a.x,a.y,pl.x,pl.y)-G.U.dist2(b.x,b.y,pl.x,pl.y)).slice(0,6);
+  let n=0;for(const e of foes){
+   if(dex===406&&typeof e.applyPoison==='function'){e.applyPoison(it.shiny?2:1);n++;}
+   else if(dex===240&&typeof e.applyBurn==='function'){e.applyBurn(it.shiny?2:1);n++;}
+   else if(dex===236&&!e.boss&&!e.judge&&!e.pkmsvvBossGuard&&Number.isFinite(e.kx)&&Number.isFinite(e.ky)){
+    const dx=e.x-pl.x,dy=e.y-pl.y,d=Math.hypot(dx,dy)||1,force=140*Math.min(1.5,affinityMultiplier(dex))*(it.shiny?1.25:1);
+    e.kx+=dx/d*force;e.ky+=dy/d*force;n++;
+   }
+  }
+  if(!n)return false;G.FX?.ring?.(pl.x,pl.y,8,range,dex===406?'#c78ce8':dex===240?'#ff9c62':'#d3f0ff',.55,2);
+  it.effectFlash=.55;return true;
  }
  function begin(pl,coop){
   applyAttackBuffs(pl);
   player=pl;items=[];nests=[];trail=pl?[{x:pl.x,y:pl.y}]:[];spawnAt=55;seq=0;runTime=0;lastDir={x:0,y:1};wasInArena=!!G.Rift?.inArena;kills=pl?.kills||0;lv=pl?.level||1;
-  if(!coop&&unlocked())G.Sprites?.preload?.(SPECIES.map(s=>s.dex),7000);
+  if(!coop&&unlocked())G.Sprites?.preload?.(SPECIES.filter(s=>supportReady(s.dex)).map(s=>s.dex),7000);
  }
  const support=()=>items.filter(x=>x.hatched&&x.active&&x.hp>0);
  const occupied=()=>items.filter(x=>!x.hatched||(x.active&&x.hp>0)).length;
  const vacancy=()=>Math.max(0,limit()-occupied());
- function roleName(s){return {attack:tr('Tấn công','Attack'),physical:tr('Tăng công vật lý','Physical attack buff'),special:tr('Tăng công đặc biệt','Special attack buff'),sleep:tr('Gây ngủ','Sleep'),heal:tr('Hồi phục','Healing'),shield:tr('Tạo khiên','Shield'),magnet:tr('Hút vật phẩm','Magnet'),slow:tr('Làm chậm','Slow'),paralyze:tr('Tê liệt','Paralysis')}[s.role]||s.role;}
+ function roleName(s){return {attack:tr('Tấn công','Attack'),physical:tr('Tăng công vật lý','Physical attack buff'),special:tr('Tăng công đặc biệt','Special attack buff'),sleep:tr('Gây ngủ','Sleep'),heal:tr('Hồi phục','Healing'),shield:tr('Tạo khiên','Shield'),magnet:tr('Hút vật phẩm','Magnet'),slow:tr('Làm chậm','Slow'),paralyze:tr('Tê liệt','Paralysis'),speed:tr('Tiếp sức','Speed boost'),cleanse:tr('Thanh tẩy','Cleanse'),poison:tr('Phấn độc','Poison'),burn:tr('Hơi nóng','Burn'),repel:tr('Hộ vệ','Repel'),guard:tr('Bảo vệ','Guard'),wish:tr('Điều ước','Wish')}[s.role]||s.role;}
  function nestSpawn(){
   if(!player||G.Rift?.inArena||nests.length>=1||vacancy()<=nests.length)return false;
   // At least one FULL camera diagonal from the player, plus a safety margin.
@@ -80,7 +150,7 @@ G.PKMSVVEggs=(()=>{
   return false; // No valid ground: retry later; never force a nest into view.
  }
  function affinityFor(dex){return Math.min(999,Math.max(0,Math.floor(Number(G.DB?.save?.pkmsvvSupportBond?.[dex])||0)));}
- function affinityGoal(dex){return Number(dex)===151?25:Number(dex)===132?50:100;}
+ function affinityGoal(dex){return isSuper(dex)?25:Number(dex)===132?50:100;}
  function affinityPercent(dex){return Math.min(100,Math.floor(100*affinityFor(dex)/affinityGoal(dex)));}
  function maxAffinity(dex){return affinityFor(dex)>=affinityGoal(dex);}
  function affinityMultiplier(dex){return 1+.6*affinityPercent(dex)/100;}
@@ -88,10 +158,10 @@ G.PKMSVVEggs=(()=>{
   (1-.45*affinityPercent(it.dex)/100);}
  function speciesChanceFor(dex){
   const mul=maxAffinity(dex)?2:1;
-  return Number(dex)===132?.08*mul:Number(dex)===151?.04*mul:0;
+  return Number(dex)===132?.08*mul:isSuper(dex)&&supportReady(dex)?.04*mul:0;
  }
  function shinyChanceFor(dex){
-  const base=Number(dex)===132||Number(dex)===151?.05:SHINY_CHANCE;
+  const base=Number(dex)===132||isSuper(dex)?.05:SHINY_CHANCE;
   return base*(maxAffinity(dex)?2:1);
  }
  function setDittoForm(it,transformed){
@@ -160,13 +230,14 @@ G.PKMSVVEggs=(()=>{
   }
  }
  function rollSpecies(roll=Math.random()){
-  const dittoChance=speciesChanceFor(132),mewChance=speciesChanceFor(151);
+  const dittoChance=speciesChanceFor(132),mewChance=speciesChanceFor(151),wishChance=speciesChanceFor(385);
   if(roll<dittoChance)return byDex[132];
   if(roll<dittoChance+mewChance)return byDex[151];
-  const pool=SPECIES.filter(x=>x.dex!==132&&x.dex!==151);
-  const remaining=1-dittoChance-mewChance;
-  const idx=Math.min(pool.length-1,Math.max(0,Math.floor((roll-dittoChance-mewChance)/remaining*pool.length)));
-  return pool[idx];
+  const start=dittoChance+mewChance+wishChance;
+  if(roll<start)return byDex[385];
+  const pool=ordinarySpecies(),remaining=1-start;
+  const idx=Math.min(pool.length-1,Math.max(0,Math.floor((roll-start)/remaining*pool.length)));
+  return byDex[pool[idx]];
  }
  function collect(n){
   const chosen=rollSpecies();
@@ -444,6 +515,7 @@ G.PKMSVVEggs=(()=>{
   if(spec.role==='attack'&&!target)return false;
   if(spec.role==='ditto')return dittoCast(it,pl);
   if(spec.role==='mew')return mewCast(it,pl);
+  if(ADDED.includes(it.dex))return extraCast(it,pl,undefined,runTime);
   let buffed=[],paralyzed=[],affected=[];
   if(spec.role==='attack')target.hurt(Math.max(1,(spec.power+pl.level*.55)*it.statScale*(it.shiny?SHINY_SKILL_POWER:1)),'#ffe8a1',0,0,0);
   else if(spec.role==='paralyze'){
@@ -701,6 +773,6 @@ G.PKMSVVEggs=(()=>{
   ctx.fillStyle='#fff3bd';ctx.font='bold 11px sans-serif';ctx.textAlign='left';
   ctx.fillText(tr('Đồng hành','Companions')+' '+ready+'/'+limit(),x+8,y+16);ctx.restore();
  }
- return {SPECIES,rollSpecies,affinityFor,affinityGoal,affinityPercent,maxAffinity,affinityMultiplier,castCooldown,
+ return {SPECIES,ADDED,supportReady,ordinarySpecies,extraCast,applyTimed,speedFactor,guardBonus,timedValue,rollSpecies,affinityFor,affinityGoal,affinityPercent,maxAffinity,affinityMultiplier,castCooldown,
   attackChannel,applyAttackBuffs,speciesChanceFor,shinyChanceFor,DITTO_FORM,DITTO_REST,SUPPORT_VISUAL_SCALE,NEST_VISUAL_SCALE,SHINY_CHANCE,COLLECT_TIME,HATCH_BASE,HATCH_MIN,SHINY_CAST_RATIO,SHINY_SKILL_POWER,begin,update,onHurt,hurtSupport,enemyTarget,interceptProjectile,hitHazard,remaining,draw,drawables,hud,limit,unlocked,get followers(){return items;},get nests(){return nests;},get occupied(){return occupied();}};
 })();

@@ -39,6 +39,13 @@ patch('js/game.js',
 patch('js/game.js',
  '    G.Judgment.drawOverlay(ctx, w, h);',
  '    G.Judgment.drawOverlay(ctx, w, h);\n    G.PKMSVVEggs.hud(ctx,w,h);');
+// Runtime-only support boosts, through native effective-stat getters.
+patch('js/entities/player.js',
+ '    const s = this.baseSpd * this.spdMul * (1 + this.buffs.spd.n * this.buffs.spd.amount) * (this.slowT > 0 ? 0.5 : 1);',
+ '    const s = this.baseSpd * this.spdMul * (1 + this.buffs.spd.n * this.buffs.spd.amount) * (this.slowT > 0 ? 0.5 : 1) * (G.PKMSVVEggs?.speedFactor?.(this)||1);');
+patch('js/entities/player.js',
+ '  get reduction() { return Math.min(0.8, this.dmgReduce + this.buffs.def.n * this.buffs.def.amount); }',
+ '  get reduction() { return Math.min(0.8, this.dmgReduce + this.buffs.def.n * this.buffs.def.amount + (G.PKMSVVEggs?.guardBonus?.(this)||0)); }');
 patch('js/entities/player.js',
  '    this.hp -= d;',
  '    const shield=Math.max(0,Number(this.pkmsvvShield)||0),absorbed=Math.min(shield,d);\n'+

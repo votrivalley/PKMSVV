@@ -38,6 +38,7 @@ test('v1.5.34 Shiny egg doubles only that egg and Ron sees a narrated formula',(
  const html=G.EggRush.html(results[0]);
  assert.match(html,/Ron đã đoạt được 4 trứng, nở ra:/);
  assert.match(html,/data-pkmsvv-hatch-shiny="1"/);
- assert.match(html,/Mew 40 \(×2\)/);
+ assert.match(html,/pkmsvv-egg-hatched-label">✨ \+40 điểm<\/small>/);
+ assert.doesNotMatch(html,/pkmsvv-egg-hatched-label">[^<]*Pokémon #/);
  assert.equal((html.match(/class="pkmsvv-egg-reveal/g)||[]).length,4);
 });

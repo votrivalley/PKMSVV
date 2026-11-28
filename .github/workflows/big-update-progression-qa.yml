@@ -4,6 +4,13 @@ on:
     branches: [feature/gmax-power-qa-20261127]
     paths:
       - 'src/pkmsvv-big-update-qa.js'
+      - 'src/v15/eggs.js'
+      - 'src/web/pkmsvv-egg-rush.js'
+      - 'src/pkmsvv-support-catalog.js'
+      - 'scripts/patch-v15-eggs.cjs'
+      - 'src/shared/match-results.css'
+      - 'tests/egg-rush*.test.cjs'
+      - 'tests/support-expansion*.cjs'
       - 'src/lan/solo-ai-bus.js'
       - 'src/pkmsvv-progression-merge.js'
       - 'tests/progression-merge.test.cjs'
@@ -75,11 +82,13 @@ jobs:
           npm pkg set 'overrides.node-abi=4.40.0'
           npm install --no-audit --no-fund
       - name: Unit progression and existing save protection
-        run: node --test tests/big-update-progression.test.cjs tests/save-guardian-regression.test.cjs tests/web-save-guardian-v2.test.cjs tests/special-power-qa.test.cjs tests/berry-rescue.test.cjs tests/dex-defeats-qa.test.cjs tests/p0-transactions.test.cjs tests/progression-merge.test.cjs
+        run: node --test tests/big-update-progression.test.cjs tests/save-guardian-regression.test.cjs tests/web-save-guardian-v2.test.cjs tests/special-power-qa.test.cjs tests/berry-rescue.test.cjs tests/dex-defeats-qa.test.cjs tests/p0-transactions.test.cjs tests/progression-merge.test.cjs tests/egg-rush-hidden-score.test.cjs tests/egg-rush-shiny.test.cjs tests/support-expansion.test.cjs
       - name: Fetch required existing Clefairy assets
         run: node scripts/fetch-pippi-pmd.cjs && node scripts/build-pippi-portrait-atlas.cjs
       - name: Compile real offline game
         run: npm run prepare:lan
+      - name: Native support inventory and Jirachi timed buffs
+        run: timeout 90s node tests/support-expansion-browser.cjs
       - name: Native Shop and Mega purchase failure, stale tab and reload
         run: timeout 100s node tests/p0-transactions-browser.cjs
       - name: Native Explore kill, result settlement, research lab hatch, compiled roster

@@ -7,7 +7,7 @@ const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
 test('Canonical support roster matches runtime and silhouette entries are not invented',()=>{
  const solo=read('src/v15/eggs.js'),online=read('src/web/pkmsvv-egg-rush.js');
  const expected=[[172,'paralyze'],[447,'physical'],[173,'slow'],
-  [360,'special'],[440,'heal'],[438,'shield'],[175,'magnet'],[174,'sleep'],[132,'ditto'],[151,'mew']];
+  [360,'special'],[440,'heal'],[438,'shield'],[175,'magnet'],[174,'sleep'],[132,'ditto'],[151,'mew'],[298,'speed'],[433,'cleanse'],[406,'poison'],[240,'burn'],[236,'repel'],[446,'guard'],[385,'wish']];
  const G={};vm.runInNewContext(solo,{G,Math,Number,Object});
  assert.deepEqual(Array.from(G.PKMSVVEggs.SPECIES,x=>[x.dex,x.role]),expected);
  assert.match(online,/EGG_SPECIES=\[172,447,173,360,440,438,175,174\]/);
@@ -646,7 +646,7 @@ test('Ditto 8%, Mew 4%, all other supports 88%, Shiny 3% independently',()=>{
  assert.notEqual(roll(.12).dex,132);
  assert.notEqual(roll(.999).dex,151);
  assert.equal(G.PKMSVVEggs.SHINY_CHANCE,.015);
- assert.equal(G.PKMSVVEggs.SPECIES.length,10);
+ assert.equal(G.PKMSVVEggs.SPECIES.length,17);
 });
 
 test('Mew random AOE casts every 1 second and Ditto borrows exactly up to 3 moves',()=>{

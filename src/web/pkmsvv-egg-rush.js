@@ -3,8 +3,15 @@ G.EggRush=(()=>{
  const MAX_TIME=720,MAX_SCORE=10,SPAWN_EVERY=60,RESPAWN_SECONDS=2,EGG_SPECIES=[172,447,173,360,440,438,175,174];
  const SUPPORT_HATCH=24,SUPPORT_MIN_HATCH=32/3,SHINY_CAST_RATIO=2/3,SHINY_SKILL_POWER=2;
  // Competitive eggs only reveal their Pokémon and score after the final egg.
- const eggValue=dex=>dex===151?20:dex===132?10:5;
- const eggShinyChance=dex=>(dex===151||dex===132)?.10:.03;
+ const eggValue=dex=>[151,385].includes(dex)?20:dex===132?10:5;
+ const eggShinyChance=dex=>([151,132,385].includes(dex))?.10:.03;
+ const ordinary=()=>G.PKMSVVEggs?.ordinarySpecies?.()||EGG_SPECIES;
+ const wishReady=()=>G.PKMSVVEggs?.supportReady?.(385)===true;
+ function sealedSpecies(roll){
+  if(roll<.04)return 151;if(roll<.12)return 132;
+  const start=wishReady()?.16:.12;if(roll<start)return 385;
+  const pool=ordinary();return pool[Math.min(pool.length-1,Math.floor((roll-start)/(1-start)*pool.length))];
+ }
  let active=false,supportMode=false,cooperative=false,survival=false,nextSpawn=60,roster=[],nests=[],trails=new Map(),trailDir=new Map(),pets=[],score={},at={},laid=0,seed=1,outcome=null,transition={},levelSeen=1,killsSeen=0,secretEggs=new Map();
  let allocation=0,retryAt=0,pendingBatch=0;const seenIds=new Set();
  const metrics={placementAttempts:0,placementFailures:0,expired:0};
@@ -26,7 +33,7 @@ G.EggRush=(()=>{
   if(active||supportMode){
    // Egg Rush contains only sealed eggs until the finale: don't preload
    // eight unrelated support animation sets during competitive gameplay.
-   G.Sprites?.preload?.(active?roster.map(x=>x.dex):[...EGG_SPECIES,...roster.map(x=>x.dex)],7500);
+   G.Sprites?.preload?.(active?roster.map(x=>x.dex):[...ordinary(),...roster.map(x=>x.dex)],7500);
    roster.forEach(m=>{transition[m.uid]={anim:new G.Sprites.Animator(m.dex,.32,false),rank:roster.findIndex(x=>x.uid===m.uid)};});
   }
  }
@@ -87,6 +94,13 @@ G.EggRush=(()=>{
    if(active)return; // Egg Rush: sealed eggs NEVER hatch mid-match.
    const pet=pets.find(p=>p.id===ev[2]);
    if(pet&&!pet.hatch){pet.hatch=true;pet.anim=new G.Sprites.Animator(pet.dex,.6*(G.Sprites.playerScale?.(pet.dex)||1),!!pet.shiny);G.FX?.ring?.(pet.x,pet.y,8,48,'#f5de8d',.6,3);}
+  }else if(ev[1]==='buff'){
+   if(!supportMode||G.Coop.isHost)return;
+   const pet=pets.find(p=>p.id===ev[2]),pl=G.Game?.player;
+   if(!pet?.hatch||!pl||pet.uid!==pl.uid||pl.dead)return;
+   const [, , ,channel,amount,until]=ev;
+   if(pet.dex===433&&channel==='cleanse'&&amount===0){pl.slowT=0;return;}
+   G.PKMSVVEggs?.applyTimed?.(pl,pet.dex,channel,amount,until);
   }else if(ev[1]==='hp'){
     const pet=pets.find(p=>p.id===ev[2]);
     if(pet&&Number.isFinite(ev[3])&&Number.isSafeInteger(ev[4])&&ev[4]>pet.hpSeq){
@@ -114,8 +128,8 @@ G.EggRush=(()=>{
   // Do NOT derive competitive odds from the publicly shared room seed;
   // other clients must not be able to predict a rare egg mid-match.
   const roll=active?Math.random():rand(n.id*413);
-  const dex=active?(roll<.04?151:roll<.12?132:EGG_SPECIES[Math.min(EGG_SPECIES.length-1,Math.floor((roll-.12)/.88*EGG_SPECIES.length))]):
-   EGG_SPECIES[Math.floor(roll*EGG_SPECIES.length)];
+  const pool=ordinary();
+  const dex=active?sealedSpecies(roll):pool[Math.floor(roll*pool.length)];
   // Shiny is an independent Host-only roll: no friendship, affinity,
   // Shiny Charm, save progression or legacy egg species multipliers.
   if(active)secretEggs.set(n.id,{dex,shiny:Math.random()<eggShinyChance(dex)});
@@ -247,7 +261,12 @@ G.EggRush=(()=>{
     (pet.uid===G.Game.player?.uid?G.Game.player:(G.Coop.isHost?players.find(p=>p.uid===pet.uid):null));
    if(pet.hatch&&owner&&!owner.dead){
     const own=siblings.filter(q=>q.hatch);
-    if(own.indexOf(pet)<3){pet.cd=(pet.cd||0)-dt;if(pet.cd<=0){support(pet,owner);pet.cd=({172:10,447:13,173:10,360:13,440:12,438:15,174:12}[pet.dex]||8)*(pet.shiny?SHINY_CAST_RATIO:1)*(1-.45*(G.PKMSVVEggs?.affinityPercent?.(pet.dex)||0)/100);}}
+    if(own.indexOf(pet)<3){pet.cd=(pet.cd||0)-dt;if(pet.cd<=0){
+     const extra=G.PKMSVVEggs?.ADDED?.includes(pet.dex);
+     const ok=extra?G.PKMSVVEggs.extraCast(pet,owner,(channel,amount,until)=>G.Coop.broadcast(['er','buff',pet.id,channel,amount,until]),time):support(pet,owner);
+     const spec=G.PKMSVVEggs?.SPECIES?.find(x=>x.dex===pet.dex);
+     pet.cd=extra&&ok===false?.5:(spec?.period||({172:10,447:13,173:10,360:13,440:12,438:15,174:12}[pet.dex]||8))*(pet.shiny?SHINY_CAST_RATIO:1)*(1-.45*(G.PKMSVVEggs?.affinityPercent?.(pet.dex)||0)/100);
+    }}
    }
   }
   if(G.Coop.isHost&&supportMode){
@@ -496,11 +515,11 @@ G.EggRush=(()=>{
    const eggs=(Array.isArray(p.hatched)?p.hatched:[]).map(e=>{
     const species=Number(e.dex),valid=Number.isInteger(species)&&species>0&&species<=1025?species:172;
     const shiny=!!e.shiny,value=eggValue(valid)*(shiny?2:1);
-    const label=valid===151?'Mew':valid===132?'Ditto':'Pokémon #'+valid;
+    const label='+'+value+' '+tr('điểm','pts');
     return '<span class="pkmsvv-egg-reveal'+(shiny?' pkmsvv-egg-shiny':'')+'" data-pkmsvv-egg-score="'+value+'">'+
      '<span class="pkmsvv-egg-shell" aria-label="'+tr('Trứng chưa nở','Unhatched egg')+'">🥚</span>'+
      '<canvas class="pkmsvv-egg-hatched-mon" width="40" height="40" data-pkmsvv-hatch-dex="'+valid+'" data-pkmsvv-hatch-shiny="'+(shiny?'1':'0')+'" aria-hidden="true"></canvas>'+
-     '<small class="pkmsvv-egg-hatched-label">'+(shiny?'✨ ':'')+esc(label)+' '+value+(shiny?' (×2)':'')+'</small></span>';
+     '<small class="pkmsvv-egg-hatched-label">'+(shiny?'✨ ':'')+esc(label)+'</small></span>';
    }).join('');
    return '<div class="pkmsvv-result-row pkmsvv-egg-final-row'+(local?' pkmsvv-result-me':'')+'" data-pkmsvv-final-rank="'+p.rank+'" data-pkmsvv-total-score="'+p.points+'">'+
     '<strong class="pkmsvv-result-rank">?</strong>'+
@@ -513,7 +532,7 @@ G.EggRush=(()=>{
   return '<section class="pkmsvv-results pkmsvv-eggrush-final" style="grid-column:1/-1" data-pkmsvv-results="eggrush" data-pkmsvv-winner="'+esc(r.standings.find(p=>p.uid===r.winner)?.name||'—')+'" data-pkmsvv-winner-uid="'+esc(r.winner||'')+'">'+
    '<h3>🥚 '+tr('TRỨNG BÍ ẨN · MỞ ĐIỂM','MYSTERY EGG REVEAL')+'</h3>'+
    '<div class="pkmsvv-results-champion" aria-live="polite">'+tr('🥚 Đang nở trứng… Ai sẽ thắng?','🥚 Eggs hatching… Who will win?')+'</div>'+
-   '<div class="pkmsvv-egg-scoring-rules">'+tr('Mew 20 · Ditto 10 · Pokémon khác 5 · Shiny ×2','Mew 20 · Ditto 10 · Other Pokémon 5 · Shiny ×2')+'</div>'+
+   '<div class="pkmsvv-egg-scoring-rules">'+tr('Mew / Jirachi 20 · Ditto 10 · Còn lại 5 · Shiny ×2','Mew / Jirachi 20 · Ditto 10 · Others 5 · Shiny ×2')+'</div>'+
    '<div class="pkmsvv-results-list">'+rows+'</div></section>';
  }
  function reveal(root){
