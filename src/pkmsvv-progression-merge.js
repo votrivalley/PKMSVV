@@ -58,6 +58,19 @@
   }
   return true;
  }
+ function coopReceipts(a,b){
+  if(a===undefined&&b===undefined)return undefined;
+  const out={};
+  for(const row of [a,b]){
+   if(row===undefined)continue;
+   if(!obj(row)||Object.keys(row).length>128)conflict();
+   for(const [k,v] of Object.entries(row)){
+    if(!/^[A-Za-z0-9_-]{1,128}$/.test(k)||!obj(v)||!Number.isSafeInteger(v.serial)||v.serial<1||!Number.isSafeInteger(v.at)||v.at<0)conflict();
+    if(!own(out,k)||v.serial>out[k].serial||(v.serial===out[k].serial&&v.at>out[k].at))Object.defineProperty(out,k,{value:copy(v),enumerable:true,writable:true,configurable:true});
+   }
+  }
+  return Object.fromEntries(Object.entries(out).sort((a,b)=>b[1].at-a[1].at||a[0].localeCompare(b[0])).slice(0,128));
+ }
  function apply(merged,newer,older){
   const a=newer?.pkmsvvIncubator,b=older?.pkmsvvIncubator;
   validate(a);validate(b);
@@ -69,6 +82,8 @@
   }
   // Validate everything before modifying the draft passed by native DB.
   const m=mastery(newer?.pkmsvvMastery,older?.pkmsvvMastery),e=evolutions(newer?.pkmsvvEggEvolutions,older?.pkmsvvEggEvolutions);
+  const c=coopReceipts(newer?.pkmsvvCoopProgress,older?.pkmsvvCoopProgress);
+  if(c!==undefined)merged.pkmsvvCoopProgress=c;
   if(m!==undefined)merged.pkmsvvMastery=m;
   if(e!==undefined)merged.pkmsvvEggEvolutions=e;
   if(eggs!==undefined)merged.pkmsvvIncubator=copy(eggs);

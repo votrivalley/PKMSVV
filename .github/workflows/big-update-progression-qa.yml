@@ -4,6 +4,7 @@ on:
     branches: [feature/gmax-power-qa-20261127]
     paths:
       - 'src/pkmsvv-big-update-qa.js'
+      - 'src/lan/solo-ai-bus.js'
       - 'src/pkmsvv-progression-merge.js'
       - 'tests/progression-merge.test.cjs'
       - 'scripts/patch-web-cloud-safe.cjs'
@@ -83,6 +84,8 @@ jobs:
         run: timeout 100s node tests/p0-transactions-browser.cjs
       - name: Native Explore kill, result settlement, research lab hatch, compiled roster
         run: timeout 220s node tests/big-update-progression-browser.cjs
+      - name: Real two-client Wi-Fi survival progression and weekly mission
+        run: timeout 220s node tests/big-update-progression-coop-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -93,6 +93,12 @@
   for(const dex of keys(older.pkmsvvMastery))
    if((Number(newer.pkmsvvMastery?.[dex])||0)<(Number(older.pkmsvvMastery[dex])||0))return true;
   if(incubatorLoss(older,newer))return true;
+  const priorCoop=older.pkmsvvCoopProgress,currentCoop=newer.pkmsvvCoopProgress;
+  for(const id of keys(priorCoop)){
+   const prior=priorCoop[id],next=currentCoop?.[id];
+   if(Number(next?.serial)>=Number(prior?.serial))continue;
+   if(next||keys(currentCoop).length<128||!Object.values(currentCoop).every(v=>Number(v?.at)>=Number(prior?.at)))return true;
+  }
   if(!learnedRetained(older,newer))return true;
   // Removing an entire inventory field is a schema/data-loss regression,
   // unlike ordinary consumption that can reduce individual item counts.

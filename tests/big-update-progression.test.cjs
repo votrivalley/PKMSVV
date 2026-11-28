@@ -111,3 +111,79 @@ test('Rift loss, missing boss and guest or remote actors do not grant an egg',()
   api.settle(s,p,901,false);assert.equal(Object.keys(s.pkmsvvIncubator.eggs).length,1);
  }
 });
+
+function coopFixture(host=true){
+ const f=setup(),{G,s,p,api}=f;let t=0;
+ // The native module uses Date.now in the VM if performance is absent.
+ // Recreate it with a controllable monotonic wall clock for these tests.
+ vm.runInNewContext(src,{G,console,performance:{now:()=>t}});
+ const members=[{uid:'host',dex:25},{uid:'guest',dex:25}];
+ const cfg={mode:'coop',host:'host',seed:123,members};
+ const uid=host?'host':'guest';
+ G.Social={uid,room:{id:'room-A',host:'host',mode:'coop',open:false,matchSerial:1,members}};
+ G.Net={uid};G.Coop={active:true,isHost:host};
+ const co=G.PKMSVVBigUpdateQA;
+ return {G,s,p,api:co,cfg,uid,clock:v=>{t=v*1000}};
+}
+test('normal Co-op Host settles authentic terminal only, shared team kills, starter and receipt retained',()=>{
+ const f=coopFixture(),{G,s,p,api,cfg,uid}=f;
+ assert.equal(api.beginCoop(s,p,cfg,uid,true),true);
+ f.clock(1);assert.equal(api.observeCoopHost(p,{time:1,kills:0,bosses:0}),true);
+ f.clock(61);assert.equal(api.observeCoopHost(p,{time:61,kills:101,bosses:1}),true);
+ assert.equal(api.settle(s,p,61,true),null,'no terminal yet');
+ const terminal=api.finalizeCoopHost(p,{t:61,ki:101,bo:1,why:'host'});
+ assert.equal(terminal.pkmsvvProgressRun.serial,1);
+ G.Coop.active=false;G.Coop.isHost=false;
+ assert.equal(api.settle(s,p,61,true).points,7);
+ assert.equal(s.pkmsvvMastery[25],7);assert.equal(s.pkmsvvIncubator.eggs['egg-1'].kills,500);
+ assert.equal(s.pkmsvvCoopProgress['room-A'].serial,1);assert.equal(api.settle(s,p,61,true),null);
+ assert.equal(api.beginCoop(s,{...p},cfg,uid,true),false,'saved match cannot be awarded twice');
+});
+test('Client requires matching native Host frames and terminal; wrong room, serial, sender and disconnect do not settle',()=>{
+ const f=coopFixture(false),{G,s,p,api,cfg,uid}=f;
+ assert.equal(api.beginCoop(s,p,cfg,uid,false),true);
+ const tag={room:'room-A',serial:1,seed:123,host:'host',rift:null};
+ f.clock(1);assert.equal(api.observeCoopFrame(p,{t:1,ki:0,bo:0,pkmsvvProgressRun:tag},'host'),true);
+ f.clock(61);const last={t:61,ki:5,bo:0,pkmsvvProgressRun:tag};
+ assert.equal(api.observeCoopFrame(p,last,'host'),true);
+ assert.equal(api.acceptCoopTerminal(p,last,'other'),false);
+ assert.equal(api.acceptCoopTerminal(p,{...last,pkmsvvProgressRun:{...tag,serial:2}},'host'),false);
+ assert.equal(api.acceptCoopTerminal(p,{...last,t:5000},'host'),false);
+ assert.equal(api.settle(s,p,61,true),null);
+ assert.equal(api.acceptCoopTerminal(p,last,'host'),true);
+ assert.equal(api.acceptCoopTerminal(p,last,'host'),false);
+ G.Coop.active=false;
+ assert.equal(api.settle(s,p,61,true).points,1);assert.equal(s.pkmsvvIncubator.eggs['egg-1'].kills,500);
+});
+test('roster change, wrong modes, bot local and early termination cannot award',()=>{
+ for(const kind of ['roster','early','mode','bot','disconnect']){
+  const f=coopFixture(),{G,s,p,api,cfg,uid}=f;
+  if(kind==='mode')cfg.mode='berry';if(kind==='bot')p.lanBot=true;
+  const started=api.beginCoop(s,p,cfg,uid,true);
+  if(kind==='mode'||kind==='bot'){assert.equal(started,false);continue;}
+  f.clock(1);api.observeCoopHost(p,{time:1,kills:0,bosses:0});
+  if(kind==='roster')G.Social.room.members=G.Social.room.members.slice(0,1);
+  f.clock(kind==='early'?10:61);
+  const time=kind==='early'?10:61;api.observeCoopHost(p,{time,kills:5,bosses:0});
+  if(kind!=='disconnect')assert.equal(api.finalizeCoopHost(p,{t:time,ki:5,bo:0}).pkmsvvProgressRun,undefined);
+  G.Coop.active=false;assert.equal(api.settle(s,p,time,true),null);assert.equal(s.pkmsvvMastery,undefined);
+ }
+});
+test('weekly mission gives one pre-rolled baby egg only with real claim, rollback and full queue are safe',()=>{
+ const {G,s,api}=setup();G.Game.state='ui';G.DEX_BY[175]={rarity:1};G.SPRITE_META[175]={a:{Idle:{},Walk:{}}};
+ const m={id:'weekly',prog:5,goal:5,claimed:false};s.missions={week:'week-1',weekly:[m],day:'day-1',daily:[]};
+ G.Ranking={periodIds:()=>({w:'week-1',d:'day-1'})};G.MissionDefs={BY:{weekly:{}}};
+ let fail=true;
+ G.Shop={transaction(kind,change){
+  const before=JSON.stringify(s),r=change(s);
+  if(fail){for(const k of Object.keys(s))delete s[k];Object.assign(s,JSON.parse(before));return null;}
+  return r;
+ }};
+ const before=JSON.stringify(s),grant=()=>{m.claimed=true;s.coins+=20;};
+ assert.equal(api.claimMission(s,m,true,grant),null);assert.equal(JSON.stringify(s),before);
+ fail=false;assert.equal(api.claimMission(s,m,true,grant),null,'stale object no longer in mission list');
+ const live=s.missions.weekly[0],res=api.claimMission(s,live,true,()=>{live.claimed=true;s.coins+=20;});
+ assert.equal(res.egg,'egg-2');assert.equal(s.pkmsvvIncubator.eggs['egg-2'].from,'mission-baby');assert.equal(s.coins,120);
+ assert.equal(api.claimMission(s,live,true,()=>{}),null);
+ s.pkmsvvIncubator.eggs['egg-2'].kills=500;assert.equal(api.hatch('egg-2').dex,175);
+});

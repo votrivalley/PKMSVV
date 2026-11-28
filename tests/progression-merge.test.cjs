@@ -36,3 +36,9 @@ test('two incompatible concurrent histories and invalid old saves fail closed',(
  assert.throws(()=>apply({owned:{175:{at:1}}},shiny,hatch),/PROGRESSION_CONFLICT/);
  assert.equal(apply({owned:{175:{at:1}},shiny:{175:{at:1}}},shiny,hatch).pkmsvvIncubator.hatched['egg-1'],175);
 });
+
+test('Co-op high water receipts survive stale save merge without summing or replay',()=>{
+ const a={pkmsvvCoopProgress:{'room-A':{serial:3,at:100}}},b={pkmsvvCoopProgress:{'room-A':{serial:2,at:200},'room-B':{serial:1,at:300}}};
+ const r=apply({},a,b);assert.deepEqual(r.pkmsvvCoopProgress,{'room-A':{serial:3,at:100},'room-B':{serial:1,at:300}});
+ assert.throws(()=>apply({}, {pkmsvvCoopProgress:{bad:{serial:-1,at:10}}}, {}),/PROGRESSION_CONFLICT/);
+});

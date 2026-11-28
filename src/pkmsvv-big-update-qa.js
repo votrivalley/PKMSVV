@@ -18,7 +18,9 @@
  const SHINY_RATE=.0045;
  const isEggOnly=dex=>eggSet.has(Number(dex));
  const eggEvolutionParent=dex=>EGG_PARENT[Number(dex)]||null;
- const runs=new WeakMap(),riftBosses=new WeakMap();
+ const runs=new WeakMap(),riftBosses=new WeakMap(),coopRuns=new WeakMap();
+ const MAX_COOP_ROOMS=128;
+ const wall=()=>globalThis.performance?.now?.()??Date.now();
  const isObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
  const own=(s,k)=>Object.prototype.hasOwnProperty.call(s||{},k);
  const copy=x=>JSON.parse(JSON.stringify(x));
@@ -38,7 +40,7 @@
  function eggHint(dex){
   if(isEggOnly(dex))return Number(dex)===446?
    L('Chỉ nhận qua ấp trứng thu phục. Có thể tìm trứng Munchlax khi thắng Giải cứu Berry Thường và hạ Munchlax.','Hatch recruitment eggs only. Defeat Munchlax and win Normal Berry Rescue for its egg.'):
-   L('Chỉ nhận qua ấp trứng thu phục từ boss vùng. Không có trong Chiêu mộ.','Hatch recruitment eggs from region bosses only. Not available in Recruitment.');
+   L('Chỉ nhận qua ấp trứng thu phục: boss vùng, Rift hoặc nhiệm vụ tuần. Không có trong Chiêu mộ.','Hatch recruitment eggs from region bosses, Rift or weekly missions. Not available in Recruitment.');
   const parent=eggEvolutionParent(dex);
   return parent?L('Mở Chiêu mộ khi tự tiến hóa từ ','Unlock Recruitment by evolving from ')+(G.DEX_BY?.[parent]?.name||('#'+parent))+'.':null;
  }
@@ -54,7 +56,7 @@
    Object.keys(raw.eggs).length>CAP)throw Error('Invalid incubator save; keep original');
   for(const [id,e] of Object.entries(raw.eggs)){
    if(!/^egg-[1-9][0-9]*$/.test(id)||!dexId(e?.dex)||!Number.isInteger(e.kills)||e.kills<0||e.kills>GOAL||own(raw.hatched,id)||
-      (e.shiny!==undefined&&typeof e.shiny!=='boolean')||(['baby-egg','rift-baby'].includes(e.from)&&!isEggOnly(e.dex))||
+      (e.shiny!==undefined&&typeof e.shiny!=='boolean')||(['baby-egg','rift-baby','mission-baby'].includes(e.from)&&!isEggOnly(e.dex))||
       (e.from==='berry-boss'&&Number(e.dex)!==446))throw Error('Invalid egg record');
   }
   if(raw.active!==null&&!own(raw.eggs,raw.active))throw Error('Invalid active egg');
@@ -63,6 +65,121 @@
  function competitive(){return !!(G.Coop?.active||G.Royale?.active||G.EggRush?.active||G.Arena?.active||
   G.PKMSVVArenaSolo?.active||G.PKMSVVChampionArena?.active||G.PKMSVVArenaPvp?.active||
   G.PKMSVVBerryRescue?.active||G.PKMSVVFossilExpedition?.session);}
+ // Normal survival Co-op only. Identity comes from the actual LAN/Wi-Fi
+ // locked room and native begin configuration, never from an award packet.
+ function party(members){
+  if(!Array.isArray(members)||members.length<2||members.length>4)return null;
+  const ids=new Set(),rows=[];
+  for(const m of members){
+   if(typeof m?.uid!=='string'||!m.uid||m.uid.length>128||ids.has(m.uid)||m.disconnected)return null;
+   ids.add(m.uid);rows.push([m.uid,m.bot===true]);
+  }
+  return JSON.stringify(rows.sort((a,b)=>a[0].localeCompare(b[0])));
+ }
+ function roomId(v){return typeof v==='string'&&/^[A-Za-z0-9_-]{1,128}$/.test(v);}
+ function receipts(s){
+  const value=s.pkmsvvCoopProgress;
+  if(value===undefined)return {};
+  if(!isObj(value)||Object.keys(value).length>MAX_COOP_ROOMS)throw Error('Invalid Co-op receipts');
+  for(const [k,v] of Object.entries(value))
+   if(!roomId(k)||!isObj(v)||!Number.isSafeInteger(v.serial)||v.serial<1||!Number.isSafeInteger(v.at)||v.at<0)throw Error('Invalid Co-op receipt');
+  return value;
+ }
+ function roomMatches(r){
+  const room=G.Social?.room;
+  return !!(r&&r.profile===save()&&!G.DB?.guest&&room?.id===r.room&&room.host===r.host&&
+    room.mode==='coop'&&room.open===false&&room.matchSerial===r.serial&&party(room.members)===r.roster&&
+    G.Social?.uid===r.uid&&G.Net?.uid===r.uid);
+ }
+ function beginCoop(s,p,cfg,uid,host){
+  if(!s||s!==save()||G.DB?.guest||!p||p.remote||p.lanBot||coopRuns.has(p))return false;
+  const room=G.Social?.room,dex=dexId(p.dex),roster=party(cfg?.members);
+  if(cfg?.mode!=='coop'||room?.mode!=='coop'||room.open!==false||!roomId(room.id)||
+     !Number.isSafeInteger(room.matchSerial)||room.matchSerial<1||!Number.isSafeInteger(cfg.seed)||cfg.seed<0||
+     cfg.host!==room.host||typeof uid!=='string'||uid!==G.Net?.uid||uid!==G.Social?.uid||
+     host!==(uid===room.host)||!roster||roster!==party(room.members)||
+     !cfg.members.some(m=>m.uid===uid&&!m.bot)||!cfg.members.some(m=>m.uid===cfg.host&&!m.bot)||!dex||!s.owned?.[dex])return false;
+  let egg=null;
+  try{if((receipts(s)[room.id]?.serial||0)>=room.matchSerial)return false;egg=incubator(s).active;}catch(_){return false;}
+  coopRuns.set(p,{profile:s,dex,egg,room:room.id,serial:room.matchSerial,seed:cfg.seed,uid,host:cfg.host,
+   isHost:host,roster,started:wall(),t:0,kills:0,bosses:0,frames:0,riftType:null,terminal:false,settled:false,invalid:false});
+  return true;
+ }
+ function validType(v){return v===null||typeof v==='string'&&/^[a-z]{3,12}$/.test(v)&&(!G.U?.TYPE_NAME||own(G.U.TYPE_NAME,v));}
+ function tag(r){return {room:r.room,serial:r.serial,seed:r.seed,host:r.host,rift:r.riftType};}
+ function matchingTag(r,v){return !!(v&&v.room===r.room&&v.serial===r.serial&&v.seed===r.seed&&v.host===r.host&&validType(v.rift));}
+ function observeCoop(r,t,kills,bosses,rift){
+  if(!r||r.invalid||r.terminal||r.settled)return false;
+  if(!roomMatches(r)){r.invalid=true;return false;}
+  if(!Number.isFinite(t)||t<0||t>86400||!Number.isSafeInteger(kills)||kills<0||kills>1000000||
+     !Number.isSafeInteger(bosses)||bosses<0||bosses>10000||!validType(rift))return false;
+  // A late/duplicate frame does not invalidate the current run. Reject
+  // counter rollback and clocks faster than real elapsed time (grace 8s).
+  if(t+0.2<r.t||kills<r.kills||bosses<r.bosses||t>(wall()-r.started)/1000+8)return false;
+  if(r.riftType!==null&&rift!==r.riftType)return false;
+  r.t=Math.max(r.t,t);r.kills=kills;r.bosses=bosses;r.riftType=rift;r.frames++;return true;
+ }
+ function observeCoopHost(p,stats){
+  const r=coopRuns.get(p);
+  if(!r?.isHost||!G.Coop?.isHost||p!==G.Game?.player)return false;
+  return observeCoop(r,stats?.time,stats?.kills,stats?.bosses,r.riftType);
+ }
+ function coopFrameTag(p){
+  const r=coopRuns.get(p);
+  return r?.isHost&&!r.invalid&&roomMatches(r)?tag(r):null;
+ }
+ function observeCoopFrame(p,frame,from){
+  const r=coopRuns.get(p);
+  if(!r||r.isHost||from!==r.host||!matchingTag(r,frame?.pkmsvvProgressRun))return false;
+  return observeCoop(r,frame.t,frame.ki,frame.bo,frame.pkmsvvProgressRun.rift);
+ }
+ function finalizeCoopHost(p,data){
+  const r=coopRuns.get(p);
+  if(!r?.isHost||!G.Coop?.isHost||p!==G.Game?.player||!data||r.frames<2||
+     !observeCoop(r,data.t,data.ki,data.bo,r.riftType))return data;
+  if(r.t<MIN_TIME)return data;
+  r.terminal=true;
+  return {...data,pkmsvvProgressRun:tag(r)};
+ }
+ function acceptCoopTerminal(p,data,from){
+  const r=coopRuns.get(p);
+  if(!r||r.isHost||from!==r.host||p!==G.Game?.player||r.frames<2||
+     !matchingTag(r,data?.pkmsvvProgressRun)||
+     !observeCoop(r,data.t,data.ki,data.bo,data.pkmsvvProgressRun.rift)||r.t<MIN_TIME)return false;
+  r.terminal=true;return true;
+ }
+ function settleCoop(s,p,time){
+  const r=coopRuns.get(p);
+  if(!r||r.invalid||!r.terminal||r.settled||r.profile!==s||s!==save()||G.DB?.guest||p.remote||p.lanBot||
+     !Number.isFinite(time)||time<MIN_TIME||Math.abs(time-r.t)>1.5)return null;
+  r.settled=true;
+  let journal;
+  try{journal=receipts(s);if((journal[r.room]?.serial||0)>=r.serial)return null;}catch(_){return null;}
+  const points=Math.min(120,Math.floor(Math.min(r.t,1800)/60)+Math.floor(r.kills/100)+Math.min(5,r.bosses)*5);
+  if(s.pkmsvvMastery!==undefined&&!isObj(s.pkmsvvMastery))return null;
+  s.pkmsvvMastery={...(s.pkmsvvMastery||{}),[r.dex]:Math.min(MAX_POINTS,summary(s,r.dex).points+points)};
+  let progress=0,riftReward=null;
+  try{
+   const next=copy(incubator(s));
+   if(r.egg&&next.active===r.egg&&next.eggs[r.egg]){
+    const e=next.eggs[r.egg],before=e.kills;e.kills=Math.min(GOAL,before+r.kills);progress=e.kills-before;
+   }
+   if(r.riftType!==null&&Object.keys(next.eggs).length<CAP){
+    const pool=eligibleDex(s,9,next),matching=pool.filter(id=>G.DEX_BY?.[id]?.types?.includes(r.riftType));
+    const candidates=matching.length?matching:pool;
+    if(candidates.length){
+     const dex=candidates[Math.floor(Math.random()*candidates.length)];
+     riftReward=createEgg(next,dex,9,isEggOnly(dex)?'rift-baby':'rift');
+    }
+   }
+   if(progress||riftReward)s.pkmsvvIncubator=next;
+  }catch(err){console.warn('[Co-op incubator] unchanged',err);}
+  // Keep one high-water receipt per room; old closed rooms cannot rejoin.
+  const next={...journal,[r.room]:{serial:r.serial,at:Date.now()}};
+  const rows=Object.entries(next).sort((a,b)=>b[1].at-a[1].at||a[0].localeCompare(b[0]));
+  s.pkmsvvCoopProgress=Object.fromEntries(rows.slice(0,MAX_COOP_ROOMS));
+  return {dex:r.dex,points,progress,riftReward};
+ }
  function begin(s,p,coop){
   const region=G.PKMSVVQuickRegion,idx=region?.selectedRegion,dex=dexId(p?.dex);
   if(!s||s!==save()||G.DB?.guest||!p||p.remote||p.lanBot||coop||competitive()||
@@ -77,15 +194,15 @@
   r.badge=true;return true;
  }
  function registerRift(p,arena,boss){
-  const r=p&&runs.get(p);
-  if(!r||r.settled||r.profile!==save()||competitive()||G.DB?.guest||p!==G.Game?.player||
+  const r=p&&(runs.get(p)||coopRuns.get(p)),co=!!(r&&coopRuns.get(p)===r);
+  if(!r||r.settled||r.profile!==save()||(co?(!r.isHost||!G.Coop?.isHost||!roomMatches(r)):competitive())||G.DB?.guest||p!==G.Game?.player||
      arena!==G.Rift?.arena||arena?.phase!=='fight'||!boss||boss.dead||boss.remote||
      boss.id!==arena.bossId||boss.legend!==true||riftBosses.has(arena))return false;
   riftBosses.set(arena,{run:r,boss});return true;
  }
  function markRiftWin(p,arena){
-  const r=p&&runs.get(p),proof=arena&&riftBosses.get(arena);
-  if(!r||r.settled||r.profile!==save()||r.riftType!==null||competitive()||G.DB?.guest||
+  const r=p&&(runs.get(p)||coopRuns.get(p)),proof=arena&&riftBosses.get(arena),co=!!(r&&coopRuns.get(p)===r);
+  if(!r||r.settled||r.profile!==save()||r.riftType!==null||(co?(!r.isHost||!G.Coop?.isHost||!roomMatches(r)):competitive())||G.DB?.guest||
      p!==G.Game?.player||arena!==G.Rift?.arena||arena?.phase!=='won'||proof?.run!==r||
      !proof.boss.dead||!Number.isFinite(proof.boss.hp)||proof.boss.hp>0||typeof arena.type!=='string')return false;
   r.riftType=arena.type;return true;
@@ -158,6 +275,7 @@
   }catch(err){if(id){if(had)s.pkmsvvIncubator=before;else delete s.pkmsvvIncubator;}throw err;}
  }
  function settle(s,p,time,coop){
+  if(coop)return settleCoop(s,p,time);
   const r=p&&runs.get(p);
   if(!r||r.settled||r.profile!==s||s!==save()||G.DB?.guest||coop||p.remote||p.lanBot||
     !Number.isFinite(time)||time<MIN_TIME||competitive())return null;
@@ -204,6 +322,29 @@
   try{Object.assign(s,draft);if(G.DB.commit(true)===false)throw Error('Save failed');return result;}
   catch(e){for(const k of Object.keys(s))delete s[k];Object.assign(s,before);throw e;}
  }
+ // The native mission claim calls this before changing the actual mission.
+ // The weekly bonus is one baby egg per eligible weekly claim, never a
+ // second payout for a stale mission reference. A full queue does not block
+ // the original coins/tickets. Only sprite-ready babies can be offered.
+ function claimMission(s,m,weekly,grant){
+  if(!s||s!==save()||G.DB?.guest||!menuOnly()||typeof grant!=='function'||!m||
+    m.claimed||!Number.isFinite(m.prog)||!Number.isFinite(m.goal)||m.goal<=0||m.prog<m.goal)return null;
+  const ids=G.Ranking?.periodIds?.(),list=weekly?s.missions?.weekly:s.missions?.daily;
+  if(!Array.isArray(list)||!list.includes(m)||!ids||(weekly?s.missions.week!==ids.w:s.missions.day!==ids.d)||!G.MissionDefs?.BY?.[m.id])return null;
+  return G.Shop?.transaction?.('mission-claim',()=>{
+   let egg=null;
+   if(weekly)try{
+    const next=copy(incubator(s));
+    const pool=EGG_ONLY.filter(d=>babyEligible(s,d,next));
+    if(pool.length&&Object.keys(next.eggs).length<CAP){
+     egg=createEgg(next,pool[Math.floor(Math.random()*pool.length)],9,'mission-baby');
+     if(egg)s.pkmsvvIncubator=next;
+    }
+   }catch(err){console.warn('[Mission incubator] unchanged',err);}
+   grant();if(m.claimed!==true)return false;
+   return {ok:true,egg};
+  },s)||null;
+ }
  function activateEgg(id,s=save()){
   return atomic(s,d=>{const i=copy(incubator(d));if(id!==null&&!own(i.eggs,id))throw Error('Unknown egg');
    if(id!==null&&i.eggs[id].kills>=GOAL)throw Error('Egg ready');i.active=id;d.pkmsvvIncubator=i;return id;});
@@ -212,7 +353,7 @@
   return atomic(s,d=>{
    const i=copy(incubator(d)),e=i.eggs[id];
    if(!e||e.kills!==GOAL)throw Error(L('Trứng chưa sẵn sàng.','Egg is not ready.'));
-   const dex=Number(e.dex),special=isEggOnly(dex)&&(['baby-egg','rift-baby','berry-boss'].includes(e.from));
+   const dex=Number(e.dex),special=isEggOnly(dex)&&(['baby-egg','rift-baby','berry-boss','mission-baby'].includes(e.from));
    const shiny=e.shiny===true;
    // Preserve pre-update queued region eggs even if their species is now gated.
    // New special egg records may legitimately reveal an unseen baby.
@@ -246,7 +387,7 @@
   const h=document.createElement('h3');h.textContent=L('Tinh thông','Mastery')+' · '+m.title;h.style.cssText='margin:0 0 6px;color:#ffe28b';
   const p=document.createElement('p');p.textContent=m.next===null?m.points+' · MAX':m.points+' / '+m.next;
   const bar=document.createElement('progress');bar.max=m.next??Math.max(1,m.points);bar.value=m.points;bar.style.cssText='width:100%;accent-color:#e9bf54';bar.setAttribute('aria-label',L('Điểm tinh thông','Mastery points'));
-  const note=document.createElement('p');note.textContent=L('Tích lũy khi chơi Khám phá solo. Thường và Shiny dùng chung tiến độ. Không cộng chỉ số.','Earned in solo Explore. Normal and Shiny share progress. No stat bonus.');
+  const note=document.createElement('p');note.textContent=L('Tích lũy khi chơi Khám phá hoặc Sống Sót Co-op có kết quả xác nhận. Thường và Shiny dùng chung tiến độ. Không cộng chỉ số.','Earned in Explore or confirmed Survival Co-op. Normal and Shiny share progress. No stat bonus.');
   const rewards=document.createElement('div');rewards.style.cssText='display:grid;gap:5px;margin-top:12px';
   const heading=document.createElement('strong');heading.textContent=L('Mốc tinh thông','Mastery milestones');rewards.append(heading);
   for(let tier=1;tier<LEVELS.length;tier++){
@@ -263,7 +404,7 @@
   if(!fromLab)return;
   const panel=document.createElement('section');panel.dataset.recruitEggPanel='1';panel.style.cssText='padding:14px;margin:10px 0;border:1px solid #a89661;border-radius:9px;background:#213949;color:#fff2cf;overflow-wrap:anywhere';
   const heading=document.createElement('strong');heading.textContent=L('Trứng thu phục · Máy ấp','Recruitment eggs · Incubator');panel.append(heading);
-  const info=document.createElement('p');info.textContent=L('Hạ boss vùng 15 phút hoặc thắng Rift trong Khám phá để tìm trứng thu phục, gồm Baby Pokémon độc quyền. Trứng Munchlax cũng có thể nhận khi hạ Munchlax và thắng Giải cứu Berry Thường đủ điều kiện. Chọn một trứng, hạ 500 quái trong Khám phá để ấp. Khác trứng hỗ trợ trong trận.','Defeat a region badge boss or win a Rift in Explore for recruitment eggs, including egg-exclusive Baby Pokémon. A qualifying Normal Berry Rescue win with Munchlax defeated can also award its egg. Select one and defeat 500 enemies in Explore to hatch. Separate from run support eggs.');panel.append(info);
+  const info=document.createElement('p');info.textContent=L('Hạ boss vùng 15 phút, thắng Rift trong Khám phá hoặc Sống Sót Co-op, hay nhận thưởng nhiệm vụ tuần để tìm trứng thu phục. Nhiệm vụ tuần chỉ tặng trứng nếu còn chỗ và Baby Pokémon phù hợp. Trứng Munchlax cũng có thể nhận khi hạ Munchlax và thắng Giải cứu Berry Thường đủ điều kiện. Chọn một trứng, hạ 500 quái trong Khám phá hoặc Sống Sót Co-op để ấp. Khác trứng hỗ trợ trong trận.','Defeat a region badge boss, win a Rift in Explore or Survival Co-op, or claim weekly missions for recruitment eggs. Weekly bonus requires a free slot and eligible Baby Pokémon. A qualifying Normal Berry Rescue win with Munchlax defeated can also award its egg. Select one and defeat 500 enemies in Explore or Survival Co-op to hatch. Separate from run support eggs.');panel.append(info);
   const say=msg=>G.UI?.toast?.(msg,3000);
   try{
    const i=incubator(save()),entries=Object.entries(i.eggs);
@@ -285,5 +426,5 @@
   }catch(err){const note=document.createElement('small');note.textContent=L('Dữ liệu máy ấp không hợp lệ; không ghi đè save.','Invalid incubator data; save preserved.');panel.append(note);}
   frame.append(panel);
  }
- G.PKMSVVBigUpdateQA=Object.freeze({LEVELS,GOAL,CAP,EGG_ONLY,SHINY_RATE,isEggOnly,eggEvolutionParent,eggDiscovered,eggGachaPolicy,eggHint,markEggEvolution,commitBerryEgg,registerRift,markRiftWin,summary,incubator,begin,markBadge,settle,activateEgg,hatch,applyMasteryPortrait,renderMastery,renderIncubator});
+ G.PKMSVVBigUpdateQA=Object.freeze({LEVELS,GOAL,CAP,EGG_ONLY,SHINY_RATE,isEggOnly,eggEvolutionParent,eggDiscovered,eggGachaPolicy,eggHint,markEggEvolution,commitBerryEgg,registerRift,markRiftWin,summary,incubator,begin,beginCoop,observeCoopHost,coopFrameTag,observeCoopFrame,finalizeCoopHost,acceptCoopTerminal,claimMission,markBadge,settle,activateEgg,hatch,applyMasteryPortrait,renderMastery,renderIncubator});
 })(typeof globalThis==='object'?globalThis:this);

@@ -851,6 +851,59 @@ if(process.env.PKMSVV_BIG_UPDATE_QA==='1'){
   '<script defer src="js/core/pkmsvv-progression-merge.js"></script>\n<script defer src="js/core/db.js"></script>');
  patch('js/core/db.js','    r.created = Math.min(a.created || Date.now(), b.created || Date.now());',
   '    G.PKMSVVProgressionMerge.apply(r,newer,older);\n    r.created = Math.min(a.created || Date.now(), b.created || Date.now());');
+ // Scope normal Co-op progression to the native locked room and real Host.
+ patch('js/net/coop.js','    members = cfg.members;',
+  '    members = cfg.members;\n    G.PKMSVVBigUpdateQA?.beginCoop(G.DB.save,pl,cfg,me,host);');
+ patch('js/net/coop.js','  function tick(dt) {\n    if (!active) return;',
+  '  function tick(dt) {\n    if (!active) return;\n    if(host)G.PKMSVVBigUpdateQA?.observeCoopHost(local,api.team());');
+ patch('js/net/coop.js','    const ja = G.Judgment.netState();',
+  '    const progressTag=G.PKMSVVBigUpdateQA?.coopFrameTag(local);\n    if(progressTag)f.pkmsvvProgressRun=progressTag;\n    const ja = G.Judgment.netState();');
+ patch('js/net/coop.js','    for (const ev of msg.ev || []) applyHostEvent(ev);',
+  '    G.PKMSVVBigUpdateQA?.observeCoopFrame(local,msg,hostUid);\n    for (const ev of msg.ev || []) { applyHostEvent(ev); if(!active)return; }');
+ patch('js/net/coop.js',"      case 'ov': { const cb = api.over; const d = ev[1]; end(); cb(d); break; }",
+  "      case 'ov': { const cb = api.over; const d = ev[1]; G.PKMSVVBigUpdateQA?.acceptCoopTerminal(local,d,hostUid); end(); cb(d); break; }");
+ patch('js/net/coop.js',"    emit(['ov', data]);",
+  "    emit(['ov', G.PKMSVVBigUpdateQA?.finalizeCoopHost(local,data) || data]);");
+ patch('js/net/coop.js',"      emit(['ov', Object.assign(api.summary ? api.summary() : {}, { why: 'host' })]);",
+  "      const data=Object.assign(api.summary ? api.summary() : {}, { why: 'host' });\n      emit(['ov', G.PKMSVVBigUpdateQA?.finalizeCoopHost(local,data) || data]);");
+ // Weekly bonus and existing mission rewards share one real save commit.
+ // Queue achievement notices until success, and re-render failed claims
+ // because the rollback may replace the previous mission object reference.
+ patch('js/systems/progress.js','  let achT = 0, toastQ = [], toastT = 0;',
+  '  let achT = 0, toastQ = [], toastT = 0, claimNotices=null;');
+ patch('js/systems/progress.js',
+  [
+   '    if (!s || m.claimed || !done(m)) return false;',
+   '    m.claimed = true;',
+   '    grant(G.MissionDefs.BY[m.id].reward);',
+   '    s.stats.missionsDone = (s.stats.missionsDone || 0) + 1;',
+   "    event('missionDone', { daily: !weekly });",
+   '    G.DB.commit(true);',
+   '    return true;'
+  ].join('\n'),
+  [
+   '    if (!s || !m || m.claimed || !done(m) || claimNotices) return false;',
+   '    const change=()=>{',
+   '      m.claimed=true; grant(G.MissionDefs.BY[m.id].reward);',
+   '      s.stats.missionsDone=(s.stats.missionsDone||0)+1;',
+   "      event('missionDone',{daily:!weekly});",
+   '    };',
+   '    if(!G.PKMSVVBigUpdateQA){change();return G.DB.commit(true)!==false;}',
+   '    claimNotices=[];let result=null,notices;',
+   '    try{result=G.PKMSVVBigUpdateQA.claimMission(s,m,weekly,change);}',
+   '    finally{notices=claimNotices;claimNotices=null;}',
+   '    G.UI?.refreshCoins?.();',
+   '    if(!result){G.UI?.toast?.(G.I18n?.lang==="vi"?"Không lưu được thưởng nhiệm vụ. Hãy thử lại.":"Could not save mission reward. Retry.",3500);return false;}',
+   '    for(const row of notices)notify(...row);',
+   '    if(result.egg)G.UI?.toast?.(G.I18n?.lang==="vi"?"Nhận trứng thu phục! Ghé máy ấp ở phòng nghiên cứu.":"Recruitment egg earned! Visit the research lab.",4000);',
+   '    return true;'
+  ].join('\n'));
+ patch('js/systems/progress.js','  function notify(title, sub, ach) {',
+  '  function notify(title, sub, ach) {\n    if(claimNotices){claimNotices.push([title,sub,ach]);return;}');
+ patch('js/ui/goals-ui.js',"btn.onclick = () => { if (G.Progress.claim(m, weekly)) { G.Audio.sfx('buy'); G.UI.toast('¡Premio recogido!'); render(); } };",
+  "btn.onclick = () => { if(btn.disabled||!btn.isConnected)return;btn.disabled=true;if (G.Progress.claim(m, weekly)) { G.Audio.sfx('buy'); G.UI.toast('¡Premio recogido!'); } render(); };");
+ patch('js/ui/goals-ui.js',"          const btn = document.createElement('button');\n          if (m.claimed)",
+  "          if(weekly&&!m.claimed&&G.PKMSVVBigUpdateQA){const note=document.createElement('small');note.className='sub';note.textContent=G.I18n?.lang==='vi'?'🥚 Thêm trứng Baby nếu máy ấp còn chỗ và có Pokémon phù hợp.':'🥚 Bonus Baby egg if an eligible Pokémon and free slot are available.';el.append(note);}\n          const btn = document.createElement('button');\n          if (m.claimed)");
  // Capture the authentic Rift boss actor, including when EnemyMgr has already
  // removed its corpse. Missing actors alone must never award a recruitment egg.
  patch('js/systems/rift.js','    arena.bossId = e.id;',
