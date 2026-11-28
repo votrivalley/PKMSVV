@@ -847,6 +847,11 @@ patch('js/core/db.js',
 // result boundary; the late-loaded module is only present in the isolated QA.
 if(process.env.PKMSVV_BIG_UPDATE_QA==='1'){
  execFileSync(process.execPath,[path.join(project,'scripts','build-eternamax-qa.cjs')],{cwd:project,stdio:'inherit'});
+ // Legacy vortex shares the same host-authoritative displacement policy
+ // as the native 3DS fields. Leave excluded modes and original damage alone.
+ patch('js/systems/combat.js',
+  '        const k = Math.min(d, f.pull * dt * (e.boss || e.judge ? 0.25 : 1));\n        e.x += dx / d * k; e.y += dy / d * k;',
+  '        const balance=G.PKMSVVCombatBalanceQA;\n        const k = Math.min(d, f.pull * dt * (balance?.dragScale(e,"vortex") ?? (e.boss || e.judge ? 0.25 : 1)));\n        if(balance?.tier(e))balance.drag(e,dx/d*k,dy/d*k);else { e.x += dx / d * k; e.y += dy / d * k; }');
  // Blank TM is an opt-in QA item; normal release builds retain their catalogue.
  patch('js/data/shop.js',"  const ORDER = ['mint', 'cap', 'caph', 'pippiReset'];",
   "  ITEMS.blankTm={name:'TM Trống',icon:'book',price:500,desc:'Erase one learned TM without refund.'};\n  const ORDER = ['mint', 'cap', 'caph', 'pippiReset','blankTm'];");

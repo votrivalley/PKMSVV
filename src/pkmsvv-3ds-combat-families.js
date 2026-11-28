@@ -171,10 +171,10 @@ G.PKMSVV3DSCombatFX = (() => {
             f.hitEnemies.add(e);
             hooks.hit?.(p,e,f.dmg,f.col,f.ca,f.sa,0,m);
           }
-          if(e.dead||e.arceus)continue;
+          if(e.dead||e.arceus||e.remote&&G.PKMSVVCombatBalanceQA?.enabled())continue;
           // Pushing a boss/judge is 15% of forward speed versus 75% for
           // normal enemies. Skip moves that would cross a wall.
-          const factor=(e.boss||e.judge)?0.15:0.75;
+          const factor=G.PKMSVVCombatBalanceQA?.dragScale(e,'wave')??((e.boss||e.judge)?0.15:0.75);
           const push=step*factor*Math.min(1.5,(Number(m.knock)||160)/160);
           const nx=e.x+f.ca*push,ny=e.y+f.sa*push;
           if(!G.World?.isWall?.(nx,ny)){e.x=nx;e.y=ny;}
@@ -193,7 +193,7 @@ G.PKMSVV3DSCombatFX = (() => {
           if(e.dead)continue;
           const dx=f.x-e.x,dy=f.y-e.y,d=Math.hypot(dx,dy);
           if(d<4)continue;
-          const strength=(e.boss||e.judge)?0.25:1;
+          const strength=G.PKMSVVCombatBalanceQA?.dragScale(e,'vortex')??((e.boss||e.judge)?0.25:1);
           const step=Math.min(d,f.pull*delta*strength);
           const nx=e.x+dx/d*step,ny=e.y+dy/d*step;
           if(!G.World?.isWall?.(nx,ny)){e.x=nx;e.y=ny;}
