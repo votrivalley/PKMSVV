@@ -15,15 +15,19 @@ const OUT=path.resolve('dist/big-update-progression-qa');fs.mkdirSync(OUT,{recur
   await page.goto(url,{waitUntil:'domcontentloaded',timeout:45000});
   await page.waitForFunction(()=>!!G.DB?.save&&!!G.Shop?.transaction&&!!G.PKMSVVMegaGacha,null,{timeout:40000});
   await page.evaluate(()=>{
-   const s=G.DB.save;Object.assign(s,{partner:25,pkmsvvStorySeen:true,pkmsvvNameChosen:true,pkmsvvChapter7Seen:true,coins:12000,bag:{mint:1,cap:2},arenaGacha:{points:500,pity:0,pulls:0,championPaid:{},trophyPaid:{}},megaStones:{}});
+   const s=G.DB.save;Object.assign(s,{partner:25,pkmsvvStorySeen:true,pkmsvvNameChosen:true,pkmsvvChapter7Seen:true,pkmsvvChapter9MegaDone:true,coins:12000,bag:{mint:1,cap:2},arenaGacha:{points:500,pity:0,pulls:0,championPaid:{},trophyPaid:{}},megaStones:{}});
    s.owned={...s.owned,25:{at:1}};
    if(G.DB.commit(true)!==true)throw Error('Fixture commit failed');
    G.MenuUI.open();G.KecleonUI.open('shop');
   });
   const buy=page.locator('[data-pkmk-buy="mint"]');
+  // Menu opening can legitimately credit old story rewards, and native
+  // balance patches may change the price. Read the live pre-click balance
+  // and actual registry instead of assuming the fixture's initial amount.
+  const baseline=await page.evaluate(()=>({coins:G.DB.save.coins,mint:G.Shop.count('mint'),price:G.Shop.ITEMS.mint.price}));
   await buy.click();
   const first=await page.evaluate(()=>({coins:G.DB.save.coins,mint:G.Shop.count('mint')}));
-  assert.deepEqual(first,{coins:10500,mint:2});
+  assert.deepEqual(first,{coins:baseline.coins-baseline.price,mint:baseline.mint+1});
   const failed=await page.evaluate(()=>{
    const key='ps.save.'+JSON.parse(localStorage.getItem('ps.session'));
    const before=JSON.stringify(G.DB.save),disk=localStorage.getItem(key),proto=Storage.prototype,original=proto.setItem;
@@ -46,12 +50,12 @@ const OUT=path.resolve('dist/big-update-progression-qa');fs.mkdirSync(OUT,{recur
    finally{localStorage.setItem(key,disk);}
    return {coins:s.coins,mint:G.Shop.count('mint'),points:s.arenaGacha.points,pulls:s.arenaGacha.pulls,stone:r.stoneKey,staleRejected:rejected};
   });
-  assert.equal(saved.coins,9000);assert.equal(saved.mint,3);assert.equal(saved.points,400);assert.equal(saved.pulls,1);assert.equal(saved.staleRejected,true);
+  assert.equal(saved.coins,baseline.coins-2*baseline.price);assert.equal(saved.mint,baseline.mint+2);assert.equal(saved.points,400);assert.equal(saved.pulls,1);assert.equal(saved.staleRejected,true);
   await page.screenshot({path:path.join(OUT,'p0-shop-native.png')});
   await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>!!G.DB?.save&&!!G.Shop?.transaction,null,{timeout:40000});
   const reloaded=await page.evaluate(stone=>({coins:G.DB.save.coins,mint:G.Shop.count('mint'),points:G.DB.save.arenaGacha.points,pulls:G.DB.save.arenaGacha.pulls,stone:G.DB.save.megaStones[stone]}),saved.stone);
-  assert.deepEqual(reloaded,{coins:9000,mint:3,points:400,pulls:1,stone:1});
+  assert.deepEqual(reloaded,{coins:saved.coins,mint:saved.mint,points:saved.points,pulls:saved.pulls,stone:1});
   assert.deepEqual(errors,[]);
-  const result={first,failed,saved,reloaded};fs.writeFileSync(path.join(OUT,'p0-transactions.json'),JSON.stringify(result,null,2));console.log('P0_TRANSACTION_NATIVE_PASS='+JSON.stringify(result));
+  const result={baseline,first,failed,saved,reloaded};fs.writeFileSync(path.join(OUT,'p0-transactions.json'),JSON.stringify(result,null,2));console.log('P0_TRANSACTION_NATIVE_PASS='+JSON.stringify(result));
  }finally{await browser.close();await server.close();}
 })().catch(err=>{console.error(err);process.exitCode=1;});
