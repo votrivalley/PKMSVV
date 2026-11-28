@@ -36,6 +36,18 @@
   const older=taught(a)[dex],newer=taught(b)[dex];
   return !Array.isArray(older)||older.every(id=>Array.isArray(newer)&&newer.includes(id));
  });
+ const incubatorLoss=(a,b)=>{
+  const old=a.pkmsvvIncubator,next=b.pkmsvvIncubator;
+  if(!record(old))return false;
+  if(!record(next)||Number(next.serial||0)<Number(old.serial||0))return true;
+  for(const id of keys(old.hatched))if(Number(next.hatched?.[id])!==Number(old.hatched[id]))return true;
+  for(const id of keys(old.eggs)){
+   const prev=old.eggs[id],current=next.eggs?.[id];
+   if(current){if(Number(current.dex)!==Number(prev.dex)||Number(current.kills||0)<Number(prev.kills||0))return true;}
+   else if(Number(next.hatched?.[id])!==Number(prev.dex)||!b.owned?.[prev.dex])return true;
+  }
+  return false;
+ };
  const score=text=>{
   try{
    const s=JSON.parse(text),berry=s.pkmsvvBerry||{},arena=s.arenas?.pkmChampion||{};
@@ -77,6 +89,9 @@
      older[k]===true&&newer[k]!==true)return true;
   for(const flag of ['pkmsvvRayquazaDefeated','pkmsvvChapter10Done','pkmsvvChapter10Seen'])
    if(older[flag]===true&&newer[flag]!==true)return true;
+  for(const dex of keys(older.pkmsvvMastery))
+   if((Number(newer.pkmsvvMastery?.[dex])||0)<(Number(older.pkmsvvMastery[dex])||0))return true;
+  if(incubatorLoss(older,newer))return true;
   if(!learnedRetained(older,newer))return true;
   // Removing an entire inventory field is a schema/data-loss regression,
   // unlike ordinary consumption that can reduce individual item counts.
@@ -139,6 +154,9 @@
    return {name,before:asNumber?qty(before):total(before),after:asNumber?qty(after):total(after)};
   }).filter(x=>x.before!==x.after).map(x=>({...x,delta:x.after-x.before}));
   for(const id of new Set([...keys(a.pkmsvvResearchRanks),...keys(b.pkmsvvResearchRanks)]))note('Nghiên cứu '+id,qty(a.pkmsvvResearchRanks?.[id]),qty(b.pkmsvvResearchRanks?.[id]));
+  for(const id of new Set([...keys(a.pkmsvvMastery),...keys(b.pkmsvvMastery)]))
+   note('Tinh thông #'+id,qty(a.pkmsvvMastery?.[id]),qty(b.pkmsvvMastery?.[id]));
+  if(incubatorLoss(a,b))permanent.push({name:'Tiến độ ấp trứng',before:1,after:0,change:'loss'});
   const risk=permanent.some(x=>x.change==='loss');
   const warnings=[];
   if(risk)warnings.push('Permanent progress or chapter flags may be lost');

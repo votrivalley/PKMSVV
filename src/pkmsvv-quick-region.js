@@ -332,6 +332,7 @@
   if(!save)return false;
   if(hasSeal(run.index,save)){
    run.badgeClaimed=true;
+  G.PKMSVVBigUpdateQA?.markBadge(G.Game?.player,boss,run.index);
    G.UI?.toast?.(tr('🏅 Đã vượt Boss 15 phút! Hãy trụ đến phút 30.',
     '🏅 First boss defeated! Survive until minute 30.'),3300);
    return true;
@@ -349,6 +350,7 @@
    return false;
   }
   run.badgeClaimed=true;
+  G.PKMSVVBigUpdateQA?.markBadge(G.Game?.player,boss,run.index);
   G.UI?.toast?.(tr('🏅 Huy hiệu Vùng '+name+'! Vùng mới đã mở. Tiếp tục đến phút 30.',
    '🏅 '+name+' Badge earned! Next region unlocked. Continue to minute 30.'),5000);
   return true;

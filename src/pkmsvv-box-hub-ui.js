@@ -421,6 +421,7 @@
      '<button type="button" class="btn small" data-pkmbx-action="tm">TM</button></div>'+
     (feedback?.id===it.id?'<div class="pkmbx-action-feedback" role="status">✓ '+clean(feedback.message)+'</div>':'')+
     '</div>';
+   G.PKMSVVBigUpdateQA?.renderMastery(profile.querySelector('.pkmbx-hub-info'),it.dex,profile.querySelector('#pkmbx-hero'));
    // QA power loadout belongs to the focused species, not the active partner.
    const powers=G.PKMSVVSpecialPowerQA;
    if(powers?.open&&currentSave()?.pkmsvvChapter7Seen===true){

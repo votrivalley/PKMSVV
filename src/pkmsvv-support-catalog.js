@@ -177,6 +177,7 @@ G.PKMSVVSupportCatalog=(()=>{
    'Discover companions by hatching eggs. Undiscovered Pokémon stay silhouetted; Normal / Shiny is available only after discovering a Shiny.');
   const list=G.PKMSVVEggs?.SPECIES||[];
   if(!list.some(x=>x.dex===selected))selected=list[0]?.dex||null;
+  G.PKMSVVBigUpdateQA?.renderIncubator(wrap.querySelector('.pkmsvv-support-modal'),fromResearchLab);
   showShiny=false;renderGrid();renderDetails();wrap.hidden=false;
   document.body?.classList?.add('pkmsvv-support-open');
   const panel=scroller();if(panel)panel.scrollTop=0;

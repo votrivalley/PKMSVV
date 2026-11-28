@@ -773,6 +773,14 @@ patch('js/entities/projectile.js',
   '<script defer src="js/ui/pkmsvv-pippi-guide.js"></script>\n'+
   '<script defer src="js/ui/pkmsvv-fossil-system.js"></script>\n</body>'));
 }
+// Big Update QA: call progression at the actual native player construction and
+// result boundary; the late-loaded module is only present in the isolated QA.
+if(process.env.PKMSVV_BIG_UPDATE_QA==='1'){
+ patch('js/game.js','    G.PKMSVVEvo.reset(pl);',
+  '    G.PKMSVVEvo.reset(pl);\n    G.PKMSVVBigUpdateQA?.begin(save,pl,coop);');
+ patch('js/game.js','    G.PKMSVVCollect.onRunEnd(save,pl.dex,time);',
+  '    G.PKMSVVCollect.onRunEnd(save,pl.dex,time);\n    G.PKMSVVBigUpdateQA?.settle(save,pl,time,coop);');
+}
 // Windows and Android remain strictly offline-first: do NOT inject the external
 // browser Online mode switch. The existing native save identity remains unchanged.
 // Invoke the installed minifier directly: npx.cmd + shell splits Windows paths
