@@ -857,7 +857,7 @@ if(process.env.PKMSVV_BIG_UPDATE_QA==='1'){
   '    let pkmsvvStartPending=false;\n    async function start() {\n      const room = G.Social.room;');
  patch('js/ui/social-ui.js','      G.Social.setOpen(false);\n      G.Net.broadcast(cfg);\n      G.Flow.startCoop(cfg);',
   [
-   '      if(G.LanBus&&G.PKMSVVBigUpdateQA&&room.mode==="coop"){',
+   '      if(G.LanBus&&G.PKMSVVBigUpdateQA&&["coop","eggrush"].includes(room.mode)){',
    '        if(pkmsvvStartPending||room.open!==true)return;',
    '        pkmsvvStartPending=true;',
    '        try{',

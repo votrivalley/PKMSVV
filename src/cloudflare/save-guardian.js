@@ -93,6 +93,9 @@
   for(const dex of keys(older.pkmsvvMastery))
    if((Number(newer.pkmsvvMastery?.[dex])||0)<(Number(older.pkmsvvMastery[dex])||0))return true;
   if(incubatorLoss(older,newer))return true;
+  for(const dex of keys(older.pkmsvvSupportBond))
+   if((Number(newer.pkmsvvSupportBond?.[dex])||0)<(Number(older.pkmsvvSupportBond[dex])||0))return true;
+  if(!retained(older.pkmsvvSupportShiny,newer.pkmsvvSupportShiny))return true;
   const priorCoop=older.pkmsvvCoopProgress,currentCoop=newer.pkmsvvCoopProgress;
   for(const id of keys(priorCoop)){
    const prior=priorCoop[id],next=currentCoop?.[id];

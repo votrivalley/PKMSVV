@@ -13,7 +13,7 @@ G.EggRush=(()=>{
   const pool=ordinary();return pool[Math.min(pool.length-1,Math.floor((roll-start)/(1-start)*pool.length))];
  }
  let active=false,supportMode=false,cooperative=false,survival=false,nextSpawn=60,roster=[],nests=[],trails=new Map(),trailDir=new Map(),pets=[],score={},at={},laid=0,seed=1,outcome=null,transition={},levelSeen=1,killsSeen=0,secretEggs=new Map();
- let allocation=0,retryAt=0,pendingBatch=0;const seenIds=new Set();
+ let allocation=0,retryAt=0,pendingBatch=0,localReward=null;const seenIds=new Set();
  const metrics={placementAttempts:0,placementFailures:0,expired:0};
  const tr=(vi,en)=>G.I18n?.lang==='en'?en:vi;
  const nameOf=uid=>roster.find(m=>m.uid===uid)?.name||'Player';
@@ -29,7 +29,7 @@ G.EggRush=(()=>{
   allocation=0;retryAt=0;pendingBatch=0;seenIds.clear();Object.assign(metrics,{placementAttempts:0,placementFailures:0,expired:0});
   roster=(active||supportMode)?(cfg.members||[]).map(m=>({uid:m.uid,name:String(m.name||'Player').slice(0,24),dex:m.dex||25,shiny:!!m.shiny})):[];
   seed=Math.floor(Number(cfg?.seed)||1);nests=[];pets=[];trails=new Map();trailDir=new Map();levelSeen=1;killsSeen=0;
-  score=Object.fromEntries(roster.map(m=>[m.uid,0]));at={};laid=0;outcome=null;transition={};secretEggs=new Map();
+  score=Object.fromEntries(roster.map(m=>[m.uid,0]));at={};laid=0;outcome=null;transition={};secretEggs=new Map();localReward=null;
   if(active||supportMode){
    // Egg Rush contains only sealed eggs until the finale: don't preload
    // eight unrelated support animation sets during competitive gameplay.
@@ -574,12 +574,21 @@ G.EggRush=(()=>{
      tr('Tranh Trứng · Chiến thắng','Egg Rush · Victory'):
      tr('Tranh Trứng · Kết quả','Egg Rush · Results');
    }
+   // Show this profile's verified settlement only after the full reveal.
+   // Never use this presentation callback to grant items.
+   if(localReward){
+    const reward=document.createElement('p');reward.className='pkmsvv-egg-rank-reward';
+    reward.textContent=tr('Phần thưởng: ','Rewards: ')+'+'+localReward.awarded+' '+tr('trứng thu phục','recruitment eggs')+' · +'+localReward.friendship+' '+tr('thân thiết Support','Support friendship');
+    if(localReward.blocked)reward.textContent+=' · '+tr('Máy ấp đầy hoặc không còn Baby phù hợp.','Incubator full or no eligible Baby Pokémon.');
+    root.append(reward);
+   }
    root.classList.add('pkmsvv-egg-scoring-done');
   };
   setTimeout(step,350);
  }
  function finish(r){if(r){outcome=r;active=true;}}
- return {begin,startPosition,onEvent,update,draw,hud,guide,html,reveal,finish,cast,orb,standings,objective,get metrics(){return {...metrics};},
+ return {begin,startPosition,onEvent,update,draw,hud,guide,html,reveal,finish,cast,orb,standings,objective,
+  setLocalReward(r){localReward=r?{...r}:null;},get localReward(){return localReward?{...localReward}:null;},get metrics(){return {...metrics};},
   get enabled(){return active||supportMode;},get pets(){return pets;},
   get nests(){return nests;},get active(){return active;},get outcome(){return outcome;},get collected(){return Object.values(score).reduce((s,n)=>s+n,0);}};
 })();

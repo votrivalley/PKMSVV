@@ -40,7 +40,7 @@
  function eggHint(dex){
   if(isEggOnly(dex))return Number(dex)===446?
    L('Chỉ nhận qua ấp trứng thu phục. Có thể tìm trứng Munchlax khi thắng Giải cứu Berry Thường và hạ Munchlax.','Hatch recruitment eggs only. Defeat Munchlax and win Normal Berry Rescue for its egg.'):
-   L('Chỉ nhận qua ấp trứng thu phục: boss vùng, Rift hoặc nhiệm vụ tuần. Không có trong Chiêu mộ.','Hatch recruitment eggs from region bosses, Rift or weekly missions. Not available in Recruitment.');
+   L('Chỉ nhận qua ấp trứng thu phục: boss vùng, Rift, nhiệm vụ tuần hoặc Tranh Trứng. Không có trong Chiêu mộ.','Hatch recruitment eggs from region bosses, Rift, weekly missions or Egg Rush. Not available in Recruitment.');
   const parent=eggEvolutionParent(dex);
   return parent?L('Mở Chiêu mộ khi tự tiến hóa từ ','Unlock Recruitment by evolving from ')+(G.DEX_BY?.[parent]?.name||('#'+parent))+'.':null;
  }
@@ -56,7 +56,7 @@
    Object.keys(raw.eggs).length>CAP)throw Error('Invalid incubator save; keep original');
   for(const [id,e] of Object.entries(raw.eggs)){
    if(!/^egg-[1-9][0-9]*$/.test(id)||!dexId(e?.dex)||!Number.isInteger(e.kills)||e.kills<0||e.kills>GOAL||own(raw.hatched,id)||
-      (e.shiny!==undefined&&typeof e.shiny!=='boolean')||(['baby-egg','rift-baby','mission-baby'].includes(e.from)&&!isEggOnly(e.dex))||
+      (e.shiny!==undefined&&typeof e.shiny!=='boolean')||(['baby-egg','rift-baby','mission-baby','egg-rush-baby'].includes(e.from)&&!isEggOnly(e.dex))||
       (e.from==='berry-boss'&&Number(e.dex)!==446))throw Error('Invalid egg record');
   }
   if(raw.active!==null&&!own(raw.eggs,raw.active))throw Error('Invalid active egg');
@@ -88,7 +88,7 @@
  function roomMatches(r){
   const room=G.Social?.room;
   return !!(r&&r.profile===save()&&!G.DB?.guest&&room?.id===r.room&&room.host===r.host&&
-    room.mode==='coop'&&room.open===false&&room.matchSerial===r.serial&&party(room.members)===r.roster&&
+    room.mode===r.mode&&room.open===false&&room.matchSerial===r.serial&&party(room.members)===r.roster&&
     G.Social?.uid===r.uid&&G.Net?.uid===r.uid);
  }
  function beginCoop(s,p,cfg,uid,host){
@@ -100,20 +100,21 @@
    const member=room?.members?.find(x=>x.uid===m?.uid);
    return member?{uid:m.uid,bot:member.bot===true,disconnected:member.disconnected}:null;
   })):null;
-  if(cfg?.mode!=='coop'||room?.mode!=='coop'||room.open!==false||!roomId(room.id)||
+  const mode=cfg?.mode;
+  if(!['coop','eggrush'].includes(mode)||room?.mode!==mode||(mode==='eggrush'&&room.members?.length!==4)||room.open!==false||!roomId(room.id)||
      !Number.isSafeInteger(room.matchSerial)||room.matchSerial<1||!Number.isSafeInteger(cfg.seed)||cfg.seed<0||
      cfg.host!==room.host||typeof uid!=='string'||uid!==G.Net?.uid||uid!==G.Social?.uid||
      host!==(uid===room.host)||!roster||roster!==cfgParty||
      !room.members.some(m=>m.uid===uid&&!m.bot)||!room.members.some(m=>m.uid===cfg.host&&!m.bot)||!dex||!s.owned?.[dex])return false;
   let egg=null;
   try{if((receipts(s)[room.id]?.serial||0)>=room.matchSerial)return false;egg=incubator(s).active;}catch(_){return false;}
-  coopRuns.set(p,{profile:s,dex,egg,room:room.id,serial:room.matchSerial,seed:cfg.seed,uid,host:cfg.host,
+  coopRuns.set(p,{profile:s,dex,egg,mode,room:room.id,serial:room.matchSerial,seed:cfg.seed,uid,host:cfg.host,
    isHost:host,roster,started:wall(),t:0,kills:0,bosses:0,frames:0,riftType:null,terminal:false,settled:false,invalid:false});
   return true;
  }
  function validType(v){return v===null||typeof v==='string'&&/^[a-z]{3,12}$/.test(v)&&(!G.U?.TYPE_NAME||own(G.U.TYPE_NAME,v));}
- function tag(r){return {room:r.room,serial:r.serial,seed:r.seed,host:r.host,rift:r.riftType};}
- function matchingTag(r,v){return !!(v&&v.room===r.room&&v.serial===r.serial&&v.seed===r.seed&&v.host===r.host&&validType(v.rift));}
+ function tag(r){return {room:r.room,serial:r.serial,seed:r.seed,host:r.host,rift:r.riftType,...(r.mode==='eggrush'?{mode:r.mode}:{})};}
+ function matchingTag(r,v){return !!(v&&v.room===r.room&&v.serial===r.serial&&v.seed===r.seed&&v.host===r.host&&(r.mode==='eggrush'?v.mode==='eggrush'&&v.rift===null:!v.mode||v.mode==='coop')&&validType(v.rift));}
  function observeCoop(r,t,kills,bosses,rift){
   if(!r||r.invalid||r.terminal||r.settled)return false;
   if(!roomMatches(r)){r.invalid=true;return false;}
@@ -139,11 +140,44 @@
   if(!r||r.isHost||from!==r.host||!matchingTag(r,frame?.pkmsvvProgressRun))return false;
   return observeCoop(r,frame.t,frame.ki,frame.bo,frame.pkmsvvProgressRun.rift);
  }
+ // Validate the actual sealed pick-up ledger against the final Host result.
+ // Do not accept UI reveal callbacks, locally fabricated ranks or a quit
+ // summary. Every egg ID must have been seen in this locked four-slot room.
+ function verifyEggRush(r,data){
+  const out=data?.eggrush,mode=G.EggRush;
+  if(r.mode!=='eggrush'||!mode?.active||!out||!Array.isArray(out.standings)||out.standings.length!==4||
+     !Number.isSafeInteger(out.collected)||out.collected<1||out.collected>10||
+     !Number.isFinite(out.finishedAt)||Math.abs(out.finishedAt-r.t)>1.5||
+     (out.collected!==10&&out.finishedAt<720)||out.finishedAt>722||
+     (r.isHost&&out!==mode.outcome))return null;
+  const pets=mode.pets,expected=JSON.parse(r.roster).map(x=>x[0]),known=new Set((G.PKMSVVEggs?.SPECIES||[]).filter(x=>G.PKMSVVEggs.supportReady?.(x.dex)!==false).map(x=>x.dex));
+  if(!Array.isArray(pets)||pets.length!==out.collected||!known.size)return null;
+  const ids=new Set(),users=new Set(),rows=[];
+  for(const row of out.standings){
+   if(!expected.includes(row?.uid)||users.has(row.uid)||!Array.isArray(row.hatched)||row.eggs!==row.hatched.length||
+      !Number.isSafeInteger(row.points)||row.points<0||!Number.isInteger(row.rank)||row.rank<1||row.rank>4)return null;
+   users.add(row.uid);let points=0;
+   for(const e of row.hatched){
+    if(!Number.isSafeInteger(e?.id)||ids.has(e.id)||!known.has(e.dex)||typeof e.shiny!=='boolean'||
+       !pets.some(p=>p.id===e.id&&p.uid===row.uid&&!p.hatch))return null;
+    ids.add(e.id);
+    const base=[151,385].includes(e.dex)?20:e.dex===132?10:5,score=base*(e.shiny?2:1);
+    if(e.basePoints!==base||e.points!==score)return null;points+=score;
+   }
+   if(points!==row.points)return null;
+   rows.push({uid:row.uid,rank:row.rank,points,eggs:row.eggs,hatched:copy(row.hatched),at:row.at||0});
+  }
+  if(ids.size!==out.collected||users.size!==4||out.standings.some((row,i)=>row.rank!==i+1||row.win!==(i===0))||out.winner!==rows[0].uid)return null;
+  for(let i=1;i<rows.length;i++)if(rows[i-1].points<rows[i].points||
+     (rows[i-1].points===rows[i].points&&rows[i-1].eggs<rows[i].eggs))return null;
+  return rows.find(row=>row.uid===r.uid)||null;
+ }
  function finalizeCoopHost(p,data){
   const r=coopRuns.get(p);
   if(!r?.isHost||!G.Coop?.isHost||p!==G.Game?.player||!data||r.frames<2||
      !observeCoop(r,data.t,data.ki,data.bo,r.riftType))return data;
   if(r.t<MIN_TIME)return data;
+  if(r.mode==='eggrush'){r.eggRush=verifyEggRush(r,data);if(!r.eggRush)return data;}
   r.terminal=true;
   return {...data,pkmsvvProgressRun:tag(r)};
  }
@@ -152,7 +186,44 @@
   if(!r||r.isHost||from!==r.host||p!==G.Game?.player||r.frames<2||
      !matchingTag(r,data?.pkmsvvProgressRun)||
      !observeCoop(r,data.t,data.ki,data.bo,data.pkmsvvProgressRun.rift)||r.t<MIN_TIME)return false;
+  if(r.mode==='eggrush'){r.eggRush=verifyEggRush(r,data);if(!r.eggRush)return false;}
   r.terminal=true;return true;
+ }
+ function settleEggRush(s,r,journal){
+  const row=r.eggRush;if(!row)return null;
+  const want=row.eggs>0?(row.rank===1?2:row.rank===2?1:0):0;
+  const draft=copy(s),reward=[];
+  // Friendship is a separate support collection, never permanent ownership.
+  if(draft.pkmsvvSupportBond!==undefined&&!isObj(draft.pkmsvvSupportBond))return null;
+  if(draft.pkmsvvSupportShiny!==undefined&&!isObj(draft.pkmsvvSupportShiny))return null;
+  if(row.eggs){
+   draft.pkmsvvSupportBond=draft.pkmsvvSupportBond||{};
+   for(const e of row.hatched){
+    draft.pkmsvvSupportBond[e.dex]=Math.min(999,n(draft.pkmsvvSupportBond[e.dex])+1);
+    if(e.shiny){draft.pkmsvvSupportShiny=draft.pkmsvvSupportShiny||{};draft.pkmsvvSupportShiny[e.dex]=true;}
+   }
+   draft.stats=draft.stats||{};draft.stats.pkmsvvEggsHatched=Math.min(99999,n(draft.stats.pkmsvvEggsHatched)+row.eggs);
+  }
+  let blocked=false;
+  try{
+   const next=copy(incubator(draft));
+   for(let j=0;j<want;j++){
+    const pool=EGG_ONLY.filter(d=>babyEligible(draft,d,next)),unowned=pool.filter(d=>!draft.owned?.[d]),choices=unowned.length?unowned:pool;
+    if(!choices.length||Object.keys(next.eggs).length>=CAP){blocked=true;break;}
+    const id=createEgg(next,choices[Math.floor(Math.random()*choices.length)],9,'egg-rush-baby');
+    if(!id){blocked=true;break;}reward.push(id);
+   }
+   if(reward.length)draft.pkmsvvIncubator=next;
+  }catch(err){blocked=true;reward.length=0;console.warn('[Egg Rush reward] incubator preserved',err);}
+  const next={...journal,[r.room]:{serial:r.serial,at:Date.now()}};
+  draft.pkmsvvCoopProgress=Object.fromEntries(Object.entries(next).sort((a,b)=>b[1].at-a[1].at||a[0].localeCompare(b[0])).slice(0,MAX_COOP_ROOMS));
+  if(JSON.stringify(draft).length>(G.PKMSVVBox2?.MAX_SAVE_CHARS||1400000))return null;
+  // Native endRun commits the full result together, including high-water
+  // receipt, bond and eggs. Its run retry writes the SAME state on failure.
+  Object.assign(s,draft);
+  const receipt={rank:row.rank,friendship:row.eggs,want,awarded:reward.length,blocked};
+  G.EggRush?.setLocalReward?.(receipt);
+  return receipt;
  }
  function settleCoop(s,p,time){
   const r=coopRuns.get(p);
@@ -161,6 +232,7 @@
   r.settled=true;
   let journal;
   try{journal=receipts(s);if((journal[r.room]?.serial||0)>=r.serial)return null;}catch(_){return null;}
+  if(r.mode==='eggrush')return settleEggRush(s,r,journal);
   const points=Math.min(120,Math.floor(Math.min(r.t,1800)/60)+Math.floor(r.kills/100)+Math.min(5,r.bosses)*5);
   if(s.pkmsvvMastery!==undefined&&!isObj(s.pkmsvvMastery))return null;
   s.pkmsvvMastery={...(s.pkmsvvMastery||{}),[r.dex]:Math.min(MAX_POINTS,summary(s,r.dex).points+points)};
@@ -359,7 +431,7 @@
   return atomic(s,d=>{
    const i=copy(incubator(d)),e=i.eggs[id];
    if(!e||e.kills!==GOAL)throw Error(L('Trứng chưa sẵn sàng.','Egg is not ready.'));
-   const dex=Number(e.dex),special=isEggOnly(dex)&&(['baby-egg','rift-baby','berry-boss','mission-baby'].includes(e.from));
+   const dex=Number(e.dex),special=isEggOnly(dex)&&(['baby-egg','rift-baby','berry-boss','mission-baby','egg-rush-baby'].includes(e.from));
    const shiny=e.shiny===true;
    // Preserve pre-update queued region eggs even if their species is now gated.
    // New special egg records may legitimately reveal an unseen baby.
@@ -410,7 +482,7 @@
   if(!fromLab)return;
   const panel=document.createElement('section');panel.dataset.recruitEggPanel='1';panel.style.cssText='padding:14px;margin:10px 0;border:1px solid #a89661;border-radius:9px;background:#213949;color:#fff2cf;overflow-wrap:anywhere';
   const heading=document.createElement('strong');heading.textContent=L('Trứng thu phục · Máy ấp','Recruitment eggs · Incubator');panel.append(heading);
-  const info=document.createElement('p');info.textContent=L('Hạ boss vùng 15 phút, thắng Rift trong Khám phá hoặc Sống Sót Co-op, hay nhận thưởng nhiệm vụ tuần để tìm trứng thu phục. Nhiệm vụ tuần chỉ tặng trứng nếu còn chỗ và Baby Pokémon phù hợp. Trứng Munchlax cũng có thể nhận khi hạ Munchlax và thắng Giải cứu Berry Thường đủ điều kiện. Chọn một trứng, hạ 500 quái trong Khám phá hoặc Sống Sót Co-op để ấp. Khác trứng hỗ trợ trong trận.','Defeat a region badge boss, win a Rift in Explore or Survival Co-op, or claim weekly missions for recruitment eggs. Weekly bonus requires a free slot and eligible Baby Pokémon. A qualifying Normal Berry Rescue win with Munchlax defeated can also award its egg. Select one and defeat 500 enemies in Explore or Survival Co-op to hatch. Separate from run support eggs.');panel.append(info);
+  const info=document.createElement('p');info.textContent=L('Hạ boss vùng 15 phút, thắng Rift trong Khám phá hoặc Sống Sót Co-op, hay nhận thưởng nhiệm vụ tuần để tìm trứng thu phục. Tranh Trứng thưởng hạng nhất 2 trứng, hạng nhì 1 trứng. Quà cần chỗ trống và Baby Pokémon phù hợp. Trứng Munchlax cũng có thể nhận khi hạ Munchlax và thắng Giải cứu Berry Thường đủ điều kiện. Chọn một trứng, hạ 500 quái trong Khám phá hoặc Sống Sót Co-op để ấp. Khác trứng hỗ trợ trong trận.','Defeat a region badge boss, win a Rift in Explore or Survival Co-op, or claim weekly missions for recruitment eggs. Egg Rush gives 2 eggs for first and 1 for second. Bonus requires free slots and eligible Baby Pokémon. A qualifying Normal Berry Rescue win with Munchlax defeated can also award its egg. Select one and defeat 500 enemies in Explore or Survival Co-op to hatch. Separate from run support eggs.');panel.append(info);
   const say=msg=>G.UI?.toast?.(msg,3000);
   try{
    const i=incubator(save()),entries=Object.entries(i.eggs);

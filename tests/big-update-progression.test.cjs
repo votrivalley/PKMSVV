@@ -194,3 +194,57 @@ test('native packet without bot flags uses locked authoritative lobby roster, no
  cfg.members=G.Social.room.members.map(({uid,dex})=>({uid,dex}));
  assert.equal(api.beginCoop(s,p,cfg,uid,true),true);
 });
+
+function eggRushFixture(host=true,rank=1){
+ const f=coopFixture(host),{G,s,p,api,cfg,uid}=f;
+ cfg.mode='eggrush';G.Social.room.mode='eggrush';
+ cfg.members.push({uid:'ai-one',bot:true,dex:7},{uid:'ai-two',bot:true,dex:1});
+ const common=rank===1?uid:host?'guest':'host',second=common===uid?(host?'guest':'host'):uid;
+ for(const dex of [175,447,172]){G.DEX_BY[dex]={rarity:1};G.SPRITE_META[dex]={a:{Idle:{},Walk:{}}};}
+ G.PKMSVVEggs={SPECIES:[{dex:175},{dex:151},{dex:172}],supportReady:()=>true};
+ const egg=(id,dex,basePoints,shiny=false)=>({id,dex,basePoints,shiny,points:basePoints*(shiny?2:1)});
+ const first=[egg(1,151,20,true)],next=[egg(2,175,5)];
+ const standings=[{uid:common,rank:1,win:true,eggs:1,points:40,hatched:first,at:30},{uid:second,rank:2,win:false,eggs:1,points:5,hatched:next,at:60},
+  {uid:'ai-one',rank:3,win:false,eggs:0,points:0,hatched:[],at:0},{uid:'ai-two',rank:4,win:false,eggs:0,points:0,hatched:[],at:0}];
+ const outcome={winner:common,standings,collected:2,finishedAt:720};
+ G.EggRush={active:true,outcome,pets:[{id:1,uid:common,hatch:false},{id:2,uid:second,hatch:false}],setLocalReward(r){this.localReward=r;}};
+ assert.equal(api.beginCoop(s,p,cfg,uid,host),true);
+ const tag={room:'room-A',serial:1,seed:123,host:'host',rift:null,mode:'eggrush'};
+ const observe=t=>{f.clock(t);if(host)assert.equal(api.observeCoopHost(p,{time:t,kills:0,bosses:0}),true);else assert.equal(api.observeCoopFrame(p,{t,ki:0,bo:0,pkmsvvProgressRun:tag},'host'),true);};
+ observe(1);observe(720);
+ return {...f,outcome,tag,data:{t:720,ki:0,bo:0,eggrush:outcome}};
+}
+test('Egg Rush first and second get two/one Baby eggs plus support friendship without permanent ownership or replay',()=>{
+ for(const [host,rank] of [[true,1],[false,2]]){
+  const {G,s,p,api,data,tag}=eggRushFixture(host,rank);
+  const before=JSON.stringify(s.owned);
+  if(host)assert.equal(api.finalizeCoopHost(p,data).pkmsvvProgressRun.mode,'eggrush');
+  else assert.equal(api.acceptCoopTerminal(p,{...data,pkmsvvProgressRun:tag},'host'),true);
+  const r=api.settle(s,p,720,true);assert.equal(r.awarded,rank===1?2:1);assert.equal(r.friendship,1);
+  assert.equal(G.EggRush.localReward.awarded,r.awarded);assert.equal(s.pkmsvvSupportBond[rank===1?151:175],1);
+  if(rank===1)assert.equal(s.pkmsvvSupportShiny[151],true);
+  assert.equal(JSON.stringify(s.owned),before);assert.equal(s.pkmsvvMastery,undefined);
+  assert.equal(Object.values(s.pkmsvvIncubator.eggs).filter(e=>e.from==='egg-rush-baby').length,r.awarded);
+  assert.equal(api.settle(s,p,720,true),null);
+ }
+});
+test('Egg Rush forged rank/egg, wrong sender and unfinished race cannot award',()=>{
+ for(const kind of ['score','id','sender','quit','rank']){
+  const {G,s,p,api,data,tag,outcome}=eggRushFixture(false,2);
+  if(kind==='score')outcome.standings[0].points=400;
+  if(kind==='id')outcome.standings[0].hatched[0].id=500;
+  if(kind==='quit')outcome.finishedAt=200;
+  if(kind==='rank')outcome.standings[0].rank=2;
+  assert.equal(api.acceptCoopTerminal(p,{...data,pkmsvvProgressRun:tag},kind==='sender'?'bad':'host'),false);
+  assert.equal(api.settle(s,p,720,true),null);assert.equal(s.pkmsvvSupportBond,undefined);
+ }
+});
+test('full incubator retains valid friendship and receipts without overwriting queued eggs',()=>{
+ const {G,s,p,api,data}=eggRushFixture(true,1);
+ for(let id=2;id<=6;id++)s.pkmsvvIncubator.eggs['egg-'+id]={dex:172,kills:0,region:9,from:'baby-egg'};
+ s.pkmsvvIncubator.serial=6;const before=JSON.stringify(s.pkmsvvIncubator);
+ assert.ok(api.finalizeCoopHost(p,data).pkmsvvProgressRun);
+ const r=api.settle(s,p,720,true);assert.equal(r.awarded,0);assert.equal(r.want,2);assert.equal(r.blocked,true);
+ assert.equal(JSON.stringify(s.pkmsvvIncubator),before);assert.equal(s.pkmsvvSupportBond[151],1);
+ assert.equal(api.settle(s,p,720,true),null);
+});
