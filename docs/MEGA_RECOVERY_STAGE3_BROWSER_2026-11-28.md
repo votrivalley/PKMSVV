@@ -1,0 +1,3 @@
+# Mega recovery Stage 3 — fix test harness and independently render previews
+
+Run 46121966101 failed in the unit test gate before asset compilation: expected alphabetical sort placed scrafty before sceptile, and the VM had no document. Correct expected alphabetical order and supply a minimal DOM-ready event stub; unchanged safety assertions. Added a standalone browser step before game compile: loads actual local Normal/Shiny sheets, inspects eight direction rows and alpha occupancy, records all 70 action sheet checks, screenshots Idle/Walk/Attack. The standalone stage can provide visual evidence even if unrelated full-game build fails. No artReady changes, no save changes, no Reloaded import, no merge/deploy. New CI pending.

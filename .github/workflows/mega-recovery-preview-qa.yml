@@ -6,6 +6,7 @@ on:
       - 'scripts/build-mega-recovery-preview.cjs'
       - 'tests/mega-recovery-preview.test.cjs'
       - 'tests/mega-recovery-preview-browser.cjs'
+      - 'tests/mega-recovery-standalone-browser.cjs'
       - '.github/workflows/mega-recovery-preview-qa.yml'
       - 'src/pkmsvv-mega-entry.js'
   workflow_dispatch:
@@ -59,6 +60,10 @@ jobs:
           npm install --no-audit --no-fund
       - name: Verify recovery gates and original catalog IDs
         run: node --test tests/mega-recovery-preview.test.cjs tests/mega-3ds-source-audit.test.cjs
+      - name: Build and render actual recovery preview independently of game compilation
+        run: |
+          node scripts/build-mega-recovery-preview.cjs
+          timeout 100s node tests/mega-recovery-standalone-browser.cjs
       - name: Fetch required existing Clefairy assets
         run: node scripts/fetch-pippi-pmd.cjs && node scripts/build-pippi-portrait-atlas.cjs
       - name: Build real offline game with separate preview registry
