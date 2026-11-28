@@ -18,7 +18,7 @@
  const SHINY_RATE=.0045;
  const isEggOnly=dex=>eggSet.has(Number(dex));
  const eggEvolutionParent=dex=>EGG_PARENT[Number(dex)]||null;
- const runs=new WeakMap();
+ const runs=new WeakMap(),riftBosses=new WeakMap();
  const isObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
  const own=(s,k)=>Object.prototype.hasOwnProperty.call(s||{},k);
  const copy=x=>JSON.parse(JSON.stringify(x));
@@ -54,7 +54,7 @@
    Object.keys(raw.eggs).length>CAP)throw Error('Invalid incubator save; keep original');
   for(const [id,e] of Object.entries(raw.eggs)){
    if(!/^egg-[1-9][0-9]*$/.test(id)||!dexId(e?.dex)||!Number.isInteger(e.kills)||e.kills<0||e.kills>GOAL||own(raw.hatched,id)||
-      (e.shiny!==undefined&&typeof e.shiny!=='boolean')||(e.from==='baby-egg'&&!isEggOnly(e.dex))||
+      (e.shiny!==undefined&&typeof e.shiny!=='boolean')||(['baby-egg','rift-baby'].includes(e.from)&&!isEggOnly(e.dex))||
       (e.from==='berry-boss'&&Number(e.dex)!==446))throw Error('Invalid egg record');
   }
   if(raw.active!==null&&!own(raw.eggs,raw.active))throw Error('Invalid active egg');
@@ -68,13 +68,27 @@
   if(!s||s!==save()||G.DB?.guest||!p||p.remote||p.lanBot||coop||competitive()||
      region?.active!==true||!Number.isInteger(idx)||idx<0||idx>9||!dex||!s.owned?.[dex])return false;
   let egg=null;try{egg=incubator(s).active;}catch(_){}
-  runs.set(p,{profile:s,dex,region:idx,egg,badge:false,settled:false});return true;
+  runs.set(p,{profile:s,dex,region:idx,egg,badge:false,riftType:null,settled:false});return true;
  }
  function markBadge(p,boss,region){
   const r=p&&runs.get(p);
   if(!r||r.settled||p!==G.Game?.player||r.region!==region||competitive()||!boss?.dead||
     !Number.isFinite(boss.hp)||boss.hp>0||!boss.pkmsvvExploreBoss&&!boss.def?.pkmsvvExploreBoss)return false;
   r.badge=true;return true;
+ }
+ function registerRift(p,arena,boss){
+  const r=p&&runs.get(p);
+  if(!r||r.settled||r.profile!==save()||competitive()||G.DB?.guest||p!==G.Game?.player||
+     arena!==G.Rift?.arena||arena?.phase!=='fight'||!boss||boss.dead||boss.remote||
+     boss.id!==arena.bossId||boss.legend!==true||riftBosses.has(arena))return false;
+  riftBosses.set(arena,{run:r,boss});return true;
+ }
+ function markRiftWin(p,arena){
+  const r=p&&runs.get(p),proof=arena&&riftBosses.get(arena);
+  if(!r||r.settled||r.profile!==save()||r.riftType!==null||competitive()||G.DB?.guest||
+     p!==G.Game?.player||arena!==G.Rift?.arena||arena?.phase!=='won'||proof?.run!==r||
+     !proof.boss.dead||!Number.isFinite(proof.boss.hp)||proof.boss.hp>0||typeof arena.type!=='string')return false;
+  r.riftType=arena.type;return true;
  }
  function spriteReady(dex){
   return !!(G.DEX_BY?.[dex]&&G.SPRITE_META?.[dex]?.a?.Idle&&G.SPRITE_META?.[dex]?.a?.Walk);
@@ -151,7 +165,7 @@
   const kills=n(p.kills,1000000),bosses=n(p.bosses,100);
   // One species per run, credited to the owned starter even if it evolves.
   const points=Math.min(120,Math.floor(Math.min(time,1800)/60)+Math.floor(kills/100)+Math.min(5,bosses)*5);
-  let reward=null,progress=0;
+  let reward=null,riftReward=null,progress=0;
   if(s.pkmsvvMastery===undefined||isObj(s.pkmsvvMastery))
    s.pkmsvvMastery={...(s.pkmsvvMastery||{}),[r.dex]:Math.min(MAX_POINTS,summary(s,r.dex).points+points)};
   try{
@@ -167,10 +181,20 @@
      reward=createEgg(next,dex,r.region,isEggOnly(dex)?'baby-egg':'region-boss');
     }
    }
-   if(reward||progress)s.pkmsvvIncubator=next;
+   // One additional egg per real Rift victory per run, not per summary
+   // packet. Preserve the original region-boss egg as first priority.
+   if(r.riftType!==null&&Object.keys(next.eggs).length<CAP){
+    const pool=eligibleDex(s,r.region,next),matching=pool.filter(id=>G.DEX_BY?.[id]?.types?.includes(r.riftType));
+    const candidates=matching.length?matching:pool;
+    if(candidates.length){
+     const dex=candidates[Math.floor(Math.random()*candidates.length)];
+     riftReward=createEgg(next,dex,r.region,isEggOnly(dex)?'rift-baby':'rift');
+    }
+   }
+   if(reward||riftReward||progress)s.pkmsvvIncubator=next;
   }catch(err){console.warn('[Big Update incubator] unchanged',err);}
   // Original native endRun owns the save commit, so no extra result commit.
-  return {dex:r.dex,points,progress,reward};
+  return {dex:r.dex,points,progress,reward,riftReward};
  }
  function menuOnly(){return ['ui','over'].includes(G.Game?.state)&&!competitive();}
  function atomic(s,fn){
@@ -188,7 +212,7 @@
   return atomic(s,d=>{
    const i=copy(incubator(d)),e=i.eggs[id];
    if(!e||e.kills!==GOAL)throw Error(L('Trứng chưa sẵn sàng.','Egg is not ready.'));
-   const dex=Number(e.dex),special=isEggOnly(dex)&&(e.from==='baby-egg'||e.from==='berry-boss');
+   const dex=Number(e.dex),special=isEggOnly(dex)&&(['baby-egg','rift-baby','berry-boss'].includes(e.from));
    const shiny=e.shiny===true;
    // Preserve pre-update queued region eggs even if their species is now gated.
    // New special egg records may legitimately reveal an unseen baby.
@@ -239,7 +263,7 @@
   if(!fromLab)return;
   const panel=document.createElement('section');panel.dataset.recruitEggPanel='1';panel.style.cssText='padding:14px;margin:10px 0;border:1px solid #a89661;border-radius:9px;background:#213949;color:#fff2cf;overflow-wrap:anywhere';
   const heading=document.createElement('strong');heading.textContent=L('Trứng thu phục · Máy ấp','Recruitment eggs · Incubator');panel.append(heading);
-  const info=document.createElement('p');info.textContent=L('Hạ boss vùng 15 phút để tìm trứng thu phục, gồm Baby Pokémon độc quyền. Trứng Munchlax cũng có thể nhận khi hạ Munchlax và thắng Giải cứu Berry Thường đủ điều kiện. Chọn một trứng, hạ 500 quái trong Khám phá để ấp. Khác trứng hỗ trợ trong trận.','Defeat a region badge boss for recruitment eggs, including egg-exclusive Baby Pokémon. A qualifying Normal Berry Rescue win with Munchlax defeated can also award its egg. Select one and defeat 500 enemies in Explore to hatch. Separate from run support eggs.');panel.append(info);
+  const info=document.createElement('p');info.textContent=L('Hạ boss vùng 15 phút hoặc thắng Rift trong Khám phá để tìm trứng thu phục, gồm Baby Pokémon độc quyền. Trứng Munchlax cũng có thể nhận khi hạ Munchlax và thắng Giải cứu Berry Thường đủ điều kiện. Chọn một trứng, hạ 500 quái trong Khám phá để ấp. Khác trứng hỗ trợ trong trận.','Defeat a region badge boss or win a Rift in Explore for recruitment eggs, including egg-exclusive Baby Pokémon. A qualifying Normal Berry Rescue win with Munchlax defeated can also award its egg. Select one and defeat 500 enemies in Explore to hatch. Separate from run support eggs.');panel.append(info);
   const say=msg=>G.UI?.toast?.(msg,3000);
   try{
    const i=incubator(save()),entries=Object.entries(i.eggs);
@@ -261,5 +285,5 @@
   }catch(err){const note=document.createElement('small');note.textContent=L('Dữ liệu máy ấp không hợp lệ; không ghi đè save.','Invalid incubator data; save preserved.');panel.append(note);}
   frame.append(panel);
  }
- G.PKMSVVBigUpdateQA=Object.freeze({LEVELS,GOAL,CAP,EGG_ONLY,SHINY_RATE,isEggOnly,eggEvolutionParent,eggDiscovered,eggGachaPolicy,eggHint,markEggEvolution,commitBerryEgg,summary,incubator,begin,markBadge,settle,activateEgg,hatch,applyMasteryPortrait,renderMastery,renderIncubator});
+ G.PKMSVVBigUpdateQA=Object.freeze({LEVELS,GOAL,CAP,EGG_ONLY,SHINY_RATE,isEggOnly,eggEvolutionParent,eggDiscovered,eggGachaPolicy,eggHint,markEggEvolution,commitBerryEgg,registerRift,markRiftWin,summary,incubator,begin,markBadge,settle,activateEgg,hatch,applyMasteryPortrait,renderMastery,renderIncubator});
 })(typeof globalThis==='object'?globalThis:this);

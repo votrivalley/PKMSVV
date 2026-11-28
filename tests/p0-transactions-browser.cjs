@@ -51,11 +51,26 @@ const OUT=path.resolve('dist/big-update-progression-qa');fs.mkdirSync(OUT,{recur
    return {coins:s.coins,mint:G.Shop.count('mint'),points:s.arenaGacha.points,pulls:s.arenaGacha.pulls,stone:r.stoneKey,staleRejected:rejected};
   });
   assert.equal(saved.coins,baseline.coins-2*baseline.price);assert.equal(saved.mint,baseline.mint+2);assert.equal(saved.points,400);assert.equal(saved.pulls,1);assert.equal(saved.staleRejected,true);
+  // A real native commit failure at the result boundary must retry the
+  // same in-memory progress, not rerun settlement. Restore storage immediately.
+  const retryInitial=await page.evaluate(()=>{
+   const s=G.DB.save,key='ps.save.'+JSON.parse(localStorage.getItem('ps.session'));
+   s.pkmsvvMastery={25:11};s.pkmsvvIncubator={serial:1,active:'egg-1',eggs:{'egg-1':{dex:175,region:1,kills:47,from:'baby-egg',shiny:false}},hatched:{}};
+   const proto=Storage.prototype,original=proto.setItem;proto.setItem=function(k,v){if(k===key)throw new DOMException('Injected run failure','QuotaExceededError');return original.call(this,k,v);};
+   try{return {ok:G.DB.commit('run'),mastery:s.pkmsvvMastery[25],disk:JSON.parse(localStorage.getItem(key)).pkmsvvMastery?.[25]||0};}
+   finally{proto.setItem=original;}
+  });
+  assert.deepEqual(retryInitial,{ok:false,mastery:11,disk:0});
+  await page.waitForFunction(()=>{
+   const key='ps.save.'+JSON.parse(localStorage.getItem('ps.session')),s=JSON.parse(localStorage.getItem(key));return s.pkmsvvMastery?.[25]===11&&s.pkmsvvIncubator?.eggs?.['egg-1']?.kills===47;
+  },null,{timeout:11000});
   await page.screenshot({path:path.join(OUT,'p0-shop-native.png')});
   await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>!!G.DB?.save&&!!G.Shop?.transaction,null,{timeout:40000});
   const reloaded=await page.evaluate(stone=>({coins:G.DB.save.coins,mint:G.Shop.count('mint'),points:G.DB.save.arenaGacha.points,pulls:G.DB.save.arenaGacha.pulls,stone:G.DB.save.megaStones[stone]}),saved.stone);
   assert.deepEqual(reloaded,{coins:saved.coins,mint:saved.mint,points:saved.points,pulls:saved.pulls,stone:1});
   assert.deepEqual(errors,[]);
-  const result={baseline,first,failed,saved,reloaded};fs.writeFileSync(path.join(OUT,'p0-transactions.json'),JSON.stringify(result,null,2));console.log('P0_TRANSACTION_NATIVE_PASS='+JSON.stringify(result));
+  const retryReload=await page.evaluate(()=>({mastery:G.DB.save.pkmsvvMastery?.[25],egg:G.DB.save.pkmsvvIncubator?.eggs?.['egg-1']?.kills}));
+  assert.deepEqual(retryReload,{mastery:11,egg:47});
+  const result={baseline,first,failed,saved,reloaded,retryInitial,retryReload};fs.writeFileSync(path.join(OUT,'p0-transactions.json'),JSON.stringify(result,null,2));console.log('P0_TRANSACTION_NATIVE_PASS='+JSON.stringify(result));
  }finally{await browser.close();await server.close();}
 })().catch(err=>{console.error(err);process.exitCode=1;});

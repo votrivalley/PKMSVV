@@ -777,7 +777,7 @@ patch('js/entities/projectile.js',
 // local tab. No account/key/schema migration. Cloud still uses its own session
 // and merge protocol; local cache failure must be reported rather than hidden.
 patch('js/core/db.js','  let storageOk = true;',
- '  let storageOk = true;\n  let pkmsvvLocalRaw;');
+ '  let storageOk = true;\n  let pkmsvvLocalRaw, pkmsvvRetryTimer=0, pkmsvvRetryCount=0, pkmsvvRetrySave=null;');
 patch('js/core/db.js','    save = fold(loadLocal(k, name));',
  '    try { pkmsvvLocalRaw = localStorage.getItem(K_SAVE + k); } catch (_) { pkmsvvLocalRaw = undefined; }\n    save = fold(loadLocal(k, name));');
 patch('js/core/db.js','    write(K_SAVE + k, save);\n    return { ok: true, isNew: true };',
@@ -796,9 +796,27 @@ patch('js/core/db.js',
  '  }'
  ].join('\n'),
  [
+ '  function cancelRunRetry() {',
+ '    clearTimeout(pkmsvvRetryTimer); pkmsvvRetryTimer=0; pkmsvvRetryCount=0; pkmsvvRetrySave=null;',
+ '  }',
+ '  function scheduleRunRetry() {',
+ '    if (pkmsvvRetrySave !== save) { cancelRunRetry(); pkmsvvRetrySave=save; }',
+ '    if (pkmsvvRetryTimer || pkmsvvRetryCount>=3) return;',
+ '    const profile=save, profileKey=key, profileMode=mode;',
+ '    pkmsvvRetryTimer=setTimeout(()=>{',
+ '      pkmsvvRetryTimer=0;',
+ '      if (save!==profile || key!==profileKey || mode!==profileMode || guest) { cancelRunRetry(); return; }',
+ '      pkmsvvRetryCount++;',
+ '      if (G.DB.commit("retry-run")===true) {',
+ '        G.UI?.toast?.(G.I18n?.lang==="vi"?"Đã lưu lại tiến trình trên máy.":"Progress saved locally after retry.",3500);',
+ '        if(mode==="cloud") saveNow().catch(()=>{});',
+ '      }',
+ '    },[1500,4000,10000][pkmsvvRetryCount]);',
+ '  }',
  '  function commit(urgent = false) {',
  '    if (guest || !key || !save) return false;',
  '    const warn = () => {',
+ '      if (urgent === "run" || urgent === "retry-run") scheduleRunRetry();',
  '      if (urgent === "run") G.UI?.toast?.(G.I18n?.lang==="vi"?"Chưa lưu được kết quả trận. Đừng thoát game; hãy xuất bản sao save hoặc thử lưu lại.":"Run not saved. Keep the game open; export a backup or retry saving.",6500);',
  '      return false;',
  '    };',
@@ -807,16 +825,16 @@ patch('js/core/db.js',
  '    try {',
  '      if (mode === "local" && (pkmsvvLocalRaw === undefined || localStorage.getItem(K_SAVE + key) !== pkmsvvLocalRaw)) {',
  '        G.UI?.toast?.(G.I18n?.lang==="vi"?"Save đã thay đổi ở cửa sổ khác. Xuất bản sao trước khi tải lại, không ghi đè save mới.":"Save changed in another window. Export a backup before reloading; newer save not overwritten.",6500);',
- '        return false;',
+ '        cancelRunRetry(); return false;',
  '      }',
  '      save.updated = Date.now(); fold(save);',
  '      if (mode === "local") {',
  '        const raw=JSON.stringify(save);',
  '        if (!write(K_SAVE + key, save)) throw Error("local write failed");',
- '        pkmsvvLocalRaw=raw; return true;',
+ '        pkmsvvLocalRaw=raw; cancelRunRetry(); return true;',
  '      }',
  '      if (!write(K_CLOUD + uid, save)) throw Error("cloud cache write failed");',
- '      pending = true; setSync("pending"); return true;',
+ '      pending = true; setSync("pending"); cancelRunRetry(); return true;',
  '    } catch (_) {',
  '      if(hadUpdated)save.updated=oldUpdated;else delete save.updated;',
  '      if(hadLed)save.led=oldLed;else delete save.led;',
@@ -828,6 +846,17 @@ patch('js/core/db.js',
 // Big Update QA: call progression at the actual native player construction and
 // result boundary; the late-loaded module is only present in the isolated QA.
 if(process.env.PKMSVV_BIG_UPDATE_QA==='1'){
+ fs.copyFileSync(path.join(project,'src','pkmsvv-progression-merge.js'),path.join(game,'js','core','pkmsvv-progression-merge.js'));
+ patch('dev.html','<script defer src="js/core/db.js"></script>',
+  '<script defer src="js/core/pkmsvv-progression-merge.js"></script>\n<script defer src="js/core/db.js"></script>');
+ patch('js/core/db.js','    r.created = Math.min(a.created || Date.now(), b.created || Date.now());',
+  '    G.PKMSVVProgressionMerge.apply(r,newer,older);\n    r.created = Math.min(a.created || Date.now(), b.created || Date.now());');
+ // Capture the authentic Rift boss actor, including when EnemyMgr has already
+ // removed its corpse. Missing actors alone must never award a recruitment egg.
+ patch('js/systems/rift.js','    arena.bossId = e.id;',
+  '    arena.bossId = e.id;\n    G.PKMSVVBigUpdateQA?.registerRift(G.Game.player,arena,e);');
+ patch('js/systems/rift.js',"    arena.phase = 'won'; arena.endT = 5;",
+  "    arena.phase = 'won'; arena.endT = 5;\n    G.PKMSVVBigUpdateQA?.markRiftWin(G.Game.player,arena);");
  // Restrict the native ordinary wild/boss cast and lost-Pokémon rescue pool,
  // without deleting species from the real Dex, support catalogue or Berry bosses.
  patch('js/data/enemies.js','G.DEX.filter(p => p.rarity < 5 &&','G.DEX.filter(p => !G.PKMSVVBigUpdateQA?.isEggOnly?.(p.dex) && p.rarity < 5 &&');

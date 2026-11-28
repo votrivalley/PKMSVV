@@ -4,6 +4,9 @@ on:
     branches: [feature/gmax-power-qa-20261127]
     paths:
       - 'src/pkmsvv-big-update-qa.js'
+      - 'src/pkmsvv-progression-merge.js'
+      - 'tests/progression-merge.test.cjs'
+      - 'scripts/patch-web-cloud-safe.cjs'
       - 'src/kecleon/**'
       - 'src/pkmsvv-mega-gacha.js'
       - 'scripts/patch-web-exclusive-session.cjs'
@@ -71,7 +74,7 @@ jobs:
           npm pkg set 'overrides.node-abi=4.40.0'
           npm install --no-audit --no-fund
       - name: Unit progression and existing save protection
-        run: node --test tests/big-update-progression.test.cjs tests/save-guardian-regression.test.cjs tests/web-save-guardian-v2.test.cjs tests/special-power-qa.test.cjs tests/berry-rescue.test.cjs tests/dex-defeats-qa.test.cjs tests/p0-transactions.test.cjs
+        run: node --test tests/big-update-progression.test.cjs tests/save-guardian-regression.test.cjs tests/web-save-guardian-v2.test.cjs tests/special-power-qa.test.cjs tests/berry-rescue.test.cjs tests/dex-defeats-qa.test.cjs tests/p0-transactions.test.cjs tests/progression-merge.test.cjs
       - name: Fetch required existing Clefairy assets
         run: node scripts/fetch-pippi-pmd.cjs && node scripts/build-pippi-portrait-atlas.cjs
       - name: Compile real offline game

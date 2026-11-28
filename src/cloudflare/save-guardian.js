@@ -45,7 +45,7 @@
    const prev=old.eggs[id],current=next.eggs?.[id];
    if(current){if(Number(current.dex)!==Number(prev.dex)||Number(current.kills||0)<Number(prev.kills||0)||
     current.from!==prev.from||!!current.shiny!==!!prev.shiny)return true;}
-   else if(Number(next.hatched?.[id])!==Number(prev.dex)||!b.owned?.[prev.dex])return true;
+   else if(Number(next.hatched?.[id])!==Number(prev.dex)||!b.owned?.[prev.dex]||(prev.shiny===true&&!b.shiny?.[prev.dex]))return true;
   }
   return false;
  };

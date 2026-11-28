@@ -15,7 +15,7 @@ patch('js/core/db.js',
  [
  "    // Recovery snapshot on this browser, written BEFORE touching Cloud.",
  "    const owner = uid, snapshot = plain(fold(save));",
- "    write('pkmsvv.cloudbackup.' + owner, snapshot);",
+ "    if (!write('pkmsvv.cloudbackup.' + owner, snapshot)) { pending=true; setSync('pending'); scheduleRetry(); return Promise.resolve(); }",
  "    const wr = fs.runTransaction(async tx => {",
  "      const ref = fs.collection('saves').doc(owner);",
  "      const current = await tx.get(ref);",
