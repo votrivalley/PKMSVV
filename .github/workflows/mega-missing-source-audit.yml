@@ -1,0 +1,30 @@
+name: Mega missing sprite recovery — pinned 3DS source audit
+on:
+  push:
+    branches: [feature/gmax-power-qa-20261127]
+    paths:
+      - 'data/mega-upstream-3ds-candidates.json'
+      - 'scripts/audit-mega-3ds-source.cjs'
+      - 'tests/mega-3ds-source-audit.test.cjs'
+      - '.github/workflows/mega-missing-source-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test tests/mega-3ds-source-audit.test.cjs
+      - run: node scripts/audit-mega-3ds-source.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mega-3ds-source-audit
+          path: dist/mega-3ds-source-audit/report.json
+          if-no-files-found: warn
+          retention-days: 7
