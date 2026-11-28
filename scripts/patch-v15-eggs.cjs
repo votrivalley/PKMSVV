@@ -39,13 +39,15 @@ patch('js/game.js',
 patch('js/game.js',
  '    G.Judgment.drawOverlay(ctx, w, h);',
  '    G.Judgment.drawOverlay(ctx, w, h);\n    G.PKMSVVEggs.hud(ctx,w,h);');
-// Runtime-only support boosts, through native effective-stat getters.
-patch('js/entities/player.js',
- '    const s = this.baseSpd * this.spdMul * (1 + this.buffs.spd.n * this.buffs.spd.amount) * (this.slowT > 0 ? 0.5 : 1);',
- '    const s = this.baseSpd * this.spdMul * (1 + this.buffs.spd.n * this.buffs.spd.amount) * (this.slowT > 0 ? 0.5 : 1) * (G.PKMSVVEggs?.speedFactor?.(this)||1);');
-patch('js/entities/player.js',
- '  get reduction() { return Math.min(0.8, this.dmgReduce + this.buffs.def.n * this.buffs.def.amount); }',
- '  get reduction() { return Math.min(0.8, this.dmgReduce + this.buffs.def.n * this.buffs.def.amount + (G.PKMSVVEggs?.guardBonus?.(this)||0)); }');
+// Preserve all existing passive/Balance/3DS getter patches. Install the
+// runtime-only modifiers after the native class has been defined, not by
+// replacing the exact speed/reduction formula needed by other patch layers.
+fs.appendFileSync(path.join(game,'js/entities/player.js'),
+ '\n;(()=>{const p=G.Player.prototype;for(const key of ["spd","reduction"]){'+
+ 'const d=Object.getOwnPropertyDescriptor(p,key);if(!d?.get)throw Error("Support getter missing: "+key);'+
+ 'Object.defineProperty(p,key,{...d,get:function(){const base=d.get.call(this);'+
+ 'if(key==="reduction")return Math.min(.8,base+(G.PKMSVVEggs?.guardBonus?.(this)||0));'+
+ 'const speed=base*(G.PKMSVVEggs?.speedFactor?.(this)||1);return G.Judgment?.active?G.Judgment.capSpd(speed):speed;}});}})();\n','utf8');
 patch('js/entities/player.js',
  '    this.hp -= d;',
  '    const shield=Math.max(0,Number(this.pkmsvvShield)||0),absorbed=Math.min(shield,d);\n'+
