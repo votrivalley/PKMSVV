@@ -644,6 +644,9 @@ execFileSync(process.execPath,[path.join(project,'scripts','patch-mega-lucario.c
 execFileSync(process.execPath,[path.join(project,'scripts','patch-ui-phase1-mega.cjs')],{cwd:project,stdio:'inherit'});
 // Phase 2: read-only 96-form Mega encyclopedia, paginated silhouettes and real stone gates.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-ui-phase2-mega.cjs')],{cwd:project,stdio:'inherit'});
+// Noncommercial, read-only recovery preview, isolated QA only. Never marks artReady.
+if(process.env.PKMSVV_MEGA_RECOVERY_PREVIEW_QA==='1')
+ execFileSync(process.execPath,[path.join(project,'scripts','build-mega-recovery-preview.cjs'),'--install-qa'],{cwd:project,stdio:'inherit'});
 // Phase 3: Champion Mega Stone draws and validated solo Mega transitions.
 execFileSync(process.execPath,[path.join(project,'scripts','patch-ui-phase3-mega.cjs')],{cwd:project,stdio:'inherit'});
 // Optional four-direction Mega prototype for manual Windows PC QA ONLY.

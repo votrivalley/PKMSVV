@@ -54,4 +54,4 @@ async function main(){
  console.log('MEGA_3DS_SOURCE_AUDIT='+JSON.stringify({counts,revision:inv.revision}));
 }
 if(require.main===module)main().catch(e=>{console.error(e);process.exitCode=1;});
-module.exports={inspectPng,classify};
+module.exports={inspectPng,classify,fetchBytes};

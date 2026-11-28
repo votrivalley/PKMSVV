@@ -7,7 +7,8 @@ G.PKMSVVMegaEntry=(()=>{
  // On the isolated Beta, let testers INSPECT every audited Mega form.
  // This does not claim missing sprite art, enable battle transformations,
  // unlock stones, or change the conservative PC/Android/production roster.
- const fullCatalogQA=()=>G.PKMSVV_MEGA_FULL_CATALOG_QA===true||
+ const recoveryPreview=f=>!!(f&&f.artReady!==true&&G.PKMSVV_MEGA_RECOVERY_PREVIEW?.[f.key]?.spriteId===f.spriteId);
+ const fullCatalogQA=()=>!!G.PKMSVV_MEGA_RECOVERY_PREVIEW||G.PKMSVV_MEGA_FULL_CATALOG_QA===true||
   (typeof window!=='undefined'&&window.PKMSVV_MEGA_FULL_CATALOG_QA===true);
  const save=()=>G.DB?.save||{};
  function isUnlocked(f){
@@ -35,7 +36,7 @@ G.PKMSVVMegaEntry=(()=>{
  // Real sprites are still required for painted Mega art and BATTLE use.
  // The isolated Beta additionally lists metadata-only cards for all 96 forms.
  const hasSprite=(f,mode=variant)=>{
-  const m=f?.artReady===true&&G.SPRITE_META?.[f.spriteId];
+  const m=(f?.artReady===true||recoveryPreview(f))&&G.SPRITE_META?.[f.spriteId];
   return !!(m?.a?.Idle&&(mode!=='shiny'||(m.sh&&m.sa?.Idle)));
  };
  const available=()=>fullCatalogQA()?catalog():catalog().filter(f=>hasSprite(f));
@@ -131,6 +132,16 @@ G.PKMSVVMegaEntry=(()=>{
     'Chưa có dạng Mega nào phù hợp với bộ sprite và bộ lọc hiện tại.',
     'No Mega sprites match this build and the current filter.');
    area.append(empty);return;
+  }
+  if(recoveryPreview(f)&&hasSprite(f)){
+   area.className='pkmsvv-mega-phase1-locked';
+   const title=el('h3');title.textContent=displayName(f);
+   const note=el('p');note.textContent=tr('QA xem trước sprite thật · Chưa mở chiến đấu','QA real sprite preview · Battle locked');
+   const meta=G.PKMSVV_MEGA_RECOVERY_PREVIEW[f.key];
+   const warning=el('small');warning.textContent=meta.distinctCore?tr('Idle / Walk / Attack riêng; các animation phụ có dùng chung hình nguồn.','Distinct Idle / Walk / Attack; auxiliary animations reuse source frames.'):tr('Chưa có Attack riêng.','Distinct Attack unavailable.');
+   area.append(title,note);
+   if(G.UI?.spriteCanvas){const cv=G.UI.spriteCanvas(f.spriteId,200,165,{scale:2,hero:true,spin:true,lively:true,shiny:variant==='shiny'});cv.className='pkmsvv-mega-detail-art';area.append(cv);}
+   area.append(warning);return;
   }
   const opened=discovered(f);
   area.className='pkmsvv-mega-phase1-locked'+(opened?' is-unlocked':'');
@@ -239,7 +250,7 @@ G.PKMSVVMegaEntry=(()=>{
   const artReady=availableArt.filter(form=>hasSprite(form)).length;
   $('pkmsvv-mega-count').textContent=fullCatalogQA()?
    tr('Đã mở: ','Unlocked: ')+unlocked+'/'+availableArt.length+
-    tr(' · Sprite sẵn: ',' · Sprite ready: ')+artReady+'/'+availableArt.length:
+    tr(' · Có hình xem trước: ',' · Art preview available: ')+artReady+'/'+availableArt.length:
    tr('Đã mở: ','Unlocked: ')+unlocked+'/'+availableArt.length+
     tr(' · Có sprite',' · Sprites available');
   for(const [mode,label] of [['all',tr('Tất cả','All')],['unlocked',tr('Đã mở','Unlocked')],['locked',tr('Chưa mở','Locked')]]){
@@ -254,9 +265,9 @@ G.PKMSVVMegaEntry=(()=>{
    grid.append(empty);
   }
   for(const [i,f] of shown.entries()){
-   const yes=discovered(f),v=art(f),card=el('button',null,'pkmsvv-mega-cell '+(yes?'is-open':'is-locked')+(yes&&!v.ready?' is-pending-art':'')+(selected===f.key?' on':''));
+   const yes=discovered(f),preview=recoveryPreview(f)&&hasSprite(f),v=art(f),card=el('button',null,'pkmsvv-mega-cell '+(yes?'is-open':'is-locked')+(yes&&!v.ready?' is-pending-art':'')+(selected===f.key?' on':''));
    card.type='button';
-   card.setAttribute('aria-label',yes?displayName(f):tr('Mega chưa khám phá','Undiscovered Mega')+' '+(page*PAGE+i+1));
+   card.setAttribute('aria-label',yes||preview?displayName(f):tr('Mega chưa khám phá','Undiscovered Mega')+' '+(page*PAGE+i+1));
    card.setAttribute('aria-pressed',String(selected===f.key));
    card.dataset.megaKey=f.key;
    if(!v.ready&&fullCatalogQA()||yes&&!v.ready){
@@ -268,13 +279,13 @@ G.PKMSVVMegaEntry=(()=>{
     card.append(missing);
    }else if(G.UI?.spriteCanvas){
     const cv=G.UI.spriteCanvas(v.dex,92,80,{
-     scale:2,shiny:yes&&v.shiny,
-     silhouette:!yes,shadow:yes&&v.ready
+     scale:2,shiny:(yes||preview)&&v.shiny,
+     silhouette:!yes&&!preview,shadow:(yes||preview)&&v.ready
     });
     cv.className='pkmsvv-mega-cell-art';card.append(cv);
    }else{const icon=el('span');icon.textContent='✦';card.append(icon);}
-   const label=el('strong');label.textContent=yes?displayName(f):'???';
-   const state=el('small');state.textContent=!yes?
+   const label=el('strong');label.textContent=yes||preview?displayName(f):'???';
+   const state=el('small');state.textContent=preview?tr('QA · Chỉ xem','QA · Preview only'):!yes?
     (fullCatalogQA()&&!v.ready?tr('Chưa mở · Chờ sprite','Locked · Art pending'):tr('Chưa mở','Locked')):
     !v.ready?tr('Đã mở · Chờ sprite','Unlocked · Sprite pending'):tr('Đã mở','Unlocked');
    card.append(label,state);
