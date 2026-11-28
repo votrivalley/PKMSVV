@@ -212,6 +212,7 @@
  // excluded rather than pretending the player-only implementation is safe.
  const ARENA_KIND=Object.freeze({projectile:'shot',cone:'shot',nova:'nova',beam:'beam',charge:'beam',melee:'melee',spin:'melee',aura:'melee',meteor:'zone',quake:'zone',buff:'buff'});
  const arenaKits=new WeakMap();
+ const arenaMoveLabel=m=>G.T?.(m.name||m.id,'move')||m.name||m.id;
  const arenaHash=(dex,id)=>{let n=(Number(dex)||1)*997;for(const c of String(id))n=(Math.imul(n,31)+c.charCodeAt(0))>>>0;return n/4294967296;};
  function arenaFamily(m){
   const k=ARENA_KIND[m?.kind];
@@ -260,8 +261,8 @@
    v.power=v.family==='buff'?0:clamp(m.dmg/Math.max(1,median),.60,1.45);
    v.ready=i*.18;
   }
-  arenaKits.set(e,{entries:selected,clock:0,last:null,buffUntil:0,buffStat:null,buffAmount:0,utilityUses:0,casts:0,history:[]});
-  e.pkmsvvArenaMoves=selected.map(v=>({id:v.m.id,name:v.m.name,type:v.m.type,kind:v.m.kind,level:v.m.lvl,cd:v.cd,family:v.family,reach:v.reach}));
+  arenaKits.set(e,{entries:selected,clock:0,last:null,buffUntil:0,buffStat:null,buffAmount:0,utilityUses:0,casts:0,history:[],observe:finite(p)?{x:p.x,y:p.y,t:0,vx:0,vy:0}:null});
+  e.pkmsvvArenaMoves=selected.map(v=>({id:v.m.id,name:arenaMoveLabel(v.m),type:v.m.type,kind:v.m.kind,level:v.m.lvl,cd:v.cd,family:v.family,reach:v.reach}));
   return e.pkmsvvArenaMoves;
  }
  function arenaKit(e){
@@ -272,6 +273,29 @@
   const s=arenaKits.get(e);if(!s||!arenaDuel(e,p))return;
   const t=clamp(Number(dt)||0,0,.25);s.clock+=t;
   for(const v of s.entries)v.ready=Math.max(0,v.ready-t);
+  // Sample past visible movement only. One bounded estimate per 160ms,
+  // never read controls, aim input, target choice, or future positions.
+  if(finite(p)){
+   if(!s.observe)s.observe={x:p.x,y:p.y,t:0,vx:0,vy:0};
+   const o=s.observe;o.t+=t;
+   if(o.t>=.16){
+    let vx=(p.x-o.x)/o.t,vy=(p.y-o.y)/o.t;
+    const speed=Math.hypot(vx,vy),limit=clamp(positive(p.spd,150),40,420);
+    if(speed>limit){vx*=limit/speed;vy*=limit/speed;}
+    o.vx=o.vx*.35+vx*.65;o.vy=o.vy*.35+vy*.65;
+    o.x=p.x;o.y=p.y;o.t=0;
+   }
+  }
+ }
+ function arenaAimPoint(e,p,lead=.23){
+  const o=arenaKits.get(e)?.observe;
+  if(!o||!finite(p))return {x:p.x,y:p.y};
+  let dx=o.vx*clamp(lead,0,.3),dy=o.vy*clamp(lead,0,.3);
+  const n=Math.hypot(dx,dy);if(n>45){dx*=45/n;dy*=45/n;}
+  const point={x:p.x+dx,y:p.y+dy};
+  // Don't put a target-zone telegraph inside a blocked tile.
+  if(G.World?.isFree&&!G.World.isFree(point.x,point.y,Math.max(3,(p.r||10)*.4),true))return {x:p.x,y:p.y};
+  return point;
  }
  function arenaSkillPick(e,p,dist){
   const s=arenaKits.get(e);if(!s||!arenaDuel(e,p)||e.ai?.cast||e.stunT>0||e.sleepT>0||e._pkmsvvMegaTransition>0)return null;
@@ -303,7 +327,8 @@
   // while waiting for range/cooldown, so no extra hidden generic attacks.
   if(!s||!arenaDuel(e,p))return false;
   const v=arenaSkillPick(e,p,dist);if(!v)return true;
-  const m=v.m,f=v.family,col=G.U?.TYPE_COLOR?.[m.type]||'#ffb7cf',ang=Math.atan2(p.y-e.y,p.x-e.x);
+  const m=v.m,f=v.family,col=G.U?.TYPE_COLOR?.[m.type]||'#ffb7cf';
+  const aim=arenaAimPoint(e,p,f==='zone'?.27:.20),ang=Math.atan2(aim.y-e.y,aim.x-e.x);
   const wind=f==='buff'?.72:f==='beam'?clamp(positive(m.charge,.85),.8,1.25):f==='zone'?.95:f==='melee'?.68:.62;
   const token={id:'pkmsvv-arena:'+m.id,arenaSkill:true,v,wind,t:0,after:.3,ang,col,fired:false,cancelled:false};
   e.ai.cast=token;v.ready=v.cd;v.last=s.clock;s.last=m.id;s.casts++;s.history.push(m.id);if(s.history.length>24)s.history.shift();
@@ -315,10 +340,10 @@
   const add=h=>G.Hazards?.add?.({...h,dmg:damage,type:m.type,cat:m.cat,color:col,delay:wind,pkmsvvArenaOwner:e,pkmsvvArenaCast:token,pkmsvvArenaMove:m.id});
   if(f==='beam')add({kind:'beam',x:e.x,y:e.y,angle:ang,len:v.reach,w:clamp(positive(m.width,26),20,55)});
   if(f==='melee')add({kind:'zone',x:e.x,y:e.y,r:clamp(positive(m.radius,60),36,115)});
-  if(f==='zone')add({kind:'zone',x:p.x,y:p.y,r:clamp(positive(m.radius,48),32,85)});
+  if(f==='zone')add({kind:'zone',x:aim.x,y:aim.y,r:clamp(positive(m.radius,48),32,85)});
   e.anim?.play?.('Charge',{speed:1.2});
   G.FX?.ring?.(e.x,e.y,e.r||12,(e.r||12)*2.2,col,wind,2);
-  G.FX?.dmgText?.(e.x,e.y-(e.bodyH||35)-8,String(m.name||m.id),col,true);
+  G.FX?.dmgText?.(e.x,e.y-(e.bodyH||35)-8,String(arenaMoveLabel(m)),col,true);
   return true;
  }
  function arenaSkillInterrupt(e,p){
@@ -459,5 +484,5 @@
   }
   ctx.restore();return x;
  }
- G.PKMSVVCombatTacticsQA=Object.freeze({alliedMode,assignRescuers,directPath,margin,needsEvade,evade,rangedGoal,berryGoal,rangedFootwork,arenaDuel,arenaProfile,arenaStats,arenaPreserveFighter,arenaPlan,arenaRecovery,arenaEquip,arenaKit,arenaSkillClock,arenaSkillStart,arenaSkillInterrupt,arenaHazardActive,arenaSkillCast,arenaFootwork,status,drawStatus});
+ G.PKMSVVCombatTacticsQA=Object.freeze({alliedMode,assignRescuers,directPath,margin,needsEvade,evade,rangedGoal,berryGoal,rangedFootwork,arenaDuel,arenaProfile,arenaStats,arenaPreserveFighter,arenaPlan,arenaRecovery,arenaEquip,arenaKit,arenaSkillClock,arenaAimPoint,arenaSkillStart,arenaSkillInterrupt,arenaHazardActive,arenaSkillCast,arenaFootwork,status,drawStatus});
 })();

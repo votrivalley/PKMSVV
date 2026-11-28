@@ -114,12 +114,18 @@ test('Arena assembles independent type-pool skills and never copies player-only 
  const player=p('p',100,0,{mon:{types:['water']},cdMul:.8,moves:[{id:'not-allowed'}]});
  const rival={id:2,dex:25,x:0,y:0,hp:500,maxHp:500,dmg:20,mon:{types:['electric']},pkmsvvArenaSolo:true,pkmsvvArenaBuild:{attacks:8,support:0,style:'press',mode:'solo',round:0,moves:[{lvl:5}]},ai:{cd:0,cast:null},bossEnd(){this.ai.cast=null;return [0,0,'Idle'];}};
  G.PKMSVVArenaSolo={active:true,stage:'fight'};G.Coop.active=false;G.Game.player=player;
- G.U={TYPE_COLOR:{electric:'#ff0'}};G.Types={mult:()=>1};const hz=[],shots=[];
+ G.U={TYPE_COLOR:{electric:'#ff0'}};G.Types={mult:()=>1};G.T=(s,context)=>context==='move'?'VI '+s:s;const hz=[],shots=[];
  G.Hazards={add:o=>hz.push(o)};G.Projectiles={spawn:o=>shots.push(o)};
  const kit=api.arenaEquip(rival,player);
  assert.equal(kit.length,6);assert.equal(new Set(kit.map(m=>m.id)).size,6);
  assert.ok(kit.every(m=>['normal','electric'].includes(m.type)&&m.level===5));assert.ok(!kit.some(m=>m.id==='unsupported'||m.id==='not-allowed'));
  assert.ok(kit.some(m=>m.family==='melee')&&kit.some(m=>m.family==='buff')&&kit.some(m=>m.family==='beam'));
+ assert.ok(kit.every(m=>m.name.startsWith('VI ')));
+ // Direction is derived from observed movement only; prediction is capped.
+ player.x=120;api.arenaSkillClock(rival,player,.2);const aim=api.arenaAimPoint(rival,player,.25);
+ assert.ok(aim.x>player.x&&aim.x<=player.x+45);assert.equal(aim.y,player.y);
+ G.World.isFree=()=>false;assert.equal(api.arenaAimPoint(rival,player,.25).x,player.x);G.World.isFree=()=>true;
+ player.x=100;
  for(let n=0;n<5;n++)api.arenaSkillClock(rival,player,.25);
  assert.equal(api.arenaSkillStart(rival,player,100),true);
  const cast=rival.ai.cast;assert.ok(cast?.arenaSkill);assert.ok(cast.wind>=.62);assert.ok(cast.damage<=30);
