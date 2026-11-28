@@ -17,7 +17,7 @@ G.PKMSVVBerryRescue=(()=>{
  const POS=[[-92,82],[92,82],[0,-72]];
  const NAMES=['Oran','Sitrus','Lum'];
  let active=false,easy=false,time=0,trees=[],bossStage=0,won=false,claimed=false,sendClock=0,endClock=0;
- let sprites=[],treeAtlas=null,treeTargets=[];
+ let sprites=[],treeAtlas=null,treeTargets=[],waveBosses=[];
  let coinGate=null,coinSession=null,coinStarted=false,lastCoinReward=null;
  const coinContext=()=>({host:G.Coop?.isHost===true,guest:!!G.DB?.guest,uid:G.Social?.uid,roomId:G.Social?.room?.id,mode:G.Social?.room?.mode,members:G.Social?.room?.members});
  let threatClock=0,threatStage=-1,threatReady=false,cachedFinalBossAlive=false;
@@ -39,7 +39,7 @@ G.PKMSVVBerryRescue=(()=>{
    G.World?.flattenForBerry?.(); // Clear cached wall chunks.
    G.Audio?.music?.('eggrush'); // Same bundled BGM as Egg Rush, from match start.
   }
-  drawnTrees.clear();lastAwards=[];
+  drawnTrees.clear();lastAwards=[];waveBosses=[];
   if(typeof document!=='undefined')document.getElementById?.('pkmsvv-berry-team-result')?.remove?.();
   sendClock=0;endClock=0;threatClock=0;threatStage=-1;threatReady=false;cachedFinalBossAlive=false;
   cachedThreats.fill(0);cachedBossNear.fill(false);
@@ -77,6 +77,7 @@ G.PKMSVVBerryRescue=(()=>{
   // Apply Easy HP/damage and the existing stage speed factor BEFORE broadcasting
   // the spawn, so clients see the same maximum HP as the host.
   rebalanceEnemy(boss,Math.floor(time/120));
+  waveBosses[bossStage-1]=boss;
   G.EnemyMgr.add(boss);
   G.Spawner?.say?.(bossStage===1?
    tr('🍓 MUNCHLAX HÁU ĂN! Tốc độ ×3 · Máu ×'+mult,'🍓 HUNGRY MUNCHLAX! Speed ×3 · HP ×'+mult):
@@ -288,8 +289,15 @@ G.PKMSVVBerryRescue=(()=>{
    if(!lastBossAlive||time>=DURATION+30){
     won=true;active=false;
     if(coinGate?.eligible){
-     try{lastCoinReward=coinGate.finish(coinSession,G.DB?.save,coinContext(),{success:true,time,trees:state(),bossStage},()=>G.DB.commit(true));}
+     let berryEgg=null;
+     try{lastCoinReward=coinGate.finish(coinSession,G.DB?.save,coinContext(),{success:true,time,trees:state(),bossStage},()=>{
+      const progression=G.PKMSVVBigUpdateQA;
+      if(!progression?.commitBerryEgg||easy||!waveBosses[0]?.dead||waveBosses[0].hp>0)return G.DB.commit(true);
+      const receipt=progression.commitBerryEgg(G.DB.save,()=>G.DB.commit(true));
+      berryEgg=receipt.egg;return receipt.committed;
+     });}
      catch(_){lastCoinReward={ok:false,reason:'save'};}
+     if(lastCoinReward.ok&&berryEgg)G.UI?.toast?.(tr('Nhận trứng Munchlax! Ghé máy ấp ở phòng nghiên cứu.','Munchlax egg earned! Visit the research lab incubator.'),4500);
      if(lastCoinReward.ok){G.UI?.refreshCoins?.();G.UI?.toast?.(tr('+'+lastCoinReward.reward+' Xu Đồng Đội','+'+lastCoinReward.reward+' Co-op Coins'),4500);}
      else G.UI?.toast?.(tr('Chưa lưu được Xu Đồng Đội.','Co-op Coins could not be saved.'),3500);
     }
@@ -424,6 +432,7 @@ G.PKMSVVBerryRescue=(()=>{
   ctx.restore();
  }
  return {DURATION,BOSS_TIMES,BOSS_SPECS,bossVisualScale,REWARD_CHANCE,NORMAL_REWARDS,EASY_REWARDS,XP_MULT,DEFENSE_RADIUS,chanceForHp,difficultyFor,targetFor,defendGoal,keepOutsideTrunks,begin,beginFrame,drawMissing,tick,onEvent,reward,draw,drawables,hud,state,
+  get eggEligible(){return won&&!easy&&!!coinGate?.eligible&&bossStage===2&&waveBosses[0]?.dex===446&&waveBosses[0].dead===true&&Number.isFinite(waveBosses[0].hp)&&waveBosses[0].hp<=0;},
   get easy(){return easy},
   get active(){return active},get trees(){return trees},get bossStage(){return bossStage},
   get lastCoinReward(){return lastCoinReward?{...lastCoinReward}:null},get coinEligible(){return !!coinGate?.eligible},

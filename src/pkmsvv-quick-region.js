@@ -110,7 +110,7 @@
   return Math.min(6,WAVE_SECONDS.reduce((n,at)=>t>=at?n+1:n,0)-1);
  }
  function eligibleByTime(id,index,time=encounterSeconds()){
-  if(!isAllowed(id,index))return false;
+  if(!isAllowed(id,index)||G.PKMSVVBigUpdateQA?.isEggOnly?.(id))return false;
   // Ordinary wilds, Rifts and minibosses may NEVER generate legendary-tier
   // Pokémon. Gen mascots enter only as the marked 15-minute Region Boss.
   const mon=G.DEX_BY?.[id];
@@ -138,7 +138,7 @@
  const progressivePools=new Map();
  let pickCounter=0;
  function progressivePool(index,time=encounterSeconds(),isBoss=false){
-  const all=speciesFor(index);
+  const full=speciesFor(index),all=G.PKMSVVBigUpdateQA?full.filter(id=>!G.PKMSVVBigUpdateQA.isEggOnly(id)):full;
   if(!all.length)return [];
   const effectiveTime=Math.max(0,time+(isBoss?80:0));
   const tier=encounterTier(effectiveTime);
@@ -146,7 +146,7 @@
   const key=index+':'+tier+':'+(rift?1:0)+':'+(isBoss?1:0);
   const rules=G.PKMSVV_EVOLUTION_DATA?.rules;
   const cached=progressivePools.get(key);
-  if(cached&&cached.source===all&&cached.rules===rules&&cached.dexBy===G.DEX_BY)
+  if(cached&&cached.source===full&&cached.eggPolicy===G.PKMSVVBigUpdateQA&&cached.rules===rules&&cached.dexBy===G.DEX_BY)
    return cached.list;
   let eligible=all.filter(id=>eligibleByTime(id,index,effectiveTime));
   if(!eligible.length){
@@ -155,7 +155,7 @@
    eligible=weakest?[weakest.id]:[];
   }
   const list=eligible.sort((a,b)=>pokemonStrength(a).power-pokemonStrength(b).power||a-b);
-  progressivePools.set(key,{source:all,rules,dexBy:G.DEX_BY,list});
+  progressivePools.set(key,{source:full,eggPolicy:G.PKMSVVBigUpdateQA,rules,dexBy:G.DEX_BY,list});
   return list;
  }
  function pickProgressive(index,time=encounterSeconds(),boss=false,offset=0){
@@ -284,7 +284,7 @@
 
  function localEpic(index){
   const source=G.DEX||[];
-  const allowed=source.filter(p=>p&&Number(p.rarity)===4&&
+  const allowed=source.filter(p=>p&&!G.PKMSVVBigUpdateQA?.isEggOnly?.(p.dex)&&Number(p.rarity)===4&&
    G.SPRITE_META?.[p.dex]&&isAllowed(p.dex,index));
   return allowed.length?allowed[Math.floor(Math.random()*allowed.length)]:null;
  }

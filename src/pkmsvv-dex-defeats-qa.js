@@ -16,10 +16,15 @@
  }
  function unlocked(s,dex){
   const id=dexId(dex);if(!id||!s)return false;
+  if(G.PKMSVVBigUpdateQA?.eggDiscovered?.(s,id))return true;
   // Old sighting flags remain in saves for backup compatibility, but NO LONGER unlock new entries.
   if(own(s,'pkmsvvDefeatedDex'))return !!s.pkmsvvDefeatedDex?.[id];
   // Legacy migration: don't erase previously earned collection progress.
   return legacyProfile(s)&&!!(s.owned?.[id]||s.shiny?.[id]);
+ }
+ function canRecruit(s,dex){
+  const policy=G.PKMSVVBigUpdateQA?.eggGachaPolicy?.(s,dex);
+  return typeof policy==='boolean'?policy:unlocked(s,dex);
  }
  function ensureLedger(s){
   if(own(s,'pkmsvvDefeatedDex')){
@@ -47,7 +52,7 @@
  }
  function persistDefeat(s,dex){
   const id=dexId(dex),db=G.DB;
-  if(!id||!G.DEX_BY?.[id]||!s||db?.guest||db?.save!==s)return false;
+  if(!id||!G.DEX_BY?.[id]||!s||db?.guest||db?.save!==s||G.PKMSVVBigUpdateQA?.isEggOnly?.(id))return false;
   if(unlocked(s,id))return false;
   const previous=s.pkmsvvDefeatedDex,had=own(s,'pkmsvvDefeatedDex');
   const next=ensureLedger(s);next[id]=true;
@@ -71,6 +76,8 @@
    pl!==G.Game?.player||Number(pl.dex)!==target)return false;
   const hist=pl.pkmEvoHistory;
   if(!Array.isArray(hist)||!hist.some(x=>Number(x?.from)===source&&Number(x?.to)===target))return false;
+  if(G.PKMSVVBigUpdateQA?.eggEvolutionParent?.(target))
+   return G.PKMSVVBigUpdateQA.markEggEvolution(s,source,target,pl);
   return persistDefeat(s,target);
  }
  // Compiled 2.0 has closure-local evolve(); polling the engine's real tick
@@ -126,14 +133,14 @@
   const previous=gacha.pull,previousPool=gacha.pool;
   gacha.pool=function(...args){
    const all=previousPool?.apply(this,args)||[];
-   return Array.isArray(all)?all.filter(m=>unlocked(G.DB?.save,m?.dex)):all;
+   return Array.isArray(all)?all.filter(m=>canRecruit(G.DB?.save,m?.dex)):all;
   };
   const wrapped=function(s,...args){
    const originals=G.DEX;
    if(!s||!Array.isArray(originals))return previous.apply(this,arguments);
    const gen=Number(args[1]);
    const selectedGen=Number.isInteger(gen)&&gen>=1&&gen<=9?gen:0;
-   const allowed=originals.filter(p=>unlocked(s,p?.dex));
+   const allowed=originals.filter(p=>canRecruit(s,p?.dex));
    // A Gen tab MUST NOT borrow an unlocked Pokémon from another generation.
    // Guard before the native paid pull, so tickets, pity and save are intact.
    const available=selectedGen?allowed.filter(p=>Number(p.gen??G.DEX_BY?.[p.dex]?.gen)===selectedGen):allowed;
@@ -160,7 +167,7 @@
     G.DEX=available;
     if(G.DEX!==available)throw Error('Dex gate could not be installed');
     const res=previous.apply(this,arguments);
-    if(res&&(!Array.isArray(res)||res.some(x=>!unlocked(s,x.dex)||
+    if(res&&(!Array.isArray(res)||res.some(x=>!canRecruit(s,x.dex)||
        (selectedGen&&Number(G.DEX_BY?.[x.dex]?.gen)!==selectedGen))))
      throw Error('Gacha tried to award undiscovered Pokémon');
     if(!res)G.UI?.toast?.(L('Chưa có Pokémon đủ điều kiện cho lượt quay này; vé được giữ nguyên.',
@@ -178,5 +185,5 @@
  }
  function install(){const enemy=installEnemy(),gacha=installGacha();installEvolution();return enemy&&gacha;}
  install();
- G.PKMSVVDexDefeats={unlocked,markDefeated,markEvolved,observeEvolution,installEvolution,inExplore,isDefeatable,ensureLedger,install,legacyProfile};
+ G.PKMSVVDexDefeats={unlocked,canRecruit,markDefeated,markEvolved,observeEvolution,installEvolution,inExplore,isDefeatable,ensureLedger,install,legacyProfile};
 })();

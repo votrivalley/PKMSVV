@@ -776,6 +776,11 @@ patch('js/entities/projectile.js',
 // Big Update QA: call progression at the actual native player construction and
 // result boundary; the late-loaded module is only present in the isolated QA.
 if(process.env.PKMSVV_BIG_UPDATE_QA==='1'){
+ // Restrict the native ordinary wild/boss cast and lost-Pokémon rescue pool,
+ // without deleting species from the real Dex, support catalogue or Berry bosses.
+ patch('js/data/enemies.js','G.DEX.filter(p => p.rarity < 5 &&','G.DEX.filter(p => !G.PKMSVVBigUpdateQA?.isEggOnly?.(p.dex) && p.rarity < 5 &&');
+ patch('js/data/enemies.js','const ok = p => !p.leg && G.SPRITE_META[p.dex]','const ok = p => !G.PKMSVVBigUpdateQA?.isEggOnly?.(p.dex) && !p.leg && G.SPRITE_META[p.dex]');
+ patch('js/systems/events.js','G.DEX.filter(p => p.rarity <= 3 && !p.leg','G.DEX.filter(p => !G.PKMSVVBigUpdateQA?.isEggOnly?.(p.dex) && p.rarity <= 3 && !p.leg');
  patch('js/game.js','    G.PKMSVVEvo.reset(pl);',
   '    G.PKMSVVEvo.reset(pl);\n    G.PKMSVVBigUpdateQA?.begin(save,pl,coop);');
  patch('js/game.js','    G.PKMSVVCollect.onRunEnd(save,pl.dex,time);',

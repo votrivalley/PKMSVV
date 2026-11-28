@@ -5,6 +5,12 @@ on:
     paths:
       - 'src/pkmsvv-big-update-qa.js'
       - 'src/pkmsvv-berry-rescue.js'
+      - 'src/pkmsvv-dex-defeats-qa.js'
+      - 'src/pkmsvv-quick-region.js'
+      - 'src/pkmsvv-box-hub-ui.js'
+      - 'src/cloudflare/save-guardian.js'
+      - 'tests/dex-defeats-qa.test.cjs'
+      - 'tests/save-guardian-regression.test.cjs'
       - 'scripts/patch-berry-coop.cjs'
       - 'tests/berry-rescue.test.cjs'
       - 'tests/big-update-progression*.cjs'
@@ -60,7 +66,7 @@ jobs:
           npm pkg set 'overrides.node-abi=4.40.0'
           npm install --no-audit --no-fund
       - name: Unit progression and existing save protection
-        run: node --test tests/big-update-progression.test.cjs tests/save-guardian-regression.test.cjs tests/web-save-guardian-v2.test.cjs tests/special-power-qa.test.cjs tests/berry-rescue.test.cjs
+        run: node --test tests/big-update-progression.test.cjs tests/save-guardian-regression.test.cjs tests/web-save-guardian-v2.test.cjs tests/special-power-qa.test.cjs tests/berry-rescue.test.cjs tests/dex-defeats-qa.test.cjs
       - name: Fetch required existing Clefairy assets
         run: node scripts/fetch-pippi-pmd.cjs && node scripts/build-pippi-portrait-atlas.cjs
       - name: Compile real offline game

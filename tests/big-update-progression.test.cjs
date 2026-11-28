@@ -41,3 +41,45 @@ test('mastery tiers cosmetic only and active egg locked while playing',()=>{
  const {G,s,api}=setup();assert.throws(()=>api.activateEgg(null));G.Game.state='ui';api.activateEgg(null);assert.equal(s.pkmsvvIncubator.active,null);
  s.pkmsvvMastery={25:750};assert.equal(api.summary(s,25).gold,true);assert.equal(api.summary(s,25).aura,true);assert.equal(api.summary(s,25).next,null);
 });
+
+test('19 baby species hatch from a region boss without inventing a defeat, and stay outside Gacha',()=>{
+ const {G,s,p,api}=setup();assert.equal(api.EGG_ONLY.length,19);
+ G.DEX_BY[175]={rarity:1};G.SPRITE_META[175]={a:{Idle:{},Walk:{}}};
+ G.PKMSVVQuickRegion.selectedRegion=1;G.PKMSVVQuickRegion.speciesFor=()=>[175];
+ assert.equal(api.eggGachaPolicy(s,175),false);
+ assert.equal(api.begin(s,p,null),true);assert.equal(api.markBadge(p,{dead:true,hp:0,pkmsvvExploreBoss:true},1),true);
+ const receipt=api.settle(s,p,901,false);assert.equal(receipt.reward,'egg-2');
+ assert.equal(s.pkmsvvIncubator.eggs['egg-2'].dex,175);assert.equal(s.pkmsvvIncubator.eggs['egg-2'].from,'baby-egg');
+ s.pkmsvvIncubator.eggs['egg-2'].kills=500;G.Game.state='ui';
+ assert.equal(api.hatch('egg-2').dex,175);assert.equal(api.eggDiscovered(s,175),true);
+ assert.equal(api.eggGachaPolicy(s,175),false);assert.equal(s.pkmsvvDefeatedDex[175],undefined);
+ assert.equal(api.eggGachaPolicy(s,25),null,'Pikachu remains on its normal story route');
+});
+test('egg evolution ledger requires the owned starter, exact chain and real solo player; branches stay separate',()=>{
+ const {G,s,p,api}=setup();
+ s.owned[175]={at:1};p.dex=175;G.DEX_BY[175]={rarity:1};G.DEX_BY[176]={rarity:2};G.DEX_BY[468]={rarity:4};
+ assert.equal(api.eggGachaPolicy(s,176),false);assert.equal(api.eggGachaPolicy(s,468),false);
+ assert.equal(api.begin(s,p,null),true);p.dex=468;p.pkmEvoHistory=[{from:175,to:468}];
+ assert.equal(api.markEggEvolution(s,175,468,p),false,'cannot skip Togetic');
+ p.dex=176;p.pkmEvoHistory=[{from:175,to:176}];
+ G.DB.commit=()=>false;assert.equal(api.markEggEvolution(s,175,176,p),false);assert.equal(s.pkmsvvEggEvolutions,undefined);
+ G.DB.commit=()=>true;assert.equal(api.markEggEvolution(s,175,176,p),true);assert.equal(api.eggGachaPolicy(s,176),true);
+ assert.equal(api.eggGachaPolicy(s,468),false);p.dex=468;p.pkmEvoHistory.push({from:176,to:468});
+ assert.equal(api.markEggEvolution(s,176,468,p),true);assert.equal(api.eggGachaPolicy(s,468),true);
+ const t={...p,dex:236,pkmEvoHistory:[]};s.owned[236]={at:1};G.Game.player=t;
+ assert.equal(api.begin(s,t,null),true);t.dex=106;t.pkmEvoHistory=[{from:236,to:106}];
+ assert.equal(api.markEggEvolution(s,236,106,t),true);assert.equal(api.eggGachaPolicy(s,106),true);
+ assert.equal(api.eggGachaPolicy(s,107),false);assert.equal(api.eggGachaPolicy(s,237),false);
+ assert.equal(api.eggGachaPolicy({owned:{143:{at:1}}},143),true,'legacy Snorlax owner retained');
+});
+test('Munchlax Berry egg shares authentic save commit; full bag or rollback never costs coins',()=>{
+ const {G,s,api}=setup();G.Coop.isHost=true;G.PKMSVVBerryRescue={eggEligible:false};
+ G.DEX_BY[446]={rarity:1};G.SPRITE_META[446]={a:{Idle:{},Walk:{}}};
+ assert.equal(api.commitBerryEgg(s,()=>true).egg,null);
+ G.PKMSVVBerryRescue.eggEligible=true;const before=JSON.stringify(s);
+ assert.equal(api.commitBerryEgg(s,()=>false).egg,null);assert.equal(JSON.stringify(s),before);
+ assert.throws(()=>api.commitBerryEgg(s,()=>{throw Error('disk')}));assert.equal(JSON.stringify(s),before);
+ const got=api.commitBerryEgg(s,()=>true);assert.equal(got.egg,'egg-2');
+ assert.equal(s.pkmsvvIncubator.eggs[got.egg].dex,446);assert.equal(s.pkmsvvIncubator.eggs[got.egg].from,'berry-boss');
+ assert.equal(api.commitBerryEgg(s,()=>true).egg,null,'no duplicate queued Munchlax');
+});

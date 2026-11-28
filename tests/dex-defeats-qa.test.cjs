@@ -205,3 +205,25 @@ test('Recruitment notice relocates BETWEEN title and Back button and stays golde
  assert.match(css,/font-style:italic/);
  assert.match(css,/color:#ffe08b/);
 });
+
+test('egg-only babies and gated evolution prizes never enter native paid Gacha from a wild defeat',()=>{
+ const f=fixture();
+ vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../src/pkmsvv-big-update-qa.js'),'utf8'),{G:f.G,console});
+ for(const [dex,gen] of [[175,2],[176,2],[468,4]]){
+  const m={dex,gen,rarity:1};f.G.DEX.push(m);f.G.DEX_BY[dex]=m;
+ }
+ f.s.pkmsvvDefeatedDex={175:true,176:true,468:true};
+ assert.equal(f.api.unlocked(f.s,176),true,'prior discovered Dex data is not removed');
+ assert.equal(f.G.Gacha.pool(1).length,0);
+ assert.equal(f.G.Gacha.pull(f.s,1,2),null);assert.equal(f.s.tickets.t1,2);
+ f.s.owned[175]={at:1};const p=f.G.Game.player;p.dex=175;
+ assert.equal(f.G.PKMSVVBigUpdateQA.begin(f.s,p,null),true);
+ p.dex=176;p.pkmEvoHistory=[{from:175,to:176,at:16}];
+ assert.equal(f.api.markEvolved(f.s,175,176,p),true);
+ assert.deepEqual(f.G.Gacha.pool(1).map(x=>x.dex),[176]);
+ assert.equal(f.G.Gacha.pull(f.s,1,2)[0].dex,176);
+ assert.equal(f.api.canRecruit(f.s,175),false);assert.equal(f.api.canRecruit(f.s,468),false);
+ p.dex=468;p.pkmEvoHistory.push({from:176,to:468,at:30});
+ assert.equal(f.api.markEvolved(f.s,176,468,p),true);
+ assert.deepEqual(f.G.Gacha.pool(1).map(x=>x.dex),[176,468]);
+});

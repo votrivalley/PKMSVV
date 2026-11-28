@@ -43,7 +43,8 @@
   for(const id of keys(old.hatched))if(Number(next.hatched?.[id])!==Number(old.hatched[id]))return true;
   for(const id of keys(old.eggs)){
    const prev=old.eggs[id],current=next.eggs?.[id];
-   if(current){if(Number(current.dex)!==Number(prev.dex)||Number(current.kills||0)<Number(prev.kills||0))return true;}
+   if(current){if(Number(current.dex)!==Number(prev.dex)||Number(current.kills||0)<Number(prev.kills||0)||
+    current.from!==prev.from||!!current.shiny!==!!prev.shiny)return true;}
    else if(Number(next.hatched?.[id])!==Number(prev.dex)||!b.owned?.[prev.dex])return true;
   }
   return false;
@@ -72,7 +73,7 @@
   // A swapped collection entry with the same count is still lost progress.
   for(const path of ['owned','shiny','itemsFound','evoMoves','ach','legends'])
    if(!keys(older[path]).every(k=>Object.hasOwn(newer[path]||{},k)))return true;
-  for(const path of ['megaStones','megaForms','megaStoryCleared','pkmsvvPowerItems'])
+  for(const path of ['megaStones','megaForms','megaStoryCleared','pkmsvvPowerItems','pkmsvvEggEvolutions'])
    if(!retained(older[path],newer[path]))return true;
   for(const path of ['seals','trophies'])
    if(!retained(older.arenas?.pkmChampion?.[path],
@@ -157,6 +158,7 @@
   for(const id of new Set([...keys(a.pkmsvvMastery),...keys(b.pkmsvvMastery)]))
    note('Tinh thông #'+id,qty(a.pkmsvvMastery?.[id]),qty(b.pkmsvvMastery?.[id]));
   if(incubatorLoss(a,b))permanent.push({name:'Tiến độ ấp trứng',before:1,after:0,change:'loss'});
+  if(!retained(a.pkmsvvEggEvolutions,b.pkmsvvEggEvolutions))permanent.push({name:'Tiến hóa mở Chiêu mộ',before:1,after:0,change:'loss'});
   const risk=permanent.some(x=>x.change==='loss');
   const warnings=[];
   if(risk)warnings.push('Permanent progress or chapter flags may be lost');

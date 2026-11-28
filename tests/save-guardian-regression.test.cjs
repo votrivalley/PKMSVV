@@ -105,3 +105,15 @@ test('Guardian treats lower machine research ranks as permanent progression loss
  assert.equal(g.regress(JSON.stringify(original),JSON.stringify(lost)),true);
  assert.equal(g.compare(JSON.stringify(original),JSON.stringify(lost)).risk,true);
 });
+
+test('Guardian keeps egg evolution unlocks and the original rolled egg variant',()=>{
+ const original=save();original.pkmsvvEggEvolutions={176:true};
+ original.pkmsvvIncubator={serial:1,active:null,eggs:{'egg-1':{dex:175,kills:50,region:1,from:'baby-egg',shiny:true}},hatched:{}};
+ const g=run(original).guardian;
+ for(const mutate of [s=>{s.pkmsvvEggEvolutions={}},s=>{s.pkmsvvIncubator.eggs['egg-1'].shiny=false},s=>{s.pkmsvvIncubator.eggs['egg-1'].from='region-boss'}]){
+  const next=structuredClone(original);mutate(next);
+  assert.equal(g.regress(JSON.stringify(original),JSON.stringify(next)),true);
+ }
+ const next=structuredClone(original);next.pkmsvvEggEvolutions[468]=true;
+ assert.equal(g.regress(JSON.stringify(original),JSON.stringify(next)),false);
+});

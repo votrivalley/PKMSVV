@@ -953,11 +953,12 @@
   const primaryDexType=String(mon?.types?.[0]||'normal').toLowerCase();
   detail.style.setProperty('--pkmbx-type',TYPE_FRAME_COLORS[primaryDexType]||'#e64a93');
   if(!mon){detail.innerHTML='<p>'+L('Không có Pokémon phù hợp.','No matching species.')+'</p>';return;}
+  const eggHint=G.PKMSVVBigUpdateQA?.eggHint?.(infoDex);
   if(!has(infoDex)){
    detail.classList.add('pkmbx-dex-undefeated');
    detail.innerHTML='<div class="pkmbx-hub-hero"><canvas id="pkmbx-dex-hero" width="176" height="176"></canvas>'+
-    '<strong>#'+infoDex+' · ???</strong><p>'+L('Chưa phát hiện Pokémon này. Hạ gục trong Khám phá hoặc tiến hóa thành loài này để mở Pokédex và Chiêu mộ.',
-     'Not discovered. Defeat it in Explore or evolve into this species to unlock Pokédex and Recruitment.')+'</p></div>';
+    '<strong>#'+infoDex+' · ???</strong><p>'+clean(eggHint||L('Chưa phát hiện Pokémon này. Hạ gục trong Khám phá hoặc tiến hóa thành loài này để mở Pokédex và Chiêu mộ.',
+     'Not discovered. Defeat it in Explore or evolve into this species to unlock Pokédex and Recruitment.'))+'</p></div>';
    draw(detail.querySelector('#pkmbx-dex-hero'),infoDex,false,true,true);
    return;
   }
@@ -988,6 +989,7 @@
       clean(typeName(t))+'</span>';
     }).join('')+'</div>'+
     '<p>'+(owned?L('✓ Đã khám phá','✓ Discovered'):L('Chưa sở hữu','Not yet owned'))+'</p>'+
+    (eggHint&&G.PKMSVVDexDefeats?.canRecruit?.(s,infoDex)===false?'<p class="pkmbx-hint">'+clean(eggHint)+'</p>':'')+
     statLine+'</div></div>'+
    '<div class="pkmbx-dex-variants"><button type="button" data-dex-variant="normal" class="'+(!dexShinyView?'active':'')+'">'+L('Bình thường','Normal')+'</button>'+
    '<button type="button" data-dex-variant="shiny" class="'+(dexShinyView?'active':'')+'" '+(!shinyAvailable?'disabled':'')+'>✨ Shiny</button></div>'+
