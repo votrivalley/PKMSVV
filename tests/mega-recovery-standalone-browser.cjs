@@ -5,8 +5,9 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{pathToFileURL}=require('node:url');
 const {chromium}=require('playwright');
 (async()=>{
- const root=path.resolve('dist/mega-recovery-preview'),registry=JSON.parse(fs.readFileSync(path.join(root,'registry.json'),'utf8'));
- assert.equal(Object.keys(registry).length,5);
+ const privatePack=process.env.PKMSVV_MEGA_RELOADED_PRIVATE_QA==='1',count=privatePack?51:5;
+ const root=path.resolve(privatePack?'dist/mega-recovery-private-preview':'dist/mega-recovery-preview'),registry=JSON.parse(fs.readFileSync(path.join(root,'registry.json'),'utf8'));
+ assert.equal(Object.keys(registry).length,count);
  const browser=await chromium.launch({headless:true,executablePath:process.env.PKMSVV_BROWSER||'/usr/bin/google-chrome',args:['--allow-file-access-from-files']});
  const page=await browser.newPage({viewport:{width:1200,height:1020}}),errors=[];
  page.on('pageerror',e=>errors.push(String(e)));
@@ -37,14 +38,14 @@ const {chromium}=require('playwright');
    return rows;
   },registry);
   fs.writeFileSync(path.join(root,'pixel-audit.json'),JSON.stringify(report,null,2));
-  assert.equal(report.length,70);
+  assert.equal(report.length,count*14);
   for(const row of report){assert.equal(row.directions,8,JSON.stringify(row));assert.ok(row.transparentFrames>0,JSON.stringify(row));}
-  for(const action of ['Idle','Walk','Attack']){
+  if(!privatePack)for(const action of ['Idle','Walk','Attack']){
    await page.selectOption('#act',action);
    await page.waitForFunction(()=>[...document.querySelectorAll('canvas')].length===10&&[...document.querySelectorAll('canvas')].every(c=>{const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;return d.some((a,i)=>i%4===3&&a>0);}),null,{timeout:15000});
    await page.screenshot({path:path.join(root,action.toLowerCase()+'-preview.png'),fullPage:true});
   }
   assert.deepEqual(errors,[]);
-  console.log('MEGA_RECOVERY_PIXEL_PASS='+JSON.stringify({forms:5,variants:10,sheets:report.length,directions:report.reduce((n,r)=>n+r.directions,0)}));
+  console.log('MEGA_RECOVERY_PIXEL_PASS='+JSON.stringify({forms:count,variants:count*2,sheets:report.length,directions:report.reduce((n,r)=>n+r.directions,0)}));
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

@@ -1,0 +1,87 @@
+name: Mega Reloaded private-use asset and battle QA (reports only)
+on:
+  push:
+    branches: [feature/gmax-power-qa-20261127]
+    paths:
+      - '.github/workflows/mega-reloaded-private-qa.yml'
+      - 'scripts/build-mega-recovery-preview.cjs'
+      - 'src/pkmsvv-mega-phase3.js'
+      - 'tests/mega-recovery-preview.test.cjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  private-pack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      PKMSVV_FOSSIL_NATIVE_QA: '1'
+      PKMSVV_STANDALONE_AI: '1'
+      PKMSVV_BETA_176_SKILLS_QA: '1'
+      PKMSVV_MEGA_SPRITE_PACK: '1'
+      PKMSVV_MEGA_RECOVERY_PREVIEW_QA: '1'
+      PKMSVV_MEGA_RECOVERY_BATTLE_QA: '1'
+      PKMSVV_MEGA_RELOADED_PRIVATE_QA: '1'
+      PKMSVV_BROWSER: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch exact original upstream commit via verified public mirror
+        shell: bash
+        run: |
+          set -euo pipefail
+          PIN=11fe868c640b62ac37beacc222e056bc4d9ec892
+          TREE=0a36feb1d9639efd7383bf30d1bfb08830dd8c6e
+          mkdir -p vendor/pokesurvivor
+          git -C vendor/pokesurvivor init
+          # JPTER78/pokesurvivor currently returns 404. Both mirrors retain
+          # exactly the same immutable commit and tree, not a later fork HEAD.
+          for mirror in             https://github.com/ovolee37/pokesurvivor-ayn-thor.git             https://github.com/Tpg590/Pokemon.git; do
+            if git -C vendor/pokesurvivor -c credential.interactive=never fetch --depth=1 "$mirror" "$PIN"; then
+              break
+            fi
+          done
+          test "$(git -C vendor/pokesurvivor rev-parse FETCH_HEAD)" = "$PIN"
+          git -C vendor/pokesurvivor checkout --detach "$PIN"
+          test "$(git -C vendor/pokesurvivor rev-parse HEAD^{tree})" = "$TREE"
+          test -s vendor/pokesurvivor/dev.html
+          test -s vendor/pokesurvivor/LICENSE-NONCOMMERCIAL.md
+          echo "PINNED_UPSTREAM_RESTORED=$PIN TREE=$TREE"
+      - name: Install build dependencies with known-published transitive ABI version
+        shell: bash
+        run: |
+          set -euo pipefail
+          # npm's unpinned transitive registry metadata currently advertises
+          # node-abi@4.42.0 whose tarball returns 404. Limit this override to
+          # the ephemeral Beta GitHub runner; no package or save changes.
+          npm pkg set 'overrides.node-abi=4.40.0'
+          npm install --no-audit --no-fund
+      - name: Verify allowlists and noncommercial private opt-in
+        run: node --test tests/mega-recovery-preview.test.cjs tests/mega-3ds-source-audit.test.cjs
+      - name: Build and inspect real 51 Normal and Shiny sets in temporary runner
+        run: |
+          node scripts/build-mega-recovery-preview.cjs
+          timeout 240s node tests/mega-recovery-standalone-browser.cjs
+      - name: Fetch required existing Clefairy assets
+        run: node scripts/fetch-pippi-pmd.cjs && node scripts/build-pippi-portrait-atlas.cjs
+      - name: Compile isolated full recovery game
+        run: npm run prepare:lan
+      - name: Verify all preview assets and original script ordering
+        run: |
+          node --test tests/mega-phase3.test.cjs
+          timeout 180s node tests/mega-recovery-preview-browser.cjs
+      - name: Run ten Solo pilots, both variants (20 cases)
+        run: timeout 360s node tests/mega-recovery-combat-browser.cjs
+      - name: Export JSON evidence only, never artwork or game binaries
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mega-reloaded-private-qa-reports
+          path: |
+            dist/mega-recovery-private-preview/pixel-audit.json
+            dist/mega-recovery-game-qa/report.json
+            dist/mega-recovery-combat-qa/*.json
+          if-no-files-found: warn
+          retention-days: 7

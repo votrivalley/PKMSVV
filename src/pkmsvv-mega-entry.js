@@ -8,7 +8,7 @@ G.PKMSVVMegaEntry=(()=>{
  // This does not claim missing sprite art, enable battle transformations,
  // unlock stones, or change the conservative PC/Android/production roster.
  const recoveryPreview=f=>!!(f&&f.artReady!==true&&G.PKMSVV_MEGA_RECOVERY_PREVIEW?.[f.key]?.spriteId===f.spriteId);
- const recoveryPilot=f=>recoveryPreview(f)&&G.PKMSVV_MEGA_RECOVERY_BATTLE_QA===true&&G.PKMSVV_MEGA_RECOVERY_PREVIEW[f.key].distinctCore===true;
+ const recoveryPilot=f=>recoveryPreview(f)&&G.PKMSVV_MEGA_RECOVERY_BATTLE_QA===true&&G.PKMSVVMegaPhase3?.recoveryCandidate?.(f)===true;
  const fullCatalogQA=()=>!!G.PKMSVV_MEGA_RECOVERY_PREVIEW||G.PKMSVV_MEGA_FULL_CATALOG_QA===true||
   (typeof window!=='undefined'&&window.PKMSVV_MEGA_FULL_CATALOG_QA===true);
  const save=()=>G.DB?.save||{};

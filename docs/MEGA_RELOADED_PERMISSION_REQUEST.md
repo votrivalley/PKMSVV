@@ -13,3 +13,7 @@ Record exact form, variant, creator, permission scope, date and evidence. Pokém
 ## Outreach status — 2026-11-28
 
 Permission request sent to the PokéSurvivor contact email (Spanish), asking for explicit authorization and introductions to third-party creators, for free noncommercial closed-group use only. No project files attached. Pending response; this is not a grant. Do not enable unapproved Reloaded asset packaging. Keep code QA and original CC BY-NC previews independent.
+
+## Owner report — 2026-11-28
+
+Project owner reports oral permission received by phone for private, free, closed-group use and explicitly requests continuing now; written confirmation deferred. No independent verification or blanket third-party license claimed. Public repo remains public: opt-in private local/CI build only, no new source artwork committed, no public artwork/build/screenshot artifact for Reloaded. Preserve exact source credits. If distributing beyond this scope, obtain specific confirmation first.

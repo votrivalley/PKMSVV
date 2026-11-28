@@ -4,7 +4,9 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {chromium}=require('playwright'),{startServer}=require('../lan-server/server.cjs');
 const OUT=path.resolve('dist/mega-recovery-combat-qa');fs.mkdirSync(OUT,{recursive:true});
-const CASES=['slowbromega','sharpedomega','scraftymega','hawluchamega'].flatMap(key=>[[key,false],[key,true]]);
+const KEYS=['slowbromega','sharpedomega','scraftymega','hawluchamega'];
+if(process.env.PKMSVV_MEGA_RELOADED_PRIVATE_QA==='1')KEYS.push('scizormega','swampertmega','garchompmega','greninjamega','dragonitemega','baxcaliburmega');
+const CASES=KEYS.flatMap(key=>[[key,false],[key,true]]);
 (async()=>{const server=await startServer({root:path.resolve(__dirname,'../dist/lan'),host:'127.0.0.1',port:0});let browser;const reports=[];
  try{
   browser=await chromium.launch({headless:true,executablePath:process.env.PKMSVV_BROWSER||'/usr/bin/google-chrome'});

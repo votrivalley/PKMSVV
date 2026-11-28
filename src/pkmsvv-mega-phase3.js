@@ -51,14 +51,19 @@ G.PKMSVVMegaPhase3=(()=>{
  }
  // Recovered art is only combat-testable on explicitly built private Solo QA.
  const RECOVERY_KEYS=new Set(['slowbromega','sharpedomega','scraftymega','hawluchamega']);
+ const RELOADED_KEYS=new Set(['scizormega','swampertmega','garchompmega','greninjamega','dragonitemega','baxcaliburmega']);
+ function recoveryCandidate(f){
+  const a=f&&G.PKMSVV_MEGA_RECOVERY_PREVIEW?.[f.key];
+  return !!(a&&a.spriteId===f.spriteId&&a.distinctCore===true&&((a.source==='spritecollab'&&RECOVERY_KEYS.has(f.key))||(a.source==='web-reloaded'&&G.PKMSVV_MEGA_RELOADED_PRIVATE_QA===true&&RELOADED_KEYS.has(f.key))));
+ }
  const RECOVERY_PAUSED_STATES=new Set(['paused','levelup','choice','held']);
  function recoveryBattle(f,p=G.Game?.player,allowPaused=false){
-  if(!f||f.artReady===true||!RECOVERY_KEYS.has(f.key)||G.PKMSVV_MEGA_RECOVERY_BATTLE_QA!==true||
+  if(!f||f.artReady===true||!recoveryCandidate(f)||G.PKMSVV_MEGA_RECOVERY_BATTLE_QA!==true||
    !p||p!==G.Game?.player||p.dex!==f.dex||p.dead||p.remote||p.lanBot||
    (G.Game?.state!=='playing'&&!(allowPaused&&RECOVERY_PAUSED_STATES.has(G.Game?.state)))||G.PKMSVVQuickRegion?.active!==true||G.Coop?.active||
    G.Royale?.active||G.EggRush?.active||G.PKMSVVArenaSolo?.active||G.PKMSVVChampionArena?.active||G.PKMSVVArenaPvp?.active)return false;
   const a=G.PKMSVV_MEGA_RECOVERY_PREVIEW?.[f.key],m=G.SPRITE_META?.[f.spriteId];
-  return !!(a?.source==='spritecollab'&&a.spriteId===f.spriteId&&a.distinctCore===true&&
+  return !!(a&&
     ['Idle','Walk','Attack','Shoot','Charge','Hurt','Faint'].every(k=>m?.a?.[k]?.r===8)&&
     (!p.shiny||(m.sh===true&&['Idle','Walk','Attack','Shoot','Charge','Hurt','Faint'].every(k=>m.sa?.[k]?.r===8)&&G.Sprites?.hasShiny?.(f.spriteId)===true)));
  }
@@ -103,7 +108,9 @@ G.PKMSVVMegaPhase3=(()=>{
   slowbromega:{atk:75,def:110,spa:100,spd:80,spe:30},
   sharpedomega:{atk:120,def:40,spa:95,spd:40,spe:95},
   scraftymega:{atk:90,def:115,spa:45,spd:115,spe:58},
-  hawluchamega:{atk:92,def:75,spa:74,spd:63,spe:118}
+  hawluchamega:{atk:92,def:75,spa:74,spd:63,spe:118},
+  greninjamega:{atk:95,def:67,spa:103,spd:71,spe:122},
+  baxcaliburmega:{atk:145,def:92,spa:75,spd:86,spe:87}
  });
  const player=()=>G.Game?.player;
  const HOVER_MEGA=new Set(['charizardmegax','charizardmegay','dragonitemega','scizormega','pidgeotmega','salamencemega','latiasmega','latiosmega','rayquazamega']);
@@ -324,5 +331,5 @@ G.PKMSVVMegaPhase3=(()=>{
  setInterval(sync,250);
  return {CHAMPIONS,STONE_CHANCE,DURATION,REUSE_COOLDOWN,CD_FACTOR,ENERGY_MAX,
   HIT_ENERGY,KILL_ENERGY,BOSS_ENERGY,rewardStone,isUnlocked,isBattleReady,
-  stoneOwned,privateQaPreview,recoveryBattle,progress,formFor,energy,addEnergy,onEnemyHurt,eligible,canActivate,activate,tryActivate,stop,tick,sync,remoteMega};
+  stoneOwned,privateQaPreview,recoveryCandidate,recoveryBattle,progress,formFor,energy,addEnergy,onEnemyHurt,eligible,canActivate,activate,tryActivate,stop,tick,sync,remoteMega};
 })();

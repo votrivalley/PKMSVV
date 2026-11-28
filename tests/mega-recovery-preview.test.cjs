@@ -25,3 +25,17 @@ test('private recovery combat requires explicit flag, correct form, real sheets,
  G.Game.state='playing';api.tick(p,1);assert.equal(p._megaRemaining,remaining-1);
  G.Coop.active=true;api.tick(p,.1);assert.equal(p._megaActive,false);assert.equal(p.anim.dex,80);assert.equal(p.cdMul,1);
 });
+
+test('private import explicitly includes 46 Web forms but excludes derived and missing art',()=>{
+ const all=selected(true),cc=selected();assert.equal(cc.length,5);assert.equal(all.length,51);
+ assert.equal(all.filter(f=>f.source==='web-reloaded').length,46);
+ assert.equal(new Set(all.map(f=>f.visualId)).size,51);assert.ok(all.every(f=>f.gameplayReady===false));
+ assert.ok(!all.some(f=>f.key==='lucariomegaz'));
+});
+test('Reloaded battle pilot requires exact whitelist, provenance and explicit private flag',()=>{
+ const f={key:'scizormega',dex:212,spriteId:10212,artReady:false},G={PKMSVV_MEGA_RECOVERY_PREVIEW:{scizormega:{source:'web-reloaded',spriteId:10212,distinctCore:true}}};
+ vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../src/pkmsvv-mega-phase3.js'),'utf8'),{G,document:{readyState:'loading',addEventListener(){}},setInterval(){}});
+ const api=G.PKMSVVMegaPhase3;assert.equal(api.recoveryCandidate(f),false);G.PKMSVV_MEGA_RELOADED_PRIVATE_QA=true;assert.equal(api.recoveryCandidate(f),true);
+ assert.equal(api.recoveryCandidate({...f,spriteId:9}),false);assert.equal(api.recoveryCandidate({...f,key:'pidgeotmega'}),false);
+ G.PKMSVV_MEGA_RECOVERY_PREVIEW.scizormega.source='derived-rejected';assert.equal(api.recoveryCandidate(f),false);
+});
