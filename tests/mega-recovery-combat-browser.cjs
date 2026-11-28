@@ -4,7 +4,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {chromium}=require('playwright'),{startServer}=require('../lan-server/server.cjs');
 const OUT=path.resolve('dist/mega-recovery-combat-qa');fs.mkdirSync(OUT,{recursive:true});
-const CASES=[['slowbromega',false],['sharpedomega',false],['scraftymega',false],['hawluchamega',true]];
+const CASES=['slowbromega','sharpedomega','scraftymega','hawluchamega'].flatMap(key=>[[key,false],[key,true]]);
 (async()=>{const server=await startServer({root:path.resolve(__dirname,'../dist/lan'),host:'127.0.0.1',port:0});let browser;const reports=[];
  try{
   browser=await chromium.launch({headless:true,executablePath:process.env.PKMSVV_BROWSER||'/usr/bin/google-chrome'});
@@ -32,7 +32,7 @@ const CASES=[['slowbromega',false],['sharpedomega',false],['scraftymega',false],
      p._megaEnergy=100;p._megaCooldownRemaining=0;
      if(!api.eligible()||api.formFor(p)?.key!==form.key)throw Error('Recovery gate denied exact form');
      await G.Sprites.preload([form.id],3500,shiny);
-     return {dex:p.dex,atk:p.baseAtk,spd:p.baseSpd,cd:p.cdMul};
+     return {dex:p.dex,atk:p.baseAtk,spd:p.baseSpd,cd:p.cdMul,save:JSON.stringify({megaStones:G.DB.save.megaStones,megaForms:G.DB.save.megaForms,megaStoryCleared:G.DB.save.megaStoryCleared,pkmsvvPowerLoadout:G.DB.save.pkmsvvPowerLoadout})};
     },{form,shiny});
     await page.keyboard.press('5',{delay:100});
     await page.waitForFunction(id=>G.Game.player?._megaActive===true&&G.Game.player?._megaFormSprite===id,form.id,{timeout:7000});
@@ -47,8 +47,8 @@ const CASES=[['slowbromega',false],['sharpedomega',false],['scraftymega',false],
     });
     assert.equal(active.anim,form.id);assert.equal(active.dex,form.dex);assert.equal(active.shiny,shiny);assert.ok(Math.abs(active.cd-original.cd*.7)<1e-8);assert.ok(active.atk>0&&active.atk<10,'scaled attack must remain finite and bounded');
     await page.waitForFunction(()=>{const q=window.__megaRecoveryTarget,p=G.Game.player;return p._megaActive&&q.e.hp<q.hp&&p.dmgDealt>q.dmg;},null,{timeout:12000});
-    await page.screenshot({path:path.join(OUT,key+'-active.png')});
-    const natural=key==='slowbromega';
+    await page.screenshot({path:path.join(OUT,key+(shiny?'-shiny':'-normal')+'-active.png')});
+    const natural=key==='slowbromega'&&!shiny;
     let lifecycle=null;
     if(natural){
      // Keep original combat HP evidence; isolate the remaining timer from
@@ -65,11 +65,12 @@ const CASES=[['slowbromega',false],['sharpedomega',false],['scraftymega',false],
      lifecycle={pausedRemaining:before.remaining,resumed:true,wallMs:Date.now()-started,naturalExpiry:true};
      await page.evaluate(()=>clearInterval(window.__megaTimerKeep));
     }
-    const ended=await page.evaluate(natural=>{const p=G.Game.player,q=window.__megaRecoveryTarget,delta=q.hp-q.e.hp,api=G.PKMSVVMegaPhase3;if(!natural)api.stop(p);return {delta,dex:p.dex,anim:p.anim.dex,atk:p.baseAtk,spd:p.baseSpd,cd:p.cdMul,cooldown:p._megaCooldownRemaining,active:!!p._megaActive};},natural);
+    const ended=await page.evaluate(natural=>{const p=G.Game.player,q=window.__megaRecoveryTarget,delta=q.hp-q.e.hp,api=G.PKMSVVMegaPhase3;if(!natural)api.stop(p);return {delta,dex:p.dex,anim:p.anim.dex,atk:p.baseAtk,spd:p.baseSpd,cd:p.cdMul,cooldown:p._megaCooldownRemaining,active:!!p._megaActive,save:JSON.stringify({megaStones:G.DB.save.megaStones,megaForms:G.DB.save.megaForms,megaStoryCleared:G.DB.save.megaStoryCleared,pkmsvvPowerLoadout:G.DB.save.pkmsvvPowerLoadout})};},natural);
     assert.ok(ended.delta>0);assert.equal(ended.anim,form.dex);assert.equal(ended.active,false);assert.equal(ended.atk,original.atk);assert.equal(ended.spd,original.spd);assert.ok(Math.abs(ended.cd-original.cd)<1e-8);if(natural)assert.ok(ended.cooldown>=198&&ended.cooldown<=200,'natural expiry starts 200s cooldown');else assert.equal(ended.cooldown,200);assert.deepEqual(errors,[]);
+    assert.equal(ended.save,original.save,'Mega and special-power ownership must stay unchanged');delete original.save;delete ended.save;
     reports.push({key,shiny,original,active,ended,lifecycle});fs.writeFileSync(path.join(OUT,'report.json'),JSON.stringify(reports,null,2));
     console.log('MEGA_RECOVERY_NATIVE_COMBAT='+JSON.stringify(reports.at(-1)));
-   }catch(e){const snapshot=await page.evaluate(()=>({state:window.G?.Game?.state,player:window.G?.Game?.player?{dex:G.Game.player.dex,shiny:G.Game.player.shiny,energy:G.Game.player._megaEnergy,mega:G.Game.player._megaActive,anim:G.Game.player.anim?.dex}:null})).catch(()=>null);fs.writeFileSync(path.join(OUT,key+'-failure.json'),JSON.stringify({error:String(e),errors,snapshot},null,2));await page.screenshot({path:path.join(OUT,key+'-failure.png'),timeout:5000}).catch(()=>{});throw e;}
+   }catch(e){const snapshot=await page.evaluate(()=>({state:window.G?.Game?.state,player:window.G?.Game?.player?{dex:G.Game.player.dex,shiny:G.Game.player.shiny,energy:G.Game.player._megaEnergy,mega:G.Game.player._megaActive,anim:G.Game.player.anim?.dex}:null})).catch(()=>null);fs.writeFileSync(path.join(OUT,key+(shiny?'-shiny':'-normal')+'-failure.json'),JSON.stringify({error:String(e),errors,snapshot},null,2));await page.screenshot({path:path.join(OUT,key+(shiny?'-shiny':'-normal')+'-failure.png'),timeout:5000}).catch(()=>{});throw e;}
    finally{await page.close();}
   }
  }finally{try{if(browser)await browser.close();}finally{await server.close();}}})().catch(e=>{console.error(e);process.exitCode=1;});

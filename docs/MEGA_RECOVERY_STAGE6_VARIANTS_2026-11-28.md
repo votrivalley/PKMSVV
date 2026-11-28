@@ -1,0 +1,3 @@
+# Mega recovery stage 6 — expand variant coverage without overwriting concurrent changes
+
+Base 55e127670c63788dbb1f19ff5140368f1d4e871d already adds pause, natural expiry and preload race protection; preserve that work. Previous run 46122777123 verified 4 real native combat cases, artifact 15254273340. Expand to all 8 Normal/Shiny cases, preserve separate screenshots, assert unchanged Mega/power ownership. Keep natural expiry on Normal Slowbro only. Pin latest tracker 72b906e7dae9a4c2f1477e7c538c8f2fd8c225a5; audit 10 unresolved exact variants and hierarchy, not aliases. Sceptile still lacks Attack in checked folder. 46 Reloaded candidates pending permission; request draft only. No production artReady promotion, no release. New CI pending.

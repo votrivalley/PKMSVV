@@ -8,6 +8,7 @@ on:
       - 'tests/mega-recovery-preview-browser.cjs'
       - 'tests/mega-recovery-standalone-browser.cjs'
       - 'tests/mega-recovery-combat-browser.cjs'
+      - 'scripts/audit-mega-unresolved.cjs'
       - 'src/pkmsvv-mega-phase3.js'
       - 'tests/mega-phase3.test.cjs'
       - '.github/workflows/mega-recovery-preview-qa.yml'
@@ -74,8 +75,10 @@ jobs:
         run: npm run prepare:lan
       - name: Verify actual compiled sprite requests and no battle unlock
         run: timeout 100s node tests/mega-recovery-preview-browser.cjs
-      - name: Private Solo QA four recovered Mega forms via keyboard and native attacks
-        run: timeout 240s node tests/mega-recovery-combat-browser.cjs
+      - name: Private Solo QA all eight Normal and Shiny cases, pause and expiry
+        run: timeout 300s node tests/mega-recovery-combat-browser.cjs
+      - name: Audit remaining exact Mega form hierarchy
+        run: node scripts/audit-mega-unresolved.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -84,5 +87,6 @@ jobs:
             dist/mega-recovery-preview/
             dist/mega-recovery-game-qa/
             dist/mega-recovery-combat-qa/
+            dist/mega-unresolved-audit/
           if-no-files-found: warn
           retention-days: 7
