@@ -51,7 +51,7 @@ patch('js/game.js',
 // before opening the lab or starting a new solo run.
 patch('js/game.js',
  "toUI() { state = 'ui'; if (cv) cv.style.cursor = ''; Backdrop.restore(); },",
- "toUI() { state = 'ui'; if (cv) cv.style.cursor = ''; Backdrop.restore(); G.EggRush?.begin(null); G.Royale?.begin(null); },");
+ "toUI() { state = 'ui'; if (cv) cv.style.cursor = ''; Backdrop.restore(); G.EggRush?.begin(null); G.Royale?.begin(null); G.Arena?.begin(null); },");
 patch('js/game.js',
  "if(d&&d.royale)G.Royale.finish(d.royale);",
  "if(d&&d.royale)G.Royale.finish(d.royale);\n      if(d&&d.eggrush)G.EggRush.finish(d.eggrush);");
