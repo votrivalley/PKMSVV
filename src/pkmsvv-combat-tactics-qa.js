@@ -315,6 +315,9 @@
     value=1+Math.min(1.2,Math.max(-1.5,(mult-1)*.48))+v.power*.34+
      (v.own?.35:0)+(v.family==='melee'&&dist<95?.8:0)+(style==='keep-range'&&v.family!=='melee'?.30:0);
     if(v.family==='nova'&&dist>v.reach*.8)value-=.65;
+    const team=championTeams.get(e);
+    if(teamBoost(e,m.cat)>0)value+=.7;
+    if(team&&team.controlUntil>team.clock&&['shot','beam','zone'].includes(v.family))value+=.55;
    }
    value+=Math.min(1.2,(s.clock-v.last)*.07)-(s.last===v.m.id?1.2:0)+v.rank*.12;
    if(value>score){score=value;best=v;}
@@ -335,7 +338,7 @@
   let damage=positive(e.dmg,1)*v.power;
   if(s.buffUntil>s.clock&&(s.buffStat==='atk'||s.buffStat===(m.cat==='physical'?'patk':'satk')))damage*=1+s.buffAmount;
   // Keep the trained base damage cap meaningful even on high-power moves.
-  damage=Math.min(damage,positive(e.dmg,1)*1.5);
+  damage=Math.min(damage*(1+teamBoost(e,m.cat)),positive(e.dmg,1)*1.5);
   token.damage=damage;
   const add=h=>G.Hazards?.add?.({...h,dmg:damage,type:m.type,cat:m.cat,color:col,delay:wind,pkmsvvArenaOwner:e,pkmsvvArenaCast:token,pkmsvvArenaMove:m.id});
   if(f==='beam')add({kind:'beam',x:e.x,y:e.y,angle:ang,len:v.reach,w:clamp(positive(m.width,26),20,55)});
@@ -353,7 +356,8 @@
   }
  }
  function arenaHazardActive(h,p){
-  const e=h?.pkmsvvArenaOwner,c=h?.pkmsvvArenaCast;
+  const e=h?.pkmsvvArenaOwner,c=h?.pkmsvvArenaCast,token=h?.pkmsvvArenaSupport;
+  if(token)return !token.cancelled&&supportAlive(e,p)&&!(e.stunT>0)&&!(e.sleepT>0);
   return !e||(!c?.cancelled&&arenaDuel(e,p)&&!e._pkmsvvMegaTransition&&!(e.stunT>0)&&!(e.sleepT>0)&&e.ai?.cast===c);
  }
  function arenaSkillCast(e,p,dt){
@@ -393,6 +397,108 @@
    return e.bossEnd();
   }
   return [0,0,'Idle'];
+ }
+ // Champion team tactics. The actors remain ordinary, targetable enemies.
+ // WeakMaps are per battle actor; no new save state or additional rewards.
+ const supportStates=new WeakMap(),championTeams=new WeakMap();
+ function supportAlive(e,p){
+  const c=e?.pkmsvvChampionSupportOwner;
+  return !!(e?.pkmsvvChampionSupport&&alive(e)&&e.hp>0&&!e.remote&&!e.friendly&&c?.pkmsvvChampion&&c.hp>0&&
+   arenaDuel(c,p)&&!c._pkmsvvMegaTransition&&G.PKMSVVChampionArena?.stage==='fight');
+ }
+ function supportState(e){
+  let s=supportStates.get(e);
+  if(!s){s={clock:0,ready:0,uses:0,pending:null};supportStates.set(e,s);}
+  return s;
+ }
+ function teamState(c){
+  let s=championTeams.get(c);
+  if(!s){s={clock:0,controlReady:0,controlUntil:0,boost:null,pending:null};championTeams.set(c,s);}
+  return s;
+ }
+ function teamBoost(c,cat){
+  const t=championTeams.get(c),b=t?.boost;
+  return b&&b.until>t.clock&&b.cat===cat&&alive(b.source)&&b.source.hp>0&&
+   b.source.pkmsvvChampionSupportOwner===c?b.amount:0;
+ }
+ function supportSteer(e,p,spd,dt){
+  // Return null for all non-supports or excluded modes; leave engine movement.
+  if(!e?.pkmsvvChampionSupport||!G.PKMSVVChampionArena?.active||G.Coop?.active)return null;
+  if(!supportAlive(e,G.Game?.player)||e.stunT>0||e.sleepT>0)return [0,0];
+  p=G.Game.player;const c=e.pkmsvvChampionSupportOwner,s=supportState(e),role=e.pkmsvvSupportRole;
+  if(s.pending&&!s.pending.hit&&!s.pending.cancelled)return [0,0];
+  if(!Number.isFinite(spd)||spd<=0||!G.World?.isFree)return null;
+  const a=Math.atan2(p.y-c.y,p.x-c.x),side=(Number(e.dex)||0)%2?1:-1;
+  let x=p.x,y=p.y;
+  if(role==='heal'||role==='physical'||role==='special'){
+   const off=role==='heal'?Math.PI:side*2.05,r=role==='heal'?100:78;
+   x=c.x+Math.cos(a+off)*r;y=c.y+Math.sin(a+off)*r;
+  }else if(role==='slow'||role==='sleep'){
+   const off=side*1.35;
+   x=p.x+Math.cos(a+off)*142;y=p.y+Math.sin(a+off)*142;
+  }else{
+   // Physical contact attacker approaches on the opposite flank.
+   x=p.x+Math.cos(a+side*.95)*20;y=p.y+Math.sin(a+side*.95)*20;
+  }
+  const dx=x-e.x,dy=y-e.y,d=Math.hypot(dx,dy);if(d<18)return [0,0];
+  const speed=Math.min(spd,d/Math.max(.08,dt||.016)),ang=Math.atan2(dy,dx);
+  for(const off of [0,side*.65,-side*.65,side*1.25,-side*1.25]){
+   const ax=Math.cos(ang+off),ay=Math.sin(ang+off),travel=Math.min(d,speed*.18);
+   if([.5,1].every(k=>G.World.isFree(e.x+ax*travel*k,e.y+ay*travel*k,(e.r||10)+2,!!e.flying)))return [ax*speed,ay*speed];
+  }
+  return [0,0];
+ }
+ function updateArenaTeam(c,p,actors,dt){
+  if(!arenaDuel(c,p)||!Array.isArray(actors))return false;
+  const t=teamState(c),step=Math.max(0,Number(dt)||0);t.clock+=step;
+  if(t.pending&&(!supportAlive(t.pending.source,p)||t.pending.source.stunT>0||t.pending.source.sleepT>0)){
+   t.pending.cancelled=true;t.pending=null;
+  }
+  if(t.pending&&t.pending.until<=t.clock)t.pending=null;
+  for(const e of actors){
+   if(!supportAlive(e,p))continue;
+   const s=supportState(e),role=e.pkmsvvSupportRole;
+   s.clock+=step;
+   if(s.pending&&(s.pending.hit||s.pending.cancelled||s.pending.until<=t.clock))s.pending=null;
+   if(e.stunT>0||e.sleepT>0||s.ready>s.clock||s.uses>=2)continue;
+   // Healer has to be in range and alive, and may only heal a wounded boss.
+   if(role==='heal'){
+    if(s.clock<12||sq(e,c)>170**2||c.hp>=c.maxHp*.80)continue;
+    c.hp=Math.min(c.maxHp,c.hp+Math.max(1,Math.round(c.maxHp*.035)));
+    s.ready=s.clock+12;s.uses++;
+    G.FX?.ring?.(c.x,c.y,12,48,'#70e9a3',.45,3);
+    G.FX?.dmgText?.(e.x,e.y-(e.bodyH||35),tr('Hồi phục','Heal'),'#70e9a3',true);
+   }else if(role==='physical'||role==='special'){
+    if(s.clock<5||sq(e,c)>155**2||t.boost?.until>t.clock)continue;
+    const cat=role==='physical'?'physical':'special';
+    t.boost={cat,amount:.12,source:e,until:t.clock+5};
+    s.ready=s.clock+12;s.uses++;
+    G.FX?.ring?.(c.x,c.y,12,50,'#ffd080',.45,3);
+    G.FX?.dmgText?.(e.x,e.y-(e.bodyH||35),role==='physical'?tr('Cường hóa vật lý','Physical boost'):tr('Cường hóa đặc công','Special boost'),'#ffd080',true);
+   }else if(role==='slow'||role==='sleep'){
+    if(s.clock<4||t.pending||t.controlReady>t.clock||sq(e,p)>230**2||!G.Hazards?.add)continue;
+    // One shared control window for the team. Lullaby deliberately uses a
+    // brief slow rather than locking the trainer's input. The marked zone
+    // must actually hit and cause native damage, with invulnerability intact.
+    const delay=.85,token={source:e,owner:c,until:t.clock+delay+1,cancelled:false,hit:false};
+    s.pending=token;t.pending=token;s.ready=s.clock+9;s.uses++;
+    t.controlReady=t.clock+5;
+    const col=role==='slow'?'#91dcff':'#d6b4ff',type=e.types?.[0]||e.mon?.types?.[0]||'normal';
+    G.Hazards.add({kind:'zone',x:p.x,y:p.y,r:40,delay,dmg:Math.max(1,e.dmg*.65),type,cat:e.cat,color:col,
+     pkmsvvArenaOwner:e,pkmsvvArenaSupport:token,pkmsvvArenaSlow:role==='slow'?1.4:.9});
+    G.FX?.ring?.(e.x,e.y,8,28,col,delay,2);
+    G.FX?.dmgText?.(e.x,e.y-(e.bodyH||35),role==='slow'?tr('Làm chậm','Slow'):tr('Ru ngủ · Chậm','Lullaby · Slow'),col,true);
+   }
+  }
+  return true;
+ }
+ function arenaSupportHit(h,p,oldHp){
+  const token=h?.pkmsvvArenaSupport;if(!token||!supportAlive(token.source,p)||p.dead||!(p.hp<oldHp))return;
+  token.hit=true;const t=teamState(token.owner);t.controlUntil=t.clock+1.4;
+  p.slowT=Math.max(Number(p.slowT)||0,clamp(Number(h.pkmsvvArenaSlow)||0,0,1.4));
+ }
+ function supportInfo(e){
+  const s=supportStates.get(e);return s?{uses:s.uses,ready:s.ready,clock:s.clock,pending:!!s.pending&&!s.pending.cancelled&&!s.pending.hit}:null;
  }
  // Arena enemies use the native boss controller. Only override its idle
  // locomotion when an existing, approaching player projectile threatens it.
@@ -484,5 +590,5 @@
   }
   ctx.restore();return x;
  }
- G.PKMSVVCombatTacticsQA=Object.freeze({alliedMode,assignRescuers,directPath,margin,needsEvade,evade,rangedGoal,berryGoal,rangedFootwork,arenaDuel,arenaProfile,arenaStats,arenaPreserveFighter,arenaPlan,arenaRecovery,arenaEquip,arenaKit,arenaSkillClock,arenaAimPoint,arenaSkillStart,arenaSkillInterrupt,arenaHazardActive,arenaSkillCast,arenaFootwork,status,drawStatus});
+ G.PKMSVVCombatTacticsQA=Object.freeze({alliedMode,assignRescuers,directPath,margin,needsEvade,evade,rangedGoal,berryGoal,rangedFootwork,arenaDuel,arenaProfile,arenaStats,arenaPreserveFighter,arenaPlan,arenaRecovery,arenaEquip,arenaKit,arenaSkillClock,arenaAimPoint,arenaSkillStart,arenaSkillInterrupt,arenaHazardActive,arenaSkillCast,supportSteer,updateArenaTeam,arenaSupportHit,supportInfo,teamBoost,arenaFootwork,status,drawStatus});
 })();

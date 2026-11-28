@@ -149,3 +149,40 @@ test('isolated Champion samples the actual trained fighter at the start of each 
  const second=G.EnemyMgr.last;assert.equal(second.pkmsvvArenaBuild.attacks,8);assert.ok(second.maxHp>first.maxHp*2);assert.equal(second.pkmsvvArenaBuild.round,1);
  assert.ok(second.pkmsvvArenaBuild.dmg>0);
 });
+
+test('Champion tactical supports reposition, heal only in range, and provide limited nonstacking category buffs',()=>{
+ const {G,lib,player}=setup();
+ vm.runInNewContext(fs.readFileSync(path.resolve(__dirname,'../src/pkmsvv-combat-tactics-qa.js'),'utf8'),{G});
+ G.World.isFree=()=>true;const hazards=[];G.Hazards.add=h=>hazards.push(h);
+ lib.start();lib.nextDuel();lib.update(3.01);
+ const boss=G.EnemyMgr.last;boss.x=0;boss.y=0;boss.hp=boss.maxHp*.5;player.x=100;player.y=0;
+ let seq=[.9,.7,.6],actors=lib.spawnOpponentSupports(boss,player,()=>seq.shift()??0);
+ const heal=actors.find(e=>e.pkmsvvSupportRole==='heal'),buff=actors.find(e=>e.pkmsvvSupportRole==='special');
+ assert.ok(heal&&buff);
+ heal.x=50;heal.y=0;buff.x=0;buff.y=60;
+ const api=G.PKMSVVCombatTacticsQA;
+ const v=api.supportSteer(heal,player,100,.016);assert.ok(v[0]<0&&Math.hypot(...v)<=100+1e-9);
+ G.World.isFree=()=>false;assert.deepEqual(Array.from(api.supportSteer(heal,player,100,.016)),[0,0]);G.World.isFree=()=>true;
+ heal.x=-500;let hp=boss.hp;lib.updateOpponentSupports(12);assert.equal(boss.hp,hp);
+ heal.x=-70;lib.updateOpponentSupports(.1);assert.ok(boss.hp>hp);assert.equal(api.supportInfo(heal).uses,1);
+ lib.updateOpponentSupports(12);assert.equal(api.supportInfo(heal).uses,2);
+ hp=boss.hp;lib.updateOpponentSupports(60);assert.equal(boss.hp,hp,'no unlimited healing');
+ assert.equal(api.teamBoost(boss,'special'),0,'expired buff');
+ boss.dead=true;lib.updateOpponentSupports(1);assert.ok(actors.every(e=>e.dead));
+});
+test('Champion supports telegraph one control zone, no slow on dodge or invulnerability, and stop when killed',()=>{
+ const {G,lib,player}=setup();vm.runInNewContext(fs.readFileSync(path.resolve(__dirname,'../src/pkmsvv-combat-tactics-qa.js'),'utf8'),{G});
+ G.World.isFree=()=>true;const hazards=[];G.Hazards.add=h=>hazards.push(h);
+ lib.start();lib.nextDuel();lib.update(3.01);
+ const boss=G.EnemyMgr.last;boss.x=0;boss.y=0;player.x=100;player.y=0;
+ let seq=[.9,.2,.25];const actors=lib.spawnOpponentSupports(boss,player,()=>seq.shift()??0);
+ assert.ok(actors.some(e=>e.pkmsvvSupportRole==='slow')&&actors.some(e=>e.pkmsvvSupportRole==='sleep'));
+ const api=G.PKMSVVCombatTacticsQA;
+ for(const e of actors){e.x=0;e.y=0;}
+ lib.updateOpponentSupports(4);assert.equal(hazards.length,1,'team cannot stack control');
+ const h=hazards[0];assert.equal(h.delay,.85);assert.ok(api.arenaHazardActive(h,player));
+ const oldHp=player.hp;api.arenaSupportHit(h,player,oldHp);assert.equal(player.slowT,undefined);
+ player.hp-=2;api.arenaSupportHit(h,player,oldHp);assert.ok(player.slowT>0&&player.slowT<=1.4);
+ h.pkmsvvArenaSupport.source.dead=true;assert.equal(api.arenaHazardActive(h,player),false);
+ G.Coop.active=true;assert.equal(api.updateArenaTeam(boss,player,actors,1),false);
+});

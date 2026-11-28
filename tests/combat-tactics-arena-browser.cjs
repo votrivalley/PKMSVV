@@ -88,6 +88,42 @@ const {chromium}=require('playwright'),{startServer}=require('../lan-server/serv
   if(report.nativeSkill.markers.length){assert.ok(report.nativeSkill.hpAfter<report.nativeSkill.hpBefore);}
   else if(report.nativeSkill.kind==='shot'||report.nativeSkill.kind==='nova'){assert.ok(report.nativeSkill.shots.length>0&&report.nativeSkill.shots.every(q=>!q.friendly));}
   else assert.equal(report.nativeSkill.kind,'buff');
+  // A second native match exercises real Champion support actors, rather
+  // than mocking Player.hurt or calling an isolated control function.
+  await page.evaluate(()=>{
+   G.PKMSVVArenaSolo.abort();G.Flow.goMenu();
+   if(!G.PKMSVVChampionArena.start())throw Error('Native Champion start rejected');
+   window.__champKeep=setInterval(()=>{[...document.querySelectorAll('.pkmsvv-berry-overlay button')].find(x=>/Không dùng Berry|No Berry/.test(x.textContent))?.click();},60);
+  });
+  await page.waitForFunction(()=>G.Game.state==='playing'&&G.PKMSVVChampionArena.stage==='prep',null,{timeout:25000});
+  const team=await page.evaluate(()=>{
+   clearInterval(window.__champKeep);
+   const arena=G.PKMSVVChampionArena,api=G.PKMSVVCombatTacticsQA,p=G.Game.player;
+   if(!arena.nextDuel(true))throw Error('Champion countdown rejected');
+   arena.update(3.01);
+   const c=G.EnemyMgr.all().find(e=>e.pkmsvvChampion&&!e.dead);
+   if(!c||arena.stage!=='fight')throw Error('Native Champion fight missing');
+   let seq=[.9,.2,.25];const actors=arena.spawnOpponentSupports(c,p,()=>seq.shift()??0);
+   let spot;for(let y=-100;y<=100&&!spot;y+=20)for(let x=-100;x<=100;x+=20)if(G.World.isFree(x,y,80,false)){spot={x,y};break;}
+   if(!spot)throw Error('No Champion test spot');
+   c.x=spot.x;c.y=spot.y;p.x=c.x+65;p.y=c.y;for(const e of actors){e.x=c.x;e.y=c.y;}
+   G.Hazards.clear();G.Projectiles.clear();arena.updateOpponentSupports(4);
+   const h=G.Hazards.all.find(h=>h.pkmsvvArenaSupport);
+   if(!h)throw Error('Native control telegraph missing');
+   p.x=h.x;p.y=h.y;p.invuln=0;p.slowT=0;const before=p.hp;
+   G.Hazards.update(h.delay+.01);
+   const hit={before,after:p.hp,slow:p.slowT,delay:h.delay,roles:actors.map(e=>e.pkmsvvSupportRole),hazards:G.Hazards.all.filter(h=>h.pkmsvvArenaSupport).length};
+   // Dead support must never detonate a previously placed control zone.
+   G.Hazards.clear();arena.updateOpponentSupports(10);
+   const next=G.Hazards.all.find(h=>h.pkmsvvArenaSupport);
+   if(!next)throw Error('Native second control telegraph missing');
+   next.pkmsvvArenaSupport.source.dead=true;p.x=next.x;p.y=next.y;p.invuln=0;p.slowT=0;const hp=p.hp;
+   G.Hazards.update(next.delay+.01);
+   return {hit,cancel:{before:hp,after:p.hp,slow:p.slowT,hazards:G.Hazards.all.filter(h=>h.pkmsvvArenaSupport).length}};
+  });
+  assert.ok(team.hit.after<team.hit.before&&team.hit.slow>0&&team.hit.slow<=1.4);
+  assert.equal(team.hit.hazards,1);assert.equal(team.cancel.after,team.cancel.before);assert.equal(team.cancel.slow,0);assert.equal(team.cancel.hazards,0);
+  report.championSupport=team;console.log('NATIVE_CHAMPION_SUPPORT_TACTICS_PASS='+JSON.stringify(team));
   assert.deepEqual(errors,[]);
   const out=path.resolve('dist/big-update-progression-qa');fs.mkdirSync(out,{recursive:true});
   fs.writeFileSync(path.join(out,'arena-footwork.json'),JSON.stringify(report,null,2));

@@ -876,10 +876,16 @@ if(process.env.PKMSVV_BIG_UPDATE_QA==='1'){
  // Do not reset player invulnerability for these single-hit new attacks.
  patch('js/systems/hazards.js',
   '      const h = list[i];\n      h.t += dt;',
-  '      const h = list[i];\n      if(h.pkmsvvArenaOwner&&!h.hit&&!G.PKMSVVCombatTacticsQA?.arenaHazardActive(h,pl)){list.splice(i,1);continue;}\n      h.t += dt;');
+  '      const h = list[i];\n      if(h.pkmsvvArenaOwner&&!h.hit&&!G.PKMSVVCombatTacticsQA?.arenaHazardActive(h,G.Game?.player)){list.splice(i,1);continue;}\n      h.t += dt;');
  patch('js/systems/hazards.js',
   '          pl.invuln = 0;\n          pl.hurt(',
-  '          if(!h.pkmsvvArenaOwner)pl.invuln = 0;\n          pl.hurt(');
+  '          if(!h.pkmsvvArenaOwner)pl.invuln = 0;\n          const arenaHpBefore=pl.hp;\n          pl.hurt(');
+ patch('js/systems/hazards.js',
+  '          pl.hurt(h.pct ? Math.max(h.dmg, pl.maxHp * h.pct) : h.dmg, h.type, !!h.pure, h.cat);',
+  '          pl.hurt(h.pct ? Math.max(h.dmg, pl.maxHp * h.pct) : h.dmg, h.type, !!h.pure, h.cat);\n          if(h.pkmsvvArenaSupport)G.PKMSVVCombatTacticsQA?.arenaSupportHit(h,pl,arenaHpBefore);');
+ patch('js/entities/enemy.js',
+  '      // --- integración ---\n      const ox = this.x, oy = this.y;',
+  '      const supportSteer=G.PKMSVVCombatTacticsQA?.supportSteer(this,pl,spd,dt);\n      if(supportSteer){vx=supportSteer[0];vy=supportSteer[1];animBase="Walk";}\n      // --- integración ---\n      const ox = this.x, oy = this.y;');
  patch('js/entities/enemy.js',
   '      if (ai.fury && Math.random() < 0.35) ai.cd = 0.3;',
   '      if (ai.fury && Math.random() < 0.35) ai.cd = 0.3;\n      ai.cd=G.PKMSVVCombatTacticsQA?.arenaRecovery(this,ai.cd)??ai.cd;');

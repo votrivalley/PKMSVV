@@ -497,9 +497,12 @@ G.PKMSVVChampionArena=(()=>{
  }
  function updateOpponentSupports(dt){
   if(!opponentSupports.length)return;
+  // Support actors persist during the 1s final Mega transition, but cannot cast.
+  if(stage==='mega-transition'&&target&&!target.dead)return;
   if(!target||target.dead||stage!=='fight'){
    clearOpponentSupports();return;
   }
+  if(G.PKMSVVCombatTacticsQA?.updateArenaTeam?.(target,G.Game?.player,opponentSupports,dt))return;
   for(const it of opponentSupports){
    if(!it||it.dead||it.hp<=0||it.pkmsvvSupportRole!=='heal')continue;
    it.pkmsvvSupportHealClock+=Math.max(0,Number(dt)||0);
@@ -770,6 +773,7 @@ G.PKMSVVChampionArena=(()=>{
   transitionClock=MEGA_TRANSITION_SECONDS;transitionOrigin=stage;
   stage='mega-transition';
   const pl=G.Game?.player;
+  G.PKMSVVCombatTacticsQA?.arenaSkillInterrupt?.(enemy,pl);
   if(pl)pl.invuln=Math.max(Number(pl.invuln)||0,MEGA_TRANSITION_SECONDS+.2);
   G.Projectiles?.clear?.();G.Hazards?.clear?.();
   battleCountdown(tr('⚡ TIẾN HÓA MEGA!','⚡ MEGA EVOLUTION!'),'mega');
